@@ -1,0 +1,28 @@
+## Hossein Moein
+## September 12 2017
+
+BUILD_PLATFORM = Linux.GCC64
+BUILD_DEFINE = Linux_GCC64
+
+# -----------------------------------------------------------------------------
+
+CXX = /usr/bin/g++
+
+INCLUDES = -I/usr/include/c++/5.4.0 -I/usr/include
+
+LFLAGS = -L/usr/lib/gcc/x86_64-linux-gnu/5.4.0
+CXXFLAGS = -O3 -fPIC $(INCLUDES) $(DEFINES) -std=c++14
+
+PLATFORM_LIBS = -lpthread -lrt -ldl -lm -lnsl -lstdc++
+
+# -----------------------------------------------------------------------------
+
+include CommonMakefile.mk
+
+# -----------------------------------------------------------------------------
+
+## Local Variables:
+## mode:Makefile
+## tab-width:4
+## End:
+

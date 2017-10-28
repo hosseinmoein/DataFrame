@@ -1,5 +1,9 @@
 // Hossein Moein
 // September 21, 2007
+// To the extent possible under law, the author(s) have dedicated all
+// copyright and related and neighboring rights to this software to
+// the public domain worldwide. This software is distributed without
+// any warranty.
 
 #ifndef _INCLUDED_DMScu_FileDef_h
 #define _INCLUDED_DMScu_FileDef_h 0

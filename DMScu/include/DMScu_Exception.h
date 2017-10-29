@@ -1,9 +1,7 @@
 // Hossein Moein
 // July 17 2009
-// To the extent possible under law, the author(s) have dedicated all
-// copyright and related and neighboring rights to this software to
-// the public domain worldwide. This software is distributed without
-// any warranty.
+// Copyright (C) 2017-2018 Hossein Moein
+// Distributed under the BSD Software License (see file License)
 
 #ifndef _INCLUDED_DMScu_Exception_h
 #define _INCLUDED_DMScu_Exception_h 0

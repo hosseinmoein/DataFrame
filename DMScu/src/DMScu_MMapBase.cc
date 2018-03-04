@@ -111,8 +111,8 @@ bool DMScu_MMapBase::_initial_map (size_type file_size,
 DMScu_MMapBase::size_type DMScu_MMapBase::
 read (void *data_ptr, size_type data_size, size_type data_count) throw ()  {
 
-    register    size_type       read_size = data_size * data_count;
-    const   register    void    *cpy_from =
+    size_type       read_size = data_size * data_count;
+    const   void    *cpy_from =
          reinterpret_cast<char *>(_mmap_ptr) + _current_offset;
 
     if (_current_offset + read_size < _file_size)
@@ -487,9 +487,9 @@ DMScu_MMapBase::size_type DMScu_MMapBase::go_to_line (size_type line)  {
         throw DMScu_Exception (err.c_str ());
     }
 
-    register    const   char    *str = reinterpret_cast<char *>(_mmap_ptr);
-    register    size_type       curr_line = 0;
-    register    size_type       offset;
+    const   char    *str = reinterpret_cast<char *>(_mmap_ptr);
+    size_type       curr_line = 0;
+    size_type       offset;
 
     for (offset = 0; offset < _file_size; ++offset)  {
         if (curr_line == line)

@@ -140,7 +140,7 @@ DMScu_FileBase::size_type DMScu_FileBase::
 read (void *data_ptr, size_type element_size, size_type element_count)
     throw ()  {
 
-    register    size_type   read_size = element_count;
+    size_type   read_size = element_count;
 
     if (_current_offset + element_size * read_size < _file_size)
         _current_offset += element_size * read_size;
@@ -190,8 +190,8 @@ write (const void *data_ptr, size_type element_size, size_type element_count) {
         throw DMScu_Exception (err.c_str ());
     }
 
-    const   register    size_type   byte_count = element_size * element_count;
-    const   register    size_type   growth = _current_offset + byte_count;
+    const   size_type   byte_count = element_size * element_count;
+    const   size_type   growth = _current_offset + byte_count;
 
     if (growth > _file_size)
         _file_size += growth - _file_size;

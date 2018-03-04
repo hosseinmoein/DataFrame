@@ -101,7 +101,7 @@ class   DMScu_FileDef  {
         inline static bool
         _is_in_list (const char this_char, const char *char_list) throw ()  {
 
-            register    const   char    *str = char_list;
+            const   char    *str = char_list;
 
             while (*str)
                 if (this_char ^ *str)

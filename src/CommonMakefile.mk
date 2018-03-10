@@ -58,7 +58,14 @@ $(LOCAL_OBJ_DIR)/%.o: %.cc
 
 # -----------------------------------------------------------------------------
 
-all: $(TARGETS)
+all: PRE_BUILD $(TARGETS)
+
+PRE_BUILD:
+	mkdir -p $(LOCAL_LIB_DIR)
+	mkdir -p $(LOCAL_BIN_DIR)
+	mkdir -p $(LOCAL_OBJ_DIR)
+	mkdir -p $(PROJECT_LIB_DIR)
+	mkdir -p $(PROJECT_INCLUDE_DIR)
 
 $(TARGET_LIB): $(LIB_OBJS)
 	ar -clrs $(TARGET_LIB) $(LIB_OBJS)

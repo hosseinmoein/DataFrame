@@ -3,7 +3,7 @@
 // Copyright (C) 2017-2018 Hossein Moein
 // Distributed under the BSD Software License (see file License)
 
-#include <DMScu_FileBase.h>
+#include "../include/DMScu_FileBase.h"
 
 bool WriteFile (DMScu_FileBase &);
 bool ReadFile (DMScu_FileBase &);

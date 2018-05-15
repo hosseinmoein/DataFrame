@@ -7,7 +7,7 @@
 #include <iostream>
 #include <string>
 
-#include <DMScu_FixedSizeString.h>
+#include "../include/DMScu_FixedSizeString.h"
 
 using namespace std;
 

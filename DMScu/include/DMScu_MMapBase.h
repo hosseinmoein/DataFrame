@@ -17,8 +17,8 @@
 #include <errno.h>
 #include <strings.h>
 
-#include <DMScu_Exception.h>
-#include <DMScu_FileDef.h>
+#include "DMScu_Exception.h"
+#include "DMScu_FileDef.h"
 
 // ----------------------------------------------------------------------------
 
@@ -351,7 +351,7 @@ class   DMScu_MMapBase : public DMScu_FileDef  {
         inline DMScu_MMapBase &operator >> (char *rhs) throw ()  {
 
             if (_file_flags & _s_bread_ || _file_flags & _s_bwrite_ ||
-                _file_flags & _s_bappend_) 
+                _file_flags & _s_bappend_)
                 read (rhs, sizeof (char), _width);
             else  {
                 strncpy (rhs, get_token (" ").c_str (), _width);
@@ -363,7 +363,7 @@ class   DMScu_MMapBase : public DMScu_FileDef  {
         inline DMScu_MMapBase &operator >> (std::ostream &rhs)  {
 
             if (_file_flags & _s_read_ || _file_flags & _s_write_ ||
-                _file_flags & _s_append_) 
+                _file_flags & _s_append_)
                 rhs << get_token (" ").data ();
             else  {
                 DMScu_FixedSizeString<1023> err;
@@ -378,7 +378,7 @@ class   DMScu_MMapBase : public DMScu_FileDef  {
         inline DMScu_MMapBase &operator >> (std::string &rhs)  {
 
             if (_file_flags & _s_read_ || _file_flags & _s_write_ ||
-                _file_flags & _s_append_) 
+                _file_flags & _s_append_)
                 rhs += get_token (" ");
             else  {
                 DMScu_FixedSizeString<1023> err;
@@ -393,7 +393,7 @@ class   DMScu_MMapBase : public DMScu_FileDef  {
         inline DMScu_MMapBase &operator >> (DMScu_VirtualString &rhs)  {
 
             if (_file_flags & _s_read_ || _file_flags & _s_write_ ||
-                _file_flags & _s_append_) 
+                _file_flags & _s_append_)
                 rhs += get_token (" ").c_str ();
             else  {
                 DMScu_FixedSizeString<1023> err;
@@ -408,7 +408,7 @@ class   DMScu_MMapBase : public DMScu_FileDef  {
         inline DMScu_MMapBase &operator >> (char &rhs) throw ()  {
 
             if (_file_flags & _s_bread_ || _file_flags & _s_bwrite_ ||
-                _file_flags & _s_bappend_) 
+                _file_flags & _s_bappend_)
                 read (&rhs, sizeof (char), 1);
             else
                 rhs = static_cast<char>(get_char ());
@@ -418,7 +418,7 @@ class   DMScu_MMapBase : public DMScu_FileDef  {
         inline DMScu_MMapBase &operator >> (unsigned char &rhs) throw ()  {
 
             if (_file_flags & _s_bread_ || _file_flags & _s_bwrite_ ||
-                _file_flags & _s_bappend_) 
+                _file_flags & _s_bappend_)
                 read (&rhs, sizeof (unsigned char), 1);
             else
                 rhs = static_cast<unsigned char>(get_char ());
@@ -428,7 +428,7 @@ class   DMScu_MMapBase : public DMScu_FileDef  {
         inline DMScu_MMapBase &operator >> (short &rhs) throw ()  {
 
             if (_file_flags & _s_bread_ || _file_flags & _s_bwrite_ ||
-                _file_flags & _s_bappend_) 
+                _file_flags & _s_bappend_)
                 read (&rhs, sizeof (short), 1);
             else
                 rhs = static_cast<short>
@@ -439,7 +439,7 @@ class   DMScu_MMapBase : public DMScu_FileDef  {
         inline DMScu_MMapBase &operator >> (int &rhs) throw ()  {
 
             if (_file_flags & _s_bread_ || _file_flags & _s_bwrite_ ||
-                _file_flags & _s_bappend_) 
+                _file_flags & _s_bappend_)
                 read (&rhs, sizeof (int), 1);
             else
                 rhs = static_cast<int>
@@ -450,7 +450,7 @@ class   DMScu_MMapBase : public DMScu_FileDef  {
         inline DMScu_MMapBase &operator >> (long int &rhs) throw ()  {
 
             if (_file_flags & _s_bread_ || _file_flags & _s_bwrite_ ||
-                _file_flags & _s_bappend_) 
+                _file_flags & _s_bappend_)
                 read (&rhs, sizeof (long int), 1);
             else
                 rhs =  strtol (get_string ("0123456789").c_str (), NULL, 0);
@@ -460,7 +460,7 @@ class   DMScu_MMapBase : public DMScu_FileDef  {
         inline DMScu_MMapBase &operator >> (long long int &rhs) throw ()  {
 
             if (_file_flags & _s_bread_ || _file_flags & _s_bwrite_ ||
-                _file_flags & _s_bappend_) 
+                _file_flags & _s_bappend_)
                 read (&rhs, sizeof (long long int), 1);
             else
                 rhs =  strtoll (get_string ("0123456789").c_str (), NULL, 0);
@@ -470,7 +470,7 @@ class   DMScu_MMapBase : public DMScu_FileDef  {
         inline DMScu_MMapBase &operator >> (unsigned short &rhs) throw ()  {
 
             if (_file_flags & _s_bread_ || _file_flags & _s_bwrite_ ||
-                _file_flags & _s_bappend_) 
+                _file_flags & _s_bappend_)
                 read (&rhs, sizeof (unsigned short), 1);
             else
                 rhs = static_cast<unsigned short>
@@ -481,7 +481,7 @@ class   DMScu_MMapBase : public DMScu_FileDef  {
         inline DMScu_MMapBase &operator >> (unsigned int &rhs) throw ()  {
 
             if (_file_flags & _s_bread_ || _file_flags & _s_bwrite_ ||
-                _file_flags & _s_bappend_) 
+                _file_flags & _s_bappend_)
                 read (&rhs, sizeof (unsigned int), 1);
             else
                 rhs = static_cast<unsigned int>
@@ -493,7 +493,7 @@ class   DMScu_MMapBase : public DMScu_FileDef  {
             throw ()  {
 
             if (_file_flags & _s_bread_ || _file_flags & _s_bwrite_ ||
-                _file_flags & _s_bappend_) 
+                _file_flags & _s_bappend_)
                 read (&rhs, sizeof (unsigned long int), 1);
             else
                 rhs = static_cast<unsigned long int>
@@ -505,7 +505,7 @@ class   DMScu_MMapBase : public DMScu_FileDef  {
             throw ()  {
 
             if (_file_flags & _s_bread_ || _file_flags & _s_bwrite_ ||
-                _file_flags & _s_bappend_) 
+                _file_flags & _s_bappend_)
                 read (&rhs, sizeof (unsigned long long int), 1);
             else
                 rhs = static_cast<unsigned long long int>
@@ -516,7 +516,7 @@ class   DMScu_MMapBase : public DMScu_FileDef  {
         inline DMScu_MMapBase &operator >> (float &rhs) throw ()  {
 
             if (_file_flags & _s_bread_ || _file_flags & _s_bwrite_ ||
-                _file_flags & _s_bappend_) 
+                _file_flags & _s_bappend_)
                 read (&rhs, sizeof (float), 1);
             else
                 rhs = static_cast<float>
@@ -527,7 +527,7 @@ class   DMScu_MMapBase : public DMScu_FileDef  {
         inline DMScu_MMapBase &operator >> (double &rhs) throw ()  {
 
             if (_file_flags & _s_bread_ || _file_flags & _s_bwrite_ ||
-                _file_flags & _s_bappend_) 
+                _file_flags & _s_bappend_)
                 read (&rhs, sizeof (double), 1);
             else
                 rhs = strtod (get_string ("0123456789.").c_str (), NULL);

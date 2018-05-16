@@ -1,3 +1,5 @@
+message(STATUS "-- Configuring DMscu module")
+
 set(SOURCE
   src/DMScu_FileBase.cc
   src/DMScu_MMapBase.cc
@@ -12,10 +14,18 @@ set(HEADERS
   include/DMScu_MMapFile.h
   )
 
+# Build the DMScu library
+add_library(DMScu SHARED ${SOURCE})
+install(TARGETS DMScu DESTINATION lib)
+install(FILES ${HEADERS} DESTINATION include)
+
+# Build the test binary
 add_executable(filebase_tester src/filebase_tester.cc)
 add_executable(fixsizestr_tester src/fixsizestr_tester.cc)
-add_executable(mmfile_tester.cc src/mmfile_tester.cc)
+add_executable(mmfile_tester src/mmfile_tester.cc)
+# Link the Dataframe library to the test binary
+target_link_libraries(filebase_tester DMScu)
+target_link_libraries(fixsizestr_tester DMScu)
+target_link_libraries(mmfile_tester DMScu)
 
-add_library(DMSCu SHARED ${SOURCE})
-install(TARGETS DMSCu DESTINATION lib)
-install(FILES ${HEADERS} DESTINATION include)
+message(STATUS "-- Configuring DMscu module - done")

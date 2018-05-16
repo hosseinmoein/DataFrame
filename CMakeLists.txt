@@ -1,30 +1,33 @@
-cmake_minimum_required (VERSION 3.0)
+cmake_minimum_required (VERSION 3.0.2)
 project (DataFrame)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON) # Produce compile_commands.json
 
 add_subdirectory(DMScu) # Build DMscu module first
 
-# #Build library
-# set(SOURCE
-#   DMScu/src/DMScu_FileBase.cc
-#   DMScu/src/DMScu_MMapBase.cc
-#   DMScu/src/DMScu_MMapFile.cc
-#   DMScu/src/filebase_tester.cc
-#   DMScu/src/fixsizestr_tester.cc
-#   DMScu/src/mmfile_tester.cc )
-# set(HEADERS
-#   DMScu/include/DMScu_Exception.h
-#   DMScu/include/DMScu_FileBase.h
-#   DMScu/include/DMScu_FileDef.h
-#   DMScu/include/DMScu_FixedSizeString.h
-#   DMScu/include/DMScu_MMapBase.h
-#   DMScu/include/DMScu_MMapFile.h
-#   )
+set(SOURCE
+  src/BaseContainer.cc
+  )
+set(HEADERS
+  include/BaseContainer.h
+  include/BaseContainer.tcc
+  include/DFVisitors.h
+  include/DataFrame.h
+  include/DataFrame.tcc
+  include/DataFrame_get.tcc
+  include/DataFrame_misc.tcc
+  include/DataFrame_opt.tcc
+  include/DataFrame_read.tcc
+  include/DataFrame_set.tcc
+  )
 
-# add_library(dataframe SHARED ${SOURCE})
-# install(TARGETS dataframe DESTINATION lib) # Move the lib file
-# install(FILES ${HEADERS} DESTINATION include) # Move the header files
+# Build the Dataframe library
+add_library(Dataframe SHARED ${SOURCE})
+target_link_libraries(Dataframe DMScu) # Link the DMscu to Dataframe
+install(TARGETS Dataframe DESTINATION lib) # Move the lib file
+install(FILES ${HEADERS} DESTINATION include) # Move the header files
 
-# Build test
-# add_executable(datasci_tester src/datasci_tester.cc src/BaseContainer.cc)
+# # Build the test binary
+# add_executable(datasci_tester src/datasci_tester.cc)
+# # Link the Dataframe library to the test binary
+# target_link_libraries(datasci_tester Dataframe DMScu)

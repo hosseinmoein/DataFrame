@@ -3,7 +3,7 @@
 // Copyright (C) 2017-2018 Hossein Moein
 // Distributed under the BSD Software License (see file License)
 
-#include <DataFrame.h>
+#include "DataFrame.h"
 
 // ----------------------------------------------------------------------------
 
@@ -198,7 +198,7 @@ equal_functor_<Ts ...>::operator() (const DS<T> &lhs_vec)  {
         result = false;
         return;
     }
-	
+
     const DataVec   &hv = df.data_[iter->second];
     const DS<T>     &rhs_vec = hv.get_vec<T, DS<T>>();
 

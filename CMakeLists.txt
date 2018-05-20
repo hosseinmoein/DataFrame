@@ -23,11 +23,12 @@ set(HEADERS
 
 # Build the Dataframe library
 add_library(Dataframe SHARED ${SOURCE})
-target_link_libraries(Dataframe DMScu) # Link the DMscu to Dataframe
+target_link_libraries(Dataframe DMScu) # Link DMscu to Dataframe
+
+# Build the test binary
+add_executable(datasci_tester src/datasci_tester.cc)
+target_link_libraries(datasci_tester Dataframe) # Link the Dataframe library to the test binary
+
+# Install the library
 install(TARGETS Dataframe DESTINATION lib) # Move the lib file
 install(FILES ${HEADERS} DESTINATION include) # Move the header files
-
-# # Build the test binary
-# add_executable(datasci_tester src/datasci_tester.cc)
-# # Link the Dataframe library to the test binary
-# target_link_libraries(datasci_tester Dataframe DMScu)

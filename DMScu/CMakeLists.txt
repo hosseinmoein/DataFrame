@@ -16,8 +16,6 @@ set(HEADERS
 
 # Build the DMScu library
 add_library(DMScu SHARED ${SOURCE})
-install(TARGETS DMScu DESTINATION lib)
-install(FILES ${HEADERS} DESTINATION include)
 
 # Build the test binary
 add_executable(filebase_tester src/filebase_tester.cc)
@@ -27,5 +25,9 @@ add_executable(mmfile_tester src/mmfile_tester.cc)
 target_link_libraries(filebase_tester DMScu)
 target_link_libraries(fixsizestr_tester DMScu)
 target_link_libraries(mmfile_tester DMScu)
+
+# Install the library/module
+install(TARGETS DMScu DESTINATION lib)
+install(FILES ${HEADERS} DESTINATION include)
 
 message(STATUS "-- Configuring DMscu module - done")

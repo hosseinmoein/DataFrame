@@ -1,8 +1,8 @@
 #include <iostream>
 #include <typeinfo>
 
-#include <DataFrame.h>
-#include <DFVisitors.h>
+#include "../include/DataFrame.h"
+#include "../include/DFVisitors.h"
 
 using namespace hmdf;
 

@@ -3,7 +3,7 @@
 
 #include <fstream>
 
-#include <DMScu_MMapFile.h>
+#include "../include/DMScu_MMapFile.h"
 
 int WriteFile (DMScu_MMapFile &);
 int ReadFile (DMScu_MMapFile &);

@@ -7,7 +7,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include <DMScu_FileBase.h>
+#include "../include/DMScu_FileBase.h"
 
 // ----------------------------------------------------------------------------
 
@@ -15,24 +15,24 @@ bool DMScu_FileBase::_translate_open_mode () throw ()  {
 
     switch (_get_open_mode ())  {
 
-        case _read_:
-            _file_flags = _s_read_ | _in_use_;
-            break;
-        case _bread_:
-            _file_flags = _s_bread_ | _in_use_;
-            break;
-        case _write_:
-            _file_flags = _s_write_ | _s_read_ | _in_use_;
-            break;
-        case _bwrite_:
-            _file_flags = _s_bwrite_ | _s_bread_ | _in_use_;
-            break;
-        case _append_:
-            _file_flags = _s_append_ | _s_read_ | _in_use_;
-            break;
-        case _bappend_:
-            _file_flags = _s_bappend_ | _s_bread_ | _in_use_;
-            break;
+	case _read_:
+		_file_flags = _s_read_ | _in_use_;
+		break;
+	case _bread_:
+		_file_flags = _s_bread_ | _in_use_;
+		break;
+	case _write_:
+		_file_flags = _s_write_ | _s_read_ | _in_use_;
+		break;
+	case _bwrite_:
+		_file_flags = _s_bwrite_ | _s_bread_ | _in_use_;
+		break;
+	case _append_:
+		_file_flags = _s_append_ | _s_read_ | _in_use_;
+		break;
+	case _bappend_:
+		_file_flags = _s_bappend_ | _s_bread_ | _in_use_;
+		break;
     }
 
     return (true);

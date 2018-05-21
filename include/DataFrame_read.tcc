@@ -4,7 +4,7 @@
 // Distributed under the BSD Software License (see file License)
 
 #include "DataFrame.h"
-#include <DMScu_MMapFile.h>
+#include "../DMScu/include/DMScu_MMapFile.h"
 #include <cstdlib>
 
 // ----------------------------------------------------------------------------

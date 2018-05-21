@@ -164,7 +164,7 @@ public:
 // ----------------------------------------------------------------------------
 
 #  ifdef DMS_INCLUDE_SOURCE
-#    include <BaseContainer.tcc>
+#    include "BaseContainer.tcc"
 #  endif // DMS_INCLUDE_SOURCE
 
 // ----------------------------------------------------------------------------

@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.0.2)
+cmake_minimum_required (VERSION 3.2)
 project (DataFrame)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON) # Produce compile_commands.json
@@ -21,9 +21,16 @@ set(HEADERS
   include/DataFrame_set.tcc
   )
 
+
 # Build the Dataframe library
+add_definitions(-D DMS_INCLUDE_SOURCE)
 add_library(Dataframe SHARED ${SOURCE})
 target_link_libraries(Dataframe DMScu) # Link DMscu to Dataframe
+
+# Find pthreads library
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+target_link_libraries(Dataframe Threads::Threads)
 
 # Build the test binary
 add_executable(datasci_tester src/datasci_tester.cc)

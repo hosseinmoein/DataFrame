@@ -27,14 +27,16 @@ add_definitions(-D DMS_INCLUDE_SOURCE)
 add_library(Dataframe SHARED ${SOURCE})
 target_link_libraries(Dataframe DMScu) # Link DMscu to Dataframe
 
-# Find pthreads library
-set(THREADS_PREFER_PTHREAD_FLAG ON)
-find_package(Threads REQUIRED)
-target_link_libraries(Dataframe Threads::Threads)
-
 # Build the test binary
 add_executable(datasci_tester src/datasci_tester.cc)
 target_link_libraries(datasci_tester Dataframe) # Link the Dataframe library to the test binary
+
+if (UNIX)
+  # Find pthreads library
+  set(THREADS_PREFER_PTHREAD_FLAG ON)
+  find_package(Threads REQUIRED)
+  target_link_libraries(datasci_tester Threads::Threads)
+endif (UNIX)
 
 # Install the library
 install(TARGETS Dataframe DESTINATION lib) # Move the lib file

@@ -8,18 +8,6 @@ add_subdirectory(DMScu) # Build DMscu module first
 set(SOURCE
   src/BaseContainer.cc
   )
-set(HEADERS
-  include/BaseContainer.h
-  include/BaseContainer.tcc
-  include/DFVisitors.h
-  include/DataFrame.h
-  include/DataFrame.tcc
-  include/DataFrame_get.tcc
-  include/DataFrame_misc.tcc
-  include/DataFrame_opt.tcc
-  include/DataFrame_read.tcc
-  include/DataFrame_set.tcc
-  )
 
 # Build the Dataframe library
 add_definitions(-D DMS_INCLUDE_SOURCE) # Need this for some of the .tcc files to be compiled
@@ -41,4 +29,5 @@ endif (UNIX)
 
 # Install the library
 install(TARGETS Dataframe DESTINATION lib) # Move the lib file
-install(FILES ${HEADERS} DESTINATION include) # Move the header files
+install(DIRECTORY include/ DESTINATION include FILES_MATCHING PATTERN "*.h") # Move the header files
+install(DIRECTORY include/ DESTINATION include FILES_MATCHING PATTERN "*.tcc") # Move the tcc files

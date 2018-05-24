@@ -21,11 +21,12 @@ set(HEADERS
   include/DataFrame_set.tcc
   )
 
-
 # Build the Dataframe library
-add_definitions(-D DMS_INCLUDE_SOURCE)
+add_definitions(-D DMS_INCLUDE_SOURCE) # Need this for some of the .tcc files to be compiled
 add_library(Dataframe SHARED ${SOURCE})
 target_link_libraries(Dataframe DMScu) # Link DMscu to Dataframe
+target_include_directories(Dataframe INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/DMScu/include)
+target_include_directories(Dataframe INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 # Build the test binary
 add_executable(datasci_tester src/datasci_tester.cc)

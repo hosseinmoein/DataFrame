@@ -3,7 +3,9 @@ project (DataFrame)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON) # Produce compile_commands.json
 
-add_subdirectory(DMScu) # Build DMscu module first
+if(UNIX)
+  add_subdirectory(DMScu) # Build DMscu module first
+endif (UNIX)
 
 set(SOURCE
   src/BaseContainer.cc
@@ -12,8 +14,10 @@ set(SOURCE
 # Build the Dataframe library
 add_definitions(-D DMS_INCLUDE_SOURCE) # Need this for some of the .tcc files to be compiled
 add_library(Dataframe SHARED ${SOURCE})
-target_link_libraries(Dataframe DMScu) # Link DMscu to Dataframe
-target_include_directories(Dataframe INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/DMScu/include)
+if(UNIX)
+  target_link_libraries(Dataframe DMScu) # Link DMscu to Dataframe
+  target_include_directories(Dataframe INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/DMScu/include)
+endif (UNIX)
 target_include_directories(Dataframe INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 # Build the test binary

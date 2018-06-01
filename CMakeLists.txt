@@ -7,6 +7,17 @@ if(UNIX)
   add_subdirectory(DMScu) # Build DMscu module first
 endif (UNIX)
 
+message("-- Copying files for testing")
+file(GLOB TEST_DATA "test/*.csv") # Get all txt files into a variable
+if (UNIX)
+  file(COPY ${TEST_DATA} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+endif(UNIX)
+if (MSVC)
+  file(COPY ${TEST_DATA} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Debug)
+  file(COPY ${TEST_DATA} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Release)
+endif(MSVC)
+message("-- Copying files for testing - done")
+
 set(SOURCE
   src/BaseContainer.cc
   )

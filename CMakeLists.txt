@@ -2,7 +2,7 @@ cmake_minimum_required (VERSION 3.2)
 project (DataFrame)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON) # Produce compile_commands.json
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 14) # C++14
 
 message("-- Copying files for testing")
 file(GLOB TEST_DATA "test/*.csv") # Get all txt files into a variable
@@ -43,3 +43,7 @@ endif (UNIX)
 install(TARGETS Dataframe DESTINATION lib) # Move the lib file
 install(DIRECTORY include/ DESTINATION include FILES_MATCHING PATTERN "*.h") # Move the header files
 install(DIRECTORY include/ DESTINATION include FILES_MATCHING PATTERN "*.tcc") # Move the tcc files
+
+# Enable ctest, testing so we can see if unit tests pass or fail in CI
+enable_testing()
+add_test(Datasci_Tester datasci_tester)

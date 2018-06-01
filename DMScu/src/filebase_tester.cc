@@ -117,9 +117,7 @@ int main (int argCnt, char *argVctr [])  {
     read_file2.close ();
     write_file.unlink ();
 
-    DMScu_FileBase  c_file ("/export/home/moeinh/work/HITS/src/DMScu/src/"
-                            "DMScu_FileBase.cc",
-                            DMScu_FileBase::_read_, 10000);
+    DMScu_FileBase  c_file ("./DMScu_FileBase.cc",DMScu_FileBase::_read_, 10000);
     char            line [1024];
 
     while (! c_file.is_eof ())  {

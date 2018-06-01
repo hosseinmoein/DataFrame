@@ -5,6 +5,12 @@ set(SOURCE
   src/DMScu_MMapFile.cc
   )
 
+message("-- Copying files for testing")
+if (UNIX)
+  file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/src/DMScu_FileBase.cc DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+endif(UNIX)
+message("-- Copying files for testing - done")
+
 # Build the DMScu library
 add_library(DMScu SHARED ${SOURCE})
 

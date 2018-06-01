@@ -3,6 +3,17 @@ project (DataFrame)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON) # Produce compile_commands.json
 
+message("-- Copying files for testing")
+file(GLOB TEST_DATA "test/*.csv") # Get all txt files into a variable
+if (UNIX)
+  file(COPY ${TEST_DATA} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+endif(UNIX)
+if (MSVC)
+  file(COPY ${TEST_DATA} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Debug)
+  file(COPY ${TEST_DATA} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Release)
+endif(MSVC)
+message("-- Copying files for testing - done")
+
 add_subdirectory(DMScu) # Build DMscu module first
 
 set(SOURCE

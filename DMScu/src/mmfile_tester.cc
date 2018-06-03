@@ -47,6 +47,7 @@ int main (int argCnt, char *argVctr [])  {
 
     DMScu_MMapFile  write_file ("test.mmap", DMScu_MMapFile::_append_, 10000);
 
+    /*
     std::ifstream    cifs ("/export/home/moeinh/work/HITS/src/DMScu/"
                            "src/DMScu_MMapBase.cc");
     std::ifstream    hifs ("/export/home/moeinh/work/HITS/src/DMScu/"
@@ -134,6 +135,7 @@ int main (int argCnt, char *argVctr [])  {
 
     read_file2.close ();
     write_file.unlink ();
+    */
     return EXIT_SUCCESS;
 }
 

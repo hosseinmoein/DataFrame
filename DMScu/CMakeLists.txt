@@ -33,4 +33,4 @@ message(STATUS "-- Configuring DMscu module - done")
 enable_testing()
 add_test(Filebase_Tester filebase_tester)
 add_test(Fixsizestr_Tester fixsizestr_tester)
-# add_test(Mmfile_Tester mmfile_tester)  # Disabling this for now, this is never exiting
+add_test(Mmfile_Tester mmfile_tester)

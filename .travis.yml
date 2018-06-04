@@ -13,6 +13,8 @@ compiler:
  - gcc
  - clang
 
+ #TODO: Get C++17 support
+
 script:
  - mkdir build
  - cd build

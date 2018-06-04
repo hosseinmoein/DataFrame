@@ -5,13 +5,13 @@ language: cpp
 notifications:
  email: false
 
-addons:
- apt:
-  sources:
-   - ubuntu-toolchain-r-test
-   - sourceline: 'ppa:beineri/opt-qt592-trusty'
-  packages:
-   - g++-5
+os:
+ - linux
+ - osx
+
+compiler:
+ - gcc
+ - clang
 
 script:
  - mkdir build

@@ -83,11 +83,11 @@ matrix:
     - os: osx
       osx_image: xcode8
       env:
-        - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
+        - MATRIX_EVAL="brew update && brew upgrade && brew install gcc4.9 && CC=gcc-4.9 && CXX=g++-4.9"
     - os: osx
       osx_image: xcode8
       env:
-        - MATRIX_EVAL"brew update && brew upgrade && brew install gcc5 && CC=gcc-5 && CXX=g++-5"
+        - MATRIX_EVAL="brew update && brew upgrade && brew install gcc5 && CC=gcc-5 && CXX=g++-5"
     - os: osx
       osx_image: xcode8
       env:
@@ -95,7 +95,7 @@ matrix:
     - os: osx
       osx_image: xcode8
       env:
-        - MATRIX_EVAL="brew update && brew upgrade && brew install gcc && CC=gcc-7 && CXX=g++-7"
+        - MATRIX_EVAL="brew update && brew upgrade && brew install gcc7 && CC=gcc-7 && CXX=g++-7"
 
 before_install:
   - eval "${MATRIX_EVAL}"

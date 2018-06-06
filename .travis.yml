@@ -7,17 +7,26 @@ notifications:
 
 matrix:
   include:
-    # GCC 4.9
+    # GCC 6
     - os: linux
       addons:
         apt:
           sources:
             - ubuntu-toolchain-r-test
           packages:
-            - g++-4.9
+            - g++-6
       env:
-        - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
-
+        - MATRIX_EVAL="CC=gcc6 && CXX=g++-6"
+    # GCC 7
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-7
+      env:
+        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
     # Clang 4.0
     - os: linux
       addons:
@@ -28,7 +37,6 @@ matrix:
             - clang-4.0
       env:
         - MATRIX_EVAL="CC=clang-4.0 && CXX=clang++-4.0"
-
     # Clang 4.9
     - os: osx
       osx_image: xcode8

@@ -13,7 +13,38 @@ compiler:
  - gcc
  - clang
 
- #TODO: Get C++17 support
+matrix:
+ include:
+    # GCC 4.9
+   - os: linux
+     addons:
+       apt:
+         sources:
+           - ubuntu-toolchain-r-test
+         packages:
+           - g++-4.9
+      env:
+        - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
+
+    # Clang 4.0
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - llvm-toolchain-trusty-4.0
+          packages:
+            - clang-4.0
+      env:
+        - MATRIX_EVAL="CC=clang-4.0 && CXX=clang++-4.0"
+
+    # Clang 4.9
+    - os: osx
+      osx_image: xcode8
+      env:
+        - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
+
+before_install:
+  - eval "${MATRIX_EVAL}"
 
 script:
  - mkdir build

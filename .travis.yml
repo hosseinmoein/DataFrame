@@ -5,14 +5,6 @@ language: cpp
 notifications:
  email: false
 
-os:
- - linux
- - osx
-
-compiler:
- - gcc
- - clang
-
 matrix:
   include:
     # GCC 4.9

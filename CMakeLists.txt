@@ -2,7 +2,8 @@ cmake_minimum_required (VERSION 3.2)
 project (DataFrame)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON) # Produce compile_commands.json
-set(CMAKE_CXX_STANDARD 17) # C++17
+set(CMAKE_CXX_STANDARD 14) # C++14
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 message("-- Copying files for testing")
 file(GLOB TEST_DATA "test/*.csv") # Get all txt files into a variable

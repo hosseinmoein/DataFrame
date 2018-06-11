@@ -79,23 +79,18 @@ matrix:
             - clang-5.0
       env:
         - MATRIX_EVAL="CC=clang-5.0 && CXX=clang++-5.0"
-    # Clang 4.9
     - os: osx
       osx_image: xcode8
       env:
-        - MATRIX_EVAL="brew update && brew upgrade && brew install gcc4.9 && CC=gcc-4.9 && CXX=g++-4.9"
+        - MATRIX_EVAL="brew update && (brew outdated gcc5 || brew upgrade gcc5) && brew install gcc5 && CC=gcc-5 && CXX=g++-5"
     - os: osx
       osx_image: xcode8
       env:
-        - MATRIX_EVAL="brew update && brew upgrade && brew install gcc5 && CC=gcc-5 && CXX=g++-5"
+        - MATRIX_EVAL="brew update && (brew outdated gcc6 || brew upgrade gcc6) && brew install gcc6 && CC=gcc-6 && CXX=g++-6"
     - os: osx
-      osx_image: xcode8
+      osx_image: xcode9.3
       env:
-        - MATRIX_EVAL="brew update && brew upgrade && brew install gcc6 && CC=gcc-6 && CXX=g++-6"
-    - os: osx
-      osx_image: xcode8
-      env:
-        - MATRIX_EVAL="brew update && brew upgrade && brew install gcc7 && CC=gcc-7 && CXX=g++-7"
+        - MATRIX_EVAL="brew update && (brew outdated gcc7 || brew upgrade gcc7) &&  CC=gcc-7 && CXX=g++-7"
 
 before_install:
   - eval "${MATRIX_EVAL}"

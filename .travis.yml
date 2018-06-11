@@ -13,9 +13,9 @@ matrix:
           sources:
             - ubuntu-toolchain-r-test
           packages:
-            - g++-6
+            - g++-5
       env:
-        - MATRIX_EVAL="CC=gcc6 && CXX=g++-6"
+        - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
     - os: linux
       addons:
         apt:
@@ -34,15 +34,6 @@ matrix:
             - clang-3.6
       env:
         - MATRIX_EVAL="CC=clang-3.6 && CXX=clang++-3.6"
-    - os: linux
-      addons:
-        apt:
-          sources:
-            - llvm-toolchain-trusty-3.7
-          packages:
-            - clang-3.7
-      env:
-        - MATRIX_EVAL="CC=clang-3.7 && CXX=clang++-3.7"
     - os: linux
       addons:
         apt:
@@ -79,23 +70,14 @@ matrix:
             - clang-5.0
       env:
         - MATRIX_EVAL="CC=clang-5.0 && CXX=clang++-5.0"
-    # Clang 4.9
     - os: osx
       osx_image: xcode8
       env:
-        - MATRIX_EVAL="brew update && brew upgrade && brew install gcc4.9 && CC=gcc-4.9 && CXX=g++-4.9"
+        - MATRIX_EVAL="brew update && (brew outdated gcc5 || brew upgrade gcc5) && brew install gcc5 && CC=gcc-5 && CXX=g++-5"
     - os: osx
       osx_image: xcode8
       env:
-        - MATRIX_EVAL="brew update && brew upgrade && brew install gcc5 && CC=gcc-5 && CXX=g++-5"
-    - os: osx
-      osx_image: xcode8
-      env:
-        - MATRIX_EVAL="brew update && brew upgrade && brew install gcc6 && CC=gcc-6 && CXX=g++-6"
-    - os: osx
-      osx_image: xcode8
-      env:
-        - MATRIX_EVAL="brew update && brew upgrade && brew install gcc7 && CC=gcc-7 && CXX=g++-7"
+        - MATRIX_EVAL="brew update && (brew outdated gcc6 || brew upgrade gcc6) && brew install gcc6 && CC=gcc-6 && CXX=g++-6"
 
 before_install:
   - eval "${MATRIX_EVAL}"

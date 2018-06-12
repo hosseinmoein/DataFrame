@@ -279,6 +279,7 @@ bucketize_async (F &&func, const TimeStamp &bucket_interval) const  {
 
 // ----------------------------------------------------------------------------
 
+#ifdef __unix__
 template<typename TS, template<typename DT, class... types> class DS>
 template<typename S, typename ... types>
 bool DataFrame<TS, DS>::write (S &o, bool values_only) const  {
@@ -297,6 +298,7 @@ bool DataFrame<TS, DS>::write (S &o, bool values_only) const  {
     o << std::endl;
     return (true);
 }
+#endif // __unix__
 
 // ----------------------------------------------------------------------------
 

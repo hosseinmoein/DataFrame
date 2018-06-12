@@ -17,6 +17,7 @@ namespace hmdf
 #define gcc_likely(x)    __builtin_expect(!!(x), 1)
 #define gcc_unlikely(x)  __builtin_expect(!!(x), 0)
 
+#ifdef __unix__
 template<typename TS, template<typename DT, class... types> class DS>
 bool DataFrame<TS, DS>::read (const char *file_name)  {
 
@@ -151,6 +152,7 @@ bool DataFrame<TS, DS>::read (const char *file_name)  {
     file.close();
     return(true);
 }
+#endif // __unix__
 
 // ----------------------------------------------------------------------------
 

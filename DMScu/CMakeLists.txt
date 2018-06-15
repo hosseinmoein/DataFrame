@@ -28,3 +28,9 @@ target_link_libraries(mmfile_tester DMScu)
 install(TARGETS DMScu DESTINATION lib)
 install(DIRECTORY include/ DESTINATION include FILES_MATCHING PATTERN "*.h")
 message(STATUS "-- Configuring DMscu module - done")
+
+# Enable ctest, testing so we can see if unit tests pass or fail in CI
+enable_testing()
+add_test(Filebase_Tester filebase_tester)
+add_test(Fixsizestr_Tester fixsizestr_tester)
+add_test(Mmfile_Tester mmfile_tester)

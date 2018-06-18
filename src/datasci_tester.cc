@@ -29,8 +29,8 @@ struct sort_functor : HeteroVector::visitor_base<int, double, std::string>  {
 
 struct change_functor : HeteroVector::visitor_base<int, double, std::string>  {
 
-    void operator() (auto &val)  {
-
+	template<typename T>
+	void operator() (T &val)  {
         for (int i = 0; i < 10; ++i)
             // val.push_back(
             //    DataFrame<unsigned long, std::vector>::

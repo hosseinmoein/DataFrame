@@ -4,10 +4,11 @@
 // Distributed under the BSD Software License (see file License)
 
 #include <DataFrame.h>
-#ifdef __linux__
+#ifdef __unix__
 #include <DMScu_MMapFile.h>
-#endif // __linux__
+#endif // __unix__
 #include <cstdlib>
+#include <fstream>
 
 // ----------------------------------------------------------------------------
 
@@ -177,18 +178,13 @@ bool DataFrame<TS, DS>::read(const char* file_name)
                     if (c == '\n') break;
             continue;
         }
-        file.put_back(); // TODO: Figure out how and why
-
-        file.get_token(':', value);
+		file.putback(c); // Put back the character after checking if it is #
+		std::string value_str;
+		std::getline(file, value_str, ':');
         if (!::strcmp(value, "INDEX")) {
             TSVec vec;
-
-            while (!file.is_eof()) {
-                c = static_cast<char>(file.get_char());
-                if (gcc_unlikely(c == '\n')) break;
-                file.put_back();
-                file.get_token(',', value);
-                vec.push_back(static_cast<TimeStamp>(atoll(value)));
+            while (std::getline(file, value_str, ',')) {
+                vec.push_back(static_cast<TimeStamp>(atoll(value_str.c_str())));
             }
             load_index(std::forward<TSVec&&>(vec));
         } else {

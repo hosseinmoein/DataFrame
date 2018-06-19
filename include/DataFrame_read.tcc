@@ -4,9 +4,9 @@
 // Distributed under the BSD Software License (see file License)
 
 #include <DataFrame.h>
-#ifdef __unix__
+#if defined(__linux__) || defined(__unix__) || defined(__APPLE__)
 #include <DMScu_MMapFile.h>
-#endif // __unix__
+#endif // defined(__linux__) || defined(__unix__) || defined(__APPLE__)
 #include <cstdlib>
 #include <fstream>
 
@@ -18,7 +18,7 @@ namespace hmdf
 #define gcc_likely(x)    __builtin_expect(!!(x), 1)
 #define gcc_unlikely(x)  __builtin_expect(!!(x), 0)
 
-#ifdef __unix__
+#if defined(__linux__) || defined(__unix__) || defined(__APPLE__)
 template<typename TS, template<typename DT, class... types> class DS>
 bool DataFrame<TS, DS>::read (const char *file_name)  {
 
@@ -153,7 +153,7 @@ bool DataFrame<TS, DS>::read (const char *file_name)  {
     file.close();
     return(true);
 }
-#endif // __unix__
+#endif // defined(__linux__) || defined(__unix__) || defined(__APPLE__)
 
 #ifdef _WIN32
 template <typename TS, template <typename DT, class... types> class DS>

@@ -190,7 +190,6 @@ bool DataFrame<TS, DS>::read(const char* file_name)
         }
 		file.unget();
         value_str = get_token(':', file);
-		std::cout << "Token parsed was " << value_str << "\n";
         if (value_str == "INDEX") {
             TSVec vec;
             while (file.get(c)) {
@@ -203,12 +202,11 @@ bool DataFrame<TS, DS>::read(const char* file_name)
             load_index(std::forward<TSVec&&>(vec));
         } else {
             file.get(c);
-			std::cout << "Character parsed was " << c << "\n";
             if (c != '<')
                 throw DataFrameError(
                     "DataFrame::read(): ERROR: Expected "
                     "'<' char to specify column type");
-            type_str = get_token(',', file);
+            type_str = get_token('>', file);
             file.get(c);
             if (c != ':')
                 throw DataFrameError(

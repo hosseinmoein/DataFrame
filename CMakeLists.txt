@@ -37,18 +37,6 @@ set_target_properties(Dataframe PROPERTIES
   LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
   RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
   )
-
-# Build the test binary
-add_executable(datasci_tester src/datasci_tester.cc)
-target_link_libraries(datasci_tester Dataframe) # Link the Dataframe library to the test binary
-
-if (UNIX)
-  # Find pthreads library
-  set(THREADS_PREFER_PTHREAD_FLAG ON)
-  find_package(Threads REQUIRED)
-  target_link_libraries(datasci_tester Threads::Threads)
-endif (UNIX)
-
 # Install the library
 include(GNUInstallDirs)
 set(config_install_dir "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}")
@@ -88,6 +76,16 @@ install(EXPORT Dataframe-targets # Export the targets created above so other pro
   NAMESPACE Dataframe::
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Dataframe
   )
+
+# Build the test binary
+add_executable(datasci_tester src/datasci_tester.cc)
+target_link_libraries(datasci_tester Dataframe) # Link the Dataframe library to the test binary
+if (UNIX)
+  # Find pthreads library
+  set(THREADS_PREFER_PTHREAD_FLAG ON)
+  find_package(Threads REQUIRED)
+  target_link_libraries(datasci_tester Threads::Threads)
+endif (UNIX)
 
 # Enable ctest, testing so we can see if unit tests pass or fail in CI
 enable_testing()

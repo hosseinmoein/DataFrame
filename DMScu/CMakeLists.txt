@@ -1,6 +1,5 @@
 project (DMScu VERSION 1.0.0 LANGUAGES CXX)
 
-message(STATUS "-- Configuring DMscu module")
 set(SOURCE
   src/DMScu_FileBase.cc
   src/DMScu_MMapBase.cc
@@ -22,17 +21,6 @@ set_target_properties(DMScu PROPERTIES
   LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
   RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
   )
-
-# Build the test binary
-add_executable(filebase_tester src/filebase_tester.cc)
-add_executable(fixsizestr_tester src/fixsizestr_tester.cc)
-add_executable(mmfile_tester src/mmfile_tester.cc)
-
-# Link the Dataframe library to the test binary
-target_link_libraries(filebase_tester DMScu)
-target_link_libraries(fixsizestr_tester DMScu)
-target_link_libraries(mmfile_tester DMScu)
-
 # Install the library/module
 include(GNUInstallDirs)
 set(config_install_dir "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}")
@@ -48,7 +36,7 @@ include(CMakePackageConfigHelpers)
 write_basic_package_version_file(
   "${version_config}" COMPATIBILITY SameMajorVersion
   )
-# Configure 'DMScuConfig.cmake'
+# Configure Project 'DMScuConfig.cmake'
 configure_package_config_file(
   "cmake/DMScu-config.cmake.in"
   "${project_config}"
@@ -71,7 +59,14 @@ install(EXPORT DMScu-targets # Export the targets created above so other project
   NAMESPACE DMScu::
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/DMScu
   )
-message(STATUS "-- Configuring DMscu module - done")
+
+# Build the test binary
+add_executable(filebase_tester src/filebase_tester.cc)
+add_executable(fixsizestr_tester src/fixsizestr_tester.cc)
+add_executable(mmfile_tester src/mmfile_tester.cc)
+target_link_libraries(filebase_tester DMScu)
+target_link_libraries(fixsizestr_tester DMScu)
+target_link_libraries(mmfile_tester DMScu)
 
 # Enable ctest, testing so we can see if unit tests pass or fail in CI
 enable_testing()

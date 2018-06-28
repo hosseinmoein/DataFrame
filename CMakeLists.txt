@@ -24,14 +24,6 @@ add_library(Dataframe SHARED ${SOURCE})
 add_library(Dataframe::Dataframe ALIAS Dataframe)
 target_compile_features(Dataframe PUBLIC cxx_std_17)
 target_link_libraries(Dataframe DMScu) # Link DMscu to Dataframe
-target_include_directories(Dataframe
-  PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/DMScu/include>
-  $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include>
-  $<INSTALL_INTERFACE:include>
-  PRIVATE
-  ${CMAKE_CURRENT_SOURCE_DIR}
-  )
 set_target_properties(Dataframe PROPERTIES
   ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
   LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib

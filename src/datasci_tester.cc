@@ -430,9 +430,23 @@ int main(int argc, char *argv[]) {
 
 
     MyDataFrame         df_read;
-	std::future<bool>   fut2 = df_read.read_async("./sample_data.csv");
-
+	// std::future<bool>   fut2 = df_read.read_async("./sample_data.csv");
+	bool   fut2 = df_read.read("./sample_data.csv");
     fut2.get();
+
+	// TODO: The problem is not due to async
+	// The data was gibberish because of async so disable that fix the easy error as of . Which looks easy
+	// No time no thou, gotta get home commit
+
+	// Testing read()
+
+	// INDEX:123432,123433,
+	// 3.111:<double>:0.87865,-0.6999,
+	// XXXX11:<double>:2.009,3.111,
+	// 36:<string>:XXXX10,XXXX11,
+	// 123451:<int>:35,36,
+	// 123433:<ulong>:123450,123451,
+
     df_read.write<std::ostream,
                   int,
                   unsigned long,

@@ -15,7 +15,6 @@ message("-- Copying files for testing - done")
 # Build the DMScu library
 add_library(DMScu SHARED ${SOURCE})
 add_library(DMScu::DMScu ALIAS DMScu)
-target_compile_features(DMScu PUBLIC cxx_std_17)
 set_target_properties(DMScu PROPERTIES
   ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
   LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib

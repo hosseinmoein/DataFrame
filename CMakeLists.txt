@@ -24,7 +24,6 @@ set(SOURCE src/BaseContainer.cc)
 add_definitions(-D DMS_INCLUDE_SOURCE) # Need this for some of the .tcc files to be compiled
 add_library(Dataframe SHARED ${SOURCE})
 add_library(Dataframe::Dataframe ALIAS Dataframe)
-target_compile_features(Dataframe PUBLIC cxx_std_17)
 target_link_libraries(Dataframe DMScu) # Link DMscu to Dataframe
 set_target_properties(Dataframe PROPERTIES
   ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib

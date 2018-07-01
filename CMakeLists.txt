@@ -4,8 +4,6 @@ project (DataFrame)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON) # Produce compile_commands.json
 set(CMAKE_CXX_STANDARD 14) # C++14
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_BUILD_TYPE Debug)
-
 
 message("-- Copying files for testing")
 file(GLOB TEST_DATA "test/*.csv") # Get all txt files into a variable

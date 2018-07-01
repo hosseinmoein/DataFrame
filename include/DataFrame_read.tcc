@@ -190,6 +190,7 @@ bool DataFrame<TS, DS>::read(const char* file_name)
         }
 		file.unget();
         value_str = get_token(':', file);
+		strcpy(value, value_str.c_str()); // This is done so the DS vector created can use the the value char array
         if (value_str == "INDEX") {
             TSVec vec;
             while (file.get(c)) {

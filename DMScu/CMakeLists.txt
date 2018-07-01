@@ -1,5 +1,9 @@
 project (DMScu VERSION 1.0.0 LANGUAGES CXX)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON) # Produce compile_commands.json
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 set(SOURCE
   src/DMScu_FileBase.cc
   src/DMScu_MMapBase.cc

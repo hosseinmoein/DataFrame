@@ -3,6 +3,10 @@ project (Dataframe VERSION 1.0.0 LANGUAGES CXX)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON) # Produce compile_commands.json
 
+if(UNIX)
+  add_subdirectory(DMScu) # Build DMscu module first
+endif (UNIX)
+
 message("-- Copying files for testing")
 file(GLOB TEST_DATA "test/*.csv") # Get all txt files into a variable
 if (UNIX)
@@ -13,8 +17,6 @@ if (MSVC)
   file(COPY ${TEST_DATA} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Release)
 endif(MSVC)
 message("-- Copying files for testing - done")
-
-add_subdirectory(DMScu) # Build DMscu module first
 
 set(SOURCE src/BaseContainer.cc)
 
@@ -28,6 +30,14 @@ set_target_properties(Dataframe PROPERTIES
   ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
   LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
   RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+  )
+target_include_directories(Dataframe
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/DMScu/include>
+  $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+  PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}
   )
 # Install the library
 include(GNUInstallDirs)

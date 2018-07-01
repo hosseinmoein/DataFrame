@@ -4,8 +4,12 @@
 // Distributed under the BSD Software License (see file License)
 
 #include "DataFrame.h"
-#include <DMScu_MMapFile.h>
+#if defined(__linux__) || defined(__unix__) || defined(__APPLE__)
+#include "DMScu_MMapFile.h"
+#endif // defined(__linux__) || defined(__unix__) || defined(__APPLE__)
 #include <cstdlib>
+#include <fstream>
+#include <functional>
 
 // ----------------------------------------------------------------------------
 
@@ -15,6 +19,7 @@ namespace hmdf
 #define gcc_likely(x)    __builtin_expect(!!(x), 1)
 #define gcc_unlikely(x)  __builtin_expect(!!(x), 0)
 
+#if defined(__linux__) || defined(__unix__) || defined(__APPLE__)
 template<typename TS, template<typename DT, class... types> class DS>
 bool DataFrame<TS, DS>::read (const char *file_name)  {
 
@@ -149,14 +154,138 @@ bool DataFrame<TS, DS>::read (const char *file_name)  {
     file.close();
     return(true);
 }
+#endif // defined(__linux__) || defined(__unix__) || defined(__APPLE__)
+
+#ifdef _WIN32
+template <typename TS, template <typename DT, class... types> class DS>
+bool DataFrame<TS, DS>::read(const char* file_name)
+{
+    auto get_token = [](const char& delim, std::ifstream& file) {
+        std::string token;
+        char c;
+        while (file.get(c)) {
+            if (c == delim)
+                break;
+            else
+                token.push_back(c);
+        }
+        return token;
+    };
+    std::ifstream file;
+    file.open(file_name, std::ios::in);  // Open for reading
+    if (!file) {
+        std::cerr << "Unable to open csv file";
+        exit(1);
+    }
+    char value[1024];
+    std::string value_str;  // Store value as a string
+    std::string type_str;  // Store value as a string
+    char c;
+    while (file.get(c)) {
+        if (c == '#' || c == '\n' || c == '\0') {
+            if (c == '#')
+                while (file.get(c))
+                    if (c == '\n') break;
+            continue;
+        }
+		file.unget();
+        value_str = get_token(':', file);
+		strcpy(value, value_str.c_str()); // This is done so the DS vector created can use the the value char array
+        if (value_str == "INDEX") {
+            TSVec vec;
+            while (file.get(c)) {
+                if (c == '\n') break;
+				file.unget();
+                value_str = get_token(',', file);
+                strcpy(value, value_str.c_str());
+                vec.push_back(static_cast<TimeStamp>(atoll(value)));
+            }
+            load_index(std::forward<TSVec&&>(vec));
+        } else {
+            file.get(c);
+            if (c != '<')
+                throw DataFrameError(
+                    "DataFrame::read(): ERROR: Expected "
+                    "'<' char to specify column type");
+            type_str = get_token('>', file);
+            file.get(c);
+            if (c != ':')
+                throw DataFrameError(
+                    "DataFrame::read(): ERROR: Expected "
+                    "':' char to start column values");
+            if (type_str == "double") {
+                DS<double>& vec = create_column<double>(value);
+                while (file.get(c)) {
+                    if (c == '\n') break;
+					file.unget();
+                    value_str = get_token(',', file);
+                    strcpy(value, value_str.c_str());
+                    vec.push_back(atof(value));
+                }
+            } else if (type_str == "int") {
+                DS<int>& vec = create_column<int>(value);
+                while (file.get(c)) {
+                    if (c == '\n') break;
+					file.unget();
+                    value_str = get_token(',', file);
+                    strcpy(value, value_str.c_str());
+                    vec.push_back(atoi(value));
+                }
+            } else if (type_str == "uint") {
+                DS<unsigned int>& vec = create_column<unsigned int>(value);
+                while (file.get(c)) {
+                    if (c == '\n') break;
+					file.unget();
+                    value_str = get_token(',', file);
+                    strcpy(value, value_str.c_str());
+                    vec.push_back(static_cast<unsigned int>(atol(value)));
+                }
+            } else if (type_str == "long") {
+                DS<long>& vec = create_column<long>(value);
+                while (file.get(c)) {
+                    if (c == '\n') break;
+					file.unget();
+                    value_str = get_token(',', file);
+                    strcpy(value, value_str.c_str());
+                    vec.push_back(atol(value));
+                }
+            } else if (type_str == "ulong") {
+                DS<unsigned long>& vec = create_column<unsigned long>(value);
+                while (file.get(c)) {
+                    if (c == '\n') break;
+					file.unget();
+                    value_str = get_token(',', file);
+                    strcpy(value, value_str.c_str());
+                    vec.push_back(static_cast<unsigned long>(atoll(value)));
+                }
+            } else if (type_str == "string") {
+                DS<std::string>& vec = create_column<std::string>(value);
+                while (file.get(c)) {
+                    if (c == '\n') break;
+					file.unget();
+                    value_str = get_token(',', file);
+                    strcpy(value, value_str.c_str());
+                    vec.push_back(value);
+                }
+            } else if (type_str == "bool") {
+                DS<bool>& vec = create_column<bool>(value);
+            } else
+                throw DataFrameError(
+                    "DataFrame::read(): ERROR: Unknown "
+                    "column type");
+        }
+    }
+
+    file.close();
+    return (true);
+}
+#endif  // _WIN32
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, template<typename DT, class... types> class DS>
-std::future<bool> DataFrame<TS, DS>::
-read_async (const char *file_name)  {
-
-    return (std::async(std::launch::async, &DataFrame::read, this, file_name));
+template <typename TS, template <typename DT, class... types> class DS>
+std::future<bool> DataFrame<TS, DS>::read_async(const char *file_name) {
+	return (std::async(std::launch::async, &DataFrame::read, this, file_name));
 }
 
 } // namespace hmdf

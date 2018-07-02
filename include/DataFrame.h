@@ -480,8 +480,12 @@ private:
 
         consistent_functor_ (const size_type s) : size(s)  {   }
 
+#if defined(__linux__) || defined(__unix__) || defined(__APPLE__)
         const DataFrame::size_type  size;
-
+#endif
+#ifdef _WIN32
+		const size_t size;
+#endif
         template<typename T>
         void operator() (T &vec) const;
     };

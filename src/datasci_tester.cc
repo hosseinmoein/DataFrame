@@ -1,4 +1,5 @@
 #include <iostream>
+#include <string>
 #include <typeinfo>
 
 #include "../include/DataFrame.h"

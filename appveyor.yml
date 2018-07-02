@@ -2,7 +2,6 @@ version: '{build}'
 
 image:
   - Visual Studio 2017
-  - Visual Studio 2015
 platform:
   - x64
   - x86
@@ -13,15 +12,13 @@ clone_folder: c:\Repos\source
 
 install:
   - ps: if($env:PLATFORM  -eq 'x64') { $env:arch = ' Win64'; } else { $env:arch = ''; } # Null for x86 builds
-  - ps: if($env:APPVEYOR_BUILD_WORKER_IMAGE  -eq 'Visual Studio 2017') { $env:compiler = 'Visual Studio 15 2017'; }
-  - ps: if($env:APPVEYOR_BUILD_WORKER_IMAGE  -eq 'Visual Studio 2015') { $env:compiler = 'Visual Studio 14 2015'; }
 
 build_script:
   - cd C:\Repos\source\
   - mkdir build
   - cd build
   - cmake --version
-  - cmake C:\Repos\source -G "%compiler%%arch%"
+  - cmake C:\Repos\source -G "Visual Studio 15 2017%arch%"
   - cmake --build . --config "Release"
 
 test_script:

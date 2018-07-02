@@ -190,14 +190,14 @@ bool DataFrame<TS, DS>::read(const char* file_name)
         }
 		file.unget();
         value_str = get_token(':', file);
-		strcpy(value, value_str.c_str()); // This is done so the DS vector created can use the the value char array
+		strcpy_s(value, value_str.c_str()); // This is done so the DS vector created can use the the value char array
         if (value_str == "INDEX") {
             TSVec vec;
             while (file.get(c)) {
                 if (c == '\n') break;
 				file.unget();
                 value_str = get_token(',', file);
-                strcpy(value, value_str.c_str());
+                strcpy_s(value, value_str.c_str());
                 vec.push_back(static_cast<TimeStamp>(atoll(value)));
             }
             load_index(std::forward<TSVec&&>(vec));
@@ -219,7 +219,7 @@ bool DataFrame<TS, DS>::read(const char* file_name)
                     if (c == '\n') break;
 					file.unget();
                     value_str = get_token(',', file);
-                    strcpy(value, value_str.c_str());
+                    strcpy_s(value, value_str.c_str());
                     vec.push_back(atof(value));
                 }
             } else if (type_str == "int") {
@@ -228,7 +228,7 @@ bool DataFrame<TS, DS>::read(const char* file_name)
                     if (c == '\n') break;
 					file.unget();
                     value_str = get_token(',', file);
-                    strcpy(value, value_str.c_str());
+                    strcpy_s(value, value_str.c_str());
                     vec.push_back(atoi(value));
                 }
             } else if (type_str == "uint") {
@@ -237,7 +237,7 @@ bool DataFrame<TS, DS>::read(const char* file_name)
                     if (c == '\n') break;
 					file.unget();
                     value_str = get_token(',', file);
-                    strcpy(value, value_str.c_str());
+                    strcpy_s(value, value_str.c_str());
                     vec.push_back(static_cast<unsigned int>(atol(value)));
                 }
             } else if (type_str == "long") {
@@ -246,7 +246,7 @@ bool DataFrame<TS, DS>::read(const char* file_name)
                     if (c == '\n') break;
 					file.unget();
                     value_str = get_token(',', file);
-                    strcpy(value, value_str.c_str());
+                    strcpy_s(value, value_str.c_str());
                     vec.push_back(atol(value));
                 }
             } else if (type_str == "ulong") {
@@ -255,7 +255,7 @@ bool DataFrame<TS, DS>::read(const char* file_name)
                     if (c == '\n') break;
 					file.unget();
                     value_str = get_token(',', file);
-                    strcpy(value, value_str.c_str());
+                    strcpy_s(value, value_str.c_str());
                     vec.push_back(static_cast<unsigned long>(atoll(value)));
                 }
             } else if (type_str == "string") {
@@ -264,7 +264,7 @@ bool DataFrame<TS, DS>::read(const char* file_name)
                     if (c == '\n') break;
 					file.unget();
                     value_str = get_token(',', file);
-                    strcpy(value, value_str.c_str());
+                    strcpy_s(value, value_str.c_str());
                     vec.push_back(value);
                 }
             } else if (type_str == "bool") {

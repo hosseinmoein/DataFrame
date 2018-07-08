@@ -1,9 +1,10 @@
-cmake_minimum_required (VERSION 3.2)
+cmake_minimum_required (VERSION 3.4)
 project (Dataframe VERSION 1.0.0 LANGUAGES CXX)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON) # Produce compile_commands.json
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+# set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON) # Export all symbols to make the correct DLLs
 
 if(UNIX)
   add_subdirectory(DMScu) # Build DMscu module first
@@ -24,7 +25,12 @@ set(SOURCE src/BaseContainer.cc)
 
 # Build the Dataframe library
 add_definitions(-D DMS_INCLUDE_SOURCE) # Need this for some of the .tcc files to be compiled
-add_library(Dataframe SHARED ${SOURCE})
+if (UNIX)
+  add_library(Dataframe SHARED ${SOURCE})
+endif(UNIX)
+if (MSVC)
+  add_library(Dataframe STATIC ${SOURCE})
+endif(MSVC)
 add_library(Dataframe::Dataframe ALIAS Dataframe)
 if (UNIX)
   target_link_libraries(Dataframe DMScu) # Link DMscu to Dataframe

@@ -43,4 +43,4 @@ script:
  - cd build
  - cmake ..
  - cmake --build . -- -j4
- - ctest
+ - ctest -V --output-on-failure

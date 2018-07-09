@@ -22,4 +22,4 @@ build_script:
   - cmake --build . --config "Release"
 
 test_script:
-  - ctest -C Release
+  - ctest -C Release -V --output-on-failure

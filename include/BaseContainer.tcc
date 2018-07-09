@@ -13,7 +13,7 @@ namespace hmdf
 {
 
 template<typename T, typename V>
-std::unordered_map<const HeteroVector *, V> HeteroVector::items_;
+std::unordered_map<const HeteroVector *, V> HeteroVector::items_{};
 
 // ----------------------------------------------------------------------------
 

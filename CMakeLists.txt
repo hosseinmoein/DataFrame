@@ -12,11 +12,8 @@ endif (UNIX)
 
 message("-- Copying files for testing")
 file(GLOB TEST_DATA "test/*.csv") # Get all txt files into a variable
-if (UNIX)
-  file(COPY ${TEST_DATA} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-endif(UNIX)
+file(COPY ${TEST_DATA} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}) # Ctest require this in the build dir, on all platforms
 if (MSVC)
-  file(COPY ${TEST_DATA} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}) # Ctest require this file to be in the build dir
   file(COPY ${TEST_DATA} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Debug)
   file(COPY ${TEST_DATA} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Release)
 endif(MSVC)

@@ -11,7 +11,7 @@
 #include <cstdlib>
 #include <cstdio>
 
-#include <DMScu_FixedSizeString.h>
+#include "DMScu_FixedSizeString.h"
 
 // ----------------------------------------------------------------------------
 

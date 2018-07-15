@@ -1,0 +1,10 @@
+@PACKAGE_INIT@
+
+if(UNIX)
+  include(CMakeFindDependencyMacro)
+  find_dependency(DMScu REQUIRED)
+endif (UNIX)
+
+if(NOT TARGET Dataframe::Dataframe)
+  include(${CMAKE_CURRENT_LIST_DIR}/Dataframe-targets.cmake)
+endif()

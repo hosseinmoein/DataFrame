@@ -1,8 +1,9 @@
 #include <iostream>
+#include <string>
 #include <typeinfo>
 
-#include <DataFrame.h>
-#include <DFVisitors.h>
+#include "../include/DataFrame.h"
+#include "../include/DFVisitors.h"
 
 using namespace hmdf;
 
@@ -29,8 +30,8 @@ struct sort_functor : HeteroVector::visitor_base<int, double, std::string>  {
 
 struct change_functor : HeteroVector::visitor_base<int, double, std::string>  {
 
-    void operator() (auto &val)  {
-
+	template<typename T>
+	void operator() (T &val)  {
         for (int i = 0; i < 10; ++i)
             // val.push_back(
             //    DataFrame<unsigned long, std::vector>::
@@ -430,9 +431,7 @@ int main(int argc, char *argv[]) {
 
 
     MyDataFrame         df_read;
-    std::future<bool>   fut2 =
-        df_read.read_async("/home/hossein/WindowsShare/Linux/"
-                           "src/DataSci/src/sample_data.csv");
+	std::future<bool>   fut2 = df_read.read_async("./sample_data.csv");
 
     fut2.get();
     df_read.write<std::ostream,

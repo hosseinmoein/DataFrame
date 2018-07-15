@@ -16,8 +16,8 @@
 #include <errno.h>
 #include <strings.h>
 
-#include <DMScu_Exception.h>
-#include <DMScu_FileDef.h>
+#include "DMScu_Exception.h"
+#include "DMScu_FileDef.h"
 
 // ----------------------------------------------------------------------------
 

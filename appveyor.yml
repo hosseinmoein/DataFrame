@@ -1,0 +1,25 @@
+version: '{build}'
+
+image:
+  - Visual Studio 2017
+platform:
+  - x64
+  - x86
+
+test: off
+
+clone_folder: c:\Repos\source
+
+install:
+  - ps: if($env:PLATFORM  -eq 'x64') { $env:arch = ' Win64'; } else { $env:arch = ''; } # Null for x86 builds
+
+build_script:
+  - cd C:\Repos\source\
+  - mkdir build
+  - cd build
+  - cmake --version
+  - cmake C:\Repos\source -G "Visual Studio 15 2017%arch%"
+  - cmake --build . --config "Release"
+
+test_script:
+  - ctest -C Release --output-on-failure

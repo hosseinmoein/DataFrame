@@ -3,7 +3,7 @@
 // Copyright (C) 2017-2018 Hossein Moein
 // Distributed under the BSD Software License (see file License)
 
-#include <BaseContainer.h>
+#include "BaseContainer.h"
 #include <type_traits>
 #include <limits>
 
@@ -12,8 +12,15 @@
 namespace hmdf
 {
 
+#if defined(__linux__) || defined(__unix__) || defined(__APPLE__)
 template<typename T, typename V>
 std::unordered_map<const HeteroVector *, V> HeteroVector::items_;
+#endif // defined(__linux__) || defined(__unix__) || defined(__APPLE__)
+
+#ifdef _WIN32
+template<typename T, typename V>
+std::unordered_map<const HeteroVector *, V> HeteroVector::items_{};
+#endif // _WIN32
 
 // ----------------------------------------------------------------------------
 
@@ -252,4 +259,3 @@ const T &HeteroVector::front() const  { return (get_vec<T, V>().front ()); }
 // tab-width:4
 // c-basic-offset:4
 // End:
-

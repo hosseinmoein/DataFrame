@@ -7,7 +7,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include <DMScu_MMapBase.h>
+#include "../include/DMScu_MMapBase.h"
 
 // ----------------------------------------------------------------------------
 

@@ -150,13 +150,9 @@ add_test(NAME datasci_tester
          WORKING_DIRECTORY $<TARGET_FILE_DIR:datasci_tester>)
 
 message("-- Copying files for testing")
-# List of test data files
-set(${TEST_DATA}
-  test/sample_data.csv
-  )
-file(COPY ${TEST_DATA} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}) # Ctest require this in the build dir, on all platforms
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data.csv DESTINATION ${CMAKE_CURRENT_BINARY_DIR}) # Ctest require this in the build dir, on all platforms
 if (MSVC)
-  file(COPY ${TEST_DATA} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Debug)
-  file(COPY ${TEST_DATA} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Release)
+  file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data.csv DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Debug)
+  file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data.csv DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Release)
 endif(MSVC)
 message("-- Copying files for testing - done")

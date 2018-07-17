@@ -1,9 +1,9 @@
-cmake_minimum_required (VERSION 3.5)
+ cmake_minimum_required (VERSION 3.5)
 project (Dataframe
          VERSION 1.0.0)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON) # Produce compile_commands.json
-# set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
@@ -14,8 +14,6 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 # See https://github.com/robotology/ycm/
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
-include(GNUInstallDirs)
-
 # Control where libraries and executables are placed during the build.
 # With the following settings executables are placed in <the top level of the
 # build tree>/bin and libraries/archives in <top level of the build tree>/lib.
@@ -23,6 +21,7 @@ include(GNUInstallDirs)
 # machines: tests, which are executables, are placed in the same folders of
 # dlls, which are treated as executables as well, so that they can properly
 # find the libraries to run. This is a because of missing RPATH on Windows.
+include(GNUInstallDirs)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}")
@@ -146,13 +145,18 @@ endif (UNIX)
 
 # Enable ctest, testing so we can see if unit tests pass or fail in CI
 enable_testing()
-add_test(Datasci_Tester datasci_tester)
+add_test(NAME datasci_tester
+         COMMAND datasci_tester
+         WORKING_DIRECTORY $<TARGET_FILE_DIR:datasci_tester>)
 
-# message("-- Copying files for testing")
-# file(GLOB TEST_DATA "test/*.csv") # Get all txt files into a variable
-# file(COPY ${TEST_DATA} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}) # Ctest require this in the build dir, on all platforms
-# if (MSVC)
-#   file(COPY ${TEST_DATA} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Debug)
-#   file(COPY ${TEST_DATA} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Release)
-# endif(MSVC)
-# message("-- Copying files for testing - done")
+message("-- Copying files for testing")
+# List of test data files
+set(${TEST_DATA}
+  test/sample_data.csv
+  )
+file(COPY ${TEST_DATA} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}) # Ctest require this in the build dir, on all platforms
+if (MSVC)
+  file(COPY ${TEST_DATA} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Debug)
+  file(COPY ${TEST_DATA} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Release)
+endif(MSVC)
+message("-- Copying files for testing - done")

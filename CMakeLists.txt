@@ -6,6 +6,12 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON) # Produce compile_commands.json
 # set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+# We use
+# - InstallBasicPackageFiles (http://robotology.github.io/ycm/gh-pages/v0.8/module/InstallBasicPackageFiles.html)
+# - AddUninstallTarget (http://robotology.github.io/ycm/gh-pages/v0.8/module/AddUninstallTarget.html)
+# - AddInstallRPATHSupport (http://robotology.github.io/ycm/gh-pages/v0.8/module/AddInstallRPATHSupport.html)
+# See https://github.com/robotology/ycm/
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 include(GNUInstallDirs)
@@ -35,6 +41,15 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}"
 set(CMAKE_C_EXTENSIONS OFF)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# Encourage user to specify a build type (e.g. Release, Debug, etc.), otherwise set it to Release.
+if(NOT CMAKE_CONFIGURATION_TYPES)
+    if(NOT CMAKE_BUILD_TYPE)
+        message(STATUS "Setting build type to 'Release' as none was specified.")
+        set_property(CACHE CMAKE_BUILD_TYPE PROPERTY VALUE "Release")
+    endif()
+endif()
+
+# Build the DMScu module first
 if(UNIX)
   add_subdirectory(DMScu) # Build DMscu module first
 endif (UNIX)
@@ -64,15 +79,13 @@ set(${LIBRARY_TARGET_NAME}_HDR
 # Build the library
 add_definitions(-D DMS_INCLUDE_SOURCE) # Need this for some of the .tcc files to be compiled
 if (UNIX)
-  add_library(Dataframe SHARED ${SOURCE})
+  add_library(${LIBRARY_TARGET_NAME} SHARED ${${LIBRARY_TARGET_NAME}_SRC})
+  target_link_libraries(${LIBRARY_TARGET_NAME} DMScu) # Link DMscu to Dataframe
 endif(UNIX)
+
 if (MSVC)
-  add_library(Dataframe STATIC ${SOURCE})
+  add_library(${LIBRARY_TARGET_NAME} STATIC ${${LIBRARY_TARGET_NAME}_SRC})
 endif(MSVC)
-add_library(Dataframe::Dataframe ALIAS Dataframe)
-if (UNIX)
-  target_link_libraries(Dataframe DMScu) # Link DMscu to Dataframe
-endif (UNIX)
 
 
 # Set two minimum target properties for the library.

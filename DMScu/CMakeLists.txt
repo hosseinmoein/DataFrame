@@ -88,5 +88,5 @@ add_test(NAME mmfile_tester
          WORKING_DIRECTORY $<TARGET_FILE_DIR:mmfile_tester>)
 
 message("-- Copying files for testing")
-file(COPY src/DMScu_FileBase.cc DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin)
+file(COPY src/DMScu_FileBase.cc DESTINATION ${CMAKE_BINARY_DIR}/bin)
 message("-- Copying files for testing - done")

@@ -54,7 +54,6 @@ if(UNIX)
 endif (UNIX)
 
 set(LIBRARY_TARGET_NAME ${PROJECT_NAME})
-message("Lib target name ${LIBRARY_TARGET_NAME}")
 
 # List of source files.
 set(${LIBRARY_TARGET_NAME}_SRC
@@ -96,7 +95,6 @@ set_target_properties(${LIBRARY_TARGET_NAME} PROPERTIES VERSION       ${${PROJEC
 # Specify include directories for both compilation and installation process.
 # The $<INSTALL_PREFIX> generator expression is useful to ensure to create 
 # relocatable configuration files, see https://cmake.org/cmake/help/latest/manual/cmake-packages.7.html#creating-relocatable-packages
-
 target_include_directories(${LIBRARY_TARGET_NAME} PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
                                                          "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/DMScu/include>"
 							 "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_INCLUDEDIR}>")

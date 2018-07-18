@@ -1,67 +1,71 @@
 project (DMScu VERSION 1.0.0 LANGUAGES CXX)
 
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON) # Produce compile_commands.json
-set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(LIBRARY_TARGET_NAME ${PROJECT_NAME})
 
 set(SOURCE
+  )
+
+# List of source files.
+set(${LIBRARY_TARGET_NAME}_SRC
   src/DMScu_FileBase.cc
   src/DMScu_MMapBase.cc
   src/DMScu_MMapFile.cc
   )
 
-message("-- Copying files for testing")
-if (UNIX)
-  file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/src/DMScu_FileBase.cc DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-endif(UNIX)
-message("-- Copying files for testing - done")
+# List of header files.
+set(${LIBRARY_TARGET_NAME}_HDR
+  include/DMScu_Exception.h
+  include/DMScu_FileBase.h
+  include/DMScu_FileDef.h
+  include/DMScu_FixedSizeString.h
+  include/DMScu_MMapBase.h
+  include/DMScu_MMapFile.h
+)
 
 # Build the DMScu library
-add_library(DMScu SHARED ${SOURCE})
-add_library(DMScu::DMScu ALIAS DMScu)
-set_target_properties(DMScu PROPERTIES
-  ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
-  LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
-  RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-  )
-# Install the library/module
-include(GNUInstallDirs)
-set(config_install_dir "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}")
-set(generated_dir "${CMAKE_CURRENT_BINARY_DIR}/generated")
-# Configuration
-set(version_config "${generated_dir}/${PROJECT_NAME}ConfigVersion.cmake")
-set(project_config "${generated_dir}/${PROJECT_NAME}Config.cmake")
-set(TARGETS_EXPORT_NAME "${PROJECT_NAME}Targets")
-set(namespace "${PROJECT_NAME}::")
-# Include module with fuction 'write_basic_package_version_file'
-include(CMakePackageConfigHelpers)
-# Configure 'DMScuConfigVersion.cmake'
-write_basic_package_version_file(
-  "${version_config}" COMPATIBILITY SameMajorVersion
-  )
-# Configure Project 'DMScuConfig.cmake'
-configure_package_config_file(
-  "cmake/DMScu-config.cmake.in"
-  "${project_config}"
-  INSTALL_DESTINATION "${config_install_dir}"
-  )
-install(TARGETS DMScu # Configure targets to be exported and install the library
-  EXPORT DMScu-targets
-  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-  INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
-  )
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} FILES_MATCHING PATTERN "*.h")
-install(
-  FILES "${project_config}" "${version_config}" # Copy the library config files so other projects using cmake can find DMScu
-  DESTINATION "${config_install_dir}"
-  )
-install(EXPORT DMScu-targets # Export the targets created above so other project can find DMScu
-  FILE DMScu-targets.cmake
-  NAMESPACE DMScu::
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/DMScu
-  )
+add_library(${LIBRARY_TARGET_NAME} SHARED ${${LIBRARY_TARGET_NAME}_SRC})
+
+# Set two minimum target properties for the library.
+# See https://cmake.org/cmake/help/latest/command/set_target_properties.html
+# Properties are: 1) Library version number 2) list of corresponding public headers
+set_target_properties(${LIBRARY_TARGET_NAME} PROPERTIES VERSION       ${${PROJECT_NAME}_VERSION}
+                                                        PUBLIC_HEADER "${${LIBRARY_TARGET_NAME}_HDR}")
+
+# Specify include directories for both compilation and installation process.
+# The $<INSTALL_PREFIX> generator expression is useful to ensure to create 
+# relocatable configuration files, see https://cmake.org/cmake/help/latest/manual/cmake-packages.7.html#creating-relocatable-packages
+target_include_directories(${LIBRARY_TARGET_NAME} PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+							 "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_INCLUDEDIR}>")
+
+# Specify installation targets, typology and destination folders.
+install(TARGETS ${LIBRARY_TARGET_NAME}
+        EXPORT  ${PROJECT_NAME}
+        LIBRARY       DESTINATION "${CMAKE_INSTALL_LIBDIR}"                            COMPONENT shlib
+        ARCHIVE       DESTINATION "${CMAKE_INSTALL_LIBDIR}"                            COMPONENT lib
+        RUNTIME       DESTINATION "${CMAKE_INSTALL_BINDIR}"                            COMPONENT bin
+        PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${LIBRARY_TARGET_NAME}" COMPONENT dev)
+
+# Create and install CMake configuration files for your project that are
+# necessary to for other projects to call find_package().
+#
+# Note that it is extremely important to use exactly the project name while installing configuration
+# files (you can use PROJECT_NAME variable to avoid any possible error). This is required to allow
+# find_package() to properly look for the installed library in system path, in particular in Windows
+# when the installation is performed in the default path.
+#
+# install_basic_package_files() comes with many input parameters to customize the configuration
+# files. The parameters used in the following call provide basic versions of CMake configuration
+# files.  See install_basic_package_files() documentation found in ./cmake folder.
+#
+# Note that if your library depends from other libraries, you are probably
+# required to used the install_basic_package_files() DEPENDENCIES option.
+include(InstallBasicPackageFiles)
+install_basic_package_files(${PROJECT_NAME}
+                            VERSION ${${PROJECT_NAME}_VERSION}
+                            COMPATIBILITY AnyNewerVersion
+                            EXPORT ${PROJECT_NAME}
+                            VARS_PREFIX ${PROJECT_NAME}
+                            NO_CHECK_REQUIRED_COMPONENTS_MACRO)
 
 # Build the test binary
 add_executable(filebase_tester src/filebase_tester.cc)
@@ -73,6 +77,16 @@ target_link_libraries(mmfile_tester DMScu)
 
 # Enable ctest, testing so we can see if unit tests pass or fail in CI
 enable_testing()
-add_test(Filebase_Tester filebase_tester)
-add_test(Fixsizestr_Tester fixsizestr_tester)
-add_test(Mmfile_Tester mmfile_tester)
+add_test(NAME filebase_tester
+         COMMAND filebase_tester
+         WORKING_DIRECTORY $<TARGET_FILE_DIR:filebase_tester>)
+add_test(NAME fixsizestr_tester
+         COMMAND fixsizestr_tester
+         WORKING_DIRECTORY $<TARGET_FILE_DIR:fixsizestr_tester>)
+add_test(NAME mmfile_tester
+         COMMAND mmfile_tester
+         WORKING_DIRECTORY $<TARGET_FILE_DIR:mmfile_tester>)
+
+message("-- Copying files for testing")
+file(COPY src/DMScu_FileBase.cc DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin)
+message("-- Copying files for testing - done")

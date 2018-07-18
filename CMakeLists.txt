@@ -40,6 +40,13 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}"
 set(CMAKE_C_EXTENSIONS OFF)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# Enable RPATH support for installed binaries and libraries
+include(AddInstallRPATHSupport)
+add_install_rpath_support(BIN_DIRS "${CMAKE_INSTALL_FULL_LIBDIR}"
+                          LIB_DIRS "${CMAKE_INSTALL_FULL_BINDIR}"
+                          INSTALL_NAME_DIR "${CMAKE_INSTALL_FULL_LIBDIR}"
+                          USE_LINK_PATH)
+
 # Encourage user to specify a build type (e.g. Release, Debug, etc.), otherwise set it to Release.
 if(NOT CMAKE_CONFIGURATION_TYPES)
     if(NOT CMAKE_BUILD_TYPE)
@@ -122,12 +129,24 @@ install(TARGETS ${LIBRARY_TARGET_NAME}
 # Note that if your library depends from other libraries, you are probably
 # required to used the install_basic_package_files() DEPENDENCIES option.
 include(InstallBasicPackageFiles)
-install_basic_package_files(${PROJECT_NAME}
+if (UNIX)
+  install_basic_package_files(${PROJECT_NAME}
+                            VERSION ${${PROJECT_NAME}_VERSION}
+                            DEPENDENCIES "DMScu REQUIRED"
+                            COMPATIBILITY AnyNewerVersion
+                            EXPORT ${PROJECT_NAME}
+                            VARS_PREFIX ${PROJECT_NAME}
+                            NO_CHECK_REQUIRED_COMPONENTS_MACRO)
+endif (UNIX)
+if (MSVC)
+  install_basic_package_files(${PROJECT_NAME}
                             VERSION ${${PROJECT_NAME}_VERSION}
                             COMPATIBILITY AnyNewerVersion
                             EXPORT ${PROJECT_NAME}
                             VARS_PREFIX ${PROJECT_NAME}
                             NO_CHECK_REQUIRED_COMPONENTS_MACRO)
+endif(MSVC)
+
 # Add the uninstall target
 include(AddUninstallTarget)
 

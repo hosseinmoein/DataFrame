@@ -4,7 +4,8 @@
 
 
 # DataFrame
-This is a C++ statistical library to provide an interface similar to Pandas package in Python
+This is a C++ statistical library to provide an interface similar to Pandas package in Python<BR>
+For documentation, please see the **DataFrameDoc** file
 
 
 # Installing using CMake
@@ -21,5 +22,3 @@ make install
 cd build
 make uninstall
 ```
-
-For documentation, please see the DataFrameDoc file

@@ -86,7 +86,7 @@ public:
 private:
 
     template<typename T, typename V = std::vector<T>>
-    static std::unordered_map<const HeteroVector *, V>  items_;
+    static std::unordered_map<const HeteroVector *, V>  vectors_;
 
     std::vector<std::function<void(HeteroVector &)>>    clear_functions_;
     std::vector<std::function<void(const HeteroVector &,

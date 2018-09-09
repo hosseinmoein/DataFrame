@@ -14,12 +14,12 @@ namespace hmdf
 
 #if defined(__linux__) || defined(__unix__) || defined(__APPLE__)
 template<typename T, typename V>
-std::unordered_map<const HeteroVector *, V> HeteroVector::items_;
+std::unordered_map<const HeteroVector *, V> HeteroVector::vectors_;
 #endif // defined(__linux__) || defined(__unix__) || defined(__APPLE__)
 
 #ifdef _WIN32
 template<typename T, typename V>
-std::unordered_map<const HeteroVector *, V> HeteroVector::items_{};
+std::unordered_map<const HeteroVector *, V> HeteroVector::vectors_{};
 #endif // _WIN32
 
 // ----------------------------------------------------------------------------
@@ -27,26 +27,26 @@ std::unordered_map<const HeteroVector *, V> HeteroVector::items_{};
 template<typename T, typename V>
 V &HeteroVector::get_vec()  {
 
-    auto    iter = items_<T>.find (this);
+    auto    iter = vectors_<T>.find (this);
 
     // don't have it yet, so create functions for copying and destroying
-    if (iter == items_<T>.end())  {
+    if (iter == vectors_<T>.end())  {
         clear_functions_.emplace_back (
-            [](HeteroVector &hv) { items_<T>.erase(&hv); });
+            [](HeteroVector &hv) { vectors_<T>.erase(&hv); });
 
         // if someone copies me, they need to call each
         // copy_function and pass themself
         copy_functions_.emplace_back (
             [](const HeteroVector &from, HeteroVector &to)  {
-                items_<T>[&to] = items_<T>[&from];
+                vectors_<T>[&to] = vectors_<T>[&from];
             });
 
         move_functions_.emplace_back (
             [](HeteroVector &from, HeteroVector &to)  {
-                items_<T>[&to] = std::move(items_<T>[&from]);
+                vectors_<T>[&to] = std::move(vectors_<T>[&from]);
             });
 
-        iter = items_<T>.emplace (this, V()).first;
+        iter = vectors_<T>.emplace (this, V()).first;
     }
 
     return (iter->second);
@@ -86,9 +86,9 @@ void HeteroVector::emplace (typename V::const_iterator pos, Args &&... args)  {
 template<typename T, typename U>
 void HeteroVector::visit_impl_help_ (T &visitor)  {
 
-    auto    iter = items_<U>.find (this);
+    auto    iter = vectors_<U>.find (this);
 
-    if (iter != items_<U>.end())
+    if (iter != vectors_<U>.end())
         for (auto &&element : iter->second)
             visitor(element);
 }
@@ -98,9 +98,9 @@ void HeteroVector::visit_impl_help_ (T &visitor)  {
 template<typename T, typename U>
 void HeteroVector::visit_impl_help_ (T &visitor) const  {
 
-    const auto  citer = items_<U>.find (this);
+    const auto  citer = vectors_<U>.find (this);
 
-    if (citer != items_<U>.end())
+    if (citer != vectors_<U>.end())
         for (auto &&element : citer->second)
             visitor(element);
 }
@@ -110,9 +110,9 @@ void HeteroVector::visit_impl_help_ (T &visitor) const  {
 template<typename T, typename U>
 void HeteroVector::sort_impl_help_ (T &functor)  {
 
-    auto    iter = items_<U>.find (this);
+    auto    iter = vectors_<U>.find (this);
 
-    if (iter != items_<U>.end())
+    if (iter != vectors_<U>.end())
         std::sort (iter->second.begin(), iter->second.end(), functor);
 }
 
@@ -121,9 +121,9 @@ void HeteroVector::sort_impl_help_ (T &functor)  {
 template<typename T, typename U>
 void HeteroVector::change_impl_help_ (T &functor)  {
 
-    auto    iter = items_<U>.find (this);
+    auto    iter = vectors_<U>.find (this);
 
-    if (iter != items_<U>.end())
+    if (iter != vectors_<U>.end())
         functor(iter->second);
 }
 
@@ -132,9 +132,9 @@ void HeteroVector::change_impl_help_ (T &functor)  {
 template<typename T, typename U>
 void HeteroVector::change_impl_help_ (T &functor) const  {
 
-    const auto  citer = items_<U>.find (this);
+    const auto  citer = vectors_<U>.find (this);
 
-    if (citer != items_<U>.end())
+    if (citer != vectors_<U>.end())
         functor(citer->second);
 }
 

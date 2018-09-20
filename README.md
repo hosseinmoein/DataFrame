@@ -7,6 +7,8 @@
 This is a C++ statistical library to provide an interface similar to Pandas package in Python<BR>
 For documentation, please see the **DataFrameDoc** file
 
+# Documentation
+[Documentation](DataFrameDoc.pdf)
 
 # Installing using CMake
 ```

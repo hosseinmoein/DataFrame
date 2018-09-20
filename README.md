@@ -10,6 +10,9 @@ For documentation, please see the **DataFrameDoc** file
 # Documentation
 [Documentation](DataFrameDoc.pdf)
 
+# Example/Test
+[Test File](src/datasci_tester.cc)
+
 # Installing using CMake
 ```
 mkdir build

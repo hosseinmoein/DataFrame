@@ -93,12 +93,13 @@ std::future<void> DataFrame<TS, DS>::sort_async(const char *by_name)  {
 template<typename TS, template<typename DT, class... types> class DS>
 template<typename F, typename T, typename ... types>
 DataFrame<TS, DS>
-DataFrame<TS, DS>::
-groupby (F &&func, const char *gb_col_name, bool already_sorted) const  {
+DataFrame<TS, DS>:: groupby (F &&func,
+                             const char *gb_col_name,
+                             sort_state already_sorted) const  {
 
     DataFrame   tmp_df = *this;
 
-    if (! already_sorted)
+    if (already_sorted == sort_state::not_sorted)
         if (gb_col_name == nullptr) tmp_df.sort<T, types ...>();
         else tmp_df.sort<T, types ...>(gb_col_name);
 
@@ -162,7 +163,9 @@ groupby (F &&func, const char *gb_col_name, bool already_sorted) const  {
                                             df);
 
                 ts_functor(tmp_df.timestamps_);
-                df.append_column<T>(gb_col_name, gb_vec [marker], false);
+                df.append_column<T>(gb_col_name,
+                                    gb_vec [marker],
+                                    nan_policy::dont_pad_with_nans);
                 func.reset();
 
                 for (const auto &iter : tmp_df.data_tb_)  {
@@ -194,7 +197,9 @@ groupby (F &&func, const char *gb_col_name, bool already_sorted) const  {
                                         df);
 
             ts_functor(tmp_df.timestamps_);
-            df.append_column<T>(gb_col_name, gb_vec [vec_size - 1], false);
+            df.append_column<T>(gb_col_name,
+                                gb_vec [vec_size - 1],
+                                nan_policy::dont_pad_with_nans);
             func.reset();
 
             for (const auto &iter : tmp_df.data_tb_)  {
@@ -221,8 +226,9 @@ groupby (F &&func, const char *gb_col_name, bool already_sorted) const  {
 template<typename TS, template<typename DT, class... types> class DS>
 template<typename F, typename T, typename ... types>
 std::future<DataFrame<TS, DS>>
-DataFrame<TS, DS>::
-groupby_async (F &&func, const char *gb_col_name, bool already_sorted) const  {
+DataFrame<TS, DS>::groupby_async (F &&func,
+                                  const char *gb_col_name,
+                                  sort_state already_sorted) const  {
 
     return (std::async(std::launch::async,
                        &DataFrame::groupby<F, T, types ...>,

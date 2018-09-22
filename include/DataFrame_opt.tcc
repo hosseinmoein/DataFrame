@@ -37,9 +37,9 @@ bool DataFrame<TS, DS>::is_equal (const DataFrame &rhs) const  {
 template<typename TS, template<typename DT, class... types> class DS>
 template<typename ... types>
 DataFrame<TS, DS> &DataFrame<TS, DS>::
-modify_by_idx (DataFrame &rhs, bool already_sorted)  {
+modify_by_idx (DataFrame &rhs, sort_state already_sorted)  {
 
-    if (! already_sorted)  {
+    if (already_sorted == sort_state::not_sorted)  {
         rhs.sort<TimeStamp, types ...>();
         sort<TimeStamp, types ...>();
     }

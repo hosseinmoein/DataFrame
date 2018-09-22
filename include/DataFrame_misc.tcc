@@ -61,7 +61,7 @@ DataFrame<TS, DS>::load_functor_<Ts ...>::operator() (const T &vec)  {
     df.load_column<ValueType>(name,
                               vec.begin() + begin,
                               vec.begin() + end,
-                              true);
+                              nan_policy::pad_with_nans);
     return;
 }
 
@@ -104,7 +104,7 @@ DataFrame<TS, DS>::groupby_functor_<F, Ts ...>::operator() (const T &vec)  {
         ValueType   v;
 
         functor.get_value(v);
-        df.append_column<ValueType>(name, v, false);
+        df.append_column<ValueType>(name, v, nan_policy::dont_pad_with_nans);
     }
 
     return;
@@ -136,7 +136,7 @@ DataFrame<TS, DS>::bucket_functor_<F, Ts ...>::operator() (const T &vec)  {
             ValueType   v;
 
             functor.get_value(v);
-            df.append_column<ValueType>(name, v, false);
+            df.append_column<ValueType>(name, v, nan_policy::dont_pad_with_nans);
             functor.reset();
             marker = i;
         }
@@ -217,11 +217,11 @@ mod_by_idx_functor_<Ts ...>::operator() (DS<T> &lhs_vec) const  {
 
     const auto  &iter = rhs_df.data_tb_.find(name);
 
-	if (iter != rhs_df.data_tb_.end())  {
+    if (iter != rhs_df.data_tb_.end())  {
         const DS<T> &rhs_vec = rhs_df.get_column<T>(name);
 
-		lhs_vec[lhs_idx] = rhs_vec[rhs_idx];
-	}
+        lhs_vec[lhs_idx] = rhs_vec[rhs_idx];
+    }
 }
 
 // ----------------------------------------------------------------------------

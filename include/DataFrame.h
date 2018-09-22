@@ -18,32 +18,42 @@
 namespace hmdf
 {
 
+struct DataFrameError : public std::runtime_error  {
+
+    DataFrameError (const char *name) : std::runtime_error (name)  {   }
+};
+struct ColNotFound : public DataFrameError  {
+
+    ColNotFound (const char *name) : DataFrameError (name)  {   }
+};
+struct InconsistentData : public DataFrameError  {
+
+    InconsistentData (const char *name) : DataFrameError (name)  {   }
+};
+struct NotImplemented : public DataFrameError  {
+
+    NotImplemented (const char *name) : DataFrameError (name)  {   }
+};
+
+// ----------------------------------------------------------------------------
+
+enum class nan_policy : bool  {
+    pad_with_nans = true,
+    dont_pad_with_nans = false
+};
+
+enum class sort_state : bool  {
+    sorted = true,
+    not_sorted = false
+};
+
+// ----------------------------------------------------------------------------
+
 // DS is a data storage container. It must have an interface partly identical
 // to std::vector
 //
 template<typename TS, template<typename DT, class... types> class DS>
 class DataFrame  {
-
-public:
-
-    struct DataFrameError : public std::runtime_error  {
-
-        DataFrameError (const char *name) : std::runtime_error (name)  {   }
-    };
-    struct ColNotFound : public DataFrameError  {
-
-        ColNotFound (const char *name) : DataFrameError (name)  {   }
-    };
-    struct InconsistentData : public DataFrameError  {
-
-        InconsistentData (const char *name) : DataFrameError (name)  {   }
-    };
-    struct NotImplemented : public DataFrameError  {
-
-        NotImplemented (const char *name) : DataFrameError (name)  {   }
-    };
-
-private:
 
     using DataVec = HeteroVector;
     using DataVecVec = DS<DataVec>;
@@ -90,7 +100,7 @@ public:  // Load/append interfaces
     //       Each pair, represents a column data and its name
     //
     template<typename ... Ts>
-    size_type load_data (TSVec &&indices, Ts ... args);
+    size_type load_data (TSVec &&indices, Ts&& ... args);
 
     // It copies the data from iterators begin to end into the index column
     //
@@ -109,26 +119,28 @@ public:  // Load/append interfaces
     // T: Type of data being copied
     // ITR: Type of the iterator
     // name: Name of the column
-    // pad_with_nan: If true, it pads the data column with nan,
-    //               if it is shorter than the index column.
+    // padding: If true, it pads the data column with nan,
+    //          if it is shorter than the index column.
     //
     template<typename T, typename ITR>
     size_type load_column(const char *name,
                           const ITR &begin,
                           const ITR &end,
-                          bool pad_with_nan = true);
+                          nan_policy padding = nan_policy::pad_with_nans);
     // It moves the data to the named column in DataFrame.
     // If column does not exist, it will be created. If the column exist,
     // it will be over written.
     //
     // T: Type of data being moved
     // name: Name of the column
-    // pad_with_nan: If true, it pads the data column with nan,
-    //               if it is shorter than the index column.
+    // padding: If true, it pads the data column with nan,
+    //          if it is shorter than the index column.
     //
     template<typename T>
     size_type
-    load_column(const char *name, DS<T> &&data, bool pad_with_nan = true);
+    load_column(const char *name,
+                DS<T> &&data,
+                nan_policy padding = nan_policy::pad_with_nans);
 
     // It appends val to the end of the index column.
     //
@@ -138,13 +150,13 @@ public:  // Load/append interfaces
     //
     // T: Type of the named data column
     // name: Name of the column
-    // pad_with_nan: If true, it pads the data column with nan,
-    //               if it is shorter than the index column.
+    // padding: If true, it pads the data column with nan,
+    //          if it is shorter than the index column.
     //
     template<typename T>
     size_type append_column(const char *name,
                             const T &val,
-                            bool pad_with_nan = true);
+                            nan_policy padding = nan_policy::pad_with_nans);
 
     // It appends the range begin to end to the end of the index column
     //
@@ -158,14 +170,14 @@ public:  // Load/append interfaces
     // T: Type of the named data column
     // ITR: Type of the iterator
     // name: Name of the column
-    // pad_with_nan: If true, it pads the data column with nan,
-    //               if it is shorter than the index column.
+    // padding: If true, it pads the data column with nan,
+    //          if it is shorter than the index column.
     //
     template<typename T, typename ITR>
     size_type append_column(const char *name,
                             const ITR &begin,
                             const ITR &end,
-                            bool pad_with_nan = true);
+                            nan_policy padding = nan_policy::pad_with_nans);
 
 public:  // Other public interfaces
 
@@ -211,14 +223,14 @@ public:  // Other public interfaces
     template<typename F, typename T, typename ... types>
     DataFrame groupby (F &&func,
                        const char *gb_col_name = nullptr,
-                       bool already_sorted = false) const;
+                       sort_state already_sorted = sort_state::not_sorted) const;
     template<typename F, typename T, typename ... types>
     // Same as groupby() above, but executed asynchronously
     //
     std::future<DataFrame>
     groupby_async (F &&func,
                    const char *gb_col_name = nullptr,
-                   bool already_sorted = false) const;
+                   sort_state already_sorted = sort_state::not_sorted) const;
 
     // It bucketizes the data and index into bucket_interval's,
     // based on index values and calls the functor for each bucket.
@@ -463,7 +475,8 @@ public:  // Operators
     //                 this will save the expensive sort operations
     //
     template<typename ... types>
-    DataFrame &modify_by_idx (DataFrame &rhs, bool already_sorted = false);
+    DataFrame &modify_by_idx (DataFrame &rhs,
+                              sort_state already_sorted = sort_state::not_sorted);
 
 protected:
 

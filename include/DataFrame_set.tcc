@@ -35,7 +35,7 @@ DS<T> &DataFrame<TS, DS>::create_column (const char *name)  {
 template<typename TS, template<typename DT, class... types> class DS>
 template<typename ... Ts>
 typename DataFrame<TS, DS>::size_type
-DataFrame<TS, DS>::load_data (TSVec &&indices, Ts ... args)  {
+DataFrame<TS, DS>::load_data (TSVec &&indices, Ts&& ... args)  {
 
     size_type       cnt = load_index(std::move(indices));
 
@@ -104,10 +104,11 @@ DataFrame<TS, DS>::append_index(const TimeStamp &val)  {
 template<typename TS, template<typename DT, class... types> class DS>
 template<typename T, typename ITR>
 typename DataFrame<TS, DS>::size_type
-DataFrame<TS, DS>::load_column (const char *name,
-                                const ITR &begin,
-                                const ITR &end,
-                                bool pad_with_nan)  {
+DataFrame<TS, DS>::
+load_column (const char *name,
+             const ITR &begin,
+             const ITR &end,
+             nan_policy padding)  {
 
     size_type s = std::distance(begin, end);
     const size_type idx_s = timestamps_.size();
@@ -139,7 +140,7 @@ DataFrame<TS, DS>::load_column (const char *name,
     size_type   ret_cnt = s;
 
     s = vec_ptr->size();
-    if (pad_with_nan && s < idx_s)  {
+    if (padding == nan_policy::pad_with_nans && s < idx_s)  {
         for (size_type i = 0; i < idx_s - s; ++i)  {
             vec_ptr->push_back (std::move(_get_nan<T>()));
             ret_cnt += 1;
@@ -155,7 +156,7 @@ template<typename TS, template<typename DT, class... types> class DS>
 template<typename T>
 typename DataFrame<TS, DS>::size_type
 DataFrame<TS, DS>::
-load_column (const char *name, DS<T> &&data, bool pad_with_nan)  {
+load_column (const char *name, DS<T> &&data, nan_policy padding)  {
 
     const size_type idx_s = timestamps_.size();
     const size_type data_s = data.size();
@@ -171,7 +172,7 @@ load_column (const char *name, DS<T> &&data, bool pad_with_nan)  {
 
     size_type   ret_cnt = data_s;
 
-    if (pad_with_nan && data_s < idx_s)  {
+    if (padding == nan_policy::pad_with_nans && data_s < idx_s)  {
         for (size_type i = 0; i < idx_s - data_s; ++i)  {
             data.push_back (std::move(_get_nan<T>()));
             ret_cnt += 1;
@@ -203,7 +204,7 @@ DataFrame<TS, DS>::_load_pair(std::pair<T1, T2> &col_name_data)  {
     return (load_column<typename decltype(col_name_data.second)::value_type>(
                 col_name_data.first, // column name
                 std::move(col_name_data.second),
-                true));
+                nan_policy::pad_with_nans));
 }
 
 // ----------------------------------------------------------------------------
@@ -214,7 +215,7 @@ typename DataFrame<TS, DS>::size_type
 DataFrame<TS, DS>::append_column (const char *name,
                                   const ITR &begin,
                                   const ITR &end,
-                                  bool pad_with_nan)  {
+                                  nan_policy padding)  {
 
     const auto  iter = data_tb_.find (name);
 
@@ -248,7 +249,7 @@ DataFrame<TS, DS>::append_column (const char *name,
     size_type   ret_cnt = s;
 
     s = vec.size();
-    if (pad_with_nan && s < idx_s)  {
+    if (padding == nan_policy::pad_with_nans && s < idx_s)  {
         for (size_type i = 0; i < idx_s - s; ++i)  {
             vec.push_back (std::move(_get_nan<T>()));
             ret_cnt += 1;
@@ -264,7 +265,7 @@ template<typename TS, template<typename DT, class... types> class DS>
 template<typename T>
 typename DataFrame<TS, DS>::size_type
 DataFrame<TS, DS>::
-append_column (const char *name, const T &val, bool pad_with_nan)  {
+append_column (const char *name, const T &val, nan_policy padding)  {
 
     const auto  iter = data_tb_.find (name);
 
@@ -298,7 +299,7 @@ append_column (const char *name, const T &val, bool pad_with_nan)  {
     size_type   ret_cnt = s;
 
     s = vec.size();
-    if (pad_with_nan && s < idx_s)  {
+    if (padding == nan_policy::pad_with_nans && s < idx_s)  {
         for (size_type i = 0; i < idx_s - s; ++i)  {
             vec.push_back (std::move(_get_nan<T>()));
             ret_cnt += 1;

@@ -30,8 +30,8 @@ struct sort_functor : HeteroVector::visitor_base<int, double, std::string>  {
 
 struct change_functor : HeteroVector::visitor_base<int, double, std::string>  {
 
-	template<typename T>
-	void operator() (T &val)  {
+    template<typename T>
+    void operator() (T &val)  {
         for (int i = 0; i < 10; ++i)
             // val.push_back(
             //    DataFrame<unsigned long, std::vector>::
@@ -150,10 +150,14 @@ int main(int argc, char *argv[]) {
               << std::endl;
 
     df.load_index(ulgvec.begin(), ulgvec.end());
-    df.load_column<int>("int_col", intvec.begin(), intvec.end(), true);
-    df.load_column<std::string>("str_col", strvec.begin(), strvec.end(), true);
-    df.load_column<double>("dbl_col", dblvec.begin(), dblvec.end(), true);
-    df.load_column<double>("dbl_col_2", dblvec2.begin(), dblvec2.end(), false);
+    df.load_column<int>("int_col", intvec.begin(), intvec.end(),
+                        nan_policy::pad_with_nans);
+    df.load_column<std::string>("str_col", strvec.begin(), strvec.end(),
+                                nan_policy::pad_with_nans);
+    df.load_column<double>("dbl_col", dblvec.begin(), dblvec.end(),
+                           nan_policy::pad_with_nans);
+    df.load_column<double>("dbl_col_2", dblvec2.begin(), dblvec2.end(),
+                           nan_policy::dont_pad_with_nans);
 
     df.append_column<std::string>("str_col", "Additional column");
     df.append_column("dbl_col", 10.56);
@@ -431,7 +435,7 @@ int main(int argc, char *argv[]) {
 
 
     MyDataFrame         df_read;
-	std::future<bool>   fut2 = df_read.read_async("./sample_data.csv");
+    std::future<bool>   fut2 = df_read.read_async("./sample_data.csv");
 
     fut2.get();
     df_read.write<std::ostream,

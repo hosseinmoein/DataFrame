@@ -127,6 +127,7 @@ public:  // Load/append interfaces
                           const ITR &begin,
                           const ITR &end,
                           nan_policy padding = nan_policy::pad_with_nans);
+
     // It moves the data to the named column in DataFrame.
     // If column does not exist, it will be created. If the column exist,
     // it will be over written.
@@ -145,6 +146,7 @@ public:  // Load/append interfaces
     // It appends val to the end of the index column.
     //
     size_type append_index(const TimeStamp &val);
+
     // It appends val to the end of the named data column.
     // If data column doesn't exist, it throws an exception.
     //
@@ -164,6 +166,7 @@ public:  // Load/append interfaces
     //
     template<typename ITR>
     size_type append_index(const ITR &begin, const ITR &end);
+
     // It appends the range begin to end to the end of the named data column.
     // If data column doesn't exist, it throws an exception.
     //
@@ -202,6 +205,7 @@ public:  // Other public interfaces
     //
     template<typename T, typename ... types>
     void sort(const char *by_name = nullptr);
+
     // Same as sort() above, but executed asynchronously
     //
     template<typename T, typename ... types>
@@ -221,12 +225,13 @@ public:  // Other public interfaces
     //                 this will save the expensive sort operation
     //
     template<typename F, typename T, typename ... types>
-    DataFrame groupby (F &&func,
-                       const char *gb_col_name = nullptr,
-                       sort_state already_sorted = sort_state::not_sorted) const;
-    template<typename F, typename T, typename ... types>
+    DataFrame groupby(F &&func,
+                      const char *gb_col_name = nullptr,
+                      sort_state already_sorted = sort_state::not_sorted) const;
+
     // Same as groupby() above, but executed asynchronously
     //
+    template<typename F, typename T, typename ... types>
     std::future<DataFrame>
     groupby_async (F &&func,
                    const char *gb_col_name = nullptr,
@@ -256,9 +261,10 @@ public:  // Other public interfaces
     //
     template<typename F, typename ... types>
     DataFrame bucketize (F &&func, const TimeStamp &bucket_interval) const;
-    template<typename F, typename ... types>
+
     // Same as bucketize() above, but executed asynchronously
     //
+    template<typename F, typename ... types>
     std::future<DataFrame>
     bucketize_async (F &&func, const TimeStamp &bucket_interval) const;
 
@@ -286,6 +292,7 @@ public:  // Other public interfaces
     //
     template<typename S, typename ... types>
     bool write (S &o, bool values_only = false) const;
+
     // Same as write() above, but executed asynchronously
     //
     template<typename S, typename ... Ts>
@@ -301,6 +308,7 @@ public:  // Other public interfaces
     // file_name: Complete path to the file
     //
     bool read (const char *file_name);
+
     // Same as read() above, but executed asynchronously
     //
     std::future<bool> read_async (const char *file_name);
@@ -313,6 +321,7 @@ public: // Read/access interfaces
     //
     template<typename T>
     DS<T> &get_column (const char *name);
+
     // It returns a const reference to the container of named data column
     //
     // T: Data type of the named column
@@ -345,6 +354,7 @@ public: // Read/access interfaces
     // It returns a const reference to the index container
     //
     const TSVec &get_index () const  { return (timestamps_); }
+
     // It returns a reference to the index container
     //
     TSVec &get_index ()  { return (timestamps_); }
@@ -475,8 +485,9 @@ public:  // Operators
     //                 this will save the expensive sort operations
     //
     template<typename ... types>
-    DataFrame &modify_by_idx (DataFrame &rhs,
-                              sort_state already_sorted = sort_state::not_sorted);
+    DataFrame &modify_by_idx(
+        DataFrame &rhs,
+        sort_state already_sorted = sort_state::not_sorted);
 
 protected:
 

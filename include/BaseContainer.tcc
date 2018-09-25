@@ -31,6 +31,10 @@ V &HeteroVector::get_vec()  {
 
     // don't have it yet, so create functions for copying and destroying
     if (iter == vectors_<T>.end())  {
+        clear_functions_.reserve(4);
+        copy_functions_.reserve(4);
+        move_functions_.reserve(4);
+
         clear_functions_.emplace_back (
             [](HeteroVector &hv) { vectors_<T>.erase(&hv); });
 

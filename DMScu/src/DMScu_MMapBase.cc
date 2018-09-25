@@ -689,7 +689,7 @@ DMScu_MMapBase &DMScu_MMapBase::operator << (const FILE &fref)  {
     else if ((_file_flags & _s_write_) || (_file_flags & _s_append_))  {
         while (! feof (const_cast<FILE *>(&fref)))  {
             const   int sread =
-                fread (buffer, sizeof (buffer - 1), 1,
+                fread (buffer, sizeof(buffer) - 1, 1,
                        const_cast<FILE *>(&fref));
 
             buffer [sread] = 0;

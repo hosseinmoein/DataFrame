@@ -57,11 +57,14 @@ bool DMScu_FileBase::open ()  {
                                      : (_file_flags & _s_bappend_ ? "ab+"
                                            : "r"))))));
 
-    if (_file_flags & _already_opened_)
-        if (_file_flags & _s_write_)
+    if (_file_flags & _already_opened_)  {
+        if (_file_flags & _s_write_)  {
             om = "r+";
-        else if (_file_flags & _s_bwrite_)
+        }
+        else if (_file_flags & _s_bwrite_)  {
             om = "rb+";
+        }
+    }
 
     if ((stream_ = ::fopen (get_file_name (), om)) != NULL)  {
         struct  stat    stat_data;

@@ -192,8 +192,6 @@ int main (int arg_cnt, char *arg_vctr [])  {
    //
     str28.compare (vstr64);
     vstr64.compare (str28);
-    if (str28 == vstr64);
-    if (vstr64 == str28);
 
     cout << "\n\n-- Testing the replace()\n\n";
     {

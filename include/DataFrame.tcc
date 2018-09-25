@@ -99,9 +99,10 @@ DataFrame<TS, DS>:: groupby (F &&func,
 
     DataFrame   tmp_df = *this;
 
-    if (already_sorted == sort_state::not_sorted)
-        if (gb_col_name == nullptr) tmp_df.sort<T, types ...>();
-        else tmp_df.sort<T, types ...>(gb_col_name);
+    if (already_sorted == sort_state::not_sorted)  {
+        if (gb_col_name == nullptr) { tmp_df.sort<T, types ...>(); }
+        else { tmp_df.sort<T, types ...>(gb_col_name); }
+    }
 
     DataFrame   df;
 

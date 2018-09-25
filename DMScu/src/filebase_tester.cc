@@ -20,7 +20,7 @@ int main (int argCnt, char *argVctr [])  {
         return (EXIT_FAILURE);
     }
 
-    if (WriteFile (fbase_file) < 0)  {
+    if (WriteFile (fbase_file) == false)  {
         printf ("Error in writing\n");
         return (EXIT_FAILURE);
     }
@@ -37,7 +37,7 @@ int main (int argCnt, char *argVctr [])  {
         return (EXIT_FAILURE);
     }
 
-    if (ReadFile (read_file) < 0)  {
+    if (ReadFile (read_file) == false)  {
         printf ("Error in writing\n");
         return (EXIT_FAILURE);
     }
@@ -156,7 +156,7 @@ bool ReadFile (DMScu_FileBase &fbase_file)  {
         }
         catch (DMScu_Exception &ex)  {
             std::cerr << "EXCEPTION: " << ex.what () << std::endl;
-            return -1;
+            return false;
         }
         std::cout << var << std::endl;
     }

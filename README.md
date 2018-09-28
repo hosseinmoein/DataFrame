@@ -14,6 +14,9 @@ For documentation, please see the **DataFrameDoc** file
 # Example/Test
 [Test File](src/datasci_tester.cc)
 
+# Contributions
+[guidance](CONTRIBUTING.md)
+
 # Installing using CMake
 ```
 mkdir build

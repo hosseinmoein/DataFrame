@@ -108,6 +108,7 @@ public:  // Load/append interfaces
     //
     template<typename ITR>
     size_type load_index(const ITR &begin, const ITR &end);
+
     // It moves the idx vector into the index column.
     //
     size_type load_index(TSVec &&idx);
@@ -189,6 +190,9 @@ public:  // Other public interfaces
     // by nan.
     // This is also called by sort(), before sorting
     //
+    // types: List all the types of all data columns.
+    //        A type should be specified in the list only once.
+    //
     template<typename ... types>
     void make_consistent ();
 
@@ -219,8 +223,8 @@ public:  // Other public interfaces
     // T: type of the groupby column. In case if index, it is type of index
     // types: List of the types of all data columns.
     //        A type should be specified in the list only once.
-    // func: The functor to do the groupby. Specs for the functor is
-    //       in a separate doc.
+    // func: The functor to do the groupby. To see an example of func, refer
+    //       to GroupbySum in DFVisitors.h file
     // already_sorted: If the DataFrame is already sorted by gb_col_name,
     //                 this will save the expensive sort operation
     //
@@ -253,11 +257,10 @@ public:  // Other public interfaces
     // F: type functor to be applied to columns to bucketize
     // types: List of the types of all data columns.
     //        A type should be specified in the list only once.
+    // func: The functor to do summarization and bucktization.
     // bucket_interval: Bucket interval is in the index's single value unit.
     //                  For example if index is in minutes, bucket_interval
     //                  will be in the unit of minutes and so on.
-    // already_sorted: If the DataFrame is already sorted by index,
-    //                 this will save the expensive sort operation
     //
     template<typename F, typename ... types>
     DataFrame bucketize (F &&func, const TimeStamp &bucket_interval) const;
@@ -277,6 +280,24 @@ public:  // Other public interfaces
     //
     template<typename F, typename ... types>
     void self_bucketize (F &&func, const TimeStamp &bucket_interval);
+
+    // It transposes the data in the DataFrame.
+    // The transpose() is only defined for DataFrame's that have a single
+    // data type
+    //
+    // T: The single type for all data columns
+    // V: The type of string vector specifying the new names for new columns
+    //    after transpose
+    // idx: A vector on indices/timestamps for the new transposed DataFrame.
+    //      Its length must equal the number of rows in this DataFrame.
+    //      Otherwise an exception is thrown
+    // col_names: A vector of strings, specifying the column names for the
+    //            new transposed DataFrame.
+    //            Its length must equal the number of rows in this DataFrame.
+    //            Otherwise an exception is thrown
+    //
+    template<typename T, typename V>
+    DataFrame transpose(TSVec &&indices, const V &col_names) const;
 
     // It outputs the content of DataFrame into the stream o as text in the
     // following format:

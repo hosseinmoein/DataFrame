@@ -287,6 +287,53 @@ bucketize_async (F &&func, const TimeStamp &bucket_interval) const  {
 // ----------------------------------------------------------------------------
 
 template<typename TS, template<typename DT, class... types> class DS>
+template<typename T, typename V>
+DataFrame<TS, DS>
+DataFrame<TS, DS>::transpose(TSVec &&indices, const V &col_names) const  {
+
+    const size_type             num_cols = data_tb_.size();
+    std::vector<const DS<T> *>  current_cols;
+
+    current_cols.reserve(num_cols);
+    for (const auto citer : data_tb_)  {
+        const DataVec   &hv = data_[citer.second];
+
+        current_cols.push_back(&(hv.get_vec<T, DS<T>>()));
+    }
+
+    if (col_names.size() != timestamps_.size())
+        throw InconsistentData ("DataFrame::transpose(): ERROR: "
+                                "Length of col_names is not equal "
+                                "to number of rows");
+    if (indices.size() != num_cols)
+        throw InconsistentData ("DataFrame::transpose(): ERROR: "
+                                "Length of index is not equal "
+                                "to number of columns");
+
+    std::vector<std::vector<T>> trans_cols(timestamps_.size());
+    DataFrame                   df;
+    size_type                   idx = 0;
+
+    for (size_type i = 0; i < timestamps_.size(); ++i)  {
+        trans_cols[i].reserve(num_cols);
+        for (size_type j = 0; j < num_cols; ++j)  {
+            if (current_cols[j]->size() > i)
+                trans_cols[i].push_back((*(current_cols[j]))[i]);
+            else
+                trans_cols[i].push_back(_get_nan<T>());
+        }
+    }
+
+    df.load_index(std::move(indices));
+    for (size_type i = 0; i < col_names.size(); ++i)
+        df.load_column(col_names[i].c_str(), std::move(trans_cols[i]));
+
+    return (df);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename TS, template<typename DT, class... types> class DS>
 template<typename S, typename ... types>
 bool DataFrame<TS, DS>::write (S &o, bool values_only) const  {
 

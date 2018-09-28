@@ -435,7 +435,7 @@ int main(int argc, char *argv[]) {
 
 
     MyDataFrame         df_read;
-    std::future<bool>   fut2 = df_read.read_async("./sample_data.csv");
+    std::future<bool>   fut2 = df_read.read_async("../test/sample_data.csv");
 
     fut2.get();
     df_read.write<std::ostream,
@@ -515,6 +515,36 @@ int main(int argc, char *argv[]) {
               unsigned long,
               double,
               std::string>(std::cout);
+
+    {
+        std::cout << "\n\nTesing transpose() modify_by_idx()" << std::endl;
+
+        std::vector<unsigned long>  idx =
+            { 123450, 123451, 123452, 123450, 123455, 123450, 123449 };
+        std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7 };
+        std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14 };
+        std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21 };
+        std::vector<double> d4 = { 22, 23, 24, 25 };
+        MyDataFrame         df;
+
+        df.load_data(std::move(idx),
+                     std::make_pair("col_1", d1),
+                     std::make_pair("col_2", d2),
+                     std::make_pair("col_3", d3),
+                     std::make_pair("col_4", d4));
+
+        std::vector<unsigned long>  tidx = { 100, 101, 102, 104 };
+        std::vector<std::string>    tcol_names =
+            { "tcol_1", "tcol_2", "tcol_3",
+              "tcol_4", "tcol_5", "tcol_6", "tcol_7" };
+        MyDataFrame                 tdf =
+            df.transpose<double>(std::move(tidx), tcol_names);
+
+        std::cout << "Original DataFrame:" << std::endl;
+        df.write<std::ostream, unsigned long, double>(std::cout);
+        std::cout << "Transposed DataFrame:" << std::endl;
+        tdf.write<std::ostream, unsigned long, double>(std::cout);
+    }
 
     return (0);
 }

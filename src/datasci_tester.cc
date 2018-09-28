@@ -517,7 +517,7 @@ int main(int argc, char *argv[]) {
               std::string>(std::cout);
 
     {
-        std::cout << "\n\nTesing transpose() modify_by_idx()" << std::endl;
+        std::cout << "\n\nTesing transpose()" << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123450, 123455, 123450, 123449 };

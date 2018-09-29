@@ -10,10 +10,10 @@ CXX = /usr/bin/g++
 
 INCLUDES = -I/usr/include/c++/7 -I/usr/include
 
-LFLAGS = -L/usr/lib/gcc/x86_64-linux-gnu/7
+LFLAGS =
 CXXFLAGS = -O3 -std=c++17 $(INCLUDES) $(DEFINES) 
 
-PLATFORM_LIBS = -lpthread -lrt -ldl -lm -lnsl -lstdc++
+PLATFORM_LIBS = -lpthread -ldl -lm -lstdc++
 
 # -----------------------------------------------------------------------------
 

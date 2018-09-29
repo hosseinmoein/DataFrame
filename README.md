@@ -16,6 +16,9 @@ This is a C++ statistical library that provides an interface similar to Pandas p
 # Contributions
 [guidance](docs/CONTRIBUTING.md)
 
+# License
+[License](License)
+
 # Installing using CMake
 ```
 mkdir build

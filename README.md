@@ -7,19 +7,17 @@
 # DataFrame
 This is a C++ statistical library that provides an interface similar to Pandas package in Python<BR>
 
-# Documentation
-[Documentation](docs/DataFrameDoc.pdf)
 
-# Example/Test
-[Test File](src/datasci_tester.cc)
+## [Documentation](docs/DataFrameDoc.pdf)
 
-# Contributions
-[guidance](docs/CONTRIBUTING.md)
+## [Test File](src/datasci_tester.cc)
 
-# License
-[License](License)
+## [Contributions](docs/CONTRIBUTING.md)
 
-# Installing using CMake
+## [License](License)
+
+
+### Installing using CMake
 ```
 mkdir build
 cd build
@@ -27,7 +25,7 @@ cmake ..
 make install
 ```
 
-# Uninstalling
+### Uninstalling
 
 ```
 cd build

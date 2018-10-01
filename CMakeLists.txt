@@ -69,6 +69,7 @@ set(${LIBRARY_TARGET_NAME}_SRC
 
 # List of header files.
 set(${LIBRARY_TARGET_NAME}_HDR
+  include/VectorView.h
   include/BaseContainer.h
   include/BaseContainer.tcc
   include/DFVisitors.h

@@ -56,7 +56,7 @@ void DataFrame<TS, DS>::multi_visit (Ts ... args) const  {
             typename std::remove_reference<decltype(functor)>::type::value_type;
         using V =
             typename std::remove_const<
-		        typename std::remove_reference<decltype(functor)>::type>::type;
+                typename std::remove_reference<decltype(functor)>::type>::type;
 
         this->visit<T, V>(pa.first, const_cast<V &>(functor));
     };

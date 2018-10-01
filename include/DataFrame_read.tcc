@@ -188,14 +188,14 @@ bool DataFrame<TS, DS>::read(const char* file_name)
                     if (c == '\n') break;
             continue;
         }
-		file.unget();
+        file.unget();
         value_str = get_token(':', file);
-		strcpy_s(value, value_str.c_str()); // This is done so the DS vector created can use the the value char array
+        strcpy_s(value, value_str.c_str()); // This is done so the DS vector created can use the the value char array
         if (value_str == "INDEX") {
             TSVec vec;
             while (file.get(c)) {
                 if (c == '\n') break;
-				file.unget();
+                file.unget();
                 value_str = get_token(',', file);
                 strcpy_s(value, value_str.c_str());
                 vec.push_back(static_cast<TimeStamp>(atoll(value)));
@@ -217,7 +217,7 @@ bool DataFrame<TS, DS>::read(const char* file_name)
                 DS<double>& vec = create_column<double>(value);
                 while (file.get(c)) {
                     if (c == '\n') break;
-					file.unget();
+                    file.unget();
                     value_str = get_token(',', file);
                     strcpy_s(value, value_str.c_str());
                     vec.push_back(atof(value));
@@ -226,7 +226,7 @@ bool DataFrame<TS, DS>::read(const char* file_name)
                 DS<int>& vec = create_column<int>(value);
                 while (file.get(c)) {
                     if (c == '\n') break;
-					file.unget();
+                    file.unget();
                     value_str = get_token(',', file);
                     strcpy_s(value, value_str.c_str());
                     vec.push_back(atoi(value));
@@ -235,7 +235,7 @@ bool DataFrame<TS, DS>::read(const char* file_name)
                 DS<unsigned int>& vec = create_column<unsigned int>(value);
                 while (file.get(c)) {
                     if (c == '\n') break;
-					file.unget();
+                    file.unget();
                     value_str = get_token(',', file);
                     strcpy_s(value, value_str.c_str());
                     vec.push_back(static_cast<unsigned int>(atol(value)));
@@ -244,7 +244,7 @@ bool DataFrame<TS, DS>::read(const char* file_name)
                 DS<long>& vec = create_column<long>(value);
                 while (file.get(c)) {
                     if (c == '\n') break;
-					file.unget();
+                    file.unget();
                     value_str = get_token(',', file);
                     strcpy_s(value, value_str.c_str());
                     vec.push_back(atol(value));
@@ -253,7 +253,7 @@ bool DataFrame<TS, DS>::read(const char* file_name)
                 DS<unsigned long>& vec = create_column<unsigned long>(value);
                 while (file.get(c)) {
                     if (c == '\n') break;
-					file.unget();
+                    file.unget();
                     value_str = get_token(',', file);
                     strcpy_s(value, value_str.c_str());
                     vec.push_back(static_cast<unsigned long>(atoll(value)));
@@ -262,7 +262,7 @@ bool DataFrame<TS, DS>::read(const char* file_name)
                 DS<std::string>& vec = create_column<std::string>(value);
                 while (file.get(c)) {
                     if (c == '\n') break;
-					file.unget();
+                    file.unget();
                     value_str = get_token(',', file);
                     strcpy_s(value, value_str.c_str());
                     vec.push_back(value);
@@ -285,7 +285,7 @@ bool DataFrame<TS, DS>::read(const char* file_name)
 
 template <typename TS, template <typename DT, class... types> class DS>
 std::future<bool> DataFrame<TS, DS>::read_async(const char *file_name) {
-	return (std::async(std::launch::async, &DataFrame::read, this, file_name));
+    return (std::async(std::launch::async, &DataFrame::read, this, file_name));
 }
 
 } // namespace hmdf

@@ -59,6 +59,18 @@ V &HeteroVector::get_vec()  {
 // ----------------------------------------------------------------------------
 
 template<typename T, typename V>
+VectorView<T> HeteroVector::get_view(size_t begin, size_t end)  {
+
+    V   &vec = get_vec<T, V>();
+
+    return (VectorView<T>(&(vec[begin]),
+                          end == size_t(-1) ? &(vec.back()) : &(vec[end])));
+
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename V>
 const V &HeteroVector::get_vec() const  {
 
     return (const_cast<HeteroVector *>(this)->get_vec<T, V>());

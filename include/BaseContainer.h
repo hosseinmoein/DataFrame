@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include "VectorView.h"
 #include <vector>
 #include <functional>
 #include <unordered_map>
@@ -40,6 +41,14 @@ public:
     template<typename T, typename V = std::vector<T>>
     const V &get_vec() const;
 
+    // It returns a view of the underlying vector.
+    // NOTE: One can modify the vector through the view. But the vector
+    //       cannot be extended or shrunk through the view.
+    // There is no const version of this method
+    //
+    template<typename T, typename V = std::vector<T>>
+    VectorView<T> get_view(size_t begin = 0, size_t end = -1);
+	
     template<typename T, typename V = std::vector<T>>
     void push_back(const T &v);
     template<typename T, typename V = std::vector<T>, class... Args>

@@ -71,6 +71,25 @@ int main(int argc, char *argv[]) {
     hv.push_back (std::string("abc"));
     hv.push_back (std::string("fas"));
 
+    {
+        std::cout << "\n\nTesing HetroVector View" << std::endl;
+
+        using DoubleView = VectorView<double>;
+        using StringView = VectorView<std::string>;
+
+        DoubleView  d = hv.get_view<double>();
+
+        std::cout << "d[3] must be 1.05: " << d[3] << std::endl;
+
+        StringView  s = hv.get_view<std::string>(1, 3);
+
+        std::cout << "s[0] must be 'str_2': " << s[0] << std::endl;
+        std::cout << "s size: " << s.size() << std::endl;
+        std::cout << "s.back() must be 'abc': " << s.back() << std::endl;
+
+        std::cout << "\n\n";
+    }
+
     hv2 = hv;
     hv3 = std::move(hv2);
 

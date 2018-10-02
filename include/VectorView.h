@@ -13,7 +13,7 @@ namespace hmdf
 {
 
 // This is a view that would make an already existing array of
-// contiuous memory look like an STL vector.
+// continuous memory look like an STL vector.
 // It also gives you STL conformant iterators.
 //
 template <typename T>

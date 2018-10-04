@@ -37,9 +37,9 @@ public:
     HeteroVector &operator= (HeteroVector &&rhs);
 
     template<typename T, typename V = std::vector<T>>
-    V &get_vec();
+    V &get_vector();
     template<typename T, typename V = std::vector<T>>
-    const V &get_vec() const;
+    const V &get_vector() const;
 
     // It returns a view of the underlying vector.
     // NOTE: One can modify the vector through the view. But the vector
@@ -57,12 +57,12 @@ public:
     void emplace (typename V::const_iterator pos, Args &&... args);
 
     template<typename T, typename V = std::vector<T>>
-    void reserve (typename V::size_type r)  { get_vec<T, V>().reserve (r); }
+    void reserve (typename V::size_type r)  { get_vector<T, V>().reserve (r); }
     template<typename T, typename V = std::vector<T>>
-    void shrink_to_fit () { get_vec<T, V>().shrink_to_fit (); }
+    void shrink_to_fit () { get_vector<T, V>().shrink_to_fit (); }
 
     template<typename T, typename V = std::vector<T>>
-    typename V::size_type size () const { return (get_vec<T, V>().size()); }
+    typename V::size_type size () const { return (get_vector<T, V>().size()); }
 
     void clear();
 

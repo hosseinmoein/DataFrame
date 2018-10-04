@@ -24,7 +24,7 @@ DS<T> &DataFrame<TS, DS>::create_column (const char *name)  {
     data_tb_.emplace (name, data_.size() - 1);
 
     DataVec &hv = data_.back();
-    DS<T>   &vec = hv.get_vec<T, DS<T>>();
+    DS<T>   &vec = hv.get_vector<T, DS<T>>();
 
     // vec.resize(timestamps_.size(), _get_nan<T>());
     return (vec);
@@ -130,7 +130,7 @@ load_column (const char *name,
     else  {
         DataVec &hv = data_[iter->second];
 
-        vec_ptr = &(hv.get_vec<T, DS<T>>());
+        vec_ptr = &(hv.get_vector<T, DS<T>>());
     }
 
     vec_ptr->clear();
@@ -187,7 +187,7 @@ load_column (const char *name, DS<T> &&data, nan_policy padding)  {
     else  {
         DataVec &hv = data_[iter->second];
 
-        vec_ptr = &(hv.get_vec<T, DS<T>>());
+        vec_ptr = &(hv.get_vector<T, DS<T>>());
     }
 
     *vec_ptr = std::move(data);
@@ -229,7 +229,7 @@ DataFrame<TS, DS>::append_column (const char *name,
     }
 
     DataVec &hv = data_[iter->second];
-    DS<T>   &vec = hv.get_vec<T, DS<T>>();
+    DS<T>   &vec = hv.get_vector<T, DS<T>>();
 
     size_type       s = std::distance(begin, end) + vec.size ();
     const size_type idx_s = timestamps_.size();
@@ -279,7 +279,7 @@ append_column (const char *name, const T &val, nan_policy padding)  {
     }
 
     DataVec &hv = data_[iter->second];
-    DS<T>   &vec = hv.get_vec<T, DS<T>>();
+    DS<T>   &vec = hv.get_vector<T, DS<T>>();
 
     size_type       s = 1;
     const size_type idx_s = timestamps_.size();

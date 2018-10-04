@@ -63,7 +63,7 @@ void DataFrame<TS, DS>::sort(const char *by_name)  {
         }
 
         DataVec                     &hv = data_[iter->second];
-        DS<T>                       &idx_vec = hv.get_vec<T, DS<T>>();
+        DS<T>                       &idx_vec = hv.get_vector<T, DS<T>>();
         sort_functor_<T, types ...> functor (idx_vec);
 
         for (size_type i = 0; i < data_.size(); ++i)
@@ -298,7 +298,7 @@ DataFrame<TS, DS>::transpose(TSVec &&indices, const V &col_names) const  {
     for (const auto citer : data_tb_)  {
         const DataVec   &hv = data_[citer.second];
 
-        current_cols.push_back(&(hv.get_vec<T, DS<T>>()));
+        current_cols.push_back(&(hv.get_vector<T, DS<T>>()));
     }
 
     if (col_names.size() != timestamps_.size())

@@ -59,8 +59,7 @@ DataFrame<TS, DS>::load_functor_<Ts ...>::operator() (const T &vec)  {
     using ValueType = typename VecType::value_type;
 
     df.load_column<ValueType>(name,
-                              vec.begin() + begin,
-                              vec.begin() + end,
+                              { vec.begin() + begin, vec.begin() + end },
                               nan_policy::pad_with_nans);
     return;
 }

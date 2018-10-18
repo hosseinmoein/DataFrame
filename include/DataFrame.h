@@ -6,10 +6,11 @@
 #pragma once
 
 #include "BaseContainer.h"
+
 #include <map>
+#include <utility>
 #include <stdexcept>
 #include <iostream>
-#include <cstdio>
 #include <cstring>
 #include <future>
 
@@ -46,6 +47,20 @@ enum class sort_state : bool  {
     sorted = true,
     not_sorted = false
 };
+
+template<typename T>
+struct Index2D  {
+    T   begin {};
+    T   end {};
+};
+
+// ----------------------------------------------------------------------------
+
+template<typename TS, template<typename DT, class... types> class DS>
+class DataFrame;
+
+template<typename TS>
+using StdDataFrame = DataFrame<TS, std::vector>;
 
 // ----------------------------------------------------------------------------
 
@@ -125,8 +140,7 @@ public:  // Load/append interfaces
     //
     template<typename T, typename ITR>
     size_type load_column(const char *name,
-                          const ITR &begin,
-                          const ITR &end,
+                          Index2D<const ITR &> range,
                           nan_policy padding = nan_policy::pad_with_nans);
 
     // It moves the data to the named column in DataFrame.
@@ -166,7 +180,7 @@ public:  // Load/append interfaces
     // ITR: Type of the iterator
     //
     template<typename ITR>
-    size_type append_index(const ITR &begin, const ITR &end);
+    size_type append_index(Index2D<const ITR &> range);
 
     // It appends the range begin to end to the end of the named data column.
     // If data column doesn't exist, it throws an exception.
@@ -179,8 +193,7 @@ public:  // Load/append interfaces
     //
     template<typename T, typename ITR>
     size_type append_column(const char *name,
-                            const ITR &begin,
-                            const ITR &end,
+                            Index2D<const ITR &> range,
                             nan_policy padding = nan_policy::pad_with_nans);
 
 public:  // Other public interfaces
@@ -359,7 +372,7 @@ public: // Read/access interfaces
     //        A type should be specified in the list only once.
     //
     template<typename ... types>
-    DataFrame get_data_by_idx (TS begin, TS end) const;
+    DataFrame get_data_by_idx (Index2D<TS> range) const;
 
     // It returns a DataFrame (including the index and data columns)
     // containing the data from location begin to location end
@@ -370,15 +383,15 @@ public: // Read/access interfaces
     //        A type should be specified in the list only once.
     //
     template<typename ... types>
-    DataFrame get_data_by_loc (size_type begin, size_type end) const;
+    DataFrame get_data_by_loc (Index2D<size_type> range) const;
 
     // It returns a const reference to the index container
     //
-    const TSVec &get_index () const  { return (timestamps_); }
+    inline const TSVec &get_index () const  { return (timestamps_); }
 
     // It returns a reference to the index container
     //
-    TSVec &get_index ()  { return (timestamps_); }
+    inline TSVec &get_index ()  { return (timestamps_); }
 
     // This is the most generalized visit function. It visits multiple
     // columns with the corresponding function objects sequentially.
@@ -523,7 +536,7 @@ private:
     template<typename ... types>
     struct consistent_functor_ : HeteroVector::visitor_base<types ...>  {
 
-        consistent_functor_ (const size_type s) : size(s)  {   }
+        inline consistent_functor_ (const size_type s) : size(s)  {   }
 
         const DataFrame::size_type  size;
         template<typename T>
@@ -533,7 +546,7 @@ private:
     template<typename T, typename ... types>
     struct sort_functor_ : HeteroVector::visitor_base<types ...>  {
 
-        sort_functor_ (const DS<T> &iv) : idx_vec(iv)  {   }
+        inline sort_functor_ (const DS<T> &iv) : idx_vec(iv)  {   }
 
         const DS<T> &idx_vec;
 
@@ -544,10 +557,10 @@ private:
     template<typename ... types>
     struct load_functor_ : HeteroVector::visitor_base<types ...>  {
 
-        load_functor_ (const char *n,
-                       std::size_t b,
-                       std::size_t e,
-                       DataFrame &d)
+        inline load_functor_ (const char *n,
+                              std::size_t b,
+                              std::size_t e,
+                              DataFrame &d)
             : name (n), begin (b), end (e), df(d)  {   }
 
         const char          *name;
@@ -562,7 +575,8 @@ private:
     template<typename ... types>
     struct add_col_functor_ : HeteroVector::visitor_base<types ...>  {
 
-        add_col_functor_ (const char *n, DataFrame &d) : name (n), df(d)  {   }
+        inline add_col_functor_ (const char *n, DataFrame &d)
+            : name (n), df(d)  {   }
 
         const char  *name;
         DataFrame   &df;
@@ -574,12 +588,12 @@ private:
     template<typename F, typename ... types>
     struct groupby_functor_ : HeteroVector::visitor_base<types ...>  {
 
-        groupby_functor_ (const char *n,
-                          std::size_t b,
-                          std::size_t e,
-                          const TS &ts,
-                          F &f,
-                          DataFrame &d)
+        inline groupby_functor_ (const char *n,
+                                 std::size_t b,
+                                 std::size_t e,
+                                 const TS &ts,
+                                 F &f,
+                                 DataFrame &d)
             : name(n), begin(b), end(e), timestamp(ts), functor(f), df(d) {  }
 
         const char          *name;
@@ -596,11 +610,11 @@ private:
     template<typename F, typename ... types>
     struct bucket_functor_ : HeteroVector::visitor_base<types ...>  {
 
-        bucket_functor_ (const char *n,
-                         const TSVec &ts,
-                         const TimeStamp &i,
-                         F &f,
-                         DataFrame &d)
+        inline bucket_functor_ (const char *n,
+                                const TSVec &ts,
+                                const TimeStamp &i,
+                                F &f,
+                                DataFrame &d)
             : name(n), timestamps(ts), interval(i), functor(f), df(d) {  }
 
         const char      *name;
@@ -616,7 +630,7 @@ private:
     template<typename ... types>
     struct print_functor_ : HeteroVector::visitor_base<types ...>  {
 
-        print_functor_ (const char *n, bool vo, std::ostream &o)
+        inline print_functor_ (const char *n, bool vo, std::ostream &o)
             : name(n), values_only(vo), os(o)  {   }
 
         const char      *name;
@@ -630,7 +644,7 @@ private:
     template<typename ... types>
     struct equal_functor_ : HeteroVector::visitor_base<types ...>  {
 
-        equal_functor_ (const char *n, const DataFrame &d)
+        inline equal_functor_ (const char *n, const DataFrame &d)
             : name(n), df(d)  {  }
 
         const char      *name;
@@ -644,10 +658,10 @@ private:
     template<typename ... types>
     struct mod_by_idx_functor_ : HeteroVector::visitor_base<types ...>  {
 
-        mod_by_idx_functor_ (const char *n,
-                             const DataFrame &d,
-                             size_type li,
-                             size_type ri)
+        inline mod_by_idx_functor_ (const char *n,
+                                    const DataFrame &d,
+                                    size_type li,
+                                    size_type ri)
             : name(n), rhs_df(d), lhs_idx(li), rhs_idx(ri)  {  }
 
         const char      *name;

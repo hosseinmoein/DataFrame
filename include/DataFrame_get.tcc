@@ -360,12 +360,12 @@ visit (const char *name1,
 template<typename TS, template<typename DT, class... types> class DS>
 template<typename ... types>
 DataFrame<TS, DS>
-DataFrame<TS, DS>::get_data_by_idx (TS begin, TS end) const  {
+DataFrame<TS, DS>::get_data_by_idx (Index2D<TS> range) const  {
 
     const auto  &lower =
-        std::lower_bound (timestamps_.begin(), timestamps_.end(), begin);
+        std::lower_bound (timestamps_.begin(), timestamps_.end(), range.begin);
     const auto  &upper =
-        std::upper_bound (timestamps_.begin(), timestamps_.end(), end);
+        std::upper_bound (timestamps_.begin(), timestamps_.end(), range.end);
     DataFrame   df;
 
     if (lower != timestamps_.end())  {
@@ -395,17 +395,18 @@ DataFrame<TS, DS>::get_data_by_idx (TS begin, TS end) const  {
 template<typename TS, template<typename DT, class... types> class DS>
 template<typename ... types>
 DataFrame<TS, DS>
-DataFrame<TS, DS>::get_data_by_loc (size_type begin, size_type end) const  {
+DataFrame<TS, DS>::get_data_by_loc (Index2D<size_type> range) const  {
 
     DataFrame   df;
 
-    if (end < timestamps_.size() && begin <= end)  {
-        df.load_index(timestamps_.begin() + begin, timestamps_.begin() + end);
+    if (range.end < timestamps_.size() && range.begin <= range.end)  {
+        df.load_index(timestamps_.begin() + range.begin,
+                      timestamps_.begin() + range.end);
 
         for (auto &iter : data_tb_)  {
             load_functor_<types ...> functor (iter.first.c_str(),
-                                              begin,
-                                              end,
+                                              range.begin,
+                                              range.end,
                                               df);
 
             data_[iter.second].change(functor);

@@ -80,12 +80,12 @@ DataFrame<TS, DS>::load_index(TSVec &&idx)  {
 template<typename TS, template<typename DT, class... types> class DS>
 template<typename ITR>
 typename DataFrame<TS, DS>::size_type
-DataFrame<TS, DS>::append_index(const ITR &begin, const ITR &end)  {
+DataFrame<TS, DS>::append_index(Index2D<const ITR &> range)  {
 
-    const size_type s = std::distance(begin, end);
+    const size_type s = std::distance(range.begin, range.end);
 
     timestamps_.reserve (timestamps_.size() + s);
-    timestamps_.insert (timestamps_.end (), begin, end);
+    timestamps_.insert (timestamps_.end (), range.begin, range.end);
     return (s);
 }
 
@@ -105,12 +105,9 @@ template<typename TS, template<typename DT, class... types> class DS>
 template<typename T, typename ITR>
 typename DataFrame<TS, DS>::size_type
 DataFrame<TS, DS>::
-load_column (const char *name,
-             const ITR &begin,
-             const ITR &end,
-             nan_policy padding)  {
+load_column (const char *name, Index2D<const ITR &> range, nan_policy padding) {
 
-    size_type s = std::distance(begin, end);
+    size_type s = std::distance(range.begin, range.end);
     const size_type idx_s = timestamps_.size();
 
     if (s > idx_s)  {
@@ -135,7 +132,7 @@ load_column (const char *name,
 
     vec_ptr->clear();
     vec_ptr->reserve(idx_s);
-    vec_ptr->insert (vec_ptr->begin (), begin, end);
+    vec_ptr->insert (vec_ptr->begin (), range.begin, range.end);
 
     size_type   ret_cnt = s;
 
@@ -212,10 +209,10 @@ DataFrame<TS, DS>::_load_pair(std::pair<T1, T2> &col_name_data)  {
 template<typename TS, template<typename DT, class... types> class DS>
 template<typename T, typename ITR>
 typename DataFrame<TS, DS>::size_type
-DataFrame<TS, DS>::append_column (const char *name,
-                                  const ITR &begin,
-                                  const ITR &end,
-                                  nan_policy padding)  {
+DataFrame<TS, DS>::
+append_column (const char *name,
+               Index2D<const ITR &> range,
+               nan_policy padding)  {
 
     const auto  iter = data_tb_.find (name);
 
@@ -231,7 +228,7 @@ DataFrame<TS, DS>::append_column (const char *name,
     DataVec &hv = data_[iter->second];
     DS<T>   &vec = hv.get_vector<T, DS<T>>();
 
-    size_type       s = std::distance(begin, end) + vec.size ();
+    size_type       s = std::distance(range.begin, range.end) + vec.size ();
     const size_type idx_s = timestamps_.size();
 
     if (s > idx_s)  {
@@ -244,7 +241,7 @@ DataFrame<TS, DS>::append_column (const char *name,
     }
 
     vec.reserve (idx_s);
-    vec.insert (vec.end (), begin, end);
+    vec.insert (vec.end (), range.begin, range.end);
 
     size_type   ret_cnt = s;
 

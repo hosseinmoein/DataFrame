@@ -134,7 +134,7 @@ int main(int argc, char *argv[]) {
 
     std::cout << "\n\nNow testing Data Frame\n" << std::endl;
 
-    typedef DataFrame<unsigned long, std::vector>   MyDataFrame;
+    typedef StdDataFrame<unsigned long> MyDataFrame;
 
     MyDataFrame         df;
     std::vector<int>    &col0 =
@@ -169,13 +169,13 @@ int main(int argc, char *argv[]) {
               << std::endl;
 
     df.load_index(ulgvec.begin(), ulgvec.end());
-    df.load_column<int>("int_col", intvec.begin(), intvec.end(),
+    df.load_column<int>("int_col", { intvec.begin(), intvec.end() },
                         nan_policy::pad_with_nans);
-    df.load_column<std::string>("str_col", strvec.begin(), strvec.end(),
+    df.load_column<std::string>("str_col", { strvec.begin(), strvec.end() },
                                 nan_policy::pad_with_nans);
-    df.load_column<double>("dbl_col", dblvec.begin(), dblvec.end(),
+    df.load_column<double>("dbl_col", { dblvec.begin(), dblvec.end() },
                            nan_policy::pad_with_nans);
-    df.load_column<double>("dbl_col_2", dblvec2.begin(), dblvec2.end(),
+    df.load_column<double>("dbl_col_2", { dblvec2.begin(), dblvec2.end() },
                            nan_policy::dont_pad_with_nans);
 
     df.append_column<std::string>("str_col", "Additional column");
@@ -253,7 +253,7 @@ int main(int argc, char *argv[]) {
         std::cout << iter << " ";
     std::cout << std::endl;
 
-    MyDataFrame df2 = df.get_data_by_idx<int, double, std::string>(3, 5);
+    MyDataFrame df2 = df.get_data_by_idx<int, double, std::string>({ 3, 5 });
 
     std::cout << "Printing the second df after get_data_by_idx() ..."
               << std::endl;
@@ -266,8 +266,9 @@ int main(int argc, char *argv[]) {
         std::cout << iter << " ";
     std::cout << std::endl;
 
-    MyDataFrame df3 = df.get_data_by_loc<int, double, std::string>(1, 2);
+    MyDataFrame df3 = df.get_data_by_loc<int, double, std::string>({ 1, 2 });
 
+    df3.write<std::ostream, int, double, std::string>(std::cout);
     std::cout << "Printing the second df after get_data_by_loc() ..."
               << std::endl;
     dvec = df3.get_column<double> ("dbl_col");

@@ -566,6 +566,48 @@ int main(int argc, char *argv[]) {
         tdf.write<std::ostream, unsigned long, double>(std::cout);
     }
 
+    {
+        std::cout << "\n\nTesing get_data_by_loc()/slicing" << std::endl;
+
+        std::vector<unsigned long>  idx =
+            { 123450, 123451, 123452, 123450, 123455, 123450, 123449 };
+        std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7 };
+        std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14 };
+        std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21 };
+        std::vector<double> d4 = { 22, 23, 24, 25 };
+        MyDataFrame         df;
+
+        df.load_data(std::move(idx),
+                     std::make_pair("col_1", d1),
+                     std::make_pair("col_2", d2),
+                     std::make_pair("col_3", d3),
+                     std::make_pair("col_4", d4));
+
+        MyDataFrame df2 = df.get_data_by_loc<double>({ 3, 6 });
+        MyDataFrame df3 = df.get_data_by_loc<double>({ 0, 7 });
+        MyDataFrame df4 = df.get_data_by_loc<double>({ -4, -1 });
+        MyDataFrame df5 = df.get_data_by_loc<double>({ -4, 6 });
+
+        df.write<std::ostream, double>(std::cout);
+        df2.write<std::ostream, double>(std::cout);
+        df3.write<std::ostream, double>(std::cout);
+        df4.write<std::ostream, double>(std::cout);
+        df5.write<std::ostream, double>(std::cout);
+
+        try  {
+            MyDataFrame df2 = df.get_data_by_loc<double>({ 3, 8 });
+        }
+        catch (const BadRange &ex)  {
+            std::cout << "Caiught: " << ex.what() << std::endl;
+		}
+        try  {
+            MyDataFrame df2 = df.get_data_by_loc<double>({ -8, -1 });
+        }
+        catch (const BadRange &ex)  {
+            std::cout << "Caiught: " << ex.what() << std::endl;
+		}
+    }
+
     return (0);
 }
 

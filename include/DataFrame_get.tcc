@@ -395,25 +395,40 @@ DataFrame<TS, DS>::get_data_by_idx (Index2D<TS> range) const  {
 template<typename TS, template<typename DT, class... types> class DS>
 template<typename ... types>
 DataFrame<TS, DS>
-DataFrame<TS, DS>::get_data_by_loc (Index2D<size_type> range) const  {
+DataFrame<TS, DS>::get_data_by_loc (Index2D<int> range) const  {
 
-    DataFrame   df;
+    if (range.begin < 0)
+		range.begin = static_cast<int>(timestamps_.size()) + range.begin;
+    if (range.end < 0)
+		range.end = static_cast<int>(timestamps_.size()) + range.end;
 
-    if (range.end < timestamps_.size() && range.begin <= range.end)  {
-        df.load_index(timestamps_.begin() + range.begin,
-                      timestamps_.begin() + range.end);
+    if (range.end <= static_cast<int>(timestamps_.size()) &&
+        range.begin <= range.end && range.begin >= 0)  {
+        DataFrame   df;
+
+        df.load_index(timestamps_.begin() + static_cast<size_type>(range.begin),
+                      timestamps_.begin() + static_cast<size_type>(range.end));
 
         for (auto &iter : data_tb_)  {
-            load_functor_<types ...> functor (iter.first.c_str(),
-                                              range.begin,
-                                              range.end,
-                                              df);
+            load_functor_<types ...> functor (
+                iter.first.c_str(),
+                static_cast<size_type>(range.begin),
+                static_cast<size_type>(range.end),
+                df);
 
             data_[iter.second].change(functor);
         }
+
+        return (df);
     }
 
-    return (df);
+    char buffer [512];
+
+    sprintf (buffer,
+             "DataFrame::get_data_by_loc(): ERROR: "
+             "Bad begin, end range: %d, %d",
+             range.begin, range.end);
+    throw BadRange (buffer);
 }
 
 } // namespace hmdf

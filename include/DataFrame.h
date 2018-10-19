@@ -31,6 +31,10 @@ struct InconsistentData : public DataFrameError  {
 
     InconsistentData (const char *name) : DataFrameError (name)  {   }
 };
+struct BadRange : public DataFrameError  {
+
+    BadRange (const char *name) : DataFrameError (name)  {   }
+};
 struct NotImplemented : public DataFrameError  {
 
     NotImplemented (const char *name) : DataFrameError (name)  {   }
@@ -383,7 +387,7 @@ public: // Read/access interfaces
     //        A type should be specified in the list only once.
     //
     template<typename ... types>
-    DataFrame get_data_by_loc (Index2D<size_type> range) const;
+    DataFrame get_data_by_loc (Index2D<int> range) const;
 
     // It returns a const reference to the index container
     //

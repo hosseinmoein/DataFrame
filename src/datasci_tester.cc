@@ -599,13 +599,13 @@ int main(int argc, char *argv[]) {
         }
         catch (const BadRange &ex)  {
             std::cout << "Caiught: " << ex.what() << std::endl;
-		}
+        }
         try  {
             MyDataFrame df2 = df.get_data_by_loc<double>({ -8, -1 });
         }
         catch (const BadRange &ex)  {
             std::cout << "Caiught: " << ex.what() << std::endl;
-		}
+        }
     }
 
     return (0);

@@ -52,6 +52,8 @@ enum class sort_state : bool  {
     not_sorted = false
 };
 
+// It represents a range with begin and end within a continuous memory space
+//
 template<typename T>
 struct Index2D  {
     T   begin {};
@@ -139,6 +141,7 @@ public:  // Load/append interfaces
     // T: Type of data being copied
     // ITR: Type of the iterator
     // name: Name of the column
+    // range: The begin and end iterators for data
     // padding: If true, it pads the data column with nan,
     //          if it is shorter than the index column.
     //
@@ -182,6 +185,7 @@ public:  // Load/append interfaces
     // It appends the range begin to end to the end of the index column
     //
     // ITR: Type of the iterator
+    // range: The begin and end iterators for data
     //
     template<typename ITR>
     size_type append_index(Index2D<const ITR &> range);
@@ -192,6 +196,7 @@ public:  // Load/append interfaces
     // T: Type of the named data column
     // ITR: Type of the iterator
     // name: Name of the column
+    // range: The begin and end iterators for data
     // padding: If true, it pads the data column with nan,
     //          if it is shorter than the index column.
     //
@@ -369,22 +374,22 @@ public: // Read/access interfaces
 
     // It returns a DataFrame (including the index and data columns)
     // containing the data from index begin to index end
-    // This function assumes the DataFrame is consistent and sorted by index.
-    // The behavior is undefined otherwise.
     //
     // types: List all the types of all data columns.
     //        A type should be specified in the list only once.
+    // range: The begin and end iterators for index specified with index values
     //
     template<typename ... types>
     DataFrame get_data_by_idx (Index2D<TS> range) const;
 
     // It returns a DataFrame (including the index and data columns)
-    // containing the data from location begin to location end
-    // This function assumes the DataFrame is consistent and sorted by index.
-    // The behavior is undefined otherwise.
+    // containing the data from location begin to location end within range.
+    // This function supports Python-like negative indexing. That is why the
+    // range type is int.
     //
     // types: List all the types of all data columns.
     //        A type should be specified in the list only once.
+    // range: The begin and end iterators for data
     //
     template<typename ... types>
     DataFrame get_data_by_loc (Index2D<int> range) const;

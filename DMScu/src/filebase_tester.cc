@@ -1,6 +1,6 @@
 // Hossein Moein
 // September 25, 2007
-// Copyright (C) 2017-2018 Hossein Moein
+// Copyright (C) 2018-2019 Hossein Moein
 // Distributed under the BSD Software License (see file License)
 
 #include "../include/DMScu_FileBase.h"

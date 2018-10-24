@@ -1,6 +1,6 @@
 // Hossein Moein
 // July 17 2009
-// Copyright (C) 2017-2018 Hossein Moein
+// Copyright (C) 2018-2019 Hossein Moein
 // Distributed under the BSD Software License (see file License)
 
 #ifndef _INCLUDED_DMScu_FixedSizeString_h

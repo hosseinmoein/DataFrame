@@ -62,13 +62,29 @@ struct Index2D  {
 
 // ----------------------------------------------------------------------------
 
+template<typename TS, typename HETERO>
+class DataFrame;
+
+template<typename TS>
+using StdDataFrame = DataFrame<TS, HeteroVector>;
+    
+template<typename TS>
+using DataFrameView = DataFrame<TS, HeteroView>;
+
+// ----------------------------------------------------------------------------
+
 // DS is a data storage container. It must have an interface partly identical
 // to std::vector
 //
-template<typename TS>
+template<typename TS, typename HETERO>
 class DataFrame  {
 
-    using DataVec = HeteroVector;
+    static_assert(std::is_base_of<HeteroVector, HETERO>::value or
+                      std::is_base_of<HeteroView, HETERO>::value,
+                  "HETERO argument can only be either of "
+                  "HeteroVector or HeteroView or their derived types");
+
+    using DataVec = HETERO;
     using DataVecVec = std::vector<DataVec>;
 
 public:
@@ -535,7 +551,7 @@ protected:
 private:
 
     template<typename ... types>
-    struct consistent_functor_ : HeteroVector::visitor_base<types ...>  {
+    struct consistent_functor_ : DataVec::template visitor_base<types ...>  {
 
         inline consistent_functor_ (const size_type s) : size(s)  {   }
 
@@ -545,7 +561,7 @@ private:
     };
 
     template<typename T, typename ... types>
-    struct sort_functor_ : HeteroVector::visitor_base<types ...>  {
+    struct sort_functor_ : DataVec::template visitor_base<types ...>  {
 
         inline sort_functor_ (const std::vector<T> &iv) : idx_vec(iv)  {   }
 
@@ -556,7 +572,7 @@ private:
     };
 
     template<typename ... types>
-    struct load_functor_ : HeteroVector::visitor_base<types ...>  {
+    struct load_functor_ : DataVec::template visitor_base<types ...>  {
 
         inline load_functor_ (const char *n,
                               std::size_t b,
@@ -574,7 +590,7 @@ private:
     };
 
     template<typename ... types>
-    struct add_col_functor_ : HeteroVector::visitor_base<types ...>  {
+    struct add_col_functor_ : DataVec::template visitor_base<types ...>  {
 
         inline add_col_functor_ (const char *n, DataFrame &d)
             : name (n), df(d)  {   }
@@ -587,7 +603,7 @@ private:
     };
 
     template<typename F, typename ... types>
-    struct groupby_functor_ : HeteroVector::visitor_base<types ...>  {
+    struct groupby_functor_ : DataVec::template visitor_base<types ...>  {
 
         inline groupby_functor_ (const char *n,
                                  std::size_t b,
@@ -609,7 +625,7 @@ private:
     };
 
     template<typename F, typename ... types>
-    struct bucket_functor_ : HeteroVector::visitor_base<types ...>  {
+    struct bucket_functor_ : DataVec::template visitor_base<types ...>  {
 
         inline bucket_functor_ (const char *n,
                                 const TSVec &ts,
@@ -629,7 +645,7 @@ private:
     };
 
     template<typename ... types>
-    struct print_functor_ : HeteroVector::visitor_base<types ...>  {
+    struct print_functor_ : DataVec::template visitor_base<types ...>  {
 
         inline print_functor_ (const char *n, bool vo, std::ostream &o)
             : name(n), values_only(vo), os(o)  {   }
@@ -643,7 +659,7 @@ private:
     };
 
     template<typename ... types>
-    struct equal_functor_ : HeteroVector::visitor_base<types ...>  {
+    struct equal_functor_ : DataVec::template visitor_base<types ...>  {
 
         inline equal_functor_ (const char *n, const DataFrame &d)
             : name(n), df(d)  {  }
@@ -657,7 +673,7 @@ private:
     };
 
     template<typename ... types>
-    struct mod_by_idx_functor_ : HeteroVector::visitor_base<types ...>  {
+    struct mod_by_idx_functor_ : DataVec::template visitor_base<types ...>  {
 
         inline mod_by_idx_functor_ (const char *n,
                                     const DataFrame &d,

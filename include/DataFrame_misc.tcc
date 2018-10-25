@@ -12,11 +12,11 @@ namespace hmdf
 
 // ----------------------------------------------------------------------------
 
-template<typename TS>
+template<typename TS, typename HETERO>
 template<typename ... Ts>
 template<typename T>
 void
-DataFrame<TS>::consistent_functor_<Ts ...>::operator() (T &vec) const  {
+DataFrame<TS, HETERO>::consistent_functor_<Ts ...>::operator() (T &vec) const  {
 
     using ValueType =
         typename std::remove_reference<decltype(vec)>::type::value_type;
@@ -26,11 +26,11 @@ DataFrame<TS>::consistent_functor_<Ts ...>::operator() (T &vec) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS>
+template<typename TS, typename HETERO>
 template<typename T, typename ... Ts>
 template<typename T2>
 void
-DataFrame<TS>::sort_functor_<T, Ts ...>::operator() (T2 &vec) const  {
+DataFrame<TS, HETERO>::sort_functor_<T, Ts ...>::operator() (T2 &vec) const  {
 
     using VecType = typename std::remove_reference<decltype(vec)>::type;
     using DataValueType = typename VecType::value_type;
@@ -49,11 +49,11 @@ DataFrame<TS>::sort_functor_<T, Ts ...>::operator() (T2 &vec) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS>
+template<typename TS, typename HETERO>
 template<typename ... Ts>
 template<typename T>
 void
-DataFrame<TS>::load_functor_<Ts ...>::operator() (const T &vec)  {
+DataFrame<TS, HETERO>::load_functor_<Ts ...>::operator() (const T &vec)  {
 
     using VecType = typename std::remove_reference<T>::type;
     using ValueType = typename VecType::value_type;
@@ -66,11 +66,11 @@ DataFrame<TS>::load_functor_<Ts ...>::operator() (const T &vec)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS>
+template<typename TS, typename HETERO>
 template<typename ... Ts>
 template<typename T>
 void
-DataFrame<TS>::add_col_functor_<Ts ...>::operator() (const T &vec)  {
+DataFrame<TS, HETERO>::add_col_functor_<Ts ...>::operator() (const T &vec)  {
 
     using VecType = typename std::remove_reference<T>::type;
     using ValueType = typename VecType::value_type;
@@ -81,11 +81,11 @@ DataFrame<TS>::add_col_functor_<Ts ...>::operator() (const T &vec)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS>
+template<typename TS, typename HETERO>
 template<typename F, typename ... Ts>
 template<typename T>
 void
-DataFrame<TS>::groupby_functor_<F, Ts ...>::operator() (const T &vec)  {
+DataFrame<TS, HETERO>::groupby_functor_<F, Ts ...>::operator() (const T &vec)  {
 
     for (std::size_t i = begin; i < end && i < vec.size(); ++i)
         functor (timestamp, name, vec[i]);
@@ -111,11 +111,11 @@ DataFrame<TS>::groupby_functor_<F, Ts ...>::operator() (const T &vec)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS>
+template<typename TS, typename HETERO>
 template<typename F, typename ... Ts>
 template<typename T>
 void
-DataFrame<TS>::bucket_functor_<F, Ts ...>::operator() (const T &vec)  {
+DataFrame<TS, HETERO>::bucket_functor_<F, Ts ...>::operator() (const T &vec)  {
 
     using VecType = typename std::remove_reference<T>::type;
     using ValueType = typename VecType::value_type;
@@ -149,11 +149,11 @@ DataFrame<TS>::bucket_functor_<F, Ts ...>::operator() (const T &vec)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS>
+template<typename TS, typename HETERO>
 template<typename ... Ts>
 template<typename T>
 void
-DataFrame<TS>::print_functor_<Ts ...>::operator() (const T &vec)  {
+DataFrame<TS, HETERO>::print_functor_<Ts ...>::operator() (const T &vec)  {
 
     using VecType = typename std::remove_reference<T>::type;
     using ValueType = typename VecType::value_type;
@@ -186,11 +186,11 @@ DataFrame<TS>::print_functor_<Ts ...>::operator() (const T &vec)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS>
+template<typename TS, typename HETERO>
 template<typename ... Ts>
 template<typename T>
 void
-DataFrame<TS>::
+DataFrame<TS, HETERO>::
 equal_functor_<Ts ...>::operator() (const std::vector<T> &lhs_vec)  {
 
     const auto  &iter = df.data_tb_.find(name);
@@ -201,7 +201,7 @@ equal_functor_<Ts ...>::operator() (const std::vector<T> &lhs_vec)  {
     }
 
     const DataVec           &hv = df.data_[iter->second];
-    const std::vector<T>    &rhs_vec = hv.get_vector<T>();
+    const std::vector<T>    &rhs_vec = hv.template get_vector<T>();
 
     if (lhs_vec != rhs_vec)
         result = false;
@@ -209,11 +209,11 @@ equal_functor_<Ts ...>::operator() (const std::vector<T> &lhs_vec)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS>
+template<typename TS, typename HETERO>
 template<typename ... Ts>
 template<typename T>
 void
-DataFrame<TS>::
+DataFrame<TS, HETERO>::
 mod_by_idx_functor_<Ts ...>::operator() (std::vector<T> &lhs_vec) const  {
 
     const auto  &iter = rhs_df.data_tb_.find(name);
@@ -227,12 +227,12 @@ mod_by_idx_functor_<Ts ...>::operator() (std::vector<T> &lhs_vec) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS>
+template<typename TS, typename HETERO>
 template<typename ... Ts, typename F, std::size_t ... Is>
 void
-DataFrame<TS>::for_each_in_tuple_ (const std::tuple<Ts ...> &tu,
-                                   F func,
-                                   std::index_sequence<Is ...>) const  {
+DataFrame<TS, HETERO>::for_each_in_tuple_ (const std::tuple<Ts ...> &tu,
+                                           F func,
+                                           std::index_sequence<Is ...>) const  {
 
     using expander = int[];
     (void) expander { 0, (func(std::get<Is>(tu)), 0) ... };
@@ -240,12 +240,12 @@ DataFrame<TS>::for_each_in_tuple_ (const std::tuple<Ts ...> &tu,
 
 // ----------------------------------------------------------------------------
 
-template<typename TS>
+template<typename TS, typename HETERO>
 template<typename ... Ts, typename F, std::size_t ... Is>
 void
-DataFrame<TS>::for_each_in_tuple_ (std::tuple<Ts ...> &tu,
-                                   F func,
-                                   std::index_sequence<Is ...>)  {
+DataFrame<TS, HETERO>::for_each_in_tuple_ (std::tuple<Ts ...> &tu,
+                                           F func,
+                                           std::index_sequence<Is ...>)  {
 
     using expander = int[];
     (void) expander { 0, (func(std::get<Is>(tu)), 0) ... };
@@ -253,10 +253,10 @@ DataFrame<TS>::for_each_in_tuple_ (std::tuple<Ts ...> &tu,
 
 // ----------------------------------------------------------------------------
 
-template<typename TS>
+template<typename TS, typename HETERO>
 template<typename ... Ts, typename F>
 void
-DataFrame<TS>::
+DataFrame<TS, HETERO>::
 for_each_in_tuple_ (const std::tuple<Ts...> &tu, F func) const  {
 
     for_each_in_tuple_(tu, func, std::make_index_sequence<sizeof...(Ts)>());
@@ -264,10 +264,10 @@ for_each_in_tuple_ (const std::tuple<Ts...> &tu, F func) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS>
+template<typename TS, typename HETERO>
 template<typename ... Ts, typename F>
 void
-DataFrame<TS>::for_each_in_tuple_ (std::tuple<Ts...> &tu, F func)  {
+DataFrame<TS, HETERO>::for_each_in_tuple_ (std::tuple<Ts...> &tu, F func)  {
 
     for_each_in_tuple_(tu, func, std::make_index_sequence<sizeof...(Ts)>());
 }

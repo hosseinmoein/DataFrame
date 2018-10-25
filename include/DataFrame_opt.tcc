@@ -12,9 +12,9 @@ namespace hmdf
 
 // ----------------------------------------------------------------------------
 
-template<typename TS>
+template<typename TS, typename  HETERO>
 template<typename ... types>
-bool DataFrame<TS>::is_equal (const DataFrame &rhs) const  {
+bool DataFrame<TS, HETERO>::is_equal (const DataFrame &rhs) const  {
 
     if (data_tb_.size() != rhs.data_tb_.size())
         return (false);
@@ -34,9 +34,9 @@ bool DataFrame<TS>::is_equal (const DataFrame &rhs) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS>
+template<typename TS, typename  HETERO>
 template<typename ... types>
-DataFrame<TS> &DataFrame<TS>::
+DataFrame<TS, HETERO> &DataFrame<TS, HETERO>::
 modify_by_idx (DataFrame &rhs, sort_state already_sorted)  {
 
     if (already_sorted == sort_state::not_sorted)  {

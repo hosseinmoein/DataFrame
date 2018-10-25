@@ -12,9 +12,9 @@
 namespace hmdf
 {
 
-template<typename TS>
+template<typename TS, typename  HETERO>
 template<typename T>
-std::vector<T> &DataFrame<TS>::create_column (const char *name)  {
+std::vector<T> &DataFrame<TS, HETERO>::create_column (const char *name)  {
 
     if (! ::strcmp(name, "INDEX"))
         throw DataFrameError ("DataFrame::create_column(): ERROR: "
@@ -24,7 +24,7 @@ std::vector<T> &DataFrame<TS>::create_column (const char *name)  {
     data_tb_.emplace (name, data_.size() - 1);
 
     DataVec         &hv = data_.back();
-	std::vector<T>  &vec = hv.get_vector<T>();
+	std::vector<T>  &vec = hv.template get_vector<T>();
 
     // vec.resize(timestamps_.size(), _get_nan<T>());
     return (vec);
@@ -32,10 +32,10 @@ std::vector<T> &DataFrame<TS>::create_column (const char *name)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS>
+template<typename TS, typename  HETERO>
 template<typename ... Ts>
-typename DataFrame<TS>::size_type
-DataFrame<TS>::load_data (TSVec &&indices, Ts&& ... args)  {
+typename DataFrame<TS, HETERO>::size_type
+DataFrame<TS, HETERO>::load_data (TSVec &&indices, Ts&& ... args)  {
 
     size_type       cnt = load_index(std::move(indices));
 
@@ -52,10 +52,10 @@ DataFrame<TS>::load_data (TSVec &&indices, Ts&& ... args)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS>
+template<typename TS, typename  HETERO>
 template<typename ITR>
-typename DataFrame<TS>::size_type
-DataFrame<TS>::load_index(const ITR &begin, const ITR &end)  {
+typename DataFrame<TS, HETERO>::size_type
+DataFrame<TS, HETERO>::load_index(const ITR &begin, const ITR &end)  {
 
     const size_type s = std::distance(begin, end);
 
@@ -67,9 +67,9 @@ DataFrame<TS>::load_index(const ITR &begin, const ITR &end)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS>
-typename DataFrame<TS>::size_type
-DataFrame<TS>::load_index(TSVec &&idx)  {
+template<typename TS, typename  HETERO>
+typename DataFrame<TS, HETERO>::size_type
+DataFrame<TS, HETERO>::load_index(TSVec &&idx)  {
 
     timestamps_ = idx;
     return (timestamps_.size());
@@ -77,10 +77,10 @@ DataFrame<TS>::load_index(TSVec &&idx)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS>
+template<typename TS, typename  HETERO>
 template<typename ITR>
-typename DataFrame<TS>::size_type
-DataFrame<TS>::append_index(Index2D<const ITR &> range)  {
+typename DataFrame<TS, HETERO>::size_type
+DataFrame<TS, HETERO>::append_index(Index2D<const ITR &> range)  {
 
     const size_type s = std::distance(range.begin, range.end);
 
@@ -91,9 +91,9 @@ DataFrame<TS>::append_index(Index2D<const ITR &> range)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS>
-typename DataFrame<TS>::size_type
-DataFrame<TS>::append_index(const TimeStamp &val)  {
+template<typename TS, typename  HETERO>
+typename DataFrame<TS, HETERO>::size_type
+DataFrame<TS, HETERO>::append_index(const TimeStamp &val)  {
 
     timestamps_.push_back (val);
     return (1);
@@ -101,10 +101,10 @@ DataFrame<TS>::append_index(const TimeStamp &val)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS>
+template<typename TS, typename  HETERO>
 template<typename T, typename ITR>
-typename DataFrame<TS>::size_type
-DataFrame<TS>::
+typename DataFrame<TS, HETERO>::size_type
+DataFrame<TS, HETERO>::
 load_column (const char *name, Index2D<const ITR &> range, nan_policy padding) {
 
     size_type s = std::distance(range.begin, range.end);
@@ -127,7 +127,7 @@ load_column (const char *name, Index2D<const ITR &> range, nan_policy padding) {
     else  {
         DataVec &hv = data_[iter->second];
 
-        vec_ptr = &(hv.get_vector<T>());
+        vec_ptr = &(hv.template get_vector<T>());
     }
 
     vec_ptr->clear();
@@ -149,10 +149,10 @@ load_column (const char *name, Index2D<const ITR &> range, nan_policy padding) {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS>
+template<typename TS, typename  HETERO>
 template<typename T>
-typename DataFrame<TS>::size_type
-DataFrame<TS>::
+typename DataFrame<TS, HETERO>::size_type
+DataFrame<TS, HETERO>::
 load_column (const char *name, std::vector<T> &&data, nan_policy padding)  {
 
     const size_type idx_s = timestamps_.size();
@@ -184,7 +184,7 @@ load_column (const char *name, std::vector<T> &&data, nan_policy padding)  {
     else  {
         DataVec &hv = data_[iter->second];
 
-        vec_ptr = &(hv.get_vector<T>());
+        vec_ptr = &(hv.template get_vector<T>());
     }
 
     *vec_ptr = std::move(data);
@@ -193,10 +193,10 @@ load_column (const char *name, std::vector<T> &&data, nan_policy padding)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS>
+template<typename TS, typename  HETERO>
 template<typename T1, typename T2>
-typename DataFrame<TS>::size_type
-DataFrame<TS>::_load_pair(std::pair<T1, T2> &col_name_data)  {
+typename DataFrame<TS, HETERO>::size_type
+DataFrame<TS, HETERO>::_load_pair(std::pair<T1, T2> &col_name_data)  {
 
     return (load_column<typename decltype(col_name_data.second)::value_type>(
                 col_name_data.first, // column name
@@ -206,10 +206,10 @@ DataFrame<TS>::_load_pair(std::pair<T1, T2> &col_name_data)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS>
+template<typename TS, typename  HETERO>
 template<typename T, typename ITR>
-typename DataFrame<TS>::size_type
-DataFrame<TS>::
+typename DataFrame<TS, HETERO>::size_type
+DataFrame<TS, HETERO>::
 append_column (const char *name,
                Index2D<const ITR &> range,
                nan_policy padding)  {
@@ -226,7 +226,7 @@ append_column (const char *name,
     }
 
     DataVec         &hv = data_[iter->second];
-	std::vector<T>  &vec = hv.get_vector<T>();
+	std::vector<T>  &vec = hv.template get_vector<T>();
 
     size_type       s = std::distance(range.begin, range.end) + vec.size ();
     const size_type idx_s = timestamps_.size();
@@ -258,10 +258,10 @@ append_column (const char *name,
 
 // ----------------------------------------------------------------------------
 
-template<typename TS>
+template<typename TS, typename  HETERO>
 template<typename T>
-typename DataFrame<TS>::size_type
-DataFrame<TS>::
+typename DataFrame<TS, HETERO>::size_type
+DataFrame<TS, HETERO>::
 append_column (const char *name, const T &val, nan_policy padding)  {
 
     const auto  iter = data_tb_.find (name);
@@ -276,7 +276,7 @@ append_column (const char *name, const T &val, nan_policy padding)  {
     }
 
     DataVec         &hv = data_[iter->second];
-	std::vector<T>  &vec = hv.get_vector<T>();
+	std::vector<T>  &vec = hv.template get_vector<T>();
 
     size_type       s = 1;
     const size_type idx_s = timestamps_.size();

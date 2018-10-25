@@ -20,8 +20,8 @@ namespace hmdf
 #define gcc_unlikely(x)  __builtin_expect(!!(x), 0)
 
 #if defined(__linux__) || defined(__unix__) || defined(__APPLE__)
-template<typename TS>
-bool DataFrame<TS>::read (const char *file_name)  {
+template<typename TS, typename  HETERO>
+bool DataFrame<TS, HETERO>::read (const char *file_name)  {
 
     DMScu_MMapFile  file (file_name,
                           DMScu_MMapFile::_read_,
@@ -160,8 +160,8 @@ bool DataFrame<TS>::read (const char *file_name)  {
 #endif // defined(__linux__) || defined(__unix__) || defined(__APPLE__)
 
 #ifdef _WIN32
-template <typename TS>
-bool DataFrame<TS>::read(const char* file_name)  {
+template<typename TS, typename  HETERO>
+bool DataFrame<TS, HETERO>::read(const char* file_name)  {
 
     auto get_token = [](const char& delim, std::ifstream& file) {
         std::string token;
@@ -291,8 +291,8 @@ bool DataFrame<TS>::read(const char* file_name)  {
 
 // ----------------------------------------------------------------------------
 
-template <typename TS>
-std::future<bool> DataFrame<TS>::read_async(const char *file_name) {
+template<typename TS, typename  HETERO>
+std::future<bool> DataFrame<TS, HETERO>::read_async(const char *file_name) {
     return (std::async(std::launch::async, &DataFrame::read, this, file_name));
 }
 

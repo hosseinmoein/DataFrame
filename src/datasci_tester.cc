@@ -74,18 +74,17 @@ int main(int argc, char *argv[]) {
     {
         std::cout << "\n\nTesing HetroVector View" << std::endl;
 
-        using DoubleView = VectorView<double>;
-        using StringView = VectorView<std::string>;
+        HeteroView  d = hv.get_view<double>();
 
-        DoubleView  d = hv.get_view<double>();
+        std::cout << "d[3] must be 1.05: " << d.at<double>(3) << std::endl;
 
-        std::cout << "d[3] must be 1.05: " << d[3] << std::endl;
+        HeteroView  s = hv.get_view<std::string>(1, 3);
 
-        StringView  s = hv.get_view<std::string>(1, 3);
-
-        std::cout << "s[0] must be 'str_2': " << s[0] << std::endl;
-        std::cout << "s size: " << s.size() << std::endl;
-        std::cout << "s.back() must be 'abc': " << s.back() << std::endl;
+        std::cout << "s[0] must be 'str_2': "
+                  << s.at<std::string>(0) << std::endl;
+        std::cout << "s size: " << s.size<std::string>() << std::endl;
+        std::cout << "s.back() must be 'abc': "
+                  << s.back<std::string>() << std::endl;
 
         std::cout << "\n\n";
     }

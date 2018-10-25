@@ -31,10 +31,6 @@ V &HeteroVector::get_vector()  {
 
     // don't have it yet, so create functions for copying and destroying
     if (iter == vectors_<T>.end())  {
-        clear_functions_.reserve(4);
-        copy_functions_.reserve(4);
-        move_functions_.reserve(4);
-
         clear_functions_.emplace_back (
             [](HeteroVector &hv) { vectors_<T>.erase(&hv); });
 
@@ -59,12 +55,12 @@ V &HeteroVector::get_vector()  {
 // ----------------------------------------------------------------------------
 
 template<typename T, typename V>
-VectorView<T> HeteroVector::get_view(size_t begin, size_t end)  {
+HeteroView HeteroVector::get_view(size_t begin, size_t end)  {
 
     V   &vec = get_vector<T, V>();
 
-    return (VectorView<T>(&(vec[begin]),
-                          end == size_t(-1) ? &(vec.back()) : &(vec[end])));
+    return (HeteroView(
+        &(vec[begin]), end == size_t(-1) ? &(vec.back()) : &(vec[end])));
 
 }
 

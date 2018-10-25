@@ -5,14 +5,12 @@
 
 #pragma once
 
-#include "VectorView.h"
+#include "HeteroView.h"
 #include <vector>
 #include <functional>
 #include <unordered_map>
 #include <utility>
 #include <algorithm>
-
-// #include <DMSob_ObjectBase.h>
 
 // ----------------------------------------------------------------------------
 
@@ -47,8 +45,8 @@ public:
     // There is no const version of this method
     //
     template<typename T, typename V = std::vector<T>>
-    VectorView<T> get_view(size_t begin = 0, size_t end = -1);
-	
+    HeteroView get_view(size_t begin = 0, size_t end = -1);
+
     template<typename T, typename V = std::vector<T>>
     void push_back(const T &v);
     template<typename T, typename V = std::vector<T>, class... Args>

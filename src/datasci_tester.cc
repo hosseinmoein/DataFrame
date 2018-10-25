@@ -34,7 +34,7 @@ struct change_functor : HeteroVector::visitor_base<int, double, std::string>  {
     void operator() (T &val)  {
         for (int i = 0; i < 10; ++i)
             // val.push_back(
-            //    DataFrame<unsigned long, std::vector>::
+            //    DataFrame<unsigned long>::
             //        _get_nan<typename std::remove_reference<decltype(val)>::type::value_type>());
             val.push_back(
         typename std::remove_reference<decltype(val)>::type::value_type());
@@ -121,11 +121,11 @@ int main(int argc, char *argv[]) {
     hv.visit(std::move(mv));
 
     hv.resize(100, 5);
-    hv.pop_back<int, std::vector<int>>();
-    hv.empty<int, std::vector<int>>();
-    hv.at<int, std::vector<int>>(5);
-    hv.back<int, std::vector<int>>();
-    hv.front<int, std::vector<int>>();
+    hv.pop_back<int>();
+    hv.empty<int>();
+    hv.at<int>(5);
+    hv.back<int>();
+    hv.front<int>();
 
     //
     // ----------------------------------------

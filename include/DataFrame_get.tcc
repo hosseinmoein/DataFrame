@@ -29,7 +29,7 @@ DS<T> &DataFrame<TS, DS>::get_column (const char *name)  {
 
     DataVec &hv = data_[iter->second];
 
-    return (hv.get_vector<T, DS<T>>());
+    return (hv.get_vector<T>());
 }
 
 // ----------------------------------------------------------------------------
@@ -82,7 +82,7 @@ V &DataFrame<TS, DS>::visit (const char *name, V &visitor) const  {
     }
 
     const DataVec   &hv = data_[iter->second];
-    const DS<T>     &vec = hv.get_vector<T, DS<T>>();
+    const DS<T>     &vec = hv.get_vector<T>();
     const size_type idx_s = timestamps_.size();
     const size_type data_s = vec.size();
 
@@ -121,8 +121,8 @@ visit (const char *name1, const char *name2, V &&visitor) const  {
 
     const DataVec   &hv1 = data_[iter1->second];
     const DataVec   &hv2 = data_[iter2->second];
-    const DS<T1>    &vec1 = hv1.get_vector<T1, DS<T1>>();
-    const DS<T2>    &vec2 = hv2.get_vector<T2, DS<T2>>();
+    const DS<T1>    &vec1 = hv1.get_vector<T1>();
+    const DS<T2>    &vec2 = hv2.get_vector<T2>();
     const size_type idx_s = timestamps_.size();
     const size_type data_s1 = vec1.size();
     const size_type data_s2 = vec2.size();
@@ -177,9 +177,9 @@ visit (const char *name1,
     const DataVec   &hv1 = data_[iter1->second];
     const DataVec   &hv2 = data_[iter2->second];
     const DataVec   &hv3 = data_[iter3->second];
-    const DS<T1>    &vec1 = hv1.get_vector<T1, DS<T1>>();
-    const DS<T2>    &vec2 = hv2.get_vector<T2, DS<T2>>();
-    const DS<T3>    &vec3 = hv3.get_vector<T3, DS<T3>>();
+    const DS<T1>    &vec1 = hv1.get_vector<T1>();
+    const DS<T2>    &vec2 = hv2.get_vector<T2>();
+    const DS<T3>    &vec3 = hv3.get_vector<T3>();
     const size_type idx_s = timestamps_.size();
     const size_type data_s1 = vec1.size();
     const size_type data_s2 = vec2.size();
@@ -247,10 +247,10 @@ visit (const char *name1,
     const DataVec   &hv2 = data_[iter2->second];
     const DataVec   &hv3 = data_[iter3->second];
     const DataVec   &hv4 = data_[iter4->second];
-    const DS<T1>    &vec1 = hv1.get_vector<T1, DS<T1>>();
-    const DS<T2>    &vec2 = hv2.get_vector<T2, DS<T2>>();
-    const DS<T3>    &vec3 = hv3.get_vector<T3, DS<T3>>();
-    const DS<T4>    &vec4 = hv4.get_vector<T4, DS<T4>>();
+    const DS<T1>    &vec1 = hv1.get_vector<T1>();
+    const DS<T2>    &vec2 = hv2.get_vector<T2>();
+    const DS<T3>    &vec3 = hv3.get_vector<T3>();
+    const DS<T4>    &vec4 = hv4.get_vector<T4>();
     const size_type idx_s = timestamps_.size();
     const size_type data_s1 = vec1.size();
     const size_type data_s2 = vec2.size();
@@ -332,11 +332,11 @@ visit (const char *name1,
     const DataVec   &hv3 = data_[iter3->second];
     const DataVec   &hv4 = data_[iter4->second];
     const DataVec   &hv5 = data_[iter5->second];
-    const DS<T1>    &vec1 = hv1.get_vector<T1, DS<T1>>();
-    const DS<T2>    &vec2 = hv2.get_vector<T2, DS<T2>>();
-    const DS<T3>    &vec3 = hv3.get_vector<T3, DS<T3>>();
-    const DS<T4>    &vec4 = hv4.get_vector<T4, DS<T4>>();
-    const DS<T5>    &vec5 = hv5.get_vector<T5, DS<T5>>();
+    const DS<T1>    &vec1 = hv1.get_vector<T1>();
+    const DS<T2>    &vec2 = hv2.get_vector<T2>();
+    const DS<T3>    &vec3 = hv3.get_vector<T3>();
+    const DS<T4>    &vec4 = hv4.get_vector<T4>();
+    const DS<T5>    &vec5 = hv5.get_vector<T5>();
     const size_type idx_s = timestamps_.size();
     const size_type data_s1 = vec1.size();
     const size_type data_s2 = vec2.size();

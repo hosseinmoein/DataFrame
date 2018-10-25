@@ -199,7 +199,7 @@ equal_functor_<Ts ...>::operator() (const DS<T> &lhs_vec)  {
     }
 
     const DataVec   &hv = df.data_[iter->second];
-    const DS<T>     &rhs_vec = hv.get_vector<T, DS<T>>();
+    const DS<T>     &rhs_vec = hv.get_vector<T>();
 
     if (lhs_vec != rhs_vec)
         result = false;

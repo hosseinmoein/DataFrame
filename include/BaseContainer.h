@@ -25,6 +25,8 @@ struct  HeteroVector  {
 
 public:
 
+    using size_type = size_t;
+	
     HeteroVector();
     HeteroVector(const HeteroVector &that);
     HeteroVector(HeteroVector &&that);
@@ -34,66 +36,66 @@ public:
     HeteroVector &operator= (const HeteroVector &rhs);
     HeteroVector &operator= (HeteroVector &&rhs);
 
-    template<typename T, typename V = std::vector<T>>
-    V &get_vector();
-    template<typename T, typename V = std::vector<T>>
-    const V &get_vector() const;
+    template<typename T>
+    std::vector<T> &get_vector();
+    template<typename T>
+    const std::vector<T> &get_vector() const;
 
     // It returns a view of the underlying vector.
     // NOTE: One can modify the vector through the view. But the vector
     //       cannot be extended or shrunk through the view.
     // There is no const version of this method
     //
-    template<typename T, typename V = std::vector<T>>
-    HeteroView get_view(size_t begin = 0, size_t end = -1);
+    template<typename T>
+    HeteroView get_view(size_type begin = 0, size_type end = -1);
 
-    template<typename T, typename V = std::vector<T>>
+    template<typename T>
     void push_back(const T &v);
-    template<typename T, typename V = std::vector<T>, class... Args>
+    template<typename T, class... Args>
     void emplace_back (Args &&... args);
-    template<typename T, typename V = std::vector<T>, class... Args>
-    void emplace (typename V::const_iterator pos, Args &&... args);
+    template<typename T, typename ITR, class... Args>
+    void emplace (ITR pos, Args &&... args);
 
-    template<typename T, typename V = std::vector<T>>
-    void reserve (typename V::size_type r)  { get_vector<T, V>().reserve (r); }
-    template<typename T, typename V = std::vector<T>>
-    void shrink_to_fit () { get_vector<T, V>().shrink_to_fit (); }
+    template<typename T>
+    void reserve (size_type r)  { get_vector<T>().reserve (r); }
+    template<typename T>
+    void shrink_to_fit () { get_vector<T>().shrink_to_fit (); }
 
-    template<typename T, typename V = std::vector<T>>
-    typename V::size_type size () const { return (get_vector<T, V>().size()); }
+    template<typename T>
+    size_type size () const { return (get_vector<T>().size()); }
 
     void clear();
 
-    template<typename T, typename V = std::vector<T>>
-    void resize(typename V::size_type count);
-    template<typename T, typename V = std::vector<T>>
-    void resize(typename V::size_type count, const T &v);
+    template<typename T>
+    void resize(size_type count);
+    template<typename T>
+    void resize(size_type count, const T &v);
 
-    template<typename T, typename V = std::vector<T>>
+    template<typename T>
     void pop_back();
 
-    template<typename T, typename V = std::vector<T>>
+    template<typename T>
     bool empty() const noexcept;
 
-    template<typename T, typename V = std::vector<T>>
-    T &at(typename V::size_type idx);
-    template<typename T, typename V = std::vector<T>>
-    const T &at(typename V::size_type idx) const;
+    template<typename T>
+    T &at(size_type idx);
+    template<typename T>
+    const T &at(size_type idx) const;
 
-    template<typename T, typename V = std::vector<T>>
+    template<typename T>
     T &back();
-    template<typename T, typename V = std::vector<T>>
+    template<typename T>
     const T &back() const;
 
-    template<typename T, typename V = std::vector<T>>
+    template<typename T>
     T &front();
-    template<typename T, typename V = std::vector<T>>
+    template<typename T>
     const T &front() const;
 
 private:
 
-    template<typename T, typename V = std::vector<T>>
-    static std::unordered_map<const HeteroVector *, V>  vectors_;
+    template<typename T>
+    static std::unordered_map<const HeteroVector *, std::vector<T>> vectors_;
 
     std::vector<std::function<void(HeteroVector &)>>    clear_functions_;
     std::vector<std::function<void(const HeteroVector &,

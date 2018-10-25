@@ -65,13 +65,16 @@ set(LIBRARY_TARGET_NAME ${PROJECT_NAME})
 # List of source files.
 set(${LIBRARY_TARGET_NAME}_SRC
   src/BaseContainer.cc
+  src/HeteroView.cc
   )
 
 # List of header files.
 set(${LIBRARY_TARGET_NAME}_HDR
   include/VectorView.h
   include/BaseContainer.h
+  include/HeteroView.h
   include/BaseContainer.tcc
+  include/HeteroView.tcc
   include/DFVisitors.h
   include/DataFrame.h
   include/DataFrame.tcc

@@ -12,9 +12,9 @@
 namespace hmdf
 {
 
-template<typename TS, template<typename DT, class... types> class DS>
+template<typename TS>
 template<typename T>
-DS<T> &DataFrame<TS, DS>::create_column (const char *name)  {
+std::vector<T> &DataFrame<TS>::create_column (const char *name)  {
 
     if (! ::strcmp(name, "INDEX"))
         throw DataFrameError ("DataFrame::create_column(): ERROR: "
@@ -23,8 +23,8 @@ DS<T> &DataFrame<TS, DS>::create_column (const char *name)  {
     data_.emplace_back (DataVec());
     data_tb_.emplace (name, data_.size() - 1);
 
-    DataVec &hv = data_.back();
-    DS<T>   &vec = hv.get_vector<T>();
+    DataVec         &hv = data_.back();
+	std::vector<T>  &vec = hv.get_vector<T>();
 
     // vec.resize(timestamps_.size(), _get_nan<T>());
     return (vec);
@@ -32,10 +32,10 @@ DS<T> &DataFrame<TS, DS>::create_column (const char *name)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, template<typename DT, class... types> class DS>
+template<typename TS>
 template<typename ... Ts>
-typename DataFrame<TS, DS>::size_type
-DataFrame<TS, DS>::load_data (TSVec &&indices, Ts&& ... args)  {
+typename DataFrame<TS>::size_type
+DataFrame<TS>::load_data (TSVec &&indices, Ts&& ... args)  {
 
     size_type       cnt = load_index(std::move(indices));
 
@@ -52,10 +52,10 @@ DataFrame<TS, DS>::load_data (TSVec &&indices, Ts&& ... args)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, template<typename DT, class... types> class DS>
+template<typename TS>
 template<typename ITR>
-typename DataFrame<TS, DS>::size_type
-DataFrame<TS, DS>::load_index(const ITR &begin, const ITR &end)  {
+typename DataFrame<TS>::size_type
+DataFrame<TS>::load_index(const ITR &begin, const ITR &end)  {
 
     const size_type s = std::distance(begin, end);
 
@@ -67,9 +67,9 @@ DataFrame<TS, DS>::load_index(const ITR &begin, const ITR &end)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, template<typename DT, class... types> class DS>
-typename DataFrame<TS, DS>::size_type
-DataFrame<TS, DS>::load_index(TSVec &&idx)  {
+template<typename TS>
+typename DataFrame<TS>::size_type
+DataFrame<TS>::load_index(TSVec &&idx)  {
 
     timestamps_ = idx;
     return (timestamps_.size());
@@ -77,10 +77,10 @@ DataFrame<TS, DS>::load_index(TSVec &&idx)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, template<typename DT, class... types> class DS>
+template<typename TS>
 template<typename ITR>
-typename DataFrame<TS, DS>::size_type
-DataFrame<TS, DS>::append_index(Index2D<const ITR &> range)  {
+typename DataFrame<TS>::size_type
+DataFrame<TS>::append_index(Index2D<const ITR &> range)  {
 
     const size_type s = std::distance(range.begin, range.end);
 
@@ -91,9 +91,9 @@ DataFrame<TS, DS>::append_index(Index2D<const ITR &> range)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, template<typename DT, class... types> class DS>
-typename DataFrame<TS, DS>::size_type
-DataFrame<TS, DS>::append_index(const TimeStamp &val)  {
+template<typename TS>
+typename DataFrame<TS>::size_type
+DataFrame<TS>::append_index(const TimeStamp &val)  {
 
     timestamps_.push_back (val);
     return (1);
@@ -101,10 +101,10 @@ DataFrame<TS, DS>::append_index(const TimeStamp &val)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, template<typename DT, class... types> class DS>
+template<typename TS>
 template<typename T, typename ITR>
-typename DataFrame<TS, DS>::size_type
-DataFrame<TS, DS>::
+typename DataFrame<TS>::size_type
+DataFrame<TS>::
 load_column (const char *name, Index2D<const ITR &> range, nan_policy padding) {
 
     size_type s = std::distance(range.begin, range.end);
@@ -119,8 +119,8 @@ load_column (const char *name, Index2D<const ITR &> range, nan_policy padding) {
         throw InconsistentData (buffer);
     }
 
-    const auto  iter = data_tb_.find (name);
-    DS<T>       *vec_ptr = nullptr;
+    const auto      iter = data_tb_.find (name);
+	std::vector<T>  *vec_ptr = nullptr;
 
     if (iter == data_tb_.end())
         vec_ptr = &(create_column<T>(name));
@@ -149,11 +149,11 @@ load_column (const char *name, Index2D<const ITR &> range, nan_policy padding) {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, template<typename DT, class... types> class DS>
+template<typename TS>
 template<typename T>
-typename DataFrame<TS, DS>::size_type
-DataFrame<TS, DS>::
-load_column (const char *name, DS<T> &&data, nan_policy padding)  {
+typename DataFrame<TS>::size_type
+DataFrame<TS>::
+load_column (const char *name, std::vector<T> &&data, nan_policy padding)  {
 
     const size_type idx_s = timestamps_.size();
     const size_type data_s = data.size();
@@ -176,8 +176,8 @@ load_column (const char *name, DS<T> &&data, nan_policy padding)  {
         }
     }
 
-    const auto  iter = data_tb_.find (name);
-    DS<T>       *vec_ptr = nullptr;
+    const auto      iter = data_tb_.find (name);
+    std::vector<T>  *vec_ptr = nullptr;
 
     if (iter == data_tb_.end())
         vec_ptr = &(create_column<T>(name));
@@ -193,10 +193,10 @@ load_column (const char *name, DS<T> &&data, nan_policy padding)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, template<typename DT, class... types> class DS>
+template<typename TS>
 template<typename T1, typename T2>
-typename DataFrame<TS, DS>::size_type
-DataFrame<TS, DS>::_load_pair(std::pair<T1, T2> &col_name_data)  {
+typename DataFrame<TS>::size_type
+DataFrame<TS>::_load_pair(std::pair<T1, T2> &col_name_data)  {
 
     return (load_column<typename decltype(col_name_data.second)::value_type>(
                 col_name_data.first, // column name
@@ -206,10 +206,10 @@ DataFrame<TS, DS>::_load_pair(std::pair<T1, T2> &col_name_data)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, template<typename DT, class... types> class DS>
+template<typename TS>
 template<typename T, typename ITR>
-typename DataFrame<TS, DS>::size_type
-DataFrame<TS, DS>::
+typename DataFrame<TS>::size_type
+DataFrame<TS>::
 append_column (const char *name,
                Index2D<const ITR &> range,
                nan_policy padding)  {
@@ -225,8 +225,8 @@ append_column (const char *name,
         throw ColNotFound (buffer);
     }
 
-    DataVec &hv = data_[iter->second];
-    DS<T>   &vec = hv.get_vector<T>();
+    DataVec         &hv = data_[iter->second];
+	std::vector<T>  &vec = hv.get_vector<T>();
 
     size_type       s = std::distance(range.begin, range.end) + vec.size ();
     const size_type idx_s = timestamps_.size();
@@ -258,10 +258,10 @@ append_column (const char *name,
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, template<typename DT, class... types> class DS>
+template<typename TS>
 template<typename T>
-typename DataFrame<TS, DS>::size_type
-DataFrame<TS, DS>::
+typename DataFrame<TS>::size_type
+DataFrame<TS>::
 append_column (const char *name, const T &val, nan_policy padding)  {
 
     const auto  iter = data_tb_.find (name);
@@ -275,8 +275,8 @@ append_column (const char *name, const T &val, nan_policy padding)  {
         throw ColNotFound (buffer);
     }
 
-    DataVec &hv = data_[iter->second];
-    DS<T>   &vec = hv.get_vector<T>();
+    DataVec         &hv = data_[iter->second];
+	std::vector<T>  &vec = hv.get_vector<T>();
 
     size_type       s = 1;
     const size_type idx_s = timestamps_.size();

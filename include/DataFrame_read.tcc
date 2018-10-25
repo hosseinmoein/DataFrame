@@ -20,8 +20,8 @@ namespace hmdf
 #define gcc_unlikely(x)  __builtin_expect(!!(x), 0)
 
 #if defined(__linux__) || defined(__unix__) || defined(__APPLE__)
-template<typename TS, template<typename DT, class... types> class DS>
-bool DataFrame<TS, DS>::read (const char *file_name)  {
+template<typename TS>
+bool DataFrame<TS>::read (const char *file_name)  {
 
     DMScu_MMapFile  file (file_name,
                           DMScu_MMapFile::_read_,
@@ -71,7 +71,7 @@ bool DataFrame<TS, DS>::read (const char *file_name)  {
                                       "':' char to start column values");
 
             if (! ::strcmp(type, "double"))  {
-                DS<double>  &vec = create_column<double>(value);
+                std::vector<double> &vec = create_column<double>(value);
 
                 while (! file.is_eof ())  {
                     c = static_cast<char>(file.get_char());
@@ -83,7 +83,7 @@ bool DataFrame<TS, DS>::read (const char *file_name)  {
                 }
             }
             else if (! ::strcmp(type, "int"))  {
-                DS<int> &vec = create_column<int>(value);
+                std::vector<int> &vec = create_column<int>(value);
 
                 while (! file.is_eof ())  {
                     c = static_cast<char>(file.get_char());
@@ -95,7 +95,8 @@ bool DataFrame<TS, DS>::read (const char *file_name)  {
                 }
             }
             else if (! ::strcmp(type, "uint"))  {
-                DS<unsigned int>    &vec = create_column<unsigned int>(value);
+                std::vector<unsigned int>   &vec =
+                    create_column<unsigned int>(value);
 
                 while (! file.is_eof ())  {
                     c = static_cast<char>(file.get_char());
@@ -107,7 +108,7 @@ bool DataFrame<TS, DS>::read (const char *file_name)  {
                 }
             }
             else if (! ::strcmp(type, "long"))  {
-                DS<long>    &vec = create_column<long>(value);
+                std::vector<long>   &vec = create_column<long>(value);
 
                 while (! file.is_eof ())  {
                     c = static_cast<char>(file.get_char());
@@ -119,7 +120,8 @@ bool DataFrame<TS, DS>::read (const char *file_name)  {
                 }
             }
             else if (! ::strcmp(type, "ulong"))  {
-                DS<unsigned long>   &vec = create_column<unsigned long>(value);
+                std::vector<unsigned long>  &vec =
+                    create_column<unsigned long>(value);
 
                 while (! file.is_eof ())  {
                     c = static_cast<char>(file.get_char());
@@ -131,7 +133,8 @@ bool DataFrame<TS, DS>::read (const char *file_name)  {
                 }
             }
             else if (! ::strcmp(type, "string"))  {
-                DS<std::string> &vec = create_column<std::string>(value);
+                std::vector<std::string>    &vec =
+                    create_column<std::string>(value);
 
                 while (! file.is_eof ())  {
                     c = static_cast<char>(file.get_char());
@@ -143,7 +146,7 @@ bool DataFrame<TS, DS>::read (const char *file_name)  {
                 }
             }
             else if (! ::strcmp(type, "bool"))  {
-                DS<bool>    &vec = create_column<bool>(value);
+                std::vector<bool>   &vec = create_column<bool>(value);
             }
             else
                 throw DataFrameError ("DataFrame::read(): ERROR: Unknown "
@@ -157,9 +160,9 @@ bool DataFrame<TS, DS>::read (const char *file_name)  {
 #endif // defined(__linux__) || defined(__unix__) || defined(__APPLE__)
 
 #ifdef _WIN32
-template <typename TS, template <typename DT, class... types> class DS>
-bool DataFrame<TS, DS>::read(const char* file_name)
-{
+template <typename TS>
+bool DataFrame<TS>::read(const char* file_name)  {
+
     auto get_token = [](const char& delim, std::ifstream& file) {
         std::string token;
         char c;
@@ -190,7 +193,9 @@ bool DataFrame<TS, DS>::read(const char* file_name)
         }
         file.unget();
         value_str = get_token(':', file);
-        strcpy_s(value, value_str.c_str()); // This is done so the DS vector created can use the the value char array
+        // This is done so the DS vector created can use the the
+        // value char array
+        strcpy_s(value, value_str.c_str());
         if (value_str == "INDEX") {
             TSVec vec;
             while (file.get(c)) {
@@ -214,7 +219,7 @@ bool DataFrame<TS, DS>::read(const char* file_name)
                     "DataFrame::read(): ERROR: Expected "
                     "':' char to start column values");
             if (type_str == "double") {
-                DS<double>& vec = create_column<double>(value);
+                std::vector<double>& vec = create_column<double>(value);
                 while (file.get(c)) {
                     if (c == '\n') break;
                     file.unget();
@@ -223,7 +228,7 @@ bool DataFrame<TS, DS>::read(const char* file_name)
                     vec.push_back(atof(value));
                 }
             } else if (type_str == "int") {
-                DS<int>& vec = create_column<int>(value);
+                std::vector<int>& vec = create_column<int>(value);
                 while (file.get(c)) {
                     if (c == '\n') break;
                     file.unget();
@@ -232,7 +237,8 @@ bool DataFrame<TS, DS>::read(const char* file_name)
                     vec.push_back(atoi(value));
                 }
             } else if (type_str == "uint") {
-                DS<unsigned int>& vec = create_column<unsigned int>(value);
+                std::vector<unsigned int>& vec =
+                    create_column<unsigned int>(value);
                 while (file.get(c)) {
                     if (c == '\n') break;
                     file.unget();
@@ -241,7 +247,7 @@ bool DataFrame<TS, DS>::read(const char* file_name)
                     vec.push_back(static_cast<unsigned int>(atol(value)));
                 }
             } else if (type_str == "long") {
-                DS<long>& vec = create_column<long>(value);
+                std::vector<long>& vec = create_column<long>(value);
                 while (file.get(c)) {
                     if (c == '\n') break;
                     file.unget();
@@ -250,7 +256,8 @@ bool DataFrame<TS, DS>::read(const char* file_name)
                     vec.push_back(atol(value));
                 }
             } else if (type_str == "ulong") {
-                DS<unsigned long>& vec = create_column<unsigned long>(value);
+                std::vector<unsigned long>& vec =
+                    create_column<unsigned long>(value);
                 while (file.get(c)) {
                     if (c == '\n') break;
                     file.unget();
@@ -259,7 +266,8 @@ bool DataFrame<TS, DS>::read(const char* file_name)
                     vec.push_back(static_cast<unsigned long>(atoll(value)));
                 }
             } else if (type_str == "string") {
-                DS<std::string>& vec = create_column<std::string>(value);
+                std::vector<std::string>& vec =
+                    create_column<std::string>(value);
                 while (file.get(c)) {
                     if (c == '\n') break;
                     file.unget();
@@ -268,7 +276,7 @@ bool DataFrame<TS, DS>::read(const char* file_name)
                     vec.push_back(value);
                 }
             } else if (type_str == "bool") {
-                DS<bool>& vec = create_column<bool>(value);
+                std::vector<bool>& vec = create_column<bool>(value);
             } else
                 throw DataFrameError(
                     "DataFrame::read(): ERROR: Unknown "
@@ -283,8 +291,8 @@ bool DataFrame<TS, DS>::read(const char* file_name)
 
 // ----------------------------------------------------------------------------
 
-template <typename TS, template <typename DT, class... types> class DS>
-std::future<bool> DataFrame<TS, DS>::read_async(const char *file_name) {
+template <typename TS>
+std::future<bool> DataFrame<TS>::read_async(const char *file_name) {
     return (std::async(std::launch::async, &DataFrame::read, this, file_name));
 }
 

@@ -133,7 +133,7 @@ int main(int argc, char *argv[]) {
 
     std::cout << "\n\nNow testing Data Frame\n" << std::endl;
 
-    typedef StdDataFrame<unsigned long> MyDataFrame;
+    typedef DataFrame<unsigned long> MyDataFrame;
 
     MyDataFrame         df;
     std::vector<int>    &col0 =

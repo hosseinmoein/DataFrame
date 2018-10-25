@@ -12,9 +12,9 @@
 namespace hmdf
 {
 
-template<typename TS, template<typename DT, class... types> class DS>
+template<typename TS>
 template<typename T>
-DS<T> &DataFrame<TS, DS>::get_column (const char *name)  {
+std::vector<T> &DataFrame<TS>::get_column (const char *name)  {
 
     auto iter = data_tb_.find (name);
 
@@ -34,18 +34,18 @@ DS<T> &DataFrame<TS, DS>::get_column (const char *name)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, template<typename DT, class... types> class DS>
+template<typename TS>
 template<typename T>
-const DS<T> &DataFrame<TS, DS>::get_column (const char *name) const  {
+const std::vector<T> &DataFrame<TS>::get_column (const char *name) const  {
 
     return (const_cast<DataFrame *>(this)->get_column<T>(name));
 }
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, template<typename DT, class... types> class DS>
+template<typename TS>
 template<typename ... Ts>
-void DataFrame<TS, DS>::multi_visit (Ts ... args) const  {
+void DataFrame<TS>::multi_visit (Ts ... args) const  {
 
     auto    args_tuple = std::tuple<Ts ...>(args ...);
     auto    fc = [this](auto &pa) mutable -> void {
@@ -66,9 +66,9 @@ void DataFrame<TS, DS>::multi_visit (Ts ... args) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, template<typename DT, class... types> class DS>
+template<typename TS>
 template<typename T, typename V>
-V &DataFrame<TS, DS>::visit (const char *name, V &visitor) const  {
+V &DataFrame<TS>::visit (const char *name, V &visitor) const  {
 
     const auto  iter = data_tb_.find (name);
 
@@ -81,10 +81,10 @@ V &DataFrame<TS, DS>::visit (const char *name, V &visitor) const  {
         throw ColNotFound (buffer);
     }
 
-    const DataVec   &hv = data_[iter->second];
-    const DS<T>     &vec = hv.get_vector<T>();
-    const size_type idx_s = timestamps_.size();
-    const size_type data_s = vec.size();
+    const DataVec           &hv = data_[iter->second];
+    const std::vector<T>    &vec = hv.get_vector<T>();
+    const size_type         idx_s = timestamps_.size();
+    const size_type         data_s = vec.size();
 
     for (size_type i = 0; i < idx_s; ++i)
         visitor (timestamps_[i], i < data_s ? vec[i] : _get_nan<T>());
@@ -94,9 +94,9 @@ V &DataFrame<TS, DS>::visit (const char *name, V &visitor) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, template<typename DT, class... types> class DS>
+template<typename TS>
 template<typename T1, typename T2, typename V>
-V &&DataFrame<TS, DS>::
+V &&DataFrame<TS>::
 visit (const char *name1, const char *name2, V &&visitor) const  {
 
     const auto  iter1 = data_tb_.find (name1);
@@ -119,13 +119,13 @@ visit (const char *name1, const char *name2, V &&visitor) const  {
         throw ColNotFound (buffer);
     }
 
-    const DataVec   &hv1 = data_[iter1->second];
-    const DataVec   &hv2 = data_[iter2->second];
-    const DS<T1>    &vec1 = hv1.get_vector<T1>();
-    const DS<T2>    &vec2 = hv2.get_vector<T2>();
-    const size_type idx_s = timestamps_.size();
-    const size_type data_s1 = vec1.size();
-    const size_type data_s2 = vec2.size();
+    const DataVec           &hv1 = data_[iter1->second];
+    const DataVec           &hv2 = data_[iter2->second];
+    const std::vector<T1>   &vec1 = hv1.get_vector<T1>();
+    const std::vector<T2>   &vec2 = hv2.get_vector<T2>();
+    const size_type         idx_s = timestamps_.size();
+    const size_type         data_s1 = vec1.size();
+    const size_type         data_s2 = vec2.size();
 
     for (size_type i = 0; i < idx_s; ++i)
         visitor (timestamps_[i],
@@ -137,9 +137,9 @@ visit (const char *name1, const char *name2, V &&visitor) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, template<typename DT, class... types> class DS>
+template<typename TS>
 template<typename T1, typename T2, typename T3, typename V>
-V &&DataFrame<TS, DS>::
+V &&DataFrame<TS>::
 visit (const char *name1,
        const char *name2,
        const char *name3,
@@ -174,16 +174,16 @@ visit (const char *name1,
         throw ColNotFound (buffer);
     }
 
-    const DataVec   &hv1 = data_[iter1->second];
-    const DataVec   &hv2 = data_[iter2->second];
-    const DataVec   &hv3 = data_[iter3->second];
-    const DS<T1>    &vec1 = hv1.get_vector<T1>();
-    const DS<T2>    &vec2 = hv2.get_vector<T2>();
-    const DS<T3>    &vec3 = hv3.get_vector<T3>();
-    const size_type idx_s = timestamps_.size();
-    const size_type data_s1 = vec1.size();
-    const size_type data_s2 = vec2.size();
-    const size_type data_s3 = vec3.size();
+    const DataVec           &hv1 = data_[iter1->second];
+    const DataVec           &hv2 = data_[iter2->second];
+    const DataVec           &hv3 = data_[iter3->second];
+    const std::vector<T1>   &vec1 = hv1.get_vector<T1>();
+    const std::vector<T2>   &vec2 = hv2.get_vector<T2>();
+    const std::vector<T3>   &vec3 = hv3.get_vector<T3>();
+    const size_type         idx_s = timestamps_.size();
+    const size_type         data_s1 = vec1.size();
+    const size_type         data_s2 = vec2.size();
+    const size_type         data_s3 = vec3.size();
 
     for (size_type i = 0; i < idx_s; ++i)
         visitor (timestamps_[i],
@@ -196,9 +196,9 @@ visit (const char *name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, template<typename DT, class... types> class DS>
+template<typename TS>
 template<typename T1, typename T2, typename T3, typename T4, typename V>
-V &&DataFrame<TS, DS>::
+V &&DataFrame<TS>::
 visit (const char *name1,
        const char *name2,
        const char *name3,
@@ -243,19 +243,19 @@ visit (const char *name1,
         throw ColNotFound (buffer);
     }
 
-    const DataVec   &hv1 = data_[iter1->second];
-    const DataVec   &hv2 = data_[iter2->second];
-    const DataVec   &hv3 = data_[iter3->second];
-    const DataVec   &hv4 = data_[iter4->second];
-    const DS<T1>    &vec1 = hv1.get_vector<T1>();
-    const DS<T2>    &vec2 = hv2.get_vector<T2>();
-    const DS<T3>    &vec3 = hv3.get_vector<T3>();
-    const DS<T4>    &vec4 = hv4.get_vector<T4>();
-    const size_type idx_s = timestamps_.size();
-    const size_type data_s1 = vec1.size();
-    const size_type data_s2 = vec2.size();
-    const size_type data_s3 = vec3.size();
-    const size_type data_s4 = vec4.size();
+    const DataVec           &hv1 = data_[iter1->second];
+    const DataVec           &hv2 = data_[iter2->second];
+    const DataVec           &hv3 = data_[iter3->second];
+    const DataVec           &hv4 = data_[iter4->second];
+    const std::vector<T1>   &vec1 = hv1.get_vector<T1>();
+    const std::vector<T2>   &vec2 = hv2.get_vector<T2>();
+    const std::vector<T3>   &vec3 = hv3.get_vector<T3>();
+    const std::vector<T4>   &vec4 = hv4.get_vector<T4>();
+    const size_type         idx_s = timestamps_.size();
+    const size_type         data_s1 = vec1.size();
+    const size_type         data_s2 = vec2.size();
+    const size_type         data_s3 = vec3.size();
+    const size_type         data_s4 = vec4.size();
 
     for (size_type i = 0; i < idx_s; ++i)
         visitor (timestamps_[i],
@@ -269,10 +269,10 @@ visit (const char *name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, template<typename DT, class... types> class DS>
+template<typename TS>
 template<typename T1, typename T2, typename T3, typename T4, typename T5,
          typename V>
-V &&DataFrame<TS, DS>::
+V &&DataFrame<TS>::
 visit (const char *name1,
        const char *name2,
        const char *name3,
@@ -327,22 +327,22 @@ visit (const char *name1,
         throw ColNotFound (buffer);
     }
 
-    const DataVec   &hv1 = data_[iter1->second];
-    const DataVec   &hv2 = data_[iter2->second];
-    const DataVec   &hv3 = data_[iter3->second];
-    const DataVec   &hv4 = data_[iter4->second];
-    const DataVec   &hv5 = data_[iter5->second];
-    const DS<T1>    &vec1 = hv1.get_vector<T1>();
-    const DS<T2>    &vec2 = hv2.get_vector<T2>();
-    const DS<T3>    &vec3 = hv3.get_vector<T3>();
-    const DS<T4>    &vec4 = hv4.get_vector<T4>();
-    const DS<T5>    &vec5 = hv5.get_vector<T5>();
-    const size_type idx_s = timestamps_.size();
-    const size_type data_s1 = vec1.size();
-    const size_type data_s2 = vec2.size();
-    const size_type data_s3 = vec3.size();
-    const size_type data_s4 = vec4.size();
-    const size_type data_s5 = vec5.size();
+    const DataVec           &hv1 = data_[iter1->second];
+    const DataVec           &hv2 = data_[iter2->second];
+    const DataVec           &hv3 = data_[iter3->second];
+    const DataVec           &hv4 = data_[iter4->second];
+    const DataVec           &hv5 = data_[iter5->second];
+    const std::vector<T1>   &vec1 = hv1.get_vector<T1>();
+    const std::vector<T2>   &vec2 = hv2.get_vector<T2>();
+    const std::vector<T3>   &vec3 = hv3.get_vector<T3>();
+    const std::vector<T4>   &vec4 = hv4.get_vector<T4>();
+    const std::vector<T5>   &vec5 = hv5.get_vector<T5>();
+    const size_type         idx_s = timestamps_.size();
+    const size_type         data_s1 = vec1.size();
+    const size_type         data_s2 = vec2.size();
+    const size_type         data_s3 = vec3.size();
+    const size_type         data_s4 = vec4.size();
+    const size_type         data_s5 = vec5.size();
 
     for (size_type i = 0; i < idx_s; ++i)
         visitor (timestamps_[i],
@@ -357,10 +357,10 @@ visit (const char *name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, template<typename DT, class... types> class DS>
+template<typename TS>
 template<typename ... types>
-DataFrame<TS, DS>
-DataFrame<TS, DS>::get_data_by_idx (Index2D<TS> range) const  {
+DataFrame<TS>
+DataFrame<TS>::get_data_by_idx (Index2D<TS> range) const  {
 
     const auto  &lower =
         std::lower_bound (timestamps_.begin(), timestamps_.end(), range.begin);
@@ -392,10 +392,10 @@ DataFrame<TS, DS>::get_data_by_idx (Index2D<TS> range) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, template<typename DT, class... types> class DS>
+template<typename TS>
 template<typename ... types>
-DataFrame<TS, DS>
-DataFrame<TS, DS>::get_data_by_loc (Index2D<int> range) const  {
+DataFrame<TS>
+DataFrame<TS>::get_data_by_loc (Index2D<int> range) const  {
 
     if (range.begin < 0)
 		range.begin = static_cast<int>(timestamps_.size()) + range.begin;

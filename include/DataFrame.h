@@ -62,28 +62,20 @@ struct Index2D  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, template<typename DT, class... types> class DS>
-class DataFrame;
-
-template<typename TS>
-using StdDataFrame = DataFrame<TS, std::vector>;
-
-// ----------------------------------------------------------------------------
-
 // DS is a data storage container. It must have an interface partly identical
 // to std::vector
 //
-template<typename TS, template<typename DT, class... types> class DS>
+template<typename TS>
 class DataFrame  {
 
     using DataVec = HeteroVector;
-    using DataVecVec = DS<DataVec>;
+    using DataVecVec = std::vector<DataVec>;
 
 public:
 
-    using size_type = typename DS<DataVec>::size_type;
+    using size_type = typename std::vector<DataVec>::size_type;
     using TimeStamp = TS;
-    using TSVec = DS<TS>;
+    using TSVec = std::vector<TS>;
 
     DataFrame() = default;
     DataFrame(const DataFrame &) = default;
@@ -108,7 +100,7 @@ public:  // Load/append interfaces
     // It creates an empty column named name
     //
     template<typename T>
-    DS<T> &create_column (const char *name);
+    std::vector<T> &create_column (const char *name);
 
     // This is the most generalized load function. It creates and loads an
     // index and a variable number of columns. The index vector and all
@@ -117,7 +109,7 @@ public:  // Load/append interfaces
     // Ts: The list of types for columns in args
     // indices: A vector of indices (timestamps) of type TimeStamp;
     // args: A variable list of arguments consisting of
-    //       std::pair(<const char *name, DS<T> &&data>).
+    //       std::pair(<const char *name, std::vector<T> &&data>).
     //       Each pair, represents a column data and its name
     //
     template<typename ... Ts>
@@ -162,7 +154,7 @@ public:  // Load/append interfaces
     template<typename T>
     size_type
     load_column(const char *name,
-                DS<T> &&data,
+                std::vector<T> &&data,
                 nan_policy padding = nan_policy::pad_with_nans);
 
     // It appends val to the end of the index column.
@@ -363,14 +355,14 @@ public: // Read/access interfaces
     // T: Data type of the named column
     //
     template<typename T>
-    DS<T> &get_column (const char *name);
+    std::vector<T> &get_column (const char *name);
 
     // It returns a const reference to the container of named data column
     //
     // T: Data type of the named column
     //
     template<typename T>
-    const DS<T> &get_column (const char *name) const;
+    const std::vector<T> &get_column (const char *name) const;
 
     // It returns a DataFrame (including the index and data columns)
     // containing the data from index begin to index end
@@ -555,9 +547,9 @@ private:
     template<typename T, typename ... types>
     struct sort_functor_ : HeteroVector::visitor_base<types ...>  {
 
-        inline sort_functor_ (const DS<T> &iv) : idx_vec(iv)  {   }
+        inline sort_functor_ (const std::vector<T> &iv) : idx_vec(iv)  {   }
 
-        const DS<T> &idx_vec;
+        const std::vector<T> &idx_vec;
 
         template<typename T2>
         void operator() (T2 &vec) const;
@@ -661,7 +653,7 @@ private:
         bool            result { true };
 
         template<typename T>
-        void operator() (const DS<T> &lhs_vec);
+        void operator() (const std::vector<T> &lhs_vec);
     };
 
     template<typename ... types>
@@ -679,7 +671,7 @@ private:
         const size_type rhs_idx;
 
         template<typename T>
-        void operator() (DS<T> &lhs_vec) const;
+        void operator() (std::vector<T> &lhs_vec) const;
     };
 
     template<typename ... Ts, typename F, std::size_t ... Is>

@@ -12,11 +12,11 @@ namespace hmdf
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, template<typename DT, class... types> class DS>
+template<typename TS>
 template<typename ... Ts>
 template<typename T>
 void
-DataFrame<TS, DS>::consistent_functor_<Ts ...>::operator() (T &vec) const  {
+DataFrame<TS>::consistent_functor_<Ts ...>::operator() (T &vec) const  {
 
     using ValueType =
         typename std::remove_reference<decltype(vec)>::type::value_type;
@@ -26,11 +26,11 @@ DataFrame<TS, DS>::consistent_functor_<Ts ...>::operator() (T &vec) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, template<typename DT, class... types> class DS>
+template<typename TS>
 template<typename T, typename ... Ts>
 template<typename T2>
 void
-DataFrame<TS, DS>::sort_functor_<T, Ts ...>::operator() (T2 &vec) const  {
+DataFrame<TS>::sort_functor_<T, Ts ...>::operator() (T2 &vec) const  {
 
     using VecType = typename std::remove_reference<decltype(vec)>::type;
     using DataValueType = typename VecType::value_type;
@@ -49,11 +49,11 @@ DataFrame<TS, DS>::sort_functor_<T, Ts ...>::operator() (T2 &vec) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, template<typename DT, class... types> class DS>
+template<typename TS>
 template<typename ... Ts>
 template<typename T>
 void
-DataFrame<TS, DS>::load_functor_<Ts ...>::operator() (const T &vec)  {
+DataFrame<TS>::load_functor_<Ts ...>::operator() (const T &vec)  {
 
     using VecType = typename std::remove_reference<T>::type;
     using ValueType = typename VecType::value_type;
@@ -66,11 +66,11 @@ DataFrame<TS, DS>::load_functor_<Ts ...>::operator() (const T &vec)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, template<typename DT, class... types> class DS>
+template<typename TS>
 template<typename ... Ts>
 template<typename T>
 void
-DataFrame<TS, DS>::add_col_functor_<Ts ...>::operator() (const T &vec)  {
+DataFrame<TS>::add_col_functor_<Ts ...>::operator() (const T &vec)  {
 
     using VecType = typename std::remove_reference<T>::type;
     using ValueType = typename VecType::value_type;
@@ -81,11 +81,11 @@ DataFrame<TS, DS>::add_col_functor_<Ts ...>::operator() (const T &vec)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, template<typename DT, class... types> class DS>
+template<typename TS>
 template<typename F, typename ... Ts>
 template<typename T>
 void
-DataFrame<TS, DS>::groupby_functor_<F, Ts ...>::operator() (const T &vec)  {
+DataFrame<TS>::groupby_functor_<F, Ts ...>::operator() (const T &vec)  {
 
     for (std::size_t i = begin; i < end && i < vec.size(); ++i)
         functor (timestamp, name, vec[i]);
@@ -111,11 +111,11 @@ DataFrame<TS, DS>::groupby_functor_<F, Ts ...>::operator() (const T &vec)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, template<typename DT, class... types> class DS>
+template<typename TS>
 template<typename F, typename ... Ts>
 template<typename T>
 void
-DataFrame<TS, DS>::bucket_functor_<F, Ts ...>::operator() (const T &vec)  {
+DataFrame<TS>::bucket_functor_<F, Ts ...>::operator() (const T &vec)  {
 
     using VecType = typename std::remove_reference<T>::type;
     using ValueType = typename VecType::value_type;
@@ -135,7 +135,9 @@ DataFrame<TS, DS>::bucket_functor_<F, Ts ...>::operator() (const T &vec)  {
             ValueType   v;
 
             functor.get_value(v);
-            df.append_column<ValueType>(name, v, nan_policy::dont_pad_with_nans);
+            df.append_column<ValueType>(name,
+                                        v,
+                                        nan_policy::dont_pad_with_nans);
             functor.reset();
             marker = i;
         }
@@ -147,11 +149,11 @@ DataFrame<TS, DS>::bucket_functor_<F, Ts ...>::operator() (const T &vec)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, template<typename DT, class... types> class DS>
+template<typename TS>
 template<typename ... Ts>
 template<typename T>
 void
-DataFrame<TS, DS>::print_functor_<Ts ...>::operator() (const T &vec)  {
+DataFrame<TS>::print_functor_<Ts ...>::operator() (const T &vec)  {
 
     using VecType = typename std::remove_reference<T>::type;
     using ValueType = typename VecType::value_type;
@@ -184,12 +186,12 @@ DataFrame<TS, DS>::print_functor_<Ts ...>::operator() (const T &vec)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, template<typename DT, class... types> class DS>
+template<typename TS>
 template<typename ... Ts>
 template<typename T>
 void
-DataFrame<TS, DS>::
-equal_functor_<Ts ...>::operator() (const DS<T> &lhs_vec)  {
+DataFrame<TS>::
+equal_functor_<Ts ...>::operator() (const std::vector<T> &lhs_vec)  {
 
     const auto  &iter = df.data_tb_.find(name);
 
@@ -198,8 +200,8 @@ equal_functor_<Ts ...>::operator() (const DS<T> &lhs_vec)  {
         return;
     }
 
-    const DataVec   &hv = df.data_[iter->second];
-    const DS<T>     &rhs_vec = hv.get_vector<T>();
+    const DataVec           &hv = df.data_[iter->second];
+    const std::vector<T>    &rhs_vec = hv.get_vector<T>();
 
     if (lhs_vec != rhs_vec)
         result = false;
@@ -207,17 +209,17 @@ equal_functor_<Ts ...>::operator() (const DS<T> &lhs_vec)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, template<typename DT, class... types> class DS>
+template<typename TS>
 template<typename ... Ts>
 template<typename T>
 void
-DataFrame<TS, DS>::
-mod_by_idx_functor_<Ts ...>::operator() (DS<T> &lhs_vec) const  {
+DataFrame<TS>::
+mod_by_idx_functor_<Ts ...>::operator() (std::vector<T> &lhs_vec) const  {
 
     const auto  &iter = rhs_df.data_tb_.find(name);
 
     if (iter != rhs_df.data_tb_.end())  {
-        const DS<T> &rhs_vec = rhs_df.get_column<T>(name);
+        const std::vector<T>    &rhs_vec = rhs_df.get_column<T>(name);
 
         lhs_vec[lhs_idx] = rhs_vec[rhs_idx];
     }
@@ -225,12 +227,12 @@ mod_by_idx_functor_<Ts ...>::operator() (DS<T> &lhs_vec) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, template<typename DT, class... types> class DS>
+template<typename TS>
 template<typename ... Ts, typename F, std::size_t ... Is>
 void
-DataFrame<TS, DS>::for_each_in_tuple_ (const std::tuple<Ts ...> &tu,
-                                       F func,
-                                       std::index_sequence<Is ...>) const  {
+DataFrame<TS>::for_each_in_tuple_ (const std::tuple<Ts ...> &tu,
+                                   F func,
+                                   std::index_sequence<Is ...>) const  {
 
     using expander = int[];
     (void) expander { 0, (func(std::get<Is>(tu)), 0) ... };
@@ -238,12 +240,12 @@ DataFrame<TS, DS>::for_each_in_tuple_ (const std::tuple<Ts ...> &tu,
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, template<typename DT, class... types> class DS>
+template<typename TS>
 template<typename ... Ts, typename F, std::size_t ... Is>
 void
-DataFrame<TS, DS>::for_each_in_tuple_ (std::tuple<Ts ...> &tu,
-                                       F func,
-                                       std::index_sequence<Is ...>)  {
+DataFrame<TS>::for_each_in_tuple_ (std::tuple<Ts ...> &tu,
+                                   F func,
+                                   std::index_sequence<Is ...>)  {
 
     using expander = int[];
     (void) expander { 0, (func(std::get<Is>(tu)), 0) ... };
@@ -251,10 +253,10 @@ DataFrame<TS, DS>::for_each_in_tuple_ (std::tuple<Ts ...> &tu,
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, template<typename DT, class... types> class DS>
+template<typename TS>
 template<typename ... Ts, typename F>
 void
-DataFrame<TS, DS>::
+DataFrame<TS>::
 for_each_in_tuple_ (const std::tuple<Ts...> &tu, F func) const  {
 
     for_each_in_tuple_(tu, func, std::make_index_sequence<sizeof...(Ts)>());
@@ -262,10 +264,10 @@ for_each_in_tuple_ (const std::tuple<Ts...> &tu, F func) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, template<typename DT, class... types> class DS>
+template<typename TS>
 template<typename ... Ts, typename F>
 void
-DataFrame<TS, DS>::for_each_in_tuple_ (std::tuple<Ts...> &tu, F func)  {
+DataFrame<TS>::for_each_in_tuple_ (std::tuple<Ts...> &tu, F func)  {
 
     for_each_in_tuple_(tu, func, std::make_index_sequence<sizeof...(Ts)>());
 }

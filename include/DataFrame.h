@@ -7,7 +7,6 @@
 
 #include "BaseContainer.h"
 
-#include <variant>
 #include <map>
 #include <utility>
 #include <stdexcept>
@@ -71,8 +70,6 @@ using StdDataFrame = DataFrame<TS, HeteroVector>;
 
 template<typename TS>
 using DataFrameView = DataFrame<TS, HeteroView>;
-
-using VectorVariant = std::variant<>;
 
 // ----------------------------------------------------------------------------
 

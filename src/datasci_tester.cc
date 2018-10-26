@@ -597,14 +597,46 @@ int main(int argc, char *argv[]) {
             MyDataFrame df2 = df.get_data_by_loc<double>({ 3, 8 });
         }
         catch (const BadRange &ex)  {
-            std::cout << "Caiught: " << ex.what() << std::endl;
+            std::cout << "Caught: " << ex.what() << std::endl;
         }
         try  {
             MyDataFrame df2 = df.get_data_by_loc<double>({ -8, -1 });
         }
         catch (const BadRange &ex)  {
-            std::cout << "Caiught: " << ex.what() << std::endl;
+            std::cout << "Caught: " << ex.what() << std::endl;
         }
+    }
+
+    {
+        std::cout << "\n\nTesing views (Took a long time)" << std::endl;
+
+        std::vector<unsigned long>  idx =
+            { 123450, 123451, 123452, 123450, 123455, 123450, 123449 };
+        std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7 };
+        std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14 };
+        std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21 };
+        std::vector<double> d4 = { 22, 23, 24, 25 };
+        std::vector<std::string> s1 =
+            { "11", "22", "33", "xx", "yy", "gg", "string" };
+        MyDataFrame         df;
+
+        df.load_data(std::move(idx),
+                     std::make_pair("col_1", d1),
+                     std::make_pair("col_2", d2),
+                     std::make_pair("col_3", d3),
+                     std::make_pair("col_4", d4),
+                     std::make_pair("col_str", s1));
+
+        typedef DataFrameView<unsigned long> MyDataFrameView;
+
+        MyDataFrameView dfv = df.get_view_by_loc<double, std::string>({ 3, 6 });
+
+        dfv.write<std::ostream, double, std::string>(std::cout);
+        dfv.get_column<double>("dbl_3")[0] = 88.0;
+        std::cout << "After changing a value on view: "
+                  << dfv.get_column<double>("col_3")[0]
+                  << " == " << df.get_column<double>("col_3")[3]
+                  << std::endl;
     }
 
     return (0);

@@ -23,6 +23,9 @@ namespace hmdf
 template<typename TS, typename  HETERO>
 bool DataFrame<TS, HETERO>::read (const char *file_name)  {
 
+    static_assert(std::is_base_of<HeteroVector, HETERO>::value,
+                  "Only a StdDataFrame can call read()");
+
     DMScu_MMapFile  file (file_name,
                           DMScu_MMapFile::_read_,
                           DMScu_MMapBase::SYSTEM_PAGE_SIZE * 2);
@@ -162,6 +165,9 @@ bool DataFrame<TS, HETERO>::read (const char *file_name)  {
 #ifdef _WIN32
 template<typename TS, typename  HETERO>
 bool DataFrame<TS, HETERO>::read(const char* file_name)  {
+
+    static_assert(std::is_base_of<HeteroVector, HETERO>::value,
+                  "Only a StdDataFrame can call read()");
 
     auto get_token = [](const char& delim, std::ifstream& file) {
         std::string token;

@@ -23,7 +23,7 @@ public:
 
     using size_type = size_t;
 
-    HeteroView() = delete;
+    HeteroView() = default;
     template<typename T>
     HeteroView(T *begin_ptr, T *end_ptr);
     HeteroView(const HeteroView &that);
@@ -68,9 +68,12 @@ private:
     template<typename T>
     static std::unordered_map<const HeteroView *, VectorView<T>>    views_;
 
-    std::function<void(HeteroView &)>                       clear_function_;
-    std::function<void(const HeteroView &, HeteroView &)>   copy_function_;
-    std::function<void(HeteroView &, HeteroView &)>         move_function_;
+    std::function<void(HeteroView &)>   clear_function_ {
+        [](HeteroView &) { return; } };
+    std::function<void(const HeteroView &, HeteroView &)>   copy_function_ {
+        [](const HeteroView &, HeteroView &)  { return; } };
+    std::function<void(HeteroView &, HeteroView &)> move_function_  {
+        [](HeteroView &, HeteroView &)  { return; } };
 
     // Visitor stuff
     //

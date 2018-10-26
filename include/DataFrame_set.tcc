@@ -16,6 +16,9 @@ template<typename TS, typename  HETERO>
 template<typename T>
 std::vector<T> &DataFrame<TS, HETERO>::create_column (const char *name)  {
 
+    static_assert(std::is_base_of<HeteroVector, HETERO>::value,
+                  "Only a StdDataFrame can call create_column()");
+
     if (! ::strcmp(name, "INDEX"))
         throw DataFrameError ("DataFrame::create_column(): ERROR: "
                               "Data column name cannot be 'INDEX'");
@@ -24,7 +27,7 @@ std::vector<T> &DataFrame<TS, HETERO>::create_column (const char *name)  {
     data_tb_.emplace (name, data_.size() - 1);
 
     DataVec         &hv = data_.back();
-	std::vector<T>  &vec = hv.template get_vector<T>();
+    std::vector<T>  &vec = hv.template get_vector<T>();
 
     // vec.resize(timestamps_.size(), _get_nan<T>());
     return (vec);
@@ -36,6 +39,9 @@ template<typename TS, typename  HETERO>
 template<typename ... Ts>
 typename DataFrame<TS, HETERO>::size_type
 DataFrame<TS, HETERO>::load_data (TSVec &&indices, Ts&& ... args)  {
+
+    static_assert(std::is_base_of<HeteroVector, HETERO>::value,
+                  "Only a StdDataFrame can call load_data()");
 
     size_type       cnt = load_index(std::move(indices));
 
@@ -71,6 +77,9 @@ template<typename TS, typename  HETERO>
 typename DataFrame<TS, HETERO>::size_type
 DataFrame<TS, HETERO>::load_index(TSVec &&idx)  {
 
+    static_assert(std::is_base_of<HeteroVector, HETERO>::value,
+                  "Only a StdDataFrame can call load_index()");
+
     timestamps_ = idx;
     return (timestamps_.size());
 }
@@ -81,6 +90,9 @@ template<typename TS, typename  HETERO>
 template<typename ITR>
 typename DataFrame<TS, HETERO>::size_type
 DataFrame<TS, HETERO>::append_index(Index2D<const ITR &> range)  {
+
+    static_assert(std::is_base_of<HeteroVector, HETERO>::value,
+                  "Only a StdDataFrame can call append_index()");
 
     const size_type s = std::distance(range.begin, range.end);
 
@@ -95,6 +107,9 @@ template<typename TS, typename  HETERO>
 typename DataFrame<TS, HETERO>::size_type
 DataFrame<TS, HETERO>::append_index(const TimeStamp &val)  {
 
+    static_assert(std::is_base_of<HeteroVector, HETERO>::value,
+                  "Only a StdDataFrame can call append_index()");
+
     timestamps_.push_back (val);
     return (1);
 }
@@ -107,7 +122,7 @@ typename DataFrame<TS, HETERO>::size_type
 DataFrame<TS, HETERO>::
 load_column (const char *name, Index2D<const ITR &> range, nan_policy padding) {
 
-    size_type s = std::distance(range.begin, range.end);
+    size_type       s = std::distance(range.begin, range.end);
     const size_type idx_s = timestamps_.size();
 
     if (s > idx_s)  {
@@ -120,7 +135,7 @@ load_column (const char *name, Index2D<const ITR &> range, nan_policy padding) {
     }
 
     const auto      iter = data_tb_.find (name);
-	std::vector<T>  *vec_ptr = nullptr;
+    std::vector<T>  *vec_ptr = nullptr;
 
     if (iter == data_tb_.end())
         vec_ptr = &(create_column<T>(name));
@@ -145,6 +160,22 @@ load_column (const char *name, Index2D<const ITR &> range, nan_policy padding) {
     }
 
     return (ret_cnt);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename TS, typename  HETERO>
+template<typename T, typename ITR>
+void DataFrame<TS, HETERO>::
+setup_view_column_ (const char *name, Index2D<ITR> range)  {
+
+    static_assert(std::is_base_of<HeteroView, HETERO>::value,
+                  "Only a DataFrameView can call setup_view_column_()");
+
+    data_.emplace_back (DataVec(&*(range.begin), &*(range.end - 1)));
+    data_tb_.emplace (name, data_.size() - 1);
+
+    return;
 }
 
 // ----------------------------------------------------------------------------
@@ -226,7 +257,7 @@ append_column (const char *name,
     }
 
     DataVec         &hv = data_[iter->second];
-	std::vector<T>  &vec = hv.template get_vector<T>();
+    std::vector<T>  &vec = hv.template get_vector<T>();
 
     size_type       s = std::distance(range.begin, range.end) + vec.size ();
     const size_type idx_s = timestamps_.size();
@@ -276,7 +307,7 @@ append_column (const char *name, const T &val, nan_policy padding)  {
     }
 
     DataVec         &hv = data_[iter->second];
-	std::vector<T>  &vec = hv.template get_vector<T>();
+    std::vector<T>  &vec = hv.template get_vector<T>();
 
     size_type       s = 1;
     const size_type idx_s = timestamps_.size();

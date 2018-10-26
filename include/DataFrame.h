@@ -67,7 +67,7 @@ class DataFrame;
 
 template<typename TS>
 using StdDataFrame = DataFrame<TS, HeteroVector>;
-    
+
 template<typename TS>
 using DataFrameView = DataFrame<TS, HeteroView>;
 
@@ -402,6 +402,20 @@ public: // Read/access interfaces
     template<typename ... types>
     DataFrame get_data_by_loc (Index2D<int> range) const;
 
+    // It behaves like get_data_by_loc(), but it returns a DataFrameView.
+    // A view is a DataFrame that is a reference to the original DataFrame.
+    // So if you modify anything in the view the original DataFrame will
+    // also be modified.
+    // Note: There are certain operations that you cannot do with a view.
+    //       For example, you cannot add/delete columns, etc.
+    //
+    // types: List all the types of all data columns.
+    //        A type should be specified in the list only once.
+    // range: The begin and end iterators for data
+    //
+    template<typename ... types>
+    DataFrameView<TS> get_view_by_loc (Index2D<int> range) const;
+
     // It returns a const reference to the index container
     //
     inline const TSVec &get_index () const  { return (timestamps_); }
@@ -540,6 +554,9 @@ public:  // Operators
         DataFrame &rhs,
         sort_state already_sorted = sort_state::not_sorted);
 
+    template<typename T, typename ITR>
+    void setup_view_column_(const char *name, Index2D<ITR> range);
+
 protected:
 
     template<typename T1, typename T2>
@@ -587,6 +604,24 @@ private:
 
         template<typename T>
         void operator() (const T &vec);
+    };
+
+    template<typename ... types>
+    struct view_setup_functor_ : DataVec::template visitor_base<types ...>  {
+
+        inline view_setup_functor_ (const char *n,
+                                    std::size_t b,
+                                    std::size_t e,
+                                    DataFrameView<TS> &d)
+            : name (n), begin (b), end (e), dfv(d)  {   }
+
+        const char          *name;
+        const std::size_t   begin;
+        const std::size_t   end;
+        DataFrameView<TS>   &dfv;
+
+        template<typename T>
+        void operator() (T &vec);
     };
 
     template<typename ... types>

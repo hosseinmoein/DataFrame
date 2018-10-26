@@ -70,6 +70,24 @@ template<typename TS, typename HETERO>
 template<typename ... Ts>
 template<typename T>
 void
+DataFrame<TS, HETERO>::view_setup_functor_<Ts ...>::
+operator() (T &vec)  {
+
+    using VecType = typename std::remove_reference<T>::type;
+    using ValueType = typename VecType::value_type;
+
+    dfv.template setup_view_column_<ValueType, typename VecType::iterator>(
+        name,
+        { vec.begin() + begin, vec.begin() + end });
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename TS, typename HETERO>
+template<typename ... Ts>
+template<typename T>
+void
 DataFrame<TS, HETERO>::add_col_functor_<Ts ...>::operator() (const T &vec)  {
 
     using VecType = typename std::remove_reference<T>::type;

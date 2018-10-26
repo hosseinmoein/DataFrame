@@ -399,9 +399,9 @@ DataFrame<TS, HETERO>
 DataFrame<TS, HETERO>::get_data_by_loc (Index2D<int> range) const  {
 
     if (range.begin < 0)
-		range.begin = static_cast<int>(timestamps_.size()) + range.begin;
+        range.begin = static_cast<int>(timestamps_.size()) + range.begin;
     if (range.end < 0)
-		range.end = static_cast<int>(timestamps_.size()) + range.end;
+        range.end = static_cast<int>(timestamps_.size()) + range.end;
 
     if (range.end <= static_cast<int>(timestamps_.size()) &&
         range.begin <= range.end && range.begin >= 0)  {
@@ -427,6 +427,51 @@ DataFrame<TS, HETERO>::get_data_by_loc (Index2D<int> range) const  {
 
     sprintf (buffer,
              "DataFrame::get_data_by_loc(): ERROR: "
+             "Bad begin, end range: %d, %d",
+             range.begin, range.end);
+    throw BadRange (buffer);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename TS, typename  HETERO>
+template<typename ... types>
+DataFrameView<TS>
+DataFrame<TS, HETERO>::get_view_by_loc (Index2D<int> range) const  {
+
+    static_assert(std::is_base_of<HeteroVector, HETERO>::value,
+                  "Only a StdDataFrame can call get_view_by_loc()");
+
+    if (range.begin < 0)
+        range.begin = static_cast<int>(timestamps_.size()) + range.begin;
+    if (range.end < 0)
+        range.end = static_cast<int>(timestamps_.size()) + range.end;
+
+    if (range.end <= static_cast<int>(timestamps_.size()) &&
+        range.begin <= range.end && range.begin >= 0)  {
+        DataFrameView<TS>   dfv;
+
+        dfv.load_index(
+            timestamps_.begin() + static_cast<size_type>(range.begin),
+            timestamps_.begin() + static_cast<size_type>(range.end));
+
+        for (auto &iter : data_tb_)  {
+            view_setup_functor_<types ...>  functor (
+                iter.first.c_str(),
+                static_cast<size_type>(range.begin),
+                static_cast<size_type>(range.end),
+                dfv);
+
+            data_[iter.second].change(functor);
+        }
+
+        return (dfv);
+    }
+
+    char buffer [512];
+
+    sprintf (buffer,
+             "DataFrame::get_view_by_loc(): ERROR: "
              "Bad begin, end range: %d, %d",
              range.begin, range.end);
     throw BadRange (buffer);

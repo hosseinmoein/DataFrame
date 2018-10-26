@@ -379,36 +379,22 @@ public:  // Other public interfaces
 public: // Read/access interfaces
 
     // It returns a reference to the container of named data column
+    // The return type depends on if we are in standard or view mode
     //
     // T: Data type of the named column
     //
     template<typename T>
-    std::vector<T> &get_column (const char *name);
+    typename type_declare<HETERO, T>::type &
+    get_column (const char *name);
 
     // It returns a const reference to the container of named data column
+    // The return type depends on if we are in standard or view mode
     //
     // T: Data type of the named column
     //
     template<typename T>
-    const std::vector<T> &get_column (const char *name) const;
-
-    // It returns a reference to the container of named data column
-    // This similar to get_column(), but since it only works in view mode
-    // it returns a VectorView<T>.
-    //
-    // T: Data type of the named column
-    //
-    template<typename T>
-    VectorView<T> &get_view_column (const char *name);
-
-    // It returns a const reference to the container of named data column
-    // This similar to get_column(), but since it only works in view mode
-    // it returns a VectorView<T>.
-    //
-    // T: Data type of the named column
-    //
-    template<typename T>
-    const VectorView<T> &get_view_column (const char *name) const;
+    const typename type_declare<HETERO, T>::type &
+    get_column (const char *name) const;
 
     // It returns a DataFrame (including the index and data columns)
     // containing the data from index begin to index end

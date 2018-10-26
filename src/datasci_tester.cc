@@ -632,9 +632,9 @@ int main(int argc, char *argv[]) {
         MyDataFrameView dfv = df.get_view_by_loc<double, std::string>({ 3, 6 });
 
         dfv.write<std::ostream, double, std::string>(std::cout);
-        dfv.get_view_column<double>("col_3")[0] = 88.0;
+        dfv.get_column<double>("col_3")[0] = 88.0;
         std::cout << "After changing a value on view: "
-                  << dfv.get_view_column<double>("col_3")[0]
+                  << dfv.get_column<double>("col_3")[0]
                   << " == " << df.get_column<double>("col_3")[3]
                   << std::endl;
     }

@@ -47,22 +47,6 @@ get_column (const char *name) const  {
 
 // ----------------------------------------------------------------------------
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 template<typename TS, typename  HETERO>
 template<typename T>
 VectorView<T> &DataFrame<TS, HETERO>::get_view_column (const char *name)  {
@@ -97,38 +81,6 @@ get_view_column (const char *name) const  {
 }
 
 // ----------------------------------------------------------------------------
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 	
 template<typename TS, typename  HETERO>
 template<typename ... Ts>

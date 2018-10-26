@@ -383,14 +383,6 @@ public: // Read/access interfaces
     template<typename T>
     const std::vector<T> &get_column (const char *name) const;
 
-
-
-
-
-
-
-
-
     // It returns a reference to the container of named data column
     // This similar to get_column(), but since it only works in view mode
     // it returns a VectorView<T>.
@@ -408,15 +400,6 @@ public: // Read/access interfaces
     //
     template<typename T>
     const VectorView<T> &get_view_column (const char *name) const;
-
-
-
-
-
-
-
-
-
 
     // It returns a DataFrame (including the index and data columns)
     // containing the data from index begin to index end

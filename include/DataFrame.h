@@ -584,9 +584,6 @@ public:  // Operators
         DataFrame &rhs,
         sort_state already_sorted = sort_state::not_sorted);
 
-    template<typename T, typename ITR>
-    void setup_view_column_(const char *name, Index2D<ITR> range);
-
 protected:
 
     template<typename T1, typename T2>
@@ -636,6 +633,9 @@ private:
         void operator() (const T &vec);
     };
 
+    template<typename T, typename ITR>
+    void setup_view_column_(const char *name, Index2D<ITR> range);
+
     template<typename ... types>
     struct view_setup_functor_ : DataVec::template visitor_base<types ...>  {
 
@@ -653,6 +653,9 @@ private:
         template<typename T>
         void operator() (T &vec);
     };
+
+    template<typename ... types>
+    friend struct view_setup_functor_;
 
     template<typename ... types>
     struct add_col_functor_ : DataVec::template visitor_base<types ...>  {

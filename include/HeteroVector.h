@@ -173,7 +173,7 @@ public:
 // ----------------------------------------------------------------------------
 
 #  ifdef DMS_INCLUDE_SOURCE
-#    include "BaseContainer.tcc"
+#    include "HeteroVector.tcc"
 #  endif // DMS_INCLUDE_SOURCE
 
 // ----------------------------------------------------------------------------

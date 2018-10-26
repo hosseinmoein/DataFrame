@@ -10,10 +10,10 @@ PROJECT_INCLUDE_DIR = ../../include
 
 # -----------------------------------------------------------------------------
 
-SRCS = BaseContainer.cc datasci_tester.cc HeteroView.cc
+SRCS = HeteroVector.cc datasci_tester.cc HeteroView.cc
 
-HEADERS = $(LOCAL_INCLUDE_DIR)/BaseContainer.h \
-          $(LOCAL_INCLUDE_DIR)/BaseContainer.tcc \
+HEADERS = $(LOCAL_INCLUDE_DIR)/HeteroVector.h \
+          $(LOCAL_INCLUDE_DIR)/HeteroVector.tcc \
           $(LOCAL_INCLUDE_DIR)/HeteroView.h \
           $(LOCAL_INCLUDE_DIR)/HeteroView.tcc \
           $(LOCAL_INCLUDE_DIR)/DataFrame.h \
@@ -43,7 +43,7 @@ DEFINES = -D_REENTRANT -DDMS_INCLUDE_SOURCE \
 
 # object file
 #
-LIB_OBJS = $(LOCAL_OBJ_DIR)/BaseContainer.o $(LOCAL_OBJ_DIR)/HeteroView.o
+LIB_OBJS = $(LOCAL_OBJ_DIR)/HeteroVector.o $(LOCAL_OBJ_DIR)/HeteroView.o
 
 # -----------------------------------------------------------------------------
 

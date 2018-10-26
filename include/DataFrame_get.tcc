@@ -16,6 +16,9 @@ template<typename TS, typename  HETERO>
 template<typename T>
 std::vector<T> &DataFrame<TS, HETERO>::get_column (const char *name)  {
 
+    static_assert(std::is_base_of<HeteroVector, HETERO>::value,
+                  "Only a StdDataFrame can call get_column()");
+
     auto iter = data_tb_.find (name);
 
     if (iter == data_tb_.end())  {
@@ -44,6 +47,89 @@ get_column (const char *name) const  {
 
 // ----------------------------------------------------------------------------
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+template<typename TS, typename  HETERO>
+template<typename T>
+VectorView<T> &DataFrame<TS, HETERO>::get_view_column (const char *name)  {
+
+    static_assert(std::is_base_of<HeteroView, HETERO>::value,
+                  "Only a DataFrameView can call get_view_column()");
+
+    auto iter = data_tb_.find (name);
+
+    if (iter == data_tb_.end())  {
+        char buffer [512];
+
+        sprintf (buffer, "DataFrame::get_column(): ERROR: "
+                         "Cannot find column '%s'",
+                 name);
+        throw ColNotFound (buffer);
+    }
+
+    DataVec &hv = data_[iter->second];
+
+    return (hv.template get_vector<T>());
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename TS, typename  HETERO>
+template<typename T>
+const VectorView<T> &DataFrame<TS, HETERO>::
+get_view_column (const char *name) const  {
+
+    return (const_cast<DataFrame *>(this)->get_view_column<T>(name));
+}
+
+// ----------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
 template<typename TS, typename  HETERO>
 template<typename ... Ts>
 void DataFrame<TS, HETERO>::multi_visit (Ts ... args) const  {

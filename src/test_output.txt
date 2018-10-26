@@ -321,5 +321,16 @@ col_2:<double>:11,12,13,
 col_4:<double>:25,nan,nan,
 col_3:<double>:18,19,20,
 
-Caiught: DataFrame::get_data_by_loc(): ERROR: Bad begin, end range: 3, 8
-Caiught: DataFrame::get_data_by_loc(): ERROR: Bad begin, end range: -1, 6
+Caught: DataFrame::get_data_by_loc(): ERROR: Bad begin, end range: 3, 8
+Caught: DataFrame::get_data_by_loc(): ERROR: Bad begin, end range: -1, 6
+
+
+Tesing views (Took a long time)
+INDEX:123450,123455,123450,
+col_1:<double>:4,5,6,
+col_2:<double>:11,12,13,
+col_4:<double>:25,nan,nan,
+col_str:<string>:xx,yy,gg,
+col_3:<double>:18,19,20,
+
+After changing a value on view: 88 == 88

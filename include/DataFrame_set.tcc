@@ -63,6 +63,9 @@ template<typename ITR>
 typename DataFrame<TS, HETERO>::size_type
 DataFrame<TS, HETERO>::load_index(const ITR &begin, const ITR &end)  {
 
+    static_assert(std::is_base_of<HeteroVector, HETERO>::value,
+                  "Only a StdDataFrame can call load_index()");
+
     const size_type s = std::distance(begin, end);
 
     timestamps_.clear ();

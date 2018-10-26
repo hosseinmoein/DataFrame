@@ -81,7 +81,7 @@ get_view_column (const char *name) const  {
 }
 
 // ----------------------------------------------------------------------------
-	
+
 template<typename TS, typename  HETERO>
 template<typename ... Ts>
 void DataFrame<TS, HETERO>::multi_visit (Ts ... args) const  {
@@ -475,7 +475,7 @@ DataFrame<TS, HETERO>::get_data_by_loc (Index2D<int> range) const  {
 template<typename TS, typename  HETERO>
 template<typename ... types>
 DataFrameView<TS>
-DataFrame<TS, HETERO>::get_view_by_loc (Index2D<int> range) const  {
+DataFrame<TS, HETERO>::get_view_by_loc (Index2D<int> range)  {
 
     static_assert(std::is_base_of<HeteroVector, HETERO>::value,
                   "Only a StdDataFrame can call get_view_by_loc()");
@@ -489,10 +489,10 @@ DataFrame<TS, HETERO>::get_view_by_loc (Index2D<int> range) const  {
         range.begin <= range.end && range.begin >= 0)  {
         DataFrameView<TS>   dfv;
 
-        dfv.load_index(
-            timestamps_.begin() + static_cast<size_type>(range.begin),
-            timestamps_.begin() + static_cast<size_type>(range.end));
-
+        dfv.timestamps_ =
+            typename DataFrameView<TS>::TSVec(
+                &*(timestamps_.begin() + range.begin),
+                &*(timestamps_.begin() + range.end - 1));
         for (auto &iter : data_tb_)  {
             view_setup_functor_<types ...>  functor (
                 iter.first.c_str(),

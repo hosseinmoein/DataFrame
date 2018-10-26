@@ -60,6 +60,15 @@ struct Index2D  {
     T   end {};
 };
 
+template<typename T, typename U>
+struct type_declare;
+
+template<typename U>
+struct type_declare<HeteroVector, U>  { using type = std::vector<U>; };
+
+template<typename U>
+struct type_declare<HeteroView, U>  { using type = VectorView<U>; };
+
 // ----------------------------------------------------------------------------
 
 template<typename TS, typename HETERO>
@@ -87,11 +96,14 @@ class DataFrame  {
     using DataVec = HETERO;
     using DataVecVec = std::vector<DataVec>;
 
+    friend DataFrameView<TS>;
+    friend StdDataFrame<TS>;
+
 public:
 
     using size_type = typename std::vector<DataVec>::size_type;
     using TimeStamp = TS;
-    using TSVec = std::vector<TS>;
+    using TSVec = typename type_declare<HETERO, TS>::type;
 
     DataFrame() = default;
     DataFrame(const DataFrame &) = default;
@@ -432,7 +444,7 @@ public: // Read/access interfaces
     // range: The begin and end iterators for data
     //
     template<typename ... types>
-    DataFrameView<TS> get_view_by_loc (Index2D<int> range) const;
+    DataFrameView<TS> get_view_by_loc (Index2D<int> range);
 
     // It returns a const reference to the index container
     //

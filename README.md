@@ -10,7 +10,8 @@ This is a C++ statistical library that provides an interface similar to Pandas p
 
 ## [Documentation](docs/DataFrameDoc.pdf)
 
-## [Test File](src/datasci_tester.cc)
+## [DataFrame Test File](src/dataframe_tester.cc)
+[Heterogeneous Vectors Test File](src/vectors_tester.cc)
 
 ## [Contributions](docs/CONTRIBUTING.md)
 

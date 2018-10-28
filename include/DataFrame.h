@@ -82,8 +82,10 @@ using DataFrameView = DataFrame<TS, HeteroView>;
 
 // ----------------------------------------------------------------------------
 
-// DS is a data storage container. It must have an interface partly identical
-// to std::vector
+// TS: Index(e.g. Timestamp) type. Although an index column need not necessarily
+//     represent time.
+// HETERO: See the static assert below. It can only be either
+//         a HeteroVector (StdDataFrame) or a HeteroView (DataFrameView)
 //
 template<typename TS, typename HETERO>
 class DataFrame  {

@@ -10,7 +10,7 @@ PROJECT_INCLUDE_DIR = ../../include
 
 # -----------------------------------------------------------------------------
 
-SRCS = HeteroVector.cc datasci_tester.cc HeteroView.cc
+SRCS = HeteroVector.cc dataframe_tester.cc HeteroView.cc vectors_tester.cc
 
 HEADERS = $(LOCAL_INCLUDE_DIR)/HeteroVector.h \
           $(LOCAL_INCLUDE_DIR)/HeteroVector.tcc \
@@ -30,7 +30,8 @@ HEADERS = $(LOCAL_INCLUDE_DIR)/HeteroVector.h \
 LIB_NAME = DataSci
 TARGET_LIB = $(LOCAL_LIB_DIR)/lib$(LIB_NAME).a
 
-TARGETS += $(TARGET_LIB) $(LOCAL_BIN_DIR)/datasci_tester
+TARGETS += $(TARGET_LIB) $(LOCAL_BIN_DIR)/dataframe_tester \
+	   $(LOCAL_BIN_DIR)/vectors_tester
 
 # -----------------------------------------------------------------------------
 
@@ -74,9 +75,13 @@ PRE_BUILD:
 $(TARGET_LIB): $(LIB_OBJS)
 	ar -clrs $(TARGET_LIB) $(LIB_OBJS)
 
-DATASCI_TESTER_OBJ = $(LOCAL_OBJ_DIR)/datasci_tester.o
-$(LOCAL_BIN_DIR)/datasci_tester: $(TARGET_LIB) $(DATASCI_TESTER_OBJ)
-	$(CXX) -o $@ $(DATASCI_TESTER_OBJ) $(LIBS)
+DATAFRAME_TESTER_OBJ = $(LOCAL_OBJ_DIR)/dataframe_tester.o
+$(LOCAL_BIN_DIR)/dataframe_tester: $(TARGET_LIB) $(DATAFRAME_TESTER_OBJ)
+	$(CXX) -o $@ $(DATAFRAME_TESTER_OBJ) $(LIBS)
+
+VECTORS_TESTER_OBJ = $(LOCAL_OBJ_DIR)/vectors_tester.o
+$(LOCAL_BIN_DIR)/vectors_tester: $(TARGET_LIB) $(VECTORS_TESTER_OBJ)
+	$(CXX) -o $@ $(VECTORS_TESTER_OBJ) $(LIBS)
 
 # -----------------------------------------------------------------------------
 
@@ -84,10 +89,10 @@ depend:
 	makedepend $(CXXFLAGS) -Y $(SRCS)
 
 clean:
-	rm -f $(LIB_OBJS) $(TARGETS) $(DATASCI_TESTER_OBJ)
+	rm -f $(LIB_OBJS) $(TARGETS) $(DATAFRAME_TESTER_OBJ) $(VECTORS_TESTER_OBJ)
 
 clobber:
-	rm -f $(LIB_OBJS) $(TARGETS) $(DATASCI_TESTER_OBJ)
+	rm -f $(LIB_OBJS) $(TARGETS) $(DATAFRAME_TESTER_OBJ) $(VECTORS_TESTER_OBJ)
 
 install_lib:
 	cp -pf $(TARGET_LIB) $(PROJECT_LIB_DIR)/.

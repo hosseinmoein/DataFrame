@@ -175,7 +175,7 @@ setup_view_column_ (const char *name, Index2D<ITR> range)  {
     static_assert(std::is_base_of<HeteroView, HETERO>::value,
                   "Only a DataFrameView can call setup_view_column_()");
 
-    data_.emplace_back (DataVec(&*(range.begin), &*(range.end - 1)));
+    data_.emplace_back (DataVec(&*(range.begin), &*(range.end)));
     data_tb_.emplace (name, data_.size() - 1);
 
     return;

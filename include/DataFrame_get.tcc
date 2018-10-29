@@ -455,7 +455,7 @@ DataFrame<TS, HETERO>::get_view_by_loc (Index2D<int> range)  {
         dfv.timestamps_ =
             typename DataFrameView<TS>::TSVec(
                 &*(timestamps_.begin() + range.begin),
-                &*(timestamps_.begin() + range.end - 1));
+                &*(timestamps_.begin() + range.end));
         for (auto &iter : data_tb_)  {
             view_setup_functor_<types ...>  functor (
                 iter.first.c_str(),

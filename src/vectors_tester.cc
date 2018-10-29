@@ -123,6 +123,28 @@ int main(int argc, char *argv[]) {
     hv.back<int>();
     hv.front<int>();
 
+    {
+        std::cout << "\n\nTesing VectorView" << std::endl;
+
+        std::vector<int> vec { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+        VectorView<int>  vec_view;
+
+        vec_view = vec;
+        std::cout << "View size: " << vec.size() << " == "
+                  << vec_view.size() << std::endl;
+        std::cout << "View value 0: " << vec[0] << " == "
+                  << vec_view[0] << std::endl;
+        std::cout << "View value 5: " << vec[5] << " == "
+                  << vec_view[5] << std::endl;
+        std::cout << "View value 9: " << vec[9] << " == "
+                  << vec_view[9] << std::endl;
+
+        vec_view[5] = 100;
+        std::cout << "View value 5 after change: " << vec[5] << " == "
+                  << vec_view[5] << std::endl;
+
+    }
+
     return (0);
 }
 

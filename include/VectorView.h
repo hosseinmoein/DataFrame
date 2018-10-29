@@ -6,6 +6,7 @@
 #pragma once
 
 #include <iterator>
+#include <vector>
 
 // ----------------------------------------------------------------------------
 
@@ -40,9 +41,7 @@ public:
     inline bool empty () const noexcept  { return (begin_ptr_ == end_ptr_); }
     inline size_type size () const noexcept  {
 
-        return (begin_ptr_
-                    ? static_cast<size_type>(end_ptr_ - begin_ptr_) + 1
-                    : 0);
+        return (static_cast<size_type>(end_ptr_ - begin_ptr_));
     }
     inline void clear () noexcept  { begin_ptr_ = end_ptr_ = nullptr; }
 
@@ -54,13 +53,10 @@ public:
 
         return (*(begin_ptr_ + i));
     }
-    inline reference front () noexcept  { return (*begin_ptr_); }
-    inline const_reference front () const noexcept  {
-
-        return (*begin_ptr_);
-    }
-    inline reference back () noexcept  { return (*end_ptr_); }
-    inline const_reference back () const noexcept  { return (*end_ptr_); }
+    inline reference front() noexcept  { return (*begin_ptr_); }
+    inline const_reference front() const noexcept  { return (*begin_ptr_); }
+    inline reference back() noexcept  { return (*(end_ptr_ - 1)); }
+    inline const_reference back() const noexcept  { return (*(end_ptr_ - 1)); }
 
     inline void swap (VectorView &rhs) noexcept  {
 
@@ -71,12 +67,12 @@ public:
 
 private:
 
-    value_type  *begin_ptr_ {nullptr};
-    value_type  *end_ptr_ {nullptr};
+    value_type  *begin_ptr_ { nullptr };
+    value_type  *end_ptr_ { nullptr };
 
 public:
 
-    class const_iterator;
+    class   const_iterator;
     class   const_reverse_iterator
         : public std::iterator<std::random_access_iterator_tag,
                                value_type const, long>  {
@@ -214,7 +210,7 @@ public:
         const_pointer   node_ {nullptr};
     };
 
-    class iterator;
+    class   iterator;
     class   const_iterator
         : public std::iterator<std::random_access_iterator_tag,
                                value_type const, long>  {
@@ -467,25 +463,33 @@ public:
 
     inline iterator begin () noexcept  {
 
-        return (empty () ? end () : iterator (begin_ptr_));
+        return (iterator (begin_ptr_));
     }
-    inline iterator end () noexcept  { return (iterator (end_ptr_ + 1)); }
+    inline iterator end () noexcept  { return (iterator (end_ptr_)); }
     inline const_iterator begin () const noexcept  {
 
-        return (empty () ? end () : const_iterator (begin_ptr_));
+        return (const_iterator (begin_ptr_));
     }
     inline const_iterator end () const noexcept  {
 
-        return (const_iterator (end_ptr_ + 1));
+        return (const_iterator (end_ptr_));
     }
 
     inline const_reverse_iterator rbegin () const noexcept  {
 
-        return (empty () ? rend () : const_iterator (end_ptr_));
+        return (const_iterator (end_ptr_ - 1));
     }
     inline const_reverse_iterator rend () const noexcept  {
 
         return (const_iterator (begin_ptr_ - 1));
+    }
+
+    VectorView &operator= (std::vector<T> &rhs)  {
+
+        VectorView  vw(&*(rhs.begin()), &*(rhs.end()));
+		
+        swap(vw);
+        return (*this);
     }
 };
 

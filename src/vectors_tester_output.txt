@@ -3,8 +3,8 @@
 Tesing HetroVector View
 d[3] must be 1.05: 1.05
 s[0] must be 'str_2': str_2
-s size: 3
-s.back() must be 'abc': abc
+s size: 2
+s.back() must be 'abc': str_3
 
 
 10
@@ -106,3 +106,11 @@ Visiting ...
 -- 
 -- 
 -- 
+
+
+Tesing VectorView
+View size: 10 == 10
+View value 0: 1 == 1
+View value 5: 6 == 6
+View value 9: 10 == 10
+View value 5 after change: 100 == 100

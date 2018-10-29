@@ -517,6 +517,42 @@ int main(int argc, char *argv[]) {
                   << std::endl;
     }
 
+    {
+        std::cout << "\n\nTesing remove_column()" << std::endl;
+
+        std::vector<unsigned long>  idx =
+            { 123450, 123451, 123452, 123450, 123455, 123450, 123449 };
+        std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7 };
+        std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14 };
+        std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21 };
+        std::vector<int>    i1 = { 22, 23, 24, 25 };
+        std::vector<std::string> s1 =
+            { "11", "22", "33", "xx", "yy", "gg", "string" };
+        MyDataFrame         df;
+
+        df.load_data(std::move(idx),
+                     std::make_pair("col_1", d1),
+                     std::make_pair("col_2", d2),
+                     std::make_pair("col_3", d3),
+                     std::make_pair("col_int", i1),
+                     std::make_pair("col_str", s1));
+
+
+        df.write<std::ostream, double, int, std::string>(std::cout);
+        df.remove_column("col_2");
+        std::cout << "After removing column `col_2`" << std::endl;
+        df.write<std::ostream, double, int, std::string>(std::cout);
+        df.remove_column("col_str");
+        std::cout << "After removing column `col_str`" << std::endl;
+        df.write<std::ostream, double, int, std::string>(std::cout);
+
+        std::vector<double> d22 = { 8, 9, 10, 11, 12, 13, 14 };
+
+        df.load_column("col_2", std::move(d22));
+        std::cout << "After adding back column `col_2`" << std::endl;
+        df.write<std::ostream, double, int, std::string>(std::cout);
+    }
+
     return (0);
 }
 

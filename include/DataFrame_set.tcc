@@ -36,6 +36,36 @@ std::vector<T> &DataFrame<TS, HETERO>::create_column (const char *name)  {
 // ----------------------------------------------------------------------------
 
 template<typename TS, typename  HETERO>
+void DataFrame<TS, HETERO>::remove_column (const char *name)  {
+
+    static_assert(std::is_base_of<HeteroVector, HETERO>::value,
+                  "Only a StdDataFrame can call remove_column()");
+
+    if (! ::strcmp(name, "INDEX"))
+        throw DataFrameError ("DataFrame::remove_column(): ERROR: "
+                              "Data column name cannot be 'INDEX'");
+
+    const auto  iter = data_tb_.find (name);
+
+    if (iter == data_tb_.end())  {
+        char buffer [512];
+
+        sprintf (buffer,
+                 "DataFrame::remove_column(): ERROR: Cannot find column '%s'",
+                 name);
+        throw ColNotFound (buffer);
+    }
+
+    // I do not erase the column from the data_ vector, because it will mess up
+    // indices in the hash table data_tb_
+    /* data_.erase (data_.begin() + iter->second); */
+    data_tb_.erase (iter);
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename TS, typename  HETERO>
 template<typename ... Ts>
 typename DataFrame<TS, HETERO>::size_type
 DataFrame<TS, HETERO>::load_data (TSVec &&indices, Ts&& ... args)  {

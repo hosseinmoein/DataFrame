@@ -129,8 +129,16 @@ public:  // Load/append interfaces
 
     // It creates an empty column named name
     //
+    // T: Type of column being added
+    //
     template<typename T>
     std::vector<T> &create_column (const char *name);
+
+    // It removes a column named name.
+    // The ctual data vector is not deleted, but the column is dropped from
+    // DataFrame
+    //
+    void remove_column (const char *name);
 
     // This is the most generalized load function. It creates and loads an
     // index and a variable number of columns. The index vector and all

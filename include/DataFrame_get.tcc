@@ -396,6 +396,45 @@ DataFrame<TS, HETERO>::get_data_by_idx (Index2D<TS> range) const  {
 
 template<typename TS, typename  HETERO>
 template<typename ... types>
+DataFrameView<TS>
+DataFrame<TS, HETERO>::get_view_by_idx (Index2D<TS> range)  {
+
+    static_assert(std::is_base_of<HeteroVector, HETERO>::value,
+                  "Only a StdDataFrame can call get_view_by_idx()");
+
+    const auto          &lower =
+        std::lower_bound (timestamps_.begin(), timestamps_.end(), range.begin);
+    const auto          &upper =
+        std::upper_bound (timestamps_.begin(), timestamps_.end(), range.end);
+    DataFrameView<TS>   dfv;
+
+    if (lower != timestamps_.end())  {
+        dfv.timestamps_ =
+            typename DataFrameView<TS>::TSVec(&*lower, &*upper);
+
+        const size_type b_dist = std::distance(timestamps_.begin(), lower);
+        const size_type e_dist = std::distance(timestamps_.begin(),
+                                               upper < timestamps_.end()
+                                                   ? upper
+                                                   : timestamps_.end());
+
+        for (auto &iter : data_tb_)  {
+            view_setup_functor_<types ...> functor (iter.first.c_str(),
+                                                    b_dist,
+                                                    e_dist,
+                                                    dfv);
+
+            data_[iter.second].change(functor);
+        }
+    }
+
+    return (dfv);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename TS, typename  HETERO>
+template<typename ... types>
 DataFrame<TS, HETERO>
 DataFrame<TS, HETERO>::get_data_by_loc (Index2D<int> range) const  {
 

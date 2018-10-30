@@ -486,7 +486,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesing views (Took a long time)" << std::endl;
+        std::cout << "\n\nTesing get_view_by_loc()" << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123450, 123455, 123450, 123449 };
@@ -551,6 +551,45 @@ int main(int argc, char *argv[]) {
         df.load_column("col_2", std::move(d22));
         std::cout << "After adding back column `col_2`" << std::endl;
         df.write<std::ostream, double, int, std::string>(std::cout);
+    }
+
+    {
+        std::cout << "\n\nTesing get_view_by_idx()/slicing" << std::endl;
+
+        std::vector<unsigned long>  idx =
+            { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+              123457, 123458, 123459, 123460, 123461, 123462, 123466 };
+        std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
+                                   13, 14 };
+        std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23,
+                                   30, 31, 32, 1.89};
+        std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21,
+                                   0.34, 1.56, 0.34, 2.3, 0.1, 0.89, 0.45 };
+        std::vector<int>    i1 = { 22, 23, 24, 25, 99, 100, 101, 3, 2 };
+        MyDataFrame         df;
+
+        df.load_data(std::move(idx),
+                     std::make_pair("col_1", d1),
+                     std::make_pair("col_2", d2),
+                     std::make_pair("col_3", d3),
+                     std::make_pair("col_4", i1));
+
+        typedef DataFrameView<unsigned long> MyDataFrameView;
+
+        MyDataFrame     df2 =
+            df.get_data_by_idx<double, int>({ 123452, 123460 });
+        MyDataFrameView dfv =
+            df.get_view_by_idx<double, int>({ 123452, 123460 });
+
+        df.write<std::ostream, double, int>(std::cout);
+        df2.write<std::ostream, double, int>(std::cout);
+        dfv.write<std::ostream, double, int>(std::cout);
+
+        dfv.get_column<double>("col_3")[0] = 88.0;
+        std::cout << "After changing a value on view: "
+                  << dfv.get_column<double>("col_3")[0]
+                  << " == " << df.get_column<double>("col_3")[2]
+                  << std::endl;
     }
 
     return (0);

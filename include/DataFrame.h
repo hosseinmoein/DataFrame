@@ -407,7 +407,8 @@ public: // Read/access interfaces
     get_column (const char *name) const;
 
     // It returns a DataFrame (including the index and data columns)
-    // containing the data from index begin to index end
+    // containing the data from index begin to index end.
+    // DataFrame must be sorted by index or behavior is undefined.
     //
     // types: List all the types of all data columns.
     //        A type should be specified in the list only once.
@@ -415,6 +416,20 @@ public: // Read/access interfaces
     //
     template<typename ... types>
     DataFrame get_data_by_idx (Index2D<TS> range) const;
+
+    // It behaves like get_data_by_idx(), but it returns a DataFrameView.
+    // A view is a DataFrame that is a reference to the original DataFrame.
+    // So if you modify anything in the view the original DataFrame will
+    // also be modified.
+    // Note: There are certain operations that you cannot do with a view.
+    //       For example, you cannot add/delete columns, etc.
+    //
+    // types: List all the types of all data columns.
+    //        A type should be specified in the list only once.
+    // range: The begin and end iterators for index specified with index values
+    //
+    template<typename ... types>
+    DataFrameView<TS> get_view_by_idx (Index2D<TS> range);
 
     // It returns a DataFrame (including the index and data columns)
     // containing the data from location begin to location end within range.

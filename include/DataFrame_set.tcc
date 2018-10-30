@@ -66,6 +66,34 @@ void DataFrame<TS, HETERO>::remove_column (const char *name)  {
 // ----------------------------------------------------------------------------
 
 template<typename TS, typename  HETERO>
+void DataFrame<TS, HETERO>::rename_column (const char *from, const char *to)  {
+
+    static_assert(std::is_base_of<HeteroVector, HETERO>::value,
+                  "Only a StdDataFrame can call rename_column()");
+
+    if (! ::strcmp(from, "INDEX") || ! ::strcmp(to, "INDEX"))
+        throw DataFrameError ("DataFrame::rename_column(): ERROR: "
+                              "Data column name cannot be 'INDEX'");
+
+    const auto  iter = data_tb_.find (from);
+
+    if (iter == data_tb_.end())  {
+        char buffer [512];
+
+        sprintf (buffer,
+                 "DataFrame::rename_column(): ERROR: Cannot find column '%s'",
+                 from);
+        throw ColNotFound (buffer);
+    }
+
+    data_tb_.emplace (to, iter->second);
+    data_tb_.erase (iter);
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename TS, typename  HETERO>
 template<typename ... Ts>
 typename DataFrame<TS, HETERO>::size_type
 DataFrame<TS, HETERO>::load_data (TSVec &&indices, Ts&& ... args)  {

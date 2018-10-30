@@ -487,7 +487,7 @@ public:
     VectorView &operator= (std::vector<T> &rhs)  {
 
         VectorView  vw(&*(rhs.begin()), &*(rhs.end()));
-		
+
         swap(vw);
         return (*this);
     }

@@ -63,7 +63,7 @@ void DataFrame<TS, HETERO>::sort(const char *by_name)  {
         }
 
         DataVec                     &hv = data_[iter->second];
-		std::vector<T>              &idx_vec = hv.template get_vector<T>();
+        std::vector<T>              &idx_vec = hv.template get_vector<T>();
         sort_functor_<T, types ...> functor (idx_vec);
 
         for (size_type i = 0; i < data_.size(); ++i)

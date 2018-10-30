@@ -135,10 +135,15 @@ public:  // Load/append interfaces
     std::vector<T> &create_column (const char *name);
 
     // It removes a column named name.
-    // The ctual data vector is not deleted, but the column is dropped from
+    // The actual data vector is not deleted, but the column is dropped from
     // DataFrame
     //
     void remove_column (const char *name);
+
+    // It renames column named from to to. If column from does not exists,
+    // it throws an exception
+    //
+    void rename_column (const char *from, const char *to);
 
     // This is the most generalized load function. It creates and loads an
     // index and a variable number of columns. The index vector and all

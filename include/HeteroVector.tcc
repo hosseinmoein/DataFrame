@@ -58,7 +58,7 @@ std::vector<T> &HeteroVector::get_vector()  {
 template<typename T>
 HeteroView HeteroVector::get_view(size_type begin, size_type end)  {
 
-	std::vector<T>  &vec = get_vector<T>();
+    std::vector<T>  &vec = get_vector<T>();
 
     return (HeteroView(
         &(vec[begin]), end == size_t(-1) ? &(vec.back()) : &(vec[end])));

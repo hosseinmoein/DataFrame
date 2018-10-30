@@ -26,7 +26,7 @@ struct  HeteroVector  {
 public:
 
     using size_type = size_t;
-	
+
     HeteroVector();
     HeteroVector(const HeteroVector &that);
     HeteroVector(HeteroVector &&that);

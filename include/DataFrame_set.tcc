@@ -398,6 +398,73 @@ append_column (const char *name, const T &val, nan_policy padding)  {
     return (ret_cnt);
 }
 
+// ----------------------------------------------------------------------------
+
+template<typename TS, typename  HETERO>
+template<typename ... types>
+void
+DataFrame<TS, HETERO>::remove_data_by_idx (Index2D<TS> range)  {
+
+    const auto  &lower =
+        std::lower_bound (timestamps_.begin(), timestamps_.end(), range.begin);
+    const auto  &upper =
+        std::upper_bound (timestamps_.begin(), timestamps_.end(), range.end);
+
+    if (lower != timestamps_.end())  {
+        const size_type b_dist = std::distance(timestamps_.begin(), lower);
+        const size_type e_dist = std::distance(timestamps_.begin(),
+                                               upper < timestamps_.end()
+                                                   ? upper
+                                                   : timestamps_.end());
+        make_consistent<types ...>();
+        timestamps_.erase(lower, upper);
+
+        remove_functor_<types ...>  functor (b_dist, e_dist);
+
+        for (auto &iter : data_tb_)
+            data_[iter.second].change(functor);
+    }
+
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename TS, typename  HETERO>
+template<typename ... types>
+void
+DataFrame<TS, HETERO>::remove_data_by_loc (Index2D<int> range)  {
+
+    if (range.begin < 0)
+        range.begin = static_cast<int>(timestamps_.size()) + range.begin;
+    if (range.end < 0)
+        range.end = static_cast<int>(timestamps_.size()) + range.end;
+
+    if (range.end <= static_cast<int>(timestamps_.size()) &&
+        range.begin <= range.end && range.begin >= 0)  {
+        make_consistent<types ...>();
+        timestamps_.erase(timestamps_.begin() + range.begin,
+                          timestamps_.begin() + range.end);
+
+        remove_functor_<types ...>  functor (
+            static_cast<size_type>(range.begin),
+            static_cast<size_type>(range.end));
+
+        for (auto &iter : data_tb_)
+            data_[iter.second].change(functor);
+
+        return;
+    }
+
+    char buffer [512];
+
+    sprintf (buffer,
+             "DataFrame::remove_data_by_loc(): ERROR: "
+             "Bad begin, end range: %d, %d",
+             range.begin, range.end);
+    throw BadRange (buffer);
+}
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

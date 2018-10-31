@@ -652,6 +652,60 @@ int main(int argc, char *argv[]) {
         std::cout << std::endl;
     }
 
+    {
+        std::cout << "\n\nTesing remove_data_by_idx()" << std::endl;
+
+        std::vector<unsigned long>  idx =
+            { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+              123457, 123458, 123459, 123460, 123461, 123462, 123466 };
+        std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
+                                   13, 14 };
+        std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23,
+                                   30, 31, 32, 1.89};
+        std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21,
+                                   0.34, 1.56, 0.34, 2.3, 0.1, 0.89, 0.45 };
+        std::vector<int>    i1 = { 22, 23, 24, 25, 99, 100, 101, 3, 2 };
+        MyDataFrame         df;
+
+        df.load_data(std::move(idx),
+                     std::make_pair("col_1", d1),
+                     std::make_pair("col_2", d2),
+                     std::make_pair("col_3", d3),
+                     std::make_pair("col_4", i1));
+
+        df.write<std::ostream, double, int>(std::cout);
+        std::cout << "After removing by ibdex { 123452, 123460 }" << std::endl;
+        df.remove_data_by_idx<double, int>({ 123452, 123460 });
+        df.write<std::ostream, double, int>(std::cout);
+    }
+
+    {
+        std::cout << "\n\nTesing remove_data_by_loc()" << std::endl;
+
+        std::vector<unsigned long>  idx =
+            { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+              123457, 123458, 123459, 123460, 123461, 123462, 123466 };
+        std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
+                                   13, 14 };
+        std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23,
+                                   30, 31, 32, 1.89};
+        std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21,
+                                   0.34, 1.56, 0.34, 2.3, 0.1, 0.89, 0.45 };
+        std::vector<int>    i1 = { 22, 23, 24, 25, 99 };
+        MyDataFrame         df;
+
+        df.load_data(std::move(idx),
+                     std::make_pair("col_1", d1),
+                     std::make_pair("col_2", d2),
+                     std::make_pair("col_3", d3),
+                     std::make_pair("col_4", i1));
+
+        df.write<std::ostream, double, int>(std::cout);
+        std::cout << "After removing by ibdex { 3, -3 }" << std::endl;
+        df.remove_data_by_loc<double, int>({ 3, -3 });
+        df.write<std::ostream, double, int>(std::cout);
+    }
+
     return (0);
 }
 

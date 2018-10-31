@@ -125,7 +125,7 @@ private:
     TSVec       timestamps_ { };  // Vector
     DataTable   data_tb_ { };     // Hash table of name -> vector index
 
-public:  // Load/append interfaces
+public:  // Load/append/remove interfaces
 
     // It creates an empty column named name
     //
@@ -239,6 +239,32 @@ public:  // Load/append interfaces
     size_type append_column(const char *name,
                             Index2D<const ITR &> range,
                             nan_policy padding = nan_policy::pad_with_nans);
+
+    // It removes the data rows from index begin to index end.
+    // DataFrame must be sorted by index or behavior is undefined.
+    // This function first calls make_consistent() that may add nan values to
+    // data columns.
+    //
+    // types: List all the types of all data columns.
+    //        A type should be specified in the list only once.
+    // range: The begin and end iterators for index specified with index values
+    //
+    template<typename ... types>
+    void remove_data_by_idx (Index2D<TS> range);
+
+    // It removes the data rows from location begin to location end
+    // within range.
+    // This function supports Python-like negative indexing. That is why the
+    // range type is int.
+    // This function first calls make_consistent() that may add nan values to
+    // data columns.
+    //
+    // types: List all the types of all data columns.
+    //        A type should be specified in the list only once.
+    // range: The begin and end iterators for data
+    //
+    template<typename ... types>
+    void remove_data_by_loc (Index2D<int> range);
 
 public:  // Other public interfaces
 
@@ -623,7 +649,7 @@ protected:
     template<typename T>
     static inline constexpr T _get_nan();
 
-private:
+private:  // Visiting functors
 
     template<typename ... types>
     struct consistent_functor_ : DataVec::template visitor_base<types ...>  {
@@ -666,6 +692,19 @@ private:
 
     template<typename T, typename ITR>
     void setup_view_column_(const char *name, Index2D<ITR> range);
+
+    template<typename ... types>
+    struct remove_functor_ : DataVec::template visitor_base<types ...>  {
+
+        inline remove_functor_ (std::size_t b, std::size_t e)
+            : begin (b), end (e)  {   }
+
+        const std::size_t   begin;
+        const std::size_t   end;
+
+        template<typename T>
+        void operator() (T &vec);
+    };
 
     template<typename ... types>
     struct view_setup_functor_ : DataVec::template visitor_base<types ...>  {
@@ -788,6 +827,8 @@ private:
         template<typename T>
         void operator() (std::vector<T> &lhs_vec) const;
     };
+
+private:  // Tuple stuff
 
     template<typename ... Ts, typename F, std::size_t ... Is>
     void for_each_in_tuple_ (const std::tuple<Ts ...> &tu,

@@ -70,6 +70,18 @@ template<typename TS, typename HETERO>
 template<typename ... Ts>
 template<typename T>
 void
+DataFrame<TS, HETERO>::remove_functor_<Ts ...>::operator() (T &vec)  {
+
+    vec.erase(vec.begin() + begin, vec.begin() + end);
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename TS, typename HETERO>
+template<typename ... Ts>
+template<typename T>
+void
 DataFrame<TS, HETERO>::view_setup_functor_<Ts ...>::
 operator() (T &vec)  {
 

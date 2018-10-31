@@ -121,9 +121,9 @@ private:
 
     // Data fields
     //
-    DataVecVec  data_ { };        // Vector of Heterogeneous vectors
-    TSVec       timestamps_ { };  // Vector
-    DataTable   data_tb_ { };     // Hash table of name -> vector index
+    DataVecVec  data_ { };     // Vector of Heterogeneous vectors
+    TSVec       indices_ { };  // Vector
+    DataTable   data_tb_ { };  // Hash table of name -> vector index
 
 public:  // Load/append/remove interfaces
 
@@ -150,7 +150,7 @@ public:  // Load/append/remove interfaces
     // column vectors are "moved" to DataFrame.
     //
     // Ts: The list of types for columns in args
-    // indices: A vector of indices (timestamps) of type TimeStamp;
+    // indices: A vector of indices of type TimeStamp;
     // args: A variable list of arguments consisting of
     //       std::pair(<const char *name, std::vector<T> &&data>).
     //       Each pair, represents a column data and its name
@@ -371,7 +371,7 @@ public:  // Other public interfaces
     // T: The single type for all data columns
     // V: The type of string vector specifying the new names for new columns
     //    after transpose
-    // idx: A vector on indices/timestamps for the new transposed DataFrame.
+    // idx: A vector on indices for the new transposed DataFrame.
     //      Its length must equal the number of rows in this DataFrame.
     //      Otherwise an exception is thrown
     // col_names: A vector of strings, specifying the column names for the
@@ -505,11 +505,11 @@ public: // Read/access interfaces
 
     // It returns a const reference to the index container
     //
-    inline const TSVec &get_index () const  { return (timestamps_); }
+    inline const TSVec &get_index () const  { return (indices_); }
 
     // It returns a reference to the index container
     //
-    inline TSVec &get_index ()  { return (timestamps_); }
+    inline TSVec &get_index ()  { return (indices_); }
 
     // This is the most generalized visit function. It visits multiple
     // columns with the corresponding function objects sequentially.
@@ -749,12 +749,12 @@ private:  // Visiting functors
                                  const TS &ts,
                                  F &f,
                                  DataFrame &d)
-            : name(n), begin(b), end(e), timestamp(ts), functor(f), df(d) {  }
+            : name(n), begin(b), end(e), indices(ts), functor(f), df(d) {  }
 
         const char          *name;
         const std::size_t   begin;
         const std::size_t   end;
-        const TS            &timestamp;
+        const TS            &indices;
         F                   &functor;
         DataFrame           &df;
 
@@ -770,10 +770,10 @@ private:  // Visiting functors
                                 const TimeStamp &i,
                                 F &f,
                                 DataFrame &d)
-            : name(n), timestamps(ts), interval(i), functor(f), df(d) {  }
+            : name(n), indices(ts), interval(i), functor(f), df(d) {  }
 
         const char      *name;
-        const TSVec     &timestamps;
+        const TSVec     &indices;
         const TimeStamp &interval;
         F               &functor;
         DataFrame       &df;

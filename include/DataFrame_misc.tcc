@@ -118,7 +118,7 @@ void
 DataFrame<TS, HETERO>::groupby_functor_<F, Ts ...>::operator() (const T &vec)  {
 
     for (std::size_t i = begin; i < end && i < vec.size(); ++i)
-        functor (timestamp, name, vec[i]);
+        functor (indices, name, vec[i]);
 
     if (! ::strcmp(name, "INDEX"))  {
         TimeStamp   v;
@@ -150,18 +150,18 @@ DataFrame<TS, HETERO>::bucket_functor_<F, Ts ...>::operator() (const T &vec)  {
     using VecType = typename std::remove_reference<T>::type;
     using ValueType = typename VecType::value_type;
 
-    const std::size_t   ts_s = timestamps.size();
+    const std::size_t   ts_s = indices.size();
     std::size_t         marker = 0;
 
-    if (df.timestamps_.empty())
+    if (df.indices_.empty())
         for (std::size_t i = 0; i < ts_s; ++i)
-            if (timestamps[i] - timestamps[marker] >= interval)  {
-                df.timestamps_.push_back(timestamps[i - 1]);
+            if (indices[i] - indices[marker] >= interval)  {
+                df.indices_.push_back(indices[i - 1]);
                 marker = i;
             }
 
     for (std::size_t i = 0, marker = 0; i < ts_s; ++i)  {
-        if (timestamps[i] - timestamps[marker] >= interval)  {
+        if (indices[i] - indices[marker] >= interval)  {
             ValueType   v;
 
             functor.get_value(v);
@@ -171,7 +171,7 @@ DataFrame<TS, HETERO>::bucket_functor_<F, Ts ...>::operator() (const T &vec)  {
             functor.reset();
             marker = i;
         }
-        functor (timestamps[i], name, vec[i]);
+        functor (indices[i], name, vec[i]);
     }
 
     return;

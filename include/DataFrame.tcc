@@ -27,7 +27,7 @@ template<typename TS, typename  HETERO>
 template<typename ... types>
 void DataFrame<TS, HETERO>::make_consistent ()  {
 
-    const size_type                 idx_s = timestamps_.size();
+    const size_type                 idx_s = indices_.size();
     consistent_functor_<types ...>  functor (idx_s);
 
     for (auto &iter : data_)
@@ -43,12 +43,12 @@ void DataFrame<TS, HETERO>::sort(const char *by_name)  {
     make_consistent<types ...>();
 
     if (by_name == nullptr)  {
-        sort_functor_<TimeStamp, types ...> functor (timestamps_);
+        sort_functor_<TimeStamp, types ...> functor (indices_);
 
         for (auto &iter : data_)
             iter.change(functor);
 
-        std::sort (timestamps_.begin(), timestamps_.end());
+        std::sort (indices_.begin(), indices_.end());
     }
     else  {
         const auto  iter = data_tb_.find (by_name);
@@ -69,7 +69,7 @@ void DataFrame<TS, HETERO>::sort(const char *by_name)  {
         for (size_type i = 0; i < data_.size(); ++i)
             if (i != iter->second)
                 data_[i].change(functor);
-        functor(timestamps_);
+        functor(indices_);
 
         std::sort (idx_vec.begin(), idx_vec.end());
     }
@@ -112,19 +112,19 @@ DataFrame<TS, HETERO>:: groupby (F &&func,
         tmp_df.data_[iter.second].change(functor);
     }
 
-    const size_type vec_size = tmp_df.timestamps_.size();
+    const size_type vec_size = tmp_df.indices_.size();
     size_type       marker = 0;
 
     if (gb_col_name == nullptr)  { // Index
         for (size_type i = 0; i < vec_size; ++i)  {
-            if (tmp_df.timestamps_[i] != tmp_df.timestamps_[marker])  {
-                df.append_index(tmp_df.timestamps_[marker]);
+            if (tmp_df.indices_[i] != tmp_df.indices_[marker])  {
+                df.append_index(tmp_df.indices_[marker]);
                 for (const auto &iter : tmp_df.data_tb_)  {
                     groupby_functor_<F, types...>   functor(
                                                 iter.first.c_str(),
                                                 marker,
                                                 i,
-                                                tmp_df.timestamps_[marker],
+                                                tmp_df.indices_[marker],
                                                 func,
                                                 df);
 
@@ -136,13 +136,13 @@ DataFrame<TS, HETERO>:: groupby (F &&func,
             }
         }
         if (marker < vec_size)  {
-            df.append_index(tmp_df.timestamps_[vec_size - 1]);
+            df.append_index(tmp_df.indices_[vec_size - 1]);
             for (const auto &iter : tmp_df.data_tb_)  {
                 groupby_functor_<F, types...>   functor(
                                             iter.first.c_str(),
                                             vec_size - 1,
                                             vec_size,
-                                            tmp_df.timestamps_[vec_size - 1],
+                                            tmp_df.indices_[vec_size - 1],
                                             func,
                                             df);
 
@@ -159,11 +159,11 @@ DataFrame<TS, HETERO>:: groupby (F &&func,
                                             "INDEX",
                                             marker,
                                             i,
-                                            tmp_df.timestamps_[marker],
+                                            tmp_df.indices_[marker],
                                             func,
                                             df);
 
-                ts_functor(tmp_df.timestamps_);
+                ts_functor(tmp_df.indices_);
                 df.append_column<T>(gb_col_name,
                                     gb_vec [marker],
                                     nan_policy::dont_pad_with_nans);
@@ -175,7 +175,7 @@ DataFrame<TS, HETERO>:: groupby (F &&func,
                                                     iter.first.c_str(),
                                                     marker,
                                                     i,
-                                                    tmp_df.timestamps_[marker],
+                                                    tmp_df.indices_[marker],
                                                     func,
                                                     df);
 
@@ -193,11 +193,11 @@ DataFrame<TS, HETERO>:: groupby (F &&func,
                                         "INDEX",
                                         vec_size - 1,
                                         vec_size,
-                                        tmp_df.timestamps_[vec_size - 1],
+                                        tmp_df.indices_[vec_size - 1],
                                         func,
                                         df);
 
-            ts_functor(tmp_df.timestamps_);
+            ts_functor(tmp_df.indices_);
             df.append_column<T>(gb_col_name,
                                 gb_vec [vec_size - 1],
                                 nan_policy::dont_pad_with_nans);
@@ -209,7 +209,7 @@ DataFrame<TS, HETERO>:: groupby (F &&func,
                                             iter.first.c_str(),
                                             vec_size - 1,
                                             vec_size,
-                                            tmp_df.timestamps_[vec_size - 1],
+                                            tmp_df.indices_[vec_size - 1],
                                             func,
                                             df);
 
@@ -258,7 +258,7 @@ bucketize (F &&func, const TimeStamp &bucket_interval) const  {
     for (const auto &iter : data_tb_)  {
         bucket_functor_<F, types...>   functor(
                                     iter.first.c_str(),
-                                    timestamps_,
+                                    indices_,
                                     bucket_interval,
                                     func,
                                     df);
@@ -301,7 +301,7 @@ DataFrame<TS, HETERO>::transpose(TSVec &&indices, const V &col_names) const  {
         current_cols.push_back(&(hv.template get_vector<T>()));
     }
 
-    if (col_names.size() != timestamps_.size())
+    if (col_names.size() != indices_.size())
         throw InconsistentData ("DataFrame::transpose(): ERROR: "
                                 "Length of col_names is not equal "
                                 "to number of rows");
@@ -310,11 +310,11 @@ DataFrame<TS, HETERO>::transpose(TSVec &&indices, const V &col_names) const  {
                                 "Length of index is not equal "
                                 "to number of columns");
 
-    std::vector<std::vector<T>> trans_cols(timestamps_.size());
+    std::vector<std::vector<T>> trans_cols(indices_.size());
     DataFrame                   df;
     size_type                   idx = 0;
 
-    for (size_type i = 0; i < timestamps_.size(); ++i)  {
+    for (size_type i = 0; i < indices_.size(); ++i)  {
         trans_cols[i].reserve(num_cols);
         for (size_type j = 0; j < num_cols; ++j)  {
             if (current_cols[j]->size() > i)
@@ -338,8 +338,8 @@ template<typename S, typename ... types>
 bool DataFrame<TS, HETERO>::write (S &o, bool values_only) const  {
 
     if (! values_only)  o << "INDEX:";
-    for (size_type i = 0; i < timestamps_.size(); ++i)
-        o << timestamps_[i] << ',';
+    for (size_type i = 0; i < indices_.size(); ++i)
+        o << indices_[i] << ',';
     o << '\n';
 
     for (const auto &iter : data_tb_)  {

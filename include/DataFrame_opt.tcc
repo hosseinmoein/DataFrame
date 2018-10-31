@@ -18,7 +18,7 @@ bool DataFrame<TS, HETERO>::is_equal (const DataFrame &rhs) const  {
 
     if (data_tb_.size() != rhs.data_tb_.size())
         return (false);
-    if (timestamps_ != rhs.timestamps_)
+    if (indices_ != rhs.indices_)
         return (false);
 
     for (const auto &iter : data_tb_)  {
@@ -44,17 +44,17 @@ modify_by_idx (DataFrame &rhs, sort_state already_sorted)  {
         sort<TimeStamp, types ...>();
     }
 
-    const size_type lhs_s { timestamps_.size() };
-    const size_type rhs_s { rhs.timestamps_.size() };
+    const size_type lhs_s { indices_.size() };
+    const size_type rhs_s { rhs.indices_.size() };
     size_type       lhs_i { 0 };
 
     for (size_type rhs_i = 0; rhs_i < rhs_s; ++rhs_i)  {
         if (lhs_i >= lhs_s)
             break;
-        while (timestamps_[lhs_i] < rhs.timestamps_[rhs_i] && lhs_i < lhs_s)
+        while (indices_[lhs_i] < rhs.indices_[rhs_i] && lhs_i < lhs_s)
             lhs_i += 1;
 
-        if (timestamps_[lhs_i] == rhs.timestamps_[rhs_i])  {
+        if (indices_[lhs_i] == rhs.indices_[rhs_i])  {
             for (auto &iter : data_tb_)  {
                 mod_by_idx_functor_<types ...>  functor (iter.first.c_str(),
                                                          rhs,
@@ -66,7 +66,7 @@ modify_by_idx (DataFrame &rhs, sort_state already_sorted)  {
 
             lhs_i += 1;
         }
-        else if (timestamps_[lhs_i] < rhs.timestamps_[rhs_i])  break;
+        else if (indices_[lhs_i] < rhs.indices_[rhs_i])  break;
     }
 
     return (*this);

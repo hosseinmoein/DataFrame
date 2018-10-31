@@ -122,11 +122,11 @@ V &DataFrame<TS, HETERO>::visit (const char *name, V &visitor) const  {
 
     const DataVec           &hv = data_[iter->second];
     const std::vector<T>    &vec = hv.template get_vector<T>();
-    const size_type         idx_s = timestamps_.size();
+    const size_type         idx_s = indices_.size();
     const size_type         data_s = vec.size();
 
     for (size_type i = 0; i < idx_s; ++i)
-        visitor (timestamps_[i], i < data_s ? vec[i] : _get_nan<T>());
+        visitor (indices_[i], i < data_s ? vec[i] : _get_nan<T>());
 
     return (visitor);
 }
@@ -162,12 +162,12 @@ visit (const char *name1, const char *name2, V &&visitor) const  {
     const DataVec           &hv2 = data_[iter2->second];
     const std::vector<T1>   &vec1 = hv1.template get_vector<T1>();
     const std::vector<T2>   &vec2 = hv2.template get_vector<T2>();
-    const size_type         idx_s = timestamps_.size();
+    const size_type         idx_s = indices_.size();
     const size_type         data_s1 = vec1.size();
     const size_type         data_s2 = vec2.size();
 
     for (size_type i = 0; i < idx_s; ++i)
-        visitor (timestamps_[i],
+        visitor (indices_[i],
                  i < data_s1 ? vec1[i] : _get_nan<T1>(),
                  i < data_s2 ? vec2[i] : _get_nan<T2>());
 
@@ -219,13 +219,13 @@ visit (const char *name1,
     const std::vector<T1>   &vec1 = hv1.template get_vector<T1>();
     const std::vector<T2>   &vec2 = hv2.template get_vector<T2>();
     const std::vector<T3>   &vec3 = hv3.template get_vector<T3>();
-    const size_type         idx_s = timestamps_.size();
+    const size_type         idx_s = indices_.size();
     const size_type         data_s1 = vec1.size();
     const size_type         data_s2 = vec2.size();
     const size_type         data_s3 = vec3.size();
 
     for (size_type i = 0; i < idx_s; ++i)
-        visitor (timestamps_[i],
+        visitor (indices_[i],
                  i < data_s1 ? vec1[i] : _get_nan<T1>(),
                  i < data_s2 ? vec2[i] : _get_nan<T2>(),
                  i < data_s3 ? vec3[i] : _get_nan<T3>());
@@ -290,14 +290,14 @@ visit (const char *name1,
     const std::vector<T2>   &vec2 = hv2.template get_vector<T2>();
     const std::vector<T3>   &vec3 = hv3.template get_vector<T3>();
     const std::vector<T4>   &vec4 = hv4.template get_vector<T4>();
-    const size_type         idx_s = timestamps_.size();
+    const size_type         idx_s = indices_.size();
     const size_type         data_s1 = vec1.size();
     const size_type         data_s2 = vec2.size();
     const size_type         data_s3 = vec3.size();
     const size_type         data_s4 = vec4.size();
 
     for (size_type i = 0; i < idx_s; ++i)
-        visitor (timestamps_[i],
+        visitor (indices_[i],
                  i < data_s1 ? vec1[i] : _get_nan<T1>(),
                  i < data_s2 ? vec2[i] : _get_nan<T2>(),
                  i < data_s3 ? vec3[i] : _get_nan<T3>(),
@@ -376,7 +376,7 @@ visit (const char *name1,
     const std::vector<T3>   &vec3 = hv3.template get_vector<T3>();
     const std::vector<T4>   &vec4 = hv4.template get_vector<T4>();
     const std::vector<T5>   &vec5 = hv5.template get_vector<T5>();
-    const size_type         idx_s = timestamps_.size();
+    const size_type         idx_s = indices_.size();
     const size_type         data_s1 = vec1.size();
     const size_type         data_s2 = vec2.size();
     const size_type         data_s3 = vec3.size();
@@ -384,7 +384,7 @@ visit (const char *name1,
     const size_type         data_s5 = vec5.size();
 
     for (size_type i = 0; i < idx_s; ++i)
-        visitor (timestamps_[i],
+        visitor (indices_[i],
                  i < data_s1 ? vec1[i] : _get_nan<T1>(),
                  i < data_s2 ? vec2[i] : _get_nan<T2>(),
                  i < data_s3 ? vec3[i] : _get_nan<T3>(),
@@ -402,19 +402,19 @@ DataFrame<TS, HETERO>
 DataFrame<TS, HETERO>::get_data_by_idx (Index2D<TS> range) const  {
 
     const auto  &lower =
-        std::lower_bound (timestamps_.begin(), timestamps_.end(), range.begin);
+        std::lower_bound (indices_.begin(), indices_.end(), range.begin);
     const auto  &upper =
-        std::upper_bound (timestamps_.begin(), timestamps_.end(), range.end);
+        std::upper_bound (indices_.begin(), indices_.end(), range.end);
     DataFrame   df;
 
-    if (lower != timestamps_.end())  {
+    if (lower != indices_.end())  {
         df.load_index(lower, upper);
 
-        const size_type b_dist = std::distance(timestamps_.begin(), lower);
-        const size_type e_dist = std::distance(timestamps_.begin(),
-                                               upper < timestamps_.end()
+        const size_type b_dist = std::distance(indices_.begin(), lower);
+        const size_type e_dist = std::distance(indices_.begin(),
+                                               upper < indices_.end()
                                                    ? upper
-                                                   : timestamps_.end());
+                                                   : indices_.end());
 
         for (auto &iter : data_tb_)  {
             load_functor_<types ...> functor (iter.first.c_str(),
@@ -440,20 +440,20 @@ DataFrame<TS, HETERO>::get_view_by_idx (Index2D<TS> range)  {
                   "Only a StdDataFrame can call get_view_by_idx()");
 
     const auto          &lower =
-        std::lower_bound (timestamps_.begin(), timestamps_.end(), range.begin);
+        std::lower_bound (indices_.begin(), indices_.end(), range.begin);
     const auto          &upper =
-        std::upper_bound (timestamps_.begin(), timestamps_.end(), range.end);
+        std::upper_bound (indices_.begin(), indices_.end(), range.end);
     DataFrameView<TS>   dfv;
 
-    if (lower != timestamps_.end())  {
-        dfv.timestamps_ =
+    if (lower != indices_.end())  {
+        dfv.indices_ =
             typename DataFrameView<TS>::TSVec(&*lower, &*upper);
 
-        const size_type b_dist = std::distance(timestamps_.begin(), lower);
-        const size_type e_dist = std::distance(timestamps_.begin(),
-                                               upper < timestamps_.end()
+        const size_type b_dist = std::distance(indices_.begin(), lower);
+        const size_type e_dist = std::distance(indices_.begin(),
+                                               upper < indices_.end()
                                                    ? upper
-                                                   : timestamps_.end());
+                                                   : indices_.end());
 
         for (auto &iter : data_tb_)  {
             view_setup_functor_<types ...> functor (iter.first.c_str(),
@@ -476,16 +476,16 @@ DataFrame<TS, HETERO>
 DataFrame<TS, HETERO>::get_data_by_loc (Index2D<int> range) const  {
 
     if (range.begin < 0)
-        range.begin = static_cast<int>(timestamps_.size()) + range.begin;
+        range.begin = static_cast<int>(indices_.size()) + range.begin;
     if (range.end < 0)
-        range.end = static_cast<int>(timestamps_.size()) + range.end;
+        range.end = static_cast<int>(indices_.size()) + range.end;
 
-    if (range.end <= static_cast<int>(timestamps_.size()) &&
+    if (range.end <= static_cast<int>(indices_.size()) &&
         range.begin <= range.end && range.begin >= 0)  {
         DataFrame   df;
 
-        df.load_index(timestamps_.begin() + static_cast<size_type>(range.begin),
-                      timestamps_.begin() + static_cast<size_type>(range.end));
+        df.load_index(indices_.begin() + static_cast<size_type>(range.begin),
+                      indices_.begin() + static_cast<size_type>(range.end));
 
         for (auto &iter : data_tb_)  {
             load_functor_<types ...> functor (
@@ -520,18 +520,18 @@ DataFrame<TS, HETERO>::get_view_by_loc (Index2D<int> range)  {
                   "Only a StdDataFrame can call get_view_by_loc()");
 
     if (range.begin < 0)
-        range.begin = static_cast<int>(timestamps_.size()) + range.begin;
+        range.begin = static_cast<int>(indices_.size()) + range.begin;
     if (range.end < 0)
-        range.end = static_cast<int>(timestamps_.size()) + range.end;
+        range.end = static_cast<int>(indices_.size()) + range.end;
 
-    if (range.end <= static_cast<int>(timestamps_.size()) &&
+    if (range.end <= static_cast<int>(indices_.size()) &&
         range.begin <= range.end && range.begin >= 0)  {
         DataFrameView<TS>   dfv;
 
-        dfv.timestamps_ =
+        dfv.indices_ =
             typename DataFrameView<TS>::TSVec(
-                &*(timestamps_.begin() + range.begin),
-                &*(timestamps_.begin() + range.end));
+                &*(indices_.begin() + range.begin),
+                &*(indices_.begin() + range.end));
         for (auto &iter : data_tb_)  {
             view_setup_functor_<types ...>  functor (
                 iter.first.c_str(),

@@ -29,7 +29,7 @@ std::vector<T> &DataFrame<TS, HETERO>::create_column (const char *name)  {
     DataVec         &hv = data_.back();
     std::vector<T>  &vec = hv.template get_vector<T>();
 
-    // vec.resize(timestamps_.size(), _get_nan<T>());
+    // vec.resize(indices_.size(), _get_nan<T>());
     return (vec);
 }
 
@@ -126,9 +126,9 @@ DataFrame<TS, HETERO>::load_index(const ITR &begin, const ITR &end)  {
 
     const size_type s = std::distance(begin, end);
 
-    timestamps_.clear ();
-    timestamps_.reserve (s);
-    timestamps_.insert (timestamps_.begin (), begin, end);
+    indices_.clear ();
+    indices_.reserve (s);
+    indices_.insert (indices_.begin (), begin, end);
     return (s);
 }
 
@@ -141,8 +141,8 @@ DataFrame<TS, HETERO>::load_index(TSVec &&idx)  {
     static_assert(std::is_base_of<HeteroVector, HETERO>::value,
                   "Only a StdDataFrame can call load_index()");
 
-    timestamps_ = idx;
-    return (timestamps_.size());
+    indices_ = idx;
+    return (indices_.size());
 }
 
 // ----------------------------------------------------------------------------
@@ -157,8 +157,8 @@ DataFrame<TS, HETERO>::append_index(Index2D<const ITR &> range)  {
 
     const size_type s = std::distance(range.begin, range.end);
 
-    timestamps_.reserve (timestamps_.size() + s);
-    timestamps_.insert (timestamps_.end (), range.begin, range.end);
+    indices_.reserve (indices_.size() + s);
+    indices_.insert (indices_.end (), range.begin, range.end);
     return (s);
 }
 
@@ -171,7 +171,7 @@ DataFrame<TS, HETERO>::append_index(const TimeStamp &val)  {
     static_assert(std::is_base_of<HeteroVector, HETERO>::value,
                   "Only a StdDataFrame can call append_index()");
 
-    timestamps_.push_back (val);
+    indices_.push_back (val);
     return (1);
 }
 
@@ -184,7 +184,7 @@ DataFrame<TS, HETERO>::
 load_column (const char *name, Index2D<const ITR &> range, nan_policy padding) {
 
     size_type       s = std::distance(range.begin, range.end);
-    const size_type idx_s = timestamps_.size();
+    const size_type idx_s = indices_.size();
 
     if (s > idx_s)  {
         char buffer [512];
@@ -247,7 +247,7 @@ typename DataFrame<TS, HETERO>::size_type
 DataFrame<TS, HETERO>::
 load_column (const char *name, std::vector<T> &&data, nan_policy padding)  {
 
-    const size_type idx_s = timestamps_.size();
+    const size_type idx_s = indices_.size();
     const size_type data_s = data.size();
 
     if (data_s > idx_s)  {
@@ -321,7 +321,7 @@ append_column (const char *name,
     std::vector<T>  &vec = hv.template get_vector<T>();
 
     size_type       s = std::distance(range.begin, range.end) + vec.size ();
-    const size_type idx_s = timestamps_.size();
+    const size_type idx_s = indices_.size();
 
     if (s > idx_s)  {
         char buffer [512];
@@ -371,7 +371,7 @@ append_column (const char *name, const T &val, nan_policy padding)  {
     std::vector<T>  &vec = hv.template get_vector<T>();
 
     size_type       s = 1;
-    const size_type idx_s = timestamps_.size();
+    const size_type idx_s = indices_.size();
 
     if (s > idx_s)  {
         char buffer [512];
@@ -409,18 +409,18 @@ DataFrame<TS, HETERO>::remove_data_by_idx (Index2D<TS> range)  {
                   "Only a StdDataFrame can call remove_data_by_idx()");
 
     const auto  &lower =
-        std::lower_bound (timestamps_.begin(), timestamps_.end(), range.begin);
+        std::lower_bound (indices_.begin(), indices_.end(), range.begin);
     const auto  &upper =
-        std::upper_bound (timestamps_.begin(), timestamps_.end(), range.end);
+        std::upper_bound (indices_.begin(), indices_.end(), range.end);
 
-    if (lower != timestamps_.end())  {
-        const size_type b_dist = std::distance(timestamps_.begin(), lower);
-        const size_type e_dist = std::distance(timestamps_.begin(),
-                                               upper < timestamps_.end()
+    if (lower != indices_.end())  {
+        const size_type b_dist = std::distance(indices_.begin(), lower);
+        const size_type e_dist = std::distance(indices_.begin(),
+                                               upper < indices_.end()
                                                    ? upper
-                                                   : timestamps_.end());
+                                                   : indices_.end());
         make_consistent<types ...>();
-        timestamps_.erase(lower, upper);
+        indices_.erase(lower, upper);
 
         remove_functor_<types ...>  functor (b_dist, e_dist);
 
@@ -442,15 +442,15 @@ DataFrame<TS, HETERO>::remove_data_by_loc (Index2D<int> range)  {
                   "Only a StdDataFrame can call remove_data_by_loc()");
 
     if (range.begin < 0)
-        range.begin = static_cast<int>(timestamps_.size()) + range.begin;
+        range.begin = static_cast<int>(indices_.size()) + range.begin;
     if (range.end < 0)
-        range.end = static_cast<int>(timestamps_.size()) + range.end;
+        range.end = static_cast<int>(indices_.size()) + range.end;
 
-    if (range.end <= static_cast<int>(timestamps_.size()) &&
+    if (range.end <= static_cast<int>(indices_.size()) &&
         range.begin <= range.end && range.begin >= 0)  {
         make_consistent<types ...>();
-        timestamps_.erase(timestamps_.begin() + range.begin,
-                          timestamps_.begin() + range.end);
+        indices_.erase(indices_.begin() + range.begin,
+                          indices_.begin() + range.end);
 
         remove_functor_<types ...>  functor (
             static_cast<size_type>(range.begin),

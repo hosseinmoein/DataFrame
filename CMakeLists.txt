@@ -83,6 +83,7 @@ set(${LIBRARY_TARGET_NAME}_HDR
   include/DataFrame_opt.tcc
   include/DataFrame_read.tcc
   include/DataFrame_set.tcc
+  include/DataFrame_functors.h
 )
 
 # Build the library

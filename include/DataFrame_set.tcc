@@ -405,6 +405,9 @@ template<typename ... types>
 void
 DataFrame<TS, HETERO>::remove_data_by_idx (Index2D<TS> range)  {
 
+    static_assert(std::is_base_of<HeteroVector, HETERO>::value,
+                  "Only a StdDataFrame can call remove_data_by_idx()");
+
     const auto  &lower =
         std::lower_bound (timestamps_.begin(), timestamps_.end(), range.begin);
     const auto  &upper =
@@ -434,6 +437,9 @@ template<typename TS, typename  HETERO>
 template<typename ... types>
 void
 DataFrame<TS, HETERO>::remove_data_by_loc (Index2D<int> range)  {
+
+    static_assert(std::is_base_of<HeteroVector, HETERO>::value,
+                  "Only a StdDataFrame can call remove_data_by_loc()");
 
     if (range.begin < 0)
         range.begin = static_cast<int>(timestamps_.size()) + range.begin;

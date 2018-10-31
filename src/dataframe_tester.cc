@@ -620,6 +620,38 @@ int main(int argc, char *argv[]) {
         df.write<std::ostream, double, int>(std::cout);
     }
 
+    {
+        std::cout << "\n\nTesing get_col_unique_values()" << std::endl;
+
+        std::vector<unsigned long>  idx =
+            { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+              123457, 123458, 123459, 123460, 123461, 123462, 123466 };
+        std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
+                                   13, 14 };
+        std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23,
+                                   30, 31, 32, 1.89};
+        std::vector<double> d3 = { 15, 16, 15, 18, 19, 16, 21,
+                                   0.34, 1.56, 0.34, 2.3, 0.34, 0.89, 19.0 };
+        std::vector<int>    i1 = { 22, 23, 24, 25, 99, 100, 101, 3, 2 };
+        MyDataFrame         df;
+
+        df.load_data(std::move(idx),
+                     std::make_pair("col_1", d1),
+                     std::make_pair("col_2", d2),
+                     std::make_pair("col_3", d3),
+                     std::make_pair("col_4", i1));
+
+        df.write<std::ostream, double, int>(std::cout);
+        std::cout << "Getting unique values in column col_3" << std::endl;
+
+        const std::vector<double>   result =
+            df.get_col_unique_values<double>("col_3");
+
+        for (auto &iter : result)
+            std::cout << iter << ",";
+        std::cout << std::endl;
+    }
+
     return (0);
 }
 

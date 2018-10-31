@@ -411,6 +411,21 @@ public: // Read/access interfaces
     const typename type_declare<HETERO, T>::type &
     get_column (const char *name) const;
 
+    // It returns a vector of unique values in the named column in the same
+    // order that exists in the column.
+    // For this method to compile and work, 3 conditions must be met:
+    // 1) Type T must be hashable. If this is a user defined type, you
+    //    must enable and specialize std::hash.
+    // 2) The equality operator (==) must be well defined for type T.
+    // 3) Type T must match the actual type of the named column.
+    // Of course, if you never call this method in your application,
+    // you need not be worried about these conditions.
+    //
+    // T: Data type of the named column
+    //
+    template<typename T>
+    std::vector<T> get_col_unique_values(const char *name) const;
+
     // It returns a DataFrame (including the index and data columns)
     // containing the data from index begin to index end.
     // DataFrame must be sorted by index or behavior is undefined.

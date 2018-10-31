@@ -6,6 +6,7 @@
 #include "DataFrame.h"
 #include <type_traits>
 #include <limits>
+#include <unordered_set>
 
 // ----------------------------------------------------------------------------
 
@@ -41,6 +42,42 @@ const typename type_declare<HETERO, T>::type &
 DataFrame<TS, HETERO>::get_column (const char *name) const  {
 
     return (const_cast<DataFrame *>(this)->get_column<T>(name));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename TS, typename  HETERO>
+template<typename T>
+std::vector<T> DataFrame<TS, HETERO>::
+get_col_unique_values(const char *name) const  {
+
+    const auto  iter = data_tb_.find (name);
+
+    if (iter == data_tb_.end())  {
+        char buffer [512];
+
+        sprintf (buffer,
+                 "DataFrame::get_col_unique_values(): "
+                 "ERROR: Cannot find column '%s'",
+                 name);
+        throw ColNotFound (buffer);
+    }
+
+    const DataVec           &hv = data_[iter->second];
+    const std::vector<T>    &vec = hv.template get_vector<T>();
+    std::vector<T>          result;
+    std::unordered_set<T>   table;
+
+    result.reserve(vec.size());
+    table.reserve(vec.size());
+    for (auto &citer : vec)  {
+        const auto  insert_ret = table.insert(citer);
+
+        if (insert_ret.second)
+            result.push_back(citer);
+    }
+
+    return(result);
 }
 
 // ----------------------------------------------------------------------------

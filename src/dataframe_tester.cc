@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <typeinfo>
+#include <cmath>
 
 #include "../include/DataFrame.h"
 #include "../include/DFVisitors.h"
@@ -704,6 +705,36 @@ int main(int argc, char *argv[]) {
         std::cout << "After removing by ibdex { 3, -3 }" << std::endl;
         df.remove_data_by_loc<double, int>({ 3, -3 });
         df.write<std::ostream, double, int>(std::cout);
+    }
+
+    {
+        std::cout << "\n\nTesing value_counts()" << std::endl;
+
+        const double                my_nan = sqrt(-1);
+        std::vector<unsigned long>  idx =
+            { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+              123457, 123458, 123459, 123460, 123461, 123462, 123466 };
+        std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
+                                   13, 14 };
+        std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23,
+                                   30, 31, 32, 1.89};
+        std::vector<double> d3 = { 15, 16, 15, 18, 19, 16, 21, my_nan,
+                                   0.34, 1.56, 0.34, 2.3, 0.34, 19.0 };
+        std::vector<int>    i1 = { 22, 23, 24, 25, 99 };
+        MyDataFrame         df;
+
+        df.load_data(std::move(idx),
+                     std::make_pair("col_1", d1),
+                     std::make_pair("col_2", d2),
+                     std::make_pair("col_3", d3),
+                     std::make_pair("col_4", i1));
+
+        df.write<std::ostream, double, int>(std::cout);
+
+        auto    result = df.value_counts<double>("col_3");
+
+        std::cout << "After calling value_counts(cols_3)" << std::endl;
+        result.write<std::ostream, size_t>(std::cout);
     }
 
     return (0);

@@ -285,8 +285,8 @@ public:  // Other public interfaces
     // data columns.
     // nan values make sorting nondeterministic.
     //
-    // T: Type of the by_name column. You always of the specify this type,
-    //    even if it is being sorted to the default index
+    // T: Type of the by_name column. You always must specify this type,
+    //    even if it is being sorted by the default index
     // types: List all the types of all data columns.
     //        A type should be specified in the list only once.
     //
@@ -323,6 +323,25 @@ public:  // Other public interfaces
     groupby_async (F &&func,
                    const char *gb_col_name = nullptr,
                    sort_state already_sorted = sort_state::not_sorted) const;
+
+    // It counts the unique values in the named column.
+    // It returns a StdDataFrame of following specs:
+    // 1) The index is of type T and contains all unique values in
+    //    the named column.
+    // 2) There is only one column named "counts" of type size_type that
+    //    contains the count for each index row.
+    // For this method to compile and work, 3 conditions must be met:
+    // 1) Type T must be hashable. If this is a user defined type, you
+    //    must enable and specialize std::hash.
+    // 2) The equality operator (==) must be well defined for type T.
+    // 3) Type T must match the actual type of the named column.
+    // Of course, if you never call this method in your application,
+    // you need not be worried about these conditions.
+    //
+    // T: Type of the col_name column.
+    //
+    template<typename T>
+    StdDataFrame<T> value_counts (const char *col_name) const;
 
     // It bucketizes the data and index into bucket_interval's,
     // based on index values and calls the functor for each bucket.
@@ -648,6 +667,9 @@ protected:
 
     template<typename T>
     static inline constexpr T _get_nan();
+
+    template<typename T>
+    static inline constexpr bool _is_nan(const T &val);
 
 private:  // Visiting functors
 

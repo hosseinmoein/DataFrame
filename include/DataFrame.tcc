@@ -24,6 +24,17 @@ inline constexpr T DataFrame<TS, HETERO>::_get_nan()  {
 // ----------------------------------------------------------------------------
 
 template<typename TS, typename  HETERO>
+template<typename T>
+inline constexpr bool DataFrame<TS, HETERO>::_is_nan(const T &val)  {
+
+    if (std::numeric_limits<T>::has_quiet_NaN)
+        return (std::isnan(val));
+    return (_get_nan<T>() == val);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename TS, typename  HETERO>
 template<typename ... types>
 void DataFrame<TS, HETERO>::make_consistent ()  {
 
@@ -237,6 +248,79 @@ DataFrame<TS, HETERO>::groupby_async (F &&func,
                            std::move(func),
                            gb_col_name,
                            already_sorted));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename TS, typename  HETERO>
+template<typename T>
+StdDataFrame<T>
+DataFrame<TS, HETERO>::value_counts (const char *col_name) const  {
+
+    auto iter = data_tb_.find (col_name);
+
+    if (iter == data_tb_.end())  {
+        char buffer [512];
+
+        sprintf (buffer,
+                 "DataFrame::value_counts(): ERROR: Cannot find column '%s'",
+                 col_name);
+        throw ColNotFound (buffer);
+    }
+
+    const DataVec           &hv = data_[iter->second];
+    const std::vector<T>    &vec = hv.template get_vector<T>();
+    auto                    hash_func =
+        [](std::reference_wrapper<const T> v) -> std::size_t  {
+            return(std::hash<T>{}(v.get()));
+    };
+    auto                    equal_func =
+        [](std::reference_wrapper<const T> lhs,
+           std::reference_wrapper<const T> rhs) -> bool  {
+            return(lhs.get() == rhs.get());
+    };
+
+    std::unordered_map<
+        typename std::reference_wrapper<const T>::type,
+        size_type,
+        decltype(hash_func),
+        decltype(equal_func)>   values_map(vec.size(), hash_func, equal_func);
+    size_type                   nan_count = 0;
+
+    // take care of nans
+    for (auto citer : vec)  {
+        if (_is_nan<T>(citer))  {
+            ++nan_count;
+            continue;
+        }
+	
+        auto    insert_result = values_map.emplace(std::ref(citer), 1);
+
+        if (insert_result.second == false)
+            insert_result.first->second += 1;
+    }
+
+    std::vector<T>          res_indices;
+    std::vector<size_type>  counts;
+
+    counts.reserve(values_map.size());
+    res_indices.reserve(values_map.size());
+
+    for (const auto citer : values_map)  {
+        res_indices.push_back(citer.first);
+        counts.emplace_back(citer.second);
+    }
+    if (nan_count > 0)  {
+        res_indices.push_back(_get_nan<T>());
+        counts.emplace_back(nan_count);
+	}
+
+    StdDataFrame<T> result_df;
+
+    result_df.load_index(std::move(res_indices));
+    result_df.load_column("counts", std::move(counts));
+
+    return(result_df);
 }
 
 // ----------------------------------------------------------------------------

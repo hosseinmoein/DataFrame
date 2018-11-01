@@ -51,7 +51,7 @@ template<typename T>
 std::vector<T> DataFrame<TS, HETERO>::
 get_col_unique_values(const char *name) const  {
 
-    const auto  iter = data_tb_.find (name);
+    auto  iter = data_tb_.find (name);
 
     if (iter == data_tb_.end())  {
         char buffer [512];
@@ -65,13 +65,32 @@ get_col_unique_values(const char *name) const  {
 
     const DataVec           &hv = data_[iter->second];
     const std::vector<T>    &vec = hv.template get_vector<T>();
-    std::vector<T>          result;
-    std::unordered_set<T>   table;
+    auto                    hash_func =
+        [](std::reference_wrapper<const T> v) -> std::size_t  {
+            return(std::hash<T>{}(v.get()));
+    };
+    auto                    equal_func =
+        [](std::reference_wrapper<const T> lhs,
+           std::reference_wrapper<const T> rhs) -> bool  {
+            return(lhs.get() == rhs.get());
+    };
+
+    std::unordered_set<
+        typename std::reference_wrapper<T>::type,
+        decltype(hash_func),
+        decltype(equal_func)>   table(vec.size(), hash_func, equal_func);
+    bool                        counted_nan = false;
+    std::vector<T>              result;
 
     result.reserve(vec.size());
-    table.reserve(vec.size());
-    for (auto &citer : vec)  {
-        const auto  insert_ret = table.insert(citer);
+    for (auto citer : vec)  {
+        if (_is_nan<T>(citer) && ! counted_nan)  {
+            counted_nan = true;
+            result.push_back(_get_nan<T>());
+            continue;
+        }
+
+        const auto  insert_ret = table.emplace(std::ref(citer));
 
         if (insert_ret.second)
             result.push_back(citer);

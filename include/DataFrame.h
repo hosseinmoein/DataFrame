@@ -312,7 +312,7 @@ public:  // Other public interfaces
     // types: List of the types of all data columns.
     //        A type should be specified in the list only once.
     // func: The functor to do the groupby. To see an example of func, refer
-    //       to GroupbySum in DFVisitors.h file
+    //       to GroupbySum in DataFrameVisitors.h file
     // already_sorted: If the DataFrame is already sorted by gb_col_name,
     //                 this will save the expensive sort operation
     //

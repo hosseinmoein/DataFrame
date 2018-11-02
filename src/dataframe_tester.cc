@@ -4,7 +4,7 @@
 #include <cmath>
 
 #include "../include/DataFrame.h"
-#include "../include/DFVisitors.h"
+#include "../include/DataFrameVisitors.h"
 
 using namespace hmdf;
 

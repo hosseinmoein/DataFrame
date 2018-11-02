@@ -25,7 +25,7 @@ HEADERS = $(LOCAL_INCLUDE_DIR)/HeteroVector.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame_opt.tcc \
           $(LOCAL_INCLUDE_DIR)/DataFrame_merge.tcc \
           $(LOCAL_INCLUDE_DIR)/DataFrame_functors.h \
-          $(LOCAL_INCLUDE_DIR)/DFVisitors.h \
+          $(LOCAL_INCLUDE_DIR)/DataFrameVisitors.h \
           $(LOCAL_INCLUDE_DIR)/VectorView.h
 
 LIB_NAME = DataSci

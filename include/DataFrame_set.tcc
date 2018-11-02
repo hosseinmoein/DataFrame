@@ -4,8 +4,6 @@
 // Distributed under the BSD Software License (see file License)
 
 #include "DataFrame.h"
-#include <type_traits>
-#include <limits>
 
 // ----------------------------------------------------------------------------
 

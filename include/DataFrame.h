@@ -7,11 +7,9 @@
 
 #include "HeteroVector.h"
 
+#include <bitset>
 #include <map>
-#include <utility>
 #include <stdexcept>
-#include <iostream>
-#include <cstring>
 #include <future>
 
 // ----------------------------------------------------------------------------
@@ -50,6 +48,13 @@ enum class nan_policy : bool  {
 enum class sort_state : bool  {
     sorted = true,
     not_sorted = false
+};
+
+enum class merge_policy : unsigned char  {
+    inner_join = 1,
+    left_join = 2,
+    right_join = 3,
+    unions = 4      // union is a reserved word
 };
 
 // It represents a range with begin and end within a continuous memory space
@@ -400,6 +405,17 @@ public:  // Other public interfaces
     //
     template<typename T, typename V>
     DataFrame transpose(TSVec &&indices, const V &col_names) const;
+
+    // NOT IMPLEMENTED YET
+    template<typename ... types>
+    DataFrame merge_by_index (const DataFrame &rhs, merge_policy mp);
+
+
+    // NOT IMPLEMENTED YET
+    template<typename ... types>
+    DataFrame merge_by_column (const DataFrame &rhs,
+                               const char *col_name,
+                               merge_policy mp);
 
     // It outputs the content of DataFrame into the stream o as text in the
     // following format:

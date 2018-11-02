@@ -7,10 +7,7 @@
 
 #include "HeteroView.h"
 #include <vector>
-#include <functional>
 #include <unordered_map>
-#include <utility>
-#include <algorithm>
 
 // ----------------------------------------------------------------------------
 

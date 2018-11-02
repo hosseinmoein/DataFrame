@@ -6,11 +6,7 @@
 #pragma once
 
 #include "VectorView.h"
-#include <vector>
-#include <functional>
 #include <unordered_map>
-#include <utility>
-#include <algorithm>
 
 // ----------------------------------------------------------------------------
 

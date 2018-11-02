@@ -9,7 +9,6 @@
 #endif // defined(__linux__) || defined(__unix__) || defined(__APPLE__)
 #include <cstdlib>
 #include <fstream>
-#include <functional>
 
 // ----------------------------------------------------------------------------
 

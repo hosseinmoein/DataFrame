@@ -407,15 +407,14 @@ public:  // Other public interfaces
     DataFrame transpose(TSVec &&indices, const V &col_names) const;
 
     // NOT IMPLEMENTED YET
-    template<typename ... types>
-    DataFrame merge_by_index (const DataFrame &rhs, merge_policy mp);
-
+    template<typename RHS_T, typename ... types>
+    StdDataFrame<TS> merge_by_index (const RHS_T &rhs, merge_policy mp) const;
 
     // NOT IMPLEMENTED YET
-    template<typename ... types>
-    DataFrame merge_by_column (const DataFrame &rhs,
-                               const char *col_name,
-                               merge_policy mp);
+    template<typename RHS_T, typename T, typename ... types>
+    StdDataFrame<TS> merge_by_column (const RHS_T &rhs,
+                                      const char *col_name,
+                                      merge_policy mp) const;
 
     // It outputs the content of DataFrame into the stream o as text in the
     // following format:
@@ -692,7 +691,43 @@ private:  // Visiting functors
     template<typename T, typename ITR>
     void setup_view_column_(const char *name, Index2D<ITR> range);
 
-#include "DataFrame_functors.h"
+    template<typename LHS_T, typename RHS_T, typename ... types>
+    static StdDataFrame<TS>
+    index_inner_join_(const LHS_T &lhs, const RHS_T &rhs);
+
+    template<typename LHS_T, typename RHS_T, typename ... types>
+    static StdDataFrame<TS>
+    index_left_join_(const LHS_T &lhs, const RHS_T &rhs);
+
+    template<typename LHS_T, typename RHS_T, typename ... types>
+    static StdDataFrame<TS>
+    index_right_join_(const LHS_T &lhs, const RHS_T &rhs);
+
+    template<typename LHS_T, typename RHS_T, typename ... types>
+    static StdDataFrame<TS>
+    index_union_(const LHS_T &lhs, const RHS_T &rhs);
+
+    template<typename LHS_T, typename RHS_T, typename COL_T, typename ... types>
+    static StdDataFrame<TS>
+    column_inner_join_(const char *col_name,
+                       const LHS_T &lhs,
+                       const RHS_T &rhs);
+
+    template<typename LHS_T, typename RHS_T, typename COL_T, typename ... types>
+    static StdDataFrame<TS>
+    column_left_join_(const char *col_name, const LHS_T &lhs, const RHS_T &rhs);
+
+    template<typename LHS_T, typename RHS_T, typename COL_T, typename ... types>
+    static StdDataFrame<TS>
+    column_right_join_(const char *col_name,
+                       const LHS_T &lhs,
+                       const RHS_T &rhs);
+
+    template<typename LHS_T, typename RHS_T, typename COL_T, typename ... types>
+    static StdDataFrame<TS>
+    column_union_(const char *col_name, const LHS_T &lhs, const RHS_T &rhs);
+
+#   include "DataFrame_functors.h"
 
 private:  // Tuple stuff
 
@@ -723,6 +758,7 @@ private:  // Tuple stuff
 #    include "DataFrame_get.tcc"
 #    include "DataFrame_read.tcc"
 #    include "DataFrame_opt.tcc"
+#    include "DataFrame_merge.tcc"
 #    include "DataFrame.tcc"
 #  endif // DMS_INCLUDE_SOURCE
 

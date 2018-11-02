@@ -737,6 +737,64 @@ int main(int argc, char *argv[]) {
         result.write<std::ostream, size_t>(std::cout);
     }
 
+    {
+        std::cout << "\n\nTesing merge (NOT IMPLEMENTED YET)" << std::endl;
+
+        std::vector<unsigned long>  idx =
+            { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+              123457, 123458, 123459, 123460, 123461, 123462, 123466 };
+        std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
+                                   13, 14 };
+        std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23,
+                                   30, 31, 32, 1.89};
+        std::vector<double> d3 = { 15, 16, 15, 18, 19, 16, 21,
+                                   0.34, 1.56, 0.34, 2.3, 0.34, 19.0 };
+        std::vector<int>    i1 = { 22, 23, 24, 25, 99 };
+        MyDataFrame         df;
+
+        df.load_data(std::move(idx),
+                     std::make_pair("col_1", d1),
+                     std::make_pair("col_2", d2),
+                     std::make_pair("col_3", d3),
+                     std::make_pair("col_4", i1));
+
+        std::vector<unsigned long>  idx2 =
+            { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+              123457, 123458, 123459, 123460, 123461, 123462, 123466 };
+        std::vector<double> d12 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
+                                    13, 14 };
+        std::vector<double> d22 = { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23,
+                                    30, 31, 32, 1.89};
+        std::vector<double> d32 = { 15, 16, 15, 18, 19, 16, 21,
+                                    0.34, 1.56, 0.34, 2.3, 0.34, 19.0 };
+        std::vector<int>    i12 = { 22, 23, 24, 25, 99 };
+        MyDataFrame         df2;
+
+        df2.load_data(std::move(idx2),
+                      std::make_pair("col_1", d12),
+                      std::make_pair("col_2", d22),
+                      std::make_pair("col_3", d32),
+                      std::make_pair("col_4", i12));
+
+        df.merge_by_index<decltype(df2), double, int>
+            (df2, merge_policy::inner_join);
+        df.merge_by_index<decltype(df2), double, int>
+            (df2, merge_policy::left_join);
+        df2.merge_by_index<decltype(df), double, int>
+            (df, merge_policy::right_join);
+        df2.merge_by_index<decltype(df), double, int>
+            (df, merge_policy::unions);
+
+        df.merge_by_column<decltype(df2), double, double, int>
+            (df2, "col_2", merge_policy::inner_join);
+        df.merge_by_column<decltype(df2), double, double, int>
+            (df2, "col_2", merge_policy::left_join);
+        df2.merge_by_column<decltype(df), double, double, int>
+            (df, "col_2", merge_policy::right_join);
+        df2.merge_by_column<decltype(df), double, double, int>
+            (df, "col_2", merge_policy::unions);
+    }
+
     return (0);
 }
 

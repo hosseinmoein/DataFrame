@@ -89,9 +89,10 @@ using DataFrameView = DataFrame<TS, HeteroView>;
 // ----------------------------------------------------------------------------
 
 // TS: Index(e.g. Timestamp) type. Although an index column need not necessarily
-//     represent time.
+//     represent time. Basically TS could be any built-in or user-defined type.
 // HETERO: See the static assert below. It can only be either
 //         a HeteroVector (StdDataFrame) or a HeteroView (DataFrameView)
+// A DataFrame can contain columns of any built-in or user-defined types.
 //
 template<typename TS, typename HETERO>
 class DataFrame  {

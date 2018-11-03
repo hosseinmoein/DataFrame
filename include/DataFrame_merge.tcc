@@ -38,9 +38,9 @@ merge_by_index (const RHS_T &rhs, merge_policy mp) const  {
                         <decltype(*this), decltype(rhs), types ...>
                             (*this, rhs));
             break;
-        case merge_policy::unions:
+        case merge_policy::left_right_join:
         default:
-            return (index_union_
+            return (index_left_right_join_
                         <decltype(*this), decltype(rhs), types ...>
                             (*this, rhs));
             break;
@@ -77,9 +77,9 @@ merge_by_column (const RHS_T &rhs,
                         <decltype(*this), decltype(rhs), T, types ...>
                             (col_name, *this, rhs));
             break;
-        case merge_policy::unions:
+        case merge_policy::left_right_join:
         default:
-            return (column_union_
+            return (column_left_right_join_
                         <decltype(*this), decltype(rhs), T, types ...>
                             (col_name, *this, rhs));
             break;
@@ -127,7 +127,7 @@ index_right_join_(const LHS_T &lhs, const RHS_T &rhs)  {
 template<typename TS, typename HETERO>
 template<typename LHS_T, typename RHS_T, typename ... types>
 StdDataFrame<TS> DataFrame<TS, HETERO>::
-index_union_(const LHS_T &lhs, const RHS_T &rhs)  {
+index_left_right_join_(const LHS_T &lhs, const RHS_T &rhs)  {
 
     StdDataFrame<TS>    result;
 
@@ -175,7 +175,9 @@ column_right_join_(const char *col_name, const LHS_T &lhs, const RHS_T &rhs)  {
 template<typename TS, typename HETERO>
 template<typename LHS_T, typename RHS_T, typename COL_T, typename ... types>
 StdDataFrame<TS> DataFrame<TS, HETERO>::
-column_union_(const char *col_name, const LHS_T &lhs, const RHS_T &rhs)  {
+column_left_right_join_(const char *col_name,
+                        const LHS_T &lhs,
+                        const RHS_T &rhs)  {
 
     StdDataFrame<TS>    result;
 

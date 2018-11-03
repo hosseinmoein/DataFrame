@@ -783,7 +783,7 @@ int main(int argc, char *argv[]) {
         df2.merge_by_index<decltype(df), double, int>
             (df, merge_policy::right_join);
         df2.merge_by_index<decltype(df), double, int>
-            (df, merge_policy::unions);
+            (df, merge_policy::left_right_join);
 
         df.merge_by_column<decltype(df2), double, double, int>
             (df2, "col_2", merge_policy::inner_join);
@@ -792,7 +792,7 @@ int main(int argc, char *argv[]) {
         df2.merge_by_column<decltype(df), double, double, int>
             (df, "col_2", merge_policy::right_join);
         df2.merge_by_column<decltype(df), double, double, int>
-            (df, "col_2", merge_policy::unions);
+            (df, "col_2", merge_policy::left_right_join);
     }
 
     return (0);

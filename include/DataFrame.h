@@ -55,7 +55,7 @@ enum class merge_policy : unsigned char  {
     inner_join = 1,
     left_join = 2,
     right_join = 3,
-    unions = 4      // union is a reserved word
+    left_right_join = 4
 };
 
 // It represents a range with begin and end within a continuous memory space
@@ -706,7 +706,7 @@ private:  // Visiting functors
 
     template<typename LHS_T, typename RHS_T, typename ... types>
     static StdDataFrame<TS>
-    index_union_(const LHS_T &lhs, const RHS_T &rhs);
+    index_left_right_join_(const LHS_T &lhs, const RHS_T &rhs);
 
     template<typename LHS_T, typename RHS_T, typename COL_T, typename ... types>
     static StdDataFrame<TS>
@@ -726,7 +726,9 @@ private:  // Visiting functors
 
     template<typename LHS_T, typename RHS_T, typename COL_T, typename ... types>
     static StdDataFrame<TS>
-    column_union_(const char *col_name, const LHS_T &lhs, const RHS_T &rhs);
+    column_left_right_join_(const char *col_name,
+                            const LHS_T &lhs,
+                            const RHS_T &rhs);
 
 #   include "DataFrame_functors.h"
 

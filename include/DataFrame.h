@@ -11,6 +11,7 @@
 #include <map>
 #include <stdexcept>
 #include <future>
+#include <cstring>
 
 // ----------------------------------------------------------------------------
 

@@ -7,6 +7,7 @@
 
 #include "VectorView.h"
 #include <unordered_map>
+#include <functional>
 
 // ----------------------------------------------------------------------------
 

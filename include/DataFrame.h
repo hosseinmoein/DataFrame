@@ -51,11 +51,11 @@ enum class sort_state : bool  {
     not_sorted = false
 };
 
-enum class merge_policy : unsigned char  {
+enum class join_policy : unsigned char  {
     inner_join = 1,
     left_join = 2,
     right_join = 3,
-    left_right_join = 4
+    left_right_join = 4  // This is merge
 };
 
 // It represents a range with begin and end within a continuous memory space
@@ -410,13 +410,13 @@ public:  // Other public interfaces
 
     // NOT IMPLEMENTED YET
     template<typename RHS_T, typename ... types>
-    StdDataFrame<TS> merge_by_index (const RHS_T &rhs, merge_policy mp) const;
+    StdDataFrame<TS> join_by_index (const RHS_T &rhs, join_policy mp) const;
 
     // NOT IMPLEMENTED YET
     template<typename RHS_T, typename T, typename ... types>
-    StdDataFrame<TS> merge_by_column (const RHS_T &rhs,
-                                      const char *col_name,
-                                      merge_policy mp) const;
+    StdDataFrame<TS> join_by_column (const RHS_T &rhs,
+                                     const char *col_name,
+                                     join_policy mp) const;
 
     // It outputs the content of DataFrame into the stream o as text in the
     // following format:
@@ -762,7 +762,7 @@ private:  // Tuple stuff
 #    include "DataFrame_get.tcc"
 #    include "DataFrame_read.tcc"
 #    include "DataFrame_opt.tcc"
-#    include "DataFrame_merge.tcc"
+#    include "DataFrame_join.tcc"
 #    include "DataFrame.tcc"
 #  endif // DMS_INCLUDE_SOURCE
 

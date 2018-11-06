@@ -313,7 +313,7 @@ index_join_functor_<Ts ...>::operator() (const std::vector<T> &lhs_vec)  {
 
     const std::vector<T>    &rhs_vec = rhs.get_column<T>(name);
 
-    for (auto &iter : merged_index_idx)  {
+    for (auto &iter : joined_index_idx)  {
     }
 }
 

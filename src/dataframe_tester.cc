@@ -738,7 +738,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesing merge (NOT IMPLEMENTED YET)" << std::endl;
+        std::cout << "\n\nTesing join (NOT IMPLEMENTED YET)" << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
@@ -776,23 +776,23 @@ int main(int argc, char *argv[]) {
                       std::make_pair("col_3", d32),
                       std::make_pair("col_4", i12));
 
-        df.merge_by_index<decltype(df2), double, int>
-            (df2, merge_policy::inner_join);
-        df.merge_by_index<decltype(df2), double, int>
-            (df2, merge_policy::left_join);
-        df2.merge_by_index<decltype(df), double, int>
-            (df, merge_policy::right_join);
-        df2.merge_by_index<decltype(df), double, int>
-            (df, merge_policy::left_right_join);
+        df.join_by_index<decltype(df2), double, int>
+            (df2, join_policy::inner_join);
+        df.join_by_index<decltype(df2), double, int>
+            (df2, join_policy::left_join);
+        df2.join_by_index<decltype(df), double, int>
+            (df, join_policy::right_join);
+        df2.join_by_index<decltype(df), double, int>
+            (df, join_policy::left_right_join);
 
-        df.merge_by_column<decltype(df2), double, double, int>
-            (df2, "col_2", merge_policy::inner_join);
-        df.merge_by_column<decltype(df2), double, double, int>
-            (df2, "col_2", merge_policy::left_join);
-        df2.merge_by_column<decltype(df), double, double, int>
-            (df, "col_2", merge_policy::right_join);
-        df2.merge_by_column<decltype(df), double, double, int>
-            (df, "col_2", merge_policy::left_right_join);
+        df.join_by_column<decltype(df2), double, double, int>
+            (df2, "col_2", join_policy::inner_join);
+        df.join_by_column<decltype(df2), double, double, int>
+            (df2, "col_2", join_policy::left_join);
+        df2.join_by_column<decltype(df), double, double, int>
+            (df, "col_2", join_policy::right_join);
+        df2.join_by_column<decltype(df), double, double, int>
+            (df, "col_2", join_policy::left_right_join);
     }
 
     return (0);

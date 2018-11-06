@@ -81,7 +81,7 @@ set(${LIBRARY_TARGET_NAME}_HDR
   include/DataFrame_get.tcc
   include/DataFrame_misc.tcc
   include/DataFrame_opt.tcc
-  include/DataFrame_merge.tcc
+  include/DataFrame_join.tcc
   include/DataFrame_read.tcc
   include/DataFrame_set.tcc
   include/DataFrame_functors.h

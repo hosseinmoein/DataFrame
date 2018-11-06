@@ -193,11 +193,11 @@ struct index_join_functor_ : DataVec::template visitor_base<types ...>  {
         const DataFrame &r,
         const std::vector<std::tuple<size_type, size_type>> &mii,
         DataFrame &res)
-        : name(n), rhs(r), merged_index_idx(mii), result(res)  {  }
+        : name(n), rhs(r), joined_index_idx(mii), result(res)  {  }
 
     const char                                          *name;
     const DataFrame                                     &rhs;
-    const std::vector<std::tuple<size_type, size_type>> &merged_index_idx;
+    const std::vector<std::tuple<size_type, size_type>> &joined_index_idx;
     DataFrame                                           &result;
 
     template<typename T>

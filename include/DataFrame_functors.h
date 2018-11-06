@@ -185,6 +185,25 @@ struct mod_by_idx_functor_ : DataVec::template visitor_base<types ...>  {
     void operator() (std::vector<T> &lhs_vec) const;
 };
 
+template<typename ... types>
+struct index_join_functor_ : DataVec::template visitor_base<types ...>  {
+
+    inline index_join_functor_ (
+        const char *n,
+        const DataFrame &r,
+        const std::vector<std::tuple<size_type, size_type>> &mii,
+        DataFrame &res)
+        : name(n), rhs(r), merged_index_idx(mii), result(res)  {  }
+
+    const char                                          *name;
+    const DataFrame                                     &rhs;
+    const std::vector<std::tuple<size_type, size_type>> &merged_index_idx;
+    DataFrame                                           &result;
+
+    template<typename T>
+    void operator() (const std::vector<T> &lhs_vec);
+};
+
 // ----------------------------------------------------------------------------
 
 // Local Variables:

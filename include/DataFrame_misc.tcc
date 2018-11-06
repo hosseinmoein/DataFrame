@@ -302,6 +302,21 @@ DataFrame<TS, HETERO>::for_each_in_tuple_ (std::tuple<Ts...> &tu, F func)  {
     for_each_in_tuple_(tu, func, std::make_index_sequence<sizeof...(Ts)>());
 }
 
+// ----------------------------------------------------------------------------
+
+template<typename TS, typename HETERO>
+template<typename ... Ts>
+template<typename T>
+void
+DataFrame<TS, HETERO>::
+index_join_functor_<Ts ...>::operator() (const std::vector<T> &lhs_vec)  {
+
+    const std::vector<T>    &rhs_vec = rhs.get_column<T>(name);
+
+    for (auto &iter : merged_index_idx)  {
+    }
+}
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

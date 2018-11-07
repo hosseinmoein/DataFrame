@@ -203,8 +203,13 @@ index_left_join_(const LHS_T &lhs, const RHS_T &rhs)  {
                 std::numeric_limits<size_type>::max());
         else  {
             if (lhs.indices_[lhs_current] == rhs.indices_[rhs_current])
-                joined_index_idx.emplace_back(lhs_current++, rhs_current);
-            rhs_current += 1;
+                joined_index_idx.emplace_back(lhs_current++, rhs_current++);
+            else   {
+                joined_index_idx.emplace_back(
+                    lhs_current++,
+                    std::numeric_limits<size_type>::max());
+                rhs_current += 1;
+            }
         }
     }
 

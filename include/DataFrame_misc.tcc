@@ -319,8 +319,15 @@ index_join_functor_common_<Ts ...>::operator()(const std::vector<T> &lhs_vec)  {
     lhs_result_col.reserve(joined_index_idx.size());
     rhs_result_col.reserve(joined_index_idx.size());
     for (auto &citer : joined_index_idx)  {
-        lhs_result_col.push_back(lhs_vec[std::get<0>(citer)]);
-        rhs_result_col.push_back(rhs_vec[std::get<1>(citer)]);
+        const size_type left_i = std::get<0>(citer);
+        const size_type right_i = std::get<1>(citer);
+
+        lhs_result_col.push_back(
+            left_i != std::numeric_limits<size_type>::max()
+                ? lhs_vec[left_i] : DataFrame::_get_nan<T>());
+        rhs_result_col.push_back(
+            right_i != std::numeric_limits<size_type>::max()
+                ? rhs_vec[right_i] : DataFrame::_get_nan<T>());
     }
 
     char    lhs_str[256];
@@ -346,7 +353,11 @@ operator()(const std::vector<T> &vec)  {
 
     result_col.reserve(joined_index_idx.size());
     for (auto &citer : joined_index_idx)  {
-        result_col.push_back(vec[std::get<SIDE>(citer)]);
+        const size_type i = std::get<SIDE>(citer);
+
+        result_col.push_back(
+            i != std::numeric_limits<size_type>::max()
+                ? vec[i] : DataFrame::_get_nan<T>());
     }
 
     result.load_column(name, std::move(result_col));

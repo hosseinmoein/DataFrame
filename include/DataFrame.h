@@ -8,6 +8,7 @@
 #include "HeteroVector.h"
 
 #include <bitset>
+#include <limits>
 #include <map>
 #include <stdexcept>
 #include <future>
@@ -692,6 +693,14 @@ private:  // Visiting functors
 
     template<typename T, typename ITR>
     void setup_view_column_(const char *name, Index2D<ITR> range);
+
+    using IndexIdxVector = std::vector<std::tuple<size_type, size_type>>;
+
+    template<typename LHS_T, typename RHS_T, typename ... types>
+    static StdDataFrame<TS>
+    join_helper_(const LHS_T &lhs,
+                 const RHS_T &rhs,
+                 const IndexIdxVector &joined_index_idx);
 
     template<typename LHS_T, typename RHS_T, typename ... types>
     static StdDataFrame<TS>

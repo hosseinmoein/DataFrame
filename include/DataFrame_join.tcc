@@ -115,21 +115,51 @@ index_inner_join_(const LHS_T &lhs, const RHS_T &rhs)  {
     StdDataFrame<TS>    result;
     std::vector<TS>     result_index;
 
+    // Load the index
     result_index.reserve(joined_index_idx.size());
     for (const auto &citer : joined_index_idx)
-        result_index.push_back(std::get<0>(citer));
+        result_index.push_back(lhs.indices_[std::get<0>(citer)]);
     result.load_index(std::move(result_index));
 
-    for (auto &iter : lhs.data_tb_)
-        if (rhs.data_tb_.find(iter.first) != rhs.data_tb_.end())  {
-            index_join_functor_<types ...>  functor (iter.first.c_str(),
-                                                     rhs,
-                                                     joined_index_idx,
-                                                     result);
+    // Load the common and lhs columns
+    for (auto &iter : lhs.data_tb_)  {
+        auto    rhs_citer = rhs.data_tb_.find(iter.first);
+
+        // Common column between two frames
+        if (rhs_citer != rhs.data_tb_.end())  {
+            index_join_functor_common_<types ...> functor (iter.first.c_str(),
+                                                           rhs,
+                                                           joined_index_idx,
+                                                           result);
 
             lhs.data_[iter.second].change(functor);
 
         }
+        else  {  // lhs only column
+            // 0 = Left
+            index_join_functor_oneside_<0, types ...> functor (
+                iter.first.c_str(),
+                joined_index_idx,
+                result);
+
+            lhs.data_[iter.second].change(functor);
+        }
+    }
+
+    // Load the rhs columns
+    for (auto &iter : rhs.data_tb_)  {
+        auto    lhs_citer = lhs.data_tb_.find(iter.first);
+
+        if (lhs_citer == lhs.data_tb_.end())  {  // rhs only column
+            // 1 = Right
+            index_join_functor_oneside_<1, types ...> functor (
+                iter.first.c_str(),
+                joined_index_idx,
+                result);
+
+            rhs.data_[iter.second].change(functor);
+        }
+    }
 
     return(result);
 }

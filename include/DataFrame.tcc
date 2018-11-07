@@ -293,7 +293,7 @@ DataFrame<TS, HETERO>::value_counts (const char *col_name) const  {
             ++nan_count;
             continue;
         }
-	
+
         auto    insert_result = values_map.emplace(std::ref(citer), 1);
 
         if (insert_result.second == false)
@@ -313,7 +313,7 @@ DataFrame<TS, HETERO>::value_counts (const char *col_name) const  {
     if (nan_count > 0)  {
         res_indices.push_back(_get_nan<T>());
         counts.emplace_back(nan_count);
-	}
+    }
 
     StdDataFrame<T> result_df;
 

@@ -186,9 +186,9 @@ struct mod_by_idx_functor_ : DataVec::template visitor_base<types ...>  {
 };
 
 template<typename ... types>
-struct index_join_functor_ : DataVec::template visitor_base<types ...>  {
+struct index_join_functor_common_ : DataVec::template visitor_base<types ...>  {
 
-    inline index_join_functor_ (
+    inline index_join_functor_common_ (
         const char *n,
         const DataFrame &r,
         const std::vector<std::tuple<size_type, size_type>> &mii,
@@ -202,6 +202,24 @@ struct index_join_functor_ : DataVec::template visitor_base<types ...>  {
 
     template<typename T>
     void operator() (const std::vector<T> &lhs_vec);
+};
+
+// SIDE:  0 = Left, 1 = Right
+template<int SIDE, typename ... types>
+struct index_join_functor_oneside_ : DataVec::template visitor_base<types ...>  {
+
+    inline index_join_functor_oneside_ (
+        const char *n,
+        const std::vector<std::tuple<size_type, size_type>> &mii,
+        DataFrame &res)
+        : name(n), joined_index_idx(mii), result(res)  {  }
+
+    const char                                          *name;
+    const std::vector<std::tuple<size_type, size_type>> &joined_index_idx;
+    DataFrame                                           &result;
+
+    template<typename T>
+    void operator() (const std::vector<T> &vec);
 };
 
 // ----------------------------------------------------------------------------

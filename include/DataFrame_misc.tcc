@@ -4,6 +4,7 @@
 // Distributed under the BSD Software License (see file License)
 
 #include "DataFrame.h"
+#include <cstdio>
 
 // ----------------------------------------------------------------------------
 
@@ -309,12 +310,46 @@ template<typename ... Ts>
 template<typename T>
 void
 DataFrame<TS, HETERO>::
-index_join_functor_<Ts ...>::operator() (const std::vector<T> &lhs_vec)  {
+index_join_functor_common_<Ts ...>::operator()(const std::vector<T> &lhs_vec)  {
 
     const std::vector<T>    &rhs_vec = rhs.get_column<T>(name);
+    std::vector<T>          lhs_result_col;
+    std::vector<T>          rhs_result_col;
 
-    for (auto &iter : joined_index_idx)  {
+    lhs_result_col.reserve(joined_index_idx.size());
+    rhs_result_col.reserve(joined_index_idx.size());
+    for (auto &citer : joined_index_idx)  {
+        lhs_result_col.push_back(lhs_vec[std::get<0>(citer)]);
+        rhs_result_col.push_back(rhs_vec[std::get<1>(citer)]);
     }
+
+    char    lhs_str[256];
+    char    rhs_str[256];
+
+    ::sprintf(lhs_str, "lhs.%s", name);
+    ::sprintf(rhs_str, "rhs.%s", name);
+    result.load_column(lhs_str, std::move(lhs_result_col));
+    result.load_column(rhs_str, std::move(rhs_result_col));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename TS, typename HETERO>
+template<int SIDE, typename ... Ts>
+template<typename T>
+void
+DataFrame<TS, HETERO>::
+index_join_functor_oneside_<SIDE, Ts ...>::
+operator()(const std::vector<T> &vec)  {
+
+    std::vector<T>          result_col;
+
+    result_col.reserve(joined_index_idx.size());
+    for (auto &citer : joined_index_idx)  {
+        result_col.push_back(vec[std::get<SIDE>(citer)]);
+    }
+
+    result.load_column(name, std::move(result_col));
 }
 
 } // namespace hmdf

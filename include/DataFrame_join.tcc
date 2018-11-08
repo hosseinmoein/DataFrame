@@ -196,7 +196,15 @@ index_left_join_(const LHS_T &lhs, const RHS_T &rhs)  {
     IndexIdxVector  joined_index_idx;
 
     joined_index_idx.reserve(lhs_end);
-    while (lhs_current != lhs_end && rhs_current != rhs_end) {
+    while (lhs_current != lhs_end || rhs_current != rhs_end) {
+        if (lhs_current >= lhs_end)  break;
+        if (rhs_current >= rhs_end)  {
+            joined_index_idx.emplace_back(
+                lhs_current++,
+                std::numeric_limits<size_type>::max());
+            continue;
+        }
+
         if (lhs.indices_[lhs_current] < rhs.indices_[rhs_current])
             joined_index_idx.emplace_back(
                 lhs_current++,
@@ -204,12 +212,8 @@ index_left_join_(const LHS_T &lhs, const RHS_T &rhs)  {
         else  {
             if (lhs.indices_[lhs_current] == rhs.indices_[rhs_current])
                 joined_index_idx.emplace_back(lhs_current++, rhs_current++);
-            else   {
-                joined_index_idx.emplace_back(
-                    lhs_current++,
-                    std::numeric_limits<size_type>::max());
+            else
                 rhs_current += 1;
-            }
         }
     }
 
@@ -231,13 +235,17 @@ index_right_join_(const LHS_T &lhs, const RHS_T &rhs)  {
     IndexIdxVector  joined_index_idx;
 
     joined_index_idx.reserve(rhs_end);
-    while (lhs_current != lhs_end && rhs_current != rhs_end) {
-        if (lhs.indices_[lhs_current] < rhs.indices_[rhs_current])  {
+    while (lhs_current != lhs_end || rhs_current != rhs_end) {
+        if (rhs_current >= rhs_end)  break;
+        if (lhs_current >= lhs_end)  {
             joined_index_idx.emplace_back(
                 std::numeric_limits<size_type>::max(),
                 rhs_current++);
-            lhs_current += 1;
+            continue;
         }
+
+        if (lhs.indices_[lhs_current] < rhs.indices_[rhs_current])
+            lhs_current += 1;
         else  {
             if (lhs.indices_[lhs_current] == rhs.indices_[rhs_current])
                 joined_index_idx.emplace_back(lhs_current++, rhs_current++);
@@ -258,9 +266,45 @@ template<typename LHS_T, typename RHS_T, typename ... types>
 StdDataFrame<TS> DataFrame<TS, HETERO>::
 index_left_right_join_(const LHS_T &lhs, const RHS_T &rhs)  {
 
-    StdDataFrame<TS>    result;
+    size_type       lhs_current = 0;
+    const size_type lhs_end = lhs.indices_.size();
+    size_type       rhs_current = 0;
+    const size_type rhs_end = rhs.indices_.size();
 
-    return(result);
+    IndexIdxVector  joined_index_idx;
+
+    joined_index_idx.reserve(std::max(lhs_end, rhs_end));
+    while (lhs_current != lhs_end || rhs_current != rhs_end) {
+        if (lhs_current >= lhs_end && rhs_current < rhs_end)  {
+            joined_index_idx.emplace_back(
+                std::numeric_limits<size_type>::max(),
+                rhs_current++);
+            continue;
+        }
+        if (rhs_current >= rhs_end && lhs_current < lhs_end)  {
+            joined_index_idx.emplace_back(
+                lhs_current++,
+                std::numeric_limits<size_type>::max());
+            continue;
+        }
+
+        if (lhs.indices_[lhs_current] < rhs.indices_[rhs_current])  {
+            joined_index_idx.emplace_back(
+                lhs_current++,
+                std::numeric_limits<size_type>::max());
+        }
+        else  {
+            if (lhs.indices_[lhs_current] == rhs.indices_[rhs_current])
+                joined_index_idx.emplace_back(lhs_current++, rhs_current++);
+            else  {
+                joined_index_idx.emplace_back(
+                    std::numeric_limits<size_type>::max(),
+                    rhs_current++);
+            }
+        }
+    }
+
+    return (join_helper_<LHS_T, RHS_T, types ...>(lhs, rhs, joined_index_idx));
 }
 
 // ----------------------------------------------------------------------------

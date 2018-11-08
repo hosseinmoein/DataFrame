@@ -407,7 +407,7 @@ public:  // Other public interfaces
     //            Otherwise an exception is thrown
     //
     template<typename T, typename V>
-    DataFrame transpose(Tsvec &&indices, const V &col_names) const;
+    DataFrame transpose(TSVec &&indices, const V &col_names) const;
 
     // It joins the data between self (lhs) and rhs and returns the joined data
     // in a StdDataFrame, based on specification in join_policy.

@@ -211,9 +211,8 @@ index_left_join_(const LHS_T &lhs, const RHS_T &rhs)  {
                 std::numeric_limits<size_type>::max());
         else  {
             if (lhs.indices_[lhs_current] == rhs.indices_[rhs_current])
-                joined_index_idx.emplace_back(lhs_current++, rhs_current++);
-            else
-                rhs_current += 1;
+                joined_index_idx.emplace_back(lhs_current++, rhs_current);
+            rhs_current += 1;
         }
     }
 
@@ -248,11 +247,12 @@ index_right_join_(const LHS_T &lhs, const RHS_T &rhs)  {
             lhs_current += 1;
         else  {
             if (lhs.indices_[lhs_current] == rhs.indices_[rhs_current])
-                joined_index_idx.emplace_back(lhs_current++, rhs_current++);
+                joined_index_idx.emplace_back(lhs_current++, rhs_current);
             else
                 joined_index_idx.emplace_back(
                     std::numeric_limits<size_type>::max(),
-                    rhs_current++);
+                    rhs_current);
+            rhs_current += 1;
         }
     }
 
@@ -295,12 +295,12 @@ index_left_right_join_(const LHS_T &lhs, const RHS_T &rhs)  {
         }
         else  {
             if (lhs.indices_[lhs_current] == rhs.indices_[rhs_current])
-                joined_index_idx.emplace_back(lhs_current++, rhs_current++);
-            else  {
+                joined_index_idx.emplace_back(lhs_current++, rhs_current);
+            else
                 joined_index_idx.emplace_back(
                     std::numeric_limits<size_type>::max(),
-                    rhs_current++);
-            }
+                    rhs_current);
+            rhs_current += 1;
         }
     }
 
@@ -314,9 +314,40 @@ template<typename LHS_T, typename RHS_T, typename COL_T, typename ... types>
 StdDataFrame<TS> DataFrame<TS, HETERO>::
 column_inner_join_(const char *col_name, const LHS_T &lhs, const RHS_T &rhs)  {
 
-    StdDataFrame<TS>    result;
+    auto    lhs_iter = lhs.data_tb_.find (col_name);
+    auto    rhs_iter = rhs.data_tb_.find (col_name);
 
-    return(result);
+    if (lhs_iter == lhs.data_tb_.end() || rhs_iter == lhs.data_tb_.end())  {
+        char buffer [512];
+
+        sprintf (buffer, "DataFrame::column_inner_join_(): ERROR: "
+                         "Cannot find column '%s'",
+                 col_name);
+        throw ColNotFound(buffer);
+    }
+
+    const DataVec               &lhs_hv = lhs.data_[lhs_iter->second];
+    const DataVec               &rhs_hv = rhs.data_[rhs_iter->second];
+    const std::vector<COL_T>    &lhs_vec = lhs_hv.template get_vector<COL_T>();
+    const std::vector<COL_T>    &rhs_vec = rhs_hv.template get_vector<COL_T>();
+    size_type                   lhs_current = 0;
+    const size_type             lhs_end = lhs_vec.size();
+    size_type                   rhs_current = 0;
+    const size_type             rhs_end = rhs_vec.size();
+    IndexIdxVector              joined_index_idx;
+
+    joined_index_idx.reserve(std::min(lhs_end, rhs_end));
+    while (lhs_current != lhs_end && rhs_current != rhs_end) {
+        if (lhs_vec[lhs_current] < rhs_vec[rhs_current])
+            lhs_current += 1;
+        else  {
+            if (lhs_vec[lhs_current] == rhs_vec[rhs_current])
+                joined_index_idx.emplace_back(lhs_current++, rhs_current);
+            rhs_current += 1;
+        }
+    }
+
+    return (join_helper_<LHS_T, RHS_T, types ...>(lhs, rhs, joined_index_idx));
 }
 
 // ----------------------------------------------------------------------------

@@ -414,8 +414,9 @@ public:  // Other public interfaces
     // The following conditions must be meet for this method
     // to compile and work properly:
     // 1) TS type must be the same between lhs and rhs.
-    // 2) Both lhs and rhs must be sorted by index
-    // 3) In both lhs and rhs, columns with the same name must have the same
+    // 2) Ordering (< > != ==) must be well defined for type TS
+    // 3) Both lhs and rhs must be sorted by index
+    // 4) In both lhs and rhs, columns with the same name must have the same
     //    type
     //
     // RHS_T: Type of DataFrame rhs

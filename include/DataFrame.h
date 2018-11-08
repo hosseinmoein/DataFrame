@@ -407,9 +407,24 @@ public:  // Other public interfaces
     //            Otherwise an exception is thrown
     //
     template<typename T, typename V>
-    DataFrame transpose(TSVec &&indices, const V &col_names) const;
+    DataFrame transpose(Tsvec &&indices, const V &col_names) const;
 
-    // NOT IMPLEMENTED YET
+    // It joins the data between self (lhs) and rhs and returns the joined data
+    // in a StdDataFrame, based on specification in join_policy.
+    // The following conditions must be meet for this method
+    // to compile and work properly:
+    // 1) TS type must be the same between lhs and rhs.
+    // 2) Both lhs and rhs must be sorted by index
+    // 3) In both lhs and rhs, columns with the same name must have the same
+    //    type
+    //
+    // RHS_T: Type of DataFrame rhs
+    // types: List all the types of all data columns.
+    //        A type should be specified in the list only once.
+    // rhs: The rhs DataFrame
+    // join_policy: Specifies how to join. For example inner join,
+    //              or left join, etc. (See join_policy definition)
+	//
     template<typename RHS_T, typename ... types>
     StdDataFrame<TS> join_by_index (const RHS_T &rhs, join_policy mp) const;
 

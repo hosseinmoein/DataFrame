@@ -429,12 +429,6 @@ public:  // Other public interfaces
     template<typename RHS_T, typename ... types>
     StdDataFrame<TS> join_by_index (const RHS_T &rhs, join_policy mp) const;
 
-    // NOT IMPLEMENTED YET
-    template<typename RHS_T, typename T, typename ... types>
-    StdDataFrame<TS> join_by_column (const RHS_T &rhs,
-                                     const char *col_name,
-                                     join_policy mp) const;
-
     // It outputs the content of DataFrame into the stream o as text in the
     // following format:
     //     INDEX:<Comma delimited list of values>
@@ -733,28 +727,6 @@ private:  // Visiting functors
     template<typename LHS_T, typename RHS_T, typename ... types>
     static StdDataFrame<TS>
     index_left_right_join_(const LHS_T &lhs, const RHS_T &rhs);
-
-    template<typename LHS_T, typename RHS_T, typename COL_T, typename ... types>
-    static StdDataFrame<TS>
-    column_inner_join_(const char *col_name,
-                       const LHS_T &lhs,
-                       const RHS_T &rhs);
-
-    template<typename LHS_T, typename RHS_T, typename COL_T, typename ... types>
-    static StdDataFrame<TS>
-    column_left_join_(const char *col_name, const LHS_T &lhs, const RHS_T &rhs);
-
-    template<typename LHS_T, typename RHS_T, typename COL_T, typename ... types>
-    static StdDataFrame<TS>
-    column_right_join_(const char *col_name,
-                       const LHS_T &lhs,
-                       const RHS_T &rhs);
-
-    template<typename LHS_T, typename RHS_T, typename COL_T, typename ... types>
-    static StdDataFrame<TS>
-    column_left_right_join_(const char *col_name,
-                            const LHS_T &lhs,
-                            const RHS_T &rhs);
 
 #   include "DataFrame_functors.h"
 

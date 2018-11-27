@@ -13,7 +13,7 @@ You can slice the data frame and instead of getting another data frame you can o
 <B>Multithreading</B><BR>
 Instances of DataFrame are not multithreaded safe. In other words, instances of DataFrame must not be used in multiple threads without protection. But DataFrame utilizes multithreading in two different ways:<BR>
     1) There are asynchronous versions of some methods. For example, you have both sort() and sort_async(). The later returns a std::future which could execute in parallel.<BR>
-    2) DataFrame uses multiple threads, internally and unbeknown to the user, in some of its algorithms when appropriate. User can control (or turn off) the multithreading by calling set_thread_level() which sets the max number of threads to be used. The default is 0. The optimal number of threads is a function of users hardware/software environment and usually obtained by trail and error.<BR>
+    2) DataFrame uses multiple threads, internally and unbeknown to the user, in some of its algorithms when appropriate. User can control (or turn off) the multithreading by calling set_thread_level() which sets the max number of threads to be used. The default is 0. The optimal number of threads is a function of users hardware/software environment and usually obtained by trail and error. set_thread_level() and threading level in general is a static property and once set, it applies to all instances. <BR>
 
 
 

@@ -10,7 +10,11 @@ PROJECT_INCLUDE_DIR = ../../include
 
 # -----------------------------------------------------------------------------
 
-SRCS = HeteroVector.cc dataframe_tester.cc HeteroView.cc vectors_tester.cc
+SRCS = HeteroVector.cc \
+       dataframe_tester.cc \
+       HeteroView.cc \
+       vectors_tester.cc \
+       ThreadGranularity.cc
 
 HEADERS = $(LOCAL_INCLUDE_DIR)/HeteroVector.h \
           $(LOCAL_INCLUDE_DIR)/HeteroVector.tcc \
@@ -26,7 +30,8 @@ HEADERS = $(LOCAL_INCLUDE_DIR)/HeteroVector.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame_join.tcc \
           $(LOCAL_INCLUDE_DIR)/DataFrame_functors.h \
           $(LOCAL_INCLUDE_DIR)/DataFrameVisitors.h \
-          $(LOCAL_INCLUDE_DIR)/VectorView.h
+          $(LOCAL_INCLUDE_DIR)/VectorView.h \
+          $(LOCAL_INCLUDE_DIR)/ThreadGranularity.h
 
 LIB_NAME = DataSci
 TARGET_LIB = $(LOCAL_LIB_DIR)/lib$(LIB_NAME).a
@@ -47,7 +52,9 @@ DEFINES = -D_REENTRANT -DDMS_INCLUDE_SOURCE \
 
 # object file
 #
-LIB_OBJS = $(LOCAL_OBJ_DIR)/HeteroVector.o $(LOCAL_OBJ_DIR)/HeteroView.o
+LIB_OBJS = $(LOCAL_OBJ_DIR)/HeteroVector.o \
+           $(LOCAL_OBJ_DIR)/HeteroView.o \
+           $(LOCAL_OBJ_DIR)/ThreadGranularity.o
 
 # -----------------------------------------------------------------------------
 

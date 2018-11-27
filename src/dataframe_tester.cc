@@ -414,6 +414,13 @@ int main(int argc, char *argv[]) {
               double,
               std::string>(std::cout);
 
+    MyDataFrame::set_thread_level(5);
+    std::cout << "Thread granularity is: " << MyDataFrame::get_thread_level()
+              << std::endl;
+    MyDataFrame::set_thread_level(0);
+    std::cout << "Thread granularity is: " << MyDataFrame::get_thread_level()
+              << std::endl;
+
     {
         std::cout << "\n\nTesing transpose()" << std::endl;
 

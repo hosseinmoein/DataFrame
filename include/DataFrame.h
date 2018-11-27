@@ -6,6 +6,7 @@
 #pragma once
 
 #include "HeteroVector.h"
+#include "ThreadGranularity.h"
 
 #include <bitset>
 #include <limits>
@@ -40,17 +41,21 @@ struct NotImplemented : public DataFrameError  {
     NotImplemented (const char *name) : DataFrameError (name)  {   }
 };
 
-// ----------------------------------------------------------------------------
+// -------------------------------------
 
 enum class nan_policy : bool  {
     pad_with_nans = true,
     dont_pad_with_nans = false
 };
 
+// -------------------------------------
+
 enum class sort_state : bool  {
     sorted = true,
     not_sorted = false
 };
+
+// -------------------------------------
 
 enum class join_policy : unsigned char  {
     inner_join = 1,
@@ -59,6 +64,8 @@ enum class join_policy : unsigned char  {
     left_right_join = 4  // This is merge
 };
 
+// -------------------------------------
+
 // It represents a range with begin and end within a continuous memory space
 //
 template<typename T>
@@ -66,6 +73,8 @@ struct Index2D  {
     T   begin {};
     T   end {};
 };
+
+// -------------------------------------
 
 template<typename T, typename U>
 struct type_declare;
@@ -76,7 +85,8 @@ struct type_declare<HeteroVector, U>  { using type = std::vector<U>; };
 template<typename U>
 struct type_declare<HeteroView, U>  { using type = VectorView<U>; };
 
-// ----------------------------------------------------------------------------
+// -------------------------------------
+
 
 template<typename TS, typename HETERO>
 class DataFrame;
@@ -96,7 +106,7 @@ using DataFrameView = DataFrame<TS, HeteroView>;
 // A DataFrame can contain columns of any built-in or user-defined types.
 //
 template<typename TS, typename HETERO>
-class DataFrame  {
+class DataFrame : public ThreadGranularity  {
 
     static_assert(std::is_base_of<HeteroVector, HETERO>::value or
                       std::is_base_of<HeteroView, HETERO>::value,

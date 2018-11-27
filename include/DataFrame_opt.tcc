@@ -46,11 +46,9 @@ modify_by_idx (DataFrame &rhs, sort_state already_sorted)  {
 
     const size_type lhs_s { indices_.size() };
     const size_type rhs_s { rhs.indices_.size() };
-    size_type       lhs_i { 0 };
 
-    for (size_type rhs_i = 0; rhs_i < rhs_s; ++rhs_i)  {
-        if (lhs_i >= lhs_s)
-            break;
+    for (size_type lhs_i = 0, rhs_i = 0;
+         lhs_i < lhs_s && rhs_i < rhs_s; ++rhs_i)  {
         while (indices_[lhs_i] < rhs.indices_[rhs_i] && lhs_i < lhs_s)
             lhs_i += 1;
 
@@ -81,3 +79,4 @@ modify_by_idx (DataFrame &rhs, sort_state already_sorted)  {
 // tab-width:4
 // c-basic-offset:4
 // End:
+

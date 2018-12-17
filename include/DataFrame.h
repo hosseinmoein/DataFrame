@@ -108,7 +108,7 @@ using DataFrameView = DataFrame<TS, HeteroView>;
 template<typename TS, typename HETERO>
 class DataFrame : public ThreadGranularity  {
 
-    static_assert(std::is_base_of<HeteroVector, HETERO>::value or
+    static_assert(std::is_base_of<HeteroVector, HETERO>::value ||
                       std::is_base_of<HeteroView, HETERO>::value,
                   "HETERO argument can only be either of "
                   "HeteroVector or HeteroView or their derived types");

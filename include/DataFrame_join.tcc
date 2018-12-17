@@ -18,7 +18,7 @@ template<typename RHS_T, typename ... types>
 StdDataFrame<TS> DataFrame<TS, HETERO>::
 join_by_index (const RHS_T &rhs, join_policy mp) const  {
 
-    static_assert(std::is_base_of<StdDataFrame<TS>, RHS_T>::value or
+    static_assert(std::is_base_of<StdDataFrame<TS>, RHS_T>::value ||
                       std::is_base_of<DataFrameView<TS>, RHS_T>::value,
                   "The rhs argument to join_by_index() can only be "
                   "StdDataFrame<TS> or DataFrameView<TS>");

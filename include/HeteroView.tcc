@@ -5,6 +5,8 @@
 
 #include "HeteroVector.h"
 
+#include <algorithm>
+
 // ----------------------------------------------------------------------------
 
 namespace hmdf

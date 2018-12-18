@@ -333,7 +333,8 @@ int main(int argc, char *argv[]) {
 
 
     MyDataFrame         df_read;
-    std::future<bool>   fut2 = df_read.read_async("../test/sample_data.csv");
+    // std::future<bool>   fut2 = df_read.read_async("../test/sample_data.csv");
+    std::future<bool>   fut2 = df_read.read_async("sample_data.csv");
 
     fut2.get();
     df_read.write<std::ostream,

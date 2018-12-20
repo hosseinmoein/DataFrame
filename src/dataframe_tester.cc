@@ -986,11 +986,33 @@ int main(int argc, char *argv[]) {
         for (auto iter : nl_visitor.get_values())
             std::cout << iter.index << '|' << iter.value << " ";
         std::cout << std::endl;
+        nl_visitor.sort_by_index();
+        std::cout << "N largest result for col_3 sorted by index:" << std::endl;
+        for (auto iter : nl_visitor.get_values())
+            std::cout << iter.index << '|' << iter.value << " ";
+        std::cout << std::endl;
+        nl_visitor.sort_by_value();
+        std::cout << "N largest result for col_3 sorted by value:" << std::endl;
+        for (auto iter : nl_visitor.get_values())
+            std::cout << iter.index << '|' << iter.value << " ";
+        std::cout << std::endl;
 
         NSmallestVisitor<5, double> ns_visitor;
 
         df.visit<double>("col_3", ns_visitor);
         std::cout << "N smallest result for col_3:" << std::endl;
+        for (auto iter : ns_visitor.get_values())
+            std::cout << iter.index << '|' << iter.value << " ";
+        std::cout << std::endl;
+        ns_visitor.sort_by_index();
+        std::cout << "N smallest result for col_3 sorted by index:"
+                  << std::endl;
+        for (auto iter : ns_visitor.get_values())
+            std::cout << iter.index << '|' << iter.value << " ";
+        std::cout << std::endl;
+        ns_visitor.sort_by_value();
+        std::cout << "N smallest result for col_3 sorted by value:"
+                  << std::endl;
         for (auto iter : ns_visitor.get_values())
             std::cout << iter.index << '|' << iter.value << " ";
         std::cout << std::endl;

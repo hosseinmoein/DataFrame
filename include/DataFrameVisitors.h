@@ -7,6 +7,7 @@
 
 #include "DataFrame.h"
 #include <cstddef>
+#include <algorithm>
 #include <limits>
 #include <type_traits>
 #include <array>
@@ -178,6 +179,21 @@ public:
     inline void pre ()  { counter_ = 0; min_index_ = -1; }
     inline void post ()  {  }
     inline const result_type &get_values () const  { return (items_); }
+
+    inline void sort_by_index()  {
+
+        std::sort(items_.begin(), items_.end(),
+                  [](const value_type &lhs, const value_type &rhs) -> bool  {
+                      return (lhs.index < rhs.index);
+                  });
+    }
+    inline void sort_by_value()  {
+
+        std::sort(items_.begin(), items_.end(),
+                  [](const value_type &lhs, const value_type &rhs) -> bool  {
+                      return (lhs.value < rhs.value);
+                  });
+    }
 };
 
 // ----------------------------------------------------------------------------
@@ -231,6 +247,21 @@ public:
     inline void pre ()  { counter_ = 0; max_index_ = -1; }
     inline void post ()  {  }
     inline const result_type &get_values () const  { return (items_); }
+
+    inline void sort_by_index()  {
+
+        std::sort(items_.begin(), items_.end(),
+                  [](const value_type &lhs, const value_type &rhs) -> bool  {
+                      return (lhs.index < rhs.index);
+                  });
+    }
+    inline void sort_by_value()  {
+
+        std::sort(items_.begin(), items_.end(),
+                  [](const value_type &lhs, const value_type &rhs) -> bool  {
+                      return (lhs.value < rhs.value);
+                  });
+    }
 };
 
 // ----------------------------------------------------------------------------

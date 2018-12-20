@@ -6,8 +6,10 @@
 #pragma once
 
 #include "DataFrame.h"
+#include <cstddef>
 #include <limits>
 #include <type_traits>
+#include <array>
 #include <cmath>
 
 // ----------------------------------------------------------------------------
@@ -15,7 +17,10 @@
 namespace hmdf
 {
 
-template<typename T, typename TS_T = unsigned long>
+template<typename T,
+         typename TS_T = unsigned long,
+         typename =
+             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
 struct MeanVisitor {
 
 private:
@@ -32,7 +37,8 @@ public:
         mean_ += val;
         cnt_ +=1;
     }
-    inline void reset ()  { mean_ = T(0); cnt_ = 0; }
+    inline void pre ()  { mean_ = T(0); cnt_ = 0; }
+    inline void post ()  {  }
     inline std::size_t get_count () const  { return (cnt_); }
     inline T get_sum () const  { return (mean_); }
     inline T get_value () const  { return (mean_ / T(cnt_)); }
@@ -58,56 +64,173 @@ public:
 
         sum_ += val;
     }
-    inline void reset ()  { sum_ = T(0); }
+    inline void pre ()  { sum_ = T(0); }
+    inline void post ()  {  }
     inline T get_value () const  { return (sum_); }
 };
 
 // ----------------------------------------------------------------------------
 
-template<typename T,
-         typename TS_T = unsigned long,
-         typename =
-             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+template<typename T, typename TS_T = unsigned long>
 struct MaxVisitor {
 
 private:
 
-    T   max_ { std::numeric_limits<T>::min() };
+    T       max_ { };
+    TS_T    index_ { };
+    bool    is_first { true };
 
 public:
 
     using value_type = T;
 
-    inline void operator() (const TS_T &, const T &val)  {
+    inline void operator() (const TS_T &idx, const T &val)  {
 
-        if (val > max_)  max_ = val;
+        if (val > max_ || is_first) {
+            max_ = val;
+            index_ = idx;
+            is_first = false;
+        }
     }
-    inline void reset ()  { max_ = std::numeric_limits<T>::min(); }
+    inline void pre ()  { is_first = true; }
+    inline void post ()  {  }
     inline T get_value () const  { return (max_); }
+    inline TS_T get_index () const  { return (index_); }
 };
 
 // ----------------------------------------------------------------------------
 
-template<typename T,
-         typename TS_T = unsigned long,
-         typename =
-             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+template<typename T, typename TS_T = unsigned long>
 struct MinVisitor {
 
 private:
 
-    T   min_ { std::numeric_limits<T>::max() };
+    T       min_ { };
+    TS_T    index_ { };
+    bool    is_first { true };
 
 public:
 
     using value_type = T;
 
-    inline void operator() (const TS_T &, const T &val)  {
+    inline void operator() (const TS_T &idx, const T &val)  {
 
-        if (val < min_)  min_ = val;
+        if (val < min_ || is_first) {
+            min_ = val;
+            index_ = idx;
+            is_first = false;
+        }
     }
-    inline void reset ()  { min_ = std::numeric_limits<T>::max(); }
+    inline void pre ()  { is_first = true; }
+    inline void post ()  {  }
     inline T get_value () const  { return (min_); }
+    inline TS_T get_index () const  { return (index_); }
+};
+
+// ----------------------------------------------------------------------------
+
+// This visitor takes, at most (when sequance is already sorted), O(N*M)
+// time, where N is the number of largest values and M is the total number
+// of all values. The assumption is that N should be relatively small, so the
+// complexity is not bad.
+// I could have used a priority queue, but that requires a std::vector
+// instaed of std::array. I think the advantage of using std::array is bigger
+// than O(MlogM) vs. O(N*M) for majority of usage.
+//
+template<std::size_t N, typename T, typename TS_T = unsigned long>
+struct  NLargestVisitor {
+
+public:
+
+    struct  DataItem  {
+        T       value { };
+        TS_T    index { };
+    };
+
+    using value_type = DataItem;
+    using result_type = std::array<value_type, N>;
+
+private:
+
+    result_type items_ { };
+    std::size_t counter_ { 0 };
+    int         min_index_ { -1 };
+
+public:
+
+    inline void operator() (const TS_T &idx, const T &val)  {
+
+        if (counter_ < N)  {
+            items_[counter_] = { val, idx };
+            if (min_index_ < 0 || val < items_[min_index_].value)
+                min_index_ = static_cast<int>(counter_);
+        }
+        else if (val > items_[min_index_].value)  {
+            items_[min_index_] = { val, idx };
+            min_index_ = 0;
+            for (int i = 1; i < N; ++i)
+                if (items_[i].value < items_[min_index_].value)
+                    min_index_ = i;
+        }
+
+        counter_ += 1;
+    }
+    inline void pre ()  { counter_ = 0; min_index_ = -1; }
+    inline void post ()  {  }
+    inline const result_type &get_values () const  { return (items_); }
+};
+
+// ----------------------------------------------------------------------------
+
+// This visitor takes, at most (when the sequance is already sorted), O(N*M)
+// time, where N is the number of largest values and M is the total number
+// of all values. The assumption is that N should be relatively small, so the
+// complexity is not bad.
+// I could have used a priority queue, but that requires a std::vector
+// instaed of std::array. I think the advantage of using std::array is bigger
+// than O(MlogM) vs. O(N*M) for majority of usage.
+//
+template<std::size_t N, typename T, typename TS_T = unsigned long>
+struct  NSmallestVisitor {
+
+public:
+
+    struct  DataItem  {
+        T       value { };
+        TS_T    index { };
+    };
+
+    using value_type = DataItem;
+    using result_type = std::array<value_type, N>;
+
+private:
+
+    result_type items_ { };
+    std::size_t counter_ { 0 };
+    int         max_index_ { -1 };
+
+public:
+
+    inline void operator() (const TS_T &idx, const T &val)  {
+
+        if (counter_ < N)  {
+            items_[counter_] = { val, idx };
+            if (max_index_ < 0 || val > items_[max_index_].value)
+                max_index_ = static_cast<int>(counter_);
+        }
+        else if (val < items_[max_index_].value)  {
+            items_[max_index_] = { val, idx };
+            max_index_ = 0;
+            for (int i = 1; i < N; ++i)
+                if (items_[i].value > items_[max_index_].value)
+                    max_index_ = i;
+        }
+
+        counter_ += 1;
+    }
+    inline void pre ()  { counter_ = 0; max_index_ = -1; }
+    inline void post ()  {  }
+    inline const result_type &get_values () const  { return (items_); }
 };
 
 // ----------------------------------------------------------------------------
@@ -142,11 +265,12 @@ public:
         dot_prod2_ += (val2 * val2);
         cnt_ += 1;
     }
-    inline void reset ()  {
+    inline void pre ()  {
 
         total1_ = total2_ = dot_prod_ = dot_prod1_ = dot_prod2_ = T(0);
         cnt_ = 0;
     }
+    inline void post ()  {  }
     inline T get_value () const  {
 
         return ((dot_prod_ - (total1_ * total2_) / T(cnt_)) / (T(cnt_) - T(1)));
@@ -183,7 +307,8 @@ public:
 
         cov_ (idx, val, val);
     }
-    inline void reset ()  { cov_.reset(); }
+    inline void pre ()  { cov_.pre(); }
+    inline void post ()  {  }
     inline T get_value () const  { return (cov_.get_value()); }
 };
 
@@ -208,7 +333,8 @@ public:
 
         var_ (idx, val);
     }
-    inline void reset ()  { var_.reset(); }
+    inline void pre ()  { var_.pre(); }
+    inline void post ()  {  }
     inline T get_value () const  { return (::sqrt(var_.get_value())); }
 };
 
@@ -233,7 +359,8 @@ public:
 
         cov_ (idx, val1, val2);
     }
-    inline void reset ()  { cov_.reset(); }
+    inline void pre ()  { cov_.pre(); }
+    inline void post ()  {  }
     inline T get_value () const  {
 
         return (cov_.get_value() /
@@ -261,7 +388,8 @@ public:
 
         dot_prod_ += (val1 * val2);
     }
-    inline void reset ()  { dot_prod_ = T(0); }
+    inline void pre ()  { dot_prod_ = T(0); }
+    inline void pro ()  {  }
     inline T get_value () const  { return (dot_prod_); }
 };
 
@@ -304,11 +432,12 @@ public:
         m3_ += term1 * delta_n * T(n_ - 2) - 3.0 * delta_n * m2_;
         m2_ += term1;
     }
-    inline void reset ()  {
+    inline void pre ()  {
 
         n_ = 0;
         m1_ = m2_ = m3_ = m4_ = T(0);
     }
+    inline void post ()  {  }
 
     inline std::size_t get_count () const { return (n_); }
     inline T get_mean () const  { return (m1_); }
@@ -358,13 +487,14 @@ public:
         y_stats_(idx, y);
         n_ += 1;
     }
-    inline void reset ()  {
+    inline void pre ()  {
 
         n_ = 0;
         s_xy_ = T(0);
-        x_stats_.reset();
-        y_stats_.reset();
+        x_stats_.pre();
+        y_stats_.pre();
     }
+    inline void post ()  {  }
 
     inline std::size_t get_count () const { return (n_); }
     inline T get_slope () const  {

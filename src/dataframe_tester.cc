@@ -77,7 +77,6 @@ int main(int argc, char *argv[]) {
     df.get_column<double>("dbl_col")[5] = 6.5;
     df.get_column<double>("dbl_col")[6] = 7.5;
     df.get_column<double>("dbl_col")[7] = 8.5;
-    dvisitor.reset();
     std::cout << "Double average is: "
               << df.visit<double>("dbl_col", dvisitor).get_value()
               << std::endl;
@@ -201,7 +200,6 @@ int main(int argc, char *argv[]) {
               << slr_visitor.get_intercept() << std::endl;
     std::cout << "Correlation of dbl_col and dbl_col_2 is: "
               << slr_visitor.get_corr() << std::endl;
-    corr_visitor.reset();
     std::cout << "Old correlation between dbl_col and dbl_col_2 is: "
               << df.visit<double, double>("dbl_col",
                                           "dbl_col_2",
@@ -955,6 +953,47 @@ int main(int argc, char *argv[]) {
 
         std::cout << "Now The joined DF:" << std::endl;
         join_df.write<std::ostream, double, int>(std::cout);
+    }
+
+    {
+        std::cout << "\n\nTesing Largest/Smallest visitors" << std::endl;
+
+        std::vector<unsigned long>  idx =
+            { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+              123457, 123458, 123459, 123460, 123461, 123462, 123466 };
+        std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
+                                   13, 14 };
+        std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23,
+                                   30, 31, 32, 1.89};
+        std::vector<double> d3 = { 15, 16, 15, 18, 19, 16, 21,
+                                   0.34, 1.56, 0.34, 2.3, 0.34, 19.0 };
+        std::vector<int>    i1 = { 22, 23, 24, 25, 99 };
+        MyDataFrame         df;
+
+        df.load_data(std::move(idx),
+                     std::make_pair("col_1", d1),
+                     std::make_pair("col_2", d2),
+                     std::make_pair("col_3", d3),
+                     std::make_pair("col_4", i1));
+
+        std::cout << "Original DF:" << std::endl;
+        df.write<std::ostream, double, int>(std::cout);
+
+        NLargestVisitor<5, double> nl_visitor;
+
+        df.visit<double>("col_3", nl_visitor);
+        std::cout << "N largest result for col_3:" << std::endl;
+        for (auto iter : nl_visitor.get_values())
+            std::cout << iter.index << '|' << iter.value << " ";
+        std::cout << std::endl;
+
+        NSmallestVisitor<5, double> ns_visitor;
+
+        df.visit<double>("col_3", ns_visitor);
+        std::cout << "N smallest result for col_3:" << std::endl;
+        for (auto iter : ns_visitor.get_values())
+            std::cout << iter.index << '|' << iter.value << " ";
+        std::cout << std::endl;
     }
 
     return (0);

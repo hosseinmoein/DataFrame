@@ -142,8 +142,10 @@ V &DataFrame<TS, HETERO>::visit (const char *name, V &visitor) const  {
     const size_type         idx_s = indices_.size();
     const size_type         data_s = vec.size();
 
+    visitor.pre();
     for (size_type i = 0; i < idx_s; ++i)
         visitor (indices_[i], i < data_s ? vec[i] : _get_nan<T>());
+    visitor.post();
 
     return (visitor);
 }
@@ -183,10 +185,12 @@ visit (const char *name1, const char *name2, V &&visitor) const  {
     const size_type         data_s1 = vec1.size();
     const size_type         data_s2 = vec2.size();
 
+    visitor.pre();
     for (size_type i = 0; i < idx_s; ++i)
         visitor (indices_[i],
                  i < data_s1 ? vec1[i] : _get_nan<T1>(),
                  i < data_s2 ? vec2[i] : _get_nan<T2>());
+    visitor.post();
 
     return (visitor);
 }
@@ -241,11 +245,13 @@ visit (const char *name1,
     const size_type         data_s2 = vec2.size();
     const size_type         data_s3 = vec3.size();
 
+    visitor.pre();
     for (size_type i = 0; i < idx_s; ++i)
         visitor (indices_[i],
                  i < data_s1 ? vec1[i] : _get_nan<T1>(),
                  i < data_s2 ? vec2[i] : _get_nan<T2>(),
                  i < data_s3 ? vec3[i] : _get_nan<T3>());
+    visitor.post();
 
     return (visitor);
 }
@@ -313,12 +319,14 @@ visit (const char *name1,
     const size_type         data_s3 = vec3.size();
     const size_type         data_s4 = vec4.size();
 
+    visitor.pre();
     for (size_type i = 0; i < idx_s; ++i)
         visitor (indices_[i],
                  i < data_s1 ? vec1[i] : _get_nan<T1>(),
                  i < data_s2 ? vec2[i] : _get_nan<T2>(),
                  i < data_s3 ? vec3[i] : _get_nan<T3>(),
                  i < data_s4 ? vec4[i] : _get_nan<T4>());
+    visitor.post();
 
     return (visitor);
 }
@@ -400,6 +408,7 @@ visit (const char *name1,
     const size_type         data_s4 = vec4.size();
     const size_type         data_s5 = vec5.size();
 
+    visitor.pre();
     for (size_type i = 0; i < idx_s; ++i)
         visitor (indices_[i],
                  i < data_s1 ? vec1[i] : _get_nan<T1>(),
@@ -407,6 +416,7 @@ visit (const char *name1,
                  i < data_s3 ? vec3[i] : _get_nan<T3>(),
                  i < data_s4 ? vec4[i] : _get_nan<T4>(),
                  i < data_s5 ? vec5[i] : _get_nan<T5>());
+    visitor.post();
 
     return (visitor);
 }

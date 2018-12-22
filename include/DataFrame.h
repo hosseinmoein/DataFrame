@@ -66,6 +66,16 @@ enum class join_policy : unsigned char  {
 
 // -------------------------------------
 
+// This policy is relative to a tabular data structure
+enum class shift_policy : unsigned char  {
+    down = 1,  // Shift the content of all columns down, keep index unchanged
+    up = 2,    // Shift the content of all columns up, keep index unchanged
+    left = 3,  // Shifting columns to left, keep index unchanged
+    right = 4  // Shifting columns to right, keep index unchanged
+};
+
+// -------------------------------------
+
 // It represents a range with begin and end within a continuous memory space
 //
 template<typename T>
@@ -435,9 +445,20 @@ public:  // Other public interfaces
     // rhs: The rhs DataFrame
     // join_policy: Specifies how to join. For example inner join,
     //              or left join, etc. (See join_policy definition)
-	//
+    //
     template<typename RHS_T, typename ... types>
     StdDataFrame<TS> join_by_index (const RHS_T &rhs, join_policy mp) const;
+
+
+    // NOT Implemented yet
+    template<typename ... types>
+    StdDataFrame<TS> shift (size_type periods, shift_policy sp) const;
+
+
+    // NOT Implemented yet
+    template<typename ... types>
+    void self_shift (size_type periods, shift_policy sp);
+
 
     // It outputs the content of DataFrame into the stream o as text in the
     // following format:
@@ -770,6 +791,7 @@ private:  // Tuple stuff
 #    include "DataFrame_read.tcc"
 #    include "DataFrame_opt.tcc"
 #    include "DataFrame_join.tcc"
+#    include "DataFrame_shift.tcc"
 #    include "DataFrame.tcc"
 #  endif // DMS_INCLUDE_SOURCE
 

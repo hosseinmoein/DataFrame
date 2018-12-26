@@ -1018,26 +1018,39 @@ int main(int argc, char *argv[]) {
         std::cout << std::endl;
     }
 
-    /*
     {
-        std::cout << "\n\nTesing Shifting" << std::endl;
+        std::cout << "\n\nTesing Shifting Up/Down" << std::endl;
 
-        std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23,
-                                   30, 31, 32, 1.89};
-        std::vector<double> d3 = { };
+        std::vector<unsigned long>  idx =
+            { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+              123457, 123458, 123459, 123460, 123461, 123462, 123466 };
+        std::vector<double>         d1 = { 15, 16, 15, 18, 19, 16, 21,
+                                           0.34, 1.56, 0.34, 2.3, 0.34, 19.0 };
+        std::vector<int>            i1 = { 22, 23, 24, 25, 99 };
+        std::vector<std::string>    s1 =
+            { "qqqq", "wwww", "eeee", "rrrr", "tttt", "yyyy", "uuuu",
+              "iiii", "oooo", "pppp", "2222", "aaaa", "dddd", "ffff" };
+        MyDataFrame                 df;
 
-        std::cout << "Vector before shifting:" <<std::endl;
-        for (const auto iter : d2)
-            std::cout << iter << "  ";
-        std::cout << std::endl;
+        df.load_data(std::move(idx),
+                     std::make_pair("dbl_col", d1),
+                     std::make_pair("int_col", i1),
+                     std::make_pair("str_col", s1));
 
-        MyDataFrame::shift_left_(d2, 100);
-        std::cout << "Vector after shifting:" <<std::endl;
-        for (const auto iter : d2)
-            std::cout << iter << "  ";
-        std::cout << std::endl;
+        std::cout << "Original DF:" << std::endl;
+        df.write<std::ostream, double, int, std::string>(std::cout);
+
+        auto    sudf = df.shift<double, int, std::string>(3, shift_policy::up);
+
+        std::cout << "Shifted Up DF:" << std::endl;
+        sudf.write<std::ostream, double, int, std::string>(std::cout);
+
+        auto    sddf =
+            df.shift<double, int, std::string>(3, shift_policy::down);
+
+        std::cout << "Shifted Down DF:" << std::endl;
+        sddf.write<std::ostream, double, int, std::string>(std::cout);
     }
-    */
 
     return (0);
 }

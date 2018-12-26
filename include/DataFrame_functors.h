@@ -11,15 +11,19 @@
 // This was meant to be included inside the private section of DataFrame class.
 // This file, by itself, is not useable/compile-able.
 
+// ----------------------------------------------------------------------------
+
 template<typename ... types>
 struct consistent_functor_ : DataVec::template visitor_base<types ...>  {
 
-    inline consistent_functor_ (const size_type s) : size(s)  {   }
+    inline consistent_functor_ (size_type s) : size(s)  {   }
 
     const DataFrame::size_type  size;
     template<typename T>
     void operator() (T &vec) const;
 };
+
+// ----------------------------------------------------------------------------
 
 template<typename T, typename ... types>
 struct sort_functor_ : DataVec::template visitor_base<types ...>  {
@@ -31,6 +35,8 @@ struct sort_functor_ : DataVec::template visitor_base<types ...>  {
     template<typename T2>
     void operator() (T2 &vec) const;
 };
+
+// ----------------------------------------------------------------------------
 
 template<typename ... types>
 struct load_functor_ : DataVec::template visitor_base<types ...>  {
@@ -50,6 +56,8 @@ struct load_functor_ : DataVec::template visitor_base<types ...>  {
     void operator() (const T &vec);
 };
 
+// ----------------------------------------------------------------------------
+
 template<typename ... types>
 struct remove_functor_ : DataVec::template visitor_base<types ...>  {
 
@@ -62,6 +70,8 @@ struct remove_functor_ : DataVec::template visitor_base<types ...>  {
     template<typename T>
     void operator() (T &vec);
 };
+
+// ----------------------------------------------------------------------------
 
 template<typename ... types>
 struct view_setup_functor_ : DataVec::template visitor_base<types ...>  {
@@ -84,6 +94,8 @@ struct view_setup_functor_ : DataVec::template visitor_base<types ...>  {
 template<typename ... types>
 friend struct view_setup_functor_;
 
+// ----------------------------------------------------------------------------
+
 template<typename ... types>
 struct add_col_functor_ : DataVec::template visitor_base<types ...>  {
 
@@ -96,6 +108,8 @@ struct add_col_functor_ : DataVec::template visitor_base<types ...>  {
     template<typename T>
     void operator() (const T &vec);
 };
+
+// ----------------------------------------------------------------------------
 
 template<typename F, typename ... types>
 struct groupby_functor_ : DataVec::template visitor_base<types ...>  {
@@ -119,6 +133,8 @@ struct groupby_functor_ : DataVec::template visitor_base<types ...>  {
     void operator() (const T &vec);
 };
 
+// ----------------------------------------------------------------------------
+
 template<typename F, typename ... types>
 struct bucket_functor_ : DataVec::template visitor_base<types ...>  {
 
@@ -139,6 +155,8 @@ struct bucket_functor_ : DataVec::template visitor_base<types ...>  {
     void operator() (const T &vec);
 };
 
+// ----------------------------------------------------------------------------
+
 template<typename ... types>
 struct print_functor_ : DataVec::template visitor_base<types ...>  {
 
@@ -153,6 +171,8 @@ struct print_functor_ : DataVec::template visitor_base<types ...>  {
     void operator() (const T &vec);
 };
 
+// ----------------------------------------------------------------------------
+
 template<typename ... types>
 struct equal_functor_ : DataVec::template visitor_base<types ...>  {
 
@@ -166,6 +186,8 @@ struct equal_functor_ : DataVec::template visitor_base<types ...>  {
     template<typename T>
     void operator() (const std::vector<T> &lhs_vec);
 };
+
+// ----------------------------------------------------------------------------
 
 template<typename ... types>
 struct mod_by_idx_functor_ : DataVec::template visitor_base<types ...>  {
@@ -184,6 +206,8 @@ struct mod_by_idx_functor_ : DataVec::template visitor_base<types ...>  {
     template<typename T>
     void operator() (std::vector<T> &lhs_vec) const;
 };
+
+// ----------------------------------------------------------------------------
 
 template<typename ... types>
 struct index_join_functor_common_ : DataVec::template visitor_base<types ...>  {
@@ -204,6 +228,8 @@ struct index_join_functor_common_ : DataVec::template visitor_base<types ...>  {
     void operator() (const std::vector<T> &lhs_vec);
 };
 
+// ----------------------------------------------------------------------------
+
 // SIDE:  0 = Left, 1 = Right
 template<int SIDE, typename ... types>
 struct index_join_functor_oneside_
@@ -222,6 +248,24 @@ struct index_join_functor_oneside_
     template<typename T>
     void operator() (const std::vector<T> &vec);
 };
+
+// ----------------------------------------------------------------------------
+
+template<typename ... types>
+struct vertical_shift_functor_ : DataVec::template visitor_base<types ...>  {
+
+    inline vertical_shift_functor_ (size_type periods, shift_policy sh_po)
+        : n(periods), sp(sh_po)  {   }
+
+    const DataFrame::size_type  n;
+    const shift_policy          sp;
+
+    template<typename T>
+    void operator() (T &vec) const;
+};
+
+template<typename ... types>
+friend struct vertical_shift_functor_;
 
 // ----------------------------------------------------------------------------
 

@@ -17,7 +17,15 @@ void DataFrame<TS, HETERO>::self_shift(size_type periods, shift_policy sp)  {
     static_assert(std::is_base_of<HeteroVector, HETERO>::value,
                   "Only a StdDataFrame can call shift()");
 
-    throw NotImplemented("Shift is not implemented yet");
+    if (sp == shift_policy::up || sp == shift_policy::down)  {
+        vertical_shift_functor_<types ...> functor(periods, sp);
+
+        for (auto &iter : data_)
+            iter.change(functor);
+    }
+    else  {
+        throw NotImplemented("Shift is not implemented yet");
+    }
 }
 
 // ----------------------------------------------------------------------------

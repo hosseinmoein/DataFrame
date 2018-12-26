@@ -483,3 +483,24 @@ N smallest result for col_3 sorted by index:
 123457|0.34 123458|1.56 123459|0.34 123460|2.3 123461|0.34 
 N smallest result for col_3 sorted by value:
 123457|0.34 123459|0.34 123461|0.34 123458|1.56 123460|2.3 
+
+
+Tesing Shifting Up/Down
+Original DF:
+INDEX:123450,123451,123452,123453,123454,123455,123456,123457,123458,123459,123460,123461,123462,123466,
+str_col:<string>:qqqq,wwww,eeee,rrrr,tttt,yyyy,uuuu,iiii,oooo,pppp,2222,aaaa,dddd,ffff,
+int_col:<int>:22,23,24,25,99,0,0,0,0,0,0,0,0,0,
+dbl_col:<double>:15,16,15,18,19,16,21,0.34,1.56,0.34,2.3,0.34,19,nan,
+
+Shifted Up DF:
+INDEX:123450,123451,123452,123453,123454,123455,123456,123457,123458,123459,123460,123461,123462,123466,
+dbl_col:<double>:18,19,16,21,0.34,1.56,0.34,2.3,0.34,19,nan,nan,nan,nan,
+int_col:<int>:25,99,0,0,0,0,0,0,0,0,0,0,0,0,
+str_col:<string>:rrrr,tttt,yyyy,uuuu,iiii,oooo,pppp,2222,aaaa,dddd,ffff,,,,
+
+Shifted Down DF:
+INDEX:123450,123451,123452,123453,123454,123455,123456,123457,123458,123459,123460,123461,123462,123466,
+dbl_col:<double>:nan,nan,nan,15,16,15,18,19,16,21,0.34,1.56,0.34,2.3,
+int_col:<int>:0,0,0,22,23,24,25,99,0,0,0,0,0,0,
+str_col:<string>:,,,qqqq,wwww,eeee,rrrr,tttt,yyyy,uuuu,iiii,oooo,pppp,2222,
+

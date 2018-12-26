@@ -450,12 +450,12 @@ public:  // Other public interfaces
     StdDataFrame<TS> join_by_index (const RHS_T &rhs, join_policy mp) const;
 
 
-    // NOT Implemented yet
+    // Doc to come shortly
     template<typename ... types>
     StdDataFrame<TS> shift (size_type periods, shift_policy sp) const;
 
 
-    // NOT Implemented yet
+    // Doc to come shortly
     template<typename ... types>
     void self_shift (size_type periods, shift_policy sp);
 

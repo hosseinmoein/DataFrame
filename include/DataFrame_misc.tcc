@@ -363,6 +363,20 @@ operator()(const std::vector<T> &vec)  {
     result.load_column(name, std::move(result_col));
 }
 
+// ----------------------------------------------------------------------------
+
+template<typename TS, typename HETERO>
+template<typename ... Ts>
+template<typename T>
+void DataFrame<TS, HETERO>::vertical_shift_functor_<Ts ...>::
+operator() (T &vec) const  {
+
+    if (sp == shift_policy::up)
+        DataFrame::shift_left_(vec, n);
+    else
+        DataFrame::shift_right_(vec, n);
+}
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

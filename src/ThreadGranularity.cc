@@ -11,7 +11,7 @@ namespace hmdf
 {
 
 unsigned int    ThreadGranularity::num_of_threads_ = 0;
-	
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

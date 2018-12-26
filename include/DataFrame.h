@@ -759,6 +759,12 @@ private:  // Visiting functors
     static StdDataFrame<TS>
     index_left_right_join_(const LHS_T &lhs, const RHS_T &rhs);
 
+    template<typename V>
+    static void shift_right_(V &vec, size_type n);
+
+    template<typename V>
+    static void shift_left_(V &vec, size_type n);
+
 #   include "DataFrame_functors.h"
 
 private:  // Tuple stuff

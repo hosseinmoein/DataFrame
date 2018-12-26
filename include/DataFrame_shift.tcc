@@ -36,6 +36,50 @@ shift(size_type periods, shift_policy sp) const  {
     return (slug);
 }
 
+// ----------------------------------------------------------------------------
+
+template<typename TS, typename HETERO>
+template<typename V>
+void DataFrame<TS, HETERO>::shift_right_(V &vec, size_type n)  {
+
+    if (n == 0)  return;
+
+    using value_type =
+        typename std::remove_reference<decltype(vec)>::type::value_type;
+
+    const auto  vec_rend = vec.rend();
+
+    for (auto riter = vec.rbegin(); riter != vec_rend; ++riter)
+        if (riter + n < vec_rend)
+            *riter = std::move(*(riter + n));
+        else
+            *riter = std::move(_get_nan<value_type>());
+
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename TS, typename HETERO>
+template<typename V>
+void DataFrame<TS, HETERO>::shift_left_(V &vec, size_type n)  {
+
+    if (n == 0)  return;
+
+    using value_type =
+        typename std::remove_reference<decltype(vec)>::type::value_type;
+
+    const auto  vec_end = vec.end();
+
+    for (auto iter = vec.begin(); iter != vec_end; ++iter)
+        if (iter + n < vec_end)
+            *iter = std::move(*(iter + n));
+        else
+            *iter = std::move(_get_nan<value_type>());
+
+    return;
+}
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

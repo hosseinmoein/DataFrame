@@ -1018,6 +1018,27 @@ int main(int argc, char *argv[]) {
         std::cout << std::endl;
     }
 
+    /*
+    {
+        std::cout << "\n\nTesing Shifting" << std::endl;
+
+        std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23,
+                                   30, 31, 32, 1.89};
+        std::vector<double> d3 = { };
+
+        std::cout << "Vector before shifting:" <<std::endl;
+        for (const auto iter : d2)
+            std::cout << iter << "  ";
+        std::cout << std::endl;
+
+        MyDataFrame::shift_left_(d2, 100);
+        std::cout << "Vector after shifting:" <<std::endl;
+        for (const auto iter : d2)
+            std::cout << iter << "  ";
+        std::cout << std::endl;
+    }
+    */
+
     return (0);
 }
 

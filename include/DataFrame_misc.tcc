@@ -260,10 +260,10 @@ mod_by_idx_functor_<Ts ...>::operator() (std::vector<T> &lhs_vec) const  {
 
 template<typename TS, typename HETERO>
 template<typename ... Ts, typename F, std::size_t ... Is>
-void
-DataFrame<TS, HETERO>::for_each_in_tuple_ (const std::tuple<Ts ...> &tu,
-                                           F func,
-                                           std::index_sequence<Is ...>) const  {
+void DataFrame<TS, HETERO>::
+for_each_in_tuple_ (const std::tuple<Ts ...> &tu,
+                    F func,
+                    std::index_sequence<Is ...>)  {
 
     using expander = int[];
     (void) expander { 0, (func(std::get<Is>(tu)), 0) ... };
@@ -273,10 +273,10 @@ DataFrame<TS, HETERO>::for_each_in_tuple_ (const std::tuple<Ts ...> &tu,
 
 template<typename TS, typename HETERO>
 template<typename ... Ts, typename F, std::size_t ... Is>
-void
-DataFrame<TS, HETERO>::for_each_in_tuple_ (std::tuple<Ts ...> &tu,
-                                           F func,
-                                           std::index_sequence<Is ...>)  {
+void DataFrame<TS, HETERO>::
+for_each_in_tuple_ (std::tuple<Ts ...> &tu,
+                    F func,
+                    std::index_sequence<Is ...>)  {
 
     using expander = int[];
     (void) expander { 0, (func(std::get<Is>(tu)), 0) ... };
@@ -286,9 +286,8 @@ DataFrame<TS, HETERO>::for_each_in_tuple_ (std::tuple<Ts ...> &tu,
 
 template<typename TS, typename HETERO>
 template<typename ... Ts, typename F>
-void
-DataFrame<TS, HETERO>::
-for_each_in_tuple_ (const std::tuple<Ts...> &tu, F func) const  {
+void DataFrame<TS, HETERO>::
+for_each_in_tuple_ (const std::tuple<Ts...> &tu, F func)  {
 
     for_each_in_tuple_(tu, func, std::make_index_sequence<sizeof...(Ts)>());
 }
@@ -297,8 +296,7 @@ for_each_in_tuple_ (const std::tuple<Ts...> &tu, F func) const  {
 
 template<typename TS, typename HETERO>
 template<typename ... Ts, typename F>
-void
-DataFrame<TS, HETERO>::for_each_in_tuple_ (std::tuple<Ts...> &tu, F func)  {
+void DataFrame<TS, HETERO>::for_each_in_tuple_ (std::tuple<Ts...> &tu, F func) {
 
     for_each_in_tuple_(tu, func, std::make_index_sequence<sizeof...(Ts)>());
 }

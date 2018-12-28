@@ -454,7 +454,6 @@ public:  // Other public interfaces
     template<typename ... types>
     StdDataFrame<TS> shift (size_type periods, shift_policy sp) const;
 
-
     // Doc to come shortly
     template<typename ... types>
     void self_shift (size_type periods, shift_policy sp);
@@ -730,7 +729,7 @@ protected:
     template<typename T>
     static inline constexpr bool _is_nan(const T &val);
 
-private:  // Visiting functors
+private:  // Static helper functions
 
     template<typename T, typename ITR>
     void setup_view_column_(const char *name, Index2D<ITR> range);
@@ -765,25 +764,26 @@ private:  // Visiting functors
     template<typename V>
     static void shift_left_(V &vec, size_type n);
 
+    // Visiting functors
 #   include "DataFrame_functors.h"
 
 private:  // Tuple stuff
 
     template<typename ... Ts, typename F, std::size_t ... Is>
-    void for_each_in_tuple_ (const std::tuple<Ts ...> &tu,
-                             F func,
-                             std::index_sequence<Is ...>) const;
+    static void for_each_in_tuple_ (const std::tuple<Ts ...> &tu,
+                                    F func,
+                                    std::index_sequence<Is ...>);
 
     template<typename ... Ts, typename F, std::size_t ... Is>
-    void for_each_in_tuple_ (std::tuple<Ts ...> &tu,
-                             F func,
-                             std::index_sequence<Is ...>);
+    static void for_each_in_tuple_ (std::tuple<Ts ...> &tu,
+                                    F func,
+                                    std::index_sequence<Is ...>);
 
     template<typename ... Ts, typename F>
-    void for_each_in_tuple_ (const std::tuple<Ts...> &tu, F func) const;
+    static void for_each_in_tuple_ (const std::tuple<Ts...> &tu, F func);
 
     template<typename ... Ts, typename F>
-    void for_each_in_tuple_ (std::tuple<Ts...> &tu, F func);
+    static void for_each_in_tuple_ (std::tuple<Ts...> &tu, F func);
 };
 
 } // namespace hmdf

@@ -70,8 +70,8 @@ enum class join_policy : unsigned char  {
 enum class shift_policy : unsigned char  {
     down = 1,  // Shift the content of all columns down, keep index unchanged
     up = 2,    // Shift the content of all columns up, keep index unchanged
-    left = 3,  // Shifting columns to left, keep index unchanged
-    right = 4  // Shifting columns to right, keep index unchanged
+    left = 3,  // Shift columns to left, keep index unchanged
+    right = 4  // Shift columns to right, keep index unchanged
 };
 
 // -------------------------------------
@@ -452,11 +452,11 @@ public:  // Other public interfaces
 
     // Doc to come shortly
     template<typename ... types>
-    StdDataFrame<TS> shift (size_type periods, shift_policy sp) const;
+    void self_shift (size_type periods, shift_policy sp);
 
     // Doc to come shortly
     template<typename ... types>
-    void self_shift (size_type periods, shift_policy sp);
+    StdDataFrame<TS> shift (size_type periods, shift_policy sp) const;
 
 
     // It outputs the content of DataFrame into the stream o as text in the
@@ -763,6 +763,12 @@ private:  // Static helper functions
 
     template<typename V>
     static void shift_left_(V &vec, size_type n);
+
+    static StdDataFrame<TS>
+	shift_columns_left_(DataFrame &df, size_type n);
+
+    static StdDataFrame<TS>
+	shift_columns_right_(DataFrame &df, size_type n);
 
     // Visiting functors
 #   include "DataFrame_functors.h"

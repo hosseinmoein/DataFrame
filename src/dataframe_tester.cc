@@ -1052,6 +1052,40 @@ int main(int argc, char *argv[]) {
         sddf.write<std::ostream, double, int, std::string>(std::cout);
     }
 
+    {
+        std::cout << "\n\nTesing Rotating Up/Down" << std::endl;
+
+        std::vector<unsigned long>  idx =
+            { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+              123457, 123458, 123459, 123460, 123461, 123462, 123466 };
+        std::vector<double>         d1 = { 15, 16, 15, 18, 19, 16, 21,
+                                           0.34, 1.56, 0.34, 2.3, 0.34, 19.0 };
+        std::vector<int>            i1 = { 22, 23, 24, 25, 99 };
+        std::vector<std::string>    s1 =
+            { "qqqq", "wwww", "eeee", "rrrr", "tttt", "yyyy", "uuuu",
+              "iiii", "oooo", "pppp", "2222", "aaaa", "dddd", "ffff" };
+        MyDataFrame                 df;
+
+        df.load_data(std::move(idx),
+                     std::make_pair("dbl_col", d1),
+                     std::make_pair("int_col", i1),
+                     std::make_pair("str_col", s1));
+
+        std::cout << "Original DF:" << std::endl;
+        df.write<std::ostream, double, int, std::string>(std::cout);
+
+        auto    rudf = df.rotate<double, int, std::string>(3, shift_policy::up);
+
+        std::cout << "Rotated Up DF:" << std::endl;
+        rudf.write<std::ostream, double, int, std::string>(std::cout);
+
+        auto    rddf =
+            df.rotate<double, int, std::string>(3, shift_policy::down);
+
+        std::cout << "Rotated Down DF:" << std::endl;
+        rddf.write<std::ostream, double, int, std::string>(std::cout);
+    }
+
     return (0);
 }
 

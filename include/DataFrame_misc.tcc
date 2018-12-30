@@ -375,6 +375,20 @@ operator() (T &vec) const  {
         DataFrame::shift_right_(vec, n);
 }
 
+// ----------------------------------------------------------------------------
+
+template<typename TS, typename HETERO>
+template<typename ... Ts>
+template<typename T>
+void DataFrame<TS, HETERO>::rotate_functor_<Ts ...>::
+operator() (T &vec) const  {
+
+    if (sp == shift_policy::up)
+        DataFrame::rotate_left_(vec, n);
+    else
+        DataFrame::rotate_right_(vec, n);
+}
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

@@ -451,9 +451,11 @@ public:  // Other public interfaces
     template<typename RHS_T, typename ... types>
     StdDataFrame<TS> join_by_index (const RHS_T &rhs, join_policy mp) const;
 
-    // It shift all the columns in self up or down based on shift_policy.
+    // It shifts all the columns in self up or down based on shift_policy.
     // Values that are shifted will be assigned to NaN. The index column
     // remains unchanged.
+    // If user shifts with periods that is larger than the column length,
+    // all values in that column become NaN.
     //
     // types: List all the types of all data columns.
     //        A type should be specified in the list only once.
@@ -469,6 +471,24 @@ public:  // Other public interfaces
     template<typename ... types>
     StdDataFrame<TS> shift (size_type periods, shift_policy sp) const;
 
+    // It rotates all the columns in self up or down based on shift_policy.
+    // The index column remains unchanged.
+    // If user rotates with periods that is larger than the column length,
+    // the behavior is undefined.
+    //
+    // types: List all the types of all data columns.
+    //        A type should be specified in the list only once.
+    // periods: Number of periods to rotate
+    // shift_policy: Specifies the direction (i.e. up/down) to rotate
+    //
+    template<typename ... types>
+    void self_rotate (size_type periods, shift_policy sp);
+
+    // It is exactly the same as self_rotate, but it leaves self unchanged
+    // and returns a new DataFrame with columns rotated.
+    //
+    template<typename ... types>
+    StdDataFrame<TS> rotate (size_type periods, shift_policy sp) const;
 
     // It outputs the content of DataFrame into the stream o as text in the
     // following format:
@@ -774,6 +794,12 @@ private:  // Static helper functions
 
     template<typename V>
     static void shift_left_(V &vec, size_type n);
+
+    template<typename V>
+    static void rotate_right_(V &vec, size_type n);
+
+    template<typename V>
+    static void rotate_left_(V &vec, size_type n);
 
     // Visiting functors
 #   include "DataFrame_functors.h"

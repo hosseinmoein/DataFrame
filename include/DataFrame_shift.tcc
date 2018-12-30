@@ -4,6 +4,7 @@
 // Distributed under the BSD Software License (see file License)
 
 #include "DataFrame.h"
+#include <algorithm>
 
 // ----------------------------------------------------------------------------
 
@@ -44,6 +45,39 @@ shift(size_type periods, shift_policy sp) const  {
 // ----------------------------------------------------------------------------
 
 template<typename TS, typename HETERO>
+template<typename ... types>
+void DataFrame<TS, HETERO>::self_rotate(size_type periods, shift_policy sp)  {
+
+    static_assert(std::is_base_of<HeteroVector, HETERO>::value,
+                  "Only a StdDataFrame can call self_rotate()");
+
+    if (periods > 0)  {
+        rotate_functor_<types ...>  functor(periods, sp);
+
+        for (auto &iter : data_)
+            iter.change(functor);
+    }
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename TS, typename HETERO>
+template<typename ... types>
+StdDataFrame<TS> DataFrame<TS, HETERO>::
+rotate(size_type periods, shift_policy sp) const  {
+
+    static_assert(std::is_base_of<HeteroVector, HETERO>::value,
+                  "Only a StdDataFrame can call rotate()");
+
+    StdDataFrame<TS>    slug = *this;
+
+    slug.template self_rotate<types ...>(periods, sp);
+    return (slug);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename TS, typename HETERO>
 template<typename V>
 void DataFrame<TS, HETERO>::shift_right_(V &vec, size_type n)  {
 
@@ -78,6 +112,28 @@ void DataFrame<TS, HETERO>::shift_left_(V &vec, size_type n)  {
         else
             *iter = std::move(_get_nan<value_type>());
 
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename TS, typename HETERO>
+template<typename V>
+void DataFrame<TS, HETERO>::rotate_right_(V &vec, size_type n)  {
+
+    // There is no checking the value of n
+    std::rotate(vec.rbegin(), vec.rbegin() + n, vec.rend());
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename TS, typename HETERO>
+template<typename V>
+void DataFrame<TS, HETERO>::rotate_left_(V &vec, size_type n)  {
+
+    // There is no checking the value of n
+    std::rotate(vec.begin(), vec.begin() + n, vec.end());
     return;
 }
 

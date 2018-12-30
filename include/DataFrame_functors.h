@@ -269,6 +269,24 @@ friend struct vertical_shift_functor_;
 
 // ----------------------------------------------------------------------------
 
+template<typename ... types>
+struct rotate_functor_ : DataVec::template visitor_base<types ...>  {
+
+    inline rotate_functor_ (size_type periods, shift_policy sh_po)
+        : n(periods), sp(sh_po)  {   }
+
+    const DataFrame::size_type  n;
+    const shift_policy          sp;
+
+    template<typename T>
+    void operator() (T &vec) const;
+};
+
+template<typename ... types>
+friend struct rotate_functor_;
+
+// ----------------------------------------------------------------------------
+
 // Local Variables:
 // mode:C++
 // tab-width:4

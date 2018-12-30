@@ -67,11 +67,13 @@ enum class join_policy : unsigned char  {
 // -------------------------------------
 
 // This policy is relative to a tabular data structure
+// There is no right or left shift (like Pandas), because columns in DataFrame
+// have no ordering. They can only be accessed by name
 enum class shift_policy : unsigned char  {
-    down = 1,  // Shift the content of all columns down, keep index unchanged
-    up = 2,    // Shift the content of all columns up, keep index unchanged
-    left = 3,  // Shift columns to left, keep index unchanged
-    right = 4  // Shift columns to right, keep index unchanged
+    down = 1,  // Shift/rotate the content of all columns down,
+               // keep index unchanged
+    up = 2,    // Shift/rotate the content of all columns up,
+               // keep index unchanged
 };
 
 // -------------------------------------
@@ -449,12 +451,21 @@ public:  // Other public interfaces
     template<typename RHS_T, typename ... types>
     StdDataFrame<TS> join_by_index (const RHS_T &rhs, join_policy mp) const;
 
-
-    // Doc to come shortly
+    // It shift all the columns in self up or down based on shift_policy.
+    // Values that are shifted will be assigned to NaN. The index column
+    // remains unchanged.
+    //
+    // types: List all the types of all data columns.
+    //        A type should be specified in the list only once.
+    // periods: Number of periods to shift
+    // shift_policy: Specifies the direction (i.e. up/down) to shift
+    //
     template<typename ... types>
     void self_shift (size_type periods, shift_policy sp);
 
-    // Doc to come shortly
+    // It is exactly the same as self_shift, but it leaves self unchanged
+    // and returns a new DataFrame with columns shifted.
+    //
     template<typename ... types>
     StdDataFrame<TS> shift (size_type periods, shift_policy sp) const;
 
@@ -763,12 +774,6 @@ private:  // Static helper functions
 
     template<typename V>
     static void shift_left_(V &vec, size_type n);
-
-    static StdDataFrame<TS>
-	shift_columns_left_(DataFrame &df, size_type n);
-
-    static StdDataFrame<TS>
-	shift_columns_right_(DataFrame &df, size_type n);
 
     // Visiting functors
 #   include "DataFrame_functors.h"

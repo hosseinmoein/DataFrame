@@ -625,8 +625,9 @@ public: // Read/access interfaces
     // column along with its name and the corresponding index value.
     // All functions objects must have this signature
     //     bool (const TimeStamp &i, const char *name, const T &col_value)
-    // If the function object returns false, the DataFrame will not go
-    // on that column.
+    // If the function object returns false, the DataFrame will stop iterating
+    // at that point on that column.
+    // NOTE: This method could be used to implement a pivot table.
     //
     // Ts: The list of types for columns in args
     // args: A variable list of arguments consisting of
@@ -641,6 +642,7 @@ public: // Read/access interfaces
 
     // It passes the values of each index and each named column to the
     // functor visitor sequentially from beginning to end
+    // NOTE: This method could be used to implement a pivot table.
     //
     // T: Type of the named column
     // V: Type of the visitor functor
@@ -651,6 +653,7 @@ public: // Read/access interfaces
 
     // It passes the values of each index and the two named columns to the
     // functor visitor sequentially from beginning to end
+    // NOTE: This method could be used to implement a pivot table.
     //
     // T1: Type of the first named column
     // T2: Type of the second named column
@@ -663,6 +666,7 @@ public: // Read/access interfaces
 
     // It passes the values of each index and the three named columns to the
     // functor visitor sequentially from beginning to end
+    // NOTE: This method could be used to implement a pivot table.
     //
     // T1: Type of the first named column
     // T2: Type of the second named column
@@ -680,6 +684,7 @@ public: // Read/access interfaces
 
     // It passes the values of each index and the four named columns to the
     // functor visitor sequentially from beginning to end
+    // NOTE: This method could be used to implement a pivot table.
     //
     // T1: Type of the first named column
     // T2: Type of the second named column
@@ -700,6 +705,7 @@ public: // Read/access interfaces
 
     // It passes the values of each index and the five named columns to the
     // functor visitor sequentially from beginning to end
+    // NOTE: This method could be used to implement a pivot table.
     //
     // T1: Type of the first named column
     // T2: Type of the second named column

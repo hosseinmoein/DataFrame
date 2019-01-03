@@ -624,21 +624,21 @@ public: // Read/access interfaces
     // Each function object is passed every single value of the given
     // column along with its name and the corresponding index value.
     // All functions objects must have this signature
-    //     bool (const TimeStamp &i, const char *name, const T &col_value)
+    //     bool (const TimeStamp &i, const char *name, [const] T &col_value)
     // If the function object returns false, the DataFrame will stop iterating
     // at that point on that column.
     // NOTE: This method could be used to implement a pivot table.
     //
     // Ts: The list of types for columns in args
     // args: A variable list of arguments consisting of
-    //     std::pair(<const char *name,
-    //       &std::function<bool (const TimeStamp &, const char *, const T &)>).
-    //      Each pair represents a column name and the functor to run on it.
-    // Note: The second member of pair is a _pointer_ to the function or
+    // std::pair(<const char *name,
+    //     &std::function<bool (const TimeStamp &, const char *, [const] T &)>).
+    // Each pair represents a column name and the functor to run on it.
+    // NOTE: The second member of pair is a _pointer_ to the function or
     //       functor object
     //
     template<typename ... Ts>
-    void multi_visit (Ts ... args) const;
+    void multi_visit (Ts ... args);
 
     // It passes the values of each index and each named column to the
     // functor visitor sequentially from beginning to end
@@ -649,7 +649,7 @@ public: // Read/access interfaces
     // name: Name of the data column
     //
     template<typename T, typename V>
-    V &visit (const char *name, V &visitor) const;
+    V &visit (const char *name, V &visitor);
 
     // It passes the values of each index and the two named columns to the
     // functor visitor sequentially from beginning to end
@@ -662,7 +662,7 @@ public: // Read/access interfaces
     // name2: Name of the second data column
     //
     template<typename T1, typename T2, typename V>
-    V &&visit (const char *name1, const char *name2, V &&visitor) const;
+    V &visit (const char *name1, const char *name2, V &visitor);
 
     // It passes the values of each index and the three named columns to the
     // functor visitor sequentially from beginning to end
@@ -677,10 +677,10 @@ public: // Read/access interfaces
     // name3: Name of the third data column
     //
     template<typename T1, typename T2, typename T3, typename V>
-    V &&visit (const char *name1,
-               const char *name2,
-               const char *name3,
-               V &&visitor) const;
+    V &visit (const char *name1,
+              const char *name2,
+              const char *name3,
+              V &visitor);
 
     // It passes the values of each index and the four named columns to the
     // functor visitor sequentially from beginning to end
@@ -697,11 +697,11 @@ public: // Read/access interfaces
     // name4: Name of the forth data column
     //
     template<typename T1, typename T2, typename T3, typename T4, typename V>
-    V &&visit (const char *name1,
-               const char *name2,
-               const char *name3,
-               const char *name4,
-               V &&visitor) const;
+    V &visit (const char *name1,
+              const char *name2,
+              const char *name3,
+              const char *name4,
+              V &visitor);
 
     // It passes the values of each index and the five named columns to the
     // functor visitor sequentially from beginning to end
@@ -721,12 +721,12 @@ public: // Read/access interfaces
     //
     template<typename T1, typename T2, typename T3, typename T4, typename T5,
              typename V>
-    V &&visit (const char *name1,
-               const char *name2,
-               const char *name3,
-               const char *name4,
-               const char *name5,
-               V &&visitor) const;
+    V &visit (const char *name1,
+              const char *name2,
+              const char *name3,
+              const char *name4,
+              const char *name5,
+              V &visitor);
 
 public:  // Operators
 

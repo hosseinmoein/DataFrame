@@ -101,11 +101,10 @@ get_col_unique_values(const char *name) const  {
 
 template<typename TS, typename  HETERO>
 template<typename ... Ts>
-void DataFrame<TS, HETERO>::multi_visit (Ts ... args) const  {
+void DataFrame<TS, HETERO>::multi_visit (Ts ... args)  {
 
     auto    args_tuple = std::tuple<Ts ...>(args ...);
     auto    fc = [this](auto &pa) mutable -> void {
-
         auto &functor = *(pa.second);
 
         using T =
@@ -114,17 +113,18 @@ void DataFrame<TS, HETERO>::multi_visit (Ts ... args) const  {
             typename std::remove_const<
                 typename std::remove_reference<decltype(functor)>::type>::type;
 
-        this->visit<T, V>(pa.first, const_cast<V &>(functor));
+        this->visit<T, V>(pa.first, functor);
     };
 
     for_each_in_tuple_ (args_tuple, fc);
+    return;
 }
 
 // ----------------------------------------------------------------------------
 
 template<typename TS, typename  HETERO>
 template<typename T, typename V>
-V &DataFrame<TS, HETERO>::visit (const char *name, V &visitor) const  {
+V &DataFrame<TS, HETERO>::visit (const char *name, V &visitor)  {
 
     const auto  iter = data_tb_.find (name);
 
@@ -137,10 +137,10 @@ V &DataFrame<TS, HETERO>::visit (const char *name, V &visitor) const  {
         throw ColNotFound (buffer);
     }
 
-    const DataVec           &hv = data_[iter->second];
-    const std::vector<T>    &vec = hv.template get_vector<T>();
-    const size_type         idx_s = indices_.size();
-    const size_type         data_s = vec.size();
+    DataVec         &hv = data_[iter->second];
+    std::vector<T>  &vec = hv.template get_vector<T>();
+    const size_type idx_s = indices_.size();
+    const size_type data_s = vec.size();
 
     visitor.pre();
     for (size_type i = 0; i < idx_s; ++i)
@@ -154,8 +154,8 @@ V &DataFrame<TS, HETERO>::visit (const char *name, V &visitor) const  {
 
 template<typename TS, typename  HETERO>
 template<typename T1, typename T2, typename V>
-V &&DataFrame<TS, HETERO>::
-visit (const char *name1, const char *name2, V &&visitor) const  {
+V &DataFrame<TS, HETERO>::
+visit (const char *name1, const char *name2, V &visitor)  {
 
     const auto  iter1 = data_tb_.find (name1);
     const auto  iter2 = data_tb_.find (name2);
@@ -177,13 +177,13 @@ visit (const char *name1, const char *name2, V &&visitor) const  {
         throw ColNotFound (buffer);
     }
 
-    const DataVec           &hv1 = data_[iter1->second];
-    const DataVec           &hv2 = data_[iter2->second];
-    const std::vector<T1>   &vec1 = hv1.template get_vector<T1>();
-    const std::vector<T2>   &vec2 = hv2.template get_vector<T2>();
-    const size_type         idx_s = indices_.size();
-    const size_type         data_s1 = vec1.size();
-    const size_type         data_s2 = vec2.size();
+    DataVec         &hv1 = data_[iter1->second];
+    DataVec         &hv2 = data_[iter2->second];
+    std::vector<T1> &vec1 = hv1.template get_vector<T1>();
+    std::vector<T2> &vec2 = hv2.template get_vector<T2>();
+    const size_type idx_s = indices_.size();
+    const size_type data_s1 = vec1.size();
+    const size_type data_s2 = vec2.size();
 
     visitor.pre();
     for (size_type i = 0; i < idx_s; ++i)
@@ -199,11 +199,8 @@ visit (const char *name1, const char *name2, V &&visitor) const  {
 
 template<typename TS, typename  HETERO>
 template<typename T1, typename T2, typename T3, typename V>
-V &&DataFrame<TS, HETERO>::
-visit (const char *name1,
-       const char *name2,
-       const char *name3,
-       V &&visitor) const  {
+V &DataFrame<TS, HETERO>::
+visit (const char *name1, const char *name2, const char *name3, V &visitor)  {
 
     const auto  iter1 = data_tb_.find (name1);
     const auto  iter2 = data_tb_.find (name2);
@@ -234,16 +231,16 @@ visit (const char *name1,
         throw ColNotFound (buffer);
     }
 
-    const DataVec           &hv1 = data_[iter1->second];
-    const DataVec           &hv2 = data_[iter2->second];
-    const DataVec           &hv3 = data_[iter3->second];
-    const std::vector<T1>   &vec1 = hv1.template get_vector<T1>();
-    const std::vector<T2>   &vec2 = hv2.template get_vector<T2>();
-    const std::vector<T3>   &vec3 = hv3.template get_vector<T3>();
-    const size_type         idx_s = indices_.size();
-    const size_type         data_s1 = vec1.size();
-    const size_type         data_s2 = vec2.size();
-    const size_type         data_s3 = vec3.size();
+    DataVec         &hv1 = data_[iter1->second];
+    DataVec         &hv2 = data_[iter2->second];
+    DataVec         &hv3 = data_[iter3->second];
+    std::vector<T1> &vec1 = hv1.template get_vector<T1>();
+    std::vector<T2> &vec2 = hv2.template get_vector<T2>();
+    std::vector<T3> &vec3 = hv3.template get_vector<T3>();
+    const size_type idx_s = indices_.size();
+    const size_type data_s1 = vec1.size();
+    const size_type data_s2 = vec2.size();
+    const size_type data_s3 = vec3.size();
 
     visitor.pre();
     for (size_type i = 0; i < idx_s; ++i)
@@ -260,12 +257,12 @@ visit (const char *name1,
 
 template<typename TS, typename  HETERO>
 template<typename T1, typename T2, typename T3, typename T4, typename V>
-V &&DataFrame<TS, HETERO>::
+V &DataFrame<TS, HETERO>::
 visit (const char *name1,
        const char *name2,
        const char *name3,
        const char *name4,
-       V &&visitor) const  {
+       V &visitor)  {
 
     const auto  iter1 = data_tb_.find (name1);
     const auto  iter2 = data_tb_.find (name2);
@@ -305,19 +302,19 @@ visit (const char *name1,
         throw ColNotFound (buffer);
     }
 
-    const DataVec           &hv1 = data_[iter1->second];
-    const DataVec           &hv2 = data_[iter2->second];
-    const DataVec           &hv3 = data_[iter3->second];
-    const DataVec           &hv4 = data_[iter4->second];
-    const std::vector<T1>   &vec1 = hv1.template get_vector<T1>();
-    const std::vector<T2>   &vec2 = hv2.template get_vector<T2>();
-    const std::vector<T3>   &vec3 = hv3.template get_vector<T3>();
-    const std::vector<T4>   &vec4 = hv4.template get_vector<T4>();
-    const size_type         idx_s = indices_.size();
-    const size_type         data_s1 = vec1.size();
-    const size_type         data_s2 = vec2.size();
-    const size_type         data_s3 = vec3.size();
-    const size_type         data_s4 = vec4.size();
+    DataVec         &hv1 = data_[iter1->second];
+    DataVec         &hv2 = data_[iter2->second];
+    DataVec         &hv3 = data_[iter3->second];
+    DataVec         &hv4 = data_[iter4->second];
+    std::vector<T1> &vec1 = hv1.template get_vector<T1>();
+    std::vector<T2> &vec2 = hv2.template get_vector<T2>();
+    std::vector<T3> &vec3 = hv3.template get_vector<T3>();
+    std::vector<T4> &vec4 = hv4.template get_vector<T4>();
+    const size_type idx_s = indices_.size();
+    const size_type data_s1 = vec1.size();
+    const size_type data_s2 = vec2.size();
+    const size_type data_s3 = vec3.size();
+    const size_type data_s4 = vec4.size();
 
     visitor.pre();
     for (size_type i = 0; i < idx_s; ++i)
@@ -336,13 +333,13 @@ visit (const char *name1,
 template<typename TS, typename  HETERO>
 template<typename T1, typename T2, typename T3, typename T4, typename T5,
          typename V>
-V &&DataFrame<TS, HETERO>::
+V &DataFrame<TS, HETERO>::
 visit (const char *name1,
        const char *name2,
        const char *name3,
        const char *name4,
        const char *name5,
-       V &&visitor) const  {
+       V &visitor)  {
 
     const auto  iter1 = data_tb_.find (name1);
     const auto  iter2 = data_tb_.find (name2);
@@ -391,22 +388,22 @@ visit (const char *name1,
         throw ColNotFound (buffer);
     }
 
-    const DataVec           &hv1 = data_[iter1->second];
-    const DataVec           &hv2 = data_[iter2->second];
-    const DataVec           &hv3 = data_[iter3->second];
-    const DataVec           &hv4 = data_[iter4->second];
-    const DataVec           &hv5 = data_[iter5->second];
-    const std::vector<T1>   &vec1 = hv1.template get_vector<T1>();
-    const std::vector<T2>   &vec2 = hv2.template get_vector<T2>();
-    const std::vector<T3>   &vec3 = hv3.template get_vector<T3>();
-    const std::vector<T4>   &vec4 = hv4.template get_vector<T4>();
-    const std::vector<T5>   &vec5 = hv5.template get_vector<T5>();
-    const size_type         idx_s = indices_.size();
-    const size_type         data_s1 = vec1.size();
-    const size_type         data_s2 = vec2.size();
-    const size_type         data_s3 = vec3.size();
-    const size_type         data_s4 = vec4.size();
-    const size_type         data_s5 = vec5.size();
+    DataVec         &hv1 = data_[iter1->second];
+    DataVec         &hv2 = data_[iter2->second];
+    DataVec         &hv3 = data_[iter3->second];
+    DataVec         &hv4 = data_[iter4->second];
+    DataVec         &hv5 = data_[iter5->second];
+    std::vector<T1> &vec1 = hv1.template get_vector<T1>();
+    std::vector<T2> &vec2 = hv2.template get_vector<T2>();
+    std::vector<T3> &vec3 = hv3.template get_vector<T3>();
+    std::vector<T4> &vec4 = hv4.template get_vector<T4>();
+    std::vector<T5> &vec5 = hv5.template get_vector<T5>();
+    const size_type idx_s = indices_.size();
+    const size_type data_s1 = vec1.size();
+    const size_type data_s2 = vec2.size();
+    const size_type data_s3 = vec3.size();
+    const size_type data_s4 = vec4.size();
+    const size_type data_s5 = vec5.size();
 
     visitor.pre();
     for (size_type i = 0; i < idx_s; ++i)

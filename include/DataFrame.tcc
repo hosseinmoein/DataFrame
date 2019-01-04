@@ -372,27 +372,38 @@ bucketize_async (F &&func, const TimeStamp &bucket_interval) const  {
 
 template<typename TS, typename  HETERO>
 template<typename T, typename V>
-DataFrame<TS, HETERO>
-DataFrame<TS, HETERO>::transpose(TSVec &&indices, const V &col_names) const  {
+DataFrame<TS, HETERO> DataFrame<TS, HETERO>::
+transpose(TSVec &&indices,
+          const V &current_col_order,
+          const V &new_col_names) const  {
 
-    const size_type                     num_cols = data_tb_.size();
+    const size_type num_cols = data_tb_.size();
+
+    if (current_col_order.size() != num_cols)
+        throw InconsistentData ("DataFrame::transpose(): ERROR: "
+                                "Length of current_col_order is not equal "
+                                "to number of columns");
+    if (new_col_names.size() != indices_.size())
+        throw InconsistentData ("DataFrame::transpose(): ERROR: "
+                                "Length of new_col_names is not equal "
+                                "to number of rows");
+
     std::vector<const std::vector<T> *> current_cols;
 
     current_cols.reserve(num_cols);
-    for (const auto citer : data_tb_)  {
-        const DataVec   &hv = data_[citer.second];
+    for (const auto citer : current_col_order)  {
+        const auto  &data_citer = data_tb_.find(citer);
+
+        if (data_citer == data_tb_.end())
+            throw InconsistentData ("DataFrame::transpose(): ERROR: "
+                                    "Cannot find at least one of the column "
+                                    "names in the order vector");
+
+        const DataVec   &hv = data_[data_citer->second];
 
         current_cols.push_back(&(hv.template get_vector<T>()));
     }
 
-    if (col_names.size() != indices_.size())
-        throw InconsistentData ("DataFrame::transpose(): ERROR: "
-                                "Length of col_names is not equal "
-                                "to number of rows");
-    if (indices.size() != num_cols)
-        throw InconsistentData ("DataFrame::transpose(): ERROR: "
-                                "Length of index is not equal "
-                                "to number of columns");
 
     std::vector<std::vector<T>> trans_cols(indices_.size());
     DataFrame                   df;
@@ -409,8 +420,8 @@ DataFrame<TS, HETERO>::transpose(TSVec &&indices, const V &col_names) const  {
     }
 
     df.load_index(std::move(indices));
-    for (size_type i = 0; i < col_names.size(); ++i)
-        df.load_column(col_names[i].c_str(), std::move(trans_cols[i]));
+    for (size_type i = 0; i < new_col_names.size(); ++i)
+        df.load_column(&(new_col_names[i][0]), std::move(trans_cols[i]));
 
     return (df);
 }

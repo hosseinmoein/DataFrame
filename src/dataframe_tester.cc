@@ -438,11 +438,13 @@ int main(int argc, char *argv[]) {
                      std::make_pair("col_4", d4));
 
         std::vector<unsigned long>  tidx = { 100, 101, 102, 104 };
-        std::vector<std::string>    tcol_names =
+        std::vector<const char *>   tcol_names =
             { "tcol_1", "tcol_2", "tcol_3",
               "tcol_4", "tcol_5", "tcol_6", "tcol_7" };
         MyDataFrame                 tdf =
-            df.transpose<double>(std::move(tidx), tcol_names);
+            df.transpose<double>(std::move(tidx),
+                                 { "col_1", "col_2", "col_3", "col_4" },
+								 tcol_names);
 
         std::cout << "Original DataFrame:" << std::endl;
         df.write<std::ostream, unsigned long, double>(std::cout);

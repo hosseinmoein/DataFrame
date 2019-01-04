@@ -415,21 +415,27 @@ public:  // Other public interfaces
 
     // It transposes the data in the DataFrame.
     // The transpose() is only defined for DataFrame's that have a single
-    // data type
+    // data type.
+    // NOTE: Since DataFrame columns have no ordering, the user must specify
+    //       the order with current_col_order.
     //
     // T: The single type for all data columns
     // V: The type of string vector specifying the new names for new columns
     //    after transpose
-    // idx: A vector on indices for the new transposed DataFrame.
-    //      Its length must equal the number of rows in this DataFrame.
-    //      Otherwise an exception is thrown
-    // col_names: A vector of strings, specifying the column names for the
-    //            new transposed DataFrame.
-    //            Its length must equal the number of rows in this DataFrame.
-    //            Otherwise an exception is thrown
+    // indices: A vector on indices for the new transposed DataFrame.
+    //          Its length must equal the number of rows in this DataFrame.
+    //          Otherwise an exception is thrown
+    // current_col_order: A vector of strings specifying the order of columns
+    //                    in the original DataFrame.
+    // new_col_names: A vector of strings, specifying the column names for the
+    //                new transposed DataFrame.
+    //                Its length must equal the number of rows in this
+    //                DataFrame. Otherwise an exception is thrown
     //
     template<typename T, typename V>
-    DataFrame transpose(TSVec &&indices, const V &col_names) const;
+    DataFrame transpose(TSVec &&indices,
+                        const V &current_col_order,
+                        const V &new_col_names) const;
 
     // It joins the data between self (lhs) and rhs and returns the joined data
     // in a StdDataFrame, based on specification in join_policy.

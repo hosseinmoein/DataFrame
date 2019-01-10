@@ -68,7 +68,7 @@ int main(int argc, char *argv[]) {
     hv.push_back (std::string("fas"));
 
     {
-        std::cout << "\n\nTesing HetroVector View" << std::endl;
+        std::cout << "\n\nTesing HeteroVector View" << std::endl;
 
         HeteroView  d = hv.get_view<double>();
 

@@ -67,6 +67,7 @@ set(${LIBRARY_TARGET_NAME}_SRC
   src/HeteroVector.cc
   src/HeteroView.cc
   src/ThreadGranularity.cc
+  src/DateTime.cc
 )
 
 # List of header files.
@@ -88,6 +89,7 @@ set(${LIBRARY_TARGET_NAME}_HDR
   include/DataFrame_set.tcc
   include/DataFrame_functors.h
   include/ThreadGranularity.h
+  include/DateTime.h
 )
 
 # Build the library

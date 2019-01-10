@@ -1,6 +1,6 @@
 
 
-Tesing HetroVector View
+Tesing HeteroVector View
 d[3] must be 1.05: 1.05
 s[0] must be 'str_2': str_2
 s size: 2

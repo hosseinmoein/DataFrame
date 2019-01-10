@@ -36,7 +36,7 @@ const unsigned int  DT_MMDDYYYY = 7;   // e.g. 09161999
 const unsigned int  DT_YYYYMMDD = 8;   // e.g. 19990916
 const unsigned int  DLR_MNY = 9;       // e.g. $ 120350045
 const unsigned int  DLR_MNY_C = 10;    // e.g. $ 120,350,045
-const unsigned int   DLR_MNY_C_DM = 11; // e.g. $ 120,350,045.53
+const unsigned int  DLR_MNY_C_DM = 11; // e.g. $ 120,350,045.53
 const unsigned int  VAL_32ND = 12;     // e.g. 105-164
 const unsigned int  VAL_64TH = 13;     // e.g. 105=33
 const unsigned int  DT_TM2 = 14;       // e.g. 09/16/1999 13:51:04.256
@@ -122,14 +122,14 @@ public:
     inline TIME_ZONE get_timezone () const  { return (time_zone_); }
 
 
-    using DateType = unsigned int;
-    using DatePartType = unsigned short int;
-    using HourType = unsigned short int;    // 1 - 3,600
-    using MinuteType = unsigned short int;  // 1 - 60
-    using SecondType = unsigned short int;  // 1 - 60
-    using MillisecondType = short int;      // 1 - 1,000
-    using MicrosecondType = int;            // 1 - 1,000,000
-    using NanosecondType =  int;            // 1 - 1,000,000,000
+    using DateType = unsigned int;           // e.g. 20190110
+    using DatePartType = unsigned short int; // e.g. year, month etc.
+    using HourType = unsigned short int;     // 1 - 3,600
+    using MinuteType = unsigned short int;   // 1 - 60
+    using SecondType = unsigned short int;   // 1 - 60
+    using MillisecondType = short int;       // 1 - 1,000
+    using MicrosecondType = int;             // 1 - 1,000,000
+    using NanosecondType =  int;             // 1 - 1,000,000,000
     using EpochType = time_t;
 
 private:

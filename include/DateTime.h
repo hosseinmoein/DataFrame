@@ -416,7 +416,7 @@ public:
     inline void add_business_days (long days) noexcept  {
 
         if (days != 0)  {
-            const   int addend = days < 0 ? -1 : 1;
+            const int   addend = days < 0 ? -1 : 1;
 
             while (days)  {
                 add_days (addend);
@@ -448,10 +448,9 @@ public:
         return (result);
     }
 
-    inline std::ostream &operator << (std::ostream &o) const  {
-
-        return (o << string_format (DT_TM2));
-    }
+    template<typename S>
+    inline S &
+    operator << (S &o) const  { return (o << string_format (DT_TM2)); }
 
  private:
 
@@ -459,9 +458,10 @@ public:
     // statically.
     //
     class   DI_initializer  { public: DI_initializer () noexcept; };
-    static  const   DI_initializer  di_init_;
 
-    friend  class   DI_initializer;
+    static const DI_initializer di_init_;
+
+    friend class    DI_initializer;
 
 protected:
 
@@ -500,7 +500,7 @@ protected:
 #endif // _WIN32
         }
 
-        const   time_t  t  = ::mktime (&ltime);
+        const time_t    t  = ::mktime (&ltime);
 
         if (time_zone_ != LOCAL)  {
 #ifdef _WIN32
@@ -535,7 +535,7 @@ protected:
 #endif // _WIN32
         }
 
-        struct  tm  ltime;
+        struct tm   ltime;
 
 #ifdef _WIN32
         localtime_s (&ltime, &the_time);

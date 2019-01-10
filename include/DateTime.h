@@ -448,10 +448,6 @@ public:
         return (result);
     }
 
-    template<typename S>
-    inline S &
-    operator << (S &o) const  { return (o << string_format (DT_TM2)); }
-
  private:
 
     // This guy initializes anything that needs to be initialized
@@ -740,6 +736,14 @@ inline bool operator > (const DateTime &lhs, const DateTime &rhs) noexcept  {
 inline bool operator >= (const DateTime &lhs, const DateTime &rhs) noexcept  {
 
     return (lhs.dt_compare (rhs) >= 0);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename S>
+inline S &operator << (S &o, const DateTime &rhs)  {
+
+    return (o << rhs.string_format (DT_TM2));
 }
 
 } // namespace hmdf

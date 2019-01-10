@@ -12,7 +12,7 @@
 namespace hmdf
 {
 
-template<typename TS, typename  HETERO>
+template<typename TS, typename HETERO>
 template<typename T>
 inline constexpr T DataFrame<TS, HETERO>::_get_nan()  {
 
@@ -23,7 +23,7 @@ inline constexpr T DataFrame<TS, HETERO>::_get_nan()  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename  HETERO>
+template<typename TS, typename HETERO>
 template<typename T>
 inline constexpr bool DataFrame<TS, HETERO>::_is_nan(const T &val)  {
 
@@ -34,7 +34,7 @@ inline constexpr bool DataFrame<TS, HETERO>::_is_nan(const T &val)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename  HETERO>
+template<typename TS, typename HETERO>
 template<typename ... types>
 void DataFrame<TS, HETERO>::make_consistent ()  {
 
@@ -47,7 +47,7 @@ void DataFrame<TS, HETERO>::make_consistent ()  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename  HETERO>
+template<typename TS, typename HETERO>
 template<typename T, typename ... types>
 void DataFrame<TS, HETERO>::sort(const char *by_name)  {
 
@@ -90,7 +90,7 @@ void DataFrame<TS, HETERO>::sort(const char *by_name)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename  HETERO>
+template<typename TS, typename HETERO>
 template<typename T, typename ... types>
 std::future<void> DataFrame<TS, HETERO>::sort_async(const char *by_name)  {
 
@@ -101,7 +101,7 @@ std::future<void> DataFrame<TS, HETERO>::sort_async(const char *by_name)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename  HETERO>
+template<typename TS, typename HETERO>
 template<typename F, typename T, typename ... types>
 DataFrame<TS, HETERO>
 DataFrame<TS, HETERO>:: groupby (F &&func,
@@ -235,7 +235,7 @@ DataFrame<TS, HETERO>:: groupby (F &&func,
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename  HETERO>
+template<typename TS, typename HETERO>
 template<typename F, typename T, typename ... types>
 std::future<DataFrame<TS, HETERO>>
 DataFrame<TS, HETERO>::groupby_async (F &&func,
@@ -252,7 +252,7 @@ DataFrame<TS, HETERO>::groupby_async (F &&func,
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename  HETERO>
+template<typename TS, typename HETERO>
 template<typename T>
 StdDataFrame<T>
 DataFrame<TS, HETERO>::value_counts (const char *col_name) const  {
@@ -325,7 +325,7 @@ DataFrame<TS, HETERO>::value_counts (const char *col_name) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename  HETERO>
+template<typename TS, typename HETERO>
 template<typename F, typename ... types>
 DataFrame<TS, HETERO>
 DataFrame<TS, HETERO>::
@@ -355,7 +355,7 @@ bucketize (F &&func, const TimeStamp &bucket_interval) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename  HETERO>
+template<typename TS, typename HETERO>
 template<typename F, typename ... types>
 std::future<DataFrame<TS, HETERO>>
 DataFrame<TS, HETERO>::
@@ -370,7 +370,7 @@ bucketize_async (F &&func, const TimeStamp &bucket_interval) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename  HETERO>
+template<typename TS, typename HETERO>
 template<typename T, typename V>
 DataFrame<TS, HETERO> DataFrame<TS, HETERO>::
 transpose(TSVec &&indices,
@@ -428,7 +428,7 @@ transpose(TSVec &&indices,
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename  HETERO>
+template<typename TS, typename HETERO>
 template<typename S, typename ... types>
 bool DataFrame<TS, HETERO>::write (S &o, bool values_only) const  {
 
@@ -449,7 +449,7 @@ bool DataFrame<TS, HETERO>::write (S &o, bool values_only) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename  HETERO>
+template<typename TS, typename HETERO>
 template<typename S, typename ... Ts>
 std::future<bool> DataFrame<TS, HETERO>::
 write_async (S &o, bool values_only) const  {

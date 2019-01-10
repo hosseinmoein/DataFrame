@@ -5,6 +5,7 @@
 
 #include "../include/DataFrame.h"
 #include "../include/DataFrameVisitors.h"
+#include "../include/DateTime.h"
 
 using namespace hmdf;
 
@@ -444,7 +445,7 @@ int main(int argc, char *argv[]) {
         MyDataFrame                 tdf =
             df.transpose<double>(std::move(tidx),
                                  { "col_1", "col_2", "col_3", "col_4" },
-								 tcol_names);
+                                 tcol_names);
 
         std::cout << "Original DataFrame:" << std::endl;
         df.write<std::ostream, unsigned long, double>(std::cout);
@@ -1086,6 +1087,38 @@ int main(int argc, char *argv[]) {
 
         std::cout << "Rotated Down DF:" << std::endl;
         rddf.write<std::ostream, double, int, std::string>(std::cout);
+    }
+
+    {
+        std::cout << "\n\nTesing DataFrame with DateTime" << std::endl;
+
+        DateTime                    dt(20010102);
+        std::vector<DateTime>       idx;
+        std::vector<double>         d1;
+        std::vector<int>            i1;
+        std::vector<std::string>    s1;
+
+        idx.reserve(20);
+        d1.reserve(20);
+        i1.reserve(20);
+        s1.reserve(20);
+        for (int i = 0; i < 20; ++i)  {
+            idx.emplace_back(dt);
+            d1.push_back(i + 0.345689);
+            i1.push_back(i);
+            dt.add_days(1);
+            s1.emplace_back("Test str");
+        }
+
+        StdDataFrame<DateTime>  df;
+
+        df.load_data(std::move(idx),
+                     std::make_pair("dbl_col", d1),
+                     std::make_pair("int_col", i1),
+                     std::make_pair("str_col", s1));
+
+        std::cout << "Original DF:" << std::endl;
+        df.write<std::ostream, double, int, std::string>(std::cout);
     }
 
     return (0);

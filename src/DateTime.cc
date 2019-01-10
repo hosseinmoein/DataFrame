@@ -87,7 +87,7 @@ const DateTime::DI_initializer  DateTime::di_init_;
 
 // ----------------------------------------------------------------------------
 
-DateTime::DI_initializer::DI_initializer () throw ()  {
+DateTime::DI_initializer::DI_initializer() noexcept  {
 
 #ifdef _WIN32 // Can not locate GetDynamicTimeZoneInformation() in kernel32.dll
     // DYNAMIC_TIME_ZONE_INFORMATION    tz_info;
@@ -131,7 +131,7 @@ const char *const   DateTime::WDAY_BR_[] =
 
 // ----------------------------------------------------------------------------
 
-DateTime::DateTime (TIME_ZONE time_zone) throw () : time_zone_ (time_zone)  {
+DateTime::DateTime (DT_TIME_ZONE time_zone) noexcept : time_zone_(time_zone)  {
 
 #ifdef _WIN32
     SYSTEMTIME  syst;
@@ -173,13 +173,13 @@ DateTime::DateTime (TIME_ZONE time_zone) throw () : time_zone_ (time_zone)  {
 
 // ----------------------------------------------------------------------------
 
-void DateTime::set_time (EpochType the_time, MillisecondType millis) throw()  {
+void DateTime::set_time (EpochType the_time, MillisecondType millis) noexcept {
 
     date_ = DateType (INVALID_TIME_T_);
     hour_ = HourType (INVALID_TIME_T_);
     minute_ = MinuteType (INVALID_TIME_T_);
     second_ = SecondType (INVALID_TIME_T_);
-    week_day_ = BAD_DAY;
+    week_day_ = DT_WEEKDAY::BAD_DAY;
 
     nanosecond_ = millis * 1000000;
     time_ = the_time;
@@ -192,7 +192,7 @@ DateTime::DateTime (DateType d,
                     MinuteType mn,
                     SecondType sc,
                     MillisecondType ms,
-                    TIME_ZONE tzone) throw ()
+                    DT_TIME_ZONE tzone) noexcept
     : date_ (d),
       hour_ (hr),
       minute_ (mn),
@@ -203,7 +203,7 @@ DateTime::DateTime (DateType d,
       // INVALID_TIME_T_ to time_.
       //
       time_ (INVALID_TIME_T_),
-      week_day_ (BAD_DAY),
+      week_day_ (DT_WEEKDAY::BAD_DAY),
       time_zone_ (tzone)  {
 }
 
@@ -225,9 +225,9 @@ DateTime::DateTime (DateType d,
 //  (4)  YYYY/MM/DD HH:MM:SS
 //  (5)  YYYY/MM/DD HH:MM:SS.MMM
 //
-DateTime::DateTime (const char *s, DATE_STYLE ds, TIME_ZONE tz)
+DateTime::DateTime (const char *s, DT_DATE_STYLE ds, DT_TIME_ZONE tz)
     : time_ (INVALID_TIME_T_),
-      week_day_ (BAD_DAY)  {
+      week_day_ (DT_WEEKDAY::BAD_DAY)  {
 
     time_zone_ = tz;
 
@@ -235,9 +235,9 @@ DateTime::DateTime (const char *s, DATE_STYLE ds, TIME_ZONE tz)
 
     while (::isspace (*str)) ++str;
 
-    if (ds == YYYYMMDD)
+    if (ds == DT_DATE_STYLE::YYYYMMDD)
         *this = str;
-    else if (ds == AME_STYLE)  {
+    else if (ds == DT_DATE_STYLE::AME_STYLE)  {
         const size_t    str_len = ::strlen (str);
 
         if (str_len == 10)  {
@@ -291,7 +291,7 @@ DateTime::DateTime (const char *s, DATE_STYLE ds, TIME_ZONE tz)
             throw std::runtime_error (err.c_str ());
         }
     }
-    else if (ds == EUR_STYLE)  {
+    else if (ds == DT_DATE_STYLE::EUR_STYLE)  {
         const   size_t   str_len = ::strlen (str);
 
         if (str_len == 10)  {
@@ -423,15 +423,15 @@ int DateTime::dt_compare (const DateTime &rhs) const  {
 
 // ----------------------------------------------------------------------------
 
-DateTime::DatePartType DateTime::days_in_month () const throw ()  {
+DateTime::DatePartType DateTime::days_in_month () const noexcept  {
 
     switch (month ())  {
-        case APR:
-        case JUN:
-        case SEP:
-        case NOV:
+        case DT_MONTH::APR:
+        case DT_MONTH::JUN:
+        case DT_MONTH::SEP:
+        case DT_MONTH::NOV:
             return (30);
-        case FEB:
+        case DT_MONTH::FEB:
             // This I remember from CML.
             //
             if ((year () % 4 == 0 && year () % 100 != 0) || year () % 400 == 0)
@@ -448,10 +448,10 @@ DateTime::DatePartType DateTime::days_in_month () const throw ()  {
 // Notice that we are not checking time_ to be valid.
 // This is potentially a bug
 //
-bool DateTime::is_valid () const throw ()  {
+bool DateTime::is_valid () const noexcept  {
 
     return (year () > 1900 && year () < 2525 &&
-            month () > BAD_MONTH && month () <= DEC &&
+            month () > DT_MONTH::BAD_MONTH && month () <= DT_MONTH::DEC &&
             dmonth () > 0 && dmonth () <= days_in_month () &&
             hour () >= 0 && hour () < 24 &&
             minute () >= 0 && minute () < 60 &&
@@ -468,11 +468,11 @@ bool DateTime::is_valid () const throw ()  {
 // for calculation of Easter Sunday.
 // Good Friday is the Friday before Easter Sunday.
 //
-bool DateTime::is_us_business_day () const throw ()  {
+bool DateTime::is_us_business_day () const noexcept  {
 
     const DatePartType  m_day = dmonth ();   // 1 - 31
-    const DatePartType  mon = month ();      // JAN - DEC
-    const WEEKDAY       w_day = dweek ();    // SUN - SAT
+    const DT_MONTH      mon = month ();      // JAN - DEC
+    const DT_WEEKDAY    w_day = dweek ();    // SUN - SAT
     const DateType      date_part = date();  // e.g. 20190110
 
     return (! (is_weekend () ||
@@ -516,32 +516,39 @@ bool DateTime::is_us_business_day () const throw ()  {
 
                // World Trade Center attack (September 11-14, 2001)
                //
-               (year () == 2001 && mon == SEP && m_day >= 11 && m_day <= 14) ||
+               (year () == 2001 && mon == DT_MONTH::SEP && m_day >= 11 &&
+                m_day <= 14) ||
 
                // Martin Luther King Day (third Monday of January)
                //
-               (w_day == MON && (m_day >= 15 && m_day <= 21) && mon == JAN) ||
+               (w_day == DT_WEEKDAY::MON &&
+                (m_day >= 15 && m_day <= 21) && mon == DT_MONTH::JAN) ||
 
                // President's Day (third Monday of February)
               //
-               (w_day == MON && (m_day >= 15 && m_day <= 21) && mon == FEB) ||
+               (w_day == DT_WEEKDAY::MON &&
+                (m_day >= 15 && m_day <= 21) && mon == DT_MONTH::FEB) ||
 
                // Memorial Day (last Monday of May)
                //
-               (w_day == MON && m_day >= 25 && mon == MAY) ||
+               (w_day == DT_WEEKDAY::MON && m_day >= 25 &&
+                mon == DT_MONTH::MAY) ||
 
                // Independence Day (July 4 or Monday, July 5 or Friday, July 3)
                //
-               ((m_day == 4 || (w_day == MON && m_day == 5) ||
-                (w_day == FRI && m_day == 3)) && mon == JUL) ||
+               ((m_day == 4 || (w_day == DT_WEEKDAY::MON && m_day == 5) ||
+                (w_day == DT_WEEKDAY::FRI && m_day == 3)) &&
+                mon == DT_MONTH::JUL) ||
 
                // Labor Day (first Monday of September)
                //
-               (w_day == MON && m_day <= 7 && mon == SEP) ||
+               (w_day == DT_WEEKDAY::MON && m_day <= 7 &&
+                mon == DT_MONTH::SEP) ||
 
                // Thanksgiving Day (fourth Thursday of November)
                //
-               (w_day == THU && (m_day >= 22 && m_day <= 28) && mon == NOV) ||
+               (w_day == DT_WEEKDAY::THU &&
+                (m_day >= 22 && m_day <= 28) && mon == DT_MONTH::NOV) ||
 
                is_xmas ()));
 }
@@ -550,18 +557,21 @@ bool DateTime::is_us_business_day () const throw ()  {
 
 // Is Veteran's Day a bank holiday?
 //
-bool DateTime::is_us_bank_holiday () const throw ()  {
+bool DateTime::is_us_bank_holiday () const noexcept  {
 
     if (! is_us_business_day ())
         return (true);
     else  {
         const DatePartType  m_day = dmonth (); // 1 - 31
-        const DatePartType  mon = month ();    // JAN - DEC
-        const WEEKDAY       w_day = dweek ();  // SUN - SAT
+        const DT_MONTH      mon = month ();    // JAN - DEC
+        const DT_WEEKDAY    w_day = dweek ();  // SUN - SAT
 
         // Columbus Day (second Monday of October)
         //
-        if (w_day == MON && m_day >= 8 && m_day <= 14 && mon == OCT)
+        if (w_day == DT_WEEKDAY::MON &&
+            m_day >= 8 &&
+            m_day <= 14 &&
+            mon == DT_MONTH::OCT)
             return (true);
     }
 

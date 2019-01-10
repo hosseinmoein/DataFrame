@@ -26,22 +26,104 @@ namespace hmdf
 // DataItem::string_format() which will be implemented in
 // derived classes
 //
-const unsigned int  AMR_DT = 1;        // e.g. 09/16/99
-const unsigned int  AMR_DT_CTY = 2;    // e.g. 09/16/1999
-const unsigned int  EUR_DT = 3;        // e.g. 16/09/99
-const unsigned int  EUR_DT_CTY = 4;    // e.g. 16/09/1999
-const unsigned int  DT_TM = 5;         // e.g. 09/16/1999 13:51:04
-const unsigned int  SCT_DT = 6;        // e.g. Sep 16, 1999
-const unsigned int  DT_MMDDYYYY = 7;   // e.g. 09161999
-const unsigned int  DT_YYYYMMDD = 8;   // e.g. 19990916
-const unsigned int  DLR_MNY = 9;       // e.g. $ 120350045
-const unsigned int  DLR_MNY_C = 10;    // e.g. $ 120,350,045
-const unsigned int  DLR_MNY_C_DM = 11; // e.g. $ 120,350,045.53
-const unsigned int  VAL_32ND = 12;     // e.g. 105-164
-const unsigned int  VAL_64TH = 13;     // e.g. 105=33
-const unsigned int  DT_TM2 = 14;       // e.g. 09/16/1999 13:51:04.256
-const unsigned int  DT_DATETIME = 15;  // e.g. 20010103   09:31:15.124
-const unsigned int  DT_FAME_DATE = 16; // e.g. 27Sep2001
+enum class DT_FORMAT : unsigned short int  {
+    AMR_DT = 1,        // e.g. 09/16/99
+    AMR_DT_CTY = 2,    // e.g. 09/16/1999
+    EUR_DT = 3,        // e.g. 16/09/99
+    EUR_DT_CTY = 4,    // e.g. 16/09/1999
+    DT_TM = 5,         // e.g. 09/16/1999 13:51:04
+    SCT_DT = 6,        // e.g. Sep 16, 1999
+    DT_MMDDYYYY = 7,   // e.g. 09161999
+    DT_YYYYMMDD = 8,   // e.g. 19990916
+    DLR_MNY = 9,       // e.g. $ 120350045
+    DLR_MNY_C = 10,    // e.g. $ 120,350,045
+    DLR_MNY_C_DM = 11, // e.g. $ 120,350,045.53
+    VAL_32ND = 12,     // e.g. 105-164
+    VAL_64TH = 13,     // e.g. 105=33
+    DT_TM2 = 14,       // e.g. 09/16/1999 13:51:04.256
+    DT_DATETIME = 15,  // e.g. 20010103   09:31:15.124
+    DT_FAME_DATE = 16  // e.g. 27Sep2001
+};
+
+// DO NOT change the values of these enums. They are offsets to an
+// static array.
+//
+enum class DT_TIME_ZONE : short int  {
+    LOCAL = -2,
+    GMT = 0,
+    AM_BUENOS_AIRES = 1,
+    AM_CHICAGO = 2,
+    AM_LOS_ANGELES = 3,
+    AM_MEXICO_CITY = 4,
+    AM_NEW_YORK = 5,
+    AS_DUBAI = 6,
+    AS_HONG_KONG = 7,
+    AS_SHANGHAI = 8,
+    AS_SINGAPORE = 9,
+    AS_TEHRAN = 10,
+    AS_TEL_AVIV = 11,
+    AS_TOKYO = 12,
+    AU_MELBOURNE = 13,
+    AU_SYDNEY = 14,
+    BR_RIO_DE_JANEIRO = 15,
+    EU_BERLIN = 16,
+    EU_LONDON = 17,
+    EU_MOSCOW = 18,
+    EU_PARIS = 19,
+    EU_ROME = 20,
+    EU_VIENNA = 21,
+    EU_ZURICH = 22,
+    UTC = 23,
+    AS_SEOUL = 24,
+    AS_TAIPEI = 25,
+    EU_STOCKHOLM = 26,
+    NZ = 27,
+    EU_OSLO = 28,
+    EU_WARSAW = 29,
+    EU_BUDAPEST = 30
+};
+
+// 1 - 7 (Sunday - Saturday)
+// DO NOT change the numbers
+//
+enum class DT_WEEKDAY : unsigned char  {
+    BAD_DAY = 0,
+    SUN = 1,
+    MON = 2,
+    TUE = 3,
+    WED = 4,
+    THU = 5,
+    FRI = 6,
+    SAT = 7
+};
+
+// 1 - 12 (January - December)
+// DO NOT change the numbers
+//
+enum class DT_MONTH : unsigned char  {
+    BAD_MONTH = 0,
+    JAN = 1,
+    FEB = 2,
+    MAR = 3,
+    APR = 4,
+    MAY = 5,
+    JUN = 6,
+    JUL = 7,
+    AUG = 8,
+    SEP = 9,
+    OCT = 10,
+    NOV = 11,
+    DEC = 12
+};
+
+// AME_STYLE: MM/DD/YYYY
+// EUR_STYLE: YYYY/MM/DD
+//
+enum class DT_DATE_STYLE : unsigned char  {
+    YYYYMMDD = 1,
+    AME_STYLE = 2,
+    EUR_STYLE = 3
+};
 
 // ----------------------------------------------------------------------------
 
@@ -53,65 +135,12 @@ class   DateTime  {
 
 public:
 
-    // DO NOT change the values of these enums. They are offsets to an
-    // static array.
-    //
-    enum  TIME_ZONE {LOCAL = -2,
-                     GMT = 0,
-                     AM_BUENOS_AIRES = 1,
-                     AM_CHICAGO = 2,
-                     AM_LOS_ANGELES = 3,
-                     AM_MEXICO_CITY = 4,
-                     AM_NEW_YORK = 5,
-                     AS_DUBAI = 6,
-                     AS_HONG_KONG = 7,
-                     AS_SHANGHAI = 8,
-                     AS_SINGAPORE = 9,
-                     AS_TEHRAN = 10,
-                     AS_TEL_AVIV = 11,
-                     AS_TOKYO = 12,
-                     AU_MELBOURNE = 13,
-                     AU_SYDNEY = 14,
-                     BR_RIO_DE_JANEIRO = 15,
-                     EU_BERLIN = 16,
-                     EU_LONDON = 17,
-                     EU_MOSCOW = 18,
-                     EU_PARIS = 19,
-                     EU_ROME = 20,
-                     EU_VIENNA = 21,
-                     EU_ZURICH = 22,
-                     UTC = 23,
-                     AS_SEOUL = 24,
-                     AS_TAIPEI = 25,
-                     EU_STOCKHOLM = 26,
-                     NZ = 27,
-                     EU_OSLO = 28,
-                     EU_WARSAW = 29,
-                     EU_BUDAPEST = 30};
-
-    // 1 - 7 (Sunday - Saturday)
-    // DO NOT change the numbers
-    //
-    enum    WEEKDAY {BAD_DAY = 0, SUN, MON, TUE, WED, THU, FRI, SAT};
-
-    // 1 - 12 (January - December)
-    // DO NOT change the numbers
-    //
-    enum    MONTH {
-        BAD_MONTH = 0,
-        JAN, FEB, MAR, APR, MAY, JUN, JUL, AUG, SEP, OCT, NOV, DEC};
-
-    // AME_STYLE: MM/DD/YYYY
-    // EUR_STYLE: YYYY/MM/DD
-    //
-    enum DATE_STYLE {YYYYMMDD, AME_STYLE, EUR_STYLE};
-
     // NOTE: This method is not multithread-safe. We have to add a mutex, if
     //       we plan to use it in a multithreaded environment. This method
     //       modifies the TZ environment variable which changes the
     //       time zone for the entire program.
     //
-    inline void set_timezone (TIME_ZONE tz)  {
+    inline void set_timezone (DT_TIME_ZONE tz)  {
 
         const EpochType t = time ();
 
@@ -119,7 +148,7 @@ public:
         breaktime_ (t, msec ());
         return;
     }
-    inline TIME_ZONE get_timezone () const  { return (time_zone_); }
+    inline DT_TIME_ZONE get_timezone () const  { return (time_zone_); }
 
 
     using DateType = unsigned int;           // e.g. 20190110
@@ -138,21 +167,21 @@ private:
 
 public:
 
-    explicit DateTime (TIME_ZONE the_zone = LOCAL) noexcept;
+    explicit DateTime (DT_TIME_ZONE the_zone = DT_TIME_ZONE::LOCAL) noexcept;
     explicit DateTime (DateType d,
                        HourType hr = 0,
                        MinuteType mn = 0,
                        SecondType sc = 0,
                        MillisecondType ms = 0,
-                       TIME_ZONE ttype = LOCAL) noexcept;
+                       DT_TIME_ZONE ttype = DT_TIME_ZONE::LOCAL) noexcept;
     DateTime (const DateTime &that) = default;
     DateTime (DateTime &&that) = default;
 
     ~DateTime () = default;
 
     explicit DateTime (const char *s,
-                       DATE_STYLE ds = YYYYMMDD,
-                       TIME_ZONE tz = LOCAL);
+                       DT_DATE_STYLE ds = DT_DATE_STYLE::YYYYMMDD,
+                       DT_TIME_ZONE tz = DT_TIME_ZONE::LOCAL);
 
     void set_time (EpochType the_time, MillisecondType millis = 0) noexcept;
 
@@ -173,9 +202,9 @@ public:
 
         return (date () / 10000);
     }
-    inline MONTH month () const noexcept  {          // JAN - DEC
+    inline DT_MONTH month () const noexcept  {          // JAN - DEC
 
-        return (static_cast<MONTH>((date () % 10000) / 100));
+        return (static_cast<DT_MONTH>((date () % 10000) / 100));
     }
     inline DatePartType dmonth () const noexcept  {  // 1 - 31
 
@@ -192,12 +221,12 @@ public:
 
         return (ltime.tm_yday + 1);
     }
-    inline WEEKDAY dweek () const noexcept  {   // SUN - SAT
+    inline DT_WEEKDAY dweek () const noexcept  {   // SUN - SAT
 
         // It _always_ makes me sad to use const_cast<>. But then I get
         // over it.
         //
-        if (week_day_ == BAD_DAY)
+        if (week_day_ == DT_WEEKDAY::BAD_DAY)
             const_cast<DateTime *>(this)->breaktime_ (time (), msec ());
 
         return (week_day_);
@@ -378,35 +407,38 @@ public:
 
     inline bool is_weekend () const noexcept  {
 
-        const WEEKDAY   w_day = dweek ();
+        const DT_WEEKDAY    w_day = dweek ();
 
-        return (w_day == SUN || w_day == SAT);
+        return (w_day == DT_WEEKDAY::SUN || w_day == DT_WEEKDAY::SAT);
     }
 
     inline bool is_newyear () const noexcept  {
 
         const DatePartType  m_day = dmonth (); // 1 - 31
-        const DatePartType  mon = month ();    // JAN - DEC
-        const WEEKDAY       w_day = dweek ();  // SUN - SAT
+        const DT_MONTH      mon = month ();    // JAN - DEC
+        const DT_WEEKDAY    w_day = dweek ();  // SUN - SAT
 
         // New Year's Day (January 1 or Monday, January 2 or Friday,
         // December 31)
         //
-        return (((m_day == 1 || (w_day == MON && m_day == 2)) && mon == JAN) ||
-                (m_day == 31 && w_day == FRI && mon == DEC));
+        return (((m_day == 1 || (w_day == DT_WEEKDAY::MON && m_day == 2)) &&
+                 mon == DT_MONTH::JAN) ||
+                (m_day == 31 && w_day == DT_WEEKDAY::FRI &&
+                 mon == DT_MONTH::DEC));
     }
 
     inline bool is_xmas () const noexcept  {
 
         const DatePartType  m_day = dmonth (); // 1 - 31
-        const DatePartType  mon = month ();    // JAN - DEC
-        const WEEKDAY       w_day = dweek ();  // SUN - SAT
+        const DT_MONTH      mon = month ();    // JAN - DEC
+        const DT_WEEKDAY    w_day = dweek ();  // SUN - SAT
 
         // Christmas Day (December 25 or Monday, December 26 or Friday,
         // December 24)
         //
-        return ((m_day == 25 || (w_day == MON && m_day == 26) ||
-                (w_day == FRI && m_day == 24)) && mon == DEC);
+        return ((m_day == 25 || (w_day == DT_WEEKDAY::MON && m_day == 26) ||
+                 (w_day == DT_WEEKDAY::FRI && m_day == 24)) &&
+                mon == DT_MONTH::DEC);
     }
 
     bool is_us_business_day () const noexcept;
@@ -438,9 +470,9 @@ public:
     DateTime &operator = (const char *rhs);
 
     template<typename T>
-    inline void date_to_str (unsigned int format, T &result) const;
+    inline void date_to_str (DT_FORMAT format, T &result) const;
 
-    inline std::string string_format (unsigned int format) const  {
+    inline std::string string_format (DT_FORMAT format) const  {
 
         std::string  result;
 
@@ -467,8 +499,8 @@ protected:
     SecondType      second_ { };
     NanosecondType  nanosecond_ { };
     EpochType       time_ { };      // Seconds since 01/01/1970 (Epoch)
-    WEEKDAY         week_day_ { };
-    TIME_ZONE       time_zone_ { };
+    DT_WEEKDAY      week_day_ { };
+    DT_TIME_ZONE    time_zone_ { };
 
     // NOTE: This method is not multithread-safe. We have to add a mutex, if
     //       we plan to use it in a multithreaded environment. This method
@@ -482,23 +514,23 @@ protected:
         ltime.tm_min = minute ();
         ltime.tm_hour = hour ();
         ltime.tm_mday = dmonth ();
-        ltime.tm_mon = static_cast<int>(month ()) - 1;
+        ltime.tm_mon = static_cast<int>(month()) - 1;
         ltime.tm_year = year () - 1900;
 
-        if (time_zone_ != LOCAL)  {
+        if (time_zone_ != DT_TIME_ZONE::LOCAL)  {
 #ifdef _WIN32
             // SetEnvironmentVariable (L"TZ", TIMEZONES_ [time_zone_]);
-            putenv (TIMEZONES_ [time_zone_]);
+            putenv (TIMEZONES_[static_cast<int>(time_zone_)]);
             _tzset ();
 #else
-            ::setenv ("TZ", TIMEZONES_ [time_zone_], 1);
+            ::setenv ("TZ", TIMEZONES_[static_cast<int>(time_zone_)], 1);
             ::tzset ();
 #endif // _WIN32
         }
 
         const time_t    t  = ::mktime (&ltime);
 
-        if (time_zone_ != LOCAL)  {
+        if (time_zone_ != DT_TIME_ZONE::LOCAL)  {
 #ifdef _WIN32
             // SetEnvironmentVariable (L"TZ", nullptr);
             putenv ("TZ=");
@@ -520,13 +552,13 @@ protected:
     //
     breaktime_ (EpochType the_time, MillisecondType millis) noexcept  {
 
-        if (time_zone_ != LOCAL)  {
+        if (time_zone_ != DT_TIME_ZONE::LOCAL)  {
 #ifdef _WIN32
             // SetEnvironmentVariable (L"TZ", TIMEZONES_ [time_zone_]);
-            putenv (TIMEZONES_ [time_zone_]);
+            putenv (TIMEZONES_[static_cast<int>(time_zone_)]);
             _tzset ();
 #else
-            ::setenv ("TZ", TIMEZONES_ [time_zone_], 1);
+            ::setenv ("TZ", TIMEZONES_[static_cast<int>(time_zone_)], 1);
             ::tzset ();
 #endif // _WIN32
         }
@@ -539,7 +571,7 @@ protected:
         localtime_r (&the_time, &ltime);
 #endif // _WIN32
 
-        if (time_zone_ != LOCAL)  {
+        if (time_zone_ != DT_TIME_ZONE::LOCAL)  {
 #ifdef _WIN32
             // SetEnvironmentVariable (L"TZ", nullptr);
             putenv ("TZ=");
@@ -561,7 +593,7 @@ protected:
         second_ = ltime.tm_sec;
         nanosecond_ = millis * 1000000;
         time_ = the_time;
-        week_day_ = static_cast<WEEKDAY>(ltime.tm_wday + 1);
+        week_day_ = static_cast<DT_WEEKDAY>(ltime.tm_wday + 1);
 
         return;
     }
@@ -576,13 +608,12 @@ protected:
 
 template<typename T>
 inline void DateTime::
-date_to_str (unsigned int format, T &result) const  {
+date_to_str (DT_FORMAT format, T &result) const  {
 
     DMScu_FixedSizeString<63>   buffer;
 
     switch (format)  {
-
-        case AMR_DT:
+        case DT_FORMAT::AMR_DT:
         {
             buffer.printf ("%002d/%002d/%002d",
                            static_cast<int>(month ()),
@@ -590,7 +621,7 @@ date_to_str (unsigned int format, T &result) const  {
                            static_cast<int>(year ()) % 100);
         } break;
 
-        case AMR_DT_CTY:
+        case DT_FORMAT::AMR_DT_CTY:
         {
             buffer.printf ("%002d/%002d/%d",
                            static_cast<int>(month ()),
@@ -598,7 +629,7 @@ date_to_str (unsigned int format, T &result) const  {
                            static_cast<int>(year ()));
         } break;
 
-        case EUR_DT:
+        case DT_FORMAT::EUR_DT:
         {
             buffer.printf ("%002d/%002d/%002d",
                            static_cast<int>(dmonth ()),
@@ -606,7 +637,7 @@ date_to_str (unsigned int format, T &result) const  {
                            static_cast<int>(year ()) % 100);
         } break;
 
-        case EUR_DT_CTY:
+        case DT_FORMAT::EUR_DT_CTY:
         {
             buffer.printf ("%002d/%002d/%d",
                            static_cast<int>(dmonth ()),
@@ -614,7 +645,7 @@ date_to_str (unsigned int format, T &result) const  {
                            static_cast<int>(year ()));
         } break;
 
-        case DT_TM:
+        case DT_FORMAT::DT_TM:
         {
             buffer.printf ("%002d/%002d/%d %002d:%002d:%002d",
                            static_cast<int>(month ()),
@@ -625,7 +656,7 @@ date_to_str (unsigned int format, T &result) const  {
                            static_cast<int>(sec ()));
         } break;
 
-        case DT_TM2:
+        case DT_FORMAT::DT_TM2:
         {
             buffer.printf ("%002d/%002d/%d %002d:%002d:%002d.%0003d",
                            static_cast<int>(month ()),
@@ -637,7 +668,7 @@ date_to_str (unsigned int format, T &result) const  {
                            static_cast<int>(msec ()));
         } break;
 
-        case DT_DATETIME:
+        case DT_FORMAT::DT_DATETIME:
         {
             buffer.printf ("%d%002d%002d  %002d:%002d:%002d.%0003d",
                            static_cast<int>(year ()),
@@ -649,7 +680,7 @@ date_to_str (unsigned int format, T &result) const  {
                            static_cast<int>(msec ()));
         } break;
 
-        case SCT_DT:
+        case DT_FORMAT::SCT_DT:
         {
             buffer.printf ("%s %002d, %d",
                            MONTH_BR_ [static_cast<int>(month ()) - 1],
@@ -657,7 +688,7 @@ date_to_str (unsigned int format, T &result) const  {
                            static_cast<int>(year ()));
         } break;
 
-        case DT_MMDDYYYY:
+        case DT_FORMAT::DT_MMDDYYYY:
         {
             buffer.printf ("%002d%002d%d",
                            static_cast<int>(month ()),
@@ -665,7 +696,7 @@ date_to_str (unsigned int format, T &result) const  {
                            static_cast<int>(year ()));
         } break;
 
-        case DT_YYYYMMDD:
+        case DT_FORMAT::DT_YYYYMMDD:
         {
             buffer.printf ("%002d%002d%002d",
                            static_cast<int>(year ()),
@@ -673,7 +704,7 @@ date_to_str (unsigned int format, T &result) const  {
                            static_cast<int>(dmonth ()));
         } break;
 
-        case DT_FAME_DATE:  // e.g. 27Sep2001
+        case DT_FORMAT::DT_FAME_DATE:  // e.g. 27Sep2001
         {
             buffer.printf ("%d%s%d",
                            static_cast<const int>(dmonth ()),
@@ -743,7 +774,7 @@ inline bool operator >= (const DateTime &lhs, const DateTime &rhs) noexcept  {
 template<typename S>
 inline S &operator << (S &o, const DateTime &rhs)  {
 
-    return (o << rhs.string_format (DT_TM2));
+    return (o << rhs.string_format (DT_FORMAT::DT_TM2));
 }
 
 } // namespace hmdf

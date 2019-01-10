@@ -89,17 +89,17 @@ const DateTime::DI_initializer  DateTime::di_init_;
 DateTime::DI_initializer::DI_initializer () throw ()  {
 
 #ifdef _WIN32 // Can not locate GetDynamicTimeZoneInformation() in kernel32.dll
-   // DYNAMIC_TIME_ZONE_INFORMATION    tz_info;
-   // char                             buffer [33];
-   // size_t                           s = 0;
+    // DYNAMIC_TIME_ZONE_INFORMATION    tz_info;
+    // char                             buffer [33];
+    // size_t                           s = 0;
 
-   // GetDynamicTimeZoneInformation (&tz_info);
+    // GetDynamicTimeZoneInformation (&tz_info);
 
-   // wcstombs_s (&s, buffer, 32, tz_info.StandardName, 32);
-   // DateTime::tzname_ = buffer;
+    // wcstombs_s (&s, buffer, 32, tz_info.StandardName, 32);
+    // DateTime::tzname_ = buffer;
 
-   // wcstombs_s (&s, buffer, 32, tz_info.DaylightName, 32);
-   // DateTime::alt_tzname_ = buffer;
+    // wcstombs_s (&s, buffer, 32, tz_info.DaylightName, 32);
+    // DateTime::alt_tzname_ = buffer;
     _tzset ();
 #else
     ::tzset ();
@@ -156,10 +156,10 @@ DateTime::DateTime (TIME_ZONE time_zone) throw () : time_zone_ (time_zone)  {
     ::clock_gettime (CLOCK_REALTIME, &ts);
     set_time (ts.tv_sec, 0);
 
-   // This is a hack. Since the original resolution of DateTime was
-   // milliseconds, set_time() take a millisecond second argument. We have to
-   // convert to nanosecond manually here.
-   //
+    // This is a hack. Since the original resolution of DateTime was
+    // milliseconds, set_time() take a millisecond second argument. We have to
+    // convert to nanosecond manually here.
+    //
     nanosecond_ = ts.tv_nsec;
 #endif // _WIN32
 }
@@ -192,9 +192,9 @@ DateTime::DateTime (DateType d,
       second_ (sc),
       nanosecond_ (ms * 1000000),
 
-     // Refer to the comment in the header file, as why we are assigning
-     // INVALID_TIME_T_ to time_.
-     //
+      // Refer to the comment in the header file, as why we are assigning
+      // INVALID_TIME_T_ to time_.
+      //
       time_ (INVALID_TIME_T_),
       week_day_ (BAD_DAY),
       time_zone_ (tzone)  {
@@ -425,8 +425,8 @@ DateTime::DatePartType DateTime::days_in_month () const throw ()  {
         case NOV:
             return (30);
         case FEB:
-           // This I remember from CML.
-           //
+            // This I remember from CML.
+            //
             if ((year () % 4 == 0 && year () % 100 != 0) || year () % 400 == 0)
                 return (29);
             else
@@ -463,64 +463,77 @@ bool DateTime::is_valid () const throw ()  {
 //
 bool DateTime::is_us_business_day () const throw ()  {
 
-    const DatePartType  m_day = dmonth (); // 1 - 31
-    const DatePartType  mon = month ();    // JAN - DEC
-    const WEEKDAY       w_day = dweek ();  // SUN - SAT
+    const DatePartType  m_day = dmonth ();   // 1 - 31
+    const DatePartType  mon = month ();      // JAN - DEC
+    const WEEKDAY       w_day = dweek ();    // SUN - SAT
+    const DateType      date_part = date();  // e.g. 20190110
 
     return (! (is_weekend () ||
                is_newyear () ||
 
-              // President Harry S. Truman day of mourning (December 28, 1972)
-              //
-               (year () == 1972 && mon == DEC && m_day == 28) ||
+               // V-J Day. End of World War II (August 15-16, 1945)
+               //
+               (date_part == 19450815 || date_part == 19450816) ||
 
-              // President Lyndon B. Johnson day of mourning (January 25, 1973)
-              //
-               (year () == 1973 && mon == JAN && m_day == 25) ||
+               // Assassination of President John F. Kennedy (November 22, 1963)
+               //
+               (date_part == 19631122) ||
 
-              // New York City black out (July 14, 1977)
-              //
-               (year () == 1977 && mon == JUL && m_day == 14) ||
+               // President Harry S. Truman day of mourning (December 28, 1972)
+               //
+               (date_part == 19721228) ||
 
-              // President Richard M. Nixon day of mourning (April 27, 1994)
-              //
-               (year () == 1994 && mon == APR && m_day == 27) ||
+               // President Lyndon B. Johnson day of mourning (January 25, 1973)
+               //
+               (date_part == 19730125) ||
 
-              // World Trade Center attack (September 11-14, 2001)
-              //
+               // New York City black out (July 14, 1977)
+               //
+               (date_part == 19770714) ||
+
+               // President Richard M. Nixon day of mourning (April 27, 1994)
+               //
+               (date_part == 19940427) ||
+
+               // President Ronald Reagan day of mourning (June 11, 2004)
+               //
+               (date_part == 20040611) ||
+
+               // President Gerald R. Ford day of mourning (January 2, 2007)
+               //
+               (date_part == 20070102) ||
+
+               // President George H. W. Bush day of mourning (December 5, 2018)
+               //
+               (date_part == 20181205) ||
+
+               // World Trade Center attack (September 11-14, 2001)
+               //
                (year () == 2001 && mon == SEP && m_day >= 11 && m_day <= 14) ||
 
-              // President Ronald Reagan day of mourning (June 11, 2004)
-              //
-               (year () == 2004 && mon == JUN && m_day == 11) ||
-
-              // President Gerald R. Ford day of mourning (January 2, 2007)
-              //
-               (mon == JAN && m_day == 2 && w_day == TUE && year () == 2007) ||
-
-              // Martin Luther King Day (third Monday of January)
-              //
+               // Martin Luther King Day (third Monday of January)
+               //
                (w_day == MON && (m_day >= 15 && m_day <= 21) && mon == JAN) ||
 
-              // President's Day (third Monday of February)
+               // President's Day (third Monday of February)
               //
                (w_day == MON && (m_day >= 15 && m_day <= 21) && mon == FEB) ||
 
-              // Memorial Day (last Monday of May)
-              //
+               // Memorial Day (last Monday of May)
+               //
                (w_day == MON && m_day >= 25 && mon == MAY) ||
 
-              // Independence Day (July 4 or Monday, July 5 or Friday, July 3)
-              //
+               // Independence Day (July 4 or Monday, July 5 or Friday, July 3)
+               //
                ((m_day == 4 || (w_day == MON && m_day == 5) ||
                 (w_day == FRI && m_day == 3)) && mon == JUL) ||
 
-              // Labor Day (first Monday of September)
-              //
+               // Labor Day (first Monday of September)
+               //
                (w_day == MON && m_day <= 7 && mon == SEP) ||
 
-              // Thanksgiving Day (fourth Thursday of November)
-              //
+               // Thanksgiving Day (fourth Thursday of November)
+               //
                (w_day == THU && (m_day >= 22 && m_day <= 28) && mon == NOV) ||
 
                is_xmas ()));
@@ -539,8 +552,8 @@ bool DateTime::is_us_bank_holiday () const throw ()  {
         const DatePartType  mon = month ();    // JAN - DEC
         const WEEKDAY       w_day = dweek ();  // SUN - SAT
 
-       // Columbus Day (second Monday of October)
-       //
+        // Columbus Day (second Monday of October)
+        //
         if (w_day == MON && m_day >= 8 && m_day <= 14 && mon == OCT)
             return (true);
     }

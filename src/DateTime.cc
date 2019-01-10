@@ -3,8 +3,8 @@
 // Copyright (C) 2018-2019 Hossein Moein
 // Distributed under the BSD Software License (see file License)
 
-#include <time.h>
 #include "../include/DateTime.h"
+#include <sys/time.h>
 
 // ----------------------------------------------------------------------------
 
@@ -136,7 +136,7 @@ DateTime::DateTime (TIME_ZONE time_zone) throw () : time_zone_ (time_zone)  {
 #ifdef _WIN32
     SYSTEMTIME  syst;
 
-    GetLocalTime (&syst);
+    GetLocalTime(&syst);
 
     struct tm   stm;
 
@@ -150,18 +150,24 @@ DateTime::DateTime (TIME_ZONE time_zone) throw () : time_zone_ (time_zone)  {
 
     // set_time (mktime (&stm),
     //           static_cast<MillisecondType>(syst.wMilliseconds));
-    set_time (::time (NULL), 0);
-#else
+    set_time(::time(nullptr), 0);
+#elifdef clock_gettime
     struct timespec ts;
 
-    ::clock_gettime (CLOCK_REALTIME, &ts);
-    set_time (ts.tv_sec, 0);
+    ::clock_gettime(Clock_REALTIME, &ts);
+    set_time(ts.tv_sec, 0);
 
     // This is a hack. Since the original resolution of DateTime was
     // milliseconds, set_time() take a millisecond second argument. We have to
     // convert to nanosecond manually here.
     //
     nanosecond_ = ts.tv_nsec;
+#else
+    struct timeval  tv { };
+
+    ::gettimeofday(&tv, nullptr);
+    set_time(tv.tv_sec, tv.tv_usec);
+    nanosecond_ = 0;
 #endif // _WIN32
 }
 

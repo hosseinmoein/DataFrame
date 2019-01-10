@@ -3,6 +3,7 @@
 // Copyright (C) 2018-2019 Hossein Moein
 // Distributed under the BSD Software License (see file License)
 
+#include <time.h>
 #include "../include/DateTime.h"
 
 // ----------------------------------------------------------------------------

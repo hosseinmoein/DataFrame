@@ -15,8 +15,6 @@
 
 #include <sys/timeb.h>
 
-#include <DMScu_FixedSizeString.h>
-
 // ----------------------------------------------------------------------------
 
 namespace hmdf
@@ -128,24 +126,13 @@ enum class DT_DATE_STYLE : unsigned char  {
 
 class   DateTime  {
 
- private:
-
-    static const char   *TIMEZONES_[];
-
 public:
 
     // NOTE: This method is not multithread-safe. This method
     //       modifies the TZ environment variable which changes the
     //       time zone for the entire program.
     //
-    inline void set_timezone (DT_TIME_ZONE tz)  {
-
-        const EpochType t = time ();
-
-        time_zone_ = tz;
-        breaktime_ (t, msec ());
-        return;
-    }
+    void set_timezone (DT_TIME_ZONE tz);
     inline DT_TIME_ZONE get_timezone () const  { return (time_zone_); }
 
 
@@ -161,7 +148,26 @@ public:
 
 private:
 
+    static const char       *TIMEZONES_[];
     static const EpochType  INVALID_TIME_T_ = -1;
+
+    // This guy initializes anything that needs to be initialized
+    // statically.
+    //
+    class   DI_initializer  { public: DI_initializer () noexcept; };
+
+    static const DI_initializer di_init_;
+
+    friend class    DI_initializer;
+
+    DateType        date_ { };      // e.g. 20001025
+    HourType        hour_ { };
+    MinuteType      minute_ { };
+    SecondType      second_ { };
+    NanosecondType  nanosecond_ { };
+    EpochType       time_ { };      // Seconds since 01/01/1970 (Epoch)
+    DT_WEEKDAY      week_day_ { };
+    DT_TIME_ZONE    time_zone_ { };
 
 public:
 
@@ -187,273 +193,39 @@ public:
 
     int dt_compare(const DateTime &rhs) const;
 
-public:
-
-    inline DateType date () const noexcept  {        // eg. 20020303
-
-        if (date_ == DateType (INVALID_TIME_T_))
-            const_cast<DateTime *>(this)->breaktime_ (time (), msec ());
-
-        return (date_);
-    }
-    inline DatePartType year () const noexcept  {    // eg. 1990
-
-        return (date () / 10000);
-    }
-    inline DT_MONTH month () const noexcept  {          // JAN - DEC
-
-        return (static_cast<DT_MONTH>((date () % 10000) / 100));
-    }
-    inline DatePartType dmonth () const noexcept  {  // 1 - 31
-
-         return (date () % 100);
-    }
-    inline DatePartType dyear () const noexcept  {   // 1 - 366
-
-        struct  tm  ltime;
-
-        // It _always_ makes me sad to use const_cast<>. But then I get
-        // over it.
-        //
-        const_cast<DateTime *>(this)->time_ = maketime_ (ltime);
-
-        return (ltime.tm_yday + 1);
-    }
-    inline DT_WEEKDAY dweek () const noexcept  {   // SUN - SAT
-
-        // It _always_ makes me sad to use const_cast<>. But then I get
-        // over it.
-        //
-        if (week_day_ == DT_WEEKDAY::BAD_DAY)
-            const_cast<DateTime *>(this)->breaktime_ (time (), msec ());
-
-        return (week_day_);
-    }
-    inline HourType hour () const noexcept  {    // 0 - 23
-
-        // It _always_ makes me sad to use const_cast<>. But then I get
-        // over it.
-        //
-        if (hour_ == HourType (INVALID_TIME_T_))
-            const_cast<DateTime *>(this)->breaktime_ (time (), msec ());
-
-        return (hour_);
-    }
-    inline MinuteType minute () const noexcept  {  // 0 - 59
-
-        if (minute_ == MinuteType (INVALID_TIME_T_))
-            const_cast<DateTime *>(this)->breaktime_ (time (), msec ());
-
-        return (minute_);
-    }
-    inline SecondType sec () const noexcept  {     // 0 - 59
-
-        if (second_ == SecondType (INVALID_TIME_T_))
-            const_cast<DateTime *>(this)->breaktime_ (time (), msec ());
-
-        return (second_);
-    }
-    inline MillisecondType msec () const noexcept  {    // 0 - 999
-
-        const   double  slug = double (nanosec ()) / 1000000.0 + 0.5;
-
-        return(static_cast<MillisecondType>(slug < 1000.0 ? slug : 999.0));
-    }
-    inline MicrosecondType microsec () const noexcept  { // 0 - 999,999
-
-        const   double  slug = double (nanosec ()) / 1000.0 + 0.5;
-
-        return (static_cast<MicrosecondType>
-                    (slug < 1000000.0 ? slug : 999999.0));
-    }
-    inline NanosecondType nanosec () const noexcept  {  // 0 - 999,999,999
-
-        return (nanosecond_);
-    }
-
-    // The reason for time_ being INVALID_TIME_T_ is performance. sometimes
-    // time_ has to be calculated by mktime() which is very expensive. In
-    // those cases we assign INVALID_TIME_T_ to time_ and whenever, it
-    // becomes necessary to calculate time_ (i.e. below), we do it only
-    // then.
-    //
-    inline EpochType time () const noexcept  { // Like time()
-
-        if (time_ == EpochType (INVALID_TIME_T_))  {
-            struct tm   ltime;
-
-            // It _always_ makes me sad to use const_cast<>. But then I get
-            // over it.
-            //
-            const_cast<DateTime *>(this)->time_ = maketime_ (ltime);
-        }
-
-        return (time_);
-    }
+    DateType date () const noexcept;            // eg. 20020303
+    DatePartType year () const noexcept;        // eg. 1990
+    DT_MONTH month () const noexcept;           // JAN - DEC
+    DatePartType dmonth () const noexcept;      // 1 - 31
+    DatePartType dyear () const noexcept;       // 1 - 366
+    DT_WEEKDAY dweek () const noexcept;         // SUN - SAT
+    HourType hour () const noexcept;            // 0 - 23
+    MinuteType minute () const noexcept;        // 0 - 59
+    SecondType sec () const noexcept;           // 0 - 59
+    MillisecondType msec () const noexcept;     // 0 - 999
+    MicrosecondType microsec () const noexcept; // 0 - 999,999
+    NanosecondType nanosec () const noexcept;   // 0 - 999,999,999
+    EpochType time () const noexcept;           // Like time()
 
     DatePartType days_in_month () const noexcept;
 
-    inline double diff_seconds (const DateTime &that) const  {
+    double diff_seconds (const DateTime &that) const;
+    double diff_minutes (const DateTime &that) const noexcept;
+    double diff_hours (const DateTime &that) const noexcept;
+    double diff_days (const DateTime &that) const noexcept;
+    double diff_weekdays (const DateTime &that) const noexcept;
+    double diff_weeks (const DateTime &that) const noexcept;
 
-        // Currently I don't have time to implement this. There are
-        // more important things to do. But we should do it at some
-        // point.
-        //
-        if (time_zone_ != that.time_zone_)
-            throw std::runtime_error ("DateTime::diff_seconds(): "
-                                      "Time difference "
-                                      "between different time zones "
-                                      "is not implemented currently.");
+    void add_seconds (EpochType secs) noexcept;
+    void add_days (long days) noexcept;
+    void add_weekdays (long days) noexcept;
 
-        const double    this_time = static_cast<double>(time ()) +
-                                (static_cast<double>(msec ()) / 1000.0);
-        const double    that_time = static_cast<double>(that.time ()) +
-                                (static_cast<double>(that.msec ()) / 1000.0);
-
-        return (this_time - that_time);
-    }
-    inline double diff_minutes (const DateTime &that) const noexcept  {
-
-        return (diff_seconds (that) / 60.0);
-    }
-    inline double diff_hours (const DateTime &that) const noexcept  {
-
-        return (diff_minutes (that) / 60.0);
-    }
-    inline double diff_days (const DateTime &that) const noexcept  {
-
-        return (diff_hours (that) / 24.0);
-    }
-
-    inline double diff_weekdays (const DateTime &that) const noexcept  {
-
-        const int   addend = dt_compare(that) ? -1 : 1;
-        DateTime    slug (that);
-        double      ddays = 0.0;
-
-        while (slug.date () != date ())  {
-            if (! slug.is_weekend ())
-                ddays += static_cast<const double>(addend);
-            slug.add_days (addend);
-        }
-
-        return (ddays + (diff_seconds (slug) /
-                         static_cast<double>(24 * 3600)));
-    }
-    inline double diff_weeks (const DateTime &that) const noexcept  {
-
-        return (diff_days (that) / 7.0);
-    }
-
-    inline void add_seconds (EpochType secs) noexcept  {
-
-        set_time (time () + secs, msec ());
-        return;
-    }
-    inline void add_days (long days) noexcept  {
-
-        if (days != 0)  {
-            const int   addend = days < 0 ? -1 : 1;
-
-            while (days)  {
-                const DateTime  prev_date (*this);
-
-                add_seconds (addend * 24 * 3600);
-
-                // Take care of DST vs EST:
-                // Ask me about why I have while loops
-                //
-                if (addend > 0)  {
-                    if (date () == prev_date.date ())
-                        while (date () == prev_date.date ())
-                            add_seconds (3600);
-                    else if (int(dyear ()) - int(prev_date.dyear ()) > 1)
-                        while (int(dyear ()) - int(prev_date.dyear ()) > 1)
-                            add_seconds (-3600);
-                    else if (hour () < prev_date.hour ())
-                        while (hour () < prev_date.hour ())
-                            add_seconds (3600);
-                    else if (hour () > prev_date.hour ())
-                        while (hour () > prev_date.hour ())
-                            add_seconds (-3600);
-                }
-                else  {
-                    if (date () == prev_date.date ())
-                        while (date () == prev_date.date ())
-                            add_seconds (-3600);
-                    else if (int(dyear ()) - int(prev_date.dyear ()) < -1)
-                        while (int(dyear ()) - int(prev_date.dyear()) < -1)
-                            add_seconds (3600);
-                    else if (hour () < prev_date.hour ())
-                        while (hour () < prev_date.hour ())
-                            add_seconds (3600);
-                    else if (hour () > prev_date.hour ())
-                        while (hour () > prev_date.hour ())
-                            add_seconds (-3600);
-                }
-
-                days -= addend;
-            }
-        }
-
-        return;
-    }
-
-    inline bool is_weekend () const noexcept  {
-
-        const DT_WEEKDAY    w_day = dweek ();
-
-        return (w_day == DT_WEEKDAY::SUN || w_day == DT_WEEKDAY::SAT);
-    }
-
-    inline bool is_newyear () const noexcept  {
-
-        const DatePartType  m_day = dmonth (); // 1 - 31
-        const DT_MONTH      mon = month ();    // JAN - DEC
-        const DT_WEEKDAY    w_day = dweek ();  // SUN - SAT
-
-        // New Year's Day (January 1 or Monday, January 2 or Friday,
-        // December 31)
-        //
-        return (((m_day == 1 || (w_day == DT_WEEKDAY::MON && m_day == 2)) &&
-                 mon == DT_MONTH::JAN) ||
-                (m_day == 31 && w_day == DT_WEEKDAY::FRI &&
-                 mon == DT_MONTH::DEC));
-    }
-
-    inline bool is_xmas () const noexcept  {
-
-        const DatePartType  m_day = dmonth (); // 1 - 31
-        const DT_MONTH      mon = month ();    // JAN - DEC
-        const DT_WEEKDAY    w_day = dweek ();  // SUN - SAT
-
-        // Christmas Day (December 25 or Monday, December 26 or Friday,
-        // December 24)
-        //
-        return ((m_day == 25 || (w_day == DT_WEEKDAY::MON && m_day == 26) ||
-                 (w_day == DT_WEEKDAY::FRI && m_day == 24)) &&
-                mon == DT_MONTH::DEC);
-    }
-
+    bool is_weekend () const noexcept;
+    bool is_newyear () const noexcept;
+    bool is_xmas () const noexcept;
     bool is_us_business_day () const noexcept;
     bool is_us_bank_holiday () const noexcept;
     bool is_valid () const noexcept;
-
-    inline void add_weekdays (long days) noexcept  {
-
-        if (days != 0)  {
-            const int   addend = days < 0 ? -1 : 1;
-
-            while (days)  {
-                add_days (addend);
-                // while (is_weekend () || is_newyear () || is_xmas ())
-                while (is_weekend ())
-                    add_days (addend);
-                days -= addend;
-            }
-        }
-        return;
-    }
 
     DateTime &operator = (DateType rhs);
 
@@ -464,260 +236,28 @@ public:
     DateTime &operator = (const char *rhs);
 
     template<typename T>
-    inline void date_to_str (DT_FORMAT format, T &result) const;
+    void date_to_str (DT_FORMAT format, T &result) const;
+    std::string string_format (DT_FORMAT format) const;
 
-    inline std::string string_format (DT_FORMAT format) const  {
-
-        std::string  result;
-
-        date_to_str (format, result);
-        return (result);
-    }
-
- private:
-
-    // This guy initializes anything that needs to be initialized
-    // statically.
-    //
-    class   DI_initializer  { public: DI_initializer () noexcept; };
-
-    static const DI_initializer di_init_;
-
-    friend class    DI_initializer;
-
-protected:
-
-    DateType        date_ { };      // e.g. 20001025
-    HourType        hour_ { };
-    MinuteType      minute_ { };
-    SecondType      second_ { };
-    NanosecondType  nanosecond_ { };
-    EpochType       time_ { };      // Seconds since 01/01/1970 (Epoch)
-    DT_WEEKDAY      week_day_ { };
-    DT_TIME_ZONE    time_zone_ { };
+private:
 
     // NOTE: This method is not multithread-safe. This method
     //       modifies the TZ environment variable which changes the
     //       time zone for the entire program.
     //
-    inline EpochType maketime_ (struct tm &ltime) const noexcept  {
-
-        ltime.tm_sec = sec ();
-        ltime.tm_isdst = -1;
-        ltime.tm_min = minute ();
-        ltime.tm_hour = hour ();
-        ltime.tm_mday = dmonth ();
-        ltime.tm_mon = static_cast<int>(month()) - 1;
-        ltime.tm_year = year () - 1900;
-
-        if (time_zone_ != DT_TIME_ZONE::LOCAL)  {
-#ifdef _WIN32
-            // SetEnvironmentVariable (L"TZ", TIMEZONES_ [time_zone_]);
-            putenv (TIMEZONES_[static_cast<int>(time_zone_)]);
-            _tzset ();
-#else
-            ::setenv ("TZ", TIMEZONES_[static_cast<int>(time_zone_)], 1);
-            ::tzset ();
-#endif // _WIN32
-        }
-
-        const time_t    t  = ::mktime (&ltime);
-
-        if (time_zone_ != DT_TIME_ZONE::LOCAL)  {
-#ifdef _WIN32
-            // SetEnvironmentVariable (L"TZ", nullptr);
-            putenv ("TZ=");
-            _tzset ();
-#else
-            ::unsetenv ("TZ");
-            ::tzset ();
-#endif // _WIN32
-        }
-
-        return (t);
-    }
+    EpochType maketime_ (struct tm &ltime) const noexcept;
 
     // NOTE: This method is not multithread-safe. This method
     //       modifies the TZ environment variable which changes the
     //       time zone for the entire program.
-    inline void
     //
-    breaktime_ (EpochType the_time, MillisecondType millis) noexcept  {
-
-        if (time_zone_ != DT_TIME_ZONE::LOCAL)  {
-#ifdef _WIN32
-            // SetEnvironmentVariable (L"TZ", TIMEZONES_ [time_zone_]);
-            putenv (TIMEZONES_[static_cast<int>(time_zone_)]);
-            _tzset ();
-#else
-            ::setenv ("TZ", TIMEZONES_[static_cast<int>(time_zone_)], 1);
-            ::tzset ();
-#endif // _WIN32
-        }
-
-        struct tm   ltime;
-
-#ifdef _WIN32
-        localtime_s (&ltime, &the_time);
-#else
-        localtime_r (&the_time, &ltime);
-#endif // _WIN32
-
-        if (time_zone_ != DT_TIME_ZONE::LOCAL)  {
-#ifdef _WIN32
-            // SetEnvironmentVariable (L"TZ", nullptr);
-            putenv ("TZ=");
-            _tzset ();
-#else
-            ::unsetenv ("TZ");
-            ::tzset ();
-#endif // _WIN32
-        }
-
-        date_ = (ltime.tm_year + 1900) * 100;
-
-        date_ += (ltime.tm_mon + 1);
-        date_ *= 100;
-        date_ += ltime.tm_mday;
-
-        hour_ = ltime.tm_hour;
-        minute_ = ltime.tm_min;
-        second_ = ltime.tm_sec;
-        nanosecond_ = millis * 1000000;
-        time_ = the_time;
-        week_day_ = static_cast<DT_WEEKDAY>(ltime.tm_wday + 1);
-
-        return;
-    }
+    void breaktime_ (EpochType the_time, MillisecondType millis) noexcept;
 
     static const char *const    MONTH_[];
     static const char *const    MONTH_BR_[];
     static const char *const    WDAY_[];
     static const char *const    WDAY_BR_[];
 };
-
-// ----------------------------------------------------------------------------
-
-template<typename T>
-inline void DateTime::
-date_to_str (DT_FORMAT format, T &result) const  {
-
-    DMScu_FixedSizeString<63>   buffer;
-
-    switch (format)  {
-        case DT_FORMAT::AMR_DT:
-        {
-            buffer.printf ("%002d/%002d/%002d",
-                           static_cast<int>(month ()),
-                           static_cast<int>(dmonth ()),
-                           static_cast<int>(year ()) % 100);
-        } break;
-
-        case DT_FORMAT::AMR_DT_CTY:
-        {
-            buffer.printf ("%002d/%002d/%d",
-                           static_cast<int>(month ()),
-                           static_cast<int>(dmonth ()),
-                           static_cast<int>(year ()));
-        } break;
-
-        case DT_FORMAT::EUR_DT:
-        {
-            buffer.printf ("%002d/%002d/%002d",
-                           static_cast<int>(dmonth ()),
-                           static_cast<int>(month ()),
-                           static_cast<int>(year ()) % 100);
-        } break;
-
-        case DT_FORMAT::EUR_DT_CTY:
-        {
-            buffer.printf ("%002d/%002d/%d",
-                           static_cast<int>(dmonth ()),
-                           static_cast<int>(month ()),
-                           static_cast<int>(year ()));
-        } break;
-
-        case DT_FORMAT::DT_TM:
-        {
-            buffer.printf ("%002d/%002d/%d %002d:%002d:%002d",
-                           static_cast<int>(month ()),
-                           static_cast<int>(dmonth ()),
-                           static_cast<int>(year ()),
-                           static_cast<int>(hour ()),
-                           static_cast<int>(minute ()),
-                           static_cast<int>(sec ()));
-        } break;
-
-        case DT_FORMAT::DT_TM2:
-        {
-            buffer.printf ("%002d/%002d/%d %002d:%002d:%002d.%0003d",
-                           static_cast<int>(month ()),
-                           static_cast<int>(dmonth ()),
-                           static_cast<int>(year ()),
-                           static_cast<int>(hour ()),
-                           static_cast<int>(minute ()),
-                           static_cast<int>(sec ()),
-                           static_cast<int>(msec ()));
-        } break;
-
-        case DT_FORMAT::DT_DATETIME:
-        {
-            buffer.printf ("%d%002d%002d  %002d:%002d:%002d.%0003d",
-                           static_cast<int>(year ()),
-                           static_cast<int>(month ()),
-                           static_cast<int>(dmonth ()),
-                           static_cast<int>(hour ()),
-                           static_cast<int>(minute ()),
-                           static_cast<int>(sec ()),
-                           static_cast<int>(msec ()));
-        } break;
-
-        case DT_FORMAT::SCT_DT:
-        {
-            buffer.printf ("%s %002d, %d",
-                           MONTH_BR_ [static_cast<int>(month ()) - 1],
-                           static_cast<int>(dmonth ()),
-                           static_cast<int>(year ()));
-        } break;
-
-        case DT_FORMAT::DT_MMDDYYYY:
-        {
-            buffer.printf ("%002d%002d%d",
-                           static_cast<int>(month ()),
-                           static_cast<int>(dmonth ()),
-                           static_cast<int>(year ()));
-        } break;
-
-        case DT_FORMAT::DT_YYYYMMDD:
-        {
-            buffer.printf ("%002d%002d%002d",
-                           static_cast<int>(year ()),
-                           static_cast<int>(month ()),
-                           static_cast<int>(dmonth ()));
-        } break;
-
-        case DT_FORMAT::DT_FAME_DATE:  // e.g. 27Sep2001
-        {
-            buffer.printf ("%d%s%d",
-                           static_cast<const int>(dmonth ()),
-                           MONTH_BR_ [static_cast<int>(month ()) - 1],
-                           static_cast<const int>(year ()));
-        } break;
-
-        default:
-        {
-            DMScu_FixedSizeString<1023>  err;
-
-            err.printf ("ERROR: DateTime::date_to_str(): Unknown format: '%u'",
-                        format);
-
-            throw std::runtime_error (err.c_str ());
-        }
-    }
-
-    result = buffer.c_str ();
-    return;
-}
 
 // ----------------------------------------------------------------------------
 

@@ -8,6 +8,8 @@
 
 #include <DateTime.h>
 
+#include <DMScu_FixedSizeString.h>
+
 using namespace hmdf;
 
 // ----------------------------------------------------------------------------

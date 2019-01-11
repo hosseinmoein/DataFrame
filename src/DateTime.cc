@@ -156,18 +156,12 @@ DateTime::DateTime (DT_TIME_ZONE time_zone) noexcept : time_zone_(time_zone)  {
 
     ::clock_gettime(Clock_REALTIME, &ts);
     set_time(ts.tv_sec, 0);
-
-    // This is a hack. Since the original resolution of DateTime was
-    // milliseconds, set_time() take a millisecond second argument. We have to
-    // convert to nanosecond manually here.
-    //
     nanosecond_ = ts.tv_nsec;
 #else
     struct timeval  tv { };
 
     ::gettimeofday(&tv, nullptr);
     set_time(tv.tv_sec, tv.tv_usec);
-    nanosecond_ = 0;
 #endif // _WIN32
 }
 

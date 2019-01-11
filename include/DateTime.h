@@ -23,8 +23,7 @@ namespace hmdf
 {
 
 // The following constants are for formatting values in
-// DataItem::string_format() which will be implemented in
-// derived classes
+// DateTime::string_format().
 //
 enum class DT_FORMAT : unsigned short int  {
     AMR_DT = 1,        // e.g. 09/16/99
@@ -135,8 +134,7 @@ class   DateTime  {
 
 public:
 
-    // NOTE: This method is not multithread-safe. We have to add a mutex, if
-    //       we plan to use it in a multithreaded environment. This method
+    // NOTE: This method is not multithread-safe. This method
     //       modifies the TZ environment variable which changes the
     //       time zone for the entire program.
     //
@@ -327,11 +325,7 @@ public:
         return (diff_hours (that) / 24.0);
     }
 
-    // Business day means week day. This misleading name is a consequence
-    // of using ObjectSpace. We should change this name and do a global
-    // search and replace.
-    //
-    inline double diff_business_days (const DateTime &that) const noexcept  {
+    inline double diff_weekdays (const DateTime &that) const noexcept  {
 
         const int   addend = dt_compare(that) ? -1 : 1;
         DateTime    slug (that);
@@ -445,7 +439,7 @@ public:
     bool is_us_bank_holiday () const noexcept;
     bool is_valid () const noexcept;
 
-    inline void add_business_days (long days) noexcept  {
+    inline void add_weekdays (long days) noexcept  {
 
         if (days != 0)  {
             const int   addend = days < 0 ? -1 : 1;
@@ -502,8 +496,7 @@ protected:
     DT_WEEKDAY      week_day_ { };
     DT_TIME_ZONE    time_zone_ { };
 
-    // NOTE: This method is not multithread-safe. We have to add a mutex, if
-    //       we plan to use it in a multithreaded environment. This method
+    // NOTE: This method is not multithread-safe. This method
     //       modifies the TZ environment variable which changes the
     //       time zone for the entire program.
     //
@@ -544,8 +537,7 @@ protected:
         return (t);
     }
 
-    // NOTE: This method is not multithread-safe. We have to add a mutex, if
-    //       we plan to use it in a multithreaded environment. This method
+    // NOTE: This method is not multithread-safe. This method
     //       modifies the TZ environment variable which changes the
     //       time zone for the entire program.
     inline void

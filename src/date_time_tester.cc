@@ -64,7 +64,7 @@ int main (int argc, char *argv [])  {
     cout << "\n----- Testing DateTime's add_days()\n" << endl;
 
     {
-        DateTime    now;
+        DateTime    now (20181023, 10, 24, 1, 123456789);;
 
         cout << "Now is: " << now.string_format (DT_FORMAT::DT_TM2) << endl;
         now.add_days (1);
@@ -710,6 +710,16 @@ int main (int argc, char *argv [])  {
                  "02/11/2010 12:31:56.000")  {
              std::cout << "ERROR: "
                        << di5.string_format (DT_FORMAT::DT_TM2) << " != "
+                       << "02/11/2010 12:31:56.000" << std::endl;
+             return (EXIT_FAILURE);
+         }
+
+         DateTime   di6 (20190110, 13, 56, 23, 123456987);
+
+         if (di6.string_format (DT_FORMAT::DT_PRECISE) !=
+                 "1547146583.123456987")  {
+             std::cout << "ERROR: "
+                       << di6.string_format (DT_FORMAT::DT_PRECISE) << " != "
                        << "02/11/2010 12:31:56.000" << std::endl;
              return (EXIT_FAILURE);
          }

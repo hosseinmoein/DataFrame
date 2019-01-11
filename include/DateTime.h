@@ -39,7 +39,8 @@ enum class DT_FORMAT : unsigned short int  {
     VAL_64TH = 13,     // e.g. 105=33
     DT_TM2 = 14,       // e.g. 09/16/1999 13:51:04.256
     DT_DATETIME = 15,  // e.g. 20010103   09:31:15.124
-    DT_FAME_DATE = 16  // e.g. 27Sep2001
+    DT_FAME_DATE = 16, // e.g. 27Sep2001
+    DT_PRECISE = 17    // e.g. Epoch.Nanoseconds
 };
 
 // DO NOT change the values of these enums. They are offsets to an
@@ -136,15 +137,15 @@ public:
     inline DT_TIME_ZONE get_timezone () const  { return (time_zone_); }
 
 
-    using DateType = unsigned int;           // e.g. 20190110
+    using DateType = unsigned int;           // YYYYMMDD
     using DatePartType = unsigned short int; // e.g. year, month etc.
-    using HourType = unsigned short int;     // 1 - 3,600
-    using MinuteType = unsigned short int;   // 1 - 60
-    using SecondType = unsigned short int;   // 1 - 60
-    using MillisecondType = short int;       // 1 - 1,000
-    using MicrosecondType = int;             // 1 - 1,000,000
-    using NanosecondType =  int;             // 1 - 1,000,000,000
-    using EpochType = time_t;
+    using HourType = unsigned short int;     // 0 - 23
+    using MinuteType = unsigned short int;   // 0 - 59
+    using SecondType = unsigned short int;   // 0 - 59
+    using MillisecondType = short int;       // 0 - 999
+    using MicrosecondType = int;             // 0 - 999,999
+    using NanosecondType =  int;             // 0 - 999,999,999
+    using EpochType = time_t;                // Signed epoch
 
 private:
 
@@ -176,7 +177,7 @@ public:
                        HourType hr = 0,
                        MinuteType mn = 0,
                        SecondType sc = 0,
-                       MillisecondType ms = 0,
+                       NanosecondType ns = 0,
                        DT_TIME_ZONE ttype = DT_TIME_ZONE::LOCAL) noexcept;
     DateTime (const DateTime &that) = default;
     DateTime (DateTime &&that) = default;
@@ -187,7 +188,7 @@ public:
                        DT_DATE_STYLE ds = DT_DATE_STYLE::YYYYMMDD,
                        DT_TIME_ZONE tz = DT_TIME_ZONE::LOCAL);
 
-    void set_time (EpochType the_time, MillisecondType millis = 0) noexcept;
+    void set_time (EpochType the_time, NanosecondType nanosec = 0) noexcept;
 
     DateTime &operator = (const DateTime &rhs) = default;
 
@@ -251,7 +252,7 @@ private:
     //       modifies the TZ environment variable which changes the
     //       time zone for the entire program.
     //
-    void breaktime_ (EpochType the_time, MillisecondType millis) noexcept;
+    void breaktime_ (EpochType the_time, NanosecondType nanosec) noexcept;
 
     static const char *const    MONTH_[];
     static const char *const    MONTH_BR_[];

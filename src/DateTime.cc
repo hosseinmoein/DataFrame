@@ -149,26 +149,23 @@ DateTime::DateTime (DT_TIME_ZONE time_zone) noexcept : time_zone_(time_zone)  {
     stm.tm_sec = syst.wSecond;
     stm.tm_isdst = -1;
 
-    // set_time (mktime (&stm),
-    //           static_cast<MillisecondType>(syst.wMilliseconds));
     set_time(::time(nullptr), 0);
 #elifdef clock_gettime
     struct timespec ts;
 
     ::clock_gettime(Clock_REALTIME, &ts);
-    set_time(ts.tv_sec, 0);
-    nanosecond_ = ts.tv_nsec;
+    set_time(ts.tv_sec, ts.tv.nsec);
 #else
     struct timeval  tv { };
 
     ::gettimeofday(&tv, nullptr);
-    set_time(tv.tv_sec, tv.tv_usec);
+    set_time(tv.tv_sec, tv.tv_usec * 1000000);
 #endif // _WIN32
 }
 
 // ----------------------------------------------------------------------------
 
-void DateTime::set_time (EpochType the_time, MillisecondType millis) noexcept {
+void DateTime::set_time (EpochType the_time, NanosecondType nanosec) noexcept {
 
     date_ = DateType (INVALID_TIME_T_);
     hour_ = HourType (INVALID_TIME_T_);
@@ -176,7 +173,7 @@ void DateTime::set_time (EpochType the_time, MillisecondType millis) noexcept {
     second_ = SecondType (INVALID_TIME_T_);
     week_day_ = DT_WEEKDAY::BAD_DAY;
 
-    nanosecond_ = millis * 1000000;
+    nanosecond_ = nanosec;
     time_ = the_time;
 }
 
@@ -186,13 +183,13 @@ DateTime::DateTime (DateType d,
                     HourType hr,
                     MinuteType mn,
                     SecondType sc,
-                    MillisecondType ms,
+                    NanosecondType ns,
                     DT_TIME_ZONE tzone) noexcept
     : date_ (d),
       hour_ (hr),
       minute_ (mn),
       second_ (sc),
-      nanosecond_ (ms * 1000000),
+      nanosecond_ (ns),
 
       // Refer to the comment in the header file, as why we are assigning
       // INVALID_TIME_T_ to time_.
@@ -580,7 +577,7 @@ void DateTime::set_timezone (DT_TIME_ZONE tz)  {
     const EpochType t = time ();
 
     time_zone_ = tz;
-    breaktime_ (t, msec ());
+    breaktime_ (t, nanosec ());
     return;
 }
 
@@ -589,7 +586,7 @@ void DateTime::set_timezone (DT_TIME_ZONE tz)  {
 DateTime::DateType DateTime::date () const noexcept  {
 
     if (date_ == DateType (INVALID_TIME_T_))
-        const_cast<DateTime *>(this)->breaktime_ (time (), msec ());
+        const_cast<DateTime *>(this)->breaktime_ (time (), nanosec ());
 
     return (date_);
 }
@@ -637,7 +634,7 @@ DT_WEEKDAY DateTime::dweek () const noexcept  {
     // over it.
     //
     if (week_day_ == DT_WEEKDAY::BAD_DAY)
-        const_cast<DateTime *>(this)->breaktime_ (time (), msec ());
+        const_cast<DateTime *>(this)->breaktime_ (time (), nanosec ());
 
     return (week_day_);
 }
@@ -650,7 +647,7 @@ DateTime::HourType DateTime::hour () const noexcept  {
     // over it.
     //
     if (hour_ == HourType (INVALID_TIME_T_))
-        const_cast<DateTime *>(this)->breaktime_ (time (), msec ());
+        const_cast<DateTime *>(this)->breaktime_ (time (), nanosec ());
      return (hour_);
 }
 
@@ -659,7 +656,7 @@ DateTime::HourType DateTime::hour () const noexcept  {
 DateTime::MinuteType DateTime::minute () const noexcept  {
 
     if (minute_ == MinuteType (INVALID_TIME_T_))
-        const_cast<DateTime *>(this)->breaktime_ (time (), msec ());
+        const_cast<DateTime *>(this)->breaktime_ (time (), nanosec ());
 
     return (minute_);
 }
@@ -669,7 +666,7 @@ DateTime::MinuteType DateTime::minute () const noexcept  {
 DateTime::SecondType DateTime::sec () const noexcept  {
 
     if (second_ == SecondType (INVALID_TIME_T_))
-        const_cast<DateTime *>(this)->breaktime_ (time (), msec ());
+        const_cast<DateTime *>(this)->breaktime_ (time (), nanosec ());
 
     return (second_);
 }
@@ -792,7 +789,7 @@ double DateTime::diff_weeks (const DateTime &that) const noexcept  {
 
 void DateTime::add_seconds (EpochType secs) noexcept  {
 
-    set_time (time () + secs, msec ());
+    set_time (time () + secs, nanosec ());
     return;
 }
 
@@ -959,7 +956,7 @@ DateTime::EpochType DateTime::maketime_ (struct tm &ltime) const noexcept  {
 // ----------------------------------------------------------------------------
 
 void
-DateTime::breaktime_ (EpochType the_time, MillisecondType millis) noexcept  {
+DateTime::breaktime_ (EpochType the_time, NanosecondType nanosec) noexcept  {
 
     if (time_zone_ != DT_TIME_ZONE::LOCAL)  {
 #ifdef _WIN32
@@ -1000,7 +997,7 @@ DateTime::breaktime_ (EpochType the_time, MillisecondType millis) noexcept  {
     hour_ = ltime.tm_hour;
     minute_ = ltime.tm_min;
     second_ = ltime.tm_sec;
-    nanosecond_ = millis * 1000000;
+    nanosecond_ = nanosec;
     time_ = the_time;
     week_day_ = static_cast<DT_WEEKDAY>(ltime.tm_wday + 1);
 
@@ -1112,6 +1109,11 @@ void DateTime::date_to_str (DT_FORMAT format, T &result) const  {
                            static_cast<const int>(dmonth ()),
                            MONTH_BR_ [static_cast<int>(month ()) - 1],
                            static_cast<const int>(year ()));
+        } break;
+
+        case DT_FORMAT::DT_PRECISE:  // e.g. Epoch.Nanoseconds
+        {
+            buffer.printf ("%ld.%d", time(), nanosec());
         } break;
 
         default:

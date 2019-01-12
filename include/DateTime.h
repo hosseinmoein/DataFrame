@@ -179,18 +179,25 @@ public:
                        SecondType sc = 0,
                        NanosecondType ns = 0,
                        DT_TIME_ZONE ttype = DT_TIME_ZONE::LOCAL) noexcept;
+    explicit DateTime (const char *s,
+                       DT_DATE_STYLE ds = DT_DATE_STYLE::YYYYMMDD,
+                       DT_TIME_ZONE tz = DT_TIME_ZONE::LOCAL);
     DateTime (const DateTime &that) = default;
     DateTime (DateTime &&that) = default;
 
     ~DateTime () = default;
 
-    explicit DateTime (const char *s,
-                       DT_DATE_STYLE ds = DT_DATE_STYLE::YYYYMMDD,
-                       DT_TIME_ZONE tz = DT_TIME_ZONE::LOCAL);
+    DateTime &operator = (const DateTime &rhs) = default;
+    DateTime &operator = (DateTime &&rhs) = default;
+    DateTime &operator = (DateType rhs);
+
+    // Currently, the following formats are supported:
+    //  1)  YYYYMMDD [LOCAL | GMT]
+    //  2)  YYYYMMDD HH:MM:SS.MMM [LOCAL | GMT]
+    //
+    DateTime &operator = (const char *rhs);
 
     void set_time (EpochType the_time, NanosecondType nanosec = 0) noexcept;
-
-    DateTime &operator = (const DateTime &rhs) = default;
 
     int dt_compare(const DateTime &rhs) const;
 
@@ -227,14 +234,6 @@ public:
     bool is_us_business_day () const noexcept;
     bool is_us_bank_holiday () const noexcept;
     bool is_valid () const noexcept;
-
-    DateTime &operator = (DateType rhs);
-
-    // Currently, the following formats are supported:
-    //  1)  YYYYMMDD [LOCAL | GMT]
-    //  2)  YYYYMMDD HH:MM:SS.MMM [LOCAL | GMT]
-    //
-    DateTime &operator = (const char *rhs);
 
     template<typename T>
     void date_to_str (DT_FORMAT format, T &result) const;

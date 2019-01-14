@@ -78,6 +78,12 @@ enum class shift_policy : unsigned char  {
 
 // -------------------------------------
 
+enum class io_format : unsigned char  {
+    csv = 1,
+};
+
+// -------------------------------------
+
 // It represents a range with begin and end within a continuous memory space
 //
 template<typename T>
@@ -509,12 +515,16 @@ public:  // Other public interfaces
     // values_only: If true, the name and type of each column is not written
     //
     template<typename S, typename ... types>
-    bool write (S &o, bool values_only = false) const;
+    bool write (S &o,
+                bool values_only = false,
+                io_format iof = io_format::csv) const;
 
     // Same as write() above, but executed asynchronously
     //
     template<typename S, typename ... Ts>
-    std::future<bool> write_async (S &o, bool values_only = false) const;
+    std::future<bool> write_async (S &o,
+                                   bool values_only = false,
+                                   io_format iof = io_format::csv) const;
 
     // It inputs the contents of a text file into itself (i.e. DataFrame).
     // The format of the file must be:
@@ -525,11 +535,12 @@ public:  // Other public interfaces
     //
     // file_name: Complete path to the file
     //
-    bool read (const char *file_name);
+    bool read (const char *file_name, io_format iof = io_format::csv);
 
     // Same as read() above, but executed asynchronously
     //
-    std::future<bool> read_async (const char *file_name);
+    std::future<bool> read_async (const char *file_name,
+                                  io_format iof = io_format::csv);
 
 public: // Read/access interfaces
 

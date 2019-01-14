@@ -20,7 +20,7 @@ namespace hmdf
 
 #if defined(__linux__) || defined(__unix__) || defined(__APPLE__)
 template<typename TS, typename  HETERO>
-bool DataFrame<TS, HETERO>::read (const char *file_name)  {
+bool DataFrame<TS, HETERO>::read (const char *file_name, io_format iof)  {
 
     static_assert(std::is_base_of<HeteroVector, HETERO>::value,
                   "Only a StdDataFrame can call read()");
@@ -163,7 +163,7 @@ bool DataFrame<TS, HETERO>::read (const char *file_name)  {
 
 #ifdef _WIN32
 template<typename TS, typename  HETERO>
-bool DataFrame<TS, HETERO>::read(const char* file_name)  {
+bool DataFrame<TS, HETERO>::read(const char* file_name, io_format iof)  {
 
     static_assert(std::is_base_of<HeteroVector, HETERO>::value,
                   "Only a StdDataFrame can call read()");
@@ -297,8 +297,14 @@ bool DataFrame<TS, HETERO>::read(const char* file_name)  {
 // ----------------------------------------------------------------------------
 
 template<typename TS, typename  HETERO>
-std::future<bool> DataFrame<TS, HETERO>::read_async(const char *file_name) {
-    return (std::async(std::launch::async, &DataFrame::read, this, file_name));
+std::future<bool> DataFrame<TS, HETERO>::
+read_async(const char *file_name, io_format iof) {
+
+    return (std::async(std::launch::async,
+                       &DataFrame::read,
+                       this,
+                       file_name,
+                       iof));
 }
 
 } // namespace hmdf

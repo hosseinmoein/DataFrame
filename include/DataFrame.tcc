@@ -430,7 +430,8 @@ transpose(TSVec &&indices,
 
 template<typename TS, typename HETERO>
 template<typename S, typename ... types>
-bool DataFrame<TS, HETERO>::write (S &o, bool values_only) const  {
+bool DataFrame<TS, HETERO>::
+write (S &o, bool values_only, io_format iof) const  {
 
     if (! values_only)  o << "INDEX:";
     for (size_type i = 0; i < indices_.size(); ++i)
@@ -452,13 +453,14 @@ bool DataFrame<TS, HETERO>::write (S &o, bool values_only) const  {
 template<typename TS, typename HETERO>
 template<typename S, typename ... Ts>
 std::future<bool> DataFrame<TS, HETERO>::
-write_async (S &o, bool values_only) const  {
+write_async (S &o, bool values_only, io_format iof) const  {
 
     return (std::async(std::launch::async,
                        &DataFrame::write<S, Ts ...>,
-                           this,
-                           std::ref(o),
-                           values_only));
+                       this,
+                       std::ref(o),
+                       values_only,
+                       iof));
 }
 
 } // namespace hmdf

@@ -513,6 +513,7 @@ public:  // Other public interfaces
     //        A type should be specified in the list only once.
     // o: Reference to an streamable object (e.g. cout)
     // values_only: If true, the name and type of each column is not written
+    // iof: Specifies the I/O format. The default is CSV
     //
     template<typename S, typename ... types>
     bool write (S &o,
@@ -534,6 +535,7 @@ public:  // Other public interfaces
     // All empty lines or lines starting with # will be skipped.
     //
     // file_name: Complete path to the file
+    // iof: Specifies the I/O format. The default is CSV
     //
     bool read (const char *file_name, io_format iof = io_format::csv);
 

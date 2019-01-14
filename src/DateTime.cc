@@ -84,11 +84,11 @@ const char  *DateTime::TIMEZONES_[] =
 };
 #endif // _WIN32
 
-const DateTime::DI_initializer  DateTime::di_init_;
+const DateTime::DT_initializer  DateTime::dt_init_;
 
 // ----------------------------------------------------------------------------
 
-DateTime::DI_initializer::DI_initializer() noexcept  {
+DateTime::DT_initializer::DT_initializer() noexcept  {
 
 #ifdef _WIN32 // Can not locate GetDynamicTimeZoneInformation() in kernel32.dll
     // DYNAMIC_TIME_ZONE_INFORMATION    tz_info;

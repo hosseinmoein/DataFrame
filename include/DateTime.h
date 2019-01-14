@@ -136,7 +136,6 @@ public:
     void set_timezone (DT_TIME_ZONE tz);
     inline DT_TIME_ZONE get_timezone () const  { return (time_zone_); }
 
-
     using DateType = unsigned int;           // YYYYMMDD
     using DatePartType = unsigned short int; // e.g. year, month etc.
     using HourType = unsigned short int;     // 0 - 23
@@ -155,11 +154,11 @@ private:
     // This guy initializes anything that needs to be initialized
     // statically.
     //
-    class   DI_initializer  { public: DI_initializer () noexcept; };
+    class   DT_initializer  { public: DT_initializer () noexcept; };
 
-    static const DI_initializer di_init_;
+    static const DT_initializer dt_init_;
 
-    friend class    DI_initializer;
+    friend class    DT_initializer;
 
     DateType        date_ { };      // e.g. 20001025
     HourType        hour_ { };

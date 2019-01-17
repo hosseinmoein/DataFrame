@@ -3,6 +3,7 @@
 // Copyright (C) 2018-2019 Hossein Moein
 // Distributed under the BSD Software License (see file License)
 
+#include "DateTime.h"
 #include "DataFrame.h"
 #include <cstdio>
 
@@ -205,6 +206,8 @@ DataFrame<TS, HETERO>::print_functor_<Ts ...>::operator() (const T &vec)  {
             os << "<string>:";
         else if (typeid(ValueType) == typeid(bool))
             os << "<bool>:";
+        else if (typeid(ValueType) == typeid(DateTime))
+            os << "<DateTime>:";
         else
             os << "<N/A>:";
     }

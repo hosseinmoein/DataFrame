@@ -4,6 +4,7 @@
 // Distributed under the BSD Software License (see file License)
 
 #include "DataFrame.h"
+#include "DateTime.h"
 #include <type_traits>
 #include <limits>
 
@@ -428,15 +429,48 @@ transpose(TSVec &&indices,
 
 // ----------------------------------------------------------------------------
 
+template<typename S, typename T>
+inline static S &_write_df_index_(S &o, const T &value)  {
+
+    return (o << value);
+}
+
+template<typename S>
+inline static S &_write_df_index_(S &o, const DateTime &value)  {
+
+    return (o << value.time() << '.' << value.nanosec());
+}
+
 template<typename TS, typename HETERO>
 template<typename S, typename ... types>
 bool DataFrame<TS, HETERO>::
 write (S &o, bool values_only, io_format iof) const  {
 
-    if (! values_only)  o << "INDEX:";
-    for (size_type i = 0; i < indices_.size(); ++i)
-        o << indices_[i] << ',';
-    o << '\n';
+    if (! values_only)  {
+        o << "INDEX:";
+        if (typeid(TS) == typeid(double))
+            o << "<double>:";
+        else if (typeid(TS) == typeid(int))
+            o << "<int>:";
+        else if (typeid(TS) == typeid(unsigned int))
+            o << "<uint>:";
+        else if (typeid(TS) == typeid(long))
+            o << "<long>:";
+        else if (typeid(TS) == typeid(unsigned long))
+            o << "<ulong>:";
+        else if (typeid(TS) == typeid(std::string))
+            o << "<string>:";
+        else if (typeid(TS) == typeid(bool))
+            o << "<bool>:";
+        else if (typeid(TS) == typeid(DateTime))
+            o << "<DateTime>:";
+        else
+            o << "<N/A>:";
+
+        for (size_type i = 0; i < indices_.size(); ++i)
+            _write_df_index_(o, indices_[i]) << ',';
+        o << '\n';
+    }
 
     for (const auto &iter : data_tb_)  {
         print_functor_<types ...> functor (iter.first.c_str(), values_only, o);

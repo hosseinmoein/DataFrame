@@ -1,7 +1,7 @@
 # Test csv file
 #
 
-INDEX:<ulong>:123432,123433,123434,123435,123436,123441,123442,123448,123449,123450,123450,123450,123450,123450,123451,123451,123452,123452,123452,123453,123454,123455,123455,123456,123457,123458,123459,123460,
+INDEX:<string>:string_index_1,string_index_2,string_index_3,string_index_4,string_index_5,string_index_6,string_index_7,string_index_8,string_index_9,string_index_10,string_index_11,string_index_12,string_index_13,string_index_14,string_index_15,string_index_16,string_index_17,string_index_18,string_index_19,string_index_20,string_index_21,string_index_22,string_index_23,string_index_24,string_index_25,string_index_26,string_index_27,string_index_28,
 ul_col:<ulong>:123450,123451,123452,123450,123455,123450,123449,123448,123451,123452,123452,123450,123455,123450,123454,123453,123456,123457,123458,123459,123460,123441,123442,123432,123433,123434,123435,123436,
 xint_col:<int>:35,36,40,45,46,33,34,8,7,1,4,6,12,14,2,9,3,10,11,20,15,5,13,22,23,24,25,30,
 str_col:<string>:XXXX10,XXXX11,XXXX01,XXXX02,XXXX03,XXXX6,XXXX7,Running fast,$15 increase,4% of something,3.4% of GDP,Market pulls back,Bonds vs. Equities,Here comes the sun,Description 4/5,C++14 development,This is bad,Some explanation,More strings,XXXX04,XXXX1,Market drops,Almost done,XXXX2,XXXX3,XXXX4,XXXX4,XXXX5,

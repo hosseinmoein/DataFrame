@@ -328,19 +328,42 @@ int main(int argc, char *argv[]) {
                   double,
                   std::string>(std::cout, true);
 
-    std::cout << "\nTesting read()\n" << std::endl;
+    {
+        std::cout << "\nTesting read()\n" << std::endl;
 
+        MyDataFrame         df_read;
+        // std::future<bool>   fut2 =
+        //     df_read.read_async("../test/sample_data.csv");
+        std::future<bool>   fut2 = df_read.read_async("sample_data.csv");
 
-    MyDataFrame         df_read;
-    // std::future<bool>   fut2 = df_read.read_async("../test/sample_data.csv");
-    std::future<bool>   fut2 = df_read.read_async("sample_data.csv");
+        fut2.get();
+        df_read.write<std::ostream,
+                      int,
+                      unsigned long,
+                      double,
+                      std::string,
+                      bool>(std::cout);
 
-    fut2.get();
-    df_read.write<std::ostream,
-                  int,
-                  unsigned long,
-                  double,
-                  std::string>(std::cout);
+        StdDataFrame<std::string>   df_read_str;
+
+        df_read_str.read_async("sample_data_string_index.csv");
+        df_read_str.write<std::ostream,
+                          int,
+                          unsigned long,
+                          double,
+                          std::string,
+                          bool>(std::cout);
+
+        StdDataFrame<DateTime>  df_read_dt;
+
+        df_read_dt.read_async("sample_data_dt_index.csv");
+        df_read_dt.write<std::ostream,
+                         int,
+                         unsigned long,
+                         double,
+                         std::string,
+                         bool>(std::cout);
+    }
 
     std::cout << "\nTesting multi_visit()\n" << std::endl;
 

@@ -141,7 +141,7 @@ _col_vector_push_back_<DateTime, std::vector<DateTime>>(
 
         ::sscanf(value, "%ld.%d", &t, &n);
         dt.set_time(t, n);
-        vec.emplace_back(std::move(dt));
+        vec.push_back(dt);
     }
 #elif _WIN32
     char    c = 0;

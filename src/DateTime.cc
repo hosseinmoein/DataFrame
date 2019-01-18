@@ -732,10 +732,12 @@ double DateTime::diff_seconds (const DateTime &that) const  {
                                   "between different time zones "
                                   "is not implemented currently.");
 
-    const double    this_time = static_cast<double>(time ()) +
-                            (static_cast<double>(msec ()) / 1000.0);
-    const double    that_time = static_cast<double>(that.time ()) +
-                            (static_cast<double>(that.msec ()) / 1000.0);
+    const double    this_time =
+        static_cast<double>(time ()) +
+        (static_cast<double>(nanosec ()) / 1000000000.0);
+    const double    that_time =
+        static_cast<double>(that.time ()) +
+        (static_cast<double>(that.nanosec ()) / 1000000000.0);
 
     return (this_time - that_time);
 }

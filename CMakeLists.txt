@@ -190,9 +190,16 @@ add_test(NAME date_time_tester
          WORKING_DIRECTORY $<TARGET_FILE_DIR:date_time_tester>)
 
 message("-- Copying files for testing")
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data.csv DESTINATION ${CMAKE_CURRENT_BINARY_DIR}) # Ctest require this in the build dir, on all platforms
+# Ctest require this files in the build dir, on all platforms
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data.csv DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data_dt_index.csv DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data_string_index.csv DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 if (MSVC)
   file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data.csv DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Debug)
   file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data.csv DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Release)
+  file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data_dt_index.csv DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Debug)
+  file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data_dt_index.csv DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Release)
+  file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/sample_data_string_index.csv.csv DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Debug)
+  file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data_string_index.csv DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Release)
 endif(MSVC)
 message("-- Copying files for testing - done")

@@ -17,6 +17,7 @@ Instances of DataFrame are not multithreaded safe. In other words, instances of 
 
 
 ## [Documentation](docs/DataFrameDoc.pdf)
+[DateTime Documentation](docs/DateTimeDoc.pdf)
 
 ## [DataFrame Test File](src/dataframe_tester.cc)
 [Heterogeneous Vectors Test File](src/vectors_tester.cc)

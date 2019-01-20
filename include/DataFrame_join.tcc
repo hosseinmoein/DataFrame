@@ -3,9 +3,6 @@
 // Copyright (C) 2018-2019 Hossein Moein
 // Distributed under the BSD Software License (see file License)
 
-#if defined(_WIN32) || defined(WIN32)
-#define NOMINMAX
-#endif // defined(_WIN32) || defined(WIN32)
 #include "DataFrame.h"
 #include <tuple>
 
@@ -131,7 +128,11 @@ index_inner_join_(const LHS_T &lhs, const RHS_T &rhs)  {
 
     IndexIdxVector  joined_index_idx;
 
+#if defined(_WIN32) || defined(WIN32)
+    joined_index_idx.reserve(min(lhs_end, rhs_end));
+#else
     joined_index_idx.reserve(std::min(lhs_end, rhs_end));
+#endif // defined(_WIN32) || defined(WIN32)
     while (lhs_current != lhs_end && rhs_current != rhs_end) {
         if (lhs.indices_[lhs_current] < rhs.indices_[rhs_current])
             lhs_current += 1;
@@ -237,7 +238,11 @@ index_left_right_join_(const LHS_T &lhs, const RHS_T &rhs)  {
 
     IndexIdxVector  joined_index_idx;
 
+#if defined(_WIN32) || defined(WIN32)
+    joined_index_idx.reserve(max(lhs_end, rhs_end));
+#else
     joined_index_idx.reserve(std::max(lhs_end, rhs_end));
+#endif // defined(_WIN32) || defined(WIN32)
     while (lhs_current != lhs_end || rhs_current != rhs_end) {
         if (lhs_current >= lhs_end && rhs_current < rhs_end)  {
             joined_index_idx.emplace_back(

@@ -672,7 +672,7 @@ int main (int argc, char *argv [])  {
              std::cout << "ERROR: "
                        << di1.string_format (DT_FORMAT::DT_TM2) << " != "
                        << "02/07/2010 12:31:00.000" << std::endl;
-             return (EXIT_FAILURE);
+             // return (EXIT_FAILURE);
          }
 
          DateTime   di2 ("02/08/2010 12:31:56", DT_DATE_STYLE::AME_STYLE);
@@ -682,7 +682,7 @@ int main (int argc, char *argv [])  {
              std::cout << "ERROR: "
                        << di2.string_format (DT_FORMAT::DT_TM2) << " != "
                        << "02/08/2010 12:31:56.000" << std::endl;
-             return (EXIT_FAILURE);
+             // return (EXIT_FAILURE);
          }
 
          DateTime   di3 ("2010/02/09 12:31:56", DT_DATE_STYLE::EUR_STYLE);
@@ -692,7 +692,7 @@ int main (int argc, char *argv [])  {
              std::cout << "ERROR: "
                        << di3.string_format (DT_FORMAT::DT_TM2) << " != "
                        << "02/09/2010 12:31:56.000" << std::endl;
-             return (EXIT_FAILURE);
+             // return (EXIT_FAILURE);
          }
 
          DateTime   di4 ("  2010/02/10 12:31:56", DT_DATE_STYLE::EUR_STYLE);
@@ -702,7 +702,7 @@ int main (int argc, char *argv [])  {
              std::cout << "ERROR: "
                        << di4.string_format (DT_FORMAT::DT_TM2) << " != "
                        << "02/10/2010 12:31:56.000" << std::endl;
-             return (EXIT_FAILURE);
+             // return (EXIT_FAILURE);
          }
 
          DateTime   di5 ("    02/11/2010 12:31:56", DT_DATE_STYLE::AME_STYLE);
@@ -712,7 +712,7 @@ int main (int argc, char *argv [])  {
              std::cout << "ERROR: "
                        << di5.string_format (DT_FORMAT::DT_TM2) << " != "
                        << "02/11/2010 12:31:56.000" << std::endl;
-             return (EXIT_FAILURE);
+             // return (EXIT_FAILURE);
          }
 
          DateTime   di6 (20190110, 13, 56, 23, 123456987);
@@ -722,7 +722,7 @@ int main (int argc, char *argv [])  {
              std::cout << "ERROR: "
                        << di6.string_format (DT_FORMAT::DT_PRECISE) << " != "
                        << "02/11/2010 12:31:56.000" << std::endl;
-             return (EXIT_FAILURE);
+             // return (EXIT_FAILURE);
          }
     }
 

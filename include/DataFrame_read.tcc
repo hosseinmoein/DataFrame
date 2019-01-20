@@ -47,7 +47,7 @@ _col_vector_push_back_(V &vec,
 #if defined(__linux__) || defined(__unix__) || defined(__APPLE__)
                        DMScu_MMapFile &file,
 #elif _WIN32
-                       std::ifstream &file
+                       std::ifstream &file,
 #endif // defined(__linux__) || defined(__unix__) || defined(__APPLE__)
                        T (*converter)(const char *))  {
 
@@ -83,7 +83,7 @@ _col_vector_push_back_<const char *, std::vector<std::string>>(
 #if defined(__linux__) || defined(__unix__) || defined(__APPLE__)
     DMScu_MMapFile &file,
 #elif _WIN32
-    std::ifstream &file
+    std::ifstream &file,
 #endif // defined(__linux__) || defined(__unix__) || defined(__APPLE__)
     const char * (*converter)(const char *))  {
 
@@ -120,7 +120,7 @@ _col_vector_push_back_<DateTime, std::vector<DateTime>>(
 #if defined(__linux__) || defined(__unix__) || defined(__APPLE__)
     DMScu_MMapFile &file,
 #elif _WIN32
-    std::ifstream &file
+    std::ifstream &file,
 #endif // defined(__linux__) || defined(__unix__) || defined(__APPLE__)
     DateTime (*converter)(const char *))  {
 

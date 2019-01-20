@@ -3,6 +3,9 @@
 // Copyright (C) 2018-2019 Hossein Moein
 // Distributed under the BSD Software License (see file License)
 
+#if defined(_WIN32) || defined(WIN32)
+#define NOMINMAX
+#endif // defined(_WIN32) || defined(WIN32)
 #include "DataFrame.h"
 #include <tuple>
 

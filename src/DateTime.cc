@@ -157,7 +157,7 @@ DateTime::DateTime (DT_TIME_ZONE time_zone) noexcept : time_zone_(time_zone)  {
     stm.tm_isdst = -1;
 
     set_time(::time(nullptr), 0);
-#elifdef clock_gettime
+#elif defined clock_gettime
     struct timespec ts;
 
     ::clock_gettime(Clock_REALTIME, &ts);

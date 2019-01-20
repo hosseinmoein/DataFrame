@@ -167,7 +167,13 @@ _col_vector_push_back_<DateTime, std::vector<DateTime>>(
 template<typename T>
 struct  _IdxParserFunctor_  {
 
-    void operator()(std::vector<T> &, DMScu_MMapFile &)  {  }
+    void operator()(std::vector<T> &,
+#if defined(__linux__) || defined(__unix__) || defined(__APPLE__)
+                    DMScu_MMapFile &file
+#elif _WIN32
+                    std::ifstream &file
+#endif // defined(__linux__) || defined(__unix__) || defined(__APPLE__)
+                   )  {  }
 };
 
 // -------------------------------------
@@ -175,7 +181,13 @@ struct  _IdxParserFunctor_  {
 template<>
 struct  _IdxParserFunctor_<double>  {
 
-    inline void operator()(std::vector<double> &vec, DMScu_MMapFile &file)  {
+    inline void operator()(std::vector<double> &vec,
+#if defined(__linux__) || defined(__unix__) || defined(__APPLE__)
+                    DMScu_MMapFile &file
+#elif _WIN32
+                    std::ifstream &file
+#endif // defined(__linux__) || defined(__unix__) || defined(__APPLE__)
+                   )  {
 
         _col_vector_push_back_(vec, file, &::atof);
     }
@@ -186,7 +198,13 @@ struct  _IdxParserFunctor_<double>  {
 template<>
 struct  _IdxParserFunctor_<int>  {
 
-    inline void operator()(std::vector<int> &vec, DMScu_MMapFile &file)  {
+    inline void operator()(std::vector<int> &vec,
+#if defined(__linux__) || defined(__unix__) || defined(__APPLE__)
+                    DMScu_MMapFile &file
+#elif _WIN32
+                    std::ifstream &file
+#endif // defined(__linux__) || defined(__unix__) || defined(__APPLE__)
+                   )  {
 
         _col_vector_push_back_(vec, file, &::atoi);
     }
@@ -197,7 +215,13 @@ struct  _IdxParserFunctor_<int>  {
 template<>
 struct  _IdxParserFunctor_<long>  {
 
-    inline void operator()(std::vector<long> &vec, DMScu_MMapFile &file)  {
+    inline void operator()(std::vector<long> &vec,
+#if defined(__linux__) || defined(__unix__) || defined(__APPLE__)
+                    DMScu_MMapFile &file
+#elif _WIN32
+                    std::ifstream &file
+#endif // defined(__linux__) || defined(__unix__) || defined(__APPLE__)
+                   )  {
 
         _col_vector_push_back_(vec, file, &::atol);
     }
@@ -209,7 +233,13 @@ template<>
 struct  _IdxParserFunctor_<unsigned long>  {
 
     inline void
-    operator()(std::vector<unsigned long> &vec, DMScu_MMapFile &file)  {
+    operator()(std::vector<unsigned long> &vec,
+#if defined(__linux__) || defined(__unix__) || defined(__APPLE__)
+                    DMScu_MMapFile &file
+#elif _WIN32
+                    std::ifstream &file
+#endif // defined(__linux__) || defined(__unix__) || defined(__APPLE__)
+                   )  {
 
         _col_vector_push_back_(vec, file, &::atoll);
     }
@@ -221,7 +251,13 @@ template<>
 struct  _IdxParserFunctor_<std::string>  {
 
     inline void
-    operator()(std::vector<std::string> &vec, DMScu_MMapFile &file)  {
+    operator()(std::vector<std::string> &vec,
+#if defined(__linux__) || defined(__unix__) || defined(__APPLE__)
+                    DMScu_MMapFile &file
+#elif _WIN32
+                    std::ifstream &file
+#endif // defined(__linux__) || defined(__unix__) || defined(__APPLE__)
+                   )  {
 
         auto    converter =
             [](const char *s)-> const char * { return s; };
@@ -237,7 +273,13 @@ template<>
 struct  _IdxParserFunctor_<DateTime>  {
 
     inline void
-    operator()(std::vector<DateTime> &vec, DMScu_MMapFile &file)  {
+    operator()(std::vector<DateTime> &vec,
+#if defined(__linux__) || defined(__unix__) || defined(__APPLE__)
+                    DMScu_MMapFile &file
+#elif _WIN32
+                    std::ifstream &file
+#endif // defined(__linux__) || defined(__unix__) || defined(__APPLE__)
+                   ) {
 
         auto    converter =
             [](const char *)-> DateTime  { return DateTime(); };
@@ -252,7 +294,13 @@ struct  _IdxParserFunctor_<DateTime>  {
 template<>
 struct  _IdxParserFunctor_<bool>  {
 
-    inline void operator()(std::vector<bool> &vec, DMScu_MMapFile &file)  {
+    inline void operator()(std::vector<bool> &vec,
+#if defined(__linux__) || defined(__unix__) || defined(__APPLE__)
+                    DMScu_MMapFile &file
+#elif _WIN32
+                    std::ifstream &file
+#endif // defined(__linux__) || defined(__unix__) || defined(__APPLE__)
+                   )  {
 
         _col_vector_push_back_(vec, file, &::atoi);
     }

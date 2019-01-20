@@ -8,12 +8,8 @@
 #ifdef _WIN32
 #include <sys/timeb.h>
 #include <sys/types.h>
-#include <winsock2.h>
  
 int gettimeofday(struct timeval* t, void* timezone);
-
-#define __need_clock_t
-#include <time.h>
 #else
 #include <sys/time.h>
 #endif // _WIN32

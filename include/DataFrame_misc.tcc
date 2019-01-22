@@ -196,7 +196,7 @@ DataFrame<TS, HETERO>::print_functor_<Ts ...>::operator() (const T &vec)  {
     using ValueType = typename VecType::value_type;
 
     if (! values_only)  {
-        os << name << ':';
+        os << name << ':' << vec.size() << ':';
         if (typeid(ValueType) == typeid(double))
             os << "<double>:";
         else if (typeid(ValueType) == typeid(int))

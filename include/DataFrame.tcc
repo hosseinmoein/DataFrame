@@ -447,7 +447,7 @@ bool DataFrame<TS, HETERO>::
 write (S &o, bool values_only, io_format iof) const  {
 
     if (! values_only)  {
-        o << "INDEX:";
+        o << "INDEX:" << indices_.size() << ':';
         if (typeid(TS) == typeid(double))
             o << "<double>:";
         else if (typeid(TS) == typeid(int))

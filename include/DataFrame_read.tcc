@@ -209,7 +209,7 @@ bool DataFrame<TS, HETERO>::read (const char *file_name, io_format iof)  {
     file.open(file_name, std::ios::in);  // Open for reading
 
     char    col_name[256];
-    char    value[1024];
+    char    value[32];
     char    type_str[64];
     char    c;
 
@@ -224,6 +224,7 @@ bool DataFrame<TS, HETERO>::read (const char *file_name, io_format iof)  {
         file.unget();
 
         _get_token_from_file_(file, ':', col_name);
+        _get_token_from_file_(file, ':', value); // Get the size
         file.get(c);
         if (c != '<')
             throw DataFrameError("DataFrame::read(): ERROR: Expected "
@@ -237,6 +238,7 @@ bool DataFrame<TS, HETERO>::read (const char *file_name, io_format iof)  {
         if (! ::strcmp(col_name, "INDEX"))  {
             TSVec   vec;
 
+            vec.reserve(::atoi(value));
             _IdxParserFunctor_<typename TSVec::value_type>()(vec, file);
             load_index(std::forward<TSVec &&>(vec));
         }
@@ -244,6 +246,7 @@ bool DataFrame<TS, HETERO>::read (const char *file_name, io_format iof)  {
             if (! ::strcmp(type_str, "double"))  {
                 std::vector<double> &vec = create_column<double>(col_name);
 
+                vec.reserve(::atoi(value));
                 _col_vector_push_back_(vec, file, ::atof);
             }
             else if (! ::strcmp(type_str, "int"))  {
@@ -255,17 +258,20 @@ bool DataFrame<TS, HETERO>::read (const char *file_name, io_format iof)  {
                 std::vector<unsigned int>   &vec =
                     create_column<unsigned int>(col_name);
 
+                vec.reserve(::atoi(value));
                 _col_vector_push_back_(vec, file, &::atol);
             }
             else if (! ::strcmp(type_str, "long"))  {
                 std::vector<long>   &vec = create_column<long>(col_name);
 
+                vec.reserve(::atoi(value));
                 _col_vector_push_back_(vec, file, &::atol);
             }
             else if (! ::strcmp(type_str, "ulong"))  {
                 std::vector<unsigned long>  &vec =
                     create_column<unsigned long>(col_name);
 
+                vec.reserve(::atoi(value));
                 _col_vector_push_back_(vec, file, &::atoll);
             }
             else if (! ::strcmp(type_str, "string"))  {
@@ -274,6 +280,7 @@ bool DataFrame<TS, HETERO>::read (const char *file_name, io_format iof)  {
                 auto                        converter =
                     [](const char *s)-> const char * { return s; };
 
+                vec.reserve(::atoi(value));
                 _col_vector_push_back_<const char *, std::vector<std::string>>
                     (vec, file, converter);
             }
@@ -283,12 +290,14 @@ bool DataFrame<TS, HETERO>::read (const char *file_name, io_format iof)  {
                 auto                    converter =
                     [](const char *)-> DateTime { return DateTime(); };
 
+                vec.reserve(::atoi(value));
                 _col_vector_push_back_<DateTime, std::vector<DateTime>>
                     (vec, file, converter);
             }
             else if (! ::strcmp(type_str, "bool"))  {
                 std::vector<bool>   &vec = create_column<bool>(col_name);
 
+                vec.reserve(::atoi(value));
                 _col_vector_push_back_(vec, file, &::atoi);
             }
             else

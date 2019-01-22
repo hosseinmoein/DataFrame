@@ -9,7 +9,7 @@
 
 #include <DateTime.h>
 
-#include <DMScu_FixedSizeString.h>
+#include <FixedSizeString.h>
 
 using namespace hmdf;
 
@@ -19,7 +19,7 @@ int main (int argc, char *argv [])  {
 
     using namespace std;
 
-    DMScu_FixedSizeString<1023> tstr;
+    String1K   tstr;
 
     DateTime    now;
     DateTime    gmnow (DT_TIME_ZONE::GMT);
@@ -665,63 +665,64 @@ int main (int argc, char *argv [])  {
     cout << "\n----- Testing DateTime's const char * constructor\n" << endl;
 
     {
-         DateTime   di1 ("20100207 12:31");
+         const DateTime di1 ("20100207 12:31");
 
          if (di1.string_format (DT_FORMAT::DT_TM2) !=
                  "02/07/2010 12:31:00.000")  {
              std::cout << "ERROR: "
                        << di1.string_format (DT_FORMAT::DT_TM2) << " != "
                        << "02/07/2010 12:31:00.000" << std::endl;
-             // return (EXIT_FAILURE);
+             return (EXIT_FAILURE);
          }
 
-         DateTime   di2 ("02/08/2010 12:31:56", DT_DATE_STYLE::AME_STYLE);
+         const DateTime di2 ("02/08/2010 12:31:56", DT_DATE_STYLE::AME_STYLE);
 
          if (di2.string_format (DT_FORMAT::DT_TM2) !=
                  "02/08/2010 12:31:56.000")  {
              std::cout << "ERROR: "
                        << di2.string_format (DT_FORMAT::DT_TM2) << " != "
                        << "02/08/2010 12:31:56.000" << std::endl;
-             // return (EXIT_FAILURE);
+             return (EXIT_FAILURE);
          }
 
-         DateTime   di3 ("2010/02/09 12:31:56", DT_DATE_STYLE::EUR_STYLE);
+         const DateTime di3 ("2010/02/09 12:31:56", DT_DATE_STYLE::EUR_STYLE);
 
          if (di3.string_format (DT_FORMAT::DT_TM2) !=
                  "02/09/2010 12:31:56.000")  {
              std::cout << "ERROR: "
                        << di3.string_format (DT_FORMAT::DT_TM2) << " != "
                        << "02/09/2010 12:31:56.000" << std::endl;
-             // return (EXIT_FAILURE);
+             return (EXIT_FAILURE);
          }
 
-         DateTime   di4 ("  2010/02/10 12:31:56", DT_DATE_STYLE::EUR_STYLE);
+         const DateTime di4 ("  2010/02/10 12:31:56", DT_DATE_STYLE::EUR_STYLE);
 
          if (di4.string_format (DT_FORMAT::DT_TM2) !=
                  "02/10/2010 12:31:56.000")  {
              std::cout << "ERROR: "
                        << di4.string_format (DT_FORMAT::DT_TM2) << " != "
                        << "02/10/2010 12:31:56.000" << std::endl;
-             // return (EXIT_FAILURE);
+             return (EXIT_FAILURE);
          }
 
-         DateTime   di5 ("    02/11/2010 12:31:56", DT_DATE_STYLE::AME_STYLE);
+         const DateTime di5 ("    02/11/2010 12:31:56",
+                             DT_DATE_STYLE::AME_STYLE);
 
          if (di5.string_format (DT_FORMAT::DT_TM2) !=
                  "02/11/2010 12:31:56.000")  {
              std::cout << "ERROR: "
                        << di5.string_format (DT_FORMAT::DT_TM2) << " != "
                        << "02/11/2010 12:31:56.000" << std::endl;
-             // return (EXIT_FAILURE);
+             return (EXIT_FAILURE);
          }
 
-         DateTime   di6 (20190110, 13, 56, 23, 123456987);
+         const DateTime di6 (20190110, 13, 56, 23, 123456987);
 
          if (di6.string_format (DT_FORMAT::DT_PRECISE) !=
                  "1547146583.123456987")  {
              std::cout << "ERROR: "
                        << di6.string_format (DT_FORMAT::DT_PRECISE) << " != "
-                       << "02/11/2010 12:31:56.000" << std::endl;
+                       << "1547146583.123456987" << std::endl;
              // return (EXIT_FAILURE);
          }
     }

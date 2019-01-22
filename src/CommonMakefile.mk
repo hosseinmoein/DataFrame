@@ -35,7 +35,8 @@ HEADERS = $(LOCAL_INCLUDE_DIR)/HeteroVector.h \
           $(LOCAL_INCLUDE_DIR)/DataFrameVisitors.h \
           $(LOCAL_INCLUDE_DIR)/VectorView.h \
           $(LOCAL_INCLUDE_DIR)/ThreadGranularity.h \
-          $(LOCAL_INCLUDE_DIR)/DateTime.h
+          $(LOCAL_INCLUDE_DIR)/DateTime.h \
+          $(LOCAL_INCLUDE_DIR)/FixedSizeString.h
 
 LIB_NAME = DataSci
 TARGET_LIB = $(LOCAL_LIB_DIR)/lib$(LIB_NAME).a
@@ -47,7 +48,7 @@ TARGETS += $(TARGET_LIB) $(LOCAL_BIN_DIR)/dataframe_tester \
 
 LFLAGS += -Bstatic -L$(LOCAL_LIB_DIR) -L$(PROJECT_LIB_DIR)
 
-LIBS = $(LFLAGS) -l$(LIB_NAME) -lDMScu $(PLATFORM_LIBS)
+LIBS = $(LFLAGS) -l$(LIB_NAME) $(PLATFORM_LIBS)
 INCLUDES += -I. -I$(LOCAL_INCLUDE_DIR) -I$(PROJECT_INCLUDE_DIR)
 DEFINES = -D_REENTRANT -DDMS_INCLUDE_SOURCE \
           -DP_THREADS -D_POSIX_PTHREAD_SEMANTICS -DDMS_$(BUILD_DEFINE)__

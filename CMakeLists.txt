@@ -55,11 +55,6 @@ if(NOT CMAKE_CONFIGURATION_TYPES)
     endif()
 endif()
 
-# Build the DMScu module first
-if(UNIX)
-  add_subdirectory(DMScu) # Build DMscu module first
-endif (UNIX)
-
 set(LIBRARY_TARGET_NAME ${PROJECT_NAME})
 
 # List of source files.
@@ -90,13 +85,13 @@ set(${LIBRARY_TARGET_NAME}_HDR
   include/DataFrame_functors.h
   include/ThreadGranularity.h
   include/DateTime.h
+  include/FixedSizeString.h
 )
 
 # Build the library
 add_definitions(-D DMS_INCLUDE_SOURCE) # Need this for some of the .tcc files to be compiled
 if (UNIX)
   add_library(${LIBRARY_TARGET_NAME} SHARED ${${LIBRARY_TARGET_NAME}_SRC})
-  target_link_libraries(${LIBRARY_TARGET_NAME} DMScu) # Link DMscu to Dataframe
 endif(UNIX)
 
 if (MSVC)
@@ -114,7 +109,6 @@ set_target_properties(${LIBRARY_TARGET_NAME} PROPERTIES VERSION       ${${PROJEC
 # The $<INSTALL_PREFIX> generator expression is useful to ensure to create
 # relocatable configuration files, see https://cmake.org/cmake/help/latest/manual/cmake-packages.7.html#creating-relocatable-packages
 target_include_directories(${LIBRARY_TARGET_NAME} PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-                                                         "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/DMScu/include>"
 							 "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_INCLUDEDIR}>")
 
 # Specify installation targets, typology and destination folders.
@@ -143,7 +137,6 @@ include(InstallBasicPackageFiles)
 if (UNIX)
   install_basic_package_files(${PROJECT_NAME}
                             VERSION ${${PROJECT_NAME}_VERSION}
-                            DEPENDENCIES "DMScu REQUIRED"
                             COMPATIBILITY AnyNewerVersion
                             EXPORT ${PROJECT_NAME}
                             VARS_PREFIX ${PROJECT_NAME}

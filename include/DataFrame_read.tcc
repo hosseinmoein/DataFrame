@@ -5,9 +5,6 @@
 
 #include "DateTime.h"
 #include "DataFrame.h"
-#if defined(__linux__) || defined(__unix__) || defined(__APPLE__)
-#include "DMScu_MMapFile.h"
-#endif // defined(__linux__) || defined(__unix__) || defined(__APPLE__)
 #include <cstdlib>
 #include <fstream>
 #include <functional>
@@ -22,7 +19,6 @@ namespace hmdf
 
 // ----------------------------------------------------------------------------
 
-#ifdef _WIN32
 inline static void
 _get_token_from_file_  (std::ifstream &file, char delim, char *value) {
 
@@ -37,32 +33,16 @@ _get_token_from_file_  (std::ifstream &file, char delim, char *value) {
 
     value[count] = 0;
 }
-#endif // _WIN32
 	
 // ----------------------------------------------------------------------------
 
 template<typename T, typename V>
 inline static void
 _col_vector_push_back_(V &vec,
-#if defined(__linux__) || defined(__unix__) || defined(__APPLE__)
-                       DMScu_MMapFile &file,
-#elif _WIN32
                        std::ifstream &file,
-#endif // defined(__linux__) || defined(__unix__) || defined(__APPLE__)
                        T (*converter)(const char *))  {
 
     char    value[1024];
-
-#if defined(__linux__) || defined(__unix__) || defined(__APPLE__)
-    while (! file.is_eof ())  {
-        char    c = static_cast<char>(file.get_char());
-
-        if (gcc_unlikely(c == '\n'))  break;
-        file.put_back();
-        file.get_token(',', value);
-        vec.push_back(converter(value));
-    }
-#elif _WIN32
     char    c = 0;
 
     while (file.get(c)) {
@@ -71,7 +51,6 @@ _col_vector_push_back_(V &vec,
         _get_token_from_file_(file, ',', value);
         vec.push_back(converter(value));
     }
-#endif // defined(__linux__) || defined(__unix__) || defined(__APPLE__)
 }
 
 // -------------------------------------
@@ -80,26 +59,10 @@ template<>
 inline void
 _col_vector_push_back_<const char *, std::vector<std::string>>(
     std::vector<std::string> &vec,
-#if defined(__linux__) || defined(__unix__) || defined(__APPLE__)
-    DMScu_MMapFile &file,
-#elif _WIN32
     std::ifstream &file,
-#endif // defined(__linux__) || defined(__unix__) || defined(__APPLE__)
     const char * (*converter)(const char *))  {
 
     char    value[1024];
-
-#if defined(__linux__) || defined(__unix__) || defined(__APPLE__)
-    while (! file.is_eof ())  {
-        char    c = static_cast<char>(file.get_char());
-
-        if (gcc_unlikely(c == '\n'))
-            break;
-        file.put_back();
-        file.get_token(',', value);
-        vec.push_back(value);
-    }
-#elif _WIN32
     char    c = 0;
 
     while (file.get(c)) {
@@ -108,7 +71,6 @@ _col_vector_push_back_<const char *, std::vector<std::string>>(
         _get_token_from_file_(file, ',', value);
         vec.push_back(value);
     }
-#endif // defined(__linux__) || defined(__unix__) || defined(__APPLE__)
 }
 
 // -------------------------------------
@@ -117,33 +79,10 @@ template<>
 inline void
 _col_vector_push_back_<DateTime, std::vector<DateTime>>(
     std::vector<DateTime> &vec,
-#if defined(__linux__) || defined(__unix__) || defined(__APPLE__)
-    DMScu_MMapFile &file,
-#elif _WIN32
     std::ifstream &file,
-#endif // defined(__linux__) || defined(__unix__) || defined(__APPLE__)
     DateTime (*converter)(const char *))  {
 
     char    value[1024];
-
-#if defined(__linux__) || defined(__unix__) || defined(__APPLE__)
-    while (! file.is_eof ())  {
-        char    c = static_cast<char>(file.get_char());
-
-        if (gcc_unlikely(c == '\n'))
-            break;
-        file.put_back();
-        file.get_token(',', value);
-
-        time_t      t;
-        int         n;
-        DateTime    dt;
-
-        ::sscanf(value, "%ld.%d", &t, &n);
-        dt.set_time(t, n);
-        vec.push_back(dt);
-    }
-#elif _WIN32
     char    c = 0;
 
     while (file.get(c)) {
@@ -159,7 +98,6 @@ _col_vector_push_back_<DateTime, std::vector<DateTime>>(
         dt.set_time(t, n);
         vec.emplace_back(std::move(dt));
     }
-#endif // defined(__linux__) || defined(__unix__) || defined(__APPLE__)
 }
 
 // ----------------------------------------------------------------------------
@@ -167,13 +105,7 @@ _col_vector_push_back_<DateTime, std::vector<DateTime>>(
 template<typename T>
 struct  _IdxParserFunctor_  {
 
-    void operator()(std::vector<T> &,
-#if defined(__linux__) || defined(__unix__) || defined(__APPLE__)
-                    DMScu_MMapFile &file
-#elif _WIN32
-                    std::ifstream &file
-#endif // defined(__linux__) || defined(__unix__) || defined(__APPLE__)
-                   )  {  }
+    void operator()(std::vector<T> &, std::ifstream &file)  {  }
 };
 
 // -------------------------------------
@@ -181,13 +113,7 @@ struct  _IdxParserFunctor_  {
 template<>
 struct  _IdxParserFunctor_<double>  {
 
-    inline void operator()(std::vector<double> &vec,
-#if defined(__linux__) || defined(__unix__) || defined(__APPLE__)
-                    DMScu_MMapFile &file
-#elif _WIN32
-                    std::ifstream &file
-#endif // defined(__linux__) || defined(__unix__) || defined(__APPLE__)
-                   )  {
+    inline void operator()(std::vector<double> &vec, std::ifstream &file)  {
 
         _col_vector_push_back_(vec, file, &::atof);
     }
@@ -198,13 +124,7 @@ struct  _IdxParserFunctor_<double>  {
 template<>
 struct  _IdxParserFunctor_<int>  {
 
-    inline void operator()(std::vector<int> &vec,
-#if defined(__linux__) || defined(__unix__) || defined(__APPLE__)
-                    DMScu_MMapFile &file
-#elif _WIN32
-                    std::ifstream &file
-#endif // defined(__linux__) || defined(__unix__) || defined(__APPLE__)
-                   )  {
+    inline void operator()(std::vector<int> &vec, std::ifstream &file)  {
 
         _col_vector_push_back_(vec, file, &::atoi);
     }
@@ -215,13 +135,7 @@ struct  _IdxParserFunctor_<int>  {
 template<>
 struct  _IdxParserFunctor_<long>  {
 
-    inline void operator()(std::vector<long> &vec,
-#if defined(__linux__) || defined(__unix__) || defined(__APPLE__)
-                    DMScu_MMapFile &file
-#elif _WIN32
-                    std::ifstream &file
-#endif // defined(__linux__) || defined(__unix__) || defined(__APPLE__)
-                   )  {
+    inline void operator()(std::vector<long> &vec, std::ifstream &file)  {
 
         _col_vector_push_back_(vec, file, &::atol);
     }
@@ -233,13 +147,7 @@ template<>
 struct  _IdxParserFunctor_<unsigned long>  {
 
     inline void
-    operator()(std::vector<unsigned long> &vec,
-#if defined(__linux__) || defined(__unix__) || defined(__APPLE__)
-                    DMScu_MMapFile &file
-#elif _WIN32
-                    std::ifstream &file
-#endif // defined(__linux__) || defined(__unix__) || defined(__APPLE__)
-                   )  {
+    operator()(std::vector<unsigned long> &vec, std::ifstream &file)  {
 
         _col_vector_push_back_(vec, file, &::atoll);
     }
@@ -251,13 +159,7 @@ template<>
 struct  _IdxParserFunctor_<std::string>  {
 
     inline void
-    operator()(std::vector<std::string> &vec,
-#if defined(__linux__) || defined(__unix__) || defined(__APPLE__)
-                    DMScu_MMapFile &file
-#elif _WIN32
-                    std::ifstream &file
-#endif // defined(__linux__) || defined(__unix__) || defined(__APPLE__)
-                   )  {
+    operator()(std::vector<std::string> &vec, std::ifstream &file)  {
 
         auto    converter =
             [](const char *s)-> const char * { return s; };
@@ -273,13 +175,7 @@ template<>
 struct  _IdxParserFunctor_<DateTime>  {
 
     inline void
-    operator()(std::vector<DateTime> &vec,
-#if defined(__linux__) || defined(__unix__) || defined(__APPLE__)
-                    DMScu_MMapFile &file
-#elif _WIN32
-                    std::ifstream &file
-#endif // defined(__linux__) || defined(__unix__) || defined(__APPLE__)
-                   ) {
+    operator()(std::vector<DateTime> &vec, std::ifstream &file) {
 
         auto    converter =
             [](const char *)-> DateTime  { return DateTime(); };
@@ -294,13 +190,7 @@ struct  _IdxParserFunctor_<DateTime>  {
 template<>
 struct  _IdxParserFunctor_<bool>  {
 
-    inline void operator()(std::vector<bool> &vec,
-#if defined(__linux__) || defined(__unix__) || defined(__APPLE__)
-                    DMScu_MMapFile &file
-#elif _WIN32
-                    std::ifstream &file
-#endif // defined(__linux__) || defined(__unix__) || defined(__APPLE__)
-                   )  {
+    inline void operator()(std::vector<bool> &vec, std::ifstream &file)  {
 
         _col_vector_push_back_(vec, file, &::atoi);
     }
@@ -314,47 +204,15 @@ bool DataFrame<TS, HETERO>::read (const char *file_name, io_format iof)  {
     static_assert(std::is_base_of<HeteroVector, HETERO>::value,
                   "Only a StdDataFrame can call read()");
 
-#if defined(__linux__) || defined(__unix__) || defined(__APPLE__)
-    DMScu_MMapFile  file (file_name,
-                          DMScu_MMapFile::_read_,
-                          DMScu_MMapBase::SYSTEM_PAGE_SIZE * 2);
-#elif _WIN32
     std::ifstream   file;
 
     file.open(file_name, std::ios::in);  // Open for reading
-#endif // defined(__linux__) || defined(__unix__) || defined(__APPLE__)
 
     char    col_name[256];
     char    value[1024];
     char    type_str[64];
     char    c;
 
-#if defined(__linux__) || defined(__unix__) || defined(__APPLE__)
-    while (! file.is_eof ())  {
-        c = static_cast<char>(file.get_char());
-
-        if (c == '#' || c == '\n' || c == '\0')  {
-            if (c == '#')
-                while (! file.is_eof ())  {
-                    c = static_cast<char>(file.get_char());
-                    if (c == '\n')
-                        break;
-                }
-            continue;
-        }
-        file.put_back();
-
-        file.get_token(':', col_name);
-        c = static_cast<char>(file.get_char());
-        if (c != '<')
-            throw DataFrameError ("DataFrame::read(): ERROR: Expected "
-                                  "'<' char to specify column type");
-        file.get_token('>', type_str);
-        c = static_cast<char>(file.get_char());
-        if (c != ':')
-            throw DataFrameError ("DataFrame::read(): ERROR: Expected "
-                                  "':' char to start column values");
-#elif _WIN32
     while (file.get(c)) {
         if (c == '#' || c == '\n' || c == '\0') {
             if (c == '#')
@@ -375,7 +233,6 @@ bool DataFrame<TS, HETERO>::read (const char *file_name, io_format iof)  {
         if (c != ':')
             throw DataFrameError("DataFrame::read(): ERROR: Expected "
                                  "':' char to start column values");
-#endif // defined(__linux__) || defined(__unix__) || defined(__APPLE__)
 
         if (! ::strcmp(col_name, "INDEX"))  {
             TSVec   vec;

@@ -3,7 +3,7 @@
 // Copyright (C) 2018-2019 Hossein Moein
 // Distributed under the BSD Software License (see file License)
 
-#include <DMScu_FixedSizeString.h>
+#include <FixedSizeString.h>
 #include "../include/DateTime.h"
 #ifdef _WIN32
 #include <sys/timeb.h>
@@ -283,7 +283,7 @@ DateTime::DateTime (const char *s, DT_DATE_STYLE ds, DT_TIME_ZONE tz)
             nanosecond_ = ms * 1000000;;
         }
         else  {
-            DMScu_FixedSizeString<511>  err;
+            String512   err;
 
             err.printf ("DateTime::DateTime(const char *): Don't know how to "
                         "parse '%s'", s);
@@ -337,7 +337,7 @@ DateTime::DateTime (const char *s, DT_DATE_STYLE ds, DT_TIME_ZONE tz)
             nanosecond_ = ms * 1000000;;
         }
         else  {
-            DMScu_FixedSizeString<511>  err;
+            String512   err;
 
             err.printf ("DateTime::DateTime(const char *): Don't know how to "
                         "parse '%s'", s);
@@ -390,7 +390,7 @@ DateTime &DateTime::operator = (const char *s)  {
         nanosecond_ = ms * 1000000;;
     }
     else  {
-        DMScu_FixedSizeString<511>  err;
+        String512   err;
 
         err.printf ("DateTime::operator=(const char *): Don't know how to "
                     "parse '%s'", s);
@@ -404,7 +404,7 @@ DateTime &DateTime::operator = (const char *s)  {
 
 DateTime &DateTime::operator = (DateType the_date)  {
 
-    DMScu_FixedSizeString<32>   buffer;
+    String512   buffer;
 
     buffer.printf ("%u", the_date);
     *this = buffer.c_str ();
@@ -1018,7 +1018,7 @@ DateTime::breaktime_ (EpochType the_time, NanosecondType nanosec) noexcept  {
 template<typename T>
 void DateTime::date_to_str (DT_FORMAT format, T &result) const  {
 
-    DMScu_FixedSizeString<63>   buffer;
+    String64    buffer;
 
     switch (format)  {
         case DT_FORMAT::AMR_DT:
@@ -1127,7 +1127,7 @@ void DateTime::date_to_str (DT_FORMAT format, T &result) const  {
 
         default:
         {
-            DMScu_FixedSizeString<1023>  err;
+            String1K    err;
 
             err.printf ("ERROR: DateTime::date_to_str(): Unknown format: '%u'",
                         format);

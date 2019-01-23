@@ -321,20 +321,22 @@ private:
     value_type  buffer_ [S + 1];
 };
 
+// ----------------------------------------------------------------------------
+
+template<typename S>
+inline S &operator << (S &lhs, const VirtualString &rhs)  {
+
+    return (lhs << rhs.c_str ());
+}
+
+// ----------------------------------------------------------------------------
+
 using String32 = FixedSizeString<31>;
 using String64 = FixedSizeString<63>;
 using String128 = FixedSizeString<127>;
 using String512 = FixedSizeString<511>;
 using String1K = FixedSizeString<1023>;
 using String2K = FixedSizeString<2047>;
-
-// ----------------------------------------------------------------------------
-
-inline
-std::ostream &operator << (std::ostream &lhs, const VirtualString &rhs)  {
-
-    return (lhs << rhs.c_str ());
-}
 
 } // namespace hmdf
 

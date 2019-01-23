@@ -219,7 +219,7 @@ public:
     //
     DateTime &operator = (const char *rhs);  // dt = "20181223"
 
-    int dt_compare(const DateTime &rhs) const; // this (lhs) compared with rhs
+    int compare(const DateTime &rhs) const; // this (lhs) compared with rhs
 
     DateType date () const noexcept;            // eg. 20020303
     DatePartType year () const noexcept;        // eg. 1990
@@ -289,42 +289,42 @@ private:
 
 inline bool operator == (const DateTime &lhs, const DateTime &rhs) noexcept  {
 
-    return (lhs.dt_compare (rhs) == 0);
+    return (lhs.compare (rhs) == 0);
 }
 
 // ----------------------------------------------------------------------------
 
 inline bool operator != (const DateTime &lhs, const DateTime &rhs) noexcept  {
 
-    return (lhs.dt_compare (rhs) != 0);
+    return (lhs.compare (rhs) != 0);
 }
 
 // ----------------------------------------------------------------------------
 
 inline bool operator < (const DateTime &lhs, const DateTime &rhs) noexcept  {
 
-    return (lhs.dt_compare (rhs) < 0);
+    return (lhs.compare (rhs) < 0);
 }
 
 // ----------------------------------------------------------------------------
 
 inline bool operator <= (const DateTime &lhs, const DateTime &rhs) noexcept  {
 
-    return (lhs.dt_compare (rhs) <= 0);
+    return (lhs.compare (rhs) <= 0);
 }
 
 // ----------------------------------------------------------------------------
 
 inline bool operator > (const DateTime &lhs, const DateTime &rhs) noexcept  {
 
-    return (lhs.dt_compare (rhs) > 0);
+    return (lhs.compare (rhs) > 0);
 }
 
 // ----------------------------------------------------------------------------
 
 inline bool operator >= (const DateTime &lhs, const DateTime &rhs) noexcept  {
 
-    return (lhs.dt_compare (rhs) >= 0);
+    return (lhs.compare (rhs) >= 0);
 }
 
 // ----------------------------------------------------------------------------

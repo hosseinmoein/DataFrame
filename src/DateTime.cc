@@ -413,7 +413,7 @@ DateTime &DateTime::operator = (DateType the_date)  {
 
 // ----------------------------------------------------------------------------
 
-int DateTime::dt_compare (const DateTime &rhs) const  {
+int DateTime::compare (const DateTime &rhs) const  {
 
     const EpochType t = time() - rhs.time();
 
@@ -774,7 +774,7 @@ double DateTime::diff_days (const DateTime &that) const noexcept  {
 
 double DateTime::diff_weekdays (const DateTime &that) const noexcept  {
 
-    const int   addend = dt_compare(that) ? -1 : 1;
+    const int   addend = compare(that) ? -1 : 1;
     DateTime    slug (that);
     double      ddays = 0.0;
 

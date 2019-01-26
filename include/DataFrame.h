@@ -638,6 +638,40 @@ public: // Read/access interfaces
     //
     inline TSVec &get_index ()  { return (indices_); }
 
+    // [Not Implemented Yet]
+	// It returns a DataFrame based on the filters passed. Each value in each
+	// column specified in args is passed to the correpsonding filter functor.
+	// If filter returns true, the value is included, otherwise the value is
+	// excluded.
+    // All filter functors must have the following signature:
+    //     bool (const TimeStamp &i, const char *name, const T &col_value)
+	//
+    // types: The list of types for columns in args
+    // args: A variable list of arguments consisting of
+    //       std::pair(<const char *name,
+    //       &std::function<bool (const TimeStamp &, const char *, const T &)>).
+    //       Each pair represents a column name and the functor to filter it.
+	//
+    template<typename ... types>
+    DataFrame get_data_by_filter (types ... args) const;
+
+    // [Not Implemented Yet]
+    // It behaves like get_data_by_filter(), but it returns a DataFrameView.
+    // A view is a DataFrame that is a reference to the original DataFrame.
+    // So if you modify anything in the view the original DataFrame will
+    // also be modified.
+    // Note: There are certain operations that you cannot do with a view.
+    //       For example, you cannot add/delete columns, etc.
+    //
+    // types: The list of types for columns in args
+    // args: A variable list of arguments consisting of
+    //       std::pair(<const char *name,
+    //       &std::function<bool (const TimeStamp &, const char *, const T &)>).
+    //       Each pair represents a column name and the functor to filter it.
+	//
+    template<typename ... types>
+    DataFrameView<TS> get_view_by_filter (types ... args) const;
+
     // This is the most generalized visit function. It visits multiple
     // columns with the corresponding function objects sequentially.
     // Each function object is passed every single value of the given
@@ -650,9 +684,11 @@ public: // Read/access interfaces
     //
     // Ts: The list of types for columns in args
     // args: A variable list of arguments consisting of
-    // std::pair(<const char *name,
-    //     &std::function<bool (const TimeStamp &, const char *, [const] T &)>).
-    // Each pair represents a column name and the functor to run on it.
+    //       std::pair(<const char *name,
+    //       &std::function<bool (const TimeStamp &,
+	//                            const char *,
+	//                            [const] T &)>).
+    //       Each pair represents a column name and the functor to run on it.
     // NOTE: The second member of pair is a _pointer_ to the function or
     //       functor object
     //

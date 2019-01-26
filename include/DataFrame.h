@@ -639,19 +639,19 @@ public: // Read/access interfaces
     inline TSVec &get_index ()  { return (indices_); }
 
     // [Not Implemented Yet]
-	// It returns a DataFrame based on the filters passed. Each value in each
-	// column specified in args is passed to the correpsonding filter functor.
-	// If filter returns true, the value is included, otherwise the value is
-	// excluded.
+    // It returns a DataFrame based on the filters passed. Each value in each
+    // column specified in args is passed to the correpsonding filter functor.
+    // If filter returns true, the value is included, otherwise the value is
+    // excluded.
     // All filter functors must have the following signature:
     //     bool (const TimeStamp &i, const char *name, const T &col_value)
-	//
+    //
     // types: The list of types for columns in args
     // args: A variable list of arguments consisting of
     //       std::pair(<const char *name,
     //       &std::function<bool (const TimeStamp &, const char *, const T &)>).
     //       Each pair represents a column name and the functor to filter it.
-	//
+    //
     template<typename ... types>
     DataFrame get_data_by_filter (types ... args) const;
 
@@ -668,7 +668,7 @@ public: // Read/access interfaces
     //       std::pair(<const char *name,
     //       &std::function<bool (const TimeStamp &, const char *, const T &)>).
     //       Each pair represents a column name and the functor to filter it.
-	//
+    //
     template<typename ... types>
     DataFrameView<TS> get_view_by_filter (types ... args) const;
 
@@ -686,8 +686,8 @@ public: // Read/access interfaces
     // args: A variable list of arguments consisting of
     //       std::pair(<const char *name,
     //       &std::function<bool (const TimeStamp &,
-	//                            const char *,
-	//                            [const] T &)>).
+    //                            const char *,
+    //                            [const] T &)>).
     //       Each pair represents a column name and the functor to run on it.
     // NOTE: The second member of pair is a _pointer_ to the function or
     //       functor object

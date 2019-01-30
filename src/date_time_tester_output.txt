@@ -1,6 +1,5 @@
-Local Time is: 01/11/2019 13:29:33.-1430   Nanoseconds: -1431252864
-GMT Time is: 01/11/2019 18:29:33.-1430   Microseconds: -1431252
-Fame date is: 11Jan2019
+Local Time is: 01/30/2019 09:22:13.999   Nanoseconds: 1892064064
+GMT Time is: 01/30/2019 14:22:13.999   Microseconds: 999999
 Date/Time should be 19721202: 12/02/1972 00:00:00.000
 Date/Time should be '19910223 16:23:45.230': 02/23/1991 16:23:45.230
 Date/Time should be '19910223 16:23:45.230': 02/23/1991 16:23:45.230
@@ -24,11 +23,11 @@ After adding 2 weekdays days to '12/24/1998 09:30:00.000' you get '12/28/1998 09
 
 ----- Testing DateTime's GMT vs Local time
 
-GMT now time: 01/11/2019 18:29:33.053   1547231373
-GMT ALT Constructor time: 01/11/2019 18:29:33.000   1547231373
+GMT now time: 01/30/2019 14:22:13.-1062   1548858133
+GMT ALT Constructor time: 01/30/2019 14:22:13.000   1548858133
 
-Local now time: 01/11/2019 13:29:33.053   1547231373
-Local ALT Constructor time: 01/11/2019 13:29:33.000   1547231373
+Local now time: 01/30/2019 09:22:13.-1061   1548858133
+Local ALT Constructor time: 01/30/2019 09:22:13.000   1548858133
 
 Local 1970 ALT Constructor time: 01/01/1970 00:00:00.000   18000
 GMT 1970 ALT Constructor time: 01/01/1970 00:00:00.000   0
@@ -208,23 +207,23 @@ After adding 10000 weekdays days to 19700101, the date is 04/30/2008 00:00:00.00
 
 ----- Testing DateTime's time zone changes
 
-Now Local:        01/11/2019 13:29:33.-1088
-GMT Local:        01/11/2019 18:29:33.-1088
-Now Buenos Aires: 01/11/2019 15:29:33.-1088
-Now Tehran:       01/11/2019 21:59:33.-1088
-Now Tokyo:        01/12/2019 03:29:33.-1088
-Now Sydeny:       01/12/2019 05:29:33.-1088
-Now New Zealand:  01/12/2019 07:29:33.-1088
-Now Moscow:       01/11/2019 21:29:33.-1088
-Now Shanghai:     01/12/2019 02:29:33.-1088
-Now Berlin:       01/11/2019 19:29:33.-1088
-Now Paris:        01/11/2019 19:29:33.-1087
-Now Stockholm:    01/11/2019 18:29:33.-1087
-Now New York:     01/11/2019 13:29:33.-1087
-Now Los Amgeles:  01/11/2019 10:29:33.-1087
-Now Local (2):    01/11/2019 13:29:33.-1087
+Now Local:        01/30/2019 09:22:14.908
+GMT Local:        01/30/2019 14:22:14.908
+Now Buenos Aires: 01/30/2019 11:22:14.908
+Now Tehran:       01/30/2019 17:52:14.908
+Now Tokyo:        01/30/2019 23:22:14.908
+Now Sydeny:       01/31/2019 01:22:14.908
+Now New Zealand:  01/31/2019 03:22:14.908
+Now Moscow:       01/30/2019 17:22:14.908
+Now Shanghai:     01/30/2019 22:22:14.908
+Now Berlin:       01/30/2019 15:22:14.908
+Now Paris:        01/30/2019 15:22:14.908
+Now Stockholm:    01/30/2019 14:22:14.908
+Now New York:     01/30/2019 09:22:14.908
+Now Los Amgeles:  01/30/2019 06:22:14.908
+Now Local (2):    01/30/2019 09:22:14.908
 
-Going from Local to Sydney: 01/12/2019 05:29:33.-1088
+Going from Local to Sydney: 01/31/2019 01:22:14.908
 
 Local Date/Time: 11/23/2009 09:38:43.000
 

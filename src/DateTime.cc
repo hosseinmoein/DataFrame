@@ -1112,14 +1112,6 @@ void DateTime::date_to_str (DT_FORMAT format, T &result) const  {
                            static_cast<int>(dmonth ()));
         } break;
 
-        case DT_FORMAT::DT_FAME_DATE:  // e.g. 27Sep2001
-        {
-            buffer.printf ("%d%s%d",
-                           static_cast<const int>(dmonth ()),
-                           MONTH_BR_ [static_cast<int>(month ()) - 1],
-                           static_cast<const int>(year ()));
-        } break;
-
         case DT_FORMAT::DT_PRECISE:  // e.g. Epoch.Nanoseconds
         {
             buffer.printf ("%ld.%d", time(), nanosec());

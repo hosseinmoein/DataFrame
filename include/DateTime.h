@@ -32,15 +32,9 @@ enum class DT_FORMAT : unsigned short int  {
     SCT_DT = 6,        // e.g. Sep 16, 1999
     DT_MMDDYYYY = 7,   // e.g. 09161999
     DT_YYYYMMDD = 8,   // e.g. 19990916
-    DLR_MNY = 9,       // e.g. $ 120350045
-    DLR_MNY_C = 10,    // e.g. $ 120,350,045
-    DLR_MNY_C_DM = 11, // e.g. $ 120,350,045.53
-    VAL_32ND = 12,     // e.g. 105-164
-    VAL_64TH = 13,     // e.g. 105=33
-    DT_TM2 = 14,       // e.g. 09/16/1999 13:51:04.256
-    DT_DATETIME = 15,  // e.g. 20010103   09:31:15.124
-    DT_FAME_DATE = 16, // e.g. 27Sep2001
-    DT_PRECISE = 17    // e.g. 1516179600.874123908 = Epoch.Nanoseconds
+    DT_TM2 = 9,        // e.g. 09/16/1999 13:51:04.256
+    DT_DATETIME = 10,  // e.g. 20010103   09:31:15.124
+    DT_PRECISE = 11    // e.g. 1516179600.874123908 = Epoch.Nanoseconds
 };
 
 // DO NOT change the values of these enums. They are offsets to an

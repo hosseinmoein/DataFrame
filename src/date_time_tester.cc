@@ -28,8 +28,6 @@ int main (int argc, char *argv [])  {
          << "   Nanoseconds: " << now.nanosec () << endl;
     cout << "GMT Time is: " << gmnow.string_format (DT_FORMAT::DT_TM2)
          << "   Microseconds: " << now.microsec () << endl;
-    cout << "Fame date is: " << now.string_format (DT_FORMAT::DT_FAME_DATE)
-         << endl;
 
     now = 19721202;
     cout << "Date/Time should be 19721202: "

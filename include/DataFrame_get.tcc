@@ -578,26 +578,6 @@ DataFrame<TS, HETERO>::get_view_by_loc (Index2D<int> range)  {
     throw BadRange (buffer);
 }
 
-// ----------------------------------------------------------------------------
-
-template<typename TS, typename  HETERO>
-template<typename ... types>
-DataFrame<TS, HETERO>
-DataFrame<TS, HETERO>::get_data_by_filter (types ... args) const  {
-
-    throw NotImplemented("get_data_by_filter() is not implemented yet");
-}
-
-// ----------------------------------------------------------------------------
-
-template<typename TS, typename  HETERO>
-template<typename ... types>
-DataFrameView<TS>
-DataFrame<TS, HETERO>::get_view_by_filter (types ... args) const  {
-
-    throw NotImplemented("get_view_by_filter() is not implemented yet");
-}
-
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

@@ -287,6 +287,35 @@ friend struct rotate_functor_;
 
 // ----------------------------------------------------------------------------
 
+template<typename TST, template<typename> class OPT, typename ... types>
+struct operator_functor_ : DataVec::template visitor_base<types ...>  {
+
+    inline operator_functor_ (const std::vector<TST> &lhsidx,
+                              const std::vector<TST> &rhsidx,
+                              const std::vector<TST> &newidx,
+                              const StdDataFrame<TST> &rhsdf,
+                              const char *colname,
+                              StdDataFrame<TST> &resultdf)
+         : lhs_idx(lhsidx),
+           rhs_idx(rhsidx),
+           new_idx(newidx),
+           rhs_df(rhsdf),
+           col_name(colname),
+           result_df(resultdf)  {  }
+
+    const std::vector<TST>  &lhs_idx;
+    const std::vector<TST>  &rhs_idx;
+    const std::vector<TST>  &new_idx;
+    const StdDataFrame<TST> &rhs_df;
+    const char              *col_name;
+    StdDataFrame<TST>       &result_df;
+
+    template<typename T>
+    void operator() (const std::vector<T> &lhs_vec);
+};
+
+// ----------------------------------------------------------------------------
+
 // Local Variables:
 // mode:C++
 // tab-width:4

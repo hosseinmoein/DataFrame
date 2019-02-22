@@ -397,6 +397,50 @@ operator() (T &vec) const  {
         DataFrame::rotate_right_(vec, n);
 }
 
+// ----------------------------------------------------------------------------
+
+template<typename TS, typename HETERO>
+template<typename TST, template<typename> class OPT, typename ... types>
+template<typename T>
+void
+DataFrame<TS, HETERO>::
+operator_functor_<TST, OPT, types ...>::
+operator()(const std::vector<T> &lhs_vec)  {
+
+    const auto  rhs_citer = rhs_df.data_tb_.find(col_name);
+
+    if (rhs_citer == rhs_df.data_tb_.end())  return;
+
+    const DataVec   &rhs_hv = rhs_df.data_[rhs_citer->second];
+    const auto      &rhs_vec = rhs_hv.template get_vector<T>();
+    const size_type new_col_size =
+        std::min(std::min(lhs_vec.size(), rhs_vec.size()), new_idx.size());
+    std::vector<T>  new_col;
+    auto            Operator = OPT<T>();
+    size_type       lcounter = 0;
+    size_type       rcounter = 0;
+
+    new_col.reserve(new_col_size);
+    for (size_type idx = 0; idx < new_col_size; ++idx)  {
+        if (lhs_idx[lcounter] == rhs_idx[rcounter])  {
+            new_col.push_back(Operator(lhs_vec[idx], rhs_vec[idx]));
+            lcounter += 1;
+            rcounter += 1;
+        }
+        else if (lhs_idx[lcounter] > rhs_idx[rcounter])  {
+            rcounter += 1;
+        }
+        else  {
+            lcounter += 1;
+        }
+    }
+
+    if (! new_col.empty())
+        result_df.load_column(col_name, std::move(new_col));
+    return;
+}
+
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

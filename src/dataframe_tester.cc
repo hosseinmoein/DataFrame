@@ -6,6 +6,7 @@
 #include "../include/DataFrame.h"
 #include "../include/DataFrameVisitors.h"
 #include "../include/DateTime.h"
+#include "../include/DataFrameOperators.h"
 
 using namespace hmdf;
 
@@ -1142,6 +1143,46 @@ int main(int argc, char *argv[]) {
 
         std::cout << "Original DF:" << std::endl;
         df.write<std::ostream, double, int, std::string>(std::cout);
+    }
+
+    {
+        std::cout << "\n\nTesing DataFrame friend plus operators" << std::endl;
+
+        MyDataFrame df1;
+        MyDataFrame df2;
+
+        df1.read("sample_data.csv");
+        df2.read("sample_data.csv");
+
+        MyDataFrame result =
+            plus<MyDataFrame,
+                 unsigned long,
+                 int,
+                 double,
+                 std::string,
+                 bool>(df1, df2);
+
+        std::cout << "Original DF1:" << std::endl;
+        df1.write<std::ostream,
+                  int,
+                  unsigned long,
+                  double,
+                  std::string,
+                  bool>(std::cout);
+        std::cout << "Original DF2:" << std::endl;
+        df2.write<std::ostream,
+                  int,
+                  unsigned long,
+                  double,
+                  std::string,
+                  bool>(std::cout);
+        std::cout << "Result DF:" << std::endl;
+        result.write<std::ostream,
+                     int,
+                     unsigned long,
+                     double,
+                     std::string,
+                     bool>(std::cout);
     }
 
     return (0);

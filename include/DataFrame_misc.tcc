@@ -421,11 +421,12 @@ operator()(const std::vector<T> &lhs_vec)  {
     size_type       rcounter = 0;
 
     new_col.reserve(new_col_size);
-    for (size_type idx = 0; idx < new_col_size; ++idx)  {
+    for (size_type idx = 0; idx < new_col_size; )  {
         if (lhs_idx[lcounter] == rhs_idx[rcounter])  {
-            new_col.push_back(Operator(lhs_vec[idx], rhs_vec[idx]));
+            new_col.push_back(Operator(lhs_vec[lcounter], rhs_vec[rcounter]));
             lcounter += 1;
             rcounter += 1;
+            idx += 1;
         }
         else if (lhs_idx[lcounter] > rhs_idx[rcounter])  {
             rcounter += 1;
@@ -433,13 +434,13 @@ operator()(const std::vector<T> &lhs_vec)  {
         else  {
             lcounter += 1;
         }
+
     }
 
     if (! new_col.empty())
         result_df.load_column(col_name, std::move(new_col));
     return;
 }
-
 
 } // namespace hmdf
 

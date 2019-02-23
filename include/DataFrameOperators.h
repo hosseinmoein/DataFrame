@@ -6,7 +6,6 @@
 #pragma once
 
 #include "DataFrame.h"
-#include <functional>
 // #include <execution>
 
 // ----------------------------------------------------------------------------
@@ -21,8 +20,8 @@ namespace hmdf
 // Both lhs and rhs must be already sorted by index, otherwise the result
 // is nonsensical.
 //
-template<typename DF, typename ... types>
-DF plus (const DF &lhs, const DF &rhs)  {
+template<typename DF, template<typename> class OPT, typename ... types>
+DF binary_operation_ (const DF &lhs, const DF &rhs)  {
 
     typename DF::TSVec          result_idx;
     const typename DF::TSVec    &lhs_ts_vec = lhs.get_index();
@@ -46,7 +45,7 @@ DF plus (const DF &lhs, const DF &rhs)  {
         if (rhs_citer == rhs.data_tb_.end())  continue;
 
         typename DF::template operator_functor_
-            <typename DF::TimeStamp, std::plus, types ...>  functor (
+            <typename DF::TimeStamp, OPT, types ...>  functor (
                 lhs_ts_vec,
                 rhs_ts_vec,
                 new_idx,

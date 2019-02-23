@@ -10,6 +10,7 @@
 
 #include <bitset>
 #include <limits>
+#include <functional>
 #include <map>
 #include <stdexcept>
 #include <future>
@@ -776,17 +777,10 @@ public:  // Operators
         DataFrame &rhs,
         sort_state already_sorted = sort_state::not_sorted);
 
-public:  // Friend Operators
+private:  // Friend Operators
 
-    // It adds the same-name and same_type columns in lhs and rhs, if the
-    // entry has the same index value.
-    // It retunrs a new DataFrame
-    //
-    // NOTE: Both lhs and rhs must be already sorted by index, otherwise the
-    //       result is nonsensical.
-    //
-    template<typename DF, typename ... types>
-    friend DF plus (const DF &lhs, const DF &rhs);
+    template<typename DF, template<typename> class OPT, typename ... types>
+    friend DF binary_operation_(const DF &lhs, const DF &rhs);
 
 protected:
 
@@ -861,6 +855,42 @@ private:  // Tuple stuff
     template<typename ... Ts, typename F>
     static void for_each_in_tuple_ (std::tuple<Ts...> &tu, F func);
 };
+
+// ----------------------------------------------------------------------------
+
+template<typename DF, template<typename> class OPT, typename ... types>
+DF binary_operation_(const DF &lhs, const DF &rhs);
+
+// These arithmetic operations operate on the same-name and same_type columns
+// in lhs and rhs, if the entry has the same index value.
+// They return a new DataFrame
+//
+// NOTE: Both lhs and rhs must be already sorted by index, otherwise the
+//       result is nonsensical.
+//
+template<typename DF, typename ... types>
+inline DF df_plus (const DF &lhs, const DF &rhs)  {
+
+    return (binary_operation_<DF, std::plus, types ...>(lhs, rhs));
+}
+
+template<typename DF, typename ... types>
+inline DF df_minus (const DF &lhs, const DF &rhs)  {
+
+    return (binary_operation_<DF, std::minus, types ...>(lhs, rhs));
+}
+
+template<typename DF, typename ... types>
+inline DF df_multiplies (const DF &lhs, const DF &rhs)  {
+
+    return (binary_operation_<DF, std::multiplies, types ...>(lhs, rhs));
+}
+
+template<typename DF, typename ... types>
+inline DF df_divides (const DF &lhs, const DF &rhs)  {
+
+    return (binary_operation_<DF, std::divides, types ...>(lhs, rhs));
+}
 
 } // namespace hmdf
 

@@ -1146,7 +1146,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesing DataFrame friend plus operators" << std::endl;
+        std::cout << "\n\nTesing DataFrame friend plus operator" << std::endl;
 
         MyDataFrame df1;
         MyDataFrame df2;
@@ -1155,12 +1155,12 @@ int main(int argc, char *argv[]) {
         df2.read("sample_data.csv");
 
         MyDataFrame result =
-            plus<MyDataFrame,
-                 unsigned long,
-                 int,
-                 double,
-                 std::string,
-                 bool>(df1, df2);
+            df_plus<MyDataFrame,
+                    unsigned long,
+                    int,
+                    double,
+                    std::string,
+                    bool>(df1, df2);
 
         std::cout << "Original DF1:" << std::endl;
         df1.write<std::ostream,
@@ -1183,6 +1183,121 @@ int main(int argc, char *argv[]) {
                      double,
                      std::string,
                      bool>(std::cout);
+    }
+
+    {
+        std::cout << "\n\nTesing DataFrame friend minus operator" << std::endl;
+
+        MyDataFrame df1;
+        MyDataFrame df2;
+
+        df1.read("sample_data.csv");
+        df2.read("sample_data.csv");
+
+        // Notice I am omitting std::string here, since minus is not defined for
+        // std::string, and hence it won't compile
+        MyDataFrame result =
+            df_minus<MyDataFrame,
+                     unsigned long,
+                     int,
+                     double,
+                     bool>(df1, df2);
+
+        std::cout << "Original DF1:" << std::endl;
+        df1.write<std::ostream,
+                  int,
+                  unsigned long,
+                  double,
+                  std::string,
+                  bool>(std::cout);
+        std::cout << "Original DF2:" << std::endl;
+        df2.write<std::ostream,
+                  int,
+                  unsigned long,
+                  double,
+                  std::string,
+                  bool>(std::cout);
+        std::cout << "Result DF:" << std::endl;
+        result.write<std::ostream,
+                     int,
+                     unsigned long,
+                     double,
+                     bool>(std::cout);
+    }
+
+    {
+        std::cout << "\n\nTesing DataFrame friend multiplis operator"
+                  << std::endl;
+
+        std::vector<unsigned long>  idx1 =
+            { 1, 2, 3, 4, 5, 6, 7, 8, 9, 25, 40, 55 };
+        std::vector<unsigned long>  idx2 =
+            { 1, 2, 3, 4, 5, 8, 9, 22, 25, 40 };
+        std::vector<double>         d1 =
+            { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
+        std::vector<double>         d2 =
+            { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+        std::vector<double>         s1 =
+            { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
+        std::vector<int>            s2 =
+            { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+
+        MyDataFrame df1;
+        MyDataFrame df2;
+
+        df1.load_data(std::move(idx1),
+                      std::make_pair("dbl_col", d1),
+                      std::make_pair("same_name", s1));
+        df2.load_data(std::move(idx2),
+                      std::make_pair("dbl_col", d2),
+                      std::make_pair("same_name", s2));
+
+        MyDataFrame result =
+            df_multiplies<MyDataFrame, int, double>(df1, df2);
+
+        std::cout << "Original DF1:" << std::endl;
+        df1.write<std::ostream, int, double>(std::cout);
+        std::cout << "Original DF2:" << std::endl;
+        df2.write<std::ostream, int, double>(std::cout);
+        std::cout << "Result DF:" << std::endl;
+        result.write<std::ostream, int, double>(std::cout);
+    }
+
+   {
+        std::cout << "\n\nTesing DataFrame friend divides operator"
+                  << std::endl;
+
+        std::vector<unsigned long>  idx1 =
+            { 1, 2, 3, 4, 5, 6, 7, 8, 9, 25, 40, 55 };
+        std::vector<unsigned long>  idx2 =
+            { 1, 2, 3, 4, 5, 8, 9, 22, 25, 40 };
+        std::vector<double>         d1 =
+            { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
+        std::vector<double>         d2 =
+            { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+        std::vector<double>         s1 =
+            { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
+        std::vector<int>            s2 =
+            { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+
+        MyDataFrame df1;
+        MyDataFrame df2;
+
+        df1.load_data(std::move(idx1),
+                      std::make_pair("dbl_col", d1),
+                      std::make_pair("same_name", s1));
+        df2.load_data(std::move(idx2),
+                      std::make_pair("dbl_col", d2),
+                      std::make_pair("same_name", s2));
+
+        MyDataFrame result = df_divides<MyDataFrame, int, double>(df1, df2);
+
+        std::cout << "Original DF1:" << std::endl;
+        df1.write<std::ostream, int, double>(std::cout);
+        std::cout << "Original DF2:" << std::endl;
+        df2.write<std::ostream, int, double>(std::cout);
+        std::cout << "Result DF:" << std::endl;
+        result.write<std::ostream, int, double>(std::cout);
     }
 
     return (0);

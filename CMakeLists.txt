@@ -73,6 +73,7 @@ set(${LIBRARY_TARGET_NAME}_HDR
   include/HeteroVector.tcc
   include/HeteroView.tcc
   include/DataFrameVisitors.h
+  include/DataFrameOperators.h
   include/DataFrame.h
   include/DataFrame.tcc
   include/DataFrame_get.tcc

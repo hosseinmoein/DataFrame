@@ -33,6 +33,7 @@ HEADERS = $(LOCAL_INCLUDE_DIR)/HeteroVector.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame_shift.tcc \
           $(LOCAL_INCLUDE_DIR)/DataFrame_functors.h \
           $(LOCAL_INCLUDE_DIR)/DataFrameVisitors.h \
+          $(LOCAL_INCLUDE_DIR)/DataFrameOperators.h \
           $(LOCAL_INCLUDE_DIR)/VectorView.h \
           $(LOCAL_INCLUDE_DIR)/ThreadGranularity.h \
           $(LOCAL_INCLUDE_DIR)/DateTime.h \

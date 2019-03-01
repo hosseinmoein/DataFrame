@@ -55,7 +55,7 @@ StatsVisitor<double>  stats_visitor;
 df.visit<double>("dbl_col", stats_visitor);
 ```
 
-## [Documentation](docs/DataFrameDoc.pdf)
+## [DataFrame Documentation](docs/DataFrameDoc.pdf)
 [DateTime Documentation](docs/DateTimeDoc.pdf)
 
 ## [DataFrame Test File](src/dataframe_tester.cc)

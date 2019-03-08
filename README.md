@@ -54,6 +54,8 @@ StatsVisitor<double>  stats_visitor;
 // Calculate the stats on column “dbl_col”
 df.visit<double>("dbl_col", stats_visitor);
 ```
+<B>Date Time</B><BR>
+DateTime class included in this library is a very cool and handy object to manipulate date/time with nanosecond precision. 
 
 ## [DataFrame Documentation](docs/DataFrameDoc.pdf)
 [DateTime Documentation](docs/DateTimeDoc.pdf)

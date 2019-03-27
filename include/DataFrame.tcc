@@ -7,6 +7,7 @@
 #include "DateTime.h"
 #include <type_traits>
 #include <limits>
+#include <cmath>
 
 // ----------------------------------------------------------------------------
 

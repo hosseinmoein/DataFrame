@@ -1,7 +1,7 @@
 from conans import ConanFile, CMake
 
 class DataFrameConan(ConanFile):
-    name = "DataFrame"
+    name = "Dataframe"
     version = "1.0.0"
     license = "BSD 3-Clause"
     url = "https://github.com/hosseinmoein/DataFrame"
@@ -24,4 +24,4 @@ class DataFrameConan(ConanFile):
         cmake.install()
 
     def package_info(self):
-        self.cpp_info.libs = ["DataFrame"]
+        self.cpp_info.libs = ["Dataframe"]

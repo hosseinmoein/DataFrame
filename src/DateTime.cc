@@ -6,12 +6,15 @@
 #include <FixedSizeString.h>
 #include "../include/DateTime.h"
 #ifdef _WIN32
-#include <sys/timeb.h>
-#include <sys/types.h>
- 
-int gettimeofday(struct timeval* t, void* timezone);
+#  include <time.h>
+#  include <windows.h>
+#  if defined(_MSC_VER) || defined(_MSC_EXTENSIONS)
+#    define DELTA_EPOCH_IN_MICROSECS  11644473600000000Ui64
+#  else
+#    define DELTA_EPOCH_IN_MICROSECS  11644473600000000ULL
+#  endif // defined(_MSC_VER) || defined(_MSC_EXTENSIONS)
 #else
-#include <sys/time.h>
+#  include <sys/time.h>
 #endif // _WIN32
 
 // ----------------------------------------------------------------------------
@@ -142,21 +145,20 @@ const char *const   DateTime::WDAY_BR_[] =
 DateTime::DateTime (DT_TIME_ZONE time_zone) noexcept : time_zone_(time_zone)  {
 
 #ifdef _WIN32
-    SYSTEMTIME  syst;
+    FILETIME            ft;
+    unsigned __int64    tmpres = 0;
 
-    GetLocalTime(&syst);
+    GetSystemTimeAsFileTime(&ft);
 
-    struct tm   stm;
+    tmpres |= ft.dwHighDateTime;
+    tmpres <<= 32;
+    tmpres |= ft.dwLowDateTime;
 
-    stm.tm_year = syst.wYear - 1900;
-    stm.tm_mon = syst.wMonth - 1;
-    stm.tm_mday = syst.wDay;
-    stm.tm_hour = syst.wHour;
-    stm.tm_min = syst.wMinute;
-    stm.tm_sec = syst.wSecond;
-    stm.tm_isdst = -1;
+    tmpres /= 10;  // convert into microseconds
+    // converting file time to unix epoch
+    tmpres -= DELTA_EPOCH_IN_MICROSECS; 
 
-    set_time(::time(nullptr), 0);
+    set_time(tmpres / 1000000UL, (tmpres % 1000000UL) * 1000000);
 #elif defined clock_gettime
     struct timespec ts;
 

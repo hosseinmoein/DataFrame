@@ -23,23 +23,23 @@ namespace hmdf
 
 struct DataFrameError : public std::runtime_error  {
 
-    DataFrameError (const char *name) : std::runtime_error (name)  {   }
+    DataFrameError (const char *desc) : std::runtime_error (desc)  {   }
 };
 struct ColNotFound : public DataFrameError  {
 
-    ColNotFound (const char *name) : DataFrameError (name)  {   }
+    ColNotFound (const char *desc) : DataFrameError (desc)  {   }
 };
 struct InconsistentData : public DataFrameError  {
 
-    InconsistentData (const char *name) : DataFrameError (name)  {   }
+    InconsistentData (const char *desc) : DataFrameError (desc)  {   }
 };
 struct BadRange : public DataFrameError  {
 
-    BadRange (const char *name) : DataFrameError (name)  {   }
+    BadRange (const char *desc) : DataFrameError (desc)  {   }
 };
 struct NotImplemented : public DataFrameError  {
 
-    NotImplemented (const char *name) : DataFrameError (name)  {   }
+    NotImplemented (const char *desc) : DataFrameError (desc)  {   }
 };
 
 // -------------------------------------

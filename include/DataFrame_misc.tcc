@@ -192,6 +192,8 @@ template<typename T>
 void
 DataFrame<TS, HETERO>::print_functor_<Ts ...>::operator() (const T &vec)  {
 
+    if (vec.empty())  return;
+
     using VecType = typename std::remove_reference<T>::type;
     using ValueType = typename VecType::value_type;
 

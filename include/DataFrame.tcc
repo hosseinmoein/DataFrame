@@ -25,19 +25,150 @@ inline constexpr T DataFrame<TS, HETERO>::_get_nan()  {
 
 // ----------------------------------------------------------------------------
 
+template<typename T>
+inline bool __is_nan__(const T &)  { return(false); }
+
+template<>
+inline bool __is_nan__<double>(const double &val)  { return(std::isnan(val)); }
+
+template<>
+inline bool __is_nan__<float>(const float &val)  { return(std::isnan(val)); }
+
+template<>
+inline bool
+__is_nan__<long double>(const long double &val)  { return(std::isnan(val)); }
+
+// ----------------------------------------------------------------------------
+
 template<typename TS, typename HETERO>
 template<typename T>
 inline constexpr bool DataFrame<TS, HETERO>::_is_nan(const T &val)  {
 
     if (std::numeric_limits<T>::has_quiet_NaN)
-        return (std::isnan(val));
+        return (__is_nan__(val));
     return (_get_nan<T>() == val);
 }
 
 // ----------------------------------------------------------------------------
 
 template<typename TS, typename HETERO>
-template<typename ... types>
+template<typename T>
+void DataFrame<TS, HETERO>::
+fill_missing_value_(std::vector<T> &vec, const T &value, int limit)  {
+
+    const size_type vec_size = vec.size();
+    int             count = 0;
+
+    for (size_type i = 0; i < vec_size; ++i)  {
+        if (limit > 0 && count >= limit)  break;
+        if (_is_nan<T>(vec[i]))  {
+            vec[i] = value;
+            count += 1;
+        }
+    }
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename TS, typename HETERO>
+template<typename T>
+void DataFrame<TS, HETERO>::
+fill_missing_ffill_(std::vector<T> &vec, int limit)  {
+
+    const size_type vec_size = vec.size();
+
+    if (vec_size == 0)  return; 
+
+    int count = 0;
+    T   *last_value = &(vec[0]);
+
+    for (size_type i = 0; i < vec_size; ++i)  {
+        if (limit > 0 && count >= limit)  break;
+        if (! _is_nan<T>(vec[i]))  last_value = &(vec[i]);
+        if (_is_nan<T>(vec[i]) && ! _is_nan<T>(*last_value))  {
+            vec[i] = *last_value;
+            count += 1;
+        }
+    }
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename TS, typename HETERO>
+template<typename T>
+void DataFrame<TS, HETERO>::
+fill_missing_bfill_(std::vector<T> &vec, int limit)  {
+
+    const long  vec_size = static_cast<long>(vec.size());
+
+    if (vec_size == 0)  return; 
+
+    int count = 0;
+    T   *last_value = &(vec[vec_size - 1]);
+
+    for (long i = vec_size - 1; i >= 0; --i)  {
+        if (limit > 0 && count >= limit)  break;
+        if (! _is_nan<T>(vec[i]))  last_value = &(vec[i]);
+        if (_is_nan<T>(vec[i]) && ! _is_nan<T>(*last_value))  {
+            vec[i] = *last_value;
+            count += 1;
+        }
+    }
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename TS, typename HETERO>
+template<typename T, size_t N>
+void DataFrame<TS, HETERO>::
+fill_missing(const std::array<const char *, N> col_names,
+             fill_policy fp,
+             const std::array<T, N> values,
+             int limit)  {
+
+    for (size_type i = 0; i < N; ++i)  {
+        const auto  citer = data_tb_.find (col_names[i]);
+
+        if (citer == data_tb_.end())  {
+            char buffer [512];
+
+            sprintf(
+                buffer,
+                "DataFrame::fill_missing(): ERROR: Cannot find column '%s'",
+                col_names[i]);
+            throw ColNotFound(buffer);
+        }
+
+        DataVec         &hv = data_[citer->second];
+        std::vector<T>  &vec = hv.template get_vector<T>();
+
+        if (fp == fill_policy::value)
+            fill_missing_value_(vec, values[i], limit);
+        else if (fp == fill_policy::fill_forward)
+            fill_missing_ffill_(vec, limit);
+        else if (fp == fill_policy::fill_backward)
+            fill_missing_bfill_(vec, limit);
+        else  {
+            char buffer [512];
+
+            sprintf (
+                buffer,
+                "DataFrame::fill_missing(): fill_policy %d is not implemented",
+                static_cast<int>(fp));
+            throw NotImplemented(buffer);
+        }
+    }
+
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename TS, typename HETERO>
+template<typename ...types>
 void DataFrame<TS, HETERO>::make_consistent ()  {
 
     const size_type                 idx_s = indices_.size();
@@ -50,7 +181,7 @@ void DataFrame<TS, HETERO>::make_consistent ()  {
 // ----------------------------------------------------------------------------
 
 template<typename TS, typename HETERO>
-template<typename T, typename ... types>
+template<typename T, typename ...types>
 void DataFrame<TS, HETERO>::sort(const char *by_name)  {
 
     make_consistent<types ...>();
@@ -93,7 +224,7 @@ void DataFrame<TS, HETERO>::sort(const char *by_name)  {
 // ----------------------------------------------------------------------------
 
 template<typename TS, typename HETERO>
-template<typename T, typename ... types>
+template<typename T, typename ...types>
 std::future<void> DataFrame<TS, HETERO>::sort_async(const char *by_name)  {
 
     return (std::async(std::launch::async,
@@ -104,7 +235,7 @@ std::future<void> DataFrame<TS, HETERO>::sort_async(const char *by_name)  {
 // ----------------------------------------------------------------------------
 
 template<typename TS, typename HETERO>
-template<typename F, typename T, typename ... types>
+template<typename F, typename T, typename ...types>
 DataFrame<TS, HETERO>
 DataFrame<TS, HETERO>:: groupby (F &&func,
                                  const char *gb_col_name,
@@ -238,7 +369,7 @@ DataFrame<TS, HETERO>:: groupby (F &&func,
 // ----------------------------------------------------------------------------
 
 template<typename TS, typename HETERO>
-template<typename F, typename T, typename ... types>
+template<typename F, typename T, typename ...types>
 std::future<DataFrame<TS, HETERO>>
 DataFrame<TS, HETERO>::groupby_async (F &&func,
                                       const char *gb_col_name,
@@ -328,7 +459,7 @@ DataFrame<TS, HETERO>::value_counts (const char *col_name) const  {
 // ----------------------------------------------------------------------------
 
 template<typename TS, typename HETERO>
-template<typename F, typename ... types>
+template<typename F, typename ...types>
 DataFrame<TS, HETERO>
 DataFrame<TS, HETERO>::
 bucketize (F &&func, const TimeStamp &bucket_interval) const  {
@@ -358,7 +489,7 @@ bucketize (F &&func, const TimeStamp &bucket_interval) const  {
 // ----------------------------------------------------------------------------
 
 template<typename TS, typename HETERO>
-template<typename F, typename ... types>
+template<typename F, typename ...types>
 std::future<DataFrame<TS, HETERO>>
 DataFrame<TS, HETERO>::
 bucketize_async (F &&func, const TimeStamp &bucket_interval) const  {
@@ -443,7 +574,7 @@ inline static S &_write_df_index_(S &o, const DateTime &value)  {
 }
 
 template<typename TS, typename HETERO>
-template<typename S, typename ... types>
+template<typename S, typename ...types>
 bool DataFrame<TS, HETERO>::
 write (S &o, bool values_only, io_format iof) const  {
 
@@ -486,7 +617,7 @@ write (S &o, bool values_only, io_format iof) const  {
 // ----------------------------------------------------------------------------
 
 template<typename TS, typename HETERO>
-template<typename S, typename ... Ts>
+template<typename S, typename ...Ts>
 std::future<bool> DataFrame<TS, HETERO>::
 write_async (S &o, bool values_only, io_format iof) const  {
 

@@ -8,10 +8,12 @@
 #include "HeteroVector.h"
 #include "ThreadGranularity.h"
 
+#include <array>
 #include <bitset>
 #include <limits>
 #include <functional>
 #include <map>
+#include <vector>
 #include <stdexcept>
 #include <future>
 #include <cstring>
@@ -75,6 +77,20 @@ enum class shift_policy : unsigned char  {
                // keep index unchanged
     up = 2,    // Shift/rotate the content of all columns up,
                // keep index unchanged
+};
+
+// -------------------------------------
+
+enum class fill_policy : unsigned char  {
+    value = 1,
+    fill_forward = 2,
+    fill_backward = 3,
+
+    //           X - X1
+    // Y = Y1 + ------- * (Y2 - Y1)
+    //          X2 - X1
+    linear_interpolate = 4,  // Using the index as X coordinate
+    linear_extrapolate = 5   // Using the index as X coordinate
 };
 
 // -------------------------------------
@@ -305,6 +321,28 @@ public:  // Load/append/remove interfaces
 
 public:  // Other public interfaces
 
+    // It fills all the "missing values" with the given values, and/or using
+    // the given method.
+    // Missing is determined by being NaN for types that have NaN. For types
+    // without NaN (e.g. string), default value is considered missing value.
+    //
+    // T: Type of the column(s) in col_names array
+    // N: Size of col_names and values array
+    // col_names: An array of names specifying the columns to fill.
+    // fp:: Specifies the method to use to fill the missing values.
+    //      For example; forward fill, values, etc.
+    // values: If the policy is "values", use these values to fill the missing
+    //         holes. Each value corresponds to the same index in the
+    //         col_names array.
+    // limit: Specifies how many values to fill. Default is -1 meaning fill
+    //        all missing values.
+    //
+    template<typename T, size_t N>
+    void fill_missing(const std::array<const char *, N> col_names,
+                      fill_policy policy,
+                      const std::array<T, N> values = { },
+                      int limit = -1);
+
     // Make all data columns the same length as the index.
     // If any data column is shorter than the index column, it will be padded
     // by nan.
@@ -462,7 +500,7 @@ public:  // Other public interfaces
     //              or left join, etc. (See join_policy definition)
     //
     template<typename RHS_T, typename ... types>
-    StdDataFrame<TS> join_by_index (const RHS_T &rhs, join_policy mp) const;
+    StdDataFrame<TS> join_by_index (const RHS_T &rhs, join_policy jp) const;
 
     // It shifts all the columns in self up or down based on shift_policy.
     // Values that are shifted will be assigned to NaN. The index column
@@ -794,6 +832,15 @@ protected:
     static inline constexpr bool _is_nan(const T &val);
 
 private:  // Static helper functions
+
+    template<typename T>
+    void fill_missing_value_(std::vector<T> &vec, const T &value, int limit);
+
+    template<typename T>
+    void fill_missing_ffill_(std::vector<T> &vec, int limit);
+
+    template<typename T>
+    void fill_missing_bfill_(std::vector<T> &vec, int limit);
 
     template<typename T, typename ITR>
     void setup_view_column_(const char *name, Index2D<ITR> range);

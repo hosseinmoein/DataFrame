@@ -5,7 +5,6 @@
 
 #include "DataFrame.h"
 #include "DateTime.h"
-#include <type_traits>
 #include <limits>
 #include <cmath>
 
@@ -54,7 +53,7 @@ inline constexpr bool DataFrame<TS, HETERO>::_is_nan(const T &val)  {
 template<typename TS, typename HETERO>
 template<typename T>
 void DataFrame<TS, HETERO>::
-fill_missing_value_(std::vector<T> &vec, const T &value, int limit)  {
+fill_missing_value_(std::vector<T> &vec, const T &value, int limit) const  {
 
     const size_type vec_size = vec.size();
     int             count = 0;
@@ -74,7 +73,7 @@ fill_missing_value_(std::vector<T> &vec, const T &value, int limit)  {
 template<typename TS, typename HETERO>
 template<typename T>
 void DataFrame<TS, HETERO>::
-fill_missing_ffill_(std::vector<T> &vec, int limit)  {
+fill_missing_ffill_(std::vector<T> &vec, int limit) const  {
 
     const size_type vec_size = vec.size();
 
@@ -99,7 +98,7 @@ fill_missing_ffill_(std::vector<T> &vec, int limit)  {
 template<typename TS, typename HETERO>
 template<typename T>
 void DataFrame<TS, HETERO>::
-fill_missing_bfill_(std::vector<T> &vec, int limit)  {
+fill_missing_bfill_(std::vector<T> &vec, int limit) const  {
 
     const long  vec_size = static_cast<long>(vec.size());
 
@@ -116,6 +115,67 @@ fill_missing_bfill_(std::vector<T> &vec, int limit)  {
             count += 1;
         }
     }
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename TS, typename HETERO>
+template<typename T,
+         typename std::enable_if<std::is_arithmetic<T>::value &&
+                                 std::is_arithmetic<TS>::value>::type*>
+void DataFrame<TS, HETERO>::
+fill_missing_linter_(std::vector<T> &vec, const TSVec &index, int limit) const {
+
+    const long  vec_size = static_cast<long>(vec.size());
+
+    if (vec_size < 3)  return; 
+
+    int         count = 0;
+    T           *y1 = &(vec[0]);
+    T           *y2 = &(vec[2]);
+    const TS    *x = &(index[1]);
+    const TS    *x1 = &(index[0]);
+    const TS    *x2 = &(index[2]);
+
+    for (size_type i = 1; i < vec_size - 1; ++i)  {
+        if (limit > 0 && count >= limit)  break;
+        if (_is_nan<T>(vec[i]))  {
+            if (_is_nan<T>(*y2))  {
+                bool    found = false;
+
+                for (size_type j = i + 1; j < vec_size; ++j)  {
+                    if (! _is_nan(vec[j]))  {
+                        y2 = &(vec[j]);
+                        x2 = &(index[j]);
+                        found = true;
+                        break;
+                    }
+                }
+                if (! found)  break;
+            }
+            if (_is_nan<T>(*y1))  {
+                for (size_type j = i - 1; j >= 0; --j)  {
+                    if (! _is_nan(vec[j]))  {
+                        y1 = &(vec[j]);
+                        x1 = &(index[j]);
+                        break;
+                    }
+                }
+            }
+            vec[i] =
+                *y1 +
+                (static_cast<T>(*x - *x1) / static_cast<T>(*x2 - *x1)) *
+                (*y2 - *y1);
+            count += 1;
+        }
+        y1 = &(vec[i]);
+        y2 = &(vec[i + 2]);
+        x = &(index[i + 1]);
+        x1 = &(index[i]);
+        x2 = &(index[i + 2]);
+    }
+
     return;
 }
 
@@ -151,7 +211,9 @@ fill_missing(const std::array<const char *, N> col_names,
             fill_missing_ffill_(vec, limit);
         else if (fp == fill_policy::fill_backward)
             fill_missing_bfill_(vec, limit);
-        else  {
+        else if (fp == fill_policy::linear_interpolate)
+            fill_missing_linter_(vec, indices_, limit);
+        else if (fp == fill_policy::linear_extrapolate)  {
             char buffer [512];
 
             sprintf (

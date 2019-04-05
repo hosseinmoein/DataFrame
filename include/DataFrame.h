@@ -15,6 +15,7 @@
 #include <map>
 #include <vector>
 #include <stdexcept>
+#include <type_traits>
 #include <future>
 #include <cstring>
 
@@ -834,13 +835,28 @@ protected:
 private:  // Static helper functions
 
     template<typename T>
-    void fill_missing_value_(std::vector<T> &vec, const T &value, int limit);
+    void
+    fill_missing_value_(std::vector<T> &vec, const T &value, int limit) const;
 
     template<typename T>
-    void fill_missing_ffill_(std::vector<T> &vec, int limit);
+    void fill_missing_ffill_(std::vector<T> &vec, int limit) const;
 
     template<typename T>
-    void fill_missing_bfill_(std::vector<T> &vec, int limit);
+    void fill_missing_bfill_(std::vector<T> &vec, int limit) const;
+
+    template<typename T,
+             typename std::enable_if<std::is_arithmetic<T>::value &&
+                                     std::is_arithmetic<TS>::value>::type* =
+                 nullptr>
+    void fill_missing_linter_(std::vector<T> &vec,
+                              const TSVec &inedx,
+                              int limit) const;
+
+    template<typename T,
+             typename std::enable_if<! std::is_arithmetic<T>::value ||
+                                     ! std::is_arithmetic<TS>::value>::type* =
+                 nullptr>
+    void fill_missing_linter_(std::vector<T> &, const TSVec &, int) const  {  }
 
     template<typename T, typename ITR>
     void setup_view_column_(const char *name, Index2D<ITR> range);

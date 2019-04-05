@@ -122,6 +122,19 @@ fill_missing_bfill_(std::vector<T> &vec, int limit) const  {
 
 template<typename TS, typename HETERO>
 template<typename T,
+         typename std::enable_if<! std::is_arithmetic<T>::value ||
+                                 ! std::is_arithmetic<TS>::value>::type*>
+void DataFrame<TS, HETERO>::
+fill_missing_linter_(std::vector<T> &, const TSVec &, int) const  {
+
+    throw NotFeasible("fill_missing_linter_(): ERROR: Interpolation is "
+                      "not feasible on non-arithmetic types");
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename TS, typename HETERO>
+template<typename T,
          typename std::enable_if<std::is_arithmetic<T>::value &&
                                  std::is_arithmetic<TS>::value>::type*>
 void DataFrame<TS, HETERO>::

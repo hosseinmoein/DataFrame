@@ -40,6 +40,10 @@ struct BadRange : public DataFrameError  {
 
     BadRange (const char *desc) : DataFrameError (desc)  {   }
 };
+struct NotFeasible : public DataFrameError  {
+
+    NotFeasible (const char *desc) : DataFrameError (desc)  {   }
+};
 struct NotImplemented : public DataFrameError  {
 
     NotImplemented (const char *desc) : DataFrameError (desc)  {   }
@@ -856,7 +860,7 @@ private:  // Static helper functions
              typename std::enable_if<! std::is_arithmetic<T>::value ||
                                      ! std::is_arithmetic<TS>::value>::type* =
                  nullptr>
-    void fill_missing_linter_(std::vector<T> &, const TSVec &, int) const  {  }
+    void fill_missing_linter_(std::vector<T> &, const TSVec &, int) const;
 
     template<typename T, typename ITR>
     void setup_view_column_(const char *name, Index2D<ITR> range);

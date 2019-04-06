@@ -201,6 +201,16 @@ void HeteroVector::change_impl_ (T &&functor, TLIST<TYPES...>) const  {
 // ----------------------------------------------------------------------------
 
 template<typename T>
+void HeteroVector::erase(size_type pos)  {
+
+    auto    &vec = get_vector<T>();
+
+    vec.erase (vec.begin() + pos);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
 void HeteroVector::resize(size_type count)  {
 
     get_vector<T>().resize (count);

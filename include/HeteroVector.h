@@ -64,6 +64,9 @@ public:
     void clear();
 
     template<typename T>
+    void erase(size_type pos);
+
+    template<typename T>
     void resize(size_type count);
     template<typename T>
     void resize(size_type count, const T &v);

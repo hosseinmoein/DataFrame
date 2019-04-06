@@ -85,6 +85,12 @@ int main(int argc, char *argv[]) {
         std::cout << "\n\n";
     }
 
+    std::cout << "hv size before erase: "
+              << hv.size<std::string>() << std::endl;
+    hv.erase<std::string>(2);
+    std::cout << "hv size after erase: "
+              << hv.size<std::string>() << std::endl;
+
     hv2 = hv;
     hv3 = std::move(hv2);
 

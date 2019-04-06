@@ -7,6 +7,8 @@ s size: 2
 s.back() must be 'abc': str_3
 
 
+hv size before erase: 5
+hv size after erase: 4
 10
 3
 4
@@ -35,7 +37,6 @@ Visiting ...
 -- 0.246
 -- str_1str_1
 -- str_2str_2
--- str_3str_3
 -- abcabc
 -- fasfas
 Sorting ...
@@ -56,7 +57,6 @@ Visiting ...
 -- fasfasfasfas
 -- str_1str_1str_1str_1
 -- str_2str_2str_2str_2
--- str_3str_3str_3str_3
 Changing ...
 Visiting ...
 -- 0
@@ -95,7 +95,6 @@ Visiting ...
 -- fasfasfasfasfasfasfasfas
 -- str_1str_1str_1str_1str_1str_1str_1str_1
 -- str_2str_2str_2str_2str_2str_2str_2str_2
--- str_3str_3str_3str_3str_3str_3str_3str_3
 -- 
 -- 
 -- 

@@ -100,6 +100,14 @@ enum class fill_policy : unsigned char  {
 
 // -------------------------------------
 
+enum class drop_policy : unsigned char  {
+    all = 1,  // Remove row if all columns are nan
+    any = 2,  // Remove row if any nan column
+    threshold = 3  // Remove row if threshold number of columns are nan
+};
+
+// -------------------------------------
+
 enum class io_format : unsigned char  {
     csv = 1,
 };
@@ -347,6 +355,17 @@ public:  // Other public interfaces
                       fill_policy policy,
                       const std::array<T, N> values = { },
                       int limit = -1);
+
+    // It removes a row if any or all or some of the columns are NaN, based
+    // on drop policy
+    //
+    // types: List all the types of all data columns.
+    //        A type should be specified in the list only once.
+    // threshold: If drop policy is threshold, it specifies the numbers of
+    //            NaN columns before removing the row.
+    //
+    template<typename ... types>
+    void drop_missing(drop_policy policy, size_type threshold = 0);
 
     // Make all data columns the same length as the index.
     // If any data column is shorter than the index column, it will be padded

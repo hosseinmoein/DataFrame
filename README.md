@@ -29,8 +29,8 @@ std::vector<unsigned long> ulgvec = { 1UL, 2UL, 3UL, 4UL, 5UL, 8UL, 7UL, 6UL }
 std::vector<unsigned long> xulgvec = ulgvec;
 
 // This is only one way of loading data into a DataFrame instance. There are
-// many different ways of doing it. Please see the documentations, DataFrame.h, or datasci_tester.cc
-int rc = df.load_data(std::move(ulgvec),
+// many different ways of doing it. Please see the documentation, or dataframe_tester.cc
+int rc = df.load_data(std::move(ulgvec),  // Index column
                       std::make_pair("int_col", intvec),
                       std::make_pair("dbl_col", dblvec),
                       std::make_pair("dbl_col_2", dblvec2),

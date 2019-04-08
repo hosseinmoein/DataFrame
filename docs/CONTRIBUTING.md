@@ -13,5 +13,5 @@
 * Wait a few days for feedback.
 * Open a branch and implement your new addition/enhancement.
 * Follow the same coding conventions and formatting already in DataFrame, as much as you can
-* write an **explicit and omprehensive** test for your new addition/enhancement.
+* write an **explicit and comprehensive** test for your new addition/enhancement.
 * issue a pull request

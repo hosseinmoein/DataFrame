@@ -444,6 +444,44 @@ operator()(const std::vector<T> &lhs_vec)  {
     return;
 }
 
+// ----------------------------------------------------------------------------
+
+template<typename TS, typename HETERO>
+template<typename ... types>
+template<typename T>
+void
+DataFrame<TS, HETERO>::
+map_missing_rows_functor_<types ...>::
+operator()(const T &vec)  {
+
+    const size_type vec_size = vec.size();
+
+    for (size_type idx = 0; idx < index_rows; ++idx)  {
+        if (idx >= vec_size || DataFrame::_is_nan(vec[idx]))  {
+            auto result = missing_row_map.emplace(idx, 0);
+
+            result.first->second += 1;
+        }
+    }
+
+    return;
+}
+
+
+// ----------------------------------------------------------------------------
+
+template<typename TS, typename HETERO>
+template<typename ... types>
+template<typename T>
+void
+DataFrame<TS, HETERO>::
+drop_missing_rows_functor_<types ...>::
+operator()(T &vec)  {
+
+    drop_missing_rows_(vec, missing_row_map, policy, threshold, col_num);
+    return;
+}
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

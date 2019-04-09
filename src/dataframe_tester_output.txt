@@ -716,3 +716,79 @@ col_4:14:<int>:22,0,0,25,0,0,0,0,0,0,0,0,0,0,
 col_2:14:<double>:8,9,10,11,12,14.6667,17.3333,20,22,23,30,31,25.178,1.89,
 col_1:14:<double>:1,2,3,4,5,6,7,8,9,10,11,12,13,14,
 
+
+
+Tesing drop_missing(all) no drop
+Original DF:
+INDEX:14:<ulong>:123450,123451,123452,123453,123454,123455,123456,123457,123458,123459,123460,123461,123462,123466,
+col_3:14:<double>:nan,16,nan,18,19,16,nan,0.34,1.56,0.34,2.3,0.34,nan,nan,
+col_4:14:<int>:22,0,0,25,0,0,0,0,0,0,0,0,0,0,
+col_str:14:<string>:qqqq,wwww,eeee,rrrr,tttt,yyyy,iiii,oooo,pppp,2222,aaaa,dddd,,,
+col_2:14:<double>:8,9,nan,11,12,nan,nan,20,22,23,30,31,nan,1.89,
+col_1:14:<double>:1,2,3,4,nan,6,7,nan,nan,nan,11,12,13,14,
+
+After drop missing all DF:
+INDEX:14:<ulong>:123450,123451,123452,123453,123454,123455,123456,123457,123458,123459,123460,123461,123462,123466,
+col_3:14:<double>:nan,16,nan,18,19,16,nan,0.34,1.56,0.34,2.3,0.34,nan,nan,
+col_4:14:<int>:22,0,0,25,0,0,0,0,0,0,0,0,0,0,
+col_str:14:<string>:qqqq,wwww,eeee,rrrr,tttt,yyyy,iiii,oooo,pppp,2222,aaaa,dddd,,,
+col_2:14:<double>:8,9,nan,11,12,nan,nan,20,22,23,30,31,nan,1.89,
+col_1:14:<double>:1,2,3,4,nan,6,7,nan,nan,nan,11,12,13,14,
+
+
+
+Tesing drop_missing(all) 2 drop
+Original DF:
+INDEX:14:<ulong>:123450,123451,123452,123453,123454,123455,123456,123457,123458,123459,123460,123461,123462,123466,
+col_3:14:<double>:nan,16,nan,18,19,nan,nan,0.34,1.56,0.34,nan,0.34,nan,nan,
+col_4:14:<int>:22,0,0,25,0,0,0,0,0,0,0,0,0,0,
+col_str:14:<string>:qqqq,wwww,eeee,rrrr,tttt,,iiii,oooo,pppp,2222,,dddd,,,
+col_2:14:<double>:8,9,nan,11,12,nan,nan,20,22,23,nan,31,nan,1.89,
+col_1:14:<double>:1,2,3,4,nan,nan,7,nan,nan,nan,nan,12,13,14,
+
+After drop missing all DF:
+INDEX:12:<ulong>:123450,123451,123452,123453,123454,123456,123457,123458,123459,123461,123462,123466,
+col_3:12:<double>:nan,16,nan,18,19,nan,0.34,1.56,0.34,0.34,nan,nan,
+col_4:12:<int>:22,0,0,25,0,0,0,0,0,0,0,0,
+col_str:12:<string>:qqqq,wwww,eeee,rrrr,tttt,iiii,oooo,pppp,2222,dddd,,,
+col_2:12:<double>:8,9,nan,11,12,nan,20,22,23,31,nan,1.89,
+col_1:12:<double>:1,2,3,4,nan,7,nan,nan,nan,12,13,14,
+
+
+
+Tesing drop_missing(any)
+Original DF:
+INDEX:14:<ulong>:123450,123451,123452,123453,123454,123455,123456,123457,123458,123459,123460,123461,123462,123466,
+col_3:14:<double>:nan,16,nan,18,19,16,nan,0.34,1.56,0.34,2.3,0.34,nan,nan,
+col_4:14:<int>:22,0,0,25,0,0,0,0,0,0,0,0,0,0,
+col_str:14:<string>:qqqq,wwww,eeee,rrrr,tttt,yyyy,iiii,oooo,pppp,2222,aaaa,dddd,,,
+col_2:14:<double>:8,9,nan,11,12,nan,nan,20,22,23,30,31,nan,1.89,
+col_1:14:<double>:1,2,3,4,nan,6,7,nan,nan,nan,11,12,13,14,
+
+After drop missing all DF:
+INDEX:1:<ulong>:123453,
+col_3:1:<double>:18,
+col_4:1:<int>:25,
+col_str:1:<string>:rrrr,
+col_2:1:<double>:11,
+col_1:1:<double>:4,
+
+
+
+Tesing drop_missing(threshold=3)
+Original DF:
+INDEX:14:<ulong>:123450,123451,123452,123453,123454,123455,123456,123457,123458,123459,123460,123461,123462,123466,
+col_3:14:<double>:nan,16,nan,18,19,16,nan,0.34,1.56,0.34,2.3,0.34,nan,nan,
+col_4:14:<int>:22,0,0,25,0,0,0,0,0,0,0,0,0,0,
+col_str:14:<string>:qqqq,wwww,eeee,rrrr,tttt,yyyy,iiii,oooo,pppp,2222,aaaa,dddd,,,
+col_2:14:<double>:8,9,nan,11,12,nan,nan,20,22,23,30,31,nan,1.89,
+col_1:14:<double>:1,2,3,4,nan,6,7,nan,nan,nan,11,12,13,14,
+
+After drop missing all DF:
+INDEX:13:<ulong>:123450,123451,123452,123453,123454,123455,123456,123457,123458,123459,123460,123461,123466,
+col_3:13:<double>:nan,16,nan,18,19,16,nan,0.34,1.56,0.34,2.3,0.34,nan,
+col_4:13:<int>:22,0,0,25,0,0,0,0,0,0,0,0,0,
+col_str:13:<string>:qqqq,wwww,eeee,rrrr,tttt,yyyy,iiii,oooo,pppp,2222,aaaa,dddd,,
+col_2:13:<double>:8,9,nan,11,12,nan,nan,20,22,23,30,31,1.89,
+col_1:13:<double>:1,2,3,4,nan,6,7,nan,nan,nan,11,12,14,
+

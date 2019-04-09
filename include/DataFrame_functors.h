@@ -316,6 +316,47 @@ struct operator_functor_ : DataVec::template visitor_base<types ...>  {
 
 // ----------------------------------------------------------------------------
 
+template<typename ... types>
+struct map_missing_rows_functor_ :
+    DataVec::template visitor_base<types ...>  {
+
+    inline map_missing_rows_functor_ (size_type ir, DropRowMap &mrm)
+        : index_rows(ir), missing_row_map(mrm)  {   }
+
+    const size_type index_rows;
+    DropRowMap      &missing_row_map;
+
+    template<typename T>
+    void operator() (const T &vec);
+};
+
+// ----------------------------------------------------------------------------
+
+template<typename ... types>
+struct drop_missing_rows_functor_ :
+    DataVec::template visitor_base<types ...>  {
+
+    inline drop_missing_rows_functor_ (const DropRowMap &mrm,
+                                       drop_policy p,
+                                       size_type th,
+                                       size_type cn)
+        : missing_row_map(mrm),
+          policy(p),
+          threshold(th),
+          col_num(cn)  {   }
+
+    const DropRowMap    &missing_row_map;
+    const drop_policy   policy;
+    const size_type     threshold;
+    const size_type     col_num;
+
+    template<typename T>
+    void operator() (T &vec);
+};
+
+// ----------------------------------------------------------------------------
+
+// Local Variables:
 // Local Variables:
 // mode:C++
 // tab-width:4

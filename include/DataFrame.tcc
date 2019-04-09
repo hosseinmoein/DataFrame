@@ -53,7 +53,7 @@ inline constexpr bool DataFrame<TS, HETERO>::_is_nan(const T &val)  {
 template<typename TS, typename HETERO>
 template<typename T>
 void DataFrame<TS, HETERO>::
-fill_missing_value_(std::vector<T> &vec, const T &value, int limit) const  {
+fill_missing_value_(std::vector<T> &vec, const T &value, int limit)  {
 
     const size_type vec_size = vec.size();
     int             count = 0;
@@ -73,7 +73,7 @@ fill_missing_value_(std::vector<T> &vec, const T &value, int limit) const  {
 template<typename TS, typename HETERO>
 template<typename T>
 void DataFrame<TS, HETERO>::
-fill_missing_ffill_(std::vector<T> &vec, int limit) const  {
+fill_missing_ffill_(std::vector<T> &vec, int limit)  {
 
     const size_type vec_size = vec.size();
 
@@ -98,7 +98,7 @@ fill_missing_ffill_(std::vector<T> &vec, int limit) const  {
 template<typename TS, typename HETERO>
 template<typename T>
 void DataFrame<TS, HETERO>::
-fill_missing_bfill_(std::vector<T> &vec, int limit) const  {
+fill_missing_bfill_(std::vector<T> &vec, int limit)  {
 
     const long  vec_size = static_cast<long>(vec.size());
 
@@ -125,7 +125,7 @@ template<typename T,
          typename std::enable_if<! std::is_arithmetic<T>::value ||
                                  ! std::is_arithmetic<TS>::value>::type*>
 void DataFrame<TS, HETERO>::
-fill_missing_linter_(std::vector<T> &, const TSVec &, int) const  {
+fill_missing_linter_(std::vector<T> &, const TSVec &, int)  {
 
     throw NotFeasible("fill_missing_linter_(): ERROR: Interpolation is "
                       "not feasible on non-arithmetic types");
@@ -138,7 +138,7 @@ template<typename T,
          typename std::enable_if<std::is_arithmetic<T>::value &&
                                  std::is_arithmetic<TS>::value>::type*>
 void DataFrame<TS, HETERO>::
-fill_missing_linter_(std::vector<T> &vec, const TSVec &index, int limit) const {
+fill_missing_linter_(std::vector<T> &vec, const TSVec &index, int limit)  {
 
     const long  vec_size = static_cast<long>(vec.size());
 
@@ -236,6 +236,74 @@ fill_missing(const std::array<const char *, N> col_names,
             throw NotImplemented(buffer);
         }
     }
+
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename TS, typename HETERO>
+template<typename T>
+void DataFrame<TS, HETERO>::
+drop_missing_rows_(T &vec,
+                   const DropRowMap missing_row_map,
+                   drop_policy policy,
+                   size_type threshold,
+                   size_type col_num)  {
+
+    size_type   erase_count = 0;
+
+    for (auto &iter : missing_row_map)  {
+        if (policy == drop_policy::all)  {
+            if (iter.second == col_num)  {
+                vec.erase(vec.begin() + iter.first - erase_count);
+                erase_count += 1;
+            }
+        }
+        else if (policy == drop_policy::any)  {
+            if (iter.second > 0)  {
+                vec.erase(vec.begin() + iter.first - erase_count);
+                erase_count += 1;
+            }
+        }
+        else if (policy == drop_policy::threshold)  {
+            if (iter.second > threshold)  {
+                vec.erase(vec.begin() + iter.first - erase_count);
+                erase_count += 1;
+            }
+        }
+    }
+
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename TS, typename HETERO>
+template<typename ... types>
+void DataFrame<TS, HETERO>::
+drop_missing(drop_policy policy, size_type threshold)  {       
+
+    DropRowMap                              missing_row_map;
+    map_missing_rows_functor_<types ...>    functor (indices_.size(),
+                                                     missing_row_map);
+
+    for (auto &iter : data_)
+        iter.change(functor);
+
+    drop_missing_rows_(indices_,
+                       missing_row_map,
+                       policy,
+                       threshold,
+                       data_.size());
+
+    drop_missing_rows_functor_<types ...>   functor2 (missing_row_map,
+                                                      policy,
+                                                      threshold,
+                                                      data_.size());
+
+    for (auto &iter : data_)
+        iter.change(functor2);
 
     return;
 }

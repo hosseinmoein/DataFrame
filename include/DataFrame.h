@@ -102,7 +102,7 @@ enum class fill_policy : unsigned char  {
 
 enum class drop_policy : unsigned char  {
     all = 1,  // Remove row if all columns are nan
-    any = 2,  // Remove row if any nan column
+    any = 2,  // Remove row if any column is nan
     threshold = 3  // Remove row if threshold number of columns are nan
 };
 
@@ -858,28 +858,38 @@ protected:
 private:  // Static helper functions
 
     template<typename T>
-    void
-    fill_missing_value_(std::vector<T> &vec, const T &value, int limit) const;
+    static void
+    fill_missing_value_(std::vector<T> &vec, const T &value, int limit);
 
     template<typename T>
-    void fill_missing_ffill_(std::vector<T> &vec, int limit) const;
+    static void fill_missing_ffill_(std::vector<T> &vec, int limit);
 
     template<typename T>
-    void fill_missing_bfill_(std::vector<T> &vec, int limit) const;
+    static void fill_missing_bfill_(std::vector<T> &vec, int limit);
 
     template<typename T,
              typename std::enable_if<std::is_arithmetic<T>::value &&
                                      std::is_arithmetic<TS>::value>::type* =
                  nullptr>
-    void fill_missing_linter_(std::vector<T> &vec,
-                              const TSVec &inedx,
-                              int limit) const;
+    static void
+    fill_missing_linter_(std::vector<T> &vec, const TSVec &inedx, int limit);
+
+    // Maps row number -> number of missing column(s)
+    using DropRowMap = std::map<size_type, size_type>;
 
     template<typename T,
              typename std::enable_if<! std::is_arithmetic<T>::value ||
                                      ! std::is_arithmetic<TS>::value>::type* =
                  nullptr>
-    void fill_missing_linter_(std::vector<T> &, const TSVec &, int) const;
+    static void
+    fill_missing_linter_(std::vector<T> &, const TSVec &, int);
+
+    template<typename T>
+    static void drop_missing_rows_(T &vec,
+                                   const DropRowMap missing_row_map,
+                                   drop_policy policy,
+                                   size_type threshold,
+                                   size_type col_num);
 
     template<typename T, typename ITR>
     void setup_view_column_(const char *name, Index2D<ITR> range);

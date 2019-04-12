@@ -859,10 +859,14 @@ private:  // Static helper functions
 
     template<typename T>
     static void
-    fill_missing_value_(std::vector<T> &vec, const T &value, int limit);
+    fill_missing_value_(std::vector<T> &vec,
+                        const T &value,
+                        int limit,
+                        size_type col_num);
 
     template<typename T>
-    static void fill_missing_ffill_(std::vector<T> &vec, int limit);
+    static void
+    fill_missing_ffill_(std::vector<T> &vec, int limit, size_type col_num);
 
     template<typename T>
     static void fill_missing_bfill_(std::vector<T> &vec, int limit);

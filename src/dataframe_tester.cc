@@ -1334,17 +1334,20 @@ int main(int argc, char *argv[]) {
                                    std::numeric_limits<int>::quiet_NaN(),
                                    25,
                                    std::numeric_limits<int>::quiet_NaN() };
-        std::vector<std::string>    s1 =
-            { "qqqq", "wwww", "eeee", "rrrr", "tttt", "yyyy",
-              "iiii", "oooo", "pppp", "2222", "aaaa", "dddd" };
         MyDataFrame         df;
 
         df.load_data(std::move(idx),
                      std::make_pair("col_1", d1),
                      std::make_pair("col_2", d2),
                      std::make_pair("col_3", d3),
-                     std::make_pair("col_str", s1),
                      std::make_pair("col_4", i1));
+
+        std::vector<std::string>    s1 =
+            { "qqqq", "wwww", "eeee", "rrrr", "tttt", "yyyy", "iiii", "oooo" };
+
+        df.load_column("col_str",
+                       std::move(s1),
+                       nan_policy::dont_pad_with_nans);
 
         std::cout << "Original DF:" << std::endl;
         df.write<std::ostream, int, double, std::string>(std::cout);
@@ -1394,17 +1397,20 @@ int main(int argc, char *argv[]) {
                                    std::numeric_limits<int>::quiet_NaN(),
                                    25,
                                    std::numeric_limits<int>::quiet_NaN() };
-        std::vector<std::string>    s1 =
-            { "qqqq", "wwww", "eeee", "rrrr", "tttt", "yyyy",
-              "iiii", "oooo", "pppp", "2222", "aaaa", "dddd" };
         MyDataFrame         df;
 
         df.load_data(std::move(idx),
                      std::make_pair("col_1", d1),
                      std::make_pair("col_2", d2),
                      std::make_pair("col_3", d3),
-                     std::make_pair("col_str", s1),
                      std::make_pair("col_4", i1));
+
+        std::vector<std::string>    s1 =
+            { "qqqq", "wwww", "eeee", "rrrr", "tttt", "yyyy", "iiii", "oooo" };
+
+        df.load_column("col_str",
+                       std::move(s1),
+                       nan_policy::dont_pad_with_nans);
 
         std::cout << "Original DF:" << std::endl;
         df.write<std::ostream, int, double, std::string>(std::cout);
@@ -1415,7 +1421,7 @@ int main(int argc, char *argv[]) {
                                    3);
         df.fill_missing<std::string, 1>({ "col_str" },
                                         fill_policy::fill_forward,
-                                        {  });
+                                        {  }, 3);
 
         std::cout << "After fill missing with values DF:" << std::endl;
         df.write<std::ostream, int, double, std::string>(std::cout);

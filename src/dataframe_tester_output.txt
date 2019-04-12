@@ -648,16 +648,16 @@ Tesing fill_missing(values)
 Original DF:
 INDEX:14:<ulong>:123450,123451,123452,123453,123454,123455,123456,123457,123458,123459,123460,123461,123462,123466,
 col_3:14:<double>:nan,16,nan,18,19,16,nan,0.34,1.56,0.34,2.3,0.34,nan,nan,
+col_str:8:<string>:qqqq,wwww,eeee,rrrr,tttt,yyyy,iiii,oooo,
 col_4:14:<int>:22,0,0,25,0,0,0,0,0,0,0,0,0,0,
-col_str:14:<string>:qqqq,wwww,eeee,rrrr,tttt,yyyy,iiii,oooo,pppp,2222,aaaa,dddd,,,
 col_2:14:<double>:8,9,nan,11,12,nan,nan,20,22,23,30,31,nan,1.89,
 col_1:14:<double>:1,2,3,4,nan,6,7,nan,nan,nan,11,12,13,14,
 
 After fill missing with values DF:
 INDEX:14:<ulong>:123450,123451,123452,123453,123454,123455,123456,123457,123458,123459,123460,123461,123462,123466,
 col_3:14:<double>:1003,16,1003,18,19,16,1003,0.34,1.56,0.34,2.3,0.34,nan,nan,
+col_str:14:<string>:qqqq,wwww,eeee,rrrr,tttt,yyyy,iiii,oooo,XXXXXX,XXXXXX,XXXXXX,XXXXXX,XXXXXX,XXXXXX,
 col_4:14:<int>:22,0,0,25,0,0,0,0,0,0,0,0,0,0,
-col_str:14:<string>:qqqq,wwww,eeee,rrrr,tttt,yyyy,iiii,oooo,pppp,2222,aaaa,dddd,XXXXXX,XXXXXX,
 col_2:14:<double>:8,9,1002,11,12,1002,1002,20,22,23,30,31,nan,1.89,
 col_1:14:<double>:1,2,3,4,1001,6,7,1001,1001,nan,11,12,13,14,
 
@@ -667,16 +667,16 @@ Tesing fill_missing(fill_forward)
 Original DF:
 INDEX:14:<ulong>:123450,123451,123452,123453,123454,123455,123456,123457,123458,123459,123460,123461,123462,123466,
 col_3:14:<double>:nan,16,nan,18,19,16,nan,0.34,1.56,0.34,2.3,0.34,nan,nan,
+col_str:8:<string>:qqqq,wwww,eeee,rrrr,tttt,yyyy,iiii,oooo,
 col_4:14:<int>:22,0,0,25,0,0,0,0,0,0,0,0,0,0,
-col_str:14:<string>:qqqq,wwww,eeee,rrrr,tttt,yyyy,iiii,oooo,pppp,2222,aaaa,dddd,,,
 col_2:14:<double>:8,9,nan,11,12,nan,nan,20,22,23,30,31,nan,1.89,
 col_1:14:<double>:1,2,3,4,nan,6,7,nan,nan,nan,11,12,13,14,
 
 After fill missing with values DF:
 INDEX:14:<ulong>:123450,123451,123452,123453,123454,123455,123456,123457,123458,123459,123460,123461,123462,123466,
 col_3:14:<double>:nan,16,16,18,19,16,16,0.34,1.56,0.34,2.3,0.34,0.34,nan,
+col_str:11:<string>:qqqq,wwww,eeee,rrrr,tttt,yyyy,iiii,oooo,oooo,oooo,oooo,
 col_4:14:<int>:22,0,0,25,0,0,0,0,0,0,0,0,0,0,
-col_str:14:<string>:qqqq,wwww,eeee,rrrr,tttt,yyyy,iiii,oooo,pppp,2222,aaaa,dddd,dddd,dddd,
 col_2:14:<double>:8,9,9,11,12,12,12,20,22,23,30,31,nan,1.89,
 col_1:14:<double>:1,2,3,4,4,6,7,7,7,nan,11,12,13,14,
 

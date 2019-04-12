@@ -53,14 +53,23 @@ inline constexpr bool DataFrame<TS, HETERO>::_is_nan(const T &val)  {
 template<typename TS, typename HETERO>
 template<typename T>
 void DataFrame<TS, HETERO>::
-fill_missing_value_(std::vector<T> &vec, const T &value, int limit)  {
+fill_missing_value_(std::vector<T> &vec,
+                    const T &value,
+                    int limit,
+                    size_type col_num)  {
 
     const size_type vec_size = vec.size();
     int             count = 0;
 
-    for (size_type i = 0; i < vec_size; ++i)  {
-        if (limit > 0 && count >= limit)  break;
-        if (_is_nan<T>(vec[i]))  {
+    if (limit < 0)
+        vec.reserve(col_num);
+    for (size_type i = 0; i < col_num; ++i)  {
+        if (limit >= 0 && count >= limit)  break;
+        if (i >= vec_size)  {
+            vec.push_back(value);
+            count += 1;
+        }
+        else if (_is_nan<T>(vec[i]))  {
             vec[i] = value;
             count += 1;
         }
@@ -73,21 +82,31 @@ fill_missing_value_(std::vector<T> &vec, const T &value, int limit)  {
 template<typename TS, typename HETERO>
 template<typename T>
 void DataFrame<TS, HETERO>::
-fill_missing_ffill_(std::vector<T> &vec, int limit)  {
+fill_missing_ffill_(std::vector<T> &vec, int limit, size_type col_num)  {
 
     const size_type vec_size = vec.size();
 
     if (vec_size == 0)  return; 
 
     int count = 0;
-    T   *last_value = &(vec[0]);
+    T   last_value = vec[0];
 
-    for (size_type i = 0; i < vec_size; ++i)  {
-        if (limit > 0 && count >= limit)  break;
-        if (! _is_nan<T>(vec[i]))  last_value = &(vec[i]);
-        if (_is_nan<T>(vec[i]) && ! _is_nan<T>(*last_value))  {
-            vec[i] = *last_value;
-            count += 1;
+    for (size_type i = 0; i < col_num; ++i)  {
+        if (limit >= 0 && count >= limit)  break;
+        if (i >= vec_size)  {
+            if (! _is_nan(last_value))  {
+                vec.reserve(col_num);
+                vec.push_back(last_value);
+                count += 1;
+            }
+            else  break;
+        }
+        else  {
+            if (! _is_nan<T>(vec[i]))  last_value = vec[i];
+            if (_is_nan<T>(vec[i]) && ! _is_nan<T>(last_value))  {
+                vec[i] = last_value;
+                count += 1;
+            }
         }
     }
     return;
@@ -105,13 +124,13 @@ fill_missing_bfill_(std::vector<T> &vec, int limit)  {
     if (vec_size == 0)  return; 
 
     int count = 0;
-    T   *last_value = &(vec[vec_size - 1]);
+    T   last_value = vec[vec_size - 1];
 
     for (long i = vec_size - 1; i >= 0; --i)  {
-        if (limit > 0 && count >= limit)  break;
-        if (! _is_nan<T>(vec[i]))  last_value = &(vec[i]);
-        if (_is_nan<T>(vec[i]) && ! _is_nan<T>(*last_value))  {
-            vec[i] = *last_value;
+        if (limit >= 0 && count >= limit)  break;
+        if (! _is_nan<T>(vec[i]))  last_value = vec[i];
+        if (_is_nan<T>(vec[i]) && ! _is_nan<T>(last_value))  {
+            vec[i] = last_value;
             count += 1;
         }
     }
@@ -152,7 +171,7 @@ fill_missing_linter_(std::vector<T> &vec, const TSVec &index, int limit)  {
     const TS    *x2 = &(index[2]);
 
     for (size_type i = 1; i < vec_size - 1; ++i)  {
-        if (limit > 0 && count >= limit)  break;
+        if (limit >= 0 && count >= limit)  break;
         if (_is_nan<T>(vec[i]))  {
             if (_is_nan<T>(*y2))  {
                 bool    found = false;
@@ -219,9 +238,9 @@ fill_missing(const std::array<const char *, N> col_names,
         std::vector<T>  &vec = hv.template get_vector<T>();
 
         if (fp == fill_policy::value)
-            fill_missing_value_(vec, values[i], limit);
+            fill_missing_value_(vec, values[i], limit, indices_.size());
         else if (fp == fill_policy::fill_forward)
-            fill_missing_ffill_(vec, limit);
+            fill_missing_ffill_(vec, limit, indices_.size());
         else if (fp == fill_policy::fill_backward)
             fill_missing_bfill_(vec, limit);
         else if (fp == fill_policy::linear_interpolate)

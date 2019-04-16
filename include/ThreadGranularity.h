@@ -12,8 +12,10 @@ namespace hmdf
 
 struct ThreadGranularity  {
 
-    static void set_thread_level(unsigned int n)  { num_of_threads_ = n; }
-    static unsigned int get_thread_level()  { return (num_of_threads_); }
+    static inline void
+    set_thread_level(unsigned int n)  { num_of_threads_ = n; }
+    static inline unsigned int
+    get_thread_level()  { return (num_of_threads_); }
 
 protected:
 

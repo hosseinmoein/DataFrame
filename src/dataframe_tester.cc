@@ -17,6 +17,8 @@ int main(int argc, char *argv[]) {
 
     typedef StdDataFrame<unsigned long> MyDataFrame;
 
+    MyDataFrame::set_thread_level(4);
+
     MyDataFrame         df;
     std::vector<int>    &col0 =
         df.create_column<int>(static_cast<const char *>("col_name"));

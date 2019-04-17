@@ -17,7 +17,7 @@ int main(int argc, char *argv[]) {
 
     typedef StdDataFrame<unsigned long> MyDataFrame;
 
-    MyDataFrame::set_thread_level(4);
+    MyDataFrame::set_thread_level(10);
 
     MyDataFrame         df;
     std::vector<int>    &col0 =

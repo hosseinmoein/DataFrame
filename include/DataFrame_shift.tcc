@@ -20,9 +20,30 @@ void DataFrame<TS, HETERO>::self_shift(size_type periods, shift_policy sp)  {
 
     if (periods > 0)  {
         vertical_shift_functor_<types ...> functor(periods, sp);
+        std::vector<std::future<void>>     futures(get_thread_level());
+        size_type                          thread_count = 0;
+        const size_type                    data_size = data_.size();
 
-        for (auto &iter : data_)
-            iter.change(functor);
+        for (size_type idx = 0; idx < data_size; ++idx)  {
+            if (thread_count >= get_thread_level())
+                data_[idx].change(functor);
+            else  {
+                auto    to_be_called =
+                    static_cast
+                    <void(DataVec::*)(vertical_shift_functor_<types ...> &&)>
+                        (&DataVec::template
+                             change<vertical_shift_functor_<types ...>>);
+
+                futures[thread_count] =
+                    std::async(std::launch::async,
+                               to_be_called,
+                               &(data_[idx]),
+                               std::move(functor));
+                thread_count += 1;
+            }
+        }
+        for (size_type idx = 0; idx < thread_count; ++idx)
+            futures[idx].get();
     }
 }
 
@@ -52,10 +73,31 @@ void DataFrame<TS, HETERO>::self_rotate(size_type periods, shift_policy sp)  {
                   "Only a StdDataFrame can call self_rotate()");
 
     if (periods > 0)  {
-        rotate_functor_<types ...>  functor(periods, sp);
+        rotate_functor_<types ...>      functor(periods, sp);
+        std::vector<std::future<void>>  futures(get_thread_level());
+        size_type                       thread_count = 0;
+        const size_type                 data_size = data_.size();
 
-        for (auto &iter : data_)
-            iter.change(functor);
+        for (size_type idx = 0; idx < data_size; ++idx)  {
+            if (thread_count >= get_thread_level())
+                data_[idx].change(functor);
+            else  {
+                auto    to_be_called =
+                    static_cast
+                        <void(DataVec::*)(rotate_functor_<types ...> &&)>
+                            (&DataVec::template
+                                 change<rotate_functor_<types ...>>);
+
+                futures[thread_count] =
+                    std::async(std::launch::async,
+                               to_be_called,
+                               &(data_[idx]),
+                               std::move(functor));
+                thread_count += 1;
+            }
+        }
+        for (size_type idx = 0; idx < thread_count; ++idx)
+            futures[idx].get();
     }
 }
 

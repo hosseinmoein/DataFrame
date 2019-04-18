@@ -221,6 +221,9 @@ fill_missing(const std::array<const char *, N> col_names,
              const std::array<T, N> values,
              int limit)  {
 
+    std::vector<std::future<void>>  futures(get_thread_level());
+    size_type                       thread_count = 0;
+
     for (size_type i = 0; i < N; ++i)  {
         const auto  citer = data_tb_.find (col_names[i]);
 
@@ -237,14 +240,58 @@ fill_missing(const std::array<const char *, N> col_names,
         DataVec         &hv = data_[citer->second];
         std::vector<T>  &vec = hv.template get_vector<T>();
 
-        if (fp == fill_policy::value)
-            fill_missing_value_(vec, values[i], limit, indices_.size());
-        else if (fp == fill_policy::fill_forward)
-            fill_missing_ffill_(vec, limit, indices_.size());
-        else if (fp == fill_policy::fill_backward)
-            fill_missing_bfill_(vec, limit);
-        else if (fp == fill_policy::linear_interpolate)
-            fill_missing_linter_(vec, indices_, limit);
+        if (fp == fill_policy::value)  {
+            if (thread_count >= get_thread_level())
+                fill_missing_value_(vec, values[i], limit, indices_.size());
+            else  {
+                futures[thread_count] =
+                    std::async(std::launch::async,
+                               &DataFrame::fill_missing_value_<T>,
+                               std::ref(vec),
+                               std::cref(values[i]),
+                               limit,
+                               indices_.size());
+                thread_count += 1;
+            }
+        }
+        else if (fp == fill_policy::fill_forward)  {
+            if (thread_count >= get_thread_level())
+                fill_missing_ffill_(vec, limit, indices_.size());
+            else  {
+                futures[thread_count] =
+                    std::async(std::launch::async,
+                               &DataFrame::fill_missing_ffill_<T>,
+                               std::ref(vec),
+                               limit,
+                               indices_.size());
+                thread_count += 1;
+            }
+        }
+        else if (fp == fill_policy::fill_backward)  {
+            if (thread_count >= get_thread_level())
+                fill_missing_bfill_(vec, limit);
+            else  {
+                futures[thread_count] =
+                    std::async(std::launch::async,
+                               &DataFrame::fill_missing_bfill_<T>,
+                               std::ref(vec),
+                               limit);
+                thread_count += 1;
+            }
+        }
+        else if (fp == fill_policy::linear_interpolate)  {
+            if (thread_count >= get_thread_level())
+                fill_missing_linter_(vec, indices_, limit);
+            else  {
+                futures[thread_count] =
+                    std::async(std::launch::async,
+                               &DataFrame::fill_missing_linter_<T>,
+                               std::ref(vec),
+                               std::cref(indices_),
+                               limit);
+                thread_count += 1;
+            }
+        }
         else if (fp == fill_policy::linear_extrapolate)  {
             char buffer [512];
 
@@ -256,6 +303,8 @@ fill_missing(const std::array<const char *, N> col_names,
         }
     }
 
+    for (size_type idx = 0; idx < thread_count; ++idx)
+        futures[idx].get();
     return;
 }
 
@@ -303,26 +352,67 @@ template<typename ... types>
 void DataFrame<TS, HETERO>::
 drop_missing(drop_policy policy, size_type threshold)  {       
 
-    DropRowMap                              missing_row_map;
+    DropRowMap                      missing_row_map;
+    std::vector<std::future<void>>  futures(get_thread_level());
+    size_type                       thread_count = 0;
+    const size_type                 data_size = data_.size();
+
     map_missing_rows_functor_<types ...>    functor (indices_.size(),
                                                      missing_row_map);
 
-    for (auto &iter : data_)
-        iter.change(functor);
+    for (size_type idx = 0; idx < data_size; ++idx)  {
+        if (thread_count >= get_thread_level())
+            data_[idx].change(functor);
+        else  {
+            auto    to_be_called =
+                static_cast
+                    <void(DataVec::*)(map_missing_rows_functor_<types ...> &&)>
+                        (&DataVec::template
+                             change<map_missing_rows_functor_<types ...>>);
+
+            futures[thread_count] =
+                std::async(std::launch::async,
+                           to_be_called,
+                           &(data_[idx]),
+                           std::move(functor));
+            thread_count += 1;
+        }
+    }
+    for (size_type idx = 0; idx < thread_count; ++idx)
+        futures[idx].get();
+    thread_count = 0;
 
     drop_missing_rows_(indices_,
                        missing_row_map,
                        policy,
                        threshold,
-                       data_.size());
+                       data_size);
 
     drop_missing_rows_functor_<types ...>   functor2 (missing_row_map,
                                                       policy,
                                                       threshold,
                                                       data_.size());
 
-    for (auto &iter : data_)
-        iter.change(functor2);
+    for (size_type idx = 0; idx < data_size; ++idx)  {
+        if (thread_count >= get_thread_level())
+            data_[idx].change(functor2);
+        else  {
+            auto    to_be_called =
+                static_cast
+                    <void(DataVec::*)(drop_missing_rows_functor_<types ...>&&)>
+                        (&DataVec::template
+                             change<drop_missing_rows_functor_<types ...>>);
+
+            futures[thread_count] =
+                std::async(std::launch::async,
+                           to_be_called,
+                           &(data_[idx]),
+                           std::move(functor2));
+            thread_count += 1;
+        }
+    }
+    for (size_type idx = 0; idx < thread_count; ++idx)
+        futures[idx].get();
 
     return;
 }

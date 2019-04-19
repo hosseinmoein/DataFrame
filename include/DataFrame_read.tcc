@@ -33,7 +33,7 @@ _get_token_from_file_  (std::ifstream &file, char delim, char *value) {
 
     value[count] = 0;
 }
-	
+
 // ----------------------------------------------------------------------------
 
 template<typename T, typename V>

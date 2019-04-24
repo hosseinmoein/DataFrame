@@ -45,6 +45,46 @@ DataFrame<TS, HETERO>::get_column (const char *name) const  {
 // ----------------------------------------------------------------------------
 
 template<typename TS, typename  HETERO>
+template<size_t N, typename ... types>
+HeteroVector DataFrame<TS, HETERO>::
+get_row(size_type row_num, const std::array<const char *, N> col_names) const {
+
+    HeteroVector ret_vec;
+
+    if (row_num >= indices_.size())  {
+        char buffer [512];
+
+        sprintf(buffer, "DataFrame::get_row(): ERROR: There aren't %lu rows",
+                row_num);
+        throw BadRange(buffer);
+    }
+
+	ret_vec.reserve<TimeStamp>(1);
+	ret_vec.push_back(indices_[row_num]);
+
+    get_row_functor_<types ...> functor(ret_vec, row_num);
+
+    for (auto name_citer : col_names)  {
+        const auto  citer = data_tb_.find (name_citer);
+
+        if (citer == data_tb_.end())  {
+            char buffer [512];
+
+            sprintf(buffer,
+                    "DataFrame::get_row(): ERROR: Cannot find column '%s'",
+                    name_citer);
+            throw ColNotFound(buffer);
+        }
+
+        data_[citer->second].change(functor);
+    }
+
+    return (ret_vec);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename TS, typename  HETERO>
 template<typename T>
 std::vector<T> DataFrame<TS, HETERO>::
 get_col_unique_values(const char *name) const  {

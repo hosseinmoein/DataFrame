@@ -1760,6 +1760,70 @@ int main(int argc, char *argv[]) {
         df.write<std::ostream, int, double, std::string>(std::cout);
     }
 
+    {
+        std::cout << "\n\nTesing get_row()" << std::endl;
+
+        std::vector<unsigned long>  idx =
+            { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+              123457, 123458, 123459, 123460, 123461, 123462, 123466 };
+        std::vector<double> d1 = { 1, 2, 3, 4,
+                                   std::numeric_limits<double>::quiet_NaN(),
+                                   6, 7,
+                                   std::numeric_limits<double>::quiet_NaN(),
+                                   std::numeric_limits<double>::quiet_NaN(),
+                                   std::numeric_limits<double>::quiet_NaN(),
+                                   11, 12, 13, 14 };
+        std::vector<double> d2 = { 8, 9, 10, 11, 12,
+                                   std::numeric_limits<double>::quiet_NaN(),
+                                   std::numeric_limits<double>::quiet_NaN(),
+                                   20, 22, 23, 30, 31,
+                                   std::numeric_limits<double>::quiet_NaN(),
+                                   1.89 };
+        std::vector<double> d3 = { 400.4, 16, 500.5, 18, 19, 16,
+                                   std::numeric_limits<double>::quiet_NaN(),
+                                   0.34, 1.56, 0.34, 2.3, 0.34,
+                                   std::numeric_limits<double>::quiet_NaN() };
+        std::vector<int>    i1 = { 22, 11, 34, 25,
+                                   std::numeric_limits<int>::quiet_NaN() };
+        MyDataFrame         df;
+
+        df.load_data(std::move(idx),
+                     std::make_pair("col_1", d1),
+                     std::make_pair("col_2", d2),
+                     std::make_pair("col_3", d3),
+                     std::make_pair("col_4", i1));
+
+        std::vector<std::string>    s1 =
+            { "qqqq", "wwww", "eeee", "rrrr", "tttt", "yyyy", "iiii", "oooo" };
+
+        df.load_column("col_str",
+                       std::move(s1),
+                       nan_policy::dont_pad_with_nans);
+
+        std::vector<int>    i2 = { 22, 11 };
+
+        df.load_column("col_int",
+                       std::move(i2),
+                       nan_policy::dont_pad_with_nans);
+
+        std::cout << "Original DF:" << std::endl;
+        df.write<std::ostream, int, double, std::string>(std::cout);
+
+        std::array<const char *, 6> columns = 
+            {"col_1", "col_2", "col_3", "col_4", "col_str", "col_int"};
+        auto                        row =
+            df.get_row<6, int, double, std::string>(2, columns);
+
+        std::cout << "Row elements are:" << std::endl;
+        std::cout << row.at<MyDataFrame::TimeStamp>(0) << ", "
+                  << row.at<double>(0) << ", "
+                  << row.at<double>(1) << ", "
+                  << row.at<double>(2) << ", "
+                  << row.at<int>(0) << ", "
+                  << row.at<int>(1) << ", "
+                  << row.at<std::string>(0) << std::endl;
+    }
+
     return (0);
 }
 

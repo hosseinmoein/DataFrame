@@ -627,6 +627,25 @@ public: // Read/access interfaces
     const typename type_declare<HETERO, T>::type &
     get_column (const char *name) const;
 
+    // It returns the data in row row_num for columns in col_names.
+    // The order of data items in the returned vector is the same as order
+    // of columns on col_names.
+	// The first item in the returned vector is always the index value
+	// corresponding to the row_num
+    // It returns a HeteroVector which contains a different type
+    // for each column.
+    //
+    // N: Size of col_names and values array
+    // types: List all the types of all data columns.
+    //        A type should be specified in the list only once.
+    // row_num: The row number
+    // col_names: Names of columns to get data from. It also specyfies the
+    //            order of data in the returned vector
+    //
+    template<size_t N, typename ... types>
+    HeteroVector get_row(size_type row_num,
+                         const std::array<const char *, N> col_names) const;
+
     // It returns a vector of unique values in the named column in the same
     // order that exists in the column.
     // For this method to compile and work, 3 conditions must be met:
@@ -642,7 +661,7 @@ public: // Read/access interfaces
     template<typename T>
     std::vector<T> get_col_unique_values(const char *name) const;
 
-    // It returns a DataFrame (including the index and data columns)
+    // It returns a DataFrame (inc     the index and data columns)
     // containing the data from index begin to index end.
     // DataFrame must be sorted by index or behavior is undefined.
     //

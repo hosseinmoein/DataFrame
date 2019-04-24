@@ -467,7 +467,6 @@ operator()(const T &vec)  {
     return;
 }
 
-
 // ----------------------------------------------------------------------------
 
 template<typename TS, typename HETERO>
@@ -481,6 +480,25 @@ operator()(T &vec)  {
     drop_missing_rows_(vec, missing_row_map, policy, threshold, col_num);
     return;
 }
+
+// ----------------------------------------------------------------------------
+
+template<typename TS, typename HETERO>
+template<typename ... types>
+template<typename T>
+void
+DataFrame<TS, HETERO>::
+get_row_functor_<types ...>::
+operator()(T &vec)  {
+
+    result.reserve<typename T::value_type>(1);
+    if (row_num < vec.size())
+        result.push_back(vec[row_num]);
+    else
+        result.push_back(_get_nan<typename T::value_type>());
+    return;
+}
+
 
 } // namespace hmdf
 

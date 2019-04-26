@@ -59,8 +59,8 @@ get_row(size_type row_num, const std::array<const char *, N> col_names) const {
         throw BadRange(buffer);
     }
 
-	ret_vec.reserve<TimeStamp>(1);
-	ret_vec.push_back(indices_[row_num]);
+    ret_vec.reserve<TimeStamp>(1);
+    ret_vec.push_back(indices_[row_num]);
 
     get_row_functor_<types ...> functor(ret_vec, row_num);
 

@@ -630,8 +630,8 @@ public: // Read/access interfaces
     // It returns the data in row row_num for columns in col_names.
     // The order of data items in the returned vector is the same as order
     // of columns on col_names.
-	// The first item in the returned vector is always the index value
-	// corresponding to the row_num
+    // The first item in the returned vector is always the index value
+    // corresponding to the row_num
     // It returns a HeteroVector which contains a different type
     // for each column.
     //
@@ -639,7 +639,7 @@ public: // Read/access interfaces
     // types: List all the types of all data columns.
     //        A type should be specified in the list only once.
     // row_num: The row number
-    // col_names: Names of columns to get data from. It also specyfies the
+    // col_names: Names of columns to get data from. It also specifies the
     //            order of data in the returned vector
     //
     template<size_t N, typename ... types>

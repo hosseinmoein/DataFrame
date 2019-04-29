@@ -68,6 +68,7 @@ set(${LIBRARY_TARGET_NAME}_SRC
 # List of header files.
 set(${LIBRARY_TARGET_NAME}_HDR
   include/VectorView.h
+  include/VectorPtrView.h
   include/HeteroVector.h
   include/HeteroView.h
   include/HeteroVector.tcc
@@ -158,9 +159,11 @@ include(AddUninstallTarget)
 # Build the test binary
 add_executable(dataframe_tester src/dataframe_tester.cc)
 add_executable(vectors_tester src/vectors_tester.cc)
+add_executable(vector_ptr_view_tester src/vector_ptr_view_tester.cc)
 add_executable(date_time_tester src/date_time_tester.cc)
 target_link_libraries(dataframe_tester Dataframe) # Link the Dataframe library to the test binary
 target_link_libraries(vectors_tester Dataframe) # Link the Dataframe library to the test binary
+target_link_libraries(vector_ptr_view_tester Dataframe) # Link the Dataframe library to the test binary
 target_link_libraries(date_time_tester Dataframe) # Link the Dataframe library to the test binary
 if (UNIX)
   # Find pthreads library
@@ -168,6 +171,7 @@ if (UNIX)
   find_package(Threads REQUIRED)
   target_link_libraries(dataframe_tester Threads::Threads)
   target_link_libraries(vectors_tester Threads::Threads)
+  target_link_libraries(vector_ptr_view_tester Threads::Threads)
   target_link_libraries(date_time_tester Threads::Threads)
 endif (UNIX)
 
@@ -179,6 +183,9 @@ add_test(NAME dataframe_tester
 add_test(NAME vectors_tester
          COMMAND vectors_tester
          WORKING_DIRECTORY $<TARGET_FILE_DIR:vectors_tester>)
+add_test(NAME vector_ptr_view_tester
+         COMMAND vector_ptr_view_tester
+         WORKING_DIRECTORY $<TARGET_FILE_DIR:vector_ptr_view_tester>)
 add_test(NAME date_time_tester
          COMMAND date_time_tester
          WORKING_DIRECTORY $<TARGET_FILE_DIR:date_time_tester>)

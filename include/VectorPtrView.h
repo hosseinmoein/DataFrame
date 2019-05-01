@@ -5,7 +5,6 @@
 
 #pragma once
 
-#include <cstdlib>
 #include <iterator>
 #include <vector>
 
@@ -21,7 +20,7 @@ private:
 
     using vector_type = std::vector<T *>;
 
-    vector_type vector_;
+    vector_type vector_ {  };
 
 public:
 
@@ -65,6 +64,21 @@ public:
     inline VectorPtrView () = default;
     inline VectorPtrView (const VectorPtrView &) = default;
     inline VectorPtrView (VectorPtrView &&) = default;
+    VectorPtrView(std::vector<T> &rhs)  {
+
+        const size_type vec_size = rhs.size();
+
+        vector_.reserve(vec_size);
+        for (size_type idx = 0; idx < vec_size; ++idx)
+            vector_.push_back(&(rhs[idx]));
+    }
+    template<typename ITR>
+    VectorPtrView(ITR first, ITR last)  {
+
+        vector_.reserve(std::distance(first, last));
+        for (auto iter = first; iter < last; ++iter)
+            vector_.push_back(&(*iter));
+    }
     ~VectorPtrView () = default;
 
     inline VectorPtrView &operator = (const VectorPtrView &) = default;
@@ -78,7 +92,7 @@ public:
     class   const_iterator;
     class   const_reverse_iterator
         : public std::iterator<std::random_access_iterator_tag,
-                               value_type const, long>  {
+                               value_type const *, long>  {
 
     public:
 
@@ -92,7 +106,7 @@ public:
         inline const_reverse_iterator () = default;
 
         inline const_reverse_iterator (value_type const **node)
-            noexcept : node_ (*node)  {   }
+            noexcept : node_ (node)  {   }
 
         inline const_reverse_iterator (const const_iterator &itr) noexcept
             : node_ (nullptr)  { *this = itr; }
@@ -120,13 +134,13 @@ public:
        //
         inline const_pointer operator -> () const noexcept  {
 
-            return (node_);
+            return (*node_);
         }
         inline const_reference operator *() const noexcept  {
 
-            return (*node_);
+            return (**node_);
         }
-        inline operator pointer () const noexcept  { return (node_); }
+        inline operator pointer () const noexcept  { return (*node_); }
 
        // ++Prefix
        //
@@ -140,7 +154,7 @@ public:
        //
         inline const_reverse_iterator operator ++ (int) noexcept  {
 
-            value_type   const  *ret_node = node_;
+            value_type *const  *ret_node = node_;
 
             node_ -= 1;
             return (const_reverse_iterator (ret_node));
@@ -164,7 +178,7 @@ public:
        //
         inline const_reverse_iterator operator -- (int) noexcept  {
 
-            value_type   const  *ret_node = node_;
+            value_type *const  *ret_node = node_;
 
             node_ += 1;
             return (const_reverse_iterator (ret_node));
@@ -178,7 +192,7 @@ public:
 
         inline const_reverse_iterator operator + (int step) noexcept  {
 
-            value_type   const  *ret_node = node_;
+            value_type *const  *ret_node = node_;
 
             ret_node -= step;
             return (const_reverse_iterator (ret_node));
@@ -186,7 +200,7 @@ public:
 
         inline const_reverse_iterator operator - (int step) noexcept  {
 
-            value_type   const  *ret_node = node_;
+            value_type *const  *ret_node = node_;
 
             ret_node += step;
             return (const_reverse_iterator (ret_node));
@@ -194,7 +208,7 @@ public:
 
         inline const_reverse_iterator operator + (long step) noexcept  {
 
-            value_type   const  *ret_node = node_;
+            value_type *const  *ret_node = node_;
 
             ret_node -= step;
             return (const_reverse_iterator (ret_node));
@@ -202,7 +216,7 @@ public:
 
         inline const_reverse_iterator operator - (long step) noexcept  {
 
-            value_type   const  *ret_node = node_;
+            value_type   *const  *ret_node = node_;
 
             ret_node += step;
             return (const_reverse_iterator (ret_node));
@@ -210,13 +224,13 @@ public:
 
     private:
 
-        const_pointer   node_ {nullptr};
+        T *const    *node_ { nullptr };
     };
 
     class   iterator;
     class   const_iterator
         : public std::iterator<std::random_access_iterator_tag,
-                               value_type const, long>  {
+                               const value_type *, long>  {
 
     public:
 
@@ -229,8 +243,8 @@ public:
        //
         inline const_iterator () = default;
 
-        inline const_iterator (value_type const **node) noexcept
-            : node_ (*node)  {   }
+        inline const_iterator (const value_type **node) noexcept
+            : node_ (node)  {   }
 
         inline const_iterator (const iterator &itr) noexcept
             : node_ (nullptr)  { *this = itr; }
@@ -253,12 +267,12 @@ public:
        // Following STL style, this iterator appears as a pointer
        // to value_type.
        //
-        inline const_pointer operator -> () const noexcept  { return (node_); }
+        inline const_pointer operator -> () const noexcept  { return (*node_); }
         inline const_reference operator * () const noexcept  {
 
-            return (*node_);
+            return (**node_);
         }
-        inline operator const_pointer () const noexcept  { return (node_); }
+        inline operator const_pointer () const noexcept  { return (*node_); }
 
        // ++Prefix
        //
@@ -272,7 +286,7 @@ public:
        //
         inline const_iterator operator ++ (int) noexcept  {
 
-            value_type   const  *ret_node = node_;
+            value_type *const  *ret_node = node_;
 
             node_ += 1;
             return (const_iterator (ret_node));
@@ -296,7 +310,7 @@ public:
        //
         inline const_iterator operator -- (int) noexcept  {
 
-            value_type  const  *ret_node = node_;
+            value_type *const  *ret_node = node_;
 
             node_ -= 1;
             return (const_iterator (ret_node));
@@ -310,7 +324,7 @@ public:
 
         inline const_iterator operator + (int step) noexcept  {
 
-            value_type  const  *ret_node = node_;
+            value_type *const  *ret_node = node_;
 
             ret_node += step;
             return (const_iterator (ret_node));
@@ -318,7 +332,7 @@ public:
 
         inline const_iterator operator - (int step) noexcept  {
 
-            value_type  const  *ret_node = node_;
+            value_type *const  *ret_node = node_;
 
             ret_node -= step;
             return (const_iterator (ret_node));
@@ -326,7 +340,7 @@ public:
 
         inline const_iterator operator + (long step) noexcept  {
 
-            value_type  const  *ret_node = node_;
+            value_type *const  *ret_node = node_;
 
             ret_node += step;
             return (const_iterator (ret_node));
@@ -334,7 +348,7 @@ public:
 
         inline const_iterator operator - (long step) noexcept  {
 
-            value_type  const  *ret_node = node_;
+            value_type *const  *ret_node = node_;
 
             ret_node -= step;
             return (const_iterator (ret_node));
@@ -342,7 +356,7 @@ public:
 
     private:
 
-        const_pointer   node_ {nullptr};
+        T *const    *node_ { nullptr };
 
         friend class    VectorPtrView::const_reverse_iterator;
     };
@@ -352,7 +366,7 @@ public:
    //
     class   iterator
         : public std::iterator<std::random_access_iterator_tag,
-                               value_type, long>  {
+                               value_type *, long>  {
 
     public:
 
@@ -365,7 +379,7 @@ public:
        //
         inline iterator () = default;
 
-        inline iterator (value_type **node) noexcept : node_ (*node)  {  }
+        inline iterator (value_type **node) noexcept : node_ (node)  {  }
 
         inline bool operator == (const iterator &rhs) const noexcept  {
 
@@ -379,9 +393,9 @@ public:
        // Following STL style, this iterator appears as a pointer
        // to value_type.
        //
-        inline pointer operator -> () const noexcept  { return (node_); }
-        inline reference operator * () const noexcept  { return (*node_); }
-        inline operator pointer () const noexcept  { return (node_); }
+        inline pointer operator -> () const noexcept  { return (*node_); }
+        inline reference operator * () const noexcept  { return (**node_); }
+        inline operator pointer () const noexcept  { return (*node_); }
 
        // We are following STL style iterator interface.
        //
@@ -392,7 +406,7 @@ public:
         }
         inline iterator operator ++ (int) noexcept  {  // Postfix++
 
-            value_type   *ret_node = node_;
+            value_type   **ret_node = node_;
 
             node_ += 1;
             return (iterator (ret_node));
@@ -411,7 +425,7 @@ public:
         }
         inline iterator operator -- (int) noexcept  {  // Postfix--
 
-            value_type   *ret_node = node_;
+            value_type   **ret_node = node_;
 
             node_ -= 1;
             return (iterator (ret_node));
@@ -425,7 +439,7 @@ public:
 
         inline iterator operator + (int step) noexcept  {
 
-            value_type   *ret_node = node_;
+            value_type   **ret_node = node_;
 
             ret_node += step;
             return (iterator (ret_node));
@@ -433,7 +447,7 @@ public:
 
         inline iterator operator - (int step) noexcept  {
 
-            value_type   *ret_node = node_;
+            value_type   **ret_node = node_;
 
             ret_node -= step;
             return (iterator (ret_node));
@@ -441,7 +455,7 @@ public:
 
         inline iterator operator + (long step) noexcept  {
 
-            value_type   *ret_node = node_;
+            value_type   **ret_node = node_;
 
             ret_node += step;
             return (iterator (ret_node));
@@ -449,7 +463,7 @@ public:
 
         inline iterator operator - (long step) noexcept  {
 
-            value_type   *ret_node = node_;
+            value_type   **ret_node = node_;
 
             ret_node -= step;
             return (iterator (ret_node));
@@ -457,7 +471,7 @@ public:
 
     private:
 
-        pointer node_ {nullptr};
+        pointer *node_ { nullptr };
 
         friend class    VectorPtrView::const_iterator;
     };
@@ -474,23 +488,23 @@ public:
 
         return (iterator (&(vector_.front())));
     }
-    inline iterator end () noexcept  { return(iterator(&(vector_.back()) + 1)); }
+    inline iterator end () noexcept { return(iterator(&(vector_.back()) + 1)); }
     inline const_iterator begin () const noexcept  {
 
         return (const_iterator (&(vector_.front())));
     }
     inline const_iterator end () const noexcept  {
 
-        return (iterator (&(vector_.back()) + 1));
+        return (const_iterator (&(vector_.back()) + 1));
     }
 
     inline const_reverse_iterator rbegin () const noexcept  {
 
-        return (const_iterator (&(vector_.back())));
+        return (const_reverse_iterator (&(vector_.back())));
     }
     inline const_reverse_iterator rend () const noexcept  {
 
-        return (const_iterator (&(vector_.front()) - 1));
+        return (const_reverse_iterator (&(vector_.front()) - 1));
     }
 
     VectorPtrView &operator= (std::vector<T> &rhs)  {
@@ -500,7 +514,7 @@ public:
 
         tmp_vec.reserve(vec_size);
         for (size_type idx = 0; idx < vec_size; ++idx)
-            tmp_vec.psuh_back(&(rhs[idx]));
+            tmp_vec.push_back(&(rhs[idx]));
         swap(tmp_vec);
         return (*this);
     }

@@ -477,11 +477,11 @@ public:
 
     inline const_reverse_iterator rbegin () const noexcept  {
 
-        return (const_iterator (end_ptr_ - 1));
+        return (const_reverse_iterator (end_ptr_ - 1));
     }
     inline const_reverse_iterator rend () const noexcept  {
 
-        return (const_iterator (begin_ptr_ - 1));
+        return (const_reverse_iterator (begin_ptr_ - 1));
     }
 
     VectorView &operator= (std::vector<T> &rhs)  {

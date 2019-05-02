@@ -3,10 +3,11 @@
 // Copyright (C) 2019-2021 Hossein Moein
 // Distributed under the BSD Software License (see file License)
 
+#include <VectorPtrView.h>
+
 #include <iostream>
 #include <cassert>
 
-#include <VectorPtrView.h>
 
 using namespace hmdf;
 
@@ -14,8 +15,10 @@ using namespace hmdf;
 
 int main (int argCnt, char *argVctr [])  {
 
-    std::vector<int>    int_vec = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
-    VectorPtrView<int>  vec_view(int_vec);
+    std::vector<int>            int_vec = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+    std::vector<int>            int_vec2 = { 10, 9, 8, 7, 6, 5, 4, 3, 2, 1 };
+    VectorPtrView<int>          vec_view(int_vec);
+    const VectorPtrView<int>    c_vec_view = int_vec;
 
     assert(vec_view.size() == int_vec.size());
 
@@ -35,6 +38,36 @@ int main (int argCnt, char *argVctr [])  {
          citer != vec_view.end(); ++citer)
         assert(*citer == ++counter);
     assert(counter == vec_view.size());
+
+    counter = 0;
+    for (VectorPtrView<int>::iterator iter = vec_view.begin();
+         iter != vec_view.end(); ++iter)
+        assert(*iter == ++counter);
+    assert(counter == vec_view.size());
+
+    counter = 0;
+    for (VectorPtrView<int>::const_iterator citer = c_vec_view.begin();
+         citer != c_vec_view.end(); ++citer)
+        assert(*citer == ++counter);
+    assert(counter == c_vec_view.size());
+
+    VectorPtrView<int>  vec_view3(int_vec2.begin(), int_vec2.end());
+
+    vec_view3.sort();
+    counter = 0;
+    for (VectorPtrView<int>::const_iterator citer = vec_view3.begin();
+         citer != vec_view3.end(); ++citer)
+        assert(*citer == ++counter);
+    assert(counter == vec_view3.size());
+
+    counter = int_vec2.size();
+    for (std::vector<int>::const_iterator citer = int_vec2.begin();
+         citer != int_vec2.end(); ++citer)
+        assert(*citer == counter--);
+    assert(counter == 0);
+
+    vec_view2.push_back(&(int_vec[3]));
+    assert(vec_view2.back() == 4);
 
     return (EXIT_SUCCESS);
 }

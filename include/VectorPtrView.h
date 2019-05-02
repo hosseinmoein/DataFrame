@@ -5,6 +5,8 @@
 
 #pragma once
 
+#include <algorithm>
+#include <functional>
 #include <iterator>
 #include <vector>
 
@@ -37,10 +39,12 @@ public:
     inline size_type capacity() const noexcept { return (vector_.capacity()); }
 
     inline bool empty() const noexcept { return (vector_.empty()); }
+    inline void shrink_to_fit()  { vector_.shrink_to_fit(); }
 
-    inline reference operator[](size_type n)  { return (*(vector_[n])); }
-    inline const_reference
-    operator[](size_type n) const { return (*(vector_[n])); }
+    inline reference at(size_type n)  { return (*(vector_[n])); }
+    inline const_reference at(size_type n) const { return (*(vector_[n])); }
+    inline reference operator[](size_type n)  { return (at(n)); }
+    inline const_reference operator[](size_type n) const { return (at(n)); }
 
     inline void reserve (size_type n) noexcept { vector_.reserve (n); }
 
@@ -50,7 +54,13 @@ public:
     inline reference back () noexcept { return (*(vector_.back ())); }
     inline const_reference
     back () const noexcept { return (*(vector_.back ())); }
-    inline void swap (VectorPtrView &rhs) noexcept  { vector_.swap (rhs); }
+
+    inline void push_back(value_type *v)  { vector_.push_back(v); }
+    inline void emplace_back(value_type *v)  { vector_.emplace_back(v); }
+    inline void pop_back()  { vector_.pop_back(); }
+
+    inline void
+    swap (VectorPtrView &rhs) noexcept  { vector_.swap (rhs.vector_); }
 
     inline friend bool
     operator == (const VectorPtrView &lhs, const VectorPtrView &rhs) {
@@ -70,21 +80,32 @@ public:
 
         const size_type vec_size = rhs.size();
 
-        vector_.reserve(vec_size);
+        reserve(vec_size);
         for (size_type idx = 0; idx < vec_size; ++idx)
-            vector_.push_back(&(rhs[idx]));
+            push_back(&(rhs[idx]));
     }
     template<typename ITR>
     VectorPtrView(ITR first, ITR last)  {
 
-        vector_.reserve(std::distance(first, last));
+        reserve(std::distance(first, last));
         for (auto iter = first; iter < last; ++iter)
-            vector_.push_back(&(*iter));
+            push_back(&(*iter));
     }
     ~VectorPtrView () = default;
 
     inline VectorPtrView &operator = (const VectorPtrView &) = default;
     inline VectorPtrView &operator = (VectorPtrView &&) = default;
+    inline VectorPtrView &operator = (std::vector<T> &rhs)  {
+
+        VectorPtrView   tmp_vec;
+        const size_type vec_size = rhs.size();
+
+        reserve(vec_size);
+        for (size_type idx = 0; idx < vec_size; ++idx)
+            tmp_vec.push_back(&(rhs[idx]));
+        swap(tmp_vec);
+        return (*this);
+    }
 
     inline void clear () throw ()  { vector_.clear(); }
     inline void resize (size_type n) throw ()  { vector_.resize(n); }
@@ -204,7 +225,7 @@ public:
 
         pointer *node_ { nullptr };
 
-        friend class    VectorPtrView::const_iterator;
+        friend class    const_iterator;
     };
 
     class   const_iterator
@@ -221,14 +242,13 @@ public:
        //       the iterator to be the "end" iterator
        //
         inline const_iterator () = default;
+        inline const_iterator &operator = (const const_iterator &) = default;
 
-        inline const_iterator (const value_type **node) noexcept
-            : node_ (node)  {   }
+        inline const_iterator (value_type *const *node) : node_ (node)  {   }
 
-        inline const_iterator (const iterator &itr) noexcept { *this = itr; }
+        inline const_iterator (const iterator &itr)  { *this = itr; }
 
-        template<typename ITR>
-        inline const_iterator &operator = (const ITR &rhs) noexcept  {
+        inline const_iterator &operator = (const iterator &rhs)  {
 
             node_ = rhs.node_;
             return (*this);
@@ -342,7 +362,7 @@ public:
 
     class   const_reverse_iterator
         : public std::iterator<std::random_access_iterator_tag,
-                               value_type const *, long>  {
+                               const value_type *, long>  {
 
     public:
 
@@ -355,11 +375,11 @@ public:
        //
         inline const_reverse_iterator () = default;
 
-        inline const_reverse_iterator (value_type const **node)
-            noexcept : node_ (node)  {   }
+        inline const_reverse_iterator (value_type *const *node)
+            : node_ (node)  {   }
 
-        inline const_reverse_iterator (const const_iterator &itr) noexcept
-            : node_ (nullptr)  { *this = itr; }
+        inline const_reverse_iterator (const const_iterator &itr)
+            { *this = itr; }
 
         inline const_reverse_iterator &
         operator = (const const_iterator &rhs) noexcept  {
@@ -476,7 +496,7 @@ public:
 
         T *const    *node_ { nullptr };
 
-        friend class    VectorPtrView::const_iterator;
+        friend class    const_iterator;
     };
 
 public:
@@ -485,6 +505,13 @@ public:
     iterator erase (iterator first, iterator last)  {
 
         return (vector_.erase (first, last));
+    }
+
+    inline void
+    sort(std::function<bool(int *, int *)> comp =
+             [](const int *l, const int *r) -> bool { return *l < *r; }) {
+
+        std::sort(vector_.begin(), vector_.end(), comp);
     }
 
     inline iterator begin () noexcept  {
@@ -508,18 +535,6 @@ public:
     inline const_reverse_iterator rend () const noexcept  {
 
         return (const_reverse_iterator (&(vector_.front()) - 1));
-    }
-
-    VectorPtrView &operator= (std::vector<T> &rhs)  {
-
-        VectorPtrView   tmp_vec;
-        const size_type vec_size = rhs.size();
-
-        tmp_vec.reserve(vec_size);
-        for (size_type idx = 0; idx < vec_size; ++idx)
-            tmp_vec.push_back(&(rhs[idx]));
-        swap(tmp_vec);
-        return (*this);
     }
 };
 

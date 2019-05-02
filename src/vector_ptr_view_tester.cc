@@ -8,10 +8,9 @@
 #include <iostream>
 #include <cassert>
 
-
 using namespace hmdf;
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 int main (int argCnt, char *argVctr [])  {
 
@@ -69,10 +68,22 @@ int main (int argCnt, char *argVctr [])  {
     vec_view2.push_back(&(int_vec[3]));
     assert(vec_view2.back() == 4);
 
+    vec_view2.erase(vec_view2.size() - 1);
+    assert(vec_view2.back() == 10);
+
+    vec_view2.insert(3, &(int_vec2[0]));
+    assert(vec_view2[3] == 10);
+    assert(vec_view2[2] == 3);
+    assert(vec_view2[4] == 4);
+
+    vec_view2.insert(vec_view2.size(), &int_vec2[0], &int_vec2[10]);
+	std::cout << vec_view2.size() << ", " << int_vec2.size() * 2 + 1 << std::endl;
+    assert(vec_view2.size() == int_vec2.size() * 2 + 1);
+
     return (EXIT_SUCCESS);
 }
 
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 // Local Variables:
 // mode:C++

@@ -34,6 +34,8 @@ public:
     using size_type = typename vector_type::size_type;
     using difference_type = typename vector_type::difference_type;
 
+public:
+
     inline size_type size() const noexcept { return (vector_.size ()); }
     inline size_type max_size() const noexcept { return (vector_.max_size()); }
     inline size_type capacity() const noexcept { return (vector_.capacity()); }
@@ -109,6 +111,31 @@ public:
 
     inline void clear () throw ()  { vector_.clear(); }
     inline void resize (size_type n) throw ()  { vector_.resize(n); }
+
+    inline void
+    erase (size_type pos)  { vector_.erase (vector_.begin() + pos); }
+    inline void erase (size_type first, size_type last)  {
+
+        vector_.erase (vector_.begin() + first, vector_.begin() + last);
+    }
+
+    inline void insert (size_type pos, value_type *v)  {
+
+        vector_.insert (vector_.begin() + pos, v);
+    }
+    inline void insert(size_type pos, value_type *first, value_type *last) {
+
+        vector_.insert (vector_.begin() + pos, &first, &last);
+    }
+
+    inline void
+    sort(std::function<bool(value_type *, value_type *)> comp =
+             [](const value_type *l, const value_type *r) -> bool {
+                 return *l < *r;
+             })  {
+
+        std::sort(vector_.begin(), vector_.end(), comp);
+    }
 
 public:
 
@@ -500,19 +527,6 @@ public:
     };
 
 public:
-
-    iterator erase (iterator pos)  { return (vector_.erase (pos)); }
-    iterator erase (iterator first, iterator last)  {
-
-        return (vector_.erase (first, last));
-    }
-
-    inline void
-    sort(std::function<bool(int *, int *)> comp =
-             [](const int *l, const int *r) -> bool { return *l < *r; }) {
-
-        std::sort(vector_.begin(), vector_.end(), comp);
-    }
 
     inline iterator begin () noexcept  {
 

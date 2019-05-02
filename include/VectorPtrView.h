@@ -225,10 +225,10 @@ public:
         inline const_iterator (const value_type **node) noexcept
             : node_ (node)  {   }
 
-        inline const_iterator (const iterator &itr) noexcept
-            : node_ (nullptr)  { *this = itr; }
+        inline const_iterator (const iterator &itr) noexcept { *this = itr; }
 
-        inline const_iterator &operator = (const iterator &rhs) noexcept  {
+        template<typename ITR>
+        inline const_iterator &operator = (const ITR &rhs) noexcept  {
 
             node_ = rhs.node_;
             return (*this);
@@ -338,8 +338,6 @@ public:
     private:
 
         T *const    *node_ { nullptr };
-
-        friend class    VectorPtrView::iterator;
     };
 
     class   const_reverse_iterator

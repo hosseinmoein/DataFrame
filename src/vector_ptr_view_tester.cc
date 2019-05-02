@@ -34,6 +34,7 @@ int main (int argCnt, char *argVctr [])  {
     for (VectorPtrView<int>::const_iterator citer = vec_view.begin();
          citer != vec_view.end(); ++citer)
         assert(*citer == ++counter);
+    assert(counter == vec_view.size());
 
     return (EXIT_SUCCESS);
 }

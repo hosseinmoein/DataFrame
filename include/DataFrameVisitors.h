@@ -274,19 +274,19 @@ struct CovVisitor {
 
 private:
 
-    T                   total1_ { T(0) };
-    T                   total2_ { T(0) };
-    T                   dot_prod_ { T(0) };
-    T                   dot_prod1_ { T(0) };
-    T                   dot_prod2_ { T(0) };
-    std::size_t         cnt_ { 0 };
-    const unsigned char b_;
+    T           total1_ { T(0) };
+    T           total2_ { T(0) };
+    T           dot_prod_ { T(0) };
+    T           dot_prod1_ { T(0) };
+    T           dot_prod2_ { T(0) };
+    std::size_t cnt_ { 0 };
+    const bool  b_;
 
 public:
 
     using value_type = T;
 
-    explicit CovVisitor (std::size_t bias = 1) : b_ (bias) {  }
+    explicit CovVisitor (bool bias = true) : b_ (bias) {  }
     inline void operator() (const TS_T &, const T &val1, const T &val2)  {
 
         total1_ += val1;

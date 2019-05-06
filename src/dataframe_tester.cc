@@ -34,12 +34,13 @@ int main(int argc, char *argv[]) {
         { 1UL, 2UL, 3UL, 4UL, 5UL, 8UL, 7UL, 6UL };
     std::vector<unsigned long>  xulgvec = ulgvec;
 
-    int rc = df.load_data(std::move(ulgvec),
-                          std::make_pair("int_col", intvec),
-                          std::make_pair("dbl_col", dblvec),
-                          std::make_pair("dbl_col_2", dblvec2),
-                          std::make_pair("str_col", strvec),
-                          std::make_pair("ul_col", xulgvec));
+    MyDataFrame::size_type  rc =
+        df.load_data(std::move(ulgvec),
+                     std::make_pair("int_col", intvec),
+                     std::make_pair("dbl_col", dblvec),
+                     std::make_pair("dbl_col_2", dblvec2),
+                     std::make_pair("str_col", strvec),
+                     std::make_pair("ul_col", xulgvec));
 
     std::cout << "Return code " << rc
               << " should be " <<

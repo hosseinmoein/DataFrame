@@ -213,7 +213,8 @@ public:
     //
     DateTime &operator = (const char *rhs);  // dt = "20181223"
 
-    int compare(const DateTime &rhs) const; // this (lhs) compared with rhs
+    // this (lhs) compared with rhs
+    EpochType compare(const DateTime &rhs) const;
 
     DateType date () const noexcept;            // eg. 20020303
     DatePartType year () const noexcept;        // eg. 1990

@@ -170,13 +170,13 @@ fill_missing_linter_(std::vector<T> &vec, const TSVec &index, int limit)  {
     const TS    *x1 = &(index[0]);
     const TS    *x2 = &(index[2]);
 
-    for (size_type i = 1; i < vec_size - 1; ++i)  {
+    for (long i = 1; i < vec_size - 1; ++i)  {
         if (limit >= 0 && count >= limit)  break;
         if (_is_nan<T>(vec[i]))  {
             if (_is_nan<T>(*y2))  {
                 bool    found = false;
 
-                for (size_type j = i + 1; j < vec_size; ++j)  {
+                for (long j = i + 1; j < vec_size; ++j)  {
                     if (! _is_nan(vec[j]))  {
                         y2 = &(vec[j]);
                         x2 = &(index[j]);
@@ -187,7 +187,7 @@ fill_missing_linter_(std::vector<T> &vec, const TSVec &index, int limit)  {
                 if (! found)  break;
             }
             if (_is_nan<T>(*y1))  {
-                for (size_type j = i - 1; j >= 0; --j)  {
+                for (long j = i - 1; j >= 0; --j)  {
                     if (! _is_nan(vec[j]))  {
                         y1 = &(vec[j]);
                         x1 = &(index[j]);

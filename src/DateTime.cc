@@ -415,7 +415,7 @@ DateTime &DateTime::operator = (DateType the_date)  {
 
 // ----------------------------------------------------------------------------
 
-int DateTime::compare (const DateTime &rhs) const  {
+DateTime::EpochType DateTime::compare (const DateTime &rhs) const  {
 
     const EpochType t = time() - rhs.time();
 
@@ -940,7 +940,7 @@ DateTime::EpochType DateTime::maketime_ (struct tm &ltime) const noexcept  {
     if (time_zone_ != DT_TIME_ZONE::LOCAL)  {
 #ifdef _WIN32
         // SetEnvironmentVariable (L"TZ", TIMEZONES_ [time_zone_]);
-        putenv (TIMEZONES_[static_cast<int>(time_zone_)]);
+        _putenv (TIMEZONES_[static_cast<int>(time_zone_)]);
         _tzset ();
 #else
         ::setenv ("TZ", TIMEZONES_[static_cast<int>(time_zone_)], 1);
@@ -953,7 +953,7 @@ DateTime::EpochType DateTime::maketime_ (struct tm &ltime) const noexcept  {
     if (time_zone_ != DT_TIME_ZONE::LOCAL)  {
 #ifdef _WIN32
         // SetEnvironmentVariable (L"TZ", nullptr);
-        putenv ("TZ=");
+        _putenv ("TZ=");
         _tzset ();
 #else
         ::unsetenv ("TZ");
@@ -972,7 +972,7 @@ DateTime::breaktime_ (EpochType the_time, NanosecondType nanosec) noexcept  {
     if (time_zone_ != DT_TIME_ZONE::LOCAL)  {
 #ifdef _WIN32
         // SetEnvironmentVariable (L"TZ", TIMEZONES_ [time_zone_]);
-        putenv (TIMEZONES_[static_cast<int>(time_zone_)]);
+        _putenv (TIMEZONES_[static_cast<int>(time_zone_)]);
         _tzset ();
 #else
         ::setenv ("TZ", TIMEZONES_[static_cast<int>(time_zone_)], 1);
@@ -991,7 +991,7 @@ DateTime::breaktime_ (EpochType the_time, NanosecondType nanosec) noexcept  {
     if (time_zone_ != DT_TIME_ZONE::LOCAL)  {
 #ifdef _WIN32
         // SetEnvironmentVariable (L"TZ", nullptr);
-        putenv ("TZ=");
+        _putenv ("TZ=");
         _tzset ();
 #else
         ::unsetenv ("TZ");

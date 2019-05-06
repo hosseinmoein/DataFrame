@@ -128,7 +128,8 @@ public:
         size_type   counter = 0;
 
         for (const_pointer itr = &(string_ [pos]);
-             itr + token_len - begin () <= self_len; ++itr, ++counter)
+             itr + token_len - begin () <= static_cast<int>(self_len);
+             ++itr, ++counter)
             if (! ::strncmp (token, itr, token_len))
                 return (pos + counter);
 

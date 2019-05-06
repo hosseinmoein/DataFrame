@@ -94,7 +94,11 @@ _col_vector_push_back_<DateTime, std::vector<DateTime>>(
         int         n;
         DateTime    dt;
 
+#ifdef _WIN32
+        ::sscanf(value, "%lld.%d", &t, &n);
+#else
         ::sscanf(value, "%ld.%d", &t, &n);
+#endif // _WIN32
         dt.set_time(t, n);
         vec.emplace_back(std::move(dt));
     }
@@ -144,10 +148,33 @@ struct  _IdxParserFunctor_<long>  {
 // -------------------------------------
 
 template<>
+struct  _IdxParserFunctor_<long long>  {
+
+    inline void operator()(std::vector<long long> &vec, std::ifstream &file) {
+
+        _col_vector_push_back_(vec, file, &::atol);
+    }
+};
+
+// -------------------------------------
+
+template<>
 struct  _IdxParserFunctor_<unsigned long>  {
 
     inline void
     operator()(std::vector<unsigned long> &vec, std::ifstream &file)  {
+
+        _col_vector_push_back_(vec, file, &::atoll);
+    }
+};
+
+// -------------------------------------
+
+template<>
+struct  _IdxParserFunctor_<unsigned long long>  {
+
+    inline void
+    operator()(std::vector<unsigned long long> &vec, std::ifstream &file)  {
 
         _col_vector_push_back_(vec, file, &::atoll);
     }

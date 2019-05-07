@@ -546,9 +546,7 @@ public:
     }
     inline const_iterator end () const noexcept  {
 
-        const const_iterator    citer(&(vector_.back()) + 1);
-
-        return (citer);
+        return (const_iterator(&(vector_.back()) + 1));
     }
 
     inline const_reverse_iterator rbegin () const noexcept  {

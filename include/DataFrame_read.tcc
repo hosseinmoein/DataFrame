@@ -152,7 +152,7 @@ struct  _IdxParserFunctor_<long long>  {
 
     inline void operator()(std::vector<long long> &vec, std::ifstream &file) {
 
-        _col_vector_push_back_(vec, file, &::atol);
+        _col_vector_push_back_(vec, file, &::atoll);
     }
 };
 
@@ -164,7 +164,7 @@ struct  _IdxParserFunctor_<unsigned long>  {
     inline void
     operator()(std::vector<unsigned long> &vec, std::ifstream &file)  {
 
-        _col_vector_push_back_(vec, file, &::atoll);
+        _col_vector_push_back_(vec, file, &::atol);
     }
 };
 

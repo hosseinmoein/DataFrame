@@ -123,9 +123,16 @@ public:
 
         vector_.insert (vector_.begin() + pos, v);
     }
-    inline void insert(size_type pos, value_type *first, value_type *last) {
+    template<typename ITR>
+    inline void insert(size_type pos, ITR first, ITR last) {
 
-        vector_.insert (vector_.begin() + pos, &first, &last);
+        std::vector<T *>    tmp_vec;
+
+        tmp_vec.reserve(std::distance(first, last));
+        for (auto iter = first; iter < last; ++iter)
+            tmp_vec.push_back(&(*iter));
+        vector_.reserve(vector_.size() + tmp_vec.size());
+        vector_.insert (vector_.begin() + pos, tmp_vec.begin(), tmp_vec.end());
     }
 
     inline void

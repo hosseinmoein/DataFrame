@@ -76,9 +76,13 @@ int main (int argCnt, char *argVctr [])  {
     assert(vec_view2[2] == 3);
     assert(vec_view2[4] == 4);
 
-    vec_view2.insert(vec_view2.size(), &int_vec2[0], &int_vec2[10]);
-	std::cout << vec_view2.size() << ", " << int_vec2.size() * 2 + 1 << std::endl;
-    // assert(vec_view2.size() == int_vec2.size() * 2 + 1);
+    vec_view2.insert(vec_view2.size(), int_vec2.begin(), int_vec2.end());
+    assert(vec_view2.size() == int_vec2.size() * 2 + 1);
+    assert(vec_view2[3] == 10);
+    assert(vec_view2[2] == 3);
+    assert(vec_view2[4] == 4);
+    assert(vec_view2[20] == 1);
+    assert(vec_view2[19] == 2);
 
     return (EXIT_SUCCESS);
 }

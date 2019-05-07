@@ -3,6 +3,7 @@
 #include <typeinfo>
 #include <limits>
 #include <cmath>
+#include <cassert>
 
 #include "../include/DataFrame.h"
 #include "../include/DataFrameVisitors.h"
@@ -33,6 +34,14 @@ int main(int argc, char *argv[]) {
     std::vector<unsigned long>  ulgvec =
         { 1UL, 2UL, 3UL, 4UL, 5UL, 8UL, 7UL, 6UL };
     std::vector<unsigned long>  xulgvec = ulgvec;
+    const size_t                total_count =
+        ulgvec.size() +
+        intvec.size() +
+        dblvec.size() +
+        dblvec2.size() +
+        strvec.size() +
+        xulgvec.size() +
+        9;  // NaNa inserterd
 
     MyDataFrame::size_type  rc =
         df.load_data(std::move(ulgvec),
@@ -42,15 +51,7 @@ int main(int argc, char *argv[]) {
                      std::make_pair("str_col", strvec),
                      std::make_pair("ul_col", xulgvec));
 
-    std::cout << "Return code " << rc
-              << " should be " <<
-        ulgvec.size() +
-        intvec.size() +
-        dblvec.size() +
-        dblvec2.size() +
-        strvec.size() +
-        ulgvec.size()
-              << std::endl;
+    assert(rc == 48);
 
     df.load_index(ulgvec.begin(), ulgvec.end());
     df.load_column<int>("int_col", { intvec.begin(), intvec.end() },
@@ -67,27 +68,20 @@ int main(int argc, char *argv[]) {
 
     std::vector<int>    ivec = df.get_column<int> ("int_col");
 
-    std::cout << "Data is: " << df.get_column<double> ("dbl_col")[2]
-              << std::endl;
+    std::cout << df.get_column<double> ("dbl_col")[2] << std::endl;
+    assert(df.get_column<double> ("dbl_col")[2] == 3.2345);
 
     hmdf::MeanVisitor<int>      ivisitor;
     hmdf::MeanVisitor<double>   dvisitor;
 
-    std::cout << "Integer average is: "
-              << df.visit<int>("int_col", ivisitor).get_value()
-              << std::endl;
-    std::cout << "Double average is: "
-              << df.visit<double>("dbl_col", dvisitor).get_value()
-              << std::endl;
+    assert(df.visit<int>("int_col", ivisitor).get_value() == 1);
+    assert(std::isnan(df.visit<double>("dbl_col", dvisitor).get_value()));
 
     df.get_column<double>("dbl_col")[5] = 6.5;
     df.get_column<double>("dbl_col")[6] = 7.5;
     df.get_column<double>("dbl_col")[7] = 8.5;
-    std::cout << "Double average is: "
-              << df.visit<double>("dbl_col", dvisitor).get_value()
-              << std::endl;
-
-    df.write<std::ostream, int, unsigned long, double, std::string>(std::cout);
+    assert(::abs(df.visit<double>("dbl_col", dvisitor).get_value() -
+                 4.83406) < 0.0001);
 
     std::cout << "Printing integer vector BEFORE making make_consistent ..."
               << std::endl;
@@ -179,38 +173,21 @@ int main(int argc, char *argv[]) {
     for (auto iter : dvec)
         std::cout << iter << " ";
     std::cout << std::endl;
-    std::cout << "Skewness of dbl_col is: "
-              << stats_visitor.get_skew()
-              << std::endl;
-    std::cout << "Kurtosis of dbl_col is: "
-              << stats_visitor.get_kurtosis()
-              << std::endl;
-    std::cout << "Mean of dbl_col is: "
-              << stats_visitor.get_mean()
-              << std::endl;
-    std::cout << "Variamce of dbl_col is: "
-              << stats_visitor.get_variance()
-              << std::endl;
-
-   std::cout <<"\nDoing simple linear regression between dbl_col and dbl_col_2"
-             << std::endl;
+    assert(abs(stats_visitor.get_skew() - 0.0396307) < 0.0001);
+    assert(abs(stats_visitor.get_kurtosis() - -1.273) < 0.0001);
+    assert(abs(stats_visitor.get_mean() - 4.83406) < 0.0001);
+    assert(abs(stats_visitor.get_variance() - 6.58781) < 0.0001);
 
     hmdf::SLRegressionVisitor<double>   slr_visitor;
 
     df.visit<double, double>("dbl_col", "dbl_col_2", slr_visitor);
-    std::cout << "Count of dbl_col and dbl_col_2 is: "
-              << slr_visitor.get_count() << std::endl;
-    std::cout << "Slope of dbl_col and dbl_col_2 is: "
-              << slr_visitor.get_slope() << std::endl;
-    std::cout << "Intercept of dbl_col and dbl_col_2 is: "
-              << slr_visitor.get_intercept() << std::endl;
-    std::cout << "Correlation of dbl_col and dbl_col_2 is: "
-              << slr_visitor.get_corr() << std::endl;
-    std::cout << "Old correlation between dbl_col and dbl_col_2 is: "
-              << df.visit<double, double>("dbl_col",
-                                          "dbl_col_2",
-                                          corr_visitor).get_value()
-              << std::endl;
+    assert(slr_visitor.get_count() == 8);
+    assert(abs(slr_visitor.get_slope() - -0.0561415) < 0.00001);
+    assert(abs(slr_visitor.get_intercept() - 0.602674) < 0.00001);
+    assert(abs(slr_visitor.get_corr() - -0.358381) < 0.00001);
+    assert(abs(df.visit<double, double>("dbl_col", "dbl_col_2",
+                                        corr_visitor).get_value() -
+               -0.358381) < 0.00001);
 
     std::cout << "\nTesting GROUPBY:\n" << std::endl;
 
@@ -382,43 +359,27 @@ int main(int argc, char *argv[]) {
                     std::make_pair("dbl_col_2", &dvisitor22),
                     std::make_pair("ul_col", &ulvisitor));
 
-    std::cout << "Integer average is: " << ivisitor2.get_value()
-              << std::endl;
-    std::cout << "Double average is: " << dvisitor2.get_value()
-              << std::endl;
-    std::cout << "Double2 average is: " << dvisitor22.get_value()
-              << std::endl;
-    std::cout << "ULong average is: " << ulvisitor.get_value()
-              << std::endl;
-
-    std::cout << "\nTesting constructors and assignments\n" << std::endl;
+    assert(ivisitor2.get_value() == 19);
+    assert(abs(dvisitor2.get_value() - 4.5696) < 0.0001);
+    assert(abs(dvisitor22.get_value() - 0.0264609) < 0.00001);
+    assert(ulvisitor.get_value() == 123448);
 
     MyDataFrame df_copy_con = dfx;
 
-    std::cout << "These must be Equal: "
-              << df_copy_con.is_equal<int,
-                                      unsigned long,
-                                      double,
-                                      std::string>(dfx)
-              << std::endl;
-    std::cout << "These must Not be Equal: "
-              << df_copy_con.is_equal<int,
-                                      unsigned long,
-                                      double,
-                                      std::string>(dfxx)
-              << std::endl;
+    assert((df_copy_con.is_equal<int, unsigned long, double, std::string>(dfx)));
+    assert((! df_copy_con.is_equal<int,
+                                   unsigned long,
+                                   double,
+                                   std::string>(dfxx)));
 
     df_copy_con.get_column<double>("dbl_col")[7] = 88.888888;
-    std::cout << "Values in dfx, df_copy_con: "
-              << dfx.get_column<double>("dbl_col")[7] << ", "
-              << df_copy_con.get_column<double>("dbl_col")[7]
-              << std::endl;
-    std::cout << "After the change, these must Not be Equal: "
-              << df_copy_con.is_equal<int,
-                                      unsigned long,
-                                      double,
-                                      std::string>(dfx)
-              << std::endl;
+    assert(dfx.get_column<double>("dbl_col")[7] == 10.0);
+    assert(
+       abs(df_copy_con.get_column<double>("dbl_col")[7] - 88.888888) < 0.00001);
+    assert(! (df_copy_con.is_equal<int,
+                                   unsigned long,
+                                   double,
+                                   std::string>(dfx)));
 
     std::cout << "dfx before modify_by_idx()" << std::endl;
     dfx.write<std::ostream,
@@ -443,11 +404,10 @@ int main(int argc, char *argv[]) {
               std::string>(std::cout);
 
     MyDataFrame::set_thread_level(5);
-    std::cout << "Thread granularity is: " << MyDataFrame::get_thread_level()
-              << std::endl;
+    assert(MyDataFrame::get_thread_level() == 5);
     MyDataFrame::set_thread_level(0);
-    std::cout << "Thread granularity is: " << MyDataFrame::get_thread_level()
-              << std::endl;
+    assert(MyDataFrame::get_thread_level() == 0);
+    MyDataFrame::set_thread_level(10);
 
     {
         std::cout << "\n\nTesing transpose()" << std::endl;
@@ -549,10 +509,9 @@ int main(int argc, char *argv[]) {
 
         dfv.write<std::ostream, double, std::string>(std::cout);
         dfv.get_column<double>("col_3")[0] = 88.0;
-        std::cout << "After changing a value on view: "
-                  << dfv.get_column<double>("col_3")[0]
-                  << " == " << df.get_column<double>("col_3")[3]
-                  << std::endl;
+        assert(dfv.get_column<double>("col_3")[0] ==
+               df.get_column<double>("col_3")[3]);
+        assert(dfv.get_column<double>("col_3")[0] == 88.0);
     }
 
     {
@@ -624,10 +583,9 @@ int main(int argc, char *argv[]) {
         dfv.write<std::ostream, double, int>(std::cout);
 
         dfv.get_column<double>("col_3")[0] = 88.0;
-        std::cout << "After changing a value on view: "
-                  << dfv.get_column<double>("col_3")[0]
-                  << " == " << df.get_column<double>("col_3")[2]
-                  << std::endl;
+        assert(dfv.get_column<double>("col_3")[0] ==
+               df.get_column<double>("col_3")[2]);
+        assert(dfv.get_column<double>("col_3")[0] == 88.0);
     }
 
     {
@@ -1815,14 +1773,13 @@ int main(int argc, char *argv[]) {
         auto                        row =
             df.get_row<6, int, double, std::string>(2, columns);
 
-        std::cout << "Row elements are:" << std::endl;
-        std::cout << row.at<MyDataFrame::TimeStamp>(0) << ", "
-                  << row.at<double>(0) << ", "
-                  << row.at<double>(1) << ", "
-                  << row.at<double>(2) << ", "
-                  << row.at<int>(0) << ", "
-                  << row.at<int>(1) << ", "
-                  << row.at<std::string>(0) << std::endl;
+        assert(row.at<MyDataFrame::TimeStamp>(0) == 123452);
+        assert(row.at<double>(0) == 3.0);
+        assert(row.at<double>(1) == 10.0);
+        assert(row.at<double>(2) == 500.5);
+        assert(row.at<int>(0) == 34);
+        assert(row.at<int>(1) == 0);
+        assert(row.at<std::string>(0) == "eeee");
     }
 
     return (0);

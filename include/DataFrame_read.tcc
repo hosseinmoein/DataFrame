@@ -49,7 +49,7 @@ _col_vector_push_back_(V &vec,
         if (c == '\n')  break;
         file.unget();
         _get_token_from_file_(file, ',', value);
-        vec.push_back(converter(value));
+        vec.push_back(static_cast<T>(converter(value)));
     }
 }
 
@@ -152,7 +152,7 @@ struct  _IdxParserFunctor_<long long>  {
 
     inline void operator()(std::vector<long long> &vec, std::ifstream &file) {
 
-        _col_vector_push_back_(vec, file, &::atol);
+        _col_vector_push_back_(vec, file, &::atoll);
     }
 };
 
@@ -164,7 +164,7 @@ struct  _IdxParserFunctor_<unsigned long>  {
     inline void
     operator()(std::vector<unsigned long> &vec, std::ifstream &file)  {
 
-        _col_vector_push_back_(vec, file, &::atoll);
+        _col_vector_push_back_(vec, file, &::atol);
     }
 };
 

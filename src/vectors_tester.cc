@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cassert>
 #include <string>
 #include <typeinfo>
 
@@ -68,28 +69,22 @@ int main(int argc, char *argv[]) {
     hv.push_back (std::string("fas"));
 
     {
-        std::cout << "\n\nTesing HeteroVector View" << std::endl;
+        // Tesing HeteroVector View
 
         HeteroView  d = hv.get_view<double>();
 
-        std::cout << "d[3] must be 1.05: " << d.at<double>(3) << std::endl;
+        assert(d.at<double>(3) == 1.05);
 
         HeteroView  s = hv.get_view<std::string>(1, 3);
 
-        std::cout << "s[0] must be 'str_2': "
-                  << s.at<std::string>(0) << std::endl;
-        std::cout << "s size: " << s.size<std::string>() << std::endl;
-        std::cout << "s.back() must be 'abc': "
-                  << s.back<std::string>() << std::endl;
-
-        std::cout << "\n\n";
+        assert(s.at<std::string>(0) == "str_2");
+        assert(s.size<std::string>() == 2);
+        assert(s.back<std::string>() == "str_3");
     }
 
-    std::cout << "hv size before erase: "
-              << hv.size<std::string>() << std::endl;
+    assert(hv.size<std::string>() == 5);
     hv.erase<std::string>(2);
-    std::cout << "hv size after erase: "
-              << hv.size<std::string>() << std::endl;
+    assert(hv.size<std::string>() == 4);
 
     hv2 = hv;
     hv3 = std::move(hv2);
@@ -130,24 +125,19 @@ int main(int argc, char *argv[]) {
     hv.front<int>();
 
     {
-        std::cout << "\n\nTesing VectorView" << std::endl;
+        // Tesing VectorView
 
         std::vector<int> vec { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
         VectorView<int>  vec_view;
 
         vec_view = vec;
-        std::cout << "View size: " << vec.size() << " == "
-                  << vec_view.size() << std::endl;
-        std::cout << "View value 0: " << vec[0] << " == "
-                  << vec_view[0] << std::endl;
-        std::cout << "View value 5: " << vec[5] << " == "
-                  << vec_view[5] << std::endl;
-        std::cout << "View value 9: " << vec[9] << " == "
-                  << vec_view[9] << std::endl;
+        assert(vec_view.size() == 10);
+        assert(vec_view[0] == 1);
+        assert(vec_view[5] == 6);
+        assert(vec_view[9] == 10);
 
         vec_view[5] = 100;
-        std::cout << "View value 5 after change: " << vec[5] << " == "
-                  << vec_view[5] << std::endl;
+        assert(vec_view[5] == 100);
 
     }
 

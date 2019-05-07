@@ -1,15 +1,4 @@
-Return code 48 should be 39
-Data is: 3.2345
-Integer average is: 1
-Double average is: nan
-Double average is: 4.83406
-INDEX:8:<ulong>:1,2,3,4,5,8,7,6,
-ul_col:8:<ulong>:1,2,3,4,5,8,7,6,
-str_col:9:<string>:Col_name,Col_name,Col_name,Col_name,Col_name,,,,Additional column,
-dbl_col_2:8:<double>:0.998,0.3456,0.056,0.15678,0.00345,0.923,0.06743,0.1,
-dbl_col:9:<double>:1.2345,2.2345,3.2345,4.2345,5.2345,6.5,7.5,8.5,10.56,
-int_col:8:<int>:1,2,3,4,5,0,0,0,
-
+3.2345
 Printing integer vector BEFORE making make_consistent ...
 1.2345 2.2345 3.2345 4.2345 5.2345 6.5 7.5 8.5 10.56 
 0.998 0.3456 0.056 0.15678 0.00345 0.923 0.06743 0.1 
@@ -38,17 +27,6 @@ Printing the second df after get_data_by_loc() ...
 Correlation between dbl_col and dbl_col_2 is: -0.358381
 
 5.2345 3.2345 7.5 8.5 4.2345 2.2345 6.5 1.2345 
-Skewness of dbl_col is: 0.0396307
-Kurtosis of dbl_col is: -1.273
-Mean of dbl_col is: 4.83406
-Variamce of dbl_col is: 6.58781
-
-Doing simple linear regression between dbl_col and dbl_col_2
-Count of dbl_col and dbl_col_2 is: 8
-Slope of dbl_col and dbl_col_2 is: -0.0561415
-Intercept of dbl_col and dbl_col_2 is: 0.602674
-Correlation of dbl_col and dbl_col_2 is: -0.358381
-Old correlation between dbl_col and dbl_col_2 is: -0.358381
 
 Testing GROUPBY:
 
@@ -136,17 +114,6 @@ ul_col:28:<ulong>:123450,123451,123452,123450,123455,123450,123449,123448,123451
 
 Testing multi_visit()
 
-Integer average is: 19
-Double average is: 4.5696
-Double2 average is: 0.0264609
-ULong average is: 123448
-
-Testing constructors and assignments
-
-These must be Equal: 1
-These must Not be Equal: 0
-Values in dfx, df_copy_con: 10, 88.8889
-After the change, these must Not be Equal: 0
 dfx before modify_by_idx()
 INDEX:28:<ulong>:123432,123433,123434,123435,123436,123441,123442,123448,123449,123450,123450,123450,123450,123450,123451,123451,123452,123452,123452,123453,123454,123455,123455,123456,123457,123458,123459,123460,
 ul_col:28:<ulong>:123450,123451,123452,123450,123455,123450,123449,123448,123451,123452,123452,123450,123455,123450,123454,123453,123456,123457,123458,123459,123460,123441,123442,123432,123433,123434,123435,123436,
@@ -171,8 +138,6 @@ dbl_col_2:28:<double>:0.87865,-0.6999,0.4111,0.1902,-0.4888,0.2,0.1056,0.1,0.067
 dbl_col:28:<double>:2.009,3.111,10,4.2222,5.3333,12,6.25,88.8889,0.9999,1.2345,4.2345,3,8,3.3333,2.2345,4.25,3.2345,0.009,1.111,5.25,11,5.2345,2.2222,1.009,2.111,9,3.2222,4.3333,
 xint_col:28:<int>:35,36,40,45,46,33,34,8,7,1,4,6,12,14,2,9,3,10,11,20,15,5,13,22,23,24,25,30,
 
-Thread granularity is: 5
-Thread granularity is: 0
 
 
 Tesing transpose()
@@ -238,7 +203,6 @@ col_4:3:<double>:25,nan,nan,
 col_str:3:<string>:xx,yy,gg,
 col_3:3:<double>:18,19,20,
 
-After changing a value on view: 88 == 88
 
 
 Tesing remove_column()
@@ -290,7 +254,6 @@ col_2:9:<double>:10,11,12,13,14,20,22,23,30,
 col_4:9:<int>:24,25,99,100,101,3,2,0,0,
 col_3:9:<double>:17,18,19,20,21,0.34,1.56,0.34,2.3,
 
-After changing a value on view: 88 == 88
 
 
 Tesing rename_column()
@@ -804,5 +767,3 @@ col_4:14:<int>:22,11,34,25,0,0,0,0,0,0,0,0,0,0,
 col_2:14:<double>:8,9,10,11,12,nan,nan,20,22,23,30,31,nan,1.89,
 col_1:14:<double>:1,2,3,4,nan,6,7,nan,nan,nan,11,12,13,14,
 
-Row elements are:
-123452, 3, 10, 500.5, 34, 0, eeee

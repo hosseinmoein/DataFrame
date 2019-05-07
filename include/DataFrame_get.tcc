@@ -54,7 +54,11 @@ get_row(size_type row_num, const std::array<const char *, N> col_names) const {
     if (row_num >= indices_.size())  {
         char buffer [512];
 
+#ifdef _WIN32
+        sprintf(buffer, "DataFrame::get_row(): ERROR: There aren't %zu rows",
+#else
         sprintf(buffer, "DataFrame::get_row(): ERROR: There aren't %lu rows",
+#endif // _WIN32
                 row_num);
         throw BadRange(buffer);
     }

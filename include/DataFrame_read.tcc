@@ -49,7 +49,7 @@ _col_vector_push_back_(V &vec,
         if (c == '\n')  break;
         file.unget();
         _get_token_from_file_(file, ',', value);
-        vec.push_back(converter(value));
+        vec.push_back(static_cast<T>(converter(value)));
     }
 }
 

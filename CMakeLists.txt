@@ -9,9 +9,9 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # Library type
 if(MSVC)
-option(STATIC "Set to ON to build xlnt as a static library instead of a shared library" ON)
+option(STATIC "Set to ON to build Dataframe as a static library instead of a shared library" ON)
 else(MSVC)
-option(STATIC "Set to ON to build xlnt as a static library instead of a shared library" OFF)
+option(STATIC "Set to ON to build Dataframe as a static library instead of a shared library" OFF)
 endif(MSVC)
 
 # We use

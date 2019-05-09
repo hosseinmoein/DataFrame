@@ -177,9 +177,9 @@ public:
 
 #  ifndef DMS_NOINCLUDE_SOURCE
 #    include "HeteroVector.tcc"
-#  endif // DMS_INCLUDE_SOURCE
+#  endif // DMS_NOINCLUDE_SOURCE
 
-#endif //DMS_NOINCLUDE_SOURCE
+#endif //HMDF_HETEROVECTOR_HPP
 
 // ----------------------------------------------------------------------------
 

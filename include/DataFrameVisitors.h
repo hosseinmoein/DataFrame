@@ -5,6 +5,9 @@
 
 #pragma once
 
+#ifndef HMDF_DATAFRAMEVISITORS_HPP
+#define HMDF_DATAFRAMEVISITORS_HPP
+
 #include "DataFrame.h"
 #include <cstddef>
 #include <algorithm>
@@ -644,6 +647,8 @@ void GroupbySum::
 get_value<std::string> (std::string &v) const  { v = str_sum; }
 
 } // namespace hmdf
+
+#endif //HMDF_DATAFRAMEVISITORS_HPP
 
 // ----------------------------------------------------------------------------
 

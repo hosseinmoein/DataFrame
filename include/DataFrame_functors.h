@@ -5,6 +5,9 @@
 
 #pragma once
 
+#ifndef HMDF_DATAFRAME_FUNCTORS_HPP
+#define HMDF_DATAFRAME_FUNCTORS_HPP
+
 // ----------------------------------------------------------------------------
 
 // This file was factored out so DataFrame.h doesn't become a huge file.
@@ -368,6 +371,8 @@ struct get_row_functor_ : DataVec::template visitor_base<types ...>  {
     template<typename T>
     void operator() (T &vec);
 };
+
+#endif //HMDF_DATAFRAME_FUNCTORS_HPP
 
 // ----------------------------------------------------------------------------
 

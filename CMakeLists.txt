@@ -93,7 +93,7 @@ set(${LIBRARY_TARGET_NAME}_HDR
 option(STATIC "Set to ON to build xlnt as a static library instead of a shared library" OFF)
 
 # Build the library
-add_definitions(-D DMS_INCLUDE_SOURCE) # Need this for some of the .tcc files to be compiled
+#add_definitions(-D DMS_INCLUDE_SOURCE) # Need this for some of the .tcc files to be compiled
 if(STATIC)
   add_library(${LIBRARY_TARGET_NAME} STATIC ${${LIBRARY_TARGET_NAME}_SRC})
 else(STATIC)

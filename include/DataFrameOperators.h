@@ -5,6 +5,9 @@
 
 #pragma once
 
+#ifndef HMDF_DATAFRAMEOPERATORS_HPP
+#define HMDF_DATAFRAMEOPERATORS_HPP
+
 #include "DataFrame.h"
 // #include <execution>
 
@@ -101,6 +104,8 @@ inline DF df_divides (const DF &lhs, const DF &rhs)  {
 }
 
 } // namespace hmdf
+
+#endif //HMDF_DATAFRAMEOPERATORS_HPP
 
 // ----------------------------------------------------------------------------
 

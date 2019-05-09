@@ -5,6 +5,9 @@
 
 #pragma once
 
+#ifndef HMDF_DATAFRAME_HPP
+#define HMDF_DATAFRAME_HPP
+
 #include "HeteroVector.h"
 #include "ThreadGranularity.h"
 
@@ -979,7 +982,7 @@ private:  // Tuple stuff
 
 // ----------------------------------------------------------------------------
 
-#  ifdef DMS_INCLUDE_SOURCE
+#  ifndef DMS_NOINCLUDE_SOURCE
 #    include "DataFrame_misc.tcc"
 #    include "DataFrame_set.tcc"
 #    include "DataFrame_get.tcc"
@@ -988,7 +991,9 @@ private:  // Tuple stuff
 #    include "DataFrame_join.tcc"
 #    include "DataFrame_shift.tcc"
 #    include "DataFrame.tcc"
-#  endif // DMS_INCLUDE_SOURCE
+#  endif // DMS_NOINCLUDE_SOURCE
+
+#endif //HMDF_DATAFRAME_HPP
 
 // ----------------------------------------------------------------------------
 

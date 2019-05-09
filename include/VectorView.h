@@ -5,6 +5,9 @@
 
 #pragma once
 
+#ifndef HMDF_VECTORVIEW_HPP
+#define HMDF_VECTORVIEW_HPP
+
 #include <iterator>
 #include <vector>
 
@@ -496,6 +499,8 @@ public:
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------
+
+#endif //HMDF_VECTORVIEW_HPP
 
 // Local Variables:
 // mode:C++

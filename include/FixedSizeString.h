@@ -5,6 +5,9 @@
 
 #pragma once
 
+#ifndef HMDF_FIXEDSIZESTRING_HPP
+#define HMDF_FIXEDSIZESTRING_HPP
+
 #include <cstdlib>
 #include <cstdio>
 #include <iostream>
@@ -340,6 +343,8 @@ using String1K = FixedSizeString<1023>;
 using String2K = FixedSizeString<2047>;
 
 } // namespace hmdf
+
+#endif //HMDF_FIXEDSIZESTRING_HPP
 
 // ----------------------------------------------------------------------------
 

@@ -5,6 +5,9 @@
 
 #pragma once
 
+#ifndef HMDF_HETEROVIEW_HPP
+#define HMDF_HETEROVIEW_HPP
+
 #include "VectorView.h"
 #include <unordered_map>
 #include <functional>
@@ -141,9 +144,11 @@ public:
 
 // ----------------------------------------------------------------------------
 
-#  ifdef DMS_INCLUDE_SOURCE
+#  ifndef DMS_NOINCLUDE_SOURCE
 #    include "HeteroView.tcc"
-#  endif // DMS_INCLUDE_SOURCE
+#  endif // DMS_NOINCLUDE_SOURCE
+
+#endif //HMDF_HETEROVIEW_HPP
 
 // ----------------------------------------------------------------------------
 
@@ -152,3 +157,4 @@ public:
 // tab-width:4
 // c-basic-offset:4
 // End:
+

@@ -5,6 +5,9 @@
 
 #pragma once
 
+#ifndef HMDF_DATETIME_HPP
+#define HMDF_DATETIME_HPP
+
 #ifdef _WIN32
 #include <windows.h>
 #endif // _WIN32
@@ -331,6 +334,8 @@ inline S &operator << (S &o, const DateTime &rhs)  {
 }
 
 } // namespace hmdf
+
+#endif //HMDF_DATETIME_HPP
 
 // ----------------------------------------------------------------------------
 

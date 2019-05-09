@@ -89,17 +89,20 @@ set(${LIBRARY_TARGET_NAME}_HDR
   include/FixedSizeString.h
 )
 
+# Library type
+option(STATIC "Set to ON to build xlnt as a static library instead of a shared library" OFF)
+
 # Build the library
 add_definitions(-D DMS_INCLUDE_SOURCE) # Need this for some of the .tcc files to be compiled
-if (UNIX)
-  add_library(${LIBRARY_TARGET_NAME} SHARED ${${LIBRARY_TARGET_NAME}_SRC})
-endif(UNIX)
-
-if (MSVC)
-  add_definitions(-D _CRT_SECURE_NO_WARNINGS)
+if(STATIC)
   add_library(${LIBRARY_TARGET_NAME} STATIC ${${LIBRARY_TARGET_NAME}_SRC})
-endif(MSVC)
+else(STATIC)
+  add_library(${LIBRARY_TARGET_NAME} SHARED ${${LIBRARY_TARGET_NAME}_SRC})
+endif(STATIC)
 
+if(MSVC)
+  add_definitions(-D _CRT_SECURE_NO_WARNINGS)
+endif()
 
 # Set two minimum target properties for the library.
 # See https://cmake.org/cmake/help/latest/command/set_target_properties.html

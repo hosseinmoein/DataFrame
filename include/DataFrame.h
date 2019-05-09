@@ -833,7 +833,7 @@ public: // Read/access interfaces
 
     // This is similar to visit(), but it passes a const reference to the index
     // vector and the named column vector at once the functor visitor.
-    // This is convineint for calculations that need the whole data vector,
+    // This is convenient for calculations that need the whole data vector,
     // for example auto-correlation.
     //
     // T: Type of the named column
@@ -845,7 +845,7 @@ public: // Read/access interfaces
 
     // This is similar to visit(), but it passes a const reference to the index
     // vector and the two named column vectors at once the functor visitor.
-    // This is convineint for calculations that need the whole data vector.
+    // This is convenient for calculations that need the whole data vector.
     // NOTE: This method could be used to implement a pivot table.
     //
     // T1: Type of the first named column

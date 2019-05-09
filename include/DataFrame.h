@@ -831,6 +831,32 @@ public: // Read/access interfaces
               const char *name5,
               V &visitor);
 
+    // This is similar to visit(), but it passes a const reference to the index
+    // vector and the named column vector at once the functor visitor.
+    // This is convineint for calculations that need the whole data vector,
+    // for example auto-correlation.
+    //
+    // T: Type of the named column
+    // V: Type of the visitor functor
+    // name: Name of the data column
+    //
+    template<typename T, typename V>
+    V &single_act_visit (const char *name, V &visitor) const;
+
+    // This is similar to visit(), but it passes a const reference to the index
+    // vector and the two named column vectors at once the functor visitor.
+    // This is convineint for calculations that need the whole data vector.
+    // NOTE: This method could be used to implement a pivot table.
+    //
+    // T1: Type of the first named column
+    // T2: Type of the second named column
+    // V: Type of the visitor functor
+    // name1: Name of the first data column
+    // name2: Name of the second data column
+    //
+    template<typename T1, typename T2, typename V>
+    V &single_act_visit (const char *name1, const char *name2, V &visitor);
+
 public:  // Operators
 
     // It compares self with rhs. If both have the sanme indices,

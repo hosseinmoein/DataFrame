@@ -465,6 +465,75 @@ visit (const char *name1,
 // ----------------------------------------------------------------------------
 
 template<typename TS, typename  HETERO>
+template<typename T, typename V>
+V &DataFrame<TS, HETERO>::
+single_act_visit (const char *name, V &visitor) const  {
+
+    const auto  iter = data_tb_.find (name);
+
+    if (iter == data_tb_.end())  {
+        char buffer [512];
+
+        sprintf(buffer,
+                "DataFrame::single_act_visit: ERROR: Cannot find column '%s'",
+                name);
+        throw ColNotFound (buffer);
+    }
+
+    const DataVec           &hv = data_[iter->second];
+    const std::vector<T>    &vec = hv.template get_vector<T>();
+
+    visitor.pre();
+    visitor (indices_, vec);
+    visitor.post();
+
+    return (visitor);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename TS, typename  HETERO>
+template<typename T1, typename T2, typename V>
+V &DataFrame<TS, HETERO>::
+single_act_visit (const char *name1, const char *name2, V &visitor)  {
+
+    const auto  iter1 = data_tb_.find (name1);
+    const auto  iter2 = data_tb_.find (name2);
+
+    if (iter1 == data_tb_.end())  {
+        char buffer [512];
+
+        sprintf (buffer,
+                 "DataFrame::single_act_visit(2): "
+                 "ERROR: Cannot find column '%s'",
+                 name1);
+        throw ColNotFound (buffer);
+    }
+    if (iter2 == data_tb_.end())  {
+        char buffer [512];
+
+        sprintf (buffer,
+                 "DataFrame::single_act_visit(2): "
+                 "ERROR: Cannot find column '%s'",
+                 name2);
+        throw ColNotFound (buffer);
+    }
+
+    const DataVec           &hv1 = data_[iter1->second];
+    const DataVec           &hv2 = data_[iter2->second];
+    const std::vector<T1>   &vec1 = hv1.template get_vector<T1>();
+    const std::vector<T2>   &vec2 = hv2.template get_vector<T2>();
+
+    visitor.pre();
+    visitor (indices_, vec1, vec2);
+    visitor.post();
+
+    return (visitor);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename TS, typename  HETERO>
 template<typename ... types>
 DataFrame<TS, HETERO>
 DataFrame<TS, HETERO>::get_data_by_idx (Index2D<TS> range) const  {

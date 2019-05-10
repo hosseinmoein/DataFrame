@@ -309,16 +309,22 @@ public:
     inline void post ()  {  }
     inline T get_value () const  {
 
-        return ((dot_prod_ - (total1_ * total2_) / T(cnt_)) / (T(cnt_) - T(1)));
+        const T bias = T(1) ? b_ : T(0);
+
+        return ((dot_prod_ - (total1_ * total2_) / T(cnt_)) / (T(cnt_) - bias));
     }
 
     inline T get_var1 () const  {
 
-        return((dot_prod1_ - (total1_ * total1_) / T(cnt_)) / (T(cnt_) - T(1)));
+        const T bias = T(1) ? b_ : T(0);
+
+        return((dot_prod1_ - (total1_ * total1_) / T(cnt_)) / (T(cnt_) - bias));
     }
     inline T get_var2 () const  {
 
-        return((dot_prod2_ - (total2_ * total2_) / T(cnt_)) / (T(cnt_) - T(1)));
+        const T bias = T(1) ? b_ : T(0);
+
+        return((dot_prod2_ - (total2_ * total2_) / T(cnt_)) / (T(cnt_) - bias));
     }
 };
 
@@ -338,13 +344,13 @@ public:
 
     using value_type = T;
 
-    explicit VarVisitor (std::size_t bias = 1) : cov_ (bias)  {   }
+    explicit VarVisitor (bool bias = true) : cov_ (bias)  {   }
     inline void operator() (const TS_T &idx, const T &val)  {
 
         cov_ (idx, val, val);
     }
     inline void pre ()  { cov_.pre(); }
-    inline void post ()  {  }
+    inline void post ()  { cov_.post(); }
     inline T get_value () const  { return (cov_.get_value()); }
 };
 
@@ -364,13 +370,13 @@ public:
 
     using value_type = T;
 
-    explicit StdVisitor (std::size_t bias = 1) : var_ (bias)  {   }
+    explicit StdVisitor (bool bias = true) : var_ (bias)  {   }
     inline void operator() (const TS_T &idx, const T &val)  {
 
         var_ (idx, val);
     }
     inline void pre ()  { var_.pre(); }
-    inline void post ()  {  }
+    inline void post ()  { var_.post(); }
     inline T get_value () const  { return (::sqrt(var_.get_value())); }
 };
 
@@ -390,18 +396,62 @@ public:
 
     using value_type = T;
 
-    explicit CorrVisitor (std::size_t bias = 1) : cov_ (bias)  {   }
+    explicit CorrVisitor (bool bias = true) : cov_ (bias)  {   }
     inline void operator() (const TS_T &idx, const T &val1, const T &val2)  {
 
         cov_ (idx, val1, val2);
     }
     inline void pre ()  { cov_.pre(); }
-    inline void post ()  {  }
+    inline void post ()  { cov_.post(); }
     inline T get_value () const  {
 
         return (cov_.get_value() /
                 (::sqrt(cov_.get_var1())* ::sqrt(cov_.get_var2())));
     }
+};
+
+// ----------------------------------------------------------------------------
+
+template<typename T,
+         typename TS_T = unsigned long,
+         typename =
+             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+struct AutoCorrVisitor  {
+
+private:
+
+    std::vector<T>          result_ {  };
+    CorrVisitor<T, TS_T>    corr_visit_ {  };
+
+public:
+
+    using value_type = T;
+
+    AutoCorrVisitor () = default;
+    inline void
+    operator() (const std::vector<TS_T> &idx, const std::vector<T> &column)  {
+
+        const std::size_t   col_len = column.size();
+
+        if (col_len <= 4)  return;
+
+        result_.reserve(col_len - 2);
+        result_.push_back(1.0);
+
+        std::size_t lag = 1;
+
+        while (lag < col_len - 4)  {
+            corr_visit_.pre();
+            for (std::size_t i = 0; i < col_len - lag; ++i)
+                corr_visit_(idx[0], column[i], column[i + lag]);
+            result_.push_back(corr_visit_.get_value());
+            corr_visit_.post();
+            lag += 1;
+        }
+    }
+    inline void pre ()  { corr_visit_.pre(); result_.clear(); }
+    inline void post ()  { corr_visit_.post();  }
+    inline const std::vector<T> &get_value () const  { return (result_); }
 };
 
 // ----------------------------------------------------------------------------

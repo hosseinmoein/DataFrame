@@ -227,7 +227,11 @@ int main(int argc, char *argv[]) {
                   std::make_pair("dbl_col_2", dblvec22),
                   std::make_pair("str_col", strvec2),
                   std::make_pair("ul_col", xulgvec2));
-    dfx.write<std::ostream, int, unsigned long, double, std::string>(std::cout);
+    dfx.write<std::ostream,
+              int,
+              unsigned long,
+              double,
+              std::string>(std::cout);
 
     const MyDataFrame   dfxx =
         dfx.groupby<GroupbySum,
@@ -366,7 +370,10 @@ int main(int argc, char *argv[]) {
 
     MyDataFrame df_copy_con = dfx;
 
-    assert((df_copy_con.is_equal<int, unsigned long, double, std::string>(dfx)));
+    assert((df_copy_con.is_equal<int,
+                                 unsigned long,
+                                 double,
+                                 std::string>(dfx)));
     assert((! df_copy_con.is_equal<int,
                                    unsigned long,
                                    double,
@@ -1780,6 +1787,51 @@ int main(int argc, char *argv[]) {
         assert(row.at<int>(0) == 34);
         assert(row.at<int>(1) == 0);
         assert(row.at<std::string>(0) == "eeee");
+    }
+
+    {
+        // Tesing Auto Correlation
+
+        std::vector<unsigned long>  idx =
+            { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+              123457, 123458, 123459, 123460, 123461, 123462, 123466,
+              123467, 123468, 123469, 123470, 123471, 123472, 123473 };
+        std::vector<double>         d1 =
+            { 15, 16, 15, 18, 19, 16, 21,
+              0.34, 1.56, 0.34, 2.3, 0.34, 19.0, 0.387,
+              0.123, 1.06, 0.65, 2.03, 0.4, 1.0, 0.007 };
+        std::vector<double>         d2 =
+            { 1.23, 1.22, 1.21, 1.20, 1.19, 1.185, 1.181,
+              1.19, 1.195, 1.189, 1.185, 1.18, 1.181, 1.186,
+              1.189, 1.19, 1.194, 1.198, 1.199, 1.197, 1.193 };
+        std::vector<int>            i1 = { 22, 23, 24, 25, 99 };
+        MyDataFrame                 df;
+
+        df.load_data(std::move(idx),
+                     std::make_pair("col_1", d1),
+                     std::make_pair("col_2", d2),
+                     std::make_pair("col_3", i1));
+
+        hmdf::AutoCorrVisitor<double>   auto_corr;
+        const auto                      &result =
+            df.single_act_visit<double>("col_1", auto_corr).get_value();
+
+        assert(result.size() == 17);
+        assert(result[0] == 1.0);
+        assert(abs(result[1] - 0.562001) < 0.00001);
+        assert(abs(result[16] - -0.265228) < 0.00001);
+        assert(abs(result[6] - 0.388131) < 0.00001);
+        assert(abs(result[10] - 0.125514) < 0.00001);
+
+        const auto  &result2 =
+            df.single_act_visit<double>("col_2", auto_corr).get_value();
+
+        assert(result.size() == 17);
+        assert(result[0] == 1.0);
+        assert(abs(result[1] - 0.903754) < 0.00001);
+        assert(abs(result[16] - 0.183254) < 0.00001);
+        assert(abs(result[6] - -0.263385) < 0.00001);
+        assert(abs(result[10] - -0.712274) < 0.00001);
     }
 
     return (0);

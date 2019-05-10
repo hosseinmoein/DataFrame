@@ -31,7 +31,7 @@ namespace hmdf
 // NOTE: VirtualString MAKES NO BOUNDARY CHECKS. IT IS THE RESPONSIBILITY
 //       OF THE PROGRAMMER TO TAKE CARE OF THAT.
 //
-class   VirtualString  {
+class HMDF_DLL_API VirtualString  {
 
 public:
 

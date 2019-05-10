@@ -8,43 +8,69 @@ set(${LIBRARY_TARGET_NAME}_SRC
         src/DateTime.cc
         )
 
-# List of header files.
-set(${LIBRARY_TARGET_NAME}_HDR
-        include/DataFrame/VectorView.h
-        include/DataFrame/HeteroVector.h
-        include/DataFrame/HeteroView.h
-        include/DataFrame/HeteroVector.tcc
-        include/DataFrame/HeteroView.tcc
-        include/DataFrame/DataFrameVisitors.h
-        include/DataFrame/DataFrameOperators.h
-        include/DataFrame/DataFrame.h
-        include/DataFrame/DataFrame.tcc
-        include/DataFrame/DataFrame_get.tcc
-        include/DataFrame/DataFrame_misc.tcc
-        include/DataFrame/DataFrame_opt.tcc
-        include/DataFrame/DataFrame_join.tcc
-        include/DataFrame/DataFrame_shift.tcc
-        include/DataFrame/DataFrame_read.tcc
-        include/DataFrame/DataFrame_set.tcc
-        include/DataFrame/DataFrame_functors.h
-        include/DataFrame/ThreadGranularity.h
-        include/DataFrame/DateTime.h
-        include/DataFrame/FixedSizeString.h
-        include/DataFrame/DataFrame_lib_exports.h
-        )
+if(STATIC)
+    # List of header files.
+    set(${LIBRARY_TARGET_NAME}_HDR
+            include/DataFrame/VectorView.h
+            include/DataFrame/HeteroVector.h
+            include/DataFrame/HeteroView.h
+            include/DataFrame/HeteroVector.tcc
+            include/DataFrame/HeteroView.tcc
+            include/DataFrame/DataFrameVisitors.h
+            include/DataFrame/DataFrameOperators.h
+            include/DataFrame/DataFrame.h
+            include/DataFrame/DataFrame.tcc
+            include/DataFrame/DataFrame_get.tcc
+            include/DataFrame/DataFrame_misc.tcc
+            include/DataFrame/DataFrame_opt.tcc
+            include/DataFrame/DataFrame_join.tcc
+            include/DataFrame/DataFrame_shift.tcc
+            include/DataFrame/DataFrame_read.tcc
+            include/DataFrame/DataFrame_set.tcc
+            include/DataFrame/DataFrame_functors.h
+            include/DataFrame/ThreadGranularity.h
+            include/DataFrame/DateTime.h
+            include/DataFrame/FixedSizeString.h
+            include/DataFrame/dllexports/static/DataFrame_lib_exports.h
+            )
+else(STATIC)
+    # List of header files.
+    set(${LIBRARY_TARGET_NAME}_HDR
+            include/DataFrame/VectorView.h
+            include/DataFrame/HeteroVector.h
+            include/DataFrame/HeteroView.h
+            include/DataFrame/HeteroVector.tcc
+            include/DataFrame/HeteroView.tcc
+            include/DataFrame/DataFrameVisitors.h
+            include/DataFrame/DataFrameOperators.h
+            include/DataFrame/DataFrame.h
+            include/DataFrame/DataFrame.tcc
+            include/DataFrame/DataFrame_get.tcc
+            include/DataFrame/DataFrame_misc.tcc
+            include/DataFrame/DataFrame_opt.tcc
+            include/DataFrame/DataFrame_join.tcc
+            include/DataFrame/DataFrame_shift.tcc
+            include/DataFrame/DataFrame_read.tcc
+            include/DataFrame/DataFrame_set.tcc
+            include/DataFrame/DataFrame_functors.h
+            include/DataFrame/ThreadGranularity.h
+            include/DataFrame/DateTime.h
+            include/DataFrame/FixedSizeString.h
+            include/DataFrame/dllexports/shared/DataFrame_lib_exports.h
+            )
+endif(STATIC)
+
 
 # Build the library
 #add_definitions(-D DMS_INCLUDE_SOURCE) # Need this for some of the .tcc files to be compiled
 if(STATIC)
     add_library(${LIBRARY_TARGET_NAME} STATIC ${${LIBRARY_TARGET_NAME}_SRC})
+    add_definitions(-DHMDF_DATAFRAME_STATIC_LINKING)
 else(STATIC)
     add_library(${LIBRARY_TARGET_NAME} SHARED ${${LIBRARY_TARGET_NAME}_SRC})
 endif(STATIC)
 
 add_definitions(-DHMDF_DLL_EXPORTING)
-
-get_target_property(${LIBRARY_TARGET_NAME}_DEFINES ${LIBRARY_TARGET_NAME} COMPILE_DEFINITIONS)
-message("lib target defines: ${${LIBRARY_TARGET_NAME}_DEFINES}")
 
 # Set two minimum target properties for the library.
 # See https://cmake.org/cmake/help/latest/command/set_target_properties.html

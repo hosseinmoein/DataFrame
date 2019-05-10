@@ -3,7 +3,7 @@
 #include <string>
 #include <typeinfo>
 
-#include "../DataFrame/include/DataFrame/HeteroVector.h"
+#include "DataFrame/HeteroVector.h"
 
 using namespace hmdf;
 

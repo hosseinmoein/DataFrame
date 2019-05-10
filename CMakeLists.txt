@@ -70,5 +70,11 @@ if(MSVC)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 endif()
 
+if(STATIC)
+    include_directories(${PROJECT_SOURCE_DIR}/DataFrame/include/DataFrame/dllexports/static)
+else(STATIC)
+    include_directories(${PROJECT_SOURCE_DIR}/DataFrame/include/DataFrame/dllexports/shared)
+endif(STATIC)
+
 add_subdirectory(DataFrame)
 add_subdirectory(test)

@@ -23,7 +23,7 @@ namespace hmdf
 // It also gives you STL conformant iterators.
 //
 template <typename T>
-class   VectorView  {
+class VectorView  {
 
 public:
 

@@ -124,7 +124,7 @@ enum class DT_DATE_STYLE : unsigned char  {
 
 // ----------------------------------------------------------------------------
 
-class   DateTime  {
+class HMDF_DLL_API DateTime  {
 
 public:
 

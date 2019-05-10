@@ -17,7 +17,7 @@
 namespace hmdf
 {
 
-struct  HeteroView  {
+struct HMDF_DLL_API HeteroView  {
 
 public:
 

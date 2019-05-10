@@ -7,9 +7,9 @@
 #include <iostream>
 #include <string>
 
-#include "../DataFrame/include/DataFrame/DateTime.h"
+#include "DataFrame/DateTime.h"
 
-#include "../DataFrame/include/DataFrame/FixedSizeString.h"
+#include "DataFrame/FixedSizeString.h"
 
 using namespace hmdf;
 

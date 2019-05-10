@@ -8,6 +8,8 @@
 #ifndef HMDF_DATAFRAMEVISITORS_HPP
 #define HMDF_DATAFRAMEVISITORS_HPP
 
+#include "DataFrame_lib_exports.h"
+
 #include "DataFrame.h"
 #include <cstddef>
 #include <algorithm>

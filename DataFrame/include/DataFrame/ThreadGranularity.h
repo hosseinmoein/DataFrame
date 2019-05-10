@@ -5,12 +5,16 @@
 
 #pragma once
 
+#ifndef HMDF_THREADGRANULARITY_HPP
+#define HMDF_THREADGRANULARITY_HPP
+
+#include "DataFrame_lib_exports.h"
 // ----------------------------------------------------------------------------
 
 namespace hmdf
 {
 
-struct ThreadGranularity  {
+struct HMDF_DLL_API ThreadGranularity  {
 
     static inline void
     set_thread_level(unsigned int n)  { num_of_threads_ = n; }
@@ -27,6 +31,8 @@ private:
 };
 
 } // namespace hmdf
+
+#endif //HMDF_THREADGRANULARITY_HPP
 
 // ----------------------------------------------------------------------------
 

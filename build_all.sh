@@ -1,5 +1,5 @@
-
-cd src
+#!/usr/bin/env bash
+cd DataFrame/src
 make -f Makefile.Linux.GCC64 clobber
 make -f Makefile.Linux.GCC64D clobber
 make -f Makefile.Linux.GCC64

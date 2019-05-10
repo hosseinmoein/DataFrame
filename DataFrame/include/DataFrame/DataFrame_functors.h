@@ -8,6 +8,8 @@
 #ifndef HMDF_DATAFRAME_FUNCTORS_HPP
 #define HMDF_DATAFRAME_FUNCTORS_HPP
 
+#include "DataFrame_lib_exports.h"
+
 // ----------------------------------------------------------------------------
 
 // This file was factored out so DataFrame.h doesn't become a huge file.

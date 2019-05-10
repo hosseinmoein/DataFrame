@@ -8,6 +8,8 @@
 #ifndef HMDF_DATAFRAME_HPP
 #define HMDF_DATAFRAME_HPP
 
+#include "DataFrame_lib_exports.h"
+
 #include "HeteroVector.h"
 #include "ThreadGranularity.h"
 
@@ -959,7 +961,7 @@ private:  // Static helper functions
     // Visiting functors
 #   include "DataFrame_functors.h"
 
-private:  // Tuple stuff
+    private:  // Tuple stuff
 
     template<typename ... Ts, typename F, std::size_t ... Is>
     static void for_each_in_tuple_ (const std::tuple<Ts ...> &tu,

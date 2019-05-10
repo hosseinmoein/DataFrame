@@ -6,7 +6,7 @@
 #ifndef HMDF_DLL_EXPORTS_H
 #define HMDF_DLL_EXPORTS_H
 
-#ifdef DATARAME_SHARED
+#ifdef DATAFRAME_SHARED
     #ifdef HMDF_DATAFRAME_DLL_EXPORTING
         #pragma message("HMDF_DLL_EXPORTING")
         #if defined(_MSC_VER)
@@ -37,6 +37,6 @@
 #else
     #pragma message("NOT_USING_DLL_MODE")
     #define HMDF_DLL_API
-#endif //DATARAME_SHARED
+#endif //DATAFRAME_SHARED
 
 #endif//HMDF_DLL_EXPORTS_H

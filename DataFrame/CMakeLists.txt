@@ -40,7 +40,7 @@ if(STATIC)
 else(STATIC)
     add_library(${LIBRARY_TARGET_NAME} SHARED ${${LIBRARY_TARGET_NAME}_SRC})
     add_definitions(-DHMDF_DATAFRAME_DLL_EXPORTING)
-    add_definitions(-DDATARAME_SHARED)
+    add_definitions(-DDATAFRAME_SHARED)
 endif(STATIC)
 
 # Set two minimum target properties for the library.

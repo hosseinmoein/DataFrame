@@ -76,3 +76,30 @@ set(LIBRARY_TARGET_NAME ${PROJECT_NAME})
 
 add_subdirectory(DataFrame)
 add_subdirectory(test)
+
+# Enable ctest, testing so we can see if unit tests pass or fail in CI
+enable_testing()
+add_test(NAME dataframe_tester
+		COMMAND dataframe_tester
+		WORKING_DIRECTORY $<TARGET_FILE_DIR:dataframe_tester>)
+add_test(NAME vectors_tester
+		COMMAND vectors_tester
+		WORKING_DIRECTORY $<TARGET_FILE_DIR:vectors_tester>)
+add_test(NAME date_time_tester
+		COMMAND date_time_tester
+		WORKING_DIRECTORY $<TARGET_FILE_DIR:date_time_tester>)
+
+message("-- Copying files for testing")
+# Ctest require this files in the build dir, on all platforms
+file(COPY ${PROJECT_SOURCE_DIR}/test/sample_data.csv DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+file(COPY ${PROJECT_SOURCE_DIR}/test/sample_data_dt_index.csv DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+file(COPY ${PROJECT_SOURCE_DIR}/test/sample_data_string_index.csv DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+if (MSVC)
+	file(COPY ${PROJECT_SOURCE_DIR}/test/sample_data.csv DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Debug)
+	file(COPY ${PROJECT_SOURCE_DIR}/test/sample_data.csv DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Release)
+	file(COPY ${PROJECT_SOURCE_DIR}/test/sample_data_dt_index.csv DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Debug)
+	file(COPY ${PROJECT_SOURCE_DIR}/test/sample_data_dt_index.csv DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Release)
+	file(COPY ${PROJECT_SOURCE_DIR}/test/sample_data_string_index.csv DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Debug)
+	file(COPY ${PROJECT_SOURCE_DIR}/test/sample_data_string_index.csv DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Release)
+endif(MSVC)
+message("-- Copying files for testing - done")

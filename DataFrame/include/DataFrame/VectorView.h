@@ -8,7 +8,7 @@
 #ifndef HMDF_VECTORVIEW_HPP
 #define HMDF_VECTORVIEW_HPP
 
-#include "DataFrame_lib_exports.h"
+#include "dllexports/DataFrame_lib_exports.h"
 
 #include <iterator>
 #include <vector>

@@ -8,7 +8,7 @@
 #ifndef HMDF_DATETIME_HPP
 #define HMDF_DATETIME_HPP
 
-#include "DataFrame_lib_exports.h"
+#include "dllexports/DataFrame_lib_exports.h"
 
 #ifdef _WIN32
 #include <windows.h>

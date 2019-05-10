@@ -8,7 +8,7 @@
 #ifndef HMDF_DATAFRAMEOPERATORS_HPP
 #define HMDF_DATAFRAMEOPERATORS_HPP
 
-#include "DataFrame_lib_exports.h"
+#include "dllexports/DataFrame_lib_exports.h"
 
 #include "DataFrame.h"
 // #include <execution>

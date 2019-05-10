@@ -8,7 +8,7 @@
 #ifndef HMDF_THREADGRANULARITY_HPP
 #define HMDF_THREADGRANULARITY_HPP
 
-#include "DataFrame_lib_exports.h"
+#include "dllexports/DataFrame_lib_exports.h"
 // ----------------------------------------------------------------------------
 
 namespace hmdf

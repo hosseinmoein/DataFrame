@@ -8,7 +8,7 @@
 #ifndef HMDF_DATAFRAME_HPP
 #define HMDF_DATAFRAME_HPP
 
-#include "DataFrame_lib_exports.h"
+#include "dllexports/DataFrame_lib_exports.h"
 
 #include "HeteroVector.h"
 #include "ThreadGranularity.h"

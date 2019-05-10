@@ -8,7 +8,7 @@
 #ifndef HMDF_DATAFRAME_FUNCTORS_HPP
 #define HMDF_DATAFRAME_FUNCTORS_HPP
 
-#include "DataFrame_lib_exports.h"
+#include "dllexports/DataFrame_lib_exports.h"
 
 // ----------------------------------------------------------------------------
 

@@ -8,7 +8,7 @@
 #ifndef HMDF_HETEROVECTOR_HPP
 #define HMDF_HETEROVECTOR_HPP
 
-#include "DataFrame_lib_exports.h"
+#include "dllexports/DataFrame_lib_exports.h"
 
 #include "HeteroView.h"
 #include <vector>

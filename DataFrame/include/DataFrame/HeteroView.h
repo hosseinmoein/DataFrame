@@ -7,7 +7,7 @@
 
 #ifndef HMDF_HETEROVIEW_HPP
 #define HMDF_HETEROVIEW_HPP
-#include "DataFrame_lib_exports.h"
+#include "dllexports/DataFrame_lib_exports.h"
 #include "VectorView.h"
 #include <unordered_map>
 #include <functional>

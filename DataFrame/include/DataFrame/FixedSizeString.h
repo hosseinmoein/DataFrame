@@ -8,7 +8,7 @@
 #ifndef HMDF_FIXEDSIZESTRING_HPP
 #define HMDF_FIXEDSIZESTRING_HPP
 
-#include "DataFrame_lib_exports.h"
+#include "dllexports/DataFrame_lib_exports.h"
 
 #include <cstdlib>
 #include <cstdio>

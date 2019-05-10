@@ -13,7 +13,9 @@ option(STATIC "Set to ON to build Dataframe as a static library instead of a sha
 add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 else(MSVC)
 option(STATIC "Set to ON to build Dataframe as a static library instead of a shared library" OFF)
-add_compile_options(-Wa,-mbig-obj)
+	if(NOT UNIX)
+		add_compile_options(-Wa,-mbig-obj)
+	endif(NOT UNIX)
 endif(MSVC)
 
 if(STATIC)

@@ -71,8 +71,8 @@ int main(int argc, char *argv[]) {
     std::cout << df.get_column<double> ("dbl_col")[2] << std::endl;
     assert(df.get_column<double> ("dbl_col")[2] == 3.2345);
 
-    hmdf::MeanVisitor<int>      ivisitor;
-    hmdf::MeanVisitor<double>   dvisitor;
+    MeanVisitor<int>    ivisitor;
+    MeanVisitor<double> dvisitor;
 
     assert(df.visit<int>("int_col", ivisitor).get_value() == 1);
     assert(std::isnan(df.visit<double>("dbl_col", dvisitor).get_value()));
@@ -157,7 +157,7 @@ int main(int argc, char *argv[]) {
         std::cout << iter << " ";
     std::cout << std::endl;
 
-    hmdf::CorrVisitor<double>   corr_visitor;
+    CorrVisitor<double> corr_visitor;
 
     std::cout << "Correlation between dbl_col and dbl_col_2 is: "
               << df.visit<double, double>("dbl_col",
@@ -165,7 +165,7 @@ int main(int argc, char *argv[]) {
                                           corr_visitor).get_value()
               << std::endl;
 
-    hmdf::StatsVisitor<double>  stats_visitor;
+    StatsVisitor<double>    stats_visitor;
 
     df.visit<double>("dbl_col", stats_visitor);
     std::cout << std::endl;
@@ -178,7 +178,7 @@ int main(int argc, char *argv[]) {
     assert(abs(stats_visitor.get_mean() - 4.83406) < 0.0001);
     assert(abs(stats_visitor.get_variance() - 6.58781) < 0.0001);
 
-    hmdf::SLRegressionVisitor<double>   slr_visitor;
+    SLRegressionVisitor<double> slr_visitor;
 
     df.visit<double, double>("dbl_col", "dbl_col_2", slr_visitor);
     assert(slr_visitor.get_count() == 8);
@@ -353,10 +353,10 @@ int main(int argc, char *argv[]) {
 
     std::cout << "\nTesting multi_visit()\n" << std::endl;
 
-    hmdf::MeanVisitor<int>              ivisitor2;
-    hmdf::MeanVisitor<unsigned long>    ulvisitor;
-    hmdf::MeanVisitor<double>           dvisitor2;
-    hmdf::MeanVisitor<double>           dvisitor22;
+    MeanVisitor<int>            ivisitor2;
+    MeanVisitor<unsigned long>  ulvisitor;
+    MeanVisitor<double>         dvisitor2;
+    MeanVisitor<double>         dvisitor22;
 
     dfx.multi_visit(std::make_pair("xint_col", &ivisitor2),
                     std::make_pair("dbl_col", &dvisitor2),
@@ -1775,7 +1775,7 @@ int main(int argc, char *argv[]) {
         std::cout << "Original DF:" << std::endl;
         df.write<std::ostream, int, double, std::string>(std::cout);
 
-        std::array<const char *, 6> columns = 
+        std::array<const char *, 6> columns =
             {"col_1", "col_2", "col_3", "col_4", "col_str", "col_int"};
         auto                        row =
             df.get_row<6, int, double, std::string>(2, columns);
@@ -1812,8 +1812,8 @@ int main(int argc, char *argv[]) {
                      std::make_pair("col_2", d2),
                      std::make_pair("col_3", i1));
 
-        hmdf::AutoCorrVisitor<double>   auto_corr;
-        const auto                      &result =
+        AutoCorrVisitor<double> auto_corr;
+        const auto              &result =
             df.single_act_visit<double>("col_1", auto_corr).get_value();
 
         assert(result.size() == 17);
@@ -1857,8 +1857,8 @@ int main(int argc, char *argv[]) {
                      std::make_pair("col_2", d2),
                      std::make_pair("col_3", i1));
 
-        hmdf::ReturnVisitor<double>   return_visit(return_policy::monetary);
-        const auto                      &result =
+        ReturnVisitor<double>   return_visit(return_policy::monetary);
+        const auto              &result =
             df.single_act_visit<double>("col_1", return_visit).get_value();
 
         assert(result.size() == 20);
@@ -1868,8 +1868,8 @@ int main(int argc, char *argv[]) {
         assert(result[6] == -20.66);
         assert(abs(result[10] - -1.96) < 0.00001);
 
-        hmdf::ReturnVisitor<double>   return_visit2(return_policy::percentage);
-        const auto                      &result2 =
+        ReturnVisitor<double>   return_visit2(return_policy::percentage);
+        const auto              &result2 =
             df.single_act_visit<double>("col_1", return_visit2).get_value();
 
         assert(result2.size() == 20);
@@ -1879,8 +1879,8 @@ int main(int argc, char *argv[]) {
         assert(abs(result2[6] - -0.98381) < 0.00001);
         assert(abs(result2[10] - -0.852174) < 0.00001);
 
-        hmdf::ReturnVisitor<double>   return_visit3(return_policy::log);
-        const auto                      &result3 =
+        ReturnVisitor<double>   return_visit3(return_policy::log);
+        const auto              &result3 =
             df.single_act_visit<double>("col_1", return_visit3).get_value();
 
         assert(result3.size() == 20);
@@ -1889,6 +1889,60 @@ int main(int argc, char *argv[]) {
         assert(abs(result3[16] - 1.13882) < 0.00001);
         assert(abs(result3[6] - -4.12333) < 0.00001);
         assert(abs(result3[10] - -1.91172) < 0.00001);
+    }
+
+    {
+        // Testing Median
+
+        std::vector<unsigned long>  idx =
+            { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+              123457, 123458, 123459, 123460, 123461, 123462, 123466,
+              123467, 123468, 123469, 123470, 123471, 123472, 123473 };
+        std::vector<double>         d1 =
+            { 1.0, 10, 8, 18, 19, 16, 21,
+              17, 20, 3, 2, 11, 7.0, 5,
+              9, 15, 14, 13, 12, 6, 4 };
+        std::vector<double>         d2 =
+            { 1.0, 10, 8, 18, 19, 16,
+              17, 20, 3, 2, 11, 7.0, 5,
+              9, 15, 14, 13, 12, 6, 4 };
+        std::vector<int>           i1 =
+            { 1, 10, 8, 18, 19, 16, 21,
+              17, 20, 3, 2, 11, 7, 5,
+              9, 15, 14, 13, 12, 6, 4 };
+        std::vector<int>            i2 =
+            { 1, 10, 8, 18, 19, 16,
+              17, 20, 3, 2, 11, 7, 5,
+              9, 15, 14, 13, 12, 6, 4 };
+        MyDataFrame                 df;
+
+        df.load_data(std::move(idx),
+                     std::make_pair("dblcol_1", d1),
+                     std::make_pair("intcol_1", i1));
+        df.load_column("dblcol_2",
+                       std::move(d2),
+                       nan_policy::dont_pad_with_nans);
+        df.load_column("intcol_2",
+                       std::move(i2),
+                       nan_policy::dont_pad_with_nans);
+
+        MedianVisitor<double>   med_visit;
+        double                  result =
+            df.single_act_visit<double>("dblcol_1", med_visit).get_value();
+
+        assert(result == 10.0);
+
+        result = df.single_act_visit<double>("dblcol_2", med_visit).get_value();
+        assert(result == 10.50);
+
+        MedianVisitor<int>  med_visit2;
+        int                 result2 =
+            df.single_act_visit<int>("intcol_1", med_visit2).get_value();
+
+        assert(result2 == 10);
+
+        result2 = df.single_act_visit<int>("intcol_2", med_visit2).get_value();
+        assert(result2 == 10);
     }
 
     return (0);

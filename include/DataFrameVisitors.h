@@ -416,6 +416,10 @@ public:
 
 // ----------------------------------------------------------------------------
 
+//
+// Single Action Visitors
+//
+
 template<typename T,
          typename TS_T = unsigned long,
          typename =
@@ -520,6 +524,117 @@ public:
     inline void pre ()  { result_.clear(); }
     inline void post ()  {   }
     inline const std::vector<T> &get_value () const  { return (result_); }
+};
+
+// ----------------------------------------------------------------------------
+
+template<typename T,
+         typename TS_T = unsigned long,
+         typename =
+             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+struct KthValueVisitor  {
+
+private:
+
+    T                   result_ {  };
+    const std::size_t   kth_element_;
+
+    inline T
+    find_kth_element_ (typename std::vector<T>::const_iterator begin,
+                       typename std::vector<T>::const_iterator end,
+                       size_t k)  {
+
+        const std::size_t   vec_size = static_cast<size_t>(end - begin);
+
+        if (k > vec_size || k <= 0)  {
+            char    err[512];
+
+            sprintf (err,
+#ifdef _WIN32
+                     "find_kth_element_(): vector length = %zu and k = %zu.",
+#else
+                     "find_kth_element_(): vector length = %lu and k = %lu.",
+#endif // _WIN32
+                     vec_size, k);
+            throw NotFeasible (err);
+        }
+
+        std::vector<T>  tmp_vec (vec_size - 1);
+        T               kth_value = *(begin + (vec_size / 2));
+        std::size_t     less_count = 0;
+        std::size_t     great_count = vec_size - 2;
+
+        for (auto citer = begin; citer < end; ++citer)
+            if (*citer < kth_value)
+                tmp_vec [less_count++] = *citer;
+            else if (*citer > kth_value)
+                tmp_vec [great_count--] = *citer;
+
+        if (less_count > k - 1)
+            return (find_kth_element_ (tmp_vec.begin (),
+                                       tmp_vec.begin () + less_count,
+                                       k));
+        else if (less_count < k - 1)
+            return (find_kth_element_ (tmp_vec.begin () + less_count,
+                                       tmp_vec.end (),
+                                       k - less_count - 1));
+        else
+            return (kth_value);
+    }
+
+public:
+
+    using value_type = T;
+
+    inline KthValueVisitor (std::size_t ke) : kth_element_(ke)  {   }
+    inline void
+    operator() (const std::vector<TS_T> &idx, const std::vector<T> &column)  {
+
+        result_ = find_kth_element_(column.begin(), column.end(), kth_element_);
+    }
+    inline void pre ()  { result_ = T(); }
+    inline void post ()  {   }
+    inline const T get_value () const  { return (result_); }
+};
+
+// ----------------------------------------------------------------------------
+
+template<typename T,
+         typename TS_T = unsigned long,
+         typename =
+             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+struct MedianVisitor  {
+
+private:
+
+    T   result_ {  };
+
+public:
+
+    using value_type = T;
+
+    MedianVisitor () = default;
+    inline void
+    operator() (const std::vector<TS_T> &idx, const std::vector<T> &column)  {
+
+        const std::size_t           vec_size = column.size();
+        KthValueVisitor<T, TS_T>    kv_visitor (vec_size >> 1);
+
+
+        kv_visitor.pre();
+        kv_visitor(idx, column);
+        result_ = kv_visitor.get_value();
+        if (! (vec_size & 0x0001))  { // even
+            KthValueVisitor<T, TS_T>    kv_visitor2 ((vec_size >> 1) + 1);
+
+            kv_visitor2.pre();
+            kv_visitor2(idx, column);
+            result_ = (result_ + kv_visitor2.get_value()) / T(2);
+        }
+    }
+    inline void pre ()  { result_ = T(); }
+    inline void post ()  {   }
+    inline const T get_value () const  { return (result_); }
 };
 
 // ----------------------------------------------------------------------------

@@ -9,6 +9,7 @@
 #include <cstddef>
 #include <algorithm>
 #include <limits>
+#include <numeric>
 #include <type_traits>
 #include <array>
 #include <cmath>
@@ -17,6 +18,14 @@
 
 namespace hmdf
 {
+
+enum class return_policy : unsigned char  {
+    log = 1,
+    percentage = 2,
+    monetary = 3,
+};
+
+// ----------------------------------------------------------------------------
 
 template<typename T,
          typename TS_T = unsigned long,
@@ -430,8 +439,10 @@ public:
 
         if (col_len <= 4)  return;
 
-        result_.reserve(col_len - 2);
-        result_.push_back(1.0);
+        std::vector<T>  tmp_result;
+
+        tmp_result.reserve(col_len - 2);
+        tmp_result.push_back(1.0);
 
         std::size_t lag = 1;
 
@@ -439,13 +450,75 @@ public:
             corr_visit_.pre();
             for (std::size_t i = 0; i < col_len - lag; ++i)
                 corr_visit_(idx[0], column[i], column[i + lag]);
-            result_.push_back(corr_visit_.get_value());
+            tmp_result.push_back(corr_visit_.get_value());
             corr_visit_.post();
             lag += 1;
         }
+        tmp_result.swap(result_);
     }
     inline void pre ()  { corr_visit_.pre(); result_.clear(); }
     inline void post ()  { corr_visit_.post();  }
+    inline const std::vector<T> &get_value () const  { return (result_); }
+};
+
+// ----------------------------------------------------------------------------
+
+template<typename T,
+         typename TS_T = unsigned long,
+         typename =
+             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+struct ReturnVisitor  {
+
+private:
+
+    std::vector<T>      result_ {  };
+    const return_policy ret_p_;
+
+public:
+
+    using value_type = T;
+
+    inline ReturnVisitor (return_policy rp) : ret_p_(rp)  {   }
+    inline void
+    operator() (const std::vector<TS_T> &idx, const std::vector<T> &column)  {
+
+        const std::size_t   col_len = column.size();
+
+        if (col_len < 3)  return;
+
+        std::vector<T>  tmp_result;
+
+        tmp_result.reserve(col_len);
+
+        if (ret_p_ == return_policy::log)  {
+            auto    func =
+                [](T lhs, T rhs) -> T  { return (::log(lhs / rhs)); };
+
+            std::adjacent_difference (column.begin(), column.end(),
+                                      std::back_inserter (tmp_result),
+                                      func);
+        }
+        else if (ret_p_ == return_policy::percentage)  {
+            auto    func =
+            [](T lhs, T rhs) -> T  { return ((lhs - rhs) / rhs); };
+
+            std::adjacent_difference (column.begin(), column.end(),
+                                      std::back_inserter (tmp_result),
+                                      func);
+        }
+        else if (ret_p_ == return_policy::monetary)  {
+            auto    func =
+            [](T lhs, T rhs) -> T  { return (lhs - rhs); };
+
+            std::adjacent_difference (column.begin(), column.end(),
+                                      std::back_inserter (tmp_result),
+                                      func);
+        }
+        tmp_result.erase (tmp_result.begin ());
+        tmp_result.swap(result_);
+    }
+    inline void pre ()  { result_.clear(); }
+    inline void post ()  {   }
     inline const std::vector<T> &get_value () const  { return (result_); }
 };
 

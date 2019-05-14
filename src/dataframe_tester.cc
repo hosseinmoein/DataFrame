@@ -417,7 +417,7 @@ int main(int argc, char *argv[]) {
     MyDataFrame::set_thread_level(10);
 
     {
-        std::cout << "\n\nTesing transpose()" << std::endl;
+        std::cout << "\n\nTesting transpose()" << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123450, 123455, 123450, 123449 };
@@ -449,7 +449,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesing get_data_by_loc()/slicing" << std::endl;
+        std::cout << "\n\nTesting get_data_by_loc()/slicing" << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123450, 123455, 123450, 123449 };
@@ -491,7 +491,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesing get_view_by_loc()" << std::endl;
+        std::cout << "\n\nTesting get_view_by_loc()" << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123450, 123455, 123450, 123449 };
@@ -522,7 +522,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesing remove_column()" << std::endl;
+        std::cout << "\n\nTesting remove_column()" << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123450, 123455, 123450, 123449 };
@@ -558,7 +558,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesing get_view_by_idx()/slicing" << std::endl;
+        std::cout << "\n\nTesting get_view_by_idx()/slicing" << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
@@ -596,7 +596,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesing rename_column()" << std::endl;
+        std::cout << "\n\nTesting rename_column()" << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
@@ -624,7 +624,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesing get_col_unique_values()" << std::endl;
+        std::cout << "\n\nTesting get_col_unique_values()" << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
@@ -656,7 +656,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesing remove_data_by_idx()" << std::endl;
+        std::cout << "\n\nTesting remove_data_by_idx()" << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
@@ -683,7 +683,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesing remove_data_by_loc()" << std::endl;
+        std::cout << "\n\nTesting remove_data_by_loc()" << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
@@ -710,7 +710,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesing value_counts()" << std::endl;
+        std::cout << "\n\nTesting value_counts()" << std::endl;
 
         const double                my_nan = sqrt(-1);
         std::vector<unsigned long>  idx =
@@ -740,7 +740,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesing Index Inner Join" << std::endl;
+        std::cout << "\n\nTesting Index Inner Join" << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
@@ -793,7 +793,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesing Index Left Join" << std::endl;
+        std::cout << "\n\nTesting Index Left Join" << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
@@ -846,7 +846,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesing Index Right Join" << std::endl;
+        std::cout << "\n\nTesting Index Right Join" << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
@@ -899,7 +899,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesing Index Left Right Join" << std::endl;
+        std::cout << "\n\nTesting Index Left Right Join" << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
@@ -952,7 +952,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesing Largest/Smallest visitors" << std::endl;
+        std::cout << "\n\nTesting Largest/Smallest visitors" << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
@@ -1015,7 +1015,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesing Shifting Up/Down" << std::endl;
+        std::cout << "\n\nTesting Shifting Up/Down" << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
@@ -1049,7 +1049,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesing Rotating Up/Down" << std::endl;
+        std::cout << "\n\nTesting Rotating Up/Down" << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
@@ -1083,7 +1083,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesing DataFrame with DateTime" << std::endl;
+        std::cout << "\n\nTesting DataFrame with DateTime" << std::endl;
 
         DateTime                    dt(20010102);
         std::vector<DateTime>       idx;
@@ -1115,7 +1115,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesing DataFrame friend plus operator" << std::endl;
+        std::cout << "\n\nTesting DataFrame friend plus operator" << std::endl;
 
         MyDataFrame df1;
         MyDataFrame df2;
@@ -1155,7 +1155,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesing DataFrame friend minus operator" << std::endl;
+        std::cout << "\n\nTesting DataFrame friend minus operator" << std::endl;
 
         MyDataFrame df1;
         MyDataFrame df2;
@@ -1195,7 +1195,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesing DataFrame friend multiplis operator"
+        std::cout << "\n\nTesting DataFrame friend multiplis operator"
                   << std::endl;
 
         std::vector<unsigned long>  idx1 =
@@ -1233,7 +1233,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesing DataFrame friend divides operator"
+        std::cout << "\n\nTesting DataFrame friend divides operator"
                   << std::endl;
 
         std::vector<unsigned long>  idx1 =
@@ -1270,7 +1270,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesing fill_missing(values)" << std::endl;
+        std::cout << "\n\nTesting fill_missing(values)" << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
@@ -1333,7 +1333,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesing fill_missing(fill_forward)" << std::endl;
+        std::cout << "\n\nTesting fill_missing(fill_forward)" << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
@@ -1396,7 +1396,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesing fill_missing(fill_backward)" << std::endl;
+        std::cout << "\n\nTesting fill_missing(fill_backward)" << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
@@ -1453,7 +1453,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesing fill_missing(linear_interpolate)" << std::endl;
+        std::cout << "\n\nTesting fill_missing(linear_interpolate)" << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
@@ -1504,7 +1504,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesing drop_missing(all) no drop" << std::endl;
+        std::cout << "\n\nTesting drop_missing(all) no drop" << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
@@ -1558,7 +1558,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesing drop_missing(all) 2 drop" << std::endl;
+        std::cout << "\n\nTesting drop_missing(all) 2 drop" << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
@@ -1619,7 +1619,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesing drop_missing(any)" << std::endl;
+        std::cout << "\n\nTesting drop_missing(any)" << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
@@ -1673,7 +1673,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesing drop_missing(threshold=3)" << std::endl;
+        std::cout << "\n\nTesting drop_missing(threshold=3)" << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
@@ -1727,7 +1727,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesing get_row()" << std::endl;
+        std::cout << "\n\nTesting get_row()" << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
@@ -1790,7 +1790,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        // Tesing Auto Correlation
+        // Testing Auto Correlation
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
@@ -1832,6 +1832,63 @@ int main(int argc, char *argv[]) {
         assert(abs(result[16] - 0.183254) < 0.00001);
         assert(abs(result[6] - -0.263385) < 0.00001);
         assert(abs(result[10] - -0.712274) < 0.00001);
+    }
+
+    {
+        // Testing Return
+
+        std::vector<unsigned long>  idx =
+            { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+              123457, 123458, 123459, 123460, 123461, 123462, 123466,
+              123467, 123468, 123469, 123470, 123471, 123472, 123473 };
+        std::vector<double>         d1 =
+            { 15, 16, 15, 18, 19, 16, 21,
+              0.34, 1.56, 0.34, 2.3, 0.34, 19.0, 0.387,
+              0.123, 1.06, 0.65, 2.03, 0.4, 1.0, 0.59 };
+        std::vector<double>         d2 =
+            { 1.23, 1.22, 1.21, 1.20, 1.19, 1.185, 1.181,
+              1.19, 1.195, 1.189, 1.185, 1.18, 1.181, 1.186,
+              1.189, 1.19, 1.194, 1.198, 1.199, 1.197, 1.193 };
+        std::vector<int>            i1 = { 22, 23, 24, 25, 99 };
+        MyDataFrame                 df;
+
+        df.load_data(std::move(idx),
+                     std::make_pair("col_1", d1),
+                     std::make_pair("col_2", d2),
+                     std::make_pair("col_3", i1));
+
+        hmdf::ReturnVisitor<double>   return_visit(return_policy::monetary);
+        const auto                      &result =
+            df.single_act_visit<double>("col_1", return_visit).get_value();
+
+        assert(result.size() == 20);
+        assert(result[0] == 1.0);
+        assert(result[1] == -1.0);
+        assert(result[16] == 1.38);
+        assert(result[6] == -20.66);
+        assert(abs(result[10] - -1.96) < 0.00001);
+
+        hmdf::ReturnVisitor<double>   return_visit2(return_policy::percentage);
+        const auto                      &result2 =
+            df.single_act_visit<double>("col_1", return_visit2).get_value();
+
+        assert(result2.size() == 20);
+        assert(abs(result2[0] - 0.0666667) < 0.00001);
+        assert(abs(result2[1] - -0.0625) < 0.00001);
+        assert(abs(result2[16] - 2.12308) < 0.00001);
+        assert(abs(result2[6] - -0.98381) < 0.00001);
+        assert(abs(result2[10] - -0.852174) < 0.00001);
+
+        hmdf::ReturnVisitor<double>   return_visit3(return_policy::log);
+        const auto                      &result3 =
+            df.single_act_visit<double>("col_1", return_visit3).get_value();
+
+        assert(result3.size() == 20);
+        assert(abs(result3[0] - 0.0645385) < 0.00001);
+        assert(abs(result3[1] - -0.0645385) < 0.00001);
+        assert(abs(result3[16] - 1.13882) < 0.00001);
+        assert(abs(result3[6] - -4.12333) < 0.00001);
+        assert(abs(result3[10] - -1.91172) < 0.00001);
     }
 
     return (0);

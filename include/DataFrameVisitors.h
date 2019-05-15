@@ -390,6 +390,32 @@ template<typename T,
          typename TS_T = unsigned long,
          typename =
              typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+struct TrackingErrorVisitor {
+
+private:
+
+    StdVisitor<T, TS_T> std_;
+
+public:
+
+    using value_type = T;
+
+    explicit TrackingErrorVisitor (bool bias = true) : std_ (bias) {  }
+    inline void operator() (const TS_T & idx, const T &val1, const T &val2)  {
+
+        std_(idx, val1 - val2);
+    }
+    inline void pre ()  { std_.pre(); }
+    inline void post ()  { std_.post();  }
+    inline T get_value () const  { return (std_.get_value()); }
+};
+
+// ----------------------------------------------------------------------------
+
+template<typename T,
+         typename TS_T = unsigned long,
+         typename =
+             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
 struct CorrVisitor  {
 
 private:
@@ -590,7 +616,8 @@ public:
     inline void
     operator() (const std::vector<TS_T> &idx, const std::vector<T> &column)  {
 
-        result_ = find_kth_element_(column.begin(), column.end(), kth_element_);
+        result_ =
+            find_kth_element_(column.begin(), column.end(), kth_element_);
     }
     inline void pre ()  { result_ = T(); }
     inline void post ()  {   }

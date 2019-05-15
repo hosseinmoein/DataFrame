@@ -105,7 +105,9 @@ DataFrame<TS, HETERO>::load_data (TSVec &&indices, Ts&& ... args)  {
     // const size_type tuple_size =
     //     std::tuple_size<decltype(args_tuple)>::value;
     auto            fc =
-        [this, &cnt](auto &pa) mutable -> void { cnt += this->_load_pair(pa); };
+        [this, &cnt](auto &pa) mutable -> void {
+            cnt += this->_load_pair(pa);
+        };
 
     for_each_in_tuple_ (args_tuple, fc);
 
@@ -179,7 +181,9 @@ template<typename TS, typename  HETERO>
 template<typename T, typename ITR>
 typename DataFrame<TS, HETERO>::size_type
 DataFrame<TS, HETERO>::
-load_column (const char *name, Index2D<const ITR &> range, nan_policy padding) {
+load_column (const char *name,
+             Index2D<const ITR &>
+             range, nan_policy padding)  {
 
     size_type       s = std::distance(range.begin, range.end);
     const size_type idx_s = indices_.size();
@@ -287,6 +291,19 @@ load_column (const char *name, std::vector<T> &&data, nan_policy padding)  {
 
     *vec_ptr = std::move(data);
     return (ret_cnt);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename TS, typename  HETERO>
+template<typename T>
+typename DataFrame<TS, HETERO>::size_type
+DataFrame<TS, HETERO>::
+load_column (const char *name,
+             const std::vector<T> &data,
+             nan_policy padding)  {
+
+    return (load_column<T>(name, { data.begin(), data.end() }, padding));
 }
 
 // ----------------------------------------------------------------------------

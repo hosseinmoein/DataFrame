@@ -266,6 +266,12 @@ public:  // Load/append/remove interfaces
                 std::vector<T> &&data,
                 nan_policy padding = nan_policy::pad_with_nans);
 
+    template<typename T>
+    size_type
+    load_column(const char *name,
+                const std::vector<T> &data,
+                nan_policy padding = nan_policy::pad_with_nans);
+
     // It appends val to the end of the index column.
     //
     size_type append_index(const TimeStamp &val);

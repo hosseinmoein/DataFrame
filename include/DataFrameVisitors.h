@@ -298,6 +298,8 @@ public:
     explicit CovVisitor (bool bias = true) : b_ (bias) {  }
     inline void operator() (const TS_T &, const T &val1, const T &val2)  {
 
+        if (std::isnan(val1) || std::isnan(val2))  return;
+
         total1_ += val1;
         total2_ += val2;
         dot_prod_ += (val1 * val2);
@@ -313,22 +315,22 @@ public:
     inline void post ()  {  }
     inline T get_value () const  {
 
-        const T bias = T(1) ? b_ : T(0);
+        const T b = T(1) ? b_ : T(0);
 
-        return ((dot_prod_ - (total1_ * total2_) / T(cnt_)) / (T(cnt_) - bias));
+        return ((dot_prod_ - (total1_ * total2_) / T(cnt_)) / (T(cnt_) - b));
     }
 
     inline T get_var1 () const  {
 
-        const T bias = T(1) ? b_ : T(0);
+        const T b = T(1) ? b_ : T(0);
 
-        return((dot_prod1_ - (total1_ * total1_) / T(cnt_)) / (T(cnt_) - bias));
+        return((dot_prod1_ - (total1_ * total1_) / T(cnt_)) / (T(cnt_) - b));
     }
     inline T get_var2 () const  {
 
-        const T bias = T(1) ? b_ : T(0);
+        const T b = T(1) ? b_ : T(0);
 
-        return((dot_prod2_ - (total2_ * total2_) / T(cnt_)) / (T(cnt_) - bias));
+        return((dot_prod2_ - (total2_ * total2_) / T(cnt_)) / (T(cnt_) - b));
     }
 };
 
@@ -356,6 +358,38 @@ public:
     inline void pre ()  { cov_.pre(); }
     inline void post ()  { cov_.post(); }
     inline T get_value () const  { return (cov_.get_value()); }
+};
+
+// ----------------------------------------------------------------------------
+
+template<typename T,
+         typename TS_T = unsigned long,
+         typename =
+             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+struct BetaVisitor  {
+
+private:
+
+    CovVisitor<T, TS_T> cov_;
+
+public:
+
+    using value_type = T;
+
+    explicit BetaVisitor (bool bias = true) : cov_ (bias)  {   }
+    inline void
+    operator() (const TS_T &idx, const T &val1, const T &benchmark)  {
+
+        cov_ (idx, val1, benchmark);
+    }
+    inline void pre ()  { cov_.pre(); }
+    inline void post ()  { cov_.post(); }
+    inline T get_value () const  {
+
+        return (cov_.get_var2() != 0.0
+                    ? cov_.get_value() / cov_.get_var2()
+                    : std::numeric_limits<T>::quiet_NaN());
+    }
 };
 
 // ----------------------------------------------------------------------------

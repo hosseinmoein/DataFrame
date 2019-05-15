@@ -2015,6 +2015,89 @@ int main(int argc, char *argv[]) {
         assert(abs(result - 17.0566) < 0.0001);
     }
 
+    {
+        // Testing Beta
+
+        std::vector<unsigned long>  idx =
+            { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+              123457, 123458, 123459, 123460, 123461, 123462, 123466,
+              123467, 123468, 123469, 123470, 123471, 123472, 123473 };
+        std::vector<double>         d1 =
+            { 1.0, 10, 8, 18, 19, 16, 21,
+              17, 20, 3, 2, 11, 7.0, 5,
+              9, 15, 14, 13, 12, 6, 4 };
+        std::vector<double>         d2 =
+            { 1.0, 10, 8, 18, 19, 16, 21,
+              17, 20, 3, 2, 11, 7.0, 5,
+              9, 15, 14, 13, 12, 6, 4 };
+        std::vector<double>         d3 =
+            { 1.1, 10.09, 8.2, 18.03, 19.4, 15.9, 20.8,
+              17.1, 19.9, 3.3, 2.2, 10.8, 7.4, 5.3,
+              9.1, 14.9, 14.8, 13.2, 12.6, 6.1, 4.4 };
+        std::vector<double>         d4 =
+            { 0.1, 9.09, 7.2, 17.03, 18.4, 14.9, 19.8,
+              16.1, 18.9, 2.3, 1.2, 9.8, 6.4, 4.3,
+              8.1, 13.9, 13.8, 12.2, 11.6, 5.1, 3.4 };
+        std::vector<double>         d5 =
+            { 20.0, 10.1, -30.2, 18.5, 1.1, 16.2, 30.8,
+              -1.56, 20.1, 25.5, 30.89, 11.1, 7.4, 5.3,
+              19, 15.1, 1.3, 1.2, 12.6, 23.2, 40.1 };
+        MyDataFrame                 df;
+
+        df.load_data(std::move(idx),
+                     std::make_pair("dblcol_1", d1),
+                     std::make_pair("dblcol_2", d2),
+                     std::make_pair("dblcol_3", d3),
+                     std::make_pair("dblcol_4", d4),
+                     std::make_pair("dblcol_5", d5));
+
+        ReturnVisitor<double>   return_visit(return_policy::log);
+
+        df.load_column(
+            "dblcol_1_return",
+            df.single_act_visit<double>("dblcol_1", return_visit).get_value(),
+            nan_policy::dont_pad_with_nans);
+        df.load_column(
+            "dblcol_2_return",
+            df.single_act_visit<double>("dblcol_2", return_visit).get_value(),
+            nan_policy::dont_pad_with_nans);
+        df.load_column(
+            "dblcol_3_return",
+            df.single_act_visit<double>("dblcol_3", return_visit).get_value(),
+            nan_policy::dont_pad_with_nans);
+        df.load_column(
+            "dblcol_4_return",
+            df.single_act_visit<double>("dblcol_4", return_visit).get_value(),
+            nan_policy::dont_pad_with_nans);
+        df.load_column(
+            "dblcol_5_return",
+            df.single_act_visit<double>("dblcol_5", return_visit).get_value(),
+            nan_policy::dont_pad_with_nans);
+
+        BetaVisitor<double> beta_visit;
+        double              result =
+            df.visit<double, double>("dblcol_1_return",
+                                     "dblcol_2_return",
+                                     beta_visit).get_value();
+
+        assert(result == 1.0);
+
+        result = df.visit<double, double>("dblcol_1_return",
+                                          "dblcol_3_return",
+                                          beta_visit).get_value();
+        assert(abs(result - 1.04881) < 0.00001);
+
+        result = df.visit<double, double>("dblcol_1_return",
+                                          "dblcol_4_return",
+                                          beta_visit).get_value();
+        assert(abs(result - 0.647582) < 0.00001);
+
+        result = df.visit<double, double>("dblcol_1_return",
+                                          "dblcol_5_return",
+                                          beta_visit).get_value();
+        assert(abs(result - -0.128854) < 0.00001);
+    }
+
     return (0);
 }
 

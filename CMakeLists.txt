@@ -157,9 +157,9 @@ endif(MSVC)
 include(AddUninstallTarget)
 
 # Build the test binary
-add_executable(dataframe_tester src/dataframe_tester.cc)
-add_executable(vectors_tester src/vectors_tester.cc)
-add_executable(date_time_tester src/date_time_tester.cc)
+add_executable(dataframe_tester test/dataframe_tester.cc)
+add_executable(vectors_tester test/vectors_tester.cc)
+add_executable(date_time_tester test/date_time_tester.cc)
 target_link_libraries(dataframe_tester Dataframe) # Link the Dataframe library to the test binary
 target_link_libraries(vectors_tester Dataframe) # Link the Dataframe library to the test binary
 target_link_libraries(date_time_tester Dataframe) # Link the Dataframe library to the test binary

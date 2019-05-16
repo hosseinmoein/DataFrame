@@ -11,10 +11,10 @@ PROJECT_INCLUDE_DIR = ../../include
 # -----------------------------------------------------------------------------
 
 SRCS = HeteroVector.cc \
-       dataframe_tester.cc \
+       ../test/dataframe_tester.cc \
        HeteroView.cc \
-       vectors_tester.cc \
-       date_time_tester.cc \
+       ../test/vectors_tester.cc \
+       ../test/date_time_tester.cc \
        ThreadGranularity.cc \
        DateTime.cc
 
@@ -42,8 +42,10 @@ HEADERS = $(LOCAL_INCLUDE_DIR)/DataFrame/HeteroVector.h \
 LIB_NAME = DataFrame
 TARGET_LIB = $(LOCAL_LIB_DIR)/lib$(LIB_NAME).a
 
-TARGETS += $(TARGET_LIB) $(LOCAL_BIN_DIR)/dataframe_tester \
-	   $(LOCAL_BIN_DIR)/vectors_tester $(LOCAL_BIN_DIR)/date_time_tester
+TARGETS += $(TARGET_LIB) \
+           $(LOCAL_BIN_DIR)/dataframe_tester \
+	       $(LOCAL_BIN_DIR)/vectors_tester \
+           $(LOCAL_BIN_DIR)/date_time_tester
 
 # -----------------------------------------------------------------------------
 
@@ -70,6 +72,9 @@ LIB_OBJS = $(LOCAL_OBJ_DIR)/HeteroVector.o \
 .SUFFIXES: .cc
 
 $(LOCAL_OBJ_DIR)/%.o: %.cc
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(LOCAL_OBJ_DIR)/%.o: ../test/%.cc
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 .cc :

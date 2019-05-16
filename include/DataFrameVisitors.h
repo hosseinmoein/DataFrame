@@ -12,7 +12,6 @@
 #include <numeric>
 #include <type_traits>
 #include <array>
-#include <cmath>
 
 // ----------------------------------------------------------------------------
 
@@ -44,6 +43,8 @@ public:
 
     inline void operator() (const TS_T &, const T &val)  {
 
+        if (is_nan__(val))  return;
+
         mean_ += val;
         cnt_ +=1;
     }
@@ -72,6 +73,8 @@ public:
 
     inline void operator() (const TS_T &, const T &val)  {
 
+        if (is_nan__(val))  return;
+
         sum_ += val;
     }
     inline void pre ()  { sum_ = T(0); }
@@ -95,6 +98,8 @@ public:
     using value_type = T;
 
     inline void operator() (const TS_T &idx, const T &val)  {
+
+        if (is_nan__(val))  return;
 
         if (val > max_ || is_first) {
             max_ = val;
@@ -124,6 +129,8 @@ public:
     using value_type = T;
 
     inline void operator() (const TS_T &idx, const T &val)  {
+
+        if (is_nan__(val))  return;
 
         if (val < min_ || is_first) {
             min_ = val;
@@ -170,6 +177,8 @@ public:
 
     inline void operator() (const TS_T &idx, const T &val)  {
 
+        if (is_nan__(val))  return;
+
         if (counter_ < N)  {
             items_[counter_] = { val, idx };
             if (min_index_ < 0 || val < items_[min_index_].value)
@@ -187,7 +196,7 @@ public:
     }
     inline void pre ()  { counter_ = 0; min_index_ = -1; }
     inline void post ()  {  }
-    inline const result_type &get_values () const  { return (items_); }
+    inline const result_type &get_value () const  { return (items_); }
 
     inline void sort_by_index()  {
 
@@ -238,6 +247,8 @@ public:
 
     inline void operator() (const TS_T &idx, const T &val)  {
 
+        if (is_nan__(val))  return;
+
         if (counter_ < N)  {
             items_[counter_] = { val, idx };
             if (max_index_ < 0 || val > items_[max_index_].value)
@@ -255,7 +266,7 @@ public:
     }
     inline void pre ()  { counter_ = 0; max_index_ = -1; }
     inline void post ()  {  }
-    inline const result_type &get_values () const  { return (items_); }
+    inline const result_type &get_value () const  { return (items_); }
 
     inline void sort_by_index()  {
 
@@ -298,7 +309,8 @@ public:
     explicit CovVisitor (bool bias = true) : b_ (bias) {  }
     inline void operator() (const TS_T &, const T &val1, const T &val2)  {
 
-        if (std::isnan(val1) || std::isnan(val2))  return;
+        if (is_nan__(val1) || is_nan__(val2))  return;
+
 
         total1_ += val1;
         total2_ += val2;
@@ -437,7 +449,7 @@ public:
     explicit TrackingErrorVisitor (bool bias = true) : std_ (bias) {  }
     inline void operator() (const TS_T & idx, const T &val1, const T &val2)  {
 
-        std_(idx, val1 - val2);
+        std_ (idx, val1 - val2);
     }
     inline void pre ()  { std_.pre(); }
     inline void post ()  { std_.post();  }
@@ -489,7 +501,7 @@ struct AutoCorrVisitor  {
 private:
 
     std::vector<T>          result_ {  };
-    CorrVisitor<T, TS_T>    corr_visit_ {  };
+    CorrVisitor<T, TS_T>    corr_ {  };
 
 public:
 
@@ -511,17 +523,17 @@ public:
         std::size_t lag = 1;
 
         while (lag < col_len - 4)  {
-            corr_visit_.pre();
+            corr_.pre();
             for (std::size_t i = 0; i < col_len - lag; ++i)
-                corr_visit_(idx[0], column[i], column[i + lag]);
-            tmp_result.push_back(corr_visit_.get_value());
-            corr_visit_.post();
+                corr_ (idx[0], column[i], column[i + lag]);
+            tmp_result.push_back(corr_.get_value());
+            corr_.post();
             lag += 1;
         }
         tmp_result.swap(result_);
     }
-    inline void pre ()  { corr_visit_.pre(); result_.clear(); }
-    inline void post ()  { corr_visit_.post();  }
+    inline void pre ()  { corr_.pre(); result_.clear(); }
+    inline void post ()  { corr_.post();  }
     inline const std::vector<T> &get_value () const  { return (result_); }
 };
 
@@ -624,11 +636,14 @@ private:
         std::size_t     less_count = 0;
         std::size_t     great_count = vec_size - 2;
 
-        for (auto citer = begin; citer < end; ++citer)
+        for (auto citer = begin; citer < end; ++citer)  {
+            if (is_nan__(*citer))  continue;
+
             if (*citer < kth_value)
                 tmp_vec [less_count++] = *citer;
             else if (*citer > kth_value)
                 tmp_vec [great_count--] = *citer;
+        }
 
         if (less_count > k - 1)
             return (find_kth_element_ (tmp_vec.begin (),
@@ -651,7 +666,7 @@ public:
     operator() (const std::vector<TS_T> &idx, const std::vector<T> &column)  {
 
         result_ =
-            find_kth_element_(column.begin(), column.end(), kth_element_);
+            find_kth_element_ (column.begin(), column.end(), kth_element_);
     }
     inline void pre ()  { result_ = T(); }
     inline void post ()  {   }
@@ -747,6 +762,8 @@ public:
 
     inline void operator() (const TS_T &idx, const T &val)  {
 
+        if (is_nan__(val))  return;
+
         T           delta, delta_n, delta_n2, term1;
         std::size_t n1 = n_;
 
@@ -808,6 +825,8 @@ public:
     using value_type = T;
 
     inline void operator() (const TS_T &idx, const T &x, const T &y)  {
+
+        if (is_nan__(x) || is_nan__(y))  return;
 
         s_xy_ += (x_stats_.get_mean() - x) *
                  (y_stats_.get_mean() - y) *

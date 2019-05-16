@@ -75,7 +75,8 @@ int main(int argc, char *argv[]) {
     MeanVisitor<double> dvisitor;
 
     assert(df.visit<int>("int_col", ivisitor).get_value() == 1);
-    assert(std::isnan(df.visit<double>("dbl_col", dvisitor).get_value()));
+    assert(abs(df.visit<double>("dbl_col",
+                                dvisitor).get_value() - 3.2345) < 0.00001);
 
     df.get_column<double>("dbl_col")[5] = 6.5;
     df.get_column<double>("dbl_col")[6] = 7.5;
@@ -979,17 +980,17 @@ int main(int argc, char *argv[]) {
 
         df.visit<double>("col_3", nl_visitor);
         std::cout << "N largest result for col_3:" << std::endl;
-        for (auto iter : nl_visitor.get_values())
+        for (auto iter : nl_visitor.get_value())
             std::cout << iter.index << '|' << iter.value << " ";
         std::cout << std::endl;
         nl_visitor.sort_by_index();
         std::cout << "N largest result for col_3 sorted by index:" << std::endl;
-        for (auto iter : nl_visitor.get_values())
+        for (auto iter : nl_visitor.get_value())
             std::cout << iter.index << '|' << iter.value << " ";
         std::cout << std::endl;
         nl_visitor.sort_by_value();
         std::cout << "N largest result for col_3 sorted by value:" << std::endl;
-        for (auto iter : nl_visitor.get_values())
+        for (auto iter : nl_visitor.get_value())
             std::cout << iter.index << '|' << iter.value << " ";
         std::cout << std::endl;
 
@@ -997,19 +998,19 @@ int main(int argc, char *argv[]) {
 
         df.visit<double>("col_3", ns_visitor);
         std::cout << "N smallest result for col_3:" << std::endl;
-        for (auto iter : ns_visitor.get_values())
+        for (auto iter : ns_visitor.get_value())
             std::cout << iter.index << '|' << iter.value << " ";
         std::cout << std::endl;
         ns_visitor.sort_by_index();
         std::cout << "N smallest result for col_3 sorted by index:"
                   << std::endl;
-        for (auto iter : ns_visitor.get_values())
+        for (auto iter : ns_visitor.get_value())
             std::cout << iter.index << '|' << iter.value << " ";
         std::cout << std::endl;
         ns_visitor.sort_by_value();
         std::cout << "N smallest result for col_3 sorted by value:"
                   << std::endl;
-        for (auto iter : ns_visitor.get_values())
+        for (auto iter : ns_visitor.get_value())
             std::cout << iter.index << '|' << iter.value << " ";
         std::cout << std::endl;
     }

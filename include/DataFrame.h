@@ -18,6 +18,7 @@
 #include <type_traits>
 #include <future>
 #include <cstring>
+#include <cmath>
 
 // ----------------------------------------------------------------------------
 
@@ -135,7 +136,6 @@ struct type_declare<HeteroView, U>  { using type = VectorView<U>; };
 
 // -------------------------------------
 
-
 template<typename TS, typename HETERO>
 class DataFrame;
 
@@ -144,6 +144,23 @@ using StdDataFrame = DataFrame<TS, HeteroVector>;
 
 template<typename TS>
 using DataFrameView = DataFrame<TS, HeteroView>;
+
+// ----------------------------------------------------------------------------
+
+// These are templated, so they work for all types
+
+template<typename T>
+inline bool is_nan__(const T &)  { return(false); }
+
+template<>
+inline bool is_nan__<double>(const double &val)  { return(std::isnan(val)); }
+
+template<>
+inline bool is_nan__<float>(const float &val)  { return(std::isnan(val)); }
+
+template<>
+inline bool
+is_nan__<long double>(const long double &val)  { return(std::isnan(val)); }
 
 // ----------------------------------------------------------------------------
 

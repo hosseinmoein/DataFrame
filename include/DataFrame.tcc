@@ -6,7 +6,6 @@
 #include "DataFrame.h"
 #include "DateTime.h"
 #include <limits>
-#include <cmath>
 
 // ----------------------------------------------------------------------------
 
@@ -24,27 +23,12 @@ inline constexpr T DataFrame<TS, HETERO>::_get_nan()  {
 
 // ----------------------------------------------------------------------------
 
-template<typename T>
-inline bool __is_nan__(const T &)  { return(false); }
-
-template<>
-inline bool __is_nan__<double>(const double &val)  { return(std::isnan(val)); }
-
-template<>
-inline bool __is_nan__<float>(const float &val)  { return(std::isnan(val)); }
-
-template<>
-inline bool
-__is_nan__<long double>(const long double &val)  { return(std::isnan(val)); }
-
-// ----------------------------------------------------------------------------
-
 template<typename TS, typename HETERO>
 template<typename T>
 inline constexpr bool DataFrame<TS, HETERO>::_is_nan(const T &val)  {
 
     if (std::numeric_limits<T>::has_quiet_NaN)
-        return (__is_nan__(val));
+        return (is_nan__(val));
     return (_get_nan<T>() == val);
 }
 

@@ -3,7 +3,7 @@
 // Copyright (C) 2018-2019 Hossein Moein
 // Distributed under the BSD Software License (see file License)
 
-#include "../include/HeteroVector.h"
+#include <DataFrame/HeteroVector.h>
 
 // ----------------------------------------------------------------------------
 

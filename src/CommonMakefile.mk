@@ -18,28 +18,28 @@ SRCS = HeteroVector.cc \
        ThreadGranularity.cc \
        DateTime.cc
 
-HEADERS = $(LOCAL_INCLUDE_DIR)/HeteroVector.h \
-          $(LOCAL_INCLUDE_DIR)/HeteroVector.tcc \
-          $(LOCAL_INCLUDE_DIR)/HeteroView.h \
-          $(LOCAL_INCLUDE_DIR)/HeteroView.tcc \
-          $(LOCAL_INCLUDE_DIR)/DataFrame.h \
-          $(LOCAL_INCLUDE_DIR)/DataFrame.tcc \
-          $(LOCAL_INCLUDE_DIR)/DataFrame_misc.tcc \
-          $(LOCAL_INCLUDE_DIR)/DataFrame_set.tcc \
-          $(LOCAL_INCLUDE_DIR)/DataFrame_get.tcc \
-          $(LOCAL_INCLUDE_DIR)/DataFrame_read.tcc \
-          $(LOCAL_INCLUDE_DIR)/DataFrame_opt.tcc \
-          $(LOCAL_INCLUDE_DIR)/DataFrame_join.tcc \
-          $(LOCAL_INCLUDE_DIR)/DataFrame_shift.tcc \
-          $(LOCAL_INCLUDE_DIR)/DataFrame_functors.h \
-          $(LOCAL_INCLUDE_DIR)/DataFrameVisitors.h \
-          $(LOCAL_INCLUDE_DIR)/DataFrameOperators.h \
-          $(LOCAL_INCLUDE_DIR)/VectorView.h \
-          $(LOCAL_INCLUDE_DIR)/ThreadGranularity.h \
-          $(LOCAL_INCLUDE_DIR)/DateTime.h \
-          $(LOCAL_INCLUDE_DIR)/FixedSizeString.h
+HEADERS = $(LOCAL_INCLUDE_DIR)/DataFrame/HeteroVector.h \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/HeteroVector.tcc \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/HeteroView.h \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/HeteroView.tcc \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/DataFrame.h \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/DataFrame.tcc \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/DataFrame_misc.tcc \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/DataFrame_set.tcc \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/DataFrame_get.tcc \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/DataFrame_read.tcc \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/DataFrame_opt.tcc \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/DataFrame_join.tcc \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/DataFrame_shift.tcc \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/DataFrame_functors.h \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/DataFrameVisitors.h \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/DataFrameOperators.h \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/VectorView.h \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/ThreadGranularity.h \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/DateTime.h \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/FixedSizeString.h
 
-LIB_NAME = DataSci
+LIB_NAME = DataFrame
 TARGET_LIB = $(LOCAL_LIB_DIR)/lib$(LIB_NAME).a
 
 TARGETS += $(TARGET_LIB) $(LOCAL_BIN_DIR)/dataframe_tester \
@@ -85,7 +85,7 @@ PRE_BUILD:
 	mkdir -p $(LOCAL_BIN_DIR)
 	mkdir -p $(LOCAL_OBJ_DIR)
 	mkdir -p $(PROJECT_LIB_DIR)
-	mkdir -p $(PROJECT_INCLUDE_DIR)
+	mkdir -p $(PROJECT_INCLUDE_DIR)/DataFrame
 
 $(TARGET_LIB): $(LIB_OBJS)
 	ar -clrs $(TARGET_LIB) $(LIB_OBJS)
@@ -119,7 +119,7 @@ install_lib:
 	cp -pf $(TARGET_LIB) $(PROJECT_LIB_DIR)/.
 
 install_hdr:
-	cp -pf $(HEADERS) $(PROJECT_INCLUDE_DIR)/.
+	cp -pf $(HEADERS) $(PROJECT_INCLUDE_DIR)/DataFrame/.
 
 # -----------------------------------------------------------------------------
 

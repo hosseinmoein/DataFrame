@@ -67,26 +67,26 @@ set(${LIBRARY_TARGET_NAME}_SRC
 
 # List of header files.
 set(${LIBRARY_TARGET_NAME}_HDR
-  include/VectorView.h
-  include/HeteroVector.h
-  include/HeteroView.h
-  include/HeteroVector.tcc
-  include/HeteroView.tcc
-  include/DataFrameVisitors.h
-  include/DataFrameOperators.h
-  include/DataFrame.h
-  include/DataFrame.tcc
-  include/DataFrame_get.tcc
-  include/DataFrame_misc.tcc
-  include/DataFrame_opt.tcc
-  include/DataFrame_join.tcc
-  include/DataFrame_shift.tcc
-  include/DataFrame_read.tcc
-  include/DataFrame_set.tcc
-  include/DataFrame_functors.h
-  include/ThreadGranularity.h
-  include/DateTime.h
-  include/FixedSizeString.h
+  include/DataFrame/VectorView.h
+  include/DataFrame/HeteroVector.h
+  include/DataFrame/HeteroView.h
+  include/DataFrame/HeteroVector.tcc
+  include/DataFrame/HeteroView.tcc
+  include/DataFrame/DataFrameVisitors.h
+  include/DataFrame/DataFrameOperators.h
+  include/DataFrame/DataFrame.h
+  include/DataFrame/DataFrame.tcc
+  include/DataFrame/DataFrame_get.tcc
+  include/DataFrame/DataFrame_misc.tcc
+  include/DataFrame/DataFrame_opt.tcc
+  include/DataFrame/DataFrame_join.tcc
+  include/DataFrame/DataFrame_shift.tcc
+  include/DataFrame/DataFrame_read.tcc
+  include/DataFrame/DataFrame_set.tcc
+  include/DataFrame/DataFrame_functors.h
+  include/DataFrame/ThreadGranularity.h
+  include/DataFrame/DateTime.h
+  include/DataFrame/FixedSizeString.h
 )
 
 # Build the library

@@ -5,10 +5,10 @@
 #include <cmath>
 #include <cassert>
 
-#include "../include/DataFrame.h"
-#include "../include/DataFrameVisitors.h"
-#include "../include/DateTime.h"
-#include "../include/DataFrameOperators.h"
+#include <DataFrame/DataFrame.h>
+#include <DataFrame/DataFrameVisitors.h>
+#include <DataFrame/DateTime.h>
+#include <DataFrame/DataFrameOperators.h>
 
 using namespace hmdf;
 

@@ -7,9 +7,8 @@
 #include <iostream>
 #include <string>
 
-#include <DateTime.h>
-
-#include <FixedSizeString.h>
+#include <DataFrame/DateTime.h>
+#include <DataFrame/FixedSizeString.h>
 
 using namespace hmdf;
 

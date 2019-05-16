@@ -1,78 +1,47 @@
 // Hossein Moein
-// September 11, 2017
+// October 24, 2018
 // Copyright (C) 2018-2019 Hossein Moein
 // Distributed under the BSD Software License (see file License)
 
 #pragma once
 
-#include "HeteroView.h"
-#include <vector>
+#include <DataFrame/VectorView.h>
+
 #include <unordered_map>
+#include <functional>
 
 // ----------------------------------------------------------------------------
 
 namespace hmdf
 {
 
-// This class implements a heterogeneous vector. Its design and implementation
-// are partly inspired by Andy G's Blog at:
-// https://gieseanw.wordpress.com/2017/05/03/a-true-heterogeneous-container/
-//
-struct  HeteroVector  {
+struct  HeteroView  {
 
 public:
 
     using size_type = size_t;
 
-    HeteroVector();
-    HeteroVector(const HeteroVector &that);
-    HeteroVector(HeteroVector &&that);
-
-    ~HeteroVector() { clear(); }
-
-    HeteroVector &operator= (const HeteroVector &rhs);
-    HeteroVector &operator= (HeteroVector &&rhs);
-
+    HeteroView() = default;
     template<typename T>
-    std::vector<T> &get_vector();
-    template<typename T>
-    const std::vector<T> &get_vector() const;
+    HeteroView(T *begin_ptr, T *end_ptr);
+    HeteroView(const HeteroView &that);
+    HeteroView(HeteroView &&that);
 
-    // It returns a view of the underlying vector.
-    // NOTE: One can modify the vector through the view. But the vector
-    //       cannot be extended or shrunk through the view.
-    // There is no const version of this method
-    //
-    template<typename T>
-    HeteroView get_view(size_type begin = 0, size_type end = -1);
+    ~HeteroView() { clear(); }
+
+    HeteroView &operator= (const HeteroView &rhs);
+    HeteroView &operator= (HeteroView &&rhs);
 
     template<typename T>
-    void push_back(const T &v);
-    template<typename T, class... Args>
-    void emplace_back (Args &&... args);
-    template<typename T, typename ITR, class... Args>
-    void emplace (ITR pos, Args &&... args);
+    VectorView<T> &get_vector();
+    template<typename T>
+    const VectorView<T> &get_vector() const;
 
     template<typename T>
-    void reserve (size_type r)  { get_vector<T>().reserve (r); }
-    template<typename T>
-    void shrink_to_fit () { get_vector<T>().shrink_to_fit (); }
-
-    template<typename T>
+    typename VectorView<T>::
     size_type size () const { return (get_vector<T>().size()); }
 
     void clear();
-
-    template<typename T>
-    void erase(size_type pos);
-
-    template<typename T>
-    void resize(size_type count);
-    template<typename T>
-    void resize(size_type count, const T &v);
-
-    template<typename T>
-    void pop_back();
 
     template<typename T>
     bool empty() const noexcept;
@@ -95,13 +64,14 @@ public:
 private:
 
     template<typename T>
-    static std::unordered_map<const HeteroVector *, std::vector<T>> vectors_;
+    static std::unordered_map<const HeteroView *, VectorView<T>>    views_;
 
-    std::vector<std::function<void(HeteroVector &)>>    clear_functions_;
-    std::vector<std::function<void(const HeteroVector &,
-                                   HeteroVector &)>>    copy_functions_;
-    std::vector<std::function<void(HeteroVector &,
-                                   HeteroVector &)>>    move_functions_;
+    std::function<void(HeteroView &)>   clear_function_ {
+        [](HeteroView &) { return; } };
+    std::function<void(const HeteroView &, HeteroView &)>   copy_function_ {
+        [](const HeteroView &, HeteroView &)  { return; } };
+    std::function<void(HeteroView &, HeteroView &)> move_function_  {
+        [](HeteroView &, HeteroView &)  { return; } };
 
     // Visitor stuff
     //
@@ -173,7 +143,7 @@ public:
 // ----------------------------------------------------------------------------
 
 #  ifdef DMS_INCLUDE_SOURCE
-#    include "HeteroVector.tcc"
+#    include <DataFrame/HeteroView.tcc>
 #  endif // DMS_INCLUDE_SOURCE
 
 // ----------------------------------------------------------------------------

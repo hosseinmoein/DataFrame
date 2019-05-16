@@ -53,7 +53,7 @@ LFLAGS += -Bstatic -L$(LOCAL_LIB_DIR) -L$(PROJECT_LIB_DIR)
 
 LIBS = $(LFLAGS) -l$(LIB_NAME) $(PLATFORM_LIBS)
 INCLUDES += -I. -I$(LOCAL_INCLUDE_DIR) -I$(PROJECT_INCLUDE_DIR)
-DEFINES = -D_REENTRANT -DDMS_INCLUDE_SOURCE \
+DEFINES = -D_REENTRANT \
           -DP_THREADS -D_POSIX_PTHREAD_SEMANTICS -DDMS_$(BUILD_DEFINE)__
 
 # -----------------------------------------------------------------------------

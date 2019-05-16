@@ -90,7 +90,6 @@ set(${LIBRARY_TARGET_NAME}_HDR
 )
 
 # Build the library
-add_definitions(-D DMS_INCLUDE_SOURCE) # Need this for some of the .tcc files to be compiled
 if (UNIX)
   add_library(${LIBRARY_TARGET_NAME} SHARED ${${LIBRARY_TARGET_NAME}_SRC})
 endif(UNIX)

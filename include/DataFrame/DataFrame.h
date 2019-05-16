@@ -1028,7 +1028,7 @@ private:  // Tuple stuff
 
 // ----------------------------------------------------------------------------
 
-#  ifdef DMS_INCLUDE_SOURCE
+#  ifndef HMDF_DO_NOT_INCLUDE_TCC_FILES
 #    include <DataFrame/DataFrame_misc.tcc>
 #    include <DataFrame/DataFrame_set.tcc>
 #    include <DataFrame/DataFrame_get.tcc>
@@ -1037,7 +1037,7 @@ private:  // Tuple stuff
 #    include <DataFrame/DataFrame_join.tcc>
 #    include <DataFrame/DataFrame_shift.tcc>
 #    include <DataFrame/DataFrame.tcc>
-#  endif // DMS_INCLUDE_SOURCE
+#  endif // HMDF_DO_NOT_INCLUDE_TCC_FILES
 
 // ----------------------------------------------------------------------------
 

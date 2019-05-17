@@ -83,6 +83,6 @@ make install
 ### Uninstalling
 
 ```
-cd build
+cd [Debug | Release]
 make uninstall
 ```

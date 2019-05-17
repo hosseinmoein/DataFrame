@@ -73,9 +73,10 @@ DateTime class included in this library is a very cool and handy object to manip
 
 ### Installing using CMake
 ```
-mkdir build
-cd build
-cmake ..
+mkdir [Debug | Release]
+cd [Debug | Release]
+cmake -DCMAKE_BUILD_TYPE=[Debug | Release] ..
+make
 make install
 ```
 

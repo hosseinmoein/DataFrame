@@ -311,7 +311,6 @@ public:
 
         if (is_nan__(val1) || is_nan__(val2))  return;
 
-
         total1_ += val1;
         total2_ += val2;
         dot_prod_ += (val1 * val2);
@@ -482,7 +481,7 @@ public:
     inline T get_value () const  {
 
         return (cov_.get_value() /
-                (::sqrt(cov_.get_var1())* ::sqrt(cov_.get_var2())));
+                (::sqrt(cov_.get_var1()) * ::sqrt(cov_.get_var2())));
     }
 };
 
@@ -500,8 +499,23 @@ struct AutoCorrVisitor  {
 
 private:
 
-    std::vector<T>          result_ {  };
-    CorrVisitor<T, TS_T>    corr_ {  };
+    std::vector<T>  result_ {  };
+
+    using CorrResult = std::pair<std::size_t, T>;
+
+    inline CorrResult
+    get_auto_corr_(std::size_t col_len,
+                   std::size_t lag,
+                   const std::vector<T> &column) const  {
+
+        CorrVisitor<T, TS_T>    corr {  };
+
+        corr.pre();
+        for (std::size_t i = 0; i < col_len - lag; ++i)
+            corr (TS_T(), column[i], column[i + lag]);
+
+        return (CorrResult(lag, corr.get_value()));
+    }
 
 public:
 
@@ -515,25 +529,41 @@ public:
 
         if (col_len <= 4)  return;
 
-        std::vector<T>  tmp_result;
+        std::vector<T>                        tmp_result(col_len - 4);
+        std::size_t                           lag = 1;
+        std::vector<std::future<CorrResult>>  futures(
+            ThreadGranularity::get_thread_level());
+        std::size_t                           thread_count = 0;
 
-        tmp_result.reserve(col_len - 2);
-        tmp_result.push_back(1.0);
-
-        std::size_t lag = 1;
-
+        tmp_result[0] = 1.0;
         while (lag < col_len - 4)  {
-            corr_.pre();
-            for (std::size_t i = 0; i < col_len - lag; ++i)
-                corr_ (idx[0], column[i], column[i + lag]);
-            tmp_result.push_back(corr_.get_value());
-            corr_.post();
+            if (thread_count >= ThreadGranularity::get_thread_level())  {
+                const auto  result = get_auto_corr_(col_len, lag, column);
+
+                tmp_result[result.first] = result.second;
+            }
+            else  {
+                futures[thread_count] =
+                    std::async(std::launch::async,
+                               &AutoCorrVisitor::get_auto_corr_,
+                               this,
+                               col_len,
+                               lag,
+                               std::cref(column));
+                thread_count += 1;
+            }
             lag += 1;
+        }
+
+        for (std::size_t i = 0; i < thread_count; ++i)  {
+            const auto  &result = futures[i].get();
+
+            tmp_result[result.first] = result.second;
         }
         tmp_result.swap(result_);
     }
-    inline void pre ()  { corr_.pre(); result_.clear(); }
-    inline void post ()  { corr_.post();  }
+    inline void pre ()  { result_.clear(); }
+    inline void post ()  {  }
     inline const std::vector<T> &get_value () const  { return (result_); }
 };
 
@@ -614,7 +644,7 @@ private:
     inline T
     find_kth_element_ (typename std::vector<T>::const_iterator begin,
                        typename std::vector<T>::const_iterator end,
-                       size_t k)  {
+                       size_t k) const  {
 
         const std::size_t   vec_size = static_cast<size_t>(end - begin);
 

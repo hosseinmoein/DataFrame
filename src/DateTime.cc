@@ -156,7 +156,7 @@ DateTime::DateTime (DT_TIME_ZONE time_zone) noexcept : time_zone_(time_zone)  {
 
     tmpres /= 10;  // convert into microseconds
     // converting file time to unix epoch
-    tmpres -= DELTA_EPOCH_IN_MICROSECS; 
+    tmpres -= DELTA_EPOCH_IN_MICROSECS;
 
     set_time(tmpres / 1000000UL, (tmpres % 1000000UL) * 1000000);
 #elif defined clock_gettime
@@ -899,8 +899,43 @@ void DateTime::add_months (long months) noexcept  {
         months -= addend;
     }
 
-    const DateType  new_date = y * 100 + m * 100 + dmonth();
+    int         new_day = dmonth();
+    const int   days_max = days_in_month_(static_cast<DT_MONTH>(m), y);
 
+    if (new_day > days_max)
+        new_day = days_max;
+
+    const DateTime  new_di((y * 100 + m) * 100 + new_day,
+                           hour(),
+                           minute(),
+                           sec(),
+                           nanosec(),
+                           get_timezone());
+
+    *this = new_di;
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+void DateTime::add_years (long years) noexcept  {
+
+    int         new_year = year() + years;
+    int         new_day = dmonth();
+    const int   days_max = days_in_month_(month(), new_year);
+
+    if (new_day > days_max)
+        new_day = days_max;
+
+    const DateTime  new_di(
+        (new_year * 100 + static_cast<int>(month())) * 100 + new_day,
+        hour(),
+        minute(),
+        sec(),
+        nanosec(),
+        get_timezone());
+
+    *this = new_di;
     return;
 }
 

@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <string>
+#include <cassert>
 
 #include <DataFrame/DateTime.h>
 #include <DataFrame/FixedSizeString.h>
@@ -29,144 +30,108 @@ int main (int argc, char *argv [])  {
          << "   Microseconds: " << now.microsec () << endl;
 
     now = 19721202;
-    cout << "Date/Time should be 19721202: "
-         << now.string_format (DT_FORMAT::DT_TM2) << endl;
+    assert(now.string_format (DT_FORMAT::DT_TM2) == "12/02/1972 00:00:00.000");
     now = "19910223 16:23:45.230";
-    cout << "Date/Time should be '19910223 16:23:45.230': "
-         << now.string_format (DT_FORMAT::DT_TM2) << endl;
+    assert(now.string_format (DT_FORMAT::DT_TM2) == "02/23/1991 16:23:45.230");
     now = "19910223 16:23:45.230";
-    cout << "Date/Time should be '19910223 16:23:45.230': "
-         << now.string_format (DT_FORMAT::DT_TM2) << endl;
+    assert(now.string_format (DT_FORMAT::DT_TM2) == "02/23/1991 16:23:45.230");
     now = "20100207 12";
-    cout << "Date/Time should be '20100207 12:00:00.000': "
-         << now.string_format (DT_FORMAT::DT_TM2) << endl;
+    assert(now.string_format (DT_FORMAT::DT_TM2) == "02/07/2010 12:00:00.000");
     now = "20100207 12:32";
-    cout << "Date/Time should be '20100207 12:32:00.000': "
-         << now.string_format (DT_FORMAT::DT_TM2) << endl;
+    assert(now.string_format (DT_FORMAT::DT_TM2) == "02/07/2010 12:32:00.000");
     now = "20100207 12:32:12";
 
     try  {
         long  diff = static_cast<long> (now.diff_seconds (gmnow));
 
-        cout << "The difference between local and GMT times is:  "
-             << diff / 3600;
-        diff %= 3600;
-        cout << ":" << diff / 60;
-        diff %= 60;
-        cout << ":" << diff << endl;
+        assert(false);
     }
     catch (const std::runtime_error &ex)  {
-        cout << ex.what();
+        // cout << ex.what();
+        ; // Time diff between different timezones is not implemented
     }
 
-    cout << "\n----- Testing DateTime's add_days()\n" << endl;
-
     {
+        // Testing DateTime's add_days()
+
         DateTime    now (20181023, 10, 24, 1, 123456789);;
 
-        cout << "Now is: " << now.string_format (DT_FORMAT::DT_TM2) << endl;
+        assert(now.string_format(DT_FORMAT::DT_TM2) ==
+                   "10/23/2018 10:24:01.123");
         now.add_days (1);
-        cout << "After adding 1 day: "
-             << now.string_format (DT_FORMAT::DT_TM2) << endl;
+        assert(now.string_format(DT_FORMAT::DT_TM2) ==
+                   "10/24/2018 10:24:01.123");
         now.add_days (-1);
-        cout << "After adding -1 day: "
-             << now.string_format (DT_FORMAT::DT_TM2) << endl;
+        assert(now.string_format(DT_FORMAT::DT_TM2) ==
+                   "10/23/2018 10:24:01.123");
 
         now.add_weekdays (1);
-        cout << "After adding 1 weekdays day: "
-             << now.string_format (DT_FORMAT::DT_TM2) << endl;
+        assert(now.string_format(DT_FORMAT::DT_TM2) ==
+                   "10/24/2018 10:24:01.123");
         now.add_weekdays (-1);
-        cout << "After adding -1 weekdays day: "
-             << now.string_format (DT_FORMAT::DT_TM2) << endl;
+        assert(now.string_format(DT_FORMAT::DT_TM2) ==
+                   "10/23/2018 10:24:01.123");
 
         {
             DateTime    di (20091224, 9, 30);
 
-
-            cout << "After adding 2 weekdays days to '"
-                 << di.string_format (DT_FORMAT::DT_TM2) << "' ";
             di.add_weekdays (2);
-            cout << "you get '" << di.string_format (DT_FORMAT::DT_TM2)
-                 << "'" << endl;
-
+            assert(di.string_format (DT_FORMAT::DT_TM2) ==
+                       "12/28/2009 09:30:00.000");
         }
 
         {
             DateTime    di (20081224, 9, 30);
 
-
-            cout << "After adding 2 weekdays days to '"
-                 << di.string_format (DT_FORMAT::DT_TM2) << "' ";
             di.add_weekdays (2);
-            cout << "you get '" << di.string_format (DT_FORMAT::DT_TM2)
-                 << "'" << endl;
-
+            assert(di.string_format (DT_FORMAT::DT_TM2) ==
+                       "12/26/2008 09:30:00.000");
         }
 
         {
             DateTime    di (20061224, 9, 30);
 
-
-            cout << "After adding 2 weekdays days to '"
-                 << di.string_format (DT_FORMAT::DT_TM2) << "' ";
             di.add_weekdays (2);
-            cout << "you get '" << di.string_format (DT_FORMAT::DT_TM2)
-                 << "'" << endl;
-
+            assert(di.string_format (DT_FORMAT::DT_TM2) ==
+                       "12/26/2006 09:30:00.000");
         }
 
         {
             DateTime    di (20051223, 9, 30);
 
-
-            cout << "After adding 2 weekdays days to '"
-                 << di.string_format (DT_FORMAT::DT_TM2) << "' ";
             di.add_weekdays (2);
-            cout << "you get '" << di.string_format (DT_FORMAT::DT_TM2)
-                 << "'" << endl;
-
+            assert(di.string_format (DT_FORMAT::DT_TM2) ==
+                       "12/27/2005 09:30:00.000");
         }
 
         {
             DateTime    di (20041223, 9, 30);
 
-
-            cout << "After adding 2 weekdays days to '"
-                 << di.string_format (DT_FORMAT::DT_TM2) << "' ";
             di.add_weekdays (2);
-            cout << "you get '" << di.string_format (DT_FORMAT::DT_TM2)
-                 << "'" << endl;
-
+            assert(di.string_format (DT_FORMAT::DT_TM2) ==
+                       "12/27/2004 09:30:00.000");
         }
 
         {
             DateTime    di (20001222, 9, 30);
 
-
-            cout << "After adding 2 weekdays days to '"
-                 << di.string_format (DT_FORMAT::DT_TM2) << "' ";
             di.add_weekdays (2);
-            cout << "you get '" << di.string_format (DT_FORMAT::DT_TM2)
-                 << "'" << endl;
-
+            assert(di.string_format (DT_FORMAT::DT_TM2) ==
+                       "12/26/2000 09:30:00.000");
         }
 
         {
             DateTime    di (19981224, 9, 30);
 
-
-            cout << "After adding 2 weekdays days to '"
-                 << di.string_format (DT_FORMAT::DT_TM2) << "' ";
             di.add_weekdays (2);
-            cout << "you get '" << di.string_format (DT_FORMAT::DT_TM2)
-                 << "'" << endl;
-
+            assert(di.string_format (DT_FORMAT::DT_TM2) ==
+                       "12/28/1998 09:30:00.000");
         }
     }
 
-    cout << "\n----- Testing DateTime's GMT vs Local time\n" << endl;
-
     {
+        cout << "\n----- Testing DateTime's GMT vs Local time\n" << endl;
+
         DateTime    gmt_now (DT_TIME_ZONE::GMT);
         DateTime    local_now;
 
@@ -211,9 +176,9 @@ int main (int argc, char *argv [])  {
              << "   " << gmt_time_1989.time () << endl << endl;
     }
 
-    cout << "\n----- Testing DateTime's weekdays day methods\n" << endl;
-
     {
+        cout << "\n----- Testing DateTime's weekdays day methods\n" << endl;
+
         const   DateTime    new_year (20020101);
 
         cout << "20020101 is a US holiday: "
@@ -580,9 +545,9 @@ int main (int argc, char *argv [])  {
         }
     }
 
-    cout << "\n----- Testing DateTime's going over year boundary\n" << endl;
-
     {
+        cout << "\n----- Testing DateTime going over year boundary\n" << endl;
+
         {
             DateTime    test (20081225, 16, 30);
             int         i = 0;
@@ -614,9 +579,9 @@ int main (int argc, char *argv [])  {
         }
     }
 
-    cout << "\n----- Testing DateTime's time zone changes\n" << endl;
-
     {
+        cout << "\n----- Testing DateTime's time zone changes\n" << endl;
+
         DateTime    local_now;
         DateTime    gmt_now (DT_TIME_ZONE::GMT);
         DateTime    b_aires_now (DT_TIME_ZONE::AM_BUENOS_AIRES);
@@ -659,9 +624,9 @@ int main (int argc, char *argv [])  {
         cout << "\nLocal changed to Sydney: " << local << endl;
     }
 
-    cout << "\n----- Testing DateTime's const char * constructor\n" << endl;
-
     {
+        // Testing DateTime's const char * constructor
+
          const DateTime di1 ("20100207 12:31");
 
          if (di1.string_format (DT_FORMAT::DT_TM2) !=
@@ -722,6 +687,64 @@ int main (int argc, char *argv [])  {
                        << "1547146583.123456987" << std::endl;
              // return (EXIT_FAILURE);
          }
+    }
+
+    {
+        // Testing DateTime's add_months()
+
+        DateTime    now (20190530, 11, 15, 5, 123456789);;
+
+        assert(now.string_format (DT_FORMAT::DT_TM2) ==
+                   "05/30/2019 11:15:05.123");
+
+        now.add_months (1);
+        assert(now.string_format (DT_FORMAT::DT_TM2) ==
+                   "06/30/2019 11:15:05.123");
+
+        now.add_months (-1);
+        assert(now.string_format (DT_FORMAT::DT_TM2) ==
+                   "05/30/2019 11:15:05.123");
+
+        now.add_months (10);
+        assert(now.string_format (DT_FORMAT::DT_TM2) ==
+                   "03/30/2020 11:15:05.123");
+
+        now.add_months (-10);
+        assert(now.string_format (DT_FORMAT::DT_TM2) ==
+                   "05/30/2019 11:15:05.123");
+
+        now.add_months (9);
+        assert(now.string_format (DT_FORMAT::DT_TM2) ==
+                   "02/29/2020 11:15:05.123");
+    }
+
+    {
+        // Testing DateTime's add_years()
+
+        DateTime    now (20160229, 11, 15, 5, 123456789);;
+
+        assert(now.string_format (DT_FORMAT::DT_TM2) ==
+                   "02/29/2016 11:15:05.123");
+
+        now.add_years (1);
+        assert(now.string_format (DT_FORMAT::DT_TM2) ==
+                   "02/28/2017 11:15:05.123");
+
+        now.add_years (-1);
+        assert(now.string_format (DT_FORMAT::DT_TM2) ==
+                   "02/28/2016 11:15:05.123");
+
+        now.add_years (5);
+        assert(now.string_format (DT_FORMAT::DT_TM2) ==
+                   "02/28/2021 11:15:05.123");
+
+        now.add_years (-5);
+        assert(now.string_format (DT_FORMAT::DT_TM2) ==
+                   "02/28/2016 11:15:05.123");
+
+        now.add_years (9);
+        assert(now.string_format (DT_FORMAT::DT_TM2) ==
+                   "02/28/2025 11:15:05.123");
     }
 
     return (EXIT_SUCCESS);

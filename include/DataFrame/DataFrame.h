@@ -115,6 +115,21 @@ enum class io_format : unsigned char  {
 
 // -------------------------------------
 
+enum class time_frequency : unsigned char  {
+    annual = 1,
+    monthly = 2,
+    weekly = 3,
+    daily = 4,
+    hourly = 5,
+    minutely = 6,
+    secondly = 7,
+    millisecondly = 8,
+    // microsecondly = 9,
+    // nanosecondly = 10
+};
+
+// -------------------------------------
+
 // It represents a range with begin and end within a continuous memory space
 //
 template<typename T>
@@ -251,6 +266,18 @@ public:  // Load/append/remove interfaces
     // It moves the idx vector into the index column.
     //
     size_type load_index(TSVec &&idx);
+
+
+
+
+
+    static std::vector<TS> &&
+	generate_datetime_index(const char *start_datetime,
+                            const char *end_datetime,
+                            time_frequency t_freq);
+
+
+
 
     // It copies the data from iterators begin to end to the named column.
     // If column does not exist, it will be created. If the column exist,

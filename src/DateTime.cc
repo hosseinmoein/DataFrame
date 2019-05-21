@@ -426,7 +426,15 @@ DateTime::EpochType DateTime::compare (const DateTime &rhs) const  {
 
 DateTime::DatePartType DateTime::days_in_month () const noexcept  {
 
-    switch (month ())  {
+    return (days_in_month_(month(), year()));
+}
+
+// ----------------------------------------------------------------------------
+
+DateTime::DatePartType DateTime::
+days_in_month_ (DT_MONTH month, DatePartType year) noexcept  {
+
+    switch (month)  {
         case DT_MONTH::APR:
         case DT_MONTH::JUN:
         case DT_MONTH::SEP:
@@ -435,7 +443,7 @@ DateTime::DatePartType DateTime::days_in_month () const noexcept  {
         case DT_MONTH::FEB:
             // This I remember from CML.
             //
-            if ((year () % 4 == 0 && year () % 100 != 0) || year () % 400 == 0)
+            if ((year % 4 == 0 && year % 100 != 0) || year % 400 == 0)
                 return (29);
             else
                 return (28);
@@ -453,7 +461,8 @@ bool DateTime::is_valid () const noexcept  {
 
     return (year () > 1900 && year () < 2525 &&
             month () > DT_MONTH::BAD_MONTH && month () <= DT_MONTH::DEC &&
-            dmonth () > 0 && dmonth () <= days_in_month () &&
+            dmonth () > 0 &&
+            dmonth () <= days_in_month_ (month(), year()) &&
             hour () >= 0 && hour () < 24 &&
             minute () >= 0 && minute () < 60 &&
             sec () >= 0 && sec () < 60 &&
@@ -870,6 +879,28 @@ void DateTime::add_weekdays (long days) noexcept  {
             days -= addend;
         }
     }
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+void DateTime::add_months (long months) noexcept  {
+
+    int         y = year();
+    int         m = static_cast<int>(month());
+    const int   addend = months >= 0 ? 1 : -1;
+
+    while (months)  {
+        m += addend;
+        if (m > 12 || m == 0)  {
+            m = m > 12 ? 1 : 12;
+            y += addend;
+        }
+        months -= addend;
+    }
+
+    const DateType  new_date = y * 100 + m * 100 + dmonth();
+
     return;
 }
 

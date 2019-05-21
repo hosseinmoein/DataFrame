@@ -4,6 +4,7 @@
 // Distributed under the BSD Software License (see file License)
 
 #include <DataFrame/DataFrame.h>
+#include <DataFrame/DateTime.h>
 
 // ----------------------------------------------------------------------------
 
@@ -144,6 +145,93 @@ DataFrame<TS, HETERO>::load_index(TSVec &&idx)  {
     indices_ = idx;
     return (indices_.size());
 }
+
+// ----------------------------------------------------------------------------
+
+
+
+
+
+
+template<typename TS, typename  HETERO>
+std::vector<TS> &&
+generate_datetime_index(const char *start_datetime,
+                        const char *end_datetime,
+                        time_frequency t_freq)  {
+
+    DateTime        start_di(start_datetime, DT_DATE_STYLE::AME_STYLE);
+    const DateTime  end_di(end_datetime, DT_DATE_STYLE::AME_STYLE);
+    const double    diff = end_di.diff_seconds(start_di);
+    std::vector<TS> index;
+
+    switch(t_freq)  {
+        case time_frequency::annual:
+            index.reserve(diff / (365 * 24 * 60 * 60) + 1);
+            break;
+        case time_frequency::monthly:
+            index.reserve(diff / (30 * 24 * 60 * 60) + 1);
+            break;
+        case time_frequency::weekly:
+            index.reserve(diff / (7 * 24 * 60 * 60) + 1);
+            break;
+        case time_frequency::daily:
+            index.reserve(diff / (24 * 60 * 60) + 1);
+            break;
+        case time_frequency::hourly:
+            index.reserve(diff / (60 * 60) + 1);
+            break;
+        case time_frequency::minutely:
+            index.reserve(diff / 60 + 1);
+            break;
+        case time_frequency::secondly:
+            index.reserve(diff + 1);
+            break;
+        case time_frequency::millisecondly:
+            index.reserve(diff * 999);
+            break;
+        default:
+            break;
+    }
+
+    while (start_di < end_di)  {
+        switch(t_freq)  {
+            case time_frequency::annual:
+                index.push_back(start_di.year());
+                break;
+            case time_frequency::monthly:
+                break;
+            case time_frequency::weekly:
+                break;
+            case time_frequency::daily:
+                break;
+            case time_frequency::hourly:
+                break;
+            case time_frequency::minutely:
+                break;
+            case time_frequency::secondly:
+                break;
+            case time_frequency::millisecondly:
+                break;
+            default:
+                break;
+        }
+    }
+
+    return (std::move(index));
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // ----------------------------------------------------------------------------
 

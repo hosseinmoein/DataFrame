@@ -247,6 +247,8 @@ public:
     void add_seconds (EpochType secs) noexcept;
     void add_days (long days) noexcept;
     void add_weekdays (long days) noexcept;
+    void add_months (long months) noexcept;
+    void add_years (long years) noexcept;
 
     bool is_weekend () const noexcept;
     bool is_newyear () const noexcept;
@@ -261,6 +263,9 @@ public:
     std::string string_format (DT_FORMAT format) const;
 
 private:
+
+    static DatePartType
+    days_in_month_ (DT_MONTH month, DatePartType year) noexcept;
 
     // NOTE: This method is not multithread-safe. This method
     //       modifies the TZ environment variable which changes the

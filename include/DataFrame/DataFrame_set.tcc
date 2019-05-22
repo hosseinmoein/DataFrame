@@ -148,11 +148,6 @@ DataFrame<TS, HETERO>::load_index(TSVec &&idx)  {
 
 // ----------------------------------------------------------------------------
 
-
-
-
-
-
 template<typename TS, typename  HETERO>
 std::vector<TS> &&
 generate_datetime_index(const char *start_datetime,
@@ -196,19 +191,25 @@ generate_datetime_index(const char *start_datetime,
     while (start_di < end_di)  {
         switch(t_freq)  {
             case time_frequency::annual:
-                index.push_back(start_di.year());
+                index.push_back(start_di.add_years(1));
                 break;
             case time_frequency::monthly:
+                index.push_back(start_di.add_months(1));
                 break;
             case time_frequency::weekly:
+                index.push_back(start_di.add_days(7));
                 break;
             case time_frequency::daily:
+                index.push_back(start_di.add_days(1));
                 break;
             case time_frequency::hourly:
+                index.push_back(start_di.add_seconds(60 * 60));
                 break;
             case time_frequency::minutely:
+                index.push_back(start_di.add_seconds(60));
                 break;
             case time_frequency::secondly:
+                index.push_back(start_di.add_seconds(1));
                 break;
             case time_frequency::millisecondly:
                 break;
@@ -219,19 +220,6 @@ generate_datetime_index(const char *start_datetime,
 
     return (std::move(index));
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // ----------------------------------------------------------------------------
 

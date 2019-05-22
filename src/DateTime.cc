@@ -738,6 +738,14 @@ DateTime::EpochType DateTime::time () const noexcept  {
 
 // ----------------------------------------------------------------------------
 
+DateTime::LongTimeType DateTime::long_time () const noexcept  {
+
+    return (static_cast<LongTimeType>(time()) * 1000000000LL +
+            static_cast<LongTimeType>(nanosec()));
+}
+
+// ----------------------------------------------------------------------------
+
 double DateTime::diff_seconds (const DateTime &that) const  {
 
     // Currently I don't have time to implement this. There are
@@ -810,6 +818,17 @@ double DateTime::diff_weeks (const DateTime &that) const noexcept  {
 void DateTime::add_seconds (EpochType secs) noexcept  {
 
     set_time (time () + secs, nanosec ());
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+void DateTime::add_nanoseconds (long nanosecs) noexcept  {
+
+    const long  sign = nanosecs >= 0L ? 1L : -1L;
+
+    set_time (time() + (((nanosec() + ::abs(nanosecs)) / 1000000000L) * sign),
+              nanosec() + ((::abs(nanosecs) % 999999999L) * sign));
     return;
 }
 

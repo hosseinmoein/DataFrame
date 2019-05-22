@@ -132,6 +132,7 @@ public:
     using MicrosecondType = int;             // 0 - 999,999
     using NanosecondType =  int;             // 0 - 999,999,999
     using EpochType = time_t;                // Signed epoch
+    using LongTimeType = long long int;      // Nano seconds since epoch
 
 private:
 
@@ -228,7 +229,8 @@ public:
     MillisecondType msec () const noexcept;     // 0 - 999
     MicrosecondType microsec () const noexcept; // 0 - 999,999
     NanosecondType nanosec () const noexcept;   // 0 - 999,999,999
-    EpochType time () const noexcept;           // Like time()
+    EpochType time () const noexcept;           // Like ::time()
+    LongTimeType long_time () const noexcept;   // Nano seconds since epoch
 
     DatePartType days_in_month () const noexcept;  // 28, 29, 30, 31
 
@@ -244,6 +246,7 @@ public:
 
     // The parameter to these methods could be +/-.
     // It will advance/pull back the date/time accordingly.
+    void add_nanoseconds (long nanosecs) noexcept;
     void add_seconds (EpochType secs) noexcept;
     void add_days (long days) noexcept;
     void add_weekdays (long days) noexcept;

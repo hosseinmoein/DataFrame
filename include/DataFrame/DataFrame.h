@@ -267,17 +267,31 @@ public:  // Load/append/remove interfaces
     //
     size_type load_index(TSVec &&idx);
 
-
-
-
-
+    // This static method generates a date/time based index vector that could
+    // be fed directly to one of the load methods. Depending on the specified
+    // frequency, it generates specific timestamps (see below).
+    // It returns a r-value vector of TS timestamps.
+    //
+    // start_datetime, end_datetime: They are the start/end date/times of
+    //     requested timestamps.
+    //     They must be in the following format:
+    //     DD/MM/YYYY [HH[:MM[:SS[.MMM]]]]
+    // t_freq: Specifies the timestamp frequnecy. Depending on the frequency,
+    //         and TS type specific timestamps are generated as follows:
+    //     TS type of DateTime always generates timestamps of DateTime
+    //     - Annual, monthly, weekly, and daily frequencies generates YYYYMMDD
+    //       timestamps.
+    //     - Hourly, minutely, and secondly frequencies generates epoch
+    //       timestamps.
+    //     - Millisecondly frequency generates nano-second since epoch
+    //       timestamps.
+    // increment: Increment in the units of the frequency 
+    //         
     static std::vector<TS> &&
-	generate_datetime_index(const char *start_datetime,
-                            const char *end_datetime,
-                            time_frequency t_freq);
-
-
-
+    gen_datetime_index(const char *start_datetime,
+                       const char *end_datetime,
+                       time_frequency t_freq,
+                       long increment = 1);
 
     // It copies the data from iterators begin to end to the named column.
     // If column does not exist, it will be created. If the column exist,

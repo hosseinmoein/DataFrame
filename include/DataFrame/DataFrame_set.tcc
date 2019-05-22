@@ -148,77 +148,138 @@ DataFrame<TS, HETERO>::load_index(TSVec &&idx)  {
 
 // ----------------------------------------------------------------------------
 
+template<typename T>
+inline static void
+_generate_ts_index_(std::vector<T> &index_vec,
+                    DateTime &start_di,
+                    time_frequency t_freq,
+                    long increment)  {
+
+    switch(t_freq)  {
+    case time_frequency::annual:
+        start_di.add_years(increment);
+        index_vec.push_back(static_cast<T>(start_di.date()));
+        break;
+    case time_frequency::monthly:
+        start_di.add_months(increment);
+        index_vec.push_back(static_cast<T>(start_di.date()));
+        break;
+    case time_frequency::weekly:
+        start_di.add_days(increment * 7);
+        index_vec.push_back(static_cast<T>(start_di.date()));
+        break;
+    case time_frequency::daily:
+        start_di.add_days(increment);
+        index_vec.push_back(static_cast<T>(start_di.date()));
+        break;
+    case time_frequency::hourly:
+        start_di.add_seconds(increment * 60 * 60);
+        index_vec.push_back(static_cast<T>(start_di.time()));
+        break;
+    case time_frequency::minutely:
+        start_di.add_seconds(increment * 60);
+        index_vec.push_back(static_cast<T>(start_di.time()));
+        break;
+    case time_frequency::secondly:
+        start_di.add_seconds(increment);
+        index_vec.push_back(static_cast<T>(start_di.time()));
+        break;
+    case time_frequency::millisecondly:
+        start_di.add_nanoseconds(increment * 1000000);
+        index_vec.push_back(static_cast<T>(start_di.long_time()));
+        break;
+    default:
+        break;
+    }
+}
+
+// ------------------------------------
+
+template<>
+inline void
+_generate_ts_index_(std::vector<DateTime> &index_vec,
+                    DateTime &start_di,
+                    time_frequency t_freq,
+                    long increment)  {
+
+    switch(t_freq)  {
+    case time_frequency::annual:
+        start_di.add_years(increment);
+        break;
+    case time_frequency::monthly:
+        start_di.add_months(increment);
+        break;
+    case time_frequency::weekly:
+        start_di.add_days(increment * 7);
+        break;
+    case time_frequency::daily:
+        start_di.add_days(increment);
+        break;
+    case time_frequency::hourly:
+        start_di.add_seconds(increment * 60 * 60);
+        break;
+    case time_frequency::minutely:
+        start_di.add_seconds(increment * 60);
+        break;
+    case time_frequency::secondly:
+        start_di.add_seconds(increment);
+        break;
+    case time_frequency::millisecondly:
+        start_di.add_nanoseconds(increment * 1000000);
+        break;
+    default:
+        break;
+    }
+    index_vec.push_back(start_di);
+}
+
+// ----------------------------------------------------------------------------
+
 template<typename TS, typename  HETERO>
 std::vector<TS> &&
-generate_datetime_index(const char *start_datetime,
-                        const char *end_datetime,
-                        time_frequency t_freq)  {
+gen_datetime_index(const char *start_datetime,
+                   const char *end_datetime,
+                   time_frequency t_freq,
+                   long increment)  {
 
     DateTime        start_di(start_datetime, DT_DATE_STYLE::AME_STYLE);
     const DateTime  end_di(end_datetime, DT_DATE_STYLE::AME_STYLE);
     const double    diff = end_di.diff_seconds(start_di);
-    std::vector<TS> index;
+    std::vector<TS> index_vec;
 
     switch(t_freq)  {
         case time_frequency::annual:
-            index.reserve(diff / (365 * 24 * 60 * 60) + 1);
+            index_vec.reserve(diff / (365 * 24 * 60 * 60) + 1);
             break;
         case time_frequency::monthly:
-            index.reserve(diff / (30 * 24 * 60 * 60) + 1);
+            index_vec.reserve(diff / (30 * 24 * 60 * 60) + 1);
             break;
         case time_frequency::weekly:
-            index.reserve(diff / (7 * 24 * 60 * 60) + 1);
+            index_vec.reserve(diff / (7 * 24 * 60 * 60) + 1);
             break;
         case time_frequency::daily:
-            index.reserve(diff / (24 * 60 * 60) + 1);
+            index_vec.reserve(diff / (24 * 60 * 60) + 1);
             break;
         case time_frequency::hourly:
-            index.reserve(diff / (60 * 60) + 1);
+            index_vec.reserve(diff / (60 * 60) + 1);
             break;
         case time_frequency::minutely:
-            index.reserve(diff / 60 + 1);
+            index_vec.reserve(diff / 60 + 1);
             break;
         case time_frequency::secondly:
-            index.reserve(diff + 1);
+            index_vec.reserve(diff + 1);
             break;
         case time_frequency::millisecondly:
-            index.reserve(diff * 999);
+            index_vec.reserve(diff * 999);
             break;
         default:
-            break;
+            throw NotFeasible ("ERROR: gen_datetime_index()");
     }
 
-    while (start_di < end_di)  {
-        switch(t_freq)  {
-            case time_frequency::annual:
-                index.push_back(start_di.add_years(1));
-                break;
-            case time_frequency::monthly:
-                index.push_back(start_di.add_months(1));
-                break;
-            case time_frequency::weekly:
-                index.push_back(start_di.add_days(7));
-                break;
-            case time_frequency::daily:
-                index.push_back(start_di.add_days(1));
-                break;
-            case time_frequency::hourly:
-                index.push_back(start_di.add_seconds(60 * 60));
-                break;
-            case time_frequency::minutely:
-                index.push_back(start_di.add_seconds(60));
-                break;
-            case time_frequency::secondly:
-                index.push_back(start_di.add_seconds(1));
-                break;
-            case time_frequency::millisecondly:
-                break;
-            default:
-                break;
-        }
-    }
+    while (start_di < end_di)
+        _generate_ts_index_<TS>(index_vec, start_di, t_freq, increment);
 
-    return (std::move(index));
+    return (std::move(index_vec));
 }
 
 // ----------------------------------------------------------------------------

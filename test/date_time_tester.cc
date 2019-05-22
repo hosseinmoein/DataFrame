@@ -46,7 +46,7 @@ int main (int argc, char *argv [])  {
 
         assert(false);
     }
-    catch (const std::runtime_error &ex)  {
+    catch (const std::runtime_error &)  {
         // cout << ex.what();
         ; // Time diff between different timezones is not implemented
     }

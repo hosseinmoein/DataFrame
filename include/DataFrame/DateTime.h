@@ -172,11 +172,11 @@ public:
     // Currently, the following formats are supported:
     //  (1)  YYYYMMDD
     // AME_STYLE:
-    //  (2)  DD/MM/YYYY
-    //  (3)  DD/MM/YYYY HH
-    //  (4)  DD/MM/YYYY HH:MM
-    //  (5)  DD/MM/YYYY HH:MM:SS
-    //  (6)  DD/MM/YYYY HH:MM:SS.MMM
+    //  (2)  MM/DD/YYYY
+    //  (3)  MM/DD/YYYY HH
+    //  (4)  MM/DD/YYYY HH:MM
+    //  (5)  MM/DD/YYYY HH:MM:SS
+    //  (6)  MM/DD/YYYY HH:MM:SS.MMM
     //
     // EUR_STYLE:
     //  (7)  YYYY/MM/DD

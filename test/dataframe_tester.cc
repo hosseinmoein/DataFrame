@@ -2099,6 +2099,87 @@ int main(int argc, char *argv[]) {
         assert(abs(result - -0.128854) < 0.00001);
     }
 
+    {
+        // Testing gen_datetime_index()
+
+        std::vector<unsigned long>  idx_vec1 =
+            MyDataFrame::gen_datetime_index("01/01/2018",
+                                            "12/31/2038",
+                                            time_frequency::annual);
+
+        assert(idx_vec1.size() == 21);
+        assert(idx_vec1[0] == 20180101);
+        assert(idx_vec1[1] == 20190101);
+        assert(idx_vec1[10] == 20280101);
+        assert(idx_vec1[20] == 20380101);
+
+        idx_vec1 = MyDataFrame::gen_datetime_index("01/01/2018",
+                                                   "12/31/2038",
+                                                   time_frequency::monthly,
+                                                   3);
+        assert(idx_vec1.size() == 84);
+        assert(idx_vec1[0] == 20180101);
+        assert(idx_vec1[1] == 20180401);
+        assert(idx_vec1[2] == 20180701);
+        assert(idx_vec1[40] == 20280101);
+        assert(idx_vec1[83] == 20381001);
+
+        idx_vec1 = MyDataFrame::gen_datetime_index("01/01/2018",
+                                                   "12/31/2038",
+                                                   time_frequency::weekly,
+                                                   4);
+        assert(idx_vec1.size() == 274);
+        assert(idx_vec1[0] == 20180101);
+        assert(idx_vec1[1] == 20180129);
+        assert(idx_vec1[2] == 20180226);
+        assert(idx_vec1[272] == 20381108);
+        assert(idx_vec1[273] == 20381206);
+
+        idx_vec1 = MyDataFrame::gen_datetime_index("01/01/2018",
+                                                   "12/31/2038",
+                                                   time_frequency::daily);
+        assert(idx_vec1.size() == 7669);
+        assert(idx_vec1[0] == 20180101);
+        assert(idx_vec1[1] == 20180102);
+        assert(idx_vec1[2] == 20180103);
+        assert(idx_vec1[7667] == 20381229);
+        assert(idx_vec1[7668] == 20381230);
+
+        idx_vec1 = MyDataFrame::gen_datetime_index("01/01/2018",
+                                                   "12/31/2022",
+                                                   time_frequency::hourly);
+        assert(idx_vec1.size() == 43800);
+        assert(idx_vec1[0] == 1514782800);
+        assert(idx_vec1[1] == 1514786400);
+        assert(idx_vec1[2] == 1514790000);
+        assert(idx_vec1[43798] == 1672455600);
+        assert(idx_vec1[43799] == 1672459200);
+
+        idx_vec1 = MyDataFrame::gen_datetime_index("01/01/2018",
+                                                   "03/31/2018",
+                                                   time_frequency::secondly,
+                                                   10);
+        assert(idx_vec1.size() == 768600);
+        assert(idx_vec1[0] == 1514782800);
+        assert(idx_vec1[1] == 1514782810);
+        assert(idx_vec1[2] == 1514782820);
+        assert(idx_vec1[768598] == 1522468780);
+        assert(idx_vec1[768599] == 1522468790);
+
+        idx_vec1 = MyDataFrame::gen_datetime_index(
+			"01/01/2018 00:00:00.000",
+            "01/01/2018 10:10:01.600",
+            time_frequency::millisecondly,
+            500);
+        assert(idx_vec1.size() == 73204);
+        assert(idx_vec1[0] == 1514782800000000000);
+        assert(idx_vec1[1] == 1514782800500000000);
+        assert(idx_vec1[2] == 1514782801000000000);
+        assert(idx_vec1[73201] == 1514819400500000000);
+        assert(idx_vec1[73202] == 1514819401000000000);
+        assert(idx_vec1[73203] == 1514819401500000000);
+    }
+
     return (0);
 }
 

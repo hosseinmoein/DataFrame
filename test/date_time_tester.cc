@@ -779,7 +779,7 @@ int main (int argc, char *argv [])  {
         now.add_nanoseconds (1000000000);
         assert(now.string_format (DT_FORMAT::DT_TM2) ==
                    "05/30/2019 11:15:06.123");
-        assert(now.long_time() == 1559229306123000001);
+        assert(now.long_time() == 1559229306123000000);
         now.add_nanoseconds (-1000000000);
         assert(now.string_format (DT_FORMAT::DT_TM2) ==
                    "05/30/2019 11:15:05.123");
@@ -787,7 +787,7 @@ int main (int argc, char *argv [])  {
         now.add_nanoseconds (1000010000);
         assert(now.string_format (DT_FORMAT::DT_TM2) ==
                    "05/30/2019 11:15:06.123");
-        assert(now.long_time() == 1559229306123010001);
+        assert(now.long_time() == 1559229306123010000);
         now.add_nanoseconds (-1000010000);
         assert(now.string_format (DT_FORMAT::DT_TM2) ==
                    "05/30/2019 11:15:05.123");
@@ -801,6 +801,24 @@ int main (int argc, char *argv [])  {
         assert(now.string_format (DT_FORMAT::DT_TM2) ==
                    "05/30/2019 11:15:05.123");
         assert(now.long_time() == 1559229305123000000);
+
+        now.add_nanoseconds (-123000000);
+        assert(now.long_time() == 1559229305000000000);
+        now.add_nanoseconds (500000000);
+        assert(now.long_time() == 1559229305500000000);
+        now.add_nanoseconds (500000000);
+        assert(now.long_time() == 1559229306000000000);
+        now.add_nanoseconds (500000000);
+        assert(now.long_time() == 1559229306500000000);
+        now.add_nanoseconds (500000000);
+        assert(now.long_time() == 1559229307000000000);
+
+        now.add_nanoseconds (-500000000);
+        assert(now.long_time() == 1559229306500000000);
+        now.add_nanoseconds (-500000000);
+        assert(now.long_time() == 1559229305000000000);
+        now.add_nanoseconds (-500000000);
+        assert(now.long_time() == 1559229304500000000);
     }
 
     return (EXIT_SUCCESS);

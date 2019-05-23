@@ -275,19 +275,22 @@ public:  // Load/append/remove interfaces
     // start_datetime, end_datetime: They are the start/end date/times of
     //     requested timestamps.
     //     They must be in the following format:
-    //     DD/MM/YYYY [HH[:MM[:SS[.MMM]]]]
+    //     MM/DD/YYYY [HH[:MM[:SS[.MMM]]]]
     // t_freq: Specifies the timestamp frequnecy. Depending on the frequency,
     //         and TS type specific timestamps are generated as follows:
     //     TS type of DateTime always generates timestamps of DateTime
     //     - Annual, monthly, weekly, and daily frequencies generates YYYYMMDD
     //       timestamps.
     //     - Hourly, minutely, and secondly frequencies generates epoch
-    //       timestamps.
+    //       timestamps (64 bit).
     //     - Millisecondly frequency generates nano-second since epoch
-    //       timestamps.
+    //       timestamps (128 bit).
     // increment: Increment in the units of the frequency 
+    //
+    // NOTE: It is the responsibility of the programmer to make sure TS type
+    //       is big enough to contain the frequency
     //         
-    static std::vector<TS> &&
+    static std::vector<TS>
     gen_datetime_index(const char *start_datetime,
                        const char *end_datetime,
                        time_frequency t_freq,

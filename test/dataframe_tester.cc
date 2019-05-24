@@ -2107,6 +2107,7 @@ int main(int argc, char *argv[]) {
                                             time_frequency::annual);
 
         assert(idx_vec1.size() == 21);
+        assert(idx_vec1.capacity() == 22);
         assert(idx_vec1[0] == 20180101);
         assert(idx_vec1[1] == 20190101);
         assert(idx_vec1[10] == 20280101);
@@ -2117,6 +2118,7 @@ int main(int argc, char *argv[]) {
                                                    time_frequency::monthly,
                                                    3);
         assert(idx_vec1.size() == 84);
+        assert(idx_vec1.capacity() == 86);
         assert(idx_vec1[0] == 20180101);
         assert(idx_vec1[1] == 20180401);
         assert(idx_vec1[2] == 20180701);
@@ -2128,6 +2130,7 @@ int main(int argc, char *argv[]) {
                                                    time_frequency::weekly,
                                                    4);
         assert(idx_vec1.size() == 274);
+        assert(idx_vec1.capacity() == 274);
         assert(idx_vec1[0] == 20180101);
         assert(idx_vec1[1] == 20180129);
         assert(idx_vec1[2] == 20180226);
@@ -2138,6 +2141,7 @@ int main(int argc, char *argv[]) {
                                                    "12/31/2038",
                                                    time_frequency::daily);
         assert(idx_vec1.size() == 7669);
+        assert(idx_vec1.capacity() == 7670);
         assert(idx_vec1[0] == 20180101);
         assert(idx_vec1[1] == 20180102);
         assert(idx_vec1[2] == 20180103);
@@ -2148,6 +2152,7 @@ int main(int argc, char *argv[]) {
                                                    "12/31/2022",
                                                    time_frequency::hourly);
         assert(idx_vec1.size() == 43800);
+        assert(idx_vec1.capacity() == 43801);
         assert(idx_vec1[0] == 1514782800);
         assert(idx_vec1[1] == 1514786400);
         assert(idx_vec1[2] == 1514790000);
@@ -2159,6 +2164,7 @@ int main(int argc, char *argv[]) {
                                                    time_frequency::secondly,
                                                    10);
         assert(idx_vec1.size() == 768600);
+        assert(idx_vec1.capacity() == 768601);
         assert(idx_vec1[0] == 1514782800);
         assert(idx_vec1[1] == 1514782810);
         assert(idx_vec1[2] == 1514782820);
@@ -2171,6 +2177,7 @@ int main(int argc, char *argv[]) {
             time_frequency::millisecondly,
             500);
         assert(idx_vec1.size() == 73204);
+        assert(idx_vec1.capacity() == 73229);
         assert(idx_vec1[0] == 1514782800000000000);
         assert(idx_vec1[1] == 1514782800500000000);
         assert(idx_vec1[2] == 1514782801000000000);

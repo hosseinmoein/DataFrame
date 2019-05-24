@@ -7,7 +7,6 @@
 
 #include <DataFrame/DataFrame.h>
 #include <DataFrame/DataFrameVisitors.h>
-#include <DataFrame/DateTime.h>
 #include <DataFrame/DataFrameOperators.h>
 
 using namespace hmdf;
@@ -2167,7 +2166,7 @@ int main(int argc, char *argv[]) {
         assert(idx_vec1[768599] == 1522468790);
 
         idx_vec1 = MyDataFrame::gen_datetime_index(
-			"01/01/2018 00:00:00.000",
+            "01/01/2018 00:00:00.000",
             "01/01/2018 10:10:01.600",
             time_frequency::millisecondly,
             500);
@@ -2178,6 +2177,23 @@ int main(int argc, char *argv[]) {
         assert(idx_vec1[73201] == 1514819400500000000);
         assert(idx_vec1[73202] == 1514819401000000000);
         assert(idx_vec1[73203] == 1514819401500000000);
+
+        std::vector<DateTime>   idx_vec2 =
+            StdDataFrame<DateTime>::gen_datetime_index("01/01/2018",
+                                                       "12/31/2022",
+                                                       time_frequency::hourly);
+
+        assert(idx_vec2.size() == 43800);
+        assert(idx_vec2[0].string_format (DT_FORMAT::DT_TM2) ==
+                   "01/01/2018 00:00:00.000");
+        assert(idx_vec2[1].string_format (DT_FORMAT::DT_TM2) ==
+                   "01/01/2018 01:00:00.000");
+        assert(idx_vec2[2].string_format (DT_FORMAT::DT_TM2) ==
+                   "01/01/2018 02:00:00.000");
+        assert(idx_vec2[43798].string_format (DT_FORMAT::DT_TM2) ==
+                   "12/30/2022 22:00:00.000");
+        assert(idx_vec2[43799].string_format (DT_FORMAT::DT_TM2) ==
+                   "12/30/2022 23:00:00.000");
     }
 
     return (0);

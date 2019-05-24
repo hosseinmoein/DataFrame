@@ -4,7 +4,6 @@
 // Distributed under the BSD Software License (see file License)
 
 #include <DataFrame/DataFrame.h>
-#include <DataFrame/DateTime.h>
 
 // ----------------------------------------------------------------------------
 
@@ -240,10 +239,11 @@ std::vector<TS> DataFrame<TS, HETERO>::
 gen_datetime_index(const char *start_datetime,
                    const char *end_datetime,
                    time_frequency t_freq,
-                   long increment)  {
+                   long increment,
+                   DT_TIME_ZONE tz)  {
 
-    DateTime        start_di(start_datetime, DT_DATE_STYLE::AME_STYLE);
-    const DateTime  end_di(end_datetime, DT_DATE_STYLE::AME_STYLE);
+    DateTime        start_di(start_datetime, DT_DATE_STYLE::AME_STYLE, tz);
+    const DateTime  end_di(end_datetime, DT_DATE_STYLE::AME_STYLE, tz);
     const double    diff = end_di.diff_seconds(start_di);
     std::vector<TS> index_vec;
 

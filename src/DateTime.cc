@@ -213,11 +213,11 @@ DateTime::DateTime (DateType d,
 // I'm adding the following formats:
 //
 // AME_STYLE:
-//  (1)  DD/MM/YYYY
-//  (2)  DD/MM/YYYY HH
-//  (3)  DD/MM/YYYY HH:MM
-//  (4)  DD/MM/YYYY HH:MM:SS
-//  (5)  DD/MM/YYYY HH:MM:SS.MMM
+//  (1)  MM/DD/YYYY
+//  (2)  MM/DD/YYYY HH
+//  (3)  MM/DD/YYYY HH:MM
+//  (4)  MM/DD/YYYY HH:MM:SS
+//  (5)  MM/DD/YYYY HH:MM:SS.MMM
 //
 // EUR_STYLE:
 //  (1)  YYYY/MM/DD

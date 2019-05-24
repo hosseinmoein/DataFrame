@@ -62,9 +62,9 @@ DateTime class included in this library is a very cool and handy object to manip
 ## [DataFrame Documentation](docs/DataFrameDoc.pdf)
 [DateTime Documentation](docs/DateTimeDoc.pdf)
 
-## [DataFrame Test File](src/dataframe_tester.cc)
-[Heterogeneous Vectors Test File](src/vectors_tester.cc)<BR>
-[Date/Time Test File](src/date_time_tester.cc)
+## [DataFrame Test File](test/dataframe_tester.cc)
+[Heterogeneous Vectors Test File](test/vectors_tester.cc)<BR>
+[Date/Time Test File](test/date_time_tester.cc)
 
 ## [Contributions](docs/CONTRIBUTING.md)
 

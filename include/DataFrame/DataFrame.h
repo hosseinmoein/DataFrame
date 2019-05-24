@@ -268,7 +268,7 @@ public:  // Load/append/remove interfaces
     //
     size_type load_index(TSVec &&idx);
 
-    // This static method generates a date/time based index vector that could
+    // This static method generates a date/time-based index vector that could
     // be fed directly to one of the load methods. Depending on the specified
     // frequency, it generates specific timestamps (see below).
     // It returns a vector of TS timestamps.
@@ -278,7 +278,7 @@ public:  // Load/append/remove interfaces
     //     requested timestamps.
     //     They must be in the following format:
     //     MM/DD/YYYY [HH[:MM[:SS[.MMM]]]]
-    // t_freq: Specifies the timestamp frequnecy. Depending on the frequency,
+    // t_freq: Specifies the timestamp frequency. Depending on the frequency,
     //         and TS type specific timestamps are generated as follows:
     //     - TS type of DateTime always generates timestamps of DateTime.
     //     - Annual, monthly, weekly, and daily frequencies generates YYYYMMDD
@@ -288,6 +288,7 @@ public:  // Load/append/remove interfaces
     //     - Millisecondly frequency generates nano-second since epoch
     //       timestamps (128 bit).
     // increment: Increment in the units of the frequency
+    // tz: Time-zone of generated timestamps
     //
     // NOTE: It is the responsibility of the programmer to make sure TS type
     //       is big enough to contain the frequency.

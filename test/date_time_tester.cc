@@ -816,9 +816,9 @@ int main (int argc, char *argv [])  {
         now.add_nanoseconds (-500000000);
         assert(now.long_time() == 1559229306500000000);
         now.add_nanoseconds (-500000000);
-        assert(now.long_time() == 1559229305000000000);
+        assert(now.long_time() == 1559229306000000000);
         now.add_nanoseconds (-500000000);
-        assert(now.long_time() == 1559229304500000000);
+        assert(now.long_time() == 1559229305500000000);
     }
 
     return (EXIT_SUCCESS);

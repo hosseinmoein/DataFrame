@@ -825,19 +825,13 @@ void DateTime::add_seconds (EpochType secs) noexcept  {
 
 void DateTime::add_nanoseconds (long nanosecs) noexcept  {
 
-    const long  sign = nanosecs >= 0L ? 1L : -1L;
-    const long  total_nano = nanosec() + ::abs(nanosecs);
-    const long  left_over = nanosecs % 1000000000L;
+    long long int   new_time =
+        static_cast<long long int>(time()) * 1000000000LL +
+        static_cast<long long int>(nanosec());
 
-    EpochType   new_time = time() + (total_nano / 1000000000L) * sign;
-    long        new_nano = (nanosec() + left_over) % 1000000000L;
-
-    if (new_nano < 0)  {
-        if (total_nano < 999999999L)
-            new_time -= 1;
-        new_nano = 1000000000 - ::abs(new_nano);
-    }
-    set_time (new_time, new_nano);
+    new_time += static_cast<long long int>(nanosecs);
+    set_time(static_cast<EpochType>(new_time / 1000000000LL),
+             static_cast<NanosecondType>(new_time % 1000000000LL));
     return;
 }
 

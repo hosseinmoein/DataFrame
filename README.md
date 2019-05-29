@@ -3,6 +3,7 @@
 ![GitHub](https://img.shields.io/github/license/hosseinmoein/DataFrame.svg?color=red&style=popout)
 ![GitHub tag (latest by date)](https://img.shields.io/github/tag-date/hosseinmoein/DataFrame.svg?color=blue&label=Official%20Release&style=popout)
 [![C++17](https://img.shields.io/badge/C%2B%2B-17-blue.svg)](https://isocpp.org/std/the-standard )
+[![Github All Releases](https://img.shields.io/github/downloads/hosseinmoein/DataFrame/total.svg)]()
 
 ![Alt text](docs/pandalion.png "C++ protecting Python")
 

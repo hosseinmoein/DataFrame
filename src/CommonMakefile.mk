@@ -15,8 +15,15 @@ SRCS = HeteroVector.cc \
        HeteroView.cc \
        ../test/vectors_tester.cc \
        ../test/date_time_tester.cc \
+       ../test/filebase_tester.cc \
+       ../test/mmfile_tester.cc \
+       ../test/sharedmem_tester.cc \
        ThreadGranularity.cc \
-       DateTime.cc
+       DateTime.cc \
+       FileBase.cc \
+       MMapBase.cc \
+       MMapFile.cc \
+       MMapSharedMem.cc
 
 HEADERS = $(LOCAL_INCLUDE_DIR)/DataFrame/HeteroVector.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/HeteroVector.tcc \
@@ -37,7 +44,12 @@ HEADERS = $(LOCAL_INCLUDE_DIR)/DataFrame/HeteroVector.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/VectorView.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/ThreadGranularity.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/DateTime.h \
-          $(LOCAL_INCLUDE_DIR)/DataFrame/FixedSizeString.h
+          $(LOCAL_INCLUDE_DIR)/DataFrame/FixedSizeString.h \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/MMap/FileBase.h \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/MMap/FileDef.h \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/MMap/MMapBase.h \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/MMap/MMapFile.h \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/MMap/MMapSharedMem.h
 
 LIB_NAME = DataFrame
 TARGET_LIB = $(LOCAL_LIB_DIR)/lib$(LIB_NAME).a
@@ -45,7 +57,10 @@ TARGET_LIB = $(LOCAL_LIB_DIR)/lib$(LIB_NAME).a
 TARGETS += $(TARGET_LIB) \
            $(LOCAL_BIN_DIR)/dataframe_tester \
 	       $(LOCAL_BIN_DIR)/vectors_tester \
-           $(LOCAL_BIN_DIR)/date_time_tester
+           $(LOCAL_BIN_DIR)/date_time_tester \
+           $(LOCAL_BIN_DIR)/filebase_tester \
+           $(LOCAL_BIN_DIR)/mmfile_tester \
+           $(LOCAL_BIN_DIR)/sharedmem_tester
 
 # -----------------------------------------------------------------------------
 
@@ -63,7 +78,11 @@ DEFINES = -D_REENTRANT \
 LIB_OBJS = $(LOCAL_OBJ_DIR)/HeteroVector.o \
            $(LOCAL_OBJ_DIR)/HeteroView.o \
            $(LOCAL_OBJ_DIR)/ThreadGranularity.o \
-           $(LOCAL_OBJ_DIR)/DateTime.o
+           $(LOCAL_OBJ_DIR)/DateTime.o \
+           $(LOCAL_OBJ_DIR)/FileBase.o \
+           $(LOCAL_OBJ_DIR)/MMapBase.o \
+           $(LOCAL_OBJ_DIR)/MMapFile.o \
+           $(LOCAL_OBJ_DIR)/MMapSharedMem.o
 
 # -----------------------------------------------------------------------------
 
@@ -107,6 +126,18 @@ DATE_TIME_TESTER_OBJ = $(LOCAL_OBJ_DIR)/date_time_tester.o
 $(LOCAL_BIN_DIR)/date_time_tester: $(TARGET_LIB) $(DATE_TIME_TESTER_OBJ)
 	$(CXX) -o $@ $(DATE_TIME_TESTER_OBJ) $(LIBS)
 
+FILEBASE_TESTER_OBJ = $(LOCAL_OBJ_DIR)/filebase_tester.o
+$(LOCAL_BIN_DIR)/filebase_tester: $(TARGET_LIB) $(FILEBASE_TESTER_OBJ)
+	$(CXX) -o $@ $(FILEBASE_TESTER_OBJ) $(LIBS)
+
+MMFILE_TESTER_OBJ = $(LOCAL_OBJ_DIR)/mmfile_tester.o
+$(LOCAL_BIN_DIR)/mmfile_tester: $(TARGET_LIB) $(MMFILE_TESTER_OBJ)
+	$(CXX) -o $@ $(MMFILE_TESTER_OBJ) $(LIBS)
+
+SHAREDMEM_TESTER_OBJ = $(LOCAL_OBJ_DIR)//sharedmem_tester.o
+$(LOCAL_BIN_DIR)/sharedmem_tester: $(TARGET_LIB) $(SHAREDMEM_TESTER_OBJ)
+	$(CXX) -o $@ $(SHAREDMEM_TESTER_OBJ) $(LIBS)
+
 # -----------------------------------------------------------------------------
 
 depend:
@@ -114,17 +145,19 @@ depend:
 
 clean:
 	rm -f $(LIB_OBJS) $(TARGETS) $(DATAFRAME_TESTER_OBJ) $(VECTORS_TESTER_OBJ) \
-          $(DATE_TIME_TESTER_OBJ)
+          $(DATE_TIME_TESTER_OBJ) $(FILEBASE_TESTER_OBJ) \
+          $(MMFILE_TESTER_OBJ) $(SHAREDMEM_TESTER_OBJ)
 
 clobber:
 	rm -f $(LIB_OBJS) $(TARGETS) $(DATAFRAME_TESTER_OBJ) $(VECTORS_TESTER_OBJ) \
-          $(DATE_TIME_TESTER_OBJ)
+          $(DATE_TIME_TESTER_OBJ) $(FILEBASE_TESTER_OBJ) \
+          $(MMFILE_TESTER_OBJ) $(SHAREDMEM_TESTER_OBJ)
 
 install_lib:
 	cp -pf $(TARGET_LIB) $(PROJECT_LIB_DIR)/.
 
 install_hdr:
-	cp -pf $(HEADERS) $(PROJECT_INCLUDE_DIR)/DataFrame/.
+	cp -rpf $(LOCAL_INCLUDE_DIR)/* $(PROJECT_INCLUDE_DIR)/.
 
 # -----------------------------------------------------------------------------
 

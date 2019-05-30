@@ -226,6 +226,15 @@ if (UNIX)
   target_link_libraries(sharedmem_tester Threads::Threads)
 endif (UNIX)
 
+if (UNIX AND NOT APPLE)
+  target_link_libraries(dataframe_tester rt)
+  target_link_libraries(vectors_tester rt)
+  target_link_libraries(date_time_tester rt)
+  target_link_libraries(filebase_tester rt)
+  target_link_libraries(mmfile_tester rt)
+  target_link_libraries(sharedmem_tester rt)
+endif()
+
 # Enable ctest, testing so we can see if unit tests pass or fail in CI
 enable_testing()
 add_test(NAME dataframe_tester

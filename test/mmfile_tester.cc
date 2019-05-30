@@ -57,8 +57,8 @@ int main (int argc, char *argv [])  {
 
     MMapFile    write_file ("test.mmap", MMapFile::_append_, 10000);
 
-    std::ifstream    cifs ("../test/mmfile_tester.cc");
-    std::ifstream    hifs ("../test/filebase_tester.cc");
+    std::ifstream    cifs ("sample_data_dt_index.csv");
+    std::ifstream    hifs ("sample_data_string_index.csv");
 
     write_file.close ();
     write_file.open ();

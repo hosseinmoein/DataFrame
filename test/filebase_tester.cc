@@ -125,7 +125,9 @@ int main (int argCnt, char *argVctr [])  {
     read_file2.close ();
     write_file.unlink ();
 
-    FileBase    c_file ("../test/filebase_tester.cc", FileBase::_read_, 10000);
+    FileBase    c_file ("sample_data_string_index.csv",
+                        FileBase::_read_,
+                        10000);
     char        line [1024];
 
     while (! c_file.is_eof ())  {

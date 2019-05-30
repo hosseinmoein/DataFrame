@@ -55,8 +55,8 @@ public:
         return (_file_flags & _in_use_
                     ? _current_offset : static_cast<size_type>(-1));
     }
-    inline const
-    char *get_file_name () const noexcept  { return (file_name_.c_str ()); }
+    inline const char *
+    get_file_name () const noexcept  { return (file_name_.c_str ()); }
 
     FileDef () = delete;
     inline FileDef (const char *file_name,

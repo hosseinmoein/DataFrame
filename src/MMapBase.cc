@@ -16,7 +16,7 @@
 
 namespace hmdf
 {
-	
+
 const MMapBase::size_type   MMapBase::SYSTEM_PAGE_SIZE =
     ::sysconf (_SC_PAGESIZE);
 
@@ -567,12 +567,13 @@ int MMapBase::set_flag (int mmap_prot, flag_type mmap_flags)  {
 
             const AutoFileDesc  desc_guard (*this);
 
-            if ((_mmap_ptr = ::mmap (nullptr,
-                                     _mmap_size,
-                                     _mmap_prot,
-                                     _mmap_flags,
-                                     _file_desc,
-                                     0)) == MAP_FAILED)  {
+            _mmap_ptr = ::mmap (nullptr,
+                                _mmap_size,
+                                _mmap_prot,
+                                _mmap_flags,
+                                _file_desc,
+                                0);
+            if (_mmap_ptr == MAP_FAILED)  {
                 String2K    err;
 
                 err.printf ("MMapBase::set_flag(): ::mmap(): (%d) %s",

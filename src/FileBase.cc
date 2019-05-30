@@ -71,7 +71,8 @@ bool FileBase::open ()  {
         }
     }
 
-    if ((stream_ = ::fopen (get_file_name (), om)) != nullptr)  {
+    stream_ = ::fopen (get_file_name (), om);
+    if (stream_ != nullptr)  {
         struct stat stat_data;
 
         if (! ::stat (get_file_name (), &stat_data))

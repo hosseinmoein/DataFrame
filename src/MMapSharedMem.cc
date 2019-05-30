@@ -26,9 +26,8 @@ bool MMapSharedMem::open ()  {
         throw std::runtime_error (
             "MMapSharedMem::open(): The device is already open");
 
-    if ((_file_desc = ::shm_open (get_file_name (),
-                                  _file_open_flags,
-                                  _file_open_mode)) > 0)  {
+    _file_desc = ::shm_open(get_file_name(), _file_open_flags, _file_open_mode);
+    if (_file_desc > 0)  {
         struct stat stat_data;
 
         if (! ::fstat (_file_desc, &stat_data))

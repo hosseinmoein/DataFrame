@@ -13,7 +13,9 @@
 #include <iostream>
 
 using namespace std;
+#ifndef _WIN32
 using namespace hmdf;
+#endif // _WIN32
 
 static const size_t         SHARED_MEMORY_NUM = 100;
 static const size_t         EVEN_SIZE = 1000;
@@ -151,7 +153,7 @@ int main (int argc, char *argv [])  {
 
 #endif // _WIN32
 
-    return (EXIT_SUCCESS);
+    return (0);
 }
 
 //-----------------------------------------------------------------------------

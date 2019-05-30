@@ -249,28 +249,35 @@ gen_datetime_index(const char *start_datetime,
 
     switch(t_freq)  {
     case time_frequency::annual:
-        index_vec.reserve(diff / (365 * 24 * 60 * 60) / increment + 1);
+        index_vec.reserve(
+          static_cast<size_type>(diff / (365 * 24 * 60 * 60) / increment + 1));
         break;
     case time_frequency::monthly:
-        index_vec.reserve(diff / (30 * 24 * 60 * 60) / increment + 1);
+        index_vec.reserve(
+          static_cast<size_type>(diff / (30 * 24 * 60 * 60) / increment + 1));
         break;
     case time_frequency::weekly:
-        index_vec.reserve(diff / (7 * 24 * 60 * 60) / increment + 1);
+        index_vec.reserve(
+            static_cast<size_type>(diff / (7 * 24 * 60 * 60) / increment + 1));
         break;
     case time_frequency::daily:
-        index_vec.reserve(diff / (24 * 60 * 60) / increment + 1);
+        index_vec.reserve(
+            static_cast<size_type>(diff / (24 * 60 * 60) / increment + 1));
         break;
     case time_frequency::hourly:
-        index_vec.reserve(diff / (60 * 60) / increment + 1);
+        index_vec.reserve(
+            static_cast<size_type>(diff / (60 * 60) / increment + 1));
         break;
     case time_frequency::minutely:
-        index_vec.reserve((diff / 60) / increment + 1);
+        index_vec.reserve(
+            static_cast<size_type>((diff / 60) / increment + 1));
         break;
     case time_frequency::secondly:
         index_vec.reserve((diff / increment) + 1);
         break;
     case time_frequency::millisecondly:
-        index_vec.reserve((diff / increment) * 999 + 100);
+        index_vec.reserve(
+            static_cast<size_type>((diff / increment) * 999 + 100));
         break;
     default:
         throw NotFeasible ("ERROR: gen_datetime_index()");

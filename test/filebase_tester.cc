@@ -5,9 +5,9 @@
 
 #include <DataFrame/MMap/FileBase.h>
 
-using namespace hmdf;
-
 #ifndef _WIN32
+
+using namespace hmdf;
 
 bool WriteFile (FileBase &);
 bool ReadFile (FileBase &);
@@ -25,12 +25,12 @@ int main (int argCnt, char *argVctr [])  {
 
     if (! fbase_file.is_ok ())  {
         printf ("Unable to create the fbase file\n");
-        return (EXIT_FAILURE);
+        return (-1);
     }
 
     if (! WriteFile (fbase_file))  {
         printf ("Error in writing\n");
-        return (EXIT_FAILURE);
+        return (-1);
     }
 
     fbase_file.close ();
@@ -42,12 +42,12 @@ int main (int argCnt, char *argVctr [])  {
 
     if (! read_file.is_ok ())  {
         printf ("Unable to open file for reading\n");
-        return (EXIT_FAILURE);
+        return (-1);
     }
 
     if (! ReadFile (read_file))  {
         printf ("Error in writing\n");
-        return (EXIT_FAILURE);
+        return (-1);
     }
 
     read_file.close ();
@@ -135,7 +135,7 @@ int main (int argCnt, char *argVctr [])  {
 
 #endif // _WIN32
 
-    return (EXIT_SUCCESS);
+    return (0);
 }
 
 //-----------------------------------------------------------------------------

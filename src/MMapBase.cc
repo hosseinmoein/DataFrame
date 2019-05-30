@@ -224,7 +224,12 @@ int MMapBase::close (CLOSE_MODE close_mode)  {
 
         if (is_open ())  {
             if (_file_flags & wflag)  {
-                ::ftruncate (_file_desc, length);
+                if (::ftruncate (_file_desc, length) < 0)  {
+                    String2K    err;
+
+                    err.printf ("MMapBase::close(): ftruncatie() failed ");
+                    throw std::runtime_error (err.c_str ());
+                }
                 ::fsync (_file_desc);
             }
 

@@ -7,9 +7,9 @@
 
 #include <fstream>
 
-using namespace hmdf;
-
 #ifndef _WIN32
+
+using namespace hmdf;
 
 int WriteFile (MMapFile &);
 int ReadFile (MMapFile &);
@@ -27,12 +27,12 @@ int main (int argc, char *argv [])  {
 
     if (! mmap_file.is_ok ())  {
         printf ("Unable to create the mmap file\n");
-        return EXIT_FAILURE;
+        return -1;
     }
 
     if (WriteFile (mmap_file) < 0)  {
         printf ("Error in writing\n");
-        return EXIT_FAILURE;
+        return -1;
     }
     mmap_file.close ();
 
@@ -44,12 +44,12 @@ int main (int argc, char *argv [])  {
 
     if (! read_file.is_ok ())  {
         printf ("Unable to open file for reading\n");
-        return EXIT_FAILURE;
+        return -1;
     }
 
     if (ReadFile (read_file) < 0)  {
         printf ("Error in writing\n");
-        return EXIT_FAILURE;
+        return -1;
     }
 
     read_file.close ();
@@ -145,7 +145,7 @@ int main (int argc, char *argv [])  {
 
 #endif // _WIN32
 
-    return EXIT_SUCCESS;
+    return 0;
 }
 
 //-----------------------------------------------------------------------------

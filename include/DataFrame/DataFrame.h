@@ -478,7 +478,7 @@ public:  // Other public interfaces
     //     bool operator() (const TimeStamp &ts, T &value);
     // A false return from the above operator method stops the iteration
     // through named column values.
-    // 
+    //
     // T: Type on column col_name. If this is index it would be the same as TS.
     // F: The functor type
     // col_name: Name of the column

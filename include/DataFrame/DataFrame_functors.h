@@ -372,7 +372,6 @@ struct get_row_functor_ : DataVec::template visitor_base<types ...>  {
 // ----------------------------------------------------------------------------
 
 // Local Variables:
-// Local Variables:
 // mode:C++
 // tab-width:4
 // c-basic-offset:4

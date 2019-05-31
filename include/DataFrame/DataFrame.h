@@ -439,8 +439,8 @@ public:  // Other public interfaces
     void drop_missing(drop_policy policy, size_type threshold = 0);
 
     // It iterates over the column named col_name
-    // (or index, if col_name == "INDEX") and replaces all values in old_valuse
-    // with the corresponding values in new_values up tp the limit. If limit is
+    // (or index, if col_name == "INDEX") and replaces all values in old_values
+    // with the corresponding values in new_values up to the limit. If limit is
     // omitted, all values will be replaced.
     // It returns number of items replaced.
     //
@@ -450,7 +450,7 @@ public:  // Other public interfaces
     // old_array: An array of values to be replaced in col_name column
     // new_array: An array of values to to replace the old_values in col_name
     //            column
-    // limit: limit of how many items to replace. Default is to rteplace all.
+    // limit: Limit of how many items to replace. Default is to replace all.
     //
     template<typename T, size_t N>
     size_type replace(const char *col_name,

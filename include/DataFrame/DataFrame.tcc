@@ -404,13 +404,6 @@ drop_missing(drop_policy policy, size_type threshold)  {
 
 // ----------------------------------------------------------------------------
 
-
-
-
-
-
-
-
 template<typename V, typename T, size_t N>
 inline static void
 _replace_vector_vals_(V &data_vec,
@@ -457,10 +450,9 @@ replace(const char *col_name,
         if (citer == data_tb_.end())  {
             char buffer [512];
 
-            sprintf(
-                buffer,
-                "DataFrame::replace(): ERROR: Cannot find column '%s'",
-                col_name);
+            sprintf(buffer,
+                    "DataFrame::replace(): ERROR: Cannot find column '%s'",
+                    col_name);
             throw ColNotFound(buffer);
         }
 
@@ -475,6 +467,34 @@ replace(const char *col_name,
     }
 
     return (count);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename TS, typename HETERO>
+template<typename T, typename F>
+void DataFrame<TS, HETERO>::
+replace(const char *col_name, F &functor)  {
+
+    const auto  citer = data_tb_.find (col_name);
+
+    if (citer == data_tb_.end())  {
+        char buffer [512];
+
+        sprintf(buffer,
+                "DataFrame::replace(): ERROR: Cannot find column '%s'",
+                col_name);
+        throw ColNotFound(buffer);
+    }
+
+    DataVec         &hv = data_[citer->second];
+    std::vector<T>  &vec = hv.template get_vector<T>();
+    const size_type vec_s = vec.size();
+
+    for (size_type i = 0; i < vec_s; ++i)
+        if (! functor(indices_[i], vec[i]))  break;
+
+    return;
 }
 
 // ----------------------------------------------------------------------------
@@ -496,15 +516,19 @@ replace_async(const char *col_name,
                            limit));
 }
 
+// ----------------------------------------------------------------------------
 
+template<typename TS, typename HETERO>
+template<typename T, typename F>
+std::future<void> DataFrame<TS, HETERO>::
+replace_async(const char *col_name, F &functor)  {
 
-
-
-
-
-
-
-
+    return (std::async(std::launch::async,
+                       &DataFrame::replace<T, F>,
+                           this,
+                           col_name,
+                           std::ref(functor)));
+}
 
 // ----------------------------------------------------------------------------
 

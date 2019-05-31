@@ -438,6 +438,63 @@ public:  // Other public interfaces
     template<typename ... types>
     void drop_missing(drop_policy policy, size_type threshold = 0);
 
+    // It iterates over the column named col_name
+    // (or index, if col_name == "INDEX") and replaces all values in old_values
+    // with the corresponding values in new_values up to the limit. If limit is
+    // omitted, all values will be replaced.
+    // It returns number of items replaced.
+    //
+    // T: Type on column col_name. If this is index it would be the same as TS.
+    // N: Size of old_values and new_values arrays
+    // col_name: Name of the column
+    // old_array: An array of values to be replaced in col_name column
+    // new_array: An array of values to to replace the old_values in col_name
+    //            column
+    // limit: Limit of how many items to replace. Default is to replace all.
+    //
+    template<typename T, size_t N>
+    size_type replace(const char *col_name,
+                      const std::array<T, N> old_values,
+                      const std::array<T, N> new_values,
+                      int limit = -1);
+
+    // Same as replace() above, but executed asynchronously
+    // NOTE: multiple instances of replace_async() maybe executed for
+    //       different columns at the same time with no problem.
+    //
+    template<typename T, size_t N>
+    std::future<size_type>
+    replace_async(const char *col_name,
+                  const std::array<T, N> old_values,
+                  const std::array<T, N> new_values,
+                  int limit = -1);
+
+    // This is similar to replace() above but it lets a functor replace the
+    // values in the named column. The functor is passed every value of the
+    // column along with a const reference of the corresponding index value.
+    // Unlike the replace version above, this replace can only work on data
+    // columns. It will not work on index column.
+    // The functor must have the following interface at minimum:
+    //     bool operator() (const TimeStamp &ts, T &value);
+    // A false return from the above operator method stops the iteration
+    // through named column values.
+    //
+    // T: Type on column col_name. If this is index it would be the same as TS.
+    // F: The functor type
+    // col_name: Name of the column
+    // functor: An instance of the functor
+    //
+    template<typename T, typename F>
+    void replace(const char *col_name, F &functor);
+
+    // Same as replace() above, but executed asynchronously
+    // NOTE: multiple instances of replace_async() maybe executed for
+    //       different columns at the same time with no problem.
+    //
+    template<typename T, typename F>
+    std::future<void>
+    replace_async(const char *col_name, F &functor);
+
     // Make all data columns the same length as the index.
     // If any data column is shorter than the index column, it will be padded
     // by nan.

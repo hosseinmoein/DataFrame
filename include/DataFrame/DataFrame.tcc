@@ -71,7 +71,7 @@ fill_missing_ffill_(std::vector<T> &vec, int limit, size_type col_num)  {
 
     const size_type vec_size = vec.size();
 
-    if (vec_size == 0)  return; 
+    if (vec_size == 0)  return;
 
     int count = 0;
     T   last_value = vec[0];
@@ -106,7 +106,7 @@ fill_missing_bfill_(std::vector<T> &vec, int limit)  {
 
     const long  vec_size = static_cast<long>(vec.size());
 
-    if (vec_size == 0)  return; 
+    if (vec_size == 0)  return;
 
     int count = 0;
     T   last_value = vec[vec_size - 1];
@@ -146,7 +146,7 @@ fill_missing_linter_(std::vector<T> &vec, const TSVec &index, int limit)  {
 
     const long  vec_size = static_cast<long>(vec.size());
 
-    if (vec_size < 3)  return; 
+    if (vec_size < 3)  return;
 
     int         count = 0;
     T           *y1 = &(vec[0]);
@@ -335,7 +335,7 @@ drop_missing_rows_(T &vec,
 template<typename TS, typename HETERO>
 template<typename ... types>
 void DataFrame<TS, HETERO>::
-drop_missing(drop_policy policy, size_type threshold)  {       
+drop_missing(drop_policy policy, size_type threshold)  {
 
     DropRowMap                      missing_row_map;
     std::vector<std::future<void>>  futures(get_thread_level());
@@ -400,6 +400,134 @@ drop_missing(drop_policy policy, size_type threshold)  {
         futures[idx].get();
 
     return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename V, typename T, size_t N>
+inline static void
+_replace_vector_vals_(V &data_vec,
+                      const std::array<T, N> &old_values,
+                      const std::array<T, N> &new_values,
+                      size_t &count,
+                      int limit)  {
+
+    const size_t    vec_s = data_vec.size();
+
+    for (size_t i = 0; i < N; ++i)  {
+        for (size_t j = 0; j < vec_s; ++j)  {
+            if (limit >= 0 && count >= limit)  return;
+            if (old_values[i] == data_vec[j])  {
+                data_vec[j] = new_values[i];
+                count += 1;
+            }
+        }
+    }
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename TS, typename HETERO>
+template<typename T, size_t N>
+typename DataFrame<TS, HETERO>::size_type DataFrame<TS, HETERO>::
+replace(const char *col_name,
+        const std::array<T, N> old_values,
+        const std::array<T, N> new_values,
+        int limit)  {
+
+    size_type   count = 0;
+
+    if (! strcmp("INDEX", col_name))  {
+        _replace_vector_vals_<TSVec, T, N>(indices_,
+                                           old_values,
+                                           new_values,
+                                           count,
+                                           limit);
+    }
+    else  {
+        const auto  citer = data_tb_.find (col_name);
+
+        if (citer == data_tb_.end())  {
+            char buffer [512];
+
+            sprintf(buffer,
+                    "DataFrame::replace(): ERROR: Cannot find column '%s'",
+                    col_name);
+            throw ColNotFound(buffer);
+        }
+
+        DataVec         &hv = data_[citer->second];
+        std::vector<T>  &vec = hv.template get_vector<T>();
+
+        _replace_vector_vals_<std::vector<T>, T, N>(vec,
+                                                    old_values,
+                                                    new_values,
+                                                    count,
+                                                    limit);
+    }
+
+    return (count);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename TS, typename HETERO>
+template<typename T, typename F>
+void DataFrame<TS, HETERO>::
+replace(const char *col_name, F &functor)  {
+
+    const auto  citer = data_tb_.find (col_name);
+
+    if (citer == data_tb_.end())  {
+        char buffer [512];
+
+        sprintf(buffer,
+                "DataFrame::replace(): ERROR: Cannot find column '%s'",
+                col_name);
+        throw ColNotFound(buffer);
+    }
+
+    DataVec         &hv = data_[citer->second];
+    std::vector<T>  &vec = hv.template get_vector<T>();
+    const size_type vec_s = vec.size();
+
+    for (size_type i = 0; i < vec_s; ++i)
+        if (! functor(indices_[i], vec[i]))  break;
+
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename TS, typename HETERO>
+template<typename T, size_t N>
+std::future<typename DataFrame<TS, HETERO>::size_type> DataFrame<TS, HETERO>::
+replace_async(const char *col_name,
+              const std::array<T, N> old_values,
+              const std::array<T, N> new_values,
+              int limit)  {
+
+    return (std::async(std::launch::async,
+                       &DataFrame::replace<T, N>,
+                           this,
+                           col_name,
+                           old_values,
+                           new_values,
+                           limit));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename TS, typename HETERO>
+template<typename T, typename F>
+std::future<void> DataFrame<TS, HETERO>::
+replace_async(const char *col_name, F &functor)  {
+
+    return (std::async(std::launch::async,
+                       &DataFrame::replace<T, F>,
+                           this,
+                           col_name,
+                           std::ref(functor)));
 }
 
 // ----------------------------------------------------------------------------

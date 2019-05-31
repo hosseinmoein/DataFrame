@@ -13,6 +13,31 @@ using namespace hmdf;
 
 // -----------------------------------------------------------------------------
 
+struct ReplaceFunctor  {
+
+    bool operator() (const unsigned int &idx, double &value)  {
+
+        if (idx == 20180103)  {
+            value *= 1000.0;
+            count += 1;
+        }
+        else if (idx == 20180115)  {
+            value *= 1000.0;
+            count += 1;
+        }
+        else if (idx == 20180121)  {
+            value *= 1000.0;
+            count += 1;
+        }
+
+        return (true);
+    }
+
+    size_t  count { 0 };
+};
+
+// -----------------------------------------------------------------------------
+
 int main(int argc, char *argv[]) {
 
     typedef StdDataFrame<unsigned long> MyDataFrame;
@@ -2201,6 +2226,135 @@ int main(int argc, char *argv[]) {
                    "12/30/2022 22:00:00.000");
         assert(idx_vec2[43799].string_format (DT_FORMAT::DT_TM2) ==
                    "12/30/2022 23:00:00.000");
+    }
+
+    {
+        // Testing replace(1)
+
+        std::vector<double> d1 = { 1.0, 10, 8, 18, 19, 16, 21,
+                                   17, 20, 3, 2, 11, 7.0, 5,
+                                   9, 15, 14, 13, 12, 6, 4 };
+        std::vector<double> d2 = { 1.0, 10, 8, 18, 19, 16, 21,
+                                   17, 20, 3, 2, 11, 7.0, 5,
+                                   9, 15, 14, 13, 12, 6, 4 };
+        std::vector<double> d3 = { 1.1, 10.09, 8.2, 18.03, 19.4, 15.9, 20.8,
+                                   17.1, 19.9, 3.3, 2.2, 10.8, 7.4, 5.3,
+                                   9.1, 14.9, 14.8, 13.2, 12.6, 6.1, 4.4 };
+        std::vector<double> d4 = { 0.1, 9.09, 7.2, 17.03, 18.4, 14.9, 19.8,
+                                   16.1, 18.9, 2.3, 1.2, 9.8, 6.4, 4.3,
+                                   8.1, 13.9, 13.8, 12.2, 11.6, 5.1, 3.4 };
+        std::vector<double> d5 = { 20.0, 10.1, -30.2, 18.5, 1.1, 16.2, 30.8,
+                                   -1.56, 20.1, 25.5, 30.89, 11.1, 7.4, 5.3,
+                                   19, 15.1, 1.3, 1.2, 12.6, 23.2, 40.1 };
+        MyDataFrame         df;
+
+        df.load_data(MyDataFrame::gen_datetime_index(
+                         "01/01/2018",
+                         "01/22/2018",
+                         time_frequency::daily),
+                     std::make_pair("dblcol_1", d1),
+                     std::make_pair("dblcol_2", d2),
+                     std::make_pair("dblcol_3", d3),
+                     std::make_pair("dblcol_4", d4),
+                     std::make_pair("dblcol_5", d5));
+        assert(df.get_column<double>("dblcol_1")[0] == 1.0);
+        assert(df.get_column<double>("dblcol_1")[20] == 4.0);
+        assert(df.get_column<double>("dblcol_1")[1] == 10.0);
+        assert(df.get_column<double>("dblcol_1")[2] == 8.0);
+        assert(df.get_column<double>("dblcol_1")[6] == 21.0);
+        assert(df.get_column<double>("dblcol_1")[7] == 17.0);
+        assert(df.get_column<double>("dblcol_1")[11] == 11.0);
+        assert(df.get_column<double>("dblcol_1")[15] == 15.0);
+
+        assert(df.get_column<double>("dblcol_5")[0] == 20.0);
+        assert(df.get_column<double>("dblcol_5")[20] == 40.1);
+        assert(df.get_column<double>("dblcol_5")[1] == 10.1);
+        assert(df.get_column<double>("dblcol_5")[2] == -30.2);
+        assert(df.get_column<double>("dblcol_5")[3] == 18.5);
+        assert(df.get_column<double>("dblcol_5")[10] == 30.89);
+        assert(df.get_column<double>("dblcol_5")[11] == 11.1);
+        assert(df.get_column<double>("dblcol_5")[17] == 1.2);
+        assert(df.get_column<double>("dblcol_5")[19] == 23.2);
+
+        auto    result1 = df.replace_async<double, 3>(
+            "dblcol_1", { 10.0, 21.0, 11.0 }, { 1000.0, 2100.0, 1100.0 });
+        auto    result2 = df.replace_async<double, 6>(
+            "dblcol_5",
+            { -45.0, -100.0, -30.2, 30.89, 40.1, 1.2 },
+            { 0.0, 0.0, 300.0, 210.0, 110.0, 1200.0 },
+            3);
+
+        auto    count = result1.get();
+
+        assert(count == 3);
+        assert(df.get_column<double>("dblcol_1")[0] == 1.0);
+        assert(df.get_column<double>("dblcol_1")[20] == 4.0);
+        assert(df.get_column<double>("dblcol_1")[1] == 1000.0);
+        assert(df.get_column<double>("dblcol_1")[2] == 8.0);
+        assert(df.get_column<double>("dblcol_1")[6] == 2100.0);
+        assert(df.get_column<double>("dblcol_1")[7] == 17.0);
+        assert(df.get_column<double>("dblcol_1")[11] == 1100.0);
+        assert(df.get_column<double>("dblcol_1")[15] == 15.0);
+
+        count = result2.get();
+        assert(count == 3);
+        assert(df.get_column<double>("dblcol_5")[0] == 20.0);
+        assert(df.get_column<double>("dblcol_5")[20] == 110.0);
+        assert(df.get_column<double>("dblcol_5")[1] == 10.1);
+        assert(df.get_column<double>("dblcol_5")[2] == 300.0);
+        assert(df.get_column<double>("dblcol_5")[3] == 18.5);
+        assert(df.get_column<double>("dblcol_5")[10] == 210.0);
+        assert(df.get_column<double>("dblcol_5")[11] == 11.1);
+        assert(df.get_column<double>("dblcol_5")[17] == 1.2);
+        assert(df.get_column<double>("dblcol_5")[19] == 23.2);
+    }
+
+    {
+        // Testing replace(2)
+
+        std::vector<double> d1 = { 1.0, 10, 8, 18, 19, 16, 21,
+                                   17, 20, 3, 2, 11, 7.0, 5,
+                                   9, 15, 14, 13, 12, 6, 4 };
+        std::vector<double> d2 = { 1.0, 10, 8, 18, 19, 16, 21,
+                                   17, 20, 3, 2, 11, 7.0, 5,
+                                   9, 15, 14, 13, 12, 6, 4 };
+        std::vector<double> d3 = { 1.1, 10.09, 8.2, 18.03, 19.4, 15.9, 20.8,
+                                   17.1, 19.9, 3.3, 2.2, 10.8, 7.4, 5.3,
+                                   9.1, 14.9, 14.8, 13.2, 12.6, 6.1, 4.4 };
+        std::vector<double> d4 = { 0.1, 9.09, 7.2, 17.03, 18.4, 14.9, 19.8,
+                                   16.1, 18.9, 2.3, 1.2, 9.8, 6.4, 4.3,
+                                   8.1, 13.9, 13.8, 12.2, 11.6, 5.1, 3.4 };
+        std::vector<double> d5 = { 20.0, 10.1, -30.2, 18.5, 1.1, 16.2, 30.8,
+                                   -1.56, 20.1, 25.5, 30.89, 11.1, 7.4, 5.3,
+                                   19, 15.1, 1.3, 1.2, 12.6, 23.2, 40.1 };
+        MyDataFrame         df;
+
+        df.load_data(MyDataFrame::gen_datetime_index(
+                         "01/01/2018",
+                         "01/22/2018",
+                         time_frequency::daily),
+                     std::make_pair("dblcol_1", d1),
+                     std::make_pair("dblcol_2", d2),
+                     std::make_pair("dblcol_3", d3),
+                     std::make_pair("dblcol_4", d4),
+                     std::make_pair("dblcol_5", d5));
+        assert(df.get_column<double>("dblcol_1")[0] == 1.0);
+        assert(df.get_column<double>("dblcol_1")[19] == 6.0);
+        assert(df.get_column<double>("dblcol_1")[20] == 4.0);
+        assert(df.get_column<double>("dblcol_1")[2] == 8.0);
+        assert(df.get_column<double>("dblcol_1")[14] == 9.0);
+
+        ReplaceFunctor  functor;
+        auto            result =
+            df.replace_async<double, ReplaceFunctor>("dblcol_1", functor);
+
+        result.get();
+        assert(functor.count == 3);
+        assert(df.get_column<double>("dblcol_1")[0] == 1.0);
+        assert(df.get_column<double>("dblcol_1")[19] == 6.0);
+        assert(df.get_column<double>("dblcol_1")[20] == 4000.0);
+        assert(df.get_column<double>("dblcol_1")[2] == 8000.0);
+        assert(df.get_column<double>("dblcol_1")[14] == 9000.0);
     }
 
     return (0);

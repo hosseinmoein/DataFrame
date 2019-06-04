@@ -40,7 +40,7 @@ ObjectVector(const char *name, ACCESS_MODE access_mode, size_type buffer_size)
         flush ();
     }
     else  {
-        if (BaseClass::get_file_size () < _DATA_START_POINT)  {
+        if (BaseClass::get_file_size () < sizeof(MetaData))  {
             String1K    err;
 
             err.printf ("ObjectVector::ObjectVector(): "
@@ -63,7 +63,7 @@ ObjectVector<T, B>::tell () const noexcept  {
 
     const size_type pos = BaseClass::tell ();
 
-    return ((pos - _DATA_START_POINT) / sizeof(value_type));
+    return ((pos - sizeof(MetaData)) / sizeof(value_type));
 }
 
 // ----------------------------------------------------------------------------
@@ -85,7 +85,7 @@ ObjectVector<T, B>::operator [] (size_type index)  {
     data_type   &this_item =
         *(reinterpret_cast<data_type *>
               (reinterpret_cast<char *>(BaseClass::_get_base_ptr ()) +
-               _DATA_START_POINT) +
+               sizeof(MetaData)) +
           index);
 
     return (this_item);
@@ -100,7 +100,7 @@ ObjectVector<T, B>::operator [] (size_type index) const noexcept  {
     const data_type &this_item =
         *(reinterpret_cast<const data_type *>
               (reinterpret_cast<const char *>(BaseClass::_get_base_ptr ()) +
-               _DATA_START_POINT) +
+               sizeof(MetaData)) +
           index);
 
     return (this_item);
@@ -156,7 +156,7 @@ bool ObjectVector<T, B>::seek_ (size_type obj_num) const noexcept  {
     BaseClass   *nc_ptr =
         const_cast<BaseClass *>(static_cast<const BaseClass *>(this));
 
-    return (nc_ptr->seek (_DATA_START_POINT + (obj_num * sizeof(value_type)),
+    return (nc_ptr->seek (sizeof(MetaData) + (obj_num * sizeof(value_type)),
                           BaseClass::_seek_set_) == 0 ? true : false);
 }
 

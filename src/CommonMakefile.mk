@@ -46,7 +46,9 @@ HEADERS = $(LOCAL_INCLUDE_DIR)/DataFrame/HeteroVector.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/MMap/FileDef.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/MMap/MMapBase.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/MMap/MMapFile.h \
-          $(LOCAL_INCLUDE_DIR)/DataFrame/MMap/MMapSharedMem.h
+          $(LOCAL_INCLUDE_DIR)/DataFrame/MMap/MMapSharedMem.h \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/MMap/ObjectVector.h \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/MMap/ObjectVector.tcc
 
 LIB_NAME = DataFrame
 TARGET_LIB = $(LOCAL_LIB_DIR)/lib$(LIB_NAME).a
@@ -56,6 +58,7 @@ TARGETS += $(TARGET_LIB) \
 	       $(LOCAL_BIN_DIR)/vectors_tester \
            $(LOCAL_BIN_DIR)/date_time_tester \
            $(LOCAL_BIN_DIR)/mmfile_tester \
+           $(LOCAL_BIN_DIR)/obj_vector_tester \
            $(LOCAL_BIN_DIR)/sharedmem_tester
 
 # -----------------------------------------------------------------------------
@@ -125,6 +128,10 @@ MMFILE_TESTER_OBJ = $(LOCAL_OBJ_DIR)/mmfile_tester.o
 $(LOCAL_BIN_DIR)/mmfile_tester: $(TARGET_LIB) $(MMFILE_TESTER_OBJ)
 	$(CXX) -o $@ $(MMFILE_TESTER_OBJ) $(LIBS)
 
+OBJ_VECTOR_TESTER_OBJ = $(LOCAL_OBJ_DIR)/obj_vector_tester.o
+$(LOCAL_BIN_DIR)/obj_vector_tester: $(TARGET_LIB) $(OBJ_VECTOR_TESTER_OBJ)
+	$(CXX) -o $@ $(OBJ_VECTOR_TESTER_OBJ) $(LIBS)
+
 SHAREDMEM_TESTER_OBJ = $(LOCAL_OBJ_DIR)//sharedmem_tester.o
 $(LOCAL_BIN_DIR)/sharedmem_tester: $(TARGET_LIB) $(SHAREDMEM_TESTER_OBJ)
 	$(CXX) -o $@ $(SHAREDMEM_TESTER_OBJ) $(LIBS)
@@ -137,12 +144,12 @@ depend:
 clean:
 	rm -f $(LIB_OBJS) $(TARGETS) $(DATAFRAME_TESTER_OBJ) $(VECTORS_TESTER_OBJ) \
           $(DATE_TIME_TESTER_OBJ) \
-          $(MMFILE_TESTER_OBJ) $(SHAREDMEM_TESTER_OBJ)
+          $(MMFILE_TESTER_OBJ) $(SHAREDMEM_TESTER_OBJ) $(OBJ_VECTOR_TESTER_OBJ)
 
 clobber:
 	rm -f $(LIB_OBJS) $(TARGETS) $(DATAFRAME_TESTER_OBJ) $(VECTORS_TESTER_OBJ) \
           $(DATE_TIME_TESTER_OBJ) \
-          $(MMFILE_TESTER_OBJ) $(SHAREDMEM_TESTER_OBJ)
+          $(MMFILE_TESTER_OBJ) $(SHAREDMEM_TESTER_OBJ) $(OBJ_VECTOR_TESTER_OBJ)
 
 install_lib:
 	cp -pf $(TARGET_LIB) $(PROJECT_LIB_DIR)/.

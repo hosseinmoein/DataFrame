@@ -34,8 +34,8 @@ public:
     using ponter = value_type *;
     using const_pointer = const value_type *;
     using const_pointer_const = const value_type *const;
-    using referemce = value_type &;
-    using const_referemce = const value_type &;
+    using reference = value_type &;
+    using const_reference = const value_type &;
 
     enum ACCESS_MODE { _normal_ = 0, // No special treatment, the default
 
@@ -83,14 +83,13 @@ public:
 
     inline void refresh () const noexcept  {
 
-        const _internal_header_type *mdata_ptr =
-            reinterpret_cast<const _internal_header_type *>
-            (reinterpret_cast<char *>(BaseClass::_get_base_ptr ());
+        const MetaData  *mdata_ptr =
+            reinterpret_cast<const MetaData *>
+                (reinterpret_cast<char *>(BaseClass::_get_base_ptr ()));
 
         cached_object_count_ = mdata_ptr->object_count;
     }
 
-    inline size_type size () const noexcept  { return (cached_object_count_); }
     time_t creation_time () const noexcept;
 
 protected:
@@ -107,32 +106,15 @@ protected:
         time_t      creation_time { 0 };
     };
 
-    using MetadDate = _internal_header_type;
-
 private:
 
     mutable size_type   cached_object_count_ { 0 };
 
-    size_type tell_ () const noexcept;
-    inline int flush_ () noexcept  { return (BaseClass::flush ()); }
+    inline size_type tell_ () const noexcept;
     inline void unlink_ ()  { BaseClass::unlink (); }
-    int write_ (const data_type *data_ele, size_type count);
+    inline int write_ (const value_type *data_ele, size_type count);
 
 public:
-
-    inline bool attach ()  {
-
-        BaseClass::open ();
-        refresh ();
-        seek (cached_object_count_);
-        return (true);
-    }
-    inline bool dettach ()  { return (BaseClass::clobber ()); }
-
-    inline const char *get_file_name () const noexcept  {
-
-        return (BaseClass::get_file_name ());
-    }
 
 //
 // The iterators:
@@ -148,10 +130,10 @@ public:
 
     public:
 
-        typedef std::random_access_iterator_tag iterator_category;
+        using iterator_category = std::random_access_iterator_tag;
 
-        typedef data_type * pointer;
-        typedef data_type & reference;
+        using pointer = value_type *;
+        using reference = value_type &;
 
     public:
 
@@ -159,7 +141,7 @@ public:
        //       the iterator to be the "end" iterator
        //
         inline iterator () noexcept : node_ (nullptr)  {   }
-        inline iterator (data_type *node) noexcept : node_ (node)  {   }
+        inline iterator (value_type *node) noexcept : node_ (node)  {   }
 
         inline bool operator == (const iterator &rhs) const noexcept  {
 
@@ -171,7 +153,7 @@ public:
         }
 
        // Following STL style, this iterator appears as a pointer
-       // to data_type.
+       // to value_type.
        //
         inline pointer operator -> () const noexcept  { return (node_); }
         inline reference operator * () const noexcept  { return (*node_); }
@@ -187,7 +169,7 @@ public:
         }
         inline iterator operator ++ (int) noexcept  {  // Postfix++
 
-            data_type   *the_node = node_;
+            value_type   *the_node = node_;
 
             node_ += 1;
             return (iterator (the_node));
@@ -206,7 +188,7 @@ public:
         }
         inline iterator operator -- (int) noexcept  {  // Postfix--
 
-            data_type   *the_node = node_;
+            value_type   *the_node = node_;
 
             node_ -= 1;
             return (iterator (the_node));
@@ -252,10 +234,10 @@ public:
 
     public:
 
-        typedef std::random_access_iterator_tag iterator_category;
+        using iterator_category = std::random_access_iterator_tag;
 
-        using pointer = data_type *;
-        using referemce = data_type &;
+        using pointer = value_type *;
+        using reference = value_type &;
 
     public:
 
@@ -263,7 +245,7 @@ public:
        //       the iterator to be the "end" iterator
        //
         inline reverse_iterator() noexcept : node_ (nullptr)  {   }
-        inline reverse_iterator(data_type *node) noexcept : node_ (node)  {   }
+        inline reverse_iterator(value_type *node) noexcept : node_ (node)  {   }
 
         inline
         reverse_iterator(const iterator &itr) noexcept : node_(nullptr)  {
@@ -290,7 +272,7 @@ public:
         }
 
        // Following STL style, this iterator appears as a pointer
-       // to data_type.
+       // to value_type.
        //
         inline pointer operator -> () const noexcept  { return (node_); }
         inline reference operator * () const noexcept  { return (*node_); }
@@ -308,7 +290,7 @@ public:
        //
         inline reverse_iterator operator ++ (int) noexcept  {
 
-            data_type const *ret_node = node_;
+            value_type const *ret_node = node_;
 
             node_ -= 1;
             return (reverse_iterator (ret_node));
@@ -332,7 +314,7 @@ public:
        //
         inline reverse_iterator operator -- (int) noexcept  {
 
-            data_type const *ret_node = node_;
+            value_type const *ret_node = node_;
 
             node_ += 1;
             return (reverse_iterator (ret_node));
@@ -378,10 +360,10 @@ public:
 
     public:
 
-        typedef std::random_access_iterator_tag iterator_category;
+        using iterator_category = std::random_access_iterator_tag;
 
-        using pointer = const data_type *;
-        using referemce = const data_type &;
+        using pointer = const value_type *;
+        using reference = const value_type &;
 
     public:
 
@@ -390,7 +372,7 @@ public:
        //
         inline const_iterator () noexcept : node_ (nullptr)  {   }
 
-        inline const_iterator (const data_type *node) noexcept
+        inline const_iterator (const value_type *node) noexcept
             : node_ (node)  {   }
 
         inline const_iterator(const iterator &itr) noexcept
@@ -424,7 +406,7 @@ public:
         }
 
        // Following STL style, this iterator appears as a pointer
-       // to data_type.
+       // to value_type.
        //
         inline pointer operator -> () const noexcept  { return (node_); }
         inline reference operator * () const noexcept  { return (*node_); }
@@ -442,7 +424,7 @@ public:
        //
         inline const_iterator operator ++ (int) noexcept  {
 
-            data_type const *ret_node = node_;
+            value_type const *ret_node = node_;
 
             node_ += 1;
             return (const_iterator (ret_node));
@@ -466,7 +448,7 @@ public:
        //
         inline const_iterator operator -- (int) noexcept  {
 
-            data_type const *ret_node = node_;
+            value_type const *ret_node = node_;
 
             node_ -= 1;
             return (const_iterator (ret_node));
@@ -511,10 +493,10 @@ public:
 
     public:
 
-        typedef std::random_access_iterator_tag iterator_category;
+        using iterator_category = std::random_access_iterator_tag;
 
-        using pointer = const data_type *;
-        using referemce = const data_type &;
+        using pointer = const value_type *;
+        using reference = const value_type &;
 
     public:
 
@@ -523,7 +505,7 @@ public:
        //
         inline const_reverse_iterator () noexcept : node_ (nullptr)  {   }
 
-        inline const_reverse_iterator (const data_type *node) noexcept
+        inline const_reverse_iterator (const value_type *node) noexcept
             : node_ (node)  {   }
 
         inline const_reverse_iterator (const const_iterator &itr)
@@ -557,7 +539,7 @@ public:
         }
 
        // Following STL style, this iterator appears as a pointer
-       // to data_type.
+       // to value_type.
        //
         inline pointer operator -> () const noexcept  { return (node_); }
         inline reference operator * () const noexcept  { return (*node_); }
@@ -575,7 +557,7 @@ public:
        //
         inline const_reverse_iterator operator ++ (int) noexcept  {
 
-            data_type const *ret_node = node_;
+            value_type const *ret_node = node_;
 
             node_ -= 1;
             return (const_reverse_iterator (ret_node));
@@ -600,7 +582,7 @@ public:
        //
         inline const_reverse_iterator operator -- (int) noexcept  {
 
-            data_type const *ret_node = node_;
+            value_type const *ret_node = node_;
 
             node_ += 1;
             return (const_reverse_iterator (ret_node));
@@ -643,7 +625,7 @@ public:
     inline iterator begin () noexcept  { return (iterator (&((*this) [0]))); }
     inline iterator end () noexcept  {
 
-        return (iterator (&((*this) [object_count ()])));
+        return (iterator (&((*this) [size()])));
     }
 
     inline const_iterator begin () const noexcept  {
@@ -652,12 +634,12 @@ public:
     }
     inline const_iterator end () const noexcept  {
 
-        return (const_iterator (&((*this) [object_count ()])));
+        return (const_iterator (&((*this) [size ()])));
     }
 
     inline reverse_iterator rbegin () noexcept  {
 
-        return (reverse_iterator (&((*this) [object_count () - 1])));
+        return (reverse_iterator (&((*this) [size () - 1])));
     }
     inline reverse_iterator rend () noexcept  {
 
@@ -666,7 +648,7 @@ public:
 
     inline const_reverse_iterator rbegin () const noexcept  {
 
-        return (const_reverse_iterator (&((*this) [object_count () - 1])));
+        return (const_reverse_iterator (&((*this) [size () - 1])));
     }
     inline const_reverse_iterator rend () const noexcept  {
 
@@ -676,8 +658,8 @@ public:
     inline reference operator [] (size_type);
     inline const_reference operator [] (size_type) const noexcept;
 
-    inline size_type size () const noexcept  { return (object_count ()); }
-    inline bool empty () const noexcept  { return (object_count () == 0); }
+    inline size_type size () const noexcept { return (cached_object_count_); }
+    inline bool empty () const noexcept  { return (size () == 0); }
 
     inline reference front () noexcept  { return ((*this) [0]); }
     inline const_reference front () const noexcept  { return ((*this) [0]); }
@@ -686,11 +668,11 @@ public:
     inline const_reference
     back () const noexcept  { return ((*this) [size () - 1]); }
 
-    inline void push_back (const data_type &d)  { write_ (&d, 1); }
+    inline void push_back (const value_type &d)  { write_ (&d, 1); }
 
     inline void reserve (size_type s)  {
 
-        const size_type trun_size = (s * sizeof(value_type)) + sizeof(MetaData);
+        const size_type trun_size = s * sizeof(value_type) + sizeof(MetaData);
 
         if (trun_size > BaseClass::get_file_size ())
             BaseClass::truncate (trun_size);
@@ -720,7 +702,7 @@ public:
 // ----------------------------------------------------------------------------
 
 template<typename T>
-using MMapVector = ObjectVector<T, MMapfile>;
+using MMapVector = ObjectVector<T, MMapFile>;
 
 template<typename T>
 using SharedMemVector = ObjectVector<T, MMapSharedMem>;
@@ -732,7 +714,7 @@ using SharedMemVector = ObjectVector<T, MMapSharedMem>;
 // ----------------------------------------------------------------------------
 
 #ifndef HMDF_DO_NOT_INCLUDE_TCC_FILES
-#  include <ObjectVector.tcc>
+#  include <DataFrame/MMap/ObjectVector.tcc>
 #endif // HMDF_DO_NOT_INCLUDE_TCC_FILES
 
 // ----------------------------------------------------------------------------

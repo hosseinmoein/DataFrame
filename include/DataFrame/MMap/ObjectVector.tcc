@@ -29,15 +29,15 @@ ObjectVector(const char *name, ACCESS_MODE access_mode, size_type buffer_size)
     const bool  just_created = BaseClass::get_file_size () == 0;
 
     if (just_created)  {
-        const _internal_header_type meta_data (0, time (nullptr));
+        const MetaData  meta_data (0, time (nullptr));
 
        // Create the meta data record
        //
-        if (! BaseClass::write (&meta_data, sizeof(MetaDate), 1))
+        if (! BaseClass::write (&meta_data, sizeof(MetaData), 1))
             throw std::runtime_error ("ObjectVector::ObjectVector<<(): Cannot"
                                       " write(). internal header record");
 
-        flush ();
+        BaseClass::flush ();
     }
     else  {
         if (BaseClass::get_file_size () < sizeof(MetaData))  {
@@ -51,15 +51,19 @@ ObjectVector(const char *name, ACCESS_MODE access_mode, size_type buffer_size)
         }
     }
 
+    const MetaData  *mdata_ptr =
+        reinterpret_cast<const MetaData *>
+            (reinterpret_cast<const char *>(BaseClass::_get_base_ptr ()));
+
     cached_object_count_ = mdata_ptr->object_count;
-    seek (cached_object_count_);
+    seek_ (cached_object_count_);
 }
 
 // ----------------------------------------------------------------------------
 
 template<typename T, typename B>
 typename ObjectVector<T, B>::size_type
-ObjectVector<T, B>::tell () const noexcept  {
+ObjectVector<T, B>::tell_ () const noexcept  {
 
     const size_type pos = BaseClass::tell ();
 
@@ -73,17 +77,17 @@ ObjectVector<T, B>::~ObjectVector ()  {
 
     if (BaseClass::get_device_type () == BaseClass::_shared_memory_ ||
         BaseClass::get_device_type () == BaseClass::_mmap_file_)
-        flush ();
+        BaseClass::flush ();
 }
 
 // ----------------------------------------------------------------------------
 
 template<typename T, typename B>
-inline typename ObjectVector<T, B>::data_type &
+inline typename ObjectVector<T, B>::value_type &
 ObjectVector<T, B>::operator [] (size_type index)  {
 
-    data_type   &this_item =
-        *(reinterpret_cast<data_type *>
+    value_type  &this_item =
+        *(reinterpret_cast<value_type *>
               (reinterpret_cast<char *>(BaseClass::_get_base_ptr ()) +
                sizeof(MetaData)) +
           index);
@@ -94,11 +98,11 @@ ObjectVector<T, B>::operator [] (size_type index)  {
 // ----------------------------------------------------------------------------
 
 template<typename T, typename B>
-inline const typename ObjectVector<T, B>::data_type &
+inline const typename ObjectVector<T, B>::value_type &
 ObjectVector<T, B>::operator [] (size_type index) const noexcept  {
 
-    const data_type &this_item =
-        *(reinterpret_cast<const data_type *>
+    const value_type    &this_item =
+        *(reinterpret_cast<const value_type *>
               (reinterpret_cast<const char *>(BaseClass::_get_base_ptr ()) +
                sizeof(MetaData)) +
           index);
@@ -111,9 +115,9 @@ ObjectVector<T, B>::operator [] (size_type index) const noexcept  {
 template<typename T, typename B>
 time_t ObjectVector<T, B>::creation_time () const noexcept  {
 
-    const _internal_header_type &meta_data =
-        *reinterpret_cast<const _internal_header_type *>
-            (reinterpret_cast<const char *>(BaseClass::_get_base_ptr ());
+    const MetaData  &meta_data =
+        *reinterpret_cast<const MetaData *>
+            (reinterpret_cast<const char *>(BaseClass::_get_base_ptr ()));
 
     return (meta_data.creation_time);
 }
@@ -123,10 +127,7 @@ time_t ObjectVector<T, B>::creation_time () const noexcept  {
 template<typename T, typename B>
 void ObjectVector<T, B>::set_access_mode (ACCESS_MODE am) const  {
 
-    if (empty ())
-        return;
-
-    const   int rc =
+    const int   rc =
         ::posix_madvise (BaseClass::_get_base_ptr (),
                          BaseClass::get_mmap_size (),
                          (am == _normal_) ? POSIX_MADV_NORMAL
@@ -163,9 +164,9 @@ bool ObjectVector<T, B>::seek_ (size_type obj_num) const noexcept  {
 // ----------------------------------------------------------------------------
 
 template<typename T, typename B>
-int ObjectVector<T, B>::write_ (const data_type *data_ele, size_type count)  {
+int ObjectVector<T, B>::write_ (const value_type *data_ele, size_type count)  {
 
-    const   int rc = BaseClass::write (data_ele, sizeof(value_type), count);
+    const int   rc = BaseClass::write (data_ele, sizeof(value_type), count);
 
     if (rc != count)  {
         String1K    err;
@@ -176,9 +177,9 @@ int ObjectVector<T, B>::write_ (const data_type *data_ele, size_type count)  {
         throw std::runtime_error (err.c_str ());
     }
 
-    _internal_header_type   &meta_data =
-        *reinterpret_cast<_internal_header_type *>
-            (reinterpret_cast<char *>(BaseClass::_get_base_ptr ());
+    MetaData    &meta_data =
+        *reinterpret_cast<MetaData *>
+            (reinterpret_cast<char *>(BaseClass::_get_base_ptr ()));
 
     meta_data.object_count += count;
     cached_object_count_ += count;
@@ -194,15 +195,15 @@ ObjectVector<T, B>::erase (iterator first, iterator last)  {
     const size_type lnum = &(*last) - &(*begin ());
 
     ::memmove (&(*first), &(*last),
-               (&(*end ()) - &(*last)) * sizeof (data_type));
+               (&(*end ()) - &(*last)) * sizeof (value_type));
 
     const size_type s = &(*last) - &(*first);
 
-    BaseClass::truncate (BaseClass::_file_size - s * sizeof (data_type));
+    BaseClass::truncate (BaseClass::_file_size - s * sizeof (value_type));
 
-    _internal_header_type   &meta_data =
-        *reinterpret_cast<_internal_header_type *>
-            (reinterpret_cast<char *>(BaseClass::_get_base_ptr ());
+    MetaData    &meta_data =
+        *reinterpret_cast<MetaData *>
+            (reinterpret_cast<char *>(BaseClass::_get_base_ptr ()));
 
     meta_data.object_count -= s;
     cached_object_count_ -= s;
@@ -220,17 +221,17 @@ void ObjectVector<T, B>::insert (iterator pos, I first, I last)  {
     const long      int to_add = &(*last) - &(*first);
     const size_type pos_index = &(*pos) - &(*begin ());
 
-    BaseClass::truncate (BaseClass::_file_size + to_add * sizeof (data_type));
+    BaseClass::truncate (BaseClass::_file_size + to_add * sizeof (value_type));
 
     const iterator  new_pos = iterator_at (pos_index);
 
     ::memmove (&(*(new_pos + to_add)), &(*new_pos),
-               (&(*end ()) - &(*new_pos)) * sizeof (data_type));
-    ::memcpy (&(*new_pos), &(*first), to_add * sizeof (data_type));
+               (&(*end ()) - &(*new_pos)) * sizeof (value_type));
+    ::memcpy (&(*new_pos), &(*first), to_add * sizeof (value_type));
 
-    _internal_header_type   &meta_data =
-        *reinterpret_cast<_internal_header_type *>
-            (reinterpret_cast<char *>(BaseClass::_get_base_ptr ());
+    MetaData    &meta_data =
+        *reinterpret_cast<MetaData *>
+            (reinterpret_cast<char *>(BaseClass::_get_base_ptr ()));
 
     meta_data.object_count += to_add;
     cached_object_count_ += to_add;

@@ -106,6 +106,8 @@ set(${LIBRARY_TARGET_NAME}_HDR
   include/DataFrame/MMap/MMapBase.h
   include/DataFrame/MMap/MMapFile.h
   include/DataFrame/MMap/MMapSharedMem.h
+  include/DataFrame/MMap/ObjectVector.h
+  include/DataFrame/MMap/ObjectVector.tcc
 )
 
 # Build the library
@@ -187,11 +189,12 @@ endif(MSVC)
 include(AddUninstallTarget)
 
 # Build the test binary
-add_executable(dataframe_tester test/dataframe_tester.cc)
-add_executable(vectors_tester   test/vectors_tester.cc)
-add_executable(date_time_tester test/date_time_tester.cc)
-add_executable(mmfile_tester    test/mmfile_tester.cc)
-add_executable(sharedmem_tester test/sharedmem_tester.cc)
+add_executable(dataframe_tester  test/dataframe_tester.cc)
+add_executable(vectors_tester    test/vectors_tester.cc)
+add_executable(date_time_tester  test/date_time_tester.cc)
+add_executable(mmfile_tester     test/mmfile_tester.cc)
+add_executable(obj_vector_tester test/obj_vector_tester.cc)
+add_executable(sharedmem_tester  test/sharedmem_tester.cc)
 
 # Link the Dataframe library to the test binary
 target_link_libraries(dataframe_tester Dataframe)
@@ -206,6 +209,9 @@ target_link_libraries(date_time_tester Dataframe)
 target_link_libraries(mmfile_tester Dataframe)
 
 # Link the Dataframe library to the test binary
+target_link_libraries(obj_vector_tester Dataframe)
+
+# Link the Dataframe library to the test binary
 target_link_libraries(sharedmem_tester Dataframe)
 
 if (UNIX)
@@ -216,6 +222,7 @@ if (UNIX)
   target_link_libraries(vectors_tester Threads::Threads)
   target_link_libraries(date_time_tester Threads::Threads)
   target_link_libraries(mmfile_tester Threads::Threads)
+  target_link_libraries(obj_vector_tester Threads::Threads)
   target_link_libraries(sharedmem_tester Threads::Threads)
 endif (UNIX)
 
@@ -224,6 +231,7 @@ if (UNIX AND NOT APPLE)
   target_link_libraries(vectors_tester rt)
   target_link_libraries(date_time_tester rt)
   target_link_libraries(mmfile_tester rt)
+  target_link_libraries(obj_vector_tester rt)
   target_link_libraries(sharedmem_tester rt)
 endif()
 
@@ -241,6 +249,9 @@ add_test(NAME date_time_tester
 add_test(NAME mmfile_tester
          COMMAND mmfile_tester
          WORKING_DIRECTORY $<TARGET_FILE_DIR:mmfile_tester>)
+add_test(NAME obj_vector_tester
+         COMMAND obj_vector_tester
+         WORKING_DIRECTORY $<TARGET_FILE_DIR:obj_vector_tester>)
 
 message("-- Copying files for testing")
 # Ctest require this files in the build dir, on all platforms

@@ -18,19 +18,19 @@
 namespace hmdf
 {
 
-// D elements are memcpy()'ed in and out of the
-// Object Base. Therefore a D cannot have any virtual
+// T elements are memcpy()'ed in and out of the
+// Object vector. Therefore a T cannot have any virtual
 // method or any dynamically allocated member or anything that will break as
 // a result of memcpy().
 //
-template<typename D, typename B>
+template<typename T, typename B>
 class   ObjectVector : protected B  {
 
 public:
 
     using BaseClass = B;
     using size_type = typename BaseClass::size_type;
-    using value_type = D;
+    using value_type = T;
     using ponter = value_type *;
     using const_pointer = const value_type *;
     using const_pointer_const = const value_type *const;
@@ -717,15 +717,23 @@ public:
     }
 };
 
+// ----------------------------------------------------------------------------
+
+template<typename T>
+using MMapVector = ObjectVector<T, MMapfile>;
+
+template<typename T>
+using SharedMemVector = ObjectVector<T, MMapSharedMem>;
+
 } // namespace hmdf
 
 #endif // _WIN32
 
 // ----------------------------------------------------------------------------
 
-#  ifdef HMDF_DO_NOT_INCLUDE_TCC_FILES
-#    include <ObjectVector.tcc>
-#  endif // HMDF_DO_NOT_INCLUDE_TCC_FILES
+#ifndef HMDF_DO_NOT_INCLUDE_TCC_FILES
+#  include <ObjectVector.tcc>
+#endif // HMDF_DO_NOT_INCLUDE_TCC_FILES
 
 // ----------------------------------------------------------------------------
 

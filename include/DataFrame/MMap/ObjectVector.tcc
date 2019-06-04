@@ -3,7 +3,6 @@
 // Copyright (C) 2019-2022 Hossein Moein
 // Distributed under the BSD Software License (see file License)
 
-
 #include <DataFrame/FixedSizeString.h>
 #include <DataFrame/MMap/ObjectVector.h>
 
@@ -22,25 +21,19 @@
 namespace hmdf
 {
 
-template<typename D, typename B>
-ObjectVector<D, B>::
+template<typename T, typename B>
+ObjectVector<T, B>::
 ObjectVector(const char *name, ACCESS_MODE access_mode, size_type buffer_size)
     : BaseClass (name, BaseClass::_bappend_, buffer_size)  {
 
     const bool  just_created = BaseClass::get_file_size () == 0;
 
     if (just_created)  {
-       // Create the header record
-       //
-        if (! BaseClass::write (&header, HEADER_SIZE, 1))
-            throw std::runtime_error ("ObjectVector::ObjectVector<<(): "
-                                      "Cannot write(). header record");
-
         const _internal_header_type meta_data (0, time (nullptr));
 
        // Create the meta data record
        //
-        if (! BaseClass::write (&meta_data, _INTERNAL_HEADER_SIZE, 1))
+        if (! BaseClass::write (&meta_data, sizeof(MetaDate), 1))
             throw std::runtime_error ("ObjectVector::ObjectVector<<(): Cannot"
                                       " write(). internal header record");
 
@@ -58,32 +51,25 @@ ObjectVector(const char *name, ACCESS_MODE access_mode, size_type buffer_size)
         }
     }
 
-   // Extract the meta data record
-   //
-    _internal_header_type   *mdata_ptr =
-        reinterpret_cast<_internal_header_type *>
-            (reinterpret_cast<char *>(BaseClass::_get_base_ptr ()) +
-             HEADER_SIZE);
-
     cached_object_count_ = mdata_ptr->object_count;
     seek (cached_object_count_);
 }
 
 // ----------------------------------------------------------------------------
 
-template<typename D, typename B>
-typename ObjectVector<D, B>::size_type
-ObjectVector<D, B>::tell () const noexcept  {
+template<typename T, typename B>
+typename ObjectVector<T, B>::size_type
+ObjectVector<T, B>::tell () const noexcept  {
 
     const size_type pos = BaseClass::tell ();
 
-    return ((pos - _DATA_START_POINT) / DATA_SIZE);
+    return ((pos - _DATA_START_POINT) / sizeof(value_type));
 }
 
 // ----------------------------------------------------------------------------
 
-template<typename D, typename B>
-ObjectVector<D, B>::~ObjectVector ()  {
+template<typename T, typename B>
+ObjectVector<T, B>::~ObjectVector ()  {
 
     if (BaseClass::get_device_type () == BaseClass::_shared_memory_ ||
         BaseClass::get_device_type () == BaseClass::_mmap_file_)
@@ -92,9 +78,9 @@ ObjectVector<D, B>::~ObjectVector ()  {
 
 // ----------------------------------------------------------------------------
 
-template<typename D, typename B>
-inline typename ObjectVector<D, B>::data_type &
-ObjectVector<D, B>::operator [] (size_type index)  {
+template<typename T, typename B>
+inline typename ObjectVector<T, B>::data_type &
+ObjectVector<T, B>::operator [] (size_type index)  {
 
     data_type   &this_item =
         *(reinterpret_cast<data_type *>
@@ -107,9 +93,9 @@ ObjectVector<D, B>::operator [] (size_type index)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename D, typename B>
-inline const typename ObjectVector<D, B>::data_type &
-ObjectVector<D, B>::operator [] (size_type index) const noexcept  {
+template<typename T, typename B>
+inline const typename ObjectVector<T, B>::data_type &
+ObjectVector<T, B>::operator [] (size_type index) const noexcept  {
 
     const data_type &this_item =
         *(reinterpret_cast<const data_type *>
@@ -122,21 +108,20 @@ ObjectVector<D, B>::operator [] (size_type index) const noexcept  {
 
 // ----------------------------------------------------------------------------
 
-template<typename D, typename B>
-time_t ObjectVector<D, B>::creation_time () const noexcept  {
+template<typename T, typename B>
+time_t ObjectVector<T, B>::creation_time () const noexcept  {
 
     const _internal_header_type &meta_data =
-        *(reinterpret_cast<const _internal_header_type *>
-              (reinterpret_cast<const char *>(BaseClass::_get_base_ptr ()) +
-               HEADER_SIZE));
+        *reinterpret_cast<const _internal_header_type *>
+            (reinterpret_cast<const char *>(BaseClass::_get_base_ptr ());
 
     return (meta_data.creation_time);
 }
 
 // ----------------------------------------------------------------------------
 
-template<typename D, typename B>
-void ObjectVector<D, B>::set_access_mode (ACCESS_MODE am) const  {
+template<typename T, typename B>
+void ObjectVector<T, B>::set_access_mode (ACCESS_MODE am) const  {
 
     if (empty ())
         return;
@@ -165,22 +150,22 @@ void ObjectVector<D, B>::set_access_mode (ACCESS_MODE am) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename D, typename B>
-bool ObjectVector<D, B>::seek_ (size_type obj_num) const noexcept  {
+template<typename T, typename B>
+bool ObjectVector<T, B>::seek_ (size_type obj_num) const noexcept  {
 
     BaseClass   *nc_ptr =
         const_cast<BaseClass *>(static_cast<const BaseClass *>(this));
 
-    return (nc_ptr->seek (_DATA_START_POINT + (obj_num * DATA_SIZE),
+    return (nc_ptr->seek (_DATA_START_POINT + (obj_num * sizeof(value_type)),
                           BaseClass::_seek_set_) == 0 ? true : false);
 }
 
 // ----------------------------------------------------------------------------
 
-template<typename D, typename B>
-int ObjectVector<D, B>::write_ (const data_type *data_ele, size_type count)  {
+template<typename T, typename B>
+int ObjectVector<T, B>::write_ (const data_type *data_ele, size_type count)  {
 
-    const   int rc = BaseClass::write (data_ele, DATA_SIZE, count);
+    const   int rc = BaseClass::write (data_ele, sizeof(value_type), count);
 
     if (rc != count)  {
         String1K    err;
@@ -192,9 +177,8 @@ int ObjectVector<D, B>::write_ (const data_type *data_ele, size_type count)  {
     }
 
     _internal_header_type   &meta_data =
-        *(reinterpret_cast<_internal_header_type *>
-              (reinterpret_cast<char *>(BaseClass::_get_base_ptr ()) +
-               HEADER_SIZE));
+        *reinterpret_cast<_internal_header_type *>
+            (reinterpret_cast<char *>(BaseClass::_get_base_ptr ());
 
     meta_data.object_count += count;
     cached_object_count_ += count;
@@ -203,9 +187,9 @@ int ObjectVector<D, B>::write_ (const data_type *data_ele, size_type count)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename D, typename B>
-typename ObjectVector<D, B>::iterator
-ObjectVector<D, B>::erase (iterator first, iterator last)  {
+template<typename T, typename B>
+typename ObjectVector<T, B>::iterator
+ObjectVector<T, B>::erase (iterator first, iterator last)  {
 
     const size_type lnum = &(*last) - &(*begin ());
 
@@ -217,9 +201,8 @@ ObjectVector<D, B>::erase (iterator first, iterator last)  {
     BaseClass::truncate (BaseClass::_file_size - s * sizeof (data_type));
 
     _internal_header_type   &meta_data =
-        *(reinterpret_cast<_internal_header_type *>
-              (reinterpret_cast<char *>(BaseClass::_get_base_ptr ()) +
-               HEADER_SIZE));
+        *reinterpret_cast<_internal_header_type *>
+            (reinterpret_cast<char *>(BaseClass::_get_base_ptr ());
 
     meta_data.object_count -= s;
     cached_object_count_ -= s;
@@ -230,9 +213,9 @@ ObjectVector<D, B>::erase (iterator first, iterator last)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename D, typename B>
+template<typename T, typename B>
 template<typename I>
-void ObjectVector<D, B>::insert (iterator pos, I first, I last)  {
+void ObjectVector<T, B>::insert (iterator pos, I first, I last)  {
 
     const long      int to_add = &(*last) - &(*first);
     const size_type pos_index = &(*pos) - &(*begin ());
@@ -246,9 +229,8 @@ void ObjectVector<D, B>::insert (iterator pos, I first, I last)  {
     ::memcpy (&(*new_pos), &(*first), to_add * sizeof (data_type));
 
     _internal_header_type   &meta_data =
-        *(reinterpret_cast<_internal_header_type *>
-              (reinterpret_cast<char *>(BaseClass::_get_base_ptr ()) +
-               HEADER_SIZE));
+        *reinterpret_cast<_internal_header_type *>
+            (reinterpret_cast<char *>(BaseClass::_get_base_ptr ());
 
     meta_data.object_count += to_add;
     cached_object_count_ += to_add;

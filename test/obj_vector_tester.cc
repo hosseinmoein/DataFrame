@@ -82,7 +82,7 @@ static const char   *OBJECT_BASE_NAME = "./testfile";
 
 // ----------------------------------------------------------------------------
 
-int main (int argCnt, char *argVctr [])  {
+int main (int argc, char *argv [])  {
 
 #ifndef _WIN32
 

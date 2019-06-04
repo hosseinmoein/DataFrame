@@ -273,7 +273,7 @@ gen_datetime_index(const char *start_datetime,
             static_cast<size_type>((diff / 60) / increment + 1));
         break;
     case time_frequency::secondly:
-        index_vec.reserve((diff / increment) + 1);
+        index_vec.reserve(static_cast<size_type>((diff / increment) + 1));
         break;
     case time_frequency::millisecondly:
         index_vec.reserve(

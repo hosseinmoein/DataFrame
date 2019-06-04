@@ -6,11 +6,11 @@
 #include <DataFrame/FixedSizeString.h>
 #include <DataFrame/MMap/ObjectVector.h>
 
+#ifndef _WIN32
+
 #include <exception>
 #include <sys/types.h>
 #include <sys/mman.h>
-
-#ifndef _WIN32
 
 //
 // There must be a nice concise language inside C++ trying to get out

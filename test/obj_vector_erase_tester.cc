@@ -7,7 +7,6 @@
 #include <vector>
 
 #include <time.h>
-#include <strings.h>
 
 using namespace std;
 using namespace hmdf;

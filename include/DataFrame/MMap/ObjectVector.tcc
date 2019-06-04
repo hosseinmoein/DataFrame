@@ -207,9 +207,9 @@ ObjectVector<T, B>::erase (iterator first, iterator last)  {
 
     meta_data.object_count -= s;
     cached_object_count_ -= s;
-    seek (cached_object_count_);
+    seek_ (cached_object_count_);
 
-    return (iterator_at (lnum - s));
+    return (begin() + lnum - s);
 }
 
 // ----------------------------------------------------------------------------
@@ -223,7 +223,7 @@ void ObjectVector<T, B>::insert (iterator pos, I first, I last)  {
 
     BaseClass::truncate (BaseClass::_file_size + to_add * sizeof (value_type));
 
-    const iterator  new_pos = iterator_at (pos_index);
+    const iterator  new_pos = begin() + pos_index;
 
     ::memmove (&(*(new_pos + to_add)), &(*new_pos),
                (&(*end ()) - &(*new_pos)) * sizeof (value_type));
@@ -235,7 +235,7 @@ void ObjectVector<T, B>::insert (iterator pos, I first, I last)  {
 
     meta_data.object_count += to_add;
     cached_object_count_ += to_add;
-    seek (cached_object_count_);
+    seek_ (cached_object_count_);
 
     return;
 }

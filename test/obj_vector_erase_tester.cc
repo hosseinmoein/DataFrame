@@ -1,5 +1,5 @@
-// Hossein Moein
-// August 13, 2008
+#include <DataFrame/FixedSizeString.h>
+#include <DataFrame/MMap/ObjectVector.h>
 
 #include <cstdio>
 #include <cstdlib>
@@ -9,11 +9,8 @@
 #include <time.h>
 #include <strings.h>
 
-#include <DMScu_FixedSizeString.h>
-
-#include <DMSob_ObjectBase.h>
-
 using namespace std;
+using namespace hmdf;
 
 // ----------------------------------------------------------------------------
 
@@ -57,26 +54,29 @@ static bool operator < (const data_class &lhs, const data_class &rhs)  {
 
 // ----------------------------------------------------------------------------
 
-typedef DMSob_ObjectBase<time_t, data_class, DMScu_MMapFile>    MyObjBase;
+#ifndef _WIN32
 
-static  const   size_t  ITER_COUNT = 1000;
-static  const   char    *OBJECT_BASE_NAME = "/tmp/testfile";
+typedef MMapVector<data_class>  MyObjBase;
+
+static const size_t ITER_COUNT = 1000;
+static const char   *OBJECT_BASE_NAME = "./testfile";
+
+#endif // _WIN32
 
 // ----------------------------------------------------------------------------
 
-int main (int argCnt, char *argVctr [])  {
+int main (int argc, char *argv [])  {
+
+#ifndef _WIN32
 
     cout.precision (20);
 
-    time_t  t = 555444;
-
-    MyObjBase   write_objbase (OBJECT_BASE_NAME, MyObjBase::_write_,
-                               MyObjBase::_random_, t);
+    MyObjBase   write_objbase (OBJECT_BASE_NAME);
 
     write_objbase.reserve (ITER_COUNT * 2);
 
     for (size_t i = 0; i < ITER_COUNT; ++i)  {
-        DMScu_FixedSizeString<63> str;
+        FixedSizeString<63> str;
 
         str.printf ("the number is %d", i);
 
@@ -84,21 +84,21 @@ int main (int argCnt, char *argVctr [])  {
 
         strcpy (dc.name, str.c_str ());
         dc.counter = i;
-            write_objbase.push_back (dc);
+
+        write_objbase.push_back (dc);
+        if (i % 1000 == 0)
+            cout << "Inserted record number " << i << endl;
     }
     cout << "Inserted total of " << write_objbase.size ()
          << " records\n" << endl;
 
-    write_objbase.dettach ();
-
-    MyObjBase   appd_object (OBJECT_BASE_NAME, MyObjBase::_append_,
-                             MyObjBase::_random_, t);
+    MyObjBase   appd_object (OBJECT_BASE_NAME);
 
     cout << "Erasing 100 - 900\n" << endl;
 
-    const   MyObjBase::iterator eiter =
-        appd_object.erase (appd_object.iterator_at (100),
-                           appd_object.iterator_at (900 + 1));
+    const MyObjBase::iterator   eiter =
+        appd_object.erase (appd_object.begin() + 100,
+                           appd_object.begin() + 900 + 1);
 
     cout << "After erasing, we have " << appd_object.size ()
          << " objects left" << endl;
@@ -107,15 +107,18 @@ int main (int argCnt, char *argVctr [])  {
     else
         cout << "Return iterator is " << eiter->counter << endl;
 
+    size_t  counter = 0;
+	
     for (MyObjBase::const_iterator citer = appd_object.begin ();
          citer != appd_object.end (); ++citer)
-        citer->print ();
+        if (++counter % 100 == 0)
+            citer->print ();
     cout << endl;
 
     cout << "Erasing 5\n" << endl;
 
-    const   MyObjBase::iterator eiter2 =
-        appd_object.erase (appd_object.iterator_at (5));
+    const MyObjBase::iterator   eiter2 =
+        appd_object.erase (appd_object.begin() + 5);
 
     cout << "After erasing, we have " << appd_object.size ()
          << " objects left" << endl;
@@ -124,9 +127,11 @@ int main (int argCnt, char *argVctr [])  {
     else
         cout << "Return iterator is " << eiter2->counter << endl;
 
+    counter = 0;
     for (MyObjBase::const_iterator citer = appd_object.begin ();
          citer != appd_object.end (); ++citer)
-        citer->print ();
+        if (++counter % 100 == 0)
+            citer->print ();
     cout << endl;
 
     cout << "Inserting 5\n" << endl;
@@ -134,32 +139,40 @@ int main (int argCnt, char *argVctr [])  {
     data_class  dc;
 
     dc.counter = 5;
-    appd_object.insert (appd_object.iterator_at (5), dc);
+    appd_object.insert (appd_object.begin() + 5, dc);
 
+    counter = 0;
     for (MyObjBase::const_iterator citer = appd_object.begin ();
          citer != appd_object.end (); ++citer)
-        citer->print ();
+        if (++counter % 100 == 0)
+            citer->print ();
     cout << endl;
 
     cout << "Inserting -1\n" << endl;
 
     dc.counter = -1;
-    appd_object.insert (appd_object.begin (), dc);
+    appd_object.insert (appd_object.begin(), dc);
 
+    counter = 0;
     for (MyObjBase::const_iterator citer = appd_object.begin ();
          citer != appd_object.end (); ++citer)
-        citer->print ();
+        if (++counter % 100 == 0)
+            citer->print ();
     cout << endl;
 
     cout << "Inserting 1000\n" << endl;
 
     dc.counter = 1000;
-    appd_object.insert (appd_object.end (), dc);
+    appd_object.insert (appd_object.end(), dc);
 
+    counter = 0;
     for (MyObjBase::const_iterator citer = appd_object.begin ();
          citer != appd_object.end (); ++citer)
-        citer->print ();
+        if (++counter % 100 == 0)
+            citer->print ();
     cout << endl;
+
+#endif // _WIN32
 
     return (EXIT_SUCCESS);
 }

@@ -126,7 +126,7 @@ public:
 
     class   iterator
         : public std::iterator<std::random_access_iterator_tag,
-                               value_type, long int>  {
+                               value_type, size_type>  {
 
     public:
 
@@ -175,7 +175,7 @@ public:
             return (iterator (the_node));
         }
 
-        inline iterator &operator += (long int step) noexcept  {
+        inline iterator &operator += (size_type step) noexcept  {
 
             node_ += step;
             return (*this);
@@ -194,18 +194,18 @@ public:
             return (iterator (the_node));
         }
 
-        inline iterator &operator -= (long int step) noexcept  {
+        inline iterator &operator -= (size_type step) noexcept  {
 
             node_ -= step;
             return (*this);
         }
 
-        inline iterator operator + (long int step) noexcept  {
+        inline iterator operator + (size_type step) noexcept  {
 
             return (iterator (node_ + step));
         }
 
-        inline iterator operator - (long int step) noexcept  {
+        inline iterator operator - (size_type step) noexcept  {
 
             return (iterator (node_ - step));
         }
@@ -230,7 +230,7 @@ public:
 
     class   reverse_iterator
         : public std::iterator<std::random_access_iterator_tag,
-                               value_type, long int>  {
+                               value_type, size_type>  {
 
     public:
 
@@ -296,7 +296,7 @@ public:
             return (reverse_iterator (ret_node));
         }
 
-        inline reverse_iterator &operator += (long int step) noexcept {
+        inline reverse_iterator &operator += (size_type step) noexcept {
 
             node_ -= step;
             return (*this);
@@ -320,18 +320,18 @@ public:
             return (reverse_iterator (ret_node));
         }
 
-        inline reverse_iterator &operator -= (long int step) noexcept {
+        inline reverse_iterator &operator -= (size_type step) noexcept {
 
             node_ += step;
             return (*this);
         }
 
-        inline reverse_iterator operator + (long int step) noexcept  {
+        inline reverse_iterator operator + (size_type step) noexcept  {
 
             return (reverse_iterator (node_ - step));
         }
 
-        inline reverse_iterator operator - (long int step) noexcept  {
+        inline reverse_iterator operator - (size_type step) noexcept  {
 
             return (reverse_iterator (node_ + step));
         }
@@ -356,7 +356,7 @@ public:
 
     class   const_iterator
         : public std::iterator<std::random_access_iterator_tag,
-                               value_type const, long int>  {
+                               value_type const, size_type>  {
 
     public:
 
@@ -430,7 +430,7 @@ public:
             return (const_iterator (ret_node));
         }
 
-        inline const_iterator &operator += (long int step) noexcept  {
+        inline const_iterator &operator += (size_type step) noexcept  {
 
             node_ += step;
             return (*this);
@@ -454,18 +454,18 @@ public:
             return (const_iterator (ret_node));
         }
 
-        inline const_iterator &operator -= (long int step) noexcept  {
+        inline const_iterator &operator -= (size_type step) noexcept  {
 
             node_ -= step;
             return (*this);
         }
 
-        inline const_iterator operator + (long int step) noexcept  {
+        inline const_iterator operator + (size_type step) noexcept  {
 
             return (const_iterator (node_ + step));
         }
 
-        inline const_iterator operator - (long int step) noexcept  {
+        inline const_iterator operator - (size_type step) noexcept  {
 
             return (const_iterator (node_ - step));
         }
@@ -489,7 +489,7 @@ public:
 
     class   const_reverse_iterator
         : public std::iterator<std::random_access_iterator_tag,
-                               value_type const, long int>  {
+                               value_type const, size_type>  {
 
     public:
 
@@ -564,7 +564,7 @@ public:
         }
 
         inline const_reverse_iterator &
-        operator += (long int step) noexcept  {
+        operator += (size_type step) noexcept  {
 
             node_ -= step;
             return (*this);
@@ -589,20 +589,20 @@ public:
         }
 
         inline const_reverse_iterator &
-        operator -= (long int step) noexcept  {
+        operator -= (size_type step) noexcept  {
 
             node_ += step;
             return (*this);
         }
 
         inline const_reverse_iterator
-        operator + (long int step) noexcept  {
+        operator + (size_type step) noexcept  {
 
             return (const_reverse_iterator (node_ - step));
         }
 
         inline const_reverse_iterator
-        operator - (long int step) noexcept  {
+        operator - (size_type step) noexcept  {
 
             return (const_reverse_iterator (node_ + step));
         }

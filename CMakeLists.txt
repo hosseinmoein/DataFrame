@@ -194,6 +194,7 @@ add_executable(vectors_tester    test/vectors_tester.cc)
 add_executable(date_time_tester  test/date_time_tester.cc)
 add_executable(mmfile_tester     test/mmfile_tester.cc)
 add_executable(obj_vector_tester test/obj_vector_tester.cc)
+add_executable(obj_vector_erase_tester test/obj_vector_erase_tester.cc)
 add_executable(sharedmem_tester  test/sharedmem_tester.cc)
 
 # Link the Dataframe library to the test binary
@@ -212,6 +213,9 @@ target_link_libraries(mmfile_tester Dataframe)
 target_link_libraries(obj_vector_tester Dataframe)
 
 # Link the Dataframe library to the test binary
+target_link_libraries(obj_vector_erase_tester Dataframe)
+
+# Link the Dataframe library to the test binary
 target_link_libraries(sharedmem_tester Dataframe)
 
 if (UNIX)
@@ -223,6 +227,7 @@ if (UNIX)
   target_link_libraries(date_time_tester Threads::Threads)
   target_link_libraries(mmfile_tester Threads::Threads)
   target_link_libraries(obj_vector_tester Threads::Threads)
+  target_link_libraries(obj_vector_erase_tester Threads::Threads)
   target_link_libraries(sharedmem_tester Threads::Threads)
 endif (UNIX)
 
@@ -232,6 +237,7 @@ if (UNIX AND NOT APPLE)
   target_link_libraries(date_time_tester rt)
   target_link_libraries(mmfile_tester rt)
   target_link_libraries(obj_vector_tester rt)
+  target_link_libraries(obj_vector_erase_tester rt)
   target_link_libraries(sharedmem_tester rt)
 endif()
 
@@ -256,6 +262,10 @@ add_test(NAME date_time_tester
 add_test(NAME obj_vector_tester
          COMMAND obj_vector_tester
          WORKING_DIRECTORY $<TARGET_FILE_DIR:obj_vector_tester>)
+
+add_test(NAME obj_vector_erase_tester
+         COMMAND obj_vector_erase_tester
+         WORKING_DIRECTORY $<TARGET_FILE_DIR:obj_vector_erase_tester>)
 
 message("-- Copying files for testing")
 # Ctest require this files in the build dir, on all platforms

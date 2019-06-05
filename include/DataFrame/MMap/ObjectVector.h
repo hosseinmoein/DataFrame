@@ -12,6 +12,7 @@
 
 #include <time.h>
 #include <iterator>
+#include <vector>
 
 // ----------------------------------------------------------------------------
 
@@ -45,7 +46,7 @@ public:
                       //
                        _sequential_ = 2,
 
-                      // Read ahead  may be less useful than normally
+                      // Read ahead may be less useful than normally
                       //
                        _random_ = 4,
 
@@ -77,20 +78,56 @@ public:
 
     inline bool is_ok () const noexcept  { return (BaseClass::is_ok ()); }
 
-    void set_access_mode (ACCESS_MODE am) const;
+    inline void set_access_mode (ACCESS_MODE am) const;
+    inline void refresh () const noexcept;
+    inline time_t creation_time () const noexcept;
 
-    bool seek_ (size_type obj_num) const noexcept;
+    inline void reserve (size_type s);
+    inline void shrink_to_fit ();
 
-    inline void refresh () const noexcept  {
+    friend bool
+    operator == (const ObjectVector &lhs, const ObjectVector &rhs)  {
 
-        const MetaData  *mdata_ptr =
-            reinterpret_cast<const MetaData *>
-                (reinterpret_cast<char *>(BaseClass::_get_base_ptr ()));
+        const size_type lhs_size = lhs.size();
 
-        cached_object_count_ = mdata_ptr->object_count;
+        if (lhs_size != rhs.size())
+            return (false);
+        for (size_type i = 0; i < lhs_size; ++i)
+            if (lhs[i] != rhs[i])  return (false);
+        return (true);
+    }
+    friend bool
+    operator != (const ObjectVector &lhs, const ObjectVector &rhs)  {
+
+        return (! (lhs == rhs));
     }
 
-    time_t creation_time () const noexcept;
+    friend bool
+    operator == (const std::vector<T> &lhs, const ObjectVector &rhs)  {
+
+        const size_type lhs_size = lhs.size();
+
+        if (lhs_size != rhs.size())
+            return (false);
+        for (size_type i = 0; i < lhs_size; ++i)
+            if (lhs[i] != rhs[i])  return (false);
+        return (true);
+    }
+    friend bool
+    operator != (const std::vector<T> &lhs, const ObjectVector &rhs)  {
+
+        return (! (lhs == rhs));
+    }
+    friend bool
+    operator == (const ObjectVector &lhs, const std::vector<T> &rhs)  {
+
+        return (rhs == lhs);
+    }
+    friend bool
+    operator != (const ObjectVector &lhs, const std::vector<T> &rhs)  {
+
+        return (rhs != lhs);
+    }
 
 protected:
 
@@ -98,7 +135,7 @@ protected:
 
     public:
 
-        inline MetaData() noexcept  {   }
+        inline MetaData() = default;
         inline MetaData (size_type oc, size_type ct) noexcept
             : object_count (oc), creation_time (ct)  {   }
 
@@ -113,16 +150,15 @@ private:
     inline size_type tell_ () const noexcept;
     inline void unlink_ ()  { BaseClass::unlink (); }
     inline int write_ (const value_type *data_ele, size_type count);
+    inline bool seek_ (size_type obj_num) const noexcept;
 
 public:
 
-//
-// The iterators:
-// These iterators contain only one pointer. Like STL iterators,
-// they are cheap to create and copy around.
-//
-
-public:
+    //
+    // The iterators:
+    // These iterators contain only one pointer. Like STL iterators,
+    // they are cheap to create and copy around.
+    //
 
     class   iterator
         : public std::iterator<std::random_access_iterator_tag,
@@ -140,7 +176,7 @@ public:
        // NOTE: The constructor with no argument initializes
        //       the iterator to be the "end" iterator
        //
-        inline iterator () noexcept : node_ (nullptr)  {   }
+        inline iterator () = default;
         inline iterator (value_type *node) noexcept : node_ (node)  {   }
 
         inline bool operator == (const iterator &rhs) const noexcept  {
@@ -222,7 +258,7 @@ public:
 
     private:
 
-        pointer node_;
+        pointer node_ { nullptr };
 
         friend class    ObjectVector::const_iterator;
         friend class    ObjectVector::reverse_iterator;
@@ -244,8 +280,8 @@ public:
        // NOTE: The constructor with no argument initializes
        //       the iterator to be the "end" iterator
        //
-        inline reverse_iterator() noexcept : node_ (nullptr)  {   }
-        inline reverse_iterator(value_type *node) noexcept : node_ (node)  {   }
+        inline reverse_iterator() = default;
+        inline reverse_iterator(value_type *node) noexcept : node_ (node) {   }
 
         inline
         reverse_iterator(const iterator &itr) noexcept : node_(nullptr)  {
@@ -348,7 +384,7 @@ public:
 
     private:
 
-        pointer node_;
+        pointer node_ { nullptr };
 
         friend class    ObjectVector::const_reverse_iterator;
         friend class    ObjectVector::const_iterator;
@@ -370,7 +406,7 @@ public:
        // NOTE: The constructor with no argument initializes
        //       the iterator to be the "end" iterator
        //
-        inline const_iterator () noexcept : node_ (nullptr)  {   }
+        inline const_iterator () = default;
 
         inline const_iterator (const value_type *node) noexcept
             : node_ (node)  {   }
@@ -482,7 +518,7 @@ public:
 
     private:
 
-        pointer node_;
+        pointer node_ { nullptr };
 
         friend class    ObjectVector::const_reverse_iterator;
     };
@@ -503,7 +539,7 @@ public:
        // NOTE: The constructor with no argument initializes
        //       the iterator to be the "end" iterator
        //
-        inline const_reverse_iterator () noexcept : node_ (nullptr)  {   }
+        inline const_reverse_iterator () = default;
 
         inline const_reverse_iterator (const value_type *node) noexcept
             : node_ (node)  {   }
@@ -619,44 +655,35 @@ public:
 
     private:
 
-        pointer node_;
+        pointer node_ { nullptr };
     };
 
-    inline iterator begin () noexcept  { return (iterator (&((*this) [0]))); }
-    inline iterator end () noexcept  {
+    inline iterator begin() noexcept  { return (iterator(&((*this)[0]))); }
+    inline iterator end() noexcept  { return (iterator(&((*this)[size()]))); }
 
-        return (iterator (&((*this) [size()])));
-    }
+    inline const_iterator
+    begin () const noexcept  { return (const_iterator (&((*this)[0]))); }
+    inline const_iterator
+    end () const noexcept  { return (const_iterator (&((*this)[size()]))); }
 
-    inline const_iterator begin () const noexcept  {
-
-        return (const_iterator (&((*this) [0])));
-    }
-    inline const_iterator end () const noexcept  {
-
-        return (const_iterator (&((*this) [size ()])));
-    }
-
-    inline reverse_iterator rbegin () noexcept  {
-
-        return (reverse_iterator (&((*this) [size () - 1])));
-    }
-    inline reverse_iterator rend () noexcept  {
-
-        return (reverse_iterator (&((*this) [0]) - 1));
-    }
+    inline reverse_iterator
+    rbegin() noexcept  { return (reverse_iterator (&((*this)[size() - 1]))); }
+    inline reverse_iterator
+    rend() noexcept  { return (reverse_iterator (&((*this)[0]) - 1)); }
 
     inline const_reverse_iterator rbegin () const noexcept  {
 
-        return (const_reverse_iterator (&((*this) [size () - 1])));
+        return (const_reverse_iterator (&((*this)[size() - 1])));
     }
     inline const_reverse_iterator rend () const noexcept  {
 
-        return (const_reverse_iterator (&((*this) [0]) - 1));
+        return (const_reverse_iterator (&((*this)[0]) - 1));
     }
 
     inline reference operator [] (size_type);
-    inline const_reference operator [] (size_type) const noexcept;
+    inline const_reference operator [] (size_type) const;
+    inline reference at (size_type i)  { return ((*this)[i]); }
+    inline const_reference at (size_type i) const  { return ((*this)[i]); }
 
     inline size_type size () const noexcept { return (cached_object_count_); }
     inline bool empty () const noexcept  { return (size () == 0); }
@@ -669,16 +696,6 @@ public:
     back () const noexcept  { return ((*this) [size () - 1]); }
 
     inline void push_back (const value_type &d)  { write_ (&d, 1); }
-
-    inline void reserve (size_type s)  {
-
-        const size_type trun_size = s * sizeof(value_type) + sizeof(MetaData);
-
-        if (trun_size > BaseClass::get_file_size ())
-            BaseClass::truncate (trun_size);
-
-        return;
-    }
 
    // Erases the range [first, last)
    //
@@ -697,6 +714,7 @@ public:
 
         return (insert (pos, &value, &value + 1));
     }
+    inline void pop_back ()  { erase(end() - 1); }
 };
 
 // ----------------------------------------------------------------------------

@@ -62,6 +62,18 @@ ObjectVector(const char *name, ACCESS_MODE access_mode, size_type buffer_size)
 // ----------------------------------------------------------------------------
 
 template<typename T, typename B>
+inline void ObjectVector<T, B>::refresh () const noexcept  {
+
+    const MetaData  *mdata_ptr =
+        reinterpret_cast<const MetaData *>
+            (reinterpret_cast<char *>(BaseClass::_get_base_ptr ()));
+
+    cached_object_count_ = mdata_ptr->object_count;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename B>
 typename ObjectVector<T, B>::size_type
 ObjectVector<T, B>::tell_ () const noexcept  {
 
@@ -99,7 +111,7 @@ ObjectVector<T, B>::operator [] (size_type index)  {
 
 template<typename T, typename B>
 inline const typename ObjectVector<T, B>::value_type &
-ObjectVector<T, B>::operator [] (size_type index) const noexcept  {
+ObjectVector<T, B>::operator [] (size_type index) const  {
 
     const value_type    &this_item =
         *(reinterpret_cast<const value_type *>
@@ -236,6 +248,34 @@ void ObjectVector<T, B>::insert (iterator pos, I first, I last)  {
     meta_data.object_count += to_add;
     cached_object_count_ += to_add;
     seek_ (cached_object_count_);
+
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename B>
+inline void ObjectVector<T, B>::reserve (size_type s)  {
+
+    const size_type trun_size = s * sizeof(value_type) + sizeof(MetaData);
+
+    if (trun_size > BaseClass::get_file_size ())
+        BaseClass::truncate (trun_size);
+
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename B>
+inline void ObjectVector<T, B>::shrink_to_fit ()  {
+
+    refresh();
+
+    const size_type trun_size = size() * sizeof(value_type) + sizeof(MetaData);
+
+    if (trun_size < BaseClass::get_file_size ())
+        BaseClass::truncate (trun_size);
 
     return;
 }

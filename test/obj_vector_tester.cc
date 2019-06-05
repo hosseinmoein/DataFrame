@@ -5,8 +5,8 @@
 #include <cstdlib>
 #include <iostream>
 #include <stdexcept>
-
 #include <time.h>
+#include <cassert>
 
 using namespace std;
 using namespace hmdf;
@@ -42,6 +42,7 @@ public:
                 counter == rhs.counter &&
                 d == rhs.d);
     }
+    bool operator != (const data_class &rhs) const { return(! (*this == rhs)); }
 
     void print () const  {
 
@@ -72,6 +73,7 @@ static bool operator < (const data_class &lhs, const data_class &rhs)  {
 #ifndef _WIN32
 
 typedef MMapVector<data_class>  MyObjBase;
+typedef std::vector<data_class> MyStdVec;
 // typedef ObjectVector<data_class, MMapSharedMem> MyObjBase;
 
 static const size_t ITER_COUNT = 10000;
@@ -89,6 +91,7 @@ int main (int argc, char *argv [])  {
     cout.precision (5);
 
     MyObjBase   write_objbase (OBJECT_BASE_NAME);
+    MyStdVec    write_stdvec;
 
     srand (5);
     srand48 (5);
@@ -109,6 +112,7 @@ int main (int argc, char *argv [])  {
         dc.d = the_double;
 
         write_objbase.push_back (dc);
+        write_stdvec.push_back (dc);
         if (i % 1000 == 0)
             cout << "Inserted record number " << i << endl;
     }
@@ -118,6 +122,12 @@ int main (int argc, char *argv [])  {
     write_objbase.set_access_mode (MyObjBase::_random_);
 
     const MyObjBase read_objbase (OBJECT_BASE_NAME);
+
+    assert(write_objbase == read_objbase);
+    assert(write_stdvec == read_objbase); 
+    assert(write_objbase == write_stdvec); 
+    write_stdvec[5].i = -8;
+    assert(write_objbase != write_stdvec); 
 
     srand (5);
     srand48 (5);

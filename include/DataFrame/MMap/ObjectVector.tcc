@@ -8,6 +8,7 @@
 
 #ifndef _WIN32
 
+#include <string>
 #include <exception>
 #include <sys/types.h>
 #include <sys/mman.h>
@@ -26,9 +27,9 @@ ObjectVector<T, B>::
 ObjectVector(const char *name, ACCESS_MODE access_mode, size_type buffer_size)
     : BaseClass (name, BaseClass::_bappend_, buffer_size)  {
 
-    const bool  just_created = BaseClass::get_file_size () == 0;
+    const size_type file_size = BaseClass::get_file_size ();
 
-    if (just_created)  {
+    if (file_size == 0)  {  // File was just created
         const MetaData  meta_data (0, time (nullptr));
 
        // Create the meta data record
@@ -36,17 +37,16 @@ ObjectVector(const char *name, ACCESS_MODE access_mode, size_type buffer_size)
         if (! BaseClass::write (&meta_data, sizeof(MetaData), 1))
             throw std::runtime_error ("ObjectVector::ObjectVector<<(): Cannot"
                                       " write(). internal header record");
-
         BaseClass::flush ();
     }
-    else  {
-        if (BaseClass::get_file_size () < sizeof(MetaData))  {
+    else  {  // An existing file
+        if (file_size < sizeof(MetaData))  {
             String1K    err;
 
             err.printf ("ObjectVector::ObjectVector(): "
                         "ObjectVector seems to be in an inconsistent "
                         "state (%d).",
-                        BaseClass::get_file_size ());
+                        file_size);
             throw std::runtime_error (err.c_str ());
         }
     }
@@ -57,6 +57,116 @@ ObjectVector(const char *name, ACCESS_MODE access_mode, size_type buffer_size)
 
     cached_object_count_ = mdata_ptr->object_count;
     seek_ (cached_object_count_);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename B>
+ObjectVector<T, B>::ObjectVector(const ObjectVector &that)
+    : BaseClass (that.get_file_name(),
+                 BaseClass::_bappend_,
+                 that.get_buffer_size())  {
+
+    const size_type file_size = BaseClass::get_file_size ();
+
+    if (file_size < sizeof(MetaData))  {
+        String1K    err;
+
+        err.printf ("ObjectVector::ObjectVector(): "
+                    "ObjectVector seems to be in an inconsistent state (%d).",
+                    file_size);
+        throw std::runtime_error (err.c_str ());
+    }
+
+    const MetaData  *mdata_ptr =
+        reinterpret_cast<const MetaData *>
+            (reinterpret_cast<const char *>(BaseClass::_get_base_ptr ()));
+
+    cached_object_count_ = mdata_ptr->object_count;
+    seek_ (cached_object_count_);
+
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename B>
+ObjectVector<T, B>::~ObjectVector ()  {
+
+    if (BaseClass::get_device_type () == BaseClass::_shared_memory_ ||
+        BaseClass::get_device_type () == BaseClass::_mmap_file_)
+        BaseClass::flush ();
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename B>
+ObjectVector<T, B> &ObjectVector<T, B>::operator = (const ObjectVector &rhs) {
+
+    // This class/file is uniquely identified by name
+    if (strcmp(BaseClass::get_file_name(), rhs.get_file_name()))  {
+        if (BaseClass::get_device_type () == BaseClass::_shared_memory_ ||
+            BaseClass::get_device_type () == BaseClass::_mmap_file_)
+            BaseClass::flush ();
+        // This is really bad design. But it is the cost of having this vector
+        BaseClass::close();
+        _set_file_name(rhs.get_file_name());
+        _set_open_mode(BaseClass::_bappend_);
+        set_buffer(rhs.get_buffer_size());
+        _set_file_open_mode(rhs.get_file_open_mode());
+        BaseClass::_translate_open_mode ();
+        BaseClass::open ();
+    }
+    return (*this);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename B>
+ObjectVector<T, B>::
+ObjectVector(const char *name,
+             const std::vector<T> &vec,
+             ACCESS_MODE access_mode,
+             size_type buffer_size)
+    : BaseClass (name, BaseClass::_bappend_, buffer_size)  {
+
+    const size_type file_size = BaseClass::get_file_size ();
+
+    if (file_size == 0)  {  // File was just created
+        const MetaData  meta_data (0, time (nullptr));
+
+       // Create the meta data record
+       //
+        if (! BaseClass::write (&meta_data, sizeof(MetaData), 1))
+            throw std::runtime_error ("ObjectVector::ObjectVector<<(): Cannot"
+                                      " write(). internal header record");
+        BaseClass::flush ();
+    }
+    else  {  // An existing file
+        if (file_size < sizeof(MetaData))  {
+            String1K    err;
+
+            err.printf ("ObjectVector::ObjectVector(): "
+                        "ObjectVector seems to be in an inconsistent "
+                        "state (%d).",
+                        file_size);
+            throw std::runtime_error (err.c_str ());
+        }
+    }
+
+    *this = vec;
+    seek_ (cached_object_count_);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename B>
+ObjectVector<T, B> &ObjectVector<T, B>::
+operator = (const std::vector<T> &rhs) {
+
+    clear();
+    reserve(rhs.size());
+    write_(rhs.data(), rhs.size());
+    return (*this);
 }
 
 // ----------------------------------------------------------------------------
@@ -80,16 +190,6 @@ ObjectVector<T, B>::tell_ () const noexcept  {
     const size_type pos = BaseClass::tell ();
 
     return ((pos - sizeof(MetaData)) / sizeof(value_type));
-}
-
-// ----------------------------------------------------------------------------
-
-template<typename T, typename B>
-ObjectVector<T, B>::~ObjectVector ()  {
-
-    if (BaseClass::get_device_type () == BaseClass::_shared_memory_ ||
-        BaseClass::get_device_type () == BaseClass::_mmap_file_)
-        BaseClass::flush ();
 }
 
 // ----------------------------------------------------------------------------

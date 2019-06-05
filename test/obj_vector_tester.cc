@@ -3,6 +3,7 @@
 
 #include <cstdio>
 #include <cstdlib>
+#include <unistd.h>
 #include <iostream>
 #include <stdexcept>
 #include <time.h>
@@ -78,7 +79,7 @@ typedef std::vector<data_class> MyStdVec;
 
 static const size_t ITER_COUNT = 10000;
 static const char   *OBJECT_BASE_NAME = "./testfile";
-// static const char  *OBJECT_BASE_NAME = "/tmp/testfile";
+static const char   *OBJECT_BASE_NAME2 = "./testfile2";
 
 #endif // _WIN32
 
@@ -122,12 +123,18 @@ int main (int argc, char *argv [])  {
     write_objbase.set_access_mode (MyObjBase::_random_);
 
     const MyObjBase read_objbase (OBJECT_BASE_NAME);
+    MyObjBase       read_objbase2 (read_objbase);
 
     assert(write_objbase == read_objbase);
     assert(write_stdvec == read_objbase); 
+    assert(write_stdvec == read_objbase2); 
     assert(write_objbase == write_stdvec); 
     write_stdvec[5].i = -8;
     assert(write_objbase != write_stdvec); 
+
+    MyObjBase read_objbase3 (OBJECT_BASE_NAME2, write_stdvec);
+
+    assert(write_stdvec == read_objbase3); 
 
     srand (5);
     srand48 (5);
@@ -262,6 +269,9 @@ int main (int argc, char *argv [])  {
     const MyObjBase::const_iterator         citr = itr;
     const MyObjBase::const_reverse_iterator critr = citr;
     const MyObjBase::reverse_iterator       ritr = itr;
+
+    ::unlink(OBJECT_BASE_NAME);
+    ::unlink(OBJECT_BASE_NAME2);
 
 #endif // _WIN32
 

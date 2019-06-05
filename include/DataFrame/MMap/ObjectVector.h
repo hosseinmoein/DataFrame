@@ -32,6 +32,7 @@ public:
     using BaseClass = B;
     using size_type = typename BaseClass::size_type;
     using value_type = T;
+    using difference_type = std::ptrdiff_t;
     using ponter = value_type *;
     using const_pointer = const value_type *;
     using const_pointer_const = const value_type *const;
@@ -69,12 +70,19 @@ public:
 public:
 
     ObjectVector () = delete;
-    ObjectVector (const ObjectVector &) = delete;
-    ObjectVector &operator = (const ObjectVector &) = delete;
+    ObjectVector (const ObjectVector &that);
+    ObjectVector &operator = (const ObjectVector &rhs);
     explicit ObjectVector (const char *name,
                            ACCESS_MODE access_mode = _random_,
                            size_type buffer_size = 1024 * sizeof(value_type));
+
     virtual ~ObjectVector ();
+
+    ObjectVector (const char *name,
+                  const std::vector<T> &vec,
+                  ACCESS_MODE access_mode = _random_,
+                  size_type buffer_size = 1024 * sizeof(value_type));
+    ObjectVector &operator = (const std::vector<T> &rhs);
 
     inline bool is_ok () const noexcept  { return (BaseClass::is_ok ()); }
 

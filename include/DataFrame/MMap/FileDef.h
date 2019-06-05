@@ -16,7 +16,7 @@
 
 namespace hmdf
 {
-	
+
 class   FileDef  {
 
 public:
@@ -80,8 +80,6 @@ protected:
     size_type   _current_offset { 0 };
     size_type   _file_size { 0 };
 
-    inline OPEN_MODE _get_open_mode () const noexcept  { return (open_mode_); }
-
     inline static bool
     _is_in_list (const char this_char, const char *char_list) noexcept  {
 
@@ -96,11 +94,15 @@ protected:
         return (false);
     }
 
+    inline OPEN_MODE _get_open_mode () const noexcept  { return (open_mode_); }
+    inline void _set_file_name(const char *n) noexcept  { file_name_ = n; }
+    inline void _set_open_mode (OPEN_MODE o)  noexcept  { open_mode_ = o; }
+
 private:
 
-    const OPEN_MODE     open_mode_;
+    OPEN_MODE           open_mode_;
     const DEVICE_TYPE   device_type_;
-    const String2K      file_name_;
+    String2K            file_name_;
 };
 
 } // namespace hmdf

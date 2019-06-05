@@ -23,7 +23,7 @@
 
 namespace hmdf
 {
-	
+
 class   MMapBase : public FileDef  {
 
 public:
@@ -580,6 +580,7 @@ protected:
 
     inline void *_get_base_ptr () const noexcept  { return (_mmap_ptr); }
     inline int _get_file_desc () const noexcept  { return (_file_desc); }
+    inline void _set_file_open_mode(mode_t m) noexcept { _file_open_mode = m; }
 
 public:
 

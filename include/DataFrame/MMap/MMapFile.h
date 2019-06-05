@@ -13,7 +13,7 @@
 
 namespace hmdf
 {
-	
+
 class   MMapFile : public MMapBase  {
 
 public:

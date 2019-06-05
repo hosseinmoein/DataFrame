@@ -3,7 +3,6 @@
 
 #include <cstdio>
 #include <cstdlib>
-#include <unistd.h>
 #include <iostream>
 #include <stdexcept>
 #include <time.h>
@@ -72,6 +71,8 @@ static bool operator < (const data_class &lhs, const data_class &rhs)  {
 // ----------------------------------------------------------------------------
 
 #ifndef _WIN32
+
+#include <unistd.h>
 
 typedef MMapVector<data_class>  MyObjBase;
 typedef std::vector<data_class> MyStdVec;

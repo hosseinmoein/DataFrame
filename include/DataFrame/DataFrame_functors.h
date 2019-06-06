@@ -79,13 +79,13 @@ struct view_setup_functor_ : DataVec::template visitor_base<types ...>  {
     inline view_setup_functor_ (const char *n,
                                 std::size_t b,
                                 std::size_t e,
-                                DataFrameView<TS> &d)
+                                DataFrameView<IndexType> &d)
         : name (n), begin (b), end (e), dfv(d)  {   }
 
-    const char          *name;
-    const std::size_t   begin;
-    const std::size_t   end;
-    DataFrameView<TS>   &dfv;
+    const char                  *name;
+    const std::size_t           begin;
+    const std::size_t           end;
+    DataFrameView<IndexType>    &dfv;
 
     template<typename T>
     void operator() (T &vec);
@@ -117,7 +117,7 @@ struct groupby_functor_ : DataVec::template visitor_base<types ...>  {
     inline groupby_functor_ (const char *n,
                              std::size_t b,
                              std::size_t e,
-                             const TS &ts,
+                             const IndexType &ts,
                              F &f,
                              DataFrame &d)
         : name(n), begin(b), end(e), indices(ts), functor(f), df(d) {  }
@@ -125,7 +125,7 @@ struct groupby_functor_ : DataVec::template visitor_base<types ...>  {
     const char          *name;
     const std::size_t   begin;
     const std::size_t   end;
-    const TS            &indices;
+    const IndexType     &indices;
     F                   &functor;
     DataFrame           &df;
 
@@ -139,17 +139,17 @@ template<typename F, typename ... types>
 struct bucket_functor_ : DataVec::template visitor_base<types ...>  {
 
     inline bucket_functor_ (const char *n,
-                            const TSVec &ts,
-                            const TimeStamp &i,
+                            const IndexVecType &ts,
+                            const IndexType &i,
                             F &f,
                             DataFrame &d)
         : name(n), indices(ts), interval(i), functor(f), df(d) {  }
 
-    const char      *name;
-    const TSVec     &indices;
-    const TimeStamp &interval;
-    F               &functor;
-    DataFrame       &df;
+    const char          *name;
+    const IndexVecType  &indices;
+    const IndexType     &interval;
+    F                   &functor;
+    DataFrame           &df;
 
     template<typename T>
     void operator() (const T &vec);
@@ -287,15 +287,15 @@ friend struct rotate_functor_;
 
 // ----------------------------------------------------------------------------
 
-template<typename TST, template<typename> class OPT, typename ... types>
+template<typename IDX, template<typename> class OPT, typename ... types>
 struct operator_functor_ : DataVec::template visitor_base<types ...>  {
 
-    inline operator_functor_ (const std::vector<TST> &lhsidx,
-                              const std::vector<TST> &rhsidx,
-                              const std::vector<TST> &newidx,
-                              const StdDataFrame<TST> &rhsdf,
+    inline operator_functor_ (const std::vector<IDX> &lhsidx,
+                              const std::vector<IDX> &rhsidx,
+                              const std::vector<IDX> &newidx,
+                              const StdDataFrame<IDX> &rhsdf,
                               const char *colname,
-                              StdDataFrame<TST> &resultdf)
+                              StdDataFrame<IDX> &resultdf)
          : lhs_idx(lhsidx),
            rhs_idx(rhsidx),
            new_idx(newidx),
@@ -303,12 +303,12 @@ struct operator_functor_ : DataVec::template visitor_base<types ...>  {
            col_name(colname),
            result_df(resultdf)  {  }
 
-    const std::vector<TST>  &lhs_idx;
-    const std::vector<TST>  &rhs_idx;
-    const std::vector<TST>  &new_idx;
-    const StdDataFrame<TST> &rhs_df;
+    const std::vector<IDX>  &lhs_idx;
+    const std::vector<IDX>  &rhs_idx;
+    const std::vector<IDX>  &new_idx;
+    const StdDataFrame<IDX> &rhs_df;
     const char              *col_name;
-    StdDataFrame<TST>       &result_df;
+    StdDataFrame<IDX>       &result_df;
 
     template<typename T>
     void operator() (const std::vector<T> &lhs_vec);

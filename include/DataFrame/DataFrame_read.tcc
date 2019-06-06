@@ -226,10 +226,10 @@ struct  _IdxParserFunctor_<bool>  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename  HETERO>
-bool DataFrame<TS, HETERO>::read (const char *file_name, io_format iof)  {
+template<typename I, typename  H>
+bool DataFrame<I, H>::read (const char *file_name, io_format iof)  {
 
-    static_assert(std::is_base_of<HeteroVector, HETERO>::value,
+    static_assert(std::is_base_of<HeteroVector, DataVec>::value,
                   "Only a StdDataFrame can call read()");
 
     std::ifstream   file;
@@ -264,11 +264,11 @@ bool DataFrame<TS, HETERO>::read (const char *file_name, io_format iof)  {
                                  "':' char to start column values");
 
         if (! ::strcmp(col_name, "INDEX"))  {
-            TSVec   vec;
+            IndexVecType    vec;
 
             vec.reserve(::atoi(value));
-            _IdxParserFunctor_<typename TSVec::value_type>()(vec, file);
-            load_index(std::forward<TSVec &&>(vec));
+            _IdxParserFunctor_<typename IndexVecType::value_type>()(vec, file);
+            load_index(std::forward<IndexVecType &&>(vec));
         }
         else  {
             if (! ::strcmp(type_str, "double"))  {
@@ -340,8 +340,8 @@ bool DataFrame<TS, HETERO>::read (const char *file_name, io_format iof)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename  HETERO>
-std::future<bool> DataFrame<TS, HETERO>::
+template<typename I, typename  H>
+std::future<bool> DataFrame<I, H>::
 read_async(const char *file_name, io_format iof) {
 
     return (std::async(std::launch::async,

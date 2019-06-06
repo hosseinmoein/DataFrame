@@ -12,10 +12,10 @@
 namespace hmdf
 {
 
-template<typename TS, typename  HETERO>
+template<typename I, typename  H>
 template<typename T>
-typename type_declare<HETERO, T>::type &
-DataFrame<TS, HETERO>::get_column (const char *name)  {
+typename type_declare<H, T>::type &
+DataFrame<I, H>::get_column (const char *name)  {
 
     auto iter = data_tb_.find (name);
 
@@ -35,19 +35,19 @@ DataFrame<TS, HETERO>::get_column (const char *name)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename  HETERO>
+template<typename I, typename  H>
 template<typename T>
-const typename type_declare<HETERO, T>::type &
-DataFrame<TS, HETERO>::get_column (const char *name) const  {
+const typename type_declare<H, T>::type &
+DataFrame<I, H>::get_column (const char *name) const  {
 
     return (const_cast<DataFrame *>(this)->get_column<T>(name));
 }
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename  HETERO>
+template<typename I, typename  H>
 template<size_t N, typename ... types>
-HeteroVector DataFrame<TS, HETERO>::
+HeteroVector DataFrame<I, H>::
 get_row(size_type row_num, const std::array<const char *, N> col_names) const {
 
     HeteroVector ret_vec;
@@ -64,7 +64,7 @@ get_row(size_type row_num, const std::array<const char *, N> col_names) const {
         throw BadRange(buffer);
     }
 
-    ret_vec.reserve<TimeStamp>(1);
+    ret_vec.reserve<IndexType>(1);
     ret_vec.push_back(indices_[row_num]);
 
     get_row_functor_<types ...> functor(ret_vec, row_num);
@@ -89,9 +89,9 @@ get_row(size_type row_num, const std::array<const char *, N> col_names) const {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename  HETERO>
+template<typename I, typename  H>
 template<typename T>
-std::vector<T> DataFrame<TS, HETERO>::
+std::vector<T> DataFrame<I, H>::
 get_col_unique_values(const char *name) const  {
 
     auto  iter = data_tb_.find (name);
@@ -144,9 +144,9 @@ get_col_unique_values(const char *name) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename  HETERO>
+template<typename I, typename  H>
 template<typename ... Ts>
-void DataFrame<TS, HETERO>::multi_visit (Ts ... args)  {
+void DataFrame<I, H>::multi_visit (Ts ... args)  {
 
     auto    args_tuple = std::tuple<Ts ...>(args ...);
     auto    fc = [this](auto &pa) mutable -> void {
@@ -167,9 +167,9 @@ void DataFrame<TS, HETERO>::multi_visit (Ts ... args)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename  HETERO>
+template<typename I, typename  H>
 template<typename T, typename V>
-V &DataFrame<TS, HETERO>::visit (const char *name, V &visitor)  {
+V &DataFrame<I, H>::visit (const char *name, V &visitor)  {
 
     const auto  iter = data_tb_.find (name);
 
@@ -197,9 +197,9 @@ V &DataFrame<TS, HETERO>::visit (const char *name, V &visitor)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename  HETERO>
+template<typename I, typename  H>
 template<typename T1, typename T2, typename V>
-V &DataFrame<TS, HETERO>::
+V &DataFrame<I, H>::
 visit (const char *name1, const char *name2, V &visitor)  {
 
     const auto  iter1 = data_tb_.find (name1);
@@ -242,9 +242,9 @@ visit (const char *name1, const char *name2, V &visitor)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename  HETERO>
+template<typename I, typename  H>
 template<typename T1, typename T2, typename T3, typename V>
-V &DataFrame<TS, HETERO>::
+V &DataFrame<I, H>::
 visit (const char *name1, const char *name2, const char *name3, V &visitor)  {
 
     const auto  iter1 = data_tb_.find (name1);
@@ -300,9 +300,9 @@ visit (const char *name1, const char *name2, const char *name3, V &visitor)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename  HETERO>
+template<typename I, typename  H>
 template<typename T1, typename T2, typename T3, typename T4, typename V>
-V &DataFrame<TS, HETERO>::
+V &DataFrame<I, H>::
 visit (const char *name1,
        const char *name2,
        const char *name3,
@@ -375,10 +375,10 @@ visit (const char *name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename  HETERO>
+template<typename I, typename  H>
 template<typename T1, typename T2, typename T3, typename T4, typename T5,
          typename V>
-V &DataFrame<TS, HETERO>::
+V &DataFrame<I, H>::
 visit (const char *name1,
        const char *name2,
        const char *name3,
@@ -465,9 +465,9 @@ visit (const char *name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename  HETERO>
+template<typename I, typename  H>
 template<typename T, typename V>
-V &DataFrame<TS, HETERO>::
+V &DataFrame<I, H>::
 single_act_visit (const char *name, V &visitor) const  {
 
     const auto  iter = data_tb_.find (name);
@@ -493,9 +493,9 @@ single_act_visit (const char *name, V &visitor) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename  HETERO>
+template<typename I, typename  H>
 template<typename T1, typename T2, typename V>
-V &DataFrame<TS, HETERO>::
+V &DataFrame<I, H>::
 single_act_visit (const char *name1, const char *name2, V &visitor)  {
 
     const auto  iter1 = data_tb_.find (name1);
@@ -534,10 +534,10 @@ single_act_visit (const char *name1, const char *name2, V &visitor)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename  HETERO>
+template<typename I, typename  H>
 template<typename ... types>
-DataFrame<TS, HETERO>
-DataFrame<TS, HETERO>::get_data_by_idx (Index2D<TS> range) const  {
+DataFrame<I, H>
+DataFrame<I, H>::get_data_by_idx (Index2D<IndexType> range) const  {
 
     const auto  &lower =
         std::lower_bound (indices_.begin(), indices_.end(), range.begin);
@@ -569,23 +569,23 @@ DataFrame<TS, HETERO>::get_data_by_idx (Index2D<TS> range) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename  HETERO>
+template<typename I, typename  H>
 template<typename ... types>
-DataFrameView<TS>
-DataFrame<TS, HETERO>::get_view_by_idx (Index2D<TS> range)  {
+DataFrameView<I>
+DataFrame<I, H>::get_view_by_idx (Index2D<IndexType> range)  {
 
-    static_assert(std::is_base_of<HeteroVector, HETERO>::value,
+    static_assert(std::is_base_of<HeteroVector, H>::value,
                   "Only a StdDataFrame can call get_view_by_idx()");
 
     const auto          &lower =
         std::lower_bound (indices_.begin(), indices_.end(), range.begin);
     const auto          &upper =
         std::upper_bound (indices_.begin(), indices_.end(), range.end);
-    DataFrameView<TS>   dfv;
+    DataFrameView<IndexType>    dfv;
 
     if (lower != indices_.end())  {
         dfv.indices_ =
-            typename DataFrameView<TS>::TSVec(&*lower, &*upper);
+            typename DataFrameView<IndexType>::IndexVecType(&*lower, &*upper);
 
         const size_type b_dist = std::distance(indices_.begin(), lower);
         const size_type e_dist = std::distance(indices_.begin(),
@@ -608,10 +608,10 @@ DataFrame<TS, HETERO>::get_view_by_idx (Index2D<TS> range)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename  HETERO>
+template<typename I, typename  H>
 template<typename ... types>
-DataFrame<TS, HETERO>
-DataFrame<TS, HETERO>::get_data_by_loc (Index2D<int> range) const  {
+DataFrame<I, H>
+DataFrame<I, H>::get_data_by_loc (Index2D<int> range) const  {
 
     if (range.begin < 0)
         range.begin = static_cast<int>(indices_.size()) + range.begin;
@@ -649,12 +649,12 @@ DataFrame<TS, HETERO>::get_data_by_loc (Index2D<int> range) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename  HETERO>
+template<typename I, typename  H>
 template<typename ... types>
-DataFrameView<TS>
-DataFrame<TS, HETERO>::get_view_by_loc (Index2D<int> range)  {
+DataFrameView<I>
+DataFrame<I, H>::get_view_by_loc (Index2D<int> range)  {
 
-    static_assert(std::is_base_of<HeteroVector, HETERO>::value,
+    static_assert(std::is_base_of<HeteroVector, H>::value,
                   "Only a StdDataFrame can call get_view_by_loc()");
 
     if (range.begin < 0)
@@ -664,10 +664,10 @@ DataFrame<TS, HETERO>::get_view_by_loc (Index2D<int> range)  {
 
     if (range.end <= static_cast<int>(indices_.size()) &&
         range.begin <= range.end && range.begin >= 0)  {
-        DataFrameView<TS>   dfv;
+        DataFrameView<IndexType>    dfv;
 
         dfv.indices_ =
-            typename DataFrameView<TS>::TSVec(
+            typename DataFrameView<IndexType>::IndexVecType(
                 &*(indices_.begin() + range.begin),
                 &*(indices_.begin() + range.end));
         for (auto &iter : data_tb_)  {

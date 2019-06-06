@@ -133,7 +133,7 @@ int main(int argc, char *argv[]) {
         std::cout << iter << " ";
     std::cout << std::endl;
 
-    df.sort<MyDataFrame::TimeStamp, int, double, std::string>();
+    df.sort<MyDataFrame::IndexType, int, double, std::string>();
     std::cout << "Printing after sorting the index ..." << std::endl;
     dvec = df.get_column<double> ("dbl_col");
     dvec2 = df.get_column<double> ("dbl_col_2");
@@ -324,7 +324,7 @@ int main(int argc, char *argv[]) {
               double,
               std::string>(std::cout);
 
-    const MyDataFrame::TimeStamp    interval = 4;
+    const MyDataFrame::IndexType    interval = 4;
     std::future<MyDataFrame>        b_fut =
         dfx.bucketize_async<GroupbySum,
                             int,
@@ -1805,7 +1805,7 @@ int main(int argc, char *argv[]) {
         auto                        row =
             df.get_row<6, int, double, std::string>(2, columns);
 
-        assert(row.at<MyDataFrame::TimeStamp>(0) == 123452);
+        assert(row.at<MyDataFrame::IndexType>(0) == 123452);
         assert(row.at<double>(0) == 3.0);
         assert(row.at<double>(1) == 10.0);
         assert(row.at<double>(2) == 500.5);

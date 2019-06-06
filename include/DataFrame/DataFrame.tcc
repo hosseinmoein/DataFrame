@@ -13,9 +13,9 @@
 namespace hmdf
 {
 
-template<typename TS, typename HETERO>
+template<typename I, typename H>
 template<typename T>
-inline constexpr T DataFrame<TS, HETERO>::_get_nan()  {
+inline constexpr T DataFrame<I, H>::_get_nan()  {
 
     if (std::numeric_limits<T>::has_quiet_NaN)
         return (std::numeric_limits<T>::quiet_NaN());
@@ -24,9 +24,9 @@ inline constexpr T DataFrame<TS, HETERO>::_get_nan()  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename HETERO>
+template<typename I, typename H>
 template<typename T>
-inline constexpr bool DataFrame<TS, HETERO>::_is_nan(const T &val)  {
+inline constexpr bool DataFrame<I, H>::_is_nan(const T &val)  {
 
     if (std::numeric_limits<T>::has_quiet_NaN)
         return (is_nan__(val));
@@ -35,9 +35,9 @@ inline constexpr bool DataFrame<TS, HETERO>::_is_nan(const T &val)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename HETERO>
+template<typename I, typename H>
 template<typename T>
-void DataFrame<TS, HETERO>::
+void DataFrame<I, H>::
 fill_missing_value_(std::vector<T> &vec,
                     const T &value,
                     int limit,
@@ -64,9 +64,9 @@ fill_missing_value_(std::vector<T> &vec,
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename HETERO>
+template<typename I, typename H>
 template<typename T>
-void DataFrame<TS, HETERO>::
+void DataFrame<I, H>::
 fill_missing_ffill_(std::vector<T> &vec, int limit, size_type col_num)  {
 
     const size_type vec_size = vec.size();
@@ -99,9 +99,9 @@ fill_missing_ffill_(std::vector<T> &vec, int limit, size_type col_num)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename HETERO>
+template<typename I, typename H>
 template<typename T>
-void DataFrame<TS, HETERO>::
+void DataFrame<I, H>::
 fill_missing_bfill_(std::vector<T> &vec, int limit)  {
 
     const long  vec_size = static_cast<long>(vec.size());
@@ -124,12 +124,12 @@ fill_missing_bfill_(std::vector<T> &vec, int limit)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename HETERO>
+template<typename I, typename H>
 template<typename T,
          typename std::enable_if<! std::is_arithmetic<T>::value ||
-                                 ! std::is_arithmetic<TS>::value>::type*>
-void DataFrame<TS, HETERO>::
-fill_missing_linter_(std::vector<T> &, const TSVec &, int)  {
+                                 ! std::is_arithmetic<I>::value>::type*>
+void DataFrame<I, H>::
+fill_missing_linter_(std::vector<T> &, const IndexVecType &, int)  {
 
     throw NotFeasible("fill_missing_linter_(): ERROR: Interpolation is "
                       "not feasible on non-arithmetic types");
@@ -137,23 +137,25 @@ fill_missing_linter_(std::vector<T> &, const TSVec &, int)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename HETERO>
+template<typename I, typename H>
 template<typename T,
          typename std::enable_if<std::is_arithmetic<T>::value &&
-                                 std::is_arithmetic<TS>::value>::type*>
-void DataFrame<TS, HETERO>::
-fill_missing_linter_(std::vector<T> &vec, const TSVec &index, int limit)  {
+                                 std::is_arithmetic<I>::value>::type*>
+void DataFrame<I, H>::
+fill_missing_linter_(std::vector<T> &vec,
+                     const IndexVecType &index,
+                     int limit)  {
 
     const long  vec_size = static_cast<long>(vec.size());
 
     if (vec_size < 3)  return;
 
-    int         count = 0;
-    T           *y1 = &(vec[0]);
-    T           *y2 = &(vec[2]);
-    const TS    *x = &(index[1]);
-    const TS    *x1 = &(index[0]);
-    const TS    *x2 = &(index[2]);
+    int             count = 0;
+    T               *y1 = &(vec[0]);
+    T               *y2 = &(vec[2]);
+    const IndexType *x = &(index[1]);
+    const IndexType *x1 = &(index[0]);
+    const IndexType *x2 = &(index[2]);
 
     for (long i = 1; i < vec_size - 1; ++i)  {
         if (limit >= 0 && count >= limit)  break;
@@ -198,9 +200,9 @@ fill_missing_linter_(std::vector<T> &vec, const TSVec &index, int limit)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename HETERO>
+template<typename I, typename H>
 template<typename T, size_t N>
-void DataFrame<TS, HETERO>::
+void DataFrame<I, H>::
 fill_missing(const std::array<const char *, N> col_names,
              fill_policy fp,
              const std::array<T, N> values,
@@ -295,9 +297,9 @@ fill_missing(const std::array<const char *, N> col_names,
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename HETERO>
+template<typename I, typename H>
 template<typename T>
-void DataFrame<TS, HETERO>::
+void DataFrame<I, H>::
 drop_missing_rows_(T &vec,
                    const DropRowMap missing_row_map,
                    drop_policy policy,
@@ -332,9 +334,9 @@ drop_missing_rows_(T &vec,
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename HETERO>
+template<typename I, typename H>
 template<typename ... types>
-void DataFrame<TS, HETERO>::
+void DataFrame<I, H>::
 drop_missing(drop_policy policy, size_type threshold)  {
 
     DropRowMap                      missing_row_map;
@@ -427,9 +429,9 @@ _replace_vector_vals_(V &data_vec,
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename HETERO>
+template<typename I, typename H>
 template<typename T, size_t N>
-typename DataFrame<TS, HETERO>::size_type DataFrame<TS, HETERO>::
+typename DataFrame<I, H>::size_type DataFrame<I, H>::
 replace(const char *col_name,
         const std::array<T, N> old_values,
         const std::array<T, N> new_values,
@@ -438,11 +440,8 @@ replace(const char *col_name,
     size_type   count = 0;
 
     if (! strcmp("INDEX", col_name))  {
-        _replace_vector_vals_<TSVec, T, N>(indices_,
-                                           old_values,
-                                           new_values,
-                                           count,
-                                           limit);
+        _replace_vector_vals_<IndexVecType, T, N>
+            (indices_, old_values, new_values, count, limit);
     }
     else  {
         const auto  citer = data_tb_.find (col_name);
@@ -471,9 +470,9 @@ replace(const char *col_name,
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename HETERO>
+template<typename I, typename H>
 template<typename T, typename F>
-void DataFrame<TS, HETERO>::
+void DataFrame<I, H>::
 replace(const char *col_name, F &functor)  {
 
     const auto  citer = data_tb_.find (col_name);
@@ -499,9 +498,9 @@ replace(const char *col_name, F &functor)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename HETERO>
+template<typename I, typename H>
 template<typename T, size_t N>
-std::future<typename DataFrame<TS, HETERO>::size_type> DataFrame<TS, HETERO>::
+std::future<typename DataFrame<I, H>::size_type> DataFrame<I, H>::
 replace_async(const char *col_name,
               const std::array<T, N> old_values,
               const std::array<T, N> new_values,
@@ -518,9 +517,9 @@ replace_async(const char *col_name,
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename HETERO>
+template<typename I, typename H>
 template<typename T, typename F>
-std::future<void> DataFrame<TS, HETERO>::
+std::future<void> DataFrame<I, H>::
 replace_async(const char *col_name, F &functor)  {
 
     return (std::async(std::launch::async,
@@ -532,9 +531,9 @@ replace_async(const char *col_name, F &functor)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename HETERO>
+template<typename I, typename H>
 template<typename ...types>
-void DataFrame<TS, HETERO>::make_consistent ()  {
+void DataFrame<I, H>::make_consistent ()  {
 
     const size_type                 idx_s = indices_.size();
     consistent_functor_<types ...>  functor (idx_s);
@@ -545,14 +544,14 @@ void DataFrame<TS, HETERO>::make_consistent ()  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename HETERO>
+template<typename I, typename H>
 template<typename T, typename ...types>
-void DataFrame<TS, HETERO>::sort(const char *by_name)  {
+void DataFrame<I, H>::sort(const char *by_name)  {
 
     make_consistent<types ...>();
 
     if (by_name == nullptr)  {
-        sort_functor_<TimeStamp, types ...> functor (indices_);
+        sort_functor_<IndexType, types ...> functor (indices_);
 
         for (auto &iter : data_)
             iter.change(functor);
@@ -588,9 +587,9 @@ void DataFrame<TS, HETERO>::sort(const char *by_name)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename HETERO>
+template<typename I, typename H>
 template<typename T, typename ...types>
-std::future<void> DataFrame<TS, HETERO>::sort_async(const char *by_name)  {
+std::future<void> DataFrame<I, H>::sort_async(const char *by_name)  {
 
     return (std::async(std::launch::async,
                        &DataFrame::sort<T, types ...>,
@@ -599,12 +598,12 @@ std::future<void> DataFrame<TS, HETERO>::sort_async(const char *by_name)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename HETERO>
+template<typename I, typename H>
 template<typename F, typename T, typename ...types>
-DataFrame<TS, HETERO>
-DataFrame<TS, HETERO>:: groupby (F &&func,
-                                 const char *gb_col_name,
-                                 sort_state already_sorted) const  {
+DataFrame<I, H>
+DataFrame<I, H>:: groupby (F &&func,
+                           const char *gb_col_name,
+                           sort_state already_sorted) const  {
 
     DataFrame   tmp_df = *this;
 
@@ -664,7 +663,7 @@ DataFrame<TS, HETERO>:: groupby (F &&func,
 
         for (size_type i = 0; i < vec_size; ++i)  {
             if (gb_vec[i] != gb_vec[marker])  {
-                groupby_functor_<F, TimeStamp>  ts_functor(
+                groupby_functor_<F, IndexType>  ts_functor(
                                             "INDEX",
                                             marker,
                                             i,
@@ -698,7 +697,7 @@ DataFrame<TS, HETERO>:: groupby (F &&func,
         }
 
         if (marker < vec_size)  {
-            groupby_functor_<F, TimeStamp>  ts_functor(
+            groupby_functor_<F, IndexType>  ts_functor(
                                         "INDEX",
                                         vec_size - 1,
                                         vec_size,
@@ -733,12 +732,12 @@ DataFrame<TS, HETERO>:: groupby (F &&func,
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename HETERO>
+template<typename I, typename H>
 template<typename F, typename T, typename ...types>
-std::future<DataFrame<TS, HETERO>>
-DataFrame<TS, HETERO>::groupby_async (F &&func,
-                                      const char *gb_col_name,
-                                      sort_state already_sorted) const  {
+std::future<DataFrame<I, H>>
+DataFrame<I, H>::groupby_async (F &&func,
+                                const char *gb_col_name,
+                                sort_state already_sorted) const  {
 
     return (std::async(std::launch::async,
                        &DataFrame::groupby<F, T, types ...>,
@@ -750,10 +749,10 @@ DataFrame<TS, HETERO>::groupby_async (F &&func,
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename HETERO>
+template<typename I, typename H>
 template<typename T>
 StdDataFrame<T>
-DataFrame<TS, HETERO>::value_counts (const char *col_name) const  {
+DataFrame<I, H>::value_counts (const char *col_name) const  {
 
     auto iter = data_tb_.find (col_name);
 
@@ -823,11 +822,11 @@ DataFrame<TS, HETERO>::value_counts (const char *col_name) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename HETERO>
+template<typename I, typename H>
 template<typename F, typename ...types>
-DataFrame<TS, HETERO>
-DataFrame<TS, HETERO>::
-bucketize (F &&func, const TimeStamp &bucket_interval) const  {
+DataFrame<I, H>
+DataFrame<I, H>::
+bucketize (F &&func, const IndexType &bucket_interval) const  {
 
     DataFrame   df;
 
@@ -853,11 +852,11 @@ bucketize (F &&func, const TimeStamp &bucket_interval) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename HETERO>
+template<typename I, typename H>
 template<typename F, typename ...types>
-std::future<DataFrame<TS, HETERO>>
-DataFrame<TS, HETERO>::
-bucketize_async (F &&func, const TimeStamp &bucket_interval) const  {
+std::future<DataFrame<I, H>>
+DataFrame<I, H>::
+bucketize_async (F &&func, const IndexType &bucket_interval) const  {
 
     return (std::async(std::launch::async,
                        &DataFrame::bucketize<F, types ...>,
@@ -868,10 +867,10 @@ bucketize_async (F &&func, const TimeStamp &bucket_interval) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename HETERO>
+template<typename I, typename H>
 template<typename T, typename V>
-DataFrame<TS, HETERO> DataFrame<TS, HETERO>::
-transpose(TSVec &&indices,
+DataFrame<I, H> DataFrame<I, H>::
+transpose(IndexVecType &&indices,
           const V &current_col_order,
           const V &new_col_names) const  {
 
@@ -938,28 +937,28 @@ inline static S &_write_df_index_(S &o, const DateTime &value)  {
     return (o << value.time() << '.' << value.nanosec());
 }
 
-template<typename TS, typename HETERO>
+template<typename I, typename H>
 template<typename S, typename ...types>
-bool DataFrame<TS, HETERO>::
+bool DataFrame<I, H>::
 write (S &o, bool values_only, io_format iof) const  {
 
     if (! values_only)  {
         o << "INDEX:" << indices_.size() << ':';
-        if (typeid(TS) == typeid(double))
+        if (typeid(IndexType) == typeid(double))
             o << "<double>:";
-        else if (typeid(TS) == typeid(int))
+        else if (typeid(IndexType) == typeid(int))
             o << "<int>:";
-        else if (typeid(TS) == typeid(unsigned int))
+        else if (typeid(IndexType) == typeid(unsigned int))
             o << "<uint>:";
-        else if (typeid(TS) == typeid(long))
+        else if (typeid(IndexType) == typeid(long))
             o << "<long>:";
-        else if (typeid(TS) == typeid(unsigned long))
+        else if (typeid(IndexType) == typeid(unsigned long))
             o << "<ulong>:";
-        else if (typeid(TS) == typeid(std::string))
+        else if (typeid(IndexType) == typeid(std::string))
             o << "<string>:";
-        else if (typeid(TS) == typeid(bool))
+        else if (typeid(IndexType) == typeid(bool))
             o << "<bool>:";
-        else if (typeid(TS) == typeid(DateTime))
+        else if (typeid(IndexType) == typeid(DateTime))
             o << "<DateTime>:";
         else
             o << "<N/A>:";
@@ -981,9 +980,9 @@ write (S &o, bool values_only, io_format iof) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename HETERO>
+template<typename I, typename H>
 template<typename S, typename ...Ts>
-std::future<bool> DataFrame<TS, HETERO>::
+std::future<bool> DataFrame<I, H>::
 write_async (S &o, bool values_only, io_format iof) const  {
 
     return (std::async(std::launch::async,

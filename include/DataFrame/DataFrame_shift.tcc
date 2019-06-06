@@ -12,11 +12,11 @@
 namespace hmdf
 {
 
-template<typename TS, typename HETERO>
+template<typename I, typename H>
 template<typename ... types>
-void DataFrame<TS, HETERO>::self_shift(size_type periods, shift_policy sp)  {
+void DataFrame<I, H>::self_shift(size_type periods, shift_policy sp)  {
 
-    static_assert(std::is_base_of<HeteroVector, HETERO>::value,
+    static_assert(std::is_base_of<HeteroVector, DataVec>::value,
                   "Only a StdDataFrame can call self_shift()");
 
     if (periods > 0)  {
@@ -50,15 +50,15 @@ void DataFrame<TS, HETERO>::self_shift(size_type periods, shift_policy sp)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename HETERO>
+template<typename I, typename H>
 template<typename ... types>
-StdDataFrame<TS> DataFrame<TS, HETERO>::
+StdDataFrame<I> DataFrame<I, H>::
 shift(size_type periods, shift_policy sp) const  {
 
-    static_assert(std::is_base_of<HeteroVector, HETERO>::value,
+    static_assert(std::is_base_of<HeteroVector, DataVec>::value,
                   "Only a StdDataFrame can call shift()");
 
-    StdDataFrame<TS>    slug = *this;
+    StdDataFrame<IndexType> slug = *this;
 
     slug.template self_shift<types ...>(periods, sp);
     return (slug);
@@ -66,11 +66,11 @@ shift(size_type periods, shift_policy sp) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename HETERO>
+template<typename I, typename DataVec>
 template<typename ... types>
-void DataFrame<TS, HETERO>::self_rotate(size_type periods, shift_policy sp)  {
+void DataFrame<I, DataVec>::self_rotate(size_type periods, shift_policy sp)  {
 
-    static_assert(std::is_base_of<HeteroVector, HETERO>::value,
+    static_assert(std::is_base_of<HeteroVector, DataVec>::value,
                   "Only a StdDataFrame can call self_rotate()");
 
     if (periods > 0)  {
@@ -104,15 +104,15 @@ void DataFrame<TS, HETERO>::self_rotate(size_type periods, shift_policy sp)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename HETERO>
+template<typename I, typename H>
 template<typename ... types>
-StdDataFrame<TS> DataFrame<TS, HETERO>::
+StdDataFrame<I> DataFrame<I, H>::
 rotate(size_type periods, shift_policy sp) const  {
 
-    static_assert(std::is_base_of<HeteroVector, HETERO>::value,
+    static_assert(std::is_base_of<HeteroVector, DataVec>::value,
                   "Only a StdDataFrame can call rotate()");
 
-    StdDataFrame<TS>    slug = *this;
+    StdDataFrame<IndexType> slug = *this;
 
     slug.template self_rotate<types ...>(periods, sp);
     return (slug);
@@ -120,9 +120,9 @@ rotate(size_type periods, shift_policy sp) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename HETERO>
+template<typename I, typename H>
 template<typename V>
-void DataFrame<TS, HETERO>::shift_right_(V &vec, size_type n)  {
+void DataFrame<I, H>::shift_right_(V &vec, size_type n)  {
 
     using value_type =
         typename std::remove_reference<decltype(vec)>::type::value_type;
@@ -140,9 +140,9 @@ void DataFrame<TS, HETERO>::shift_right_(V &vec, size_type n)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename HETERO>
+template<typename I, typename H>
 template<typename V>
-void DataFrame<TS, HETERO>::shift_left_(V &vec, size_type n)  {
+void DataFrame<I, H>::shift_left_(V &vec, size_type n)  {
 
     using value_type =
         typename std::remove_reference<decltype(vec)>::type::value_type;
@@ -160,9 +160,9 @@ void DataFrame<TS, HETERO>::shift_left_(V &vec, size_type n)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename HETERO>
+template<typename I, typename H>
 template<typename V>
-void DataFrame<TS, HETERO>::rotate_right_(V &vec, size_type n)  {
+void DataFrame<I, H>::rotate_right_(V &vec, size_type n)  {
 
     // There is no checking the value of n
     std::rotate(vec.rbegin(), vec.rbegin() + n, vec.rend());
@@ -171,9 +171,9 @@ void DataFrame<TS, HETERO>::rotate_right_(V &vec, size_type n)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename HETERO>
+template<typename I, typename H>
 template<typename V>
-void DataFrame<TS, HETERO>::rotate_left_(V &vec, size_type n)  {
+void DataFrame<I, H>::rotate_left_(V &vec, size_type n)  {
 
     // There is no checking the value of n
     std::rotate(vec.begin(), vec.begin() + n, vec.end());

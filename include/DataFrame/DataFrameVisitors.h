@@ -27,7 +27,7 @@ enum class return_policy : unsigned char  {
 // ----------------------------------------------------------------------------
 
 template<typename T,
-         typename TS_T = unsigned long,
+         typename I = unsigned long,
          typename =
              typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
 struct MeanVisitor {
@@ -41,7 +41,7 @@ public:
 
     using value_type = T;
 
-    inline void operator() (const TS_T &, const T &val)  {
+    inline void operator() (const I &, const T &val)  {
 
         if (is_nan__(val))  return;
 
@@ -58,7 +58,7 @@ public:
 // ----------------------------------------------------------------------------
 
 template<typename T,
-         typename TS_T = unsigned long,
+         typename I = unsigned long,
          typename =
              typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
 struct SumVisitor {
@@ -71,7 +71,7 @@ public:
 
     using value_type = T;
 
-    inline void operator() (const TS_T &, const T &val)  {
+    inline void operator() (const I &, const T &val)  {
 
         if (is_nan__(val))  return;
 
@@ -84,20 +84,20 @@ public:
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename TS_T = unsigned long>
+template<typename T, typename I = unsigned long>
 struct MaxVisitor {
 
 private:
 
     T       max_ { };
-    TS_T    index_ { };
+    I       index_ { };
     bool    is_first { true };
 
 public:
 
     using value_type = T;
 
-    inline void operator() (const TS_T &idx, const T &val)  {
+    inline void operator() (const I &idx, const T &val)  {
 
         if (is_nan__(val))  return;
 
@@ -110,25 +110,25 @@ public:
     inline void pre ()  { is_first = true; }
     inline void post ()  {  }
     inline T get_value () const  { return (max_); }
-    inline TS_T get_index () const  { return (index_); }
+    inline I get_index () const  { return (index_); }
 };
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename TS_T = unsigned long>
+template<typename T, typename I = unsigned long>
 struct MinVisitor {
 
 private:
 
     T       min_ { };
-    TS_T    index_ { };
+    I       index_ { };
     bool    is_first { true };
 
 public:
 
     using value_type = T;
 
-    inline void operator() (const TS_T &idx, const T &val)  {
+    inline void operator() (const I &idx, const T &val)  {
 
         if (is_nan__(val))  return;
 
@@ -141,7 +141,7 @@ public:
     inline void pre ()  { is_first = true; }
     inline void post ()  {  }
     inline T get_value () const  { return (min_); }
-    inline TS_T get_index () const  { return (index_); }
+    inline I get_index () const  { return (index_); }
 };
 
 // ----------------------------------------------------------------------------
@@ -154,14 +154,14 @@ public:
 // instaed of std::array. I think the advantage of using std::array is bigger
 // than O(MlogM) vs. O(N*M) for majority of usage.
 //
-template<std::size_t N, typename T, typename TS_T = unsigned long>
+template<std::size_t N, typename T, typename I = unsigned long>
 struct  NLargestVisitor {
 
 public:
 
     struct  DataItem  {
-        T       value { };
-        TS_T    index { };
+        T   value { };
+        I   index { };
     };
 
     using value_type = DataItem;
@@ -175,7 +175,7 @@ private:
 
 public:
 
-    inline void operator() (const TS_T &idx, const T &val)  {
+    inline void operator() (const I &idx, const T &val)  {
 
         if (is_nan__(val))  return;
 
@@ -224,14 +224,14 @@ public:
 // instaed of std::array. I think the advantage of using std::array is bigger
 // than O(MlogM) vs. O(N*M) for majority of usage.
 //
-template<std::size_t N, typename T, typename TS_T = unsigned long>
+template<std::size_t N, typename T, typename I = unsigned long>
 struct  NSmallestVisitor {
 
 public:
 
     struct  DataItem  {
-        T       value { };
-        TS_T    index { };
+        T   value { };
+        I   index { };
     };
 
     using value_type = DataItem;
@@ -245,7 +245,7 @@ private:
 
 public:
 
-    inline void operator() (const TS_T &idx, const T &val)  {
+    inline void operator() (const I &idx, const T &val)  {
 
         if (is_nan__(val))  return;
 
@@ -287,7 +287,7 @@ public:
 // ----------------------------------------------------------------------------
 
 template<typename T,
-         typename TS_T = unsigned long,
+         typename I = unsigned long,
          typename =
              typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
 struct CovVisitor {
@@ -307,7 +307,7 @@ public:
     using value_type = T;
 
     explicit CovVisitor (bool bias = true) : b_ (bias) {  }
-    inline void operator() (const TS_T &, const T &val1, const T &val2)  {
+    inline void operator() (const I &, const T &val1, const T &val2)  {
 
         if (is_nan__(val1) || is_nan__(val2))  return;
 
@@ -348,21 +348,21 @@ public:
 // ----------------------------------------------------------------------------
 
 template<typename T,
-         typename TS_T = unsigned long,
+         typename I = unsigned long,
          typename =
              typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
 struct VarVisitor  {
 
 private:
 
-    CovVisitor<T, TS_T> cov_;
+    CovVisitor<T, I>    cov_;
 
 public:
 
     using value_type = T;
 
     explicit VarVisitor (bool bias = true) : cov_ (bias)  {   }
-    inline void operator() (const TS_T &idx, const T &val)  {
+    inline void operator() (const I &idx, const T &val)  {
 
         cov_ (idx, val, val);
     }
@@ -374,14 +374,14 @@ public:
 // ----------------------------------------------------------------------------
 
 template<typename T,
-         typename TS_T = unsigned long,
+         typename I = unsigned long,
          typename =
              typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
 struct BetaVisitor  {
 
 private:
 
-    CovVisitor<T, TS_T> cov_;
+    CovVisitor<T, I>    cov_;
 
 public:
 
@@ -389,7 +389,7 @@ public:
 
     explicit BetaVisitor (bool bias = true) : cov_ (bias)  {   }
     inline void
-    operator() (const TS_T &idx, const T &val1, const T &benchmark)  {
+    operator() (const I &idx, const T &val1, const T &benchmark)  {
 
         cov_ (idx, val1, benchmark);
     }
@@ -406,21 +406,21 @@ public:
 // ----------------------------------------------------------------------------
 
 template<typename T,
-         typename TS_T = unsigned long,
+         typename I = unsigned long,
          typename =
              typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
 struct StdVisitor   {
 
 private:
 
-    VarVisitor<T, TS_T> var_;
+    VarVisitor<T, I>    var_;
 
 public:
 
     using value_type = T;
 
     explicit StdVisitor (bool bias = true) : var_ (bias)  {   }
-    inline void operator() (const TS_T &idx, const T &val)  {
+    inline void operator() (const I &idx, const T &val)  {
 
         var_ (idx, val);
     }
@@ -432,21 +432,21 @@ public:
 // ----------------------------------------------------------------------------
 
 template<typename T,
-         typename TS_T = unsigned long,
+         typename I = unsigned long,
          typename =
              typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
 struct TrackingErrorVisitor {
 
 private:
 
-    StdVisitor<T, TS_T> std_;
+    StdVisitor<T, I>    std_;
 
 public:
 
     using value_type = T;
 
     explicit TrackingErrorVisitor (bool bias = true) : std_ (bias) {  }
-    inline void operator() (const TS_T & idx, const T &val1, const T &val2)  {
+    inline void operator() (const I & idx, const T &val1, const T &val2)  {
 
         std_ (idx, val1 - val2);
     }
@@ -458,21 +458,21 @@ public:
 // ----------------------------------------------------------------------------
 
 template<typename T,
-         typename TS_T = unsigned long,
+         typename I = unsigned long,
          typename =
              typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
 struct CorrVisitor  {
 
 private:
 
-    CovVisitor<T, TS_T> cov_;
+    CovVisitor<T, I>    cov_;
 
 public:
 
     using value_type = T;
 
     explicit CorrVisitor (bool bias = true) : cov_ (bias)  {   }
-    inline void operator() (const TS_T &idx, const T &val1, const T &val2)  {
+    inline void operator() (const I &idx, const T &val1, const T &val2)  {
 
         cov_ (idx, val1, val2);
     }
@@ -492,7 +492,7 @@ public:
 //
 
 template<typename T,
-         typename TS_T = unsigned long,
+         typename I = unsigned long,
          typename =
              typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
 struct AutoCorrVisitor  {
@@ -508,11 +508,11 @@ private:
                    std::size_t lag,
                    const std::vector<T> &column) const  {
 
-        CorrVisitor<T, TS_T>    corr {  };
+        CorrVisitor<T, I>   corr {  };
 
         corr.pre();
         for (std::size_t i = 0; i < col_len - lag; ++i)
-            corr (TS_T(), column[i], column[i + lag]);
+            corr (I(), column[i], column[i + lag]);
 
         return (CorrResult(lag, corr.get_value()));
     }
@@ -523,7 +523,7 @@ public:
 
     AutoCorrVisitor () = default;
     inline void
-    operator() (const std::vector<TS_T> &idx, const std::vector<T> &column)  {
+    operator() (const std::vector<I> &idx, const std::vector<T> &column)  {
 
         const std::size_t   col_len = column.size();
 
@@ -570,7 +570,7 @@ public:
 // ----------------------------------------------------------------------------
 
 template<typename T,
-         typename TS_T = unsigned long,
+         typename I = unsigned long,
          typename =
              typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
 struct ReturnVisitor  {
@@ -586,7 +586,7 @@ public:
 
     inline ReturnVisitor (return_policy rp) : ret_p_(rp)  {   }
     inline void
-    operator() (const std::vector<TS_T> &idx, const std::vector<T> &column)  {
+    operator() (const std::vector<I> &idx, const std::vector<T> &column)  {
 
         const std::size_t   col_len = column.size();
 
@@ -631,7 +631,7 @@ public:
 // ----------------------------------------------------------------------------
 
 template<typename T,
-         typename TS_T = unsigned long,
+         typename I = unsigned long,
          typename =
              typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
 struct KthValueVisitor  {
@@ -693,7 +693,7 @@ public:
 
     inline KthValueVisitor (std::size_t ke) : kth_element_(ke)  {   }
     inline void
-    operator() (const std::vector<TS_T> &idx, const std::vector<T> &column)  {
+    operator() (const std::vector<I> &idx, const std::vector<T> &column)  {
 
         result_ =
             find_kth_element_ (column.begin(), column.end(), kth_element_);
@@ -706,7 +706,7 @@ public:
 // ----------------------------------------------------------------------------
 
 template<typename T,
-         typename TS_T = unsigned long,
+         typename I = unsigned long,
          typename =
              typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
 struct MedianVisitor  {
@@ -721,17 +721,17 @@ public:
 
     MedianVisitor () = default;
     inline void
-    operator() (const std::vector<TS_T> &idx, const std::vector<T> &column)  {
+    operator() (const std::vector<I> &idx, const std::vector<T> &column)  {
 
-        const std::size_t           vec_size = column.size();
-        KthValueVisitor<T, TS_T>    kv_visitor (vec_size >> 1);
+        const std::size_t       vec_size = column.size();
+        KthValueVisitor<T, I>   kv_visitor (vec_size >> 1);
 
 
         kv_visitor.pre();
         kv_visitor(idx, column);
         result_ = kv_visitor.get_value();
         if (! (vec_size & 0x0001))  { // even
-            KthValueVisitor<T, TS_T>    kv_visitor2 ((vec_size >> 1) + 1);
+            KthValueVisitor<T, I>   kv_visitor2 ((vec_size >> 1) + 1);
 
             kv_visitor2.pre();
             kv_visitor2(idx, column);
@@ -746,7 +746,7 @@ public:
 // ----------------------------------------------------------------------------
 
 template<typename T,
-         typename TS_T = unsigned long,
+         typename I = unsigned long,
          typename =
              typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
 struct DotProdVisitor  {
@@ -759,7 +759,7 @@ public:
 
     using value_type = T;
 
-    inline void operator() (const TS_T &idx, const T &val1, const T &val2)  {
+    inline void operator() (const I &idx, const T &val1, const T &val2)  {
 
         dot_prod_ += (val1 * val2);
     }
@@ -773,7 +773,7 @@ public:
 // One-pass stats calculation.
 //
 template<typename T,
-         typename TS_T = unsigned long,
+         typename I = unsigned long,
          typename =
              typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
 struct StatsVisitor  {
@@ -790,7 +790,7 @@ public:
 
     using value_type = T;
 
-    inline void operator() (const TS_T &idx, const T &val)  {
+    inline void operator() (const I &idx, const T &val)  {
 
         if (is_nan__(val))  return;
 
@@ -835,7 +835,7 @@ public:
 // One pass simple linear regression
 //
 template<typename T,
-         typename TS_T = unsigned long,
+         typename I = unsigned long,
          typename =
              typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
 struct SLRegressionVisitor  {
@@ -846,15 +846,15 @@ private:
 
     // Sum of the product of the difference between x and its mean and
     // the difference between y and its mean.
-    T                       s_xy_ { T(0) };
-    StatsVisitor<T, TS_T>   x_stats_;
-    StatsVisitor<T, TS_T>   y_stats_;
+    T                   s_xy_ { T(0) };
+    StatsVisitor<T, I>  x_stats_;
+    StatsVisitor<T, I>  y_stats_;
 
 public:
 
     using value_type = T;
 
-    inline void operator() (const TS_T &idx, const T &x, const T &y)  {
+    inline void operator() (const I &idx, const T &x, const T &y)  {
 
         if (is_nan__(x) || is_nan__(y))  return;
 

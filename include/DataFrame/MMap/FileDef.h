@@ -59,12 +59,8 @@ public:
     get_file_name () const noexcept  { return (file_name_.c_str ()); }
 
     FileDef () = delete;
-    inline FileDef (const char *file_name,
-                    OPEN_MODE om,
-                    DEVICE_TYPE dt) noexcept
-        : open_mode_ (om),
-          device_type_ (dt),
-          file_name_ (file_name)  {   }
+    FileDef(const char *file_name, OPEN_MODE om, DEVICE_TYPE dt) noexcept
+        : open_mode_ (om), device_type_ (dt), file_name_ (file_name)  {   }
 
 protected:
 
@@ -94,7 +90,7 @@ protected:
         return (false);
     }
 
-    inline OPEN_MODE _get_open_mode () const noexcept  { return (open_mode_); }
+    inline OPEN_MODE _get_open_mode() const noexcept  { return (open_mode_); }
     inline void _set_file_name(const char *n) noexcept  { file_name_ = n; }
     inline void _set_open_mode (OPEN_MODE o)  noexcept  { open_mode_ = o; }
 

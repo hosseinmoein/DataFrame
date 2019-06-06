@@ -19,6 +19,34 @@
 namespace hmdf
 {
 
+enum class ACCESS_MODE : unsigned char  {
+    normal = 0, // No special treatment, the default
+
+    // Pages in the given range can be aggressively read ahead, and may be
+    // freed soon after they are accessed
+    //
+    sequential = 2,
+
+    // Read ahead may be less useful than normally
+    //
+    random = 4,
+
+    // It might be a good idea to read some pages ahead
+    //
+    need_now = 8,
+
+    // Do not expect access in the near future. (For the  time  being, the
+    // application is finished with the given range, so the kernel can free
+    // resources associated with it.)  Subsequent accesses  of pages  in this
+    // range will succeed, but will result either in re-loading of the memory
+    // contents from the underlying  mapped  file (see  mmap) or
+    // zero-fill-on-demand pages for mappings without an underlying file.
+    //
+    dont_need = 16
+};
+
+// ----------------------------------------------------------------------------
+
 // T elements are memcpy()'ed in and out of the
 // Object vector. Therefore a T cannot have any virtual
 // method or any dynamically allocated member or anything that will break as
@@ -39,59 +67,53 @@ public:
     using reference = value_type &;
     using const_reference = const value_type &;
 
-    enum ACCESS_MODE { _normal_ = 0, // No special treatment, the default
-
-                      // Pages in the given range can be aggressively
-                      // read ahead, and may be freed soon after they
-                      // are accessed
-                      //
-                       _sequential_ = 2,
-
-                      // Read ahead may be less useful than normally
-                      //
-                       _random_ = 4,
-
-                      // It might be a good idea to read some pages ahead
-                      //
-                       _need_now_ = 8,
-
-                      // Do not expect access in the near future.
-                      // (For the  time  being, the  application is
-                      // finished with the given range, so the kernel can
-                      // free resources associated with it.)  Subsequent
-                      // accesses  of pages  in this range will succeed,
-                      // but will result either in re-loading of the memory
-                      // contents from the underlying  mapped  file
-                      // (see  mmap) or zero-fill-on-demand pages for
-                      // mappings without an underlying file.
-                      //
-                       _dont_need_ = 16 };
-
-public:
-
     ObjectVector () = delete;
     ObjectVector (const ObjectVector &that);
     ObjectVector &operator = (const ObjectVector &rhs);
     explicit ObjectVector (const char *name,
-                           ACCESS_MODE access_mode = _random_,
+                           ACCESS_MODE access_mode = ACCESS_MODE::random,
                            size_type buffer_size = 1024 * sizeof(value_type));
+    ObjectVector (const char *name,
+                  size_type n,
+                  const T &value = T(),
+                  ACCESS_MODE access_mode = ACCESS_MODE::random,
+                  size_type buffer_size = 1024 * sizeof(value_type));
+    template<typename ITER>
+    ObjectVector (const char *name,
+                  ITER first,
+                  ITER last,
+                  ACCESS_MODE access_mode = ACCESS_MODE::random,
+                  size_type buffer_size = 1024 * sizeof(value_type));
 
     virtual ~ObjectVector ();
 
     ObjectVector (const char *name,
                   const std::vector<T> &vec,
-                  ACCESS_MODE access_mode = _random_,
+                  ACCESS_MODE access_mode = ACCESS_MODE::random,
                   size_type buffer_size = 1024 * sizeof(value_type));
     ObjectVector &operator = (const std::vector<T> &rhs);
 
-    inline bool is_ok () const noexcept  { return (BaseClass::is_ok ()); }
+    inline reference operator [] (size_type);
+    inline const_reference operator [] (size_type) const;
+    inline reference at (size_type i)  { return ((*this)[i]); }
+    inline const_reference at (size_type i) const  { return ((*this)[i]); }
 
-    inline void set_access_mode (ACCESS_MODE am) const;
-    inline void refresh () const noexcept;
-    inline time_t creation_time () const noexcept;
+    inline reference front () noexcept  { return ((*this) [0]); }
+    inline const_reference front () const noexcept  { return ((*this) [0]); }
+
+    inline reference back () noexcept  { return ((*this) [size () - 1]); }
+    inline const_reference
+    back () const noexcept  { return ((*this) [size () - 1]); }
+
+    inline size_type size () const noexcept { return (cached_object_count_); }
+    inline bool empty () const noexcept  { return (size () == 0); }
 
     inline void reserve (size_type s);
     inline void shrink_to_fit ();
+
+    inline void push_back (const value_type &d)  { write_ (&d, 1); }
+    inline void clear ()  { erase (begin (), end ()); }
+    inline void pop_back ()  { erase(end() - 1); }
 
     friend bool
     operator == (const ObjectVector &lhs, const ObjectVector &rhs)  {
@@ -137,6 +159,10 @@ public:
         return (rhs != lhs);
     }
 
+    inline void set_access_mode (ACCESS_MODE am) const;
+    inline void refresh () const noexcept;
+    inline time_t creation_time () const noexcept;
+
 protected:
 
     class   MetaData  {
@@ -155,6 +181,7 @@ private:
 
     mutable size_type   cached_object_count_ { 0 };
 
+    inline void setup_();
     inline size_type tell_ () const noexcept;
     inline void unlink_ ()  { BaseClass::unlink (); }
     inline int write_ (const value_type *data_ele, size_type count);
@@ -666,6 +693,8 @@ public:
         pointer node_ { nullptr };
     };
 
+public:
+
     inline iterator begin() noexcept  { return (iterator(&((*this)[0]))); }
     inline iterator end() noexcept  { return (iterator(&((*this)[size()]))); }
 
@@ -688,28 +717,10 @@ public:
         return (const_reverse_iterator (&((*this)[0]) - 1));
     }
 
-    inline reference operator [] (size_type);
-    inline const_reference operator [] (size_type) const;
-    inline reference at (size_type i)  { return ((*this)[i]); }
-    inline const_reference at (size_type i) const  { return ((*this)[i]); }
-
-    inline size_type size () const noexcept { return (cached_object_count_); }
-    inline bool empty () const noexcept  { return (size () == 0); }
-
-    inline reference front () noexcept  { return ((*this) [0]); }
-    inline const_reference front () const noexcept  { return ((*this) [0]); }
-
-    inline reference back () noexcept  { return ((*this) [size () - 1]); }
-    inline const_reference
-    back () const noexcept  { return ((*this) [size () - 1]); }
-
-    inline void push_back (const value_type &d)  { write_ (&d, 1); }
-
    // Erases the range [first, last)
    //
     iterator erase (iterator first, iterator last);
     inline iterator erase (iterator pos) { return (erase (pos, pos + 1)); }
-    inline void clear ()  { erase (begin (), end ()); }
 
    // Inserts the range [first, last) before pos
    //
@@ -722,7 +733,6 @@ public:
 
         return (insert (pos, &value, &value + 1));
     }
-    inline void pop_back ()  { erase(end() - 1); }
 };
 
 // ----------------------------------------------------------------------------

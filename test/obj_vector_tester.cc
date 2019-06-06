@@ -20,7 +20,7 @@ public:
     typedef unsigned int    size_type;
     typedef time_t          time_type;
 
-    inline data_class () : i (0), counter (0), d (0.0)  { name [0] = 0; }
+    inline data_class ()  { name [0] = 0; }
     inline data_class (const data_class &that)  { *this = that; }
 
     inline data_class &operator = (const data_class &rhs)  {
@@ -56,9 +56,9 @@ public:
     }
 
     char    name [64];
-    int     i;
-    size_t  counter;
-    double  d;
+    int     i { 0 };
+    size_t  counter { 0 };
+    double  d { 23.33 };
 };
 
 // ----------------------------------------------------------------------------
@@ -81,6 +81,8 @@ typedef std::vector<data_class> MyStdVec;
 static const size_t ITER_COUNT = 10000;
 static const char   *OBJECT_BASE_NAME = "./testfile";
 static const char   *OBJECT_BASE_NAME2 = "./testfile2";
+static const char   *OBJECT_BASE_NAME3 = "./testfile3";
+static const char   *OBJECT_BASE_NAME4 = "./testfile4";
 
 #endif // _WIN32
 
@@ -93,7 +95,7 @@ int main (int argc, char *argv [])  {
     cout.precision (5);
 
     MyObjBase   write_objbase (OBJECT_BASE_NAME);
-    MyStdVec    write_stdvec;
+    MyStdVec    stdvec;
 
     srand (5);
     srand48 (5);
@@ -114,28 +116,29 @@ int main (int argc, char *argv [])  {
         dc.d = the_double;
 
         write_objbase.push_back (dc);
-        write_stdvec.push_back (dc);
+        stdvec.push_back (dc);
         if (i % 1000 == 0)
             cout << "Inserted record number " << i << endl;
     }
+    write_objbase.shrink_to_fit();
     cout << "Inserted total of " << write_objbase.size ()
          << " records" << endl;
     cout << endl;
-    write_objbase.set_access_mode (MyObjBase::_random_);
+    write_objbase.set_access_mode (ACCESS_MODE::random);
 
     const MyObjBase read_objbase (OBJECT_BASE_NAME);
     MyObjBase       read_objbase2 (read_objbase);
 
     assert(write_objbase == read_objbase);
-    assert(write_stdvec == read_objbase); 
-    assert(write_stdvec == read_objbase2); 
-    assert(write_objbase == write_stdvec); 
-    write_stdvec[5].i = -8;
-    assert(write_objbase != write_stdvec); 
+    assert(stdvec == read_objbase);
+    assert(stdvec == read_objbase2);
+    assert(write_objbase == stdvec);
+    stdvec[5].i = -8;
+    assert(write_objbase != stdvec);
 
-    MyObjBase read_objbase3 (OBJECT_BASE_NAME2, write_stdvec);
+    MyObjBase read_objbase3 (OBJECT_BASE_NAME2, stdvec);
 
-    assert(write_stdvec == read_objbase3); 
+    assert(stdvec == read_objbase3);
 
     srand (5);
     srand48 (5);
@@ -271,8 +274,30 @@ int main (int argc, char *argv [])  {
     const MyObjBase::const_reverse_iterator critr = citr;
     const MyObjBase::reverse_iterator       ritr = itr;
 
+    MyObjBase obj_vector1 (OBJECT_BASE_NAME3, 100);
+
+    assert(obj_vector1.size() == 100);
+    assert(obj_vector1[0].i == 0);
+    assert(obj_vector1[0].d == 23.33);
+    assert(obj_vector1[48].i == 0);
+    assert(obj_vector1[48].d == 23.33);
+    assert(obj_vector1[99].i == 0);
+    assert(obj_vector1[99].d == 23.33);
+
+    MyObjBase obj_vector2 (OBJECT_BASE_NAME4, stdvec.begin(), stdvec.end());
+
+    assert(obj_vector2.size() == stdvec.size());
+    assert(obj_vector2[0].i == stdvec[0].i);
+    assert(obj_vector2[0].d == stdvec[0].d);
+    assert(obj_vector2[48].i == stdvec[48].i);
+    assert(obj_vector2[48].d == stdvec[48].d);
+    assert(obj_vector2[99].i == stdvec[99].i);
+    assert(obj_vector2[99].d == stdvec[99].d);
+
     ::unlink(OBJECT_BASE_NAME);
     ::unlink(OBJECT_BASE_NAME2);
+    ::unlink(OBJECT_BASE_NAME3);
+    ::unlink(OBJECT_BASE_NAME4);
 
 #endif // _WIN32
 

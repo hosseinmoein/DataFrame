@@ -19,7 +19,7 @@
 
 namespace hmdf
 {
-	
+
 bool MMapSharedMem::open ()  {
 
     if (is_open ())
@@ -77,9 +77,7 @@ bool MMapSharedMem::_initial_map_posthook ()  {
 int MMapSharedMem::close (CLOSE_MODE close_mode)  {
 
     if (is_open ())  {
-        const int   status = ::close (_file_desc);
-
-        if (status != 0)  {
+        if (::close (_file_desc) != 0)  {
             String2K    err;
 
             err.printf ("MMapSharedMem::close(): ::close(): (%d) %s -- %s",

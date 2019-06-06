@@ -16,7 +16,7 @@
 
 namespace hmdf
 {
-	
+
 bool MMapFile::open ()  {
 
     if (is_open ())

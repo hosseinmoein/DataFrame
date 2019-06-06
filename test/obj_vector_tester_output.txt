@@ -8,7 +8,7 @@ Inserted record number 6000
 Inserted record number 7000
 Inserted record number 8000
 Inserted record number 9000
-Inserted total of 20000 records
+Inserted total of 10000 records
 
 
 Testing the print function:
@@ -25,13 +25,13 @@ Read total of 10000 records
 Compared read_objbase [2] == write_objbase [2]
 Compared c_read_objbase [2] == write_objbase [2]
 
-Object count of write_objbase: 20000
-Object count of read_objbase: 20000
-Object count of c_read_objbase: 20000
+Object count of write_objbase: 10000
+Object count of read_objbase: 10000
+Object count of c_read_objbase: 10000
 
-Creation_time of write_objbase: Tue Jun  4 13:17:27 2019
-Creation_time of read_objbase: Tue Jun  4 13:17:27 2019
-Creation_time of c_read_objbase: Tue Jun  4 13:17:27 2019
+Creation_time of write_objbase: Thu Jun  6 11:01:32 2019
+Creation_time of read_objbase: Thu Jun  6 11:01:32 2019
+Creation_time of c_read_objbase: Thu Jun  6 11:01:32 2019
 
 
 
@@ -47,29 +47,9 @@ Testing the forward iterators:
 	7000
 	8000
 	9000
-	0
-	1000
-	2000
-	3000
-	4000
-	5000
-	6000
-	7000
-	8000
-	9000
 
 Testing the reverse iterators:
 
-	9000
-	8000
-	7000
-	6000
-	5000
-	4000
-	3000
-	2000
-	1000
-	0
 	9000
 	8000
 	7000

@@ -23,9 +23,7 @@ namespace hmdf
 {
 
 template<typename T, typename B>
-ObjectVector<T, B>::
-ObjectVector(const char *name, ACCESS_MODE access_mode, size_type buffer_size)
-    : BaseClass (name, BaseClass::_bappend_, buffer_size)  {
+void ObjectVector<T, B>::setup_()  {
 
     const size_type file_size = BaseClass::get_file_size ();
 
@@ -35,7 +33,7 @@ ObjectVector(const char *name, ACCESS_MODE access_mode, size_type buffer_size)
        // Create the meta data record
        //
         if (! BaseClass::write (&meta_data, sizeof(MetaData), 1))
-            throw std::runtime_error ("ObjectVector::ObjectVector<<(): Cannot"
+            throw std::runtime_error ("ObjectVector::setup_(): Cannot"
                                       " write(). internal header record");
         BaseClass::flush ();
     }
@@ -43,13 +41,42 @@ ObjectVector(const char *name, ACCESS_MODE access_mode, size_type buffer_size)
         if (file_size < sizeof(MetaData))  {
             String1K    err;
 
-            err.printf ("ObjectVector::ObjectVector(): "
+            err.printf ("ObjectVector::setup_(): "
                         "ObjectVector seems to be in an inconsistent "
                         "state (%d).",
                         file_size);
             throw std::runtime_error (err.c_str ());
         }
     }
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename B>
+ObjectVector<T, B>::
+ObjectVector(const char *name, ACCESS_MODE access_mode, size_type buffer_size)
+    : BaseClass (name, BaseClass::_bappend_, buffer_size)  {
+
+    setup_();
+
+    const MetaData  *mdata_ptr =
+        reinterpret_cast<const MetaData *>
+            (reinterpret_cast<const char *>(BaseClass::_get_base_ptr ()));
+
+    cached_object_count_ = mdata_ptr->object_count;
+    seek_ (cached_object_count_);
+    set_access_mode (access_mode);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename B>
+ObjectVector<T, B>::ObjectVector(const ObjectVector &that)
+    : BaseClass (that.get_file_name(),
+                 BaseClass::_bappend_,
+                 that.get_buffer_size())  {
+
+    setup_();
 
     const MetaData  *mdata_ptr =
         reinterpret_cast<const MetaData *>
@@ -62,29 +89,40 @@ ObjectVector(const char *name, ACCESS_MODE access_mode, size_type buffer_size)
 // ----------------------------------------------------------------------------
 
 template<typename T, typename B>
-ObjectVector<T, B>::ObjectVector(const ObjectVector &that)
-    : BaseClass (that.get_file_name(),
-                 BaseClass::_bappend_,
-                 that.get_buffer_size())  {
+ObjectVector<T, B>::
+ObjectVector(const char *name,
+             size_type n,
+             const T &value,
+             ACCESS_MODE access_mode,
+             size_type buffer_size)
+    : BaseClass (name, BaseClass::_bappend_, buffer_size)  {
 
-    const size_type file_size = BaseClass::get_file_size ();
+    setup_();
 
-    if (file_size < sizeof(MetaData))  {
-        String1K    err;
+    clear();
+    reserve(n);
+    for (size_type i = 0; i < n; ++i)  push_back(value);
+    set_access_mode (access_mode);
+}
 
-        err.printf ("ObjectVector::ObjectVector(): "
-                    "ObjectVector seems to be in an inconsistent state (%d).",
-                    file_size);
-        throw std::runtime_error (err.c_str ());
-    }
+// ----------------------------------------------------------------------------
 
-    const MetaData  *mdata_ptr =
-        reinterpret_cast<const MetaData *>
-            (reinterpret_cast<const char *>(BaseClass::_get_base_ptr ()));
+template<typename T, typename B>
+template<typename ITER>
+ObjectVector<T, B>::
+ObjectVector(const char *name,
+             ITER first,
+             ITER last,
+             ACCESS_MODE access_mode,
+             size_type buffer_size)
+    : BaseClass (name, BaseClass::_bappend_, buffer_size)  {
 
-    cached_object_count_ = mdata_ptr->object_count;
-    seek_ (cached_object_count_);
+    setup_();
 
+    clear();
+    reserve(std::distance(first, last));
+    for (ITER citer = first; citer != last; ++citer)  push_back(*citer);
+    set_access_mode (access_mode);
 }
 
 // ----------------------------------------------------------------------------
@@ -129,32 +167,11 @@ ObjectVector(const char *name,
              size_type buffer_size)
     : BaseClass (name, BaseClass::_bappend_, buffer_size)  {
 
-    const size_type file_size = BaseClass::get_file_size ();
-
-    if (file_size == 0)  {  // File was just created
-        const MetaData  meta_data (0, time (nullptr));
-
-       // Create the meta data record
-       //
-        if (! BaseClass::write (&meta_data, sizeof(MetaData), 1))
-            throw std::runtime_error ("ObjectVector::ObjectVector<<(): Cannot"
-                                      " write(). internal header record");
-        BaseClass::flush ();
-    }
-    else  {  // An existing file
-        if (file_size < sizeof(MetaData))  {
-            String1K    err;
-
-            err.printf ("ObjectVector::ObjectVector(): "
-                        "ObjectVector seems to be in an inconsistent "
-                        "state (%d).",
-                        file_size);
-            throw std::runtime_error (err.c_str ());
-        }
-    }
+    setup_();
 
     *this = vec;
     seek_ (cached_object_count_);
+    set_access_mode (access_mode);
 }
 
 // ----------------------------------------------------------------------------
@@ -240,14 +257,15 @@ template<typename T, typename B>
 void ObjectVector<T, B>::set_access_mode (ACCESS_MODE am) const  {
 
     const int   rc =
-        ::posix_madvise (BaseClass::_get_base_ptr (),
-                         BaseClass::get_mmap_size (),
-                         (am == _normal_) ? POSIX_MADV_NORMAL
-                             : (am == _need_now_) ? POSIX_MADV_WILLNEED
-                             : (am == _random_) ? POSIX_MADV_RANDOM
-                             : (am == _sequential_) ? POSIX_MADV_SEQUENTIAL
-                             : (am == _dont_need_) ? POSIX_MADV_DONTNEED
-                             : -1);
+        ::posix_madvise (
+            BaseClass::_get_base_ptr (),
+            BaseClass::get_mmap_size (),
+            (am == ACCESS_MODE::normal) ? POSIX_MADV_NORMAL
+                 : (am == ACCESS_MODE::need_now) ? POSIX_MADV_WILLNEED
+                 : (am == ACCESS_MODE::random) ? POSIX_MADV_RANDOM
+                 : (am == ACCESS_MODE::sequential) ? POSIX_MADV_SEQUENTIAL
+                 : (am == ACCESS_MODE::dont_need) ? POSIX_MADV_DONTNEED
+                 : -1);
 
     if (rc)  {
         String1K    err;

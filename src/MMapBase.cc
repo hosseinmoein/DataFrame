@@ -107,10 +107,7 @@ bool MMapBase::_initial_map (size_type file_size,
         }
     }
 
-    if (_initial_map_posthook ())
-        return (_good_flag = true);
-
-    return (_good_flag = false);
+    return (_good_flag = _initial_map_posthook ());
 }
 
 // ----------------------------------------------------------------------------
@@ -159,12 +156,12 @@ write (const void *data_ptr, size_type data_size, size_type data_count)  {
             _mmap_size +
                 ((! get_buffer_size ())
                     ? tp_add
-                    : (((tp_add / get_buffer_size ()) * get_buffer_size ()) +
-                       (tp_add % get_buffer_size() ? get_buffer_size () : 0)));
+                    : (((tp_add / get_buffer_size()) * get_buffer_size()) +
+                       (tp_add % get_buffer_size() ? get_buffer_size() : 0)));
 
         const AutoFileDesc  desc_guard (*this);
         void *const         tmp_mmap_ptr =
-            ::mmap (nullptr, new_size, _mmap_prot, _mmap_flags, _file_desc, 0);
+            ::mmap(nullptr, new_size, _mmap_prot, _mmap_flags, _file_desc, 0);
 
         if (tmp_mmap_ptr == MAP_FAILED)  {
             String2K    err;
@@ -384,9 +381,9 @@ int MMapBase::printf (const char *format_str, ...) noexcept  {
         va_start (argument_ptr, format_str);
 
         char_count =
-            ::vsprintf (reinterpret_cast<char *>(_mmap_ptr) + _current_offset,
-                        format_str,
-                        argument_ptr);
+            ::vsprintf(reinterpret_cast<char *>(_mmap_ptr) + _current_offset,
+                       format_str,
+                       argument_ptr);
 
         va_end (argument_ptr);
         if (char_count > 0)  {
@@ -685,11 +682,11 @@ MMapBase &MMapBase::operator << (std::ifstream &ifs)  {
 
 MMapBase &MMapBase::operator << (const FILE &fref)  {
 
-    char    buffer [_buff_size_];
+    char    buffer[_buff_size_];
 
     if ((_file_flags & _s_bwrite_) || (_file_flags & _s_bappend_))  {
         while (! feof (const_cast<FILE *>(&fref)))  {
-            const   int sread =
+            const int   sread =
                 fread (buffer, _buff_size_, 1, const_cast<FILE *>(&fref));
 
             write (buffer, sread, 1);

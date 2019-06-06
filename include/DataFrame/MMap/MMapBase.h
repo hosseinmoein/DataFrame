@@ -28,7 +28,7 @@ class   MMapBase : public FileDef  {
 
 public:
 
-    static  const   size_type   SYSTEM_PAGE_SIZE;
+    static const size_type  SYSTEM_PAGE_SIZE;
 
     MMapBase () = delete;
     inline MMapBase (const char *file_name,
@@ -344,7 +344,7 @@ public:
     inline MMapBase &operator >> (char *rhs) noexcept  {
 
         if (_file_flags & _s_bread_ || _file_flags & _s_bwrite_ ||
-            _file_flags & _s_bappend_) 
+            _file_flags & _s_bappend_)
             read (rhs, sizeof (char), _width);
         else  {
             strncpy (rhs, get_token (" ").c_str (), _width);
@@ -356,7 +356,7 @@ public:
     inline MMapBase &operator >> (std::ostream &rhs)  {
 
         if (_file_flags & _s_read_ || _file_flags & _s_write_ ||
-            _file_flags & _s_append_) 
+            _file_flags & _s_append_)
             rhs << get_token (" ").data ();
         else  {
             String1K    err;
@@ -371,7 +371,7 @@ public:
     inline MMapBase &operator >> (std::string &rhs)  {
 
         if (_file_flags & _s_read_ || _file_flags & _s_write_ ||
-            _file_flags & _s_append_) 
+            _file_flags & _s_append_)
             rhs += get_token (" ");
         else  {
             String1K    err;
@@ -386,7 +386,7 @@ public:
     inline MMapBase &operator >> (VirtualString &rhs)  {
 
         if (_file_flags & _s_read_ || _file_flags & _s_write_ ||
-            _file_flags & _s_append_) 
+            _file_flags & _s_append_)
             rhs += get_token (" ").c_str ();
         else  {
             String1K    err;
@@ -401,7 +401,7 @@ public:
     inline MMapBase &operator >> (char &rhs) noexcept  {
 
         if (_file_flags & _s_bread_ || _file_flags & _s_bwrite_ ||
-            _file_flags & _s_bappend_) 
+            _file_flags & _s_bappend_)
             read (&rhs, sizeof (char), 1);
         else
             rhs = static_cast<char>(get_char ());
@@ -411,7 +411,7 @@ public:
     inline MMapBase &operator >> (unsigned char &rhs) noexcept  {
 
         if (_file_flags & _s_bread_ || _file_flags & _s_bwrite_ ||
-            _file_flags & _s_bappend_) 
+            _file_flags & _s_bappend_)
             read (&rhs, sizeof (unsigned char), 1);
         else
             rhs = static_cast<unsigned char>(get_char ());
@@ -421,7 +421,7 @@ public:
     inline MMapBase &operator >> (short &rhs) noexcept  {
 
         if (_file_flags & _s_bread_ || _file_flags & _s_bwrite_ ||
-            _file_flags & _s_bappend_) 
+            _file_flags & _s_bappend_)
             read (&rhs, sizeof (short), 1);
         else
             rhs = static_cast<short>
@@ -432,7 +432,7 @@ public:
     inline MMapBase &operator >> (int &rhs) noexcept  {
 
         if (_file_flags & _s_bread_ || _file_flags & _s_bwrite_ ||
-            _file_flags & _s_bappend_) 
+            _file_flags & _s_bappend_)
             read (&rhs, sizeof (int), 1);
         else
             rhs = static_cast<int>
@@ -443,7 +443,7 @@ public:
     inline MMapBase &operator >> (long int &rhs) noexcept  {
 
         if (_file_flags & _s_bread_ || _file_flags & _s_bwrite_ ||
-            _file_flags & _s_bappend_) 
+            _file_flags & _s_bappend_)
             read (&rhs, sizeof (long int), 1);
         else
             rhs =  strtol (get_string ("0123456789").c_str (), nullptr, 0);
@@ -453,7 +453,7 @@ public:
     inline MMapBase &operator >> (long long int &rhs) noexcept  {
 
         if (_file_flags & _s_bread_ || _file_flags & _s_bwrite_ ||
-            _file_flags & _s_bappend_) 
+            _file_flags & _s_bappend_)
             read (&rhs, sizeof (long long int), 1);
         else
             rhs =  strtoll (get_string ("0123456789").c_str (), nullptr, 0);
@@ -463,7 +463,7 @@ public:
     inline MMapBase &operator >> (unsigned short &rhs) noexcept  {
 
         if (_file_flags & _s_bread_ || _file_flags & _s_bwrite_ ||
-            _file_flags & _s_bappend_) 
+            _file_flags & _s_bappend_)
             read (&rhs, sizeof (unsigned short), 1);
         else
             rhs = static_cast<unsigned short>
@@ -474,7 +474,7 @@ public:
     inline MMapBase &operator >> (unsigned int &rhs) noexcept  {
 
         if (_file_flags & _s_bread_ || _file_flags & _s_bwrite_ ||
-            _file_flags & _s_bappend_) 
+            _file_flags & _s_bappend_)
             read (&rhs, sizeof (unsigned int), 1);
         else
             rhs = static_cast<unsigned int>
@@ -485,7 +485,7 @@ public:
     inline MMapBase &operator >> (unsigned long int &rhs) noexcept  {
 
         if (_file_flags & _s_bread_ || _file_flags & _s_bwrite_ ||
-            _file_flags & _s_bappend_) 
+            _file_flags & _s_bappend_)
             read (&rhs, sizeof (unsigned long int), 1);
         else
             rhs = static_cast<unsigned long int>
@@ -496,7 +496,7 @@ public:
     inline MMapBase &operator >> (unsigned long long int &rhs) noexcept  {
 
         if (_file_flags & _s_bread_ || _file_flags & _s_bwrite_ ||
-            _file_flags & _s_bappend_) 
+            _file_flags & _s_bappend_)
             read (&rhs, sizeof (unsigned long long int), 1);
         else
             rhs = static_cast<unsigned long long int>
@@ -507,7 +507,7 @@ public:
     inline MMapBase &operator >> (float &rhs) noexcept  {
 
         if (_file_flags & _s_bread_ || _file_flags & _s_bwrite_ ||
-            _file_flags & _s_bappend_) 
+            _file_flags & _s_bappend_)
             read (&rhs, sizeof (float), 1);
         else
             rhs = static_cast<float>
@@ -518,7 +518,7 @@ public:
     inline MMapBase &operator >> (double &rhs) noexcept  {
 
         if (_file_flags & _s_bread_ || _file_flags & _s_bwrite_ ||
-            _file_flags & _s_bappend_) 
+            _file_flags & _s_bappend_)
             read (&rhs, sizeof (double), 1);
         else
             rhs = strtod (get_string ("0123456789.").c_str (), nullptr);

@@ -217,13 +217,13 @@ public:
 
 private:
 
-    using DataTable = std::unordered_map<std::string, size_type>;
+    using ColumnTable = std::unordered_map<std::string, size_type>;
 
     // Data fields
     //
-    DataVecVec      data_ { };     // Vector of Heterogeneous vectors
-    IndexVecType    indices_ { };  // Vector
-    DataTable       data_tb_ { };  // Hash table of name -> vector index
+    DataVecVec      data_ { };       // Vector of Heterogeneous vectors
+    IndexVecType    indices_ { };    // Vector
+    ColumnTable     column_tb_ { };  // Hash table of name -> vector index
 
 public:  // Load/append/remove interfaces
 

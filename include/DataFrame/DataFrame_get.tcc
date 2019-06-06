@@ -17,9 +17,9 @@ template<typename T>
 typename type_declare<H, T>::type &
 DataFrame<I, H>::get_column (const char *name)  {
 
-    auto iter = data_tb_.find (name);
+    auto iter = column_tb_.find (name);
 
-    if (iter == data_tb_.end())  {
+    if (iter == column_tb_.end())  {
         char buffer [512];
 
         sprintf (buffer, "DataFrame::get_column(): ERROR: "
@@ -70,9 +70,9 @@ get_row(size_type row_num, const std::array<const char *, N> col_names) const {
     get_row_functor_<types ...> functor(ret_vec, row_num);
 
     for (auto name_citer : col_names)  {
-        const auto  citer = data_tb_.find (name_citer);
+        const auto  citer = column_tb_.find (name_citer);
 
-        if (citer == data_tb_.end())  {
+        if (citer == column_tb_.end())  {
             char buffer [512];
 
             sprintf(buffer,
@@ -94,9 +94,9 @@ template<typename T>
 std::vector<T> DataFrame<I, H>::
 get_col_unique_values(const char *name) const  {
 
-    auto  iter = data_tb_.find (name);
+    auto  iter = column_tb_.find (name);
 
-    if (iter == data_tb_.end())  {
+    if (iter == column_tb_.end())  {
         char buffer [512];
 
         sprintf (buffer,
@@ -171,9 +171,9 @@ template<typename I, typename  H>
 template<typename T, typename V>
 V &DataFrame<I, H>::visit (const char *name, V &visitor)  {
 
-    const auto  iter = data_tb_.find (name);
+    const auto  iter = column_tb_.find (name);
 
-    if (iter == data_tb_.end())  {
+    if (iter == column_tb_.end())  {
         char buffer [512];
 
         sprintf (buffer,
@@ -202,10 +202,10 @@ template<typename T1, typename T2, typename V>
 V &DataFrame<I, H>::
 visit (const char *name1, const char *name2, V &visitor)  {
 
-    const auto  iter1 = data_tb_.find (name1);
-    const auto  iter2 = data_tb_.find (name2);
+    const auto  iter1 = column_tb_.find (name1);
+    const auto  iter2 = column_tb_.find (name2);
 
-    if (iter1 == data_tb_.end())  {
+    if (iter1 == column_tb_.end())  {
         char buffer [512];
 
         sprintf (buffer,
@@ -213,7 +213,7 @@ visit (const char *name1, const char *name2, V &visitor)  {
                  name1);
         throw ColNotFound (buffer);
     }
-    if (iter2 == data_tb_.end())  {
+    if (iter2 == column_tb_.end())  {
         char buffer [512];
 
         sprintf (buffer,
@@ -247,11 +247,11 @@ template<typename T1, typename T2, typename T3, typename V>
 V &DataFrame<I, H>::
 visit (const char *name1, const char *name2, const char *name3, V &visitor)  {
 
-    const auto  iter1 = data_tb_.find (name1);
-    const auto  iter2 = data_tb_.find (name2);
-    const auto  iter3 = data_tb_.find (name3);
+    const auto  iter1 = column_tb_.find (name1);
+    const auto  iter2 = column_tb_.find (name2);
+    const auto  iter3 = column_tb_.find (name3);
 
-    if (iter1 == data_tb_.end())  {
+    if (iter1 == column_tb_.end())  {
         char buffer [512];
 
         sprintf (buffer,
@@ -259,7 +259,7 @@ visit (const char *name1, const char *name2, const char *name3, V &visitor)  {
                  name1);
         throw ColNotFound (buffer);
     }
-    if (iter2 == data_tb_.end())  {
+    if (iter2 == column_tb_.end())  {
         char buffer [512];
 
         sprintf (buffer,
@@ -267,7 +267,7 @@ visit (const char *name1, const char *name2, const char *name3, V &visitor)  {
                  name2);
         throw ColNotFound (buffer);
     }
-    if (iter3 == data_tb_.end())  {
+    if (iter3 == column_tb_.end())  {
         char buffer [512];
 
         sprintf (buffer,
@@ -309,12 +309,12 @@ visit (const char *name1,
        const char *name4,
        V &visitor)  {
 
-    const auto  iter1 = data_tb_.find (name1);
-    const auto  iter2 = data_tb_.find (name2);
-    const auto  iter3 = data_tb_.find (name3);
-    const auto  iter4 = data_tb_.find (name4);
+    const auto  iter1 = column_tb_.find (name1);
+    const auto  iter2 = column_tb_.find (name2);
+    const auto  iter3 = column_tb_.find (name3);
+    const auto  iter4 = column_tb_.find (name4);
 
-    if (iter1 == data_tb_.end())  {
+    if (iter1 == column_tb_.end())  {
         char buffer [512];
 
         sprintf (buffer,
@@ -322,7 +322,7 @@ visit (const char *name1,
                  name1);
         throw ColNotFound (buffer);
     }
-    if (iter2 == data_tb_.end())  {
+    if (iter2 == column_tb_.end())  {
         char buffer [512];
 
         sprintf (buffer,
@@ -330,7 +330,7 @@ visit (const char *name1,
                  name2);
         throw ColNotFound (buffer);
     }
-    if (iter3 == data_tb_.end())  {
+    if (iter3 == column_tb_.end())  {
         char buffer [512];
 
         sprintf (buffer,
@@ -338,7 +338,7 @@ visit (const char *name1,
                  name3);
         throw ColNotFound (buffer);
     }
-    if (iter4 == data_tb_.end())  {
+    if (iter4 == column_tb_.end())  {
         char buffer [512];
 
         sprintf (buffer,
@@ -386,13 +386,13 @@ visit (const char *name1,
        const char *name5,
        V &visitor)  {
 
-    const auto  iter1 = data_tb_.find (name1);
-    const auto  iter2 = data_tb_.find (name2);
-    const auto  iter3 = data_tb_.find (name3);
-    const auto  iter4 = data_tb_.find (name4);
-    const auto  iter5 = data_tb_.find (name5);
+    const auto  iter1 = column_tb_.find (name1);
+    const auto  iter2 = column_tb_.find (name2);
+    const auto  iter3 = column_tb_.find (name3);
+    const auto  iter4 = column_tb_.find (name4);
+    const auto  iter5 = column_tb_.find (name5);
 
-    if (iter1 == data_tb_.end())  {
+    if (iter1 == column_tb_.end())  {
         char buffer [512];
 
         sprintf (buffer,
@@ -400,7 +400,7 @@ visit (const char *name1,
                  name1);
         throw ColNotFound (buffer);
     }
-    if (iter2 == data_tb_.end())  {
+    if (iter2 == column_tb_.end())  {
         char buffer [512];
 
         sprintf (buffer,
@@ -408,7 +408,7 @@ visit (const char *name1,
                  name2);
         throw ColNotFound (buffer);
     }
-    if (iter3 == data_tb_.end())  {
+    if (iter3 == column_tb_.end())  {
         char buffer [512];
 
         sprintf (buffer,
@@ -416,7 +416,7 @@ visit (const char *name1,
                  name3);
         throw ColNotFound (buffer);
     }
-    if (iter4 == data_tb_.end())  {
+    if (iter4 == column_tb_.end())  {
         char buffer [512];
 
         sprintf (buffer,
@@ -424,7 +424,7 @@ visit (const char *name1,
                  name4);
         throw ColNotFound (buffer);
     }
-    if (iter5 == data_tb_.end())  {
+    if (iter5 == column_tb_.end())  {
         char buffer [512];
 
         sprintf (buffer,
@@ -470,9 +470,9 @@ template<typename T, typename V>
 V &DataFrame<I, H>::
 single_act_visit (const char *name, V &visitor) const  {
 
-    const auto  iter = data_tb_.find (name);
+    const auto  iter = column_tb_.find (name);
 
-    if (iter == data_tb_.end())  {
+    if (iter == column_tb_.end())  {
         char buffer [512];
 
         sprintf(buffer,
@@ -498,10 +498,10 @@ template<typename T1, typename T2, typename V>
 V &DataFrame<I, H>::
 single_act_visit (const char *name1, const char *name2, V &visitor)  {
 
-    const auto  iter1 = data_tb_.find (name1);
-    const auto  iter2 = data_tb_.find (name2);
+    const auto  iter1 = column_tb_.find (name1);
+    const auto  iter2 = column_tb_.find (name2);
 
-    if (iter1 == data_tb_.end())  {
+    if (iter1 == column_tb_.end())  {
         char buffer [512];
 
         sprintf (buffer,
@@ -510,7 +510,7 @@ single_act_visit (const char *name1, const char *name2, V &visitor)  {
                  name1);
         throw ColNotFound (buffer);
     }
-    if (iter2 == data_tb_.end())  {
+    if (iter2 == column_tb_.end())  {
         char buffer [512];
 
         sprintf (buffer,
@@ -554,7 +554,7 @@ DataFrame<I, H>::get_data_by_idx (Index2D<IndexType> range) const  {
                                                    ? upper
                                                    : indices_.end());
 
-        for (auto &iter : data_tb_)  {
+        for (auto &iter : column_tb_)  {
             load_functor_<types ...> functor (iter.first.c_str(),
                                               b_dist,
                                               e_dist,
@@ -593,7 +593,7 @@ DataFrame<I, H>::get_view_by_idx (Index2D<IndexType> range)  {
                                                    ? upper
                                                    : indices_.end());
 
-        for (auto &iter : data_tb_)  {
+        for (auto &iter : column_tb_)  {
             view_setup_functor_<types ...> functor (iter.first.c_str(),
                                                     b_dist,
                                                     e_dist,
@@ -625,7 +625,7 @@ DataFrame<I, H>::get_data_by_loc (Index2D<int> range) const  {
         df.load_index(indices_.begin() + static_cast<size_type>(range.begin),
                       indices_.begin() + static_cast<size_type>(range.end));
 
-        for (auto &iter : data_tb_)  {
+        for (auto &iter : column_tb_)  {
             load_functor_<types ...> functor (
                 iter.first.c_str(),
                 static_cast<size_type>(range.begin),
@@ -670,7 +670,7 @@ DataFrame<I, H>::get_view_by_loc (Index2D<int> range)  {
             typename DataFrameView<IndexType>::IndexVecType(
                 &*(indices_.begin() + range.begin),
                 &*(indices_.begin() + range.end));
-        for (auto &iter : data_tb_)  {
+        for (auto &iter : column_tb_)  {
             view_setup_functor_<types ...>  functor (
                 iter.first.c_str(),
                 static_cast<size_type>(range.begin),

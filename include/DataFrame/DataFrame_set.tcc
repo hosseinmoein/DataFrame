@@ -22,7 +22,7 @@ std::vector<T> &DataFrame<I, H>::create_column (const char *name)  {
                               "Data column name cannot be 'INDEX'");
 
     data_.emplace_back (DataVec());
-    data_tb_.emplace (name, data_.size() - 1);
+    column_tb_.emplace (name, data_.size() - 1);
 
     DataVec         &hv = data_.back();
     std::vector<T>  &vec = hv.template get_vector<T>();
@@ -43,9 +43,9 @@ void DataFrame<I, H>::remove_column (const char *name)  {
         throw DataFrameError ("DataFrame::remove_column(): ERROR: "
                               "Data column name cannot be 'INDEX'");
 
-    const auto  iter = data_tb_.find (name);
+    const auto  iter = column_tb_.find (name);
 
-    if (iter == data_tb_.end())  {
+    if (iter == column_tb_.end())  {
         char buffer [512];
 
         sprintf (buffer,
@@ -55,9 +55,9 @@ void DataFrame<I, H>::remove_column (const char *name)  {
     }
 
     // I do not erase the column from the data_ vector, because it will mess up
-    // indices in the hash table data_tb_
+    // indices in the hash table column_tb_
     /* data_.erase (data_.begin() + iter->second); */
-    data_tb_.erase (iter);
+    column_tb_.erase (iter);
     return;
 }
 
@@ -73,9 +73,9 @@ void DataFrame<I, H>::rename_column (const char *from, const char *to)  {
         throw DataFrameError ("DataFrame::rename_column(): ERROR: "
                               "Data column name cannot be 'INDEX'");
 
-    const auto  iter = data_tb_.find (from);
+    const auto  iter = column_tb_.find (from);
 
-    if (iter == data_tb_.end())  {
+    if (iter == column_tb_.end())  {
         char buffer [512];
 
         sprintf (buffer,
@@ -84,8 +84,8 @@ void DataFrame<I, H>::rename_column (const char *from, const char *to)  {
         throw ColNotFound (buffer);
     }
 
-    data_tb_.emplace (to, iter->second);
-    data_tb_.erase (iter);
+    column_tb_.emplace (to, iter->second);
+    column_tb_.erase (iter);
     return;
 }
 
@@ -346,10 +346,10 @@ load_column (const char *name,
         throw InconsistentData (buffer);
     }
 
-    const auto      iter = data_tb_.find (name);
+    const auto      iter = column_tb_.find (name);
     std::vector<T>  *vec_ptr = nullptr;
 
-    if (iter == data_tb_.end())
+    if (iter == column_tb_.end())
         vec_ptr = &(create_column<T>(name));
     else  {
         DataVec &hv = data_[iter->second];
@@ -385,7 +385,7 @@ setup_view_column_ (const char *name, Index2D<ITR> range)  {
                   "Only a DataFrameView can call setup_view_column_()");
 
     data_.emplace_back (DataVec(&*(range.begin), &*(range.end)));
-    data_tb_.emplace (name, data_.size() - 1);
+    column_tb_.emplace (name, data_.size() - 1);
 
     return;
 }
@@ -423,10 +423,10 @@ load_column (const char *name, std::vector<T> &&data, nan_policy padding)  {
         }
     }
 
-    const auto      iter = data_tb_.find (name);
+    const auto      iter = column_tb_.find (name);
     std::vector<T>  *vec_ptr = nullptr;
 
-    if (iter == data_tb_.end())
+    if (iter == column_tb_.end())
         vec_ptr = &(create_column<T>(name));
     else  {
         DataVec &hv = data_[iter->second];
@@ -474,9 +474,9 @@ append_column (const char *name,
                Index2D<const ITR &> range,
                nan_policy padding)  {
 
-    const auto  iter = data_tb_.find (name);
+    const auto  iter = column_tb_.find (name);
 
-    if (iter == data_tb_.end())  {
+    if (iter == column_tb_.end())  {
         char buffer [512];
 
         sprintf (buffer, "DataFrame::append_column(): ERROR: "
@@ -528,9 +528,9 @@ typename DataFrame<I, H>::size_type
 DataFrame<I, H>::
 append_column (const char *name, const T &val, nan_policy padding)  {
 
-    const auto  iter = data_tb_.find (name);
+    const auto  iter = column_tb_.find (name);
 
-    if (iter == data_tb_.end())  {
+    if (iter == column_tb_.end())  {
         char buffer [512];
 
         sprintf (buffer, "DataFrame::append_column(): ERROR: "
@@ -599,7 +599,7 @@ void DataFrame<I, H>::remove_data_by_idx (Index2D<IndexType> range)  {
 
         remove_functor_<types ...>  functor (b_dist, e_dist);
 
-        for (auto &iter : data_tb_)
+        for (auto &iter : column_tb_)
             data_[iter.second].change(functor);
     }
 
@@ -630,7 +630,7 @@ void DataFrame<I, H>::remove_data_by_loc (Index2D<int> range)  {
             static_cast<size_type>(range.begin),
             static_cast<size_type>(range.end));
 
-        for (auto &iter : data_tb_)
+        for (auto &iter : column_tb_)
             data_[iter.second].change(functor);
 
         return;

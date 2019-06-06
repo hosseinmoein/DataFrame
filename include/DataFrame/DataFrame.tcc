@@ -212,9 +212,9 @@ fill_missing(const std::array<const char *, N> col_names,
     size_type                       thread_count = 0;
 
     for (size_type i = 0; i < N; ++i)  {
-        const auto  citer = data_tb_.find (col_names[i]);
+        const auto  citer = column_tb_.find (col_names[i]);
 
-        if (citer == data_tb_.end())  {
+        if (citer == column_tb_.end())  {
             char buffer [512];
 
             sprintf(
@@ -444,9 +444,9 @@ replace(const char *col_name,
             (indices_, old_values, new_values, count, limit);
     }
     else  {
-        const auto  citer = data_tb_.find (col_name);
+        const auto  citer = column_tb_.find (col_name);
 
-        if (citer == data_tb_.end())  {
+        if (citer == column_tb_.end())  {
             char buffer [512];
 
             sprintf(buffer,
@@ -475,9 +475,9 @@ template<typename T, typename F>
 void DataFrame<I, H>::
 replace(const char *col_name, F &functor)  {
 
-    const auto  citer = data_tb_.find (col_name);
+    const auto  citer = column_tb_.find (col_name);
 
-    if (citer == data_tb_.end())  {
+    if (citer == column_tb_.end())  {
         char buffer [512];
 
         sprintf(buffer,
@@ -559,9 +559,9 @@ void DataFrame<I, H>::sort(const char *by_name)  {
         std::sort (indices_.begin(), indices_.end());
     }
     else  {
-        const auto  iter = data_tb_.find (by_name);
+        const auto  iter = column_tb_.find (by_name);
 
-        if (iter == data_tb_.end())  {
+        if (iter == column_tb_.end())  {
             char buffer [512];
 
             sprintf (buffer, "DataFrame::sort(): ERROR: "
@@ -614,7 +614,7 @@ DataFrame<I, H>:: groupby (F &&func,
 
     DataFrame   df;
 
-    for (const auto &iter : tmp_df.data_tb_)  {
+    for (const auto &iter : tmp_df.column_tb_)  {
         add_col_functor_<types ...> functor (iter.first.c_str(), df);
 
         tmp_df.data_[iter.second].change(functor);
@@ -627,7 +627,7 @@ DataFrame<I, H>:: groupby (F &&func,
         for (size_type i = 0; i < vec_size; ++i)  {
             if (tmp_df.indices_[i] != tmp_df.indices_[marker])  {
                 df.append_index(tmp_df.indices_[marker]);
-                for (const auto &iter : tmp_df.data_tb_)  {
+                for (const auto &iter : tmp_df.column_tb_)  {
                     groupby_functor_<F, types...>   functor(
                                                 iter.first.c_str(),
                                                 marker,
@@ -645,7 +645,7 @@ DataFrame<I, H>:: groupby (F &&func,
         }
         if (marker < vec_size)  {
             df.append_index(tmp_df.indices_[vec_size - 1]);
-            for (const auto &iter : tmp_df.data_tb_)  {
+            for (const auto &iter : tmp_df.column_tb_)  {
                 groupby_functor_<F, types...>   functor(
                                             iter.first.c_str(),
                                             vec_size - 1,
@@ -677,7 +677,7 @@ DataFrame<I, H>:: groupby (F &&func,
                                     nan_policy::dont_pad_with_nans);
                 func.reset();
 
-                for (const auto &iter : tmp_df.data_tb_)  {
+                for (const auto &iter : tmp_df.column_tb_)  {
                     if (iter.first != gb_col_name)  {
                         groupby_functor_<F, types...>   functor(
                                                     iter.first.c_str(),
@@ -711,7 +711,7 @@ DataFrame<I, H>:: groupby (F &&func,
                                 nan_policy::dont_pad_with_nans);
             func.reset();
 
-            for (const auto &iter : tmp_df.data_tb_)  {
+            for (const auto &iter : tmp_df.column_tb_)  {
                 if (iter.first != gb_col_name)  {
                     groupby_functor_<F, types...>   functor(
                                             iter.first.c_str(),
@@ -754,9 +754,9 @@ template<typename T>
 StdDataFrame<T>
 DataFrame<I, H>::value_counts (const char *col_name) const  {
 
-    auto iter = data_tb_.find (col_name);
+    auto iter = column_tb_.find (col_name);
 
-    if (iter == data_tb_.end())  {
+    if (iter == column_tb_.end())  {
         char buffer [512];
 
         sprintf (buffer,
@@ -830,13 +830,13 @@ bucketize (F &&func, const IndexType &bucket_interval) const  {
 
     DataFrame   df;
 
-    for (const auto &iter : data_tb_)  {
+    for (const auto &iter : column_tb_)  {
         add_col_functor_<types ...> functor (iter.first.c_str(), df);
 
         data_[iter.second].change(functor);
     }
 
-    for (const auto &iter : data_tb_)  {
+    for (const auto &iter : column_tb_)  {
         bucket_functor_<F, types...>   functor(
                                     iter.first.c_str(),
                                     indices_,
@@ -874,7 +874,7 @@ transpose(IndexVecType &&indices,
           const V &current_col_order,
           const V &new_col_names) const  {
 
-    const size_type num_cols = data_tb_.size();
+    const size_type num_cols = column_tb_.size();
 
     if (current_col_order.size() != num_cols)
         throw InconsistentData ("DataFrame::transpose(): ERROR: "
@@ -889,9 +889,9 @@ transpose(IndexVecType &&indices,
 
     current_cols.reserve(num_cols);
     for (const auto citer : current_col_order)  {
-        const auto  &data_citer = data_tb_.find(citer);
+        const auto  &data_citer = column_tb_.find(citer);
 
-        if (data_citer == data_tb_.end())
+        if (data_citer == column_tb_.end())
             throw InconsistentData ("DataFrame::transpose(): ERROR: "
                                     "Cannot find at least one of the column "
                                     "names in the order vector");
@@ -968,7 +968,7 @@ write (S &o, bool values_only, io_format iof) const  {
         o << '\n';
     }
 
-    for (const auto &iter : data_tb_)  {
+    for (const auto &iter : column_tb_)  {
         print_functor_<types ...> functor (iter.first.c_str(), values_only, o);
 
         data_[iter.second].change(functor);

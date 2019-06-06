@@ -235,9 +235,9 @@ void
 DataFrame<I, H>::
 equal_functor_<Ts ...>::operator() (const std::vector<T> &lhs_vec)  {
 
-    const auto  &iter = df.data_tb_.find(name);
+    const auto  &iter = df.column_tb_.find(name);
 
-    if (iter == df.data_tb_.end())  {
+    if (iter == df.column_tb_.end())  {
         result = false;
         return;
     }
@@ -258,9 +258,9 @@ void
 DataFrame<I, H>::
 mod_by_idx_functor_<Ts ...>::operator() (std::vector<T> &lhs_vec) const  {
 
-    const auto  &iter = rhs_df.data_tb_.find(name);
+    const auto  &iter = rhs_df.column_tb_.find(name);
 
-    if (iter != rhs_df.data_tb_.end())  {
+    if (iter != rhs_df.column_tb_.end())  {
         const std::vector<T>    &rhs_vec = rhs_df.get_column<T>(name);
 
         lhs_vec[lhs_idx] = rhs_vec[rhs_idx];
@@ -408,9 +408,9 @@ DataFrame<I, H>::
 operator_functor_<TST, OPT, types ...>::
 operator()(const std::vector<T> &lhs_vec)  {
 
-    const auto  rhs_citer = rhs_df.data_tb_.find(col_name);
+    const auto  rhs_citer = rhs_df.column_tb_.find(col_name);
 
-    if (rhs_citer == rhs_df.data_tb_.end())  return;
+    if (rhs_citer == rhs_df.column_tb_.end())  return;
 
     const DataVec   &rhs_hv = rhs_df.data_[rhs_citer->second];
     const auto      &rhs_vec = rhs_hv.template get_vector<T>();

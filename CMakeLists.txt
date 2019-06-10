@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 3.5)
-project (Dataframe VERSION 1.0.0)
+project (DataFrame VERSION 1.0.0)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON) # Produce compile_commands.json
 set(CMAKE_CXX_STANDARD 14)
@@ -126,8 +126,7 @@ endif(MSVC)
 # Properties are: 1) Library version number 2) list of corresponding public
 # headers
 set_target_properties(${LIBRARY_TARGET_NAME}
-                      PROPERTIES VERSION ${${PROJECT_NAME}_VERSION}
-                      PUBLIC_HEADER "${${LIBRARY_TARGET_NAME}_HDR}")
+                      PROPERTIES VERSION ${${PROJECT_NAME}_VERSION})
 
 # Specify include directories for both compilation and installation process.
 # The $<INSTALL_PREFIX> generator expression is useful to ensure to create
@@ -144,8 +143,12 @@ install(TARGETS ${LIBRARY_TARGET_NAME}
         LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT shlib
         ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT lib
         RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT bin
-        PUBLIC_HEADER DESTINATION
-        "${CMAKE_INSTALL_INCLUDEDIR}/${LIBRARY_TARGET_NAME}" COMPONENT dev)
+)
+
+install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include/${PROJECT_NAME}" # src
+        DESTINATION "include"  # target directory
+        COMPONENT dev
+)
 
 # Create and install CMake configuration files for your project that are
 # necessary to for other projects to call find_package().
@@ -197,26 +200,26 @@ add_executable(obj_vector_tester test/obj_vector_tester.cc)
 add_executable(obj_vector_erase_tester test/obj_vector_erase_tester.cc)
 add_executable(sharedmem_tester  test/sharedmem_tester.cc)
 
-# Link the Dataframe library to the test binary
-target_link_libraries(dataframe_tester Dataframe)
+# Link the DataFrame library to the test binary
+target_link_libraries(dataframe_tester DataFrame)
 
-# Link the Dataframe library to the test binary
-target_link_libraries(vectors_tester Dataframe)
+# Link the DataFrame library to the test binary
+target_link_libraries(vectors_tester DataFrame)
 
-# Link the Dataframe library to the test binary
-target_link_libraries(date_time_tester Dataframe)
+# Link the DataFrame library to the test binary
+target_link_libraries(date_time_tester DataFrame)
 
-# Link the Dataframe library to the test binary
-target_link_libraries(mmfile_tester Dataframe)
+# Link the DataFrame library to the test binary
+target_link_libraries(mmfile_tester DataFrame)
 
-# Link the Dataframe library to the test binary
-target_link_libraries(obj_vector_tester Dataframe)
+# Link the DataFrame library to the test binary
+target_link_libraries(obj_vector_tester DataFrame)
 
-# Link the Dataframe library to the test binary
-target_link_libraries(obj_vector_erase_tester Dataframe)
+# Link the DataFrame library to the test binary
+target_link_libraries(obj_vector_erase_tester DataFrame)
 
-# Link the Dataframe library to the test binary
-target_link_libraries(sharedmem_tester Dataframe)
+# Link the DataFrame library to the test binary
+target_link_libraries(sharedmem_tester DataFrame)
 
 if (UNIX)
   # Find pthreads library

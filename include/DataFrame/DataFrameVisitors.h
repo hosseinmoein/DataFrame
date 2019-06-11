@@ -89,6 +89,34 @@ private:
 
 // ----------------------------------------------------------------------------
 
+template<typename T,
+         typename I = unsigned long,
+         typename =
+             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+struct ProdVisitor {
+
+    using value_type = T;
+    using index_type = I;
+    using count_type = std::size_t;
+    using result_type = T;
+
+    inline void operator() (const index_type &, const value_type &val)  {
+
+        if (is_nan__(val))  return;
+
+        prod_ *= val;
+    }
+    inline void pre ()  { prod_ = 1; }
+    inline void post ()  {  }
+    inline result_type get_result () const  { return (prod_); }
+
+private:
+
+    value_type  prod_ { 1 };
+};
+
+// ----------------------------------------------------------------------------
+
 template<typename T, typename I = unsigned long>
 struct MaxVisitor {
 
@@ -516,6 +544,158 @@ private:
 //
 // Single Action Visitors
 //
+
+template<typename T,
+         typename I = unsigned long,
+         typename =
+             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+struct CumSumVisitor {
+
+    using value_type = T;
+    using index_type = I;
+    using count_type = std::size_t;
+    using result_type = std::vector<value_type>;
+
+    inline void
+    operator() (const std::vector<index_type> &,
+                const std::vector<value_type> &column)  {
+
+        value_type  running_sum = 0;
+
+        sum_.reserve(column.size());
+        for (const auto citer : column)  {
+            if (! is_nan__(citer))  {
+                running_sum += citer;
+                sum_.push_back(running_sum);
+            }
+            else
+                sum_.push_back(citer);
+        }
+    }
+    inline void pre ()  { sum_.clear(); }
+    inline void post ()  {  }
+    inline const result_type &get_result () const  { return (sum_); }
+
+private:
+
+    std::vector<value_type> sum_ {  };
+};
+
+// ----------------------------------------------------------------------------
+
+template<typename T,
+         typename I = unsigned long,
+         typename =
+             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+struct CumProdVisitor {
+
+    using value_type = T;
+    using index_type = I;
+    using count_type = std::size_t;
+    using result_type = std::vector<value_type>;
+
+    inline void
+    operator() (const std::vector<index_type> &,
+                const std::vector<value_type> &column)  {
+
+        value_type  running_prod = 1;
+
+        prod_.reserve(column.size());
+        for (const auto citer : column)  {
+            if (! is_nan__(citer))  {
+                running_prod *= citer;
+                prod_.push_back(running_prod);
+            }
+            else
+                prod_.push_back(citer);
+        }
+    }
+    inline void pre ()  { prod_.clear(); }
+    inline void post ()  {  }
+    inline const result_type &get_result () const  { return (prod_); }
+
+private:
+
+    std::vector<value_type> prod_ {  };
+};
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename I = unsigned long>
+struct CumMaxVisitor {
+
+    using value_type = T;
+    using index_type = I;
+    using count_type = std::size_t;
+    using result_type = std::vector<value_type>;
+
+    inline void
+    operator() (const std::vector<index_type> &,
+                const std::vector<value_type> &column)  {
+
+        if (column.empty())  return;
+
+        value_type  running_max = column[0];
+
+        max_.reserve(column.size());
+        for (const auto citer : column)  {
+            if (! is_nan__(citer))  {
+                if (citer > running_max)
+                    running_max = citer;
+                max_.push_back(running_max);
+            }
+            else
+                max_.push_back(citer);
+        }
+    }
+    inline void pre ()  { max_.clear(); }
+    inline void post ()  {  }
+    inline const result_type &get_result () const  { return (max_); }
+
+private:
+
+    std::vector<value_type> max_ {  };
+};
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename I = unsigned long>
+struct CumMinVisitor {
+
+    using value_type = T;
+    using index_type = I;
+    using count_type = std::size_t;
+    using result_type = std::vector<value_type>;
+
+    inline void
+    operator() (const std::vector<index_type> &,
+                const std::vector<value_type> &column)  {
+
+        if (column.empty())  return;
+
+        value_type  running_min = column[0];
+
+        min_.reserve(column.size());
+        for (const auto citer : column)  {
+            if (! is_nan__(citer))  {
+                if (citer < running_min)
+                    running_min = citer;
+                min_.push_back(running_min);
+            }
+            else
+                min_.push_back(citer);
+        }
+    }
+    inline void pre ()  { min_.clear(); }
+    inline void post ()  {  }
+    inline const result_type &get_result () const  { return (min_); }
+
+private:
+
+    std::vector<value_type> min_ {  };
+};
+
+// ----------------------------------------------------------------------------
 
 template<typename T,
          typename I = unsigned long,

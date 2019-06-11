@@ -2364,6 +2364,86 @@ int main(int argc, char *argv[]) {
         assert(df.get_column<double>("dblcol_1")[14] == 9000.0);
     }
 
+    {
+        // Testing some visitors
+
+        std::vector<unsigned long>  idx =
+            { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+              123457, 123458, 123459, 123460, 123461, 123462, 123466,
+              123467, 123468, 123469, 123470, 123471, 123472, 123473 };
+        std::vector<double>         d1 =
+            { 1.0, 10, 8, 18, 19, 16, 21,
+              17, 20, 3, 2, 11, 7.0, 5,
+              9, 15, 14, 13, 12, 6, 4 };
+        std::vector<double>         d2 =
+            { 1.0, 10, 8, 18, 19, 16,
+              17, 20, 3, 2, 11, 7.0, 5,
+              9, 15, 14, 13, 12, 6, 4 };
+        std::vector<int>           i1 =
+            { 1, 1, 2, 4, 3, 4, 5,
+              2, 1, 2, 2, 3, 4, 5,
+              7, 1, 2, 3, 2, 6, 4 };
+        std::vector<int>            i2 =
+            { 1, 10, 8, 18, 19, 16,
+              17, 20, 3, 2, 11, 7, 5,
+              9, 15, 14, 13, 12, 6, 4 };
+        std::vector<double>         d3 =
+            { 1, 10, std::numeric_limits<double>::quiet_NaN(), 18, 19, 16,
+              17, 20, std::numeric_limits<double>::quiet_NaN(),
+              2, 11, 7, std::numeric_limits<double>::quiet_NaN(), 5,
+              9, 15, 14, 13, 12, 6 };
+        MyDataFrame                 df;
+
+        df.load_data(std::move(idx),
+                     std::make_pair("dblcol_1", d1),
+                     std::make_pair("intcol_1", i1));
+        df.load_column("dblcol_2",
+                       std::move(d2),
+                       nan_policy::dont_pad_with_nans);
+        df.load_column("intcol_2",
+                       std::move(i2),
+                       nan_policy::dont_pad_with_nans);
+        df.load_column("dblcol_3",
+                       std::move(d3),
+                       nan_policy::dont_pad_with_nans);
+
+        SumVisitor<int>     sum_visit;
+        ProdVisitor<int>    prod_visit;
+        int                 sum_result =
+            df.visit<int>("intcol_2", sum_visit).get_result();
+        int                 prod_result =
+            df.visit<int>("intcol_1", prod_visit).get_result();
+
+        assert(sum_result == 210);
+        assert(prod_result == 464486400);
+
+        CumSumVisitor<double>       cum_sum_visit;
+        const std::vector<double>   &cum_sum_result =
+            df.single_act_visit<double>("dblcol_3",
+                                        cum_sum_visit).get_result();
+
+        assert(cum_sum_result.size() == 20);
+        assert(cum_sum_result[0] == 1);
+        assert(cum_sum_result[1] == 11);
+        assert(cum_sum_result[19] == 195);
+        assert(cum_sum_result[18] == 189);
+        assert(std::isnan(cum_sum_result[2]));
+        assert(std::isnan(cum_sum_result[8]));
+
+        CumMaxVisitor<double>       cum_max_visit;
+        const std::vector<double>   &cum_max_result =
+            df.single_act_visit<double>("dblcol_3",
+                                        cum_max_visit).get_result();
+
+        assert(cum_max_result.size() == 20);
+        assert(cum_max_result[0] == 1);
+        assert(cum_max_result[1] == 10);
+        assert(cum_max_result[19] == 20);
+        assert(cum_max_result[18] == 20);
+        assert(std::isnan(cum_max_result[2]));
+        assert(std::isnan(cum_max_result[8]));
+    }
+
     return (0);
 }
 

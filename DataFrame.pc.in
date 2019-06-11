@@ -6,4 +6,4 @@ Name: DataFrame
 Description: C++ DataFrame -- R's and Pandas DataFrame in modern C++ using native types, continuous memory storage, and no virtual functions.
 Version: @PROJECT_NAME_VERSION@
 Cflags: -I${includedir}
-Libs: -L${libdir} -lDataFrame -lrt
+Libs: -L${libdir} -lDataFrame

@@ -150,6 +150,15 @@ install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include/${PROJECT_NAME}" # src
         COMPONENT dev
 )
 
+# Support pkg-config
+set(PROJECT_NAME_VERSION "${${PROJECT_NAME}_VERSION}")
+configure_file(${PROJECT_NAME}.pc.in
+  "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.pc"
+  @ONLY)
+
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.pc"
+  DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig/")
+
 # Create and install CMake configuration files for your project that are
 # necessary to for other projects to call find_package().
 #

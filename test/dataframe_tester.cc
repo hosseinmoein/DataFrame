@@ -2444,6 +2444,62 @@ int main(int argc, char *argv[]) {
         assert(std::isnan(cum_max_result[8]));
     }
 
+    {
+        // Testing Mode
+
+        std::vector<unsigned long>  idx =
+            { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+              123457, 123458, 123459, 123460, 123461, 123462, 123466,
+              123467, 123468, 123469, 123470, 123471, 123472, 123473 };
+        std::vector<double>         d1 =
+            { 1.0, 10, 8, 18, 19, 16, 21,
+              17, 20, 3, 2, 11, 7.0, 5,
+              9, 15, 14, 13, 12, 6, 4 };
+        std::vector<double>         d2 =
+            { 1.0, 10, 8, 18, 19, 16,
+              17, 20, 3, 2, 11, 7.0, 5,
+              9, 15, 14, 13, 12, 6, 4 };
+        std::vector<int>           i1 =
+            { 1, 1, 2, 4, 3, 4, 5,
+              2, 1, 2, 2, 3, 4, 5,
+              7, 1, 2, 3, 2, 6, 4 };
+        std::vector<int>            i2 =
+            { 1, 10, 8, 18, 19, 16,
+              17, 20, 3, 2, 11, 7, 5,
+              9, 15, 14, 13, 12, 6, 4 };
+        std::vector<double>         d3 =
+            { 1, 10, std::numeric_limits<double>::quiet_NaN(), 18, 19, 16,
+              17, 20, std::numeric_limits<double>::quiet_NaN(),
+              2, 11, 7, std::numeric_limits<double>::quiet_NaN(), 5,
+              9, 15, 14, 13, 12, 6 };
+        MyDataFrame                 df;
+
+        df.load_data(std::move(idx),
+                     std::make_pair("dblcol_1", d1),
+                     std::make_pair("intcol_1", i1));
+        df.load_column("dblcol_2",
+                       std::move(d2),
+                       nan_policy::dont_pad_with_nans);
+        df.load_column("intcol_2",
+                       std::move(i2),
+                       nan_policy::dont_pad_with_nans);
+        df.load_column("dblcol_3",
+                       std::move(d3),
+                       nan_policy::dont_pad_with_nans);
+
+        ModeVisitor<3, double>  mode_visit;
+        const auto              &result =
+            df.single_act_visit<double>("dblcol_3", mode_visit).get_result();
+
+        assert(result.size() == 3);
+        assert(result[0].indices.size() == 3);
+        assert(result[0].value_indices_in_col.size() == 3);
+        assert(std::isnan(result[0].value));
+        assert(result[0].repeat_count() == 3);
+        assert(result[0].indices[1] == 123458);
+        assert(result[0].value_indices_in_col[2] == 12);
+    }
+
     return (0);
 }
 

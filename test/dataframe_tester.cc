@@ -2362,6 +2362,15 @@ int main(int argc, char *argv[]) {
         assert(df.get_column<double>("dblcol_1")[20] == 4000.0);
         assert(df.get_column<double>("dblcol_1")[2] == 8000.0);
         assert(df.get_column<double>("dblcol_1")[14] == 9000.0);
+
+        auto    seq_vec = MyDataFrame::gen_sequence_index(1, 200, 4);
+
+        assert(seq_vec.size() == 50);
+        assert(seq_vec[0] == 1);
+        assert(seq_vec[2] == 9);
+        assert(seq_vec[3] == 13);
+        assert(seq_vec[49] == 197);
+        assert(seq_vec[48] == 193);
     }
 
     {

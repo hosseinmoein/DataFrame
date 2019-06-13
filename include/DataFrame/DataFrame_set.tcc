@@ -293,6 +293,24 @@ gen_datetime_index(const char *start_datetime,
 // ----------------------------------------------------------------------------
 
 template<typename I, typename  H>
+std::vector<I> DataFrame<I, H>::
+gen_sequence_index (const IndexType &start_value,
+                   const IndexType &end_value,
+                   long increment)  {
+
+    std::vector<IndexType>  index_vec;
+    IndexType               sv = start_value;
+
+    while (sv < end_value)  {
+        index_vec.push_back(sv);
+        sv = sv + increment;
+    }
+    return (index_vec);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
 template<typename ITR>
 typename DataFrame<I, H>::size_type
 DataFrame<I, H>::append_index(Index2D<const ITR &> range)  {

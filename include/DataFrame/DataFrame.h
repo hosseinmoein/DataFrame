@@ -10,7 +10,6 @@
 #include <DataFrame/DateTime.h>
 
 #include <array>
-#include <bitset>
 #include <limits>
 #include <functional>
 #include <map>
@@ -303,6 +302,23 @@ public:  // Load/append/remove interfaces
                        time_frequency t_freq,
                        long increment = 1,
                        DT_TIME_ZONE tz = DT_TIME_ZONE::LOCAL);
+
+    // This static method generates a vector of sequential values of
+    // IndexType that could be fed directly to one of the load methods.
+    // The values are incremented by "increment".
+    // The index type must be incrementable.
+    // If by incrementing "start_value" by increment you would never reach
+    // "end_value", the behavior will be undefined.
+    // It returns a vector of IndexType values.
+    //
+    // start_value, end_value: Starting and ending values of IndexType.
+    //                         Start value is included. End value is excluded.
+    // increment: Increment by value
+    //
+    static std::vector<IndexType>
+    gen_sequence_index(const IndexType &start_value,
+                       const IndexType &end_value,
+                       long increment = 1);
 
     // It copies the data from iterators begin to end to the named column.
     // If column does not exist, it will be created. If the column exist,
@@ -958,12 +974,12 @@ public: // Read/access interfaces
     // T1: Type of the first named column
     // T2: Type of the second named column
     // T3: Type of the third named column
-    // T4: Type of the forth named column
+    // T4: Type of the fourth named column
     // V: Type of the visitor functor
     // name1: Name of the first data column
     // name2: Name of the second data column
     // name3: Name of the third data column
-    // name4: Name of the forth data column
+    // name4: Name of the fourth data column
     //
     template<typename T1, typename T2, typename T3, typename T4, typename V>
     V &
@@ -980,13 +996,13 @@ public: // Read/access interfaces
     // T1: Type of the first named column
     // T2: Type of the second named column
     // T3: Type of the third named column
-    // T4: Type of the forth named column
+    // T4: Type of the fourth named column
     // T5: Type of the fifth named column
     // V: Type of the visitor functor
     // name1: Name of the first data column
     // name2: Name of the second data column
     // name3: Name of the third data column
-    // name4: Name of the forth data column
+    // name4: Name of the fourth data column
     // name5: Name of the fifth data column
     //
     template<typename T1, typename T2, typename T3, typename T4, typename T5,

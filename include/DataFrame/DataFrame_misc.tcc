@@ -200,16 +200,22 @@ DataFrame<I, H>::print_functor_<Ts ...>::operator() (const T &vec)  {
 
     if (! values_only)  {
         os << name << ':' << vec.size() << ':';
-        if (typeid(ValueType) == typeid(double))
+        if (typeid(ValueType) == typeid(float))
+            os << "<float>:";
+        else if (typeid(ValueType) == typeid(double))
             os << "<double>:";
         else if (typeid(ValueType) == typeid(int))
             os << "<int>:";
         else if (typeid(ValueType) == typeid(unsigned int))
             os << "<uint>:";
-        else if (typeid(ValueType) == typeid(long))
+        else if (typeid(ValueType) == typeid(long int))
             os << "<long>:";
-        else if (typeid(ValueType) == typeid(unsigned long))
+        else if (typeid(ValueType) == typeid(long long int))
+            os << "<longlong>:";
+        else if (typeid(ValueType) == typeid(unsigned long int))
             os << "<ulong>:";
+        else if (typeid(ValueType) == typeid(unsigned long long int))
+            os << "<ulonglong>:";
         else if (typeid(ValueType) == typeid(std::string))
             os << "<string>:";
         else if (typeid(ValueType) == typeid(bool))

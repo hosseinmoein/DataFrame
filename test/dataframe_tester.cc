@@ -2285,6 +2285,8 @@ int main(int argc, char *argv[]) {
 
         auto    result1 = df.replace_async<double, 3>(
             "dblcol_1", { 10.0, 21.0, 11.0 }, { 1000.0, 2100.0, 1100.0 });
+        auto    idx_result = df.replace_index<3>(
+            { 20180101, 20180102, 20180103 }, { 1000, 2100, 1100 });
         auto    result2 = df.replace_async<double, 6>(
             "dblcol_5",
             { -45.0, -100.0, -30.2, 30.89, 40.1, 1.2 },

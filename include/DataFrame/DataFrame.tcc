@@ -418,7 +418,7 @@ _replace_vector_vals_(V &data_vec,
 
     for (size_t i = 0; i < N; ++i)  {
         for (size_t j = 0; j < vec_s; ++j)  {
-            if (limit >= 0 && count >= limit)  return;
+            if (limit >= 0 && count >= static_cast<size_t>(limit))  return;
             if (old_values[i] == data_vec[j])  {
                 data_vec[j] = new_values[i];
                 count += 1;
@@ -438,32 +438,39 @@ replace(const char *col_name,
         int limit)  {
 
     size_type   count = 0;
+    const auto  citer = column_tb_.find (col_name);
 
-    if (! strcmp("INDEX", col_name))  {
-        _replace_vector_vals_<IndexVecType, T, N>
-            (indices_, old_values, new_values, count, limit);
+    if (citer == column_tb_.end())  {
+        char buffer [512];
+
+        sprintf(buffer,
+                "DataFrame::replace(): ERROR: Cannot find column '%s'",
+                col_name);
+        throw ColNotFound(buffer);
     }
-    else  {
-        const auto  citer = column_tb_.find (col_name);
 
-        if (citer == column_tb_.end())  {
-            char buffer [512];
+    DataVec         &hv = data_[citer->second];
+    std::vector<T>  &vec = hv.template get_vector<T>();
 
-            sprintf(buffer,
-                    "DataFrame::replace(): ERROR: Cannot find column '%s'",
-                    col_name);
-            throw ColNotFound(buffer);
-        }
+    _replace_vector_vals_<std::vector<T>, T, N>
+        (vec, old_values, new_values, count, limit);
 
-        DataVec         &hv = data_[citer->second];
-        std::vector<T>  &vec = hv.template get_vector<T>();
+    return (count);
+}
 
-        _replace_vector_vals_<std::vector<T>, T, N>(vec,
-                                                    old_values,
-                                                    new_values,
-                                                    count,
-                                                    limit);
-    }
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<size_t N>
+typename DataFrame<I, H>::size_type DataFrame<I, H>::
+replace_index(const std::array<IndexType, N> old_values,
+              const std::array<IndexType, N> new_values,
+              int limit)  {
+
+    size_type   count = 0;
+
+    _replace_vector_vals_<IndexVecType, IndexType, N>
+        (indices_, old_values, new_values, count, limit);
 
     return (count);
 }
@@ -944,16 +951,24 @@ write (S &o, bool values_only, io_format iof) const  {
 
     if (! values_only)  {
         o << "INDEX:" << indices_.size() << ':';
-        if (typeid(IndexType) == typeid(double))
+        if (typeid(IndexType) == typeid(float))
+            o << "<float>:";
+        else if (typeid(IndexType) == typeid(double))
             o << "<double>:";
+        else if (typeid(IndexType) == typeid(long double))
+            o << "<longdouble>:";
         else if (typeid(IndexType) == typeid(int))
             o << "<int>:";
         else if (typeid(IndexType) == typeid(unsigned int))
             o << "<uint>:";
-        else if (typeid(IndexType) == typeid(long))
+        else if (typeid(IndexType) == typeid(long int))
             o << "<long>:";
-        else if (typeid(IndexType) == typeid(unsigned long))
+        else if (typeid(IndexType) == typeid(long long int))
+            o << "<longlong>:";
+        else if (typeid(IndexType) == typeid(unsigned long int))
             o << "<ulong>:";
+        else if (typeid(IndexType) == typeid(unsigned long long int))
+            o << "<ulonglong>:";
         else if (typeid(IndexType) == typeid(std::string))
             o << "<string>:";
         else if (typeid(IndexType) == typeid(bool))

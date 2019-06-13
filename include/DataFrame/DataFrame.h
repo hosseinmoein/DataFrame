@@ -466,10 +466,9 @@ public:  // Other public interfaces
     void
     drop_missing(drop_policy policy, size_type threshold = 0);
 
-    // It iterates over the column named col_name
-    // (or index, if col_name == "INDEX") and replaces all values in old_values
-    // with the corresponding values in new_values up to the limit. If limit is
-    // omitted, all values will be replaced.
+    // It iterates over the column named col_name and replaces all values
+    // in old_values with the corresponding values in new_values up to the
+    // limit. If limit is omitted, all values will be replaced.
     // It returns number of items replaced.
     //
     // T: Type on column col_name. If this is index it would be the same as
@@ -526,6 +525,20 @@ public:  // Other public interfaces
     template<typename T, typename F>
     std::future<void>
     replace_async(const char *col_name, F &functor);
+
+    // This does the same thing as replace() above for the index column
+    //
+    // N: Size of old_values and new_values arrays
+    // old_array: An array of values to be replaced in col_name column
+    // new_array: An array of values to to replace the old_values in col_name
+    //            column
+    // limit: Limit of how many items to replace. Default is to replace all.
+    //
+    template<size_t N>
+    size_type
+    replace_index(const std::array<IndexType, N> old_values,
+                  const std::array<IndexType, N> new_values,
+                  int limit = -1);
 
     // Make all data columns the same length as the index.
     // If any data column is shorter than the index column, it will be padded

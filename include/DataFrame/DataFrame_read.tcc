@@ -116,9 +116,32 @@ struct  _IdxParserFunctor_  {
 // -------------------------------------
 
 template<>
+struct  _IdxParserFunctor_<float>  {
+
+    inline void operator()(std::vector<float> &vec, std::ifstream &file)  {
+
+        _col_vector_push_back_(vec, file, &::atof);
+    }
+};
+
+// -------------------------------------
+
+template<>
 struct  _IdxParserFunctor_<double>  {
 
     inline void operator()(std::vector<double> &vec, std::ifstream &file)  {
+
+        _col_vector_push_back_(vec, file, &::atof);
+    }
+};
+
+// -------------------------------------
+
+template<>
+struct  _IdxParserFunctor_<long double>  {
+
+    inline void
+    operator()(std::vector<long double> &vec, std::ifstream &file)  {
 
         _col_vector_push_back_(vec, file, &::atof);
     }
@@ -271,8 +294,21 @@ bool DataFrame<I, H>::read (const char *file_name, io_format iof)  {
             load_index(std::forward<IndexVecType &&>(vec));
         }
         else  {
-            if (! ::strcmp(type_str, "double"))  {
+            if (! ::strcmp(type_str, "float"))  {
+                std::vector<float>  &vec = create_column<float>(col_name);
+
+                vec.reserve(::atoi(value));
+                _col_vector_push_back_(vec, file, ::atof);
+            }
+            else if (! ::strcmp(type_str, "double"))  {
                 std::vector<double> &vec = create_column<double>(col_name);
+
+                vec.reserve(::atoi(value));
+                _col_vector_push_back_(vec, file, ::atof);
+            }
+            else if (! ::strcmp(type_str, "longdouble"))  {
+                std::vector<long double>    &vec =
+                    create_column<long double>(col_name);
 
                 vec.reserve(::atoi(value));
                 _col_vector_push_back_(vec, file, ::atof);
@@ -295,12 +331,26 @@ bool DataFrame<I, H>::read (const char *file_name, io_format iof)  {
                 vec.reserve(::atoi(value));
                 _col_vector_push_back_(vec, file, &::atol);
             }
+            else if (! ::strcmp(type_str, "longlong"))  {
+                std::vector<long long>  &vec =
+                    create_column<long long>(col_name);
+
+                vec.reserve(::atoi(value));
+                _col_vector_push_back_(vec, file, &::atol);
+            }
             else if (! ::strcmp(type_str, "ulong"))  {
                 std::vector<unsigned long>  &vec =
                     create_column<unsigned long>(col_name);
 
                 vec.reserve(::atoi(value));
-                _col_vector_push_back_(vec, file, &::atoll);
+                _col_vector_push_back_(vec, file, &::atol);
+            }
+            else if (! ::strcmp(type_str, "ulonglong"))  {
+                std::vector<unsigned long long> &vec =
+                    create_column<unsigned long long>(col_name);
+
+                vec.reserve(::atoi(value));
+                _col_vector_push_back_(vec, file, &::atol);
             }
             else if (! ::strcmp(type_str, "string"))  {
                 std::vector<std::string>    &vec =

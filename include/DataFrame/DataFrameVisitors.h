@@ -1175,11 +1175,13 @@ struct  ModeVisitor {
                 nan_item.value_indices_in_col.push_back(i);
             }
             else  {
-                auto    result =
-                    val_map.emplace(std::pair(column[i], DataItem(column[i])));
+                auto    ret =
+                    val_map.emplace(
+                        std::pair<value_type, DataItem>(
+                            column[i], DataItem(column[i])));
 
-                result.first->second.indices.push_back(idx[i]);
-                result.first->second.value_indices_in_col.push_back(i);
+                ret.first->second.indices.push_back(idx[i]);
+                ret.first->second.value_indices_in_col.push_back(i);
             }
         }
 

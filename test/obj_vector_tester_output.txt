@@ -1,0 +1,62 @@
+Inserted record number 0
+Inserted record number 1000
+Inserted record number 2000
+Inserted record number 3000
+Inserted record number 4000
+Inserted record number 5000
+Inserted record number 6000
+Inserted record number 7000
+Inserted record number 8000
+Inserted record number 9000
+Inserted total of 10000 records
+
+
+Testing the print function:
+Printing from data_class::print()
+	name    = the number is 923123031
+	i       = 923123031
+	counter = 9999
+	d       = 0.15957
+
+Print function was successfull
+
+Read total of 10000 records
+
+Compared read_objbase [2] == write_objbase [2]
+Compared c_read_objbase [2] == write_objbase [2]
+
+Object count of write_objbase: 10000
+Object count of read_objbase: 10000
+Object count of c_read_objbase: 10000
+
+Creation_time of write_objbase: Thu Jun  6 11:01:32 2019
+Creation_time of read_objbase: Thu Jun  6 11:01:32 2019
+Creation_time of c_read_objbase: Thu Jun  6 11:01:32 2019
+
+
+
+Testing the forward iterators:
+
+	0
+	1000
+	2000
+	3000
+	4000
+	5000
+	6000
+	7000
+	8000
+	9000
+
+Testing the reverse iterators:
+
+	9000
+	8000
+	7000
+	6000
+	5000
+	4000
+	3000
+	2000
+	1000
+	0

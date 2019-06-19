@@ -3,8 +3,9 @@
 // Copyright (C) 2018-2019 Hossein Moein
 // Distributed under the BSD Software License (see file License)
 
-#include "DateTime.h"
-#include "DataFrame.h"
+#include <DataFrame/DateTime.h>
+#include <DataFrame/DataFrame.h>
+
 #include <cstdlib>
 #include <fstream>
 #include <functional>
@@ -115,9 +116,32 @@ struct  _IdxParserFunctor_  {
 // -------------------------------------
 
 template<>
+struct  _IdxParserFunctor_<float>  {
+
+    inline void operator()(std::vector<float> &vec, std::ifstream &file)  {
+
+        _col_vector_push_back_(vec, file, &::atof);
+    }
+};
+
+// -------------------------------------
+
+template<>
 struct  _IdxParserFunctor_<double>  {
 
     inline void operator()(std::vector<double> &vec, std::ifstream &file)  {
+
+        _col_vector_push_back_(vec, file, &::atof);
+    }
+};
+
+// -------------------------------------
+
+template<>
+struct  _IdxParserFunctor_<long double>  {
+
+    inline void
+    operator()(std::vector<long double> &vec, std::ifstream &file)  {
 
         _col_vector_push_back_(vec, file, &::atof);
     }
@@ -225,10 +249,10 @@ struct  _IdxParserFunctor_<bool>  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename  HETERO>
-bool DataFrame<TS, HETERO>::read (const char *file_name, io_format iof)  {
+template<typename I, typename  H>
+bool DataFrame<I, H>::read (const char *file_name, io_format iof)  {
 
-    static_assert(std::is_base_of<HeteroVector, HETERO>::value,
+    static_assert(std::is_base_of<HeteroVector, DataVec>::value,
                   "Only a StdDataFrame can call read()");
 
     std::ifstream   file;
@@ -263,15 +287,28 @@ bool DataFrame<TS, HETERO>::read (const char *file_name, io_format iof)  {
                                  "':' char to start column values");
 
         if (! ::strcmp(col_name, "INDEX"))  {
-            TSVec   vec;
+            IndexVecType    vec;
 
             vec.reserve(::atoi(value));
-            _IdxParserFunctor_<typename TSVec::value_type>()(vec, file);
-            load_index(std::forward<TSVec &&>(vec));
+            _IdxParserFunctor_<typename IndexVecType::value_type>()(vec, file);
+            load_index(std::forward<IndexVecType &&>(vec));
         }
         else  {
-            if (! ::strcmp(type_str, "double"))  {
+            if (! ::strcmp(type_str, "float"))  {
+                std::vector<float>  &vec = create_column<float>(col_name);
+
+                vec.reserve(::atoi(value));
+                _col_vector_push_back_(vec, file, ::atof);
+            }
+            else if (! ::strcmp(type_str, "double"))  {
                 std::vector<double> &vec = create_column<double>(col_name);
+
+                vec.reserve(::atoi(value));
+                _col_vector_push_back_(vec, file, ::atof);
+            }
+            else if (! ::strcmp(type_str, "longdouble"))  {
+                std::vector<long double>    &vec =
+                    create_column<long double>(col_name);
 
                 vec.reserve(::atoi(value));
                 _col_vector_push_back_(vec, file, ::atof);
@@ -294,12 +331,26 @@ bool DataFrame<TS, HETERO>::read (const char *file_name, io_format iof)  {
                 vec.reserve(::atoi(value));
                 _col_vector_push_back_(vec, file, &::atol);
             }
+            else if (! ::strcmp(type_str, "longlong"))  {
+                std::vector<long long>  &vec =
+                    create_column<long long>(col_name);
+
+                vec.reserve(::atoi(value));
+                _col_vector_push_back_(vec, file, &::atol);
+            }
             else if (! ::strcmp(type_str, "ulong"))  {
                 std::vector<unsigned long>  &vec =
                     create_column<unsigned long>(col_name);
 
                 vec.reserve(::atoi(value));
-                _col_vector_push_back_(vec, file, &::atoll);
+                _col_vector_push_back_(vec, file, &::atol);
+            }
+            else if (! ::strcmp(type_str, "ulonglong"))  {
+                std::vector<unsigned long long> &vec =
+                    create_column<unsigned long long>(col_name);
+
+                vec.reserve(::atoi(value));
+                _col_vector_push_back_(vec, file, &::atol);
             }
             else if (! ::strcmp(type_str, "string"))  {
                 std::vector<std::string>    &vec =
@@ -339,8 +390,8 @@ bool DataFrame<TS, HETERO>::read (const char *file_name, io_format iof)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename  HETERO>
-std::future<bool> DataFrame<TS, HETERO>::
+template<typename I, typename  H>
+std::future<bool> DataFrame<I, H>::
 read_async(const char *file_name, io_format iof) {
 
     return (std::async(std::launch::async,

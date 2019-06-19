@@ -1,0 +1,9 @@
+prefix=@CMAKE_INSTALL_PREFIX@
+libdir=${prefix}/@CMAKE_INSTALL_LIBDIR@
+includedir=${prefix}/include
+
+Name: DataFrame
+Description: C++ DataFrame -- R's and Pandas DataFrame in modern C++ using native types, continuous memory storage, and no virtual functions.
+Version: @PROJECT_NAME_VERSION@
+Cflags: -I${includedir}
+Libs: -L${libdir} -lDataFrame

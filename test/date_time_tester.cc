@@ -6,10 +6,10 @@
 #include <cstdlib>
 #include <iostream>
 #include <string>
+#include <cassert>
 
-#include <DateTime.h>
-
-#include <FixedSizeString.h>
+#include <DataFrame/DateTime.h>
+#include <DataFrame/FixedSizeString.h>
 
 using namespace hmdf;
 
@@ -30,144 +30,108 @@ int main (int argc, char *argv [])  {
          << "   Microseconds: " << now.microsec () << endl;
 
     now = 19721202;
-    cout << "Date/Time should be 19721202: "
-         << now.string_format (DT_FORMAT::DT_TM2) << endl;
+    assert(now.string_format (DT_FORMAT::DT_TM2) == "12/02/1972 00:00:00.000");
     now = "19910223 16:23:45.230";
-    cout << "Date/Time should be '19910223 16:23:45.230': "
-         << now.string_format (DT_FORMAT::DT_TM2) << endl;
+    assert(now.string_format (DT_FORMAT::DT_TM2) == "02/23/1991 16:23:45.230");
     now = "19910223 16:23:45.230";
-    cout << "Date/Time should be '19910223 16:23:45.230': "
-         << now.string_format (DT_FORMAT::DT_TM2) << endl;
+    assert(now.string_format (DT_FORMAT::DT_TM2) == "02/23/1991 16:23:45.230");
     now = "20100207 12";
-    cout << "Date/Time should be '20100207 12:00:00.000': "
-         << now.string_format (DT_FORMAT::DT_TM2) << endl;
+    assert(now.string_format (DT_FORMAT::DT_TM2) == "02/07/2010 12:00:00.000");
     now = "20100207 12:32";
-    cout << "Date/Time should be '20100207 12:32:00.000': "
-         << now.string_format (DT_FORMAT::DT_TM2) << endl;
+    assert(now.string_format (DT_FORMAT::DT_TM2) == "02/07/2010 12:32:00.000");
     now = "20100207 12:32:12";
 
     try  {
         long  diff = static_cast<long> (now.diff_seconds (gmnow));
 
-        cout << "The difference between local and GMT times is:  "
-             << diff / 3600;
-        diff %= 3600;
-        cout << ":" << diff / 60;
-        diff %= 60;
-        cout << ":" << diff << endl;
+        assert(false);
     }
-    catch (const std::runtime_error &ex)  {
-        cout << ex.what();
+    catch (const std::runtime_error &)  {
+        // cout << ex.what();
+        ; // Time diff between different timezones is not implemented
     }
-
-    cout << "\n----- Testing DateTime's add_days()\n" << endl;
 
     {
-        DateTime    now (20181023, 10, 24, 1, 123456789);;
+        // Testing DateTime's add_days()
 
-        cout << "Now is: " << now.string_format (DT_FORMAT::DT_TM2) << endl;
+        DateTime    now (20181023, 10, 24, 1, 123456789);
+
+        assert(now.string_format(DT_FORMAT::DT_TM2) ==
+                   "10/23/2018 10:24:01.123");
         now.add_days (1);
-        cout << "After adding 1 day: "
-             << now.string_format (DT_FORMAT::DT_TM2) << endl;
+        assert(now.string_format(DT_FORMAT::DT_TM2) ==
+                   "10/24/2018 10:24:01.123");
         now.add_days (-1);
-        cout << "After adding -1 day: "
-             << now.string_format (DT_FORMAT::DT_TM2) << endl;
+        assert(now.string_format(DT_FORMAT::DT_TM2) ==
+                   "10/23/2018 10:24:01.123");
 
         now.add_weekdays (1);
-        cout << "After adding 1 weekdays day: "
-             << now.string_format (DT_FORMAT::DT_TM2) << endl;
+        assert(now.string_format(DT_FORMAT::DT_TM2) ==
+                   "10/24/2018 10:24:01.123");
         now.add_weekdays (-1);
-        cout << "After adding -1 weekdays day: "
-             << now.string_format (DT_FORMAT::DT_TM2) << endl;
+        assert(now.string_format(DT_FORMAT::DT_TM2) ==
+                   "10/23/2018 10:24:01.123");
 
         {
-            DateTime    di (20091224, 9, 30);
+            DateTime    dt (20091224, 9, 30);
 
-
-            cout << "After adding 2 weekdays days to '"
-                 << di.string_format (DT_FORMAT::DT_TM2) << "' ";
-            di.add_weekdays (2);
-            cout << "you get '" << di.string_format (DT_FORMAT::DT_TM2)
-                 << "'" << endl;
-
+            dt.add_weekdays (2);
+            assert(dt.string_format (DT_FORMAT::DT_TM2) ==
+                       "12/28/2009 09:30:00.000");
         }
 
         {
-            DateTime    di (20081224, 9, 30);
+            DateTime    dt (20081224, 9, 30);
 
-
-            cout << "After adding 2 weekdays days to '"
-                 << di.string_format (DT_FORMAT::DT_TM2) << "' ";
-            di.add_weekdays (2);
-            cout << "you get '" << di.string_format (DT_FORMAT::DT_TM2)
-                 << "'" << endl;
-
+            dt.add_weekdays (2);
+            assert(dt.string_format (DT_FORMAT::DT_TM2) ==
+                       "12/26/2008 09:30:00.000");
         }
 
         {
-            DateTime    di (20061224, 9, 30);
+            DateTime    dt (20061224, 9, 30);
 
-
-            cout << "After adding 2 weekdays days to '"
-                 << di.string_format (DT_FORMAT::DT_TM2) << "' ";
-            di.add_weekdays (2);
-            cout << "you get '" << di.string_format (DT_FORMAT::DT_TM2)
-                 << "'" << endl;
-
+            dt.add_weekdays (2);
+            assert(dt.string_format (DT_FORMAT::DT_TM2) ==
+                       "12/26/2006 09:30:00.000");
         }
 
         {
-            DateTime    di (20051223, 9, 30);
+            DateTime    dt (20051223, 9, 30);
 
-
-            cout << "After adding 2 weekdays days to '"
-                 << di.string_format (DT_FORMAT::DT_TM2) << "' ";
-            di.add_weekdays (2);
-            cout << "you get '" << di.string_format (DT_FORMAT::DT_TM2)
-                 << "'" << endl;
-
+            dt.add_weekdays (2);
+            assert(dt.string_format (DT_FORMAT::DT_TM2) ==
+                       "12/27/2005 09:30:00.000");
         }
 
         {
-            DateTime    di (20041223, 9, 30);
+            DateTime    dt (20041223, 9, 30);
 
-
-            cout << "After adding 2 weekdays days to '"
-                 << di.string_format (DT_FORMAT::DT_TM2) << "' ";
-            di.add_weekdays (2);
-            cout << "you get '" << di.string_format (DT_FORMAT::DT_TM2)
-                 << "'" << endl;
-
+            dt.add_weekdays (2);
+            assert(dt.string_format (DT_FORMAT::DT_TM2) ==
+                       "12/27/2004 09:30:00.000");
         }
 
         {
-            DateTime    di (20001222, 9, 30);
+            DateTime    dt (20001222, 9, 30);
 
-
-            cout << "After adding 2 weekdays days to '"
-                 << di.string_format (DT_FORMAT::DT_TM2) << "' ";
-            di.add_weekdays (2);
-            cout << "you get '" << di.string_format (DT_FORMAT::DT_TM2)
-                 << "'" << endl;
-
+            dt.add_weekdays (2);
+            assert(dt.string_format (DT_FORMAT::DT_TM2) ==
+                       "12/26/2000 09:30:00.000");
         }
 
         {
-            DateTime    di (19981224, 9, 30);
+            DateTime    dt (19981224, 9, 30);
 
-
-            cout << "After adding 2 weekdays days to '"
-                 << di.string_format (DT_FORMAT::DT_TM2) << "' ";
-            di.add_weekdays (2);
-            cout << "you get '" << di.string_format (DT_FORMAT::DT_TM2)
-                 << "'" << endl;
-
+            dt.add_weekdays (2);
+            assert(dt.string_format (DT_FORMAT::DT_TM2) ==
+                       "12/28/1998 09:30:00.000");
         }
     }
 
-    cout << "\n----- Testing DateTime's GMT vs Local time\n" << endl;
-
     {
+        cout << "\n----- Testing DateTime's GMT vs Local time\n" << endl;
+
         DateTime    gmt_now (DT_TIME_ZONE::GMT);
         DateTime    local_now;
 
@@ -212,9 +176,9 @@ int main (int argc, char *argv [])  {
              << "   " << gmt_time_1989.time () << endl << endl;
     }
 
-    cout << "\n----- Testing DateTime's weekdays day methods\n" << endl;
-
     {
+        cout << "\n----- Testing DateTime's weekdays day methods\n" << endl;
+
         const   DateTime    new_year (20020101);
 
         cout << "20020101 is a US holiday: "
@@ -405,23 +369,23 @@ int main (int argc, char *argv [])  {
     cout << "\n----- Testing DateTime's diff methods\n" << endl;
 
     {
-        const   DateTime    di1 (20020101, 12, 54, 31);
-        const   DateTime    di2 (20020201, 3, 50, 30);
+        const   DateTime    dt1 (20020101, 12, 54, 31);
+        const   DateTime    dt2 (20020201, 3, 50, 30);
 
-        cout << "di1 is: " << di1.string_format (DT_FORMAT::DT_TM2) << endl;
-        cout << "di2 is: " << di2.string_format (DT_FORMAT::DT_TM2) << endl;
-        cout << "second difference between di1 and di2: "
-             << di1.diff_seconds (di2) << endl;
-        cout << "minute difference between di1 and di2: "
-             << di1.diff_minutes (di2) << endl;
-        cout << "hour difference between di1 and di2: "
-             << di1.diff_hours (di2) << endl;
-        cout << "day difference between di1 and di2: "
-             << di1.diff_days (di2) << endl;
-        cout << "business day difference between di1 and di2: "
-             << di1.diff_weekdays (di2) << endl;
-        cout << "week difference between di1 and di2: "
-             << di1.diff_weeks (di2) << endl;
+        cout << "dt1 is: " << dt1.string_format (DT_FORMAT::DT_TM2) << endl;
+        cout << "dt2 is: " << dt2.string_format (DT_FORMAT::DT_TM2) << endl;
+        cout << "second difference between dt1 and dt2: "
+             << dt1.diff_seconds (dt2) << endl;
+        cout << "minute difference between dt1 and dt2: "
+             << dt1.diff_minutes (dt2) << endl;
+        cout << "hour difference between dt1 and dt2: "
+             << dt1.diff_hours (dt2) << endl;
+        cout << "day difference between dt1 and dt2: "
+             << dt1.diff_days (dt2) << endl;
+        cout << "business day difference between dt1 and dt2: "
+             << dt1.diff_weekdays (dt2) << endl;
+        cout << "week difference between dt1 and dt2: "
+             << dt1.diff_weeks (dt2) << endl;
 
         size_t          index = 0;
         const   size_t  max_index = 10000;
@@ -581,9 +545,9 @@ int main (int argc, char *argv [])  {
         }
     }
 
-    cout << "\n----- Testing DateTime's going over year boundary\n" << endl;
-
     {
+        cout << "\n----- Testing DateTime going over year boundary\n" << endl;
+
         {
             DateTime    test (20081225, 16, 30);
             int         i = 0;
@@ -615,9 +579,9 @@ int main (int argc, char *argv [])  {
         }
     }
 
-    cout << "\n----- Testing DateTime's time zone changes\n" << endl;
-
     {
+        cout << "\n----- Testing DateTime's time zone changes\n" << endl;
+
         DateTime    local_now;
         DateTime    gmt_now (DT_TIME_ZONE::GMT);
         DateTime    b_aires_now (DT_TIME_ZONE::AM_BUENOS_AIRES);
@@ -660,69 +624,201 @@ int main (int argc, char *argv [])  {
         cout << "\nLocal changed to Sydney: " << local << endl;
     }
 
-    cout << "\n----- Testing DateTime's const char * constructor\n" << endl;
-
     {
-         const DateTime di1 ("20100207 12:31");
+        // Testing DateTime's const char * constructor
 
-         if (di1.string_format (DT_FORMAT::DT_TM2) !=
+         const DateTime dt1 ("20100207 12:31");
+
+         if (dt1.string_format (DT_FORMAT::DT_TM2) !=
                  "02/07/2010 12:31:00.000")  {
              std::cout << "ERROR: "
-                       << di1.string_format (DT_FORMAT::DT_TM2) << " != "
+                       << dt1.string_format (DT_FORMAT::DT_TM2) << " != "
                        << "02/07/2010 12:31:00.000" << std::endl;
              return (EXIT_FAILURE);
          }
 
-         const DateTime di2 ("02/08/2010 12:31:56", DT_DATE_STYLE::AME_STYLE);
+         const DateTime dt2 ("02/08/2010 12:31:56", DT_DATE_STYLE::AME_STYLE);
 
-         if (di2.string_format (DT_FORMAT::DT_TM2) !=
+         if (dt2.string_format (DT_FORMAT::DT_TM2) !=
                  "02/08/2010 12:31:56.000")  {
              std::cout << "ERROR: "
-                       << di2.string_format (DT_FORMAT::DT_TM2) << " != "
+                       << dt2.string_format (DT_FORMAT::DT_TM2) << " != "
                        << "02/08/2010 12:31:56.000" << std::endl;
              return (EXIT_FAILURE);
          }
 
-         const DateTime di3 ("2010/02/09 12:31:56", DT_DATE_STYLE::EUR_STYLE);
+         const DateTime dt3 ("2010/02/09 12:31:56", DT_DATE_STYLE::EUR_STYLE);
 
-         if (di3.string_format (DT_FORMAT::DT_TM2) !=
+         if (dt3.string_format (DT_FORMAT::DT_TM2) !=
                  "02/09/2010 12:31:56.000")  {
              std::cout << "ERROR: "
-                       << di3.string_format (DT_FORMAT::DT_TM2) << " != "
+                       << dt3.string_format (DT_FORMAT::DT_TM2) << " != "
                        << "02/09/2010 12:31:56.000" << std::endl;
              return (EXIT_FAILURE);
          }
 
-         const DateTime di4 ("  2010/02/10 12:31:56", DT_DATE_STYLE::EUR_STYLE);
+         const DateTime dt4 ("  2010/02/10 12:31:56", DT_DATE_STYLE::EUR_STYLE);
 
-         if (di4.string_format (DT_FORMAT::DT_TM2) !=
+         if (dt4.string_format (DT_FORMAT::DT_TM2) !=
                  "02/10/2010 12:31:56.000")  {
              std::cout << "ERROR: "
-                       << di4.string_format (DT_FORMAT::DT_TM2) << " != "
+                       << dt4.string_format (DT_FORMAT::DT_TM2) << " != "
                        << "02/10/2010 12:31:56.000" << std::endl;
              return (EXIT_FAILURE);
          }
 
-         const DateTime di5 ("    02/11/2010 12:31:56",
+         const DateTime dt5 ("    02/11/2010 12:31:56",
                              DT_DATE_STYLE::AME_STYLE);
 
-         if (di5.string_format (DT_FORMAT::DT_TM2) !=
+         if (dt5.string_format (DT_FORMAT::DT_TM2) !=
                  "02/11/2010 12:31:56.000")  {
              std::cout << "ERROR: "
-                       << di5.string_format (DT_FORMAT::DT_TM2) << " != "
+                       << dt5.string_format (DT_FORMAT::DT_TM2) << " != "
                        << "02/11/2010 12:31:56.000" << std::endl;
              return (EXIT_FAILURE);
          }
 
-         const DateTime di6 (20190110, 13, 56, 23, 123456987);
+         const DateTime dt6 (20190110, 13, 56, 23, 123456987);
 
-         if (di6.string_format (DT_FORMAT::DT_PRECISE) !=
+         if (dt6.string_format (DT_FORMAT::DT_PRECISE) !=
                  "1547146583.123456987")  {
              std::cout << "ERROR: "
-                       << di6.string_format (DT_FORMAT::DT_PRECISE) << " != "
+                       << dt6.string_format (DT_FORMAT::DT_PRECISE) << " != "
                        << "1547146583.123456987" << std::endl;
              // return (EXIT_FAILURE);
          }
+    }
+
+    {
+        // Testing DateTime's add_months()
+
+        DateTime    now (20190530, 11, 15, 5, 123456789);
+
+        assert(now.string_format (DT_FORMAT::DT_TM2) ==
+                   "05/30/2019 11:15:05.123");
+
+        now.add_months (1);
+        assert(now.string_format (DT_FORMAT::DT_TM2) ==
+                   "06/30/2019 11:15:05.123");
+
+        now.add_months (-1);
+        assert(now.string_format (DT_FORMAT::DT_TM2) ==
+                   "05/30/2019 11:15:05.123");
+
+        now.add_months (10);
+        assert(now.string_format (DT_FORMAT::DT_TM2) ==
+                   "03/30/2020 11:15:05.123");
+
+        now.add_months (-10);
+        assert(now.string_format (DT_FORMAT::DT_TM2) ==
+                   "05/30/2019 11:15:05.123");
+
+        now.add_months (9);
+        assert(now.string_format (DT_FORMAT::DT_TM2) ==
+                   "02/29/2020 11:15:05.123");
+    }
+
+    {
+        // Testing DateTime's add_years()
+
+        DateTime    now (20160229, 11, 15, 5, 123456789);
+
+        assert(now.string_format (DT_FORMAT::DT_TM2) ==
+                   "02/29/2016 11:15:05.123");
+
+        now.add_years (1);
+        assert(now.string_format (DT_FORMAT::DT_TM2) ==
+                   "02/28/2017 11:15:05.123");
+
+        now.add_years (-1);
+        assert(now.string_format (DT_FORMAT::DT_TM2) ==
+                   "02/28/2016 11:15:05.123");
+
+        now.add_years (5);
+        assert(now.string_format (DT_FORMAT::DT_TM2) ==
+                   "02/28/2021 11:15:05.123");
+
+        now.add_years (-5);
+        assert(now.string_format (DT_FORMAT::DT_TM2) ==
+                   "02/28/2016 11:15:05.123");
+
+        now.add_years (9);
+        assert(now.string_format (DT_FORMAT::DT_TM2) ==
+                   "02/28/2025 11:15:05.123");
+    }
+
+    {
+        // Testing DateTime's long_time()
+
+        const DateTime  dt1 (20190522, 11, 15, 5, 123456789,
+                             DT_TIME_ZONE::AM_NEW_YORK);
+
+        assert(dt1.long_time() == 1558538105123456789);
+
+        const DateTime  dt2 (20190522, 11, 15, 5, 5,
+                             DT_TIME_ZONE::AM_NEW_YORK);
+
+        assert(dt2.long_time() == 1558538105000000005);
+
+        const DateTime  dt3 (20190522, 11, 15, 0, 0,
+                             DT_TIME_ZONE::AM_NEW_YORK);
+
+        assert(dt3.long_time() == 1558538100000000000);
+        assert(dt3.time() == 1558538100);
+    }
+
+    {
+        // Testing DateTime's add_nanoseconds()
+
+        DateTime    now (20190530, 11, 15, 5, 123000000,
+                         DT_TIME_ZONE::AM_NEW_YORK);
+
+        assert(now.string_format (DT_FORMAT::DT_TM2) ==
+                   "05/30/2019 11:15:05.123");
+
+        now.add_nanoseconds (1000000000);
+        assert(now.string_format (DT_FORMAT::DT_TM2) ==
+                   "05/30/2019 11:15:06.123");
+        assert(now.long_time() == 1559229306123000000);
+        now.add_nanoseconds (-1000000000);
+        assert(now.string_format (DT_FORMAT::DT_TM2) ==
+                   "05/30/2019 11:15:05.123");
+        assert(now.long_time() == 1559229305123000000);
+        now.add_nanoseconds (1000010000);
+        assert(now.string_format (DT_FORMAT::DT_TM2) ==
+                   "05/30/2019 11:15:06.123");
+        assert(now.long_time() == 1559229306123010000);
+        now.add_nanoseconds (-1000010000);
+        assert(now.string_format (DT_FORMAT::DT_TM2) ==
+                   "05/30/2019 11:15:05.123");
+        assert(now.long_time() == 1559229305123000000);
+
+        now.add_nanoseconds (9999);
+        assert(now.string_format (DT_FORMAT::DT_TM2) ==
+                   "05/30/2019 11:15:05.123");
+        assert(now.long_time() == 1559229305123009999);
+        now.add_nanoseconds (-9999);
+        assert(now.string_format (DT_FORMAT::DT_TM2) ==
+                   "05/30/2019 11:15:05.123");
+        assert(now.long_time() == 1559229305123000000);
+
+        now.add_nanoseconds (-123000000);
+        assert(now.long_time() == 1559229305000000000);
+        now.add_nanoseconds (500000000);
+        assert(now.long_time() == 1559229305500000000);
+        now.add_nanoseconds (500000000);
+        assert(now.long_time() == 1559229306000000000);
+        now.add_nanoseconds (500000000);
+        assert(now.long_time() == 1559229306500000000);
+        now.add_nanoseconds (500000000);
+        assert(now.long_time() == 1559229307000000000);
+
+        now.add_nanoseconds (-500000000);
+        assert(now.long_time() == 1559229306500000000);
+        now.add_nanoseconds (-500000000);
+        assert(now.long_time() == 1559229306000000000);
+        now.add_nanoseconds (-500000000);
+        assert(now.long_time() == 1559229305500000000);
     }
 
     return (EXIT_SUCCESS);

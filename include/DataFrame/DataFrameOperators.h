@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "DataFrame.h"
+#include <DataFrame/DataFrame.h>
 // #include <execution>
 
 // ----------------------------------------------------------------------------
@@ -23,9 +23,9 @@ namespace hmdf
 template<typename DF, template<typename> class OPT, typename ... types>
 DF binary_operation (const DF &lhs, const DF &rhs)  {
 
-    typename DF::TSVec          result_idx;
-    const typename DF::TSVec    &lhs_ts_vec = lhs.get_index();
-    const typename DF::TSVec    &rhs_ts_vec = rhs.get_index();
+    typename DF::IndexVecType       result_idx;
+    const typename DF::IndexVecType &lhs_ts_vec = lhs.get_index();
+    const typename DF::IndexVecType &rhs_ts_vec = rhs.get_index();
 
     result_idx.reserve(std::min(lhs_ts_vec.size(), rhs_ts_vec.size()));
     std::set_intersection(// std::execution::parallel_policy,
@@ -37,15 +37,15 @@ DF binary_operation (const DF &lhs, const DF &rhs)  {
 
     result.load_index(std::move(result_idx));
 
-    const typename DF::TSVec    &new_idx = result.get_index();
+    const typename DF::IndexVecType &new_idx = result.get_index();
 
-    for (const auto &lhs_citer : lhs.data_tb_)  {
-        const auto  rhs_citer = rhs.data_tb_.find(lhs_citer.first.c_str());
+    for (const auto &lhs_citer : lhs.column_tb_)  {
+        const auto  rhs_citer = rhs.column_tb_.find(lhs_citer.first.c_str());
 
-        if (rhs_citer == rhs.data_tb_.end())  continue;
+        if (rhs_citer == rhs.column_tb_.end())  continue;
 
         typename DF::template operator_functor_
-            <typename DF::TimeStamp, OPT, types ...>  functor (
+            <typename DF::IndexType, OPT, types ...>  functor (
                 lhs_ts_vec,
                 rhs_ts_vec,
                 new_idx,

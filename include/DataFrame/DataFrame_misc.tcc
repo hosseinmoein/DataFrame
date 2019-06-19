@@ -3,8 +3,9 @@
 // Copyright (C) 2018-2019 Hossein Moein
 // Distributed under the BSD Software License (see file License)
 
-#include "DateTime.h"
-#include "DataFrame.h"
+#include <DataFrame/DateTime.h>
+#include <DataFrame/DataFrame.h>
+
 #include <cstdio>
 
 // ----------------------------------------------------------------------------
@@ -19,11 +20,11 @@ namespace hmdf
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename HETERO>
+template<typename I, typename H>
 template<typename ... Ts>
 template<typename T>
 void
-DataFrame<TS, HETERO>::consistent_functor_<Ts ...>::operator() (T &vec) const  {
+DataFrame<I, H>::consistent_functor_<Ts ...>::operator() (T &vec) const  {
 
     using ValueType =
         typename std::remove_reference<decltype(vec)>::type::value_type;
@@ -33,11 +34,11 @@ DataFrame<TS, HETERO>::consistent_functor_<Ts ...>::operator() (T &vec) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename HETERO>
+template<typename I, typename H>
 template<typename T, typename ... Ts>
 template<typename T2>
 void
-DataFrame<TS, HETERO>::sort_functor_<T, Ts ...>::operator() (T2 &vec) const  {
+DataFrame<I, H>::sort_functor_<T, Ts ...>::operator() (T2 &vec) const  {
 
     using VecType = typename std::remove_reference<decltype(vec)>::type;
     using DataValueType = typename VecType::value_type;
@@ -56,11 +57,11 @@ DataFrame<TS, HETERO>::sort_functor_<T, Ts ...>::operator() (T2 &vec) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename HETERO>
+template<typename I, typename H>
 template<typename ... Ts>
 template<typename T>
 void
-DataFrame<TS, HETERO>::load_functor_<Ts ...>::operator() (const T &vec)  {
+DataFrame<I, H>::load_functor_<Ts ...>::operator() (const T &vec)  {
 
     using VecType = typename std::remove_reference<T>::type;
     using ValueType = typename VecType::value_type;
@@ -73,11 +74,11 @@ DataFrame<TS, HETERO>::load_functor_<Ts ...>::operator() (const T &vec)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename HETERO>
+template<typename I, typename H>
 template<typename ... Ts>
 template<typename T>
 void
-DataFrame<TS, HETERO>::remove_functor_<Ts ...>::operator() (T &vec)  {
+DataFrame<I, H>::remove_functor_<Ts ...>::operator() (T &vec)  {
 
     vec.erase(vec.begin() + begin, vec.begin() + end);
     return;
@@ -85,11 +86,11 @@ DataFrame<TS, HETERO>::remove_functor_<Ts ...>::operator() (T &vec)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename HETERO>
+template<typename I, typename H>
 template<typename ... Ts>
 template<typename T>
 void
-DataFrame<TS, HETERO>::view_setup_functor_<Ts ...>::
+DataFrame<I, H>::view_setup_functor_<Ts ...>::
 operator() (T &vec)  {
 
     using VecType = typename std::remove_reference<T>::type;
@@ -103,11 +104,11 @@ operator() (T &vec)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename HETERO>
+template<typename I, typename H>
 template<typename ... Ts>
 template<typename T>
 void
-DataFrame<TS, HETERO>::add_col_functor_<Ts ...>::operator() (const T &vec)  {
+DataFrame<I, H>::add_col_functor_<Ts ...>::operator() (const T &vec)  {
 
     using VecType = typename std::remove_reference<T>::type;
     using ValueType = typename VecType::value_type;
@@ -118,17 +119,17 @@ DataFrame<TS, HETERO>::add_col_functor_<Ts ...>::operator() (const T &vec)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename HETERO>
+template<typename I, typename H>
 template<typename F, typename ... Ts>
 template<typename T>
 void
-DataFrame<TS, HETERO>::groupby_functor_<F, Ts ...>::operator() (const T &vec)  {
+DataFrame<I, H>::groupby_functor_<F, Ts ...>::operator() (const T &vec)  {
 
     for (std::size_t i = begin; i < end && i < vec.size(); ++i)
         functor (indices, name, vec[i]);
 
     if (! ::strcmp(name, "INDEX"))  {
-        TimeStamp   v;
+        IndexType   v;
 
         functor.get_value(v);
         df.append_index(v);
@@ -148,11 +149,11 @@ DataFrame<TS, HETERO>::groupby_functor_<F, Ts ...>::operator() (const T &vec)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename HETERO>
+template<typename I, typename H>
 template<typename F, typename ... Ts>
 template<typename T>
 void
-DataFrame<TS, HETERO>::bucket_functor_<F, Ts ...>::operator() (const T &vec)  {
+DataFrame<I, H>::bucket_functor_<F, Ts ...>::operator() (const T &vec)  {
 
     using VecType = typename std::remove_reference<T>::type;
     using ValueType = typename VecType::value_type;
@@ -186,11 +187,11 @@ DataFrame<TS, HETERO>::bucket_functor_<F, Ts ...>::operator() (const T &vec)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename HETERO>
+template<typename I, typename H>
 template<typename ... Ts>
 template<typename T>
 void
-DataFrame<TS, HETERO>::print_functor_<Ts ...>::operator() (const T &vec)  {
+DataFrame<I, H>::print_functor_<Ts ...>::operator() (const T &vec)  {
 
     if (vec.empty())  return;
 
@@ -199,16 +200,22 @@ DataFrame<TS, HETERO>::print_functor_<Ts ...>::operator() (const T &vec)  {
 
     if (! values_only)  {
         os << name << ':' << vec.size() << ':';
-        if (typeid(ValueType) == typeid(double))
+        if (typeid(ValueType) == typeid(float))
+            os << "<float>:";
+        else if (typeid(ValueType) == typeid(double))
             os << "<double>:";
         else if (typeid(ValueType) == typeid(int))
             os << "<int>:";
         else if (typeid(ValueType) == typeid(unsigned int))
             os << "<uint>:";
-        else if (typeid(ValueType) == typeid(long))
+        else if (typeid(ValueType) == typeid(long int))
             os << "<long>:";
-        else if (typeid(ValueType) == typeid(unsigned long))
+        else if (typeid(ValueType) == typeid(long long int))
+            os << "<longlong>:";
+        else if (typeid(ValueType) == typeid(unsigned long int))
             os << "<ulong>:";
+        else if (typeid(ValueType) == typeid(unsigned long long int))
+            os << "<ulonglong>:";
         else if (typeid(ValueType) == typeid(std::string))
             os << "<string>:";
         else if (typeid(ValueType) == typeid(bool))
@@ -227,16 +234,16 @@ DataFrame<TS, HETERO>::print_functor_<Ts ...>::operator() (const T &vec)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename HETERO>
+template<typename I, typename H>
 template<typename ... Ts>
 template<typename T>
 void
-DataFrame<TS, HETERO>::
+DataFrame<I, H>::
 equal_functor_<Ts ...>::operator() (const std::vector<T> &lhs_vec)  {
 
-    const auto  &iter = df.data_tb_.find(name);
+    const auto  &iter = df.column_tb_.find(name);
 
-    if (iter == df.data_tb_.end())  {
+    if (iter == df.column_tb_.end())  {
         result = false;
         return;
     }
@@ -250,16 +257,16 @@ equal_functor_<Ts ...>::operator() (const std::vector<T> &lhs_vec)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename HETERO>
+template<typename I, typename H>
 template<typename ... Ts>
 template<typename T>
 void
-DataFrame<TS, HETERO>::
+DataFrame<I, H>::
 mod_by_idx_functor_<Ts ...>::operator() (std::vector<T> &lhs_vec) const  {
 
-    const auto  &iter = rhs_df.data_tb_.find(name);
+    const auto  &iter = rhs_df.column_tb_.find(name);
 
-    if (iter != rhs_df.data_tb_.end())  {
+    if (iter != rhs_df.column_tb_.end())  {
         const std::vector<T>    &rhs_vec = rhs_df.get_column<T>(name);
 
         lhs_vec[lhs_idx] = rhs_vec[rhs_idx];
@@ -268,9 +275,9 @@ mod_by_idx_functor_<Ts ...>::operator() (std::vector<T> &lhs_vec) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename HETERO>
+template<typename I, typename H>
 template<typename ... Ts, typename F, std::size_t ... Is>
-void DataFrame<TS, HETERO>::
+void DataFrame<I, H>::
 for_each_in_tuple_ (const std::tuple<Ts ...> &tu,
                     F func,
                     std::index_sequence<Is ...>)  {
@@ -281,9 +288,9 @@ for_each_in_tuple_ (const std::tuple<Ts ...> &tu,
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename HETERO>
+template<typename I, typename H>
 template<typename ... Ts, typename F, std::size_t ... Is>
-void DataFrame<TS, HETERO>::
+void DataFrame<I, H>::
 for_each_in_tuple_ (std::tuple<Ts ...> &tu,
                     F func,
                     std::index_sequence<Is ...>)  {
@@ -294,9 +301,9 @@ for_each_in_tuple_ (std::tuple<Ts ...> &tu,
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename HETERO>
+template<typename I, typename H>
 template<typename ... Ts, typename F>
-void DataFrame<TS, HETERO>::
+void DataFrame<I, H>::
 for_each_in_tuple_ (const std::tuple<Ts...> &tu, F func)  {
 
     for_each_in_tuple_(tu, func, std::make_index_sequence<sizeof...(Ts)>());
@@ -304,20 +311,20 @@ for_each_in_tuple_ (const std::tuple<Ts...> &tu, F func)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename HETERO>
+template<typename I, typename H>
 template<typename ... Ts, typename F>
-void DataFrame<TS, HETERO>::for_each_in_tuple_ (std::tuple<Ts...> &tu, F func) {
+void DataFrame<I, H>::for_each_in_tuple_ (std::tuple<Ts...> &tu, F func) {
 
     for_each_in_tuple_(tu, func, std::make_index_sequence<sizeof...(Ts)>());
 }
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename HETERO>
+template<typename I, typename H>
 template<typename ... Ts>
 template<typename T>
 void
-DataFrame<TS, HETERO>::
+DataFrame<I, H>::
 index_join_functor_common_<Ts ...>::operator()(const std::vector<T> &lhs_vec)  {
 
     const std::vector<T>    &rhs_vec = rhs.get_column<T>(name);
@@ -349,12 +356,10 @@ index_join_functor_common_<Ts ...>::operator()(const std::vector<T> &lhs_vec)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename HETERO>
+template<typename I, typename H>
 template<int SIDE, typename ... Ts>
 template<typename T>
-void
-DataFrame<TS, HETERO>::
-index_join_functor_oneside_<SIDE, Ts ...>::
+void DataFrame<I, H>::index_join_functor_oneside_<SIDE, Ts ...>::
 operator()(const std::vector<T> &vec)  {
 
     std::vector<T>          result_col;
@@ -373,10 +378,10 @@ operator()(const std::vector<T> &vec)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename HETERO>
+template<typename I, typename H>
 template<typename ... Ts>
 template<typename T>
-void DataFrame<TS, HETERO>::vertical_shift_functor_<Ts ...>::
+void DataFrame<I, H>::vertical_shift_functor_<Ts ...>::
 operator() (T &vec) const  {
 
     if (sp == shift_policy::up)
@@ -387,10 +392,10 @@ operator() (T &vec) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename HETERO>
+template<typename I, typename H>
 template<typename ... Ts>
 template<typename T>
-void DataFrame<TS, HETERO>::rotate_functor_<Ts ...>::
+void DataFrame<I, H>::rotate_functor_<Ts ...>::
 operator() (T &vec) const  {
 
     if (sp == shift_policy::up)
@@ -401,17 +406,17 @@ operator() (T &vec) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename HETERO>
+template<typename I, typename H>
 template<typename TST, template<typename> class OPT, typename ... types>
 template<typename T>
 void
-DataFrame<TS, HETERO>::
+DataFrame<I, H>::
 operator_functor_<TST, OPT, types ...>::
 operator()(const std::vector<T> &lhs_vec)  {
 
-    const auto  rhs_citer = rhs_df.data_tb_.find(col_name);
+    const auto  rhs_citer = rhs_df.column_tb_.find(col_name);
 
-    if (rhs_citer == rhs_df.data_tb_.end())  return;
+    if (rhs_citer == rhs_df.column_tb_.end())  return;
 
     const DataVec   &rhs_hv = rhs_df.data_[rhs_citer->second];
     const auto      &rhs_vec = rhs_hv.template get_vector<T>();
@@ -446,11 +451,11 @@ operator()(const std::vector<T> &lhs_vec)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename HETERO>
+template<typename I, typename H>
 template<typename ... types>
 template<typename T>
 void
-DataFrame<TS, HETERO>::
+DataFrame<I, H>::
 map_missing_rows_functor_<types ...>::
 operator()(const T &vec)  {
 
@@ -469,11 +474,11 @@ operator()(const T &vec)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename HETERO>
+template<typename I, typename H>
 template<typename ... types>
 template<typename T>
 void
-DataFrame<TS, HETERO>::
+DataFrame<I, H>::
 drop_missing_rows_functor_<types ...>::
 operator()(T &vec)  {
 
@@ -483,11 +488,11 @@ operator()(T &vec)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename HETERO>
+template<typename I, typename H>
 template<typename ... types>
 template<typename T>
 void
-DataFrame<TS, HETERO>::
+DataFrame<I, H>::
 get_row_functor_<types ...>::
 operator()(T &vec)  {
 

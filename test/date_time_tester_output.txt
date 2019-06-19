@@ -1,33 +1,13 @@
-Local Time is: 01/30/2019 09:22:13.999   Nanoseconds: 1892064064
-GMT Time is: 01/30/2019 14:22:13.999   Microseconds: 999999
-Date/Time should be 19721202: 12/02/1972 00:00:00.000
-Date/Time should be '19910223 16:23:45.230': 02/23/1991 16:23:45.230
-Date/Time should be '19910223 16:23:45.230': 02/23/1991 16:23:45.230
-Date/Time should be '20100207 12:00:00.000': 02/07/2010 12:00:00.000
-Date/Time should be '20100207 12:32:00.000': 02/07/2010 12:32:00.000
-DateTime::diff_seconds(): Time difference between different time zones is not implemented currently.
------ Testing DateTime's add_days()
-
-Now is: 10/23/2018 10:24:01.123
-After adding 1 day: 10/24/2018 10:24:01.123
-After adding -1 day: 10/23/2018 10:24:01.123
-After adding 1 weekdays day: 10/24/2018 10:24:01.123
-After adding -1 weekdays day: 10/23/2018 10:24:01.123
-After adding 2 weekdays days to '12/24/2009 09:30:00.000' you get '12/28/2009 09:30:00.000'
-After adding 2 weekdays days to '12/24/2008 09:30:00.000' you get '12/26/2008 09:30:00.000'
-After adding 2 weekdays days to '12/24/2006 09:30:00.000' you get '12/26/2006 09:30:00.000'
-After adding 2 weekdays days to '12/23/2005 09:30:00.000' you get '12/27/2005 09:30:00.000'
-After adding 2 weekdays days to '12/23/2004 09:30:00.000' you get '12/27/2004 09:30:00.000'
-After adding 2 weekdays days to '12/22/2000 09:30:00.000' you get '12/26/2000 09:30:00.000'
-After adding 2 weekdays days to '12/24/1998 09:30:00.000' you get '12/28/1998 09:30:00.000'
+Local Time is: 05/21/2019 17:55:08.-2104   Nanoseconds: -2105383680
+GMT Time is: 05/21/2019 21:55:08.-2104   Microseconds: -2105383
 
 ----- Testing DateTime's GMT vs Local time
 
-GMT now time: 01/30/2019 14:22:13.-1062   1548858133
-GMT ALT Constructor time: 01/30/2019 14:22:13.000   1548858133
+GMT now time: 05/21/2019 21:55:08.-823   1558475708
+GMT ALT Constructor time: 05/21/2019 21:55:08.000   1558475708
 
-Local now time: 01/30/2019 09:22:13.-1061   1548858133
-Local ALT Constructor time: 01/30/2019 09:22:13.000   1548858133
+Local now time: 05/21/2019 17:55:08.-823   1558475708
+Local ALT Constructor time: 05/21/2019 17:55:08.000   1558475708
 
 Local 1970 ALT Constructor time: 01/01/1970 00:00:00.000   18000
 GMT 1970 ALT Constructor time: 01/01/1970 00:00:00.000   0
@@ -172,7 +152,7 @@ After adding 10000 weekdays days to 19700101, the date is 04/30/2008 00:00:00.00
 11/03/2008 16:30:00.000 --- 1225747800
 10/31/2008 16:30:00.000 --- 1225485000
 
------ Testing DateTime's going over year boundary
+----- Testing DateTime going over year boundary
 
 
 
@@ -207,27 +187,24 @@ After adding 10000 weekdays days to 19700101, the date is 04/30/2008 00:00:00.00
 
 ----- Testing DateTime's time zone changes
 
-Now Local:        01/30/2019 09:22:14.908
-GMT Local:        01/30/2019 14:22:14.908
-Now Buenos Aires: 01/30/2019 11:22:14.908
-Now Tehran:       01/30/2019 17:52:14.908
-Now Tokyo:        01/30/2019 23:22:14.908
-Now Sydeny:       01/31/2019 01:22:14.908
-Now New Zealand:  01/31/2019 03:22:14.908
-Now Moscow:       01/30/2019 17:22:14.908
-Now Shanghai:     01/30/2019 22:22:14.908
-Now Berlin:       01/30/2019 15:22:14.908
-Now Paris:        01/30/2019 15:22:14.908
-Now Stockholm:    01/30/2019 14:22:14.908
-Now New York:     01/30/2019 09:22:14.908
-Now Los Amgeles:  01/30/2019 06:22:14.908
-Now Local (2):    01/30/2019 09:22:14.908
+Now Local:        05/21/2019 17:55:08.-504
+GMT Local:        05/21/2019 21:55:08.-504
+Now Buenos Aires: 05/21/2019 18:55:08.-503
+Now Tehran:       05/22/2019 02:25:08.-503
+Now Tokyo:        05/22/2019 06:55:08.-503
+Now Sydeny:       05/22/2019 07:55:08.-503
+Now New Zealand:  05/22/2019 09:55:08.-503
+Now Moscow:       05/22/2019 00:55:08.-503
+Now Shanghai:     05/22/2019 05:55:08.-503
+Now Berlin:       05/21/2019 23:55:08.-503
+Now Paris:        05/21/2019 23:55:08.-503
+Now Stockholm:    05/21/2019 21:55:08.-503
+Now New York:     05/21/2019 17:55:08.-503
+Now Los Amgeles:  05/21/2019 14:55:08.-503
+Now Local (2):    05/21/2019 17:55:08.-503
 
-Going from Local to Sydney: 01/31/2019 01:22:14.908
+Going from Local to Sydney: 05/22/2019 07:55:08.-504
 
 Local Date/Time: 11/23/2009 09:38:43.000
 
 Local changed to Sydney: 11/24/2009 01:38:43.000
-
------ Testing DateTime's const char * constructor
-

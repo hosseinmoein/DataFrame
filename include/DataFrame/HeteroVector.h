@@ -5,7 +5,8 @@
 
 #pragma once
 
-#include "HeteroView.h"
+#include <DataFrame/HeteroView.h>
+
 #include <vector>
 #include <unordered_map>
 
@@ -172,9 +173,9 @@ public:
 
 // ----------------------------------------------------------------------------
 
-#  ifdef DMS_INCLUDE_SOURCE
-#    include "HeteroVector.tcc"
-#  endif // DMS_INCLUDE_SOURCE
+#  ifndef HMDF_DO_NOT_INCLUDE_TCC_FILES
+#    include <DataFrame/HeteroVector.tcc>
+#  endif // HMDF_DO_NOT_INCLUDE_TCC_FILES
 
 // ----------------------------------------------------------------------------
 

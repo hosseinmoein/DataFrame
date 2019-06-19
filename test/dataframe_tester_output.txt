@@ -140,7 +140,7 @@ xint_col:28:<int>:35,36,40,45,46,33,34,8,7,1,4,6,12,14,2,9,3,10,11,20,15,5,13,22
 
 
 
-Tesing transpose()
+Testing transpose()
 Original DataFrame:
 INDEX:7:<ulong>:123450,123451,123452,123450,123455,123450,123449,
 col_3:7:<double>:15,16,17,18,19,20,21,
@@ -160,7 +160,7 @@ tcol_1:4:<double>:1,8,15,22,
 
 
 
-Tesing get_data_by_loc()/slicing
+Testing get_data_by_loc()/slicing
 INDEX:7:<ulong>:123450,123451,123452,123450,123455,123450,123449,
 col_3:7:<double>:15,16,17,18,19,20,21,
 col_4:7:<double>:22,23,24,25,nan,nan,nan,
@@ -195,7 +195,7 @@ Caught: DataFrame::get_data_by_loc(): ERROR: Bad begin, end range: 3, 8
 Caught: DataFrame::get_data_by_loc(): ERROR: Bad begin, end range: -1, 6
 
 
-Tesing get_view_by_loc()
+Testing get_view_by_loc()
 INDEX:3:<ulong>:123450,123455,123450,
 col_1:3:<double>:4,5,6,
 col_2:3:<double>:11,12,13,
@@ -205,7 +205,7 @@ col_3:3:<double>:18,19,20,
 
 
 
-Tesing remove_column()
+Testing remove_column()
 INDEX:7:<ulong>:123450,123451,123452,123450,123455,123450,123449,
 col_int:7:<int>:22,23,24,25,0,0,0,
 col_3:7:<double>:15,16,17,18,19,20,21,
@@ -235,7 +235,7 @@ col_1:7:<double>:1,2,3,4,5,6,7,
 
 
 
-Tesing get_view_by_idx()/slicing
+Testing get_view_by_idx()/slicing
 INDEX:14:<ulong>:123450,123451,123452,123453,123454,123455,123456,123457,123458,123459,123460,123461,123462,123466,
 col_3:14:<double>:15,16,17,18,19,20,21,0.34,1.56,0.34,2.3,0.1,0.89,0.45,
 col_4:14:<int>:22,23,24,25,99,100,101,3,2,0,0,0,0,0,
@@ -256,7 +256,7 @@ col_3:9:<double>:17,18,19,20,21,0.34,1.56,0.34,2.3,
 
 
 
-Tesing rename_column()
+Testing rename_column()
 Before rename
 INDEX:14:<ulong>:123450,123451,123452,123453,123454,123455,123456,123457,123458,123459,123460,123461,123462,123466,
 col_3:14:<double>:15,16,17,18,19,20,21,0.34,1.56,0.34,2.3,0.1,0.89,0.45,
@@ -273,7 +273,7 @@ col_1:14:<double>:1,2,3,4,5,6,7,8,9,10,11,12,13,14,
 
 
 
-Tesing get_col_unique_values()
+Testing get_col_unique_values()
 INDEX:14:<ulong>:123450,123451,123452,123453,123454,123455,123456,123457,123458,123459,123460,123461,123462,123466,
 col_3:14:<double>:15,16,15,18,19,16,21,0.34,1.56,0.34,2.3,0.34,0.89,19,
 col_4:14:<int>:22,23,24,25,99,100,101,3,2,0,0,0,0,0,
@@ -284,7 +284,7 @@ Getting unique values in column col_3
 15,16,18,19,21,0.34,1.56,2.3,0.89,
 
 
-Tesing remove_data_by_idx()
+Testing remove_data_by_idx()
 INDEX:14:<ulong>:123450,123451,123452,123453,123454,123455,123456,123457,123458,123459,123460,123461,123462,123466,
 col_3:14:<double>:15,16,17,18,19,20,21,0.34,1.56,0.34,2.3,0.1,0.89,0.45,
 col_4:14:<int>:22,23,24,25,99,100,101,3,2,0,0,0,0,0,
@@ -300,7 +300,7 @@ col_1:5:<double>:1,2,12,13,14,
 
 
 
-Tesing remove_data_by_loc()
+Testing remove_data_by_loc()
 INDEX:14:<ulong>:123450,123451,123452,123453,123454,123455,123456,123457,123458,123459,123460,123461,123462,123466,
 col_3:14:<double>:15,16,17,18,19,20,21,0.34,1.56,0.34,2.3,0.1,0.89,0.45,
 col_4:14:<int>:22,23,24,25,99,0,0,0,0,0,0,0,0,0,
@@ -316,7 +316,7 @@ col_1:6:<double>:1,2,3,12,13,14,
 
 
 
-Tesing value_counts()
+Testing value_counts()
 INDEX:14:<ulong>:123450,123451,123452,123453,123454,123455,123456,123457,123458,123459,123460,123461,123462,123466,
 col_3:14:<double>:15,16,15,18,19,16,21,nan,0.34,1.56,0.34,2.3,0.34,19,
 col_4:14:<int>:22,23,24,25,99,0,0,0,0,0,0,0,0,0,
@@ -329,7 +329,7 @@ counts:9:<ulong>:1,1,1,2,3,1,2,2,1,
 
 
 
-Tesing Index Inner Join
+Testing Index Inner Join
 First DF:
 INDEX:14:<ulong>:123450,123451,123452,123453,123454,123455,123456,123457,123458,123459,123460,123461,123462,123466,
 col_3:14:<double>:15,16,15,18,19,16,21,0.34,1.56,0.34,2.3,0.34,19,nan,
@@ -357,7 +357,7 @@ col_3:5:<double>:15,18,16,1.56,nan,
 
 
 
-Tesing Index Left Join
+Testing Index Left Join
 First DF:
 INDEX:14:<ulong>:123450,123451,123452,123453,123454,123455,123456,123457,123458,123459,123460,123461,123462,123466,
 col_3:14:<double>:15,16,15,18,19,16,21,0.34,1.56,0.34,2.3,0.34,19,nan,
@@ -385,7 +385,7 @@ col_3:14:<double>:15,16,15,18,19,16,21,0.34,1.56,0.34,2.3,0.34,19,nan,
 
 
 
-Tesing Index Right Join
+Testing Index Right Join
 First DF:
 INDEX:14:<ulong>:123450,123451,123452,123453,123454,123455,123456,123457,123458,123459,123460,123461,123462,123466,
 col_3:14:<double>:15,16,15,18,19,16,21,0.34,1.56,0.34,2.3,0.34,19,nan,
@@ -413,7 +413,7 @@ col_3:14:<double>:15,18,16,1.56,nan,nan,nan,nan,nan,nan,nan,nan,nan,nan,
 
 
 
-Tesing Index Left Right Join
+Testing Index Left Right Join
 First DF:
 INDEX:14:<ulong>:123450,123451,123452,123453,123454,123455,123456,123457,123458,123459,123460,123461,123462,123466,
 col_3:14:<double>:15,16,15,18,19,16,21,0.34,1.56,0.34,2.3,0.34,19,nan,
@@ -441,7 +441,7 @@ col_3:23:<double>:15,16,15,18,19,16,21,0.34,1.56,0.34,2.3,0.34,19,nan,nan,nan,na
 
 
 
-Tesing Largest/Smallest visitors
+Testing Largest/Smallest visitors
 Original DF:
 INDEX:14:<ulong>:123450,123451,123452,123453,123454,123455,123456,123457,123458,123459,123460,123461,123462,123466,
 col_3:14:<double>:15,16,15,18,19,16,21,0.34,1.56,0.34,2.3,0.34,19,nan,
@@ -463,7 +463,7 @@ N smallest result for col_3 sorted by value:
 123457|0.34 123459|0.34 123461|0.34 123458|1.56 123460|2.3 
 
 
-Tesing Shifting Up/Down
+Testing Shifting Up/Down
 Original DF:
 INDEX:14:<ulong>:123450,123451,123452,123453,123454,123455,123456,123457,123458,123459,123460,123461,123462,123466,
 str_col:14:<string>:qqqq,wwww,eeee,rrrr,tttt,yyyy,uuuu,iiii,oooo,pppp,2222,aaaa,dddd,ffff,
@@ -484,7 +484,7 @@ str_col:14:<string>:,,,qqqq,wwww,eeee,rrrr,tttt,yyyy,uuuu,iiii,oooo,pppp,2222,
 
 
 
-Tesing Rotating Up/Down
+Testing Rotating Up/Down
 Original DF:
 INDEX:14:<ulong>:123450,123451,123452,123453,123454,123455,123456,123457,123458,123459,123460,123461,123462,123466,
 str_col:14:<string>:qqqq,wwww,eeee,rrrr,tttt,yyyy,uuuu,iiii,oooo,pppp,2222,aaaa,dddd,ffff,
@@ -505,7 +505,7 @@ str_col:14:<string>:aaaa,dddd,ffff,qqqq,wwww,eeee,rrrr,tttt,yyyy,uuuu,iiii,oooo,
 
 
 
-Tesing DataFrame with DateTime
+Testing DataFrame with DateTime
 Original DF:
 INDEX:20:<DateTime>:978411600.0,978498000.0,978584400.0,978670800.0,978757200.0,978843600.0,978930000.0,979016400.0,979102800.0,979189200.0,979275600.0,979362000.0,979448400.0,979534800.0,979621200.0,979707600.0,979794000.0,979880400.0,979966800.0,980053200.0,
 str_col:20:<string>:Test str,Test str,Test str,Test str,Test str,Test str,Test str,Test str,Test str,Test str,Test str,Test str,Test str,Test str,Test str,Test str,Test str,Test str,Test str,Test str,
@@ -514,7 +514,7 @@ dbl_col:20:<double>:0.345689,1.34569,2.34569,3.34569,4.34569,5.34569,6.34569,7.3
 
 
 
-Tesing DataFrame friend plus operator
+Testing DataFrame friend plus operator
 Original DF1:
 INDEX:28:<ulong>:123432,123433,123434,123435,123436,123441,123442,123448,123449,123450,123450,123450,123450,123450,123451,123451,123452,123452,123452,123453,123454,123455,123455,123456,123457,123458,123459,123460,
 xint_col:28:<int>:35,36,40,45,46,33,34,8,7,1,4,6,12,14,2,9,3,10,11,20,15,5,13,22,23,24,25,30,
@@ -544,7 +544,7 @@ xint_col:28:<int>:70,72,80,90,92,66,68,16,14,2,8,12,24,28,4,18,6,20,22,40,30,10,
 
 
 
-Tesing DataFrame friend minus operator
+Testing DataFrame friend minus operator
 Original DF1:
 INDEX:28:<ulong>:123432,123433,123434,123435,123436,123441,123442,123448,123449,123450,123450,123450,123450,123450,123451,123451,123452,123452,123452,123453,123454,123455,123455,123456,123457,123458,123459,123460,
 xint_col:28:<int>:35,36,40,45,46,33,34,8,7,1,4,6,12,14,2,9,3,10,11,20,15,5,13,22,23,24,25,30,
@@ -573,7 +573,7 @@ xint_col:28:<int>:0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 
 
 
-Tesing DataFrame friend multiplis operator
+Testing DataFrame friend multiplis operator
 Original DF1:
 INDEX:12:<ulong>:1,2,3,4,5,6,7,8,9,25,40,55,
 same_name:12:<double>:1,2,3,4,5,6,7,8,9,10,11,12,
@@ -590,7 +590,7 @@ dbl_col:9:<double>:1,4,9,16,25,48,63,90,110,
 
 
 
-Tesing DataFrame friend divides operator
+Testing DataFrame friend divides operator
 Original DF1:
 INDEX:12:<ulong>:1,2,3,4,5,6,7,8,9,25,40,55,
 same_name:12:<double>:1,2,3,4,5,6,7,8,9,10,11,12,
@@ -607,7 +607,7 @@ dbl_col:9:<double>:1,1,1,1,1,1.33333,1.28571,1.11111,1.1,
 
 
 
-Tesing fill_missing(values)
+Testing fill_missing(values)
 Original DF:
 INDEX:14:<ulong>:123450,123451,123452,123453,123454,123455,123456,123457,123458,123459,123460,123461,123462,123466,
 col_3:14:<double>:nan,16,nan,18,19,16,nan,0.34,1.56,0.34,2.3,0.34,nan,nan,
@@ -626,7 +626,7 @@ col_1:14:<double>:1,2,3,4,1001,6,7,1001,1001,nan,11,12,13,14,
 
 
 
-Tesing fill_missing(fill_forward)
+Testing fill_missing(fill_forward)
 Original DF:
 INDEX:14:<ulong>:123450,123451,123452,123453,123454,123455,123456,123457,123458,123459,123460,123461,123462,123466,
 col_3:14:<double>:nan,16,nan,18,19,16,nan,0.34,1.56,0.34,2.3,0.34,nan,nan,
@@ -645,7 +645,7 @@ col_1:14:<double>:1,2,3,4,4,6,7,7,7,nan,11,12,13,14,
 
 
 
-Tesing fill_missing(fill_backward)
+Testing fill_missing(fill_backward)
 Original DF:
 INDEX:14:<ulong>:123450,123451,123452,123453,123454,123455,123456,123457,123458,123459,123460,123461,123462,123466,
 col_3:14:<double>:nan,16,nan,18,19,16,nan,0.34,1.56,0.34,2.3,0.34,nan,nan,
@@ -664,7 +664,7 @@ col_1:14:<double>:1,2,3,4,6,6,7,11,11,11,11,12,13,14,
 
 
 
-Tesing fill_missing(linear_interpolate)
+Testing fill_missing(linear_interpolate)
 Original DF:
 INDEX:14:<ulong>:123450,123451,123452,123453,123454,123455,123456,123457,123458,123459,123460,123461,123462,123466,
 col_3:14:<double>:nan,16,nan,18,19,16,nan,0.34,1.56,0.34,2.3,0.34,nan,nan,
@@ -681,7 +681,7 @@ col_1:14:<double>:1,2,3,4,5,6,7,8,9,10,11,12,13,14,
 
 
 
-Tesing drop_missing(all) no drop
+Testing drop_missing(all) no drop
 Original DF:
 INDEX:14:<ulong>:123450,123451,123452,123453,123454,123455,123456,123457,123458,123459,123460,123461,123462,123466,
 col_3:14:<double>:nan,16,nan,18,19,16,nan,0.34,1.56,0.34,2.3,0.34,nan,nan,
@@ -700,7 +700,7 @@ col_1:14:<double>:1,2,3,4,nan,6,7,nan,nan,nan,11,12,13,14,
 
 
 
-Tesing drop_missing(all) 2 drop
+Testing drop_missing(all) 2 drop
 Original DF:
 INDEX:14:<ulong>:123450,123451,123452,123453,123454,123455,123456,123457,123458,123459,123460,123461,123462,123466,
 col_3:14:<double>:nan,16,nan,18,19,nan,nan,0.34,1.56,0.34,nan,0.34,nan,nan,
@@ -719,7 +719,7 @@ col_1:12:<double>:1,2,3,4,nan,7,nan,nan,nan,12,13,14,
 
 
 
-Tesing drop_missing(any)
+Testing drop_missing(any)
 Original DF:
 INDEX:14:<ulong>:123450,123451,123452,123453,123454,123455,123456,123457,123458,123459,123460,123461,123462,123466,
 col_3:14:<double>:nan,16,nan,18,19,16,nan,0.34,1.56,0.34,2.3,0.34,nan,nan,
@@ -738,7 +738,7 @@ col_1:1:<double>:4,
 
 
 
-Tesing drop_missing(threshold=3)
+Testing drop_missing(threshold=3)
 Original DF:
 INDEX:14:<ulong>:123450,123451,123452,123453,123454,123455,123456,123457,123458,123459,123460,123461,123462,123466,
 col_3:14:<double>:nan,16,nan,18,19,16,nan,0.34,1.56,0.34,2.3,0.34,nan,nan,
@@ -757,7 +757,7 @@ col_1:13:<double>:1,2,3,4,nan,6,7,nan,nan,nan,11,12,14,
 
 
 
-Tesing get_row()
+Testing get_row()
 Original DF:
 INDEX:14:<ulong>:123450,123451,123452,123453,123454,123455,123456,123457,123458,123459,123460,123461,123462,123466,
 col_int:2:<int>:22,11,

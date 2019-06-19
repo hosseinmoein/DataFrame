@@ -3,8 +3,8 @@
 // Copyright (C) 2018-2019 Hossein Moein
 // Distributed under the BSD Software License (see file License)
 
-#include <FixedSizeString.h>
-#include "../include/DateTime.h"
+#include <DataFrame/FixedSizeString.h>
+#include <DataFrame/DateTime.h>
 #ifdef _WIN32
 #  include <time.h>
 #  include <windows.h>
@@ -156,7 +156,7 @@ DateTime::DateTime (DT_TIME_ZONE time_zone) noexcept : time_zone_(time_zone)  {
 
     tmpres /= 10;  // convert into microseconds
     // converting file time to unix epoch
-    tmpres -= DELTA_EPOCH_IN_MICROSECS; 
+    tmpres -= DELTA_EPOCH_IN_MICROSECS;
 
     set_time(tmpres / 1000000UL, (tmpres % 1000000UL) * 1000000);
 #elif defined clock_gettime
@@ -213,11 +213,11 @@ DateTime::DateTime (DateType d,
 // I'm adding the following formats:
 //
 // AME_STYLE:
-//  (1)  DD/MM/YYYY
-//  (2)  DD/MM/YYYY HH
-//  (3)  DD/MM/YYYY HH:MM
-//  (4)  DD/MM/YYYY HH:MM:SS
-//  (5)  DD/MM/YYYY HH:MM:SS.MMM
+//  (1)  MM/DD/YYYY
+//  (2)  MM/DD/YYYY HH
+//  (3)  MM/DD/YYYY HH:MM
+//  (4)  MM/DD/YYYY HH:MM:SS
+//  (5)  MM/DD/YYYY HH:MM:SS.MMM
 //
 // EUR_STYLE:
 //  (1)  YYYY/MM/DD
@@ -426,7 +426,15 @@ DateTime::EpochType DateTime::compare (const DateTime &rhs) const  {
 
 DateTime::DatePartType DateTime::days_in_month () const noexcept  {
 
-    switch (month ())  {
+    return (days_in_month_(month(), year()));
+}
+
+// ----------------------------------------------------------------------------
+
+DateTime::DatePartType DateTime::
+days_in_month_ (DT_MONTH month, DatePartType year) noexcept  {
+
+    switch (month)  {
         case DT_MONTH::APR:
         case DT_MONTH::JUN:
         case DT_MONTH::SEP:
@@ -435,7 +443,7 @@ DateTime::DatePartType DateTime::days_in_month () const noexcept  {
         case DT_MONTH::FEB:
             // This I remember from CML.
             //
-            if ((year () % 4 == 0 && year () % 100 != 0) || year () % 400 == 0)
+            if ((year % 4 == 0 && year % 100 != 0) || year % 400 == 0)
                 return (29);
             else
                 return (28);
@@ -453,7 +461,8 @@ bool DateTime::is_valid () const noexcept  {
 
     return (year () > 1900 && year () < 2525 &&
             month () > DT_MONTH::BAD_MONTH && month () <= DT_MONTH::DEC &&
-            dmonth () > 0 && dmonth () <= days_in_month () &&
+            dmonth () > 0 &&
+            dmonth () <= days_in_month_ (month(), year()) &&
             hour () >= 0 && hour () < 24 &&
             minute () >= 0 && minute () < 60 &&
             sec () >= 0 && sec () < 60 &&
@@ -729,6 +738,14 @@ DateTime::EpochType DateTime::time () const noexcept  {
 
 // ----------------------------------------------------------------------------
 
+DateTime::LongTimeType DateTime::long_time () const noexcept  {
+
+    return (static_cast<LongTimeType>(time()) * 1000000000LL +
+            static_cast<LongTimeType>(nanosec()));
+}
+
+// ----------------------------------------------------------------------------
+
 double DateTime::diff_seconds (const DateTime &that) const  {
 
     // Currently I don't have time to implement this. There are
@@ -806,6 +823,20 @@ void DateTime::add_seconds (EpochType secs) noexcept  {
 
 // ----------------------------------------------------------------------------
 
+void DateTime::add_nanoseconds (long nanosecs) noexcept  {
+
+    long long int   new_time =
+        static_cast<long long int>(time()) * 1000000000LL +
+        static_cast<long long int>(nanosec());
+
+    new_time += static_cast<long long int>(nanosecs);
+    set_time(static_cast<EpochType>(new_time / 1000000000LL),
+             static_cast<NanosecondType>(new_time % 1000000000LL));
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
 void DateTime::add_days (long days) noexcept  {
 
     if (days != 0)  {
@@ -870,6 +901,63 @@ void DateTime::add_weekdays (long days) noexcept  {
             days -= addend;
         }
     }
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+void DateTime::add_months (long months) noexcept  {
+
+    int         y = year();
+    int         m = static_cast<int>(month());
+    const int   addend = months >= 0 ? 1 : -1;
+
+    while (months)  {
+        m += addend;
+        if (m > 12 || m == 0)  {
+            m = m > 12 ? 1 : 12;
+            y += addend;
+        }
+        months -= addend;
+    }
+
+    int         new_day = dmonth();
+    const int   days_max = days_in_month_(static_cast<DT_MONTH>(m), y);
+
+    if (new_day > days_max)
+        new_day = days_max;
+
+    const DateTime  new_di((y * 100 + m) * 100 + new_day,
+                           hour(),
+                           minute(),
+                           sec(),
+                           nanosec(),
+                           get_timezone());
+
+    *this = new_di;
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+void DateTime::add_years (long years) noexcept  {
+
+    int         new_year = year() + years;
+    int         new_day = dmonth();
+    const int   days_max = days_in_month_(month(), new_year);
+
+    if (new_day > days_max)
+        new_day = days_max;
+
+    const DateTime  new_di(
+        (new_year * 100 + static_cast<int>(month())) * 100 + new_day,
+        hour(),
+        minute(),
+        sec(),
+        nanosec(),
+        get_timezone());
+
+    *this = new_di;
     return;
 }
 

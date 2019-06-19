@@ -3,7 +3,8 @@
 // Copyright (C) 2018-2019 Hossein Moein
 // Distributed under the BSD Software License (see file License)
 
-#include "DataFrame.h"
+#include <DataFrame/DataFrame.h>
+
 #include <tuple>
 
 // ----------------------------------------------------------------------------
@@ -17,15 +18,15 @@ namespace hmdf
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename HETERO>
+template<typename I, typename H>
 template<typename RHS_T, typename ... types>
-StdDataFrame<TS> DataFrame<TS, HETERO>::
+StdDataFrame<I> DataFrame<I, H>::
 join_by_index (const RHS_T &rhs, join_policy mp) const  {
 
-    static_assert(std::is_base_of<StdDataFrame<TS>, RHS_T>::value ||
-                      std::is_base_of<DataFrameView<TS>, RHS_T>::value,
+    static_assert(std::is_base_of<StdDataFrame<IndexType>, RHS_T>::value ||
+                      std::is_base_of<DataFrameView<IndexType>, RHS_T>::value,
                   "The rhs argument to join_by_index() can only be "
-                  "StdDataFrame<TS> or DataFrameView<TS>");
+                  "StdDataFrame<IndexType> or DataFrameView<IndexType>");
 
     switch(mp)  {
         case join_policy::inner_join:
@@ -54,15 +55,15 @@ join_by_index (const RHS_T &rhs, join_policy mp) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename HETERO>
+template<typename I, typename H>
 template<typename LHS_T, typename RHS_T, typename ... types>
-StdDataFrame<TS> DataFrame<TS, HETERO>::
+StdDataFrame<I> DataFrame<I, H>::
 join_helper_(const LHS_T &lhs,
              const RHS_T &rhs,
              const IndexIdxVector &joined_index_idx)  {
 
-    StdDataFrame<TS>    result;
-    std::vector<TS>     result_index;
+    StdDataFrame<IndexType>    result;
+    std::vector<IndexType>     result_index;
 
     // Load the index
     result_index.reserve(joined_index_idx.size());
@@ -76,11 +77,11 @@ join_helper_(const LHS_T &lhs,
     result.load_index(std::move(result_index));
 
     // Load the common and lhs columns
-    for (auto &iter : lhs.data_tb_)  {
-        auto    rhs_citer = rhs.data_tb_.find(iter.first);
+    for (auto &iter : lhs.column_tb_)  {
+        auto    rhs_citer = rhs.column_tb_.find(iter.first);
 
         // Common column between two frames
-        if (rhs_citer != rhs.data_tb_.end())  {
+        if (rhs_citer != rhs.column_tb_.end())  {
             index_join_functor_common_<types ...> functor (iter.first.c_str(),
                                                            rhs,
                                                            joined_index_idx,
@@ -101,10 +102,10 @@ join_helper_(const LHS_T &lhs,
     }
 
     // Load the rhs columns
-    for (auto &iter : rhs.data_tb_)  {
-        auto    lhs_citer = lhs.data_tb_.find(iter.first);
+    for (auto &iter : rhs.column_tb_)  {
+        auto    lhs_citer = lhs.column_tb_.find(iter.first);
 
-        if (lhs_citer == lhs.data_tb_.end())  {  // rhs only column
+        if (lhs_citer == lhs.column_tb_.end())  {  // rhs only column
             // 1 = Right
             index_join_functor_oneside_<1, types ...> functor (
                 iter.first.c_str(),
@@ -120,9 +121,9 @@ join_helper_(const LHS_T &lhs,
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename HETERO>
+template<typename I, typename H>
 template<typename LHS_T, typename RHS_T, typename ... types>
-StdDataFrame<TS> DataFrame<TS, HETERO>::
+StdDataFrame<I> DataFrame<I, H>::
 index_inner_join_(const LHS_T &lhs, const RHS_T &rhs)  {
 
     size_type       lhs_current = 0;
@@ -148,9 +149,9 @@ index_inner_join_(const LHS_T &lhs, const RHS_T &rhs)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename HETERO>
+template<typename I, typename H>
 template<typename LHS_T, typename RHS_T, typename ... types>
-StdDataFrame<TS> DataFrame<TS, HETERO>::
+StdDataFrame<I> DataFrame<I, H>::
 index_left_join_(const LHS_T &lhs, const RHS_T &rhs)  {
 
     size_type       lhs_current = 0;
@@ -186,9 +187,9 @@ index_left_join_(const LHS_T &lhs, const RHS_T &rhs)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename HETERO>
+template<typename I, typename H>
 template<typename LHS_T, typename RHS_T, typename ... types>
-StdDataFrame<TS> DataFrame<TS, HETERO>::
+StdDataFrame<I> DataFrame<I, H>::
 index_right_join_(const LHS_T &lhs, const RHS_T &rhs)  {
 
     size_type       lhs_current = 0;
@@ -226,9 +227,9 @@ index_right_join_(const LHS_T &lhs, const RHS_T &rhs)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename TS, typename HETERO>
+template<typename I, typename H>
 template<typename LHS_T, typename RHS_T, typename ... types>
-StdDataFrame<TS> DataFrame<TS, HETERO>::
+StdDataFrame<I> DataFrame<I, H>::
 index_left_right_join_(const LHS_T &lhs, const RHS_T &rhs)  {
 
     size_type       lhs_current = 0;

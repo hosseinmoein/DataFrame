@@ -132,6 +132,7 @@ public:
     using MicrosecondType = int;             // 0 - 999,999
     using NanosecondType =  int;             // 0 - 999,999,999
     using EpochType = time_t;                // Signed epoch
+    using LongTimeType = long long int;      // Nano seconds since epoch
 
 private:
 
@@ -171,11 +172,11 @@ public:
     // Currently, the following formats are supported:
     //  (1)  YYYYMMDD
     // AME_STYLE:
-    //  (2)  DD/MM/YYYY
-    //  (3)  DD/MM/YYYY HH
-    //  (4)  DD/MM/YYYY HH:MM
-    //  (5)  DD/MM/YYYY HH:MM:SS
-    //  (6)  DD/MM/YYYY HH:MM:SS.MMM
+    //  (2)  MM/DD/YYYY
+    //  (3)  MM/DD/YYYY HH
+    //  (4)  MM/DD/YYYY HH:MM
+    //  (5)  MM/DD/YYYY HH:MM:SS
+    //  (6)  MM/DD/YYYY HH:MM:SS.MMM
     //
     // EUR_STYLE:
     //  (7)  YYYY/MM/DD
@@ -228,7 +229,8 @@ public:
     MillisecondType msec () const noexcept;     // 0 - 999
     MicrosecondType microsec () const noexcept; // 0 - 999,999
     NanosecondType nanosec () const noexcept;   // 0 - 999,999,999
-    EpochType time () const noexcept;           // Like time()
+    EpochType time () const noexcept;           // Like ::time()
+    LongTimeType long_time () const noexcept;   // Nano seconds since epoch
 
     DatePartType days_in_month () const noexcept;  // 28, 29, 30, 31
 
@@ -244,9 +246,12 @@ public:
 
     // The parameter to these methods could be +/-.
     // It will advance/pull back the date/time accordingly.
+    void add_nanoseconds (long nanosecs) noexcept;
     void add_seconds (EpochType secs) noexcept;
     void add_days (long days) noexcept;
     void add_weekdays (long days) noexcept;
+    void add_months (long months) noexcept;
+    void add_years (long years) noexcept;
 
     bool is_weekend () const noexcept;
     bool is_newyear () const noexcept;
@@ -261,6 +266,9 @@ public:
     std::string string_format (DT_FORMAT format) const;
 
 private:
+
+    static DatePartType
+    days_in_month_ (DT_MONTH month, DatePartType year) noexcept;
 
     // NOTE: This method is not multithread-safe. This method
     //       modifies the TZ environment variable which changes the

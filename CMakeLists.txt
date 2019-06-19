@@ -221,7 +221,7 @@ target_link_libraries(dataframe_tester DataFrame)
 target_link_libraries(vectors_tester DataFrame)
 
 # Link the DataFrame library to the test binary
-target_link_libraries(vector_ptr_view_tester Dataframe)
+target_link_libraries(vector_ptr_view_tester DataFrame)
 
 # Link the DataFrame library to the test binary
 target_link_libraries(date_time_tester DataFrame)

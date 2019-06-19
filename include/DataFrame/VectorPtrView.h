@@ -537,25 +537,26 @@ public:
 
     inline iterator begin () noexcept  {
 
-        return (iterator (&(vector_.front())));
+        return (iterator (&(*(vector_.begin()))));
     }
-    inline iterator end () noexcept { return(iterator(&(vector_.back()) + 1)); }
+    inline iterator
+    end () noexcept { return (iterator(&(*(vector_.end())))); }
     inline const_iterator begin () const noexcept  {
 
-        return (const_iterator (&(vector_.front())));
+        return (const_iterator (&(*(vector_.begin()))));
     }
     inline const_iterator end () const noexcept  {
 
-        return (const_iterator(&(vector_.back()) + 1));
+        return (const_iterator(&(*(vector_.end()))));
     }
 
     inline const_reverse_iterator rbegin () const noexcept  {
 
-        return (const_reverse_iterator (&(vector_.back())));
+        return (const_reverse_iterator (&(*(vector_.rbegin()))));
     }
     inline const_reverse_iterator rend () const noexcept  {
 
-        return (const_reverse_iterator (&(vector_.front()) - 1));
+        return (const_reverse_iterator (&(*(vector_.rend()))));
     }
 };
 

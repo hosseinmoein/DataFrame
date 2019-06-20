@@ -20,7 +20,7 @@ Instances of DataFrame are not multithreaded safe. In other words, a single inst
 <B>Example Code</B>
 ```CPP
 // Define a DataFrame with unsigned long index type that uses std::vector
-typedef DataFrame<unsigned long, std::vector>	MyDataFrame;
+typedef StdDataFrame<unsigned long> MyDataFrame;
 
 MyDataFrame                df;
 std::vector<int>           intvec = { 1, 2, 3, 4, 5 };

@@ -78,14 +78,8 @@ public:
     inline VectorPtrView () = default;
     inline VectorPtrView (const VectorPtrView &) = default;
     inline VectorPtrView (VectorPtrView &&) = default;
-    VectorPtrView(std::vector<T> &rhs)  {
-
-        const size_type vec_size = rhs.size();
-
-        reserve(vec_size);
-        for (size_type idx = 0; idx < vec_size; ++idx)
-            push_back(&(rhs[idx]));
-    }
+    inline VectorPtrView(const std::vector<T> &rhs)  { *this = rhs; }
+    inline VectorPtrView(std::vector<T> &rhs)  { *this = rhs; }
     template<typename ITR>
     VectorPtrView(ITR first, ITR last)  {
 
@@ -97,6 +91,17 @@ public:
 
     inline VectorPtrView &operator = (const VectorPtrView &) = default;
     inline VectorPtrView &operator = (VectorPtrView &&) = default;
+    inline VectorPtrView &operator = (const std::vector<T> &rhs)  {
+
+        VectorPtrView   tmp_vec;
+        const size_type vec_size = rhs.size();
+
+        reserve(vec_size);
+        for (size_type idx = 0; idx < vec_size; ++idx)
+            tmp_vec.push_back(&(rhs[idx]));
+        swap(tmp_vec);
+        return (*this);
+    }
     inline VectorPtrView &operator = (std::vector<T> &rhs)  {
 
         VectorPtrView   tmp_vec;
@@ -108,6 +113,7 @@ public:
         swap(tmp_vec);
         return (*this);
     }
+
 
     inline void clear () throw ()  { vector_.clear(); }
     inline void resize (size_type n) throw ()  { vector_.resize(n); }
@@ -281,8 +287,14 @@ public:
         inline const_iterator (value_type *const *node) : node_ (node)  {   }
 
         inline const_iterator (const iterator &itr)  { *this = itr; }
+        inline const_iterator (iterator &itr)  { *this = itr; }
 
         inline const_iterator &operator = (const iterator &rhs)  {
+
+            node_ = rhs.node_;
+            return (*this);
+        }
+        inline const_iterator &operator = (iterator &rhs)  {
 
             node_ = rhs.node_;
             return (*this);
@@ -414,9 +426,16 @@ public:
 
         inline const_reverse_iterator (const const_iterator &itr)
             { *this = itr; }
+        inline const_reverse_iterator (const_iterator &itr) { *this = itr; }
 
         inline const_reverse_iterator &
         operator = (const const_iterator &rhs) noexcept  {
+
+            node_ = rhs.node_;
+            return (*this);
+        }
+        inline const_reverse_iterator &
+        operator = (const_iterator &rhs) noexcept  {
 
             node_ = rhs.node_;
             return (*this);

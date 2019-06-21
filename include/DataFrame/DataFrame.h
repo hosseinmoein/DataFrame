@@ -406,11 +406,11 @@ public:  // Load/append/remove interfaces
     // This function first calls make_consistent() that may add nan values to
     // data columns.
     //
-    // types: List all the types of all data columns.
-    //        A type should be specified in the list only once.
+    // Ts: List all the types of all data columns.
+    //     A type should be specified in the list only once.
     // range: The begin and end iterators for index specified with index values
     //
-    template<typename ... types>
+    template<typename ... Ts>
     void
     remove_data_by_idx (Index2D<IndexType> range);
 
@@ -421,11 +421,11 @@ public:  // Load/append/remove interfaces
     // This function first calls make_consistent() that may add nan values to
     // data columns.
     //
-    // types: List all the types of all data columns.
-    //        A type should be specified in the list only once.
+    // Ts: List all the types of all data columns.
+    //     A type should be specified in the list only once.
     // range: The begin and end iterators for data
     //
-    template<typename ... types>
+    template<typename ... Ts>
     void
     remove_data_by_loc (Index2D<int> range);
 
@@ -457,12 +457,12 @@ public:  // Other public interfaces
     // It removes a row if any or all or some of the columns are NaN, based
     // on drop policy
     //
-    // types: List all the types of all data columns.
-    //        A type should be specified in the list only once.
+    // Ts: List all the types of all data columns.
+    //     A type should be specified in the list only once.
     // threshold: If drop policy is threshold, it specifies the numbers of
     //            NaN columns before removing the row.
     //
-    template<typename ... types>
+    template<typename ... Ts>
     void
     drop_missing(drop_policy policy, size_type threshold = 0);
 
@@ -545,10 +545,10 @@ public:  // Other public interfaces
     // by nan.
     // This is also called by sort(), before sorting
     //
-    // types: List all the types of all data columns.
-    //        A type should be specified in the list only once.
+    // Ts: List all the types of all data columns.
+    //     A type should be specified in the list only once.
     //
-    template<typename ... types>
+    template<typename ... Ts>
     void
     make_consistent ();
 
@@ -560,16 +560,16 @@ public:  // Other public interfaces
     //
     // T: Type of the by_name column. You always must specify this type,
     //    even if it is being sorted by the default index
-    // types: List all the types of all data columns.
-    //        A type should be specified in the list only once.
+    // Ts: List all the types of all data columns.
+    //     A type should be specified in the list only once.
     //
-    template<typename T, typename ... types>
+    template<typename T, typename ... Ts>
     void
     sort(const char *by_name = nullptr);
 
     // Same as sort() above, but executed asynchronously
     //
-    template<typename T, typename ... types>
+    template<typename T, typename ... Ts>
     std::future<void>
     sort_async (const char *by_name = nullptr);
 
@@ -579,14 +579,14 @@ public:  // Other public interfaces
     //
     // F: type functor to be applied to columns to group by
     // T: type of the groupby column. In case if index, it is type of index
-    // types: List of the types of all data columns.
-    //        A type should be specified in the list only once.
+    // Ts: List of the types of all data columns.
+    //     A type should be specified in the list only once.
     // func: The functor to do the groupby. To see an example of func, refer
     //       to GroupbySum in DataFrameVisitors.h file
     // already_sorted: If the DataFrame is already sorted by gb_col_name,
     //                 this will save the expensive sort operation
     //
-    template<typename F, typename T, typename ... types>
+    template<typename F, typename T, typename ... Ts>
     DataFrame
     groupby(F &&func,
             const char *gb_col_name = nullptr,
@@ -594,7 +594,7 @@ public:  // Other public interfaces
 
     // Same as groupby() above, but executed asynchronously
     //
-    template<typename F, typename T, typename ... types>
+    template<typename F, typename T, typename ... Ts>
     std::future<DataFrame>
     groupby_async (F &&func,
                    const char *gb_col_name = nullptr,
@@ -634,20 +634,20 @@ public:  // Other public interfaces
     // NOTE:The DataFrame must already be sorted by index.
     //
     // F: type functor to be applied to columns to bucketize
-    // types: List of the types of all data columns.
-    //        A type should be specified in the list only once.
+    // Ts: List of the types of all data columns.
+    //     A type should be specified in the list only once.
     // func: The functor to do summarization and bucktization.
     // bucket_interval: Bucket interval is in the index's single value unit.
     //                  For example if index is in minutes, bucket_interval
     //                  will be in the unit of minutes and so on.
     //
-    template<typename F, typename ... types>
+    template<typename F, typename ... Ts>
     DataFrame
     bucketize (F &&func, const IndexType &bucket_interval) const;
 
     // Same as bucketize() above, but executed asynchronously
     //
-    template<typename F, typename ... types>
+    template<typename F, typename ... Ts>
     std::future<DataFrame>
     bucketize_async (F &&func, const IndexType &bucket_interval) const;
 
@@ -658,7 +658,7 @@ public:  // Other public interfaces
     //
     // NOTE:The DataFrame must already be sorted by index.
     //
-    template<typename F, typename ... types>
+    template<typename F, typename ... Ts>
     void
     self_bucketize (F &&func, const IndexType &bucket_interval);
 
@@ -698,13 +698,13 @@ public:  // Other public interfaces
     //    type
     //
     // RHS_T: Type of DataFrame rhs
-    // types: List all the types of all data columns.
-    //        A type should be specified in the list only once.
+    // Ts: List all the types of all data columns.
+    //     A type should be specified in the list only once.
     // rhs: The rhs DataFrame
     // join_policy: Specifies how to join. For example inner join,
     //              or left join, etc. (See join_policy definition)
     //
-    template<typename RHS_T, typename ... types>
+    template<typename RHS_T, typename ... Ts>
     StdDataFrame<IndexType>
     join_by_index (const RHS_T &rhs, join_policy jp) const;
 
@@ -714,19 +714,19 @@ public:  // Other public interfaces
     // If user shifts with periods that is larger than the column length,
     // all values in that column become NaN.
     //
-    // types: List all the types of all data columns.
-    //        A type should be specified in the list only once.
+    // Ts: List all the types of all data columns.
+    //     A type should be specified in the list only once.
     // periods: Number of periods to shift
     // shift_policy: Specifies the direction (i.e. up/down) to shift
     //
-    template<typename ... types>
+    template<typename ... Ts>
     void
     self_shift (size_type periods, shift_policy sp);
 
     // It is exactly the same as self_shift, but it leaves self unchanged
     // and returns a new DataFrame with columns shifted.
     //
-    template<typename ... types>
+    template<typename ... Ts>
     StdDataFrame<IndexType>
     shift (size_type periods, shift_policy sp) const;
 
@@ -735,19 +735,19 @@ public:  // Other public interfaces
     // If user rotates with periods that is larger than the column length,
     // the behavior is undefined.
     //
-    // types: List all the types of all data columns.
-    //        A type should be specified in the list only once.
+    // Ts: List all the types of all data columns.
+    //     A type should be specified in the list only once.
     // periods: Number of periods to rotate
     // shift_policy: Specifies the direction (i.e. up/down) to rotate
     //
-    template<typename ... types>
+    template<typename ... Ts>
     void
     self_rotate (size_type periods, shift_policy sp);
 
     // It is exactly the same as self_rotate, but it leaves self unchanged
     // and returns a new DataFrame with columns rotated.
     //
-    template<typename ... types>
+    template<typename ... Ts>
     StdDataFrame<IndexType>
     rotate (size_type periods, shift_policy sp) const;
 
@@ -758,13 +758,13 @@ public:  // Other public interfaces
     //     <Column2 name>:<Column2 type>:<Comma delimited list of values>
     //
     // S: Output stream type
-    // types: List all the types of all data columns.
-    //        A type should be specified in the list only once.
+    // Ts: List all the types of all data columns.
+    //     A type should be specified in the list only once.
     // o: Reference to an streamable object (e.g. cout)
     // values_only: If true, the name and type of each column is not written
     // iof: Specifies the I/O format. The default is CSV
     //
-    template<typename S, typename ... types>
+    template<typename S, typename ... Ts>
     bool
     write (S &o,
            bool values_only = false,
@@ -824,13 +824,13 @@ public: // Read/access interfaces
     // for each column.
     //
     // N: Size of col_names and values array
-    // types: List all the types of all data columns.
-    //        A type should be specified in the list only once.
+    // Ts: List all the types of all data columns.
+    //     A type should be specified in the list only once.
     // row_num: The row number
     // col_names: Names of columns to get data from. It also specifies the
     //            order of data in the returned vector
     //
-    template<size_t N, typename ... types>
+    template<size_t N, typename ... Ts>
     HeteroVector
     get_row(size_type row_num,
             const std::array<const char *, N> col_names) const;
@@ -851,15 +851,15 @@ public: // Read/access interfaces
     std::vector<T>
     get_col_unique_values(const char *name) const;
 
-    // It returns a DataFrame (inc     the index and data columns)
+    // It returns a DataFrame (including the index and data columns)
     // containing the data from index begin to index end.
     // DataFrame must be sorted by index or behavior is undefined.
     //
-    // types: List all the types of all data columns.
-    //        A type should be specified in the list only once.
+    // Ts: List all the types of all data columns.
+    //     A type should be specified in the list only once.
     // range: The begin and end iterators for index specified with index values
     //
-    template<typename ... types>
+    template<typename ... Ts>
     DataFrame
     get_data_by_idx (Index2D<IndexType> range) const;
 
@@ -870,11 +870,11 @@ public: // Read/access interfaces
     // Note: There are certain operations that you cannot do with a view.
     //       For example, you cannot add/delete columns, etc.
     //
-    // types: List all the types of all data columns.
-    //        A type should be specified in the list only once.
+    // Ts: List all the types of all data columns.
+    //     A type should be specified in the list only once.
     // range: The begin and end iterators for index specified with index values
     //
-    template<typename ... types>
+    template<typename ... Ts>
     DataFrameView<IndexType>
     get_view_by_idx (Index2D<IndexType> range);
 
@@ -883,11 +883,11 @@ public: // Read/access interfaces
     // This function supports Python-like negative indexing. That is why the
     // range type is int.
     //
-    // types: List all the types of all data columns.
-    //        A type should be specified in the list only once.
+    // Ts: List all the types of all data columns.
+    //     A type should be specified in the list only once.
     // range: The begin and end iterators for data
     //
-    template<typename ... types>
+    template<typename ... Ts>
     DataFrame
     get_data_by_loc (Index2D<int> range) const;
 
@@ -898,13 +898,77 @@ public: // Read/access interfaces
     // Note: There are certain operations that you cannot do with a view.
     //       For example, you cannot add/delete columns, etc.
     //
-    // types: List all the types of all data columns.
-    //        A type should be specified in the list only once.
+    // Ts: List all the types of all data columns.
+    //     A type should be specified in the list only once.
     // range: The begin and end iterators for data
     //
-    template<typename ... types>
+    template<typename ... Ts>
     DataFrameView<IndexType>
     get_view_by_loc (Index2D<int> range);
+
+    // This method does boolean filtering selection via the sel_functor
+    // (e.g. a functor, function, or lambda). It returns a new DataFrame.
+    // Each element of the named column along with its corresponding index
+    // is passed to the sel_functor. If sel_functor returns true, that index
+    // is selected and all the elements of all column for that index will be
+    // included in the returned DataFrame.
+    // The signature of sel_fucntor:
+    //     bool ()(const IndexType &, const T &)
+    //
+    // T: Type of the named column
+    // F: Type of the selecting functor
+    // Ts: The list of types for all columns.
+    //     A type should be specified only once
+    // name: Name of the data column
+    // sel_functor: A reference to the selecting functor
+    //
+    template<typename T, typename F, typename ... Ts>
+    DataFrame
+    get_data_by_sel (const char *name, F &sel_functor) const;
+
+    // This does the same function as above get_data_be_sel() but operating
+    // on two columns.
+    // The signature of sel_fucntor:
+    //     bool ()(const IndexType &, const T1 &, const T2 &)
+    //
+    // T1: Type of the first named column
+    // T2: Type of the second named column
+    // F: Type of the selecting functor
+    // Ts: The list of types for all columns.
+    //     A type should be specified only once
+    // name1: Name of the first data column
+    // name2: Name of the second data column
+    // sel_functor: A reference to the selecting functor
+    //
+    template<typename T1, typename T2, typename F, typename ... Ts>
+    DataFrame
+    get_data_by_sel (const char *name1,
+                     const char *name2,
+                     F &sel_functor) const;
+
+    // This does the same function as above get_data_be_sel() but operating
+    // on three columns.
+    // The signature of sel_fucntor:
+    //     bool ()(const IndexType &, const T1 &, const T2 &, const T3 &)
+    //
+    // T1: Type of the first named column
+    // T2: Type of the second named column
+    // T3: Type of the third named column
+    // F: Type of the selecting functor
+    // Ts: The list of types for all columns.
+    //     A type should be specified only once
+    // name1: Name of the first data column
+    // name2: Name of the second data column
+    // name3: Name of the third data column
+    // sel_functor: A reference to the selecting functor
+    //
+    template<typename T1, typename T2, typename T3, typename F,
+             typename ... Ts>
+    DataFrame
+    get_data_by_sel (const char *name1,
+                     const char *name2,
+                     const char *name3,
+                     F &sel_functor) const;
 
     // It returns a const reference to the index container
     //
@@ -1062,10 +1126,10 @@ public:  // Operators
     // same number of columns, same names for each column, and all
     // columns are eual, then it retunrs true. Otherwise it returns false
     //
-    // types: List all the types of all data columns.
-    //        A type should be specified in the list only once.
+    // Ts: List all the types of all data columns.
+    //     A type should be specified in the list only once.
     //
-    template<typename ... types>
+    template<typename ... Ts>
     bool
     is_equal (const DataFrame &rhs) const;
 
@@ -1074,19 +1138,19 @@ public:  // Operators
     // If not already_sorted, both rhs and self will be sorted by index
     // It returns a reference to self
     //
-    // types: List all the types of all data columns.
-    //        A type should be specified in the list only once.
+    // Ts: List all the types of all data columns.
+    //     A type should be specified in the list only once.
     // already_sorted: If the self and rhs are already sorted by index,
     //                 this will save the expensive sort operations
     //
-    template<typename ... types>
+    template<typename ... Ts>
     DataFrame &
     modify_by_idx(DataFrame &rhs,
                   sort_state already_sorted = sort_state::not_sorted);
 
 private:  // Friend Operators
 
-    template<typename DF, template<typename> class OPT, typename ... types>
+    template<typename DF, template<typename> class OPT, typename ... Ts>
     friend DF binary_operation(const DF &lhs, const DF &rhs);
 
 protected:
@@ -1147,25 +1211,25 @@ private:  // Static helper functions
 
     using IndexIdxVector = std::vector<std::tuple<size_type, size_type>>;
 
-    template<typename LHS_T, typename RHS_T, typename ... types>
+    template<typename LHS_T, typename RHS_T, typename ... Ts>
     static StdDataFrame<IndexType>
     join_helper_(const LHS_T &lhs,
                  const RHS_T &rhs,
                  const IndexIdxVector &joined_index_idx);
 
-    template<typename LHS_T, typename RHS_T, typename ... types>
+    template<typename LHS_T, typename RHS_T, typename ... Ts>
     static StdDataFrame<IndexType>
     index_inner_join_(const LHS_T &lhs, const RHS_T &rhs);
 
-    template<typename LHS_T, typename RHS_T, typename ... types>
+    template<typename LHS_T, typename RHS_T, typename ... Ts>
     static StdDataFrame<IndexType>
     index_left_join_(const LHS_T &lhs, const RHS_T &rhs);
 
-    template<typename LHS_T, typename RHS_T, typename ... types>
+    template<typename LHS_T, typename RHS_T, typename ... Ts>
     static StdDataFrame<IndexType>
     index_right_join_(const LHS_T &lhs, const RHS_T &rhs);
 
-    template<typename LHS_T, typename RHS_T, typename ... types>
+    template<typename LHS_T, typename RHS_T, typename ... Ts>
     static StdDataFrame<IndexType>
     index_left_right_join_(const LHS_T &lhs, const RHS_T &rhs);
 

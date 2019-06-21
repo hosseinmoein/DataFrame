@@ -173,6 +173,12 @@ public:
 
         inline iterator (value_type **node) noexcept : node_ (node)  {  }
 
+        inline iterator &operator = (value_type **rhs)  {
+
+            node_ = rhs;
+            return (*this);
+        }
+
         inline bool operator == (const iterator &rhs) const noexcept  {
 
             return (node_ == rhs.node_);
@@ -289,6 +295,11 @@ public:
         inline const_iterator (const iterator &itr)  { *this = itr; }
         inline const_iterator (iterator &itr)  { *this = itr; }
 
+        inline const_iterator &operator = (value_type *const *rhs)  {
+
+            node_ = rhs;
+            return (*this);
+        }
         inline const_iterator &operator = (const iterator &rhs)  {
 
             node_ = rhs.node_;
@@ -428,6 +439,12 @@ public:
             { *this = itr; }
         inline const_reverse_iterator (const_iterator &itr) { *this = itr; }
 
+        inline const_reverse_iterator &
+        operator = (value_type *const *rhs) noexcept  {
+
+            node_ = rhs;
+            return (*this);
+        }
         inline const_reverse_iterator &
         operator = (const const_iterator &rhs) noexcept  {
 

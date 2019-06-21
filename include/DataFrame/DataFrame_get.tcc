@@ -46,7 +46,7 @@ DataFrame<I, H>::get_column (const char *name) const  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename  H>
-template<size_t N, typename ... types>
+template<size_t N, typename ... Ts>
 HeteroVector DataFrame<I, H>::
 get_row(size_type row_num, const std::array<const char *, N> col_names) const {
 
@@ -67,7 +67,7 @@ get_row(size_type row_num, const std::array<const char *, N> col_names) const {
     ret_vec.reserve<IndexType>(1);
     ret_vec.push_back(indices_[row_num]);
 
-    get_row_functor_<types ...> functor(ret_vec, row_num);
+    get_row_functor_<Ts ...>    functor(ret_vec, row_num);
 
     for (auto name_citer : col_names)  {
         const auto  citer = column_tb_.find (name_citer);
@@ -535,7 +535,7 @@ single_act_visit (const char *name1, const char *name2, V &visitor)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename  H>
-template<typename ... types>
+template<typename ... Ts>
 DataFrame<I, H>
 DataFrame<I, H>::get_data_by_idx (Index2D<IndexType> range) const  {
 
@@ -555,10 +555,10 @@ DataFrame<I, H>::get_data_by_idx (Index2D<IndexType> range) const  {
                                                    : indices_.end());
 
         for (auto &iter : column_tb_)  {
-            load_functor_<types ...> functor (iter.first.c_str(),
-                                              b_dist,
-                                              e_dist,
-                                              df);
+            load_functor_<Ts ...>   functor (iter.first.c_str(),
+                                             b_dist,
+                                             e_dist,
+                                             df);
 
             data_[iter.second].change(functor);
         }
@@ -570,7 +570,7 @@ DataFrame<I, H>::get_data_by_idx (Index2D<IndexType> range) const  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename  H>
-template<typename ... types>
+template<typename ... Ts>
 DataFrameView<I>
 DataFrame<I, H>::get_view_by_idx (Index2D<IndexType> range)  {
 
@@ -594,10 +594,10 @@ DataFrame<I, H>::get_view_by_idx (Index2D<IndexType> range)  {
                                                    : indices_.end());
 
         for (auto &iter : column_tb_)  {
-            view_setup_functor_<types ...> functor (iter.first.c_str(),
-                                                    b_dist,
-                                                    e_dist,
-                                                    dfv);
+            view_setup_functor_<Ts ...> functor (iter.first.c_str(),
+                                                 b_dist,
+                                                 e_dist,
+                                                 dfv);
 
             data_[iter.second].change(functor);
         }
@@ -609,7 +609,7 @@ DataFrame<I, H>::get_view_by_idx (Index2D<IndexType> range)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename  H>
-template<typename ... types>
+template<typename ... Ts>
 DataFrame<I, H>
 DataFrame<I, H>::get_data_by_loc (Index2D<int> range) const  {
 
@@ -626,7 +626,7 @@ DataFrame<I, H>::get_data_by_loc (Index2D<int> range) const  {
                       indices_.begin() + static_cast<size_type>(range.end));
 
         for (auto &iter : column_tb_)  {
-            load_functor_<types ...> functor (
+            load_functor_<Ts ...>   functor (
                 iter.first.c_str(),
                 static_cast<size_type>(range.begin),
                 static_cast<size_type>(range.end),
@@ -650,7 +650,7 @@ DataFrame<I, H>::get_data_by_loc (Index2D<int> range) const  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename  H>
-template<typename ... types>
+template<typename ... Ts>
 DataFrameView<I>
 DataFrame<I, H>::get_view_by_loc (Index2D<int> range)  {
 
@@ -670,8 +670,8 @@ DataFrame<I, H>::get_view_by_loc (Index2D<int> range)  {
             typename DataFrameView<IndexType>::IndexVecType(
                 &*(indices_.begin() + range.begin),
                 &*(indices_.begin() + range.end));
-        for (auto &iter : column_tb_)  {
-            view_setup_functor_<types ...>  functor (
+        for (const auto &iter : column_tb_)  {
+            view_setup_functor_<Ts ...> functor (
                 iter.first.c_str(),
                 static_cast<size_type>(range.begin),
                 static_cast<size_type>(range.end),
@@ -690,6 +690,204 @@ DataFrame<I, H>::get_view_by_loc (Index2D<int> range)  {
              "Bad begin, end range: %d, %d",
              range.begin, range.end);
     throw BadRange (buffer);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename T, typename F, typename ... Ts>
+DataFrame<I, H> DataFrame<I, H>::
+get_data_by_sel (const char *name, F &sel_functor) const  {
+
+    const auto  citer = column_tb_.find (name);
+
+    if (citer == column_tb_.end())  {
+        char buffer [512];
+
+        sprintf (buffer,
+                 "DataFrame::get_data_by_sel(1): ERROR: "
+                 "Cannot find column '%s'",
+                 name);
+        throw ColNotFound (buffer);
+    }
+
+    const DataVec           &hv = data_[citer->second];
+    const std::vector<T>    &vec = hv.template get_vector<T>();
+    const size_type         idx_s = indices_.size();
+    const size_type         col_s = vec.size();
+    std::vector<size_type>  col_indices;
+
+    col_indices.reserve(indices_.size() / 2);
+    for (size_type i = 0; i < col_s; ++i)
+        if (sel_functor (indices_[i], vec[i]))
+            col_indices.push_back(i);
+
+    DataFrame       df;
+    IndexVecType    new_index;
+
+    new_index.reserve(col_indices.size());
+    for (const auto citer: col_indices)
+        new_index.push_back(indices_[citer]);
+    df.load_index(std::move(new_index));
+
+    for (auto col_citer : column_tb_)  {
+        sel_load_functor_<Ts ...>   functor (
+            col_citer.first.c_str(),
+            col_indices,
+            df);
+
+        data_[col_citer.second].change(functor);
+    }
+
+    return (df);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename T1, typename T2, typename F, typename ... Ts>
+DataFrame<I, H> DataFrame<I, H>::
+get_data_by_sel (const char *name1, const char *name2, F &sel_functor) const  {
+
+    const auto  citer1 = column_tb_.find (name1);
+    const auto  citer2 = column_tb_.find (name2);
+
+    if (citer1 == column_tb_.end())  {
+        char buffer [512];
+
+        sprintf (buffer,
+                 "DataFrame::get_data_by_sel(2): ERROR: "
+                 "Cannot find column '%s'",
+                 name1);
+        throw ColNotFound (buffer);
+    }
+    if (citer2 == column_tb_.end())  {
+        char buffer [512];
+
+        sprintf (buffer,
+                 "DataFrame::get_data_by_sel(2): ERROR: "
+                 "Cannot find column '%s'",
+                 name2);
+        throw ColNotFound (buffer);
+    }
+
+    const DataVec           &hv1 = data_[citer1->second];
+    const DataVec           &hv2 = data_[citer2->second];
+    const std::vector<T1>   &vec1 = hv1.template get_vector<T1>();
+    const std::vector<T2>   &vec2 = hv2.template get_vector<T2>();
+    const size_type         col_s1 = vec1.size();
+    const size_type         col_s2 = vec2.size();
+    const size_type         col_s = std::max(col_s1, col_s2);
+    std::vector<size_type>  col_indices;
+
+    col_indices.reserve(indices_.size() / 2);
+    for (size_type i = 0; i < col_s; ++i)
+        if (sel_functor (indices_[i],
+                         i < col_s1 ? vec1[i] : _get_nan<T1>(),
+                         i < col_s2 ? vec2[i] : _get_nan<T2>()))
+            col_indices.push_back(i);
+
+    DataFrame       df;
+    IndexVecType    new_index;
+
+    new_index.reserve(col_indices.size());
+    for (const auto citer: col_indices)
+        new_index.push_back(indices_[citer]);
+    df.load_index(std::move(new_index));
+
+    for (auto col_citer : column_tb_)  {
+        sel_load_functor_<Ts ...>   functor (
+            col_citer.first.c_str(),
+            col_indices,
+            df);
+
+        data_[col_citer.second].change(functor);
+    }
+
+    return (df);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename T1, typename T2, typename T3, typename F,
+         typename ... Ts>
+DataFrame<I, H> DataFrame<I, H>::
+get_data_by_sel (const char *name1,
+                 const char *name2,
+                 const char *name3,
+                 F &sel_functor) const  {
+
+    const auto  citer1 = column_tb_.find (name1);
+    const auto  citer2 = column_tb_.find (name2);
+    const auto  citer3 = column_tb_.find (name3);
+
+    if (citer1 == column_tb_.end())  {
+        char buffer [512];
+
+        sprintf (buffer,
+                 "DataFrame::get_data_by_sel(2): ERROR: "
+                 "Cannot find column '%s'",
+                 name1);
+        throw ColNotFound (buffer);
+    }
+    if (citer2 == column_tb_.end())  {
+        char buffer [512];
+
+        sprintf (buffer,
+                 "DataFrame::get_data_by_sel(2): ERROR: "
+                 "Cannot find column '%s'",
+                 name2);
+        throw ColNotFound (buffer);
+    }
+    if (citer3 == column_tb_.end())  {
+        char buffer [512];
+
+        sprintf (buffer,
+                 "DataFrame::get_data_by_sel(2): ERROR: "
+                 "Cannot find column '%s'",
+                 name3);
+        throw ColNotFound (buffer);
+    }
+
+    const DataVec           &hv1 = data_[citer1->second];
+    const DataVec           &hv2 = data_[citer2->second];
+    const DataVec           &hv3 = data_[citer3->second];
+    const std::vector<T1>   &vec1 = hv1.template get_vector<T1>();
+    const std::vector<T2>   &vec2 = hv2.template get_vector<T2>();
+    const std::vector<T3>   &vec3 = hv3.template get_vector<T3>();
+    const size_type         col_s1 = vec1.size();
+    const size_type         col_s2 = vec2.size();
+    const size_type         col_s3 = vec3.size();
+    const size_type         col_s = std::max(std::max(col_s1, col_s2), col_s3);
+    std::vector<size_type>  col_indices;
+
+    col_indices.reserve(indices_.size() / 2);
+    for (size_type i = 0; i < col_s; ++i)
+        if (sel_functor (indices_[i],
+                         i < col_s1 ? vec1[i] : _get_nan<T1>(),
+                         i < col_s2 ? vec2[i] : _get_nan<T2>(),
+                         i < col_s3 ? vec3[i] : _get_nan<T3>()))
+            col_indices.push_back(i);
+
+    DataFrame       df;
+    IndexVecType    new_index;
+
+    new_index.reserve(col_indices.size());
+    for (const auto citer: col_indices)
+        new_index.push_back(indices_[citer]);
+    df.load_index(std::move(new_index));
+
+    for (auto col_citer : column_tb_)  {
+        sel_load_functor_<Ts ...>   functor (
+            col_citer.first.c_str(),
+            col_indices,
+            df);
+
+        data_[col_citer.second].change(functor);
+    }
+
+    return (df);
 }
 
 } // namespace hmdf

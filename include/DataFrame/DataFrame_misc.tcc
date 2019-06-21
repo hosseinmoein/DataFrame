@@ -407,11 +407,11 @@ operator() (T &vec) const  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename TST, template<typename> class OPT, typename ... types>
+template<typename TST, template<typename> class OPT, typename ... Ts>
 template<typename T>
 void
 DataFrame<I, H>::
-operator_functor_<TST, OPT, types ...>::
+operator_functor_<TST, OPT, Ts ...>::
 operator()(const std::vector<T> &lhs_vec)  {
 
     const auto  rhs_citer = rhs_df.column_tb_.find(col_name);
@@ -452,11 +452,11 @@ operator()(const std::vector<T> &lhs_vec)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename ... types>
+template<typename ... Ts>
 template<typename T>
 void
 DataFrame<I, H>::
-map_missing_rows_functor_<types ...>::
+map_missing_rows_functor_<Ts ...>::
 operator()(const T &vec)  {
 
     const size_type vec_size = vec.size();
@@ -475,11 +475,11 @@ operator()(const T &vec)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename ... types>
+template<typename ... Ts>
 template<typename T>
 void
 DataFrame<I, H>::
-drop_missing_rows_functor_<types ...>::
+drop_missing_rows_functor_<Ts ...>::
 operator()(T &vec)  {
 
     drop_missing_rows_(vec, missing_row_map, policy, threshold, col_num);
@@ -489,12 +489,12 @@ operator()(T &vec)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename ... types>
+template<typename ... Ts>
 template<typename T>
 void
 DataFrame<I, H>::
-get_row_functor_<types ...>::
-operator()(T &vec)  {
+get_row_functor_<Ts ...>::
+operator()(const T &vec)  {
 
     result.reserve<typename T::value_type>(1);
     if (row_num < vec.size())
@@ -504,6 +504,29 @@ operator()(T &vec)  {
     return;
 }
 
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename ... Ts>
+template<typename T>
+void
+DataFrame<I, H>::
+sel_load_functor_<Ts ...>::
+operator() (const std::vector<T> &vec)  {
+
+    std::vector<T>  new_col;
+    const size_type vec_size = vec.size();
+
+    new_col.reserve(sel_indices.size());
+    for (const auto citer : sel_indices)
+        if (citer < vec_size)
+            new_col.push_back(vec[citer]);
+        else
+            break;
+    new_col.shrink_to_fit();
+    df.load_column(name, std::move(new_col));
+    return;
+}
 
 } // namespace hmdf
 

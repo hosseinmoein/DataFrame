@@ -27,13 +27,16 @@ typedef StdDataFrame<unsigned long> MyDataFrame;
 MyDataFrame                df;
 std::vector<int>           intvec = { 1, 2, 3, 4, 5 };
 std::vector<double>        dblvec = { 1.2345, 2.2345, 3.2345, 4.2345, 5.2345 };
-std::vector<double>        dblvec2 = { 0.998, 0.3456, 0.056, 0.15678, 0.00345, 0.923, 0.06743, 0.1 };
-std::vector<std::string>   strvec = { "Insight", "John Dow", "Alakazam", "Persian Prince", "Bugs Bunny" };
+std::vector<double>        dblvec2 = { 0.998, 0.3456, 0.056, 0.15678, 0.00345,
+                                       0.923, 0.06743, 0.1 };
+std::vector<std::string>   strvec = { "Insight", "John Dow", "Alakazam",
+                                      "Persian Prince", "Bugs Bunny" };
 std::vector<unsigned long> ulgvec = { 1UL, 2UL, 3UL, 4UL, 5UL, 8UL, 7UL, 6UL }
 std::vector<unsigned long> xulgvec = ulgvec;
 
 // This is only one way of loading data into a DataFrame instance. There are
-// many different ways of doing it. Please see the documentation, or dataframe_tester.cc
+// many different ways of doing it. Please see the documentation,
+// or dataframe_tester.cc
 int rc = df.load_data(std::move(ulgvec),  // Index column
                       std::make_pair("int_col", intvec),
                       std::make_pair("dbl_col", dblvec),
@@ -52,7 +55,8 @@ df.sort<MyDataFrame::TimeStamp, int, double, std::string>();
 // Sort the Frame by column “dbl_col_2”
 df.sort<double, int, double, std::string>("dbl_col_2");
 
-// A functor to calculate mean, variance, skew, kurtosis, defined in DataFrameVisitors.h file
+// A functor to calculate mean, variance, skew, kurtosis, defined in
+// DataFrameVisitors.h file.
 // You can implement your own algorithms and extend the DataFrame easily 
 StatsVisitor<double>  stats_visitor;
 // Calculate the stats on column “dbl_col”

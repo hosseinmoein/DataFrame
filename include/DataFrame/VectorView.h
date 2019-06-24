@@ -23,14 +23,14 @@ class   VectorView  {
 public:
 
     using value_type = T;
-    using size_type = unsigned long long int;
+    using size_type = unsigned long int;
     using pointer = value_type *;
     using const_pointer = const value_type *;
     using const_pointer_const = const value_type *const;
     using reference = value_type &;
     using const_reference = const value_type &;
 
-    static  const   size_type   value_size = sizeof(value_type);
+    static const size_type  value_size = sizeof(value_type);
 
 public:
 
@@ -63,6 +63,14 @@ public:
         std::swap (begin_ptr_, rhs.begin_ptr_);
         std::swap (end_ptr_, rhs.end_ptr_);
         return;
+    }
+
+    VectorView &operator= (std::vector<T> &rhs)  {
+
+        VectorView  vw(&*(rhs.begin()), &*(rhs.end()));
+
+        swap(vw);
+        return (*this);
     }
 
 private:
@@ -461,35 +469,21 @@ public:
 
 public:
 
-    inline iterator begin () noexcept  {
-
-        return (iterator (begin_ptr_));
-    }
+    inline iterator begin () noexcept  { return (iterator (begin_ptr_)); }
     inline iterator end () noexcept  { return (iterator (end_ptr_)); }
-    inline const_iterator begin () const noexcept  {
+    inline const_iterator
+    begin () const noexcept  { return (const_iterator (begin_ptr_)); }
+    inline const_iterator
+    end () const noexcept  { return (const_iterator (end_ptr_)); }
 
-        return (const_iterator (begin_ptr_));
-    }
-    inline const_iterator end () const noexcept  {
-
-        return (const_iterator (end_ptr_));
-    }
-
-    inline const_reverse_iterator rbegin () const noexcept  {
+    inline const_reverse_iterator
+	rbegin () const noexcept  {
 
         return (const_reverse_iterator (end_ptr_ - 1));
     }
     inline const_reverse_iterator rend () const noexcept  {
 
         return (const_reverse_iterator (begin_ptr_ - 1));
-    }
-
-    VectorView &operator= (std::vector<T> &rhs)  {
-
-        VectorView  vw(&*(rhs.begin()), &*(rhs.end()));
-
-        swap(vw);
-        return (*this);
     }
 };
 

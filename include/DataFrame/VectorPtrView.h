@@ -29,10 +29,13 @@ public:
     using value_type = T;
     using pointer = T *;
     using const_pointer = const T *;
+    using const_pointer_const = const T *const;
     using reference = T &;
     using const_reference = const T &;
     using size_type = typename vector_type::size_type;
     using difference_type = typename vector_type::difference_type;
+
+    static const size_type  value_size = sizeof(T);
 
 public:
 
@@ -114,7 +117,6 @@ public:
         return (*this);
     }
 
-
     inline void clear () throw ()  { vector_.clear(); }
     inline void resize (size_type n) throw ()  { vector_.resize(n); }
 
@@ -138,11 +140,11 @@ public:
         for (auto iter = first; iter < last; ++iter)
             tmp_vec.push_back(&(*iter));
         vector_.reserve(vector_.size() + tmp_vec.size());
-        vector_.insert (vector_.begin() + pos, tmp_vec.begin(), tmp_vec.end());
+        vector_.insert(vector_.begin() + pos, tmp_vec.begin(), tmp_vec.end());
     }
 
     inline void
-    sort(std::function<bool(value_type *, value_type *)> comp =
+    sort(std::function<bool(const value_type *, const value_type *)> comp =
              [](const value_type *l, const value_type *r) -> bool {
                  return *l < *r;
              })  {
@@ -170,10 +172,14 @@ public:
        //       the iterator to be the "end" iterator
        //
         inline iterator () = default;
+        inline iterator (const iterator &) = default;
+        inline iterator (iterator &&) = default;
+        inline iterator &operator = (const iterator &) = default;
+        inline iterator &operator = (iterator &&) = default;
 
         inline iterator (value_type **node) noexcept : node_ (node)  {  }
 
-        inline iterator &operator = (value_type **rhs)  {
+        inline iterator &operator = (value_type **rhs) noexcept  {
 
             node_ = rhs;
             return (*this);
@@ -288,30 +294,22 @@ public:
        //       the iterator to be the "end" iterator
        //
         inline const_iterator () = default;
+        inline const_iterator (const const_iterator &) = default;
+        inline const_iterator (const_iterator &&) = default;
         inline const_iterator &operator = (const const_iterator &) = default;
+        inline const_iterator &operator = (const_iterator &&) = default;
 
-        inline const_iterator (value_type *const *node) : node_ (node)  {   }
-        inline const_iterator (value_type **node) : node_ (node)  {   }
+        inline const_iterator (value_type *const *node) noexcept
+            : node_ (node)  {   }
+        inline const_iterator (value_type **node) noexcept : node_ (node)  {   }
+        inline const_iterator (const iterator &itr) noexcept  { *this = itr; }
 
-        inline const_iterator (const iterator &itr)  { *this = itr; }
-        inline const_iterator (iterator &itr)  { *this = itr; }
-
-        inline const_iterator &operator = (value_type *const *rhs)  {
-
-            node_ = rhs;
-            return (*this);
-        }
-        inline const_iterator &operator = (value_type **rhs)  {
+        inline const_iterator &operator = (value_type *const *rhs) noexcept  {
 
             node_ = rhs;
             return (*this);
         }
-        inline const_iterator &operator = (const iterator &rhs)  {
-
-            node_ = rhs.node_;
-            return (*this);
-        }
-        inline const_iterator &operator = (iterator &rhs)  {
+        inline const_iterator &operator = (const iterator &rhs) noexcept {
 
             node_ = rhs.node_;
             return (*this);
@@ -437,27 +435,23 @@ public:
        //       the iterator to be the "end" iterator
        //
         inline const_reverse_iterator () = default;
+        inline const_reverse_iterator(const const_reverse_iterator &) = default;
+        inline const_reverse_iterator(const_reverse_iterator &&) = default;
+        inline const_reverse_iterator &
+        operator = (const const_reverse_iterator &) = default;
+        inline const_reverse_iterator &
+        operator = (const_reverse_iterator &&) = default;
 
-        inline const_reverse_iterator (value_type *const *node)
+        inline const_reverse_iterator (value_type *const *node) noexcept
             : node_ (node)  {   }
-        inline const_reverse_iterator (value_type **node) : node_(node)  {   }
-
-        inline const_reverse_iterator (const const_iterator &itr)
+        inline const_reverse_iterator (const const_iterator &itr) noexcept
             { *this = itr; }
-        inline const_reverse_iterator (const_iterator &itr) { *this = itr; }
 
-        inline const_reverse_iterator (const iterator &itr)
+        inline const_reverse_iterator (const iterator &itr) noexcept
             { *this = itr; }
-        inline const_reverse_iterator (iterator &itr) { *this = itr; }
 
         inline const_reverse_iterator &
         operator = (value_type *const *rhs) noexcept  {
-
-            node_ = rhs;
-            return (*this);
-        }
-        inline const_reverse_iterator &
-        operator = (value_type **rhs) noexcept  {
 
             node_ = rhs;
             return (*this);
@@ -469,19 +463,7 @@ public:
             return (*this);
         }
         inline const_reverse_iterator &
-        operator = (const_iterator &rhs) noexcept  {
-
-            node_ = rhs.node_;
-            return (*this);
-        }
-        inline const_reverse_iterator &
         operator = (const iterator &rhs) noexcept  {
-
-            node_ = rhs.node_;
-            return (*this);
-        }
-        inline const_reverse_iterator &
-        operator = (iterator &rhs) noexcept  {
 
             node_ = rhs.node_;
             return (*this);

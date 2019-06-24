@@ -31,7 +31,7 @@ int main (int argCnt, char *argVctr [])  {
     assert(vec_view2.front() == 1);
     assert(vec_view.back() == 10);
 
-    int counter = 0;
+	std::size_t counter = 0;
 
 #ifndef _WIN32
     for (VectorPtrView<int>::const_iterator citer = vec_view.begin();

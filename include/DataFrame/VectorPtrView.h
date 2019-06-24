@@ -301,7 +301,6 @@ public:
 
         inline const_iterator (value_type *const *node) noexcept
             : node_ (node)  {   }
-        inline const_iterator (value_type **node) noexcept : node_ (node)  {   }
         inline const_iterator (const iterator &itr) noexcept  { *this = itr; }
 
         inline const_iterator &operator = (value_type *const *rhs) noexcept  {

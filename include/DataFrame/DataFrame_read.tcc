@@ -41,7 +41,7 @@ template<typename T, typename V>
 inline static void
 _col_vector_push_back_(V &vec,
                        std::ifstream &file,
-                       T (*converter)(const char *))  {
+                       T (*converter)(const char *, char **, int))  {
 
     char    value[1024];
     char    c = 0;
@@ -50,7 +50,26 @@ _col_vector_push_back_(V &vec,
         if (c == '\n')  break;
         file.unget();
         _get_token_from_file_(file, ',', value);
-        vec.push_back(static_cast<T>(converter(value)));
+        vec.push_back(static_cast<T>(converter(value, nullptr, 0)));
+    }
+}
+
+// -------------------------------------
+
+template<typename T, typename V>
+inline static void
+_col_vector_push_back_(V &vec,
+                       std::ifstream &file,
+                       T (*converter)(const char *, char **))  {
+
+    char    value[1024];
+    char    c = 0;
+
+    while (file.get(c)) {
+        if (c == '\n')  break;
+        file.unget();
+        _get_token_from_file_(file, ',', value);
+        vec.push_back(static_cast<T>(converter(value, nullptr)));
     }
 }
 
@@ -61,7 +80,7 @@ inline void
 _col_vector_push_back_<const char *, std::vector<std::string>>(
     std::vector<std::string> &vec,
     std::ifstream &file,
-    const char * (*converter)(const char *))  {
+    const char * (*converter)(const char *, char **))  {
 
     char    value[1024];
     char    c = 0;
@@ -81,7 +100,7 @@ inline void
 _col_vector_push_back_<DateTime, std::vector<DateTime>>(
     std::vector<DateTime> &vec,
     std::ifstream &file,
-    DateTime (*converter)(const char *))  {
+    DateTime (*converter)(const char *, char **))  {
 
     char    value[1024];
     char    c = 0;
@@ -120,7 +139,7 @@ struct  _IdxParserFunctor_<float>  {
 
     inline void operator()(std::vector<float> &vec, std::ifstream &file)  {
 
-        _col_vector_push_back_(vec, file, &::atof);
+        _col_vector_push_back_(vec, file, &::strtof);
     }
 };
 
@@ -131,7 +150,7 @@ struct  _IdxParserFunctor_<double>  {
 
     inline void operator()(std::vector<double> &vec, std::ifstream &file)  {
 
-        _col_vector_push_back_(vec, file, &::atof);
+        _col_vector_push_back_(vec, file, &::strtod);
     }
 };
 
@@ -143,7 +162,7 @@ struct  _IdxParserFunctor_<long double>  {
     inline void
     operator()(std::vector<long double> &vec, std::ifstream &file)  {
 
-        _col_vector_push_back_(vec, file, &::atof);
+        _col_vector_push_back_(vec, file, &::strtold);
     }
 };
 
@@ -154,7 +173,7 @@ struct  _IdxParserFunctor_<int>  {
 
     inline void operator()(std::vector<int> &vec, std::ifstream &file)  {
 
-        _col_vector_push_back_(vec, file, &::atoi);
+        _col_vector_push_back_(vec, file, &::strtol);
     }
 };
 
@@ -165,7 +184,7 @@ struct  _IdxParserFunctor_<long>  {
 
     inline void operator()(std::vector<long> &vec, std::ifstream &file)  {
 
-        _col_vector_push_back_(vec, file, &::atol);
+        _col_vector_push_back_(vec, file, &::strtol);
     }
 };
 
@@ -176,7 +195,19 @@ struct  _IdxParserFunctor_<long long>  {
 
     inline void operator()(std::vector<long long> &vec, std::ifstream &file) {
 
-        _col_vector_push_back_(vec, file, &::atoll);
+        _col_vector_push_back_(vec, file, &::strtoll);
+    }
+};
+
+// -------------------------------------
+
+template<>
+struct  _IdxParserFunctor_<unsigned int>  {
+
+    inline void
+    operator()(std::vector<unsigned int> &vec, std::ifstream &file)  {
+
+        _col_vector_push_back_(vec, file, &::strtoul);
     }
 };
 
@@ -188,7 +219,7 @@ struct  _IdxParserFunctor_<unsigned long>  {
     inline void
     operator()(std::vector<unsigned long> &vec, std::ifstream &file)  {
 
-        _col_vector_push_back_(vec, file, &::atol);
+        _col_vector_push_back_(vec, file, &::strtoul);
     }
 };
 
@@ -200,7 +231,7 @@ struct  _IdxParserFunctor_<unsigned long long>  {
     inline void
     operator()(std::vector<unsigned long long> &vec, std::ifstream &file)  {
 
-        _col_vector_push_back_(vec, file, &::atoll);
+        _col_vector_push_back_(vec, file, &::strtoull);
     }
 };
 
@@ -213,7 +244,7 @@ struct  _IdxParserFunctor_<std::string>  {
     operator()(std::vector<std::string> &vec, std::ifstream &file)  {
 
         auto    converter =
-            [](const char *s)-> const char * { return s; };
+            [](const char *s, char **)-> const char * { return s; };
 
         _col_vector_push_back_<const char *, std::vector<std::string>>
             (vec, file, converter);
@@ -229,7 +260,7 @@ struct  _IdxParserFunctor_<DateTime>  {
     operator()(std::vector<DateTime> &vec, std::ifstream &file) {
 
         auto    converter =
-            [](const char *)-> DateTime  { return DateTime(); };
+            [](const char *, char **)-> DateTime  { return DateTime(); };
 
         _col_vector_push_back_<DateTime, std::vector<DateTime>>
             (vec, file, converter);
@@ -243,7 +274,7 @@ struct  _IdxParserFunctor_<bool>  {
 
     inline void operator()(std::vector<bool> &vec, std::ifstream &file)  {
 
-        _col_vector_push_back_(vec, file, &::atoi);
+        _col_vector_push_back_(vec, file, &::strtol);
     }
 };
 
@@ -298,65 +329,65 @@ bool DataFrame<I, H>::read (const char *file_name, io_format iof)  {
                 std::vector<float>  &vec = create_column<float>(col_name);
 
                 vec.reserve(::atoi(value));
-                _col_vector_push_back_(vec, file, ::atof);
+                _col_vector_push_back_(vec, file, &::strtof);
             }
             else if (! ::strcmp(type_str, "double"))  {
                 std::vector<double> &vec = create_column<double>(col_name);
 
                 vec.reserve(::atoi(value));
-                _col_vector_push_back_(vec, file, ::atof);
+                _col_vector_push_back_(vec, file, &::strtod);
             }
             else if (! ::strcmp(type_str, "longdouble"))  {
                 std::vector<long double>    &vec =
                     create_column<long double>(col_name);
 
                 vec.reserve(::atoi(value));
-                _col_vector_push_back_(vec, file, ::atof);
+                _col_vector_push_back_(vec, file, &::strtold);
             }
             else if (! ::strcmp(type_str, "int"))  {
                 std::vector<int> &vec = create_column<int>(col_name);
 
-                _col_vector_push_back_(vec, file, &::atoi);
+                _col_vector_push_back_(vec, file, &::strtol);
             }
             else if (! ::strcmp(type_str, "uint"))  {
                 std::vector<unsigned int>   &vec =
                     create_column<unsigned int>(col_name);
 
                 vec.reserve(::atoi(value));
-                _col_vector_push_back_(vec, file, &::atol);
+                _col_vector_push_back_(vec, file, &::strtoul);
             }
             else if (! ::strcmp(type_str, "long"))  {
                 std::vector<long>   &vec = create_column<long>(col_name);
 
                 vec.reserve(::atoi(value));
-                _col_vector_push_back_(vec, file, &::atol);
+                _col_vector_push_back_(vec, file, &::strtol);
             }
             else if (! ::strcmp(type_str, "longlong"))  {
                 std::vector<long long>  &vec =
                     create_column<long long>(col_name);
 
                 vec.reserve(::atoi(value));
-                _col_vector_push_back_(vec, file, &::atol);
+                _col_vector_push_back_(vec, file, &::strtoll);
             }
             else if (! ::strcmp(type_str, "ulong"))  {
                 std::vector<unsigned long>  &vec =
                     create_column<unsigned long>(col_name);
 
                 vec.reserve(::atoi(value));
-                _col_vector_push_back_(vec, file, &::atol);
+                _col_vector_push_back_(vec, file, &::strtoul);
             }
             else if (! ::strcmp(type_str, "ulonglong"))  {
                 std::vector<unsigned long long> &vec =
                     create_column<unsigned long long>(col_name);
 
                 vec.reserve(::atoi(value));
-                _col_vector_push_back_(vec, file, &::atol);
+                _col_vector_push_back_(vec, file, &::strtoull);
             }
             else if (! ::strcmp(type_str, "string"))  {
                 std::vector<std::string>    &vec =
                     create_column<std::string>(col_name);
                 auto                        converter =
-                    [](const char *s)-> const char * { return s; };
+                    [](const char *s, char **)-> const char * { return s; };
 
                 vec.reserve(::atoi(value));
                 _col_vector_push_back_<const char *, std::vector<std::string>>
@@ -366,7 +397,7 @@ bool DataFrame<I, H>::read (const char *file_name, io_format iof)  {
                 std::vector<DateTime>   &vec =
                     create_column<DateTime>(col_name);
                 auto                    converter =
-                    [](const char *)-> DateTime { return DateTime(); };
+                    [](const char *, char **)-> DateTime { return DateTime(); };
 
                 vec.reserve(::atoi(value));
                 _col_vector_push_back_<DateTime, std::vector<DateTime>>
@@ -376,7 +407,7 @@ bool DataFrame<I, H>::read (const char *file_name, io_format iof)  {
                 std::vector<bool>   &vec = create_column<bool>(col_name);
 
                 vec.reserve(::atoi(value));
-                _col_vector_push_back_(vec, file, &::atoi);
+                _col_vector_push_back_(vec, file, &::strtol);
             }
             else
                 throw DataFrameError ("DataFrame::read(): ERROR: Unknown "

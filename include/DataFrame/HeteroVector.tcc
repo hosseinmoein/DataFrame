@@ -62,7 +62,18 @@ HeteroView HeteroVector::get_view(size_type begin, size_type end)  {
 
     return (HeteroView(
         &(vec[begin]), end == size_t(-1) ? &(vec.back()) : &(vec[end])));
+}
 
+// ----------------------------------------------------------------------------
+
+template<typename T>
+HeteroPtrView HeteroVector::get_ptr_view(size_type begin, size_type end)  {
+
+    std::vector<T>  &vec = get_vector<T>();
+
+    return (HeteroPtrView(
+        &(*(vec.begin() + begin)),
+        end == size_type(-1) ? &(*(vec.end())) : &(*(vec.begin() + end))));
 }
 
 // ----------------------------------------------------------------------------

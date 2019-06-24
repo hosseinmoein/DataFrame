@@ -71,11 +71,25 @@ int main(int argc, char *argv[]) {
     {
         // Tesing HeteroVector View
 
-        HeteroView  d = hv.get_view<double>();
+        HeteroView  v = hv.get_view<double>();
 
-        assert(d.at<double>(3) == 1.05);
+        assert(v.at<double>(3) == 1.05);
 
         HeteroView  s = hv.get_view<std::string>(1, 3);
+
+        assert(s.at<std::string>(0) == "str_2");
+        assert(s.size<std::string>() == 2);
+        assert(s.back<std::string>() == "str_3");
+    }
+
+    {
+        // Tesing HeteroVector PtrView
+
+        HeteroPtrView   v = hv.get_ptr_view<double>();
+
+        assert(v.at<double>(3) == 1.05);
+
+        HeteroPtrView   s = hv.get_ptr_view<std::string>(1, 3);
 
         assert(s.at<std::string>(0) == "str_2");
         assert(s.size<std::string>() == 2);

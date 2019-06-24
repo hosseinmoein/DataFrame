@@ -23,7 +23,7 @@ class   VectorView  {
 public:
 
     using value_type = T;
-    using size_type = unsigned long int;
+    using size_type = unsigned long long int;
     using pointer = value_type *;
     using const_pointer = const value_type *;
     using const_pointer_const = const value_type *const;

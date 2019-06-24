@@ -33,10 +33,16 @@ int main (int argCnt, char *argVctr [])  {
 
     int counter = 0;
 
+#ifndef _WIN32
     for (VectorPtrView<int>::const_iterator citer = vec_view.begin();
          citer != vec_view.end(); ++citer)
         assert(*citer == ++counter);
     assert(counter == vec_view.size());
+#else
+    for (std::size_t i = 0; i < vec_view.size(); ++i)
+        assert(vec_view[i] == ++counter);
+    assert(counter == vec_view.size());
+#endif // _WIN32
 
     counter = 0;
     for (VectorPtrView<int>::iterator iter = vec_view.begin();
@@ -54,10 +60,16 @@ int main (int argCnt, char *argVctr [])  {
 
     vec_view3.sort();
     counter = 0;
+#ifndef _WIN32
     for (VectorPtrView<int>::const_iterator citer = vec_view3.begin();
          citer != vec_view3.end(); ++citer)
         assert(*citer == ++counter);
     assert(counter == vec_view3.size());
+#else
+    for (std::size_t i = 0; i < vec_view3.size(); ++i)
+        assert(vec_view3[i] == ++counter);
+    assert(counter == vec_view3.size());
+#endif // _WIN32
 
     counter = int_vec2.size();
     for (std::vector<int>::const_iterator citer = int_vec2.begin();

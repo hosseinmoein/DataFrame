@@ -45,10 +45,12 @@ int main (int argCnt, char *argVctr [])  {
 #endif // _WIN32
 
     counter = 0;
+#ifndef _WIN32
     for (VectorPtrView<int>::iterator iter = vec_view.begin();
          iter != vec_view.end(); ++iter)
         assert(*iter == ++counter);
     assert(counter == vec_view.size());
+#endif // _WIN32
 
     counter = 0;
 #ifndef _WIN32

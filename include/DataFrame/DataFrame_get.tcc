@@ -744,6 +744,77 @@ get_data_by_sel (const char *name, F &sel_functor) const  {
 
 // ----------------------------------------------------------------------------
 
+
+
+
+
+
+
+
+template<typename I, typename  H>
+template<typename T, typename F, typename ... Ts>
+DataFramePtrView<I> DataFrame<I, H>::
+get_view_by_sel (const char *name, F &sel_functor)  {
+
+    static_assert(std::is_base_of<HeteroVector, H>::value,
+                  "Only a StdDataFrame can call get_view_by_sel()");
+
+    const auto  citer = column_tb_.find (name);
+
+    if (citer == column_tb_.end())  {
+        char buffer [512];
+
+        sprintf (buffer,
+                 "DataFrame::get_data_by_sel(1): ERROR: "
+                 "Cannot find column '%s'",
+                 name);
+        throw ColNotFound (buffer);
+    }
+
+    const DataVec           &hv = data_[citer->second];
+    const std::vector<T>    &vec = hv.template get_vector<T>();
+    const size_type         idx_s = indices_.size();
+    const size_type         col_s = vec.size();
+    std::vector<size_type>  col_indices;
+
+    col_indices.reserve(indices_.size() / 2);
+    for (size_type i = 0; i < col_s; ++i)
+        if (sel_functor (indices_[i], vec[i]))
+            col_indices.push_back(i);
+
+    using TheView = DataFramePtrView<IndexType>;
+
+    TheView                         dfv;
+    typename TheView::IndexVecType  new_index;
+
+    new_index.reserve(col_indices.size());
+    for (const auto citer: col_indices)
+        new_index.push_back(&(indices_[citer]));
+    dfv.indices_ = std::move(new_index);
+
+    for (auto col_citer : column_tb_)  {
+        sel_load_view_functor_<Ts ...>   functor (
+            col_citer.first.c_str(),
+            col_indices,
+            dfv);
+
+        data_[col_citer.second].change(functor);
+    }
+
+    return (dfv);
+}
+
+// ----------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
 template<typename I, typename  H>
 template<typename T1, typename T2, typename F, typename ... Ts>
 DataFrame<I, H> DataFrame<I, H>::

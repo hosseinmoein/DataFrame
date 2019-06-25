@@ -3,8 +3,6 @@
 // Copyright (C) 2018-2019 Hossein Moein
 // Distributed under the BSD Software License (see file License)
 
-#include <DataFrame/HeteroVector.h>
-
 #include <algorithm>
 
 // ----------------------------------------------------------------------------
@@ -35,6 +33,32 @@ HeteroPtrView::HeteroPtrView(T *begin_ptr, T *end_ptr)
               views_<T>[&to] = std::move(views_<T>[&from]); })  {
 
     views_<T>.emplace(this, VectorPtrView<T>(begin_ptr, end_ptr));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
+HeteroPtrView::HeteroPtrView(VectorPtrView<T> &vec)
+    : clear_function_([](HeteroPtrView &hv) { views_<T>.erase(&hv); }),
+      copy_function_([](const HeteroPtrView &from, HeteroPtrView &to)  {
+              views_<T>[&to] = views_<T>[&from]; }),
+      move_function_([](HeteroPtrView &from, HeteroPtrView &to)  {
+              views_<T>[&to] = std::move(views_<T>[&from]); })  {
+
+    views_<T>.push_back(this, vec);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
+HeteroPtrView::HeteroPtrView(VectorPtrView<T> &&vec)
+    : clear_function_([](HeteroPtrView &hv) { views_<T>.erase(&hv); }),
+      copy_function_([](const HeteroPtrView &from, HeteroPtrView &to)  {
+              views_<T>[&to] = views_<T>[&from]; }),
+      move_function_([](HeteroPtrView &from, HeteroPtrView &to)  {
+              views_<T>[&to] = std::move(views_<T>[&from]); })  {
+
+    views_<T>.emplace(this, std::move(vec));
 }
 
 // ----------------------------------------------------------------------------

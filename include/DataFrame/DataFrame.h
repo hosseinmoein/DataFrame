@@ -149,6 +149,9 @@ struct type_declare<HeteroVector, U>  { using type = std::vector<U>; };
 template<typename U>
 struct type_declare<HeteroView, U>  { using type = VectorView<U>; };
 
+template<typename U>
+struct type_declare<HeteroPtrView, U>  { using type = VectorPtrView<U>; };
+
 // -------------------------------------
 
 // H stands for a heterogeneous vector
@@ -160,6 +163,9 @@ using StdDataFrame = DataFrame<I, HeteroVector>;
 
 template<typename I>
 using DataFrameView = DataFrame<I, HeteroView>;
+
+template<typename I>
+using DataFramePtrView = DataFrame<I, HeteroPtrView>;
 
 // ----------------------------------------------------------------------------
 
@@ -184,20 +190,24 @@ is_nan__<long double>(const long double &val)  { return(std::isnan(val)); }
 //    represent time. Basically I could be any built-in or user-defined type.
 // H (HETERO): See the static assert below. It can only be either
 //             a HeteroVector (StdDataFrame) or a HeteroView (DataFrameView)
+//             or a HeteroPtrView (DataFramePtrView)
 // A DataFrame can contain columns of any built-in or user-defined types.
 //
 template<typename I, typename H>
 class DataFrame : public ThreadGranularity  {
 
     static_assert(std::is_base_of<HeteroVector, H>::value ||
-                      std::is_base_of<HeteroView, H>::value,
+                      std::is_base_of<HeteroView, H>::value ||
+                  std::is_base_of<HeteroPtrView, H>::value,
                   "H argument can only be either of "
-                  "HeteroVector or HeteroView or their derived types");
+                  "HeteroVector, HeteroView, HeteroPtrView "
+                  "or their derived types");
 
     using DataVec = H;
     using DataVecVec = std::vector<DataVec>;
 
     friend DataFrameView<I>;
+    friend DataFramePtrView<I>;
     friend StdDataFrame<I>;
 
 public:
@@ -925,6 +935,18 @@ public: // Read/access interfaces
     template<typename T, typename F, typename ... Ts>
     DataFrame
     get_data_by_sel (const char *name, F &sel_functor) const;
+
+
+
+
+
+    template<typename T, typename F, typename ... Ts>
+    DataFramePtrView<IndexType>
+    get_view_by_sel (const char *name, F &sel_functor);
+
+
+
+
 
     // This does the same function as above get_data_be_sel() but operating
     // on two columns.

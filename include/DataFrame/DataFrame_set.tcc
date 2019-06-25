@@ -399,8 +399,10 @@ template<typename T, typename ITR>
 void DataFrame<I, H>::
 setup_view_column_ (const char *name, Index2D<ITR> range)  {
 
-    static_assert(std::is_base_of<HeteroView, DataVec>::value,
-                  "Only a DataFrameView can call setup_view_column_()");
+    static_assert(std::is_base_of<HeteroView, DataVec>::value ||
+                      std::is_base_of<HeteroPtrView, DataVec>::value,
+                  "Only a DataFrameView or DataFramePtrView can "
+                  "call setup_view_column_()");
 
     data_.emplace_back (DataVec(&*(range.begin), &*(range.end)));
     column_tb_.emplace (name, data_.size() - 1);

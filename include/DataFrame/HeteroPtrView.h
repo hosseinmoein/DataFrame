@@ -24,6 +24,10 @@ public:
     HeteroPtrView() = default;
     template<typename T>
     HeteroPtrView(T *begin_ptr, T *end_ptr);
+    template<typename T>
+    HeteroPtrView(VectorPtrView<T> &vec);
+    template<typename T>
+    HeteroPtrView(VectorPtrView<T> &&vec);
     HeteroPtrView(const HeteroPtrView &that);
     HeteroPtrView(HeteroPtrView &&that);
 

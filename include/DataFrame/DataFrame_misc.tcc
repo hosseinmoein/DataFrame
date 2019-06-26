@@ -524,7 +524,7 @@ operator() (const std::vector<T> &vec)  {
         else
             break;
     new_col.shrink_to_fit();
-    df.load_column(name, std::move(new_col));
+    df.load_column(name, std::move(new_col), nan_policy::dont_pad_with_nans);
     return;
 }
 

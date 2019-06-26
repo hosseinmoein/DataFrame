@@ -925,6 +925,11 @@ public: // Read/access interfaces
     // The signature of sel_fucntor:
     //     bool ()(const IndexType &, const T &)
     //
+    // NOTE: If the selection logic results in empty column(s), the result
+    //       empty columns will _not_ be padded with NaN's. You can always
+    //       call make_consistent() on the original or result DataFrame to make
+    //       all columns into consistent length
+    //
     // T: Type of the named column
     // F: Type of the selecting functor
     // Ts: The list of types for all columns.
@@ -936,17 +941,21 @@ public: // Read/access interfaces
     DataFrame
     get_data_by_sel (const char *name, F &sel_functor) const;
 
-
-
-
-
+    // This is identical with above get_data_by_sel(), but:
+    // 1) The result is a view
+    // 2) Since the result is a view, you cannot call make_consistent() on
+    //    the result.
+    //
+    // T: Type of the named column
+    // F: Type of the selecting functor
+    // Ts: The list of types for all columns.
+    //     A type should be specified only once
+    // name: Name of the data column
+    // sel_functor: A reference to the selecting functor
+    //
     template<typename T, typename F, typename ... Ts>
     DataFramePtrView<IndexType>
     get_view_by_sel (const char *name, F &sel_functor);
-
-
-
-
 
     // This does the same function as above get_data_be_sel() but operating
     // on two columns.
@@ -967,6 +976,24 @@ public: // Read/access interfaces
     get_data_by_sel (const char *name1,
                      const char *name2,
                      F &sel_functor) const;
+
+    // This is identical with above get_data_by_sel(), but:
+    // 1) The result is a view
+    // 2) Since the result is a view, you cannot call make_consistent() on
+    //    the result.
+    //
+    // T1: Type of the first named column
+    // T2: Type of the second named column
+    // F: Type of the selecting functor
+    // Ts: The list of types for all columns.
+    //     A type should be specified only once
+    // name1: Name of the first data column
+    // name2: Name of the second data column
+    // sel_functor: A reference to the selecting functor
+    //
+    template<typename T1, typename T2, typename F, typename ... Ts>
+    DataFramePtrView<IndexType>
+    get_view_by_sel (const char *name1, const char *name2, F &sel_functor);
 
     // This does the same function as above get_data_be_sel() but operating
     // on three columns.
@@ -991,6 +1018,30 @@ public: // Read/access interfaces
                      const char *name2,
                      const char *name3,
                      F &sel_functor) const;
+
+    // This is identical with above get_data_by_sel(), but:
+    // 1) The result is a view
+    // 2) Since the result is a view, you cannot call make_consistent() on
+    //    the result.
+    //
+    // T1: Type of the first named column
+    // T2: Type of the second named column
+    // T3: Type of the third named column
+    // F: Type of the selecting functor
+    // Ts: The list of types for all columns.
+    //     A type should be specified only once
+    // name1: Name of the first data column
+    // name2: Name of the second data column
+    // name3: Name of the third data column
+    // sel_functor: A reference to the selecting functor
+    //
+    template<typename T1, typename T2, typename T3, typename F,
+             typename ... Ts>
+    DataFramePtrView<IndexType>
+    get_view_by_sel (const char *name1,
+                     const char *name2,
+                     const char *name3,
+                     F &sel_functor);
 
     // It returns a const reference to the index container
     //

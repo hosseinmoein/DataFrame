@@ -2544,11 +2544,10 @@ int main(int argc, char *argv[]) {
         assert(result.get_index().size() == 3);
         assert(result.get_column<double>("col_1").size() == 3);
         assert(result.get_column<std::string>("col_str").size() == 3);
-        assert(result.get_column<double>("col_4").size() == 3);
+        assert(result.get_column<double>("col_4").size() == 0);
         assert(result.get_index()[0] == 123454);
         assert(result.get_index()[2] == 123456);
         assert(result.get_column<double>("col_2")[1] == 13);
-        assert(std::isnan(result.get_column<double>("col_4")[2]));
         assert(result.get_column<std::string>("col_str")[1] == "gg");
         assert(result.get_column<std::string>("col_str")[2] == "ll");
         assert(result.get_column<double>("col_1")[1] == 6);
@@ -2572,7 +2571,7 @@ int main(int argc, char *argv[]) {
         assert(result2.get_index().size() == 5);
         assert(result2.get_column<double>("col_1").size() == 5);
         assert(result2.get_column<std::string>("col_str").size() == 5);
-        assert(result2.get_column<double>("col_4").size() == 5);
+        assert(result2.get_column<double>("col_4").size() == 2);
         assert(result2.get_index()[0] == 123450);
         assert(result2.get_index()[2] == 123454);
         assert(result2.get_index()[4] == 123456);
@@ -2581,7 +2580,6 @@ int main(int argc, char *argv[]) {
         assert(result2.get_column<double>("col_2")[3] == 13);
         assert(result2.get_column<double>("col_4")[0] == 22);
         assert(result2.get_column<double>("col_4")[1] == 24);
-        assert(std::isnan(result2.get_column<double>("col_4")[2]));
         assert(result2.get_column<std::string>("col_str")[0] == "11");
         assert(result2.get_column<std::string>("col_str")[1] == "33");
         assert(result2.get_column<std::string>("col_str")[2] == "ff");
@@ -2633,41 +2631,57 @@ int main(int argc, char *argv[]) {
         assert(result.get_column<double>("col_1")[1] == 6);
         assert(result.get_column<double>("col_1")[2] == 7);
 
+        result.get_column<double>("col_1")[1] = 600;
+        assert(result.get_column<double>("col_1")[1] == 600);
+        assert(df.get_column<double>("col_1")[5] == 600);
+
         auto    functor2 =
+            [](const unsigned long &,
+               const double &val1,
+               const double &val2)-> bool {
+                return (val1 >= 5 || val2 == 15);
+            };
+        auto    result2 =
+            df.get_view_by_sel<double,
+                               double,
+                               decltype(functor2),
+                               double, std::string>
+            ("col_1", "col_3", functor2);
+
+        auto    functor3 =
             [](const unsigned long &,
                const double &val1,
                const double &val2,
                const std::string val3)-> bool {
                 return (val1 >= 5 || val2 == 15 || val3 == "33");
             };
-        auto    result2 =
-            df.get_data_by_sel<double,
+        auto    result3 =
+            df.get_view_by_sel<double,
                                double,
                                std::string,
-                               decltype(functor2),
+                               decltype(functor3),
                                double, std::string>
-            ("col_1", "col_3", "col_str", functor2);
+            ("col_1", "col_3", "col_str", functor3);
 
-        assert(result2.get_index().size() == 5);
-        assert(result2.get_column<double>("col_1").size() == 5);
-        assert(result2.get_column<std::string>("col_str").size() == 5);
-        assert(result2.get_column<double>("col_4").size() == 5);
-        assert(result2.get_index()[0] == 123450);
-        assert(result2.get_index()[2] == 123454);
-        assert(result2.get_index()[4] == 123456);
-        assert(result2.get_column<double>("col_2")[0] == 8);
-        assert(result2.get_column<double>("col_2")[1] == 10);
-        assert(result2.get_column<double>("col_2")[3] == 13);
-        assert(result2.get_column<double>("col_4")[0] == 22);
-        assert(result2.get_column<double>("col_4")[1] == 24);
-        assert(std::isnan(result2.get_column<double>("col_4")[2]));
-        assert(result2.get_column<std::string>("col_str")[0] == "11");
-        assert(result2.get_column<std::string>("col_str")[1] == "33");
-        assert(result2.get_column<std::string>("col_str")[2] == "ff");
-        assert(result2.get_column<std::string>("col_str")[4] == "ll");
-        assert(result2.get_column<double>("col_1")[0] == 1);
-        assert(result2.get_column<double>("col_1")[1] == 3);
-        assert(result2.get_column<double>("col_1")[2] == 5);
+        assert(result3.get_index().size() == 5);
+        assert(result3.get_column<double>("col_1").size() == 5);
+        assert(result3.get_column<std::string>("col_str").size() == 5);
+        assert(result3.get_column<double>("col_4").size() == 2);
+        assert(result3.get_index()[0] == 123450);
+        assert(result3.get_index()[2] == 123454);
+        assert(result3.get_index()[4] == 123456);
+        assert(result3.get_column<double>("col_2")[0] == 8);
+        assert(result3.get_column<double>("col_2")[1] == 10);
+        assert(result3.get_column<double>("col_2")[3] == 13);
+        assert(result3.get_column<double>("col_4")[0] == 22);
+        assert(result3.get_column<double>("col_4")[1] == 24);
+        assert(result3.get_column<std::string>("col_str")[0] == "11");
+        assert(result3.get_column<std::string>("col_str")[1] == "33");
+        assert(result3.get_column<std::string>("col_str")[2] == "ff");
+        assert(result3.get_column<std::string>("col_str")[4] == "ll");
+        assert(result3.get_column<double>("col_1")[0] == 1);
+        assert(result3.get_column<double>("col_1")[1] == 3);
+        assert(result3.get_column<double>("col_1")[2] == 5);
     }
 
     return (0);

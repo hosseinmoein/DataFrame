@@ -73,6 +73,7 @@ set(LIBRARY_TARGET_NAME ${PROJECT_NAME})
 set(${LIBRARY_TARGET_NAME}_SRC
   src/HeteroVector.cc
   src/HeteroView.cc
+  src/HeteroPtrView.cc
   src/ThreadGranularity.cc
   src/DateTime.cc
   src/MMapBase.cc
@@ -86,8 +87,10 @@ set(${LIBRARY_TARGET_NAME}_HDR
   include/DataFrame/VectorPtrView.h
   include/DataFrame/HeteroVector.h
   include/DataFrame/HeteroView.h
+  include/DataFrame/HeteroPtrView.h
   include/DataFrame/HeteroVector.tcc
   include/DataFrame/HeteroView.tcc
+  include/DataFrame/HeteroPtrView.tcc
   include/DataFrame/DataFrameVisitors.h
   include/DataFrame/DataFrameOperators.h
   include/DataFrame/DataFrame.h

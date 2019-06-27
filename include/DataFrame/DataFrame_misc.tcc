@@ -517,14 +517,42 @@ operator() (const std::vector<T> &vec)  {
     std::vector<T>  new_col;
     const size_type vec_size = vec.size();
 
-    new_col.reserve(sel_indices.size());
+    new_col.reserve(std::min(sel_indices.size(), vec_size));
     for (const auto citer : sel_indices)
         if (citer < vec_size)
             new_col.push_back(vec[citer]);
         else
             break;
     new_col.shrink_to_fit();
-    df.load_column(name, std::move(new_col));
+    df.load_column(name, std::move(new_col), nan_policy::dont_pad_with_nans);
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename ... Ts>
+template<typename T>
+void
+DataFrame<I, H>::
+sel_load_view_functor_<Ts ...>::
+operator() (std::vector<T> &vec)  {
+
+    VectorPtrView<T>    new_col;
+    const size_type     vec_size = vec.size();
+
+    new_col.reserve(std::min(sel_indices.size(), vec_size));
+    for (const auto citer : sel_indices)
+        if (citer < vec_size)
+            new_col.push_back(&(vec[citer]));
+        else
+            break;
+    new_col.shrink_to_fit();
+
+    using data_vec_t = typename DataFramePtrView<I>::DataVec;
+
+    dfv.data_.emplace_back(data_vec_t(std::move(new_col)));
+    dfv.column_tb_.emplace (name, dfv.data_.size() - 1);
     return;
 }
 

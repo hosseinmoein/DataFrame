@@ -149,6 +149,9 @@ struct type_declare<HeteroVector, U>  { using type = std::vector<U>; };
 template<typename U>
 struct type_declare<HeteroView, U>  { using type = VectorView<U>; };
 
+template<typename U>
+struct type_declare<HeteroPtrView, U>  { using type = VectorPtrView<U>; };
+
 // -------------------------------------
 
 // H stands for a heterogeneous vector
@@ -160,6 +163,9 @@ using StdDataFrame = DataFrame<I, HeteroVector>;
 
 template<typename I>
 using DataFrameView = DataFrame<I, HeteroView>;
+
+template<typename I>
+using DataFramePtrView = DataFrame<I, HeteroPtrView>;
 
 // ----------------------------------------------------------------------------
 
@@ -184,20 +190,24 @@ is_nan__<long double>(const long double &val)  { return(std::isnan(val)); }
 //    represent time. Basically I could be any built-in or user-defined type.
 // H (HETERO): See the static assert below. It can only be either
 //             a HeteroVector (StdDataFrame) or a HeteroView (DataFrameView)
+//             or a HeteroPtrView (DataFramePtrView)
 // A DataFrame can contain columns of any built-in or user-defined types.
 //
 template<typename I, typename H>
 class DataFrame : public ThreadGranularity  {
 
     static_assert(std::is_base_of<HeteroVector, H>::value ||
-                      std::is_base_of<HeteroView, H>::value,
+                      std::is_base_of<HeteroView, H>::value ||
+                  std::is_base_of<HeteroPtrView, H>::value,
                   "H argument can only be either of "
-                  "HeteroVector or HeteroView or their derived types");
+                  "HeteroVector, HeteroView, HeteroPtrView "
+                  "or their derived types");
 
     using DataVec = H;
     using DataVecVec = std::vector<DataVec>;
 
     friend DataFrameView<I>;
+    friend DataFramePtrView<I>;
     friend StdDataFrame<I>;
 
 public:
@@ -915,6 +925,11 @@ public: // Read/access interfaces
     // The signature of sel_fucntor:
     //     bool ()(const IndexType &, const T &)
     //
+    // NOTE: If the selection logic results in empty column(s), the result
+    //       empty columns will _not_ be padded with NaN's. You can always
+    //       call make_consistent() on the original or result DataFrame to make
+    //       all columns into consistent length
+    //
     // T: Type of the named column
     // F: Type of the selecting functor
     // Ts: The list of types for all columns.
@@ -925,6 +940,22 @@ public: // Read/access interfaces
     template<typename T, typename F, typename ... Ts>
     DataFrame
     get_data_by_sel (const char *name, F &sel_functor) const;
+
+    // This is identical with above get_data_by_sel(), but:
+    // 1) The result is a view
+    // 2) Since the result is a view, you cannot call make_consistent() on
+    //    the result.
+    //
+    // T: Type of the named column
+    // F: Type of the selecting functor
+    // Ts: The list of types for all columns.
+    //     A type should be specified only once
+    // name: Name of the data column
+    // sel_functor: A reference to the selecting functor
+    //
+    template<typename T, typename F, typename ... Ts>
+    DataFramePtrView<IndexType>
+    get_view_by_sel (const char *name, F &sel_functor);
 
     // This does the same function as above get_data_be_sel() but operating
     // on two columns.
@@ -945,6 +976,24 @@ public: // Read/access interfaces
     get_data_by_sel (const char *name1,
                      const char *name2,
                      F &sel_functor) const;
+
+    // This is identical with above get_data_by_sel(), but:
+    // 1) The result is a view
+    // 2) Since the result is a view, you cannot call make_consistent() on
+    //    the result.
+    //
+    // T1: Type of the first named column
+    // T2: Type of the second named column
+    // F: Type of the selecting functor
+    // Ts: The list of types for all columns.
+    //     A type should be specified only once
+    // name1: Name of the first data column
+    // name2: Name of the second data column
+    // sel_functor: A reference to the selecting functor
+    //
+    template<typename T1, typename T2, typename F, typename ... Ts>
+    DataFramePtrView<IndexType>
+    get_view_by_sel (const char *name1, const char *name2, F &sel_functor);
 
     // This does the same function as above get_data_be_sel() but operating
     // on three columns.
@@ -969,6 +1018,30 @@ public: // Read/access interfaces
                      const char *name2,
                      const char *name3,
                      F &sel_functor) const;
+
+    // This is identical with above get_data_by_sel(), but:
+    // 1) The result is a view
+    // 2) Since the result is a view, you cannot call make_consistent() on
+    //    the result.
+    //
+    // T1: Type of the first named column
+    // T2: Type of the second named column
+    // T3: Type of the third named column
+    // F: Type of the selecting functor
+    // Ts: The list of types for all columns.
+    //     A type should be specified only once
+    // name1: Name of the first data column
+    // name2: Name of the second data column
+    // name3: Name of the third data column
+    // sel_functor: A reference to the selecting functor
+    //
+    template<typename T1, typename T2, typename T3, typename F,
+             typename ... Ts>
+    DataFramePtrView<IndexType>
+    get_view_by_sel (const char *name1,
+                     const char *name2,
+                     const char *name3,
+                     F &sel_functor);
 
     // It returns a const reference to the index container
     //

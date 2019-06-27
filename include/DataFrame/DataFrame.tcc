@@ -335,7 +335,7 @@ drop_missing_rows_(T &vec,
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename ... types>
+template<typename ... Ts>
 void DataFrame<I, H>::
 drop_missing(drop_policy policy, size_type threshold)  {
 
@@ -344,8 +344,8 @@ drop_missing(drop_policy policy, size_type threshold)  {
     size_type                       thread_count = 0;
     const size_type                 data_size = data_.size();
 
-    map_missing_rows_functor_<types ...>    functor (indices_.size(),
-                                                     missing_row_map);
+    map_missing_rows_functor_<Ts ...>   functor (indices_.size(),
+                                                 missing_row_map);
 
     for (size_type idx = 0; idx < data_size; ++idx)  {
         if (thread_count >= get_thread_level())
@@ -353,9 +353,9 @@ drop_missing(drop_policy policy, size_type threshold)  {
         else  {
             auto    to_be_called =
                 static_cast
-                    <void(DataVec::*)(map_missing_rows_functor_<types ...> &&)>
+                    <void(DataVec::*)(map_missing_rows_functor_<Ts ...> &&)>
                         (&DataVec::template
-                             change<map_missing_rows_functor_<types ...>>);
+                             change<map_missing_rows_functor_<Ts ...>>);
 
             futures[thread_count] =
                 std::async(std::launch::async,
@@ -375,10 +375,10 @@ drop_missing(drop_policy policy, size_type threshold)  {
                        threshold,
                        data_size);
 
-    drop_missing_rows_functor_<types ...>   functor2 (missing_row_map,
-                                                      policy,
-                                                      threshold,
-                                                      data_.size());
+    drop_missing_rows_functor_<Ts ...>  functor2 (missing_row_map,
+                                                  policy,
+                                                  threshold,
+                                                  data_.size());
 
     for (size_type idx = 0; idx < data_size; ++idx)  {
         if (thread_count >= get_thread_level())
@@ -386,9 +386,9 @@ drop_missing(drop_policy policy, size_type threshold)  {
         else  {
             auto    to_be_called =
                 static_cast
-                    <void(DataVec::*)(drop_missing_rows_functor_<types ...>&&)>
+                    <void(DataVec::*)(drop_missing_rows_functor_<Ts ...>&&)>
                         (&DataVec::template
-                             change<drop_missing_rows_functor_<types ...>>);
+                             change<drop_missing_rows_functor_<Ts ...>>);
 
             futures[thread_count] =
                 std::async(std::launch::async,
@@ -539,11 +539,14 @@ replace_async(const char *col_name, F &functor)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename ...types>
+template<typename ...Ts>
 void DataFrame<I, H>::make_consistent ()  {
 
-    const size_type                 idx_s = indices_.size();
-    consistent_functor_<types ...>  functor (idx_s);
+    static_assert(std::is_base_of<HeteroVector, H>::value,
+                  "Only a StdDataFrame can call make_consistent()");
+
+    const size_type             idx_s = indices_.size();
+    consistent_functor_<Ts ...> functor (idx_s);
 
     for (auto &iter : data_)
         iter.change(functor);
@@ -552,13 +555,13 @@ void DataFrame<I, H>::make_consistent ()  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename T, typename ...types>
+template<typename T, typename ...Ts>
 void DataFrame<I, H>::sort(const char *by_name)  {
 
-    make_consistent<types ...>();
+    make_consistent<Ts ...>();
 
     if (by_name == nullptr)  {
-        sort_functor_<IndexType, types ...> functor (indices_);
+        sort_functor_<IndexType, Ts ...>    functor (indices_);
 
         for (auto &iter : data_)
             iter.change(functor);
@@ -579,7 +582,7 @@ void DataFrame<I, H>::sort(const char *by_name)  {
 
         DataVec                     &hv = data_[iter->second];
         std::vector<T>              &idx_vec = hv.template get_vector<T>();
-        sort_functor_<T, types ...> functor (idx_vec);
+        sort_functor_<T, Ts ...>    functor (idx_vec);
 
         for (size_type i = 0; i < data_.size(); ++i)
             if (i != iter->second)
@@ -595,18 +598,18 @@ void DataFrame<I, H>::sort(const char *by_name)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename T, typename ...types>
+template<typename T, typename ...Ts>
 std::future<void> DataFrame<I, H>::sort_async(const char *by_name)  {
 
     return (std::async(std::launch::async,
-                       &DataFrame::sort<T, types ...>,
+                       &DataFrame::sort<T, Ts ...>,
                        this, by_name));
 }
 
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename F, typename T, typename ...types>
+template<typename F, typename T, typename ...Ts>
 DataFrame<I, H>
 DataFrame<I, H>:: groupby (F &&func,
                            const char *gb_col_name,
@@ -615,14 +618,14 @@ DataFrame<I, H>:: groupby (F &&func,
     DataFrame   tmp_df = *this;
 
     if (already_sorted == sort_state::not_sorted)  {
-        if (gb_col_name == nullptr) { tmp_df.sort<T, types ...>(); }
-        else { tmp_df.sort<T, types ...>(gb_col_name); }
+        if (gb_col_name == nullptr) { tmp_df.sort<T, Ts ...>(); }
+        else { tmp_df.sort<T, Ts ...>(gb_col_name); }
     }
 
     DataFrame   df;
 
     for (const auto &iter : tmp_df.column_tb_)  {
-        add_col_functor_<types ...> functor (iter.first.c_str(), df);
+        add_col_functor_<Ts ...>    functor (iter.first.c_str(), df);
 
         tmp_df.data_[iter.second].change(functor);
     }
@@ -635,13 +638,13 @@ DataFrame<I, H>:: groupby (F &&func,
             if (tmp_df.indices_[i] != tmp_df.indices_[marker])  {
                 df.append_index(tmp_df.indices_[marker]);
                 for (const auto &iter : tmp_df.column_tb_)  {
-                    groupby_functor_<F, types...>   functor(
-                                                iter.first.c_str(),
-                                                marker,
-                                                i,
-                                                tmp_df.indices_[marker],
-                                                func,
-                                                df);
+                    groupby_functor_<F, Ts...>  functor(
+                                                    iter.first.c_str(),
+                                                    marker,
+                                                    i,
+                                                    tmp_df.indices_[marker],
+                                                    func,
+                                                    df);
 
                     tmp_df.data_[iter.second].change(functor);
                     func.reset();
@@ -653,13 +656,13 @@ DataFrame<I, H>:: groupby (F &&func,
         if (marker < vec_size)  {
             df.append_index(tmp_df.indices_[vec_size - 1]);
             for (const auto &iter : tmp_df.column_tb_)  {
-                groupby_functor_<F, types...>   functor(
-                                            iter.first.c_str(),
-                                            vec_size - 1,
-                                            vec_size,
-                                            tmp_df.indices_[vec_size - 1],
-                                            func,
-                                            df);
+                groupby_functor_<F, Ts...>  functor(
+                                                iter.first.c_str(),
+                                                vec_size - 1,
+                                                vec_size,
+                                                tmp_df.indices_[vec_size - 1],
+                                                func,
+                                                df);
 
                 tmp_df.data_[iter.second].change(functor);
             }
@@ -686,13 +689,13 @@ DataFrame<I, H>:: groupby (F &&func,
 
                 for (const auto &iter : tmp_df.column_tb_)  {
                     if (iter.first != gb_col_name)  {
-                        groupby_functor_<F, types...>   functor(
-                                                    iter.first.c_str(),
-                                                    marker,
-                                                    i,
-                                                    tmp_df.indices_[marker],
-                                                    func,
-                                                    df);
+                        groupby_functor_<F, Ts...>  functor(
+                                                        iter.first.c_str(),
+                                                        marker,
+                                                        i,
+                                                        tmp_df.indices_[marker],
+                                                        func,
+                                                        df);
 
                         tmp_df.data_[iter.second].change(functor);
                         func.reset();
@@ -720,7 +723,7 @@ DataFrame<I, H>:: groupby (F &&func,
 
             for (const auto &iter : tmp_df.column_tb_)  {
                 if (iter.first != gb_col_name)  {
-                    groupby_functor_<F, types...>   functor(
+                    groupby_functor_<F, Ts...>  functor(
                                             iter.first.c_str(),
                                             vec_size - 1,
                                             vec_size,
@@ -740,14 +743,14 @@ DataFrame<I, H>:: groupby (F &&func,
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename F, typename T, typename ...types>
+template<typename F, typename T, typename ...Ts>
 std::future<DataFrame<I, H>>
 DataFrame<I, H>::groupby_async (F &&func,
                                 const char *gb_col_name,
                                 sort_state already_sorted) const  {
 
     return (std::async(std::launch::async,
-                       &DataFrame::groupby<F, T, types ...>,
+                       &DataFrame::groupby<F, T, Ts ...>,
                            this,
                            std::move(func),
                            gb_col_name,
@@ -830,7 +833,7 @@ DataFrame<I, H>::value_counts (const char *col_name) const  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename F, typename ...types>
+template<typename F, typename ...Ts>
 DataFrame<I, H>
 DataFrame<I, H>::
 bucketize (F &&func, const IndexType &bucket_interval) const  {
@@ -838,18 +841,18 @@ bucketize (F &&func, const IndexType &bucket_interval) const  {
     DataFrame   df;
 
     for (const auto &iter : column_tb_)  {
-        add_col_functor_<types ...> functor (iter.first.c_str(), df);
+        add_col_functor_<Ts ...>    functor (iter.first.c_str(), df);
 
         data_[iter.second].change(functor);
     }
 
     for (const auto &iter : column_tb_)  {
-        bucket_functor_<F, types...>   functor(
-                                    iter.first.c_str(),
-                                    indices_,
-                                    bucket_interval,
-                                    func,
-                                    df);
+        bucket_functor_<F, Ts...>   functor(
+                                        iter.first.c_str(),
+                                        indices_,
+                                        bucket_interval,
+                                        func,
+                                        df);
 
         data_[iter.second].change(functor);
     }
@@ -860,13 +863,13 @@ bucketize (F &&func, const IndexType &bucket_interval) const  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename F, typename ...types>
+template<typename F, typename ...Ts>
 std::future<DataFrame<I, H>>
 DataFrame<I, H>::
 bucketize_async (F &&func, const IndexType &bucket_interval) const  {
 
     return (std::async(std::launch::async,
-                       &DataFrame::bucketize<F, types ...>,
+                       &DataFrame::bucketize<F, Ts ...>,
                            this,
                            std::move(func),
                            std::cref(bucket_interval)));
@@ -945,7 +948,7 @@ inline static S &_write_df_index_(S &o, const DateTime &value)  {
 }
 
 template<typename I, typename H>
-template<typename S, typename ...types>
+template<typename S, typename ...Ts>
 bool DataFrame<I, H>::
 write (S &o, bool values_only, io_format iof) const  {
 
@@ -984,7 +987,7 @@ write (S &o, bool values_only, io_format iof) const  {
     }
 
     for (const auto &iter : column_tb_)  {
-        print_functor_<types ...> functor (iter.first.c_str(), values_only, o);
+        print_functor_<Ts ...>  functor (iter.first.c_str(), values_only, o);
 
         data_[iter.second].change(functor);
     }

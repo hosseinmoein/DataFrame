@@ -100,7 +100,6 @@ DataFrame<I, H>::load_data (IndexVecType &&indices, Ts&& ... args)  {
                   "Only a StdDataFrame can call load_data()");
 
     size_type       cnt = load_index(std::move(indices));
-
     auto            args_tuple = std::tuple<Ts ...>(args ...);
     // const size_type tuple_size =
     //     std::tuple_size<decltype(args_tuple)>::value;
@@ -399,8 +398,10 @@ template<typename T, typename ITR>
 void DataFrame<I, H>::
 setup_view_column_ (const char *name, Index2D<ITR> range)  {
 
-    static_assert(std::is_base_of<HeteroView, DataVec>::value,
-                  "Only a DataFrameView can call setup_view_column_()");
+    static_assert(std::is_base_of<HeteroView, DataVec>::value ||
+                      std::is_base_of<HeteroPtrView, DataVec>::value,
+                  "Only a DataFrameView or DataFramePtrView can "
+                  "call setup_view_column_()");
 
     data_.emplace_back (DataVec(&*(range.begin), &*(range.end)));
     column_tb_.emplace (name, data_.size() - 1);
@@ -595,7 +596,7 @@ append_column (const char *name, const T &val, nan_policy padding)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename  H>
-template<typename ... types>
+template<typename ... Ts>
 void DataFrame<I, H>::remove_data_by_idx (Index2D<IndexType> range)  {
 
     static_assert(std::is_base_of<HeteroVector, H>::value,
@@ -612,10 +613,10 @@ void DataFrame<I, H>::remove_data_by_idx (Index2D<IndexType> range)  {
                                                upper < indices_.end()
                                                    ? upper
                                                    : indices_.end());
-        make_consistent<types ...>();
+        make_consistent<Ts ...>();
         indices_.erase(lower, upper);
 
-        remove_functor_<types ...>  functor (b_dist, e_dist);
+        remove_functor_<Ts ...> functor (b_dist, e_dist);
 
         for (auto &iter : column_tb_)
             data_[iter.second].change(functor);
@@ -627,7 +628,7 @@ void DataFrame<I, H>::remove_data_by_idx (Index2D<IndexType> range)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename  H>
-template<typename ... types>
+template<typename ... Ts>
 void DataFrame<I, H>::remove_data_by_loc (Index2D<int> range)  {
 
     static_assert(std::is_base_of<HeteroVector, H>::value,
@@ -640,11 +641,11 @@ void DataFrame<I, H>::remove_data_by_loc (Index2D<int> range)  {
 
     if (range.end <= static_cast<int>(indices_.size()) &&
         range.begin <= range.end && range.begin >= 0)  {
-        make_consistent<types ...>();
+        make_consistent<Ts ...>();
         indices_.erase(indices_.begin() + range.begin,
-                          indices_.begin() + range.end);
+                       indices_.begin() + range.end);
 
-        remove_functor_<types ...>  functor (
+        remove_functor_<Ts ...> functor (
             static_cast<size_type>(range.begin),
             static_cast<size_type>(range.end));
 

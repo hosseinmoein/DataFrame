@@ -1,62 +1,45 @@
 // Hossein Moein
-// September 11, 2017
+// June 24, 2019
 // Copyright (C) 2018-2019 Hossein Moein
 // Distributed under the BSD Software License (see file License)
 
 #pragma once
 
-#include <DataFrame/HeteroView.h>
-#include <DataFrame/HeteroPtrView.h>
+#include <DataFrame/VectorPtrView.h>
 
-#include <vector>
 #include <unordered_map>
+#include <functional>
 
 // ----------------------------------------------------------------------------
 
 namespace hmdf
 {
 
-// This class implements a heterogeneous vector. Its design and implementation
-// are partly inspired by Andy G's Blog at:
-// https://gieseanw.wordpress.com/2017/05/03/a-true-heterogeneous-container/
-//
-struct  HeteroVector  {
+struct  HeteroPtrView  {
 
 public:
 
     using size_type = size_t;
 
-    HeteroVector();
-    HeteroVector(const HeteroVector &that);
-    HeteroVector(HeteroVector &&that);
+    HeteroPtrView() = default;
+    template<typename T>
+    HeteroPtrView(T *begin_ptr, T *end_ptr);
+    template<typename T>
+    HeteroPtrView(VectorPtrView<T> &vec);
+    template<typename T>
+    HeteroPtrView(VectorPtrView<T> &&vec);
+    HeteroPtrView(const HeteroPtrView &that);
+    HeteroPtrView(HeteroPtrView &&that);
 
-    ~HeteroVector() { clear(); }
+    ~HeteroPtrView() { clear(); }
 
-    HeteroVector &operator= (const HeteroVector &rhs);
-    HeteroVector &operator= (HeteroVector &&rhs);
+    HeteroPtrView &operator= (const HeteroPtrView &rhs);
+    HeteroPtrView &operator= (HeteroPtrView &&rhs);
 
     template<typename T>
-    std::vector<T> &get_vector();
+    VectorPtrView<T> &get_vector();
     template<typename T>
-    const std::vector<T> &get_vector() const;
-
-    // It returns a view of the underlying vector.
-    // NOTE: One can modify the vector through the view. But the vector
-    //       cannot be extended or shrunk through the view.
-    // There is no const version of this method
-    //
-    template<typename T>
-    HeteroView get_view(size_type begin = 0, size_type end = -1);
-
-    template<typename T>
-    HeteroPtrView get_ptr_view(size_type begin = 0, size_type end = -1);
-
-    template<typename T>
-    void push_back(const T &v);
-    template<typename T, class... Args>
-    void emplace_back (Args &&... args);
-    template<typename T, typename ITR, class... Args>
-    void emplace (ITR pos, Args &&... args);
+    const VectorPtrView<T> &get_vector() const;
 
     template<typename T>
     void reserve (size_type r)  { get_vector<T>().reserve (r); }
@@ -64,20 +47,10 @@ public:
     void shrink_to_fit () { get_vector<T>().shrink_to_fit (); }
 
     template<typename T>
+    typename VectorPtrView<T>::
     size_type size () const { return (get_vector<T>().size()); }
 
     void clear();
-
-    template<typename T>
-    void erase(size_type pos);
-
-    template<typename T>
-    void resize(size_type count);
-    template<typename T>
-    void resize(size_type count, const T &v);
-
-    template<typename T>
-    void pop_back();
 
     template<typename T>
     bool empty() const noexcept;
@@ -100,13 +73,20 @@ public:
 private:
 
     template<typename T>
-    static std::unordered_map<const HeteroVector *, std::vector<T>> vectors_;
+    static std::unordered_map<const HeteroPtrView *, VectorPtrView<T>> views_;
 
-    std::vector<std::function<void(HeteroVector &)>>    clear_functions_;
-    std::vector<std::function<void(const HeteroVector &,
-                                   HeteroVector &)>>    copy_functions_;
-    std::vector<std::function<void(HeteroVector &,
-                                   HeteroVector &)>>    move_functions_;
+    std::function<void(HeteroPtrView &)>
+        clear_function_ {
+            [](HeteroPtrView &) { return; }
+        };
+    std::function<void(const HeteroPtrView &, HeteroPtrView &)>
+        copy_function_ {
+            [](const HeteroPtrView &, HeteroPtrView &)  { return; }
+        };
+    std::function<void(HeteroPtrView &, HeteroPtrView &)>
+        move_function_  {
+            [](HeteroPtrView &, HeteroPtrView &)  { return; }
+        };
 
     // Visitor stuff
     //
@@ -178,7 +158,7 @@ public:
 // ----------------------------------------------------------------------------
 
 #  ifndef HMDF_DO_NOT_INCLUDE_TCC_FILES
-#    include <DataFrame/HeteroVector.tcc>
+#    include <DataFrame/HeteroPtrView.tcc>
 #  endif // HMDF_DO_NOT_INCLUDE_TCC_FILES
 
 // ----------------------------------------------------------------------------

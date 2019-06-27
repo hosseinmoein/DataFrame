@@ -78,7 +78,7 @@ DateTime class included in this library is a very cool and handy object to manip
 
 
 ### Installing using CMake
-```
+```bash
 mkdir [Debug | Release]
 cd [Debug | Release]
 cmake -DCMAKE_BUILD_TYPE=[Debug | Release] ..
@@ -88,7 +88,7 @@ make install
 
 ### Uninstalling
 
-```
+```bash
 cd [Debug | Release]
 make uninstall
 ```

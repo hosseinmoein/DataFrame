@@ -193,7 +193,7 @@ DateTime::DateTime (DateType d,
                     MinuteType mn,
                     SecondType sc,
                     NanosecondType ns,
-                    DT_TIME_ZONE tzone) noexcept
+                    DT_TIME_ZONE tz) noexcept
     : date_ (d),
       hour_ (hr),
       minute_ (mn),
@@ -205,7 +205,7 @@ DateTime::DateTime (DateType d,
       //
       time_ (INVALID_TIME_T_),
       week_day_ (DT_WEEKDAY::BAD_DAY),
-      time_zone_ (tzone)  {
+      time_zone_ (tz)  {
 }
 
 // ----------------------------------------------------------------------------
@@ -228,9 +228,8 @@ DateTime::DateTime (DateType d,
 //
 DateTime::DateTime (const char *s, DT_DATE_STYLE ds, DT_TIME_ZONE tz)
     : time_ (INVALID_TIME_T_),
-      week_day_ (DT_WEEKDAY::BAD_DAY)  {
-
-    time_zone_ = tz;
+      week_day_ (DT_WEEKDAY::BAD_DAY),
+      time_zone_ (tz)  {
 
     const char  *str = s;
 
@@ -417,7 +416,7 @@ DateTime &DateTime::operator = (DateType the_date)  {
 
 DateTime::EpochType DateTime::compare (const DateTime &rhs) const  {
 
-    const EpochType t = time() - rhs.time();
+    const EpochType t = this->time() - rhs.time();
 
     return (t == 0 ? nanosec () - rhs.nanosec () : t);
 }
@@ -592,7 +591,7 @@ bool DateTime::is_us_bank_holiday () const noexcept  {
 
 void DateTime::set_timezone (DT_TIME_ZONE tz)  {
 
-    const EpochType t = time ();
+    const EpochType t = this->time ();
 
     time_zone_ = tz;
     breaktime_ (t, nanosec ());
@@ -604,7 +603,7 @@ void DateTime::set_timezone (DT_TIME_ZONE tz)  {
 DateTime::DateType DateTime::date () const noexcept  {
 
     if (date_ == DateType (INVALID_TIME_T_))
-        const_cast<DateTime *>(this)->breaktime_ (time (), nanosec ());
+        const_cast<DateTime *>(this)->breaktime_ (this->time (), nanosec ());
 
     return (date_);
 }
@@ -652,7 +651,7 @@ DT_WEEKDAY DateTime::dweek () const noexcept  {
     // over it.
     //
     if (week_day_ == DT_WEEKDAY::BAD_DAY)
-        const_cast<DateTime *>(this)->breaktime_ (time (), nanosec ());
+        const_cast<DateTime *>(this)->breaktime_ (this->time (), nanosec ());
 
     return (week_day_);
 }
@@ -665,7 +664,7 @@ DateTime::HourType DateTime::hour () const noexcept  {
     // over it.
     //
     if (hour_ == HourType (INVALID_TIME_T_))
-        const_cast<DateTime *>(this)->breaktime_ (time (), nanosec ());
+        const_cast<DateTime *>(this)->breaktime_ (this->time (), nanosec ());
      return (hour_);
 }
 
@@ -674,7 +673,7 @@ DateTime::HourType DateTime::hour () const noexcept  {
 DateTime::MinuteType DateTime::minute () const noexcept  {
 
     if (minute_ == MinuteType (INVALID_TIME_T_))
-        const_cast<DateTime *>(this)->breaktime_ (time (), nanosec ());
+        const_cast<DateTime *>(this)->breaktime_ (this->time (), nanosec ());
 
     return (minute_);
 }
@@ -684,7 +683,7 @@ DateTime::MinuteType DateTime::minute () const noexcept  {
 DateTime::SecondType DateTime::sec () const noexcept  {
 
     if (second_ == SecondType (INVALID_TIME_T_))
-        const_cast<DateTime *>(this)->breaktime_ (time (), nanosec ());
+        const_cast<DateTime *>(this)->breaktime_ (this->time (), nanosec ());
 
     return (second_);
 }
@@ -693,7 +692,7 @@ DateTime::SecondType DateTime::sec () const noexcept  {
 
 DateTime::MillisecondType DateTime::msec () const noexcept  {
 
-    const   double  slug = double (nanosec ()) / 1000000.0 + 0.5;
+    const double    slug = double (nanosec ()) / 1000000.0 + 0.5;
 
     return(static_cast<MillisecondType>(slug < 1000.0 ? slug : 999.0));
 }
@@ -702,7 +701,7 @@ DateTime::MillisecondType DateTime::msec () const noexcept  {
 
 DateTime::MicrosecondType DateTime::microsec () const noexcept  {
 
-    const   double  slug = double (nanosec ()) / 1000.0 + 0.5;
+    const double    slug = double (nanosec ()) / 1000.0 + 0.5;
 
     return (static_cast<MicrosecondType>(slug < 1000000.0 ? slug : 999999.0));
 }
@@ -740,7 +739,7 @@ DateTime::EpochType DateTime::time () const noexcept  {
 
 DateTime::LongTimeType DateTime::long_time () const noexcept  {
 
-    return (static_cast<LongTimeType>(time()) * 1000000000LL +
+    return (static_cast<LongTimeType>(this->time()) * 1000000000LL +
             static_cast<LongTimeType>(nanosec()));
 }
 
@@ -753,13 +752,13 @@ double DateTime::diff_seconds (const DateTime &that) const  {
     // point.
     //
     if (time_zone_ != that.time_zone_)
-        throw std::runtime_error ("DateTime::diff_seconds(): "
-                                  "Time difference "
-                                  "between different time zones "
-                                  "is not implemented currently.");
+        throw std::runtime_error (
+            "DateTime::diff_seconds(): "
+            "Time difference between different time zones "
+            "is not implemented currently.");
 
     const double    this_time =
-        static_cast<double>(time ()) +
+        static_cast<double>(this->time ()) +
         (static_cast<double>(nanosec ()) / 1000000000.0);
     const double    that_time =
         static_cast<double>(that.time ()) +
@@ -817,7 +816,7 @@ double DateTime::diff_weeks (const DateTime &that) const noexcept  {
 
 void DateTime::add_seconds (EpochType secs) noexcept  {
 
-    set_time (time () + secs, nanosec ());
+    set_time (this->time () + secs, nanosec ());
     return;
 }
 
@@ -826,7 +825,7 @@ void DateTime::add_seconds (EpochType secs) noexcept  {
 void DateTime::add_nanoseconds (long nanosecs) noexcept  {
 
     long long int   new_time =
-        static_cast<long long int>(time()) * 1000000000LL +
+        static_cast<long long int>(this->time()) * 1000000000LL +
         static_cast<long long int>(nanosec());
 
     new_time += static_cast<long long int>(nanosecs);
@@ -1204,7 +1203,7 @@ void DateTime::date_to_str (DT_FORMAT format, T &result) const  {
 
         case DT_FORMAT::DT_PRECISE:  // e.g. Epoch.Nanoseconds
         {
-            buffer.printf ("%ld.%d", time(), nanosec());
+            buffer.printf ("%ld.%d", this->time(), nanosec());
         } break;
 
         default:

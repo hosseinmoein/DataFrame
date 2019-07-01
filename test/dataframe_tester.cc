@@ -2133,7 +2133,7 @@ int main(int argc, char *argv[]) {
     {
         // Testing gen_datetime_index()
         // I am commenting some of these out because with timezone spec,
-        // it will take tool long for the test to run
+        // it will take too long for the test to run
 
         std::vector<unsigned long>  idx_vec1 =
             MyDataFrame::gen_datetime_index("01/01/2018",
@@ -2149,7 +2149,7 @@ int main(int argc, char *argv[]) {
         assert(idx_vec1[10] == 20280101);
         assert(idx_vec1[20] == 20380101);
 
-		/*
+        /*
         idx_vec1 = MyDataFrame::gen_datetime_index("01/01/2018",
                                                    "12/31/2038",
                                                    time_frequency::monthly,
@@ -2201,7 +2201,7 @@ int main(int argc, char *argv[]) {
         assert(idx_vec1[2] == 1514790000);
         assert(idx_vec1[43798] == 1672455600);
         assert(idx_vec1[43799] == 1672459200);
-		*/
+        */
 
         idx_vec1 = MyDataFrame::gen_datetime_index("01/01/2018",
                                                    "03/31/2018",

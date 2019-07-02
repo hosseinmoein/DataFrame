@@ -556,6 +556,29 @@ operator() (std::vector<T> &vec)  {
     return;
 }
 
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename ... Ts>
+template<typename T>
+void
+DataFrame<I, H>::
+sel_remove_functor_<Ts ...>::
+operator() (std::vector<T> &vec) const  {
+
+    const size_type sel_indices_s = sel_indices.size();
+    const size_type vec_s = vec.size();
+    size_type       del_count = 0;
+
+    for (size_type i = 0; i < sel_indices_s; ++i)
+        if (sel_indices[i] < vec_s)
+            vec.erase(vec.begin() + sel_indices[i] - del_count++);
+        else
+            break;
+    return;
+}
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

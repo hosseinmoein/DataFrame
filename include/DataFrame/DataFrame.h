@@ -439,6 +439,25 @@ public:  // Load/append/remove interfaces
     void
     remove_data_by_loc (Index2D<int> range);
 
+
+    template<typename T, typename F, typename ... Ts>
+    void
+    remove_data_by_sel (const char *name, F &sel_functor);
+
+
+    template<typename T1, typename T2, typename F, typename ... Ts>
+    void
+    remove_data_by_sel (const char *name1, const char *name2, F &sel_functor);
+
+
+    template<typename T1, typename T2, typename T3, typename F,
+             typename ... Ts>
+    void
+    remove_data_by_sel (const char *name1,
+                        const char *name2,
+                        const char *name3,
+                        F &sel_functor);
+
 public:  // Other public interfaces
 
     // It fills all the "missing values" with the given values, and/or using

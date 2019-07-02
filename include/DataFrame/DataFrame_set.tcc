@@ -664,6 +664,196 @@ void DataFrame<I, H>::remove_data_by_loc (Index2D<int> range)  {
     throw BadRange (buffer);
 }
 
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename T, typename F, typename ... Ts>
+void DataFrame<I, H>::remove_data_by_sel (const char *name, F &sel_functor)  {
+
+    static_assert(std::is_base_of<HeteroVector, H>::value,
+                  "Only a StdDataFrame can call remove_data_by_loc()");
+
+    const auto  citer = column_tb_.find (name);
+
+    if (citer == column_tb_.end())  {
+        char buffer [512];
+
+        sprintf (buffer,
+                 "DataFrame::remove_data_by_sel(1): ERROR: "
+                 "Cannot find column '%s'",
+                 name);
+        throw ColNotFound (buffer);
+    }
+
+    const DataVec           &hv = data_[citer->second];
+    const std::vector<T>    &vec = hv.template get_vector<T>();
+    const size_type         idx_s = indices_.size();
+    const size_type         col_s = vec.size();
+    std::vector<size_type>  col_indices;
+
+    col_indices.reserve(indices_.size() / 2);
+    for (size_type i = 0; i < col_s; ++i)
+        if (sel_functor (indices_[i], vec[i]))
+            col_indices.push_back(i);
+
+    for (auto col_citer : column_tb_)  {
+        sel_remove_functor_<Ts ...> functor (col_indices);
+
+        data_[col_citer.second].change(functor);
+    }
+
+    const size_type col_indices_s = col_indices.size();
+    size_type       del_count = 0;
+
+    for (size_type i = 0; i < col_indices_s; ++i)
+        indices_.erase(indices_.begin() + col_indices[i] - del_count++);
+
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename T1, typename T2, typename F, typename ... Ts>
+void DataFrame<I, H>::
+remove_data_by_sel (const char *name1, const char *name2, F &sel_functor)  {
+
+    const auto  citer1 = column_tb_.find (name1);
+
+    if (citer1 == column_tb_.end())  {
+        char buffer [512];
+
+        sprintf (buffer,
+                 "DataFrame::remove_data_by_sel(2): ERROR: "
+                 "Cannot find column '%s'",
+                 name1);
+        throw ColNotFound (buffer);
+    }
+
+    const auto  citer2 = column_tb_.find (name2);
+
+    if (citer2 == column_tb_.end())  {
+        char buffer [512];
+
+        sprintf (buffer,
+                 "DataFrame::remove_data_by_sel(2): ERROR: "
+                 "Cannot find column '%s'",
+                 name2);
+        throw ColNotFound (buffer);
+    }
+
+    const DataVec           &hv1 = data_[citer1->second];
+    const DataVec           &hv2 = data_[citer2->second];
+    const std::vector<T1>   &vec1 = hv1.template get_vector<T1>();
+    const std::vector<T2>   &vec2 = hv2.template get_vector<T2>();
+    const size_type         col_s1 = vec1.size();
+    const size_type         col_s2 = vec2.size();
+    const size_type         col_s = std::max(col_s1, col_s2);
+    std::vector<size_type>  col_indices;
+
+    col_indices.reserve(indices_.size() / 2);
+    for (size_type i = 0; i < col_s; ++i)
+        if (sel_functor (indices_[i],
+                         i < col_s1 ? vec1[i] : _get_nan<T1>(),
+                         i < col_s2 ? vec2[i] : _get_nan<T2>()))
+            col_indices.push_back(i);
+
+    for (auto col_citer : column_tb_)  {
+        sel_remove_functor_<Ts ...> functor (col_indices);
+
+        data_[col_citer.second].change(functor);
+    }
+
+    const size_type col_indices_s = col_indices.size();
+    size_type       del_count = 0;
+
+    for (size_type i = 0; i < col_indices_s; ++i)
+        indices_.erase(indices_.begin() + col_indices[i] - del_count++);
+
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename T1, typename T2, typename T3, typename F, typename ... Ts>
+void DataFrame<I, H>::
+remove_data_by_sel (const char *name1,
+                    const char *name2,
+                    const char *name3,
+                    F &sel_functor)  {
+
+    const auto  citer1 = column_tb_.find (name1);
+
+    if (citer1 == column_tb_.end())  {
+        char buffer [512];
+
+        sprintf (buffer,
+                 "DataFrame::get_data_by_sel(2): ERROR: "
+                 "Cannot find column '%s'",
+                 name1);
+        throw ColNotFound (buffer);
+    }
+
+    const auto  citer2 = column_tb_.find (name2);
+
+    if (citer2 == column_tb_.end())  {
+        char buffer [512];
+
+        sprintf (buffer,
+                 "DataFrame::get_data_by_sel(2): ERROR: "
+                 "Cannot find column '%s'",
+                 name2);
+        throw ColNotFound (buffer);
+    }
+
+    const auto  citer3 = column_tb_.find (name3);
+
+    if (citer3 == column_tb_.end())  {
+        char buffer [512];
+
+        sprintf (buffer,
+                 "DataFrame::get_data_by_sel(2): ERROR: "
+                 "Cannot find column '%s'",
+                 name3);
+        throw ColNotFound (buffer);
+    }
+
+    const DataVec           &hv1 = data_[citer1->second];
+    const DataVec           &hv2 = data_[citer2->second];
+    const DataVec           &hv3 = data_[citer3->second];
+    const std::vector<T1>   &vec1 = hv1.template get_vector<T1>();
+    const std::vector<T2>   &vec2 = hv2.template get_vector<T2>();
+    const std::vector<T3>   &vec3 = hv3.template get_vector<T3>();
+    const size_type         col_s1 = vec1.size();
+    const size_type         col_s2 = vec2.size();
+    const size_type         col_s3 = vec3.size();
+    const size_type         col_s = std::max(std::max(col_s1, col_s2), col_s3);
+    std::vector<size_type>  col_indices;
+
+    col_indices.reserve(indices_.size() / 2);
+    for (size_type i = 0; i < col_s; ++i)
+        if (sel_functor (indices_[i],
+                         i < col_s1 ? vec1[i] : _get_nan<T1>(),
+                         i < col_s2 ? vec2[i] : _get_nan<T2>(),
+                         i < col_s3 ? vec3[i] : _get_nan<T3>()))
+            col_indices.push_back(i);
+
+    for (auto col_citer : column_tb_)  {
+        sel_remove_functor_<Ts ...> functor (col_indices);
+
+        data_[col_citer.second].change(functor);
+    }
+
+    const size_type col_indices_s = col_indices.size();
+    size_type       del_count = 0;
+
+    for (size_type i = 0; i < col_indices_s; ++i)
+        indices_.erase(indices_.begin() + col_indices[i] - del_count++);
+
+    return;
+}
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

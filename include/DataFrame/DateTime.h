@@ -160,14 +160,14 @@ private:
 public:
 
     // Initialized to now
-    explicit DateTime (DT_TIME_ZONE the_zone = DT_TIME_ZONE::LOCAL) noexcept;
+    explicit DateTime (DT_TIME_ZONE tz = DT_TIME_ZONE::LOCAL);
 
     explicit DateTime (DateType d,
                        HourType hr = 0,
                        MinuteType mn = 0,
                        SecondType sc = 0,
                        NanosecondType ns = 0,
-                       DT_TIME_ZONE tz = DT_TIME_ZONE::LOCAL) noexcept;
+                       DT_TIME_ZONE tz = DT_TIME_ZONE::LOCAL);
 
     // Currently, the following formats are supported:
     //  (1)  YYYYMMDD

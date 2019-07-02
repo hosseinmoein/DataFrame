@@ -22,42 +22,6 @@
 namespace hmdf
 {
 
-#ifdef _WIN32
-const char  *DateTime::TIMEZONES_[] =
-{
-    "TZ=GMT",
-    "TZ=GMT+03",    // "America/Buenos_Aires",
-    "TZ=GMT+06",    // "America/Chicago",
-    "TZ=GMT+08",    // "America/Los_Angeles",
-    "TZ=GMT+06",    // "America/Mexico_City",
-    "TZ=GMT+05",    // "America/New_York",
-    "TZ=GMT-04",    // "Asia/Dubai",
-    "TZ=GMT-08",    // "Asia/Hong_Kong",
-    "TZ=GMT-08",    // "Asia/Shanghai",
-    "TZ=GMT-08",    // "Asia/Singapore",
-    "TZ=GMT-03:30", // "Asia/Tehran",
-    "TZ=GMT-02",    // "Asia/Tel_Aviv",
-    "TZ=GMT-09",    // "Asia/Tokyo",
-    "TZ=GMT-11",    // "Australia/Melbourne",
-    "TZ=GMT-10",    // "Australia/NSW",
-    "TZ=GMT+03",    // "Brazil/East",
-    "TZ=GMT-01",    // "Europe/Berlin",
-    "TZ=GMT-00",    // "Europe/London",
-    "TZ=GMT-03",    // "Europe/Moscow",
-    "TZ=GMT-01",    // "Europe/Paris",
-    "TZ=GMT-01",    // "Europe/Rome",
-    "TZ=GMT-01",    // "Europe/Vienna",
-    "TZ=GMT-01",    // "Europe/Zurich",
-    "TZ=GMT+00",    // "UTC",
-    "TZ=GMT-07",    // "Asia/Seoul",
-    "TZ=GMT-08",    // "Asia/Taipei",
-    "TZ=GMT-01",    // "Eurpoe/Sweden",
-    "TZ=GMT-13",    // "NZ",
-    "TZ=GMT-01",    // "Europe/Oslo",
-    "TZ=GMT-01",    // "Europe/Warsaw",
-    "TZ=GMT-01",    // "Europe/Budapest"
-};
-#else
 const char  *DateTime::TIMEZONES_[] =
 {
     "GMT",
@@ -92,7 +56,6 @@ const char  *DateTime::TIMEZONES_[] =
     "Europe/Warsaw",
     "Europe/Budapest"
 };
-#endif // _WIN32
 
 const DateTime::DT_initializer  DateTime::dt_init_;
 
@@ -100,18 +63,7 @@ const DateTime::DT_initializer  DateTime::dt_init_;
 
 DateTime::DT_initializer::DT_initializer() noexcept  {
 
-#ifdef _WIN32 // Can not locate GetDynamicTimeZoneInformation() in kernel32.dll
-    // DYNAMIC_TIME_ZONE_INFORMATION    tz_info;
-    // char                             buffer [33];
-    // size_t                           s = 0;
-
-    // GetDynamicTimeZoneInformation (&tz_info);
-
-    // wcstombs_s (&s, buffer, 32, tz_info.StandardName, 32);
-    // DateTime::tzname_ = buffer;
-
-    // wcstombs_s (&s, buffer, 32, tz_info.DaylightName, 32);
-    // DateTime::alt_tzname_ = buffer;
+#ifdef _WIN32
     _tzset ();
 #else
     ::tzset ();
@@ -122,13 +74,13 @@ DateTime::DT_initializer::DT_initializer() noexcept  {
 
 const char *const   DateTime::MONTH_[] =
 {
-    "January", "February", "March", "April", "May", "June", "July",
-    "August", "September", "October", "November", "December"
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
 };
 const char *const   DateTime::MONTH_BR_[] =
 {
-    "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug",
-    "Sep", "Oct", "Nov", "Dec"
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
 };
 const char *const   DateTime::WDAY_[] =
 {
@@ -142,7 +94,7 @@ const char *const   DateTime::WDAY_BR_[] =
 
 // ----------------------------------------------------------------------------
 
-DateTime::DateTime (DT_TIME_ZONE time_zone) noexcept : time_zone_(time_zone)  {
+DateTime::DateTime (DT_TIME_ZONE tz) : time_zone_(tz)  {
 
 #ifdef _WIN32
     FILETIME            ft;
@@ -174,7 +126,7 @@ DateTime::DateTime (DT_TIME_ZONE time_zone) noexcept : time_zone_(time_zone)  {
 
 // ----------------------------------------------------------------------------
 
-void DateTime::set_time (EpochType the_time, NanosecondType nanosec) noexcept {
+void DateTime::set_time(EpochType the_time, NanosecondType nanosec) noexcept {
 
     date_ = DateType (INVALID_TIME_T_);
     hour_ = HourType (INVALID_TIME_T_);
@@ -193,7 +145,7 @@ DateTime::DateTime (DateType d,
                     MinuteType mn,
                     SecondType sc,
                     NanosecondType ns,
-                    DT_TIME_ZONE tz) noexcept
+                    DT_TIME_ZONE tz)
     : date_ (d),
       hour_ (hr),
       minute_ (mn),
@@ -292,7 +244,7 @@ DateTime::DateTime (const char *s, DT_DATE_STYLE ds, DT_TIME_ZONE tz)
         }
     }
     else if (ds == DT_DATE_STYLE::EUR_STYLE)  {
-        const   size_t   str_len = ::strlen (str);
+        const size_t    str_len = ::strlen (str);
 
         if (str_len == 10)  {
             hour_ = minute_ = second_ = nanosecond_ = 0;
@@ -633,7 +585,7 @@ DateTime::DatePartType DateTime::dmonth () const noexcept  {
 
 DateTime::DatePartType DateTime::dyear () const noexcept  {
 
-    struct  tm  ltime;
+    struct tm   ltime;
 
     // It _always_ makes me sad to use const_cast<>. But then I get
     // over it.
@@ -1107,7 +1059,7 @@ DateTime::breaktime_ (EpochType the_time, NanosecondType nanosec) noexcept  {
 template<typename T>
 void DateTime::date_to_str (DT_FORMAT format, T &result) const  {
 
-    String64    buffer;
+    String128   buffer;
 
     switch (format)  {
         case DT_FORMAT::AMR_DT:
@@ -1208,12 +1160,10 @@ void DateTime::date_to_str (DT_FORMAT format, T &result) const  {
 
         default:
         {
-            String1K    err;
-
-            err.printf ("ERROR: DateTime::date_to_str(): Unknown format: '%u'",
-                        format);
-
-            throw std::runtime_error (err.c_str ());
+            buffer.printf ("ERROR: DateTime::date_to_str(): "
+                           "Unknown format: '%u'",
+                           format);
+            throw std::runtime_error (buffer.c_str ());
         }
     }
 

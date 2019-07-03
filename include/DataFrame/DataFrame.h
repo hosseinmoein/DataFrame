@@ -439,17 +439,64 @@ public:  // Load/append/remove interfaces
     void
     remove_data_by_loc (Index2D<int> range);
 
-
+    // It removes data rows by boolean filtering selection via the sel_functor
+    // (e.g. a functor, function, or lambda).
+    // Each element of the named column along with its corresponding index
+    // is passed to the sel_functor. If sel_functor returns true, that row
+    // will be removed.
+    // The signature of sel_fucntor:
+    //     bool ()(const IndexType &, const T &)
+    //
+    // NOTE: If the selection logic results in empty column(s), the empty
+    //       column(s) will _not_ be padded with NaN's. You can always call
+    //       make_consistent() afterwards to make all columns into consistent
+    //       length
+    //
+    // T: Type of the named column
+    // F: Type of the selecting functor
+    // Ts: The list of types for all columns.
+    //     A type should be specified only once
+    // name: Name of the data column
+    // sel_functor: A reference to the selecting functor
+    //
     template<typename T, typename F, typename ... Ts>
     void
     remove_data_by_sel (const char *name, F &sel_functor);
 
-
+    // This does the same function as above remove_data_by_sel() but operating
+    // on two columns.
+    // The signature of sel_fucntor:
+    //     bool ()(const IndexType &, const T1 &, const T2 &)
+    //
+    // T1: Type of the first named column
+    // T2: Type of the second named column
+    // F: Type of the selecting functor
+    // Ts: The list of types for all columns.
+    //     A type should be specified only once
+    // name1: Name of the first data column
+    // name2: Name of the second data column
+    // sel_functor: A reference to the selecting functor
+    //
     template<typename T1, typename T2, typename F, typename ... Ts>
     void
     remove_data_by_sel (const char *name1, const char *name2, F &sel_functor);
 
-
+    // This does the same function as above remove_data_by_sel() but operating
+    // on three columns.
+    // The signature of sel_fucntor:
+    //     bool ()(const IndexType &, const T1 &, const T2 &, const T3 &)
+    //
+    // T1: Type of the first named column
+    // T2: Type of the second named column
+    // T3: Type of the third named column
+    // F: Type of the selecting functor
+    // Ts: The list of types for all columns.
+    //     A type should be specified only once
+    // name1: Name of the first data column
+    // name2: Name of the second data column
+    // name3: Name of the third data column
+    // sel_functor: A reference to the selecting functor
+    //
     template<typename T1, typename T2, typename T3, typename F,
              typename ... Ts>
     void
@@ -976,7 +1023,7 @@ public: // Read/access interfaces
     DataFramePtrView<IndexType>
     get_view_by_sel (const char *name, F &sel_functor);
 
-    // This does the same function as above get_data_be_sel() but operating
+    // This does the same function as above get_data_by_sel() but operating
     // on two columns.
     // The signature of sel_fucntor:
     //     bool ()(const IndexType &, const T1 &, const T2 &)
@@ -1014,7 +1061,7 @@ public: // Read/access interfaces
     DataFramePtrView<IndexType>
     get_view_by_sel (const char *name1, const char *name2, F &sel_functor);
 
-    // This does the same function as above get_data_be_sel() but operating
+    // This does the same function as above get_data_by_sel() but operating
     // on three columns.
     // The signature of sel_fucntor:
     //     bool ()(const IndexType &, const T1 &, const T2 &, const T3 &)

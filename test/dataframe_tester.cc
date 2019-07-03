@@ -2701,16 +2701,6 @@ int main(int argc, char *argv[]) {
         assert(result3.get_column<double>("col_1")[2] == 5);
     }
 
-
-
-
-
-
-
-
-
-
-
     {
         // Testing remove_data_by_sel()
 

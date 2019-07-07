@@ -3,7 +3,7 @@
 // Copyright (C) 2018-2019 Hossein Moein
 // Distributed under the BSD Software License (see file License)
 
-#include <DataFrame/HeteroPtrView.h>
+#include <DataFrame/Vectors/HeteroPtrView.h>
 
 // ----------------------------------------------------------------------------
 

@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include <DataFrame/HeteroVector.h>
+#include <DataFrame/Vectors/HeteroVector.h>
 #include <DataFrame/Utils/ThreadGranularity.h>
 #include <DataFrame/Utils/DateTime.h>
 

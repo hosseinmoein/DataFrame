@@ -3,7 +3,7 @@
 // Copyright (C) 2019-2021 Hossein Moein
 // Distributed under the BSD Software License (see file License)
 
-#include <DataFrame/VectorPtrView.h>
+#include <DataFrame/Vectors/VectorPtrView.h>
 
 #include <iostream>
 #include <cassert>

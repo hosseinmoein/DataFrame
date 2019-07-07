@@ -3,8 +3,8 @@
 // Copyright (C) 2018-2019 Hossein Moein
 // Distributed under the BSD Software License (see file License)
 
-#include <DataFrame/FixedSizeString.h>
-#include <DataFrame/DateTime.h>
+#include <DataFrame/Utils/FixedSizeString.h>
+#include <DataFrame/Utils/DateTime.h>
 #ifdef _WIN32
 #  include <time.h>
 #  include <windows.h>

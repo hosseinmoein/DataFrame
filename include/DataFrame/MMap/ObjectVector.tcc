@@ -3,7 +3,7 @@
 // Copyright (C) 2019-2022 Hossein Moein
 // Distributed under the BSD Software License (see file License)
 
-#include <DataFrame/FixedSizeString.h>
+#include <DataFrame/Utils/FixedSizeString.h>
 #include <DataFrame/MMap/ObjectVector.h>
 
 #ifndef _WIN32

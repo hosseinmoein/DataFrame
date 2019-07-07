@@ -8,7 +8,7 @@
 #pragma once
 
 #include <DataFrame/MMap/FileDef.h>
-#include <DataFrame/FixedSizeString.h>
+#include <DataFrame/Utils/FixedSizeString.h>
 
 #include <fstream>
 #include <iostream>

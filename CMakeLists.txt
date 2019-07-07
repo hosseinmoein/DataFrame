@@ -103,9 +103,9 @@ set(${LIBRARY_TARGET_NAME}_HDR
   include/DataFrame/DataFrame_read.tcc
   include/DataFrame/DataFrame_set.tcc
   include/DataFrame/DataFrame_functors.h
-  include/DataFrame/ThreadGranularity.h
-  include/DataFrame/DateTime.h
-  include/DataFrame/FixedSizeString.h
+  include/DataFrame/Utils/ThreadGranularity.h
+  include/DataFrame/Utils/DateTime.h
+  include/DataFrame/Utils/FixedSizeString.h
   include/DataFrame/MMap/FileDef.h
   include/DataFrame/MMap/MMapBase.h
   include/DataFrame/MMap/MMapFile.h

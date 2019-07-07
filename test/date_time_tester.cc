@@ -8,8 +8,8 @@
 #include <string>
 #include <cassert>
 
-#include <DataFrame/DateTime.h>
-#include <DataFrame/FixedSizeString.h>
+#include <DataFrame/Utils/DateTime.h>
+#include <DataFrame/Utils/FixedSizeString.h>
 
 using namespace hmdf;
 

@@ -6,8 +6,8 @@
 #pragma once
 
 #include <DataFrame/HeteroVector.h>
-#include <DataFrame/ThreadGranularity.h>
-#include <DataFrame/DateTime.h>
+#include <DataFrame/Utils/ThreadGranularity.h>
+#include <DataFrame/Utils/DateTime.h>
 
 #include <array>
 #include <limits>

@@ -1,4 +1,4 @@
-#include <DataFrame/FixedSizeString.h>
+#include <DataFrame/Utils/FixedSizeString.h>
 #include <DataFrame/MMap/ObjectVector.h>
 
 #include <cstdio>

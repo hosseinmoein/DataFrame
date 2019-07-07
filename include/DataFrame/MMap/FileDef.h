@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <DataFrame/FixedSizeString.h>
+#include <DataFrame/Utils/FixedSizeString.h>
 
 #include <cstdlib>
 #include <cstdio>

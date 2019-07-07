@@ -4,7 +4,6 @@
 // Distributed under the BSD Software License (see file License)
 
 #include <DataFrame/DataFrame.h>
-#include <DataFrame/DateTime.h>
 
 #include <limits>
 

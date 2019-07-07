@@ -45,9 +45,9 @@ HEADERS = $(LOCAL_INCLUDE_DIR)/DataFrame/HeteroVector.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/DataFrameOperators.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/VectorView.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/VectorPtrView.h \
-          $(LOCAL_INCLUDE_DIR)/DataFrame/ThreadGranularity.h \
-          $(LOCAL_INCLUDE_DIR)/DataFrame/DateTime.h \
-          $(LOCAL_INCLUDE_DIR)/DataFrame/FixedSizeString.h \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/ThreadGranularity.h \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/DateTime.h \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/FixedSizeString.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/MMap/FileDef.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/MMap/MMapBase.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/MMap/MMapFile.h \

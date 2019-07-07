@@ -6,7 +6,7 @@
 #ifndef _WIN32
 
 #include <DataFrame/MMap/MMapFile.h>
-#include <DataFrame/FixedSizeString.h>
+#include <DataFrame/Utils/FixedSizeString.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>

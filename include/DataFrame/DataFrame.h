@@ -5,20 +5,21 @@
 
 #pragma once
 
+#include <DataFrame/Utils/DateTime.h>
 #include <DataFrame/Vectors/HeteroVector.h>
 #include <DataFrame/Utils/ThreadGranularity.h>
-#include <DataFrame/Utils/DateTime.h>
 
 #include <array>
-#include <limits>
+#include <cmath>
+#include <cstring>
 #include <functional>
+#include <future>
+#include <limits>
 #include <map>
 #include <vector>
+#include <utility>
 #include <stdexcept>
 #include <type_traits>
-#include <future>
-#include <cstring>
-#include <cmath>
 
 // ----------------------------------------------------------------------------
 
@@ -872,6 +873,13 @@ public:  // Other public interfaces
     read_async (const char *file_name, io_format iof = io_format::csv);
 
 public: // Read/access interfaces
+
+    // It returns a pair containing number of rows and columns.
+    // Note: Number of rows is the number of index rows. Not every column
+    //       has the same number of rows, necessarily. But each column has,
+    //       at most, this number of rows.
+    //
+    std::pair<size_type, size_type> shape();
 
     // It returns a reference to the container of named data column
     // The return type depends on if we are in standard or view mode

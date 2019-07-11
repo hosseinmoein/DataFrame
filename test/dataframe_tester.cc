@@ -2702,7 +2702,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        // Testing remove_data_by_sel()
+        // Testing remove_data_by_sel() and shape()
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123453, 123454, 123455, 123456 };
@@ -2714,6 +2714,11 @@ int main(int argc, char *argv[]) {
             { "11", "22", "33", "ee", "ff", "gg", "ll" };
         MyDataFrame         df;
 
+        auto    shape = df.shape();
+
+        assert(shape.first == 0);
+        assert(shape.second == 0);
+
         df.load_data(std::move(idx),
                      std::make_pair("col_1", d1),
                      std::make_pair("col_2", d2),
@@ -2722,6 +2727,10 @@ int main(int argc, char *argv[]) {
         df.load_column("col_4",
                        std::move(d4),
                        nan_policy::dont_pad_with_nans);
+
+        shape = df.shape();
+        assert(shape.first == 7);
+        assert(shape.second == 5);
 
         MyDataFrame df2 = df;
 

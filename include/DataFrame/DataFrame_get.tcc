@@ -13,6 +13,16 @@ namespace hmdf
 {
 
 template<typename I, typename  H>
+std::pair<typename DataFrame<I, H>::size_type,
+          typename DataFrame<I, H>::size_type>
+DataFrame<I, H>::shape()  {
+
+    return (std::make_pair(indices_.size(), column_tb_.size()));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
 template<typename T>
 typename type_declare<H, T>::type &
 DataFrame<I, H>::get_column (const char *name)  {

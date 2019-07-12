@@ -508,6 +508,19 @@ public:  // Load/append/remove interfaces
 
 public:  // Other public interfaces
 
+    // It randomly shuffles the named column(s) non-deterministically.
+    //
+    // also_shuffle_index: If true, it shuffles the named column(s) and the
+    //                     index column. Otherwise, index is not shuffled.
+    // N: Number of named columns
+    // Ts: List of types of named columns.
+    //     A type should be specified in the list only once.
+    //
+    template<size_t N, typename ... Ts>
+    void
+    shuffle(const std::array<const char *, N> col_names,
+            bool also_shuffle_index);
+
     // It fills all the "missing values" with the given values, and/or using
     // the given method.
     // Missing is determined by being NaN for types that have NaN. For types
@@ -908,7 +921,7 @@ public: // Read/access interfaces
     // for each column.
     //
     // N: Size of col_names and values array
-    // Ts: List all the types of all data columns.
+    // Ts: List of types of named columns.
     //     A type should be specified in the list only once.
     // row_num: The row number
     // col_names: Names of columns to get data from. It also specifies the

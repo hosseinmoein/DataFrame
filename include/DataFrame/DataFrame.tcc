@@ -5,12 +5,47 @@
 
 #include <DataFrame/DataFrame.h>
 
+#include <algorithm>
 #include <limits>
+#include <random>
 
 // ----------------------------------------------------------------------------
 
 namespace hmdf
 {
+
+template<typename I, typename H>
+template<size_t N, typename ... Ts>
+void
+DataFrame<I, H>::shuffle(const std::array<const char *, N> col_names,
+                         bool also_shuffle_index)  {
+
+    if (also_shuffle_index)  {
+        std::random_device  rd;
+        std::mt19937        g(rd());
+
+        std::shuffle(indices_.begin(), indices_.end(), g);
+    }
+
+    shuffle_functor_<Ts ...>    functor;
+
+    for (auto name_citer : col_names)  {
+        const auto  citer = column_tb_.find (name_citer);
+
+        if (citer == column_tb_.end())  {
+            char buffer [512];
+
+            sprintf(buffer,
+                    "DataFrame::shuffle(): ERROR: Cannot find column '%s'",
+                    name_citer);
+            throw ColNotFound(buffer);
+        }
+
+        data_[citer->second].change(functor);
+    }
+}
+
+// ----------------------------------------------------------------------------
 
 template<typename I, typename H>
 template<typename T>

@@ -2786,6 +2786,40 @@ int main(int argc, char *argv[]) {
         assert(df2.get_column<double>("col_1")[1] == 4);
     }
 
+    {
+        // Testing shuffle()
+
+        std::vector<unsigned long>  idx =
+            { 123450, 123451, 123452, 123453, 123454, 123455, 123456 };
+        std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7 };
+        std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14 };
+        std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21 };
+        std::vector<double> d4 = { 22, 23, 24, 25 };
+        std::vector<std::string> s1 =
+            { "11", "22", "33", "aa", "bb", "cc", "dd" };
+        MyDataFrame         df;
+
+        df.load_data(std::move(idx),
+                     std::make_pair("col_1", d1),
+                     std::make_pair("col_2", d2),
+                     std::make_pair("col_3", d3),
+                     std::make_pair("col_str", s1));
+        df.load_column("col_4",
+                       std::move(d4),
+                       nan_policy::dont_pad_with_nans);
+
+        std::cout << "Original DatFrasme:" << std::endl;
+        df.write<std::ostream, int, double, std::string>(std::cout);
+
+		df.shuffle<2, double, std::string>({"col_1", "col_str"}, false);
+        std::cout << "shuffle with no index:" << std::endl;
+        df.write<std::ostream, int, double, std::string>(std::cout);
+
+		df.shuffle<2, double>({"col_2", "col_3"}, true);
+        std::cout << "shuffle with index:" << std::endl;
+        df.write<std::ostream, int, double, std::string>(std::cout);
+    }
+
     return (0);
 }
 

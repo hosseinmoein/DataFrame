@@ -5,7 +5,9 @@
 
 #include <DataFrame/DataFrame.h>
 
+#include <algorithm>
 #include <cstdio>
+#include <random>
 
 // ----------------------------------------------------------------------------
 
@@ -555,7 +557,6 @@ operator() (std::vector<T> &vec)  {
     return;
 }
 
-
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
@@ -575,6 +576,23 @@ operator() (std::vector<T> &vec) const  {
             vec.erase(vec.begin() + sel_indices[i] - del_count++);
         else
             break;
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename ... Ts>
+template<typename T>
+void
+DataFrame<I, H>::
+shuffle_functor_<Ts ...>::
+operator() (std::vector<T> &vec) const  {
+
+    std::random_device  rd;
+    std::mt19937        g(rd());
+
+    std::shuffle(vec.begin(), vec.end(), g);
     return;
 }
 

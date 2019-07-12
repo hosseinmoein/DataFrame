@@ -421,6 +421,17 @@ struct sel_remove_functor_ : DataVec::template visitor_base<Ts ...>  {
 
 // ----------------------------------------------------------------------------
 
+template<typename ... Ts>
+struct shuffle_functor_ : DataVec::template visitor_base<Ts ...>  {
+
+    inline shuffle_functor_ ()  {  }
+
+    template<typename T>
+    void operator() (std::vector<T> &vec) const;
+};
+
+// ----------------------------------------------------------------------------
+
 // Local Variables:
 // mode:C++
 // tab-width:4

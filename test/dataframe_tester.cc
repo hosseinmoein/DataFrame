@@ -2811,13 +2811,73 @@ int main(int argc, char *argv[]) {
         std::cout << "Original DatFrasme:" << std::endl;
         df.write<std::ostream, int, double, std::string>(std::cout);
 
-		df.shuffle<2, double, std::string>({"col_1", "col_str"}, false);
+        df.shuffle<2, double, std::string>({"col_1", "col_str"}, false);
         std::cout << "shuffle with no index:" << std::endl;
         df.write<std::ostream, int, double, std::string>(std::cout);
 
-		df.shuffle<2, double>({"col_2", "col_3"}, true);
+        df.shuffle<2, double>({"col_2", "col_3"}, true);
         std::cout << "shuffle with index:" << std::endl;
         df.write<std::ostream, int, double, std::string>(std::cout);
+    }
+
+    {
+        // Testing SimpleRollAdopter{ }
+
+        std::vector<unsigned long>  idx =
+            { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+              123457, 123458, 123459, 123460};
+        std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
+        std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18 };
+        std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25 };
+        std::vector<double> d4 = { 22, 23, 24, 25, 26, 27 };
+        std::vector<std::string> s1 =
+            { "11", "22", "33", "aa", "bb", "cc", "dd" "tt", "uu", "ii", "88" };
+        MyDataFrame         df;
+
+        df.load_data(std::move(idx),
+                     std::make_pair("col_1", d1),
+                     std::make_pair("col_2", d2),
+                     std::make_pair("col_3", d3),
+                     std::make_pair("col_str", s1));
+        df.load_column("col_4",
+                       std::move(d4),
+                       nan_policy::dont_pad_with_nans);
+
+        std::cout << "Original DatFrasme:" << std::endl;
+        df.write<std::ostream, int, double, std::string>(std::cout);
+
+        SimpleRollAdopter<MinVisitor<double>, double>   min_roller(3);
+        const auto                                      &result =
+            df.single_act_visit<double>("col_1", min_roller).get_result();
+
+        assert(result.size() == 11);
+        assert(std::isnan(result[0]));
+        assert(std::isnan(result[1]));
+        assert(result[2] == 1.0);
+        assert(result[5] == 4.0);
+        assert(result[8] == 7.0);
+
+        SimpleRollAdopter<MeanVisitor<double>, double>  mean_roller(3);
+        const auto                                      &result2 =
+            df.single_act_visit<double>("col_3", mean_roller).get_result();
+
+        assert(result2.size() == 11);
+        assert(std::isnan(result2[0]));
+        assert(std::isnan(result2[1]));
+        assert(result2[2] == 16.0);
+        assert(result2[5] == 19.0);
+        assert(result2[8] == 22.0);
+
+        SimpleRollAdopter<MaxVisitor<double>, double>   max_roller(3);
+        const auto                                      &result3 =
+            df.single_act_visit<double>("col_4", max_roller).get_result();
+
+        assert(result3.size() == 6);
+        assert(std::isnan(result3[0]));
+        assert(std::isnan(result3[1]));
+        assert(result3[2] == 24.0);
+        assert(result3[4] == 26.0);
+        assert(result3[5] == 27.0);
     }
 
     return (0);

@@ -567,6 +567,59 @@ private:
 
 // ----------------------------------------------------------------------------
 
+template<typename F, typename T, typename I = unsigned long>
+struct SimpleRollAdopter {
+
+private:
+
+    using functor_type = F;
+    using f_result_type = typename functor_type::result_type;
+
+    functor_type                functor_ { };
+    const size_t                roll_count_ { 0 };
+    std::vector<f_result_type>  result_ { };
+
+public:
+
+    using value_type = T;
+    using index_type = I;
+    using result_type = std::vector<f_result_type>;
+
+    explicit SimpleRollAdopter(size_t r_count) : roll_count_(r_count)  {   }
+
+    inline void
+    operator() (const std::vector<index_type> &idx,
+                const std::vector<value_type> &column)  {
+
+        if (roll_count_ == 0)  return;
+
+        const size_t    col_s = column.size();
+
+        result_.reserve(col_s);
+
+        for (size_t i = 0; i < roll_count_ - 1 && i < col_s; ++i)
+            result_.push_back(std::numeric_limits<f_result_type>::quiet_NaN());
+        for (size_t i = 0; i < col_s; ++i)  {
+            size_t  r = 0;
+
+            functor_.pre();
+            for (size_t j = i; r < roll_count_ && j < col_s; ++j, ++r)
+                functor_(idx[j], column[j]);
+            if (r == roll_count_)
+                result_.push_back(functor_.get_result());
+            functor_.post();
+        }
+
+        return;
+    }
+
+    inline void pre ()  { functor_.pre(); result_.clear(); }
+    inline void post ()  { functor_.post(); }
+    inline const result_type &get_result () const  { return (result_); }
+};
+
+// ----------------------------------------------------------------------------
+
 // One-pass stats calculation.
 //
 template<typename T,

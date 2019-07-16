@@ -42,6 +42,7 @@ HEADERS = $(LOCAL_INCLUDE_DIR)/DataFrame/Vectors/HeteroVector.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/DataFrame_shift.tcc \
           $(LOCAL_INCLUDE_DIR)/DataFrame/DataFrame_functors.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/DataFrameVisitors.h \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/DataFrameTypes.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/DataFrameOperators.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Vectors/VectorView.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Vectors/VectorPtrView.h \

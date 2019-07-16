@@ -2827,7 +2827,11 @@ int main(int argc, char *argv[]) {
             { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
               123457, 123458, 123459, 123460};
         std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
-        std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18 };
+        std::vector<double> d2 = { 8, 9, 10, 11,
+                                   std::numeric_limits<double>::quiet_NaN(),
+                                   13, 14,
+                                   std::numeric_limits<double>::quiet_NaN(),
+                                   16, 17, 18 };
         std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25 };
         std::vector<double> d4 = { 22, 23, 24, 25, 26, 27 };
         std::vector<std::string> s1 =
@@ -2843,10 +2847,8 @@ int main(int argc, char *argv[]) {
                        std::move(d4),
                        nan_policy::dont_pad_with_nans);
 
-        std::cout << "Original DatFrasme:" << std::endl;
-        df.write<std::ostream, int, double, std::string>(std::cout);
-
-        SimpleRollAdopter<MinVisitor<double>, double>   min_roller(3);
+        SimpleRollAdopter<MinVisitor<double>, double>   min_roller(
+            MinVisitor<double>(), 3);
         const auto                                      &result =
             df.single_act_visit<double>("col_1", min_roller).get_result();
 
@@ -2857,7 +2859,8 @@ int main(int argc, char *argv[]) {
         assert(result[5] == 4.0);
         assert(result[8] == 7.0);
 
-        SimpleRollAdopter<MeanVisitor<double>, double>  mean_roller(3);
+        SimpleRollAdopter<MeanVisitor<double>, double>  mean_roller(
+            MeanVisitor<double>(), 3);
         const auto                                      &result2 =
             df.single_act_visit<double>("col_3", mean_roller).get_result();
 
@@ -2868,7 +2871,8 @@ int main(int argc, char *argv[]) {
         assert(result2[5] == 19.0);
         assert(result2[8] == 22.0);
 
-        SimpleRollAdopter<MaxVisitor<double>, double>   max_roller(3);
+        SimpleRollAdopter<MaxVisitor<double>, double>   max_roller(
+            MaxVisitor<double>(), 3);
         const auto                                      &result3 =
             df.single_act_visit<double>("col_4", max_roller).get_result();
 
@@ -2878,6 +2882,21 @@ int main(int argc, char *argv[]) {
         assert(result3[2] == 24.0);
         assert(result3[4] == 26.0);
         assert(result3[5] == 27.0);
+
+        SimpleRollAdopter<MaxVisitor<double>, double>   max2_roller(
+            MaxVisitor<double>(false), 3);
+        const auto                                      &result4 =
+            df.single_act_visit<double>("col_2", max2_roller).get_result();
+
+        assert(result4.size() == 11);
+        assert(std::isnan(result4[0]));
+        assert(std::isnan(result4[1]));
+        assert(result4[2] == 10.0);
+        assert(result4[3] == 11.0);
+        assert(std::isnan(result4[4]));
+        assert(std::isnan(result4[8]));
+        assert(std::isnan(result4[9]));
+        assert(result4[10] == 18.0);
     }
 
     return (0);

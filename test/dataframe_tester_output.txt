@@ -779,15 +779,15 @@ shuffle with no index:
 INDEX:7:<ulong>:123450,123451,123452,123453,123454,123455,123456,
 col_3:7:<double>:15,16,17,18,19,20,21,
 col_4:4:<double>:22,23,24,25,
-col_str:7:<string>:bb,cc,dd,22,33,11,aa,
+col_str:7:<string>:11,cc,bb,aa,dd,22,33,
 col_2:7:<double>:8,9,10,11,12,13,14,
-col_1:7:<double>:1,4,3,5,2,7,6,
+col_1:7:<double>:5,1,7,3,6,4,2,
 
 shuffle with index:
-INDEX:7:<ulong>:123455,123456,123451,123454,123452,123450,123453,
-col_3:7:<double>:16,19,20,15,21,17,18,
+INDEX:7:<ulong>:123450,123454,123453,123455,123456,123452,123451,
+col_3:7:<double>:19,16,18,15,17,21,20,
 col_4:4:<double>:22,23,24,25,
-col_str:7:<string>:bb,cc,dd,22,33,11,aa,
-col_2:7:<double>:9,8,10,12,11,13,14,
-col_1:7:<double>:1,4,3,5,2,7,6,
+col_str:7:<string>:11,cc,bb,aa,dd,22,33,
+col_2:7:<double>:8,11,12,10,14,13,9,
+col_1:7:<double>:5,1,7,3,6,4,2,
 

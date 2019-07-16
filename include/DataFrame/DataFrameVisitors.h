@@ -37,7 +37,7 @@ struct MeanVisitor {
 
     inline void operator() (const index_type &, const value_type &val)  {
 
-        if (is_nan__(val))  return;
+        if (skip_nan_ && is_nan__(val))  return;
 
         mean_ += val;
         cnt_ +=1;
@@ -51,10 +51,13 @@ struct MeanVisitor {
         return (mean_ / value_type(cnt_));
     }
 
+    explicit MeanVisitor(bool skipnan = true) : skip_nan_(skipnan)  {   }
+
 private:
 
     value_type  mean_ { 0 };
     size_type   cnt_ { 0 };
+    const bool  skip_nan_ { };
 };
 
 // ----------------------------------------------------------------------------
@@ -72,7 +75,7 @@ struct SumVisitor {
 
     inline void operator() (const index_type &, const value_type &val)  {
 
-        if (is_nan__(val))  return;
+        if (skip_nan_ && is_nan__(val))  return;
 
         sum_ += val;
     }
@@ -80,9 +83,12 @@ struct SumVisitor {
     inline void post ()  {  }
     inline result_type get_result () const  { return (sum_); }
 
+    explicit SumVisitor(bool skipnan = true) : skip_nan_(skipnan)  {   }
+
 private:
 
     value_type  sum_ { 0 };
+    const bool  skip_nan_ { };
 };
 
 // ----------------------------------------------------------------------------
@@ -100,7 +106,7 @@ struct ProdVisitor {
 
     inline void operator() (const index_type &, const value_type &val)  {
 
-        if (is_nan__(val))  return;
+        if (skip_nan_ && is_nan__(val))  return;
 
         prod_ *= val;
     }
@@ -108,9 +114,12 @@ struct ProdVisitor {
     inline void post ()  {  }
     inline result_type get_result () const  { return (prod_); }
 
+    explicit ProdVisitor(bool skipnan = true) : skip_nan_(skipnan)  {   }
+
 private:
 
     value_type  prod_ { 1 };
+    const bool  skip_nan_ { };
 };
 
 // ----------------------------------------------------------------------------
@@ -125,7 +134,13 @@ struct MaxVisitor {
 
     inline void operator() (const index_type &idx, const value_type &val)  {
 
-        if (is_nan__(val))  return;
+        if (is_nan__(val))  {
+            if (skip_nan_)  return;
+            else  {
+                max_ = std::numeric_limits<value_type>::quiet_NaN();
+                is_first = false;
+            }
+        }
 
         if (val > max_ || is_first) {
             max_ = val;
@@ -138,11 +153,14 @@ struct MaxVisitor {
     inline result_type get_result () const  { return (max_); }
     inline index_type get_index () const  { return (index_); }
 
+    explicit MaxVisitor(bool skipnan = true) : skip_nan_(skipnan)  {   }
+
 private:
 
     value_type  max_ { };
     index_type  index_ { };
     bool        is_first { true };
+    const bool  skip_nan_ { };
 };
 
 // ----------------------------------------------------------------------------
@@ -157,7 +175,13 @@ struct MinVisitor {
 
     inline void operator() (const index_type &idx, const value_type &val)  {
 
-        if (is_nan__(val))  return;
+        if (is_nan__(val))  {
+            if (skip_nan_)  return;
+            else  {
+                min_ = std::numeric_limits<value_type>::quiet_NaN();
+                is_first = false;
+            }
+        }
 
         if (val < min_ || is_first) {
             min_ = val;
@@ -170,11 +194,14 @@ struct MinVisitor {
     inline result_type get_result () const  { return (min_); }
     inline index_type get_index () const  { return (index_); }
 
+    explicit MinVisitor(bool skipnan = true) : skip_nan_(skipnan)  {   }
+
 private:
 
     value_type  min_ { };
     index_type  index_ { };
     bool        is_first { true };
+    const bool  skip_nan_ { };
 };
 
 // ----------------------------------------------------------------------------
@@ -203,7 +230,7 @@ struct  NLargestVisitor {
 
     inline void operator() (const index_type &idx, const value_type &val)  {
 
-        if (is_nan__(val))  return;
+        if (skip_nan_ && is_nan__(val))  return;
 
         if (counter_ < N)  {
             items_[counter_] = { val, idx };
@@ -239,11 +266,14 @@ struct  NLargestVisitor {
                   });
     }
 
+    explicit NLargestVisitor(bool skipnan = true) : skip_nan_(skipnan)  {   }
+
 private:
 
     result_type items_ { };
     size_type   counter_ { 0 };
     int         min_index_ { -1 };
+    const bool  skip_nan_ { };
 };
 
 // ----------------------------------------------------------------------------
@@ -272,7 +302,7 @@ struct  NSmallestVisitor {
 
     inline void operator() (const index_type &idx, const value_type &val)  {
 
-        if (is_nan__(val))  return;
+        if (skip_nan_ && is_nan__(val))  return;
 
         if (counter_ < N)  {
             items_[counter_] = { val, idx };
@@ -308,11 +338,14 @@ struct  NSmallestVisitor {
                   });
     }
 
+    explicit NSmallestVisitor(bool skipnan = true) : skip_nan_(skipnan)  {   }
+
 private:
 
     result_type items_ { };
     size_type   counter_ { 0 };
     int         max_index_ { -1 };
+    const bool  skip_nan_ { };
 };
 
 // ----------------------------------------------------------------------------
@@ -328,12 +361,13 @@ struct CovVisitor {
     using size_type = std::size_t;
     using result_type = T;
 
-    explicit CovVisitor (bool bias = true) : b_ (bias) {  }
+    explicit CovVisitor (bool bias = true, bool skipnan = true)
+        : b_ (bias), skip_nan_(skipnan) {  }
     inline void operator() (const index_type &,
                             const value_type &val1,
                             const value_type &val2)  {
 
-        if (is_nan__(val1) || is_nan__(val2))  return;
+        if (skip_nan_ && (is_nan__(val1) || is_nan__(val2)))  return;
 
         total1_ += val1;
         total2_ += val2;
@@ -380,6 +414,7 @@ private:
     value_type  dot_prod2_ { 0 };
     size_type   cnt_ { 0 };
     const bool  b_;
+    const bool  skip_nan_ { };
 };
 
 // ----------------------------------------------------------------------------
@@ -585,7 +620,8 @@ public:
     using index_type = I;
     using result_type = std::vector<f_result_type>;
 
-    explicit SimpleRollAdopter(size_t r_count) : roll_count_(r_count)  {   }
+    explicit SimpleRollAdopter(F &&functor, size_t r_count)
+        : functor_(std::move(functor)), roll_count_(r_count)  {   }
 
     inline void
     operator() (const std::vector<index_type> &idx,
@@ -635,7 +671,7 @@ struct StatsVisitor  {
 
     inline void operator() (const index_type &idx, const value_type &val)  {
 
-        if (is_nan__(val))  return;
+        if (skip_nan_ && is_nan__(val))  return;
 
         value_type  delta, delta_n, delta_n2, term1;
         size_type   n1 = n_;
@@ -673,6 +709,8 @@ struct StatsVisitor  {
         return (value_type(n_) * m4_ / (m2_ * m2_) - 3.0);
     }
 
+    explicit StatsVisitor(bool skipnan = true) : skip_nan_(skipnan)  {   }
+
 private:
 
     size_type   n_ { 0 };
@@ -680,6 +718,7 @@ private:
     value_type  m2_ { 0 };
     value_type  m3_ { 0 };
     value_type  m4_ { 0 };
+    const bool  skip_nan_ { };
 };
 
 // ----------------------------------------------------------------------------
@@ -703,7 +742,7 @@ public:
                             const value_type &x,
                             const value_type &y)  {
 
-        if (is_nan__(x) || is_nan__(y))  return;
+        if (skip_nan_ && (is_nan__(x) || is_nan__(y)))  return;
 
         s_xy_ += (x_stats_.get_mean() - x) *
                  (y_stats_.get_mean() - y) *
@@ -743,6 +782,9 @@ public:
         return (s_xy_ / (value_type(n_ - 1) * t));
     }
 
+    explicit SLRegressionVisitor(bool skipnan = true)
+        : x_stats_(skipnan), y_stats_(skipnan), skip_nan_(skipnan)  {   }
+
 private:
 
     size_type                               n_ { 0 };
@@ -750,8 +792,9 @@ private:
     // Sum of the product of the difference between x and its mean and
     // the difference between y and its mean.
     value_type                              s_xy_ { 0 };
-    StatsVisitor<value_type, index_type>    x_stats_;
-    StatsVisitor<value_type, index_type>    y_stats_;
+    StatsVisitor<value_type, index_type>    x_stats_ {  };
+    StatsVisitor<value_type, index_type>    y_stats_ {  };
+    const bool                              skip_nan_ { };
 };
 
 // ----------------------------------------------------------------------------
@@ -779,7 +822,7 @@ struct CumSumVisitor {
 
         sum_.reserve(column.size());
         for (const auto citer : column)  {
-            if (! is_nan__(citer))  {
+            if (! skip_nan_ || ! is_nan__(citer))  {
                 running_sum += citer;
                 sum_.push_back(running_sum);
             }
@@ -791,9 +834,12 @@ struct CumSumVisitor {
     inline void post ()  {  }
     inline const result_type &get_result () const  { return (sum_); }
 
+    explicit CumSumVisitor(bool skipnan = true) : skip_nan_(skipnan)  {   }
+
 private:
 
     std::vector<value_type> sum_ {  };
+    const bool              skip_nan_ { };
 };
 
 // ----------------------------------------------------------------------------
@@ -817,7 +863,7 @@ struct CumProdVisitor {
 
         prod_.reserve(column.size());
         for (const auto citer : column)  {
-            if (! is_nan__(citer))  {
+            if (! skip_nan_ || ! is_nan__(citer))  {
                 running_prod *= citer;
                 prod_.push_back(running_prod);
             }
@@ -829,9 +875,12 @@ struct CumProdVisitor {
     inline void post ()  {  }
     inline const result_type &get_result () const  { return (prod_); }
 
+    explicit CumProdVisitor(bool skipnan = true) : skip_nan_(skipnan)  {   }
+
 private:
 
     std::vector<value_type> prod_ {  };
+    const bool              skip_nan_ { };
 };
 
 // ----------------------------------------------------------------------------
@@ -854,7 +903,7 @@ struct CumMaxVisitor {
 
         max_.reserve(column.size());
         for (const auto citer : column)  {
-            if (! is_nan__(citer))  {
+            if (! skip_nan_ || ! is_nan__(citer))  {
                 if (citer > running_max)
                     running_max = citer;
                 max_.push_back(running_max);
@@ -867,9 +916,12 @@ struct CumMaxVisitor {
     inline void post ()  {  }
     inline const result_type &get_result () const  { return (max_); }
 
+    explicit CumMaxVisitor(bool skipnan = true) : skip_nan_(skipnan)  {   }
+
 private:
 
     std::vector<value_type> max_ {  };
+    const bool              skip_nan_ { };
 };
 
 // ----------------------------------------------------------------------------
@@ -892,7 +944,7 @@ struct CumMinVisitor {
 
         min_.reserve(column.size());
         for (const auto citer : column)  {
-            if (! is_nan__(citer))  {
+            if (! skip_nan_ || ! is_nan__(citer))  {
                 if (citer < running_min)
                     running_min = citer;
                 min_.push_back(running_min);
@@ -905,9 +957,12 @@ struct CumMinVisitor {
     inline void post ()  {  }
     inline const result_type &get_result () const  { return (min_); }
 
+    explicit CumMinVisitor(bool skipnan = true) : skip_nan_(skipnan)  {   }
+
 private:
 
     std::vector<value_type> min_ {  };
+    const bool              skip_nan_ { };
 };
 
 // ----------------------------------------------------------------------------
@@ -1005,7 +1060,7 @@ struct ReturnVisitor  {
     using size_type = std::size_t;
     using result_type = std::vector<value_type>;
 
-    inline ReturnVisitor (return_policy rp) : ret_p_(rp)  {   }
+    explicit ReturnVisitor (return_policy rp) : ret_p_(rp)  {   }
     inline void operator() (const std::vector<index_type> &idx,
                             const std::vector<value_type> &column)  {
 
@@ -1073,7 +1128,8 @@ struct KthValueVisitor  {
     using size_type = std::size_t;
     using result_type = T;
 
-    inline KthValueVisitor (size_type ke) : kth_element_(ke)  {   }
+    explicit KthValueVisitor (size_type ke, bool skipnan = true)
+        : kth_element_(ke), skip_nan_(skipnan)  {   }
     inline void
     operator() (const std::vector<index_type> &idx,
                 const std::vector<value_type> &column)  {
@@ -1089,6 +1145,7 @@ private:
 
     result_type     result_ {  };
     const size_type kth_element_;
+    const bool      skip_nan_ { };
 
     inline value_type
     find_kth_element_ (typename std::vector<value_type>::const_iterator begin,
@@ -1116,7 +1173,7 @@ private:
         size_type               great_count = vec_size - 2;
 
         for (auto citer = begin; citer < end; ++citer)  {
-            if (is_nan__(*citer))  continue;
+            if (skip_nan_ && is_nan__(*citer))  continue;
 
             if (*citer < kth_value)
                 tmp_vec [less_count++] = *citer;

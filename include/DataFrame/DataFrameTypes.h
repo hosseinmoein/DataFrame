@@ -5,6 +5,8 @@
 
 #pragma once
 
+#include <DataFrame/Vectors/HeteroVector.h>
+
 #include <cmath>
 #include <stdexcept>
 
@@ -114,6 +116,14 @@ enum class time_frequency : unsigned char  {
     millisecondly = 8,
     // microsecondly = 9,
     // nanosecondly = 10
+};
+
+// -------------------------------------
+
+enum class return_policy : unsigned char  {
+    log = 1,
+    percentage = 2,
+    monetary = 3,
 };
 
 // -------------------------------------

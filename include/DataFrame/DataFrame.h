@@ -5,9 +5,8 @@
 
 #pragma once
 
-#include <DataFrame//DataFrameTypes.h>
+#include <DataFrame/DataFrameTypes.h>
 #include <DataFrame/Utils/DateTime.h>
-#include <DataFrame/Vectors/HeteroVector.h>
 #include <DataFrame/Utils/ThreadGranularity.h>
 
 #include <array>

@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include <DataFrame/DataFrame.h>
+#include <DataFrame/DataFrameTypes.h>
 
 #include <cstddef>
 #include <algorithm>
@@ -15,14 +15,6 @@
 
 namespace hmdf
 {
-
-enum class return_policy : unsigned char  {
-    log = 1,
-    percentage = 2,
-    monetary = 3,
-};
-
-// ----------------------------------------------------------------------------
 
 template<typename T,
          typename I = unsigned long,

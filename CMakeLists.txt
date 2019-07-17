@@ -71,39 +71,39 @@ set(LIBRARY_TARGET_NAME ${PROJECT_NAME})
 
 # List of source files.
 set(${LIBRARY_TARGET_NAME}_SRC
-  src/HeteroVector.cc
-  src/HeteroView.cc
-  src/HeteroPtrView.cc
-  src/ThreadGranularity.cc
-  src/DateTime.cc
-  src/MMapBase.cc
-  src/MMapFile.cc
-  src/MMapSharedMem.cc
+  src/Vectors/HeteroVector.cc
+  src/Vectors/HeteroView.cc
+  src/Vectors/HeteroPtrView.cc
+  src/Utils/ThreadGranularity.cc
+  src/Utils/DateTime.cc
+  src/MMap/MMapBase.cc
+  src/MMap/MMapFile.cc
+  src/MMap/MMapSharedMem.cc
 )
 
 # List of header files.
 set(${LIBRARY_TARGET_NAME}_HDR
-  include/DataFrame/VectorView.h
-  include/DataFrame/VectorPtrView.h
-  include/DataFrame/HeteroVector.h
-  include/DataFrame/HeteroView.h
-  include/DataFrame/HeteroPtrView.h
-  include/DataFrame/HeteroVector.tcc
-  include/DataFrame/HeteroView.tcc
-  include/DataFrame/HeteroPtrView.tcc
+  include/DataFrame/Vectors/VectorView.h
+  include/DataFrame/Vectors/VectorPtrView.h
+  include/DataFrame/Vectors/HeteroVector.h
+  include/DataFrame/Vectors/HeteroView.h
+  include/DataFrame/Vectors/HeteroPtrView.h
+  include/DataFrame/Vectors/HeteroVector.tcc
+  include/DataFrame/Vectors/HeteroView.tcc
+  include/DataFrame/Vectors/HeteroPtrView.tcc
   include/DataFrame/DataFrameVisitors.h
   include/DataFrame/DataFrameTypes.h
   include/DataFrame/DataFrameOperators.h
   include/DataFrame/DataFrame.h
-  include/DataFrame/DataFrame.tcc
-  include/DataFrame/DataFrame_get.tcc
-  include/DataFrame/DataFrame_misc.tcc
-  include/DataFrame/DataFrame_opt.tcc
-  include/DataFrame/DataFrame_join.tcc
-  include/DataFrame/DataFrame_shift.tcc
-  include/DataFrame/DataFrame_read.tcc
-  include/DataFrame/DataFrame_set.tcc
-  include/DataFrame/DataFrame_functors.h
+  include/DataFrame/Internals/DataFrame.tcc
+  include/DataFrame/Internals/DataFrame_get.tcc
+  include/DataFrame/Internals/DataFrame_misc.tcc
+  include/DataFrame/Internals/DataFrame_opt.tcc
+  include/DataFrame/Internals/DataFrame_join.tcc
+  include/DataFrame/Internals/DataFrame_shift.tcc
+  include/DataFrame/Internals/DataFrame_read.tcc
+  include/DataFrame/Internals/DataFrame_set.tcc
+  include/DataFrame/Internals/DataFrame_functors.h
   include/DataFrame/Utils/ThreadGranularity.h
   include/DataFrame/Utils/DateTime.h
   include/DataFrame/Utils/FixedSizeString.h

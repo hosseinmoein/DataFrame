@@ -1243,7 +1243,7 @@ private:  // Static helper functions
     static void rotate_left_(V &vec, size_type n);
 
     // Visiting functors
-#   include <DataFrame/DataFrame_functors.h>
+#   include <DataFrame/Internals/DataFrame_functors.h>
 
 private:  // Tuple stuff
 
@@ -1269,14 +1269,14 @@ private:  // Tuple stuff
 // ----------------------------------------------------------------------------
 
 #  ifndef HMDF_DO_NOT_INCLUDE_TCC_FILES
-#    include <DataFrame/DataFrame_misc.tcc>
-#    include <DataFrame/DataFrame_set.tcc>
-#    include <DataFrame/DataFrame_get.tcc>
-#    include <DataFrame/DataFrame_read.tcc>
-#    include <DataFrame/DataFrame_opt.tcc>
-#    include <DataFrame/DataFrame_join.tcc>
-#    include <DataFrame/DataFrame_shift.tcc>
-#    include <DataFrame/DataFrame.tcc>
+#    include <DataFrame/Internals/DataFrame_misc.tcc>
+#    include <DataFrame/Internals/DataFrame_set.tcc>
+#    include <DataFrame/Internals/DataFrame_get.tcc>
+#    include <DataFrame/Internals/DataFrame_read.tcc>
+#    include <DataFrame/Internals/DataFrame_opt.tcc>
+#    include <DataFrame/Internals/DataFrame_join.tcc>
+#    include <DataFrame/Internals/DataFrame_shift.tcc>
+#    include <DataFrame/Internals/DataFrame.tcc>
 #  endif // HMDF_DO_NOT_INCLUDE_TCC_FILES
 
 // ----------------------------------------------------------------------------

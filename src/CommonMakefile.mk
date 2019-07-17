@@ -10,20 +10,20 @@ PROJECT_INCLUDE_DIR = ../../include
 
 # -----------------------------------------------------------------------------
 
-SRCS = HeteroVector.cc \
+SRCS = Vectors/HeteroVector.cc \
        ../test/dataframe_tester.cc \
-       HeteroView.cc \
-       HeteroPtrView.cc \
+       Vectors/HeteroView.cc \
+       Vectors/HeteroPtrView.cc \
        ../test/vectors_tester.cc \
        ../test/vector_ptr_view_tester.cc \
        ../test/date_time_tester.cc \
        ../test/mmfile_tester.cc \
        ../test/sharedmem_tester.cc \
-       ThreadGranularity.cc \
-       DateTime.cc \
-       MMapBase.cc \
-       MMapFile.cc \
-       MMapSharedMem.cc
+       Utils/ThreadGranularity.cc \
+       Utils/DateTime.cc \
+       MMap/MMapBase.cc \
+       MMap/MMapFile.cc \
+       MMap/MMapSharedMem.cc
 
 HEADERS = $(LOCAL_INCLUDE_DIR)/DataFrame/Vectors/HeteroVector.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Vectors/HeteroVector.tcc \
@@ -32,15 +32,15 @@ HEADERS = $(LOCAL_INCLUDE_DIR)/DataFrame/Vectors/HeteroVector.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Vectors/HeteroPtrView.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Vectors/HeteroPtrView.tcc \
           $(LOCAL_INCLUDE_DIR)/DataFrame/DataFrame.h \
-          $(LOCAL_INCLUDE_DIR)/DataFrame/DataFrame.tcc \
-          $(LOCAL_INCLUDE_DIR)/DataFrame/DataFrame_misc.tcc \
-          $(LOCAL_INCLUDE_DIR)/DataFrame/DataFrame_set.tcc \
-          $(LOCAL_INCLUDE_DIR)/DataFrame/DataFrame_get.tcc \
-          $(LOCAL_INCLUDE_DIR)/DataFrame/DataFrame_read.tcc \
-          $(LOCAL_INCLUDE_DIR)/DataFrame/DataFrame_opt.tcc \
-          $(LOCAL_INCLUDE_DIR)/DataFrame/DataFrame_join.tcc \
-          $(LOCAL_INCLUDE_DIR)/DataFrame/DataFrame_shift.tcc \
-          $(LOCAL_INCLUDE_DIR)/DataFrame/DataFrame_functors.h \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/Internals/DataFrame.tcc \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/Internals/DataFrame_misc.tcc \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/Internals/DataFrame_set.tcc \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/Internals/DataFrame_get.tcc \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/Internals/DataFrame_read.tcc \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/Internals/DataFrame_opt.tcc \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/Internals/DataFrame_join.tcc \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/Internals/DataFrame_shift.tcc \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/Internals/DataFrame_functors.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/DataFrameVisitors.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/DataFrameTypes.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/DataFrameOperators.h \
@@ -99,13 +99,17 @@ LIB_OBJS = $(LOCAL_OBJ_DIR)/HeteroVector.o \
 
 $(LOCAL_OBJ_DIR)/%.o: %.cc
 	$(CXX) $(CXXFLAGS) -c $< -o $@
-
 $(LOCAL_OBJ_DIR)/%.o: ../test/%.cc
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+$(LOCAL_OBJ_DIR)/%.o: MMap/%.cc
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+$(LOCAL_OBJ_DIR)/%.o: Vectors/%.cc
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+$(LOCAL_OBJ_DIR)/%.o: Utils/%.cc
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 .cc :
 	$(CXX) $(CXXFLAGS) $< -o $@ -lm $(TLIB) -lg++
-#	$(CXX) $(CXXFLAGS) $< -o $@ -lm $(TLIB)
 
 # -----------------------------------------------------------------------------
 

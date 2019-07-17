@@ -612,7 +612,7 @@ public:
     using index_type = I;
     using result_type = std::vector<f_result_type>;
 
-    explicit SimpleRollAdopter(F &&functor, size_t r_count)
+    inline SimpleRollAdopter(F &&functor, size_t r_count)
         : functor_(std::move(functor)), roll_count_(r_count)  {   }
 
     inline void

@@ -596,6 +596,38 @@ operator() (std::vector<T> &vec) const  {
     return;
 }
 
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename ... Ts>
+template<typename T>
+void
+DataFrame<I, H>::
+random_load_data_functor_<Ts ...>::operator() (const T &vec)  {
+
+    using VecType = typename std::remove_reference<T>::type;
+    using ValueType = typename VecType::value_type;
+
+    const size_type vec_s = vec.size();
+    const size_type n_rows = rand_indices.size();
+    VecType         new_vec;
+    size_type       prev_value;
+
+    new_vec.reserve(n_rows);
+    for (size_type i = 0; i < n_rows; ++i)  {
+        if (rand_indices[i] < vec_s)  {
+            if (i == 0 || rand_indices[i] != prev_value)
+                new_vec.push_back(vec[rand_indices[i]]);
+            prev_value = rand_indices[i];
+        }
+        else
+            break;
+    }
+
+    df.load_column<ValueType>(name, std::move(new_vec));
+    return;
+}
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

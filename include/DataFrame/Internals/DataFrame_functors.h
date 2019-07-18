@@ -439,10 +439,10 @@ struct random_load_data_functor_ : DataVec::template visitor_base<Ts ...>  {
         const char *n,
         const std::vector<std::size_t>  &ri,
         DataFrame &d)
-        : name (n), random_indices (ri), df(d)  {   }
+        : name (n), rand_indices (ri), df(d)  {   }
 
     const char                      *name;
-    const std::vector<std::size_t>  &random_indices;
+    const std::vector<std::size_t>  &rand_indices;
     DataFrame                       &df;
 
     template<typename T>

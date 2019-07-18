@@ -1114,15 +1114,6 @@ get_view_by_sel (const char *name1,
 
 // ----------------------------------------------------------------------------
 
-
-
-
-
-
-
-
-
-
 template<typename I, typename  H>
 template<typename ... Ts>
 DataFrame<I, H> DataFrame<I, H>::
@@ -1137,10 +1128,10 @@ get_data_by_rand (random_policy spec, double n, size_type seed) const  {
     }
     else if (spec == random_policy::frac_rows_with_seed)  {
         use_seed = true;
-        n_rows = static_cast<size_type(n * index_s);
+        n_rows = static_cast<size_type>(n * index_s);
     }
     else if (spec == random_policy::frac_rows_no_seed)  {
-        n_rows = static_cast<size_type(n * index_s);
+        n_rows = static_cast<size_type>(n * index_s);
     }
 
     if (index_s > 0 && n_rows < index_s - 1)  {
@@ -1156,21 +1147,23 @@ get_data_by_rand (random_policy spec, double n, size_type seed) const  {
             rand_indices[i] = dis(gen);
         std::sort(rand_indices.begin(), rand_indices.end());
 
+        IndexVecType    new_index;
+        size_type       prev_value;
+
+        new_index.reserve(n_rows);
+        for (size_type i = 0; i < n_rows; ++i)  {
+            if (i == 0 || rand_indices[i] != prev_value)
+                new_index.push_back(indices_[rand_indices[i]]);
+            prev_value = rand_indices[i];
+        }
+
         DataFrame   df;
 
-
-
-
-
-
-        df.load_index(indices_.begin() + static_cast<size_type>(range.begin),
-                      indices_.begin() + static_cast<size_type>(range.end));
-
+        df.load_index(std::move(new_index));
         for (auto &iter : column_tb_)  {
-            load_functor_<Ts ...>   functor (
+            random_load_data_functor_<Ts ...>   functor (
                 iter.first.c_str(),
-                static_cast<size_type>(range.begin),
-                static_cast<size_type>(range.end),
+                rand_indices,
                 df);
 
             data_[iter.second].change(functor);

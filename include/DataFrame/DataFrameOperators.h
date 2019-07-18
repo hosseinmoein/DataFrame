@@ -19,10 +19,11 @@ namespace hmdf
 // Both lhs and rhs must be already sorted by index, otherwise the result
 // is nonsensical.
 //
-template<typename DF, template<typename> class OPT, typename ... types>
+template<typename DF, template<typename> class OPT, typename ... Ts>
 DF binary_operation (const DF &lhs, const DF &rhs)  {
 
     typename DF::IndexVecType       result_idx;
+
     const typename DF::IndexVecType &lhs_ts_vec = lhs.get_index();
     const typename DF::IndexVecType &rhs_ts_vec = rhs.get_index();
 
@@ -44,7 +45,7 @@ DF binary_operation (const DF &lhs, const DF &rhs)  {
         if (rhs_citer == rhs.column_tb_.end())  continue;
 
         typename DF::template operator_functor_
-            <typename DF::IndexType, OPT, types ...>  functor (
+            <typename DF::IndexType, OPT, Ts ...>   functor (
                 lhs_ts_vec,
                 rhs_ts_vec,
                 new_idx,
@@ -69,34 +70,34 @@ DF binary_operation (const DF &lhs, const DF &rhs)  {
 //       result is nonsensical.
 //
 
-template<typename DF, typename ... types>
+template<typename DF, typename ... Ts>
 inline DF df_plus (const DF &lhs, const DF &rhs)  {
 
-    return (binary_operation<DF, std::plus, types ...>(lhs, rhs));
+    return (binary_operation<DF, std::plus, Ts ...>(lhs, rhs));
 }
 
 // ----------------------------------------------------------------------------
 
-template<typename DF, typename ... types>
+template<typename DF, typename ... Ts>
 inline DF df_minus (const DF &lhs, const DF &rhs)  {
 
-    return (binary_operation<DF, std::minus, types ...>(lhs, rhs));
+    return (binary_operation<DF, std::minus, Ts ...>(lhs, rhs));
 }
 
 // ----------------------------------------------------------------------------
 
-template<typename DF, typename ... types>
+template<typename DF, typename ... Ts>
 inline DF df_multiplies (const DF &lhs, const DF &rhs)  {
 
-    return (binary_operation<DF, std::multiplies, types ...>(lhs, rhs));
+    return (binary_operation<DF, std::multiplies, Ts ...>(lhs, rhs));
 }
 
 // ----------------------------------------------------------------------------
 
-template<typename DF, typename ... types>
+template<typename DF, typename ... Ts>
 inline DF df_divides (const DF &lhs, const DF &rhs)  {
 
-    return (binary_operation<DF, std::divides, types ...>(lhs, rhs));
+    return (binary_operation<DF, std::divides, Ts ...>(lhs, rhs));
 }
 
 } // namespace hmdf

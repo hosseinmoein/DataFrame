@@ -967,6 +967,34 @@ public: // Read/access interfaces
                      const char *name3,
                      F &sel_functor);
 
+
+
+
+
+
+
+
+    template<typename ... Ts>
+    DataFrame
+    get_data_by_rand (random_policy spec, double n, size_type seed = 0) const;
+
+
+    template<typename ... Ts>
+    DataFramePtrView<IndexType>
+    get_view_by_rand (random_policy spec, double n, size_type seed = 0) const;
+
+
+
+
+
+
+
+
+
+
+
+
+
     // It returns a const reference to the index container
     //
     inline const IndexVecType &get_index () const  { return (indices_); }

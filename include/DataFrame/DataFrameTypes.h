@@ -40,21 +40,21 @@ struct NotImplemented : public DataFrameError  {
     NotImplemented (const char *desc) : DataFrameError (desc)  {   }
 };
 
-// -------------------------------------
+// ----------------------------------------------------------------------------
 
 enum class nan_policy : bool  {
     pad_with_nans = true,
     dont_pad_with_nans = false
 };
 
-// -------------------------------------
+// ----------------------------------------------------------------------------
 
 enum class sort_state : bool  {
     sorted = true,
     not_sorted = false
 };
 
-// -------------------------------------
+// ----------------------------------------------------------------------------
 
 enum class join_policy : unsigned char  {
     inner_join = 1,
@@ -63,7 +63,7 @@ enum class join_policy : unsigned char  {
     left_right_join = 4  // This is merge
 };
 
-// -------------------------------------
+// ----------------------------------------------------------------------------
 
 // This policy is relative to a tabular data structure
 // There is no right or left shift (like Pandas), because columns in DataFrame
@@ -75,7 +75,7 @@ enum class shift_policy : unsigned char  {
                // keep index unchanged
 };
 
-// -------------------------------------
+// ----------------------------------------------------------------------------
 
 enum class fill_policy : unsigned char  {
     value = 1,
@@ -89,7 +89,7 @@ enum class fill_policy : unsigned char  {
     linear_extrapolate = 5   // Using the index as X coordinate
 };
 
-// -------------------------------------
+// ----------------------------------------------------------------------------
 
 enum class drop_policy : unsigned char  {
     all = 1,  // Remove row if all columns are nan
@@ -97,13 +97,13 @@ enum class drop_policy : unsigned char  {
     threshold = 3  // Remove row if threshold number of columns are nan
 };
 
-// -------------------------------------
+// ----------------------------------------------------------------------------
 
 enum class io_format : unsigned char  {
     csv = 1,
 };
 
-// -------------------------------------
+// ----------------------------------------------------------------------------
 
 enum class time_frequency : unsigned char  {
     annual = 1,
@@ -118,7 +118,7 @@ enum class time_frequency : unsigned char  {
     // nanosecondly = 10
 };
 
-// -------------------------------------
+// ----------------------------------------------------------------------------
 
 enum class return_policy : unsigned char  {
     log = 1,
@@ -126,7 +126,34 @@ enum class return_policy : unsigned char  {
     monetary = 3,
 };
 
-// -------------------------------------
+// ----------------------------------------------------------------------------
+
+// Specification for calling get_[data|view]_by_rand()
+// Number of rows means the n paramtere is an positive integer specifying
+// the number of rows to select
+// Fraction of rows means the n paramtere is a positive real number [0:1]
+// specifying a fraction of rows to select
+//
+enum class random_policy : unsigned char  {
+    num_rows_with_seed = 1, // Number of rows with specifying a seed
+    num_rows_no_seed = 2, // Number of rows with no seed specification
+    frac_rows_with_seed = 3, // Fraction of rows with specifying a seed
+    frac_rows_no_seed = 4, // Fraction of rows with no seed specification
+};
+
+// ----------------------------------------------------------------------------
+
+// Integer random number distribution
+//
+enum class int_dist_policy : unsigned char  {
+    uniform_distribution = 1,
+    binomial_distribution = 2,
+    negative_binomial_distribution = 3,
+    geometric_distribution = 4,
+    poisson_distribution = 5,
+};
+
+// ----------------------------------------------------------------------------
 
 // It represents a range with begin and end within a continuous memory space
 //
@@ -136,7 +163,7 @@ struct Index2D  {
     T   end {};
 };
 
-// -------------------------------------
+// ----------------------------------------------------------------------------
 
 template<typename T, typename U>
 struct type_declare;
@@ -150,7 +177,7 @@ struct type_declare<HeteroView, U>  { using type = VectorView<U>; };
 template<typename U>
 struct type_declare<HeteroPtrView, U>  { using type = VectorPtrView<U>; };
 
-// -------------------------------------
+// ----------------------------------------------------------------------------
 
 // H stands for a heterogeneous vector
 template<typename I, typename H>

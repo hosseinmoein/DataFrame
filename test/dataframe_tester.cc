@@ -2909,8 +2909,8 @@ int main(int argc, char *argv[]) {
         std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18 };
         std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25 };
         std::vector<double> d4 = { 22, 23, 24, 25, 26, 27 };
-        std::vector<std::string> s1 =
-            { "11", "22", "33", "aa", "bb", "cc", "dd" "tt", "uu", "ii", "88" };
+        std::vector<std::string> s1 = { "11", "22", "33", "aa", "bb", "cc",
+                                        "dd", "tt", "uu", "ii", "88" };
         MyDataFrame         df;
 
         df.load_data(std::move(idx),
@@ -2922,21 +2922,21 @@ int main(int argc, char *argv[]) {
                        std::move(d4),
                        nan_policy::dont_pad_with_nans);
 
-        std::cout << "Original DF:" << std::endl;
-        df.write<std::ostream, double, std::string>(std::cout);
-
         auto    result =
             df.get_data_by_rand<double, std::string>
                 (random_policy::num_rows_no_seed, 5);
         auto    result2 =
             df.get_data_by_rand<double, std::string>
-			(random_policy::frac_rows_with_seed, 0.8, 23);
+            (random_policy::frac_rows_with_seed, 0.8, 23);
 
         assert(result2.get_index().size() == 6);
         assert(result2.get_column<double>("col_1").size() == 6);
         assert(result2.get_column<double>("col_4").size() == 6);
-        std::cout << "After random selection:" << std::endl;
-        result2.write<std::ostream, double, std::string>(std::cout);
+        assert(result2.get_column<std::string>("col_str").size() == 6);
+        assert(std::isnan(result2.get_column<double>("col_4")[2]));
+        assert(result2.get_column<double>("col_3")[4] == 24.0);
+        assert(result2.get_column<double>("col_1")[5] == 11.0);
+        assert(result2.get_column<std::string>("col_str")[4] == "ii");
     }
 
     return (0);

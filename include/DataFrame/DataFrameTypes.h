@@ -129,16 +129,16 @@ enum class return_policy : unsigned char  {
 // ----------------------------------------------------------------------------
 
 // Specification for calling get_[data|view]_by_rand()
-// Number of rows means the n paramtere is an positive integer specifying
+// Number of rows means the n parameter is an positive integer specifying
 // the number of rows to select
-// Fraction of rows means the n paramtere is a positive real number [0:1]
+// Fraction of rows means the n parameter is a positive real number [0:1]
 // specifying a fraction of rows to select
 //
 enum class random_policy : unsigned char  {
-    num_rows_with_seed = 1, // Number of rows with specifying a seed
-    num_rows_no_seed = 2, // Number of rows with no seed specification
+    num_rows_with_seed = 1,  // Number of rows with specifying a seed
+    num_rows_no_seed = 2,    // Number of rows with no seed specification
     frac_rows_with_seed = 3, // Fraction of rows with specifying a seed
-    frac_rows_no_seed = 4, // Fraction of rows with no seed specification
+    frac_rows_no_seed = 4,   // Fraction of rows with no seed specification
 };
 
 // ----------------------------------------------------------------------------

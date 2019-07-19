@@ -967,13 +967,6 @@ public: // Read/access interfaces
                      const char *name3,
                      F &sel_functor);
 
-
-
-
-
-
-
-
     // It returns a DataFrame (including the index and data columns)
     // containing the data from uniform random selection.
     // random_policy determines the behavior of method.
@@ -1015,18 +1008,6 @@ public: // Read/access interfaces
     template<typename ... Ts>
     DataFramePtrView<IndexType>
     get_view_by_rand (random_policy spec, double n, size_type seed = 0) const;
-
-
-
-
-
-
-
-
-
-
-
-
 
     // It returns a const reference to the index container
     //

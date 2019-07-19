@@ -973,6 +973,7 @@ public: // Read/access interfaces
     // Note: The actual number of rows returned might be smaller than
     //       requested. That is because the random process might produce
     //       the same number more than once.
+    // Note: The columns in the result are not padded with NaN.
     //
     // Ts: List all the types of all data columns.
     //     A type should be specified in the list only once.
@@ -994,6 +995,7 @@ public: // Read/access interfaces
     // also be modified.
     // Note: There are certain operations that you cannot do with a view.
     //       For example, you cannot add/delete columns, etc.
+    // Note: The columns in the result are not padded with NaN.
     //
     // Ts: List all the types of all data columns.
     //     A type should be specified in the list only once.

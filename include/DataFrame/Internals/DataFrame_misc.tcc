@@ -624,7 +624,45 @@ random_load_data_functor_<Ts ...>::operator() (const T &vec)  {
             break;
     }
 
-    df.load_column<ValueType>(name, std::move(new_vec));
+    df.load_column<ValueType>(name,
+                              std::move(new_vec),
+                              nan_policy::dont_pad_with_nans);
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename ... Ts>
+template<typename T>
+void
+DataFrame<I, H>::
+random_load_view_functor_<Ts ...>::operator() (const T &vec)  {
+
+    using VecType = typename std::remove_reference<T>::type;
+    using ValueType = typename VecType::value_type;
+
+    const size_type             vec_s = vec.size();
+    const size_type             n_rows = rand_indices.size();
+    VectorPtrView<ValueType>    new_vec;
+    size_type                   prev_value;
+
+    new_vec.reserve(n_rows);
+    for (size_type i = 0; i < n_rows; ++i)  {
+        if (rand_indices[i] < vec_s)  {
+            if (i == 0 || rand_indices[i] != prev_value)
+                new_vec.push_back(
+                    const_cast<ValueType *>(&(vec[rand_indices[i]])));
+            prev_value = rand_indices[i];
+        }
+        else
+            break;
+    }
+
+    using data_vec_t = typename DataFramePtrView<I>::DataVec;
+
+    dfv.data_.emplace_back(data_vec_t(std::move(new_vec)));
+    dfv.column_tb_.emplace (name, dfv.data_.size() - 1);
     return;
 }
 

@@ -1185,6 +1185,88 @@ get_data_by_rand (random_policy spec, double n, size_type seed) const  {
     throw BadRange (buffer);
 }
 
+
+
+
+
+
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename ... Ts>
+DataFramePtrView<I> DataFrame<I, H>::
+get_view_by_rand (random_policy spec, double n, size_type seed) const  {
+
+    bool            use_seed = false;
+    size_type       n_rows = static_cast<size_type>(n);
+    const size_type index_s = indices_.size();
+
+    if (spec == random_policy::num_rows_with_seed)  {
+        use_seed = true;
+    }
+    else if (spec == random_policy::frac_rows_with_seed)  {
+        use_seed = true;
+        n_rows = static_cast<size_type>(n * index_s);
+    }
+    else if (spec == random_policy::frac_rows_no_seed)  {
+        n_rows = static_cast<size_type>(n * index_s);
+    }
+
+    if (index_s > 0 && n_rows < index_s - 1)  {
+        std::random_device  rd;
+        std::mt19937        gen(rd());
+
+        if (use_seed)  gen.seed(seed);
+
+        std::uniform_int_distribution<size_type>    dis(0, index_s - 1);
+        std::vector<size_type>                      rand_indices(n_rows);
+
+        for (size_type i = 0; i < n_rows; ++i)
+            rand_indices[i] = dis(gen);
+        std::sort(rand_indices.begin(), rand_indices.end());
+
+        using TheView = DataFramePtrView<IndexType>;
+
+        typename TheView::IndexVecType  new_index;
+        size_type                       prev_value;
+
+        new_index.reserve(n_rows);
+        for (size_type i = 0; i < n_rows; ++i)  {
+            if (i == 0 || rand_indices[i] != prev_value)
+                new_index.push_back(
+                    const_cast<I *>(&(indices_[rand_indices[i]])));
+            prev_value = rand_indices[i];
+        }
+
+        TheView dfv;
+
+        dfv.indices_ = std::move(new_index);
+        for (auto &iter : column_tb_)  {
+            random_load_view_functor_<Ts ...>   functor (
+                iter.first.c_str(),
+                rand_indices,
+                dfv);
+
+            data_[iter.second].change(functor);
+        }
+
+        return (dfv);
+    }
+
+    char buffer [512];
+
+    sprintf (buffer,
+             "DataFrame::get_view_by_rand(): ERROR: "
+#ifdef _WIN32
+             "Number of rows requested %zu is more than available rows %zu",
+#else
+             "Number of rows requested %lu is more than available rows %lu",
+#endif // _WIN32
+             n_rows, index_s);
+    throw BadRange (buffer);
+}
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

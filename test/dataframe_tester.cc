@@ -1478,7 +1478,8 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesting fill_missing(linear_interpolate)" << std::endl;
+        std::cout << "\n\nTesting fill_missing(linear_interpolate)"
+                  << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
@@ -2931,12 +2932,60 @@ int main(int argc, char *argv[]) {
 
         assert(result2.get_index().size() == 6);
         assert(result2.get_column<double>("col_1").size() == 6);
-        assert(result2.get_column<double>("col_4").size() == 6);
+        assert(result2.get_column<double>("col_4").size() == 1);
         assert(result2.get_column<std::string>("col_str").size() == 6);
-        assert(std::isnan(result2.get_column<double>("col_4")[2]));
+        assert(result2.get_column<double>("col_4")[0] == 25.0);
         assert(result2.get_column<double>("col_3")[4] == 24.0);
         assert(result2.get_column<double>("col_1")[5] == 11.0);
         assert(result2.get_column<std::string>("col_str")[4] == "ii");
+    }
+
+    {
+        // Testing get_view_by_rand()
+
+        std::vector<unsigned long>  idx =
+            { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+              123457, 123458, 123459, 123460};
+        std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
+        std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18 };
+        std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25 };
+        std::vector<double> d4 = { 22, 23, 24, 25, 26, 27 };
+        std::vector<std::string> s1 = { "11", "22", "33", "aa", "bb", "cc",
+                                        "dd", "tt", "uu", "ii", "88" };
+        MyDataFrame         df;
+
+        df.load_data(std::move(idx),
+                     std::make_pair("col_1", d1),
+                     std::make_pair("col_2", d2),
+                     std::make_pair("col_3", d3),
+                     std::make_pair("col_str", s1));
+        df.load_column("col_4",
+                       std::move(d4),
+                       nan_policy::dont_pad_with_nans);
+
+        auto    result =
+            df.get_view_by_rand<double, std::string>
+                (random_policy::num_rows_no_seed, 5);
+        auto    result2 =
+            df.get_view_by_rand<double, std::string>
+            (random_policy::frac_rows_with_seed, 0.8, 23);
+
+        std::cout << "View after random:" << std::endl;
+        result2.write<std::ostream, int, double, std::string>(std::cout);
+
+        assert(result2.get_index().size() == 6);
+        assert(result2.get_column<double>("col_1").size() == 6);
+        assert(result2.get_column<double>("col_4").size() == 1);
+        assert(result2.get_column<std::string>("col_str").size() == 6);
+        assert(result2.get_column<double>("col_4")[0] == 25.0);
+        assert(result2.get_column<double>("col_3")[4] == 24.0);
+        assert(result2.get_column<double>("col_1")[5] == 11.0);
+        assert(result2.get_column<std::string>("col_str")[4] == "ii");
+
+        result2.get_column<std::string>("col_str")[4] = "TEST";
+        assert(result2.get_column<std::string>("col_str")[4] == "TEST");
+        assert(result2.get_column<std::string>("col_str")[4] ==
+               df.get_column<std::string>("col_str")[9]);
     }
 
     return (0);

@@ -1185,12 +1185,6 @@ get_data_by_rand (random_policy spec, double n, size_type seed) const  {
     throw BadRange (buffer);
 }
 
-
-
-
-
-
-
 // ----------------------------------------------------------------------------
 
 template<typename I, typename  H>

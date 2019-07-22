@@ -1138,7 +1138,7 @@ get_data_by_rand (random_policy spec, double n, size_type seed) const  {
         std::random_device  rd;
         std::mt19937        gen(rd());
 
-        if (use_seed)  gen.seed(seed);
+        if (use_seed)  gen.seed(static_cast<unsigned int>(seed));
 
         std::uniform_int_distribution<size_type>    dis(0, index_s - 1);
         std::vector<size_type>                      rand_indices(n_rows);
@@ -1211,7 +1211,7 @@ get_view_by_rand (random_policy spec, double n, size_type seed) const  {
         std::random_device  rd;
         std::mt19937        gen(rd());
 
-        if (use_seed)  gen.seed(seed);
+        if (use_seed)  gen.seed(static_cast<unsigned int>(seed));
 
         std::uniform_int_distribution<size_type>    dis(0, index_s - 1);
         std::vector<size_type>                      rand_indices(n_rows);

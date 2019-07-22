@@ -65,8 +65,8 @@ gen_bernoulli_distribution(
 
 // Produces random non-negative integer values i, distributed according to
 // discrete probability function:
-// P(i|t,p) = (t)    i          t-i
-//            (i) . p . ( 1 - p)
+//            (t)    i          t-i
+// P(i|t,p) = (i) . p . (1 - p)
 //
 // It retruns the vector of results
 // Optional parameters to set:
@@ -77,6 +77,112 @@ std::vector<T>
 gen_binomial_distribution(
     std::size_t n, const RandGenParams<T> &params = { });
 
+// ----------------------------------------------------------------------------
+
+// Produces random non-negative integer values i, distributed according to
+// discrete probability function:
+//            (k+i-1)    k         i
+// P(i|k,p) = (i    ) . p . (1 - p)
+//
+// It retruns the vector of results
+// Optional parameters to set:
+//     t_dist, prob_true, seed
+//
+template<typename T>
+std::vector<T>
+gen_negative_binomial_distribution(
+    std::size_t n, const RandGenParams<T> &params = { });
+
+// ----------------------------------------------------------------------------
+
+// Produces random non-negative integer values i, distributed according to
+// discrete probability function:
+//                     i
+// P(i|p) = p . (1 - p)
+//
+// It retruns the vector of results
+// Optional parameters to set:
+//     prob_true, seed
+//
+template<typename T>
+std::vector<T>
+gen_geometric_distribution(
+    std::size_t n, const RandGenParams<T> &params = { });
+
+// ----------------------------------------------------------------------------
+
+// Produces random non-negative integer values i, distributed according to
+// discrete probability function:
+//             -u    i      
+//            e     u
+// P(i|u) = ------------
+//               i!
+//
+// It retruns the vector of results
+// Optional parameters to set:
+//     mean, seed
+//
+template<typename T>
+std::vector<T>
+gen_poisson_distribution(std::size_t n, const RandGenParams<T> &params = { });
+
+// ----------------------------------------------------------------------------
+
+// Produces random non-negative floating-point values x,
+// distributed according to probability density function:
+// P(x|λ) = λe-λx
+//
+// It retruns the vector of results
+// Optional parameters to set:
+//     lambda, seed
+//
+template<typename T>
+std::vector<T>
+gen_exponential_distribution(
+    std::size_t n, const RandGenParams<T> &params = { });
+
+// ----------------------------------------------------------------------------
+
+// Produces random non-negative floating-point values x,
+// distributed according to probability density function:
+// p(x∣α,β)=e−x/ββα⋅Γ(α)⋅xα−1
+//
+// It retruns the vector of results
+// Optional parameters to set:
+//     alpha, beta, seed
+//
+template<typename T>
+std::vector<T>
+gen_gamma_distribution(std::size_t n, const RandGenParams<T> &params = { });
+
+// ----------------------------------------------------------------------------
+
+// Produces random non-negative floating-point values x,
+// distributed according to probability density function:
+// see https://en.cppreference.com/w/cpp/numeric/random/weibull_distribution
+//
+// It retruns the vector of results
+// Optional parameters to set:
+//     alpha (shape), beta (scale), seed
+//
+template<typename T>
+std::vector<T>
+gen_weibull_distribution(std::size_t n, const RandGenParams<T> &params = { });
+
+// ----------------------------------------------------------------------------
+
+// Produces random numbers according to the extreme value distribution
+// (it is also known as Gumbel Type I, log-Weibull, Fisher-Tippett Type I):
+// see https://en.cppreference.com/w/cpp/numeric/random/extreme_value_distribution
+//
+// It retruns the vector of results
+// Optional parameters to set:
+//     alpha (location), beta (scale), seed
+//
+template<typename T>
+std::vector<T>
+gen_extreme_value_distribution(
+    std::size_t n, const RandGenParams<T> &params = { });
 
 } // namespace hmdf
 

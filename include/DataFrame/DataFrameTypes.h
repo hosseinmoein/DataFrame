@@ -146,9 +146,10 @@ enum class random_policy : unsigned char  {
 
 template<typename T>
 struct  RandGenParams  {
-    T           min_value { std::numeric_limits<T>::min() };
-    T           max_value { std::numeric_limits<T>::max() };
-    std::size_t seed { std::size_t(-1) };
+    T   min_value { std::numeric_limits<T>::min() };
+    T   max_value { std::numeric_limits<T>::max() };
+
+    unsigned int    seed { (unsigned int) -1 };
 
     // The p distribution parameter (probability of generating true)
     double      prob_true { 0.5 };

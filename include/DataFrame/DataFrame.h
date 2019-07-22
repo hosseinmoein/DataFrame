@@ -13,7 +13,6 @@
 #include <cstring>
 #include <functional>
 #include <future>
-#include <limits>
 #include <map>
 #include <vector>
 #include <utility>
@@ -35,7 +34,7 @@ template<typename I, typename H>
 class DataFrame : public ThreadGranularity  {
 
     static_assert(std::is_base_of<HeteroVector, H>::value ||
-                      std::is_base_of<HeteroView, H>::value ||
+                  std::is_base_of<HeteroView, H>::value ||
                   std::is_base_of<HeteroPtrView, H>::value,
                   "H argument can only be either of "
                   "HeteroVector, HeteroView, HeteroPtrView "

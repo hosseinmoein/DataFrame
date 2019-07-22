@@ -19,6 +19,7 @@ SRCS = Vectors/HeteroVector.cc \
        ../test/date_time_tester.cc \
        ../test/mmfile_tester.cc \
        ../test/sharedmem_tester.cc \
+       ../test/gen_rand_tester.cc \
        Utils/ThreadGranularity.cc \
        Utils/DateTime.cc \
        MMap/MMapBase.cc \
@@ -41,8 +42,10 @@ HEADERS = $(LOCAL_INCLUDE_DIR)/DataFrame/Vectors/HeteroVector.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Internals/DataFrame_join.tcc \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Internals/DataFrame_shift.tcc \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Internals/DataFrame_functors.h \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/Internals/RandGen.tcc \
           $(LOCAL_INCLUDE_DIR)/DataFrame/DataFrameVisitors.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/DataFrameTypes.h \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/RandGen.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/DataFrameOperators.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Vectors/VectorView.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Vectors/VectorPtrView.h \
@@ -67,7 +70,8 @@ TARGETS += $(TARGET_LIB) \
            $(LOCAL_BIN_DIR)/mmfile_tester \
            $(LOCAL_BIN_DIR)/obj_vector_tester \
            $(LOCAL_BIN_DIR)/obj_vector_erase_tester \
-           $(LOCAL_BIN_DIR)/sharedmem_tester
+           $(LOCAL_BIN_DIR)/sharedmem_tester \
+           $(LOCAL_BIN_DIR)/gen_rand_tester
 
 # -----------------------------------------------------------------------------
 
@@ -153,9 +157,13 @@ OBJ_VECTOR_ERASE_TESTER_OBJ = $(LOCAL_OBJ_DIR)/obj_vector_erase_tester.o
 $(LOCAL_BIN_DIR)/obj_vector_erase_tester: $(TARGET_LIB) $(OBJ_VECTOR_ERASE_TESTER_OBJ)
 	$(CXX) -o $@ $(OBJ_VECTOR_ERASE_TESTER_OBJ) $(LIBS)
 
-SHAREDMEM_TESTER_OBJ = $(LOCAL_OBJ_DIR)//sharedmem_tester.o
+SHAREDMEM_TESTER_OBJ = $(LOCAL_OBJ_DIR)/sharedmem_tester.o
 $(LOCAL_BIN_DIR)/sharedmem_tester: $(TARGET_LIB) $(SHAREDMEM_TESTER_OBJ)
 	$(CXX) -o $@ $(SHAREDMEM_TESTER_OBJ) $(LIBS)
+
+GEN_RAND_TESTER_OBJ = $(LOCAL_OBJ_DIR)/gen_rand_tester.o
+$(LOCAL_BIN_DIR)/gen_rand_tester: $(TARGET_LIB) $(GEN_RAND_TESTER_OBJ)
+	$(CXX) -o $@ $(GEN_RAND_TESTER_OBJ) $(LIBS)
 
 # -----------------------------------------------------------------------------
 
@@ -165,13 +173,13 @@ depend:
 clean:
 	rm -f $(LIB_OBJS) $(TARGETS) $(DATAFRAME_TESTER_OBJ) $(VECTORS_TESTER_OBJ) \
           $(DATE_TIME_TESTER_OBJ) $(VECTOR_PTR_VIEW_TESTER_OBJ) \
-          $(MMFILE_TESTER_OBJ) $(SHAREDMEM_TESTER_OBJ) \
+          $(MMFILE_TESTER_OBJ) $(SHAREDMEM_TESTER_OBJ) $(GEN_RAND_TESTER_OBJ) \
           $(OBJ_VECTOR_TESTER_OBJ) $(OBJ_VECTOR_ERASE_TESTER_OBJ)
 
 clobber:
 	rm -f $(LIB_OBJS) $(TARGETS) $(DATAFRAME_TESTER_OBJ) $(VECTORS_TESTER_OBJ) \
           $(DATE_TIME_TESTER_OBJ) $(VECTOR_PTR_VIEW_TESTER_OBJ) \
-          $(MMFILE_TESTER_OBJ) $(SHAREDMEM_TESTER_OBJ) \
+          $(SHAREDMEM_TESTER_OBJ) $(MMFILE_TESTER_OBJ) $(GEN_RAND_TESTER_OBJ) \
           $(OBJ_VECTOR_TESTER_OBJ) $(OBJ_VECTOR_ERASE_TESTER_OBJ)
 
 install_lib:

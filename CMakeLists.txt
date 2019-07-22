@@ -93,6 +93,7 @@ set(${LIBRARY_TARGET_NAME}_HDR
   include/DataFrame/Vectors/HeteroPtrView.tcc
   include/DataFrame/DataFrameVisitors.h
   include/DataFrame/DataFrameTypes.h
+  include/DataFrame/RandGen.h
   include/DataFrame/DataFrameOperators.h
   include/DataFrame/DataFrame.h
   include/DataFrame/Internals/DataFrame.tcc
@@ -104,6 +105,7 @@ set(${LIBRARY_TARGET_NAME}_HDR
   include/DataFrame/Internals/DataFrame_read.tcc
   include/DataFrame/Internals/DataFrame_set.tcc
   include/DataFrame/Internals/DataFrame_functors.h
+  include/DataFrame/Internals/RandGen.tcc
   include/DataFrame/Utils/ThreadGranularity.h
   include/DataFrame/Utils/DateTime.h
   include/DataFrame/Utils/FixedSizeString.h
@@ -217,6 +219,7 @@ add_executable(mmfile_tester     test/mmfile_tester.cc)
 add_executable(obj_vector_tester test/obj_vector_tester.cc)
 add_executable(obj_vector_erase_tester test/obj_vector_erase_tester.cc)
 add_executable(sharedmem_tester  test/sharedmem_tester.cc)
+add_executable(gen_rand_tester.o  test/gen_rand_tester.cc)
 
 # Link the DataFrame library to the test binary
 target_link_libraries(dataframe_tester DataFrame)
@@ -242,6 +245,9 @@ target_link_libraries(obj_vector_erase_tester DataFrame)
 # Link the DataFrame library to the test binary
 target_link_libraries(sharedmem_tester DataFrame)
 
+# Link the DataFrame library to the test binary
+target_link_libraries(gen_rand_tester DataFrame)
+
 if (UNIX)
   # Find pthreads library
   set(THREADS_PREFER_PTHREAD_FLAG ON)
@@ -254,6 +260,7 @@ if (UNIX)
   target_link_libraries(obj_vector_tester Threads::Threads)
   target_link_libraries(obj_vector_erase_tester Threads::Threads)
   target_link_libraries(sharedmem_tester Threads::Threads)
+  target_link_libraries(gen_rand_tester Threads::Threads)
 endif (UNIX)
 
 if (UNIX AND NOT APPLE)
@@ -265,6 +272,7 @@ if (UNIX AND NOT APPLE)
   target_link_libraries(obj_vector_tester rt)
   target_link_libraries(obj_vector_erase_tester rt)
   target_link_libraries(sharedmem_tester rt)
+  target_link_libraries(gen_rand_tester rt)
 endif()
 
 # Enable ctest, testing so we can see if unit tests pass or fail in CI
@@ -295,6 +303,9 @@ add_test(NAME obj_vector_tester
 add_test(NAME obj_vector_erase_tester
          COMMAND obj_vector_erase_tester
          WORKING_DIRECTORY $<TARGET_FILE_DIR:obj_vector_erase_tester>)
+add_test(NAME gen_rand_tester
+         COMMAND gen_rand_tester
+         WORKING_DIRECTORY $<TARGET_FILE_DIR:gen_rand_tester>)
 
 message("-- Copying files for testing")
 # Ctest require this files in the build dir, on all platforms

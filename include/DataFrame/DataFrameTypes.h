@@ -8,6 +8,7 @@
 #include <DataFrame/Vectors/HeteroVector.h>
 
 #include <cmath>
+#include <limits>
 #include <stdexcept>
 
 // ----------------------------------------------------------------------------
@@ -143,14 +144,34 @@ enum class random_policy : unsigned char  {
 
 // ----------------------------------------------------------------------------
 
-// Integer random number distribution
-//
-enum class int_dist_policy : unsigned char  {
-    uniform_distribution = 1,
-    binomial_distribution = 2,
-    negative_binomial_distribution = 3,
-    geometric_distribution = 4,
-    poisson_distribution = 5,
+template<typename T>
+struct  RandGenParams  {
+    T           min_value { std::numeric_limits<T>::min() };
+    T           max_value { std::numeric_limits<T>::max() };
+    std::size_t seed { std::size_t(-1) };
+
+    // The p distribution parameter (probability of generating true)
+    double      prob_true { 0.5 };
+    // The t or k distribution parameter (number of trials)
+    std::size_t t_dist { 1 };
+    // The μ distribution parameter (the mean of the distribution)
+    double      mean { 1.0 };
+    // the σ distribution parameter (standard deviation)
+    double      std { 0 };
+    // The λ distribution parameter (the rate parameter)
+    double      lambda { 1.0 };
+    // The α distribution parameter (shape, location)
+    double      alpha { 1.0 };
+    // The β distribution parameter (scale)
+    double      beta { 1.0 };
+    // The m distribution parameter (log-scale)
+    double      m { 0 };
+    // The s distribution parameter (shape)
+    double      s { 1.0 };
+    // The n distribution parameter (degrees of freedom)
+    double      n { 1.0 };
+    // degrees of freedom for fisher_f_distribution
+    double      n2 { 1.0 };
 };
 
 // ----------------------------------------------------------------------------

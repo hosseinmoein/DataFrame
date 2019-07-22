@@ -219,7 +219,7 @@ add_executable(mmfile_tester     test/mmfile_tester.cc)
 add_executable(obj_vector_tester test/obj_vector_tester.cc)
 add_executable(obj_vector_erase_tester test/obj_vector_erase_tester.cc)
 add_executable(sharedmem_tester  test/sharedmem_tester.cc)
-add_executable(gen_rand_tester.o  test/gen_rand_tester.cc)
+add_executable(gen_rand_tester  test/gen_rand_tester.cc)
 
 # Link the DataFrame library to the test binary
 target_link_libraries(dataframe_tester DataFrame)

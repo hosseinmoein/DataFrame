@@ -15,12 +15,12 @@
 namespace hmdf
 {
 
-// It generates n uniform interger distribution random numbers.
+// It generates n uniform integer distribution random numbers.
 //                  1
 // P(i|a,b) = --------------
 //              b − a + 1
 //
-// It retruns the vector of results
+// It returns the vector of results
 // Optional parameters to set:
 //     max_value, min_value, seed
 //
@@ -40,7 +40,7 @@ gen_uniform_int_dist(std::size_t n, const RandGenParams<T> &params = { });
 // P(i|a,b) = ----------
 //              b − a 
 //
-// It retruns the vector of results
+// It returns the vector of results
 // Optional parameters to set:
 //     max_value, min_value, seed
 //
@@ -60,7 +60,7 @@ gen_uniform_real_dist(std::size_t n, const RandGenParams<T> &params = { });
 // P(b|p) = ⎨
 //          ⎩ 1 - p if b == fasle 
 //
-// It retruns the vector of results
+// It returns the vector of results
 // Optional parameters to set:
 //     prob_true, seed
 //
@@ -77,7 +77,7 @@ gen_bernoulli_dist(std::size_t n, const RandGenParams<bool> &params = { });
 //            (t)    i          t-i
 // P(i|t,p) = (i) . p . (1 - p)
 //
-// It retruns the vector of results
+// It returns the vector of results
 // Optional parameters to set:
 //     t_dist, prob_true, seed
 //
@@ -97,7 +97,7 @@ gen_binomial_dist(std::size_t n, const RandGenParams<T> &params = { });
 //            (k+i-1)    k         i
 // P(i|k,p) = (i    ) . p . (1 - p)
 //
-// It retruns the vector of results
+// It returns the vector of results
 // Optional parameters to set:
 //     t_dist, prob_true, seed
 //
@@ -117,7 +117,7 @@ gen_negative_binomial_dist(std::size_t n, const RandGenParams<T> &params = {});
 //                     i
 // P(i|p) = p . (1 - p)
 //
-// It retruns the vector of results
+// It returns the vector of results
 // Optional parameters to set:
 //     prob_true, seed
 //
@@ -139,7 +139,7 @@ gen_geometric_dist(std::size_t n, const RandGenParams<T> &params = { });
 // P(i|u) = ------------
 //               i!
 //
-// It retruns the vector of results
+// It returns the vector of results
 // Optional parameters to set:
 //     mean, seed
 //
@@ -158,7 +158,7 @@ gen_poisson_dist(std::size_t n, const RandGenParams<T> &params = { });
 // distributed according to probability density function:
 // P(x|λ) = λe-λx
 //
-// It retruns the vector of results
+// It returns the vector of results
 // Optional parameters to set:
 //     lambda, seed
 //
@@ -176,7 +176,7 @@ gen_exponential_dist(std::size_t n, const RandGenParams<T> &params = { });
 // distributed according to probability density function:
 // p(x∣α,β)=e−x/ββα⋅Γ(α)⋅xα−1
 //
-// It retruns the vector of results
+// It returns the vector of results
 // Optional parameters to set:
 //     alpha, beta, seed
 //
@@ -194,7 +194,7 @@ gen_gamma_dist(std::size_t n, const RandGenParams<T> &params = { });
 // distributed according to probability density function:
 // see https://en.cppreference.com/w/cpp/numeric/random/weibull_distribution
 //
-// It retruns the vector of results
+// It returns the vector of results
 // Optional parameters to set:
 //     alpha (shape), beta (scale), seed
 //
@@ -212,7 +212,7 @@ gen_weibull_dist(std::size_t n, const RandGenParams<T> &params = { });
 // (it is also known as Gumbel Type I, log-Weibull, Fisher-Tippett Type I):
 // see https://en.cppreference.com/w/cpp/numeric/random/extreme_value_distribution
 //
-// It retruns the vector of results
+// It returns the vector of results
 // Optional parameters to set:
 //     alpha (location), beta (scale), seed
 //
@@ -230,7 +230,7 @@ gen_extreme_value_dist(std::size_t n, const RandGenParams<T> &params = { });
 // random number distribution. It is defined as:
 // see https://en.cppreference.com/w/cpp/numeric/random/normal_distribution
 //
-// It retruns the vector of results
+// It returns the vector of results
 // Optional parameters to set:
 //     mean, std (scale), seed
 //
@@ -248,7 +248,7 @@ gen_normal_dist(std::size_t n, const RandGenParams<T> &params = { });
 // random numbers x > 0 according to a log-normal distribution:
 // see https://en.cppreference.com/w/cpp/numeric/random/lognormal_distribution
 //
-// It retruns the vector of results
+// It returns the vector of results
 // Optional parameters to set:
 //     m (log-scale), s (shape), seed
 //
@@ -266,7 +266,7 @@ gen_lognormal_dist(std::size_t n, const RandGenParams<T> &params = { });
 // to the Chi-squared distribution:
 // see https://en.cppreference.com/w/cpp/numeric/random/chi_squared_distribution
 //
-// It retruns the vector of results
+// It returns the vector of results
 // Optional parameters to set:
 //     n (degree of freedom), seed
 //
@@ -284,7 +284,7 @@ gen_chi_squared_dist(std::size_t n, const RandGenParams<T> &params = { });
 // (also called Lorentz distribution):
 // see https://en.cppreference.com/w/cpp/numeric/random/cauchy_distribution
 //
-// It retruns the vector of results
+// It returns the vector of results
 // Optional parameters to set:
 //     alpha (location), beta (scale), seed
 //
@@ -301,7 +301,7 @@ gen_cauchy_dist(std::size_t n, const RandGenParams<T> &params = { });
 // Produces random numbers according to the f-distribution:
 // see https://en.cppreference.com/w/cpp/numeric/random/fisher_f_distribution
 //
-// It retruns the vector of results
+// It returns the vector of results
 // Optional parameters to set:
 //     n (degree of freedom), n2 (degree of freedom), seed
 //
@@ -319,7 +319,7 @@ gen_fisher_f_dist(std::size_t n, const RandGenParams<T> &params = { });
 // to probability density function:
 // see https://en.cppreference.com/w/cpp/numeric/random/student_t_distribution
 //
-// It retruns the vector of results
+// It returns the vector of results
 // Optional parameters to set:
 //     n (degree of freedom), seed
 //

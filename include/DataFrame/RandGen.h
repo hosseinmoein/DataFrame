@@ -24,10 +24,14 @@ namespace hmdf
 // Optional parameters to set:
 //     max_value, min_value, seed
 //
+// T: Type can only be [unsigned] char, [unsigned] short, [unsigned] int,
+//    [unsigned] long int, or [unsigned] long long int
+// n: Number of numerics to generate
+// params: List of all applicable parameters, see DataFrameTypes.h
+//
 template<typename T>
 std::vector<T>
-gen_uniform_int_distribution(
-    std::size_t n, const RandGenParams<T> &params = { });
+gen_uniform_int_dist(std::size_t n, const RandGenParams<T> &params = { });
 
 // ----------------------------------------------------------------------------
 
@@ -40,10 +44,13 @@ gen_uniform_int_distribution(
 // Optional parameters to set:
 //     max_value, min_value, seed
 //
+// T: Type can only be float, double, or long double
+// n: Number of numerics to generate
+// params: List of all applicable parameters, see DataFrameTypes.h
+//
 template<typename T>
 std::vector<T>
-gen_uniform_real_distribution(
-    std::size_t n, const RandGenParams<T> &params = { });
+gen_uniform_real_dist(std::size_t n, const RandGenParams<T> &params = { });
 
 // ----------------------------------------------------------------------------
 
@@ -57,9 +64,11 @@ gen_uniform_real_distribution(
 // Optional parameters to set:
 //     prob_true, seed
 //
+// n: Number of numerics to generate
+// params: List of all applicable parameters, see DataFrameTypes.h
+//
 std::vector<bool>
-gen_bernoulli_distribution(
-    std::size_t n, const RandGenParams<bool> &params = { });
+gen_bernoulli_dist(std::size_t n, const RandGenParams<bool> &params = { });
 
 // ----------------------------------------------------------------------------
 
@@ -72,10 +81,14 @@ gen_bernoulli_distribution(
 // Optional parameters to set:
 //     t_dist, prob_true, seed
 //
+// T: Type can only be [unsigned] char, [unsigned] short, [unsigned] int,
+//    [unsigned] long int, or [unsigned] long long int
+// n: Number of numerics to generate
+// params: List of all applicable parameters, see DataFrameTypes.h
+//
 template<typename T>
 std::vector<T>
-gen_binomial_distribution(
-    std::size_t n, const RandGenParams<T> &params = { });
+gen_binomial_dist(std::size_t n, const RandGenParams<T> &params = { });
 
 // ----------------------------------------------------------------------------
 
@@ -88,10 +101,14 @@ gen_binomial_distribution(
 // Optional parameters to set:
 //     t_dist, prob_true, seed
 //
+// T: Type can only be [unsigned] char, [unsigned] short, [unsigned] int,
+//    [unsigned] long int, or [unsigned] long long int
+// n: Number of numerics to generate
+// params: List of all applicable parameters, see DataFrameTypes.h
+//
 template<typename T>
 std::vector<T>
-gen_negative_binomial_distribution(
-    std::size_t n, const RandGenParams<T> &params = { });
+gen_negative_binomial_dist(std::size_t n, const RandGenParams<T> &params = {});
 
 // ----------------------------------------------------------------------------
 
@@ -104,10 +121,14 @@ gen_negative_binomial_distribution(
 // Optional parameters to set:
 //     prob_true, seed
 //
+// T: Type can only be [unsigned] char, [unsigned] short, [unsigned] int,
+//    [unsigned] long int, or [unsigned] long long int
+// n: Number of numerics to generate
+// params: List of all applicable parameters, see DataFrameTypes.h
+//
 template<typename T>
 std::vector<T>
-gen_geometric_distribution(
-    std::size_t n, const RandGenParams<T> &params = { });
+gen_geometric_dist(std::size_t n, const RandGenParams<T> &params = { });
 
 // ----------------------------------------------------------------------------
 
@@ -122,9 +143,14 @@ gen_geometric_distribution(
 // Optional parameters to set:
 //     mean, seed
 //
+// T: Type can only be [unsigned] char, [unsigned] short, [unsigned] int,
+//    [unsigned] long int, or [unsigned] long long int
+// n: Number of numerics to generate
+// params: List of all applicable parameters, see DataFrameTypes.h
+//
 template<typename T>
 std::vector<T>
-gen_poisson_distribution(std::size_t n, const RandGenParams<T> &params = { });
+gen_poisson_dist(std::size_t n, const RandGenParams<T> &params = { });
 
 // ----------------------------------------------------------------------------
 
@@ -136,10 +162,13 @@ gen_poisson_distribution(std::size_t n, const RandGenParams<T> &params = { });
 // Optional parameters to set:
 //     lambda, seed
 //
+// T: Type can only be float, double, or long double
+// n: Number of numerics to generate
+// params: List of all applicable parameters, see DataFrameTypes.h
+//
 template<typename T>
 std::vector<T>
-gen_exponential_distribution(
-    std::size_t n, const RandGenParams<T> &params = { });
+gen_exponential_dist(std::size_t n, const RandGenParams<T> &params = { });
 
 // ----------------------------------------------------------------------------
 
@@ -151,9 +180,13 @@ gen_exponential_distribution(
 // Optional parameters to set:
 //     alpha, beta, seed
 //
+// T: Type can only be float, double, or long double
+// n: Number of numerics to generate
+// params: List of all applicable parameters, see DataFrameTypes.h
+//
 template<typename T>
 std::vector<T>
-gen_gamma_distribution(std::size_t n, const RandGenParams<T> &params = { });
+gen_gamma_dist(std::size_t n, const RandGenParams<T> &params = { });
 
 // ----------------------------------------------------------------------------
 
@@ -165,9 +198,13 @@ gen_gamma_distribution(std::size_t n, const RandGenParams<T> &params = { });
 // Optional parameters to set:
 //     alpha (shape), beta (scale), seed
 //
+// T: Type can only be float, double, or long double
+// n: Number of numerics to generate
+// params: List of all applicable parameters, see DataFrameTypes.h
+//
 template<typename T>
 std::vector<T>
-gen_weibull_distribution(std::size_t n, const RandGenParams<T> &params = { });
+gen_weibull_dist(std::size_t n, const RandGenParams<T> &params = { });
 
 // ----------------------------------------------------------------------------
 
@@ -179,10 +216,102 @@ gen_weibull_distribution(std::size_t n, const RandGenParams<T> &params = { });
 // Optional parameters to set:
 //     alpha (location), beta (scale), seed
 //
+// T: Type can only be float, double, or long double
+// n: Number of numerics to generate
+// params: List of all applicable parameters, see DataFrameTypes.h
+//
 template<typename T>
 std::vector<T>
-gen_extreme_value_distribution(
-    std::size_t n, const RandGenParams<T> &params = { });
+gen_extreme_value_dist(std::size_t n, const RandGenParams<T> &params = { });
+
+// ----------------------------------------------------------------------------
+
+// Generates random numbers according to the Normal (or Gaussian)
+// random number distribution. It is defined as:
+// see https://en.cppreference.com/w/cpp/numeric/random/normal_distribution
+//
+// It retruns the vector of results
+// Optional parameters to set:
+//     mean, std (scale), seed
+//
+// T: Type can only be float, double, or long double
+// n: Number of numerics to generate
+// params: List of all applicable parameters, see DataFrameTypes.h
+//
+template<typename T>
+std::vector<T>
+gen_normal_dist(std::size_t n, const RandGenParams<T> &params = { });
+
+// ----------------------------------------------------------------------------
+
+// The lognormal_distribution random number distribution produces
+// random numbers x > 0 according to a log-normal distribution:
+// see https://en.cppreference.com/w/cpp/numeric/random/lognormal_distribution
+//
+// It retruns the vector of results
+// Optional parameters to set:
+//     m (log-scale), s (shape), seed
+//
+// T: Type can only be float, double, or long double
+// n: Number of numerics to generate
+// params: List of all applicable parameters, see DataFrameTypes.h
+//
+template<typename T>
+std::vector<T>
+gen_lognormal_dist(std::size_t n, const RandGenParams<T> &params = { });
+
+// ----------------------------------------------------------------------------
+
+// The chi_squared_distribution produces random numbers x > 0 according
+// to the Chi-squared distribution:
+// see https://en.cppreference.com/w/cpp/numeric/random/chi_squared_distribution
+//
+// It retruns the vector of results
+// Optional parameters to set:
+//     n (degree of freedom), seed
+//
+// T: Type can only be float, double, or long double
+// n: Number of numerics to generate
+// params: List of all applicable parameters, see DataFrameTypes.h
+//
+template<typename T>
+std::vector<T>
+gen_chi_squared_dist(std::size_t n, const RandGenParams<T> &params = { });
+
+// ----------------------------------------------------------------------------
+
+// Produces random numbers according to a Cauchy distribution
+// (also called Lorentz distribution):
+// see https://en.cppreference.com/w/cpp/numeric/random/cauchy_distribution
+//
+// It retruns the vector of results
+// Optional parameters to set:
+//     alpha (location), beta (scale), seed
+//
+// T: Type can only be float, double, or long double
+// n: Number of numerics to generate
+// params: List of all applicable parameters, see DataFrameTypes.h
+//
+template<typename T>
+std::vector<T>
+gen_cauchy_dist(std::size_t n, const RandGenParams<T> &params = { });
+
+// ----------------------------------------------------------------------------
+
+// Produces random numbers according to the f-distribution:
+// see https://en.cppreference.com/w/cpp/numeric/random/fisher_f_distribution
+//
+// It retruns the vector of results
+// Optional parameters to set:
+//     n (degree of freedom), n2 (degree of freedom), seed
+//
+// T: Type can only be float, double, or long double
+// n: Number of numerics to generate
+// params: List of all applicable parameters, see DataFrameTypes.h
+//
+template<typename T>
+std::vector<T>
+gen_fisher_f_dist(std::size_t n, const RandGenParams<T> &params = { });
 
 } // namespace hmdf
 

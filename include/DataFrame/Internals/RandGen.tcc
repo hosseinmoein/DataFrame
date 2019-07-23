@@ -349,6 +349,24 @@ gen_fisher_f_dist(std::size_t n, const RandGenParams<T> &params) {
                 std::fisher_f_distribution<T>(params.n, params.n2)));
 }
 
+// ----------------------------------------------------------------------------
+
+template<typename T>
+std::vector<T>
+gen_student_t_dist(std::size_t n, const RandGenParams<T> &params) {
+
+    static_assert(std::is_same<float, T>::value ||
+                  std::is_same<double, T>::value ||
+                  std::is_same<long double, T>::value,
+                  "gen_student_t_dist() requires real number type");
+
+    using D = std::student_t_distribution<T>;
+
+    return (_gen_rand_<T, D>(
+                n, params,
+                std::student_t_distribution<T>(params.n)));
+}
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

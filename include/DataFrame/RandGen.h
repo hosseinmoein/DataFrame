@@ -313,6 +313,24 @@ template<typename T>
 std::vector<T>
 gen_fisher_f_dist(std::size_t n, const RandGenParams<T> &params = { });
 
+// ----------------------------------------------------------------------------
+
+// Produces random floating-point values x, distributed according
+// to probability density function:
+// see https://en.cppreference.com/w/cpp/numeric/random/student_t_distribution
+//
+// It retruns the vector of results
+// Optional parameters to set:
+//     n (degree of freedom), seed
+//
+// T: Type can only be float, double, or long double
+// n: Number of numerics to generate
+// params: List of all applicable parameters, see DataFrameTypes.h
+//
+template<typename T>
+std::vector<T>
+gen_student_t_dist(std::size_t n, const RandGenParams<T> &params = { });
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

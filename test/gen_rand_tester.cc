@@ -126,6 +126,10 @@ int main(int argc, char *argv[]) {
 
     {
         auto    r = gen_fisher_f_dist<double>(1024);
+    }
+
+    {
+        auto    r = gen_student_t_dist<double>(1024);
 
         for (auto citer : r)
             std::cout << citer << ", ";

@@ -103,6 +103,7 @@ set(${LIBRARY_TARGET_NAME}_HDR
   include/DataFrame/Internals/DataFrame_join.tcc
   include/DataFrame/Internals/DataFrame_shift.tcc
   include/DataFrame/Internals/DataFrame_read.tcc
+  include/DataFrame/Internals/DataFrame_write.tcc
   include/DataFrame/Internals/DataFrame_set.tcc
   include/DataFrame/Internals/DataFrame_functors.h
   include/DataFrame/Internals/RandGen.tcc

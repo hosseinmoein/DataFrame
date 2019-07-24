@@ -1316,6 +1316,7 @@ private:  // Tuple stuff
 #    include <DataFrame/Internals/DataFrame_set.tcc>
 #    include <DataFrame/Internals/DataFrame_get.tcc>
 #    include <DataFrame/Internals/DataFrame_read.tcc>
+#    include <DataFrame/Internals/DataFrame_write.tcc>
 #    include <DataFrame/Internals/DataFrame_opt.tcc>
 #    include <DataFrame/Internals/DataFrame_join.tcc>
 #    include <DataFrame/Internals/DataFrame_shift.tcc>

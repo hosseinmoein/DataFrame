@@ -214,7 +214,7 @@ int main(int argc, char *argv[]) {
                                         corr_visitor).get_result() -
                -0.358381) < 0.00001);
 
-    std::cout << "\nTesting GROUPBY:\n" << std::endl;
+    std::cout << "\nTesting GROUPBY ..." << std::endl;
 
     std::vector<unsigned long>  ulgvec2 =
         { 123450, 123451, 123452, 123450, 123455, 123450, 123449,
@@ -301,7 +301,7 @@ int main(int argc, char *argv[]) {
                 double,
                 std::string>(std::cout);
 
-    std::cout << "\nTesting Async write\n" << std::endl;
+    std::cout << "\nTesting Async write ..." << std::endl;
 
     std::future<bool>   fut =
         dfxx3.write_async<std::ostream,
@@ -312,7 +312,7 @@ int main(int argc, char *argv[]) {
 
     fut.get();
 
-    std::cout << "\nTesting Bucketize()\n" << std::endl;
+    std::cout << "\nTesting Bucketize() ..." << std::endl;
 
     std::future<void>   sort_fut =
         dfx.sort_async<double, int, double, std::string>();
@@ -340,7 +340,7 @@ int main(int argc, char *argv[]) {
                   std::string>(std::cout, true);
 
     {
-        std::cout << "\nTesting read()\n" << std::endl;
+        std::cout << "\nTesting read() ..." << std::endl;
 
         MyDataFrame         df_read;
         // std::future<bool>   fut2 =
@@ -376,7 +376,7 @@ int main(int argc, char *argv[]) {
                          bool>(std::cout);
     }
 
-    std::cout << "\nTesting multi_visit()\n" << std::endl;
+    std::cout << "\nTesting multi_visit() ..." << std::endl;
 
     MeanVisitor<int>            ivisitor2;
     MeanVisitor<unsigned long>  ulvisitor;
@@ -442,7 +442,7 @@ int main(int argc, char *argv[]) {
     MyDataFrame::set_thread_level(10);
 
     {
-        std::cout << "\n\nTesting transpose()" << std::endl;
+        std::cout << "\nTesting transpose() ..." << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123450, 123455, 123450, 123449 };
@@ -474,7 +474,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesting get_data_by_loc()/slicing" << std::endl;
+        std::cout << "\nTesting get_data_by_loc()/slicing ..." << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123450, 123455, 123450, 123449 };
@@ -516,7 +516,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesting get_view_by_loc()" << std::endl;
+        std::cout << "\nTesting get_view_by_loc() ..." << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123450, 123455, 123450, 123449 };
@@ -547,7 +547,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesting remove_column()" << std::endl;
+        std::cout << "\nTesting remove_column() ..." << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123450, 123455, 123450, 123449 };
@@ -583,7 +583,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesting get_view_by_idx()/slicing" << std::endl;
+        std::cout << "\nTesting get_view_by_idx()/slicing ..." << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
@@ -621,7 +621,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesting rename_column()" << std::endl;
+        std::cout << "\nTesting rename_column() ..." << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
@@ -649,7 +649,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesting get_col_unique_values()" << std::endl;
+        std::cout << "\nTesting get_col_unique_values() ..." << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
@@ -681,7 +681,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesting remove_data_by_idx()" << std::endl;
+        std::cout << "\nTesting remove_data_by_idx() ..." << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
@@ -708,7 +708,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesting remove_data_by_loc()" << std::endl;
+        std::cout << "\nTesting remove_data_by_loc() ..." << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
@@ -735,7 +735,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesting value_counts()" << std::endl;
+        std::cout << "\nTesting value_counts() ..." << std::endl;
 
         const double                my_nan = sqrt(-1);
         std::vector<unsigned long>  idx =
@@ -765,7 +765,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesting Index Inner Join" << std::endl;
+        std::cout << "\nTesting Index Inner Join ..." << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
@@ -818,7 +818,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesting Index Left Join" << std::endl;
+        std::cout << "\nTesting Index Left Join ..." << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
@@ -871,7 +871,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesting Index Right Join" << std::endl;
+        std::cout << "\nTesting Index Right Join ..." << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
@@ -924,7 +924,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesting Index Left Right Join" << std::endl;
+        std::cout << "\nTesting Index Left Right Join ..." << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
@@ -977,7 +977,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesting Largest/Smallest visitors" << std::endl;
+        std::cout << "\nTesting Largest/Smallest visitors ..." << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
@@ -1040,7 +1040,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesting Shifting Up/Down" << std::endl;
+        std::cout << "\nTesting Shifting Up/Down ..." << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
@@ -1074,7 +1074,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesting Rotating Up/Down" << std::endl;
+        std::cout << "\nTesting Rotating Up/Down ..." << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
@@ -1108,7 +1108,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesting DataFrame with DateTime" << std::endl;
+        std::cout << "\nTesting DataFrame with DateTime ..." << std::endl;
 
         DateTime                    dt(20010102);
         std::vector<DateTime>       idx;
@@ -1140,7 +1140,8 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesting DataFrame friend plus operator" << std::endl;
+        std::cout << "\nTesting DataFrame friend plus operator ..."
+                  << std::endl;
 
         MyDataFrame df1;
         MyDataFrame df2;
@@ -1180,7 +1181,8 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesting DataFrame friend minus operator" << std::endl;
+        std::cout << "\nTesting DataFrame friend minus operator ..."
+                  << std::endl;
 
         MyDataFrame df1;
         MyDataFrame df2;
@@ -1220,7 +1222,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesting DataFrame friend multiplis operator"
+        std::cout << "\nTesting DataFrame friend multiplis operator ..."
                   << std::endl;
 
         std::vector<unsigned long>  idx1 =
@@ -1258,7 +1260,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesting DataFrame friend divides operator"
+        std::cout << "\nTesting DataFrame friend divides operator ..."
                   << std::endl;
 
         std::vector<unsigned long>  idx1 =
@@ -1295,7 +1297,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesting fill_missing(values)" << std::endl;
+        std::cout << "\nTesting fill_missing(values) ..." << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
@@ -1358,7 +1360,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesting fill_missing(fill_forward)" << std::endl;
+        std::cout << "\nTesting fill_missing(fill_forward) ..." << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
@@ -1421,7 +1423,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesting fill_missing(fill_backward)" << std::endl;
+        std::cout << "\nTesting fill_missing(fill_backward) ..." << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
@@ -1478,7 +1480,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesting fill_missing(linear_interpolate)"
+        std::cout << "\nTesting fill_missing(linear_interpolate) ..."
                   << std::endl;
 
         std::vector<unsigned long>  idx =
@@ -1530,7 +1532,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesting drop_missing(all) no drop" << std::endl;
+        std::cout << "\nTesting drop_missing(all) no drop ..." << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
@@ -1584,7 +1586,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesting drop_missing(all) 2 drop" << std::endl;
+        std::cout << "\nTesting drop_missing(all) 2 drop ..." << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
@@ -1645,7 +1647,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesting drop_missing(any)" << std::endl;
+        std::cout << "\nTesting drop_missing(any) ..." << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
@@ -1699,7 +1701,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesting drop_missing(threshold=3)" << std::endl;
+        std::cout << "\nTesting drop_missing(threshold=3) ..." << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
@@ -1753,7 +1755,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\n\nTesting get_row()" << std::endl;
+        std::cout << "\nTesting get_row() ..." << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
@@ -1816,7 +1818,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        // Testing Auto Correlation
+        std::cout << "\nTesting Auto Correlation ..." << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
@@ -1861,7 +1863,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        // Testing Return
+        std::cout << "\nTesting Return ..." << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
@@ -1918,7 +1920,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        // Testing Median
+        std::cout << "\nTesting Median ..." << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
@@ -1974,7 +1976,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        // Testing Tracking Error
+        std::cout << "\nTesting Tracking Error ..." << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
@@ -2044,7 +2046,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        // Testing Beta
+        std::cout << "\nTesting Beta ..." << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
@@ -2132,7 +2134,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        // Testing gen_datetime_index()
+        std::cout << "\nTesting gen_datetime_index() ..." << std::endl;
         // I am commenting some of these out because with timezone spec,
         // it will take too long for the test to run
 
@@ -2254,7 +2256,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        // Testing replace(1)
+        std::cout << "\nTesting replace(1) ..." << std::endl;
 
         std::vector<double> d1 = { 1.0, 10, 8, 18, 19, 16, 21,
                                    17, 20, 3, 2, 11, 7.0, 5,
@@ -2337,7 +2339,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        // Testing replace(2)
+        std::cout << "\nTesting replace(2) ..." << std::endl;
 
         std::vector<double> d1 = { 1.0, 10, 8, 18, 19, 16, 21,
                                    17, 20, 3, 2, 11, 7.0, 5,
@@ -2394,7 +2396,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        // Testing some visitors
+        std::cout << "\nTesting some visitors ..." << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
@@ -2474,7 +2476,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        // Testing Mode
+        std::cout << "\nTesting Mode ..." << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
@@ -2530,7 +2532,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        // Testing get_data_by_sel()
+        std::cout << "\nTesting get_data_by_sel() ..." << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123453, 123454, 123455, 123456 };
@@ -2608,7 +2610,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        // Testing get_view_by_sel()
+        std::cout << "\nTesting get_view_by_sel() ..." << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123453, 123454, 123455, 123456 };
@@ -2703,7 +2705,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        // Testing remove_data_by_sel() and shape()
+        std::cout << "\nTesting remove_data_by_sel() ..." << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123453, 123454, 123455, 123456 };
@@ -2788,7 +2790,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        // Testing shuffle()
+        std::cout << "\nTesting shuffle() ..." << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123453, 123454, 123455, 123456 };
@@ -2822,7 +2824,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        // Testing SimpleRollAdopter{ }
+        std::cout << "\nTesting SimpleRollAdopter{ } ..." << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
@@ -2901,7 +2903,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        // Testing get_data_by_rand()
+        std::cout << "\nTesting get_data_by_rand() ..." << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
@@ -2941,7 +2943,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        // Testing get_view_by_rand()
+        std::cout << "\nTesting get_view_by_rand() ..." << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
@@ -2969,9 +2971,6 @@ int main(int argc, char *argv[]) {
         auto    result2 =
             df.get_view_by_rand<double, std::string>
             (random_policy::frac_rows_with_seed, 0.8, 23);
-
-        std::cout << "View after random:" << std::endl;
-        result2.write<std::ostream, int, double, std::string>(std::cout);
 
         assert(result2.get_index().size() == 6);
         assert(result2.get_column<double>("col_1").size() == 6);

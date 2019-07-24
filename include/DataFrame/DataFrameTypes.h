@@ -102,6 +102,7 @@ enum class drop_policy : unsigned char  {
 
 enum class io_format : unsigned char  {
     csv = 1,
+    json = 2,
 };
 
 // ----------------------------------------------------------------------------

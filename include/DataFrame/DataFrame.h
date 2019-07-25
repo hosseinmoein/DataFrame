@@ -1312,11 +1312,11 @@ private:  // Tuple stuff
 // ----------------------------------------------------------------------------
 
 #  ifndef HMDF_DO_NOT_INCLUDE_TCC_FILES
-#    include <DataFrame/Internals/DataFrame_misc.tcc>
 #    include <DataFrame/Internals/DataFrame_set.tcc>
 #    include <DataFrame/Internals/DataFrame_get.tcc>
 #    include <DataFrame/Internals/DataFrame_read.tcc>
 #    include <DataFrame/Internals/DataFrame_write.tcc>
+#    include <DataFrame/Internals/DataFrame_misc.tcc>
 #    include <DataFrame/Internals/DataFrame_opt.tcc>
 #    include <DataFrame/Internals/DataFrame_join.tcc>
 #    include <DataFrame/Internals/DataFrame_shift.tcc>

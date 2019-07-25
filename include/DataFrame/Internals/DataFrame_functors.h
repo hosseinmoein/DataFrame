@@ -158,13 +158,34 @@ struct bucket_functor_ : DataVec::template visitor_base<Ts ...>  {
 // ----------------------------------------------------------------------------
 
 template<typename ... Ts>
-struct print_functor_ : DataVec::template visitor_base<Ts ...>  {
+struct print_csv_functor_ : DataVec::template visitor_base<Ts ...>  {
 
-    inline print_functor_ (const char *n, bool vo, std::ostream &o)
+    inline print_csv_functor_ (const char *n, bool vo, std::ostream &o)
         : name(n), values_only(vo), os(o)  {   }
 
     const char      *name;
     const bool      values_only;
+    std::ostream    &os;
+
+    template<typename T>
+    void operator() (const T &vec);
+};
+
+
+// ----------------------------------------------------------------------------
+
+template<typename ... Ts>
+struct print_json_functor_ : DataVec::template visitor_base<Ts ...>  {
+
+    inline print_json_functor_ (const char *n,
+                                bool vo,
+                                bool npc,
+                                std::ostream &o)
+        : name(n), values_only(vo), need_pre_comma(npc), os(o)  {   }
+
+    const char      *name;
+    const bool      values_only;
+    const bool      need_pre_comma;
     std::ostream    &os;
 
     template<typename T>

@@ -16,10 +16,14 @@
 namespace hmdf
 {
 
-#if defined(WIN32) || defined (_WIN32)
-#undef min
-#undef max
-#endif // defined(WIN32) || defined (_WIN32)
+#if defined(WIN32) || defined(_WIN32)
+#  ifdef min
+#    undef min
+#  endif // min
+#  ifdef max
+#    undef max
+#  endif // max
+#endif // WIN32 || _WIN32
 
 // ----------------------------------------------------------------------------
 

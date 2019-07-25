@@ -14,13 +14,6 @@
 namespace hmdf
 {
 
-#if defined(WIN32) || defined (_WIN32)
-#undef min
-#undef max
-#endif // defined(WIN32) || defined (_WIN32)
-
-// ----------------------------------------------------------------------------
-
 template<typename I, typename H>
 template<typename ... Ts>
 template<typename T>

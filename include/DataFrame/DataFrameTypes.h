@@ -16,6 +16,13 @@
 namespace hmdf
 {
 
+#if defined(WIN32) || defined (_WIN32)
+#undef min
+#undef max
+#endif // defined(WIN32) || defined (_WIN32)
+
+// ----------------------------------------------------------------------------
+
 struct DataFrameError : public std::runtime_error  {
 
     DataFrameError (const char *desc) : std::runtime_error (desc)  {   }

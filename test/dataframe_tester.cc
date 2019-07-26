@@ -2987,6 +2987,122 @@ int main(int argc, char *argv[]) {
                df.get_column<std::string>("col_str")[9]);
     }
 
+    {
+        std::cout << "\nTesting Diff ..." << std::endl;
+        double my_nan = std::numeric_limits<double>::quiet_NaN();
+        double epsilon = 0.0000001;
+        std::vector<unsigned long>  idx =
+            { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+              123457, 123458, 123459, 123460, 123461, 123462, 123466,
+              123467, 123468, 123469, 123470, 123471, 123472, 123473 };
+        std::vector<double>         d1 =
+            { my_nan, 16, 15, 18, my_nan, 16, 21,
+              0.34, 1.56, 0.34, 2.3, my_nan, 19.0, 0.387,
+              0.123, 1.06, my_nan, 2.03, 0.4, 1.0, my_nan };
+        std::vector<double>         d2 =
+            { 1.23, 1.22, 1.21, 1.20, 1.19, 1.185, 1.181,
+              1.19, 1.195, 1.189, 1.185, 1.18, 1.181, 1.186,
+              1.189, 1.19, 1.194, 1.198, 1.199, 1.197, 1.193 };
+        std::vector<int>            i1 = { 22, 23, 24, 25, 99 };
+        MyDataFrame                 df;
+
+        df.load_data(std::move(idx),
+                     std::make_pair("col_1", d1),
+                     std::make_pair("col_2", d2),
+                     std::make_pair("col_3", i1));
+
+        DiffVisitor<double>   diff_visit(1, false);
+        const auto            &result =
+            df.single_act_visit<double>("col_1", diff_visit).get_result();
+
+        assert(result.size() == 21);
+        assert(std::isnan(result[0]));
+        assert(std::isnan(result[1]));
+        assert(result[2] == -1.0);
+        assert(result[3] == 3);
+        assert(std::isnan(result[4]));
+        assert(std::isnan(result[17]));
+        assert(result[18] == -1.63);
+        assert(result[19] == 0.6);
+        assert(std::isnan(result[20]));
+
+        DiffVisitor<double>   diff_visit2(-1, false);
+        const auto            &result2 =
+            df.single_act_visit<double>("col_1", diff_visit2).get_result();
+
+        assert(result2.size() == 21);
+        assert(std::isnan(result2[0]));
+        assert(result2[1] == 1.0);
+        assert(result2[2] == -3);
+        assert(std::isnan(result2[4]));
+        assert(std::isnan(result2[16]));
+        assert(result2[17] == 1.63);
+        assert(result2[18] == -0.6);
+        assert(std::isnan(result2[19]));
+        assert(std::isnan(result2[20]));
+
+        DiffVisitor<double>   diff_visit3(3, false);
+        const auto            &result3 =
+            df.single_act_visit<double>("col_1", diff_visit3).get_result();
+
+        assert(result3.size() == 21);
+        assert(std::isnan(result3[0]));
+        assert(std::isnan(result3[1]));
+        assert(std::isnan(result3[2]));
+        assert(std::isnan(result3[4]));
+        assert(result3[5] == 1.0);
+        assert(result3[6] == 3.0);
+        assert(std::isnan(result3[7]));
+        assert(std::isnan(result3[16]));
+        assert(fabs(result3[17] - 1.907) < epsilon);
+        assert(result3[18] == -0.66);
+        assert(std::isnan(result3[19]));
+        assert(std::isnan(result3[20]));
+
+        DiffVisitor<double>   diff_visit4(-3, false);
+        const auto              &result4 =
+            df.single_act_visit<double>("col_1", diff_visit4).get_result();
+
+        assert(result4.size() == 21);
+        assert(std::isnan(result4[0]));
+        assert(std::isnan(result4[1]));
+        assert(result4[2] == -1.0);
+        assert(result4[3] == -3.0);
+        assert(std::isnan(result4[4]));
+        assert(std::isnan(result4[13]));
+        assert(fabs(result4[14] - -1.907) < epsilon);
+        assert(result4[15] == 0.66);
+        assert(std::isnan(result4[16]));
+        assert(std::isnan(result4[17]));
+        assert(std::isnan(result4[18]));
+        assert(std::isnan(result4[19]));
+        assert(std::isnan(result4[20]));
+
+        DiffVisitor<double>   diff_visit5(3, true);
+        const auto            &result5 =
+            df.single_act_visit<double>("col_1", diff_visit5).get_result();
+
+        assert(result5.size() == 10);
+        assert(result5[0] == 1.0);
+        assert(result5[1] == 3.0);
+        assert(result5[2] == -14.44);
+        assert(result5[7] == -17.94);
+        assert(fabs(result5[8] - 1.907) < epsilon);
+        assert(result5[9] == -0.66);
+
+        DiffVisitor<double>   diff_visit6(-3, true);
+        const auto            &result6 =
+            df.single_act_visit<double>("col_1", diff_visit6).get_result();
+
+        assert(result6.size() == 10);
+        assert(result6[0] == -1.0);
+        assert(result6[1] == -3.0);
+        assert(result6[2] == 14.44);
+        assert(result6[7] == 17.94);
+        assert(fabs(result6[8] - -1.907) < epsilon);
+        assert(result6[9] == 0.66);
+    }
+
     return (0);
 }
 

@@ -1327,6 +1327,62 @@ private:
     result_type items_ { };
 };
 
+
+// ----------------------------------------------------------------------------
+
+template<typename T,
+         typename I = unsigned long,
+         typename =
+             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+struct DiffVisitor  {
+
+    using value_type = T;
+    using index_type = I;
+    using size_type = std::size_t;
+    using result_type = std::vector<value_type>;
+
+    explicit DiffVisitor(int periods = 1, bool skipnan = true)
+        : periods_(periods), skip_nan_(skipnan) { }
+    inline void operator() (const std::vector<index_type> &idx,
+                            const std::vector<value_type> &column)  {
+        const size_type col_len = column.size();
+
+        result_.reserve(col_len);
+
+        if (periods_ >= 0)  {
+            if (!skip_nan_)  {
+                for (size_t i_ = 0; i_ < periods_ && i_ < col_len; ++i_) {
+                    result_.push_back(std::numeric_limits<value_type>::quiet_NaN());
+                }
+            }
+            for (auto i = column.begin() + periods_, j = column.begin(); i < column.end(); ++i, ++j) {
+                if (skip_nan_ && (is_nan__(*i) || is_nan__(*j)))  continue;
+                result_.push_back(*i - *j);
+            }
+        } else {
+            for (auto i = column.rbegin() + abs(periods_), j = column.rbegin(); i < column.rend(); ++i, ++j) {
+                if (skip_nan_ && (is_nan__(*i) || is_nan__(*j)))  continue;
+                result_.insert(result_.begin(), (*i - *j));
+            }
+
+            if (skip_nan_ )  return;
+            for (size_t i_ = 0; i_ < abs(periods_) && i_ < col_len; ++i_) {
+                result_.push_back(std::numeric_limits<value_type>::quiet_NaN());
+            }
+        }
+    }
+    inline void pre ()  { result_.clear(); }
+    inline void post ()  {   }
+    inline const result_type &get_result () const  { return (result_); }
+
+private:
+
+    result_type     result_ { };
+    const int       periods_ { };
+    const bool      skip_nan_ { };
+};
+
+
 // ----------------------------------------------------------------------------
 
 struct GroupbySum

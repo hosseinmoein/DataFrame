@@ -11,6 +11,7 @@
 
 #include <array>
 #include <cstring>
+#include <fstream>
 #include <functional>
 #include <future>
 #include <map>
@@ -1205,6 +1206,8 @@ protected:
     static inline constexpr bool _is_nan(const T &val);
 
 private:  // Static helper functions
+
+    void read_json_(std::ifstream &file);
 
     template<typename T>
     static void

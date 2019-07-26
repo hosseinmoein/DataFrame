@@ -2990,6 +2990,7 @@ int main(int argc, char *argv[]) {
     {
         std::cout << "\nTesting Diff ..." << std::endl;
         double my_nan = std::numeric_limits<double>::quiet_NaN();
+        double epsilon = 0.0000001;
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
               123457, 123458, 123459, 123460, 123461, 123462, 123466,
@@ -3053,9 +3054,7 @@ int main(int argc, char *argv[]) {
         assert(result3[6] == 3.0);
         assert(std::isnan(result3[7]));
         assert(std::isnan(result3[16]));
-        // FIXME: Why does it fail to assert result3[17]? But the output is correct.
-        // std::cout << "result3[17] == " << result3[17] << "\n";
-        // assert(result3[17] == 1.907);
+        assert(fabs(result3[17] - 1.907) < epsilon);
         assert(result3[18] == -0.66);
         assert(std::isnan(result3[19]));
         assert(std::isnan(result3[20]));
@@ -3071,9 +3070,7 @@ int main(int argc, char *argv[]) {
         assert(result4[3] == -3.0);
         assert(std::isnan(result4[4]));
         assert(std::isnan(result4[13]));
-        // FIXME: Why does it fail to assert result4[14]? But the output is correct.
-        // std::cout << "result4[14] == " << result4[14] << "\n";
-        // assert(result4[14] == -1.907);
+        assert(fabs(result4[14] - -1.907) < epsilon);
         assert(result4[15] == 0.66);
         assert(std::isnan(result4[16]));
         assert(std::isnan(result4[17]));
@@ -3090,9 +3087,7 @@ int main(int argc, char *argv[]) {
         assert(result5[1] == 3.0);
         assert(result5[2] == -14.44);
         assert(result5[7] == -17.94);
-        // FIXME: Why does it fail to assert result5[8]? But the output is correct.
-        // std::cout << "result5[8] == " << result5[8] << "\n";
-        // assert(result5[8] == 1.907);
+        assert(fabs(result5[8] - 1.907) < epsilon);
         assert(result5[9] == -0.66);
 
         DiffVisitor<double>   diff_visit6(-3, true);
@@ -3104,9 +3099,7 @@ int main(int argc, char *argv[]) {
         assert(result6[1] == -3.0);
         assert(result6[2] == 14.44);
         assert(result6[7] == 17.94);
-        // FIXME: Why does it fail to assert result6[8]? But the output is correct.
-        // std::cout << "result6[8] == " << result6[8] << "\n";
-        // assert(result6[8] == -1.907);
+        assert(fabs(result6[8] - -1.907) < epsilon);
         assert(result6[9] == 0.66);
     }
 

@@ -46,7 +46,7 @@ int rc = df.load_data(std::move(ulgvec),  // Index column
 
 // This is another way of loading a DataFrame
 MyDataFrame       df2;
-std::future<bool> fut = df2.read_async("sample_data.csv");
+std::future<bool> fut = df2.read_async("sample_data.csv", io_format::csv);
 
 fut.get();
         

@@ -2987,7 +2987,7 @@ int main(int argc, char *argv[]) {
                df.get_column<std::string>("col_str")[9]);
     }
 
-	{
+    {
         std::cout << "\nTesting write(json) ..." << std::endl;
 
         std::vector<unsigned long>  idx =
@@ -3014,10 +3014,11 @@ int main(int argc, char *argv[]) {
         df.write<std::ostream, int, double, std::string>(std::cout,
                                                          false,
                                                          io_format::json);
-	}
+    }
 
     {
         std::cout << "\nTesting Diff ..." << std::endl;
+
         double my_nan = std::numeric_limits<double>::quiet_NaN();
         double epsilon = 0.0000001;
         std::vector<unsigned long>  idx =
@@ -3130,6 +3131,16 @@ int main(int argc, char *argv[]) {
         assert(result6[7] == 17.94);
         assert(fabs(result6[8] - -1.907) < epsilon);
         assert(result6[9] == 0.66);
+    }
+
+    {
+        std::cout << "\nTesting reading/writing JSON ..." << std::endl;
+
+        MyDataFrame df;
+
+        df.read("sample_data.json", io_format::json);
+        std::cout << "Result from JSON:" << std::endl;
+        df.write<std::ostream, double, std::string>(std::cout);
     }
 
     return (0);

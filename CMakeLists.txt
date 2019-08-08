@@ -312,6 +312,8 @@ message("-- Copying files for testing")
 # Ctest require this files in the build dir, on all platforms
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data.csv
          DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data.json
+         DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data_dt_index.csv
          DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data_string_index.csv
@@ -321,6 +323,10 @@ if (MSVC)
   file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data.csv
            DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Debug)
   file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data.csv
+           DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Release)
+  file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data.json
+           DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Debug)
+  file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data.json
            DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Release)
   file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data_dt_index.csv
            DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Debug)

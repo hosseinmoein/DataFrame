@@ -3139,8 +3139,25 @@ int main(int argc, char *argv[]) {
         MyDataFrame df;
 
         df.read("sample_data.json", io_format::json);
-        std::cout << "Result from JSON:" << std::endl;
-        df.write<std::ostream, double, std::string>(std::cout);
+        assert(df.get_index().size() == 12);
+        assert(df.get_index()[0] == 123450);
+        assert(df.get_index()[4] == 123454);
+        assert(df.get_index()[11] == 555555);
+        assert(df.get_column<double>("col_4").size() == 6);
+        assert(df.get_column<double>("col_4")[0] == 22.0);
+        assert(df.get_column<double>("col_4")[4] == 26.0);
+        assert(df.get_column<double>("col_4")[5] == 27.0);
+        assert(df.get_column<std::string>("col_str").size() == 12);
+        assert(df.get_column<std::string>("col_str")[0] == "11");
+        assert(df.get_column<std::string>("col_str")[8] == "uu");
+        assert(df.get_column<std::string>("col_str")[11] == "This is a test");
+        assert(df.get_column<double>("col_1").size() == 12);
+        assert(df.get_column<double>("col_2").size() == 12);
+        assert(df.get_column<double>("col_2")[6] == 14.0);
+        assert(df.get_column<double>("col_2")[11] == 777.78);
+        assert(df.get_column<double>("col_3").size() == 12);
+        assert(df.get_column<double>("col_3")[3] == 18.0);
+        assert(df.get_column<double>("col_3")[11] == 555.543);
     }
 
     return (0);

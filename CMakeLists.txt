@@ -329,22 +329,20 @@ add_custom_command(
     ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data_string_index.csv
     ${CMAKE_CURRENT_BINARY_DIR}/sample_data_string_index.csv)
 
-if (MSVC)
-  file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data.csv
-            DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Debug)
-  file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data.csv
-            DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Release)
-  file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data.json
-            DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Debug)
-  file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data.json
-            DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Release)
-  file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data_dt_index.csv
-            DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Debug)
-  file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data_dt_index.csv
-            DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Release)
-  file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data_string_index.csv
-            DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Debug)
-  file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data_string_index.csv
-            DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Release)
-endif(MSVC)
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data.csv
+          DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Debug)
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data.csv
+          DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Release)
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data.json
+          DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Debug)
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data.json
+          DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Release)
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data_dt_index.csv
+          DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Debug)
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data_dt_index.csv
+          DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Release)
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data_string_index.csv
+          DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Debug)
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data_string_index.csv
+          DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Release)
 message("-- Copying files for testing - done")

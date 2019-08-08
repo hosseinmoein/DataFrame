@@ -313,21 +313,21 @@ message("-- Copying files for testing")
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
                    COMMAND ${CMAKE_COMMAND} -E copy
                    ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data.csv
-                   ${CMAKE_CURRENT_BINARY_DIR}/.)
+                   ${CMAKE_CURRENT_BINARY_DIR}/sample_data.csv)
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
                    COMMAND ${CMAKE_COMMAND} -E copy
                    ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data.json
-                   ${CMAKE_CURRENT_BINARY_DIR}/.)
+                   ${CMAKE_CURRENT_BINARY_DIR}/sample_data.json)
 add_custom_command(
     TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
     ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data_dt_index.csv
-    ${CMAKE_CURRENT_BINARY_DIR}/.)
+    ${CMAKE_CURRENT_BINARY_DIR}/sample_data_dt_index.csv)
 add_custom_command(
     TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
     ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data_string_index.csv
-    ${CMAKE_CURRENT_BINARY_DIR}/.)
+    ${CMAKE_CURRENT_BINARY_DIR}/sample_data_string_index.csv)
 
 if (MSVC)
   file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data.csv

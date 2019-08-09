@@ -343,11 +343,16 @@ int main(int argc, char *argv[]) {
         std::cout << "\nTesting read() ..." << std::endl;
 
         MyDataFrame         df_read;
-        // std::future<bool>   fut2 =
-        //     df_read.read_async("../test/sample_data.csv");
-        std::future<bool>   fut2 = df_read.read_async("sample_data.csv");
+        try  {
+            // std::future<bool>   fut2 =
+            //     df_read.read_async("../test/sample_data.csv");
+            std::future<bool>   fut2 = df_read.read_async("sample_data.csv");
 
-        fut2.get();
+            fut2.get();
+        }
+        catch (const DataFrameError &ex)  {
+            std::cout << ex.what() << std::endl;
+        }
         df_read.write<std::ostream,
                       int,
                       unsigned long,
@@ -357,7 +362,12 @@ int main(int argc, char *argv[]) {
 
         StdDataFrame<std::string>   df_read_str;
 
-        df_read_str.read_async("sample_data_string_index.csv");
+        try  {
+            df_read_str.read("sample_data_string_index.csv");
+        }
+        catch (const DataFrameError &ex)  {
+            std::cout << ex.what() << std::endl;
+        }
         df_read_str.write<std::ostream,
                           int,
                           unsigned long,
@@ -367,7 +377,12 @@ int main(int argc, char *argv[]) {
 
         StdDataFrame<DateTime>  df_read_dt;
 
-        df_read_dt.read_async("sample_data_dt_index.csv");
+        try  {
+            df_read_dt.read("sample_data_dt_index.csv");
+        }
+        catch (const DataFrameError &ex)  {
+            std::cout << ex.what() << std::endl;
+        }
         df_read_dt.write<std::ostream,
                          int,
                          unsigned long,
@@ -1146,8 +1161,13 @@ int main(int argc, char *argv[]) {
         MyDataFrame df1;
         MyDataFrame df2;
 
-        df1.read("sample_data.csv");
-        df2.read("sample_data.csv");
+        try  {
+            df1.read("sample_data.csv");
+            df2.read("sample_data.csv");
+        }
+        catch (const DataFrameError &ex)  {
+            std::cout << ex.what() << std::endl;
+        }
 
         MyDataFrame result =
             df_plus<MyDataFrame,
@@ -1187,8 +1207,13 @@ int main(int argc, char *argv[]) {
         MyDataFrame df1;
         MyDataFrame df2;
 
-        df1.read("sample_data.csv");
-        df2.read("sample_data.csv");
+        try  {
+            df1.read("sample_data.csv");
+            df2.read("sample_data.csv");
+        }
+        catch (const DataFrameError &ex)  {
+            std::cout << ex.what() << std::endl;
+        }
 
         // Notice I am omitting std::string here, since minus is not defined for
         // std::string, and hence it won't compile
@@ -3138,26 +3163,32 @@ int main(int argc, char *argv[]) {
 
         MyDataFrame df;
 
-        df.read("sample_data.json", io_format::json);
-        assert(df.get_index().size() == 12);
-        assert(df.get_index()[0] == 123450);
-        assert(df.get_index()[4] == 123454);
-        assert(df.get_index()[11] == 555555);
-        assert(df.get_column<double>("col_4").size() == 6);
-        assert(df.get_column<double>("col_4")[0] == 22.0);
-        assert(df.get_column<double>("col_4")[4] == 26.0);
-        assert(df.get_column<double>("col_4")[5] == 27.0);
-        assert(df.get_column<std::string>("col_str").size() == 12);
-        assert(df.get_column<std::string>("col_str")[0] == "11");
-        assert(df.get_column<std::string>("col_str")[8] == "uu");
-        assert(df.get_column<std::string>("col_str")[11] == "This is a test");
-        assert(df.get_column<double>("col_1").size() == 12);
-        assert(df.get_column<double>("col_2").size() == 12);
-        assert(df.get_column<double>("col_2")[6] == 14.0);
-        assert(df.get_column<double>("col_2")[11] == 777.78);
-        assert(df.get_column<double>("col_3").size() == 12);
-        assert(df.get_column<double>("col_3")[3] == 18.0);
-        assert(df.get_column<double>("col_3")[11] == 555.543);
+        try  {
+            df.read("sample_data.json", io_format::json);
+            assert(df.get_index().size() == 12);
+            assert(df.get_index()[0] == 123450);
+            assert(df.get_index()[4] == 123454);
+            assert(df.get_index()[11] == 555555);
+            assert(df.get_column<double>("col_4").size() == 6);
+            assert(df.get_column<double>("col_4")[0] == 22.0);
+            assert(df.get_column<double>("col_4")[4] == 26.0);
+            assert(df.get_column<double>("col_4")[5] == 27.0);
+            assert(df.get_column<std::string>("col_str").size() == 12);
+            assert(df.get_column<std::string>("col_str")[0] == "11");
+            assert(df.get_column<std::string>("col_str")[8] == "uu");
+            assert(df.get_column<std::string>("col_str")[11] ==
+                       "This is a test");
+            assert(df.get_column<double>("col_1").size() == 12);
+            assert(df.get_column<double>("col_2").size() == 12);
+            assert(df.get_column<double>("col_2")[6] == 14.0);
+            assert(df.get_column<double>("col_2")[11] == 777.78);
+            assert(df.get_column<double>("col_3").size() == 12);
+            assert(df.get_column<double>("col_3")[3] == 18.0);
+            assert(df.get_column<double>("col_3")[11] == 555.543);
+        }
+        catch (const DataFrameError &ex)  {
+            std::cout << ex.what() << std::endl;
+        }
     }
 
     return (0);

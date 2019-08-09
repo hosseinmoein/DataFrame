@@ -4,6 +4,7 @@
 // Distributed under the BSD Software License (see file License)
 
 #include <DataFrame/DataFrame.h>
+#include <DataFrame/Utils/FixedSizeString.h>
 
 #include <cstdlib>
 #include <functional>
@@ -605,6 +606,12 @@ bool DataFrame<I, H>::read (const char *file_name, io_format iof)  {
     std::ifstream   file;
 
     file.open(file_name, std::ios::in);  // Open for reading
+    if (file.fail())  {
+        String1K    err;
+
+        err.printf("read(): ERROR: Unable to open file '%s'", file_name);
+        throw DataFrameError(err.c_str());
+    }
 
     if (iof == io_format::csv)  {
         char    col_name[256];

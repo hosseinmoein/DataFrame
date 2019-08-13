@@ -40,6 +40,17 @@ DataFrame<I, H>::consistent_functor_<Ts ...>::operator() (T &vec) const  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
+template<typename ... Ts>
+template<typename T>
+void
+DataFrame<I, H>::shrink_to_fit_functor_<Ts ...>::operator() (T &vec) const  {
+
+    vec.shrink_to_fit();
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
 template<typename T, typename ... Ts>
 template<typename T2>
 void

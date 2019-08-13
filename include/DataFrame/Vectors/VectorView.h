@@ -58,6 +58,10 @@ public:
     inline reference back() noexcept  { return (*(end_ptr_ - 1)); }
     inline const_reference back() const noexcept  { return (*(end_ptr_ - 1)); }
 
+    // This is to match the std::vector interface, so things will compile
+    //
+    inline void shrink_to_fit()  {  }
+
     inline void swap (VectorView &rhs) noexcept  {
 
         std::swap (begin_ptr_, rhs.begin_ptr_);
@@ -477,7 +481,7 @@ public:
     end () const noexcept  { return (const_iterator (end_ptr_)); }
 
     inline const_reverse_iterator
-	rbegin () const noexcept  {
+    rbegin () const noexcept  {
 
         return (const_reverse_iterator (end_ptr_ - 1));
     }

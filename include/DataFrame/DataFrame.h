@@ -86,12 +86,14 @@ public:  // Load/append/remove interfaces
     // The actual data vector is not deleted, but the column is dropped from
     // DataFrame
     //
-    void remove_column(const char *name);
+    void
+    remove_column(const char *name);
 
     // It renames column named from to to. If column from does not exists,
     // it throws an exception
     //
-    void rename_column(const char *from, const char *to);
+    void
+    rename_column(const char *from, const char *to);
 
     // This is the most generalized load function. It creates and loads an
     // index and a variable number of columns. The index vector and all
@@ -117,56 +119,8 @@ public:  // Load/append/remove interfaces
 
     // It moves the idx vector into the index column.
     //
-    size_type load_index(IndexVecType &&idx);
-
-    // This static method generates a date/time-based index vector that could
-    // be fed directly to one of the load methods. Depending on the specified
-    // frequency, it generates specific timestamps (see below).
-    // It returns a vector of IndexType timestamps.
-    // Currently IndexType could be any built-in numeric type or DateTime
-    //
-    // start_datetime, end_datetime: They are the start/end date/times of
-    //     requested timestamps.
-    //     They must be in the following format:
-    //     MM/DD/YYYY [HH[:MM[:SS[.MMM]]]]
-    // t_freq: Specifies the timestamp frequency. Depending on the frequency,
-    //         and IndexType type specific timestamps are generated as follows:
-    //    - IndexType type of DateTime always generates timestamps of DateTime.
-    //    - Annual, monthly, weekly, and daily frequencies generates YYYYMMDD
-    //      timestamps.
-    //    - Hourly, minutely, and secondly frequencies generates epoch
-    //      timestamps (64 bit).
-    //    - Millisecondly frequency generates nano-second since epoch
-    //      timestamps (128 bit).
-    // increment: Increment in the units of the frequency
-    // tz: Time-zone of generated timestamps
-    //
-    // NOTE: It is the responsibility of the programmer to make sure
-    //       IndexType type is big enough to contain the frequency.
-    //
-    static std::vector<IndexType>
-    gen_datetime_index(const char *start_datetime,
-                       const char *end_datetime,
-                       time_frequency t_freq,
-                       long increment = 1,
-                       DT_TIME_ZONE tz = DT_TIME_ZONE::LOCAL);
-
-    // This static method generates a vector of sequential values of
-    // IndexType that could be fed directly to one of the load methods.
-    // The values are incremented by "increment".
-    // The index type must be incrementable.
-    // If by incrementing "start_value" by increment you would never reach
-    // "end_value", the behavior will be undefined.
-    // It returns a vector of IndexType values.
-    //
-    // start_value, end_value: Starting and ending values of IndexType.
-    //                         Start value is included. End value is excluded.
-    // increment: Increment by value
-    //
-    static std::vector<IndexType>
-    gen_sequence_index(const IndexType &start_value,
-                       const IndexType &end_value,
-                       long increment = 1);
+    size_type
+    load_index(IndexVecType &&idx);
 
     // It copies the data from iterators begin to end to the named column.
     // If column does not exist, it will be created. If the column exist,
@@ -208,7 +162,8 @@ public:  // Load/append/remove interfaces
 
     // It appends val to the end of the index column.
     //
-    size_type append_index(const IndexType &val);
+    size_type
+    append_index(const IndexType &val);
 
     // It appends val to the end of the named data column.
     // If data column doesn't exist, it throws an exception.
@@ -343,7 +298,7 @@ public:  // Load/append/remove interfaces
                        const char *name3,
                        F &sel_functor);
 
-public:  // Other public interfaces
+public:  // Data manipulation
 
     // It randomly shuffles the named column(s) non-deterministically.
     //
@@ -466,18 +421,6 @@ public:  // Other public interfaces
     replace_index(const std::array<IndexType, N> old_values,
                   const std::array<IndexType, N> new_values,
                   int limit = -1);
-
-    // Make all data columns the same length as the index.
-    // If any data column is shorter than the index column, it will be padded
-    // by nan.
-    // This is also called by sort(), before sorting
-    //
-    // Ts: List all the types of all data columns.
-    //     A type should be specified in the list only once.
-    //
-    template<typename ... Ts>
-    void
-    make_consistent();
 
     // Sort the DataFrame by the named column. By default, it sorts
     // by index (i.e. by_name == nullptr).
@@ -678,99 +621,7 @@ public:  // Other public interfaces
     StdDataFrame<IndexType>
     rotate(size_type periods, shift_policy sp) const;
 
-    // It outputs the content of DataFrame into the stream o.
-    // Currently two formats (i.e. csv, json) are supported specified by
-    // the iof parameter.
-    // The csv file format must be:
-    //     INDEX:<Number data points>:<values>
-    //     <Col1>:<Number data points>:<Col1 type>:<values>
-    //     <Col2>:<Number of data points>:<Col2 type>:<values>
-    //     .
-    //     .
-    //     .
-    // All empty lines or lines starting with # will be skipped.
-    //
-    // The JSON file format looks like this:
-    //     {
-    //     "INDEX":{"N":3,"T":"ulong","D":[123450,123451,123452]},
-    //     "col_3":{"N":3,"T":"double","D":[15.2,16.34,17.764]},
-    //     "col_4":{"N":3,"T":"int","D":[22,23,24]},
-    //     "col_str":{"N":3,"T":"string","D":["11","22","33"]},
-    //     "col_2":{"N":3,"T":"double","D":[8,9.001,10]},
-    //     "col_1":{"N":3,"T":"double","D":[1,2,3.456]}
-    //     }
-    // Please note DataFrame json does not follow json spec 100%. In json,
-    // there is not particular order in dictionary fields. But in DataFrame
-    // json:
-    // 1) Column “INDEX” must be the first column
-    // 2) Fields in column dictionaries must be in N, T, D order
-    //
-    // S: Output stream type
-    // Ts: List all the types of all data columns.
-    //     A type should be specified in the list only once.
-    // o: Reference to an streamable object (e.g. cout)
-    // values_only: If true, the name and type of each column is not written
-    // iof: Specifies the I/O format. The default is CSV
-    //
-    template<typename S, typename ... Ts>
-    bool
-    write(S &o,
-          bool values_only = false,
-          io_format iof = io_format::csv) const;
-
-    // Same as write() above, but executed asynchronously
-    //
-    template<typename S, typename ... Ts>
-    std::future<bool>
-    write_async(S &o,
-                bool values_only = false,
-                io_format iof = io_format::csv) const;
-
-    // It inputs the contents of a text file into itself (i.e. DataFrame).
-    // Currently two formats (i.e. csv, json) are supported specified by
-    // the iof parameter.
-    // The csv file format must be:
-    //     INDEX:<Number data points>:<values>
-    //     <Col1>:<Number data points>:<Col1 type>:<values>
-    //     <Col2>:<Number of data points>:<Col2 type>:<values>
-    //     .
-    //     .
-    //     .
-    // All empty lines or lines starting with # will be skipped.
-    //
-    // The JSON file format looks like this:
-    //     {
-    //     "INDEX":{"N":3,"T":"ulong","D":[123450,123451,123452]},
-    //     "col_3":{"N":3,"T":"double","D":[15.2,16.34,17.764]},
-    //     "col_4":{"N":3,"T":"int","D":[22,23,24]},
-    //     "col_str":{"N":3,"T":"string","D":["11","22","33"]},
-    //     "col_2":{"N":3,"T":"double","D":[8,9.001,10]},
-    //     "col_1":{"N":3,"T":"double","D":[1,2,3.456]}
-    //     }
-    // Please note DataFrame json does not follow json spec 100%. In json,
-    // there is not particular order in dictionary fields. But in DataFrame
-    // json:
-    // 1) Column “INDEX” must be the first column
-    // 2) Fields in column dictionaries must be in N, T, D order
-    //
-    // file_name: Complete path to the file
-    // iof: Specifies the I/O format. The default is CSV
-    //
-    bool read(const char *file_name, io_format iof = io_format::csv);
-
-    // Same as read() above, but executed asynchronously
-    //
-    std::future<bool>
-    read_async(const char *file_name, io_format iof = io_format::csv);
-
-public: // Read/access interfaces
-
-    // It returns a pair containing number of rows and columns.
-    // Note: Number of rows is the number of index rows. Not every column
-    //       has the same number of rows, necessarily. But each column has,
-    //       at most, this number of rows.
-    //
-    std::pair<size_type, size_type> shape();
+public: // Read/access and slicing interfaces
 
     // It returns a reference to the container of named data column
     // The return type depends on if we are in standard or view mode
@@ -1060,6 +911,8 @@ public: // Read/access interfaces
     //
     inline IndexVecType &get_index()  { return (indices_); }
 
+public:  // Visitors
+
     // This is the most generalized visit function. It visits multiple
     // columns with the corresponding function objects sequentially.
     // Each function object is passed every single value of the given
@@ -1230,21 +1083,194 @@ public:  // Operators
     modify_by_idx(DataFrame &rhs,
                   sort_state already_sorted = sort_state::not_sorted);
 
+public:  // Utilities and miscellaneous
+
+    // Make all data columns the same length as the index.
+    // If any data column is shorter than the index column, it will be padded
+    // by nan.
+    // This is also called by sort(), before sorting
+    //
+    // Ts: List all the types of all data columns.
+    //     A type should be specified in the list only once.
+    //
+    template<typename ... Ts>
+    void
+    make_consistent();
+
+    // It returns a pair containing number of rows and columns.
+    // Note: Number of rows is the number of index rows. Not every column
+    //       has the same number of rows, necessarily. But each column has,
+    //       at most, this number of rows.
+    //
+    std::pair<size_type, size_type>
+    shape();
+
+    // This will reclaim unused/reserve memory from all columns including the
+    // index.
+    // If your DataFrame has grown organically from different data sources,
+    // shrink_to_fit() could potentially reduce your memory footprint
+    // significantly.
+    // After this call, any iterator or reference you hold to any data point
+    // in the DataFrame could be invalidated.
+    //
+    template<typename ... Ts>
+    void
+    shrink_to_fit();
+
+    // This static method generates a date/time-based index vector that could
+    // be fed directly to one of the load methods. Depending on the specified
+    // frequency, it generates specific timestamps (see below).
+    // It returns a vector of IndexType timestamps.
+    // Currently IndexType could be any built-in numeric type or DateTime
+    //
+    // start_datetime, end_datetime: They are the start/end date/times of
+    //     requested timestamps.
+    //     They must be in the following format:
+    //     MM/DD/YYYY [HH[:MM[:SS[.MMM]]]]
+    // t_freq: Specifies the timestamp frequency. Depending on the frequency,
+    //         and IndexType type specific timestamps are generated as follows:
+    //    - IndexType type of DateTime always generates timestamps of DateTime.
+    //    - Annual, monthly, weekly, and daily frequencies generates YYYYMMDD
+    //      timestamps.
+    //    - Hourly, minutely, and secondly frequencies generates epoch
+    //      timestamps (64 bit).
+    //    - Millisecondly frequency generates nano-second since epoch
+    //      timestamps (128 bit).
+    // increment: Increment in the units of the frequency
+    // tz: Time-zone of generated timestamps
+    //
+    // NOTE: It is the responsibility of the programmer to make sure
+    //       IndexType type is big enough to contain the frequency.
+    //
+    static std::vector<IndexType>
+    gen_datetime_index(const char *start_datetime,
+                       const char *end_datetime,
+                       time_frequency t_freq,
+                       long increment = 1,
+                       DT_TIME_ZONE tz = DT_TIME_ZONE::LOCAL);
+
+    // This static method generates a vector of sequential values of
+    // IndexType that could be fed directly to one of the load methods.
+    // The values are incremented by "increment".
+    // The index type must be incrementable.
+    // If by incrementing "start_value" by increment you would never reach
+    // "end_value", the behavior will be undefined.
+    // It returns a vector of IndexType values.
+    //
+    // start_value, end_value: Starting and ending values of IndexType.
+    //                         Start value is included. End value is excluded.
+    // increment: Increment by value
+    //
+    static std::vector<IndexType>
+    gen_sequence_index(const IndexType &start_value,
+                       const IndexType &end_value,
+                       long increment = 1);
+
+    // It outputs the content of DataFrame into the stream o.
+    // Currently two formats (i.e. csv, json) are supported specified by
+    // the iof parameter.
+    // The csv file format must be:
+    //     INDEX:<Number data points>:<values>
+    //     <Col1>:<Number data points>:<Col1 type>:<values>
+    //     <Col2>:<Number of data points>:<Col2 type>:<values>
+    //     .
+    //     .
+    //     .
+    // All empty lines or lines starting with # will be skipped.
+    //
+    // The JSON file format looks like this:
+    //     {
+    //     "INDEX":{"N":3,"T":"ulong","D":[123450,123451,123452]},
+    //     "col_3":{"N":3,"T":"double","D":[15.2,16.34,17.764]},
+    //     "col_4":{"N":3,"T":"int","D":[22,23,24]},
+    //     "col_str":{"N":3,"T":"string","D":["11","22","33"]},
+    //     "col_2":{"N":3,"T":"double","D":[8,9.001,10]},
+    //     "col_1":{"N":3,"T":"double","D":[1,2,3.456]}
+    //     }
+    // Please note DataFrame json does not follow json spec 100%. In json,
+    // there is not particular order in dictionary fields. But in DataFrame
+    // json:
+    // 1) Column “INDEX” must be the first column
+    // 2) Fields in column dictionaries must be in N, T, D order
+    //
+    // S: Output stream type
+    // Ts: List all the types of all data columns.
+    //     A type should be specified in the list only once.
+    // o: Reference to an streamable object (e.g. cout)
+    // values_only: If true, the name and type of each column is not written
+    // iof: Specifies the I/O format. The default is CSV
+    //
+    template<typename S, typename ... Ts>
+    bool
+    write(S &o,
+          bool values_only = false,
+          io_format iof = io_format::csv) const;
+
+    // Same as write() above, but executed asynchronously
+    //
+    template<typename S, typename ... Ts>
+    std::future<bool>
+    write_async(S &o,
+                bool values_only = false,
+                io_format iof = io_format::csv) const;
+
+    // It inputs the contents of a text file into itself (i.e. DataFrame).
+    // Currently two formats (i.e. csv, json) are supported specified by
+    // the iof parameter.
+    // The csv file format must be:
+    //     INDEX:<Number data points>:<values>
+    //     <Col1>:<Number data points>:<Col1 type>:<values>
+    //     <Col2>:<Number of data points>:<Col2 type>:<values>
+    //     .
+    //     .
+    //     .
+    // All empty lines or lines starting with # will be skipped.
+    //
+    // The JSON file format looks like this:
+    //     {
+    //     "INDEX":{"N":3,"T":"ulong","D":[123450,123451,123452]},
+    //     "col_3":{"N":3,"T":"double","D":[15.2,16.34,17.764]},
+    //     "col_4":{"N":3,"T":"int","D":[22,23,24]},
+    //     "col_str":{"N":3,"T":"string","D":["11","22","33"]},
+    //     "col_2":{"N":3,"T":"double","D":[8,9.001,10]},
+    //     "col_1":{"N":3,"T":"double","D":[1,2,3.456]}
+    //     }
+    // Please note DataFrame json does not follow json spec 100%. In json,
+    // there is not particular order in dictionary fields. But in DataFrame
+    // json:
+    // 1) Column “INDEX” must be the first column
+    // 2) Fields in column dictionaries must be in N, T, D order
+    //
+    // file_name: Complete path to the file
+    // iof: Specifies the I/O format. The default is CSV
+    //
+    bool
+    read(const char *file_name, io_format iof = io_format::csv);
+
+    // Same as read() above, but executed asynchronously
+    //
+    std::future<bool>
+    read_async(const char *file_name, io_format iof = io_format::csv);
+
 private:  // Friend Operators
 
     template<typename DF, template<typename> class OPT, typename ... Ts>
-    friend DF binary_operation(const DF &lhs, const DF &rhs);
+    friend DF
+    binary_operation(const DF &lhs, const DF &rhs);
 
 protected:
 
     template<typename T1, typename T2>
-    size_type _load_pair(std::pair<T1, T2> &col_name_data);
+    size_type
+    _load_pair(std::pair<T1, T2> &col_name_data);
 
     template<typename T>
-    static inline constexpr T _get_nan();
+    static inline constexpr
+    T _get_nan();
 
     template<typename T>
-    static inline constexpr bool _is_nan(const T &val);
+    static inline constexpr bool
+    _is_nan(const T &val);
 
 private:  // Static helper functions
 
@@ -1262,7 +1288,8 @@ private:  // Static helper functions
     fill_missing_ffill_(std::vector<T> &vec, int limit, size_type col_num);
 
     template<typename T>
-    static void fill_missing_bfill_(std::vector<T> &vec, int limit);
+    static void
+    fill_missing_bfill_(std::vector<T> &vec, int limit);
 
     template<typename T,
              typename std::enable_if<
@@ -1284,14 +1311,16 @@ private:  // Static helper functions
     fill_missing_linter_(std::vector<T> &, const IndexVecType &, int);
 
     template<typename T>
-    static void drop_missing_rows_(T &vec,
-                                   const DropRowMap missing_row_map,
-                                   drop_policy policy,
-                                   size_type threshold,
-                                   size_type col_num);
+    static void
+    drop_missing_rows_(T &vec,
+                       const DropRowMap missing_row_map,
+                       drop_policy policy,
+                       size_type threshold,
+                       size_type col_num);
 
     template<typename T, typename ITR>
-    void setup_view_column_(const char *name, Index2D<ITR> range);
+    void
+    setup_view_column_(const char *name, Index2D<ITR> range);
 
     using IndexIdxVector = std::vector<std::tuple<size_type, size_type>>;
 
@@ -1318,16 +1347,20 @@ private:  // Static helper functions
     index_left_right_join_(const LHS_T &lhs, const RHS_T &rhs);
 
     template<typename V>
-    static void shift_right_(V &vec, size_type n);
+    static void
+    shift_right_(V &vec, size_type n);
 
     template<typename V>
-    static void shift_left_(V &vec, size_type n);
+    static void
+    shift_left_(V &vec, size_type n);
 
     template<typename V>
-    static void rotate_right_(V &vec, size_type n);
+    static void
+    rotate_right_(V &vec, size_type n);
 
     template<typename V>
-    static void rotate_left_(V &vec, size_type n);
+    static void
+    rotate_left_(V &vec, size_type n);
 
     // Visiting functors
 #   include <DataFrame/Internals/DataFrame_functors.h>
@@ -1335,20 +1368,24 @@ private:  // Static helper functions
 private:  // Tuple stuff
 
     template<typename ... Ts, typename F, std::size_t ... Is>
-    static void for_each_in_tuple_(const std::tuple<Ts ...> &tu,
-                                   F func,
-                                   std::index_sequence<Is ...>);
+    static void
+    for_each_in_tuple_(const std::tuple<Ts ...> &tu,
+                       F func,
+                       std::index_sequence<Is ...>);
 
     template<typename ... Ts, typename F, std::size_t ... Is>
-    static void for_each_in_tuple_(std::tuple<Ts ...> &tu,
-                                   F func,
-                                   std::index_sequence<Is ...>);
+    static void
+    for_each_in_tuple_(std::tuple<Ts ...> &tu,
+                       F func,
+                       std::index_sequence<Is ...>);
 
     template<typename ... Ts, typename F>
-    static void for_each_in_tuple_(const std::tuple<Ts...> &tu, F func);
+    static void
+    for_each_in_tuple_(const std::tuple<Ts...> &tu, F func);
 
     template<typename ... Ts, typename F>
-    static void for_each_in_tuple_(std::tuple<Ts...> &tu, F func);
+    static void
+    for_each_in_tuple_(std::tuple<Ts...> &tu, F func);
 };
 
 } // namespace hmdf

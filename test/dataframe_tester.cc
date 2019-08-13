@@ -122,6 +122,7 @@ int main(int argc, char *argv[]) {
     std::cout << std::endl;
 
     df.make_consistent<int, double, std::string>();
+    df.shrink_to_fit<int, double, std::string>();
     std::cout << "Printing integer vector AFTER making make_consistent ..."
               << std::endl;
     dvec = df.get_column<double> ("dbl_col");
@@ -554,6 +555,7 @@ int main(int argc, char *argv[]) {
 
         MyDataFrameView dfv = df.get_view_by_loc<double, std::string>({ 3, 6 });
 
+        dfv.shrink_to_fit<double, std::string>();
         dfv.write<std::ostream, double, std::string>(std::cout);
         dfv.get_column<double>("col_3")[0] = 88.0;
         assert(dfv.get_column<double>("col_3")[0] ==
@@ -2664,6 +2666,7 @@ int main(int argc, char *argv[]) {
             df.get_view_by_sel<double, decltype(functor), double, std::string>
                 ("col_1", functor);
 
+        result.shrink_to_fit<double, std::string>();
         assert(result.get_index().size() == 3);
         assert(result.get_column<double>("col_1").size() == 3);
         assert(result.get_column<std::string>("col_str").size() == 3);

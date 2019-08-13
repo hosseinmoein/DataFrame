@@ -25,6 +25,17 @@ struct consistent_functor_ : DataVec::template visitor_base<Ts ...>  {
 
 // ----------------------------------------------------------------------------
 
+template<typename ... Ts>
+struct shrink_to_fit_functor_ : DataVec::template visitor_base<Ts ...>  {
+
+    inline shrink_to_fit_functor_ ()  {   }
+
+    template<typename T>
+    void operator() (T &vec) const;
+};
+
+// ----------------------------------------------------------------------------
+
 template<typename T, typename ... Ts>
 struct sort_functor_ : DataVec::template visitor_base<Ts ...>  {
 

@@ -589,6 +589,20 @@ void DataFrame<I, H>::make_consistent ()  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
+template<typename ...Ts>
+void DataFrame<I, H>::shrink_to_fit ()  {
+
+    indices_.shrink_to_fit();
+
+    shrink_to_fit_functor_<Ts ...>  functor;
+
+    for (auto &iter : data_)
+        iter.change(functor);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
 template<typename T, typename ...Ts>
 void DataFrame<I, H>::sort(const char *by_name)  {
 

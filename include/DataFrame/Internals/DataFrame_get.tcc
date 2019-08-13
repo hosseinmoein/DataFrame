@@ -13,6 +13,17 @@
 namespace hmdf
 {
 
+#if defined(WIN32) || defined(_WIN32)
+#  ifdef min
+#    undef min
+#  endif // min
+#  ifdef max
+#    undef max
+#  endif // max
+#endif // WIN32 || _WIN32
+
+// ----------------------------------------------------------------------------
+
 template<typename I, typename  H>
 std::pair<typename DataFrame<I, H>::size_type,
           typename DataFrame<I, H>::size_type>

@@ -103,6 +103,7 @@ set(${LIBRARY_TARGET_NAME}_HDR
   include/DataFrame/Internals/DataFrame_join.tcc
   include/DataFrame/Internals/DataFrame_shift.tcc
   include/DataFrame/Internals/DataFrame_read.tcc
+  include/DataFrame/Internals/DataFrame_write.tcc
   include/DataFrame/Internals/DataFrame_set.tcc
   include/DataFrame/Internals/DataFrame_functors.h
   include/DataFrame/Internals/RandGen.tcc
@@ -309,25 +310,39 @@ add_test(NAME gen_rand_tester
 
 message("-- Copying files for testing")
 # Ctest require this files in the build dir, on all platforms
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data.csv
-         DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data_dt_index.csv
-         DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data_string_index.csv
-         DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+                   COMMAND ${CMAKE_COMMAND} -E copy
+                   ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data.csv
+                   ${CMAKE_CURRENT_BINARY_DIR}/sample_data.csv)
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+                   COMMAND ${CMAKE_COMMAND} -E copy
+                   ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data.json
+                   ${CMAKE_CURRENT_BINARY_DIR}/sample_data.json)
+add_custom_command(
+    TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy
+    ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data_dt_index.csv
+    ${CMAKE_CURRENT_BINARY_DIR}/sample_data_dt_index.csv)
+add_custom_command(
+    TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy
+    ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data_string_index.csv
+    ${CMAKE_CURRENT_BINARY_DIR}/sample_data_string_index.csv)
 
-if (MSVC)
-  file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data.csv
-           DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Debug)
-  file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data.csv
-           DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Release)
-  file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data_dt_index.csv
-           DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Debug)
-  file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data_dt_index.csv
-           DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Release)
-  file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data_string_index.csv
-           DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Debug)
-  file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data_string_index.csv
-           DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Release)
-endif(MSVC)
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data.csv
+          DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Debug)
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data.csv
+          DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Release)
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data.json
+          DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Debug)
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data.json
+          DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Release)
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data_dt_index.csv
+          DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Debug)
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data_dt_index.csv
+          DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Release)
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data_string_index.csv
+          DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Debug)
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data_string_index.csv
+          DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Release)
 message("-- Copying files for testing - done")

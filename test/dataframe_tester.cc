@@ -343,11 +343,16 @@ int main(int argc, char *argv[]) {
         std::cout << "\nTesting read() ..." << std::endl;
 
         MyDataFrame         df_read;
-        // std::future<bool>   fut2 =
-        //     df_read.read_async("../test/sample_data.csv");
-        std::future<bool>   fut2 = df_read.read_async("sample_data.csv");
+        try  {
+            // std::future<bool>   fut2 =
+            //     df_read.read_async("../test/sample_data.csv");
+            std::future<bool>   fut2 = df_read.read_async("sample_data.csv");
 
-        fut2.get();
+            fut2.get();
+        }
+        catch (const DataFrameError &ex)  {
+            std::cout << ex.what() << std::endl;
+        }
         df_read.write<std::ostream,
                       int,
                       unsigned long,
@@ -357,7 +362,12 @@ int main(int argc, char *argv[]) {
 
         StdDataFrame<std::string>   df_read_str;
 
-        df_read_str.read_async("sample_data_string_index.csv");
+        try  {
+            df_read_str.read("sample_data_string_index.csv");
+        }
+        catch (const DataFrameError &ex)  {
+            std::cout << ex.what() << std::endl;
+        }
         df_read_str.write<std::ostream,
                           int,
                           unsigned long,
@@ -367,7 +377,12 @@ int main(int argc, char *argv[]) {
 
         StdDataFrame<DateTime>  df_read_dt;
 
-        df_read_dt.read_async("sample_data_dt_index.csv");
+        try  {
+            df_read_dt.read("sample_data_dt_index.csv");
+        }
+        catch (const DataFrameError &ex)  {
+            std::cout << ex.what() << std::endl;
+        }
         df_read_dt.write<std::ostream,
                          int,
                          unsigned long,
@@ -1146,8 +1161,13 @@ int main(int argc, char *argv[]) {
         MyDataFrame df1;
         MyDataFrame df2;
 
-        df1.read("sample_data.csv");
-        df2.read("sample_data.csv");
+        try  {
+            df1.read("sample_data.csv");
+            df2.read("sample_data.csv");
+        }
+        catch (const DataFrameError &ex)  {
+            std::cout << ex.what() << std::endl;
+        }
 
         MyDataFrame result =
             df_plus<MyDataFrame,
@@ -1187,8 +1207,13 @@ int main(int argc, char *argv[]) {
         MyDataFrame df1;
         MyDataFrame df2;
 
-        df1.read("sample_data.csv");
-        df2.read("sample_data.csv");
+        try  {
+            df1.read("sample_data.csv");
+            df2.read("sample_data.csv");
+        }
+        catch (const DataFrameError &ex)  {
+            std::cout << ex.what() << std::endl;
+        }
 
         // Notice I am omitting std::string here, since minus is not defined for
         // std::string, and hence it won't compile
@@ -2988,7 +3013,37 @@ int main(int argc, char *argv[]) {
     }
 
     {
+        std::cout << "\nTesting write(json) ..." << std::endl;
+
+        std::vector<unsigned long>  idx =
+            { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+              123457, 123458, 123459, 123460};
+        std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
+        std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18 };
+        std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25 };
+        std::vector<double> d4 = { 22, 23, 24, 25, 26, 27 };
+        std::vector<std::string> s1 = { "11", "22", "33", "aa", "bb", "cc",
+                                        "dd", "tt", "uu", "ii", "88" };
+        MyDataFrame         df;
+
+        df.load_data(std::move(idx),
+                     std::make_pair("col_1", d1),
+                     std::make_pair("col_2", d2),
+                     std::make_pair("col_3", d3),
+                     std::make_pair("col_str", s1));
+        df.load_column("col_4",
+                       std::move(d4),
+                       nan_policy::dont_pad_with_nans);
+
+        std::cout << "Writing in JSON:" << std::endl;
+        df.write<std::ostream, int, double, std::string>(std::cout,
+                                                         false,
+                                                         io_format::json);
+    }
+
+    {
         std::cout << "\nTesting Diff ..." << std::endl;
+
         double my_nan = std::numeric_limits<double>::quiet_NaN();
         double epsilon = 0.0000001;
         std::vector<unsigned long>  idx =
@@ -3101,6 +3156,39 @@ int main(int argc, char *argv[]) {
         assert(result6[7] == 17.94);
         assert(fabs(result6[8] - -1.907) < epsilon);
         assert(result6[9] == 0.66);
+    }
+
+    {
+        std::cout << "\nTesting reading/writing JSON ..." << std::endl;
+
+        MyDataFrame df;
+
+        try  {
+            df.read("sample_data.json", io_format::json);
+            assert(df.get_index().size() == 12);
+            assert(df.get_index()[0] == 123450);
+            assert(df.get_index()[4] == 123454);
+            assert(df.get_index()[11] == 555555);
+            assert(df.get_column<double>("col_4").size() == 6);
+            assert(df.get_column<double>("col_4")[0] == 22.0);
+            assert(df.get_column<double>("col_4")[4] == 26.0);
+            assert(df.get_column<double>("col_4")[5] == 27.0);
+            assert(df.get_column<std::string>("col_str").size() == 12);
+            assert(df.get_column<std::string>("col_str")[0] == "11");
+            assert(df.get_column<std::string>("col_str")[8] == "uu");
+            assert(df.get_column<std::string>("col_str")[11] ==
+                       "This is a test");
+            assert(df.get_column<double>("col_1").size() == 12);
+            assert(df.get_column<double>("col_2").size() == 12);
+            assert(df.get_column<double>("col_2")[6] == 14.0);
+            assert(df.get_column<double>("col_2")[11] == 777.78);
+            assert(df.get_column<double>("col_3").size() == 12);
+            assert(df.get_column<double>("col_3")[3] == 18.0);
+            assert(df.get_column<double>("col_3")[11] == 555.543);
+        }
+        catch (const DataFrameError &ex)  {
+            std::cout << ex.what() << std::endl;
+        }
     }
 
     return (0);

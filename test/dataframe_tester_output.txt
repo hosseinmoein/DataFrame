@@ -771,17 +771,17 @@ shuffle with no index:
 INDEX:7:<ulong>:123450,123451,123452,123453,123454,123455,123456,
 col_3:7:<double>:15,16,17,18,19,20,21,
 col_4:4:<double>:22,23,24,25,
-col_str:7:<string>:33,22,cc,dd,11,bb,aa,
+col_str:7:<string>:dd,33,cc,11,bb,aa,22,
 col_2:7:<double>:8,9,10,11,12,13,14,
-col_1:7:<double>:4,2,7,6,3,1,5,
+col_1:7:<double>:3,1,6,2,4,5,7,
 
 shuffle with index:
-INDEX:7:<ulong>:123455,123450,123451,123454,123452,123456,123453,
-col_3:7:<double>:19,18,21,16,17,20,15,
+INDEX:7:<ulong>:123451,123453,123455,123450,123454,123456,123452,
+col_3:7:<double>:19,17,15,16,20,21,18,
 col_4:4:<double>:22,23,24,25,
-col_str:7:<string>:33,22,cc,dd,11,bb,aa,
-col_2:7:<double>:9,12,13,8,10,14,11,
-col_1:7:<double>:4,2,7,6,3,1,5,
+col_str:7:<string>:dd,33,cc,11,bb,aa,22,
+col_2:7:<double>:11,9,8,13,10,14,12,
+col_1:7:<double>:3,1,6,2,4,5,7,
 
 
 Testing SimpleRollAdopter{ } ...
@@ -789,3 +789,18 @@ Testing SimpleRollAdopter{ } ...
 Testing get_data_by_rand() ...
 
 Testing get_view_by_rand() ...
+
+Testing write(json) ...
+Writing in JSON:
+{
+"INDEX":{"N":11,"T":"ulong","D":[123450,123451,123452,123453,123454,123455,123456,123457,123458,123459,123460]},
+"col_3":{"N":11,"T":"double","D":[15,16,17,18,19,20,21,22,23,24,25]},
+"col_4":{"N":6,"T":"double","D":[22,23,24,25,26,27]},
+"col_str":{"N":11,"T":"string","D":["11","22","33","aa","bb","cc","dd","tt","uu","ii","88"]},
+"col_2":{"N":11,"T":"double","D":[8,9,10,11,12,13,14,15,16,17,18]},
+"col_1":{"N":11,"T":"double","D":[1,2,3,4,5,6,7,8,9,10,11]}
+}
+
+Testing Diff ...
+
+Testing reading/writing JSON ...

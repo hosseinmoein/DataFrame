@@ -16,6 +16,17 @@
 namespace hmdf
 {
 
+#if defined(WIN32) || defined(_WIN32)
+#  ifdef min
+#    undef min
+#  endif // min
+#  ifdef max
+#    undef max
+#  endif // max
+#endif // WIN32 || _WIN32
+
+// ----------------------------------------------------------------------------
+
 struct DataFrameError : public std::runtime_error  {
 
     DataFrameError (const char *desc) : std::runtime_error (desc)  {   }
@@ -102,6 +113,9 @@ enum class drop_policy : unsigned char  {
 
 enum class io_format : unsigned char  {
     csv = 1,
+    json = 2,
+    hdf5 = 3,
+    binary = 4,
 };
 
 // ----------------------------------------------------------------------------

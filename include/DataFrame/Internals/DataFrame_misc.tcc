@@ -14,10 +14,14 @@
 namespace hmdf
 {
 
-#if defined(WIN32) || defined (_WIN32)
-#undef min
-#undef max
-#endif // defined(WIN32) || defined (_WIN32)
+#if defined(WIN32) || defined(_WIN32)
+#  ifdef min
+#    undef min
+#  endif // min
+#  ifdef max
+#    undef max
+#  endif // max
+#endif // WIN32 || _WIN32
 
 // ----------------------------------------------------------------------------
 
@@ -192,7 +196,7 @@ template<typename I, typename H>
 template<typename ... Ts>
 template<typename T>
 void
-DataFrame<I, H>::print_functor_<Ts ...>::operator() (const T &vec)  {
+DataFrame<I, H>::print_csv_functor_<Ts ...>::operator() (const T &vec)  {
 
     if (vec.empty())  return;
 
@@ -205,6 +209,10 @@ DataFrame<I, H>::print_functor_<Ts ...>::operator() (const T &vec)  {
             os << "<float>:";
         else if (typeid(ValueType) == typeid(double))
             os << "<double>:";
+        else if (typeid(ValueType) == typeid(short int))
+            os << "<short>:";
+        else if (typeid(ValueType) == typeid(unsigned short int))
+            os << "<ushort>:";
         else if (typeid(ValueType) == typeid(int))
             os << "<int>:";
         else if (typeid(ValueType) == typeid(unsigned int))
@@ -229,6 +237,66 @@ DataFrame<I, H>::print_functor_<Ts ...>::operator() (const T &vec)  {
     for (std::size_t i = 0; i < vec.size(); ++i)
         os << vec[i] << ',';
     os << '\n';
+
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename ... Ts>
+template<typename T>
+void
+DataFrame<I, H>::print_json_functor_<Ts ...>::operator() (const T &vec)  {
+
+    if (vec.empty())  return;
+
+    using VecType = typename std::remove_reference<T>::type;
+    using ValueType = typename VecType::value_type;
+
+    if (need_pre_comma)
+        os << ",\n";
+    if (! values_only)  {
+        os << '"' << name << "\":{\"N\":" << vec.size() << ',';
+        if (typeid(ValueType) == typeid(float))
+            os << "\"T\":\"float\",";
+        else if (typeid(ValueType) == typeid(double))
+            os << "\"T\":\"double\",";
+        else if (typeid(ValueType) == typeid(short int))
+            os << "\"T\":\"short\",";
+        else if (typeid(ValueType) == typeid(unsigned short int))
+            os << "\"T\":\"ushort\",";
+        else if (typeid(ValueType) == typeid(int))
+            os << "\"T\":\"int\",";
+        else if (typeid(ValueType) == typeid(unsigned int))
+            os << "\"T\":\"uint\",";
+        else if (typeid(ValueType) == typeid(long int))
+            os << "\"T\":\"long\",";
+        else if (typeid(ValueType) == typeid(long long int))
+            os << "\"T\":\"longlong\",";
+        else if (typeid(ValueType) == typeid(unsigned long int))
+            os << "\"T\":\"ulong\",";
+        else if (typeid(ValueType) == typeid(unsigned long long int))
+            os << "\"T\":\"ulonglong\",";
+        else if (typeid(ValueType) == typeid(std::string))
+            os << "\"T\":\"string\",";
+        else if (typeid(ValueType) == typeid(bool))
+            os << "\"T\":\"bool\",";
+        else if (typeid(ValueType) == typeid(DateTime))
+            os << "\"T\":\"DateTime\",";
+        else
+            os << "\"T\":\"N/A\",";
+    }
+
+    os << "\"D\":[";
+    if (! vec.empty())  {
+        _write_json_df_index_(os, vec[0]);
+        for (std::size_t i = 1; i < vec.size(); ++i)  {
+            os << ',';
+            _write_json_df_index_(os, vec[i]);
+        }
+    }
+    os << "]}";
 
     return;
 }

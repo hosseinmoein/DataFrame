@@ -92,3 +92,13 @@ make install
 cd [Debug | Release]
 make uninstall
 ```
+
+### Performance
+There is a test program [dataframe_performance](test/dataframe_performace.cc) that should give you some sense of how this library performs. It does the followings in about 300 to 400 milliseconds on my mac-book
+![Alt text](docs/MacSize.png "About MacBook")
+
+1. It generates about 16 million second resolution timestamps and loads it into the DataFrame
+2. It generates about 16 million random numbers each for 3 columns with normal, log normal, and exponential distributions and loads them into the DataFrame
+3. It calculates mean each of the 3 columns
+
+The program is compiled with gcc compiler with -O3 flag

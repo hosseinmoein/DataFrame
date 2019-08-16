@@ -12,14 +12,14 @@ typedef StdDataFrame<time_t> MyDataFrame;
 
 int main(int argc, char *argv[]) {
 
-    const DateTime          start;
+    // const DateTime          start;
     MyDataFrame             df;
     const size_t            index_sz =
         df.load_index(
             MyDataFrame::gen_datetime_index("01/01/1970",
                                             "08/15/2019",
                                             time_frequency::secondly,
-                                            100));
+                                            1));
     RandGenParams<double>   p;
 
     p.mean = 1.0;  // Default
@@ -38,14 +38,14 @@ int main(int argc, char *argv[]) {
     df.visit<double>("log_normal", ln_mv);
     df.visit<double>("exponential", e_mv);
 
-    const DateTime  end;
+    // const DateTime  end;
 
-    std::cout << "Index size of " << index_sz
-              << " Took " << end.diff_seconds(start) << " seconds."
-              << std::endl;
-    std::cout << "Normal mean " << n_mv.get_result() << std::endl;
-    std::cout << "Log Normal mean " << ln_mv.get_result() << std::endl;
-    std::cout << "Exponential mean " << e_mv.get_result() << std::endl;
+    // std::cout << "Index size of " << index_sz
+    //           << " Took " << end.diff_seconds(start) << " seconds."
+    //           << std::endl;
+    // std::cout << "Normal mean " << n_mv.get_result() << std::endl;
+    // std::cout << "Log Normal mean " << ln_mv.get_result() << std::endl;
+    // std::cout << "Exponential mean " << e_mv.get_result() << std::endl;
     return (0);
 }
 

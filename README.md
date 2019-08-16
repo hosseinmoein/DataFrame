@@ -94,7 +94,7 @@ make uninstall
 ```
 
 ### Performance
-There is a test program [dataframe_performance](test/dataframe_performance.cc) that should give you some sense of how this library performs. As a comparison there is also a Pandas Python [pandas_performance](test/pandas_performance.cc) script that does exactly the same thing<BR>
+There is a test program [dataframe_performance](test/dataframe_performance.cc) that should give you some sense of how this library performs. As a comparison there is also a Pandas Python [pandas_performance](test/pandas_performance.py) script that does exactly the same thing<BR>
 dataframe_performance.cc is compiled with gcc compiler with -O3 flag<BR>
 I ran both on my mac-book, doing the following:<BR> 
 <img src="docs/MacSize.png" alt="drawing" width="500"/>

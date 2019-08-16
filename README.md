@@ -97,7 +97,7 @@ make uninstall
 There is a test program [dataframe_performance](test/dataframe_performance.cc) that should give you some sense of how this library performs. It does the followings in about 300 to 400 milliseconds on my mac-book<BR>
 <img src="docs/MacSize.png" alt="drawing" width="500"/>
 
-1. It generates about 16 million second resolution timestamps and loads it into the DataFrame
+1. It generates about 16 million second resolution timestamps and loads it into the DataFrame as index
 2. It generates about 16 million random numbers each for 3 columns with normal, log normal, and exponential distributions and loads them into the DataFrame
 3. It calculates the mean of each of the 3 columns
 

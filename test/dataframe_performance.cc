@@ -12,7 +12,7 @@ typedef StdDataFrame<time_t> MyDataFrame;
 
 int main(int argc, char *argv[]) {
 
-    DateTime                start;
+    const DateTime          start;
     MyDataFrame             df;
     const size_t            index_sz =
         df.load_index(
@@ -38,7 +38,7 @@ int main(int argc, char *argv[]) {
     df.visit<double>("log_normal", ln_mv);
     df.visit<double>("exponential", e_mv);
 
-    DateTime    end;
+    const DateTime  end;
 
     std::cout << "Index size of " << index_sz
               << " Took " << end.diff_seconds(start) << " seconds."

@@ -94,14 +94,15 @@ make uninstall
 ```
 
 ### Performance
-There is a test program [dataframe_performance](test/dataframe_performance.cc) that should give you some sense of how this library performs. As a comparison there is also a Pandas Python [pandas_performance](test/pandas_performance.py) script that does exactly the same thing<BR>
-dataframe_performance.cc is compiled with gcc compiler with -O3 flag<BR>
+There is a test program [dataframe_performance](test/dataframe_performance.cc) that should give you some sense of how this library performs. As a comparison, there is also a Pandas Python [pandas_performance](test/pandas_performance.py) script that does exactly the same thing.<BR>
+dataframe_performance.cc is compiled with gcc compiler with -O3 flag.<BR>
+pandas_performance.py is ran with Python 3.7.<BR>
 I ran both on my mac-book, doing the following:<BR> 
 <img src="docs/MacSize.png" alt="drawing" width="500"/>
 
-1. Generate ~1.6 billion second resolution timestamps and load it into the DataFrame/Pandas as index
-2. Generate ~1.6 billion random numbers each for 3 columns with normal, log normal, and exponential distributions and load them into the DataFrame/Pandas
-3. Calculate the mean of each of the 3 columns
+1. Generate ~1.6 billion second resolution timestamps and load it into the DataFrame/Pandas as index.
+2. Generate ~1.6 billion random numbers each for 3 columns with normal, log normal, and exponential distributions and load them into the DataFrame/Pandas.
+3. Calculate the mean of each of the 3 columns.
 
 Result:
 ```bash
@@ -111,8 +112,8 @@ Killed: 9
 real    11m45.649s
 user    2m59.348s
 sys     2m59.555s
-
-
+Prompt>
+Prompt>
 Prompt> time ../bin/Linux.GCC64/dataframe_performance
 real    7m10.931s
 user    2m55.901s

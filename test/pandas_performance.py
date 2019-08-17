@@ -1,17 +1,19 @@
-import pandas as pd
 import numpy as np
+import pandas as pd
 
-days = pd.date_range("1970-01-01", "2019-08-15", freq='S')
-normal = np.random.normal(size=len(days))
-log_normal = np.random.lognormal(size=len(days))
-exponential = np.random.exponential(size=len(days))
+# ------------------------------------------------------------------------------
 
-df = pd.DataFrame({"date": days,
+timestamps = pd.date_range("1970-01-01", "2019-08-15", freq='S')
+normal = np.random.normal(size=len(timestamps))
+log_normal = np.random.lognormal(size=len(timestamps))
+exponential = np.random.exponential(size=len(timestamps))
+
+df = pd.DataFrame({"timestamp": timestamps,
                    "normal": normal,
                    "log_normal": log_normal,
                    "exponential": exponential,
                    })
-df.set_index("date")
+df.set_index("timestamp")
 
 df["normal"].mean()
 df["log_normal"].mean()

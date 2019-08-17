@@ -107,15 +107,20 @@ I ran both on my mac-book, doing the following:<BR>
 Result:
 ```bash
 Prompt> time python pandas_performance.py
-Killed: 9
+All memory allocations are done. Calculating means ...
 
-real    11m45.649s
-user    2m59.348s
-sys     2m59.555s
+real  17m18.916s
+user  4m47.113s
+sys   5m31.901s
 Prompt>
 Prompt>
 Prompt> time ../bin/Linux.GCC64/dataframe_performance
-real    7m10.931s
-user    2m55.901s
-sys     2m37.538s
+All memory allocations are done. Calculating means ...
+
+real  6m40.222s
+user  2m54.362s
+sys   2m14.951s
 ```
+The interesting part:<BR>
+In case of Pandas allocating memory and calculating means take almost the same time.<BR>
+In case of DataFrame 85% of the time is spent in allocating memory.

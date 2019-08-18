@@ -673,6 +673,39 @@ DataFrame<I, H>::get_data_by_loc (Index2D<int> range) const  {
 
 template<typename I, typename  H>
 template<typename ... Ts>
+DataFrame<I, H>
+DataFrame<I, H>::get_data_by_loc (const std::vector<long> &locations) const  {
+
+    const size_type idx_s = indices_.size();
+    DataFrame       df;
+    IndexVecType    new_index;
+
+    new_index.reserve(locations.size());
+    for (const auto citer: locations)  {
+        const size_type index =
+            citer >= 0 ? citer : static_cast<long>(idx_s) + citer;
+
+        new_index.push_back(indices_[index]);
+    }
+    df.load_index(std::move(new_index));
+
+    for (auto col_citer : column_tb_)  {
+        sel_load_functor_<long, Ts ...>  functor (
+            col_citer.first.c_str(),
+            locations,
+            idx_s,
+            df);
+
+        data_[col_citer.second].change(functor);
+    }
+
+    return (df);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename ... Ts>
 DataFrameView<I>
 DataFrame<I, H>::get_view_by_loc (Index2D<int> range)  {
 
@@ -739,7 +772,7 @@ get_data_by_sel (const char *name, F &sel_functor) const  {
     const size_type         col_s = vec.size();
     std::vector<size_type>  col_indices;
 
-    col_indices.reserve(indices_.size() / 2);
+    col_indices.reserve(idx_s / 2);
     for (size_type i = 0; i < col_s; ++i)
         if (sel_functor (indices_[i], vec[i]))
             col_indices.push_back(i);
@@ -753,9 +786,10 @@ get_data_by_sel (const char *name, F &sel_functor) const  {
     df.load_index(std::move(new_index));
 
     for (auto col_citer : column_tb_)  {
-        sel_load_functor_<Ts ...>   functor (
+        sel_load_functor_<size_type, Ts ...>    functor (
             col_citer.first.c_str(),
             col_indices,
+            idx_s,
             df);
 
         data_[col_citer.second].change(functor);
@@ -848,6 +882,7 @@ get_data_by_sel (const char *name1, const char *name2, F &sel_functor) const  {
         throw ColNotFound (buffer);
     }
 
+    const size_type         idx_s = indices_.size();
     const DataVec           &hv1 = data_[citer1->second];
     const DataVec           &hv2 = data_[citer2->second];
     const std::vector<T1>   &vec1 = hv1.template get_vector<T1>();
@@ -857,7 +892,7 @@ get_data_by_sel (const char *name1, const char *name2, F &sel_functor) const  {
     const size_type         col_s = std::max(col_s1, col_s2);
     std::vector<size_type>  col_indices;
 
-    col_indices.reserve(indices_.size() / 2);
+    col_indices.reserve(idx_s / 2);
     for (size_type i = 0; i < col_s; ++i)
         if (sel_functor (indices_[i],
                          i < col_s1 ? vec1[i] : _get_nan<T1>(),
@@ -873,9 +908,10 @@ get_data_by_sel (const char *name1, const char *name2, F &sel_functor) const  {
     df.load_index(std::move(new_index));
 
     for (auto col_citer : column_tb_)  {
-        sel_load_functor_<Ts ...>   functor (
+        sel_load_functor_<size_type, Ts ...>    functor (
             col_citer.first.c_str(),
             col_indices,
+            idx_s,
             df);
 
         data_[col_citer.second].change(functor);
@@ -996,6 +1032,7 @@ get_data_by_sel (const char *name1,
         throw ColNotFound (buffer);
     }
 
+    const size_type         idx_s = indices_.size();
     const DataVec           &hv1 = data_[citer1->second];
     const DataVec           &hv2 = data_[citer2->second];
     const DataVec           &hv3 = data_[citer3->second];
@@ -1008,7 +1045,7 @@ get_data_by_sel (const char *name1,
     const size_type         col_s = std::max(std::max(col_s1, col_s2), col_s3);
     std::vector<size_type>  col_indices;
 
-    col_indices.reserve(indices_.size() / 2);
+    col_indices.reserve(idx_s / 2);
     for (size_type i = 0; i < col_s; ++i)
         if (sel_functor (indices_[i],
                          i < col_s1 ? vec1[i] : _get_nan<T1>(),
@@ -1025,9 +1062,10 @@ get_data_by_sel (const char *name1,
     df.load_index(std::move(new_index));
 
     for (auto col_citer : column_tb_)  {
-        sel_load_functor_<Ts ...>   functor (
+        sel_load_functor_<size_type, Ts ...>    functor (
             col_citer.first.c_str(),
             col_indices,
+            idx_s,
             df);
 
         data_[col_citer.second].change(functor);

@@ -717,6 +717,22 @@ public: // Read/access and slicing interfaces
     DataFrame
     get_data_by_loc(Index2D<int> range) const;
 
+    // It returns a DataFrame (including the index and data columns)
+    // containing the data from locations, specified in locations vector.
+    // This function supports Python-like negative indexing. That is why the
+    // locations vector type is int.
+    // NOTE: The negative indixing is relative to the "index" column, which
+    //       may not be the size as all other column.
+    //       The returned DataFrame is in the same order as locations parameter
+    //
+    // Ts: List all the types of all data columns.
+    //     A type should be specified in the list only once.
+    // locations: List of indices into the index column to copy data
+    //
+    template<typename ... Ts>
+    DataFrame
+    get_data_by_loc(const std::vector<long> &locations) const;
+
     // It behaves like get_data_by_loc(), but it returns a DataFrameView.
     // A view is a DataFrame that is a reference to the original DataFrame.
     // So if you modify anything in the view the original DataFrame will

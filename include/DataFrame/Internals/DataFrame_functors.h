@@ -403,17 +403,19 @@ struct get_row_functor_ : DataVec::template visitor_base<Ts ...>  {
 
 // ----------------------------------------------------------------------------
 
-template<typename ... Ts>
+template<typename IT, typename ... Ts>
 struct sel_load_functor_ : DataVec::template visitor_base<Ts ...>  {
 
     inline sel_load_functor_ (const char *n,
-                              const std::vector<size_type> &si,
+                              const std::vector<IT> &si,
+                              size_type is,
                               DataFrame &d)
-        : name (n), sel_indices (si), df(d)  {   }
+        : name (n), sel_indices (si), indices_size(is), df(d)  {   }
 
-    const char                      *name;
-    const std::vector<size_type>    &sel_indices;
-    DataFrame                       &df;
+    const char              *name;
+    const std::vector<IT>   &sel_indices;
+    size_type               indices_size;
+    DataFrame               &df;
 
     template<typename T>
     void operator() (const std::vector<T> &vec);

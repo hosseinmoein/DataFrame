@@ -733,7 +733,7 @@ public: // Read/access and slicing interfaces
     DataFrame
     get_data_by_loc(const std::vector<long> &locations) const;
 
-    // It behaves like get_data_by_loc(), but it returns a DataFrameView.
+    // It behaves like get_data_by_loc(range), but it returns a DataFrameView.
     // A view is a DataFrame that is a reference to the original DataFrame.
     // So if you modify anything in the view the original DataFrame will
     // also be modified.
@@ -747,6 +747,22 @@ public: // Read/access and slicing interfaces
     template<typename ... Ts>
     DataFrameView<IndexType>
     get_view_by_loc(Index2D<long> range);
+
+    // It behaves like get_data_by_loc(locations), but it returns a
+    // DataFramePtrView.
+    // A view is a DataFrame that is a reference to the original DataFrame.
+    // So if you modify anything in the view the original DataFrame will
+    // also be modified.
+    // Note: There are certain operations that you cannot do with a view.
+    //       For example, you cannot add/delete columns, etc.
+    //
+    // Ts: List all the types of all data columns.
+    //     A type should be specified in the list only once.
+    // locations: List of indices into the index column to copy data
+    //
+    template<typename ... Ts>
+    DataFramePtrView<IndexType>
+    get_view_by_loc(const std::vector<long> &locations);
 
     // This method does boolean filtering selection via the sel_functor
     // (e.g. a functor, function, or lambda). It returns a new DataFrame.

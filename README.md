@@ -65,7 +65,7 @@ df.visit<double>("dbl_col", stats_visitor);
 <B>Date Time</B><BR>
 DateTime class included in this library is a very cool and handy object to manipulate date/time with nanosecond precision. 
 
-## <a href="http://htmlpreview.github.com/?https://github.com/hosseinmoein/DataFrame/blob/Hossein/GetMethods/docs/DataFrameDoc.html">DataFrame Documentation</a>
+## [DataFrame Documentation](docs/DataFrameDoc.pdf)
 [DateTime Documentation](docs/DateTimeDoc.pdf)
 
 ## [DataFrame Test File](test/dataframe_tester.cc)

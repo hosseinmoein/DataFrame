@@ -750,6 +750,45 @@ DataFrame<I, H>::get_view_by_loc (Index2D<long> range)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename  H>
+template<typename ... Ts>
+DataFramePtrView<I>
+DataFrame<I, H>::get_view_by_loc (const std::vector<long> &locations)  {
+
+    static_assert(std::is_base_of<HeteroVector, H>::value,
+                  "Only a StdDataFrame can call get_view_by_loc()");
+
+    using TheView = DataFramePtrView<IndexType>;
+
+    TheView         dfv;
+    const size_type idx_s = indices_.size();
+
+    typename TheView::IndexVecType  new_index;
+
+    new_index.reserve(locations.size());
+    for (const auto citer: locations)  {
+        const size_type index =
+            citer >= 0 ? citer : static_cast<long>(idx_s) + citer;
+
+        new_index.push_back(&(indices_[index]));
+    }
+    dfv.indices_ = std::move(new_index);
+
+    for (auto col_citer : column_tb_)  {
+        sel_load_view_functor_<long, Ts ...>    functor (
+            col_citer.first.c_str(),
+            locations,
+            indices_.size(),
+            dfv);
+
+        data_[col_citer.second].change(functor);
+    }
+
+    return (dfv);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
 template<typename T, typename F, typename ... Ts>
 DataFrame<I, H> DataFrame<I, H>::
 get_data_by_sel (const char *name, F &sel_functor) const  {
@@ -826,7 +865,7 @@ get_view_by_sel (const char *name, F &sel_functor)  {
     const size_type         col_s = vec.size();
     std::vector<size_type>  col_indices;
 
-    col_indices.reserve(indices_.size() / 2);
+    col_indices.reserve(idx_s / 2);
     for (size_type i = 0; i < col_s; ++i)
         if (sel_functor (indices_[i], vec[i]))
             col_indices.push_back(i);
@@ -842,9 +881,10 @@ get_view_by_sel (const char *name, F &sel_functor)  {
     dfv.indices_ = std::move(new_index);
 
     for (auto col_citer : column_tb_)  {
-        sel_load_view_functor_<Ts ...>   functor (
+        sel_load_view_functor_<size_type, Ts ...>   functor (
             col_citer.first.c_str(),
             col_indices,
+            idx_s,
             dfv);
 
         data_[col_citer.second].change(functor);
@@ -956,12 +996,13 @@ get_view_by_sel (const char *name1, const char *name2, F &sel_functor)  {
     const DataVec           &hv2 = data_[citer2->second];
     const std::vector<T1>   &vec1 = hv1.template get_vector<T1>();
     const std::vector<T2>   &vec2 = hv2.template get_vector<T2>();
+    const size_type         idx_s = indices_.size();
     const size_type         col_s1 = vec1.size();
     const size_type         col_s2 = vec2.size();
     const size_type         col_s = std::max(col_s1, col_s2);
     std::vector<size_type>  col_indices;
 
-    col_indices.reserve(indices_.size() / 2);
+    col_indices.reserve(idx_s / 2);
     for (size_type i = 0; i < col_s; ++i)
         if (sel_functor (indices_[i],
                          i < col_s1 ? vec1[i] : _get_nan<T1>(),
@@ -979,9 +1020,10 @@ get_view_by_sel (const char *name1, const char *name2, F &sel_functor)  {
     dfv.indices_ = std::move(new_index);
 
     for (auto col_citer : column_tb_)  {
-        sel_load_view_functor_<Ts ...>   functor (
+        sel_load_view_functor_<size_type, Ts ...>   functor (
             col_citer.first.c_str(),
             col_indices,
+            idx_s,
             dfv);
 
         data_[col_citer.second].change(functor);
@@ -1125,13 +1167,14 @@ get_view_by_sel (const char *name1,
     const std::vector<T1>   &vec1 = hv1.template get_vector<T1>();
     const std::vector<T2>   &vec2 = hv2.template get_vector<T2>();
     const std::vector<T3>   &vec3 = hv3.template get_vector<T3>();
+    const size_type         idx_s = indices_.size();
     const size_type         col_s1 = vec1.size();
     const size_type         col_s2 = vec2.size();
     const size_type         col_s3 = vec3.size();
     const size_type         col_s = std::max(std::max(col_s1, col_s2), col_s3);
     std::vector<size_type>  col_indices;
 
-    col_indices.reserve(indices_.size() / 2);
+    col_indices.reserve(idx_s / 2);
     for (size_type i = 0; i < col_s; ++i)
         if (sel_functor (indices_[i],
                          i < col_s1 ? vec1[i] : _get_nan<T1>(),
@@ -1150,9 +1193,10 @@ get_view_by_sel (const char *name1,
     dfv.indices_ = std::move(new_index);
 
     for (auto col_citer : column_tb_)  {
-        sel_load_view_functor_<Ts ...>   functor (
+        sel_load_view_functor_<size_type, Ts ...>   functor (
             col_citer.first.c_str(),
             col_indices,
+            idx_s,
             dfv);
 
         data_[col_citer.second].change(functor);

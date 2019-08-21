@@ -614,22 +614,26 @@ operator() (const std::vector<T> &vec)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename ... Ts>
+template<typename IT, typename ... Ts>
 template<typename T>
 void
 DataFrame<I, H>::
-sel_load_view_functor_<Ts ...>::
+sel_load_view_functor_<IT, Ts ...>::
 operator() (std::vector<T> &vec)  {
 
     VectorPtrView<T>    new_col;
     const size_type     vec_size = vec.size();
 
     new_col.reserve(std::min(sel_indices.size(), vec_size));
-    for (const auto citer : sel_indices)
-        if (citer < vec_size)
-            new_col.push_back(&(vec[citer]));
+    for (const auto citer : sel_indices)  {
+        const size_type index =
+            citer >= 0 ? citer : static_cast<IT>(indices_size) + citer;
+
+        if (index < vec_size)
+            new_col.push_back(&(vec[index]));
         else
             break;
+    }
 
     using data_vec_t = typename DataFramePtrView<I>::DataVec;
 

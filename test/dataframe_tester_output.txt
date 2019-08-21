@@ -771,17 +771,17 @@ shuffle with no index:
 INDEX:7:<ulong>:123450,123451,123452,123453,123454,123455,123456,
 col_3:7:<double>:15,16,17,18,19,20,21,
 col_4:4:<double>:22,23,24,25,
-col_str:7:<string>:cc,11,bb,dd,aa,22,33,
+col_str:7:<string>:dd,bb,22,11,aa,cc,33,
 col_2:7:<double>:8,9,10,11,12,13,14,
-col_1:7:<double>:4,5,6,7,2,3,1,
+col_1:7:<double>:3,1,6,2,5,7,4,
 
 shuffle with index:
-INDEX:7:<ulong>:123453,123451,123456,123452,123454,123455,123450,
-col_3:7:<double>:16,15,19,20,17,18,21,
+INDEX:7:<ulong>:123454,123451,123453,123450,123455,123456,123452,
+col_3:7:<double>:15,17,21,18,20,19,16,
 col_4:4:<double>:22,23,24,25,
-col_str:7:<string>:cc,11,bb,dd,aa,22,33,
-col_2:7:<double>:8,12,11,9,10,14,13,
-col_1:7:<double>:4,5,6,7,2,3,1,
+col_str:7:<string>:dd,bb,22,11,aa,cc,33,
+col_2:7:<double>:12,13,11,10,9,8,14,
+col_1:7:<double>:3,1,6,2,5,7,4,
 
 
 Testing SimpleRollAdopter{ } ...
@@ -806,3 +806,5 @@ Testing Diff ...
 Testing reading/writing JSON ...
 
 Testing get_data_by_loc()/locations ...
+
+Testing get_view_by_loc()/locations ...

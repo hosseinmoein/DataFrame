@@ -220,7 +220,7 @@ public:  // Load/append/remove interfaces
     // It removes the data rows from location begin to location end
     // within range.
     // This function supports Python-like negative indexing. That is why the
-    // range type is int.
+    // range type is long.
     // This function first calls make_consistent() that may add nan values to
     // data columns.
     //
@@ -230,7 +230,7 @@ public:  // Load/append/remove interfaces
     //
     template<typename ... Ts>
     void
-    remove_data_by_loc(Index2D<int> range);
+    remove_data_by_loc(Index2D<long> range);
 
     // It removes data rows by boolean filtering selection via the sel_functor
     // (e.g. a functor, function, or lambda).
@@ -707,7 +707,7 @@ public: // Read/access and slicing interfaces
     // It returns a DataFrame (including the index and data columns)
     // containing the data from location begin to location end within range.
     // This function supports Python-like negative indexing. That is why the
-    // range type is int.
+    // range type is long.
     //
     // Ts: List all the types of all data columns.
     //     A type should be specified in the list only once.
@@ -715,12 +715,12 @@ public: // Read/access and slicing interfaces
     //
     template<typename ... Ts>
     DataFrame
-    get_data_by_loc(Index2D<int> range) const;
+    get_data_by_loc(Index2D<long> range) const;
 
     // It returns a DataFrame (including the index and data columns)
     // containing the data from locations, specified in locations vector.
     // This function supports Python-like negative indexing. That is why the
-    // locations vector type is int.
+    // locations vector type is long.
     // NOTE: The negative indixing is relative to the "index" column, which
     //       may not be the size as all other column.
     //       The returned DataFrame is in the same order as locations parameter
@@ -746,7 +746,7 @@ public: // Read/access and slicing interfaces
     //
     template<typename ... Ts>
     DataFrameView<IndexType>
-    get_view_by_loc(Index2D<int> range);
+    get_view_by_loc(Index2D<long> range);
 
     // This method does boolean filtering selection via the sel_functor
     // (e.g. a functor, function, or lambda). It returns a new DataFrame.

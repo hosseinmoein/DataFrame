@@ -633,14 +633,14 @@ DataFrame<I, H>::get_view_by_idx (Index2D<IndexType> range)  {
 template<typename I, typename  H>
 template<typename ... Ts>
 DataFrame<I, H>
-DataFrame<I, H>::get_data_by_loc (Index2D<int> range) const  {
+DataFrame<I, H>::get_data_by_loc (Index2D<long> range) const  {
 
     if (range.begin < 0)
-        range.begin = static_cast<int>(indices_.size()) + range.begin;
+        range.begin = static_cast<long>(indices_.size()) + range.begin;
     if (range.end < 0)
-        range.end = static_cast<int>(indices_.size()) + range.end;
+        range.end = static_cast<long>(indices_.size()) + range.end;
 
-    if (range.end <= static_cast<int>(indices_.size()) &&
+    if (range.end <= static_cast<long>(indices_.size()) &&
         range.begin <= range.end && range.begin >= 0)  {
         DataFrame   df;
 
@@ -664,7 +664,7 @@ DataFrame<I, H>::get_data_by_loc (Index2D<int> range) const  {
 
     sprintf (buffer,
              "DataFrame::get_data_by_loc(): ERROR: "
-             "Bad begin, end range: %d, %d",
+             "Bad begin, end range: %ld, %ld",
              range.begin, range.end);
     throw BadRange (buffer);
 }
@@ -707,17 +707,17 @@ DataFrame<I, H>::get_data_by_loc (const std::vector<long> &locations) const  {
 template<typename I, typename  H>
 template<typename ... Ts>
 DataFrameView<I>
-DataFrame<I, H>::get_view_by_loc (Index2D<int> range)  {
+DataFrame<I, H>::get_view_by_loc (Index2D<long> range)  {
 
     static_assert(std::is_base_of<HeteroVector, H>::value,
                   "Only a StdDataFrame can call get_view_by_loc()");
 
     if (range.begin < 0)
-        range.begin = static_cast<int>(indices_.size()) + range.begin;
+        range.begin = static_cast<long>(indices_.size()) + range.begin;
     if (range.end < 0)
-        range.end = static_cast<int>(indices_.size()) + range.end;
+        range.end = static_cast<long>(indices_.size()) + range.end;
 
-    if (range.end <= static_cast<int>(indices_.size()) &&
+    if (range.end <= static_cast<long>(indices_.size()) &&
         range.begin <= range.end && range.begin >= 0)  {
         DataFrameView<IndexType>    dfv;
 
@@ -742,7 +742,7 @@ DataFrame<I, H>::get_view_by_loc (Index2D<int> range)  {
 
     sprintf (buffer,
              "DataFrame::get_view_by_loc(): ERROR: "
-             "Bad begin, end range: %d, %d",
+             "Bad begin, end range: %ld, %ld",
              range.begin, range.end);
     throw BadRange (buffer);
 }

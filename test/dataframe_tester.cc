@@ -170,7 +170,7 @@ int main(int argc, char *argv[]) {
     std::cout << std::endl;
 
     MyDataFrame df3 = df.get_data_by_loc<int, double, std::string>
-        (Index2D<int> { 1, 2 });
+        (Index2D<long> { 1, 2 });
 
     df3.write<std::ostream, int, double, std::string>(std::cout);
     std::cout << "Printing the second df after get_data_by_loc() ..."
@@ -507,10 +507,10 @@ int main(int argc, char *argv[]) {
                      std::make_pair("col_3", d3),
                      std::make_pair("col_4", d4));
 
-        MyDataFrame df2 = df.get_data_by_loc<double>(Index2D<int> { 3, 6 });
-        MyDataFrame df3 = df.get_data_by_loc<double>(Index2D<int> { 0, 7 });
-        MyDataFrame df4 = df.get_data_by_loc<double>(Index2D<int> { -4, -1 });
-        MyDataFrame df5 = df.get_data_by_loc<double>(Index2D<int> { -4, 6 });
+        MyDataFrame df2 = df.get_data_by_loc<double>(Index2D<long> { 3, 6 });
+        MyDataFrame df3 = df.get_data_by_loc<double>(Index2D<long> { 0, 7 });
+        MyDataFrame df4 = df.get_data_by_loc<double>(Index2D<long> { -4, -1 });
+        MyDataFrame df5 = df.get_data_by_loc<double>(Index2D<long> { -4, 6 });
 
         df.write<std::ostream, double>(std::cout);
         df2.write<std::ostream, double>(std::cout);
@@ -519,14 +519,15 @@ int main(int argc, char *argv[]) {
         df5.write<std::ostream, double>(std::cout);
 
         try  {
-            MyDataFrame df2 = df.get_data_by_loc<double>(Index2D<int> { 3, 8 });
+            MyDataFrame df2 =
+                df.get_data_by_loc<double>(Index2D<long> { 3, 8 });
         }
         catch (const BadRange &ex)  {
             std::cout << "Caught: " << ex.what() << std::endl;
         }
         try  {
             MyDataFrame df2 =
-                df.get_data_by_loc<double>(Index2D<int> { -8, -1 });
+                df.get_data_by_loc<double>(Index2D<long> { -8, -1 });
         }
         catch (const BadRange &ex)  {
             std::cout << "Caught: " << ex.what() << std::endl;

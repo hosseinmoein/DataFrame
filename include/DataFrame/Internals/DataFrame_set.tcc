@@ -640,17 +640,17 @@ void DataFrame<I, H>::remove_data_by_idx (Index2D<IndexType> range)  {
 
 template<typename I, typename  H>
 template<typename ... Ts>
-void DataFrame<I, H>::remove_data_by_loc (Index2D<int> range)  {
+void DataFrame<I, H>::remove_data_by_loc (Index2D<long> range)  {
 
     static_assert(std::is_base_of<HeteroVector, H>::value,
                   "Only a StdDataFrame can call remove_data_by_loc()");
 
     if (range.begin < 0)
-        range.begin = static_cast<int>(indices_.size()) + range.begin;
+        range.begin = static_cast<long>(indices_.size()) + range.begin;
     if (range.end < 0)
-        range.end = static_cast<int>(indices_.size()) + range.end;
+        range.end = static_cast<long>(indices_.size()) + range.end;
 
-    if (range.end <= static_cast<int>(indices_.size()) &&
+    if (range.end <= static_cast<long>(indices_.size()) &&
         range.begin <= range.end && range.begin >= 0)  {
         make_consistent<Ts ...>();
         indices_.erase(indices_.begin() + range.begin,
@@ -670,7 +670,7 @@ void DataFrame<I, H>::remove_data_by_loc (Index2D<int> range)  {
 
     sprintf (buffer,
              "DataFrame::remove_data_by_loc(): ERROR: "
-             "Bad begin, end range: %d, %d",
+             "Bad begin, end range: %ld, %ld",
              range.begin, range.end);
     throw BadRange (buffer);
 }

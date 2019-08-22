@@ -689,7 +689,22 @@ public: // Read/access and slicing interfaces
     DataFrame
     get_data_by_idx(Index2D<IndexType> range) const;
 
-    // It behaves like get_data_by_idx(), but it returns a DataFrameView.
+    // It returns a DataFrame (including the index and data columns)
+    // containing the data corresponding to the indices specified in "values"
+    // vector.
+    // This method runs in O(n), where n is the number of indices, by
+    // creating a hash table of values. IndexType must be hashable.
+    // NOTE: The returned DataFrame is in the same order as original DataFrame
+    //
+    // Ts: List all the types of all data columns.
+    //     A type should be specified in the list only once.
+    // values: List of indices to copy data from
+    //
+    template<typename ... Ts>
+    DataFrame
+    get_data_by_idx(const std::vector<IndexType> &values) const;
+
+    // It behaves like get_data_by_idx(range), but it returns a DataFrameView.
     // A view is a DataFrame that is a reference to the original DataFrame.
     // So if you modify anything in the view the original DataFrame will
     // also be modified.

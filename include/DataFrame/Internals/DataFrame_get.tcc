@@ -593,6 +593,43 @@ DataFrame<I, H>::get_data_by_idx (Index2D<IndexType> range) const  {
 
 template<typename I, typename  H>
 template<typename ... Ts>
+DataFrame<I, H>
+DataFrame<I, H>::get_data_by_idx(const std::vector<IndexType> &values) const  {
+
+    const std::unordered_set<IndexType> val_table(values.begin(), values.end());
+    IndexVecType                        new_index;
+    std::vector<size_type>              locations;
+    const size_type                     values_s = values.size();
+    const size_type                     idx_s = indices_.size();
+
+    new_index.reserve(values_s);
+    locations.reserve(values_s);
+    for (size_type i = 0; i < idx_s; ++i)
+        if (val_table.find(indices_[i]) != val_table.end())  {
+            new_index.push_back(indices_[i]);
+            locations.push_back(i);
+        }
+
+    DataFrame   df;
+
+    df.load_index(std::move(new_index));
+    for (auto col_citer : column_tb_)  {
+        sel_load_functor_<size_type, Ts ...>    functor (
+            col_citer.first.c_str(),
+            locations,
+            idx_s,
+            df);
+
+        data_[col_citer.second].change(functor);
+    }
+
+    return (df);
+}
+
+// ----------------------------------------------------------------------------
+ 
+template<typename I, typename  H>
+template<typename ... Ts>
 DataFrameView<I>
 DataFrame<I, H>::get_view_by_idx (Index2D<IndexType> range)  {
 

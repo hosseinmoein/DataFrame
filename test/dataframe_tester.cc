@@ -632,7 +632,8 @@ int main(int argc, char *argv[]) {
             df.get_data_by_idx<double, int>(
                 Index2D<MyDataFrame::IndexType> { 123452, 123460 });
         MyDataFrameView dfv =
-            df.get_view_by_idx<double, int>({ 123452, 123460 });
+            df.get_view_by_idx<double, int>(
+                Index2D<MyDataFrame::IndexType> { 123452, 123460 });
 
         df.write<std::ostream, double, int>(std::cout);
         df2.write<std::ostream, double, int>(std::cout);
@@ -3202,7 +3203,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\nTesting get_data_by_loc()/locations ..." << std::endl;
+        std::cout << "\nTesting get_data_by_loc(locations) ..." << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123450, 123455, 123450, 123449 };
@@ -3247,7 +3248,7 @@ int main(int argc, char *argv[]) {
     }
 
     {
-        std::cout << "\nTesting get_view_by_loc()/locations ..." << std::endl;
+        std::cout << "\nTesting get_view_by_loc(locations) ..." << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123450, 123455, 123450, 123449 };
@@ -3292,12 +3293,11 @@ int main(int argc, char *argv[]) {
 
         dfv2.get_column<double>("col_1")[0] = 101.0;
         assert(dfv2.get_column<double>("col_1")[0] == 101.0);
-        assert(dfv2.get_column<double>("col_1")[0] == 101.0);
         assert(df.get_column<double>("col_1")[3] == 101.0);
     }
 
     {
-        std::cout << "\nTesting get_data_by_idx()/values ..." << std::endl;
+        std::cout << "\nTesting get_data_by_idx(values) ..." << std::endl;
 
         std::vector<unsigned long>  idx =
             { 123450, 123451, 123452, 123450, 123455, 123450, 123449 };
@@ -3343,6 +3343,59 @@ int main(int argc, char *argv[]) {
         assert(df3.get_column<double>("col_4")[1] == 25.0);
         assert(std::isnan(df3.get_column<double>("col_4")[2]));
         assert(std::isnan(df3.get_column<double>("col_4")[3]));
+    }
+
+    {
+        std::cout << "\nTesting get_view_by_idx(values) ..." << std::endl;
+
+        std::vector<unsigned long>  idx =
+            { 123450, 123451, 123452, 123450, 123455, 123450, 123449 };
+        std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7 };
+        std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14 };
+        std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21 };
+        std::vector<double> d4 = { 22, 23, 24, 25 };
+        MyDataFrame         df;
+
+        df.load_data(std::move(idx),
+                     std::make_pair("col_1", d1),
+                     std::make_pair("col_2", d2),
+                     std::make_pair("col_3", d3),
+                     std::make_pair("col_4", d4));
+
+        auto    dfv1 =
+            df.get_view_by_idx<double>(
+                std::vector<MyDataFrame::IndexType> { 123452, 123455 });
+        auto    dfv2 =
+            df.get_view_by_idx<double>(
+                std::vector<MyDataFrame::IndexType> { 123449, 123450 });
+
+        assert(dfv1.get_index().size() == 2);
+        assert(dfv1.get_column<double>("col_3").size() == 2);
+        assert(dfv1.get_column<double>("col_2").size() == 2);
+        assert(dfv1.get_index()[0] == 123452);
+        assert(dfv1.get_index()[1] == 123455);
+        assert(dfv1.get_column<double>("col_3")[0] == 17.0);
+        assert(dfv1.get_column<double>("col_2")[1] == 12.0);
+        assert(std::isnan(dfv1.get_column<double>("col_4")[1]));
+
+        assert(dfv2.get_index().size() == 4);
+        assert(dfv2.get_column<double>("col_3").size() == 4);
+        assert(dfv2.get_column<double>("col_2").size() == 4);
+        assert(dfv2.get_column<double>("col_1").size() == 4);
+        assert(dfv2.get_index()[0] == 123450);
+        assert(dfv2.get_index()[1] == 123450);
+        assert(dfv2.get_index()[2] == 123450);
+        assert(dfv2.get_index()[3] == 123449);
+        assert(dfv2.get_column<double>("col_1")[0] == 1.0);
+        assert(dfv2.get_column<double>("col_2")[2] == 13.0);
+        assert(dfv2.get_column<double>("col_4")[0] == 22.0);
+        assert(dfv2.get_column<double>("col_4")[1] == 25.0);
+        assert(std::isnan(dfv2.get_column<double>("col_4")[2]));
+        assert(std::isnan(dfv2.get_column<double>("col_4")[3]));
+
+        dfv2.get_column<double>("col_1")[0] = 101.0;
+        assert(dfv2.get_column<double>("col_1")[0] == 101.0);
+        assert(df.get_column<double>("col_1")[0] == 101.0);
     }
 
     return (0);

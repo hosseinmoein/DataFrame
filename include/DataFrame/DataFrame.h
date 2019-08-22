@@ -719,6 +719,22 @@ public: // Read/access and slicing interfaces
     DataFrameView<IndexType>
     get_view_by_idx(Index2D<IndexType> range);
 
+    // It behaves like get_data_by_idx(values), but it returns a
+    // DataFramePtrView.
+    // A view is a DataFrame that is a reference to the original DataFrame.
+    // So if you modify anything in the view the original DataFrame will
+    // also be modified.
+    // Note: There are certain operations that you cannot do with a view.
+    //       For example, you cannot add/delete columns, etc.
+    //
+    // Ts: List all the types of all data columns.
+    //     A type should be specified in the list only once.
+    // values: List of indices to copy data from
+    //
+    template<typename ... Ts>
+    DataFramePtrView<IndexType>
+    get_view_by_idx(const std::vector<IndexType> &values);
+
     // It returns a DataFrame (including the index and data columns)
     // containing the data from location begin to location end within range.
     // This function supports Python-like negative indexing. That is why the

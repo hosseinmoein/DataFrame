@@ -8,7 +8,6 @@
 #include <DataFrame/Vectors/HeteroView.h>
 #include <DataFrame/Vectors/HeteroPtrView.h>
 
-#include <vector>
 #include <unordered_map>
 
 // ----------------------------------------------------------------------------

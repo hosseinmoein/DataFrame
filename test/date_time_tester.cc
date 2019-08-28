@@ -3,13 +3,13 @@
 // Copyright (C) 2018-2019 Hossein Moein
 // Distributed under the BSD Software License (see file License)
 
+#include <DataFrame/Utils/DateTime.h>
+#include <DataFrame/Utils/FixedSizeString.h>
+
 #include <cstdlib>
 #include <iostream>
 #include <string>
 #include <cassert>
-
-#include <DataFrame/Utils/DateTime.h>
-#include <DataFrame/Utils/FixedSizeString.h>
 
 using namespace hmdf;
 

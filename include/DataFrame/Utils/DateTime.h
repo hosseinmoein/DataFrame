@@ -12,6 +12,7 @@
 #include <cstdio>
 #include <ctime>
 #include <stdexcept>
+#include <string>
 
 #include <sys/timeb.h>
 

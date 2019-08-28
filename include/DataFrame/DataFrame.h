@@ -10,14 +10,9 @@
 #include <DataFrame/Utils/ThreadGranularity.h>
 
 #include <array>
-#include <cstring>
 #include <fstream>
-#include <functional>
 #include <future>
 #include <map>
-#include <vector>
-#include <utility>
-#include <type_traits>
 
 // ----------------------------------------------------------------------------
 

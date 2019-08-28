@@ -1,8 +1,8 @@
-#include <iostream>
-
 #include <DataFrame/DataFrame.h>
 #include <DataFrame/DataFrameVisitors.h>
 #include <DataFrame/RandGen.h>
+
+#include <iostream>
 
 using namespace hmdf;
 

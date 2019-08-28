@@ -1,13 +1,13 @@
+#include <DataFrame/DataFrame.h>
+#include <DataFrame/DataFrameVisitors.h>
+#include <DataFrame/DataFrameOperators.h>
+
 #include <iostream>
 #include <string>
 #include <typeinfo>
 #include <limits>
 #include <cmath>
 #include <cassert>
-
-#include <DataFrame/DataFrame.h>
-#include <DataFrame/DataFrameVisitors.h>
-#include <DataFrame/DataFrameOperators.h>
 
 using namespace hmdf;
 

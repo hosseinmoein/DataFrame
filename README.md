@@ -17,6 +17,9 @@ Instances of DataFrame are not multithreaded safe. In other words, a single inst
 1. There are asynchronous versions of some methods. For example, you have both sort() and sort_async(). The latter returns a std::future which could execute in parallel.
 2. DataFrame uses multiple threads, internally and unbeknown to the user, in some of its algorithms when appropriate. User can control (or turn off) the multithreading by calling set_thread_level() which sets the max number of threads to be used. The default is 0. The optimal number of threads is a function of users hardware/software environment and usually obtained by trail and error. set_thread_level() and threading level in general is a static property and once set, it applies to all instances.
 
+<B>Date Time</B><BR>
+DateTime class included in this library is a very cool and handy object to manipulate date/time with nanosecond precision.
+
 ---
 
 <B>Example Code</B>
@@ -63,12 +66,7 @@ df.sort<double, int, double, std::string>("dbl_col_2");
 StatsVisitor<double>  stats_visitor;
 // Calculate the stats on column “dbl_col”
 df.visit<double>("dbl_col", stats_visitor);
-```
-
----
-
-<B>Date Time</B><BR>
-DateTime class included in this library is a very cool and handy object to manipulate date/time with nanosecond precision. 
+``` 
 
 ---
 

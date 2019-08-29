@@ -4,7 +4,7 @@
 ![GitHub tag (latest by date)](https://img.shields.io/github/tag-date/hosseinmoein/DataFrame.svg?color=blue&label=Official%20Release&style=popout)
 [![C++17](https://img.shields.io/badge/C%2B%2B-17-blue.svg)](https://isocpp.org/std/the-standard )
 
-![Alt text](docs/pandalion.png "C++ protecting Python")
+<img src="docs/pandalion.png" alt="drawing" width="500"/>
 
 # DataFrame
 This is a C++ statistical library that provides an interface similar to Pandas package in Python.<BR>

@@ -5,11 +5,10 @@
 
 #pragma once
 
-#include <cstdlib>
-#include <cstdio>
-#include <iostream>
 #include <cstdarg>
-
+#include <cstdio>
+#include <cstdlib>
+#include <iostream>
 #include <string.h>
 
 // ----------------------------------------------------------------------------

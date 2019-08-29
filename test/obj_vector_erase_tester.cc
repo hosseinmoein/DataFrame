@@ -1,5 +1,5 @@
-#include <DataFrame/Utils/FixedSizeString.h>
 #include <DataFrame/MMap/ObjectVector.h>
+#include <DataFrame/Utils/FixedSizeString.h>
 
 #include <cstdio>
 #include <cstdlib>

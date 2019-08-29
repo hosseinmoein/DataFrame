@@ -7,8 +7,8 @@
 
 #include <DataFrame/DataFrameTypes.h>
 
-#include <cstddef>
 #include <algorithm>
+#include <cstddef>
 #include <numeric>
 
 // ----------------------------------------------------------------------------

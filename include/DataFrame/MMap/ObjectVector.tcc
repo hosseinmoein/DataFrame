@@ -3,15 +3,15 @@
 // Copyright (C) 2019-2022 Hossein Moein
 // Distributed under the BSD Software License (see file License)
 
-#include <DataFrame/Utils/FixedSizeString.h>
 #include <DataFrame/MMap/ObjectVector.h>
+#include <DataFrame/Utils/FixedSizeString.h>
 
 #ifndef _WIN32
 
-#include <string>
 #include <exception>
-#include <sys/types.h>
+#include <string>
 #include <sys/mman.h>
+#include <sys/types.h>
 
 //
 // There must be a nice concise language inside C++ trying to get out

@@ -7,8 +7,8 @@
 
 #include <DataFrame/Vectors/VectorView.h>
 
-#include <unordered_map>
 #include <functional>
+#include <unordered_map>
 
 // ----------------------------------------------------------------------------
 

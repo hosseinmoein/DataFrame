@@ -8,12 +8,12 @@
 #include <DataFrame/MMap/MMapSharedMem.h>
 #include <DataFrame/Utils/FixedSizeString.h>
 
-#include <sys/types.h>
-#include <sys/mman.h>
-#include <sys/stat.h>
-#include <unistd.h>
 #include <fcntl.h>
 #include <stdexcept>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 // ----------------------------------------------------------------------------
 

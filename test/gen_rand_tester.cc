@@ -1,7 +1,7 @@
 #include <DataFrame/RandGen.h>
 
-#include <iostream>
 #include <cassert>
+#include <iostream>
 
 using namespace hmdf;
 

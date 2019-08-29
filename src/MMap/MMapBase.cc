@@ -8,8 +8,8 @@
 #include <DataFrame/MMap/MMapBase.h>
 #include <DataFrame/Utils/FixedSizeString.h>
 
-#include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <unistd.h>
 
 // ----------------------------------------------------------------------------

@@ -5,6 +5,7 @@
 
 #include <DataFrame/RandGen.h>
 
+#include <random>
 #include <type_traits>
 
 // ----------------------------------------------------------------------------

@@ -5,8 +5,8 @@
 
 #include <DataFrame/Vectors/VectorPtrView.h>
 
-#include <iostream>
 #include <cassert>
+#include <iostream>
 
 using namespace hmdf;
 

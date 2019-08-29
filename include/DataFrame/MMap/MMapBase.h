@@ -11,13 +11,12 @@
 #include <DataFrame/Utils/FixedSizeString.h>
 
 #include <fstream>
+#include <errno.h>
 #include <iostream>
 #include <string>
-
-#include <sys/mman.h>
-#include <sys/fcntl.h>
-#include <errno.h>
 #include <strings.h>
+#include <sys/fcntl.h>
+#include <sys/mman.h>
 
 // ----------------------------------------------------------------------------
 

@@ -5,8 +5,8 @@
 
 #pragma once
 
-#include <DataFrame/Vectors/HeteroView.h>
 #include <DataFrame/Vectors/HeteroPtrView.h>
+#include <DataFrame/Vectors/HeteroView.h>
 
 #include <unordered_map>
 

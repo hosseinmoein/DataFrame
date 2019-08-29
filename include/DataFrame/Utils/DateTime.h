@@ -5,16 +5,15 @@
 
 #pragma once
 
-#ifdef _WIN32
-#include <windows.h>
-#endif // _WIN32
-
 #include <cstdio>
 #include <ctime>
 #include <stdexcept>
 #include <string>
-
 #include <sys/timeb.h>
+
+#ifdef _WIN32
+#  include <windows.h>
+#endif // _WIN32
 
 // ----------------------------------------------------------------------------
 

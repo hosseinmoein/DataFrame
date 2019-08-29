@@ -1,7 +1,7 @@
 #include <DataFrame/Vectors/HeteroVector.h>
 
-#include <iostream>
 #include <cassert>
+#include <iostream>
 #include <string>
 #include <typeinfo>
 

@@ -6,10 +6,10 @@
 #include <DataFrame/Utils/DateTime.h>
 #include <DataFrame/Utils/FixedSizeString.h>
 
+#include <cassert>
 #include <cstdlib>
 #include <iostream>
 #include <string>
-#include <cassert>
 
 using namespace hmdf;
 

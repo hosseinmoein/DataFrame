@@ -17,6 +17,8 @@ Instances of DataFrame are not multithreaded safe. In other words, a single inst
 1. There are asynchronous versions of some methods. For example, you have both sort() and sort_async(). The latter returns a std::future which could execute in parallel.
 2. DataFrame uses multiple threads, internally and unbeknown to the user, in some of its algorithms when appropriate. User can control (or turn off) the multithreading by calling set_thread_level() which sets the max number of threads to be used. The default is 0. The optimal number of threads is a function of users hardware/software environment and usually obtained by trail and error. set_thread_level() and threading level in general is a static property and once set, it applies to all instances.
 
+---
+
 <B>Example Code</B>
 ```CPP
 using namespace hmdf;
@@ -62,20 +64,29 @@ StatsVisitor<double>  stats_visitor;
 // Calculate the stats on column “dbl_col”
 df.visit<double>("dbl_col", stats_visitor);
 ```
+
+---
+
 <B>Date Time</B><BR>
 DateTime class included in this library is a very cool and handy object to manipulate date/time with nanosecond precision. 
+
+---
 
 ## [DataFrame Documentation](docs/DataFrameDoc.pdf)
 [DateTime Documentation](docs/DateTimeDoc.pdf)
 
+---
+
 ## [DataFrame Test File](test/dataframe_tester.cc)
 [Heterogeneous Vectors Test File](test/vectors_tester.cc)<BR>
 [Date/Time Test File](test/date_time_tester.cc)
+  
+---
 
-## [Contributions](docs/CONTRIBUTING.md)
+[Contributions](docs/CONTRIBUTING.md)<BR>
+[License](License)
 
-## [License](License)
-
+---
 
 ### Installing using CMake
 ```bash
@@ -92,6 +103,7 @@ make install
 cd [Debug | Release]
 make uninstall
 ```
+---
 
 ### Performance
 There is a test program [dataframe_performance](test/dataframe_performance.cc) that should give you some sense of how this library performs. As a comparison, there is also a Pandas Python [pandas_performance](test/pandas_performance.py) script that does exactly the same thing.<BR>

@@ -5,6 +5,8 @@
 
 #include <DataFrame/DataFrame.h>
 
+#include <cstring>
+
 // ----------------------------------------------------------------------------
 
 namespace hmdf

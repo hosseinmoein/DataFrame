@@ -32,9 +32,9 @@ int main(int argc, char *argv[]) {
     std::cout << "All memory allocations are done. Calculating means ..."
               << std::endl;
 
-    MeanVisitor<double> n_mv;
-    MeanVisitor<double> ln_mv;
-    MeanVisitor<double> e_mv;
+    MeanVisitor<double, time_t> n_mv;
+    MeanVisitor<double, time_t> ln_mv;
+    MeanVisitor<double, time_t> e_mv;
 
     df.visit<double>("normal", n_mv);
     df.visit<double>("log_normal", ln_mv);

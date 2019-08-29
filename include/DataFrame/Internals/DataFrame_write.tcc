@@ -24,30 +24,6 @@ inline static S &_write_csv_df_index_(S &o, const DateTime &value)  {
     return (o << value.time() << '.' << value.nanosec());
 }
 
-// -------------------------------------
-
-template<typename S, typename T>
-inline static S &_write_json_df_index_(S &o, const T &value)  {
-
-    return (o << value);
-}
-
-// -------------------------------------
-
-template<typename S>
-inline static S &_write_json_df_index_(S &o, const DateTime &value)  {
-
-    return (o << value.time() << '.' << value.nanosec());
-}
-
-// -------------------------------------
-
-template<typename S>
-inline static S &_write_json_df_index_(S &o, const std::string &value)  {
-
-    return (o << '"' << value << '"');
-}
-
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>

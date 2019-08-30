@@ -34,7 +34,13 @@ public:
 
 public:
 
-    inline VectorView() = default;
+    VectorView() = default;
+    VectorView(const VectorView &) = default;
+    VectorView(VectorView &&) = default;
+    VectorView &operator= (const VectorView &) = default;
+    VectorView &operator= (VectorView &&) = default;
+    ~VectorView() = default;
+
     inline VectorView (value_type *bp, value_type *ep) noexcept
         : begin_ptr_(bp), end_ptr_(ep)  {   }
 
@@ -45,6 +51,9 @@ public:
     }
     inline void clear () noexcept  { begin_ptr_ = end_ptr_ = nullptr; }
 
+    inline reference at (size_type i) noexcept  { return (*(begin_ptr_ + i)); }
+    inline const_reference
+	at (size_type i) const noexcept  { return (*(begin_ptr_ + i)); }
     inline reference operator [] (size_type i) noexcept  {
 
         return (*(begin_ptr_ + i));
@@ -58,9 +67,10 @@ public:
     inline reference back() noexcept  { return (*(end_ptr_ - 1)); }
     inline const_reference back() const noexcept  { return (*(end_ptr_ - 1)); }
 
-    // This is to match the std::vector interface, so things will compile
+    // These are to match the std::vector interface, so things will compile
     //
     inline void shrink_to_fit()  {  }
+    inline void reserve (size_type)  {  }
 
     inline void swap (VectorView &rhs) noexcept  {
 
@@ -219,7 +229,7 @@ public:
 
     private:
 
-        const_pointer   node_ {nullptr};
+        const_pointer   node_ { nullptr };
     };
 
     class   iterator;
@@ -351,7 +361,7 @@ public:
 
     private:
 
-        const_pointer   node_ {nullptr};
+        const_pointer   node_ { nullptr };
 
         friend  class   VectorView::const_reverse_iterator;
     };
@@ -466,7 +476,7 @@ public:
 
     private:
 
-        pointer node_ {nullptr};
+        pointer node_ { nullptr };
 
         friend  class   VectorView::const_iterator;
     };
@@ -481,14 +491,9 @@ public:
     end () const noexcept  { return (const_iterator (end_ptr_)); }
 
     inline const_reverse_iterator
-    rbegin () const noexcept  {
-
-        return (const_reverse_iterator (end_ptr_ - 1));
-    }
-    inline const_reverse_iterator rend () const noexcept  {
-
-        return (const_reverse_iterator (begin_ptr_ - 1));
-    }
+    rbegin() const noexcept { return (const_reverse_iterator(end_ptr_ - 1)); }
+    inline const_reverse_iterator
+    rend() const noexcept { return (const_reverse_iterator(begin_ptr_ - 1)); }
 };
 
 } // namespace hmdf

@@ -348,10 +348,10 @@ template<typename T, typename B>
 template<typename I>
 void ObjectVector<T, B>::insert (iterator pos, I first, I last)  {
 
-    const long      int to_add = &(*last) - &(*first);
+    const size_type to_add = &(*last) - &(*first);
     const size_type pos_index = &(*pos) - &(*begin ());
 
-    BaseClass::truncate (BaseClass::_file_size + to_add * sizeof (value_type));
+    BaseClass::truncate(BaseClass::_file_size + to_add * sizeof (value_type));
 
     const iterator  new_pos = begin() + pos_index;
 

@@ -61,7 +61,7 @@ public:
     using size_type = typename BaseClass::size_type;
     using value_type = T;
     using difference_type = std::ptrdiff_t;
-    using ponter = value_type *;
+    using pointer = value_type *;
     using const_pointer = const value_type *;
     using const_pointer_const = const value_type *const;
     using reference = value_type &;
@@ -181,7 +181,7 @@ private:
 
     mutable size_type   cached_object_count_ { 0 };
 
-    inline void setup_();
+    inline void setup_ ();
     inline size_type tell_ () const noexcept;
     inline void unlink_ ()  { BaseClass::unlink (); }
     inline int write_ (const value_type *data_ele, size_type count);
@@ -708,11 +708,13 @@ public:
     inline reverse_iterator
     rend() noexcept  { return (reverse_iterator (&((*this)[0]) - 1)); }
 
-    inline const_reverse_iterator rbegin () const noexcept  {
+    inline const_reverse_iterator
+    rbegin () const noexcept  {
 
         return (const_reverse_iterator (&((*this)[size() - 1])));
     }
-    inline const_reverse_iterator rend () const noexcept  {
+    inline const_reverse_iterator
+    rend () const noexcept  {
 
         return (const_reverse_iterator (&((*this)[0]) - 1));
     }

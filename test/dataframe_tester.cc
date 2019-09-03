@@ -4,6 +4,7 @@
 
 #include <cassert>
 #include <cmath>
+#include <cmath>
 #include <iostream>
 #include <limits>
 #include <string>
@@ -92,7 +93,6 @@ int main(int argc, char *argv[]) {
 
     std::vector<int>    ivec = df.get_column<int> ("int_col");
 
-    std::cout << df.get_column<double> ("dbl_col")[2] << std::endl;
     assert(df.get_column<double> ("dbl_col")[2] == 3.2345);
 
     MeanVisitor<int>    ivisitor;
@@ -108,113 +108,145 @@ int main(int argc, char *argv[]) {
     assert(::abs(df.visit<double>("dbl_col", dvisitor).get_result() -
                  4.83406) < 0.0001);
 
-    std::cout << "Printing integer vector BEFORE making make_consistent ..."
-              << std::endl;
-
     std::vector<double> dvec = df.get_column<double> ("dbl_col");
     std::vector<double> dvec2 = df.get_column<double> ("dbl_col_2");
 
-    for (auto iter : dvec)
-        std::cout << iter << " ";
-    std::cout << std::endl;
-    for (auto iter : dvec2)
-        std::cout << iter << " ";
-    std::cout << std::endl;
+    assert(dvec.size() == 9);
+    assert(dvec[0] == 1.2345);
+    assert(dvec[1] == 2.2345);
+    assert(dvec[3] == 4.2345);
+    assert(dvec[8] == 10.56);
+
+    assert(dvec2.size() == 8);
+    assert(dvec2[0] == 0.998);
+    assert(dvec2[1] == 0.3456);
+    assert(dvec2[4] == 0.00345);
+    assert(dvec2[7] == 0.1);
 
     df.make_consistent<int, double, std::string>();
     df.shrink_to_fit<int, double, std::string>();
-    std::cout << "Printing integer vector AFTER making make_consistent ..."
-              << std::endl;
     dvec = df.get_column<double> ("dbl_col");
     dvec2 = df.get_column<double> ("dbl_col_2");
-    for (auto iter : dvec)
-        std::cout << iter << " ";
-    std::cout << std::endl;
-    for (auto iter : dvec2)
-        std::cout << iter << " ";
-    std::cout << std::endl;
+
+    assert(dvec.size() == 8);
+    assert(dvec[0] == 1.2345);
+    assert(dvec[1] == 2.2345);
+    assert(dvec[3] == 4.2345);
+    assert(dvec[7] == 8.5);
+
+    assert(dvec2.size() == 8);
+    assert(dvec2[0] == 0.998);
+    assert(dvec2[1] == 0.3456);
+    assert(dvec2[4] == 0.00345);
+    assert(dvec2[7] == 0.1);
 
     df.sort<MyDataFrame::IndexType, int, double, std::string>();
-    std::cout << "Printing after sorting the index ..." << std::endl;
     dvec = df.get_column<double> ("dbl_col");
     dvec2 = df.get_column<double> ("dbl_col_2");
-    for (auto iter : dvec)
-        std::cout << iter << " ";
-    std::cout << std::endl;
-    for (auto iter : dvec2)
-        std::cout << iter << " ";
-    std::cout << std::endl;
+
+    assert(dvec.size() == 8);
+    assert(dvec[0] == 1.2345);
+    assert(dvec[1] == 2.2345);
+    assert(dvec[3] == 4.2345);
+    assert(dvec[5] == 8.5);
+    assert(dvec[7] == 6.5);
+
+    assert(dvec2.size() == 8);
+    assert(dvec2[0] == 0.998);
+    assert(dvec2[1] == 0.3456);
+    assert(dvec2[4] == 0.00345);
+    assert(dvec2[5] == 0.1);
+    assert(dvec2[7] == 0.923);
 
     df.sort<double, int, double, std::string>("dbl_col_2");
-    std::cout << "Printing after sorting the dbl_col_2 ..." << std::endl;
     dvec = df.get_column<double> ("dbl_col");
     dvec2 = df.get_column<double> ("dbl_col_2");
-    for (auto iter : dvec)
-        std::cout << iter << " ";
-    std::cout << std::endl;
-    for (auto iter : dvec2)
-        std::cout << iter << " ";
-    std::cout << std::endl;
+
+    assert(dvec.size() == 8);
+    assert(dvec[0] == 5.2345);
+    assert(dvec[1] == 3.2345);
+    assert(dvec[3] == 8.5);
+    assert(dvec[5] == 2.2345);
+    assert(dvec[7] == 1.2345);
+
+    assert(dvec2.size() == 8);
+    assert(dvec2[0] == 0.00345);
+    assert(dvec2[1] == 0.056);
+    assert(dvec2[4] == 0.15678);
+    assert(dvec2[5] == 0.3456);
+    assert(dvec2[7] == 0.998);
 
     MyDataFrame df2 =
         df.get_data_by_idx<int, double, std::string>(
             Index2D<MyDataFrame::IndexType> { 3, 5 });
 
-    std::cout << "Printing the second df after get_data_by_idx() ..."
-              << std::endl;
+    // Printing the second df after get_data_by_idx() ...
+
     dvec = df2.get_column<double> ("dbl_col");
     dvec2 = df2.get_column<double> ("dbl_col_2");
-    for (auto iter : dvec)
-        std::cout << iter << " ";
-    std::cout << std::endl;
-    for (auto iter : dvec2)
-        std::cout << iter << " ";
-    std::cout << std::endl;
+
+    assert(dvec.size() == 6);
+    assert(dvec[0] == 5.2345);
+    assert(dvec[1] == 3.2345);
+    assert(dvec[3] == 8.5);
+    assert(dvec[5] == 2.2345);
+
+    assert(dvec2.size() == 6);
+    assert(dvec2[0] == 0.00345);
+    assert(dvec2[1] == 0.056);
+    assert(dvec2[4] == 0.15678);
+    assert(dvec2[5] == 0.3456);
 
     MyDataFrame df3 = df.get_data_by_loc<int, double, std::string>
         (Index2D<long> { 1, 2 });
 
-    df3.write<std::ostream, int, double, std::string>(std::cout);
-    std::cout << "Printing the second df after get_data_by_loc() ..."
-              << std::endl;
+    assert(df3.get_index().size() == 1);
+    assert(df3.get_column<int>("int_col").size() == 1);
+    assert(df3.get_column<double>("dbl_col").size() == 1);
+    assert(df3.get_column<double>("dbl_col_2").size() == 1);
+    assert(df3.get_column<std::string>("str_col").size() == 1);
+    assert(df3.get_index()[0] == 3);
+    assert(df3.get_column<double>("dbl_col")[0] == 3.2345);
+    assert(df3.get_column<int>("col_name")[0] == 0);
+    assert(df3.get_column<std::string>("str_col")[0] == "Col_name");
+
+    // Printing the second df after get_data_by_loc() ...
+
     dvec = df3.get_column<double> ("dbl_col");
     dvec2 = df3.get_column<double> ("dbl_col_2");
-    for (auto iter : dvec)
-        std::cout << iter << " ";
-    std::cout << std::endl;
-    for (auto iter : dvec2)
-        std::cout << iter << " ";
-    std::cout << std::endl;
+
+    assert(dvec.size() == 1);
+    assert(dvec[5] == 2.2345);
+
+    assert(dvec2.size() == 1);
+    assert(dvec2[0] == 0.056);
+
+    // Correlation between dbl_col and dbl_col_2 is
 
     CorrVisitor<double> corr_visitor;
+    const double        corr = 
+        df.visit<double, double>
+            ("dbl_col", "dbl_col_2", corr_visitor).get_result();
 
-    std::cout << "Correlation between dbl_col and dbl_col_2 is: "
-              << df.visit<double, double>("dbl_col",
-                                          "dbl_col_2",
-                                          corr_visitor).get_result()
-              << std::endl;
+    assert(fabs(corr - -0.358381) < 0.000001);
 
     StatsVisitor<double>    stats_visitor;
 
     df.visit<double>("dbl_col", stats_visitor);
-    std::cout << std::endl;
     dvec = df.get_column<double> ("dbl_col");
-    for (auto iter : dvec)
-        std::cout << iter << " ";
-    std::cout << std::endl;
-    assert(abs(stats_visitor.get_skew() - 0.0396307) < 0.0001);
-    assert(abs(stats_visitor.get_kurtosis() - -1.273) < 0.0001);
-    assert(abs(stats_visitor.get_mean() - 4.83406) < 0.0001);
-    assert(abs(stats_visitor.get_variance() - 6.58781) < 0.0001);
+    assert(fabs(stats_visitor.get_skew() - 0.0396307) < 0.0001);
+    assert(fabs(stats_visitor.get_kurtosis() - -1.273) < 0.0001);
+    assert(fabs(stats_visitor.get_mean() - 4.83406) < 0.0001);
+    assert(fabs(stats_visitor.get_variance() - 6.58781) < 0.0001);
 
     SLRegressionVisitor<double> slr_visitor;
 
     df.visit<double, double>("dbl_col", "dbl_col_2", slr_visitor);
     assert(slr_visitor.get_count() == 8);
-    assert(abs(slr_visitor.get_slope() - -0.0561415) < 0.00001);
-    assert(abs(slr_visitor.get_intercept() - 0.602674) < 0.00001);
-    assert(abs(slr_visitor.get_corr() - -0.358381) < 0.00001);
-    assert(abs(df.visit<double, double>("dbl_col", "dbl_col_2",
+    assert(fabs(slr_visitor.get_slope() - -0.0561415) < 0.00001);
+    assert(fabs(slr_visitor.get_intercept() - 0.602674) < 0.00001);
+    assert(fabs(slr_visitor.get_corr() - -0.358381) < 0.00001);
+    assert(fabs(df.visit<double, double>("dbl_col", "dbl_col_2",
                                         corr_visitor).get_result() -
                -0.358381) < 0.00001);
 
@@ -408,8 +440,8 @@ int main(int argc, char *argv[]) {
                     std::make_pair("ul_col", &ulvisitor));
 
     assert(ivisitor2.get_result() == 19);
-    assert(abs(dvisitor2.get_result() - 4.5696) < 0.0001);
-    assert(abs(dvisitor22.get_result() - 0.0264609) < 0.00001);
+    assert(fabs(dvisitor2.get_result() - 4.5696) < 0.0001);
+    assert(fabs(dvisitor22.get_result() - 0.0264609) < 0.00001);
     assert(ulvisitor.get_result() == 123448);
 
     MyDataFrame df_copy_con = dfx;
@@ -426,7 +458,8 @@ int main(int argc, char *argv[]) {
     df_copy_con.get_column<double>("dbl_col")[7] = 88.888888;
     assert(dfx.get_column<double>("dbl_col")[7] == 10.0);
     assert(
-       abs(df_copy_con.get_column<double>("dbl_col")[7] - 88.888888) < 0.00001);
+       fabs(df_copy_con.get_column<double>("dbl_col")[7] - 88.888888) <
+                0.00001);
     assert(! (df_copy_con.is_equal<int,
                                    unsigned long,
                                    double,
@@ -1881,20 +1914,20 @@ int main(int argc, char *argv[]) {
 
         assert(result.size() == 17);
         assert(result[0] == 1.0);
-        assert(abs(result[1] - 0.562001) < 0.00001);
-        assert(abs(result[16] - -0.265228) < 0.00001);
-        assert(abs(result[6] - 0.388131) < 0.00001);
-        assert(abs(result[10] - 0.125514) < 0.00001);
+        assert(fabs(result[1] - 0.562001) < 0.00001);
+        assert(fabs(result[16] - -0.265228) < 0.00001);
+        assert(fabs(result[6] - 0.388131) < 0.00001);
+        assert(fabs(result[10] - 0.125514) < 0.00001);
 
         const auto  &result2 =
             df.single_act_visit<double>("col_2", auto_corr).get_result();
 
         assert(result.size() == 17);
         assert(result[0] == 1.0);
-        assert(abs(result[1] - 0.903754) < 0.00001);
-        assert(abs(result[16] - 0.183254) < 0.00001);
-        assert(abs(result[6] - -0.263385) < 0.00001);
-        assert(abs(result[10] - -0.712274) < 0.00001);
+        assert(fabs(result[1] - 0.903754) < 0.00001);
+        assert(fabs(result[16] - 0.183254) < 0.00001);
+        assert(fabs(result[6] - -0.263385) < 0.00001);
+        assert(fabs(result[10] - -0.712274) < 0.00001);
     }
 
     {
@@ -1929,29 +1962,29 @@ int main(int argc, char *argv[]) {
         assert(result[1] == -1.0);
         assert(result[16] == 1.38);
         assert(result[6] == -20.66);
-        assert(abs(result[10] - -1.96) < 0.00001);
+        assert(fabs(result[10] - -1.96) < 0.00001);
 
         ReturnVisitor<double>   return_visit2(return_policy::percentage);
         const auto              &result2 =
             df.single_act_visit<double>("col_1", return_visit2).get_result();
 
         assert(result2.size() == 20);
-        assert(abs(result2[0] - 0.0666667) < 0.00001);
-        assert(abs(result2[1] - -0.0625) < 0.00001);
-        assert(abs(result2[16] - 2.12308) < 0.00001);
-        assert(abs(result2[6] - -0.98381) < 0.00001);
-        assert(abs(result2[10] - -0.852174) < 0.00001);
+        assert(fabs(result2[0] - 0.0666667) < 0.00001);
+        assert(fabs(result2[1] - -0.0625) < 0.00001);
+        assert(fabs(result2[16] - 2.12308) < 0.00001);
+        assert(fabs(result2[6] - -0.98381) < 0.00001);
+        assert(fabs(result2[10] - -0.852174) < 0.00001);
 
         ReturnVisitor<double>   return_visit3(return_policy::log);
         const auto              &result3 =
             df.single_act_visit<double>("col_1", return_visit3).get_result();
 
         assert(result3.size() == 20);
-        assert(abs(result3[0] - 0.0645385) < 0.00001);
-        assert(abs(result3[1] - -0.0645385) < 0.00001);
-        assert(abs(result3[16] - 1.13882) < 0.00001);
-        assert(abs(result3[6] - -4.12333) < 0.00001);
-        assert(abs(result3[10] - -1.91172) < 0.00001);
+        assert(fabs(result3[0] - 0.0645385) < 0.00001);
+        assert(fabs(result3[1] - -0.0645385) < 0.00001);
+        assert(fabs(result3[16] - 1.13882) < 0.00001);
+        assert(fabs(result3[6] - -4.12333) < 0.00001);
+        assert(fabs(result3[10] - -1.91172) < 0.00001);
     }
 
     {
@@ -2057,12 +2090,12 @@ int main(int argc, char *argv[]) {
         result = df.visit<double, double>("dblcol_1",
                                           "dblcol_3",
                                           tracking_visit).get_result();
-        assert(abs(result - 0.256416) < 0.00001);
+        assert(fabs(result - 0.256416) < 0.00001);
 
         result = df.visit<double, double>("dblcol_1",
                                           "dblcol_4",
                                           tracking_visit).get_result();
-        assert(abs(result - 0.256416) < 0.00001);
+        assert(fabs(result - 0.256416) < 0.00001);
 
         result = df.visit<double, double>("dblcol_3",
                                           "dblcol_4",
@@ -2072,12 +2105,12 @@ int main(int argc, char *argv[]) {
         result = df.visit<double, double>("dblcol_2",
                                           "dblcol_4",
                                           tracking_visit).get_result();
-        assert(abs(result - 0.256416) < 0.00001);
+        assert(fabs(result - 0.256416) < 0.00001);
 
         result = df.visit<double, double>("dblcol_1",
                                           "dblcol_5",
                                           tracking_visit).get_result();
-        assert(abs(result - 17.0566) < 0.0001);
+        assert(fabs(result - 17.0566) < 0.0001);
     }
 
     {
@@ -2155,17 +2188,17 @@ int main(int argc, char *argv[]) {
         result = df.visit<double, double>("dblcol_1_return",
                                           "dblcol_3_return",
                                           beta_visit).get_result();
-        assert(abs(result - 1.04881) < 0.00001);
+        assert(fabs(result - 1.04881) < 0.00001);
 
         result = df.visit<double, double>("dblcol_1_return",
                                           "dblcol_4_return",
                                           beta_visit).get_result();
-        assert(abs(result - 0.647582) < 0.00001);
+        assert(fabs(result - 0.647582) < 0.00001);
 
         result = df.visit<double, double>("dblcol_1_return",
                                           "dblcol_5_return",
                                           beta_visit).get_result();
-        assert(abs(result - -0.128854) < 0.00001);
+        assert(fabs(result - -0.128854) < 0.00001);
     }
 
     {

@@ -8,6 +8,7 @@
 #include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
+#include <functional>
 #include <iostream>
 #include <string.h>
 
@@ -339,6 +340,26 @@ using String1K = FixedSizeString<1023>;
 using String2K = FixedSizeString<2047>;
 
 } // namespace hmdf
+
+// ----------------------------------------------------------------------------
+
+template<>
+struct  std::hash<hmdf::String64>  {
+
+    static const std::size_t    A = 54059;   // A prime
+    static const std::size_t    B = 76963;   // Another prime
+    static const std::size_t    C = 86969;   // Yet another prime
+    static const std::size_t    FIRSTH = 37; // Also prime
+
+    inline std::size_t operator()(const hmdf::String64 &key) const noexcept {
+
+		std::size_t h = FIRSTH;
+        const char  *s = key.c_str();
+
+        while (*(s++)) { h = (h * A) ^ (*s * B); }
+        return (h); // Or return h % C;
+    }
+};
 
 // ----------------------------------------------------------------------------
 

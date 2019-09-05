@@ -343,23 +343,26 @@ using String2K = FixedSizeString<2047>;
 
 // ----------------------------------------------------------------------------
 
+namespace std  {
 template<>
-struct  std::hash<hmdf::String64>  {
+struct  hash<typename hmdf::String64>  {
 
-    static const std::size_t    A = 54059;   // A prime
-    static const std::size_t    B = 76963;   // Another prime
-    static const std::size_t    C = 86969;   // Yet another prime
-    static const std::size_t    FIRSTH = 37; // Also prime
+    static const size_t A = 54059;   // A prime
+    static const size_t B = 76963;   // Another prime
+    static const size_t C = 86969;   // Yet another prime
+    static const size_t FIRSTH = 37; // Also prime
 
-    inline std::size_t operator()(const hmdf::String64 &key) const noexcept {
+    inline size_t operator()(const hmdf::String64 &key) const noexcept {
 
-		std::size_t h = FIRSTH;
+		size_t      h = FIRSTH;
         const char  *s = key.c_str();
 
         while (*(s++)) { h = (h * A) ^ (*s * B); }
         return (h); // Or return h % C;
     }
 };
+
+} // namespace std
 
 // ----------------------------------------------------------------------------
 

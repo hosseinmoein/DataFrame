@@ -30,7 +30,7 @@ class   VirtualString  {
 
 public:
 
-    using size_type = size_t;
+    using size_type = std::size_t;
     using value_type = char;
     using pointer = value_type *;
     using const_pointer = const value_type *;
@@ -266,7 +266,23 @@ public:
     inline size_type size () const noexcept { return (::strlen(string_)); }
     inline bool empty () const noexcept  { return (*string_ == 0); }
 
+    // Fowler–Noll–Vo (FNV-1a) hash function
+    //
+    inline size_type hash () const noexcept {
+
+        size_type   h = FNV_OFFSET_BASIS_;
+        const char  *s = string_;
+
+        while (*(s++)) { h = (h ^ *s) * FNV_PRIME_; }
+        return (h);
+    }
+
 private:
+
+    // This is affective for 64-bit systems
+    //
+    static const size_type  FNV_OFFSET_BASIS_ = 14695981039346656037UL;
+    static const size_type  FNV_PRIME_ = 1099511628211UL;
 
     pointer string_;
 };
@@ -347,18 +363,9 @@ namespace std  {
 template<>
 struct  hash<typename hmdf::String64>  {
 
-    static const size_t A = 54059;   // A prime
-    static const size_t B = 76963;   // Another prime
-    static const size_t C = 86969;   // Yet another prime
-    static const size_t FIRSTH = 37; // Also prime
+    inline size_t operator() (const hmdf::String64 &key) const noexcept {
 
-    inline size_t operator()(const hmdf::String64 &key) const noexcept {
-
-		size_t      h = FIRSTH;
-        const char  *s = key.c_str();
-
-        while (*(s++)) { h = (h * A) ^ (*s * B); }
-        return (h); // Or return h % C;
+        return (key.hash());
     }
 };
 

@@ -361,9 +361,9 @@ using String2K = FixedSizeString<2047>;
 
 namespace std  {
 template<>
-struct  hash<typename hmdf::String64>  {
+struct  hash<typename hmdf::VirtualString>  {
 
-    inline size_t operator() (const hmdf::String64 &key) const noexcept {
+    inline size_t operator()(const hmdf::VirtualString &key) const noexcept {
 
         return (key.hash());
     }

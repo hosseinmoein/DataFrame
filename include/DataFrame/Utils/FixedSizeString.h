@@ -256,6 +256,11 @@ public:
 
     inline void clear () noexcept  { *string_ = 0; }
 
+    // These two make it compatible with std::string
+    //
+    inline void resize (size_type) noexcept  {  }
+    inline void resize (size_type, value_type) noexcept  {  }
+
     // const utility methods.
     //
     inline const_pointer c_str () const noexcept  { return (string_); }
@@ -267,22 +272,18 @@ public:
     inline bool empty () const noexcept  { return (*string_ == 0); }
 
     // Fowler–Noll–Vo (FNV-1a) hash function
+    // This is for 64-bit systems
     //
     inline size_type hash () const noexcept {
 
-        size_type   h = FNV_OFFSET_BASIS_;
-        const char  *s = string_;
+        size_type       h = 14695981039346656037UL; // offset basis
+        const_pointer   s = string_;
 
-        while (*(s++)) { h = (h ^ *s) * FNV_PRIME_; }
+        while (*(s++)) { h = (h ^ *s) * 1099511628211UL; } // 64bit prime
         return (h);
     }
 
 private:
-
-    // This is affective for 64-bit systems
-    //
-    static const size_type  FNV_OFFSET_BASIS_ = 14695981039346656037UL;
-    static const size_type  FNV_PRIME_ = 1099511628211UL;
 
     pointer string_;
 };

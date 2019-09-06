@@ -348,8 +348,6 @@ int main(int argc, char *argv[]) {
 
     fut.get();
 
-    std::cout << "\nTesting Bucketize() ..." << std::endl;
-
     std::future<void>   sort_fut =
         dfx.sort_async<double, int, double, std::string>();
 
@@ -359,6 +357,8 @@ int main(int argc, char *argv[]) {
               unsigned long,
               double,
               std::string>(std::cout);
+
+    std::cout << "\nTesting Bucketize() ..." << std::endl;
 
     const MyDataFrame::IndexType    interval = 4;
     std::future<MyDataFrame>        b_fut =
@@ -2880,16 +2880,16 @@ int main(int argc, char *argv[]) {
                        std::move(d4),
                        nan_policy::dont_pad_with_nans);
 
-        std::cout << "Original DatFrasme:" << std::endl;
-        df.write<std::ostream, int, double, std::string>(std::cout);
+        // std::cout << "Original DatFrasme:" << std::endl;
+        // df.write<std::ostream, int, double, std::string>(std::cout);
 
         df.shuffle<2, double, std::string>({"col_1", "col_str"}, false);
-        std::cout << "shuffle with no index:" << std::endl;
-        df.write<std::ostream, int, double, std::string>(std::cout);
+        // std::cout << "shuffle with no index:" << std::endl;
+        // df.write<std::ostream, int, double, std::string>(std::cout);
 
         df.shuffle<2, double>({"col_2", "col_3"}, true);
-        std::cout << "shuffle with index:" << std::endl;
-        df.write<std::ostream, int, double, std::string>(std::cout);
+        // std::cout << "shuffle with index:" << std::endl;
+        // df.write<std::ostream, int, double, std::string>(std::cout);
     }
 
     {

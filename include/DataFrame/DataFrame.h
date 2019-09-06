@@ -7,6 +7,7 @@
 
 #include <DataFrame/DataFrameTypes.h>
 #include <DataFrame/Utils/DateTime.h>
+#include <DataFrame/Utils/FixedSizeString.h>
 #include <DataFrame/Utils/ThreadGranularity.h>
 
 #include <array>
@@ -59,7 +60,9 @@ public:
 
 private:
 
-    using ColumnTable = std::unordered_map<std::string, size_type>;
+    using ColNameType = String64;
+    using ColumnTable =
+        std::unordered_map<ColNameType, size_type, std::hash<VirtualString>>;
 
     // Data fields
     //

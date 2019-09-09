@@ -1394,6 +1394,119 @@ private:
 
 // ----------------------------------------------------------------------------
 
+template<typename T,
+         typename I = unsigned long,
+         typename =
+             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+struct ZScoreVisitor {
+
+    using value_type = T;
+    using index_type = I;
+    using size_type = std::size_t;
+    using result_type = std::vector<value_type>;
+
+    inline void
+    operator() (const std::vector<index_type> &idx,
+                const std::vector<value_type> &col)  {
+
+        MeanVisitor<value_type> mvisit;
+        StdVisitor<value_type>  svisit;
+        const size_type         col_s = col.size();
+
+        mvisit.pre();
+        svisit.pre();
+        for (size_type i = 0; i < col_s; ++i)  {
+            if (! skip_nan_ || ! is_nan__(col[i]))  {
+                mvisit(idx[i], col[i]);
+                svisit(idx[i], col[i]);
+            }
+        }
+        mvisit.post();
+        svisit.post();
+
+        const value_type    m = mvisit.get_result();
+        const value_type    s = svisit.get_result();
+
+        zscore_.reserve(col.size());
+        for (const auto citer : col)
+            zscore_.push_back((citer - m) / s);
+    }
+    inline void pre ()  { zscore_.clear(); }
+    inline void post ()  {  }
+    inline const result_type &get_result () const  { return (zscore_); }
+    inline result_type &get_result ()  { return (zscore_); }
+
+    explicit ZScoreVisitor(bool skipnan = true) : skip_nan_(skipnan)  {   }
+
+private:
+
+    std::vector<value_type> zscore_ {  };
+    const bool              skip_nan_ { };
+};
+
+// ----------------------------------------------------------------------------
+
+template<typename T,
+         typename I = unsigned long,
+         typename =
+             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+struct SampleZScoreVisitor {
+
+    using value_type = T;
+    using index_type = I;
+    using size_type = std::size_t;
+    using result_type = value_type;
+
+    inline void
+    operator() (const std::vector<index_type> &idx,
+                const std::vector<value_type> &population,
+                const std::vector<value_type> &sample)  {
+
+        MeanVisitor<value_type> p_mvisit;
+        StdVisitor<value_type>  p_svisit;
+        MeanVisitor<value_type> s_mvisit;
+        const size_type         p_col_s = population.size();
+        const size_type         s_col_s = sample.size();
+        const size_type         max_s = std::max(p_col_s, s_col_s);
+
+        p_mvisit.pre();
+        p_svisit.pre();
+        s_mvisit.pre();
+        for (size_type i = 0; i < max_s; ++i)  {
+            if (i < p_col_s)  {
+                if (! skip_nan_ || ! is_nan__(population[i]))  {
+                    p_mvisit(idx[i], population[i]);
+                    p_svisit(idx[i], population[i]);
+                }
+            }
+            if (i < s_col_s)  {
+                if (! skip_nan_ || ! is_nan__(sample[i]))  {
+                    s_mvisit(idx[i], sample[i]);
+                }
+            }
+        }
+        p_mvisit.post();
+        p_svisit.post();
+        s_mvisit.post();
+
+        zscore_ = (s_mvisit.get_result() - p_mvisit.get_result()) /
+                  (p_svisit.get_result() / ::sqrt(s_col_s));
+    }
+    inline void pre ()  { zscore_ = 0; }
+    inline void post ()  {  }
+    inline result_type get_result () const  { return (zscore_); }
+
+    explicit
+    SampleZScoreVisitor(bool skipnan = true) : skip_nan_(skipnan)  {   }
+
+private:
+
+    value_type  zscore_ {  };
+    const bool  skip_nan_ { };
+};
+
+// ----------------------------------------------------------------------------
+
 struct GroupbySum
     : HeteroVector::visitor_base<int, double, long, std::string>  {
 

@@ -3431,6 +3431,63 @@ int main(int argc, char *argv[]) {
         assert(df.get_column<double>("col_1")[0] == 101.0);
     }
 
+    {
+        std::cout << "\nTesting Z-Score visitors ..." << std::endl;
+
+        std::vector<unsigned long>  idx =
+            { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+              123457, 123458, 123459, 123460, 123461, 123462, 123466,
+              123467, 123468, 123469, 123470, 123471, 123472, 123473 };
+        std::vector<double>         d1 =
+            { 99.00011, 99.00012, 99.00013, 99.00014, 99.00015, 99.00016,
+              99.000113, 99.000112, 99.000111, 99.00019, 99.00018, 99.00017,
+              99.000114, 99.000115, 99.000116, 99.000117, 99.000118, 99.000119,
+              99.0001114, 99.0001113, 99.0001112 };
+        std::vector<double>         d2 =
+            { 10.1, 20.1, 30.1, 40.1, 50.1, 60.1, 70.1,
+              120.1, 110.1, 28.1, 18.1, 100.1, 90.1, 80.1,
+              130.1, 140.1, 150.1, 160.1, 170.1, 180.1, 190.1 };
+        MyDataFrame                 df;
+
+        df.load_data(std::move(idx),
+                     std::make_pair("col_1", d1),
+                     std::make_pair("col_2", d2));
+
+        ZScoreVisitor<double>   z_score;
+        ZScoreVisitor<double>   z_score2;
+        const auto              result =
+            df.single_act_visit<double>("col_1", z_score).get_result();
+        const auto              result2 =
+            df.single_act_visit<double>("col_2", z_score2).get_result();
+
+        assert(result.size() == 21);
+        assert(fabs(result[0] - -0.774806) < 0.000001);
+        assert(fabs(result[4] - 0.816872) < 0.000001);
+        assert(fabs(result[10] - 2.01063) < 0.000001);
+        assert(fabs(result[19] - -0.723076) < 0.000001);
+        assert(fabs(result[20] - -0.727055) < 0.000001);
+
+        assert(result2.size() == 21);
+        assert(fabs(result2[0] - -1.42003) < 0.00001);
+        assert(fabs(result2[4] - -0.732921) < 0.00001);
+        assert(fabs(result2[10] - -1.28261) < 0.00001);
+        assert(fabs(result2[19] - 1.5002) < 0.00001);
+        assert(fabs(result2[20] - 1.67198) < 0.00001);
+
+        SampleZScoreVisitor<double> z_score3;
+        auto                        result3 =
+            df.single_act_visit<double, double>("col_1",
+                                                "col_2",
+                                                z_score3).get_result();
+
+        assert(fabs(result3 - -1136669.1600501483772) < 0.000001);
+        result3 =
+            df.single_act_visit<double, double>("col_2",
+                                                "col_2",
+                                                z_score3).get_result();
+        assert(result3 == 0.0);
+    }
+
     return (0);
 }
 

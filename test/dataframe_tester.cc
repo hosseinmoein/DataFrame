@@ -224,7 +224,7 @@ int main(int argc, char *argv[]) {
     // Correlation between dbl_col and dbl_col_2 is
 
     CorrVisitor<double> corr_visitor;
-    const double        corr = 
+    const double        corr =
         df.visit<double, double>
             ("dbl_col", "dbl_col_2", corr_visitor).get_result();
 

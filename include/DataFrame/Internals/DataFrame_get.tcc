@@ -627,7 +627,7 @@ DataFrame<I, H>::get_data_by_idx(const std::vector<IndexType> &values) const  {
 }
 
 // ----------------------------------------------------------------------------
- 
+
 template<typename I, typename  H>
 template<typename ... Ts>
 DataFrameView<I>

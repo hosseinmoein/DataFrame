@@ -54,7 +54,7 @@ MyDataFrame       df2;
 std::future<bool> fut = df2.read_async("sample_data.csv", io_format::csv);
 
 fut.get();
-        
+
 // Sort the Frame by index
 df.sort<MyDataFrame::TimeStamp, int, double, std::string>();
 // Sort the Frame by column “dbl_col_2”
@@ -62,11 +62,11 @@ df.sort<double, int, double, std::string>("dbl_col_2");
 
 // A functor to calculate mean, variance, skew, kurtosis, defined in
 // DataFrameVisitors.h file.
-// You can implement your own algorithms and extend the DataFrame easily 
+// You can implement your own algorithms and extend the DataFrame easily
 StatsVisitor<double>  stats_visitor;
 // Calculate the stats on column “dbl_col”
 df.visit<double>("dbl_col", stats_visitor);
-``` 
+```
 
 ---
 
@@ -78,7 +78,7 @@ df.visit<double>("dbl_col", stats_visitor);
 [DataFrame Test File](test/dataframe_tester.cc)<BR>
 [Heterogeneous Vectors Test File](test/vectors_tester.cc)<BR>
 [Date/Time Test File](test/date_time_tester.cc)
-  
+
 ---
 
 [Contributions](docs/CONTRIBUTING.md)<BR>
@@ -107,7 +107,7 @@ make uninstall
 There is a test program [dataframe_performance](test/dataframe_performance.cc) that should give you some sense of how this library performs. As a comparison, there is also a Pandas Python [pandas_performance](test/pandas_performance.py) script that does exactly the same thing.<BR>
 dataframe_performance.cc is compiled with gcc compiler with -O3 flag.<BR>
 pandas_performance.py is ran with Python 3.7.<BR>
-I ran both on my mac-book, doing the following:<BR> 
+I ran both on my mac-book, doing the following:<BR>
 <img src="docs/MacSize.png" alt="drawing" width="500"/>
 
 1. Generate ~1.6 billion second resolution timestamps and load it into the DataFrame/Pandas as index.

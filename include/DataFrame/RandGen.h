@@ -35,7 +35,7 @@ gen_uniform_int_dist(std::size_t n, const RandGenParams<T> &params = { });
 // It generates n uniform real distribution random numbers.
 //                1
 // P(i|a,b) = ----------
-//              b − a 
+//              b − a
 //
 // It returns the vector of results
 // Optional parameters to set:
@@ -55,7 +55,7 @@ gen_uniform_real_dist(std::size_t n, const RandGenParams<T> &params = { });
 // function. The probability of true is:
 //          ⎧     p if b == true
 // P(b|p) = ⎨
-//          ⎩ 1 - p if b == fasle 
+//          ⎩ 1 - p if b == fasle
 //
 // It returns the vector of results
 // Optional parameters to set:
@@ -131,7 +131,7 @@ gen_geometric_dist(std::size_t n, const RandGenParams<T> &params = { });
 
 // Produces random non-negative integer values i, distributed according to
 // discrete probability function:
-//             -u    i      
+//             -u    i
 //            e     u
 // P(i|u) = ------------
 //               i!

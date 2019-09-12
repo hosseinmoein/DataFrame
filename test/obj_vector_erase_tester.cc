@@ -105,7 +105,7 @@ int main (int argc, char *argv [])  {
         cout << "Return iterator is " << eiter->counter << endl;
 
     size_t  counter = 0;
-	
+
     for (MyObjBase::const_iterator citer = appd_object.begin ();
          citer != appd_object.end (); ++citer)
         if (++counter % 100 == 0)

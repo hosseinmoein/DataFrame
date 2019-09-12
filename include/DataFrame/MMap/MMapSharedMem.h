@@ -13,7 +13,7 @@
 
 namespace hmdf
 {
-	
+
 class   MMapSharedMem : public MMapBase  {
 
 public:

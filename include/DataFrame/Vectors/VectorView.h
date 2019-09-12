@@ -53,7 +53,7 @@ public:
 
     inline reference at (size_type i) noexcept  { return (*(begin_ptr_ + i)); }
     inline const_reference
-	at (size_type i) const noexcept  { return (*(begin_ptr_ + i)); }
+    at (size_type i) const noexcept  { return (*(begin_ptr_ + i)); }
     inline reference operator [] (size_type i) noexcept  {
 
         return (*(begin_ptr_ + i));

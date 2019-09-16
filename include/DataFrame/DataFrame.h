@@ -22,10 +22,13 @@ namespace hmdf
 
 // I: Index(e.g. Timestamp) type. Although an index column need not necessarily
 //    represent time. Basically I could be any built-in or user-defined type.
-// H (HETERO): See the static assert below. It can only be either
-//             a HeteroVector (StdDataFrame) or a HeteroView (DataFrameView)
-//             or a HeteroPtrView (DataFramePtrView)
-// A DataFrame can contain columns of any built-in or user-defined types.
+// H: See the static assert below. It can only be either
+//    a HeteroVector (typedef'ed below to StdDataFrame) or
+//    a HeteroView (typedef'ed below to DataFrameView) or
+//    a HeteroPtrView (typedef'ed below to DataFramePtrView)
+//
+// A DataFrame may contain one index and any number of columns of any built-in
+// or user-defined types.
 //
 template<typename I, typename H>
 class DataFrame : public ThreadGranularity  {
@@ -74,7 +77,8 @@ public:  // Load/append/remove interfaces
 
     // It creates an empty column named name
     //
-    // T: Type of column being added
+    // T:
+    //   Type of column being added
     //
     template<typename T>
     std::vector<T> &
@@ -97,11 +101,14 @@ public:  // Load/append/remove interfaces
     // index and a variable number of columns. The index vector and all
     // column vectors are "moved" to DataFrame.
     //
-    // Ts: The list of types for columns in args
-    // indices: A vector of indices of type IndexType;
-    // args: A variable list of arguments consisting of
-    //       std::pair(<const char *name, std::vector<T> &&data>).
-    //       Each pair, represents a column data and its name
+    // Ts:
+    //   The list of types for columns in args
+    // indices:
+    //   A vector of indices of type IndexType;
+    // args:
+    //   A variable list of arguments consisting of
+    //     std::pair(<const char *name, std::vector<T> &&data>).
+    //   Each pair, represents a column data and its name
     //
     template<typename ... Ts>
     size_type
@@ -109,7 +116,8 @@ public:  // Load/append/remove interfaces
 
     // It copies the data from iterators begin to end into the index column
     //
-    // ITR: Type of the iterator
+    // ITR:
+    //   Type of the iterator
     //
     template<typename ITR>
     size_type
@@ -124,12 +132,17 @@ public:  // Load/append/remove interfaces
     // If column does not exist, it will be created. If the column exist,
     // it will be over written.
     //
-    // T: Type of data being copied
-    // ITR: Type of the iterator
-    // name: Name of the column
-    // range: The begin and end iterators for data
-    // padding: If true, it pads the data column with nan,
-    //          if it is shorter than the index column.
+    // T:
+    //   Type of data being copied
+    // ITR:
+    //   Type of the iterator
+    // name:
+    //   Name of the column
+    // range:
+    //   The begin and end iterators for data
+    // padding:
+    //   If true, it pads the data column with nan, if it is shorter than the
+    //   index column.
     //
     template<typename T, typename ITR>
     size_type
@@ -141,10 +154,13 @@ public:  // Load/append/remove interfaces
     // If column does not exist, it will be created. If the column exist,
     // it will be over written.
     //
-    // T: Type of data being moved
-    // name: Name of the column
-    // padding: If true, it pads the data column with nan,
-    //          if it is shorter than the index column.
+    // T:
+    //   Type of data being moved
+    // name:
+    //   Name of the column
+    // padding:
+    //   If true, it pads the data column with nan, if it is shorter than the
+    //   index column.
     //
     template<typename T>
     size_type
@@ -166,10 +182,13 @@ public:  // Load/append/remove interfaces
     // It appends val to the end of the named data column.
     // If data column doesn't exist, it throws an exception.
     //
-    // T: Type of the named data column
-    // name: Name of the column
-    // padding: If true, it pads the data column with nan,
-    //          if it is shorter than the index column.
+    // T:
+    //   Type of the named data column
+    // name:
+    //   Name of the column
+    // padding:
+    //   If true, it pads the data column with nan, if it is shorter than the
+    //   index column.
     //
     template<typename T>
     size_type
@@ -179,8 +198,10 @@ public:  // Load/append/remove interfaces
 
     // It appends the range begin to end to the end of the index column
     //
-    // ITR: Type of the iterator
-    // range: The begin and end iterators for data
+    // ITR:
+    //   Type of the iterator
+    // range:
+    //   The begin and end iterators for data
     //
     template<typename ITR>
     size_type
@@ -189,12 +210,17 @@ public:  // Load/append/remove interfaces
     // It appends the range begin to end to the end of the named data column.
     // If data column doesn't exist, it throws an exception.
     //
-    // T: Type of the named data column
-    // ITR: Type of the iterator
-    // name: Name of the column
-    // range: The begin and end iterators for data
-    // padding: If true, it pads the data column with nan,
-    //          if it is shorter than the index column.
+    // T:
+    //   Type of the named data column
+    // ITR:
+    //   Type of the iterator
+    // name:
+    //   Name of the column
+    // range:
+    //   The begin and end iterators for data
+    // padding:
+    //   If true, it pads the data column with nan, if it is shorter than the
+    //   index column.
     //
     template<typename T, typename ITR>
     size_type
@@ -207,9 +233,11 @@ public:  // Load/append/remove interfaces
     // This function first calls make_consistent() that may add nan values to
     // data columns.
     //
-    // Ts: List all the types of all data columns.
-    //     A type should be specified in the list only once.
-    // range: The begin and end iterators for index specified with index values
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // range:
+    //   The begin and end iterators for index specified with index values
     //
     template<typename ... Ts>
     void
@@ -222,9 +250,11 @@ public:  // Load/append/remove interfaces
     // This function first calls make_consistent() that may add nan values to
     // data columns.
     //
-    // Ts: List all the types of all data columns.
-    //     A type should be specified in the list only once.
-    // range: The begin and end iterators for data
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // range:
+    //   The begin and end iterators for data
     //
     template<typename ... Ts>
     void
@@ -243,12 +273,17 @@ public:  // Load/append/remove interfaces
     //       make_consistent() afterwards to make all columns into consistent
     //       length
     //
-    // T: Type of the named column
-    // F: Type of the selecting functor
-    // Ts: The list of types for all columns.
-    //     A type should be specified only once
-    // name: Name of the data column
-    // sel_functor: A reference to the selecting functor
+    // T:
+    //   Type of the named column
+    // F:
+    //   Type of the selecting functor
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // name:
+    //   Name of the data column
+    // sel_functor:
+    //   A reference to the selecting functor
     //
     template<typename T, typename F, typename ... Ts>
     void
@@ -259,14 +294,21 @@ public:  // Load/append/remove interfaces
     // The signature of sel_fucntor:
     //     bool ()(const IndexType &, const T1 &, const T2 &)
     //
-    // T1: Type of the first named column
-    // T2: Type of the second named column
-    // F: Type of the selecting functor
-    // Ts: The list of types for all columns.
-    //     A type should be specified only once
-    // name1: Name of the first data column
-    // name2: Name of the second data column
-    // sel_functor: A reference to the selecting functor
+    // T1:
+    //   Type of the first named column
+    // T2:
+    //   Type of the second named column
+    // F:
+    //   Type of the selecting functor
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // name1:
+    //   Name of the first data column
+    // name2:
+    //   Name of the second data column
+    // sel_functor:
+    //   A reference to the selecting functor
     //
     template<typename T1, typename T2, typename F, typename ... Ts>
     void
@@ -277,16 +319,25 @@ public:  // Load/append/remove interfaces
     // The signature of sel_fucntor:
     //     bool ()(const IndexType &, const T1 &, const T2 &, const T3 &)
     //
-    // T1: Type of the first named column
-    // T2: Type of the second named column
-    // T3: Type of the third named column
-    // F: Type of the selecting functor
-    // Ts: The list of types for all columns.
-    //     A type should be specified only once
-    // name1: Name of the first data column
-    // name2: Name of the second data column
-    // name3: Name of the third data column
-    // sel_functor: A reference to the selecting functor
+    // T1:
+    //   Type of the first named column
+    // T2:
+    //   Type of the second named column
+    // T3:
+    //   Type of the third named column
+    // F:
+    //   Type of the selecting functor
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // name1:
+    //   Name of the first data column
+    // name2:
+    //   Name of the second data column
+    // name3:
+    //   Name of the third data column
+    // sel_functor:
+    //   A reference to the selecting functor
     //
     template<typename T1, typename T2, typename T3, typename F,
              typename ... Ts>
@@ -302,9 +353,11 @@ public:  // Data manipulation
     //
     // also_shuffle_index: If true, it shuffles the named column(s) and the
     //                     index column. Otherwise, index is not shuffled.
-    // N: Number of named columns
-    // Ts: List of types of named columns.
-    //     A type should be specified in the list only once.
+    // N:
+    //   Number of named columns
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
     //
     template<size_t N, typename ... Ts>
     void
@@ -316,16 +369,21 @@ public:  // Data manipulation
     // Missing is determined by being NaN for types that have NaN. For types
     // without NaN (e.g. string), default value is considered missing value.
     //
-    // T: Type of the column(s) in col_names array
-    // N: Size of col_names and values array
-    // col_names: An array of names specifying the columns to fill.
-    // fp:: Specifies the method to use to fill the missing values.
-    //      For example; forward fill, values, etc.
-    // values: If the policy is "values", use these values to fill the missing
-    //         holes. Each value corresponds to the same index in the
-    //         col_names array.
-    // limit: Specifies how many values to fill. Default is -1 meaning fill
-    //        all missing values.
+    // T:
+    //   Type of the column(s) in col_names array
+    // N:
+    //   Size of col_names and values array
+    // col_names:
+    //   An array of names specifying the columns to fill.
+    // fp:
+    //   Specifies the method to use to fill the missing values. For example;
+    //   forward fill, values, etc.
+    // values:
+    //   If the policy is "values", use these values to fill the missing
+    //   holes. Each value corresponds to the same index in the col_names array.
+    // limit:
+    //   Specifies how many values to fill. Default is -1 meaning fill all
+    //   missing values.
     //
     template<typename T, size_t N>
     void
@@ -337,10 +395,12 @@ public:  // Data manipulation
     // It removes a row if any or all or some of the columns are NaN, based
     // on drop policy
     //
-    // Ts: List all the types of all data columns.
-    //     A type should be specified in the list only once.
-    // threshold: If drop policy is threshold, it specifies the numbers of
-    //            NaN columns before removing the row.
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // threshold:
+    //   If drop policy is threshold, it specifies the numbers of NaN columns
+    //   before removing the row.
     //
     template<typename ... Ts>
     void
@@ -351,14 +411,19 @@ public:  // Data manipulation
     // limit. If limit is omitted, all values will be replaced.
     // It returns number of items replaced.
     //
-    // T: Type on column col_name. If this is index it would be the same as
-    //    IndexType.
-    // N: Size of old_values and new_values arrays
-    // col_name: Name of the column
-    // old_array: An array of values to be replaced in col_name column
-    // new_array: An array of values to to replace the old_values in col_name
-    //            column
-    // limit: Limit of how many items to replace. Default is to replace all.
+    // T:
+    //   Type on column col_name. If this is index it would be the same as
+    //   IndexType.
+    // N:
+    //   Size of old_values and new_values arrays
+    // col_name:
+    //   Name of the column
+    // old_array:
+    //   An array of values to be replaced in col_name column
+    // new_array:
+    //   An array of values to to replace the old_values in col_name column
+    // limit:
+    //   Limit of how many items to replace. Default is to replace all.
     //
     template<typename T, size_t N>
     size_type
@@ -368,6 +433,7 @@ public:  // Data manipulation
             int limit = -1);
 
     // Same as replace() above, but executed asynchronously
+    //
     // NOTE: multiple instances of replace_async() maybe executed for
     //       different columns at the same time with no problem.
     //
@@ -388,17 +454,22 @@ public:  // Data manipulation
     // A false return from the above operator method stops the iteration
     // through named column values.
     //
-    // T: Type on column col_name. If this is index it would be the same as
-    //    IndexType.
-    // F: The functor type
-    // col_name: Name of the column
-    // functor: An instance of the functor
+    // T:
+    //   Type on column col_name. If this is index it would be the same as
+    //   IndexType.
+    // F:
+    //   The functor type
+    // col_name:
+    //   Name of the column
+    // functor:
+    //   An instance of the functor
     //
     template<typename T, typename F>
     void
     replace(const char *col_name, F &functor);
 
     // Same as replace() above, but executed asynchronously
+    //
     // NOTE: multiple instances of replace_async() maybe executed for
     //       different columns at the same time with no problem.
     //
@@ -412,7 +483,8 @@ public:  // Data manipulation
     // old_array: An array of values to be replaced in col_name column
     // new_array: An array of values to to replace the old_values in col_name
     //            column
-    // limit: Limit of how many items to replace. Default is to replace all.
+    // limit:
+    //   Limit of how many items to replace. Default is to replace all.
     //
     template<size_t N>
     size_type
@@ -428,8 +500,9 @@ public:  // Data manipulation
     //
     // T: Type of the by_name column. You always must specify this type,
     //    even if it is being sorted by the default index
-    // Ts: List all the types of all data columns.
-    //     A type should be specified in the list only once.
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
     //
     template<typename T, typename ... Ts>
     void
@@ -445,14 +518,19 @@ public:  // Data manipulation
     // the temp df by gb_col_name before performing groupby.
     // if gb_col_name is null, it groups by index.
     //
-    // F: type functor to be applied to columns to group by
-    // T: type of the groupby column. In case if index, it is type of index
-    // Ts: List of the types of all data columns.
-    //     A type should be specified in the list only once.
-    // func: The functor to do the groupby. To see an example of func, refer
-    //       to GroupbySum in DataFrameVisitors.h file
-    // already_sorted: If the DataFrame is already sorted by gb_col_name,
-    //                 this will save the expensive sort operation
+    // F:
+    //   type functor to be applied to columns to group by
+    // T:
+    //   type of the groupby column. In case if index, it is type of index
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // func:
+    //   The functor to do the groupby. To see an example of func, refer to
+    //   GroupbySum in DataFrameVisitors.h file
+    // already_sorted:
+    //   If the DataFrame is already sorted by gb_col_name, this will save the
+    //   expensive sort operation
     //
     template<typename F, typename T, typename ... Ts>
     DataFrame
@@ -470,19 +548,20 @@ public:  // Data manipulation
 
     // It counts the unique values in the named column.
     // It returns a StdDataFrame of following specs:
-    // 1) The index is of type T and contains all unique values in
-    //    the named column.
-    // 2) There is only one column named "counts" of type size_type that
-    //    contains the count for each index row.
+    //   1) The index is of type T and contains all unique values in
+    //      the named column.
+    //   2) There is only one column named "counts" of type size_type that
+    //      contains the count for each index row.
     // For this method to compile and work, 3 conditions must be met:
-    // 1) Type T must be hashable. If this is a user defined type, you
-    //    must enable and specialize std::hash.
-    // 2) The equality operator (==) must be well defined for type T.
-    // 3) Type T must match the actual type of the named column.
+    //   1) Type T must be hashable. If this is a user defined type, you
+    //      must enable and specialize std::hash.
+    //   2) The equality operator (==) must be well defined for type T.
+    //   3) Type T must match the actual type of the named column.
     // Of course, if you never call this method in your application,
     // you need not be worried about these conditions.
     //
-    // T: Type of the col_name column.
+    // T:
+    //   Type of the col_name column.
     //
     template<typename T>
     StdDataFrame<T>
@@ -501,13 +580,17 @@ public:  // Data manipulation
     //
     // NOTE:The DataFrame must already be sorted by index.
     //
-    // F: type functor to be applied to columns to bucketize
-    // Ts: List of the types of all data columns.
-    //     A type should be specified in the list only once.
-    // func: The functor to do summarization and bucktization.
-    // bucket_interval: Bucket interval is in the index's single value unit.
-    //                  For example if index is in minutes, bucket_interval
-    //                  will be in the unit of minutes and so on.
+    // F:
+    //   type functor to be applied to columns to bucketize
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // func:
+    //   The functor to do summarization and bucktization.
+    // bucket_interval:
+    //   Bucket interval is in the index's single value unit. For example if
+    //   index is in minutes, bucket_interval will be in the unit of minutes
+    //   and so on.
     //
     template<typename F, typename ... Ts>
     DataFrame
@@ -533,21 +616,26 @@ public:  // Data manipulation
     // It transposes the data in the DataFrame.
     // The transpose() is only defined for DataFrame's that have a single
     // data type.
+    //
     // NOTE: Since DataFrame columns have no ordering, the user must specify
     //       the order with current_col_order.
     //
-    // T: The single type for all data columns
-    // V: The type of string vector specifying the new names for new columns
+    // T:
+    //   The single type for all data columns
+    // V:
+    //   The type of string vector specifying the new names for new columns
     //    after transpose
-    // indices: A vector on indices for the new transposed DataFrame.
-    //          Its length must equal the number of rows in this DataFrame.
-    //          Otherwise an exception is thrown
-    // current_col_order: A vector of strings specifying the order of columns
-    //                    in the original DataFrame.
-    // new_col_names: A vector of strings, specifying the column names for the
-    //                new transposed DataFrame.
-    //                Its length must equal the number of rows in this
-    //                DataFrame. Otherwise an exception is thrown
+    // indices:
+    //   A vector on indices for the new transposed DataFrame. Its length must
+    //   equal the number of rows in this DataFrame. Otherwise an exception is
+    //   thrown
+    // current_col_order:
+    //   A vector of strings specifying the order of columns in the original
+    //   DataFrame.
+    // new_col_names:
+    //   A vector of strings, specifying the column names for the new
+    //   transposed DataFrame. Its length must equal the number of rows in this
+    //   DataFrame. Otherwise an exception is thrown
     //
     template<typename T, typename V>
     DataFrame
@@ -559,18 +647,21 @@ public:  // Data manipulation
     // in a StdDataFrame, based on specification in join_policy.
     // The following conditions must be meet for this method
     // to compile and work properly:
-    // 1) IndexType type must be the same between lhs and rhs.
-    // 2) Ordering (< > != ==) must be well defined for type IndexType
-    // 3) Both lhs and rhs must be sorted by index
-    // 4) In both lhs and rhs, columns with the same name must have the same
-    //    type
+    //   1) IndexType type must be the same between lhs and rhs.
+    //   2) Ordering (< > != ==) must be well defined for type IndexType
+    //   3) Both lhs and rhs must be sorted by index
+    //   4) In both lhs and rhs, columns with the same name must have the same
+    //      type
     //
     // RHS_T: Type of DataFrame rhs
-    // Ts: List all the types of all data columns.
-    //     A type should be specified in the list only once.
-    // rhs: The rhs DataFrame
-    // join_policy: Specifies how to join. For example inner join,
-    //              or left join, etc. (See join_policy definition)
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // rhs:
+    //   The rhs DataFrame
+    // join_policy:
+    //   Specifies how to join. For example inner join, or left join, etc.
+    //   (See join_policy definition)
     //
     template<typename RHS_T, typename ... Ts>
     StdDataFrame<IndexType>
@@ -582,10 +673,12 @@ public:  // Data manipulation
     // If user shifts with periods that is larger than the column length,
     // all values in that column become NaN.
     //
-    // Ts: List all the types of all data columns.
-    //     A type should be specified in the list only once.
-    // periods: Number of periods to shift
-    // shift_policy: Specifies the direction (i.e. up/down) to shift
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // periods:
+    //   Number of periods to shift shift_policy: Specifies the direction
+    //   (i.e. up/down) to shift
     //
     template<typename ... Ts>
     void
@@ -603,10 +696,13 @@ public:  // Data manipulation
     // If user rotates with periods that is larger than the column length,
     // the behavior is undefined.
     //
-    // Ts: List all the types of all data columns.
-    //     A type should be specified in the list only once.
-    // periods: Number of periods to rotate
-    // shift_policy: Specifies the direction (i.e. up/down) to rotate
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // periods:
+    //   Number of periods to rotate
+    // shift_policy:
+    //   Specifies the direction (i.e. up/down) to rotate
     //
     template<typename ... Ts>
     void
@@ -624,7 +720,8 @@ public: // Read/access and slicing interfaces
     // It returns a reference to the container of named data column
     // The return type depends on if we are in standard or view mode
     //
-    // T: Data type of the named column
+    // T:
+    //   Data type of the named column
     //
     template<typename T>
     typename type_declare<DataVec, T>::type &
@@ -633,7 +730,8 @@ public: // Read/access and slicing interfaces
     // It returns a const reference to the container of named data column
     // The return type depends on if we are in standard or view mode
     //
-    // T: Data type of the named column
+    // T:
+    //   Data type of the named column
     //
     template<typename T>
     const typename type_declare<DataVec, T>::type &
@@ -647,12 +745,16 @@ public: // Read/access and slicing interfaces
     // It returns a HeteroVector which contains a different type
     // for each column.
     //
-    // N: Size of col_names and values array
-    // Ts: List of types of named columns.
-    //     A type should be specified in the list only once.
-    // row_num: The row number
-    // col_names: Names of columns to get data from. It also specifies the
-    //            order of data in the returned vector
+    // N:
+    //   Size of col_names and values array
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // row_num:
+    //   The row number
+    // col_names:
+    //   Names of columns to get data from. It also specifies the order of data
+    //   in the returned vector
     //
     template<size_t N, typename ... Ts>
     HeteroVector
@@ -662,14 +764,15 @@ public: // Read/access and slicing interfaces
     // It returns a vector of unique values in the named column in the same
     // order that exists in the column.
     // For this method to compile and work, 3 conditions must be met:
-    // 1) Type T must be hashable. If this is a user defined type, you
-    //    must enable and specialize std::hash.
-    // 2) The equality operator (==) must be well defined for type T.
-    // 3) Type T must match the actual type of the named column.
+    //   1) Type T must be hashable. If this is a user defined type, you
+    //      must enable and specialize std::hash.
+    //   2) The equality operator (==) must be well defined for type T.
+    //   3) Type T must match the actual type of the named column.
     // Of course, if you never call this method in your application,
     // you need not be worried about these conditions.
     //
-    // T: Data type of the named column
+    // T:
+    //   Data type of the named column
     //
     template<typename T>
     std::vector<T>
@@ -679,9 +782,11 @@ public: // Read/access and slicing interfaces
     // containing the data from index begin to index end.
     // DataFrame must be sorted by index or behavior is undefined.
     //
-    // Ts: List all the types of all data columns.
-    //     A type should be specified in the list only once.
-    // range: The begin and end iterators for index specified with index values
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // range:
+    //   The begin and end iterators for index specified with index values
     //
     template<typename ... Ts>
     DataFrame
@@ -692,11 +797,14 @@ public: // Read/access and slicing interfaces
     // vector.
     // This method runs in O(n), where n is the number of indices, by
     // creating a hash table of values. IndexType must be hashable.
+    //
     // NOTE: The returned DataFrame is in the same order as original DataFrame
     //
-    // Ts: List all the types of all data columns.
-    //     A type should be specified in the list only once.
-    // values: List of indices to copy data from
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // values:
+    //   List of indices to copy data from
     //
     template<typename ... Ts>
     DataFrame
@@ -706,12 +814,15 @@ public: // Read/access and slicing interfaces
     // A view is a DataFrame that is a reference to the original DataFrame.
     // So if you modify anything in the view the original DataFrame will
     // also be modified.
-    // Note: There are certain operations that you cannot do with a view.
+    //
+    // NOTE: There are certain operations that you cannot do with a view.
     //       For example, you cannot add/delete columns, etc.
     //
-    // Ts: List all the types of all data columns.
-    //     A type should be specified in the list only once.
-    // range: The begin and end iterators for index specified with index values
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // range:
+    //   The begin and end iterators for index specified with index values
     //
     template<typename ... Ts>
     DataFrameView<IndexType>
@@ -722,12 +833,15 @@ public: // Read/access and slicing interfaces
     // A view is a DataFrame that is a reference to the original DataFrame.
     // So if you modify anything in the view the original DataFrame will
     // also be modified.
-    // Note: There are certain operations that you cannot do with a view.
+    //
+    // NOTE: There are certain operations that you cannot do with a view.
     //       For example, you cannot add/delete columns, etc.
     //
-    // Ts: List all the types of all data columns.
-    //     A type should be specified in the list only once.
-    // values: List of indices to copy data from
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // values:
+    //   List of indices to copy data from
     //
     template<typename ... Ts>
     DataFramePtrView<IndexType>
@@ -738,9 +852,11 @@ public: // Read/access and slicing interfaces
     // This function supports Python-like negative indexing. That is why the
     // range type is long.
     //
-    // Ts: List all the types of all data columns.
-    //     A type should be specified in the list only once.
-    // range: The begin and end iterators for data
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // range:
+    //   The begin and end iterators for data
     //
     template<typename ... Ts>
     DataFrame
@@ -750,12 +866,14 @@ public: // Read/access and slicing interfaces
     // containing the data from locations, specified in locations vector.
     // This function supports Python-like negative indexing. That is why the
     // locations vector type is long.
+    //
     // NOTE: The negative indixing is relative to the "index" column, which
     //       may not be the size as all other column.
     //       The returned DataFrame is in the same order as locations parameter
     //
-    // Ts: List all the types of all data columns.
-    //     A type should be specified in the list only once.
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
     // locations: List of indices into the index column to copy data
     //
     template<typename ... Ts>
@@ -766,12 +884,15 @@ public: // Read/access and slicing interfaces
     // A view is a DataFrame that is a reference to the original DataFrame.
     // So if you modify anything in the view the original DataFrame will
     // also be modified.
-    // Note: There are certain operations that you cannot do with a view.
+    //
+    // NOTE: There are certain operations that you cannot do with a view.
     //       For example, you cannot add/delete columns, etc.
     //
-    // Ts: List all the types of all data columns.
-    //     A type should be specified in the list only once.
-    // range: The begin and end iterators for data
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // range:
+    //   The begin and end iterators for data
     //
     template<typename ... Ts>
     DataFrameView<IndexType>
@@ -782,12 +903,15 @@ public: // Read/access and slicing interfaces
     // A view is a DataFrame that is a reference to the original DataFrame.
     // So if you modify anything in the view the original DataFrame will
     // also be modified.
-    // Note: There are certain operations that you cannot do with a view.
+    //
+    // NOTE: There are certain operations that you cannot do with a view.
     //       For example, you cannot add/delete columns, etc.
     //
-    // Ts: List all the types of all data columns.
-    //     A type should be specified in the list only once.
-    // locations: List of indices into the index column to copy data
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // locations:
+    //   List of indices into the index column to copy data
     //
     template<typename ... Ts>
     DataFramePtrView<IndexType>
@@ -807,28 +931,38 @@ public: // Read/access and slicing interfaces
     //       call make_consistent() on the original or result DataFrame to make
     //       all columns into consistent length
     //
-    // T: Type of the named column
-    // F: Type of the selecting functor
-    // Ts: The list of types for all columns.
-    //     A type should be specified only once
-    // name: Name of the data column
-    // sel_functor: A reference to the selecting functor
+    // T:
+    //   Type of the named column
+    // F:
+    //   Type of the selecting functor
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // name:
+    //   Name of the data column
+    // sel_functor:
+    //   A reference to the selecting functor
     //
     template<typename T, typename F, typename ... Ts>
     DataFrame
     get_data_by_sel(const char *name, F &sel_functor) const;
 
     // This is identical with above get_data_by_sel(), but:
-    // 1) The result is a view
-    // 2) Since the result is a view, you cannot call make_consistent() on
-    //    the result.
+    //   1) The result is a view
+    //   2) Since the result is a view, you cannot call make_consistent() on
+    //      the result.
     //
-    // T: Type of the named column
-    // F: Type of the selecting functor
-    // Ts: The list of types for all columns.
-    //     A type should be specified only once
-    // name: Name of the data column
-    // sel_functor: A reference to the selecting functor
+    // T:
+    //   Type of the named column
+    // F:
+    //   Type of the selecting functor
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // name:
+    //   Name of the data column
+    // sel_functor:
+    //   A reference to the selecting functor
     //
     template<typename T, typename F, typename ... Ts>
     DataFramePtrView<IndexType>
@@ -839,14 +973,21 @@ public: // Read/access and slicing interfaces
     // The signature of sel_fucntor:
     //     bool ()(const IndexType &, const T1 &, const T2 &)
     //
-    // T1: Type of the first named column
-    // T2: Type of the second named column
-    // F: Type of the selecting functor
-    // Ts: The list of types for all columns.
-    //     A type should be specified only once
-    // name1: Name of the first data column
-    // name2: Name of the second data column
-    // sel_functor: A reference to the selecting functor
+    // T1:
+    //   Type of the first named column
+    // T2:
+    //   Type of the second named column
+    // F:
+    //   Type of the selecting functor
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // name1:
+    //   Name of the first data column
+    // name2:
+    //   Name of the second data column
+    // sel_functor:
+    //   A reference to the selecting functor
     //
     template<typename T1, typename T2, typename F, typename ... Ts>
     DataFrame
@@ -855,18 +996,25 @@ public: // Read/access and slicing interfaces
                     F &sel_functor) const;
 
     // This is identical with above get_data_by_sel(), but:
-    // 1) The result is a view
-    // 2) Since the result is a view, you cannot call make_consistent() on
-    //    the result.
+    //   1) The result is a view
+    //   2) Since the result is a view, you cannot call make_consistent() on
+    //      the result.
     //
-    // T1: Type of the first named column
-    // T2: Type of the second named column
-    // F: Type of the selecting functor
-    // Ts: The list of types for all columns.
-    //     A type should be specified only once
-    // name1: Name of the first data column
-    // name2: Name of the second data column
-    // sel_functor: A reference to the selecting functor
+    // T1:
+    //   Type of the first named column
+    // T2:
+    //   Type of the second named column
+    // F:
+    //   Type of the selecting functor
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // name1:
+    //   Name of the first data column
+    // name2:
+    //   Name of the second data column
+    // sel_functor:
+    //   A reference to the selecting functor
     //
     template<typename T1, typename T2, typename F, typename ... Ts>
     DataFramePtrView<IndexType>
@@ -877,16 +1025,25 @@ public: // Read/access and slicing interfaces
     // The signature of sel_fucntor:
     //     bool ()(const IndexType &, const T1 &, const T2 &, const T3 &)
     //
-    // T1: Type of the first named column
-    // T2: Type of the second named column
-    // T3: Type of the third named column
-    // F: Type of the selecting functor
-    // Ts: The list of types for all columns.
-    //     A type should be specified only once
-    // name1: Name of the first data column
-    // name2: Name of the second data column
-    // name3: Name of the third data column
-    // sel_functor: A reference to the selecting functor
+    // T1:
+    //   Type of the first named column
+    // T2:
+    //   Type of the second named column
+    // T3:
+    //   Type of the third named column
+    // F:
+    //   Type of the selecting functor
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // name1:
+    //   Name of the first data column
+    // name2:
+    //   Name of the second data column
+    // name3:
+    //   Name of the third data column
+    // sel_functor:
+    //   A reference to the selecting functor
     //
     template<typename T1, typename T2, typename T3, typename F,
              typename ... Ts>
@@ -897,20 +1054,29 @@ public: // Read/access and slicing interfaces
                     F &sel_functor) const;
 
     // This is identical with above get_data_by_sel(), but:
-    // 1) The result is a view
-    // 2) Since the result is a view, you cannot call make_consistent() on
-    //    the result.
+    //   1) The result is a view
+    //   2) Since the result is a view, you cannot call make_consistent() on
+    //      the result.
     //
-    // T1: Type of the first named column
-    // T2: Type of the second named column
-    // T3: Type of the third named column
-    // F: Type of the selecting functor
-    // Ts: The list of types for all columns.
-    //     A type should be specified only once
-    // name1: Name of the first data column
-    // name2: Name of the second data column
-    // name3: Name of the third data column
-    // sel_functor: A reference to the selecting functor
+    // T1:
+    //   Type of the first named column
+    // T2:
+    //   Type of the second named column
+    // T3:
+    //   Type of the third named column
+    // F:
+    //   Type of the selecting functor
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // name1:
+    //   Name of the first data column
+    // name2:
+    //   Name of the second data column
+    // name3:
+    //   Name of the third data column
+    // sel_functor:
+    //   A reference to the selecting functor
     //
     template<typename T1, typename T2, typename T3, typename F,
              typename ... Ts>
@@ -923,20 +1089,25 @@ public: // Read/access and slicing interfaces
     // It returns a DataFrame (including the index and data columns)
     // containing the data from uniform random selection.
     // random_policy determines the behavior of method.
-    // Note: The actual number of rows returned might be smaller than
+    //
+    // NOTE: The actual number of rows returned might be smaller than
     //       requested. That is because the random process might produce
     //       the same number more than once.
-    // Note: The columns in the result are not padded with NaN.
+    // NOTE: The columns in the result are not padded with NaN.
     //
-    // Ts: List all the types of all data columns.
-    //     A type should be specified in the list only once.
-    // random_policy: Please see random_policy in DataFrameTypes.h. It
-    //                specifies how this function should proceed.
-    // n: Depending on the random policy, it is either the number of rows to
-    //    sample or a fraction of rows to sample. In case of fraction, for
-    //    example 0.4 means 40% of rows.
-    // seed: depending on the random policy, user could specify a seed. The
-    //       same seed should always produce the same random selection.
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // random_policy:
+    //   Please see random_policy in DataFrameTypes.h. It specifies how this
+    //   function should proceed.
+    // n:
+    //   Depending on the random policy, it is either the number of rows to
+    //   sample or a fraction of rows to sample. In case of fraction, for
+    //   example 0.4 means 40% of rows.
+    // seed:
+    //   depending on the random policy, user could specify a seed. The same
+    //   seed should always produce the same random selection.
     //
     template<typename ... Ts>
     DataFrame
@@ -946,19 +1117,24 @@ public: // Read/access and slicing interfaces
     // A view is a DataFrame that is a reference to the original DataFrame.
     // So if you modify anything in the view the original DataFrame will
     // also be modified.
-    // Note: There are certain operations that you cannot do with a view.
-    //       For example, you cannot add/delete columns, etc.
-    // Note: The columns in the result are not padded with NaN.
     //
-    // Ts: List all the types of all data columns.
-    //     A type should be specified in the list only once.
-    // random_policy: Please see random_policy in DataFrameTypes.h. It
-    //                specifies how this function should proceed.
-    // n: Depending on the random policy, it is either the number of rows to
-    //    sample or a fraction of rows to sample. In case of fraction, for
-    //    example 0.4 means 40% of rows.
-    // seed: depending on the random policy, user could specify a seed. The
-    //       same seed should always produce the same random selection.
+    // NOTE: There are certain operations that you cannot do with a view.
+    //       For example, you cannot add/delete columns, etc.
+    // NOTE: The columns in the result are not padded with NaN.
+    //
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // random_policy:
+    //   Please see random_policy in DataFrameTypes.h. It specifies how this
+    //   function should proceed.
+    // n:
+    //   Depending on the random policy, it is either the number of rows to
+    //   sample or a fraction of rows to sample. In case of fraction, for
+    //   example 0.4 means 40% of rows.
+    // seed:
+    //   depending on the random policy, user could specify a seed. The same
+    //   seed should always produce the same random selection.
     //
     template<typename ... Ts>
     DataFramePtrView<IndexType>
@@ -982,15 +1158,19 @@ public:  // Visitors
     //     bool (const IndexType &i, const char *name, [const] T &col_value)
     // If the function object returns false, the DataFrame will stop iterating
     // at that point on that column.
+    //
     // NOTE: This method could be used to implement a pivot table.
     //
-    // Ts: The list of types for columns in args
-    // args: A variable list of arguments consisting of
+    // Ts:
+    //   The list of types for columns in args
+    // args:
+    //   A variable list of arguments consisting of
     //       std::pair(<const char *name,
-    //       &std::function<bool (const IndexType &,
-    //                            const char *,
-    //                            [const] T &)>).
-    //       Each pair represents a column name and the functor to run on it.
+    //                  &std::function<bool (const IndexType &,
+    //                                       const char *,
+    //                                       [const] T &)>)
+    //   Each pair represents a column name and the functor to run on it.
+    //
     // NOTE: The second member of pair is a _pointer_ to the function or
     //       functor object
     //
@@ -1000,11 +1180,15 @@ public:  // Visitors
 
     // It passes the values of each index and each named column to the
     // functor visitor sequentially from beginning to end
+    //
     // NOTE: This method could be used to implement a pivot table.
     //
-    // T: Type of the named column
-    // V: Type of the visitor functor
-    // name: Name of the data column
+    // T:
+    //   Type of the named column
+    // V:
+    //   Type of the visitor functor
+    // name:
+    //   Name of the data column
     //
     template<typename T, typename V>
     V &
@@ -1012,13 +1196,19 @@ public:  // Visitors
 
     // It passes the values of each index and the two named columns to the
     // functor visitor sequentially from beginning to end
+    //
     // NOTE: This method could be used to implement a pivot table.
     //
-    // T1: Type of the first named column
-    // T2: Type of the second named column
-    // V: Type of the visitor functor
-    // name1: Name of the first data column
-    // name2: Name of the second data column
+    // T1:
+    //   Type of the first named column
+    // T2:
+    //   Type of the second named column
+    // V:
+    //   Type of the visitor functor
+    // name1:
+    //   Name of the first data column
+    // name2:
+    //   Name of the second data column
     //
     template<typename T1, typename T2, typename V>
     V &
@@ -1026,15 +1216,23 @@ public:  // Visitors
 
     // It passes the values of each index and the three named columns to the
     // functor visitor sequentially from beginning to end
+    //
     // NOTE: This method could be used to implement a pivot table.
     //
-    // T1: Type of the first named column
-    // T2: Type of the second named column
-    // T3: Type of the third named column
-    // V: Type of the visitor functor
-    // name1: Name of the first data column
-    // name2: Name of the second data column
-    // name3: Name of the third data column
+    // T1:
+    //   Type of the first named column
+    // T2:
+    //   Type of the second named column
+    // T3:
+    //   Type of the third named column
+    // V:
+    //   Type of the visitor functor
+    // name1:
+    //   Name of the first data column
+    // name2:
+    //   Name of the second data column
+    // name3:
+    //   Name of the third data column
     //
     template<typename T1, typename T2, typename T3, typename V>
     V &
@@ -1042,17 +1240,27 @@ public:  // Visitors
 
     // It passes the values of each index and the four named columns to the
     // functor visitor sequentially from beginning to end
+    //
     // NOTE: This method could be used to implement a pivot table.
     //
-    // T1: Type of the first named column
-    // T2: Type of the second named column
-    // T3: Type of the third named column
-    // T4: Type of the fourth named column
-    // V: Type of the visitor functor
-    // name1: Name of the first data column
-    // name2: Name of the second data column
-    // name3: Name of the third data column
-    // name4: Name of the fourth data column
+    // T1:
+    //   Type of the first named column
+    // T2:
+    //   Type of the second named column
+    // T3:
+    //   Type of the third named column
+    // T4:
+    //   Type of the fourth named column
+    // V:
+    //   Type of the visitor functor
+    // name1:
+    //   Name of the first data column
+    // name2:
+    //   Name of the second data column
+    // name3:
+    //   Name of the third data column
+    // name4:
+    //   Name of the fourth data column
     //
     template<typename T1, typename T2, typename T3, typename T4, typename V>
     V &
@@ -1064,19 +1272,31 @@ public:  // Visitors
 
     // It passes the values of each index and the five named columns to the
     // functor visitor sequentially from beginning to end
+    //
     // NOTE: This method could be used to implement a pivot table.
     //
-    // T1: Type of the first named column
-    // T2: Type of the second named column
-    // T3: Type of the third named column
-    // T4: Type of the fourth named column
-    // T5: Type of the fifth named column
-    // V: Type of the visitor functor
-    // name1: Name of the first data column
-    // name2: Name of the second data column
-    // name3: Name of the third data column
-    // name4: Name of the fourth data column
-    // name5: Name of the fifth data column
+    // T1:
+    //   Type of the first named column
+    // T2:
+    //   Type of the second named column
+    // T3:
+    //   Type of the third named column
+    // T4:
+    //   Type of the fourth named column
+    // T5:
+    //   Type of the fifth named column
+    // V:
+    //   Type of the visitor functor
+    // name1:
+    //   Name of the first data column
+    // name2:
+    //   Name of the second data column
+    // name3:
+    //   Name of the third data column
+    // name4:
+    //   Name of the fourth data column
+    // name5:
+    //   Name of the fifth data column
     //
     template<typename T1, typename T2, typename T3, typename T4, typename T5,
              typename V>
@@ -1093,9 +1313,12 @@ public:  // Visitors
     // This is convenient for calculations that need the whole data vector,
     // for example auto-correlation.
     //
-    // T: Type of the named column
-    // V: Type of the visitor functor
-    // name: Name of the data column
+    // T:
+    //   Type of the named column
+    // V:
+    //   Type of the visitor functor
+    // name:
+    //   Name of the data column
     //
     template<typename T, typename V>
     V &
@@ -1104,13 +1327,19 @@ public:  // Visitors
     // This is similar to visit(), but it passes a const reference to the index
     // vector and the two named column vectors at once the functor visitor.
     // This is convenient for calculations that need the whole data vector.
+    //
     // NOTE: This method could be used to implement a pivot table.
     //
-    // T1: Type of the first named column
-    // T2: Type of the second named column
-    // V: Type of the visitor functor
-    // name1: Name of the first data column
-    // name2: Name of the second data column
+    // T1:
+    //   Type of the first named column
+    // T2:
+    //   Type of the second named column
+    // V:
+    //   Type of the visitor functor
+    // name1:
+    //   Name of the first data column
+    // name2:
+    //   Name of the second data column
     //
     template<typename T1, typename T2, typename V>
     V &
@@ -1122,8 +1351,9 @@ public:  // Operators
     // same number of columns, same names for each column, and all
     // columns are eual, then it retunrs true. Otherwise it returns false
     //
-    // Ts: List all the types of all data columns.
-    //     A type should be specified in the list only once.
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
     //
     template<typename ... Ts>
     bool
@@ -1134,10 +1364,12 @@ public:  // Operators
     // If not already_sorted, both rhs and self will be sorted by index
     // It returns a reference to self
     //
-    // Ts: List all the types of all data columns.
-    //     A type should be specified in the list only once.
-    // already_sorted: If the self and rhs are already sorted by index,
-    //                 this will save the expensive sort operations
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // already_sorted:
+    //   If the self and rhs are already sorted by index, this will save the
+    //   expensive sort operations
     //
     template<typename ... Ts>
     DataFrame &
@@ -1151,15 +1383,17 @@ public:  // Utilities and miscellaneous
     // by nan.
     // This is also called by sort(), before sorting
     //
-    // Ts: List all the types of all data columns.
-    //     A type should be specified in the list only once.
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
     //
     template<typename ... Ts>
     void
     make_consistent();
 
     // It returns a pair containing number of rows and columns.
-    // Note: Number of rows is the number of index rows. Not every column
+    //
+    // NOTE: Number of rows is the number of index rows. Not every column
     //       has the same number of rows, necessarily. But each column has,
     //       at most, this number of rows.
     //
@@ -1174,6 +1408,10 @@ public:  // Utilities and miscellaneous
     // After this call, any iterator or reference you hold to any data point
     // in the DataFrame could be invalidated.
     //
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    //
     template<typename ... Ts>
     void
     shrink_to_fit();
@@ -1184,21 +1422,23 @@ public:  // Utilities and miscellaneous
     // It returns a vector of IndexType timestamps.
     // Currently IndexType could be any built-in numeric type or DateTime
     //
-    // start_datetime, end_datetime: They are the start/end date/times of
-    //     requested timestamps.
-    //     They must be in the following format:
-    //     MM/DD/YYYY [HH[:MM[:SS[.MMM]]]]
-    // t_freq: Specifies the timestamp frequency. Depending on the frequency,
-    //         and IndexType type specific timestamps are generated as follows:
-    //    - IndexType type of DateTime always generates timestamps of DateTime.
-    //    - Annual, monthly, weekly, and daily frequencies generates YYYYMMDD
-    //      timestamps.
-    //    - Hourly, minutely, and secondly frequencies generates epoch
-    //      timestamps (64 bit).
-    //    - Millisecondly frequency generates nano-second since epoch
-    //      timestamps (128 bit).
-    // increment: Increment in the units of the frequency
-    // tz: Time-zone of generated timestamps
+    // start_datetime, end_datetime:
+    //   They are the start/end date/times of requested timestamps.
+    //   They must be in the following format: MM/DD/YYYY [HH[:MM[:SS[.MMM]]]]
+    // t_freq:
+    //   Specifies the timestamp frequency. Depending on the frequency, and
+    //   IndexType type specific timestamps are generated as follows:
+    //   - IndexType type of DateTime always generates timestamps of DateTime.
+    //   - Annual, monthly, weekly, and daily frequencies generates YYYYMMDD
+    //     timestamps.
+    //   - Hourly, minutely, and secondly frequencies generates epoch
+    //     timestamps (64 bit).
+    //   - Millisecondly frequency generates nano-second since epoch
+    //     timestamps (128 bit).
+    // increment:
+    //   Increment in the units of the frequency
+    // tz:
+    //   Time-zone of generated timestamps
     //
     // NOTE: It is the responsibility of the programmer to make sure
     //       IndexType type is big enough to contain the frequency.
@@ -1218,9 +1458,11 @@ public:  // Utilities and miscellaneous
     // "end_value", the behavior will be undefined.
     // It returns a vector of IndexType values.
     //
-    // start_value, end_value: Starting and ending values of IndexType.
-    //                         Start value is included. End value is excluded.
-    // increment: Increment by value
+    // start_value, end_value:
+    //   Starting and ending values of IndexType. Start value is included.
+    //   End value is excluded.
+    // increment:
+    //   Increment by value
     //
     static std::vector<IndexType>
     gen_sequence_index(const IndexType &start_value,
@@ -1251,15 +1493,20 @@ public:  // Utilities and miscellaneous
     // Please note DataFrame json does not follow json spec 100%. In json,
     // there is not particular order in dictionary fields. But in DataFrame
     // json:
-    // 1) Column “INDEX” must be the first column
-    // 2) Fields in column dictionaries must be in N, T, D order
+    //   1) Column “INDEX” must be the first column
+    //   2) Fields in column dictionaries must be in N, T, D order
     //
-    // S: Output stream type
-    // Ts: List all the types of all data columns.
-    //     A type should be specified in the list only once.
-    // o: Reference to an streamable object (e.g. cout)
-    // values_only: If true, the name and type of each column is not written
-    // iof: Specifies the I/O format. The default is CSV
+    // S:
+    //   Output stream type
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // o:
+    //   Reference to an streamable object (e.g. cout)
+    // values_only:
+    //   If true, the name and type of each column is not written
+    // iof:
+    //   Specifies the I/O format. The default is CSV
     //
     template<typename S, typename ... Ts>
     bool
@@ -1299,11 +1546,13 @@ public:  // Utilities and miscellaneous
     // Please note DataFrame json does not follow json spec 100%. In json,
     // there is not particular order in dictionary fields. But in DataFrame
     // json:
-    // 1) Column “INDEX” must be the first column
-    // 2) Fields in column dictionaries must be in N, T, D order
+    //   1) Column “INDEX” must be the first column
+    //   2) Fields in column dictionaries must be in N, T, D order
     //
-    // file_name: Complete path to the file
-    // iof: Specifies the I/O format. The default is CSV
+    // file_name:
+    //   Complete path to the file
+    // iof:
+    //   Specifies the I/O format. The default is CSV
     //
     bool
     read(const char *file_name, io_format iof = io_format::csv);

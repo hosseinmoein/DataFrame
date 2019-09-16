@@ -71,7 +71,7 @@ gen_bernoulli_dist(std::size_t n, const RandGenParams<bool> &params = { });
 
 // Produces random non-negative integer values i, distributed according to
 // discrete probability function:
-//            (t)    i          t-i
+//            (t)    i         t-i
 // P(i|t,p) = (i) . p . (1 - p)
 //
 // It returns the vector of results

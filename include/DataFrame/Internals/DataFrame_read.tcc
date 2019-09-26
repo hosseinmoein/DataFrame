@@ -35,7 +35,7 @@ _get_token_from_file_ (std::ifstream &file,
         else if (c == alt_delim)  {
             file.unget();
             break;
-        } 
+        }
         else  {
             value[count++] = c;
         }

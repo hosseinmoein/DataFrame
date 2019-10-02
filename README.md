@@ -132,5 +132,5 @@ user  2m54.362s
 sys   2m14.951s
 ```
 <B>The interesting part:</B><BR>
-In case of Pandas, allocating memory (+ random number generation) and calculating means take almost the same time.<BR>
+In case of Pandas, allocating memory + random number generation and calculating means take almost the same time.<BR>
 In case of DataFrame 85% of the time is spent in allocating memory (+ random number generation).

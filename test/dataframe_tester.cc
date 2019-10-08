@@ -3488,6 +3488,50 @@ int main(int argc, char *argv[]) {
         assert(result3 == 0.0);
     }
 
+    {
+        std::cout << "\nTesting Thread safety ..." << std::endl;
+
+        const size_t    vec_size = 100000;
+
+        auto  do_work = [vec_size]() {
+            MyDataFrame         df;
+            std::vector<size_t> vec;
+
+            for (size_t i = 0; i < vec_size; ++i)
+                vec.push_back(i);
+    
+            df.load_data(MyDataFrame::gen_sequence_index(0, vec_size, 1),
+                         std::make_pair("col1", vec));
+
+            // This is an extremely inefficient way of doing it, especially in
+            // a multithreaded program. Each “get_column” is a hash table
+            // look up and in multithreaded programs requires a lock.
+            // It is much more efficient to call “get_column” outside the loop
+            // and loop over the referenced vector.
+            // Here I am doing it this way to make sure synchronization
+            // between threads are bulletproof.
+            //
+            for (size_t i = 0; i < vec_size; ++i)  {
+                const size_t    j = df.get_column<size_t>("col1")[i];
+
+                assert(i == j);
+            }
+            df.shrink_to_fit();
+        };
+
+        SpinLock                    lock;
+        std::vector<std::thread>    thr_vec;
+
+        MyDataFrame::set_lock(&lock);
+
+        for (size_t i = 0; i < 20; ++i)
+            thr_vec.push_back(std::thread(do_work));
+        for (size_t i = 0; i < 20; ++i)
+            thr_vec[i].join();
+
+        MyDataFrame::remove_lock();
+    }
+
     return (0);
 }
 

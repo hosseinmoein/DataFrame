@@ -53,14 +53,6 @@ public:
     using IndexType = I;
     using IndexVecType = typename type_declare<DataVec, IndexType>::type;
 
-    // DataFrame has unprotected static data. If you are using DataFrame in a
-    // multi-threaded program, you must provide a SpinLock. DataFrame will use
-    // your SpinLock to protect its static data.
-    // This is done this way, so by default, there is no locking overhead.
-    //
-    void set_lock (SpinLock *sl)  { lock_ = sl; }
-    void remove_lock ()  { lock_ = nullptr; }
-
     DataFrame() = default;
     DataFrame(const DataFrame &) = default;
     DataFrame(DataFrame &&) = default;
@@ -84,6 +76,14 @@ private:
     static SpinLock *lock_;          // It is null by default
 
 public:  // Load/append/remove interfaces
+
+    // DataFrame has unprotected static data. If you are using DataFrame in a
+    // multi-threaded program, you must provide a SpinLock. DataFrame will use
+    // your SpinLock to protect its static data.
+    // This is done this way, so by default, there is no locking overhead.
+    //
+    static void set_lock (SpinLock *sl)  { lock_ = sl; }
+    static void remove_lock ()  { lock_ = nullptr; }
 
     // It creates an empty column named name
     //

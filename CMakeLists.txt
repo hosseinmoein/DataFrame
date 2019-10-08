@@ -74,7 +74,6 @@ set(${LIBRARY_TARGET_NAME}_SRC
   src/Vectors/HeteroVector.cc
   src/Vectors/HeteroView.cc
   src/Vectors/HeteroPtrView.cc
-  src/DataFrame.cc
   src/Utils/ThreadGranularity.cc
   src/Utils/DateTime.cc
   src/MMap/MMapBase.cc

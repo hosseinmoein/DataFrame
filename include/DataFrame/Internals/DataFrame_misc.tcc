@@ -354,8 +354,10 @@ equal_functor_<Ts ...>::operator() (const std::vector<T> &lhs_vec)  {
     }
 
     const DataVec           &hv = df.data_[iter->second];
+    SpinGuard               guard(lock_);
     const std::vector<T>    &rhs_vec = hv.template get_vector<T>();
 
+    guard.release();
     if (lhs_vec != rhs_vec)
         result = false;
 }
@@ -524,7 +526,11 @@ operator()(const std::vector<T> &lhs_vec)  {
     if (rhs_citer == rhs_df.column_tb_.end())  return;
 
     const DataVec   &rhs_hv = rhs_df.data_[rhs_citer->second];
+    SpinGuard       guard(lock_);
     const auto      &rhs_vec = rhs_hv.template get_vector<T>();
+
+    guard.release();
+
     const size_type new_col_size =
         std::min(std::min(lhs_vec.size(), rhs_vec.size()), new_idx.size());
     std::vector<T>  new_col;

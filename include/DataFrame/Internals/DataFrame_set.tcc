@@ -38,8 +38,10 @@ std::vector<T> &DataFrame<I, H>::create_column (const char *name)  {
     column_tb_.emplace (name, data_.size() - 1);
 
     DataVec         &hv = data_.back();
+    SpinGuard       guard(lock_);
     std::vector<T>  &vec = hv.template get_vector<T>();
 
+    guard.release();
     // vec.resize(indices_.size(), _get_nan<T>());
     return (vec);
 }

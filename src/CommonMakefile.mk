@@ -21,7 +21,6 @@ SRCS = Vectors/HeteroVector.cc \
        ../test/mmfile_tester.cc \
        ../test/sharedmem_tester.cc \
        ../test/gen_rand_tester.cc \
-       DataFrame.cc \
        Utils/ThreadGranularity.cc \
        Utils/DateTime.cc \
        MMap/MMapBase.cc \
@@ -93,7 +92,6 @@ DEFINES = -D_REENTRANT \
 LIB_OBJS = $(LOCAL_OBJ_DIR)/HeteroVector.o \
            $(LOCAL_OBJ_DIR)/HeteroView.o \
            $(LOCAL_OBJ_DIR)/HeteroPtrView.o \
-           $(LOCAL_OBJ_DIR)/DataFrame.o \
            $(LOCAL_OBJ_DIR)/ThreadGranularity.o \
            $(LOCAL_OBJ_DIR)/DateTime.o \
            $(LOCAL_OBJ_DIR)/MMapBase.o \

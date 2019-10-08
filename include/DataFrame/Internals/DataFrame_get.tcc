@@ -50,7 +50,8 @@ DataFrame<I, H>::get_column (const char *name)  {
         throw ColNotFound (buffer);
     }
 
-    DataVec &hv = data_[iter->second];
+    DataVec         &hv = data_[iter->second];
+    const SpinGuard guars(lock_);
 
     return (hv.template get_vector<T>());
 }

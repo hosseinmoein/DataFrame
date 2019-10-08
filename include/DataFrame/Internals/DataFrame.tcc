@@ -264,8 +264,10 @@ fill_missing(const std::array<const char *, N> col_names,
         }
 
         DataVec         &hv = data_[citer->second];
+        SpinGuard       guard(lock_);
         std::vector<T>  &vec = hv.template get_vector<T>();
 
+        guard.release();
         if (fp == fill_policy::value)  {
             if (thread_count >= get_thread_level())
                 fill_missing_value_(vec, values[i], limit, indices_.size());
@@ -489,8 +491,10 @@ replace(const char *col_name,
     }
 
     DataVec         &hv = data_[citer->second];
+    SpinGuard       guard(lock_);
     std::vector<T>  &vec = hv.template get_vector<T>();
 
+    guard.release();
     _replace_vector_vals_<std::vector<T>, T, N>
         (vec, old_values, new_values, count, limit);
 
@@ -533,7 +537,11 @@ replace(const char *col_name, F &functor)  {
     }
 
     DataVec         &hv = data_[citer->second];
+    SpinGuard       guard(lock_);
     std::vector<T>  &vec = hv.template get_vector<T>();
+
+    guard.release();
+
     const size_type vec_s = vec.size();
 
     for (size_type i = 0; i < vec_s; ++i)
@@ -633,8 +641,12 @@ void DataFrame<I, H>::sort(const char *by_name)  {
             throw ColNotFound (buffer);
         }
 
-        DataVec                     &hv = data_[iter->second];
-        std::vector<T>              &idx_vec = hv.template get_vector<T>();
+        DataVec         &hv = data_[iter->second];
+        SpinGuard       guard(lock_);
+        std::vector<T>  &idx_vec = hv.template get_vector<T>();
+
+        guard.release();
+
         sort_functor_<T, Ts ...>    functor (idx_vec);
 
         for (size_type i = 0; i < data_.size(); ++i)
@@ -829,12 +841,16 @@ DataFrame<I, H>::value_counts (const char *col_name) const  {
     }
 
     const DataVec           &hv = data_[iter->second];
+    SpinGuard               guard(lock_);
     const std::vector<T>    &vec = hv.template get_vector<T>();
-    auto                    hash_func =
+
+    guard.release();
+
+    auto    hash_func =
         [](std::reference_wrapper<const T> v) -> std::size_t  {
             return(std::hash<T>{}(v.get()));
     };
-    auto                    equal_func =
+    auto    equal_func =
         [](std::reference_wrapper<const T> lhs,
            std::reference_wrapper<const T> rhs) -> bool  {
             return(lhs.get() == rhs.get());
@@ -960,6 +976,7 @@ transpose(IndexVecType &&indices,
                                     "names in the order vector");
 
         const DataVec   &hv = data_[data_citer->second];
+        const SpinGuard guard(lock_);
 
         current_cols.push_back(&(hv.template get_vector<T>()));
     }

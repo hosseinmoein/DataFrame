@@ -130,12 +130,16 @@ get_col_unique_values(const char *name) const  {
     }
 
     const DataVec           &hv = data_[iter->second];
+    SpinGuard               guard(lock_);
     const std::vector<T>    &vec = hv.template get_vector<T>();
-    auto                    hash_func =
+
+    guard.release();
+
+    auto    hash_func =
         [](std::reference_wrapper<const T> v) -> std::size_t  {
             return(std::hash<T>{}(v.get()));
     };
-    auto                    equal_func =
+    auto    equal_func =
         [](std::reference_wrapper<const T> lhs,
            std::reference_wrapper<const T> rhs) -> bool  {
             return(lhs.get() == rhs.get());
@@ -206,7 +210,11 @@ V &DataFrame<I, H>::visit (const char *name, V &visitor)  {
     }
 
     DataVec         &hv = data_[iter->second];
+    SpinGuard       guard(lock_);
     std::vector<T>  &vec = hv.template get_vector<T>();
+
+    guard.release();
+
     const size_type idx_s = indices_.size();
     const size_type data_s = vec.size();
 
@@ -247,8 +255,12 @@ visit (const char *name1, const char *name2, V &visitor)  {
 
     DataVec         &hv1 = data_[iter1->second];
     DataVec         &hv2 = data_[iter2->second];
+    SpinGuard       guard(lock_);
     std::vector<T1> &vec1 = hv1.template get_vector<T1>();
     std::vector<T2> &vec2 = hv2.template get_vector<T2>();
+
+    guard.release();
+
     const size_type idx_s = indices_.size();
     const size_type data_s1 = vec1.size();
     const size_type data_s2 = vec2.size();
@@ -302,9 +314,13 @@ visit (const char *name1, const char *name2, const char *name3, V &visitor)  {
     DataVec         &hv1 = data_[iter1->second];
     DataVec         &hv2 = data_[iter2->second];
     DataVec         &hv3 = data_[iter3->second];
+    SpinGuard       guard(lock_);
     std::vector<T1> &vec1 = hv1.template get_vector<T1>();
     std::vector<T2> &vec2 = hv2.template get_vector<T2>();
     std::vector<T3> &vec3 = hv3.template get_vector<T3>();
+
+    guard.release();
+
     const size_type idx_s = indices_.size();
     const size_type data_s1 = vec1.size();
     const size_type data_s2 = vec2.size();
@@ -374,10 +390,14 @@ visit (const char *name1,
     DataVec         &hv2 = data_[iter2->second];
     DataVec         &hv3 = data_[iter3->second];
     DataVec         &hv4 = data_[iter4->second];
+    SpinGuard       guard(lock_);
     std::vector<T1> &vec1 = hv1.template get_vector<T1>();
     std::vector<T2> &vec2 = hv2.template get_vector<T2>();
     std::vector<T3> &vec3 = hv3.template get_vector<T3>();
     std::vector<T4> &vec4 = hv4.template get_vector<T4>();
+
+    guard.release();
+
     const size_type idx_s = indices_.size();
     const size_type data_s1 = vec1.size();
     const size_type data_s2 = vec2.size();
@@ -461,11 +481,15 @@ visit (const char *name1,
     DataVec         &hv3 = data_[iter3->second];
     DataVec         &hv4 = data_[iter4->second];
     DataVec         &hv5 = data_[iter5->second];
+    SpinGuard       guard(lock_);
     std::vector<T1> &vec1 = hv1.template get_vector<T1>();
     std::vector<T2> &vec2 = hv2.template get_vector<T2>();
     std::vector<T3> &vec3 = hv3.template get_vector<T3>();
     std::vector<T4> &vec4 = hv4.template get_vector<T4>();
     std::vector<T5> &vec5 = hv5.template get_vector<T5>();
+
+    guard.release();
+
     const size_type idx_s = indices_.size();
     const size_type data_s1 = vec1.size();
     const size_type data_s2 = vec2.size();
@@ -505,8 +529,10 @@ single_act_visit (const char *name, V &visitor) const  {
     }
 
     const DataVec           &hv = data_[iter->second];
+    SpinGuard               guard(lock_);
     const std::vector<T>    &vec = hv.template get_vector<T>();
 
+    guard.release();
     visitor.pre();
     visitor (indices_, vec);
     visitor.post();
@@ -545,9 +571,11 @@ single_act_visit (const char *name1, const char *name2, V &visitor)  {
 
     const DataVec           &hv1 = data_[iter1->second];
     const DataVec           &hv2 = data_[iter2->second];
+    SpinGuard               guard(lock_);
     const std::vector<T1>   &vec1 = hv1.template get_vector<T1>();
     const std::vector<T2>   &vec2 = hv2.template get_vector<T2>();
 
+    guard.release();
     visitor.pre();
     visitor (indices_, vec1, vec2);
     visitor.post();
@@ -887,7 +915,11 @@ get_data_by_sel (const char *name, F &sel_functor) const  {
     }
 
     const DataVec           &hv = data_[citer->second];
+    SpinGuard               guard(lock_);
     const std::vector<T>    &vec = hv.template get_vector<T>();
+
+    guard.release();
+
     const size_type         idx_s = indices_.size();
     const size_type         col_s = vec.size();
     std::vector<size_type>  col_indices;
@@ -941,7 +973,11 @@ get_view_by_sel (const char *name, F &sel_functor)  {
     }
 
     const DataVec           &hv = data_[citer->second];
+    SpinGuard               guard(lock_);
     const std::vector<T>    &vec = hv.template get_vector<T>();
+
+    guard.release();
+
     const size_type         idx_s = indices_.size();
     const size_type         col_s = vec.size();
     std::vector<size_type>  col_indices;
@@ -1006,8 +1042,12 @@ get_data_by_sel (const char *name1, const char *name2, F &sel_functor) const  {
     const size_type         idx_s = indices_.size();
     const DataVec           &hv1 = data_[citer1->second];
     const DataVec           &hv2 = data_[citer2->second];
+    SpinGuard               guard(lock_);
     const std::vector<T1>   &vec1 = hv1.template get_vector<T1>();
     const std::vector<T2>   &vec2 = hv2.template get_vector<T2>();
+
+    guard.release();
+
     const size_type         col_s1 = vec1.size();
     const size_type         col_s2 = vec2.size();
     const size_type         col_s = std::max(col_s1, col_s2);
@@ -1075,8 +1115,12 @@ get_view_by_sel (const char *name1, const char *name2, F &sel_functor)  {
 
     const DataVec           &hv1 = data_[citer1->second];
     const DataVec           &hv2 = data_[citer2->second];
+    SpinGuard               guard(lock_);
     const std::vector<T1>   &vec1 = hv1.template get_vector<T1>();
     const std::vector<T2>   &vec2 = hv2.template get_vector<T2>();
+
+    guard.release();
+
     const size_type         idx_s = indices_.size();
     const size_type         col_s1 = vec1.size();
     const size_type         col_s2 = vec2.size();
@@ -1159,9 +1203,13 @@ get_data_by_sel (const char *name1,
     const DataVec           &hv1 = data_[citer1->second];
     const DataVec           &hv2 = data_[citer2->second];
     const DataVec           &hv3 = data_[citer3->second];
+    SpinGuard               guard(lock_);
     const std::vector<T1>   &vec1 = hv1.template get_vector<T1>();
     const std::vector<T2>   &vec2 = hv2.template get_vector<T2>();
     const std::vector<T3>   &vec3 = hv3.template get_vector<T3>();
+
+    guard.release();
+
     const size_type         col_s1 = vec1.size();
     const size_type         col_s2 = vec2.size();
     const size_type         col_s3 = vec3.size();
@@ -1245,9 +1293,13 @@ get_view_by_sel (const char *name1,
     const DataVec           &hv1 = data_[citer1->second];
     const DataVec           &hv2 = data_[citer2->second];
     const DataVec           &hv3 = data_[citer3->second];
+    SpinGuard               guard(lock_);
     const std::vector<T1>   &vec1 = hv1.template get_vector<T1>();
     const std::vector<T2>   &vec2 = hv2.template get_vector<T2>();
     const std::vector<T3>   &vec3 = hv3.template get_vector<T3>();
+
+    guard.release();
+
     const size_type         idx_s = indices_.size();
     const size_type         col_s1 = vec1.size();
     const size_type         col_s2 = vec2.size();

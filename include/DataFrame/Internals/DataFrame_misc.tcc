@@ -668,7 +668,10 @@ operator() (std::vector<T> &vec)  {
 
     using data_vec_t = typename DataFramePtrView<I>::DataVec;
 
+    SpinGuard   guard(lock_);
+
     dfv.data_.emplace_back(data_vec_t(std::move(new_col)));
+    guard.release();
     dfv.column_tb_.emplace (name, dfv.data_.size() - 1);
     return;
 }
@@ -777,7 +780,10 @@ random_load_view_functor_<Ts ...>::operator() (const T &vec)  {
 
     using data_vec_t = typename DataFramePtrView<I>::DataVec;
 
+    SpinGuard   guard(lock_);
+
     dfv.data_.emplace_back(data_vec_t(std::move(new_vec)));
+    guard.release();
     dfv.column_tb_.emplace (name, dfv.data_.size() - 1);
     return;
 }

@@ -38,10 +38,9 @@ std::vector<T> &DataFrame<I, H>::create_column (const char *name)  {
     column_tb_.emplace (name, data_.size() - 1);
 
     DataVec         &hv = data_.back();
-    SpinGuard       guard(lock_);
+    const SpinGuard guard(lock_);
     std::vector<T>  &vec = hv.template get_vector<T>();
 
-    guard.release();
     // vec.resize(indices_.size(), _get_nan<T>());
     return (vec);
 }
@@ -384,7 +383,8 @@ load_column (const char *name,
     if (iter == column_tb_.end())
         vec_ptr = &(create_column<T>(name));
     else  {
-        DataVec &hv = data_[iter->second];
+        DataVec         &hv = data_[iter->second];
+        const SpinGuard guard(lock_);
 
         vec_ptr = &(hv.template get_vector<T>());
     }
@@ -463,7 +463,8 @@ load_column (const char *name, std::vector<T> &&data, nan_policy padding)  {
     if (iter == column_tb_.end())
         vec_ptr = &(create_column<T>(name));
     else  {
-        DataVec &hv = data_[iter->second];
+        DataVec         &hv = data_[iter->second];
+        const SpinGuard guard(lock_);
 
         vec_ptr = &(hv.template get_vector<T>());
     }
@@ -520,7 +521,10 @@ append_column (const char *name,
     }
 
     DataVec         &hv = data_[iter->second];
+    SpinGuard       guard(lock_);
     std::vector<T>  &vec = hv.template get_vector<T>();
+
+    guard.release();
 
     size_type       s = std::distance(range.begin, range.end) + vec.size ();
     const size_type idx_s = indices_.size();
@@ -574,7 +578,10 @@ append_column (const char *name, const T &val, nan_policy padding)  {
     }
 
     DataVec         &hv = data_[iter->second];
+    SpinGuard       guard(lock_);
     std::vector<T>  &vec = hv.template get_vector<T>();
+
+    guard.release();
 
     size_type       s = 1;
     const size_type idx_s = indices_.size();
@@ -701,7 +708,11 @@ void DataFrame<I, H>::remove_data_by_sel (const char *name, F &sel_functor)  {
     }
 
     const DataVec           &hv = data_[citer->second];
+    SpinGuard               guard(lock_);
     const std::vector<T>    &vec = hv.template get_vector<T>();
+
+    guard.release();
+
     const size_type         idx_s = indices_.size();
     const size_type         col_s = vec.size();
     std::vector<size_type>  col_indices;
@@ -759,8 +770,12 @@ remove_data_by_sel (const char *name1, const char *name2, F &sel_functor)  {
 
     const DataVec           &hv1 = data_[citer1->second];
     const DataVec           &hv2 = data_[citer2->second];
+    SpinGuard               guard(lock_);
     const std::vector<T1>   &vec1 = hv1.template get_vector<T1>();
     const std::vector<T2>   &vec2 = hv2.template get_vector<T2>();
+
+    guard.release();
+
     const size_type         col_s1 = vec1.size();
     const size_type         col_s2 = vec2.size();
     const size_type         col_s = std::max(col_s1, col_s2);
@@ -837,9 +852,13 @@ remove_data_by_sel (const char *name1,
     const DataVec           &hv1 = data_[citer1->second];
     const DataVec           &hv2 = data_[citer2->second];
     const DataVec           &hv3 = data_[citer3->second];
+    SpinGuard               guard(lock_);
     const std::vector<T1>   &vec1 = hv1.template get_vector<T1>();
     const std::vector<T2>   &vec2 = hv2.template get_vector<T2>();
     const std::vector<T3>   &vec3 = hv3.template get_vector<T3>();
+
+    guard.release();
+
     const size_type         col_s1 = vec1.size();
     const size_type         col_s2 = vec2.size();
     const size_type         col_s3 = vec3.size();

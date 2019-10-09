@@ -56,7 +56,7 @@ private:
 struct  SpinGuard  {
 
     inline
-	SpinGuard(SpinLock *l) noexcept : lock_(l)  { if (lock_)  lock_->lock(); }
+    SpinGuard(SpinLock *l) noexcept : lock_(l)  { if (lock_)  lock_->lock(); }
     inline ~SpinGuard() noexcept  { if (lock_)  lock_->unlock(); }
 
     inline void release() noexcept  {
@@ -67,12 +67,13 @@ struct  SpinGuard  {
         }
     }
 
+    SpinGuard () = delete;
     SpinGuard (const SpinGuard &) = delete;
     SpinGuard &operator = (const SpinGuard &) = delete;
 
 private:
 
-    SpinLock    *lock_ { nullptr };
+    SpinLock    *lock_;
 };
 
 } // namespace hmdf

@@ -1544,32 +1544,32 @@ public:
 // -------------------------------------
 
 template<>
-void GroupbySum::
+inline void GroupbySum::
 operator() (const unsigned long &ts,
             const char *name,
             const int &datum)  { int_sum += datum; }
 template<>
-void GroupbySum::
+inline void GroupbySum::
 operator() (const unsigned long &ts,
             const char *name,
             const unsigned int &datum)  { uint_sum += datum; }
 template<>
-void GroupbySum::
+inline void GroupbySum::
 operator() (const unsigned long &ts,
             const char *name,
             const double &datum)  { double_sum += datum; }
 template<>
-void GroupbySum::
+inline void GroupbySum::
 operator() (const unsigned long &ts,
             const char *name,
             const long &datum)  { long_sum += datum; }
 template<>
-void GroupbySum::
+inline void GroupbySum::
 operator() (const unsigned long &ts,
             const char *name,
             const unsigned long &datum)  { ulong_sum += datum; }
 template<>
-void GroupbySum::
+inline void GroupbySum::
 operator() (const unsigned long &ts,
             const char *name,
             const std::string &datum)  {
@@ -1585,19 +1585,19 @@ operator() (const unsigned long &ts,
 // -------------------------------------
 
 template<>
-void GroupbySum::get_value<int> (int &v) const  { v = int_sum; }
+inline void GroupbySum::get_value<int> (int &v) const  { v = int_sum; }
 template<>
-void GroupbySum::
+inline void GroupbySum::
 get_value<unsigned int> (unsigned int &v) const  { v = uint_sum; }
 template<>
-void GroupbySum::get_value<double> (double &v) const  { v = double_sum; }
+inline void GroupbySum::get_value<double> (double &v) const  { v = double_sum; }
 template<>
-void GroupbySum::get_value<long> (long &v) const  { v = long_sum; }
+inline void GroupbySum::get_value<long> (long &v) const  { v = long_sum; }
 template<>
-void GroupbySum::
+inline void GroupbySum::
 get_value<unsigned long>(unsigned long &v) const { v = ulong_sum; }
 template<>
-void GroupbySum::
+inline void GroupbySum::
 get_value<std::string> (std::string &v) const  { v = str_sum; }
 
 } // namespace hmdf

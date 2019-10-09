@@ -11,11 +11,18 @@ This is a C++ statistical library that provides an interface similar to Pandas p
 <B>A DataFrame can have one index column and many data columns of any built-in or user-defined type</B>.<BR>
 You could do almost everything you could do with Pandas within the C++ syntax and type checking framework. You can add/delete any data column type, slice, run summarization functors, transpose, etc. like Pandas.<BR><BR>
 <B>Views</B><BR>
-You can slice the data frame and instead of getting another data frame you can opt to get a view. A view is a data frame that is a reference to a slice of the original data frame. So if you change the data in the view the corresponding data in the original data frame will also be changed.<BR><BR>
+You can slice the data frame and instead of getting another data frame you can opt to get a view. A view is a data frame that is a reference to a slice of the original data frame. So if you change the data in the view the corresponding data in the original data frame will also be changed.<BR>
+
 <B>Multithreading</B><BR>
-Instances of DataFrame are not multithreaded safe. In other words, a single instance of DataFrame must not be used in multiple threads without protection. But DataFrame utilizes multithreading in two different ways:<BR>
+DataFrame uses static containers to achieve type heterogeneity. By default those static containers are unprotected. This is done by design so, by default, there is no locking overhead. If you use DataFrame in a multithreaded program you have to provide a _SpinLock_ defined in _Utils/ThreadGranularity.h_ file. DataFrame will use your _SpinLock_ to protect the containers.
+Please see documentation and _test/dataframetester.cc_ for example.
+<BR>
+In addition, instances of DataFrame are not multithreaded safe either. In other words, a single instance of DataFrame must not be used in multiple threads without protection.
+<BR>
+Also, DataFrame utilizes multithreading in two different ways internally:
+<BR>
 1. There are asynchronous versions of some methods. For example, you have both sort() and sort_async(). The latter returns a std::future which could execute in parallel.
-2. DataFrame uses multiple threads, internally and unbeknown to the user, in some of its algorithms when appropriate. User can control (or turn off) the multithreading by calling set_thread_level() which sets the max number of threads to be used. The default is 0. The optimal number of threads is a function of users hardware/software environment and usually obtained by trail and error. set_thread_level() and threading level in general is a static property and once set, it applies to all instances.
+2. DataFrame uses multiple threads, internally and unbeknown to the user, in some of its algorithms when appropriate. User can control (or turn off) the multithreading by calling set_thread_level() which sets the max number of threads to be used. The default is 0. The optimal number of threads is a function of users hardware/software environment and usually obtained by trail and error. set_thread_level() and threading level in general is a static property and once set, it applies to all instances.<BR>
 
 <B>Date Time</B><BR>
 DateTime class included in this library is a very cool and handy object to manipulate date/time with nanosecond precision.

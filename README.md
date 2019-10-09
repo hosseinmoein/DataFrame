@@ -15,6 +15,7 @@ You can slice the data frame and instead of getting another data frame you can o
 
 <B>Multithreading</B><BR>
 DataFrame uses static containers to achieve type heterogeneity. By default those static containers are unprotected. This is done by design so, by default, there is no locking overhead. If you use DataFrame in a multithreaded program you must provide a _SpinLock_ defined in _Utils/ThreadGranularity.h_ file. DataFrame will use your _SpinLock_ to protect the containers.
+<BR>
 Please see documentation, _set_lock()_, _remove_lock()_, and _test/dataframetester.cc_ for code example.
 <BR>
 In addition, instances of DataFrame are not multithreaded safe either. In other words, a single instance of DataFrame must not be used in multiple threads without protection.

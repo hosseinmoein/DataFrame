@@ -14,13 +14,13 @@ You could do almost everything you could do with Pandas within the C++ syntax an
 You can slice the data frame and instead of getting another data frame you can opt to get a view. A view is a data frame that is a reference to a slice of the original data frame. So if you change the data in the view the corresponding data in the original data frame will also be changed.<BR>
 
 <B>Multithreading</B><BR>
-DataFrame uses static containers to achieve type heterogeneity. By default those static containers are unprotected. This is done by design so, by default, there is no locking overhead. If you use DataFrame in a multithreaded program you must provide a _SpinLock_ defined in _Utils/ThreadGranularity.h_ file. DataFrame will use your _SpinLock_ to protect the containers.
+DataFrame uses static containers to achieve type heterogeneity. By default, these static containers are unprotected. This is done by design. So by default, there is no locking overhead. If you use DataFrame in a multithreaded program you must provide a _SpinLock_ defined in _Utils/ThreadGranularity.h_ file. DataFrame will use your _SpinLock_ to protect the containers.
 <BR>
-Please see documentation, _set_lock()_, _remove_lock()_, and _test/dataframetester.cc_ for code example.
+Please see documentation, _set_lock()_, _remove_lock()_, and _test/dataframe_tester.cc_ for code example.
 <BR>
 In addition, instances of DataFrame are not multithreaded safe either. In other words, a single instance of DataFrame must not be used in multiple threads without protection.
 <BR>
-Also, DataFrame utilizes multithreading in two different ways internally:
+In the meantime, DataFrame utilizes multithreading in two different ways internally:
 <BR>
 1. There are asynchronous versions of some methods. For example, you have both _sort()_ and _sort_async()_. The latter returns a _std::future_ that could execute in parallel.
 2. DataFrame uses multiple threads, internally and unbeknown to the user, in some of its algorithms when appropriate. User can control (or turn off) the multithreading by calling _set_thread_level()_ which sets the max number of threads to be used. The default is 0. The optimal number of threads is a function of users hardware/software environment and usually obtained by trail and error. _set_thread_level()_ and threading level in general is a static property and once set, it applies to all instances.<BR>

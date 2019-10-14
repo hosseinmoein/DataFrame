@@ -12,6 +12,8 @@
 
 using namespace hmdf;
 
+typedef StdDataFrame<unsigned long> MyDataFrame;
+
 // -----------------------------------------------------------------------------
 
 struct ReplaceFunctor  {
@@ -39,9 +41,7 @@ struct ReplaceFunctor  {
 
 // -----------------------------------------------------------------------------
 
-int main(int argc, char *argv[]) {
-
-    typedef StdDataFrame<unsigned long> MyDataFrame;
+static void test_haphazard()  {
 
     MyDataFrame::set_thread_level(10);
 
@@ -375,58 +375,6 @@ int main(int argc, char *argv[]) {
                   double,
                   std::string>(std::cout, true);
 
-    {
-        std::cout << "\nTesting read() ..." << std::endl;
-
-        MyDataFrame         df_read;
-        try  {
-            // std::future<bool>   fut2 =
-            //     df_read.read_async("../test/sample_data.csv");
-            std::future<bool>   fut2 = df_read.read_async("sample_data.csv");
-
-            fut2.get();
-        }
-        catch (const DataFrameError &ex)  {
-            std::cout << ex.what() << std::endl;
-        }
-        df_read.write<std::ostream,
-                      int,
-                      unsigned long,
-                      double,
-                      std::string,
-                      bool>(std::cout);
-
-        StdDataFrame<std::string>   df_read_str;
-
-        try  {
-            df_read_str.read("sample_data_string_index.csv");
-        }
-        catch (const DataFrameError &ex)  {
-            std::cout << ex.what() << std::endl;
-        }
-        df_read_str.write<std::ostream,
-                          int,
-                          unsigned long,
-                          double,
-                          std::string,
-                          bool>(std::cout);
-
-        StdDataFrame<DateTime>  df_read_dt;
-
-        try  {
-            df_read_dt.read("sample_data_dt_index.csv");
-        }
-        catch (const DataFrameError &ex)  {
-            std::cout << ex.what() << std::endl;
-        }
-        df_read_dt.write<std::ostream,
-                         int,
-                         unsigned long,
-                         double,
-                         std::string,
-                         bool>(std::cout);
-    }
-
     std::cout << "\nTesting multi_visit() ..." << std::endl;
 
     MeanVisitor<int>            ivisitor2;
@@ -492,756 +440,883 @@ int main(int argc, char *argv[]) {
     MyDataFrame::set_thread_level(0);
     assert(MyDataFrame::get_thread_level() == 0);
     MyDataFrame::set_thread_level(10);
+}
 
-    {
-        std::cout << "\nTesting transpose() ..." << std::endl;
+// -----------------------------------------------------------------------------
 
-        std::vector<unsigned long>  idx =
-            { 123450, 123451, 123452, 123450, 123455, 123450, 123449 };
-        std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7 };
-        std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14 };
-        std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21 };
-        std::vector<double> d4 = { 22, 23, 24, 25 };
-        MyDataFrame         df;
+static void test_read()  {
 
-        df.load_data(std::move(idx),
-                     std::make_pair("col_1", d1),
-                     std::make_pair("col_2", d2),
-                     std::make_pair("col_3", d3),
-                     std::make_pair("col_4", d4));
+    std::cout << "\nTesting read() ..." << std::endl;
 
-        std::vector<unsigned long>  tidx = { 100, 101, 102, 104 };
-        std::vector<const char *>   tcol_names =
-            { "tcol_1", "tcol_2", "tcol_3",
-              "tcol_4", "tcol_5", "tcol_6", "tcol_7" };
-        MyDataFrame                 tdf =
-            df.transpose<double>(std::move(tidx),
-                                 { "col_1", "col_2", "col_3", "col_4" },
-                                 tcol_names);
+    MyDataFrame         df_read;
+    try  {
+        // std::future<bool>   fut2 =
+        //     df_read.read_async("../test/sample_data.csv");
+        std::future<bool>   fut2 = df_read.read_async("sample_data.csv");
 
-        std::cout << "Original DataFrame:" << std::endl;
-        df.write<std::ostream, unsigned long, double>(std::cout);
-        std::cout << "Transposed DataFrame:" << std::endl;
-        tdf.write<std::ostream, unsigned long, double>(std::cout);
+        fut2.get();
     }
-
-    {
-        std::cout << "\nTesting get_data_by_loc()/slicing ..." << std::endl;
-
-        std::vector<unsigned long>  idx =
-            { 123450, 123451, 123452, 123450, 123455, 123450, 123449 };
-        std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7 };
-        std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14 };
-        std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21 };
-        std::vector<double> d4 = { 22, 23, 24, 25 };
-        MyDataFrame         df;
-
-        df.load_data(std::move(idx),
-                     std::make_pair("col_1", d1),
-                     std::make_pair("col_2", d2),
-                     std::make_pair("col_3", d3),
-                     std::make_pair("col_4", d4));
-
-        MyDataFrame df2 = df.get_data_by_loc<double>(Index2D<long> { 3, 6 });
-        MyDataFrame df3 = df.get_data_by_loc<double>(Index2D<long> { 0, 7 });
-        MyDataFrame df4 = df.get_data_by_loc<double>(Index2D<long> { -4, -1 });
-        MyDataFrame df5 = df.get_data_by_loc<double>(Index2D<long> { -4, 6 });
-
-        df.write<std::ostream, double>(std::cout);
-        df2.write<std::ostream, double>(std::cout);
-        df3.write<std::ostream, double>(std::cout);
-        df4.write<std::ostream, double>(std::cout);
-        df5.write<std::ostream, double>(std::cout);
-
-        try  {
-            MyDataFrame df2 =
-                df.get_data_by_loc<double>(Index2D<long> { 3, 8 });
-        }
-        catch (const BadRange &ex)  {
-            std::cout << "Caught: " << ex.what() << std::endl;
-        }
-        try  {
-            MyDataFrame df2 =
-                df.get_data_by_loc<double>(Index2D<long> { -8, -1 });
-        }
-        catch (const BadRange &ex)  {
-            std::cout << "Caught: " << ex.what() << std::endl;
-        }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
     }
-
-    {
-        std::cout << "\nTesting get_view_by_loc() ..." << std::endl;
-
-        std::vector<unsigned long>  idx =
-            { 123450, 123451, 123452, 123450, 123455, 123450, 123449 };
-        std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7 };
-        std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14 };
-        std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21 };
-        std::vector<double> d4 = { 22, 23, 24, 25 };
-        std::vector<std::string> s1 =
-            { "11", "22", "33", "xx", "yy", "gg", "string" };
-        MyDataFrame         df;
-
-        df.load_data(std::move(idx),
-                     std::make_pair("col_1", d1),
-                     std::make_pair("col_2", d2),
-                     std::make_pair("col_3", d3),
-                     std::make_pair("col_4", d4),
-                     std::make_pair("col_str", s1));
-
-        typedef DataFrameView<unsigned long> MyDataFrameView;
-
-        MyDataFrameView dfv =
-            df.get_view_by_loc<double, std::string>(Index2D<long> { 3, 6 });
-
-        dfv.shrink_to_fit<double, std::string>();
-        dfv.write<std::ostream, double, std::string>(std::cout);
-        dfv.get_column<double>("col_3")[0] = 88.0;
-        assert(dfv.get_column<double>("col_3")[0] ==
-               df.get_column<double>("col_3")[3]);
-        assert(dfv.get_column<double>("col_3")[0] == 88.0);
-    }
-
-    {
-        std::cout << "\nTesting remove_column() ..." << std::endl;
-
-        std::vector<unsigned long>  idx =
-            { 123450, 123451, 123452, 123450, 123455, 123450, 123449 };
-        std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7 };
-        std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14 };
-        std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21 };
-        std::vector<int>    i1 = { 22, 23, 24, 25 };
-        std::vector<std::string> s1 =
-            { "11", "22", "33", "xx", "yy", "gg", "string" };
-        MyDataFrame         df;
-
-        df.load_data(std::move(idx),
-                     std::make_pair("col_1", d1),
-                     std::make_pair("col_2", d2),
-                     std::make_pair("col_3", d3),
-                     std::make_pair("col_int", i1),
-                     std::make_pair("col_str", s1));
-
-
-        df.write<std::ostream, double, int, std::string>(std::cout);
-        df.remove_column("col_2");
-        std::cout << "After removing column `col_2`" << std::endl;
-        df.write<std::ostream, double, int, std::string>(std::cout);
-        df.remove_column("col_str");
-        std::cout << "After removing column `col_str`" << std::endl;
-        df.write<std::ostream, double, int, std::string>(std::cout);
-
-        std::vector<double> d22 = { 8, 9, 10, 11, 12, 13, 14 };
-
-        df.load_column("col_2", std::move(d22));
-        std::cout << "After adding back column `col_2`" << std::endl;
-        df.write<std::ostream, double, int, std::string>(std::cout);
-    }
-
-    {
-        std::cout << "\nTesting get_view_by_idx()/slicing ..." << std::endl;
-
-        std::vector<unsigned long>  idx =
-            { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
-              123457, 123458, 123459, 123460, 123461, 123462, 123466 };
-        std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
-                                   13, 14 };
-        std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23,
-                                   30, 31, 32, 1.89};
-        std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21,
-                                   0.34, 1.56, 0.34, 2.3, 0.1, 0.89, 0.45 };
-        std::vector<int>    i1 = { 22, 23, 24, 25, 99, 100, 101, 3, 2 };
-        MyDataFrame         df;
-
-        df.load_data(std::move(idx),
-                     std::make_pair("col_1", d1),
-                     std::make_pair("col_2", d2),
-                     std::make_pair("col_3", d3),
-                     std::make_pair("col_4", i1));
-
-        typedef DataFrameView<unsigned long> MyDataFrameView;
-
-        MyDataFrame     df2 =
-            df.get_data_by_idx<double, int>(
-                Index2D<MyDataFrame::IndexType> { 123452, 123460 });
-        MyDataFrameView dfv =
-            df.get_view_by_idx<double, int>(
-                Index2D<MyDataFrame::IndexType> { 123452, 123460 });
-
-        df.write<std::ostream, double, int>(std::cout);
-        df2.write<std::ostream, double, int>(std::cout);
-        dfv.write<std::ostream, double, int>(std::cout);
-
-        dfv.get_column<double>("col_3")[0] = 88.0;
-        assert(dfv.get_column<double>("col_3")[0] ==
-               df.get_column<double>("col_3")[2]);
-        assert(dfv.get_column<double>("col_3")[0] == 88.0);
-    }
-
-    {
-        std::cout << "\nTesting rename_column() ..." << std::endl;
-
-        std::vector<unsigned long>  idx =
-            { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
-              123457, 123458, 123459, 123460, 123461, 123462, 123466 };
-        std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
-                                   13, 14 };
-        std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23,
-                                   30, 31, 32, 1.89};
-        std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21,
-                                   0.34, 1.56, 0.34, 2.3, 0.1, 0.89, 0.45 };
-        std::vector<int>    i1 = { 22, 23, 24, 25, 99, 100, 101, 3, 2 };
-        MyDataFrame         df;
-
-        df.load_data(std::move(idx),
-                     std::make_pair("col_1", d1),
-                     std::make_pair("col_2", d2),
-                     std::make_pair("col_3", d3),
-                     std::make_pair("col_4", i1));
-
-        std::cout << "Before rename" << std::endl;
-        df.write<std::ostream, double, int>(std::cout);
-        df.rename_column("col_2", "renamed_column");
-        std::cout << "After rename" << std::endl;
-        df.write<std::ostream, double, int>(std::cout);
-    }
-
-    {
-        std::cout << "\nTesting get_col_unique_values() ..." << std::endl;
-
-        std::vector<unsigned long>  idx =
-            { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
-              123457, 123458, 123459, 123460, 123461, 123462, 123466 };
-        std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
-                                   13, 14 };
-        std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23,
-                                   30, 31, 32, 1.89};
-        std::vector<double> d3 = { 15, 16, 15, 18, 19, 16, 21,
-                                   0.34, 1.56, 0.34, 2.3, 0.34, 0.89, 19.0 };
-        std::vector<int>    i1 = { 22, 23, 24, 25, 99, 100, 101, 3, 2 };
-        MyDataFrame         df;
-
-        df.load_data(std::move(idx),
-                     std::make_pair("col_1", d1),
-                     std::make_pair("col_2", d2),
-                     std::make_pair("col_3", d3),
-                     std::make_pair("col_4", i1));
-
-        df.write<std::ostream, double, int>(std::cout);
-        std::cout << "Getting unique values in column col_3" << std::endl;
-
-        const std::vector<double>   result =
-            df.get_col_unique_values<double>("col_3");
-
-        for (auto &iter : result)
-            std::cout << iter << ",";
-        std::cout << std::endl;
-    }
-
-    {
-        std::cout << "\nTesting remove_data_by_idx() ..." << std::endl;
-
-        std::vector<unsigned long>  idx =
-            { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
-              123457, 123458, 123459, 123460, 123461, 123462, 123466 };
-        std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
-                                   13, 14 };
-        std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23,
-                                   30, 31, 32, 1.89};
-        std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21,
-                                   0.34, 1.56, 0.34, 2.3, 0.1, 0.89, 0.45 };
-        std::vector<int>    i1 = { 22, 23, 24, 25, 99, 100, 101, 3, 2 };
-        MyDataFrame         df;
-
-        df.load_data(std::move(idx),
-                     std::make_pair("col_1", d1),
-                     std::make_pair("col_2", d2),
-                     std::make_pair("col_3", d3),
-                     std::make_pair("col_4", i1));
-
-        df.write<std::ostream, double, int>(std::cout);
-        std::cout << "After removing by ibdex { 123452, 123460 }" << std::endl;
-        df.remove_data_by_idx<double, int>({ 123452, 123460 });
-        df.write<std::ostream, double, int>(std::cout);
-    }
-
-    {
-        std::cout << "\nTesting remove_data_by_loc() ..." << std::endl;
-
-        std::vector<unsigned long>  idx =
-            { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
-              123457, 123458, 123459, 123460, 123461, 123462, 123466 };
-        std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
-                                   13, 14 };
-        std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23,
-                                   30, 31, 32, 1.89};
-        std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21,
-                                   0.34, 1.56, 0.34, 2.3, 0.1, 0.89, 0.45 };
-        std::vector<int>    i1 = { 22, 23, 24, 25, 99 };
-        MyDataFrame         df;
-
-        df.load_data(std::move(idx),
-                     std::make_pair("col_1", d1),
-                     std::make_pair("col_2", d2),
-                     std::make_pair("col_3", d3),
-                     std::make_pair("col_4", i1));
-
-        df.write<std::ostream, double, int>(std::cout);
-        std::cout << "After removing by ibdex { 3, -3 }" << std::endl;
-        df.remove_data_by_loc<double, int>({ 3, -3 });
-        df.write<std::ostream, double, int>(std::cout);
-    }
-
-    {
-        std::cout << "\nTesting value_counts() ..." << std::endl;
-
-        const double                my_nan = sqrt(-1);
-        std::vector<unsigned long>  idx =
-            { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
-              123457, 123458, 123459, 123460, 123461, 123462, 123466 };
-        std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
-                                   13, 14 };
-        std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23,
-                                   30, 31, 32, 1.89};
-        std::vector<double> d3 = { 15, 16, 15, 18, 19, 16, 21, my_nan,
-                                   0.34, 1.56, 0.34, 2.3, 0.34, 19.0 };
-        std::vector<int>    i1 = { 22, 23, 24, 25, 99 };
-        MyDataFrame         df;
-
-        df.load_data(std::move(idx),
-                     std::make_pair("col_1", d1),
-                     std::make_pair("col_2", d2),
-                     std::make_pair("col_3", d3),
-                     std::make_pair("col_4", i1));
-
-        df.write<std::ostream, double, int>(std::cout);
-
-        auto    result = df.value_counts<double>("col_3");
-
-        std::cout << "After calling value_counts(cols_3)" << std::endl;
-        result.write<std::ostream, size_t>(std::cout);
-    }
-
-    {
-        std::cout << "\nTesting Index Inner Join ..." << std::endl;
-
-        std::vector<unsigned long>  idx =
-            { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
-              123457, 123458, 123459, 123460, 123461, 123462, 123466 };
-        std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
-                                   13, 14 };
-        std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23,
-                                   30, 31, 32, 1.89};
-        std::vector<double> d3 = { 15, 16, 15, 18, 19, 16, 21,
-                                   0.34, 1.56, 0.34, 2.3, 0.34, 19.0 };
-        std::vector<int>    i1 = { 22, 23, 24, 25, 99 };
-        MyDataFrame         df;
-
-        df.load_data(std::move(idx),
-                     std::make_pair("col_1", d1),
-                     std::make_pair("col_2", d2),
-                     std::make_pair("col_3", d3),
-                     std::make_pair("col_4", i1));
-
-        std::vector<unsigned long>  idx2 =
-            { 123452, 123453, 123455, 123458, 123466, 223450, 223451,
-              223454, 223456, 223457, 223459, 223460, 223461, 223462 };
-        std::vector<double> d12 =
-               { 11, 12, 13, 14, 15, 16, 17, 18, 19, 110, 111, 112, 113, 114 };
-        std::vector<double> d22 =
-            { 18, 19, 110, 111, 112, 113, 114, 120, 122, 123,
-              130, 131, 132, 11.89 };
-        std::vector<double> d32 = { 115, 116, 115, 118, 119, 116, 121,
-                                    10.34, 11.56, 10.34, 12.3, 10.34, 119.0 };
-        std::vector<int>    i12 = { 122, 123, 124, 125, 199 };
-        MyDataFrame         df2;
-
-        df2.load_data(std::move(idx2),
-                      std::make_pair("xcol_1", d12),
-                      std::make_pair("col_2", d22),
-                      std::make_pair("xcol_3", d32),
-                      std::make_pair("col_4", i12));
-
-        std::cout << "First DF:" << std::endl;
-        df.write<std::ostream, double, int>(std::cout);
-        std::cout << "Second DF2:" << std::endl;
-        df2.write<std::ostream, double, int>(std::cout);
-
-        MyDataFrame join_df =
-            df.join_by_index<decltype(df2), double, int>
-                (df2, join_policy::inner_join);
-
-        std::cout << "Now The joined DF:" << std::endl;
-        join_df.write<std::ostream, double, int>(std::cout);
-    }
-
-    {
-        std::cout << "\nTesting Index Left Join ..." << std::endl;
-
-        std::vector<unsigned long>  idx =
-            { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
-              123457, 123458, 123459, 123460, 123461, 123462, 123466 };
-        std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
-                                   13, 14 };
-        std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23,
-                                   30, 31, 32, 1.89};
-        std::vector<double> d3 = { 15, 16, 15, 18, 19, 16, 21,
-                                   0.34, 1.56, 0.34, 2.3, 0.34, 19.0 };
-        std::vector<int>    i1 = { 22, 23, 24, 25, 99 };
-        MyDataFrame         df;
-
-        df.load_data(std::move(idx),
-                     std::make_pair("col_1", d1),
-                     std::make_pair("col_2", d2),
-                     std::make_pair("col_3", d3),
-                     std::make_pair("col_4", i1));
-
-        std::vector<unsigned long>  idx2 =
-            { 123452, 123453, 123455, 123458, 123466, 223450, 223451,
-              223454, 223456, 223457, 223459, 223460, 223461, 223462 };
-        std::vector<double> d12 =
-               { 11, 12, 13, 14, 15, 16, 17, 18, 19, 110, 111, 112, 113, 114 };
-        std::vector<double> d22 =
-            { 18, 19, 110, 111, 112, 113, 114, 120, 122, 123,
-              130, 131, 132, 11.89 };
-        std::vector<double> d32 = { 115, 116, 115, 118, 119, 116, 121,
-                                    10.34, 11.56, 10.34, 12.3, 10.34, 119.0 };
-        std::vector<int>    i12 = { 122, 123, 124, 125, 199 };
-        MyDataFrame         df2;
-
-        df2.load_data(std::move(idx2),
-                      std::make_pair("xcol_1", d12),
-                      std::make_pair("col_2", d22),
-                      std::make_pair("xcol_3", d32),
-                      std::make_pair("col_4", i12));
-
-        std::cout << "First DF:" << std::endl;
-        df.write<std::ostream, double, int>(std::cout);
-        std::cout << "Second DF2:" << std::endl;
-        df2.write<std::ostream, double, int>(std::cout);
-
-        MyDataFrame join_df =
-            df.join_by_index<decltype(df2), double, int>
-                (df2, join_policy::left_join);
-
-        std::cout << "Now The joined DF:" << std::endl;
-        join_df.write<std::ostream, double, int>(std::cout);
-    }
-
-    {
-        std::cout << "\nTesting Index Right Join ..." << std::endl;
-
-        std::vector<unsigned long>  idx =
-            { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
-              123457, 123458, 123459, 123460, 123461, 123462, 123466 };
-        std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
-                                   13, 14 };
-        std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23,
-                                   30, 31, 32, 1.89};
-        std::vector<double> d3 = { 15, 16, 15, 18, 19, 16, 21,
-                                   0.34, 1.56, 0.34, 2.3, 0.34, 19.0 };
-        std::vector<int>    i1 = { 22, 23, 24, 25, 99 };
-        MyDataFrame         df;
-
-        df.load_data(std::move(idx),
-                     std::make_pair("col_1", d1),
-                     std::make_pair("col_2", d2),
-                     std::make_pair("col_3", d3),
-                     std::make_pair("col_4", i1));
-
-        std::vector<unsigned long>  idx2 =
-            { 123452, 123453, 123455, 123458, 123466, 223450, 223451,
-              223454, 223456, 223457, 223459, 223460, 223461, 223462 };
-        std::vector<double> d12 =
-               { 11, 12, 13, 14, 15, 16, 17, 18, 19, 110, 111, 112, 113, 114 };
-        std::vector<double> d22 =
-            { 18, 19, 110, 111, 112, 113, 114, 120, 122, 123,
-              130, 131, 132, 11.89 };
-        std::vector<double> d32 = { 115, 116, 115, 118, 119, 116, 121,
-                                    10.34, 11.56, 10.34, 12.3, 10.34, 119.0 };
-        std::vector<int>    i12 = { 122, 123, 124, 125, 199 };
-        MyDataFrame         df2;
-
-        df2.load_data(std::move(idx2),
-                      std::make_pair("xcol_1", d12),
-                      std::make_pair("col_2", d22),
-                      std::make_pair("xcol_3", d32),
-                      std::make_pair("col_4", i12));
-
-        std::cout << "First DF:" << std::endl;
-        df.write<std::ostream, double, int>(std::cout);
-        std::cout << "Second DF2:" << std::endl;
-        df2.write<std::ostream, double, int>(std::cout);
-
-        MyDataFrame join_df =
-            df.join_by_index<decltype(df2), double, int>
-                (df2, join_policy::right_join);
-
-        std::cout << "Now The joined DF:" << std::endl;
-        join_df.write<std::ostream, double, int>(std::cout);
-    }
-
-    {
-        std::cout << "\nTesting Index Left Right Join ..." << std::endl;
-
-        std::vector<unsigned long>  idx =
-            { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
-              123457, 123458, 123459, 123460, 123461, 123462, 123466 };
-        std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
-                                   13, 14 };
-        std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23,
-                                   30, 31, 32, 1.89};
-        std::vector<double> d3 = { 15, 16, 15, 18, 19, 16, 21,
-                                   0.34, 1.56, 0.34, 2.3, 0.34, 19.0 };
-        std::vector<int>    i1 = { 22, 23, 24, 25, 99 };
-        MyDataFrame         df;
-
-        df.load_data(std::move(idx),
-                     std::make_pair("col_1", d1),
-                     std::make_pair("col_2", d2),
-                     std::make_pair("col_3", d3),
-                     std::make_pair("col_4", i1));
-
-        std::vector<unsigned long>  idx2 =
-            { 123452, 123453, 123455, 123458, 123466, 223450, 223451,
-              223454, 223456, 223457, 223459, 223460, 223461, 223462 };
-        std::vector<double> d12 =
-               { 11, 12, 13, 14, 15, 16, 17, 18, 19, 110, 111, 112, 113, 114 };
-        std::vector<double> d22 =
-            { 18, 19, 110, 111, 112, 113, 114, 120, 122, 123,
-              130, 131, 132, 11.89 };
-        std::vector<double> d32 = { 115, 116, 115, 118, 119, 116, 121,
-                                    10.34, 11.56, 10.34, 12.3, 10.34, 119.0 };
-        std::vector<int>    i12 = { 122, 123, 124, 125, 199 };
-        MyDataFrame         df2;
-
-        df2.load_data(std::move(idx2),
-                      std::make_pair("xcol_1", d12),
-                      std::make_pair("col_2", d22),
-                      std::make_pair("xcol_3", d32),
-                      std::make_pair("col_4", i12));
-
-        std::cout << "First DF:" << std::endl;
-        df.write<std::ostream, double, int>(std::cout);
-        std::cout << "Second DF2:" << std::endl;
-        df2.write<std::ostream, double, int>(std::cout);
-
-        MyDataFrame join_df =
-            df.join_by_index<decltype(df2), double, int>
-                (df2, join_policy::left_right_join);
-
-        std::cout << "Now The joined DF:" << std::endl;
-        join_df.write<std::ostream, double, int>(std::cout);
-    }
-
-    {
-        std::cout << "\nTesting Largest/Smallest visitors ..." << std::endl;
-
-        std::vector<unsigned long>  idx =
-            { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
-              123457, 123458, 123459, 123460, 123461, 123462, 123466 };
-        std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
-                                   13, 14 };
-        std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23,
-                                   30, 31, 32, 1.89};
-        std::vector<double> d3 = { 15, 16, 15, 18, 19, 16, 21,
-                                   0.34, 1.56, 0.34, 2.3, 0.34, 19.0 };
-        std::vector<int>    i1 = { 22, 23, 24, 25, 99 };
-        MyDataFrame         df;
-
-        df.load_data(std::move(idx),
-                     std::make_pair("col_1", d1),
-                     std::make_pair("col_2", d2),
-                     std::make_pair("col_3", d3),
-                     std::make_pair("col_4", i1));
-
-        std::cout << "Original DF:" << std::endl;
-        df.write<std::ostream, double, int>(std::cout);
-
-        NLargestVisitor<5, double> nl_visitor;
-
-        df.visit<double>("col_3", nl_visitor);
-        std::cout << "N largest result for col_3:" << std::endl;
-        for (auto iter : nl_visitor.get_result())
-            std::cout << iter.index << '|' << iter.value << " ";
-        std::cout << std::endl;
-        nl_visitor.sort_by_index();
-        std::cout << "N largest result for col_3 sorted by index:" << std::endl;
-        for (auto iter : nl_visitor.get_result())
-            std::cout << iter.index << '|' << iter.value << " ";
-        std::cout << std::endl;
-        nl_visitor.sort_by_value();
-        std::cout << "N largest result for col_3 sorted by value:" << std::endl;
-        for (auto iter : nl_visitor.get_result())
-            std::cout << iter.index << '|' << iter.value << " ";
-        std::cout << std::endl;
-
-        NSmallestVisitor<5, double> ns_visitor;
-
-        df.visit<double>("col_3", ns_visitor);
-        std::cout << "N smallest result for col_3:" << std::endl;
-        for (auto iter : ns_visitor.get_result())
-            std::cout << iter.index << '|' << iter.value << " ";
-        std::cout << std::endl;
-        ns_visitor.sort_by_index();
-        std::cout << "N smallest result for col_3 sorted by index:"
-                  << std::endl;
-        for (auto iter : ns_visitor.get_result())
-            std::cout << iter.index << '|' << iter.value << " ";
-        std::cout << std::endl;
-        ns_visitor.sort_by_value();
-        std::cout << "N smallest result for col_3 sorted by value:"
-                  << std::endl;
-        for (auto iter : ns_visitor.get_result())
-            std::cout << iter.index << '|' << iter.value << " ";
-        std::cout << std::endl;
-    }
-
-    {
-        std::cout << "\nTesting Shifting Up/Down ..." << std::endl;
-
-        std::vector<unsigned long>  idx =
-            { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
-              123457, 123458, 123459, 123460, 123461, 123462, 123466 };
-        std::vector<double>         d1 = { 15, 16, 15, 18, 19, 16, 21,
-                                           0.34, 1.56, 0.34, 2.3, 0.34, 19.0 };
-        std::vector<int>            i1 = { 22, 23, 24, 25, 99 };
-        std::vector<std::string>    s1 =
-            { "qqqq", "wwww", "eeee", "rrrr", "tttt", "yyyy", "uuuu",
-              "iiii", "oooo", "pppp", "2222", "aaaa", "dddd", "ffff" };
-        MyDataFrame                 df;
-
-        df.load_data(std::move(idx),
-                     std::make_pair("dbl_col", d1),
-                     std::make_pair("int_col", i1),
-                     std::make_pair("str_col", s1));
-
-        std::cout << "Original DF:" << std::endl;
-        df.write<std::ostream, double, int, std::string>(std::cout);
-
-        auto    sudf = df.shift<double, int, std::string>(3, shift_policy::up);
-
-        std::cout << "Shifted Up DF:" << std::endl;
-        sudf.write<std::ostream, double, int, std::string>(std::cout);
-
-        auto    sddf =
-            df.shift<double, int, std::string>(3, shift_policy::down);
-
-        std::cout << "Shifted Down DF:" << std::endl;
-        sddf.write<std::ostream, double, int, std::string>(std::cout);
-    }
-
-    {
-        std::cout << "\nTesting Rotating Up/Down ..." << std::endl;
-
-        std::vector<unsigned long>  idx =
-            { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
-              123457, 123458, 123459, 123460, 123461, 123462, 123466 };
-        std::vector<double>         d1 = { 15, 16, 15, 18, 19, 16, 21,
-                                           0.34, 1.56, 0.34, 2.3, 0.34, 19.0 };
-        std::vector<int>            i1 = { 22, 23, 24, 25, 99 };
-        std::vector<std::string>    s1 =
-            { "qqqq", "wwww", "eeee", "rrrr", "tttt", "yyyy", "uuuu",
-              "iiii", "oooo", "pppp", "2222", "aaaa", "dddd", "ffff" };
-        MyDataFrame                 df;
-
-        df.load_data(std::move(idx),
-                     std::make_pair("dbl_col", d1),
-                     std::make_pair("int_col", i1),
-                     std::make_pair("str_col", s1));
-
-        std::cout << "Original DF:" << std::endl;
-        df.write<std::ostream, double, int, std::string>(std::cout);
-
-        auto    rudf = df.rotate<double, int, std::string>(3, shift_policy::up);
-
-        std::cout << "Rotated Up DF:" << std::endl;
-        rudf.write<std::ostream, double, int, std::string>(std::cout);
-
-        auto    rddf =
-            df.rotate<double, int, std::string>(3, shift_policy::down);
-
-        std::cout << "Rotated Down DF:" << std::endl;
-        rddf.write<std::ostream, double, int, std::string>(std::cout);
-    }
-
-    {
-        std::cout << "\nTesting DataFrame with DateTime ..." << std::endl;
-
-        DateTime                    dt(20010102);
-        std::vector<DateTime>       idx;
-        std::vector<double>         d1;
-        std::vector<int>            i1;
-        std::vector<std::string>    s1;
-
-        idx.reserve(20);
-        d1.reserve(20);
-        i1.reserve(20);
-        s1.reserve(20);
-        for (int i = 0; i < 20; ++i)  {
-            idx.emplace_back(dt);
-            d1.push_back(i + 0.345689);
-            i1.push_back(i);
-            dt.add_days(1);
-            s1.emplace_back("Test str");
-        }
-
-        StdDataFrame<DateTime>  df;
-
-        df.load_data(std::move(idx),
-                     std::make_pair("dbl_col", d1),
-                     std::make_pair("int_col", i1),
-                     std::make_pair("str_col", s1));
-
-        std::cout << "Original DF:" << std::endl;
-        df.write<std::ostream, double, int, std::string>(std::cout);
-    }
-
-    {
-        std::cout << "\nTesting DataFrame friend plus operator ..."
-                  << std::endl;
-
-        MyDataFrame df1;
-        MyDataFrame df2;
-
-        try  {
-            df1.read("sample_data.csv");
-            df2.read("sample_data.csv");
-        }
-        catch (const DataFrameError &ex)  {
-            std::cout << ex.what() << std::endl;
-        }
-
-        MyDataFrame result =
-            df_plus<MyDataFrame,
-                    unsigned long,
-                    int,
-                    double,
-                    std::string,
-                    bool>(df1, df2);
-
-        std::cout << "Original DF1:" << std::endl;
-        df1.write<std::ostream,
+    df_read.write<std::ostream,
                   int,
                   unsigned long,
                   double,
                   std::string,
                   bool>(std::cout);
-        std::cout << "Original DF2:" << std::endl;
-        df2.write<std::ostream,
-                  int,
-                  unsigned long,
-                  double,
-                  std::string,
-                  bool>(std::cout);
-        std::cout << "Result DF:" << std::endl;
-        result.write<std::ostream,
+
+    StdDataFrame<std::string>   df_read_str;
+
+    try  {
+        df_read_str.read("sample_data_string_index.csv");
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+    df_read_str.write<std::ostream,
+                      int,
+                      unsigned long,
+                      double,
+                      std::string,
+                      bool>(std::cout);
+
+    StdDataFrame<DateTime>  df_read_dt;
+
+    try  {
+        df_read_dt.read("sample_data_dt_index.csv");
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+    df_read_dt.write<std::ostream,
                      int,
                      unsigned long,
                      double,
                      std::string,
                      bool>(std::cout);
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_transpose()  {
+
+    std::cout << "\nTesting transpose() ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+            { 123450, 123451, 123452, 123450, 123455, 123450, 123449 };
+    std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7 };
+    std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14 };
+    std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21 };
+    std::vector<double> d4 = { 22, 23, 24, 25 };
+    MyDataFrame         df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("col_1", d1),
+                 std::make_pair("col_2", d2),
+                 std::make_pair("col_3", d3),
+                 std::make_pair("col_4", d4));
+
+    std::vector<unsigned long>  tidx = { 100, 101, 102, 104 };
+    std::vector<const char *>   tcol_names =
+        { "tcol_1", "tcol_2", "tcol_3",
+          "tcol_4", "tcol_5", "tcol_6", "tcol_7" };
+    MyDataFrame                 tdf =
+        df.transpose<double>(std::move(tidx),
+                             { "col_1", "col_2", "col_3", "col_4" },
+                             tcol_names);
+
+    std::cout << "Original DataFrame:" << std::endl;
+    df.write<std::ostream, unsigned long, double>(std::cout);
+    std::cout << "Transposed DataFrame:" << std::endl;
+    tdf.write<std::ostream, unsigned long, double>(std::cout);
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_get_data_by_loc_slicing()  {
+
+    std::cout << "\nTesting get_data_by_loc()/slicing ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 123450, 123451, 123452, 123450, 123455, 123450, 123449 };
+    std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7 };
+    std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14 };
+    std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21 };
+    std::vector<double> d4 = { 22, 23, 24, 25 };
+    MyDataFrame         df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("col_1", d1),
+                 std::make_pair("col_2", d2),
+                 std::make_pair("col_3", d3),
+                 std::make_pair("col_4", d4));
+
+    MyDataFrame df2 = df.get_data_by_loc<double>(Index2D<long> { 3, 6 });
+    MyDataFrame df3 = df.get_data_by_loc<double>(Index2D<long> { 0, 7 });
+    MyDataFrame df4 = df.get_data_by_loc<double>(Index2D<long> { -4, -1 });
+    MyDataFrame df5 = df.get_data_by_loc<double>(Index2D<long> { -4, 6 });
+
+    df.write<std::ostream, double>(std::cout);
+    df2.write<std::ostream, double>(std::cout);
+    df3.write<std::ostream, double>(std::cout);
+    df4.write<std::ostream, double>(std::cout);
+    df5.write<std::ostream, double>(std::cout);
+
+    try  {
+        MyDataFrame df2 =
+            df.get_data_by_loc<double>(Index2D<long> { 3, 8 });
     }
+    catch (const BadRange &ex)  {
+        std::cout << "Caught: " << ex.what() << std::endl;
+    }
+    try  {
+        MyDataFrame df2 =
+            df.get_data_by_loc<double>(Index2D<long> { -8, -1 });
+    }
+    catch (const BadRange &ex)  {
+        std::cout << "Caught: " << ex.what() << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_get_view_by_loc()  {
+
+    std::cout << "\nTesting get_view_by_loc() ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 123450, 123451, 123452, 123450, 123455, 123450, 123449 };
+    std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7 };
+    std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14 };
+    std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21 };
+    std::vector<double> d4 = { 22, 23, 24, 25 };
+    std::vector<std::string> s1 =
+        { "11", "22", "33", "xx", "yy", "gg", "string" };
+    MyDataFrame         df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("col_1", d1),
+                 std::make_pair("col_2", d2),
+                 std::make_pair("col_3", d3),
+                 std::make_pair("col_4", d4),
+                 std::make_pair("col_str", s1));
+
+    typedef DataFrameView<unsigned long> MyDataFrameView;
+
+    MyDataFrameView dfv =
+        df.get_view_by_loc<double, std::string>(Index2D<long> { 3, 6 });
+
+    dfv.shrink_to_fit<double, std::string>();
+    dfv.write<std::ostream, double, std::string>(std::cout);
+    dfv.get_column<double>("col_3")[0] = 88.0;
+    assert(dfv.get_column<double>("col_3")[0] ==
+           df.get_column<double>("col_3")[3]);
+    assert(dfv.get_column<double>("col_3")[0] == 88.0);
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_remove_column()  {
+
+    std::cout << "\nTesting remove_column() ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 123450, 123451, 123452, 123450, 123455, 123450, 123449 };
+    std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7 };
+    std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14 };
+    std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21 };
+    std::vector<int>    i1 = { 22, 23, 24, 25 };
+    std::vector<std::string> s1 =
+        { "11", "22", "33", "xx", "yy", "gg", "string" };
+    MyDataFrame         df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("col_1", d1),
+                 std::make_pair("col_2", d2),
+                 std::make_pair("col_3", d3),
+                 std::make_pair("col_int", i1),
+                 std::make_pair("col_str", s1));
+
+    df.write<std::ostream, double, int, std::string>(std::cout);
+    df.remove_column("col_2");
+    std::cout << "After removing column `col_2`" << std::endl;
+    df.write<std::ostream, double, int, std::string>(std::cout);
+    df.remove_column("col_str");
+    std::cout << "After removing column `col_str`" << std::endl;
+    df.write<std::ostream, double, int, std::string>(std::cout);
+
+    std::vector<double> d22 = { 8, 9, 10, 11, 12, 13, 14 };
+
+    df.load_column("col_2", std::move(d22));
+    std::cout << "After adding back column `col_2`" << std::endl;
+    df.write<std::ostream, double, int, std::string>(std::cout);
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_get_view_by_idx_slicing()  {
+
+    std::cout << "\nTesting get_view_by_idx()/slicing ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466 };
+    std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
+    std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23,
+                               30, 31, 32, 1.89};
+    std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21,
+                               0.34, 1.56, 0.34, 2.3, 0.1, 0.89, 0.45 };
+    std::vector<int>    i1 = { 22, 23, 24, 25, 99, 100, 101, 3, 2 };
+    MyDataFrame         df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("col_1", d1),
+                 std::make_pair("col_2", d2),
+                 std::make_pair("col_3", d3),
+                 std::make_pair("col_4", i1));
+
+    typedef DataFrameView<unsigned long> MyDataFrameView;
+
+    MyDataFrame     df2 =
+        df.get_data_by_idx<double, int>(
+            Index2D<MyDataFrame::IndexType> { 123452, 123460 });
+    MyDataFrameView dfv =
+        df.get_view_by_idx<double, int>(
+            Index2D<MyDataFrame::IndexType> { 123452, 123460 });
+
+    df.write<std::ostream, double, int>(std::cout);
+    df2.write<std::ostream, double, int>(std::cout);
+    dfv.write<std::ostream, double, int>(std::cout);
+
+    dfv.get_column<double>("col_3")[0] = 88.0;
+    assert(dfv.get_column<double>("col_3")[0] ==
+           df.get_column<double>("col_3")[2]);
+    assert(dfv.get_column<double>("col_3")[0] == 88.0);
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_rename_column()  {
+
+    std::cout << "\nTesting rename_column() ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466 };
+    std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
+                               13, 14 };
+    std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23,
+                               30, 31, 32, 1.89};
+    std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21,
+                               0.34, 1.56, 0.34, 2.3, 0.1, 0.89, 0.45 };
+    std::vector<int>    i1 = { 22, 23, 24, 25, 99, 100, 101, 3, 2 };
+    MyDataFrame         df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("col_1", d1),
+                 std::make_pair("col_2", d2),
+                 std::make_pair("col_3", d3),
+                 std::make_pair("col_4", i1));
+
+    std::cout << "Before rename" << std::endl;
+    df.write<std::ostream, double, int>(std::cout);
+    df.rename_column("col_2", "renamed_column");
+    std::cout << "After rename" << std::endl;
+    df.write<std::ostream, double, int>(std::cout);
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_get_col_unique_values()  {
+
+    std::cout << "\nTesting get_col_unique_values() ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466 };
+    std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
+    std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23,
+                               30, 31, 32, 1.89};
+    std::vector<double> d3 = { 15, 16, 15, 18, 19, 16, 21,
+                               0.34, 1.56, 0.34, 2.3, 0.34, 0.89, 19.0 };
+    std::vector<int>    i1 = { 22, 23, 24, 25, 99, 100, 101, 3, 2 };
+    MyDataFrame         df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("col_1", d1),
+                 std::make_pair("col_2", d2),
+                 std::make_pair("col_3", d3),
+                 std::make_pair("col_4", i1));
+
+    df.write<std::ostream, double, int>(std::cout);
+    std::cout << "Getting unique values in column col_3" << std::endl;
+
+    const std::vector<double>   result =
+        df.get_col_unique_values<double>("col_3");
+
+    for (auto &iter : result)
+        std::cout << iter << ",";
+    std::cout << std::endl;
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_remove_data_by_idx()  {
+
+    std::cout << "\nTesting remove_data_by_idx() ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466 };
+    std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
+    std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23,
+                               30, 31, 32, 1.89};
+    std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21,
+                               0.34, 1.56, 0.34, 2.3, 0.1, 0.89, 0.45 };
+    std::vector<int>    i1 = { 22, 23, 24, 25, 99, 100, 101, 3, 2 };
+    MyDataFrame         df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("col_1", d1),
+                 std::make_pair("col_2", d2),
+                 std::make_pair("col_3", d3),
+                 std::make_pair("col_4", i1));
+
+    df.write<std::ostream, double, int>(std::cout);
+    std::cout << "After removing by ibdex { 123452, 123460 }" << std::endl;
+    df.remove_data_by_idx<double, int>({ 123452, 123460 });
+    df.write<std::ostream, double, int>(std::cout);
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_remove_data_by_loc()  {
+
+    std::cout << "\nTesting remove_data_by_loc() ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466 };
+    std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
+    std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23,
+                               30, 31, 32, 1.89};
+    std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21,
+                               0.34, 1.56, 0.34, 2.3, 0.1, 0.89, 0.45 };
+    std::vector<int>    i1 = { 22, 23, 24, 25, 99 };
+    MyDataFrame         df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("col_1", d1),
+                 std::make_pair("col_2", d2),
+                 std::make_pair("col_3", d3),
+                 std::make_pair("col_4", i1));
+
+    df.write<std::ostream, double, int>(std::cout);
+    std::cout << "After removing by ibdex { 3, -3 }" << std::endl;
+    df.remove_data_by_loc<double, int>({ 3, -3 });
+    df.write<std::ostream, double, int>(std::cout);
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_value_counts()  {
+
+    std::cout << "\nTesting value_counts() ..." << std::endl;
+
+    const double                my_nan = sqrt(-1);
+    std::vector<unsigned long>  idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466 };
+    std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
+    std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23,
+                               30, 31, 32, 1.89};
+    std::vector<double> d3 = { 15, 16, 15, 18, 19, 16, 21, my_nan,
+                               0.34, 1.56, 0.34, 2.3, 0.34, 19.0 };
+    std::vector<int>    i1 = { 22, 23, 24, 25, 99 };
+    MyDataFrame         df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("col_1", d1),
+                 std::make_pair("col_2", d2),
+                 std::make_pair("col_3", d3),
+                 std::make_pair("col_4", i1));
+
+    df.write<std::ostream, double, int>(std::cout);
+
+    auto    result = df.value_counts<double>("col_3");
+
+    std::cout << "After calling value_counts(cols_3)" << std::endl;
+    result.write<std::ostream, size_t>(std::cout);
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_index_inner_join()  {
+
+    std::cout << "\nTesting Index Inner Join ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466 };
+    std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
+    std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23,
+                               30, 31, 32, 1.89};
+    std::vector<double> d3 = { 15, 16, 15, 18, 19, 16, 21,
+                               0.34, 1.56, 0.34, 2.3, 0.34, 19.0 };
+    std::vector<int>    i1 = { 22, 23, 24, 25, 99 };
+    MyDataFrame         df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("col_1", d1),
+                 std::make_pair("col_2", d2),
+                 std::make_pair("col_3", d3),
+                 std::make_pair("col_4", i1));
+
+    std::vector<unsigned long>  idx2 =
+        { 123452, 123453, 123455, 123458, 123466, 223450, 223451,
+          223454, 223456, 223457, 223459, 223460, 223461, 223462 };
+    std::vector<double> d12 =
+           { 11, 12, 13, 14, 15, 16, 17, 18, 19, 110, 111, 112, 113, 114 };
+    std::vector<double> d22 =
+        { 18, 19, 110, 111, 112, 113, 114, 120, 122, 123,
+          130, 131, 132, 11.89 };
+    std::vector<double> d32 =
+        { 115, 116, 115, 118, 119, 116, 121,
+          10.34, 11.56, 10.34, 12.3, 10.34, 119.0 };
+    std::vector<int>    i12 = { 122, 123, 124, 125, 199 };
+    MyDataFrame         df2;
+
+    df2.load_data(std::move(idx2),
+                  std::make_pair("xcol_1", d12),
+                  std::make_pair("col_2", d22),
+                  std::make_pair("xcol_3", d32),
+                  std::make_pair("col_4", i12));
+
+    std::cout << "First DF:" << std::endl;
+    df.write<std::ostream, double, int>(std::cout);
+    std::cout << "Second DF2:" << std::endl;
+    df2.write<std::ostream, double, int>(std::cout);
+
+    MyDataFrame join_df =
+        df.join_by_index<decltype(df2), double, int>
+            (df2, join_policy::inner_join);
+
+    std::cout << "Now The joined DF:" << std::endl;
+    join_df.write<std::ostream, double, int>(std::cout);
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_index_left_join()  {
+
+    std::cout << "\nTesting Index Left Join ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466 };
+    std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
+    std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23,
+                               30, 31, 32, 1.89};
+    std::vector<double> d3 = { 15, 16, 15, 18, 19, 16, 21,
+                               0.34, 1.56, 0.34, 2.3, 0.34, 19.0 };
+    std::vector<int>    i1 = { 22, 23, 24, 25, 99 };
+    MyDataFrame         df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("col_1", d1),
+                 std::make_pair("col_2", d2),
+                 std::make_pair("col_3", d3),
+                 std::make_pair("col_4", i1));
+
+    std::vector<unsigned long>  idx2 =
+        { 123452, 123453, 123455, 123458, 123466, 223450, 223451,
+          223454, 223456, 223457, 223459, 223460, 223461, 223462 };
+    std::vector<double> d12 =
+           { 11, 12, 13, 14, 15, 16, 17, 18, 19, 110, 111, 112, 113, 114 };
+    std::vector<double> d22 =
+        { 18, 19, 110, 111, 112, 113, 114, 120, 122, 123,
+          130, 131, 132, 11.89 };
+    std::vector<double> d32 =
+        { 115, 116, 115, 118, 119, 116, 121,
+          10.34, 11.56, 10.34, 12.3, 10.34, 119.0 };
+    std::vector<int>    i12 = { 122, 123, 124, 125, 199 };
+    MyDataFrame         df2;
+
+    df2.load_data(std::move(idx2),
+                  std::make_pair("xcol_1", d12),
+                  std::make_pair("col_2", d22),
+                  std::make_pair("xcol_3", d32),
+                  std::make_pair("col_4", i12));
+
+    std::cout << "First DF:" << std::endl;
+    df.write<std::ostream, double, int>(std::cout);
+    std::cout << "Second DF2:" << std::endl;
+    df2.write<std::ostream, double, int>(std::cout);
+
+    MyDataFrame join_df =
+        df.join_by_index<decltype(df2), double, int>
+            (df2, join_policy::left_join);
+
+    std::cout << "Now The joined DF:" << std::endl;
+    join_df.write<std::ostream, double, int>(std::cout);
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_index_right_join()  {
+
+    std::cout << "\nTesting Index Right Join ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466 };
+    std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
+    std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23,
+                               30, 31, 32, 1.89};
+    std::vector<double> d3 = { 15, 16, 15, 18, 19, 16, 21,
+                               0.34, 1.56, 0.34, 2.3, 0.34, 19.0 };
+    std::vector<int>    i1 = { 22, 23, 24, 25, 99 };
+    MyDataFrame         df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("col_1", d1),
+                 std::make_pair("col_2", d2),
+                 std::make_pair("col_3", d3),
+                 std::make_pair("col_4", i1));
+
+    std::vector<unsigned long>  idx2 =
+        { 123452, 123453, 123455, 123458, 123466, 223450, 223451,
+          223454, 223456, 223457, 223459, 223460, 223461, 223462 };
+    std::vector<double> d12 =
+           { 11, 12, 13, 14, 15, 16, 17, 18, 19, 110, 111, 112, 113, 114 };
+    std::vector<double> d22 =
+        { 18, 19, 110, 111, 112, 113, 114, 120, 122, 123,
+          130, 131, 132, 11.89 };
+    std::vector<double> d32 =
+        { 115, 116, 115, 118, 119, 116, 121,
+          10.34, 11.56, 10.34, 12.3, 10.34, 119.0 };
+    std::vector<int>    i12 = { 122, 123, 124, 125, 199 };
+    MyDataFrame         df2;
+
+    df2.load_data(std::move(idx2),
+                  std::make_pair("xcol_1", d12),
+                  std::make_pair("col_2", d22),
+                  std::make_pair("xcol_3", d32),
+                  std::make_pair("col_4", i12));
+
+    std::cout << "First DF:" << std::endl;
+    df.write<std::ostream, double, int>(std::cout);
+    std::cout << "Second DF2:" << std::endl;
+    df2.write<std::ostream, double, int>(std::cout);
+
+    MyDataFrame join_df =
+        df.join_by_index<decltype(df2), double, int>
+            (df2, join_policy::right_join);
+
+    std::cout << "Now The joined DF:" << std::endl;
+    join_df.write<std::ostream, double, int>(std::cout);
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_index_left_right_join()  {
+
+    std::cout << "\nTesting Index Left Right Join ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466 };
+    std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
+    std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23,
+                               30, 31, 32, 1.89};
+    std::vector<double> d3 = { 15, 16, 15, 18, 19, 16, 21,
+                               0.34, 1.56, 0.34, 2.3, 0.34, 19.0 };
+    std::vector<int>    i1 = { 22, 23, 24, 25, 99 };
+    MyDataFrame         df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("col_1", d1),
+                 std::make_pair("col_2", d2),
+                 std::make_pair("col_3", d3),
+                 std::make_pair("col_4", i1));
+
+    std::vector<unsigned long>  idx2 =
+        { 123452, 123453, 123455, 123458, 123466, 223450, 223451,
+          223454, 223456, 223457, 223459, 223460, 223461, 223462 };
+    std::vector<double> d12 =
+           { 11, 12, 13, 14, 15, 16, 17, 18, 19, 110, 111, 112, 113, 114 };
+    std::vector<double> d22 =
+        { 18, 19, 110, 111, 112, 113, 114, 120, 122, 123,
+          130, 131, 132, 11.89 };
+    std::vector<double> d32 =
+        { 115, 116, 115, 118, 119, 116, 121,
+          10.34, 11.56, 10.34, 12.3, 10.34, 119.0 };
+    std::vector<int>    i12 = { 122, 123, 124, 125, 199 };
+    MyDataFrame         df2;
+
+    df2.load_data(std::move(idx2),
+                  std::make_pair("xcol_1", d12),
+                  std::make_pair("col_2", d22),
+                  std::make_pair("xcol_3", d32),
+                  std::make_pair("col_4", i12));
+
+    std::cout << "First DF:" << std::endl;
+    df.write<std::ostream, double, int>(std::cout);
+    std::cout << "Second DF2:" << std::endl;
+    df2.write<std::ostream, double, int>(std::cout);
+
+    MyDataFrame join_df =
+        df.join_by_index<decltype(df2), double, int>
+            (df2, join_policy::left_right_join);
+
+    std::cout << "Now The joined DF:" << std::endl;
+    join_df.write<std::ostream, double, int>(std::cout);
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_largest_smallest_visitors()  {
+
+    std::cout << "\nTesting Largest/Smallest visitors ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466 };
+    std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
+    std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23,
+                               30, 31, 32, 1.89};
+    std::vector<double> d3 = { 15, 16, 15, 18, 19, 16, 21,
+                               0.34, 1.56, 0.34, 2.3, 0.34, 19.0 };
+    std::vector<int>    i1 = { 22, 23, 24, 25, 99 };
+    MyDataFrame         df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("col_1", d1),
+                 std::make_pair("col_2", d2),
+                 std::make_pair("col_3", d3),
+                 std::make_pair("col_4", i1));
+
+    std::cout << "Original DF:" << std::endl;
+    df.write<std::ostream, double, int>(std::cout);
+
+    NLargestVisitor<5, double> nl_visitor;
+
+    df.visit<double>("col_3", nl_visitor);
+    std::cout << "N largest result for col_3:" << std::endl;
+    for (auto iter : nl_visitor.get_result())
+        std::cout << iter.index << '|' << iter.value << " ";
+    std::cout << std::endl;
+    nl_visitor.sort_by_index();
+    std::cout << "N largest result for col_3 sorted by index:" << std::endl;
+    for (auto iter : nl_visitor.get_result())
+        std::cout << iter.index << '|' << iter.value << " ";
+    std::cout << std::endl;
+    nl_visitor.sort_by_value();
+    std::cout << "N largest result for col_3 sorted by value:" << std::endl;
+    for (auto iter : nl_visitor.get_result())
+        std::cout << iter.index << '|' << iter.value << " ";
+    std::cout << std::endl;
+
+    NSmallestVisitor<5, double> ns_visitor;
+
+    df.visit<double>("col_3", ns_visitor);
+    std::cout << "N smallest result for col_3:" << std::endl;
+    for (auto iter : ns_visitor.get_result())
+        std::cout << iter.index << '|' << iter.value << " ";
+    std::cout << std::endl;
+    ns_visitor.sort_by_index();
+    std::cout << "N smallest result for col_3 sorted by index:" << std::endl;
+    for (auto iter : ns_visitor.get_result())
+        std::cout << iter.index << '|' << iter.value << " ";
+    std::cout << std::endl;
+    ns_visitor.sort_by_value();
+    std::cout << "N smallest result for col_3 sorted by value:" << std::endl;
+    for (auto iter : ns_visitor.get_result())
+        std::cout << iter.index << '|' << iter.value << " ";
+    std::cout << std::endl;
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_shifting_up_down()  {
+
+    std::cout << "\nTesting Shifting Up/Down ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466 };
+    std::vector<double>         d1 = { 15, 16, 15, 18, 19, 16, 21,
+                                       0.34, 1.56, 0.34, 2.3, 0.34, 19.0 };
+    std::vector<int>            i1 = { 22, 23, 24, 25, 99 };
+    std::vector<std::string>    s1 =
+        { "qqqq", "wwww", "eeee", "rrrr", "tttt", "yyyy", "uuuu",
+          "iiii", "oooo", "pppp", "2222", "aaaa", "dddd", "ffff" };
+    MyDataFrame                 df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("dbl_col", d1),
+                 std::make_pair("int_col", i1),
+                 std::make_pair("str_col", s1));
+
+    std::cout << "Original DF:" << std::endl;
+    df.write<std::ostream, double, int, std::string>(std::cout);
+
+    auto    sudf = df.shift<double, int, std::string>(3, shift_policy::up);
+
+    std::cout << "Shifted Up DF:" << std::endl;
+    sudf.write<std::ostream, double, int, std::string>(std::cout);
+
+    auto    sddf = df.shift<double, int, std::string>(3, shift_policy::down);
+
+    std::cout << "Shifted Down DF:" << std::endl;
+    sddf.write<std::ostream, double, int, std::string>(std::cout);
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_rotating_up_down()  {
+
+    std::cout << "\nTesting Rotating Up/Down ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466 };
+    std::vector<double>         d1 = { 15, 16, 15, 18, 19, 16, 21,
+                                       0.34, 1.56, 0.34, 2.3, 0.34, 19.0 };
+    std::vector<int>            i1 = { 22, 23, 24, 25, 99 };
+    std::vector<std::string>    s1 =
+        { "qqqq", "wwww", "eeee", "rrrr", "tttt", "yyyy", "uuuu",
+          "iiii", "oooo", "pppp", "2222", "aaaa", "dddd", "ffff" };
+    MyDataFrame                 df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("dbl_col", d1),
+                 std::make_pair("int_col", i1),
+                 std::make_pair("str_col", s1));
+
+    std::cout << "Original DF:" << std::endl;
+    df.write<std::ostream, double, int, std::string>(std::cout);
+
+    auto    rudf = df.rotate<double, int, std::string>(3, shift_policy::up);
+
+    std::cout << "Rotated Up DF:" << std::endl;
+    rudf.write<std::ostream, double, int, std::string>(std::cout);
+
+    auto    rddf = df.rotate<double, int, std::string>(3, shift_policy::down);
+
+    std::cout << "Rotated Down DF:" << std::endl;
+    rddf.write<std::ostream, double, int, std::string>(std::cout);
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_dataframe_with_datetime()  {
+
+    std::cout << "\nTesting DataFrame with DateTime ..." << std::endl;
+
+    DateTime                    dt(20010102);
+    std::vector<DateTime>       idx;
+    std::vector<double>         d1;
+    std::vector<int>            i1;
+    std::vector<std::string>    s1;
+
+    idx.reserve(20);
+    d1.reserve(20);
+    i1.reserve(20);
+    s1.reserve(20);
+    for (int i = 0; i < 20; ++i)  {
+        idx.emplace_back(dt);
+        d1.push_back(i + 0.345689);
+        i1.push_back(i);
+        dt.add_days(1);
+        s1.emplace_back("Test str");
+    }
+
+    StdDataFrame<DateTime>  df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("dbl_col", d1),
+                 std::make_pair("int_col", i1),
+                 std::make_pair("str_col", s1));
+
+    std::cout << "Original DF:" << std::endl;
+    df.write<std::ostream, double, int, std::string>(std::cout);
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_dataframe_friend_plus_operator()  {
+
+    std::cout << "\nTesting DataFrame friend plus operator ..." << std::endl;
+
+    MyDataFrame df1;
+    MyDataFrame df2;
+
+    try  {
+        df1.read("sample_data.csv");
+        df2.read("sample_data.csv");
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+
+    MyDataFrame result =
+        df_plus<MyDataFrame,
+                unsigned long,
+                int,
+                double,
+                std::string,
+                bool>(df1, df2);
+
+    std::cout << "Original DF1:" << std::endl;
+    df1.write<std::ostream,
+              int,
+              unsigned long,
+              double,
+              std::string,
+              bool>(std::cout);
+    std::cout << "Original DF2:" << std::endl;
+    df2.write<std::ostream,
+              int,
+              unsigned long,
+              double,
+              std::string,
+              bool>(std::cout);
+    std::cout << "Result DF:" << std::endl;
+    result.write<std::ostream,
+                 int,
+                 unsigned long,
+                 double,
+                 std::string,
+                 bool>(std::cout);
+}
+
+// -----------------------------------------------------------------------------
+
+int main(int argc, char *argv[]) {
+
+    test_haphazard();
+    test_read();
+    test_transpose();
+    test_get_data_by_loc_slicing();
+    test_get_view_by_loc();
+    test_remove_column();
+    test_get_view_by_idx_slicing();
+    test_rename_column();
+    test_get_col_unique_values();
+    test_remove_data_by_idx();
+    test_remove_data_by_loc();
+    test_value_counts();
+    test_index_inner_join();
+    test_index_left_join();
+    test_index_right_join();
+    test_index_left_right_join();
+    test_largest_smallest_visitors();
+    test_shifting_up_down();
+    test_rotating_up_down();
+    test_dataframe_with_datetime();
+    test_dataframe_friend_plus_operator();
 
     {
         std::cout << "\nTesting DataFrame friend minus operator ..."

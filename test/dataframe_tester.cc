@@ -1294,6 +1294,1360 @@ static void test_dataframe_friend_plus_operator()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_dataframe_friend_minus_operator()  {
+
+    std::cout << "\nTesting DataFrame friend minus operator ..." << std::endl;
+
+    MyDataFrame df1;
+    MyDataFrame df2;
+
+    try  {
+        df1.read("sample_data.csv");
+        df2.read("sample_data.csv");
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+
+    // Notice I am omitting std::string here, since minus is not defined for
+    // std::string, and hence it won't compile
+    MyDataFrame result =
+        df_minus<MyDataFrame,
+                 unsigned long,
+                 int,
+                 double,
+                 bool>(df1, df2);
+
+    std::cout << "Original DF1:" << std::endl;
+    df1.write<std::ostream,
+              int,
+              unsigned long,
+              double,
+              std::string,
+              bool>(std::cout);
+    std::cout << "Original DF2:" << std::endl;
+    df2.write<std::ostream,
+              int,
+              unsigned long,
+              double,
+              std::string,
+              bool>(std::cout);
+    std::cout << "Result DF:" << std::endl;
+    result.write<std::ostream,
+                 int,
+                 unsigned long,
+                 double,
+                 bool>(std::cout);
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_dataframe_friend_multiplies_operator()  {
+
+    std::cout << "\nTesting DataFrame friend multiplies operator ..."
+              << std::endl;
+
+    std::vector<unsigned long>  idx1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 25, 40, 55 };
+    std::vector<unsigned long>  idx2 = { 1, 2, 3, 4, 5, 8, 9, 22, 25, 40 };
+    std::vector<double>         d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
+    std::vector<double>         d2 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+    std::vector<double>         s1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
+    std::vector<int>            s2 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+
+    MyDataFrame df1;
+    MyDataFrame df2;
+
+    df1.load_data(std::move(idx1),
+                  std::make_pair("dbl_col", d1),
+                  std::make_pair("same_name", s1));
+    df2.load_data(std::move(idx2),
+                  std::make_pair("dbl_col", d2),
+                  std::make_pair("same_name", s2));
+
+    MyDataFrame result = df_multiplies<MyDataFrame, int, double>(df1, df2);
+
+    std::cout << "Original DF1:" << std::endl;
+    df1.write<std::ostream, int, double>(std::cout);
+    std::cout << "Original DF2:" << std::endl;
+    df2.write<std::ostream, int, double>(std::cout);
+    std::cout << "Result DF:" << std::endl;
+    result.write<std::ostream, int, double>(std::cout);
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_dataframe_friend_divides_operator()  {
+
+    std::cout << "\nTesting DataFrame friend divides operator ..." << std::endl;
+
+    std::vector<unsigned long>  idx1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 25, 40, 55 };
+    std::vector<unsigned long>  idx2 = { 1, 2, 3, 4, 5, 8, 9, 22, 25, 40 };
+    std::vector<double>         d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
+    std::vector<double>         d2 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+    std::vector<double>         s1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
+    std::vector<int>            s2 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+
+    MyDataFrame df1;
+    MyDataFrame df2;
+
+    df1.load_data(std::move(idx1),
+                  std::make_pair("dbl_col", d1),
+                  std::make_pair("same_name", s1));
+    df2.load_data(std::move(idx2),
+                  std::make_pair("dbl_col", d2),
+                  std::make_pair("same_name", s2));
+
+    MyDataFrame result = df_divides<MyDataFrame, int, double>(df1, df2);
+
+    std::cout << "Original DF1:" << std::endl;
+    df1.write<std::ostream, int, double>(std::cout);
+    std::cout << "Original DF2:" << std::endl;
+    df2.write<std::ostream, int, double>(std::cout);
+    std::cout << "Result DF:" << std::endl;
+    result.write<std::ostream, int, double>(std::cout);
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_fill_missing_values()  {
+
+    std::cout << "\nTesting fill_missing(values) ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466 };
+    std::vector<double> d1 = { 1, 2, 3, 4,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               6, 7,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               std::numeric_limits<double>::quiet_NaN(),
+                               std::numeric_limits<double>::quiet_NaN(),
+                               11, 12, 13, 14 };
+    std::vector<double> d2 = { 8, 9,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               11, 12,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               std::numeric_limits<double>::quiet_NaN(),
+                               20, 22, 23, 30, 31,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               1.89 };
+    std::vector<double> d3 = { std::numeric_limits<double>::quiet_NaN(),
+                               16,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               18, 19, 16,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               0.34, 1.56, 0.34, 2.3, 0.34,
+                               std::numeric_limits<double>::quiet_NaN() };
+    std::vector<int>    i1 = { 22,
+                               std::numeric_limits<int>::quiet_NaN(),
+                               std::numeric_limits<int>::quiet_NaN(),
+                               25,
+                               std::numeric_limits<int>::quiet_NaN() };
+    MyDataFrame         df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("col_1", d1),
+                 std::make_pair("col_2", d2),
+                 std::make_pair("col_3", d3),
+                 std::make_pair("col_4", i1));
+
+    std::vector<std::string>    s1 =
+        { "qqqq", "wwww", "eeee", "rrrr", "tttt", "yyyy", "iiii", "oooo" };
+
+    df.load_column("col_str", std::move(s1), nan_policy::dont_pad_with_nans);
+
+    std::cout << "Original DF:" << std::endl;
+    df.write<std::ostream, int, double, std::string>(std::cout);
+
+    df.fill_missing<double, 3>({ "col_1", "col_2", "col_3" },
+                               fill_policy::value,
+                               { 1001, 1002, 1003 },
+                               3);
+    df.fill_missing<std::string, 1>({ "col_str" },
+                                    fill_policy::value,
+                                    { "XXXXXX" });
+
+    std::cout << "After fill missing with values DF:" << std::endl;
+    df.write<std::ostream, int, double, std::string>(std::cout);
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_fill_missing_fill_forward()  {
+
+    std::cout << "\nTesting fill_missing(fill_forward) ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466 };
+    std::vector<double> d1 = { 1, 2, 3, 4,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               6, 7,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               std::numeric_limits<double>::quiet_NaN(),
+                               std::numeric_limits<double>::quiet_NaN(),
+                               11, 12, 13, 14 };
+    std::vector<double> d2 = { 8, 9,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               11, 12,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               std::numeric_limits<double>::quiet_NaN(),
+                               20, 22, 23, 30, 31,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               1.89 };
+    std::vector<double> d3 = { std::numeric_limits<double>::quiet_NaN(),
+                               16,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               18, 19, 16,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               0.34, 1.56, 0.34, 2.3, 0.34,
+                               std::numeric_limits<double>::quiet_NaN() };
+    std::vector<int>    i1 = { 22,
+                               std::numeric_limits<int>::quiet_NaN(),
+                               std::numeric_limits<int>::quiet_NaN(),
+                               25,
+                               std::numeric_limits<int>::quiet_NaN() };
+    MyDataFrame         df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("col_1", d1),
+                 std::make_pair("col_2", d2),
+                 std::make_pair("col_3", d3),
+                 std::make_pair("col_4", i1));
+
+    std::vector<std::string>    s1 =
+        { "qqqq", "wwww", "eeee", "rrrr", "tttt", "yyyy", "iiii", "oooo" };
+
+    df.load_column("col_str", std::move(s1), nan_policy::dont_pad_with_nans);
+
+    std::cout << "Original DF:" << std::endl;
+    df.write<std::ostream, int, double, std::string>(std::cout);
+
+    df.fill_missing<double, 3>({ "col_1", "col_2", "col_3" },
+                               fill_policy::fill_forward,
+                               { },
+                               3);
+    df.fill_missing<std::string, 1>({ "col_str" },
+                                    fill_policy::fill_forward,
+                                    {  }, 3);
+
+    std::cout << "After fill missing with values DF:" << std::endl;
+    df.write<std::ostream, int, double, std::string>(std::cout);
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_fill_missing_fill_backward()  {
+
+    std::cout << "\nTesting fill_missing(fill_backward) ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466 };
+    std::vector<double> d1 = { 1, 2, 3, 4,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               6, 7,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               std::numeric_limits<double>::quiet_NaN(),
+                               std::numeric_limits<double>::quiet_NaN(),
+                               11, 12, 13, 14 };
+    std::vector<double> d2 = { 8, 9,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               11, 12,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               std::numeric_limits<double>::quiet_NaN(),
+                               20, 22, 23, 30, 31,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               1.89 };
+    std::vector<double> d3 = { std::numeric_limits<double>::quiet_NaN(),
+                               16,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               18, 19, 16,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               0.34, 1.56, 0.34, 2.3, 0.34,
+                               std::numeric_limits<double>::quiet_NaN() };
+    std::vector<int>    i1 = { 22,
+                               std::numeric_limits<int>::quiet_NaN(),
+                               std::numeric_limits<int>::quiet_NaN(),
+                               25,
+                               std::numeric_limits<int>::quiet_NaN() };
+    std::vector<std::string>    s1 =
+        { "qqqq", "wwww", "eeee", "rrrr", "tttt", "yyyy",
+          "iiii", "oooo", "pppp", "2222", "aaaa", "dddd" };
+    MyDataFrame         df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("col_1", d1),
+                 std::make_pair("col_2", d2),
+                 std::make_pair("col_3", d3),
+                 std::make_pair("col_str", s1),
+                 std::make_pair("col_4", i1));
+
+    std::cout << "Original DF:" << std::endl;
+    df.write<std::ostream, int, double, std::string>(std::cout);
+
+    df.fill_missing<double, 3>({ "col_1", "col_2", "col_3" },
+                               fill_policy::fill_backward);
+    df.fill_missing<std::string, 1>({ "col_str" }, fill_policy::fill_backward);
+
+    std::cout << "After fill missing with values DF:" << std::endl;
+    df.write<std::ostream, int, double, std::string>(std::cout);
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_fill_missing_fill_linear_interpolation()  {
+
+    std::cout << "\nTesting fill_missing(linear_interpolate) ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466 };
+    std::vector<double> d1 = { 1, 2, 3, 4,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               6, 7,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               std::numeric_limits<double>::quiet_NaN(),
+                               std::numeric_limits<double>::quiet_NaN(),
+                               11, 12, 13, 14 };
+    std::vector<double> d2 = { 8, 9,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               11, 12,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               std::numeric_limits<double>::quiet_NaN(),
+                               20, 22, 23, 30, 31,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               1.89 };
+    std::vector<double> d3 = { std::numeric_limits<double>::quiet_NaN(),
+                               16,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               18, 19, 16,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               0.34, 1.56, 0.34, 2.3, 0.34,
+                               std::numeric_limits<double>::quiet_NaN() };
+    std::vector<int>    i1 = { 22,
+                               std::numeric_limits<int>::quiet_NaN(),
+                               std::numeric_limits<int>::quiet_NaN(),
+                               25,
+                               std::numeric_limits<int>::quiet_NaN() };
+    MyDataFrame         df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("col_1", d1),
+                 std::make_pair("col_2", d2),
+                 std::make_pair("col_3", d3),
+                 std::make_pair("col_4", i1));
+
+    std::cout << "Original DF:" << std::endl;
+    df.write<std::ostream, int, double>(std::cout);
+
+    df.fill_missing<double, 3>({ "col_1", "col_2", "col_3" },
+                               fill_policy::linear_interpolate);
+
+    std::cout << "After fill missing with values DF:" << std::endl;
+    df.write<std::ostream, int, double>(std::cout);
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_drop_missing_all_no_drop()  {
+
+    std::cout << "\nTesting drop_missing(all) no drop ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466 };
+    std::vector<double> d1 = { 1, 2, 3, 4,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               6, 7,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               std::numeric_limits<double>::quiet_NaN(),
+                               std::numeric_limits<double>::quiet_NaN(),
+                               11, 12, 13, 14 };
+    std::vector<double> d2 = { 8, 9,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               11, 12,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               std::numeric_limits<double>::quiet_NaN(),
+                               20, 22, 23, 30, 31,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               1.89 };
+    std::vector<double> d3 = { std::numeric_limits<double>::quiet_NaN(),
+                               16,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               18, 19, 16,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               0.34, 1.56, 0.34, 2.3, 0.34,
+                               std::numeric_limits<double>::quiet_NaN() };
+    std::vector<int>    i1 = { 22,
+                               std::numeric_limits<int>::quiet_NaN(),
+                               std::numeric_limits<int>::quiet_NaN(),
+                               25,
+                               std::numeric_limits<int>::quiet_NaN() };
+    std::vector<std::string>    s1 =
+        { "qqqq", "wwww", "eeee", "rrrr", "tttt", "yyyy",
+          "iiii", "oooo", "pppp", "2222", "aaaa", "dddd" };
+    MyDataFrame         df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("col_1", d1),
+                 std::make_pair("col_2", d2),
+                 std::make_pair("col_3", d3),
+                 std::make_pair("col_str", s1),
+                 std::make_pair("col_4", i1));
+
+    std::cout << "Original DF:" << std::endl;
+    df.write<std::ostream, int, double, std::string>(std::cout);
+
+    df.drop_missing<int, double, std::string>(drop_policy::all);
+
+    std::cout << "After drop missing all DF:" << std::endl;
+    df.write<std::ostream, int, double, std::string>(std::cout);
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_drop_missing_all_2_drop()  {
+
+    std::cout << "\nTesting drop_missing(all) 2 drop ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466 };
+    std::vector<double> d1 = { 1, 2, 3, 4,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               std::numeric_limits<double>::quiet_NaN(),
+                               7,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               std::numeric_limits<double>::quiet_NaN(),
+                               std::numeric_limits<double>::quiet_NaN(),
+                               std::numeric_limits<double>::quiet_NaN(),
+                               12, 13, 14 };
+    std::vector<double> d2 = { 8, 9,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               11, 12,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               std::numeric_limits<double>::quiet_NaN(),
+                               20, 22, 23,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               31,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               1.89 };
+    std::vector<double> d3 = { std::numeric_limits<double>::quiet_NaN(),
+                               16,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               18, 19,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               std::numeric_limits<double>::quiet_NaN(),
+                               0.34, 1.56, 0.34,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               0.34,
+                               std::numeric_limits<double>::quiet_NaN() };
+    std::vector<int>    i1 = { 22,
+                               std::numeric_limits<int>::quiet_NaN(),
+                               std::numeric_limits<int>::quiet_NaN(),
+                               25,
+                               std::numeric_limits<int>::quiet_NaN() };
+    std::vector<std::string>    s1 =
+        { "qqqq", "wwww", "eeee", "rrrr", "tttt", "",
+          "iiii", "oooo", "pppp", "2222", "", "dddd" };
+    MyDataFrame         df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("col_1", d1),
+                 std::make_pair("col_2", d2),
+                 std::make_pair("col_3", d3),
+                 std::make_pair("col_str", s1),
+                 std::make_pair("col_4", i1));
+
+    std::cout << "Original DF:" << std::endl;
+    df.write<std::ostream, int, double, std::string>(std::cout);
+
+    df.drop_missing<int, double, std::string>(drop_policy::all);
+
+    std::cout << "After drop missing all DF:" << std::endl;
+    df.write<std::ostream, int, double, std::string>(std::cout);
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_drop_missing_any()  {
+
+    std::cout << "\nTesting drop_missing(any) ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466 };
+    std::vector<double> d1 = { 1, 2, 3, 4,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               6, 7,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               std::numeric_limits<double>::quiet_NaN(),
+                               std::numeric_limits<double>::quiet_NaN(),
+                               11, 12, 13, 14 };
+    std::vector<double> d2 = { 8, 9,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               11, 12,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               std::numeric_limits<double>::quiet_NaN(),
+                               20, 22, 23, 30, 31,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               1.89 };
+    std::vector<double> d3 = { std::numeric_limits<double>::quiet_NaN(),
+                               16,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               18, 19, 16,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               0.34, 1.56, 0.34, 2.3, 0.34,
+                               std::numeric_limits<double>::quiet_NaN() };
+    std::vector<int>    i1 = { 22,
+                               std::numeric_limits<int>::quiet_NaN(),
+                               std::numeric_limits<int>::quiet_NaN(),
+                               25,
+                               std::numeric_limits<int>::quiet_NaN() };
+    std::vector<std::string>    s1 =
+        { "qqqq", "wwww", "eeee", "rrrr", "tttt", "yyyy",
+          "iiii", "oooo", "pppp", "2222", "aaaa", "dddd" };
+    MyDataFrame         df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("col_1", d1),
+                 std::make_pair("col_2", d2),
+                 std::make_pair("col_3", d3),
+                 std::make_pair("col_str", s1),
+                 std::make_pair("col_4", i1));
+
+    std::cout << "Original DF:" << std::endl;
+    df.write<std::ostream, int, double, std::string>(std::cout);
+
+    df.drop_missing<int, double, std::string>(drop_policy::any);
+
+    std::cout << "After drop missing all DF:" << std::endl;
+    df.write<std::ostream, int, double, std::string>(std::cout);
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_drop_threashold_3()  {
+
+    std::cout << "\nTesting drop_missing(threshold=3) ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466 };
+    std::vector<double> d1 = { 1, 2, 3, 4,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               6, 7,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               std::numeric_limits<double>::quiet_NaN(),
+                               std::numeric_limits<double>::quiet_NaN(),
+                               11, 12, 13, 14 };
+    std::vector<double> d2 = { 8, 9,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               11, 12,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               std::numeric_limits<double>::quiet_NaN(),
+                               20, 22, 23, 30, 31,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               1.89 };
+    std::vector<double> d3 = { std::numeric_limits<double>::quiet_NaN(),
+                               16,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               18, 19, 16,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               0.34, 1.56, 0.34, 2.3, 0.34,
+                               std::numeric_limits<double>::quiet_NaN() };
+    std::vector<int>    i1 = { 22,
+                               std::numeric_limits<int>::quiet_NaN(),
+                               std::numeric_limits<int>::quiet_NaN(),
+                               25,
+                               std::numeric_limits<int>::quiet_NaN() };
+    std::vector<std::string>    s1 =
+        { "qqqq", "wwww", "eeee", "rrrr", "tttt", "yyyy",
+          "iiii", "oooo", "pppp", "2222", "aaaa", "dddd" };
+    MyDataFrame         df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("col_1", d1),
+                 std::make_pair("col_2", d2),
+                 std::make_pair("col_3", d3),
+                 std::make_pair("col_str", s1),
+                 std::make_pair("col_4", i1));
+
+    std::cout << "Original DF:" << std::endl;
+    df.write<std::ostream, int, double, std::string>(std::cout);
+
+    df.drop_missing<int, double, std::string>(drop_policy::threshold, 3);
+
+    std::cout << "After drop missing all DF:" << std::endl;
+    df.write<std::ostream, int, double, std::string>(std::cout);
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_get_row()  {
+
+    std::cout << "\nTesting get_row() ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466 };
+    std::vector<double> d1 = { 1, 2, 3, 4,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               6, 7,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               std::numeric_limits<double>::quiet_NaN(),
+                               std::numeric_limits<double>::quiet_NaN(),
+                               11, 12, 13, 14 };
+    std::vector<double> d2 = { 8, 9, 10, 11, 12,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               std::numeric_limits<double>::quiet_NaN(),
+                               20, 22, 23, 30, 31,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               1.89 };
+    std::vector<double> d3 = { 400.4, 16, 500.5, 18, 19, 16,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               0.34, 1.56, 0.34, 2.3, 0.34,
+                               std::numeric_limits<double>::quiet_NaN() };
+    std::vector<int>    i1 = { 22, 11, 34, 25,
+                               std::numeric_limits<int>::quiet_NaN() };
+    MyDataFrame         df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("col_1", d1),
+                 std::make_pair("col_2", d2),
+                 std::make_pair("col_3", d3),
+                 std::make_pair("col_4", i1));
+
+    std::vector<std::string>    s1 =
+        { "qqqq", "wwww", "eeee", "rrrr", "tttt", "yyyy", "iiii", "oooo" };
+
+    df.load_column("col_str", std::move(s1), nan_policy::dont_pad_with_nans);
+
+    std::vector<int>    i2 = { 22, 11 };
+
+    df.load_column("col_int", std::move(i2), nan_policy::dont_pad_with_nans);
+
+    std::cout << "Original DF:" << std::endl;
+    df.write<std::ostream, int, double, std::string>(std::cout);
+
+    std::array<const char *, 6> columns =
+        {"col_1", "col_2", "col_3", "col_4", "col_str", "col_int"};
+    auto                        row =
+        df.get_row<6, int, double, std::string>(2, columns);
+
+    assert(row.at<MyDataFrame::IndexType>(0) == 123452);
+    assert(row.at<double>(0) == 3.0);
+    assert(row.at<double>(1) == 10.0);
+    assert(row.at<double>(2) == 500.5);
+    assert(row.at<int>(0) == 34);
+    assert(row.at<int>(1) == 0);
+    assert(row.at<std::string>(0) == "eeee");
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_auto_correlation()  {
+
+    std::cout << "\nTesting Auto Correlation ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466,
+          123467, 123468, 123469, 123470, 123471, 123472, 123473 };
+    std::vector<double>         d1 =
+        { 15, 16, 15, 18, 19, 16, 21,
+          0.34, 1.56, 0.34, 2.3, 0.34, 19.0, 0.387,
+          0.123, 1.06, 0.65, 2.03, 0.4, 1.0, 0.007 };
+    std::vector<double>         d2 =
+        { 1.23, 1.22, 1.21, 1.20, 1.19, 1.185, 1.181,
+          1.19, 1.195, 1.189, 1.185, 1.18, 1.181, 1.186,
+          1.189, 1.19, 1.194, 1.198, 1.199, 1.197, 1.193 };
+    std::vector<int>            i1 = { 22, 23, 24, 25, 99 };
+    MyDataFrame                 df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("col_1", d1),
+                 std::make_pair("col_2", d2),
+                 std::make_pair("col_3", i1));
+
+    AutoCorrVisitor<double> auto_corr;
+    const auto              &result =
+        df.single_act_visit<double>("col_1", auto_corr).get_result();
+
+    assert(result.size() == 17);
+    assert(result[0] == 1.0);
+    assert(fabs(result[1] - 0.562001) < 0.00001);
+    assert(fabs(result[16] - -0.265228) < 0.00001);
+    assert(fabs(result[6] - 0.388131) < 0.00001);
+    assert(fabs(result[10] - 0.125514) < 0.00001);
+
+    const auto  &result2 =
+        df.single_act_visit<double>("col_2", auto_corr).get_result();
+
+    assert(result.size() == 17);
+    assert(result[0] == 1.0);
+    assert(fabs(result[1] - 0.903754) < 0.00001);
+    assert(fabs(result[16] - 0.183254) < 0.00001);
+    assert(fabs(result[6] - -0.263385) < 0.00001);
+    assert(fabs(result[10] - -0.712274) < 0.00001);
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_return()  {
+
+    std::cout << "\nTesting Return ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466,
+          123467, 123468, 123469, 123470, 123471, 123472, 123473 };
+    std::vector<double>         d1 =
+        { 15, 16, 15, 18, 19, 16, 21,
+          0.34, 1.56, 0.34, 2.3, 0.34, 19.0, 0.387,
+          0.123, 1.06, 0.65, 2.03, 0.4, 1.0, 0.59 };
+    std::vector<double>         d2 =
+        { 1.23, 1.22, 1.21, 1.20, 1.19, 1.185, 1.181,
+          1.19, 1.195, 1.189, 1.185, 1.18, 1.181, 1.186,
+          1.189, 1.19, 1.194, 1.198, 1.199, 1.197, 1.193 };
+    std::vector<int>            i1 = { 22, 23, 24, 25, 99 };
+    MyDataFrame                 df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("col_1", d1),
+                 std::make_pair("col_2", d2),
+                 std::make_pair("col_3", i1));
+
+    ReturnVisitor<double>   return_visit(return_policy::monetary);
+    const auto              &result =
+        df.single_act_visit<double>("col_1", return_visit).get_result();
+
+    assert(result.size() == 20);
+    assert(result[0] == 1.0);
+    assert(result[1] == -1.0);
+    assert(result[16] == 1.38);
+    assert(result[6] == -20.66);
+    assert(fabs(result[10] - -1.96) < 0.00001);
+
+    ReturnVisitor<double>   return_visit2(return_policy::percentage);
+    const auto              &result2 =
+        df.single_act_visit<double>("col_1", return_visit2).get_result();
+
+    assert(result2.size() == 20);
+    assert(fabs(result2[0] - 0.0666667) < 0.00001);
+    assert(fabs(result2[1] - -0.0625) < 0.00001);
+    assert(fabs(result2[16] - 2.12308) < 0.00001);
+    assert(fabs(result2[6] - -0.98381) < 0.00001);
+    assert(fabs(result2[10] - -0.852174) < 0.00001);
+
+    ReturnVisitor<double>   return_visit3(return_policy::log);
+    const auto              &result3 =
+        df.single_act_visit<double>("col_1", return_visit3).get_result();
+
+    assert(result3.size() == 20);
+    assert(fabs(result3[0] - 0.0645385) < 0.00001);
+    assert(fabs(result3[1] - -0.0645385) < 0.00001);
+    assert(fabs(result3[16] - 1.13882) < 0.00001);
+    assert(fabs(result3[6] - -4.12333) < 0.00001);
+    assert(fabs(result3[10] - -1.91172) < 0.00001);
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_median()  {
+
+    std::cout << "\nTesting Median ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466,
+          123467, 123468, 123469, 123470, 123471, 123472, 123473 };
+    std::vector<double>         d1 =
+        { 1.0, 10, 8, 18, 19, 16, 21, 17, 20, 3, 2, 11, 7.0, 5,
+          9, 15, 14, 13, 12, 6, 4 };
+    std::vector<double>         d2 =
+        { 1.0, 10, 8, 18, 19, 16, 17, 20, 3, 2, 11, 7.0, 5,
+          9, 15, 14, 13, 12, 6, 4 };
+    std::vector<int>           i1 =
+        { 1, 10, 8, 18, 19, 16, 21, 17, 20, 3, 2, 11, 7, 5,
+          9, 15, 14, 13, 12, 6, 4 };
+    std::vector<int>            i2 =
+        { 1, 10, 8, 18, 19, 16, 17, 20, 3, 2, 11, 7, 5,
+          9, 15, 14, 13, 12, 6, 4 };
+    MyDataFrame                 df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("dblcol_1", d1),
+                 std::make_pair("intcol_1", i1));
+    df.load_column("dblcol_2", std::move(d2), nan_policy::dont_pad_with_nans);
+    df.load_column("intcol_2", std::move(i2), nan_policy::dont_pad_with_nans);
+
+    MedianVisitor<double>   med_visit;
+    double                  result =
+        df.single_act_visit<double>("dblcol_1", med_visit).get_result();
+
+    assert(result == 10.0);
+
+    result = df.single_act_visit<double>("dblcol_2", med_visit).get_result();
+    assert(result == 10.50);
+
+    MedianVisitor<int>  med_visit2;
+    int                 result2 =
+        df.single_act_visit<int>("intcol_1", med_visit2).get_result();
+
+    assert(result2 == 10);
+
+    result2 = df.single_act_visit<int>("intcol_2", med_visit2).get_result();
+    assert(result2 == 10);
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_tracking_error()  {
+
+    std::cout << "\nTesting Tracking Error ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466,
+          123467, 123468, 123469, 123470, 123471, 123472, 123473 };
+    std::vector<double>         d1 =
+        { 1.0, 10, 8, 18, 19, 16, 21, 17, 20, 3, 2, 11, 7.0, 5,
+          9, 15, 14, 13, 12, 6, 4 };
+    std::vector<double>         d2 =
+        { 1.0, 10, 8, 18, 19, 16, 21, 17, 20, 3, 2, 11, 7.0, 5,
+          9, 15, 14, 13, 12, 6, 4 };
+    std::vector<double>         d3 =
+        { 1.1, 10.09, 8.2, 18.03, 19.4, 15.9, 20.8,
+          17.1, 19.9, 3.3, 2.2, 10.8, 7.4, 5.3,
+          9.1, 14.9, 14.8, 13.2, 12.6, 6.1, 4.4 };
+    std::vector<double>         d4 =
+        { 0.1, 9.09, 7.2, 17.03, 18.4, 14.9, 19.8,
+          16.1, 18.9, 2.3, 1.2, 9.8, 6.4, 4.3,
+          8.1, 13.9, 13.8, 12.2, 11.6, 5.1, 3.4 };
+    std::vector<double>         d5 =
+        { 20.0, 10.1, -30.2, 18.5, 1.1, 16.2, 30.8,
+          -1.56, 20.1, 25.5, 30.89, 11.1, 7.4, 5.3,
+          19, 15.1, 1.3, 1.2, 12.6, 23.2, 40.1 };
+    MyDataFrame                 df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("dblcol_1", d1),
+                 std::make_pair("dblcol_2", d2),
+                 std::make_pair("dblcol_3", d3),
+                 std::make_pair("dblcol_4", d4),
+                 std::make_pair("dblcol_5", d5));
+
+    TrackingErrorVisitor<double>    tracking_visit;
+    double                          result =
+        df.visit<double, double>("dblcol_1",
+                                 "dblcol_2",
+                                 tracking_visit).get_result();
+
+    assert(result == 0.0);
+
+    result = df.visit<double, double>("dblcol_1",
+                                      "dblcol_3",
+                                      tracking_visit).get_result();
+    assert(fabs(result - 0.256416) < 0.00001);
+
+    result = df.visit<double, double>("dblcol_1",
+                                      "dblcol_4",
+                                      tracking_visit).get_result();
+    assert(fabs(result - 0.256416) < 0.00001);
+
+    result = df.visit<double, double>("dblcol_3",
+                                      "dblcol_4",
+                                      tracking_visit).get_result();
+    assert(result == 0.0);
+
+    result = df.visit<double, double>("dblcol_2",
+                                      "dblcol_4",
+                                      tracking_visit).get_result();
+    assert(fabs(result - 0.256416) < 0.00001);
+
+    result = df.visit<double, double>("dblcol_1",
+                                      "dblcol_5",
+                                      tracking_visit).get_result();
+    assert(fabs(result - 17.0566) < 0.0001);
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_beta()  {
+
+    std::cout << "\nTesting Beta ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466,
+          123467, 123468, 123469, 123470, 123471, 123472, 123473 };
+    std::vector<double>         d1 =
+        { 1.0, 10, 8, 18, 19, 16, 21, 17, 20, 3, 2, 11, 7.0, 5,
+          9, 15, 14, 13, 12, 6, 4 };
+    std::vector<double>         d2 =
+        { 1.0, 10, 8, 18, 19, 16, 21, 17, 20, 3, 2, 11, 7.0, 5,
+          9, 15, 14, 13, 12, 6, 4 };
+    std::vector<double>         d3 =
+        { 1.1, 10.09, 8.2, 18.03, 19.4, 15.9, 20.8,
+          17.1, 19.9, 3.3, 2.2, 10.8, 7.4, 5.3,
+          9.1, 14.9, 14.8, 13.2, 12.6, 6.1, 4.4 };
+    std::vector<double>         d4 =
+        { 0.1, 9.09, 7.2, 17.03, 18.4, 14.9, 19.8,
+          16.1, 18.9, 2.3, 1.2, 9.8, 6.4, 4.3,
+          8.1, 13.9, 13.8, 12.2, 11.6, 5.1, 3.4 };
+    std::vector<double>         d5 =
+        { 20.0, 10.1, -30.2, 18.5, 1.1, 16.2, 30.8,
+          -1.56, 20.1, 25.5, 30.89, 11.1, 7.4, 5.3,
+          19, 15.1, 1.3, 1.2, 12.6, 23.2, 40.1 };
+    MyDataFrame                 df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("dblcol_1", d1),
+                 std::make_pair("dblcol_2", d2),
+                 std::make_pair("dblcol_3", d3),
+                 std::make_pair("dblcol_4", d4),
+                 std::make_pair("dblcol_5", d5));
+
+    ReturnVisitor<double>   return_visit(return_policy::log);
+
+    df.load_column(
+        "dblcol_1_return",
+        df.single_act_visit<double>("dblcol_1", return_visit).get_result(),
+        nan_policy::dont_pad_with_nans);
+    df.load_column(
+        "dblcol_2_return",
+        df.single_act_visit<double>("dblcol_2", return_visit).get_result(),
+        nan_policy::dont_pad_with_nans);
+    df.load_column(
+        "dblcol_3_return",
+        df.single_act_visit<double>("dblcol_3", return_visit).get_result(),
+        nan_policy::dont_pad_with_nans);
+    df.load_column(
+        "dblcol_4_return",
+        df.single_act_visit<double>("dblcol_4", return_visit).get_result(),
+        nan_policy::dont_pad_with_nans);
+    df.load_column(
+        "dblcol_5_return",
+        df.single_act_visit<double>("dblcol_5", return_visit).get_result(),
+        nan_policy::dont_pad_with_nans);
+
+    BetaVisitor<double> beta_visit;
+    double              result =
+        df.visit<double, double>("dblcol_1_return",
+                                 "dblcol_2_return",
+                                 beta_visit).get_result();
+
+    assert(result == 1.0);
+
+    result = df.visit<double, double>("dblcol_1_return",
+                                      "dblcol_3_return",
+                                      beta_visit).get_result();
+    assert(fabs(result - 1.04881) < 0.00001);
+
+    result = df.visit<double, double>("dblcol_1_return",
+                                      "dblcol_4_return",
+                                      beta_visit).get_result();
+    assert(fabs(result - 0.647582) < 0.00001);
+
+    result = df.visit<double, double>("dblcol_1_return",
+                                      "dblcol_5_return",
+                                      beta_visit).get_result();
+    assert(fabs(result - -0.128854) < 0.00001);
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_gen_datetime_index()  {
+
+    std::cout << "\nTesting gen_datetime_index() ..." << std::endl;
+    // I am commenting some of these out because with timezone spec,
+    // it will take too long for the test to run
+
+    std::vector<unsigned long>  idx_vec1 =
+        MyDataFrame::gen_datetime_index("01/01/2018",
+                                        "12/31/2038",
+                                        time_frequency::annual,
+                                        1,
+                                        DT_TIME_ZONE::AM_NEW_YORK);
+
+    assert(idx_vec1.size() == 21);
+    assert(idx_vec1.capacity() == 22);
+    assert(idx_vec1[0] == 20180101);
+    assert(idx_vec1[1] == 20190101);
+    assert(idx_vec1[10] == 20280101);
+    assert(idx_vec1[20] == 20380101);
+
+    /*
+    idx_vec1 = MyDataFrame::gen_datetime_index("01/01/2018",
+                                               "12/31/2038",
+                                               time_frequency::monthly,
+                                               3,
+                                               DT_TIME_ZONE::AM_NEW_YORK);
+    assert(idx_vec1.size() == 84);
+    assert(idx_vec1.capacity() == 86);
+    assert(idx_vec1[0] == 20180101);
+    assert(idx_vec1[1] == 20180401);
+    assert(idx_vec1[2] == 20180701);
+    assert(idx_vec1[40] == 20280101);
+    assert(idx_vec1[83] == 20381001);
+
+    idx_vec1 = MyDataFrame::gen_datetime_index("01/01/2018",
+                                               "12/31/2038",
+                                               time_frequency::weekly,
+                                               4,
+                                               DT_TIME_ZONE::AM_NEW_YORK);
+    assert(idx_vec1.size() == 274);
+    assert(idx_vec1.capacity() == 274);
+    assert(idx_vec1[0] == 20180101);
+    assert(idx_vec1[1] == 20180129);
+    assert(idx_vec1[2] == 20180226);
+    assert(idx_vec1[272] == 20381108);
+    assert(idx_vec1[273] == 20381206);
+
+    idx_vec1 = MyDataFrame::gen_datetime_index("01/01/2018",
+                                               "12/31/2038",
+                                               time_frequency::daily,
+                                               1,
+                                               DT_TIME_ZONE::AM_NEW_YORK);
+    assert(idx_vec1.size() == 7669);
+    assert(idx_vec1.capacity() == 7670);
+    assert(idx_vec1[0] == 20180101);
+    assert(idx_vec1[1] == 20180102);
+    assert(idx_vec1[2] == 20180103);
+    assert(idx_vec1[7667] == 20381229);
+    assert(idx_vec1[7668] == 20381230);
+
+    idx_vec1 = MyDataFrame::gen_datetime_index("01/01/2018",
+                                               "12/31/2022",
+                                               time_frequency::hourly,
+                                               1,
+                                               DT_TIME_ZONE::AM_NEW_YORK);
+    assert(idx_vec1.size() == 43800);
+    assert(idx_vec1.capacity() == 43801);
+    assert(idx_vec1[0] == 1514782800);
+    assert(idx_vec1[1] == 1514786400);
+    assert(idx_vec1[2] == 1514790000);
+    assert(idx_vec1[43798] == 1672455600);
+    assert(idx_vec1[43799] == 1672459200);
+    */
+
+    idx_vec1 = MyDataFrame::gen_datetime_index("01/01/2018",
+                                               "03/31/2018",
+                                               time_frequency::secondly,
+                                               10,
+                                               DT_TIME_ZONE::AM_NEW_YORK);
+    assert(idx_vec1.size() == 768600);
+    assert(idx_vec1.capacity() == 768601);
+    assert(idx_vec1[0] == 1514782800);
+    assert(idx_vec1[1] == 1514782810);
+    assert(idx_vec1[2] == 1514782820);
+    assert(idx_vec1[768598] == 1522468780);
+    assert(idx_vec1[768599] == 1522468790);
+
+    idx_vec1 = MyDataFrame::gen_datetime_index(
+        "01/01/2018 00:00:00.000",
+        "01/01/2018 10:10:01.600",
+        time_frequency::millisecondly,
+        500,
+        DT_TIME_ZONE::AM_NEW_YORK);
+    assert(idx_vec1.size() == 73204);
+    assert(idx_vec1.capacity() == 73229);
+    assert(idx_vec1[0] == 1514782800000000000);
+    assert(idx_vec1[1] == 1514782800500000000);
+    assert(idx_vec1[2] == 1514782801000000000);
+    assert(idx_vec1[73201] == 1514819400500000000);
+    assert(idx_vec1[73202] == 1514819401000000000);
+    assert(idx_vec1[73203] == 1514819401500000000);
+
+    std::vector<DateTime>   idx_vec2 =
+        StdDataFrame<DateTime>::gen_datetime_index(
+            "01/01/2018",
+            "12/31/2022",
+            time_frequency::hourly,
+            1,
+            DT_TIME_ZONE::AM_NEW_YORK);
+
+    assert(idx_vec2.size() == 43800);
+    assert(idx_vec2[0].string_format (DT_FORMAT::DT_TM2) ==
+               "01/01/2018 00:00:00.000");
+    assert(idx_vec2[1].string_format (DT_FORMAT::DT_TM2) ==
+               "01/01/2018 01:00:00.000");
+    assert(idx_vec2[2].string_format (DT_FORMAT::DT_TM2) ==
+               "01/01/2018 02:00:00.000");
+    assert(idx_vec2[43798].string_format (DT_FORMAT::DT_TM2) ==
+               "12/30/2022 22:00:00.000");
+    assert(idx_vec2[43799].string_format (DT_FORMAT::DT_TM2) ==
+               "12/30/2022 23:00:00.000");
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_replace_1()  {
+
+    std::cout << "\nTesting replace(1) ..." << std::endl;
+
+    std::vector<double> d1 = { 1.0, 10, 8, 18, 19, 16, 21,
+                               17, 20, 3, 2, 11, 7.0, 5,
+                               9, 15, 14, 13, 12, 6, 4 };
+    std::vector<double> d2 = { 1.0, 10, 8, 18, 19, 16, 21,
+                               17, 20, 3, 2, 11, 7.0, 5,
+                               9, 15, 14, 13, 12, 6, 4 };
+    std::vector<double> d3 = { 1.1, 10.09, 8.2, 18.03, 19.4, 15.9, 20.8,
+                               17.1, 19.9, 3.3, 2.2, 10.8, 7.4, 5.3,
+                               9.1, 14.9, 14.8, 13.2, 12.6, 6.1, 4.4 };
+    std::vector<double> d4 = { 0.1, 9.09, 7.2, 17.03, 18.4, 14.9, 19.8,
+                               16.1, 18.9, 2.3, 1.2, 9.8, 6.4, 4.3,
+                               8.1, 13.9, 13.8, 12.2, 11.6, 5.1, 3.4 };
+    std::vector<double> d5 = { 20.0, 10.1, -30.2, 18.5, 1.1, 16.2, 30.8,
+                               -1.56, 20.1, 25.5, 30.89, 11.1, 7.4, 5.3,
+                               19, 15.1, 1.3, 1.2, 12.6, 23.2, 40.1 };
+    MyDataFrame         df;
+
+    df.load_data(MyDataFrame::gen_datetime_index(
+                     "01/01/2018",
+                     "01/22/2018",
+                     time_frequency::daily),
+                 std::make_pair("dblcol_1", d1),
+                 std::make_pair("dblcol_2", d2),
+                 std::make_pair("dblcol_3", d3),
+                 std::make_pair("dblcol_4", d4),
+                 std::make_pair("dblcol_5", d5));
+    assert(df.get_column<double>("dblcol_1")[0] == 1.0);
+    assert(df.get_column<double>("dblcol_1")[20] == 4.0);
+    assert(df.get_column<double>("dblcol_1")[1] == 10.0);
+    assert(df.get_column<double>("dblcol_1")[2] == 8.0);
+    assert(df.get_column<double>("dblcol_1")[6] == 21.0);
+    assert(df.get_column<double>("dblcol_1")[7] == 17.0);
+    assert(df.get_column<double>("dblcol_1")[11] == 11.0);
+    assert(df.get_column<double>("dblcol_1")[15] == 15.0);
+
+    assert(df.get_column<double>("dblcol_5")[0] == 20.0);
+    assert(df.get_column<double>("dblcol_5")[20] == 40.1);
+    assert(df.get_column<double>("dblcol_5")[1] == 10.1);
+    assert(df.get_column<double>("dblcol_5")[2] == -30.2);
+    assert(df.get_column<double>("dblcol_5")[3] == 18.5);
+    assert(df.get_column<double>("dblcol_5")[10] == 30.89);
+    assert(df.get_column<double>("dblcol_5")[11] == 11.1);
+    assert(df.get_column<double>("dblcol_5")[17] == 1.2);
+    assert(df.get_column<double>("dblcol_5")[19] == 23.2);
+
+    auto    result1 = df.replace_async<double, 3>(
+        "dblcol_1", { 10.0, 21.0, 11.0 }, { 1000.0, 2100.0, 1100.0 });
+    auto    idx_result = df.replace_index<3>(
+        { 20180101, 20180102, 20180103 }, { 1000, 2100, 1100 });
+    auto    result2 = df.replace_async<double, 6>(
+        "dblcol_5",
+        { -45.0, -100.0, -30.2, 30.89, 40.1, 1.2 },
+        { 0.0, 0.0, 300.0, 210.0, 110.0, 1200.0 },
+        3);
+
+    auto    count = result1.get();
+
+    assert(count == 3);
+    assert(df.get_column<double>("dblcol_1")[0] == 1.0);
+    assert(df.get_column<double>("dblcol_1")[20] == 4.0);
+    assert(df.get_column<double>("dblcol_1")[1] == 1000.0);
+    assert(df.get_column<double>("dblcol_1")[2] == 8.0);
+    assert(df.get_column<double>("dblcol_1")[6] == 2100.0);
+    assert(df.get_column<double>("dblcol_1")[7] == 17.0);
+    assert(df.get_column<double>("dblcol_1")[11] == 1100.0);
+    assert(df.get_column<double>("dblcol_1")[15] == 15.0);
+
+    count = result2.get();
+    assert(count == 3);
+    assert(df.get_column<double>("dblcol_5")[0] == 20.0);
+    assert(df.get_column<double>("dblcol_5")[20] == 110.0);
+    assert(df.get_column<double>("dblcol_5")[1] == 10.1);
+    assert(df.get_column<double>("dblcol_5")[2] == 300.0);
+    assert(df.get_column<double>("dblcol_5")[3] == 18.5);
+    assert(df.get_column<double>("dblcol_5")[10] == 210.0);
+    assert(df.get_column<double>("dblcol_5")[11] == 11.1);
+    assert(df.get_column<double>("dblcol_5")[17] == 1.2);
+    assert(df.get_column<double>("dblcol_5")[19] == 23.2);
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_replace_2()  {
+
+    std::cout << "\nTesting replace(2) ..." << std::endl;
+
+    std::vector<double> d1 = { 1.0, 10, 8, 18, 19, 16, 21,
+                               17, 20, 3, 2, 11, 7.0, 5,
+                               9, 15, 14, 13, 12, 6, 4 };
+    std::vector<double> d2 = { 1.0, 10, 8, 18, 19, 16, 21,
+                               17, 20, 3, 2, 11, 7.0, 5,
+                               9, 15, 14, 13, 12, 6, 4 };
+    std::vector<double> d3 = { 1.1, 10.09, 8.2, 18.03, 19.4, 15.9, 20.8,
+                               17.1, 19.9, 3.3, 2.2, 10.8, 7.4, 5.3,
+                               9.1, 14.9, 14.8, 13.2, 12.6, 6.1, 4.4 };
+    std::vector<double> d4 = { 0.1, 9.09, 7.2, 17.03, 18.4, 14.9, 19.8,
+                               16.1, 18.9, 2.3, 1.2, 9.8, 6.4, 4.3,
+                               8.1, 13.9, 13.8, 12.2, 11.6, 5.1, 3.4 };
+    std::vector<double> d5 = { 20.0, 10.1, -30.2, 18.5, 1.1, 16.2, 30.8,
+                               -1.56, 20.1, 25.5, 30.89, 11.1, 7.4, 5.3,
+                               19, 15.1, 1.3, 1.2, 12.6, 23.2, 40.1 };
+    MyDataFrame         df;
+
+    df.load_data(MyDataFrame::gen_datetime_index(
+                     "01/01/2018",
+                     "01/22/2018",
+                     time_frequency::daily),
+                 std::make_pair("dblcol_1", d1),
+                 std::make_pair("dblcol_2", d2),
+                 std::make_pair("dblcol_3", d3),
+                 std::make_pair("dblcol_4", d4),
+                 std::make_pair("dblcol_5", d5));
+    assert(df.get_column<double>("dblcol_1")[0] == 1.0);
+    assert(df.get_column<double>("dblcol_1")[19] == 6.0);
+    assert(df.get_column<double>("dblcol_1")[20] == 4.0);
+    assert(df.get_column<double>("dblcol_1")[2] == 8.0);
+    assert(df.get_column<double>("dblcol_1")[14] == 9.0);
+
+    ReplaceFunctor  functor;
+    auto            result =
+        df.replace_async<double, ReplaceFunctor>("dblcol_1", functor);
+
+    result.get();
+    assert(functor.count == 3);
+    assert(df.get_column<double>("dblcol_1")[0] == 1.0);
+    assert(df.get_column<double>("dblcol_1")[19] == 6.0);
+    assert(df.get_column<double>("dblcol_1")[20] == 4000.0);
+    assert(df.get_column<double>("dblcol_1")[2] == 8000.0);
+    assert(df.get_column<double>("dblcol_1")[14] == 9000.0);
+
+    auto    seq_vec = MyDataFrame::gen_sequence_index(1, 200, 4);
+
+    assert(seq_vec.size() == 50);
+    assert(seq_vec[0] == 1);
+    assert(seq_vec[2] == 9);
+    assert(seq_vec[3] == 13);
+    assert(seq_vec[49] == 197);
+    assert(seq_vec[48] == 193);
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_some_visitors()  {
+
+    std::cout << "\nTesting some visitors ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466,
+          123467, 123468, 123469, 123470, 123471, 123472, 123473 };
+    std::vector<double>         d1 =
+        { 1.0, 10, 8, 18, 19, 16, 21, 17, 20, 3, 2, 11, 7.0, 5,
+          9, 15, 14, 13, 12, 6, 4 };
+    std::vector<double>         d2 =
+        { 1.0, 10, 8, 18, 19, 16, 17, 20, 3, 2, 11, 7.0, 5,
+          9, 15, 14, 13, 12, 6, 4 };
+    std::vector<int>           i1 =
+        { 1, 1, 2, 4, 3, 4, 5, 2, 1, 2, 2, 3, 4, 5, 7, 1, 2, 3, 2, 6, 4 };
+    std::vector<int>            i2 =
+        { 1, 10, 8, 18, 19, 16, 17, 20, 3, 2, 11, 7, 5,
+          9, 15, 14, 13, 12, 6, 4 };
+    std::vector<double>         d3 =
+        { 1, 10, std::numeric_limits<double>::quiet_NaN(), 18, 19, 16,
+          17, 20, std::numeric_limits<double>::quiet_NaN(),
+          2, 11, 7, std::numeric_limits<double>::quiet_NaN(), 5,
+          9, 15, 14, 13, 12, 6 };
+    MyDataFrame                 df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("dblcol_1", d1),
+                 std::make_pair("intcol_1", i1));
+    df.load_column("dblcol_2", std::move(d2), nan_policy::dont_pad_with_nans);
+    df.load_column("intcol_2", std::move(i2), nan_policy::dont_pad_with_nans);
+    df.load_column("dblcol_3", std::move(d3), nan_policy::dont_pad_with_nans);
+
+    SumVisitor<int>     sum_visit;
+    ProdVisitor<int>    prod_visit;
+    int                 sum_result =
+        df.visit<int>("intcol_2", sum_visit).get_result();
+    int                 prod_result =
+        df.visit<int>("intcol_1", prod_visit).get_result();
+
+    assert(sum_result == 210);
+    assert(prod_result == 464486400);
+
+    CumSumVisitor<double>       cum_sum_visit;
+    const std::vector<double>   &cum_sum_result =
+        df.single_act_visit<double>("dblcol_3", cum_sum_visit).get_result();
+
+    assert(cum_sum_result.size() == 20);
+    assert(cum_sum_result[0] == 1);
+    assert(cum_sum_result[1] == 11);
+    assert(cum_sum_result[19] == 195);
+    assert(cum_sum_result[18] == 189);
+    assert(std::isnan(cum_sum_result[2]));
+    assert(std::isnan(cum_sum_result[8]));
+
+    CumMaxVisitor<double>       cum_max_visit;
+    const std::vector<double>   &cum_max_result =
+        df.single_act_visit<double>("dblcol_3", cum_max_visit).get_result();
+
+    assert(cum_max_result.size() == 20);
+    assert(cum_max_result[0] == 1);
+    assert(cum_max_result[1] == 10);
+    assert(cum_max_result[19] == 20);
+    assert(cum_max_result[18] == 20);
+    assert(std::isnan(cum_max_result[2]));
+    assert(std::isnan(cum_max_result[8]));
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_mode()  {
+
+    std::cout << "\nTesting Mode ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466,
+          123467, 123468, 123469, 123470, 123471, 123472, 123473 };
+    std::vector<double>         d1 =
+        { 1.0, 10, 8, 18, 19, 16, 21, 17, 20, 3, 2, 11, 7.0, 5,
+          9, 15, 14, 13, 12, 6, 4 };
+    std::vector<double>         d2 =
+        { 1.0, 10, 8, 18, 19, 16, 17, 20, 3, 2, 11, 7.0, 5,
+          9, 15, 14, 13, 12, 6, 4 };
+    std::vector<int>           i1 =
+        { 1, 1, 2, 4, 3, 4, 5, 2, 1, 2, 2, 3, 4, 5, 7, 1, 2, 3, 2, 6, 4 };
+    std::vector<int>            i2 =
+        { 1, 10, 8, 18, 19, 16, 17, 20, 3, 2, 11, 7, 5,
+          9, 15, 14, 13, 12, 6, 4 };
+    std::vector<double>         d3 =
+        { 1, 10, std::numeric_limits<double>::quiet_NaN(), 18, 19, 16,
+          17, 20, std::numeric_limits<double>::quiet_NaN(),
+          2, 11, 7, std::numeric_limits<double>::quiet_NaN(), 5,
+          9, 15, 14, 13, 12, 6 };
+    MyDataFrame                 df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("dblcol_1", d1),
+                 std::make_pair("intcol_1", i1));
+    df.load_column("dblcol_2", std::move(d2), nan_policy::dont_pad_with_nans);
+    df.load_column("intcol_2", std::move(i2), nan_policy::dont_pad_with_nans);
+    df.load_column("dblcol_3", std::move(d3), nan_policy::dont_pad_with_nans);
+
+    ModeVisitor<3, double>  mode_visit;
+    const auto              &result =
+        df.single_act_visit<double>("dblcol_3", mode_visit).get_result();
+
+    assert(result.size() == 3);
+    assert(result[0].indices.size() == 3);
+    assert(result[0].value_indices_in_col.size() == 3);
+    assert(std::isnan(result[0].value));
+    assert(result[0].repeat_count() == 3);
+    assert(result[0].indices[1] == 123458);
+    assert(result[0].value_indices_in_col[2] == 12);
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int argc, char *argv[]) {
 
     test_haphazard();
@@ -1317,1362 +2671,28 @@ int main(int argc, char *argv[]) {
     test_rotating_up_down();
     test_dataframe_with_datetime();
     test_dataframe_friend_plus_operator();
-
-    {
-        std::cout << "\nTesting DataFrame friend minus operator ..."
-                  << std::endl;
-
-        MyDataFrame df1;
-        MyDataFrame df2;
-
-        try  {
-            df1.read("sample_data.csv");
-            df2.read("sample_data.csv");
-        }
-        catch (const DataFrameError &ex)  {
-            std::cout << ex.what() << std::endl;
-        }
-
-        // Notice I am omitting std::string here, since minus is not defined for
-        // std::string, and hence it won't compile
-        MyDataFrame result =
-            df_minus<MyDataFrame,
-                     unsigned long,
-                     int,
-                     double,
-                     bool>(df1, df2);
-
-        std::cout << "Original DF1:" << std::endl;
-        df1.write<std::ostream,
-                  int,
-                  unsigned long,
-                  double,
-                  std::string,
-                  bool>(std::cout);
-        std::cout << "Original DF2:" << std::endl;
-        df2.write<std::ostream,
-                  int,
-                  unsigned long,
-                  double,
-                  std::string,
-                  bool>(std::cout);
-        std::cout << "Result DF:" << std::endl;
-        result.write<std::ostream,
-                     int,
-                     unsigned long,
-                     double,
-                     bool>(std::cout);
-    }
-
-    {
-        std::cout << "\nTesting DataFrame friend multiplis operator ..."
-                  << std::endl;
-
-        std::vector<unsigned long>  idx1 =
-            { 1, 2, 3, 4, 5, 6, 7, 8, 9, 25, 40, 55 };
-        std::vector<unsigned long>  idx2 =
-            { 1, 2, 3, 4, 5, 8, 9, 22, 25, 40 };
-        std::vector<double>         d1 =
-            { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
-        std::vector<double>         d2 =
-            { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
-        std::vector<double>         s1 =
-            { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
-        std::vector<int>            s2 =
-            { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
-
-        MyDataFrame df1;
-        MyDataFrame df2;
-
-        df1.load_data(std::move(idx1),
-                      std::make_pair("dbl_col", d1),
-                      std::make_pair("same_name", s1));
-        df2.load_data(std::move(idx2),
-                      std::make_pair("dbl_col", d2),
-                      std::make_pair("same_name", s2));
-
-        MyDataFrame result =
-            df_multiplies<MyDataFrame, int, double>(df1, df2);
-
-        std::cout << "Original DF1:" << std::endl;
-        df1.write<std::ostream, int, double>(std::cout);
-        std::cout << "Original DF2:" << std::endl;
-        df2.write<std::ostream, int, double>(std::cout);
-        std::cout << "Result DF:" << std::endl;
-        result.write<std::ostream, int, double>(std::cout);
-    }
-
-    {
-        std::cout << "\nTesting DataFrame friend divides operator ..."
-                  << std::endl;
-
-        std::vector<unsigned long>  idx1 =
-            { 1, 2, 3, 4, 5, 6, 7, 8, 9, 25, 40, 55 };
-        std::vector<unsigned long>  idx2 =
-            { 1, 2, 3, 4, 5, 8, 9, 22, 25, 40 };
-        std::vector<double>         d1 =
-            { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
-        std::vector<double>         d2 =
-            { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
-        std::vector<double>         s1 =
-            { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
-        std::vector<int>            s2 =
-            { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
-
-        MyDataFrame df1;
-        MyDataFrame df2;
-
-        df1.load_data(std::move(idx1),
-                      std::make_pair("dbl_col", d1),
-                      std::make_pair("same_name", s1));
-        df2.load_data(std::move(idx2),
-                      std::make_pair("dbl_col", d2),
-                      std::make_pair("same_name", s2));
-
-        MyDataFrame result = df_divides<MyDataFrame, int, double>(df1, df2);
-
-        std::cout << "Original DF1:" << std::endl;
-        df1.write<std::ostream, int, double>(std::cout);
-        std::cout << "Original DF2:" << std::endl;
-        df2.write<std::ostream, int, double>(std::cout);
-        std::cout << "Result DF:" << std::endl;
-        result.write<std::ostream, int, double>(std::cout);
-    }
-
-    {
-        std::cout << "\nTesting fill_missing(values) ..." << std::endl;
-
-        std::vector<unsigned long>  idx =
-            { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
-              123457, 123458, 123459, 123460, 123461, 123462, 123466 };
-        std::vector<double> d1 = { 1, 2, 3, 4,
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   6, 7,
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   11, 12, 13, 14 };
-        std::vector<double> d2 = { 8, 9,
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   11, 12,
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   20, 22, 23, 30, 31,
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   1.89 };
-        std::vector<double> d3 = { std::numeric_limits<double>::quiet_NaN(),
-                                   16,
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   18, 19, 16,
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   0.34, 1.56, 0.34, 2.3, 0.34,
-                                   std::numeric_limits<double>::quiet_NaN() };
-        std::vector<int>    i1 = { 22,
-                                   std::numeric_limits<int>::quiet_NaN(),
-                                   std::numeric_limits<int>::quiet_NaN(),
-                                   25,
-                                   std::numeric_limits<int>::quiet_NaN() };
-        MyDataFrame         df;
-
-        df.load_data(std::move(idx),
-                     std::make_pair("col_1", d1),
-                     std::make_pair("col_2", d2),
-                     std::make_pair("col_3", d3),
-                     std::make_pair("col_4", i1));
-
-        std::vector<std::string>    s1 =
-            { "qqqq", "wwww", "eeee", "rrrr", "tttt", "yyyy", "iiii", "oooo" };
-
-        df.load_column("col_str",
-                       std::move(s1),
-                       nan_policy::dont_pad_with_nans);
-
-        std::cout << "Original DF:" << std::endl;
-        df.write<std::ostream, int, double, std::string>(std::cout);
-
-        df.fill_missing<double, 3>({ "col_1", "col_2", "col_3" },
-                                   fill_policy::value,
-                                   { 1001, 1002, 1003 },
-                                   3);
-        df.fill_missing<std::string, 1>({ "col_str" },
-                                        fill_policy::value,
-                                        { "XXXXXX" });
-
-        std::cout << "After fill missing with values DF:" << std::endl;
-        df.write<std::ostream, int, double, std::string>(std::cout);
-    }
-
-    {
-        std::cout << "\nTesting fill_missing(fill_forward) ..." << std::endl;
-
-        std::vector<unsigned long>  idx =
-            { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
-              123457, 123458, 123459, 123460, 123461, 123462, 123466 };
-        std::vector<double> d1 = { 1, 2, 3, 4,
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   6, 7,
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   11, 12, 13, 14 };
-        std::vector<double> d2 = { 8, 9,
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   11, 12,
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   20, 22, 23, 30, 31,
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   1.89 };
-        std::vector<double> d3 = { std::numeric_limits<double>::quiet_NaN(),
-                                   16,
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   18, 19, 16,
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   0.34, 1.56, 0.34, 2.3, 0.34,
-                                   std::numeric_limits<double>::quiet_NaN() };
-        std::vector<int>    i1 = { 22,
-                                   std::numeric_limits<int>::quiet_NaN(),
-                                   std::numeric_limits<int>::quiet_NaN(),
-                                   25,
-                                   std::numeric_limits<int>::quiet_NaN() };
-        MyDataFrame         df;
-
-        df.load_data(std::move(idx),
-                     std::make_pair("col_1", d1),
-                     std::make_pair("col_2", d2),
-                     std::make_pair("col_3", d3),
-                     std::make_pair("col_4", i1));
-
-        std::vector<std::string>    s1 =
-            { "qqqq", "wwww", "eeee", "rrrr", "tttt", "yyyy", "iiii", "oooo" };
-
-        df.load_column("col_str",
-                       std::move(s1),
-                       nan_policy::dont_pad_with_nans);
-
-        std::cout << "Original DF:" << std::endl;
-        df.write<std::ostream, int, double, std::string>(std::cout);
-
-        df.fill_missing<double, 3>({ "col_1", "col_2", "col_3" },
-                                   fill_policy::fill_forward,
-                                   { },
-                                   3);
-        df.fill_missing<std::string, 1>({ "col_str" },
-                                        fill_policy::fill_forward,
-                                        {  }, 3);
-
-        std::cout << "After fill missing with values DF:" << std::endl;
-        df.write<std::ostream, int, double, std::string>(std::cout);
-    }
-
-    {
-        std::cout << "\nTesting fill_missing(fill_backward) ..." << std::endl;
-
-        std::vector<unsigned long>  idx =
-            { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
-              123457, 123458, 123459, 123460, 123461, 123462, 123466 };
-        std::vector<double> d1 = { 1, 2, 3, 4,
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   6, 7,
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   11, 12, 13, 14 };
-        std::vector<double> d2 = { 8, 9,
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   11, 12,
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   20, 22, 23, 30, 31,
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   1.89 };
-        std::vector<double> d3 = { std::numeric_limits<double>::quiet_NaN(),
-                                   16,
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   18, 19, 16,
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   0.34, 1.56, 0.34, 2.3, 0.34,
-                                   std::numeric_limits<double>::quiet_NaN() };
-        std::vector<int>    i1 = { 22,
-                                   std::numeric_limits<int>::quiet_NaN(),
-                                   std::numeric_limits<int>::quiet_NaN(),
-                                   25,
-                                   std::numeric_limits<int>::quiet_NaN() };
-        std::vector<std::string>    s1 =
-            { "qqqq", "wwww", "eeee", "rrrr", "tttt", "yyyy",
-              "iiii", "oooo", "pppp", "2222", "aaaa", "dddd" };
-        MyDataFrame         df;
-
-        df.load_data(std::move(idx),
-                     std::make_pair("col_1", d1),
-                     std::make_pair("col_2", d2),
-                     std::make_pair("col_3", d3),
-                     std::make_pair("col_str", s1),
-                     std::make_pair("col_4", i1));
-
-        std::cout << "Original DF:" << std::endl;
-        df.write<std::ostream, int, double, std::string>(std::cout);
-
-        df.fill_missing<double, 3>({ "col_1", "col_2", "col_3" },
-                                   fill_policy::fill_backward);
-        df.fill_missing<std::string, 1>({ "col_str" },
-                                        fill_policy::fill_backward);
-
-        std::cout << "After fill missing with values DF:" << std::endl;
-        df.write<std::ostream, int, double, std::string>(std::cout);
-    }
-
-    {
-        std::cout << "\nTesting fill_missing(linear_interpolate) ..."
-                  << std::endl;
-
-        std::vector<unsigned long>  idx =
-            { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
-              123457, 123458, 123459, 123460, 123461, 123462, 123466 };
-        std::vector<double> d1 = { 1, 2, 3, 4,
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   6, 7,
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   11, 12, 13, 14 };
-        std::vector<double> d2 = { 8, 9,
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   11, 12,
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   20, 22, 23, 30, 31,
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   1.89 };
-        std::vector<double> d3 = { std::numeric_limits<double>::quiet_NaN(),
-                                   16,
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   18, 19, 16,
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   0.34, 1.56, 0.34, 2.3, 0.34,
-                                   std::numeric_limits<double>::quiet_NaN() };
-        std::vector<int>    i1 = { 22,
-                                   std::numeric_limits<int>::quiet_NaN(),
-                                   std::numeric_limits<int>::quiet_NaN(),
-                                   25,
-                                   std::numeric_limits<int>::quiet_NaN() };
-        MyDataFrame         df;
-
-        df.load_data(std::move(idx),
-                     std::make_pair("col_1", d1),
-                     std::make_pair("col_2", d2),
-                     std::make_pair("col_3", d3),
-                     std::make_pair("col_4", i1));
-
-        std::cout << "Original DF:" << std::endl;
-        df.write<std::ostream, int, double>(std::cout);
-
-        df.fill_missing<double, 3>({ "col_1", "col_2", "col_3" },
-                                   fill_policy::linear_interpolate);
-
-        std::cout << "After fill missing with values DF:" << std::endl;
-        df.write<std::ostream, int, double>(std::cout);
-    }
-
-    {
-        std::cout << "\nTesting drop_missing(all) no drop ..." << std::endl;
-
-        std::vector<unsigned long>  idx =
-            { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
-              123457, 123458, 123459, 123460, 123461, 123462, 123466 };
-        std::vector<double> d1 = { 1, 2, 3, 4,
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   6, 7,
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   11, 12, 13, 14 };
-        std::vector<double> d2 = { 8, 9,
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   11, 12,
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   20, 22, 23, 30, 31,
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   1.89 };
-        std::vector<double> d3 = { std::numeric_limits<double>::quiet_NaN(),
-                                   16,
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   18, 19, 16,
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   0.34, 1.56, 0.34, 2.3, 0.34,
-                                   std::numeric_limits<double>::quiet_NaN() };
-        std::vector<int>    i1 = { 22,
-                                   std::numeric_limits<int>::quiet_NaN(),
-                                   std::numeric_limits<int>::quiet_NaN(),
-                                   25,
-                                   std::numeric_limits<int>::quiet_NaN() };
-        std::vector<std::string>    s1 =
-            { "qqqq", "wwww", "eeee", "rrrr", "tttt", "yyyy",
-              "iiii", "oooo", "pppp", "2222", "aaaa", "dddd" };
-        MyDataFrame         df;
-
-        df.load_data(std::move(idx),
-                     std::make_pair("col_1", d1),
-                     std::make_pair("col_2", d2),
-                     std::make_pair("col_3", d3),
-                     std::make_pair("col_str", s1),
-                     std::make_pair("col_4", i1));
-
-        std::cout << "Original DF:" << std::endl;
-        df.write<std::ostream, int, double, std::string>(std::cout);
-
-        df.drop_missing<int, double, std::string>(drop_policy::all);
-
-        std::cout << "After drop missing all DF:" << std::endl;
-        df.write<std::ostream, int, double, std::string>(std::cout);
-    }
-
-    {
-        std::cout << "\nTesting drop_missing(all) 2 drop ..." << std::endl;
-
-        std::vector<unsigned long>  idx =
-            { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
-              123457, 123458, 123459, 123460, 123461, 123462, 123466 };
-        std::vector<double> d1 = { 1, 2, 3, 4,
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   7,
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   12, 13, 14 };
-        std::vector<double> d2 = { 8, 9,
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   11, 12,
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   20, 22, 23,
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   31,
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   1.89 };
-        std::vector<double> d3 = { std::numeric_limits<double>::quiet_NaN(),
-                                   16,
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   18, 19,
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   0.34, 1.56, 0.34,
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   0.34,
-                                   std::numeric_limits<double>::quiet_NaN() };
-        std::vector<int>    i1 = { 22,
-                                   std::numeric_limits<int>::quiet_NaN(),
-                                   std::numeric_limits<int>::quiet_NaN(),
-                                   25,
-                                   std::numeric_limits<int>::quiet_NaN() };
-        std::vector<std::string>    s1 =
-            { "qqqq", "wwww", "eeee", "rrrr", "tttt", "",
-              "iiii", "oooo", "pppp", "2222", "", "dddd" };
-        MyDataFrame         df;
-
-        df.load_data(std::move(idx),
-                     std::make_pair("col_1", d1),
-                     std::make_pair("col_2", d2),
-                     std::make_pair("col_3", d3),
-                     std::make_pair("col_str", s1),
-                     std::make_pair("col_4", i1));
-
-        std::cout << "Original DF:" << std::endl;
-        df.write<std::ostream, int, double, std::string>(std::cout);
-
-        df.drop_missing<int, double, std::string>(drop_policy::all);
-
-        std::cout << "After drop missing all DF:" << std::endl;
-        df.write<std::ostream, int, double, std::string>(std::cout);
-    }
-
-    {
-        std::cout << "\nTesting drop_missing(any) ..." << std::endl;
-
-        std::vector<unsigned long>  idx =
-            { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
-              123457, 123458, 123459, 123460, 123461, 123462, 123466 };
-        std::vector<double> d1 = { 1, 2, 3, 4,
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   6, 7,
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   11, 12, 13, 14 };
-        std::vector<double> d2 = { 8, 9,
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   11, 12,
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   20, 22, 23, 30, 31,
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   1.89 };
-        std::vector<double> d3 = { std::numeric_limits<double>::quiet_NaN(),
-                                   16,
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   18, 19, 16,
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   0.34, 1.56, 0.34, 2.3, 0.34,
-                                   std::numeric_limits<double>::quiet_NaN() };
-        std::vector<int>    i1 = { 22,
-                                   std::numeric_limits<int>::quiet_NaN(),
-                                   std::numeric_limits<int>::quiet_NaN(),
-                                   25,
-                                   std::numeric_limits<int>::quiet_NaN() };
-        std::vector<std::string>    s1 =
-            { "qqqq", "wwww", "eeee", "rrrr", "tttt", "yyyy",
-              "iiii", "oooo", "pppp", "2222", "aaaa", "dddd" };
-        MyDataFrame         df;
-
-        df.load_data(std::move(idx),
-                     std::make_pair("col_1", d1),
-                     std::make_pair("col_2", d2),
-                     std::make_pair("col_3", d3),
-                     std::make_pair("col_str", s1),
-                     std::make_pair("col_4", i1));
-
-        std::cout << "Original DF:" << std::endl;
-        df.write<std::ostream, int, double, std::string>(std::cout);
-
-        df.drop_missing<int, double, std::string>(drop_policy::any);
-
-        std::cout << "After drop missing all DF:" << std::endl;
-        df.write<std::ostream, int, double, std::string>(std::cout);
-    }
-
-    {
-        std::cout << "\nTesting drop_missing(threshold=3) ..." << std::endl;
-
-        std::vector<unsigned long>  idx =
-            { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
-              123457, 123458, 123459, 123460, 123461, 123462, 123466 };
-        std::vector<double> d1 = { 1, 2, 3, 4,
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   6, 7,
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   11, 12, 13, 14 };
-        std::vector<double> d2 = { 8, 9,
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   11, 12,
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   20, 22, 23, 30, 31,
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   1.89 };
-        std::vector<double> d3 = { std::numeric_limits<double>::quiet_NaN(),
-                                   16,
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   18, 19, 16,
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   0.34, 1.56, 0.34, 2.3, 0.34,
-                                   std::numeric_limits<double>::quiet_NaN() };
-        std::vector<int>    i1 = { 22,
-                                   std::numeric_limits<int>::quiet_NaN(),
-                                   std::numeric_limits<int>::quiet_NaN(),
-                                   25,
-                                   std::numeric_limits<int>::quiet_NaN() };
-        std::vector<std::string>    s1 =
-            { "qqqq", "wwww", "eeee", "rrrr", "tttt", "yyyy",
-              "iiii", "oooo", "pppp", "2222", "aaaa", "dddd" };
-        MyDataFrame         df;
-
-        df.load_data(std::move(idx),
-                     std::make_pair("col_1", d1),
-                     std::make_pair("col_2", d2),
-                     std::make_pair("col_3", d3),
-                     std::make_pair("col_str", s1),
-                     std::make_pair("col_4", i1));
-
-        std::cout << "Original DF:" << std::endl;
-        df.write<std::ostream, int, double, std::string>(std::cout);
-
-        df.drop_missing<int, double, std::string>(drop_policy::threshold, 3);
-
-        std::cout << "After drop missing all DF:" << std::endl;
-        df.write<std::ostream, int, double, std::string>(std::cout);
-    }
-
-    {
-        std::cout << "\nTesting get_row() ..." << std::endl;
-
-        std::vector<unsigned long>  idx =
-            { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
-              123457, 123458, 123459, 123460, 123461, 123462, 123466 };
-        std::vector<double> d1 = { 1, 2, 3, 4,
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   6, 7,
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   11, 12, 13, 14 };
-        std::vector<double> d2 = { 8, 9, 10, 11, 12,
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   20, 22, 23, 30, 31,
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   1.89 };
-        std::vector<double> d3 = { 400.4, 16, 500.5, 18, 19, 16,
-                                   std::numeric_limits<double>::quiet_NaN(),
-                                   0.34, 1.56, 0.34, 2.3, 0.34,
-                                   std::numeric_limits<double>::quiet_NaN() };
-        std::vector<int>    i1 = { 22, 11, 34, 25,
-                                   std::numeric_limits<int>::quiet_NaN() };
-        MyDataFrame         df;
-
-        df.load_data(std::move(idx),
-                     std::make_pair("col_1", d1),
-                     std::make_pair("col_2", d2),
-                     std::make_pair("col_3", d3),
-                     std::make_pair("col_4", i1));
-
-        std::vector<std::string>    s1 =
-            { "qqqq", "wwww", "eeee", "rrrr", "tttt", "yyyy", "iiii", "oooo" };
-
-        df.load_column("col_str",
-                       std::move(s1),
-                       nan_policy::dont_pad_with_nans);
-
-        std::vector<int>    i2 = { 22, 11 };
-
-        df.load_column("col_int",
-                       std::move(i2),
-                       nan_policy::dont_pad_with_nans);
-
-        std::cout << "Original DF:" << std::endl;
-        df.write<std::ostream, int, double, std::string>(std::cout);
-
-        std::array<const char *, 6> columns =
-            {"col_1", "col_2", "col_3", "col_4", "col_str", "col_int"};
-        auto                        row =
-            df.get_row<6, int, double, std::string>(2, columns);
-
-        assert(row.at<MyDataFrame::IndexType>(0) == 123452);
-        assert(row.at<double>(0) == 3.0);
-        assert(row.at<double>(1) == 10.0);
-        assert(row.at<double>(2) == 500.5);
-        assert(row.at<int>(0) == 34);
-        assert(row.at<int>(1) == 0);
-        assert(row.at<std::string>(0) == "eeee");
-    }
-
-    {
-        std::cout << "\nTesting Auto Correlation ..." << std::endl;
-
-        std::vector<unsigned long>  idx =
-            { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
-              123457, 123458, 123459, 123460, 123461, 123462, 123466,
-              123467, 123468, 123469, 123470, 123471, 123472, 123473 };
-        std::vector<double>         d1 =
-            { 15, 16, 15, 18, 19, 16, 21,
-              0.34, 1.56, 0.34, 2.3, 0.34, 19.0, 0.387,
-              0.123, 1.06, 0.65, 2.03, 0.4, 1.0, 0.007 };
-        std::vector<double>         d2 =
-            { 1.23, 1.22, 1.21, 1.20, 1.19, 1.185, 1.181,
-              1.19, 1.195, 1.189, 1.185, 1.18, 1.181, 1.186,
-              1.189, 1.19, 1.194, 1.198, 1.199, 1.197, 1.193 };
-        std::vector<int>            i1 = { 22, 23, 24, 25, 99 };
-        MyDataFrame                 df;
-
-        df.load_data(std::move(idx),
-                     std::make_pair("col_1", d1),
-                     std::make_pair("col_2", d2),
-                     std::make_pair("col_3", i1));
-
-        AutoCorrVisitor<double> auto_corr;
-        const auto              &result =
-            df.single_act_visit<double>("col_1", auto_corr).get_result();
-
-        assert(result.size() == 17);
-        assert(result[0] == 1.0);
-        assert(fabs(result[1] - 0.562001) < 0.00001);
-        assert(fabs(result[16] - -0.265228) < 0.00001);
-        assert(fabs(result[6] - 0.388131) < 0.00001);
-        assert(fabs(result[10] - 0.125514) < 0.00001);
-
-        const auto  &result2 =
-            df.single_act_visit<double>("col_2", auto_corr).get_result();
-
-        assert(result.size() == 17);
-        assert(result[0] == 1.0);
-        assert(fabs(result[1] - 0.903754) < 0.00001);
-        assert(fabs(result[16] - 0.183254) < 0.00001);
-        assert(fabs(result[6] - -0.263385) < 0.00001);
-        assert(fabs(result[10] - -0.712274) < 0.00001);
-    }
-
-    {
-        std::cout << "\nTesting Return ..." << std::endl;
-
-        std::vector<unsigned long>  idx =
-            { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
-              123457, 123458, 123459, 123460, 123461, 123462, 123466,
-              123467, 123468, 123469, 123470, 123471, 123472, 123473 };
-        std::vector<double>         d1 =
-            { 15, 16, 15, 18, 19, 16, 21,
-              0.34, 1.56, 0.34, 2.3, 0.34, 19.0, 0.387,
-              0.123, 1.06, 0.65, 2.03, 0.4, 1.0, 0.59 };
-        std::vector<double>         d2 =
-            { 1.23, 1.22, 1.21, 1.20, 1.19, 1.185, 1.181,
-              1.19, 1.195, 1.189, 1.185, 1.18, 1.181, 1.186,
-              1.189, 1.19, 1.194, 1.198, 1.199, 1.197, 1.193 };
-        std::vector<int>            i1 = { 22, 23, 24, 25, 99 };
-        MyDataFrame                 df;
-
-        df.load_data(std::move(idx),
-                     std::make_pair("col_1", d1),
-                     std::make_pair("col_2", d2),
-                     std::make_pair("col_3", i1));
-
-        ReturnVisitor<double>   return_visit(return_policy::monetary);
-        const auto              &result =
-            df.single_act_visit<double>("col_1", return_visit).get_result();
-
-        assert(result.size() == 20);
-        assert(result[0] == 1.0);
-        assert(result[1] == -1.0);
-        assert(result[16] == 1.38);
-        assert(result[6] == -20.66);
-        assert(fabs(result[10] - -1.96) < 0.00001);
-
-        ReturnVisitor<double>   return_visit2(return_policy::percentage);
-        const auto              &result2 =
-            df.single_act_visit<double>("col_1", return_visit2).get_result();
-
-        assert(result2.size() == 20);
-        assert(fabs(result2[0] - 0.0666667) < 0.00001);
-        assert(fabs(result2[1] - -0.0625) < 0.00001);
-        assert(fabs(result2[16] - 2.12308) < 0.00001);
-        assert(fabs(result2[6] - -0.98381) < 0.00001);
-        assert(fabs(result2[10] - -0.852174) < 0.00001);
-
-        ReturnVisitor<double>   return_visit3(return_policy::log);
-        const auto              &result3 =
-            df.single_act_visit<double>("col_1", return_visit3).get_result();
-
-        assert(result3.size() == 20);
-        assert(fabs(result3[0] - 0.0645385) < 0.00001);
-        assert(fabs(result3[1] - -0.0645385) < 0.00001);
-        assert(fabs(result3[16] - 1.13882) < 0.00001);
-        assert(fabs(result3[6] - -4.12333) < 0.00001);
-        assert(fabs(result3[10] - -1.91172) < 0.00001);
-    }
-
-    {
-        std::cout << "\nTesting Median ..." << std::endl;
-
-        std::vector<unsigned long>  idx =
-            { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
-              123457, 123458, 123459, 123460, 123461, 123462, 123466,
-              123467, 123468, 123469, 123470, 123471, 123472, 123473 };
-        std::vector<double>         d1 =
-            { 1.0, 10, 8, 18, 19, 16, 21,
-              17, 20, 3, 2, 11, 7.0, 5,
-              9, 15, 14, 13, 12, 6, 4 };
-        std::vector<double>         d2 =
-            { 1.0, 10, 8, 18, 19, 16,
-              17, 20, 3, 2, 11, 7.0, 5,
-              9, 15, 14, 13, 12, 6, 4 };
-        std::vector<int>           i1 =
-            { 1, 10, 8, 18, 19, 16, 21,
-              17, 20, 3, 2, 11, 7, 5,
-              9, 15, 14, 13, 12, 6, 4 };
-        std::vector<int>            i2 =
-            { 1, 10, 8, 18, 19, 16,
-              17, 20, 3, 2, 11, 7, 5,
-              9, 15, 14, 13, 12, 6, 4 };
-        MyDataFrame                 df;
-
-        df.load_data(std::move(idx),
-                     std::make_pair("dblcol_1", d1),
-                     std::make_pair("intcol_1", i1));
-        df.load_column("dblcol_2",
-                       std::move(d2),
-                       nan_policy::dont_pad_with_nans);
-        df.load_column("intcol_2",
-                       std::move(i2),
-                       nan_policy::dont_pad_with_nans);
-
-        MedianVisitor<double>   med_visit;
-        double                  result =
-            df.single_act_visit<double>("dblcol_1", med_visit).get_result();
-
-        assert(result == 10.0);
-
-        result = df.single_act_visit<double>("dblcol_2",
-                                             med_visit).get_result();
-        assert(result == 10.50);
-
-        MedianVisitor<int>  med_visit2;
-        int                 result2 =
-            df.single_act_visit<int>("intcol_1", med_visit2).get_result();
-
-        assert(result2 == 10);
-
-        result2 = df.single_act_visit<int>("intcol_2",
-                                           med_visit2).get_result();
-        assert(result2 == 10);
-    }
-
-    {
-        std::cout << "\nTesting Tracking Error ..." << std::endl;
-
-        std::vector<unsigned long>  idx =
-            { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
-              123457, 123458, 123459, 123460, 123461, 123462, 123466,
-              123467, 123468, 123469, 123470, 123471, 123472, 123473 };
-        std::vector<double>         d1 =
-            { 1.0, 10, 8, 18, 19, 16, 21,
-              17, 20, 3, 2, 11, 7.0, 5,
-              9, 15, 14, 13, 12, 6, 4 };
-        std::vector<double>         d2 =
-            { 1.0, 10, 8, 18, 19, 16, 21,
-              17, 20, 3, 2, 11, 7.0, 5,
-              9, 15, 14, 13, 12, 6, 4 };
-        std::vector<double>         d3 =
-            { 1.1, 10.09, 8.2, 18.03, 19.4, 15.9, 20.8,
-              17.1, 19.9, 3.3, 2.2, 10.8, 7.4, 5.3,
-              9.1, 14.9, 14.8, 13.2, 12.6, 6.1, 4.4 };
-        std::vector<double>         d4 =
-            { 0.1, 9.09, 7.2, 17.03, 18.4, 14.9, 19.8,
-              16.1, 18.9, 2.3, 1.2, 9.8, 6.4, 4.3,
-              8.1, 13.9, 13.8, 12.2, 11.6, 5.1, 3.4 };
-        std::vector<double>         d5 =
-            { 20.0, 10.1, -30.2, 18.5, 1.1, 16.2, 30.8,
-              -1.56, 20.1, 25.5, 30.89, 11.1, 7.4, 5.3,
-              19, 15.1, 1.3, 1.2, 12.6, 23.2, 40.1 };
-        MyDataFrame                 df;
-
-        df.load_data(std::move(idx),
-                     std::make_pair("dblcol_1", d1),
-                     std::make_pair("dblcol_2", d2),
-                     std::make_pair("dblcol_3", d3),
-                     std::make_pair("dblcol_4", d4),
-                     std::make_pair("dblcol_5", d5));
-
-        TrackingErrorVisitor<double>    tracking_visit;
-        double                          result =
-            df.visit<double, double>("dblcol_1",
-                                     "dblcol_2",
-                                     tracking_visit).get_result();
-
-        assert(result == 0.0);
-
-        result = df.visit<double, double>("dblcol_1",
-                                          "dblcol_3",
-                                          tracking_visit).get_result();
-        assert(fabs(result - 0.256416) < 0.00001);
-
-        result = df.visit<double, double>("dblcol_1",
-                                          "dblcol_4",
-                                          tracking_visit).get_result();
-        assert(fabs(result - 0.256416) < 0.00001);
-
-        result = df.visit<double, double>("dblcol_3",
-                                          "dblcol_4",
-                                          tracking_visit).get_result();
-        assert(result == 0.0);
-
-        result = df.visit<double, double>("dblcol_2",
-                                          "dblcol_4",
-                                          tracking_visit).get_result();
-        assert(fabs(result - 0.256416) < 0.00001);
-
-        result = df.visit<double, double>("dblcol_1",
-                                          "dblcol_5",
-                                          tracking_visit).get_result();
-        assert(fabs(result - 17.0566) < 0.0001);
-    }
-
-    {
-        std::cout << "\nTesting Beta ..." << std::endl;
-
-        std::vector<unsigned long>  idx =
-            { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
-              123457, 123458, 123459, 123460, 123461, 123462, 123466,
-              123467, 123468, 123469, 123470, 123471, 123472, 123473 };
-        std::vector<double>         d1 =
-            { 1.0, 10, 8, 18, 19, 16, 21,
-              17, 20, 3, 2, 11, 7.0, 5,
-              9, 15, 14, 13, 12, 6, 4 };
-        std::vector<double>         d2 =
-            { 1.0, 10, 8, 18, 19, 16, 21,
-              17, 20, 3, 2, 11, 7.0, 5,
-              9, 15, 14, 13, 12, 6, 4 };
-        std::vector<double>         d3 =
-            { 1.1, 10.09, 8.2, 18.03, 19.4, 15.9, 20.8,
-              17.1, 19.9, 3.3, 2.2, 10.8, 7.4, 5.3,
-              9.1, 14.9, 14.8, 13.2, 12.6, 6.1, 4.4 };
-        std::vector<double>         d4 =
-            { 0.1, 9.09, 7.2, 17.03, 18.4, 14.9, 19.8,
-              16.1, 18.9, 2.3, 1.2, 9.8, 6.4, 4.3,
-              8.1, 13.9, 13.8, 12.2, 11.6, 5.1, 3.4 };
-        std::vector<double>         d5 =
-            { 20.0, 10.1, -30.2, 18.5, 1.1, 16.2, 30.8,
-              -1.56, 20.1, 25.5, 30.89, 11.1, 7.4, 5.3,
-              19, 15.1, 1.3, 1.2, 12.6, 23.2, 40.1 };
-        MyDataFrame                 df;
-
-        df.load_data(std::move(idx),
-                     std::make_pair("dblcol_1", d1),
-                     std::make_pair("dblcol_2", d2),
-                     std::make_pair("dblcol_3", d3),
-                     std::make_pair("dblcol_4", d4),
-                     std::make_pair("dblcol_5", d5));
-
-        ReturnVisitor<double>   return_visit(return_policy::log);
-
-        df.load_column(
-            "dblcol_1_return",
-            df.single_act_visit<double>("dblcol_1",
-                                        return_visit).get_result(),
-            nan_policy::dont_pad_with_nans);
-        df.load_column(
-            "dblcol_2_return",
-            df.single_act_visit<double>("dblcol_2",
-                                        return_visit).get_result(),
-            nan_policy::dont_pad_with_nans);
-        df.load_column(
-            "dblcol_3_return",
-            df.single_act_visit<double>("dblcol_3",
-                                        return_visit).get_result(),
-            nan_policy::dont_pad_with_nans);
-        df.load_column(
-            "dblcol_4_return",
-            df.single_act_visit<double>("dblcol_4",
-                                        return_visit).get_result(),
-            nan_policy::dont_pad_with_nans);
-        df.load_column(
-            "dblcol_5_return",
-            df.single_act_visit<double>("dblcol_5",
-                                        return_visit).get_result(),
-            nan_policy::dont_pad_with_nans);
-
-        BetaVisitor<double> beta_visit;
-        double              result =
-            df.visit<double, double>("dblcol_1_return",
-                                     "dblcol_2_return",
-                                     beta_visit).get_result();
-
-        assert(result == 1.0);
-
-        result = df.visit<double, double>("dblcol_1_return",
-                                          "dblcol_3_return",
-                                          beta_visit).get_result();
-        assert(fabs(result - 1.04881) < 0.00001);
-
-        result = df.visit<double, double>("dblcol_1_return",
-                                          "dblcol_4_return",
-                                          beta_visit).get_result();
-        assert(fabs(result - 0.647582) < 0.00001);
-
-        result = df.visit<double, double>("dblcol_1_return",
-                                          "dblcol_5_return",
-                                          beta_visit).get_result();
-        assert(fabs(result - -0.128854) < 0.00001);
-    }
-
-    {
-        std::cout << "\nTesting gen_datetime_index() ..." << std::endl;
-        // I am commenting some of these out because with timezone spec,
-        // it will take too long for the test to run
-
-        std::vector<unsigned long>  idx_vec1 =
-            MyDataFrame::gen_datetime_index("01/01/2018",
-                                            "12/31/2038",
-                                            time_frequency::annual,
-                                            1,
-                                            DT_TIME_ZONE::AM_NEW_YORK);
-
-        assert(idx_vec1.size() == 21);
-        assert(idx_vec1.capacity() == 22);
-        assert(idx_vec1[0] == 20180101);
-        assert(idx_vec1[1] == 20190101);
-        assert(idx_vec1[10] == 20280101);
-        assert(idx_vec1[20] == 20380101);
-
-        /*
-        idx_vec1 = MyDataFrame::gen_datetime_index("01/01/2018",
-                                                   "12/31/2038",
-                                                   time_frequency::monthly,
-                                                   3,
-                                                   DT_TIME_ZONE::AM_NEW_YORK);
-        assert(idx_vec1.size() == 84);
-        assert(idx_vec1.capacity() == 86);
-        assert(idx_vec1[0] == 20180101);
-        assert(idx_vec1[1] == 20180401);
-        assert(idx_vec1[2] == 20180701);
-        assert(idx_vec1[40] == 20280101);
-        assert(idx_vec1[83] == 20381001);
-
-        idx_vec1 = MyDataFrame::gen_datetime_index("01/01/2018",
-                                                   "12/31/2038",
-                                                   time_frequency::weekly,
-                                                   4,
-                                                   DT_TIME_ZONE::AM_NEW_YORK);
-        assert(idx_vec1.size() == 274);
-        assert(idx_vec1.capacity() == 274);
-        assert(idx_vec1[0] == 20180101);
-        assert(idx_vec1[1] == 20180129);
-        assert(idx_vec1[2] == 20180226);
-        assert(idx_vec1[272] == 20381108);
-        assert(idx_vec1[273] == 20381206);
-
-        idx_vec1 = MyDataFrame::gen_datetime_index("01/01/2018",
-                                                   "12/31/2038",
-                                                   time_frequency::daily,
-                                                   1,
-                                                   DT_TIME_ZONE::AM_NEW_YORK);
-        assert(idx_vec1.size() == 7669);
-        assert(idx_vec1.capacity() == 7670);
-        assert(idx_vec1[0] == 20180101);
-        assert(idx_vec1[1] == 20180102);
-        assert(idx_vec1[2] == 20180103);
-        assert(idx_vec1[7667] == 20381229);
-        assert(idx_vec1[7668] == 20381230);
-
-        idx_vec1 = MyDataFrame::gen_datetime_index("01/01/2018",
-                                                   "12/31/2022",
-                                                   time_frequency::hourly,
-                                                   1,
-                                                   DT_TIME_ZONE::AM_NEW_YORK);
-        assert(idx_vec1.size() == 43800);
-        assert(idx_vec1.capacity() == 43801);
-        assert(idx_vec1[0] == 1514782800);
-        assert(idx_vec1[1] == 1514786400);
-        assert(idx_vec1[2] == 1514790000);
-        assert(idx_vec1[43798] == 1672455600);
-        assert(idx_vec1[43799] == 1672459200);
-        */
-
-        idx_vec1 = MyDataFrame::gen_datetime_index("01/01/2018",
-                                                   "03/31/2018",
-                                                   time_frequency::secondly,
-                                                   10,
-                                                   DT_TIME_ZONE::AM_NEW_YORK);
-        assert(idx_vec1.size() == 768600);
-        assert(idx_vec1.capacity() == 768601);
-        assert(idx_vec1[0] == 1514782800);
-        assert(idx_vec1[1] == 1514782810);
-        assert(idx_vec1[2] == 1514782820);
-        assert(idx_vec1[768598] == 1522468780);
-        assert(idx_vec1[768599] == 1522468790);
-
-        idx_vec1 = MyDataFrame::gen_datetime_index(
-            "01/01/2018 00:00:00.000",
-            "01/01/2018 10:10:01.600",
-            time_frequency::millisecondly,
-            500,
-            DT_TIME_ZONE::AM_NEW_YORK);
-        assert(idx_vec1.size() == 73204);
-        assert(idx_vec1.capacity() == 73229);
-        assert(idx_vec1[0] == 1514782800000000000);
-        assert(idx_vec1[1] == 1514782800500000000);
-        assert(idx_vec1[2] == 1514782801000000000);
-        assert(idx_vec1[73201] == 1514819400500000000);
-        assert(idx_vec1[73202] == 1514819401000000000);
-        assert(idx_vec1[73203] == 1514819401500000000);
-
-        std::vector<DateTime>   idx_vec2 =
-            StdDataFrame<DateTime>::gen_datetime_index(
-                "01/01/2018",
-                "12/31/2022",
-                time_frequency::hourly,
-                1,
-                DT_TIME_ZONE::AM_NEW_YORK);
-
-        assert(idx_vec2.size() == 43800);
-        assert(idx_vec2[0].string_format (DT_FORMAT::DT_TM2) ==
-                   "01/01/2018 00:00:00.000");
-        assert(idx_vec2[1].string_format (DT_FORMAT::DT_TM2) ==
-                   "01/01/2018 01:00:00.000");
-        assert(idx_vec2[2].string_format (DT_FORMAT::DT_TM2) ==
-                   "01/01/2018 02:00:00.000");
-        assert(idx_vec2[43798].string_format (DT_FORMAT::DT_TM2) ==
-                   "12/30/2022 22:00:00.000");
-        assert(idx_vec2[43799].string_format (DT_FORMAT::DT_TM2) ==
-                   "12/30/2022 23:00:00.000");
-    }
-
-    {
-        std::cout << "\nTesting replace(1) ..." << std::endl;
-
-        std::vector<double> d1 = { 1.0, 10, 8, 18, 19, 16, 21,
-                                   17, 20, 3, 2, 11, 7.0, 5,
-                                   9, 15, 14, 13, 12, 6, 4 };
-        std::vector<double> d2 = { 1.0, 10, 8, 18, 19, 16, 21,
-                                   17, 20, 3, 2, 11, 7.0, 5,
-                                   9, 15, 14, 13, 12, 6, 4 };
-        std::vector<double> d3 = { 1.1, 10.09, 8.2, 18.03, 19.4, 15.9, 20.8,
-                                   17.1, 19.9, 3.3, 2.2, 10.8, 7.4, 5.3,
-                                   9.1, 14.9, 14.8, 13.2, 12.6, 6.1, 4.4 };
-        std::vector<double> d4 = { 0.1, 9.09, 7.2, 17.03, 18.4, 14.9, 19.8,
-                                   16.1, 18.9, 2.3, 1.2, 9.8, 6.4, 4.3,
-                                   8.1, 13.9, 13.8, 12.2, 11.6, 5.1, 3.4 };
-        std::vector<double> d5 = { 20.0, 10.1, -30.2, 18.5, 1.1, 16.2, 30.8,
-                                   -1.56, 20.1, 25.5, 30.89, 11.1, 7.4, 5.3,
-                                   19, 15.1, 1.3, 1.2, 12.6, 23.2, 40.1 };
-        MyDataFrame         df;
-
-        df.load_data(MyDataFrame::gen_datetime_index(
-                         "01/01/2018",
-                         "01/22/2018",
-                         time_frequency::daily),
-                     std::make_pair("dblcol_1", d1),
-                     std::make_pair("dblcol_2", d2),
-                     std::make_pair("dblcol_3", d3),
-                     std::make_pair("dblcol_4", d4),
-                     std::make_pair("dblcol_5", d5));
-        assert(df.get_column<double>("dblcol_1")[0] == 1.0);
-        assert(df.get_column<double>("dblcol_1")[20] == 4.0);
-        assert(df.get_column<double>("dblcol_1")[1] == 10.0);
-        assert(df.get_column<double>("dblcol_1")[2] == 8.0);
-        assert(df.get_column<double>("dblcol_1")[6] == 21.0);
-        assert(df.get_column<double>("dblcol_1")[7] == 17.0);
-        assert(df.get_column<double>("dblcol_1")[11] == 11.0);
-        assert(df.get_column<double>("dblcol_1")[15] == 15.0);
-
-        assert(df.get_column<double>("dblcol_5")[0] == 20.0);
-        assert(df.get_column<double>("dblcol_5")[20] == 40.1);
-        assert(df.get_column<double>("dblcol_5")[1] == 10.1);
-        assert(df.get_column<double>("dblcol_5")[2] == -30.2);
-        assert(df.get_column<double>("dblcol_5")[3] == 18.5);
-        assert(df.get_column<double>("dblcol_5")[10] == 30.89);
-        assert(df.get_column<double>("dblcol_5")[11] == 11.1);
-        assert(df.get_column<double>("dblcol_5")[17] == 1.2);
-        assert(df.get_column<double>("dblcol_5")[19] == 23.2);
-
-        auto    result1 = df.replace_async<double, 3>(
-            "dblcol_1", { 10.0, 21.0, 11.0 }, { 1000.0, 2100.0, 1100.0 });
-        auto    idx_result = df.replace_index<3>(
-            { 20180101, 20180102, 20180103 }, { 1000, 2100, 1100 });
-        auto    result2 = df.replace_async<double, 6>(
-            "dblcol_5",
-            { -45.0, -100.0, -30.2, 30.89, 40.1, 1.2 },
-            { 0.0, 0.0, 300.0, 210.0, 110.0, 1200.0 },
-            3);
-
-        auto    count = result1.get();
-
-        assert(count == 3);
-        assert(df.get_column<double>("dblcol_1")[0] == 1.0);
-        assert(df.get_column<double>("dblcol_1")[20] == 4.0);
-        assert(df.get_column<double>("dblcol_1")[1] == 1000.0);
-        assert(df.get_column<double>("dblcol_1")[2] == 8.0);
-        assert(df.get_column<double>("dblcol_1")[6] == 2100.0);
-        assert(df.get_column<double>("dblcol_1")[7] == 17.0);
-        assert(df.get_column<double>("dblcol_1")[11] == 1100.0);
-        assert(df.get_column<double>("dblcol_1")[15] == 15.0);
-
-        count = result2.get();
-        assert(count == 3);
-        assert(df.get_column<double>("dblcol_5")[0] == 20.0);
-        assert(df.get_column<double>("dblcol_5")[20] == 110.0);
-        assert(df.get_column<double>("dblcol_5")[1] == 10.1);
-        assert(df.get_column<double>("dblcol_5")[2] == 300.0);
-        assert(df.get_column<double>("dblcol_5")[3] == 18.5);
-        assert(df.get_column<double>("dblcol_5")[10] == 210.0);
-        assert(df.get_column<double>("dblcol_5")[11] == 11.1);
-        assert(df.get_column<double>("dblcol_5")[17] == 1.2);
-        assert(df.get_column<double>("dblcol_5")[19] == 23.2);
-    }
-
-    {
-        std::cout << "\nTesting replace(2) ..." << std::endl;
-
-        std::vector<double> d1 = { 1.0, 10, 8, 18, 19, 16, 21,
-                                   17, 20, 3, 2, 11, 7.0, 5,
-                                   9, 15, 14, 13, 12, 6, 4 };
-        std::vector<double> d2 = { 1.0, 10, 8, 18, 19, 16, 21,
-                                   17, 20, 3, 2, 11, 7.0, 5,
-                                   9, 15, 14, 13, 12, 6, 4 };
-        std::vector<double> d3 = { 1.1, 10.09, 8.2, 18.03, 19.4, 15.9, 20.8,
-                                   17.1, 19.9, 3.3, 2.2, 10.8, 7.4, 5.3,
-                                   9.1, 14.9, 14.8, 13.2, 12.6, 6.1, 4.4 };
-        std::vector<double> d4 = { 0.1, 9.09, 7.2, 17.03, 18.4, 14.9, 19.8,
-                                   16.1, 18.9, 2.3, 1.2, 9.8, 6.4, 4.3,
-                                   8.1, 13.9, 13.8, 12.2, 11.6, 5.1, 3.4 };
-        std::vector<double> d5 = { 20.0, 10.1, -30.2, 18.5, 1.1, 16.2, 30.8,
-                                   -1.56, 20.1, 25.5, 30.89, 11.1, 7.4, 5.3,
-                                   19, 15.1, 1.3, 1.2, 12.6, 23.2, 40.1 };
-        MyDataFrame         df;
-
-        df.load_data(MyDataFrame::gen_datetime_index(
-                         "01/01/2018",
-                         "01/22/2018",
-                         time_frequency::daily),
-                     std::make_pair("dblcol_1", d1),
-                     std::make_pair("dblcol_2", d2),
-                     std::make_pair("dblcol_3", d3),
-                     std::make_pair("dblcol_4", d4),
-                     std::make_pair("dblcol_5", d5));
-        assert(df.get_column<double>("dblcol_1")[0] == 1.0);
-        assert(df.get_column<double>("dblcol_1")[19] == 6.0);
-        assert(df.get_column<double>("dblcol_1")[20] == 4.0);
-        assert(df.get_column<double>("dblcol_1")[2] == 8.0);
-        assert(df.get_column<double>("dblcol_1")[14] == 9.0);
-
-        ReplaceFunctor  functor;
-        auto            result =
-            df.replace_async<double, ReplaceFunctor>("dblcol_1", functor);
-
-        result.get();
-        assert(functor.count == 3);
-        assert(df.get_column<double>("dblcol_1")[0] == 1.0);
-        assert(df.get_column<double>("dblcol_1")[19] == 6.0);
-        assert(df.get_column<double>("dblcol_1")[20] == 4000.0);
-        assert(df.get_column<double>("dblcol_1")[2] == 8000.0);
-        assert(df.get_column<double>("dblcol_1")[14] == 9000.0);
-
-        auto    seq_vec = MyDataFrame::gen_sequence_index(1, 200, 4);
-
-        assert(seq_vec.size() == 50);
-        assert(seq_vec[0] == 1);
-        assert(seq_vec[2] == 9);
-        assert(seq_vec[3] == 13);
-        assert(seq_vec[49] == 197);
-        assert(seq_vec[48] == 193);
-    }
-
-    {
-        std::cout << "\nTesting some visitors ..." << std::endl;
-
-        std::vector<unsigned long>  idx =
-            { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
-              123457, 123458, 123459, 123460, 123461, 123462, 123466,
-              123467, 123468, 123469, 123470, 123471, 123472, 123473 };
-        std::vector<double>         d1 =
-            { 1.0, 10, 8, 18, 19, 16, 21,
-              17, 20, 3, 2, 11, 7.0, 5,
-              9, 15, 14, 13, 12, 6, 4 };
-        std::vector<double>         d2 =
-            { 1.0, 10, 8, 18, 19, 16,
-              17, 20, 3, 2, 11, 7.0, 5,
-              9, 15, 14, 13, 12, 6, 4 };
-        std::vector<int>           i1 =
-            { 1, 1, 2, 4, 3, 4, 5,
-              2, 1, 2, 2, 3, 4, 5,
-              7, 1, 2, 3, 2, 6, 4 };
-        std::vector<int>            i2 =
-            { 1, 10, 8, 18, 19, 16,
-              17, 20, 3, 2, 11, 7, 5,
-              9, 15, 14, 13, 12, 6, 4 };
-        std::vector<double>         d3 =
-            { 1, 10, std::numeric_limits<double>::quiet_NaN(), 18, 19, 16,
-              17, 20, std::numeric_limits<double>::quiet_NaN(),
-              2, 11, 7, std::numeric_limits<double>::quiet_NaN(), 5,
-              9, 15, 14, 13, 12, 6 };
-        MyDataFrame                 df;
-
-        df.load_data(std::move(idx),
-                     std::make_pair("dblcol_1", d1),
-                     std::make_pair("intcol_1", i1));
-        df.load_column("dblcol_2",
-                       std::move(d2),
-                       nan_policy::dont_pad_with_nans);
-        df.load_column("intcol_2",
-                       std::move(i2),
-                       nan_policy::dont_pad_with_nans);
-        df.load_column("dblcol_3",
-                       std::move(d3),
-                       nan_policy::dont_pad_with_nans);
-
-        SumVisitor<int>     sum_visit;
-        ProdVisitor<int>    prod_visit;
-        int                 sum_result =
-            df.visit<int>("intcol_2", sum_visit).get_result();
-        int                 prod_result =
-            df.visit<int>("intcol_1", prod_visit).get_result();
-
-        assert(sum_result == 210);
-        assert(prod_result == 464486400);
-
-        CumSumVisitor<double>       cum_sum_visit;
-        const std::vector<double>   &cum_sum_result =
-            df.single_act_visit<double>("dblcol_3",
-                                        cum_sum_visit).get_result();
-
-        assert(cum_sum_result.size() == 20);
-        assert(cum_sum_result[0] == 1);
-        assert(cum_sum_result[1] == 11);
-        assert(cum_sum_result[19] == 195);
-        assert(cum_sum_result[18] == 189);
-        assert(std::isnan(cum_sum_result[2]));
-        assert(std::isnan(cum_sum_result[8]));
-
-        CumMaxVisitor<double>       cum_max_visit;
-        const std::vector<double>   &cum_max_result =
-            df.single_act_visit<double>("dblcol_3",
-                                        cum_max_visit).get_result();
-
-        assert(cum_max_result.size() == 20);
-        assert(cum_max_result[0] == 1);
-        assert(cum_max_result[1] == 10);
-        assert(cum_max_result[19] == 20);
-        assert(cum_max_result[18] == 20);
-        assert(std::isnan(cum_max_result[2]));
-        assert(std::isnan(cum_max_result[8]));
-    }
-
-    {
-        std::cout << "\nTesting Mode ..." << std::endl;
-
-        std::vector<unsigned long>  idx =
-            { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
-              123457, 123458, 123459, 123460, 123461, 123462, 123466,
-              123467, 123468, 123469, 123470, 123471, 123472, 123473 };
-        std::vector<double>         d1 =
-            { 1.0, 10, 8, 18, 19, 16, 21,
-              17, 20, 3, 2, 11, 7.0, 5,
-              9, 15, 14, 13, 12, 6, 4 };
-        std::vector<double>         d2 =
-            { 1.0, 10, 8, 18, 19, 16,
-              17, 20, 3, 2, 11, 7.0, 5,
-              9, 15, 14, 13, 12, 6, 4 };
-        std::vector<int>           i1 =
-            { 1, 1, 2, 4, 3, 4, 5,
-              2, 1, 2, 2, 3, 4, 5,
-              7, 1, 2, 3, 2, 6, 4 };
-        std::vector<int>            i2 =
-            { 1, 10, 8, 18, 19, 16,
-              17, 20, 3, 2, 11, 7, 5,
-              9, 15, 14, 13, 12, 6, 4 };
-        std::vector<double>         d3 =
-            { 1, 10, std::numeric_limits<double>::quiet_NaN(), 18, 19, 16,
-              17, 20, std::numeric_limits<double>::quiet_NaN(),
-              2, 11, 7, std::numeric_limits<double>::quiet_NaN(), 5,
-              9, 15, 14, 13, 12, 6 };
-        MyDataFrame                 df;
-
-        df.load_data(std::move(idx),
-                     std::make_pair("dblcol_1", d1),
-                     std::make_pair("intcol_1", i1));
-        df.load_column("dblcol_2",
-                       std::move(d2),
-                       nan_policy::dont_pad_with_nans);
-        df.load_column("intcol_2",
-                       std::move(i2),
-                       nan_policy::dont_pad_with_nans);
-        df.load_column("dblcol_3",
-                       std::move(d3),
-                       nan_policy::dont_pad_with_nans);
-
-        ModeVisitor<3, double>  mode_visit;
-        const auto              &result =
-            df.single_act_visit<double>("dblcol_3", mode_visit).get_result();
-
-        assert(result.size() == 3);
-        assert(result[0].indices.size() == 3);
-        assert(result[0].value_indices_in_col.size() == 3);
-        assert(std::isnan(result[0].value));
-        assert(result[0].repeat_count() == 3);
-        assert(result[0].indices[1] == 123458);
-        assert(result[0].value_indices_in_col[2] == 12);
-    }
+    test_dataframe_friend_minus_operator();
+    test_dataframe_friend_multiplies_operator();
+    test_dataframe_friend_divides_operator();
+    test_fill_missing_values();
+    test_fill_missing_fill_forward();
+    test_fill_missing_fill_backward();
+    test_fill_missing_fill_linear_interpolation();
+    test_drop_missing_all_no_drop();
+    test_drop_missing_all_2_drop();
+    test_drop_missing_any();
+    test_drop_threashold_3();
+    test_get_row();
+    test_auto_correlation();
+    test_return();
+    test_median();
+    test_tracking_error();
+    test_beta();
+    test_gen_datetime_index();
+    test_replace_1();
+    test_replace_2();
+    test_some_visitors();
+    test_mode();
 
     {
         std::cout << "\nTesting get_data_by_sel() ..." << std::endl;

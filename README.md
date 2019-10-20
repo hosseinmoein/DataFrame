@@ -136,7 +136,7 @@ user  2m54.362s
 sys   2m14.951s
 ```
 <B>The interesting part:</B><BR>
-1. Pandas script, I believe, is entirely implemented in Numpy which C.
+1. Pandas script, I believe, is entirely implemented in Numpy which is in C.
 2. In case of Pandas, allocating memory + random number generation and calculating means take almost the same time.
 3. In case of DataFrame 85% of the time is spent in allocating memory + random number generation.
 4. You load data once, but calculate statistics many times. So DataFrame, in general, is about 8x faster than parts of Pandas that are implemented in Numpy. I leave parts of Pandas that are purely in Python to imagination.

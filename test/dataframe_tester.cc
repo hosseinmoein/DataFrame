@@ -3606,6 +3606,41 @@ static void test_thread_safety()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_view_visitors()  {
+
+    std::cout << "\nTesting View visitors ..." << std::endl;
+
+    MyDataFrame         df;
+
+    std::vector<unsigned long>  idxvec = { 1UL, 2UL, 3UL, 4UL, 5UL };
+    std::vector<double>         dblvec1 = { 1.1, 2.2, 3.3, 4.4, 5.5 };
+    std::vector<double>         dblvec2 = { 2.2, 3.3, 4.4, 5.5, 6.6 };
+    std::vector<double>         dblvec3 = { 3.3, 4.4, 5.5, 6.6, 7.7 };
+    std::vector<double>         dblvec4 = { 4.4, 5.5, 6.6, 7.7, 8.8 };
+    std::vector<double>         dblvec5 = { 5.5, 6.6, 7.7, 8.8, 9.9 };
+
+    df.load_data(std::move(idxvec), 
+                 std::make_pair("dbl_col1", dblvec1),
+                 std::make_pair("dbl_col2", dblvec2),
+                 std::make_pair("dbl_col3", dblvec3),
+                 std::make_pair("dbl_col4", dblvec4),
+                 std::make_pair("dbl_col5", dblvec5));
+
+    typedef DataFrameView<unsigned long> MyDataFrameView;
+
+    MyDataFrameView dfv = 
+        df.get_view_by_idx<double>(Index2D<unsigned long> { 3, 5 });
+    MeanVisitor<double> mean_visitor;
+    assert(abs(dfv.visit<double>("dbl_col1", 
+                                 mean_visitor).get_result() - 4.4) < 0.00001);
+
+    DotProdVisitor<double> dp_visitor;
+    assert(abs(dfv.visit<double, double>("dbl_col1", "dbl_col2", 
+                                 dp_visitor).get_result() - 75.02) < 0.00001);
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int argc, char *argv[]) {
 
     test_haphazard();
@@ -3667,6 +3702,7 @@ int main(int argc, char *argv[]) {
     test_get_view_by_idx_values();
     test_z_score_visitor();
     test_thread_safety();
+    test_view_visitors();
 
     return (0);
 }

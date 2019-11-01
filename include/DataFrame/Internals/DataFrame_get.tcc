@@ -210,13 +210,17 @@ V &DataFrame<I, H>::visit (const char *name, V &visitor)  {
     }
 
     DataVec         &hv = data_[iter->second];
+    SpinGuard       guard(lock_);
+    std::vector<T>  &vec = hv.template get_vector<T>();
+
+    guard.release();
 
     const size_type idx_s = indices_.size();
-    const size_type data_s = hv.template size<T>();
+    const size_type data_s = vec.size();
 
     visitor.pre();
     for (size_type i = 0; i < idx_s; ++i)
-        visitor (indices_[i], i < data_s ? hv.template at<T>(i) : _get_nan<T>());
+        visitor (indices_[i], i < data_s ? vec[i] : _get_nan<T>());
     visitor.post();
 
     return (visitor);
@@ -251,16 +255,21 @@ visit (const char *name1, const char *name2, V &visitor)  {
 
     DataVec         &hv1 = data_[iter1->second];
     DataVec         &hv2 = data_[iter2->second];
+    SpinGuard       guard(lock_);
+    std::vector<T1> &vec1 = hv1.template get_vector<T1>();
+    std::vector<T2> &vec2 = hv2.template get_vector<T2>();
+
+    guard.release();
 
     const size_type idx_s = indices_.size();
-    const size_type data_s1 = hv1.template size<T1>();
-    const size_type data_s2 = hv2.template size<T2>();
+    const size_type data_s1 = vec1.size();
+    const size_type data_s2 = vec2.size();
 
     visitor.pre();
     for (size_type i = 0; i < idx_s; ++i)
         visitor (indices_[i],
-                 i < data_s1 ? hv1.template at<T1>(i) : _get_nan<T1>(),
-                 i < data_s2 ? hv2.template at<T2>(i) : _get_nan<T2>());
+                 i < data_s1 ? vec1[i] : _get_nan<T1>(),
+                 i < data_s2 ? vec2[i] : _get_nan<T2>());
     visitor.post();
 
     return (visitor);
@@ -305,18 +314,24 @@ visit (const char *name1, const char *name2, const char *name3, V &visitor)  {
     DataVec         &hv1 = data_[iter1->second];
     DataVec         &hv2 = data_[iter2->second];
     DataVec         &hv3 = data_[iter3->second];
+    SpinGuard       guard(lock_);
+    std::vector<T1> &vec1 = hv1.template get_vector<T1>();
+    std::vector<T2> &vec2 = hv2.template get_vector<T2>();
+    std::vector<T3> &vec3 = hv3.template get_vector<T3>();
+
+    guard.release();
 
     const size_type idx_s = indices_.size();
-    const size_type data_s1 = hv1.template size<T1>();
-    const size_type data_s2 = hv2.template size<T2>();
-    const size_type data_s3 = hv3.template size<T3>();
+    const size_type data_s1 = vec1.size();
+    const size_type data_s2 = vec2.size();
+    const size_type data_s3 = vec3.size();
 
     visitor.pre();
     for (size_type i = 0; i < idx_s; ++i)
         visitor (indices_[i],
-                 i < data_s1 ? hv1.template at<T1>(i) : _get_nan<T1>(),
-                 i < data_s2 ? hv2.template at<T2>(i) : _get_nan<T2>(),
-                 i < data_s3 ? hv3.template at<T3>(i) : _get_nan<T3>());
+                 i < data_s1 ? vec1[i] : _get_nan<T1>(),
+                 i < data_s2 ? vec2[i] : _get_nan<T2>(),
+                 i < data_s3 ? vec3[i] : _get_nan<T3>());
     visitor.post();
 
     return (visitor);
@@ -375,20 +390,27 @@ visit (const char *name1,
     DataVec         &hv2 = data_[iter2->second];
     DataVec         &hv3 = data_[iter3->second];
     DataVec         &hv4 = data_[iter4->second];
+    SpinGuard       guard(lock_);
+    std::vector<T1> &vec1 = hv1.template get_vector<T1>();
+    std::vector<T2> &vec2 = hv2.template get_vector<T2>();
+    std::vector<T3> &vec3 = hv3.template get_vector<T3>();
+    std::vector<T4> &vec4 = hv4.template get_vector<T4>();
+
+    guard.release();
 
     const size_type idx_s = indices_.size();
-    const size_type data_s1 = hv1.template size<T1>();
-    const size_type data_s2 = hv2.template size<T2>();
-    const size_type data_s3 = hv3.template size<T3>();
-    const size_type data_s4 = hv4.template size<T4>();
+    const size_type data_s1 = vec1.size();
+    const size_type data_s2 = vec2.size();
+    const size_type data_s3 = vec3.size();
+    const size_type data_s4 = vec4.size();
 
     visitor.pre();
     for (size_type i = 0; i < idx_s; ++i)
         visitor (indices_[i],
-                 i < data_s1 ? hv1.template at<T1>(i) : _get_nan<T1>(),
-                 i < data_s2 ? hv2.template at<T2>(i) : _get_nan<T2>(),
-                 i < data_s3 ? hv3.template at<T3>(i) : _get_nan<T3>(),
-                 i < data_s4 ? hv4.template at<T4>(i) : _get_nan<T4>());
+                 i < data_s1 ? vec1[i] : _get_nan<T1>(),
+                 i < data_s2 ? vec2[i] : _get_nan<T2>(),
+                 i < data_s3 ? vec3[i] : _get_nan<T3>(),
+                 i < data_s4 ? vec4[i] : _get_nan<T4>());
     visitor.post();
 
     return (visitor);
@@ -459,22 +481,30 @@ visit (const char *name1,
     DataVec         &hv3 = data_[iter3->second];
     DataVec         &hv4 = data_[iter4->second];
     DataVec         &hv5 = data_[iter5->second];
+    SpinGuard       guard(lock_);
+    std::vector<T1> &vec1 = hv1.template get_vector<T1>();
+    std::vector<T2> &vec2 = hv2.template get_vector<T2>();
+    std::vector<T3> &vec3 = hv3.template get_vector<T3>();
+    std::vector<T4> &vec4 = hv4.template get_vector<T4>();
+    std::vector<T5> &vec5 = hv5.template get_vector<T5>();
+
+    guard.release();
 
     const size_type idx_s = indices_.size();
-    const size_type data_s1 = hv1.template size<T1>();
-    const size_type data_s2 = hv2.template size<T2>();
-    const size_type data_s3 = hv3.template size<T3>();
-    const size_type data_s4 = hv4.template size<T4>();
-    const size_type data_s5 = hv5.template size<T5>();
+    const size_type data_s1 = vec1.size();
+    const size_type data_s2 = vec2.size();
+    const size_type data_s3 = vec3.size();
+    const size_type data_s4 = vec4.size();
+    const size_type data_s5 = vec5.size();
 
     visitor.pre();
     for (size_type i = 0; i < idx_s; ++i)
         visitor (indices_[i],
-                 i < data_s1 ? hv1.template at<T1>(i) : _get_nan<T1>(),
-                 i < data_s2 ? hv2.template at<T2>(i) : _get_nan<T2>(),
-                 i < data_s3 ? hv3.template at<T3>(i) : _get_nan<T3>(),
-                 i < data_s4 ? hv4.template at<T4>(i) : _get_nan<T4>(),
-                 i < data_s5 ? hv5.template at<T5>(i) : _get_nan<T5>());
+                 i < data_s1 ? vec1[i] : _get_nan<T1>(),
+                 i < data_s2 ? vec2[i] : _get_nan<T2>(),
+                 i < data_s3 ? vec3[i] : _get_nan<T3>(),
+                 i < data_s4 ? vec4[i] : _get_nan<T4>(),
+                 i < data_s5 ? vec5[i] : _get_nan<T5>());
     visitor.post();
 
     return (visitor);

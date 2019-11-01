@@ -584,7 +584,7 @@ struct DotProdVisitor  {
         dot_prod_ += (val1 * val2);
     }
     inline void pre ()  { dot_prod_ = value_type(0); }
-    inline void pro ()  {  }
+    inline void post ()  {  }
     inline result_type get_result () const  { return (dot_prod_); }
 
 private:
@@ -1327,7 +1327,6 @@ private:
     result_type items_ { };
 };
 
-
 // ----------------------------------------------------------------------------
 
 template<typename T,
@@ -1390,7 +1389,6 @@ private:
     const long  periods_ { };
     const bool  skip_nan_ { };
 };
-
 
 // ----------------------------------------------------------------------------
 

@@ -498,13 +498,8 @@ single_act_visit (const char *name, V &visitor) const  {
         throw ColNotFound (buffer);
     }
 
-    const DataVec           &hv = data_[iter->second];
-    SpinGuard               guard(lock_);
-    const std::vector<T>    &vec = hv.template get_vector<T>();
-
-    guard.release();
     visitor.pre();
-    visitor (indices_, vec);
+    visitor (indices_, data_[iter->second]);
     visitor.post();
 
     return (visitor);

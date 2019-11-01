@@ -1054,7 +1054,7 @@ struct ReturnVisitor  {
 
     explicit ReturnVisitor (return_policy rp) : ret_p_(rp)  {   }
     template<typename K, typename H> 
-    inline void operator() (const H &, const K &column)  {
+    inline void operator() (const K &, const H &column)  {
 
         const size_type col_len = column.template size<value_type>();
 

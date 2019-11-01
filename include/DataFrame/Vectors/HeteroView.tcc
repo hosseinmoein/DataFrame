@@ -205,6 +205,55 @@ T &HeteroView::front()  { return (get_vector<T>().front ()); }
 template<typename T>
 const T &HeteroView::front() const  { return (get_vector<T>().front ()); }
 
+// ----------------------------------------------------------------------------
+
+template<typename T>
+HeteroView::iterator<T>
+HeteroView::begin()  { return (get_vector<T>().begin ()); }
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
+HeteroView::const_iterator<T>
+HeteroView::begin() const  { return (get_vector<T>().begin ()); }
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
+HeteroView::iterator<T>
+HeteroView::end()  { return (get_vector<T>().end ()); }
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
+HeteroView::const_iterator<T>
+HeteroView::end() const  { return (get_vector<T>().end ()); }
+
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
+HeteroView::reverse_iterator<T>
+HeteroView::rbegin()  { return (get_vector<T>().rbegin ()); }
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
+HeteroView::const_reverse_iterator<T>
+HeteroView::rbegin() const  { return (get_vector<T>().rbegin ()); }
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
+HeteroView::reverse_iterator<T>
+HeteroView::rend()  { return (get_vector<T>().rend ()); }
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
+HeteroView::const_reverse_iterator<T>
+HeteroView::rend() const  { return (get_vector<T>().rend ()); }
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

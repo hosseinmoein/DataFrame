@@ -61,6 +61,35 @@ public:
     template<typename T>
     const T &front() const;
 
+    template<typename T>
+    using iterator = typename VectorView<T>::iterator;
+    template<typename T>
+    using const_iterator = typename VectorView<T>::const_iterator;
+    template<typename T>
+    using reverse_iterator = typename VectorView<T>::reverse_iterator;
+    template<typename T>
+    using const_reverse_iterator = typename VectorView<T>::const_reverse_iterator;
+
+    template<typename T>
+    iterator<T> begin();
+    template<typename T>
+    const_iterator<T> begin() const;
+
+    template<typename T>
+    iterator<T> end();
+    template<typename T>
+    const_iterator<T> end() const;
+
+    template<typename T>
+    reverse_iterator<T> rbegin();
+    template<typename T>
+    const_reverse_iterator<T> rbegin() const;
+
+    template<typename T>
+    reverse_iterator<T> rend();
+    template<typename T>
+    const_reverse_iterator<T> rend() const;
+
 private:
 
     template<typename T>

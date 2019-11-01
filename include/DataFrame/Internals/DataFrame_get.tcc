@@ -211,7 +211,7 @@ V &DataFrame<I, H>::visit (const char *name, V &visitor)  {
 
     DataVec         &hv = data_[iter->second];
     SpinGuard       guard(lock_);
-    std::vector<T>  &vec = hv.template get_vector<T>();
+    auto            &vec = hv.template get_vector<T>();
 
     guard.release();
 
@@ -256,8 +256,8 @@ visit (const char *name1, const char *name2, V &visitor)  {
     DataVec         &hv1 = data_[iter1->second];
     DataVec         &hv2 = data_[iter2->second];
     SpinGuard       guard(lock_);
-    std::vector<T1> &vec1 = hv1.template get_vector<T1>();
-    std::vector<T2> &vec2 = hv2.template get_vector<T2>();
+    auto            &vec1 = hv1.template get_vector<T1>();
+    auto            &vec2 = hv2.template get_vector<T2>();
 
     guard.release();
 
@@ -315,9 +315,9 @@ visit (const char *name1, const char *name2, const char *name3, V &visitor)  {
     DataVec         &hv2 = data_[iter2->second];
     DataVec         &hv3 = data_[iter3->second];
     SpinGuard       guard(lock_);
-    std::vector<T1> &vec1 = hv1.template get_vector<T1>();
-    std::vector<T2> &vec2 = hv2.template get_vector<T2>();
-    std::vector<T3> &vec3 = hv3.template get_vector<T3>();
+    auto            &vec1 = hv1.template get_vector<T1>();
+    auto            &vec2 = hv2.template get_vector<T2>();
+    auto            &vec3 = hv3.template get_vector<T3>();
 
     guard.release();
 
@@ -391,10 +391,10 @@ visit (const char *name1,
     DataVec         &hv3 = data_[iter3->second];
     DataVec         &hv4 = data_[iter4->second];
     SpinGuard       guard(lock_);
-    std::vector<T1> &vec1 = hv1.template get_vector<T1>();
-    std::vector<T2> &vec2 = hv2.template get_vector<T2>();
-    std::vector<T3> &vec3 = hv3.template get_vector<T3>();
-    std::vector<T4> &vec4 = hv4.template get_vector<T4>();
+    auto            &vec1 = hv1.template get_vector<T1>();
+    auto            &vec2 = hv2.template get_vector<T2>();
+    auto            &vec3 = hv3.template get_vector<T3>();
+    auto            &vec4 = hv4.template get_vector<T4>();
 
     guard.release();
 
@@ -482,11 +482,11 @@ visit (const char *name1,
     DataVec         &hv4 = data_[iter4->second];
     DataVec         &hv5 = data_[iter5->second];
     SpinGuard       guard(lock_);
-    std::vector<T1> &vec1 = hv1.template get_vector<T1>();
-    std::vector<T2> &vec2 = hv2.template get_vector<T2>();
-    std::vector<T3> &vec3 = hv3.template get_vector<T3>();
-    std::vector<T4> &vec4 = hv4.template get_vector<T4>();
-    std::vector<T5> &vec5 = hv5.template get_vector<T5>();
+    auto            &vec1 = hv1.template get_vector<T1>();
+    auto            &vec2 = hv2.template get_vector<T2>();
+    auto            &vec3 = hv3.template get_vector<T3>();
+    auto            &vec4 = hv4.template get_vector<T4>();
+    auto            &vec5 = hv5.template get_vector<T5>();
 
     guard.release();
 
@@ -530,7 +530,7 @@ single_act_visit (const char *name, V &visitor) const  {
 
     const DataVec           &hv = data_[iter->second];
     SpinGuard               guard(lock_);
-    const std::vector<T>    &vec = hv.template get_vector<T>();
+    auto                    &vec = hv.template get_vector<T>();
 
     guard.release();
     visitor.pre();

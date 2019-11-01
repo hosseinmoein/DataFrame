@@ -615,9 +615,9 @@ public:
     inline SimpleRollAdopter(F &&functor, size_t r_count)
         : functor_(std::move(functor)), roll_count_(r_count)  {   }
 
+    template <typename K, typename H>
     inline void
-    operator() (const std::vector<index_type> &idx,
-                const std::vector<value_type> &column)  {
+    operator() (const K &idx, const H &column)  {
 
         if (roll_count_ == 0)  return;
 
@@ -806,9 +806,9 @@ struct CumSumVisitor {
     using size_type = std::size_t;
     using result_type = std::vector<value_type>;
 
+    template <typename K, typename H>
     inline void
-    operator() (const std::vector<index_type> &,
-                const std::vector<value_type> &column)  {
+    operator() (const K &, const H &column)  {
 
         value_type  running_sum = 0;
 
@@ -847,9 +847,9 @@ struct CumProdVisitor {
     using size_type = std::size_t;
     using result_type = std::vector<value_type>;
 
+    template <typename K, typename H>
     inline void
-    operator() (const std::vector<index_type> &,
-                const std::vector<value_type> &column)  {
+    operator() (const K &, const H &column)  {
 
         value_type  running_prod = 1;
 
@@ -885,9 +885,9 @@ struct CumMaxVisitor {
     using size_type = std::size_t;
     using result_type = std::vector<value_type>;
 
+    template <typename K, typename H>
     inline void
-    operator() (const std::vector<index_type> &,
-                const std::vector<value_type> &column)  {
+    operator() (const K &, const H &column)  {
 
         if (column.empty())  return;
 
@@ -926,9 +926,9 @@ struct CumMinVisitor {
     using size_type = std::size_t;
     using result_type = std::vector<value_type>;
 
+    template <typename K, typename H>
     inline void
-    operator() (const std::vector<index_type> &,
-                const std::vector<value_type> &column)  {
+    operator() (const K &, const H &column)  {
 
         if (column.empty())  return;
 
@@ -973,9 +973,9 @@ public:
     using result_type = std::vector<value_type>;
 
     AutoCorrVisitor () = default;
+    template <typename K, typename H>
     inline void
-    operator() (const std::vector<index_type> &,
-                const std::vector<value_type> &column)  {
+    operator() (const K &, const H &column)  {
 
         const size_type col_len = column.size();
 
@@ -997,7 +997,7 @@ public:
             else  {
                 futures[thread_count] =
                     std::async(std::launch::async,
-                               &AutoCorrVisitor::get_auto_corr_,
+                               &AutoCorrVisitor::get_auto_corr_<H>,
                                this,
                                col_len,
                                lag,
@@ -1024,10 +1024,11 @@ private:
 
     using CorrResult = std::pair<size_type, value_type>;
 
+    template<typename H>
     inline CorrResult
     get_auto_corr_(size_type col_len,
                    size_type lag,
-                   const std::vector<value_type> &column) const  {
+                   const H &column) const  {
 
         CorrVisitor<value_type, index_type> corr {  };
 
@@ -1122,9 +1123,9 @@ struct KthValueVisitor  {
 
     explicit KthValueVisitor (size_type ke, bool skipnan = true)
         : kth_element_(ke), skip_nan_(skipnan)  {   }
+    template <typename K, typename H>
     inline void
-    operator() (const std::vector<index_type> &,
-                const std::vector<value_type> &column)  {
+    operator() (const K &, const H &column)  {
 
         result_ =
             find_kth_element_ (column.begin(), column.end(), kth_element_);
@@ -1139,10 +1140,9 @@ private:
     const size_type kth_element_;
     const bool      skip_nan_ { };
 
+    template<typename It>
     inline value_type
-    find_kth_element_ (typename std::vector<value_type>::const_iterator begin,
-                       typename std::vector<value_type>::const_iterator end,
-                       size_type k) const  {
+    find_kth_element_ (It begin, It end, size_type k) const  {
 
         const size_type vec_size = static_cast<size_type>(end - begin);
 
@@ -1160,7 +1160,7 @@ private:
         }
 
         std::vector<value_type> tmp_vec (vec_size - 1);
-        value_type              kth_value = *(begin + (vec_size / 2));
+        value_type              kth_value = *(begin + static_cast<long>(vec_size / 2));
         size_type               less_count = 0;
         size_type               great_count = vec_size - 2;
 
@@ -1200,9 +1200,9 @@ struct MedianVisitor  {
     using result_type = T;
 
     MedianVisitor () = default;
+    template <typename K, typename H>
     inline void
-    operator() (const std::vector<index_type> &idx,
-                const std::vector<value_type> &column)  {
+    operator() (const K &idx, const H &column)  {
 
         const size_type                         vec_size = column.size();
         KthValueVisitor<value_type, index_type> kv_visitor (vec_size >> 1);
@@ -1262,9 +1262,9 @@ struct  ModeVisitor {
 
     using result_type = std::array<DataItem, N>;
 
+    template <typename K, typename H>
     inline void
-    operator() (const std::vector<index_type> &idx,
-                const std::vector<value_type> &column)  {
+    operator() (const K &idx, const H &column)  {
 
         DataItem                                    nan_item(
             std::numeric_limits<value_type>::quiet_NaN());
@@ -1344,8 +1344,8 @@ struct DiffVisitor  {
     explicit DiffVisitor(long periods = 1, bool skipnan = true)
         : periods_(periods), skip_nan_(skipnan) {  }
 
-    inline void operator() (const std::vector<index_type> &,
-                            const std::vector<value_type> &column)  {
+    template <typename K, typename H>
+    inline void operator() (const K &, const H &column)  {
 
         const size_type col_len = column.size();
 
@@ -1405,9 +1405,9 @@ struct ZScoreVisitor {
     using size_type = std::size_t;
     using result_type = std::vector<value_type>;
 
+    template <typename K, typename H>
     inline void
-    operator() (const std::vector<index_type> &idx,
-                const std::vector<value_type> &col)  {
+    operator() (const K &idx, const H &col)  {
 
         MeanVisitor<value_type> mvisit;
         StdVisitor<value_type>  svisit;

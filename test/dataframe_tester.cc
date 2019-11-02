@@ -3606,6 +3606,121 @@ static void test_thread_safety()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_view_visitors()  {
+
+    std::cout << "\nTesting View visitors ..." << std::endl;
+
+    MyDataFrame         df;
+
+    std::vector<unsigned long>  idxvec = { 1UL, 2UL, 3UL, 4UL, 5UL,
+                                           6UL, 7UL, 8UL, 9UL, 10UL };
+    std::vector<double>         dblvec1 = { 1.1, 2.2, 3.3, 4.4, 5.5 };
+    std::vector<double>         dblvec2 = { 2.2, 3.3, 4.4, 5.5, 6.6 };
+    std::vector<double>         dblvec3 = { 0.0, 1.1, 2.2, 3.3, 4.4,
+                                            5.5, 6.6, 7.7, 8.8, 9.9 };
+    std::vector<double>         dblvec4 = { 5.9, 4.4, 1.0, 9.8, 5.3,
+                                            7.2, 3.8, 4.1 };
+    std::vector<double>         dblvec5 = { 1.1, 5.9, 4.4, 1.0, 9.8,
+                                            5.3, 7.2, 3.8, 4.1, 10.1 };
+    std::vector<double>         dblvec6 = { 1.1, 1.1, 3.3, 3.3, 1.1 };
+
+    df.load_data(std::move(idxvec), 
+                 std::make_pair("dbl_col1", dblvec1),
+                 std::make_pair("dbl_col2", dblvec2),
+                 std::make_pair("dbl_col3", dblvec3),
+                 std::make_pair("dbl_col4", dblvec4),
+                 std::make_pair("dbl_col5", dblvec5),
+                 std::make_pair("dbl_col6", dblvec6));
+
+    typedef DataFrameView<unsigned long> MyDataFrameView;
+
+    MyDataFrameView dfv = 
+        df.get_view_by_idx<double>(Index2D<unsigned long> { 2, 4 });
+    assert(dfv.get_index().size() == 3);
+    MeanVisitor<double> mean_visitor;
+    assert(abs(dfv.visit<double>("dbl_col1", 
+                                 mean_visitor).get_result() - 3.3) < 0.00001);
+
+    DotProdVisitor<double> dp_visitor;
+    assert(abs(dfv.visit<double, double>("dbl_col1", "dbl_col2", 
+                                 dp_visitor).get_result() - 45.98) < 0.00001);
+
+    
+    SimpleRollAdopter<MeanVisitor<double>, double> 
+        mean_roller1(MeanVisitor<double>(), 3);
+    const auto &res_sra = 
+        dfv.single_act_visit<double>("dbl_col1", mean_roller1).get_result();
+    assert(abs(res_sra[2] - 3.3) < 0.00001);
+
+    CumSumVisitor<double> cs_visitor;
+    const auto &res_cs =
+        dfv.single_act_visit<double>("dbl_col1", cs_visitor).get_result();
+    assert(abs(res_cs[0] - 2.2) < 0.00001);
+    assert(abs(res_cs[1] - 5.5) < 0.00001);
+    assert(abs(res_cs[2] - 9.9) < 0.00001);
+
+    CumProdVisitor<double> cp_visitor;
+    const auto &res_cp =
+        dfv.single_act_visit<double>("dbl_col1", cp_visitor).get_result();
+    assert(abs(res_cp[0] - 2.2) < 0.00001);
+    assert(abs(res_cp[1] - 7.26) < 0.00001);
+    assert(abs(res_cp[2] - 31.944) < 0.00001);
+
+    CumMinVisitor<double> cmin_visitor;
+    const auto &res_cmin =
+        dfv.single_act_visit<double>("dbl_col1", cmin_visitor).get_result();
+    assert(abs(res_cmin[0] - 2.2) < 0.00001);
+    assert(abs(res_cmin[1] - 2.2) < 0.00001);
+    assert(abs(res_cmin[2] - 2.2) < 0.00001);
+
+    CumMaxVisitor<double> cmax_visitor;
+    const auto &res_cmax =
+        dfv.single_act_visit<double>("dbl_col1", cmax_visitor).get_result();
+    assert(abs(res_cmax[0] - 2.2) < 0.00001);
+    assert(abs(res_cmax[1] - 3.3) < 0.00001);
+    assert(abs(res_cmax[2] - 4.4) < 0.00001);
+
+    MyDataFrameView dfv2 = 
+        df.get_view_by_idx<double>(Index2D<unsigned long> { 2, 9 });
+
+    AutoCorrVisitor<double> ac_visitor;
+    const auto &res_ac =
+        dfv2.single_act_visit<double>("dbl_col5", ac_visitor).get_result();
+    assert(abs(res_ac[1] - -0.36855) < 0.00001);
+    assert(abs(res_ac[5] - 0.67957) < 0.00001);
+
+    ReturnVisitor<double> ret_visitor(return_policy::monetary);
+    const auto &res_ret =
+        df.single_act_visit<double>("dbl_col4", ret_visitor).get_result();
+    assert(abs(res_ret[0] - -1.5) < 0.00001);
+    assert(abs(res_ret[6] - 0.3) < 0.00001);
+
+    MedianVisitor<double> med_visitor;
+    const auto &res_med =
+        dfv2.single_act_visit<double>("dbl_col3", med_visitor).get_result();
+    assert(abs(res_med - 4.95) < 0.00001);
+
+    ModeVisitor<2, double> mode_visitor;
+    const auto &res_mode =
+        dfv2.single_act_visit<double>("dbl_col6", mode_visitor).get_result();
+    assert(abs(res_mode[1].value - 3.3) < 0.00001);
+
+    DiffVisitor<double> diff_visitor(1);
+    const auto &res_diff =
+        dfv.single_act_visit<double>("dbl_col1", diff_visitor).get_result();
+    assert(res_diff.size() == 2);
+    assert(abs(res_diff[0] - 1.1) < 0.00001);
+    assert(abs(res_diff[1] - 1.1) < 0.00001);
+
+    ZScoreVisitor<double> zs_visitor;
+    const auto &res_zs =
+        dfv2.single_act_visit<double>("dbl_col5", zs_visitor).get_result();
+    assert(abs(res_zs[2] - -1.61418) < 0.00001);
+    assert(abs(res_zs[4] - 0.04336) < 0.00001);
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int argc, char *argv[]) {
 
     test_haphazard();
@@ -3667,6 +3782,7 @@ int main(int argc, char *argv[]) {
     test_get_view_by_idx_values();
     test_z_score_visitor();
     test_thread_safety();
+    test_view_visitors();
 
     return (0);
 }

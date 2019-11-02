@@ -96,6 +96,47 @@ public:
     template<typename T>
     const T &front() const;
 
+    template<typename T>
+    using iterator = typename std::vector<T>::iterator;
+    template<typename T>
+    using const_iterator = typename std::vector<T>::const_iterator;
+    template<typename T>
+    using reverse_iterator = typename std::vector<T>::reverse_iterator;
+    template<typename T>
+    using const_reverse_iterator = typename std::vector<T>::const_reverse_iterator;
+
+    template<typename T>
+    inline iterator<T>
+    begin() noexcept { return (get_vector<T>().begin()); }
+
+    template<typename T>
+    inline iterator<T>
+    end() noexcept { return (get_vector<T>().end()); }
+
+    template<typename T>
+    inline const_iterator<T>
+    begin () const noexcept { return (get_vector<T>().begin()); }
+
+    template<typename T>
+    inline const_iterator<T>
+    end () const noexcept { return (get_vector<T>().end()); }
+
+    template<typename T>
+    inline reverse_iterator<T>
+    rbegin() noexcept { return (get_vector<T>().rbegin()); }
+
+    template<typename T>
+    inline reverse_iterator<T>
+    rend() noexcept { return (get_vector<T>().rend()); }
+
+    template<typename T>
+    inline const_reverse_iterator<T>
+    rbegin () const noexcept { return (get_vector<T>().rbegin()); }
+
+    template<typename T>
+    inline const_reverse_iterator<T>
+    rend () const noexcept { return (get_vector<T>().rend()); }
+
 private:
 
     template<typename T>

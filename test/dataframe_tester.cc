@@ -386,7 +386,17 @@ static void test_haphazard()  {
                     std::make_pair("dbl_col", &dvisitor2),
                     std::make_pair("dbl_col_2", &dvisitor22),
                     std::make_pair("ul_col", &ulvisitor));
+    assert(ivisitor2.get_result() == 19);
+    assert(fabs(dvisitor2.get_result() - 4.5696) < 0.0001);
+    assert(fabs(dvisitor22.get_result() - 0.0264609) < 0.00001);
+    assert(ulvisitor.get_result() == 123448);
 
+    const MyDataFrame   dfx_c = dfx;
+
+    dfx_c.multi_visit(std::make_pair("xint_col", &ivisitor2),
+                      std::make_pair("dbl_col", &dvisitor2),
+                      std::make_pair("dbl_col_2", &dvisitor22),
+                      std::make_pair("ul_col", &ulvisitor));
     assert(ivisitor2.get_result() == 19);
     assert(fabs(dvisitor2.get_result() - 4.5696) < 0.0001);
     assert(fabs(dvisitor22.get_result() - 0.0264609) < 0.00001);
@@ -1985,12 +1995,24 @@ static void test_auto_correlation()  {
     const auto  &result2 =
         df.single_act_visit<double>("col_2", auto_corr).get_result();
 
-    assert(result.size() == 17);
-    assert(result[0] == 1.0);
-    assert(fabs(result[1] - 0.903754) < 0.00001);
-    assert(fabs(result[16] - 0.183254) < 0.00001);
-    assert(fabs(result[6] - -0.263385) < 0.00001);
-    assert(fabs(result[10] - -0.712274) < 0.00001);
+    assert(result2.size() == 17);
+    assert(result2[0] == 1.0);
+    assert(fabs(result2[1] - 0.903754) < 0.00001);
+    assert(fabs(result2[16] - 0.183254) < 0.00001);
+    assert(fabs(result2[6] - -0.263385) < 0.00001);
+    assert(fabs(result2[10] - -0.712274) < 0.00001);
+
+    const MyDataFrame   df_c = df;
+
+    const auto  &result3 =
+        df_c.single_act_visit<double>("col_2", auto_corr).get_result();
+
+    assert(result3.size() == 17);
+    assert(result3[0] == 1.0);
+    assert(fabs(result3[1] - 0.903754) < 0.00001);
+    assert(fabs(result3[16] - 0.183254) < 0.00001);
+    assert(fabs(result3[6] - -0.263385) < 0.00001);
+    assert(fabs(result3[10] - -0.712274) < 0.00001);
 }
 
 // -----------------------------------------------------------------------------

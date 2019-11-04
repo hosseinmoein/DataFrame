@@ -1188,6 +1188,13 @@ public:  // Visitors
     void
     multi_visit(Ts ... args);
 
+    template<typename ... Ts>
+    void
+    multi_visit(Ts ... args) const  {
+
+        const_cast<DataFrame *>(this)->multi_visit<Ts ...>(args ...);
+    }
+
     // It passes the values of each index and each named column to the
     // functor visitor sequentially from beginning to end
     //
@@ -1203,6 +1210,13 @@ public:  // Visitors
     template<typename T, typename V>
     V &
     visit(const char *name, V &visitor);
+
+    template<typename T, typename V>
+    V &
+    visit(const char *name, V &visitor) const  {
+
+        return(const_cast<DataFrame *>(this)->visit<T, V>(name, visitor));
+    }
 
     // It passes the values of each index and the two named columns to the
     // functor visitor sequentially from beginning to end
@@ -1223,6 +1237,14 @@ public:  // Visitors
     template<typename T1, typename T2, typename V>
     V &
     visit(const char *name1, const char *name2, V &visitor);
+
+    template<typename T1, typename T2, typename V>
+    V &
+    visit(const char *name1, const char *name2, V &visitor) const  {
+
+        return(const_cast<DataFrame *>(this)->visit<T1, T2, V>
+			   (name1, name2, visitor));
+    }
 
     // It passes the values of each index and the three named columns to the
     // functor visitor sequentially from beginning to end
@@ -1247,6 +1269,17 @@ public:  // Visitors
     template<typename T1, typename T2, typename T3, typename V>
     V &
     visit(const char *name1, const char *name2, const char *name3, V &visitor);
+
+    template<typename T1, typename T2, typename T3, typename V>
+    V &
+    visit(const char *name1,
+          const char *name2,
+          const char *name3,
+          V &visitor) const  {
+
+        return(const_cast<DataFrame *>(this)->visit<T1, T2, T3, V>
+               (name1, name2, name3, visitor));
+    }
 
     // It passes the values of each index and the four named columns to the
     // functor visitor sequentially from beginning to end
@@ -1279,6 +1312,18 @@ public:  // Visitors
           const char *name3,
           const char *name4,
           V &visitor);
+
+    template<typename T1, typename T2, typename T3, typename T4, typename V>
+    V &
+    visit(const char *name1,
+          const char *name2,
+          const char *name3,
+          const char *name4,
+          V &visitor) const  {
+
+        return(const_cast<DataFrame *>(this)->visit<T1, T2, T3, T4, V>
+               (name1, name2, name3, name4, visitor));
+    }
 
     // It passes the values of each index and the five named columns to the
     // functor visitor sequentially from beginning to end
@@ -1318,6 +1363,20 @@ public:  // Visitors
           const char *name5,
           V &visitor);
 
+    template<typename T1, typename T2, typename T3, typename T4, typename T5,
+             typename V>
+    V &
+    visit(const char *name1,
+          const char *name2,
+          const char *name3,
+          const char *name4,
+          const char *name5,
+          V &visitor) const  {
+
+        return(const_cast<DataFrame *>(this)->visit<T1, T2, T3, T4, T5, V>
+               (name1, name2, name3, name4, name5, visitor));
+    }
+
     // This is similar to visit(), but it passes a const reference to the index
     // vector and the named column vector at once the functor visitor.
     // This is convenient for calculations that need the whole data vector,
@@ -1332,7 +1391,15 @@ public:  // Visitors
     //
     template<typename T, typename V>
     V &
-    single_act_visit(const char *name, V &visitor) const;
+    single_act_visit(const char *name, V &visitor);
+
+    template<typename T, typename V>
+    V &
+    single_act_visit(const char *name, V &visitor) const  {
+
+        return(const_cast<DataFrame *>(this)->single_act_visit<T, V>
+			   (name, visitor));
+	}
 
     // This is similar to visit(), but it passes a const reference to the index
     // vector and the two named column vectors at once the functor visitor.
@@ -1354,6 +1421,14 @@ public:  // Visitors
     template<typename T1, typename T2, typename V>
     V &
     single_act_visit(const char *name1, const char *name2, V &visitor);
+
+    template<typename T1, typename T2, typename V>
+    V &
+    single_act_visit(const char *name1, const char *name2, V &visitor) const  {
+
+        return(const_cast<DataFrame *>(this)->single_act_visit<T1, T2, V>
+			   (name1, name2, visitor));
+	}
 
 public:  // Operators
 

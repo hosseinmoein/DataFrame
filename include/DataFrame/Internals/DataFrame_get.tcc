@@ -515,7 +515,7 @@ visit (const char *name1,
 template<typename I, typename  H>
 template<typename T, typename V>
 V &DataFrame<I, H>::
-single_act_visit (const char *name, V &visitor) const  {
+single_act_visit (const char *name, V &visitor)  {
 
     const auto  iter = column_tb_.find (name);
 

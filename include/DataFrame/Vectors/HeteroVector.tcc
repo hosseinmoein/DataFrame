@@ -12,19 +12,6 @@
 namespace hmdf
 {
 
-#if defined(__linux__) || defined(__unix__) || defined(__APPLE__)
-template<typename T>
-std::unordered_map<const HeteroVector *, std::vector<T>> HeteroVector::vectors_;
-#endif // defined(__linux__) || defined(__unix__) || defined(__APPLE__)
-
-#ifdef _WIN32
-template<typename T>
-std::unordered_map<const HeteroVector *, std::vector<T>>
-    HeteroVector::vectors_ { };
-#endif // _WIN32
-
-// ----------------------------------------------------------------------------
-
 template<typename T>
 std::vector<T> &HeteroVector::get_vector()  {
 

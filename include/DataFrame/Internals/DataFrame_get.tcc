@@ -27,7 +27,7 @@ namespace hmdf
 template<typename I, typename  H>
 std::pair<typename DataFrame<I, H>::size_type,
           typename DataFrame<I, H>::size_type>
-DataFrame<I, H>::shape()  {
+DataFrame<I, H>::shape() const  {
 
     return (std::make_pair(indices_.size(), column_tb_.size()));
 }
@@ -515,7 +515,7 @@ visit (const char *name1,
 template<typename I, typename  H>
 template<typename T, typename V>
 V &DataFrame<I, H>::
-single_act_visit (const char *name, V &visitor) const  {
+single_act_visit (const char *name, V &visitor)  {
 
     const auto  iter = column_tb_.find (name);
 

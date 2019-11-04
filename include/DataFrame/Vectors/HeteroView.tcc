@@ -12,18 +12,6 @@
 namespace hmdf
 {
 
-#if defined(__linux__) || defined(__unix__) || defined(__APPLE__)
-template<typename T>
-std::unordered_map<const HeteroView *, VectorView<T>> HeteroView::views_;
-#endif // defined(__linux__) || defined(__unix__) || defined(__APPLE__)
-
-#ifdef _WIN32
-template<typename T>
-std::unordered_map<const HeteroView *, VectorView<T>> HeteroView::views_{};
-#endif // _WIN32
-
-// ----------------------------------------------------------------------------
-
 template<typename T>
 HeteroView::HeteroView(T *begin_ptr, T *end_ptr)
     : clear_function_([](HeteroView &hv) { views_<T>.erase(&hv); }),

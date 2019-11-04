@@ -103,7 +103,8 @@ public:
     template<typename T>
     using reverse_iterator = typename std::vector<T>::reverse_iterator;
     template<typename T>
-    using const_reverse_iterator = typename std::vector<T>::const_reverse_iterator;
+    using const_reverse_iterator =
+        typename std::vector<T>::const_reverse_iterator;
 
     template<typename T>
     inline iterator<T>
@@ -140,7 +141,8 @@ public:
 private:
 
     template<typename T>
-    static std::unordered_map<const HeteroVector *, std::vector<T>> vectors_;
+    inline static std::unordered_map<const HeteroVector *, std::vector<T>>
+        vectors_ {  };
 
     std::vector<std::function<void(HeteroVector &)>>    clear_functions_;
     std::vector<std::function<void(const HeteroVector &,

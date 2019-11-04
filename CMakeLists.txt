@@ -2,7 +2,7 @@ cmake_minimum_required (VERSION 3.5)
 project (DataFrame VERSION 1.0.0)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON) # Produce compile_commands.json
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
@@ -206,6 +206,7 @@ if (MSVC)
                               EXPORT ${PROJECT_NAME}
                               VARS_PREFIX ${PROJECT_NAME}
                               NO_CHECK_REQUIRED_COMPONENTS_MACRO)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
 endif(MSVC)
 
 # Add the uninstall target

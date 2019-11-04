@@ -73,7 +73,8 @@ public:
 private:
 
     template<typename T>
-    static std::unordered_map<const HeteroPtrView *, VectorPtrView<T>> views_;
+    inline static std::unordered_map<const HeteroPtrView *, VectorPtrView<T>>
+        views_ {  };
 
     std::function<void(HeteroPtrView &)>
         clear_function_ {

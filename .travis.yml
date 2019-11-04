@@ -13,22 +13,13 @@ matrix:
           sources:
             - ubuntu-toolchain-r-test
           packages:
-            - g++-5
-      env:
-        - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
-    - os: linux
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
             - g++-7
       env:
         - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
     - os: osx
-      osx_image: xcode8.3
+      osx_image: xcode11.2
       env:
-        - MATRIX_EVAL="brew update && (brew outdated gcc5 || brew upgrade gcc5) && brew install gcc5 && CC=gcc-5 && CXX=g++-5"
+        - MATRIX_EVAL="brew update && (brew outdated gcc7 || brew upgrade gcc7) && brew install gcc7 && CC=gcc-7 && CXX=g++-7"
 
 before_install:
   - eval "${MATRIX_EVAL}"

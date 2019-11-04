@@ -207,6 +207,7 @@ if (MSVC)
                               EXPORT ${PROJECT_NAME}
                               VARS_PREFIX ${PROJECT_NAME}
                               NO_CHECK_REQUIRED_COMPONENTS_MACRO)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
 endif(MSVC)
 
 # Add the uninstall target

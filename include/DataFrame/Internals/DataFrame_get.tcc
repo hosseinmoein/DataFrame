@@ -27,7 +27,7 @@ namespace hmdf
 template<typename I, typename  H>
 std::pair<typename DataFrame<I, H>::size_type,
           typename DataFrame<I, H>::size_type>
-DataFrame<I, H>::shape()  {
+DataFrame<I, H>::shape() const  {
 
     return (std::make_pair(indices_.size(), column_tb_.size()));
 }

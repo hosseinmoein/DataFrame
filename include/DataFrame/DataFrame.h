@@ -1408,7 +1408,7 @@ public:  // Utilities and miscellaneous
     //       at most, this number of rows.
     //
     std::pair<size_type, size_type>
-    shape();
+    shape() const;
 
     // This will reclaim unused/reserve memory from all columns including the
     // index.

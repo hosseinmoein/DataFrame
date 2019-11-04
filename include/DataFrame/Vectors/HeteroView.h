@@ -68,7 +68,8 @@ public:
     template<typename T>
     using reverse_iterator = typename VectorView<T>::reverse_iterator;
     template<typename T>
-    using const_reverse_iterator = typename VectorView<T>::const_reverse_iterator;
+    using const_reverse_iterator =
+        typename VectorView<T>::const_reverse_iterator;
 
     template<typename T>
     iterator<T> begin();
@@ -93,7 +94,8 @@ public:
 private:
 
     template<typename T>
-    static std::unordered_map<const HeteroView *, VectorView<T>>    views_;
+    inline static std::unordered_map<const HeteroView *, VectorView<T>>
+        views_ {  };
 
     std::function<void(HeteroView &)>   clear_function_ {
         [](HeteroView &) { return; } };

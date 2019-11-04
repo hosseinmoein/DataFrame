@@ -73,7 +73,7 @@ private:
     IndexVecType    indices_ { };    // Vector
     ColumnTable     column_tb_ { };  // Hash table of name -> vector index
 
-    static SpinLock *lock_;          // It is null by default
+    inline static SpinLock *lock_ { nullptr };    // It is null by default
 
 public:  // Load/append/remove interfaces
 

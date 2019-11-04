@@ -15,11 +15,6 @@ namespace hmdf
 {
 
 template<typename I, typename H>
-SpinLock    *DataFrame<I, H>::lock_ { nullptr };
-
-// ----------------------------------------------------------------------------
-
-template<typename I, typename H>
 template<size_t N, typename ... Ts>
 void
 DataFrame<I, H>::shuffle(const std::array<const char *, N> col_names,

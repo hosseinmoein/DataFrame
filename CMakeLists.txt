@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.9.4)
+cmake_minimum_required (VERSION 3.5)
 project (DataFrame VERSION 1.0.0)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON) # Produce compile_commands.json

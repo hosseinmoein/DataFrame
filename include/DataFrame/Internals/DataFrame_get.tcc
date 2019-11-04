@@ -368,9 +368,11 @@ visit (const char *name1, const char *name2, V &visitor) const {
         visitor (indices_[i], vec1[i], vec2[i]);
 	}
     for (; i < idx_s; ++i)
+	{
         visitor (indices_[i],
-                 i < data_s1 ? vec1[i] : _get_nan<T1>(),
-                 i < data_s2 ? vec2[i] : _get_nan<T2>());
+			i < data_s1 ? vec1[i] : _get_nan<T1>(),
+			i < data_s2 ? vec2[i] : _get_nan<T2>());
+	}
     visitor.post();
 
     return (visitor);

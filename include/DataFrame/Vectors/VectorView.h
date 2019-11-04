@@ -145,7 +145,7 @@ public:
 
             return (*node_);
         }
-        inline operator pointer () const noexcept  { return (node_); }
+        inline operator const_pointer () const noexcept  { return (node_); }
 
        // ++Prefix
        //

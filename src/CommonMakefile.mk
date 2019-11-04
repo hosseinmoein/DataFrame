@@ -46,6 +46,7 @@ HEADERS = $(LOCAL_INCLUDE_DIR)/DataFrame/Vectors/HeteroVector.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Internals/DataFrame_functors.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Internals/RandGen.tcc \
           $(LOCAL_INCLUDE_DIR)/DataFrame/DataFrameVisitors.h \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/DataFrameVisitors2.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/DataFrameTypes.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/RandGen.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/DataFrameOperators.h \

@@ -1,6 +1,8 @@
 #include <DataFrame/DataFrame.h>
 #include <DataFrame/DataFrameOperators.h>
 #include <DataFrame/DataFrameVisitors.h>
+#include <DataFrame/DataFrameVisitors2.h>
+#include <DataFrame/RandGen.h>
 
 #include <cassert>
 #include <cmath>
@@ -3743,6 +3745,34 @@ static void test_view_visitors()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_k_means()  {
+
+    std::cout << "\nTesting k-means visitor ..." << std::endl;
+
+    MyDataFrame             df;
+    RandGenParams<double>   p;
+
+    p.mean = 1.0;  // Default
+    p.std = 0.005;
+
+    df.load_data(MyDataFrame::gen_sequence_index(0, 1024, 1),
+                 std::make_pair("col1", gen_lognormal_dist<double>(1024)));
+
+    KMeansVisitor<5, double>    km_visitor(1000);
+
+    const auto &result =
+        df.single_act_visit<double>("col1", km_visitor).get_result();
+
+    for (auto iter : result)  {
+        for (auto iter2 : iter)  {
+            std::cout << iter2 << ", ";
+        }
+        std::cout << "\n\n" << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int argc, char *argv[]) {
 
     test_haphazard();
@@ -3805,6 +3835,7 @@ int main(int argc, char *argv[]) {
     test_z_score_visitor();
     test_thread_safety();
     test_view_visitors();
+    test_k_means();
 
     return (0);
 }

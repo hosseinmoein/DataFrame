@@ -92,6 +92,7 @@ set(${LIBRARY_TARGET_NAME}_HDR
   include/DataFrame/Vectors/HeteroView.tcc
   include/DataFrame/Vectors/HeteroPtrView.tcc
   include/DataFrame/DataFrameVisitors.h
+  include/DataFrame/DataFrameVisitors2.h
   include/DataFrame/DataFrameTypes.h
   include/DataFrame/RandGen.h
   include/DataFrame/DataFrameOperators.h

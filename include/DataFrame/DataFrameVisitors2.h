@@ -36,12 +36,12 @@ private:
     result_type     clusters_ { };
 
     inline void calc_clusters_(const std::vector<value_type> &col,
-							   const means_type &k_means)  {
+                               const means_type &k_means)  {
 
         const size_type col_size = col.size();
 
         for (size_type i = 0; i < K; ++i)  {
-            clusters_[i].reserve(col_size / K + 1);
+            clusters_[i].reserve(col_size / K + 2);
             clusters_[i].push_back(k_means[i]);
         }
  
@@ -54,7 +54,7 @@ private:
 
                 if (dist < min_dist)  {
                     min_dist = dist;
-                    min_idx = i
+                    min_idx = i;
                 }
             }
             clusters_[min_idx].push_back(citer);
@@ -95,14 +95,14 @@ private:
             }
 
             // Sum up and count points for each cluster.
-            means_type                  new_means;
-            std::array<size_type, K>    counts { 0 };
+            means_type              new_means { value_type() };
+            std::array<double, K>   counts { 0.0 };
 
             for (size_type point = 0; point < col_size; ++point) {
                 const size_type cluster = assignments[point];
 
                 new_means[cluster] += col[point];
-                counts[cluster] += 1;
+                counts[cluster] += 1.0;
             }
 
             bool    done = true;
@@ -111,7 +111,7 @@ private:
             for (size_type cluster = 0; cluster < K; ++cluster) {
                 // Turn 0/0 into 0/1 to avoid zero division.
                 const double        count =
-                    std::max<size_type>(1, counts[cluster]);
+                    std::max<double>(1.0, counts[cluster]);
                 const value_type    value = new_means[cluster] / count;
 
                 if (::fabs(value - k_means[cluster]) > 0.0000001)  { 

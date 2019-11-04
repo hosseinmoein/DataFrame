@@ -229,6 +229,52 @@ V &DataFrame<I, H>::visit (const char *name, V &visitor)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename  H>
+template<typename T, typename V>
+V &DataFrame<I, H>::visit (const char *name, V &visitor) const {
+
+    const auto  iter = column_tb_.find (name);
+
+    if (iter == column_tb_.end())  {
+        char buffer [512];
+
+        sprintf (buffer,
+                 "DataFrame::visit(1): ERROR: Cannot find column '%s'",
+                 name);
+        throw ColNotFound (buffer);
+    }
+
+    DataVec         &hv = data_[iter->second];
+    SpinGuard       guard(lock_);
+    auto            &vec = hv.template get_vector<T>();
+
+    guard.release();
+
+    const size_type idx_s = indices_.size();
+    const size_type data_s = vec.size();
+
+	const size_type min_s = std::min(idx_s, data_s);
+
+    visitor.pre();
+	size_type i = 0;
+    for (; i < min_s; ++i)
+	{
+        visitor (indices_[i], vec[i]);
+	}
+	if (idx_s > min_s)
+	{
+		for (; i < idx_s; ++i)
+		{
+			visitor (indices_[i], _get_nan<T>());
+		}
+	}
+    visitor.post();
+
+    return (visitor);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
 template<typename T1, typename T2, typename V>
 V &DataFrame<I, H>::
 visit (const char *name1, const char *name2, V &visitor)  {
@@ -267,6 +313,61 @@ visit (const char *name1, const char *name2, V &visitor)  {
 
     visitor.pre();
     for (size_type i = 0; i < idx_s; ++i)
+        visitor (indices_[i],
+                 i < data_s1 ? vec1[i] : _get_nan<T1>(),
+                 i < data_s2 ? vec2[i] : _get_nan<T2>());
+    visitor.post();
+
+    return (visitor);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename T1, typename T2, typename V>
+V &DataFrame<I, H>::
+visit (const char *name1, const char *name2, V &visitor) const {
+
+    const auto  iter1 = column_tb_.find (name1);
+    const auto  iter2 = column_tb_.find (name2);
+
+    if (iter1 == column_tb_.end())  {
+        char buffer [512];
+
+        sprintf (buffer,
+                 "DataFrame::visit(2): ERROR: Cannot find column '%s'",
+                 name1);
+        throw ColNotFound (buffer);
+    }
+    if (iter2 == column_tb_.end())  {
+        char buffer [512];
+
+        sprintf (buffer,
+                 "DataFrame::visit(2): ERROR: Cannot find column '%s'",
+                 name2);
+        throw ColNotFound (buffer);
+    }
+
+    const DataVec   &hv1 = data_[iter1->second];
+    const DataVec   &hv2 = data_[iter2->second];
+    SpinGuard       guard(lock_);
+    auto            &vec1 = hv1.template get_vector<T1>();
+    auto            &vec2 = hv2.template get_vector<T2>();
+
+    guard.release();
+
+    const size_type idx_s = indices_.size();
+    const size_type data_s1 = vec1.size();
+    const size_type data_s2 = vec2.size();
+	const size_type min_s = std::min({idx_s, data_s1, data_s2});
+
+    visitor.pre();
+	size_type i = 0;
+    for (; i < min_s; ++i)
+	{
+        visitor (indices_[i], vec1[i], vec2[i]);
+	}
+    for (; i < idx_s; ++i)
         visitor (indices_[i],
                  i < data_s1 ? vec1[i] : _get_nan<T1>(),
                  i < data_s2 ? vec2[i] : _get_nan<T2>());

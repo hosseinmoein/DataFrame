@@ -124,6 +124,7 @@ if (UNIX)
 endif(UNIX)
 
 if (MSVC)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
   add_definitions(-D _CRT_SECURE_NO_WARNINGS)
   add_library(${LIBRARY_TARGET_NAME} STATIC ${${LIBRARY_TARGET_NAME}_SRC})
 endif(MSVC)

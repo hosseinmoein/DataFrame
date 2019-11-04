@@ -1204,6 +1204,10 @@ public:  // Visitors
     V &
     visit(const char *name, V &visitor);
 
+	template<typename T, typename V>
+	V &
+	visit(const char *name, V &visitor) const;
+
     // It passes the values of each index and the two named columns to the
     // functor visitor sequentially from beginning to end
     //
@@ -1223,6 +1227,10 @@ public:  // Visitors
     template<typename T1, typename T2, typename V>
     V &
     visit(const char *name1, const char *name2, V &visitor);
+
+	template<typename T1, typename T2, typename V>
+	V &
+	visit(const char *name1, const char *name2, V &visitor) const;
 
     // It passes the values of each index and the three named columns to the
     // functor visitor sequentially from beginning to end

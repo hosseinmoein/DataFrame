@@ -3595,7 +3595,7 @@ static void test_thread_safety()  {
 
         for (size_t i = 0; i < vec_size; ++i)
             vec.push_back(i);
-    
+
         df.load_data(MyDataFrame::gen_sequence_index(0, vec_size, 1),
                      std::make_pair("col1", vec));
 
@@ -3648,7 +3648,7 @@ static void test_view_visitors()  {
                                             5.3, 7.2, 3.8, 4.1, 10.1 };
     std::vector<double>         dblvec6 = { 1.1, 1.1, 3.3, 3.3, 1.1 };
 
-    df.load_data(std::move(idxvec), 
+    df.load_data(std::move(idxvec),
                  std::make_pair("dbl_col1", dblvec1),
                  std::make_pair("dbl_col2", dblvec2),
                  std::make_pair("dbl_col3", dblvec3),
@@ -3658,21 +3658,21 @@ static void test_view_visitors()  {
 
     typedef DataFrameView<unsigned long> MyDataFrameView;
 
-    MyDataFrameView dfv = 
+    MyDataFrameView dfv =
         df.get_view_by_idx<double>(Index2D<unsigned long> { 2, 4 });
     assert(dfv.get_index().size() == 3);
     MeanVisitor<double> mean_visitor;
-    assert(fabs(dfv.visit<double>("dbl_col1", 
+    assert(fabs(dfv.visit<double>("dbl_col1",
                                  mean_visitor).get_result() - 3.3) < 0.00001);
 
     DotProdVisitor<double> dp_visitor;
-    assert(fabs(dfv.visit<double, double>("dbl_col1", "dbl_col2", 
+    assert(fabs(dfv.visit<double, double>("dbl_col1", "dbl_col2",
                                  dp_visitor).get_result() - 45.98) < 0.00001);
 
-    
-    SimpleRollAdopter<MeanVisitor<double>, double> 
+
+    SimpleRollAdopter<MeanVisitor<double>, double>
         mean_roller1(MeanVisitor<double>(), 3);
-    const auto &res_sra = 
+    const auto &res_sra =
         dfv.single_act_visit<double>("dbl_col1", mean_roller1).get_result();
     assert(fabs(res_sra[2] - 3.3) < 0.00001);
 
@@ -3704,7 +3704,7 @@ static void test_view_visitors()  {
     assert(fabs(res_cmax[1] - 3.3) < 0.00001);
     assert(fabs(res_cmax[2] - 4.4) < 0.00001);
 
-    MyDataFrameView dfv2 = 
+    MyDataFrameView dfv2 =
         df.get_view_by_idx<double>(Index2D<unsigned long> { 2, 9 });
 
     AutoCorrVisitor<double> ac_visitor;
@@ -3838,12 +3838,88 @@ static void test_k_means()  {
     }
     assert(found);
 
-    // for (auto iter : result)  {
+    // Now try with Points
+    //
+    p.seed = 200;
+
+    auto    x_vec = gen_lognormal_dist<double>(item_cnt, p);
+
+    p.seed = 4356;
+
+    auto                y_vec = gen_lognormal_dist<double>(item_cnt, p);
+    std::vector<Point>  points;
+
+    points.reserve(item_cnt);
+    for (size_t i = 0; i < item_cnt; ++i)
+        points.push_back(Point(x_vec[i], y_vec[i]));
+    df.load_column("point_col", std::move(points));
+
+    KMeansVisitor<5, Point> km_visitor2(1000, point_distance);
+
+    const auto &result2 =
+        df.single_act_visit<Point>("point_col", km_visitor2).get_result();
+
+    // for (auto iter : result2)  {
     //     for (auto iter2 : iter)  {
-    //         std::cout << iter2 << ", ";
+    //         std::cout << iter2.x << " | " << iter2.y << ", ";
     //     }
     //     std::cout << "\n\n" << std::endl;
     // }
+
+    found = false;
+    for (auto iter : result2)  {
+        if (::fabs(iter[0].x - 18.9556) < 0.1 &&
+            ::fabs(iter[0].y - 2.17537) < 0.1)  {
+            if (::fabs(iter[6].x - 16.7309) < 0.1 &&
+                ::fabs(iter[6].y - 0.872376) < 0.1)  {
+                found = true;
+                break;
+            }
+        }
+    }
+    assert(found);
+    found = false;
+    for (auto iter : result2)  {
+        if (::fabs(iter[0].x - 0.943977) < 0.1 &&
+            ::fabs(iter[0].y - 0.910989) < 0.1)  {
+            if (::fabs(iter[2].x - 0.30509) < 0.1 &&
+                ::fabs(iter[2].y - 1.69017) < 0.1)  {
+                found = true;
+                break;
+            }
+        }
+    }
+    assert(found);
+    found = false;
+    for (auto iter : result2)  {
+        if (::fabs(iter[0].x - 4.31973) < 0.1 &&
+            ::fabs(iter[0].y - 1.24214) < 0.1)  {
+            if (::fabs(iter[3].x - 4.68381) < 0.1 &&
+                ::fabs(iter[3].y - 0.453632) < 0.1)  {
+                found = true;
+                break;
+            }
+        }
+    }
+    assert(found);
+    found = false;
+    for (auto iter : result2)  {
+        if (::fabs(iter[0].x - 1.5694) < 0.1 &&
+            ::fabs(iter[0].y - 15.3338) < 0.1)  {
+            found = true;
+            break;
+        }
+    }
+    assert(found);
+    found = false;
+    for (auto iter : result2)  {
+        if (::fabs(iter[0].x - 1.29624) < 0.1 &&
+            ::fabs(iter[0].y - 4.13919) < 0.1)  {
+            found = true;
+            break;
+        }
+    }
+    assert(found);
 }
 
 // -----------------------------------------------------------------------------

@@ -7,7 +7,6 @@
 
 #include <DataFrame/DataFrameTypes.h>
 
-#include <cmath>
 #include <functional>
 
 // ----------------------------------------------------------------------------
@@ -16,7 +15,7 @@ namespace hmdf
 {
 
 template<size_t K, typename T, typename I = unsigned long>
-struct  KMeansVisitor {
+struct  KMeansVisitor  {
 
 public:
 
@@ -35,8 +34,8 @@ private:
     distance_func   dfunc_;
     result_type     clusters_ { };
 
-    inline void calc_clusters_(const std::vector<value_type> &col,
-                               const means_type &k_means)  {
+    template<typename H>
+    inline void calc_clusters_(const H &col, const means_type &k_means)  {
 
         const size_type col_size = col.size();
 
@@ -61,7 +60,8 @@ private:
         }
     }
 
-    inline void calc_k_means_(const std::vector<value_type> &col)  {
+    template<typename H>
+    inline void calc_k_means_(const H &col)  {
 
         const size_type col_size = col.size();
         means_type      k_means { };
@@ -114,7 +114,7 @@ private:
                     std::max<double>(1.0, counts[cluster]);
                 const value_type    value = new_means[cluster] / count;
 
-                if (::fabs(value - k_means[cluster]) > 0.0000001)  { 
+                if (dfunc_(value, k_means[cluster]) > 0.0000001)  { 
                     done = false;
                     k_means[cluster] = value;
                 }
@@ -128,9 +128,9 @@ private:
 
 public:
 
-    inline void
-    operator() (const std::vector<index_type> &,
-                const std::vector<value_type> &col)  { calc_k_means_(col); }
+    template<typename IV, typename H>
+    inline void operator() (const IV &, const H &col)  { calc_k_means_(col); }
+
     inline void pre ()  {  }
     inline void post ()  {  }
     inline const result_type &get_result () const  { return (clusters_); }

@@ -209,18 +209,21 @@ V &DataFrame<I, H>::visit (const char *name, V &visitor)  {
         throw ColNotFound (buffer);
     }
 
-    DataVec         &hv = data_[iter->second];
-    SpinGuard       guard(lock_);
-    auto            &vec = hv.template get_vector<T>();
+    DataVec     &hv = data_[iter->second];
+    SpinGuard   guard(lock_);
+    auto        &vec = hv.template get_vector<T>();
 
     guard.release();
 
     const size_type idx_s = indices_.size();
-    const size_type data_s = vec.size();
+    const size_type min_s = std::min<size_type>(vec.size(), idx_s);
+    size_type       i = 0;
 
     visitor.pre();
-    for (size_type i = 0; i < idx_s; ++i)
-        visitor (indices_[i], i < data_s ? vec[i] : _get_nan<T>());
+    for (; i < min_s; ++i)
+        visitor (indices_[i], vec[i]);
+    for (; i < idx_s; ++i)
+        visitor (indices_[i], _get_nan<T>());
     visitor.post();
 
     return (visitor);
@@ -253,20 +256,24 @@ visit (const char *name1, const char *name2, V &visitor)  {
         throw ColNotFound (buffer);
     }
 
-    DataVec         &hv1 = data_[iter1->second];
-    DataVec         &hv2 = data_[iter2->second];
-    SpinGuard       guard(lock_);
-    auto            &vec1 = hv1.template get_vector<T1>();
-    auto            &vec2 = hv2.template get_vector<T2>();
+    DataVec     &hv1 = data_[iter1->second];
+    DataVec     &hv2 = data_[iter2->second];
+    SpinGuard   guard(lock_);
+    auto        &vec1 = hv1.template get_vector<T1>();
+    auto        &vec2 = hv2.template get_vector<T2>();
 
     guard.release();
 
     const size_type idx_s = indices_.size();
     const size_type data_s1 = vec1.size();
     const size_type data_s2 = vec2.size();
+    const size_type min_s = std::min<size_type>({ idx_s, data_s1, data_s2 });
+    size_type       i = 0;
 
     visitor.pre();
-    for (size_type i = 0; i < idx_s; ++i)
+    for (; i < min_s; ++i)
+        visitor (indices_[i], vec1[i], vec2[i]);
+    for (; i < idx_s; ++i)
         visitor (indices_[i],
                  i < data_s1 ? vec1[i] : _get_nan<T1>(),
                  i < data_s2 ? vec2[i] : _get_nan<T2>());
@@ -311,13 +318,13 @@ visit (const char *name1, const char *name2, const char *name3, V &visitor)  {
         throw ColNotFound (buffer);
     }
 
-    DataVec         &hv1 = data_[iter1->second];
-    DataVec         &hv2 = data_[iter2->second];
-    DataVec         &hv3 = data_[iter3->second];
-    SpinGuard       guard(lock_);
-    auto            &vec1 = hv1.template get_vector<T1>();
-    auto            &vec2 = hv2.template get_vector<T2>();
-    auto            &vec3 = hv3.template get_vector<T3>();
+    DataVec     &hv1 = data_[iter1->second];
+    DataVec     &hv2 = data_[iter2->second];
+    DataVec     &hv3 = data_[iter3->second];
+    SpinGuard   guard(lock_);
+    auto        &vec1 = hv1.template get_vector<T1>();
+    auto        &vec2 = hv2.template get_vector<T2>();
+    auto        &vec3 = hv3.template get_vector<T3>();
 
     guard.release();
 
@@ -325,9 +332,14 @@ visit (const char *name1, const char *name2, const char *name3, V &visitor)  {
     const size_type data_s1 = vec1.size();
     const size_type data_s2 = vec2.size();
     const size_type data_s3 = vec3.size();
+    const size_type min_s =
+        std::min<size_type>({ idx_s, data_s1, data_s2, data_s3 });
+    size_type       i = 0;
 
     visitor.pre();
-    for (size_type i = 0; i < idx_s; ++i)
+    for (; i < min_s; ++i)
+        visitor (indices_[i], vec1[i], vec2[i], vec3[i]);
+    for (; i < idx_s; ++i)
         visitor (indices_[i],
                  i < data_s1 ? vec1[i] : _get_nan<T1>(),
                  i < data_s2 ? vec2[i] : _get_nan<T2>(),
@@ -386,15 +398,15 @@ visit (const char *name1,
         throw ColNotFound (buffer);
     }
 
-    DataVec         &hv1 = data_[iter1->second];
-    DataVec         &hv2 = data_[iter2->second];
-    DataVec         &hv3 = data_[iter3->second];
-    DataVec         &hv4 = data_[iter4->second];
-    SpinGuard       guard(lock_);
-    auto            &vec1 = hv1.template get_vector<T1>();
-    auto            &vec2 = hv2.template get_vector<T2>();
-    auto            &vec3 = hv3.template get_vector<T3>();
-    auto            &vec4 = hv4.template get_vector<T4>();
+    DataVec     &hv1 = data_[iter1->second];
+    DataVec     &hv2 = data_[iter2->second];
+    DataVec     &hv3 = data_[iter3->second];
+    DataVec     &hv4 = data_[iter4->second];
+    SpinGuard   guard(lock_);
+    auto        &vec1 = hv1.template get_vector<T1>();
+    auto        &vec2 = hv2.template get_vector<T2>();
+    auto        &vec3 = hv3.template get_vector<T3>();
+    auto        &vec4 = hv4.template get_vector<T4>();
 
     guard.release();
 
@@ -403,9 +415,14 @@ visit (const char *name1,
     const size_type data_s2 = vec2.size();
     const size_type data_s3 = vec3.size();
     const size_type data_s4 = vec4.size();
+    const size_type min_s =
+        std::min<size_type>({ idx_s, data_s1, data_s2, data_s3, data_s4 });
+    size_type       i = 0;
 
     visitor.pre();
-    for (size_type i = 0; i < idx_s; ++i)
+    for (; i < min_s; ++i)
+        visitor (indices_[i], vec1[i], vec2[i], vec3[i], vec4[i]);
+    for (; i < idx_s; ++i)
         visitor (indices_[i],
                  i < data_s1 ? vec1[i] : _get_nan<T1>(),
                  i < data_s2 ? vec2[i] : _get_nan<T2>(),
@@ -476,17 +493,17 @@ visit (const char *name1,
         throw ColNotFound (buffer);
     }
 
-    DataVec         &hv1 = data_[iter1->second];
-    DataVec         &hv2 = data_[iter2->second];
-    DataVec         &hv3 = data_[iter3->second];
-    DataVec         &hv4 = data_[iter4->second];
-    DataVec         &hv5 = data_[iter5->second];
-    SpinGuard       guard(lock_);
-    auto            &vec1 = hv1.template get_vector<T1>();
-    auto            &vec2 = hv2.template get_vector<T2>();
-    auto            &vec3 = hv3.template get_vector<T3>();
-    auto            &vec4 = hv4.template get_vector<T4>();
-    auto            &vec5 = hv5.template get_vector<T5>();
+    DataVec     &hv1 = data_[iter1->second];
+    DataVec     &hv2 = data_[iter2->second];
+    DataVec     &hv3 = data_[iter3->second];
+    DataVec     &hv4 = data_[iter4->second];
+    DataVec     &hv5 = data_[iter5->second];
+    SpinGuard   guard(lock_);
+    auto        &vec1 = hv1.template get_vector<T1>();
+    auto        &vec2 = hv2.template get_vector<T2>();
+    auto        &vec3 = hv3.template get_vector<T3>();
+    auto        &vec4 = hv4.template get_vector<T4>();
+    auto        &vec5 = hv5.template get_vector<T5>();
 
     guard.release();
 
@@ -496,9 +513,15 @@ visit (const char *name1,
     const size_type data_s3 = vec3.size();
     const size_type data_s4 = vec4.size();
     const size_type data_s5 = vec5.size();
+    const size_type min_s =
+        std::min<size_type>(
+            { idx_s, data_s1, data_s2, data_s3, data_s4, data_s5 });
+    size_type       i = 0;
 
     visitor.pre();
-    for (size_type i = 0; i < idx_s; ++i)
+    for (; i < min_s; ++i)
+        visitor (indices_[i], vec1[i], vec2[i], vec3[i], vec4[i], vec5[i]);
+    for (; i < idx_s; ++i)
         visitor (indices_[i],
                  i < data_s1 ? vec1[i] : _get_nan<T1>(),
                  i < data_s2 ? vec2[i] : _get_nan<T2>(),
@@ -528,9 +551,9 @@ single_act_visit (const char *name, V &visitor)  {
         throw ColNotFound (buffer);
     }
 
-    const DataVec           &hv = data_[iter->second];
-    SpinGuard               guard(lock_);
-    auto                    &vec = hv.template get_vector<T>();
+    const DataVec   &hv = data_[iter->second];
+    SpinGuard       guard(lock_);
+    auto            &vec = hv.template get_vector<T>();
 
     guard.release();
     visitor.pre();

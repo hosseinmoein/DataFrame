@@ -101,7 +101,7 @@ private:
             for (size_type point = 0; point < col_size; ++point) {
                 const size_type cluster = assignments[point];
 
-                new_means[cluster] += col[point];
+                new_means[cluster] = new_means[cluster] + col[point];
                 counts[cluster] += 1.0;
             }
 

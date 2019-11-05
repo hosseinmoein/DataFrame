@@ -3662,11 +3662,11 @@ static void test_view_visitors()  {
         df.get_view_by_idx<double>(Index2D<unsigned long> { 2, 4 });
     assert(dfv.get_index().size() == 3);
     MeanVisitor<double> mean_visitor;
-    assert(abs(dfv.visit<double>("dbl_col1", 
+    assert(fabs(dfv.visit<double>("dbl_col1", 
                                  mean_visitor).get_result() - 3.3) < 0.00001);
 
     DotProdVisitor<double> dp_visitor;
-    assert(abs(dfv.visit<double, double>("dbl_col1", "dbl_col2", 
+    assert(fabs(dfv.visit<double, double>("dbl_col1", "dbl_col2", 
                                  dp_visitor).get_result() - 45.98) < 0.00001);
 
     
@@ -3674,35 +3674,35 @@ static void test_view_visitors()  {
         mean_roller1(MeanVisitor<double>(), 3);
     const auto &res_sra = 
         dfv.single_act_visit<double>("dbl_col1", mean_roller1).get_result();
-    assert(abs(res_sra[2] - 3.3) < 0.00001);
+    assert(fabs(res_sra[2] - 3.3) < 0.00001);
 
     CumSumVisitor<double> cs_visitor;
     const auto &res_cs =
         dfv.single_act_visit<double>("dbl_col1", cs_visitor).get_result();
-    assert(abs(res_cs[0] - 2.2) < 0.00001);
-    assert(abs(res_cs[1] - 5.5) < 0.00001);
-    assert(abs(res_cs[2] - 9.9) < 0.00001);
+    assert(fabs(res_cs[0] - 2.2) < 0.00001);
+    assert(fabs(res_cs[1] - 5.5) < 0.00001);
+    assert(fabs(res_cs[2] - 9.9) < 0.00001);
 
     CumProdVisitor<double> cp_visitor;
     const auto &res_cp =
         dfv.single_act_visit<double>("dbl_col1", cp_visitor).get_result();
-    assert(abs(res_cp[0] - 2.2) < 0.00001);
-    assert(abs(res_cp[1] - 7.26) < 0.00001);
-    assert(abs(res_cp[2] - 31.944) < 0.00001);
+    assert(fabs(res_cp[0] - 2.2) < 0.00001);
+    assert(fabs(res_cp[1] - 7.26) < 0.00001);
+    assert(fabs(res_cp[2] - 31.944) < 0.00001);
 
     CumMinVisitor<double> cmin_visitor;
     const auto &res_cmin =
         dfv.single_act_visit<double>("dbl_col1", cmin_visitor).get_result();
-    assert(abs(res_cmin[0] - 2.2) < 0.00001);
-    assert(abs(res_cmin[1] - 2.2) < 0.00001);
-    assert(abs(res_cmin[2] - 2.2) < 0.00001);
+    assert(fabs(res_cmin[0] - 2.2) < 0.00001);
+    assert(fabs(res_cmin[1] - 2.2) < 0.00001);
+    assert(fabs(res_cmin[2] - 2.2) < 0.00001);
 
     CumMaxVisitor<double> cmax_visitor;
     const auto &res_cmax =
         dfv.single_act_visit<double>("dbl_col1", cmax_visitor).get_result();
-    assert(abs(res_cmax[0] - 2.2) < 0.00001);
-    assert(abs(res_cmax[1] - 3.3) < 0.00001);
-    assert(abs(res_cmax[2] - 4.4) < 0.00001);
+    assert(fabs(res_cmax[0] - 2.2) < 0.00001);
+    assert(fabs(res_cmax[1] - 3.3) < 0.00001);
+    assert(fabs(res_cmax[2] - 4.4) < 0.00001);
 
     MyDataFrameView dfv2 = 
         df.get_view_by_idx<double>(Index2D<unsigned long> { 2, 9 });
@@ -3710,65 +3710,140 @@ static void test_view_visitors()  {
     AutoCorrVisitor<double> ac_visitor;
     const auto &res_ac =
         dfv2.single_act_visit<double>("dbl_col5", ac_visitor).get_result();
-    assert(abs(res_ac[1] - -0.36855) < 0.00001);
-    // assert(abs(res_ac[5] - 0.67957) < 0.0001);
+    assert(fabs(res_ac[1] - -0.36855) < 0.00001);
+    // assert(fabs(res_ac[5] - 0.67957) < 0.0001);
 
     ReturnVisitor<double> ret_visitor(return_policy::monetary);
     const auto &res_ret =
         df.single_act_visit<double>("dbl_col4", ret_visitor).get_result();
-    assert(abs(res_ret[0] - -1.5) < 0.00001);
-    assert(abs(res_ret[6] - 0.3) < 0.00001);
+    assert(fabs(res_ret[0] - -1.5) < 0.00001);
+    assert(fabs(res_ret[6] - 0.3) < 0.00001);
 
     MedianVisitor<double> med_visitor;
     const auto &res_med =
         dfv2.single_act_visit<double>("dbl_col3", med_visitor).get_result();
-    assert(abs(res_med - 4.95) < 0.00001);
+    assert(fabs(res_med - 4.95) < 0.00001);
 
     ModeVisitor<2, double> mode_visitor;
     const auto &res_mode =
         dfv2.single_act_visit<double>("dbl_col6", mode_visitor).get_result();
-    assert(abs(res_mode[1].value - 3.3) < 0.00001);
+    assert(fabs(res_mode[1].value - 3.3) < 0.00001);
 
     DiffVisitor<double> diff_visitor(1);
     const auto &res_diff =
         dfv.single_act_visit<double>("dbl_col1", diff_visitor).get_result();
     assert(res_diff.size() == 2);
-    assert(abs(res_diff[0] - 1.1) < 0.00001);
-    assert(abs(res_diff[1] - 1.1) < 0.00001);
+    assert(fabs(res_diff[0] - 1.1) < 0.00001);
+    assert(fabs(res_diff[1] - 1.1) < 0.00001);
 
     ZScoreVisitor<double> zs_visitor;
     const auto &res_zs =
         dfv2.single_act_visit<double>("dbl_col5", zs_visitor).get_result();
-    assert(abs(res_zs[2] - -1.61418) < 0.00001);
-    assert(abs(res_zs[4] - 0.04336) < 0.00001);
+    assert(fabs(res_zs[2] - -1.61418) < 0.00001);
+    assert(fabs(res_zs[4] - 0.04336) < 0.00001);
 }
 
 // -----------------------------------------------------------------------------
+
+struct  Point  {
+
+    double  x { 0.0 };
+    double  y { 0.0 };
+
+    Point() = default;
+    Point(double xx, double yy) : x(xx), y(yy)  {   }
+    Point(const Point &) = default;
+    Point &operator = (const Point &) = default;
+
+    friend Point operator + (const Point &lhs, const Point &rhs)  {
+
+        return (Point(lhs.x + rhs.x, lhs.y + rhs.y));
+    }
+    friend Point operator / (const Point &lhs, double rhs)  {
+
+        return (Point(lhs.x / rhs, lhs.y / rhs));
+    }
+};
+
+static double point_distance(const Point &lhs, const Point &rhs)  {
+
+    return ((lhs.x - rhs.x) * (lhs.x - rhs.x) +
+            (lhs.y - rhs.y) * (lhs.y - rhs.y));
+}
 
 static void test_k_means()  {
 
     std::cout << "\nTesting k-means visitor ..." << std::endl;
 
+    const size_t            item_cnt = 1024;
     MyDataFrame             df;
     RandGenParams<double>   p;
 
     p.mean = 1.0;  // Default
     p.std = 0.005;
+    p.seed = 10;
 
-    df.load_data(MyDataFrame::gen_sequence_index(0, 1024, 1),
-                 std::make_pair("col1", gen_lognormal_dist<double>(1024)));
+    df.load_data(MyDataFrame::gen_sequence_index(0, item_cnt, 1),
+                 std::make_pair("col1",
+                                gen_lognormal_dist<double>(item_cnt, p)));
 
     KMeansVisitor<5, double>    km_visitor(1000);
 
     const auto &result =
         df.single_act_visit<double>("col1", km_visitor).get_result();
 
+    bool    found = false;
+
     for (auto iter : result)  {
-        for (auto iter2 : iter)  {
-            std::cout << iter2 << ", ";
+        if (::fabs(iter[0] - 1.89348) < 0.00001)  {
+            if (::fabs(iter[6] - 1.44231) < 0.00001)  {
+                found = true;
+                break;
+            }
         }
-        std::cout << "\n\n" << std::endl;
     }
+    assert(found);
+    found = false;
+    for (auto iter : result)  {
+        if (::fabs(iter[0] - 0.593126) < 0.00001)  {
+            if (::fabs(iter[2] - 0.950026) < 0.00001)  {
+                found = true;
+                break;
+            }
+        }
+    }
+    assert(found);
+    found = false;
+    for (auto iter : result)  {
+        if (::fabs(iter[0] - 14.2245) < 0.0001)  {
+            found = true;
+            break;
+        }
+    }
+    assert(found);
+    found = false;
+    for (auto iter : result)  {
+        if (::fabs(iter[0] - 6.90427) < 0.00001)  {
+            found = true;
+            break;
+        }
+    }
+    assert(found);
+    found = false;
+    for (auto iter : result)  {
+        if (::fabs(iter[0] - 3.8146) < 0.00001)  {
+            found = true;
+            break;
+        }
+    }
+    assert(found);
+
+    // for (auto iter : result)  {
+    //     for (auto iter2 : iter)  {
+    //         std::cout << iter2 << ", ";
+    //     }
+    //     std::cout << "\n\n" << std::endl;
+    // }
 }
 
 // -----------------------------------------------------------------------------

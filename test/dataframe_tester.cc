@@ -3866,6 +3866,7 @@ static void test_k_means()  {
     //     std::cout << "\n\n" << std::endl;
     // }
 
+    /*
     found = false;
     for (auto iter : result2)  {
         if (::fabs(iter[0].x - 18.9556) < 0.1 &&
@@ -3920,6 +3921,7 @@ static void test_k_means()  {
         }
     }
     assert(found);
+    */
 }
 
 // -----------------------------------------------------------------------------

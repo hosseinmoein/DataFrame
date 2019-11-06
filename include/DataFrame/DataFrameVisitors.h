@@ -621,7 +621,7 @@ public:
 
         if (roll_count_ == 0)  return;
 
-        const size_t    col_s = column.size();
+        const size_t    col_s = std::min(idx.size(), column.size());
 
         result_.reserve(col_s);
 
@@ -808,18 +808,19 @@ struct CumSumVisitor {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &, const H &column)  {
+    operator() (const K &idx, const H &column)  {
 
-        value_type  running_sum = 0;
+        value_type      running_sum = 0;
+        const size_type col_s = std::min(idx.size(), column.size());
 
-        sum_.reserve(column.size());
-        for (const auto citer : column)  {
-            if (! skip_nan_ || ! is_nan__(citer))  {
-                running_sum += citer;
+        sum_.reserve(col_s);
+        for (size_type i = 0; i < col_s; ++i)  {
+            if (! skip_nan_ || ! is_nan__(column[i]))  {
+                running_sum += column[i];
                 sum_.push_back(running_sum);
             }
             else
-                sum_.push_back(citer);
+                sum_.push_back(column[i]);
         }
     }
     inline void pre ()  { sum_.clear(); }
@@ -849,18 +850,19 @@ struct CumProdVisitor {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &, const H &column)  {
+    operator() (const K &idx, const H &column)  {
 
-        value_type  running_prod = 1;
+        value_type      running_prod = 1;
+        const size_type col_s = std::min(idx.size(), column.size());
 
-        prod_.reserve(column.size());
-        for (const auto citer : column)  {
-            if (! skip_nan_ || ! is_nan__(citer))  {
-                running_prod *= citer;
+        prod_.reserve(col_s);
+        for (size_type i = 0; i < col_s; ++i)  {
+            if (! skip_nan_ || ! is_nan__(column[i]))  {
+                running_prod *= column[i];
                 prod_.push_back(running_prod);
             }
             else
-                prod_.push_back(citer);
+                prod_.push_back(column[i]);
         }
     }
     inline void pre ()  { prod_.clear(); }
@@ -887,21 +889,22 @@ struct CumMaxVisitor {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &, const H &column)  {
+    operator() (const K &idx, const H &column)  {
 
         if (column.empty())  return;
 
-        value_type  running_max = column[0];
+        value_type      running_max = column[0];
+        const size_type col_s = std::min(idx.size(), column.size());
 
-        max_.reserve(column.size());
-        for (const auto citer : column)  {
-            if (! skip_nan_ || ! is_nan__(citer))  {
-                if (citer > running_max)
-                    running_max = citer;
+        max_.reserve(col_s);
+        for (size_type i = 0; i < col_s; ++i)  {
+            if (! skip_nan_ || ! is_nan__(column[i]))  {
+                if (column[i] > running_max)
+                    running_max = column[i];
                 max_.push_back(running_max);
             }
             else
-                max_.push_back(citer);
+                max_.push_back(column[i]);
         }
     }
     inline void pre ()  { max_.clear(); }
@@ -928,21 +931,22 @@ struct CumMinVisitor {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &, const H &column)  {
+    operator() (const K &idx, const H &column)  {
 
         if (column.empty())  return;
 
-        value_type  running_min = column[0];
+        value_type      running_min = column[0];
+        const size_type col_s = std::min(idx.size(), column.size());
 
-        min_.reserve(column.size());
-        for (const auto citer : column)  {
-            if (! skip_nan_ || ! is_nan__(citer))  {
-                if (citer < running_min)
-                    running_min = citer;
+        min_.reserve(col_s);
+        for (size_type i = 0; i < col_s; ++i)  {
+            if (! skip_nan_ || ! is_nan__(column[i]))  {
+                if (column[i] < running_min)
+                    running_min = column[i];
                 min_.push_back(running_min);
             }
             else
-                min_.push_back(citer);
+                min_.push_back(column[i]);
         }
     }
     inline void pre ()  { min_.clear(); }
@@ -975,9 +979,9 @@ public:
     AutoCorrVisitor () = default;
     template <typename K, typename H>
     inline void
-    operator() (const K &, const H &column)  {
+    operator() (const K &idx, const H &column)  {
 
-        const size_type col_len = column.size();
+        const size_type col_len = std::min(idx.size(), column.size());
 
         if (col_len <= 4)  return;
 
@@ -1054,10 +1058,10 @@ struct ReturnVisitor  {
     using result_type = std::vector<value_type>;
 
     explicit ReturnVisitor (return_policy rp) : ret_p_(rp)  {   }
-    inline void operator() (const std::vector<index_type> &,
+    inline void operator() (const std::vector<index_type> &idx,
                             const std::vector<value_type> &column)  {
 
-        const size_type col_len = column.size();
+        const size_type col_len = std::min(idx.size(), column.size());
 
         if (col_len < 3)  return;
 
@@ -1204,7 +1208,8 @@ struct MedianVisitor  {
     inline void
     operator() (const K &idx, const H &column)  {
 
-        const size_type                         vec_size = column.size();
+        const size_type                         vec_size =
+            std::min(idx.size(), column.size());
         KthValueVisitor<value_type, index_type> kv_visitor (vec_size >> 1);
 
 
@@ -1268,7 +1273,8 @@ struct  ModeVisitor {
 
         DataItem                                    nan_item(
             std::numeric_limits<value_type>::quiet_NaN());
-        const size_type                             col_size = column.size();
+        const size_type                             col_size =
+            std::min(idx.size(), column.size());
         std::unordered_map<value_type, DataItem>    val_map (col_size);
 
         for (size_type i = 0; i < col_size; ++i)  {
@@ -1344,9 +1350,9 @@ struct DiffVisitor  {
         : periods_(periods), skip_nan_(skipnan) {  }
 
     template <typename K, typename H>
-    inline void operator() (const K &, const H &column)  {
+    inline void operator() (const K &idx, const H &column)  {
 
-        const size_type col_len = column.size();
+        const size_type col_len = std::min(idx.size(), column.size());
 
         result_.reserve(col_len);
         if (periods_ >= 0)  {
@@ -1409,7 +1415,7 @@ struct ZScoreVisitor {
 
         MeanVisitor<value_type> mvisit;
         StdVisitor<value_type>  svisit;
-        const size_type         col_s = col.size();
+        const size_type         col_s = std::min(idx.size(), col.size());
 
         mvisit.pre();
         svisit.pre();
@@ -1425,7 +1431,7 @@ struct ZScoreVisitor {
         const value_type    m = mvisit.get_result();
         const value_type    s = svisit.get_result();
 
-        zscore_.reserve(col.size());
+        zscore_.reserve(col_s);
         for (const auto citer : col)
             zscore_.push_back((citer - m) / s);
     }

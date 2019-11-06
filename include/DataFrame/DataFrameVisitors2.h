@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include <DataFrame/DataFrameTypes.h>
+#include <DataFrame/DataFrameVisitors.h>
 
 #include <functional>
 
@@ -35,9 +35,9 @@ private:
     result_type     clusters_ { };
 
     template<typename H>
-    inline void calc_clusters_(const H &col, const means_type &k_means)  {
-
-        const size_type col_size = col.size();
+    inline void calc_clusters_(const H &col,
+                               const means_type &k_means,
+                               size_type col_size)  {
 
         for (size_type i = 0; i < K; ++i)  {
             clusters_[i].reserve(col_size / K + 2);
@@ -61,10 +61,9 @@ private:
     }
 
     template<typename H>
-    inline void calc_k_means_(const H &col)  {
+    inline void calc_k_means_(const H &col, size_type col_size)  {
 
-        const size_type col_size = col.size();
-        means_type      k_means { };
+        means_type  k_means { };
 
         std::random_device                          rd;
         std::mt19937                                gen(rd());
@@ -123,13 +122,16 @@ private:
             if (done)  break;
         }
 
-        calc_clusters_(col, k_means);
+        calc_clusters_(col, k_means, col_size);
     }
 
 public:
 
     template<typename IV, typename H>
-    inline void operator() (const IV &, const H &col)  { calc_k_means_(col); }
+    inline void operator() (const IV &idx, const H &col)  {
+
+        calc_k_means_(col, std::min(idx.size(), col.size()));
+    }
 
     inline void pre ()  {  }
     inline void post ()  {  }
@@ -142,6 +144,13 @@ public:
                 return ((x - y) * (x - y));
             })
         : iter_num_(num_of_iter), dfunc_(f)  {   }
+};
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename I = unsigned long>
+struct  AffinityPropagationVisitor  {
+
 };
 
 } // namespace hmdf

@@ -705,6 +705,25 @@ static void test_get_view_by_idx_slicing()  {
     assert(dfv.get_column<double>("col_3")[0] ==
            df.get_column<double>("col_3")[2]);
     assert(dfv.get_column<double>("col_3")[0] == 88.0);
+    
+    bool threw = false;
+    try {
+        MyDataFrameView dfv2 =
+            df.get_view_by_idx<double, int>(
+                Index2D<MyDataFrame::IndexType> { 123449, 123460 });
+    } catch(BadRange &e) {
+        threw = true;
+    }
+    assert(threw);
+    threw = false;
+    try {
+        MyDataFrameView dfv2 =
+            df.get_view_by_idx<double, int>(
+                Index2D<MyDataFrame::IndexType> { 123452, 123467 });
+    } catch(BadRange &e) {
+        threw = true;
+    }
+    assert(threw);
 }
 
 // -----------------------------------------------------------------------------

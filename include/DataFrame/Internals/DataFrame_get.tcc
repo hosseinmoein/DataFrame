@@ -695,15 +695,8 @@ DataFrame<I, H>::get_view_by_idx (Index2D<IndexType> range)  {
     DataFrameView<IndexType>    dfv;
 
     if ((range.begin < indices_.front()) || (range.end > indices_.back()))
-    {
-        char buffer [512];
-
-        sprintf (buffer,
-                "DataFrame::get_view_by_idx(): ERROR: "
-                "Bad begin, end range: %ld, %ld",
-                range.begin, range.end);
-        throw BadRange (buffer);
-    }
+        throw BadRange ("DataFrame::get_view_by_idx(): ERROR: "
+                        "Bad begin, end range");
 
     if (lower != indices_.end())  {
         dfv.indices_ =

@@ -1127,12 +1127,12 @@ struct KthValueVisitor  {
 
     explicit KthValueVisitor (size_type ke, bool skipnan = true)
         : kth_element_(ke), skip_nan_(skipnan)  {   }
+
     template <typename K, typename H>
     inline void
     operator() (const K &, const H &column)  {
 
-        result_ =
-            find_kth_element_ (column.begin(), column.end(), kth_element_);
+        result_ = find_kth_element_(column.begin(), column.end(), kth_element_);
     }
     inline void pre ()  { result_ = value_type(); }
     inline void post ()  {   }
@@ -1164,7 +1164,8 @@ private:
         }
 
         std::vector<value_type> tmp_vec (vec_size - 1);
-        value_type              kth_value = *(begin + static_cast<long>(vec_size / 2));
+        value_type              kth_value =
+            *(begin + static_cast<long>(vec_size / 2));
         size_type               less_count = 0;
         size_type               great_count = vec_size - 2;
 
@@ -1208,19 +1209,20 @@ struct MedianVisitor  {
     inline void
     operator() (const K &idx, const H &column)  {
 
-        const size_type                         vec_size =
-            std::min(idx.size(), column.size());
+        const size_type                         vec_size = column.size();
         KthValueVisitor<value_type, index_type> kv_visitor (vec_size >> 1);
 
 
         kv_visitor.pre();
         kv_visitor(idx, column);
+        kv_visitor.post();
         result_ = kv_visitor.get_result();
         if (! (vec_size & 0x0001))  { // even
             KthValueVisitor<value_type, I>   kv_visitor2 ((vec_size >> 1) + 1);
 
             kv_visitor2.pre();
             kv_visitor2(idx, column);
+            kv_visitor2.post();
             result_ = (result_ + kv_visitor2.get_result()) / value_type(2);
         }
     }

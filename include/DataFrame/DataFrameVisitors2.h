@@ -44,19 +44,19 @@ private:
             clusters_[i].push_back(k_means[i]);
         }
  
-        for (const auto &citer : col)  {
+        for (size_type j = 0; j < col_size; ++j)  {
             double      min_dist = std::numeric_limits<double>::max();
             size_type   min_idx;
 
             for (size_type i = 0; i < K; ++i)  {
-                const double    dist = dfunc_(citer, k_means[i]);
+                const double    dist = dfunc_(col[j], k_means[i]);
 
                 if (dist < min_dist)  {
                     min_dist = dist;
                     min_idx = i;
                 }
             }
-            clusters_[min_idx].push_back(citer);
+            clusters_[min_idx].push_back(col[j]);
         }
     }
 
@@ -162,3 +162,150 @@ struct  AffinityPropagationVisitor  {
 // tab-width:4
 // c-basic-offset:4
 // End:
+
+// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+
+//N is the number of two-dimension data points
+//S is the similarity matrix
+//R is the responsibility matrix
+//A is the availabiltiy matrix
+//iter is the maximum number of iterations
+//damping_factor is the damping factor
+const size_type N = 25;
+
+double      S[N][N] = {0};
+double      R[N][N] = {0};
+double      A[N][N] = {0};
+size_type   iter = 230;
+double      damping_factor = 0.9;
+
+const char  *dataFileName = "ToyProblemData.txt";
+
+void readS(double S[N][N], const char *dfn) {
+
+    // read data 
+    ifstream    myfile(dfn);
+    
+    double  dataPoint[N][2] = {0};
+
+    for (size_type i = 0; i < N; i++)  {
+        myfile >> dataPoint[i][0] >> dataPoint[i][1];
+    }
+    myfile.close();
+    
+    size_type       size = N * (N - 1) / 2;
+    vector<double>  tmpS;
+
+    // compute similarity between data point i and j (i is not equal to j)
+    for (size_type i = 0; i < N - 1; i++)
+        for (size_type j = i + 1; j < N; j++) {
+            S[i][j] = -((dataPoint[i][0] - dataPoint[j][0]) *
+                        (dataPoint[i][0] - dataPoint[j][0]) +
+                        (dataPoint[i][1] - dataPoint[j][1]) *
+                        (dataPoint[i][1] - dataPoint[j][1]));
+            S[j][i] = S[i][j];
+            tmpS.push_back(S[i][j]); 
+        }
+
+    // compute preferences for all data points: median 
+    sort(tmpS.begin(), tmpS.end());
+
+    double  median = 0;
+    
+    if (size % 2 == 0) 
+        median = (tmpS[size / 2] + tmpS[size / 2 - 1]) / 2;
+    else 
+        median = tmpS[size / 2];
+
+    for (size_type i = 0; i < N; i++)  S[i][i] = median;
+}
+
+int main()  {
+
+    readS(S, dataFileName);
+    
+    for (size_type m = 0; m < iter; m++)  {
+        // update responsibility
+        for (size_type i = 0; i < N; i++)
+            for (size_type k = 0; k < N; k++)  {
+                double  max = -1e100;
+
+                for (size_type kk = 0; kk < k; kk++)  {
+                    if (S[i][kk] + A[i][kk] > max) 
+                        max = S[i][kk] + A[i][kk];
+                }
+                for (size_type kk = k + 1; kk < N; kk++)  {
+                    if (S[i][kk] + A[i][kk] > max) 
+                        max = S[i][kk] + A[i][kk];
+                }
+
+                R[i][k] = (1 - damping_factor) * (S[i][k] - max) +
+                          damping_factor * R[i][k];
+            }
+
+        // update availability
+        for (size_type i = 0; i < N; i++)
+            for (size_type k = 0; k < N; k++)  {
+                if (i == k)  {
+                    double  sum = 0.0;
+
+                    for (size_type ii = 0; ii < i; ii++)
+                        sum += max(0.0, R[ii][k]);
+                    for(size_type ii = i + 1; ii < N; ii++)
+                        sum += max(0.0, R[ii][k]);
+
+                    A[i][k] = (1 - damping_factor) * sum +
+                              damping_factor * A[i][k];
+                }
+                else  {
+                    double      sum = 0.0;
+                    size_type   maxik = max(i, k);
+                    size_type   minik = min(i, k);
+
+                    for (size_type ii = 0; ii < minik; ii++)
+                        sum += max(0.0, R[ii][k]);
+                    for (size_type ii = minik + 1; ii < maxik; ii++)
+                        sum += max(0.0, R[ii][k]);
+                    for (size_type ii = maxik + 1; ii < N; ii++)
+                        sum += max(0.0, R[ii][k]);
+
+                    A[i][k] = (1 - damping_factor) * min(0.0, R[k][k]+sum) +
+                              damping_factor * A[i][k];
+                }
+            }
+    }
+    
+    // find the exemplar
+    vector<size_type> center;
+
+    for (size_type i = 0; i < N; i++)
+        if (R[i][i] + A[i][i] > 0)
+            center.push_back(i);
+
+    // data point assignment, idx[i] is the exemplar for data point i
+    size_type idx[N] = { 0 };
+
+    for (size_type i = 0; i < N; i++)  {
+        size_type   idxForI = 0;
+        double      maxSim = -1e100; 
+
+        for (size_type j = 0; j < center.size(); j++) {
+            size_type c = center[j];
+
+            if (S[i][c] > maxSim)  {
+                maxSim = S[i][c];
+                idxForI = c;
+            }
+        }
+        idx[i] = idxForI;
+    }
+
+    // output the assignment
+    for (size_type i = 0; i < N; i++)
+        cout << idx[i] << endl; 
+}
+

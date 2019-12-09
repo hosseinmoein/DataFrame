@@ -47,6 +47,7 @@ public:
     inline void shrink_to_fit()  { vector_.shrink_to_fit(); }
 
     inline reference at(size_type n)  { return (*(vector_[n])); }
+    inline pointer &ptr_at(size_type n)  { return (vector_[n]); }
     inline const_reference at(size_type n) const { return (*(vector_[n])); }
     inline reference operator[](size_type n)  { return (at(n)); }
     inline const_reference operator[](size_type n) const { return (at(n)); }

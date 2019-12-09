@@ -3763,6 +3763,12 @@ struct  Point  {
 
         return (Point(lhs.x / rhs, lhs.y / rhs));
     }
+
+    template<typename S>
+    friend S &operator << (S &s, const Point &rhs)  {
+
+        return (s << rhs.x << ", " << rhs.y);
+    }
 };
 
 static double point_distance(const Point &lhs, const Point &rhs)  {
@@ -3789,12 +3795,14 @@ static void test_k_means()  {
 
     KMeansVisitor<5, double>    km_visitor(1000);
 
-    const auto &result =
-        df.single_act_visit<double>("col1", km_visitor).get_result();
+    df.single_act_visit<double>("col1", km_visitor);
 
-    bool    found = false;
+    // Using the calculated means, separate the given column into clusters
+    const auto  clusters =
+        km_visitor.get_clusters(df.get_index(), df.get_column<double>("col1"));
+    bool        found = false;
 
-    for (auto iter : result)  {
+    for (auto iter : clusters)  {
         if (::fabs(iter[0] - 1.89348) < 0.00001)  {
             if (::fabs(iter[6] - 1.44231) < 0.00001)  {
                 found = true;
@@ -3804,7 +3812,7 @@ static void test_k_means()  {
     }
     assert(found);
     found = false;
-    for (auto iter : result)  {
+    for (auto iter : clusters)  {
         if (::fabs(iter[0] - 0.593126) < 0.00001)  {
             if (::fabs(iter[2] - 0.950026) < 0.00001)  {
                 found = true;
@@ -3814,7 +3822,7 @@ static void test_k_means()  {
     }
     assert(found);
     found = false;
-    for (auto iter : result)  {
+    for (auto iter : clusters)  {
         if (::fabs(iter[0] - 14.2245) < 0.0001)  {
             found = true;
             break;
@@ -3822,7 +3830,7 @@ static void test_k_means()  {
     }
     assert(found);
     found = false;
-    for (auto iter : result)  {
+    for (auto iter : clusters)  {
         if (::fabs(iter[0] - 6.90427) < 0.00001)  {
             found = true;
             break;
@@ -3830,7 +3838,7 @@ static void test_k_means()  {
     }
     assert(found);
     found = false;
-    for (auto iter : result)  {
+    for (auto iter : clusters)  {
         if (::fabs(iter[0] - 3.8146) < 0.00001)  {
             found = true;
             break;
@@ -3856,19 +3864,22 @@ static void test_k_means()  {
 
     KMeansVisitor<5, Point> km_visitor2(1000, point_distance);
 
-    const auto &result2 =
-        df.single_act_visit<Point>("point_col", km_visitor2).get_result();
+    df.single_act_visit<Point>("point_col", km_visitor2);
 
-    // for (auto iter : result2)  {
+    // Using the calculated means, separate the given column into clusters
+    const auto  clusters2 =
+        km_visitor2.get_clusters(df.get_index(),
+                                 df.get_column<Point>("point_col"));
+
+    // for (auto iter : clusters2)  {
     //     for (auto iter2 : iter)  {
     //         std::cout << iter2.x << " | " << iter2.y << ", ";
     //     }
     //     std::cout << "\n\n" << std::endl;
     // }
 
-    /*
     found = false;
-    for (auto iter : result2)  {
+    for (auto iter : clusters2)  {
         if (::fabs(iter[0].x - 18.9556) < 0.1 &&
             ::fabs(iter[0].y - 2.17537) < 0.1)  {
             if (::fabs(iter[6].x - 16.7309) < 0.1 &&
@@ -3879,8 +3890,9 @@ static void test_k_means()  {
         }
     }
     assert(found);
+    /*
     found = false;
-    for (auto iter : result2)  {
+    for (auto iter : clusters2)  {
         if (::fabs(iter[0].x - 0.943977) < 0.1 &&
             ::fabs(iter[0].y - 0.910989) < 0.1)  {
             if (::fabs(iter[2].x - 0.30509) < 0.1 &&
@@ -3892,7 +3904,7 @@ static void test_k_means()  {
     }
     assert(found);
     found = false;
-    for (auto iter : result2)  {
+    for (auto iter : clusters2)  {
         if (::fabs(iter[0].x - 4.31973) < 0.1 &&
             ::fabs(iter[0].y - 1.24214) < 0.1)  {
             if (::fabs(iter[3].x - 4.68381) < 0.1 &&
@@ -3904,7 +3916,7 @@ static void test_k_means()  {
     }
     assert(found);
     found = false;
-    for (auto iter : result2)  {
+    for (auto iter : clusters2)  {
         if (::fabs(iter[0].x - 1.5694) < 0.1 &&
             ::fabs(iter[0].y - 15.3338) < 0.1)  {
             found = true;
@@ -3913,7 +3925,7 @@ static void test_k_means()  {
     }
     assert(found);
     found = false;
-    for (auto iter : result2)  {
+    for (auto iter : clusters2)  {
         if (::fabs(iter[0].x - 1.29624) < 0.1 &&
             ::fabs(iter[0].y - 4.13919) < 0.1)  {
             found = true;
@@ -3922,6 +3934,72 @@ static void test_k_means()  {
     }
     assert(found);
     */
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_affinity_propagation()  {
+
+    std::cout << "\nTesting affinity propagation visitor ..." << std::endl;
+
+    const size_t            item_cnt = 100;
+    MyDataFrame             df;
+    RandGenParams<double>   p;
+    std::vector<double>     final_col;
+    std::vector<double>     col_data;
+
+    p.seed = 1962;
+
+    p.min_value = 0;
+    p.max_value = 10;
+    col_data = gen_uniform_real_dist<double>(item_cnt, p);
+    final_col.insert(final_col.end(), col_data.begin(), col_data.end());
+
+    p.min_value = 20;
+    p.max_value = 30;
+    col_data = gen_uniform_real_dist<double>(item_cnt, p);
+    final_col.insert(final_col.end(), col_data.begin(), col_data.end());
+
+    p.min_value = 40;
+    p.max_value = 50;
+    col_data = gen_uniform_real_dist<double>(item_cnt, p);
+    final_col.insert(final_col.end(), col_data.begin(), col_data.end());
+
+    p.min_value = 60;
+    p.max_value = 70;
+    col_data = gen_uniform_real_dist<double>(item_cnt, p);
+    final_col.insert(final_col.end(), col_data.begin(), col_data.end());
+
+    p.min_value = 80;
+    p.max_value = 90;
+    col_data = gen_uniform_real_dist<double>(item_cnt, p);
+    final_col.insert(final_col.end(), col_data.begin(), col_data.end());
+
+    df.load_data(MyDataFrame::gen_sequence_index(0, item_cnt * 5, 1),
+                 std::make_pair("col1", final_col));
+    df.shuffle<1, double>({"col1"}, false);
+
+    KMeansVisitor<5, double>            km_visitor(1000);
+    AffinityPropagationVisitor<double>  ap_visitor(50);
+
+    df.single_act_visit<double>("col1", km_visitor);
+    df.single_act_visit<double>("col1", ap_visitor);
+
+    // Using the calculated means, separate the given column into clusters
+    const auto  k_means = km_visitor.get_result();
+    const auto  results =
+        ap_visitor.get_clusters(df.get_index(), df.get_column<double>("col1"));
+
+    for (auto iter : k_means)  {
+        std::cout << iter << ", ";
+    }
+    std::cout << "\n\n" << std::endl;
+    for (auto iter : results)  {
+        for (auto iter2 : iter)  {
+            std::cout << iter2 << ", ";
+        }
+        std::cout << "\n" << std::endl;
+    }
 }
 
 // -----------------------------------------------------------------------------
@@ -3989,6 +4067,7 @@ int main(int argc, char *argv[]) {
     test_thread_safety();
     test_view_visitors();
     test_k_means();
+    test_affinity_propagation();
 
     return (0);
 }

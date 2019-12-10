@@ -85,7 +85,7 @@ private:
                     std::max<double>(1.0, counts[cluster]);
                 const value_type    value = new_means[cluster] / count;
 
-                if (dfunc_(value, k_means_[cluster]) > 0.0000001)  { 
+                if (dfunc_(value, k_means_[cluster]) > 0.0000001)  {
                     done = false;
                     k_means_[cluster] = value;
                 }
@@ -115,7 +115,7 @@ public:
             clusters[i].reserve(col_size / K + 2);
             clusters[i].push_back(const_cast<value_type *>(&(k_means_[i])));
         }
- 
+
         for (size_type j = 0; j < col_size; ++j)  {
             double      min_dist = std::numeric_limits<double>::max();
             size_type   min_idx;
@@ -284,7 +284,7 @@ public:
 
         get_avail_and_respon(simil, csize, avail, respon);
 
-        centers_.reserve(std::max(csize / 100, size_type(16)));
+        centers_.reserve(std::min(csize / 100, size_type(16)));
         for (size_type i = 0; i < csize; ++i)  {
             if (respon[i * csize + i] + avail[i * csize + i] > 0.0)
                 centers_.push_back(const_cast<value_type *>(&(col[i])));
@@ -304,7 +304,7 @@ public:
             clusters.resize(centers_size);
             for (size_type i = 0; i < centers_size; ++i)
                 clusters[i].reserve(csize / centers_size);
- 
+
             for (size_type j = 0; j < csize; ++j)  {
                 double      min_dist = std::numeric_limits<double>::max();
                 size_type   min_idx;

@@ -3942,13 +3942,13 @@ static void test_affinity_propagation()  {
 
     std::cout << "\nTesting affinity propagation visitor ..." << std::endl;
 
-    const size_t            item_cnt = 100;
+    const size_t            item_cnt = 50;
     MyDataFrame             df;
     RandGenParams<double>   p;
     std::vector<double>     final_col;
     std::vector<double>     col_data;
 
-    p.seed = 1962;
+    p.seed = 3575984165U;
 
     p.min_value = 0;
     p.max_value = 10;

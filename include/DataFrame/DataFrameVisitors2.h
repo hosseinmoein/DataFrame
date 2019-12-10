@@ -150,7 +150,7 @@ public:
 // ----------------------------------------------------------------------------
 
 template<typename T, typename I = unsigned long>
-struct  AffinityPropagationVisitor  {
+struct  AffinityPropVisitor  {
 
 public:
 
@@ -158,7 +158,7 @@ public:
     using index_type = I;
     using size_type = std::size_t;
     using result_type = VectorPtrView<value_type>;
-    using cluster_type = std::vector<std::vector<value_type>>;
+    using cluster_type = std::vector<VectorPtrView<value_type>>;
     using distance_func =
         std::function<double(const value_type &x, const value_type &y)>;
 
@@ -317,7 +317,8 @@ public:
                         min_idx = i;
                     }
                 }
-                clusters[min_idx].push_back(col[j]);
+                clusters[min_idx].push_back(
+                    const_cast<value_type *>(&(col[j])));
             }
         }
 
@@ -328,7 +329,7 @@ public:
     inline void post ()  {  }
     inline const result_type &get_result () const  { return (centers_); }
 
-    AffinityPropagationVisitor(
+    AffinityPropVisitor(
         size_type num_of_iter,
         distance_func f =
             [](const value_type &x, const value_type &y) -> double {

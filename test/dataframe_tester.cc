@@ -3979,8 +3979,8 @@ static void test_affinity_propagation()  {
                  std::make_pair("col1", final_col));
     df.shuffle<1, double>({"col1"}, false);
 
-    KMeansVisitor<5, double>            km_visitor(1000);
-    AffinityPropagationVisitor<double>  ap_visitor(50);
+    KMeansVisitor<5, double>    km_visitor(1000);
+    AffinityPropVisitor<double> ap_visitor(50);
 
     df.single_act_visit<double>("col1", km_visitor);
     df.single_act_visit<double>("col1", ap_visitor);

@@ -17,19 +17,19 @@ namespace hmdf
 template<typename T>
 static inline void
 _sort_by_sorted_index_(std::vector<T> &to_be_sorted,
-                       std::vector<size_t> &sorted_idxs,
+                       std::vector<size_t> &sorting_idxs,
                        size_t idx_s)  {
 
     if (idx_s > 0)  {
         idx_s -= 1;
         for (size_t i = 0; i < idx_s; ++i)  {
             // while the element i is not yet in place
-            while (sorted_idxs[i] != sorted_idxs[sorted_idxs[i]])  {
+            while (sorting_idxs[i] != sorting_idxs[sorting_idxs[i]])  {
                 // swap it with the element at its final place
-                const size_t    j = sorted_idxs[i];
+                const size_t    j = sorting_idxs[i];
 
-                std::swap(to_be_sorted[j], to_be_sorted[sorted_idxs[j]]);
-                std::swap(sorted_idxs[i], sorted_idxs[j]);
+                std::swap(to_be_sorted[j], to_be_sorted[sorting_idxs[j]]);
+                std::swap(sorting_idxs[i], sorting_idxs[j]);
             }
         }
     }
@@ -640,12 +640,12 @@ void DataFrame<I, H>::sort(const char *by_name)  {
     make_consistent<Ts ...>();
 
     const size_type         idx_s = indices_.size();
-    std::vector<size_type>  sorted_idxs(idx_s);
+    std::vector<size_type>  sorting_idxs(idx_s);
 
-    std::iota(sorted_idxs.begin(), sorted_idxs.end(), 0);
+    std::iota(sorting_idxs.begin(), sorting_idxs.end(), 0);
 
     if (by_name == nullptr)  {
-        std::sort (sorted_idxs.begin(), sorted_idxs.end(),
+        std::sort (sorting_idxs.begin(), sorting_idxs.end(),
                    [this](size_type i, size_type j) -> bool  {
                        return (this->indices_[i] < this->indices_[j]);
                    });
@@ -667,17 +667,17 @@ void DataFrame<I, H>::sort(const char *by_name)  {
         const std::vector<T>    &idx_vec = hv.template get_vector<T>();
 
         guard.release();
-        std::sort (sorted_idxs.begin(), sorted_idxs.end(),
+        std::sort (sorting_idxs.begin(), sorting_idxs.end(),
                    [&x = idx_vec](size_type i, size_type j) -> bool {
                        return (x[i] < x[j]);
                    });
     }
 
-    sort_functor_<Ts ...>   functor (sorted_idxs, idx_s);
+    sort_functor_<Ts ...>   functor (sorting_idxs, idx_s);
 
     for (auto &iter : data_)
         iter.change(functor);
-    _sort_by_sorted_index_(indices_, sorted_idxs, idx_s);
+    _sort_by_sorted_index_(indices_, sorting_idxs, idx_s);
 
     return;
 }

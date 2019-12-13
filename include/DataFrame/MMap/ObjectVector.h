@@ -195,16 +195,15 @@ public:
     // they are cheap to create and copy around.
     //
 
-    class   iterator
-        : public std::iterator<std::random_access_iterator_tag,
-                               value_type, size_type>  {
+    class   iterator  {
 
     public:
 
         using iterator_category = std::random_access_iterator_tag;
-
+        using value_type = T;
         using pointer = value_type *;
         using reference = value_type &;
+        using difference_type = long;
 
     public:
 
@@ -299,16 +298,15 @@ public:
         friend class    ObjectVector::reverse_iterator;
     };
 
-    class   reverse_iterator
-        : public std::iterator<std::random_access_iterator_tag,
-                               value_type, size_type>  {
+    class   reverse_iterator  {
 
     public:
 
         using iterator_category = std::random_access_iterator_tag;
-
+        using value_type = T;
         using pointer = value_type *;
         using reference = value_type &;
+        using difference_type = long;
 
     public:
 
@@ -425,16 +423,15 @@ public:
         friend class    ObjectVector::const_iterator;
     };
 
-    class   const_iterator
-        : public std::iterator<std::random_access_iterator_tag,
-                               value_type const, size_type>  {
+    class   const_iterator  {
 
     public:
 
         using iterator_category = std::random_access_iterator_tag;
-
-        using pointer = const value_type *;
-        using reference = const value_type &;
+        using value_type = T;
+        using pointer = value_type *;
+        using reference = value_type &;
+        using difference_type = long;
 
     public:
 
@@ -479,9 +476,9 @@ public:
        // Following STL style, this iterator appears as a pointer
        // to value_type.
        //
-        inline pointer operator -> () const noexcept  { return (node_); }
+        inline const value_type *operator -> () const noexcept { return(node_); }
         inline reference operator * () const noexcept  { return (*node_); }
-        inline operator pointer () const noexcept  { return (node_); }
+        inline operator const pointer () const noexcept  { return (node_); }
 
        // ++Prefix
        //
@@ -553,21 +550,20 @@ public:
 
     private:
 
-        pointer node_ { nullptr };
+        const value_type    *node_ { nullptr };
 
         friend class    ObjectVector::const_reverse_iterator;
     };
 
-    class   const_reverse_iterator
-        : public std::iterator<std::random_access_iterator_tag,
-                               value_type const, size_type>  {
+    class   const_reverse_iterator  {
 
     public:
 
         using iterator_category = std::random_access_iterator_tag;
-
-        using pointer = const value_type *;
-        using reference = const value_type &;
+        using value_type = T;
+        using pointer = value_type *;
+        using reference = value_type &;
+        using difference_type = long;
 
     public:
 
@@ -612,9 +608,9 @@ public:
        // Following STL style, this iterator appears as a pointer
        // to value_type.
        //
-        inline pointer operator -> () const noexcept  { return (node_); }
+        inline const value_type *operator -> () const noexcept { return(node_); }
         inline reference operator * () const noexcept  { return (*node_); }
-        inline operator pointer () const noexcept  { return (node_); }
+        inline operator const pointer () const noexcept  { return (node_); }
 
        // ++Prefix
        //
@@ -690,7 +686,7 @@ public:
 
     private:
 
-        pointer node_ { nullptr };
+        const value_type    *node_ { nullptr };
     };
 
 public:

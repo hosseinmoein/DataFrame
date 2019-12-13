@@ -79,9 +79,10 @@ template<typename I, typename H>
 template<typename ... Ts>
 template<typename T2>
 void
-DataFrame<I, H>::sort_functor_<Ts ...>::operator() (T2 &vec) const  {
+DataFrame<I, H>::sort_functor_<Ts ...>::operator() (T2 &vec)  {
 
-    _sort_by_sorted_index_(vec, sorted_idxs, idx_s);
+    sorted_idxs_copy = sorted_idxs;
+    _sort_by_sorted_index_(vec, sorted_idxs_copy, idx_s);
     return;
 }
 

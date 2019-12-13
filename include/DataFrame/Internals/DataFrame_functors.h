@@ -43,10 +43,11 @@ struct sort_functor_ : DataVec::template visitor_base<Ts ...>  {
         : sorted_idxs(si), idx_s(is)  {   }
 
     const std::vector<size_t>   &sorted_idxs;
+    std::vector<size_t>         sorted_idxs_copy;
     const size_t                idx_s;
 
     template<typename T2>
-    void operator() (T2 &vec) const;
+    void operator() (T2 &vec);
 };
 
 // ----------------------------------------------------------------------------

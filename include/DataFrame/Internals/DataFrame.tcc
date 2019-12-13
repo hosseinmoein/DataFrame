@@ -14,6 +14,26 @@
 namespace hmdf
 {
 
+template<typename T>
+static inline void
+_sort_by_sorted_index_(std::vector<T> &to_be_sorted,
+                       std::vector<size_t> sorted_idxs,
+                       size_t idx_s)  {
+
+    for (size_t i = 0; i < idx_s - 1; ++i)  {
+        // while the element i is not yet in place
+        while (sorted_idxs[i] != sorted_idxs[sorted_idxs[i]])  {
+            // swap it with the element at its final place
+            const size_t    j = sorted_idxs[i];
+
+            std::swap(to_be_sorted[j], to_be_sorted[sorted_idxs[j]]);
+            std::swap(sorted_idxs[i], sorted_idxs[j]);
+        }
+    }
+}
+
+// ----------------------------------------------------------------------------
+
 template<typename I, typename H>
 template<size_t N, typename ... Ts>
 void
@@ -616,13 +636,16 @@ void DataFrame<I, H>::sort(const char *by_name)  {
 
     make_consistent<Ts ...>();
 
+    const size_type         idx_s = indices_.size();
+    std::vector<size_type>  sorted_idxs(idx_s);
+
+    std::iota(sorted_idxs.begin(), sorted_idxs.end(), 0);
+
     if (by_name == nullptr)  {
-        sort_functor_<IndexType, Ts ...>    functor (indices_);
-
-        for (auto &iter : data_)
-            iter.change(functor);
-
-        std::sort (indices_.begin(), indices_.end());
+        std::sort (sorted_idxs.begin(), sorted_idxs.end(),
+                   [this](size_type i, size_type j) -> bool  {
+                       return (this->indices_[i] < this->indices_[j]);
+                   });
     }
     else  {
         const auto  iter = column_tb_.find (by_name);
@@ -636,21 +659,22 @@ void DataFrame<I, H>::sort(const char *by_name)  {
             throw ColNotFound (buffer);
         }
 
-        DataVec         &hv = data_[iter->second];
-        SpinGuard       guard(lock_);
-        std::vector<T>  &idx_vec = hv.template get_vector<T>();
+        const DataVec           &hv = data_[iter->second];
+        SpinGuard               guard(lock_);
+        const std::vector<T>    &idx_vec = hv.template get_vector<T>();
 
         guard.release();
-
-        sort_functor_<T, Ts ...>    functor (idx_vec);
-
-        for (size_type i = 0; i < data_.size(); ++i)
-            if (i != iter->second)
-                data_[i].change(functor);
-        functor(indices_);
-
-        std::sort (idx_vec.begin(), idx_vec.end());
+        std::sort (sorted_idxs.begin(), sorted_idxs.end(),
+                   [&x = idx_vec](size_type i, size_type j) -> bool {
+                       return (x[i] < x[j]);
+                   });
     }
+
+    sort_functor_<Ts ...>   functor (sorted_idxs, idx_s);
+
+    for (auto &iter : data_)
+        iter.change(functor);
+    _sort_by_sorted_index_(indices_, sorted_idxs, idx_s);
 
     return;
 }

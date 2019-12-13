@@ -76,23 +76,12 @@ DataFrame<I, H>::shrink_to_fit_functor_<Ts ...>::operator() (T &vec) const  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename T, typename ... Ts>
+template<typename ... Ts>
 template<typename T2>
 void
-DataFrame<I, H>::sort_functor_<T, Ts ...>::operator() (T2 &vec) const  {
+DataFrame<I, H>::sort_functor_<Ts ...>::operator() (T2 &vec) const  {
 
-    using VecType = typename std::remove_reference<decltype(vec)>::type;
-    using DataValueType = typename VecType::value_type;
-
-    std::multimap<T, DataValueType> tmp_map;
-    const DataFrame::size_type      idx_s = idx_vec.size();
-
-    for (size_t i = 0; i < idx_s; ++i)
-        tmp_map.emplace(std::move(idx_vec[i]), std::move(vec[i]));
-    vec.clear();
-    for (auto &iter : tmp_map)
-        vec.emplace_back(std::move(iter.second));
-
+    _sort_by_sorted_index_(vec, sorted_idxs, idx_s);
     return;
 }
 

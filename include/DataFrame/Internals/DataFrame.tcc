@@ -635,7 +635,7 @@ void DataFrame<I, H>::shrink_to_fit ()  {
 
 template<typename I, typename H>
 template<typename T, typename ...Ts>
-void DataFrame<I, H>::sort(const char *by_name)  {
+void DataFrame<I, H>::sort(const char *name, sort_spec dir)  {
 
     make_consistent<Ts ...>();
 
@@ -644,21 +644,29 @@ void DataFrame<I, H>::sort(const char *by_name)  {
 
     std::iota(sorting_idxs.begin(), sorting_idxs.end(), 0);
 
-    if (by_name == nullptr)  {
-        std::sort (sorting_idxs.begin(), sorting_idxs.end(),
-                   [this](size_type i, size_type j) -> bool  {
-                       return (this->indices_[i] < this->indices_[j]);
-                   });
+    if (! ::strcmp(name, "INDEX"))  {
+        auto    a = [this](size_type i, size_type j) -> bool  {
+                        return (this->indices_[i] < this->indices_[j]);
+                    };
+        auto    d = [this](size_type i, size_type j) -> bool  {
+                        return (this->indices_[i] >= this->indices_[j]);
+                    };
+
+
+        if (dir == sort_spec::ascen)
+            std::sort (sorting_idxs.begin(), sorting_idxs.end(), a);
+        else
+            std::sort (sorting_idxs.begin(), sorting_idxs.end(), d);
     }
     else  {
-        const auto  iter = column_tb_.find (by_name);
+        const auto  iter = column_tb_.find (name);
 
         if (iter == column_tb_.end())  {
             char buffer [512];
 
             sprintf (buffer, "DataFrame::sort(): ERROR: "
                              "Cannot find column '%s'",
-                     by_name);
+                     name);
             throw ColNotFound (buffer);
         }
 
@@ -667,10 +675,18 @@ void DataFrame<I, H>::sort(const char *by_name)  {
         const std::vector<T>    &idx_vec = hv.template get_vector<T>();
 
         guard.release();
-        std::sort (sorting_idxs.begin(), sorting_idxs.end(),
-                   [&x = idx_vec](size_type i, size_type j) -> bool {
-                       return (x[i] < x[j]);
-                   });
+
+        auto    a = [&x = idx_vec](size_type i, size_type j) -> bool {
+                        return (x[i] < x[j]);
+                    };
+        auto    d = [&x = idx_vec](size_type i, size_type j) -> bool {
+                        return (x[i] >= x[j]);
+                    };
+
+        if (dir == sort_spec::ascen)
+            std::sort (sorting_idxs.begin(), sorting_idxs.end(), a);
+        else
+            std::sort (sorting_idxs.begin(), sorting_idxs.end(), d);
     }
 
     sort_functor_<Ts ...>   functor (sorting_idxs, idx_s);
@@ -686,11 +702,12 @@ void DataFrame<I, H>::sort(const char *by_name)  {
 
 template<typename I, typename H>
 template<typename T, typename ...Ts>
-std::future<void> DataFrame<I, H>::sort_async(const char *by_name)  {
+std::future<void>
+DataFrame<I, H>::sort_async(const char *name, sort_spec dir)  {
 
     return (std::async(std::launch::async,
                        &DataFrame::sort<T, Ts ...>,
-                       this, by_name));
+                       this, name, dir));
 }
 
 // ----------------------------------------------------------------------------
@@ -705,7 +722,7 @@ DataFrame<I, H>:: groupby (F &&func,
     DataFrame   tmp_df = *this;
 
     if (already_sorted == sort_state::not_sorted)  {
-        if (gb_col_name == nullptr) { tmp_df.sort<T, Ts ...>(); }
+        if (gb_col_name == nullptr) { tmp_df.sort<T, Ts ...>("INDEX"); }
         else { tmp_df.sort<T, Ts ...>(gb_col_name); }
     }
 

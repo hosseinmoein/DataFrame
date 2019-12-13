@@ -502,27 +502,32 @@ public:  // Data manipulation
                   const std::array<IndexType, N> new_values,
                   int limit = -1);
 
-    // Sort the DataFrame by the named column. By default, it sorts
-    // by index (i.e. by_name == nullptr).
+    // Sort the DataFrame by the named column. If name equals "INDEX", it sorts
+    // by index. Otherwise it sorts by the named column.
     // Sort first calls make_consistent() that may add nan values to
     // data columns.
     // nan values make sorting nondeterministic.
     //
-    // T: Type of the by_name column. You always must specify this type,
-    //    even if it is being sorted by the default index
+    // T:
+    //   Type of the named column. You always must specify this type,
+    //   even if it is being sorted by the index.
     // Ts:
     //   List all the types of all data columns. A type should be specified in
     //   the list only once.
+    // name:
+    //   The name of a column or string "INDEX"
+    // dir:
+    //   Direction of sorting, ascending or descending
     //
     template<typename T, typename ... Ts>
     void
-    sort(const char *by_name = nullptr);
+    sort(const char *name, sort_spec dir = sort_spec::ascen);
 
     // Same as sort() above, but executed asynchronously
     //
     template<typename T, typename ... Ts>
     std::future<void>
-    sort_async(const char *by_name = nullptr);
+    sort_async(const char *name, sort_spec dir = sort_spec::ascen);
 
     // Groupby copies the DataFrame into a temp DataFrame and sorts
     // the temp df by gb_col_name before performing groupby.
@@ -1243,7 +1248,7 @@ public:  // Visitors
     visit(const char *name1, const char *name2, V &visitor) const  {
 
         return(const_cast<DataFrame *>(this)->visit<T1, T2, V>
-			   (name1, name2, visitor));
+               (name1, name2, visitor));
     }
 
     // It passes the values of each index and the three named columns to the
@@ -1398,8 +1403,8 @@ public:  // Visitors
     single_act_visit(const char *name, V &visitor) const  {
 
         return(const_cast<DataFrame *>(this)->single_act_visit<T, V>
-			   (name, visitor));
-	}
+               (name, visitor));
+    }
 
     // This is similar to visit(), but it passes a const reference to the index
     // vector and the two named column vectors at once the functor visitor.
@@ -1427,8 +1432,8 @@ public:  // Visitors
     single_act_visit(const char *name1, const char *name2, V &visitor) const  {
 
         return(const_cast<DataFrame *>(this)->single_act_visit<T1, T2, V>
-			   (name1, name2, visitor));
-	}
+               (name1, name2, visitor));
+    }
 
 public:  // Operators
 

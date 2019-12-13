@@ -68,6 +68,13 @@ enum class sort_state : bool  {
 
 // ----------------------------------------------------------------------------
 
+enum class sort_spec : unsigned char  {
+    ascen = 1,
+    desce = 2,
+};
+
+// ----------------------------------------------------------------------------
+
 enum class join_policy : unsigned char  {
     inner_join = 1,
     left_join = 2,

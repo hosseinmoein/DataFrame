@@ -60,7 +60,7 @@ std::future<bool> fut = df2.read_async("sample_data.csv", io_format::csv);
 fut.get();
 
 // Sort the Frame by index
-df.sort<MyDataFrame::TimeStamp, int, double, std::string>();
+df.sort<MyDataFrame::TimeStamp, int, double, std::string>("INDEX");
 // Sort the Frame by column “dbl_col_2”
 df.sort<double, int, double, std::string>("dbl_col_2");
 

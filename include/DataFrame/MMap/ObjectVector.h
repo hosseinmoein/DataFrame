@@ -203,7 +203,7 @@ public:
         using value_type = T;
         using pointer = value_type *;
         using reference = value_type &;
-        using difference_type = long;
+        using difference_type = size_type;
 
     public:
 
@@ -306,7 +306,7 @@ public:
         using value_type = T;
         using pointer = value_type *;
         using reference = value_type &;
-        using difference_type = long;
+        using difference_type = size_type;
 
     public:
 
@@ -431,7 +431,7 @@ public:
         using value_type = T;
         using pointer = value_type *;
         using reference = value_type &;
-        using difference_type = long;
+        using difference_type = size_type;
 
     public:
 
@@ -563,7 +563,7 @@ public:
         using value_type = T;
         using pointer = value_type *;
         using reference = value_type &;
-        using difference_type = long;
+        using difference_type = size_type;
 
     public:
 

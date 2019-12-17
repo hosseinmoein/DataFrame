@@ -142,7 +142,8 @@ static void test_haphazard()  {
     assert(dvec2[4] == 0.00345);
     assert(dvec2[7] == 0.1);
 
-    df.sort<MyDataFrame::IndexType, int, double, std::string>("INDEX");
+    df.sort<MyDataFrame::IndexType, int, double, std::string>
+        ("INDEX", sort_spec::ascen);
     dvec = df.get_column<double> ("dbl_col");
     dvec2 = df.get_column<double> ("dbl_col_2");
 
@@ -170,7 +171,7 @@ static void test_haphazard()  {
     assert(dvec2[0] == 0.998);
     assert(dvec2[7] == 0.00345);
 
-    df.sort<double, int, double, std::string>("dbl_col_2");
+    df.sort<double, int, double, std::string>("dbl_col_2", sort_spec::ascen);
     dvec = df.get_column<double> ("dbl_col");
     dvec2 = df.get_column<double> ("dbl_col_2");
 
@@ -360,8 +361,20 @@ static void test_haphazard()  {
 
     fut.get();
 
+    std::cout << "\nTesting Async sort ..." << std::endl;
+
+    auto    sf = dfx.sort_async<MyDataFrame::IndexType, std::string,
+                                int, double, std::string, unsigned int>
+                     ("INDEX", sort_spec::ascen, "str_col", sort_spec::desce);
+
+    sf.get();
+
+    std::cout << "\nTesting Async sort 2 ..." << std::endl;
+
     std::future<void>   sort_fut =
-        dfx.sort_async<double, int, double, std::string>("INDEX");
+        dfx.sort_async<MyDataFrame::IndexType,
+                       int, double, std::string, unsigned int>
+            ("INDEX", sort_spec::ascen);
 
     sort_fut.get();
     dfx.write<std::ostream,
@@ -4014,6 +4027,48 @@ static void test_affinity_propagation()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_multi_col_sort()  {
+
+    std::cout << "\nTesting multi-column sort ..." << std::endl;
+
+    MyDataFrame df;
+
+    std::vector<unsigned long>  idxvec = { 1UL, 2UL, 3UL, 4UL, 5UL,
+                                           5UL, 5UL, 6UL, 6UL, 7UL,
+                                           8UL, 9UL, 10UL, 10UL, 11UL };
+    std::vector<double>         dblvec = { 0.0, 15.0, 14.0, 2.0, 1.0,
+                                           12.0, 11.0, 8.0, 7.0, 6.0,
+                                           5.0, 4.0, 3.0, 9.0, 10.0};
+    std::vector<double>         dblvec2 = { 100.0, 101.0, 102.0, 103.0, 104.0,
+                                           105.0, 106.55, 107.34, 1.8, 111.0,
+                                           112.0, 113.0, 114.0, 115.0, 116.0};
+    std::vector<int>            intvec = { 1, 2, 3, 4, 5,
+                                           6, 6, 7, 7, 8,
+                                           9, 10, 11, 12, 13 };
+    std::vector<std::string>    strvec = { "aa", "bb", "cc", "dd", "ee",
+                                           "ff", "gg", "hh", "ii", "jj",
+                                           "kk", "ll", "mm", "nn", "oo" };
+
+    df.load_data(std::move(idxvec),
+                 std::make_pair("dbl_col", dblvec),
+                 std::make_pair("dbl_col_2", dblvec2),
+                 std::make_pair("int_col", intvec),
+                 std::make_pair("str_col", strvec));
+    df.write<std::ostream, double, int, std::string>(std::cout);
+
+    auto    sf = df.sort_async<MyDataFrame::IndexType, int, std::string,
+                               int, double, std::string>
+                     ("INDEX", sort_spec::ascen,
+                      "int_col", sort_spec::desce,
+                      "str_col", sort_spec::desce);
+
+    std::cout << "Aftyer multi column sorting ..." << std::endl;
+    sf.get();
+    df.write<std::ostream, double, int, std::string>(std::cout);
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int argc, char *argv[]) {
 
     test_haphazard();
@@ -4078,6 +4133,7 @@ int main(int argc, char *argv[]) {
     test_view_visitors();
     test_k_means();
     test_affinity_propagation();
+    test_multi_col_sort();
 
     return (0);
 }

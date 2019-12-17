@@ -504,9 +504,9 @@ public:  // Data manipulation
 
     // Sort the DataFrame by the named column. If name equals "INDEX", it sorts
     // by index. Otherwise it sorts by the named column.
-    // Sort first calls make_consistent() that may add nan values to
-    // data columns.
-    // nan values make sorting nondeterministic.
+    // NOTE: Sort first calls make_consistent() that may add nan values to
+    //       data columns.
+    //       nan values make sorting nondeterministic.
     //
     // T:
     //   Type of the named column. You always must specify this type,
@@ -521,13 +521,104 @@ public:  // Data manipulation
     //
     template<typename T, typename ... Ts>
     void
-    sort(const char *name, sort_spec dir = sort_spec::ascen);
+    sort(const char *name, sort_spec dir);
+
+    // This sort function sorts DataFrame based on two columns, aslo
+    // specified by the two directions.
+    // name[n] could be "INDEX" in whcih case the index column is taken as the
+    // sorting column.
+    // NOTE: The orde of T[n] type specifications must match the order of
+    //       name[n] column names. In Addition, all column types must be
+    //       specified separately.
+    // NOTE: Sort first calls make_consistent() that may add nan values to
+    //       data columns.
+    //       nan values make sorting nondeterministic.
+    //
+    // T1:
+    //   Type of the first named column. You always must specify this type,
+    //   even if it is being sorted by the index.
+    // T2:
+    //   Type of the second named column. You always must specify this type,
+    //   even if it is being sorted by the index.
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // name1:
+    //   Name of the first column or string "INDEX"
+    // name2:
+    //   Name of the second column or string "INDEX"
+    // dir1:
+    //   Direction of sorting for the first column
+    // dir2:
+    //   Direction of sorting for the second column
+    //
+    template<typename T1, typename T2, typename ... Ts>
+    void
+    sort(const char *name1, sort_spec dir1,
+         const char *name2, sort_spec dir2);
+
+    // This sort function is similar to above but it uses 3 columns
+    //
+    template<typename T1, typename T2, typename T3, typename ... Ts>
+    void
+    sort(const char *name1, sort_spec dir1,
+         const char *name2, sort_spec dir2,
+         const char *name3, sort_spec dir3);
+
+    // This sort function is similar to above but it uses 4 columns
+    //
+    template<typename T1, typename T2, typename T3, typename T4,
+             typename ... Ts>
+    void
+    sort(const char *name1, sort_spec dir1,
+         const char *name2, sort_spec dir2,
+         const char *name3, sort_spec dir3,
+         const char *name4, sort_spec dir4);
+
+    // This sort function is similar to above but it uses 5 columns
+    //
+    template<typename T1, typename T2, typename T3, typename T4, typename T5,
+             typename ... Ts>
+    void
+    sort(const char *name1, sort_spec dir1,
+         const char *name2, sort_spec dir2,
+         const char *name3, sort_spec dir3,
+         const char *name4, sort_spec dir4,
+         const char *name5, sort_spec dir5);
 
     // Same as sort() above, but executed asynchronously
     //
     template<typename T, typename ... Ts>
     std::future<void>
-    sort_async(const char *name, sort_spec dir = sort_spec::ascen);
+    sort_async(const char *name, sort_spec dir);
+
+    template<typename T1, typename T2, typename ... Ts>
+    std::future<void>
+    sort_async(const char *name1, sort_spec dir1,
+               const char *name2, sort_spec dir2);
+
+    template<typename T1, typename T2, typename T3, typename ... Ts>
+    std::future<void>
+    sort_async(const char *name1, sort_spec dir1,
+               const char *name2, sort_spec dir2,
+               const char *name3, sort_spec dir3);
+
+    template<typename T1, typename T2, typename T3, typename T4,
+             typename ... Ts>
+    std::future<void>
+    sort_async(const char *name1, sort_spec dir1,
+               const char *name2, sort_spec dir2,
+               const char *name3, sort_spec dir3,
+               const char *name4, sort_spec dir4);
+
+    template<typename T1, typename T2, typename T3, typename T4, typename T5,
+             typename ... Ts>
+    std::future<void>
+    sort_async(const char *name1, sort_spec dir1,
+               const char *name2, sort_spec dir2,
+               const char *name3, sort_spec dir3,
+               const char *name4, sort_spec dir4,
+               const char *name5, sort_spec dir5);
 
     // Groupby copies the DataFrame into a temp DataFrame and sorts
     // the temp df by gb_col_name before performing groupby.

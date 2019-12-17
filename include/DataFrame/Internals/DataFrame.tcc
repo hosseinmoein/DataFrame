@@ -6,6 +6,7 @@
 #include <DataFrame/DataFrame.h>
 
 #include <algorithm>
+#include <future>
 #include <limits>
 #include <random>
 
@@ -640,7 +641,7 @@ void DataFrame<I, H>::sort(const char *name, sort_spec dir)  {
     make_consistent<Ts ...>();
 
     const size_type         idx_s = indices_.size();
-    std::vector<size_type>  sorting_idxs(idx_s);
+    std::vector<size_type>  sorting_idxs(idx_s, 0);
 
     std::iota(sorting_idxs.begin(), sorting_idxs.end(), 0);
 
@@ -701,13 +702,639 @@ void DataFrame<I, H>::sort(const char *name, sort_spec dir)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
+template<typename T1, typename T2, typename ... Ts>
+void DataFrame<I, H>::
+sort(const char *name1, sort_spec dir1, const char *name2, sort_spec dir2)  {
+
+    make_consistent<Ts ...>();
+
+    std::vector<T1> *vec1 { nullptr};
+    std::vector<T2> *vec2 { nullptr};
+
+    if (! ::strcmp(name1, "INDEX"))
+        vec1 = reinterpret_cast<std::vector<T1> *>(&indices_);
+    else  {
+        auto  iter = column_tb_.find (name1);
+
+        if (iter == column_tb_.end())  {
+            char buffer [512];
+
+            sprintf (buffer, "DataFrame::sort(): ERROR: "
+                             "Cannot find column '%s'",
+                     name1);
+            throw ColNotFound (buffer);
+        }
+
+        DataVec     &hv = data_[iter->second];
+        SpinGuard   guard(lock_);
+
+        vec1 = &(hv.template get_vector<T1>());
+    }
+    if (! ::strcmp(name2, "INDEX"))
+        vec2 = reinterpret_cast<std::vector<T2> *>(&indices_);
+    else  {
+        auto  iter = column_tb_.find (name2);
+
+        if (iter == column_tb_.end())  {
+            char buffer [512];
+
+            sprintf (buffer, "DataFrame::sort(): ERROR: "
+                             "Cannot find column '%s'",
+                     name2);
+            throw ColNotFound (buffer);
+        }
+
+        DataVec     &hv = data_[iter->second];
+        SpinGuard   guard(lock_);
+
+        vec2 = &(hv.template get_vector<T2>());
+    }
+
+    const size_type         idx_s = indices_.size();
+    std::vector<size_type>  sorting_idxs(idx_s, 0);
+    auto                    cf =
+        [vec1, vec2, dir1, dir2](size_type i, size_type j) -> bool {
+            if (dir1 == sort_spec::ascen)  {
+                if (vec1->at(i) < vec1->at(j))
+                    return (true);
+                else if (vec1->at(i) > vec1->at(j))
+                    return (false);
+            }
+            else  {
+                if (vec1->at(i) > vec1->at(j))
+                    return (true);
+                else if (vec1->at(i) < vec1->at(j))
+                    return (false);
+            }
+            if (dir2 == sort_spec::ascen)
+                return (vec2->at(i) < vec2->at(j));
+            else
+                return (vec2->at(i) >= vec2->at(j));
+        };
+
+    std::iota(sorting_idxs.begin(), sorting_idxs.end(), 0);
+    std::sort(sorting_idxs.begin(), sorting_idxs.end(), cf);
+
+    sort_functor_<Ts ...>   functor (sorting_idxs, idx_s);
+
+    for (auto &iter : data_)
+        iter.change(functor);
+    _sort_by_sorted_index_(indices_, sorting_idxs, idx_s);
+
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename T1, typename T2, typename T3, typename ... Ts>
+void DataFrame<I, H>::
+sort(const char *name1, sort_spec dir1,
+     const char *name2, sort_spec dir2,
+     const char *name3, sort_spec dir3)  {
+
+    make_consistent<Ts ...>();
+
+    std::vector<T1> *vec1 { nullptr};
+    std::vector<T2> *vec2 { nullptr};
+    std::vector<T3> *vec3 { nullptr};
+
+    if (! ::strcmp(name1, "INDEX"))
+        vec1 = reinterpret_cast<std::vector<T1> *>(&indices_);
+    else  {
+        auto    iter = column_tb_.find (name1);
+
+        if (iter == column_tb_.end())  {
+            char buffer [512];
+
+            sprintf (buffer, "DataFrame::sort(): ERROR: "
+                             "Cannot find column '%s'",
+                     name1);
+            throw ColNotFound (buffer);
+        }
+
+        DataVec     &hv = data_[iter->second];
+        SpinGuard   guard(lock_);
+
+        vec1 = &(hv.template get_vector<T1>());
+    }
+    if (! ::strcmp(name2, "INDEX"))
+        vec2 = reinterpret_cast<std::vector<T2> *>(&indices_);
+    else  {
+        auto    iter = column_tb_.find (name2);
+
+        if (iter == column_tb_.end())  {
+            char buffer [512];
+
+            sprintf (buffer, "DataFrame::sort(): ERROR: "
+                             "Cannot find column '%s'",
+                     name2);
+            throw ColNotFound (buffer);
+        }
+
+        DataVec     &hv = data_[iter->second];
+        SpinGuard   guard(lock_);
+
+        vec2 = &(hv.template get_vector<T2>());
+    }
+    if (! ::strcmp(name3, "INDEX"))
+        vec3 = reinterpret_cast<std::vector<T3> *>(&indices_);
+    else  {
+        auto    iter = column_tb_.find (name3);
+
+        if (iter == column_tb_.end())  {
+            char buffer [512];
+
+            sprintf (buffer, "DataFrame::sort(): ERROR: "
+                             "Cannot find column '%s'",
+                     name3);
+            throw ColNotFound (buffer);
+        }
+
+        DataVec     &hv = data_[iter->second];
+        SpinGuard   guard(lock_);
+
+        vec3 = &(hv.template get_vector<T3>());
+    }
+
+    const size_type         idx_s = indices_.size();
+    std::vector<size_type>  sorting_idxs(idx_s, 0);
+    auto                    cf =
+        [vec1, vec2, vec3, dir1, dir2, dir3]
+        (size_type i, size_type j) -> bool {
+            if (dir1 == sort_spec::ascen)  {
+                if (vec1->at(i) < vec1->at(j))
+                    return (true);
+                else if (vec1->at(i) > vec1->at(j))
+                    return (false);
+            }
+            else  {
+                if (vec1->at(i) > vec1->at(j))
+                    return (true);
+                else if (vec1->at(i) < vec1->at(j))
+                    return (false);
+            }
+            if (dir2 == sort_spec::ascen)  {
+                if (vec2->at(i) < vec2->at(j))
+                    return (true);
+                else if (vec2->at(i) > vec2->at(j))
+                    return (false);
+            }
+            else  {
+                if (vec2->at(i) > vec2->at(j))
+                    return (true);
+                else if (vec2->at(i) < vec2->at(j))
+                    return (false);
+            }
+            if (dir3 == sort_spec::ascen)
+                return (vec3->at(i) < vec3->at(j));
+            else
+                return (vec3->at(i) >= vec3->at(j));
+        };
+
+    std::iota(sorting_idxs.begin(), sorting_idxs.end(), 0);
+    std::sort(sorting_idxs.begin(), sorting_idxs.end(), cf);
+
+    sort_functor_<Ts ...>   functor (sorting_idxs, idx_s);
+
+    for (auto &iter : data_)
+        iter.change(functor);
+    _sort_by_sorted_index_(indices_, sorting_idxs, idx_s);
+
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename T1, typename T2, typename T3, typename T4, typename ... Ts>
+void DataFrame<I, H>::
+sort(const char *name1, sort_spec dir1,
+     const char *name2, sort_spec dir2,
+     const char *name3, sort_spec dir3,
+     const char *name4, sort_spec dir4)  {
+
+    make_consistent<Ts ...>();
+
+    std::vector<T1> *vec1 { nullptr};
+    std::vector<T2> *vec2 { nullptr};
+    std::vector<T3> *vec3 { nullptr};
+    std::vector<T4> *vec4 { nullptr};
+
+    if (! ::strcmp(name1, "INDEX"))
+        vec1 = reinterpret_cast<std::vector<T1> *>(&indices_);
+    else  {
+        auto    iter = column_tb_.find (name1);
+
+        if (iter == column_tb_.end())  {
+            char buffer [512];
+
+            sprintf (buffer, "DataFrame::sort(): ERROR: "
+                             "Cannot find column '%s'",
+                     name1);
+            throw ColNotFound (buffer);
+        }
+
+        DataVec     &hv = data_[iter->second];
+        SpinGuard   guard(lock_);
+
+        vec1 = &(hv.template get_vector<T1>());
+    }
+    if (! ::strcmp(name2, "INDEX"))
+        vec2 = reinterpret_cast<std::vector<T2> *>(&indices_);
+    else  {
+        auto    iter = column_tb_.find (name2);
+
+        if (iter == column_tb_.end())  {
+            char buffer [512];
+
+            sprintf (buffer, "DataFrame::sort(): ERROR: "
+                             "Cannot find column '%s'",
+                     name2);
+            throw ColNotFound (buffer);
+        }
+
+        DataVec     &hv = data_[iter->second];
+        SpinGuard   guard(lock_);
+
+        vec2 = &(hv.template get_vector<T2>());
+    }
+    if (! ::strcmp(name3, "INDEX"))
+        vec3 = reinterpret_cast<std::vector<T3> *>(&indices_);
+    else  {
+        auto    iter = column_tb_.find (name3);
+
+        if (iter == column_tb_.end())  {
+            char buffer [512];
+
+            sprintf (buffer, "DataFrame::sort(): ERROR: "
+                             "Cannot find column '%s'",
+                     name3);
+            throw ColNotFound (buffer);
+        }
+
+        DataVec     &hv = data_[iter->second];
+        SpinGuard   guard(lock_);
+
+        vec3 = &(hv.template get_vector<T3>());
+    }
+    if (! ::strcmp(name4, "INDEX"))
+        vec4 = reinterpret_cast<std::vector<T4> *>(&indices_);
+    else  {
+        auto    iter = column_tb_.find (name4);
+
+        if (iter == column_tb_.end())  {
+            char buffer [512];
+
+            sprintf (buffer, "DataFrame::sort(): ERROR: "
+                             "Cannot find column '%s'",
+                     name4);
+            throw ColNotFound (buffer);
+        }
+
+        DataVec     &hv = data_[iter->second];
+        SpinGuard   guard(lock_);
+
+        vec4 = &(hv.template get_vector<T4>());
+    }
+
+    const size_type         idx_s = indices_.size();
+    std::vector<size_type>  sorting_idxs(idx_s, 0);
+    auto                    cf =
+        [vec1, vec2, vec3, vec4, dir1, dir2, dir3, dir4]
+        (size_type i, size_type j) -> bool {
+            if (dir1 == sort_spec::ascen)  {
+                if (vec1->at(i) < vec1->at(j))
+                    return (true);
+                else if (vec1->at(i) > vec1->at(j))
+                    return (false);
+            }
+            else  {
+                if (vec1->at(i) > vec1->at(j))
+                    return (true);
+                else if (vec1->at(i) < vec1->at(j))
+                    return (false);
+            }
+            if (dir2 == sort_spec::ascen)  {
+                if (vec2->at(i) < vec2->at(j))
+                    return (true);
+                else if (vec2->at(i) > vec2->at(j))
+                    return (false);
+            }
+            else  {
+                if (vec2->at(i) > vec2->at(j))
+                    return (true);
+                else if (vec2->at(i) < vec2->at(j))
+                    return (false);
+            }
+            if (dir3 == sort_spec::ascen)  {
+                if (vec3->at(i) < vec3->at(j))
+                    return (true);
+                else if (vec3->at(i) > vec3->at(j))
+                    return (false);
+            }
+            else  {
+                if (vec3->at(i) > vec3->at(j))
+                    return (true);
+                else if (vec3->at(i) < vec3->at(j))
+                    return (false);
+            }
+            if (dir4 == sort_spec::ascen)
+                return (vec4->at(i) < vec4->at(j));
+            else
+                return (vec4->at(i) >= vec4->at(j));
+        };
+
+    std::iota(sorting_idxs.begin(), sorting_idxs.end(), 0);
+    std::sort(sorting_idxs.begin(), sorting_idxs.end(), cf);
+
+    sort_functor_<Ts ...>   functor (sorting_idxs, idx_s);
+
+    for (auto &iter : data_)
+        iter.change(functor);
+    _sort_by_sorted_index_(indices_, sorting_idxs, idx_s);
+
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename T1, typename T2, typename T3, typename T4, typename T5,
+         typename ... Ts>
+void DataFrame<I, H>::
+sort(const char *name1, sort_spec dir1,
+     const char *name2, sort_spec dir2,
+     const char *name3, sort_spec dir3,
+     const char *name4, sort_spec dir4,
+     const char *name5, sort_spec dir5)  {
+
+    make_consistent<Ts ...>();
+
+    std::vector<T1> *vec1 { nullptr};
+    std::vector<T2> *vec2 { nullptr};
+    std::vector<T3> *vec3 { nullptr};
+    std::vector<T4> *vec4 { nullptr};
+    std::vector<T5> *vec5 { nullptr};
+
+    if (! ::strcmp(name1, "INDEX"))
+        vec1 = reinterpret_cast<std::vector<T1> *>(&indices_);
+    else  {
+        auto    iter = column_tb_.find (name1);
+
+        if (iter == column_tb_.end())  {
+            char buffer [512];
+
+            sprintf (buffer, "DataFrame::sort(): ERROR: "
+                             "Cannot find column '%s'",
+                     name1);
+            throw ColNotFound (buffer);
+        }
+
+        DataVec     &hv = data_[iter->second];
+        SpinGuard   guard(lock_);
+
+        vec1 = &(hv.template get_vector<T1>());
+    }
+    if (! ::strcmp(name2, "INDEX"))
+        vec2 = reinterpret_cast<std::vector<T2> *>(&indices_);
+    else  {
+        auto    iter = column_tb_.find (name2);
+
+        if (iter == column_tb_.end())  {
+            char buffer [512];
+
+            sprintf (buffer, "DataFrame::sort(): ERROR: "
+                             "Cannot find column '%s'",
+                     name2);
+            throw ColNotFound (buffer);
+        }
+
+        DataVec     &hv = data_[iter->second];
+        SpinGuard   guard(lock_);
+
+        vec2 = &(hv.template get_vector<T2>());
+    }
+    if (! ::strcmp(name3, "INDEX"))
+        vec3 = reinterpret_cast<std::vector<T3> *>(&indices_);
+    else  {
+        auto    iter = column_tb_.find (name3);
+
+        if (iter == column_tb_.end())  {
+            char buffer [512];
+
+            sprintf (buffer, "DataFrame::sort(): ERROR: "
+                             "Cannot find column '%s'",
+                     name3);
+            throw ColNotFound (buffer);
+        }
+
+        DataVec     &hv = data_[iter->second];
+        SpinGuard   guard(lock_);
+
+        vec3 = &(hv.template get_vector<T3>());
+    }
+    if (! ::strcmp(name4, "INDEX"))
+        vec4 = reinterpret_cast<std::vector<T4> *>(&indices_);
+    else  {
+        auto    iter = column_tb_.find (name4);
+
+        if (iter == column_tb_.end())  {
+            char buffer [512];
+
+            sprintf (buffer, "DataFrame::sort(): ERROR: "
+                             "Cannot find column '%s'",
+                     name4);
+            throw ColNotFound (buffer);
+        }
+
+        DataVec     &hv = data_[iter->second];
+        SpinGuard   guard(lock_);
+
+        vec4 = &(hv.template get_vector<T4>());
+    }
+    if (! ::strcmp(name4, "INDEX"))
+        vec5 = reinterpret_cast<std::vector<T5> *>(&indices_);
+    else  {
+        auto    iter = column_tb_.find (name5);
+
+        if (iter == column_tb_.end())  {
+            char buffer [512];
+
+            sprintf (buffer, "DataFrame::sort(): ERROR: "
+                             "Cannot find column '%s'",
+                     name5);
+            throw ColNotFound (buffer);
+        }
+
+        DataVec     &hv = data_[iter->second];
+        SpinGuard   guard(lock_);
+
+        vec5 = &(hv.template get_vector<T5>());
+    }
+
+    const size_type         idx_s = indices_.size();
+    std::vector<size_type>  sorting_idxs(idx_s, 0);
+    auto                    cf =
+        [vec1, vec2, vec3, vec4, vec5, dir1, dir2, dir3, dir4, dir5]
+        (size_type i, size_type j) -> bool {
+            if (dir1 == sort_spec::ascen)  {
+                if (vec1->at(i) < vec1->at(j))
+                    return (true);
+                else if (vec1->at(i) > vec1->at(j))
+                    return (false);
+            }
+            else  {
+                if (vec1->at(i) > vec1->at(j))
+                    return (true);
+                else if (vec1->at(i) < vec1->at(j))
+                    return (false);
+            }
+            if (dir2 == sort_spec::ascen)  {
+                if (vec2->at(i) < vec2->at(j))
+                    return (true);
+                else if (vec2->at(i) > vec2->at(j))
+                    return (false);
+            }
+            else  {
+                if (vec2->at(i) > vec2->at(j))
+                    return (true);
+                else if (vec2->at(i) < vec2->at(j))
+                    return (false);
+            }
+            if (dir3 == sort_spec::ascen)  {
+                if (vec3->at(i) < vec3->at(j))
+                    return (true);
+                else if (vec3->at(i) > vec3->at(j))
+                    return (false);
+            }
+            else  {
+                if (vec3->at(i) > vec3->at(j))
+                    return (true);
+                else if (vec3->at(i) < vec3->at(j))
+                    return (false);
+            }
+            if (dir4 == sort_spec::ascen)  {
+                if (vec4->at(i) < vec4->at(j))
+                    return (true);
+                else if (vec4->at(i) > vec4->at(j))
+                    return (false);
+            }
+            else  {
+                if (vec4->at(i) > vec4->at(j))
+                    return (true);
+                else if (vec4->at(i) < vec4->at(j))
+                    return (false);
+            }
+            if (dir5 == sort_spec::ascen)
+                return (vec5->at(i) < vec5->at(j));
+            else
+                return (vec5->at(i) >= vec5->at(j));
+        };
+
+    std::iota(sorting_idxs.begin(), sorting_idxs.end(), 0);
+    std::sort(sorting_idxs.begin(), sorting_idxs.end(), cf);
+
+    sort_functor_<Ts ...>   functor (sorting_idxs, idx_s);
+
+    for (auto &iter : data_)
+        iter.change(functor);
+    _sort_by_sorted_index_(indices_, sorting_idxs, idx_s);
+
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
 template<typename T, typename ...Ts>
 std::future<void>
 DataFrame<I, H>::sort_async(const char *name, sort_spec dir)  {
 
     return (std::async(std::launch::async,
-                       &DataFrame::sort<T, Ts ...>,
-                       this, name, dir));
+                       [name, dir, this] () -> void {
+                           this->sort<T, Ts ...>(name, dir);
+                       }));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename T1, typename T2, typename ... Ts>
+std::future<void>
+DataFrame<I, H>::
+sort_async(const char *name1, sort_spec dir1,
+           const char *name2, sort_spec dir2)  {
+
+    return (std::async(std::launch::async,
+                       [name1, dir1, name2, dir2, this] () -> void {
+                           this->sort<T1, T2, Ts ...>(name1, dir1,
+                                                      name2, dir2);
+                       }));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename T1, typename T2, typename T3, typename ... Ts>
+std::future<void>
+DataFrame<I, H>::
+sort_async(const char *name1, sort_spec dir1,
+           const char *name2, sort_spec dir2,
+           const char *name3, sort_spec dir3)  {
+
+    return (std::async(std::launch::async,
+                       [name1, dir1, name2, dir2, name3, dir3,
+                        this] () -> void {
+                           this->sort<T1, T2, T3, Ts ...>(name1, dir1,
+                                                          name2, dir2,
+                                                          name3, dir3);
+                       }));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename T1, typename T2, typename T3, typename T4, typename ... Ts>
+std::future<void>
+DataFrame<I, H>::
+sort_async(const char *name1, sort_spec dir1,
+           const char *name2, sort_spec dir2,
+           const char *name3, sort_spec dir3,
+           const char *name4, sort_spec dir4)  {
+
+    return (std::async(std::launch::async,
+                       [name1, dir1, name2, dir2, name3, dir3, name4, dir4,
+                        this] () -> void {
+                           this->sort<T1, T2, T3, T4, Ts ...>(name1, dir1,
+                                                              name2, dir2,
+                                                              name3, dir3,
+                                                              name4, dir4);
+                       }));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename T1, typename T2, typename T3, typename T4, typename T5,
+         typename ... Ts>
+std::future<void>
+DataFrame<I, H>::
+sort_async(const char *name1, sort_spec dir1,
+           const char *name2, sort_spec dir2,
+           const char *name3, sort_spec dir3,
+           const char *name4, sort_spec dir4,
+           const char *name5, sort_spec dir5)  {
+
+    return (std::async(std::launch::async,
+                       [name1, dir1, name2, dir2, name3, dir3, name4, dir4,
+                        name5, dir5, this] () -> void {
+                           this->sort<T1, T2, T3, T4, T5, Ts ...>(name1, dir1,
+                                                                  name2, dir2,
+                                                                  name3, dir3,
+                                                                  name4, dir4,
+                                                                  name5, dir5);
+                       }));
 }
 
 // ----------------------------------------------------------------------------
@@ -722,8 +1349,10 @@ DataFrame<I, H>:: groupby (F &&func,
     DataFrame   tmp_df = *this;
 
     if (already_sorted == sort_state::not_sorted)  {
-        if (gb_col_name == nullptr) { tmp_df.sort<T, Ts ...>("INDEX"); }
-        else { tmp_df.sort<T, Ts ...>(gb_col_name); }
+        if (gb_col_name == nullptr) {
+            tmp_df.sort<T, Ts ...>("INDEX", sort_spec::ascen);
+        }
+        else { tmp_df.sort<T, Ts ...>(gb_col_name, sort_spec::ascen); }
     }
 
     DataFrame   df;

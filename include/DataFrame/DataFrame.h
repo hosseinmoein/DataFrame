@@ -523,13 +523,13 @@ public:  // Data manipulation
     void
     sort(const char *name, sort_spec dir);
 
-    // This sort function sorts DataFrame based on two columns, aslo
+    // This sort function sorts DataFrame based on two columns, also
     // specified by the two directions.
     // name[n] could be "INDEX" in whcih case the index column is taken as the
     // sorting column.
-    // NOTE: The orde of T[n] type specifications must match the order of
-    //       name[n] column names. In Addition, all column types must be
-    //       specified separately.
+    // NOTE: The order of T[n] type specifications must match the order of
+    //       name[n] column names. In addition, all column types must be
+    //       specified separately. Otherwise, the behavior is undefined.
     // NOTE: Sort first calls make_consistent() that may add nan values to
     //       data columns.
     //       nan values make sorting nondeterministic.
@@ -557,7 +557,7 @@ public:  // Data manipulation
     sort(const char *name1, sort_spec dir1,
          const char *name2, sort_spec dir2);
 
-    // This sort function is similar to above but it uses 3 columns
+    // This sort function is similar to above, but it uses 3 columns
     //
     template<typename T1, typename T2, typename T3, typename ... Ts>
     void
@@ -565,7 +565,7 @@ public:  // Data manipulation
          const char *name2, sort_spec dir2,
          const char *name3, sort_spec dir3);
 
-    // This sort function is similar to above but it uses 4 columns
+    // This sort function is similar to above, but it uses 4 columns
     //
     template<typename T1, typename T2, typename T3, typename T4,
              typename ... Ts>
@@ -575,7 +575,7 @@ public:  // Data manipulation
          const char *name3, sort_spec dir3,
          const char *name4, sort_spec dir4);
 
-    // This sort function is similar to above but it uses 5 columns
+    // This sort function is similar to above, but it uses 5 columns
     //
     template<typename T1, typename T2, typename T3, typename T4, typename T5,
              typename ... Ts>

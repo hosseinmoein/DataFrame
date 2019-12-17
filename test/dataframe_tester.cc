@@ -4033,9 +4033,9 @@ static void test_multi_col_sort()  {
 
     MyDataFrame df;
 
-    std::vector<unsigned long>  idxvec = { 1UL, 2UL, 3UL, 4UL, 5UL,
-                                           5UL, 5UL, 6UL, 6UL, 7UL,
-                                           8UL, 9UL, 10UL, 10UL, 11UL };
+    std::vector<unsigned long>  idxvec = { 1UL, 2UL, 3UL, 10UL, 5UL,
+                                           7UL, 8UL, 12UL, 9UL, 12UL,
+                                           10UL, 13UL, 10UL, 15UL, 14UL };
     std::vector<double>         dblvec = { 0.0, 15.0, 14.0, 2.0, 1.0,
                                            12.0, 11.0, 8.0, 7.0, 6.0,
                                            5.0, 4.0, 3.0, 9.0, 10.0};
@@ -4043,9 +4043,9 @@ static void test_multi_col_sort()  {
                                            105.0, 106.55, 107.34, 1.8, 111.0,
                                            112.0, 113.0, 114.0, 115.0, 116.0};
     std::vector<int>            intvec = { 1, 2, 3, 4, 5,
-                                           6, 6, 7, 7, 8,
-                                           9, 10, 11, 12, 13 };
-    std::vector<std::string>    strvec = { "aa", "bb", "cc", "dd", "ee",
+                                           8, 6, 7, 11, 14,
+                                           9, 10, 15, 12, 13 };
+    std::vector<std::string>    strvec = { "zz", "bb", "cc", "ww", "ee",
                                            "ff", "gg", "hh", "ii", "jj",
                                            "kk", "ll", "mm", "nn", "oo" };
 
@@ -4054,7 +4054,7 @@ static void test_multi_col_sort()  {
                  std::make_pair("dbl_col_2", dblvec2),
                  std::make_pair("int_col", intvec),
                  std::make_pair("str_col", strvec));
-    df.write<std::ostream, double, int, std::string>(std::cout);
+    // df.write<std::ostream, double, int, std::string>(std::cout);
 
     auto    sf = df.sort_async<MyDataFrame::IndexType, int, std::string,
                                int, double, std::string>
@@ -4062,9 +4062,36 @@ static void test_multi_col_sort()  {
                       "int_col", sort_spec::desce,
                       "str_col", sort_spec::desce);
 
-    std::cout << "Aftyer multi column sorting ..." << std::endl;
     sf.get();
-    df.write<std::ostream, double, int, std::string>(std::cout);
+    assert(df.get_index()[0] == 1);
+    assert(df.get_index()[5] == 8);
+    assert(df.get_index()[8] == 10);
+    assert(df.get_index()[13] == 14);
+    assert(df.get_index()[14] == 15);
+
+    assert(df.get_column<int>("int_col")[0] == 1);
+    assert(df.get_column<int>("int_col")[5] == 6);
+    assert(df.get_column<int>("int_col")[8] == 9);
+    assert(df.get_column<int>("int_col")[13] == 13);
+    assert(df.get_column<int>("int_col")[14] == 12);
+
+    assert(df.get_column<std::string>("str_col")[0] == "zz");
+    assert(df.get_column<std::string>("str_col")[5] == "gg");
+    assert(df.get_column<std::string>("str_col")[8] == "kk");
+    assert(df.get_column<std::string>("str_col")[13] == "oo");
+    assert(df.get_column<std::string>("str_col")[14] == "nn");
+
+    assert(df.get_column<double>("dbl_col")[0] == 0.0);
+    assert(df.get_column<double>("dbl_col")[5] == 11.0);
+    assert(df.get_column<double>("dbl_col")[8] == 5.0);
+    assert(df.get_column<double>("dbl_col")[13] == 10.0);
+    assert(df.get_column<double>("dbl_col")[14] == 9.0);
+
+    assert(df.get_column<double>("dbl_col_2")[0] == 100.0);
+    assert(df.get_column<double>("dbl_col_2")[5] == 106.55);
+    assert(df.get_column<double>("dbl_col_2")[8] == 112.0);
+    assert(df.get_column<double>("dbl_col_2")[13] == 116.0);
+    assert(df.get_column<double>("dbl_col_2")[14] == 115.0);
 }
 
 // -----------------------------------------------------------------------------

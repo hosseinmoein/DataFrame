@@ -502,8 +502,9 @@ public:  // Data manipulation
                   const std::array<IndexType, N> new_values,
                   int limit = -1);
 
-    // Sort the DataFrame by the named column. If name equals "INDEX", it sorts
-    // by index. Otherwise it sorts by the named column.
+    // Sort the DataFrame by the named column. If name equals "INDEX" or
+    // DF_INDEX_COL_NAME, it sorts by index. Otherwise it sorts by the named
+    // column.
     // NOTE: Sort first calls make_consistent() that may add nan values to
     //       data columns.
     //       nan values make sorting nondeterministic.
@@ -515,7 +516,7 @@ public:  // Data manipulation
     //   List all the types of all data columns. A type should be specified in
     //   the list only once.
     // name:
-    //   The name of a column or string "INDEX"
+    //   The name of a column or string "INDEX" or DF_INDEX_COL_NAME
     // dir:
     //   Direction of sorting, ascending or descending
     //
@@ -525,8 +526,8 @@ public:  // Data manipulation
 
     // This sort function sorts DataFrame based on two columns, also
     // specified by the two directions.
-    // name[n] could be "INDEX" in whcih case the index column is taken as the
-    // sorting column.
+    // name[n] could be "INDEX" (or DF_INDEX_COL_NAME) in whcih case the index
+    // column is taken as the sorting column.
     // NOTE: The order of T[n] type specifications must match the order of
     //       name[n] column names. In addition, all column types must be
     //       specified separately. Otherwise, the behavior is undefined.
@@ -544,9 +545,9 @@ public:  // Data manipulation
     //   List all the types of all data columns. A type should be specified in
     //   the list only once.
     // name1:
-    //   Name of the first column or string "INDEX"
+    //   Name of the first column or string "INDEX" or DF_INDEX_COL_NAME
     // name2:
-    //   Name of the second column or string "INDEX"
+    //   Name of the second column or string "INDEX" or DF_INDEX_COL_NAME
     // dir1:
     //   Direction of sorting for the first column
     // dir2:

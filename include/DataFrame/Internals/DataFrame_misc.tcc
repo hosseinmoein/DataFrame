@@ -159,7 +159,7 @@ DataFrame<I, H>::groupby_functor_<F, Ts ...>::operator() (const T &vec)  {
     for (std::size_t i = begin; i < end && i < vec.size(); ++i)
         functor (indices, name, vec[i]);
 
-    if (! ::strcmp(name, "INDEX"))  {
+    if (! ::strcmp(name, DF_INDEX_COL_NAME))  {
         IndexType   v;
 
         functor.get_value(v);

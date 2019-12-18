@@ -645,7 +645,7 @@ void DataFrame<I, H>::sort(const char *name, sort_spec dir)  {
 
     std::iota(sorting_idxs.begin(), sorting_idxs.end(), 0);
 
-    if (! ::strcmp(name, "INDEX"))  {
+    if (! ::strcmp(name, DF_INDEX_COL_NAME))  {
         auto    a = [this](size_type i, size_type j) -> bool  {
                         return (this->indices_[i] < this->indices_[j]);
                     };
@@ -711,7 +711,7 @@ sort(const char *name1, sort_spec dir1, const char *name2, sort_spec dir2)  {
     std::vector<T1> *vec1 { nullptr};
     std::vector<T2> *vec2 { nullptr};
 
-    if (! ::strcmp(name1, "INDEX"))
+    if (! ::strcmp(name1, DF_INDEX_COL_NAME))
         vec1 = reinterpret_cast<std::vector<T1> *>(&indices_);
     else  {
         auto  iter = column_tb_.find (name1);
@@ -730,7 +730,7 @@ sort(const char *name1, sort_spec dir1, const char *name2, sort_spec dir2)  {
 
         vec1 = &(hv.template get_vector<T1>());
     }
-    if (! ::strcmp(name2, "INDEX"))
+    if (! ::strcmp(name2, DF_INDEX_COL_NAME))
         vec2 = reinterpret_cast<std::vector<T2> *>(&indices_);
     else  {
         auto  iter = column_tb_.find (name2);
@@ -799,7 +799,7 @@ sort(const char *name1, sort_spec dir1,
     std::vector<T2> *vec2 { nullptr};
     std::vector<T3> *vec3 { nullptr};
 
-    if (! ::strcmp(name1, "INDEX"))
+    if (! ::strcmp(name1, DF_INDEX_COL_NAME))
         vec1 = reinterpret_cast<std::vector<T1> *>(&indices_);
     else  {
         auto    iter = column_tb_.find (name1);
@@ -818,7 +818,7 @@ sort(const char *name1, sort_spec dir1,
 
         vec1 = &(hv.template get_vector<T1>());
     }
-    if (! ::strcmp(name2, "INDEX"))
+    if (! ::strcmp(name2, DF_INDEX_COL_NAME))
         vec2 = reinterpret_cast<std::vector<T2> *>(&indices_);
     else  {
         auto    iter = column_tb_.find (name2);
@@ -837,7 +837,7 @@ sort(const char *name1, sort_spec dir1,
 
         vec2 = &(hv.template get_vector<T2>());
     }
-    if (! ::strcmp(name3, "INDEX"))
+    if (! ::strcmp(name3, DF_INDEX_COL_NAME))
         vec3 = reinterpret_cast<std::vector<T3> *>(&indices_);
     else  {
         auto    iter = column_tb_.find (name3);
@@ -921,7 +921,7 @@ sort(const char *name1, sort_spec dir1,
     std::vector<T3> *vec3 { nullptr};
     std::vector<T4> *vec4 { nullptr};
 
-    if (! ::strcmp(name1, "INDEX"))
+    if (! ::strcmp(name1, DF_INDEX_COL_NAME))
         vec1 = reinterpret_cast<std::vector<T1> *>(&indices_);
     else  {
         auto    iter = column_tb_.find (name1);
@@ -940,7 +940,7 @@ sort(const char *name1, sort_spec dir1,
 
         vec1 = &(hv.template get_vector<T1>());
     }
-    if (! ::strcmp(name2, "INDEX"))
+    if (! ::strcmp(name2, DF_INDEX_COL_NAME))
         vec2 = reinterpret_cast<std::vector<T2> *>(&indices_);
     else  {
         auto    iter = column_tb_.find (name2);
@@ -959,7 +959,7 @@ sort(const char *name1, sort_spec dir1,
 
         vec2 = &(hv.template get_vector<T2>());
     }
-    if (! ::strcmp(name3, "INDEX"))
+    if (! ::strcmp(name3, DF_INDEX_COL_NAME))
         vec3 = reinterpret_cast<std::vector<T3> *>(&indices_);
     else  {
         auto    iter = column_tb_.find (name3);
@@ -978,7 +978,7 @@ sort(const char *name1, sort_spec dir1,
 
         vec3 = &(hv.template get_vector<T3>());
     }
-    if (! ::strcmp(name4, "INDEX"))
+    if (! ::strcmp(name4, DF_INDEX_COL_NAME))
         vec4 = reinterpret_cast<std::vector<T4> *>(&indices_);
     else  {
         auto    iter = column_tb_.find (name4);
@@ -1077,7 +1077,7 @@ sort(const char *name1, sort_spec dir1,
     std::vector<T4> *vec4 { nullptr};
     std::vector<T5> *vec5 { nullptr};
 
-    if (! ::strcmp(name1, "INDEX"))
+    if (! ::strcmp(name1, DF_INDEX_COL_NAME))
         vec1 = reinterpret_cast<std::vector<T1> *>(&indices_);
     else  {
         auto    iter = column_tb_.find (name1);
@@ -1096,7 +1096,7 @@ sort(const char *name1, sort_spec dir1,
 
         vec1 = &(hv.template get_vector<T1>());
     }
-    if (! ::strcmp(name2, "INDEX"))
+    if (! ::strcmp(name2, DF_INDEX_COL_NAME))
         vec2 = reinterpret_cast<std::vector<T2> *>(&indices_);
     else  {
         auto    iter = column_tb_.find (name2);
@@ -1115,7 +1115,7 @@ sort(const char *name1, sort_spec dir1,
 
         vec2 = &(hv.template get_vector<T2>());
     }
-    if (! ::strcmp(name3, "INDEX"))
+    if (! ::strcmp(name3, DF_INDEX_COL_NAME))
         vec3 = reinterpret_cast<std::vector<T3> *>(&indices_);
     else  {
         auto    iter = column_tb_.find (name3);
@@ -1134,7 +1134,7 @@ sort(const char *name1, sort_spec dir1,
 
         vec3 = &(hv.template get_vector<T3>());
     }
-    if (! ::strcmp(name4, "INDEX"))
+    if (! ::strcmp(name4, DF_INDEX_COL_NAME))
         vec4 = reinterpret_cast<std::vector<T4> *>(&indices_);
     else  {
         auto    iter = column_tb_.find (name4);
@@ -1153,7 +1153,7 @@ sort(const char *name1, sort_spec dir1,
 
         vec4 = &(hv.template get_vector<T4>());
     }
-    if (! ::strcmp(name4, "INDEX"))
+    if (! ::strcmp(name4, DF_INDEX_COL_NAME))
         vec5 = reinterpret_cast<std::vector<T5> *>(&indices_);
     else  {
         auto    iter = column_tb_.find (name5);
@@ -1350,7 +1350,7 @@ DataFrame<I, H>:: groupby (F &&func,
 
     if (already_sorted == sort_state::not_sorted)  {
         if (gb_col_name == nullptr) {
-            tmp_df.sort<T, Ts ...>("INDEX", sort_spec::ascen);
+            tmp_df.sort<T, Ts ...>(DF_INDEX_COL_NAME, sort_spec::ascen);
         }
         else { tmp_df.sort<T, Ts ...>(gb_col_name, sort_spec::ascen); }
     }
@@ -1407,7 +1407,7 @@ DataFrame<I, H>:: groupby (F &&func,
         for (size_type i = 0; i < vec_size; ++i)  {
             if (gb_vec[i] != gb_vec[marker])  {
                 groupby_functor_<F, IndexType>  ts_functor(
-                                            "INDEX",
+                                            DF_INDEX_COL_NAME,
                                             marker,
                                             i,
                                             tmp_df.indices_[marker],
@@ -1441,7 +1441,7 @@ DataFrame<I, H>:: groupby (F &&func,
 
         if (marker < vec_size)  {
             groupby_functor_<F, IndexType>  ts_functor(
-                                        "INDEX",
+                                        DF_INDEX_COL_NAME,
                                         vec_size - 1,
                                         vec_size,
                                         tmp_df.indices_[vec_size - 1],

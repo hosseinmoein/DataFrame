@@ -143,7 +143,7 @@ static void test_haphazard()  {
     assert(dvec2[7] == 0.1);
 
     df.sort<MyDataFrame::IndexType, int, double, std::string>
-        ("INDEX", sort_spec::ascen);
+        (DF_INDEX_COL_NAME, sort_spec::ascen);
     dvec = df.get_column<double> ("dbl_col");
     dvec2 = df.get_column<double> ("dbl_col_2");
 
@@ -365,7 +365,8 @@ static void test_haphazard()  {
 
     auto    sf = dfx.sort_async<MyDataFrame::IndexType, std::string,
                                 int, double, std::string, unsigned int>
-                     ("INDEX", sort_spec::ascen, "str_col", sort_spec::desce);
+                     (DF_INDEX_COL_NAME, sort_spec::ascen,
+                      "str_col", sort_spec::desce);
 
     sf.get();
 
@@ -374,7 +375,7 @@ static void test_haphazard()  {
     std::future<void>   sort_fut =
         dfx.sort_async<MyDataFrame::IndexType,
                        int, double, std::string, unsigned int>
-            ("INDEX", sort_spec::ascen);
+            (DF_INDEX_COL_NAME, sort_spec::ascen);
 
     sort_fut.get();
     dfx.write<std::ostream,
@@ -4058,7 +4059,7 @@ static void test_multi_col_sort()  {
 
     auto    sf = df.sort_async<MyDataFrame::IndexType, int, std::string,
                                int, double, std::string>
-                     ("INDEX", sort_spec::ascen,
+                     (DF_INDEX_COL_NAME, sort_spec::ascen,
                       "int_col", sort_spec::desce,
                       "str_col", sort_spec::desce);
 

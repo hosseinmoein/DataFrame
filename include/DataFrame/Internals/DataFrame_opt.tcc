@@ -40,8 +40,8 @@ DataFrame<I, H> &DataFrame<I, H>::
 modify_by_idx (DataFrame &rhs, sort_state already_sorted)  {
 
     if (already_sorted == sort_state::not_sorted)  {
-        rhs.sort<IndexType, types ...>("INDEX", sort_spec::ascen);
-        sort<IndexType, types ...>("INDEX", sort_spec::ascen);
+        rhs.sort<IndexType, types ...>(DF_INDEX_COL_NAME, sort_spec::ascen);
+        sort<IndexType, types ...>(DF_INDEX_COL_NAME, sort_spec::ascen);
     }
 
     const size_type lhs_s { indices_.size() };

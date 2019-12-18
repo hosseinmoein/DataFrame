@@ -54,6 +54,10 @@ struct NotImplemented : public DataFrameError  {
 
 // ----------------------------------------------------------------------------
 
+inline constexpr const char *const  DF_INDEX_COL_NAME = "INDEX";
+
+// ----------------------------------------------------------------------------
+
 enum class nan_policy : bool  {
     pad_with_nans = true,
     dont_pad_with_nans = false

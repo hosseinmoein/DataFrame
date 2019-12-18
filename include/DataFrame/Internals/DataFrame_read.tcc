@@ -391,12 +391,12 @@ void DataFrame<I, H>::read_json_(std::ifstream &file)  {
                 "DataFrame::read_json_(): ERROR: Expected '\"' (1)");
         _get_token_from_file_(file, '"', col_name);
         if (first_col)  {
-            if (strcmp(col_name, "INDEX"))
+            if (strcmp(col_name, DF_INDEX_COL_NAME))
                 throw DataFrameError("DataFrame::read_json_(): ERROR: "
                                      "Expected column name 'INDEX'");
         }
         else {
-            if (! strcmp(col_name, "INDEX"))
+            if (! strcmp(col_name, DF_INDEX_COL_NAME))
                 throw DataFrameError("DataFrame::read_json_(): ERROR: "
                                      "column name 'INDEX' is not allowed");
         }
@@ -641,7 +641,7 @@ bool DataFrame<I, H>::read (const char *file_name, io_format iof)  {
                 throw DataFrameError("DataFrame::read(): ERROR: Expected "
                                      "':' char to start column values");
 
-            if (! ::strcmp(col_name, "INDEX"))  {
+            if (! ::strcmp(col_name, DF_INDEX_COL_NAME))  {
                 IndexVecType    vec;
 
                 vec.reserve(::atoi(value));

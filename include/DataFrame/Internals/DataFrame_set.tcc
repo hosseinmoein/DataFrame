@@ -30,7 +30,7 @@ std::vector<T> &DataFrame<I, H>::create_column (const char *name)  {
     static_assert(std::is_base_of<HeteroVector, DataVec>::value,
                   "Only a StdDataFrame can call create_column()");
 
-    if (! ::strcmp(name, "INDEX"))
+    if (! ::strcmp(name, DF_INDEX_COL_NAME))
         throw DataFrameError ("DataFrame::create_column(): ERROR: "
                               "Data column name cannot be 'INDEX'");
 
@@ -53,7 +53,7 @@ void DataFrame<I, H>::remove_column (const char *name)  {
     static_assert(std::is_base_of<HeteroVector, DataVec>::value,
                   "Only a StdDataFrame can call remove_column()");
 
-    if (! ::strcmp(name, "INDEX"))
+    if (! ::strcmp(name, DF_INDEX_COL_NAME))
         throw DataFrameError ("DataFrame::remove_column(): ERROR: "
                               "Data column name cannot be 'INDEX'");
 
@@ -83,7 +83,8 @@ void DataFrame<I, H>::rename_column (const char *from, const char *to)  {
     static_assert(std::is_base_of<HeteroVector, DataVec>::value,
                   "Only a StdDataFrame can call rename_column()");
 
-    if (! ::strcmp(from, "INDEX") || ! ::strcmp(to, "INDEX"))
+    if (! ::strcmp(from, DF_INDEX_COL_NAME) ||
+        ! ::strcmp(to, DF_INDEX_COL_NAME))
         throw DataFrameError ("DataFrame::rename_column(): ERROR: "
                               "Data column name cannot be 'INDEX'");
 

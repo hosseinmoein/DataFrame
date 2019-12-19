@@ -1108,6 +1108,11 @@ static void test_index_left_right_join()  {
 
     std::cout << "Now The joined DF:" << std::endl;
     join_df.write<std::ostream, double, int>(std::cout);
+
+    StdDataFrame<unsigned int>  join_df2 =
+        df.join_by_column<decltype(df2), double, double, int>
+           (df2, "col_2", join_policy::left_right_join);
+
 }
 
 // -----------------------------------------------------------------------------

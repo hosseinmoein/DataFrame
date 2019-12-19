@@ -774,6 +774,23 @@ public:  // Data manipulation
     StdDataFrame<IndexType>
     join_by_index(const RHS_T &rhs, join_policy jp) const;
 
+
+
+
+    template<typename RHS_T, typename T, typename ... Ts>
+    StdDataFrame<unsigned int>
+    join_by_column(const RHS_T &rhs, const char *name, join_policy jp) const;
+
+
+
+
+
+
+
+
+
+
+
     // It shifts all the columns in self up or down based on shift_policy.
     // Values that are shifted will be assigned to NaN. The index column
     // remains unchanged.
@@ -1815,28 +1832,70 @@ private:  // Static helper functions
     setup_view_column_(const char *name, Index2D<ITR> range);
 
     using IndexIdxVector = std::vector<std::tuple<size_type, size_type>>;
+    template<typename T>
+    using JoinSortingPair = std::pair<const T *, size_type>;
 
     template<typename LHS_T, typename RHS_T, typename ... Ts>
     static StdDataFrame<IndexType>
-    join_helper_(const LHS_T &lhs,
-                 const RHS_T &rhs,
-                 const IndexIdxVector &joined_index_idx);
+    index_join_helper_(const LHS_T &lhs,
+                       const RHS_T &rhs,
+                       const IndexIdxVector &joined_index_idx);
+
+    template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
+    static StdDataFrame<unsigned int>
+    column_join_helper_(const LHS_T &lhs,
+                        const RHS_T &rhs,
+                        const char *col_name,
+                        const IndexIdxVector &joined_index_idx);
 
     template<typename LHS_T, typename RHS_T, typename ... Ts>
     static StdDataFrame<IndexType>
     index_inner_join_(const LHS_T &lhs, const RHS_T &rhs);
 
+    template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
+    static StdDataFrame<unsigned int>
+    column_inner_join_(const LHS_T &lhs,
+                       const RHS_T &rhs,
+                       const char *col_name,
+                       const std::vector<JoinSortingPair<T>> &col_vec_lhs,
+                       const std::vector<JoinSortingPair<T>> &col_vec_rhs);
+
     template<typename LHS_T, typename RHS_T, typename ... Ts>
     static StdDataFrame<IndexType>
     index_left_join_(const LHS_T &lhs, const RHS_T &rhs);
+
+    template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
+    static StdDataFrame<unsigned int>
+    column_left_join_(const LHS_T &lhs,
+                      const RHS_T &rhs,
+                      const char *col_name,
+                      const std::vector<JoinSortingPair<T>> &col_vec_lhs,
+                      const std::vector<JoinSortingPair<T>> &col_vec_rhs);
 
     template<typename LHS_T, typename RHS_T, typename ... Ts>
     static StdDataFrame<IndexType>
     index_right_join_(const LHS_T &lhs, const RHS_T &rhs);
 
+    template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
+    static StdDataFrame<unsigned int>
+    column_right_join_(const LHS_T &lhs,
+                       const RHS_T &rhs,
+                       const char *col_name,
+                       const std::vector<JoinSortingPair<T>> &col_vec_lhs,
+                       const std::vector<JoinSortingPair<T>> &col_vec_rhs);
+
     template<typename LHS_T, typename RHS_T, typename ... Ts>
     static StdDataFrame<IndexType>
     index_left_right_join_(const LHS_T &lhs, const RHS_T &rhs);
+
+    template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
+    static StdDataFrame<unsigned int>
+    column_left_right_join_(
+        const LHS_T &lhs,
+        const RHS_T &rhs,
+        const char *col_name,
+        const std::vector<JoinSortingPair<T>> &col_vec_lhs,
+        const std::vector<JoinSortingPair<T>> &col_vec_rhs);
 
     template<typename V>
     static void

@@ -418,11 +418,12 @@ void DataFrame<I, H>::for_each_in_tuple_ (std::tuple<Ts...> &tu, F func) {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename ... Ts>
+template<typename RES_T, typename ... Ts>
 template<typename T>
 void
 DataFrame<I, H>::
-index_join_functor_common_<Ts ...>::operator()(const std::vector<T> &lhs_vec)  {
+index_join_functor_common_<RES_T, Ts ...>::
+operator()(const std::vector<T> &lhs_vec)  {
 
     const std::vector<T>    &rhs_vec = rhs.get_column<T>(name);
     std::vector<T>          lhs_result_col;
@@ -454,9 +455,9 @@ index_join_functor_common_<Ts ...>::operator()(const std::vector<T> &lhs_vec)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<int SIDE, typename ... Ts>
+template<int SIDE, typename RES_T, typename ... Ts>
 template<typename T>
-void DataFrame<I, H>::index_join_functor_oneside_<SIDE, Ts ...>::
+void DataFrame<I, H>::index_join_functor_oneside_<SIDE, RES_T, Ts ...>::
 operator()(const std::vector<T> &vec)  {
 
     std::vector<T>          result_col;

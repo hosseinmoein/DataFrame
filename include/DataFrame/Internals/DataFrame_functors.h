@@ -244,20 +244,20 @@ struct mod_by_idx_functor_ : DataVec::template visitor_base<Ts ...>  {
 
 // ----------------------------------------------------------------------------
 
-template<typename ... Ts>
+template<typename RES_T, typename ... Ts>
 struct index_join_functor_common_ : DataVec::template visitor_base<Ts ...>  {
 
     inline index_join_functor_common_ (
         const char *n,
         const DataFrame &r,
         const IndexIdxVector &mii,
-        DataFrame &res)
+        RES_T &res)
         : name(n), rhs(r), joined_index_idx(mii), result(res)  {  }
 
     const char              *name;
     const DataFrame         &rhs;
     const IndexIdxVector    &joined_index_idx;
-    DataFrame               &result;
+    RES_T                   &result;
 
     template<typename T>
     void operator() (const std::vector<T> &lhs_vec);
@@ -266,19 +266,19 @@ struct index_join_functor_common_ : DataVec::template visitor_base<Ts ...>  {
 // ----------------------------------------------------------------------------
 
 // SIDE:  0 = Left, 1 = Right
-template<int SIDE, typename ... Ts>
+template<int SIDE, typename RES_T, typename ... Ts>
 struct index_join_functor_oneside_
     : DataVec::template visitor_base<Ts ...>  {
 
     inline index_join_functor_oneside_ (
         const char *n,
         const IndexIdxVector &mii,
-        DataFrame &res)
+        RES_T &res)
         : name(n), joined_index_idx(mii), result(res)  {  }
 
     const char              *name;
     const IndexIdxVector    &joined_index_idx;
-    DataFrame               &result;
+    RES_T                   &result;
 
     template<typename T>
     void operator() (const std::vector<T> &vec);

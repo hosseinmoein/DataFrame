@@ -777,7 +777,7 @@ public:  // Data manipulation
 
     // It joins the data between self (lhs) and rhs and returns the joined data
     // in a StdDataFrame, based on specification in join_policy.
-    // The returned DataFrame is indexed by a sequence of insigned integers from
+    // The returned DataFrame is indexed by a sequence of unsigned integers from
     // 0 to N. The returned DataFrame will at least have two columns names
     // lhs.INDEX and rhs.INDEX containing the lhs and rhs indices based on join
     // policy.
@@ -798,13 +798,12 @@ public:  // Data manipulation
     //   the list only once.
     // rhs:
     //   The rhs DataFrame
-    // namne:
+    // name:
     //   Name of the column which the join will be based on
     // join_policy:
     //   Specifies how to join. For example inner join, or left join, etc.
     //   (See join_policy definition)
     //
-
     template<typename RHS_T, typename T, typename ... Ts>
     StdDataFrame<unsigned int>
     join_by_column(const RHS_T &rhs, const char *name, join_policy jp) const;

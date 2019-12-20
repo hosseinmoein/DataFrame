@@ -1108,11 +1108,6 @@ static void test_index_left_right_join()  {
 
     std::cout << "Now The joined DF:" << std::endl;
     join_df.write<std::ostream, double, int>(std::cout);
-
-    StdDataFrame<unsigned int>  join_df2 =
-        df.join_by_column<decltype(df2), double, double, int>
-           (df2, "col_2", join_policy::left_right_join);
-
 }
 
 // -----------------------------------------------------------------------------
@@ -4102,6 +4097,87 @@ static void test_multi_col_sort()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_join_by_column()  {
+
+    std::cout << "\nTesting join by column ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466 };
+    std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
+    std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23,
+                               30, 31, 32, 1.89};
+    std::vector<double> d3 = { 15, 16, 15, 18, 19, 16, 21,
+                               0.34, 1.56, 0.34, 2.3, 0.34, 19.0 };
+    std::vector<int>    i1 = { 22, 23, 24, 25, 99 };
+    MyDataFrame         df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("col_1", d1),
+                 std::make_pair("col_2", d2),
+                 std::make_pair("col_3", d3),
+                 std::make_pair("col_4", i1));
+
+    std::vector<unsigned long>  idx2 =
+        { 123452, 123453, 123455, 123458, 123466, 223450, 223451,
+          223454, 223456, 223457, 223459, 223460, 223461, 223462 };
+    std::vector<double> d12 =
+           { 11, 12, 13, 14, 15, 16, 17, 18, 19, 110, 111, 112, 113, 114 };
+    std::vector<double> d22 =
+        { 8, 19, 110, 111, 9, 113, 114, 99, 122, 123,
+          130, 131, 20, 11.89 };
+    std::vector<double> d32 =
+        { 115, 116, 115, 118, 119, 116, 121,
+          10.34, 11.56, 10.34, 12.3, 10.34, 119.0 };
+    std::vector<int>    i12 = { 122, 123, 124, 125, 199 };
+    MyDataFrame         df2;
+
+    df2.load_data(std::move(idx2),
+                  std::make_pair("xcol_1", d12),
+                  std::make_pair("col_2", d22),
+                  std::make_pair("xcol_3", d32),
+                  std::make_pair("col_4", i12));
+
+    std::cout << "First DF:" << std::endl;
+    df.write<std::ostream, double, int>(std::cout);
+    std::cout << "Second DF2:" << std::endl;
+    df2.write<std::ostream, double, int>(std::cout);
+
+    StdDataFrame<unsigned int>  inner_result =
+        df.join_by_column<decltype(df2), double, double, int>
+           (df2, "col_2", join_policy::inner_join);
+
+    std::cout << "Inner result:" << std::endl;
+    inner_result.write<std::ostream,
+                       double, int, MyDataFrame::IndexType>(std::cout);
+
+    StdDataFrame<unsigned int>  left_result =
+        df.join_by_column<decltype(df2), double, double, int>
+           (df2, "col_2", join_policy::left_join);
+
+    std::cout << "Left result:" << std::endl;
+    left_result.write<std::ostream,
+                      double, int, MyDataFrame::IndexType>(std::cout);
+
+    StdDataFrame<unsigned int>  right_result =
+        df.join_by_column<decltype(df2), double, double, int>
+           (df2, "col_2", join_policy::right_join);
+
+    std::cout << "Right result:" << std::endl;
+    right_result.write<std::ostream,
+                       double, int, MyDataFrame::IndexType>(std::cout);
+
+    StdDataFrame<unsigned int>  left_right_result =
+        df.join_by_column<decltype(df2), double, double, int>
+           (df2, "col_2", join_policy::left_right_join);
+
+    std::cout << "Left-Right result:" << std::endl;
+    left_right_result.write<std::ostream,
+                            double, int, MyDataFrame::IndexType>(std::cout);
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int argc, char *argv[]) {
 
     test_haphazard();
@@ -4167,6 +4243,7 @@ int main(int argc, char *argv[]) {
     test_k_means();
     test_affinity_propagation();
     test_multi_col_sort();
+    test_join_by_column();
 
     return (0);
 }

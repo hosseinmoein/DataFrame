@@ -5,6 +5,7 @@
 
 #include <DataFrame/DataFrame.h>
 
+#include <cstdio>
 #include <tuple>
 
 // ----------------------------------------------------------------------------
@@ -241,8 +242,13 @@ column_join_helper_(const LHS_T &lhs,
         if (right_i != std::numeric_limits<size_type>::max())
             rhs_index.push_back(rhs.indices_[right_i]);
     }
-    result.load_column("lhs.INDEX", std::move(lhs_index));
-    result.load_column("rhs.INDEX", std::move(rhs_index));
+
+    char    buffer[64];
+
+    ::sprintf(buffer, "lhs.%s", DF_INDEX_COL_NAME);
+    result.load_column(buffer, std::move(lhs_index));
+    ::sprintf(buffer, "rhs.%s", DF_INDEX_COL_NAME);
+    result.load_column(buffer, std::move(rhs_index));
     result.load_column(col_name, std::move(named_col_vec));
 
     // Load the common and lhs columns

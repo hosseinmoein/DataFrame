@@ -4138,42 +4138,61 @@ static void test_join_by_column()  {
                   std::make_pair("xcol_3", d32),
                   std::make_pair("col_4", i12));
 
-    std::cout << "First DF:" << std::endl;
-    df.write<std::ostream, double, int>(std::cout);
-    std::cout << "Second DF2:" << std::endl;
-    df2.write<std::ostream, double, int>(std::cout);
-
     StdDataFrame<unsigned int>  inner_result =
         df.join_by_column<decltype(df2), double, double, int>
            (df2, "col_2", join_policy::inner_join);
 
-    std::cout << "Inner result:" << std::endl;
-    inner_result.write<std::ostream,
-                       double, int, MyDataFrame::IndexType>(std::cout);
+    assert(inner_result.get_index().size() == 3);
+    assert(inner_result.get_column<double>("xcol_1")[2] == 113.0);
+    assert(inner_result.get_column<double>("xcol_3")[1] == 119.0);
+    assert(inner_result.get_column<double>("col_1")[2] == 8.0);
+    assert(inner_result.get_column<double>("col_3")[0] == 15.0);
+    assert(inner_result.get_column<int>("rhs.col_4")[2] == 0);
+    assert(inner_result.get_column<int>("lhs.col_4")[0] == 22);
+    assert(inner_result.get_column<unsigned long>("rhs.INDEX")[1] == 123466);
+    assert(inner_result.get_column<unsigned long>("lhs.INDEX")[2] == 123457);
 
     StdDataFrame<unsigned int>  left_result =
         df.join_by_column<decltype(df2), double, double, int>
            (df2, "col_2", join_policy::left_join);
 
-    std::cout << "Left result:" << std::endl;
-    left_result.write<std::ostream,
-                      double, int, MyDataFrame::IndexType>(std::cout);
+    assert(left_result.get_index().size() == 14);
+    assert(std::isnan(left_result.get_column<double>("xcol_1")[5]));
+    assert(left_result.get_column<double>("xcol_3")[8] == 119.0);
+    assert(left_result.get_column<double>("col_1")[13] == 13.0);
+    assert(left_result.get_column<double>("col_3")[9] == 1.56);
+    assert(left_result.get_column<int>("rhs.col_4")[2] == 199);
+    assert(left_result.get_column<int>("lhs.col_4")[5] == 99);
+    assert(left_result.get_column<unsigned long>("rhs.INDEX")[3] == 0);
+    assert(left_result.get_column<unsigned long>("lhs.INDEX")[11] == 123460);
 
     StdDataFrame<unsigned int>  right_result =
         df.join_by_column<decltype(df2), double, double, int>
            (df2, "col_2", join_policy::right_join);
 
-    std::cout << "Right result:" << std::endl;
-    right_result.write<std::ostream,
-                       double, int, MyDataFrame::IndexType>(std::cout);
+    assert(right_result.get_index().size() == 14);
+    assert(right_result.get_column<double>("xcol_1")[5] == 18.0);
+    assert(std::isnan(right_result.get_column<double>("xcol_3")[2]));
+    assert(right_result.get_column<double>("col_1")[4] == 8.0);
+    assert(std::isnan(right_result.get_column<double>("col_3")[5]));
+    assert(right_result.get_column<int>("rhs.col_4")[2] == 0);
+    assert(right_result.get_column<int>("lhs.col_4")[5] == 0);
+    assert(right_result.get_column<unsigned long>("rhs.INDEX")[3] == 123453);
+    assert(right_result.get_column<unsigned long>("lhs.INDEX")[11] == 0);
 
     StdDataFrame<unsigned int>  left_right_result =
         df.join_by_column<decltype(df2), double, double, int>
            (df2, "col_2", join_policy::left_right_join);
 
-    std::cout << "Left-Right result:" << std::endl;
-    left_right_result.write<std::ostream,
-                            double, int, MyDataFrame::IndexType>(std::cout);
+    assert(left_right_result.get_index().size() == 25);
+    assert(left_right_result.get_column<double>("xcol_1")[2] == 15.0);
+    assert(left_right_result.get_column<double>("xcol_3")[1] == 115.0);
+    assert(left_right_result.get_column<double>("col_1")[2] == 2.0);
+    assert(std::isnan(left_right_result.get_column<double>("col_3")[0]));
+    assert(left_right_result.get_column<int>("rhs.col_4")[2] == 199);
+    assert(left_right_result.get_column<int>("lhs.col_4")[0] == 0);
+    assert(left_right_result.get_column<unsigned long>("rhs.INDEX")[1] == 123452);
+    assert(left_right_result.get_column<unsigned long>("lhs.INDEX")[2] == 123451);
 }
 
 // -----------------------------------------------------------------------------

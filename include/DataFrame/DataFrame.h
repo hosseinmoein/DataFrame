@@ -760,7 +760,8 @@ public:  // Data manipulation
     //   4) In both lhs and rhs, columns with the same name must have the same
     //      type
     //
-    // RHS_T: Type of DataFrame rhs
+    // RHS_T:
+    //   Type of DataFrame rhs
     // Ts:
     //   List all the types of all data columns. A type should be specified in
     //   the list only once.
@@ -774,22 +775,39 @@ public:  // Data manipulation
     StdDataFrame<IndexType>
     join_by_index(const RHS_T &rhs, join_policy jp) const;
 
-
-
+    // It joins the data between self (lhs) and rhs and returns the joined data
+    // in a StdDataFrame, based on specification in join_policy.
+    // The returned DataFrame is indexed by a sequence of insigned integers from
+    // 0 to N. The returned DataFrame will at least have two columns names
+    // lhs.INDEX and rhs.INDEX containing the lhs and rhs indices based on join
+    // policy.
+    // The following conditions must be meet for this method
+    // to compile and work properly:
+    //   1) Ordering (< > != ==) must be well defined for the type of the
+    //      named column.
+    //   2) Both lhs and rhs must contain the named column
+    //   3) In both lhs and rhs, columns with the same name must have the same
+    //      type
+    //
+    // RHS_T:
+    //   Type of DataFrame rhs
+    // T:
+    //   Type of the named column
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // rhs:
+    //   The rhs DataFrame
+    // namne:
+    //   Name of the column which the join will be based on
+    // join_policy:
+    //   Specifies how to join. For example inner join, or left join, etc.
+    //   (See join_policy definition)
+    //
 
     template<typename RHS_T, typename T, typename ... Ts>
     StdDataFrame<unsigned int>
     join_by_column(const RHS_T &rhs, const char *name, join_policy jp) const;
-
-
-
-
-
-
-
-
-
-
 
     // It shifts all the columns in self up or down based on shift_policy.
     // Values that are shifted will be assigned to NaN. The index column

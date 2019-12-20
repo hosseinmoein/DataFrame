@@ -238,9 +238,12 @@ column_join_helper_(const LHS_T &lhs,
         }
         else  {
             named_col_vec.push_back(rhs_named_col_vec[right_i]);
+            lhs_index.push_back(DataFrame::_get_nan<left_idx_t>());
         }
         if (right_i != std::numeric_limits<size_type>::max())
             rhs_index.push_back(rhs.indices_[right_i]);
+        else
+            rhs_index.push_back(DataFrame::_get_nan<right_idx_t>());
     }
 
     char    buffer[64];
@@ -432,24 +435,21 @@ column_left_join_(const LHS_T &lhs,
         if (lhs_current >= lhs_end)  break;
         if (rhs_current >= rhs_end)  {
             joined_index_idx.emplace_back(
-                col_vec_lhs[lhs_current].second,
+                col_vec_lhs[lhs_current++].second,
                 std::numeric_limits<size_type>::max());
-            lhs_current += 1;
             continue;
         }
 
-        if (lhs.indices_[lhs_current] < rhs.indices_[rhs_current])  {
+        if (*(col_vec_lhs[lhs_current].first) <
+                *(col_vec_rhs[rhs_current].first))
             joined_index_idx.emplace_back(
-                col_vec_lhs[lhs_current].second,
+                col_vec_lhs[lhs_current++].second,
                 std::numeric_limits<size_type>::max());
-            lhs_current += 1;
-        }
         else  {
-            if (lhs.indices_[lhs_current] == rhs.indices_[rhs_current])  {
-                joined_index_idx.emplace_back(col_vec_lhs[lhs_current].second,
+            if (*(col_vec_lhs[lhs_current].first) ==
+                    *(col_vec_rhs[rhs_current].first))
+                joined_index_idx.emplace_back(col_vec_lhs[lhs_current++].second,
                                               col_vec_rhs[rhs_current].second);
-                lhs_current += 1;
-            }
             rhs_current += 1;
         }
     }
@@ -528,10 +528,12 @@ column_right_join_(const LHS_T &lhs,
             continue;
         }
 
-        if (lhs.indices_[lhs_current] < rhs.indices_[rhs_current])
+        if (*(col_vec_lhs[lhs_current].first) <
+                *(col_vec_rhs[rhs_current].first))
             lhs_current += 1;
         else  {
-            if (lhs.indices_[lhs_current] == rhs.indices_[rhs_current])  {
+            if (*(col_vec_lhs[lhs_current].first) ==
+                    *(col_vec_rhs[rhs_current].first))  {
                 joined_index_idx.emplace_back(
                     col_vec_lhs[lhs_current].second,
                     col_vec_rhs[rhs_current].second);
@@ -633,14 +635,16 @@ column_left_right_join_(const LHS_T &lhs,
             continue;
         }
 
-        if (lhs.indices_[lhs_current] < rhs.indices_[rhs_current])  {
+        if (*(col_vec_lhs[lhs_current].first) <
+                *(col_vec_rhs[rhs_current].first))  {
             joined_index_idx.emplace_back(
                 col_vec_lhs[lhs_current].second,
                 std::numeric_limits<size_type>::max());
             lhs_current += 1;
         }
         else  {
-            if (lhs.indices_[lhs_current] == rhs.indices_[rhs_current])  {
+            if (*(col_vec_lhs[lhs_current].first) ==
+                    *(col_vec_rhs[rhs_current].first))  {
                 joined_index_idx.emplace_back(col_vec_lhs[lhs_current].second,
                                               col_vec_rhs[rhs_current].second);
                 lhs_current += 1;

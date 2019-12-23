@@ -20,7 +20,7 @@ namespace hmdf
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename RHS_T, typename ... types>
+template<typename RHS_T, typename ... Ts>
 StdDataFrame<I> DataFrame<I, H>::
 join_by_index (const RHS_T &rhs, join_policy mp) const  {
 
@@ -54,20 +54,20 @@ join_by_index (const RHS_T &rhs, join_policy mp) const  {
     switch(mp)  {
         case join_policy::inner_join:
             return (index_inner_join_
-                        <decltype(*this), RHS_T, types ...>
+                        <decltype(*this), RHS_T, Ts ...>
                     (*this, rhs, idx_vec_lhs, idx_vec_rhs));
         case join_policy::left_join:
             return (index_left_join_
-                        <decltype(*this), RHS_T, types ...>
+                        <decltype(*this), RHS_T, Ts ...>
                     (*this, rhs, idx_vec_lhs, idx_vec_rhs));
         case join_policy::right_join:
             return (index_right_join_
-                        <decltype(*this), RHS_T, types ...>
+                        <decltype(*this), RHS_T, Ts ...>
                     (*this, rhs, idx_vec_lhs, idx_vec_rhs));
         case join_policy::left_right_join:
         default:
             return (index_left_right_join_
-                        <decltype(*this), RHS_T, types ...>
+                        <decltype(*this), RHS_T, Ts ...>
                     (*this, rhs, idx_vec_lhs, idx_vec_rhs));
     }
 }
@@ -75,7 +75,7 @@ join_by_index (const RHS_T &rhs, join_policy mp) const  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename RHS_T, typename T, typename ... types>
+template<typename RHS_T, typename T, typename ... Ts>
 StdDataFrame<unsigned int> DataFrame<I, H>::
 join_by_column (const RHS_T &rhs, const char *name, join_policy mp) const  {
 
@@ -128,20 +128,20 @@ join_by_column (const RHS_T &rhs, const char *name, join_policy mp) const  {
     switch(mp)  {
         case join_policy::inner_join:
             return (column_inner_join_
-                        <decltype(*this), RHS_T, T, types ...>
+                        <decltype(*this), RHS_T, T, Ts ...>
                             (*this, rhs, name, col_vec_lhs, col_vec_rhs));
         case join_policy::left_join:
             return (column_left_join_
-                        <decltype(*this), RHS_T, T, types ...>
+                        <decltype(*this), RHS_T, T, Ts ...>
                             (*this, rhs, name, col_vec_lhs, col_vec_rhs));
         case join_policy::right_join:
             return (column_right_join_
-                        <decltype(*this), RHS_T, T, types ...>
+                        <decltype(*this), RHS_T, T, Ts ...>
                             (*this, rhs, name, col_vec_lhs, col_vec_rhs));
         case join_policy::left_right_join:
         default:
             return (column_left_right_join_
-                        <decltype(*this), RHS_T, T, types ...>
+                        <decltype(*this), RHS_T, T, Ts ...>
                             (*this, rhs, name, col_vec_lhs, col_vec_rhs));
     }
 }
@@ -149,7 +149,63 @@ join_by_column (const RHS_T &rhs, const char *name, join_policy mp) const  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename LHS_T, typename RHS_T, typename ... types>
+template<typename LHS_T, typename RHS_T, typename IDX_T, typename ... Ts>
+void DataFrame<I, H>::
+join_helper_common_(const LHS_T &lhs,
+                    const RHS_T &rhs,
+                    const IndexIdxVector &joined_index_idx,
+                    StdDataFrame<IDX_T> &result,
+                    const char *skip_col_name)  {
+
+    // Load the common and lhs columns
+    for (auto &iter : lhs.column_tb_)  {
+        auto    rhs_citer = rhs.column_tb_.find(iter.first);
+
+        if (skip_col_name && iter.first == skip_col_name)  continue;
+
+        // Common column between two frames
+        if (rhs_citer != rhs.column_tb_.end())  {
+            index_join_functor_common_<decltype(result), Ts ...> functor(
+                iter.first.c_str(),
+                rhs,
+                joined_index_idx,
+                result);
+
+            lhs.data_[iter.second].change(functor);
+        }
+        else  {  // lhs only column
+            // 0 = Left
+            index_join_functor_oneside_<0, decltype(result), Ts ...> functor (
+                iter.first.c_str(),
+                joined_index_idx,
+                result);
+
+            lhs.data_[iter.second].change(functor);
+        }
+    }
+
+    // Load the rhs columns
+    for (auto &iter : rhs.column_tb_)  {
+        auto    lhs_citer = lhs.column_tb_.find(iter.first);
+
+        if (skip_col_name && iter.first == skip_col_name)  continue;
+
+        if (lhs_citer == lhs.column_tb_.end())  {  // rhs only column
+            // 1 = Right
+            index_join_functor_oneside_<1, decltype(result), Ts ...> functor (
+                iter.first.c_str(),
+                joined_index_idx,
+                result);
+
+            rhs.data_[iter.second].change(functor);
+        }
+    }
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename LHS_T, typename RHS_T, typename ... Ts>
 StdDataFrame<I> DataFrame<I, H>::
 index_join_helper_(const LHS_T &lhs,
                    const RHS_T &rhs,
@@ -169,58 +225,15 @@ index_join_helper_(const LHS_T &lhs,
     }
     result.load_index(std::move(result_index));
 
-    // Load the common and lhs columns
-    for (auto &iter : lhs.column_tb_)  {
-        auto    rhs_citer = rhs.column_tb_.find(iter.first);
-
-        // Common column between two frames
-        if (rhs_citer != rhs.column_tb_.end())  {
-            index_join_functor_common_<decltype(result), types ...> functor(
-                iter.first.c_str(),
-                rhs,
-                joined_index_idx,
-                result);
-
-            lhs.data_[iter.second].change(functor);
-
-        }
-        else  {  // lhs only column
-            // 0 = Left
-            index_join_functor_oneside_<0,
-                                        decltype(result),
-                                        types ...> functor (
-                iter.first.c_str(),
-                joined_index_idx,
-                result);
-
-            lhs.data_[iter.second].change(functor);
-        }
-    }
-
-    // Load the rhs columns
-    for (auto &iter : rhs.column_tb_)  {
-        auto    lhs_citer = lhs.column_tb_.find(iter.first);
-
-        if (lhs_citer == lhs.column_tb_.end())  {  // rhs only column
-            // 1 = Right
-            index_join_functor_oneside_<1,
-                                        decltype(result),
-                                        types ...> functor (
-                iter.first.c_str(),
-                joined_index_idx,
-                result);
-
-            rhs.data_[iter.second].change(functor);
-        }
-    }
-
+    join_helper_common_<LHS_T, RHS_T, IndexType, Ts ...>
+        (lhs, rhs, joined_index_idx, result); 
     return(result);
 }
 
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename LHS_T, typename RHS_T, typename T, typename ... types>
+template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
 StdDataFrame<unsigned int> DataFrame<I, H>::
 column_join_helper_(const LHS_T &lhs,
                     const RHS_T &rhs,
@@ -276,55 +289,8 @@ column_join_helper_(const LHS_T &lhs,
     result.load_column(buffer, std::move(rhs_index));
     result.load_column(col_name, std::move(named_col_vec));
 
-    // Load the common and lhs columns
-    for (auto &iter : lhs.column_tb_)  {
-        auto    rhs_citer = rhs.column_tb_.find(iter.first);
-
-        if (iter.first == col_name)  continue;
-
-        // Common column between two frames
-        if (rhs_citer != rhs.column_tb_.end())  {
-            index_join_functor_common_<decltype(result), types ...> functor(
-                iter.first.c_str(),
-                rhs,
-                joined_index_idx,
-                result);
-
-            lhs.data_[iter.second].change(functor);
-
-        }
-        else  {  // lhs only column
-            // 0 = Left
-            index_join_functor_oneside_<0,
-                                        decltype(result),
-                                        types ...> functor (
-                iter.first.c_str(),
-                joined_index_idx,
-                result);
-
-            lhs.data_[iter.second].change(functor);
-        }
-    }
-
-    // Load the rhs columns
-    for (auto &iter : rhs.column_tb_)  {
-        auto    lhs_citer = lhs.column_tb_.find(iter.first);
-
-        if (iter.first == col_name)  continue;
-
-        if (lhs_citer == lhs.column_tb_.end())  {  // rhs only column
-            // 1 = Right
-            index_join_functor_oneside_<1,
-                                        decltype(result),
-                                        types ...> functor (
-                iter.first.c_str(),
-                joined_index_idx,
-                result);
-
-            rhs.data_[iter.second].change(functor);
-        }
-    }
-
+    join_helper_common_<LHS_T, RHS_T, unsigned int, Ts ...>
+        (lhs, rhs, joined_index_idx, result, col_name); 
     return(result);
 }
 
@@ -364,13 +330,13 @@ DataFrame<I, H>::get_inner_index_idx_vector_(
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename LHS_T, typename RHS_T, typename ... types>
+template<typename LHS_T, typename RHS_T, typename ... Ts>
 StdDataFrame<I> DataFrame<I, H>::
 index_inner_join_(const LHS_T &lhs, const RHS_T &rhs,
                   const std::vector<JoinSortingPair<IndexType>> &col_vec_lhs,
                   const std::vector<JoinSortingPair<IndexType>> &col_vec_rhs) {
 
-    return (index_join_helper_<LHS_T, RHS_T, types ...>
+    return (index_join_helper_<LHS_T, RHS_T, Ts ...>
                 (lhs, rhs,
                  get_inner_index_idx_vector_(col_vec_lhs, col_vec_rhs)));
 }
@@ -378,7 +344,7 @@ index_inner_join_(const LHS_T &lhs, const RHS_T &rhs,
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename LHS_T, typename RHS_T, typename T, typename ... types>
+template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
 StdDataFrame<unsigned int> DataFrame<I, H>::
 column_inner_join_(const LHS_T &lhs,
                    const RHS_T &rhs,
@@ -386,7 +352,7 @@ column_inner_join_(const LHS_T &lhs,
                    const std::vector<JoinSortingPair<T>> &col_vec_lhs,
                    const std::vector<JoinSortingPair<T>> &col_vec_rhs)  {
 
-    return (column_join_helper_<LHS_T, RHS_T, T, types ...>
+    return (column_join_helper_<LHS_T, RHS_T, T, Ts ...>
                 (lhs, rhs, col_name,
                  get_inner_index_idx_vector_(col_vec_lhs, col_vec_rhs)));
 }
@@ -435,13 +401,13 @@ DataFrame<I, H>::get_left_index_idx_vector_(
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename LHS_T, typename RHS_T, typename ... types>
+template<typename LHS_T, typename RHS_T, typename ... Ts>
 StdDataFrame<I> DataFrame<I, H>::
 index_left_join_(const LHS_T &lhs, const RHS_T &rhs,
                  const std::vector<JoinSortingPair<IndexType>> &col_vec_lhs,
                  const std::vector<JoinSortingPair<IndexType>> &col_vec_rhs) {
 
-    return (index_join_helper_<LHS_T, RHS_T, types ...>
+    return (index_join_helper_<LHS_T, RHS_T, Ts ...>
                 (lhs, rhs,
                  get_left_index_idx_vector_(col_vec_lhs, col_vec_rhs)));
 }
@@ -449,7 +415,7 @@ index_left_join_(const LHS_T &lhs, const RHS_T &rhs,
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename LHS_T, typename RHS_T, typename T, typename ... types>
+template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
 StdDataFrame<unsigned int> DataFrame<I, H>::
 column_left_join_(const LHS_T &lhs,
                   const RHS_T &rhs,
@@ -457,7 +423,7 @@ column_left_join_(const LHS_T &lhs,
                   const std::vector<JoinSortingPair<T>> &col_vec_lhs,
                   const std::vector<JoinSortingPair<T>> &col_vec_rhs)  {
 
-    return (column_join_helper_<LHS_T, RHS_T, T, types ...>
+    return (column_join_helper_<LHS_T, RHS_T, T, Ts ...>
                 (lhs, rhs, col_name,
                  get_left_index_idx_vector_(col_vec_lhs, col_vec_rhs)));
 }
@@ -510,13 +476,13 @@ DataFrame<I, H>::get_right_index_idx_vector_(
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename LHS_T, typename RHS_T, typename ... types>
+template<typename LHS_T, typename RHS_T, typename ... Ts>
 StdDataFrame<I> DataFrame<I, H>::
 index_right_join_(const LHS_T &lhs, const RHS_T &rhs,
                   const std::vector<JoinSortingPair<IndexType>> &col_vec_lhs,
                   const std::vector<JoinSortingPair<IndexType>> &col_vec_rhs) {
 
-    return (index_join_helper_<LHS_T, RHS_T, types ...>
+    return (index_join_helper_<LHS_T, RHS_T, Ts ...>
                 (lhs, rhs,
                  get_right_index_idx_vector_(col_vec_lhs, col_vec_rhs)));
 }
@@ -524,7 +490,7 @@ index_right_join_(const LHS_T &lhs, const RHS_T &rhs,
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename LHS_T, typename RHS_T, typename T, typename ... types>
+template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
 StdDataFrame<unsigned int> DataFrame<I, H>::
 column_right_join_(const LHS_T &lhs,
                    const RHS_T &rhs,
@@ -532,7 +498,7 @@ column_right_join_(const LHS_T &lhs,
                    const std::vector<JoinSortingPair<T>> &col_vec_lhs,
                    const std::vector<JoinSortingPair<T>> &col_vec_rhs)  {
 
-    return (column_join_helper_<LHS_T, RHS_T, T, types ...>
+    return (column_join_helper_<LHS_T, RHS_T, T, Ts ...>
                 (lhs, rhs, col_name,
                  get_right_index_idx_vector_(col_vec_lhs, col_vec_rhs)));
 }
@@ -592,7 +558,7 @@ DataFrame<I, H>::get_left_right_index_idx_vector_(
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename LHS_T, typename RHS_T, typename ... types>
+template<typename LHS_T, typename RHS_T, typename ... Ts>
 StdDataFrame<I> DataFrame<I, H>::
 index_left_right_join_(
     const LHS_T &lhs,
@@ -600,7 +566,7 @@ index_left_right_join_(
     const std::vector<JoinSortingPair<IndexType>> &col_vec_lhs,
     const std::vector<JoinSortingPair<IndexType>> &col_vec_rhs) {
 
-    return (index_join_helper_<LHS_T, RHS_T, types ...>
+    return (index_join_helper_<LHS_T, RHS_T, Ts ...>
                 (lhs, rhs,
                  get_left_right_index_idx_vector_(col_vec_lhs, col_vec_rhs)));
 }
@@ -608,7 +574,7 @@ index_left_right_join_(
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename LHS_T, typename RHS_T, typename T, typename ... types>
+template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
 StdDataFrame<unsigned int> DataFrame<I, H>::
 column_left_right_join_(const LHS_T &lhs,
                         const RHS_T &rhs,
@@ -616,7 +582,7 @@ column_left_right_join_(const LHS_T &lhs,
                         const std::vector<JoinSortingPair<T>> &col_vec_lhs,
                         const std::vector<JoinSortingPair<T>> &col_vec_rhs)  {
 
-    return (column_join_helper_<LHS_T, RHS_T, T, types ...>
+    return (column_join_helper_<LHS_T, RHS_T, T, Ts ...>
                 (lhs, rhs, col_name,
                  get_left_right_index_idx_vector_(col_vec_lhs, col_vec_rhs)));
 }

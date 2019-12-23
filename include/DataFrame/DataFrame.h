@@ -1851,6 +1851,14 @@ private:  // Static helper functions
     template<typename T>
     using JoinSortingPair = std::pair<const T *, size_type>;
 
+    template<typename LHS_T, typename RHS_T, typename IDX_T, typename ... Ts>
+    static void
+    join_helper_common_(const LHS_T &lhs,
+                        const RHS_T &rhs,
+                        const IndexIdxVector &joined_index_idx,
+                        StdDataFrame<IDX_T> &result,
+                        const char *skip_col_name = nullptr);
+
     template<typename LHS_T, typename RHS_T, typename ... Ts>
     static StdDataFrame<IndexType>
     index_join_helper_(const LHS_T &lhs,

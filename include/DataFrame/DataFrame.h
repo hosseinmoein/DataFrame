@@ -1864,6 +1864,12 @@ private:  // Static helper functions
                         const char *col_name,
                         const IndexIdxVector &joined_index_idx);
 
+    template<typename T>
+    static IndexIdxVector
+    get_inner_index_idx_vector_(
+        const std::vector<JoinSortingPair<T>> &col_vec_lhs,
+        const std::vector<JoinSortingPair<T>> &col_vec_rhs);
+
     template<typename LHS_T, typename RHS_T, typename ... Ts>
     static StdDataFrame<IndexType>
     index_inner_join_(
@@ -1878,6 +1884,12 @@ private:  // Static helper functions
                        const char *col_name,
                        const std::vector<JoinSortingPair<T>> &col_vec_lhs,
                        const std::vector<JoinSortingPair<T>> &col_vec_rhs);
+
+    template<typename T>
+    static IndexIdxVector
+    get_left_index_idx_vector_(
+        const std::vector<JoinSortingPair<T>> &col_vec_lhs,
+        const std::vector<JoinSortingPair<T>> &col_vec_rhs);
 
     template<typename LHS_T, typename RHS_T, typename ... Ts>
     static StdDataFrame<IndexType>
@@ -1894,6 +1906,12 @@ private:  // Static helper functions
                       const std::vector<JoinSortingPair<T>> &col_vec_lhs,
                       const std::vector<JoinSortingPair<T>> &col_vec_rhs);
 
+    template<typename T>
+    static IndexIdxVector
+    get_right_index_idx_vector_(
+        const std::vector<JoinSortingPair<T>> &col_vec_lhs,
+        const std::vector<JoinSortingPair<T>> &col_vec_rhs);
+
     template<typename LHS_T, typename RHS_T, typename ... Ts>
     static StdDataFrame<IndexType>
     index_right_join_(
@@ -1908,6 +1926,12 @@ private:  // Static helper functions
                        const char *col_name,
                        const std::vector<JoinSortingPair<T>> &col_vec_lhs,
                        const std::vector<JoinSortingPair<T>> &col_vec_rhs);
+
+    template<typename T>
+    static IndexIdxVector
+    get_left_right_index_idx_vector_(
+        const std::vector<JoinSortingPair<T>> &col_vec_lhs,
+        const std::vector<JoinSortingPair<T>> &col_vec_rhs);
 
     template<typename LHS_T, typename RHS_T, typename ... Ts>
     static StdDataFrame<IndexType>

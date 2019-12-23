@@ -756,8 +756,7 @@ public:  // Data manipulation
     // to compile and work properly:
     //   1) IndexType type must be the same between lhs and rhs.
     //   2) Ordering (< > != ==) must be well defined for type IndexType
-    //   3) Both lhs and rhs must be sorted by index
-    //   4) In both lhs and rhs, columns with the same name must have the same
+    //   3) In both lhs and rhs, columns with the same name must have the same
     //      type
     //
     // RHS_T:
@@ -1867,7 +1866,10 @@ private:  // Static helper functions
 
     template<typename LHS_T, typename RHS_T, typename ... Ts>
     static StdDataFrame<IndexType>
-    index_inner_join_(const LHS_T &lhs, const RHS_T &rhs);
+    index_inner_join_(
+        const LHS_T &lhs, const RHS_T &rhs,
+        const std::vector<JoinSortingPair<IndexType>> &col_vec_lhs,
+        const std::vector<JoinSortingPair<IndexType>> &col_vec_rhs);
 
     template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
     static StdDataFrame<unsigned int>
@@ -1879,7 +1881,10 @@ private:  // Static helper functions
 
     template<typename LHS_T, typename RHS_T, typename ... Ts>
     static StdDataFrame<IndexType>
-    index_left_join_(const LHS_T &lhs, const RHS_T &rhs);
+    index_left_join_(
+        const LHS_T &lhs, const RHS_T &rhs,
+        const std::vector<JoinSortingPair<IndexType>> &col_vec_lhs,
+        const std::vector<JoinSortingPair<IndexType>> &col_vec_rhs);
 
     template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
     static StdDataFrame<unsigned int>
@@ -1891,7 +1896,10 @@ private:  // Static helper functions
 
     template<typename LHS_T, typename RHS_T, typename ... Ts>
     static StdDataFrame<IndexType>
-    index_right_join_(const LHS_T &lhs, const RHS_T &rhs);
+    index_right_join_(
+        const LHS_T &lhs, const RHS_T &rhs,
+        const std::vector<JoinSortingPair<IndexType>> &col_vec_lhs,
+        const std::vector<JoinSortingPair<IndexType>> &col_vec_rhs);
 
     template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
     static StdDataFrame<unsigned int>
@@ -1903,7 +1911,10 @@ private:  // Static helper functions
 
     template<typename LHS_T, typename RHS_T, typename ... Ts>
     static StdDataFrame<IndexType>
-    index_left_right_join_(const LHS_T &lhs, const RHS_T &rhs);
+    index_left_right_join_(
+        const LHS_T &lhs, const RHS_T &rhs,
+        const std::vector<JoinSortingPair<IndexType>> &col_vec_lhs,
+        const std::vector<JoinSortingPair<IndexType>> &col_vec_rhs);
 
     template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
     static StdDataFrame<unsigned int>

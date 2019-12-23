@@ -29,24 +29,46 @@ join_by_index (const RHS_T &rhs, join_policy mp) const  {
                   "The rhs argument to join_by_index() can only be "
                   "StdDataFrame<IndexType> or DataFrameView<IndexType>");
 
+    const std::vector<IndexType>            &lhs_idx = get_index();
+    const std::vector<IndexType>            &rhs_idx = rhs.get_index();
+    const size_type                         lhs_idx_s = lhs_idx.size();
+    const size_type                         rhs_idx_s = rhs_idx.size();
+    std::vector<JoinSortingPair<IndexType>> idx_vec_lhs;
+    std::vector<JoinSortingPair<IndexType>> idx_vec_rhs;
+
+    idx_vec_lhs.reserve(lhs_idx_s);
+    for (size_type i = 0; i < lhs_idx_s; ++i)
+        idx_vec_lhs.push_back(std::make_pair(&(lhs_idx[i]), i));
+    idx_vec_rhs.reserve(rhs_idx_s);
+    for (size_type i = 0; i < rhs_idx_s; ++i)
+        idx_vec_rhs.push_back(std::make_pair(&(rhs_idx[i]), i));
+
+    auto    cf = [] (const JoinSortingPair<IndexType> &l,
+                     const JoinSortingPair<IndexType> &r) -> bool  {
+                     return (*(l.first) < *(r.first));
+                 };
+
+    std::sort(idx_vec_lhs.begin(), idx_vec_lhs.end(), cf);
+    std::sort(idx_vec_rhs.begin(), idx_vec_rhs.end(), cf);
+
     switch(mp)  {
         case join_policy::inner_join:
             return (index_inner_join_
-                        <decltype(*this), decltype(rhs), types ...>
-                            (*this, rhs));
+                        <decltype(*this), RHS_T, types ...>
+                    (*this, rhs, idx_vec_lhs, idx_vec_rhs));
         case join_policy::left_join:
             return (index_left_join_
-                        <decltype(*this), decltype(rhs), types ...>
-                            (*this, rhs));
+                        <decltype(*this), RHS_T, types ...>
+                    (*this, rhs, idx_vec_lhs, idx_vec_rhs));
         case join_policy::right_join:
             return (index_right_join_
-                        <decltype(*this), decltype(rhs), types ...>
-                            (*this, rhs));
+                        <decltype(*this), RHS_T, types ...>
+                    (*this, rhs, idx_vec_lhs, idx_vec_rhs));
         case join_policy::left_right_join:
         default:
             return (index_left_right_join_
-                        <decltype(*this), decltype(rhs), types ...>
-                            (*this, rhs));
+                        <decltype(*this), RHS_T, types ...>
+                    (*this, rhs, idx_vec_lhs, idx_vec_rhs));
     }
 }
 
@@ -106,20 +128,20 @@ join_by_column (const RHS_T &rhs, const char *name, join_policy mp) const  {
     switch(mp)  {
         case join_policy::inner_join:
             return (column_inner_join_
-                        <decltype(*this), decltype(rhs), T, types ...>
+                        <decltype(*this), RHS_T, T, types ...>
                             (*this, rhs, name, col_vec_lhs, col_vec_rhs));
         case join_policy::left_join:
             return (column_left_join_
-                        <decltype(*this), decltype(rhs), T, types ...>
+                        <decltype(*this), RHS_T, T, types ...>
                             (*this, rhs, name, col_vec_lhs, col_vec_rhs));
         case join_policy::right_join:
             return (column_right_join_
-                        <decltype(*this), decltype(rhs), T, types ...>
+                        <decltype(*this), RHS_T, T, types ...>
                             (*this, rhs, name, col_vec_lhs, col_vec_rhs));
         case join_policy::left_right_join:
         default:
             return (column_left_right_join_
-                        <decltype(*this), decltype(rhs), T, types ...>
+                        <decltype(*this), RHS_T, T, types ...>
                             (*this, rhs, name, col_vec_lhs, col_vec_rhs));
     }
 }
@@ -311,22 +333,28 @@ column_join_helper_(const LHS_T &lhs,
 template<typename I, typename H>
 template<typename LHS_T, typename RHS_T, typename ... types>
 StdDataFrame<I> DataFrame<I, H>::
-index_inner_join_(const LHS_T &lhs, const RHS_T &rhs)  {
+index_inner_join_(const LHS_T &lhs, const RHS_T &rhs,
+                  const std::vector<JoinSortingPair<IndexType>> &col_vec_lhs,
+                  const std::vector<JoinSortingPair<IndexType>> &col_vec_rhs) {
 
     size_type       lhs_current = 0;
-    const size_type lhs_end = lhs.indices_.size();
+    const size_type lhs_end = col_vec_lhs.size();
     size_type       rhs_current = 0;
-    const size_type rhs_end = rhs.indices_.size();
+    const size_type rhs_end = col_vec_rhs.size();
 
     IndexIdxVector  joined_index_idx;
 
     joined_index_idx.reserve(std::min(lhs_end, rhs_end));
     while (lhs_current != lhs_end && rhs_current != rhs_end) {
-        if (lhs.indices_[lhs_current] < rhs.indices_[rhs_current])
+        if (*(col_vec_lhs[lhs_current].first) <
+                *(col_vec_rhs[rhs_current].first))
             lhs_current += 1;
         else  {
-            if (lhs.indices_[lhs_current] == rhs.indices_[rhs_current])
-                joined_index_idx.emplace_back(lhs_current++, rhs_current);
+            if (*(col_vec_lhs[lhs_current].first) ==
+                    *(col_vec_rhs[rhs_current].first))
+                joined_index_idx.emplace_back(
+                    col_vec_lhs[lhs_current++].second,
+                    col_vec_rhs[rhs_current].second);
             rhs_current += 1;
         }
     }
@@ -360,11 +388,10 @@ column_inner_join_(const LHS_T &lhs,
             lhs_current += 1;
         else  {
             if (*(col_vec_lhs[lhs_current].first) ==
-                    *(col_vec_rhs[rhs_current].first))  {
-                joined_index_idx.emplace_back(col_vec_lhs[lhs_current].second,
-                                              col_vec_rhs[rhs_current].second);
-                lhs_current += 1;
-            }
+                    *(col_vec_rhs[rhs_current].first))
+                joined_index_idx.emplace_back(
+                    col_vec_lhs[lhs_current++].second,
+                    col_vec_rhs[rhs_current].second);
             rhs_current += 1;
         }
     }
@@ -378,7 +405,10 @@ column_inner_join_(const LHS_T &lhs,
 template<typename I, typename H>
 template<typename LHS_T, typename RHS_T, typename ... types>
 StdDataFrame<I> DataFrame<I, H>::
-index_left_join_(const LHS_T &lhs, const RHS_T &rhs)  {
+index_left_join_(const LHS_T &lhs, const RHS_T &rhs,
+                 const std::vector<JoinSortingPair<IndexType>> &col_vec_lhs,
+                 const std::vector<JoinSortingPair<IndexType>> &col_vec_rhs) {
+
 
     size_type       lhs_current = 0;
     const size_type lhs_end = lhs.indices_.size();
@@ -392,18 +422,21 @@ index_left_join_(const LHS_T &lhs, const RHS_T &rhs)  {
         if (lhs_current >= lhs_end)  break;
         if (rhs_current >= rhs_end)  {
             joined_index_idx.emplace_back(
-                lhs_current++,
+                col_vec_lhs[lhs_current++].second,
                 std::numeric_limits<size_type>::max());
             continue;
         }
 
-        if (lhs.indices_[lhs_current] < rhs.indices_[rhs_current])
+        if (*(col_vec_lhs[lhs_current].first) <
+                *(col_vec_rhs[rhs_current].first))
             joined_index_idx.emplace_back(
-                lhs_current++,
+                col_vec_lhs[lhs_current++].second,
                 std::numeric_limits<size_type>::max());
         else  {
-            if (lhs.indices_[lhs_current] == rhs.indices_[rhs_current])
-                joined_index_idx.emplace_back(lhs_current++, rhs_current);
+            if (*(col_vec_lhs[lhs_current].first) ==
+                    *(col_vec_rhs[rhs_current].first))
+                joined_index_idx.emplace_back(col_vec_lhs[lhs_current++].second,
+                                              col_vec_rhs[rhs_current].second);
             rhs_current += 1;
         }
     }
@@ -463,7 +496,10 @@ column_left_join_(const LHS_T &lhs,
 template<typename I, typename H>
 template<typename LHS_T, typename RHS_T, typename ... types>
 StdDataFrame<I> DataFrame<I, H>::
-index_right_join_(const LHS_T &lhs, const RHS_T &rhs)  {
+index_right_join_(const LHS_T &lhs, const RHS_T &rhs,
+                  const std::vector<JoinSortingPair<IndexType>> &col_vec_lhs,
+                  const std::vector<JoinSortingPair<IndexType>> &col_vec_rhs) {
+
 
     size_type       lhs_current = 0;
     const size_type lhs_end = lhs.indices_.size();
@@ -478,19 +514,23 @@ index_right_join_(const LHS_T &lhs, const RHS_T &rhs)  {
         if (lhs_current >= lhs_end)  {
             joined_index_idx.emplace_back(
                 std::numeric_limits<size_type>::max(),
-                rhs_current++);
+                col_vec_rhs[rhs_current++].second);
             continue;
         }
 
-        if (lhs.indices_[lhs_current] < rhs.indices_[rhs_current])
+        if (*(col_vec_lhs[lhs_current].first) <
+                *(col_vec_rhs[rhs_current].first))
             lhs_current += 1;
         else  {
-            if (lhs.indices_[lhs_current] == rhs.indices_[rhs_current])
-                joined_index_idx.emplace_back(lhs_current++, rhs_current);
+            if (*(col_vec_lhs[lhs_current].first) ==
+                    *(col_vec_rhs[rhs_current].first))
+                joined_index_idx.emplace_back(
+                    col_vec_lhs[lhs_current++].second,
+                    col_vec_rhs[rhs_current].second);
             else
                 joined_index_idx.emplace_back(
                     std::numeric_limits<size_type>::max(),
-                    rhs_current);
+                    col_vec_rhs[rhs_current].second);
             rhs_current += 1;
         }
     }
@@ -523,8 +563,7 @@ column_right_join_(const LHS_T &lhs,
         if (lhs_current >= lhs_end)  {
             joined_index_idx.emplace_back(
                 std::numeric_limits<size_type>::max(),
-                col_vec_rhs[rhs_current].second);
-            rhs_current += 1;
+                col_vec_rhs[rhs_current++].second);
             continue;
         }
 
@@ -533,12 +572,10 @@ column_right_join_(const LHS_T &lhs,
             lhs_current += 1;
         else  {
             if (*(col_vec_lhs[lhs_current].first) ==
-                    *(col_vec_rhs[rhs_current].first))  {
+                    *(col_vec_rhs[rhs_current].first))
                 joined_index_idx.emplace_back(
-                    col_vec_lhs[lhs_current].second,
+                    col_vec_lhs[lhs_current++].second,
                     col_vec_rhs[rhs_current].second);
-                lhs_current += 1;
-            }
             else
                 joined_index_idx.emplace_back(
                     std::numeric_limits<size_type>::max(),
@@ -556,7 +593,11 @@ column_right_join_(const LHS_T &lhs,
 template<typename I, typename H>
 template<typename LHS_T, typename RHS_T, typename ... types>
 StdDataFrame<I> DataFrame<I, H>::
-index_left_right_join_(const LHS_T &lhs, const RHS_T &rhs)  {
+index_left_right_join_(
+    const LHS_T &lhs, const RHS_T &rhs,
+    const std::vector<JoinSortingPair<IndexType>> &col_vec_lhs,
+    const std::vector<JoinSortingPair<IndexType>> &col_vec_rhs) {
+
 
     size_type       lhs_current = 0;
     const size_type lhs_end = lhs.indices_.size();
@@ -570,28 +611,31 @@ index_left_right_join_(const LHS_T &lhs, const RHS_T &rhs)  {
         if (lhs_current >= lhs_end && rhs_current < rhs_end)  {
             joined_index_idx.emplace_back(
                 std::numeric_limits<size_type>::max(),
-                rhs_current++);
+                col_vec_rhs[rhs_current++].second);
             continue;
         }
         if (rhs_current >= rhs_end && lhs_current < lhs_end)  {
             joined_index_idx.emplace_back(
-                lhs_current++,
+                col_vec_lhs[lhs_current++].second,
                 std::numeric_limits<size_type>::max());
             continue;
         }
 
-        if (lhs.indices_[lhs_current] < rhs.indices_[rhs_current])  {
+        if (*(col_vec_lhs[lhs_current].first) <
+                *(col_vec_rhs[rhs_current].first))  {
             joined_index_idx.emplace_back(
-                lhs_current++,
+                col_vec_lhs[lhs_current++].second,
                 std::numeric_limits<size_type>::max());
         }
         else  {
-            if (lhs.indices_[lhs_current] == rhs.indices_[rhs_current])
-                joined_index_idx.emplace_back(lhs_current++, rhs_current);
+            if (*(col_vec_lhs[lhs_current].first) ==
+                    *(col_vec_rhs[rhs_current].first))
+                joined_index_idx.emplace_back(col_vec_lhs[lhs_current++].second,
+                                              col_vec_rhs[rhs_current].second);
             else
                 joined_index_idx.emplace_back(
                     std::numeric_limits<size_type>::max(),
-                    rhs_current);
+                    col_vec_rhs[rhs_current].second);
             rhs_current += 1;
         }
     }
@@ -623,32 +667,27 @@ column_left_right_join_(const LHS_T &lhs,
         if (lhs_current >= lhs_end && rhs_current < rhs_end)  {
             joined_index_idx.emplace_back(
                 std::numeric_limits<size_type>::max(),
-                col_vec_rhs[rhs_current].second);
-            rhs_current += 1;
+                col_vec_rhs[rhs_current++].second);
             continue;
         }
         if (rhs_current >= rhs_end && lhs_current < lhs_end)  {
             joined_index_idx.emplace_back(
-                col_vec_lhs[lhs_current].second,
+                col_vec_lhs[lhs_current++].second,
                 std::numeric_limits<size_type>::max());
-            lhs_current += 1;
             continue;
         }
 
         if (*(col_vec_lhs[lhs_current].first) <
                 *(col_vec_rhs[rhs_current].first))  {
             joined_index_idx.emplace_back(
-                col_vec_lhs[lhs_current].second,
+                col_vec_lhs[lhs_current++].second,
                 std::numeric_limits<size_type>::max());
-            lhs_current += 1;
         }
         else  {
             if (*(col_vec_lhs[lhs_current].first) ==
-                    *(col_vec_rhs[rhs_current].first))  {
-                joined_index_idx.emplace_back(col_vec_lhs[lhs_current].second,
+                    *(col_vec_rhs[rhs_current].first))
+                joined_index_idx.emplace_back(col_vec_lhs[lhs_current++].second,
                                               col_vec_rhs[rhs_current].second);
-                lhs_current += 1;
-            }
             else
                 joined_index_idx.emplace_back(
                     std::numeric_limits<size_type>::max(),

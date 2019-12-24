@@ -270,23 +270,8 @@ fill_missing(const std::array<const char *, N> col_names,
     size_type                       thread_count = 0;
 
     for (size_type i = 0; i < N; ++i)  {
-        const auto  citer = column_tb_.find (col_names[i]);
+        std::vector<T>  &vec = get_column<T>(col_names[i]);
 
-        if (citer == column_tb_.end())  {
-            char buffer [512];
-
-            sprintf(
-                buffer,
-                "DataFrame::fill_missing(): ERROR: Cannot find column '%s'",
-                col_names[i]);
-            throw ColNotFound(buffer);
-        }
-
-        DataVec         &hv = data_[citer->second];
-        SpinGuard       guard(lock_);
-        std::vector<T>  &vec = hv.template get_vector<T>();
-
-        guard.release();
         if (fp == fill_policy::value)  {
             if (thread_count >= get_thread_level())
                 fill_missing_value_(vec, values[i], limit, indices_.size());
@@ -497,23 +482,9 @@ replace(const char *col_name,
         const std::array<T, N> new_values,
         int limit)  {
 
-    size_type   count = 0;
-    const auto  citer = column_tb_.find (col_name);
+    std::vector<T>  &vec = get_column<T>(col_name);
+    size_type       count = 0;
 
-    if (citer == column_tb_.end())  {
-        char buffer [512];
-
-        sprintf(buffer,
-                "DataFrame::replace(): ERROR: Cannot find column '%s'",
-                col_name);
-        throw ColNotFound(buffer);
-    }
-
-    DataVec         &hv = data_[citer->second];
-    SpinGuard       guard(lock_);
-    std::vector<T>  &vec = hv.template get_vector<T>();
-
-    guard.release();
     _replace_vector_vals_<std::vector<T>, T, N>
         (vec, old_values, new_values, count, limit);
 
@@ -544,23 +515,7 @@ template<typename T, typename F>
 void DataFrame<I, H>::
 replace(const char *col_name, F &functor)  {
 
-    const auto  citer = column_tb_.find (col_name);
-
-    if (citer == column_tb_.end())  {
-        char buffer [512];
-
-        sprintf(buffer,
-                "DataFrame::replace(): ERROR: Cannot find column '%s'",
-                col_name);
-        throw ColNotFound(buffer);
-    }
-
-    DataVec         &hv = data_[citer->second];
-    SpinGuard       guard(lock_);
-    std::vector<T>  &vec = hv.template get_vector<T>();
-
-    guard.release();
-
+    std::vector<T>  &vec = get_column<T>(col_name);
     const size_type vec_s = vec.size();
 
     for (size_type i = 0; i < vec_s; ++i)
@@ -660,22 +615,7 @@ void DataFrame<I, H>::sort(const char *name, sort_spec dir)  {
             std::sort (sorting_idxs.begin(), sorting_idxs.end(), d);
     }
     else  {
-        const auto  iter = column_tb_.find (name);
-
-        if (iter == column_tb_.end())  {
-            char buffer [512];
-
-            sprintf (buffer, "DataFrame::sort(): ERROR: "
-                             "Cannot find column '%s'",
-                     name);
-            throw ColNotFound (buffer);
-        }
-
-        const DataVec           &hv = data_[iter->second];
-        SpinGuard               guard(lock_);
-        const std::vector<T>    &idx_vec = hv.template get_vector<T>();
-
-        guard.release();
+        const std::vector<T>    &idx_vec = get_column<T>(name);
 
         auto    a = [&x = idx_vec](size_type i, size_type j) -> bool {
                         return (x[i] < x[j]);
@@ -713,42 +653,13 @@ sort(const char *name1, sort_spec dir1, const char *name2, sort_spec dir2)  {
 
     if (! ::strcmp(name1, DF_INDEX_COL_NAME))
         vec1 = reinterpret_cast<std::vector<T1> *>(&indices_);
-    else  {
-        auto  iter = column_tb_.find (name1);
+    else
+        vec1 = &(get_column<T1>(name1));
 
-        if (iter == column_tb_.end())  {
-            char buffer [512];
-
-            sprintf (buffer, "DataFrame::sort(): ERROR: "
-                             "Cannot find column '%s'",
-                     name1);
-            throw ColNotFound (buffer);
-        }
-
-        DataVec     &hv = data_[iter->second];
-        SpinGuard   guard(lock_);
-
-        vec1 = &(hv.template get_vector<T1>());
-    }
     if (! ::strcmp(name2, DF_INDEX_COL_NAME))
         vec2 = reinterpret_cast<std::vector<T2> *>(&indices_);
-    else  {
-        auto  iter = column_tb_.find (name2);
-
-        if (iter == column_tb_.end())  {
-            char buffer [512];
-
-            sprintf (buffer, "DataFrame::sort(): ERROR: "
-                             "Cannot find column '%s'",
-                     name2);
-            throw ColNotFound (buffer);
-        }
-
-        DataVec     &hv = data_[iter->second];
-        SpinGuard   guard(lock_);
-
-        vec2 = &(hv.template get_vector<T2>());
-    }
+    else
+        vec2 = &(get_column<T2>(name2));
 
     const size_type         idx_s = indices_.size();
     std::vector<size_type>  sorting_idxs(idx_s, 0);
@@ -801,61 +712,18 @@ sort(const char *name1, sort_spec dir1,
 
     if (! ::strcmp(name1, DF_INDEX_COL_NAME))
         vec1 = reinterpret_cast<std::vector<T1> *>(&indices_);
-    else  {
-        auto    iter = column_tb_.find (name1);
+    else
+        vec1 = &(get_column<T1>(name1));
 
-        if (iter == column_tb_.end())  {
-            char buffer [512];
-
-            sprintf (buffer, "DataFrame::sort(): ERROR: "
-                             "Cannot find column '%s'",
-                     name1);
-            throw ColNotFound (buffer);
-        }
-
-        DataVec     &hv = data_[iter->second];
-        SpinGuard   guard(lock_);
-
-        vec1 = &(hv.template get_vector<T1>());
-    }
     if (! ::strcmp(name2, DF_INDEX_COL_NAME))
         vec2 = reinterpret_cast<std::vector<T2> *>(&indices_);
-    else  {
-        auto    iter = column_tb_.find (name2);
+    else
+        vec2 = &(get_column<T2>(name2));
 
-        if (iter == column_tb_.end())  {
-            char buffer [512];
-
-            sprintf (buffer, "DataFrame::sort(): ERROR: "
-                             "Cannot find column '%s'",
-                     name2);
-            throw ColNotFound (buffer);
-        }
-
-        DataVec     &hv = data_[iter->second];
-        SpinGuard   guard(lock_);
-
-        vec2 = &(hv.template get_vector<T2>());
-    }
     if (! ::strcmp(name3, DF_INDEX_COL_NAME))
         vec3 = reinterpret_cast<std::vector<T3> *>(&indices_);
-    else  {
-        auto    iter = column_tb_.find (name3);
-
-        if (iter == column_tb_.end())  {
-            char buffer [512];
-
-            sprintf (buffer, "DataFrame::sort(): ERROR: "
-                             "Cannot find column '%s'",
-                     name3);
-            throw ColNotFound (buffer);
-        }
-
-        DataVec     &hv = data_[iter->second];
-        SpinGuard   guard(lock_);
-
-        vec3 = &(hv.template get_vector<T3>());
-    }
+    else
+        vec3 = &(get_column<T3>(name3));
 
     const size_type         idx_s = indices_.size();
     std::vector<size_type>  sorting_idxs(idx_s, 0);
@@ -923,80 +791,23 @@ sort(const char *name1, sort_spec dir1,
 
     if (! ::strcmp(name1, DF_INDEX_COL_NAME))
         vec1 = reinterpret_cast<std::vector<T1> *>(&indices_);
-    else  {
-        auto    iter = column_tb_.find (name1);
+    else
+        vec1 = &(get_column<T1>(name1));
 
-        if (iter == column_tb_.end())  {
-            char buffer [512];
-
-            sprintf (buffer, "DataFrame::sort(): ERROR: "
-                             "Cannot find column '%s'",
-                     name1);
-            throw ColNotFound (buffer);
-        }
-
-        DataVec     &hv = data_[iter->second];
-        SpinGuard   guard(lock_);
-
-        vec1 = &(hv.template get_vector<T1>());
-    }
     if (! ::strcmp(name2, DF_INDEX_COL_NAME))
         vec2 = reinterpret_cast<std::vector<T2> *>(&indices_);
-    else  {
-        auto    iter = column_tb_.find (name2);
+    else
+        vec2 = &(get_column<T2>(name2));
 
-        if (iter == column_tb_.end())  {
-            char buffer [512];
-
-            sprintf (buffer, "DataFrame::sort(): ERROR: "
-                             "Cannot find column '%s'",
-                     name2);
-            throw ColNotFound (buffer);
-        }
-
-        DataVec     &hv = data_[iter->second];
-        SpinGuard   guard(lock_);
-
-        vec2 = &(hv.template get_vector<T2>());
-    }
     if (! ::strcmp(name3, DF_INDEX_COL_NAME))
         vec3 = reinterpret_cast<std::vector<T3> *>(&indices_);
-    else  {
-        auto    iter = column_tb_.find (name3);
+    else
+        vec3 = &(get_column<T3>(name3));
 
-        if (iter == column_tb_.end())  {
-            char buffer [512];
-
-            sprintf (buffer, "DataFrame::sort(): ERROR: "
-                             "Cannot find column '%s'",
-                     name3);
-            throw ColNotFound (buffer);
-        }
-
-        DataVec     &hv = data_[iter->second];
-        SpinGuard   guard(lock_);
-
-        vec3 = &(hv.template get_vector<T3>());
-    }
     if (! ::strcmp(name4, DF_INDEX_COL_NAME))
         vec4 = reinterpret_cast<std::vector<T4> *>(&indices_);
-    else  {
-        auto    iter = column_tb_.find (name4);
-
-        if (iter == column_tb_.end())  {
-            char buffer [512];
-
-            sprintf (buffer, "DataFrame::sort(): ERROR: "
-                             "Cannot find column '%s'",
-                     name4);
-            throw ColNotFound (buffer);
-        }
-
-        DataVec     &hv = data_[iter->second];
-        SpinGuard   guard(lock_);
-
-        vec4 = &(hv.template get_vector<T4>());
-    }
+    else
+        vec4 = &(get_column<T4>(name4));
 
     const size_type         idx_s = indices_.size();
     std::vector<size_type>  sorting_idxs(idx_s, 0);
@@ -1079,99 +890,28 @@ sort(const char *name1, sort_spec dir1,
 
     if (! ::strcmp(name1, DF_INDEX_COL_NAME))
         vec1 = reinterpret_cast<std::vector<T1> *>(&indices_);
-    else  {
-        auto    iter = column_tb_.find (name1);
+    else
+        vec1 = &(get_column<T1>(name1));
 
-        if (iter == column_tb_.end())  {
-            char buffer [512];
-
-            sprintf (buffer, "DataFrame::sort(): ERROR: "
-                             "Cannot find column '%s'",
-                     name1);
-            throw ColNotFound (buffer);
-        }
-
-        DataVec     &hv = data_[iter->second];
-        SpinGuard   guard(lock_);
-
-        vec1 = &(hv.template get_vector<T1>());
-    }
     if (! ::strcmp(name2, DF_INDEX_COL_NAME))
         vec2 = reinterpret_cast<std::vector<T2> *>(&indices_);
-    else  {
-        auto    iter = column_tb_.find (name2);
+    else
+        vec2 = &(get_column<T2>(name2));
 
-        if (iter == column_tb_.end())  {
-            char buffer [512];
-
-            sprintf (buffer, "DataFrame::sort(): ERROR: "
-                             "Cannot find column '%s'",
-                     name2);
-            throw ColNotFound (buffer);
-        }
-
-        DataVec     &hv = data_[iter->second];
-        SpinGuard   guard(lock_);
-
-        vec2 = &(hv.template get_vector<T2>());
-    }
     if (! ::strcmp(name3, DF_INDEX_COL_NAME))
         vec3 = reinterpret_cast<std::vector<T3> *>(&indices_);
-    else  {
-        auto    iter = column_tb_.find (name3);
+    else
+        vec3 = &(get_column<T3>(name3));
 
-        if (iter == column_tb_.end())  {
-            char buffer [512];
-
-            sprintf (buffer, "DataFrame::sort(): ERROR: "
-                             "Cannot find column '%s'",
-                     name3);
-            throw ColNotFound (buffer);
-        }
-
-        DataVec     &hv = data_[iter->second];
-        SpinGuard   guard(lock_);
-
-        vec3 = &(hv.template get_vector<T3>());
-    }
     if (! ::strcmp(name4, DF_INDEX_COL_NAME))
         vec4 = reinterpret_cast<std::vector<T4> *>(&indices_);
-    else  {
-        auto    iter = column_tb_.find (name4);
+    else
+        vec4 = &(get_column<T4>(name4));
 
-        if (iter == column_tb_.end())  {
-            char buffer [512];
-
-            sprintf (buffer, "DataFrame::sort(): ERROR: "
-                             "Cannot find column '%s'",
-                     name4);
-            throw ColNotFound (buffer);
-        }
-
-        DataVec     &hv = data_[iter->second];
-        SpinGuard   guard(lock_);
-
-        vec4 = &(hv.template get_vector<T4>());
-    }
     if (! ::strcmp(name4, DF_INDEX_COL_NAME))
         vec5 = reinterpret_cast<std::vector<T5> *>(&indices_);
-    else  {
-        auto    iter = column_tb_.find (name5);
-
-        if (iter == column_tb_.end())  {
-            char buffer [512];
-
-            sprintf (buffer, "DataFrame::sort(): ERROR: "
-                             "Cannot find column '%s'",
-                     name5);
-            throw ColNotFound (buffer);
-        }
-
-        DataVec     &hv = data_[iter->second];
-        SpinGuard   guard(lock_);
-
-        vec5 = &(hv.template get_vector<T5>());
-    }
+    else
+        vec5 = &(get_column<T5>(name5));
 
     const size_type         idx_s = indices_.size();
     std::vector<size_type>  sorting_idxs(idx_s, 0);
@@ -1497,28 +1237,12 @@ template<typename T>
 StdDataFrame<T>
 DataFrame<I, H>::value_counts (const char *col_name) const  {
 
-    auto iter = column_tb_.find (col_name);
-
-    if (iter == column_tb_.end())  {
-        char buffer [512];
-
-        sprintf (buffer,
-                 "DataFrame::value_counts(): ERROR: Cannot find column '%s'",
-                 col_name);
-        throw ColNotFound (buffer);
-    }
-
-    const DataVec           &hv = data_[iter->second];
-    SpinGuard               guard(lock_);
-    const std::vector<T>    &vec = hv.template get_vector<T>();
-
-    guard.release();
-
-    auto    hash_func =
+    const std::vector<T>    &vec = get_column<T>(col_name);
+    auto                    hash_func =
         [](std::reference_wrapper<const T> v) -> std::size_t  {
             return(std::hash<T>{}(v.get()));
     };
-    auto    equal_func =
+    auto                    equal_func =
         [](std::reference_wrapper<const T> lhs,
            std::reference_wrapper<const T> rhs) -> bool  {
             return(lhs.get() == rhs.get());
@@ -1635,20 +1359,8 @@ transpose(IndexVecType &&indices,
     std::vector<const std::vector<T> *> current_cols;
 
     current_cols.reserve(num_cols);
-    for (const auto citer : current_col_order)  {
-        const auto  &data_citer = column_tb_.find(citer);
-
-        if (data_citer == column_tb_.end())
-            throw InconsistentData ("DataFrame::transpose(): ERROR: "
-                                    "Cannot find at least one of the column "
-                                    "names in the order vector");
-
-        const DataVec   &hv = data_[data_citer->second];
-        const SpinGuard guard(lock_);
-
-        current_cols.push_back(&(hv.template get_vector<T>()));
-    }
-
+    for (const auto citer : current_col_order)
+        current_cols.push_back(&(get_column<T>(citer)));
 
     std::vector<std::vector<T>> trans_cols(indices_.size());
     DataFrame                   df;

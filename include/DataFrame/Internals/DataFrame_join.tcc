@@ -84,28 +84,10 @@ join_by_column (const RHS_T &rhs, const char *name, join_policy mp) const  {
                   "The rhs argument to join_by_index() can only be "
                   "StdDataFrame<IndexType> or DataFrameView<IndexType>");
 
-    const auto  lhs_iter = column_tb_.find (name);
-    const auto  rhs_iter = rhs.column_tb_.find (name);
-
-    if (lhs_iter == column_tb_.end() || rhs_iter == rhs.column_tb_.end()) {
-        char buffer [512];
-
-        sprintf (buffer, "DataFrame::join_by_column(): ERROR: "
-                         "Cannot find column '%s'",
-                 name);
-        throw ColNotFound (buffer);
-    }
-
-    const DataVec   &lhs_hv = data_[lhs_iter->second];
-    const DataVec   &rhs_hv = rhs.data_[rhs_iter->second];
-    SpinGuard       guard(lock_);
-
-    const std::vector<T>    &lhs_vec = lhs_hv.template get_vector<T>();
-    const std::vector<T>    &rhs_vec = rhs_hv.template get_vector<T>();
-    guard.release();
-
-    const size_type lhs_vec_s = lhs_vec.size();
-    const size_type rhs_vec_s = rhs_vec.size();
+    const std::vector<T>    &lhs_vec = get_column<T>(name);
+    const std::vector<T>    &rhs_vec = rhs.template get_column<T>(name);
+    const size_type         lhs_vec_s = lhs_vec.size();
+    const size_type         rhs_vec_s = rhs_vec.size();
 
     std::vector<JoinSortingPair<T>> col_vec_lhs;
     std::vector<JoinSortingPair<T>> col_vec_rhs;

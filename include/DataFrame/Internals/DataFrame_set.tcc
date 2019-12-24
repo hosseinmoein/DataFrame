@@ -510,23 +510,7 @@ append_column (const char *name,
                Index2D<const ITR &> range,
                nan_policy padding)  {
 
-    const auto  iter = column_tb_.find (name);
-
-    if (iter == column_tb_.end())  {
-        char buffer [512];
-
-        sprintf (buffer, "DataFrame::append_column(): ERROR: "
-                         "Cannot find column '%s'",
-                 name);
-        throw ColNotFound (buffer);
-    }
-
-    DataVec         &hv = data_[iter->second];
-    SpinGuard       guard(lock_);
-    std::vector<T>  &vec = hv.template get_vector<T>();
-
-    guard.release();
-
+    std::vector<T>  &vec = get_column<T>(name);
     size_type       s = std::distance(range.begin, range.end) + vec.size ();
     const size_type idx_s = indices_.size();
 
@@ -567,23 +551,7 @@ typename DataFrame<I, H>::size_type
 DataFrame<I, H>::
 append_column (const char *name, const T &val, nan_policy padding)  {
 
-    const auto  iter = column_tb_.find (name);
-
-    if (iter == column_tb_.end())  {
-        char buffer [512];
-
-        sprintf (buffer, "DataFrame::append_column(): ERROR: "
-                         "Cannot find column '%s'",
-                 name);
-        throw ColNotFound (buffer);
-    }
-
-    DataVec         &hv = data_[iter->second];
-    SpinGuard       guard(lock_);
-    std::vector<T>  &vec = hv.template get_vector<T>();
-
-    guard.release();
-
+    std::vector<T>  &vec = get_column<T>(name);
     size_type       s = 1;
     const size_type idx_s = indices_.size();
 
@@ -696,24 +664,7 @@ void DataFrame<I, H>::remove_data_by_sel (const char *name, F &sel_functor)  {
     static_assert(std::is_base_of<HeteroVector, H>::value,
                   "Only a StdDataFrame can call remove_data_by_loc()");
 
-    const auto  citer = column_tb_.find (name);
-
-    if (citer == column_tb_.end())  {
-        char buffer [512];
-
-        sprintf (buffer,
-                 "DataFrame::remove_data_by_sel(1): ERROR: "
-                 "Cannot find column '%s'",
-                 name);
-        throw ColNotFound (buffer);
-    }
-
-    const DataVec           &hv = data_[citer->second];
-    SpinGuard               guard(lock_);
-    const std::vector<T>    &vec = hv.template get_vector<T>();
-
-    guard.release();
-
+    const std::vector<T>    &vec = get_column<T>(name);
     const size_type         idx_s = indices_.size();
     const size_type         col_s = vec.size();
     std::vector<size_type>  col_indices;

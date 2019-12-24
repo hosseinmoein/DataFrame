@@ -117,29 +117,12 @@ template<typename T>
 std::vector<T> DataFrame<I, H>::
 get_col_unique_values(const char *name) const  {
 
-    auto  iter = column_tb_.find (name);
-
-    if (iter == column_tb_.end())  {
-        char buffer [512];
-
-        sprintf (buffer,
-                 "DataFrame::get_col_unique_values(): "
-                 "ERROR: Cannot find column '%s'",
-                 name);
-        throw ColNotFound (buffer);
-    }
-
-    const DataVec           &hv = data_[iter->second];
-    SpinGuard               guard(lock_);
-    const std::vector<T>    &vec = hv.template get_vector<T>();
-
-    guard.release();
-
-    auto    hash_func =
+    const std::vector<T>    &vec = get_column<T>(name);
+    auto                    hash_func =
         [](std::reference_wrapper<const T> v) -> std::size_t  {
             return(std::hash<T>{}(v.get()));
     };
-    auto    equal_func =
+    auto                    equal_func =
         [](std::reference_wrapper<const T> lhs,
            std::reference_wrapper<const T> rhs) -> bool  {
             return(lhs.get() == rhs.get());
@@ -198,23 +181,7 @@ template<typename I, typename  H>
 template<typename T, typename V>
 V &DataFrame<I, H>::visit (const char *name, V &visitor)  {
 
-    const auto  iter = column_tb_.find (name);
-
-    if (iter == column_tb_.end())  {
-        char buffer [512];
-
-        sprintf (buffer,
-                 "DataFrame::visit(1): ERROR: Cannot find column '%s'",
-                 name);
-        throw ColNotFound (buffer);
-    }
-
-    DataVec     &hv = data_[iter->second];
-    SpinGuard   guard(lock_);
-    auto        &vec = hv.template get_vector<T>();
-
-    guard.release();
-
+    auto            &vec = get_column<T>(name);
     const size_type idx_s = indices_.size();
     const size_type min_s = std::min<size_type>(vec.size(), idx_s);
     size_type       i = 0;
@@ -540,22 +507,8 @@ template<typename T, typename V>
 V &DataFrame<I, H>::
 single_act_visit (const char *name, V &visitor)  {
 
-    const auto  iter = column_tb_.find (name);
+    auto    &vec = get_column<T>(name);
 
-    if (iter == column_tb_.end())  {
-        char buffer [512];
-
-        sprintf(buffer,
-                "DataFrame::single_act_visit: ERROR: Cannot find column '%s'",
-                name);
-        throw ColNotFound (buffer);
-    }
-
-    const DataVec   &hv = data_[iter->second];
-    SpinGuard       guard(lock_);
-    auto            &vec = hv.template get_vector<T>();
-
-    guard.release();
     visitor.pre();
     visitor (indices_, vec);
     visitor.post();
@@ -925,24 +878,7 @@ template<typename T, typename F, typename ... Ts>
 DataFrame<I, H> DataFrame<I, H>::
 get_data_by_sel (const char *name, F &sel_functor) const  {
 
-    const auto  citer = column_tb_.find (name);
-
-    if (citer == column_tb_.end())  {
-        char buffer [512];
-
-        sprintf (buffer,
-                 "DataFrame::get_data_by_sel(1): ERROR: "
-                 "Cannot find column '%s'",
-                 name);
-        throw ColNotFound (buffer);
-    }
-
-    const DataVec           &hv = data_[citer->second];
-    SpinGuard               guard(lock_);
-    const std::vector<T>    &vec = hv.template get_vector<T>();
-
-    guard.release();
-
+    const std::vector<T>    &vec = get_column<T>(name);
     const size_type         idx_s = indices_.size();
     const size_type         col_s = vec.size();
     std::vector<size_type>  col_indices;
@@ -983,24 +919,7 @@ get_view_by_sel (const char *name, F &sel_functor)  {
     static_assert(std::is_base_of<HeteroVector, H>::value,
                   "Only a StdDataFrame can call get_view_by_sel()");
 
-    const auto  citer = column_tb_.find (name);
-
-    if (citer == column_tb_.end())  {
-        char buffer [512];
-
-        sprintf (buffer,
-                 "DataFrame::get_data_by_sel(1): ERROR: "
-                 "Cannot find column '%s'",
-                 name);
-        throw ColNotFound (buffer);
-    }
-
-    const DataVec           &hv = data_[citer->second];
-    SpinGuard               guard(lock_);
-    const std::vector<T>    &vec = hv.template get_vector<T>();
-
-    guard.release();
-
+    const std::vector<T>    &vec = get_column<T>(name);
     const size_type         idx_s = indices_.size();
     const size_type         col_s = vec.size();
     std::vector<size_type>  col_indices;

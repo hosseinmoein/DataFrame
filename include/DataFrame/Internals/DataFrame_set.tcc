@@ -696,38 +696,8 @@ template<typename T1, typename T2, typename F, typename ... Ts>
 void DataFrame<I, H>::
 remove_data_by_sel (const char *name1, const char *name2, F &sel_functor)  {
 
-    const auto  citer1 = column_tb_.find (name1);
-
-    if (citer1 == column_tb_.end())  {
-        char buffer [512];
-
-        sprintf (buffer,
-                 "DataFrame::remove_data_by_sel(2): ERROR: "
-                 "Cannot find column '%s'",
-                 name1);
-        throw ColNotFound (buffer);
-    }
-
-    const auto  citer2 = column_tb_.find (name2);
-
-    if (citer2 == column_tb_.end())  {
-        char buffer [512];
-
-        sprintf (buffer,
-                 "DataFrame::remove_data_by_sel(2): ERROR: "
-                 "Cannot find column '%s'",
-                 name2);
-        throw ColNotFound (buffer);
-    }
-
-    const DataVec           &hv1 = data_[citer1->second];
-    const DataVec           &hv2 = data_[citer2->second];
-    SpinGuard               guard(lock_);
-    const std::vector<T1>   &vec1 = hv1.template get_vector<T1>();
-    const std::vector<T2>   &vec2 = hv2.template get_vector<T2>();
-
-    guard.release();
-
+    const std::vector<T1>   &vec1 = get_column<T1>(name1);
+    const std::vector<T2>   &vec2 = get_column<T2>(name2);
     const size_type         col_s1 = vec1.size();
     const size_type         col_s2 = vec2.size();
     const size_type         col_s = std::max(col_s1, col_s2);
@@ -765,52 +735,9 @@ remove_data_by_sel (const char *name1,
                     const char *name3,
                     F &sel_functor)  {
 
-    const auto  citer1 = column_tb_.find (name1);
-
-    if (citer1 == column_tb_.end())  {
-        char buffer [512];
-
-        sprintf (buffer,
-                 "DataFrame::get_data_by_sel(2): ERROR: "
-                 "Cannot find column '%s'",
-                 name1);
-        throw ColNotFound (buffer);
-    }
-
-    const auto  citer2 = column_tb_.find (name2);
-
-    if (citer2 == column_tb_.end())  {
-        char buffer [512];
-
-        sprintf (buffer,
-                 "DataFrame::get_data_by_sel(2): ERROR: "
-                 "Cannot find column '%s'",
-                 name2);
-        throw ColNotFound (buffer);
-    }
-
-    const auto  citer3 = column_tb_.find (name3);
-
-    if (citer3 == column_tb_.end())  {
-        char buffer [512];
-
-        sprintf (buffer,
-                 "DataFrame::get_data_by_sel(2): ERROR: "
-                 "Cannot find column '%s'",
-                 name3);
-        throw ColNotFound (buffer);
-    }
-
-    const DataVec           &hv1 = data_[citer1->second];
-    const DataVec           &hv2 = data_[citer2->second];
-    const DataVec           &hv3 = data_[citer3->second];
-    SpinGuard               guard(lock_);
-    const std::vector<T1>   &vec1 = hv1.template get_vector<T1>();
-    const std::vector<T2>   &vec2 = hv2.template get_vector<T2>();
-    const std::vector<T3>   &vec3 = hv3.template get_vector<T3>();
-
-    guard.release();
-
+    const std::vector<T1>   &vec1 = get_column<T1>(name1);
+    const std::vector<T2>   &vec2 = get_column<T2>(name2);
+    const std::vector<T3>   &vec3 = get_column<T3>(name3);
     const size_type         col_s1 = vec1.size();
     const size_type         col_s2 = vec2.size();
     const size_type         col_s3 = vec3.size();

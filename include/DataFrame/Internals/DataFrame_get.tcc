@@ -39,7 +39,7 @@ template<typename T>
 typename type_declare<H, T>::type &
 DataFrame<I, H>::get_column (const char *name)  {
 
-    auto iter = column_tb_.find (name);
+    auto    iter = column_tb_.find (name);
 
     if (iter == column_tb_.end())  {
         char buffer [512];
@@ -203,34 +203,8 @@ template<typename T1, typename T2, typename V>
 V &DataFrame<I, H>::
 visit (const char *name1, const char *name2, V &visitor)  {
 
-    const auto  iter1 = column_tb_.find (name1);
-    const auto  iter2 = column_tb_.find (name2);
-
-    if (iter1 == column_tb_.end())  {
-        char buffer [512];
-
-        sprintf (buffer,
-                 "DataFrame::visit(2): ERROR: Cannot find column '%s'",
-                 name1);
-        throw ColNotFound (buffer);
-    }
-    if (iter2 == column_tb_.end())  {
-        char buffer [512];
-
-        sprintf (buffer,
-                 "DataFrame::visit(2): ERROR: Cannot find column '%s'",
-                 name2);
-        throw ColNotFound (buffer);
-    }
-
-    DataVec     &hv1 = data_[iter1->second];
-    DataVec     &hv2 = data_[iter2->second];
-    SpinGuard   guard(lock_);
-    auto        &vec1 = hv1.template get_vector<T1>();
-    auto        &vec2 = hv2.template get_vector<T2>();
-
-    guard.release();
-
+    auto            &vec1 = get_column<T1>(name1);
+    auto            &vec2 = get_column<T2>(name2);
     const size_type idx_s = indices_.size();
     const size_type data_s1 = vec1.size();
     const size_type data_s2 = vec2.size();
@@ -256,45 +230,9 @@ template<typename T1, typename T2, typename T3, typename V>
 V &DataFrame<I, H>::
 visit (const char *name1, const char *name2, const char *name3, V &visitor)  {
 
-    const auto  iter1 = column_tb_.find (name1);
-    const auto  iter2 = column_tb_.find (name2);
-    const auto  iter3 = column_tb_.find (name3);
-
-    if (iter1 == column_tb_.end())  {
-        char buffer [512];
-
-        sprintf (buffer,
-                 "DataFrame::visit(3): ERROR: Cannot find column '%s'",
-                 name1);
-        throw ColNotFound (buffer);
-    }
-    if (iter2 == column_tb_.end())  {
-        char buffer [512];
-
-        sprintf (buffer,
-                 "DataFrame::visit(3): ERROR: Cannot find column '%s'",
-                 name2);
-        throw ColNotFound (buffer);
-    }
-    if (iter3 == column_tb_.end())  {
-        char buffer [512];
-
-        sprintf (buffer,
-                 "DataFrame::visit(3): ERROR: Cannot find column '%s'",
-                 name3);
-        throw ColNotFound (buffer);
-    }
-
-    DataVec     &hv1 = data_[iter1->second];
-    DataVec     &hv2 = data_[iter2->second];
-    DataVec     &hv3 = data_[iter3->second];
-    SpinGuard   guard(lock_);
-    auto        &vec1 = hv1.template get_vector<T1>();
-    auto        &vec2 = hv2.template get_vector<T2>();
-    auto        &vec3 = hv3.template get_vector<T3>();
-
-    guard.release();
-
+    auto            &vec1 = get_column<T1>(name1);
+    auto            &vec2 = get_column<T2>(name2);
+    auto            &vec3 = get_column<T3>(name3);
     const size_type idx_s = indices_.size();
     const size_type data_s1 = vec1.size();
     const size_type data_s2 = vec2.size();
@@ -327,56 +265,10 @@ visit (const char *name1,
        const char *name4,
        V &visitor)  {
 
-    const auto  iter1 = column_tb_.find (name1);
-    const auto  iter2 = column_tb_.find (name2);
-    const auto  iter3 = column_tb_.find (name3);
-    const auto  iter4 = column_tb_.find (name4);
-
-    if (iter1 == column_tb_.end())  {
-        char buffer [512];
-
-        sprintf (buffer,
-                 "DataFrame::visit(4): ERROR: Cannot find column '%s'",
-                 name1);
-        throw ColNotFound (buffer);
-    }
-    if (iter2 == column_tb_.end())  {
-        char buffer [512];
-
-        sprintf (buffer,
-                 "DataFrame::visit(4): ERROR: Cannot find column '%s'",
-                 name2);
-        throw ColNotFound (buffer);
-    }
-    if (iter3 == column_tb_.end())  {
-        char buffer [512];
-
-        sprintf (buffer,
-                 "DataFrame::visit(4): ERROR: Cannot find column '%s'",
-                 name3);
-        throw ColNotFound (buffer);
-    }
-    if (iter4 == column_tb_.end())  {
-        char buffer [512];
-
-        sprintf (buffer,
-                 "DataFrame::visit(4): ERROR: Cannot find column '%s'",
-                 name4);
-        throw ColNotFound (buffer);
-    }
-
-    DataVec     &hv1 = data_[iter1->second];
-    DataVec     &hv2 = data_[iter2->second];
-    DataVec     &hv3 = data_[iter3->second];
-    DataVec     &hv4 = data_[iter4->second];
-    SpinGuard   guard(lock_);
-    auto        &vec1 = hv1.template get_vector<T1>();
-    auto        &vec2 = hv2.template get_vector<T2>();
-    auto        &vec3 = hv3.template get_vector<T3>();
-    auto        &vec4 = hv4.template get_vector<T4>();
-
-    guard.release();
-
+    auto            &vec1 = get_column<T1>(name1);
+    auto            &vec2 = get_column<T2>(name2);
+    auto            &vec3 = get_column<T3>(name3);
+    auto            &vec4 = get_column<T4>(name4);
     const size_type idx_s = indices_.size();
     const size_type data_s1 = vec1.size();
     const size_type data_s2 = vec2.size();
@@ -413,67 +305,11 @@ visit (const char *name1,
        const char *name5,
        V &visitor)  {
 
-    const auto  iter1 = column_tb_.find (name1);
-    const auto  iter2 = column_tb_.find (name2);
-    const auto  iter3 = column_tb_.find (name3);
-    const auto  iter4 = column_tb_.find (name4);
-    const auto  iter5 = column_tb_.find (name5);
-
-    if (iter1 == column_tb_.end())  {
-        char buffer [512];
-
-        sprintf (buffer,
-                 "DataFrame::visit(5): ERROR: Cannot find column '%s'",
-                 name1);
-        throw ColNotFound (buffer);
-    }
-    if (iter2 == column_tb_.end())  {
-        char buffer [512];
-
-        sprintf (buffer,
-                 "DataFrame::visit(5): ERROR: Cannot find column '%s'",
-                 name2);
-        throw ColNotFound (buffer);
-    }
-    if (iter3 == column_tb_.end())  {
-        char buffer [512];
-
-        sprintf (buffer,
-                 "DataFrame::visit(5): ERROR: Cannot find column '%s'",
-                 name3);
-        throw ColNotFound (buffer);
-    }
-    if (iter4 == column_tb_.end())  {
-        char buffer [512];
-
-        sprintf (buffer,
-                 "DataFrame::visit(5): ERROR: Cannot find column '%s'",
-                 name4);
-        throw ColNotFound (buffer);
-    }
-    if (iter5 == column_tb_.end())  {
-        char buffer [512];
-
-        sprintf (buffer,
-                 "DataFrame::visit(5): ERROR: Cannot find column '%s'",
-                 name5);
-        throw ColNotFound (buffer);
-    }
-
-    DataVec     &hv1 = data_[iter1->second];
-    DataVec     &hv2 = data_[iter2->second];
-    DataVec     &hv3 = data_[iter3->second];
-    DataVec     &hv4 = data_[iter4->second];
-    DataVec     &hv5 = data_[iter5->second];
-    SpinGuard   guard(lock_);
-    auto        &vec1 = hv1.template get_vector<T1>();
-    auto        &vec2 = hv2.template get_vector<T2>();
-    auto        &vec3 = hv3.template get_vector<T3>();
-    auto        &vec4 = hv4.template get_vector<T4>();
-    auto        &vec5 = hv5.template get_vector<T5>();
-
-    guard.release();
-
+    auto            &vec1 = get_column<T1>(name1);
+    auto            &vec2 = get_column<T2>(name2);
+    auto            &vec3 = get_column<T3>(name3);
+    auto            &vec4 = get_column<T4>(name4);
+    auto            &vec5 = get_column<T5>(name5);
     const size_type idx_s = indices_.size();
     const size_type data_s1 = vec1.size();
     const size_type data_s2 = vec2.size();
@@ -523,35 +359,9 @@ template<typename T1, typename T2, typename V>
 V &DataFrame<I, H>::
 single_act_visit (const char *name1, const char *name2, V &visitor)  {
 
-    const auto  iter1 = column_tb_.find (name1);
-    const auto  iter2 = column_tb_.find (name2);
+    const std::vector<T1>   &vec1 = get_column<T1>(name1);
+    const std::vector<T2>   &vec2 = get_column<T2>(name2);
 
-    if (iter1 == column_tb_.end())  {
-        char buffer [512];
-
-        sprintf (buffer,
-                 "DataFrame::single_act_visit(2): "
-                 "ERROR: Cannot find column '%s'",
-                 name1);
-        throw ColNotFound (buffer);
-    }
-    if (iter2 == column_tb_.end())  {
-        char buffer [512];
-
-        sprintf (buffer,
-                 "DataFrame::single_act_visit(2): "
-                 "ERROR: Cannot find column '%s'",
-                 name2);
-        throw ColNotFound (buffer);
-    }
-
-    const DataVec           &hv1 = data_[iter1->second];
-    const DataVec           &hv2 = data_[iter2->second];
-    SpinGuard               guard(lock_);
-    const std::vector<T1>   &vec1 = hv1.template get_vector<T1>();
-    const std::vector<T2>   &vec2 = hv2.template get_vector<T2>();
-
-    guard.release();
     visitor.pre();
     visitor (indices_, vec1, vec2);
     visitor.post();
@@ -959,37 +769,9 @@ template<typename T1, typename T2, typename F, typename ... Ts>
 DataFrame<I, H> DataFrame<I, H>::
 get_data_by_sel (const char *name1, const char *name2, F &sel_functor) const  {
 
-    const auto  citer1 = column_tb_.find (name1);
-    const auto  citer2 = column_tb_.find (name2);
-
-    if (citer1 == column_tb_.end())  {
-        char buffer [512];
-
-        sprintf (buffer,
-                 "DataFrame::get_data_by_sel(2): ERROR: "
-                 "Cannot find column '%s'",
-                 name1);
-        throw ColNotFound (buffer);
-    }
-    if (citer2 == column_tb_.end())  {
-        char buffer [512];
-
-        sprintf (buffer,
-                 "DataFrame::get_data_by_sel(2): ERROR: "
-                 "Cannot find column '%s'",
-                 name2);
-        throw ColNotFound (buffer);
-    }
-
     const size_type         idx_s = indices_.size();
-    const DataVec           &hv1 = data_[citer1->second];
-    const DataVec           &hv2 = data_[citer2->second];
-    SpinGuard               guard(lock_);
-    const std::vector<T1>   &vec1 = hv1.template get_vector<T1>();
-    const std::vector<T2>   &vec2 = hv2.template get_vector<T2>();
-
-    guard.release();
-
+    const std::vector<T1>   &vec1 = get_column<T1>(name1);
+    const std::vector<T2>   &vec2 = get_column<T2>(name2);
     const size_type         col_s1 = vec1.size();
     const size_type         col_s2 = vec2.size();
     const size_type         col_s = std::max(col_s1, col_s2);
@@ -1033,36 +815,8 @@ get_view_by_sel (const char *name1, const char *name2, F &sel_functor)  {
     static_assert(std::is_base_of<HeteroVector, H>::value,
                   "Only a StdDataFrame can call get_view_by_sel()");
 
-    const auto  citer1 = column_tb_.find (name1);
-    const auto  citer2 = column_tb_.find (name2);
-
-    if (citer1 == column_tb_.end())  {
-        char buffer [512];
-
-        sprintf (buffer,
-                 "DataFrame::get_view_by_sel(2): ERROR: "
-                 "Cannot find column '%s'",
-                 name1);
-        throw ColNotFound (buffer);
-    }
-    if (citer2 == column_tb_.end())  {
-        char buffer [512];
-
-        sprintf (buffer,
-                 "DataFrame::get_view_by_sel(2): ERROR: "
-                 "Cannot find column '%s'",
-                 name2);
-        throw ColNotFound (buffer);
-    }
-
-    const DataVec           &hv1 = data_[citer1->second];
-    const DataVec           &hv2 = data_[citer2->second];
-    SpinGuard               guard(lock_);
-    const std::vector<T1>   &vec1 = hv1.template get_vector<T1>();
-    const std::vector<T2>   &vec2 = hv2.template get_vector<T2>();
-
-    guard.release();
-
+    const std::vector<T1>   &vec1 = get_column<T1>(name1);
+    const std::vector<T2>   &vec2 = get_column<T2>(name2);
     const size_type         idx_s = indices_.size();
     const size_type         col_s1 = vec1.size();
     const size_type         col_s2 = vec2.size();
@@ -1109,49 +863,10 @@ get_data_by_sel (const char *name1,
                  const char *name3,
                  F &sel_functor) const  {
 
-    const auto  citer1 = column_tb_.find (name1);
-    const auto  citer2 = column_tb_.find (name2);
-    const auto  citer3 = column_tb_.find (name3);
-
-    if (citer1 == column_tb_.end())  {
-        char buffer [512];
-
-        sprintf (buffer,
-                 "DataFrame::get_data_by_sel(2): ERROR: "
-                 "Cannot find column '%s'",
-                 name1);
-        throw ColNotFound (buffer);
-    }
-    if (citer2 == column_tb_.end())  {
-        char buffer [512];
-
-        sprintf (buffer,
-                 "DataFrame::get_data_by_sel(2): ERROR: "
-                 "Cannot find column '%s'",
-                 name2);
-        throw ColNotFound (buffer);
-    }
-    if (citer3 == column_tb_.end())  {
-        char buffer [512];
-
-        sprintf (buffer,
-                 "DataFrame::get_data_by_sel(2): ERROR: "
-                 "Cannot find column '%s'",
-                 name3);
-        throw ColNotFound (buffer);
-    }
-
     const size_type         idx_s = indices_.size();
-    const DataVec           &hv1 = data_[citer1->second];
-    const DataVec           &hv2 = data_[citer2->second];
-    const DataVec           &hv3 = data_[citer3->second];
-    SpinGuard               guard(lock_);
-    const std::vector<T1>   &vec1 = hv1.template get_vector<T1>();
-    const std::vector<T2>   &vec2 = hv2.template get_vector<T2>();
-    const std::vector<T3>   &vec3 = hv3.template get_vector<T3>();
-
-    guard.release();
-
+    const std::vector<T1>   &vec1 = get_column<T1>(name1);
+    const std::vector<T2>   &vec2 = get_column<T2>(name2);
+    const std::vector<T3>   &vec3 = get_column<T3>(name3);
     const size_type         col_s1 = vec1.size();
     const size_type         col_s2 = vec2.size();
     const size_type         col_s3 = vec3.size();
@@ -1200,48 +915,9 @@ get_view_by_sel (const char *name1,
     static_assert(std::is_base_of<HeteroVector, H>::value,
                   "Only a StdDataFrame can call get_view_by_sel()");
 
-    const auto  citer1 = column_tb_.find (name1);
-    const auto  citer2 = column_tb_.find (name2);
-    const auto  citer3 = column_tb_.find (name3);
-
-    if (citer1 == column_tb_.end())  {
-        char buffer [512];
-
-        sprintf (buffer,
-                 "DataFrame::get_view_by_sel(2): ERROR: "
-                 "Cannot find column '%s'",
-                 name1);
-        throw ColNotFound (buffer);
-    }
-    if (citer2 == column_tb_.end())  {
-        char buffer [512];
-
-        sprintf (buffer,
-                 "DataFrame::get_view_by_sel(2): ERROR: "
-                 "Cannot find column '%s'",
-                 name2);
-        throw ColNotFound (buffer);
-    }
-    if (citer3 == column_tb_.end())  {
-        char buffer [512];
-
-        sprintf (buffer,
-                 "DataFrame::get_view_by_sel(2): ERROR: "
-                 "Cannot find column '%s'",
-                 name3);
-        throw ColNotFound (buffer);
-    }
-
-    const DataVec           &hv1 = data_[citer1->second];
-    const DataVec           &hv2 = data_[citer2->second];
-    const DataVec           &hv3 = data_[citer3->second];
-    SpinGuard               guard(lock_);
-    const std::vector<T1>   &vec1 = hv1.template get_vector<T1>();
-    const std::vector<T2>   &vec2 = hv2.template get_vector<T2>();
-    const std::vector<T3>   &vec3 = hv3.template get_vector<T3>();
-
-    guard.release();
-
+    const std::vector<T1>   &vec1 = get_column<T1>(name1);
+    const std::vector<T2>   &vec2 = get_column<T2>(name2);
+    const std::vector<T3>   &vec3 = get_column<T3>(name3);
     const size_type         idx_s = indices_.size();
     const size_type         col_s1 = vec1.size();
     const size_type         col_s2 = vec2.size();

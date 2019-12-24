@@ -1801,6 +1801,10 @@ private:  // Static helper functions
 
     void read_json_(std::ifstream &file);
 
+    template<typename CF, typename ... Ts>
+    static void
+    sort_common_(DataFrame<I, H> &df, CF &&comp_func);
+
     template<typename T>
     static void
     fill_missing_value_(std::vector<T> &vec,

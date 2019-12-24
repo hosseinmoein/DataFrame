@@ -39,6 +39,25 @@ _sort_by_sorted_index_(std::vector<T> &to_be_sorted,
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
+template<typename CF, typename ... Ts>
+void DataFrame<I, H>::sort_common_(DataFrame<I, H> &df, CF &&comp_func)  {
+
+    const size_type         idx_s = df.indices_.size();
+    std::vector<size_type>  sorting_idxs(idx_s, 0);
+
+    std::iota(sorting_idxs.begin(), sorting_idxs.end(), 0);
+    std::sort(sorting_idxs.begin(), sorting_idxs.end(), comp_func);
+
+    sort_functor_<Ts ...>   functor (sorting_idxs, idx_s);
+
+    for (auto &iter : df.data_)
+        iter.change(functor);
+    _sort_by_sorted_index_(df.indices_, sorting_idxs, idx_s);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
 template<size_t N, typename ... Ts>
 void
 DataFrame<I, H>::shuffle(const std::array<const char *, N> col_names,
@@ -595,11 +614,6 @@ void DataFrame<I, H>::sort(const char *name, sort_spec dir)  {
 
     make_consistent<Ts ...>();
 
-    const size_type         idx_s = indices_.size();
-    std::vector<size_type>  sorting_idxs(idx_s, 0);
-
-    std::iota(sorting_idxs.begin(), sorting_idxs.end(), 0);
-
     if (! ::strcmp(name, DF_INDEX_COL_NAME))  {
         auto    a = [this](size_type i, size_type j) -> bool  {
                         return (this->indices_[i] < this->indices_[j]);
@@ -610,9 +624,9 @@ void DataFrame<I, H>::sort(const char *name, sort_spec dir)  {
 
 
         if (dir == sort_spec::ascen)
-            std::sort (sorting_idxs.begin(), sorting_idxs.end(), a);
+            sort_common_<decltype(a), Ts ...>(*this, std::move(a));
         else
-            std::sort (sorting_idxs.begin(), sorting_idxs.end(), d);
+            sort_common_<decltype(d), Ts ...>(*this, std::move(d));
     }
     else  {
         const std::vector<T>    &idx_vec = get_column<T>(name);
@@ -625,16 +639,10 @@ void DataFrame<I, H>::sort(const char *name, sort_spec dir)  {
                     };
 
         if (dir == sort_spec::ascen)
-            std::sort (sorting_idxs.begin(), sorting_idxs.end(), a);
+            sort_common_<decltype(a), Ts ...>(*this, std::move(a));
         else
-            std::sort (sorting_idxs.begin(), sorting_idxs.end(), d);
+            sort_common_<decltype(d), Ts ...>(*this, std::move(d));
     }
-
-    sort_functor_<Ts ...>   functor (sorting_idxs, idx_s);
-
-    for (auto &iter : data_)
-        iter.change(functor);
-    _sort_by_sorted_index_(indices_, sorting_idxs, idx_s);
 
     return;
 }
@@ -661,9 +669,7 @@ sort(const char *name1, sort_spec dir1, const char *name2, sort_spec dir2)  {
     else
         vec2 = &(get_column<T2>(name2));
 
-    const size_type         idx_s = indices_.size();
-    std::vector<size_type>  sorting_idxs(idx_s, 0);
-    auto                    cf =
+    auto    cf =
         [vec1, vec2, dir1, dir2](size_type i, size_type j) -> bool {
             if (dir1 == sort_spec::ascen)  {
                 if (vec1->at(i) < vec1->at(j))
@@ -683,15 +689,7 @@ sort(const char *name1, sort_spec dir1, const char *name2, sort_spec dir2)  {
                 return (vec2->at(i) >= vec2->at(j));
         };
 
-    std::iota(sorting_idxs.begin(), sorting_idxs.end(), 0);
-    std::sort(sorting_idxs.begin(), sorting_idxs.end(), cf);
-
-    sort_functor_<Ts ...>   functor (sorting_idxs, idx_s);
-
-    for (auto &iter : data_)
-        iter.change(functor);
-    _sort_by_sorted_index_(indices_, sorting_idxs, idx_s);
-
+    sort_common_<decltype(cf), Ts ...>(*this, std::move(cf));
     return;
 }
 
@@ -725,9 +723,7 @@ sort(const char *name1, sort_spec dir1,
     else
         vec3 = &(get_column<T3>(name3));
 
-    const size_type         idx_s = indices_.size();
-    std::vector<size_type>  sorting_idxs(idx_s, 0);
-    auto                    cf =
+    auto    cf =
         [vec1, vec2, vec3, dir1, dir2, dir3]
         (size_type i, size_type j) -> bool {
             if (dir1 == sort_spec::ascen)  {
@@ -760,15 +756,7 @@ sort(const char *name1, sort_spec dir1,
                 return (vec3->at(i) >= vec3->at(j));
         };
 
-    std::iota(sorting_idxs.begin(), sorting_idxs.end(), 0);
-    std::sort(sorting_idxs.begin(), sorting_idxs.end(), cf);
-
-    sort_functor_<Ts ...>   functor (sorting_idxs, idx_s);
-
-    for (auto &iter : data_)
-        iter.change(functor);
-    _sort_by_sorted_index_(indices_, sorting_idxs, idx_s);
-
+    sort_common_<decltype(cf), Ts ...>(*this, std::move(cf));
     return;
 }
 
@@ -809,9 +797,7 @@ sort(const char *name1, sort_spec dir1,
     else
         vec4 = &(get_column<T4>(name4));
 
-    const size_type         idx_s = indices_.size();
-    std::vector<size_type>  sorting_idxs(idx_s, 0);
-    auto                    cf =
+    auto    cf =
         [vec1, vec2, vec3, vec4, dir1, dir2, dir3, dir4]
         (size_type i, size_type j) -> bool {
             if (dir1 == sort_spec::ascen)  {
@@ -856,15 +842,7 @@ sort(const char *name1, sort_spec dir1,
                 return (vec4->at(i) >= vec4->at(j));
         };
 
-    std::iota(sorting_idxs.begin(), sorting_idxs.end(), 0);
-    std::sort(sorting_idxs.begin(), sorting_idxs.end(), cf);
-
-    sort_functor_<Ts ...>   functor (sorting_idxs, idx_s);
-
-    for (auto &iter : data_)
-        iter.change(functor);
-    _sort_by_sorted_index_(indices_, sorting_idxs, idx_s);
-
+    sort_common_<decltype(cf), Ts ...>(*this, std::move(cf));
     return;
 }
 
@@ -913,9 +891,7 @@ sort(const char *name1, sort_spec dir1,
     else
         vec5 = &(get_column<T5>(name5));
 
-    const size_type         idx_s = indices_.size();
-    std::vector<size_type>  sorting_idxs(idx_s, 0);
-    auto                    cf =
+    auto    cf =
         [vec1, vec2, vec3, vec4, vec5, dir1, dir2, dir3, dir4, dir5]
         (size_type i, size_type j) -> bool {
             if (dir1 == sort_spec::ascen)  {
@@ -972,15 +948,7 @@ sort(const char *name1, sort_spec dir1,
                 return (vec5->at(i) >= vec5->at(j));
         };
 
-    std::iota(sorting_idxs.begin(), sorting_idxs.end(), 0);
-    std::sort(sorting_idxs.begin(), sorting_idxs.end(), cf);
-
-    sort_functor_<Ts ...>   functor (sorting_idxs, idx_s);
-
-    for (auto &iter : data_)
-        iter.change(functor);
-    _sort_by_sorted_index_(indices_, sorting_idxs, idx_s);
-
+    sort_common_<decltype(cf), Ts ...>(*this, std::move(cf));
     return;
 }
 

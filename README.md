@@ -15,7 +15,7 @@ You could do almost everything you could do with Pandas within the C++ syntax an
 
 <B>Multithreading</B><BR>
 1. DataFrame uses static containers to achieve type heterogeneity. By default, these static containers are unprotected. This is done by design. So by default, there is no locking overhead. If you use DataFrame in a multithreaded program you must provide a _SpinLock_ defined in <a href="include/DataFrame/Utils/ThreadGranularity.h">ThreadGranularity.h</a> file. DataFrame will use your _SpinLock_ to protect the containers.<BR>
-Please see <a href="docs/DataFrameDoc.pdf">documentation</a>, _set_lock()_, _remove_lock()_, and <a href="test/dataframe_tester.cc#L3562">dataframe_tester.cc</a> for code example.
+Please see <a href="docs/DataFrameDoc.pdf">documentation</a>, _set_lock()_, _remove_lock()_, and <a href="test/dataframe_tester.cc#L3610">dataframe_tester.cc</a> for code example.
 2. In addition, instances of DataFrame are not multithreaded safe either. In other words, a single instance of DataFrame must not be used in multiple threads without protection.
 3. In the meantime, DataFrame utilizes multithreading in two different ways internally:
     1. There are asynchronous versions of some methods. For example, you have both _sort()_ and _sort_async()_. The latter returns a _std::future_ that could execute in parallel.

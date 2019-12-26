@@ -20,8 +20,8 @@
 namespace hmdf
 {
 
-// I: Index(e.g. Timestamp) type. Although an index column need not necessarily
-//    represent time. Basically I could be any built-in or user-defined type.
+// I: Index (e.g. Timestamp) type. Although an index column need not necessarily
+//    represent time, it could be any built-in or user-defined type.
 // H: See the static assert below. It can only be either
 //    a HeteroVector (typedef'ed below to StdDataFrame) or
 //    a HeteroView (typedef'ed below to DataFrameView) or

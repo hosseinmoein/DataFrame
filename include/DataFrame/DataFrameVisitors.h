@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <functional>
 #include <numeric>
 
 // ----------------------------------------------------------------------------
@@ -1252,20 +1253,56 @@ struct  ModeVisitor {
 
     struct  DataItem  {
         // Value of the column item
-        value_type              value { };
+        const value_type                *value { nullptr };
         // List of indices where value occurred
-        std::vector<index_type> indices { };
+        VectorConstPtrView<index_type>  indices { };
+
         // Number of times value occurred
         inline size_type repeat_count() const  { return (indices.size()); }
+
         // List of column indices where value occurred
         std::vector<size_type>  value_indices_in_col {  };
 
         DataItem() = default;
-        inline DataItem(value_type v) : value(v)  {
+        inline DataItem(const value_type &v) : value(&v)  {
             indices.reserve(4);
             value_indices_in_col.reserve(4);
         }
+
+        const value_type &get_value() const noexcept  { return (*value); }
     };
+
+private:
+
+    struct my_hash_  {
+        using argument_type = const value_type *;
+        using result_type = std::size_t;
+
+        inline result_type operator() (const argument_type &a) const noexcept {
+
+            return (std::hash<value_type>()(*a));
+        }
+    };
+
+    struct my_equal_to_  {
+        using first_argument_type = const value_type *;
+        using second_argument_type = const value_type *;
+        using result_type = bool;
+
+        inline result_type
+        operator() (const first_argument_type &f,
+                    const second_argument_type &s) const noexcept {
+
+            return (std::equal_to<value_type>()(*f, *s));
+        }
+    };
+
+    using map_type = std::unordered_map<const value_type *,
+                                        DataItem,
+                                        my_hash_,
+                                        my_equal_to_>;
+
+public:
 
     using result_type = std::array<DataItem, N>;
 
@@ -1273,24 +1310,24 @@ struct  ModeVisitor {
     inline void
     operator() (const K &idx, const H &column)  {
 
-        DataItem                                    nan_item(
-            std::numeric_limits<value_type>::quiet_NaN());
-        const size_type                             col_size =
-            std::min(idx.size(), column.size());
-        std::unordered_map<value_type, DataItem>    val_map (col_size);
+        DataItem        nan_item;
+        const size_type col_size = std::min(idx.size(), column.size());
+        map_type        val_map;
 
+        val_map.reserve(col_size);
         for (size_type i = 0; i < col_size; ++i)  {
             if (is_nan__(column[i]))  {
-                nan_item.indices.push_back(idx[i]);
+                nan_item.value = &(column[i]);
+                nan_item.indices.push_back(&(idx[i]));
                 nan_item.value_indices_in_col.push_back(i);
             }
             else  {
                 auto    ret =
                     val_map.emplace(
-                        std::pair<value_type, DataItem>(
-                            column[i], DataItem(column[i])));
+                        std::pair<const value_type *, DataItem>(
+                            &(column[i]), DataItem(column[i])));
 
-                ret.first->second.indices.push_back(idx[i]);
+                ret.first->second.indices.push_back(&(idx[i]));
                 ret.first->second.value_indices_in_col.push_back(i);
             }
         }
@@ -1298,12 +1335,14 @@ struct  ModeVisitor {
         std::vector<DataItem> val_vec;
 
         val_vec.reserve(val_map.size() + 1);
-        val_vec.push_back(nan_item);
+        if (nan_item.value != nullptr)
+            val_vec.push_back(nan_item);
         std::for_each(val_map.begin(),
                       val_map.end(),
                       [&val_vec](const auto &map_pair) -> void {
                           val_vec.push_back(map_pair.second);
                       });
+
         std::sort(val_vec.begin(), val_vec.end(),
                   [](const DataItem &lhs, const DataItem &rhs) -> bool  {
                       return (lhs.repeat_count() > rhs.repeat_count()); // dec
@@ -1326,7 +1365,7 @@ struct  ModeVisitor {
 
         std::sort(items_.begin(), items_.end(),
                   [](const DataItem &lhs, const DataItem &rhs) -> bool  {
-                      return (lhs.value < rhs.value);
+                      return (*(lhs.value) < *(rhs.value));
                   });
     }
 

@@ -2688,10 +2688,21 @@ static void test_mode()  {
     assert(result.size() == 3);
     assert(result[0].indices.size() == 3);
     assert(result[0].value_indices_in_col.size() == 3);
-    assert(std::isnan(result[0].value));
+    assert(std::isnan(result[0].get_value()));
     assert(result[0].repeat_count() == 3);
     assert(result[0].indices[1] == 123458);
     assert(result[0].value_indices_in_col[2] == 12);
+
+    ModeVisitor<4, int> mode_visit2;
+    const auto          &result2 =
+        df.single_act_visit<int>("intcol_1", mode_visit2).get_result();
+
+    assert(result2.size() == 4);
+    assert(result2[0].indices.size() == 6);
+    assert(result2[0].value_indices_in_col.size() == 6);
+    assert(result2[0].repeat_count() == 6);
+    assert(result2[0].get_value() == 2);
+    assert(result2[1].repeat_count() == 4);
 }
 
 // -----------------------------------------------------------------------------
@@ -3751,7 +3762,7 @@ static void test_view_visitors()  {
     ModeVisitor<2, double> mode_visitor;
     const auto &res_mode =
         dfv2.single_act_visit<double>("dbl_col6", mode_visitor).get_result();
-    assert(fabs(res_mode[1].value - 3.3) < 0.00001);
+    assert(fabs(res_mode[1].get_value() - 3.3) < 0.00001);
 
     DiffVisitor<double> diff_visitor(1);
     const auto &res_diff =

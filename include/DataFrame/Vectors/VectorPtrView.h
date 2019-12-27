@@ -602,6 +602,469 @@ public:
     }
 };
 
+// ----------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+template<typename T>
+class   VectorConstPtrView  {
+
+private:
+
+    using vector_type = std::vector<const T *>;
+
+    vector_type vector_ {  };
+
+public:
+
+    using value_type = T;
+    using pointer = const T *;
+    using const_pointer = const T *;
+    using const_pointer_const = const T *const;
+    using reference = const T &;
+    using const_reference = const T &;
+    using size_type = typename vector_type::size_type;
+    using difference_type = typename vector_type::difference_type;
+
+    static const size_type  value_size = sizeof(T);
+
+public:
+
+    inline size_type size() const noexcept { return (vector_.size ()); }
+    inline size_type max_size() const noexcept { return (vector_.max_size()); }
+    inline size_type capacity() const noexcept { return (vector_.capacity()); }
+
+    inline bool empty() const noexcept { return (vector_.empty()); }
+    inline void shrink_to_fit()  { vector_.shrink_to_fit(); }
+
+    inline const_pointer &ptr_at(size_type n) const  { return (vector_[n]); }
+    inline const_reference at(size_type n) const { return (*(vector_[n])); }
+    inline const_reference operator[](size_type n) const { return (at(n)); }
+
+    inline void reserve (size_type n) noexcept { vector_.reserve (n); }
+
+    inline const_reference
+    front() const noexcept { return(*(vector_.front())); }
+    inline const_reference
+    back () const noexcept { return (*(vector_.back ())); }
+
+    inline void push_back(const value_type *v)  { vector_.push_back(v); }
+    inline void emplace_back(const value_type *v)  { vector_.emplace_back(v); }
+    inline void pop_back()  { vector_.pop_back(); }
+
+    inline void
+    swap (VectorConstPtrView &rhs) noexcept  { vector_.swap (rhs.vector_); }
+
+    inline friend bool
+    operator == (const VectorConstPtrView &lhs, const VectorConstPtrView &rhs) {
+
+        return (lhs.vector_ == rhs.vector_);
+    }
+    inline friend bool
+    operator < (const VectorConstPtrView &lhs, const VectorConstPtrView &rhs) {
+
+        return (lhs.vector_ < rhs.vector_);
+    }
+
+    inline VectorConstPtrView () = default;
+    inline VectorConstPtrView (const VectorConstPtrView &) = default;
+    inline VectorConstPtrView (VectorConstPtrView &&) = default;
+    inline VectorConstPtrView(const std::vector<T> &rhs)  { *this = rhs; }
+    inline VectorConstPtrView(std::vector<T> &rhs)  { *this = rhs; }
+    template<typename ITR>
+    VectorConstPtrView(ITR first, ITR last)  {
+
+        reserve(std::distance(first, last));
+        for (auto iter = first; iter < last; ++iter)
+            push_back(&(*iter));
+    }
+    ~VectorConstPtrView () = default;
+
+    inline VectorConstPtrView &
+    operator = (const VectorConstPtrView &) = default;
+    inline VectorConstPtrView &operator = (VectorConstPtrView &&) = default;
+    inline VectorConstPtrView &operator = (const std::vector<T> &rhs)  {
+
+        VectorConstPtrView   tmp_vec;
+        const size_type      vec_size = rhs.size();
+
+        reserve(vec_size);
+        for (size_type idx = 0; idx < vec_size; ++idx)
+            tmp_vec.push_back(&(rhs[idx]));
+        swap(tmp_vec);
+        return (*this);
+    }
+    inline VectorConstPtrView &operator = (std::vector<T> &rhs)  {
+
+        VectorConstPtrView   tmp_vec;
+        const size_type      vec_size = rhs.size();
+
+        reserve(vec_size);
+        for (size_type idx = 0; idx < vec_size; ++idx)
+            tmp_vec.push_back(&(rhs[idx]));
+        swap(tmp_vec);
+        return (*this);
+    }
+
+    inline void clear () throw ()  { vector_.clear(); }
+    inline void resize (size_type n) throw ()  { vector_.resize(n); }
+
+    inline void
+    erase (size_type pos)  { vector_.erase (vector_.begin() + pos); }
+    inline void erase (size_type first, size_type last)  {
+
+        vector_.erase (vector_.begin() + first, vector_.begin() + last);
+    }
+
+    inline void insert (size_type pos, value_type *v)  {
+
+        vector_.insert (vector_.begin() + pos, v);
+    }
+    template<typename ITR>
+    inline void insert(size_type pos, ITR first, ITR last) {
+
+        std::vector<T *>    tmp_vec;
+
+        tmp_vec.reserve(std::distance(first, last));
+        for (auto iter = first; iter < last; ++iter)
+            tmp_vec.push_back(&(*iter));
+        vector_.reserve(vector_.size() + tmp_vec.size());
+        vector_.insert(vector_.begin() + pos, tmp_vec.begin(), tmp_vec.end());
+    }
+
+    inline void
+    sort(std::function<bool(const value_type *, const value_type *)> comp =
+             [](const value_type *l, const value_type *r) -> bool {
+                 return *l < *r;
+             })  {
+
+        std::sort(vector_.begin(), vector_.end(), comp);
+    }
+
+public:
+
+   // This iterator contains only one pointer. Like STL iterators,
+   // it is cheap to create and copy around.
+   //
+    class   const_iterator  {
+
+    public:
+
+        using iterator_category = std::random_access_iterator_tag;
+        using value_type = T;
+        using pointer = value_type *;
+        using reference = value_type &;
+        using difference_type = long;
+
+    public:
+
+       // NOTE: The constructor with no argument initializes
+       //       the iterator to be the "end" iterator
+       //
+        inline const_iterator () = default;
+        inline const_iterator (const const_iterator &) = default;
+        inline const_iterator (const_iterator &&) = default;
+        inline const_iterator &operator = (const const_iterator &) = default;
+        inline const_iterator &operator = (const_iterator &&) = default;
+
+        inline const_iterator (pointer const *node) noexcept
+            : node_ (node)  {   }
+
+        inline const_iterator &operator = (pointer const *rhs) noexcept  {
+
+            node_ = rhs;
+            return (*this);
+        }
+
+        template<typename ITR>
+        inline bool operator == (const ITR &rhs) const noexcept  {
+
+            return (node_ == rhs.node_);
+        }
+        template<typename ITR>
+        inline bool operator != (const ITR &rhs) const noexcept  {
+
+            return (node_ != rhs.node_);
+        }
+
+       // Following STL style, this iterator appears as a pointer
+       // to value_type.
+       //
+        inline const_pointer operator -> () const noexcept { return(*node_); }
+        inline const_reference operator * () const noexcept  {
+
+            return (**node_);
+        }
+        inline operator const_pointer () const noexcept  { return (*node_); }
+
+       // ++Prefix
+       //
+        inline const_iterator &operator ++ () noexcept  {
+
+            node_ += 1;
+            return (*this);
+        }
+
+       // Postfix++
+       //
+        inline const_iterator operator ++ (int) noexcept  {
+
+            value_type const  **ret_node = node_;
+
+            node_ += 1;
+            return (const_iterator (ret_node));
+        }
+
+        inline const_iterator &operator += (int step) noexcept  {
+
+            node_ += step;
+            return (*this);
+        }
+
+       // --Prefix
+       //
+        inline const_iterator &operator -- () noexcept  {
+
+            node_ -= 1;
+            return (*this);
+        }
+
+       // Postfix--
+       //
+        inline const_iterator operator -- (int) noexcept  {
+
+            value_type const  **ret_node = node_;
+
+            node_ -= 1;
+            return (const_iterator (ret_node));
+        }
+
+        inline const_iterator &operator -= (int step) noexcept  {
+
+            node_ -= step;
+            return (*this);
+        }
+
+        inline const_iterator operator + (int step) noexcept  {
+
+            value_type const  **ret_node = node_;
+
+            ret_node += step;
+            return (const_iterator (ret_node));
+        }
+
+        inline const_iterator operator - (int step) noexcept  {
+
+            value_type const  **ret_node = node_;
+
+            ret_node -= step;
+            return (const_iterator (ret_node));
+        }
+
+        inline const_iterator operator + (long step) noexcept  {
+
+            value_type const  **ret_node = node_;
+
+            ret_node += step;
+            return (const_iterator (ret_node));
+        }
+
+        inline const_iterator operator - (long step) noexcept  {
+
+            value_type const  **ret_node = node_;
+
+            ret_node -= step;
+            return (const_iterator (ret_node));
+        }
+
+    private:
+
+        const pointer   *node_ { nullptr };
+    };
+
+    class   const_reverse_iterator  {
+
+    public:
+
+        using iterator_category = std::random_access_iterator_tag;
+        using value_type = T;
+        using pointer = value_type *;
+        using reference = value_type &;
+        using difference_type = long;
+
+    public:
+
+       // NOTE: The constructor with no argument initializes
+       //       the iterator to be the "end" iterator
+       //
+        inline const_reverse_iterator () = default;
+        inline const_reverse_iterator(const const_reverse_iterator &) = default;
+        inline const_reverse_iterator(const_reverse_iterator &&) = default;
+        inline const_reverse_iterator &
+        operator = (const const_reverse_iterator &) = default;
+        inline const_reverse_iterator &
+        operator = (const_reverse_iterator &&) = default;
+
+        inline const_reverse_iterator (pointer const *node) noexcept
+            : node_ (node)  {   }
+        inline const_reverse_iterator (const const_iterator &itr) noexcept
+            { *this = itr; }
+
+        inline const_reverse_iterator &
+        operator = (pointer const *rhs) noexcept  {
+
+            node_ = rhs;
+            return (*this);
+        }
+        inline const_reverse_iterator &
+        operator = (const const_iterator &rhs) noexcept  {
+
+            node_ = rhs.node_;
+            return (*this);
+        }
+
+        template<typename ITR>
+        inline bool operator == (const ITR &rhs) const noexcept  {
+
+            return (node_ == rhs.node_);
+        }
+        template<typename ITR>
+        inline bool operator != (const ITR &rhs) const noexcept  {
+
+            return (node_ != rhs.node_);
+        }
+
+       // Following STL style, this iterator appears as a pointer
+       // to value_type.
+       //
+        inline const_pointer operator -> () const noexcept { return(*node_); }
+        inline const_reference operator *() const noexcept { return(**node_); }
+        inline operator pointer () const noexcept  { return (*node_); }
+
+       // ++Prefix
+       //
+        inline const_reverse_iterator &operator ++ () noexcept  {
+
+            node_ -= 1;
+            return (*this);
+        }
+
+       // Postfix++
+       //
+        inline const_reverse_iterator operator ++ (int) noexcept  {
+
+            value_type const  **ret_node = node_;
+
+            node_ -= 1;
+            return (const_reverse_iterator (ret_node));
+        }
+
+        inline const_reverse_iterator &operator += (int step) noexcept  {
+
+            node_ -= step;
+            return (*this);
+        }
+
+       // --Prefix
+       //
+        inline const_reverse_iterator &operator -- () noexcept  {
+
+            node_ += 1;
+            return (*this);
+        }
+
+       // Postfix--
+       //
+        inline const_reverse_iterator operator -- (int) noexcept  {
+
+            value_type const  **ret_node = node_;
+
+            node_ += 1;
+            return (const_reverse_iterator (ret_node));
+        }
+
+        inline const_reverse_iterator &operator -= (int step) noexcept  {
+
+            node_ += step;
+            return (*this);
+        }
+
+        inline const_reverse_iterator operator + (int step) noexcept  {
+
+            value_type const  **ret_node = node_;
+
+            ret_node -= step;
+            return (const_reverse_iterator (ret_node));
+        }
+
+        inline const_reverse_iterator operator - (int step) noexcept  {
+
+            value_type const  **ret_node = node_;
+
+            ret_node += step;
+            return (const_reverse_iterator (ret_node));
+        }
+
+        inline const_reverse_iterator operator + (long step) noexcept  {
+
+            value_type const  **ret_node = node_;
+
+            ret_node -= step;
+            return (const_reverse_iterator (ret_node));
+        }
+
+        inline const_reverse_iterator operator - (long step) noexcept  {
+
+            value_type   const  **ret_node = node_;
+
+            ret_node += step;
+            return (const_reverse_iterator (ret_node));
+        }
+
+    private:
+
+        const pointer   *node_ { nullptr };
+
+        friend class    const_iterator;
+    };
+
+public:
+
+    inline const_iterator
+    begin() const noexcept { return (const_iterator (&(*(vector_.begin())))); }
+    inline const_iterator
+    end () const noexcept  { return (const_iterator(&(*(vector_.end())))); }
+
+    inline const_reverse_iterator
+    rbegin () const noexcept  { 
+        return (const_reverse_iterator (&(*(vector_.rbegin()))));
+    }
+    inline const_reverse_iterator
+    rend () const noexcept  {
+
+        return (const_reverse_iterator (&(*(vector_.rend()))));
+    }
+};
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

@@ -23,6 +23,26 @@ namespace hmdf
 {
 
 template<typename T, typename B>
+inline typename ObjectVector<T, B>::MetaData &
+ObjectVector<T, B>::_get_meta_data() noexcept  {
+
+    return (*reinterpret_cast<MetaData *>
+                (reinterpret_cast<char *>(BaseClass::_get_base_ptr ())));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename B>
+inline const typename ObjectVector<T, B>::MetaData &
+ObjectVector<T, B>::_get_meta_data() const noexcept  {
+
+    return (*reinterpret_cast<const MetaData *>
+                (reinterpret_cast<const char *>(BaseClass::_get_base_ptr ())));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename B>
 void ObjectVector<T, B>::setup_()  {
 
     const size_type file_size = BaseClass::get_file_size ();
@@ -59,12 +79,7 @@ ObjectVector(const char *name, ACCESS_MODE access_mode, size_type buffer_size)
 
     setup_();
 
-    const MetaData  *mdata_ptr =
-        reinterpret_cast<const MetaData *>
-            (reinterpret_cast<const char *>(BaseClass::_get_base_ptr ()));
-
-    cached_object_count_ = mdata_ptr->object_count;
-    seek_ (cached_object_count_);
+    seek_ (_get_meta_data().object_count);
     set_access_mode (access_mode);
 }
 
@@ -78,12 +93,7 @@ ObjectVector<T, B>::ObjectVector(const ObjectVector &that)
 
     setup_();
 
-    const MetaData  *mdata_ptr =
-        reinterpret_cast<const MetaData *>
-            (reinterpret_cast<const char *>(BaseClass::_get_base_ptr ()));
-
-    cached_object_count_ = mdata_ptr->object_count;
-    seek_ (cached_object_count_);
+    seek_ (_get_meta_data().object_count);
 }
 
 // ----------------------------------------------------------------------------
@@ -170,7 +180,7 @@ ObjectVector(const char *name,
     setup_();
 
     *this = vec;
-    seek_ (cached_object_count_);
+    seek_ (_get_meta_data().object_count);
     set_access_mode (access_mode);
 }
 
@@ -189,18 +199,6 @@ operator = (const std::vector<T> &rhs) {
 // ----------------------------------------------------------------------------
 
 template<typename T, typename B>
-inline void ObjectVector<T, B>::refresh () const noexcept  {
-
-    const MetaData  *mdata_ptr =
-        reinterpret_cast<const MetaData *>
-            (reinterpret_cast<char *>(BaseClass::_get_base_ptr ()));
-
-    cached_object_count_ = mdata_ptr->object_count;
-}
-
-// ----------------------------------------------------------------------------
-
-template<typename T, typename B>
 typename ObjectVector<T, B>::size_type
 ObjectVector<T, B>::tell_ () const noexcept  {
 
@@ -212,31 +210,115 @@ ObjectVector<T, B>::tell_ () const noexcept  {
 // ----------------------------------------------------------------------------
 
 template<typename T, typename B>
-inline typename ObjectVector<T, B>::value_type &
+inline typename ObjectVector<T, B>::reference
 ObjectVector<T, B>::operator [] (size_type index)  {
 
-    value_type  &this_item =
-        *(reinterpret_cast<value_type *>
-              (reinterpret_cast<char *>(BaseClass::_get_base_ptr ()) +
-               sizeof(MetaData)) +
-          index);
-
-    return (this_item);
+    return(*(reinterpret_cast<value_type *>
+                 (reinterpret_cast<char *>(BaseClass::_get_base_ptr ()) +
+                  sizeof(MetaData)) +
+             index));
 }
 
 // ----------------------------------------------------------------------------
 
 template<typename T, typename B>
-inline const typename ObjectVector<T, B>::value_type &
+inline typename ObjectVector<T, B>::const_reference
 ObjectVector<T, B>::operator [] (size_type index) const  {
 
-    const value_type    &this_item =
-        *(reinterpret_cast<const value_type *>
-              (reinterpret_cast<const char *>(BaseClass::_get_base_ptr ()) +
-               sizeof(MetaData)) +
-          index);
+    return(*(reinterpret_cast<const value_type *>
+                 (reinterpret_cast<const char *>(BaseClass::_get_base_ptr ()) +
+                  sizeof(MetaData)) +
+             index));
+}
 
-    return (this_item);
+// ----------------------------------------------------------------------------
+
+template<typename T, typename B>
+inline typename ObjectVector<T, B>::reference
+ObjectVector<T, B>::at (size_type index)  {
+
+    return ((*this)[index]);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename B>
+inline typename ObjectVector<T, B>::const_reference
+ObjectVector<T, B>::at (size_type index) const  {
+
+    return ((*this)[index]);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename B>
+inline typename ObjectVector<T, B>::reference
+ObjectVector<T, B>::front ()  {
+
+    return ((*this)[0]);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename B>
+inline typename ObjectVector<T, B>::const_reference
+ObjectVector<T, B>::front () const  {
+
+    return ((*this)[0]);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename B>
+inline typename ObjectVector<T, B>::reference
+ObjectVector<T, B>::back ()  {
+
+    return ((*this)[size() - 1]);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename B>
+inline typename ObjectVector<T, B>::const_reference
+ObjectVector<T, B>::back () const  {
+
+    return ((*this)[size() - 1]);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename B>
+inline void ObjectVector<T, B>::push_back (const value_type &d)  {
+
+    write_ (&d, 1);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename B>
+inline typename ObjectVector<T, B>::size_type ObjectVector<T, B>::
+size () const noexcept {
+
+    return (_get_meta_data().object_count);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename B>
+inline bool ObjectVector<T, B>::empty () const noexcept {
+
+    return (size() == 0);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename B>
+template<typename ... Ts>
+inline void ObjectVector<T, B>::emplace_back (Ts && ... args)  {
+
+    const value_type    item (std::forward<Ts>(args) ...);
+
+    write_ (&item, 1);
 }
 
 // ----------------------------------------------------------------------------
@@ -244,11 +326,7 @@ ObjectVector<T, B>::operator [] (size_type index) const  {
 template<typename T, typename B>
 time_t ObjectVector<T, B>::creation_time () const noexcept  {
 
-    const MetaData  &meta_data =
-        *reinterpret_cast<const MetaData *>
-            (reinterpret_cast<const char *>(BaseClass::_get_base_ptr ()));
-
-    return (meta_data.creation_time);
+    return (_get_meta_data().creation_time);
 }
 
 // ----------------------------------------------------------------------------
@@ -307,12 +385,9 @@ int ObjectVector<T, B>::write_ (const value_type *data_ele, size_type count)  {
         throw std::runtime_error (err.c_str ());
     }
 
-    MetaData    &meta_data =
-        *reinterpret_cast<MetaData *>
-            (reinterpret_cast<char *>(BaseClass::_get_base_ptr ()));
+    auto    &obj_count = _get_meta_data().object_count;
 
-    meta_data.object_count += count;
-    cached_object_count_ += count;
+    obj_count += count;
     return (rc);
 }
 
@@ -331,15 +406,93 @@ ObjectVector<T, B>::erase (iterator first, iterator last)  {
 
     BaseClass::truncate (BaseClass::_file_size - s * sizeof (value_type));
 
-    MetaData    &meta_data =
-        *reinterpret_cast<MetaData *>
-            (reinterpret_cast<char *>(BaseClass::_get_base_ptr ()));
+    MetaData    &meta_data = _get_meta_data();
 
     meta_data.object_count -= s;
-    cached_object_count_ -= s;
-    seek_ (cached_object_count_);
+    seek_ (meta_data.object_count);
 
     return (begin() + lnum - s);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename B>
+inline typename ObjectVector<T, B>::iterator ObjectVector<T, B>::
+begin() noexcept  {
+
+    return (iterator(&((*this)[0])));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename B>
+inline typename ObjectVector<T, B>::iterator ObjectVector<T, B>::
+end() noexcept  {
+
+    return (iterator(&((*this)[size()])));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename B>
+inline typename ObjectVector<T, B>::const_iterator ObjectVector<T, B>::
+begin () const noexcept  {
+
+    return (const_iterator (&((*this)[0])));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename B>
+inline typename ObjectVector<T, B>::const_iterator ObjectVector<T, B>::
+end () const noexcept  {
+
+    return (const_iterator (&((*this)[size()])));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename B>
+inline typename ObjectVector<T, B>::reverse_iterator ObjectVector<T, B>::
+rbegin() noexcept  {
+
+    return (reverse_iterator (&((*this)[size() - 1])));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename B>
+inline typename ObjectVector<T, B>::reverse_iterator ObjectVector<T, B>::
+rend() noexcept  {
+
+    return (reverse_iterator (&((*this)[0]) - 1));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename B>
+inline typename ObjectVector<T, B>::const_reverse_iterator ObjectVector<T, B>::
+rbegin () const noexcept  {
+
+    return (const_reverse_iterator (&((*this)[size() - 1])));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename B>
+inline typename ObjectVector<T, B>::const_reverse_iterator ObjectVector<T, B>::
+rend () const noexcept  {
+
+    return (const_reverse_iterator (&((*this)[0]) - 1));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename B>
+typename ObjectVector<T, B>::iterator
+ObjectVector<T, B>::erase (iterator pos)  {
+
+    return (erase (pos, pos + 1));
 }
 
 // ----------------------------------------------------------------------------
@@ -359,15 +512,20 @@ void ObjectVector<T, B>::insert (iterator pos, I first, I last)  {
                (&(*end ()) - &(*new_pos)) * sizeof (value_type));
     ::memcpy (&(*new_pos), &(*first), to_add * sizeof (value_type));
 
-    MetaData    &meta_data =
-        *reinterpret_cast<MetaData *>
-            (reinterpret_cast<char *>(BaseClass::_get_base_ptr ()));
+    MetaData    &meta_data = _get_meta_data();
 
     meta_data.object_count += to_add;
-    cached_object_count_ += to_add;
-    seek_ (cached_object_count_);
+    seek_ (meta_data.object_count);
 
     return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename B>
+void ObjectVector<T, B>::insert (iterator pos, const_reference value)  {
+
+    return (insert (pos, &value, &value + 1));
 }
 
 // ----------------------------------------------------------------------------
@@ -386,9 +544,34 @@ inline void ObjectVector<T, B>::reserve (size_type s)  {
 // ----------------------------------------------------------------------------
 
 template<typename T, typename B>
-inline void ObjectVector<T, B>::shrink_to_fit ()  {
+inline void ObjectVector<T, B>::clear ()  {
 
-    refresh();
+    erase (begin (), end ());
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename B>
+inline void ObjectVector<T, B>::pop_back ()  {
+
+    erase (end () - 1);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename B>
+inline typename ObjectVector<T, B>::size_type ObjectVector<T, B>::
+capacity () const noexcept  {
+
+    const size_type trun_size = BaseClass::get_mmap_size() - sizeof(MetaData);
+
+    return (trun_size / sizeof(value_type));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename B>
+inline void ObjectVector<T, B>::shrink_to_fit ()  {
 
     const size_type trun_size = size() * sizeof(value_type) + sizeof(MetaData);
 

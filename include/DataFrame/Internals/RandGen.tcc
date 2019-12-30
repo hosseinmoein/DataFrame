@@ -20,7 +20,7 @@ _gen_rand_(std::size_t n, const RandGenParams<T> &params, D &&dist)  {
     std::random_device  rd;
     std::mt19937        gen(rd());
 
-    if (params.seed != (unsigned int)-1)  gen.seed(params.seed);
+    if (params.seed != static_cast<unsigned int>(-1))  gen.seed(params.seed);
 
     std::vector<T>  result(n);
 

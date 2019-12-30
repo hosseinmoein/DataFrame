@@ -10,6 +10,7 @@
 #include <DataFrame/MMap/MMapFile.h>
 #include <DataFrame/MMap/MMapSharedMem.h>
 
+#include <unistd.h>
 #include <iterator>
 #include <time.h>
 #include <vector>
@@ -42,7 +43,7 @@ enum class ACCESS_MODE : unsigned char  {
     // contents from the underlying  mapped  file (see  mmap) or
     // zero-fill-on-demand pages for mappings without an underlying file.
     //
-    dont_need = 16
+    dont_need = 16,
 };
 
 // ----------------------------------------------------------------------------
@@ -70,50 +71,52 @@ public:
     ObjectVector () = delete;
     ObjectVector (const ObjectVector &that);
     ObjectVector &operator = (const ObjectVector &rhs);
-    explicit ObjectVector (const char *name,
-                           ACCESS_MODE access_mode = ACCESS_MODE::random,
-                           size_type buffer_size = 1024 * sizeof(value_type));
+    explicit
+    ObjectVector (const char *name,
+                  ACCESS_MODE access_mode = ACCESS_MODE::random,
+                  size_type buffer_size = 64 * ::sysconf(_SC_PAGE_SIZE));
     ObjectVector (const char *name,
                   size_type n,
                   const T &value = T(),
                   ACCESS_MODE access_mode = ACCESS_MODE::random,
-                  size_type buffer_size = 1024 * sizeof(value_type));
+                  size_type buffer_size = 64 * ::sysconf(_SC_PAGE_SIZE));
     template<typename ITER>
     ObjectVector (const char *name,
                   ITER first,
                   ITER last,
                   ACCESS_MODE access_mode = ACCESS_MODE::random,
-                  size_type buffer_size = 1024 * sizeof(value_type));
+                  size_type buffer_size = 64 * ::sysconf(_SC_PAGE_SIZE));
 
     virtual ~ObjectVector ();
 
     ObjectVector (const char *name,
                   const std::vector<T> &vec,
                   ACCESS_MODE access_mode = ACCESS_MODE::random,
-                  size_type buffer_size = 1024 * sizeof(value_type));
+                  size_type buffer_size = 64 * ::sysconf(_SC_PAGE_SIZE));
     ObjectVector &operator = (const std::vector<T> &rhs);
 
-    inline reference operator [] (size_type);
-    inline const_reference operator [] (size_type) const;
-    inline reference at (size_type i)  { return ((*this)[i]); }
-    inline const_reference at (size_type i) const  { return ((*this)[i]); }
+    inline reference operator [] (size_type index);
+    inline const_reference operator [] (size_type index) const;
+    inline reference at (size_type index);
+    inline const_reference at (size_type index) const;
 
-    inline reference front () noexcept  { return ((*this) [0]); }
-    inline const_reference front () const noexcept  { return ((*this) [0]); }
+    inline reference front ();
+    inline const_reference front () const;
 
-    inline reference back () noexcept  { return ((*this) [size () - 1]); }
-    inline const_reference
-    back () const noexcept  { return ((*this) [size () - 1]); }
+    inline reference back ();
+    inline const_reference back () const;
 
-    inline size_type size () const noexcept { return (cached_object_count_); }
-    inline bool empty () const noexcept  { return (size () == 0); }
+    inline size_type size () const noexcept;
+    inline bool empty () const noexcept;
 
     inline void reserve (size_type s);
+    inline size_type capacity () const noexcept;
     inline void shrink_to_fit ();
 
-    inline void push_back (const value_type &d)  { write_ (&d, 1); }
-    inline void clear ()  { erase (begin (), end ()); }
-    inline void pop_back ()  { erase(end() - 1); }
+    inline void push_back (const value_type &d);
+    template<typename ... Ts> inline void emplace_back (Ts && ... args);
+    inline void clear ();
+    inline void pop_back ();
 
     friend bool
     operator == (const ObjectVector &lhs, const ObjectVector &rhs)  {
@@ -160,7 +163,6 @@ public:
     }
 
     inline void set_access_mode (ACCESS_MODE am) const;
-    inline void refresh () const noexcept;
     inline time_t creation_time () const noexcept;
 
 protected:
@@ -177,9 +179,10 @@ protected:
         time_t      creation_time { 0 };
     };
 
-private:
+    inline MetaData &_get_meta_data() noexcept;
+    inline const MetaData &_get_meta_data() const noexcept;
 
-    mutable size_type   cached_object_count_ { 0 };
+private:
 
     inline void setup_ ();
     inline size_type tell_ () const noexcept;
@@ -476,7 +479,8 @@ public:
        // Following STL style, this iterator appears as a pointer
        // to value_type.
        //
-        inline const value_type *operator -> () const noexcept { return(node_); }
+        inline const value_type *
+        operator -> () const noexcept { return(node_); }
         inline reference operator * () const noexcept  { return (*node_); }
         inline operator const pointer () const noexcept  { return (node_); }
 
@@ -608,7 +612,8 @@ public:
        // Following STL style, this iterator appears as a pointer
        // to value_type.
        //
-        inline const value_type *operator -> () const noexcept { return(node_); }
+        inline const value_type *
+        operator -> () const noexcept { return(node_); }
         inline reference operator * () const noexcept  { return (*node_); }
         inline operator const pointer () const noexcept  { return (node_); }
 
@@ -691,34 +696,22 @@ public:
 
 public:
 
-    inline iterator begin() noexcept  { return (iterator(&((*this)[0]))); }
-    inline iterator end() noexcept  { return (iterator(&((*this)[size()]))); }
+    inline iterator begin() noexcept;
+    inline iterator end() noexcept;
 
-    inline const_iterator
-    begin () const noexcept  { return (const_iterator (&((*this)[0]))); }
-    inline const_iterator
-    end () const noexcept  { return (const_iterator (&((*this)[size()]))); }
+    inline const_iterator begin () const noexcept;
+    inline const_iterator end () const noexcept;
 
-    inline reverse_iterator
-    rbegin() noexcept  { return (reverse_iterator (&((*this)[size() - 1]))); }
-    inline reverse_iterator
-    rend() noexcept  { return (reverse_iterator (&((*this)[0]) - 1)); }
+    inline reverse_iterator rbegin() noexcept;
+    inline reverse_iterator rend() noexcept;
 
-    inline const_reverse_iterator
-    rbegin () const noexcept  {
-
-        return (const_reverse_iterator (&((*this)[size() - 1])));
-    }
-    inline const_reverse_iterator
-    rend () const noexcept  {
-
-        return (const_reverse_iterator (&((*this)[0]) - 1));
-    }
+    inline const_reverse_iterator rbegin () const noexcept;
+    inline const_reverse_iterator rend () const noexcept;
 
    // Erases the range [first, last)
    //
     iterator erase (iterator first, iterator last);
-    inline iterator erase (iterator pos) { return (erase (pos, pos + 1)); }
+    inline iterator erase (iterator pos);
 
    // Inserts the range [first, last) before pos
    //
@@ -727,10 +720,7 @@ public:
    //
     template<typename I>
     void insert (iterator pos, I first, I last);
-    inline void insert (iterator pos, const_reference value)  {
-
-        return (insert (pos, &value, &value + 1));
-    }
+    inline void insert (iterator pos, const_reference value);
 };
 
 // ----------------------------------------------------------------------------

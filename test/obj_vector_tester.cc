@@ -21,6 +21,11 @@ public:
     typedef time_t          time_type;
 
     inline data_class ()  { name [0] = 0; }
+    inline data_class (const char * str,
+                       int ii,
+                       size_t st,
+                       double dd)
+        : i (ii), counter(st), d(dd)  { ::strcpy(name, str); }
     inline data_class (const data_class &that)  { *this = that; }
 
     inline data_class &operator = (const data_class &rhs)  {
@@ -120,7 +125,9 @@ int main (int argc, char *argv [])  {
         if (i % 1000 == 0)
             cout << "Inserted record number " << i << endl;
     }
-    write_objbase.shrink_to_fit();
+    write_objbase.emplace_back ("emplace item", 4000, ITER_COUNT, 4000.45);
+    stdvec.emplace_back ("emplace item", 4000, ITER_COUNT, 4000.45);
+
     cout << "Inserted total of " << write_objbase.size ()
          << " records" << endl;
     cout << endl;
@@ -130,11 +137,19 @@ int main (int argc, char *argv [])  {
     MyObjBase       read_objbase2 (read_objbase);
 
     assert(write_objbase == read_objbase);
+    assert(read_objbase[ITER_COUNT].i == 4000);
+    assert(read_objbase[ITER_COUNT].d == 4000.45);
     assert(stdvec == read_objbase);
     assert(stdvec == read_objbase2);
     assert(write_objbase == stdvec);
     stdvec[5].i = -8;
     assert(write_objbase != stdvec);
+
+    cout << "Capacity is: " << write_objbase.capacity() << ", "
+         << read_objbase.capacity() << endl;
+    write_objbase.shrink_to_fit();
+    cout << "Capacity is: " << write_objbase.capacity() << ", "
+         << read_objbase.capacity() << endl;
 
     MyObjBase read_objbase3 (OBJECT_BASE_NAME2, stdvec);
 
@@ -253,10 +268,9 @@ int main (int argc, char *argv [])  {
 
     cout << "\nTesting the forward iterators:\n\n";
 
-    for (MyObjBase::const_iterator citr = write_objbase.begin ();
-         citr != write_objbase.end (); ++citr)  {
-        if (citr->counter % 1000 == 0)
-            cout << "\t" << citr->counter << endl;
+    for (auto citr : write_objbase)  {
+        if (citr.counter % 1000 == 0)
+            cout << "\t" << citr.counter << endl;
     }
 
     cout << "\nTesting the reverse iterators:\n\n";

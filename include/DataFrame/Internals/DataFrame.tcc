@@ -15,29 +15,6 @@
 namespace hmdf
 {
 
-template<typename T>
-static inline void
-_sort_by_sorted_index_(std::vector<T> &to_be_sorted,
-                       std::vector<size_t> &sorting_idxs,
-                       size_t idx_s)  {
-
-    if (idx_s > 0)  {
-        idx_s -= 1;
-        for (size_t i = 0; i < idx_s; ++i)  {
-            // while the element i is not yet in place
-            while (sorting_idxs[i] != sorting_idxs[sorting_idxs[i]])  {
-                // swap it with the element at its final place
-                const size_t    j = sorting_idxs[i];
-
-                std::swap(to_be_sorted[j], to_be_sorted[sorting_idxs[j]]);
-                std::swap(sorting_idxs[i], sorting_idxs[j]);
-            }
-        }
-    }
-}
-
-// ----------------------------------------------------------------------------
-
 template<typename I, typename H>
 template<typename CF, typename ... Ts>
 void DataFrame<I, H>::sort_common_(DataFrame<I, H> &df, CF &&comp_func)  {
@@ -466,29 +443,6 @@ drop_missing(drop_policy policy, size_type threshold)  {
         futures[idx].get();
 
     return;
-}
-
-// ----------------------------------------------------------------------------
-
-template<typename V, typename T, size_t N>
-inline static void
-_replace_vector_vals_(V &data_vec,
-                      const std::array<T, N> &old_values,
-                      const std::array<T, N> &new_values,
-                      size_t &count,
-                      int limit)  {
-
-    const size_t    vec_s = data_vec.size();
-
-    for (size_t i = 0; i < N; ++i)  {
-        for (size_t j = 0; j < vec_s; ++j)  {
-            if (limit >= 0 && count >= static_cast<size_t>(limit))  return;
-            if (old_values[i] == data_vec[j])  {
-                data_vec[j] = new_values[i];
-                count += 1;
-            }
-        }
-    }
 }
 
 // ----------------------------------------------------------------------------
@@ -1050,9 +1004,9 @@ sort_async(const char *name1, sort_spec dir1,
 template<typename I, typename H>
 template<typename F, typename T, typename ...Ts>
 DataFrame<I, H>
-DataFrame<I, H>:: groupby (F &&func,
-                           const char *gb_col_name,
-                           sort_state already_sorted) const  {
+DataFrame<I, H>::groupby (F &&func,
+                          const char *gb_col_name,
+                          sort_state already_sorted) const  {
 
     DataFrame   tmp_df = *this;
 

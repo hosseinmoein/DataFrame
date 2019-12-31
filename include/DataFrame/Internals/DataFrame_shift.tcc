@@ -66,9 +66,9 @@ shift(size_type periods, shift_policy sp) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename DataVec>
+template<typename I, typename H>
 template<typename ... types>
-void DataFrame<I, DataVec>::self_rotate(size_type periods, shift_policy sp)  {
+void DataFrame<I, H>::self_rotate(size_type periods, shift_policy sp)  {
 
     static_assert(std::is_base_of<HeteroVector, DataVec>::value,
                   "Only a StdDataFrame can call self_rotate()");
@@ -85,9 +85,8 @@ void DataFrame<I, DataVec>::self_rotate(size_type periods, shift_policy sp)  {
             else  {
                 auto    to_be_called =
                     static_cast
-                        <void(DataVec::*)(rotate_functor_<types ...> &&)>
-                            (&DataVec::template
-                                 change<rotate_functor_<types ...>>);
+                        <void(H::*)(rotate_functor_<types ...> &&)>
+                            (&H::template change<rotate_functor_<types ...>>);
 
                 futures[thread_count] =
                     std::async(std::launch::async,

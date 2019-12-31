@@ -2008,6 +2008,7 @@ private:  // Tuple stuff
 // ----------------------------------------------------------------------------
 
 #ifndef HMDF_DO_NOT_INCLUDE_TCC_FILES
+#  include <DataFrame/Internals/DataFrame_standalone.tcc>
 #  include <DataFrame/Internals/DataFrame.tcc>
 #  include <DataFrame/Internals/DataFrame_get.tcc>
 #  include <DataFrame/Internals/DataFrame_join.tcc>

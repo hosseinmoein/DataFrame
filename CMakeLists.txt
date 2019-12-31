@@ -1,7 +1,7 @@
 cmake_minimum_required (VERSION 3.5)
 project (DataFrame VERSION 1.0.0)
 
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON) # Produce compile_commands.json
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON) # Produce cmpile_commands.json
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
@@ -100,6 +100,7 @@ set(${LIBRARY_TARGET_NAME}_HDR
   include/DataFrame/Internals/DataFrame.tcc
   include/DataFrame/Internals/DataFrame_get.tcc
   include/DataFrame/Internals/DataFrame_misc.tcc
+  include/DataFrame/Internals/DataFrame_standalone.tcc
   include/DataFrame/Internals/DataFrame_opt.tcc
   include/DataFrame/Internals/DataFrame_join.tcc
   include/DataFrame/Internals/DataFrame_shift.tcc

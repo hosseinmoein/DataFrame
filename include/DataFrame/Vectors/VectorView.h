@@ -49,6 +49,7 @@ public:
 
         return (static_cast<size_type>(end_ptr_ - begin_ptr_));
     }
+    inline size_type capacity () const noexcept  { return (size()); }
     inline void clear () noexcept  { begin_ptr_ = end_ptr_ = nullptr; }
 
     inline reference at (size_type i) noexcept  { return (*(begin_ptr_ + i)); }

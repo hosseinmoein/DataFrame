@@ -260,6 +260,35 @@ is_nan__<long double>(const long double &val)  { return(std::isnan(val)); }
 
 // ----------------------------------------------------------------------------
 
+// Evertyhting is in bytes. The numbers are estimates, since memory allocated
+// is really unknown to the objects such as vectors.
+// If type has dynamically allocated memory, it is not counted here
+
+struct  MemUsage  {
+
+    size_t  column_used_memory { 0 };
+    size_t  column_capacity_memory { 0 };
+    size_t  column_type_size { 0 };
+    size_t  index_used_memory { 0 };
+    size_t  index_capacity_memory { 0 };
+    size_t  index_type_size { 0 };
+
+    template<typename S>
+    friend S &operator << (S &stream, const MemUsage &mu)  {
+
+        stream << "Column Used Memory: " << mu.column_used_memory << '\n'
+               << "Column Capacity Memory: "
+               << mu.column_capacity_memory << '\n'
+               << "Column Type Size: " << mu.column_type_size << '\n'
+               << "Index Used Memory: " << mu.index_used_memory << '\n'
+               << "Index Capacity Memory: " << mu.index_capacity_memory << '\n'
+               << "Index Type Size: " << mu.index_type_size << '\n';
+        return (stream);
+    }
+};
+
+// ----------------------------------------------------------------------------
+
 // Local Variables:
 // mode:C++
 // tab-width:4

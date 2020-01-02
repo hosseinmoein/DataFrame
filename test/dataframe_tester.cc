@@ -638,6 +638,10 @@ static void test_get_view_by_loc()  {
                  std::make_pair("col_4", d4),
                  std::make_pair("col_str", s1));
 
+    auto  memory_use1 = df.get_memory_usage<double>("col_3");
+
+    std::cout << "DataFrame Memory Usage:\n" << memory_use1 << std::endl;
+
     typedef DataFrameView<unsigned long> MyDataFrameView;
 
     MyDataFrameView dfv =
@@ -649,6 +653,10 @@ static void test_get_view_by_loc()  {
     assert(dfv.get_column<double>("col_3")[0] ==
            df.get_column<double>("col_3")[3]);
     assert(dfv.get_column<double>("col_3")[0] == 88.0);
+
+    auto  memory_use2 = dfv.get_memory_usage<double>("col_3");
+
+    std::cout << "View Memory Usage:\n" << memory_use2 << std::endl;
 }
 
 // -----------------------------------------------------------------------------
@@ -3446,6 +3454,10 @@ static void test_get_view_by_loc_location()  {
     dfv2.get_column<double>("col_1")[0] = 101.0;
     assert(dfv2.get_column<double>("col_1")[0] == 101.0);
     assert(df.get_column<double>("col_1")[3] == 101.0);
+
+    auto  memory_use = dfv2.get_memory_usage<double>("col_3");
+
+    std::cout << "View Memory Usage:\n" << memory_use << std::endl;
 }
 
 // -----------------------------------------------------------------------------

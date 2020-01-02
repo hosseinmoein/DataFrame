@@ -528,6 +528,39 @@ inline static S &_write_csv_df_index_(S &o, const DateTime &value)  {
     return (o << value.time() << '.' << value.nanosec());
 }
 
+// ----------------------------------------------------------------------------
+
+template<typename T>
+inline static void _get_mem_numbers_(const VectorView<T> &container,
+                                     size_t &used_mem,
+                                     size_t &capacity_mem) {
+
+    used_mem = sizeof(T *) * 2;
+    capacity_mem = sizeof(T *) * 2;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
+inline static void _get_mem_numbers_(const VectorPtrView<T> &container, 
+                                     size_t &used_mem,
+                                     size_t &capacity_mem) {
+
+    used_mem = container.size() * sizeof(T *);
+    capacity_mem = container.capacity() * sizeof(T *);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
+inline static void _get_mem_numbers_(const std::vector<T> &container,
+                                     size_t &used_mem,
+                                     size_t &capacity_mem) {
+
+    used_mem = container.size() * sizeof(T);
+    capacity_mem = container.capacity() * sizeof(T);
+}
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

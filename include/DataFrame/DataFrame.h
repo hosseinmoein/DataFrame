@@ -635,6 +635,8 @@ public:  // Data manipulation
     // func:
     //   The functor to do the groupby. To see an example of func, refer to
     //   GroupbySum in DataFrameVisitors.h file
+    // gb_col_name:
+    //   Name of the column
     // already_sorted:
     //   If the DataFrame is already sorted by gb_col_name, this will save the
     //   expensive sort operation
@@ -669,6 +671,8 @@ public:  // Data manipulation
     //
     // T:
     //   Type of the col_name column.
+    // col_name:
+    //   Name of the column
     //
     template<typename T>
     StdDataFrame<T>
@@ -871,7 +875,9 @@ public: // Read/access and slicing interfaces
     // The return type depends on if we are in standard or view mode
     //
     // T:
-    //   Data type of the named column
+    //   Type of the named column.
+    // name:
+    //   Name of the column
     //
     template<typename T>
     const typename type_declare<DataVec, T>::type &
@@ -1614,6 +1620,26 @@ public:  // Utilities and miscellaneous
     //
     std::pair<size_type, size_type>
     shape() const;
+
+    // It returns the memory used by the given column and index column.
+    // All numbers are in bytes.
+    // MemUsage is a structure defined in DataFrameTypes.h file.
+    //
+    // NOTE: The returned values are only estimates. The actual allocated
+    //       memory by OS is unknown to any container object.
+    //       In other words, the actual memory used might be and probably is
+    //       larger than numbers returned by this call.
+    //       Also if a type (T) allocates dynamic memory, it is not included
+    //       in the result
+    //
+    // T:
+    //   Type of the col_name column.
+    // col_name:
+    //   Name of the column
+    //
+    template<typename T>
+    MemUsage
+    get_memory_usage(const char *col_name) const;
 
     // This will reclaim unused/reserve memory from all columns including the
     // index.

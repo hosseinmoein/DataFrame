@@ -1,7 +1,7 @@
 #include <DataFrame/DataFrame.h>
 #include <DataFrame/DataFrameOperators.h>
-#include <DataFrame/DataFrameVisitors.h>
-#include <DataFrame/DataFrameVisitors2.h>
+#include <DataFrame/DataFrameStatsVisitors.h>
+#include <DataFrame/DataFrameMLVisitors.h>
 #include <DataFrame/RandGen.h>
 
 #include <cassert>

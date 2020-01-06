@@ -65,7 +65,7 @@ df.sort<MyDataFrame::TimeStamp, int, double, std::string>("INDEX", sort_spec::as
 df.sort<double, int, double, std::string>("dbl_col_2", sort_spec::desce);
 
 // A functor to calculate mean, variance, skew, kurtosis, defined in
-// DataFrameVisitors.h file.
+// DataFrameStatsVisitors.h file.
 // You can implement your own algorithms and extend the DataFrame easily
 StatsVisitor<double>  stats_visitor;
 // Calculate the stats on column “dbl_col”

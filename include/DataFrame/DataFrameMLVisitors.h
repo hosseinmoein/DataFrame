@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include <DataFrame/DataFrameVisitors.h>
+#include <DataFrame/DataFrameStatsVisitors.h>
 #include <DataFrame/Vectors/VectorPtrView.h>
 
 #include <functional>

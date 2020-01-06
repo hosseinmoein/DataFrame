@@ -634,7 +634,7 @@ public:  // Data manipulation
     //   the list only once.
     // func:
     //   The functor to do the groupby. To see an example of func, refer to
-    //   GroupbySum in DataFrameVisitors.h file
+    //   GroupbySum in DataFrameStatsVisitors.h file
     // gb_col_name:
     //   Name of the column
     // already_sorted:

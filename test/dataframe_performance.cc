@@ -1,5 +1,5 @@
 #include <DataFrame/DataFrame.h>
-#include <DataFrame/DataFrameVisitors.h>
+#include <DataFrame/DataFrameStatsVisitors.h>
 #include <DataFrame/RandGen.h>
 
 #include <iostream>

@@ -1,6 +1,6 @@
 // Hossein Moein
 // June 24, 2019
-// Copyright (C) 2018-2019 Hossein Moein
+// Copyright (C) 2019-2022 Hossein Moein
 // Distributed under the BSD Software License (see file License)
 
 #include <DataFrame/Vectors/HeteroPtrView.h>

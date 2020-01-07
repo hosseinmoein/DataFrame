@@ -7,6 +7,7 @@
 
 #include <DataFrame/DataFrameTypes.h>
 
+#include <cmath>
 #include <algorithm>
 #include <cstddef>
 #include <functional>
@@ -595,17 +596,24 @@ private:
 
 // ----------------------------------------------------------------------------
 
+template<typename F, typename T, typename I>
+struct  ExponentialRollAdopter;
+
+// Simple rolling adoptor for visitors
+//
 template<typename F, typename T, typename I = unsigned long>
-struct SimpleRollAdopter {
+struct  SimpleRollAdopter  {
 
 private:
 
-    using functor_type = F;
-    using f_result_type = typename functor_type::result_type;
+    using visitor_type = F;
+    using f_result_type = typename visitor_type::result_type;
 
-    functor_type                functor_ { };
+    visitor_type                visitor_ { };
     const size_t                roll_count_ { 0 };
     std::vector<f_result_type>  result_ { };
+
+    friend class ExponentialRollAdopter<F, T, I>;
 
 public:
 
@@ -614,7 +622,7 @@ public:
     using result_type = std::vector<f_result_type>;
 
     inline SimpleRollAdopter(F &&functor, size_t r_count)
-        : functor_(std::move(functor)), roll_count_(r_count)  {   }
+        : visitor_(std::move(functor)), roll_count_(r_count)  {   }
 
     template <typename K, typename H>
     inline void
@@ -631,23 +639,95 @@ public:
         for (size_t i = 0; i < col_s; ++i)  {
             size_t  r = 0;
 
-            functor_.pre();
+            visitor_.pre();
             for (size_t j = i; r < roll_count_ && j < col_s; ++j, ++r)
-                functor_(idx[j], column[j]);
+                visitor_(idx[j], column[j]);
             if (r == roll_count_)
-                result_.push_back(functor_.get_result());
-            functor_.post();
+                result_.push_back(visitor_.get_result());
+            visitor_.post();
         }
-
-        return;
     }
 
-    inline void pre ()  { functor_.pre(); result_.clear(); }
-    inline void post ()  { functor_.post(); }
+    inline void pre ()  { visitor_.pre(); result_.clear(); }
+    inline void post ()  { visitor_.post(); }
     inline const result_type &get_result () const  { return (result_); }
 };
 
 // ----------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+// Exponential rolling adoptor for visitors
+// (decay * Xt) + ((1 − decay) * AVGt-1)
+//
+template<typename F, typename T, typename I = unsigned long>
+struct  ExponentialRollAdopter  {
+
+private:
+
+    using SimpleRoller = SimpleRollAdopter<F,T, I>;
+
+    SimpleRoller    simple_roller_;
+    const double    decay_;
+
+public:
+
+    using value_type = T;
+    using index_type = I;
+    using result_type = typename SimpleRoller::result_type;
+
+    inline ExponentialRollAdopter(F &&functor,
+                                  size_t r_count,
+                                  exponential_decay_spec eds,
+                                  double value)
+        : simple_roller_(std::move(functor), r_count),
+          decay_(eds == exponential_decay_spec::center_of_gravity
+                 ? 1.0 / (1.0 + value)
+                 : eds == exponential_decay_spec::span
+                 ? 2.0 / (1.0 + value)
+                 : eds == exponential_decay_spec::halflife
+                 ? 1.0 - std::exp(std::log(0.5) / value)
+                 : value) {   }
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx, const H &column)  {
+
+
+        simple_roller_(idx, column);
+
+        const size_t    result_s = simple_roller_.result_.size();
+
+        for (size_t i = 1; i < result_s; ++i)
+            if (! is_nan__(simple_roller_.result_[i - 1]))
+                simple_roller_.result_[i] =
+                    decay_ * column[i] +
+                    ((1.0 - decay_) * simple_roller_.result_[i - 1]);
+    }
+
+    inline void pre ()  { simple_roller_.pre(); }
+    inline void post ()  { simple_roller_.post(); }
+    inline const result_type &
+    get_result () const  { return (simple_roller_.get_result()); }
+};
+
+// ----------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
 
 // One-pass stats calculation.
 //

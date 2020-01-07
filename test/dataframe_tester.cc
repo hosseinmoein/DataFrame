@@ -3088,6 +3088,82 @@ static void test_SimpleRollAdopter()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_ExponentialRollAdopter()  {
+
+    std::cout << "\nTesting ExponentialRollAdopter{ } ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460};
+    std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
+    std::vector<double> d2 = { 8, 9, 10, 11,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               13, 14,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               16, 17, 18 };
+    std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25 };
+    std::vector<double> d4 = { 22, 23, 24, 25, 26, 27 };
+    std::vector<std::string> s1 =
+        { "11", "22", "33", "aa", "bb", "cc", "dd" "tt", "uu", "ii", "88" };
+    MyDataFrame         df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("col_1", d1),
+                 std::make_pair("col_2", d2),
+                 std::make_pair("col_3", d3),
+                 std::make_pair("col_str", s1));
+    df.load_column("col_4", std::move(d4), nan_policy::dont_pad_with_nans);
+
+    ExponentialRollAdopter<MeanVisitor<double>, double> hl_expo_mean_roller(
+        MeanVisitor<double>(), 3, exponential_decay_spec::halflife, 0.5);
+    const auto                                          &hl_expo_result =
+        df.single_act_visit<double>("col_3", hl_expo_mean_roller).get_result();
+    ExponentialRollAdopter<MeanVisitor<double>, double> cg_expo_mean_roller(
+        MeanVisitor<double>(), 3, exponential_decay_spec::center_of_gravity,
+        0.5);
+    const auto                                          &cg_expo_result =
+        df.single_act_visit<double>("col_3", cg_expo_mean_roller).get_result();
+    ExponentialRollAdopter<MeanVisitor<double>, double> s_expo_mean_roller(
+        MeanVisitor<double>(), 3, exponential_decay_spec::span, 1.5);
+    const auto                                          &s_expo_result =
+        df.single_act_visit<double>("col_3", s_expo_mean_roller).get_result();
+    ExponentialRollAdopter<MeanVisitor<double>, double> f_expo_mean_roller(
+        MeanVisitor<double>(), 3, exponential_decay_spec::fixed, 0.5);
+    const auto                                          &f_expo_result =
+        df.single_act_visit<double>("col_3", f_expo_mean_roller).get_result();
+    SimpleRollAdopter<MeanVisitor<double>, double>      simple_mean_roller(
+        MeanVisitor<double>(), 3);
+    const auto                                      &simple_result =
+        df.single_act_visit<double>("col_3", simple_mean_roller).get_result();
+
+    std::cout << "Simple" << std::endl;
+    for (auto iter : simple_result)
+        std::cout << iter << ", ";
+    std::cout << std::endl;
+
+    std::cout << "Halflife Exponential" << std::endl;
+    for (auto iter : hl_expo_result)
+        std::cout << iter << ", ";
+    std::cout << std::endl;
+
+    std::cout << "Center of gravity Exponential" << std::endl;
+    for (auto iter : cg_expo_result)
+        std::cout << iter << ", ";
+    std::cout << std::endl;
+
+    std::cout << "Span Exponential" << std::endl;
+    for (auto iter : s_expo_result)
+        std::cout << iter << ", ";
+    std::cout << std::endl;
+
+    std::cout << "Fixed Exponential" << std::endl;
+    for (auto iter : f_expo_result)
+        std::cout << iter << ", ";
+    std::cout << std::endl;
+}
+
+// -----------------------------------------------------------------------------
+
 static void test_get_data_by_rand()  {
 
     std::cout << "\nTesting get_data_by_rand() ..." << std::endl;
@@ -4286,6 +4362,7 @@ int main(int argc, char *argv[]) {
     test_affinity_propagation();
     test_multi_col_sort();
     test_join_by_column();
+    test_ExponentialRollAdopter();
 
     return (0);
 }

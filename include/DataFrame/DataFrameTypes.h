@@ -122,6 +122,15 @@ enum class drop_policy : unsigned char  {
 
 // ----------------------------------------------------------------------------
 
+enum class exponential_decay_spec : unsigned char  {
+    center_of_gravity = 1, // decay = 1 / (1 + value), for value >= 0
+    span = 2,              // decay = 2 / (1 + value), for value >= 1
+    halflife = 3,          // decay = 1 − exp(log(0.5) / value), for value > 0
+    fixed = 4,             // dacay = value, for 0 < value <= 1
+};
+
+// ----------------------------------------------------------------------------
+
 enum class io_format : unsigned char  {
     csv = 1,
     json = 2,

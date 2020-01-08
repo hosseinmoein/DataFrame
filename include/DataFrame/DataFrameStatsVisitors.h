@@ -60,6 +60,44 @@ template<typename T,
          typename I = unsigned long,
          typename =
              typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+struct GeometricMeanVisitor {
+
+    using value_type = T;
+    using index_type = I;
+    using size_type = std::size_t;
+    using result_type = T;
+
+    inline void operator() (const index_type &, const value_type &val)  {
+
+        if (skip_nan_ && is_nan__(val))  return;
+
+        mean_ *= val;
+        cnt_ +=1;
+    }
+    inline void pre ()  { mean_ = 0; cnt_ = 0; }
+    inline void post ()  {  }
+    inline size_type get_count () const  { return (cnt_); }
+    inline value_type get_sum () const  { return (mean_); }
+    inline result_type get_result () const  {
+
+        return (std::pow(mean_, value_type(1) / value_type(cnt_));
+    }
+
+    explicit MeanVisitor(bool skipnan = true) : skip_nan_(skipnan)  {   }
+
+private:
+
+    value_type  mean_ { 0 };
+    size_type   cnt_ { 0 };
+    const bool  skip_nan_ { };
+};
+
+// ----------------------------------------------------------------------------
+
+template<typename T,
+         typename I = unsigned long,
+         typename =
+             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
 struct SumVisitor {
 
     using value_type = T;

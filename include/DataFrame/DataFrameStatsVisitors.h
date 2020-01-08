@@ -596,9 +596,6 @@ private:
 
 // ----------------------------------------------------------------------------
 
-template<typename F, typename T, typename I>
-struct  ExponentialRollAdopter;
-
 // Simple rolling adoptor for visitors
 //
 template<typename F, typename T, typename I = unsigned long>
@@ -612,8 +609,6 @@ private:
     visitor_type                visitor_ { };
     const size_t                roll_count_ { 0 };
     std::vector<f_result_type>  result_ { };
-
-    friend class ExponentialRollAdopter<F, T, I>;
 
 public:
 
@@ -663,49 +658,60 @@ struct  ExponentialRollAdopter  {
 
 private:
 
-    using SimpleRoller = SimpleRollAdopter<F,T, I>;
+    using visitor_type = F;
+    using f_result_type = typename visitor_type::result_type;
 
-    SimpleRoller    simple_roller_;
-    const double    decay_;
+    std::vector<f_result_type>  result_ { };
+    visitor_type                visitor_ { };
+    const size_t                roll_count_;
+    const double                decay_;
 
 public:
 
     using value_type = T;
     using index_type = I;
-    using result_type = typename SimpleRoller::result_type;
+    using result_type = std::vector<f_result_type>;
 
     inline ExponentialRollAdopter(F &&functor,
                                   size_t r_count,
                                   exponential_decay_spec eds,
                                   double value)
-        : simple_roller_(std::move(functor), r_count),
+        : visitor_(std::move(functor)),
+          roll_count_(r_count),
           decay_(eds == exponential_decay_spec::center_of_gravity
-                 ? 1.0 / (1.0 + value)
-                 : eds == exponential_decay_spec::span
-                 ? 2.0 / (1.0 + value)
-                 : eds == exponential_decay_spec::halflife
-                 ? 1.0 - std::exp(std::log(0.5) / value)
-                 : value) {   }
+                     ? 1.0 / (1.0 + value)
+                     : eds == exponential_decay_spec::span
+                         ? 2.0 / (1.0 + value)
+                         : eds == exponential_decay_spec::halflife
+                             ? 1.0 - std::exp(std::log(0.5) / value)
+                             : value)  {   }
 
     template <typename K, typename H>
     inline void
     operator() (const K &idx, const H &column)  {
 
-        simple_roller_(idx, column);
+        const size_t    col_s = std::min(idx.size(), column.size());
 
-        const size_t    result_s = simple_roller_.result_.size();
+        if (roll_count_ == 0 || roll_count_ >= col_s)  return;
 
-        for (size_t i = 1; i < result_s; ++i)
-            if (! is_nan__(simple_roller_.result_[i - 1]))
-                simple_roller_.result_[i] =
-                    decay_ * column[i] +
-                    ((1.0 - decay_) * simple_roller_.result_[i - 1]);
+        result_.resize(col_s, std::numeric_limits<f_result_type>::quiet_NaN());
+
+        size_t  i = 0;
+
+        visitor_.pre();
+        for (; i < roll_count_; ++i)
+            visitor_(idx[i], column[i]);
+        visitor_.post();
+        result_[--i] = visitor_.get_result();
+        i += 1;
+
+        for (; i < col_s; ++i)
+            result_[i] = decay_ * column[i] + ((1.0 - decay_) * result_[i - 1]);
     }
 
-    inline void pre ()  { simple_roller_.pre(); }
-    inline void post ()  { simple_roller_.post(); }
-    inline const result_type &
-    get_result () const  { return (simple_roller_.get_result()); }
+    inline void pre ()  { visitor_.pre(); result_.clear(); }
+    inline void post ()  { visitor_.post(); }
+    inline const result_type &get_result () const  { return (result_); }
 };
 
 // ----------------------------------------------------------------------------

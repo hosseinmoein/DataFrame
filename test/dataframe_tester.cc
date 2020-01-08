@@ -3796,7 +3796,16 @@ static void test_view_visitors()  {
         mean_roller1(MeanVisitor<double>(), 3);
     const auto &res_sra =
         dfv.single_act_visit<double>("dbl_col1", mean_roller1).get_result();
+
     assert(fabs(res_sra[2] - 3.3) < 0.00001);
+
+    SimpleRollAdopter<GeometricMeanVisitor<double>, double>
+        geo_mean_roller(GeometricMeanVisitor<double>(), 3);
+    const auto  &res_srga =
+        df.single_act_visit<double>("dbl_col4", geo_mean_roller).get_result();
+
+    assert(fabs(res_srga[2] - 2.96098) < 0.00001);
+    assert(fabs(res_srga[6] - 5.25368) < 0.00001);
 
     CumSumVisitor<double> cs_visitor;
     const auto &res_cs =

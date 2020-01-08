@@ -74,20 +74,21 @@ struct GeometricMeanVisitor {
         mean_ *= val;
         cnt_ +=1;
     }
-    inline void pre ()  { mean_ = 0; cnt_ = 0; }
+    inline void pre ()  { mean_ = value_type(1); cnt_ = 0; }
     inline void post ()  {  }
     inline size_type get_count () const  { return (cnt_); }
     inline value_type get_sum () const  { return (mean_); }
     inline result_type get_result () const  {
 
-        return (std::pow(mean_, value_type(1) / value_type(cnt_));
+        return (std::pow(mean_, value_type(1) / value_type(cnt_)));
     }
 
-    explicit MeanVisitor(bool skipnan = true) : skip_nan_(skipnan)  {   }
+    explicit GeometricMeanVisitor(bool skipnan = true)
+            : skip_nan_(skipnan)  {   }
 
 private:
 
-    value_type  mean_ { 0 };
+    value_type  mean_ { 1 };
     size_type   cnt_ { 0 };
     const bool  skip_nan_ { };
 };

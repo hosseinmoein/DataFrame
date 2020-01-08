@@ -3014,7 +3014,7 @@ static void test_SimpleRollAdopter()  {
 
     std::vector<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
-          123457, 123458, 123459, 123460};
+          123457, 123458, 123459, 123460 };
     std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
     std::vector<double> d2 = { 8, 9, 10, 11,
                                std::numeric_limits<double>::quiet_NaN(),
@@ -3094,7 +3094,7 @@ static void test_ExponentialRollAdopter()  {
 
     std::vector<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
-          123457, 123458, 123459, 123460};
+          123457, 123458, 123459, 123460 };
     std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
     std::vector<double> d2 = { 8, 9, 10, 11,
                                std::numeric_limits<double>::quiet_NaN(),
@@ -3131,35 +3131,34 @@ static void test_ExponentialRollAdopter()  {
         MeanVisitor<double>(), 3, exponential_decay_spec::fixed, 0.5);
     const auto                                          &f_expo_result =
         df.single_act_visit<double>("col_3", f_expo_mean_roller).get_result();
-    SimpleRollAdopter<MeanVisitor<double>, double>      simple_mean_roller(
-        MeanVisitor<double>(), 3);
-    const auto                                      &simple_result =
-        df.single_act_visit<double>("col_3", simple_mean_roller).get_result();
 
-    std::cout << "Simple" << std::endl;
-    for (auto iter : simple_result)
-        std::cout << iter << ", ";
-    std::cout << std::endl;
+    assert(s_expo_result.size() == 11);
+    assert(std::isnan(s_expo_result[0]));
+    assert(std::isnan(s_expo_result[1]));
+    assert(s_expo_result[2] == 16.0);
+    assert(s_expo_result[5] == 19.744);
+    assert(fabs(s_expo_result[8] - 22.75) < 0.0001);
 
-    std::cout << "Halflife Exponential" << std::endl;
-    for (auto iter : hl_expo_result)
-        std::cout << iter << ", ";
-    std::cout << std::endl;
+    assert(f_expo_result.size() == 11);
+    assert(std::isnan(f_expo_result[0]));
+    assert(std::isnan(f_expo_result[1]));
+    assert(f_expo_result[2] == 16.0);
+    assert(f_expo_result[5] == 19.0);
+    assert(f_expo_result[8] == 22.0);
 
-    std::cout << "Center of gravity Exponential" << std::endl;
-    for (auto iter : cg_expo_result)
-        std::cout << iter << ", ";
-    std::cout << std::endl;
+    assert(cg_expo_result.size() == 11);
+    assert(std::isnan(cg_expo_result[0]));
+    assert(std::isnan(cg_expo_result[1]));
+    assert(cg_expo_result[2] == 16.0);
+    assert(fabs(cg_expo_result[5] - 19.4815) < 0.0001);
+    assert(fabs(cg_expo_result[8] - 22.4993) < 0.0001);
 
-    std::cout << "Span Exponential" << std::endl;
-    for (auto iter : s_expo_result)
-        std::cout << iter << ", ";
-    std::cout << std::endl;
-
-    std::cout << "Fixed Exponential" << std::endl;
-    for (auto iter : f_expo_result)
-        std::cout << iter << ", ";
-    std::cout << std::endl;
+    assert(hl_expo_result.size() == 11);
+    assert(std::isnan(hl_expo_result[0]));
+    assert(std::isnan(hl_expo_result[1]));
+    assert(hl_expo_result[2] == 16.0);
+    assert(fabs(hl_expo_result[5] - 19.6562) < 0.0001);
+    assert(fabs(hl_expo_result[8] - 22.6665) < 0.0001);
 }
 
 // -----------------------------------------------------------------------------

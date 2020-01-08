@@ -655,13 +655,6 @@ public:
 
 // ----------------------------------------------------------------------------
 
-
-
-
-
-
-
-
 // Exponential rolling adoptor for visitors
 // (decay * Xt) + ((1 − decay) * AVGt-1)
 //
@@ -698,7 +691,6 @@ public:
     inline void
     operator() (const K &idx, const H &column)  {
 
-
         simple_roller_(idx, column);
 
         const size_t    result_s = simple_roller_.result_.size();
@@ -717,17 +709,6 @@ public:
 };
 
 // ----------------------------------------------------------------------------
-
-
-
-
-
-
-
-
-
-
-
 
 // One-pass stats calculation.
 //

@@ -3807,6 +3807,14 @@ static void test_view_visitors()  {
     assert(fabs(res_srga[2] - 2.96098) < 0.00001);
     assert(fabs(res_srga[6] - 5.25368) < 0.00001);
 
+    SimpleRollAdopter<HarmonicMeanVisitor<double>, double>
+        har_mean_roller(HarmonicMeanVisitor<double>(), 3);
+    const auto  &res_srha =
+        df.single_act_visit<double>("dbl_col4", har_mean_roller).get_result();
+
+    assert(fabs(res_srha[2] - 2.14782) < 0.00001);
+    assert(fabs(res_srha[6] - 5.0785) < 0.00001);
+
     CumSumVisitor<double> cs_visitor;
     const auto &res_cs =
         dfv.single_act_visit<double>("dbl_col1", cs_visitor).get_result();

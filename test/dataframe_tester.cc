@@ -2,6 +2,7 @@
 #include <DataFrame/DataFrameOperators.h>
 #include <DataFrame/DataFrameStatsVisitors.h>
 #include <DataFrame/DataFrameMLVisitors.h>
+#include <DataFrame/DataFrameFinancialVisitors.h>
 #include <DataFrame/RandGen.h>
 
 #include <cassert>
@@ -4306,8 +4307,67 @@ static void test_join_by_column()  {
     assert(std::isnan(left_right_result.get_column<double>("col_3")[0]));
     assert(left_right_result.get_column<int>("rhs.col_4")[2] == 199);
     assert(left_right_result.get_column<int>("lhs.col_4")[0] == 0);
-    assert(left_right_result.get_column<unsigned long>("rhs.INDEX")[1] == 123452);
-    assert(left_right_result.get_column<unsigned long>("lhs.INDEX")[2] == 123451);
+    assert(left_right_result.get_column<unsigned long>("rhs.INDEX")[1] ==
+               123452);
+    assert(left_right_result.get_column<unsigned long>("lhs.INDEX")[2] ==
+               123451);
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_DoubleCrossOver()  {
+
+    std::cout << "\nTesting DoubleCrossOver{ } ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+          21, 22, 23, 24, 25, 26, 27, 28, 29, 31, 31, 32, 33, 34, 35, 36, 37,
+          38, 39, 40 };
+    std::vector<double> d1 =
+        { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+          19, 18, 17, 17, 16, 15, 14, 13, 14, 13, 12, 11, 12, 10, 9, 8, 7,
+          6, 7, 5 };
+    MyDataFrame         df;
+
+    df.load_data(std::move(idx), std::make_pair("col_1", d1));
+
+    using geo_mean_t = GeometricMeanVisitor<double>;
+    using mean_t = MeanVisitor<double>;
+    using short_roller_t = SimpleRollAdopter<geo_mean_t, double>;
+    using long_roller_t = ExponentialRollAdopter<mean_t, double>;
+    using double_cross_t =
+        DoubleCrossOver<short_roller_t, long_roller_t, double>;
+
+    double_cross_t  visitor(
+       short_roller_t(geo_mean_t(), 3),
+       long_roller_t(mean_t(), 4, exponential_decay_spec::span, 1.5));
+
+    df.single_act_visit<double>("col_1", visitor);
+
+    auto    &raw_to_short = visitor.get_raw_to_short_term();
+    auto    &raw_to_long = visitor.get_raw_to_long_term();
+    auto    &short_to_long = visitor.get_short_term_to_long_term();
+
+    assert(raw_to_short.size() == 40);
+    assert(std::isnan(raw_to_short[1]));
+    assert(fabs(raw_to_short[8] - 1.04189) < 0.00001);
+    assert(fabs(raw_to_short[12] - 1.02784) < 0.00001);
+    assert(fabs(raw_to_short[39] - -0.943922) < 0.00001);
+    assert(fabs(raw_to_short[38] - 0.3506) < 0.00001);
+
+    assert(raw_to_long.size() == 40);
+    assert(std::isnan(raw_to_long[2]));
+    assert(fabs(raw_to_long[8] - 0.2504) < 0.00001);
+    assert(fabs(raw_to_long[12] - 0.250001) < 0.00001);
+    assert(fabs(raw_to_long[39] - -0.370008) < 0.00001);
+    assert(fabs(raw_to_long[38] - 0.149962) < 0.00001);
+
+    assert(short_to_long.size() == 40);
+    assert(std::isnan(short_to_long[0]));
+    assert(fabs(short_to_long[8] - -0.791486) < 0.00001);
+    assert(fabs(short_to_long[12] - -0.777842) < 0.00001);
+    assert(fabs(short_to_long[39] - 0.573914) < 0.00001);
+    assert(fabs(short_to_long[38] - -0.200639) < 0.00001);
 }
 
 // -----------------------------------------------------------------------------
@@ -4379,6 +4439,7 @@ int main(int argc, char *argv[]) {
     test_multi_col_sort();
     test_join_by_column();
     test_ExponentialRollAdopter();
+    test_DoubleCrossOver();
 
     return (0);
 }

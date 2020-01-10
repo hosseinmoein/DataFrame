@@ -433,8 +433,8 @@ struct CovVisitor {
     using size_type = std::size_t;
     using result_type = T;
 
-    explicit CovVisitor (bool bias = true, bool skipnan = true)
-        : b_ (bias), skip_nan_(skipnan) {  }
+    explicit CovVisitor (bool biased = false, bool skipnan = true)
+        : b_ (biased), skip_nan_(skipnan) {  }
     inline void operator() (const index_type &,
                             const value_type &val1,
                             const value_type &val2)  {
@@ -456,7 +456,7 @@ struct CovVisitor {
     inline void post ()  {  }
     inline result_type get_result () const  {
 
-        const value_type    b = 1 ? b_ : 0;
+        const value_type    b = b_ ? 0 : 1;
 
         return ((dot_prod_ - (total1_ * total2_) / value_type(cnt_)) /
                 (value_type(cnt_) - b));
@@ -464,14 +464,14 @@ struct CovVisitor {
 
     inline value_type get_var1 () const  {
 
-        const value_type    b = 1 ? b_ : 0;
+        const value_type    b = b_ ? 0 : 1;
 
         return ((dot_prod1_ - (total1_ * total1_) / value_type(cnt_)) /
                 (value_type(cnt_) - b));
     }
     inline value_type get_var2 () const  {
 
-        const value_type    b = 1 ? b_ : 0;
+        const value_type    b = b_ ? 0 : 1;
 
         return ((dot_prod2_ - (total2_ * total2_) / value_type(cnt_)) /
                 (value_type(cnt_) - b));
@@ -502,7 +502,7 @@ struct VarVisitor  {
     using size_type = std::size_t;
     using result_type = T;
 
-    explicit VarVisitor (bool bias = true) : cov_ (bias)  {   }
+    explicit VarVisitor (bool biased = false) : cov_ (biased)  {   }
     inline void operator() (const index_type &idx, const value_type &val)  {
 
         cov_ (idx, val, val);
@@ -529,7 +529,7 @@ struct BetaVisitor  {
     using size_type = std::size_t;
     using result_type = T;
 
-    explicit BetaVisitor (bool bias = true) : cov_ (bias)  {   }
+    explicit BetaVisitor (bool biased = false) : cov_ (biased)  {   }
     inline void operator() (const index_type &idx,
                             const value_type &val1,
                             const value_type &benchmark)  {
@@ -563,7 +563,7 @@ struct StdVisitor   {
     using size_type = std::size_t;
     using result_type = T;
 
-    explicit StdVisitor (bool bias = true) : var_ (bias)  {   }
+    explicit StdVisitor (bool biased = false) : var_ (biased)  {   }
     inline void operator() (const index_type &idx, const value_type &val)  {
 
         var_ (idx, val);
@@ -593,7 +593,7 @@ struct TrackingErrorVisitor {
     using size_type = std::size_t;
     using result_type = T;
 
-    explicit TrackingErrorVisitor (bool bias = true) : std_ (bias) {  }
+    explicit TrackingErrorVisitor (bool biased = false) : std_ (biased) {  }
     inline void operator() (const index_type &idx,
                             const value_type &val1,
                             const value_type &val2)  {
@@ -624,7 +624,7 @@ public:
     using size_type = std::size_t;
     using result_type = T;
 
-    explicit CorrVisitor (bool bias = true) : cov_ (bias)  {   }
+    explicit CorrVisitor (bool biased = false) : cov_ (biased)  {   }
     inline void operator() (const index_type &idx,
                             const value_type &val1,
                             const value_type &val2)  {

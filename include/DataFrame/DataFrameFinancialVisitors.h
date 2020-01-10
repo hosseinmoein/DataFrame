@@ -96,6 +96,68 @@ private:
     result_type short_term_to_long_term_;
 };
 
+// ----------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+template<typename T,
+         typename I = unsigned long,
+         typename =
+             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+struct BollingerBand {
+
+private:
+
+
+public:
+
+    using value_type = T;
+    using index_type = I;
+    using size_type = std::size_t;
+    using result_type = std::vector<value_type>;
+
+    inline BollingerBand()  {  }
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx, const H &column)  {
+
+    }
+
+    inline void pre ()  {
+
+        col_to_short_term_.clear();
+        col_to_long_term_.clear();
+        short_term_to_long_term_.clear();
+    }
+    inline void post ()  {
+
+    }
+
+    const result_type &
+    get_raw_to_short_term() const  { return (col_to_short_term_); }
+    const result_type &
+    get_raw_to_long_term() const  { return (col_to_long_term_); }
+    const result_type &
+    get_short_term_to_long_term() const  { return (short_term_to_long_term_); }
+
+private:
+
+    result_type col_to_short_term_;
+    result_type col_to_long_term_;
+    result_type short_term_to_long_term_;
+};
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

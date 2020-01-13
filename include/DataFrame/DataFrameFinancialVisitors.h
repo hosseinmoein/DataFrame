@@ -100,18 +100,6 @@ private:
 
 // ----------------------------------------------------------------------------
 
-
-
-
-
-
-
-
-
-
-
-
-
 template<typename T,
          typename I = unsigned long,
          typename =
@@ -123,7 +111,7 @@ private:
     const double                                upper_band_multiplier_;
     const double                                lower_band_multiplier_;
     SimpleRollAdopter<MeanVisitor<T, I>, T, I>  mean_roller_;
-    StdVisitor<T, I>                            std_visitor_;
+    SimpleRollAdopter<StdVisitor<T, I>, T, I>   std_roller_;
 
 public:
 
@@ -139,34 +127,42 @@ public:
         : upper_band_multiplier_(upper_band_multiplier),
           lower_band_multiplier_(lower_band_multiplier),
           mean_roller_(std::move(MeanVisitor<T, I>()), moving_mean_period),
-          std_visitor_(biased)  {   }
+          std_roller_(std::move(StdVisitor<T, I>(biased)), moving_mean_period) {
+    }
 
     template <typename K, typename H>
     inline void
     operator() (const K &idx, const H &column)  {
 
-        const size_type col_s = std::min(idx.size(), column.size());
-
         mean_roller_.pre();
         mean_roller_(idx, column);
         mean_roller_.post();
 
-        std_visitor_.pre();
-        for (size_type i = 0; i < col_s; ++i)
-            std_visitor_(idx[i], column[i]);
-        std_visitor_.post();
+        std_roller_.pre();
+        std_roller_(idx, column);
+        std_roller_.post();
 
-        const value_type    std_result = std_visitor_.get_result();
-        const value_type    upper = std_result * upper_band_multiplier_;
-        const value_type    lower = std_result * lower_band_multiplier_;
-        const auto          &mean_result = mean_roller_.get_result();
+        const auto      &std_result = std_roller_.get_result();
+        const auto      &mean_result = mean_roller_.get_result();
+        const size_type col_s =
+            std::min<size_type>(
+                { idx.size(),
+                  column.size(),
+                  std_result.size(),
+                  mean_result.size()
+                });
 
         upper_band_to_raw_.reserve(col_s);
         for (size_type i = 0; i < col_s; ++i)
-            upper_band_to_raw_.push_back((mean_result[i] + upper) - column[i]); 
+            upper_band_to_raw_.push_back(
+                (mean_result[i] + std_result[i] * upper_band_multiplier_) -
+                column[i]);
+
         raw_to_lower_band_.reserve(col_s);
         for (size_type i = 0; i < col_s; ++i)
-            raw_to_lower_band_.push_back(column[i] - (mean_result[i] - lower)); 
+            raw_to_lower_band_.push_back(
+                column[i] -
+                (mean_result[i] - std_result[i] * lower_band_multiplier_));
     }
 
     inline void pre ()  {

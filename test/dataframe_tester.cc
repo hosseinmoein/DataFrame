@@ -4372,6 +4372,48 @@ static void test_DoubleCrossOver()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_BollingerBand()  {
+
+    std::cout << "\nTesting BollingerBand{ } ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+          21, 22, 23, 24, 25, 26, 27, 28, 29, 31, 31, 32, 33, 34, 35, 36, 37,
+          38, 39, 40 };
+    std::vector<double> d1 =
+        { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+          19, 18, 17, 17, 16, 15, 14, 13, 14, 13, 12, 11, 12, 10, 9, 8, 7,
+          6, 7, 5 };
+    MyDataFrame         df;
+
+    df.load_data(std::move(idx), std::make_pair("col_1", d1));
+
+    using bollinger_band_t = BollingerBand<double>;
+
+    bollinger_band_t  visitor(2.0, 2.0, 5);
+
+    df.single_act_visit<double>("col_1", visitor);
+
+    auto    &upper_to_raw = visitor.get_upper_band_to_raw();
+    auto    &raw_to_lower = visitor.get_raw_to_lower_band();
+
+    assert(upper_to_raw.size() == 40);
+    assert(std::isnan(upper_to_raw[3]));
+    assert(fabs(upper_to_raw[8] - 1.16228) < 0.00001);
+    assert(fabs(upper_to_raw[12] - 1.16228) < 0.00001);
+    assert(fabs(upper_to_raw[38] - 2.68035) < 0.00001);
+    assert(fabs(upper_to_raw[39] - 3.88035) < 0.00001);
+
+    assert(raw_to_lower.size() == 40);
+    assert(std::isnan(raw_to_lower[1]));
+    assert(fabs(raw_to_lower[8] - 5.16228) < 0.00001);
+    assert(fabs(raw_to_lower[12] - 5.16228) < 0.00001);
+    assert(fabs(raw_to_lower[38] - 1.88035) < 0.00001);
+    assert(fabs(raw_to_lower[39] - 0.680351) < 0.00001);
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int argc, char *argv[]) {
 
     test_haphazard();
@@ -4440,6 +4482,7 @@ int main(int argc, char *argv[]) {
     test_join_by_column();
     test_ExponentialRollAdopter();
     test_DoubleCrossOver();
+    test_BollingerBand();
 
     return (0);
 }

@@ -183,6 +183,101 @@ private:
     result_type raw_to_lower_band_;
 };
 
+// ----------------------------------------------------------------------------
+
+// Moving Average Convergence/Divergence
+//
+template<typename T,
+         typename I = unsigned long,
+         typename =
+             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+struct MACDVisitor {
+
+private:
+
+    using macd_roller_t = ExponentialRollAdopter<MeanVisitor<T, I>, T, I>;
+
+    const std::size_t   short_mean_period_;
+    const std::size_t   long_mean_period_;
+    macd_roller_t       signal_line_roller_;
+
+public:
+
+    using value_type = T;
+    using index_type = I;
+    using size_type = std::size_t;
+    using result_type = std::vector<value_type>;
+
+    inline MACDVisitor(size_type short_mean_period,  // e.g. 12-day
+                       size_type long_mean_period,   // e.g. 26-day
+                       size_type signal_line_period) // e.g.  9-day
+        : short_mean_period_(short_mean_period),
+          long_mean_period_(long_mean_period),
+          signal_line_roller_(std::move(MeanVisitor<T, I>()),
+                              signal_line_period)  {
+    }
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx, const H &column)  {
+
+        macd_roller_t   short_roller(std::move(MeanVisitor<T, I>()),
+                                     short_mean_period_);
+
+        short_roller.pre();
+        short_roller(idx, column);
+        short_roller.post();
+
+        macd_roller_t   long_roller(std::move(MeanVisitor<T, I>()),
+                                    long_mean_period_);
+
+        long_roller.pre();
+        long_roller(idx, column);
+        long_roller.post();
+
+        const auto      &short_result = short_roller.get_result();
+        const auto      &long_result = long_roller.get_result();
+        const size_type col_s =
+            std::min<size_type>(
+                { idx.size(),
+                  column.size(),
+                  short_result.size(),
+                  long_result.size()
+                });
+
+        macd_line_.reserve(col_s);
+        for (size_type i = 0; i < col_s; ++i)
+            macd_line_.push_back(short_result[i] - long_result[i]);
+
+        signal_line_roller_.pre();
+        signal_line_roller_(idx, macd_line_);
+        signal_line_roller_.post();
+
+        const auto  &signal_line_result = signal_line_roller_.get_result();
+
+        macd_histogram_.reserve(col_s);
+        for (size_type i = 0; i < col_s; ++i)
+            macd_histogram_.push_back(macd_line_[i] - signal_line_result[i]);
+    }
+
+    inline void pre ()  {
+
+        macd_line_.clear();
+        macd_histogram_.clear();
+    }
+    inline void post ()  {  }
+
+    const result_type &get_macd_line() const { return (macd_line_); }
+    const result_type &
+    get_signal_line() const { return (signal_line_roller_.get_result()); }
+    const result_type &get_macd_histogram() const { return (macd_histogram_); }
+
+private:
+
+    result_type macd_line_;       // short-mean EMA - long-mean EMA
+    result_type macd_histogram_;  // MACD Line - Signal Line
+};
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

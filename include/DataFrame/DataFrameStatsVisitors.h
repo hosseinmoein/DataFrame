@@ -743,6 +743,7 @@ private:
     visitor_type                visitor_ { };
     const size_t                roll_count_;
     const double                decay_;
+    const bool                  skip_nan_;
 
 public:
 
@@ -753,7 +754,8 @@ public:
     inline ExponentialRollAdopter(F &&functor,
                                   size_t r_count,
                                   exponential_decay_spec eds,
-                                  double value)
+                                  double value,
+                                  bool skip_nan = true)
         : visitor_(std::move(functor)),
           roll_count_(r_count),
           decay_(eds == exponential_decay_spec::center_of_gravity
@@ -762,7 +764,8 @@ public:
                          ? 2.0 / (1.0 + value)
                          : eds == exponential_decay_spec::halflife
                              ? 1.0 - std::exp(std::log(0.5) / value)
-                             : value)  {   }
+                             : value),
+          skip_nan_(skip_nan)  {   }
 
     template <typename K, typename H>
     inline void
@@ -783,8 +786,10 @@ public:
         result_[--i] = visitor_.get_result();
         i += 1;
 
-        for (; i < col_s; ++i)
+        for (; i < col_s; ++i)  {
+            if (skip_nan_ && is_nan__(column[i]))  continue;
             result_[i] = decay_ * column[i] + ((1.0 - decay_) * result_[i - 1]);
+        }
     }
 
     inline void pre ()  { visitor_.pre(); result_.clear(); }

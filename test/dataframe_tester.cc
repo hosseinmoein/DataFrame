@@ -4414,6 +4414,50 @@ static void test_BollingerBand()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_MACDVisitor()  {
+
+    std::cout << "\nTesting MACDVisitor{ } ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+          21, 22, 23, 24, 25, 26, 27, 28, 29, 31, 31, 32, 33, 34, 35, 36, 37,
+          38, 39, 40 };
+    std::vector<double> d1 =
+        { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+          19, 18, 17, 17, 16, 15, 14, 13, 14, 13, 12, 11, 12, 10, 9, 8, 7,
+          6, 7, 5 };
+    MyDataFrame         df;
+
+    df.load_data(std::move(idx), std::make_pair("col_1", d1));
+
+    using macd_t = MACDVisitor<double>;
+
+    macd_t  visitor(2, 5, 6);
+
+    df.single_act_visit<double>("col_1", visitor);
+
+    auto    &macd_result = visitor.get_macd_line();
+    auto    &signal_line = visitor.get_signal_line();
+    auto    &macd_histo = visitor.get_macd_histogram();
+
+    std::cout << "MACD Line:" << std::endl;
+    for (auto citer : macd_result)
+        std::cout << citer << ", ";
+    std::cout << std::endl;
+
+    std::cout << "Signal Line:" << std::endl;
+    for (auto citer : signal_line)
+        std::cout << citer << ", ";
+    std::cout << std::endl;
+
+    std::cout << "MACD Histo:" << std::endl;
+    for (auto citer : macd_histo)
+        std::cout << citer << ", ";
+    std::cout << std::endl;
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int argc, char *argv[]) {
 
     test_haphazard();
@@ -4483,6 +4527,7 @@ int main(int argc, char *argv[]) {
     test_ExponentialRollAdopter();
     test_DoubleCrossOver();
     test_BollingerBand();
+    test_MACDVisitor();
 
     return (0);
 }

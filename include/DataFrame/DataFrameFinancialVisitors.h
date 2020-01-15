@@ -210,11 +210,15 @@ public:
 
     inline MACDVisitor(size_type short_mean_period,  // e.g. 12-day
                        size_type long_mean_period,   // e.g. 26-day
-                       size_type signal_line_period) // e.g.  9-day
+                       size_type signal_line_period, // e.g.  9-day
+                       exponential_decay_spec ed_spec =
+                           exponential_decay_spec::span,
+                       double expo_decay_value = 0.2)
         : short_mean_period_(short_mean_period),
           long_mean_period_(long_mean_period),
           signal_line_roller_(std::move(MeanVisitor<T, I>()),
-                              signal_line_period)  {
+                              signal_line_period,
+                              ed_spec, expo_decay_value)  {
     }
 
     template <typename K, typename H>
@@ -222,14 +226,16 @@ public:
     operator() (const K &idx, const H &column)  {
 
         macd_roller_t   short_roller(std::move(MeanVisitor<T, I>()),
-                                     short_mean_period_);
+                                     short_mean_period_,
+                                     exponential_decay_spec::span, 0.2);
 
         short_roller.pre();
         short_roller(idx, column);
         short_roller.post();
 
         macd_roller_t   long_roller(std::move(MeanVisitor<T, I>()),
-                                    long_mean_period_);
+                                    long_mean_period_,
+                                    exponential_decay_spec::span, 0.2);
 
         long_roller.pre();
         long_roller(idx, column);

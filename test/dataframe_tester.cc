@@ -4467,20 +4467,59 @@ static void test_MACDVisitor()  {
     auto    &signal_line = visitor.get_signal_line();
     auto    &macd_histo = visitor.get_macd_histogram();
 
-    std::cout << "MACD Line:" << std::endl;
-    for (auto citer : macd_result)
-        std::cout << citer << ", ";
-    std::cout << std::endl;
+    assert(macd_result.size() == 40);
+    assert(std::isnan(macd_result[3]));
+    assert(fabs(macd_result[8] - 0.526749) < 0.000001);
+    assert(fabs(macd_result[12] - 0.104049) < 0.000001);
+    assert(fabs(macd_result[38] - 2.74705e-06) < 0.000001);
+    assert(fabs(macd_result[39] - -1.83136e-06) < 0.000001);
 
-    std::cout << "Signal Line:" << std::endl;
-    for (auto citer : signal_line)
-        std::cout << citer << ", ";
-    std::cout << std::endl;
+    assert(signal_line.size() == 40);
+    assert(std::isnan(signal_line[2]));
+    assert(std::isnan(signal_line[4]));
+    assert(fabs(signal_line[8] - 2.50206) < 0.00001);
+    assert(fabs(signal_line[12] - 1.18789) < 0.00001);
+    assert(fabs(signal_line[38] - 0.000150401) < 0.000001);
+    assert(fabs(signal_line[39] - -0.000103319) < 0.000001);
 
-    std::cout << "MACD Histo:" << std::endl;
-    for (auto citer : macd_histo)
-        std::cout << citer << ", ";
-    std::cout << std::endl;
+    assert(macd_histo.size() == 40);
+    assert(std::isnan(macd_histo[0]));
+    assert(std::isnan(macd_histo[4]));
+    assert(fabs(macd_histo[8] - -1.97531) < 0.00001);
+    assert(fabs(macd_histo[12] - -1.08385) < 0.00001);
+    assert(fabs(macd_histo[38] - -0.000147654) < 0.000001);
+    assert(fabs(macd_histo[39] - 0.000101488) < 0.000001);
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_ExpandingRollAdopter()  {
+
+    std::cout << "\nTesting ExpandingRollAdopter{ } ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+          21, 22, 23, 24, 25, 26, 27, 28, 29, 31, 31, 32, 33, 34, 35, 36, 37,
+          38, 39, 40 };
+    std::vector<double> d1 =
+        { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+          21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37,
+          38, 39, 40 };
+    MyDataFrame         df;
+
+    df.load_data(std::move(idx), std::make_pair("col_1", d1));
+
+    ExpandingRollAdopter<MeanVisitor<double>, double>
+        expand_roller(MeanVisitor<double>(), 2);
+    const auto  &result =
+        df.single_act_visit<double>("col_1", expand_roller).get_result();
+
+    assert(result.size() == 21);
+    assert(std::isnan(result[0]));
+    assert(result[8] == 12);
+    assert(result[13] == 19.5);
+    assert(result[15] == 22.5);
+    assert(result[20] == 30);
 }
 
 // -----------------------------------------------------------------------------
@@ -4555,6 +4594,7 @@ int main(int argc, char *argv[]) {
     test_DoubleCrossOver();
     test_BollingerBand();
     test_MACDVisitor();
+    test_ExpandingRollAdopter();
 
     return (0);
 }

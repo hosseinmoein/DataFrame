@@ -739,9 +739,9 @@ public:
             visitor_.pre();
             for (size_t j = i; r < roll_count_ && j < col_s; ++j, ++r)
                 visitor_(idx[j], column[j]);
+            visitor_.post();
             if (r == roll_count_)
                 result_.push_back(visitor_.get_result());
-            visitor_.post();
         }
     }
 
@@ -751,13 +751,6 @@ public:
 };
 
 // ----------------------------------------------------------------------------
-
-
-
-
-
-
-
 
 // Expanding rolling adoptor for visitors
 //
@@ -801,16 +794,17 @@ public:
 
         for (size_t i = 0; i < rc - 1 && i < col_s; ++i)
             result_.push_back(std::numeric_limits<f_result_type>::quiet_NaN());
-        for (size_t i = 0; i < col_s; ++i)  {
+
+        for (size_t i = 0; i < col_s; ++i, rc += increment_count_)  {
             size_t  r = 0;
 
-            rc += i * increment_count_;
             visitor_.pre();
             for (size_t j = i; r < rc && j < col_s; ++j, ++r)
                 visitor_(idx[j], column[j]);
+            visitor_.post();
             if (r == rc)
                 result_.push_back(visitor_.get_result());
-            visitor_.post();
+            else  break;
         }
     }
 
@@ -820,15 +814,6 @@ public:
 };
 
 // ----------------------------------------------------------------------------
-
-
-
-
-
-
-
-
-
 
 // Exponential rolling adoptor for visitors
 // (decay * Xt) + ((1 − decay) * AVGt-1)

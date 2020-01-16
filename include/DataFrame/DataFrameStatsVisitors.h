@@ -752,6 +752,84 @@ public:
 
 // ----------------------------------------------------------------------------
 
+
+
+
+
+
+
+
+// Expanding rolling adoptor for visitors
+//
+template<typename F, typename T, typename I = unsigned long>
+struct  ExpandingRollAdopter  {
+
+private:
+
+    using visitor_type = F;
+    using f_result_type = typename visitor_type::result_type;
+
+    visitor_type                visitor_ { };
+    const size_t                init_roll_count_ { 0 };
+    const size_t                increment_count_ { 0 };
+    std::vector<f_result_type>  result_ { };
+
+public:
+
+    using value_type = T;
+    using index_type = I;
+    using result_type = std::vector<f_result_type>;
+
+    inline ExpandingRollAdopter(F &&functor,
+                                size_t r_count,
+                                size_t i_count = 1)
+        : visitor_(std::move(functor)),
+          init_roll_count_(r_count),
+          increment_count_(i_count)  {   }
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx, const H &column)  {
+
+        if (init_roll_count_ == 0)  return;
+
+        const size_t    col_s = std::min(idx.size(), column.size());
+
+        result_.reserve(col_s);
+
+        size_t  rc = init_roll_count_;
+
+        for (size_t i = 0; i < rc - 1 && i < col_s; ++i)
+            result_.push_back(std::numeric_limits<f_result_type>::quiet_NaN());
+        for (size_t i = 0; i < col_s; ++i)  {
+            size_t  r = 0;
+
+            rc += i * increment_count_;
+            visitor_.pre();
+            for (size_t j = i; r < rc && j < col_s; ++j, ++r)
+                visitor_(idx[j], column[j]);
+            if (r == rc)
+                result_.push_back(visitor_.get_result());
+            visitor_.post();
+        }
+    }
+
+    inline void pre ()  { visitor_.pre(); result_.clear(); }
+    inline void post ()  { visitor_.post(); }
+    inline const result_type &get_result () const  { return (result_); }
+};
+
+// ----------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
 // Exponential rolling adoptor for visitors
 // (decay * Xt) + ((1 − decay) * AVGt-1)
 //

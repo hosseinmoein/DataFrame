@@ -37,7 +37,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     #else
         #define LIBRARY_API __declspec(dllimport)
     #endif
-#elif
+#else
     #define LIBRARY_API
 #endif  // _WIN32
 

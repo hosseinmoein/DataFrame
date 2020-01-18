@@ -121,7 +121,7 @@ set(${LIBRARY_TARGET_NAME}_HDR
   include/DataFrame/MMap/ObjectVector.tcc
 )
 
-add_definitions(-DLIBRARY_API)
+add_definitions(-DLIBRARY_EXPORTS)
 
 # Build the library
 if (UNIX)

@@ -55,7 +55,7 @@ namespace hmdf
 // or user-defined types.
 //
 template<typename I, typename H>
-class DataFrame : public ThreadGranularity  {
+class LIBRARY_API DataFrame : public ThreadGranularity {
 
     static_assert(std::is_base_of<HeteroVector, H>::value ||
                       std::is_base_of<HeteroView, H>::value ||

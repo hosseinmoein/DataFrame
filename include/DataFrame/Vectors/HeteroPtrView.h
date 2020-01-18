@@ -39,7 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace hmdf
 {
 
-struct  HeteroPtrView  {
+struct LIBRARY_API HeteroPtrView {
 
 public:
 

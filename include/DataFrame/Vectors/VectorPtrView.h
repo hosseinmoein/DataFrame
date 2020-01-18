@@ -34,13 +34,23 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iterator>
 #include <vector>
 
+#ifdef _WIN32
+    #ifdef LIBRARY_EXPORTS
+        #define LIBRARY_API __declspec(dllexport)
+    #else
+        #define LIBRARY_API __declspec(dllimport)
+    #endif
+#elif
+    #define LIBRARY_API
+#endif  // _WIN32
+
 // ----------------------------------------------------------------------------
 
 namespace hmdf
 {
 
 template<typename T>
-class   VectorPtrView  {
+class LIBRARY_API VectorPtrView {
 
 private:
 

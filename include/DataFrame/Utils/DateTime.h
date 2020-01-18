@@ -37,6 +37,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #ifdef _WIN32
 #  include <windows.h>
+    #ifdef LIBRARY_EXPORTS
+        #define LIBRARY_API __declspec(dllexport)
+    #else
+        #define LIBRARY_API __declspec(dllimport)
+    #endif
+#elif
+    #define LIBRARY_API
 #endif // _WIN32
 
 // ----------------------------------------------------------------------------
@@ -143,7 +150,7 @@ enum class DT_DATE_STYLE : unsigned char  {
 
 // ----------------------------------------------------------------------------
 
-class   DateTime  {
+class LIBRARY_API DateTime {
 
 public:
 

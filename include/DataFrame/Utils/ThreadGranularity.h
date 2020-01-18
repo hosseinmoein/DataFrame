@@ -31,12 +31,22 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
 
+#ifdef _WIN32
+    #ifdef LIBRARY_EXPORTS
+        #define LIBRARY_API __declspec(dllexport)
+    #else
+        #define LIBRARY_API __declspec(dllimport)
+    #endif
+#else
+    #define LIBRARY_API
+#endif  // _WIN32
+
 // ----------------------------------------------------------------------------
 
 namespace hmdf
 {
 
-struct  ThreadGranularity  {
+struct LIBRARY_API ThreadGranularity {
 
     static inline void
     set_thread_level(unsigned int n)  { num_of_threads_ = n; }

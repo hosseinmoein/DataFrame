@@ -121,18 +121,20 @@ set(${LIBRARY_TARGET_NAME}_HDR
   include/DataFrame/MMap/ObjectVector.tcc
 )
 
+add_definitions(-DLIBRARY_EXPORTS)
+
 # Build the library
 if (UNIX)
-  add_library(${LIBRARY_TARGET_NAME} SHARED ${${LIBRARY_TARGET_NAME}_SRC})
+  add_library(${LIBRARY_TARGET_NAME} ${${LIBRARY_TARGET_NAME}_SRC})
 endif(UNIX)
 
 if (MSVC)
   add_definitions(-D _CRT_SECURE_NO_WARNINGS)
-  add_library(${LIBRARY_TARGET_NAME} STATIC ${${LIBRARY_TARGET_NAME}_SRC})
+  add_library(${LIBRARY_TARGET_NAME} ${${LIBRARY_TARGET_NAME}_SRC})
 endif(MSVC)
 
 if (MINGW)
-  add_library(${LIBRARY_TARGET_NAME} STATIC ${${LIBRARY_TARGET_NAME}_SRC})
+  add_library(${LIBRARY_TARGET_NAME} ${${LIBRARY_TARGET_NAME}_SRC})
 endif()
 
 # Set two minimum target properties for the library.
@@ -154,7 +156,7 @@ target_include_directories(${LIBRARY_TARGET_NAME}
 # Specify installation targets, typology and destination folders.
 install(TARGETS ${LIBRARY_TARGET_NAME}
         EXPORT  ${PROJECT_NAME}
-        LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT shlib
+        LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT lib
         ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT lib
         RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT bin
 )

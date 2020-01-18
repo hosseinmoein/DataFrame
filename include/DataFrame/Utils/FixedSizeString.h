@@ -36,6 +36,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iostream>
 #include <string.h>
 
+#ifdef _WIN32
+    #ifdef LIBRARY_EXPORTS
+        #define LIBRARY_API __declspec(dllexport)
+    #else
+        #define LIBRARY_API __declspec(dllimport)
+    #endif
+#else
+    #define LIBRARY_API
+#endif  // _WIN32
+
 // ----------------------------------------------------------------------------
 
 namespace hmdf
@@ -50,8 +60,8 @@ namespace hmdf
 // NOTE: VirtualString MAKES NO BOUNDARY CHECKS. IT IS THE RESPONSIBILITY
 //       OF THE PROGRAMMER TO TAKE CARE OF THAT.
 //
-class   VirtualString  {
 
+class LIBRARY_API VirtualString {
 public:
 
     using size_type = std::size_t;

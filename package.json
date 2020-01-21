@@ -1,0 +1,9 @@
+{
+  "name": "DataFrame",
+  "version": "1.6.0",
+  "homepage": "https://github.com/hosseinmoein/DataFrame",
+  "repository": "github:hosseinmoein/DataFrame",
+  "author": "Hossein Moein <myseajune@aol.com>",
+  "description": "C++ DataFrame -- R's and Pandas DataFrame in modern C++ using native types, continuous memory storage, and no virtual functions",
+  "license": "BSD 3-Clause",
+}

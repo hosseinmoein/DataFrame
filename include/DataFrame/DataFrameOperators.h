@@ -35,10 +35,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace hmdf
 {
-#if defined(WIN32) || defined (_WIN32)
-#undef min
-#undef max
-#endif // defined(WIN32) || defined (_WIN32)
+
+#if defined(WIN32) || defined(_WIN32)
+#  ifdef min
+#    undef min
+#  endif // min
+#  ifdef max
+#    undef max
+#  endif // max
+#endif // WIN32 || _WIN32
 
 // Both lhs and rhs must be already sorted by index, otherwise the result
 // is nonsensical.

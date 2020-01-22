@@ -37,13 +37,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #ifdef _WIN32
 #  include <windows.h>
-    #ifdef LIBRARY_EXPORTS
-        #define LIBRARY_API __declspec(dllexport)
-    #else
-        #define LIBRARY_API __declspec(dllimport)
-    #endif
+#  ifdef LIBRARY_EXPORTS
+#    define LIBRARY_API __declspec(dllexport)
+#  else
+#    define LIBRARY_API __declspec(dllimport)
+#  endif // LIBRARY_EXPORTS
 #else
-    #define LIBRARY_API
+#  define LIBRARY_API
 #endif // _WIN32
 
 // ----------------------------------------------------------------------------

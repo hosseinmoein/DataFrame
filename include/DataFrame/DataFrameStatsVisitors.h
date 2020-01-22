@@ -1225,13 +1225,14 @@ public:
 
         std::vector<value_type>               tmp_result(col_len - 4);
         size_type                             lag = 1;
-        std::vector<std::future<CorrResult>>  futures(
-            ThreadGranularity::get_thread_level());
+        const size_type                       thread_level =
+            ThreadGranularity::get_sensible_thread_level();
+        std::vector<std::future<CorrResult>>  futures(thread_level);
         size_type                             thread_count = 0;
 
         tmp_result[0] = 1.0;
         while (lag < col_len - 4)  {
-            if (thread_count >= ThreadGranularity::get_thread_level())  {
+            if (thread_count >= thread_level)  {
                 const auto  result = get_auto_corr_(col_len, lag, column);
 
                 tmp_result[result.first] = result.second;

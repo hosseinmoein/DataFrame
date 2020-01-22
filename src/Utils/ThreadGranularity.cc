@@ -29,12 +29,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <DataFrame/Utils/ThreadGranularity.h>
 
+#include <thread>
+
 // ----------------------------------------------------------------------------
 
 namespace hmdf
 {
 
-unsigned int    ThreadGranularity::num_of_threads_ = 0;
+unsigned int        ThreadGranularity::num_of_threads_ = 0;
+const unsigned int  ThreadGranularity::supported_threads_ =
+    std::thread::hardware_concurrency();
 
 } // namespace hmdf
 

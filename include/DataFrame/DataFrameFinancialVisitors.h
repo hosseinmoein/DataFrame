@@ -54,6 +54,35 @@ private:
     S_RT    short_roller_;
     L_RT    long_roller_;
 
+    template <typename K, typename H>
+    inline std::size_t run_short_roller_(const K &idx, const H &column)  {
+
+        short_roller_(idx, column);
+
+        const auto          &result = short_roller_.get_result();
+        const std::size_t   col_s =
+            std::min<std::size_t>({ idx.size(), column.size(), result.size() });
+
+        col_to_short_term_.reserve(col_s);
+        for (size_type i = 0; i < col_s; ++i)
+            col_to_short_term_.push_back(column[i] - result[i]);
+        return (col_s);
+    }
+    template <typename K, typename H>
+    inline std::size_t run_long_roller_(const K &idx, const H &column)  {
+
+        long_roller_(idx, column);
+
+        const auto          &result = long_roller_.get_result();
+        const std::size_t   col_s =
+            std::min<std::size_t>({ idx.size(), column.size(), result.size() });
+
+        col_to_long_term_.reserve(col_s);
+        for (size_type i = 0; i < col_s; ++i)
+            col_to_long_term_.push_back(column[i] - result[i]);
+        return (col_s);
+    }
+
 public:
 
     using value_type = T;
@@ -68,30 +97,39 @@ public:
     inline void
     operator() (const K &idx, const H &column)  {
 
-        short_roller_(idx, column);
-        long_roller_(idx, column);
+        const size_type thread_level =
+            ThreadGranularity::get_sensible_thread_level();
+        size_type       re_count1 = 0;
+        size_type       re_count2 = 0;
 
-        const auto  &result1 = short_roller_.get_result();
-        size_type   col_s =
-            std::min<size_type>({ idx.size(), column.size(), result1.size() });
+        if (thread_level >= 2)  {
+            std::future<size_type>  fut1 =
+                std::async(std::launch::async,
+                           &DoubleCrossOver::run_short_roller_<K, H>,
+                           this,
+                           std::cref(idx),
+                           std::cref(column));
+            std::future<size_type>  fut2 =
+                std::async(std::launch::async,
+                           &DoubleCrossOver::run_long_roller_<K, H>,
+                           this,
+                           std::cref(idx),
+                           std::cref(column));
 
-        col_to_short_term_.reserve(col_s);
-        for (size_type i = 0; i < col_s; ++i)
-            col_to_short_term_.push_back(column[i] - result1[i]);
+            re_count1 = fut1.get();
+            re_count2 = fut2.get();
+        }
+        else  {
+            re_count1 = run_short_roller_(idx, column);
+            re_count2 = run_long_roller_(idx, column);
+        }
 
-        const auto  &result2 = long_roller_.get_result();
+        const size_type col_s = std::min<size_type>(re_count1, re_count2);
 
-        col_s =
-            std::min<size_type>({ idx.size(), column.size(), result2.size() });
-        col_to_long_term_.reserve(col_s);
-        for (size_type i = 0; i < col_s; ++i)
-            col_to_long_term_.push_back(column[i] - result2[i]);
-
-        col_s =
-            std::min<size_type>({ idx.size(), result1.size(), result2.size() });
         short_term_to_long_term_.reserve(col_s);
         for (size_type i = 0; i < col_s; ++i)
-            short_term_to_long_term_.push_back(result1[i] - result2[i]);
+            short_term_to_long_term_.push_back(
+                short_roller_.get_result()[i] - long_roller_.get_result()[i]);
     }
 
     inline void pre ()  {
@@ -137,6 +175,22 @@ private:
     SimpleRollAdopter<MeanVisitor<T, I>, T, I>  mean_roller_;
     SimpleRollAdopter<StdVisitor<T, I>, T, I>   std_roller_;
 
+    template <typename K, typename H>
+    inline void run_mean_roller_(const K &idx, const H &column)  {
+
+        mean_roller_.pre();
+        mean_roller_(idx, column);
+        mean_roller_.post();
+    }
+
+    template <typename K, typename H>
+    inline void run_std_roller_(const K &idx, const H &column)  {
+
+        std_roller_.pre();
+        std_roller_(idx, column);
+        std_roller_.post();
+    }
+
 public:
 
     using value_type = T;
@@ -158,13 +212,30 @@ public:
     inline void
     operator() (const K &idx, const H &column)  {
 
-        mean_roller_.pre();
-        mean_roller_(idx, column);
-        mean_roller_.post();
+        const size_type thread_level =
+            ThreadGranularity::get_sensible_thread_level();
 
-        std_roller_.pre();
-        std_roller_(idx, column);
-        std_roller_.post();
+        if (thread_level >= 2)  {
+            std::future<void>   fut1 =
+                std::async(std::launch::async,
+                           &BollingerBand::run_mean_roller_<K, H>,
+                           this,
+                           std::cref(idx),
+                           std::cref(column));
+            std::future<void>   fut2 =
+                std::async(std::launch::async,
+                           &BollingerBand::run_std_roller_<K, H>,
+                           this,
+                           std::cref(idx),
+                           std::cref(column));
+
+            fut1.get();
+            fut2.get();
+		}
+		else  {
+            run_mean_roller_(idx, column);
+            run_std_roller_(idx, column);
+		}
 
         const auto      &std_result = std_roller_.get_result();
         const auto      &mean_result = mean_roller_.get_result();

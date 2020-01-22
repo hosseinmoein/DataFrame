@@ -27,18 +27,28 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <algorithm>
 #include <atomic>
 
 #pragma once
 
+#if defined(_WIN32)
+#  ifdef min
+#    undef min
+#  endif // min
+#  ifdef max
+#    undef max
+#  endif // max
+#endif // _WIN32
+
 #ifdef _WIN32
-    #ifdef LIBRARY_EXPORTS
-        #define LIBRARY_API __declspec(dllexport)
-    #else
-        #define LIBRARY_API __declspec(dllimport)
-    #endif
+#  ifdef LIBRARY_EXPORTS
+#    define LIBRARY_API __declspec(dllexport)
+#  else
+#    define LIBRARY_API __declspec(dllimport)
+#  endif // LIBRARY_EXPORTS
 #else
-    #define LIBRARY_API
+#  define LIBRARY_API
 #endif  // _WIN32
 
 // ----------------------------------------------------------------------------
@@ -52,6 +62,16 @@ struct LIBRARY_API ThreadGranularity {
     set_thread_level(unsigned int n)  { num_of_threads_ = n; }
     static inline unsigned int
     get_thread_level()  { return (num_of_threads_); }
+    static inline constexpr unsigned int
+    get_supported_thread()  { return (supported_threads_); }
+
+    static inline unsigned int
+    get_sensible_thread_level()  {
+
+        return (supported_threads_ != 0
+                    ? std::min(supported_threads_, num_of_threads_)
+                    : num_of_threads_);
+    }
 
 protected:
 
@@ -59,7 +79,8 @@ protected:
 
 private:
 
-    static unsigned int num_of_threads_;
+    static unsigned int         num_of_threads_;
+    static const unsigned int   supported_threads_;
 };
 
 // ----------------------------------------------------------------------------

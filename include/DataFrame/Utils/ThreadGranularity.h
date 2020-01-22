@@ -62,7 +62,7 @@ struct LIBRARY_API ThreadGranularity {
     set_thread_level(unsigned int n)  { num_of_threads_ = n; }
     static inline unsigned int
     get_thread_level()  { return (num_of_threads_); }
-    static inline constexpr unsigned int
+    static inline unsigned int
     get_supported_thread()  { return (supported_threads_); }
 
     static inline unsigned int

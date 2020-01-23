@@ -4532,6 +4532,49 @@ static void test_ExpandingRollAdopter()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_MADVisitor()  {
+
+    std::cout << "\nTesting MADVisitor{ } ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+          21, 22, 23, 24, 25, 26, 27, 28, 29, 31, 31, 32, 33, 34, 35, 36, 37,
+          38, 39, 40 };
+    std::vector<double> d1 =
+        { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+          21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37,
+          38, 39, 40 };
+    MyDataFrame         df;
+
+    df.load_data(std::move(idx), std::make_pair("col_1", d1));
+
+    MADVisitor<double>  mad_visitor1(mad_type::mean_abs_dev_around_mean);
+    const auto          result1 =
+        df.single_act_visit<double>("col_1", mad_visitor1).get_result();
+
+    assert(result1 == 10.0);
+
+    MADVisitor<double>  mad_visitor2(mad_type::mean_abs_dev_around_median);
+    const auto          result2 =
+        df.single_act_visit<double>("col_1", mad_visitor2).get_result();
+
+    assert(result2 == 10.0);
+
+    MADVisitor<double>  mad_visitor3(mad_type::median_abs_dev_around_mean);
+    const auto          result3 =
+        df.single_act_visit<double>("col_1", mad_visitor3).get_result();
+
+    assert(result3 == 5.25);
+
+    MADVisitor<double>  mad_visitor4(mad_type::median_abs_dev_around_median);
+    const auto          result4 =
+        df.single_act_visit<double>("col_1", mad_visitor4).get_result();
+
+    assert(result4 == 5.25);
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int argc, char *argv[]) {
 
     test_haphazard();
@@ -4603,6 +4646,7 @@ int main(int argc, char *argv[]) {
     test_BollingerBand();
     test_MACDVisitor();
     test_ExpandingRollAdopter();
+    test_MADVisitor();
 
     return (0);
 }

@@ -1614,6 +1614,162 @@ private:
 
 // ----------------------------------------------------------------------------
 
+// This calculates 4 different form of Mean Absolute Deviation based on the
+// requested type input. Please the mad_type enum type
+//
+template<typename T,
+         typename I = unsigned long,
+         typename =
+             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+struct MADVisitor  {
+
+private:
+
+    const mad_type  mad_type_;
+    const bool      skip_nan_;
+
+    template <typename K, typename H>
+    inline void
+    calc_mean_abs_dev_around_mean_(const K &idx, const H &column)  {
+
+        const std::size_t   col_s = std::min(idx.size(), column.size());
+        MeanVisitor<T, I>   mean_visitor(skip_nan_);
+
+        mean_visitor.pre();
+        for (std::size_t i = 0; i < col_s; ++i)
+            mean_visitor(idx[i], column[i]);
+        mean_visitor.post();
+
+        MeanVisitor<T, I>   mean_mean_visitor(skip_nan_);
+
+        mean_mean_visitor.pre();
+        for (std::size_t i = 0; i < col_s; ++i)  {
+            if (skip_nan_ && is_nan__(column[i]))  continue;
+            mean_mean_visitor(idx[i],
+                              std::fabs(column[i] - mean_visitor.get_result()));
+        }
+        mean_mean_visitor.post();
+
+        result_ = mean_mean_visitor.get_result();
+    }
+
+    template <typename K, typename H>
+    inline void
+    calc_mean_abs_dev_around_median_(const K &idx, const H &column)  {
+
+        MedianVisitor<T, I> median_visitor;
+
+        median_visitor.pre();
+        median_visitor(idx, column);
+        median_visitor.post();
+
+        const std::size_t   col_s = std::min(idx.size(), column.size());
+        MeanVisitor<T, I>   mean_median_visitor(skip_nan_);
+
+        mean_median_visitor.pre();
+        for (std::size_t i = 0; i < col_s; ++i)  {
+            if (skip_nan_ && is_nan__(column[i]))  continue;
+            mean_median_visitor(
+                idx[i],
+                std::fabs(column[i] - median_visitor.get_result()));
+        }
+        mean_median_visitor.post();
+
+        result_ = mean_median_visitor.get_result();
+    }
+
+    template <typename K, typename H>
+    inline void
+    calc_median_abs_dev_around_mean_(const K &idx, const H &column)  {
+
+        MeanVisitor<T, I>   mean_visitor(skip_nan_);
+        const std::size_t   col_s = std::min(idx.size(), column.size());
+
+        mean_visitor.pre();
+        for (std::size_t i = 0; i < col_s; ++i)
+            mean_visitor(idx[i], column[i]);
+        mean_visitor.post();
+
+        MedianVisitor<T, I> median_mean_visitor;
+        std::vector<T>      mean_dists;
+
+        mean_dists.reserve(col_s);
+        for (std::size_t i = 0; i < col_s; ++i)
+            mean_dists.push_back(
+                std::fabs(column[i] - mean_visitor.get_result()));
+        median_mean_visitor.pre();
+        median_mean_visitor(idx, mean_dists);
+        median_mean_visitor.post();
+
+        result_ = median_mean_visitor.get_result();
+    }
+
+    template <typename K, typename H>
+    inline void
+    calc_median_abs_dev_around_median_(const K &idx, const H &column)  {
+
+        MedianVisitor<T, I> median_visitor;
+
+        median_visitor.pre();
+        median_visitor(idx, column);
+        median_visitor.post();
+
+        const std::size_t   col_s = std::min(idx.size(), column.size());
+        MedianVisitor<T, I> median_median_visitor;
+        std::vector<T>      median_dists;
+
+        median_dists.reserve(col_s);
+        for (std::size_t i = 0; i < col_s; ++i)
+            median_dists.push_back(
+                std::fabs(column[i] - median_visitor.get_result()));
+        median_median_visitor.pre();
+        median_median_visitor(idx, median_dists);
+        median_median_visitor.post();
+
+        result_ = median_median_visitor.get_result();
+    }
+
+public:
+
+    using value_type = T;
+    using index_type = I;
+    using size_type = std::size_t;
+    using result_type = T;
+
+    MADVisitor (mad_type mt, bool skip_nan = true)
+        : mad_type_(mt), skip_nan_(skip_nan)  {   }
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx, const H &column)  {
+
+        switch (mad_type_)  {
+            case mad_type::mean_abs_dev_around_mean:
+                calc_mean_abs_dev_around_mean_(idx, column);
+                break;
+            case mad_type::mean_abs_dev_around_median:
+                calc_mean_abs_dev_around_median_(idx, column);
+                break;
+            case mad_type::median_abs_dev_around_mean:
+                calc_median_abs_dev_around_mean_(idx, column);
+                break;
+            case mad_type::median_abs_dev_around_median:
+                calc_median_abs_dev_around_median_(idx, column);
+                break;
+            default:
+                break;
+        }
+    }
+    inline void pre ()  { result_ = value_type(); }
+    inline void post ()  {   }
+    inline result_type get_result () const  { return (result_); }
+
+private:
+
+    result_type result_ {  };
+};
+
+// ----------------------------------------------------------------------------
+
 template<typename T,
          typename I = unsigned long,
          typename =

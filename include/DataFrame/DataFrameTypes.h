@@ -155,6 +155,18 @@ enum class exponential_decay_spec : unsigned char  {
 
 // ----------------------------------------------------------------------------
 
+// It defines different ways of calculating averages around averages,
+// in other words different types of Mean Absolute Deviation.
+//
+enum class mad_type : unsigned char  {
+    mean_abs_dev_around_mean = 1,
+    mean_abs_dev_around_median = 2,
+    median_abs_dev_around_mean = 3,
+    median_abs_dev_around_median = 4,
+};
+
+// ----------------------------------------------------------------------------
+
 enum class io_format : unsigned char  {
     csv = 1,
     json = 2,

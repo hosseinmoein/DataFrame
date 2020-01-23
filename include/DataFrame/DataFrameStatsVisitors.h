@@ -501,6 +501,8 @@ struct CovVisitor {
                 (value_type(cnt_) - b));
     }
 
+    inline size_type get_count() const  { return (cnt_); }
+
 private:
 
     value_type  total1_ { 0 };
@@ -534,6 +536,7 @@ struct VarVisitor  {
     inline void pre ()  { cov_.pre(); }
     inline void post ()  { cov_.post(); }
     inline result_type get_result () const  { return (cov_.get_result()); }
+    inline size_type get_count() const  { return (cov_.get_count()); }
 
 private:
 
@@ -568,6 +571,7 @@ struct BetaVisitor  {
                     ? cov_.get_result() / cov_.get_var2()
                     : std::numeric_limits<value_type>::quiet_NaN());
     }
+    inline size_type get_count() const  { return (cov_.get_count()); }
 
 private:
 
@@ -598,10 +602,44 @@ struct StdVisitor   {
 
         return (::sqrt(var_.get_result()));
     }
+    inline size_type get_count() const  { return (var_.get_count()); }
 
 private:
 
     VarVisitor<value_type, index_type>  var_;
+};
+
+// ----------------------------------------------------------------------------
+
+// Standard Error of the Mean
+//
+template<typename T,
+         typename I = unsigned long,
+         typename =
+             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+struct SEMVisitor   {
+
+    using value_type = T;
+    using index_type = I;
+    using size_type = std::size_t;
+    using result_type = T;
+
+    explicit SEMVisitor (bool biased = false) : std_ (biased)  {   }
+    inline void operator() (const index_type &idx, const value_type &val)  {
+
+        std_ (idx, val);
+    }
+    inline void pre ()  { std_.pre(); }
+    inline void post ()  { std_.post(); }
+    inline result_type get_result () const  {
+
+        return (std_.get_result() / ::sqrt(get_count()));
+    }
+    inline size_type get_count() const  { return (std_.get_count()); }
+
+private:
+
+    StdVisitor<value_type, index_type>  std_;
 };
 
 // ----------------------------------------------------------------------------

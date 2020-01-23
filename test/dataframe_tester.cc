@@ -1419,7 +1419,8 @@ static void test_dataframe_friend_multiplies_operator()  {
     std::cout << "\nTesting DataFrame friend multiplies operator ..."
               << std::endl;
 
-    std::vector<unsigned long>  idx1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 25, 40, 55 };
+    std::vector<unsigned long>  idx1 =
+        { 1, 2, 3, 4, 5, 6, 7, 8, 9, 25, 40, 55 };
     std::vector<unsigned long>  idx2 = { 1, 2, 3, 4, 5, 8, 9, 22, 25, 40 };
     std::vector<double>         d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
     std::vector<double>         d2 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
@@ -1452,7 +1453,8 @@ static void test_dataframe_friend_divides_operator()  {
 
     std::cout << "\nTesting DataFrame friend divides operator ..." << std::endl;
 
-    std::vector<unsigned long>  idx1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 25, 40, 55 };
+    std::vector<unsigned long>  idx1 =
+        { 1, 2, 3, 4, 5, 6, 7, 8, 9, 25, 40, 55 };
     std::vector<unsigned long>  idx2 = { 1, 2, 3, 4, 5, 8, 9, 22, 25, 40 };
     std::vector<double>         d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
     std::vector<double>         d2 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
@@ -4575,6 +4577,31 @@ static void test_MADVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_SEMVisitor()  {
+
+    std::cout << "\nTesting SEMVisitor{ } ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+          21, 22, 23, 24, 25, 26, 27, 28, 29, 31, 31, 32, 33, 34, 35, 36, 37,
+          38, 39, 40 };
+    std::vector<double> d1 =
+        { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+          21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37,
+          38, 39, 40 };
+    MyDataFrame         df;
+
+    df.load_data(std::move(idx), std::make_pair("col_1", d1));
+
+    SEMVisitor<double>  sem_visitor;
+    const auto          result =
+        df.visit<double>("col_1", sem_visitor).get_result();
+
+    assert(fabs(result - 1.84842) < 0.00001);
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int argc, char *argv[]) {
 
     test_haphazard();
@@ -4647,6 +4674,7 @@ int main(int argc, char *argv[]) {
     test_MACDVisitor();
     test_ExpandingRollAdopter();
     test_MADVisitor();
+    test_SEMVisitor();
 
     return (0);
 }

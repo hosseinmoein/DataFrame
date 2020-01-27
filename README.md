@@ -61,9 +61,9 @@ std::future<bool> fut = df2.read_async("sample_data.csv", io_format::csv);
 fut.get();
 
 // Sort the Frame by index
-df.sort<MyDataFrame::TimeStamp, int, double, std::string>("INDEX", sort_spec::ascen);
+df.sort<MyDataFrame::IndexType, int, double, std::string, unsigned long>("INDEX", sort_spec::ascen);
 // Sort the Frame by column “dbl_col_2” in descending order
-df.sort<double, int, double, std::string>("dbl_col_2", sort_spec::desce);
+df.sort<double, int, double, std::string, unsigned long>("dbl_col_2", sort_spec::desce);
 
 // A functor to calculate mean, variance, skew, kurtosis, defined in
 // DataFrameStatsVisitors.h file.

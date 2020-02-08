@@ -4,7 +4,6 @@
 ![GitHub tag (latest by date)](https://img.shields.io/github/tag-date/hosseinmoein/DataFrame.svg?color=blue&label=Official%20Release&style=popout)
 [![C++17](https://img.shields.io/badge/C%2B%2B-17-blue.svg)](https://isocpp.org/std/the-standard )
 [![HitCount](http://hits.dwyl.io/hosseinmoein/DataFrame.svg)](http://hits.dwyl.io/hosseinmoein/DataFrame)
-<!-- ![Code Quality Score](https://www.code-inspector.com/project/3758/score/svg) -->
 ![Code Grade](https://www.code-inspector.com/project/3758/status/svg)
 
 <img src="docs/pandalion.png" alt="drawing" width="500"/>

@@ -133,7 +133,8 @@ enum class fill_policy : unsigned char  {
     // Y = Y1 + ------- * (Y2 - Y1)
     //          X2 - X1
     linear_interpolate = 4,  // Using the index as X coordinate
-    linear_extrapolate = 5   // Using the index as X coordinate
+    linear_extrapolate = 5,  // Using the index as X coordinate
+    mid_point = 6,           // Mid-point of x and y
 };
 
 // ----------------------------------------------------------------------------

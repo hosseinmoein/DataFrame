@@ -1866,6 +1866,20 @@ private:  // Static helper functions
     static void
     fill_missing_ffill_(std::vector<T> &vec, int limit, size_type col_num);
 
+    template<typename T,
+             typename std::enable_if<
+                 std::is_arithmetic<T>::value &&
+                 std::is_arithmetic<IndexType>::value>::type* = nullptr>
+    static void
+    fill_missing_midpoint_(std::vector<T> &vec, int limit, size_type col_num);
+
+    template<typename T,
+             typename std::enable_if<
+                 ! std::is_arithmetic<T>::value ||
+                 ! std::is_arithmetic<IndexType>::value>::type* = nullptr>
+    static void
+    fill_missing_midpoint_(std::vector<T> &vec, int limit, size_type col_num);
+
     template<typename T>
     static void
     fill_missing_bfill_(std::vector<T> &vec, int limit);
@@ -1879,15 +1893,15 @@ private:  // Static helper functions
                          const IndexVecType &inedx,
                          int limit);
 
-    // Maps row number -> number of missing column(s)
-    using DropRowMap = std::map<size_type, size_type>;
-
     template<typename T,
              typename std::enable_if<
                  ! std::is_arithmetic<T>::value ||
                  ! std::is_arithmetic<IndexType>::value>::type* = nullptr>
     static void
     fill_missing_linter_(std::vector<T> &, const IndexVecType &, int);
+
+    // Maps row number -> number of missing column(s)
+    using DropRowMap = std::map<size_type, size_type>;
 
     template<typename T>
     static void

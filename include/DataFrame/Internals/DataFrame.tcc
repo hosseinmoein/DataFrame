@@ -154,7 +154,7 @@ fill_missing_ffill_(std::vector<T> &vec, int limit, size_type col_num)  {
     int count = 0;
     T   last_value = vec[0];
 
-    for (size_type i = 0; i < col_num; ++i)  {
+    for (size_type i = 1; i < col_num; ++i)  {
         if (limit >= 0 && count >= limit)  break;
         if (i >= vec_size)  {
             if (! _is_nan(last_value))  {
@@ -165,10 +165,59 @@ fill_missing_ffill_(std::vector<T> &vec, int limit, size_type col_num)  {
             else  break;
         }
         else  {
-            if (! _is_nan<T>(vec[i]))  last_value = vec[i];
-            if (_is_nan<T>(vec[i]) && ! _is_nan<T>(last_value))  {
+            if (! _is_nan<T>(vec[i]))
+                last_value = vec[i];
+            else if (! _is_nan<T>(last_value))  {
                 vec[i] = last_value;
                 count += 1;
+            }
+        }
+    }
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename T,
+         typename std::enable_if<! std::is_arithmetic<T>::value ||
+                                 ! std::is_arithmetic<I>::value>::type*>
+void DataFrame<I, H>::
+fill_missing_midpoint_(std::vector<T> &vec, int limit, size_type col_num)  {
+
+    throw NotFeasible("fill_missing_midpoint_(): ERROR: Mid-point filling is "
+                      "not feasible on non-arithmetic types");
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename T,
+         typename std::enable_if<std::is_arithmetic<T>::value &&
+                                 std::is_arithmetic<I>::value>::type*>
+void DataFrame<I, H>::
+fill_missing_midpoint_(std::vector<T> &vec, int limit, size_type col_num)  {
+
+    const size_type vec_size = vec.size();
+
+    if (vec_size < 3)  return;
+
+    int count = 0;
+    T   last_value = vec[0];
+
+    for (size_type i = 1; i < vec_size - 1; ++i)  {
+        if (limit >= 0 && count >= limit)  break;
+        
+        if (! _is_nan<T>(vec[i]))
+            last_value = vec[i];
+        else if (! _is_nan<T>(last_value))  {
+            for (size_type j = i + 1; j < vec_size; ++j)  {
+                if (! _is_nan<T>(vec[j]))  {
+                    vec[i] = (last_value + vec[j]) / T(2);
+                    last_value = vec[i];
+                    count += 1;
+                    break;
+                }
             }
         }
     }
@@ -341,6 +390,19 @@ fill_missing(const std::array<const char *, N> col_names,
                                std::ref(vec),
                                std::cref(indices_),
                                limit);
+                thread_count += 1;
+            }
+        }
+        else if (fp == fill_policy::mid_point)  {
+            if (thread_count >= get_thread_level())
+                fill_missing_midpoint_(vec, limit, indices_.size());
+            else  {
+                futures[thread_count] =
+                    std::async(std::launch::async,
+                               &DataFrame::fill_missing_midpoint_<T>,
+                               std::ref(vec),
+                               limit,
+                               indices_.size());
                 thread_count += 1;
             }
         }

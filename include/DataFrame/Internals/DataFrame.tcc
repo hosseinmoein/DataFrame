@@ -448,12 +448,19 @@ quantile(const char *col_name, double qt, quantile_policy policy) const  {
         throw NotFeasible(buffer);
     }
 
-    const size_type idx = static_cast<size_type>(qt * vec_len);
-    const bool      is_even = vec_len - idx == idx  || 
-                              std::fmod(double(vec_len), double(idx)) != 0.0;
+    const size_type idx = static_cast<size_type>(std::round(qt * vec_len));
+    const double    is_even = ! (vec_len & 0x01) || double(idx) < qt * vec_len;
     T               result = T();
 
-    if (policy == quantile_policy::mid_point ||
+    if (qt == 0.0)  {
+        KthValueVisitor<T, I>   kth_value(1);
+
+        kth_value.pre();
+        kth_value(get_index(), vec);
+        kth_value.post();
+        result = kth_value.get_result();
+	}
+    else if (policy == quantile_policy::mid_point ||
         policy == quantile_policy::linear)  {
         KthValueVisitor<T, I>   kth_value1(idx);
 
@@ -478,7 +485,7 @@ quantile(const char *col_name, double qt, quantile_policy policy) const  {
              policy == quantile_policy::higher_value)  {
         KthValueVisitor<T, I>   kth_value(
             policy == quantile_policy::lower_value ? idx
-            : (idx + 1 < vec_len ? idx + 1 : idx));
+            : (idx + 1 < vec_len && is_even ? idx + 1 : idx));
 
         kth_value.pre();
         kth_value(get_index(), vec);

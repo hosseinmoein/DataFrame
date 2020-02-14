@@ -4661,6 +4661,55 @@ static void test_fill_missing_mid_point()  {
 
 // -----------------------------------------------------------------------------
 
+
+
+
+
+
+
+
+static void test_quantile()  {
+
+    std::cout << "\nTesting quantile{ } ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+          21, 22, 23, 24, 25, 26, 27, 28, 29, 31, 31, 32, 33, 34, 35, 36, 37,
+          38, 39, 40 };
+    std::vector<double> d1 =
+        { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+          21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37,
+          38, 39, 40 };
+    MyDataFrame         df;
+
+    df.load_data(std::move(idx), std::make_pair("col_1", d1));
+    df.shuffle<1, double>({"col_1"}, false);
+
+    auto    result =
+        df.quantile<double>("col_1", 1, quantile_policy::mid_point);
+
+    std::cout << "mid_point Result: " << result << std::endl;
+    result = df.quantile<double>("col_1", 1, quantile_policy::mid_point);
+    std::cout << "mid_point Result: " << result << std::endl;
+
+    result = df.quantile<double>("col_1", 0.5, quantile_policy::mid_point);
+    std::cout << "mid_point Result: " << result << std::endl;
+    result = df.quantile<double>("col_1", 0.5, quantile_policy::higher_value);
+    std::cout << "higher Result: " << result << std::endl;
+    result = df.quantile<double>("col_1", 0.5, quantile_policy::lower_value);
+    std::cout << "lower Result: " << result << std::endl;
+    result = df.quantile<double>("col_1", 0.55, quantile_policy::mid_point);
+    std::cout << "mid_point Result: " << result << std::endl;
+}
+
+// -----------------------------------------------------------------------------
+
+
+
+
+
+
+
 int main(int argc, char *argv[]) {
 
     test_haphazard();
@@ -4723,8 +4772,8 @@ int main(int argc, char *argv[]) {
     test_z_score_visitor();
     test_thread_safety();
     test_view_visitors();
-    test_k_means();
-    test_affinity_propagation();
+    // test_k_means();
+    // test_affinity_propagation();
     test_multi_col_sort();
     test_join_by_column();
     test_ExponentialRollAdopter();
@@ -4735,6 +4784,7 @@ int main(int argc, char *argv[]) {
     test_MADVisitor();
     test_SEMVisitor();
     test_fill_missing_mid_point();
+    test_quantile();
 
     return (0);
 }

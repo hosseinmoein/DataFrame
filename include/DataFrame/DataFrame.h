@@ -883,6 +883,25 @@ public:  // Data manipulation
     StdDataFrame<IndexType>
     rotate(size_type periods, shift_policy sp) const;
 
+    // It calculates the given quantile (between 0 and 1), using specified
+    // policy for the given column
+    //
+    // T:
+    //   Type of the col_name column.
+    // col_name:
+    //   Name of the column
+    // qt:
+    //   The quantile between 0 and 1
+    // quantile_policy:
+    //   Specifies how to combine two quntiles, in case.
+    //   Please see quantile_policy type for more explanation
+	//
+    template<typename T>
+    T
+    quantile(const char *col_name,
+             double qt,  // The quantile between 0 and 1
+             quantile_policy policy = quantile_policy::mid_point) const;
+
 public: // Read/access and slicing interfaces
 
     // It returns a reference to the container of named data column

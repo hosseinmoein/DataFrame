@@ -139,6 +139,15 @@ enum class fill_policy : unsigned char  {
 
 // ----------------------------------------------------------------------------
 
+enum class quantile_policy : unsigned char  {
+    lower_value = 1,   // Take the higher index
+    higher_value = 2,  // Take the lower index
+    mid_point = 3,     // Average the two quantiles
+    linear = 4,        // Linearly combine the two quantiles
+};
+
+// ----------------------------------------------------------------------------
+
 enum class drop_policy : unsigned char  {
     all = 1,  // Remove row if all columns are nan
     any = 2,  // Remove row if any column is nan

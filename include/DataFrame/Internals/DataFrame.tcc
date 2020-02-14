@@ -28,8 +28,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include <DataFrame/DataFrame.h>
+#include <DataFrame/DataFrameStatsVisitors.h>
 
 #include <algorithm>
+#include <cmath>
 #include <future>
 #include <limits>
 #include <random>
@@ -420,6 +422,72 @@ fill_missing(const std::array<const char *, N> col_names,
     for (size_type idx = 0; idx < thread_count; ++idx)
         futures[idx].get();
     return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename T>
+T DataFrame<I, H>::
+quantile(const char *col_name, double qt, quantile_policy policy) const  {
+
+    const std::vector<T>    &vec = get_column<T>(col_name);
+    const size_type         vec_len = vec.size();
+
+    if (qt < 0.0 || qt > 1.0 || vec_len == 0)  {
+        char buffer [512];
+
+        sprintf (buffer,
+                 "DataFrame::quantile(): unable to do quantile: "
+#ifdef _WIN32
+                 "qt: %f, Column Len: %zu",
+#else
+                 "qt: %f, Column Len: %lu",
+#endif // _WIN32
+                 qt, vec_len);
+        throw NotFeasible(buffer);
+    }
+
+    const double    didx = qt * double(vec_len);
+    const size_type iidx = static_cast<size_type>(didx);
+    const bool      is_even = ! (iidx & 0x01);
+    T               result = T();
+
+    if (policy == quantile_policy::mid_point ||
+        policy == quantile_policy::linear)  {
+        KthValueVisitor<T, I>   kth_value1(iidx);
+
+        kth_value1.pre();
+        kth_value1(get_index(), vec);
+        kth_value1.post();
+        result = kth_value1.get_result();
+        if ((is_even || policy == quantile_policy::linear) &&
+            iidx + 1 < vec_len)  {
+            KthValueVisitor<T, I>   kth_value2(iidx + 1);
+
+            kth_value2.pre();
+            kth_value2(get_index(), vec);
+            kth_value2.post();
+            if (policy == quantile_policy::mid_point)
+                result = (result + kth_value2.get_result()) / 2.0;
+            else // linear
+                result =
+                    result + (kth_value2.get_result() - result) * (1.0 - qt);
+        }
+    }
+    else if (policy == quantile_policy::lower_value ||
+             policy == quantile_policy::higher_value)  {
+        KthValueVisitor<T, I>   kth_value(
+            policy == quantile_policy::lower_value ? iidx
+            : (iidx + 1 > vec_len ? iidx + 1 : iidx));
+
+        kth_value.pre();
+        kth_value(get_index(), vec);
+        kth_value.post();
+        result = kth_value.get_result();
+    }
+
+    return result;
 }
 
 // ----------------------------------------------------------------------------

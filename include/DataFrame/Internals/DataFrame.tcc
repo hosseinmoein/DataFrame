@@ -478,7 +478,7 @@ quantile(const char *col_name, double qt, quantile_policy policy) const  {
              policy == quantile_policy::higher_value)  {
         KthValueVisitor<T, I>   kth_value(
             policy == quantile_policy::lower_value ? idx
-            : (idx + 1 > vec_len ? idx + 1 : idx));
+            : (idx + 1 < vec_len ? idx + 1 : idx));
 
         kth_value.pre();
         kth_value(get_index(), vec);

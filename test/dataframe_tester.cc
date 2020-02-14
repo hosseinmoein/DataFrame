@@ -4661,16 +4661,9 @@ static void test_fill_missing_mid_point()  {
 
 // -----------------------------------------------------------------------------
 
-
-
-
-
-
-
-
 static void test_quantile()  {
 
-    std::cout << "\nTesting quantile{ } ..." << std::endl;
+    std::cout << "\nTesting quantile() ..." << std::endl;
 
     std::vector<unsigned long>  idx =
         { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
@@ -4688,34 +4681,30 @@ static void test_quantile()  {
     auto    result =
         df.quantile<double>("col_1", 1, quantile_policy::mid_point);
 
-    std::cout << "mid_point Result: " << result << std::endl;
+    assert(result == 40.0);
 
     result = df.quantile<double>("col_1", 0.5, quantile_policy::mid_point);
-    std::cout << "mid_point Result: " << result << std::endl;
+    assert(result == 20.5);
 
     result = df.quantile<double>("col_1", 0.5, quantile_policy::linear);
-    std::cout << "linear Result: " << result << std::endl;
+    assert(result == 20.5);
 
     result = df.quantile<double>("col_1", 0.5, quantile_policy::higher_value);
-    std::cout << "higher Result: " << result << std::endl;
+    assert(result == 21.0);
 
     result = df.quantile<double>("col_1", 0.5, quantile_policy::lower_value);
-    std::cout << "lower Result: " << result << std::endl;
+    assert(result == 20.0);
 
     result = df.quantile<double>("col_1", 0.55, quantile_policy::mid_point);
-    std::cout << "mid_point Result: " << result << std::endl;
+    assert(result == 22.5);
 
     result = df.quantile<double>("col_1", 0.55, quantile_policy::linear);
+    assert(result == 22.45);
+
     std::cout << "linear Result: " << result << std::endl;
 }
 
 // -----------------------------------------------------------------------------
-
-
-
-
-
-
 
 int main(int argc, char *argv[]) {
 

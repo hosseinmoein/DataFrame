@@ -4689,17 +4689,24 @@ static void test_quantile()  {
         df.quantile<double>("col_1", 1, quantile_policy::mid_point);
 
     std::cout << "mid_point Result: " << result << std::endl;
-    result = df.quantile<double>("col_1", 1, quantile_policy::mid_point);
-    std::cout << "mid_point Result: " << result << std::endl;
 
     result = df.quantile<double>("col_1", 0.5, quantile_policy::mid_point);
     std::cout << "mid_point Result: " << result << std::endl;
+
+    result = df.quantile<double>("col_1", 0.5, quantile_policy::linear);
+    std::cout << "linear Result: " << result << std::endl;
+
     result = df.quantile<double>("col_1", 0.5, quantile_policy::higher_value);
     std::cout << "higher Result: " << result << std::endl;
+
     result = df.quantile<double>("col_1", 0.5, quantile_policy::lower_value);
     std::cout << "lower Result: " << result << std::endl;
+
     result = df.quantile<double>("col_1", 0.55, quantile_policy::mid_point);
     std::cout << "mid_point Result: " << result << std::endl;
+
+    result = df.quantile<double>("col_1", 0.55, quantile_policy::linear);
+    std::cout << "linear Result: " << result << std::endl;
 }
 
 // -----------------------------------------------------------------------------

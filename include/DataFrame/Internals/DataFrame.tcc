@@ -448,22 +448,21 @@ quantile(const char *col_name, double qt, quantile_policy policy) const  {
         throw NotFeasible(buffer);
     }
 
-    const double    didx = qt * double(vec_len);
-    const size_type iidx = static_cast<size_type>(didx);
-    const bool      is_even = ! (iidx & 0x01);
+    const size_type idx = static_cast<size_type>(qt * vec_len);
+    const bool      is_even = vec_len - idx == idx  || 
+                              std::fmod(double(vec_len), double(idx)) != 0.0;
     T               result = T();
 
     if (policy == quantile_policy::mid_point ||
         policy == quantile_policy::linear)  {
-        KthValueVisitor<T, I>   kth_value1(iidx);
+        KthValueVisitor<T, I>   kth_value1(idx);
 
         kth_value1.pre();
         kth_value1(get_index(), vec);
         kth_value1.post();
         result = kth_value1.get_result();
-        if ((is_even || policy == quantile_policy::linear) &&
-            iidx + 1 < vec_len)  {
-            KthValueVisitor<T, I>   kth_value2(iidx + 1);
+        if (is_even && idx + 1 < vec_len)  {
+            KthValueVisitor<T, I>   kth_value2(idx + 1);
 
             kth_value2.pre();
             kth_value2(get_index(), vec);
@@ -478,8 +477,8 @@ quantile(const char *col_name, double qt, quantile_policy policy) const  {
     else if (policy == quantile_policy::lower_value ||
              policy == quantile_policy::higher_value)  {
         KthValueVisitor<T, I>   kth_value(
-            policy == quantile_policy::lower_value ? iidx
-            : (iidx + 1 > vec_len ? iidx + 1 : iidx));
+            policy == quantile_policy::lower_value ? idx
+            : (idx + 1 > vec_len ? idx + 1 : idx));
 
         kth_value.pre();
         kth_value(get_index(), vec);

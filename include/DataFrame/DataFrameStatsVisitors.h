@@ -1514,6 +1514,120 @@ private:
 
 // ----------------------------------------------------------------------------
 
+
+
+
+
+template<typename T,
+         typename I = unsigned long,
+         typename =
+             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+struct QuantileVisitor  {
+
+    using value_type = T;
+    using index_type = I;
+    using size_type = std::size_t;
+    using result_type = T;
+
+    QuantileVisitor () = default;
+    QuantileVisitor (value_type quantile, quantile_policy q_policy)
+        : qt_(quantile), policy_(q_policy)  {   }
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx, const H &column)  {
+
+        const size_type vec_len = column.size();
+
+        if (qt_ < 0.0 || qt_ > 1.0 || vec_len == 0)  {
+            char buffer [512];
+
+            sprintf (buffer,
+                     "QuantileVisitor{}: unable to do quantile: "
+#ifdef _WIN32
+                     "qt: %f, Column Len: %zu",
+#else
+                     "qt: %f, Column Len: %lu",
+#endif // _WIN32
+                     qt_, vec_len);
+            throw NotFeasible(buffer);
+        }
+
+        const double    vec_len_frac = qt_ * vec_len;
+        const size_type idx = static_cast<size_type>(std::round(vec_len_frac));
+        const bool      need_two =
+            ! (vec_len & 0x01) || double(idx) < vec_len_frac;
+
+        if (qt_ == 0.0)  {
+            KthValueVisitor<T, I>   kth_value(1);
+
+            kth_value.pre();
+            kth_value(idx, column);
+            kth_value.post();
+            result_ = kth_value.get_result();
+        }
+        else if (qt_ == 1.0)  {
+            KthValueVisitor<T, I>   kth_value(vec_len);
+
+            kth_value.pre();
+            kth_value(idx, column);
+            kth_value.post();
+            result_ = kth_value.get_result();
+        }
+        else if (policy == quantile_policy::mid_point ||
+                 policy == quantile_policy::linear)  {
+            KthValueVisitor<T, I>   kth_value1(idx);
+
+            kth_value1.pre();
+            kth_value(idx, column);
+            kth_value1.post();
+            result_ = kth_value1.get_result();
+            if (need_two && idx + 1 < vec_len)  {
+                KthValueVisitor<T, I>   kth_value2(idx + 1);
+
+                kth_value2.pre();
+                kth_value(idx, column);
+                kth_value2.post();
+                if (policy == quantile_policy::mid_point)
+                    result_ = (result_ + kth_value2.get_result()) / 2.0;
+                else // linear
+                    result_ = result_ + (kth_value2.get_result() - result_) *
+                              (1.0 - qt_);
+            }
+        }
+        else if (policy == quantile_policy::lower_value ||
+                 policy == quantile_policy::higher_value)  {
+            KthValueVisitor<T, I>   kth_value(
+                policy == quantile_policy::lower_value ? idx
+                : (idx + 1 < vec_len && need_two ? idx + 1 : idx));
+
+            kth_value.pre();
+            kth_value(idx, column);
+            kth_value.post();
+            result_ = kth_value.get_result();
+        }
+    }
+
+    inline void pre ()  { result_ = value_type(); }
+    inline void post ()  {   }
+    inline result_type get_result () const  { return (result_); }
+
+private:
+
+    result_type             result_ {  };
+    const result_type       qt_ { 0.5  };
+    const quantile_policy   policy_ { quantile_policy::mid_point };
+};
+
+// ----------------------------------------------------------------------------
+
+
+
+
+
+
+
+
 // Mode of a vector is a value that appears most often in the vector.
 // This visitor extracts the top N repeated values in the column with the
 // associated indices.

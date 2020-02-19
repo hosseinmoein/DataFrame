@@ -4710,7 +4710,6 @@ static void test_quantile()  {
     result = df.quantile<double>("col_1", 0, quantile_policy::linear);
     assert(result == 1.0);
 
-
     df.get_index().push_back(41);
     df.get_column<double>("col_1").push_back(41);
 
@@ -4733,10 +4732,25 @@ static void test_quantile()  {
     assert(result == 29.29);
 
     result = df.quantile<double>("col_1", 0.23, quantile_policy::mid_point);
-    std::cout << "Result: " << result << std::endl;
+    assert(result == 9.5);
+
+    result = df.quantile<double>("col_1", 0.2, quantile_policy::mid_point);
+    assert(result == 8.5);
 
     result = df.quantile<double>("col_1", 0.23, quantile_policy::linear);
-    std::cout << "Result: " << result << std::endl;
+    assert(result == 9.77);
+
+    result = df.quantile<double>("col_1", 0.23, quantile_policy::lower_value);
+    assert(result == 9.0);
+
+    result = df.quantile<double>("col_1", 0.23, quantile_policy::higher_value);
+    assert(result == 10.0);
+
+    result = df.quantile<double>("col_1", 1, quantile_policy::linear);
+    assert(result == 41.0);
+
+    result = df.quantile<double>("col_1", 0, quantile_policy::mid_point);
+    assert(result == 1.0);
 }
 
 // -----------------------------------------------------------------------------

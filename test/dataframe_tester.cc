@@ -4678,78 +4678,123 @@ static void test_quantile()  {
     df.load_data(std::move(idx), std::make_pair("col_1", d1));
     df.shuffle<1, double>({"col_1"}, false);
 
-    auto    result =
-        df.quantile<double>("col_1", 1, quantile_policy::mid_point);
+	QuantileVisitor<double> v1(1, quantile_policy::mid_point);
+    auto                    result =
+        df.single_act_visit<double>("col_1", v1).get_result();
 
     assert(result == 40.0);
 
-    result = df.quantile<double>("col_1", 0.5, quantile_policy::mid_point);
+	QuantileVisitor<double> v2(0.5, quantile_policy::mid_point);
+
+    result = df.single_act_visit<double>("col_1", v2).get_result();
     assert(result == 20.5);
 
-    result = df.quantile<double>("col_1", 0.5, quantile_policy::linear);
+	QuantileVisitor<double> v3(0.5, quantile_policy::linear);
+
+    result = df.single_act_visit<double>("col_1", v3).get_result();
     assert(result == 20.5);
 
-    result = df.quantile<double>("col_1", 0.5, quantile_policy::higher_value);
+	QuantileVisitor<double> v4(0.5, quantile_policy::higher_value);
+
+    result = df.single_act_visit<double>("col_1", v4).get_result();
     assert(result == 21.0);
 
-    result = df.quantile<double>("col_1", 0.5, quantile_policy::lower_value);
+	QuantileVisitor<double> v5(0.5, quantile_policy::lower_value);
+
+    result = df.single_act_visit<double>("col_1", v5).get_result();
     assert(result == 20.0);
 
-    result = df.quantile<double>("col_1", 0.55, quantile_policy::mid_point);
+	QuantileVisitor<double> v6(0.55, quantile_policy::mid_point);
+
+    result = df.single_act_visit<double>("col_1", v6).get_result();
     assert(result == 22.5);
 
-    result = df.quantile<double>("col_1", 0.55, quantile_policy::linear);
+	QuantileVisitor<double> v7(0.55, quantile_policy::linear);
+
+    result = df.single_act_visit<double>("col_1", v7).get_result();
     assert(result == 22.45);
 
-    result = df.quantile<double>("col_1", 0.75, quantile_policy::mid_point);
+	QuantileVisitor<double> v8(0.75, quantile_policy::mid_point);
+
+    result = df.single_act_visit<double>("col_1", v8).get_result();
     assert(result == 30.5);
 
-    result = df.quantile<double>("col_1", 0.75, quantile_policy::linear);
+	QuantileVisitor<double> v9(0.75, quantile_policy::linear);
+
+    result = df.single_act_visit<double>("col_1", v9).get_result();
     assert(result == 30.25);
 
-    result = df.quantile<double>("col_1", 0, quantile_policy::linear);
+	QuantileVisitor<double> v10(0, quantile_policy::linear);
+
+    result = df.single_act_visit<double>("col_1", v10).get_result();
     assert(result == 1.0);
 
     df.get_index().push_back(41);
     df.get_column<double>("col_1").push_back(41);
 
-    result = df.quantile<double>("col_1", 0.75, quantile_policy::mid_point);
+	QuantileVisitor<double> v11(0.75, quantile_policy::mid_point);
+
+    result = df.single_act_visit<double>("col_1", v11).get_result();
     assert(result == 31.0);
 
-    result = df.quantile<double>("col_1", 0.75, quantile_policy::linear);
+	QuantileVisitor<double> v12(0.75, quantile_policy::linear);
+
+    result = df.single_act_visit<double>("col_1", v12).get_result();
     assert(result == 31.0);
 
-    result = df.quantile<double>("col_1", 0.75, quantile_policy::lower_value);
+	QuantileVisitor<double> v13(0.75, quantile_policy::lower_value);
+
+    result = df.single_act_visit<double>("col_1", v13).get_result();
     assert(result == 31.0);
 
-    result = df.quantile<double>("col_1", 0.75, quantile_policy::higher_value);
+	QuantileVisitor<double> v14(0.75, quantile_policy::higher_value);
+
+    result = df.single_act_visit<double>("col_1", v14).get_result();
     assert(result == 31.0);
 
-    result = df.quantile<double>("col_1", 0.71, quantile_policy::mid_point);
+	QuantileVisitor<double> v15(0.71, quantile_policy::mid_point);
+
+    result = df.single_act_visit<double>("col_1", v15).get_result();
     assert(result == 29.5);
 
-    result = df.quantile<double>("col_1", 0.71, quantile_policy::linear);
+	QuantileVisitor<double> v16(0.71, quantile_policy::linear);
+
+    result = df.single_act_visit<double>("col_1", v16).get_result();
     assert(result == 29.29);
 
-    result = df.quantile<double>("col_1", 0.23, quantile_policy::mid_point);
+	QuantileVisitor<double> v17(0.23, quantile_policy::mid_point);
+
+    result = df.single_act_visit<double>("col_1", v17).get_result();
     assert(result == 9.5);
 
-    result = df.quantile<double>("col_1", 0.2, quantile_policy::mid_point);
+	QuantileVisitor<double> v18(0.2, quantile_policy::mid_point);
+
+    result = df.single_act_visit<double>("col_1", v18).get_result();
     assert(result == 8.5);
 
-    result = df.quantile<double>("col_1", 0.23, quantile_policy::linear);
+	QuantileVisitor<double> v19(0.23, quantile_policy::linear);
+
+    result = df.single_act_visit<double>("col_1", v19).get_result();
     assert(result == 9.77);
 
-    result = df.quantile<double>("col_1", 0.23, quantile_policy::lower_value);
+	QuantileVisitor<double> v20(0.23, quantile_policy::lower_value);
+
+    result = df.single_act_visit<double>("col_1", v20).get_result();
     assert(result == 9.0);
 
-    result = df.quantile<double>("col_1", 0.23, quantile_policy::higher_value);
+	QuantileVisitor<double> v21(0.23, quantile_policy::higher_value);
+
+    result = df.single_act_visit<double>("col_1", v21).get_result();
     assert(result == 10.0);
 
-    result = df.quantile<double>("col_1", 1, quantile_policy::linear);
+	QuantileVisitor<double> v22(1, quantile_policy::linear);
+
+    result = df.single_act_visit<double>("col_1", v22).get_result();
     assert(result == 41.0);
 
-    result = df.quantile<double>("col_1", 0, quantile_policy::mid_point);
+	QuantileVisitor<double> v23(0, quantile_policy::mid_point);
+
+    result = df.single_act_visit<double>("col_1", v23).get_result();
     assert(result == 1.0);
 }
 
@@ -4817,8 +4862,8 @@ int main(int argc, char *argv[]) {
     test_z_score_visitor();
     test_thread_safety();
     test_view_visitors();
-    // test_k_means();
-    // test_affinity_propagation();
+    test_k_means();
+    test_affinity_propagation();
     test_multi_col_sort();
     test_join_by_column();
     test_ExponentialRollAdopter();

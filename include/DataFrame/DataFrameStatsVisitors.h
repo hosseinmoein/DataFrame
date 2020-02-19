@@ -1514,10 +1514,6 @@ private:
 
 // ----------------------------------------------------------------------------
 
-
-
-
-
 template<typename T,
          typename I = unsigned long,
          typename =
@@ -1554,9 +1550,10 @@ struct QuantileVisitor  {
         }
 
         const double    vec_len_frac = qt_ * vec_len;
-        const size_type idx = static_cast<size_type>(std::round(vec_len_frac));
+        const size_type int_idx =
+            static_cast<size_type>(std::round(vec_len_frac));
         const bool      need_two =
-            ! (vec_len & 0x01) || double(idx) < vec_len_frac;
+            ! (vec_len & 0x01) || double(int_idx) < vec_len_frac;
 
         if (qt_ == 0.0)  {
             KthValueVisitor<T, I>   kth_value(1);
@@ -1574,32 +1571,32 @@ struct QuantileVisitor  {
             kth_value.post();
             result_ = kth_value.get_result();
         }
-        else if (policy == quantile_policy::mid_point ||
-                 policy == quantile_policy::linear)  {
-            KthValueVisitor<T, I>   kth_value1(idx);
+        else if (policy_ == quantile_policy::mid_point ||
+                 policy_ == quantile_policy::linear)  {
+            KthValueVisitor<T, I>   kth_value1(int_idx);
 
             kth_value1.pre();
-            kth_value(idx, column);
+            kth_value1(idx, column);
             kth_value1.post();
             result_ = kth_value1.get_result();
-            if (need_two && idx + 1 < vec_len)  {
-                KthValueVisitor<T, I>   kth_value2(idx + 1);
+            if (need_two && int_idx + 1 < vec_len)  {
+                KthValueVisitor<T, I>   kth_value2(int_idx + 1);
 
                 kth_value2.pre();
-                kth_value(idx, column);
+                kth_value2(idx, column);
                 kth_value2.post();
-                if (policy == quantile_policy::mid_point)
+                if (policy_ == quantile_policy::mid_point)
                     result_ = (result_ + kth_value2.get_result()) / 2.0;
                 else // linear
                     result_ = result_ + (kth_value2.get_result() - result_) *
                               (1.0 - qt_);
             }
         }
-        else if (policy == quantile_policy::lower_value ||
-                 policy == quantile_policy::higher_value)  {
+        else if (policy_ == quantile_policy::lower_value ||
+                 policy_ == quantile_policy::higher_value)  {
             KthValueVisitor<T, I>   kth_value(
-                policy == quantile_policy::lower_value ? idx
-                : (idx + 1 < vec_len && need_two ? idx + 1 : idx));
+                policy_ == quantile_policy::lower_value ? int_idx
+                : (int_idx + 1 < vec_len && need_two ? int_idx + 1 : int_idx));
 
             kth_value.pre();
             kth_value(idx, column);
@@ -1620,13 +1617,6 @@ private:
 };
 
 // ----------------------------------------------------------------------------
-
-
-
-
-
-
-
 
 // Mode of a vector is a value that appears most often in the vector.
 // This visitor extracts the top N repeated values in the column with the

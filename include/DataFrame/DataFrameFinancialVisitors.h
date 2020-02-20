@@ -397,7 +397,7 @@ struct  VWAPVisitor {
 
     struct  VWAP  {
         value_type  vwap { 0 };
-        index_type  the_time { 0 };
+        index_type  index_value { 0 };
         size_type   event_count { 0 };
         value_type  total_volume { 0 };
         value_type  high_price { 0 };
@@ -486,13 +486,14 @@ struct  VWAPVisitor {
     }
     inline const result_type &get_result () const  { return (result_); }
 
-    explicit VWAPVisitor(double interval,
-                         double max_volume = 0,
-                         double total_volume_limit = 0,
-                         distance_func f =
-            [](const index_type &idx1, const index_type &idx2) -> double {
-                return (static_cast<double>(idx2 - idx1));
-            })
+    explicit
+    VWAPVisitor(double interval,
+                double max_volume = 0,
+                double total_volume_limit = 0,
+                distance_func f =
+                    [](const I &idx1, const I &idx2) -> double {
+                        return (static_cast<double>(idx2 - idx1));
+                    })
         : dfunc_(f),
           interval_(interval),
           max_volume_(max_volume),
@@ -519,11 +520,11 @@ private:
                 cum_low_price_ = the_price;
         }
     }
-    inline void reset_ (index_type the_time)  {
+    inline void reset_ (index_type index_value)  {
 
         price_accumulator_ = 0;
         volume_accumulator_ = 0;
-        last_time_ = the_time;
+        last_time_ = index_value;
         started_ = true;
         event_count_ = 0;
         high_price_ = 0;

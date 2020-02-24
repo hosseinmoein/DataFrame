@@ -385,6 +385,7 @@ private:
 
 // ----------------------------------------------------------------------------
 
+// Volume Weighted Average Price
 template<typename T,
          typename I = unsigned long,
          typename =
@@ -401,30 +402,28 @@ struct  VWAPVisitor {
         size_type   event_count { 0 };
         value_type  total_volume { 0 };
         value_type  high_price { 0 };
-        value_type  low_price { std::numeric_limits<double>::max() };
+        value_type  low_price { std::numeric_limits<value_type>::max() };
         value_type  cumulative_vwap { 0 };
         size_type   cumulative_event_count { 0 };
         value_type  cumulative_total_volume { 0 };
         value_type  cumulative_high_price { 0 };
         value_type  comulative_low_price
-            { std::numeric_limits<double>::max() };
+            { std::numeric_limits<value_type>::max() };
     };
 
     using result_type = std::vector<VWAP>;
     using distance_func =
         std::function<double(const index_type &, const index_type &)>;
 
-    // std::numeric_limits<value_type>::quiet_NaN()
-    // is_nan__(val)
     // Index value is assumed to represent time
     // The first value is assumed to be the price of a traded instrument.
     // The second value is assimed to be the size of a traded instrument.
-    // The provided "dfunc" measures time elapsed between to index values
+    // The provided "dfunc" measures time elapsed between two index values
     inline void operator() (const index_type &idx,
                             const value_type &price,
                             const value_type &size)  {
 
-        // Reached the limit, stop
+        // If reached the limit, stop
         if (total_volume_limit_ == 0 ||
             cum_volume_accumulator_ < total_volume_limit_)  {
             if (started_ && dfunc_(last_time_, idx) >= interval_)  {
@@ -528,7 +527,7 @@ private:
         started_ = true;
         event_count_ = 0;
         high_price_ = 0;
-        low_price_ = std::numeric_limits<double>::max();
+        low_price_ = std::numeric_limits<value_type>::max();
     }
 
     result_type     result_ { };
@@ -538,9 +537,9 @@ private:
     bool            started_ { false };
     size_type       event_count_ { 0 };
     value_type      high_price_ { 0 };
-    value_type      low_price_ { std::numeric_limits<double>::max() };
+    value_type      low_price_ { std::numeric_limits<value_type>::max() };
     value_type      cum_high_price_ { 0 };
-    value_type      cum_low_price_ { std::numeric_limits<double>::max() };
+    value_type      cum_low_price_ { std::numeric_limits<value_type>::max() };
     value_type      cum_price_accumulator_ { 0 };
     value_type      cum_volume_accumulator_ { 0 };
     size_type       cum_event_count_ { 0 };
@@ -548,6 +547,268 @@ private:
     const double    interval_;
     const double    max_volume_;
     const double    total_volume_limit_;
+};
+
+// ----------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Volume Weighted Bid-Ask Spread
+template<typename T,
+         typename I = unsigned long,
+         typename =
+             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+struct  VWBASVisitor {
+
+    using value_type = T;
+    using index_type = I;
+    using size_type = std::size_t;
+
+    struct  VWBAS  {
+        value_type  spread { 0 };
+        value_type  percent_spread { 0 };
+        value_type  vwbas { 0 };
+        value_type  percent_vwbas { 0 };
+        index_type  index_value { 0 };
+        size_type   event_count { 0 };
+        value_type  total_ask_volume { 0 };
+        value_type  total_bid_volume { 0 };
+        value_type  high_ask_price { 0 };
+        value_type  low_ask_price { std::numeric_limits<value_type>::max() };
+        value_type  high_bid_price { 0 };
+        value_type  low_bid_price { std::numeric_limits<value_type>::max() };
+        value_type  cumulative_vwbas { 0 };
+        size_type   cumulative_event_count { 0 };
+        value_type  cumulative_total_ask_volume { 0 };
+        value_type  cumulative_total_bid_volume { 0 };
+        value_type  cumulative_high_ask_price { 0 };
+        value_type  comulative_low_ask_price
+            { std::numeric_limits<value_type>::max() };
+        value_type  cumulative_high_bid_price { 0 };
+        value_type  comulative_low_bid_price
+            { std::numeric_limits<value_type>::max() };
+    };
+
+    using result_type = std::vector<VWBAS>;
+    using distance_func =
+        std::function<double(const index_type &, const index_type &)>;
+
+    // Index value is assumed to represent time
+    // The first value is assumed to be the bid price of a traded instrument.
+    // The second value is assumed to be the ask price of a traded instrument.
+    // The third value is assimed to be the bid size of a traded instrument.
+    // The fourth value is assimed to be the ask size of a traded instrument.
+    // The provided "dfunc" measures time elapsed between two index values
+    inline void operator() (const index_type &idx,
+                            const value_type &bid_price,
+                            const value_type &ask_price,
+                            const value_type &bid_size,
+                            const value_type &ask_size)  {
+
+        if (started_ && dfunc_(last_time_, idx) >= interval_)  {
+            post();
+
+            reset_(idx);
+            accumulate_(bid_size, ask_size, bid_price, ask_price);
+        }
+        else  {
+            if (! started_)
+                reset_ (idx);
+            accumulate_(bid_size, ask_size, bid_price, ask_price);
+        }
+    }
+
+    inline void pre ()  {
+
+        result_.clear();
+        vw_bid_price_accumulator_ = 0;
+        vw_ask_price_accumulator_ = 0;
+        bid_price_accumulator_ = 0;
+        ask_price_accumulator_ = 0;
+        bid_volume_accumulator_ = 0;
+        ask_volume_accumulator_ = 0;
+        last_time_ = index_type();
+        started_ = false;
+        event_count_ = 0;
+        high_bid_price_ = 0;
+        high_ask_price_ = 0;
+        low_bid_price_ = std::numeric_limits<value_type>::max();
+        low_ask_price_ = std::numeric_limits<value_type>::max();
+        cum_high_bid_price_ = 0;
+        cum_high_ask_price_ = 0;
+        cum_low_bid_price_ = std::numeric_limits<value_type>::max();
+        cum_low_ask_price_ = std::numeric_limits<value_type>::max();
+        cum_bid_price_accumulator_ = 0;
+        cum_ask_price_accumulator_ = 0;
+        cum_bid_volume_accumulator_ = 0;
+        cum_ask_volume_accumulator_ = 0;
+        cum_event_count_ = 0;
+    }
+    inline void post ()  {
+
+        if (event_count_ > 0)  {
+            if (bid_volume_accumulator_ > 0 && ask_volume_accumulator_ > 0)  {
+                const value_type    vwa =
+                    vw_ask_price_accumulator_ / ask_volume_accumulator_;
+                const value_type    vwb =
+                    vw_bid_price_accumulator_ / bid_volume_accumulator_;
+                const value_type    vwbas = vwa - vwb;
+                const value_type    per_vwbas = (vwbas / vwb) * 100.0;
+                const value_type    spread =
+                    (ask_price_accumulator_ / event_count_) -
+                    (bid_price_accumulator_ / event_count_);
+                const value_type    per_spread =
+                    (spread / (bid_price_accumulator_ / event_count_)) * 100.0;
+
+                result_.push_back (
+                    { spread,
+                      per_spread,
+                      vwbas,
+                      per_vwbas,
+                      last_time_,
+                      event_count_,
+                      ask_volume_accumulator_,
+                      bid_volume_accumulator_,
+                      high_ask_price_,
+                      low_ask_price_,
+                      high_bid_price_,
+                      low_bid_price_,
+
+                      // Accumulative VWBAS
+                      (cum_ask_price_accumulator_ /
+                       cum_ask_volume_accumulator_) -
+                      (cum_bid_price_accumulator_ /
+                       cum_bid_volume_accumulator_),
+
+                      cum_event_count_,
+                      cum_ask_volume_accumulator_,
+                      cum_bid_volume_accumulator_,
+                      cum_high_ask_price_,
+                      cum_low_ask_price_,
+                      cum_high_bid_price_,
+                      cum_low_bid_price_,
+                    });
+            }
+            else  {
+                result_.push_back (
+                    { std::numeric_limits<value_type>::quiet_NaN(),
+                      last_time_,
+                      event_count_,
+                    });
+            }
+        }
+    }
+    inline const result_type &get_result () const  { return (result_); }
+
+    explicit
+    VWBASVisitor(double interval,
+                 double max_volume = 0,
+                 distance_func f =
+                     [](const I &idx1, const I &idx2) -> double {
+                         return (static_cast<double>(idx2 - idx1));
+                     })
+        : dfunc_(f), interval_(interval), max_volume_(max_volume)  {   }
+
+private:
+
+    inline void accumulate_ (value_type bid_size, value_type ask_size,
+                             value_type bid_price, value_type ask_price)  {
+
+        if (max_volume_ == 0 ||
+            (bid_size < max_volume_ && ask_size < max_volume_))  {
+            vw_bid_price_accumulator_ += bid_price * bid_size;
+            bid_price_accumulator_ += bid_price;
+            cum_bid_price_accumulator_ += bid_price * bid_size;
+            bid_volume_accumulator_ += bid_size;
+            cum_bid_volume_accumulator_ += bid_size;
+            if (bid_price > high_bid_price_)
+                high_bid_price_ = bid_price;
+            if (bid_price < low_bid_price_)
+                low_bid_price_ = bid_price;
+            if (bid_price > cum_high_bid_price_)
+                cum_high_bid_price_ = bid_price;
+            if (bid_price < cum_low_bid_price_)
+                cum_low_bid_price_ = bid_price;
+
+            vw_ask_price_accumulator_ += ask_price * ask_size;
+            ask_price_accumulator_ += ask_price;
+            cum_ask_price_accumulator_ += ask_price * ask_size;
+            ask_volume_accumulator_ += ask_size;
+            cum_ask_volume_accumulator_ += ask_size;
+            if (ask_price > high_ask_price_)
+                high_ask_price_ = ask_price;
+            if (ask_price < low_ask_price_)
+                low_ask_price_ = ask_price;
+            if (ask_price > cum_high_ask_price_)
+                cum_high_ask_price_ = ask_price;
+            if (ask_price < cum_low_ask_price_)
+                cum_low_ask_price_ = ask_price;
+
+            event_count_ += 1;
+            cum_event_count_ += 1;
+        }
+    }
+    inline void reset_ (index_type index_value)  {
+
+        vw_bid_price_accumulator_ = 0;
+        vw_ask_price_accumulator_ = 0;
+        bid_price_accumulator_ = 0;
+        ask_price_accumulator_ = 0;
+        bid_volume_accumulator_ = 0;
+        ask_volume_accumulator_ = 0;
+        last_time_ = index_value;
+        started_ = true;
+        event_count_ = 0;
+        high_bid_price_ = 0;
+        high_ask_price_ = 0;
+        low_bid_price_ = std::numeric_limits<value_type>::max();
+        low_ask_price_ = std::numeric_limits<value_type>::max();
+    }
+
+    result_type     result_ { };
+    value_type      vw_bid_price_accumulator_ { 0 };
+    value_type      vw_ask_price_accumulator_ { 0 };
+    value_type      bid_price_accumulator_ { 0 };
+    value_type      ask_price_accumulator_ { 0 };
+    value_type      bid_volume_accumulator_ { 0 };
+    value_type      ask_volume_accumulator_ { 0 };
+    index_type      last_time_ { };
+    bool            started_ { false };
+    size_type       event_count_ { 0 };
+    value_type      high_bid_price_ { 0 };
+    value_type      high_ask_price_ { 0 };
+    value_type      low_bid_price_ { std::numeric_limits<value_type>::max() };
+    value_type      low_ask_price_ { std::numeric_limits<value_type>::max() };
+    value_type      cum_high_bid_price_ { 0 };
+    value_type      cum_high_ask_price_ { 0 };
+    value_type      cum_low_bid_price_
+        { std::numeric_limits<value_type>::max() };
+    value_type      cum_low_ask_price_
+        { std::numeric_limits<value_type>::max() };
+    value_type      cum_bid_price_accumulator_ { 0 };
+    value_type      cum_ask_price_accumulator_ { 0 };
+    value_type      cum_bid_volume_accumulator_ { 0 };
+    value_type      cum_ask_volume_accumulator_ { 0 };
+    size_type       cum_event_count_ { 0 };
+    distance_func   dfunc_;
+    const double    interval_;
+    const double    max_volume_;
 };
 
 } // namespace hmdf

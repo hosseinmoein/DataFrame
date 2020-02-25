@@ -4814,9 +4814,9 @@ static void test_VWAP()  {
 
     RandGenParams<double>   size_p = price_p;
 
-    price_p.std = 1;
-    price_p.min_value = 50.0;
-    price_p.max_value = 2000.0;
+    size_p.std = 1;
+    size_p.min_value = 50.0;
+    size_p.max_value = 2000.0;
 
     MyDataFrame df;
 
@@ -4836,12 +4836,100 @@ static void test_VWAP()  {
     assert(result[1].index_value == 200);
     assert(result[10].event_count == 24);
     assert(result[10].index_value == 1100);
-    assert(fabs(result[0].vwap - 932.912) < 0.001);
-    assert(fabs(result[0].cumulative_vwap - 932.912) < 0.001);
-    assert(fabs(result[4].vwap - 996.838) < 0.001);
-    assert(fabs(result[4].cumulative_vwap - 983.683) < 0.001);
-    assert(fabs(result[10].vwap - 1041.49) < 0.01);
-    assert(fabs(result[10].cumulative_vwap - 1034.06) < 0.01);
+    assert(fabs(result[0].vwap - 548.091) < 0.001);
+    assert(fabs(result[0].average_price - 535.331) < 0.001);
+    assert(fabs(result[0].cumulative_vwap - 548.091) < 0.001);
+    assert(fabs(result[4].vwap - 551.923) < 0.001);
+    assert(fabs(result[4].average_price - 537.798) < 0.001);
+    assert(fabs(result[4].cumulative_vwap - 550.347) < 0.001);
+    assert(fabs(result[10].vwap - 553.196) < 0.001);
+    assert(fabs(result[10].average_price - 539.629) < 0.001);
+    assert(fabs(result[10].cumulative_vwap - 552.067) < 0.001);
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_VWBAS()  {
+
+    std::cout << "\nTesting VWBASVisitor{ } ..." << std::endl;
+
+    RandGenParams<double>   bprice_p;
+
+    bprice_p.mean = 1.0;
+    bprice_p.std = 0.005;
+    bprice_p.seed = 10;
+    bprice_p.min_value = 100.0;
+    bprice_p.max_value = 102.0;
+
+    RandGenParams<double>   aprice_p = bprice_p;
+
+    aprice_p.seed = 200;
+    aprice_p.min_value = 102.0;
+    aprice_p.max_value = 104.0;
+
+    RandGenParams<double>   asize_p = bprice_p;
+
+    asize_p.std = 1;
+    asize_p.seed = 500;
+    asize_p.min_value = 50.0;
+    asize_p.max_value = 2000.0;
+
+    RandGenParams<double>   bsize_p = asize_p;
+
+    asize_p.std = 1;
+    asize_p.seed = 123456;
+    asize_p.min_value = 50.0;
+    asize_p.max_value = 2000.0;
+    MyDataFrame df;
+
+    df.load_data(
+        MyDataFrame::gen_sequence_index(100, 1124, 1),
+        std::make_pair("bid_price",
+                       gen_uniform_real_dist<double>(1024, bprice_p)),
+        std::make_pair("ask_price",
+                       gen_uniform_real_dist<double>(1024, aprice_p)),
+        std::make_pair("bid_size",
+                       gen_uniform_real_dist<double>(1024, bsize_p)),
+        std::make_pair("ask_size",
+                       gen_uniform_real_dist<double>(1024, asize_p)));
+
+    VWBASVisitor<double>    v1(100);
+    auto                    result =
+        df.visit<double, double, double, double>
+            ("bid_price", "ask_price", "bid_size", "ask_size", v1).get_result();
+
+    assert(result.size() == 11);
+    assert(result[0].event_count == 100);
+    assert(result[0].index_value == 100);
+    assert(result[1].event_count == 100);
+    assert(result[1].cumulative_event_count == 200);
+    assert(result[1].index_value == 200);
+    assert(result[10].event_count == 24);
+    assert(result[10].index_value == 1100);
+
+    assert(fabs(result[0].spread - 2.11835) < 0.00001);
+    assert(fabs(result[0].percent_spread - 2.0998) < 0.0001);
+    assert(fabs(result[0].vwbas - 2.15156) < 0.00001);
+    assert(fabs(result[0].percent_vwbas - 2.13298) < 0.00001);
+    assert(fabs(result[0].high_bid_price - 101.966) < 0.001);
+    assert(fabs(result[0].low_ask_price - 102.012) < 0.001);
+    assert(fabs(result[0].cumulative_vwbas - 2.15156) < 0.00001);
+
+    assert(fabs(result[5].spread - 1.92471) < 0.00001);
+    assert(fabs(result[5].percent_spread - 1.90509) < 0.0001);
+    assert(fabs(result[5].vwbas - 1.9199) < 0.0001);
+    assert(fabs(result[5].percent_vwbas - 1.90052) < 0.00001);
+    assert(fabs(result[5].high_bid_price - 101.987) < 0.001);
+    assert(fabs(result[5].low_ask_price - 102.04) < 0.01);
+    assert(fabs(result[5].cumulative_vwbas - 2.07029) < 0.00001);
+
+    assert(fabs(result[10].spread - 1.98223) < 0.00001);
+    assert(fabs(result[10].percent_spread - 1.96279) < 0.0001);
+    assert(fabs(result[10].vwbas - 2.05129) < 0.0001);
+    assert(fabs(result[10].percent_vwbas - 2.03336) < 0.00001);
+    assert(fabs(result[10].high_bid_price - 101.997) < 0.001);
+    assert(fabs(result[10].low_ask_price - 102.12) < 0.01);
+    assert(fabs(result[10].cumulative_vwbas - 2.02198) < 0.00001);
 }
 
 // -----------------------------------------------------------------------------
@@ -4922,6 +5010,7 @@ int main(int argc, char *argv[]) {
     test_fill_missing_mid_point();
     test_quantile();
     test_VWAP();
+    test_VWBAS();
 
     return (0);
 }

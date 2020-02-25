@@ -397,6 +397,7 @@ struct  VWAPVisitor {
     using size_type = std::size_t;
 
     struct  VWAP  {
+        value_type  average_price { 0 };
         value_type  vwap { 0 };
         index_type  index_value { 0 };
         size_type   event_count { 0 };
@@ -443,6 +444,7 @@ struct  VWAPVisitor {
     inline void pre ()  {
 
         result_.clear();
+        vw_price_accumulator_ = 0;
         price_accumulator_ = 0;
         volume_accumulator_ = 0;
         last_time_  = index_type();
@@ -461,7 +463,8 @@ struct  VWAPVisitor {
         if (event_count_ > 0)  {
             if (volume_accumulator_ > 0)  {
                 result_.push_back (
-                    { price_accumulator_ / volume_accumulator_,
+                    { price_accumulator_ / event_count_,
+                      vw_price_accumulator_ / volume_accumulator_,
                       last_time_,
                       event_count_,
                       volume_accumulator_,
@@ -477,6 +480,7 @@ struct  VWAPVisitor {
             else  {
                 result_.push_back (
                     { std::numeric_limits<value_type>::quiet_NaN(),
+                      std::numeric_limits<value_type>::quiet_NaN(),
                       last_time_,
                       event_count_,
                     });
@@ -503,7 +507,8 @@ private:
     inline void accumulate_ (value_type the_size, value_type the_price)  {
 
         if (max_volume_ == 0 || the_size < max_volume_)  {
-            price_accumulator_ += the_price * the_size;
+            vw_price_accumulator_ += the_price * the_size;
+            price_accumulator_ += the_price;
             cum_price_accumulator_ += the_price * the_size;
             volume_accumulator_ += the_size;
             cum_volume_accumulator_ += the_size;
@@ -521,6 +526,7 @@ private:
     }
     inline void reset_ (index_type index_value)  {
 
+        vw_price_accumulator_ = 0;
         price_accumulator_ = 0;
         volume_accumulator_ = 0;
         last_time_ = index_value;
@@ -531,6 +537,7 @@ private:
     }
 
     result_type     result_ { };
+    value_type      vw_price_accumulator_ { 0 };
     value_type      price_accumulator_ { 0 };
     value_type      volume_accumulator_ { 0 };
     index_type      last_time_ { };
@@ -550,24 +557,6 @@ private:
 };
 
 // ----------------------------------------------------------------------------
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // Volume Weighted Bid-Ask Spread
 template<typename T,
@@ -708,6 +697,9 @@ struct  VWBASVisitor {
             else  {
                 result_.push_back (
                     { std::numeric_limits<value_type>::quiet_NaN(),
+                      std::numeric_limits<value_type>::quiet_NaN(),
+                      std::numeric_limits<value_type>::quiet_NaN(),
+                      std::numeric_limits<value_type>::quiet_NaN(),
                       last_time_,
                       event_count_,
                     });

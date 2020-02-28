@@ -269,7 +269,7 @@ struct mod_by_idx_functor_ : DataVec::template visitor_base<Ts ...>  {
 // ----------------------------------------------------------------------------
 
 template<typename RES_T, typename ... Ts>
-struct index_join_functor_common_ : DataVec::template visitor_base<Ts ...>  {
+struct  index_join_functor_common_ : DataVec::template visitor_base<Ts ...>  {
 
     inline index_join_functor_common_ (
         const char *n,
@@ -291,7 +291,7 @@ struct index_join_functor_common_ : DataVec::template visitor_base<Ts ...>  {
 
 // SIDE:  0 = Left, 1 = Right
 template<int SIDE, typename RES_T, typename ... Ts>
-struct index_join_functor_oneside_
+struct  index_join_functor_oneside_
     : DataVec::template visitor_base<Ts ...>  {
 
     inline index_join_functor_oneside_ (
@@ -303,6 +303,23 @@ struct index_join_functor_oneside_
     const char              *name;
     const IndexIdxVector    &joined_index_idx;
     RES_T                   &result;
+
+    template<typename T>
+    void operator() (const std::vector<T> &vec);
+};
+
+// ----------------------------------------------------------------------------
+
+template<typename RES_T, typename ... Ts>
+struct  concat_functor_ : DataVec::template visitor_base<Ts ...>  {
+
+    inline concat_functor_ (const char *n, RES_T &res, bool ic, size_type ois)
+        : name(n), result(res), insert_col(ic), original_index_s(ois)  {  }
+
+    const char      *name;
+    RES_T           &result;
+    const bool      insert_col;
+    const size_type original_index_s;
 
     template<typename T>
     void operator() (const std::vector<T> &vec);

@@ -835,6 +835,26 @@ public:  // Data manipulation
     StdDataFrame<unsigned int>
     join_by_column(const RHS_T &rhs, const char *name, join_policy jp) const;
 
+
+
+
+
+    template<typename RHS_T, typename ... Ts>
+    StdDataFrame<IndexType>
+    concat(const RHS_T &rhs, bool add_new_columns = true) const;
+
+
+    template<typename RHS_T, typename ... Ts>
+    void
+    self_concat(const RHS_T &rhs, bool add_new_columns = true);
+
+
+
+
+
+
+
+
     // It shifts all the columns in self up or down based on shift_policy.
     // Values that are shifted will be assigned to NaN. The index column
     // remains unchanged.
@@ -2002,6 +2022,10 @@ private:  // Static helper functions
                        const char *col_name,
                        const std::vector<JoinSortingPair<T>> &col_vec_lhs,
                        const std::vector<JoinSortingPair<T>> &col_vec_rhs);
+
+    template<typename LHS_T, typename RHS_T, typename ... Ts>
+    static void
+    concat_helper_(LHS_T &lhs, const RHS_T &rhs, bool add_new_columns);
 
     template<typename T>
     static IndexIdxVector

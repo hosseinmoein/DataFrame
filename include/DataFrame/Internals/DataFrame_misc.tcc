@@ -466,6 +466,28 @@ operator()(const std::vector<T> &vec)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
+template<typename RES_T, typename ... Ts>
+template<typename T>
+void DataFrame<I, H>::concat_functor_<RES_T, Ts ...>::
+operator()(const std::vector<T> &vec)  {
+
+    if (insert_col)  {
+        std::vector<T>  res_vec(original_index_s + vec.size(),
+                                DataFrame::_get_nan<T>());
+
+        std::copy(vec.begin(), vec.end(), res_vec.begin() + original_index_s);
+        result.load_column(name, res_vec);
+    }
+    else  {
+        std::vector<T>  &res_vec = result.template get_column<T>(name);
+
+        res_vec.insert(res_vec.end(), vec.begin(), vec.end());
+    }
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
 template<typename ... Ts>
 template<typename T>
 void DataFrame<I, H>::vertical_shift_functor_<Ts ...>::

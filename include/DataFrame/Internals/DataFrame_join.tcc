@@ -42,13 +42,14 @@ template<typename RHS_T, typename ... Ts>
 StdDataFrame<I> DataFrame<I, H>::
 join_by_index (const RHS_T &rhs, join_policy mp) const  {
 
-    static_assert(std::is_base_of<StdDataFrame<IndexType>, RHS_T>::value ||
-                      std::is_base_of<DataFrameView<IndexType>, RHS_T>::value,
+    static_assert(std::is_base_of<StdDataFrame<I>, RHS_T>::value ||
+                      std::is_base_of<DataFrameView<I>, RHS_T>::value ||
+                      std::is_base_of<DataFramePtrView<I>, RHS_T>::value,
                   "The rhs argument to join_by_index() can only be "
-                  "StdDataFrame<IndexType> or DataFrameView<IndexType>");
+                  "StdDataFrame<IndexType> or DataFrame[Ptr]View<IndexType>");
 
-    const std::vector<IndexType>            &lhs_idx = get_index();
-    const std::vector<IndexType>            &rhs_idx = rhs.get_index();
+    const auto                              &lhs_idx = get_index();
+    const auto                              &rhs_idx = rhs.get_index();
     const size_type                         lhs_idx_s = lhs_idx.size();
     const size_type                         rhs_idx_s = rhs_idx.size();
     std::vector<JoinSortingPair<IndexType>> idx_vec_lhs;
@@ -97,15 +98,16 @@ template<typename RHS_T, typename T, typename ... Ts>
 StdDataFrame<unsigned int> DataFrame<I, H>::
 join_by_column (const RHS_T &rhs, const char *name, join_policy mp) const  {
 
-    static_assert(std::is_base_of<StdDataFrame<IndexType>, RHS_T>::value ||
-                      std::is_base_of<DataFrameView<IndexType>, RHS_T>::value,
-                  "The rhs argument to join_by_index() can only be "
-                  "StdDataFrame<IndexType> or DataFrameView<IndexType>");
+    static_assert(std::is_base_of<StdDataFrame<I>, RHS_T>::value ||
+                      std::is_base_of<DataFrameView<I>, RHS_T>::value ||
+                      std::is_base_of<DataFramePtrView<I>, RHS_T>::value,
+                  "The rhs argument to join_by_column() can only be "
+                  "StdDataFrame<IndexType> or DataFrame[Ptr]View<IndexType>");
 
-    const std::vector<T>    &lhs_vec = get_column<T>(name);
-    const std::vector<T>    &rhs_vec = rhs.template get_column<T>(name);
-    const size_type         lhs_vec_s = lhs_vec.size();
-    const size_type         rhs_vec_s = rhs_vec.size();
+    const auto      &lhs_vec = get_column<T>(name);
+    const auto      &rhs_vec = rhs.template get_column<T>(name);
+    const size_type lhs_vec_s = lhs_vec.size();
+    const size_type rhs_vec_s = rhs_vec.size();
 
     std::vector<JoinSortingPair<T>> col_vec_lhs;
     std::vector<JoinSortingPair<T>> col_vec_rhs;
@@ -226,7 +228,7 @@ index_join_helper_(const LHS_T &lhs,
     result.load_index(std::move(result_index));
 
     join_helper_common_<LHS_T, RHS_T, IndexType, Ts ...>
-        (lhs, rhs, joined_index_idx, result); 
+        (lhs, rhs, joined_index_idx, result);
     return(result);
 }
 
@@ -290,7 +292,7 @@ column_join_helper_(const LHS_T &lhs,
     result.load_column(col_name, std::move(named_col_vec));
 
     join_helper_common_<LHS_T, RHS_T, unsigned int, Ts ...>
-        (lhs, rhs, joined_index_idx, result, col_name); 
+        (lhs, rhs, joined_index_idx, result, col_name);
     return(result);
 }
 
@@ -585,6 +587,67 @@ column_left_right_join_(const LHS_T &lhs,
     return (column_join_helper_<LHS_T, RHS_T, T, Ts ...>
                 (lhs, rhs, col_name,
                  get_left_right_index_idx_vector_(col_vec_lhs, col_vec_rhs)));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename LHS_T, typename RHS_T, typename ... Ts>
+void DataFrame<I, H>::
+concat_helper_(LHS_T &lhs, const RHS_T &rhs, bool add_new_columns)  {
+
+    const size_type orig_index_s = lhs.get_index().size();
+
+    lhs.get_index().insert(lhs.get_index().end(),
+                           rhs.get_index().begin(), rhs.get_index().end());
+
+    // Load common columns
+    for (auto &lhs_iter : lhs.column_tb_)  {
+        auto    rhs_citer = rhs.column_tb_.find(lhs_iter.first);
+
+        if (rhs_citer != rhs.column_tb_.end())  {
+            concat_functor_<LHS_T, Ts ...>  functor(lhs_iter.first.c_str(),
+                                                    lhs,
+                                                    false,
+                                                    orig_index_s);
+
+            rhs.data_[rhs_citer->second].change(functor);
+        }
+    }
+
+    // Load columns from rhs that do not exist in lhs
+    if (add_new_columns)  {
+        for (auto &rhs_citer : rhs.column_tb_)  {
+            auto    lhs_iter = lhs.column_tb_.find(rhs_citer.first);
+
+            if (lhs_iter == lhs.column_tb_.end())  {
+                concat_functor_<LHS_T, Ts ...>  functor(rhs_citer.first.c_str(),
+                                                        lhs,
+                                                        true,
+                                                        orig_index_s);
+
+                rhs.data_[rhs_citer.second].change(functor);
+            }
+        }
+    }
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename RHS_T, typename ... Ts>
+void
+DataFrame<I, H>::self_concat(const RHS_T &rhs, bool add_new_columns)  {
+
+    static_assert((std::is_base_of<StdDataFrame<I>, RHS_T>::value ||
+                   std::is_base_of<DataFrameView<I>, RHS_T>::value ||
+                   std::is_base_of<DataFramePtrView<I>, RHS_T>::value) &&
+                  ! std::is_base_of<StdDataFrame<I>, decltype(*this)>::value,
+                  "The rhs argument to self_concat() can only be "
+                  "StdDataFrame<IndexType> or DataFrame[Ptr]View<IndexType>. "
+                  "Self must be StdDataFrame<IndexType>");
+
+    concat_helper_<decltype(*this), RHS_T, Ts ...>(*this, rhs, add_new_columns);
 }
 
 } // namespace hmdf

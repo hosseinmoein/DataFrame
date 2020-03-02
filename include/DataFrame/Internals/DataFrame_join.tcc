@@ -650,11 +650,53 @@ DataFrame<I, H>::self_concat(const RHS_T &rhs, bool add_new_columns)  {
     concat_helper_<decltype(*this), RHS_T, Ts ...>(*this, rhs, add_new_columns);
 }
 
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename RHS_T, typename ... Ts>
+StdDataFrame<I>
+DataFrame<I, H>::concat(const RHS_T &rhs, concat_policy cp) const  {
+
+    static_assert((std::is_base_of<StdDataFrame<I>, RHS_T>::value ||
+                   std::is_base_of<DataFrameView<I>, RHS_T>::value ||
+                   std::is_base_of<DataFramePtrView<I>, RHS_T>::value) &&
+                  ! std::is_base_of<StdDataFrame<I>, decltype(*this)>::value,
+                  "The rhs argument to concat() can only be "
+                  "StdDataFrame<IndexType> or DataFrame[Ptr]View<IndexType>. "
+                  "Self must be StdDataFrame<IndexType>");
+
+    StdDataFrame<I> result;
+
+    if (cp == concat_policy::all_columns ||
+        cp == concat_policy::lhs_and_common_columns)  {
+        result = *this;
+        concat_helper_<decltype(result), RHS_T, Ts ...>(
+            result, rhs, cp == concat_policy::all_columns);
+    }
+    else if (cp == concat_policy::common_columns)  {
+        result.load_index(this->get_index().begin(), this->get_index().end());
+        for (auto &lhs_citer : column_tb_)  {
+            auto    rhs_citer = rhs.column_tb_.find(lhs_citer.first);
+
+            if (rhs_citer != rhs.column_tb_.end())  {
+                load_all_functor_<Ts ...>   functor(lhs_citer.first.c_str(),
+                                                    result);
+
+                data_[lhs_citer.second].change(functor);
+            }
+        }
+        concat_helper_<decltype(result), RHS_T, Ts ...>(result, rhs, false);
+    }
+
+    return (result);
+}
+
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------
 
-// Local Variables:
+// Local Variables::w
 // mode:C++
 // tab-width:4
 // c-basic-offset:4

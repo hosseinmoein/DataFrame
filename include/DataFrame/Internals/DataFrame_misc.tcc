@@ -98,6 +98,22 @@ template<typename I, typename H>
 template<typename ... Ts>
 template<typename T>
 void
+DataFrame<I, H>::load_all_functor_<Ts ...>::operator() (const T &vec)  {
+
+    using VecType = typename std::remove_reference<T>::type;
+    using ValueType = typename VecType::value_type;
+
+    df.load_column<ValueType>(name, { vec.begin(), vec.end() },
+                              nan_policy::pad_with_nans);
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename ... Ts>
+template<typename T>
+void
 DataFrame<I, H>::remove_functor_<Ts ...>::operator() (T &vec)  {
 
     vec.erase(vec.begin() + begin, vec.begin() + end);

@@ -97,6 +97,20 @@ struct load_functor_ : DataVec::template visitor_base<Ts ...>  {
 // ----------------------------------------------------------------------------
 
 template<typename ... Ts>
+struct load_all_functor_ : DataVec::template visitor_base<Ts ...>  {
+
+    inline load_all_functor_ (const char *n, DataFrame &d) : name(n), df(d) { }
+
+    const char  *name;
+    DataFrame   &df;
+
+    template<typename T>
+    void operator() (const T &vec);
+};
+
+// ----------------------------------------------------------------------------
+
+template<typename ... Ts>
 struct remove_functor_ : DataVec::template visitor_base<Ts ...>  {
 
     inline remove_functor_ (std::size_t b, std::size_t e)

@@ -112,6 +112,13 @@ enum class join_policy : unsigned char  {
 
 // ----------------------------------------------------------------------------
 
+enum class concat_policy : unsigned char  {
+    common_columns = 1,
+    all_columns = 2,
+    lhs_and_common_columns = 3,
+};
+
+// ----------------------------------------------------------------------------
 // This policy is relative to a tabular data structure
 // There is no right or left shift (like Pandas), because columns in DataFrame
 // have no ordering. They can only be accessed by name

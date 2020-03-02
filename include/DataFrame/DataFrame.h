@@ -841,7 +841,8 @@ public:  // Data manipulation
 
     template<typename RHS_T, typename ... Ts>
     StdDataFrame<IndexType>
-    concat(const RHS_T &rhs, bool add_new_columns = true) const;
+    concat(const RHS_T &rhs,
+           concat_policy cp = concat_policy::all_columns) const;
 
 
     template<typename RHS_T, typename ... Ts>

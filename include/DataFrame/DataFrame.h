@@ -125,7 +125,7 @@ public:  // Load/append/remove interfaces
     void
     remove_column(const char *name);
 
-    // It renames column named from to to. If column from does not exists,
+    // It renames column named from to to. If column from does not exist,
     // it throws an exception
     //
     void
@@ -163,7 +163,7 @@ public:  // Load/append/remove interfaces
     load_index(IndexVecType &&idx);
 
     // It copies the data from iterators begin to end to the named column.
-    // If column does not exist, it will be created. If the column exist,
+    // If column does not exist, it will be created. If the column exists,
     // it will be over written.
     //
     // T:
@@ -185,7 +185,7 @@ public:  // Load/append/remove interfaces
                 nan_policy padding = nan_policy::pad_with_nans);
 
     // It moves the data to the named column in DataFrame.
-    // If column does not exist, it will be created. If the column exist,
+    // If column does not exist, it will be created. If the column exists,
     // it will be over written.
     //
     // T:
@@ -927,6 +927,14 @@ public: // Read/access and slicing interfaces
     template<typename T>
     const typename type_declare<DataVec, T>::type &
     get_column(const char *name) const;
+
+    // Returns true if self has the named column, otherwise false
+    //
+    // name:
+    //   Name of the column
+    //
+    bool
+    has_column(const char *name) const;
 
     // It returns the data in row row_num for columns in col_names.
     // The order of data items in the returned vector is the same as order

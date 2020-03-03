@@ -4965,7 +4965,25 @@ static void test_self_concat()  {
     df2.load_column("dbl_col_2", std::move(dblvec2));
 
     df1.self_concat<decltype(df2), double, int, std::string>(df2, true);
-    // df1.write<std::ostream, double, int, std::string>(std::cout);
+    assert(df1.get_index().size() == 30);
+    assert(df1.get_column<double>("dbl_col_2").size() == 30);
+    assert(df1.get_column<double>("dbl_col").size() == 30);
+    assert(df1.get_column<std::string>("str_col").size() == 30);
+    assert(df1.get_column<int>("int_col").size() == 30);
+    assert(df1.get_index()[0] == 1);
+    assert(df1.get_index()[14] == 14);
+    assert(df1.get_index()[15] == 1);
+    assert(df1.get_index()[29] == 14);
+    assert(std::isnan(df1.get_column<double>("dbl_col_2")[0]));
+    assert(std::isnan(df1.get_column<double>("dbl_col_2")[14]));
+    assert(df1.get_column<double>("dbl_col_2")[15] == 100.0);
+    assert(df1.get_column<double>("dbl_col_2")[29] == 116.0);
+    assert(df1.get_column<std::string>("str_col")[0] == "zz");
+    assert(df1.get_column<std::string>("str_col")[14] == "oo");
+    assert(df1.get_column<std::string>("str_col")[15] == "zz");
+    assert(df1.get_column<int>("int_col")[0] == 1);
+    assert(df1.get_column<int>("int_col")[14] == 13);
+    assert(df1.get_column<int>("int_col")[15] == 1);
 }
 
 // -----------------------------------------------------------------------------
@@ -5002,7 +5020,43 @@ static void test_concat()  {
 
     auto    result1 = df1.concat<decltype(df2), double, int, std::string>(df2);
 
-    result1.write<std::ostream, double, int, std::string>(std::cout);
+    assert(result1.get_index().size() == 30);
+    assert(result1.get_column<double>("dbl_col_2").size() == 30);
+    assert(result1.get_column<double>("dbl_col").size() == 30);
+    assert(result1.get_column<std::string>("str_col").size() == 30);
+    assert(result1.get_column<int>("int_col").size() == 30);
+    assert(result1.get_index()[0] == 1);
+    assert(result1.get_index()[14] == 14);
+    assert(result1.get_index()[15] == 1);
+    assert(result1.get_index()[29] == 14);
+    assert(std::isnan(result1.get_column<double>("dbl_col_2")[0]));
+    assert(std::isnan(result1.get_column<double>("dbl_col_2")[14]));
+    assert(result1.get_column<double>("dbl_col_2")[15] == 100.0);
+    assert(result1.get_column<double>("dbl_col_2")[29] == 116.0);
+    assert(result1.get_column<std::string>("str_col")[0] == "zz");
+    assert(result1.get_column<std::string>("str_col")[14] == "oo");
+    assert(result1.get_column<std::string>("str_col")[15] == "zz");
+    assert(result1.get_column<int>("int_col")[0] == 1);
+    assert(result1.get_column<int>("int_col")[14] == 13);
+    assert(result1.get_column<int>("int_col")[15] == 1);
+
+    auto    result2 =
+        df1.concat<decltype(df2), double, int, std::string>
+            (df2, concat_policy::common_columns);
+
+    assert(result2.get_index().size() == 30);
+    assert(result2.get_column<double>("dbl_col").size() == 30);
+    assert(result2.get_column<std::string>("str_col").size() == 30);
+    assert(result2.get_column<std::string>("str_col")[0] == "zz");
+    assert(result2.get_column<std::string>("str_col")[14] == "oo");
+    assert(result2.get_column<std::string>("str_col")[15] == "zz");
+    assert(! result2.has_column("dbl_col_2"));
+
+    auto    result3 =
+        df1.concat<decltype(df2), double, int, std::string>
+            (df2, concat_policy::lhs_and_common_columns);
+
+    assert((result2.is_equal<int, double, std::string>(result3)));
 }
 
 // -----------------------------------------------------------------------------

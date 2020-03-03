@@ -89,6 +89,17 @@ DataFrame<I, H>::get_column (const char *name)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename  H>
+bool
+DataFrame<I, H>::has_column (const char *name) const  {
+
+    auto    iter = column_tb_.find (name);
+
+    return (iter != column_tb_.end());
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
 template<typename T>
 const typename type_declare<H, T>::type &
 DataFrame<I, H>::get_column (const char *name) const  {

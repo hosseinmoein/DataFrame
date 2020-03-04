@@ -835,26 +835,47 @@ public:  // Data manipulation
     StdDataFrame<unsigned int>
     join_by_column(const RHS_T &rhs, const char *name, join_policy jp) const;
 
-
-
-
-
+    // It concatenates rhs to the end of self and returns the result as
+    // another DataFrame.
+    // Concatenation is done based on policy
+    //
+    // RHS_T:
+    //   Type of DataFrame rhs
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // rhs:
+    //   The rhs DataFrame
+    // cp:
+    //   Concatenation policy:
+    //   all_columns: concatenate all columns. If a column does not exist in
+    //                self, create one in the result and prepend with nan
+    //   common_columns: only apply concatenation to the common columns
+    //   lhs_and_common_columns: the result will have all the columns in self,
+    //                           but only common columns and index are
+    //                           concatenated
+    //
     template<typename RHS_T, typename ... Ts>
     StdDataFrame<IndexType>
     concat(const RHS_T &rhs,
            concat_policy cp = concat_policy::all_columns) const;
 
-
+    // This is similar to concat() method but it is applied to self. It changes
+    // self.
+    //
+    // RHS_T:
+    //   Type of DataFrame rhs
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // rhs:
+    //   The rhs DataFrame
+    // add_new_columns:
+    //   If true, it creates new columns in self and prepend them with nan
+    //
     template<typename RHS_T, typename ... Ts>
     void
     self_concat(const RHS_T &rhs, bool add_new_columns = true);
-
-
-
-
-
-
-
 
     // It shifts all the columns in self up or down based on shift_policy.
     // Values that are shifted will be assigned to NaN. The index column
@@ -929,6 +950,7 @@ public: // Read/access and slicing interfaces
     get_column(const char *name) const;
 
     // Returns true if self has the named column, otherwise false
+    // NOTE: Even if the column exists, it may not be of the type you expect.
     //
     // name:
     //   Name of the column

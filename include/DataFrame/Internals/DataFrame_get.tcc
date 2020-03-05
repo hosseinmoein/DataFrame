@@ -433,10 +433,10 @@ DataFrame<I, H>::get_data_by_idx (Index2D<IndexType> range) const  {
                                                    : indices_.end());
 
         for (auto &iter : column_tb_)  {
-            load_functor_<Ts ...>   functor (iter.first.c_str(),
-                                             b_dist,
-                                             e_dist,
-                                             df);
+            load_functor_<DataFrame, Ts ...>    functor (iter.first.c_str(),
+                                                         b_dist,
+                                                         e_dist,
+                                                         df);
 
             data_[iter.second].change(functor);
         }
@@ -584,7 +584,7 @@ DataFrame<I, H>::get_data_by_loc (Index2D<long> range) const  {
                       indices_.begin() + static_cast<size_type>(range.end));
 
         for (auto &iter : column_tb_)  {
-            load_functor_<Ts ...>   functor (
+            load_functor_<DataFrame, Ts ...>    functor (
                 iter.first.c_str(),
                 static_cast<size_type>(range.begin),
                 static_cast<size_type>(range.end),
@@ -1144,6 +1144,41 @@ get_view_by_rand (random_policy spec, double n, size_type seed) const  {
 #endif // _WIN32
              n_rows, index_s);
     throw BadRange (buffer);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename T, typename ... Ts>
+StdDataFrame<T> DataFrame<I, H>::
+get_reindexed(const char *col_to_be_index, const char *old_index_name) const  {
+
+    StdDataFrame<T> result;
+    const auto      &new_idx = get_column<T>(col_to_be_index);
+    const size_type new_idx_s =
+        result.load_index(new_idx.begin(), new_idx.end());
+
+    if (old_index_name)  {
+        const auto      &curr_idx = get_index();
+        const size_type col_s =
+            curr_idx.size() >= new_idx_s ? new_idx_s : curr_idx.size();
+
+        result.template load_column<IndexType>(
+            old_index_name, { curr_idx.begin(), curr_idx.begin() + col_s });
+    }
+
+    for (auto citer : column_tb_)  {
+        if (citer.first == col_to_be_index)  continue;
+
+        load_functor_<StdDataFrame<T>, Ts ...>  functor (citer.first.c_str(),
+                                                         0,
+                                                         new_idx_s,
+                                                         result);
+
+        data_[citer.second].change(functor);
+    }
+
+    return (result);
 }
 
 } // namespace hmdf

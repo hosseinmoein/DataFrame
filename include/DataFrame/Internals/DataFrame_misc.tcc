@@ -78,18 +78,20 @@ DataFrame<I, H>::sort_functor_<Ts ...>::operator() (T2 &vec)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename ... Ts>
+template<typename LHS, typename ... Ts>
 template<typename T>
 void
-DataFrame<I, H>::load_functor_<Ts ...>::operator() (const T &vec)  {
+DataFrame<I, H>::load_functor_<LHS, Ts ...>::operator() (const T &vec)  {
 
     using VecType = typename std::remove_reference<T>::type;
     using ValueType = typename VecType::value_type;
 
-    df.load_column<ValueType>(name,
-                              { vec.begin() + begin, vec.begin() + end },
-                              nan_policy::pad_with_nans);
-    return;
+    const size_type col_s = vec.size() >= end ? end : vec.size();
+
+    df.template load_column<ValueType>(
+        name,
+        { vec.begin() + begin, vec.begin() + col_s },
+        nan_policy::pad_with_nans);
 }
 
 // ----------------------------------------------------------------------------

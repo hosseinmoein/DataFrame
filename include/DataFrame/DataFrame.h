@@ -1369,6 +1369,25 @@ public: // Read/access and slicing interfaces
     //
     inline IndexVecType &get_index()  { return (indices_); }
 
+
+
+
+
+
+
+    template<typename T, typename ... Ts>
+    StdDataFrame<T>
+    get_reindexed(const char *col_to_be_index,
+                  const char *old_index_name = nullptr) const;
+
+
+    template<typename T, typename ... Ts>
+    DataFrameView<T>
+    get_reindexed_view(const char *col_to_be_index,
+                       const char *old_index_name = nullptr) const;
+
+
+
 public:  // Visitors
 
     // This is the most generalized visit function. It visits multiple

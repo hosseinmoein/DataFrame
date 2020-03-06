@@ -1037,6 +1037,8 @@ public: // Read/access and slicing interfaces
     //
     // NOTE: There are certain operations that you cannot do with a view.
     //       For example, you cannot add/delete columns, etc.
+    // NOTE: Although this is a const method, it returns a view. So, the data
+    //       could still be modified through the returned view
     //
     // Ts:
     //   List all the types of all data columns. A type should be specified in
@@ -1046,7 +1048,7 @@ public: // Read/access and slicing interfaces
     //
     template<typename ... Ts>
     DataFrameView<IndexType>
-    get_view_by_idx(Index2D<IndexType> range);
+    get_view_by_idx(Index2D<IndexType> range) const;
 
     // It behaves like get_data_by_idx(values), but it returns a
     // DataFramePtrView.
@@ -1056,6 +1058,8 @@ public: // Read/access and slicing interfaces
     //
     // NOTE: There are certain operations that you cannot do with a view.
     //       For example, you cannot add/delete columns, etc.
+    // NOTE: Although this is a const method, it returns a view. So, the data
+    //       could still be modified through the returned view
     //
     // Ts:
     //   List all the types of all data columns. A type should be specified in
@@ -1065,7 +1069,7 @@ public: // Read/access and slicing interfaces
     //
     template<typename ... Ts>
     DataFramePtrView<IndexType>
-    get_view_by_idx(const std::vector<IndexType> &values);
+    get_view_by_idx(const std::vector<IndexType> &values) const;
 
     // It returns a DataFrame (including the index and data columns)
     // containing the data from location begin to location end within range.
@@ -1107,6 +1111,8 @@ public: // Read/access and slicing interfaces
     //
     // NOTE: There are certain operations that you cannot do with a view.
     //       For example, you cannot add/delete columns, etc.
+    // NOTE: Although this is a const method, it returns a view. So, the data
+    //       could still be modified through the returned view
     //
     // Ts:
     //   List all the types of all data columns. A type should be specified in
@@ -1116,7 +1122,7 @@ public: // Read/access and slicing interfaces
     //
     template<typename ... Ts>
     DataFrameView<IndexType>
-    get_view_by_loc(Index2D<long> range);
+    get_view_by_loc(Index2D<long> range) const;
 
     // It behaves like get_data_by_loc(locations), but it returns a
     // DataFramePtrView.
@@ -1126,6 +1132,8 @@ public: // Read/access and slicing interfaces
     //
     // NOTE: There are certain operations that you cannot do with a view.
     //       For example, you cannot add/delete columns, etc.
+    // NOTE: Although this is a const method, it returns a view. So, the data
+    //       could still be modified through the returned view
     //
     // Ts:
     //   List all the types of all data columns. A type should be specified in
@@ -1135,7 +1143,7 @@ public: // Read/access and slicing interfaces
     //
     template<typename ... Ts>
     DataFramePtrView<IndexType>
-    get_view_by_loc(const std::vector<long> &locations);
+    get_view_by_loc(const std::vector<long> &locations) const;
 
     // This method does boolean filtering selection via the sel_functor
     // (e.g. a functor, function, or lambda). It returns a new DataFrame.
@@ -1172,6 +1180,9 @@ public: // Read/access and slicing interfaces
     //   2) Since the result is a view, you cannot call make_consistent() on
     //      the result.
     //
+    // NOTE: Although this is a const method, it returns a view. So, the data
+    //       could still be modified through the returned view
+    //
     // T:
     //   Type of the named column
     // F:
@@ -1186,7 +1197,7 @@ public: // Read/access and slicing interfaces
     //
     template<typename T, typename F, typename ... Ts>
     DataFramePtrView<IndexType>
-    get_view_by_sel(const char *name, F &sel_functor);
+    get_view_by_sel(const char *name, F &sel_functor) const;
 
     // This does the same function as above get_data_by_sel() but operating
     // on two columns.
@@ -1220,6 +1231,9 @@ public: // Read/access and slicing interfaces
     //   2) Since the result is a view, you cannot call make_consistent() on
     //      the result.
     //
+    // NOTE: Although this is a const method, it returns a view. So, the data
+    //       could still be modified through the returned view
+    //
     // T1:
     //   Type of the first named column
     // T2:
@@ -1238,7 +1252,7 @@ public: // Read/access and slicing interfaces
     //
     template<typename T1, typename T2, typename F, typename ... Ts>
     DataFramePtrView<IndexType>
-    get_view_by_sel(const char *name1, const char *name2, F &sel_functor);
+    get_view_by_sel(const char *name1, const char *name2, F &sel_functor) const;
 
     // This does the same function as above get_data_by_sel() but operating
     // on three columns.
@@ -1278,6 +1292,9 @@ public: // Read/access and slicing interfaces
     //   2) Since the result is a view, you cannot call make_consistent() on
     //      the result.
     //
+    // NOTE: Although this is a const method, it returns a view. So, the data
+    //       could still be modified through the returned view
+    //
     // T1:
     //   Type of the first named column
     // T2:
@@ -1304,7 +1321,7 @@ public: // Read/access and slicing interfaces
     get_view_by_sel(const char *name1,
                     const char *name2,
                     const char *name3,
-                    F &sel_functor);
+                    F &sel_functor) const;
 
     // It returns a DataFrame (including the index and data columns)
     // containing the data from uniform random selection.
@@ -1341,6 +1358,8 @@ public: // Read/access and slicing interfaces
     // NOTE: There are certain operations that you cannot do with a view.
     //       For example, you cannot add/delete columns, etc.
     // NOTE: The columns in the result are not padded with NaN.
+    // NOTE: Although this is a const method, it returns a view. So, the data
+    //       could still be modified through the returned view
     //
     // Ts:
     //   List all the types of all data columns. A type should be specified in
@@ -1371,6 +1390,7 @@ public: // Read/access and slicing interfaces
     // It creates and returns a new DataFrame which has the col_to_be_index
     // column as the index. If old_index_name is not null, it will be loaded
     // as a regular column in the result under the name old_index_name.
+    //
     // NOTE: If the new index column is shorter than other columns, every
     //       column will be cut to that length.
     // NOTE: Columns will not be padded by nan
@@ -1395,6 +1415,9 @@ public: // Read/access and slicing interfaces
 
     // This is similar to get_reindexed(), but it returns a view. Please read
     // above for specs.
+    //
+    // NOTE: There are certain operations that you cannot do with a view.
+    //       For example, you cannot add/delete columns, etc.
     // NOTE: Although this is a const method, it returns a view. So, the data
     //       could still be modified through the returned view
     //

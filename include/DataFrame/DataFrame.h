@@ -1368,24 +1368,53 @@ public: // Read/access and slicing interfaces
     //
     inline IndexVecType &get_index()  { return (indices_); }
 
-
-
-
-
-
-
+    // It creates and returns a new DataFrame which has the col_to_be_index
+    // column as the index. If old_index_name is not null, it will be loaded
+    // as a regular column in the result under the name old_index_name.
+    // NOTE: If the new index column is shorter than other columns, every
+    //       column will be cut to that length.
+    // NOTE: Columns will not be padded by nan
+    //
+    // T:
+    //   Type of the "new index" column
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // col_to_be_index:
+    //   Name of the column you want as the new index. This name will not be a
+    //   column in the result anymore
+    // old_index_name:
+    //   Name of the current index, if converted into a regular column in the
+    //   result. If this is null, the current index will not be loaded into
+    //   the result as a column.
+    //   
     template<typename T, typename ... Ts>
     StdDataFrame<T>
     get_reindexed(const char *col_to_be_index,
                   const char *old_index_name = nullptr) const;
 
-
+    // This is similar to get_reindexed(), but it returns a view. Please read
+    // above for specs.
+    // NOTE: Although this is a const method, it returns a view. So, the data
+    //       could still be modified through the returned view
+    //
+    // T:
+    //   Type of the "new index" column
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // col_to_be_index:
+    //   Name of the column you want as the new index. This name will not be a
+    //   column in the result anymore
+    // old_index_name:
+    //   Name of the current index, if converted into a regular column in the
+    //   result. If this is null, the current index will not be loaded into
+    //   the result as a column.
+    //   
     template<typename T, typename ... Ts>
     DataFrameView<T>
     get_reindexed_view(const char *col_to_be_index,
                        const char *old_index_name = nullptr) const;
-
-
 
 public:  // Visitors
 

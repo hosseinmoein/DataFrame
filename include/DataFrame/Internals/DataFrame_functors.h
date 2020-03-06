@@ -127,25 +127,25 @@ struct remove_functor_ : DataVec::template visitor_base<Ts ...>  {
 
 // ----------------------------------------------------------------------------
 
-template<typename ... Ts>
+template<typename LHS, typename ... Ts>
 struct view_setup_functor_ : DataVec::template visitor_base<Ts ...>  {
 
     inline view_setup_functor_ (const char *n,
                                 std::size_t b,
                                 std::size_t e,
-                                DataFrameView<IndexType> &d)
+                                LHS &d)
         : name (n), begin (b), end (e), dfv(d)  {   }
 
-    const char                  *name;
-    const std::size_t           begin;
-    const std::size_t           end;
-    DataFrameView<IndexType>    &dfv;
+    const char          *name;
+    const std::size_t   begin;
+    const std::size_t   end;
+    LHS                 &dfv;
 
     template<typename T>
     void operator() (T &vec);
 };
 
-template<typename ... Ts>
+template<typename LHS, typename ... Ts>
 friend struct view_setup_functor_;
 
 // ----------------------------------------------------------------------------

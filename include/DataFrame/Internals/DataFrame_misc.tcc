@@ -125,18 +125,20 @@ DataFrame<I, H>::remove_functor_<Ts ...>::operator() (T &vec)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename ... Ts>
+template<typename LHS, typename ... Ts>
 template<typename T>
 void
-DataFrame<I, H>::view_setup_functor_<Ts ...>::
+DataFrame<I, H>::view_setup_functor_<LHS, Ts ...>::
 operator() (T &vec)  {
 
     using VecType = typename std::remove_reference<T>::type;
     using ValueType = typename VecType::value_type;
 
+    const size_type col_s = vec.size() >= end ? end : vec.size();
+
     dfv.template setup_view_column_<ValueType, typename VecType::iterator>(
         name,
-        { vec.begin() + begin, vec.begin() + end });
+        { vec.begin() + begin, vec.begin() + col_s });
     return;
 }
 

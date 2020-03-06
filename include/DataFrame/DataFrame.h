@@ -67,9 +67,8 @@ class LIBRARY_API DataFrame : public ThreadGranularity {
     using DataVec = H;
     using DataVecVec = std::vector<DataVec>;
 
-    friend DataFrameView<I>;
-    friend DataFramePtrView<I>;
-    friend StdDataFrame<I>;
+    template<typename II, typename HH>
+    friend class DataFrame;
 
 public:
 

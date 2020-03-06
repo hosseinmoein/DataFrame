@@ -492,9 +492,9 @@ DataFrame<I, H>::get_view_by_idx (Index2D<IndexType> range)  {
     static_assert(std::is_base_of<HeteroVector, H>::value,
                   "Only a StdDataFrame can call get_view_by_idx()");
 
-    const auto          &lower =
+    const auto                  &lower =
         std::lower_bound (indices_.begin(), indices_.end(), range.begin);
-    const auto          &upper =
+    const auto                  &upper =
         std::upper_bound (indices_.begin(), indices_.end(), range.end);
     DataFrameView<IndexType>    dfv;
 
@@ -509,10 +509,11 @@ DataFrame<I, H>::get_view_by_idx (Index2D<IndexType> range)  {
                                                    : indices_.end());
 
         for (auto &iter : column_tb_)  {
-            view_setup_functor_<Ts ...> functor (iter.first.c_str(),
-                                                 b_dist,
-                                                 e_dist,
-                                                 dfv);
+            view_setup_functor_<DataFrameView<IndexType>, Ts ...>   functor (
+                iter.first.c_str(),
+                b_dist,
+                e_dist,
+                dfv);
 
             data_[iter.second].change(functor);
         }
@@ -662,7 +663,7 @@ DataFrame<I, H>::get_view_by_loc (Index2D<long> range)  {
                 &*(indices_.begin() + range.begin),
                 &*(indices_.begin() + range.end));
         for (const auto &iter : column_tb_)  {
-            view_setup_functor_<Ts ...> functor (
+            view_setup_functor_<DataFrameView<IndexType>, Ts ...>   functor (
                 iter.first.c_str(),
                 static_cast<size_type>(range.begin),
                 static_cast<size_type>(range.end),
@@ -1178,6 +1179,48 @@ get_reindexed(const char *col_to_be_index, const char *old_index_name) const  {
             nan_policy::dont_pad_with_nans);
 
         data_[citer.second].change(functor);
+    }
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename T, typename ... Ts>
+DataFrameView<T> DataFrame<I, H>::
+get_reindexed_view(const char *col_to_be_index,
+                   const char *old_index_name) const  {
+
+    auto                *nc_this = const_cast<DataFrame<I, H> *>(this);
+    DataFrameView<T>    result;
+    auto                &new_idx =
+        nc_this->template get_column<T>(col_to_be_index);
+    const size_type     new_idx_s = new_idx.size();
+
+    result.indices_ =
+        typename DataFrameView<T>::IndexVecType(&*(new_idx.begin()),
+                                                &*(new_idx.end()));
+    if (old_index_name)  {
+        auto            &curr_idx = nc_this->get_index();
+        const size_type col_s =
+            curr_idx.size() >= new_idx_s ? new_idx_s : curr_idx.size();
+
+        result.template setup_view_column_<IndexType,
+                                           typename IndexVecType::iterator>
+            (old_index_name, { curr_idx.begin(), curr_idx.begin() + col_s });
+    }
+
+    for (auto citer : column_tb_)  {
+        if (citer.first == col_to_be_index)  continue;
+
+        view_setup_functor_<DataFrameView<T>, Ts ...>   functor (
+            citer.first.c_str(),
+            0,
+            new_idx_s,
+            result);
+
+        nc_this->data_[citer.second].change(functor);
     }
 
     return (result);

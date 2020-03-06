@@ -82,13 +82,15 @@ struct load_functor_ : DataVec::template visitor_base<Ts ...>  {
     inline load_functor_ (const char *n,
                           std::size_t b,
                           std::size_t e,
-                          LHS &d)
-        : name (n), begin (b), end (e), df(d)  {   }
+                          LHS &d,
+                          nan_policy np = nan_policy::pad_with_nans)
+	: name (n), begin (b), end (e), df(d), nan_p(np)  {   }
 
     const char          *name;
     const std::size_t   begin;
     const std::size_t   end;
     LHS                 &df;
+    const nan_policy    nan_p;
 
     template<typename T>
     void operator() (const T &vec);

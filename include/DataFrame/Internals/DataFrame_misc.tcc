@@ -91,7 +91,7 @@ DataFrame<I, H>::load_functor_<LHS, Ts ...>::operator() (const T &vec)  {
     df.template load_column<ValueType>(
         name,
         { vec.begin() + begin, vec.begin() + col_s },
-        nan_policy::pad_with_nans);
+        nan_p);
 }
 
 // ----------------------------------------------------------------------------

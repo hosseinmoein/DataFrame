@@ -1170,10 +1170,12 @@ get_reindexed(const char *col_to_be_index, const char *old_index_name) const  {
     for (auto citer : column_tb_)  {
         if (citer.first == col_to_be_index)  continue;
 
-        load_functor_<StdDataFrame<T>, Ts ...>  functor (citer.first.c_str(),
-                                                         0,
-                                                         new_idx_s,
-                                                         result);
+        load_functor_<StdDataFrame<T>, Ts ...>  functor (
+            citer.first.c_str(),
+            0,
+            new_idx_s,
+            result,
+            nan_policy::dont_pad_with_nans);
 
         data_[citer.second].change(functor);
     }

@@ -5093,14 +5093,31 @@ static void test_get_reindexed()  {
         df.get_reindexed<double, int, double, std::string>
             ("dbl_col", "OLD_IDX");
 
-    result1.write<std::ostream, int, double, std::string, unsigned long>
-        (std::cout);
+    assert(result1.get_index().size() == 15);
+    assert(result1.get_column<double>("dbl_col_2").size() == 15);
+    assert(result1.get_column<unsigned long>("OLD_IDX").size() == 15);
+    assert(result1.get_column<std::string>("str_col").size() == 15);
+    assert(result1.get_column<int>("int_col").size() == 11);
+    assert(result1.get_index()[0] == 0);
+    assert(result1.get_index()[14] == 10.0);
+    assert(result1.get_column<int>("int_col")[3] == 4);
+    assert(result1.get_column<int>("int_col")[9] == 14);
+    assert(result1.get_column<std::string>("str_col")[5] == "ff");
+    assert(result1.get_column<double>("dbl_col_2")[10] == 112.0);
 
     auto    result2 =
         df.get_reindexed<int, int, double, std::string>("int_col", "OLD_IDX");
 
-    result2.write<std::ostream, int, double, std::string, unsigned long>
-        (std::cout);
+    assert(result2.get_index().size() == 11);
+    assert(result2.get_column<double>("dbl_col_2").size() == 11);
+    assert(result2.get_column<double>("dbl_col").size() == 11);
+    assert(result2.get_column<unsigned long>("OLD_IDX").size() == 11);
+    assert(result2.get_column<std::string>("str_col").size() == 11);
+    assert(result2.get_column<double>("dbl_col_2")[10] == 112.0);
+    assert(result2.get_column<double>("dbl_col")[3] == 2.0);
+    assert(result2.get_column<std::string>("str_col")[5] == "ff");
+    assert(result2.get_index()[0] == 1);
+    assert(result2.get_index()[10] == 9);
 }
 
 // -----------------------------------------------------------------------------

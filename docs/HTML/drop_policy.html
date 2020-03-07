@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+   <table align="center" border="1">
+      <tr bgcolor="lightblue">
+        <th>Signature</th>
+        <th>Description</th>
+      </tr>
+      <tr bgcolor="lightgrey">
+        <td bgcolor="maroon">
+	<font color="white">
+	enum class drop_policy : unsigned char  {<BR>
+	    all = 1,         // Remove row if all columns are nan<BR>
+	    any = 2,         // Remove row if any column is nan<BR>
+	    threshold = 3    // Remove row if threshold number of columns are nan<BR>
+        };
+	</font>
+	</td>
+	<td>
+	This policy specifies what rows to drop/remove based on missing column data<BR>
+	<B>all</B>: Drop the row if all columns are missing<BR>
+	<B>any</B>: Drop the row if any column is missing<BR>
+	<B>threshold</B>: Drop the column if threshold number of columns are missing
+	</td>
+      </tr>
+
+  </table> 
+
+</body>
+</html>
+

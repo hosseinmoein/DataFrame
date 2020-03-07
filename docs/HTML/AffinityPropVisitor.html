@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+   <table align="center" border="1">
+      <tr bgcolor="lightblue">
+        <th>Signature</th>
+        <th>Description</th>
+        <th>Parameters</th>
+      </tr>
+      <tr bgcolor="lightgrey">
+        <td bgcolor="maroon">
+	<font color="white">
+    template&lt;typename T, typename I = unsigned long&gt;<BR>
+    struct AffinityPropVisitor;
+	</font>
+	</td>
+	<td>
+    This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_action_visit() interface.<BR>
+    This functor class finds clusters in data using Affinity Propagation algorithm.<BR>
+    The constructor takes three parameters<BR>
+        1. Number of iterations<BR>
+        2. A function to calculate distance between to data points of type T with a default value<BR>
+            <I>
+            <p style="margin-left:10%; margin-right:10%;">
+            KMeansVisitor(size_type num_of_iter,<BR>
+                          distance_func f = [](const value_type &x, const value_type &y) -> double {<BR>
+                              return ((x - y) * (x - y));<BR>
+                          })<BR>
+            </p>
+            </I>
+        3. Damping factor used in the algorithm. The default is 0.9. (1 – damping factor) prevents numerical oscillations.<BR>
+    The result type is VectorPtrView of type T containing the centers of clusters.<BR>
+    There is also a get_clusters() method that returns an vector of VectorPtrView’s which contain the data clustered around the centers.
+	</td>
+	<td>
+    <B>T</B>: Column data type<BR>
+    <B>I</B>: Index type
+	</td>
+    </tr>
+
+  </table> 
+
+</body>
+</html>
+

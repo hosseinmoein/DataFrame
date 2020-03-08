@@ -47,6 +47,7 @@ You could slice the data in many different ways. You could join, merge, group-by
 4. Never use more space than you need ala `unions`, `std::variant`, ...
 5. Avoid copying data as much as possible. Unfortunately, sometimes you have to
 6. Use multi-threading but only when it makes sense
+7. Do not attempt to protect the user against `garbage in, garbage out`
 <BR>
 <B>Views</B><BR>
 - You can slice the data frame and instead of getting another data frame you can opt to get a view. A view is a data frame that is a reference to a slice of the original data frame. So if you change the data in the view the corresponding data in the original data frame will also be changed (and vice versa).<BR><BR>

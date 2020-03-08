@@ -37,7 +37,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # DataFrame
 This is a C++ statistical library that provides an interface similar to Pandas package in Python.<BR>
 <B>A DataFrame can have one index column and many data columns of any built-in or user-defined type</B>.<BR>
-You could slice the data in many different ways. You could join, merge, group-by the data. You could run various statistical, summarization and ML algorithms on the data. You could add your custom algorithms easily. You could multi-column sort, custom pick and delete the data. And more …<BR><BR>
+You could slice the data in many different ways. You could join, merge, group-by the data. You could run various statistical, summarization and ML algorithms on the data. You could add your custom algorithms easily. You could multi-column sort, custom pick and delete the data. And more …<BR>
+
+<B>I have followed a few principals in this library:</B><BR>
+
+1. I must support any type either built-in or user defined without needing new code
+2. Never chase pointers ala `linked lists`, `std::any`, `pointer to base`, ..., including `virtual function calls`
+3. Have all column data in continuous memory space
+4. Never use more space than you need ala `unions`, `std::variant`, ...
+5. Avoid copying data as much as possible. Unfortunately, sometimes you have to
+6. Use multi-threading but only when it makes sense
+<BR>
 <B>Views</B><BR>
 - You can slice the data frame and instead of getting another data frame you can opt to get a view. A view is a data frame that is a reference to a slice of the original data frame. So if you change the data in the view the corresponding data in the original data frame will also be changed (and vice versa).<BR>
 

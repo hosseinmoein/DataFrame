@@ -41,7 +41,7 @@ You could slice the data in many different ways. You could join, merge, group-by
 
 <B>I have followed a few principals in this library:</B><BR>
 
-1. I must support any type either built-in or user defined without needing new code
+1. Support any type either built-in or user defined without needing new code
 2. Never chase pointers ala `linked lists`, `std::any`, `pointer to base`, ..., including `virtual function calls`
 3. Have all column data in continuous memory space
 4. Never use more space than you need ala `unions`, `std::variant`, ...

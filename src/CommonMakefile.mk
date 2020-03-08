@@ -12,6 +12,7 @@ PROJECT_INCLUDE_DIR = ../../include
 
 SRCS = Vectors/HeteroVector.cc \
        ../test/dataframe_tester.cc \
+       ../test/dataframe_tester_2.cc \
        ../test/dataframe_performance.cc \
        Vectors/HeteroView.cc \
        Vectors/HeteroPtrView.cc \
@@ -69,9 +70,10 @@ TARGET_LIB = $(LOCAL_LIB_DIR)/lib$(LIB_NAME).a
 
 TARGETS += $(TARGET_LIB) \
            $(LOCAL_BIN_DIR)/dataframe_tester \
+           $(LOCAL_BIN_DIR)/dataframe_tester_2 \
            $(LOCAL_BIN_DIR)/dataframe_performance \
-	       $(LOCAL_BIN_DIR)/vectors_tester \
-	       $(LOCAL_BIN_DIR)/vector_ptr_view_tester \
+           $(LOCAL_BIN_DIR)/vectors_tester \
+           $(LOCAL_BIN_DIR)/vector_ptr_view_tester \
            $(LOCAL_BIN_DIR)/date_time_tester \
            $(LOCAL_BIN_DIR)/mmfile_tester \
            $(LOCAL_BIN_DIR)/obj_vector_tester \
@@ -139,6 +141,10 @@ DATAFRAME_TESTER_OBJ = $(LOCAL_OBJ_DIR)/dataframe_tester.o
 $(LOCAL_BIN_DIR)/dataframe_tester: $(TARGET_LIB) $(DATAFRAME_TESTER_OBJ)
 	$(CXX) -o $@ $(DATAFRAME_TESTER_OBJ) $(LIBS)
 
+DATAFRAME_TESTER_OBJ_2 = $(LOCAL_OBJ_DIR)/dataframe_tester_2.o
+$(LOCAL_BIN_DIR)/dataframe_tester_2: $(TARGET_LIB) $(DATAFRAME_TESTER_OBJ_2)
+	$(CXX) -o $@ $(DATAFRAME_TESTER_OBJ_2) $(LIBS)
+
 DATAFRAME_PERFORMANCE_OBJ = $(LOCAL_OBJ_DIR)/dataframe_performance.o
 $(LOCAL_BIN_DIR)/dataframe_performance: $(TARGET_LIB) $(DATAFRAME_PERFORMANCE_OBJ)
 	$(CXX) -o $@ $(DATAFRAME_PERFORMANCE_OBJ) $(LIBS)
@@ -185,7 +191,7 @@ clean:
           $(DATE_TIME_TESTER_OBJ) $(VECTOR_PTR_VIEW_TESTER_OBJ) \
           $(MMFILE_TESTER_OBJ) $(SHAREDMEM_TESTER_OBJ) $(GEN_RAND_TESTER_OBJ) \
           $(OBJ_VECTOR_TESTER_OBJ) $(OBJ_VECTOR_ERASE_TESTER_OBJ) \
-          $(DATAFRAME_PERFORMACE_OBJ)
+          $(DATAFRAME_PERFORMACE_OBJ) $(DATAFRAME_TESTER_OBJ_2)
 
 clobber:
 	rm -f $(LIB_OBJS) $(TARGETS) $(DATAFRAME_TESTER_OBJ) $(VECTORS_TESTER_OBJ) \

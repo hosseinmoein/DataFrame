@@ -49,8 +49,8 @@ You could slice the data in many different ways. You could join, merge, group-by
 6. Use multi-threading but only when it makes sense
 <BR>
 <B>Views</B><BR>
-- You can slice the data frame and instead of getting another data frame you can opt to get a view. A view is a data frame that is a reference to a slice of the original data frame. So if you change the data in the view the corresponding data in the original data frame will also be changed (and vice versa).<BR>
-<BR>
+- You can slice the data frame and instead of getting another data frame you can opt to get a view. A view is a data frame that is a reference to a slice of the original data frame. So if you change the data in the view the corresponding data in the original data frame will also be changed (and vice versa).<BR><BR>
+
 <B>Multithreading</B><BR>
 1. DataFrame uses static containers to achieve type heterogeneity. By default, these static containers are unprotected. This is done by design. So by default, there is no locking overhead. If you use DataFrame in a multithreaded program you must provide a _SpinLock_ defined in <a href="include/DataFrame/Utils/ThreadGranularity.h">ThreadGranularity.h</a> file. DataFrame will use your _SpinLock_ to protect the containers.<BR>
 Please see <a href="docs/DataFrameDoc.pdf">documentation</a>, _set_lock()_, _remove_lock()_, and <a href="test/dataframe_tester.cc#L3736">dataframe_tester.cc</a> for code example.

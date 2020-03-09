@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+   <table align="center" border="1">
+      <tr bgcolor="lightblue">
+        <th>Signature</th>
+        <th>Description</th>
+        <th>Parameters</th>
+      </tr>
+      <tr bgcolor="lightgrey">
+        <td bgcolor="maroon">
+	<font color="white">
+	template&lt;typename T&gt;<BR>
+	size_type<BR>
+	append_column(const char *name, const T &amp;val, nan_policy padding = nan_policy::pad_with_nans);
+	</font>
+	</td>
+	<td>
+	It appends val to the end of the named data column. If data column doesn't exist, it throws an exception.<BR>
+	Returns number of items loaded
+	</td>
+	<td>
+	<b>T</b>: Type of the named data column<BR>
+	<b>name</b>: Name of the column<BR>
+	<B>padding</B>: If true, it pads the data column with nan,  if it is shorter than the index column.
+	</td>
+      </tr>
+
+      <tr bgcolor="lightgrey">
+        <td bgcolor="maroon">
+	<font color="white">
+	template&lt;typename T, typename ITR&gt;<BR>
+	size_type<BR>
+	append_column(const char *name, Index2D<const ITR &> range, nan_policy padding = nan_policy::pad_with_nans);
+	</font>
+	</td>
+	<td>
+	It appends the range begin to end to the end of the named data column. If data column doesn't exist, it throws an exception.<BR>
+	Returns number of items loaded
+	</td>
+	<td>
+	<B>T</B>: Type of the named data column<BR>
+	<B>ITR</B>: Type of the iterator<BR>
+	<B>name</B>: Name of the column<BR>
+	<B>range</B>: The begin and end iterators for data<BR>
+	<B>padding</B>: If true, it pads the data column with nan, if it is shorter than the index column.
+	</td>
+      </tr>
+  </table> 
+
+</body>
+</html>
+

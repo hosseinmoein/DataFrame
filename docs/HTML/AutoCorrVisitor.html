@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+   <table align="center" border="1">
+      <tr bgcolor="lightblue">
+        <th>Signature</th>
+        <th>Description</th>
+        <th>Parameters</th>
+      </tr>
+      <tr bgcolor="lightgrey">
+        <td bgcolor="maroon">
+	<font color="white">
+    templat&lt;etypename T, typename I = unsigned long, typename = typename std::enable_if<std::is_arithmetic<T>::value, T>::type&gt;<BR>
+    struct AutoCorrVisitor;
+	</font>
+	</td>
+	<td>
+    This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_action_visit() interface.<BR>
+    This functor class calculates the auto correlation of given column. The result is a vector of auto correlations with lags of 0 up to length of column – 4.<BR>
+    See this document and dataframe_tester.cc for examples.
+	</td>
+	<td>
+    <B>T</B>: Column data type. T must be an arithmetic-enabled type<BR>
+    <B>I</B>: Index type.
+	</td>
+    </tr>
+
+  </table> 
+
+</body>
+</html>
+

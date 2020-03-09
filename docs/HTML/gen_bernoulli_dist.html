@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+  <table align="center" border="1">
+    <tr bgcolor="lightblue">
+        <th>Signature</th>
+        <th>Description</th>
+        <th>Parameters</th>
+    </tr>
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon">
+	  <font color="white">
+      std::vector&lt;bool&gt;<BR>
+      gen_bernoulli_dist(std::size_t n, const RandGenParams<bool> &amp;params = { });
+	  </font>
+	  </td>
+	  <td>
+      It generates random Boolean values, according to the discrete probability function. The probability of true is:<BR>
+      <I>
+                    ⎧     p if b == true<BR>
+           P(b|p) = ⎨<BR>
+                    ⎩ 1 - p if b == fasle<BR>
+      </I>
+      It returns the vector of results<BR>
+      Optional parameters to set:<BR>
+      <I>prob_true, seed</I>
+	  </td>
+	  <td>
+      <B>n</B>: Number of numeric to generate<BR>
+      <B>params</B>: List of all applicable parameters, see DataFrameTypes.h
+	  </td>
+    </tr>
+  </table> 
+
+</body>
+</html>
+

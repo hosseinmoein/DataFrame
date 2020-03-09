@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+  <table align="center" border="1">
+    <tr bgcolor="lightblue">
+        <th>Signature</th>
+        <th>Description</th>
+        <th>Parameters</th>
+    </tr>
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon">
+	  <font color="white">
+      template&lt;typename T&gt;<BR>
+      std::vector&lt;T&gt;<BR>
+      gen_binomial_dist(std::size_t n, const RandGenParams&lt;T&gt; &amp;params = { });
+	  </font>
+	  </td>
+	  <td>
+      Produces random non-negative integer values i, distributed according to discrete probability function:<BR>
+      <I>P(i|t,p)=(ti)⋅pi⋅(1−p)t−i</I><BR>
+
+      It returns the vector of results<BR>
+      Optional parameters to set:<BR>
+      <I>t_dist, prob_true, seed</I>
+	  </td>
+	  <td>
+      <B>T</B>: Type can only be [unsigned] char, [unsigned] short, [unsigned] int, [unsigned] long int, or [unsigned] long long int<BR>
+      <B>n</B>: Number of numerics to generate<BR>
+      <B>params</B>: List of all applicable parameters, see DataFrameTypes.h
+	  </td>
+    </tr>
+  </table> 
+
+</body>
+</html>
+

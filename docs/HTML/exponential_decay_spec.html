@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <table align="center" border="1">
+
+    <tr bgcolor="lightblue">
+      <th>Signature</th> <th>Description</th>
+    </tr>
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        enum class exponential_decay_spec : unsigned char  {<BR>
+            &emsp;center_of_gravity = 1, // decay = 1 / (1 + value), for value >= 0<BR>
+            &emsp;span = 2,              // decay = 2 / (1 + value), for value >= 1<BR>
+            &emsp;halflife = 3,          // decay = 1 − exp(log(0.5) / value), for value > 0<BR>
+            &emsp;fixed = 4,             // decay = value, for 0 < value <= 1<BR>
+        };</font>
+      </td>
+      <td width="65%">
+        This spec determines how an exponentially moving stat decays.
+        It is used as a parameter to the ExponentialRollAdopter adopter constructor.
+        Based on this spec, the value parameter is converted to decay.
+      </td>
+    </tr>
+
+  </table>
+</body>
+</html>
+
+<!--
+Local Variables:
+mode:HTML
+tab-width:4
+c-basic-offset:4
+End:
+-->

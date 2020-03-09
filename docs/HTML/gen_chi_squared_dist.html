@@ -9,24 +9,22 @@
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        std::vector&lt;bool&gt;<BR>
-        gen_bernoulli_dist(std::size_t n, const RandGenParams<bool> &amp;params = { }); </font>
+        template&lt;typename T&gt;<BR>
+        std::vector&lt;T&gt;<BR>
+        gen_chi_squared_dist(std::size_t n, const RandGenParams<T> &amp;params = { }); </font>
       </td>
       <td>
-        It generates random Boolean values, according to the discrete probability function. The probability of true is:<BR>
-        <I>
-        <PRE>
-                  ⎧ p if b == true
-        P(b|p) =  ⎨
-                  ⎩ 1 - p if b == fasle
-        </PRE>
-        </I>
+        The chi_squared_distribution produces random numbers x > 0 according<BR>
+        to the Chi-squared distribution:<BR>
+        see https://en.cppreference.com/w/cpp/numeric/random/chi_squared_distribution<BR>
+        <BR>
         It returns the vector of results<BR>
         Optional parameters to set:<BR>
-        <I>prob_true, seed</I>
+        n (degree of freedom), seed
       </td>
       <td>
-        <B>n</B>: Number of numeric to generate<BR>
+        <B>T</B>: Type can only be float, double, or long double<BR>
+        <B>n</B>: Number of numerics to generate<BR>
         <B>params</B>: List of all applicable parameters, see DataFrameTypes.h
       </td>
     </tr>

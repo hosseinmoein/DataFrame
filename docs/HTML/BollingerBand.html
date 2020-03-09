@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <table align="center" border="1">
+
+    <tr bgcolor="lightblue">
+      <th>Signature</th> <th>Description</th> <th>Parameters</th>
+    </tr>
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        templat&lt;typename T, typename I = unsigned long, typename = typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;<BR>
+        struct BollingerBand; </font>
+      </td>
+      <td>
+        This is a “single action visitor”, meaning it is passed the whole data vector in
+        one call and you must use the single_action_visit() interface.<BR>
+        This functor class calculates Bollinger bands and generates the spread between
+        the given column and lower/upper bands. It could be used to generate signals within financial applications.<BR>
+        The constructor takes:<BR>
+        <UL>
+          <LI>Upper band multiplier to be multiplied by standard-deviation and added to the moving average</LI>
+          <LI>Lower band multiplier to be multiplied by standard-deviation and subtracted from the moving average</LI>
+          <LI>Number of periods for a simple moving mean and std.</LI>
+          <LI>Biased; whether the moving std is biased. The default is false meaning the denominator is “n – 1”.</LI>
+        </UL>
+        <PRE>
+            BollingerBand(double upper_band_multiplier,
+                          double lower_band_multiplier,
+                          size_type moving_mean_period,
+                          bool biased = false)
+        </PRE>
+        There are 2 methods that give you the results:<BR>
+        <OL>
+          <LI>const result_type &amp;get_upper_band_to_raw() const – Returns a vector of upper band minus data column.</LI>
+          <LI>const result_type &amp;get_raw_to_lower_band() const – Returns a vector of data column minus lower band.</LI>
+        </OL>
+      </td>
+      <td>
+        <B>T</B>: Column data type
+        <B>I</B>: Index type
+      </td>
+    </tr>
+
+  </table> 
+</body>
+</html>
+
+<!--
+Local Variables:
+mode:HTML
+tab-width:4
+c-basic-offset:4
+End:
+-->

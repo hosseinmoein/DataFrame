@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <table align="center" border="1">
+
+    <tr bgcolor="lightblue">
+      <th>Signature</th> <th>Description</th> <th>Parameters</th>
+    </tr>
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        templat&lt;typename T, typename I = unsigned long, typename = typename std::enable_if<std::is_arithmetic<T>::value, T>::type&gt;<BR>
+        struct BetaVisitor; </font>
+      </td>
+      <td width="40%">
+        This functor class calculates the beta (i.e. exposure) of the given first column to the given second column (benchmark).<BR>
+        <T>explicit BetaVisitor (bool bias = true);</I><BR>
+        See this document and dataframe_tester.cc for examples.
+      </td>
+      <td>
+        <B>T</B>: Column data type<BR>
+        <B>I</B>: Index type
+      </td>
+    </tr>
+
+  </table> 
+</body>
+</html>
+
+<!--
+Local Variables:
+mode:HTML
+tab-width:4
+c-basic-offset:4
+End:
+-->

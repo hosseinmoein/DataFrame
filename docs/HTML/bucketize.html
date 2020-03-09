@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <table align="center" border="1">
+
+    <tr bgcolor="lightblue">
+        <th>Signature</th> <th>Description</th> <th>Parameters</th>
+    </tr>
+
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        template&lt;typename F, typename ... Ts&gt;<BR>
+        DataFrame<BR>
+        bucketize (F &amp;&amp;func, const IndexType &amp;bucket_interval) const;</font>
+      </td>
+      <td WIDTH="33.3%">
+        It bucketizes the data and index into bucket_interval's, based on index values and calls the
+        functor for each bucket. The result of each bucket will be stored in a new DataFrame with
+        same shape and returned. Every data bucket is guaranteed to be as wide as bucket_interval.
+        This mean some data items at the end may not be included in the new bucketized DataFrame.
+        The index of each bucket will be the last index in the original DataFrame that is less than
+        bucket_interval away from the previous bucket<BR>
+        <B>NOTE</b>: The DataFrame must already be sorted by index.
+      </td>
+      <td WIDTH="33.3%">
+        <B>F</B>: type functor to be applied to columns to bucketize<BR>
+        <B>Ts</B>: The list of types for all columns. A type should be specified only once.<BR>
+        <B>bucket_interval</B>: Bucket interval is in the index's single value unit.
+        For example, if index is in minutes, bucket_interval will be in
+        the unit of minutes and so on.<BR>
+        <B>already_sorted</B>: If the DataFrame is already sorted by index, this will save the expensive sort operation
+      </td>
+    </tr>
+
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        template&lt;typename F, typename ... Ts&gt;<BR>
+        std::future&lt;DataFrame&gt;<BR>
+        bucketize_sync (F &amp;&amp;func, const IndexType &amp;bucket_interval) const;</font>
+      </td>
+      <td WIDTH="33.3%">
+        Same as bucketize() above, but executed asynchronously
+      </td>
+      <td WIDTH="33.3%">
+      </td>
+    </tr>
+
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        template&lt;typename F, typename ... Ts&gt;<BR>
+        void<BR>
+        self_bucketize(F &amp;&amp;func, const IndexType &amp;bucket_interval);</font>
+      </td>
+      <td WIDTH="33.3%">
+        This is exactly the same as bucketize() above. The only difference is it stores the result
+        in itself and returns void. So, after the return the original data is lost and replaced with bucketized data
+      </td>
+      <td WIDTH="33.3%">
+      </td>
+    </tr>
+
+  </table> 
+</body>
+</html>
+
+<!--
+Local Variables:
+mode:HTML
+tab-width:4
+c-basic-offset:4
+End:
+-->

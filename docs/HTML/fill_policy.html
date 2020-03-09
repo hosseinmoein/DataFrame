@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <table align="center" border="1">
+
+    <tr bgcolor="lightblue">
+      <th>Signature</th> <th>Description</th>
+    </tr>
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        enum class fill_policy : unsigned char  {<BR>
+            &emsp;value = 1,<BR>
+            &emsp;fill_forward = 2,<BR>
+            &emsp;fill_backward = 3,<BR>
+            &emsp;linear_interpolate = 4, // Using the index as X coordinate<BR>
+            &emsp;linear_extrapolate = 5, // Using the index as X coordinate<BR>
+            &emsp;mid_point = 6,          // Mid-point of x and y<BR>
+        };</font>
+      </td>
+      <td width="65%">
+        This policy determines how to fill missing values in the DataFrame<BR>
+        value: Fill all the missing values, in a given column, with the given value.<BR>
+        <B>fill_forward</B>: Fill the missing values, in a given column, with the last valid
+        value before the missing value<BR>
+        <B>fill_backward</B>: Fill the missing values, in a given column, with the first valid
+        value after the missing value<BR>
+        <B>linear_interpolate</B>:<BR>
+        <B>linear_extrapolate</B>:<BR>
+        Use the index column as X coordinate and the given column as Y coordinate
+        And do interpolation/extrapolation as follows:<BR>
+        <PRE>
+                   X - X1
+        Y = Y1 + ----------- * (Y2 - Y1)
+                   X2 - X1
+        </PRE>
+      </td>
+    </tr>
+
+  </table>
+</body>
+</html>
+
+<!--
+Local Variables:
+mode:HTML
+tab-width:4
+c-basic-offset:4
+End:
+-->

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <table align="center" border="1">
+
+    <tr bgcolor="lightblue">
+        <th>Signature</th> <th>Description</th> <th>Parameters</th>
+    </tr>
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon" width="33.3%"> <font color="white">
+        template&lt;typename RHS_T, typename ... Ts&gt;<BR>
+        StdDataFrame&lt;IndexType&gt;<BR>
+        concat(const RHS_T &amp;rhs, concat_policy cp = concat_policy::all_columns) const;
+      </td>
+      <td>
+        It concatenates rhs to the end of self and returns the result as another DataFrame.<BR>
+        Concatenation is done based on policy
+      </td>
+      <td>
+        <B>RHS_T</B>: Type of DataFrame rhs<BR>
+        <B>Ts</B>: List all the types of all data columns. A type should be specified in the list only once.<BR>
+        <B>rhs</B>: The rhs DataFrame<BR>
+        <B>cp</B>: Concatenation policy:<BR>
+        <PRE>
+          <B>all_columns</B>: concatenate all columns. If a column does not exist in self,
+          create one in the result and prepend with nan
+          <B>common_columns</B>: only apply concatenation to the common columns
+          <B>lhs_and_common_columns</B>: the result will have all the columns in self,
+          but only common columns and index are concatenated
+        <PRE>
+      </td>
+    </tr>
+
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        template&lt;typename RHS_T, typename ... Ts&gt;<BR>
+        void<BR>
+        self_concat(const RHS_T &amp;rhs, bool add_new_columns = true);
+      </td>
+      <td>
+        This is similar to concat() method but it is applied to self. It changes self.
+      </td>
+      <td>
+        <B>RHS_T</B>: Type of DataFrame rhs<BR>
+        <B>Ts</B>: List all the types of all data columns. A type should be specified in the list only once.<BR>
+        <B>rhs</B>: The rhs DataFrame<BR>
+        <B>add_new_columns</B>: If true, it creates new columns in self and prepend them with nan
+      </td>
+    </tr>
+
+  </table> 
+</body>
+</html>
+
+<!--
+Local Variables:
+mode:HTML
+tab-width:4
+c-basic-offset:4
+End:
+-->

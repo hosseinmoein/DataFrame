@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <table align="center" border="1">
+
+    <tr bgcolor="lightblue">
+      <th>Signature</th> <th>Description</th> <th>Parameters</th>
+    </tr>
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        templat&lt;typename T, typename I = unsigned long, typename = typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;<BR>
+        struct CorrVisitor; </font>
+      </td>
+      <td>
+        This functor class calculates the correlation of two given columns.<BR>
+        <PRE>
+          explicit CorrVisitor (bool bias = true);
+        </PRE>
+        See this document and dataframe_tester.cc for examples.
+      </td>
+      <td>
+        <B>T</B>: Column data type. T must be an arithmetic-enabled type<BR>
+        <B>I</B>: Index type.
+      </td>
+    </tr>
+
+  </table> 
+</body>
+</html>
+
+<!--
+Local Variables:
+mode:HTML
+tab-width:4
+c-basic-offset:4
+End:
+-->

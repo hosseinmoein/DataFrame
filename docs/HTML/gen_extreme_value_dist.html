@@ -11,16 +11,16 @@
       <td bgcolor="maroon"> <font color="white">
         template&lt;typename T&gt;<BR>
         std::vector&lt;T&gt;<BR>
-        gen_chi_squared_dist(std::size_t n, const RandGenParams&lt;T&gt; &amp;params = { }); </font>
+        gen_extreme_value_dist(std::size_t n, const RandGenParams&lt;T&gt; &amp;params = { }); </font>
       </td>
       <td>
-        The chi_squared_distribution produces random numbers x > 0 according<BR>
-        to the Chi-squared distribution:<BR>
-        see https://en.cppreference.com/w/cpp/numeric/random/chi_squared_distribution<BR>
+        Produces random numbers according to the extreme value distribution<BR>
+        (it is also known as Gumbel Type I, log-Weibull, Fisher-Tippett Type I):<BR>
+        see https://en.cppreference.com/w/cpp/numeric/random/extreme_value_distribution<BR>
         <BR>
         It returns the vector of results<BR>
         Optional parameters to set:<BR>
-        n (degree of freedom), seed
+        alpha (location), beta (scale), seed
       </td>
       <td>
         <B>T</B>: Type can only be float, double, or long double<BR>

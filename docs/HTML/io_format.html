@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <table align="center" border="1">
+
+    <tr bgcolor="lightblue">
+      <th>Signature</th> <th>Description</th>
+    </tr>
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        enum class io_format : unsigned char  {<BR>
+            &emsp;csv = 1,<BR>
+            &emsp;json = 2,<BR>
+            &emsp;hdf5 = 3,   // Not Implemented<BR>
+            &emsp;binary = 4, // Not Implemented<BR>
+        }; </font>
+      </td>
+      <td>
+        This specifies the I/O format for reading and writing to/from files, streams, etc.<BR>
+        Currently only CSV format is supported. The CSV format is as follows:<BR>
+        <UL>
+          <LI>Any empty line or any line started with # will be ignored</LI>
+          <LI>A data line has the following format:<BR>
+            &lt;column name&gt;:&lt;number of data points&gt;:&lt;\&lt;type\&gt;&gt;:data,data,…<BR>
+            An example line would look like this:<BR>
+            price:1001:&lt;double&gt;:23.456,24.56,…</LI>
+        </UL>
+      </td>
+    </tr>
+
+  </table>
+</body>
+</html>
+
+<!--
+Local Variables:
+mode:HTML
+tab-width:4
+c-basic-offset:4
+End:
+-->

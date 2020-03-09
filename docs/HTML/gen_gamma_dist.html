@@ -11,16 +11,17 @@
       <td bgcolor="maroon"> <font color="white">
         template&lt;typename T&gt;<BR>
         std::vector&lt;T&gt;<BR>
-        gen_chi_squared_dist(std::size_t n, const RandGenParams&lt;T&gt; &amp;params = { }); </font>
+        gen_gamma_dist(std::size_t n, const RandGenParams&lt;T&gt; &amp;params = { }); </font>
       </td>
       <td>
-        The chi_squared_distribution produces random numbers x > 0 according<BR>
-        to the Chi-squared distribution:<BR>
-        see https://en.cppreference.com/w/cpp/numeric/random/chi_squared_distribution<BR>
-        <BR>
+        Produces random non-negative floating-point values x,
+        distributed according to probability density function:<BR>
+        <PRE>
+          p(x∣α,β)=e−x/ββα⋅Γ(α)⋅xα−1
+        </PRE>
         It returns the vector of results<BR>
         Optional parameters to set:<BR>
-        n (degree of freedom), seed
+        alpha, beta, seed<BR>
       </td>
       <td>
         <B>T</B>: Type can only be float, double, or long double<BR>

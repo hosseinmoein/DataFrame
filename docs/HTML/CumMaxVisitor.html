@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <table align="center" border="1">
+
+    <tr bgcolor="lightblue">
+      <th>Signature</th> <th>Description</th> <th>Parameters</th>
+    </tr>
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        templat&lt;typename T, typename I = unsigned long&gt;<BR>
+        struct CumMaxVisitor; </font>
+      </td>
+      <td width="50%">
+        This is a “single action visitor”, meaning it is passed the whole data vector
+        in one call and you must use the single_action_visit() interface.<BR>
+        This functor class calculates the cumulative maximum of a given column.
+        The constructor takes a single optional Boolean argument to whether skip NaN values. The default is True.<BR>
+        See this document and dataframe_tester.cc for examples.<BR>
+        The result is a vector of running maximums<BR>
+      </td>
+      <td>
+        <B>T</B>: Column data type.<BR>
+        <B>I</B>: Index type.
+      </td>
+    </tr>
+
+  </table> 
+</body>
+</html>
+
+<!--
+Local Variables:
+mode:HTML
+tab-width:4
+c-basic-offset:4
+End:
+-->

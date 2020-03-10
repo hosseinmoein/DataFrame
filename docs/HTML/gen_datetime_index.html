@@ -32,26 +32,33 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon" width="33.3%"> <font color="white">
-        template&lt;typename T, size_t N&gt;<BR>
-        void<BR>
-        fill_missing(const std::array<const char *, N> col_names, fill_policy policy, const std::array<T, N> values = { }, int limit = -1);
-
+        template&lt;typename T&gt;<BR>
+        static std::vector&lt;typename I&gt;<BR>
+        gen_datetime_index(const char *start_datetime, const char *end_datetime, time_frequency t_freq, long increment = 1, DT_TIME_ZONE tz = DT_TIME_ZONE::LOCAL);
       </td>
       <td>
-        It fills all the "missing values" with the given values, and/or using the given method
-        (See fill_policy above). Missing is determined by being NaN for types that have NaN.
-        For types without NaN (e.g. string), default value is considered missing value
+        This static method generates a date/time-based index vector that could be fed
+        directly to one of the load methods. Depending on the specified frequency,
+        it generates specific timestamps (see below).<BR>
+        It returns a vector of I timestamps.<BR>
+        Currently I could be any built-in numeric type or DateTime<BR>
+        <B>NOTE</b>: It is the responsibility of the programmer to make sure I type
+        is big enough to contain the frequency.
       </td>
       <td>
-        <B>T</B>: Type of the column(s) in col_names array<BR>
-        <B>N</B>: Size of col_names and values array
-        <B>col_names</B>: An array of names specifying the columns to fill.<BR>
-        <B>policy</B>: Specifies the method to use to fill the missing values.
-            For example; forward fill, values, etc.<BR>
-        <B>values</B>: If the policy is "values", use these values to fill the missing
-            holes. Each value corresponds to the same index in the
-            col_names array.<BR>
-        <B>limit</B>: Specifies how many values to fill. Default is -1 meaning fill all missing values.
+        <B>start_datetime, end_datetime</B>: They are the start/end date/times of requested timestamps.<BR>
+        They must be in the following format:<BR>
+        MM/DD/YYYY [HH[:MM[:SS[.MMM]]]]<BR>
+        <B>t_freq</B>: Specifies the timestamp frequency. Depending on the frequency,
+        and I type specific timestamps are generated as follows:<BR>
+        <UL>
+          <LI>I type of DateTime always generates timestamps of DateTime.</LI>
+          <LI>Annual, monthly, weekly, and daily frequencies generates YYYYMMDD timestamps.</LI>
+          <LI>Hourly, minutely, and secondly frequencies generates epoch timestamps (64 bit).</LI>
+          <LI>Millisecondly frequency generates nano-second since epoch timestamps (128 bit).</LI>
+        </UL>
+        <B>increment</B>: Increment in the units of the frequency<BR>
+        <B>tz</B>: Time-zone of generated timestamps
       </td>
     </tr>
 

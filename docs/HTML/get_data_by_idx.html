@@ -31,27 +31,34 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         <th>Signature</th> <th>Description</th> <th>Parameters</th>
     </tr>
     <tr bgcolor="lightgrey">
-      <td bgcolor="maroon" width="33.3%"> <font color="white">
-        template&lt;typename T, size_t N&gt;<BR>
-        void<BR>
-        fill_missing(const std::array<const char *, N> col_names, fill_policy policy, const std::array<T, N> values = { }, int limit = -1);
+      <td bgcolor="maroon"> <font color="white">
+        template&lt;typename ... Ts&gt;<BR>
+        DataFrame<BR>
+        get_data_by_idx(Index2D&lt;IndexType&gt; range) const;
+      </td>
+      <td width="40%">
+        It returns a DataFrame (including the index and data columns) containing the data from index begin to index end. This function assumes the DataFrame is consistent and sorted by index. The behavior is undefined otherwise.
+      </td>
+      <td>
+        <B>Ts</B>: The list of types for all columns. A type should be specified only once.<BR>
+        <B>range</B>: The begin and end iterators for index specified with index values
+      </td>
+    </tr>
 
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        template&lt;typename ... Ts&gt;<BR>
+        DataFrame<BR>
+        get_data_by_idx(const std::vector&lt;IndexType&gt; &amp;values) const;
+      </td>
+      <td width="40%">
+        It returns a DataFrame (including the index and data columns) containing the data corresponding to the indices specified in "values" vector.<BR>
+        This method runs in O(n), where n is the number of indices, by creating a hash table of values. IndexType must be hash able.<BR>
+        <B>NOTE</b>: The returned DataFrame is in the same order as original DataFrame
       </td>
       <td>
-        It fills all the "missing values" with the given values, and/or using the given method
-        (See fill_policy above). Missing is determined by being NaN for types that have NaN.
-        For types without NaN (e.g. string), default value is considered missing value
-      </td>
-      <td>
-        <B>T</B>: Type of the column(s) in col_names array<BR>
-        <B>N</B>: Size of col_names and values array
-        <B>col_names</B>: An array of names specifying the columns to fill.<BR>
-        <B>policy</B>: Specifies the method to use to fill the missing values.
-            For example; forward fill, values, etc.<BR>
-        <B>values</B>: If the policy is "values", use these values to fill the missing
-            holes. Each value corresponds to the same index in the
-            col_names array.<BR>
-        <B>limit</B>: Specifies how many values to fill. Default is -1 meaning fill all missing values.
+        <B>Ts</B>: The list of types for all columns. A type should be specified only once.<BR>
+        <B>values</b>: List of indices to copy data from
       </td>
     </tr>
 

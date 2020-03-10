@@ -28,34 +28,25 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   <table align="center" border="1">
 
     <tr bgcolor="lightblue">
-        <th>Signature</th> <th>Description</th> <th>Parameters</th>
+      <th>Signature</th> <th>Description</th>
     </tr>
     <tr bgcolor="lightgrey">
-      <td bgcolor="maroon" width="33.3%"> <font color="white">
-        template&lt;typename T, size_t N&gt;<BR>
-        void<BR>
-        fill_missing(const std::array<const char *, N> col_names, fill_policy policy, const std::array<T, N> values = { }, int limit = -1);
-
+      <td bgcolor="maroon"> <font color="white">
+        enum class quantile_policy : unsigned char  {<BR>
+            &emsp;lower_value = 1, // Take the higher index<BR>
+            &emsp;higher_value = 2, // Take the lower index<BR>
+            &emsp;mid_point = 3, // Average the two quantiles<BR>
+            &emsp;linear = 4, // Linearly combine the two quantiles<BR>
+        }; </font>
       </td>
       <td>
-        It fills all the "missing values" with the given values, and/or using the given method
-        (See fill_policy above). Missing is determined by being NaN for types that have NaN.
-        For types without NaN (e.g. string), default value is considered missing value
-      </td>
-      <td>
-        <B>T</B>: Type of the column(s) in col_names array<BR>
-        <B>N</B>: Size of col_names and values array
-        <B>col_names</B>: An array of names specifying the columns to fill.<BR>
-        <B>policy</B>: Specifies the method to use to fill the missing values.
-            For example; forward fill, values, etc.<BR>
-        <B>values</B>: If the policy is "values", use these values to fill the missing
-            holes. Each value corresponds to the same index in the
-            col_names array.<BR>
-        <B>limit</B>: Specifies how many values to fill. Default is -1 meaning fill all missing values.
+        This policy determines how to calculate quantiles when they fall between two values.<BR>
+        Linear is calculates as:<BR>
+        X1 + (X2 – X1) * (1.0 – QT)
       </td>
     </tr>
 
-  </table> 
+  </table>
 </body>
 </html>
 

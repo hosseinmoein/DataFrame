@@ -32,26 +32,23 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon" width="33.3%"> <font color="white">
-        template&lt;typename T, size_t N&gt;<BR>
-        void<BR>
-        fill_missing(const std::array<const char *, N> col_names, fill_policy policy, const std::array<T, N> values = { }, int limit = -1);
-
+        template&lt;typename T&gt;<BR>
+        static std::vector&lt;typename I&gt;<BR>
+        gen_sequence_index(const IndexType &amp;start_value, const IndexType &amp;end_value, long increment = 1);
       </td>
       <td>
-        It fills all the "missing values" with the given values, and/or using the given method
-        (See fill_policy above). Missing is determined by being NaN for types that have NaN.
-        For types without NaN (e.g. string), default value is considered missing value
+        This static method generates a vector of sequential values of IndexType that
+        could be fed directly to one of the load methods.<BR>
+        The values are incremented by "increment".<BR>
+        The index type must be incrementable.<BR>
+        If by incrementing "start_value" by increment you would never reach
+        "end_value", the behavior will be undefined.<BR>
+        It returns a vector of IndexType values.
       </td>
       <td>
-        <B>T</B>: Type of the column(s) in col_names array<BR>
-        <B>N</B>: Size of col_names and values array
-        <B>col_names</B>: An array of names specifying the columns to fill.<BR>
-        <B>policy</B>: Specifies the method to use to fill the missing values.
-            For example; forward fill, values, etc.<BR>
-        <B>values</B>: If the policy is "values", use these values to fill the missing
-            holes. Each value corresponds to the same index in the
-            col_names array.<BR>
-        <B>limit</B>: Specifies how many values to fill. Default is -1 meaning fill all missing values.
+        <B>start_value, end_value</B>: Starting and ending values of IndexType.
+        Start value is included. End value is excluded.<BR>
+        <B>increment</B>: Increment by value
       </td>
     </tr>
 

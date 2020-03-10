@@ -28,30 +28,28 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   <table align="center" border="1">
 
     <tr bgcolor="lightblue">
-        <th>Signature</th> <th>Description</th> <th>Parameters</th>
+      <th>Signature</th> <th>Description</th> <th>Parameters</th>
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon" width="33.3%"> <font color="white">
-        template&lt;typename T, size_t N&gt;<BR>
-        void<BR>
-        fill_missing(const std::array<const char *, N> col_names, fill_policy policy, const std::array<T, N> values = { }, int limit = -1);
-
+        template&lt;typename F, typename T, typename I = unsigned long&gt;<BR>
+        struct ExponentialRollAdopter;</font>
       </td>
       <td>
-        It fills all the "missing values" with the given values, and/or using the given method
-        (See fill_policy above). Missing is determined by being NaN for types that have NaN.
-        For types without NaN (e.g. string), default value is considered missing value
+        This functor applies functor F to the data in an exponentially decaying rolling progression. The roll count is given to the constructor of ExponentialRollAdopter. The other parameters to the constructor determine how the decay is calculated. Please see the exponential_decay_spec type above.<BR>
+        The result is a vector of values with same number of items as the given column. The first roll_count items, in the result, will be NAN.<BR>
+        The formula used is: <I>(decay * Xt) + ((1 − decay) * Yt-1)</I><BR>
+        Where:<BR>
+        <I>Xt</I> is current value<BR>
+        <I>Yt-1</I> is last calculated stats<BR>
+        <PRE>
+          inline ExponentialRollAdopter(F &&functor, size_t roll_count, exponential_decay_spec eds, double value)
+        </PRE>
       </td>
-      <td>
-        <B>T</B>: Type of the column(s) in col_names array<BR>
-        <B>N</B>: Size of col_names and values array
-        <B>col_names</B>: An array of names specifying the columns to fill.<BR>
-        <B>policy</B>: Specifies the method to use to fill the missing values.
-            For example; forward fill, values, etc.<BR>
-        <B>values</B>: If the policy is "values", use these values to fill the missing
-            holes. Each value corresponds to the same index in the
-            col_names array.<BR>
-        <B>limit</B>: Specifies how many values to fill. Default is -1 meaning fill all missing values.
+      <td width="33.3%">
+        <B>F</B>: Functor type<BR>
+        <B>T</B>: Column data type<BR>
+        <B>I</B>: Index type
       </td>
     </tr>
 

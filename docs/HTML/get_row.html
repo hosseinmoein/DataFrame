@@ -28,20 +28,24 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   <table align="center" border="1">
 
     <tr bgcolor="lightblue">
-      <th>Signature</th> <th>Description</th> <th>Parameters</th>
+        <th>Signature</th> <th>Description</th> <th>Parameters</th>
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        templat&lt;typename T, typename I = unsigned long, typename = typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;<BR>
-        struct GeometricMeanVisitor; </font>
-      </td>
-      <td width="33.3%">
-This functor class calculates the geometric mean of a given column. The constructor takes a single optional Boolean argument to whether skip NaN values. The default is True.<BR>
-See this document and dataframe_tester.cc for examples.<BR>
+        HeteroVector<BR>
+        get_row(size_type row_num, const std::array&lt;const char *, N&gt; col_names) const;
       </td>
       <td>
-        <B>T</B>: Column data type.<BR>
-        <B>I</B>: Index type.
+        It returns the data in row row_num for columns in col_names. The order of data items in the returned vector is the same as order of columns on col_names.<BR>
+        The first item in the returned vector is always the index value<BR>
+        corresponding to the row_num<BR>
+        It returns a HeteroVector which contains a different type for each column.<BR>
+      </td>
+      <td>
+        <B>N</B>: Size of col_names and values array<BR>
+        <B>Ts</B>: The list of types for all columns. A type should be specified only once.<BR>
+        <B>row_num</B>: The row number<BR>
+        <B>col_names</B>: Names of columns to get data from. It also specifies the order of data in the returned vector
       </td>
     </tr>
 

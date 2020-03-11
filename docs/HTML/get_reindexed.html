@@ -1,0 +1,81 @@
+<!--
+Copyright (c) 2019-2022, Hossein Moein
+All rights reserved.
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+* Redistributions of source code must retain the above copyright
+  notice, this list of conditions and the following disclaimer.
+* Redistributions in binary form must reproduce the above copyright
+  notice, this list of conditions and the following disclaimer in the
+  documentation and/or other materials provided with the distribution.
+* Neither the name of Hossein Moein and/or the DataFrame nor the
+  names of its contributors may be used to endorse or promote products
+  derived from this software without specific prior written permission.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL Hossein Moein BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+<!DOCTYPE html>
+<html>
+<body>
+  <table align="center" border="1">
+
+    <tr bgcolor="lightblue">
+        <th>Signature</th> <th>Description</th> <th>Parameters</th>
+    </tr>
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon" width="33.3%"> <font color="white">
+        template&lt;typename T, typename ... Ts&gt;<BR>
+        StdDataFrame&lt;T&gt;<BR>
+        get_reindexed(const char *col_to_be_index, const char *old_index_name = nullptr) const; </font>
+      </td>
+      <td>
+        It creates and returns a new DataFrame which has the col_to_be_index column as the index. If old_index_name is not null, it will be loaded as a regular column in the result under the name old_index_name.<BR>
+        <B>NOTE</B>: If the new index column is shorter than other columns, every column will be cut to that length.<BR>
+        <B>NOTE</B>: Columns will not be padded by nan
+      </td>
+      <td>
+        <B>T</B>: Type of the "new index" column<BR>
+        <B>Ts</B>: List all the types of all data columns. A type should be specified in the list only once.<BR>
+        <B>col_to_be_index</B>: Name of the column you want as the new index. This name will not be a column in the result anymore<BR>
+        <B>old_index_name</B>: Name of the current index, if converted into a regular column in the result. If this is null, the current index will not be loaded into the result as a column.<BR>
+      </td>
+    </tr>
+
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        template&lt;typename T, typename ... Ts&gt;<BR>
+        StdDataFrame&lt;T&gt;<BR>
+        get_reindexed_view(const char *col_to_be_index, const char *old_index_name = nullptr) const; </font>
+      </td>
+      <td>
+        This is similar to get_reindexed(), but it returns a view. Please read above for specs.<BR>
+        <B>Note</B>: There are certain operations that you cannot do with a view. For example, you cannot add/delete columns, etc.<BR>
+        <B>Note</B>: Although this is a const method, it returns a view. So, the data could still be modified through the returned view
+      </td>
+      <td>
+        <B>T</B>: Type of the "new index" column<BR>
+        <B>Ts</B>: List all the types of all data columns. A type should be specified in the list only once.<BR>
+        <B>col_to_be_index</B>: Name of the column you want as the new index. This name will not be a column in the result anymore<BR>
+        <B>old_index_name</B>: Name of the current index, if converted into a regular column in the result. If this is null, the current index will not be loaded into the result as a column.<BR>
+      </td>
+    </tr>
+
+  </table> 
+</body>
+</html>
+
+<!--
+Local Variables:
+mode:HTML
+tab-width:4
+c-basic-offset:4
+End:
+-->

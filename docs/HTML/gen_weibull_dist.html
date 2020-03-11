@@ -28,20 +28,27 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   <table align="center" border="1">
 
     <tr bgcolor="lightblue">
-      <th>Signature</th> <th>Description</th> <th>Parameters</th>
+        <th>Signature</th> <th>Description</th> <th>Parameters</th>
     </tr>
+
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        templat&lt;typename T, typename I = unsigned long, typename = typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;<BR>
-        struct GeometricMeanVisitor; </font>
-      </td>
-      <td width="33.3%">
-This functor class calculates the geometric mean of a given column. The constructor takes a single optional Boolean argument to whether skip NaN values. The default is True.<BR>
-See this document and dataframe_tester.cc for examples.<BR>
+        template&lt;typename T&gt;<BR>
+        std::vector&lt;T&gt;<BR>
+        gen_weibull_dist(std::size_t n, const RandGenParams&lt;T&gt; &amp;params = { }); </font>
       </td>
       <td>
-        <B>T</B>: Column data type.<BR>
-        <B>I</B>: Index type.
+        Produces random non-negative floating-point values x, distributed according to probability density function:<BR>
+        see https://en.cppreference.com/w/cpp/numeric/random/weibull_distribution<BR>
+        <BR>
+        It returns the vector of results<BR>
+        Optional parameters to set:<BR>
+        alpha (shape), beta (scale), seed
+      </td>
+      <td>
+        <B>T</B>: Type can only be float, double, or long double<BR>
+        <B>n</B>: Number of numerics to generate<BR>
+        <B>params</B>: List of all applicable parameters, see DataFrameTypes.h
       </td>
     </tr>
 

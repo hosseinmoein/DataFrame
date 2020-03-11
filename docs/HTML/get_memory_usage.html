@@ -30,18 +30,22 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <tr bgcolor="lightblue">
       <th>Signature</th> <th>Description</th> <th>Parameters</th>
     </tr>
+
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        templat&lt;typename T, typename I = unsigned long, typename = typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;<BR>
-        struct GeometricMeanVisitor; </font>
-      </td>
-      <td width="33.3%">
-This functor class calculates the geometric mean of a given column. The constructor takes a single optional Boolean argument to whether skip NaN values. The default is True.<BR>
-See this document and dataframe_tester.cc for examples.<BR>
+        template&lt;typename T&gt;<BR>
+        get_memory_usage(const char *col_name) const;<BR>
+        </td>
+      <td width = "50%">
+        It returns the memory used by the given column and index column.<BR>
+        All numbers are in bytes.<BR>
+        MemUsage is a structure defined in DataFrameTypes.h file.<BR>
+
+                <B>NOTE</B>: The returned values are only estimates. The actual allocated memory by OS is unknown to any container object. In other words, the actual memory used might be and probably is larger than numbers returned by this call. Also if a type (T) allocates dynamic memory, it is not included in the result
       </td>
       <td>
-        <B>T</B>: Column data type.<BR>
-        <B>I</B>: Index type.
+        <B>T</B>: Type of the col_name column.<BR>
+        <B>col_name</B>: Name of the column
       </td>
     </tr>
 

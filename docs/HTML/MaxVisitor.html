@@ -32,16 +32,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        templat&lt;typename T, typename I = unsigned long, typename = typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;<BR>
-        struct GeometricMeanVisitor; </font>
+        templat&lt;typename T, typename I = unsigned long&gt;<BR>
+        struct MaxVisitor; </font>
       </td>
       <td width="33.3%">
-This functor class calculates the geometric mean of a given column. The constructor takes a single optional Boolean argument to whether skip NaN values. The default is True.<BR>
-See this document and dataframe_tester.cc for examples.<BR>
+        This functor class calculates the maximum of a given column. The constructor takes a single optional Boolean argument to whether skip NaN values. The default is True.<BR>
+        See this document and dataframe_tester.cc for examples.<BR>
       </td>
-      <td>
-        <B>T</B>: Column data type.<BR>
-        <B>I</B>: Index type.
+      <td width="15%">
+        <B>T</B>: Column data type<BR>
+        <B>I</B>: Index type
       </td>
     </tr>
 

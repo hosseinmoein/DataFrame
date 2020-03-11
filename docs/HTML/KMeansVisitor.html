@@ -32,16 +32,31 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        templat&lt;typename T, typename I = unsigned long, typename = typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;<BR>
-        struct GeometricMeanVisitor; </font>
+        template&lt;size_t K, typename T, typename I = unsigned long&gt;<BR>
+        struct KMeansVisitor; </font>
       </td>
       <td width="33.3%">
-This functor class calculates the geometric mean of a given column. The constructor takes a single optional Boolean argument to whether skip NaN values. The default is True.<BR>
-See this document and dataframe_tester.cc for examples.<BR>
+        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_action_visit() interface.<BR>
+        This functor class finds the K means in the data. It could also cluster the data round the means.<BR>
+        The constructor takes two parameters<BR>
+        <OL>
+        <LI>Number of iterations</LI>
+        <LI>A function to calculate distance between to data points of type T with a default value<BR>
+        <PRE>
+    KMeansVisitor(size_type num_of_iter,
+                  distance_func f = [](const value_type &x, const value_type &y) -> double {
+                                        return ((x - y) * (x - y));
+                                    })
+        </PRE>
+        </LI>
+        </OL>
+        The result type is an array of K means of type T.<BR>
+        There is also a get_clusters() method that returns an array of K VectorPtrView’s which contain the data clustered around the K-Means. The first element in each VectorPtrView is the mean and the reset are the data points belonging to that cluster.
       </td>
       <td>
-        <B>T</B>: Column data type.<BR>
-        <B>I</B>: Index type.
+        <B>K</B>: Number of means to find<BR>
+        <B>T</B>: Column data type<BR>
+        <B>I</B>: Index type
       </td>
     </tr>
 

@@ -33,15 +33,36 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
         templat&lt;typename T, typename I = unsigned long, typename = typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;<BR>
-        struct GeometricMeanVisitor; </font>
+        struct MACDVisitor; </font>
       </td>
       <td width="33.3%">
-This functor class calculates the geometric mean of a given column. The constructor takes a single optional Boolean argument to whether skip NaN values. The default is True.<BR>
-See this document and dataframe_tester.cc for examples.<BR>
+        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_action_visit() interface.<BR>
+        This functor class calculates the Moving Average Convergence/Divergence oscillator (MACD) which is one of the simplest and most effective momentum indicators available. It could be used to generate signals within financial applications.<BR>
+        The constructor takes:<BR>
+        <UL>
+          <LI>Number of periods for the short-term exponential moving average.</LI>
+          <LI>Number of periods for the long-term exponential moving average. (short-term EMA – long-term EMA) = MACD Line</LI>
+          <LI>Number of periods for the signal line. EMA(MACD Line) = Signal Line</LI>
+          <LI>Decay type for the exponential moving averages.</LI>
+          <LI>Decay value for the exponential moving averages (See DataFrame Types and Exponential Roll Adopter).</LI>
+        </UL>
+        <PRE>
+        MACDVisitor(size_type short_mean_period,  // e.g. 12-day
+                    size_type long_mean_period,   // e.g. 26-day
+                    size_type signal_line_period, // e.g.  9-day
+                    exponential_decay_spec ed_spec = exponential_decay_spec::span,
+                    double expo_decay_value = 0.2)
+        </PRE>
+        <OL>
+        There are 3 methods that give you the results:
+          <LI>const result_type &amp;get_macd_line() const – Returns vector of MACD Line (See above).</LI>
+          <LI>const result_type &amp;get_signal_line() const – Returns vector of Signal Line (See above).</LI>
+          <LI>const result_type &amp;get_macd_histogram() const – Returns vector of MACD Histogram. (MACD Line – Signal Line) = MACD Histogram</LI>
+</OL>
       </td>
-      <td>
-        <B>T</B>: Column data type.<BR>
-        <B>I</B>: Index type.
+      <td width="15%">
+        <B>T</B>: Column data type<BR>
+        <B>I</B>: Index type
       </td>
     </tr>
 

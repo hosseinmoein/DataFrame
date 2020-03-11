@@ -28,24 +28,28 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   <table align="center" border="1">
 
     <tr bgcolor="lightblue">
-      <th>Signature</th> <th>Description</th> <th>Parameters</th>
+      <th>Signature</th> <th>Description</th>
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        templat&lt;typename T, typename I = unsigned long, typename = typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;<BR>
-        struct GeometricMeanVisitor; </font>
-      </td>
-      <td width="33.3%">
-This functor class calculates the geometric mean of a given column. The constructor takes a single optional Boolean argument to whether skip NaN values. The default is True.<BR>
-See this document and dataframe_tester.cc for examples.<BR>
+        struct  MemUsage  {<BR>
+            &emsp;size_t  column_used_memory { 0 };<BR>
+            &emsp;size_t  column_capacity_memory { 0 };<BR>
+            &emsp;size_t  column_type_size { 0 };<BR>
+            &emsp;size_t  index_used_memory { 0 };<BR>
+            &emsp;size_t  index_capacity_memory { 0 };<BR>
+            &emsp;size_t  index_type_size { 0 };<BR>
+        <BR>
+            &emsp;template<typename S><BR>
+            &emsp;friend S &operator << (S &stream, const MemUsage &mu);<BR>
+        }; </font>
       </td>
       <td>
-        <B>T</B>: Column data type.<BR>
-        <B>I</B>: Index type.
+        This struct holds the result of calling get_memory_usage() method on DataFrame.
       </td>
     </tr>
 
-  </table> 
+  </table>
 </body>
 </html>
 

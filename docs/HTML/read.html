@@ -1,0 +1,99 @@
+<!--
+Copyright (c) 2019-2022, Hossein Moein
+All rights reserved.
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+* Redistributions of source code must retain the above copyright
+  notice, this list of conditions and the following disclaimer.
+* Redistributions in binary form must reproduce the above copyright
+  notice, this list of conditions and the following disclaimer in the
+  documentation and/or other materials provided with the distribution.
+* Neither the name of Hossein Moein and/or the DataFrame nor the
+  names of its contributors may be used to endorse or promote products
+  derived from this software without specific prior written permission.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL Hossein Moein BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+<!DOCTYPE html>
+<html>
+<body>
+  <table align="center" border="1">
+
+    <tr bgcolor="lightblue">
+        <th>Signature</th> <th>Description</th> <th>Parameters</th>
+    </tr>
+
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon" width = "33.3%"> <font color="white">
+        bool<BR>
+        read(const char *file_name, io_format iof = io_format::csv); </font>
+      </td>
+      <td>
+        It inputs the contents of a text file into itself (i.e. DataFrame). Currently two formats (i.e. csv, json) are supported specified by the iof parameter.<BR>
+        The csv file format must be:<BR>
+<PRE>
+INDEX:<Number of data points>:<Comma delimited list of values>
+&lt;Column1 name&gt;:&lt;Number of data points&gt;:&lt;Column1 type&gt;:&lt;Comma delimited list of values&gt;
+&lt;Column2 name&gt;:&lt;Number of data points&gt;:&lt;Column2 type&gt;:&lt;Comma delimited list of values&gt;
+.
+.
+.
+</PRE>
+        All empty lines or lines starting with # will be skipped.<BR>
+<BR>
+        The JSON file format looks like this:<BR>
+<PRE>
+{
+    "INDEX":{"N":3,"T":"ulong","D":[123450,123451,123452]},
+    "col_3":{"N":3,"T":"double","D":[15.2,16.34,17.764]},
+    "col_4":{"N":3,"T":"int","D":[22,23,24]},
+    "col_str":{"N":3,"T":"string","D":["11","22","33"]},
+    "col_2":{"N":3,"T":"double","D":[8,9.001,10]},
+    "col_1":{"N":3,"T":"double","D":[1,2,3.456]}
+}
+</PRE>
+        Please note DataFrame json does not follow json spec 100%. In json, there is no particular order in dictionary fields. But in DataFrame json:
+        <OL>
+          <LI>Column “INDEX” must be the first column</LI>
+          <LI>Fields in column dictionaries must be in N, T, D order</LI>
+        </OL>
+      </td>
+      <td>
+        <B>file_name</B>: Complete path to the file<BR>
+        <B>iof</B>: Specifies the I/O format. The default is CSV
+      </td>
+    </tr>
+
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon" width = "33.3%"> <font color="white">
+        std::future&lt;bool&gt;<BR>
+        read_async(const char *file_name, io_format iof = io_format::csv); </font>
+      </td>
+      <td>
+        Same as read() above, but executed asynchronously
+      </td>
+      <td>
+        <B>file_name</B>: Complete path to the file<BR>
+        <B>iof</B>: Specifies the I/O format. The default is CSV
+      </td>
+    </tr>
+
+  </table> 
+</body>
+</html>
+
+<!--
+Local Variables:
+mode:HTML
+tab-width:4
+c-basic-offset:4
+End:
+-->

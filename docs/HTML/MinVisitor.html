@@ -32,15 +32,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        templat&lt;typename T, typename I = unsigned long, typename = typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;<BR>
-        struct BetaVisitor; </font>
+        templat&lt;typename T, typename I = unsigned long&gt;<BR>
+        struct MinVisitor; </font>
       </td>
-      <td width="40%">
-        This functor class calculates the beta (i.e. exposure) of the given first column to the given second column (benchmark).<BR>
-        <T>explicit BetaVisitor (bool bias = true);</I><BR>
+      <td width="33.3%">
+        This functor class calculates the minimum of a given column. The constructor takes a single optional Boolean argument to whether skip NaN values. The default is True.<BR>
         See this document and dataframe_tester.cc for examples.
       </td>
-      <td>
+      <td width="15%">
         <B>T</B>: Column data type<BR>
         <B>I</B>: Index type
       </td>

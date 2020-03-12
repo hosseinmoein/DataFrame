@@ -32,15 +32,28 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        templat&lt;typename T, typename I = unsigned long, typename = typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;<BR>
-        struct BetaVisitor; </font>
-      </td>
-      <td width="40%">
-        This functor class calculates the beta (i.e. exposure) of the given first column to the given second column (benchmark).<BR>
-        <T>explicit BetaVisitor (bool bias = true);</I><BR>
-        See this document and dataframe_tester.cc for examples.
+        templat&lt;typename T, typename I = unsigned long&gt;<BR>
+        struct ModeVisitor; </font>
       </td>
       <td>
+        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_action_visit() interface.<BR>
+        This functor class finds the N highest mode (N most repeated values) of the given column.<BR>
+        The result is an array of N items each of this type:<BR>
+        <PRE>
+        struct  DataItem  {
+            // Value of the column item
+            value_type               value;
+            // List of indices where value occurred
+            std::vector<index_type>  indices;
+            // Number of times value occurred
+            inline size_type repeat_count() const  { return (indices.size()); }
+            // List of column indices where value occurred
+            std::vector<size_type>   value_indices_in_col;
+        };
+        </PRE>
+      </td>
+      <td width = "15%">
+        <B>N</B>: Number of modes to find<BR>
         <B>T</B>: Column data type<BR>
         <B>I</B>: Index type
       </td>

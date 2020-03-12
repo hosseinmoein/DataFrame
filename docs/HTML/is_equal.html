@@ -28,21 +28,20 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   <table align="center" border="1">
 
     <tr bgcolor="lightblue">
-      <th>Signature</th> <th>Description</th> <th>Parameters</th>
+        <th>Signature</th> <th>Description</th> <th>Parameters</th>
     </tr>
     <tr bgcolor="lightgrey">
-      <td bgcolor="maroon"> <font color="white">
-        templat&lt;typename T, typename I = unsigned long, typename = typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;<BR>
-        struct BetaVisitor; </font>
-      </td>
-      <td width="40%">
-        This functor class calculates the beta (i.e. exposure) of the given first column to the given second column (benchmark).<BR>
-        <T>explicit BetaVisitor (bool bias = true);</I><BR>
-        See this document and dataframe_tester.cc for examples.
+      <td bgcolor="maroon" width="20%"> <font color="white">
+        template&lt;typename ... Ts&gt;<BR>
+        bool<BR>
+        is_equal(const DataFrame &amp;rhs) const; </font>
       </td>
       <td>
-        <B>T</B>: Column data type<BR>
-        <B>I</B>: Index type
+        It compares self with rhs. If both have the same indices, same number of columns, same names for each column, and all columns are equal, then it returns true. Otherwise it returns false
+      </td>
+      <td>
+        <B>Ts</B>: The list of types for all columns. A type should be specified only once.<BR>
+        <B>rhs</B>: The other DataFrame
       </td>
     </tr>
 

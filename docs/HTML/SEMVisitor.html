@@ -33,12 +33,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
         templat&lt;typename T, typename I = unsigned long, typename = typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;<BR>
-        struct DotProdVisitor; </font>
-      </td>
-      <td width="33.3%">
-        This functor class calculates the dot-product of two given columns. See this document and dataframe_tester.cc for examples.
+        struct SEMVisitor; </font>
       </td>
       <td>
+        This functor class calculates the Standard Error of the Mean for a given column.<BR>
+        <I>explicit SEMVisitor (bool bias = true);</I><BR>
+        See this document and dataframe_tester.cc for examples.<BR>
+      </td>
+      <td width="15%">
         <B>T</B>: Column data type.<BR>
         <B>I</B>: Index type.
       </td>

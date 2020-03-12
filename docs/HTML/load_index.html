@@ -28,19 +28,35 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   <table align="center" border="1">
 
     <tr bgcolor="lightblue">
-      <th>Signature</th> <th>Description</th> <th>Parameters</th>
+        <th>Signature</th> <th>Description</th> <th>Parameters</th>
     </tr>
+
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        templat&lt;typename T, typename I = unsigned long, typename = typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;<BR>
-        struct DotProdVisitor; </font>
-      </td>
-      <td width="33.3%">
-        This functor class calculates the dot-product of two given columns. See this document and dataframe_tester.cc for examples.
+        template&lt;typename ITR&gt;<BR>
+        size_type<BR>
+        load_index(const ITR &amp;begin const ITR &amp;end); </font>
       </td>
       <td>
-        <B>T</B>: Column data type.<BR>
-        <B>I</B>: Index type.
+		It copies the data from iterators begin to end into the index column<BR>
+        Returns number of items loaded
+      </td>
+      <td>
+        <B>ITR</B>: Type of the iterator
+      </td>
+    </tr>
+
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        template&lt;typename ITR&gt;<BR>
+        size_type<BR>
+        load_index(IndexVecType &amp;&amp;idx); </font>
+      </td>
+      <td>
+		It moves the idx vector into the index column.<BR>
+        Returns number of items loaded
+      </td>
+      <td>
       </td>
     </tr>
 

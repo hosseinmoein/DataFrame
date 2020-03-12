@@ -33,12 +33,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
         templat&lt;typename T, typename I = unsigned long, typename = typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;<BR>
-        struct DotProdVisitor; </font>
+        struct ReturnVisitor; </font>
       </td>
-      <td width="33.3%">
-        This functor class calculates the dot-product of two given columns. See this document and dataframe_tester.cc for examples.
+      <td width="40%">
+        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_action_visit() interface.<BR>
+        This functor class calculates the return of a given column, according to the return policy (monetary, percentage, or log). The result is a vector of returns.<BR>
+        <I>explicit ReturnVisitor (return_policy rp);</I><BR>
+        See this document and dataframe_tester.cc for examples.
       </td>
-      <td>
+      <td width="15%">
         <B>T</B>: Column data type.<BR>
         <B>I</B>: Index type.
       </td>

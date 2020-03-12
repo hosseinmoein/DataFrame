@@ -28,19 +28,25 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   <table align="center" border="1">
 
     <tr bgcolor="lightblue">
-      <th>Signature</th> <th>Description</th> <th>Parameters</th>
+        <th>Signature</th> <th>Description</th> <th>Parameters</th>
     </tr>
+
     <tr bgcolor="lightgrey">
-      <td bgcolor="maroon"> <font color="white">
-        templat&lt;typename T, typename I = unsigned long, typename = typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;<BR>
-        struct DotProdVisitor; </font>
-      </td>
-      <td width="33.3%">
-        This functor class calculates the dot-product of two given columns. See this document and dataframe_tester.cc for examples.
+      <td bgcolor="maroon" width = "33.3%"> <font color="white">
+        template&lt;typename ... Ts&gt;<BR>
+        size_type<BR>
+        load_data(IndexVecType &amp;&amp;indices, Ts ... args); </font>
       </td>
       <td>
-        <B>T</B>: Column data type.<BR>
-        <B>I</B>: Index type.
+        This is the most generalized load function. It creates and loads an index and a variable number of columns. The index vector and all column vectors are "moved" to DataFrame.<BR>
+        Returns number of items loaded
+      </td>
+      <td width = "33.3%">
+        <B>Ts</B>: The list of types for columns in args<BR>
+        <B>indices</B>: A vector of indices (timestamps) of type IndexType;<BR>
+        <B>args</B>: A variable list of arguments consisting of<BR>
+        <I>std::pair(const char *name, std::vector&lt;T&gt; &amp;&amp;data).</I><BR>
+        Each pair represents a column data and its name
       </td>
     </tr>
 

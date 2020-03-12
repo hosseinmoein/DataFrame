@@ -32,15 +32,20 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        templat&lt;typename T, typename I = unsigned long, typename = typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;<BR>
-        struct DotProdVisitor; </font>
+        template&lt;typename F, typename T, typename I = unsigned long&gt;<BR>
+        struct ExpandingRollAdopter;</font>
       </td>
-      <td width="33.3%">
-        This functor class calculates the dot-product of two given columns. See this document and dataframe_tester.cc for examples.
+      <td width = "50%">
+        This functor applies functor F to the data in a rolling progression. The roll count is given to the constructor of SimpleRollAdoptor.<BR>
+        The result is a vector of values with same number of items as the given column. The first roll_count items, in the result, will be NAN.<BR>
+        <PRE>
+          inline SimpleRollAdopter(F &&functor, size_t roll_count)
+        </PRE>
       </td>
       <td>
-        <B>T</B>: Column data type.<BR>
-        <B>I</B>: Index type.
+        <B>F</B>: Functor type<BR>
+        <B>T</B>: Column data type<BR>
+        <B>I</B>: Index type
       </td>
     </tr>
 

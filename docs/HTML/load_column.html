@@ -1,0 +1,101 @@
+<!--
+Copyright (c) 2019-2022, Hossein Moein
+All rights reserved.
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+* Redistributions of source code must retain the above copyright
+  notice, this list of conditions and the following disclaimer.
+* Redistributions in binary form must reproduce the above copyright
+  notice, this list of conditions and the following disclaimer in the
+  documentation and/or other materials provided with the distribution.
+* Neither the name of Hossein Moein and/or the DataFrame nor the
+  names of its contributors may be used to endorse or promote products
+  derived from this software without specific prior written permission.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL Hossein Moein BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+<!DOCTYPE html>
+<html>
+<body>
+  <table align="center" border="1">
+
+    <tr bgcolor="lightblue">
+        <th>Signature</th> <th>Description</th> <th>Parameters</th>
+    </tr>
+
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        template&lt;typename T, typename ITR&gt;<BR>
+        size_type<BR>
+        load_column(const char *name, Index2D&lt;const ITR &amp;&gt; range, nan_policy padding = nan_policy::pad_with_nans); </font>
+      </td>
+      <td>
+        It copies the data from iterators begin to end to the named column. If column does not exist, it will be created. If the column exist, it will be over written.<BR>
+        Returns number of items loaded
+      </td>
+      <td>
+        <B>T</B>: Type of data being copied<BR>
+        <B>ITR</B>: Type of the iterator<BR>
+        <B>name</B>: Name of the column<BR>
+        <B>range</B>: The begin and end iterators for data<BR>
+        <B>padding</B>: If true, it pads the data column with nan if it is shorter than the index column.<BR>
+      </td>
+    </tr>
+
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        template&lt;typename&gt;<BR>
+        size_type<BR>
+        load_column(const char *name, std::vector&lt;T&gt; &amp;&amp;data, nan_policy padding = nan_policy::pad_with_nans); </font>
+      </td>
+      <td>
+        It moves the data to the named column in DataFrame. If column does not exist, it will be created. If the column exist, it will be over written.<BR>
+        Returns number of items loaded
+      </td>
+      <td>
+        <B>T</B>: Type of data being copied<BR>
+        <B>ITR</B>: Type of the iterator<BR>
+        <B>name</B>: Name of the column<BR>
+        <B>range</B>: The begin and end iterators for data<BR>
+        <B>padding</B>: If true, it pads the data column with nan if it is shorter than the index column.<BR>
+      </td>
+    </tr>
+
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        template&lt;typename&gt;<BR>
+        size_type<BR>
+        load_column(const char *name, const std::vector&lt;T&gt; &amp;data, nan_policy padding = nan_policy::pad_with_nans); </font>
+      </td>
+      <td>
+        It copies the data to the named column in DataFrame. If column does not exist, it will be created. If the column exist, it will be over written.<BR>
+        Returns number of items loaded
+      </td>
+      <td>
+        <B>T</B>: Type of data being copied<BR>
+        <B>ITR</B>: Type of the iterator<BR>
+        <B>name</B>: Name of the column<BR>
+        <B>range</B>: The begin and end iterators for data<BR>
+        <B>padding</B>: If true, it pads the data column with nan if it is shorter than the index column.<BR>
+      </td>
+    </tr>
+
+  </table> 
+</body>
+</html>
+
+<!--
+Local Variables:
+mode:HTML
+tab-width:4
+c-basic-offset:4
+End:
+-->

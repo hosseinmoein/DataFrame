@@ -23,18 +23,34 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
 <!DOCTYPE html>
-<html>
-<body>
-  <table align="center" border="1">
+<html><body>
 
-    <tr bgcolor="lightblue">
-      <th>DataFrame Methods</th>
-      <th>DataFrame Types</th>
-      <th>DataFrame Built-in Visitors</th>
-      <th>Random Generators</th>
+<P>
+  In the <font size="+2">method</font> descriptions “I” stands for index type and “T” or “Ts” stand for data type(s)
+</P>
+<P>
+  <font size="+2">Visitors</font> are all defined in files <I>include/DataFrameStatsVisitors.h, include/DataFrameMLVisitors.h</I> and <I>include/DataFrameFinancialVisitors.h.</I> Also see <I>test/data_frame_tester.cc</I> for example usage.<BR>
+  There are some common interfaces in most of the visitors. For example the following interfaces are common between most (but not all) visitors:<BR>
+  <B>get_result()</B> It returns the result of the visitor/algo.<BR>
+  <B>pre()</B> It is called by DataFrame each time before starting to pass the data to the visitor. pre() is the place to initialize the process<BR>
+  <B>post()</B> It is called by DataFrame each time it is done with passing data to the visitor. 
+</P>
+<P>
+<font size="+2">Random generators</font> are a set of convenient routines to generate random number.<BR>
+For the definition and defaults of <I>RandGenParams</I>, see this document and file <I>DataFrameTypes.h</I>
+</P>
+
+<BR><BR>
+
+  <table align="center" border="1">
+    <tr bgcolor="blue">
+      <th><font color="white">DataFrame Methods</font></th>
+      <th><font color="white">DataFrame Types</font></th>
+      <th><font color="white">DataFrame Built-in Visitors</font></th>
+      <th><font color="white">Random Generators</font></th>
     </tr>
 
-    <tr bgcolor="lightgrey">
+    <tr bgcolor="silver">
       <td><a href="append_column.html">append_column</a>( 2 )</td>
       <td>enum class <a href="concat_policy.html">concat_policy</a>{  }</td>
       <td>struct <a href="AffinityPropVisitor.html">AffinityPropVisitor</a>{  }</td>
@@ -48,7 +64,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <td><a href="gen_binomial_dist.html">gen_binomial_dist</a>( )</td>
     </tr>
 
-    <tr bgcolor="lightgrey">
+    <tr bgcolor="silver">
       <td><a href="bucketize.html">bucketize</a>( )</td>
       <td>enum class <a href="fill_policy.html">fill_policy</a>{  }</td>
       <td>struct <a href="BetaVisitor.html">BetaVisitor</a>{  }</td>
@@ -62,7 +78,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <td><a href="gen_chi_squared_dist.html">gen_chi_squared_dist</a>( )</td>
     </tr>
 
-    <tr bgcolor="lightgrey">
+    <tr bgcolor="silver">
       <td><a href="concat.html">concat</a>( )</td>
       <td></td>
       <td>struct <a href="CorrVisitor.html">CorrVisitor</a>{  }</td>
@@ -76,7 +92,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <td><a href="gen_extreme_value_dist.html">gen_extreme_value_dist</a>( )</td>
     </tr>
 
-    <tr bgcolor="lightgrey">
+    <tr bgcolor="silver">
       <td><a href="drop_missing.html">drop_missing</a>( )</td>
       <td>enum class <a href="join_policy.html">join_policy</a>{  }</td>
       <td>struct <a href="CumMaxVisitor.html">CumMaxVisitor</a>{  }</td>
@@ -90,7 +106,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <td><a href="gen_gamma_dist.html">gen_gamma_dist</a>( )</td>
     </tr>
 
-    <tr bgcolor="lightgrey">
+    <tr bgcolor="silver">
       <td><a href="gen_datetime_index.html">gen_datetime_index</a>( )</td>
       <td>enum class <a href="nan_policy.html">nan_policy</a>{  }</td>
       <td>struct <a href="CumProdVisitor.html">CumProdVisitor</a>{  }</td>
@@ -104,7 +120,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <td><a href="gen_lognormal_dist.html">gen_lognormal_dist</a>( )</td>
     </tr>
 
-    <tr bgcolor="lightgrey">
+    <tr bgcolor="silver">
       <td><a href="get_col_unique_values.html">get_col_unique_values</a>( )</td>
       <td>enum class <a href="random_policy.html">random_policy</a>{  }</td>
       <td>struct <a href="DotProdVisitor.html">DotProdVisitor</a>{  }</td>
@@ -118,7 +134,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <td><a href="gen_normal_dist.html">gen_normal_dist</a>( )</td>
     </tr>
 
-    <tr bgcolor="lightgrey">
+    <tr bgcolor="silver">
       <td><a href="get_data_by_idx.html">get_data_by_idx</a>( 2 )</td>
       <td>enum class <a href="shift_policy.html">shift_policy</a>{  }</td>
       <td>struct <a href="ExpandingRollAdopter.html">ExpandingRollAdopter</a>{  }</td>
@@ -132,7 +148,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <td><a href="gen_student_t_dist.html">gen_student_t_dist</a>( )</td>
     </tr>
 
-    <tr bgcolor="lightgrey">
+    <tr bgcolor="silver">
       <td><a href="get_data_by_rand.html">get_data_by_rand</a>( )</td>
       <td>enum class <a href="sort_state.html">sort_state</a>{  }</td>
       <td>struct <a href="GeometricMeanVisitor.html">GeometricMeanVisitor</a>{  }</td>
@@ -146,7 +162,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <td><a href="gen_uniform_real_dist.html">gen_uniform_real_dist</a>( )</td>
     </tr>
 
-    <tr bgcolor="lightgrey">
+    <tr bgcolor="silver">
       <td><a href="get_index.html">get_index</a>( 2 )</td>
       <td>struct BadRange{  } -- An Exception</td>
       <td>struct <a href="HarmonicMeanVisitor.html">HarmonicMeanVisitor</a>{  }</td>
@@ -160,7 +176,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <td></td>
     </tr>
 
-    <tr bgcolor="lightgrey">
+    <tr bgcolor="silver">
       <td><a href="get_reindexed.html">get_reindexed</a>( )</td>
       <td>struct DataFrameError{  } -- An Exception</td>
       <td>struct <a href="KthValueVisitor.html">KthValueVisitor</a>{  }</td>
@@ -174,7 +190,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <td></td>
     </tr>
 
-    <tr bgcolor="lightgrey">
+    <tr bgcolor="silver">
       <td><a href="get_row.html">get_row</a>( )</td>
       <td>enum class <a href="Index2D.html">Index2D</a>{  }</td>
       <td>struct <a href="MADVisitor.html">MADVisitor</a>{  }</td>
@@ -188,7 +204,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <td></td>
     </tr>
 
-    <tr bgcolor="lightgrey">
+    <tr bgcolor="silver">
       <td><a href="get_data_by_loc.html">get_view_by_loc</a>( 2 )</td>
       <td>struct NotFeasible{  } -- An Exception</td>
       <td>struct <a href="MeanVisitor.html">MeanVisitor</a>{  }</td>
@@ -202,7 +218,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <td></td>
     </tr>
 
-    <tr bgcolor="lightgrey">
+    <tr bgcolor="silver">
       <td><a href="get_data_by_sel.html">get_view_by_sel</a>( 3 )</td>
       <td></td>
       <td>struct <a href="MinVisitor.html">MinVisitor</a>{  }</td>
@@ -216,7 +232,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <td></td>
     </tr>
 
-    <tr bgcolor="lightgrey">
+    <tr bgcolor="silver">
       <td><a href="groupby.html">groupby_async</a>( )</td>
       <td></td>
       <td>struct <a href="NLargestVisitor.html">NLargestVisitor</a>{  }</td>
@@ -230,7 +246,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <td></td>
     </tr>
 
-    <tr bgcolor="lightgrey">
+    <tr bgcolor="silver">
       <td><a href="is_equal.html">is_equal</a>( )</td>
       <td></td>
       <td>struct <a href="ProdVisitor.html">ProdVisitor</a>{  }</td>
@@ -244,7 +260,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <td></td>
     </tr>
 
-    <tr bgcolor="lightgrey">
+    <tr bgcolor="silver">
       <td><a href="join_by_column.html">join_by_index</a>( )</td>
       <td></td>
       <td>struct <a href="ReturnVisitor.html">ReturnVisitor</a>{  }</td>
@@ -258,7 +274,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <td></td>
     </tr>
 
-    <tr bgcolor="lightgrey">
+    <tr bgcolor="silver">
       <td><a href="load_data.html">load_data</a>( )</td>
       <td></td>
       <td>struct <a href="SEMVisitor.html">SEMVisitor</a>{  }</td>
@@ -272,7 +288,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <td></td>
     </tr>
 
-    <tr bgcolor="lightgrey">
+    <tr bgcolor="silver">
       <td><a href="make_consistent.html">make_consistent</a>( )</td>
       <td></td>
       <td>struct <a href="SLRegressionVisitor.html">SLRegressionVisitor</a>{  }</td>
@@ -286,7 +302,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <td></td>
     </tr>
 
-    <tr bgcolor="lightgrey">
+    <tr bgcolor="silver">
       <td><a href="multi_visit.html">multi_visit</a>( )</td>
       <td></td>
       <td>struct <a href="StdVisitor.html">StdVisitor</a>{  }</td>
@@ -300,7 +316,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <td></td>
     </tr>
 
-    <tr bgcolor="lightgrey">
+    <tr bgcolor="silver">
       <td><a href="read.html">read_async</a>( )</td>
       <td></td>
       <td>struct <a href="TrackingErrorVisitor.html">TrackingErrorVisitor</a>{  }</td>
@@ -314,7 +330,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <td></td>
     </tr>
 
-    <tr bgcolor="lightgrey">
+    <tr bgcolor="silver">
       <td><a href="remove_data_by_idx.html">remove_data_by_idx</a>( )</td>
       <td></td>
       <td>struct <a href="VWBASVisitor.html">VWBASVisitor</a>{  }</td>
@@ -328,7 +344,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <td></td>
     </tr>
 
-    <tr bgcolor="lightgrey">
+    <tr bgcolor="silver">
       <td><a href="remove_data_by_sel.html">remove_data_by_sel</a>( 3 )</td>
       <td></td>
       <td></td>
@@ -342,7 +358,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <td></td>
     </tr>
 
-    <tr bgcolor="lightgrey">
+    <tr bgcolor="silver">
       <td><a href="rename_column.html">rename_column</a>( )</td>
       <td></td>
       <td></td>
@@ -356,7 +372,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <td></td>
     </tr>
 
-    <tr bgcolor="lightgrey">
+    <tr bgcolor="silver">
       <td><a href="replace.html">replace_async</a>( 2 )</td>
       <td></td>
       <td></td>
@@ -370,7 +386,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <td></td>
     </tr>
 
-    <tr bgcolor="lightgrey">
+    <tr bgcolor="silver">
       <td><a href="rotate.html">rotate</a>( )</td>
       <td></td>
       <td></td>
@@ -384,7 +400,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <td></td>
     </tr>
 
-    <tr bgcolor="lightgrey">
+    <tr bgcolor="silver">
       <td><a href="concat.html">self_concat</a>( )</td>
       <td></td>
       <td></td>
@@ -398,7 +414,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <td></td>
     </tr>
 
-    <tr bgcolor="lightgrey">
+    <tr bgcolor="silver">
       <td><a href="self_shift.html">self_shift</a>( )</td>
       <td></td>
       <td></td>
@@ -412,7 +428,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <td></td>
     </tr>
 
-    <tr bgcolor="lightgrey">
+    <tr bgcolor="silver">
       <td><a href="remove_lock.html">set_lock</a>( )</td>
       <td></td>
       <td></td>
@@ -426,7 +442,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <td></td>
     </tr>
 
-    <tr bgcolor="lightgrey">
+    <tr bgcolor="silver">
       <td><a href="shrink_to_fit.html">shrink_to_fit</a>( )</td>
       <td></td>
       <td></td>
@@ -440,18 +456,65 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <td></td>
     </tr>
 
-    <tr bgcolor="lightgrey">
+    <tr bgcolor="silver">
       <td><a href="single_act_visit.html">single_act_visit</a>( 2 )</td>
       <td></td>
       <td></td>
       <td></td>
     </tr>
 
+    <tr bgcolor="lightgrey">
+      <td><a href="sort.html">sort</a>( 5 )</td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+
+    <tr bgcolor="silver">
+      <td><a href="sort.html">sort_async</a>( 5 )</td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+
+    <tr bgcolor="lightgrey">
+      <td><a href="transpose.html">transpose</a>( )</td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+
+    <tr bgcolor="silver">
+      <td><a href="value_counts.html">value_counts</a>( )</td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+
+    <tr bgcolor="lightgrey">
+      <td><a href="visit.html">visit</a>( 5 )</td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+
+    <tr bgcolor="silver">
+      <td><a href="write.html">write</a>( )</td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+
+    <tr bgcolor="lightgrey">
+      <td><a href="write.html">write_async</a>( )</td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
   </table>
 
   <BR><BR>
-</body>
-</html>
+</body></html>
 
 <!--
 Local Variables:

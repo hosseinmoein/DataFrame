@@ -514,6 +514,86 @@ For the definition and defaults of <I>RandGenParams</I>, see this document and f
   </table>
 
   <BR><BR>
+
+  <H1><font color="blue">GLOBAL OPERATORS</font></H1>
+  <P>
+    These are currently arithmetic operators declared in include/DataFrame.h. Because they all have to be templated, they cannot be defined as redefined built-in operators.<BR>
+    <PRE>
+    <font color="maroon" size="+1">
+        template&lt;typename DF, typename ... Ts&gt;
+        inline DF df_plus(const DF &amp;lhs, const DF &amp;rhs);
+ 
+        template&lt;typename DF, typename ... Ts&gt;
+        inline DF df_minus(const DF &amp;lhs, const DF &amp;rhs);
+ 
+        template&lt;typename DF, typename ... Ts&gt;
+        inline DF df_multiplies(const DF &amp;lhs, const DF &amp;rhs);
+ 
+        template&lt;typename DF, typename ... Ts&gt;
+        inline DF df_divides(const DF &amp;lhs, const DF &amp;rhs);
+    </font>
+    </PRE>
+    These arithmetic operations operate on the same-name and same-type columns on lhs and rhs. Each pair of entries is operated on, only if they have the same index value.<BR>
+    They return a new DataFrame<BR>
+    <B>NOTE</B>: Both lhs and rhs must be already sorted by index, otherwise the result is nonsensical.
+  </P>
+
+  <H1><font color="blue">MOTIVATION</font></H1>
+  <P>
+    Although Pandas has a spot-on interface and it is full of useful functionalities, it lacks performance and scalability. For example, it is hard to decipher high-frequency intraday data such as Options data or S&amp;P500 constituents tick-by-tick data using Pandas.<BR>
+    Another issue I have encountered often is the research is done using Python, because it has such tools as Pandas, but the execution in production is in C++ for its efficiency, reliability and scalability. Therefore, there is this translation, or sometimes a bridge, between research and executions.<BR>
+    Also, in this day and age, C++ needs a heterogeneous data container.<BR>
+    Mainly because of these factors, I implemented the C++ DataFrame.<BR>
+    <I>I welcome all contributions from people with expertise, interest, and time to do it. I will add more functionalities from time to time, but currently my spare time is limited.</I>
+  </P>
+
+  <H1><font color="blue">Views</font></H1>
+  <P>
+    Views were added in the second wave. It is a very useful concept with practical use-cases. A view is a slice of a DataFrame that is a reference to the original DataFrame. It appears exactly the same as a DataFrame, but if you modify any data in the view, the corresponding data point(s) in the original DataFrame will also be modified.<BR>
+    There are certain things you cannot do in views. For example, you cannot add to delete columns, extend the index column, ...<BR>
+    For more understanding, look at this document further and/or the test files.
+  </P>
+
+  <H1><font color="blue">Visitors</font></H1>
+  <P>
+    Visitors are the mechanism to run statistical algorithms. Most of DataFrame statistical algorithms are in “visitors”. Visitor is the mechanism by which DataFrame passes data points to your algorithm. You can add your own algorithms to a visitor functor and extend DataFrame easily. There are two kinds of visitation mechanisms in DataFrame:<BR>
+      <OL>
+        <LI>Regular visit (visit()). In this case DataFrame passes the given column(s) data points one-by-one to the visitor functor. This is convenient for algorithms that can operate one data point at a time (e.g. correlation, variance).</LI>
+        <LI>Single-action visit (single_act_visit()). In this case a reference to the given column(s) are passed to the visitor functor at once. This is necessary for algorithms that need the whole data together (e.g. return, median).</LI>
+      </OL>
+    See this document, <I>DataFrameStatsVisitors.h, DataFrameMLVisitors.h, DataFrameFinancialVisitors.h,</I> and <I>dataframe_tester.cc</I> for more examples and documentation.
+  </P>
+
+  <H1><font color="blue">Random Generators</font></H1>
+  <P>
+    Random generators were added as a series of convenient stand-alone functions to generate random numbers (it covers all C++ standard distributions). You can seamlessly use these routines to generate random DataFrame columns.<BR>
+    See this document and file <I>RandGen.h</I> and <I>dataframe_tester.cc.</I>
+  </P>
+
+  <H1><font color="blue">CODE STRUCTURE</font></H1>
+  <P>
+    The DataFrame library is “almost” a header-only library with a few boilerplate source file exceptions, <I>HeteroVector.cc</I> and <I>HeteroView.cc</I> and a few others. Also there is <I>DateTime.cc.</I><BR>
+    <BR>
+    Starting from the root directory;<BR>
+    <font size="+2">include</font> directory contains most of the code. It includes <I>.h</I> and <I>.tcc</I> files. The latter are C++ template code files (they are mostly located in the <I>Internals</I> subdirectory). The main header file is <I>DataFrame.h.</I> It contains the DataFrame class and its interface. There are comprehensive comments for each public interface call in that file. The rest of the files there will show you how the sausage is made.<BR>
+    Include directory also contains subdirectories that contain mostly internal DataFrame implementation.<BR>
+    One exception, the <I>DateTime.h</I> is located in the Utils subdirectory<BR>
+    <BR>
+    <font size="+2">src</font> directory contains Linux-only make files and a few subdirectories that contain various source codes.<BR>
+    <BR>
+    <font size="+2">test</font> directory contains all the test source files, mocked data files, and test output files. The main test source file is <I>dataframe_tester.cc.</I> It contains test cases for all functionalities of DataFrame. It is not in a very organized structure. I plan to make the test cases more organized.
+  </P>
+
+  <H1><font color="blue">BUILD INSTRUCTIONS</font></H1>
+  <P>
+    <font size="+2">Using plain make and make-files</font><BR>
+    Go to the root of the repository, where license file is, and execute build_all.sh. This will build the library and test executables for Linux flavors <BR>
+    <font size="+2">Using cmake</font><BR>
+    Please see README file. Thanks to @justinjk007, you should be able to build this in Linux, Windows, Mac, and more
+  </P>
+
+  <BR><BR>
+
 </body></html>
 
 <!--

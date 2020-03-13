@@ -113,10 +113,11 @@ df.visit<double>("dbl_col", stats_visitor);
 
 ---
 
-<!--
+
 ## [DataFrame Documentation](https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html)
--->
+<!--
 ## [DataFrame Documentation](docs/DataFrameDoc.pdf)
+-->
 [DateTime Documentation](docs/DateTimeDoc.pdf)
 
 ---

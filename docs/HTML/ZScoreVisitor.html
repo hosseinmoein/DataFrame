@@ -30,32 +30,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <tr bgcolor="lightblue">
       <th>Signature</th> <th>Description</th> <th>Parameters</th>
     </tr>
-
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        size_type<BR>
-        append_index(const IndexType &amp;val); </font>
+        templat&lt;typename T, typename I = unsigned long, typename = typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;<BR>
+        struct ZScoreVisitor; </font>
       </td>
-      <td>
-        It appends val to the end of the index column.  Returns number of items loaded<BR>
-        Returns number of items loaded
+      <td width="33.3%">
+        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_action_visit() interface.<BR>
+        This functor class calculates the z-score each value in a given column against the same column as the population. Its result is a vector of z-scores.<BR>
       </td>
-      <td></td>
-    </tr>
-
-    <tr bgcolor="lightgrey">
-      <td bgcolor="maroon"> <font color="white">
-        template&lt;typename ITR&gt;<BR>
-        size_type<BR>
-        append_index(Index2D<const ITR &> range); </font>
-      </td>
-      <td>
-        It appends the range begin to end to the end of the index column<BR>
-        Returns number of items loade
-      </td>
-      <td>
-        <B>TR</B>: Type of the iterator<BR>
-        <B>range</B>: The begin and end iterators for data<BR>
+      <td width="15%">
+        <B>T</B>: Column data type.<BR>
+        <B>I</B>: Index type.
       </td>
     </tr>
 

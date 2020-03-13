@@ -28,34 +28,22 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   <table align="center" border="1">
 
     <tr bgcolor="lightblue">
-      <th>Signature</th> <th>Description</th> <th>Parameters</th>
+        <th>Signature</th> <th>Description</th> <th>Parameters</th>
     </tr>
-
     <tr bgcolor="lightgrey">
-      <td bgcolor="maroon"> <font color="white">
-        size_type<BR>
-        append_index(const IndexType &amp;val); </font>
+      <td bgcolor="maroon" width = "33.3%"> <font color="white">
+        template&lt;typename ... Ts&gt;<BR>
+        void<BR>
+        remove_data_by_loc(Index2D&lt;I&gt; range); </font>
       </td>
-      <td>
-        It appends val to the end of the index column.  Returns number of items loaded<BR>
-        Returns number of items loaded
+      <td width = "33.3%">
+        It removes the data rows from location begin to location end within range.<BR>
+        This function supports Python-like negative indexing. That is why the range type is int.<BR>
+        This function first calls make_consistent() that may add nan values to data columns.
       </td>
-      <td></td>
-    </tr>
-
-    <tr bgcolor="lightgrey">
-      <td bgcolor="maroon"> <font color="white">
-        template&lt;typename ITR&gt;<BR>
-        size_type<BR>
-        append_index(Index2D<const ITR &> range); </font>
-      </td>
-      <td>
-        It appends the range begin to end to the end of the index column<BR>
-        Returns number of items loade
-      </td>
-      <td>
-        <B>TR</B>: Type of the iterator<BR>
-        <B>range</B>: The begin and end iterators for data<BR>
+      <td width = "33.3%">
+        <B>Ts</B>: The list of types for all columns. A type should be specified only once.<BR>
+        <B>range</B>: The begin and end iterators for data
       </td>
     </tr>
 

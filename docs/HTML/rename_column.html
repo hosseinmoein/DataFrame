@@ -33,30 +33,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        size_type<BR>
-        append_index(const IndexType &amp;val); </font>
+        void<BR>
+        rename_column (const char *from, const char *to); </font>
       </td>
       <td>
-        It appends val to the end of the index column.  Returns number of items loaded<BR>
-        Returns number of items loaded
+        It renames column named from to to. If column from does not exists, it throws an exception<BR>
       </td>
       <td></td>
-    </tr>
-
-    <tr bgcolor="lightgrey">
-      <td bgcolor="maroon"> <font color="white">
-        template&lt;typename ITR&gt;<BR>
-        size_type<BR>
-        append_index(Index2D<const ITR &> range); </font>
-      </td>
-      <td>
-        It appends the range begin to end to the end of the index column<BR>
-        Returns number of items loade
-      </td>
-      <td>
-        <B>TR</B>: Type of the iterator<BR>
-        <B>range</B>: The begin and end iterators for data<BR>
-      </td>
     </tr>
 
   </table> 

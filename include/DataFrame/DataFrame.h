@@ -1407,7 +1407,7 @@ public: // Read/access and slicing interfaces
     //   Name of the current index, if converted into a regular column in the
     //   result. If this is null, the current index will not be loaded into
     //   the result as a column.
-    //   
+    //
     template<typename T, typename ... Ts>
     StdDataFrame<T>
     get_reindexed(const char *col_to_be_index,
@@ -1433,7 +1433,7 @@ public: // Read/access and slicing interfaces
     //   Name of the current index, if converted into a regular column in the
     //   result. If this is null, the current index will not be loaded into
     //   the result as a column.
-    //   
+    //
     template<typename T, typename ... Ts>
     DataFrameView<T>
     get_reindexed_view(const char *col_to_be_index,
@@ -1498,6 +1498,16 @@ public:  // Visitors
 
         return(const_cast<DataFrame *>(this)->visit<T, V>(name, visitor));
     }
+
+    template<typename T, typename V>
+	std::future<void>
+    visit_async(const char *name, V &visitor);
+
+    template<typename T, typename V>
+	std::future<void>
+    visit_async(const char *name, V &visitor) const;
+
+
 
     // It passes the values of each index and the two named columns to the
     // functor visitor sequentially from beginning to end

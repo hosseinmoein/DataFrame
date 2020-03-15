@@ -1499,15 +1499,15 @@ public:  // Visitors
         return(const_cast<DataFrame *>(this)->visit<T, V>(name, visitor));
     }
 
+    /*
     template<typename T, typename V>
-	std::future<void>
+    std::future<void>
     visit_async(const char *name, V &visitor);
 
     template<typename T, typename V>
-	std::future<void>
+    std::future<void>
     visit_async(const char *name, V &visitor) const;
-
-
+    */
 
     // It passes the values of each index and the two named columns to the
     // functor visitor sequentially from beginning to end

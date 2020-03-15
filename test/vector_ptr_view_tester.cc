@@ -105,8 +105,10 @@ int main (int argCnt, char *argVctr [])  {
 
     counter = int_vec2.size();
     for (std::vector<int>::const_iterator citer = int_vec2.begin();
-         citer != int_vec2.end(); ++citer)
-        assert(*citer == counter--);
+         citer != int_vec2.end(); ++citer)  {
+        assert(*citer == counter);
+        counter -= 1;
+    }
     assert(counter == 0);
 
     vec_view2.push_back(&(int_vec[3]));

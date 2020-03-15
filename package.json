@@ -5,5 +5,5 @@
   "repository": "github:hosseinmoein/DataFrame",
   "author": "Hossein Moein <myseajune@aol.com>",
   "description": "C++ DataFrame -- R's and Pandas DataFrame in modern C++ using native types, continuous memory storage, and no virtual functions",
-  "license": "BSD 3-Clause",
+  "license": "BSD 3-Clause"
 }

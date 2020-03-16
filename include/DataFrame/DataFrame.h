@@ -1592,6 +1592,27 @@ public:  // Visitors
                (name1, name2, name3, visitor));
     }
 
+    // These are identical to above visit() but could execute asynchronously.
+    // NOTE: It should be safe to run multiple visits on different columns
+    //       at the same time (as long as the index column is not being
+    //       modified).
+    // NOTE: It should be safe to run multiple read-only visits on the same
+    // column or different columns at the same time
+    //
+    template<typename T1, typename T2, typename T3, typename V>
+    std::future<V &>
+    visit_async(const char *name1,
+                const char *name2,
+                const char *name3,
+                V &visitor);
+
+    template<typename T1, typename T2, typename T3, typename V>
+    std::future<V &>
+    visit_async(const char *name1,
+                const char *name2,
+                const char *name3,
+                V &visitor) const;
+
     // It passes the values of each index and the four named columns to the
     // functor visitor sequentially from beginning to end
     //
@@ -1635,6 +1656,29 @@ public:  // Visitors
         return(const_cast<DataFrame *>(this)->visit<T1, T2, T3, T4, V>
                (name1, name2, name3, name4, visitor));
     }
+
+    // These are identical to above visit() but could execute asynchronously.
+    // NOTE: It should be safe to run multiple visits on different columns
+    //       at the same time (as long as the index column is not being
+    //       modified).
+    // NOTE: It should be safe to run multiple read-only visits on the same
+    // column or different columns at the same time
+    //
+    template<typename T1, typename T2, typename T3, typename T4, typename V>
+    std::future<V &>
+    visit_async(const char *name1,
+                const char *name2,
+                const char *name3,
+                const char *name4,
+                V &visitor);
+
+    template<typename T1, typename T2, typename T3, typename T4, typename V>
+    std::future<V &>
+    visit_async(const char *name1,
+                const char *name2,
+                const char *name3,
+                const char *name4,
+                V &visitor) const;
 
     // It passes the values of each index and the five named columns to the
     // functor visitor sequentially from beginning to end

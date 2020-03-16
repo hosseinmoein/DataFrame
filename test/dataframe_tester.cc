@@ -4898,9 +4898,10 @@ static void test_VWBAS()  {
                        gen_uniform_real_dist<double>(1024, asize_p)));
 
     VWBASVisitor<double>    v1(100);
-    auto                    result =
-        df.visit<double, double, double, double>
-            ("bid_price", "ask_price", "bid_size", "ask_size", v1).get_result();
+    auto                    fut =
+        df.visit_async<double, double, double, double>
+            ("bid_price", "ask_price", "bid_size", "ask_size", v1);
+    auto                    result = fut.get().get_result();
 
     assert(result.size() == 11);
     assert(result[0].event_count == 100);

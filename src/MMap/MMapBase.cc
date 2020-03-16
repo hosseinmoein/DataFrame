@@ -181,7 +181,7 @@ write (const void *data_ptr, size_type data_size, size_type data_count)  {
                 ((! get_buffer_size ())
                     ? tp_add
                     : (((tp_add / get_buffer_size()) * get_buffer_size()) +
-                       (tp_add % get_buffer_size() ? get_buffer_size() : 0)));
+                       ((tp_add % get_buffer_size()) ? get_buffer_size() : 0)));
 
         const AutoFileDesc  desc_guard (*this);
         void *const         tmp_mmap_ptr =
@@ -398,10 +398,11 @@ inline bool MMapBase::check_space_4_printf_ () noexcept  {
 
 int MMapBase::printf (const char *format_str, ...) noexcept  {
 
-    int     char_count = 0;
-    va_list argument_ptr;
+    int char_count = 0;
 
     if (check_space_4_printf_ ())  {
+        va_list argument_ptr;
+
         va_start (argument_ptr, format_str);
 
         char_count =

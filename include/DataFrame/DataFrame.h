@@ -1499,7 +1499,7 @@ public:  // Visitors
         return(const_cast<DataFrame *>(this)->visit<T, V>(name, visitor));
     }
 
-    // This identical to above visit() but could execute asynchronously.
+    // These are identical to above visit() but could execute asynchronously.
     // NOTE: It should be safe to run multiple visits on different columns
     //       at the same time (as long as the index column is not being
     //       modified).
@@ -1541,6 +1541,21 @@ public:  // Visitors
         return(const_cast<DataFrame *>(this)->visit<T1, T2, V>
                (name1, name2, visitor));
     }
+
+    // These are identical to above visit() but could execute asynchronously.
+    // NOTE: It should be safe to run multiple visits on different columns
+    //       at the same time (as long as the index column is not being
+    //       modified).
+    // NOTE: It should be safe to run multiple read-only visits on the same
+    // column or different columns at the same time
+    //
+    template<typename T1, typename T2, typename V>
+    std::future<V &>
+    visit_async(const char *name1, const char *name2, V &visitor);
+
+    template<typename T1, typename T2, typename V>
+    std::future<V &>
+    visit_async(const char *name1, const char *name2, V &visitor) const;
 
     // It passes the values of each index and the three named columns to the
     // functor visitor sequentially from beginning to end

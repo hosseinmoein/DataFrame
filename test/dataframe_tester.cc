@@ -269,9 +269,9 @@ static void test_haphazard()  {
     // Correlation between dbl_col and dbl_col_2 is
 
     CorrVisitor<double> corr_visitor;
-    const double        corr =
-        df.visit<double, double>
-            ("dbl_col", "dbl_col_2", corr_visitor).get_result();
+    auto                fut10 =
+        df.visit_async<double, double>("dbl_col", "dbl_col_2", corr_visitor);
+    const double        corr = fut10.get().get_result();
 
     assert(fabs(corr - -0.358381) < 0.000001);
 

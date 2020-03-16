@@ -41,27 +41,27 @@ You could slice the data in many different ways. You could join, merge, group-by
 
 <B>I have followed a few principals in this library:</B><BR>
 
-1. Support any type either built-in or user defined without needing new code
-2. Never chase pointers ala `linked lists`, `std::any`, `pointer to base`, ..., including `virtual function calls`
-3. Have all column data in continuous memory space
-4. Never use more space than you need ala `unions`, `std::variant`, ...
-5. Avoid copying data as much as possible. Unfortunately, sometimes you have to
-6. Use multi-threading but only when it makes sense
-7. Do not attempt to protect the user against `garbage in, garbage out`
-<BR>
+1.  Support any type either built-in or user defined without needing new code<BR>
+2.  Never chase pointers ala `linked lists`, `std::any`, `pointer to base`, ..., including `virtual function calls`<BR>
+3.  Have all column data in continuous memory space<BR>
+4.  Never use more space than you need ala `unions`, `std::variant`, ...<BR>
+5.  Avoid copying data as much as possible. Unfortunately, sometimes you have to<BR>
+6.  Use multi-threading but only when it makes sense<BR>
+7.  Do not attempt to protect the user against `garbage in, garbage out`<BR>
+
 <B>Views</B><BR>
-- You can slice the data frame and instead of getting another data frame you can opt to get a view. A view is a data frame that is a reference to a slice of the original data frame. So if you change the data in the view the corresponding data in the original data frame will also be changed (and vice versa).<BR><BR>
+-  You can slice the data frame and instead of getting another data frame you can opt to get a view. A view is a data frame that is a reference to a slice of the original data frame. So if you change the data in the view the corresponding data in the original data frame will also be changed (and vice versa).<BR>
 
 <B>Multithreading</B><BR>
-1. DataFrame uses static containers to achieve type heterogeneity. By default, these static containers are unprotected. This is done by design. So by default, there is no locking overhead. If you use DataFrame in a multithreaded program you must provide a _SpinLock_ defined in <a href="include/DataFrame/Utils/ThreadGranularity.h">ThreadGranularity.h</a> file. DataFrame will use your _SpinLock_ to protect the containers.<BR>
-Please see <a href="docs/DataFrameDoc.pdf">documentation</a>, _set_lock()_, _remove_lock()_, and <a href="test/dataframe_tester.cc#L3736">dataframe_tester.cc</a> for code example.
-2. In addition, instances of DataFrame are not multithreaded safe either. In other words, a single instance of DataFrame must not be used in multiple threads without protection.
-3. In the meantime, DataFrame utilizes multithreading in two different ways internally:
-    1. There are asynchronous versions of some methods. For example, you have both _sort()_ and _sort_async()_. The latter returns a _std::future_ that could execute in parallel.
-    2. DataFrame uses multiple threads, internally and unbeknown to the user, in some of its algorithms when appropriate. User can control (or turn off) the multithreading by calling _set_thread_level()_ which sets the max number of threads to be used. The default is 0. The optimal number of threads is a function of users hardware/software environment and usually obtained by trail and error. _set_thread_level()_ and threading level in general is a static property and once set, it applies to all instances.<BR>
+1.  DataFrame uses static containers to achieve type heterogeneity. By default, these static containers are unprotected. This is done by design. So by default, there is no locking overhead. If you use DataFrame in a multithreaded program you must provide a _SpinLock_ defined in <a href="include/DataFrame/Utils/ThreadGranularity.h">ThreadGranularity.h</a> file. DataFrame will use your _SpinLock_ to protect the containers.<BR>
+Please see <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html">documentation</a>, <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/remove_lock.html">set_lock()</a>, <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/remove_lock.html">remove_lock()</a>, and <a href="test/dataframe_tester.cc#L3736">dataframe_tester.cc</a> for code example.<BR>
+2.  In addition, instances of DataFrame are not multithreaded safe either. In other words, a single instance of DataFrame must not be used in multiple threads without protection.<BR>
+3.  In the meantime, DataFrame utilizes multithreading in two different ways internally:<BR>
+    1.  There are asynchronous versions of some methods. For example, you have both _sort()_ and _sort_async()_. The latter returns a _std::future_ that could execute in parallel.<BR>
+    2.  DataFrame uses multiple threads, internally and unbeknown to the user, in some of its algorithms when appropriate. User can control (or turn off) the multithreading by calling _set_thread_level()_ which sets the max number of threads to be used. The default is 0. The optimal number of threads is a function of users hardware/software environment and usually obtained by trail and error. _set_thread_level()_ and threading level in general is a static property and once set, it applies to all instances.<BR>
 
 <B><a href="docs/DateTimeDoc.pdf">DateTime</a></B><BR>
-- DateTime class included in this library is a very cool and handy object to manipulate date/time with nanosecond precision.
+-  DateTime class included in this library is a very cool and handy object to manipulate date/time with nanosecond precision.<BR>
 
 ---
 
@@ -157,9 +157,9 @@ pandas_performance.py is ran with Python 3.7.<BR>
 I ran both on my mac-book, doing the following:<BR>
 <img src="docs/MacSize.png" alt="drawing" width="500"/>
 
-1. Generate ~1.6 billion second resolution timestamps and load it into the DataFrame/Pandas as index.
-2. Generate ~1.6 billion random numbers each for 3 columns with normal, log normal, and exponential distributions and load them into the DataFrame/Pandas.
-3. Calculate the mean of each of the 3 columns.
+1.  Generate ~1.6 billion second resolution timestamps and load it into the DataFrame/Pandas as index.<BR>
+2.  Generate ~1.6 billion random numbers each for 3 columns with normal, log normal, and exponential distributions and load them into the DataFrame/Pandas.<BR>
+3.  Calculate the mean of each of the 3 columns.<BR>
 
 Result:
 ```bash
@@ -179,8 +179,8 @@ user  2m54.362s
 sys   2m14.951s
 ```
 <B>The interesting part:</B><BR>
-1. Pandas script, I believe, is entirely implemented in Numpy which is in C.
-2. In case of Pandas, allocating memory + random number generation takes almost the same amount of time as calculating means.
-3. In case of DataFrame 85% of the time is spent in allocating memory + random number generation.
-4. You load data once, but calculate statistics many times. So DataFrame, in general, is about 8x faster than parts of Pandas that are implemented in Numpy. I leave parts of Pandas that are purely in Python to imagination.
+1.  Pandas script, I believe, is entirely implemented in Numpy which is in C.<BR>
+2.  In case of Pandas, allocating memory + random number generation takes almost the same amount of time as calculating means.<BR>
+3.  In case of DataFrame 85% of the time is spent in allocating memory + random number generation.<BR>
+4.  You load data once, but calculate statistics many times. So DataFrame, in general, is about 8x faster than parts of Pandas that are implemented in Numpy. I leave parts of Pandas that are purely in Python to imagination.<BR>
 

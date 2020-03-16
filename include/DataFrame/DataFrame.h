@@ -1732,6 +1732,33 @@ public:  // Visitors
                (name1, name2, name3, name4, name5, visitor));
     }
 
+    // These are identical to above visit() but could execute asynchronously.
+    // NOTE: It should be safe to run multiple visits on different columns
+    //       at the same time (as long as the index column is not being
+    //       modified).
+    // NOTE: It should be safe to run multiple read-only visits on the same
+    // column or different columns at the same time
+    //
+    template<typename T1, typename T2, typename T3, typename T4, typename T5,
+             typename V>
+    std::future<V &>
+    visit_async(const char *name1,
+                const char *name2,
+                const char *name3,
+                const char *name4,
+                const char *name5,
+                V &visitor);
+
+    template<typename T1, typename T2, typename T3, typename T4, typename T5,
+             typename V>
+    std::future<V &>
+    visit_async(const char *name1,
+                const char *name2,
+                const char *name3,
+                const char *name4,
+                const char *name5,
+                V &visitor) const;
+
     // This is similar to visit(), but it passes a const reference to the index
     // vector and the named column vector at once the functor visitor.
     // This is convenient for calculations that need the whole data vector,

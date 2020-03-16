@@ -400,7 +400,7 @@ visit_async(const char *name1,
         static_cast<V &(DataFrame::*)(const char *,
                                       const char *,
                                       const char *,
-                                      V &)>
+                                      V &) const>
             (&DataFrame::visit<T1, T2, T3, V>),
         this,
         name1,
@@ -491,7 +491,7 @@ visit_async(const char *name1,
                                       const char *,
                                       const char *,
                                       const char *,
-                                      V &)>
+                                      V &) const>
             (&DataFrame::visit<T1, T2, T3, T4, V>),
         this,
         name1,
@@ -543,6 +543,68 @@ visit (const char *name1,
     visitor.post();
 
     return (visitor);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename T1, typename T2, typename T3, typename T4, typename T5,
+         typename V>
+std::future<V &> DataFrame<I, H>::
+visit_async(const char *name1,
+            const char *name2,
+            const char *name3,
+            const char *name4,
+            const char *name5,
+            V &visitor)  {
+
+    return (std::async(
+        std::launch::async,
+        static_cast<V &(DataFrame::*)(const char *,
+                                      const char *,
+                                      const char *,
+                                      const char *,
+                                      const char *,
+                                      V &)>
+            (&DataFrame::visit<T1, T2, T3, T4, T5, V>),
+        this,
+        name1,
+        name2,
+        name3,
+        name4,
+        name5,
+        std::ref(visitor)));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename T1, typename T2, typename T3, typename T4, typename T5,
+         typename V>
+std::future<V &> DataFrame<I, H>::
+visit_async(const char *name1,
+            const char *name2,
+            const char *name3,
+            const char *name4,
+            const char *name5,
+            V &visitor) const {
+
+    return (std::async(
+        std::launch::async,
+        static_cast<V &(DataFrame::*)(const char *,
+                                      const char *,
+                                      const char *,
+                                      const char *,
+                                      const char *,
+                                      V &) const>
+            (&DataFrame::visit<T1, T2, T3, T4, T5, V>),
+        this,
+        name1,
+        name2,
+        name3,
+        name4,
+        name5,
+        std::ref(visitor)));
 }
 
 // ----------------------------------------------------------------------------

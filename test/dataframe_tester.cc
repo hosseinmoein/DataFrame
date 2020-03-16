@@ -126,10 +126,15 @@ static void test_haphazard()  {
 
     MeanVisitor<int>    ivisitor;
     MeanVisitor<double> dvisitor;
+    const MyDataFrame   const_df = df;
+    auto                const_fut =
+        const_df.visit_async<int>("int_col", ivisitor);
 
-    assert(df.visit<int>("int_col", ivisitor).get_result() == 1);
-    assert(abs(df.visit<double>("dbl_col",
-                                dvisitor).get_result() - 3.2345) < 0.00001);
+    assert(const_fut.get().get_result() == 1);
+
+    auto    fut = df.visit_async<double>("dbl_col", dvisitor);
+
+    assert(abs(fut.get().get_result() - 3.2345) < 0.00001);
 
     df.get_column<double>("dbl_col")[5] = 6.5;
     df.get_column<double>("dbl_col")[6] = 7.5;
@@ -379,14 +384,14 @@ static void test_haphazard()  {
 
     std::cout << "\nTesting Async write ..." << std::endl;
 
-    std::future<bool>   fut =
+    std::future<bool>   fut2 =
         dfxx3.write_async<std::ostream,
                           int,
                           unsigned long,
                           double,
                           std::string>(std::cout);
 
-    fut.get();
+    fut2.get();
 
     std::cout << "\nTesting Async sort ..." << std::endl;
 

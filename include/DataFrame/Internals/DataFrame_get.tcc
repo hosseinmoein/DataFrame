@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <DataFrame/DataFrame.h>
 
+#include <functional>
 #include <random>
 #include <unordered_set>
 
@@ -235,6 +236,37 @@ V &DataFrame<I, H>::visit (const char *name, V &visitor)  {
     visitor.post();
 
     return (visitor);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename T, typename V>
+std::future<V &> DataFrame<I, H>::visit_async(const char *name, V &visitor)  {
+
+    return (std::async(
+	    std::launch::async,
+        static_cast<V &(DataFrame::*)(const char *, V &)>
+           (&DataFrame::visit<T, V>),
+        this,
+        name,
+        std::ref(visitor)));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename T, typename V>
+std::future<V &> DataFrame<I, H>::
+visit_async(const char *name, V &visitor) const  {
+
+    return (std::async(
+	    std::launch::async,
+        static_cast<V &(DataFrame::*)(const char *, V &) const>
+           (&DataFrame::visit<T, V>),
+        this,
+        name,
+        std::ref(visitor)));
 }
 
 // ----------------------------------------------------------------------------

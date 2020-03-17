@@ -2050,8 +2050,9 @@ static void test_auto_correlation()  {
                  std::make_pair("col_3", i1));
 
     AutoCorrVisitor<double> auto_corr;
-    const auto              &result =
-        df.single_act_visit<double>("col_1", auto_corr).get_result();
+    auto                    fut =
+        df.single_act_visit_async<double>("col_1", auto_corr);
+    const auto              &result = fut.get().get_result();
 
     assert(result.size() == 17);
     assert(result[0] == 1.0);
@@ -3723,11 +3724,12 @@ static void test_z_score_visitor()  {
     assert(fabs(result2[19] - 1.5002) < 0.00001);
     assert(fabs(result2[20] - 1.67198) < 0.00001);
 
+    const MyDataFrame           const_df = df;
     SampleZScoreVisitor<double> z_score3;
-    auto                        result3 =
-        df.single_act_visit<double, double>("col_1",
-                                            "col_2",
-                                            z_score3).get_result();
+    auto                        fut =
+        const_df.single_act_visit_async<double, double>
+            ("col_1", "col_2", z_score3);
+    auto                        result3 = fut.get().get_result();
 
     assert(fabs(result3 - -1136669.1600501483772) < 0.000001);
     result3 =

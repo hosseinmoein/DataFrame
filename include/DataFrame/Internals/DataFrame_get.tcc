@@ -626,6 +626,38 @@ single_act_visit (const char *name, V &visitor)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename  H>
+template<typename T, typename V>
+std::future<V &> DataFrame<I, H>::
+single_act_visit_async(const char *name, V &visitor)  {
+
+    return (std::async(
+        std::launch::async,
+        static_cast<V &(DataFrame::*)(const char *, V &)>
+           (&DataFrame::single_act_visit<T, V>),
+        this,
+        name,
+        std::ref(visitor)));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename T, typename V>
+std::future<V &> DataFrame<I, H>::
+single_act_visit_async(const char *name, V &visitor) const  {
+
+    return (std::async(
+        std::launch::async,
+        static_cast<V &(DataFrame::*)(const char *, V &) const>
+           (&DataFrame::single_act_visit<T, V>),
+        this,
+        name,
+        std::ref(visitor)));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
 template<typename T1, typename T2, typename V>
 V &DataFrame<I, H>::
 single_act_visit (const char *name1, const char *name2, V &visitor)  {
@@ -638,6 +670,42 @@ single_act_visit (const char *name1, const char *name2, V &visitor)  {
     visitor.post();
 
     return (visitor);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename T1, typename T2, typename V>
+std::future<V &> DataFrame<I, H>::
+single_act_visit_async(const char *name1, const char *name2, V &visitor)  {
+
+    return (std::async(
+        std::launch::async,
+        static_cast<V &(DataFrame::*)(const char *, const char *, V &)>
+            (&DataFrame::single_act_visit<T1, T2, V>),
+        this,
+        name1,
+        name2,
+        std::ref(visitor)));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename T1, typename T2, typename V>
+std::future<V &> DataFrame<I, H>::
+single_act_visit_async(const char *name1,
+                       const char *name2,
+                       V &visitor) const  {
+
+    return (std::async(
+        std::launch::async,
+        static_cast<V &(DataFrame::*)(const char *, const char *, V &) const>
+            (&DataFrame::single_act_visit<T1, T2, V>),
+        this,
+        name1,
+        name2,
+        std::ref(visitor)));
 }
 
 // ----------------------------------------------------------------------------

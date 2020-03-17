@@ -1504,7 +1504,7 @@ public:  // Visitors
     //       at the same time (as long as the index column is not being
     //       modified).
     // NOTE: It should be safe to run multiple read-only visits on the same
-    // column or different columns at the same time
+    //       column or different columns at the same time
     //
     template<typename T, typename V>
     std::future<V &>
@@ -1547,7 +1547,7 @@ public:  // Visitors
     //       at the same time (as long as the index column is not being
     //       modified).
     // NOTE: It should be safe to run multiple read-only visits on the same
-    // column or different columns at the same time
+    //       column or different columns at the same time
     //
     template<typename T1, typename T2, typename V>
     std::future<V &>
@@ -1597,7 +1597,7 @@ public:  // Visitors
     //       at the same time (as long as the index column is not being
     //       modified).
     // NOTE: It should be safe to run multiple read-only visits on the same
-    // column or different columns at the same time
+    //       column or different columns at the same time
     //
     template<typename T1, typename T2, typename T3, typename V>
     std::future<V &>
@@ -1662,7 +1662,7 @@ public:  // Visitors
     //       at the same time (as long as the index column is not being
     //       modified).
     // NOTE: It should be safe to run multiple read-only visits on the same
-    // column or different columns at the same time
+    //       column or different columns at the same time
     //
     template<typename T1, typename T2, typename T3, typename T4, typename V>
     std::future<V &>
@@ -1737,7 +1737,7 @@ public:  // Visitors
     //       at the same time (as long as the index column is not being
     //       modified).
     // NOTE: It should be safe to run multiple read-only visits on the same
-    // column or different columns at the same time
+    //       column or different columns at the same time
     //
     template<typename T1, typename T2, typename T3, typename T4, typename T5,
              typename V>
@@ -1783,6 +1783,22 @@ public:  // Visitors
                (name, visitor));
     }
 
+    // These are identical to above single_act_visit() but could execute
+    // asynchronously.
+    // NOTE: It should be safe to run multiple single_act_visit on different
+    //       columns at the same time (as long as the index column is not being
+    //       modified).
+    // NOTE: It should be safe to run multiple read-only single_act_visit on
+    //       the same column or different columns at the same time
+    //
+    template<typename T1, typename V>
+    std::future<V &>
+    single_act_visit_async(const char *name, V &visitor);
+
+    template<typename T1, typename V>
+    std::future<V &>
+    single_act_visit_async(const char *name, V &visitor) const;
+
     // This is similar to visit(), but it passes a const reference to the index
     // vector and the two named column vectors at once the functor visitor.
     // This is convenient for calculations that need the whole data vector.
@@ -1811,6 +1827,24 @@ public:  // Visitors
         return(const_cast<DataFrame *>(this)->single_act_visit<T1, T2, V>
                (name1, name2, visitor));
     }
+
+    // These are identical to above single_act_visit() but could execute
+    // asynchronously.
+    // NOTE: It should be safe to run multiple single_act_visit on different
+    //       columns at the same time (as long as the index column is not being
+    //       modified).
+    // NOTE: It should be safe to run multiple read-only single_act_visit on
+    //       the same column or different columns at the same time
+    //
+    template<typename T1, typename T2, typename V>
+    std::future<V &>
+    single_act_visit_async(const char *name1, const char *name2, V &visitor);
+
+    template<typename T1, typename T2, typename V>
+    std::future<V &>
+    single_act_visit_async(const char *name1,
+                           const char *name2,
+                           V &visitor) const;
 
 public:  // Operators
 

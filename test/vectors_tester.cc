@@ -130,7 +130,7 @@ int main(int argc, char *argv[]) {
     hv2 = hv;
     hv3 = std::move(hv2);
 
-    const std::vector<double>  &dbl_vec = hv.get_vector<double>();
+    const std::vector<double>  &dbl_vec = hv3.get_vector<double>();
 
     for (const auto &iter : int_vec)
         std::cout << iter << std::endl;

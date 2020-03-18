@@ -139,7 +139,9 @@ DateTime::DateTime (DT_TIME_ZONE tz) : time_zone_(tz)  {
 #elif defined clock_gettime
     struct timespec ts;
 
-    ::clock_gettime(Clock_REALTIME, &ts);
+    if (::clock_gettime(Clock_REALTIME, &ts) < 0)
+        throw std::runtime_error ("DateTime::DateTime(): ERROR: "
+                                  "clock_gettime() failed");
     set_time(ts.tv_sec, ts.tv.nsec);
 #else
     struct timeval  tv { };

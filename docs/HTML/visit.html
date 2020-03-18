@@ -35,10 +35,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <td bgcolor="maroon"> <font color="white">
         template&lt;typename T, typename V&gt;<BR>
         V &amp;<BR>
-        visit (const char *name, V &amp;visitor); </font>
+        visit(const char *name, V &amp;visitor); </font>
       </td>
       <td>
         It passes the values of each index and the named column to the functor visitor sequentially from beginning to end<BR>
+        <B>NOTE:</B> There is also a const version of this method.
       </td>
       <td width = "33.3%">
         <B>T</B>: Type of the named column<BR>
@@ -49,12 +50,29 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
+        template&lt;typename T, typename V&gt;<BR>
+        std::future&lt;V &amp;&gt;<BR>
+        visit_async(const char *name, V &amp;visitor); </font>
+      </td>
+      <td>
+        These are identical to above visit() but could execute asynchronously.<BR>
+        <B>NOTE:</B> It should be safe to run multiple visits on different columns at the same time (as long as the index column is not being modified).<BR>
+        <B>NOTE:</B> It should be safe to run multiple read-only visits on the same column or different columns at the same time<BR>
+        <B>NOTE:</B> There is also a const version of this method.
+      </td>
+      <td width = "33.3%">
+      </td>
+    </tr>
+
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
         template&lt;typename T1, typename T2, typename V&gt;<BR>
         V &amp;<BR>
-        visit (const char *name1, const char *name2, V &amp;visitor); </font>
+        visit(const char *name1, const char *name2, V &amp;visitor); </font>
       </td>
       <td>
         It passes the values of each index and the two named columns to the functor visitor sequentially from beginning to end<BR>
+        <B>NOTE:</B> There is also a const version of this method.
       </td>
       <td>
         <B>T1</B>: Type of the first named column<BR>
@@ -67,12 +85,29 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
+        template&lt;typename T1, typename T2, typename V&gt;<BR>
+        std::future&lt;V &amp;&gt;<BR>
+        visit_async(const char *name1, const char *name2, V &amp;visitor); </font>
+      </td>
+      <td>
+        These are identical to above visit() but could execute asynchronously.<BR>
+        <B>NOTE:</B> It should be safe to run multiple visits on different columns at the same time (as long as the index column is not being modified).<BR>
+        <B>NOTE:</B> It should be safe to run multiple read-only visits on the same column or different columns at the same time<BR>
+        <B>NOTE:</B> There is also a const version of this method.
+      </td>
+      <td>
+      </td>
+    </tr>
+
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
         template&lt;typename T1, typename T2, typename T3, typename V&gt;<BR>
         V &amp;<BR>
-        visit (const char *name1, const char *name2, const char *name3, V &amp;visitor); </font>
+        visit(const char *name1, const char *name2, const char *name3, V &amp;visitor); </font>
       </td>
       <td>
         It passes the values of each index and the three named columns to the functor visitor sequentially from beginning to end<BR>
+        <B>NOTE:</B> There is also a const version of this method.
       </td>
       <td>
         <B>T1</B>: Type of the first named column<BR>
@@ -87,12 +122,29 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
+        template&lt;typename T1, typename T2, typename T3, typename V&gt;<BR>
+        std::future&lt;V &amp;&gt;<BR>
+        visit_async(const char *name1, const char *name2, const char *name3, V &amp;visitor); </font>
+      </td>
+      <td>
+        These are identical to above visit() but could execute asynchronously.<BR>
+        <B>NOTE:</B> It should be safe to run multiple visits on different columns at the same time (as long as the index column is not being modified).<BR>
+        <B>NOTE:</B> It should be safe to run multiple read-only visits on the same column or different columns at the same time<BR>
+        <B>NOTE:</B> There is also a const version of this method.
+      </td>
+      <td>
+      </td>
+    </tr>
+
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
         template&lt;typename T1, typename T2, typename T3, typename T4, typename V&gt;<BR>
         V &amp;<BR>
-        visit (const char *name1, const char *name2, const char *name3, const char *name4, V &amp;visitor); </font>
+        visit(const char *name1, const char *name2, const char *name3, const char *name4, V &amp;visitor); </font>
       </td>
       <td>
         It passes the values of each index and the four named columns to the functor visitor sequentially from beginning to end<BR>
+        <B>NOTE:</B> There is also a const version of this method.
       </td>
       <td>
         <B>T1</B>: Type of the first named column<BR>
@@ -109,12 +161,29 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
+        template&lt;typename T1, typename T2, typename T3, typename T4, typename V&gt;<BR>
+        std::future&lt;V &amp;&gt;<BR>
+        visit_async(const char *name1, const char *name2, const char *name3, const char *name4, V &amp;visitor); </font>
+      </td>
+      <td>
+        These are identical to above visit() but could execute asynchronously.<BR>
+        <B>NOTE:</B> It should be safe to run multiple visits on different columns at the same time (as long as the index column is not being modified).<BR>
+        <B>NOTE:</B> It should be safe to run multiple read-only visits on the same column or different columns at the same time<BR>
+        <B>NOTE:</B> There is also a const version of this method.
+      </td>
+      <td>
+      </td>
+    </tr>
+
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
         template&lt;typename T1, typename T2, typename T3, typename T4, typename T5, typename V&gt;<BR>
         V &amp;<BR>
-        visit (const char *name1, const char *name2, const char *name3, const char *name4, const char *name5, V &amp;visitor); </font>
+        visit(const char *name1, const char *name2, const char *name3, const char *name4, const char *name5, V &amp;visitor); </font>
       </td>
       <td>
         It passes the values of each index and the five named columns to the functor visitor sequentially from beginning to end<BR>
+        <B>NOTE:</B> There is also a const version of this method.
       </td>
       <td>
         <B>T1</B>: Type of the first named column<BR>
@@ -128,6 +197,22 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         <B>name3</B>: Name of the third data column<BR>
         <B>name4</B>: Name of the fourth data column<BR>
         <B>name5</B>: Name of the fifth data column
+      </td>
+    </tr>
+
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        template&lt;typename T1, typename T2, typename T3, typename T4, typename T5, typename V&gt;<BR>
+        std::future&lt;V &amp;&gt;<BR>
+        visit_async(const char *name1, const char *name2, const char *name3, const char *name4, const char *name5, V &amp;visitor); </font>
+      </td>
+      <td>
+        These are identical to above visit() but could execute asynchronously.<BR>
+        <B>NOTE:</B> It should be safe to run multiple visits on different columns at the same time (as long as the index column is not being modified).<BR>
+        <B>NOTE:</B> It should be safe to run multiple read-only visits on the same column or different columns at the same time<BR>
+        <B>NOTE:</B> There is also a const version of this method.
+      </td>
+      <td>
       </td>
     </tr>
 

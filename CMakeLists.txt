@@ -76,9 +76,6 @@ set(${LIBRARY_TARGET_NAME}_SRC
   src/Vectors/HeteroPtrView.cc
   src/Utils/ThreadGranularity.cc
   src/Utils/DateTime.cc
-  src/MMap/MMapBase.cc
-  src/MMap/MMapFile.cc
-  src/MMap/MMapSharedMem.cc
 )
 
 # List of header files.
@@ -113,12 +110,6 @@ set(${LIBRARY_TARGET_NAME}_HDR
   include/DataFrame/Utils/ThreadGranularity.h
   include/DataFrame/Utils/DateTime.h
   include/DataFrame/Utils/FixedSizeString.h
-  include/DataFrame/MMap/FileDef.h
-  include/DataFrame/MMap/MMapBase.h
-  include/DataFrame/MMap/MMapFile.h
-  include/DataFrame/MMap/MMapSharedMem.h
-  include/DataFrame/MMap/ObjectVector.h
-  include/DataFrame/MMap/ObjectVector.tcc
 )
 
 add_definitions(-DLIBRARY_EXPORTS)
@@ -224,10 +215,6 @@ add_executable(dataframe_performance  test/dataframe_performance.cc)
 add_executable(vectors_tester    test/vectors_tester.cc)
 add_executable(vector_ptr_view_tester test/vector_ptr_view_tester.cc)
 add_executable(date_time_tester  test/date_time_tester.cc)
-add_executable(mmfile_tester     test/mmfile_tester.cc)
-add_executable(obj_vector_tester test/obj_vector_tester.cc)
-add_executable(obj_vector_erase_tester test/obj_vector_erase_tester.cc)
-add_executable(sharedmem_tester  test/sharedmem_tester.cc)
 add_executable(gen_rand_tester  test/gen_rand_tester.cc)
 
 # Link the DataFrame library to the test binary
@@ -249,18 +236,6 @@ target_link_libraries(vector_ptr_view_tester DataFrame)
 target_link_libraries(date_time_tester DataFrame)
 
 # Link the DataFrame library to the test binary
-target_link_libraries(mmfile_tester DataFrame)
-
-# Link the DataFrame library to the test binary
-target_link_libraries(obj_vector_tester DataFrame)
-
-# Link the DataFrame library to the test binary
-target_link_libraries(obj_vector_erase_tester DataFrame)
-
-# Link the DataFrame library to the test binary
-target_link_libraries(sharedmem_tester DataFrame)
-
-# Link the DataFrame library to the test binary
 target_link_libraries(gen_rand_tester DataFrame)
 
 if (UNIX)
@@ -273,10 +248,6 @@ if (UNIX)
   target_link_libraries(vectors_tester Threads::Threads)
   target_link_libraries(vector_ptr_view_tester Threads::Threads)
   target_link_libraries(date_time_tester Threads::Threads)
-  target_link_libraries(mmfile_tester Threads::Threads)
-  target_link_libraries(obj_vector_tester Threads::Threads)
-  target_link_libraries(obj_vector_erase_tester Threads::Threads)
-  target_link_libraries(sharedmem_tester Threads::Threads)
   target_link_libraries(gen_rand_tester Threads::Threads)
 endif (UNIX)
 
@@ -287,10 +258,6 @@ if (UNIX AND NOT APPLE)
   target_link_libraries(vectors_tester rt)
   target_link_libraries(vector_ptr_view_tester rt)
   target_link_libraries(date_time_tester rt)
-  target_link_libraries(mmfile_tester rt)
-  target_link_libraries(obj_vector_tester rt)
-  target_link_libraries(obj_vector_erase_tester rt)
-  target_link_libraries(sharedmem_tester rt)
   target_link_libraries(gen_rand_tester rt)
 endif()
 
@@ -319,19 +286,6 @@ add_test(NAME date_time_tester
          COMMAND date_time_tester
          WORKING_DIRECTORY $<TARGET_FILE_DIR:date_time_tester>)
 
-# For some unknown reason to me, this test hangs in Travis CI
-#
-# add_test(NAME mmfile_tester
-#          COMMAND mmfile_tester
-#          WORKING_DIRECTORY $<TARGET_FILE_DIR:mmfile_tester>)
-
-add_test(NAME obj_vector_tester
-         COMMAND obj_vector_tester
-         WORKING_DIRECTORY $<TARGET_FILE_DIR:obj_vector_tester>)
-
-add_test(NAME obj_vector_erase_tester
-         COMMAND obj_vector_erase_tester
-         WORKING_DIRECTORY $<TARGET_FILE_DIR:obj_vector_erase_tester>)
 add_test(NAME gen_rand_tester
          COMMAND gen_rand_tester
          WORKING_DIRECTORY $<TARGET_FILE_DIR:gen_rand_tester>)

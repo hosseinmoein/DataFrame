@@ -63,10 +63,13 @@ int main(int argc, char *argv[]) {
     MeanVisitor<double, time_t> ln_mv;
     MeanVisitor<double, time_t> e_mv;
 
-    df.visit<double>("normal", n_mv);
-    df.visit<double>("log_normal", ln_mv);
-    df.visit<double>("exponential", e_mv);
+    auto    fut1 = df.visit_async<double>("normal", n_mv);
+    auto    fut2 = df.visit_async<double>("log_normal", ln_mv);
+    auto    fut3 = df.visit_async<double>("exponential", e_mv);
 
+    fut1.get();
+    fut2.get();
+    fut3.get();
     // std::cout << "Normal mean " << n_mv.get_result() << std::endl;
     // std::cout << "Log Normal mean " << ln_mv.get_result() << std::endl;
     // std::cout << "Exponential mean " << e_mv.get_result() << std::endl;

@@ -1,13 +1,13 @@
-Local Time is: 05/21/2019 17:55:08.-2104   Nanoseconds: -2105383680
-GMT Time is: 05/21/2019 21:55:08.-2104   Microseconds: -2105383
+Local Time is: 03/21/2020 12:06:38.951   Nanoseconds: 950943360
+GMT Time is: 03/21/2020 16:06:38.951   Microseconds: 950943
 
 ----- Testing DateTime's GMT vs Local time
 
-GMT now time: 05/21/2019 21:55:08.-823   1558475708
-GMT ALT Constructor time: 05/21/2019 21:55:08.000   1558475708
+GMT now time: 03/21/2020 16:06:38.000   1584806798
+GMT ALT Constructor time: 03/21/2020 16:06:38.000   1584806798
 
-Local now time: 05/21/2019 17:55:08.-823   1558475708
-Local ALT Constructor time: 05/21/2019 17:55:08.000   1558475708
+Local now time: 03/21/2020 12:06:38.000   1584806798
+Local ALT Constructor time: 03/21/2020 12:06:38.000   1584806798
 
 Local 1970 ALT Constructor time: 01/01/1970 00:00:00.000   18000
 GMT 1970 ALT Constructor time: 01/01/1970 00:00:00.000   0
@@ -44,14 +44,14 @@ GMT 1989 ALT Constructor time: 12/14/1989 20:15:23.000   629669723
 
 ----- Testing DateTime's diff methods
 
-di1 is: 01/01/2002 12:54:31.000
-di2 is: 02/01/2002 03:50:30.000
-second difference between di1 and di2: -2.64576e+06
-minute difference between di1 and di2: -44096
-hour difference between di1 and di2: -734.933
-day difference between di1 and di2: -30.6222
-business day difference between di1 and di2: -22.6222
-week difference between di1 and di2: -4.3746
+dt1 is: 01/01/2002 12:54:31.000
+dt2 is: 02/01/2002 03:50:30.000
+second difference between dt1 and dt2: -2.64576e+06
+minute difference between dt1 and dt2: -44096
+hour difference between dt1 and dt2: -734.933
+day difference between dt1 and dt2: -30.6222
+business day difference between dt1 and dt2: -22.6222
+week difference between dt1 and dt2: -4.3746
 After adding 10000 weekdays days to 19700101, the date is 04/30/2008 00:00:00.000
 
 ----- Testing DateTime's DST vs EST (Going Forward)
@@ -187,23 +187,23 @@ After adding 10000 weekdays days to 19700101, the date is 04/30/2008 00:00:00.00
 
 ----- Testing DateTime's time zone changes
 
-Now Local:        05/21/2019 17:55:08.-504
-GMT Local:        05/21/2019 21:55:08.-504
-Now Buenos Aires: 05/21/2019 18:55:08.-503
-Now Tehran:       05/22/2019 02:25:08.-503
-Now Tokyo:        05/22/2019 06:55:08.-503
-Now Sydeny:       05/22/2019 07:55:08.-503
-Now New Zealand:  05/22/2019 09:55:08.-503
-Now Moscow:       05/22/2019 00:55:08.-503
-Now Shanghai:     05/22/2019 05:55:08.-503
-Now Berlin:       05/21/2019 23:55:08.-503
-Now Paris:        05/21/2019 23:55:08.-503
-Now Stockholm:    05/21/2019 21:55:08.-503
-Now New York:     05/21/2019 17:55:08.-503
-Now Los Amgeles:  05/21/2019 14:55:08.-503
-Now Local (2):    05/21/2019 17:55:08.-503
+Now Local:        03/21/2020 12:06:38.641
+GMT Local:        03/21/2020 16:06:38.641
+Now Buenos Aires: 03/21/2020 13:06:38.642
+Now Tehran:       03/21/2020 20:36:38.642
+Now Tokyo:        03/22/2020 01:06:38.642
+Now Sydeny:       03/22/2020 03:06:38.642
+Now New Zealand:  03/22/2020 05:06:38.642
+Now Moscow:       03/21/2020 19:06:38.642
+Now Shanghai:     03/22/2020 00:06:38.642
+Now Berlin:       03/21/2020 17:06:38.642
+Now Paris:        03/21/2020 17:06:38.642
+Now Stockholm:    03/21/2020 16:06:38.642
+Now New York:     03/21/2020 12:06:38.642
+Now Los Amgeles:  03/21/2020 09:06:38.642
+Now Local (2):    03/21/2020 12:06:38.642
 
-Going from Local to Sydney: 05/22/2019 07:55:08.-504
+Going from Local to Sydney: 03/22/2020 03:06:38.641
 
 Local Date/Time: 11/23/2009 09:38:43.000
 

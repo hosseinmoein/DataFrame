@@ -161,7 +161,7 @@ public:
     using SecondType = unsigned short int;   // 0 - 59
     using MillisecondType = short int;       // 0 - 999
     using MicrosecondType = int;             // 0 - 999,999
-    using NanosecondType =  int;             // 0 - 999,999,999
+    using NanosecondType = int;              // 0 - 999,999,999
     using EpochType = time_t;                // Signed epoch
     using LongTimeType = long long int;      // Nano seconds since epoch
 
@@ -187,6 +187,9 @@ private:
     EpochType       time_ { INVALID_TIME_T_ }; // Sec since 01/01/1970 (Epoch)
     DT_WEEKDAY      week_day_ { DT_WEEKDAY::BAD_DAY };
     DT_TIME_ZONE    time_zone_ { };
+
+    inline static void change_env_timezone_(DT_TIME_ZONE time_zone);
+    inline static void reset_env_timezone_(DT_TIME_ZONE time_zone);
 
 public:
 

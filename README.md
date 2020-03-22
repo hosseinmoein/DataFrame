@@ -150,9 +150,9 @@ make uninstall
 ---
 
 ### Performance
-There is a test program [dataframe_performance](test/dataframe_performance.cc) that should give you some sense of how this library performs. As a comparison, there is also a Pandas Python [pandas_performance](test/pandas_performance.py) script that does exactly the same thing.<BR>
-dataframe_performance.cc uses DataFrame async interface and is compiled with gcc compiler with -O3 flag.<BR>
-pandas_performance.py is ran with Python 3.7.<BR>
+There is a test program [_dataframe_performance_](test/dataframe_performance.cc) that should give you some sense of how this library performs. As a comparison, there is also a Pandas Python [_pandas_performance_](test/pandas_performance.py) script that does exactly the same thing.<BR>
+_dataframe_performance.cc_ uses DataFrame async interface and is compiled with gcc compiler with -O3 flag.<BR>
+_pandas_performance.py_ is ran with Python 3.7.<BR>
 I ran both on my mac-book, doing the following:<BR>
 <img src="docs/MacSize.png" alt="drawing" width="500"/>
 

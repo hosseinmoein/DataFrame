@@ -30,9 +30,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/Utils/DateTime.h>
 #include <DataFrame/Utils/FixedSizeString.h>
 
+#include <time.h>
+
 #ifdef _WIN32
-#  include <time.h>
-#  include <windows.h>
 #  if defined(_MSC_VER) || defined(_MSC_EXTENSIONS)
 #    define DELTA_EPOCH_IN_MICROSECS  11644473600000000Ui64
 #  else
@@ -147,7 +147,7 @@ DateTime::DateTime (DT_TIME_ZONE tz) : time_zone_(tz)  {
     struct timeval  tv { };
 
     ::gettimeofday(&tv, nullptr);
-    set_time(tv.tv_sec, tv.tv_usec * 1000000);
+    set_time(tv.tv_sec, tv.tv_usec * 1000);
 #endif // _WIN32
 }
 
@@ -642,7 +642,7 @@ DateTime::MicrosecondType DateTime::microsec () const noexcept  {
 DateTime::NanosecondType DateTime::nanosec () const noexcept  {
 
     // nano secs could be negative because of architecture
-    return (nanosecond_ > 0 ? nanosecond_ : 0);
+    return (nanosecond_);
 }
 
 // ----------------------------------------------------------------------------

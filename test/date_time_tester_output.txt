@@ -1,13 +1,13 @@
-Local Time is: 03/21/2020 12:06:38.951   Nanoseconds: 950943360
-GMT Time is: 03/21/2020 16:06:38.951   Microseconds: 950943
+Local Time is: 03/23/2020 10:33:55.874   Nanoseconds: 873843000
+GMT Time is: 03/23/2020 14:33:55.874   Microseconds: 873843
 
 ----- Testing DateTime's GMT vs Local time
 
-GMT now time: 03/21/2020 16:06:38.000   1584806798
-GMT ALT Constructor time: 03/21/2020 16:06:38.000   1584806798
+GMT now time: 03/23/2020 14:33:55.876   1584974035
+GMT ALT Constructor time: 03/23/2020 14:33:55.000   1584974035
 
-Local now time: 03/21/2020 12:06:38.000   1584806798
-Local ALT Constructor time: 03/21/2020 12:06:38.000   1584806798
+Local now time: 03/23/2020 10:33:55.876   1584974035
+Local ALT Constructor time: 03/23/2020 10:33:55.000   1584974035
 
 Local 1970 ALT Constructor time: 01/01/1970 00:00:00.000   18000
 GMT 1970 ALT Constructor time: 01/01/1970 00:00:00.000   0
@@ -187,23 +187,23 @@ After adding 10000 weekdays days to 19700101, the date is 04/30/2008 00:00:00.00
 
 ----- Testing DateTime's time zone changes
 
-Now Local:        03/21/2020 12:06:38.641
-GMT Local:        03/21/2020 16:06:38.641
-Now Buenos Aires: 03/21/2020 13:06:38.642
-Now Tehran:       03/21/2020 20:36:38.642
-Now Tokyo:        03/22/2020 01:06:38.642
-Now Sydeny:       03/22/2020 03:06:38.642
-Now New Zealand:  03/22/2020 05:06:38.642
-Now Moscow:       03/21/2020 19:06:38.642
-Now Shanghai:     03/22/2020 00:06:38.642
-Now Berlin:       03/21/2020 17:06:38.642
-Now Paris:        03/21/2020 17:06:38.642
-Now Stockholm:    03/21/2020 16:06:38.642
-Now New York:     03/21/2020 12:06:38.642
-Now Los Amgeles:  03/21/2020 09:06:38.642
-Now Local (2):    03/21/2020 12:06:38.642
+Now Local:        03/23/2020 10:33:55.976
+GMT Local:        03/23/2020 14:33:55.976
+Now Buenos Aires: 03/23/2020 11:33:55.976
+Now Tehran:       03/23/2020 19:03:55.976
+Now Tokyo:        03/23/2020 23:33:55.976
+Now Sydeny:       03/24/2020 01:33:55.976
+Now New Zealand:  03/24/2020 03:33:55.976
+Now Moscow:       03/23/2020 17:33:55.976
+Now Shanghai:     03/23/2020 22:33:55.976
+Now Berlin:       03/23/2020 15:33:55.976
+Now Paris:        03/23/2020 15:33:55.976
+Now Stockholm:    03/23/2020 14:33:55.976
+Now New York:     03/23/2020 10:33:55.976
+Now Los Amgeles:  03/23/2020 07:33:55.976
+Now Local (2):    03/23/2020 10:33:55.976
 
-Going from Local to Sydney: 03/22/2020 03:06:38.641
+Going from Local to Sydney: 03/24/2020 01:33:55.976
 
 Local Date/Time: 11/23/2009 09:38:43.000
 

@@ -136,19 +136,16 @@ DateTime::DateTime (DT_TIME_ZONE tz) : time_zone_(tz)  {
     tmpres -= DELTA_EPOCH_IN_MICROSECS;
 
     set_time(tmpres / 1000000UL, (tmpres % 1000000UL) * 1000000);
-#else
+#elif defined HMDF_HAVE_CLOCK_GETTIME
     struct timespec ts;
 
-    if (::clock_gettime(CLOCK_REALTIME, &ts) < 0)
-        throw std::runtime_error ("DateTime::DateTime(): ERROR: "
-                                  "clock_gettime() failed");
+    ::clock_gettime(CLOCK_REALTIME, &ts);
     set_time(ts.tv_sec, ts.tv_nsec);
-    /*
+#else
     struct timeval  tv { };
 
     ::gettimeofday(&tv, nullptr);
     set_time(tv.tv_sec, tv.tv_usec * 1000);
-    */
 #endif // _WIN32
 }
 

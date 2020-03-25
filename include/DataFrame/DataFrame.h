@@ -130,6 +130,28 @@ public:  // Load/append/remove interfaces
     void
     rename_column(const char *from, const char *to);
 
+    // It changes the type of the named column. The change happens by
+    // calling convert_func on each element of named column.
+    // NOTE: This will copy data
+    //
+    // FROM_T:
+    //   Current type of the named column
+    // TO_T:
+    //   New type to be of the named column
+    // name:
+    //   Column name
+    // convert_func:
+    //   A function to change each element of named column from FROM_T to TO_T
+    //   type. The default is C-style cast
+    //
+    template<typename FROM_T, typename TO_T>
+    void
+    retype_column(const char *name,
+                  std::function<TO_T (const FROM_T &)> convert_func =
+                      [](const FROM_T &val) -> TO_T  {
+                          return ((TO_T) (*(&val)));
+                      });
+
     // This is the most generalized load function. It creates and loads an
     // index and a variable number of columns. The index vector and all
     // column vectors are "moved" to DataFrame.

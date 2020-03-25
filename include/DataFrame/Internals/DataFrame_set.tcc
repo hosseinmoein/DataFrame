@@ -120,6 +120,32 @@ void DataFrame<I, H>::rename_column (const char *from, const char *to)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename  H>
+template<typename FROM_T, typename TO_T>
+void DataFrame<I, H>::
+retype_column (const char *name,
+               std::function<TO_T (const FROM_T &)> convert_func)  {
+
+    static_assert(std::is_base_of<HeteroVector, DataVec>::value,
+                  "Only a StdDataFrame can call retype_column()");
+
+    if (! ::strcmp(name, DF_INDEX_COL_NAME))
+        throw DataFrameError ("DataFrame::retype_column(): ERROR: "
+                              "Data column name cannot be 'INDEX'");
+
+    const std::vector<FROM_T>   &old_vec = get_column<FROM_T>(name);
+    std::vector<TO_T>           new_vec;
+
+    new_vec.reserve(old_vec.size());
+    for (const auto &citer : old_vec)
+        new_vec.push_back(std::move(convert_func(citer)));
+    remove_column(name);
+    load_column<TO_T>(name, std::move(new_vec));
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
 template<typename ... Ts>
 typename DataFrame<I, H>::size_type
 DataFrame<I, H>::load_data (IndexVecType &&indices, Ts&& ... args)  {

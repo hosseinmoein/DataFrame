@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <cassert>
 #include <iostream>
+#include <string>
 
 using namespace hmdf;
 
@@ -164,10 +165,55 @@ static void test_get_reindexed_view()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_retype_column()  {
+
+    std::cout << "\nTesting retype_column( ) ..." << std::endl;
+
+    std::vector<unsigned long>  idxvec =
+        { 1UL, 2UL, 3UL, 10UL, 5UL, 7UL, 8UL, 12UL, 9UL, 12UL,
+          10UL, 13UL, 10UL, 15UL, 14UL };
+    std::vector<int>            intvec =
+        { -1, 2, 3, 4, 5, 8, -6, 7, 11, 14, -9, 12, 13, 14, 15 };
+    std::vector<std::string>    strvec =
+        { "11", "22", "33", "44", "55", "66", "-77", "88", "99", "100",
+          "101", "102", "103", "104", "-105" };
+
+    MyDataFrame df;
+
+    df.load_data(std::move(idxvec),
+                 std::make_pair("str_col", strvec),
+                 std::make_pair("int_col", intvec));
+
+    df.retype_column<int, unsigned int>("int_col");
+    assert(df.get_index().size() == 15);
+    assert(df.get_column<unsigned int>("int_col").size() == 15);
+    assert(df.get_column<unsigned int>("int_col")[0] == 4294967295);
+    assert(df.get_column<unsigned int>("int_col")[1] == 2);
+    assert(df.get_column<unsigned int>("int_col")[6] == 4294967290);
+    assert(df.get_column<unsigned int>("int_col")[8] == 11);
+    assert(df.get_column<std::string>("str_col")[0] == "11");
+    assert(df.get_column<std::string>("str_col")[6] == "-77");
+
+    df.retype_column<std::string, int>("str_col",
+                                       [](const std::string &val) -> int {
+                                           return (std::stoi(val));
+                                       });
+    assert(df.get_index().size() == 15);
+    assert(df.get_column<unsigned int>("int_col").size() == 15);
+    assert(df.get_column<int>("str_col").size() == 15);
+    assert(df.get_column<unsigned int>("int_col")[6] == 4294967290);
+    assert(df.get_column<unsigned int>("int_col")[8] == 11);
+    assert(df.get_column<int>("str_col")[0] == 11);
+    assert(df.get_column<int>("str_col")[6] == -77);
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int argc, char *argv[]) {
 
     test_get_reindexed();
     test_get_reindexed_view();
+    test_retype_column();
 
     return (0);
 }

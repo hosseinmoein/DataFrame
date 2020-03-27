@@ -150,9 +150,9 @@ make uninstall
 ---
 
 ### Package managers
-If you are using Conan to manage your dependencies, merely add `dataframe/x.y.z@` to your requires, where x.y.z is the release version you want to use. Conan will acquire DataFrame, build it from source in your computer, and provide CMake integration support for your projects. See the [conan docs](https://docs.conan.io/en/latest/) for more information. Sample `conanfile.txt`:
+If you are using Conan to manage your dependencies, merely add `dataframe/x.y.z@` to your requires, where x.y.z is the release version you want to use. Conan will acquire DataFrame, build it from source in your computer, and provide CMake integration support for your projects. See the [conan docs](https://docs.conan.io/en/latest/) for more information.<BR> Sample `conanfile.txt`:
 
-```
+```text
 [requires]
 dataframe/1.7.0@
 

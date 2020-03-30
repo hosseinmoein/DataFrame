@@ -165,28 +165,28 @@ For the definition and defaults of <I>RandGenParams</I>, see this document and f
 
     <tr bgcolor="lightgrey">
       <td><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/get_index.html">get_index</a>( 2 )</td>
-      <td>struct BadRange{  } -- An Exception</td>
+      <td>struct BadRange{  }<BR>An Exception</td>
       <td>struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/HarmonicMeanVisitor.html">HarmonicMeanVisitor</a>{  }</td>
       <td><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/gen_weibull_dist.html">gen_weibull_dist</a>( )</td>
     </tr>
 
     <tr bgcolor="silver">
       <td><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/get_memory_usage.html">get_memory_usage</a>( )</td>
-      <td>struct ColNotFound{  } -- An Exception</td>
+      <td>struct ColNotFound{  }<BR>An Exception</td>
       <td>struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/KMeansVisitor.html">KMeansVisitor</a>{  }</td>
       <td></td>
     </tr>
 
     <tr bgcolor="lightgrey">
       <td><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/get_reindexed.html">get_reindexed</a>( )</td>
-      <td>struct DataFrameError{  } -- An Exception</td>
+      <td>struct DataFrameError{  }<BR>An Exception</td>
       <td>struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/KthValueVisitor.html">KthValueVisitor</a>{  }</td>
       <td></td>
     </tr>
 
     <tr bgcolor="silver">
       <td><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/get_reindexed.html">get_reindexed_view</a>( )</td>
-      <td>struct InconsistentData{  } -- An Exception</td>
+      <td>struct InconsistentData{  }<BR>An Exception</td>
       <td>struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/MACDVisitor.html">MACDVisitor</a>{  }</td>
       <td></td>
     </tr>
@@ -207,14 +207,14 @@ For the definition and defaults of <I>RandGenParams</I>, see this document and f
 
     <tr bgcolor="lightgrey">
       <td><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/get_data_by_loc.html">get_view_by_loc</a>( 2 )</td>
-      <td>struct NotFeasible{  } -- An Exception</td>
+      <td>struct NotFeasible{  }<BR>An Exception</td>
       <td>struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/MeanVisitor.html">MeanVisitor</a>{  }</td>
       <td></td>
     </tr>
 
     <tr bgcolor="silver">
       <td><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/get_data_by_rand.html">get_view_by_rand</a>( )</td>
-      <td>struct NotImplemented{  } -- An Exception</td>
+      <td>struct NotImplemented{  }<BR>An Exception</td>
       <td>struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/MedianVisitor.html">MedianVisitor</a>{  }</td>
       <td></td>
     </tr>
@@ -545,7 +545,16 @@ For the definition and defaults of <I>RandGenParams</I>, see this document and f
 
   <BR><BR>
 
-  <H1><font color="blue">GLOBAL OPERATORS</font></H1>
+  <H1><font color="blue">Motivation</font></H1>
+  <P>
+    Although Pandas has a spot-on interface and it is full of useful functionalities, it lacks performance and scalability. For example, it is hard to decipher high-frequency intraday data such as Options data or S&amp;P500 constituents tick-by-tick data using Pandas.<BR>
+    Another issue I have encountered often is the research is done using Python, because it has such tools as Pandas, but the execution in production is in C++ for its efficiency, reliability and scalability. Therefore, there is this translation, or sometimes a bridge, between research and executions.<BR>
+    Also, in this day and age, C++ needs a heterogeneous data container.<BR>
+    Mainly because of these factors, I implemented the C++ DataFrame.<BR>
+    <I>I welcome all contributions from people with expertise, interest, and time to do it. I will add more functionalities from time to time, but currently my spare time is limited.</I>
+  </P>
+
+  <H1><font color="blue">Global Operators</font></H1>
   <P>
     These are currently arithmetic operators declared in include/DataFrame.h. Because they all have to be templated, they cannot be defined as redefined built-in operators.<BR>
     <PRE>
@@ -566,15 +575,6 @@ For the definition and defaults of <I>RandGenParams</I>, see this document and f
     These arithmetic operations operate on the same-name and same-type columns on lhs and rhs. Each pair of entries is operated on, only if they have the same index value.<BR>
     They return a new DataFrame<BR>
     <B>NOTE</B>: Both lhs and rhs must be already sorted by index, otherwise the result is nonsensical.
-  </P>
-
-  <H1><font color="blue">MOTIVATION</font></H1>
-  <P>
-    Although Pandas has a spot-on interface and it is full of useful functionalities, it lacks performance and scalability. For example, it is hard to decipher high-frequency intraday data such as Options data or S&amp;P500 constituents tick-by-tick data using Pandas.<BR>
-    Another issue I have encountered often is the research is done using Python, because it has such tools as Pandas, but the execution in production is in C++ for its efficiency, reliability and scalability. Therefore, there is this translation, or sometimes a bridge, between research and executions.<BR>
-    Also, in this day and age, C++ needs a heterogeneous data container.<BR>
-    Mainly because of these factors, I implemented the C++ DataFrame.<BR>
-    <I>I welcome all contributions from people with expertise, interest, and time to do it. I will add more functionalities from time to time, but currently my spare time is limited.</I>
   </P>
 
   <H1><font color="blue">Views</font></H1>
@@ -600,7 +600,7 @@ For the definition and defaults of <I>RandGenParams</I>, see this document and f
     See this document and file <I>RandGen.h</I> and <I>dataframe_tester.cc.</I>
   </P>
 
-  <H1><font color="blue">CODE STRUCTURE</font></H1>
+  <H1><font color="blue">Code Structure</font></H1>
   <P>
     The DataFrame library is “almost” a header-only library with a few boilerplate source file exceptions, <I>HeteroVector.cc</I> and <I>HeteroView.cc</I> and a few others. Also there is <I>DateTime.cc.</I><BR>
     <BR>
@@ -614,7 +614,7 @@ For the definition and defaults of <I>RandGenParams</I>, see this document and f
     <font size="+2">test</font> directory contains all the test source files, mocked data files, and test output files. The main test source file is <I>dataframe_tester.cc.</I> It contains test cases for all functionalities of DataFrame. It is not in a very organized structure. I plan to make the test cases more organized.
   </P>
 
-  <H1><font color="blue">BUILD INSTRUCTIONS</font></H1>
+  <H1><font color="blue">Build Instructions</font></H1>
   <P>
     <font size="+2">Using plain make and make-files</font><BR>
     Go to the root of the repository, where license file is, and execute build_all.sh. This will build the library and test executables for Linux flavors <BR>

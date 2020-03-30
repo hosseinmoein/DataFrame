@@ -213,6 +213,8 @@ public:  // Load/append/remove interfaces
     //   Type of data being moved
     // name:
     //   Name of the column
+    // data:
+    //   Data vector
     // padding:
     //   If true, it pads the data column with nan, if it is shorter than the
     //   index column.
@@ -228,6 +230,54 @@ public:  // Load/append/remove interfaces
     load_column(const char *name,
                 const std::vector<T> &data,
                 nan_policy padding = nan_policy::pad_with_nans);
+
+    // This method creates a column similar to above, but assumes data is
+    // bucket or bar values. That means the data vector contains statistical
+    // figure(s) for time buckets and must be aligned with the index column
+    // at bucket intervals.
+    // For example, index column is in minutes unit. The data vector is the
+    // sum of 5-minute buckets of some column, or some set not even present in
+    // DataFrame. The values in data vector will be aligned with the index
+    // column at every 5 minutes. The in-between values will “null_value”.
+    //
+    // NOTE: The data vector must contain (index size / interval) number of
+    //       values or less, if index has values per interval. Otherwise, data
+    //       must contain appropriate number of values.
+    // NOTE: The index must be in ascending order
+    //
+    // T:
+    //   Type of data being loaded
+    // name:
+    //   Name of the column
+    // data:
+    //   Data vector
+    // interval:
+    //   Bucket interval measured in index units distance
+    // start_from_beginning:
+    //   If true, the first data value will be associated with the first index
+    //   value. If false, the first data value will be associated with index
+    //   value interval away from the first index value
+    // null_value:
+    //   The value to fill the new column in-between intervals. The default is
+    //   T version of NaN. For None NaN'able types, it will be default value
+    //   for T
+    // diff_func:
+    //   Function to calculate distance between two index values
+    //
+    template<typename T>
+    size_type
+    load_align_column(const char *name,
+                      const std::vector<T> &&data,
+                      size_type interval,
+                      bool start_from_beginning,
+                      const T &null_value = DataFrame::_get_nan<T>(),
+                      std::function<size_type(const IndexType &,
+                                              const IndexType &)> diff_func =
+                          [](const IndexType &t_1,
+                             const IndexType &t) -> size_type  {
+                              return (static_cast<size_type>(t - t_1));
+                          }
+                      );
 
     // It appends val to the end of the index column.
     //

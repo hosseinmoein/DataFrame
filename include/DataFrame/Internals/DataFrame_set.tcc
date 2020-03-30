@@ -432,6 +432,61 @@ template<typename I, typename  H>
 template<typename T>
 typename DataFrame<I, H>::size_type
 DataFrame<I, H>::
+load_align_column(const char *name,
+                  const std::vector<T> &&data,
+                  size_type interval,
+                  bool start_from_beginning,
+                  const T &null_value,
+                  std::function<size_type(const IndexType &,
+                                          const IndexType &)> diff_func)  {
+
+    const size_type idx_s = indices_.size();
+    const size_type data_s = data.size();
+
+    if (data_s > idx_s || data_s == 0)  {
+        char buffer [512];
+
+        sprintf (buffer, "DataFrame::load_align_column(): ERROR: "
+#ifdef _WIN32
+                         "data size of %zu is larger than index size of %zu",
+#else
+                         "data size of %lu is larger than index size of %lu",
+#endif // _WIN32
+                 data_s, idx_s);
+        throw InconsistentData (buffer);
+    }
+
+    std::vector<T>  new_col(idx_s, null_value);
+    size_type       idx_idx { 0 };
+
+    if (start_from_beginning)  {
+        new_col[0] = std::move(data[0]);
+        idx_idx = 1;
+    }
+
+    size_type   idx_ref_idx { 0 };
+    size_type   data_idx { idx_idx };
+
+    for ( ; data_idx < data_s && idx_idx < idx_s; ++idx_idx)  {
+        const size_type idx_diff =
+            diff_func(indices_[idx_ref_idx], indices_[idx_idx]);
+
+        if (idx_diff < interval)  continue;
+        new_col[idx_idx + (idx_diff > interval ? -1 : 0)] =
+            std::move(data[data_idx]);
+        idx_ref_idx = idx_idx + (idx_diff > interval ? -1 : 0);
+        data_idx += 1;
+    }
+
+    return (load_column<T>(name, std::move(new_col)));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename T>
+typename DataFrame<I, H>::size_type
+DataFrame<I, H>::
 load_column (const char *name,
              const std::vector<T> &data,
              nan_policy padding)  {

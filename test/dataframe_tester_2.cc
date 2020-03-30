@@ -209,11 +209,50 @@ static void test_retype_column()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_load_align_column()  {
+
+    std::cout << "\nTesting load_align_column( ) ..." << std::endl;
+
+    std::vector<unsigned long>  idxvec =
+        { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
+          16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28 };
+    std::vector<int>            intvec =
+        { -1, 2, 3, 4, 5, 8, -6, 7, 11, 14, -9, 12, 13, 14, 15 };
+    std::vector<double>         summary_vec = { 100, 200, 300, 400, 500 };
+
+    MyDataFrame df;
+
+    df.load_data(std::move(idxvec),
+                 std::make_pair("int_col", intvec));
+    df.load_align_column("summary_col", std::move(summary_vec), 5, true);
+
+    std::vector<double> summary_vec_2 = { 102, 202, 302, 402, 502 };
+
+    df.load_align_column("summary_col_2", std::move(summary_vec_2), 5, false);
+
+    assert(df.get_column<double>("summary_col").size() == 28);
+    assert(df.get_column<double>("summary_col_2").size() == 28);
+    assert(df.get_column<double>("summary_col")[0] == 100);
+    assert(std::isnan(df.get_column<double>("summary_col_2")[0]));
+    assert(df.get_column<double>("summary_col")[5] == 200);
+    assert(std::isnan(df.get_column<double>("summary_col")[6]));
+    assert(df.get_column<double>("summary_col_2")[5] == 102);
+    assert(df.get_column<double>("summary_col")[20] == 500);
+    assert(df.get_column<double>("summary_col_2")[25] == 502);
+    assert(std::isnan(df.get_column<double>("summary_col")[27]));
+    assert(std::isnan(df.get_column<double>("summary_col")[26]));
+    assert(std::isnan(df.get_column<double>("summary_col_2")[27]));
+    assert(std::isnan(df.get_column<double>("summary_col_2")[26]));
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int argc, char *argv[]) {
 
     test_get_reindexed();
     test_get_reindexed_view();
     test_retype_column();
+    test_load_align_column();
 
     return (0);
 }

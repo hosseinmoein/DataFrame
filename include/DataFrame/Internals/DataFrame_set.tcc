@@ -432,13 +432,15 @@ template<typename I, typename  H>
 template<typename T>
 typename DataFrame<I, H>::size_type
 DataFrame<I, H>::
-load_align_column(const char *name,
-                  const std::vector<T> &&data,
-                  size_type interval,
-                  bool start_from_beginning,
-                  const T &null_value,
-                  std::function<size_type(const IndexType &,
-                                          const IndexType &)> diff_func)  {
+load_align_column(
+    const char *name,
+    const std::vector<T> &&data,
+    size_type interval,
+    bool start_from_beginning,
+    const T &null_value,
+    std::function<DataFrame::size_type(
+                        const DataFrame::IndexType &,
+                        const DataFrame::IndexType &)> diff_func)  {
 
     const size_type idx_s = indices_.size();
     const size_type data_s = data.size();

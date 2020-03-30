@@ -36,6 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <array>
 #include <fstream>
+#include <functional>
 #include <future>
 #include <map>
 
@@ -271,8 +272,8 @@ public:  // Load/append/remove interfaces
                       size_type interval,
                       bool start_from_beginning,
                       const T &null_value = DataFrame::_get_nan<T>(),
-                      std::function<size_type(const IndexType &,
-                                              const IndexType &)> diff_func =
+                      std::function<size_type (const IndexType &,
+                                               const IndexType &)> diff_func =
                           [](const IndexType &t_1,
                              const IndexType &t) -> size_type  {
                               return (static_cast<size_type>(t - t_1));

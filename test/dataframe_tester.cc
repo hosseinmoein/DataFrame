@@ -261,7 +261,7 @@ static void test_haphazard()  {
     dvec2 = df3.get_column<double> ("dbl_col_2");
 
     assert(dvec.size() == 1);
-    assert(dvec[5] == 2.2345);
+    assert(dvec[0] == 3.2345);
 
     assert(dvec2.size() == 1);
     assert(dvec2[0] == 0.056);

@@ -434,7 +434,7 @@ typename DataFrame<I, H>::size_type
 DataFrame<I, H>::
 load_align_column(
     const char *name,
-    const std::vector<T> &&data,
+    std::vector<T> &&data,
     size_type interval,
     bool start_from_beginning,
     const T &null_value,

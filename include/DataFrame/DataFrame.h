@@ -273,12 +273,14 @@ public:  // Load/append/remove interfaces
         size_type interval,
         bool start_from_beginning,
         const T &null_value = DataFrame::_get_nan<T>(),
-        std::function<DataFrame::size_type (
-                          const DataFrame::IndexType &,
-                          const DataFrame::IndexType &)> diff_func =
-            [](const DataFrame::IndexType &t_1,
-               const DataFrame::IndexType &t) -> DataFrame::size_type  {
-                return (static_cast<DataFrame::size_type>(t - t_1));
+        std::function<typename DataFrame<I, H>::size_type (
+            const typename DataFrame<I, H>::IndexType &,
+            const typename DataFrame<I, H>::IndexType &)> diff_func =
+            [](const typename DataFrame<I, H>::IndexType &t_1,
+               const typename DataFrame<I, H>::IndexType &t) ->
+                   typename DataFrame<I, H>::size_type  {
+                return (
+                    static_cast<typename DataFrame<I, H>::size_type>(t - t_1));
             });
 
     // It appends val to the end of the index column.

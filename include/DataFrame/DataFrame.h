@@ -267,19 +267,19 @@ public:  // Load/append/remove interfaces
     //
     template<typename T>
     size_type
-    load_align_column(const char *name,
-                      const std::vector<T> &&data,
-                      size_type interval,
-                      bool start_from_beginning,
-                      const T &null_value = DataFrame::_get_nan<T>(),
-                      std::function<DataFrame::size_type (
-                                  const DataFrame::IndexType &,
-                                  const DataFrame::IndexType &)> diff_func =
-                          [](const IndexType &t_1,
-                             const IndexType &t) -> size_type  {
-                              return (static_cast<size_type>(t - t_1));
-                          }
-                      );
+    load_align_column(
+        const char *name,
+        const std::vector<T> &&data,
+        size_type interval,
+        bool start_from_beginning,
+        const T &null_value = DataFrame::_get_nan<T>(),
+        std::function<DataFrame::size_type (
+                          const DataFrame::IndexType &,
+                          const DataFrame::IndexType &)> diff_func =
+            [](const DataFrame::IndexType &t_1,
+               const DataFrame::IndexType &t) -> DataFrame::size_type  {
+                return (static_cast<DataFrame::size_type>(t - t_1));
+            });
 
     // It appends val to the end of the index column.
     //

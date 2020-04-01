@@ -177,12 +177,9 @@ DataFrame<I, H>::load_index(const ITR &begin, const ITR &end)  {
     static_assert(std::is_base_of<HeteroVector, DataVec>::value,
                   "Only a StdDataFrame can call load_index()");
 
-    const size_type s = std::distance(begin, end);
-
-    indices_.clear ();
-    indices_.reserve (s);
-    indices_.insert (indices_.begin (), begin, end);
-    return (s);
+    indices_.clear();
+    indices_.insert (indices_.end(), begin, end);
+    return (indices_.size());
 }
 
 // ----------------------------------------------------------------------------
@@ -286,8 +283,7 @@ DataFrame<I, H>::append_index(Index2D<const ITR &> range)  {
 
     const size_type s = std::distance(range.begin, range.end);
 
-    indices_.reserve (indices_.size() + s);
-    indices_.insert (indices_.end (), range.begin, range.end);
+    indices_.insert(indices_.end(), range.begin, range.end);
     return (s);
 }
 
@@ -343,8 +339,7 @@ load_column (const char *name,
     }
 
     vec_ptr->clear();
-    vec_ptr->reserve(idx_s);
-    vec_ptr->insert (vec_ptr->begin (), range.begin, range.end);
+    vec_ptr->insert (vec_ptr->end(), range.begin, range.end);
 
     size_type   ret_cnt = s;
 
@@ -536,7 +531,6 @@ append_column (const char *name,
         throw InconsistentData (buffer);
     }
 
-    vec.reserve (idx_s);
     vec.insert (vec.end (), range.begin, range.end);
 
     size_type   ret_cnt = s;

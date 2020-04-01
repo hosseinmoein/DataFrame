@@ -1950,8 +1950,9 @@ struct DiffVisitor  {
                       j = column.rbegin();
                  i < column.rend(); ++i, ++j) {
                 if (skip_nan_ && (is_nan__(*i) || is_nan__(*j)))  continue;
-                result_.insert(result_.begin(), (*i - *j));
+                result_.push_back(*i - *j);
             }
+            std::reverse(result_.begin(), result_.end());
 
             if (skip_nan_ )  return;
             for (size_type i = 0;

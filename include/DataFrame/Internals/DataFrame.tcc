@@ -440,19 +440,19 @@ drop_missing_rows_(T &vec,
     for (auto &iter : missing_row_map)  {
         if (policy == drop_policy::all)  {
             if (iter.second == col_num)  {
-                vec.erase(vec.begin() + iter.first - erase_count);
+                vec.erase(vec.begin() + (iter.first - erase_count));
                 erase_count += 1;
             }
         }
         else if (policy == drop_policy::any)  {
             if (iter.second > 0)  {
-                vec.erase(vec.begin() + iter.first - erase_count);
+                vec.erase(vec.begin() + (iter.first - erase_count));
                 erase_count += 1;
             }
         }
         else if (policy == drop_policy::threshold)  {
             if (iter.second > threshold)  {
-                vec.erase(vec.begin() + iter.first - erase_count);
+                vec.erase(vec.begin() + (iter.first - erase_count));
                 erase_count += 1;
             }
         }

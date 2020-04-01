@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/DataFrame.h>
 
 #include <algorithm>
+#include <iterator>
 
 // ----------------------------------------------------------------------------
 
@@ -153,7 +154,7 @@ void DataFrame<I, H>::shift_right_(V &vec, size_type n)  {
     const auto  vec_rend = vec.rend();
 
     for (auto riter = vec.rbegin(); riter != vec_rend; ++riter)
-        if (riter + n < vec_rend)
+        if (std::distance(riter, vec_rend) > n)
             *riter = std::move(*(riter + n));
         else
             *riter = std::move(_get_nan<value_type>());
@@ -173,7 +174,7 @@ void DataFrame<I, H>::shift_left_(V &vec, size_type n)  {
     const auto  vec_end = vec.end();
 
     for (auto iter = vec.begin(); iter != vec_end; ++iter)
-        if (iter + n < vec_end)
+        if (std::distance(iter, vec_end) > n)
             *iter = std::move(*(iter + n));
         else
             *iter = std::move(_get_nan<value_type>());

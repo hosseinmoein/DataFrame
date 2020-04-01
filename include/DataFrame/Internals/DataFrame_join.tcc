@@ -696,7 +696,7 @@ DataFrame<I, H>::concat(const RHS_T &rhs, concat_policy cp) const  {
 
 // ----------------------------------------------------------------------------
 
-// Local Variables::w
+// Local Variables:
 // mode:C++
 // tab-width:4
 // c-basic-offset:4

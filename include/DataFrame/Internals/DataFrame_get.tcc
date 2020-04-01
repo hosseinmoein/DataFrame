@@ -927,7 +927,7 @@ DataFrame<I, H>::get_data_by_loc (const std::vector<long> &locations) const  {
     new_index.reserve(locations.size());
     for (const auto citer: locations)  {
         const size_type index =
-            citer >= 0 ? citer : static_cast<long>(idx_s) + citer;
+            citer >= 0 ? (citer) : (citer) + static_cast<long>(idx_s);
 
         new_index.push_back(indices_[index]);
     }
@@ -1016,7 +1016,7 @@ DataFrame<I, H>::get_view_by_loc (const std::vector<long> &locations) const  {
     new_index.reserve(locations.size());
     for (const auto citer: locations)  {
         const size_type index =
-            citer >= 0 ? citer : static_cast<long>(idx_s) + citer;
+            citer >= 0 ? (citer) : (citer) + static_cast<long>(idx_s);
 
         new_index.push_back(&(nc_this->indices_[index]));
     }

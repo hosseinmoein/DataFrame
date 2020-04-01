@@ -317,11 +317,13 @@ fill_missing_linter_(std::vector<T> &vec,
                 (*y2 - *y1);
             count += 1;
         }
-        y1 = &(vec[i]);
-        y2 = &(vec[i + 2]);
-        x = &(index[i + 1]);
-        x1 = &(index[i]);
-        x2 = &(index[i + 2]);
+        if (i < (vec_size - 2))  {
+            y1 = &(vec[i]);
+            y2 = &(vec[i + 2]);
+            x = &(index[i + 1]);
+            x1 = &(index[i]);
+            x2 = &(index[i + 2]);
+        }
     }
 
     return;

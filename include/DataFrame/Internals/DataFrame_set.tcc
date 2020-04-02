@@ -687,7 +687,7 @@ void DataFrame<I, H>::remove_data_by_sel (const char *name, F &sel_functor)  {
     size_type       del_count = 0;
 
     for (size_type i = 0; i < col_indices_s; ++i)
-        indices_.erase(indices_.begin() + col_indices[i] - del_count++);
+        indices_.erase(indices_.begin() + (col_indices[i] - del_count++));
 
     return;
 }
@@ -723,7 +723,7 @@ remove_data_by_sel (const char *name1, const char *name2, F &sel_functor)  {
     size_type       del_count = 0;
 
     for (size_type i = 0; i < col_indices_s; ++i)
-        indices_.erase(indices_.begin() + col_indices[i] - del_count++);
+        indices_.erase(indices_.begin() + (col_indices[i] - del_count++));
 
     return;
 }
@@ -765,7 +765,7 @@ remove_data_by_sel (const char *name1,
     size_type       del_count = 0;
 
     for (size_type i = 0; i < col_indices_s; ++i)
-        indices_.erase(indices_.begin() + col_indices[i] - del_count++);
+        indices_.erase(indices_.begin() + (col_indices[i] - del_count++));
 
     return;
 }

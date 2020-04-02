@@ -714,7 +714,7 @@ operator() (std::vector<T> &vec) const  {
 
     for (size_type i = 0; i < sel_indices_s; ++i)
         if (sel_indices[i] < vec_s)
-            vec.erase(vec.begin() + sel_indices[i] - del_count++);
+            vec.erase(vec.begin() + (sel_indices[i] - del_count++));
         else
             break;
     return;

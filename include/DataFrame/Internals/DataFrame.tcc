@@ -32,6 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <algorithm>
 #include <cmath>
+#include <functional>
 #include <future>
 #include <limits>
 #include <random>
@@ -663,7 +664,7 @@ void DataFrame<I, H>::sort(const char *name, sort_spec dir)  {
                         return (this->indices_[i] < this->indices_[j]);
                     };
         auto    d = [this](size_type i, size_type j) -> bool  {
-                        return (this->indices_[i] >= this->indices_[j]);
+                        return (this->indices_[i] > this->indices_[j]);
                     };
 
 
@@ -679,7 +680,7 @@ void DataFrame<I, H>::sort(const char *name, sort_spec dir)  {
                         return (x[i] < x[j]);
                     };
         auto    d = [&x = idx_vec](size_type i, size_type j) -> bool {
-                        return (x[i] >= x[j]);
+                        return (x[i] > x[j]);
                     };
 
         if (dir == sort_spec::ascen)
@@ -730,7 +731,7 @@ sort(const char *name1, sort_spec dir1, const char *name2, sort_spec dir2)  {
             if (dir2 == sort_spec::ascen)
                 return (vec2->at(i) < vec2->at(j));
             else
-                return (vec2->at(i) >= vec2->at(j));
+                return (vec2->at(i) > vec2->at(j));
         };
 
     sort_common_<decltype(cf), Ts ...>(*this, std::move(cf));
@@ -797,7 +798,7 @@ sort(const char *name1, sort_spec dir1,
             if (dir3 == sort_spec::ascen)
                 return (vec3->at(i) < vec3->at(j));
             else
-                return (vec3->at(i) >= vec3->at(j));
+                return (vec3->at(i) > vec3->at(j));
         };
 
     sort_common_<decltype(cf), Ts ...>(*this, std::move(cf));
@@ -883,7 +884,7 @@ sort(const char *name1, sort_spec dir1,
             if (dir4 == sort_spec::ascen)
                 return (vec4->at(i) < vec4->at(j));
             else
-                return (vec4->at(i) >= vec4->at(j));
+                return (vec4->at(i) > vec4->at(j));
         };
 
     sort_common_<decltype(cf), Ts ...>(*this, std::move(cf));
@@ -989,7 +990,7 @@ sort(const char *name1, sort_spec dir1,
             if (dir5 == sort_spec::ascen)
                 return (vec5->at(i) < vec5->at(j));
             else
-                return (vec5->at(i) >= vec5->at(j));
+                return (vec5->at(i) > vec5->at(j));
         };
 
     sort_common_<decltype(cf), Ts ...>(*this, std::move(cf));

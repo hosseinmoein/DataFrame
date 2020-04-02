@@ -74,6 +74,8 @@ static void test_haphazard()  {
 
     MyDataFrame::set_thread_level(10);
 
+    std::cout << "\nTesting load_data ..." << std::endl;
+
     MyDataFrame         df;
     std::vector<int>    &col0 =
         df.create_column<int>(static_cast<const char *>("col_name"));
@@ -124,6 +126,8 @@ static void test_haphazard()  {
 
     assert(df.get_column<double> ("dbl_col")[2] == 3.2345);
 
+    std::cout << "\nTesting Visitors 1 ..." << std::endl;
+
     MeanVisitor<int>    ivisitor;
     MeanVisitor<double> dvisitor;
     const MyDataFrame   const_df = df;
@@ -157,6 +161,8 @@ static void test_haphazard()  {
     assert(dvec2[4] == 0.00345);
     assert(dvec2[7] == 0.1);
 
+    std::cout << "\nTesting make_consistent ..." << std::endl;
+
     df.make_consistent<int, double, std::string>();
     df.shrink_to_fit<int, double, std::string>();
     dvec = df.get_column<double> ("dbl_col");
@@ -173,6 +179,8 @@ static void test_haphazard()  {
     assert(dvec2[1] == 0.3456);
     assert(dvec2[4] == 0.00345);
     assert(dvec2[7] == 0.1);
+
+    std::cout << "\nTesting sort 1 ..." << std::endl;
 
     df.sort<MyDataFrame::IndexType, int, double, std::string>
         (DF_INDEX_COL_NAME, sort_spec::ascen);
@@ -193,6 +201,8 @@ static void test_haphazard()  {
     assert(dvec2[5] == 0.1);
     assert(dvec2[7] == 0.923);
 
+    std::cout << "\nTesting sort 2 ..." << std::endl;
+
     df.sort<double, int, double, std::string>("dbl_col_2", sort_spec::desce);
     dvec = df.get_column<double> ("dbl_col");
     dvec2 = df.get_column<double> ("dbl_col_2");
@@ -202,6 +212,8 @@ static void test_haphazard()  {
 
     assert(dvec2[0] == 0.998);
     assert(dvec2[7] == 0.00345);
+
+    std::cout << "\nTesting sort 3 ..." << std::endl;
 
     df.sort<double, int, double, std::string>("dbl_col_2", sort_spec::ascen);
     dvec = df.get_column<double> ("dbl_col");
@@ -221,26 +233,29 @@ static void test_haphazard()  {
     assert(dvec2[5] == 0.3456);
     assert(dvec2[7] == 0.998);
 
+    std::cout << "\nTesting get_data_by_idx() ..." << std::endl;
+
+    df.sort<MyDataFrame::IndexType, int, double, std::string>
+        (DF_INDEX_COL_NAME, sort_spec::ascen);
+
     MyDataFrame df2 =
         df.get_data_by_idx<int, double, std::string>(
             Index2D<MyDataFrame::IndexType> { 3, 5 });
 
-    // Printing the second df after get_data_by_idx() ...
-
     dvec = df2.get_column<double> ("dbl_col");
     dvec2 = df2.get_column<double> ("dbl_col_2");
 
-    assert(dvec.size() == 6);
-    assert(dvec[0] == 5.2345);
-    assert(dvec[1] == 3.2345);
-    assert(dvec[3] == 8.5);
-    assert(dvec[5] == 2.2345);
+    assert(dvec.size() == 3);
+    assert(dvec[0] == 3.2345);
+    assert(dvec[1] == 4.2345);
 
-    assert(dvec2.size() == 6);
-    assert(dvec2[0] == 0.00345);
-    assert(dvec2[1] == 0.056);
-    assert(dvec2[4] == 0.15678);
-    assert(dvec2[5] == 0.3456);
+    assert(dvec2.size() == 3);
+    assert(dvec2[0] == 0.056);
+    assert(dvec2[1] == 0.15678);
+
+    std::cout << "\nTesting get_data_by_loc() ..." << std::endl;
+
+    df.sort<double, int, double, std::string>("dbl_col_2", sort_spec::ascen);
 
     MyDataFrame df3 = df.get_data_by_loc<int, double, std::string>
         (Index2D<long> { 1, 2 });
@@ -266,7 +281,7 @@ static void test_haphazard()  {
     assert(dvec2.size() == 1);
     assert(dvec2[0] == 0.056);
 
-    // Correlation between dbl_col and dbl_col_2 is
+    std::cout << "\nTesting Correlation Visitor ..." << std::endl;
 
     CorrVisitor<double> corr_visitor;
     auto                fut10 =
@@ -274,6 +289,8 @@ static void test_haphazard()  {
     const double        corr = fut10.get().get_result();
 
     assert(fabs(corr - -0.358381) < 0.000001);
+
+    std::cout << "\nTesting Stats Visitor ..." << std::endl;
 
     StatsVisitor<double>    stats_visitor;
 
@@ -283,6 +300,8 @@ static void test_haphazard()  {
     assert(fabs(stats_visitor.get_kurtosis() - -1.273) < 0.0001);
     assert(fabs(stats_visitor.get_mean() - 4.83406) < 0.0001);
     assert(fabs(stats_visitor.get_variance() - 6.58781) < 0.0001);
+
+    std::cout << "\nTesting SLRegression Visitor ..." << std::endl;
 
     SLRegressionVisitor<double> slr_visitor;
 

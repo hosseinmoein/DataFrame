@@ -78,6 +78,22 @@ public:
     inline VectorView (value_type *bp, value_type *ep) noexcept
         : begin_ptr_(bp), end_ptr_(ep)  {   }
 
+    // The purpose of this method is for the user be able to conform to STL
+    // standards.
+    // To create a VectorView over an entire std::vector you have to do this:
+    //        VectorView(&(*v.begin()), &(*v.end()));
+    // The above second parameter is against standards and it is caught
+    // if you set the STL boundary check flag. So instead, you can do:
+    //        VectorView vv;
+    //        vv.set_begin_end_special(&(*v.begin()), &(*v.back()));
+    //
+    inline void set_begin_end_special(value_type *bp, value_type *ep_1)  {
+
+        begin_ptr_ = bp;
+        end_ptr_ = ep_1;
+        end_ptr_ += 1;
+    }
+
     inline bool empty () const noexcept  { return (begin_ptr_ == end_ptr_); }
     inline size_type size () const noexcept  {
 
@@ -566,6 +582,22 @@ public:
     inline
     VectorConstView (const value_type *bp, const value_type *ep) noexcept
         : begin_ptr_(bp), end_ptr_(ep)  {   }
+
+    // The purpose of this method is for the user be able to conform to STL
+    // standards.
+    // To create a VectorView over an entire std::vector you have to do this:
+    //        VectorView(&(*v.begin()), &(*v.end()));
+    // The above second parameter is against standards and it is caught
+    // if you set the STL boundary check flag. So instead, you can do:
+    //        VectorView vv;
+    //        vv.set_begin_end_special(&(*v.begin()), &(v.back()));
+    //
+    inline void set_begin_end_special(value_type *bp, value_type *ep_1)  {
+
+        begin_ptr_ = bp;
+        end_ptr_ = ep_1;
+        end_ptr_ += 1;
+    }
 
     inline bool empty () const noexcept  { return (begin_ptr_ == end_ptr_); }
     inline size_type size () const noexcept  {

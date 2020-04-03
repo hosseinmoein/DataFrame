@@ -1519,9 +1519,9 @@ get_reindexed_view(const char *col_to_be_index,
         nc_this->template get_column<T>(col_to_be_index);
     const size_type     new_idx_s = new_idx.size();
 
-    result.indices_ =
-        typename DataFrameView<T>::IndexVecType(&*(new_idx.begin()),
-                                                &*(new_idx.end()));
+    result.indices_ = typename DataFrameView<T>::IndexVecType();
+    result.indices_.set_begin_end_special(&*(new_idx.begin()),
+                                          &(new_idx.back()));
     if (old_index_name)  {
         auto            &curr_idx = nc_this->get_index();
         const size_type col_s =

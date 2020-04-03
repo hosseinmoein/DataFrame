@@ -50,6 +50,25 @@ HeteroView::HeteroView(T *begin_ptr, T *end_ptr)
 // ----------------------------------------------------------------------------
 
 template<typename T>
+void HeteroView::set_begin_end_special(T *bp, T *ep_1)  {
+
+    clear_function_ = [](HeteroView &hv) { views_<T>.erase(&hv); };
+    copy_function_  = [](const HeteroView &from, HeteroView &to)  {
+                          views_<T>[&to] = views_<T>[&from];
+                      };
+    move_function_ = [](HeteroView &from, HeteroView &to)  {
+                         views_<T>[&to] = std::move(views_<T>[&from]);
+                     };
+
+    VectorView<T>   vv;
+
+    vv.set_begin_end_special(bp, ep_1);
+    views_<T>.emplace(this, vv);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
 VectorView<T> &HeteroView::get_vector()  {
 
     auto    iter = views_<T>.find (this);

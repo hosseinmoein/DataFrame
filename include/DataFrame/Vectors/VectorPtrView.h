@@ -127,6 +127,26 @@ public:
     }
     ~VectorPtrView () = default;
 
+    // The purpose of this method is for the user be able to conform to STL
+    // standards.
+    // To create a VectorView over an entire std::vector you have to do this:
+    //        VectorView(&(*v.begin()), &(*v.end()));
+    // The above second parameter is against standards and it is caught
+    // if you set the STL boundary check flag. So instead, you can do:
+    //        VectorView vv;
+    //        vv.set_begin_end_special(&(*v.begin()), &(*v.back()));
+    //
+    template<typename ITR>
+    inline void set_begin_end_special(ITR first, ITR last_1)  {
+
+        ITR last = last_1;
+
+		last += 1;
+        reserve(std::distance(first, last));
+        for (auto iter = first; iter < last; ++iter)
+            push_back(&(*iter));
+    }
+
     inline VectorPtrView &operator = (const VectorPtrView &) = default;
     inline VectorPtrView &operator = (VectorPtrView &&) = default;
     inline VectorPtrView &operator = (const std::vector<T> &rhs)  {

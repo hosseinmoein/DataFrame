@@ -48,6 +48,25 @@ HeteroPtrView::HeteroPtrView(T *begin_ptr, T *end_ptr)
 // ----------------------------------------------------------------------------
 
 template<typename T>
+void HeteroPtrView::set_begin_end_special(T *bp, T *ep_1)  {
+
+    clear_function_ = [](HeteroPtrView &hv) { views_<T>.erase(&hv); };
+    copy_function_  = [](const HeteroPtrView &from, HeteroPtrView &to)  {
+                          views_<T>[&to] = views_<T>[&from];
+                      };
+    move_function_ = [](HeteroPtrView &from, HeteroPtrView &to)  {
+                         views_<T>[&to] = std::move(views_<T>[&from]);
+                     };
+
+    VectorPtrView<T>    vv;
+
+    vv.set_begin_end_special(bp, ep_1);
+    views_<T>.emplace(this, vv);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
 HeteroPtrView::HeteroPtrView(VectorPtrView<T> &vec)
     : clear_function_([](HeteroPtrView &hv) { views_<T>.erase(&hv); }),
       copy_function_([](const HeteroPtrView &from, HeteroPtrView &to)  {

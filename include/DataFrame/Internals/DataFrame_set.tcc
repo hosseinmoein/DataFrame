@@ -366,7 +366,10 @@ setup_view_column_ (const char *name, Index2D<ITR> range)  {
                   "Only a DataFrameView or DataFramePtrView can "
                   "call setup_view_column_()");
 
-    data_.emplace_back (DataVec(&*(range.begin), &*(range.end)));
+    DataVec dv;
+
+    dv.set_begin_end_special(&*(range.begin), &*(range.end - 1));
+    data_.emplace_back (dv);
     column_tb_.emplace (name, data_.size() - 1);
 
     return;

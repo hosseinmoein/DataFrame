@@ -48,6 +48,19 @@ public:
     HeteroPtrView() = default;
     template<typename T>
     HeteroPtrView(T *begin_ptr, T *end_ptr);
+
+    // The purpose of this method is for the user be able to conform to STL
+    // standards.
+    // To create a VectorView over an entire std::vector you have to do this:
+    //        VectorView(&(*v.begin()), &(*v.end()));
+    // The above second parameter is against standards and it is caught
+    // if you set the STL boundary check flag. So instead, you can do:
+    //        VectorView vv;
+    //        vv.set_begin_end_special(&(*v.begin()), &(v.back()));
+    //
+    template<typename T>
+    void set_begin_end_special(T *bp, T *ep_1);
+
     template<typename T>
     HeteroPtrView(VectorPtrView<T> &vec);
     template<typename T>

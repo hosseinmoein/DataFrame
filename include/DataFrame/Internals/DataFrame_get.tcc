@@ -1332,10 +1332,10 @@ get_data_by_rand (random_policy spec, double n, size_type seed) const  {
     }
     else if (spec == random_policy::frac_rows_with_seed)  {
         use_seed = true;
-        n_rows = static_cast<size_type>(n * index_s);
+        n_rows = static_cast<size_type>(n * double(index_s));
     }
     else if (spec == random_policy::frac_rows_no_seed)  {
-        n_rows = static_cast<size_type>(n * index_s);
+        n_rows = static_cast<size_type>(n * double(index_s));
     }
 
     if (index_s > 0 && n_rows < index_s - 1)  {
@@ -1405,10 +1405,10 @@ get_view_by_rand (random_policy spec, double n, size_type seed) const  {
     }
     else if (spec == random_policy::frac_rows_with_seed)  {
         use_seed = true;
-        n_rows = static_cast<size_type>(n * index_s);
+        n_rows = static_cast<size_type>(n * double(index_s));
     }
     else if (spec == random_policy::frac_rows_no_seed)  {
-        n_rows = static_cast<size_type>(n * index_s);
+        n_rows = static_cast<size_type>(n * double(index_s));
     }
 
     if (index_s > 0 && n_rows < index_s - 1)  {

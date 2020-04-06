@@ -84,7 +84,7 @@ struct load_functor_ : DataVec::template visitor_base<Ts ...>  {
                           std::size_t e,
                           LHS &d,
                           nan_policy np = nan_policy::pad_with_nans)
-	: name (n), begin (b), end (e), df(d), nan_p(np)  {   }
+    : name (n), begin (b), end (e), df(d), nan_p(np)  {   }
 
     const char          *name;
     const std::size_t   begin;

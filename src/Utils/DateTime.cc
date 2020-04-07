@@ -47,6 +47,42 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace hmdf
 {
 
+#ifdef _WIN32
+const char  *DateTime::TIMEZONES_[] =
+{
+    "TZ=GMT",
+    "TZ=GMT+03",    // "America/Buenos_Aires",
+    "TZ=GMT+06",    // "America/Chicago",
+    "TZ=GMT+08",    // "America/Los_Angeles",
+    "TZ=GMT+06",    // "America/Mexico_City",
+    "TZ=GMT+05",    // "America/New_York",
+    "TZ=GMT-04",    // "Asia/Dubai",
+    "TZ=GMT-08",    // "Asia/Hong_Kong",
+    "TZ=GMT-08",    // "Asia/Shanghai",
+    "TZ=GMT-08",    // "Asia/Singapore",
+    "TZ=GMT-03:30", // "Asia/Tehran",
+    "TZ=GMT-02",    // "Asia/Tel_Aviv",
+    "TZ=GMT-09",    // "Asia/Tokyo",
+    "TZ=GMT-11",    // "Australia/Melbourne",
+    "TZ=GMT-10",    // "Australia/NSW",
+    "TZ=GMT+03",    // "Brazil/East",
+    "TZ=GMT-01",    // "Europe/Berlin",
+    "TZ=GMT-00",    // "Europe/London",
+    "TZ=GMT-03",    // "Europe/Moscow",
+    "TZ=GMT-01",    // "Europe/Paris",
+    "TZ=GMT-01",    // "Europe/Rome",
+    "TZ=GMT-01",    // "Europe/Vienna",
+    "TZ=GMT-01",    // "Europe/Zurich",
+    "TZ=GMT+00",    // "UTC",
+    "TZ=GMT-07",    // "Asia/Seoul",
+    "TZ=GMT-08",    // "Asia/Taipei",
+    "TZ=GMT-01",    // "Eurpoe/Sweden",
+    "TZ=GMT-13",    // "NZ",
+    "TZ=GMT-01",    // "Europe/Oslo",
+    "TZ=GMT-01",    // "Europe/Warsaw",
+    "TZ=GMT-01"     // "Europe/Budapest"
+};
+#else
 const char  *DateTime::TIMEZONES_[] =
 {
     "GMT",
@@ -81,6 +117,7 @@ const char  *DateTime::TIMEZONES_[] =
     "Europe/Warsaw",
     "Europe/Budapest"
 };
+#endif // _WIN32
 
 const DateTime::DT_initializer  DateTime::dt_init_;
 

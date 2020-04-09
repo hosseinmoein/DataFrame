@@ -750,7 +750,8 @@ template<typename ... Ts>
 DataFrame<I, H>
 DataFrame<I, H>::get_data_by_idx(const std::vector<IndexType> &values) const  {
 
-    const std::unordered_set<IndexType> val_table(values.begin(), values.end());
+    const std::unordered_set<IndexType> val_table(values.begin(),
+                                                  values.end());
     IndexVecType                        new_index;
     std::vector<size_type>              locations;
     const size_type                     values_s = values.size();
@@ -838,7 +839,8 @@ get_view_by_idx(const std::vector<IndexType> &values) const  {
 
     using TheView = DataFramePtrView<IndexType>;
 
-    const std::unordered_set<IndexType> val_table(values.begin(), values.end());
+    const std::unordered_set<IndexType> val_table(values.begin(),
+                                                  values.end());
     typename TheView::IndexVecType      new_index;
     std::vector<size_type>              locations;
     const size_type                     values_s = values.size();
@@ -1542,6 +1544,27 @@ get_reindexed_view(const char *col_to_be_index,
             result);
 
         nc_this->data_[citer.second].change(functor);
+    }
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename ... Ts>
+std::vector<std::tuple<typename DataFrame<I, H>::ColNameType,
+                       typename DataFrame<I, H>::size_type,
+                       std::type_index>>
+DataFrame<I, H>::get_columns_info () const  {
+
+    std::vector<std::tuple<ColNameType, size_type, std::type_index>> result;
+
+    result.reserve(column_tb_.size());
+    for (auto &citer : column_tb_)  {
+        columns_info_functor_<Ts ...>   functor (result, citer.first.c_str());
+
+        data_[citer.second].change(functor);
     }
 
     return (result);

@@ -566,6 +566,25 @@ struct random_load_view_functor_ : DataVec::template visitor_base<Ts ...>  {
 
 // ----------------------------------------------------------------------------
 
+template<typename ... Ts>
+struct columns_info_functor_ : DataVec::template visitor_base<Ts ...>  {
+
+    using result_t =
+        std::vector<std::tuple<ColNameType, size_type, std::type_index>>;
+
+    inline columns_info_functor_ (result_t &r, const char *n)
+        : result(r), name(n)  {   }
+
+    result_t    &result;
+    const char  *name;
+
+    template<typename T>
+    void operator() (const T &vec);
+};
+
+
+// ----------------------------------------------------------------------------
+
 // Local Variables:
 // mode:C++
 // tab-width:4

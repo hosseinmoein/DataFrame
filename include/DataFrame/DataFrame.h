@@ -39,6 +39,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <functional>
 #include <future>
 #include <map>
+#include <tuple>
+#include <typeindex>
 
 // ----------------------------------------------------------------------------
 
@@ -76,6 +78,7 @@ public:
     using size_type = typename std::vector<DataVec>::size_type;
     using IndexType = I;
     using IndexVecType = typename type_declare<DataVec, IndexType>::type;
+    using ColNameType = String64;
 
     DataFrame() = default;
     DataFrame(const DataFrame &) = default;
@@ -87,7 +90,6 @@ public:
 
 private:
 
-    using ColNameType = String64;
     using ColumnTable =
         std::unordered_map<ColNameType, size_type, std::hash<VirtualString>>;
 
@@ -1976,6 +1978,17 @@ public:  // Utilities and miscellaneous
     //
     std::pair<size_type, size_type>
     shape() const;
+
+    // It returns information about each column. The result is a vector of
+    // tuples containing each column name, size, and std::type_index(typeid).
+    //
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    //
+    template<typename ... Ts>
+    std::vector<std::tuple<ColNameType, size_type, std::type_index>>
+    get_columns_info() const;
 
     // It returns the memory used by the given column and index column.
     // All numbers are in bytes.

@@ -810,6 +810,21 @@ random_load_view_functor_<Ts ...>::operator() (const T &vec)  {
     return;
 }
 
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename ... Ts>
+template<typename T>
+void
+DataFrame<I, H>::
+columns_info_functor_<Ts ...>::operator() (const T &vec)  {
+
+    using VecType = typename std::remove_reference<T>::type;
+    using ValueType = typename VecType::value_type;
+
+    result.emplace_back(name, vec.size(), std::type_index(typeid(ValueType)));
+}
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

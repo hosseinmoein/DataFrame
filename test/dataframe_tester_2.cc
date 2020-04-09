@@ -247,12 +247,77 @@ static void test_load_align_column()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_get_columns_info()  {
+
+    std::cout << "\nTesting get_columns_info( ) ..." << std::endl;
+
+    MyDataFrame df;
+
+    std::vector<unsigned long>  idxvec = { 1UL, 2UL, 3UL, 10UL, 5UL,
+                                           7UL, 8UL, 12UL, 9UL, 12UL,
+                                           10UL, 13UL, 10UL, 15UL, 14UL };
+    std::vector<double>         dblvec = { 0.0, 15.0, 14.0, 2.0, 1.0,
+                                           12.0, 11.0, 8.0, 7.0, 6.0,
+                                           5.0, 4.0, 3.0, 9.0, 10.0};
+    std::vector<double>         dblvec2 = { 100.0, 101.0, 102.0, 103.0, 104.0,
+                                            105.0, 106.55, 107.34, 1.8, 111.0,
+                                            112.0, 113.0, 114.0, 115.0, 116.0};
+    std::vector<int>            intvec = { 1, 2, 3, 4, 5, 8, 6, 7, 11, 14, 9 };
+    std::vector<std::string>    strvec = { "zz", "bb", "cc", "ww", "ee",
+                                           "ff", "gg", "hh", "ii", "jj",
+                                           "kk", "ll", "mm", "nn", "oo" };
+
+    df.load_data(std::move(idxvec),
+                 std::make_pair("dbl_col", dblvec),
+                 std::make_pair("dbl_col_2", dblvec2),
+                 std::make_pair("str_col", strvec));
+    df.load_column("int_col",
+                   std::move(intvec),
+                   nan_policy::dont_pad_with_nans);
+
+    auto    result = df.get_columns_info<int, double, std::string>();
+    bool    dbl_col_found = false;
+    bool    dbl_col_2_found = false;
+    bool    str_col_found = false;
+    bool    int_col_found = false;
+
+    for (auto citer: result)  {
+        if (std::get<0>(citer) == "dbl_col")  {
+            dbl_col_found = true;
+            assert(std::get<1>(citer) == 15);
+            assert(std::get<2>(citer) == std::type_index(typeid(double)));
+        }
+        if (std::get<0>(citer) == "dbl_col_2")  {
+            dbl_col_2_found = true;
+            assert(std::get<1>(citer) == 15);
+            assert(std::get<2>(citer) == std::type_index(typeid(double)));
+        }
+        if (std::get<0>(citer) == "str_col")  {
+            str_col_found = true;
+            assert(std::get<1>(citer) == 15);
+            assert(std::get<2>(citer) == std::type_index(typeid(std::string)));
+        }
+        if (std::get<0>(citer) == "int_col")  {
+            int_col_found = true;
+            assert(std::get<1>(citer) == 11);
+            assert(std::get<2>(citer) == std::type_index(typeid(int)));
+        }
+    }
+    assert(dbl_col_found);
+    assert(dbl_col_2_found);
+    assert(str_col_found);
+    assert(int_col_found);
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int argc, char *argv[]) {
 
     test_get_reindexed();
     test_get_reindexed_view();
     test_retype_column();
     test_load_align_column();
+    test_get_columns_info() ;
 
     return (0);
 }

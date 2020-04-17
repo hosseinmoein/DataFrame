@@ -1270,8 +1270,10 @@ public:
         size_type   cat = 0;
 
         for (size_type i = 0; i < c_len; ++i)  {
-            if (is_nan__(column[i]))
+            if (is_nan__(column[i]))  {
                 result_.push_back(nan_);
+                continue;
+            }
 
             const typename map_type::const_iterator citer =
                 cat_map_.find(&(column[i]));

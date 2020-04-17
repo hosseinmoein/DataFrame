@@ -322,11 +322,11 @@ static void test_CategoryVisitor()  {
                                            10UL, 13UL, 10UL, 15UL, 14UL };
     std::vector<double>         dblvec = { 0.0, 15.0, 14.0, 15.0, 1.0,
                                            12.0, 11.0, 8.0, 15.0, 6.0,
-                                           5.0, 4.0, 14.0, 14.0, 10.0};
+                                           sqrt(-1), 4.0, 14.0, 14.0, 20.0};
     std::vector<int>            intvec = { 1, 2, 3, 4, 5, 8, 6, 7, 11, 14, 9 };
     std::vector<std::string>    strvec = { "zz", "bb", "zz", "ww", "ee",
                                            "ff", "gg", "zz", "ii", "jj",
-                                           "kk", "ll", "mm", "ee", "oo" };
+                                           "kk", "ll", "mm", "ee", "" };
 
     df.load_data(std::move(idxvec),
                  std::make_pair("dbl_col", dblvec),
@@ -339,6 +339,9 @@ static void test_CategoryVisitor()  {
     auto                    result =
         df.single_act_visit<double>("dbl_col", cat).get_result();
 
+    for (auto citer: result)
+		std::cout << citer << ", ";
+	std::cout << std::endl;
     assert(result.size() == 15);
     assert(result[0] == 0);
     assert(result[1] == 1);
@@ -348,7 +351,8 @@ static void test_CategoryVisitor()  {
     assert(result[8] == 1);
     assert(result[13] == 2);
     assert(result[12] == 2);
-    assert(result[11] == 9);
+    assert(result[11] == 8);
+    assert(result[10] == static_cast<unsigned long>(-1));
 
     CategoryVisitor<std::string>    cat2;
     auto                            result2 =

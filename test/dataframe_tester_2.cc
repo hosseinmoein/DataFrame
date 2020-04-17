@@ -311,13 +311,66 @@ static void test_get_columns_info()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_CategoryVisitor()  {
+
+    std::cout << "\nTesting CategoryVisitor{ } ..." << std::endl;
+
+    MyDataFrame df;
+
+    std::vector<unsigned long>  idxvec = { 1UL, 2UL, 3UL, 10UL, 5UL,
+                                           7UL, 8UL, 12UL, 9UL, 12UL,
+                                           10UL, 13UL, 10UL, 15UL, 14UL };
+    std::vector<double>         dblvec = { 0.0, 15.0, 14.0, 15.0, 1.0,
+                                           12.0, 11.0, 8.0, 15.0, 6.0,
+                                           5.0, 4.0, 14.0, 14.0, 10.0};
+    std::vector<int>            intvec = { 1, 2, 3, 4, 5, 8, 6, 7, 11, 14, 9 };
+    std::vector<std::string>    strvec = { "zz", "bb", "zz", "ww", "ee",
+                                           "ff", "gg", "zz", "ii", "jj",
+                                           "kk", "ll", "mm", "ee", "oo" };
+
+    df.load_data(std::move(idxvec),
+                 std::make_pair("dbl_col", dblvec),
+                 std::make_pair("str_col", strvec));
+    df.load_column("int_col",
+                   std::move(intvec),
+                   nan_policy::dont_pad_with_nans);
+
+    CategoryVisitor<double> cat;
+    auto                    result =
+        df.single_act_visit<double>("dbl_col", cat).get_result();
+
+    assert(result.size() == 15);
+    assert(result[0] == 0);
+    assert(result[1] == 1);
+    assert(result[2] == 2);
+    assert(result[3] == 1);
+    assert(result[4] == 3);
+    assert(result[8] == 1);
+    assert(result[13] == 2);
+    assert(result[12] == 2);
+    assert(result[11] == 9);
+
+    CategoryVisitor<std::string>    cat2;
+    auto                            result2 =
+        df.single_act_visit<std::string>("str_col", cat2).get_result();
+
+    assert(result2.size() == 15);
+    assert(result2[0] == 0);
+    assert(result2[1] == 1);
+    assert(result2[2] == 0);
+    assert(result2[13] == 3);
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int argc, char *argv[]) {
 
     test_get_reindexed();
     test_get_reindexed_view();
     test_retype_column();
     test_load_align_column();
-    test_get_columns_info() ;
+    test_get_columns_info();
+    test_CategoryVisitor();
 
     return (0);
 }

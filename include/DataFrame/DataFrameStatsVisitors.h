@@ -35,6 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <algorithm>
 #include <cstddef>
 #include <functional>
+#include <map>
 #include <numeric>
 
 // ----------------------------------------------------------------------------
@@ -1239,6 +1240,72 @@ private:
 
 // ----------------------------------------------------------------------------
 
+// This categorizes the values in the column with integer values starting
+// from 0
+//
+template<typename T, typename I = unsigned long>
+struct CategoryVisitor  {
+
+private:
+
+    struct t_less_  {
+        inline bool
+        operator() (const T *lhs, const T *rhs) const  { return (*lhs < *rhs); }
+    };
+
+public:
+    using value_type = T;
+    using index_type = I;
+    using size_type = std::size_t;
+    using result_type = std::vector<size_type>;
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx, const H &column)  {
+
+        const size_type c_len = column.size();
+
+        result_.reserve(c_len);
+
+        size_type   cat = 0;
+
+        for (size_type i = 0; i < c_len; ++i)  {
+            if (is_nan__(column[i]))
+                result_.push_back(nan_);
+
+            const typename map_type::const_iterator citer =
+                cat_map_.find(&(column[i]));
+
+            if (citer == cat_map_.end())  {
+                cat_map_.insert({ &(column[i]), cat });
+                result_.push_back(cat);
+                cat += 1;
+            }
+            else
+                result_.push_back(citer->second);
+        }
+    }
+
+    explicit
+    CategoryVisitor(size_type nan_val = size_type(-1)) : nan_(nan_val)  {   }
+
+    inline void pre ()  { result_.clear(); cat_map_.clear(); }
+    inline void post ()  {  }
+    inline const result_type &get_result () const  { return (result_); }
+
+private:
+
+    using map_type = std::map<const T *, size_type, t_less_>;
+
+    map_type        cat_map_ { };
+    result_type     result_ { };
+    const size_type nan_;
+};
+
+// ----------------------------------------------------------------------------
+
+// Simple rolling adoptor for visitors
+//
 template<typename T,
          typename I = unsigned long,
          typename =

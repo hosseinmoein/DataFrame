@@ -1267,7 +1267,7 @@ public:
 
         result_.reserve(c_len);
 
-        size_type   cat = 0;
+        size_type   cat = nan_ != 0 ? 0 : 1;
 
         for (size_type i = 0; i < c_len; ++i)  {
             if (is_nan__(column[i]))  {
@@ -1282,6 +1282,7 @@ public:
                 cat_map_.insert({ &(column[i]), cat });
                 result_.push_back(cat);
                 cat += 1;
+                if (cat == nan_)  cat += 1;
             }
             else
                 result_.push_back(citer->second);
@@ -1302,6 +1303,42 @@ private:
     map_type        cat_map_ { };
     result_type     result_ { };
     const size_type nan_;
+};
+
+// ----------------------------------------------------------------------------
+
+// It factorizes the given column into a vector of Booleans based on the
+// result of the given function.
+//
+template<typename T, typename I = unsigned long>
+struct FactorizeVisitor  {
+
+    using value_type = T;
+    using index_type = I;
+    using size_type = std::size_t;
+    using result_type = std::vector<bool>;
+    using factor_func = std::function<bool(const value_type &val)>;
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx, const H &column)  {
+
+        result_.reserve(column.size());
+
+        for (auto citer : column)
+            result_.push_back(ffunc_(citer));
+    }
+
+    explicit FactorizeVisitor(factor_func f) : ffunc_(f)  {   }
+
+    inline void pre ()  { result_.clear(); }
+    inline void post ()  {  }
+    inline const result_type &get_result () const  { return (result_); }
+
+private:
+
+    result_type result_ { };
+    factor_func ffunc_;
 };
 
 // ----------------------------------------------------------------------------

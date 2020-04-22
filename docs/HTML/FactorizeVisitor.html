@@ -33,18 +33,22 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
         templat&lt;typename T, typename I = unsigned long&gt;<BR>
-        struct CategoryVisitor; </font>
+        struct FactorizeVisitor; </font>
       </td>
       <td width="50%">
         This is a “single action visitor”, meaning it is passed the whole data vector
         in one call and you must use the single_action_visit() interface.<BR>
-        This functor categorizes the given column values with unsigned long start with 0. The result is a vector of integers with the same length as the column. Each unique value in the column has a unique integer associated with it. This could be used to create statistical category columns.<BR>
-        The constructor takes an unsigned value to represent NaN values. The default is unsigned long value of -1.<BR>
+
+        This functor produces a Boolean vector of same length as the given column. Each element in the result vector is true if the corresponding element in the column passes the factorization function, otherwise it is false.<BR>
+
+        The constructor takes one parameter which is the factorization function<BR>
             <PRE>
+            using factor_func = std::function&lt;bool(const value_type &amp;val)&gt;;
+
             explicit
-            CategoryVisitor(size_type nan_val = size_type(-1));
+            FactorizeVisitor(factor_func f);
             </PRE>
-        The result is a vector of size_type
+        The result is a vector of bool
       </td>
       <td>
         <B>T</B>: Column data type.<BR>

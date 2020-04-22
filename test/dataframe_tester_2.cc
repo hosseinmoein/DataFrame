@@ -339,9 +339,7 @@ static void test_CategoryVisitor()  {
     auto                    result =
         df.single_act_visit<double>("dbl_col", cat).get_result();
 
-    for (auto citer: result)
-		std::cout << citer << ", ";
-	std::cout << std::endl;
+    std::cout << std::endl;
     assert(result.size() == 15);
     assert(result[0] == 0);
     assert(result[1] == 1);
@@ -367,6 +365,52 @@ static void test_CategoryVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_FactorizeVisitor()  {
+
+    std::cout << "\nTesting FactorizeVisitor{ } ..." << std::endl;
+
+    MyDataFrame df;
+
+    std::vector<unsigned long>  idxvec = { 1UL, 2UL, 3UL, 10UL, 5UL,
+                                           7UL, 8UL, 12UL, 9UL, 12UL,
+                                           10UL, 13UL, 10UL, 15UL, 14UL };
+    std::vector<double>         dblvec = { 0.0, 15.0, 14.0, 2.0, 1.0,
+                                           12.0, 11.0, 8.0, 7.0, 6.0,
+                                           5.0, 4.0, 3.0, 9.0, 10.0};
+    std::vector<double>         dblvec2 = { 100.0, 101.0, 102.0, 103.0, 104.0,
+                                            105.0, 106.55, 107.34, 1.8, 111.0,
+                                            112.0, 113.0, 114.0, 115.0, 116.0};
+    std::vector<int>            intvec = { 1, 2, 3, 4, 5, 8, 6, 7, 11, 14, 9 };
+    std::vector<std::string>    strvec = { "zz", "bb", "cc", "ww", "ee",
+                                           "ff", "gg", "hh", "ii", "jj",
+                                           "kk", "ll", "mm", "nn", "oo" };
+
+    df.load_data(std::move(idxvec),
+                 std::make_pair("dbl_col", dblvec),
+                 std::make_pair("dbl_col_2", dblvec2),
+                 std::make_pair("str_col", strvec));
+    df.load_column("int_col",
+                   std::move(intvec),
+                   nan_policy::dont_pad_with_nans);
+    
+    FactorizeVisitor<double>    fact([] (const double &f) -> bool {
+                                         return (f > 106.0 && f < 114.0);
+                                     });
+    df.load_column("bool_col",
+                   df.single_act_visit<double>("dbl_col_2", fact).get_result());
+    assert(df.get_column<bool>("bool_col").size() == 15);
+    assert(df.get_column<bool>("bool_col")[0] == false);
+    assert(df.get_column<bool>("bool_col")[4] == false);
+    assert(df.get_column<bool>("bool_col")[6] == true);
+    assert(df.get_column<bool>("bool_col")[7] == true);
+    assert(df.get_column<bool>("bool_col")[8] == false);
+    assert(df.get_column<bool>("bool_col")[9] == true);
+    assert(df.get_column<bool>("bool_col")[11] == true);
+    assert(df.get_column<bool>("bool_col")[13] == false);
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int argc, char *argv[]) {
 
     test_get_reindexed();
@@ -375,6 +419,7 @@ int main(int argc, char *argv[]) {
     test_load_align_column();
     test_get_columns_info();
     test_CategoryVisitor();
+    test_FactorizeVisitor();
 
     return (0);
 }

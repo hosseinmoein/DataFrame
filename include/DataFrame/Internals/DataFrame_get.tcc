@@ -28,7 +28,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include <DataFrame/DataFrame.h>
+#include <DataFrame/DataFrameStatsVisitors.h>
 
+#include <cmath>
 #include <functional>
 #include <random>
 #include <unordered_set>
@@ -1569,6 +1571,211 @@ DataFrame<I, H>::get_columns_info () const  {
 
     return (result);
 }
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename V>
+bool DataFrame<I, H>::is_monotonic_increasing_(const V &column)  {
+
+    const size_type col_s = column.size();
+
+    for (size_type i = 1; i < col_s; ++i)
+        if (column[i] < column[i - 1])
+            return(false);
+    return(true);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename V>
+bool DataFrame<I, H>::is_strictly_monotonic_increasing_(const V &column)  {
+
+    const size_type col_s = column.size();
+
+    for (size_type i = 1; i < col_s; ++i)
+        if (column[i] <= column[i - 1])
+            return(false);
+    return(true);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename V>
+bool DataFrame<I, H>::is_monotonic_decreasing_(const V &column)  {
+
+    const size_type col_s = column.size();
+
+    for (size_type i = 1; i < col_s; ++i)
+        if (column[i] > column[i - 1])
+            return(false);
+    return(true);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename V>
+bool DataFrame<I, H>::is_strictly_monotonic_decreasing_(const V &column)  {
+
+    const size_type col_s = column.size();
+
+    for (size_type i = 1; i < col_s; ++i)
+        if (column[i] >= column[i - 1])
+            return(false);
+    return(true);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename V>
+bool DataFrame<I, H>::
+is_normal_(const V &column, double epsilon, bool check_for_standard)  {
+
+    using value_type = typename V::value_type;
+
+    const I                     dummy_idx { I() };
+    StatsVisitor<value_type, I> svisit;
+
+    svisit.pre();
+    for (auto citer : column)
+        svisit(dummy_idx, citer);
+    svisit.post();
+
+    const value_type    mean = svisit.get_mean();
+    const value_type    std = svisit.get_std();
+    const value_type    high_band_1 = mean + std;
+    const value_type    low_band_1 = mean - std;
+    double              count_1 = 0;
+    const value_type    high_band_2 = mean + std * 2.0;
+    const value_type    low_band_2 = mean - std * 2.0;
+    double              count_2 = 0;
+    const value_type    high_band_3 = mean + std * 3.0;
+    const value_type    low_band_3 = mean - std * 3.0;
+    double              count_3 = 0;
+
+    for (auto citer : column)  {
+        if (citer >= low_band_1 && citer < high_band_1)  {
+            count_3 += 1;
+            count_2 += 1;
+            count_1 += 1;
+        }
+        else if (citer >= low_band_2 && citer < high_band_2)  {
+            count_3 += 1;
+            count_2 += 1;
+        }
+        else if (citer >= low_band_3 && citer < high_band_3)  {
+            count_3 += 1;
+        }
+    }
+
+    const double    col_s = column.size();
+
+    if (std::fabs((count_1 / col_s) - 0.68) <= epsilon &&
+        std::fabs((count_2 / col_s) - 0.95) <= epsilon &&
+        std::fabs((count_3 / col_s) - 0.997) <= epsilon)  {
+        if (check_for_standard)
+            return (std::fabs(mean - 0) <= epsilon &&
+                    std::fabs(std - 1.0) <= epsilon);
+        return (true);
+    }
+    return(false);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename V>
+bool DataFrame<I, H>::is_lognormal_(const V &column, double epsilon)  {
+
+    using value_type = typename V::value_type;
+
+    const I                     dummy_idx { I() };
+    StatsVisitor<value_type, I> svisit;
+    StatsVisitor<value_type, I> log_visit;
+
+    svisit.pre();
+    for (auto citer : column)  {
+        svisit(dummy_idx, std::log(citer));
+        log_visit(dummy_idx, citer);
+    }
+    svisit.post();
+
+    const value_type    mean = svisit.get_mean();
+    const value_type    std = svisit.get_std();
+    const value_type    high_band_1 = mean + std;
+    const value_type    low_band_1 = mean - std;
+    double              count_1 = 0;
+    const value_type    high_band_2 = mean + std * 2.0;
+    const value_type    low_band_2 = mean - std * 2.0;
+    double              count_2 = 0;
+    const value_type    high_band_3 = mean + std * 3.0;
+    const value_type    low_band_3 = mean - std * 3.0;
+    double              count_3 = 0;
+
+    for (auto citer : column)  {
+        const double    log_val = std::log(citer);
+
+        if (log_val >= low_band_1 && log_val < high_band_1)  {
+            count_3 += 1;
+            count_2 += 1;
+            count_1 += 1;
+        }
+        else if (log_val >= low_band_2 && log_val < high_band_2)  {
+            count_3 += 1;
+            count_2 += 1;
+        }
+        else if (log_val >= low_band_3 && log_val < high_band_3)  {
+            count_3 += 1;
+        }
+    }
+
+    const double    col_s = column.size();
+
+    if (std::fabs((count_1 / col_s) - 0.68) <= epsilon &&
+        std::fabs((count_2 / col_s) - 0.95) <= epsilon &&
+        std::fabs((count_3 / col_s) - 0.997) <= epsilon &&
+		log_visit.get_skew() > 10.0 * svisit.get_skew() &&
+		log_visit.get_kurtosis() > 10.0 * svisit.get_kurtosis())
+        return (true);
+    return(false);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename T>
+bool DataFrame<I, H>::
+pattern_match(const char *col_name,
+              pattern_spec pattern,
+              double epsilon) const  {
+
+    const auto  &col = get_column<T>(col_name);
+
+    switch(pattern)  {
+    case pattern_spec::monotonic_increasing:
+        return (is_monotonic_increasing_(col));
+    case pattern_spec::strictly_monotonic_increasing:
+        return (is_strictly_monotonic_increasing_(col));
+    case pattern_spec::monotonic_decreasing:
+        return (is_monotonic_decreasing_(col));
+    case pattern_spec::strictly_monotonic_decreasing:
+        return (is_strictly_monotonic_decreasing_(col));
+    case pattern_spec::normally_distributed:
+        return (is_normal_(col, epsilon, false));
+    case pattern_spec::standard_normally_distributed:
+        return (is_normal_(col, epsilon, true));
+    case pattern_spec::lognormally_distributed:
+        return (is_lognormal_(col, epsilon));
+    default:
+        throw NotImplemented("pattern_match(): "
+                             "Requested pattern is not implemented");
+    }
+}
+
 
 } // namespace hmdf
 

@@ -1035,6 +1035,20 @@ public: // Read/access and slicing interfaces
     bool
     has_column(const char *name) const;
 
+
+
+
+
+    template<typename T>
+    bool
+    pattern_match(const char *col_name,
+                  pattern_spec pattern,
+                  double epsilon = 0.0) const;
+
+
+
+
+
     // It returns the data in row row_num for columns in col_names.
     // The order of data items in the returned vector is the same as order
     // of columns on col_names.
@@ -2373,6 +2387,30 @@ private:  // Static helper functions
         const char *col_name,
         const std::vector<JoinSortingPair<T>> &col_vec_lhs,
         const std::vector<JoinSortingPair<T>> &col_vec_rhs);
+
+    template<typename V>
+    static bool
+    is_monotonic_increasing_(const V &column);
+
+    template<typename V>
+    static bool
+    is_strictly_monotonic_increasing_(const V &column);
+
+    template<typename V>
+    static bool
+    is_monotonic_decreasing_(const V &column);
+
+    template<typename V>
+    static bool
+    is_strictly_monotonic_decreasing_(const V &column);
+
+    template<typename V>
+    static bool
+    is_normal_(const V &column, double epsilon, bool check_for_standard);
+
+    template<typename V>
+    static bool
+    is_lognormal_(const V &column, double epsilon);
 
     template<typename V>
     static void

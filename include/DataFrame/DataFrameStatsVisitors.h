@@ -59,7 +59,7 @@ struct MeanVisitor {
         if (skip_nan_ && is_nan__(val))  return;
 
         mean_ += val;
-        cnt_ +=1;
+        cnt_ += 1;
     }
     inline void pre ()  { mean_ = 0; cnt_ = 0; }
     inline void post ()  {  }
@@ -97,7 +97,7 @@ struct GeometricMeanVisitor {
         if (skip_nan_ && is_nan__(val))  return;
 
         mean_ *= val;
-        cnt_ +=1;
+        cnt_ += 1;
     }
     inline void pre ()  { mean_ = value_type(1); cnt_ = 0; }
     inline void post ()  {  }
@@ -136,7 +136,7 @@ struct HarmonicMeanVisitor {
         if (skip_nan_ && is_nan__(val))  return;
 
         mean_ += value_type(1) / val;
-        cnt_ +=1;
+        cnt_ += 1;
     }
     inline void pre ()  { mean_ = 0; cnt_ = 0; }
     inline void post ()  {  }

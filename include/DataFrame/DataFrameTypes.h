@@ -231,6 +231,18 @@ enum class random_policy : unsigned char  {
 
 // ----------------------------------------------------------------------------
 
+enum class pattern_spec : unsigned char  {
+    monotonic_increasing = 1,           // i >= j
+    strictly_monotonic_increasing = 2,  // i > j
+    monotonic_decreasing = 3,           // i <= j
+    strictly_monotonic_decreasing = 4,  // i < j
+    normally_distributed = 6,  // 68%-95%-99.7% 3-sigma rule to approximate
+    standard_normally_distributed = 7,  // Same as normal + 0/1.0 check
+    lognormally_distributed = 8, // Uses the above normal test on the log(x)
+};
+
+// ----------------------------------------------------------------------------
+
 template<typename T>
 struct  RandGenParams  {
     T   min_value { std::numeric_limits<T>::min() };

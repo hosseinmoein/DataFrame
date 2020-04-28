@@ -26,6 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include <DataFrame/DataFrame.h>
+#include <DataFrame/RandGen.h>
 
 #include <cassert>
 #include <iostream>
@@ -339,7 +340,6 @@ static void test_CategoryVisitor()  {
     auto                    result =
         df.single_act_visit<double>("dbl_col", cat).get_result();
 
-    std::cout << std::endl;
     assert(result.size() == 15);
     assert(result[0] == 0);
     assert(result[1] == 1);
@@ -411,6 +411,107 @@ static void test_FactorizeVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_pattern_match()  {
+
+    std::cout << "\nTesting pattern_match( ) ..." << std::endl;
+
+    const size_t            item_cnt = 8192;
+    MyDataFrame             df;
+    RandGenParams<double>   p;
+
+    p.mean = 5.6;
+    p.std = 0.5;
+    p.seed = 123;
+    p.min_value = 0;
+    p.max_value = 30;
+
+    df.load_data(MyDataFrame::gen_sequence_index(0, item_cnt, 1),
+                 std::make_pair("lognormal",
+                                gen_lognormal_dist<double>(item_cnt, p)),
+                 std::make_pair("normal",
+                                gen_normal_dist<double>(item_cnt, p)),
+                 std::make_pair("uniform_real",
+                                gen_uniform_real_dist<double>(item_cnt, p)));
+    p.mean = 0;
+    p.std = 1.0;
+    p.min_value = -30;
+    p.max_value = 30;
+    df.load_column("std_normal", gen_normal_dist<double>(item_cnt, p));
+    df.load_column<unsigned long>(
+        "increasing",
+        MyDataFrame::gen_sequence_index(0, item_cnt, 1));
+
+    bool    result =
+        df.pattern_match<double>("lognormal",
+                                 pattern_spec::normally_distributed,
+                                 0.01);
+    assert(result == false);
+
+    result = df.pattern_match<double>("normal",
+                                     pattern_spec::normally_distributed,
+                                     0.01);
+    assert(result == true);
+
+    result = df.pattern_match<double>(
+                 "std_normal",
+                 pattern_spec::standard_normally_distributed,
+                 0.013);
+    assert(result == true);
+
+    result = df.pattern_match<double>("lognormal",
+                                      pattern_spec::lognormally_distributed,
+                                      0.01);
+    assert(result == true);
+
+    result = df.pattern_match<double>("normal",
+                                      pattern_spec::lognormally_distributed,
+                                      0.01);
+    assert(result == false);
+
+    result = df.pattern_match<double>("uniform_real",
+                                      pattern_spec::lognormally_distributed,
+                                      1.0);
+    assert(result == false);
+
+    result = df.pattern_match<double>("uniform_real",
+                                      pattern_spec::normally_distributed,
+                                      0.1);
+    assert(result == false);
+
+    result = df.pattern_match<unsigned long>(
+			     "increasing",
+                 pattern_spec::monotonic_increasing);
+    assert(result == true);
+    result = df.pattern_match<unsigned long>(
+			     "increasing",
+                 pattern_spec::strictly_monotonic_increasing);
+    assert(result == true);
+
+	df.get_column<unsigned long>("increasing")[10] = 9;
+
+    result = df.pattern_match<unsigned long>(
+			     "increasing",
+                 pattern_spec::monotonic_increasing);
+    assert(result == true);
+    result = df.pattern_match<unsigned long>(
+			     "increasing",
+                 pattern_spec::strictly_monotonic_increasing);
+    assert(result == false);
+
+	df.get_column<unsigned long>("increasing")[1000] = 988;
+
+    result = df.pattern_match<unsigned long>(
+			     "increasing",
+                 pattern_spec::monotonic_increasing);
+    assert(result == false);
+    result = df.pattern_match<unsigned long>(
+			     "increasing",
+                 pattern_spec::strictly_monotonic_increasing);
+    assert(result == false);
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int argc, char *argv[]) {
 
     test_get_reindexed();
@@ -420,6 +521,7 @@ int main(int argc, char *argv[]) {
     test_get_columns_info();
     test_CategoryVisitor();
     test_FactorizeVisitor();
+    test_pattern_match();
 
     return (0);
 }

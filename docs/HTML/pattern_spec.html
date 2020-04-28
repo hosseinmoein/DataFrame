@@ -1,0 +1,88 @@
+<!--
+Copyright (c) 2019-2022, Hossein Moein
+All rights reserved.
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+* Redistributions of source code must retain the above copyright
+  notice, this list of conditions and the following disclaimer.
+* Redistributions in binary form must reproduce the above copyright
+  notice, this list of conditions and the following disclaimer in the
+  documentation and/or other materials provided with the distribution.
+* Neither the name of Hossein Moein and/or the DataFrame nor the
+  names of its contributors may be used to endorse or promote products
+  derived from this software without specific prior written permission.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL Hossein Moein BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+<!DOCTYPE html>
+<html>
+<body>
+  <table align="center" border="1">
+
+    <tr bgcolor="lightblue">
+      <th>Signature</th> <th>Description</th>
+    </tr>
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        enum class pattern_spec : unsigned char  {<BR>
+            &emsp;monotonic_increasing = 1,           // i >= j<BR>
+            &emsp;strictly_monotonic_increasing = 2,  // i > j<BR>
+            &emsp;monotonic_decreasing = 3,           // i <= j<BR>
+            &emsp;strictly_monotonic_decreasing = 4,  // i < j<BR>
+            &emsp;normally_distributed = 6,           // 68%-95%-99.7% 3-sigma rule to approximate<BR>
+            &emsp;standard_normally_distributed = 7,  // Same as normal + 0/1.0 check<BR>
+            &emsp;lognormally_distributed = 8,        // Uses the above normal test on the log(x) + Skew and Kurtosis<BR>
+        }; </font>
+      </td>
+      <td>
+        Enumerated type to specify different patterns to detect.
+      </td>
+    </tr>
+
+  </table>
+
+  <BR><BR>
+
+  <table align="center" border="1">
+
+    <tr bgcolor="lightblue">
+        <th>Signature</th> <th>Description</th> <th>Parameters</th>
+    </tr>
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        template&lt;typename T&gt;<BR>
+        bool<BR>
+        attern_match(const char *col_name, pattern_spec pattern, double epsilon = 0.0) const; </font>
+      </td>
+      <td>
+        This method returns true if the given column follows the given pattern, otherwise it returns false. Epsilon is used for approximation.<BR>
+        List of supported patterns are specified in pattern_spec above.
+      </td>
+      <td>
+        <b>T</b>: Type of the named column<BR>
+        <b>col_name</b>: Type of the named colum<BR>
+        <b>pattern</b>: The pattern we are looking for specified in DataFrameTypes.h<BR>
+        <b>epsilon</b>: An epsilon value to use to match pattern parameters
+      </td>
+    </tr>
+
+  </table>
+
+</body>
+</html>
+
+<!--
+Local Variables:
+mode:HTML
+tab-width:4
+c-basic-offset:4
+End:
+-->

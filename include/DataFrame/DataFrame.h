@@ -1035,19 +1035,25 @@ public: // Read/access and slicing interfaces
     bool
     has_column(const char *name) const;
 
-
-
-
-
+    // This method returns true if the given column follows the given pattern,
+    // otherwise it returns false. Epsilon is used for approximation.
+    // List of supported patterns are specified in pattern_spec enum in
+    // DataFrameTypes.h file.
+    //
+    // T:
+    //   Type of the named column.
+    // col_name:
+    //   Name of the column
+    // pattern:
+    //   The pattern we are looking for specified in DataFrameTypes.h
+    // epsilon:
+    //   An epsilon value to use to match pattern parameters
+    //
     template<typename T>
     bool
     pattern_match(const char *col_name,
                   pattern_spec pattern,
                   double epsilon = 0.0) const;
-
-
-
-
 
     // It returns the data in row row_num for columns in col_names.
     // The order of data items in the returned vector is the same as order

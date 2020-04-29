@@ -59,7 +59,14 @@ template<typename T>
 void
 DataFrame<I, H>::shrink_to_fit_functor_<Ts ...>::operator() (T &vec) const  {
 
+    using value_type = typename T::value_type;
+
     vec.shrink_to_fit();
+
+    const size_type s = vec.capacity() * sizeof(value_type);
+
+    if (s && ! (s & (s - 1)))  // Avoid cache line aliasing misses
+        vec.reserve(vec.size() + 1);  // Knock it off the power of 2
 }
 
 // ----------------------------------------------------------------------------

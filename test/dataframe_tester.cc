@@ -3795,7 +3795,7 @@ static void test_thread_safety()  {
 
             assert(i == j);
         }
-        df.shrink_to_fit();
+        df.shrink_to_fit<size_t>();
     };
 
     SpinLock                    lock;

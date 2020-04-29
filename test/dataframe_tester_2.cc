@@ -479,35 +479,72 @@ static void test_pattern_match()  {
     assert(result == false);
 
     result = df.pattern_match<unsigned long>(
-			     "increasing",
+                 "increasing",
                  pattern_spec::monotonic_increasing);
     assert(result == true);
     result = df.pattern_match<unsigned long>(
-			     "increasing",
+                 "increasing",
                  pattern_spec::strictly_monotonic_increasing);
     assert(result == true);
 
-	df.get_column<unsigned long>("increasing")[10] = 9;
+    df.get_column<unsigned long>("increasing")[10] = 9;
 
     result = df.pattern_match<unsigned long>(
-			     "increasing",
+                 "increasing",
                  pattern_spec::monotonic_increasing);
     assert(result == true);
     result = df.pattern_match<unsigned long>(
-			     "increasing",
+                 "increasing",
                  pattern_spec::strictly_monotonic_increasing);
     assert(result == false);
 
-	df.get_column<unsigned long>("increasing")[1000] = 988;
+    df.get_column<unsigned long>("increasing")[1000] = 988;
 
     result = df.pattern_match<unsigned long>(
-			     "increasing",
+                 "increasing",
                  pattern_spec::monotonic_increasing);
     assert(result == false);
     result = df.pattern_match<unsigned long>(
-			     "increasing",
+                 "increasing",
                  pattern_spec::strictly_monotonic_increasing);
     assert(result == false);
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_ClipVisitor()  {
+
+    std::cout << "\nTesting ClipVisitor{ } ..." << std::endl;
+
+    MyDataFrame df;
+
+    std::vector<unsigned long>  idxvec = { 1UL, 2UL, 3UL, 10UL, 5UL,
+                                           7UL, 8UL, 12UL, 9UL, 12UL,
+                                           10UL, 13UL, 10UL, 15UL, 14UL };
+    std::vector<double>         dblvec = { 0.0, 15.0, 14.0, 15.0, 1.0,
+                                           12.0, 11.0, 8.0, 15.0, 6.0,
+                                           sqrt(-1), 4.0, 14.0, 14.0, 20.0};
+    std::vector<int>            intvec = { 1, 2, 3, 4, 5, 8, 6, 7, 11, 14, 9 };
+    std::vector<std::string>    strvec = { "zz", "bb", "zz", "ww", "ee",
+                                           "ff", "gg", "zz", "ii", "jj",
+                                           "kk", "ll", "mm", "ee", "" };
+
+    df.load_data(std::move(idxvec),
+                 std::make_pair("dbl_col", dblvec),
+                 std::make_pair("str_col", strvec));
+    df.load_column("int_col",
+                   std::move(intvec),
+                   nan_policy::dont_pad_with_nans);
+
+    ClipVisitor<double> clip (14, 5);
+    auto                result = df.visit<double>("dbl_col", clip).get_result();
+
+    assert(result == 7);
+    assert(df.get_column<double>("dbl_col")[0] == 5.0);
+    assert(df.get_column<double>("dbl_col")[1] == 14.0);
+    assert(df.get_column<double>("dbl_col")[2] == 14.0);
+    assert(df.get_column<double>("dbl_col")[4] == 5.0);
+    assert(df.get_column<double>("dbl_col")[5] == 12.0);
 }
 
 // -----------------------------------------------------------------------------
@@ -522,6 +559,7 @@ int main(int argc, char *argv[]) {
     test_CategoryVisitor();
     test_FactorizeVisitor();
     test_pattern_match();
+    test_ClipVisitor();
 
     return (0);
 }

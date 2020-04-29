@@ -233,8 +233,11 @@ V &DataFrame<I, H>::visit (const char *name, V &visitor)  {
     visitor.pre();
     for (; i < min_s; ++i)
         visitor (indices_[i], vec[i]);
-    for (; i < idx_s; ++i)
-        visitor (indices_[i], _get_nan<T>());
+    for (; i < idx_s; ++i)  {
+        T   nan_val = _get_nan<T>();
+
+        visitor (indices_[i], nan_val);
+    }
     visitor.post();
 
     return (visitor);
@@ -289,10 +292,14 @@ visit (const char *name1, const char *name2, V &visitor)  {
     visitor.pre();
     for (; i < min_s; ++i)
         visitor (indices_[i], vec1[i], vec2[i]);
-    for (; i < idx_s; ++i)
+    for (; i < idx_s; ++i)  {
+        T1  nan_val1 = _get_nan<T1>();
+        T2  nan_val2 = _get_nan<T2>();
+
         visitor (indices_[i],
-                 i < data_s1 ? vec1[i] : _get_nan<T1>(),
-                 i < data_s2 ? vec2[i] : _get_nan<T2>());
+                 i < data_s1 ? vec1[i] : nan_val1,
+                 i < data_s2 ? vec2[i] : nan_val2);
+    }
     visitor.post();
 
     return (visitor);
@@ -353,11 +360,16 @@ visit (const char *name1, const char *name2, const char *name3, V &visitor)  {
     visitor.pre();
     for (; i < min_s; ++i)
         visitor (indices_[i], vec1[i], vec2[i], vec3[i]);
-    for (; i < idx_s; ++i)
+    for (; i < idx_s; ++i)  {
+        T1  nan_val1 = _get_nan<T1>();
+        T2  nan_val2 = _get_nan<T2>();
+        T3  nan_val3 = _get_nan<T3>();
+
         visitor (indices_[i],
-                 i < data_s1 ? vec1[i] : _get_nan<T1>(),
-                 i < data_s2 ? vec2[i] : _get_nan<T2>(),
-                 i < data_s3 ? vec3[i] : _get_nan<T3>());
+                 i < data_s1 ? vec1[i] : nan_val1,
+                 i < data_s2 ? vec2[i] : nan_val2,
+                 i < data_s3 ? vec3[i] : nan_val3);
+    }
     visitor.post();
 
     return (visitor);
@@ -438,12 +450,18 @@ visit (const char *name1,
     visitor.pre();
     for (; i < min_s; ++i)
         visitor (indices_[i], vec1[i], vec2[i], vec3[i], vec4[i]);
-    for (; i < idx_s; ++i)
+    for (; i < idx_s; ++i)  {
+        T1  nan_val1 = _get_nan<T1>();
+        T2  nan_val2 = _get_nan<T2>();
+        T3  nan_val3 = _get_nan<T3>();
+        T4  nan_val4 = _get_nan<T4>();
+
         visitor (indices_[i],
-                 i < data_s1 ? vec1[i] : _get_nan<T1>(),
-                 i < data_s2 ? vec2[i] : _get_nan<T2>(),
-                 i < data_s3 ? vec3[i] : _get_nan<T3>(),
-                 i < data_s4 ? vec4[i] : _get_nan<T4>());
+                 i < data_s1 ? vec1[i] : nan_val1,
+                 i < data_s2 ? vec2[i] : nan_val2,
+                 i < data_s3 ? vec3[i] : nan_val3,
+                 i < data_s4 ? vec4[i] : nan_val4);
+    }
     visitor.post();
 
     return (visitor);
@@ -535,13 +553,20 @@ visit (const char *name1,
     visitor.pre();
     for (; i < min_s; ++i)
         visitor (indices_[i], vec1[i], vec2[i], vec3[i], vec4[i], vec5[i]);
-    for (; i < idx_s; ++i)
+    for (; i < idx_s; ++i)  {
+        T1  nan_val1 = _get_nan<T1>();
+        T2  nan_val2 = _get_nan<T2>();
+        T3  nan_val3 = _get_nan<T3>();
+        T4  nan_val4 = _get_nan<T4>();
+        T5  nan_val5 = _get_nan<T5>();
+
         visitor (indices_[i],
-                 i < data_s1 ? vec1[i] : _get_nan<T1>(),
-                 i < data_s2 ? vec2[i] : _get_nan<T2>(),
-                 i < data_s3 ? vec3[i] : _get_nan<T3>(),
-                 i < data_s4 ? vec4[i] : _get_nan<T4>(),
-                 i < data_s5 ? vec5[i] : _get_nan<T5>());
+                 i < data_s1 ? vec1[i] : nan_val1,
+                 i < data_s2 ? vec2[i] : nan_val2,
+                 i < data_s3 ? vec3[i] : nan_val3,
+                 i < data_s4 ? vec4[i] : nan_val4,
+                 i < data_s5 ? vec5[i] : nan_val5);
+    }
     visitor.post();
 
     return (visitor);
@@ -1738,8 +1763,8 @@ bool DataFrame<I, H>::is_lognormal_(const V &column, double epsilon)  {
     if (std::fabs((count_1 / col_s) - 0.68) <= epsilon &&
         std::fabs((count_2 / col_s) - 0.95) <= epsilon &&
         std::fabs((count_3 / col_s) - 0.997) <= epsilon &&
-		log_visit.get_skew() > 10.0 * svisit.get_skew() &&
-		log_visit.get_kurtosis() > 10.0 * svisit.get_kurtosis())
+        log_visit.get_skew() > 10.0 * svisit.get_skew() &&
+        log_visit.get_kurtosis() > 10.0 * svisit.get_kurtosis())
         return (true);
     return(false);
 }

@@ -1,5 +1,4 @@
 map()
 map_to_another_column()
 another look at groupby()
-clip()
 

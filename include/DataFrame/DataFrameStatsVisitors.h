@@ -737,6 +737,41 @@ private:
 
 // ----------------------------------------------------------------------------
 
+template<typename T, typename I = unsigned long>
+struct ClipVisitor  {
+
+    using value_type = T;
+    using index_type = I;
+    using size_type = std::size_t;
+    using result_type = size_type;
+
+    inline void operator() (const index_type &, value_type &val)  {
+
+        if (val > upper_)  {
+            val = upper_;
+            count_ += 1;
+        }
+        else if (val < lower_)  {
+            val = lower_;
+            count_ += 1;
+        }
+    }
+    inline void pre ()  {  }
+    inline void post ()  {  }
+    inline result_type get_result () const  { return (count_); }
+
+    ClipVisitor(const value_type &u, const value_type &l)
+        : upper_(u), lower_(l)  {   }
+
+private:
+
+    result_type         count_ { 0 };
+    const value_type    &upper_;
+    const value_type    &lower_;
+};
+
+// ----------------------------------------------------------------------------
+
 // Simple rolling adoptor for visitors
 //
 template<typename F, typename T, typename I = unsigned long>

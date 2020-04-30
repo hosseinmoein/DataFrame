@@ -32,13 +32,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename T, typename I = unsigned long, typename = typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;<BR>
-        struct BetaVisitor; </font>
+        template&lt;typename T, typename I = unsigned long&gt;<BR>
+        struct ClipVisitor; </font>
       </td>
       <td width="40%">
-        This functor class calculates the beta (i.e. exposure) of the given first column to the given second column (benchmark).<BR>
-        <I>explicit BetaVisitor (bool bias = true);</I><BR>
-        See this document and dataframe_tester.cc for examples.
+        This visitor actually changes the given column’s data. It sets any column value greater than upper to upper and any value smaller than lower to lower.<BR>
+        The <I>get_result()</I> method returns the number of items changed.<BR><BR>
+        <I>ClipVisitor(const value_type &amp;upper, const value_type &amp;lower)</I><BR><BR>
+        See this document and dataframe_tester_2.cc for examples.
       </td>
       <td>
         <B>T</B>: Column data type<BR>

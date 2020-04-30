@@ -125,6 +125,7 @@ df.visit<double>("dbl_col", stats_visitor);
 ---
 
 [DataFrame Test File](test/dataframe_tester.cc)<BR>
+[DataFrame Test File 2](test/dataframe_tester_2.cc)<BR>
 [Heterogeneous Vectors Test File](test/vectors_tester.cc)<BR>
 [Date/Time Test File](test/date_time_tester.cc)
 

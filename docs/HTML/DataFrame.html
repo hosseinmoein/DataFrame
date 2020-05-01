@@ -28,6 +28,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <P>
   In the <font size="+2">method</font> descriptions “I” stands for index type and “T” or “Ts” stand for data type(s)
 </P>
+
+<P>
+  <font size="+2">Examples:</font> There are a lot of example code in <I>test/dataframe_tester.cc</I> and <I>test/dataframe_tester_2.cc</I>. You should find at least one example for each feature.
+</P>
+
 <P>
   <font size="+2">Visitors</font> are all defined in files <I>include/DataFrameStatsVisitors.h, include/DataFrameMLVisitors.h>, include/DataFrameFinancialVisitors.h</I>, and <I>include/DataFrameTransformVisitors.h.</I> Also see <I>test/data_frame_tester.cc</I> for example usage.<BR>
   There are some common interfaces in most of the visitors. For example the following interfaces are common between most (but not all) visitors:<BR>
@@ -35,6 +40,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   <B>pre()</B> It is called by DataFrame each time before starting to pass the data to the visitor. pre() is the place to initialize the process<BR>
   <B>post()</B> It is called by DataFrame each time it is done with passing data to the visitor. 
 </P>
+
 <P>
 <font size="+2">Random generators</font> are a set of convenient routines to generate random number.<BR>
 For the definition and defaults of <I>RandGenParams</I>, see this document and file <I>DataFrameTypes.h</I>

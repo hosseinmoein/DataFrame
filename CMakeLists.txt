@@ -94,6 +94,7 @@ set(${LIBRARY_TARGET_NAME}_HDR
   include/DataFrame/DataFrameStatsVisitors.h
   include/DataFrame/DataFrameMLVisitors.h
   include/DataFrame/DataFrameFinancialVisitors.h
+  include/DataFrame/DataFrameTransformVisitors.h
   include/DataFrame/DataFrameTypes.h
   include/DataFrame/RandGen.h
   include/DataFrame/DataFrameOperators.h

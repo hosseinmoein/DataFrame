@@ -26,6 +26,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include <DataFrame/DataFrame.h>
+#include <DataFrame/DataFrameStatsVisitors.h>
+#include <DataFrame/DataFrameTransformVisitors.h>
 #include <DataFrame/RandGen.h>
 
 #include <cassert>

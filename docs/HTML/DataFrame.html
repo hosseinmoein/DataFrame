@@ -29,7 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   In the <font size="+2">method</font> descriptions “I” stands for index type and “T” or “Ts” stand for data type(s)
 </P>
 <P>
-  <font size="+2">Visitors</font> are all defined in files <I>include/DataFrameStatsVisitors.h, include/DataFrameMLVisitors.h</I> and <I>include/DataFrameFinancialVisitors.h.</I> Also see <I>test/data_frame_tester.cc</I> for example usage.<BR>
+  <font size="+2">Visitors</font> are all defined in files <I>include/DataFrameStatsVisitors.h, include/DataFrameMLVisitors.h>, include/DataFrameFinancialVisitors.h</I>, and <I>include/DataFrameTransformVisitors.h.</I> Also see <I>test/data_frame_tester.cc</I> for example usage.<BR>
   There are some common interfaces in most of the visitors. For example the following interfaces are common between most (but not all) visitors:<BR>
   <B>get_result()</B> It returns the result of the visitor/algo.<BR>
   <B>pre()</B> It is called by DataFrame each time before starting to pass the data to the visitor. pre() is the place to initialize the process<BR>
@@ -605,7 +605,7 @@ For the definition and defaults of <I>RandGenParams</I>, see this document and f
         <LI>Regular visit (visit()). In this case DataFrame passes the given column(s) data points one-by-one to the visitor functor. This is convenient for algorithms that can operate one data point at a time (e.g. correlation, variance).</LI>
         <LI>Single-action visit (single_act_visit()). In this case a reference to the given column(s) are passed to the visitor functor at once. This is necessary for algorithms that need the whole data together (e.g. return, median).</LI>
       </OL>
-    See this document, <I>DataFrameStatsVisitors.h, DataFrameMLVisitors.h, DataFrameFinancialVisitors.h,</I> and <I>dataframe_tester.cc</I> for more examples and documentation.
+    See this document, <I>DataFrameStatsVisitors.h, DataFrameMLVisitors.h, DataFrameFinancialVisitors.h, DataFrameTransformVisitors.h</I>, and <I>test/dataframe_tester.cc</I> for more examples and documentation.
   </P>
 
   <H1><font color="blue">Random Generators</font></H1>

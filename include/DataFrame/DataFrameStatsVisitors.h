@@ -43,16 +43,26 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace hmdf
 {
 
+#define DEFINE_VISIT_BASIC_TYPES \
+    using value_type = T; \
+    using index_type = I; \
+    using size_type = std::size_t;
+
+#define DEFINE_VISIT_BASIC_TYPES_2 \
+    DEFINE_VISIT_BASIC_TYPES \
+    using result_type = T;
+
+#define DEFINE_VISIT_BASIC_TYPES_3 \
+    DEFINE_VISIT_BASIC_TYPES \
+    using result_type = std::vector<T>;
+
 template<typename T,
          typename I = unsigned long,
          typename =
              typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
 struct MeanVisitor {
 
-    using value_type = T;
-    using index_type = I;
-    using size_type = std::size_t;
-    using result_type = T;
+    DEFINE_VISIT_BASIC_TYPES_2
 
     inline void operator() (const index_type &, const value_type &val)  {
 
@@ -87,10 +97,7 @@ template<typename T,
              typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
 struct GeometricMeanVisitor {
 
-    using value_type = T;
-    using index_type = I;
-    using size_type = std::size_t;
-    using result_type = T;
+    DEFINE_VISIT_BASIC_TYPES_2
 
     inline void operator() (const index_type &, const value_type &val)  {
 
@@ -126,10 +133,7 @@ template<typename T,
              typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
 struct HarmonicMeanVisitor {
 
-    using value_type = T;
-    using index_type = I;
-    using size_type = std::size_t;
-    using result_type = T;
+    DEFINE_VISIT_BASIC_TYPES_2
 
     inline void operator() (const index_type &, const value_type &val)  {
 
@@ -165,10 +169,7 @@ template<typename T,
              typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
 struct SumVisitor {
 
-    using value_type = T;
-    using index_type = I;
-    using size_type = std::size_t;
-    using result_type = T;
+    DEFINE_VISIT_BASIC_TYPES_2
 
     inline void operator() (const index_type &, const value_type &val)  {
 
@@ -196,10 +197,7 @@ template<typename T,
              typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
 struct ProdVisitor {
 
-    using value_type = T;
-    using index_type = I;
-    using size_type = std::size_t;
-    using result_type = T;
+    DEFINE_VISIT_BASIC_TYPES_2
 
     inline void operator() (const index_type &, const value_type &val)  {
 
@@ -224,10 +222,7 @@ private:
 template<typename T, typename I = unsigned long>
 struct MaxVisitor {
 
-    using value_type = T;
-    using index_type = I;
-    using size_type = std::size_t;
-    using result_type = T;
+    DEFINE_VISIT_BASIC_TYPES_2
 
     inline void operator() (const index_type &idx, const value_type &val)  {
 
@@ -265,10 +260,7 @@ private:
 template<typename T, typename I = unsigned long>
 struct MinVisitor {
 
-    using value_type = T;
-    using index_type = I;
-    using size_type = std::size_t;
-    using result_type = T;
+    DEFINE_VISIT_BASIC_TYPES_2
 
     inline void operator() (const index_type &idx, const value_type &val)  {
 
@@ -314,9 +306,7 @@ private:
 template<std::size_t N, typename T, typename I = unsigned long>
 struct  NLargestVisitor {
 
-    using value_type = T;
-    using index_type = I;
-    using size_type = std::size_t;
+    DEFINE_VISIT_BASIC_TYPES
 
     struct  DataItem  {
         value_type  value { };
@@ -386,9 +376,7 @@ private:
 template<std::size_t N, typename T, typename I = unsigned long>
 struct  NSmallestVisitor {
 
-    using value_type = T;
-    using index_type = I;
-    using size_type = std::size_t;
+    DEFINE_VISIT_BASIC_TYPES
 
     struct  DataItem  {
         value_type  value { };
@@ -453,10 +441,7 @@ template<typename T,
              typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
 struct CovVisitor {
 
-    using value_type = T;
-    using index_type = I;
-    using size_type = std::size_t;
-    using result_type = T;
+    DEFINE_VISIT_BASIC_TYPES_2
 
     explicit CovVisitor (bool biased = false, bool skipnan = true)
         : b_ (biased), skip_nan_(skipnan) {  }
@@ -524,10 +509,7 @@ template<typename T,
              typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
 struct VarVisitor  {
 
-    using value_type = T;
-    using index_type = I;
-    using size_type = std::size_t;
-    using result_type = T;
+    DEFINE_VISIT_BASIC_TYPES_2
 
     explicit VarVisitor (bool biased = false) : cov_ (biased)  {   }
     inline void operator() (const index_type &idx, const value_type &val)  {
@@ -552,10 +534,7 @@ template<typename T,
              typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
 struct BetaVisitor  {
 
-    using value_type = T;
-    using index_type = I;
-    using size_type = std::size_t;
-    using result_type = T;
+    DEFINE_VISIT_BASIC_TYPES_2
 
     explicit BetaVisitor (bool biased = false) : cov_ (biased)  {   }
     inline void operator() (const index_type &idx,
@@ -587,10 +566,7 @@ template<typename T,
              typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
 struct StdVisitor   {
 
-    using value_type = T;
-    using index_type = I;
-    using size_type = std::size_t;
-    using result_type = T;
+    DEFINE_VISIT_BASIC_TYPES_2
 
     explicit StdVisitor (bool biased = false) : var_ (biased)  {   }
     inline void operator() (const index_type &idx, const value_type &val)  {
@@ -620,10 +596,7 @@ template<typename T,
              typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
 struct SEMVisitor   {
 
-    using value_type = T;
-    using index_type = I;
-    using size_type = std::size_t;
-    using result_type = T;
+    DEFINE_VISIT_BASIC_TYPES_2
 
     explicit SEMVisitor (bool biased = false) : std_ (biased)  {   }
     inline void operator() (const index_type &idx, const value_type &val)  {
@@ -651,10 +624,7 @@ template<typename T,
              typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
 struct TrackingErrorVisitor {
 
-    using value_type = T;
-    using index_type = I;
-    using size_type = std::size_t;
-    using result_type = T;
+    DEFINE_VISIT_BASIC_TYPES_2
 
     explicit TrackingErrorVisitor (bool biased = false) : std_ (biased) {  }
     inline void operator() (const index_type &idx,
@@ -682,10 +652,7 @@ struct CorrVisitor  {
 
 public:
 
-    using value_type = T;
-    using index_type = I;
-    using size_type = std::size_t;
-    using result_type = T;
+    DEFINE_VISIT_BASIC_TYPES_2
 
     explicit CorrVisitor (bool biased = false) : cov_ (biased)  {   }
     inline void operator() (const index_type &idx,
@@ -715,10 +682,7 @@ template<typename T,
              typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
 struct DotProdVisitor  {
 
-    using value_type = T;
-    using index_type = I;
-    using size_type = std::size_t;
-    using result_type = T;
+    DEFINE_VISIT_BASIC_TYPES_2
 
     inline void operator() (const index_type &,
                             const value_type &val1,
@@ -753,11 +717,10 @@ private:
 
 public:
 
-    using value_type = T;
-    using index_type = I;
+    DEFINE_VISIT_BASIC_TYPES
     using result_type = std::vector<f_result_type>;
 
-    inline SimpleRollAdopter(F &&functor, size_t r_count)
+    inline SimpleRollAdopter(F &&functor, size_type r_count)
         : visitor_(std::move(functor)), roll_count_(r_count)  {   }
 
     template <typename K, typename H>
@@ -766,17 +729,17 @@ public:
 
         if (roll_count_ == 0)  return;
 
-        const size_t    col_s = std::min(idx.size(), column.size());
+        const size_type col_s = std::min(idx.size(), column.size());
 
         result_.reserve(col_s);
 
-        for (size_t i = 0; i < roll_count_ - 1 && i < col_s; ++i)
+        for (size_type i = 0; i < roll_count_ - 1 && i < col_s; ++i)
             result_.push_back(std::numeric_limits<f_result_type>::quiet_NaN());
-        for (size_t i = 0; i < col_s; ++i)  {
-            size_t  r = 0;
+        for (size_type i = 0; i < col_s; ++i)  {
+            size_type   r = 0;
 
             visitor_.pre();
-            for (size_t j = i; r < roll_count_ && j < col_s; ++j, ++r)
+            for (size_type j = i; r < roll_count_ && j < col_s; ++j, ++r)
                 visitor_(idx[j], column[j]);
             visitor_.post();
             if (r == roll_count_)
@@ -808,8 +771,7 @@ private:
 
 public:
 
-    using value_type = T;
-    using index_type = I;
+    DEFINE_VISIT_BASIC_TYPES
     using result_type = std::vector<f_result_type>;
 
     inline ExpandingRollAdopter(F &&functor,
@@ -873,8 +835,7 @@ private:
 
 public:
 
-    using value_type = T;
-    using index_type = I;
+    DEFINE_VISIT_BASIC_TYPES
     using result_type = std::vector<f_result_type>;
 
     inline ExponentialRollAdopter(F &&functor,
@@ -933,10 +894,7 @@ template<typename T,
              typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
 struct StatsVisitor  {
 
-    using value_type = T;
-    using index_type = I;
-    using size_type = std::size_t;
-    using result_type = T;
+    DEFINE_VISIT_BASIC_TYPES_2
 
     inline void operator() (const index_type &, const value_type &val)  {
 
@@ -1002,10 +960,7 @@ struct SLRegressionVisitor  {
 
 public:
 
-    using value_type = T;
-    using index_type = I;
-    using size_type = std::size_t;
-    using result_type = T;
+    DEFINE_VISIT_BASIC_TYPES_2
 
     inline void operator() (const index_type &idx,
                             const value_type &x,
@@ -1078,10 +1033,7 @@ template<typename T,
              typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
 struct CumSumVisitor {
 
-    using value_type = T;
-    using index_type = I;
-    using size_type = std::size_t;
-    using result_type = std::vector<value_type>;
+    DEFINE_VISIT_BASIC_TYPES_3
 
     template <typename K, typename H>
     inline void
@@ -1120,10 +1072,7 @@ template<typename T,
              typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
 struct CumProdVisitor {
 
-    using value_type = T;
-    using index_type = I;
-    using size_type = std::size_t;
-    using result_type = std::vector<value_type>;
+    DEFINE_VISIT_BASIC_TYPES_3
 
     template <typename K, typename H>
     inline void
@@ -1159,10 +1108,7 @@ private:
 template<typename T, typename I = unsigned long>
 struct CumMaxVisitor {
 
-    using value_type = T;
-    using index_type = I;
-    using size_type = std::size_t;
-    using result_type = std::vector<value_type>;
+    DEFINE_VISIT_BASIC_TYPES_3
 
     template <typename K, typename H>
     inline void
@@ -1201,10 +1147,7 @@ private:
 template<typename T, typename I = unsigned long>
 struct CumMinVisitor {
 
-    using value_type = T;
-    using index_type = I;
-    using size_type = std::size_t;
-    using result_type = std::vector<value_type>;
+    DEFINE_VISIT_BASIC_TYPES_3
 
     template <typename K, typename H>
     inline void
@@ -1254,9 +1197,8 @@ private:
     };
 
 public:
-    using value_type = T;
-    using index_type = I;
-    using size_type = std::size_t;
+
+    DEFINE_VISIT_BASIC_TYPES
     using result_type = std::vector<size_type>;
 
     template <typename K, typename H>
@@ -1313,9 +1255,7 @@ private:
 template<typename T, typename I = unsigned long>
 struct FactorizeVisitor  {
 
-    using value_type = T;
-    using index_type = I;
-    using size_type = std::size_t;
+    DEFINE_VISIT_BASIC_TYPES
     using result_type = std::vector<bool>;
     using factor_func = std::function<bool(const value_type &val)>;
 
@@ -1353,10 +1293,7 @@ struct AutoCorrVisitor  {
 
 public:
 
-    using value_type = T;
-    using index_type = I;
-    using size_type = std::size_t;
-    using result_type = std::vector<value_type>;
+    DEFINE_VISIT_BASIC_TYPES_3
 
     AutoCorrVisitor () = default;
     template <typename K, typename H>
@@ -1435,10 +1372,7 @@ template<typename T,
              typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
 struct ReturnVisitor  {
 
-    using value_type = T;
-    using index_type = I;
-    using size_type = std::size_t;
-    using result_type = std::vector<value_type>;
+    DEFINE_VISIT_BASIC_TYPES_3
 
     explicit ReturnVisitor (return_policy rp) : ret_p_(rp)  {   }
     inline void operator() (const std::vector<index_type> &idx,
@@ -1503,10 +1437,7 @@ template<typename T,
              typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
 struct KthValueVisitor  {
 
-    using value_type = T;
-    using index_type = I;
-    using size_type = std::size_t;
-    using result_type = T;
+    DEFINE_VISIT_BASIC_TYPES_2
 
     explicit KthValueVisitor (size_type ke, bool skipnan = true)
         : kth_element_(ke), skip_nan_(skipnan)  {   }
@@ -1582,10 +1513,7 @@ template<typename T,
              typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
 struct MedianVisitor  {
 
-    using value_type = T;
-    using index_type = I;
-    using size_type = std::size_t;
-    using result_type = T;
+    DEFINE_VISIT_BASIC_TYPES_2
 
     MedianVisitor () = default;
     template <typename K, typename H>
@@ -1626,10 +1554,7 @@ template<typename T,
              typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
 struct QuantileVisitor  {
 
-    using value_type = T;
-    using index_type = I;
-    using size_type = std::size_t;
-    using result_type = T;
+    DEFINE_VISIT_BASIC_TYPES_2
 
     QuantileVisitor () = default;
     QuantileVisitor (value_type quantile, quantile_policy q_policy)
@@ -1733,9 +1658,7 @@ private:
 template<std::size_t N, typename T, typename I = unsigned long>
 struct  ModeVisitor {
 
-    using value_type = T;
-    using index_type = I;
-    using size_type = std::size_t;
+    DEFINE_VISIT_BASIC_TYPES
 
     struct  DataItem  {
         // Value of the column item
@@ -1979,10 +1902,7 @@ private:
 
 public:
 
-    using value_type = T;
-    using index_type = I;
-    using size_type = std::size_t;
-    using result_type = T;
+    DEFINE_VISIT_BASIC_TYPES_2
 
     MADVisitor (mad_type mt, bool skip_nan = true)
         : mad_type_(mt), skip_nan_(skip_nan)  {   }
@@ -2024,10 +1944,7 @@ template<typename T,
              typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
 struct DiffVisitor  {
 
-    using value_type = T;
-    using index_type = I;
-    using size_type = std::size_t;
-    using result_type = std::vector<value_type>;
+    DEFINE_VISIT_BASIC_TYPES_3
 
     explicit DiffVisitor(long periods = 1, bool skipnan = true)
         : periods_(periods), skip_nan_(skipnan) {  }
@@ -2088,10 +2005,7 @@ template<typename T,
              typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
 struct ZScoreVisitor {
 
-    using value_type = T;
-    using index_type = I;
-    using size_type = std::size_t;
-    using result_type = std::vector<value_type>;
+    DEFINE_VISIT_BASIC_TYPES_3
 
     template <typename K, typename H>
     inline void
@@ -2140,10 +2054,7 @@ template<typename T,
              typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
 struct SampleZScoreVisitor {
 
-    using value_type = T;
-    using index_type = I;
-    using size_type = std::size_t;
-    using result_type = value_type;
+    DEFINE_VISIT_BASIC_TYPES_2
 
     inline void
     operator() (const std::vector<index_type> &idx,

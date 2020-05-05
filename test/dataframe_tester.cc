@@ -535,10 +535,9 @@ static void test_read()  {
 
     std::cout << "\nTesting read() ..." << std::endl;
 
-    MyDataFrame         df_read;
+    MyDataFrame df_read;
+
     try  {
-        // std::future<bool>   fut2 =
-        //     df_read.read_async("../test/sample_data.csv");
         std::future<bool>   fut2 = df_read.read_async("sample_data.csv");
 
         fut2.get();

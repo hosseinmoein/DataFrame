@@ -1,4 +1,3 @@
-map()
-map_to_another_column()
-another look at groupby()
+another look at groupby
+another look at pivot_table
 

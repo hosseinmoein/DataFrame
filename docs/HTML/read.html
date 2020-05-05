@@ -86,7 +86,62 @@ INDEX:<Number of data points>:<Comma delimited list of values>
       </td>
     </tr>
 
-  </table> 
+  </table>
+
+  <pre style='color:#000000;background:#ffffff;'><span style='color:#800000; font-weight:bold; '>static</span> <span style='color:#800000; font-weight:bold; '>void</span> test_read<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span>  <span style='color:#800080; '>{</span>
+
+    std<span style='color:#800080; '>::</span>cout <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#800000; '>"</span><span style='color:#0f69ff; '>\n</span><span style='color:#0000e6; '>Testing read() ...</span><span style='color:#800000; '>"</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> std<span style='color:#800080; '>::</span>endl<span style='color:#800080; '>;</span>
+
+    MyDataFrame df_read<span style='color:#800080; '>;</span>
+
+    try  <span style='color:#800080; '>{</span>
+        std<span style='color:#800080; '>::</span>future<span style='color:#808030; '>&lt;</span>bool<span style='color:#808030; '>></span>   fut2 <span style='color:#808030; '>=</span> df_read<span style='color:#808030; '>.</span>read_async<span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>sample_data.csv</span><span style='color:#800000; '>"</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+
+        fut2<span style='color:#808030; '>.</span>get<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    <span style='color:#800080; '>}</span>
+    catch <span style='color:#808030; '>(</span><span style='color:#800000; font-weight:bold; '>const</span> DataFrameError <span style='color:#808030; '>&amp;</span>ex<span style='color:#808030; '>)</span>  <span style='color:#800080; '>{</span>
+        std<span style='color:#800080; '>::</span>cout <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> ex<span style='color:#808030; '>.</span>what<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> std<span style='color:#800080; '>::</span>endl<span style='color:#800080; '>;</span>
+    <span style='color:#800080; '>}</span>
+    df_read<span style='color:#808030; '>.</span>write<span style='color:#808030; '>&lt;</span>std<span style='color:#800080; '>::</span>ostream<span style='color:#808030; '>,</span>
+                  <span style='color:#800000; font-weight:bold; '>int</span><span style='color:#808030; '>,</span>
+                  <span style='color:#800000; font-weight:bold; '>unsigned</span> <span style='color:#800000; font-weight:bold; '>long</span><span style='color:#808030; '>,</span>
+                  <span style='color:#800000; font-weight:bold; '>double</span><span style='color:#808030; '>,</span>
+                  std<span style='color:#800080; '>::</span>string<span style='color:#808030; '>,</span>
+                  bool<span style='color:#808030; '>></span><span style='color:#808030; '>(</span>std<span style='color:#800080; '>::</span>cout<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+
+    StdDataFrame<span style='color:#808030; '>&lt;</span>std<span style='color:#800080; '>::</span>string<span style='color:#808030; '>></span>   df_read_str<span style='color:#800080; '>;</span>
+
+    try  <span style='color:#800080; '>{</span>
+        df_read_str<span style='color:#808030; '>.</span>read<span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>sample_data_string_index.csv</span><span style='color:#800000; '>"</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    <span style='color:#800080; '>}</span>
+    catch <span style='color:#808030; '>(</span><span style='color:#800000; font-weight:bold; '>const</span> DataFrameError <span style='color:#808030; '>&amp;</span>ex<span style='color:#808030; '>)</span>  <span style='color:#800080; '>{</span>
+        std<span style='color:#800080; '>::</span>cout <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> ex<span style='color:#808030; '>.</span>what<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> std<span style='color:#800080; '>::</span>endl<span style='color:#800080; '>;</span>
+    <span style='color:#800080; '>}</span>
+    df_read_str<span style='color:#808030; '>.</span>write<span style='color:#808030; '>&lt;</span>std<span style='color:#800080; '>::</span>ostream<span style='color:#808030; '>,</span>
+                      <span style='color:#800000; font-weight:bold; '>int</span><span style='color:#808030; '>,</span>
+                      <span style='color:#800000; font-weight:bold; '>unsigned</span> <span style='color:#800000; font-weight:bold; '>long</span><span style='color:#808030; '>,</span>
+                      <span style='color:#800000; font-weight:bold; '>double</span><span style='color:#808030; '>,</span>
+                      std<span style='color:#800080; '>::</span>string<span style='color:#808030; '>,</span>
+                      bool<span style='color:#808030; '>></span><span style='color:#808030; '>(</span>std<span style='color:#800080; '>::</span>cout<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+
+    StdDataFrame<span style='color:#808030; '>&lt;</span>DateTime<span style='color:#808030; '>></span>  df_read_dt<span style='color:#800080; '>;</span>
+
+    try  <span style='color:#800080; '>{</span>
+        df_read_dt<span style='color:#808030; '>.</span>read<span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>sample_data_dt_index.csv</span><span style='color:#800000; '>"</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    <span style='color:#800080; '>}</span>
+    catch <span style='color:#808030; '>(</span><span style='color:#800000; font-weight:bold; '>const</span> DataFrameError <span style='color:#808030; '>&amp;</span>ex<span style='color:#808030; '>)</span>  <span style='color:#800080; '>{</span>
+        std<span style='color:#800080; '>::</span>cout <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> ex<span style='color:#808030; '>.</span>what<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> std<span style='color:#800080; '>::</span>endl<span style='color:#800080; '>;</span>
+    <span style='color:#800080; '>}</span>
+    df_read_dt<span style='color:#808030; '>.</span>write<span style='color:#808030; '>&lt;</span>std<span style='color:#800080; '>::</span>ostream<span style='color:#808030; '>,</span>
+                     <span style='color:#800000; font-weight:bold; '>int</span><span style='color:#808030; '>,</span>
+                     <span style='color:#800000; font-weight:bold; '>unsigned</span> <span style='color:#800000; font-weight:bold; '>long</span><span style='color:#808030; '>,</span>
+                     <span style='color:#800000; font-weight:bold; '>double</span><span style='color:#808030; '>,</span>
+                     std<span style='color:#800080; '>::</span>string<span style='color:#808030; '>,</span>
+                     bool<span style='color:#808030; '>></span><span style='color:#808030; '>(</span>std<span style='color:#800080; '>::</span>cout<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+<span style='color:#800080; '>}</span>
+</pre>
+  <!--Created using ToHtml.com on 2020-05-05 13:52:26 UTC -->
+  
 </body>
 </html>
 

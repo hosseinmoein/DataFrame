@@ -68,55 +68,7 @@ Please see <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoe
 
 ---
 
-<B>Example Code</B>
-```CPP
-using namespace hmdf;
-
-// Define a DataFrame with unsigned long index type
-typedef StdDataFrame<unsigned long> MyDataFrame;
-
-MyDataFrame                df;
-std::vector<int>           intvec = { 1, 2, 3, 4, 5 };
-std::vector<double>        dblvec = { 1.2345, 2.2345, 3.2345, 4.2345, 5.2345 };
-std::vector<double>        dblvec2 = { 0.998, 0.3456, 0.056, 0.15678, 0.00345,
-                                       0.923, 0.06743, 0.1 };
-std::vector<std::string>   strvec = { "Insight", "John Dow", "Alakazam",
-                                      "Persian Prince", "Bugs Bunny" };
-std::vector<unsigned long> ulgvec = { 1UL, 2UL, 3UL, 4UL, 5UL, 8UL, 7UL, 6UL }
-std::vector<unsigned long> xulgvec = ulgvec;
-
-// This is only one way of loading data into a DataFrame instance. There are
-// many different ways of doing it. Please see the documentation,
-// or dataframe_tester.cc
-int rc = df.load_data(std::move(ulgvec),  // Index column
-                      std::make_pair("int_col", intvec),
-                      std::make_pair("dbl_col", dblvec),
-                      std::make_pair("dbl_col_2", dblvec2),
-                      std::make_pair("str_col", strvec),
-                      std::make_pair("ul_col", xulgvec));
-
-// This is another way of loading a DataFrame
-MyDataFrame       df2;
-std::future<bool> fut = df2.read_async("sample_data.csv", io_format::csv);
-
-fut.get();
-
-// Sort the Frame by index
-df.sort<MyDataFrame::IndexType, int, double, std::string, unsigned long>("INDEX", sort_spec::ascen);
-// Sort the Frame by column “dbl_col_2” in descending order
-df.sort<double, int, double, std::string, unsigned long>("dbl_col_2", sort_spec::desce);
-
-// A functor to calculate mean, variance, skew, kurtosis, defined in
-// DataFrameStatsVisitors.h file.
-// You can implement your own algorithms and extend the DataFrame easily
-StatsVisitor<double>  stats_visitor;
-// Calculate the stats on column “dbl_col”
-df.visit<double>("dbl_col", stats_visitor);
-```
-
----
-
-## [DataFrame Documentation](https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html)
+## [DataFrame Documentation / Code Samples](https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html)
 <!--
 ## [DataFrame Documentation](docs/DataFrameDoc.pdf)
 -->

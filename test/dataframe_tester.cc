@@ -97,7 +97,7 @@ static void test_haphazard()  {
         dblvec2.size() +
         strvec.size() +
         xulgvec.size() +
-        9;  // NaNa inserterd
+        9;  // NaN inserterd
 
     MyDataFrame::size_type  rc =
         df.load_data(std::move(ulgvec),

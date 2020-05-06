@@ -60,7 +60,201 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       </td>
     </tr>
 
-  </table> 
+  </table>
+
+  <pre style='color:#000000;background:#ffffff;'><span style='color:#800000; font-weight:bold; '>struct</span>  Point  <span style='color:#800080; '>{</span>
+
+    <span style='color:#800000; font-weight:bold; '>double</span>  x <span style='color:#800080; '>{</span> <span style='color:#008000; '>0.0</span> <span style='color:#800080; '>}</span><span style='color:#800080; '>;</span>
+    <span style='color:#800000; font-weight:bold; '>double</span>  y <span style='color:#800080; '>{</span> <span style='color:#008000; '>0.0</span> <span style='color:#800080; '>}</span><span style='color:#800080; '>;</span>
+
+    Point<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>=</span> <span style='color:#800000; font-weight:bold; '>default</span><span style='color:#800080; '>;</span>
+    Point<span style='color:#808030; '>(</span><span style='color:#800000; font-weight:bold; '>double</span> xx<span style='color:#808030; '>,</span> <span style='color:#800000; font-weight:bold; '>double</span> yy<span style='color:#808030; '>)</span> <span style='color:#800080; '>:</span> x<span style='color:#808030; '>(</span>xx<span style='color:#808030; '>)</span><span style='color:#808030; '>,</span> y<span style='color:#808030; '>(</span>yy<span style='color:#808030; '>)</span>  <span style='color:#800080; '>{</span>   <span style='color:#800080; '>}</span>
+    Point<span style='color:#808030; '>(</span><span style='color:#800000; font-weight:bold; '>const</span> Point <span style='color:#808030; '>&amp;</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>=</span> <span style='color:#800000; font-weight:bold; '>default</span><span style='color:#800080; '>;</span>
+    Point <span style='color:#808030; '>&amp;</span><span style='color:#800000; font-weight:bold; '>operator</span> <span style='color:#808030; '>=</span> <span style='color:#808030; '>(</span><span style='color:#800000; font-weight:bold; '>const</span> Point <span style='color:#808030; '>&amp;</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>=</span> <span style='color:#800000; font-weight:bold; '>default</span><span style='color:#800080; '>;</span>
+
+    <span style='color:#800000; font-weight:bold; '>friend</span> Point <span style='color:#800000; font-weight:bold; '>operator</span> <span style='color:#808030; '>+</span> <span style='color:#808030; '>(</span><span style='color:#800000; font-weight:bold; '>const</span> Point <span style='color:#808030; '>&amp;</span>lhs<span style='color:#808030; '>,</span> <span style='color:#800000; font-weight:bold; '>const</span> Point <span style='color:#808030; '>&amp;</span>rhs<span style='color:#808030; '>)</span>  <span style='color:#800080; '>{</span>
+
+        <span style='color:#800000; font-weight:bold; '>return</span> <span style='color:#808030; '>(</span>Point<span style='color:#808030; '>(</span>lhs<span style='color:#808030; '>.</span>x <span style='color:#808030; '>+</span> rhs<span style='color:#808030; '>.</span>x<span style='color:#808030; '>,</span> lhs<span style='color:#808030; '>.</span>y <span style='color:#808030; '>+</span> rhs<span style='color:#808030; '>.</span>y<span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    <span style='color:#800080; '>}</span>
+    <span style='color:#800000; font-weight:bold; '>friend</span> Point <span style='color:#800000; font-weight:bold; '>operator</span> <span style='color:#808030; '>/</span> <span style='color:#808030; '>(</span><span style='color:#800000; font-weight:bold; '>const</span> Point <span style='color:#808030; '>&amp;</span>lhs<span style='color:#808030; '>,</span> <span style='color:#800000; font-weight:bold; '>double</span> rhs<span style='color:#808030; '>)</span>  <span style='color:#800080; '>{</span>
+
+        <span style='color:#800000; font-weight:bold; '>return</span> <span style='color:#808030; '>(</span>Point<span style='color:#808030; '>(</span>lhs<span style='color:#808030; '>.</span>x <span style='color:#808030; '>/</span> rhs<span style='color:#808030; '>,</span> lhs<span style='color:#808030; '>.</span>y <span style='color:#808030; '>/</span> rhs<span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    <span style='color:#800080; '>}</span>
+
+    <span style='color:#800000; font-weight:bold; '>template</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>typename</span> S<span style='color:#800080; '>></span>
+    <span style='color:#800000; font-weight:bold; '>friend</span> S <span style='color:#808030; '>&amp;</span><span style='color:#800000; font-weight:bold; '>operator</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#808030; '>(</span>S <span style='color:#808030; '>&amp;</span>s<span style='color:#808030; '>,</span> <span style='color:#800000; font-weight:bold; '>const</span> Point <span style='color:#808030; '>&amp;</span>rhs<span style='color:#808030; '>)</span>  <span style='color:#800080; '>{</span>
+
+        <span style='color:#800000; font-weight:bold; '>return</span> <span style='color:#808030; '>(</span>s <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> rhs<span style='color:#808030; '>.</span>x <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>, </span><span style='color:#800000; '>"</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> rhs<span style='color:#808030; '>.</span>y<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    <span style='color:#800080; '>}</span>
+<span style='color:#800080; '>}</span><span style='color:#800080; '>;</span>
+
+<span style='color:#800000; font-weight:bold; '>static</span> <span style='color:#800000; font-weight:bold; '>double</span> point_distance<span style='color:#808030; '>(</span><span style='color:#800000; font-weight:bold; '>const</span> Point <span style='color:#808030; '>&amp;</span>lhs<span style='color:#808030; '>,</span> <span style='color:#800000; font-weight:bold; '>const</span> Point <span style='color:#808030; '>&amp;</span>rhs<span style='color:#808030; '>)</span>  <span style='color:#800080; '>{</span>
+
+    <span style='color:#800000; font-weight:bold; '>return</span> <span style='color:#808030; '>(</span><span style='color:#808030; '>(</span>lhs<span style='color:#808030; '>.</span>x <span style='color:#808030; '>-</span> rhs<span style='color:#808030; '>.</span>x<span style='color:#808030; '>)</span> <span style='color:#808030; '>*</span> <span style='color:#808030; '>(</span>lhs<span style='color:#808030; '>.</span>x <span style='color:#808030; '>-</span> rhs<span style='color:#808030; '>.</span>x<span style='color:#808030; '>)</span> <span style='color:#808030; '>+</span> <span style='color:#808030; '>(</span>lhs<span style='color:#808030; '>.</span>y <span style='color:#808030; '>-</span> rhs<span style='color:#808030; '>.</span>y<span style='color:#808030; '>)</span> <span style='color:#808030; '>*</span> <span style='color:#808030; '>(</span>lhs<span style='color:#808030; '>.</span>y <span style='color:#808030; '>-</span> rhs<span style='color:#808030; '>.</span>y<span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+<span style='color:#800080; '>}</span>
+
+<span style='color:#800000; font-weight:bold; '>static</span> <span style='color:#800000; font-weight:bold; '>void</span> test_k_means<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span>  <span style='color:#800080; '>{</span>
+
+    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>cout</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#800000; '>"</span><span style='color:#0f69ff; '>\n</span><span style='color:#0000e6; '>Testing k-means visitor ...</span><span style='color:#800000; '>"</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>endl</span><span style='color:#800080; '>;</span>
+
+    <span style='color:#800000; font-weight:bold; '>const</span> <span style='color:#603000; '>size_t</span>            item_cnt <span style='color:#808030; '>=</span> <span style='color:#008c00; '>1024</span><span style='color:#800080; '>;</span>
+    MyDataFrame             df<span style='color:#800080; '>;</span>
+    RandGenParams<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span>   p<span style='color:#800080; '>;</span>
+
+    p<span style='color:#808030; '>.</span>mean <span style='color:#808030; '>=</span> <span style='color:#008000; '>1.0</span><span style='color:#800080; '>;</span>  <span style='color:#696969; '>// Default</span>
+    p<span style='color:#808030; '>.</span><span style='color:#666616; '>std</span> <span style='color:#808030; '>=</span> <span style='color:#008000; '>0.005</span><span style='color:#800080; '>;</span>
+    p<span style='color:#808030; '>.</span>seed <span style='color:#808030; '>=</span> <span style='color:#008c00; '>10</span><span style='color:#800080; '>;</span>
+
+    df<span style='color:#808030; '>.</span>load_data<span style='color:#808030; '>(</span>MyDataFrame<span style='color:#800080; '>::</span>gen_sequence_index<span style='color:#808030; '>(</span><span style='color:#008c00; '>0</span><span style='color:#808030; '>,</span> item_cnt<span style='color:#808030; '>,</span> <span style='color:#008c00; '>1</span><span style='color:#808030; '>)</span><span style='color:#808030; '>,</span>
+                 <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span>make_pair<span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>col1</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> gen_lognormal_dist<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span>item_cnt<span style='color:#808030; '>,</span> p<span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+
+    KMeansVisitor<span style='color:#800080; '>&lt;</span><span style='color:#008c00; '>5</span><span style='color:#808030; '>,</span> <span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span>    km_visitor<span style='color:#808030; '>(</span><span style='color:#008c00; '>1000</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+
+    df<span style='color:#808030; '>.</span>single_act_visit<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>col1</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> km_visitor<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+
+    <span style='color:#696969; '>// Using the calculated means, separate the given column into clusters</span>
+    <span style='color:#800000; font-weight:bold; '>const</span> <span style='color:#800000; font-weight:bold; '>auto</span>  clusters <span style='color:#808030; '>=</span> km_visitor<span style='color:#808030; '>.</span>get_clusters<span style='color:#808030; '>(</span>df<span style='color:#808030; '>.</span>get_index<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>,</span> df<span style='color:#808030; '>.</span>get_column<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>col1</span><span style='color:#800000; '>"</span><span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    <span style='color:#800000; font-weight:bold; '>bool</span>        found <span style='color:#808030; '>=</span> <span style='color:#800000; font-weight:bold; '>false</span><span style='color:#800080; '>;</span>
+
+<span style='color:#696969; '>/*</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;for (auto iter : clusters)  {</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;if (::fabs(iter[0] - 1.89348) &lt; 0.00001)  {</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;if (::fabs(iter[6] - 1.44231) &lt; 0.00001)  {</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;found = true;</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;break;</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;}</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;}</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;}</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;assert(found);</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;found = false;</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;for (auto iter : clusters)  {</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;if (::fabs(iter[0] - 0.593126) &lt; 0.00001)  {</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;if (::fabs(iter[2] - 0.950026) &lt; 0.00001)  {</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;found = true;</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;break;</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;}</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;}</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;}</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;assert(found);</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;found = false;</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;for (auto iter : clusters)  {</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;if (::fabs(iter[0] - 14.2245) &lt; 0.0001)  {</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;found = true;</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;break;</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;}</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;}</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;assert(found);</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;found = false;</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;for (auto iter : clusters)  {</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;if (::fabs(iter[0] - 6.90427) &lt; 0.00001)  {</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;found = true;</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;break;</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;}</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;}</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;assert(found);</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;found = false;</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;for (auto iter : clusters)  {</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;if (::fabs(iter[0] - 3.8146) &lt; 0.00001)  {</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;found = true;</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;break;</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;}</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;}</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;assert(found);</span>
+<span style='color:#696969; '>*/</span>
+
+    <span style='color:#696969; '>// Now try with Points</span>
+    <span style='color:#696969; '>//</span>
+    p<span style='color:#808030; '>.</span>seed <span style='color:#808030; '>=</span> <span style='color:#008c00; '>200</span><span style='color:#800080; '>;</span>
+
+    <span style='color:#800000; font-weight:bold; '>auto</span>    x_vec <span style='color:#808030; '>=</span> gen_lognormal_dist<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span>item_cnt<span style='color:#808030; '>,</span> p<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+
+    p<span style='color:#808030; '>.</span>seed <span style='color:#808030; '>=</span> <span style='color:#008c00; '>4356</span><span style='color:#800080; '>;</span>
+
+    <span style='color:#800000; font-weight:bold; '>auto</span>                y_vec <span style='color:#808030; '>=</span> gen_lognormal_dist<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span>item_cnt<span style='color:#808030; '>,</span> p<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>vector</span><span style='color:#800080; '>&lt;</span>Point<span style='color:#800080; '>></span>  points<span style='color:#800080; '>;</span>
+
+    points<span style='color:#808030; '>.</span>reserve<span style='color:#808030; '>(</span>item_cnt<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    <span style='color:#800000; font-weight:bold; '>for</span> <span style='color:#808030; '>(</span><span style='color:#603000; '>size_t</span> i <span style='color:#808030; '>=</span> <span style='color:#008c00; '>0</span><span style='color:#800080; '>;</span> i <span style='color:#808030; '>&lt;</span> item_cnt<span style='color:#800080; '>;</span> <span style='color:#808030; '>+</span><span style='color:#808030; '>+</span>i<span style='color:#808030; '>)</span>
+        points<span style='color:#808030; '>.</span>push_back<span style='color:#808030; '>(</span>Point<span style='color:#808030; '>(</span>x_vec<span style='color:#808030; '>[</span>i<span style='color:#808030; '>]</span><span style='color:#808030; '>,</span> y_vec<span style='color:#808030; '>[</span>i<span style='color:#808030; '>]</span><span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    df<span style='color:#808030; '>.</span>load_column<span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>point_col</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>move</span><span style='color:#808030; '>(</span>points<span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+
+    KMeansVisitor<span style='color:#800080; '>&lt;</span><span style='color:#008c00; '>5</span><span style='color:#808030; '>,</span> Point<span style='color:#800080; '>></span> km_visitor2<span style='color:#808030; '>(</span><span style='color:#008c00; '>1000</span><span style='color:#808030; '>,</span> point_distance<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+
+    df<span style='color:#808030; '>.</span>single_act_visit<span style='color:#800080; '>&lt;</span>Point<span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>point_col</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> km_visitor2<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+
+    <span style='color:#696969; '>// Using the calculated means, separate the given column into clusters</span>
+    <span style='color:#800000; font-weight:bold; '>const</span> <span style='color:#800000; font-weight:bold; '>auto</span>  clusters2 <span style='color:#808030; '>=</span>
+        km_visitor2<span style='color:#808030; '>.</span>get_clusters<span style='color:#808030; '>(</span>df<span style='color:#808030; '>.</span>get_index<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>,</span> df<span style='color:#808030; '>.</span>get_column<span style='color:#800080; '>&lt;</span>Point<span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>point_col</span><span style='color:#800000; '>"</span><span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+
+    <span style='color:#800000; font-weight:bold; '>for</span> <span style='color:#808030; '>(</span><span style='color:#800000; font-weight:bold; '>auto</span> iter <span style='color:#800080; '>:</span> clusters2<span style='color:#808030; '>)</span>  <span style='color:#800080; '>{</span>
+        <span style='color:#800000; font-weight:bold; '>for</span> <span style='color:#808030; '>(</span><span style='color:#800000; font-weight:bold; '>auto</span> iter2 <span style='color:#800080; '>:</span> iter<span style='color:#808030; '>)</span>  <span style='color:#800080; '>{</span>
+            <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>cout</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> iter2<span style='color:#808030; '>.</span>x <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '> | </span><span style='color:#800000; '>"</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> iter2<span style='color:#808030; '>.</span>y <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>, </span><span style='color:#800000; '>"</span><span style='color:#800080; '>;</span>
+        <span style='color:#800080; '>}</span>
+        <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>cout</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#800000; '>"</span><span style='color:#0f69ff; '>\n</span><span style='color:#0f69ff; '>\n</span><span style='color:#800000; '>"</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>endl</span><span style='color:#800080; '>;</span>
+    <span style='color:#800080; '>}</span>
+
+<span style='color:#696969; '>/*</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;found = false;</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;for (auto iter : clusters2)  {</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;if (::fabs(iter[0].x - 18.9556) &lt; 0.1 &amp;&amp;</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;::fabs(iter[0].y - 2.17537) &lt; 0.1)  {</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;if (::fabs(iter[6].x - 16.7309) &lt; 0.1 &amp;&amp;</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;::fabs(iter[6].y - 0.872376) &lt; 0.1)  {</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;found = true;</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;break;</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;}</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;}</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;}</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;assert(found);</span>
+<span style='color:#696969; '>*/</span>
+<span style='color:#696969; '>/*</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;found = false;</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;for (auto iter : clusters2)  {</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;if (::fabs(iter[0].x - 0.943977) &lt; 0.1 &amp;&amp;</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;::fabs(iter[0].y - 0.910989) &lt; 0.1)  {</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;if (::fabs(iter[2].x - 0.30509) &lt; 0.1 &amp;&amp;</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;::fabs(iter[2].y - 1.69017) &lt; 0.1)  {</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;found = true;</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;break;</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;}</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;}</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;}</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;assert(found);</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;found = false;</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;for (auto iter : clusters2)  {</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;if (::fabs(iter[0].x - 4.31973) &lt; 0.1 &amp;&amp;</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;::fabs(iter[0].y - 1.24214) &lt; 0.1)  {</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;if (::fabs(iter[3].x - 4.68381) &lt; 0.1 &amp;&amp;</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;::fabs(iter[3].y - 0.453632) &lt; 0.1)  {</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;found = true;</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;break;</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;}</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;}</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;}</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;assert(found);</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;found = false;</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;for (auto iter : clusters2)  {</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;if (::fabs(iter[0].x - 1.5694) &lt; 0.1 &amp;&amp;</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;::fabs(iter[0].y - 15.3338) &lt; 0.1)  {</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;found = true;</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;break;</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;}</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;}</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;assert(found);</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;found = false;</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;for (auto iter : clusters2)  {</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;if (::fabs(iter[0].x - 1.29624) &lt; 0.1 &amp;&amp;</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;::fabs(iter[0].y - 4.13919) &lt; 0.1)  {</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;found = true;</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;break;</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;}</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;}</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;assert(found);</span>
+<span style='color:#696969; '>*/</span>
+<span style='color:#800080; '>}</span>
+</pre>
+  <!--Created using ToHtml.com on 2020-05-06 13:34:15 UTC -->
+
 </body>
 </html>
 

@@ -42,7 +42,7 @@ This is a C++ statistical library that provides an interface similar to Pandas p
 <B>A DataFrame can have one index column and many data columns of any built-in or user-defined type</B>.<BR>
 You could slice the data in many different ways. You could join, merge, group-by the data. You could run various statistical, summarization and ML algorithms on the data. You could add your custom algorithms easily. You could multi-column sort, custom pick and delete the data. And more …<BR>
 
-<B>I have followed a few principals in this library:</B><BR>
+<B>I have followed a few principles in this library:</B><BR>
 
 1.  Support any type either built-in or user defined without needing new code<BR>
 2.  Never chase pointers ala `linked lists`, `std::any`, `pointer to base`, ..., including `virtual function calls`<BR>

@@ -46,7 +46,7 @@ You could slice the data in many different ways. You could join, merge, group-by
 
 1.  Support any type either built-in or user defined without needing new code<BR>
 2.  Never chase pointers ala `linked lists`, `std::any`, `pointer to base`, ..., including `virtual function calls`<BR>
-3.  Have all column data in continuous memory space<BR>
+3.  Have all column data in continuous memory space. Also, be mindful of cache-line aliasing misses between multiple columns<BR>
 4.  Never use more space than you need ala `unions`, `std::variant`, ...<BR>
 5.  Avoid copying data as much as possible. Unfortunately, sometimes you have to<BR>
 6.  Use multi-threading but only when it makes sense<BR>

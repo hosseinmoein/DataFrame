@@ -48,7 +48,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       </td>
     </tr>
 
-  </table> 
+  </table>
+
+  <pre style='color:#000000;background:#ffffff;'>    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>cout</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#800000; '>"</span><span style='color:#0f69ff; '>\n</span><span style='color:#0000e6; '>Testing Covariance Visitor ...</span><span style='color:#800000; '>"</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>endl</span><span style='color:#800080; '>;</span>
+
+    CovVisitor<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span> cov_visitor<span style='color:#800080; '>;</span>
+    <span style='color:#800000; font-weight:bold; '>auto</span>                fut10 <span style='color:#808030; '>=</span> df<span style='color:#808030; '>.</span>visit_async<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#808030; '>,</span> <span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>dbl_col</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>dbl_col_2</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> cov_visitor<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    <span style='color:#800000; font-weight:bold; '>const</span> <span style='color:#800000; font-weight:bold; '>double</span>        cov <span style='color:#808030; '>=</span> fut10<span style='color:#808030; '>.</span>get<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+
+    assert<span style='color:#808030; '>(</span><span style='color:#603000; '>fabs</span><span style='color:#808030; '>(</span>cov <span style='color:#808030; '>-</span> <span style='color:#808030; '>-</span><span style='color:#008000; '>0.358381</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>&lt;</span> <span style='color:#008000; '>0.000001</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+</pre>
+  <!--Created using ToHtml.com on 2020-05-07 15:50:30 UTC -->
+
 </body>
 </html>
 

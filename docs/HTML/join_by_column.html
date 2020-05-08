@@ -25,6 +25,30 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <!DOCTYPE html>
 <html>
 <body>
+
+    <table align="center" border="1">
+
+    <tr bgcolor="lightblue">
+      <th>Signature</th> <th>Description</th>
+    </tr>
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        enum class join_policy : unsigned char  {<BR>
+            &emsp;inner_join = 1,<BR>
+            &emsp;left_join = 2,<BR>
+            &emsp;right_join = 3,<BR>
+            &emsp;left_right_join = 4	// This is merge<BR>
+        }; </font>
+      </td>
+      <td>
+        Enumerated type to specify joining two DataFrames
+      </td>
+    </tr>
+
+	</table>
+
+	<BR>
+	
   <table align="center" border="1">
 
     <tr bgcolor="lightblue">

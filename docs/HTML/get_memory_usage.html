@@ -25,6 +25,35 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <!DOCTYPE html>
 <html>
 <body>
+
+  <table align="center" border="1">
+
+    <tr bgcolor="lightblue">
+      <th>Signature</th> <th>Description</th>
+    </tr>
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        struct  MemUsage  {<BR>
+            &emsp;size_t  column_used_memory { 0 };<BR>
+            &emsp;size_t  column_capacity_memory { 0 };<BR>
+            &emsp;size_t  column_type_size { 0 };<BR>
+            &emsp;size_t  index_used_memory { 0 };<BR>
+            &emsp;size_t  index_capacity_memory { 0 };<BR>
+            &emsp;size_t  index_type_size { 0 };<BR>
+        <BR>
+            &emsp;template<typename S><BR>
+            &emsp;friend S &operator << (S &stream, const MemUsage &mu);<BR>
+        }; </font>
+      </td>
+      <td>
+        This struct holds the result of calling get_memory_usage() method on DataFrame.
+      </td>
+    </tr>
+
+  </table>
+
+  <BR>
+
   <table align="center" border="1">
 
     <tr bgcolor="lightblue">

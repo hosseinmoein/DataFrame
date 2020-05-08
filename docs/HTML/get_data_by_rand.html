@@ -25,6 +25,34 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <!DOCTYPE html>
 <html>
 <body>
+
+  <table align="center" border="1">
+
+    <tr bgcolor="lightblue">
+      <th>Signature</th> <th>Description</th>
+    </tr>
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        enum class random_policy : unsigned char  {<BR>
+            &emsp;num_rows_with_seed = 1, // Number of rows with specifying a seed<BR>
+            &emsp;num_rows_no_seed = 2, // Number of rows with no seed specification<BR>
+            &emsp;frac_rows_with_seed = 3, // Fraction of rows with specifying a seed<BR>
+            &emsp;frac_rows_no_seed = 4, // Fraction of rows with no seed specification<BR>
+        }; </font>
+      </td>
+      <td>
+        Specification for calling get_[data|view]_by_rand()<BR>
+        Number of rows means the n parameter is an positive integer specifying<BR>
+        the number of rows to select<BR>
+        Fraction of rows means the n parameter is a positive real number [0:1]<BR>
+        specifying a fraction of rows to select
+      </td>
+    </tr>
+
+  </table>
+
+  <BR>
+  
   <table align="center" border="1">
 
     <tr bgcolor="lightblue">

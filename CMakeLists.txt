@@ -124,7 +124,7 @@ if (UNIX)
 endif(UNIX)
 
 if (MSVC)
-  add_definitions(-D _CRT_SECURE_NO_WARNINGS)
+  add_definitions(-D_CRT_SECURE_NO_WARNINGS)
   add_library(${LIBRARY_TARGET_NAME} ${${LIBRARY_TARGET_NAME}_SRC})
 endif(MSVC)
 

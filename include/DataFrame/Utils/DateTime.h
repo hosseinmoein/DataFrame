@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <cstdio>
 #include <ctime>
+#include <limits>
 #include <stdexcept>
 #include <string>
 #include <sys/timeb.h>
@@ -167,8 +168,15 @@ public:
 
 private:
 
+    template<typename T>
+    using INVALID_VALUE_ = typename std::numeric_limits<T>;
+
     static const char       *TIMEZONES_[];
-    static const EpochType  INVALID_TIME_T_ = -1;
+    static const EpochType  INVALID_TIME_T_ = INVALID_VALUE_<EpochType>::max();
+    static const DateType   INVALID_DATE_ = INVALID_VALUE_<DateType>::max();
+    static const HourType   INVALID_HOUR_ = INVALID_VALUE_<HourType>::max();
+    static const MinuteType INVALID_MINUTE_ = INVALID_VALUE_<MinuteType>::max();
+    static const SecondType INVALID_SECOND_ = INVALID_VALUE_<SecondType>::max();
 
     // This guy initializes anything that needs to be initialized
     // statically.
@@ -179,14 +187,14 @@ private:
 
     friend class    DT_initializer;
 
-    DateType        date_ { DateType(INVALID_TIME_T_) };   // e.g. 20001025
-    HourType        hour_ { HourType(INVALID_TIME_T_) };
-    MinuteType      minute_ { MinuteType(INVALID_TIME_T_) };
-    SecondType      second_ { SecondType(INVALID_TIME_T_) };
+    DateType        date_ { INVALID_DATE_ };  // Like 20190518
+    HourType        hour_ { INVALID_HOUR_ };
+    MinuteType      minute_ { INVALID_MINUTE_ };
+    SecondType      second_ { INVALID_SECOND_ };
     NanosecondType  nanosecond_ { 0 };
     EpochType       time_ { INVALID_TIME_T_ }; // Sec since 01/01/1970 (Epoch)
     DT_WEEKDAY      week_day_ { DT_WEEKDAY::BAD_DAY };
-    DT_TIME_ZONE    time_zone_ { };
+    DT_TIME_ZONE    time_zone_ { DT_TIME_ZONE::LOCAL};
 
     inline static void change_env_timezone_(DT_TIME_ZONE time_zone);
     inline static void reset_env_timezone_(DT_TIME_ZONE time_zone);

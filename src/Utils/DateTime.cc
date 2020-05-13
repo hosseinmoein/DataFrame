@@ -190,10 +190,10 @@ DateTime::DateTime (DT_TIME_ZONE tz) : time_zone_(tz)  {
 
 void DateTime::set_time(EpochType the_time, NanosecondType nanosec) noexcept {
 
-    date_ = DateType (INVALID_TIME_T_);
-    hour_ = HourType (INVALID_TIME_T_);
-    minute_ = MinuteType (INVALID_TIME_T_);
-    second_ = SecondType (INVALID_TIME_T_);
+    date_ = INVALID_DATE_;
+    hour_ = INVALID_HOUR_;
+    minute_ = INVALID_MINUTE_;
+    second_ = INVALID_SECOND_;
     week_day_ = DT_WEEKDAY::BAD_DAY;
 
     nanosecond_ = nanosec;
@@ -568,7 +568,7 @@ void DateTime::set_timezone (DT_TIME_ZONE tz)  {
 
 DateTime::DateType DateTime::date () const noexcept  {
 
-    if (date_ == DateType (INVALID_TIME_T_))
+    if (date_ == INVALID_DATE_)
         const_cast<DateTime *>(this)->breaktime_ (this->time (), nanosec ());
 
     return (date_);
@@ -629,7 +629,7 @@ DateTime::HourType DateTime::hour () const noexcept  {
     // It _always_ makes me sad to use const_cast<>. But then I get
     // over it.
     //
-    if (hour_ == HourType (INVALID_TIME_T_))
+    if (hour_ == INVALID_HOUR_)
         const_cast<DateTime *>(this)->breaktime_ (this->time (), nanosec ());
      return (hour_);
 }
@@ -638,7 +638,7 @@ DateTime::HourType DateTime::hour () const noexcept  {
 
 DateTime::MinuteType DateTime::minute () const noexcept  {
 
-    if (minute_ == MinuteType (INVALID_TIME_T_))
+    if (minute_ == INVALID_MINUTE_)
         const_cast<DateTime *>(this)->breaktime_ (this->time (), nanosec ());
 
     return (minute_);
@@ -648,7 +648,7 @@ DateTime::MinuteType DateTime::minute () const noexcept  {
 
 DateTime::SecondType DateTime::sec () const noexcept  {
 
-    if (second_ == SecondType (INVALID_TIME_T_))
+    if (second_ == INVALID_SECOND_)
         const_cast<DateTime *>(this)->breaktime_ (this->time (), nanosec ());
 
     return (second_);
@@ -690,7 +690,7 @@ DateTime::NanosecondType DateTime::nanosec () const noexcept  {
 //
 DateTime::EpochType DateTime::time () const noexcept  {
 
-    if (time_ == EpochType (INVALID_TIME_T_))  {
+    if (time_ == INVALID_TIME_T_)  {
         struct tm   ltime;
 
         // It _always_ makes me sad to use const_cast<>. But then I get

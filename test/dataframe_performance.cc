@@ -45,7 +45,7 @@ int main(int argc, char *argv[]) {
             MyDataFrame::gen_datetime_index("01/01/1970",
                                             "08/15/2019",
                                             time_frequency::secondly,
-                                            1));
+                                            1, DT_TIME_ZONE::EU_BERLIN));
     RandGenParams<double>   p;
 
     p.mean = 1.0;  // Default

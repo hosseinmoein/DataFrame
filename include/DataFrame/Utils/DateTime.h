@@ -43,6 +43,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #  else
 #    define LIBRARY_API __declspec(dllimport)
 #  endif // LIBRARY_EXPORTS
+#  ifdef min
+#    undef min
+#  endif // min
+#  ifdef max
+#    undef max
+#  endif // max
 #else
 #  define LIBRARY_API
 #endif // _WIN32
@@ -194,7 +200,7 @@ private:
     NanosecondType  nanosecond_ { 0 };
     EpochType       time_ { INVALID_TIME_T_ }; // Sec since 01/01/1970 (Epoch)
     DT_WEEKDAY      week_day_ { DT_WEEKDAY::BAD_DAY };
-    DT_TIME_ZONE    time_zone_ { DT_TIME_ZONE::LOCAL};
+    DT_TIME_ZONE    time_zone_ { DT_TIME_ZONE::LOCAL };
 
     inline static void change_env_timezone_(DT_TIME_ZONE time_zone);
     inline static void reset_env_timezone_(DT_TIME_ZONE time_zone);

@@ -213,12 +213,6 @@ DateTime::DateTime (DateType d,
       minute_ (mn),
       second_ (sc),
       nanosecond_ (ns),
-
-      // Refer to the comment in the header file, as why we are assigning
-      // INVALID_TIME_T_ to time_.
-      //
-      time_ (INVALID_TIME_T_),
-      week_day_ (DT_WEEKDAY::BAD_DAY),
       time_zone_ (tz)  {
 }
 
@@ -241,9 +235,7 @@ DateTime::DateTime (DateType d,
 //  (5)  YYYY/MM/DD HH:MM:SS.MMM
 //
 DateTime::DateTime (const char *s, DT_DATE_STYLE ds, DT_TIME_ZONE tz)
-    : time_ (INVALID_TIME_T_),
-      week_day_ (DT_WEEKDAY::BAD_DAY),
-      time_zone_ (tz)  {
+    : time_zone_ (tz)  {
 
     const char  *str = s;
 
@@ -424,7 +416,7 @@ days_in_month_ (DT_MONTH month, DatePartType year) noexcept  {
 //
 bool DateTime::is_valid () const noexcept  {
 
-    return (year () > 1900 && year () < 2525 &&
+    return (year () > 0 && year () < 9999 &&
             month () > DT_MONTH::BAD_MONTH && month () <= DT_MONTH::DEC &&
             dmonth () > 0 &&
             dmonth () <= days_in_month_ (month(), year()) &&
@@ -820,13 +812,11 @@ void DateTime::add_days (long days) noexcept  {
                 while (date () == prev_date.date ())
                     add_seconds (3600 * addend);
             }
-            else if (addend > 0 &&
-                     int(dyear ()) - int(prev_date.dyear ()) > 1)  {
+            else if (addend > 0 && int(dyear()) - int(prev_date.dyear()) > 1) {
                 while (int(dyear ()) - int(prev_date.dyear ()) > 1)
                     add_seconds (-3600 * addend);
             }
-            else if (addend < 0 &&
-                     int(dyear ()) - int(prev_date.dyear ()) < -1)  {
+            else if (addend < 0 && int(dyear()) - int(prev_date.dyear()) < -1) {
                 while (int(dyear ()) - int(prev_date.dyear()) < -1)
                     add_seconds (3600);
             }

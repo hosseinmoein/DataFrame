@@ -259,28 +259,28 @@ table.hovertable td {
 
     <tr onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
       <td><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/groupby.html">groupby</a>( )</td>
-      <td></td>
+      <td><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/global_operators.html">df_plus</a> operator</td>
       <td>struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/ModeVisitor.html">ModeVisitor</a>{  }</td>
       <td></td>
     </tr>
 
     <tr onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
       <td><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/groupby.html">groupby_async</a>( )</td>
-      <td></td>
+      <td><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/global_operators.html">df_minus</a> operator</td>
       <td>struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/NLargestVisitor.html">NLargestVisitor</a>{  }</td>
       <td></td>
     </tr>
 
     <tr onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
       <td><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/has_column.html">has_column</a>( )</td>
-      <td></td>
+      <td><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/global_operators.html">df_multiplies</a> operator</td>
       <td>struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/NSmallestVisitor.html">NSmallestVisitor</a>{  }</td>
       <td></td>
     </tr>
 
     <tr onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
       <td><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/is_equal.html">is_equal</a>( )</td>
-      <td></td>
+      <td><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/global_operators.html">df_divides</a> operator</td>
       <td>struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/ProdVisitor.html">ProdVisitor</a>{  }</td>
       <td></td>
     </tr>
@@ -707,27 +707,6 @@ MyDataFrame<span style='color:#800080; '>::</span>set_lock<span style='color:#80
 MyDataFrame<span style='color:#800080; '>::</span>remove_lock<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
 </pre>
 <!--Created using ToHtml.com on 2020-05-04 18:56:41 UTC -->
-  </P>
-
-  <H1><font color="blue">Global Operators</font></H1>
-  <P>
-    These are currently arithmetic operators declared in include/DataFrame.h. Because they all have to be templated, they cannot be defined as redefined built-in operators.<BR>
-<pre style='color:#000000;background:#ffffff;'><span style='color:#800000; font-weight:bold; '>template</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>typename</span> DF<span style='color:#808030; '>,</span> <span style='color:#800000; font-weight:bold; '>typename</span> <span style='color:#808030; '>.</span><span style='color:#808030; '>.</span><span style='color:#808030; '>.</span> Ts<span style='color:#800080; '>></span>
-<span style='color:#800000; font-weight:bold; '>inline</span> DF df_plus<span style='color:#808030; '>(</span><span style='color:#800000; font-weight:bold; '>const</span> DF <span style='color:#808030; '>&amp;</span>lhs<span style='color:#808030; '>,</span> <span style='color:#800000; font-weight:bold; '>const</span> DF <span style='color:#808030; '>&amp;</span>rhs<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
- 
-<span style='color:#800000; font-weight:bold; '>template</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>typename</span> DF<span style='color:#808030; '>,</span> <span style='color:#800000; font-weight:bold; '>typename</span> <span style='color:#808030; '>.</span><span style='color:#808030; '>.</span><span style='color:#808030; '>.</span> Ts<span style='color:#800080; '>></span>
-<span style='color:#800000; font-weight:bold; '>inline</span> DF df_minus<span style='color:#808030; '>(</span><span style='color:#800000; font-weight:bold; '>const</span> DF <span style='color:#808030; '>&amp;</span>lhs<span style='color:#808030; '>,</span> <span style='color:#800000; font-weight:bold; '>const</span> DF <span style='color:#808030; '>&amp;</span>rhs<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
- 
-<span style='color:#800000; font-weight:bold; '>template</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>typename</span> DF<span style='color:#808030; '>,</span> <span style='color:#800000; font-weight:bold; '>typename</span> <span style='color:#808030; '>.</span><span style='color:#808030; '>.</span><span style='color:#808030; '>.</span> Ts<span style='color:#800080; '>></span>
-<span style='color:#800000; font-weight:bold; '>inline</span> DF df_multiplies<span style='color:#808030; '>(</span><span style='color:#800000; font-weight:bold; '>const</span> DF <span style='color:#808030; '>&amp;</span>lhs<span style='color:#808030; '>,</span> <span style='color:#800000; font-weight:bold; '>const</span> DF <span style='color:#808030; '>&amp;</span>rhs<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
- 
-<span style='color:#800000; font-weight:bold; '>template</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>typename</span> DF<span style='color:#808030; '>,</span> <span style='color:#800000; font-weight:bold; '>typename</span> <span style='color:#808030; '>.</span><span style='color:#808030; '>.</span><span style='color:#808030; '>.</span> Ts<span style='color:#800080; '>></span>
-<span style='color:#800000; font-weight:bold; '>inline</span> DF df_divides<span style='color:#808030; '>(</span><span style='color:#800000; font-weight:bold; '>const</span> DF <span style='color:#808030; '>&amp;</span>lhs<span style='color:#808030; '>,</span> <span style='color:#800000; font-weight:bold; '>const</span> DF <span style='color:#808030; '>&amp;</span>rhs<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
-</pre>
-<!--Created using ToHtml.com on 2020-05-04 18:59:52 UTC -->
-    These arithmetic operations operate on the same-name and same-type columns on lhs and rhs. Each pair of entries is operated on, only if they have the same index value.<BR>
-    They return a new DataFrame<BR>
-    <B>NOTE</B>: Both lhs and rhs must be already sorted by index, otherwise the result is nonsensical.
   </P>
 
   <H1><font color="blue">Views</font></H1>

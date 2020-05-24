@@ -33,14 +33,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        enum class fill_policy : unsigned char  {<BR>
-            &emsp;value = 1,<BR>
-            &emsp;fill_forward = 2,<BR>
-            &emsp;fill_backward = 3,<BR>
-            &emsp;linear_interpolate = 4, // Using the index as X coordinate<BR>
-            &emsp;linear_extrapolate = 5, // Using the index as X coordinate<BR>
-            &emsp;mid_point = 6,          // Mid-point of x and y<BR>
-        };</font>
+	<PRE>
+enum class fill_policy : unsigned char  {
+    value = 1,
+    fill_forward = 2,
+    fill_backward = 3,
+    linear_interpolate = 4, // Using the index as X coordinate
+    linear_extrapolate = 5, // Using the index as X coordinate
+    mid_point = 6,          // Mid-point of x and y
+};</PRE></font>
       </td>
       <td width="65%">
         This policy determines how to fill missing values in the DataFrame<BR>

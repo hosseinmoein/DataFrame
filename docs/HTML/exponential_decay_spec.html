@@ -33,13 +33,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
         enum class exponential_decay_spec : unsigned char  {<BR>
-            &emsp;center_of_gravity = 1, // decay = 1 / (1 + value), for value >= 0<BR>
-            &emsp;span = 2,              // decay = 2 / (1 + value), for value >= 1<BR>
-            &emsp;halflife = 3,          // decay = 1 − exp(log(0.5) / value), for value > 0<BR>
-            &emsp;fixed = 4,             // decay = value, for 0 < value <= 1<BR>
+            &emsp;center_of_gravity = 1, <tab id=t1>// Decay = 1 / (1 + value), <tab id=t2>for value >= 0<BR>
+            &emsp;span = 2,              <tab to=t1>// Decay = 2 / (1 + value), <tab to=t2>for value >= 1<BR>
+            &emsp;halflife = 3,          <tab to=t1>// Decay = 1 − exp(log(0.5) / value), <tab to=t2>for value > 0<BR>
+            &emsp;fixed = 4,             <tab to=t1>// Decay = value, <tab to=t2>for 0 < value <= 1<BR>
         };</font>
       </td>
-      <td width="65%">
+      <td width="60%">
         This spec determines how an exponentially moving stat decays.
         It is used as a parameter to the ExponentialRollAdopter adopter constructor.
         Based on this spec, the value parameter is converted to decay.

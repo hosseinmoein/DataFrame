@@ -33,12 +33,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        enum class quantile_policy : unsigned char  {<BR>
-            &emsp;lower_value = 1, // Take the higher index<BR>
-            &emsp;higher_value = 2, // Take the lower index<BR>
-            &emsp;mid_point = 3, // Average the two quantiles<BR>
-            &emsp;linear = 4, // Linearly combine the two quantiles<BR>
-        }; </font>
+        <PRE>
+enum class quantile_policy : unsigned char  {
+    lower_value = 1,  // Take the higher index
+    higher_value = 2, // Take the lower index
+    mid_point = 3,    // Average the two quantiles
+    linear = 4,       // Linearly combine the two quantiles
+};</PRE> </font>
       </td>
       <td>
         This policy determines how to calculate quantiles when they fall between two values.<BR>

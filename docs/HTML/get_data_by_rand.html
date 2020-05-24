@@ -33,12 +33,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        enum class random_policy : unsigned char  {<BR>
-            &emsp;num_rows_with_seed = 1, // Number of rows with specifying a seed<BR>
-            &emsp;num_rows_no_seed = 2, // Number of rows with no seed specification<BR>
-            &emsp;frac_rows_with_seed = 3, // Fraction of rows with specifying a seed<BR>
-            &emsp;frac_rows_no_seed = 4, // Fraction of rows with no seed specification<BR>
-        }; </font>
+        <PRE>
+enum class random_policy : unsigned char  {
+    num_rows_with_seed = 1, // Number of rows with specifying a seed
+    num_rows_no_seed = 2, // Number of rows with no seed specification
+    frac_rows_with_seed = 3, // Fraction of rows with specifying a seed
+    frac_rows_no_seed = 4, // Fraction of rows with no seed specification
+};</PRE> </font>
       </td>
       <td>
         Specification for calling get_[data|view]_by_rand()<BR>

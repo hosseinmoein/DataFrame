@@ -32,12 +32,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
+        <PRE>
         enum class exponential_decay_spec : unsigned char  {<BR>
-            &emsp;center_of_gravity = 1, <tab id=t1>// Decay = 1 / (1 + value), <tab id=t2>for value >= 0<BR>
-            &emsp;span = 2,              <tab to=t1>// Decay = 2 / (1 + value), <tab to=t2>for value >= 1<BR>
-            &emsp;halflife = 3,          <tab to=t1>// Decay = 1 − exp(log(0.5) / value), <tab to=t2>for value > 0<BR>
-            &emsp;fixed = 4,             <tab to=t1>// Decay = value, <tab to=t2>for 0 < value <= 1<BR>
-        };</font>
+            center_of_gravity = 1, // Decay = 1 / (1 + value),           for value >= 0<BR>
+            span = 2,              // Decay = 2 / (1 + value),           for value >= 1<BR>
+            halflife = 3,          // Decay = 1 − exp(log(0.5) / value), for value > 0<BR>
+            fixed = 4,             // Decay = value,                     for 0 < value <= 1<BR>
+        };</PRE></font>
       </td>
       <td width="60%">
         This spec determines how an exponentially moving stat decays.

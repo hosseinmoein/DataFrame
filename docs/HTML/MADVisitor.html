@@ -33,12 +33,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        enum class mad_type : unsigned char  {<BR>
-            &emsp;mean_abs_dev_around_mean = 1,     // Mean of absolute distances from mean <BR>
-            &emsp;mean_abs_dev_around_median = 2,   // Mean of absolute distances from median<BR>
-            &emsp;median_abs_dev_around_mean = 3,   // Median of absolute distances from mean<BR>
-            &emsp;median_abs_dev_around_median = 4, // Median of absolute distances from median<BR>
-        }; </font>
+        <PRE>
+enum class mad_type : unsigned char  {
+    mean_abs_dev_around_mean = 1,     // Mean of absolute distances from mean
+    mean_abs_dev_around_median = 2,   // Mean of absolute distances from median
+    median_abs_dev_around_mean = 3,   // Median of absolute distances from mean
+    median_abs_dev_around_median = 4, // Median of absolute distances from median
+};</PRE< </font>
       </td>
       <td width="50%">
         This defines different ways of calculating averages around averages,

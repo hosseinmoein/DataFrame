@@ -33,11 +33,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        enum class drop_policy : unsigned char  {<BR>
-            &emsp;all = 1,      // Remove row if all columns are nan<BR>
-            &emsp;any = 2,      // Remove row if any column is nan<BR>
-            &emsp;threshold = 3 // Remove row if threshold number of columns are nan<BR>
-        }; </font>
+        <PRE>
+enum class drop_policy : unsigned char  {
+    all = 1,      // Remove row if all columns are nan
+    any = 2,      // Remove row if any column is nan
+    threshold = 3 // Remove row if threshold number of columns are nan
+}; </PRE> </font>
       </td>
       <td>
         This policy specifies what rows to drop/remove based on missing column data<BR>

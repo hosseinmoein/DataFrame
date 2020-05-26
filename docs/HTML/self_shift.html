@@ -33,10 +33,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        enum class shift_policy : unsigned char  {<BR>
-            &emsp;down = 1, // Shift/rotate the content of all columns down, keep index unchanged<BR>
-            &emsp;up = 2,   // Shift/rotate the content of all columns up, keep index unchanged<BR>
-        }; </font>
+        <PRE>
+enum class shift_policy : unsigned char  {
+    down = 1, // Shift/rotate the content of all columns down, keep index unchanged
+    up = 2,   // Shift/rotate the content of all columns up, keep index unchanged
+}; </PRE> </font>
       </td>
       <td width="50%">
         This policy is relative to a tabular data structure<BR>

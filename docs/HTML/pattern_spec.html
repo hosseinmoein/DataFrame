@@ -32,15 +32,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        enum class pattern_spec : unsigned char  {<BR>
-            &emsp;monotonic_increasing = 1,           // i >= j<BR>
-            &emsp;strictly_monotonic_increasing = 2,  // i > j<BR>
-            &emsp;monotonic_decreasing = 3,           // i <= j<BR>
-            &emsp;strictly_monotonic_decreasing = 4,  // i < j<BR>
-            &emsp;normally_distributed = 6,           // 68%-95%-99.7% 3-sigma rule to approximate<BR>
-            &emsp;standard_normally_distributed = 7,  // Same as normal + 0/1.0 check<BR>
-            &emsp;lognormally_distributed = 8,        // Uses the above normal test on the log(x) + Skew and Kurtosis<BR>
-        }; </font>
+        <PRE>
+enum class pattern_spec : unsigned char  {
+    monotonic_increasing = 1,          // i >= j
+    strictly_monotonic_increasing = 2, // i > j
+    monotonic_decreasing = 3,          // i <= j
+    strictly_monotonic_decreasing = 4, // i < j
+    normally_distributed = 6,          // 68%-95%-99.7% 3-sigma rule to approximate
+    standard_normally_distributed = 7, // Same as normal + 0/1.0 check
+    lognormally_distributed = 8,       // Uses the above normal test on the log(x) + Skew and Kurtosis
+}; </PRE> </font>
       </td>
       <td>
         Enumerated type to specify different patterns to detect.

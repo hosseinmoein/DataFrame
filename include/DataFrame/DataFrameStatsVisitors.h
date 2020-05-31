@@ -1375,14 +1375,15 @@ struct ReturnVisitor  {
     DEFINE_VISIT_BASIC_TYPES_3
 
     explicit ReturnVisitor (return_policy rp) : ret_p_(rp)  {   }
-    inline void operator() (const std::vector<index_type> &idx,
-                            const std::vector<value_type> &column)  {
+
+    template <typename K, typename H>
+    inline void operator() (const K &idx, const H &column)  {
 
         const size_type col_len = std::min(idx.size(), column.size());
 
         if (col_len < 3)  return;
 
-        std::vector<value_type> tmp_result;
+        result_type tmp_result;
 
         tmp_result.reserve(col_len);
 
@@ -1398,9 +1399,9 @@ struct ReturnVisitor  {
         }
         else if (ret_p_ == return_policy::percentage)  {
             auto    func =
-            [](value_type lhs, value_type rhs) -> value_type  {
-                return ((lhs - rhs) / rhs);
-            };
+                [](value_type lhs, value_type rhs) -> value_type  {
+                    return ((lhs - rhs) / rhs);
+                };
 
             std::adjacent_difference (column.begin(), column.end(),
                                       std::back_inserter (tmp_result),
@@ -1408,9 +1409,9 @@ struct ReturnVisitor  {
         }
         else if (ret_p_ == return_policy::monetary)  {
             auto    func =
-            [](value_type lhs, value_type rhs) -> value_type  {
-                return (lhs - rhs);
-            };
+                [](value_type lhs, value_type rhs) -> value_type  {
+                    return (lhs - rhs);
+                };
 
             std::adjacent_difference (column.begin(), column.end(),
                                       std::back_inserter (tmp_result),

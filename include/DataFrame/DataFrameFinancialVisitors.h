@@ -803,6 +803,89 @@ private:
     const double    max_volume_;
 };
 
+// ----------------------------------------------------------------------------
+
+// This is meaningfull, only if the return series is close to normal
+// distribution
+//
+template<typename T,
+         typename I = unsigned long,
+         typename =
+             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+struct SharpeRatioVisitor {
+
+    DEFINE_VISIT_BASIC_TYPES_2
+
+    explicit
+    SharpeRatioVisitor (return_policy rp, bool biased = false)
+        : ret_p_(rp), biased_ (biased) {  }
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx, const H &asset_ret, const H &benchmark_ret)  {
+
+        const size_type vec_s = asset_ret.size();
+		
+        if (vec_s != benchmark_ret.size() || vec_s < 4)  {
+            char    err[512];
+
+            sprintf (err,
+#ifdef _WIN32
+                     "SharpeRatioVisitor: Size of asset = %zu and "
+                     "benchmark = %zu time-series do not match.",
+#else
+                     "SharpeRatioVisitor: Size of asset = %lu and "
+                     "benchmark = %lu time-series do not match.",
+#endif // _WIN32
+                     vec_s, benchmark_ret.size());
+            throw NotFeasible (err);
+        }
+
+        value_type                          cum_return { 0.0 };
+        StdVisitor<value_type, index_type>  _std(biased_);
+        auto                                ret_runc =
+            (ret_p_ == return_policy::log ?
+                [](const value_type &lhs,
+                   const value_type &rhs) -> value_type  {
+                    return (::log(lhs / rhs));
+                }
+             : (ret_p_ == return_policy::percentage ?
+                [](const value_type &lhs,
+                   const value_type &rhs) -> value_type  {
+                    return ((lhs - rhs) / rhs);
+                }
+             : // ret_p_ == return_policy::monetary
+                [](const value_type &lhs,
+                   const value_type &rhs) -> value_type  {
+                    return (lhs - rhs);
+                }));
+        auto                                a_citer = asset_ret.begin() + 1;
+
+        _std.pre();
+        _std (0, *(asset_ret.begin()) - *(benchmark_ret.begin()));
+        for (auto b_citer = benchmark_ret.begin() + 1;
+             b_citer != benchmark_ret.end(); ++a_citer, ++b_citer)  {
+            _std (0, *a_citer - *b_citer);
+            cum_return += ret_func(*a_citer - *b_citer,
+                                   *(a_citer - 1) - *(b_citer - 1));
+        }
+        _std.post();
+        cum_return -= *(asset_ret.begin()) - *(benchmark_ret.begin());
+        result_ = (cum_return / value_type(vec_s - 1)) / _std.get_result();
+    }
+
+    inline void pre ()  { result_ = 0; }
+    inline void post ()  {  }
+    inline result_type get_result () const  { return (result_); }
+
+private:
+
+    const return_policy ret_p_;
+    const bool          biased_;
+    value_type          sharpe_ { 0 };
+    result_type         result_ { 0 };
+};
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

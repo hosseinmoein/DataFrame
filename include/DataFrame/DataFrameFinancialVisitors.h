@@ -817,61 +817,42 @@ struct SharpeRatioVisitor {
     DEFINE_VISIT_BASIC_TYPES_2
 
     explicit
-    SharpeRatioVisitor (return_policy rp, bool biased = false)
-        : ret_p_(rp), biased_ (biased) {  }
+    SharpeRatioVisitor(bool biased = false) : biased_ (biased) {  }
 
     template <typename K, typename H>
     inline void
     operator() (const K &idx, const H &asset_ret, const H &benchmark_ret)  {
 
         const size_type vec_s = asset_ret.size();
-		
-        if (vec_s != benchmark_ret.size() || vec_s < 4)  {
+
+        if (vec_s != benchmark_ret.size() || vec_s < 3)  {
             char    err[512];
 
             sprintf (err,
 #ifdef _WIN32
                      "SharpeRatioVisitor: Size of asset = %zu and "
-                     "benchmark = %zu time-series do not match.",
+                     "benchmark = %zu time-series are not feasible.",
 #else
                      "SharpeRatioVisitor: Size of asset = %lu and "
-                     "benchmark = %lu time-series do not match.",
+                     "benchmark = %lu time-series are not feasible.",
 #endif // _WIN32
                      vec_s, benchmark_ret.size());
             throw NotFeasible (err);
         }
 
         value_type                          cum_return { 0.0 };
-        StdVisitor<value_type, index_type>  _std(biased_);
-        auto                                ret_runc =
-            (ret_p_ == return_policy::log ?
-                [](const value_type &lhs,
-                   const value_type &rhs) -> value_type  {
-                    return (::log(lhs / rhs));
-                }
-             : (ret_p_ == return_policy::percentage ?
-                [](const value_type &lhs,
-                   const value_type &rhs) -> value_type  {
-                    return ((lhs - rhs) / rhs);
-                }
-             : // ret_p_ == return_policy::monetary
-                [](const value_type &lhs,
-                   const value_type &rhs) -> value_type  {
-                    return (lhs - rhs);
-                }));
-        auto                                a_citer = asset_ret.begin() + 1;
+        StdVisitor<value_type, index_type>  std_vis(biased_);
+        auto                                a_citer = asset_ret.begin();
+        const index_type                    &index_val = idx[0]; // Ignored
 
-        _std.pre();
-        _std (0, *(asset_ret.begin()) - *(benchmark_ret.begin()));
-        for (auto b_citer = benchmark_ret.begin() + 1;
+        std_vis.pre();
+        for (auto b_citer = benchmark_ret.begin();
              b_citer != benchmark_ret.end(); ++a_citer, ++b_citer)  {
-            _std (0, *a_citer - *b_citer);
-            cum_return += ret_func(*a_citer - *b_citer,
-                                   *(a_citer - 1) - *(b_citer - 1));
+            std_vis (index_val, *a_citer - *b_citer);
+            cum_return += *a_citer - *b_citer;
         }
-        _std.post();
-        cum_return -= *(asset_ret.begin()) - *(benchmark_ret.begin());
-        result_ = (cum_return / value_type(vec_s - 1)) / _std.get_result();
+        std_vis.post();
+        result_ = (cum_return / value_type(vec_s)) / std_vis.get_result();
     }
 
     inline void pre ()  { result_ = 0; }
@@ -880,10 +861,8 @@ struct SharpeRatioVisitor {
 
 private:
 
-    const return_policy ret_p_;
-    const bool          biased_;
-    value_type          sharpe_ { 0 };
-    result_type         result_ { 0 };
+    const bool  biased_;
+    result_type result_ { 0 };
 };
 
 } // namespace hmdf

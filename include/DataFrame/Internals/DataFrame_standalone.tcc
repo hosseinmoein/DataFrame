@@ -566,7 +566,7 @@ inline static void _get_mem_numbers_(const VectorView<T> &container,
 // ----------------------------------------------------------------------------
 
 template<typename T>
-inline static void _get_mem_numbers_(const VectorPtrView<T> &container, 
+inline static void _get_mem_numbers_(const VectorPtrView<T> &container,
                                      size_t &used_mem,
                                      size_t &capacity_mem) {
 

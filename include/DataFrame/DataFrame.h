@@ -1189,7 +1189,7 @@ public: // Read/access and slicing interfaces
     // This function supports Python-like negative indexing. That is why the
     // locations vector type is long.
     //
-    // NOTE: The negative indixing is relative to the "index" column, which
+    // NOTE: The negative indexing is relative to the "index" column, which
     //       may not be the size as all other column.
     //       The returned DataFrame is in the same order as locations parameter
     //
@@ -1948,7 +1948,7 @@ public:  // Operators
 
     // It compares self with rhs. If both have the sanme indices,
     // same number of columns, same names for each column, and all
-    // columns are eual, then it retunrs true. Otherwise it returns false
+    // columns are equal, then it returns true. Otherwise it returns false
     //
     // Ts:
     //   List all the types of all data columns. A type should be specified in
@@ -1958,7 +1958,7 @@ public:  // Operators
     bool
     is_equal(const DataFrame &rhs) const;
 
-    // It iterates over all indices in rhs and modifyies all the data
+    // It iterates over all indices in rhs and modifies all the data
     // columns in self that correspond to the given index value.
     // If not already_sorted, both rhs and self will be sorted by index
     // It returns a reference to self
@@ -2083,7 +2083,7 @@ public:  // Utilities and miscellaneous
     // This static method generates a vector of sequential values of
     // IndexType that could be fed directly to one of the load methods.
     // The values are incremented by "increment".
-    // The index type must be incrementable.
+    // The index type must be increment-able.
     // If by incrementing "start_value" by increment you would never reach
     // "end_value", the behavior will be undefined.
     // It returns a vector of IndexType values.
@@ -2255,7 +2255,7 @@ private:  // Static helper functions
                  std::is_arithmetic<IndexType>::value>::type* = nullptr>
     static void
     fill_missing_linter_(std::vector<T> &vec,
-                         const IndexVecType &inedx,
+                         const IndexVecType &index,
                          int limit);
 
     template<typename T,

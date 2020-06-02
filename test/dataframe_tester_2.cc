@@ -395,7 +395,7 @@ static void test_FactorizeVisitor()  {
     df.load_column("int_col",
                    std::move(intvec),
                    nan_policy::dont_pad_with_nans);
-    
+
     FactorizeVisitor<double>    fact([] (const double &f) -> bool {
                                          return (f > 106.0 && f < 114.0);
                                      });

@@ -1,0 +1,86 @@
+<!--
+Copyright (c) 2019-2022, Hossein Moein
+All rights reserved.
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+* Redistributions of source code must retain the above copyright
+  notice, this list of conditions and the following disclaimer.
+* Redistributions in binary form must reproduce the above copyright
+  notice, this list of conditions and the following disclaimer in the
+  documentation and/or other materials provided with the distribution.
+* Neither the name of Hossein Moein and/or the DataFrame nor the
+  names of its contributors may be used to endorse or promote products
+  derived from this software without specific prior written permission.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL Hossein Moein BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+<!DOCTYPE html>
+<html>
+<body>
+
+  <table align="center" border="1">
+
+    <tr bgcolor="lightblue">
+      <th>Signature</th> <th>Description</th> <th>Parameters</th>
+    </tr>
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        template&lt;typename T, typename I = unsigned long, typename = typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;<BR>
+        struct SharpeRatioVisitor; </font>
+      </td>
+      <td width="50%">
+        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_action_visit() interface.<BR>
+        This functor class calculates Sharpe ratio given two columns representing asset returns and benchmark returns (or risk-free rate). Note that Sharpe ratio makes sense only if asset returns are normally distributed.<BR>
+        <I> explicit SharpeRatioVisitor(bool biased = false);</I><BR>
+        See this document and dataframe_tester_2.cc for examples.
+      </td>
+      <td width="15%">
+        <B>T</B>: Column data type.<BR>
+        <B>I</B>: Index type.
+      </td>
+    </tr>
+
+  </table>
+
+<pre style='color:#000000;background:#ffffff;'><span style='color:#800000; font-weight:bold; '>static</span> <span style='color:#800000; font-weight:bold; '>void</span> test_SharpeRatioVisitor<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span>  <span style='color:#800080; '>{</span>
+
+    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>cout</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#800000; '>"</span><span style='color:#0f69ff; '>\n</span><span style='color:#0000e6; '>Testing SharpeRatioVisitor{  } ...</span><span style='color:#800000; '>"</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>endl</span><span style='color:#800080; '>;</span>
+
+    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>vector</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>unsigned</span> <span style='color:#800000; font-weight:bold; '>long</span><span style='color:#800080; '>></span>  idx <span style='color:#808030; '>=</span>
+        <span style='color:#800080; '>{</span> <span style='color:#008c00; '>123450</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123451</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123452</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123453</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123454</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123455</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123456</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123457</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123458</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123459</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123460</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123461</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123462</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123466</span><span style='color:#808030; '>,</span>
+          <span style='color:#008c00; '>123467</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123468</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123469</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123470</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123471</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123472</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123473</span> <span style='color:#800080; '>}</span><span style='color:#800080; '>;</span>
+    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>vector</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span>         d1 <span style='color:#808030; '>=</span>
+        <span style='color:#800080; '>{</span> <span style='color:#008000; '>2.5</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>2.45</span><span style='color:#808030; '>,</span> <span style='color:#808030; '>-</span><span style='color:#008000; '>0.65</span><span style='color:#808030; '>,</span> <span style='color:#808030; '>-</span><span style='color:#008000; '>0.1</span><span style='color:#808030; '>,</span> <span style='color:#808030; '>-</span><span style='color:#008000; '>1.1</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>1.87</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.98</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.34</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>1.56</span><span style='color:#808030; '>,</span> <span style='color:#808030; '>-</span><span style='color:#008000; '>0.34</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>2.3</span><span style='color:#808030; '>,</span> <span style='color:#808030; '>-</span><span style='color:#008000; '>0.34</span><span style='color:#808030; '>,</span> <span style='color:#808030; '>-</span><span style='color:#008000; '>1.9</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.387</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.123</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>1.06</span><span style='color:#808030; '>,</span> <span style='color:#808030; '>-</span><span style='color:#008000; '>0.65</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>2.03</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.4</span><span style='color:#808030; '>,</span> <span style='color:#808030; '>-</span><span style='color:#008000; '>1.0</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.59</span> <span style='color:#800080; '>}</span><span style='color:#800080; '>;</span>
+    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>vector</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span>         d2 <span style='color:#808030; '>=</span>
+        <span style='color:#800080; '>{</span> <span style='color:#008000; '>0.2</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.58</span><span style='color:#808030; '>,</span> <span style='color:#808030; '>-</span><span style='color:#008000; '>0.60</span><span style='color:#808030; '>,</span> <span style='color:#808030; '>-</span><span style='color:#008000; '>0.08</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.05</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.87</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.2</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.4</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.5</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.06</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.3</span><span style='color:#808030; '>,</span> <span style='color:#808030; '>-</span><span style='color:#008000; '>0.34</span><span style='color:#808030; '>,</span> <span style='color:#808030; '>-</span><span style='color:#008000; '>0.9</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.8</span><span style='color:#808030; '>,</span> <span style='color:#808030; '>-</span><span style='color:#008000; '>0.4</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.86</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.01</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>1.02</span><span style='color:#808030; '>,</span> <span style='color:#808030; '>-</span><span style='color:#008000; '>0.02</span><span style='color:#808030; '>,</span> <span style='color:#808030; '>-</span><span style='color:#008000; '>1.5</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.2</span> <span style='color:#800080; '>}</span><span style='color:#800080; '>;</span>
+    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>vector</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>int</span><span style='color:#800080; '>></span>            i1 <span style='color:#808030; '>=</span> <span style='color:#800080; '>{</span> <span style='color:#008c00; '>22</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>23</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>24</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>25</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>99</span> <span style='color:#800080; '>}</span><span style='color:#800080; '>;</span>
+    MyDataFrame                 df<span style='color:#800080; '>;</span>
+
+    df<span style='color:#808030; '>.</span>load_data<span style='color:#808030; '>(</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>move</span><span style='color:#808030; '>(</span>idx<span style='color:#808030; '>)</span><span style='color:#808030; '>,</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span>make_pair<span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>asset</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> d1<span style='color:#808030; '>)</span><span style='color:#808030; '>,</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span>make_pair<span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>benchmark</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> d2<span style='color:#808030; '>)</span><span style='color:#808030; '>,</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span>make_pair<span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>col_3</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> i1<span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+
+    SharpeRatioVisitor<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span>  sh_ratio<span style='color:#800080; '>;</span>
+    <span style='color:#800000; font-weight:bold; '>const</span> <span style='color:#800000; font-weight:bold; '>auto</span>                  result <span style='color:#808030; '>=</span> df<span style='color:#808030; '>.</span>single_act_visit<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#808030; '>,</span> <span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>asset</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>benchmark</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> sh_ratio<span style='color:#808030; '>)</span><span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+
+    assert<span style='color:#808030; '>(</span><span style='color:#603000; '>fabs</span><span style='color:#808030; '>(</span>result <span style='color:#808030; '>-</span> <span style='color:#008000; '>0.425631</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>&lt;</span> <span style='color:#008000; '>0.00001</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+<span style='color:#800080; '>}</span>
+</pre>
+<!--Created using ToHtml.com on 2020-06-01 18:47:44 UTC -->
+
+</body>
+</html>
+
+<!--
+Local Variables:
+mode:HTML
+tab-width:4
+c-basic-offset:4
+End:
+-->

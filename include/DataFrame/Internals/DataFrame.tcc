@@ -210,7 +210,7 @@ fill_missing_midpoint_(std::vector<T> &vec, int limit, size_type col_num)  {
 
     for (size_type i = 1; i < vec_size - 1; ++i)  {
         if (limit >= 0 && count >= limit)  break;
-        
+
         if (! _is_nan<T>(vec[i]))
             last_value = vec[i];
         else if (! _is_nan<T>(last_value))  {

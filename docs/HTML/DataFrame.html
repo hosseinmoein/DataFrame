@@ -25,6 +25,32 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <!DOCTYPE html>
 <html><body>
 
+<H1 style="text-align:center">DataFrame</H1>
+<P>
+  <font size="+2">DataFrame</font> is a templatized C++ class that provides functionalities similar to Python Pandas or R dara.frame.<BR>
+DataFrame class is defined as:
+<pre style='color:#000000;background:#ffffff;'><span style='color:#800000; font-weight:bold; '>template</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>typename</span> I<span style='color:#808030; '>,</span> <span style='color:#800000; font-weight:bold; '>typename</span> H<span style='color:#800080; '>></span>
+<span style='color:#800000; font-weight:bold; '>class</span> DataFrame;
+</pre>
+<!--Created using ToHtml.com on 2020-06-09 14:51:05 UTC -->
+  <I><B>I</I></B> specifies the index column type<BR>
+  <I><B>H</I></B> specifies a heterogenous vector type to contain DataFrame columns. <I>H</I> can only be:<BR>
+  <UL>
+    <LI><I>HeteroVector</I>: This is an actual heterogenous vector that would contain data. This will result in a "standard" data frame</LI>
+    <LI><I>HeteroPtrView</I>: This is a heterogenous vector view. It will result in a data frame view into a <B>disjoint</B> slice of another data frame.</LI>
+    <LI><I>HeteroView</I>: This is a heterogenous vector view. It will result in a data frame view into a <B>continuous</B> slice of another data frame. This view is slightly more efficient than <I>HeteroPtrView</I></LI>
+  </UL>
+  Some of the methods in DataFrame return another DataFrame or one of the above views depending on how you slice the original DataFrame.<BR>
+
+  DataFrame library interface is separated into two categories:
+  <OL>
+    <LI>Slicing & dicing, joining, and groupby'ing, ... the data</LI>
+    <LI>Analytical algorithms being statistical, machine-learning, financial analysis …</LI>
+  </OL>
+  I employ regular parameterized methods to implement item 1. For item 2., I chose the visitor pattern. Please see below and also examples
+</P>
+<HR>
+
 <P>
   <font size="+2">Code Examples</font> are in <I>test/dataframe_tester.cc</I> and <I>test/dataframe_tester_2.cc</I>. You should find at least one example for each feature.
 </P>
@@ -41,8 +67,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <font size="+2">Random Generators</font> are a set of convenient routines to generate random number.<BR>
 For the definition and defaults of <I>RandGenParams</I>, see this document and file <I>DataFrameTypes.h</I>
 </P>
-
-<BR><BR>
+<HR>
 
 <!-- CSS goes in the document HEAD or added to your external stylesheet -->
 <style type="text/css">

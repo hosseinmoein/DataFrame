@@ -41,7 +41,19 @@ DataFrame class is defined as:
     <LI><I>HeteroView</I>: This is a heterogenous vector view. It will result in a data frame view into a <B>continuous</B> slice of another data frame. This view is slightly more efficient than <I>HeteroPtrView</I></LI>
   </UL>
   Some of the methods in DataFrame return another DataFrame or one of the above views depending on how you slice the original DataFrame.<BR>
+  There are a few convenient typedef’s that are handy<BR>
+  <pre style='color:#000000;background:#ffffff;'><span style='color:#800000; font-weight:bold; '>template</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>typename</span> I<span style='color:#800080; '>></span>
+<span style='color:#800000; font-weight:bold; '>using</span> <B>StdDataFrame</B> <span style='color:#808030; '>=</span> DataFrame<span style='color:#800080; '>&lt;</span>I<span style='color:#808030; '>,</span> HeteroVector<span style='color:#800080; '>></span><span style='color:#800080; '>;</span>
 
+<span style='color:#800000; font-weight:bold; '>template</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>typename</span> I<span style='color:#800080; '>></span>
+<span style='color:#800000; font-weight:bold; '>using</span> <B>DataFrameView</B> <span style='color:#808030; '>=</span> DataFrame<span style='color:#800080; '>&lt;</span>I<span style='color:#808030; '>,</span> HeteroView<span style='color:#800080; '>></span><span style='color:#800080; '>;</span>
+
+<span style='color:#800000; font-weight:bold; '>template</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>typename</span> I<span style='color:#800080; '>></span>
+<span style='color:#800000; font-weight:bold; '>using</span> <B>DataFramePtrView</B> <span style='color:#808030; '>=</span> DataFrame<span style='color:#800080; '>&lt;</span>I<span style='color:#808030; '>,</span> HeteroPtrView<span style='color:#800080; '>></span><span style='color:#800080; '>;</span>
+</pre>
+<!--Created using ToHtml.com on 2020-06-10 15:24:27 UTC -->
+
+  <BR>
   DataFrame library interface is separated into two categories:
   <OL>
     <LI>Slicing & dicing, joining, and groupby'ing, ... the data</LI>

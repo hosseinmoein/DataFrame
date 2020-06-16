@@ -281,8 +281,7 @@ public:  // Load/append/remove interfaces
             [](const typename DataFrame<I, H>::IndexType &t_1,
                const typename DataFrame<I, H>::IndexType &t) ->
                    typename DataFrame<I, H>::size_type  {
-                return (
-                    static_cast<typename DataFrame<I, H>::size_type>(t - t_1));
+                return (static_cast<std::size_t>(t - t_1));
             });
 
     // It appends val to the end of the index column.

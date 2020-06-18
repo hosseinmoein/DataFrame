@@ -243,6 +243,18 @@ enum class pattern_spec : unsigned char  {
 
 // ----------------------------------------------------------------------------
 
+// Specification for RankVisitor
+// This specifies how to assign ranks to members of a column
+//
+enum class rank_policy : unsigned char  {
+    average = 1,  // Average of ranks, if an item is repeated
+    first = 2,    // First rank, if an item is repeated
+    last = 3,     // Last rank, if an item is repeated
+    actual = 4,   // The actual rank of each item based on stable sort
+};
+
+// ----------------------------------------------------------------------------
+
 template<typename T>
 struct  RandGenParams  {
     T   min_value { std::numeric_limits<T>::min() };

@@ -586,6 +586,73 @@ static void test_SharpeRatioVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_RankVisitor()  {
+
+    std::cout << "\nTesting RankVisitor{  } ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466,
+          123467, 123468, 123469, 123470, 123471, 123472, 123473 };
+    std::vector<double>         d1 =
+        { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+          20, 21 };
+    std::vector<double>         d2 =
+        { 10, 2, 3, 4, 5, 13, 7, 8, 9, 10, 1, 12, 13, 10, 15, 16, 17, 18, 19,
+          20, 13 };
+    std::vector<int>            i1 = { 22, 23, 24, 25, 99 };
+    MyDataFrame                 df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("d1_col", d1),
+                 std::make_pair("d2_col", d2),
+                 std::make_pair("col_3", i1));
+
+    RankVisitor<double> avg_rank_v(rank_policy::average);
+    RankVisitor<double> first_rank_v(rank_policy::first);
+    RankVisitor<double> last_rank_v(rank_policy::last);
+    RankVisitor<double> actual_rank_v(rank_policy::actual);
+    const auto          actual_result =
+        df.single_act_visit<double>("d1_col", actual_rank_v).get_result();
+    const auto          avg_result =
+        df.single_act_visit<double>("d1_col", avg_rank_v).get_result();
+    const auto          first_result =
+        df.single_act_visit<double>("d1_col", first_rank_v).get_result();
+    const auto          last_result =
+        df.single_act_visit<double>("d1_col", last_rank_v).get_result();
+
+    for (size_t i = 0; i < actual_result.size(); ++i)
+        assert(actual_result[i] == double(i));
+    assert(actual_result == avg_result);
+    assert(actual_result == last_result);
+    assert(actual_result == first_result);
+	
+    const auto          actual_result2 =
+        df.single_act_visit<double>("d2_col", actual_rank_v).get_result();
+    const auto          avg_result2 =
+        df.single_act_visit<double>("d2_col", avg_rank_v).get_result();
+    const auto          first_result2 =
+        df.single_act_visit<double>("d2_col", first_rank_v).get_result();
+    const auto          last_result2 =
+        df.single_act_visit<double>("d2_col", last_rank_v).get_result();
+
+    std::vector<double> ar_equal {8, 1, 2, 3, 4, 12, 5, 6, 7, 9, 0, 11, 13,
+                                  10, 15, 16, 17, 18, 19, 20, 14
+               };
+    assert(actual_result2 == ar_equal);
+    ar_equal = std::vector<double> {9, 1, 2, 3, 4, 13, 5, 6, 7, 9, 0, 11, 13,
+                                    9, 15, 16, 17, 18, 19, 20, 13};
+    assert(avg_result2 == ar_equal);
+    ar_equal = std::vector<double> {8, 1, 2, 3, 4, 12, 5, 6, 7, 8, 0, 11, 12,
+                                    8, 15, 16, 17, 18, 19, 20, 12};
+    assert(first_result2 == ar_equal);
+    ar_equal = std::vector<double> {10, 1, 2, 3, 4, 14, 5, 6, 7, 10, 0, 11, 14,
+                                    10, 15, 16, 17, 18, 19, 20, 14};
+    assert(last_result2 == ar_equal);
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int argc, char *argv[]) {
 
     test_get_reindexed();
@@ -598,6 +665,7 @@ int main(int argc, char *argv[]) {
     test_pattern_match();
     test_ClipVisitor();
     test_SharpeRatioVisitor();
+    test_RankVisitor();
 
     return (0);
 }

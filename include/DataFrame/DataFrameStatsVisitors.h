@@ -1249,6 +1249,97 @@ private:
 
 // ----------------------------------------------------------------------------
 
+// This ranks the values in the column based on rank policy starting from 0.
+//
+template<typename T, typename I = unsigned long>
+struct RankVisitor  {
+
+public:
+
+    DEFINE_VISIT_BASIC_TYPES
+    using result_type = std::vector<double>;
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx, const H &column)  {
+
+        const size_type         c_len = column.size();
+        std::vector<size_type>  rank_vec(c_len);
+
+        std::iota(rank_vec.begin(), rank_vec.end(), 0);
+        std::stable_sort(rank_vec.begin(), rank_vec.end(),
+                         [&column](size_type lhs, size_type rhs) -> bool {
+                             return (column[lhs] < column[rhs]);
+                         });
+        result_.resize(c_len);
+
+        const value_type    *prev_value = &(column[rank_vec[0]]);
+
+        for (size_type i = 0; i < c_len; ++i)  {
+            double      avg_val = i;
+            double      first_val = i;
+            double      last_val = i;
+            size_type   j = i + 1;
+
+            for ( ; j < c_len && *prev_value == column[rank_vec[j]]; ++j)  {
+                last_val = j;
+                avg_val += j;
+            }
+            avg_val /= double(j - i);
+            for (; i < c_len && i < j; ++i)   {
+                switch(policy_)  {
+                case rank_policy::average:
+                    result_[rank_vec[i]] = avg_val;
+                    break;
+                case rank_policy::first:
+                    result_[rank_vec[i]] = first_val;
+                    break;
+                case rank_policy::last:
+                    result_[rank_vec[i]] = last_val;
+                    break;
+                case rank_policy::actual:
+                    result_[rank_vec[i]] = i;
+                    break;
+                }
+            }
+            prev_value = &(column[rank_vec[i]]);
+            i -= 1;  // Because the outer loop does ++i
+        }
+    }
+
+    explicit
+    RankVisitor(rank_policy p = rank_policy::actual) : policy_(p)  {   }
+
+    inline void pre ()  { result_.clear(); }
+    inline void post ()  {  }
+    inline const result_type &get_result () const  { return (result_); }
+
+private:
+
+    const rank_policy   policy_;
+    result_type         result_ { };
+};
+
+// ----------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // It factorizes the given column into a vector of Booleans based on the
 // result of the given function.
 //

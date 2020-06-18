@@ -1322,24 +1322,6 @@ private:
 
 // ----------------------------------------------------------------------------
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // It factorizes the given column into a vector of Booleans based on the
 // result of the given function.
 //

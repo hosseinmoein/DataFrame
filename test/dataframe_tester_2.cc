@@ -626,7 +626,7 @@ static void test_RankVisitor()  {
     assert(actual_result == avg_result);
     assert(actual_result == last_result);
     assert(actual_result == first_result);
-	
+
     const auto          actual_result2 =
         df.single_act_visit<double>("d2_col", actual_rank_v).get_result();
     const auto          avg_result2 =

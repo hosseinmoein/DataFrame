@@ -627,13 +627,13 @@ static void test_RankVisitor()  {
     assert(actual_result == last_result);
     assert(actual_result == first_result);
 
-    const auto          actual_result2 =
+    const auto  actual_result2 =
         df.single_act_visit<double>("d2_col", actual_rank_v).get_result();
-    const auto          avg_result2 =
+    const auto  avg_result2 =
         df.single_act_visit<double>("d2_col", avg_rank_v).get_result();
-    const auto          first_result2 =
+    const auto  first_result2 =
         df.single_act_visit<double>("d2_col", first_rank_v).get_result();
-    const auto          last_result2 =
+    const auto  last_result2 =
         df.single_act_visit<double>("d2_col", last_rank_v).get_result();
 
     std::vector<double> ar_equal {8, 1, 2, 3, 4, 12, 5, 6, 7, 9, 0, 11, 13,

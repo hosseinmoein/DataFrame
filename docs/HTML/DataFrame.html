@@ -110,7 +110,7 @@ table.hovertable td {
 }
 </style>
 
-  <H2 style="text-align:center">Table of Features</H2>
+  <H2 style="text-align:center">Table of Features (with Code Samples)</H2>
   <table align="center" class="hovertable">
 
     <tr>
@@ -625,8 +625,8 @@ table.hovertable td {
     </tr>
 
   </table>
-
-  <BR><BR>
+<HR>
+  <BR>
 
   <H1><font color="blue">Motivation</font></H1>
   <P>
@@ -636,116 +636,7 @@ table.hovertable td {
     Mainly because of these factors, I implemented the C++ DataFrame.<BR>
     <I>I welcome all contributions from people with expertise, interest, and time to do it. I will add more functionalities from time to time, but currently my spare time is limited.</I>
   </P>
-
-  <H1><font color="blue">Code Sample</font></H1>
-<P>
-  <pre style='color:#000000;background:#ffffff;'><span style='color:#800000; font-weight:bold; '>using</span> <span style='color:#800000; font-weight:bold; '>namespace</span> hmdf<span style='color:#800080; '>;</span>
- 
-<span style='color:#696969; '>// Defines a DataFrame with unsigned long index type that used std::vector</span>
-<span style='color:#800000; font-weight:bold; '>using</span> MyDataFrame <span style='color:#808030; '>=</span> StdDataFrame<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>unsigned</span> <span style='color:#800000; font-weight:bold; '>long</span><span style='color:#800080; '>></span><span style='color:#800080; '>;</span>
- 
-MyDataFrame  df<span style='color:#800080; '>;</span>
-<span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>vector</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>int</span><span style='color:#800080; '>></span>  intvec <span style='color:#808030; '>=</span> <span style='color:#800080; '>{</span> <span style='color:#008c00; '>1</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>2</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>3</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>4</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>5</span> <span style='color:#800080; '>}</span><span style='color:#800080; '>;</span>
-<span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>vector</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span>  dblvec <span style='color:#808030; '>=</span> <span style='color:#800080; '>{</span> <span style='color:#008000; '>1.2345</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>2.2345</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>3.2345</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>4.2345</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>5.2345</span> <span style='color:#800080; '>}</span><span style='color:#800080; '>;</span>
-<span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>vector</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span>  dblvec2 <span style='color:#808030; '>=</span> <span style='color:#800080; '>{</span> <span style='color:#008000; '>0.998</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.3456</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.056</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.15678</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.00345</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.923</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.06743</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.1</span> <span style='color:#800080; '>}</span><span style='color:#800080; '>;</span>
-<span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>vector</span><span style='color:#800080; '>&lt;</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>string</span><span style='color:#800080; '>></span>  strvec <span style='color:#808030; '>=</span> <span style='color:#800080; '>{</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>Some string</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>some string 2</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>some string 3</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>some string 4</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>some string 5</span><span style='color:#800000; '>"</span> <span style='color:#800080; '>}</span><span style='color:#800080; '>;</span>
-<span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>vector</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>unsigned</span> <span style='color:#800000; font-weight:bold; '>long</span><span style='color:#800080; '>></span>  ulgvec <span style='color:#808030; '>=</span> <span style='color:#800080; '>{</span> <span style='color:#008c00; '>1</span><span style='color:#006600; '>UL</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>2</span><span style='color:#006600; '>UL</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>3</span><span style='color:#006600; '>UL</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>4</span><span style='color:#006600; '>UL</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>5</span><span style='color:#006600; '>UL</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>8</span><span style='color:#006600; '>UL</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>7</span><span style='color:#006600; '>UL</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>6</span><span style='color:#006600; '>UL</span> <span style='color:#800080; '>}</span>
-<span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>vector</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>unsigned</span> <span style='color:#800000; font-weight:bold; '>long</span><span style='color:#800080; '>></span>  xulgvec <span style='color:#808030; '>=</span> ulgvec<span style='color:#800080; '>;</span>
- 
-<span style='color:#696969; '>// This is only one way of loading data into the DataFrame. There are</span>
-<span style='color:#696969; '>// many different ways of doing it. Please see DataFrame.h and</span>
-<span style='color:#696969; '>// dataframe_tester.cc</span>
-<span style='color:#800000; font-weight:bold; '>int</span> rc <span style='color:#808030; '>=</span> df<span style='color:#808030; '>.</span>load_data<span style='color:#808030; '>(</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>move</span><span style='color:#808030; '>(</span>ulgvec<span style='color:#808030; '>)</span><span style='color:#808030; '>,</span>
-                      <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span>make_pair<span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>int_col</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> intvec<span style='color:#808030; '>)</span><span style='color:#808030; '>,</span>
-                      <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span>make_pair<span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>dbl_col</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> dblvec<span style='color:#808030; '>)</span><span style='color:#808030; '>,</span>
-                      <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span>make_pair<span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>dbl_col_2</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> dblvec2<span style='color:#808030; '>)</span><span style='color:#808030; '>,</span>
-                      <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span>make_pair<span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>str_col</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> strvec<span style='color:#808030; '>)</span><span style='color:#808030; '>,</span>
-                      <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span>make_pair<span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>ul_col</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> xulgvec<span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
-
-<span style='color:#696969; '>// Sort the Frame by index</span>
-df<span style='color:#808030; '>.</span><span style='color:#603000; '>sort</span><span style='color:#800080; '>&lt;</span>MyDataFrame<span style='color:#800080; '>::</span>IndexType<span style='color:#808030; '>,</span> <span style='color:#800000; font-weight:bold; '>int</span><span style='color:#808030; '>,</span> <span style='color:#800000; font-weight:bold; '>double</span><span style='color:#808030; '>,</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>string</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>INDEX</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> sort_spec<span style='color:#800080; '>::</span>ascen<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
-<span style='color:#696969; '>// Sort the Frame by column “dbl_col_2”</span>
-df<span style='color:#808030; '>.</span><span style='color:#603000; '>sort</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#808030; '>,</span> <span style='color:#800000; font-weight:bold; '>int</span><span style='color:#808030; '>,</span> <span style='color:#800000; font-weight:bold; '>double</span><span style='color:#808030; '>,</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>string</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>dbl_col_2</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> sort_spec<span style='color:#800080; '>::</span>desce<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
- 
-<span style='color:#696969; '>// A functor to calculate mean, variance, skew, kurtosis, defined in </span>
-<span style='color:#696969; '>// DataFrameStatsVisitors.h file</span>
-StatsVisitor<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span>  stats_visitor<span style='color:#800080; '>;</span>
- 
-<span style='color:#696969; '>// Calculate the stats on column “dbl_col”</span>
-df<span style='color:#808030; '>.</span>visit<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>dbl_col</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> stats_visitor<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
-
-<span style='color:#696969; '>//</span>
-<span style='color:#696969; '>// Example code with Views</span>
-<span style='color:#696969; '>//</span>
-
-<span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>vector</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>unsigned</span> <span style='color:#800000; font-weight:bold; '>long</span><span style='color:#800080; '>></span>  idx <span style='color:#808030; '>=</span> <span style='color:#800080; '>{</span> <span style='color:#008c00; '>123450</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123451</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123452</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123450</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123455</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123450</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123449</span> <span style='color:#800080; '>}</span><span style='color:#800080; '>;</span>
-<span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>vector</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span>  d1 <span style='color:#808030; '>=</span> <span style='color:#800080; '>{</span> <span style='color:#008c00; '>1</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>2</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>3</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>4</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>5</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>6</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>7</span> <span style='color:#800080; '>}</span><span style='color:#800080; '>;</span>
-<span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>vector</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span>  d2 <span style='color:#808030; '>=</span> <span style='color:#800080; '>{</span> <span style='color:#008c00; '>8</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>9</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>10</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>11</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>12</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>13</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>14</span> <span style='color:#800080; '>}</span><span style='color:#800080; '>;</span>
-<span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>vector</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span>  d3 <span style='color:#808030; '>=</span> <span style='color:#800080; '>{</span> <span style='color:#008c00; '>15</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>16</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>17</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>18</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>19</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>20</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>21</span> <span style='color:#800080; '>}</span><span style='color:#800080; '>;</span>
-<span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>vector</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span>  d4 <span style='color:#808030; '>=</span> <span style='color:#800080; '>{</span> <span style='color:#008c00; '>22</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>23</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>24</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>25</span> <span style='color:#800080; '>}</span><span style='color:#800080; '>;</span>
-<span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>vector</span><span style='color:#800080; '>&lt;</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>string</span><span style='color:#800080; '>></span>  s1 <span style='color:#808030; '>=</span> <span style='color:#800080; '>{</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>11</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>22</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>33</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>xx</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>yy</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>gg</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>string</span><span style='color:#800000; '>"</span> <span style='color:#800080; '>}</span><span style='color:#800080; '>;</span>
-MyDataFrame<span style='color:#808030; '></span>  df2<span style='color:#800080; '>;</span>
- 
-df2<span style='color:#808030; '>.</span>load_data<span style='color:#808030; '>(</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>move</span><span style='color:#808030; '>(</span>idx<span style='color:#808030; '>)</span><span style='color:#808030; '>,</span>
-              <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span>make_pair<span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>col_1</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> d1<span style='color:#808030; '>)</span><span style='color:#808030; '>,</span>
-              <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span>make_pair<span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>col_2</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> d2<span style='color:#808030; '>)</span><span style='color:#808030; '>,</span>
-              <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span>make_pair<span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>col_3</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> d3<span style='color:#808030; '>)</span><span style='color:#808030; '>,</span>
-              <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span>make_pair<span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>col_4</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> d4<span style='color:#808030; '>)</span><span style='color:#808030; '>,</span>
-              <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span>make_pair<span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>col_str</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> s1<span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
-
-<span style='color:#800000; font-weight:bold; '>using</span> MyDataFrameView <span style='color:#808030; '>=</span> DataFrameView<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>unsigned</span> <span style='color:#800000; font-weight:bold; '>long</span><span style='color:#800080; '>></span><span style='color:#800080; '>;</span>
- 
-MyDataFrameView  dfv <span style='color:#808030; '>=</span> df2<span style='color:#808030; '>.</span>get_view_by_loc<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#808030; '>,</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>string</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span>Index2D<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>long</span><span style='color:#800080; '>></span> <span style='color:#ffffff; background:#dd0000; font-weight:bold; font-style:italic; '>{</span> <span style='color:#008c00; '>3</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>6</span> <span style='color:#ffffff; background:#dd0000; font-weight:bold; font-style:italic; '>}</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
- 
-dfv<span style='color:#808030; '>.</span>get_column<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>col_3</span><span style='color:#800000; '>"</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span><span style='color:#008c00; '>0</span><span style='color:#808030; '>]</span> <span style='color:#808030; '>=</span> <span style='color:#008000; '>88.0</span><span style='color:#800080; '>;</span>
-<span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>cout</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>After changing a value on view: </span><span style='color:#800000; '>"</span>
-          <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> dfv<span style='color:#808030; '>.</span>get_column<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>col_3</span><span style='color:#800000; '>"</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span><span style='color:#008c00; '>0</span><span style='color:#808030; '>]</span>
-          <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '> == </span><span style='color:#800000; '>"</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> df<span style='color:#808030; '>.</span>get_column<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>col_3</span><span style='color:#800000; '>"</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span><span style='color:#008c00; '>3</span><span style='color:#808030; '>]</span>
-          <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>endl</span><span style='color:#800080; '>;</span>
-
-<span style='color:#696969; '>//</span>
-<span style='color:#696969; '>// Example with multithreaded-safe code</span>
-<span style='color:#696969; '>//</span>
-
-<span style='color:#800000; font-weight:bold; '>const</span> <span style='color:#603000; '>size_t</span>    vec_size <span style='color:#808030; '>=</span> <span style='color:#008c00; '>100000</span><span style='color:#800080; '>;</span>
-<span style='color:#800000; font-weight:bold; '>auto</span>            do_work <span style='color:#808030; '>=</span> <span style='color:#808030; '>[</span>vec_size<span style='color:#808030; '>]</span><span style='color:#808030; '>(</span><span style='color:#808030; '>)</span> <span style='color:#800080; '>{</span>
-    MyDataFrame         df<span style='color:#800080; '>;</span>
-    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>vector</span><span style='color:#800080; '>&lt;</span><span style='color:#603000; '>size_t</span><span style='color:#800080; '>></span> vec<span style='color:#800080; '>;</span>
-
-    <span style='color:#800000; font-weight:bold; '>for</span> <span style='color:#808030; '>(</span><span style='color:#603000; '>size_t</span> i <span style='color:#808030; '>=</span> <span style='color:#008c00; '>0</span><span style='color:#800080; '>;</span> i <span style='color:#808030; '>&lt;</span> vec_size<span style='color:#800080; '>;</span> <span style='color:#808030; '>+</span><span style='color:#808030; '>+</span>i<span style='color:#808030; '>)</span>
-        vec<span style='color:#808030; '>.</span>push_back<span style='color:#808030; '>(</span>i<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
-
-    df<span style='color:#808030; '>.</span>load_data<span style='color:#808030; '>(</span>MyDataFrame<span style='color:#800080; '>::</span>gen_sequence_index<span style='color:#808030; '>(</span><span style='color:#008c00; '>0</span><span style='color:#808030; '>,</span> vec_size<span style='color:#808030; '>,</span> <span style='color:#008c00; '>1</span><span style='color:#808030; '>)</span><span style='color:#808030; '>,</span>
-                 <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span>make_pair<span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>col1</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> vec<span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
-
-    <span style='color:#696969; '>// This is an extremely inefficient way of doing it, especially in</span>
-    <span style='color:#696969; '>// a multithreaded program. Each “get_column” is a hash table</span>
-    <span style='color:#696969; '>// look up and in multithreaded programs requires a lock.</span>
-    <span style='color:#696969; '>// It is much more efficient to call “get_column” outside the loop</span>
-    <span style='color:#696969; '>// and loop over the referenced vector.</span>
-    <span style='color:#696969; '>// Here I am doing it this way to make sure synchronization</span>
-    <span style='color:#696969; '>// between threads are bulletproof.</span>
-    <span style='color:#800000; font-weight:bold; '>for</span> <span style='color:#808030; '>(</span><span style='color:#603000; '>size_t</span> i <span style='color:#808030; '>=</span> <span style='color:#008c00; '>0</span><span style='color:#800080; '>;</span> i <span style='color:#808030; '>&lt;</span> vec_size<span style='color:#800080; '>;</span> <span style='color:#808030; '>+</span><span style='color:#808030; '>+</span>i<span style='color:#808030; '>)</span>  <span style='color:#800080; '>{</span>
-        <span style='color:#800000; font-weight:bold; '>const</span> <span style='color:#603000; '>size_t</span>    j <span style='color:#808030; '>=</span> df<span style='color:#808030; '>.</span>get_column<span style='color:#800080; '>&lt;</span><span style='color:#603000; '>size_t</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>col1</span><span style='color:#800000; '>"</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span>i<span style='color:#808030; '>]</span><span style='color:#800080; '>;</span>
-
-        assert<span style='color:#808030; '>(</span>i <span style='color:#808030; '>=</span><span style='color:#808030; '>=</span> j<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
-    <span style='color:#800080; '>}</span>
-    df<span style='color:#808030; '>.</span>shrink_to_fit<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
-<span style='color:#800080; '>}</span><span style='color:#800080; '>;</span>
-
-SpinLock                    lock<span style='color:#800080; '>;</span>
-<span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>vector</span><span style='color:#800080; '>&lt;</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span>thread<span style='color:#800080; '>></span>    thr_vec<span style='color:#800080; '>;</span>
-
-<span style='color:#696969; '>// Use this lock to protect internal DataFrame static members</span>
-MyDataFrame<span style='color:#800080; '>::</span>set_lock<span style='color:#808030; '>(</span><span style='color:#808030; '>&amp;</span>lock<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
-<span style='color:#800000; font-weight:bold; '>for</span> <span style='color:#808030; '>(</span><span style='color:#603000; '>size_t</span> i <span style='color:#808030; '>=</span> <span style='color:#008c00; '>0</span><span style='color:#800080; '>;</span> i <span style='color:#808030; '>&lt;</span> <span style='color:#008c00; '>20</span><span style='color:#800080; '>;</span> <span style='color:#808030; '>+</span><span style='color:#808030; '>+</span>i<span style='color:#808030; '>)</span>
-    thr_vec<span style='color:#808030; '>.</span>push_back<span style='color:#808030; '>(</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span>thread<span style='color:#808030; '>(</span>do_work<span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
-<span style='color:#800000; font-weight:bold; '>for</span> <span style='color:#808030; '>(</span><span style='color:#603000; '>size_t</span> i <span style='color:#808030; '>=</span> <span style='color:#008c00; '>0</span><span style='color:#800080; '>;</span> i <span style='color:#808030; '>&lt;</span> <span style='color:#008c00; '>20</span><span style='color:#800080; '>;</span> <span style='color:#808030; '>+</span><span style='color:#808030; '>+</span>i<span style='color:#808030; '>)</span>
-    thr_vec<span style='color:#808030; '>[</span>i<span style='color:#808030; '>]</span><span style='color:#808030; '>.</span>join<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
-MyDataFrame<span style='color:#800080; '>::</span>remove_lock<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
-</pre>
-<!--Created using ToHtml.com on 2020-05-04 18:56:41 UTC -->
-  </P>
+<HR>
 
   <H1><font color="blue">Views</font></H1>
   <P>
@@ -753,6 +644,7 @@ MyDataFrame<span style='color:#800080; '>::</span>remove_lock<span style='color:
     There are certain things you cannot do in views. For example, you cannot add to delete columns, extend the index column, ...<BR>
     For more understanding, look at this document further and/or the test files.
   </P>
+<HR>
 
   <H1><font color="blue">Visitors</font></H1>
   <P>
@@ -763,12 +655,14 @@ MyDataFrame<span style='color:#800080; '>::</span>remove_lock<span style='color:
       </OL>
     See this document, <I>DataFrameStatsVisitors.h, DataFrameMLVisitors.h, DataFrameFinancialVisitors.h, DataFrameTransformVisitors.h</I>, and <I>test/dataframe_tester.cc</I> for more examples and documentation.
   </P>
+<HR>
 
   <H1><font color="blue">Random Generators</font></H1>
   <P>
     Random generators were added as a series of convenient stand-alone functions to generate random numbers (it covers all C++ standard distributions). You can seamlessly use these routines to generate random DataFrame columns.<BR>
     See this document and file <I>RandGen.h</I> and <I>dataframe_tester.cc.</I>
   </P>
+<HR>
 
   <H1><font color="blue">Code Structure</font></H1>
   <P>
@@ -783,6 +677,7 @@ MyDataFrame<span style='color:#800080; '>::</span>remove_lock<span style='color:
     <BR>
     <font size="+2">test</font> directory contains all the test source files, mocked data files, and test output files. The main test source file is <I>dataframe_tester.cc.</I> It contains test cases for all functionalities of DataFrame. It is not in a very organized structure. I plan to make the test cases more organized.
   </P>
+<HR>
 
   <H1><font color="blue">Build Instructions</font></H1>
   <P>
@@ -791,6 +686,7 @@ MyDataFrame<span style='color:#800080; '>::</span>remove_lock<span style='color:
     <font size="+2">Using cmake</font><BR>
     Please see README file. Thanks to @justinjk007, you should be able to build this in Linux, Windows, Mac, and more
   </P>
+<HR>
 
   <BR><BR>
 

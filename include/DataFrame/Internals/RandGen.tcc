@@ -132,7 +132,7 @@ gen_binomial_dist(std::size_t n, const RandGenParams<T> &params)  {
 
     return (_gen_rand_<T, D>(
                 n, params,
-                std::binomial_distribution<T>(params.t_dist,
+                std::binomial_distribution<T>(static_cast<T>(params.t_dist),
                                               params.prob_true)));
 }
 
@@ -158,8 +158,8 @@ gen_negative_binomial_dist(std::size_t n, const RandGenParams<T> &params)  {
 
     return (_gen_rand_<T, D>(
                 n, params,
-                std::negative_binomial_distribution<T>(params.t_dist,
-                                                       params.prob_true)));
+                std::negative_binomial_distribution<T>
+                    (static_cast<T>(params.t_dist), params.prob_true)));
 }
 
 // ----------------------------------------------------------------------------

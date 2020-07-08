@@ -3778,8 +3778,11 @@ static void test_thread_safety()  {
         for (size_t i = 0; i < vec_size; ++i)
             vec.push_back(i);
 
-        df.load_data(MyDataFrame::gen_sequence_index(0, vec_size, 1),
-                     std::make_pair("col1", vec));
+        df.load_data(
+            MyDataFrame::gen_sequence_index(0,
+                static_cast<unsigned long>(vec_size),
+                1),
+            std::make_pair("col1", vec));
 
         // This is an extremely inefficient way of doing it, especially in
         // a multithreaded program. Each “get_column” is a hash table

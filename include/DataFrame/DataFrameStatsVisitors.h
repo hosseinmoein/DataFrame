@@ -909,10 +909,11 @@ struct StatsVisitor  {
         delta_n2 = delta_n * delta_n;
         term1 = delta * delta_n * value_type(n1);
         m1_ += delta_n;
-        m4_ += term1 * delta_n2 * value_type(n_ * n_ - 3 * n_ + 3) +
-               6.0 * delta_n2 * m2_ -
-               4.0 * delta_n * m3_;
-        m3_ += term1 * delta_n * value_type(n_ - 2) - 3.0 * delta_n * m2_;
+        m4_ = m4_ + static_cast<value_type>
+                     (term1 * delta_n2 * value_type(n_ * n_ - 3 * n_ + 3) +
+                   6.0 * delta_n2 * m2_ - 4.0 * delta_n * m3_);
+        m3_ = m3_ + static_cast<value_type>
+            (term1 * delta_n * value_type(n_ - 2) - 3.0 * delta_n * m2_);
         m2_ += term1;
     }
     inline void pre ()  {
@@ -924,16 +925,22 @@ struct StatsVisitor  {
 
     inline size_type get_count () const { return (n_); }
     inline result_type get_mean () const  { return (m1_); }
-    inline result_type
-    get_variance () const  { return (m2_ / (value_type(n_) - 1.0)); }
-    inline result_type get_std () const  { return (::sqrt(get_variance())); }
+    inline result_type get_variance () const  {
+
+        return static_cast<result_type>(m2_ / (value_type(n_) - 1.0));
+    }
+    inline result_type get_std () const  {
+
+        return static_cast<result_type>(::sqrt(get_variance()));
+    }
     inline result_type get_skew () const  {
 
-        return (::sqrt(n_) * m3_ / ::pow(m2_, 1.5));
+        return static_cast<result_type>(::sqrt(n_) * m3_ / ::pow(m2_, 1.5));
     }
     inline result_type get_kurtosis () const  {
 
-        return (value_type(n_) * m4_ / (m2_ * m2_) - 3.0);
+        return static_cast<result_type>
+            (value_type(n_) * m4_ / (m2_ * m2_) - 3.0);
     }
 
     explicit StatsVisitor(bool skipnan = true) : skip_nan_(skipnan)  {   }
@@ -1276,14 +1283,14 @@ public:
         const value_type    *prev_value = &(column[rank_vec[0]]);
 
         for (size_type i = 0; i < c_len; ++i)  {
-            double      avg_val = i;
-            double      first_val = i;
-            double      last_val = i;
+            double      avg_val = static_cast<double>(i);
+            double      first_val = static_cast<double>(i);
+            double      last_val = static_cast<double>(i);
             size_type   j = i + 1;
 
             for ( ; j < c_len && *prev_value == column[rank_vec[j]]; ++j)  {
-                last_val = j;
-                avg_val += j;
+                last_val = static_cast<double>(j);
+                avg_val += static_cast<double>(j);
             }
             avg_val /= double(j - i);
             for (; i < c_len && i < j; ++i)   {
@@ -1298,7 +1305,7 @@ public:
                     result_[rank_vec[i]] = last_val;
                     break;
                 case rank_policy::actual:
-                    result_[rank_vec[i]] = i;
+                    result_[rank_vec[i]] = static_cast<double>(i);
                     break;
                 }
             }

@@ -154,10 +154,15 @@ void DataFrame<I, H>::shift_right_(V &vec, size_type n)  {
     const auto  vec_rend = vec.rend();
 
     for (auto riter = vec.rbegin(); riter != vec_rend; ++riter)
-        if (std::distance(riter, vec_rend) > n)
+        if (std::distance(riter, vec_rend) >
+            static_cast
+                <typename std::iterator_traits<decltype(riter)>::
+                    difference_type>(n))  {
             *riter = std::move(*(riter + n));
-        else
+        }
+        else  {
             *riter = std::move(_get_nan<value_type>());
+        }
 
     return;
 }
@@ -174,10 +179,15 @@ void DataFrame<I, H>::shift_left_(V &vec, size_type n)  {
     const auto  vec_end = vec.end();
 
     for (auto iter = vec.begin(); iter != vec_end; ++iter)
-        if (std::distance(iter, vec_end) > n)
+        if (std::distance(iter, vec_end) >
+            static_cast
+                <typename std::iterator_traits<decltype(iter)>::
+                    difference_type>(n))  {
             *iter = std::move(*(iter + n));
-        else
+        }
+        else  {
             *iter = std::move(_get_nan<value_type>());
+        }
 
     return;
 }

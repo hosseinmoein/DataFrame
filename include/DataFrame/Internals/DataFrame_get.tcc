@@ -1670,17 +1670,17 @@ is_normal_(const V &column, double epsilon, bool check_for_standard)  {
         svisit(dummy_idx, citer);
     svisit.post();
 
-    const value_type    mean = svisit.get_mean();
-    const value_type    std = svisit.get_std();
-    const value_type    high_band_1 = mean + std;
-    const value_type    low_band_1 = mean - std;
-    double              count_1 = 0;
-    const value_type    high_band_2 = mean + std * 2.0;
-    const value_type    low_band_2 = mean - std * 2.0;
-    double              count_2 = 0;
-    const value_type    high_band_3 = mean + std * 3.0;
-    const value_type    low_band_3 = mean - std * 3.0;
-    double              count_3 = 0;
+    const value_type    mean = static_cast<value_type>(svisit.get_mean());
+    const value_type    std = static_cast<value_type>(svisit.get_std());
+    const value_type    high_band_1 = static_cast<value_type>(mean + std);
+    const value_type    low_band_1 = static_cast<value_type>(mean - std);
+    double              count_1 = 0.0;
+    const value_type    high_band_2 = static_cast<value_type>(mean + std * 2.0);
+    const value_type    low_band_2 = static_cast<value_type>(mean - std * 2.0);
+    double              count_2 = 0.0;
+    const value_type    high_band_3 = static_cast<value_type>(mean + std * 3.0);
+    const value_type    low_band_3 = static_cast<value_type>(mean - std * 3.0);
+    double              count_3 = 0.0;
 
     for (auto citer : column)  {
         if (citer >= low_band_1 && citer < high_band_1)  {
@@ -1697,7 +1697,7 @@ is_normal_(const V &column, double epsilon, bool check_for_standard)  {
         }
     }
 
-    const double    col_s = column.size();
+    const double    col_s = static_cast<double>(column.size());
 
     if (std::fabs((count_1 / col_s) - 0.68) <= epsilon &&
         std::fabs((count_2 / col_s) - 0.95) <= epsilon &&
@@ -1724,22 +1724,22 @@ bool DataFrame<I, H>::is_lognormal_(const V &column, double epsilon)  {
 
     svisit.pre();
     for (auto citer : column)  {
-        svisit(dummy_idx, std::log(citer));
+        svisit(dummy_idx, static_cast<value_type>(std::log(citer)));
         log_visit(dummy_idx, citer);
     }
     svisit.post();
 
-    const value_type    mean = svisit.get_mean();
-    const value_type    std = svisit.get_std();
-    const value_type    high_band_1 = mean + std;
-    const value_type    low_band_1 = mean - std;
-    double              count_1 = 0;
-    const value_type    high_band_2 = mean + std * 2.0;
-    const value_type    low_band_2 = mean - std * 2.0;
-    double              count_2 = 0;
-    const value_type    high_band_3 = mean + std * 3.0;
-    const value_type    low_band_3 = mean - std * 3.0;
-    double              count_3 = 0;
+    const value_type    mean = static_cast<value_type>(svisit.get_mean());
+    const value_type    std = static_cast<value_type>(svisit.get_std());
+    const value_type    high_band_1 = static_cast<value_type>(mean + std);
+    const value_type    low_band_1 = static_cast<value_type>(mean - std);
+    double              count_1 = 0.0;
+    const value_type    high_band_2 = static_cast<value_type>(mean + std * 2.0);
+    const value_type    low_band_2 = static_cast<value_type>(mean - std * 2.0);
+    double              count_2 = 0.0;
+    const value_type    high_band_3 = static_cast<value_type>(mean + std * 3.0);
+    const value_type    low_band_3 = static_cast<value_type>(mean - std * 3.0);
+    double              count_3 = 0.0;
 
     for (auto citer : column)  {
         const double    log_val = std::log(citer);
@@ -1758,7 +1758,7 @@ bool DataFrame<I, H>::is_lognormal_(const V &column, double epsilon)  {
         }
     }
 
-    const double    col_s = column.size();
+    const double    col_s = static_cast<double>(column.size());
 
     if (std::fabs((count_1 / col_s) - 0.68) <= epsilon &&
         std::fabs((count_2 / col_s) - 0.95) <= epsilon &&

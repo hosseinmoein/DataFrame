@@ -249,7 +249,8 @@ column_join_helper_(const LHS_T &lhs,
 
     // Load the new result index
     result.load_index(
-        std::move(StdDataFrame<unsigned int>::gen_sequence_index(0, jii_s, 1)));
+        std::move(StdDataFrame<unsigned int>::gen_sequence_index(
+               0, static_cast<unsigned int>(jii_s), 1)));
 
     // Load the lhs and rhs indices into two columns in the result
     // Also load the unified named column

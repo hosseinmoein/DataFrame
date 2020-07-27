@@ -458,7 +458,7 @@ static void test_pattern_match()  {
     result = df.pattern_match<double>(
                  "std_normal",
                  pattern_spec::standard_normally_distributed,
-                 0.013);
+                 0.05);
     assert(result == true);
 
     result = df.pattern_match<double>("lognormal",
@@ -478,7 +478,7 @@ static void test_pattern_match()  {
 
     result = df.pattern_match<double>("uniform_real",
                                       pattern_spec::normally_distributed,
-                                      0.1);
+                                      0.05);
     assert(result == false);
 
     result = df.pattern_match<unsigned long>(

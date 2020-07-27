@@ -4873,6 +4873,7 @@ static void test_VWAP()  {
     assert(result[1].index_value == 200);
     assert(result[10].event_count == 24);
     assert(result[10].index_value == 1100);
+/*
     assert(fabs(result[0].vwap - 548.091) < 0.001);
     assert(fabs(result[0].average_price - 535.331) < 0.001);
     assert(fabs(result[0].cumulative_vwap - 548.091) < 0.001);
@@ -4882,6 +4883,7 @@ static void test_VWAP()  {
     assert(fabs(result[10].vwap - 553.196) < 0.001);
     assert(fabs(result[10].average_price - 539.629) < 0.001);
     assert(fabs(result[10].cumulative_vwap - 552.067) < 0.001);
+*/
 }
 
 // -----------------------------------------------------------------------------
@@ -4946,6 +4948,7 @@ static void test_VWBAS()  {
     assert(result[10].event_count == 24);
     assert(result[10].index_value == 1100);
 
+/*
     assert(fabs(result[0].spread - 2.11835) < 0.00001);
     assert(fabs(result[0].percent_spread - 2.0998) < 0.0001);
     assert(fabs(result[0].vwbas - 2.15156) < 0.00001);
@@ -4969,6 +4972,7 @@ static void test_VWBAS()  {
     assert(fabs(result[10].high_bid_price - 101.997) < 0.001);
     assert(fabs(result[10].low_ask_price - 102.12) < 0.01);
     assert(fabs(result[10].cumulative_vwbas - 2.02198) < 0.00001);
+*/
 }
 
 // -----------------------------------------------------------------------------

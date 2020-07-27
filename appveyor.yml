@@ -4,14 +4,15 @@ image:
   - Visual Studio 2017
 platform:
   - x64
-  - x86
+#  - x86
 
 test: off
 
 clone_folder: c:\Repos\source
 
 install:
-  - ps: if($env:PLATFORM  -eq 'x64') { $env:arch = ' Win64'; } else { $env:arch = ''; } # Null for x86 builds
+#  - ps: if($env:PLATFORM  -eq 'x64') { $env:arch = ' Win64'; } else { $env:arch = ''; } # Null for x86 builds
+  - ps: $env:arch = ' Win64';
 
 build_script:
   - cd C:\Repos\source\

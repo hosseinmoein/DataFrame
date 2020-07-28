@@ -31,8 +31,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <DataFrame/DataFrameTypes.h>
 
-#include <cmath>
 #include <algorithm>
+#include <cmath>
 #include <cstddef>
 #include <functional>
 #include <map>
@@ -2123,8 +2123,8 @@ struct ZScoreVisitor {
 
 private:
 
-    std::vector<value_type> zscore_ {  };
-    const bool              skip_nan_ { };
+    result_type zscore_ {  };
+    const bool  skip_nan_ { };
 };
 
 // ----------------------------------------------------------------------------
@@ -2183,6 +2183,72 @@ private:
 
     value_type  zscore_ {  };
     const bool  skip_nan_ { };
+};
+
+// ----------------------------------------------------------------------------
+
+template<typename T,
+         typename I = unsigned long,
+         typename =
+             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+struct SigmiodVisitor {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+private:
+
+    template <typename H>
+    inline void logistic_(const H &column)  {
+
+        for (auto citer : column)
+            sigmiods_.push_back(1.0 / (1.0 + std::exp(-citer)));
+    }
+    template <typename H>
+    inline void algebraic_(const H &column)  {
+
+        for (auto citer : column)
+            sigmiods_.push_back(1.0 / std::sqrt(1.0 + std::pow(citer, 2.0)));
+    }
+    template <typename H>
+    inline void hyperbolic_tan_(const H &column)  {
+
+        for (auto citer : column)
+            sigmiods_.push_back(std::tanh(citer));
+    }
+    template <typename H>
+    inline void arc_tan_(const H &column)  {
+
+        for (auto citer : column)
+            sigmiods_.push_back(std::atan(citer));
+    }
+
+public:
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx, const H &col)  {
+
+        sigmiods_.reserve(col.size());
+        if (sigmiod_type_ == sigmiod_type::logistic)
+            logistic_(col);
+        else if (sigmiod_type_ == sigmiod_type::algebraic)
+            algebraic_(col);
+        else if (sigmiod_type_ == sigmiod_type::hyperbolic_tan)
+            hyperbolic_tan_(col);
+        else if (sigmiod_type_ == sigmiod_type::arc_tan)
+            arc_tan_(col);
+    }
+    inline void pre ()  { sigmiods_.clear(); }
+    inline void post ()  {  }
+    inline const result_type &get_result () const  { return (sigmiods_); }
+    inline result_type &get_result ()  { return (sigmiods_); }
+
+    explicit SigmiodVisitor(sigmiod_type st) : sigmiod_type_(st)  {   }
+
+private:
+
+    result_type         sigmiods_ {  };
+    const sigmiod_type  sigmiod_type_;
 };
 
 // ----------------------------------------------------------------------------

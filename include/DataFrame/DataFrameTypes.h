@@ -255,6 +255,18 @@ enum class rank_policy : unsigned char  {
 
 // ----------------------------------------------------------------------------
 
+// Different types of Sigmiod functions. For now, there is no integration
+//
+enum class sigmiod_type : unsigned char  {
+    logistic = 1,   // f(x) = 1 / (1 + exp(-x))
+    algebraic = 2,  // f(x) = 1 / sqrt(1 + pow(x, 2.0))
+    // f(x) = [(exp(x) - exp(-x)) / (exp(x) + exp(-x))] = tanh(x)
+    hyperbolic_tan = 3,
+    arc_tan = 4,    // f(x) = arctan(x)
+};
+
+// ----------------------------------------------------------------------------
+
 template<typename T>
 struct  RandGenParams  {
     T   min_value { std::numeric_limits<T>::min() };

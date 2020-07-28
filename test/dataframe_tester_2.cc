@@ -637,8 +637,8 @@ static void test_RankVisitor()  {
         df.single_act_visit<double>("d2_col", last_rank_v).get_result();
 
     std::vector<double> ar_equal {8, 1, 2, 3, 4, 12, 5, 6, 7, 9, 0, 11, 13,
-                                  10, 15, 16, 17, 18, 19, 20, 14
-               };
+                                  10, 15, 16, 17, 18, 19, 20, 14 };
+
     assert(actual_result2 == ar_equal);
     ar_equal = std::vector<double> {9, 1, 2, 3, 4, 13, 5, 6, 7, 9, 0, 11, 13,
                                     9, 15, 16, 17, 18, 19, 20, 13};
@@ -653,16 +653,6 @@ static void test_RankVisitor()  {
 
 // -----------------------------------------------------------------------------
 
-
-
-
-
-
-
-
-
-
-
 static void test_SigmiodVisitor()  {
 
     std::cout << "\nTesting SigmiodVisitor{  } ..." << std::endl;
@@ -675,8 +665,8 @@ static void test_SigmiodVisitor()  {
         { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
           20, 21 };
     std::vector<double>         d2 =
-        { 10, 2, 3, 4, 5, 13, 7, 8, 9, 10, 1, 12, 13, 10, 15, 16, 17, 18, 19,
-          20, 13 };
+        { 0.23, 0.25, 0.256, 0.26, 0.268, 0.271, 0.279, 0.285, 0.29, 0.3, 0.5,
+          -0.2, 1, 0, 2, 0, -0.1, 0.55, 0.58, 0.6, 0.7 };
     std::vector<int>            i1 = { 22, 23, 24, 25, 99 };
     MyDataFrame                 df;
 
@@ -685,47 +675,76 @@ static void test_SigmiodVisitor()  {
                  std::make_pair("d2_col", d2),
                  std::make_pair("col_3", i1));
 
-    RankVisitor<double> avg_rank_v(rank_policy::average);
-    RankVisitor<double> first_rank_v(rank_policy::first);
-    RankVisitor<double> last_rank_v(rank_policy::last);
-    RankVisitor<double> actual_rank_v(rank_policy::actual);
-    const auto          actual_result =
-        df.single_act_visit<double>("d1_col", actual_rank_v).get_result();
-    const auto          avg_result =
-        df.single_act_visit<double>("d1_col", avg_rank_v).get_result();
-    const auto          first_result =
-        df.single_act_visit<double>("d1_col", first_rank_v).get_result();
-    const auto          last_result =
-        df.single_act_visit<double>("d1_col", last_rank_v).get_result();
+    SigmiodVisitor<double>  sig_log(sigmiod_type::logistic);
+    SigmiodVisitor<double>  sig_alg(sigmiod_type::algebraic);
+    SigmiodVisitor<double>  sig_tan(sigmiod_type::hyperbolic_tan);
+    SigmiodVisitor<double>  sig_atan(sigmiod_type::arc_tan);
+    SigmiodVisitor<double>  sig_err(sigmiod_type::error_function);
+    SigmiodVisitor<double>  sig_gud(sigmiod_type::gudermannian);
+    SigmiodVisitor<double>  sig_smo(sigmiod_type::smoothstep);
+    const auto              log_result =
+        df.single_act_visit<double>("d1_col", sig_log).get_result();
+    const auto              alg_result =
+        df.single_act_visit<double>("d1_col", sig_alg).get_result();
+    const auto              tan_result =
+        df.single_act_visit<double>("d1_col", sig_tan).get_result();
+    const auto              atan_result =
+        df.single_act_visit<double>("d1_col", sig_atan).get_result();
+    const auto              err_result =
+        df.single_act_visit<double>("d1_col", sig_err).get_result();
+    const auto              gud_result =
+        df.single_act_visit<double>("d1_col", sig_gud).get_result();
+    const auto              smo_result =
+        df.single_act_visit<double>("d2_col", sig_smo).get_result();
 
-    for (size_t i = 0; i < actual_result.size(); ++i)
-        assert(actual_result[i] == double(i));
-    assert(actual_result == avg_result);
-    assert(actual_result == last_result);
-    assert(actual_result == first_result);
+    std::vector<double> result {
+        0.731059, 0.880797, 0.952574, 0.982014, 0.993307, 0.997527, 0.999089,
+        0.999665, 0.999877, 0.999955, 0.999983, 0.999994, 0.999998, 0.999999,
+        1, 1, 1, 1, 1, 1, 1 };
 
-    const auto  actual_result2 =
-        df.single_act_visit<double>("d2_col", actual_rank_v).get_result();
-    const auto  avg_result2 =
-        df.single_act_visit<double>("d2_col", avg_rank_v).get_result();
-    const auto  first_result2 =
-        df.single_act_visit<double>("d2_col", first_rank_v).get_result();
-    const auto  last_result2 =
-        df.single_act_visit<double>("d2_col", last_rank_v).get_result();
+    for (size_t idx = 0; idx < result.size(); ++idx)
+        assert(fabs(result[idx] - log_result[idx]) < 0.00001);
 
-    std::vector<double> ar_equal {8, 1, 2, 3, 4, 12, 5, 6, 7, 9, 0, 11, 13,
-                                  10, 15, 16, 17, 18, 19, 20, 14
-               };
-    assert(actual_result2 == ar_equal);
-    ar_equal = std::vector<double> {9, 1, 2, 3, 4, 13, 5, 6, 7, 9, 0, 11, 13,
-                                    9, 15, 16, 17, 18, 19, 20, 13};
-    assert(avg_result2 == ar_equal);
-    ar_equal = std::vector<double> {8, 1, 2, 3, 4, 12, 5, 6, 7, 8, 0, 11, 12,
-                                    8, 15, 16, 17, 18, 19, 20, 12};
-    assert(first_result2 == ar_equal);
-    ar_equal = std::vector<double> {10, 1, 2, 3, 4, 14, 5, 6, 7, 10, 0, 11, 14,
-                                    10, 15, 16, 17, 18, 19, 20, 14};
-    assert(last_result2 == ar_equal);
+    result = std::vector<double> {
+        0.707107, 0.447214, 0.316228, 0.242536, 0.196116, 0.164399, 0.141421,
+        0.124035, 0.110432, 0.0995037, 0.0905357, 0.0830455, 0.0766965,
+        0.071247, 0.066519, 0.0623783, 0.058722, 0.05547, 0.0525588,
+        0.0499376, 0.0475651 };
+    for (size_t idx = 0; idx < result.size(); ++idx)
+        assert(fabs(result[idx] - alg_result[idx]) < 0.00001);
+
+    result = std::vector<double> {
+        0.761594, 0.964028, 0.995055, 0.999329, 0.999909, 0.999988, 0.999998,
+        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+    for (size_t idx = 0; idx < result.size(); ++idx)
+        assert(fabs(result[idx] - tan_result[idx]) < 0.00001);
+
+    result = std::vector<double> {
+        0.785398, 1.10715, 1.24905, 1.32582, 1.3734, 1.40565, 1.4289, 1.44644,
+        1.46014, 1.47113, 1.48014, 1.48766, 1.49402, 1.49949, 1.50423, 1.50838,
+        1.51204, 1.5153, 1.51821, 1.52084, 1.52321 };
+    for (size_t idx = 0; idx < result.size(); ++idx)
+        assert(fabs(result[idx] - atan_result[idx]) < 0.00001);
+
+    result = std::vector<double> {
+        0.842701, 0.995322, 0.999978, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1 };
+    for (size_t idx = 0; idx < result.size(); ++idx)
+       assert(fabs(result[idx] - err_result[idx]) < 0.00001);
+
+    result = std::vector<double> {
+        0.865769, 1.30176, 1.4713, 1.53417, 1.55732, 1.56584, 1.56897, 1.57013,
+        1.57055, 1.57071, 1.57076, 1.57078, 1.57079, 1.57079, 1.5708, 1.5708,
+        1.5708, 1.5708, 1.5708, 1.5708, 1.5708 };
+    for (size_t idx = 0; idx < result.size(); ++idx)
+       assert(fabs(result[idx] - gud_result[idx]) < 0.00001);
+
+    result = std::vector<double> {
+        0.134366, 0.15625, 0.163054, 0.167648, 0.176974, 0.180518, 0.190088,
+		0.197377, 0.203522, 0.216, 0.5, 0, 1, 0, 1, 0, 0, 0.57475, 0.618976,
+		0.648, 0.784 };
+    for (size_t idx = 0; idx < result.size(); ++idx)
+       assert(fabs(result[idx] - smo_result[idx]) < 0.00001);
 }
 
 // -----------------------------------------------------------------------------

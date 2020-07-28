@@ -2221,6 +2221,30 @@ private:
         for (auto citer : column)
             sigmiods_.push_back(std::atan(citer));
     }
+    template <typename H>
+    inline void error_function_(const H &column)  {
+
+        for (auto citer : column)
+            sigmiods_.push_back(std::erf(citer));
+    }
+    template <typename H>
+    inline void gudermannian_(const H &column)  {
+
+        for (auto citer : column)
+            sigmiods_.push_back(std::atan(std::sinh(citer)));
+    }
+    template <typename H>
+    inline void smoothstep_(const H &column)  {
+
+        for (auto citer : column)  {
+            if (citer <= 0.0)
+                sigmiods_.push_back(0.0);
+            else if (citer >= 1.0)
+                sigmiods_.push_back(1.0);
+            else
+                sigmiods_.push_back(citer * citer * (3.0 - 2.0 * citer));
+        }
+    }
 
 public:
 
@@ -2237,6 +2261,12 @@ public:
             hyperbolic_tan_(col);
         else if (sigmiod_type_ == sigmiod_type::arc_tan)
             arc_tan_(col);
+        else if (sigmiod_type_ == sigmiod_type::error_function)
+            error_function_(col);
+        else if (sigmiod_type_ == sigmiod_type::gudermannian)
+            gudermannian_(col);
+        else if (sigmiod_type_ == sigmiod_type::smoothstep)
+            smoothstep_(col);
     }
     inline void pre ()  { sigmiods_.clear(); }
     inline void post ()  {  }

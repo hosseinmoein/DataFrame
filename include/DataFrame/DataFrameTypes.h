@@ -258,11 +258,15 @@ enum class rank_policy : unsigned char  {
 // Different types of Sigmiod functions. For now, there is no integration
 //
 enum class sigmiod_type : unsigned char  {
-    logistic = 1,   // f(x) = 1 / (1 + exp(-x))
-    algebraic = 2,  // f(x) = 1 / sqrt(1 + pow(x, 2.0))
+    logistic = 1,        // f(x) = 1 / (1 + exp(-x))
+    algebraic = 2,       // f(x) = 1 / sqrt(1 + pow(x, 2.0))
     // f(x) = [(exp(x) - exp(-x)) / (exp(x) + exp(-x))] = tanh(x)
     hyperbolic_tan = 3,
-    arc_tan = 4,    // f(x) = arctan(x)
+    arc_tan = 4,         // f(x) = atan(x)
+    error_function = 5,  // f(x) = 2/sqrt(pi) * ∫exp(-pow(t, 2) dt
+    gudermannian = 6,    // f(x) = atan(sinh(x))
+    // f(x) = 0 if x <= 0, 1 if x >= 1 else 3pow(x, 2) - 2pow(x, 3)
+    smoothstep = 7,
 };
 
 // ----------------------------------------------------------------------------

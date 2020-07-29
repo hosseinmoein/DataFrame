@@ -741,10 +741,69 @@ static void test_SigmiodVisitor()  {
 
     result = std::vector<double> {
         0.134366, 0.15625, 0.163054, 0.167648, 0.176974, 0.180518, 0.190088,
-		0.197377, 0.203522, 0.216, 0.5, 0, 1, 0, 1, 0, 0, 0.57475, 0.618976,
-		0.648, 0.784 };
+        0.197377, 0.203522, 0.216, 0.5, 0, 1, 0, 1, 0, 0, 0.57475, 0.618976,
+        0.648, 0.784 };
     for (size_t idx = 0; idx < result.size(); ++idx)
        assert(fabs(result[idx] - smo_result[idx]) < 0.00001);
+}
+
+// -----------------------------------------------------------------------------
+
+static double my_max(const double &d1, const double &d2, const double &d3)  {
+
+    return (std::max<double>({ d1, d2, d3 }));
+}
+
+static void test_combine()  {
+
+    std::cout << "\nTesting combine( ) ..." << std::endl;
+
+    std::vector<unsigned long>  idx1 =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466,
+          123467, 123468, 123469, 123470, 123471, 123472, 123473 };
+    std::vector<unsigned long>  idx2 =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466,
+          123467, 123468, 123469, 123470, 123471, 123472, 123473 };
+    std::vector<unsigned long>  idx3 =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466,
+          123467, 123468, 123469, 123470, 123471, 123472, 123473 };
+    std::vector<unsigned long>  idx4 =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466,
+          123467, 123468, 123469, 123470, 123471, 123472, 123473 };
+    std::vector<double>         d1 =
+        { 1, 2, 100, 4, 5, 6, 7, 8, 9, 10, 11, 300, 13, 14, 15, 16, 17, 18, 19,
+          20, 200 };
+    std::vector<double>         d2 =
+        { 1, 2, 1000, 4, 5, 6, 7, 8, 9, 10, 11, 3000, 13, 14, 15, 16, 17, 18,
+          19, 20, 2000 };
+    std::vector<double>         d3 =
+        { 1, 2, 5000, 4, 5, 6, 7, 8, 9, 10, 11, 7000, 13, 14, 15, 16, 17, 18,
+          19, 20, 8000 };
+    std::vector<double>         d4 =
+        { 1, 2, 10000, 4, 5, 6, 7, 8, 9, 10, 11, 20000, 13, 14, 15, 16, 17,
+          18, 19, 20, 30000 };
+    MyDataFrame                 df1;
+    MyDataFrame                 df2;
+    MyDataFrame                 df3;
+    MyDataFrame                 df4;
+
+    df1.load_data(std::move(idx1), std::make_pair("d1_col", d1));
+    df2.load_data(std::move(idx2), std::make_pair("d1_col", d2));
+    df3.load_data(std::move(idx3), std::make_pair("d1_col", d3));
+    df4.load_data(std::move(idx4), std::make_pair("d1_col", d4));
+
+    df1.load_column("d2_col",
+                    std::move(df1.combine<double>("d1_col", df2, df3, my_max)));
+
+    std::vector<double> result {
+        1, 2, 5000, 4, 5, 6, 7, 8, 9, 10, 11, 7000, 13, 14, 15, 16, 17, 18,
+        19, 20, 8000 };
+
+    assert(df1.get_column<double>("d2_col") == result);
 }
 
 // -----------------------------------------------------------------------------
@@ -763,6 +822,7 @@ int main(int argc, char *argv[]) {
     test_SharpeRatioVisitor();
     test_RankVisitor();
     test_SigmiodVisitor();
+    test_combine();
 
     return (0);
 }

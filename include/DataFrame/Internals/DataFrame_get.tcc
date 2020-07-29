@@ -1801,6 +1801,76 @@ pattern_match(const char *col_name,
     }
 }
 
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename T, typename DF, typename F>
+std::vector<T> DataFrame<I, H>::
+combine(const char *col_name, const DF &rhs, F &functor) const  {
+
+    const auto      &lhs_col = get_column<T>(col_name);
+    const auto      &rhs_col = rhs.template get_column<T>(col_name);
+    const size_type col_s = std::min(lhs_col.size(), rhs_col.size());
+    std::vector<T>  result;
+
+    result.reserve(col_s);
+    for (size_type i = 0; i < col_s; ++i)
+        result.push_back(std::move(functor(lhs_col[i], rhs_col[i])));
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename T, typename DF1, typename DF2, typename F>
+std::vector<T> DataFrame<I, H>::
+combine(const char *col_name,
+        const DF1 &df1,
+        const DF2 &df2,
+        F &functor) const  {
+
+    const auto      &lhs_col = get_column<T>(col_name);
+    const auto      &df1_col = df1.template get_column<T>(col_name);
+    const auto      &df2_col = df2.template get_column<T>(col_name);
+    const size_type col_s =
+        std::min<size_type>({ lhs_col.size(), df1_col.size(), df2_col.size() });
+    std::vector<T>  result;
+
+    result.reserve(col_s);
+    for (size_type i = 0; i < col_s; ++i)
+        result.push_back(
+            std::move(functor(lhs_col[i], df1_col[i], df2_col[i])));
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename T, typename DF1, typename DF2, typename DF3, typename F>
+std::vector<T> DataFrame<I, H>::
+combine(const char *col_name,
+        const DF1 &df1,
+        const DF2 &df2,
+        const DF3 &df3,
+        F &functor) const  {
+
+    const auto      &lhs_col = get_column<T>(col_name);
+    const auto      &df1_col = df1.template get_column<T>(col_name);
+    const auto      &df2_col = df2.template get_column<T>(col_name);
+    const auto      &df3_col = df3.template get_column<T>(col_name);
+    const size_type col_s = std::min<size_type>(
+        { lhs_col.size(), df1_col.size(), df2_col.size(), df3_col.size() });
+    std::vector<T>  result;
+
+    result.reserve(col_s);
+    for (size_type i = 0; i < col_s; ++i)
+        result.push_back(
+            std::move(functor(lhs_col[i], df1_col[i], df2_col[i], df3_col[i])));
+
+    return (result);
+}
 
 } // namespace hmdf
 

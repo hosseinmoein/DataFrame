@@ -1536,6 +1536,105 @@ public: // Read/access and slicing interfaces
     get_reindexed_view(const char *col_to_be_index,
                        const char *old_index_name = nullptr) const;
 
+    // This method combines the content of column col_name between self and
+    // rhs based on the logic in functor. Both self and rhs must contain
+    // col_name column with the same type as T.
+    // It returns the result as a vector that could be moved into one of the
+    // dataframes consequently. The length of the result vector will be the min
+    // length of the columns in self and rhs.
+    //
+    // NOTE: It is the responsibility of the user to make sure both columns
+    //       in self and rhs are properly aligned.
+    //
+    // T:
+    //   Type on column col_name. If this is index it would be the same as
+    //   IndexType.
+    // DF:
+    //   Type of the rhs dataframe
+    // F:
+    //   The functor type
+    // col_name:
+    //   Name of the column
+    // rhs:
+    //   An instance of a dataframe that contains the same col_name with the
+    //   same type (T)
+    // functor:
+    //   An instance of the functor with signature:
+    //       T func(const T &self_data, const T &rhs_data)
+    //
+    template<typename T, typename DF, typename F>
+    std::vector<T>
+    combine(const char *col_name, const DF &rhs, F &functor) const;
+
+    // Same as the combine() above but it combines 3 columns.
+    //
+    // T:
+    //   Type on column col_name. If this is index it would be the same as
+    //   IndexType.
+    // DF1:
+    //   Type of the df1 dataframe
+    // DF2:
+    //   Type of the df2 dataframe
+    // F:
+    //   The functor type
+    // col_name:
+    //   Name of the column
+    // df1:
+    //   An instance of a dataframe that contains the same col_name with the
+    //   same type (T)
+    // df2:
+    //   Another instance of a dataframe that contains the same col_name with
+    //   the same type (T)
+    // functor:
+    //   An instance of the functor with signature:
+    //       T func(const T &self_data, const T &df1_data, const T &df2_data)
+    //
+    template<typename T, typename DF1, typename DF2, typename F>
+    std::vector<T>
+    combine(const char *col_name,
+            const DF1 &df1,
+            const DF2 &df2,
+            F &functor) const;
+
+    // Same as the combine() above but it combines 4 columns.
+    //
+    // T:
+    //   Type on column col_name. If this is index it would be the same as
+    //   IndexType.
+    // DF1:
+    //   Type of the df1 dataframe
+    // DF2:
+    //   Type of the df2 dataframe
+    // DF3:
+    //   Type of the df3 dataframe
+    // F:
+    //   The functor type
+    // col_name:
+    //   Name of the column
+    // df1:
+    //   An instance of a dataframe that contains the same col_name with the
+    //   same type (T)
+    // df2:
+    //   Another instance of a dataframe that contains the same col_name with
+    //   the same type (T)
+    // df3:
+    //   Another instance of a dataframe that contains the same col_name with
+    //   the same type (T)
+    // functor:
+    //   An instance of the functor with signature:
+    //       T func(const T &self_data,
+    //              const T &df1_data,
+    //              const T &df2_data,
+    //              const T &df3_data)
+    //
+    template<typename T, typename DF1, typename DF2, typename DF3, typename F>
+    std::vector<T>
+    combine(const char *col_name,
+            const DF1 &df1,
+            const DF2 &df2,
+            const DF3 &df3,
+            F &functor) const;
+
 public:  // Visitors
 
     // This is the most generalized visit function. It visits multiple

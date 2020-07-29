@@ -1,0 +1,165 @@
+<!--
+Copyright (c) 2019-2022, Hossein Moein
+All rights reserved.
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+* Redistributions of source code must retain the above copyright
+  notice, this list of conditions and the following disclaimer.
+* Redistributions in binary form must reproduce the above copyright
+  notice, this list of conditions and the following disclaimer in the
+  documentation and/or other materials provided with the distribution.
+* Neither the name of Hossein Moein and/or the DataFrame nor the
+  names of its contributors may be used to endorse or promote products
+  derived from this software without specific prior written permission.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL Hossein Moein BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+<!DOCTYPE html>
+<html>
+<body>
+  <table align="center" border="1">
+
+    <tr bgcolor="lightblue">
+        <th>Signature</th> <th>Description</th> <th>Parameters</th>
+    </tr>
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon" width="30%"> <font color="white">
+        template&lt;typename T, typename DF, typename F&gt;<BR>
+        std::vector&lt;T&gt;<BR>
+        combine(const char *col_name, const DF &amp;rhs, F &amp;functor) const;</font>
+      </td>
+      <td width="30%">
+        This method combines the content of column col_name between self and rhs based on the logic in functor. Both self and rhs must contain col_name column with the same type as T.<BR>
+        It returns the result as a vector that could be moved into one of the dataframes consequently. The length of the result vector will be the min length of the columns in self and rhs.<BR>
+        <B>Note</B>: It is the responsibility of the user to make sure both columns in self and rhs are properly aligned.
+      </td>
+      <td>
+        <B>T</B>: Type on column col_name. If this is index it would be the same as IndexType.<BR>
+        <B>DF</B>: Type of the rhs dataframe<BR>
+        <B>F</B>: The functor type<BR>
+        <B>col_name</B>: Name of the column<BR>
+        <B>rhs</B>: An instance of a dataframe that contains the same col_name with the same type (T)<BR>
+        <B>functor</B>: An instance of the functor with signature:<BR>
+              <I>T func(const T &amp;self_data, const T &amp;rhs_data)</I>
+      </td>
+    </tr>
+
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        template&lt;typename T, typename DF1, typename DF2, typename F&gt;<BR>
+        std::vector&lt;T&gt;<BR>
+        combine(const char *col_name, const DF1 &amp;df1, const DF2 &amp;df2, F &amp;functor) const;</font>
+      </td>
+      <td>
+        Same as the combine() above but it combines 3 columns.<BR>
+      </td>
+      <td>
+        <B>T</B>: Type on column col_name. If this is index it would be the same as IndexType.<BR>
+        <B>DF1</B>: Type of the df1 dataframe<BR>
+        <B>DF2</B>: Type of the df2 dataframe<BR>
+        <B>F</B>: The functor type<BR>
+        <B>col_name</B>: Name of the column<BR>
+        <B>df1</B>: An instance of a dataframe that contains the same col_name with the same type (T)<BR>
+        <B>df2</B>: Another instance of a dataframe that contains the same col_name with the same type (T)<BR>
+        <B>functor</B>: An instance of the functor with signature:<BR>
+              <I>T func(const T &amp;self_data, const T &amp;df1_data, const T &amp;df2_data)</I>
+      </td>
+    </tr>
+
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        template&lt;typename T, typename DF1, typename DF2, typename DF3, typename F&gt;<BR>
+        std::vector&lt;T&gt;<BR>
+        combine(const char *col_name, const DF1 &amp;df1, const DF2 &amp;df2, const DF3 &amp;df3, F &amp;functor) const;</font>
+      </td>
+      <td>
+        Same as the combine() above but it combines 4 columns.<BR>
+      </td>
+      <td>
+        <B>T</B>: Type on column col_name. If this is index it would be the same as IndexType.<BR>
+        <B>DF1</B>: Type of the df1 dataframe<BR>
+        <B>DF2</B>: Type of the df2 dataframe<BR>
+        <B>DF3</B>: Type of the df3 dataframe<BR>
+        <B>F</B>: The functor type<BR>
+        <B>col_name</B>: Name of the column<BR>
+        <B>df1</B>: An instance of a dataframe that contains the same col_name with the same type (T)<BR>
+        <B>df2</B>: Another instance of a dataframe that contains the same col_name with the same type (T)<BR>
+        <B>df3</B>: Another instance of a dataframe that contains the same col_name with the same type (T)<BR>
+        <B>functor</B>: An instance of the functor with signature:<BR>
+              <I>T func(const T &amp;self_data, const T &amp;df1_data, const T &amp;df2_data, const T &amp;df3_data)</I>
+      </td>
+    </tr>
+
+  </table>
+
+ <pre style='color:#000000;background:#ffffff;'><span style='color:#800000; font-weight:bold; '>static</span> <span style='color:#800000; font-weight:bold; '>double</span> my_max<span style='color:#808030; '>(</span><span style='color:#800000; font-weight:bold; '>const</span> <span style='color:#800000; font-weight:bold; '>double</span> <span style='color:#808030; '>&amp;</span>d1<span style='color:#808030; '>,</span> <span style='color:#800000; font-weight:bold; '>const</span> <span style='color:#800000; font-weight:bold; '>double</span> <span style='color:#808030; '>&amp;</span>d2<span style='color:#808030; '>,</span> <span style='color:#800000; font-weight:bold; '>const</span> <span style='color:#800000; font-weight:bold; '>double</span> <span style='color:#808030; '>&amp;</span>d3<span style='color:#808030; '>)</span>  <span style='color:#800080; '>{</span>
+
+    <span style='color:#800000; font-weight:bold; '>return</span> <span style='color:#808030; '>(</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>max</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#ffffff; background:#dd0000; font-weight:bold; font-style:italic; '>{</span> d1<span style='color:#808030; '>,</span> d2<span style='color:#808030; '>,</span> d3 <span style='color:#ffffff; background:#dd0000; font-weight:bold; font-style:italic; '>}</span><span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+<span style='color:#800080; '>}</span>
+
+<span style='color:#800000; font-weight:bold; '>static</span> <span style='color:#800000; font-weight:bold; '>void</span> test_combine<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span>  <span style='color:#800080; '>{</span>
+
+    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>cout</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#800000; '>"</span><span style='color:#0f69ff; '>\n</span><span style='color:#0000e6; '>Testing combine( ) ...</span><span style='color:#800000; '>"</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>endl</span><span style='color:#800080; '>;</span>
+
+    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>vector</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>unsigned</span> <span style='color:#800000; font-weight:bold; '>long</span><span style='color:#800080; '>></span>  idx1 <span style='color:#808030; '>=</span>
+        <span style='color:#800080; '>{</span> <span style='color:#008c00; '>123450</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123451</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123452</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123453</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123454</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123455</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123456</span><span style='color:#808030; '>,</span>
+          <span style='color:#008c00; '>123457</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123458</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123459</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123460</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123461</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123462</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123466</span><span style='color:#808030; '>,</span>
+          <span style='color:#008c00; '>123467</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123468</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123469</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123470</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123471</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123472</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123473</span> <span style='color:#800080; '>}</span><span style='color:#800080; '>;</span>
+    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>vector</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>unsigned</span> <span style='color:#800000; font-weight:bold; '>long</span><span style='color:#800080; '>></span>  idx2 <span style='color:#808030; '>=</span>
+        <span style='color:#800080; '>{</span> <span style='color:#008c00; '>123450</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123451</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123452</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123453</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123454</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123455</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123456</span><span style='color:#808030; '>,</span>
+          <span style='color:#008c00; '>123457</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123458</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123459</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123460</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123461</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123462</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123466</span><span style='color:#808030; '>,</span>
+          <span style='color:#008c00; '>123467</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123468</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123469</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123470</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123471</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123472</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123473</span> <span style='color:#800080; '>}</span><span style='color:#800080; '>;</span>
+    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>vector</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>unsigned</span> <span style='color:#800000; font-weight:bold; '>long</span><span style='color:#800080; '>></span>  idx3 <span style='color:#808030; '>=</span>
+        <span style='color:#800080; '>{</span> <span style='color:#008c00; '>123450</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123451</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123452</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123453</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123454</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123455</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123456</span><span style='color:#808030; '>,</span>
+          <span style='color:#008c00; '>123457</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123458</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123459</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123460</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123461</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123462</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123466</span><span style='color:#808030; '>,</span>
+          <span style='color:#008c00; '>123467</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123468</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123469</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123470</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123471</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123472</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123473</span> <span style='color:#800080; '>}</span><span style='color:#800080; '>;</span>
+    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>vector</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>unsigned</span> <span style='color:#800000; font-weight:bold; '>long</span><span style='color:#800080; '>></span>  idx4 <span style='color:#808030; '>=</span>
+        <span style='color:#800080; '>{</span> <span style='color:#008c00; '>123450</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123451</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123452</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123453</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123454</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123455</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123456</span><span style='color:#808030; '>,</span>
+          <span style='color:#008c00; '>123457</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123458</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123459</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123460</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123461</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123462</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123466</span><span style='color:#808030; '>,</span>
+          <span style='color:#008c00; '>123467</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123468</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123469</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123470</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123471</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123472</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123473</span> <span style='color:#800080; '>}</span><span style='color:#800080; '>;</span>
+    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>vector</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span>         d1 <span style='color:#808030; '>=</span>
+        <span style='color:#800080; '>{</span> <span style='color:#008c00; '>1</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>2</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>100</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>4</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>5</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>6</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>7</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>8</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>9</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>10</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>11</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>300</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>13</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>14</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>15</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>16</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>17</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>18</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>19</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>20</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>200</span> <span style='color:#800080; '>}</span><span style='color:#800080; '>;</span>
+    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>vector</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span>         d2 <span style='color:#808030; '>=</span>
+        <span style='color:#800080; '>{</span> <span style='color:#008c00; '>1</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>2</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>1000</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>4</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>5</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>6</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>7</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>8</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>9</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>10</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>11</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>3000</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>13</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>14</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>15</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>16</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>17</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>18</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>19</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>20</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>2000</span> <span style='color:#800080; '>}</span><span style='color:#800080; '>;</span>
+    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>vector</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span>         d3 <span style='color:#808030; '>=</span>
+        <span style='color:#800080; '>{</span> <span style='color:#008c00; '>1</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>2</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>5000</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>4</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>5</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>6</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>7</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>8</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>9</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>10</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>11</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>7000</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>13</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>14</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>15</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>16</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>17</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>18</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>19</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>20</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>8000</span> <span style='color:#800080; '>}</span><span style='color:#800080; '>;</span>
+    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>vector</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span>         d4 <span style='color:#808030; '>=</span>
+        <span style='color:#800080; '>{</span> <span style='color:#008c00; '>1</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>2</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>10000</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>4</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>5</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>6</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>7</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>8</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>9</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>10</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>11</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>20000</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>13</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>14</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>15</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>16</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>17</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>18</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>19</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>20</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>30000</span> <span style='color:#800080; '>}</span><span style='color:#800080; '>;</span>
+    MyDataFrame                 df1<span style='color:#800080; '>;</span>
+    MyDataFrame                 df2<span style='color:#800080; '>;</span>
+    MyDataFrame                 df3<span style='color:#800080; '>;</span>
+    MyDataFrame                 df4<span style='color:#800080; '>;</span>
+
+    df1<span style='color:#808030; '>.</span>load_data<span style='color:#808030; '>(</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>move</span><span style='color:#808030; '>(</span>idx1<span style='color:#808030; '>)</span><span style='color:#808030; '>,</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span>make_pair<span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>d1_col</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> d1<span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    df2<span style='color:#808030; '>.</span>load_data<span style='color:#808030; '>(</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>move</span><span style='color:#808030; '>(</span>idx2<span style='color:#808030; '>)</span><span style='color:#808030; '>,</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span>make_pair<span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>d1_col</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> d2<span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    df3<span style='color:#808030; '>.</span>load_data<span style='color:#808030; '>(</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>move</span><span style='color:#808030; '>(</span>idx3<span style='color:#808030; '>)</span><span style='color:#808030; '>,</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span>make_pair<span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>d1_col</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> d3<span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    df4<span style='color:#808030; '>.</span>load_data<span style='color:#808030; '>(</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>move</span><span style='color:#808030; '>(</span>idx4<span style='color:#808030; '>)</span><span style='color:#808030; '>,</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span>make_pair<span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>d1_col</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> d4<span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+
+    df1<span style='color:#808030; '>.</span>load_column<span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>d2_col</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>move</span><span style='color:#808030; '>(</span>df1<span style='color:#808030; '>.</span>combine<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>d1_col</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> df2<span style='color:#808030; '>,</span> df3<span style='color:#808030; '>,</span> my_max<span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+
+    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>vector</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span> result <span style='color:#800080; '>{</span>
+        <span style='color:#008c00; '>1</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>2</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>5000</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>4</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>5</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>6</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>7</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>8</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>9</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>10</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>11</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>7000</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>13</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>14</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>15</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>16</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>17</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>18</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>19</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>20</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>8000</span> <span style='color:#800080; '>}</span><span style='color:#800080; '>;</span>
+
+    assert<span style='color:#808030; '>(</span>df1<span style='color:#808030; '>.</span>get_column<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>d2_col</span><span style='color:#800000; '>"</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>=</span><span style='color:#808030; '>=</span> result<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+<span style='color:#800080; '>}</span>
+</pre>
+<!--Created using ToHtml.com on 2020-07-29 15:35:00 UTC -->
+
+</body>
+</html>
+
+<!--
+Local Variables:
+mode:HTML
+tab-width:4
+c-basic-offset:4
+End:
+-->

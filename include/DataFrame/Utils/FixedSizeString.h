@@ -112,8 +112,7 @@ public:
     }
     inline VirtualString &ncopy (const_pointer rhs, size_type len) noexcept  {
 
-        ::strncpy (string_, rhs, len);
-        string_ [len] = 0;
+        ::snprintf(string_, len, "%s", rhs);
         return (*this);
     }
 
@@ -356,8 +355,7 @@ public:
     }
     inline FixedSizeString &operator = (const_pointer rhs) noexcept {
 
-        ::strncpy (buffer_, rhs, S);
-        buffer_ [S] = 0;
+        ::snprintf(buffer_, S, "%s", rhs);
         return (*this);
     }
     inline FixedSizeString &operator = (const VirtualString &rhs) noexcept  {

@@ -18,9 +18,9 @@ build_script:
   - cd C:\Repos\source\
   - mkdir build
   - cd build
-  - cmake --version
+  - cmake --version 
   - cmake C:\Repos\source -G "Visual Studio 15 2017%arch%"
-  - cmake --build . --config "Release"
+  - cmake --build -DBUILD_SHARED_LIBS . --config "Release"
 
 test_script:
   - ctest -C Release --output-on-failure

@@ -1503,6 +1503,7 @@ struct ReturnVisitor  {
     inline void pre ()  { result_.clear(); }
     inline void post ()  {   }
     inline const result_type &get_result () const  { return (result_); }
+    inline result_type &get_result ()  { return (result_); }
 
 private:
 

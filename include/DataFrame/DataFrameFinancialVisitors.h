@@ -865,6 +865,61 @@ private:
     result_type result_ { 0 };
 };
 
+// ----------------------------------------------------------------------------
+
+// Relative Strength Index (RSI) is a technical indicator used in the
+// analysis of financial markets. It is intended to chart the current and
+// historical strength or weakness of a stock or market based on the closing
+// prices of a recent trading period. The indicator should not be confused
+// with relative strength.
+// The RSI is classified as a momentum oscillator, measuring the velocity and
+// magnitude of price movements.
+// The RSI is most typically used on a 14-day (a parameter in this visitor)
+// timeframe, measured on a scale from 0 to 100.
+//
+template<typename T,
+         typename I = unsigned long,
+         typename =
+             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+struct RSIVisitor {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void operator() (const K &idx, const H &column)  {
+
+        const size_type col_s = column.size();
+
+        // This data doesn't make sense
+        if (avg_period_ > col_s + 2)  return;
+
+        ReturnVisitor   return_v (rp_);
+
+        return_v.pre();
+        return_v (idx, column);
+        return_v.post();
+
+        result_.reserve(col_s - avg_period_);
+    }
+
+    RSIVisitor(return_policy rp,
+               bool exponential_avg,
+               size_type avg_period = 14)
+        : rp_(rp), expo_avg_(exponential_avg), avg_period_(avg_period)  {   }
+
+    inline void pre ()  { result_.clear(); }
+    inline void post ()  {  }
+    inline const result_type &get_result () const  { return (result_); }
+    inline result_type &get_result ()  { return (result_); }
+
+private:
+
+    const return_policy rp_;
+    const bool          expo_avg_;
+    const size_type     avg_period_;
+    result_type         result_ { };
+};
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

@@ -130,8 +130,11 @@ if (MSVC)
       # At build time: LIBRARY_EXPORTS and HMDF_SHARED defined
       # At consume time: HMDF_SHARED defined
   # If static: no definition at build and consume time
-  add_definitions(-DLIBRARY_EXPORTS)
-  add_definitions(-DHMDF_SHARED)
+  if (BUILD_SHARED_LIBS)
+    target_compile_definitions(${LIBRARY_TARGET_NAME}
+                               PRIVATE LIBRARY_EXPORTS  # Build time only
+                               PUBLIC HMDF_SHARED)
+  endif(BUILD_SHARED_LIBS)
 endif(MSVC)
 
 if (MINGW)

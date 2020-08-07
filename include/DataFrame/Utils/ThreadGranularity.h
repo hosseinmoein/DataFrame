@@ -32,24 +32,21 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
 
-#if defined(_WIN32)
+#if defined(_WIN32) && defined(HMDF_SHARED)
+#  ifdef LIBRARY_EXPORTS
+#    define LIBRARY_API __declspec(dllexport)
+#  else
+#    define LIBRARY_API __declspec(dllimport)
+#  endif // LIBRARY_EXPORTS
 #  ifdef min
 #    undef min
 #  endif // min
 #  ifdef max
 #    undef max
 #  endif // max
-#endif // _WIN32
-
-#ifdef _WIN32
-#  ifdef LIBRARY_EXPORTS
-#    define LIBRARY_API __declspec(dllexport)
-#  else
-#    define LIBRARY_API __declspec(dllimport)
-#  endif // LIBRARY_EXPORTS
 #else
 #  define LIBRARY_API
-#endif  // _WIN32
+#endif // _WIN32
 
 // ----------------------------------------------------------------------------
 

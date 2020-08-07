@@ -116,7 +116,6 @@ set(${LIBRARY_TARGET_NAME}_HDR
   include/DataFrame/Utils/FixedSizeString.h
 )
 
-add_definitions(-DLIBRARY_EXPORTS)
 
 # Build the library
 if (UNIX)
@@ -126,6 +125,13 @@ endif(UNIX)
 if (MSVC)
   add_definitions(-D_CRT_SECURE_NO_WARNINGS)
   add_library(${LIBRARY_TARGET_NAME} ${${LIBRARY_TARGET_NAME}_SRC})
+
+  # If shared:
+      # At build time: LIBRARY_EXPORTS and HMDF_SHARED defined
+      # At consume time: HMDF_SHARED defined
+  # If static: no definition at build and consume time
+  add_definitions(-DLIBRARY_EXPORTS)
+  add_definitions(-DHMDF_SHARED)
 endif(MSVC)
 
 if (MINGW)

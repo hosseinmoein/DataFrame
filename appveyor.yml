@@ -20,7 +20,7 @@ build_script:
   - cd build
   - cmake --version 
   - cmake C:\Repos\source -G "Visual Studio 15 2017%arch%"
-  - cmake --build -DBUILD_SHARED_LIBS . --config "Release"
+  - cmake -DBUILD_SHARED_LIBS --build . --config "Release"
 
 test_script:
   - ctest -C Release --output-on-failure

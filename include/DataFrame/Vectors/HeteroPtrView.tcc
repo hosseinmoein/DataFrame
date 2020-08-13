@@ -74,7 +74,7 @@ HeteroPtrView::HeteroPtrView(VectorPtrView<T> &vec)
       move_function_([](HeteroPtrView &from, HeteroPtrView &to)  {
               views_<T>[&to] = std::move(views_<T>[&from]); })  {
 
-    views_<T>.push_back(this, vec);
+    views_<T>.emplace(this, vec);
 }
 
 // ----------------------------------------------------------------------------

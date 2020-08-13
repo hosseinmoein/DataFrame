@@ -808,6 +808,38 @@ static void test_combine()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_RSIVisitor()  {
+
+    std::cout << "\nTesting RSIVisitor{  } ..." << std::endl;
+
+    const size_t            item_cnt = 32;
+    MyDataFrame             df;
+    RandGenParams<double>   p;
+
+    p.mean = 5.6;
+    p.std = 0.5;
+    p.seed = 123;
+    p.min_value = 0;
+    p.max_value = 8;
+
+    df.load_data(MyDataFrame::gen_sequence_index(0, item_cnt, 1),
+                 std::make_pair("normal",
+                                gen_normal_dist<double>(item_cnt, p)));
+
+    RSIVisitor<double>  rsi(return_policy::percentage);
+    const auto          rsi_result =
+        df.single_act_visit<double>("normal", rsi).get_result();
+    std::vector<double> result {
+        61.7415, 60.4834, 61.9366, 59.6913, 57.6219, 60.7955, 59.3452, 59.975,
+        58.261, 52.4888, 54.3424, 55.912, 54.6126, 54.3072, 52.3504, 56.7229,
+        52.4376, 51.8158 };
+
+    for (size_t idx = 0; idx < result.size(); ++idx)
+       assert(fabs(result[idx] - rsi_result[idx]) < 0.0001);
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int argc, char *argv[]) {
 
     test_get_reindexed();
@@ -823,6 +855,7 @@ int main(int argc, char *argv[]) {
     test_RankVisitor();
     test_SigmiodVisitor();
     test_combine();
+    test_RSIVisitor();
 
     return (0);
 }

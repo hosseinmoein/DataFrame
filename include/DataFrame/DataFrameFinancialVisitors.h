@@ -875,7 +875,13 @@ private:
 // The RSI is classified as a momentum oscillator, measuring the velocity and
 // magnitude of price movements.
 // The RSI is most typically used on a 14-day (a parameter in this visitor)
-// timeframe, measured on a scale from 0 to 100.
+// time frame, measured on a scale from 0 to 100.
+// Traditional interpretation and usage of the RSI are that values of 70 or
+// above indicate that a security is becoming overbought or overvalued and may
+// be primed for a trend reversal or corrective pullback in price. An RSI
+// reading of 30 or below indicates an oversold or undervalued condition.
+//
+// The input (column) to this visitor is assumed to be instrument prices.
 //
 template<typename T,
          typename I = unsigned long,
@@ -891,21 +897,49 @@ struct RSIVisitor {
         const size_type col_s = column.size();
 
         // This data doesn't make sense
-        if (avg_period_ > col_s + 2)  return;
+        if (avg_period_ >= col_s - 3)  return;
 
-        ReturnVisitor   return_v (rp_);
+        ReturnVisitor<value_type>   return_v (rp_);
 
         return_v.pre();
         return_v (idx, column);
         return_v.post();
 
+        value_type          avg_up = 0;
+        value_type          avg_down = 0;
+        const value_type    avg_period_1 = avg_period_ - value_type(1);
+
+        for (size_type idx = 0; idx < avg_period_; ++idx)  {
+            const value_type    value = return_v.get_result()[idx];
+
+            if (value > 0)
+                avg_up = (avg_up * avg_period_1 + value) / avg_period_;
+            else if (value < 0)
+                avg_down = (avg_down * avg_period_1 - value) / avg_period_;
+        }
+
         result_.reserve(col_s - avg_period_);
+
+        constexpr value_type    hundred = value_type(100);
+        constexpr value_type    one = value_type(1);
+
+        result_.push_back(hundred - (hundred / (one + avg_up / avg_down)));
+
+        const size_type ret_s = return_v.get_result().size();
+
+        for (size_type idx = avg_period_; idx < ret_s; ++idx)  {
+            const value_type    value = return_v.get_result()[idx];
+
+            if (value > 0)
+                avg_up = (avg_up * avg_period_1 + value) / avg_period_;
+            else if (value < 0)
+                avg_down = (avg_down * avg_period_1 - value) / avg_period_;
+            result_.push_back(hundred - (hundred / (one + avg_up / avg_down)));
+        }
     }
 
-    RSIVisitor(return_policy rp,
-               bool exponential_avg,
-               size_type avg_period = 14)
-        : rp_(rp), expo_avg_(exponential_avg), avg_period_(avg_period)  {   }
+    explicit RSIVisitor(return_policy rp, size_type avg_period = 14)
+        : rp_(rp), avg_period_(value_type(avg_period))  {   }
 
     inline void pre ()  { result_.clear(); }
     inline void post ()  {  }
@@ -915,8 +949,7 @@ struct RSIVisitor {
 private:
 
     const return_policy rp_;
-    const bool          expo_avg_;
-    const size_type     avg_period_;
+    const value_type    avg_period_;
     result_type         result_ { };
 };
 

@@ -1,0 +1,94 @@
+<!--
+Copyright (c) 2019-2022, Hossein Moein
+All rights reserved.
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+* Redistributions of source code must retain the above copyright
+  notice, this list of conditions and the following disclaimer.
+* Redistributions in binary form must reproduce the above copyright
+  notice, this list of conditions and the following disclaimer in the
+  documentation and/or other materials provided with the distribution.
+* Neither the name of Hossein Moein and/or the DataFrame nor the
+  names of its contributors may be used to endorse or promote products
+  derived from this software without specific prior written permission.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL Hossein Moein BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+<!DOCTYPE html>
+<html>
+<body>
+
+  <table align="center" border="1">
+
+    <tr bgcolor="lightblue">
+      <th>Signature</th> <th>Description</th> <th>Parameters</th>
+    </tr>
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        template&lt;typename T, typename I = unsigned long, typename = typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;<BR>
+        struct RSIVisitor; </font>
+      </td>
+      <td width="40%">
+        Relative Strength Index (RSI) is a technical indicator used in the analysis of financial markets. It is intended to chart the current and historical strength or weakness of a stock or market based on the closing prices of a recent trading period. The indicator should not be confused with relative strength.<BR>
+        The RSI is classified as a momentum oscillator, measuring the velocity and magnitude of price movements.<BR>
+        The RSI is most typically used on a 14-day (a parameter in this visitor) time frame, measured on a scale from 0 to 100.<BR>
+        Traditional interpretation and usage of the RSI are that values of 70 or above indicate that a security is becoming overbought or overvalued and may be primed for a trend reversal or corrective pullback in price. An RSI reading of 30 or below indicates an oversold or undervalued condition.<BR><BR>
+        <B>NOTE:</B> The input (column) to this visitor is assumed to be instrument prices.<BR>
+        <B>NOTE:</B> The length of the result vector is <I>length of column - avg_period</I>.<BR><BR>
+        <I>explicit RSIVisitor(return_policy rp, size_type avg_period = 14)</I>
+      </td>
+      <td width="15%">
+        <B>T</B>: Column data type.<BR>
+        <B>I</B>: Index type.
+      </td>
+    </tr>
+
+  </table>
+
+ <pre style='color:#000000;background:#ffffff;'><span style='color:#800000; font-weight:bold; '>static</span> <span style='color:#800000; font-weight:bold; '>void</span> test_RSIVisitor<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span>  <span style='color:#800080; '>{</span>
+
+    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>cout</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#800000; '>"</span><span style='color:#0f69ff; '>\n</span><span style='color:#0000e6; '>Testing RSIVisitor{  } ...</span><span style='color:#800000; '>"</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>endl</span><span style='color:#800080; '>;</span>
+
+    <span style='color:#800000; font-weight:bold; '>const</span> <span style='color:#603000; '>size_t</span>            item_cnt <span style='color:#808030; '>=</span> <span style='color:#008c00; '>32</span><span style='color:#800080; '>;</span>
+    MyDataFrame             df<span style='color:#800080; '>;</span>
+    RandGenParams<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span>   p<span style='color:#800080; '>;</span>
+
+    p<span style='color:#808030; '>.</span>mean <span style='color:#808030; '>=</span> <span style='color:#008000; '>5.6</span><span style='color:#800080; '>;</span>
+    p<span style='color:#808030; '>.</span><span style='color:#666616; '>std</span> <span style='color:#808030; '>=</span> <span style='color:#008000; '>0.5</span><span style='color:#800080; '>;</span>
+    p<span style='color:#808030; '>.</span>seed <span style='color:#808030; '>=</span> <span style='color:#008c00; '>123</span><span style='color:#800080; '>;</span>
+    p<span style='color:#808030; '>.</span>min_value <span style='color:#808030; '>=</span> <span style='color:#008c00; '>0</span><span style='color:#800080; '>;</span>
+    p<span style='color:#808030; '>.</span>max_value <span style='color:#808030; '>=</span> <span style='color:#008c00; '>8</span><span style='color:#800080; '>;</span>
+
+    df<span style='color:#808030; '>.</span>load_data<span style='color:#808030; '>(</span>MyDataFrame<span style='color:#800080; '>::</span>gen_sequence_index<span style='color:#808030; '>(</span><span style='color:#008c00; '>0</span><span style='color:#808030; '>,</span> item_cnt<span style='color:#808030; '>,</span> <span style='color:#008c00; '>1</span><span style='color:#808030; '>)</span><span style='color:#808030; '>,</span>
+                 <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span>make_pair<span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>normal</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> gen_normal_dist<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span>item_cnt<span style='color:#808030; '>,</span> p<span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+
+    RSIVisitor<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span>  rsi<span style='color:#808030; '>(</span>return_policy<span style='color:#800080; '>::</span>percentage<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    <span style='color:#800000; font-weight:bold; '>const</span> <span style='color:#800000; font-weight:bold; '>auto</span>          rsi_result <span style='color:#808030; '>=</span> df<span style='color:#808030; '>.</span>single_act_visit<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>normal</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> rsi<span style='color:#808030; '>)</span><span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>vector</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span> result <span style='color:#800080; '>{</span>
+        <span style='color:#008000; '>61.7415</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>60.4834</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>61.9366</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>59.6913</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>57.6219</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>60.7955</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>59.3452</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>59.975</span><span style='color:#808030; '>,</span>
+        <span style='color:#008000; '>58.261</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>52.4888</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>54.3424</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>55.912</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>54.6126</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>54.3072</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>52.3504</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>56.7229</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>52.4376</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>51.8158</span> <span style='color:#800080; '>}</span><span style='color:#800080; '>;</span>
+
+    <span style='color:#800000; font-weight:bold; '>for</span> <span style='color:#808030; '>(</span><span style='color:#603000; '>size_t</span> idx <span style='color:#808030; '>=</span> <span style='color:#008c00; '>0</span><span style='color:#800080; '>;</span> idx <span style='color:#808030; '>&lt;</span> result<span style='color:#808030; '>.</span>size<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span> <span style='color:#808030; '>+</span><span style='color:#808030; '>+</span>idx<span style='color:#808030; '>)</span>
+       assert<span style='color:#808030; '>(</span><span style='color:#603000; '>fabs</span><span style='color:#808030; '>(</span>result<span style='color:#808030; '>[</span>idx<span style='color:#808030; '>]</span> <span style='color:#808030; '>-</span> rsi_result<span style='color:#808030; '>[</span>idx<span style='color:#808030; '>]</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>&lt;</span> <span style='color:#008000; '>0.0001</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+<span style='color:#800080; '>}</span>
+</pre>
+<!--Created using ToHtml.com on 2020-08-13 19:03:32 UTC -->
+  
+</body>
+</html>
+
+<!--
+Local Variables:
+mode:HTML
+tab-width:4
+c-basic-offset:4
+End:
+-->

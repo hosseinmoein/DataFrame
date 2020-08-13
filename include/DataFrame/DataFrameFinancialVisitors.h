@@ -918,7 +918,7 @@ struct RSIVisitor {
                 avg_down = (avg_down * avg_period_1 - value) / avg_period_;
         }
 
-        result_.reserve(col_s - avg_period_);
+        result_.reserve(col_s - static_cast<size_type>(avg_period_));
 
         constexpr value_type    hundred = value_type(100);
         constexpr value_type    one = value_type(1);
@@ -927,7 +927,7 @@ struct RSIVisitor {
 
         const size_type ret_s = return_v.get_result().size();
 
-        for (size_type idx = avg_period_; idx < ret_s; ++idx)  {
+        for (size_type idx = size_type(avg_period_); idx < ret_s; ++idx)  {
             const value_type    value = return_v.get_result()[idx];
 
             if (value > 0)

@@ -3999,9 +3999,11 @@ static void test_k_means()  {
 
     df.single_act_visit<double>("col1", km_visitor);
 
+    const auto  &col1 = df.get_column<double>("col1");
     // Using the calculated means, separate the given column into clusters
     const auto  clusters =
-        km_visitor.get_clusters(df.get_index(), df.get_column<double>("col1"));
+        km_visitor.get_clusters(df.get_index().begin(), df.get_index().end(),
+                                col1.begin(), col1.end());
     bool        found = false;
 
 /*
@@ -4071,9 +4073,10 @@ static void test_k_means()  {
     df.single_act_visit<Point>("point_col", km_visitor2);
 
     // Using the calculated means, separate the given column into clusters
+    const auto  &point_col = df.get_column<Point>("point_col");
     const auto  clusters2 =
-        km_visitor2.get_clusters(df.get_index(),
-                                 df.get_column<Point>("point_col"));
+        km_visitor2.get_clusters(df.get_index().begin(), df.get_index().end(),
+                                 point_col.begin(), point_col.end());
 
     for (auto iter : clusters2)  {
         for (auto iter2 : iter)  {
@@ -4193,8 +4196,10 @@ static void test_affinity_propagation()  {
 
     // Using the calculated means, separate the given column into clusters
     const auto  k_means = km_visitor.get_result();
+    const auto  &col1 = df.get_column<double>("col1");
     const auto  results =
-        ap_visitor.get_clusters(df.get_index(), df.get_column<double>("col1"));
+        ap_visitor.get_clusters(df.get_index().begin(), df.get_index().end(),
+                                col1.begin(), col1.end());
 
     for (auto iter : k_means)  {
         std::cout << iter << ", ";

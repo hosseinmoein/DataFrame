@@ -35,6 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cmath>
 #include <cstddef>
 #include <functional>
+#include <iterator>
 #include <map>
 #include <numeric>
 
@@ -725,11 +726,16 @@ public:
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx, const H &column)  {
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &column_begin,
+                const H &column_end)  {
 
         if (roll_count_ == 0)  return;
 
-        const size_type col_s = std::min(idx.size(), column.size());
+        const size_type idx_size = std::distance(idx_begin, idx_end);
+        const size_type col_size = std::distance(column_begin, column_end);
+        const size_type col_s = std::min(idx_size, col_size);
 
         result_.reserve(col_s);
 
@@ -740,7 +746,7 @@ public:
 
             visitor_.pre();
             for (size_type j = i; r < roll_count_ && j < col_s; ++j, ++r)
-                visitor_(idx[j], column[j]);
+                visitor_(*(idx_begin + j), *(column_begin + j));
             visitor_.post();
             if (r == roll_count_)
                 result_.push_back(visitor_.get_result());
@@ -783,11 +789,16 @@ public:
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx, const H &column)  {
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &column_begin,
+                const H &column_end)  {
 
         if (init_roll_count_ == 0)  return;
 
-        const size_t    col_s = std::min(idx.size(), column.size());
+        const size_type idx_size = std::distance(idx_begin, idx_end);
+        const size_type col_size = std::distance(column_begin, column_end);
+        const size_t    col_s = std::min(idx_size, col_size);
 
         result_.reserve(col_s);
 
@@ -801,7 +812,7 @@ public:
 
             visitor_.pre();
             for (size_t j = i; r < rc && j < col_s; ++j, ++r)
-                visitor_(idx[j], column[j]);
+                visitor_(*(idx_begin + j), *(column_begin + j));
             visitor_.post();
             if (r == rc)
                 result_.push_back(visitor_.get_result());
@@ -856,9 +867,14 @@ public:
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx, const H &column)  {
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &column_begin,
+                const H &column_end)  {
 
-        const size_t    col_s = std::min(idx.size(), column.size());
+        const size_type idx_size = std::distance(idx_begin, idx_end);
+        const size_type col_size = std::distance(column_begin, column_end);
+        const size_t    col_s = std::min(idx_size, col_size);
 
         if (roll_count_ == 0 || roll_count_ >= col_s)  return;
 
@@ -868,14 +884,16 @@ public:
 
         visitor_.pre();
         for (; i < roll_count_; ++i)
-            visitor_(idx[i], column[i]);
+            visitor_(*(idx_begin + i), *(column_begin + i));
         visitor_.post();
         result_[--i] = visitor_.get_result();
         i += 1;
 
         for (; i < col_s; ++i)  {
-            if (skip_nan_ && is_nan__(column[i]))  continue;
-            result_[i] = decay_ * column[i] + ((1.0 - decay_) * result_[i - 1]);
+            if (skip_nan_ && is_nan__(*(column_begin + i)))  continue;
+            result_[i] =
+                decay_ * *(column_begin + i) +
+                ((1.0 - decay_) * result_[i - 1]);
         }
     }
 
@@ -1044,19 +1062,26 @@ struct CumSumVisitor {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx, const H &column)  {
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &column_begin,
+                const H &column_end)  {
 
         value_type      running_sum = 0;
-        const size_type col_s = std::min(idx.size(), column.size());
+        const size_type idx_size = std::distance(idx_begin, idx_end);
+        const size_type col_size = std::distance(column_begin, column_end);
+        const size_type col_s = std::min(idx_size, col_size);
 
         sum_.reserve(col_s);
         for (size_type i = 0; i < col_s; ++i)  {
-            if (! skip_nan_ || ! is_nan__(column[i]))  {
-                running_sum += column[i];
+            const value_type    &value = *(column_begin + i);
+
+            if (! skip_nan_ || ! is_nan__(value))  {
+                running_sum += value;
                 sum_.push_back(running_sum);
             }
             else
-                sum_.push_back(column[i]);
+                sum_.push_back(value);
         }
     }
     inline void pre ()  { sum_.clear(); }
@@ -1083,19 +1108,26 @@ struct CumProdVisitor {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx, const H &column)  {
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &column_begin,
+                const H &column_end)  {
 
+        const size_type idx_size = std::distance(idx_begin, idx_end);
+        const size_type col_size = std::distance(column_begin, column_end);
         value_type      running_prod = 1;
-        const size_type col_s = std::min(idx.size(), column.size());
+        const size_type col_s = std::min(idx_size, col_size);
 
         prod_.reserve(col_s);
         for (size_type i = 0; i < col_s; ++i)  {
-            if (! skip_nan_ || ! is_nan__(column[i]))  {
-                running_prod *= column[i];
+            const value_type    &value = *(column_begin + i);
+
+            if (! skip_nan_ || ! is_nan__(value))  {
+                running_prod *= value;
                 prod_.push_back(running_prod);
             }
             else
-                prod_.push_back(column[i]);
+                prod_.push_back(value);
         }
     }
     inline void pre ()  { prod_.clear(); }
@@ -1119,22 +1151,30 @@ struct CumMaxVisitor {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx, const H &column)  {
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &column_begin,
+                const H &column_end)  {
 
-        if (column.empty())  return;
+        const size_type idx_size = std::distance(idx_begin, idx_end);
+        const size_type col_size = std::distance(column_begin, column_end);
 
-        value_type      running_max = column[0];
-        const size_type col_s = std::min(idx.size(), column.size());
+        if (col_size == 0)  return;
+
+        value_type      running_max = *column_begin;
+        const size_type col_s = std::min(idx_size, col_size);
 
         max_.reserve(col_s);
         for (size_type i = 0; i < col_s; ++i)  {
-            if (! skip_nan_ || ! is_nan__(column[i]))  {
-                if (column[i] > running_max)
-                    running_max = column[i];
+            const value_type    &value = *(column_begin + i);
+
+            if (! skip_nan_ || ! is_nan__(value))  {
+                if (value > running_max)
+                    running_max = value;
                 max_.push_back(running_max);
             }
             else
-                max_.push_back(column[i]);
+                max_.push_back(value);
         }
     }
     inline void pre ()  { max_.clear(); }
@@ -1158,22 +1198,30 @@ struct CumMinVisitor {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx, const H &column)  {
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &column_begin,
+                const H &column_end)  {
 
-        if (column.empty())  return;
+        const size_type idx_size = std::distance(idx_begin, idx_end);
+        const size_type col_size = std::distance(column_begin, column_end);
 
-        value_type      running_min = column[0];
-        const size_type col_s = std::min(idx.size(), column.size());
+        if (col_size == 0)  return;
+
+        value_type      running_min = *column_begin;
+        const size_type col_s = std::min(idx_size, col_size);
 
         min_.reserve(col_s);
         for (size_type i = 0; i < col_s; ++i)  {
-            if (! skip_nan_ || ! is_nan__(column[i]))  {
-                if (column[i] < running_min)
-                    running_min = column[i];
+            const value_type    &value = *(column_begin + i);
+
+            if (! skip_nan_ || ! is_nan__(value))  {
+                if (value < running_min)
+                    running_min = value;
                 min_.push_back(running_min);
             }
             else
-                min_.push_back(column[i]);
+                min_.push_back(value);
         }
     }
     inline void pre ()  { min_.clear(); }
@@ -1210,25 +1258,30 @@ public:
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx, const H &column)  {
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &column_begin,
+                const H &column_end)  {
 
-        const size_type c_len = column.size();
+        const size_type c_len = std::distance(column_begin, column_end);
 
         result_.reserve(c_len);
 
         size_type   cat = nan_ != 0 ? 0 : 1;
 
         for (size_type i = 0; i < c_len; ++i)  {
-            if (is_nan__(column[i]))  {
+            const value_type    &value = *(column_begin + i);
+
+            if (is_nan__(value))  {
                 result_.push_back(nan_);
                 continue;
             }
 
             const typename map_type::const_iterator citer =
-                cat_map_.find(&(column[i]));
+                cat_map_.find(&value);
 
             if (citer == cat_map_.end())  {
-                cat_map_.insert({ &(column[i]), cat });
+                cat_map_.insert({ &value, cat });
                 result_.push_back(cat);
                 cat += 1;
                 if (cat == nan_)  cat += 1;
@@ -1268,19 +1321,23 @@ public:
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx, const H &column)  {
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &column_begin,
+                const H &column_end)  {
 
-        const size_type         c_len = column.size();
+        const size_type         c_len = std::distance(column_begin, column_end);
         std::vector<size_type>  rank_vec(c_len);
 
         std::iota(rank_vec.begin(), rank_vec.end(), 0);
-        std::stable_sort(rank_vec.begin(), rank_vec.end(),
-                         [&column](size_type lhs, size_type rhs) -> bool {
-                             return (column[lhs] < column[rhs]);
-                         });
+        std::stable_sort(
+            rank_vec.begin(), rank_vec.end(),
+            [&column_begin](size_type lhs, size_type rhs) -> bool {
+                return *(column_begin + lhs) < *(column_begin + rhs);
+            });
         result_.resize(c_len);
 
-        const value_type    *prev_value = &(column[rank_vec[0]]);
+        const value_type    *prev_value = &*(column_begin + rank_vec[0]);
 
         for (size_type i = 0; i < c_len; ++i)  {
             double      avg_val = static_cast<double>(i);
@@ -1288,7 +1345,8 @@ public:
             double      last_val = static_cast<double>(i);
             size_type   j = i + 1;
 
-            for ( ; j < c_len && *prev_value == column[rank_vec[j]]; ++j)  {
+            for ( ; j < c_len && *prev_value == *(column_begin + rank_vec[j]);
+                 ++j)  {
                 last_val = static_cast<double>(j);
                 avg_val += static_cast<double>(j);
             }
@@ -1309,7 +1367,7 @@ public:
                     break;
                 }
             }
-            prev_value = &(column[rank_vec[i]]);
+            prev_value = &*(column_begin + rank_vec[i]);
             i -= 1;  // Because the outer loop does ++i
         }
     }
@@ -1341,12 +1399,15 @@ struct FactorizeVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx, const H &column)  {
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &column_begin,
+                const H &column_end)  {
 
-        result_.reserve(column.size());
+        result_.reserve(std::distance(column_begin, column_end));
 
-        for (auto citer : column)
-            result_.push_back(ffunc_(citer));
+        for (auto citer = column_begin; citer < column_end; ++citer)
+            result_.push_back(ffunc_(*citer));
     }
 
     explicit FactorizeVisitor(factor_func f) : ffunc_(f)  {   }
@@ -1363,8 +1424,6 @@ private:
 
 // ----------------------------------------------------------------------------
 
-// Simple rolling adoptor for visitors
-//
 template<typename T,
          typename I = unsigned long,
          typename =
@@ -1378,9 +1437,14 @@ public:
     AutoCorrVisitor () = default;
     template <typename K, typename H>
     inline void
-    operator() (const K &idx, const H &column)  {
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &column_begin,
+                const H &column_end)  {
 
-        const size_type col_len = std::min(idx.size(), column.size());
+        const size_type idx_size = std::distance(idx_begin, idx_end);
+        const size_type col_size = std::distance(column_begin, column_end);
+        const size_type col_len = std::min(idx_size, col_size);
 
         if (col_len <= 4)  return;
 
@@ -1394,7 +1458,7 @@ public:
         tmp_result[0] = 1.0;
         while (lag < col_len - 4)  {
             if (thread_count >= thread_level)  {
-                const auto  result = get_auto_corr_(col_len, lag, column);
+                const auto  result = get_auto_corr_(col_len, lag, column_begin);
 
                 tmp_result[result.first] = result.second;
             }
@@ -1405,7 +1469,7 @@ public:
                                this,
                                col_len,
                                lag,
-                               std::cref(column));
+                               std::cref(column_begin));
                 thread_count += 1;
             }
             lag += 1;
@@ -1432,13 +1496,15 @@ private:
     inline CorrResult
     get_auto_corr_(size_type col_len,
                    size_type lag,
-                   const H &column) const  {
+                   const H &column_begin) const  {
 
         CorrVisitor<value_type, index_type> corr {  };
+        constexpr I                         dummy = I();
 
         corr.pre();
         for (size_type i = 0; i < col_len - lag; ++i)
-            corr (I(), column[i], column[i + lag]);
+            corr (dummy, *(column_begin + i), *(column_begin + i + lag));
+        corr.post();
 
         return (CorrResult(lag, corr.get_result()));
     }
@@ -1457,49 +1523,43 @@ struct ReturnVisitor  {
     explicit ReturnVisitor (return_policy rp) : ret_p_(rp)  {   }
 
     template <typename K, typename H>
-    inline void operator() (const K &idx, const H &column)  {
+    inline void
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &prices_begin,
+                const H &prices_end)  {
 
-        const size_type col_len = std::min(idx.size(), column.size());
+        const size_type idx_size = std::distance(idx_begin, idx_end);
+        const size_type col_size = std::distance(prices_begin, prices_end);
+        const size_type col_len = std::min(idx_size, col_size);
 
         if (col_len < 3)  return;
+
+        // Log return
+        std::function<value_type(value_type, value_type)>   func =
+            [](value_type lhs, value_type rhs) -> value_type  {
+                return (::log(lhs / rhs));
+            };
+
+        if (ret_p_ == return_policy::percentage)
+            func = [](value_type lhs, value_type rhs) -> value_type  {
+                      return ((lhs - rhs) / rhs);
+                   };
+        else if (ret_p_ == return_policy::monetary)
+            func = [](value_type lhs, value_type rhs) -> value_type  {
+                       return (lhs - rhs);
+                   };
 
         result_type tmp_result;
 
         tmp_result.reserve(col_len);
-
-        if (ret_p_ == return_policy::log)  {
-            auto    func =
-                [](value_type lhs, value_type rhs) -> value_type  {
-                    return (::log(lhs / rhs));
-                };
-
-            std::adjacent_difference (column.begin(), column.end(),
-                                      std::back_inserter (tmp_result),
-                                      func);
-        }
-        else if (ret_p_ == return_policy::percentage)  {
-            auto    func =
-                [](value_type lhs, value_type rhs) -> value_type  {
-                    return ((lhs - rhs) / rhs);
-                };
-
-            std::adjacent_difference (column.begin(), column.end(),
-                                      std::back_inserter (tmp_result),
-                                      func);
-        }
-        else if (ret_p_ == return_policy::monetary)  {
-            auto    func =
-                [](value_type lhs, value_type rhs) -> value_type  {
-                    return (lhs - rhs);
-                };
-
-            std::adjacent_difference (column.begin(), column.end(),
-                                      std::back_inserter (tmp_result),
-                                      func);
-        }
+        std::adjacent_difference (prices_begin, prices_end,
+                                  std::back_inserter (tmp_result),
+                                  func);
         tmp_result.erase (tmp_result.begin ());
         tmp_result.swap(result_);
     }
+
     inline void pre ()  { result_.clear(); }
     inline void post ()  {   }
     inline const result_type &get_result () const  { return (result_); }
@@ -1526,9 +1586,12 @@ struct KthValueVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &, const H &column)  {
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &values_begin,
+                const H &values_end)  {
 
-        result_ = find_kth_element_(column.begin(), column.end(), kth_element_);
+        result_ = find_kth_element_(values_begin, values_end, kth_element_);
     }
     inline void pre ()  { result_ = value_type(); }
     inline void post ()  {   }
@@ -1544,7 +1607,7 @@ private:
     inline value_type
     find_kth_element_ (It begin, It end, size_type k) const  {
 
-        const size_type vec_size = static_cast<size_type>(end - begin);
+        const size_type vec_size = std::distance(begin, end);
 
         if (k > vec_size || k <= 0)  {
             char    err[512];
@@ -1600,21 +1663,25 @@ struct MedianVisitor  {
     MedianVisitor () = default;
     template <typename K, typename H>
     inline void
-    operator() (const K &idx, const H &column)  {
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &values_begin,
+                const H &values_end)  {
 
-        const size_type                         vec_size = column.size();
+        const size_type                         vec_size =
+            std::distance(values_begin, values_end);
         KthValueVisitor<value_type, index_type> kv_visitor (vec_size >> 1);
 
 
         kv_visitor.pre();
-        kv_visitor(idx, column);
+        kv_visitor(idx_begin, idx_end, values_begin, values_end);
         kv_visitor.post();
         result_ = kv_visitor.get_result();
         if (! (vec_size & 0x0001))  { // even
             KthValueVisitor<value_type, I>   kv_visitor2 ((vec_size >> 1) + 1);
 
             kv_visitor2.pre();
-            kv_visitor2(idx, column);
+            kv_visitor2(idx_begin, idx_end, values_begin, values_end);
             kv_visitor2.post();
             result_ = (result_ + kv_visitor2.get_result()) / value_type(2);
         }
@@ -1644,9 +1711,12 @@ struct QuantileVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx, const H &column)  {
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &column_begin,
+                const H &column_end)  {
 
-        const size_type vec_len = column.size();
+        const size_type vec_len = std::distance(column_begin, column_end);
 
         if (qt_ < 0.0 || qt_ > 1.0 || vec_len == 0)  {
             char buffer [512];
@@ -1668,19 +1738,11 @@ struct QuantileVisitor  {
         const bool      need_two =
             ! (vec_len & 0x01) || double(int_idx) < vec_len_frac;
 
-        if (qt_ == 0.0)  {
-            KthValueVisitor<T, I>   kth_value(1);
+        if (qt_ == 0.0 || qt_ == 1.0)  {
+            KthValueVisitor<T, I>   kth_value((qt_ == 0.0 ) ? 1 : vec_len);
 
             kth_value.pre();
-            kth_value(idx, column);
-            kth_value.post();
-            result_ = kth_value.get_result();
-        }
-        else if (qt_ == 1.0)  {
-            KthValueVisitor<T, I>   kth_value(vec_len);
-
-            kth_value.pre();
-            kth_value(idx, column);
+            kth_value(idx_begin, idx_end, column_begin, column_end);
             kth_value.post();
             result_ = kth_value.get_result();
         }
@@ -1689,14 +1751,14 @@ struct QuantileVisitor  {
             KthValueVisitor<T, I>   kth_value1(int_idx);
 
             kth_value1.pre();
-            kth_value1(idx, column);
+            kth_value1(idx_begin, idx_end, column_begin, column_end);
             kth_value1.post();
             result_ = kth_value1.get_result();
             if (need_two && int_idx + 1 < vec_len)  {
                 KthValueVisitor<T, I>   kth_value2(int_idx + 1);
 
                 kth_value2.pre();
-                kth_value2(idx, column);
+                kth_value2(idx_begin, idx_end, column_begin, column_end);
                 kth_value2.post();
                 if (policy_ == quantile_policy::mid_point)
                     result_ = (result_ + kth_value2.get_result()) / 2.0;
@@ -1712,7 +1774,7 @@ struct QuantileVisitor  {
                 : (int_idx + 1 < vec_len && need_two ? int_idx + 1 : int_idx));
 
             kth_value.pre();
-            kth_value(idx, column);
+            kth_value(idx_begin, idx_end, column_begin, column_end);
             kth_value.post();
             result_ = kth_value.get_result();
         }
@@ -1799,26 +1861,32 @@ public:
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx, const H &column)  {
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &column_begin,
+                const H &column_end)  {
 
         DataItem        nan_item;
-        const size_type col_size = std::min(idx.size(), column.size());
+        const size_type idx_size = std::distance(idx_begin, idx_end);
+        const size_type column_size = std::distance(column_begin, column_end);
+        const size_type col_size = std::min(idx_size, column_size);
         map_type        val_map;
 
         val_map.reserve(col_size);
         for (size_type i = 0; i < col_size; ++i)  {
-            if (is_nan__(column[i]))  {
-                nan_item.value = &(column[i]);
-                nan_item.indices.push_back(&(idx[i]));
+            if (is_nan__(*(column_begin + i)))  {
+                nan_item.value = &*(column_begin + i);
+                nan_item.indices.push_back(&*(idx_begin + i));
                 nan_item.value_indices_in_col.push_back(i);
             }
             else  {
                 auto    ret =
                     val_map.emplace(
                         std::pair<const value_type *, DataItem>(
-                            &(column[i]), DataItem(column[i])));
+                            &*(column_begin + i),
+                            DataItem(*(column_begin + i))));
 
-                ret.first->second.indices.push_back(&(idx[i]));
+                ret.first->second.indices.push_back(&*(idx_begin + i));
                 ret.first->second.value_indices_in_col.push_back(i);
             }
         }
@@ -1883,23 +1951,29 @@ private:
 
     template <typename K, typename H>
     inline void
-    calc_mean_abs_dev_around_mean_(const K &idx, const H &column)  {
+    calc_mean_abs_dev_around_mean_(const K &idx_begin,
+                                   const K &idx_end,
+                                   const H &column_begin,
+                                   const H &column_end)  {
 
-        const std::size_t   col_s = std::min(idx.size(), column.size());
+        const size_type     idx_size = std::distance(idx_begin, idx_end);
+        const size_type     col_size = std::distance(column_begin, column_end);
+        const std::size_t   col_s = std::min(idx_size, col_size);
         MeanVisitor<T, I>   mean_visitor(skip_nan_);
 
         mean_visitor.pre();
         for (std::size_t i = 0; i < col_s; ++i)
-            mean_visitor(idx[i], column[i]);
+            mean_visitor(*(idx_begin + i), *(column_begin + i));
         mean_visitor.post();
 
         MeanVisitor<T, I>   mean_mean_visitor(skip_nan_);
 
         mean_mean_visitor.pre();
         for (std::size_t i = 0; i < col_s; ++i)  {
-            if (skip_nan_ && is_nan__(column[i]))  continue;
-            mean_mean_visitor(idx[i],
-                              std::fabs(column[i] - mean_visitor.get_result()));
+            if (skip_nan_ && is_nan__(*(column_begin + i)))  continue;
+            mean_mean_visitor(*(idx_begin + i),
+                              std::fabs(*(column_begin + i) -
+                                        mean_visitor.get_result()));
         }
         mean_mean_visitor.post();
 
@@ -1908,23 +1982,28 @@ private:
 
     template <typename K, typename H>
     inline void
-    calc_mean_abs_dev_around_median_(const K &idx, const H &column)  {
+    calc_mean_abs_dev_around_median_(const K &idx_begin,
+                                     const K &idx_end,
+                                     const H &column_begin,
+                                     const H &column_end)  {
 
         MedianVisitor<T, I> median_visitor;
 
         median_visitor.pre();
-        median_visitor(idx, column);
+        median_visitor(idx_begin, idx_end, column_begin, column_end);
         median_visitor.post();
 
-        const std::size_t   col_s = std::min(idx.size(), column.size());
+        const size_type     idx_size = std::distance(idx_begin, idx_end);
+        const size_type     col_size = std::distance(column_begin, column_end);
+        const std::size_t   col_s = std::min(idx_size, col_size);
         MeanVisitor<T, I>   mean_median_visitor(skip_nan_);
 
         mean_median_visitor.pre();
         for (std::size_t i = 0; i < col_s; ++i)  {
-            if (skip_nan_ && is_nan__(column[i]))  continue;
+            if (skip_nan_ && is_nan__(*(column_begin + i)))  continue;
             mean_median_visitor(
-                idx[i],
-                std::fabs(column[i] - median_visitor.get_result()));
+                *(idx_begin + i),
+                std::fabs(*(column_begin + i) - median_visitor.get_result()));
         }
         mean_median_visitor.post();
 
@@ -1933,14 +2012,19 @@ private:
 
     template <typename K, typename H>
     inline void
-    calc_median_abs_dev_around_mean_(const K &idx, const H &column)  {
+    calc_median_abs_dev_around_mean_(const K &idx_begin,
+                                     const K &idx_end,
+                                     const H &column_begin,
+                                     const H &column_end)  {
 
         MeanVisitor<T, I>   mean_visitor(skip_nan_);
-        const std::size_t   col_s = std::min(idx.size(), column.size());
+        const size_type     idx_size = std::distance(idx_begin, idx_end);
+        const size_type     col_size = std::distance(column_begin, column_end);
+        const std::size_t   col_s = std::min(idx_size, col_size);
 
         mean_visitor.pre();
         for (std::size_t i = 0; i < col_s; ++i)
-            mean_visitor(idx[i], column[i]);
+            mean_visitor(*(idx_begin + i), *(column_begin + i));
         mean_visitor.post();
 
         MedianVisitor<T, I> median_mean_visitor;
@@ -1949,9 +2033,10 @@ private:
         mean_dists.reserve(col_s);
         for (std::size_t i = 0; i < col_s; ++i)
             mean_dists.push_back(
-                std::fabs(column[i] - mean_visitor.get_result()));
+                std::fabs(*(column_begin + i) - mean_visitor.get_result()));
         median_mean_visitor.pre();
-        median_mean_visitor(idx, mean_dists);
+        median_mean_visitor(idx_begin, idx_end,
+                            mean_dists.begin(), mean_dists.end());
         median_mean_visitor.post();
 
         result_ = median_mean_visitor.get_result();
@@ -1959,24 +2044,30 @@ private:
 
     template <typename K, typename H>
     inline void
-    calc_median_abs_dev_around_median_(const K &idx, const H &column)  {
+    calc_median_abs_dev_around_median_(const K &idx_begin,
+                                       const K &idx_end,
+                                       const H &column_begin,
+                                       const H &column_end)  {
 
         MedianVisitor<T, I> median_visitor;
 
         median_visitor.pre();
-        median_visitor(idx, column);
+        median_visitor(idx_begin, idx_end, column_begin, column_end);
         median_visitor.post();
 
-        const std::size_t   col_s = std::min(idx.size(), column.size());
+        const size_type     idx_size = std::distance(idx_begin, idx_end);
+        const size_type     col_size = std::distance(column_begin, column_end);
+        const std::size_t   col_s = std::min(idx_size, col_size);
         MedianVisitor<T, I> median_median_visitor;
         std::vector<T>      median_dists;
 
         median_dists.reserve(col_s);
         for (std::size_t i = 0; i < col_s; ++i)
             median_dists.push_back(
-                std::fabs(column[i] - median_visitor.get_result()));
+                std::fabs(*(column_begin + i) - median_visitor.get_result()));
         median_median_visitor.pre();
-        median_median_visitor(idx, median_dists);
+        median_median_visitor(idx_begin, idx_end,
+                              median_dists.begin(), median_dists.end());
         median_median_visitor.post();
 
         result_ = median_median_visitor.get_result();
@@ -1990,20 +2081,27 @@ public:
         : mad_type_(mt), skip_nan_(skip_nan)  {   }
     template <typename K, typename H>
     inline void
-    operator() (const K &idx, const H &column)  {
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &column_begin,
+                const H &column_end)  {
 
         switch (mad_type_)  {
             case mad_type::mean_abs_dev_around_mean:
-                calc_mean_abs_dev_around_mean_(idx, column);
+                calc_mean_abs_dev_around_mean_(idx_begin, idx_end,
+                                               column_begin, column_end);
                 break;
             case mad_type::mean_abs_dev_around_median:
-                calc_mean_abs_dev_around_median_(idx, column);
+                calc_mean_abs_dev_around_median_(idx_begin, idx_end,
+                                                 column_begin, column_end);
                 break;
             case mad_type::median_abs_dev_around_mean:
-                calc_median_abs_dev_around_mean_(idx, column);
+                calc_median_abs_dev_around_mean_(idx_begin, idx_end,
+                                                 column_begin, column_end);
                 break;
             case mad_type::median_abs_dev_around_median:
-                calc_median_abs_dev_around_median_(idx, column);
+                calc_median_abs_dev_around_median_(idx_begin, idx_end,
+                                                   column_begin, column_end);
                 break;
             default:
                 break;
@@ -2032,9 +2130,15 @@ struct DiffVisitor  {
         : periods_(periods), skip_nan_(skipnan) {  }
 
     template <typename K, typename H>
-    inline void operator() (const K &idx, const H &column)  {
+    inline void
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &column_begin,
+                const H &column_end)  {
 
-        const size_type col_len = std::min(idx.size(), column.size());
+        const size_type idx_size = std::distance(idx_begin, idx_end);
+        const size_type col_size = std::distance(column_begin, column_end);
+        const size_type col_len = std::min(idx_size, col_size);
 
         result_.reserve(col_len);
         if (periods_ >= 0)  {
@@ -2044,16 +2148,22 @@ struct DiffVisitor  {
                     result_.push_back(
                         std::numeric_limits<value_type>::quiet_NaN());
             }
-            for (auto i = column.begin() + periods_, j = column.begin();
-                 i < column.end(); ++i, ++j) {
+
+            auto    i = column_begin;
+
+            i += periods_;
+            for (auto j = column_begin; i < column_end; ++i, ++j) {
                 if (skip_nan_ && (is_nan__(*i) || is_nan__(*j)))  continue;
                 result_.push_back(*i - *j);
             }
         }
         else {
-            for (auto i = column.rbegin() + std::abs(periods_),
-                      j = column.rbegin();
-                 i < column.rend(); ++i, ++j) {
+            auto    i = column_end;
+            auto    j = column_end;
+
+            i -= (1 + std::abs(periods_));
+            j -= 1;
+            for ( ; i >= column_begin; --i, --j) {
                 if (skip_nan_ && (is_nan__(*i) || is_nan__(*j)))  continue;
                 result_.push_back(*i - *j);
             }
@@ -2091,18 +2201,24 @@ struct ZScoreVisitor {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx, const H &col)  {
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &column_begin,
+                const H &column_end)  {
 
         MeanVisitor<value_type> mvisit;
         StdVisitor<value_type>  svisit;
-        const size_type         col_s = std::min(idx.size(), col.size());
+        const size_type         idx_size = std::distance(idx_begin, idx_end);
+        const size_type         col_size =
+            std::distance(column_begin, column_end);
+        const size_type         col_s = std::min(idx_size, col_size);
 
         mvisit.pre();
         svisit.pre();
         for (size_type i = 0; i < col_s; ++i)  {
-            if (! skip_nan_ || ! is_nan__(col[i]))  {
-                mvisit(idx[i], col[i]);
-                svisit(idx[i], col[i]);
+            if (! skip_nan_ || ! is_nan__(*(column_begin + i)))  {
+                mvisit(*(idx_begin + i), *(column_begin + i));
+                svisit(*(idx_begin + i), *(column_begin + i));
             }
         }
         mvisit.post();
@@ -2112,8 +2228,8 @@ struct ZScoreVisitor {
         const value_type    s = svisit.get_result();
 
         zscore_.reserve(col_s);
-        for (const auto citer : col)
-            zscore_.push_back((citer - m) / s);
+        for (auto citer = column_begin; citer < column_end; ++citer)
+            zscore_.push_back((*citer - m) / s);
     }
     inline void pre ()  { zscore_.clear(); }
     inline void post ()  {  }
@@ -2138,16 +2254,22 @@ struct SampleZScoreVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_2
 
+    template <typename K, typename H>
     inline void
-    operator() (const std::vector<index_type> &idx,
-                const std::vector<value_type> &population,
-                const std::vector<value_type> &sample)  {
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &population_begin,
+                const H &population_end,
+                const H &sample_begin,
+                const H &sample_end)  {
 
         MeanVisitor<value_type> p_mvisit;
         StdVisitor<value_type>  p_svisit;
         MeanVisitor<value_type> s_mvisit;
-        const size_type         p_col_s = population.size();
-        const size_type         s_col_s = sample.size();
+        const size_type         p_col_s =
+            std::distance(population_begin, population_end);
+        const size_type         s_col_s =
+            std::distance(sample_begin, sample_end);
         const size_type         max_s = std::max(p_col_s, s_col_s);
 
         p_mvisit.pre();
@@ -2155,14 +2277,14 @@ struct SampleZScoreVisitor {
         s_mvisit.pre();
         for (size_type i = 0; i < max_s; ++i)  {
             if (i < p_col_s)  {
-                if (! skip_nan_ || ! is_nan__(population[i]))  {
-                    p_mvisit(idx[i], population[i]);
-                    p_svisit(idx[i], population[i]);
+                if (! skip_nan_ || ! is_nan__(*(population_begin + i)))  {
+                    p_mvisit(*(idx_begin + i), *(population_begin + i));
+                    p_svisit(*(idx_begin + i), *(population_begin + i));
                 }
             }
             if (i < s_col_s)  {
-                if (! skip_nan_ || ! is_nan__(sample[i]))  {
-                    s_mvisit(idx[i], sample[i]);
+                if (! skip_nan_ || ! is_nan__(*(sample_begin + i)))  {
+                    s_mvisit(*(idx_begin + i), *(sample_begin + i));
                 }
             }
         }
@@ -2199,51 +2321,51 @@ struct SigmiodVisitor {
 private:
 
     template <typename H>
-    inline void logistic_(const H &column)  {
+    inline void logistic_(const H &column_begin, const H &column_end)  {
 
-        for (auto citer : column)
-            sigmiods_.push_back(1.0 / (1.0 + std::exp(-citer)));
+        for (auto citer = column_begin; citer < column_end; ++citer)
+            sigmiods_.push_back(1.0 / (1.0 + std::exp(-(*citer))));
     }
     template <typename H>
-    inline void algebraic_(const H &column)  {
+    inline void algebraic_(const H &column_begin, const H &column_end)  {
 
-        for (auto citer : column)
-            sigmiods_.push_back(1.0 / std::sqrt(1.0 + std::pow(citer, 2.0)));
+        for (auto citer = column_begin; citer < column_end; ++citer)
+            sigmiods_.push_back(1.0 / std::sqrt(1.0 + std::pow(*citer, 2.0)));
     }
     template <typename H>
-    inline void hyperbolic_tan_(const H &column)  {
+    inline void hyperbolic_tan_(const H &column_begin, const H &column_end)  {
 
-        for (auto citer : column)
-            sigmiods_.push_back(std::tanh(citer));
+        for (auto citer = column_begin; citer < column_end; ++citer)
+            sigmiods_.push_back(std::tanh(*citer));
     }
     template <typename H>
-    inline void arc_tan_(const H &column)  {
+    inline void arc_tan_(const H &column_begin, const H &column_end)  {
 
-        for (auto citer : column)
-            sigmiods_.push_back(std::atan(citer));
+        for (auto citer = column_begin; citer < column_end; ++citer)
+            sigmiods_.push_back(std::atan(*citer));
     }
     template <typename H>
-    inline void error_function_(const H &column)  {
+    inline void error_function_(const H &column_begin, const H &column_end)  {
 
-        for (auto citer : column)
-            sigmiods_.push_back(std::erf(citer));
+        for (auto citer = column_begin; citer < column_end; ++citer)
+            sigmiods_.push_back(std::erf(*citer));
     }
     template <typename H>
-    inline void gudermannian_(const H &column)  {
+    inline void gudermannian_(const H &column_begin, const H &column_end)  {
 
-        for (auto citer : column)
-            sigmiods_.push_back(std::atan(std::sinh(citer)));
+        for (auto citer = column_begin; citer < column_end; ++citer)
+            sigmiods_.push_back(std::atan(std::sinh(*citer)));
     }
     template <typename H>
-    inline void smoothstep_(const H &column)  {
+    inline void smoothstep_(const H &column_begin, const H &column_end)  {
 
-        for (auto citer : column)  {
-            if (citer <= 0.0)
+        for (auto citer = column_begin; citer < column_end; ++citer)  {
+            if (*citer <= 0.0)
                 sigmiods_.push_back(0.0);
-            else if (citer >= 1.0)
+            else if (*citer >= 1.0)
                 sigmiods_.push_back(1.0);
             else
-                sigmiods_.push_back(citer * citer * (3.0 - 2.0 * citer));
+                sigmiods_.push_back(*citer * *citer * (3.0 - 2.0 * *citer));
         }
     }
 
@@ -2251,23 +2373,26 @@ public:
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx, const H &col)  {
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &column_begin,
+                const H &column_end)  {
 
-        sigmiods_.reserve(col.size());
+        sigmiods_.reserve(std::distance(column_begin, column_end));
         if (sigmiod_type_ == sigmiod_type::logistic)
-            logistic_(col);
+            logistic_(column_begin, column_end);
         else if (sigmiod_type_ == sigmiod_type::algebraic)
-            algebraic_(col);
+            algebraic_(column_begin, column_end);
         else if (sigmiod_type_ == sigmiod_type::hyperbolic_tan)
-            hyperbolic_tan_(col);
+            hyperbolic_tan_(column_begin, column_end);
         else if (sigmiod_type_ == sigmiod_type::arc_tan)
-            arc_tan_(col);
+            arc_tan_(column_begin, column_end);
         else if (sigmiod_type_ == sigmiod_type::error_function)
-            error_function_(col);
+            error_function_(column_begin, column_end);
         else if (sigmiod_type_ == sigmiod_type::gudermannian)
-            gudermannian_(col);
+            gudermannian_(column_begin, column_end);
         else if (sigmiod_type_ == sigmiod_type::smoothstep)
-            smoothstep_(col);
+            smoothstep_(column_begin, column_end);
     }
     inline void pre ()  { sigmiods_.clear(); }
     inline void post ()  {  }

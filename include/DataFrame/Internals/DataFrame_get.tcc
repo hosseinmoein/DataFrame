@@ -644,7 +644,7 @@ single_act_visit (const char *name, V &visitor)  {
     auto    &vec = get_column<T>(name);
 
     visitor.pre();
-    visitor (indices_, vec);
+    visitor (indices_.begin(), indices_.end(), vec.begin(), vec.end());
     visitor.post();
 
     return (visitor);
@@ -693,7 +693,9 @@ single_act_visit (const char *name1, const char *name2, V &visitor)  {
     const std::vector<T2>   &vec2 = get_column<T2>(name2);
 
     visitor.pre();
-    visitor (indices_, vec1, vec2);
+    visitor (indices_.begin(), indices_.end(),
+             vec1.begin(), vec1.end(),
+             vec2.begin(), vec2.end());
     visitor.post();
 
     return (visitor);

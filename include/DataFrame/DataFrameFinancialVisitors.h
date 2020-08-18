@@ -56,33 +56,43 @@ private:
     L_RT    long_roller_;
 
     template <typename K, typename H>
-    inline std::size_t run_short_roller_(const K &idx, const H &column)  {
+    inline std::size_t
+    run_short_roller_(const K &idx_begin,
+                      const K &idx_end,
+                      const H &prices_begin,
+                      const H &prices_end)  {
 
-        short_roller_(idx, column);
+        short_roller_(idx_begin, idx_end, prices_begin, prices_end);
 
         const auto          &result = short_roller_.get_result();
+        const size_type     idx_size = std::distance(idx_begin, idx_end);
+        const size_type     col_size = std::distance(prices_begin, prices_end);
         const std::size_t   col_s =
-            std::min<std::size_t>({ idx.size(), column.size(),
-                                    result.size() });
+            std::min<std::size_t>({ idx_size, col_size, result.size() });
 
         col_to_short_term_.reserve(col_s);
         for (size_type i = 0; i < col_s; ++i)
-            col_to_short_term_.push_back(column[i] - result[i]);
+            col_to_short_term_.push_back(*(prices_begin + i) - result[i]);
         return (col_s);
     }
     template <typename K, typename H>
-    inline std::size_t run_long_roller_(const K &idx, const H &column)  {
+    inline std::size_t
+    run_long_roller_(const K &idx_begin,
+                     const K &idx_end,
+                     const H &prices_begin,
+                     const H &prices_end)  {
 
-        long_roller_(idx, column);
+        long_roller_(idx_begin, idx_end, prices_begin, prices_end);
 
         const auto          &result = long_roller_.get_result();
+        const size_type     idx_size = std::distance(idx_begin, idx_end);
+        const size_type     col_size = std::distance(prices_begin, prices_end);
         const std::size_t   col_s =
-            std::min<std::size_t>({ idx.size(), column.size(),
-                                    result.size() });
+            std::min<std::size_t>({ idx_size, col_size, result.size() });
 
         col_to_long_term_.reserve(col_s);
         for (size_type i = 0; i < col_s; ++i)
-            col_to_long_term_.push_back(column[i] - result[i]);
+            col_to_long_term_.push_back(*(prices_begin + i) - result[i]);
         return (col_s);
     }
 
@@ -98,7 +108,10 @@ public:
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx, const H &column)  {
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &prices_begin,
+                const H &prices_end)  {
 
         const size_type thread_level =
             ThreadGranularity::get_sensible_thread_level();
@@ -110,21 +123,27 @@ public:
                 std::async(std::launch::async,
                            &DoubleCrossOver::run_short_roller_<K, H>,
                            this,
-                           std::cref(idx),
-                           std::cref(column));
+                           std::cref(idx_begin),
+                           std::cref(idx_end),
+                           std::cref(prices_begin),
+                           std::cref(prices_end));
             std::future<size_type>  fut2 =
                 std::async(std::launch::async,
                            &DoubleCrossOver::run_long_roller_<K, H>,
                            this,
-                           std::cref(idx),
-                           std::cref(column));
+                           std::cref(idx_begin),
+                           std::cref(idx_end),
+                           std::cref(prices_begin),
+                           std::cref(prices_end));
 
             re_count1 = fut1.get();
             re_count2 = fut2.get();
         }
         else  {
-            re_count1 = run_short_roller_(idx, column);
-            re_count2 = run_long_roller_(idx, column);
+            re_count1 =
+                run_short_roller_(idx_begin, idx_end, prices_begin, prices_end);
+            re_count2 =
+                run_long_roller_(idx_begin, idx_end, prices_begin, prices_end);
         }
 
         const size_type col_s = std::min<size_type>(re_count1, re_count2);
@@ -179,18 +198,26 @@ private:
     SimpleRollAdopter<StdVisitor<T, I>, T, I>   std_roller_;
 
     template <typename K, typename H>
-    inline void run_mean_roller_(const K &idx, const H &column)  {
+    inline void
+    run_mean_roller_(const K &idx_begin,
+                     const K &idx_end,
+                     const H &prices_begin,
+                     const H &prices_end)  {
 
         mean_roller_.pre();
-        mean_roller_(idx, column);
+        mean_roller_(idx_begin, idx_end, prices_begin, prices_end);
         mean_roller_.post();
     }
 
     template <typename K, typename H>
-    inline void run_std_roller_(const K &idx, const H &column)  {
+    inline void
+    run_std_roller_(const K &idx_begin,
+                    const K &idx_end,
+                    const H &prices_begin,
+                    const H &prices_end)  {
 
         std_roller_.pre();
-        std_roller_(idx, column);
+        std_roller_(idx_begin, idx_end, prices_begin, prices_end);
         std_roller_.post();
     }
 
@@ -208,13 +235,15 @@ public:
         : upper_band_multiplier_(upper_band_multiplier),
           lower_band_multiplier_(lower_band_multiplier),
           mean_roller_(std::move(MeanVisitor<T, I>()), moving_mean_period),
-          std_roller_(std::move(StdVisitor<T, I>(biased)),
-                      moving_mean_period) {
+          std_roller_(std::move(StdVisitor<T, I>(biased)), moving_mean_period) {
     }
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx, const H &column)  {
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &prices_begin,
+                const H &prices_end)  {
 
         const size_type thread_level =
             ThreadGranularity::get_sensible_thread_level();
@@ -224,43 +253,45 @@ public:
                 std::async(std::launch::async,
                            &BollingerBand::run_mean_roller_<K, H>,
                            this,
-                           std::cref(idx),
-                           std::cref(column));
+                           std::cref(idx_begin),
+                           std::cref(idx_end),
+                           std::cref(prices_begin),
+                           std::cref(prices_end));
             std::future<void>   fut2 =
                 std::async(std::launch::async,
                            &BollingerBand::run_std_roller_<K, H>,
                            this,
-                           std::cref(idx),
-                           std::cref(column));
+                           std::cref(idx_begin),
+                           std::cref(idx_end),
+                           std::cref(prices_begin),
+                           std::cref(prices_end));
 
             fut1.get();
             fut2.get();
         }
         else  {
-            run_mean_roller_(idx, column);
-            run_std_roller_(idx, column);
+            run_mean_roller_(idx_begin, idx_end, prices_begin, prices_end);
+            run_std_roller_(idx_begin, idx_end, prices_begin, prices_end);
         }
 
+        const size_type idx_size = std::distance(idx_begin, idx_end);
+        const size_type col_size = std::distance(prices_begin, prices_end);
         const auto      &std_result = std_roller_.get_result();
         const auto      &mean_result = mean_roller_.get_result();
         const size_type col_s =
             std::min<size_type>(
-                { idx.size(),
-                  column.size(),
-                  std_result.size(),
-                  mean_result.size()
-                });
+                { idx_size, col_size, std_result.size(), mean_result.size() });
 
         upper_band_to_raw_.reserve(col_s);
         for (size_type i = 0; i < col_s; ++i)
             upper_band_to_raw_.push_back(
                 (mean_result[i] + std_result[i] * upper_band_multiplier_) -
-                column[i]);
+                *(prices_begin + i));
 
         raw_to_lower_band_.reserve(col_s);
         for (size_type i = 0; i < col_s; ++i)
             raw_to_lower_band_.push_back(
-                column[i] -
+                *(prices_begin + i) -
                 (mean_result[i] - std_result[i] * lower_band_multiplier_));
     }
 
@@ -307,12 +338,12 @@ public:
     using size_type = std::size_t;
     using result_type = std::vector<value_type>;
 
-    inline MACDVisitor(size_type short_mean_period,  // e.g. 12-day
-                       size_type long_mean_period,   // e.g. 26-day
-                       size_type signal_line_period, // e.g.  9-day
-                       exponential_decay_spec ed_spec =
-                           exponential_decay_spec::span,
-                       double expo_decay_value = 0.2)
+    inline MACDVisitor(
+        size_type short_mean_period,  // e.g. 12-day
+        size_type long_mean_period,   // e.g. 26-day
+        size_type signal_line_period, // e.g.  9-day
+        exponential_decay_spec ed_spec = exponential_decay_spec::span,
+        double expo_decay_value = 0.2)
         : short_mean_period_(short_mean_period),
           long_mean_period_(long_mean_period),
           signal_line_roller_(std::move(MeanVisitor<T, I>()),
@@ -322,14 +353,17 @@ public:
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx, const H &column)  {
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &column_begin,
+                const H &column_end)  {
 
         macd_roller_t   short_roller(std::move(MeanVisitor<T, I>()),
                                      short_mean_period_,
                                      exponential_decay_spec::span, 0.2);
 
         short_roller.pre();
-        short_roller(idx, column);
+        short_roller(idx_begin, idx_end, column_begin, column_end);
         short_roller.post();
 
         macd_roller_t   long_roller(std::move(MeanVisitor<T, I>()),
@@ -337,25 +371,24 @@ public:
                                     exponential_decay_spec::span, 0.2);
 
         long_roller.pre();
-        long_roller(idx, column);
+        long_roller(idx_begin, idx_end, column_begin, column_end);
         long_roller.post();
 
+        const size_type idx_size = std::distance(idx_begin, idx_end);
+        const size_type col_size = std::distance(column_begin, column_end);
         const auto      &short_result = short_roller.get_result();
         const auto      &long_result = long_roller.get_result();
         const size_type col_s =
             std::min<size_type>(
-                { idx.size(),
-                  column.size(),
-                  short_result.size(),
-                  long_result.size()
-                });
+                {idx_size, col_size, short_result.size(), long_result.size()});
 
         macd_line_.reserve(col_s);
         for (size_type i = 0; i < col_s; ++i)
             macd_line_.push_back(short_result[i] - long_result[i]);
 
         signal_line_roller_.pre();
-        signal_line_roller_(idx, macd_line_);
+        signal_line_roller_(idx_begin, idx_end,
+                            macd_line_.begin(), macd_line_.end());
         signal_line_roller_.post();
 
         const auto  &signal_line_result = signal_line_roller_.get_result();
@@ -821,11 +854,18 @@ struct SharpeRatioVisitor {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx, const H &asset_ret, const H &benchmark_ret)  {
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &asset_ret_begin,
+                const H &asset_ret_end,
+                const H &benchmark_ret_begin,
+                const H &benchmark_ret_end)  {
 
-        const size_type vec_s = asset_ret.size();
+        const size_type vec_s = std::distance(asset_ret_begin, asset_ret_end);
+        const size_type b_s =
+            std::distance(benchmark_ret_begin, benchmark_ret_end);
 
-        if (vec_s != benchmark_ret.size() || vec_s < 3)  {
+        if (vec_s != b_s || vec_s < 3)  {
             char    err[512];
 
             sprintf (err,
@@ -836,18 +876,18 @@ struct SharpeRatioVisitor {
                      "SharpeRatioVisitor: Size of asset = %lu and "
                      "benchmark = %lu time-series are not feasible.",
 #endif // _WIN32
-                     vec_s, benchmark_ret.size());
+                     vec_s, b_s);
             throw NotFeasible (err);
         }
 
         value_type                          cum_return { 0.0 };
         StdVisitor<value_type, index_type>  std_vis(biased_);
-        auto                                a_citer = asset_ret.begin();
-        const index_type                    &index_val = idx[0]; // Ignored
+        auto                                a_citer = asset_ret_begin;
+        const index_type                    &index_val = *idx_begin; // Ignored
 
         std_vis.pre();
-        for (auto b_citer = benchmark_ret.begin();
-             b_citer != benchmark_ret.end(); ++a_citer, ++b_citer)  {
+        for (auto b_citer = benchmark_ret_begin;
+             b_citer != benchmark_ret_end; ++a_citer, ++b_citer)  {
             std_vis (index_val, *a_citer - *b_citer);
             cum_return += *a_citer - *b_citer;
         }
@@ -892,9 +932,13 @@ struct RSIVisitor {
     DEFINE_VISIT_BASIC_TYPES_3
 
     template <typename K, typename H>
-    inline void operator() (const K &idx, const H &column)  {
+    inline void
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &prices_begin,
+                const H &prices_end)  {
 
-        const size_type col_s = column.size();
+        const size_type col_s = std::distance(prices_begin, prices_end);
 
         // This data doesn't make sense
         if (avg_period_ >= col_s - 3)  return;
@@ -902,15 +946,15 @@ struct RSIVisitor {
         ReturnVisitor<value_type>   return_v (rp_);
 
         return_v.pre();
-        return_v (idx, column);
+        return_v (idx_begin, idx_end, prices_begin, prices_end);
         return_v.post();
 
         value_type          avg_up = 0;
         value_type          avg_down = 0;
         const value_type    avg_period_1 = avg_period_ - value_type(1);
 
-        for (size_type idx = 0; idx < avg_period_; ++idx)  {
-            const value_type    value = return_v.get_result()[idx];
+        for (size_type i = 0; i < avg_period_; ++i)  {
+            const value_type    value = return_v.get_result()[i];
 
             if (value > 0)
                 avg_up = (avg_up * avg_period_1 + value) / avg_period_;
@@ -927,8 +971,8 @@ struct RSIVisitor {
 
         const size_type ret_s = return_v.get_result().size();
 
-        for (size_type idx = size_type(avg_period_); idx < ret_s; ++idx)  {
-            const value_type    value = return_v.get_result()[idx];
+        for (size_type i = size_type(avg_period_); i < ret_s; ++i)  {
+            const value_type    value = return_v.get_result()[i];
 
             if (value > 0)
                 avg_up = (avg_up * avg_period_1 + value) / avg_period_;

@@ -33,6 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/Vectors/VectorPtrView.h>
 
 #include <functional>
+#include <iterator>
 
 // ----------------------------------------------------------------------------
 
@@ -59,7 +60,7 @@ private:
     result_type     k_means_ { };
 
     template<typename H>
-    inline void calc_k_means_(const H &col, size_type col_size)  {
+    inline void calc_k_means_(const H &column_begin, size_type col_size)  {
 
         std::random_device                          rd;
         std::mt19937                                gen(rd());
@@ -67,7 +68,7 @@ private:
 
         // Pick centroids as random points from the col.
         for (auto &k_mean : k_means_)
-            k_mean = col[rd_gen(gen)];
+            k_mean = *(column_begin + rd_gen(gen));
 
         std::vector<size_type>  assignments(col_size, 0);
 
@@ -79,7 +80,7 @@ private:
 
                 for (size_type cluster = 0; cluster < K; ++cluster) {
                     const double    distance =
-                        dfunc_(col[point], k_means_[cluster]);
+                        dfunc_(*(column_begin + point), k_means_[cluster]);
 
                     if (distance < best_distance) {
                         best_distance = distance;
@@ -96,7 +97,8 @@ private:
             for (size_type point = 0; point < col_size; ++point) {
                 const size_type cluster = assignments[point];
 
-                new_means[cluster] = new_means[cluster] + col[point];
+                new_means[cluster] =
+                    new_means[cluster] + *(column_begin + point);
                 counts[cluster] += 1.0;
             }
 
@@ -122,17 +124,30 @@ private:
 public:
 
     template<typename IV, typename H>
-    inline void operator() (const IV &idx, const H &col)  {
+    inline void
+    operator() (const IV &idx_begin,
+                const IV &idx_end,
+                const H &column_begin,
+                const H &column_end)  {
 
-        calc_k_means_(col, std::min(idx.size(), col.size()));
+        const size_type idx_size = std::distance(idx_begin, idx_end);
+        const size_type col_size = std::distance(column_begin, column_end);
+
+        calc_k_means_(column_begin, std::min(idx_size, col_size));
     }
 
     // Using the calculated means, separate the given column into clusters
     //
     template<typename IV, typename H>
-    inline cluster_type get_clusters(const IV &idx, const H &col) const  {
+    inline cluster_type
+    get_clusters(const IV &idx_begin,
+                 const IV &idx_end,
+                 const H &column_begin,
+                 const H &column_end)  {
 
-        const size_type col_size = std::min(idx.size(), col.size());
+        const size_type idx_s = std::distance(idx_begin, idx_end);
+        const size_type col_s = std::distance(column_begin, column_end);
+        const size_type col_size = std::min(idx_s, col_s);
         cluster_type    clusters;
 
         for (size_type i = 0; i < K; ++i)  {
@@ -145,14 +160,15 @@ public:
             size_type   min_idx;
 
             for (size_type i = 0; i < K; ++i)  {
-                const double    dist = dfunc_(col[j], k_means_[i]);
+                const double    dist = dfunc_(*(column_begin + j), k_means_[i]);
 
                 if (dist < min_dist)  {
                     min_dist = dist;
                     min_idx = i;
                 }
             }
-            clusters[min_idx].push_back(const_cast<value_type *>(&(col[j])));
+            clusters[min_idx].push_back(
+                const_cast<value_type *>(&*(column_begin + j)));
         }
 
         return (clusters);
@@ -195,7 +211,7 @@ private:
 
     template<typename H>
     inline std::vector<double>
-    get_similarity_(const H &col, size_type csize)  {
+    get_similarity_(const H &column_begin, size_type csize)  {
 
         std::vector<double> simil((csize * (csize + 1)) / 2, 0.0);
         double              min_val = std::numeric_limits<double>::max();
@@ -203,7 +219,8 @@ private:
         // Compute similarity between distinct data points i and j
         for (size_type i = 0; i < csize - 1; ++i)
             for (size_type j = i + 1; j < csize; ++j)  {
-                const double    val = -dfunc_(col[i], col[j]);
+                const double    val =
+                    -dfunc_(*(column_begin + i), *(column_begin + j));
 
                 simil[(i * csize) + j - ((i * (i + 1)) >> 1)] = val;
                 if (val < min_val)  min_val = val;
@@ -298,11 +315,19 @@ private:
 public:
 
     template<typename IV, typename H>
-    inline void operator() (const IV &idx, const H &col)  {
+    inline void
+    operator() (const IV &idx_begin,
+                const IV &idx_end,
+                const H &column_begin,
+                const H &column_end)  {
 
-        const size_type             csize = std::min(idx.size(), col.size());
+        const size_type             idx_size =
+            std::distance(idx_begin, idx_end);
+        const size_type             col_size =
+            std::distance(column_begin, column_end);
+        const size_type             csize = std::min(idx_size, col_size);
         const std::vector<double>   simil =
-            std::move(get_similarity_(col, csize));
+            std::move(get_similarity_(column_begin, csize));
         std::vector<double>         avail;
         std::vector<double>         respon;
 
@@ -311,16 +336,23 @@ public:
         centers_.reserve(std::min(csize / 100, size_type(16)));
         for (size_type i = 0; i < csize; ++i)  {
             if (respon[i * csize + i] + avail[i * csize + i] > 0.0)
-                centers_.push_back(const_cast<value_type *>(&(col[i])));
+                centers_.push_back(
+                    const_cast<value_type *>(&*(column_begin + i)));
         }
     }
 
     // Using the calculated means, separate the given column into clusters
     //
     template<typename IV, typename H>
-    inline cluster_type get_clusters(const IV &idx, const H &col) const  {
+    inline cluster_type
+    get_clusters(const IV &idx_begin,
+                 const IV &idx_end,
+                 const H &column_begin,
+                 const H &column_end)  {
 
-        const size_type csize = std::min(idx.size(), col.size());
+        const size_type idx_size = std::distance(idx_begin, idx_end);
+        const size_type col_size = std::distance(column_begin, column_end);
+        const size_type csize = std::min(idx_size, col_size);
         const size_type centers_size = centers_.size();
         cluster_type    clusters;
 
@@ -334,7 +366,8 @@ public:
                 size_type   min_idx;
 
                 for (size_type i = 0; i < centers_size; ++i)  {
-                    const double    dist = dfunc_(col[j], centers_[i]);
+                    const double    dist =
+                        dfunc_(*(column_begin + j), centers_[i]);
 
                     if (dist < min_dist)  {
                         min_dist = dist;
@@ -342,7 +375,7 @@ public:
                     }
                 }
                 clusters[min_idx].push_back(
-                    const_cast<value_type *>(&(col[j])));
+                    const_cast<value_type *>(&*(column_begin + j)));
             }
         }
 

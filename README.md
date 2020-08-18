@@ -118,7 +118,7 @@ cmake
 ### Performance
 There is a test program [_dataframe_performance_](test/dataframe_performance.cc) that should give you some sense of how this library performs. As a comparison, there is also a Pandas Python [_pandas_performance_](test/pandas_performance.py) script that does exactly the same thing.<BR>
 _dataframe_performance.cc_ uses DataFrame async interface and is compiled with gcc compiler with -O3 flag.<BR>
-_pandas_performance.py_ is ran with Python 3.7.<BR>
+_pandas_performance.py_ is ran with Pandas 1.1.0 and Python 3.7.<BR>
 I ran both on my mac-book, doing the following:<BR>
 <img src="docs/MacSize.png" alt="drawing" width="500"/>
 
@@ -128,15 +128,15 @@ I ran both on my mac-book, doing the following:<BR>
 
 Result:
 ```bash
-MacBook> time python pandas_performance.py
+MacBook> time python test/pandas_performance.py
 All memory allocations are done. Calculating means ...
 
 real  17m18.916s
 user  4m47.113s
 sys   5m31.901s
-MacBook>
-MacBook>
-MacBook> time ../bin/Linux.GCC64/dataframe_performance
+
+
+MacBook> time bin/Linux.GCC64/dataframe_performance
 All memory allocations are done. Calculating means ...
 
 real  6m40.222s
@@ -148,3 +148,4 @@ sys   2m14.951s
 2.  In case of Pandas, allocating memory + random number generation takes almost the same amount of time as calculating means.<BR>
 3.  In case of DataFrame 85% of the time is spent in allocating memory + random number generation.<BR>
 4.  You load data once, but calculate statistics many times. So DataFrame, in general, is about 8x faster than parts of Pandas that are implemented in Numpy. I leave parts of Pandas that are purely in Python to imagination.<BR>
+5.  Pandas process image at its peak is ~105GB. C++ DataFrame process image at its peak is ~68GB.

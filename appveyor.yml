@@ -20,7 +20,7 @@ build_script:
   - mkdir build
   - cd build
   - cmake --version
-  - cmake C:\Repos\source -G "Visual Studio 16 2019%arch%"
+  - cmake C:\Repos\source -G "Visual Studio 16.7 2019%arch%"
 #  - cmake C:\Repos\source -G "Visual Studio 15 2017%arch%"
   - cmake --build . --config "Release"
 

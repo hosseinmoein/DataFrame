@@ -1,8 +1,7 @@
 version: '{build}'
 
 image:
-  - Visual Studio 2019
-#  - Visual Studio 2017
+  - Visual Studio 2017
 platform:
   - x64
 #  - x86
@@ -20,8 +19,7 @@ build_script:
   - mkdir build
   - cd build
   - cmake --version
-  - cmake C:\Repos\source -G "Visual Studio 16.7 2019%arch%"
-#  - cmake C:\Repos\source -G "Visual Studio 15 2017%arch%"
+  - cmake C:\Repos\source -G "Visual Studio 15 2017%arch%"
   - cmake --build . --config "Release"
 
 test_script:

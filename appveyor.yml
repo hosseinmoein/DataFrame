@@ -1,7 +1,8 @@
 version: '{build}'
 
 image:
-  - Visual Studio 2017
+  - Visual Studio 2019
+#  - Visual Studio 2017
 platform:
   - x64
 #  - x86

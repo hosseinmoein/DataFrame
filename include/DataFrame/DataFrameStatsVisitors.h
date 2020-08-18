@@ -733,7 +733,8 @@ public:
 
         if (roll_count_ == 0)  return;
 
-        const size_type idx_size = std::distance(idx_begin, idx_end);
+        const size_type idx_size =
+            static_cast<size_type>(std::distance(idx_begin, idx_end));
         const size_type col_size = std::distance(column_begin, column_end);
         const size_type col_s = std::min(idx_size, col_size);
 

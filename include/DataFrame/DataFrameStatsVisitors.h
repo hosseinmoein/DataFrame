@@ -1517,67 +1517,6 @@ template<typename T,
          typename I = unsigned long,
          typename =
              typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
-struct ReturnVisitor  {
-
-    DEFINE_VISIT_BASIC_TYPES_3
-
-    explicit ReturnVisitor (return_policy rp) : ret_p_(rp)  {   }
-
-    template <typename K, typename H>
-    inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &prices_begin,
-                const H &prices_end)  {
-
-        const size_type idx_size = std::distance(idx_begin, idx_end);
-        const size_type col_size = std::distance(prices_begin, prices_end);
-        const size_type col_len = std::min(idx_size, col_size);
-
-        if (col_len < 3)  return;
-
-        // Log return
-        std::function<value_type(value_type, value_type)>   func =
-            [](value_type lhs, value_type rhs) -> value_type  {
-                return (::log(lhs / rhs));
-            };
-
-        if (ret_p_ == return_policy::percentage)
-            func = [](value_type lhs, value_type rhs) -> value_type  {
-                      return ((lhs - rhs) / rhs);
-                   };
-        else if (ret_p_ == return_policy::monetary)
-            func = [](value_type lhs, value_type rhs) -> value_type  {
-                       return (lhs - rhs);
-                   };
-
-        result_type tmp_result;
-
-        tmp_result.reserve(col_len);
-        std::adjacent_difference (prices_begin, prices_end,
-                                  std::back_inserter (tmp_result),
-                                  func);
-        tmp_result.erase (tmp_result.begin ());
-        tmp_result.swap(result_);
-    }
-
-    inline void pre ()  { result_.clear(); }
-    inline void post ()  {   }
-    inline const result_type &get_result () const  { return (result_); }
-    inline result_type &get_result ()  { return (result_); }
-
-private:
-
-    result_type         result_ {  };
-    const return_policy ret_p_;
-};
-
-// ----------------------------------------------------------------------------
-
-template<typename T,
-         typename I = unsigned long,
-         typename =
-             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
 struct KthValueVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_2

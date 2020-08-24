@@ -655,11 +655,12 @@ table.hovertable td {
 
   <H1><font color="blue">Visitors</font></H1>
   <P>
-    Visitors are the mechanism to run statistical algorithms. Most of DataFrame statistical algorithms are in “visitors”. Visitor is the mechanism by which DataFrame passes data points to your algorithm. You can add your own algorithms to a visitor functor and extend DataFrame easily. There are two kinds of visitation mechanisms in DataFrame:<BR>
-      <OL>
-        <LI>Regular visit (visit()). In this case DataFrame passes the given column(s) data points one-by-one to the visitor functor. This is convenient for algorithms that can operate one data point at a time (e.g. correlation, variance).</LI>
-        <LI>Single-action visit (single_act_visit()). In this case a reference to the given column(s) are passed to the visitor functor at once. This is necessary for algorithms that need the whole data together (e.g. return, median).</LI>
-      </OL>
+    Visitors are the main mechanism to implement analytical (i.e. statistical, financial, machine-learning) algorithms. You can easily follow the visitor's interface to add your custom algorithm by which you will extend the DataFrame package.<BR> 
+    There are two visitor interfaces:<BR>
+    <OL>
+      <LI>Regular visit. This visitor is called by calling the <I>visit()</I> method on a DataFrame instance. In this case DataFrame passes the given index and column(s) data points one-by-one to the visitor functor. This is convenient for algorithms that can operate one data point at a time. Examples are <I>correlation</I> or <I>variance</I> visitors. They are implemented in <I> DataFrameStatsVisitors.h</I> file.</LI>
+      <LI>Single-action visit. This visitor is called by calling the <I>single_act_visit()</I> method on a DataFrame instance . In this case begin and end iterators for the given index and column(s) are passed to the visitor functor. So the fuctor has access to all index and column(s) data at once. This is necessary for algorithms that need the whole data together. Examples are  <I>return</I> or <I>median</I> visitors. They are implemented in <I> DataFrameFinancialVisitors.h</I> and <I> DataFrameStatsVisitors.h</I> files respectively.</LI>
+    </OL>
     See this document, <I>DataFrameStatsVisitors.h, DataFrameMLVisitors.h, DataFrameFinancialVisitors.h, DataFrameTransformVisitors.h</I>, and <I>test/dataframe_tester.cc</I> for more examples and documentation.
   </P>
 <HR>

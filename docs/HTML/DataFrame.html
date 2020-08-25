@@ -65,20 +65,7 @@ DataFrame class is defined as:
 <HR>
 
 <P>
-  <font size="+2">Code Examples</font> are in <I>test/dataframe_tester.cc</I> and <I>test/dataframe_tester_2.cc</I>. You should find at least one example for each feature.
-</P>
-
-<P>
-  <font size="+2">Visitors</font> are all defined in files <I>include/DataFrameStatsVisitors.h, include/DataFrameMLVisitors.h>, include/DataFrameFinancialVisitors.h</I>, and <I>include/DataFrameTransformVisitors.h.</I> Also see <I>test/data_frame_tester.cc</I> for example usage.<BR>
-  There are some common interfaces in most of the visitors. For example the following interfaces are common between most (but not all) visitors:<BR>
-  <B>get_result()</B> It returns the result of the visitor/algo.<BR>
-  <B>pre()</B> It is called by DataFrame each time before starting to pass the data to the visitor. pre() is the place to initialize the process<BR>
-  <B>post()</B> It is called by DataFrame each time it is done with passing data to the visitor. 
-</P>
-
-<P>
-<font size="+2">Random Generators</font> are a set of convenient routines to generate random number.<BR>
-For the definition and defaults of <I>RandGenParams</I>, see this document and file <I>DataFrameTypes.h</I>
+  <font size="+2">Code Examples</font> are in <I>test/dataframe_tester.cc</I> and <I>test/dataframe_tester_2.cc</I>. You should find at least one example for each feature. Also in the table below, you will find code examples for each feature.
 </P>
 <HR>
 
@@ -647,7 +634,7 @@ table.hovertable td {
 
   <H1><font color="blue">Views</font></H1>
   <P>
-    Views were added in the second wave. It is a very useful concept with practical use-cases. A view is a slice of a DataFrame that is a reference to the original DataFrame. It appears exactly the same as a DataFrame, but if you modify any data in the view, the corresponding data point(s) in the original DataFrame will also be modified.<BR>
+    Views were added in the second wave of development. It is a very useful concept with practical use-cases. A view is a slice of a DataFrame that is a reference to the original DataFrame. It appears exactly the same as a DataFrame, but if you modify any data in the view, the corresponding data point(s) in the original DataFrame will also be modified.<BR>
     There are certain things you cannot do in views. For example, you cannot add to delete columns, extend the index column, ...<BR>
     For more understanding, look at this document further and/or the test files.
   </P>
@@ -661,6 +648,11 @@ table.hovertable td {
       <LI>Regular visit. This visitor is called by calling the <I>visit()</I> method on a DataFrame instance. In this case DataFrame passes the given index and column(s) data points one-by-one to the visitor functor. This is convenient for algorithms that can operate one data point at a time. Examples are <I>correlation</I> or <I>variance</I> visitors. They are implemented in <I> DataFrameStatsVisitors.h</I> file.</LI>
       <LI>Single-action visit. This visitor is called by calling the <I>single_act_visit()</I> method on a DataFrame instance . In this case begin and end iterators for the given index and column(s) are passed to the visitor functor. So the fuctor has access to all index and column(s) data at once. This is necessary for algorithms that need the whole data together. Examples are  <I>return</I> or <I>median</I> visitors. They are implemented in <I> DataFrameFinancialVisitors.h</I> and <I> DataFrameStatsVisitors.h</I> files respectively.</LI>
     </OL>
+    There are some common interfaces in most of the visitors. For example the following interfaces are common between most (but not all) visitors:<BR>
+    <B>get_result()</B> It returns the result of the visitor/algorithm.<BR>
+    <B>pre()</B> It is called by DataFrame each time before starting to pass the data to the visitor. pre() is the place to initialize the process<BR>
+    <B>post()</B> It is called by DataFrame each time it is done with passing data to the visitor.<BR>
+    <BR>
     See this document, <I>DataFrameStatsVisitors.h, DataFrameMLVisitors.h, DataFrameFinancialVisitors.h, DataFrameTransformVisitors.h</I>, and <I>test/dataframe_tester.cc</I> for more examples and documentation.
   </P>
 <HR>
@@ -669,6 +661,7 @@ table.hovertable td {
   <P>
     Random generators were added as a series of convenient stand-alone functions to generate random numbers (it covers all C++ standard distributions). You can seamlessly use these routines to generate random DataFrame columns.<BR>
     See this document and file <I>RandGen.h</I> and <I>dataframe_tester.cc.</I>
+    For the definition and defaults of <I>RandGenParams</I>, see this document and file <I>DataFrameTypes.h</I>
   </P>
 <HR>
 

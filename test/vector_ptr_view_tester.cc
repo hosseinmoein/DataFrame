@@ -129,7 +129,13 @@ int main (int argCnt, char *argVctr [])  {
     assert(vec_view2[4] == 4);
     assert(vec_view2[20] == 1);
     assert(vec_view2[19] == 2);
+	
+    VectorPtrView<int>::const_iterator item = vec_view.begin();
 
+    assert(*item == 1);    
+    assert(*(item++) == 1);
+    assert(*item == 2);    
+	
     return (EXIT_SUCCESS);
 }
 

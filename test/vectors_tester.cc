@@ -180,6 +180,11 @@ int main(int argc, char *argv[]) {
         vec_view[5] = 100;
         assert(vec_view[5] == 100);
 
+        VectorView<int>::const_iterator item = vec_view.begin();
+
+        assert(*item == 1);
+        assert(*(item++) == 1);
+        assert(*item == 2);
     }
 
     return (0);

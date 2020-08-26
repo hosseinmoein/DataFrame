@@ -31,6 +31,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <DataFrame/DataFrameTypes.h>
 
+#include <vector>
+
 // ----------------------------------------------------------------------------
 
 namespace hmdf
@@ -351,6 +353,15 @@ gen_fisher_f_dist(std::size_t n, const RandGenParams<T> &params = { });
 template<typename T>
 std::vector<T>
 gen_student_t_dist(std::size_t n, const RandGenParams<T> &params = { });
+
+// ----------------------------------------------------------------------------
+
+// This function generates n logarithmically spaced numbers between first and
+// last for the given base
+//
+template<typename T>
+std::vector<T>
+gen_log_space_nums(std::size_t n, T first, T last, T base);
 
 } // namespace hmdf
 

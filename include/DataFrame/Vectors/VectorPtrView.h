@@ -277,7 +277,7 @@ public:
         }
         inline iterator operator ++ (int) noexcept  {  // Postfix++
 
-            value_type   **ret_node = node_;
+            iter_type ret_node = node_;
 
             node_ += 1;
             return (iterator (ret_node));
@@ -296,7 +296,7 @@ public:
         }
         inline iterator operator -- (int) noexcept  {  // Postfix--
 
-            value_type   **ret_node = node_;
+            iter_type ret_node = node_;
 
             node_ -= 1;
             return (iterator (ret_node));
@@ -426,7 +426,7 @@ public:
        //
         inline const_iterator operator ++ (int) noexcept  {
 
-            value_type const  **ret_node = node_;
+            iter_type ret_node = node_;
 
             node_ += 1;
             return (const_iterator (ret_node));
@@ -450,7 +450,7 @@ public:
        //
         inline const_iterator operator -- (int) noexcept  {
 
-            value_type const  **ret_node = node_;
+            iter_type ret_node = node_;
 
             node_ -= 1;
             return (const_iterator (ret_node));
@@ -590,7 +590,7 @@ public:
        //
         inline const_reverse_iterator operator ++ (int) noexcept  {
 
-            value_type const  **ret_node = node_;
+            iter_type ret_node = node_;
 
             node_ -= 1;
             return (const_reverse_iterator (ret_node));
@@ -614,7 +614,7 @@ public:
        //
         inline const_reverse_iterator operator -- (int) noexcept  {
 
-            value_type const  **ret_node = node_;
+            iter_type ret_node = node_;
 
             node_ += 1;
             return (const_reverse_iterator (ret_node));
@@ -900,7 +900,7 @@ public:
        //
         inline const_iterator operator ++ (int) noexcept  {
 
-            value_type const  **ret_node = node_;
+            iter_type ret_node = node_;
 
             node_ += 1;
             return (const_iterator (ret_node));
@@ -924,7 +924,7 @@ public:
        //
         inline const_iterator operator -- (int) noexcept  {
 
-            value_type const  **ret_node = node_;
+            iter_type ret_node = node_;
 
             node_ -= 1;
             return (const_iterator (ret_node));
@@ -1055,7 +1055,7 @@ public:
        //
         inline const_reverse_iterator operator ++ (int) noexcept  {
 
-            value_type const  **ret_node = node_;
+            iter_type ret_node = node_;
 
             node_ -= 1;
             return (const_reverse_iterator (ret_node));
@@ -1079,7 +1079,7 @@ public:
        //
         inline const_reverse_iterator operator -- (int) noexcept  {
 
-            value_type const  **ret_node = node_;
+            iter_type ret_node = node_;
 
             node_ += 1;
             return (const_reverse_iterator (ret_node));

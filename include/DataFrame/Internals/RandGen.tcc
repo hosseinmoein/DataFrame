@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <DataFrame/RandGen.h>
 
+#include <cmath>
 #include <random>
 #include <type_traits>
 
@@ -48,8 +49,8 @@ _gen_rand_(std::size_t n, const RandGenParams<T> &params, D &&dist)  {
 
     std::vector<T>  result(n);
 
-    for (std::size_t i = 0; i < n; ++i)
-        result[i] = dist(gen);
+    for (auto iter = result.begin(); iter < result.end(); ++iter)
+        *iter = dist(gen);
     return (result);
 }
 
@@ -390,6 +391,25 @@ gen_student_t_dist(std::size_t n, const RandGenParams<T> &params) {
     return (_gen_rand_<T, D>(
                 n, params,
                 std::student_t_distribution<T>(params.n)));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
+std::vector<T>
+gen_log_space_nums(std::size_t n, T first, T last, T base)  {
+
+    const T         step = (last - first) / (T(n) - T(1));
+    T               current = first;
+    std::vector<T>  result(n);
+
+    for (auto iter = result.begin(); iter < result.end(); ++iter)  {
+        const T val = ::pow(base, current);
+
+        current += step;
+        *iter = val;
+    }
+    return (result);
 }
 
 } // namespace hmdf

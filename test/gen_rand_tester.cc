@@ -163,6 +163,19 @@ int main(int argc, char *argv[]) {
         std::cout << std::endl;
     }
 
+    {
+        auto    r = gen_log_space_nums<double>(1024, 3, 4, 2);
+        auto    r2 = gen_log_space_nums<double>(256, 3, 4, 10);
+
+        std::cout << '\n' << std::endl;
+        for (auto citer : r)
+            std::cout << citer << ", ";
+        std::cout << '\n' << std::endl;
+        for (auto citer : r2)
+            std::cout << citer << ", ";
+        std::cout << std::endl;
+    }
+
     return (0);
 }
 

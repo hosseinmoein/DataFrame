@@ -356,8 +356,8 @@ gen_student_t_dist(std::size_t n, const RandGenParams<T> &params = { });
 
 // ----------------------------------------------------------------------------
 
-// This function generates n logarithmically spaced numbers between first and
-// last for the given base
+// This function generates n logarithmically spaced numbers between the given
+// base raised to the power of first to last.
 //
 template<typename T>
 std::vector<T>

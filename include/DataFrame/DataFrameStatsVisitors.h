@@ -1352,23 +1352,35 @@ public:
                 avg_val += static_cast<double>(j);
             }
             avg_val /= double(j - i);
-            for (; i < c_len && i < j; ++i)   {
-                switch(policy_)  {
+
+            switch(policy_)  {
                 case rank_policy::average:
-                    result_[rank_vec[i]] = avg_val;
+                {
+                    for (; i < c_len && i < j; ++i)
+                        result_[rank_vec[i]] = avg_val;
                     break;
+                }
                 case rank_policy::first:
-                    result_[rank_vec[i]] = first_val;
+                {
+                    for (; i < c_len && i < j; ++i)
+                        result_[rank_vec[i]] = first_val;
                     break;
+                }
                 case rank_policy::last:
-                    result_[rank_vec[i]] = last_val;
+                {
+                    for (; i < c_len && i < j; ++i)
+                        result_[rank_vec[i]] = last_val;
                     break;
+                }
                 case rank_policy::actual:
-                    result_[rank_vec[i]] = static_cast<double>(i);
+                {
+                    for (; i < c_len && i < j; ++i)
+                        result_[rank_vec[i]] = static_cast<double>(i);
                     break;
                 }
             }
-            prev_value = &*(column_begin + rank_vec[i]);
+            if (i < c_len)
+                prev_value = &*(column_begin + rank_vec[i]);
             i -= 1;  // Because the outer loop does ++i
         }
     }

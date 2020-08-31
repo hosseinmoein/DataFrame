@@ -122,11 +122,12 @@ enum class concat_policy : unsigned char  {
 // This policy is relative to a tabular data structure
 // There is no right or left shift (like Pandas), because columns in DataFrame
 // have no ordering. They can only be accessed by name
+//
 enum class shift_policy : unsigned char  {
-    down = 1,  // Shift/rotate the content of all columns down,
-               // keep index unchanged
-    up = 2,    // Shift/rotate the content of all columns up,
-               // keep index unchanged
+    // Shift/rotate the content of all columns down, keep index unchanged
+    down = 1,
+    // Shift/rotate the content of all columns up, keep index unchanged
+    up = 2,
 };
 
 // ----------------------------------------------------------------------------
@@ -156,9 +157,17 @@ enum class quantile_policy : unsigned char  {
 // ----------------------------------------------------------------------------
 
 enum class drop_policy : unsigned char  {
-    all = 1,  // Remove row if all columns are nan
-    any = 2,  // Remove row if any column is nan
+    all = 1,       // Remove row if all columns are nan
+    any = 2,       // Remove row if any column is nan
     threshold = 3  // Remove row if threshold number of columns are nan
+};
+
+// ----------------------------------------------------------------------------
+
+enum class remove_dup_spec : unsigned char  {
+    keep_first = 1,  // Keep the first duplicated row
+    keep_last = 2,   // Keep the last duplicated row
+    keep_none = 3    // Discard all duplicated rows
 };
 
 // ----------------------------------------------------------------------------
@@ -329,6 +338,7 @@ struct type_declare<HeteroPtrView, U>  { using type = VectorPtrView<U>; };
 // ----------------------------------------------------------------------------
 
 // H stands for a heterogeneous vector
+//
 template<typename I, typename H>
 class DataFrame;
 
@@ -365,7 +375,7 @@ is_nan__<long double>(const long double &val)  { return(std::isnan(val)); }
 // Evertyhting is in bytes. The numbers are estimates, since memory allocated
 // is really unknown to the objects such as vectors.
 // If type has dynamically allocated memory, it is not counted here
-
+//
 struct  MemUsage  {
 
     size_t  column_used_memory { 0 };

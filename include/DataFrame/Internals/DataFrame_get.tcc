@@ -117,8 +117,6 @@ template<size_t N, typename ... Ts>
 HeteroVector DataFrame<I, H>::
 get_row(size_type row_num, const std::array<const char *, N> col_names) const {
 
-    HeteroVector ret_vec;
-
     if (row_num >= indices_.size())  {
         char buffer [512];
 
@@ -130,6 +128,8 @@ get_row(size_type row_num, const std::array<const char *, N> col_names) const {
                 row_num);
         throw BadRange(buffer);
     }
+
+    HeteroVector ret_vec;
 
     ret_vec.reserve<IndexType>(1);
     ret_vec.push_back(indices_[row_num]);

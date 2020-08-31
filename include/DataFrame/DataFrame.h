@@ -457,6 +457,62 @@ public:  // Load/append/remove interfaces
                        const char *name3,
                        F &sel_functor);
 
+
+
+
+
+
+
+
+
+    template<typename T1, typename T2, typename ... Ts>
+    [[nodiscard]] DataFrame
+    remove_duplicates(const char *name1,
+                      const char *name2,
+                      bool include_index,
+                      remove_dup_spec rds);
+
+    template<typename T1, typename T2, typename T3, typename ... Ts>
+    [[nodiscard]] DataFrame
+    remove_duplicates(const char *name1,
+                      const char *name2,
+                      const char *name3,
+                      bool include_index,
+                      remove_dup_spec rds);
+
+    template<typename T1, typename T2, typename T3, typename T4,
+             typename ... Ts>
+    [[nodiscard]] DataFrame
+    remove_duplicates(const char *name1,
+                      const char *name2,
+                      const char *name3,
+                      const char *name4,
+                      bool include_index,
+                      remove_dup_spec rds);
+
+    template<typename T1, typename T2, typename T3, typename T4, typename T5,
+             typename ... Ts>
+    [[nodiscard]] DataFrame
+    remove_duplicates(const char *name1,
+                      const char *name2,
+                      const char *name3,
+                      const char *name4,
+                      const char *name5,
+                      bool include_index,
+                      remove_dup_spec rds);
+
+    template<typename T1, typename T2, typename T3, typename T4, typename T5,
+             typename T6, typename ... Ts>
+    [[nodiscard]] DataFrame
+    remove_duplicates(const char *name1,
+                      const char *name2,
+                      const char *name3,
+                      const char *name4,
+                      const char *name5,
+                      const char *name6,
+                      bool include_index,
+                      remove_dup_spec rds);
+
 public:  // Data manipulation
 
     // It randomly shuffles the named column(s) non-deterministically.

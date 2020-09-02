@@ -34,7 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
         <PRE>
-enum class sigmiod_type : unsigned char  {
+enum class sigmoid_type : unsigned char  {
     logistic = 1,        // f(x) = 1 / (1 + exp(-x))
     algebraic = 2,       // f(x) = 1 / sqrt(1 + pow(x, 2.0))
     hyperbolic_tan = 3,  // f(x) = [(exp(x) - exp(-x)) / (exp(x) + exp(-x))] = tanh(x)
@@ -45,7 +45,7 @@ enum class sigmiod_type : unsigned char  {
 };</PRE> </font>
       </td>
       <td>
-        Different Sigmiod function types that are supported. They are to be used with SigmiodVisitor<BR>
+        Different Sigmoid function types that are supported. They are to be used with SigmoidVisitor<BR>
       </td>
     </tr>
 
@@ -61,12 +61,12 @@ enum class sigmiod_type : unsigned char  {
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
         template&lt;typename T, typename I = unsigned long, typename = typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;<BR>
-        struct SigmiodVisitor; </font>
+        struct SigmoidVisitor; </font>
       </td>
       <td width="40%">
         This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_action_visit() interface.<BR>
-        This functor class calculates Sigmiod function for each item in the given column. The Sigmiod fuction is based on the sigmiod_type above.<BR>
-        <I> explicit SigmiodVisitor(sigmiod_type st)</I>
+        This functor class calculates Sigmoid function for each item in the given column. The Sigmoid fuction is based on the sigmoid_type above.<BR>
+        <I> explicit SigmoidVisitor(sigmoid_type st)</I>
       </td>
       <td width="15%">
         <B>T</B>: Column data type.<BR>
@@ -76,9 +76,9 @@ enum class sigmiod_type : unsigned char  {
 
   </table>
 
-<pre style='color:#000000;background:#ffffff;'><span style='color:#800000; font-weight:bold; '>static</span> <span style='color:#800000; font-weight:bold; '>void</span> test_SigmiodVisitor<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span>  <span style='color:#800080; '>{</span>
+<pre style='color:#000000;background:#ffffff;'><span style='color:#800000; font-weight:bold; '>static</span> <span style='color:#800000; font-weight:bold; '>void</span> test_SigmoidVisitor<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span>  <span style='color:#800080; '>{</span>
 
-    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>cout</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#800000; '>"</span><span style='color:#0f69ff; '>\n</span><span style='color:#0000e6; '>Testing SigmiodVisitor{  } ...</span><span style='color:#800000; '>"</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>endl</span><span style='color:#800080; '>;</span>
+    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>cout</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#800000; '>"</span><span style='color:#0f69ff; '>\n</span><span style='color:#0000e6; '>Testing SigmoidVisitor{  } ...</span><span style='color:#800000; '>"</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>endl</span><span style='color:#800080; '>;</span>
 
     <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>vector</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>unsigned</span> <span style='color:#800000; font-weight:bold; '>long</span><span style='color:#800080; '>></span>  idx <span style='color:#808030; '>=</span>
         <span style='color:#800080; '>{</span> <span style='color:#008c00; '>123450</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123451</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123452</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123453</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123454</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123455</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123456</span><span style='color:#808030; '>,</span>
@@ -97,13 +97,13 @@ enum class sigmiod_type : unsigned char  {
                  <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span>make_pair<span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>d2_col</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> d2<span style='color:#808030; '>)</span><span style='color:#808030; '>,</span>
                  <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span>make_pair<span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>col_3</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> i1<span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
 
-    SigmiodVisitor<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span>  sig_log<span style='color:#808030; '>(</span>sigmiod_type<span style='color:#800080; '>::</span>logistic<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
-    SigmiodVisitor<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span>  sig_alg<span style='color:#808030; '>(</span>sigmiod_type<span style='color:#800080; '>::</span>algebraic<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
-    SigmiodVisitor<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span>  sig_tan<span style='color:#808030; '>(</span>sigmiod_type<span style='color:#800080; '>::</span>hyperbolic_tan<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
-    SigmiodVisitor<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span>  sig_atan<span style='color:#808030; '>(</span>sigmiod_type<span style='color:#800080; '>::</span>arc_tan<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
-    SigmiodVisitor<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span>  sig_err<span style='color:#808030; '>(</span>sigmiod_type<span style='color:#800080; '>::</span>error_function<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
-    SigmiodVisitor<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span>  sig_gud<span style='color:#808030; '>(</span>sigmiod_type<span style='color:#800080; '>::</span>gudermannian<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
-    SigmiodVisitor<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span>  sig_smo<span style='color:#808030; '>(</span>sigmiod_type<span style='color:#800080; '>::</span>smoothstep<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    SigmoidVisitor<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span>  sig_log<span style='color:#808030; '>(</span>sigmoid_type<span style='color:#800080; '>::</span>logistic<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    SigmoidVisitor<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span>  sig_alg<span style='color:#808030; '>(</span>sigmoid_type<span style='color:#800080; '>::</span>algebraic<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    SigmoidVisitor<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span>  sig_tan<span style='color:#808030; '>(</span>sigmoid_type<span style='color:#800080; '>::</span>hyperbolic_tan<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    SigmoidVisitor<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span>  sig_atan<span style='color:#808030; '>(</span>sigmoid_type<span style='color:#800080; '>::</span>arc_tan<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    SigmoidVisitor<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span>  sig_err<span style='color:#808030; '>(</span>sigmoid_type<span style='color:#800080; '>::</span>error_function<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    SigmoidVisitor<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span>  sig_gud<span style='color:#808030; '>(</span>sigmoid_type<span style='color:#800080; '>::</span>gudermannian<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    SigmoidVisitor<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span>  sig_smo<span style='color:#808030; '>(</span>sigmoid_type<span style='color:#800080; '>::</span>smoothstep<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
     <span style='color:#800000; font-weight:bold; '>const</span> <span style='color:#800000; font-weight:bold; '>auto</span>              log_result <span style='color:#808030; '>=</span> df<span style='color:#808030; '>.</span>single_act_visit<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>d1_col</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> sig_log<span style='color:#808030; '>)</span><span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
     <span style='color:#800000; font-weight:bold; '>const</span> <span style='color:#800000; font-weight:bold; '>auto</span>              alg_result <span style='color:#808030; '>=</span> df<span style='color:#808030; '>.</span>single_act_visit<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>d1_col</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> sig_alg<span style='color:#808030; '>)</span><span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
     <span style='color:#800000; font-weight:bold; '>const</span> <span style='color:#800000; font-weight:bold; '>auto</span>              tan_result <span style='color:#808030; '>=</span> df<span style='color:#808030; '>.</span>single_act_visit<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>d1_col</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> sig_tan<span style='color:#808030; '>)</span><span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>

@@ -1352,23 +1352,35 @@ public:
                 avg_val += static_cast<double>(j);
             }
             avg_val /= double(j - i);
-            for (; i < c_len && i < j; ++i)   {
-                switch(policy_)  {
+
+            switch(policy_)  {
                 case rank_policy::average:
-                    result_[rank_vec[i]] = avg_val;
+                {
+                    for (; i < c_len && i < j; ++i)
+                        result_[rank_vec[i]] = avg_val;
                     break;
+                }
                 case rank_policy::first:
-                    result_[rank_vec[i]] = first_val;
+                {
+                    for (; i < c_len && i < j; ++i)
+                        result_[rank_vec[i]] = first_val;
                     break;
+                }
                 case rank_policy::last:
-                    result_[rank_vec[i]] = last_val;
+                {
+                    for (; i < c_len && i < j; ++i)
+                        result_[rank_vec[i]] = last_val;
                     break;
+                }
                 case rank_policy::actual:
-                    result_[rank_vec[i]] = static_cast<double>(i);
+                {
+                    for (; i < c_len && i < j; ++i)
+                        result_[rank_vec[i]] = static_cast<double>(i);
                     break;
                 }
             }
-            prev_value = &*(column_begin + rank_vec[i]);
+            if (i < c_len)
+                prev_value = &*(column_begin + rank_vec[i]);
             i -= 1;  // Because the outer loop does ++i
         }
     }
@@ -2254,7 +2266,7 @@ template<typename T,
          typename I = unsigned long,
          typename =
              typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
-struct SigmiodVisitor {
+struct SigmoidVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
@@ -2264,48 +2276,48 @@ private:
     inline void logistic_(const H &column_begin, const H &column_end)  {
 
         for (auto citer = column_begin; citer < column_end; ++citer)
-            sigmiods_.push_back(1.0 / (1.0 + std::exp(-(*citer))));
+            sigmoids_.push_back(1.0 / (1.0 + std::exp(-(*citer))));
     }
     template <typename H>
     inline void algebraic_(const H &column_begin, const H &column_end)  {
 
         for (auto citer = column_begin; citer < column_end; ++citer)
-            sigmiods_.push_back(1.0 / std::sqrt(1.0 + std::pow(*citer, 2.0)));
+            sigmoids_.push_back(1.0 / std::sqrt(1.0 + std::pow(*citer, 2.0)));
     }
     template <typename H>
     inline void hyperbolic_tan_(const H &column_begin, const H &column_end)  {
 
         for (auto citer = column_begin; citer < column_end; ++citer)
-            sigmiods_.push_back(std::tanh(*citer));
+            sigmoids_.push_back(std::tanh(*citer));
     }
     template <typename H>
     inline void arc_tan_(const H &column_begin, const H &column_end)  {
 
         for (auto citer = column_begin; citer < column_end; ++citer)
-            sigmiods_.push_back(std::atan(*citer));
+            sigmoids_.push_back(std::atan(*citer));
     }
     template <typename H>
     inline void error_function_(const H &column_begin, const H &column_end)  {
 
         for (auto citer = column_begin; citer < column_end; ++citer)
-            sigmiods_.push_back(std::erf(*citer));
+            sigmoids_.push_back(std::erf(*citer));
     }
     template <typename H>
     inline void gudermannian_(const H &column_begin, const H &column_end)  {
 
         for (auto citer = column_begin; citer < column_end; ++citer)
-            sigmiods_.push_back(std::atan(std::sinh(*citer)));
+            sigmoids_.push_back(std::atan(std::sinh(*citer)));
     }
     template <typename H>
     inline void smoothstep_(const H &column_begin, const H &column_end)  {
 
         for (auto citer = column_begin; citer < column_end; ++citer)  {
             if (*citer <= 0.0)
-                sigmiods_.push_back(0.0);
+                sigmoids_.push_back(0.0);
             else if (*citer >= 1.0)
-                sigmiods_.push_back(1.0);
+                sigmoids_.push_back(1.0);
             else
-                sigmiods_.push_back(*citer * *citer * (3.0 - 2.0 * *citer));
+                sigmoids_.push_back(*citer * *citer * (3.0 - 2.0 * *citer));
         }
     }
 
@@ -2318,33 +2330,33 @@ public:
                 const H &column_begin,
                 const H &column_end)  {
 
-        sigmiods_.reserve(std::distance(column_begin, column_end));
-        if (sigmiod_type_ == sigmiod_type::logistic)
+        sigmoids_.reserve(std::distance(column_begin, column_end));
+        if (sigmoid_type_ == sigmoid_type::logistic)
             logistic_(column_begin, column_end);
-        else if (sigmiod_type_ == sigmiod_type::algebraic)
+        else if (sigmoid_type_ == sigmoid_type::algebraic)
             algebraic_(column_begin, column_end);
-        else if (sigmiod_type_ == sigmiod_type::hyperbolic_tan)
+        else if (sigmoid_type_ == sigmoid_type::hyperbolic_tan)
             hyperbolic_tan_(column_begin, column_end);
-        else if (sigmiod_type_ == sigmiod_type::arc_tan)
+        else if (sigmoid_type_ == sigmoid_type::arc_tan)
             arc_tan_(column_begin, column_end);
-        else if (sigmiod_type_ == sigmiod_type::error_function)
+        else if (sigmoid_type_ == sigmoid_type::error_function)
             error_function_(column_begin, column_end);
-        else if (sigmiod_type_ == sigmiod_type::gudermannian)
+        else if (sigmoid_type_ == sigmoid_type::gudermannian)
             gudermannian_(column_begin, column_end);
-        else if (sigmiod_type_ == sigmiod_type::smoothstep)
+        else if (sigmoid_type_ == sigmoid_type::smoothstep)
             smoothstep_(column_begin, column_end);
     }
-    inline void pre ()  { sigmiods_.clear(); }
+    inline void pre ()  { sigmoids_.clear(); }
     inline void post ()  {  }
-    inline const result_type &get_result () const  { return (sigmiods_); }
-    inline result_type &get_result ()  { return (sigmiods_); }
+    inline const result_type &get_result () const  { return (sigmoids_); }
+    inline result_type &get_result ()  { return (sigmoids_); }
 
-    explicit SigmiodVisitor(sigmiod_type st) : sigmiod_type_(st)  {   }
+    explicit SigmoidVisitor(sigmoid_type st) : sigmoid_type_(st)  {   }
 
 private:
 
-    result_type         sigmiods_ {  };
-    const sigmiod_type  sigmiod_type_;
+    result_type         sigmoids_ {  };
+    const sigmoid_type  sigmoid_type_;
 };
 
 // ----------------------------------------------------------------------------

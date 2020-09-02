@@ -264,9 +264,9 @@ enum class rank_policy : unsigned char  {
 
 // ----------------------------------------------------------------------------
 
-// Different types of Sigmiod functions. For now, there is no integration
+// Different types of Sigmoid functions. For now, there is no integration
 //
-enum class sigmiod_type : unsigned char  {
+enum class sigmoid_type : unsigned char  {
     logistic = 1,        // f(x) = 1 / (1 + exp(-x))
     algebraic = 2,       // f(x) = 1 / sqrt(1 + pow(x, 2.0))
     // f(x) = [(exp(x) - exp(-x)) / (exp(x) + exp(-x))] = tanh(x)

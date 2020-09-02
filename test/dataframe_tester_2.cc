@@ -653,9 +653,9 @@ static void test_RankVisitor()  {
 
 // -----------------------------------------------------------------------------
 
-static void test_SigmiodVisitor()  {
+static void test_SigmoidVisitor()  {
 
-    std::cout << "\nTesting SigmiodVisitor{  } ..." << std::endl;
+    std::cout << "\nTesting SigmoidVisitor{  } ..." << std::endl;
 
     std::vector<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
@@ -675,13 +675,13 @@ static void test_SigmiodVisitor()  {
                  std::make_pair("d2_col", d2),
                  std::make_pair("col_3", i1));
 
-    SigmiodVisitor<double>  sig_log(sigmiod_type::logistic);
-    SigmiodVisitor<double>  sig_alg(sigmiod_type::algebraic);
-    SigmiodVisitor<double>  sig_tan(sigmiod_type::hyperbolic_tan);
-    SigmiodVisitor<double>  sig_atan(sigmiod_type::arc_tan);
-    SigmiodVisitor<double>  sig_err(sigmiod_type::error_function);
-    SigmiodVisitor<double>  sig_gud(sigmiod_type::gudermannian);
-    SigmiodVisitor<double>  sig_smo(sigmiod_type::smoothstep);
+    SigmoidVisitor<double>  sig_log(sigmoid_type::logistic);
+    SigmoidVisitor<double>  sig_alg(sigmoid_type::algebraic);
+    SigmoidVisitor<double>  sig_tan(sigmoid_type::hyperbolic_tan);
+    SigmoidVisitor<double>  sig_atan(sigmoid_type::arc_tan);
+    SigmoidVisitor<double>  sig_err(sigmoid_type::error_function);
+    SigmoidVisitor<double>  sig_gud(sigmoid_type::gudermannian);
+    SigmoidVisitor<double>  sig_smo(sigmoid_type::smoothstep);
     const auto              log_result =
         df.single_act_visit<double>("d1_col", sig_log).get_result();
     const auto              alg_result =
@@ -853,7 +853,7 @@ int main(int argc, char *argv[]) {
     test_ClipVisitor();
     test_SharpeRatioVisitor();
     test_RankVisitor();
-    test_SigmiodVisitor();
+    test_SigmoidVisitor();
     test_combine();
     test_RSIVisitor();
 

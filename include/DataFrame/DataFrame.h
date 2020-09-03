@@ -457,14 +457,29 @@ public:  // Load/append/remove interfaces
                        const char *name3,
                        F &sel_functor);
 
-
-
-
-
-
-
-
-
+    // It removes duplicate rows and returns a new DataFrame. Duplication is
+    // determined by the two given columns. remove_dup_spec determines which
+    // of the duplicated rows to keep.
+    //
+    // NOTE: The two given column types must be hash-able and must have
+    //       equality (==) operator well defined. 
+    //
+    // T1:
+    //   Type of the first named column
+    // T2:
+    //   Type of the second named column
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // name1:
+    //   Name of the first data column
+    // name2:
+    //   Name of the second data column
+    // include_index:
+    //   If true, it includes the index column to determine uniqueness
+    // rds:
+    //   Determined which of the duplicated columns to keep
+    //
     template<typename T1, typename T2, typename ... Ts>
     [[nodiscard]] DataFrame
     remove_duplicates(const char *name1,
@@ -472,6 +487,28 @@ public:  // Load/append/remove interfaces
                       bool include_index,
                       remove_dup_spec rds) const;
 
+    // Same as above, but there are 3 columns involved
+    //
+    // T1:
+    //   Type of the first named column
+    // T2:
+    //   Type of the second named column
+    // T3:
+    //   Type of the third named column
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // name1:
+    //   Name of the first data column
+    // name2:
+    //   Name of the second data column
+    // name3:
+    //   Name of the third data column
+    // include_index:
+    //   If true, it includes the index column to determine uniqueness
+    // rds:
+    //   Determined which of the duplicated columns to keep
+    //
     template<typename T1, typename T2, typename T3, typename ... Ts>
     [[nodiscard]] DataFrame
     remove_duplicates(const char *name1,
@@ -480,6 +517,32 @@ public:  // Load/append/remove interfaces
                       bool include_index,
                       remove_dup_spec rds) const;
 
+    // Same as above, but there are 4 columns involved
+    //
+    // T1:
+    //   Type of the first named column
+    // T2:
+    //   Type of the second named column
+    // T3:
+    //   Type of the third named column
+    // T4:
+    //   Type of the fourth named column
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // name1:
+    //   Name of the first data column
+    // name2:
+    //   Name of the second data column
+    // name3:
+    //   Name of the third data column
+    // name4:
+    //   Name of the fourth data column
+    // include_index:
+    //   If true, it includes the index column to determine uniqueness
+    // rds:
+    //   Determined which of the duplicated columns to keep
+    //
     template<typename T1, typename T2, typename T3, typename T4,
              typename ... Ts>
     [[nodiscard]] DataFrame
@@ -490,6 +553,36 @@ public:  // Load/append/remove interfaces
                       bool include_index,
                       remove_dup_spec rds) const;
 
+    // Same as above, but there are 5 columns involved
+    //
+    // T1:
+    //   Type of the first named column
+    // T2:
+    //   Type of the second named column
+    // T3:
+    //   Type of the third named column
+    // T4:
+    //   Type of the fourth named column
+    // T5:
+    //   Type of the fifth named column
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // name1:
+    //   Name of the first data column
+    // name2:
+    //   Name of the second data column
+    // name3:
+    //   Name of the third data column
+    // name4:
+    //   Name of the fourth data column
+    // name5:
+    //   Name of the fifth data column
+    // include_index:
+    //   If true, it includes the index column to determine uniqueness
+    // rds:
+    //   Determined which of the duplicated columns to keep
+    //
     template<typename T1, typename T2, typename T3, typename T4, typename T5,
              typename ... Ts>
     [[nodiscard]] DataFrame
@@ -501,6 +594,40 @@ public:  // Load/append/remove interfaces
                       bool include_index,
                       remove_dup_spec rds) const;
 
+    // Same as above, but there are 6 columns involved
+    //
+    // T1:
+    //   Type of the first named column
+    // T2:
+    //   Type of the second named column
+    // T3:
+    //   Type of the third named column
+    // T4:
+    //   Type of the fourth named column
+    // T5:
+    //   Type of the fifth named column
+    // T6:
+    //   Type of the sixth named column
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // name1:
+    //   Name of the first data column
+    // name2:
+    //   Name of the second data column
+    // name3:
+    //   Name of the third data column
+    // name4:
+    //   Name of the fourth data column
+    // name5:
+    //   Name of the fifth data column
+    // name6:
+    //   Name of the sixth data column
+    // include_index:
+    //   If true, it includes the index column to determine uniqueness
+    // rds:
+    //   Determined which of the duplicated columns to keep
+    //
     template<typename T1, typename T2, typename T3, typename T4, typename T5,
              typename T6, typename ... Ts>
     [[nodiscard]] DataFrame

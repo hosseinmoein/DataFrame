@@ -773,6 +773,290 @@ remove_data_by_sel (const char *name1,
     return;
 }
 
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename MAP, typename ... Ts>
+StdDataFrame<I> DataFrame<I, H>::
+remove_dups_common_(const DataFrame &s_df,
+                    remove_dup_spec rds,
+                    const MAP &row_table,
+                    const IndexVecType &index)  {
+
+    using count_vec = std::vector<size_type>;
+
+    count_vec   rows_to_del;
+
+    rows_to_del.reserve(8);
+    for (const auto &citer : row_table)  {
+        if (citer.second.size() > 1)  {
+            if (rds == remove_dup_spec::keep_first)  {
+                for (size_type i = 1; i < citer.second.size(); ++i)
+                    rows_to_del.push_back(citer.second[i]);
+            }
+            else if (rds == remove_dup_spec::keep_last)  {
+                for (size_type i = 0; i < citer.second.size() - 1; ++i)
+                    rows_to_del.push_back(citer.second[i]);
+            }
+            else  {  // remove_dup_spec::keep_none
+                for (size_type i = 0; i < citer.second.size(); ++i)
+                    rows_to_del.push_back(citer.second[i]);
+            }
+        }
+    }
+
+    StdDataFrame<I> new_df;
+    IndexVecType    new_index (index.size() - rows_to_del.size());
+
+    _remove_copy_if_(index.begin(), index.end(), new_index.begin(),
+                     [&rows_to_del] (std::size_t n) -> bool  {
+                         return (std::find(rows_to_del.begin(),
+                                           rows_to_del.end(),
+                                           n) != rows_to_del.end());
+                     });
+    new_df.load_index(std::move(new_index));
+
+    for (auto citer : s_df.column_tb_)  {
+        copy_remove_functor_<Ts ...>    functor (citer.first.c_str(),
+                                                 rows_to_del,
+                                                 new_df);
+
+        s_df.data_[citer.second].change(functor);
+    }
+    return (new_df);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename T1, typename T2, typename ... Ts>
+DataFrame<I, H> DataFrame<I, H>::
+remove_duplicates (const char *name1,
+                   const char *name2,
+                   bool include_index,
+                   remove_dup_spec rds) const  {
+
+    using data_tuple = std::tuple<const T1 &, const T2 &, const IndexType &>;
+    using count_vec = std::vector<size_type>;
+    using data_map = std::unordered_map<data_tuple, count_vec>;
+
+    const std::vector<T1>   &vec1 = get_column<T1>(name1);
+    const std::vector<T2>   &vec2 = get_column<T2>(name2);
+    const auto              &index = get_index();
+    const size_type         col_s =
+        std::min<size_type>({ vec1.size(), vec2.size(), index.size() });
+    data_map                row_table;
+    count_vec               dummy_vec;
+    const IndexType         dummy_idx { };
+
+    for (size_type i = 0; i < col_s; ++i)  {
+        auto    insert_res =
+            row_table.emplace(
+                std::forward_as_tuple(vec1[i], vec2[i],
+                                      include_index ? index[i] : dummy_idx),
+                dummy_vec);
+
+        if (insert_res.second)
+            insert_res.first->second.reserve(8);
+        insert_res.first->second.push_back(i);
+    }
+
+    return(remove_dups_common_<data_map, Ts ...>(*this, rds, row_table, index));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename T1, typename T2, typename T3, typename ... Ts>
+DataFrame<I, H> DataFrame<I, H>::
+remove_duplicates (const char *name1,
+                   const char *name2,
+                   const char *name3,
+                   bool include_index,
+                   remove_dup_spec rds) const  {
+
+    using data_tuple = std::tuple<const T1 &, const T2 &, const T3 &,
+                                  const IndexType &>;
+    using count_vec = std::vector<size_type>;
+    using data_map = std::unordered_map<data_tuple, count_vec>;
+
+    const std::vector<T1>   &vec1 = get_column<T1>(name1);
+    const std::vector<T2>   &vec2 = get_column<T2>(name2);
+    const std::vector<T3>   &vec3 = get_column<T3>(name3);
+    const auto              &index = get_index();
+    const size_type         col_s =
+        std::min<size_type>(
+            { vec1.size(), vec2.size(), vec3.size(), index.size() });
+    data_map                row_table;
+    count_vec               dummy_vec;
+    const IndexType         dummy_idx { };
+
+    for (size_type i = 0; i < col_s; ++i)  {
+        auto    insert_res =
+            row_table.emplace(
+                std::forward_as_tuple(vec1[i], vec2[i], vec3[i],
+                                      include_index ? index[i] : dummy_idx),
+                dummy_vec);
+
+        if (insert_res.second)
+            insert_res.first->second.reserve(8);
+        insert_res.first->second.push_back(i);
+    }
+
+    return(remove_dups_common_<data_map, Ts ...>(*this, rds, row_table, index));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename T1, typename T2, typename T3, typename T4, typename ... Ts>
+DataFrame<I, H> DataFrame<I, H>::
+remove_duplicates (const char *name1,
+                   const char *name2,
+                   const char *name3,
+                   const char *name4,
+                   bool include_index,
+                   remove_dup_spec rds) const  {
+
+    using data_tuple = std::tuple<const T1 &, const T2 &,
+                                  const T3 &, const T4 &,
+                                  const IndexType &>;
+    using count_vec = std::vector<size_type>;
+    using data_map = std::unordered_map<data_tuple, count_vec>;
+
+    const std::vector<T1>   &vec1 = get_column<T1>(name1);
+    const std::vector<T2>   &vec2 = get_column<T2>(name2);
+    const std::vector<T3>   &vec3 = get_column<T3>(name3);
+    const std::vector<T4>   &vec4 = get_column<T4>(name4);
+    const auto              &index = get_index();
+    const size_type         col_s =
+        std::min<size_type>(
+            { vec1.size(), vec2.size(), vec3.size(), vec4.size(),
+              index.size() });
+    data_map                row_table;
+    count_vec               dummy_vec;
+    const IndexType         dummy_idx { };
+
+    for (size_type i = 0; i < col_s; ++i)  {
+        auto    insert_res =
+            row_table.emplace(
+                std::forward_as_tuple(vec1[i], vec2[i], vec3[i], vec4[i],
+                                      include_index ? index[i] : dummy_idx),
+                dummy_vec);
+
+        if (insert_res.second)
+            insert_res.first->second.reserve(8);
+        insert_res.first->second.push_back(i);
+    }
+
+    return(remove_dups_common_<data_map, Ts ...>(*this, rds, row_table, index));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename T1, typename T2, typename T3, typename T4, typename T5,
+         typename ... Ts>
+DataFrame<I, H> DataFrame<I, H>::
+remove_duplicates (const char *name1,
+                   const char *name2,
+                   const char *name3,
+                   const char *name4,
+                   const char *name5,
+                   bool include_index,
+                   remove_dup_spec rds) const  {
+
+    using data_tuple = std::tuple<const T1 &, const T2 &,
+                                  const T3 &, const T4 &, const T5 &,
+                                  const IndexType &>;
+    using count_vec = std::vector<size_type>;
+    using data_map = std::unordered_map<data_tuple, count_vec>;
+
+    const std::vector<T1>   &vec1 = get_column<T1>(name1);
+    const std::vector<T2>   &vec2 = get_column<T2>(name2);
+    const std::vector<T3>   &vec3 = get_column<T3>(name3);
+    const std::vector<T4>   &vec4 = get_column<T4>(name4);
+    const std::vector<T5>   &vec5 = get_column<T5>(name5);
+    const auto              &index = get_index();
+    const size_type         col_s =
+        std::min<size_type>(
+            { vec1.size(), vec2.size(), vec3.size(), vec4.size(), vec5.size(),
+              index.size() });
+    data_map                row_table;
+    count_vec               dummy_vec;
+    const IndexType         dummy_idx { };
+
+    for (size_type i = 0; i < col_s; ++i)  {
+        auto    insert_res =
+            row_table.emplace(
+                std::forward_as_tuple(vec1[i], vec2[i], vec3[i],
+                                      vec4[i], vec5[i],
+                                      include_index ? index[i] : dummy_idx),
+                dummy_vec);
+
+        if (insert_res.second)
+            insert_res.first->second.reserve(8);
+        insert_res.first->second.push_back(i);
+    }
+
+    return(remove_dups_common_<data_map, Ts ...>(*this, rds, row_table, index));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename T1, typename T2, typename T3, typename T4,
+         typename T5, typename T6,
+         typename ... Ts>
+DataFrame<I, H> DataFrame<I, H>::
+remove_duplicates (const char *name1,
+                   const char *name2,
+                   const char *name3,
+                   const char *name4,
+                   const char *name5,
+                   const char *name6,
+                   bool include_index,
+                   remove_dup_spec rds) const  {
+
+    using data_tuple = std::tuple<const T1 &, const T2 &,
+                                  const T3 &, const T4 &,
+                                  const T5 &, const T6 &,
+                                  const IndexType &>;
+    using count_vec = std::vector<size_type>;
+    using data_map = std::unordered_map<data_tuple, count_vec>;
+
+    const std::vector<T1>   &vec1 = get_column<T1>(name1);
+    const std::vector<T2>   &vec2 = get_column<T2>(name2);
+    const std::vector<T3>   &vec3 = get_column<T3>(name3);
+    const std::vector<T4>   &vec4 = get_column<T4>(name4);
+    const std::vector<T5>   &vec5 = get_column<T5>(name5);
+    const std::vector<T6>   &vec6 = get_column<T6>(name6);
+    const auto              &index = get_index();
+    const size_type         col_s =
+        std::min<size_type>(
+            { vec1.size(), vec2.size(), vec3.size(), vec4.size(),
+              vec5.size(), vec6.size(),
+              index.size() });
+    data_map                row_table;
+    count_vec               dummy_vec;
+    const IndexType         dummy_idx { };
+
+    for (size_type i = 0; i < col_s; ++i)  {
+        auto    insert_res =
+            row_table.emplace(
+                std::forward_as_tuple(vec1[i], vec2[i], vec3[i],
+                                      vec4[i], vec5[i], vec6[i],
+                                      include_index ? index[i] : dummy_idx),
+                dummy_vec);
+
+        if (insert_res.second)
+            insert_res.first->second.reserve(8);
+        insert_res.first->second.push_back(i);
+    }
+
+    return(remove_dups_common_<data_map, Ts ...>(*this, rds, row_table, index));
+}
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

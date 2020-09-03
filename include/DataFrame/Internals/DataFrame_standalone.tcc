@@ -585,7 +585,73 @@ inline static void _get_mem_numbers_(const std::vector<T> &container,
     capacity_mem = container.capacity() * sizeof(T);
 }
 
+// ----------------------------------------------------------------------------
+
+//
+// Specializing std::hash for tuples
+//
+
+// Code from boost
+// Reciprocal of the golden ratio helps spread entropy and handles duplicates.
+
+template<typename T>
+inline void _hash_combine_(std::size_t &seed, T const &v)  {
+
+    seed ^= std::hash<T>()(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+}
+
+// Recursive template code derived from Matthieu M.
+template<typename Tuple, size_t I = std::tuple_size<Tuple>::value - 1>
+struct  _hash_value_impl_  {
+
+    static inline void apply(size_t &seed, Tuple const &in_tuple)  {
+
+        _hash_value_impl_<Tuple, I - 1>::apply(seed, in_tuple);
+        _hash_combine_(seed, std::get<I>(in_tuple));
+    }
+};
+
+template<typename Tuple>
+struct  _hash_value_impl_<Tuple, 0>  {
+
+    static inline void apply(size_t &seed, Tuple const &in_tuple)  {
+
+        _hash_combine_(seed, std::get<0>(in_tuple));
+    }
+};
+
 } // namespace hmdf
+
+namespace std  {
+template<typename ... TT>
+struct  hash<std::tuple<TT ...>>  {
+
+    inline size_t operator()(std::tuple<TT ...> const &in_tuple) const  {
+
+        size_t  seed = 0;
+
+        hmdf::_hash_value_impl_<std::tuple<TT ...>>::apply(seed, in_tuple);
+        return (seed);
+    }
+};
+
+
+// ----------------------------------------------------------------------------
+
+// Specialized version of std::remove_copy
+//
+
+template<typename I, typename O, typename PRE>
+inline static O _remove_copy_if_(I first, I last, O d_first, PRE predicate)  {
+
+    for (I i = first; i != last; ++i)
+        if (! predicate (std::distance(first, i)))
+            *d_first++ = *i;
+
+    return d_first;
+}
+
+} // namespace std
 
 // ----------------------------------------------------------------------------
 

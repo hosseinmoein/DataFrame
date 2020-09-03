@@ -832,6 +832,31 @@ columns_info_functor_<Ts ...>::operator() (const T &vec)  {
     result.emplace_back(name, vec.size(), std::type_index(typeid(ValueType)));
 }
 
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename ... Ts>
+template<typename T>
+void
+DataFrame<I, H>::
+copy_remove_functor_<Ts ...>::operator() (const T &vec)  {
+
+    using VecType = typename std::remove_reference<T>::type;
+    using ValueType = typename VecType::value_type;
+
+    VecType new_vec (vec.size() - to_delete.size());
+
+    _remove_copy_if_(vec.begin(), vec.end(), new_vec.begin(),
+                     [this] (std::size_t n) -> bool  {
+                         return (std::find(this->to_delete.begin(),
+                                           this->to_delete.end(),
+                                           n) != this->to_delete.end());
+                     });
+    df.load_column<ValueType>(name,
+                              std::move(new_vec),
+                              nan_policy::dont_pad_with_nans);
+}
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

@@ -582,6 +582,23 @@ struct columns_info_functor_ : DataVec::template visitor_base<Ts ...>  {
     void operator() (const T &vec);
 };
 
+// ----------------------------------------------------------------------------
+
+template<typename ... Ts>
+struct copy_remove_functor_ : DataVec::template visitor_base<Ts ...>  {
+
+    inline copy_remove_functor_ (const char *n,
+                                 const std::vector<std::size_t>  &td,
+                                 DataFrame &d)
+        : name(n), to_delete (td), df(d)  {   }
+
+    const char                      *name;
+    const std::vector<std::size_t>  &to_delete;
+    DataFrame                       &df;
+
+    template<typename T>
+    void operator() (const T &vec);
+};
 
 // ----------------------------------------------------------------------------
 

@@ -470,7 +470,7 @@ public:  // Load/append/remove interfaces
     remove_duplicates(const char *name1,
                       const char *name2,
                       bool include_index,
-                      remove_dup_spec rds);
+                      remove_dup_spec rds) const;
 
     template<typename T1, typename T2, typename T3, typename ... Ts>
     [[nodiscard]] DataFrame
@@ -478,7 +478,7 @@ public:  // Load/append/remove interfaces
                       const char *name2,
                       const char *name3,
                       bool include_index,
-                      remove_dup_spec rds);
+                      remove_dup_spec rds) const;
 
     template<typename T1, typename T2, typename T3, typename T4,
              typename ... Ts>
@@ -488,7 +488,7 @@ public:  // Load/append/remove interfaces
                       const char *name3,
                       const char *name4,
                       bool include_index,
-                      remove_dup_spec rds);
+                      remove_dup_spec rds) const;
 
     template<typename T1, typename T2, typename T3, typename T4, typename T5,
              typename ... Ts>
@@ -499,7 +499,7 @@ public:  // Load/append/remove interfaces
                       const char *name4,
                       const char *name5,
                       bool include_index,
-                      remove_dup_spec rds);
+                      remove_dup_spec rds) const;
 
     template<typename T1, typename T2, typename T3, typename T4, typename T5,
              typename T6, typename ... Ts>
@@ -511,7 +511,7 @@ public:  // Load/append/remove interfaces
                       const char *name5,
                       const char *name6,
                       bool include_index,
-                      remove_dup_spec rds);
+                      remove_dup_spec rds) const;
 
 public:  // Data manipulation
 
@@ -2527,6 +2527,13 @@ private:  // Static helper functions
                        const char *col_name,
                        const std::vector<JoinSortingPair<T>> &col_vec_lhs,
                        const std::vector<JoinSortingPair<T>> &col_vec_rhs);
+
+    template<typename MAP, typename ... Ts>
+    static StdDataFrame<IndexType>
+    remove_dups_common_(const DataFrame &s_df,
+                        remove_dup_spec rds,
+                        const MAP &row_table,
+                        const IndexVecType &index);
 
     template<typename LHS_T, typename RHS_T, typename ... Ts>
     static void

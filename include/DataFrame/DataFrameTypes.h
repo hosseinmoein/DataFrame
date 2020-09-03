@@ -34,6 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cmath>
 #include <limits>
 #include <stdexcept>
+#include <tuple>
 
 // ----------------------------------------------------------------------------
 
@@ -368,8 +369,6 @@ template<>
 inline bool
 is_nan__<long double>(const long double &val)  { return(std::isnan(val)); }
 
-} // namespace hmdf
-
 // ----------------------------------------------------------------------------
 
 // Evertyhting is in bytes. The numbers are estimates, since memory allocated
@@ -399,7 +398,10 @@ struct  MemUsage  {
     }
 };
 
+} // namespace hmdf
+
 // ----------------------------------------------------------------------------
+
 
 // Local Variables:
 // mode:C++

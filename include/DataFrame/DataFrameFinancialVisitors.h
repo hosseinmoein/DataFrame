@@ -534,6 +534,14 @@ struct  VWAPVisitor {
             }
         }
     }
+    template <typename K, typename H>
+    inline void
+    operator() (K idx_begin, K idx_end,
+                H column_begin1, H column_end1, H column_begin2, H column_end2)  {
+
+        while (column_begin1 < column_end1 && column_begin2 < column_end2)
+            (*this)(*idx_begin, *column_begin1++, *column_begin2++);
+    }
 
     inline void pre ()  {
 
@@ -715,6 +723,19 @@ struct  VWBASVisitor {
                 reset_ (idx);
             accumulate_(bid_size, ask_size, bid_price, ask_price);
         }
+    }
+    template <typename K, typename H>
+    inline void
+    operator() (K idx_begin, K idx_end,
+                H column_begin1, H column_end1, H column_begin2, H column_end2,
+                H column_begin3, H column_end3, H column_begin4, H column_end4)  {
+
+        while (column_begin1 < column_end1 &&
+               column_begin2 < column_end2 &&
+               column_begin3 < column_end3 &&
+               column_begin4 < column_end4)
+            (*this)(*idx_begin, *column_begin1++, *column_begin2++,
+                    *column_begin3++, *column_begin4++);
     }
 
     inline void pre ()  {

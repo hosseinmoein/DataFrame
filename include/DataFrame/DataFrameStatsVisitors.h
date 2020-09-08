@@ -200,7 +200,7 @@ struct SumVisitor {
             (*this)(*idx_begin, *column_begin++);
     }
 
-    inline void pre ()  { sum_ = 0; }
+    inline void pre ()  { sum_ = value_type { }; }
     inline void post ()  {  }
     inline result_type get_result () const  { return (sum_); }
 
@@ -521,7 +521,8 @@ struct CovVisitor {
     template <typename K, typename H>
     inline void
     operator() (K idx_begin, K idx_end,
-                H column_begin1, H column_end1, H column_begin2, H column_end2)  {
+                H column_begin1, H column_end1,
+                H column_begin2, H column_end2)  {
 
         while (column_begin1 < column_end1 && column_begin2 < column_end2)
             (*this)(*idx_begin, *column_begin1++, *column_begin2++);
@@ -623,10 +624,11 @@ struct BetaVisitor  {
     template <typename K, typename H>
     inline void
     operator() (K idx_begin, K idx_end,
-                H column_begin1, H column_end1, H column_begin2, H column_end2)  {
+                H column_begin1, H column_end1,
+                H benchmark_begin, H benchmark_end)  {
 
-        while (column_begin1 < column_end1 && column_begin2 < column_end2)
-            (*this)(*idx_begin, *column_begin1++, *column_begin2++);
+        while (column_begin1 < column_end1 && benchmark_begin < benchmark_end)
+            (*this)(*idx_begin, *column_begin1++, *benchmark_begin++);
     }
 
     inline void pre ()  { cov_.pre(); }
@@ -738,7 +740,8 @@ struct TrackingErrorVisitor {
     template <typename K, typename H>
     inline void
     operator() (K idx_begin, K idx_end,
-                H column_begin1, H column_end1, H column_begin2, H column_end2)  {
+                H column_begin1, H column_end1,
+                H column_begin2, H column_end2)  {
 
         while (column_begin1 < column_end1 && column_begin2 < column_end2)
             (*this)(*idx_begin, *column_begin1++, *column_begin2++);
@@ -775,7 +778,8 @@ public:
     template <typename K, typename H>
     inline void
     operator() (K idx_begin, K idx_end,
-                H column_begin1, H column_end1, H column_begin2, H column_end2)  {
+                H column_begin1, H column_end1,
+                H column_begin2, H column_end2)  {
 
         while (column_begin1 < column_end1 && column_begin2 < column_end2)
             (*this)(*idx_begin, *column_begin1++, *column_begin2++);
@@ -813,7 +817,8 @@ struct DotProdVisitor  {
     template <typename K, typename H>
     inline void
     operator() (K idx_begin, K idx_end,
-                H column_begin1, H column_end1, H column_begin2, H column_end2)  {
+                H column_begin1, H column_end1,
+                H column_begin2, H column_end2)  {
 
         while (column_begin1 < column_end1 && column_begin2 < column_end2)
             (*this)(*idx_begin, *column_begin1++, *column_begin2++);
@@ -1141,10 +1146,11 @@ public:
     template <typename K, typename H>
     inline void
     operator() (K idx_begin, K idx_end,
-                H column_begin1, H column_end1, H column_begin2, H column_end2)  {
+                H x_begin, H x_end,
+                H y_begin, H y_end)  {
 
-        while (column_begin1 < column_end1 && column_begin2 < column_end2)
-            (*this)(*idx_begin, *column_begin1++, *column_begin2++);
+        while (x_begin < x_end && y_begin < y_end)
+            (*this)(*idx_begin, *x_begin++, *y_begin++);
     }
 
     inline void pre ()  {
@@ -2503,101 +2509,6 @@ private:
     result_type         sigmoids_ {  };
     const sigmoid_type  sigmoid_type_;
 };
-
-// ----------------------------------------------------------------------------
-
-struct GroupbySum
-    : HeteroVector::visitor_base<int, double, long, std::string>  {
-
-private:
-
-    int             int_sum { 0 };
-    unsigned int    uint_sum { 0 };
-    double          double_sum { 0.0 };
-    long            long_sum { 0 };
-    unsigned long   ulong_sum { 0 };
-    std::string     str_sum { };
-
-public:
-
-    template<typename T>
-    void
-    operator() (const unsigned long &ts, const char *name, const T &datum)  {
-
-        return;
-    }
-
-    void reset ()  {
-
-        int_sum = 0;
-        uint_sum = 0;
-        double_sum = 0.0;
-        long_sum = 0;
-        ulong_sum = 0;
-        str_sum.clear();
-    }
-
-    template<typename T> void get_value (T &) const  { return; }
-};
-
-// -------------------------------------
-
-template<>
-inline void GroupbySum::
-operator() (const unsigned long &ts,
-            const char *name,
-            const int &datum)  { int_sum += datum; }
-template<>
-inline void GroupbySum::
-operator() (const unsigned long &ts,
-            const char *name,
-            const unsigned int &datum)  { uint_sum += datum; }
-template<>
-inline void GroupbySum::
-operator() (const unsigned long &ts,
-            const char *name,
-            const double &datum)  { double_sum += datum; }
-template<>
-inline void GroupbySum::
-operator() (const unsigned long &ts,
-            const char *name,
-            const long &datum)  { long_sum += datum; }
-template<>
-inline void GroupbySum::
-operator() (const unsigned long &ts,
-            const char *name,
-            const unsigned long &datum)  { ulong_sum += datum; }
-template<>
-inline void GroupbySum::
-operator() (const unsigned long &ts,
-            const char *name,
-            const std::string &datum)  {
-
-    if (str_sum.empty())
-        str_sum += datum;
-    else  {
-        str_sum += '|';
-        str_sum += datum;
-    }
-}
-
-// -------------------------------------
-
-template<>
-inline void GroupbySum::get_value<int> (int &v) const  { v = int_sum; }
-template<>
-inline void GroupbySum::
-get_value<unsigned int> (unsigned int &v) const  { v = uint_sum; }
-template<>
-inline void GroupbySum::get_value<double> (double &v) const  { v = double_sum; }
-template<>
-inline void GroupbySum::get_value<long> (long &v) const  { v = long_sum; }
-template<>
-inline void GroupbySum::
-get_value<unsigned long>(unsigned long &v) const { v = ulong_sum; }
-template<>
-inline void GroupbySum::
-get_value<std::string> (std::string &v) const  { v = str_sum; }
 
 } // namespace hmdf
 

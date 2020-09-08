@@ -172,25 +172,30 @@ template<typename T>
 void
 DataFrame<I, H>::groupby_functor_<F, Ts ...>::operator() (const T &vec)  {
 
-    for (std::size_t i = begin; i < end && i < vec.size(); ++i)
-        functor (indices, name, vec[i]);
+    using VecType = typename std::remove_reference<T>::type;
+    using ValueType = typename VecType::value_type;
 
     if (! ::strcmp(name, DF_INDEX_COL_NAME))  {
-        IndexType   v;
+        auto    visitor = functor.template get_aggregator<I, I>();
 
-        functor.get_value(v);
-        df.append_index(v);
+        visitor.pre();
+        visitor(index_vec.begin() + begin, index_vec.begin() + end,
+                index_vec.begin() + begin, index_vec.begin() + end);
+        visitor.post();
+
+        df.append_index(visitor.get_result());
     }
     else  {
-        using VecType = typename std::remove_reference<T>::type;
-        using ValueType = typename VecType::value_type;
+        auto    visitor = functor.template get_aggregator<ValueType, I>();
 
-        ValueType   v;
+        visitor.pre();
+        visitor(index_vec.begin() + begin, index_vec.begin() + end,
+                vec.begin() + begin, vec.begin() + end);
+        visitor.post();
 
-        functor.get_value(v);
-        df.append_column<ValueType>(name, v, nan_policy::dont_pad_with_nans);
+        df.append_column<ValueType>(name, visitor.get_result(),
+                                    nan_policy::dont_pad_with_nans);
     }
-
     return;
 }
 
@@ -215,18 +220,20 @@ DataFrame<I, H>::bucket_functor_<F, Ts ...>::operator() (const T &vec)  {
                 marker = i;
             }
 
+    auto    visitor = functor.template get_aggregator<ValueType, I>();
+
+    visitor.pre();
     for (std::size_t i = 0, marker = 0; i < ts_s; ++i)  {
         if (indices[i] - indices[marker] >= interval)  {
-            ValueType   v;
-
-            functor.get_value(v);
+            visitor.post();
             df.append_column<ValueType>(name,
-                                        v,
+                                        visitor.get_result(),
                                         nan_policy::dont_pad_with_nans);
-            functor.reset();
+            visitor.pre();
             marker = i;
         }
-        functor (indices[i], name, vec[i]);
+        visitor(indices.begin() + i, indices.begin() + i + 1,
+                vec.begin() + i, vec.begin() + i + 1);
     }
 
     return;

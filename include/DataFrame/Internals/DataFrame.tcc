@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include <DataFrame/DataFrame.h>
-#include <DataFrame/DataFrameStatsVisitors.h>
+#include <DataFrame/GroupbyAggregators.h>
 
 #include <algorithm>
 #include <cmath>
@@ -1119,7 +1119,7 @@ DataFrame<I, H>::groupby (F &&func,
     const size_type vec_size = tmp_df.indices_.size();
     size_type       marker = 0;
 
-    if (gb_col_name == nullptr)  { // Index
+    if (! ::strcmp(gb_col_name, DF_INDEX_COL_NAME))  { // Index
         for (size_type i = 0; i < vec_size; ++i)  {
             if (tmp_df.indices_[i] != tmp_df.indices_[marker])  {
                 df.append_index(tmp_df.indices_[marker]);
@@ -1128,12 +1128,11 @@ DataFrame<I, H>::groupby (F &&func,
                                                     iter.first.c_str(),
                                                     marker,
                                                     i,
-                                                    tmp_df.indices_[marker],
+                                                    tmp_df.indices_,
                                                     func,
                                                     df);
 
                     tmp_df.data_[iter.second].change(functor);
-                    func.reset();
                 }
 
                 marker = i;
@@ -1146,7 +1145,7 @@ DataFrame<I, H>::groupby (F &&func,
                                                 iter.first.c_str(),
                                                 vec_size - 1,
                                                 vec_size,
-                                                tmp_df.indices_[vec_size - 1],
+                                                tmp_df.indices_,
                                                 func,
                                                 df);
 
@@ -1163,7 +1162,7 @@ DataFrame<I, H>::groupby (F &&func,
                                             DF_INDEX_COL_NAME,
                                             marker,
                                             i,
-                                            tmp_df.indices_[marker],
+                                            tmp_df.indices_,
                                             func,
                                             df);
 
@@ -1171,7 +1170,6 @@ DataFrame<I, H>::groupby (F &&func,
                 df.append_column<T>(gb_col_name,
                                     gb_vec [marker],
                                     nan_policy::dont_pad_with_nans);
-                func.reset();
 
                 for (const auto &iter : tmp_df.column_tb_)  {
                     if (iter.first != gb_col_name)  {
@@ -1179,12 +1177,11 @@ DataFrame<I, H>::groupby (F &&func,
                                                         iter.first.c_str(),
                                                         marker,
                                                         i,
-                                                        tmp_df.indices_[marker],
+                                                        tmp_df.indices_,
                                                         func,
                                                         df);
 
                         tmp_df.data_[iter.second].change(functor);
-                        func.reset();
                     }
                 }
 
@@ -1197,7 +1194,7 @@ DataFrame<I, H>::groupby (F &&func,
                                         DF_INDEX_COL_NAME,
                                         vec_size - 1,
                                         vec_size,
-                                        tmp_df.indices_[vec_size - 1],
+                                        tmp_df.indices_,
                                         func,
                                         df);
 
@@ -1205,7 +1202,6 @@ DataFrame<I, H>::groupby (F &&func,
             df.append_column<T>(gb_col_name,
                                 gb_vec [vec_size - 1],
                                 nan_policy::dont_pad_with_nans);
-            func.reset();
 
             for (const auto &iter : tmp_df.column_tb_)  {
                 if (iter.first != gb_col_name)  {
@@ -1213,7 +1209,7 @@ DataFrame<I, H>::groupby (F &&func,
                                             iter.first.c_str(),
                                             vec_size - 1,
                                             vec_size,
-                                            tmp_df.indices_[vec_size - 1],
+                                            tmp_df.indices_,
                                             func,
                                             df);
 

@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/DataFrameStatsVisitors.h>
 #include <DataFrame/DataFrameMLVisitors.h>
 #include <DataFrame/DataFrameFinancialVisitors.h>
+#include <DataFrame/GroupbyAggregators.h>
 #include <DataFrame/RandGen.h>
 
 #include <cassert>
@@ -364,7 +365,7 @@ static void test_haphazard()  {
                     int,
                     unsigned long,
                     std::string,
-                    double>(GroupbySum());
+                    double>(GroupbySum(), DF_INDEX_COL_NAME);
 
     dfxx.write<std::ostream,
                int,

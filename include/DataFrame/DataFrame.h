@@ -906,7 +906,7 @@ public:  // Data manipulation
 
     // Groupby copies the DataFrame into a temp DataFrame and sorts
     // the temp df by gb_col_name before performing groupby.
-    // if gb_col_name is null, it groups by index.
+    // if gb_col_name is DF_INDEX_COL_NAME, it groups by index.
     //
     // F:
     //   type functor to be applied to columns to group by
@@ -927,7 +927,7 @@ public:  // Data manipulation
     template<typename F, typename T, typename ... Ts>
     [[nodiscard]] DataFrame
     groupby(F &&func,
-            const char *gb_col_name = nullptr,
+            const char *gb_col_name,
             sort_state already_sorted = sort_state::not_sorted) const;
 
     // Same as groupby() above, but executed asynchronously
@@ -935,7 +935,7 @@ public:  // Data manipulation
     template<typename F, typename T, typename ... Ts>
     [[nodiscard]] std::future<DataFrame>
     groupby_async(F &&func,
-                  const char *gb_col_name = nullptr,
+                  const char *gb_col_name,
                   sort_state already_sorted = sort_state::not_sorted) const;
 
     // It counts the unique values in the named column.

@@ -171,15 +171,15 @@ struct groupby_functor_ : DataVec::template visitor_base<Ts ...>  {
     inline groupby_functor_ (const char *n,
                              std::size_t b,
                              std::size_t e,
-                             const IndexType &ts,
+                             const IndexVecType &iv,
                              F &f,
                              DataFrame &d)
-        : name(n), begin(b), end(e), indices(ts), functor(f), df(d) {  }
+        : name(n), begin(b), end(e), index_vec(iv), functor(f), df(d) {  }
 
     const char          *name;
     const std::size_t   begin;
     const std::size_t   end;
-    const IndexType     &indices;
+    const IndexVecType  &index_vec;
     F                   &functor;
     DataFrame           &df;
 

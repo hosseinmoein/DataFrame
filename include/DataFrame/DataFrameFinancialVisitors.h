@@ -537,10 +537,11 @@ struct  VWAPVisitor {
     template <typename K, typename H>
     inline void
     operator() (K idx_begin, K idx_end,
-                H column_begin1, H column_end1, H column_begin2, H column_end2)  {
+                H price_begin, H price_end,
+                H size_begin, H size_end)  {
 
-        while (column_begin1 < column_end1 && column_begin2 < column_end2)
-            (*this)(*idx_begin, *column_begin1++, *column_begin2++);
+        while (price_begin < price_end && size_begin < size_end)
+            (*this)(*idx_begin, *price_begin++, *size_begin++);
     }
 
     inline void pre ()  {
@@ -727,15 +728,17 @@ struct  VWBASVisitor {
     template <typename K, typename H>
     inline void
     operator() (K idx_begin, K idx_end,
-                H column_begin1, H column_end1, H column_begin2, H column_end2,
-                H column_begin3, H column_end3, H column_begin4, H column_end4)  {
+                H bid_price_begin, H bid_price_end,
+                H ask_price_begin, H ask_price_end,
+                H bid_size_begin, H bid_size_end,
+                H ask_size_begin, H ask_size_end)  {
 
-        while (column_begin1 < column_end1 &&
-               column_begin2 < column_end2 &&
-               column_begin3 < column_end3 &&
-               column_begin4 < column_end4)
-            (*this)(*idx_begin, *column_begin1++, *column_begin2++,
-                    *column_begin3++, *column_begin4++);
+        while (bid_price_begin < bid_price_end &&
+               ask_price_begin < ask_price_end &&
+               bid_size_begin < bid_size_end &&
+               ask_size_begin < ask_size_end)
+            (*this)(*idx_begin, *bid_price_begin++, *ask_price_begin++,
+                    *bid_size_begin++, *ask_size_begin++);
     }
 
     inline void pre ()  {

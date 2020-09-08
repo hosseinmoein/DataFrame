@@ -172,9 +172,6 @@ template<typename T>
 void
 DataFrame<I, H>::groupby_functor_<F, Ts ...>::operator() (const T &vec)  {
 
-    using VecType = typename std::remove_reference<T>::type;
-    using ValueType = typename VecType::value_type;
-
     if (! ::strcmp(name, DF_INDEX_COL_NAME))  {
         auto    visitor = functor.template get_aggregator<I, I>();
 
@@ -186,11 +183,16 @@ DataFrame<I, H>::groupby_functor_<F, Ts ...>::operator() (const T &vec)  {
         df.append_index(visitor.get_result());
     }
     else  {
-        auto    visitor = functor.template get_aggregator<ValueType, I>();
+        using VecType = typename std::remove_reference<T>::type;
+        using ValueType = typename VecType::value_type;
+
+        auto                visitor =
+            functor.template get_aggregator<ValueType, I>();
+        const std::size_t   vec_end = std::min(end, vec.size());
 
         visitor.pre();
-        visitor(index_vec.begin() + begin, index_vec.begin() + end,
-                vec.begin() + begin, vec.begin() + end);
+        visitor(index_vec.begin() + begin, index_vec.begin() + vec_end,
+                vec.begin() + begin, vec.begin() + vec_end);
         visitor.post();
 
         df.append_column<ValueType>(name, visitor.get_result(),

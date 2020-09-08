@@ -1676,10 +1676,7 @@ private:
 
 // ----------------------------------------------------------------------------
 
-template<typename T,
-         typename I = unsigned long,
-         typename =
-             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+template<typename T, typename I = unsigned long>
 struct KthValueVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_2
@@ -1755,10 +1752,7 @@ private:
 
 // ----------------------------------------------------------------------------
 
-template<typename T,
-         typename I = unsigned long,
-         typename =
-             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+template<typename T, typename I = unsigned long>
 struct MedianVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_2
@@ -1800,16 +1794,13 @@ private:
 
 // ----------------------------------------------------------------------------
 
-template<typename T,
-         typename I = unsigned long,
-         typename =
-             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+template<typename T, typename I = unsigned long>
 struct QuantileVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_2
 
     QuantileVisitor () = default;
-    QuantileVisitor (value_type quantile, quantile_policy q_policy)
+    QuantileVisitor (double quantile, quantile_policy q_policy)
         : qt_(quantile), policy_(q_policy)  {   }
 
     template <typename K, typename H>
@@ -1890,7 +1881,7 @@ struct QuantileVisitor  {
 private:
 
     result_type             result_ {  };
-    const result_type       qt_ { 0.5  };
+    const double            qt_ { 0.5  };
     const quantile_policy   policy_ { quantile_policy::mid_point };
 };
 

@@ -70,6 +70,42 @@ struct  GroupbyMin  {
     get_aggregator()  { return (MinVisitor<T, I>()); }
 };
 
+// ----------------------------------------------------------------------------
+
+struct  GroupbyVar  {
+
+    template<typename T, typename I>
+    static inline VarVisitor<T, I>
+    get_aggregator()  { return (VarVisitor<T, I>()); }
+};
+
+// ----------------------------------------------------------------------------
+
+struct  GroupbyStd  {
+
+    template<typename T, typename I>
+    static inline StdVisitor<T, I>
+    get_aggregator()  { return (StdVisitor<T, I>()); }
+};
+
+// ----------------------------------------------------------------------------
+
+struct  GroupbySEM  {
+
+    template<typename T, typename I>
+    static inline SEMVisitor<T, I>
+    get_aggregator()  { return (SEMVisitor<T, I>()); }
+};
+
+// ----------------------------------------------------------------------------
+
+struct  GroupbyMedian  {
+
+    template<typename T, typename I>
+    static inline MedianVisitor<T, I>
+    get_aggregator()  { return (MedianVisitor<T, I>()); }
+};
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

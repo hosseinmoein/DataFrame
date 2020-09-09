@@ -939,6 +939,96 @@ static void test_remove_duplicates()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_groupby()  {
+
+    std::cout << "\nTesting groupby( ) ..." << std::endl;
+
+    std::vector<unsigned long>  ulgvec2 =
+        { 123450, 123451, 123452, 123450, 123455, 123450, 123449,
+          123450, 123451, 123450, 123452, 123450, 123455, 123450,
+          123454, 123450, 123450, 123457, 123458, 123459, 123450,
+          123441, 123442, 123432, 123450, 123450, 123435, 123450 };
+    std::vector<unsigned long>  xulgvec2 = ulgvec2;
+    std::vector<int>            intvec2 =
+        { 1, 2, 3, 4, 5, 3, 7, 3, 9, 10, 3, 2, 3, 14,
+          2, 2, 2, 3, 2, 3, 3, 3, 3, 3, 36, 2, 45, 2 };
+    std::vector<double>         xdblvec2 =
+        { 1.2345, 2.2345, 3.2345, 4.2345, 5.2345, 3.0, 0.9999,
+          10.0, 4.25, 0.009, 1.111, 8.0, 2.2222, 3.3333,
+          11.0, 5.25, 1.009, 2.111, 9.0, 3.2222, 4.3333,
+          12.0, 6.25, 2.009, 3.111, 10.0, 4.2222, 5.3333 };
+    std::vector<double>         dblvec22 =
+        { 0.998, 0.3456, 0.056, 0.15678, 0.00345, 0.923, 0.06743,
+          0.1, 0.0056, 0.07865, -0.9999, 0.0111, 0.1002, -0.8888,
+          0.14, 0.0456, 0.078654, -0.8999, 0.01119, 0.8002, -0.9888,
+          0.2, 0.1056, 0.87865, -0.6999, 0.4111, 0.1902, -0.4888 };
+    std::vector<std::string>    strvec2 =
+        { "4% of something", "Description 4/5", "This is bad",
+          "3.4% of GDP", "Market drops", "Market pulls back",
+          "$15 increase", "Running fast", "C++14 development",
+          "Some explanation", "More strings", "Bonds vs. Equities",
+          "Almost done", "Here comes the sun", "XXXX1", "XXXX04",
+          "XXXX2", "XXXX3", "XXXX4", "XXXX4", "XXXX5", "XXXX6",
+          "XXXX7", "XXXX10", "XXXX11", "XXXX01", "XXXX02", "XXXX03" };
+
+    MyDataFrame df;
+
+    df.load_data(std::move(ulgvec2),
+                 std::make_pair("xint_col", intvec2),
+                 std::make_pair("dbl_col", xdblvec2),
+                 std::make_pair("dbl_col_2", dblvec22),
+                 std::make_pair("str_col", strvec2),
+                 std::make_pair("ul_col", xulgvec2));
+
+    auto    result =
+        df.groupby<GroupbySum,
+                    unsigned long,
+                    int,
+                    unsigned long,
+                    std::string,
+                    double>(GroupbySum(), DF_INDEX_COL_NAME);
+
+    assert((result.get_index() ==
+            std::vector<unsigned long> {
+                123432, 123435, 123441, 123442, 123449, 123450, 123451, 123452,
+                123454, 123455, 123457, 123458, 123459
+            }));
+    assert((result.get_column<int>("xint_col") ==
+            std::vector<int> { 3, 45, 3, 3, 7, 84, 11, 6, 2, 8, 3, 2, 3 }));
+    assert((result.get_column<std::string>("str_col") ==
+            std::vector<std::string> {
+                "XXXX10", "XXXX02", "XXXX6", "XXXX7", "$15 increase",
+                "4% of something3.4% of GDPMarket pulls backRunning fastSome explanationBonds vs. EquitiesHere comes the sunXXXX04XXXX2XXXX5XXXX11XXXX01XXXX03",
+                "Description 4/5C++14 development", "This is badMore strings",
+                "XXXX1", "Market dropsAlmost done", "XXXX3", "XXXX4", "XXXX4"
+            }));
+
+    result = df.groupby<GroupbyMax,
+                        int,
+                        int,
+                        unsigned long,
+                        std::string,
+                        double>(GroupbyMax(), "xint_col");
+    assert((result.get_index() ==
+            std::vector<unsigned long> {
+                123450, 123458, 123459, 123450, 123455, 123449, 123451, 123450,
+                123450, 123450, 123435
+            }));
+    assert((result.get_column<double>("dbl_col_2") ==
+            std::vector<double> {
+                0.998, 0.4111, 0.923, 0.15678, 0.00345, 0.06743, 0.0056,
+                0.07865, -0.8888, -0.6999, 0.1902
+            }));
+    assert((result.get_column<std::string>("str_col") ==
+            std::vector<std::string> {
+                "4% of something", "XXXX4", "XXXX7", "3.4% of GDP",
+                "Market drops", "$15 increase", "C++14 development",
+                "Some explanation", "Here comes the sun", "XXXX11", "XXXX02"
+            }));
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int argc, char *argv[]) {
 
     test_get_reindexed();
@@ -956,6 +1046,7 @@ int main(int argc, char *argv[]) {
     test_combine();
     test_RSIVisitor();
     test_remove_duplicates();
+    test_groupby();
 
     return (0);
 }

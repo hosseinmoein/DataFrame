@@ -1099,12 +1099,8 @@ groupby (F &&func, const char *gb_col_name, sort_state already_sorted) const  {
 
     DataFrame   tmp_df = *this;
 
-    if (already_sorted == sort_state::not_sorted)  {
-        if (gb_col_name == nullptr) {
-            tmp_df.sort<T, Ts ...>(DF_INDEX_COL_NAME, sort_spec::ascen);
-        }
-        else { tmp_df.sort<T, Ts ...>(gb_col_name, sort_spec::ascen); }
-    }
+    if (already_sorted == sort_state::not_sorted)
+        tmp_df.sort<T, Ts ...>(gb_col_name, sort_spec::ascen);
 
     DataFrame   result;
 

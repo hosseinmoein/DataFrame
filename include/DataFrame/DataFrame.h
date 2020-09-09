@@ -906,7 +906,7 @@ public:  // Data manipulation
 
     // Groupby copies the DataFrame into a temp DataFrame and sorts
     // the temp df by gb_col_name before performing groupby.
-    // if gb_col_name is DF_INDEX_COL_NAME, it groups by index.
+    // If gb_col_name is DF_INDEX_COL_NAME, it groups by index.
     //
     // F:
     //   type functor to be applied to columns to group by
@@ -916,8 +916,8 @@ public:  // Data manipulation
     //   List all the types of all data columns. A type should be specified in
     //   the list only once.
     // func:
-    //   The functor to do the groupby. To see an example of func, refer to
-    //   GroupbySum in DataFrameStatsVisitors.h file
+    //   The aggregator functor to do the groupby. All built-in groupby
+    //   aggregators are defined in GroupbyAggregators.h file
     // gb_col_name:
     //   Name of the column
     // already_sorted:
@@ -975,12 +975,14 @@ public:  // Data manipulation
     // NOTE:The DataFrame must already be sorted by index.
     //
     // F:
-    //   type functor to be applied to columns to bucketize
+    //   Functor type to be applied to columns to bucketize
     // Ts:
     //   List all the types of all data columns. A type should be specified in
     //   the list only once.
     // func:
     //   The functor to do summarization and bucktization.
+    //   All built-in bucket aggregators are defined in
+    //   GroupbyAggregators.h file
     // bucket_interval:
     //   Bucket interval is in the index's single value unit. For example if
     //   index is in minutes, bucket_interval will be in the unit of minutes

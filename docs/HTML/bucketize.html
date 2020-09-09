@@ -47,8 +47,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         <B>NOTE</b>: The DataFrame must already be sorted by index.
       </td>
       <td WIDTH="33.3%">
-        <B>F</B>: type functor to be applied to columns to bucketize<BR>
+        <B>F</B>: Functor type to be applied to columns to bucketize<BR>
         <B>Ts</B>: The list of types for all columns. A type should be specified only once.<BR>
+        <B>func</B>: The functor to do summarization and bucktization. All built-in bucket aggregators are defined in GroupbyAggregators.h file<BR>
         <B>bucket_interval</B>: Bucket interval is in the index's single value unit.
         For example, if index is in minutes, bucket_interval will be in
         the unit of minutes and so on.<BR>

@@ -33,9 +33,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename T, size_t N&gt;<BR>
-        size_type<BR>
-        replace(const char *col_name, const std::array&lt;T, N&gt; old_values, const std::array&lt;T, N&gt; new_values, int limit = -1); </font>
+        <PRE><B>
+template&lt;typename T, size_t N&gt;
+size_type
+replace(const char *col_name,
+        const std::array&lt;T, N&gt; old_values,
+        const std::array&lt;T, N&gt; new_values,
+        int limit = -1);
+        </B></PRE></font>
       </td>
       <td width = "33.3%">
         It iterates over the column named col_name (or index, if col_name == "INDEX") and replaces all values in old_values with the corresponding values in new_values up to the limit. If limit is omitted, all values will be replaced.<BR>
@@ -54,9 +59,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename T, size_t N&gt;<BR>
-        std::future&lt;size_type&gt;<BR>
-        replace_async(const char *col_name, const std::array&lt;T, N&gt; old_values, const std::array&lt;T, N&gt; new_values, int limit = -1); </font>
+        <PRE><B>
+ emplate&lt;typename T, size_t N&gt;
+std::future&lt;size_type&gt;
+replace_async(const char *col_name,
+              const std::array&lt;T, N&gt; old_values,
+              const std::array&lt;T, N&gt; new_values,
+              int limit = -1);
+        </B></PRE></font>
       </td>
       <td>
         Same as replace() above, but executed asynchronously<BR>
@@ -69,16 +79,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename T, typename F&gt;<BR>
-        void<BR>
-        replace(const char *col_name, F &amp;functor); </font>
+        <PRE><B>
+template&lt;typename T, typename F&gt;
+void
+replace(const char *col_name, F &amp;functor);
+        </B></PRE></font>
       </td>
       <td>
         This is similar to replace() above but it lets a functor replace the values in the named column. The functor is passed every value of the column along with a const reference of the corresponding index value.<BR>
         Unlike the replace version above, this replace can only work on data columns. It will not work on index column.<BR>
         The functor must have the following interface at minimum:<BR>
         <PRE>
-          bool operator() (const IndexType &ts, T &value);
+    bool operator() (const IndexType &ts, T &value);
         </PRE>
         A false return from the above operator method stops the iteration through named column values.
       </td>
@@ -94,9 +106,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename T, typename F&gt;<BR>
-        std::future&lt;void&gt;<BR>
-        replace_async(const char *col_name, F &amp;functor); </font>
+        <PRE><B>
+template&lt;typename T, typename F&gt;
+std::future&lt;void&gt;
+replace_async(const char *col_name, F &amp;functor);
+        </B></PRE></font>
       </td>
       <td>
         Same as replace() above, but executed asynchronously<BR>
@@ -109,9 +123,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;size_t N&gt;<BR>
-        size_type<BR>
-        replace_index(const std::array&lt;IndexType, N&gt; old_values, const std::array&lt;IndexType, N&gt; new_values, int limit = -1); </font>
+        <PRE><B>
+template&lt;size_t N&gt;
+size_type
+replace_index(const std::array&lt;IndexType, N&gt; old_values,
+              const std::array&lt;IndexType, N&gt; new_values,
+              int limit = -1);
+        </B></PRE></font>
       </td>
       <td>
         This does the same thing as replace() above for the index column

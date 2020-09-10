@@ -32,9 +32,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename ... Ts&gt;<BR>
-        DataFrame &amp;<BR>
-        modify_by_idx(DataFrame &amp;rhs, sort_state already_sorted = sort_state::not_sorted); </font>
+        <PRE><B>
+template&lt;typename ... Ts&gt;
+DataFrame &amp;
+modify_by_idx(DataFrame &amp;rhs,
+              sort_state already_sorted = sort_state::not_sorted);
+        </B></PRE></font>
       </td>
       <td>
         It iterates over all indices in rhs and modifies all the data columns in self that correspond to the given index value. If not already_sorted, both rhs and self will be sorted by index.<BR>

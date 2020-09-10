@@ -32,9 +32,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon" width = "15%"> <font color="white">
-        template&lt;typename ... Ts&gt;<BR>
-        void<BR>
-        multi_visit(Ts ... args); </font>
+        <PRE><B>
+template&lt;typename ... Ts&gt;
+void
+multi_visit(Ts ... args);
+        </B></PRE></font>
       </td>
       <td width = "33.3%">
         This is the most generalized visit function. It visits multiple columns with the corresponding function objects sequentially. Each function object is passed every single value of the given column along with its name and the corresponding index value. All functions objects must have this signature<BR>

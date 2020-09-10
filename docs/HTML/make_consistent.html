@@ -32,10 +32,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
 
     <tr bgcolor="lightgrey">
-      <td bgcolor="maroon" width = "33.3%"> <font color="white">
-        template&lt;typename ... Ts&gt;<BR>
-        void<BR>
-        make_consistent(); </font>
+      <td bgcolor="maroon"> <font color="white">
+        <PRE><B>
+template&lt;typename ... Ts&gt;
+void
+make_consistent();
+        </B></PRE></font>
       </td>
       <td>
         Make all data columns the same length as the index. If any data column is shorter than the index column, it will be padded by nan.<BR>

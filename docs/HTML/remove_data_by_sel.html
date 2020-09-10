@@ -33,15 +33,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename T, typename F, typename ... Ts&gt;<BR>
-        void<BR>
-        remove_data_by_sel(const char *name, F &amp;sel_functor) const;
+        <PRE><B>
+template&lt;typename T, typename F, typename ... Ts&gt;
+void
+remove_data_by_sel(const char *name, F &amp;sel_functor) const;
+        </B></PRE></font>
       </td>
       <td width = "33.3%">
         It removes data rows by boolean filtering selection via the sel_functor (e.g. a functor, function, or lambda). Each element of the named column along with its corresponding index is passed to the sel_functor. If sel_functor returns true, that row will be removed.<BR>
         The signature of sel_fucntor:<BR>
         <PRE>
-          bool ()(const IndexType &, const T &)
+    bool ()(const IndexType &, const T &)
         </PRE>
         <B>NOTE</B>: If the selection logic results in empty column(s), the empty column(s) will _not_ be padded with NaN's. You can always call make_consistent() afterwards to make all columns into consistent length
       <td>
@@ -55,15 +57,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename T1, typename T2, typename F, typename ... Ts&gt;<BR>
-        void<BR>
-        remove_data_by_sel(const char *name1, const char *name2, F &amp;sel_functor) const;
+        <PRE><B>
+template&lt;typename T1, typename T2, typename F, typename ... Ts&gt;
+void
+remove_data_by_sel(const char *name1, const char *name2,
+                   F &amp;sel_functor) const;
+        </B></PRE></font>
       </td>
       <td>
         This does the same function as above remove_data_by_sel() but operating on two columns.<BR>
         The signature of sel_fucntor:<BR>
         <PRE>
-          bool ()(const IndexType &, const T1 &, const T2 &)
+    bool ()(const IndexType &, const T1 &, const T2 &)
         </PRE>
       </td>
       <td>
@@ -79,15 +84,20 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename T1, typename T2, typename T3, typename F, typename ... Ts&gt;<BR>
-        void<BR>
-        remove_data_by_sel(const char *name1, const char *name2, const char *name3, F &amp;sel_functor) const;
+        <PRE><B>
+template&lt;typename T1, typename T2, typename T3,
+         typename F, typename ... Ts&gt;
+void
+remove_data_by_sel(const char *name1, const char *name2,
+                   const char *name3,
+                   F &amp;sel_functor) const;
+        </B></PRE></font>
       </td>
       <td>
         This does the same function as above remove_data_by_sel() but operating on three columns.<BR>
         The signature of sel_fucntor:<BR>
         <PRE>
-          bool ()(const IndexType &, const T1 &, const T2 &, const T3 &)
+    bool ()(const IndexType &, const T1 &, const T2 &, const T3 &)
         </PRE>
       </td>
       <td>

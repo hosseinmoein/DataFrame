@@ -33,8 +33,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon" width = "33.3%"> <font color="white">
-        bool<BR>
-        read(const char *file_name, io_format iof = io_format::csv); </font>
+        <PRE><B>
+bool
+read(const char *file_name, io_format iof = io_format::csv);
+        </B></PRE></font>
       </td>
       <td>
         It inputs the contents of a text file into itself (i.e. DataFrame). Currently two formats (i.e. csv, json) are supported specified by the iof parameter.<BR>
@@ -74,8 +76,10 @@ INDEX:<Number of data points>:<Comma delimited list of values>
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon" width = "33.3%"> <font color="white">
-        std::future&lt;bool&gt;<BR>
-        read_async(const char *file_name, io_format iof = io_format::csv); </font>
+        <PRE><B>
+std::future&lt;bool&gt;
+read_async(const char *file_name, io_format iof = io_format::csv);
+        </B></PRE></font>
       </td>
       <td>
         Same as read() above, but executed asynchronously

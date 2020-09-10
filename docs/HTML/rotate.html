@@ -33,9 +33,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename ... Ts&gt;<BR>
-        void<BR>
-        void self_rotate(size_type periods, shift_policy sp); </font>
+        <PRE><B>
+template&lt;typename ... Ts&gt;
+void
+void self_rotate(size_type periods, shift_policy sp);
+        </B></PRE></font>
       </td>
       <td width = "33.3%">
         It rotates all the columns in self up or down based on shift_policy.
@@ -51,9 +53,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename ... Ts&gt;<BR>
-        StdDataFrame&lt;I&gt;<BR>
-        void rotate(size_type periods, shift_policy sp); </font>
+        <PRE><B>
+template&lt;typename ... Ts&gt;
+StdDataFrame&lt;I&gt;
+void rotate(size_type periods, shift_policy sp);
+        </B></PRE></font>
       </td>
       <td>
         It is exactly the same as self_rotate, but it leaves self unchanged and returns a new DataFrame with columns rotated.

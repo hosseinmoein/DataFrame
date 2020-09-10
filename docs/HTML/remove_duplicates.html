@@ -33,12 +33,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        <PRE>
+        <PRE><B>
 enum class remove_dup_spec : unsigned char  {
     keep_first = 1,  // Keep the first duplicated row
     keep_last = 2,   // Keep the last duplicated row
     keep_none = 3    // Discard all duplicated rows
-};</PRE> </font>
+};</B></PRE> </font>
       </td>
       <td>
         Specifies which duplicated row to keep
@@ -57,9 +57,12 @@ enum class remove_dup_spec : unsigned char  {
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename T1, typename T2, typename ... Ts&gt;<BR>
-        [[nodiscard]] DataFrame<BR>
-        remove_duplicates(const char *name1, const char * name2, bool include_index, remove_dup_spec rds) const;
+        <PRE><B>
+template&lt;typename T1, typename T2, typename ... Ts&gt;
+[[nodiscard]] DataFrame
+remove_duplicates(const char *name1, const char *name2,
+                  bool include_index, remove_dup_spec rds) const;
+        </B></PRE></font>
       </td>
       <td width = "33.3%">
         It removes duplicate rows and returns a new DataFrame. Duplication is determined by the two given columns. remove_dup_spec determines which of the duplicated rows to keep.<BR>
@@ -78,9 +81,12 @@ enum class remove_dup_spec : unsigned char  {
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename T1, typename T2, typename T3, typename ... Ts&gt;<BR>
-        [[nodiscard]] DataFrame<BR>
-        remove_duplicates(const char *name1, const char * name2, const char *name3, bool include_index, remove_dup_spec rds) const;
+        <PRE><B>
+template&lt;typename T1, typename T2, typename T3, typename ... Ts&gt;
+[[nodiscard]] DataFrame
+remove_duplicates(const char *name1, const char *name2, const char *name3,
+                  bool include_index, remove_dup_spec rds) const;
+        </B></PRE></font>
       </td>
       <td width = "33.3%">
         Same as above, but there are 3 columns involved
@@ -99,9 +105,13 @@ enum class remove_dup_spec : unsigned char  {
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename T1, typename T2, typename T3, typename T4, typename ... Ts&gt;<BR>
-        [[nodiscard]] DataFrame<BR>
-        remove_duplicates(const char *name1, const char * name2, const char *name3, const char *name4, bool include_index, remove_dup_spec rds) const;
+        <PRE><B>
+template&lt;typename T1, typename T2, typename T3, typename T4, typename ... Ts&gt;
+[[nodiscard]] DataFrame
+remove_duplicates(const char *name1, const char *name2,
+                  const char *name3, const char *name4,
+                  bool include_index, remove_dup_spec rds) const;
+        </B></PRE></font>
       </td>
       <td width = "33.3%">
         Same as above, but there are 4 columns involved
@@ -122,9 +132,14 @@ enum class remove_dup_spec : unsigned char  {
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename T1, typename T2, typename T3, typename T4, typename T5, typename ... Ts&gt;<BR>
-        [[nodiscard]] DataFrame<BR>
-        remove_duplicates(const char *name1, const char * name2, const char *name3, const char *name4, const char *name5, bool include_index, remove_dup_spec rds) const;
+        <PRE><B>
+template&lt;typename T1, typename T2, typename T3, typename T4,
+         typename T5, typename ... Ts&gt;
+[[nodiscard]] DataFrame
+remove_duplicates(const char *name1, const char *name2,
+                  const char *name3, const char *name4, const char *name5,
+                  bool include_index, remove_dup_spec rds) const;
+        </B></PRE></font>
       </td>
       <td width = "33.3%">
         Same as above, but there are 5 columns involved
@@ -147,9 +162,15 @@ enum class remove_dup_spec : unsigned char  {
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename ... Ts&gt;<BR>
-        [[nodiscard]] DataFrame<BR>
-        remove_duplicates(const char *name1, const char * name2, const char *name3, const char *name4, const char *name5, const char *name6, bool include_index, remove_dup_spec rds) const;
+        <PRE><B>
+template&lt;typename T1, typename T2, typename T3, typename T4,
+         typename T5, typename T6, typename ... Ts&gt;
+[[nodiscard]] DataFrame
+remove_duplicates(const char *name1, const char *name2,
+                  const char *name3, const char *name4,
+                  const char *name5, const char *name6,
+                  bool include_index, remove_dup_spec rds) const;
+        </B></PRE></font>
       </td>
       <td width = "33.3%">
         Same as above, but there are 6 columns involved

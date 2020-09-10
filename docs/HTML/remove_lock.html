@@ -33,8 +33,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        static void set_lock (SpinLock *lock);<BR>
-        static void remove_lock (); </font>
+        <PRE><B>
+static void set_lock (SpinLock *lock);
+static void remove_lock ();
+        </B></PRE></font>
       </td>
       <td width = "33.3%">
         DataFrame has unprotected static data. If you are using DataFrame in a multi-threaded program, you must provide a SpinLock. DataFrame will use your SpinLock to protect its static data.<BR>

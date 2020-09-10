@@ -33,13 +33,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon" width = "33.3%"> <font color="white">
-        template&lt;typename FROM_T, typename TO_T&gt;<BR>
-        void<BR>
-        retype_column(const char *name,<BR>
-                      std::function&lt;TO_T (const FROM_T &amp;)&gt; convert_func =<BR>
-                          [](const FROM_T &amp;val) -> TO_T  {<BR>
-                              return ((TO_T) (*(&amp;val)));<BR>
-                          }); </font>
+        <PRE><B>
+template&lt;typename FROM_T, typename TO_T&gt;
+void
+retype_column(const char *name,
+              std::function&lt;TO_T (const FROM_T &amp;)&gt; convert_func =
+                  [](const FROM_T &amp;val) -> TO_T  {
+                      return ((TO_T) (*(&amp;val)));
+                  });
+        </B></PRE></font>
       </td>
       <td>
         It changes the type of the named column. The change happens by calling convert_func on each element of named column.<BR>

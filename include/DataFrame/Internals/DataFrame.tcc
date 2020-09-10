@@ -119,7 +119,7 @@ inline constexpr bool DataFrame<I, H>::_is_nan(const T &val)  {
 template<typename I, typename H>
 template<typename T>
 void DataFrame<I, H>::
-fill_missing_value_(std::vector<T> &vec,
+fill_missing_value_(ColumnVecType<T> &vec,
                     const T &value,
                     int limit,
                     size_type col_num)  {
@@ -148,7 +148,7 @@ fill_missing_value_(std::vector<T> &vec,
 template<typename I, typename H>
 template<typename T>
 void DataFrame<I, H>::
-fill_missing_ffill_(std::vector<T> &vec, int limit, size_type col_num)  {
+fill_missing_ffill_(ColumnVecType<T> &vec, int limit, size_type col_num)  {
 
     const size_type vec_size = vec.size();
 
@@ -186,7 +186,7 @@ template<typename T,
          typename std::enable_if<! std::is_arithmetic<T>::value ||
                                  ! std::is_arithmetic<I>::value>::type*>
 void DataFrame<I, H>::
-fill_missing_midpoint_(std::vector<T> &vec, int limit, size_type col_num)  {
+fill_missing_midpoint_(ColumnVecType<T> &vec, int limit, size_type col_num)  {
 
     throw NotFeasible("fill_missing_midpoint_(): ERROR: Mid-point filling is "
                       "not feasible on non-arithmetic types");
@@ -199,7 +199,7 @@ template<typename T,
          typename std::enable_if<std::is_arithmetic<T>::value &&
                                  std::is_arithmetic<I>::value>::type*>
 void DataFrame<I, H>::
-fill_missing_midpoint_(std::vector<T> &vec, int limit, size_type col_num)  {
+fill_missing_midpoint_(ColumnVecType<T> &vec, int limit, size_type col_num)  {
 
     const size_type vec_size = vec.size();
 
@@ -232,7 +232,7 @@ fill_missing_midpoint_(std::vector<T> &vec, int limit, size_type col_num)  {
 template<typename I, typename H>
 template<typename T>
 void DataFrame<I, H>::
-fill_missing_bfill_(std::vector<T> &vec, int limit)  {
+fill_missing_bfill_(ColumnVecType<T> &vec, int limit)  {
 
     const long  vec_size = static_cast<long>(vec.size());
 
@@ -259,7 +259,7 @@ template<typename T,
          typename std::enable_if<! std::is_arithmetic<T>::value ||
                                  ! std::is_arithmetic<I>::value>::type*>
 void DataFrame<I, H>::
-fill_missing_linter_(std::vector<T> &, const IndexVecType &, int)  {
+fill_missing_linter_(ColumnVecType<T> &, const IndexVecType &, int)  {
 
     throw NotFeasible("fill_missing_linter_(): ERROR: Interpolation is "
                       "not feasible on non-arithmetic types");
@@ -272,7 +272,7 @@ template<typename T,
          typename std::enable_if<std::is_arithmetic<T>::value &&
                                  std::is_arithmetic<I>::value>::type*>
 void DataFrame<I, H>::
-fill_missing_linter_(std::vector<T> &vec,
+fill_missing_linter_(ColumnVecType<T> &vec,
                      const IndexVecType &index,
                      int limit)  {
 
@@ -344,7 +344,7 @@ fill_missing(const std::array<const char *, N> col_names,
     size_type                       thread_count = 0;
 
     for (size_type i = 0; i < N; ++i)  {
-        std::vector<T>  &vec = get_column<T>(col_names[i]);
+        ColumnVecType<T>    &vec = get_column<T>(col_names[i]);
 
         if (fp == fill_policy::value)  {
             if (thread_count >= get_thread_level())
@@ -362,7 +362,7 @@ fill_missing(const std::array<const char *, N> col_names,
         }
         else if (fp == fill_policy::fill_forward)  {
             if (thread_count >= get_thread_level())
-                fill_missing_ffill_(vec, limit, indices_.size());
+                fill_missing_ffill_<T>(vec, limit, indices_.size());
             else  {
                 futures[thread_count] =
                     std::async(std::launch::async,
@@ -375,7 +375,7 @@ fill_missing(const std::array<const char *, N> col_names,
         }
         else if (fp == fill_policy::fill_backward)  {
             if (thread_count >= get_thread_level())
-                fill_missing_bfill_(vec, limit);
+                fill_missing_bfill_<T>(vec, limit);
             else  {
                 futures[thread_count] =
                     std::async(std::launch::async,
@@ -387,7 +387,7 @@ fill_missing(const std::array<const char *, N> col_names,
         }
         else if (fp == fill_policy::linear_interpolate)  {
             if (thread_count >= get_thread_level())
-                fill_missing_linter_(vec, indices_, limit);
+                fill_missing_linter_<T>(vec, indices_, limit);
             else  {
                 futures[thread_count] =
                     std::async(std::launch::async,
@@ -400,7 +400,7 @@ fill_missing(const std::array<const char *, N> col_names,
         }
         else if (fp == fill_policy::mid_point)  {
             if (thread_count >= get_thread_level())
-                fill_missing_midpoint_(vec, limit, indices_.size());
+                fill_missing_midpoint_<T>(vec, limit, indices_.size());
             else  {
                 futures[thread_count] =
                     std::async(std::launch::async,
@@ -546,10 +546,10 @@ replace(const char *col_name,
         const std::array<T, N> new_values,
         int limit)  {
 
-    std::vector<T>  &vec = get_column<T>(col_name);
-    size_type       count = 0;
+    ColumnVecType<T>    &vec = get_column<T>(col_name);
+    size_type           count = 0;
 
-    _replace_vector_vals_<std::vector<T>, T, N>
+    _replace_vector_vals_<ColumnVecType<T>, T, N>
         (vec, old_values, new_values, count, limit);
 
     return (count);
@@ -579,8 +579,8 @@ template<typename T, typename F>
 void DataFrame<I, H>::
 replace(const char *col_name, F &functor)  {
 
-    std::vector<T>  &vec = get_column<T>(col_name);
-    const size_type vec_s = vec.size();
+    ColumnVecType<T>    &vec = get_column<T>(col_name);
+    const size_type     vec_s = vec.size();
 
     for (size_type i = 0; i < vec_s; ++i)
         if (! functor(indices_[i], vec[i]))  break;
@@ -674,7 +674,7 @@ void DataFrame<I, H>::sort(const char *name, sort_spec dir)  {
             sort_common_<decltype(d), Ts ...>(*this, std::move(d));
     }
     else  {
-        const std::vector<T>    &idx_vec = get_column<T>(name);
+        const ColumnVecType<T>  &idx_vec = get_column<T>(name);
 
         auto    a = [&x = idx_vec](size_type i, size_type j) -> bool {
                         return (x[i] < x[j]);
@@ -701,16 +701,16 @@ sort(const char *name1, sort_spec dir1, const char *name2, sort_spec dir2)  {
 
     make_consistent<Ts ...>();
 
-    std::vector<T1> *vec1 { nullptr};
-    std::vector<T2> *vec2 { nullptr};
+    ColumnVecType<T1>   *vec1 { nullptr};
+    ColumnVecType<T2>   *vec2 { nullptr};
 
     if (! ::strcmp(name1, DF_INDEX_COL_NAME))
-        vec1 = reinterpret_cast<std::vector<T1> *>(&indices_);
+        vec1 = reinterpret_cast<ColumnVecType<T1> *>(&indices_);
     else
         vec1 = &(get_column<T1>(name1));
 
     if (! ::strcmp(name2, DF_INDEX_COL_NAME))
-        vec2 = reinterpret_cast<std::vector<T2> *>(&indices_);
+        vec2 = reinterpret_cast<ColumnVecType<T2> *>(&indices_);
     else
         vec2 = &(get_column<T2>(name2));
 
@@ -749,22 +749,22 @@ sort(const char *name1, sort_spec dir1,
 
     make_consistent<Ts ...>();
 
-    std::vector<T1> *vec1 { nullptr};
-    std::vector<T2> *vec2 { nullptr};
-    std::vector<T3> *vec3 { nullptr};
+    ColumnVecType<T1>   *vec1 { nullptr};
+    ColumnVecType<T2>   *vec2 { nullptr};
+    ColumnVecType<T3>   *vec3 { nullptr};
 
     if (! ::strcmp(name1, DF_INDEX_COL_NAME))
-        vec1 = reinterpret_cast<std::vector<T1> *>(&indices_);
+        vec1 = reinterpret_cast<ColumnVecType<T1> *>(&indices_);
     else
         vec1 = &(get_column<T1>(name1));
 
     if (! ::strcmp(name2, DF_INDEX_COL_NAME))
-        vec2 = reinterpret_cast<std::vector<T2> *>(&indices_);
+        vec2 = reinterpret_cast<ColumnVecType<T2> *>(&indices_);
     else
         vec2 = &(get_column<T2>(name2));
 
     if (! ::strcmp(name3, DF_INDEX_COL_NAME))
-        vec3 = reinterpret_cast<std::vector<T3> *>(&indices_);
+        vec3 = reinterpret_cast<ColumnVecType<T3> *>(&indices_);
     else
         vec3 = &(get_column<T3>(name3));
 
@@ -817,28 +817,28 @@ sort(const char *name1, sort_spec dir1,
 
     make_consistent<Ts ...>();
 
-    std::vector<T1> *vec1 { nullptr};
-    std::vector<T2> *vec2 { nullptr};
-    std::vector<T3> *vec3 { nullptr};
-    std::vector<T4> *vec4 { nullptr};
+    ColumnVecType<T1>   *vec1 { nullptr};
+    ColumnVecType<T2>   *vec2 { nullptr};
+    ColumnVecType<T3>   *vec3 { nullptr};
+    ColumnVecType<T4>   *vec4 { nullptr};
 
     if (! ::strcmp(name1, DF_INDEX_COL_NAME))
-        vec1 = reinterpret_cast<std::vector<T1> *>(&indices_);
+        vec1 = reinterpret_cast<ColumnVecType<T1> *>(&indices_);
     else
         vec1 = &(get_column<T1>(name1));
 
     if (! ::strcmp(name2, DF_INDEX_COL_NAME))
-        vec2 = reinterpret_cast<std::vector<T2> *>(&indices_);
+        vec2 = reinterpret_cast<ColumnVecType<T2> *>(&indices_);
     else
         vec2 = &(get_column<T2>(name2));
 
     if (! ::strcmp(name3, DF_INDEX_COL_NAME))
-        vec3 = reinterpret_cast<std::vector<T3> *>(&indices_);
+        vec3 = reinterpret_cast<ColumnVecType<T3> *>(&indices_);
     else
         vec3 = &(get_column<T3>(name3));
 
     if (! ::strcmp(name4, DF_INDEX_COL_NAME))
-        vec4 = reinterpret_cast<std::vector<T4> *>(&indices_);
+        vec4 = reinterpret_cast<ColumnVecType<T4> *>(&indices_);
     else
         vec4 = &(get_column<T4>(name4));
 
@@ -905,34 +905,34 @@ sort(const char *name1, sort_spec dir1,
 
     make_consistent<Ts ...>();
 
-    std::vector<T1> *vec1 { nullptr};
-    std::vector<T2> *vec2 { nullptr};
-    std::vector<T3> *vec3 { nullptr};
-    std::vector<T4> *vec4 { nullptr};
-    std::vector<T5> *vec5 { nullptr};
+    ColumnVecType<T1>   *vec1 { nullptr};
+    ColumnVecType<T2>   *vec2 { nullptr};
+    ColumnVecType<T3>   *vec3 { nullptr};
+    ColumnVecType<T4>   *vec4 { nullptr};
+    ColumnVecType<T5>   *vec5 { nullptr};
 
     if (! ::strcmp(name1, DF_INDEX_COL_NAME))
-        vec1 = reinterpret_cast<std::vector<T1> *>(&indices_);
+        vec1 = reinterpret_cast<ColumnVecType<T1> *>(&indices_);
     else
         vec1 = &(get_column<T1>(name1));
 
     if (! ::strcmp(name2, DF_INDEX_COL_NAME))
-        vec2 = reinterpret_cast<std::vector<T2> *>(&indices_);
+        vec2 = reinterpret_cast<ColumnVecType<T2> *>(&indices_);
     else
         vec2 = &(get_column<T2>(name2));
 
     if (! ::strcmp(name3, DF_INDEX_COL_NAME))
-        vec3 = reinterpret_cast<std::vector<T3> *>(&indices_);
+        vec3 = reinterpret_cast<ColumnVecType<T3> *>(&indices_);
     else
         vec3 = &(get_column<T3>(name3));
 
     if (! ::strcmp(name4, DF_INDEX_COL_NAME))
-        vec4 = reinterpret_cast<std::vector<T4> *>(&indices_);
+        vec4 = reinterpret_cast<ColumnVecType<T4> *>(&indices_);
     else
         vec4 = &(get_column<T4>(name4));
 
     if (! ::strcmp(name4, DF_INDEX_COL_NAME))
-        vec5 = reinterpret_cast<std::vector<T5> *>(&indices_);
+        vec5 = reinterpret_cast<ColumnVecType<T5> *>(&indices_);
     else
         vec5 = &(get_column<T5>(name5));
 
@@ -1147,7 +1147,7 @@ groupby (F &&func, const char *gb_col_name, sort_state already_sorted) const  {
         }
     }
     else  { // Non-index column
-        const std::vector<T>    &gb_vec = tmp_df.get_column<T>(gb_col_name);
+        const ColumnVecType<T>  &gb_vec = tmp_df.get_column<T>(gb_col_name);
         const size_type         vec_size = gb_vec.size();
 
         for (size_type i = 0; i < vec_size; ++i)  {
@@ -1236,7 +1236,7 @@ template<typename T>
 StdDataFrame<T>
 DataFrame<I, H>::value_counts (const char *col_name) const  {
 
-    const std::vector<T>    &vec = get_column<T>(col_name);
+    const ColumnVecType<T>  &vec = get_column<T>(col_name);
     auto                    hash_func =
         [](std::reference_wrapper<const T> v) -> std::size_t  {
             return(std::hash<T>{}(v.get()));

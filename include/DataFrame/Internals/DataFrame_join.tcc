@@ -257,9 +257,9 @@ column_join_helper_(const LHS_T &lhs,
     std::vector<left_idx_t>     lhs_index;
     std::vector<right_idx_t>    rhs_index;
     std::vector<T>              named_col_vec;
-    const std::vector<T>        &lhs_named_col_vec =
+    const ColumnVecType<T>      &lhs_named_col_vec =
         lhs.template get_column<T>(col_name);
-    const std::vector<T>        &rhs_named_col_vec =
+    const ColumnVecType<T>      &rhs_named_col_vec =
         rhs.template get_column<T>(col_name);
 
     lhs_index.reserve(jii_s);

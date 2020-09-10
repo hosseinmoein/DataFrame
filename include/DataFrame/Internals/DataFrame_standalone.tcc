@@ -34,7 +34,7 @@ namespace hmdf
 
 template<typename T>
 static inline void
-_sort_by_sorted_index_(std::vector<T> &to_be_sorted,
+_sort_by_sorted_index_(T &to_be_sorted,
                        std::vector<size_t> &sorting_idxs,
                        size_t idx_s)  {
 

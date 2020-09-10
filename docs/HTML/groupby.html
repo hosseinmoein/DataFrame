@@ -38,7 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         groupby (F &amp;&amp;func, const char *gb_col_name, sort_state already_sorted = sort_state::not_sorted) const; </font>
       </td>
       <td>
-        Groupby copies the DataFrame into a temp DataFrame and sorts the temp df by gb_col_name before performing groupby. If gb_col_name is DF_INDEX_COL_NAME, it groups by index.<BR>
+        Groupby copies the DataFrame into a temp DataFrame and sorts the temp df by gb_col_name before performing groupby. If gb_col_name is DF_INDEX_COL_NAME, it groups by index.<BR><BR>
         The first argument to groupby is an aggregator functor. All built-in groupby aggregators are in <I>GroupbyAggregators.h</I> file. Examples are <I>GroupbySum</I>, <I>GroupbyMax</I>, <I>GroupbyMean</I>, …
       </td>
       <td>

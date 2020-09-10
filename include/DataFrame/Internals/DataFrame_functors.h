@@ -259,7 +259,7 @@ struct equal_functor_ : DataVec::template visitor_base<Ts ...>  {
     bool            result { true };
 
     template<typename T>
-    void operator() (const std::vector<T> &lhs_vec);
+    void operator() (const T &lhs_vec);
 };
 
 // ----------------------------------------------------------------------------
@@ -279,7 +279,7 @@ struct mod_by_idx_functor_ : DataVec::template visitor_base<Ts ...>  {
     const size_type rhs_idx;
 
     template<typename T>
-    void operator() (std::vector<T> &lhs_vec) const;
+    void operator() (T &lhs_vec) const;
 };
 
 // ----------------------------------------------------------------------------
@@ -300,7 +300,7 @@ struct  index_join_functor_common_ : DataVec::template visitor_base<Ts ...>  {
     RES_T                   &result;
 
     template<typename T>
-    void operator() (const std::vector<T> &lhs_vec);
+    void operator() (const T &lhs_vec);
 };
 
 // ----------------------------------------------------------------------------
@@ -321,7 +321,7 @@ struct  index_join_functor_oneside_
     RES_T                   &result;
 
     template<typename T>
-    void operator() (const std::vector<T> &vec);
+    void operator() (const T &vec);
 };
 
 // ----------------------------------------------------------------------------
@@ -338,7 +338,7 @@ struct  concat_functor_ : DataVec::template visitor_base<Ts ...>  {
     const size_type original_index_s;
 
     template<typename T>
-    void operator() (const std::vector<T> &vec);
+    void operator() (const T &vec);
 };
 
 // ----------------------------------------------------------------------------
@@ -403,7 +403,7 @@ struct operator_functor_ : DataVec::template visitor_base<Ts ...>  {
     StdDataFrame<IDX>       &result_df;
 
     template<typename T>
-    void operator() (const std::vector<T> &lhs_vec);
+    void operator() (const T &lhs_vec);
 };
 
 // ----------------------------------------------------------------------------
@@ -478,7 +478,7 @@ struct sel_load_functor_ : DataVec::template visitor_base<Ts ...>  {
     DataFrame               &df;
 
     template<typename T>
-    void operator() (const std::vector<T> &vec);
+    void operator() (const T &vec);
 };
 
 // ----------------------------------------------------------------------------
@@ -498,7 +498,7 @@ struct sel_load_view_functor_ : DataVec::template visitor_base<Ts ...>  {
     DataFramePtrView<IndexType> &dfv;
 
     template<typename T>
-    void operator() (std::vector<T> &vec);
+    void operator() (T &vec);
 };
 
 // ----------------------------------------------------------------------------
@@ -512,7 +512,7 @@ struct sel_remove_functor_ : DataVec::template visitor_base<Ts ...>  {
     const std::vector<size_type>    &sel_indices;
 
     template<typename T>
-    void operator() (std::vector<T> &vec) const;
+    void operator() (T &vec) const;
 };
 
 // ----------------------------------------------------------------------------
@@ -523,7 +523,7 @@ struct shuffle_functor_ : DataVec::template visitor_base<Ts ...>  {
     inline shuffle_functor_ ()  {  }
 
     template<typename T>
-    void operator() (std::vector<T> &vec) const;
+    void operator() (T &vec) const;
 };
 
 // ----------------------------------------------------------------------------

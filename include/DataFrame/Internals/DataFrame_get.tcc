@@ -69,7 +69,7 @@ MemUsage DataFrame<I, H>::get_memory_usage(const char *col_name) const  {
 
 template<typename I, typename  H>
 template<typename T>
-typename type_declare<H, T>::type &
+typename DataFrame<I, H>::template ColumnVecType<T> &
 DataFrame<I, H>::get_column (const char *name)  {
 
     auto    iter = column_tb_.find (name);
@@ -104,7 +104,7 @@ DataFrame<I, H>::has_column (const char *name) const  {
 
 template<typename I, typename  H>
 template<typename T>
-const typename type_declare<H, T>::type &
+const typename DataFrame<I, H>::template ColumnVecType<T> &
 DataFrame<I, H>::get_column (const char *name) const  {
 
     return (const_cast<DataFrame *>(this)->get_column<T>(name));
@@ -161,7 +161,7 @@ template<typename T>
 std::vector<T> DataFrame<I, H>::
 get_col_unique_values(const char *name) const  {
 
-    const std::vector<T>    &vec = get_column<T>(name);
+    const ColumnVecType<T>  &vec = get_column<T>(name);
     auto                    hash_func =
         [](std::reference_wrapper<const T> v) -> std::size_t  {
             return(std::hash<T>{}(v.get()));
@@ -689,8 +689,8 @@ template<typename T1, typename T2, typename V>
 V &DataFrame<I, H>::
 single_act_visit (const char *name1, const char *name2, V &visitor)  {
 
-    const std::vector<T1>   &vec1 = get_column<T1>(name1);
-    const std::vector<T2>   &vec2 = get_column<T2>(name2);
+    const ColumnVecType<T1> &vec1 = get_column<T1>(name1);
+    const ColumnVecType<T2> &vec2 = get_column<T2>(name2);
 
     visitor.pre();
     visitor (indices_.begin(), indices_.end(),
@@ -1073,7 +1073,7 @@ template<typename T, typename F, typename ... Ts>
 DataFrame<I, H> DataFrame<I, H>::
 get_data_by_sel (const char *name, F &sel_functor) const  {
 
-    const std::vector<T>    &vec = get_column<T>(name);
+    const ColumnVecType<T>  &vec = get_column<T>(name);
     const size_type         idx_s = indices_.size();
     const size_type         col_s = vec.size();
     std::vector<size_type>  col_indices;
@@ -1114,7 +1114,7 @@ get_view_by_sel (const char *name, F &sel_functor) const  {
     static_assert(std::is_base_of<HeteroVector, H>::value,
                   "Only a StdDataFrame can call get_view_by_sel()");
 
-    const std::vector<T>    &vec = get_column<T>(name);
+    const ColumnVecType<T>  &vec = get_column<T>(name);
     const size_type         idx_s = indices_.size();
     const size_type         col_s = vec.size();
     std::vector<size_type>  col_indices;
@@ -1157,8 +1157,8 @@ DataFrame<I, H> DataFrame<I, H>::
 get_data_by_sel (const char *name1, const char *name2, F &sel_functor) const  {
 
     const size_type         idx_s = indices_.size();
-    const std::vector<T1>   &vec1 = get_column<T1>(name1);
-    const std::vector<T2>   &vec2 = get_column<T2>(name2);
+    const ColumnVecType<T1> &vec1 = get_column<T1>(name1);
+    const ColumnVecType<T2> &vec2 = get_column<T2>(name2);
     const size_type         col_s1 = vec1.size();
     const size_type         col_s2 = vec2.size();
     const size_type         col_s = std::max(col_s1, col_s2);
@@ -1202,8 +1202,8 @@ get_view_by_sel (const char *name1, const char *name2, F &sel_functor) const  {
     static_assert(std::is_base_of<HeteroVector, H>::value,
                   "Only a StdDataFrame can call get_view_by_sel()");
 
-    const std::vector<T1>   &vec1 = get_column<T1>(name1);
-    const std::vector<T2>   &vec2 = get_column<T2>(name2);
+    const ColumnVecType<T1> &vec1 = get_column<T1>(name1);
+    const ColumnVecType<T2> &vec2 = get_column<T2>(name2);
     const size_type         idx_s = indices_.size();
     const size_type         col_s1 = vec1.size();
     const size_type         col_s2 = vec2.size();
@@ -1253,9 +1253,9 @@ get_data_by_sel (const char *name1,
                  F &sel_functor) const  {
 
     const size_type         idx_s = indices_.size();
-    const std::vector<T1>   &vec1 = get_column<T1>(name1);
-    const std::vector<T2>   &vec2 = get_column<T2>(name2);
-    const std::vector<T3>   &vec3 = get_column<T3>(name3);
+    const ColumnVecType<T1> &vec1 = get_column<T1>(name1);
+    const ColumnVecType<T2> &vec2 = get_column<T2>(name2);
+    const ColumnVecType<T3> &vec3 = get_column<T3>(name3);
     const size_type         col_s1 = vec1.size();
     const size_type         col_s2 = vec2.size();
     const size_type         col_s3 = vec3.size();
@@ -1304,9 +1304,9 @@ get_view_by_sel (const char *name1,
     static_assert(std::is_base_of<HeteroVector, H>::value,
                   "Only a StdDataFrame can call get_view_by_sel()");
 
-    const std::vector<T1>   &vec1 = get_column<T1>(name1);
-    const std::vector<T2>   &vec2 = get_column<T2>(name2);
-    const std::vector<T3>   &vec3 = get_column<T3>(name3);
+    const ColumnVecType<T1> &vec1 = get_column<T1>(name1);
+    const ColumnVecType<T2> &vec2 = get_column<T2>(name2);
+    const ColumnVecType<T3> &vec3 = get_column<T3>(name3);
     const size_type         idx_s = indices_.size();
     const size_type         col_s1 = vec1.size();
     const size_type         col_s2 = vec2.size();

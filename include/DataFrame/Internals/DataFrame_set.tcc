@@ -132,7 +132,7 @@ retype_column (const char *name,
         throw DataFrameError ("DataFrame::retype_column(): ERROR: "
                               "Data column name cannot be 'INDEX'");
 
-    const std::vector<FROM_T>   &old_vec = get_column<FROM_T>(name);
+    const ColumnVecType<FROM_T> &old_vec = get_column<FROM_T>(name);
     std::vector<TO_T>           new_vec;
 
     new_vec.reserve(old_vec.size());
@@ -670,7 +670,7 @@ void DataFrame<I, H>::remove_data_by_sel (const char *name, F &sel_functor)  {
     static_assert(std::is_base_of<HeteroVector, H>::value,
                   "Only a StdDataFrame can call remove_data_by_loc()");
 
-    const std::vector<T>    &vec = get_column<T>(name);
+    const ColumnVecType<T>  &vec = get_column<T>(name);
     const size_type         idx_s = indices_.size();
     const size_type         col_s = vec.size();
     std::vector<size_type>  col_indices;
@@ -702,8 +702,8 @@ template<typename T1, typename T2, typename F, typename ... Ts>
 void DataFrame<I, H>::
 remove_data_by_sel (const char *name1, const char *name2, F &sel_functor)  {
 
-    const std::vector<T1>   &vec1 = get_column<T1>(name1);
-    const std::vector<T2>   &vec2 = get_column<T2>(name2);
+    const ColumnVecType<T1> &vec1 = get_column<T1>(name1);
+    const ColumnVecType<T2> &vec2 = get_column<T2>(name2);
     const size_type         col_s1 = vec1.size();
     const size_type         col_s2 = vec2.size();
     const size_type         col_s = std::max(col_s1, col_s2);
@@ -741,9 +741,9 @@ remove_data_by_sel (const char *name1,
                     const char *name3,
                     F &sel_functor)  {
 
-    const std::vector<T1>   &vec1 = get_column<T1>(name1);
-    const std::vector<T2>   &vec2 = get_column<T2>(name2);
-    const std::vector<T3>   &vec3 = get_column<T3>(name3);
+    const ColumnVecType<T1> &vec1 = get_column<T1>(name1);
+    const ColumnVecType<T2> &vec2 = get_column<T2>(name2);
+    const ColumnVecType<T3> &vec3 = get_column<T3>(name3);
     const size_type         col_s1 = vec1.size();
     const size_type         col_s2 = vec2.size();
     const size_type         col_s3 = vec3.size();
@@ -840,8 +840,8 @@ remove_duplicates (const char *name1,
     using count_vec = std::vector<size_type>;
     using data_map = std::unordered_map<data_tuple, count_vec>;
 
-    const std::vector<T1>   &vec1 = get_column<T1>(name1);
-    const std::vector<T2>   &vec2 = get_column<T2>(name2);
+    const ColumnVecType<T1> &vec1 = get_column<T1>(name1);
+    const ColumnVecType<T2> &vec2 = get_column<T2>(name2);
     const auto              &index = get_index();
     const size_type         col_s =
         std::min<size_type>({ vec1.size(), vec2.size(), index.size() });
@@ -880,9 +880,9 @@ remove_duplicates (const char *name1,
     using count_vec = std::vector<size_type>;
     using data_map = std::unordered_map<data_tuple, count_vec>;
 
-    const std::vector<T1>   &vec1 = get_column<T1>(name1);
-    const std::vector<T2>   &vec2 = get_column<T2>(name2);
-    const std::vector<T3>   &vec3 = get_column<T3>(name3);
+    const ColumnVecType<T1> &vec1 = get_column<T1>(name1);
+    const ColumnVecType<T2> &vec2 = get_column<T2>(name2);
+    const ColumnVecType<T3> &vec3 = get_column<T3>(name3);
     const auto              &index = get_index();
     const size_type         col_s =
         std::min<size_type>(
@@ -924,10 +924,10 @@ remove_duplicates (const char *name1,
     using count_vec = std::vector<size_type>;
     using data_map = std::unordered_map<data_tuple, count_vec>;
 
-    const std::vector<T1>   &vec1 = get_column<T1>(name1);
-    const std::vector<T2>   &vec2 = get_column<T2>(name2);
-    const std::vector<T3>   &vec3 = get_column<T3>(name3);
-    const std::vector<T4>   &vec4 = get_column<T4>(name4);
+    const ColumnVecType<T1> &vec1 = get_column<T1>(name1);
+    const ColumnVecType<T2> &vec2 = get_column<T2>(name2);
+    const ColumnVecType<T3> &vec3 = get_column<T3>(name3);
+    const ColumnVecType<T4> &vec4 = get_column<T4>(name4);
     const auto              &index = get_index();
     const size_type         col_s =
         std::min<size_type>(
@@ -972,11 +972,11 @@ remove_duplicates (const char *name1,
     using count_vec = std::vector<size_type>;
     using data_map = std::unordered_map<data_tuple, count_vec>;
 
-    const std::vector<T1>   &vec1 = get_column<T1>(name1);
-    const std::vector<T2>   &vec2 = get_column<T2>(name2);
-    const std::vector<T3>   &vec3 = get_column<T3>(name3);
-    const std::vector<T4>   &vec4 = get_column<T4>(name4);
-    const std::vector<T5>   &vec5 = get_column<T5>(name5);
+    const ColumnVecType<T1> &vec1 = get_column<T1>(name1);
+    const ColumnVecType<T2> &vec2 = get_column<T2>(name2);
+    const ColumnVecType<T3> &vec3 = get_column<T3>(name3);
+    const ColumnVecType<T4> &vec4 = get_column<T4>(name4);
+    const ColumnVecType<T5> &vec5 = get_column<T5>(name5);
     const auto              &index = get_index();
     const size_type         col_s =
         std::min<size_type>(
@@ -1025,12 +1025,12 @@ remove_duplicates (const char *name1,
     using count_vec = std::vector<size_type>;
     using data_map = std::unordered_map<data_tuple, count_vec>;
 
-    const std::vector<T1>   &vec1 = get_column<T1>(name1);
-    const std::vector<T2>   &vec2 = get_column<T2>(name2);
-    const std::vector<T3>   &vec3 = get_column<T3>(name3);
-    const std::vector<T4>   &vec4 = get_column<T4>(name4);
-    const std::vector<T5>   &vec5 = get_column<T5>(name5);
-    const std::vector<T6>   &vec6 = get_column<T6>(name6);
+    const ColumnVecType<T1> &vec1 = get_column<T1>(name1);
+    const ColumnVecType<T2> &vec2 = get_column<T2>(name2);
+    const ColumnVecType<T3> &vec3 = get_column<T3>(name3);
+    const ColumnVecType<T4> &vec4 = get_column<T4>(name4);
+    const ColumnVecType<T5> &vec5 = get_column<T5>(name5);
+    const ColumnVecType<T6> &vec6 = get_column<T6>(name6);
     const auto              &index = get_index();
     const size_type         col_s =
         std::min<size_type>(

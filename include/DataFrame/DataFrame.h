@@ -80,6 +80,9 @@ public:
     using IndexVecType = typename type_declare<DataVec, IndexType>::type;
     using ColNameType = String64;
 
+    template<typename T>
+    using ColumnVecType = typename type_declare<DataVec, T>::type;
+
     DataFrame() = default;
     DataFrame(const DataFrame &) = default;
     DataFrame(DataFrame &&) = default;
@@ -1195,7 +1198,7 @@ public: // Read/access and slicing interfaces
     //   Data type of the named column
     //
     template<typename T>
-    [[nodiscard]] typename type_declare<DataVec, T>::type &
+    [[nodiscard]] ColumnVecType<T> &
     get_column(const char *name);
 
     // It returns a const reference to the container of named data column
@@ -1207,7 +1210,7 @@ public: // Read/access and slicing interfaces
     //   Name of the column
     //
     template<typename T>
-    [[nodiscard]] const typename type_declare<DataVec, T>::type &
+    [[nodiscard]] const ColumnVecType<T> &
     get_column(const char *name) const;
 
     // Returns true if self has the named column, otherwise false
@@ -2511,39 +2514,39 @@ private:  // Static helper functions
 
     template<typename T>
     static void
-    fill_missing_value_(std::vector<T> &vec,
+    fill_missing_value_(ColumnVecType<T> &vec,
                         const T &value,
                         int limit,
                         size_type col_num);
 
     template<typename T>
     static void
-    fill_missing_ffill_(std::vector<T> &vec, int limit, size_type col_num);
+    fill_missing_ffill_(ColumnVecType<T> &vec, int limit, size_type col_num);
 
     template<typename T,
              typename std::enable_if<
                  std::is_arithmetic<T>::value &&
                  std::is_arithmetic<IndexType>::value>::type* = nullptr>
     static void
-    fill_missing_midpoint_(std::vector<T> &vec, int limit, size_type col_num);
+    fill_missing_midpoint_(ColumnVecType<T> &vec, int limit, size_type col_num);
 
     template<typename T,
              typename std::enable_if<
                  ! std::is_arithmetic<T>::value ||
                  ! std::is_arithmetic<IndexType>::value>::type* = nullptr>
     static void
-    fill_missing_midpoint_(std::vector<T> &vec, int limit, size_type col_num);
+    fill_missing_midpoint_(ColumnVecType<T> &vec, int limit, size_type col_num);
 
     template<typename T>
     static void
-    fill_missing_bfill_(std::vector<T> &vec, int limit);
+    fill_missing_bfill_(ColumnVecType<T> &vec, int limit);
 
     template<typename T,
              typename std::enable_if<
                  std::is_arithmetic<T>::value &&
                  std::is_arithmetic<IndexType>::value>::type* = nullptr>
     static void
-    fill_missing_linter_(std::vector<T> &vec,
+    fill_missing_linter_(ColumnVecType<T> &vec,
                          const IndexVecType &index,
                          int limit);
 
@@ -2552,7 +2555,7 @@ private:  // Static helper functions
                  ! std::is_arithmetic<T>::value ||
                  ! std::is_arithmetic<IndexType>::value>::type* = nullptr>
     static void
-    fill_missing_linter_(std::vector<T> &, const IndexVecType &, int);
+    fill_missing_linter_(ColumnVecType<T> &, const IndexVecType &, int);
 
     // Maps row number -> number of missing column(s)
     using DropRowMap = std::map<size_type, size_type>;

@@ -32,9 +32,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename T, typename V&gt;<BR>
-        DataFrame<BR>
-        transpose(IndexVecType &amp;&amp;indices, const V &amp;current_col_order, const V &amp;new_col_names) const; </font>
+        <PRE><B>
+template&lt;typename T, typename V&gt;
+DataFrame
+transpose(IndexVecType &amp;&amp;indices,
+          const V &amp;current_col_order,
+          const V &amp;new_col_names) const; </font>
+        </B></PRE>
       </td>
       <td>
         It transposes the data in the DataFrame.<BR>

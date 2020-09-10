@@ -33,11 +33,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        <PRE>
+        <PRE><B>
 enum class shift_policy : unsigned char  {
     down = 1, // Shift/rotate the content of all columns down, keep index unchanged
     up = 2,   // Shift/rotate the content of all columns up, keep index unchanged
-}; </PRE> </font>
+}; </B></PRE> </font>
       </td>
       <td width="50%">
         This policy is relative to a tabular data structure<BR>
@@ -57,9 +57,11 @@ enum class shift_policy : unsigned char  {
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename ... Ts&gt;<BR>
-        void<BR>
-        self_shift(size_type periods, shift_policy sp); </font>
+        <PRE><B>
+template&lt;typename ... Ts&gt;
+void
+self_shift(size_type periods, shift_policy sp); </font>
+        </B></PRE>
       </td>
       <td width = "33.3%">
         It shifts all the columns in self up or down based on shift_policy.
@@ -76,9 +78,11 @@ enum class shift_policy : unsigned char  {
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename ... Ts&gt;<BR>
-        StdDataFrame&lt;I&gt;<BR>
-        shift(size_type periods, shift_policy sp); </font>
+        <PRE><B>
+template&lt;typename ... Ts&gt;
+StdDataFrame&lt;I&gt;
+shift(size_type periods, shift_policy sp); </font>
+        </B></PRE>
       </td>
       <td>
         It is exactly the same as self_shift, but it leaves self unchanged and returns a new DataFrame with columns shifted.

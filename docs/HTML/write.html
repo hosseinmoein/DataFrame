@@ -33,9 +33,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename S, typename ... Ts&gt;<BR>
-        bool<BR>
-        write(S &amp;o, bool values_only = false, io_format iof = io_format::csv) const; </font>
+        <PRE><B>
+template&lt;typename S, typename ... Ts&gt;
+bool
+write(S &amp;o, bool values_only = false,
+      io_format iof = io_format::csv) const; </font>
+        </B></PRE>
       </td>
       <td>
         It outputs the content of DataFrame into the stream o. Currently two formats (i.e. csv, json) are supported specified by the iof parameter.<BR>
@@ -78,9 +81,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename S, typename ... Ts&gt;<BR>
-        std::future&lt;bool&gt;<BR>
-        write_async(S &amp;o, bool values_only = false, io_format iof = io_format::csv) const; </font>
+        <PRE><B>
+template&lt;typename S, typename ... Ts&gt;
+std::future&lt;bool&gt;
+write_async(S &amp;o, bool values_only = false,
+            io_format iof = io_format::csv) const; </font>
+        </B></PRE>
       </td>
       <td>
         Same as write() above, but executed asynchronously

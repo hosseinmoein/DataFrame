@@ -32,9 +32,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;size_t N, typename ... Ts&gt;<BR>
-        void<BR>
-        shuffle(const std::array&lt;const char *, N&gt; col_names, bool also_shuffle_index); </font>
+        <PRE><B>
+template&lt;size_t N, typename ... Ts&gt;
+void
+shuffle(const std::array&lt;const char *, N&gt;
+        col_names,
+        bool also_shuffle_index); </font>
+        </B></PRE>
       </td>
       <td>
         It randomly shuffles the named column(s) non-deterministically.

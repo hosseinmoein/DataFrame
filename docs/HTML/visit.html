@@ -33,9 +33,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename T, typename V&gt;<BR>
-        V &amp;<BR>
-        visit(const char *name, V &amp;visitor); </font>
+        <PRE><B>
+template&lt;typename T, typename V&gt;
+V &amp;
+visit(const char *name, V &amp;visitor); </font>
+        </B></PRE>
       </td>
       <td>
         It passes the values of each index and the named column to the functor visitor sequentially from beginning to end<BR>
@@ -50,9 +52,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename T, typename V&gt;<BR>
-        std::future&lt;V &amp;&gt;<BR>
-        visit_async(const char *name, V &amp;visitor); </font>
+        <PRE><B>
+template&lt;typename T, typename V&gt;
+std::future&lt;V &amp;&gt;
+visit_async(const char *name, V &amp;visitor); </font>
+        </B></PRE>
       </td>
       <td>
         These are identical to above visit() but could execute asynchronously.<BR>
@@ -66,9 +70,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename T1, typename T2, typename V&gt;<BR>
-        V &amp;<BR>
-        visit(const char *name1, const char *name2, V &amp;visitor); </font>
+        <PRE><B>
+template&lt;typename T1, typename T2, typename V&gt;
+V &amp;
+visit(const char *name1, const char *name2, V &amp;visitor); </font>
+        </B></PRE>
       </td>
       <td>
         It passes the values of each index and the two named columns to the functor visitor sequentially from beginning to end<BR>
@@ -85,9 +91,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename T1, typename T2, typename V&gt;<BR>
-        std::future&lt;V &amp;&gt;<BR>
-        visit_async(const char *name1, const char *name2, V &amp;visitor); </font>
+        <PRE><B>
+template&lt;typename T1, typename T2, typename V&gt;
+std::future&lt;V &amp;&gt;
+visit_async(const char *name1, const char *name2, V &amp;visitor); </font>
+        </B></PRE>
       </td>
       <td>
         These are identical to above visit() but could execute asynchronously.<BR>
@@ -101,9 +109,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename T1, typename T2, typename T3, typename V&gt;<BR>
-        V &amp;<BR>
-        visit(const char *name1, const char *name2, const char *name3, V &amp;visitor); </font>
+        <PRE><B>
+template&lt;typename T1, typename T2, typename T3, typename V&gt;
+V &amp;
+visit(const char *name1, const char *name2,
+      const char *name3, V &amp;visitor); </font>
+        </B></PRE>
       </td>
       <td>
         It passes the values of each index and the three named columns to the functor visitor sequentially from beginning to end<BR>
@@ -122,9 +133,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename T1, typename T2, typename T3, typename V&gt;<BR>
-        std::future&lt;V &amp;&gt;<BR>
-        visit_async(const char *name1, const char *name2, const char *name3, V &amp;visitor); </font>
+        <PRE><B>
+template&lt;typename T1, typename T2, typename T3, typename V&gt;
+std::future&lt;V &amp;&gt;
+visit_async(const char *name1, const char *name2,
+            const char *name3, V &amp;visitor); </font>
+        </B></PRE>
       </td>
       <td>
         These are identical to above visit() but could execute asynchronously.<BR>
@@ -138,9 +152,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename T1, typename T2, typename T3, typename T4, typename V&gt;<BR>
-        V &amp;<BR>
-        visit(const char *name1, const char *name2, const char *name3, const char *name4, V &amp;visitor); </font>
+        <PRE><B>
+template&lt;typename T1, typename T2, typename T3, typename T4,
+         typename V&gt;
+V &amp;
+visit(const char *name1, const char *name2,
+      const char *name3, const char *name4,
+      V &amp;visitor); </font>
+        </B></PRE>
       </td>
       <td>
         It passes the values of each index and the four named columns to the functor visitor sequentially from beginning to end<BR>
@@ -161,9 +180,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename T1, typename T2, typename T3, typename T4, typename V&gt;<BR>
-        std::future&lt;V &amp;&gt;<BR>
-        visit_async(const char *name1, const char *name2, const char *name3, const char *name4, V &amp;visitor); </font>
+        <PRE><B>
+template&lt;typename T1, typename T2, typename T3, typename T4,
+         typename V&gt;
+std::future&lt;V &amp;&gt;
+visit_async(const char *name1, const char *name2,
+            const char *name3, const char *name4,
+            V &amp;visitor); </font>
+        </B></PRE>
       </td>
       <td>
         These are identical to above visit() but could execute asynchronously.<BR>
@@ -177,9 +201,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename T1, typename T2, typename T3, typename T4, typename T5, typename V&gt;<BR>
-        V &amp;<BR>
-        visit(const char *name1, const char *name2, const char *name3, const char *name4, const char *name5, V &amp;visitor); </font>
+        <PRE><B>
+template&lt;typename T1, typename T2, typename T3, typename T4,
+         typename T5, typename V&gt;
+V &amp;
+visit(const char *name1, const char *name2,
+      const char *name3, const char *name4,
+      const char *name5, V &amp;visitor); </font>
+        </B></PRE>
       </td>
       <td>
         It passes the values of each index and the five named columns to the functor visitor sequentially from beginning to end<BR>
@@ -202,9 +231,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename T1, typename T2, typename T3, typename T4, typename T5, typename V&gt;<BR>
-        std::future&lt;V &amp;&gt;<BR>
-        visit_async(const char *name1, const char *name2, const char *name3, const char *name4, const char *name5, V &amp;visitor); </font>
+        <PRE><B>
+template&lt;typename T1, typename T2, typename T3, typename T4,
+         typename T5, typename V&gt;
+std::future&lt;V &amp;&gt;
+visit_async(const char *name1, const char *name2,
+            const char *name3, const char *name4,
+            const char *name5, V &amp;visitor); </font>
+        </B></PRE>
       </td>
       <td>
         These are identical to above visit() but could execute asynchronously.<BR>

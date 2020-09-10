@@ -32,18 +32,20 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        enum class time_frequency : unsigned char  {<BR>
-            &emsp;annual = 1,<BR>
-            &emsp;monthly = 2,<BR>
-            &emsp;weekly = 3,<BR>
-            &emsp;daily = 4,<BR>
-            &emsp;hourly = 5,<BR>
-            &emsp;minutely = 6,<BR>
-            &emsp;secondly = 7,<BR>
-            &emsp;millisecondly = 8,<BR>
-            &emsp;// microsecondly = 9,<BR>
-            &emsp;// nanosecondly = 10<BR>
-        }; </font>
+        <PRE><B>
+enum class time_frequency : unsigned char  {
+    annual = 1,
+    monthly = 2,
+    weekly = 3,
+    daily = 4,
+    hourly = 5,
+    minutely = 6,
+    secondly = 7,
+    millisecondly = 8,
+    // microsecondly = 9,
+    // nanosecondly = 10
+}; </font>
+        </B></PRE>
       </td>
       <td>
         This enum specifies time frequency for index generation and otherwise. The names are self-explanatory.

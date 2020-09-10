@@ -33,11 +33,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename T, typename V&gt;<BR>
-        V &amp;<BR>
-        single_act_visit(const char *name, V &amp;visitor); </font>
+        <PRE><B>
+template&lt;typename T, typename V&gt;
+V &amp;
+single_act_visit(const char *name, V &amp;visitor); </font>
+        </B></PRE>
       </td>
-      <td width = "33.3%">
+      <td width = "40%">
         This is similar to visit(), but it passes a const reference to the index vector and the named column vector at once the functor visitor. This is convenient for calculations that need the whole data vector, for example auto-correlation.<BR>
         <B>NOTE:</B> There is also a const version of this method.
       </td>
@@ -50,11 +52,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename T, typename V&gt;<BR>
-        std::future&lt;V &amp;&gt;<BR>
-        single_act_visit_async(const char *name, V &amp;visitor); </font>
+        <PRE><B>
+template&lt;typename T, typename V&gt;
+std::future&lt;V &amp;&gt;
+single_act_visit_async(const char *name, V &amp;visitor); </font>
+        </B></PRE>
       </td>
-      <td width = "33.3%">
+      <td width = "40%">
         These are identical to above single_act_visit() but could execute asynchronously.<BR>
         <B>NOTE:</B> It should be safe to run multiple single_act_visit on different columns at the same time (as long as the index column is not being modified).<BR>
         <B>NOTE:</B> It should be safe to run multiple read-only single_act_visit on the same column or different columns at the same time<BR>
@@ -66,11 +70,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename T1, typename T2, typename V&gt;<BR>
-        V &amp;<BR>
-        single_act_visit(const char *name1, const char *name2, V &amp;visitor); </font>
+        <PRE><B>
+template&lt;typename T1, typename T2, typename V&gt;
+V &amp;
+single_act_visit(const char *name1, const char *name2, V &amp;visitor); </font>
+        </B></PRE>
       </td>
-      <td width = "33.3%">
+      <td width = "40%">
         This is similar to visit(), but it passes a const reference to the index vector and the two named column vectors at once the functor visitor. This is convenient for calculations that need the whole data vector.<BR>
         <B>NOTE:</B> There is also a const version of this method.
       </td>
@@ -85,11 +91,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename T1, typename T2, typename V&gt;<BR>
-        std::future&lt;V &amp;&gt;<BR>
-        single_act_visit_async(const char *name1, const char *name2, V &amp;visitor); </font>
+        <PRE><B>
+template&lt;typename T1, typename T2, typename V&gt;
+std::future&lt;V &amp;&gt;
+single_act_visit_async(const char *name1, const char *name2, V &amp;visitor); </font>
+        </B></PRE>
       </td>
-      <td width = "33.3%">
+      <td width = "40%">
         These are identical to above single_act_visit() but could execute asynchronously.<BR>
         <B>NOTE:</B> It should be safe to run multiple single_act_visit on different columns at the same time (as long as the index column is not being modified).<BR>
         <B>NOTE:</B> It should be safe to run multiple read-only single_act_visit on the same column or different columns at the same time<BR>

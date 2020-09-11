@@ -31,29 +31,32 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         <th>Signature</th> <th>Description</th> <th>Parameters</th>
     </tr>
     <tr bgcolor="lightgrey">
-      <td bgcolor="maroon" width="33.3%"> <font color="white">
-        template&lt;typename T&gt;<BR>
-        static std::vector&lt;typename I&gt;<BR>
-        gen_datetime_index(const char *start_datetime, const char *end_datetime, time_frequency t_freq, long increment = 1, DT_TIME_ZONE tz = DT_TIME_ZONE::LOCAL);
+      <td bgcolor="maroon"> <font color="white">
+        <PRE><B>
+template&lt;typename T&gt;
+static std::vector&lt;typename I&gt;
+gen_datetime_index(const char *start_datetime,
+                   const char *end_datetime,
+                   time_frequency t_freq,
+                   long increment = 1,
+                   DT_TIME_ZONE tz = DT_TIME_ZONE::LOCAL);
+        </B></PRE></font>
       </td>
       <td>
-        This static method generates a date/time-based index vector that could be fed
-        directly to one of the load methods. Depending on the specified frequency,
-        it generates specific timestamps (see below).<BR>
+        This static method generates a date/time-based index vector that could be fed directly to one of the load methods. Depending on the specified frequency, it generates specific timestamps (see below).<BR>
         It returns a vector of I timestamps.<BR>
         Currently I could be any built-in numeric type or DateTime<BR>
-        <B>NOTE</b>: It is the responsibility of the programmer to make sure I type
-        is big enough to contain the frequency.
+        <B>NOTE</b>: It is the responsibility of the programmer to make sure I type is big enough to contain the frequency.
       </td>
       <td>
         <B>start_datetime, end_datetime</B>: They are the start/end date/times of requested timestamps.<BR>
         They must be in the following format:<BR>
-        MM/DD/YYYY [HH[:MM[:SS[.MMM]]]]<BR>
+        <I>MM/DD/YYYY [HH[:MM[:SS[.MMM]]]]</I><BR>
         <B>t_freq</B>: Specifies the timestamp frequency. Depending on the frequency,
         and I type specific timestamps are generated as follows:<BR>
         <UL>
           <LI>I type of DateTime always generates timestamps of DateTime.</LI>
-          <LI>Annual, monthly, weekly, and daily frequencies generates YYYYMMDD timestamps.</LI>
+          <LI>Annual, monthly, weekly, and daily frequencies generates <I>YYYYMMDD</I> timestamps.</LI>
           <LI>Hourly, minutely, and secondly frequencies generates epoch timestamps (64 bit).</LI>
           <LI>Millisecondly frequency generates nano-second since epoch timestamps (128 bit).</LI>
         </UL>

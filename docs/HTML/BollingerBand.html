@@ -32,8 +32,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename T, typename I = unsigned long, typename = typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;<BR>
-        struct BollingerBand; </font>
+        <PRE><B>
+template&lt;typename T,
+         typename I = unsigned long,
+         typename =
+             typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;
+struct BollingerBand;
+        </B></PRE></font>
       </td>
       <td>
         This is a “single action visitor”, meaning it is passed the whole data vector in
@@ -48,10 +53,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
           <LI>Biased; whether the moving std is biased. The default is false meaning the denominator is “n – 1”.</LI>
         </UL>
         <PRE>
-            BollingerBand(double upper_band_multiplier,
-                          double lower_band_multiplier,
-                          size_type moving_mean_period,
-                          bool biased = false)
+    BollingerBand(double upper_band_multiplier,
+                  double lower_band_multiplier,
+                  size_type moving_mean_period,
+                  bool biased = false)
         </PRE>
         There are 2 methods that give you the results:<BR>
         <OL>
@@ -59,7 +64,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
           <LI>const result_type &amp;get_raw_to_lower_band() const – Returns a vector of data column minus lower band.</LI>
         </OL>
       </td>
-      <td>
+      <td width="12%">
         <B>T</B>: Column data type<BR>
         <B>I</B>: Index type
       </td>

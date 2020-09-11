@@ -32,16 +32,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename T, typename I = unsigned long&gt;<BR>
-        struct ClipVisitor; </font>
+        <PRE><B>
+template&lt;typename T, typename I = unsigned long&gt;
+struct ClipVisitor;
+        </B></PRE></font>
       </td>
-      <td width="40%">
+      <td>
         This visitor actually changes the given column’s data. It sets any column value greater than upper to upper and any value smaller than lower to lower.<BR>
         The <I>get_result()</I> method returns the number of items changed.<BR><BR>
         <I>ClipVisitor(const value_type &amp;upper, const value_type &amp;lower)</I><BR><BR>
         See this document and dataframe_tester_2.cc for examples.
       </td>
-      <td>
+      <td width="12%">
         <B>T</B>: Column data type<BR>
         <B>I</B>: Index type
       </td>

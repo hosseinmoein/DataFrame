@@ -31,9 +31,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <th>Signature</th> <th>Description</th> <th>Parameters</th>
     </tr>
     <tr bgcolor="lightgrey">
-      <td bgcolor="maroon" width="33.3%"> <font color="white">
-        template&lt;typename F, typename T, typename I = unsigned long&gt;<BR>
-        struct ExponentialRollAdopter;</font>
+      <td bgcolor="maroon"> <font color="white">
+        <PRE><B>
+template&lt;typename F, typename T, typename I = unsigned long&gt;
+struct ExponentialRollAdopter;
+        </B></PRE></font>
       </td>
       <td>
         This functor applies functor F to the data in an exponentially decaying rolling progression. The roll count is given to the constructor of ExponentialRollAdopter. The other parameters to the constructor determine how the decay is calculated. Please see the exponential_decay_spec type above.<BR>
@@ -43,10 +45,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         <I>Xt</I> is current value<BR>
         <I>Yt-1</I> is last calculated stats<BR>
         <PRE>
-          inline ExponentialRollAdopter(F &&functor, size_t roll_count, exponential_decay_spec eds, double value)
+    inline ExponentialRollAdopter(F &&functor,
+                                  size_t roll_count,
+                                  exponential_decay_spec eds,
+                                  double value)
         </PRE>
       </td>
-      <td width="33.3%">
+      <td width="12%">
         <B>F</B>: Functor type<BR>
         <B>T</B>: Column data type<BR>
         <B>I</B>: Index type

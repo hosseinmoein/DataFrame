@@ -32,18 +32,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename T, typename I = unsigned long&gt;<BR>
-        struct CumMaxVisitor; </font>
+        <PRE><B>
+template&lt;typename T, typename I = unsigned long&gt;
+struct CumMaxVisitor;
+        </B></PRE></font>
       </td>
-      <td width="50%">
-        This is a “single action visitor”, meaning it is passed the whole data vector
-        in one call and you must use the single_action_visit() interface.<BR>
-        This functor class calculates the cumulative maximum of a given column.
-        The constructor takes a single optional Boolean argument to whether skip NaN values. The default is True.<BR>
+      <td>
+        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_action_visit() interface.<BR>
+        This functor class calculates the cumulative maximum of a given column. The constructor takes a single optional Boolean argument to whether skip NaN values. The default is True.<BR>
         See this document and dataframe_tester.cc for examples.<BR>
         The result is a vector of running maximums<BR>
       </td>
-      <td>
+      <td width="12%">
         <B>T</B>: Column data type.<BR>
         <B>I</B>: Index type.
       </td>

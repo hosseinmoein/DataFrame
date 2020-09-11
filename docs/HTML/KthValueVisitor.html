@@ -32,17 +32,19 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename T, typename I = unsigned long, typename = typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;<BR>
-        struct KthValueVisitor; </font>
+        <PRE><B>
+template&lt;typename T, typename I = unsigned long&gt;
+struct KthValueVisitor;
+        </B></PRE></font>
       </td>
-      <td width="33.3%">
+      <td>
         This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_action_visit() interface.<BR>
         This functor class finds the Kth element in the given column in linear time.<BR>
         <PRE>
-          explicit KthValueVisitor (size_type ke, bool skipnan = true);
+    explicit KthValueVisitor (size_type ke, bool skipnan = true);
         </PRE>
       </td>
-      <td width="20%">
+      <td width="12%">
         <B>T</B>: Column data type<BR>
         <B>I</B>: Index type
       </td>

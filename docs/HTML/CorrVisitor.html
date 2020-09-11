@@ -32,13 +32,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename T, typename I = unsigned long, typename = typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;<BR>
-        struct CorrVisitor; </font>
+        <PRE><B>
+template&lt;typename T,
+         typename I = unsigned long,
+         typename =
+             typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;
+struct CorrVisitor;
+        </B></PRE></font>
       </td>
       <td>
         This functor class calculates the correlation of two given columns.<BR>
         <PRE>
-          explicit CorrVisitor (bool bias = true);
+    explicit CorrVisitor (bool bias = true);
         </PRE>
         See this document and dataframe_tester.cc for examples.
       </td>

@@ -32,9 +32,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon" width="33.3%"> <font color="white">
-        template&lt;typename T&gt;<BR>
-        static std::vector&lt;typename I&gt;<BR>
-        gen_sequence_index(const IndexType &amp;start_value, const IndexType &amp;end_value, long increment = 1);
+        <PRE><B>
+template&lt;typename T&gt;
+static std::vector&lt;typename I&gt;
+gen_sequence_index(const IndexType &amp;start_value,
+                   const IndexType &amp;end_value,
+                   long increment = 1);
+        </B></PRE></font>
       </td>
       <td>
         This static method generates a vector of sequential values of IndexType that

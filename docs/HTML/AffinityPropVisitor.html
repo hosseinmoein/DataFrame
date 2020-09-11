@@ -32,8 +32,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename T, typename I = unsigned long&gt;<BR>
-        struct AffinityPropVisitor; </font>
+        <PRE><B>
+template&lt;typename T, typename I = unsigned long&gt;
+struct AffinityPropVisitor;
+        </B></PRE></font>
       </td>
       <td>
         This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_action_visit() interface.<BR>
@@ -43,17 +45,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         2. A function to calculate distance between to data points of type T with a default value<BR>
         <I>
         <PRE>
-          KMeansVisitor(size_type num_of_iter,
-                        distance_func f = [](const value_type &x, const value_type &y) -> double {
-                            return ((x - y) * (x - y));
-                        })
+    KMeansVisitor(size_type num_of_iter,
+                  distance_func f =
+                      [](const value_type &x, const value_type &y) -> double {
+                          return ((x - y) * (x - y));
+                      })
         </PRE>
         </I>
         3. Damping factor used in the algorithm. The default is 0.9. (1 – damping factor) prevents numerical oscillations.<BR>
         The result type is VectorPtrView of type T containing the centers of clusters.<BR>
         There is also a get_clusters() method that returns an vector of VectorPtrView’s which contain the data clustered around the centers.
       </td>
-      <td>
+      <td width="12%">
         <B>T</B>: Column data type<BR>
         <B>I</B>: Index type
       </td>

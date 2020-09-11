@@ -32,10 +32,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename T, typename I = unsigned long&gt;<BR>
-        struct FactorizeVisitor; </font>
+        <PRE><B>
+template&lt;typename T, typename I = unsigned long&gt;
+struct FactorizeVisitor;
+        </B></PRE></font>
       </td>
-      <td width="50%">
+      <td>
         This is a “single action visitor”, meaning it is passed the whole data vector
         in one call and you must use the single_action_visit() interface.<BR>
 
@@ -43,14 +45,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
         The constructor takes one parameter which is the factorization function<BR>
             <PRE>
-            using factor_func = std::function&lt;bool(const value_type &amp;val)&gt;;
+    using factor_func = std::function&lt;bool(const value_type &amp;val)&gt;;
 
-            explicit
-            FactorizeVisitor(factor_func f);
+    explicit FactorizeVisitor(factor_func f);
             </PRE>
         The result is a vector of bool
       </td>
-      <td>
+      <td width="12%">
         <B>T</B>: Column data type.<BR>
         <B>I</B>: Index type.
       </td>

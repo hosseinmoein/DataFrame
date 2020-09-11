@@ -33,16 +33,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        std::vector&lt;bool&gt;<BR>
-        gen_bernoulli_dist(std::size_t n, const RandGenParams&lt;bool&gt; &amp;params = { }); </font>
+        <PRE><B>
+std::vector&lt;bool&gt;
+gen_bernoulli_dist(std::size_t n, const RandGenParams&lt;bool&gt; &amp;params = { });
+        </B></PRE></font>
       </td>
       <td>
         It generates random Boolean values, according to the discrete probability function. The probability of true is:<BR>
         <I>
         <PRE>
-                  ⎧ p if b == true
-        P(b|p) =  ⎨
-                  ⎩ 1 - p if b == fasle
+              ⎧ p if b == true
+    P(b|p) =  ⎨
+              ⎩ 1 - p if b == fasle
         </PRE>
         </I>
         It returns the vector of results<BR>

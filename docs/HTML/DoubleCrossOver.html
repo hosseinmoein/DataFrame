@@ -32,15 +32,20 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-          template&lt;typename S_RT, typename L_RT, typename T, typename I = unsigned long, typename = typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;<BR>
-        struct DoubleCrossOver; </font>
+        <PRE><B>
+template&lt;typename T,
+         typename I = unsigned long,
+         typename =
+             typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;
+struct DoubleCrossOver;
+        </B></PRE></font>
       </td>
-      <td width="33.3%">
+      <td>
         This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_action_visit() interface.<BR>
         This functor class calculates the crossover of a data vector with two of its moving averages. It could be used to generate signals within financial applications.<BR>
         The constructor takes the two adopters:<BR>
         <PRE>
-        DoubleCrossOver(S_RT &&short_moving, L_RT &&long_moving)
+    DoubleCrossOver(S_RT &&short_moving, L_RT &&long_moving)
         </PRE>
         There are 3 methods that give you the results:<BR>
         <OL>

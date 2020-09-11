@@ -33,9 +33,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename ITR&gt;<BR>
-        size_type<BR>
-        load_index(const ITR &amp;begin const ITR &amp;end); </font>
+        <PRE><B>
+template&lt;typename ITR&gt;
+size_type
+load_index(const ITR &amp;begin const ITR &amp;end);
+        </B></PRE></font>
       </td>
       <td>
 		It copies the data from iterators begin to end into the index column<BR>
@@ -48,9 +50,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename ITR&gt;<BR>
-        size_type<BR>
-        load_index(IndexVecType &amp;&amp;idx); </font>
+        <PRE><B>
+template&lt;typename ITR&gt;
+size_type
+load_index(IndexVecType &amp;&amp;idx);
+        </B></PRE></font>
       </td>
       <td>
 		It moves the idx vector into the index column.<BR>

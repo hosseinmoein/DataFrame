@@ -32,10 +32,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
 
     <tr bgcolor="lightgrey">
-      <td bgcolor="maroon" width = "38%"> <font color="white">
-        template&lt;typename ... Ts&gt;<BR>
-        std::vector&lt;std::tuple&lt;ColNameType, size_type, std::type_index&gt;&gt;<BR>
-        get_columns_info() const; </font>
+      <td bgcolor="maroon"> <font color="white">
+        <PRE><B>
+template&lt;typename ... Ts&gt;
+std::vector&lt;std::tuple&lt;ColNameType, size_type, std::type_index&gt;&gt;
+get_columns_info() const;
+        </B></PRE></font>
       </td>
       <td>
         It returns information about each column. The result is a vector of tuples containing each column name, size, and std::type_index(typeid).

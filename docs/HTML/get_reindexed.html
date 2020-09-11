@@ -31,10 +31,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         <th>Signature</th> <th>Description</th> <th>Parameters</th>
     </tr>
     <tr bgcolor="lightgrey">
-      <td bgcolor="maroon" width="33.3%"> <font color="white">
-        template&lt;typename T, typename ... Ts&gt;<BR>
-        StdDataFrame&lt;T&gt;<BR>
-        get_reindexed(const char *col_to_be_index, const char *old_index_name = nullptr) const; </font>
+      <td bgcolor="maroon"> <font color="white">
+        <PRE><B>
+template&lt;typename T, typename ... Ts&gt;
+StdDataFrame&lt;T&gt;
+get_reindexed(const char *col_to_be_index,
+              const char *old_index_name = nullptr) const;
+        </B></PRE></font>
       </td>
       <td>
         It creates and returns a new DataFrame which has the col_to_be_index column as the index. If old_index_name is not null, it will be loaded as a regular column in the result under the name old_index_name.<BR>
@@ -51,9 +54,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename T, typename ... Ts&gt;<BR>
-        StdDataFrame&lt;T&gt;<BR>
-        get_reindexed_view(const char *col_to_be_index, const char *old_index_name = nullptr) const; </font>
+        <PRE><B>
+template&lt;typename T, typename ... Ts&gt;
+StdDataFrame&lt;T&gt;
+get_reindexed_view(const char *col_to_be_index,
+                   const char *old_index_name = nullptr) const;
+        </B></PRE></font>
       </td>
       <td>
         This is similar to get_reindexed(), but it returns a view. Please read above for specs.<BR>

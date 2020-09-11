@@ -31,10 +31,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         <th>Signature</th> <th>Description</th> <th>Parameters</th>
     </tr>
     <tr bgcolor="lightgrey">
-      <td bgcolor="maroon" width="20%"> <font color="white">
-        template&lt;typename ... Ts&gt;<BR>
-        bool<BR>
-        is_equal(const DataFrame &amp;rhs) const; </font>
+      <td bgcolor="maroon"> <font color="white">
+        <PRE><B>
+template&lt;typename ... Ts&gt;
+bool
+is_equal(const DataFrame &amp;rhs) const;
+        </B></PRE></font>
       </td>
       <td>
         It compares self with rhs. If both have the same indices, same number of columns, same names for each column, and all columns are equal, then it returns true. Otherwise it returns false

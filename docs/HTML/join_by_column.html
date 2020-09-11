@@ -33,12 +33,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        enum class join_policy : unsigned char  {<BR>
-            &emsp;inner_join = 1,<BR>
-            &emsp;left_join = 2,<BR>
-            &emsp;right_join = 3,<BR>
-            &emsp;left_right_join = 4	// This is merge<BR>
-        }; </font>
+        <PRE><B>
+enum class join_policy : unsigned char  {
+    inner_join = 1,
+    left_join = 2,
+    right_join = 3,
+    left_right_join = 4	// This is merge
+}; 
+        </B></PRE></font>
       </td>
       <td>
         Enumerated type to specify joining two DataFrames
@@ -57,9 +59,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename RHS_T, typename T, typename ... Ts&gt;<BR>
-        StdDataFrame&lt;unsigned int&gt;<BR>
-        join_by_column(const RHS_T &amp;rhs, const char *name, join_policy jp) const; </font>
+        <PRE><B>
+template&lt;typename RHS_T, typename T, typename ... Ts&gt;
+StdDataFrame&lt;unsigned int&gt;
+join_by_column(const RHS_T &amp;rhs,
+               const char *name,
+               join_policy jp) const;
+        </B></PRE></font>
       </td>
       <td WIDTH="33.3%">
         It joins the data between self (lhs) and rhs and returns the joined data in a StdDataFrame, based on specification in join_policy.<BR>
@@ -84,9 +90,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename RHS_T, typename ... Ts&gt;<BR>
-        StdDataFrame&lt;I&gt;<BR>
-        join_by_index(const RHS_T &amp;rhs, join_policy jp) const; </font>
+        <PRE><B>
+template&lt;typename RHS_T, typename ... Ts&gt;
+StdDataFrame&lt;I&gt;
+join_by_index(const RHS_T &amp;rhs, join_policy jp) const;
+        </B></PRE></font>
       </td>
       <td WIDTH="33.3%">
         It joins the data between self (lhs) and rhs and returns the joined data<BR>

@@ -33,17 +33,19 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        struct  MemUsage  {<BR>
-            &emsp;size_t  column_used_memory { 0 };<BR>
-            &emsp;size_t  column_capacity_memory { 0 };<BR>
-            &emsp;size_t  column_type_size { 0 };<BR>
-            &emsp;size_t  index_used_memory { 0 };<BR>
-            &emsp;size_t  index_capacity_memory { 0 };<BR>
-            &emsp;size_t  index_type_size { 0 };<BR>
-        <BR>
-            &emsp;template<typename S><BR>
-            &emsp;friend S &operator << (S &stream, const MemUsage &mu);<BR>
-        }; </font>
+        <PRE><B>
+struct  MemUsage  {
+    size_t  column_used_memory { 0 };
+    size_t  column_capacity_memory { 0 };
+    size_t  column_type_size { 0 };
+    size_t  index_used_memory { 0 };
+    size_t  index_capacity_memory { 0 };
+    size_t  index_type_size { 0 };
+
+    template&lt;typename S&gt;
+    friend S &operator << (S &stream, const MemUsage &mu);
+}; </font>
+        </B></PRE></font>
       </td>
       <td>
         This struct holds the result of calling get_memory_usage() method on DataFrame.
@@ -62,10 +64,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename T&gt;<BR>
-        get_memory_usage(const char *col_name) const;<BR>
+        <PRE><B>
+template&lt;typename T&gt;
+[[nodiscard]] MemUsage
+get_memory_usage(const char *col_name) const;
+        </B></PRE></font>
         </td>
-      <td width = "50%">
+      <td>
         It returns the memory used by the given column and index column.<BR>
         All numbers are in bytes.<BR>
         MemUsage is a structure defined in DataFrameTypes.h file.<BR>

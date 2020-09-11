@@ -32,9 +32,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename T&gt;<BR>
-        typename type_declare&lt;H, T&gt;::type &amp;<BR>
-        get_column (const char *name);
+        <PRE><B>
+template&lt;typename T&gt;
+[[nodiscard]] ColumnVecType&lt;T&gt; &amp;
+get_column (const char *name);
+        </B></PRE></font>
       </td>
       <td>
         It returns a reference to the container of named data column The return type depends on if we are in standard or view mode
@@ -46,9 +48,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename T&gt;<BR>
-        const typename type_declare&lt;H, T&gt;::type &amp;<BR>
-        get_column (const char *name) const;
+        <PRE><B>
+template&lt;typename T&gt;
+[[nodiscard]] const ColumnVecType&lt;T&gt; &amp;
+get_column (const char *name) const;
+        </B></PRE></font>
       </td>
       <td>
         It returns a const reference to the container of named data column The return type depends on if we are in standard or view mode

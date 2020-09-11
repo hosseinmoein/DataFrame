@@ -33,13 +33,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        <PRE>
+        <PRE><B>
 enum class random_policy : unsigned char  {
     num_rows_with_seed = 1,  // Number of rows with specifying a seed
     num_rows_no_seed = 2,    // Number of rows with no seed specification
     frac_rows_with_seed = 3, // Fraction of rows with specifying a seed
     frac_rows_no_seed = 4,   // Fraction of rows with no seed specification
-};</PRE> </font>
+};</B></PRE> </font>
       </td>
       <td>
         Specification for calling get_[data|view]_by_rand()<BR>
@@ -60,10 +60,14 @@ enum class random_policy : unsigned char  {
         <th>Signature</th> <th>Description</th> <th>Parameters</th>
     </tr>
     <tr bgcolor="lightgrey">
-      <td bgcolor="maroon" width="33.3%"> <font color="white">
-        template&lt;typename ... Ts&gt;<BR>
-        DataFrame<BR>
-        get_data_by_rand(random_policy spec, double n, size_type seed = 0) const;
+      <td bgcolor="maroon"> <font color="white">
+        <PRE><B>
+template&lt;typename ... Ts&gt;
+DataFrame&lt;I&gt;
+get_data_by_rand(random_policy spec,
+                 double n,
+                 size_type seed = 0) const;
+        </B></PRE></font>
       </td>
       <td>
         It returns a DataFrame (including the index and data columns) containing the data from uniform random selection. random_policy determines the behavior of method.<BR>
@@ -79,10 +83,14 @@ enum class random_policy : unsigned char  {
     </tr>
 
     <tr bgcolor="lightgrey">
-      <td bgcolor="maroon" width="33.3%"> <font color="white">
-        template&lt;typename ... Ts&gt;<BR>
-        DataFramePtrView&lt;I&gt;<BR>
-        get_view_by_rand(random_policy spec, double n, size_type seed = 0) const;
+      <td bgcolor="maroon"> <font color="white">
+        <PRE><B>
+template&lt;typename ... Ts&gt;
+DataFramePtrView&lt;I&gt;
+get_view_by_rand(random_policy spec,
+                 double n,
+                 size_type seed = 0) const;
+        </B></PRE></font>
       </td>
       <td>
         It behaves like get_data_by_rand(), but it returns a DataFrameView. A view is a DataFrame that is a reference to the original DataFrame. So if you modify anything in the view the original DataFrame will also be modified.<BR>

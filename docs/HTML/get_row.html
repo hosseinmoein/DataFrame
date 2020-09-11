@@ -32,8 +32,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        HeteroVector<BR>
-        get_row(size_type row_num, const std::array&lt;const char *, N&gt; col_names) const;
+        <PRE><B>
+HeteroVector
+get_row(size_type row_num,
+        const std::array&lt;const char *, N&gt; col_names) const;
+        </B></PRE></font>
       </td>
       <td>
         It returns the data in row row_num for columns in col_names. The order of data items in the returned vector is the same as order of columns on col_names.<BR>

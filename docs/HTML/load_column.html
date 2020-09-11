@@ -32,10 +32,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
 
     <tr bgcolor="lightgrey">
-      <td bgcolor="maroon" width = "42%"> <font color="white">
-        template&lt;typename T, typename ITR&gt;<BR>
-        size_type<BR>
-        load_column(const char *name, Index2D&lt;const ITR &amp;&gt; range, nan_policy padding = nan_policy::pad_with_nans); </font>
+      <td bgcolor="maroon"> <font color="white">
+        <PRE><B>
+template&lt;typename T, typename ITR&gt;
+size_type
+load_column(const char *name,
+            Index2D&lt;const ITR &amp;&gt; range,
+            nan_policy padding = nan_policy::pad_with_nans);
+        </B></PRE></font>
       </td>
       <td>
         It copies the data from iterators begin to end to the named column. If column does not exist, it will be created. If the column exist, it will be over written.<BR>
@@ -52,9 +56,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename&gt;<BR>
-        size_type<BR>
-        load_column(const char *name, std::vector&lt;T&gt; &amp;&amp;data, nan_policy padding = nan_policy::pad_with_nans); </font>
+        <PRE><B>
+template&lt;typename&gt;
+size_type
+load_column(const char *name,
+            std::vector&lt;T&gt; &amp;&amp;data,
+            nan_policy padding = nan_policy::pad_with_nans);
+        </B></PRE></font>
       </td>
       <td>
         It moves the data to the named column in DataFrame. If column does not exist, it will be created. If the column exist, it will be over written.<BR>
@@ -72,9 +80,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename&gt;<BR>
-        size_type<BR>
-        load_column(const char *name, const std::vector&lt;T&gt; &amp;data, nan_policy padding = nan_policy::pad_with_nans); </font>
+        <PRE><B>
+template&lt;typename&gt;
+size_type
+load_column(const char *name,
+            const std::vector&lt;T&gt; &amp;data,
+            nan_policy padding = nan_policy::pad_with_nans);
+        </B></PRE></font>
       </td>
       <td>
         It copies the data to the named column in DataFrame. If column does not exist, it will be created. If the column exist, it will be over written.<BR>
@@ -92,18 +104,21 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename&gt;<BR>
-        size_type<BR>
-        load_align_column(const char *name,<BR>
-                 &emsp;   const std::vector&lt;T&gt; &amp;&amp;data,<BR>
-                 &emsp;   size_type interval,<BR>
-                 &emsp;   bool start_from_beginning,<BR>
-                 &emsp;   const T &amp;null_value = DataFrame::_get_nan&lt;T&gt;(),<BR>
-                 &emsp;   std::function&lt;size_type (const IndexType &amp;, const IndexType &amp;)&gt; diff_func =<BR>
-                 &emsp;       [](const IndexType &amp;t_1, const IndexType &amp;t) -&gt; size_type  {<BR>
-                 &emsp;&emsp;     return (static_cast&lt;size_type&gt;(t - t_1));<BR>
-                 &emsp;       }<BR>
-                          ); </font>
+        <PRE><B>
+template&lt;typename&gt;
+size_type
+load_align_column(
+    const char *name,
+    const std::vector&lt;T&gt; &amp;&amp;data,
+    size_type interval,
+    bool start_from_beginning,
+    const T &amp;null_value = DataFrame::_get_nan&lt;T&gt;(),
+    std::function&lt;size_type (const IndexType &amp;,
+                             const IndexType &amp;)&gt; diff_func =
+        [](const IndexType &amp;t_1, const IndexType &amp;t) -&gt; size_type  {
+            return (static_cast&lt;size_type&gt;(t - t_1));
+        });
+        </B></PRE></font>
       </td>
       <td>
         This method creates a column similar to above, but assumes data is bucket or bar values. That means the data vector contains statistical figure(s) for time buckets and must be aligned with the index column at bucket intervals.<BR>

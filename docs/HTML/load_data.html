@@ -32,10 +32,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
 
     <tr bgcolor="lightgrey">
-      <td bgcolor="maroon" width = "33.3%"> <font color="white">
-        template&lt;typename ... Ts&gt;<BR>
-        size_type<BR>
-        load_data(IndexVecType &amp;&amp;indices, Ts ... args); </font>
+      <td bgcolor="maroon"> <font color="white">
+        <PRE><B>
+template&lt;typename ... Ts&gt;
+size_type
+load_data(IndexVecType &amp;&amp;indices, Ts ... args);
+        </B></PRE></font>
       </td>
       <td>
         This is the most generalized load function. It creates and loads an index and a variable number of columns. The index vector and all column vectors are "moved" to DataFrame.<BR>

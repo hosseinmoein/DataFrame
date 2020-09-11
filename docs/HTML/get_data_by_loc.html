@@ -33,11 +33,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename ... Ts&gt;<BR>
-        DataFrame<BR>
-        get_data_by_loc(Index2D&lt;IndexType&gt; range) const;
+        <PRE><B>
+template&lt;typename ... Ts&gt;
+DataFrame
+get_data_by_loc(Index2D&lt;IndexType&gt; range) const;
+        </B></PRE></font>
       </td>
-      <td width="40%">
+      <td>
         It returns a DataFrame (including the index and data columns) containing the data from location begin to location end.<BR>
         This function supports Python-like negative indexing. That is why the range type is long.
       </td>
@@ -49,11 +51,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename ... Ts&gt;<BR>
-        DataFrame<BR>
-        get_data_by_loc(const std::vector&lt;long&gt; &amp;locations) const;
+        <PRE><B>
+template&lt;typename ... Ts&gt;
+DataFrame<
+get_data_by_loc(const std::vector&lt;long&gt; &amp;locations) const;
+        </B></PRE></font>
       </td>
-      <td width="40%">
+      <td>
         It returns a DataFrame (including the index and data columns) containing the data from locations, specified in locations vector. This function supports Python-like negative indexing. That is why the locations vector type is long.<BR>
         <B>NOTE</b>: The negative indexing is relative to the "index" column, which may not be the size as all other column.<BR>
         The returned DataFrame is in the same order as locations parameter
@@ -67,11 +71,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename ... Ts&gt;<BR>
-        DataFrameView&lt;I&gt;<BR>
-        get_view_by_loc(Index2D&lt;IndexType&gt; range) const;
+        <PRE><B>
+template&lt;typename ... Ts&gt;
+DataFrameView&lt;I&gt;
+get_view_by_loc(Index2D&lt;IndexType&gt; range) const;
+        </B></PRE></font>
       </td>
-      <td width="40%">
+      <td>
         It behaves like get_data_by_loc(), but it returns a DataFrameView.<BR>
         A view is a DataFrame that is a reference to the original DataFrame.<BR>
         So if you modify anything in the view the original DataFrame will also be modified.<BR>
@@ -86,11 +92,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename ... Ts&gt;<BR>
-        DataFramePtrView&lt;I&gt;<BR>
-        get_view_by_loc(const std::vector&lt;long&gt; &amp;locations) const;
+        <PRE><B>
+template&lt;typename ... Ts&gt;
+DataFramePtrView&lt;I&gt;
+get_view_by_loc(const std::vector&lt;long&gt; &amp;locations) const;
+        </B></PRE></font>
       </td>
-      <td width="40%">
+      <td>
         It behaves like get_data_by_loc(locations), but it returns a DataFramePtrView.<BR>
         A view is a DataFrame that is a reference to the original DataFrame. So if you modify anything in the view the original DataFrame will also be modified.<BR>
         <B>NOTE</B>: There are certain operations that you cannot do with a view. For example, you cannot add/delete columns, etc.<BR>

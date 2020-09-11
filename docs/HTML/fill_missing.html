@@ -33,7 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-	<PRE>
+	<PRE><B>
 enum class fill_policy : unsigned char  {
     value = 1,
     fill_forward = 2,
@@ -41,9 +41,9 @@ enum class fill_policy : unsigned char  {
     linear_interpolate = 4, // Using the index as X coordinate
     linear_extrapolate = 5, // Using the index as X coordinate
     mid_point = 6,          // Mid-point of x and y
-};</PRE></font>
+};</B></PRE></font>
       </td>
-      <td width="65%">
+      <td>
         This policy determines how to fill missing values in the DataFrame<BR>
         value: Fill all the missing values, in a given column, with the given value.<BR>
         <B>fill_forward</B>: Fill the missing values, in a given column, with the last valid
@@ -55,9 +55,9 @@ enum class fill_policy : unsigned char  {
         Use the index column as X coordinate and the given column as Y coordinate
         And do interpolation/extrapolation as follows:<BR>
         <PRE>
-                   X - X1
-        Y = Y1 + ----------- * (Y2 - Y1)
-                   X2 - X1
+               X - X1
+    Y = Y1 + ----------- * (Y2 - Y1)
+               X2 - X1
         </PRE>
       </td>
     </tr>
@@ -72,11 +72,15 @@ enum class fill_policy : unsigned char  {
         <th>Signature</th> <th>Description</th> <th>Parameters</th>
     </tr>
     <tr bgcolor="lightgrey">
-      <td bgcolor="maroon" width="33.3%"> <font color="white">
-        template&lt;typename T, size_t N&gt;<BR>
-        void<BR>
-        fill_missing(const std::array<const char *, N> col_names, fill_policy policy, const std::array<T, N> values = { }, int limit = -1);
-
+      <td bgcolor="maroon"> <font color="white">
+        <PRE><B>
+template&lt;typename T, size_t N&gt;
+void
+fill_missing(const std::array<const char *, N> col_names,
+             fill_policy policy,
+             const std::array<T, N> values = { },
+             int limit = -1);
+        </B></PRE></font>
       </td>
       <td>
         It fills all the "missing values" with the given values, and/or using the given method
@@ -87,11 +91,8 @@ enum class fill_policy : unsigned char  {
         <B>T</B>: Type of the column(s) in col_names array<BR>
         <B>N</B>: Size of col_names and values array
         <B>col_names</B>: An array of names specifying the columns to fill.<BR>
-        <B>policy</B>: Specifies the method to use to fill the missing values.
-            For example; forward fill, values, etc.<BR>
-        <B>values</B>: If the policy is "values", use these values to fill the missing
-            holes. Each value corresponds to the same index in the
-            col_names array.<BR>
+        <B>policy</B>: Specifies the method to use to fill the missing values. For example; forward fill, values, etc.<BR>
+        <B>values</B>: If the policy is "values", use these values to fill the missing holes. Each value corresponds to the same index in the col_names array.<BR>
         <B>limit</B>: Specifies how many values to fill. Default is -1 meaning fill all missing values.
       </td>
     </tr>

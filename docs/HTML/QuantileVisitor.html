@@ -33,13 +33,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        <PRE>
+        <PRE><B>
 enum class quantile_policy : unsigned char  {
     lower_value = 1,  // Take the higher index
     higher_value = 2, // Take the lower index
     mid_point = 3,    // Average the two quantiles
     linear = 4,       // Linearly combine the two quantiles
-};</PRE> </font>
+};</B></PRE> </font>
       </td>
       <td>
         This policy determines how to calculate quantiles when they fall between two values.<BR>
@@ -59,15 +59,20 @@ enum class quantile_policy : unsigned char  {
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename T, typename I = unsigned long, typename = typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;<BR>
-        struct QuantileVisitor; </font>
+        <PRE><B>
+template&lt;typename T,
+         typename I = unsigned long,
+         typename =
+             typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;
+struct QuantileVisitor;
+        </B></PRE></font>
       </td>
-      <td width="40%">
+      <td>
         This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_action_visit() interface.<BR>
         This functor class finds the quantile specified by quantile and q_policy. Please see quantile_policy for more explanation.<BR>
         <I>explicit QuantileVisitor (value_type quantile, quantile_policy q_policy);</I>
       </td>
-      <td width="15%">
+      <td width="12%">
         <B>T</B>: Column data type.<BR>
         <B>I</B>: Index type.
       </td>

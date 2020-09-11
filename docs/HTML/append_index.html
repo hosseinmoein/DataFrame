@@ -33,28 +33,34 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        size_type<BR>
-        append_index(const IndexType &amp;val); </font>
+        <PRE><B>
+size_type
+append_index(const IndexType &amp;val);
+        </B></PRE></font>
       </td>
       <td>
         It appends val to the end of the index column.  Returns number of items loaded<BR>
         Returns number of items loaded
       </td>
-      <td></td>
+      <td>
+        <B>val</B>: Single index value<BR>
+      </td>
     </tr>
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename ITR&gt;<BR>
-        size_type<BR>
-        append_index(Index2D<const ITR &> range); </font>
+        <PRE><B>
+template&lt;typename ITR&gt;
+size_type
+append_index(Index2D<const ITR &> range);
+        </B></PRE></font>
       </td>
       <td>
         It appends the range begin to end to the end of the index column<BR>
-        Returns number of items loade
+        Returns number of items loaded
       </td>
       <td>
-        <B>TR</B>: Type of the iterator<BR>
+        <B>ITR</B>: Type of the iterator<BR>
         <B>range</B>: The begin and end iterators for data<BR>
       </td>
     </tr>

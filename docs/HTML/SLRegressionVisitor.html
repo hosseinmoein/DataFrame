@@ -32,14 +32,19 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename T, typename I = unsigned long, typename = typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;<BR>
-        struct SLRegressionVisitor; </font>
+        <PRE><B>
+template&lt;typename T,
+         typename I = unsigned long,
+         typename =
+             typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;
+struct SLRegressionVisitor;
+        </B></PRE></font>
       </td>
       <td>
         This functor class calculates simple linear regression between x and y columns<BR>
         It produces slop, intercept, and correlation
       </td>
-      <td width="15%">
+      <td width="12%">
         <B>T</B>: Column data type.<BR>
         <B>I</B>: Index type.
       </td>

@@ -33,7 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        <PRE>
+        <PRE><B>
 enum class sigmoid_type : unsigned char  {
     logistic = 1,        // f(x) = 1 / (1 + exp(-x))
     algebraic = 2,       // f(x) = 1 / sqrt(1 + pow(x, 2.0))
@@ -42,7 +42,7 @@ enum class sigmoid_type : unsigned char  {
     error_function = 5,  // f(x) = 2/sqrt(pi) * ∫exp(-pow(t, 2) dt
     gudermannian = 6,    // f(x) = atan(sinh(x))
     smoothstep = 7,      // f(x) = 0 if x <= 0, 1 if x >= 1 else 3pow(x, 2) - 2pow(x, 3)
-};</PRE> </font>
+};</B></PRE> </font>
       </td>
       <td>
         Different Sigmoid function types that are supported. They are to be used with SigmoidVisitor<BR>
@@ -60,15 +60,20 @@ enum class sigmoid_type : unsigned char  {
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename T, typename I = unsigned long, typename = typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;<BR>
-        struct SigmoidVisitor; </font>
+        <PRE><B>
+template&lt;typename T,
+         typename I = unsigned long,
+         typename =
+             typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;
+struct SigmoidVisitor;
+        </B></PRE></font>
       </td>
-      <td width="40%">
+      <td>
         This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_action_visit() interface.<BR>
         This functor class calculates Sigmoid function for each item in the given column. The Sigmoid fuction is based on the sigmoid_type above.<BR>
-        <I> explicit SigmoidVisitor(sigmoid_type st)</I>
+        <I>explicit SigmoidVisitor(sigmoid_type st)</I>
       </td>
-      <td width="15%">
+      <td width="12%">
         <B>T</B>: Column data type.<BR>
         <B>I</B>: Index type.
       </td>

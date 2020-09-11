@@ -32,15 +32,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename T, typename I = unsigned long&gt;<BR>
-        struct NLargestVisitor; </font>
+        <PRE><B>
+template&lt;typename T, typename I = unsigned long&gt;
+struct NLargestVisitor;
+        </B></PRE></font>
       </td>
       <td>
         This functor class calculates the N smallest values of a column. I runs in O(N*M), where N is the number of largest values and M is the total number of all values.<BR>
         If N is relatively small this is better than O(M*logM). The constructor takes a single optional Boolean argument to whether skip NaN values. The default is True.<BR>
-        See this document and dataframe_tester.cc for examples.<BR>
       </td>
-      <td width = "15%">
+      <td width = "12%">
         <B>N</B>: Number of largest values<BR>
         <B>T</B>: Column data type<BR>
         <B>I</B>: Index type

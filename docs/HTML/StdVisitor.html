@@ -32,17 +32,22 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename T, typename I = unsigned long, typename = typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;<BR>
-        struct StdVisitor; </font>
+        <PRE><B>
+template&lt;typename T,
+         typename I = unsigned long,
+         typename =
+             typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;
+struct StdVisitor;
+        </B></PRE></font>
       </td>
-      <td width="33.3%">
+      <td>
         This functor class calculates the standard deviation of a given column.<BR>
         <PRE>
-          explicit StdVisitor (bool bias = true);
+    explicit StdVisitor (bool bias = true);
         </PRE>
         See this document and dataframe_tester.cc for examples.<BR>
       </td>
-      <td width="15%">
+      <td width="12%">
         <B>T</B>: Column data type.<BR>
         <B>I</B>: Index type.
       </td>

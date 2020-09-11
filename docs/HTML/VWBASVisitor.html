@@ -32,10 +32,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename T, typename I = unsigned long, typename = typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;<BR>
-        struct VWBASVisitor; </font>
+        <PRE><B>
+template&lt;typename T,
+         typename I = unsigned long,
+         typename =
+             typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;
+struct VWBASVisitor;
+        </B></PRE></font>
       </td>
-      <td width="33.3%">
+      <td>
         This functor class calculates VWBAS (Volume Weighted Bid-Ask Spread) – and more - between the four column values. The first column is the index (assumed to represent time). The second column is assumed to be bid price. The third column is assumed to be ask price. The fourth column is assumed to be bid size. The fifth column is assumed to be ask size.<BR>
         The constructor takes:<BR>
         <UL>
@@ -46,9 +51,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         <PRE>
   VWBASVisitor(double interval,
                double max_volume = 0,
-               distance_func f  = [](const I &idx1, const I &idx2) -> double {
-                                      return (static_cast<double>(idx2 - idx1));
-                                  })
+               distance_func f =
+                   [](const I &idx1, const I &idx2) -> double {
+                       return (static_cast<double>(idx2 - idx1));
+                   })
         </PRE>
         The result is a vector of following structs:<BR>
 <PRE>
@@ -76,7 +82,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   }
 </PRE>
       </td>
-      <td width="15%">
+      <td width = "12%">
         <B>T</B>: Column data type.<BR>
         <B>I</B>: Index type.
       </td>

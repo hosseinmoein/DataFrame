@@ -33,9 +33,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename F, typename ... Ts&gt;<BR>
-        DataFrame<BR>
-        bucketize (F &amp;&amp;func, const IndexType &amp;bucket_interval) const;</font>
+        <PRE><B>
+template&lt;typename F, typename ... Ts&gt;
+DataFrame
+bucketize (F &amp;&amp;func, const IndexType &amp;bucket_interval) const;
+        </B></PRE></font>
       </td>
       <td WIDTH="33.3%">
         It bucketizes the data and index into bucket_interval's, based on index values and calls the
@@ -59,9 +61,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename F, typename ... Ts&gt;<BR>
-        std::future&lt;DataFrame&gt;<BR>
-        bucketize_async (F &amp;&amp;func, const IndexType &amp;bucket_interval) const;</font>
+        <PRE><B>
+template&lt;typename F, typename ... Ts&gt;
+std::future&lt;DataFrame&gt;
+bucketize_async (F &amp;&amp;func,
+                 const IndexType &amp;bucket_interval) const;
+        </B></PRE></font>
       </td>
       <td WIDTH="33.3%">
         Same as bucketize() above, but executed asynchronously
@@ -72,9 +77,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename F, typename ... Ts&gt;<BR>
-        void<BR>
-        self_bucketize(F &amp;&amp;func, const IndexType &amp;bucket_interval);</font>
+        <PRE><B>
+template&lt;typename F, typename ... Ts&gt;
+void
+self_bucketize(F &amp;&amp;func,
+               const IndexType &amp;bucket_interval);
+        </B></PRE></font>
       </td>
       <td WIDTH="33.3%">
         This is exactly the same as bucketize() above. The only difference is it stores the result
@@ -86,7 +94,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
   </table>
 
-  <pre style='color:#000000;background:#ffffff;'>     <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>vector</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>unsigned</span> <span style='color:#800000; font-weight:bold; '>long</span><span style='color:#800080; '>></span>  ulgvec2 <span style='color:#808030; '>=</span>
+<pre style='color:#000000;background:#ffffff;'>    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>vector</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>unsigned</span> <span style='color:#800000; font-weight:bold; '>long</span><span style='color:#800080; '>></span>  ulgvec2 <span style='color:#808030; '>=</span>
         <span style='color:#800080; '>{</span> <span style='color:#008c00; '>123450</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123451</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123452</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123450</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123455</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123450</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123449</span><span style='color:#808030; '>,</span>
           <span style='color:#008c00; '>123448</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123451</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123452</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123452</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123450</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123455</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123450</span><span style='color:#808030; '>,</span>
           <span style='color:#008c00; '>123454</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123453</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123456</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123457</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123458</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123459</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123460</span><span style='color:#808030; '>,</span>

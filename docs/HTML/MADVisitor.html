@@ -33,15 +33,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        <PRE>
+        <PRE><B>
 enum class mad_type : unsigned char  {
     mean_abs_dev_around_mean = 1,     // Mean of absolute distances from mean
     mean_abs_dev_around_median = 2,   // Mean of absolute distances from median
     median_abs_dev_around_mean = 3,   // Median of absolute distances from mean
     median_abs_dev_around_median = 4, // Median of absolute distances from median
-};</PRE< </font>
+};</B></PRE< </font>
       </td>
-      <td width="50%">
+      <td>
         This defines different ways of calculating averages around averages,
         in other words different types of Mean Absolute Deviation.
       </td>
@@ -58,17 +58,22 @@ enum class mad_type : unsigned char  {
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename T, typename I = unsigned long, typename = typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;<BR>
-        struct MADVisitor; </font>
+        <PRE><B>
+template&lt;typename T,
+         typename I = unsigned long,
+         typename =
+             typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;
+struct MADVisitor;
+        </B></PRE></font>
       </td>
-      <td width="50%">
+      <td>
         This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_action_visit() interface.<BR>
         This functor class calculates 4 different forms of Mean Absolute Deviation. Please see mad_type enum definition above in the type section<BR>
         <PRE>
-          MADVisitor(mad_type mt, bool skip_nan = true)
+    MADVisitor(mad_type mt, bool skip_nan = true)
         </PRE>
       </td>
-      <td width="15%">
+      <td width="12%">
         <B>T</B>: Column data type<BR>
         <B>I</B>: Index type
       </td>

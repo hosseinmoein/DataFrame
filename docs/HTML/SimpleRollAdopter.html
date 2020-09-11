@@ -32,17 +32,19 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename F, typename T, typename I = unsigned long&gt;<BR>
-        struct ExpandingRollAdopter;</font>
+        <PRE><B>
+template&lt;typename F, typename T, typename I = unsigned long&gt;
+struct ExpandingRollAdopter;
+        </B></PRE></font>
       </td>
-      <td width = "50%">
+      <td>
         This functor applies functor F to the data in a rolling progression. The roll count is given to the constructor of SimpleRollAdoptor.<BR>
         The result is a vector of values with same number of items as the given column. The first roll_count items, in the result, will be NAN.<BR>
         <PRE>
-          inline SimpleRollAdopter(F &&functor, size_t roll_count)
+    inline SimpleRollAdopter(F &&functor, size_t roll_count)
         </PRE>
       </td>
-      <td>
+      <td width="12%">
         <B>F</B>: Functor type<BR>
         <B>T</B>: Column data type<BR>
         <B>I</B>: Index type

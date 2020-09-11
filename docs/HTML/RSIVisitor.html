@@ -33,10 +33,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename T, typename I = unsigned long, typename = typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;<BR>
-        struct RSIVisitor; </font>
+        <PRE><B>
+template&lt;typename T,
+         typename I = unsigned long,
+         typename =
+             typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;
+struct RSIVisitor;
+        </B></PRE></font>
       </td>
-      <td width="40%">
+      <td>
         Relative Strength Index (RSI) is a technical indicator used in the analysis of financial markets. It is intended to chart the current and historical strength or weakness of a stock or market based on the closing prices of a recent trading period. The indicator should not be confused with relative strength.<BR>
         The RSI is classified as a momentum oscillator, measuring the velocity and magnitude of price movements.<BR>
         The RSI is most typically used on a 14-day (a parameter in this visitor) time frame, measured on a scale from 0 to 100.<BR>
@@ -45,7 +50,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         <B>NOTE:</B> The length of the result vector is <I>length of column - avg_period</I>.<BR><BR>
         <I>explicit RSIVisitor(return_policy rp, size_type avg_period = 14)</I>
       </td>
-      <td width="15%">
+      <td width="12%">
         <B>T</B>: Column data type.<BR>
         <B>I</B>: Index type.
       </td>

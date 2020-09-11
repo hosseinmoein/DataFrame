@@ -33,12 +33,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        <PRE>
+        <PRE><B>
 enum class drop_policy : unsigned char  {
     all = 1,      // Remove row if all columns are nan
     any = 2,      // Remove row if any column is nan
     threshold = 3 // Remove row if threshold number of columns are nan
-}; </PRE> </font>
+}; </B></PRE> </font>
       </td>
       <td>
         This policy specifies what rows to drop/remove based on missing column data<BR>
@@ -58,18 +58,19 @@ enum class drop_policy : unsigned char  {
         <th>Signature</th> <th>Description</th> <th>Parameters</th>
     </tr>
     <tr bgcolor="lightgrey">
-      <td bgcolor="maroon" width="33.3%"> <font color="white">
-        template&lt;typename ... Ts&gt;<BR>
-        void<BR>
-        drop_missing(drop_policy policy, size_type threshold = 0);
+      <td bgcolor="maroon"> <font color="white">
+        <PRE><B>
+template&lt;typename ... Ts&gt;
+void
+drop_missing(drop_policy policy, size_type threshold = 0);
+        </B></PRE></font>
       </td>
       <td>
         It removes a row if any or all or some of the columns are NaN, based on drop policy
       </td>
       <td>
         <B>Ts</B>: The list of types for all columns. A type should be specified only once.<BR>
-        <B>threshold</B>: If drop policy is threshold, it specifies the numbers of<BR>
-        NaN columns before removing the row.
+        <B>threshold</B>: If drop policy is threshold, it specifies the numbers of NaN columns before removing the row.
       </td>
     </tr>
 

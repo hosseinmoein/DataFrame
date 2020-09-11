@@ -33,13 +33,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        <PRE>
+        <PRE><B>
 enum class rank_policy : unsigned char  {
     average = 1, // Average of ranks, if an item is repeated
     first = 2,   // First rank, if an item is repeated
     last = 3,    // Last rank, if an item is repeated
     actual = 4,  // The actual rank of each item based on stable sort
-};</PRE> </font>
+};</B></PRE> </font>
       </td>
       <td>
         This policy determines how to calculate ranking for a vector of data that is sortable.<BR>
@@ -57,15 +57,17 @@ enum class rank_policy : unsigned char  {
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename T, typename I = unsigned long&gt;<BR>
-        struct RankVisitor; </font>
+        <PRE><B>
+template&lt;typename T, typename I = unsigned long&gt;
+struct RankVisitor;
+        </B></PRE></font>
       </td>
-      <td width="40%">
+      <td>
         This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_action_visit() interface.<BR>
         This functor class calculates ranks of the given vector of data. Please see rank_policy for more explanation.
         <I>explicit RankVisitor(rank_policy p = rank_policy::actual)</I>
       </td>
-      <td width="15%">
+      <td width="12%">
         <B>T</B>: Column data type.<BR>
         <B>I</B>: Index type.
       </td>

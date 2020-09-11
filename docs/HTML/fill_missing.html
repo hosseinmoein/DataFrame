@@ -46,14 +46,11 @@ enum class fill_policy : unsigned char  {
       <td>
         This policy determines how to fill missing values in the DataFrame<BR>
         value: Fill all the missing values, in a given column, with the given value.<BR>
-        <B>fill_forward</B>: Fill the missing values, in a given column, with the last valid
-        value before the missing value<BR>
-        <B>fill_backward</B>: Fill the missing values, in a given column, with the first valid
-        value after the missing value<BR>
+        <B>fill_forward</B>: Fill the missing values, in a given column, with the last valid value before the missing value<BR>
+        <B>fill_backward</B>: Fill the missing values, in a given column, with the first valid value after the missing value<BR>
         <B>linear_interpolate</B>:<BR>
         <B>linear_extrapolate</B>:<BR>
-        Use the index column as X coordinate and the given column as Y coordinate
-        And do interpolation/extrapolation as follows:<BR>
+        Use the index column as X coordinate and the given column as Y coordinate And do interpolation/extrapolation as follows:<BR>
         <PRE>
                X - X1
     Y = Y1 + ----------- * (Y2 - Y1)

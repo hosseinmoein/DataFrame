@@ -32,9 +32,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename T&gt;<BR>
-        size_type<BR>
-        append_column(const char *name, const T &amp;val, nan_policy padding = nan_policy::pad_with_nans); </font>
+        <PRE><B>
+template&lt;typename T&gt;
+size_type
+append_column(const char *name,
+              const T &amp;val,
+              nan_policy padding = nan_policy::pad_with_nans);
+        </B></PRE></font>
       </td>
       <td>
         It appends val to the end of the named data column. If data column doesn't exist, it throws an exception.<BR>
@@ -49,9 +53,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename T, typename ITR&gt;<BR>
-        size_type<BR>
-        append_column(const char *name, Index2D<const ITR &> range, nan_policy padding = nan_policy::pad_with_nans); </font>
+        <PRE><B>
+template&lt;typename T, typename ITR&gt;
+size_type
+append_column(const char *name,
+              Index2D&lt;const ITR &amp;&gt; range,
+              nan_policy padding = nan_policy::pad_with_nans);
+        </B></PRE></font>
       </td>
       <td>
         It appends the range begin to end to the end of the named data column. If data column doesn't exist, it throws an exception.<BR>

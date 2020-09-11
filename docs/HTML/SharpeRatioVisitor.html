@@ -33,16 +33,20 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename T, typename I = unsigned long, typename = typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;<BR>
-        struct SharpeRatioVisitor; </font>
+        <PRE><B>
+template&lt;typename T,
+         typename I = unsigned long,
+         typename =
+             typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;
+struct SharpeRatioVisitor;
+        </B></PRE></font>
       </td>
-      <td width="50%">
+      <td>
         This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_action_visit() interface.<BR>
         This functor class calculates Sharpe ratio given two columns representing asset returns and benchmark returns (or risk-free rate). Note that Sharpe ratio makes sense only if asset returns are normally distributed.<BR>
-        <I> explicit SharpeRatioVisitor(bool biased = false);</I><BR>
-        See this document and dataframe_tester_2.cc for examples.
+        <I> explicit SharpeRatioVisitor(bool biased = false);</I>
       </td>
-      <td width="15%">
+      <td width="12%">
         <B>T</B>: Column data type.<BR>
         <B>I</B>: Index type.
       </td>

@@ -32,14 +32,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename T, typename I = unsigned long, typename = typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;<BR>
-        struct SumVisitor; </font>
+        <PRE><B>
+template&lt;typename T, typename I = unsigned long&gt
+struct SumVisitor;
+        </B></PRE></font>
       </td>
-      <td width="33.3%">
+      <td>
         This functor class calculates the sum of a given column. The constructor takes a single optional Boolean argument to whether skip NaN values. The default is True.<BR>
         See this document and dataframe_tester.cc for examples.
       </td>
-      <td width="15%">
+      <td width="12%">
         <B>T</B>: Column data type.<BR>
         <B>I</B>: Index type.
       </td>

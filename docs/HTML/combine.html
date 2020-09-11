@@ -31,15 +31,19 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         <th>Signature</th> <th>Description</th> <th>Parameters</th>
     </tr>
     <tr bgcolor="lightgrey">
-      <td bgcolor="maroon" width="30%"> <font color="white">
-        template&lt;typename T, typename DF, typename F&gt;<BR>
-        std::vector&lt;T&gt;<BR>
-        combine(const char *col_name, const DF &amp;rhs, F &amp;functor) const;</font>
+      <td bgcolor="maroon"> <font color="white">
+        <PRE><B>
+template&lt;typename T, typename DF, typename F&gt;
+std::vector&lt;T&gt;
+combine(const char *col_name,
+        const DF &amp;rhs,
+        F &amp;functor) const;
+        </B></PRE></font>
       </td>
-      <td width="30%">
+      <td>
         This method combines the content of column col_name between self and rhs based on the logic in functor. Both self and rhs must contain col_name column with the same type as T.<BR>
         It returns the result as a vector that could be moved into one of the dataframes consequently. The length of the result vector will be the min length of the columns in self and rhs.<BR>
-        <B>Note</B>: It is the responsibility of the user to make sure both columns in self and rhs are properly aligned.
+        <B>NOTE</B>: It is the responsibility of the user to make sure both columns in self and rhs are properly aligned.
       </td>
       <td>
         <B>T</B>: Type on column col_name. If this is index it would be the same as IndexType.<BR>
@@ -48,15 +52,21 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         <B>col_name</B>: Name of the column<BR>
         <B>rhs</B>: An instance of a dataframe that contains the same col_name with the same type (T)<BR>
         <B>functor</B>: An instance of the functor with signature:<BR>
-              <I>T func(const T &amp;self_data, const T &amp;rhs_data)</I>
+              <PRE><I>T func(const T &amp;self_data, const T &amp;rhs_data)</I></PRE>
       </td>
     </tr>
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename T, typename DF1, typename DF2, typename F&gt;<BR>
-        std::vector&lt;T&gt;<BR>
-        combine(const char *col_name, const DF1 &amp;df1, const DF2 &amp;df2, F &amp;functor) const;</font>
+        <PRE><B>
+template&lt;typename T, typename DF1,
+         typename DF2, typename F&gt;
+std::vector&lt;T&gt;
+combine(const char *col_name,
+        const DF1 &amp;df1,
+        const DF2 &amp;df2,
+        F &amp;functor) const;
+        </B></PRE></font>
       </td>
       <td>
         Same as the combine() above but it combines 3 columns.<BR>
@@ -70,15 +80,23 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         <B>df1</B>: An instance of a dataframe that contains the same col_name with the same type (T)<BR>
         <B>df2</B>: Another instance of a dataframe that contains the same col_name with the same type (T)<BR>
         <B>functor</B>: An instance of the functor with signature:<BR>
-              <I>T func(const T &amp;self_data, const T &amp;df1_data, const T &amp;df2_data)</I>
+              <PRE><I>T func(const T &amp;self_data, const T &amp;df1_data, const T &amp;df2_data)</I></PRE>
       </td>
     </tr>
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename T, typename DF1, typename DF2, typename DF3, typename F&gt;<BR>
-        std::vector&lt;T&gt;<BR>
-        combine(const char *col_name, const DF1 &amp;df1, const DF2 &amp;df2, const DF3 &amp;df3, F &amp;functor) const;</font>
+        <PRE><B>
+template&lt;typename T, typename DF1,
+         typename DF2, typename DF3,
+         typename F&gt;
+std::vector&lt;T&gt;
+combine(const char *col_name,
+        const DF1 &amp;df1,
+        const DF2 &amp;df2,
+        const DF3 &amp;df3,
+        F &amp;functor) const;
+        </B></PRE></font>
       </td>
       <td>
         Same as the combine() above but it combines 4 columns.<BR>
@@ -94,7 +112,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         <B>df2</B>: Another instance of a dataframe that contains the same col_name with the same type (T)<BR>
         <B>df3</B>: Another instance of a dataframe that contains the same col_name with the same type (T)<BR>
         <B>functor</B>: An instance of the functor with signature:<BR>
-              <I>T func(const T &amp;self_data, const T &amp;df1_data, const T &amp;df2_data, const T &amp;df3_data)</I>
+        <PRE><I>T func(const T &amp;self_data, const T &amp;df1_data,
+       const T &amp;df2_data, const T &amp;df3_data)</I></PRE>
       </td>
     </tr>
 

@@ -32,17 +32,22 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        template&lt;typename T, typename I = unsigned long, typename = typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;<BR>
-        struct TrackingErrorVisitor; </font>
+        <PRE><B>
+template&lt;typename T,
+         typename I = unsigned long,
+         typename =
+             typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;
+struct TrackingErrorVisitor;
+        </B></PRE></font>
       </td>
-      <td width="33.3%">
+      <td>
         This functor class calculates the tracking error between two columns. Tracking error is the standard deviation of the difference vector.<BR>
         <PRE>
-          explicit TrackingErrorVisitor(bool bias = true);
+    explicit TrackingErrorVisitor(bool bias = true);
         </PRE>
         See this document and dataframe_tester.cc for examples.<BR>
       </td>
-      <td width="15%">
+      <td width="12%">
         <B>T</B>: Column data type.<BR>
         <B>I</B>: Index type.
       </td>

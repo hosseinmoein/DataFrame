@@ -1029,6 +1029,81 @@ static void test_groupby()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_groupby_2()  {
+
+    std::cout << "\nTesting groupby_2( ) ..." << std::endl;
+
+    std::vector<unsigned long>  ulgvec2 =
+        { 123450, 123451, 123452, 123450, 123455, 123450, 123449,
+          123450, 123451, 123450, 123452, 123450, 123455, 123450,
+          123454, 123450, 123450, 123457, 123458, 123459, 123450,
+          123441, 123442, 123432, 123450, 123450, 123435, 123450 };
+    std::vector<unsigned long>  xulgvec2 = ulgvec2;
+    std::vector<int>            intvec2 =
+        { 1, 2, 3, 4, 5, 3, 7, 3, 9, 10, 3, 2, 3, 14,
+          2, 2, 2, 3, 2, 3, 3, 3, 3, 3, 36, 2, 45, 2 };
+    std::vector<double>         xdblvec2 =
+        { 1.2345, 2.2345, 3.2345, 4.2345, 5.2345, 3.0, 0.9999,
+          10.0, 4.25, 0.009, 1.111, 8.0, 2.2222, 3.3333,
+          11.0, 5.25, 1.009, 2.111, 9.0, 3.2222, 4.3333,
+          12.0, 6.25, 2.009, 3.111, 10.0, 4.2222, 5.3333 };
+    std::vector<double>         dblvec22 =
+        { 0.998, 0.3456, 0.056, 0.15678, 0.00345, 0.923, 0.06743,
+          0.1, 0.0056, 0.07865, -0.9999, 0.0111, 0.1002, -0.8888,
+          0.14, 0.0456, 0.078654, -0.8999, 0.01119, 0.8002, -0.9888,
+          0.2, 0.1056, 0.87865, -0.6999, 0.4111, 0.1902, -0.4888 };
+    std::vector<std::string>    strvec2 =
+        { "4% of something", "Description 4/5", "This is bad",
+          "3.4% of GDP", "Market drops", "Market pulls back",
+          "$15 increase", "Running fast", "C++14 development",
+          "Some explanation", "More strings", "Bonds vs. Equities",
+          "Almost done", "Here comes the sun", "XXXX1", "XXXX04",
+          "XXXX2", "XXXX3", "XXXX4", "XXXX4", "XXXX5", "XXXX6",
+          "XXXX7", "XXXX10", "XXXX11", "XXXX01", "XXXX02", "XXXX03" };
+
+    MyDataFrame df;
+
+    df.load_data(std::move(ulgvec2),
+                 std::make_pair("xint_col", intvec2),
+                 std::make_pair("dbl_col", xdblvec2),
+                 std::make_pair("dbl_col_2", dblvec22),
+                 std::make_pair("str_col", strvec2),
+                 std::make_pair("ul_col", xulgvec2));
+
+    auto    fut =
+        df.groupby_async<GroupbySum,
+                         MyDataFrame::IndexType,
+                         int,
+                         int,
+                         unsigned long,
+                         std::string,
+                         double>(GroupbySum(), DF_INDEX_COL_NAME, "xint_col");
+    auto    result = fut.get();
+
+    assert((result.get_index() ==
+            std::vector<unsigned long> {
+                123432, 123435, 246883, 123449, 123450, 617250, 370350, 123450,
+                123450, 123450, 123450, 123451, 123451, 246904, 123454, 123455,
+                123455, 123457, 123458, 123459
+            }));
+    assert((result.get_column<int>("xint_col") ==
+            std::vector<int> {
+                3, 45, 3, 7, 1, 2, 3, 4, 10, 14, 36, 2, 9, 3, 2, 3, 5, 3, 2, 3
+            }));
+    assert((result.get_column<std::string>("str_col") ==
+            std::vector<std::string> {
+                "XXXX10", "XXXX02", "XXXX6XXXX7", "$15 increase",
+                "4% of something", "Bonds vs. EquitiesXXXX04XXXX2XXXX01XXXX03",
+                "Market pulls backRunning fastXXXX5", "3.4% of GDP",
+                "Some explanation", "Here comes the sun", "XXXX11",
+                "Description 4/5", "C++14 development",
+                "This is badMore strings", "XXXX1", "Almost done",
+                "Market drops", "XXXX3", "XXXX4", "XXXX4"
+            }));
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int argc, char *argv[]) {
 
     test_get_reindexed();
@@ -1047,6 +1122,7 @@ int main(int argc, char *argv[]) {
     test_RSIVisitor();
     test_remove_duplicates();
     test_groupby();
+    test_groupby_2();
 
     return (0);
 }

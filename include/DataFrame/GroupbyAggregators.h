@@ -72,6 +72,24 @@ struct  GroupbyMin  {
 
 // ----------------------------------------------------------------------------
 
+struct  GroupbyLast  {
+
+    template<typename T, typename I>
+    static inline LastVisitor<T, I>
+    get_aggregator()  { return (LastVisitor<T, I>()); }
+};
+
+// ----------------------------------------------------------------------------
+
+struct  GroupbyFirst  {
+
+    template<typename T, typename I>
+    static inline FirstVisitor<T, I>
+    get_aggregator()  { return (FirstVisitor<T, I>()); }
+};
+
+// ----------------------------------------------------------------------------
+
 struct  GroupbyVar  {
 
     template<typename T, typename I>

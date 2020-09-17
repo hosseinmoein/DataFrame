@@ -933,12 +933,30 @@ public:  // Data manipulation
             const char *gb_col_name,
             sort_state already_sorted = sort_state::not_sorted) const;
 
+    // This is the same as above groupby() but it groups by two columns
+    //
+    template<typename F, typename T1, typename T2, typename ... Ts>
+    [[nodiscard]] DataFrame
+    groupby(F &&func,
+            const char *gb_col_name1,
+            const char *gb_col_name2,
+            sort_state already_sorted = sort_state::not_sorted) const;
+
     // Same as groupby() above, but executed asynchronously
     //
     template<typename F, typename T, typename ... Ts>
     [[nodiscard]] std::future<DataFrame>
     groupby_async(F &&func,
                   const char *gb_col_name,
+                  sort_state already_sorted = sort_state::not_sorted) const;
+
+    // Same as groupby() above, but executed asynchronously
+    //
+    template<typename F, typename T1, typename T2, typename ... Ts>
+    [[nodiscard]] std::future<DataFrame>
+    groupby_async(F &&func,
+                  const char *gb_col_name1,
+                  const char *gb_col_name2,
                   sort_state already_sorted = sort_state::not_sorted) const;
 
     // It counts the unique values in the named column.

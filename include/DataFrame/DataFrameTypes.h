@@ -195,10 +195,11 @@ enum class mad_type : unsigned char  {
 // ----------------------------------------------------------------------------
 
 enum class io_format : unsigned char  {
-    csv = 1,
-    json = 2,
-    hdf5 = 3,
-    binary = 4,
+    csv = 1,   // DataFrame specific csv format
+    csv2 = 2,  // Regular csv format (similar to Pandas)
+    json = 3,
+    hdf5 = 4,
+    binary = 5,
 };
 
 // ----------------------------------------------------------------------------

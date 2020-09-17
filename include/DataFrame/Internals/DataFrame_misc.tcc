@@ -355,6 +355,33 @@ DataFrame<I, H>::print_json_functor_<Ts ...>::operator() (const T &vec)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
+template<typename S, typename ... Ts>
+template<typename T>
+void DataFrame<I, H>::
+print_csv2_header_functor_<S, Ts ...>::operator() (const T &vec)  {
+
+    using VecType = typename std::remove_reference<T>::type;
+    using ValueType = typename VecType::value_type;
+
+    _write_csv2_df_header_<S, ValueType>(os, name, vec.size(), '\0');
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename S, typename ... Ts>
+template<typename T>
+void DataFrame<I, H>::
+print_csv2_data_functor_<S, Ts ...>::operator() (const T &vec)  {
+
+    if (vec.size() > index)  os << vec[index];
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
 template<typename ... Ts>
 template<typename T>
 void

@@ -248,6 +248,35 @@ struct print_json_functor_ : DataVec::template visitor_base<Ts ...>  {
 
 // ----------------------------------------------------------------------------
 
+template<typename S, typename ... Ts>
+struct print_csv2_header_functor_ : DataVec::template visitor_base<Ts ...>  {
+
+    inline print_csv2_header_functor_ (const char *n, S &o)
+        : name(n), os(o)  {   }
+
+    const char  *name;
+    S           &os;
+
+    template<typename T>
+    void operator() (const T &vec);
+};
+
+// ----------------------------------------------------------------------------
+
+template<typename S, typename ... Ts>
+struct print_csv2_data_functor_ : DataVec::template visitor_base<Ts ...>  {
+
+    inline print_csv2_data_functor_ (std::size_t i, S &o) : index(i), os(o) {  }
+
+    const std::size_t   index;
+    S                   &os;
+
+    template<typename T>
+    void operator() (const T &vec);
+};
+
+// ----------------------------------------------------------------------------
+
 template<typename ... Ts>
 struct equal_functor_ : DataVec::template visitor_base<Ts ...>  {
 

@@ -539,6 +539,91 @@ _generate_ts_index_<DateTime>(std::vector<DateTime> &index_vec,
 // ----------------------------------------------------------------------------
 
 template<typename S, typename T>
+inline static S &
+_write_csv2_df_header_(S &o,
+                       const char *col_name,
+                       std::size_t col_size,
+                       char last_delimit)  {
+
+    o << col_name << ':' << col_size << ':';
+
+    if (typeid(T) == typeid(float))
+        o << "<float>" << last_delimit;
+    else if (typeid(T) == typeid(double))
+        o << "<double>" << last_delimit;
+    else if (typeid(T) == typeid(long double))
+        o << "<longdouble>" << last_delimit;
+    else if (typeid(T) == typeid(short int))
+        o << "<short>" << last_delimit;
+    else if (typeid(T) == typeid(unsigned short int))
+        o << "<ushort>" << last_delimit;
+    else if (typeid(T) == typeid(int))
+        o << "<int>" << last_delimit;
+    else if (typeid(T) == typeid(unsigned int))
+        o << "<uint>" << last_delimit;
+    else if (typeid(T) == typeid(long int))
+        o << "<long>" << last_delimit;
+    else if (typeid(T) == typeid(long long int))
+        o << "<longlong>" << last_delimit;
+    else if (typeid(T) == typeid(unsigned long int))
+        o << "<ulong>" << last_delimit;
+    else if (typeid(T) == typeid(unsigned long long int))
+        o << "<ulonglong>" << last_delimit;
+    else if (typeid(T) == typeid(std::string))
+        o << "<string>" << last_delimit;
+    else if (typeid(T) == typeid(bool))
+        o << "<bool>" << last_delimit;
+    else if (typeid(T) == typeid(DateTime))
+        o << "<DateTime>" << last_delimit;
+    else
+        o << "<N/A>" << last_delimit;
+    return (o);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename S, typename T>
+inline static S &
+_write_json_df_header_(S &o, const char *col_name, std::size_t col_size)  {
+
+    o << '"' << col_name << "\":{\"N\":" << col_size << ',';
+
+    if (typeid(T) == typeid(float))
+        o << "\"T\":\"float\",";
+    else if (typeid(T) == typeid(double))
+        o << "\"T\":\"double\",";
+    else if (typeid(T) == typeid(long double))
+        o << "\"T\":\"longdouble\",";
+    else if (typeid(T) == typeid(short int))
+        o << "\"T\":\"short\",";
+    else if (typeid(T) == typeid(unsigned short int))
+        o << "\"T\":\"ushort\",";
+    else if (typeid(T) == typeid(int))
+        o << "\"T\":\"int\",";
+    else if (typeid(T) == typeid(unsigned int))
+        o << "\"T\":\"uint\",";
+    else if (typeid(T) == typeid(long int))
+        o << "\"T\":\"long\",";
+    else if (typeid(T) == typeid(long long int))
+        o << "\"T\":\"longlong\",";
+    else if (typeid(T) == typeid(unsigned long int))
+        o << "\"T\":\"ulong\",";
+    else if (typeid(T) == typeid(unsigned long long int))
+        o << "\"T\":\"ulonglong\",";
+    else if (typeid(T) == typeid(std::string))
+        o << "\"T\":\"string\",";
+    else if (typeid(T) == typeid(bool))
+        o << "\"T\":\"bool\",";
+    else if (typeid(T) == typeid(DateTime))
+        o << "\"T\":\"DateTime\",";
+    else
+        o << "\"T\":\"N/A\",";
+    return (o);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename S, typename T>
 inline static S &_write_csv_df_index_(S &o, const T &value)  {
 
     return (o << value);

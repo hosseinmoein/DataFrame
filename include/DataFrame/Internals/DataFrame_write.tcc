@@ -39,64 +39,33 @@ template<typename S, typename ...Ts>
 bool DataFrame<I, H>::
 write (S &o, bool values_only, io_format iof) const  {
 
-    if (iof != io_format::csv && iof != io_format::json)
+    if (iof != io_format::csv &&
+        iof != io_format::json &&
+        iof != io_format::csv2)
         throw NotImplemented("write(): This io_format is not implemented");
 
     if (iof == io_format::json)
         o << "{\n";
 
-    bool    need_pre_comma = false;
+    bool            need_pre_comma = false;
+    const size_type index_s = indices_.size();
 
     if (! values_only)  {
         if (iof == io_format::json)
-            o << "\"INDEX\":{\"N\":" << indices_.size() << ',';
-        else
-            o << "INDEX:" << indices_.size() << ':';
-
-        if (typeid(IndexType) == typeid(float))
-            o << (iof == io_format::csv ? "<float>:" : "\"T\":\"float\",");
-        else if (typeid(IndexType) == typeid(double))
-            o << (iof == io_format::csv ? "<double>:" : "\"T\":\"double\",");
-        else if (typeid(IndexType) == typeid(long double))
-            o << (iof == io_format::csv
-                      ? "<longdouble>:"
-                      : "\"T\":\"longdouble\",");
-        else if (typeid(IndexType) == typeid(short int))
-            o << (iof == io_format::csv ? "<short>:" : "\"T\":\"short\",");
-        else if (typeid(IndexType) == typeid(unsigned short int))
-            o << (iof == io_format::csv ? "<ushort>:" : "\"T\":\"ushort\",");
-        else if (typeid(IndexType) == typeid(int))
-            o << (iof == io_format::csv ? "<int>:" : "\"T\":\"int\",");
-        else if (typeid(IndexType) == typeid(unsigned int))
-            o << (iof == io_format::csv ? "<uint>:" : "\"T\":\"uint\",");
-        else if (typeid(IndexType) == typeid(long int))
-            o << (iof == io_format::csv ? "<long>:" : "\"T\":\"long\",");
-        else if (typeid(IndexType) == typeid(long long int))
-            o << (iof == io_format::csv
-                      ? "<longlong>:"
-                      : "\"T\":\"longlong\",");
-        else if (typeid(IndexType) == typeid(unsigned long int))
-            o << (iof == io_format::csv ? "<ulong>:" : "\"T\":\"ulong\",");
-        else if (typeid(IndexType) == typeid(unsigned long long int))
-            o << (iof == io_format::csv
-                      ? "<ulonglong>:"
-                      : "\"T\":\"ulonglong\",");
-        else if (typeid(IndexType) == typeid(std::string))
-            o << (iof == io_format::csv ? "<string>:" : "\"T\":\"string\",");
-        else if (typeid(IndexType) == typeid(bool))
-            o << (iof == io_format::csv ? "<bool>:" : "\"T\":\"bool\",");
-        else if (typeid(IndexType) == typeid(DateTime))
-            o << (iof == io_format::csv
-                      ? "<DateTime>:"
-                      : "\"T\":\"DateTime\",");
-        else
-            o << (iof == io_format::csv ? "<N/A>:" : "\"T\":\"N/A\",");
+            _write_json_df_header_<S, IndexType>
+                (o, DF_INDEX_COL_NAME, index_s);
+        else if (iof == io_format::csv)
+            _write_csv2_df_header_<S, IndexType>
+                (o, DF_INDEX_COL_NAME, index_s, ':');
+        else if (iof == io_format::csv2)
+            _write_csv2_df_header_<S, IndexType>
+                (o, DF_INDEX_COL_NAME, index_s, '\0');
 
         if (iof == io_format::json)  {
             o << "\"D\":[";
-            if (! indices_.empty())  {
+            if (index_s != 0)  {
                 _write_json_df_index_(o, indices_[0]);
-                for (size_type i = 1; i < indices_.size(); ++i)  {
+                for (size_type i = 1; i < index_s; ++i)  {
                     o << ',';
                     _write_json_df_index_(o, indices_[i]);
                 }
@@ -104,9 +73,19 @@ write (S &o, bool values_only, io_format iof) const  {
             o << "]}";
             need_pre_comma = true;
         }
-        else  {
-            for (size_type i = 0; i < indices_.size(); ++i)
+        else if (iof == io_format::csv)  {
+            for (size_type i = 0; i < index_s; ++i)
                 _write_csv_df_index_(o, indices_[i]) << ',';
+            o << '\n';
+        }
+        else if (iof == io_format::csv2)  {
+            for (const auto &iter : column_tb_)  {
+                o << ',';
+                print_csv2_header_functor_<S, Ts ...>   functor(
+                    iter.first.c_str(), o);
+
+                data_[iter.second].change(functor);
+            }
             o << '\n';
         }
     }
@@ -122,13 +101,26 @@ write (S &o, bool values_only, io_format iof) const  {
             need_pre_comma = true;
         }
     }
-    else {
+    else if (iof == io_format::csv)  {
         for (const auto &iter : column_tb_)  {
             print_csv_functor_<Ts ...>  functor (iter.first.c_str(),
                                                  values_only,
                                                  o);
 
             data_[iter.second].change(functor);
+        }
+    }
+    else if (iof == io_format::csv2)  {
+        for (size_type i = 0; i < index_s; ++i)  {
+            o << indices_[i];
+            for (auto citer = column_tb_.begin();
+                 citer != column_tb_.end(); ++citer)  {
+                print_csv2_data_functor_<S, Ts ...>  functor (i, o);
+
+                o << ',';
+                data_[citer->second].change(functor);
+            }
+            o << '\n';
         }
     }
 

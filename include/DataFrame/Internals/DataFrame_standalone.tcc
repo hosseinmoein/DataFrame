@@ -135,7 +135,7 @@ _col_vector_push_back_(V &vec,
                        T (*converter)(const char *, char **, int),
                        io_format file_type = io_format::csv)  {
 
-    char    value[1024];
+    char    value[8192];
     char    c = 0;
 
     while (file.get(c)) {
@@ -157,7 +157,7 @@ _col_vector_push_back_(V &vec,
                        T (*converter)(const char *, char **),
                        io_format file_type = io_format::csv)  {
 
-    char    value[1024];
+    char    value[8192];
     char    c = 0;
 
     while (file.get(c)) {
@@ -180,7 +180,7 @@ _col_vector_push_back_<const char *, std::vector<std::string>>(
     const char * (*converter)(const char *, char **),
     io_format file_type)  {
 
-    char    value[1024];
+    char    value[8192];
     char    c = 0;
 
     while (file.get(c)) {

@@ -2525,6 +2525,8 @@ protected:
 private:  // Static helper functions
 
     void read_json_(std::ifstream &file);
+    void read_csv_(std::ifstream &file);
+    void read_csv2_(std::ifstream &file);
 
     template<typename CF, typename ... Ts>
     static void

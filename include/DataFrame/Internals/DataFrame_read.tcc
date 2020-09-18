@@ -273,6 +273,157 @@ void DataFrame<I, H>::read_json_(std::ifstream &file)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename  H>
+void DataFrame<I, H>::read_csv_(std::ifstream &file)  {
+
+    char    col_name[256];
+    char    value[32];
+    char    type_str[64];
+    char    c;
+
+    while (file.get(c)) {
+        if (c == '#' || c == '\n' || c == '\0') {
+            if (c == '#')
+                while (file.get(c))
+                    if (c == '\n') break;
+
+            continue;
+        }
+        file.unget();
+
+        _get_token_from_file_(file, ':', col_name);
+        _get_token_from_file_(file, ':', value); // Get the size
+        file.get(c);
+        if (c != '<')
+            throw DataFrameError("DataFrame::read_csv_(): ERROR: Expected "
+                                 "'<' char to specify column type");
+        _get_token_from_file_(file, '>', type_str);
+        file.get(c);
+        if (c != ':')
+            throw DataFrameError("DataFrame::read_csv_(): ERROR: Expected "
+                                 "':' char to start column values");
+
+        if (! ::strcmp(col_name, DF_INDEX_COL_NAME))  {
+            IndexVecType    vec;
+
+            vec.reserve(::atoi(value));
+            _IdxParserFunctor_<IndexType>()(vec, file);
+            load_index(std::forward<IndexVecType &&>(vec));
+        }
+        else  {
+            if (! ::strcmp(type_str, "float"))  {
+                std::vector<float>  &vec = create_column<float>(col_name);
+
+                vec.reserve(::atoi(value));
+                _col_vector_push_back_(vec, file, &::strtof);
+            }
+            else if (! ::strcmp(type_str, "double"))  {
+                std::vector<double> &vec = create_column<double>(col_name);
+
+                vec.reserve(::atoi(value));
+                _col_vector_push_back_(vec, file, &::strtod);
+            }
+            else if (! ::strcmp(type_str, "longdouble"))  {
+                std::vector<long double>    &vec =
+                    create_column<long double>(col_name);
+
+                vec.reserve(::atoi(value));
+                _col_vector_push_back_(vec, file, &::strtold);
+            }
+            else if (! ::strcmp(type_str, "int"))  {
+                std::vector<int> &vec = create_column<int>(col_name);
+
+                vec.reserve(::atoi(value));
+                _col_vector_push_back_(vec, file, &::strtol);
+            }
+            else if (! ::strcmp(type_str, "uint"))  {
+                std::vector<unsigned int>   &vec =
+                    create_column<unsigned int>(col_name);
+
+                vec.reserve(::atoi(value));
+                _col_vector_push_back_(vec, file, &::strtoul);
+            }
+            else if (! ::strcmp(type_str, "long"))  {
+                std::vector<long>   &vec = create_column<long>(col_name);
+
+                vec.reserve(::atoi(value));
+                _col_vector_push_back_(vec, file, &::strtol);
+            }
+            else if (! ::strcmp(type_str, "longlong"))  {
+                std::vector<long long>  &vec =
+                    create_column<long long>(col_name);
+
+                vec.reserve(::atoi(value));
+                _col_vector_push_back_(vec, file, &::strtoll);
+            }
+            else if (! ::strcmp(type_str, "ulong"))  {
+                std::vector<unsigned long>  &vec =
+                    create_column<unsigned long>(col_name);
+
+                vec.reserve(::atoi(value));
+                _col_vector_push_back_(vec, file, &::strtoul);
+            }
+            else if (! ::strcmp(type_str, "ulonglong"))  {
+                std::vector<unsigned long long> &vec =
+                    create_column<unsigned long long>(col_name);
+
+                vec.reserve(::atoi(value));
+                _col_vector_push_back_(vec, file, &::strtoull);
+            }
+            else if (! ::strcmp(type_str, "string"))  {
+                std::vector<std::string>    &vec =
+                    create_column<std::string>(col_name);
+                auto                        converter =
+                    [](const char *s, char **)-> const char * { return s; };
+
+                vec.reserve(::atoi(value));
+                _col_vector_push_back_<const char *, std::vector<std::string>>
+                    (vec, file, converter);
+            }
+            else if (! ::strcmp(type_str, "DateTime"))  {
+                std::vector<DateTime>   &vec =
+                    create_column<DateTime>(col_name);
+                auto                    converter =
+                    [](const char *, char **)-> DateTime { return DateTime(); };
+
+                vec.reserve(::atoi(value));
+                _col_vector_push_back_<DateTime, std::vector<DateTime>>
+                    (vec, file, converter);
+            }
+            else if (! ::strcmp(type_str, "bool"))  {
+                std::vector<bool>   &vec = create_column<bool>(col_name);
+
+                vec.reserve(::atoi(value));
+                _col_vector_push_back_(vec, file, &::strtol);
+            }
+            else
+                throw DataFrameError("DataFrame::read_csv_(): ERROR: Unknown "
+                                     "column type");
+        }
+    }
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+void DataFrame<I, H>::read_csv2_(std::ifstream &file)  {
+
+    std::vector<float>              *f_vec { nullptr };
+    std::vector<double>             *d_vec { nullptr };
+    std::vector<long double>        *ld_vec { nullptr };
+    std::vector<int>                *i_vec { nullptr };
+    std::vector<unsigned int>       *ui_vec { nullptr };
+    std::vector<long>               *l_vec { nullptr };
+    std::vector<long long>          *ll_vec { nullptr };
+    std::vector<unsigned long>      *ul_vec { nullptr };
+    std::vector<unsigned long long> *ull_vec { nullptr };
+    std::vector<std::string>        *s_vec { nullptr };
+    std::vector<DateTime>           *dt_vec { nullptr };
+    std::vector<bool>               *b_vec { nullptr };
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
 bool DataFrame<I, H>::read (const char *file_name, io_format iof)  {
 
     static_assert(std::is_base_of<HeteroVector, DataVec>::value,
@@ -288,138 +439,10 @@ bool DataFrame<I, H>::read (const char *file_name, io_format iof)  {
         throw DataFrameError(err.c_str());
     }
 
-    if (iof == io_format::csv)  {
-        char    col_name[256];
-        char    value[32];
-        char    type_str[64];
-        char    c;
-
-        while (file.get(c)) {
-            if (c == '#' || c == '\n' || c == '\0') {
-                if (c == '#')
-                    while (file.get(c))
-                        if (c == '\n') break;
-
-                continue;
-            }
-            file.unget();
-
-            _get_token_from_file_(file, ':', col_name);
-            _get_token_from_file_(file, ':', value); // Get the size
-            file.get(c);
-            if (c != '<')
-                throw DataFrameError("DataFrame::read(): ERROR: Expected "
-                                     "'<' char to specify column type");
-            _get_token_from_file_(file, '>', type_str);
-            file.get(c);
-            if (c != ':')
-                throw DataFrameError("DataFrame::read(): ERROR: Expected "
-                                     "':' char to start column values");
-
-            if (! ::strcmp(col_name, DF_INDEX_COL_NAME))  {
-                IndexVecType    vec;
-
-                vec.reserve(::atoi(value));
-                _IdxParserFunctor_<IndexType>()(vec, file);
-                load_index(std::forward<IndexVecType &&>(vec));
-            }
-            else  {
-                if (! ::strcmp(type_str, "float"))  {
-                    std::vector<float>  &vec = create_column<float>(col_name);
-
-                    vec.reserve(::atoi(value));
-                    _col_vector_push_back_(vec, file, &::strtof);
-                }
-                else if (! ::strcmp(type_str, "double"))  {
-                    std::vector<double> &vec = create_column<double>(col_name);
-
-                    vec.reserve(::atoi(value));
-                    _col_vector_push_back_(vec, file, &::strtod);
-                }
-                else if (! ::strcmp(type_str, "longdouble"))  {
-                    std::vector<long double>    &vec =
-                        create_column<long double>(col_name);
-
-                    vec.reserve(::atoi(value));
-                    _col_vector_push_back_(vec, file, &::strtold);
-                }
-                else if (! ::strcmp(type_str, "int"))  {
-                    std::vector<int> &vec = create_column<int>(col_name);
-
-                    vec.reserve(::atoi(value));
-                    _col_vector_push_back_(vec, file, &::strtol);
-                }
-                else if (! ::strcmp(type_str, "uint"))  {
-                    std::vector<unsigned int>   &vec =
-                        create_column<unsigned int>(col_name);
-
-                    vec.reserve(::atoi(value));
-                    _col_vector_push_back_(vec, file, &::strtoul);
-                }
-                else if (! ::strcmp(type_str, "long"))  {
-                    std::vector<long>   &vec = create_column<long>(col_name);
-
-                    vec.reserve(::atoi(value));
-                    _col_vector_push_back_(vec, file, &::strtol);
-                }
-                else if (! ::strcmp(type_str, "longlong"))  {
-                    std::vector<long long>  &vec =
-                        create_column<long long>(col_name);
-
-                    vec.reserve(::atoi(value));
-                    _col_vector_push_back_(vec, file, &::strtoll);
-                }
-                else if (! ::strcmp(type_str, "ulong"))  {
-                    std::vector<unsigned long>  &vec =
-                        create_column<unsigned long>(col_name);
-
-                    vec.reserve(::atoi(value));
-                    _col_vector_push_back_(vec, file, &::strtoul);
-                }
-                else if (! ::strcmp(type_str, "ulonglong"))  {
-                    std::vector<unsigned long long> &vec =
-                        create_column<unsigned long long>(col_name);
-
-                    vec.reserve(::atoi(value));
-                    _col_vector_push_back_(vec, file, &::strtoull);
-                }
-                else if (! ::strcmp(type_str, "string"))  {
-                    std::vector<std::string>    &vec =
-                        create_column<std::string>(col_name);
-                    auto                        converter =
-                        [](const char *s, char **)-> const char * {
-                            return s;
-                        };
-
-                    vec.reserve(::atoi(value));
-                    _col_vector_push_back_
-                        <const char *, std::vector<std::string>>
-                        (vec, file, converter);
-                }
-                else if (! ::strcmp(type_str, "DateTime"))  {
-                    std::vector<DateTime>   &vec =
-                        create_column<DateTime>(col_name);
-                    auto                    converter =
-                        [](const char *, char **)-> DateTime {
-                            return DateTime();
-                        };
-
-                    vec.reserve(::atoi(value));
-                    _col_vector_push_back_<DateTime, std::vector<DateTime>>
-                        (vec, file, converter);
-                }
-                else if (! ::strcmp(type_str, "bool"))  {
-                    std::vector<bool>   &vec = create_column<bool>(col_name);
-
-                    vec.reserve(::atoi(value));
-                    _col_vector_push_back_(vec, file, &::strtol);
-                }
-                else
-                    throw DataFrameError ("DataFrame::read(): ERROR: Unknown "
-                                          "column type");
-            }
-        }
-    }
+    if (iof == io_format::csv)
+        read_csv_ (file);
+    else if (iof == io_format::csv2)
+        read_csv2_ (file);
     else if (iof == io_format::json)
         read_json_ (file);
     else

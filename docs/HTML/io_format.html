@@ -34,7 +34,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>
 enum class io_format : unsigned char  {
-    csv = 1,
+    csv = 1,    // DataFrame specific csv format
+    csv2 = 2,   // Regular csv format (similar to Pandas)
     json = 2,
     hdf5 = 3,   // Not Implemented
     binary = 4, // Not Implemented

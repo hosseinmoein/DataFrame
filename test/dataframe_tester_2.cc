@@ -1202,7 +1202,7 @@ int main(int argc, char *argv[]) {
     test_remove_duplicates();
     test_groupby();
     test_groupby_2();
-    // test_io_format_csv2();
+    test_io_format_csv2();
 
     return (0);
 }

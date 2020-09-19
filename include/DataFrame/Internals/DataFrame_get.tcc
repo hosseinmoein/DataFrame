@@ -61,7 +61,8 @@ MemUsage DataFrame<I, H>::get_memory_usage(const char *col_name) const  {
     _get_mem_numbers_(get_index(),
                       result.index_used_memory, result.index_capacity_memory);
     _get_mem_numbers_(get_column<T>(col_name),
-                      result.column_used_memory, result.column_capacity_memory);
+                      result.column_used_memory,
+					  result.column_capacity_memory);
     return (result);
 }
 
@@ -84,7 +85,7 @@ DataFrame<I, H>::get_column (const char *name)  {
     }
 
     DataVec         &hv = data_[iter->second];
-    const SpinGuard guars(lock_);
+    const SpinGuard guard(lock_);
 
     return (hv.template get_vector<T>());
 }

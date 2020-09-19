@@ -52,10 +52,8 @@ std::vector<T> &DataFrame<I, H>::create_column (const char *name)  {
 
     DataVec         &hv = data_.back();
     const SpinGuard guard(lock_);
-    std::vector<T>  &vec = hv.template get_vector<T>();
 
-    // vec.resize(indices_.size(), _get_nan<T>());
-    return (vec);
+    return (hv.template get_vector<T>());
 }
 
 // ----------------------------------------------------------------------------

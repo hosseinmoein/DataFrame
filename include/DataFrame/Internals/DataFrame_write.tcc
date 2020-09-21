@@ -36,8 +36,7 @@ namespace hmdf
 
 template<typename I, typename H>
 template<typename S, typename ...Ts>
-bool DataFrame<I, H>::
-write (S &o, bool values_only, io_format iof) const  {
+bool DataFrame<I, H>::write (S &o, io_format iof) const  {
 
     if (iof != io_format::csv &&
         iof != io_format::json &&
@@ -50,50 +49,46 @@ write (S &o, bool values_only, io_format iof) const  {
     bool            need_pre_comma = false;
     const size_type index_s = indices_.size();
 
-    if (! values_only)  {
-        if (iof == io_format::json)
-            _write_json_df_header_<S, IndexType>
-                (o, DF_INDEX_COL_NAME, index_s);
-        else if (iof == io_format::csv)
-            _write_csv2_df_header_<S, IndexType>
-                (o, DF_INDEX_COL_NAME, index_s, ':');
-        else if (iof == io_format::csv2)
-            _write_csv2_df_header_<S, IndexType>
-                (o, DF_INDEX_COL_NAME, index_s, '\0');
+    if (iof == io_format::json)
+        _write_json_df_header_<S, IndexType>(o, DF_INDEX_COL_NAME, index_s);
+    else if (iof == io_format::csv)
+        _write_csv2_df_header_<S, IndexType>
+            (o, DF_INDEX_COL_NAME, index_s, ':');
+    else if (iof == io_format::csv2)
+        _write_csv2_df_header_<S, IndexType>
+            (o, DF_INDEX_COL_NAME, index_s, '\0');
 
-        if (iof == io_format::json)  {
-            o << "\"D\":[";
-            if (index_s != 0)  {
-                _write_json_df_index_(o, indices_[0]);
-                for (size_type i = 1; i < index_s; ++i)  {
-                    o << ',';
-                    _write_json_df_index_(o, indices_[i]);
-                }
-            }
-            o << "]}";
-            need_pre_comma = true;
-        }
-        else if (iof == io_format::csv)  {
-            for (size_type i = 0; i < index_s; ++i)
-                _write_csv_df_index_(o, indices_[i]) << ',';
-            o << '\n';
-        }
-        else if (iof == io_format::csv2)  {
-            for (const auto &iter : column_tb_)  {
+    if (iof == io_format::json)  {
+        o << "\"D\":[";
+        if (index_s != 0)  {
+            _write_json_df_index_(o, indices_[0]);
+            for (size_type i = 1; i < index_s; ++i)  {
                 o << ',';
-                print_csv2_header_functor_<S, Ts ...>   functor(
-                    iter.first.c_str(), o);
-
-                data_[iter.second].change(functor);
+                _write_json_df_index_(o, indices_[i]);
             }
-            o << '\n';
         }
+        o << "]}";
+        need_pre_comma = true;
+    }
+    else if (iof == io_format::csv)  {
+        for (size_type i = 0; i < index_s; ++i)
+            _write_csv_df_index_(o, indices_[i]) << ',';
+        o << '\n';
+    }
+    else if (iof == io_format::csv2)  {
+        for (const auto &iter : column_tb_)  {
+            o << ',';
+            print_csv2_header_functor_<S, Ts ...>   functor(
+                iter.first.c_str(), o);
+
+            data_[iter.second].change(functor);
+        }
+        o << '\n';
     }
 
     if (iof == io_format::json)  {
         for (const auto &iter : column_tb_)  {
             print_json_functor_<Ts ...> functor (iter.first.c_str(),
-                                                 values_only,
                                                  need_pre_comma,
                                                  o);
 
@@ -103,9 +98,7 @@ write (S &o, bool values_only, io_format iof) const  {
     }
     else if (iof == io_format::csv)  {
         for (const auto &iter : column_tb_)  {
-            print_csv_functor_<Ts ...>  functor (iter.first.c_str(),
-                                                 values_only,
-                                                 o);
+            print_csv_functor_<Ts ...>  functor (iter.first.c_str(), o);
 
             data_[iter.second].change(functor);
         }
@@ -135,13 +128,12 @@ write (S &o, bool values_only, io_format iof) const  {
 template<typename I, typename H>
 template<typename S, typename ...Ts>
 std::future<bool> DataFrame<I, H>::
-write_async (S &o, bool values_only, io_format iof) const  {
+write_async (S &o, io_format iof) const  {
 
     return (std::async(std::launch::async,
                        &DataFrame::write<S, Ts ...>,
                        this,
                        std::ref(o),
-                       values_only,
                        iof));
 }
 

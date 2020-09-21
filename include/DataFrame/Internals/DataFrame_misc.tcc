@@ -254,37 +254,36 @@ DataFrame<I, H>::print_csv_functor_<Ts ...>::operator() (const T &vec)  {
     using VecType = typename std::remove_reference<T>::type;
     using ValueType = typename VecType::value_type;
 
-    if (! values_only)  {
-        os << name << ':' << vec.size() << ':';
-        if (typeid(ValueType) == typeid(float))
-            os << "<float>:";
-        else if (typeid(ValueType) == typeid(double))
-            os << "<double>:";
-        else if (typeid(ValueType) == typeid(short int))
-            os << "<short>:";
-        else if (typeid(ValueType) == typeid(unsigned short int))
-            os << "<ushort>:";
-        else if (typeid(ValueType) == typeid(int))
-            os << "<int>:";
-        else if (typeid(ValueType) == typeid(unsigned int))
-            os << "<uint>:";
-        else if (typeid(ValueType) == typeid(long int))
-            os << "<long>:";
-        else if (typeid(ValueType) == typeid(long long int))
-            os << "<longlong>:";
-        else if (typeid(ValueType) == typeid(unsigned long int))
-            os << "<ulong>:";
-        else if (typeid(ValueType) == typeid(unsigned long long int))
-            os << "<ulonglong>:";
-        else if (typeid(ValueType) == typeid(std::string))
-            os << "<string>:";
-        else if (typeid(ValueType) == typeid(bool))
-            os << "<bool>:";
-        else if (typeid(ValueType) == typeid(DateTime))
-            os << "<DateTime>:";
-        else
-            os << "<N/A>:";
-    }
+    os << name << ':' << vec.size() << ':';
+    if (typeid(ValueType) == typeid(float))
+        os << "<float>:";
+    else if (typeid(ValueType) == typeid(double))
+        os << "<double>:";
+    else if (typeid(ValueType) == typeid(short int))
+        os << "<short>:";
+    else if (typeid(ValueType) == typeid(unsigned short int))
+        os << "<ushort>:";
+    else if (typeid(ValueType) == typeid(int))
+        os << "<int>:";
+    else if (typeid(ValueType) == typeid(unsigned int))
+        os << "<uint>:";
+    else if (typeid(ValueType) == typeid(long int))
+        os << "<long>:";
+    else if (typeid(ValueType) == typeid(long long int))
+        os << "<longlong>:";
+    else if (typeid(ValueType) == typeid(unsigned long int))
+        os << "<ulong>:";
+    else if (typeid(ValueType) == typeid(unsigned long long int))
+        os << "<ulonglong>:";
+    else if (typeid(ValueType) == typeid(std::string))
+        os << "<string>:";
+    else if (typeid(ValueType) == typeid(bool))
+        os << "<bool>:";
+    else if (typeid(ValueType) == typeid(DateTime))
+        os << "<DateTime>:";
+    else
+        os << "<N/A>:";
+
     for (std::size_t i = 0; i < vec.size(); ++i)
         os << vec[i] << ',';
     os << '\n';
@@ -307,37 +306,36 @@ DataFrame<I, H>::print_json_functor_<Ts ...>::operator() (const T &vec)  {
 
     if (need_pre_comma)
         os << ",\n";
-    if (! values_only)  {
-        os << '"' << name << "\":{\"N\":" << vec.size() << ',';
-        if (typeid(ValueType) == typeid(float))
-            os << "\"T\":\"float\",";
-        else if (typeid(ValueType) == typeid(double))
-            os << "\"T\":\"double\",";
-        else if (typeid(ValueType) == typeid(short int))
-            os << "\"T\":\"short\",";
-        else if (typeid(ValueType) == typeid(unsigned short int))
-            os << "\"T\":\"ushort\",";
-        else if (typeid(ValueType) == typeid(int))
-            os << "\"T\":\"int\",";
-        else if (typeid(ValueType) == typeid(unsigned int))
-            os << "\"T\":\"uint\",";
-        else if (typeid(ValueType) == typeid(long int))
-            os << "\"T\":\"long\",";
-        else if (typeid(ValueType) == typeid(long long int))
-            os << "\"T\":\"longlong\",";
-        else if (typeid(ValueType) == typeid(unsigned long int))
-            os << "\"T\":\"ulong\",";
-        else if (typeid(ValueType) == typeid(unsigned long long int))
-            os << "\"T\":\"ulonglong\",";
-        else if (typeid(ValueType) == typeid(std::string))
-            os << "\"T\":\"string\",";
-        else if (typeid(ValueType) == typeid(bool))
-            os << "\"T\":\"bool\",";
-        else if (typeid(ValueType) == typeid(DateTime))
-            os << "\"T\":\"DateTime\",";
-        else
-            os << "\"T\":\"N/A\",";
-    }
+
+    os << '"' << name << "\":{\"N\":" << vec.size() << ',';
+    if (typeid(ValueType) == typeid(float))
+        os << "\"T\":\"float\",";
+    else if (typeid(ValueType) == typeid(double))
+        os << "\"T\":\"double\",";
+    else if (typeid(ValueType) == typeid(short int))
+        os << "\"T\":\"short\",";
+    else if (typeid(ValueType) == typeid(unsigned short int))
+        os << "\"T\":\"ushort\",";
+    else if (typeid(ValueType) == typeid(int))
+        os << "\"T\":\"int\",";
+    else if (typeid(ValueType) == typeid(unsigned int))
+        os << "\"T\":\"uint\",";
+    else if (typeid(ValueType) == typeid(long int))
+        os << "\"T\":\"long\",";
+    else if (typeid(ValueType) == typeid(long long int))
+        os << "\"T\":\"longlong\",";
+    else if (typeid(ValueType) == typeid(unsigned long int))
+        os << "\"T\":\"ulong\",";
+    else if (typeid(ValueType) == typeid(unsigned long long int))
+        os << "\"T\":\"ulonglong\",";
+    else if (typeid(ValueType) == typeid(std::string))
+        os << "\"T\":\"string\",";
+    else if (typeid(ValueType) == typeid(bool))
+        os << "\"T\":\"bool\",";
+    else if (typeid(ValueType) == typeid(DateTime))
+        os << "\"T\":\"DateTime\",";
+    else
+        os << "\"T\":\"N/A\",";
 
     os << "\"D\":[";
     if (! vec.empty())  {

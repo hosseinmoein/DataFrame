@@ -2443,24 +2443,18 @@ public:  // Utilities and miscellaneous
     //   the list only once.
     // o:
     //   Reference to an streamable object (e.g. cout)
-    // values_only:
-    //   If true, the name and type of each column is not written
     // iof:
     //   Specifies the I/O format. The default is CSV
     //
     template<typename S, typename ... Ts>
     bool
-    write(S &o,
-          bool values_only = false,
-          io_format iof = io_format::csv) const;
+    write(S &o, io_format iof = io_format::csv) const;
 
     // Same as write() above, but executed asynchronously
     //
     template<typename S, typename ... Ts>
     [[nodiscard]] std::future<bool>
-    write_async(S &o,
-                bool values_only = false,
-                io_format iof = io_format::csv) const;
+    write_async(S &o, io_format iof = io_format::csv) const;
 
     // It inputs the contents of a text file into itself (i.e. DataFrame).
     // Currently two formats (i.e. csv, json) are supported specified by

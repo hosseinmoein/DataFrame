@@ -36,7 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         <PRE><B>
 template&lt;typename S, typename ... Ts&gt;
 bool
-write(S &amp;o, bool values_only = false,
+write(S &amp;o,
       io_format iof = io_format::csv) const; </font>
         </B></PRE>
       </td>
@@ -84,7 +84,6 @@ write(S &amp;o, bool values_only = false,
         <B>S</B>: Output stream type<BR>
         <B>Ts</B>: The list of types for all columns. A type should be specified only once.<BR>
         <B>o</B>: Reference to an streamable object (e.g. cout)<BR>
-        <B>values_only</B>: If true, the name and type of each column is not written<BR>
         <B>iof</B>: Specifies the I/O format. The default is CSV
       </td>
     </tr>
@@ -94,7 +93,7 @@ write(S &amp;o, bool values_only = false,
         <PRE><B>
 template&lt;typename S, typename ... Ts&gt;
 std::future&lt;bool&gt;
-write_async(S &amp;o, bool values_only = false,
+write_async(S &amp;o,
             io_format iof = io_format::csv) const; </font>
         </B></PRE>
       </td>

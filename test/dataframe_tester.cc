@@ -451,7 +451,7 @@ static void test_haphazard()  {
                   int,
                   unsigned long,
                   double,
-                  std::string>(std::cout, true);
+                  std::string>(std::cout);
 
     std::cout << "\nTesting multi_visit() ..." << std::endl;
 
@@ -3334,7 +3334,6 @@ static void test_write_json()  {
 
     std::cout << "Writing in JSON:" << std::endl;
     df.write<std::ostream, int, double, std::string>(std::cout,
-                                                     false,
                                                      io_format::json);
 }
 

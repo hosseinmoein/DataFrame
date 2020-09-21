@@ -1163,7 +1163,7 @@ static void test_io_format_csv2()  {
              unsigned long,
              double,
              bool,
-             std::string>(std::cout, false, io_format::csv2);
+             std::string>(std::cout, io_format::csv2);
 
     MyDataFrame df_read;
 
@@ -1178,7 +1178,7 @@ static void test_io_format_csv2()  {
                   unsigned long,
                   double,
                   bool,
-                  std::string>(std::cout, false, io_format::csv2);
+                  std::string>(std::cout, io_format::csv2);
 }
 
 // -----------------------------------------------------------------------------

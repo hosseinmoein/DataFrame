@@ -1209,6 +1209,10 @@ public:  // Data manipulation
 
 public: // Read/access and slicing interfaces
 
+    inline bool empty() const noexcept  { return (indices_.empty()); }
+    inline bool
+    shapeless() const noexcept  { return (empty() && column_tb_.empty()); }
+
     // It returns a reference to the container of named data column
     // The return type depends on if we are in standard or view mode
     //

@@ -1218,18 +1218,18 @@ static void test_BoxCoxVisitor()  {
     const auto              &result4 =
         df.single_act_visit<double>("uniform_real", bc_v4).get_result();
 
-	for(auto citer : result1)
-		std::cout << citer << ", ";
-	std::cout << std::endl;
-	for(auto citer : result2)
-		std::cout << citer << ", ";
-	std::cout << std::endl;
-	for(auto citer : result3)
-		std::cout << citer << ", ";
-	std::cout << std::endl;
-	for(auto citer : result4)
-		std::cout << citer << ", ";
-	std::cout << std::endl;
+    for(auto citer : result1)
+        std::cout << citer << ", ";
+    std::cout << std::endl;
+    for(auto citer : result2)
+        std::cout << citer << ", ";
+    std::cout << std::endl;
+    for(auto citer : result3)
+        std::cout << citer << ", ";
+    std::cout << std::endl;
+    for(auto citer : result4)
+        std::cout << citer << ", ";
+    std::cout << std::endl;
 }
 
 // -----------------------------------------------------------------------------

@@ -1,0 +1,148 @@
+<!--
+Copyright (c) 2019-2022, Hossein Moein
+All rights reserved.
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+* Redistributions of source code must retain the above copyright
+  notice, this list of conditions and the following disclaimer.
+* Redistributions in binary form must reproduce the above copyright
+  notice, this list of conditions and the following disclaimer in the
+  documentation and/or other materials provided with the distribution.
+* Neither the name of Hossein Moein and/or the DataFrame nor the
+  names of its contributors may be used to endorse or promote products
+  derived from this software without specific prior written permission.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL Hossein Moein BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+<!DOCTYPE html>
+<html>
+<body>
+
+  <table align="center" border="1">
+
+    <tr bgcolor="lightblue">
+      <th>Signature</th> <th>Description</th>
+    </tr>
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        <PRE><B>
+enum class box_cox_type : unsigned char  {
+    // y(λ) = (y^λ - 1) / λ,  if λ != 0
+    // y(λ) = log(y),         if λ == 0
+    original = 1,
+
+    // y(λ) = (y^λ - 1) / (λ * GM^(λ - 1)),  if λ != 0
+    // y(λ) = GM * log(y),                   if λ == 0
+    geometric_mean = 2,
+
+    // y(λ) = sign(y) * (((|y| + 1)^λ - 1) / λ),  if λ != 0
+    // y(λ) = sign(y) * log(|y| + 1),             if λ == 0
+    modulus = 3,
+
+    // y(λ) = (e^λy - 1) / λ,  if λ != 0
+    // y(λ) = y,               if λ == 0
+    exponential = 4,
+};</B></PRE> </font>
+      </td>
+      <td>
+        Different Box-Cox transformation formulas to be used with BoxCoxVisitor.
+      </td>
+    </tr>
+
+  </table>
+
+  <BR>
+
+  <table align="center" border="1">
+
+    <tr bgcolor="lightblue">
+      <th>Signature</th> <th>Description</th> <th>Parameters</th>
+    </tr>
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        <PRE><B>
+template&lt;typename T,
+         typename I = unsigned long,
+         typename =
+             typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;
+struct BoxCoxVisitor;
+        </B></PRE></font>
+      </td>
+      <td>
+        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_action_visit() interface.<BR>
+        This visitor implements the Box-Cox transformation. This is a power transformation to a normal distribution. It is not guaranteed to always work.<BR>
+        The most important factor in this transformation is the power lambda factor. Lambda is usually between -5 and 5.<BR>
+        In case of <I>original</I> and <I>geometric_mean</I>, all series values must be positive. If there are negative values, you must set the <I>is_all_positive</I> flag to false. In this case the visitor will shift the series. The shift value is the absolute value of the min of the series + <I>0.0000001</I>.<BR>
+        In other types, the series could have both +/- values.<BR><BR>
+        <I>BoxCoxVisitor(box_cox_type bc_type, value_type lambda, bool is_all_positive);</I>
+      </td>
+      <td width="12%">
+        <B>T</B>: Column data type.<BR>
+        <B>I</B>: Index type.
+      </td>
+    </tr>
+
+  </table>
+
+ <pre style='color:#000000;background:#ffffff;'><span style='color:#800000; font-weight:bold; '>static</span> <span style='color:#800000; font-weight:bold; '>void</span> test_BoxCoxVisitor<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span>  <span style='color:#800080; '>{</span>
+
+    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>cout</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#800000; '>"</span><span style='color:#0f69ff; '>\n</span><span style='color:#0000e6; '>Testing BoxCoxVisitor{ } ...</span><span style='color:#800000; '>"</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>endl</span><span style='color:#800080; '>;</span>
+
+    <span style='color:#800000; font-weight:bold; '>const</span> <span style='color:#603000; '>size_t</span>            item_cnt <span style='color:#808030; '>=</span> <span style='color:#008c00; '>16</span><span style='color:#800080; '>;</span>
+    MyDataFrame             df<span style='color:#800080; '>;</span>
+    RandGenParams<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span>   p<span style='color:#800080; '>;</span>
+
+    p<span style='color:#808030; '>.</span>mean <span style='color:#808030; '>=</span> <span style='color:#008000; '>5.6</span><span style='color:#800080; '>;</span>
+    p<span style='color:#808030; '>.</span><span style='color:#666616; '>std</span> <span style='color:#808030; '>=</span> <span style='color:#008000; '>0.5</span><span style='color:#800080; '>;</span>
+    p<span style='color:#808030; '>.</span>seed <span style='color:#808030; '>=</span> <span style='color:#008c00; '>123</span><span style='color:#800080; '>;</span>
+    p<span style='color:#808030; '>.</span>min_value <span style='color:#808030; '>=</span> <span style='color:#808030; '>-</span><span style='color:#008c00; '>15</span><span style='color:#800080; '>;</span>
+    p<span style='color:#808030; '>.</span>max_value <span style='color:#808030; '>=</span> <span style='color:#008c00; '>30</span><span style='color:#800080; '>;</span>
+
+    df<span style='color:#808030; '>.</span>load_data<span style='color:#808030; '>(</span>MyDataFrame<span style='color:#800080; '>::</span>gen_sequence_index<span style='color:#808030; '>(</span><span style='color:#008c00; '>0</span><span style='color:#808030; '>,</span> item_cnt<span style='color:#808030; '>,</span> <span style='color:#008c00; '>1</span><span style='color:#808030; '>)</span><span style='color:#808030; '>,</span>
+                 <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span>make_pair<span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>lognormal</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> gen_lognormal_dist<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span>item_cnt<span style='color:#808030; '>,</span> p<span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#808030; '>,</span>
+                 <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span>make_pair<span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>normal</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> gen_normal_dist<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span>item_cnt<span style='color:#808030; '>,</span> p<span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#808030; '>,</span>
+                 <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span>make_pair<span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>uniform_real</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> gen_uniform_real_dist<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span>item_cnt<span style='color:#808030; '>,</span> p<span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+
+    BoxCoxVisitor<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span>   bc_v1<span style='color:#808030; '>(</span>box_cox_type<span style='color:#800080; '>::</span>original<span style='color:#808030; '>,</span> <span style='color:#008000; '>1.5</span><span style='color:#808030; '>,</span> <span style='color:#800000; font-weight:bold; '>true</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    <span style='color:#800000; font-weight:bold; '>const</span> <span style='color:#800000; font-weight:bold; '>auto</span>              <span style='color:#808030; '>&amp;</span>result1 <span style='color:#808030; '>=</span> df<span style='color:#808030; '>.</span>single_act_visit<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>lognormal</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> bc_v1<span style='color:#808030; '>)</span><span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    BoxCoxVisitor<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span>   bc_v2<span style='color:#808030; '>(</span>box_cox_type<span style='color:#800080; '>::</span>original<span style='color:#808030; '>,</span> <span style='color:#008000; '>1.5</span><span style='color:#808030; '>,</span> <span style='color:#800000; font-weight:bold; '>false</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    <span style='color:#800000; font-weight:bold; '>const</span> <span style='color:#800000; font-weight:bold; '>auto</span>              <span style='color:#808030; '>&amp;</span>result2 <span style='color:#808030; '>=</span> df<span style='color:#808030; '>.</span>single_act_visit<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>uniform_real</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> bc_v2<span style='color:#808030; '>)</span><span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    BoxCoxVisitor<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span>   bc_v3<span style='color:#808030; '>(</span>box_cox_type<span style='color:#800080; '>::</span><span style='color:#603000; '>modulus</span><span style='color:#808030; '>,</span> <span style='color:#808030; '>-</span><span style='color:#008000; '>0.5</span><span style='color:#808030; '>,</span> <span style='color:#800000; font-weight:bold; '>false</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    <span style='color:#800000; font-weight:bold; '>const</span> <span style='color:#800000; font-weight:bold; '>auto</span>              <span style='color:#808030; '>&amp;</span>result3 <span style='color:#808030; '>=</span> df<span style='color:#808030; '>.</span>single_act_visit<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>uniform_real</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> bc_v3<span style='color:#808030; '>)</span><span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    BoxCoxVisitor<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span>   bc_v4<span style='color:#808030; '>(</span>box_cox_type<span style='color:#800080; '>::</span>exponential<span style='color:#808030; '>,</span> <span style='color:#808030; '>-</span><span style='color:#008000; '>0.5</span><span style='color:#808030; '>,</span> <span style='color:#800000; font-weight:bold; '>false</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    <span style='color:#800000; font-weight:bold; '>const</span> <span style='color:#800000; font-weight:bold; '>auto</span>              <span style='color:#808030; '>&amp;</span>result4 <span style='color:#808030; '>=</span> df<span style='color:#808030; '>.</span>single_act_visit<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>uniform_real</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> bc_v4<span style='color:#808030; '>)</span><span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    
+    <span style='color:#800000; font-weight:bold; '>for</span><span style='color:#808030; '>(</span><span style='color:#800000; font-weight:bold; '>auto</span> citer <span style='color:#800080; '>:</span> result1<span style='color:#808030; '>)</span>
+        <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>cout</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> citer <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>, </span><span style='color:#800000; '>"</span><span style='color:#800080; '>;</span>
+    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>cout</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>endl</span><span style='color:#800080; '>;</span>
+    <span style='color:#800000; font-weight:bold; '>for</span><span style='color:#808030; '>(</span><span style='color:#800000; font-weight:bold; '>auto</span> citer <span style='color:#800080; '>:</span> result2<span style='color:#808030; '>)</span>
+        <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>cout</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> citer <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>, </span><span style='color:#800000; '>"</span><span style='color:#800080; '>;</span>
+    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>cout</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>endl</span><span style='color:#800080; '>;</span>
+    <span style='color:#800000; font-weight:bold; '>for</span><span style='color:#808030; '>(</span><span style='color:#800000; font-weight:bold; '>auto</span> citer <span style='color:#800080; '>:</span> result3<span style='color:#808030; '>)</span>
+        <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>cout</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> citer <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>, </span><span style='color:#800000; '>"</span><span style='color:#800080; '>;</span>
+    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>cout</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>endl</span><span style='color:#800080; '>;</span>
+    <span style='color:#800000; font-weight:bold; '>for</span><span style='color:#808030; '>(</span><span style='color:#800000; font-weight:bold; '>auto</span> citer <span style='color:#800080; '>:</span> result4<span style='color:#808030; '>)</span>
+        <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>cout</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> citer <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>, </span><span style='color:#800000; '>"</span><span style='color:#800080; '>;</span>
+    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>cout</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>endl</span><span style='color:#800080; '>;</span>
+<span style='color:#800080; '>}</span>
+</pre>
+<!--Created using ToHtml.com on 2020-09-23 15:07:44 UTC -->
+
+</body>
+</html>
+
+<!--
+Local Variables:
+mode:HTML
+tab-width:4
+c-basic-offset:4
+End:
+-->

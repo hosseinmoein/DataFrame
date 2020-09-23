@@ -1183,6 +1183,57 @@ static void test_io_format_csv2()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_BoxCoxVisitor()  {
+
+    std::cout << "\nTesting BoxCoxVisitor{ } ..." << std::endl;
+
+    const size_t            item_cnt = 16;
+    MyDataFrame             df;
+    RandGenParams<double>   p;
+
+    p.mean = 5.6;
+    p.std = 0.5;
+    p.seed = 123;
+    p.min_value = -15;
+    p.max_value = 30;
+
+    df.load_data(MyDataFrame::gen_sequence_index(0, item_cnt, 1),
+                 std::make_pair("lognormal",
+                                gen_lognormal_dist<double>(item_cnt, p)),
+                 std::make_pair("normal",
+                                gen_normal_dist<double>(item_cnt, p)),
+                 std::make_pair("uniform_real",
+                                gen_uniform_real_dist<double>(item_cnt, p)));
+
+    BoxCoxVisitor<double>   bc_v1(box_cox_type::original, 1.5, true);
+    const auto              &result1 =
+        df.single_act_visit<double>("lognormal", bc_v1).get_result();
+    BoxCoxVisitor<double>   bc_v2(box_cox_type::original, 1.5, false);
+    const auto              &result2 =
+        df.single_act_visit<double>("uniform_real", bc_v2).get_result();
+    BoxCoxVisitor<double>   bc_v3(box_cox_type::modulus, -0.5, false);
+    const auto              &result3 =
+        df.single_act_visit<double>("uniform_real", bc_v3).get_result();
+    BoxCoxVisitor<double>   bc_v4(box_cox_type::exponential, -0.5, false);
+    const auto              &result4 =
+        df.single_act_visit<double>("uniform_real", bc_v4).get_result();
+
+	for(auto citer : result1)
+		std::cout << citer << ", ";
+	std::cout << std::endl;
+	for(auto citer : result2)
+		std::cout << citer << ", ";
+	std::cout << std::endl;
+	for(auto citer : result3)
+		std::cout << citer << ", ";
+	std::cout << std::endl;
+	for(auto citer : result4)
+		std::cout << citer << ", ";
+	std::cout << std::endl;
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int argc, char *argv[]) {
 
     test_get_reindexed();
@@ -1203,6 +1254,7 @@ int main(int argc, char *argv[]) {
     test_groupby();
     test_groupby_2();
     test_io_format_csv2();
+    test_BoxCoxVisitor();
 
     return (0);
 }

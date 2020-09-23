@@ -282,6 +282,23 @@ enum class sigmoid_type : unsigned char  {
 
 // ----------------------------------------------------------------------------
 
+enum class box_cox_type : unsigned char  {
+    // y(λ) = (y^λ - 1) / λ,  if λ != 0
+    // y(λ) = log(y),         if λ == 0
+    original = 1,
+    // y(λ) = (y^λ - 1) / (λ * GM^(λ - 1)),  if λ != 0
+    // y(λ) = GM * log(y),                   if λ == 0
+    geometric_mean = 2,
+    // y(λ) = sign(y) * (((|y| + 1)^λ - 1) / λ),  if λ != 0
+    // y(λ) = sign(y) * log(|y| + 1),             if λ == 0
+    modulus = 3,
+    // y(λ) = (e^λy - 1) / λ,  if λ != 0
+    // y(λ) = y,               if λ == 0
+    exponential = 4,
+};
+
+// ----------------------------------------------------------------------------
+
 template<typename T>
 struct  RandGenParams  {
     T   min_value { std::numeric_limits<T>::min() };

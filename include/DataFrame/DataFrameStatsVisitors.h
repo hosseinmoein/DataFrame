@@ -73,8 +73,10 @@ struct MeanVisitor {
     inline void
     operator() (K idx_begin, K idx_end, H column_begin, H column_end)  {
 
+        const auto  &dummy = *idx_begin;
+
         while (column_begin < column_end)
-            (*this)(*idx_begin, *column_begin++);
+            (*this)(dummy, *column_begin++);
     }
 
     inline void pre ()  { mean_ = 0; cnt_ = 0; }
@@ -121,8 +123,10 @@ struct GeometricMeanVisitor {
     inline void
     operator() (K idx_begin, K idx_end, H column_begin, H column_end)  {
 
+        const auto  &dummy = *idx_begin;
+
         while (column_begin < column_end)
-            (*this)(*idx_begin, *column_begin++);
+            (*this)(dummy, *column_begin++);
     }
 
     explicit GeometricMeanVisitor(bool skipnan = true)
@@ -272,8 +276,10 @@ struct MaxVisitor {
     inline void
     operator() (K idx_begin, K idx_end, H column_begin, H column_end)  {
 
+        const auto  &dummy = *idx_begin;
+
         while (column_begin < column_end)
-            (*this)(*idx_begin, *column_begin++);
+            (*this)(dummy, *column_begin++);
     }
 
     inline void pre ()  { is_first = true; }
@@ -318,8 +324,10 @@ struct MinVisitor {
     inline void
     operator() (K idx_begin, K idx_end, H column_begin, H column_end)  {
 
+        const auto  &dummy = *idx_begin;
+
         while (column_begin < column_end)
-            (*this)(*idx_begin, *column_begin++);
+            (*this)(dummy, *column_begin++);
     }
 
     inline void pre ()  { is_first = true; }
@@ -2551,6 +2559,173 @@ private:
 
     result_type         sigmoids_ {  };
     const sigmoid_type  sigmoid_type_;
+};
+
+// ----------------------------------------------------------------------------
+
+template<typename T,
+         typename I = unsigned long,
+         typename =
+             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+struct BoxCoxVisitor {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+private:
+
+    template<typename H>
+    inline void modulus_(const H &column_begin, const H &column_end)  {
+
+        H   citer = column_begin;
+
+        if (lambda_ != 0)  {
+            while (citer < column_end)  {
+                const value_type    sign = std::signbit(*citer) ? -1 : 1;
+                const value_type    v =
+                    (std::pow(std::fabs(*citer++) + one_, lambda_) - one_) /
+                    lambda_;
+
+                transdormed_.push_back(sign * v);
+            }
+        }
+        else  {
+            while (citer < column_end)  {
+                const value_type    sign = std::signbit(*citer) ? -1 : 1;
+
+                transdormed_.push_back(
+                   sign * std::log(std::fabs(*citer++) + one_));
+            }
+        }
+    }
+
+    template<typename H>
+    inline void exponential_(const H &column_begin, const H &column_end)  {
+
+        H   citer = column_begin;
+
+        if (lambda_ != 0)  {
+            while (citer < column_end)
+                transdormed_.push_back(
+                    (std::exp(lambda_ * *citer++) - one_) / lambda_);
+        }
+        else  {
+            while (citer < column_end)
+                transdormed_.push_back(*citer++);
+        }
+    }
+
+    template<typename H>
+    inline void original_(const H &column_begin,
+                          const H &column_end,
+                          value_type shift)  {
+
+        H   citer = column_begin;
+
+        if (lambda_ != 0)  {
+            while (citer < column_end)
+                transdormed_.push_back(
+                    (std::pow(*citer++ + shift, lambda_) -  one_) / lambda_);
+        }
+        else  {
+            while (citer < column_end)
+                transdormed_.push_back(std::log(*citer++ + shift));
+        }
+    }
+
+    template<typename K, typename H>
+    inline void geometric_mean_(const K &dummy,
+                                const H &column_begin,
+                                const H &column_end,
+                                value_type shift)  {
+
+        H   citer = column_begin;
+
+        if (lambda_ != 0)  {
+            GeometricMeanVisitor<T, I>  reg_gm;
+
+            reg_gm.pre();
+            while (citer < column_end)
+                reg_gm(dummy, *citer++ + shift);
+            reg_gm.post();
+
+            citer = column_begin;
+            while (citer < column_end)  {
+                const value_type    raw_v = *citer++ + shift;
+                const value_type    v =
+                    (std::pow(raw_v, lambda_) -  one_) /
+                    (lambda_ * std::pow(reg_gm.get_result(), lambda_ - one_));
+
+                transdormed_.push_back(v);
+            }
+        }
+        else  {
+            GeometricMeanVisitor<T, I>  log_gm;
+
+            log_gm.pre();
+            while (citer < column_end)
+                log_gm(dummy, std::log(*citer++ + shift));
+            log_gm.post();
+
+            citer = column_begin;
+            while (citer < column_end)  {
+                const value_type    raw_v = *citer++ + shift;
+
+                transdormed_.push_back(raw_v * log_gm.get_result());
+            }
+        }
+    }
+
+public:
+
+    template<typename K, typename H>
+    inline void
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &column_begin,
+                const H &column_end)  {
+
+        value_type  shift = 0;
+
+        if (! is_all_positive_ &&
+            (box_cox_type_ == box_cox_type::original ||
+             box_cox_type_ == box_cox_type::geometric_mean))  {
+            MinVisitor<T, I>    mv;
+
+            mv.pre();
+            mv(idx_begin, idx_end, column_begin, column_end);
+            mv.post();
+
+            shift = std::fabs(mv.get_result()) + value_type(0.0000001);
+        }
+
+        transdormed_.reserve(std::distance(column_begin, column_end));
+        if (box_cox_type_ == box_cox_type::original)
+            original_(column_begin, column_end, shift);
+        else if (box_cox_type_ == box_cox_type::geometric_mean)
+            geometric_mean_(*idx_begin, column_begin, column_end, shift);
+        else if (box_cox_type_ == box_cox_type::modulus)
+            modulus_(column_begin, column_end);
+        else if (box_cox_type_ == box_cox_type::exponential)
+            exponential_(column_begin, column_end);
+    }
+
+    inline void pre ()  { transdormed_.clear(); }
+    inline void post ()  {  }
+    inline const result_type &get_result () const  { return (transdormed_); }
+    inline result_type &get_result ()  { return (transdormed_); }
+
+    BoxCoxVisitor(box_cox_type bct, value_type l, bool is_all_pos)
+        : box_cox_type_(bct),
+          lambda_(l),
+          is_all_positive_(is_all_pos)  {   }
+
+private:
+
+    result_type                 transdormed_ {  };
+    const box_cox_type          box_cox_type_;
+    const value_type            lambda_;
+    const bool                  is_all_positive_;
+    static constexpr value_type one_ { value_type(1) };
 };
 
 } // namespace hmdf

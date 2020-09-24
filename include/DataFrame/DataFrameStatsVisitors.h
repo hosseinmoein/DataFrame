@@ -2585,14 +2585,14 @@ private:
                     (std::pow(std::fabs(*citer++) + one_, lambda_) - one_) /
                     lambda_;
 
-                transdormed_.push_back(sign * v);
+                transformed_.push_back(sign * v);
             }
         }
         else  {
             while (citer < column_end)  {
                 const value_type    sign = std::signbit(*citer) ? -1 : 1;
 
-                transdormed_.push_back(
+                transformed_.push_back(
                    sign * std::log(std::fabs(*citer++) + one_));
             }
         }
@@ -2605,12 +2605,12 @@ private:
 
         if (lambda_ != 0)  {
             while (citer < column_end)
-                transdormed_.push_back(
+                transformed_.push_back(
                     (std::exp(lambda_ * *citer++) - one_) / lambda_);
         }
         else  {
             while (citer < column_end)
-                transdormed_.push_back(*citer++);
+                transformed_.push_back(*citer++);
         }
     }
 
@@ -2623,12 +2623,12 @@ private:
 
         if (lambda_ != 0)  {
             while (citer < column_end)
-                transdormed_.push_back(
+                transformed_.push_back(
                     (std::pow(*citer++ + shift, lambda_) -  one_) / lambda_);
         }
         else  {
             while (citer < column_end)
-                transdormed_.push_back(std::log(*citer++ + shift));
+                transformed_.push_back(std::log(*citer++ + shift));
         }
     }
 
@@ -2655,7 +2655,7 @@ private:
                     (std::pow(raw_v, lambda_) -  one_) /
                     (lambda_ * std::pow(reg_gm.get_result(), lambda_ - one_));
 
-                transdormed_.push_back(v);
+                transformed_.push_back(v);
             }
         }
         else  {
@@ -2670,7 +2670,7 @@ private:
             while (citer < column_end)  {
                 const value_type    raw_v = *citer++ + shift;
 
-                transdormed_.push_back(raw_v * log_gm.get_result());
+                transformed_.push_back(raw_v * log_gm.get_result());
             }
         }
     }
@@ -2698,7 +2698,7 @@ public:
             shift = std::fabs(mv.get_result()) + value_type(0.0000001);
         }
 
-        transdormed_.reserve(std::distance(column_begin, column_end));
+        transformed_.reserve(std::distance(column_begin, column_end));
         if (box_cox_type_ == box_cox_type::original)
             original_(column_begin, column_end, shift);
         else if (box_cox_type_ == box_cox_type::geometric_mean)
@@ -2709,10 +2709,10 @@ public:
             exponential_(column_begin, column_end);
     }
 
-    inline void pre ()  { transdormed_.clear(); }
+    inline void pre ()  { transformed_.clear(); }
     inline void post ()  {  }
-    inline const result_type &get_result () const  { return (transdormed_); }
-    inline result_type &get_result ()  { return (transdormed_); }
+    inline const result_type &get_result () const  { return (transformed_); }
+    inline result_type &get_result ()  { return (transformed_); }
 
     BoxCoxVisitor(box_cox_type bct, value_type l, bool is_all_pos)
         : box_cox_type_(bct),
@@ -2721,11 +2721,101 @@ public:
 
 private:
 
-    result_type                 transdormed_ {  };
+    result_type                 transformed_ {  };
     const box_cox_type          box_cox_type_;
     const value_type            lambda_;
     const bool                  is_all_positive_;
     static constexpr value_type one_ { value_type(1) };
+};
+
+// ----------------------------------------------------------------------------
+
+template<typename T,
+         typename I = unsigned long,
+         typename =
+             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+struct NormalizeVisitor {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template<typename K, typename H>
+    inline void
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &column_begin,
+                const H &column_end)  {
+
+        MinVisitor<T, I>    minv;
+        MaxVisitor<T, I>    maxv;
+
+        minv.pre();
+        maxv.pre();
+        minv(idx_begin, idx_end, column_begin, column_end);
+        maxv(idx_begin, idx_end, column_begin, column_end);
+        minv.post();
+        maxv.post();
+
+        const value_type    diff = maxv.get_result() - minv.get_result();
+        H                   citer = column_begin;
+
+        normalized_.reserve(std::distance(column_begin, column_end));
+        while (citer < column_end)
+            normalized_.push_back((*citer++ - minv.get_result()) / diff);
+    }
+
+    inline void pre ()  { normalized_.clear(); }
+    inline void post ()  {  }
+    inline const result_type &get_result () const  { return (normalized_); }
+    inline result_type &get_result ()  { return (normalized_); }
+
+private:
+
+    result_type normalized_ {  };
+};
+
+// ----------------------------------------------------------------------------
+
+template<typename T,
+         typename I = unsigned long,
+         typename =
+             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+struct StandardizeVisitor {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template<typename K, typename H>
+    inline void
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &column_begin,
+                const H &column_end)  {
+
+        MeanVisitor<T, I>   mv;
+        StdVisitor<T, I>    sv;
+
+        mv.pre();
+        sv.pre();
+        mv(idx_begin, idx_end, column_begin, column_end);
+        sv(idx_begin, idx_end, column_begin, column_end);
+        mv.post();
+        sv.post();
+
+        H   citer = column_begin;
+
+        standardized_.reserve(std::distance(column_begin, column_end));
+        while (citer < column_end)
+            standardized_.push_back(
+                (*citer++ - mv.get_result()) / sv.get_result());
+    }
+
+    inline void pre ()  { standardized_.clear(); }
+    inline void post ()  {  }
+    inline const result_type &get_result () const  { return (standardized_); }
+    inline result_type &get_result ()  { return (standardized_); }
+
+private:
+
+    result_type standardized_ {  };
 };
 
 } // namespace hmdf

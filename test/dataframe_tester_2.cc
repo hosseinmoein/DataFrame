@@ -1234,6 +1234,51 @@ static void test_BoxCoxVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_NormalizeVisitor()  {
+
+    std::cout << "\nTesting NormalizeVisitor{ } ..." << std::endl;
+
+    std::vector<unsigned long>  ulgvec2 =
+        { 123450, 123451, 123452, 123450, 123455, 123450, 123449,
+          123450, 123451, 123450, 123452, 123450, 123455, 123450,
+          123454, 123450, 123450, 123457, 123458, 123459, 123450,
+          123441, 123442, 123432, 123450, 123450, 123435, 123450 };
+    std::vector<double>         dblvec =
+        { 1.2345, 2.2345, 3.2345, 4.2345, 5.2345, 3.0, 0.9999,
+          10.0, 4.25, 0.009, 8.0, 2.2222, 3.3333, 15.6,
+          11.0, 5.25, 1.009, 2.111, 9.0, 3.2222, 4.3333,
+          12.0, 6.25, 2.009, 3.111, 10.0, 4.2222, 5.3333 };
+
+    MyDataFrame df;
+
+    df.load_data(std::move(ulgvec2), std::make_pair("dbl_col", dblvec));
+
+    NormalizeVisitor<double>    norm_v;
+    StandardizeVisitor<double>  stand_v;
+    auto                        result =
+        df.single_act_visit<double>("dbl_col", norm_v).get_result();
+    std::vector<double>         norm_result = {
+        0.078603, 0.142743, 0.206882, 0.271022, 0.335161, 0.191841, 0.0635559,
+        0.640818, 0.272016, 0, 0.512539, 0.141954, 0.213219, 1, 0.704958,
+        0.336155, 0.0641396, 0.134821, 0.576679, 0.206093, 0.277359, 0.769098,
+        0.400295, 0.128279, 0.198961, 0.640818, 0.270233, 0.341498,
+    };
+    std::vector<double>         stand_result = {
+        -1.00542, -0.744444, -0.48347, -0.222497, 0.0384758, -0.544669, -1.06664,
+        1.28214, -0.218452, -1.32524, 0.760197, -0.747654, -0.457686, 2.74359,
+        1.54312, 0.0425209, -1.06427, -0.776674, 1.02117, -0.48668, -0.196713,
+        1.80409, 0.303494, -0.803293, -0.515701, 1.28214, -0.225707, 0.06426
+    };
+
+    for (size_t idx = 0; idx < result.size(); ++idx)
+       assert(fabs(result[idx] - norm_result[idx]) < 0.00001);
+    result = df.single_act_visit<double>("dbl_col", stand_v).get_result();
+    for (size_t idx = 0; idx < result.size(); ++idx)
+       assert(fabs(result[idx] - stand_result[idx]) < 0.00001);
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int argc, char *argv[]) {
 
     test_get_reindexed();
@@ -1255,6 +1300,7 @@ int main(int argc, char *argv[]) {
     test_groupby_2();
     test_io_format_csv2();
     test_BoxCoxVisitor();
+    test_NormalizeVisitor();
 
     return (0);
 }

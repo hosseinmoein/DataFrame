@@ -1,0 +1,124 @@
+<!--
+Copyright (c) 2019-2022, Hossein Moein
+All rights reserved.
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+* Redistributions of source code must retain the above copyright
+  notice, this list of conditions and the following disclaimer.
+* Redistributions in binary form must reproduce the above copyright
+  notice, this list of conditions and the following disclaimer in the
+  documentation and/or other materials provided with the distribution.
+* Neither the name of Hossein Moein and/or the DataFrame nor the
+  names of its contributors may be used to endorse or promote products
+  derived from this software without specific prior written permission.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL Hossein Moein BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+<!DOCTYPE html>
+<html>
+<body>
+  <table align="center" border="1">
+
+    <tr bgcolor="lightblue">
+      <th>Signature</th> <th>Description</th> <th>Parameters</th>
+    </tr>
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        <PRE><B>
+template&lt;typename T,
+         typename I = unsigned long,
+         typename =
+             typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;
+struct NormalizeVisitor;
+        </B></PRE></font>
+      </td>
+      <td>
+        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_action_visit() interface.<BR>
+        This functor class normalizes column data by doing <I>y = (x - min) / (max - min)</I>.<BR>
+      </td>
+      <td width="12%">
+        <B>T</B>: Column data type<BR>
+        <B>I</B>: Index type
+      </td>
+    </tr>
+
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        <PRE><B>
+template&lt;typename T,
+         typename I = unsigned long,
+         typename =
+             typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;
+struct StandardizeVisitor;
+        </B></PRE></font>
+      </td>
+      <td>
+        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_action_visit() interface.<BR>
+        This functor class standardizes column data by doing <I>y = (x - mean) / std</I>.<BR>
+      </td>
+      <td width="12%">
+        <B>T</B>: Column data type<BR>
+        <B>I</B>: Index type
+      </td>
+    </tr>
+
+  </table> 
+
+<pre style='color:#000000;background:#ffffff;'><span style='color:#800000; font-weight:bold; '>static</span> <span style='color:#800000; font-weight:bold; '>void</span> test_NormalizeVisitor<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span>  <span style='color:#800080; '>{</span>
+
+    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>cout</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#800000; '>"</span><span style='color:#0f69ff; '>\n</span><span style='color:#0000e6; '>Testing NormalizeVisitor{ } ...</span><span style='color:#800000; '>"</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>endl</span><span style='color:#800080; '>;</span>
+
+    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>vector</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>unsigned</span> <span style='color:#800000; font-weight:bold; '>long</span><span style='color:#800080; '>></span>  ulgvec2 <span style='color:#808030; '>=</span>
+        <span style='color:#800080; '>{</span> <span style='color:#008c00; '>123450</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123451</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123452</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123450</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123455</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123450</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123449</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123450</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123451</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123450</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123452</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123450</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123455</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123450</span><span style='color:#808030; '>,</span>
+          <span style='color:#008c00; '>123454</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123450</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123450</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123457</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123458</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123459</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123450</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123441</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123442</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123432</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123450</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123450</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123435</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123450</span> <span style='color:#800080; '>}</span><span style='color:#800080; '>;</span>
+    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>vector</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span>         dblvec <span style='color:#808030; '>=</span>
+        <span style='color:#800080; '>{</span> <span style='color:#008000; '>1.2345</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>2.2345</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>3.2345</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>4.2345</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>5.2345</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>3.0</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.9999</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>10.0</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>4.25</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.009</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>8.0</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>2.2222</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>3.3333</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>15.6</span><span style='color:#808030; '>,</span>
+          <span style='color:#008000; '>11.0</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>5.25</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>1.009</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>2.111</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>9.0</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>3.2222</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>4.3333</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>12.0</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>6.25</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>2.009</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>3.111</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>10.0</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>4.2222</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>5.3333</span> <span style='color:#800080; '>}</span><span style='color:#800080; '>;</span>
+
+    MyDataFrame df<span style='color:#800080; '>;</span>
+
+    df<span style='color:#808030; '>.</span>load_data<span style='color:#808030; '>(</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>move</span><span style='color:#808030; '>(</span>ulgvec2<span style='color:#808030; '>)</span><span style='color:#808030; '>,</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span>make_pair<span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>dbl_col</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> dblvec<span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+
+    NormalizeVisitor<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span>    norm_v<span style='color:#800080; '>;</span>
+    StandardizeVisitor<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span>  stand_v<span style='color:#800080; '>;</span>
+    <span style='color:#800000; font-weight:bold; '>auto</span>                        result <span style='color:#808030; '>=</span> df<span style='color:#808030; '>.</span>single_act_visit<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>dbl_col</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> norm_v<span style='color:#808030; '>)</span><span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>vector</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span>         norm_result <span style='color:#808030; '>=</span> <span style='color:#800080; '>{</span>
+        <span style='color:#008000; '>0.078603</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.142743</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.206882</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.271022</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.335161</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.191841</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.0635559</span><span style='color:#808030; '>,</span>
+        <span style='color:#008000; '>0.640818</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.272016</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>0</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.512539</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.141954</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.213219</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>1</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.704958</span><span style='color:#808030; '>,</span>
+        <span style='color:#008000; '>0.336155</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.0641396</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.134821</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.576679</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.206093</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.277359</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.769098</span><span style='color:#808030; '>,</span>
+        <span style='color:#008000; '>0.400295</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.128279</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.198961</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.640818</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.270233</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.341498</span><span style='color:#808030; '>,</span>
+    <span style='color:#800080; '>}</span><span style='color:#800080; '>;</span>
+    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>vector</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span>         stand_result <span style='color:#808030; '>=</span> <span style='color:#800080; '>{</span>
+        <span style='color:#808030; '>-</span><span style='color:#008000; '>1.00542</span><span style='color:#808030; '>,</span> <span style='color:#808030; '>-</span><span style='color:#008000; '>0.744444</span><span style='color:#808030; '>,</span> <span style='color:#808030; '>-</span><span style='color:#008000; '>0.48347</span><span style='color:#808030; '>,</span> <span style='color:#808030; '>-</span><span style='color:#008000; '>0.222497</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.0384758</span><span style='color:#808030; '>,</span> <span style='color:#808030; '>-</span><span style='color:#008000; '>0.544669</span><span style='color:#808030; '>,</span> <span style='color:#808030; '>-</span><span style='color:#008000; '>1.06664</span><span style='color:#808030; '>,</span>
+        <span style='color:#008000; '>1.28214</span><span style='color:#808030; '>,</span> <span style='color:#808030; '>-</span><span style='color:#008000; '>0.218452</span><span style='color:#808030; '>,</span> <span style='color:#808030; '>-</span><span style='color:#008000; '>1.32524</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.760197</span><span style='color:#808030; '>,</span> <span style='color:#808030; '>-</span><span style='color:#008000; '>0.747654</span><span style='color:#808030; '>,</span> <span style='color:#808030; '>-</span><span style='color:#008000; '>0.457686</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>2.74359</span><span style='color:#808030; '>,</span>
+        <span style='color:#008000; '>1.54312</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.0425209</span><span style='color:#808030; '>,</span> <span style='color:#808030; '>-</span><span style='color:#008000; '>1.06427</span><span style='color:#808030; '>,</span> <span style='color:#808030; '>-</span><span style='color:#008000; '>0.776674</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>1.02117</span><span style='color:#808030; '>,</span> <span style='color:#808030; '>-</span><span style='color:#008000; '>0.48668</span><span style='color:#808030; '>,</span> <span style='color:#808030; '>-</span><span style='color:#008000; '>0.196713</span><span style='color:#808030; '>,</span>
+        <span style='color:#008000; '>1.80409</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.303494</span><span style='color:#808030; '>,</span> <span style='color:#808030; '>-</span><span style='color:#008000; '>0.803293</span><span style='color:#808030; '>,</span> <span style='color:#808030; '>-</span><span style='color:#008000; '>0.515701</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>1.28214</span><span style='color:#808030; '>,</span> <span style='color:#808030; '>-</span><span style='color:#008000; '>0.225707</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.06426</span>
+    <span style='color:#800080; '>}</span><span style='color:#800080; '>;</span>
+
+    <span style='color:#800000; font-weight:bold; '>for</span> <span style='color:#808030; '>(</span><span style='color:#603000; '>size_t</span> idx <span style='color:#808030; '>=</span> <span style='color:#008c00; '>0</span><span style='color:#800080; '>;</span> idx <span style='color:#808030; '>&lt;</span> result<span style='color:#808030; '>.</span>size<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span> <span style='color:#808030; '>+</span><span style='color:#808030; '>+</span>idx<span style='color:#808030; '>)</span>
+       assert<span style='color:#808030; '>(</span><span style='color:#603000; '>fabs</span><span style='color:#808030; '>(</span>result<span style='color:#808030; '>[</span>idx<span style='color:#808030; '>]</span> <span style='color:#808030; '>-</span> norm_result<span style='color:#808030; '>[</span>idx<span style='color:#808030; '>]</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>&lt;</span> <span style='color:#008000; '>0.00001</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    result <span style='color:#808030; '>=</span> df<span style='color:#808030; '>.</span>single_act_visit<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>dbl_col</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> stand_v<span style='color:#808030; '>)</span><span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    <span style='color:#800000; font-weight:bold; '>for</span> <span style='color:#808030; '>(</span><span style='color:#603000; '>size_t</span> idx <span style='color:#808030; '>=</span> <span style='color:#008c00; '>0</span><span style='color:#800080; '>;</span> idx <span style='color:#808030; '>&lt;</span> result<span style='color:#808030; '>.</span>size<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span> <span style='color:#808030; '>+</span><span style='color:#808030; '>+</span>idx<span style='color:#808030; '>)</span>
+       assert<span style='color:#808030; '>(</span><span style='color:#603000; '>fabs</span><span style='color:#808030; '>(</span>result<span style='color:#808030; '>[</span>idx<span style='color:#808030; '>]</span> <span style='color:#808030; '>-</span> stand_result<span style='color:#808030; '>[</span>idx<span style='color:#808030; '>]</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>&lt;</span> <span style='color:#008000; '>0.00001</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+<span style='color:#800080; '>}</span>
+</pre>
+<!--Created using ToHtml.com on 2020-09-24 12:24:48 UTC -->
+
+</body>
+</html>
+
+<!--
+Local Variables:
+mode:HTML
+tab-width:4
+c-basic-offset:4
+End:
+-->

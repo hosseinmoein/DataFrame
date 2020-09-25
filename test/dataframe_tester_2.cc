@@ -1327,6 +1327,12 @@ static void test_HampelFilterVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static inline std::size_t
+get_index(std::size_t row, std::size_t col, std::size_t num_rows)  {
+
+    return (col * num_rows + row);
+}
+
 int main(int argc, char *argv[]) {
 
     test_get_reindexed();
@@ -1351,6 +1357,143 @@ int main(int argc, char *argv[]) {
     test_NormalizeVisitor();
     test_HampelFilterVisitor();
 
+
+    std::cout.precision(4); // set precision
+    std::cout.setf(std::ios::fixed);
+    // To find the size of arrays that will store x,y, and z values
+    std::cout << "\nEnter the no. of data pairs to be entered:\n";
+
+    std::size_t col_s;
+
+    std::cin >> col_s;
+
+    double x[col_s], y[col_s];
+
+    std::cout << "\nEnter the x-axis values:\n"; // Input x-values
+    for (std::size_t i = 0; i < col_s; i++)
+        std::cin >> x[i];
+
+    std::cout << "\nEnter the y-axis values:\n"; // Input y-values
+    for (std::size_t i = 0; i < col_s; i++)
+        std::cin >> y[i];
+
+    std::size_t degree;
+
+    std::cout << "\nWhat degree of Polynomial do you want to use "
+                 "for the fit?\n";
+    std::cin >> degree; // degree is the degree of Polynomial
+
+    // Array that will store the values of
+    // sigma(xi), sigma(xi^2), sigma(xi^3) ... sigma(xi^2n)
+    double sigma_x[2 * degree + 1];
+
+    for (std::size_t i = 0; i < 2 * degree + 1; i++) {
+        sigma_x[i] = 0;
+        for (std::size_t j = 0; j < col_s; j++)
+            // consecutive positions of the array will store
+            // col_s, sigma(xi), sigma(xi^2), sigma(xi^3) ... sigma(xi^2n)
+            sigma_x[i] = sigma_x[i] + std::pow(x[j], i);
+    }
+
+    // B is the Normal matrix (augmented) that will store the equations, 'a'
+    // is for value of the final coefficients
+    const std::size_t   num_rows = degree + 1;
+    double              eq_matrix[num_rows * (degree + 2)], a[degree + 1];
+
+    for (std::size_t i = 0; i <= degree; i++)
+        for (std::size_t j = 0; j <= degree; j++)
+            // Build the Normal matrix by storing the corresponding
+            // coefficients at the right positions except the last column of
+            // the matrix
+            eq_matrix[get_index(i, j, num_rows)] = sigma_x[i + j];
+
+    // Array to store the values of
+    // sigma(yi), sigma(xi * yi), sigma(xi^2 * yi) ... sigma(xi^n * yi)
+    double sigma_y[degree + 1];
+
+    for (std::size_t i = 0; i < degree + 1; i++) {
+        sigma_y[i] = 0;
+        for (std::size_t j = 0; j < col_s; j++)
+            // consecutive positions will store
+            // sigma(yi), sigma(xi * yi), sigma(xi^2 * yi) ... sigma(xi^n * yi)
+            sigma_y[i] = sigma_y[i] + std::pow(x[j], i) * y[j];
+    }
+
+    for (std::size_t i = 0; i <= degree; i++)
+        // load the values of sigma_y as the last column of eq_matrix
+		// (Normal Matrix but augmented)
+        eq_matrix[get_index(i, degree + 1, num_rows)] = sigma_y[i];
+
+    // degree is made degree + 1 because the Gaussian Elimination part below was
+    // for degree equations, but here degree is the degree of polynomial and
+    // for degree degree we get degree + 1 equations
+    degree = degree + 1;
+
+    std::cout << "\nThe Normal(Augmented Matrix) is as follows:\n";
+
+    // print the Normal-augmented matrix
+    for (std::size_t i = 0; i < degree; i++) {
+        for (std::size_t j = 0; j <= degree; j++)
+            std::cout << eq_matrix[get_index(i, j, num_rows)] << std::setw(16);
+        std::cout << "\n";
+    }
+
+    // From now Gaussian Elimination starts(can be ignored) to solve the set
+    // of linear equations (Pivotisation)
+    for (std::size_t i = 0; i < degree; i++)
+        for (std::size_t k = i + 1; k < degree; k++)
+            if (eq_matrix[get_index(i, i, num_rows)] <
+				    eq_matrix[get_index(k, i, num_rows)])
+                for (std::size_t j = 0; j <= degree; j++) {
+                    const double    temp = eq_matrix[get_index(i, j, num_rows)];
+
+                    eq_matrix[get_index(i, j, num_rows)] =
+						eq_matrix[get_index(k, j, num_rows)];
+                    eq_matrix[get_index(k, j, num_rows)] = temp;
+                }
+
+    // loop to perform the gauss elimination
+    for (std::size_t i = 0; i < degree - 1; i++)
+        for (std::size_t k = i + 1; k < degree; k++) {
+            const double    t =
+                eq_matrix[get_index(k, i, num_rows)] /
+				eq_matrix[get_index(i, i, num_rows)];
+
+            for (std::size_t j = 0; j <= degree; j++)
+                // make the elements below the pivot elements equal to zero
+                // or elimnate the variables
+                eq_matrix[get_index(k, j, num_rows)] =
+                    eq_matrix[get_index(k, j, num_rows)] -
+                    t * eq_matrix[get_index(i, j, num_rows)];
+        }
+
+    // back-substitution
+    // x is an array whose values correspond to the values of x, y, z ...
+    for (int i = int(degree) - 1; i >= 0; i--) {
+        // make the variable to be calculated equal to the rhs of the last
+        // equation
+        a[i] = eq_matrix[get_index(i, degree, num_rows)];
+        for (int j = 0; j < degree; j++)
+            // then subtract all the lhs values except the coefficient of
+            // the variable whose value is being calculated
+            if (j != i)
+                a[i] = a[i] - eq_matrix[get_index(i, j, num_rows)] * a[j];
+        // now finally divide the rhs by the coefficient of the variable to be
+        // calculated
+        a[i] = a[i] / eq_matrix[get_index(i, i, num_rows)];
+    }
+
+    std::cout <<"\nThe values of the coefficients are as follows:\n";
+    std::cout << "\nSlope: " << a[0] << '\n';
+    for (std::size_t i = 0; i < degree; i++)
+        // Print the values of x^0, x^1, x^2, x^3, ...
+        std::cout <<"x^" << i << "=" << a[i] << std::endl;
+
+    std::cout << "\nHence the fitted Polynomial is given by:\ny=";
+    for (std::size_t i = 0; i < degree; i++)
+       std::cout << " + (" << a[i] << ")" << "x^" << i;
+
+    std::cout << "\n";
     return (0);
 }
 

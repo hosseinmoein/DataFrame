@@ -1279,6 +1279,54 @@ static void test_NormalizeVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_HampelFilterVisitor()  {
+
+    std::cout << "\nTesting HampelFilterVisitor{  } ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466,
+          123467, 123468, 123469, 123470, 123471, 123472, 123473,
+          123467, 123468, 123469, 123470, 123471, 123472, 123473,
+          123467, 123468, 123469, 123470, 123471, 123472, 123473,
+        };
+    std::vector<double>         d1 =
+        { 2.5, 2.45, -1.65, -0.1, -1.1, 1.87, 0.98,
+          0.34, 1.56, -12.34, 2.3, -0.34, -1.9, 0.387,
+          0.123, 1.06, -0.65, 2.03, 0.4, -1.0, 0.59,
+          0.125, 1.9, -0.68, 2.0045, 50.8, -1.0, 0.78,
+          0.48, 1.99, -0.97, 1.03, 8.678, -1.4, 1.59,
+        };
+    MyDataFrame                 df;
+
+    df.load_data(std::move(idx), std::make_pair("dbl_col", d1));
+
+    std::cout << std::endl;
+    HampelFilterVisitor<double> hf_v(7, hampel_type::mean, 2);
+    auto                        result =
+        df.single_act_visit<double>("dbl_col", hf_v).get_result();
+    std::vector<double>         hampel_result = {
+        2.5, 2.45, -1.65, -0.1, -1.1, 1.87, 0.98, 0.34, 1.56,
+        std::numeric_limits<double>::quiet_NaN(), 2.3, -0.34, -1.9, 0.387,
+        0.123, 1.06, -0.65, 2.03, 0.4, -1, 0.59, 0.125, 1.9, -0.68, 2.0045,
+        std::numeric_limits<double>::quiet_NaN(), -1, 0.78, 0.48, 1.99,
+        -0.97, 1.03, 8.678, -1.4, 1.59
+    };
+    const auto                  &column = df.get_column<double>("dbl_col");
+
+    assert(result == 2);
+    for (size_t idx = 0; idx < hampel_result.size(); ++idx)  {
+        const auto  v = column[idx];
+
+        if (std::isnan(v))
+            assert(std::isnan(hampel_result[idx]));
+        else
+            assert(hampel_result[idx] == v);
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int argc, char *argv[]) {
 
     test_get_reindexed();
@@ -1301,6 +1349,7 @@ int main(int argc, char *argv[]) {
     test_io_format_csv2();
     test_BoxCoxVisitor();
     test_NormalizeVisitor();
+    test_HampelFilterVisitor();
 
     return (0);
 }

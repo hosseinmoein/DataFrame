@@ -165,6 +165,13 @@ enum class drop_policy : unsigned char  {
 
 // ----------------------------------------------------------------------------
 
+enum class hampel_type : unsigned char  {
+    mean = 1,   // Use mean absolute deviation
+    median = 2, // Use median absolute deviation
+};
+
+// ----------------------------------------------------------------------------
+
 enum class remove_dup_spec : unsigned char  {
     keep_first = 1,  // Keep the first duplicated row
     keep_last = 2,   // Keep the last duplicated row

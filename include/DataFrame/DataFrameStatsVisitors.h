@@ -884,20 +884,21 @@ public:
         for (size_type i = 0; i < roll_count_ - 1 && i < col_s; ++i)
             result_.push_back(std::numeric_limits<f_result_type>::quiet_NaN());
         for (size_type i = 0; i < col_s; ++i)  {
-            size_type   r = 0;
-
-            visitor_.pre();
-            for (size_type j = i; r < roll_count_ && j < col_s; ++j, ++r)
-                visitor_(*(idx_begin + j), *(column_begin + j));
-            visitor_.post();
-            if (r == roll_count_)
+            if (i + roll_count_ <= col_s)  {
+                visitor_.pre();
+                visitor_(idx_begin + i, idx_begin + i + roll_count_,
+                         column_begin + i, column_begin + i + roll_count_);
+                visitor_.post();
                 result_.push_back(visitor_.get_result());
+            }
+            else  break;
         }
     }
 
     inline void pre ()  { visitor_.pre(); result_.clear(); }
     inline void post ()  { visitor_.post(); }
     inline const result_type &get_result () const  { return (result_); }
+    inline result_type &get_result ()  { return (result_); }
 };
 
 // ----------------------------------------------------------------------------

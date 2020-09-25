@@ -26,10 +26,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include <DataFrame/DataFrame.h>
+#include <DataFrame/DataFrameFinancialVisitors.h>
+#include <DataFrame/DataFrameMLVisitors.h>
 #include <DataFrame/DataFrameOperators.h>
 #include <DataFrame/DataFrameStatsVisitors.h>
-#include <DataFrame/DataFrameMLVisitors.h>
-#include <DataFrame/DataFrameFinancialVisitors.h>
 #include <DataFrame/GroupbyAggregators.h>
 #include <DataFrame/RandGen.h>
 

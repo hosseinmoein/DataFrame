@@ -1358,6 +1358,7 @@ int main(int argc, char *argv[]) {
     test_HampelFilterVisitor();
 
 
+    /*
     std::cout.precision(4); // set precision
     std::cout.setf(std::ios::fixed);
     // To find the size of arrays that will store x,y, and z values
@@ -1367,7 +1368,7 @@ int main(int argc, char *argv[]) {
 
     std::cin >> col_s;
 
-    double x[col_s], y[col_s];
+    std::vector<double> x(col_s), y(col_s);
 
     std::cout << "\nEnter the x-axis values:\n"; // Input x-values
     for (std::size_t i = 0; i < col_s; i++)
@@ -1385,7 +1386,7 @@ int main(int argc, char *argv[]) {
 
     // Array that will store the values of
     // sigma(xi), sigma(xi^2), sigma(xi^3) ... sigma(xi^2n)
-    double sigma_x[2 * degree + 1];
+    std::vector<double> sigma_x(2 * degree + 1);
 
     for (std::size_t i = 0; i < 2 * degree + 1; i++) {
         sigma_x[i] = 0;
@@ -1398,7 +1399,7 @@ int main(int argc, char *argv[]) {
     // B is the Normal matrix (augmented) that will store the equations, 'a'
     // is for value of the final coefficients
     const std::size_t   num_rows = degree + 1;
-    double              eq_matrix[num_rows * (degree + 2)], a[degree + 1];
+    std::vector<double> eq_matrix(num_rows * (degree + 2)), a(degree + 1);
 
     for (std::size_t i = 0; i <= degree; i++)
         for (std::size_t j = 0; j <= degree; j++)
@@ -1409,7 +1410,7 @@ int main(int argc, char *argv[]) {
 
     // Array to store the values of
     // sigma(yi), sigma(xi * yi), sigma(xi^2 * yi) ... sigma(xi^n * yi)
-    double sigma_y[degree + 1];
+    std::vector<double> sigma_y(degree + 1);
 
     for (std::size_t i = 0; i < degree + 1; i++) {
         sigma_y[i] = 0;
@@ -1421,7 +1422,7 @@ int main(int argc, char *argv[]) {
 
     for (std::size_t i = 0; i <= degree; i++)
         // load the values of sigma_y as the last column of eq_matrix
-		// (Normal Matrix but augmented)
+        // (Normal Matrix but augmented)
         eq_matrix[get_index(i, degree + 1, num_rows)] = sigma_y[i];
 
     // degree is made degree + 1 because the Gaussian Elimination part below was
@@ -1434,7 +1435,7 @@ int main(int argc, char *argv[]) {
     // print the Normal-augmented matrix
     for (std::size_t i = 0; i < degree; i++) {
         for (std::size_t j = 0; j <= degree; j++)
-            std::cout << eq_matrix[get_index(i, j, num_rows)] << std::setw(16);
+            std::cout << eq_matrix[get_index(i, j, num_rows)];
         std::cout << "\n";
     }
 
@@ -1443,12 +1444,12 @@ int main(int argc, char *argv[]) {
     for (std::size_t i = 0; i < degree; i++)
         for (std::size_t k = i + 1; k < degree; k++)
             if (eq_matrix[get_index(i, i, num_rows)] <
-				    eq_matrix[get_index(k, i, num_rows)])
+                    eq_matrix[get_index(k, i, num_rows)])
                 for (std::size_t j = 0; j <= degree; j++) {
                     const double    temp = eq_matrix[get_index(i, j, num_rows)];
 
                     eq_matrix[get_index(i, j, num_rows)] =
-						eq_matrix[get_index(k, j, num_rows)];
+                        eq_matrix[get_index(k, j, num_rows)];
                     eq_matrix[get_index(k, j, num_rows)] = temp;
                 }
 
@@ -1457,7 +1458,7 @@ int main(int argc, char *argv[]) {
         for (std::size_t k = i + 1; k < degree; k++) {
             const double    t =
                 eq_matrix[get_index(k, i, num_rows)] /
-				eq_matrix[get_index(i, i, num_rows)];
+                eq_matrix[get_index(i, i, num_rows)];
 
             for (std::size_t j = 0; j <= degree; j++)
                 // make the elements below the pivot elements equal to zero
@@ -1494,6 +1495,7 @@ int main(int argc, char *argv[]) {
        std::cout << " + (" << a[i] << ")" << "x^" << i;
 
     std::cout << "\n";
+    */
     return (0);
 }
 

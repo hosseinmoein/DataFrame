@@ -1301,7 +1301,6 @@ static void test_HampelFilterVisitor()  {
 
     df.load_data(std::move(idx), std::make_pair("dbl_col", d1));
 
-    std::cout << std::endl;
     HampelFilterVisitor<double> hf_v(7, hampel_type::mean, 2);
     auto                        result =
         df.single_act_visit<double>("dbl_col", hf_v).get_result();
@@ -1327,11 +1326,60 @@ static void test_HampelFilterVisitor()  {
 
 // -----------------------------------------------------------------------------
 
-static inline std::size_t
-get_index(std::size_t row, std::size_t col, std::size_t num_rows)  {
+static void test_PolyFitVisitor()  {
 
-    return (col * num_rows + row);
+    std::cout << "\nTesting PolyFitVisitor{  } ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466,
+          123467, 123468, 123469, 123470, 123471, 123472, 123473,
+          123467, 123468, 123469, 123470, 123471, 123472, 123473,
+          123467, 123468, 123469, 123470, 123471, 123472, 123473,
+        };
+    std::vector<double>         d1 =
+        { 2.5, 2.45, -1.65, -0.1, -1.1, 1.87, 0.98,
+          0.34, 1.56, -12.34, 2.3, -0.34, -1.9, 0.387,
+          0.123, 1.06, -0.65, 2.03, 0.4, -1.0, 0.59,
+          0.125, 1.9, -0.68, 2.0045, 50.8, -1.0, 0.78,
+          0.48, 1.99, -0.97, 1.03, 8.678, -1.4, 1.59,
+        };
+    MyDataFrame                 df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("dbl_col", d1));
+    df.load_column<double>("X1",
+                           { 1, 2, 3, 4, 5 },
+                           nan_policy::dont_pad_with_nans);
+    df.load_column<double>("Y1",
+                           { 6, 7, 8, 9, 3 },
+                           nan_policy::dont_pad_with_nans);
+    df.load_column<double>("X2",
+                           { 0.0, 1.0, 2.0, 3.0,  4.0,  5.0 },
+                           nan_policy::dont_pad_with_nans);
+    df.load_column<double>("Y2",
+                           { 0.0, 0.8, 0.9, 0.1, -0.8, -1.0 },
+                           nan_policy::dont_pad_with_nans);
+
+    PolyFitVisitor<double>  poly_v1 (2);
+    auto                    result1 =
+        df.single_act_visit<double, double>("X1", "Y1", poly_v1).get_result();
+    auto                    actual1 = std::vector<double> { 0.8, 5.6, -1 };
+
+    for (size_t idx = 0; idx < result1.size(); ++idx)
+       assert(fabs(result1[idx] - actual1[idx]) < 0.00001);
+
+    PolyFitVisitor<double>  poly_v2 (3);
+    auto                    result2 =
+        df.single_act_visit<double, double>("X2", "Y2", poly_v2).get_result();
+    auto                    actual2 =
+        std::vector<double> { -0.0396825, 1.69312, -0.813492, 0.087037 };
+
+    for (size_t idx = 0; idx < result2.size(); ++idx)
+       assert(fabs(result2[idx] - actual2[idx]) < 0.00001);
 }
+
+// -----------------------------------------------------------------------------
 
 int main(int argc, char *argv[]) {
 
@@ -1356,146 +1404,8 @@ int main(int argc, char *argv[]) {
     test_BoxCoxVisitor();
     test_NormalizeVisitor();
     test_HampelFilterVisitor();
+    test_PolyFitVisitor();
 
-
-    /*
-    std::cout.precision(4); // set precision
-    std::cout.setf(std::ios::fixed);
-    // To find the size of arrays that will store x,y, and z values
-    std::cout << "\nEnter the no. of data pairs to be entered:\n";
-
-    std::size_t col_s;
-
-    std::cin >> col_s;
-
-    std::vector<double> x(col_s), y(col_s);
-
-    std::cout << "\nEnter the x-axis values:\n"; // Input x-values
-    for (std::size_t i = 0; i < col_s; i++)
-        std::cin >> x[i];
-
-    std::cout << "\nEnter the y-axis values:\n"; // Input y-values
-    for (std::size_t i = 0; i < col_s; i++)
-        std::cin >> y[i];
-
-    std::size_t degree;
-
-    std::cout << "\nWhat degree of Polynomial do you want to use "
-                 "for the fit?\n";
-    std::cin >> degree; // degree is the degree of Polynomial
-
-    // Array that will store the values of
-    // sigma(xi), sigma(xi^2), sigma(xi^3) ... sigma(xi^2n)
-    std::vector<double> sigma_x(2 * degree + 1);
-
-    for (std::size_t i = 0; i < 2 * degree + 1; i++) {
-        sigma_x[i] = 0;
-        for (std::size_t j = 0; j < col_s; j++)
-            // consecutive positions of the array will store
-            // col_s, sigma(xi), sigma(xi^2), sigma(xi^3) ... sigma(xi^2n)
-            sigma_x[i] = sigma_x[i] + std::pow(x[j], i);
-    }
-
-    // B is the Normal matrix (augmented) that will store the equations, 'a'
-    // is for value of the final coefficients
-    const std::size_t   num_rows = degree + 1;
-    std::vector<double> eq_matrix(num_rows * (degree + 2)), a(degree + 1);
-
-    for (std::size_t i = 0; i <= degree; i++)
-        for (std::size_t j = 0; j <= degree; j++)
-            // Build the Normal matrix by storing the corresponding
-            // coefficients at the right positions except the last column of
-            // the matrix
-            eq_matrix[get_index(i, j, num_rows)] = sigma_x[i + j];
-
-    // Array to store the values of
-    // sigma(yi), sigma(xi * yi), sigma(xi^2 * yi) ... sigma(xi^n * yi)
-    std::vector<double> sigma_y(degree + 1);
-
-    for (std::size_t i = 0; i < degree + 1; i++) {
-        sigma_y[i] = 0;
-        for (std::size_t j = 0; j < col_s; j++)
-            // consecutive positions will store
-            // sigma(yi), sigma(xi * yi), sigma(xi^2 * yi) ... sigma(xi^n * yi)
-            sigma_y[i] = sigma_y[i] + std::pow(x[j], i) * y[j];
-    }
-
-    for (std::size_t i = 0; i <= degree; i++)
-        // load the values of sigma_y as the last column of eq_matrix
-        // (Normal Matrix but augmented)
-        eq_matrix[get_index(i, degree + 1, num_rows)] = sigma_y[i];
-
-    // degree is made degree + 1 because the Gaussian Elimination part below was
-    // for degree equations, but here degree is the degree of polynomial and
-    // for degree degree we get degree + 1 equations
-    degree = degree + 1;
-
-    std::cout << "\nThe Normal(Augmented Matrix) is as follows:\n";
-
-    // print the Normal-augmented matrix
-    for (std::size_t i = 0; i < degree; i++) {
-        for (std::size_t j = 0; j <= degree; j++)
-            std::cout << eq_matrix[get_index(i, j, num_rows)];
-        std::cout << "\n";
-    }
-
-    // From now Gaussian Elimination starts(can be ignored) to solve the set
-    // of linear equations (Pivotisation)
-    for (std::size_t i = 0; i < degree; i++)
-        for (std::size_t k = i + 1; k < degree; k++)
-            if (eq_matrix[get_index(i, i, num_rows)] <
-                    eq_matrix[get_index(k, i, num_rows)])
-                for (std::size_t j = 0; j <= degree; j++) {
-                    const double    temp = eq_matrix[get_index(i, j, num_rows)];
-
-                    eq_matrix[get_index(i, j, num_rows)] =
-                        eq_matrix[get_index(k, j, num_rows)];
-                    eq_matrix[get_index(k, j, num_rows)] = temp;
-                }
-
-    // loop to perform the gauss elimination
-    for (std::size_t i = 0; i < degree - 1; i++)
-        for (std::size_t k = i + 1; k < degree; k++) {
-            const double    t =
-                eq_matrix[get_index(k, i, num_rows)] /
-                eq_matrix[get_index(i, i, num_rows)];
-
-            for (std::size_t j = 0; j <= degree; j++)
-                // make the elements below the pivot elements equal to zero
-                // or elimnate the variables
-                eq_matrix[get_index(k, j, num_rows)] =
-                    eq_matrix[get_index(k, j, num_rows)] -
-                    t * eq_matrix[get_index(i, j, num_rows)];
-        }
-
-    // back-substitution
-    // x is an array whose values correspond to the values of x, y, z ...
-    for (int i = int(degree) - 1; i >= 0; i--) {
-        // make the variable to be calculated equal to the rhs of the last
-        // equation
-        a[i] = eq_matrix[get_index(i, degree, num_rows)];
-        for (int j = 0; j < degree; j++)
-            // then subtract all the lhs values except the coefficient of
-            // the variable whose value is being calculated
-            if (j != i)
-                a[i] = a[i] - eq_matrix[get_index(i, j, num_rows)] * a[j];
-        // now finally divide the rhs by the coefficient of the variable to be
-        // calculated
-        a[i] = a[i] / eq_matrix[get_index(i, i, num_rows)];
-    }
-
-    std::cout <<"\nThe values of the coefficients are as follows:\n";
-    std::cout << "\nSlope: " << a[0] << '\n';
-    for (std::size_t i = 0; i < degree; i++)
-        // Print the values of x^0, x^1, x^2, x^3, ...
-        std::cout <<"x^" << i << "=" << a[i] << std::endl;
-
-    std::cout << "\nHence the fitted Polynomial is given by:\ny=";
-    for (std::size_t i = 0; i < degree; i++)
-       std::cout << " + (" << a[i] << ")" << "x^" << i;
-
-    std::cout << "\n";
-    */
     return (0);
 }
 

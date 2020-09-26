@@ -2819,6 +2819,146 @@ private:
     result_type standardized_ {  };
 };
 
+// ----------------------------------------------------------------------------
+
+template<typename T,
+         typename I = unsigned long,
+         typename =
+             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+struct PolyFitVisitor {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+private:
+
+    static inline size_type
+    index_(size_type row, size_type col, size_type num_rows)  {
+
+        return (col * num_rows + row);
+    }
+
+public:
+
+    template<typename K, typename H>
+    inline void
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &x_begin, const H &x_end,
+                const H &y_begin, const H &y_end)  {
+
+        const size_type col_s = std::distance(x_begin, x_end);
+
+        assert((col_s == std::distance(y_begin, y_end)));
+
+        // degree needs to change
+        size_type       deg = degree_;
+        const size_type nrows = deg + 1;
+
+        // Array that will store the values of
+        // sigma(xi), sigma(xi^2), sigma(xi^3) ... sigma(xi^2n)
+        std::vector<value_type> sigma_x (2 * nrows, 0);
+
+        for (size_type i = 0; i < sigma_x.size(); ++i) {
+            // consecutive positions of the array will store
+            // col_s, sigma(xi), sigma(xi^2), sigma(xi^3) ... sigma(xi^2n)
+            for (size_type j = 0; j < col_s; ++j)
+                sigma_x[i] = sigma_x[i] + std::pow(*(x_begin + j), i);
+        }
+
+        // eq_mat is the Normal matrix (augmented) that will store the
+        // equations
+        std::vector<value_type> eq_mat (nrows * (deg + 2), 0);
+
+        for (size_type i = 0; i <= deg; ++i)
+            // Build the Normal matrix by storing the corresponding
+            // coefficients at the right positions except the last column
+            // of the matrix
+            for (size_type j = 0; j <= deg; ++j)
+                eq_mat[index_(i, j, nrows)] = sigma_x[i + j];
+
+        // Array to store the values of
+        // sigma(yi), sigma(xi * yi), sigma(xi^2 * yi) ... sigma(xi^n * yi)
+        std::vector<value_type> sigma_y (nrows, 0);
+
+        for (size_type i = 0; i < sigma_y.size(); ++i) {
+
+            // consecutive positions will store
+            // sigma(yi), sigma(xi * yi), sigma(xi^2 * yi) ... sigma(xi^n * yi)
+            for (size_type j = 0; j < col_s; ++j)
+                sigma_y[i] =
+                    sigma_y[i] + std::pow(*(x_begin + j), i) * *(y_begin + j);
+        }
+
+        // load the values of sigma_y as the last column of eq_mat
+        // (Normal Matrix but augmented)
+        for (size_type i = 0; i <= deg; ++i)
+            eq_mat[index_(i, nrows, nrows)] = sigma_y[i];
+
+        // deg is made deg + 1 because the Gaussian elimination part
+        // below was for deg equations, but here deg is the deg of
+        // polynomial and for deg we get deg + 1 equations
+        deg += 1;
+
+        // From now Gaussian elimination starts (can be ignored) to solve the
+        // set of linear equations (Pivotisation)
+        for (size_type i = 0; i < deg; ++i)  {
+            for (size_type k = i + 1; k < deg; ++k)
+                if (eq_mat[index_(i, i, nrows)] < eq_mat[index_(k, i, nrows)])
+                    for (size_type j = 0; j <= deg; ++j)
+                        std::swap(eq_mat[index_(i, j, nrows)],
+                                  eq_mat[index_(k, j, nrows)]);
+        }
+
+        // loop to perform the gauss elimination
+        for (size_type i = 0; i < deg - 1; ++i)  {
+            for (size_type k = i + 1; k < deg; ++k) {
+                const value_type    t =
+                    eq_mat[index_(k, i, nrows)] / eq_mat[index_(i, i, nrows)];
+
+                // make the elements below the pivot elements equal to zero
+                // or elimnate the variables
+                for (size_type j = 0; j <= deg; ++j)
+                    eq_mat[index_(k, j, nrows)] =
+                        eq_mat[index_(k, j, nrows)] -
+                        eq_mat[index_(i, j, nrows)] * t;
+            }
+        }
+
+        coefficients_.resize(deg, 0);
+
+        // back-substitution
+        // x is an array whose values correspond to the values of x, y, z ...
+        for (int i = int(deg) - 1; i >= 0; --i) {
+            // make the variable to be calculated equal to the rhs of the last
+            // equation
+            coefficients_[i] = eq_mat[index_(i, deg, nrows)];
+            for (int j = 0; j < deg; ++j)
+                // then subtract all the lhs values except the coefficient of
+                // the variable whose value is being calculated
+                if (j != i)
+                    coefficients_[i] =
+                        coefficients_[i] -
+                        eq_mat[index_(i, j, nrows)] * coefficients_[j];
+
+            // now finally divide the rhs by the coefficient of the
+            // variable to be calculated
+            coefficients_[i] = coefficients_[i] / eq_mat[index_(i, i, nrows)];
+        }
+    }
+
+    inline void pre ()  { coefficients_.clear(); }
+    inline void post ()  {  }
+    inline const result_type &get_result () const  { return (coefficients_); }
+    inline result_type &get_result ()  { return (coefficients_); }
+    inline value_type get_slope () const  { return (coefficients_[0]); }
+
+    explicit PolyFitVisitor(size_type d) : degree_(d)  {  }
+
+private:
+
+    result_type     coefficients_ {  };
+    const size_type degree_;
+};
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

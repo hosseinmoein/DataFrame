@@ -1364,7 +1364,7 @@ static void test_PolyFitVisitor()  {
     PolyFitVisitor<double>  poly_v1 (2);
     auto                    result1 =
         df.single_act_visit<double, double>("X1", "Y1", poly_v1).get_result();
-    auto                    actual1 = std::vector<double> { 0.8, 5.6, -1 };
+    auto                    actual1 = std::vector<double> { -1, 5.6, 0.8 };
 
     for (size_t idx = 0; idx < result1.size(); ++idx)
        assert(fabs(result1[idx] - actual1[idx]) < 0.00001);
@@ -1373,10 +1373,54 @@ static void test_PolyFitVisitor()  {
     auto                    result2 =
         df.single_act_visit<double, double>("X2", "Y2", poly_v2).get_result();
     auto                    actual2 =
-        std::vector<double> { -0.0396825, 1.69312, -0.813492, 0.087037 };
+        std::vector<double> { 0.087037, -0.813492, 1.69312, -0.0396825 };
 
     for (size_t idx = 0; idx < result2.size(); ++idx)
        assert(fabs(result2[idx] - actual2[idx]) < 0.00001);
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_HurstExponentVisitor()  {
+
+    std::cout << "\nTesting HurstExponentVisitor{ } ..." << std::endl;
+
+    RandGenParams<double>   p;
+
+    p.seed = 123;
+    p.min_value = 0;
+    p.max_value = 30;
+
+    std::vector<double> d1 = gen_uniform_real_dist<double>(1024, p);
+    std::vector<double> d2 =
+        { 0.04, 0.02, 0.05, 0.08, 0.02, -0.17, 0.05, 0.0 };
+    std::vector<double> d3 =
+        { 0.04, 0.05, 0.055, 0.06, 0.061, 0.072, 0.073, 0.8 };
+
+    MyDataFrame df;
+
+    df.load_index(std::move(MyDataFrame::gen_sequence_index(0, 1024, 1)));
+    df.load_column("d1_col", std::move(d1), nan_policy::dont_pad_with_nans);
+    df.load_column("d2_col", std::move(d2), nan_policy::dont_pad_with_nans);
+    df.load_column("d3_col", std::move(d3), nan_policy::dont_pad_with_nans);
+
+    HurstExponentVisitor<double>    he_v1 ({ 1, 2, 4 });
+    auto                            result1 =
+        df.single_act_visit<double>("d2_col", he_v1).get_result();
+
+    assert(result1 - 0.865926 < 0.00001);
+
+    HurstExponentVisitor<double>    he_v2 ({ 1, 2, 4, 5, 6, 7 });
+    auto                            result2 =
+        df.single_act_visit<double>("d1_col", he_v2).get_result();
+
+    assert(result2 - 0.487977 < 0.00001);
+
+    HurstExponentVisitor<double>    he_v3 ({ 1, 2, 4 });
+    auto                            result3 =
+        df.single_act_visit<double>("d3_col", he_v3).get_result();
+
+    assert(result3 - 0.903057 < 0.00001);
 }
 
 // -----------------------------------------------------------------------------
@@ -1405,6 +1449,7 @@ int main(int argc, char *argv[]) {
     test_NormalizeVisitor();
     test_HampelFilterVisitor();
     test_PolyFitVisitor();
+    test_HurstExponentVisitor();
 
     return (0);
 }

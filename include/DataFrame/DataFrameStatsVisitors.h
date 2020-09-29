@@ -1306,8 +1306,8 @@ struct CumSumVisitor {
 
 private:
 
-    std::vector<value_type> sum_ {  };
-    const bool              skip_nan_ { };
+    result_type sum_ {  };
+    const bool  skip_nan_ { };
 };
 
 // ----------------------------------------------------------------------------
@@ -2869,19 +2869,19 @@ public:
         // equations
         std::vector<value_type> eq_mat (nrows * (deg + 2), 0);
 
-        for (size_type i = 0; i <= deg; ++i)
+        for (size_type i = 0; i <= deg; ++i)  {
             // Build the Normal matrix by storing the corresponding
             // coefficients at the right positions except the last column
             // of the matrix
             for (size_type j = 0; j <= deg; ++j)
                 eq_mat[index_(i, j, nrows)] = sigma_x[i + j];
+        }
 
         // Array to store the values of
         // sigma(yi), sigma(xi * yi), sigma(xi^2 * yi) ... sigma(xi^n * yi)
         std::vector<value_type> sigma_y (nrows, 0);
 
         for (size_type i = 0; i < sigma_y.size(); ++i) {
-
             // consecutive positions will store
             // sigma(yi), sigma(xi * yi), sigma(xi^2 * yi) ... sigma(xi^n * yi)
             for (size_type j = 0; j < col_s; ++j)
@@ -2924,39 +2924,40 @@ public:
             }
         }
 
-        coefficients_.resize(deg, 0);
+        coeffs_.resize(deg, 0);
 
         // back-substitution
         // x is an array whose values correspond to the values of x, y, z ...
         for (int i = int(deg) - 1; i >= 0; --i) {
             // make the variable to be calculated equal to the rhs of the last
             // equation
-            coefficients_[i] = eq_mat[index_(i, deg, nrows)];
-            for (int j = 0; j < deg; ++j)
+            coeffs_[i] = eq_mat[index_(i, deg, nrows)];
+            for (int j = 0; j < deg; ++j)  {
                 // then subtract all the lhs values except the coefficient of
                 // the variable whose value is being calculated
                 if (j != i)
-                    coefficients_[i] =
-                        coefficients_[i] -
-                        eq_mat[index_(i, j, nrows)] * coefficients_[j];
+                    coeffs_[i] =
+                        coeffs_[i] - eq_mat[index_(i, j, nrows)] * coeffs_[j];
+            }
 
             // now finally divide the rhs by the coefficient of the
             // variable to be calculated
-            coefficients_[i] = coefficients_[i] / eq_mat[index_(i, i, nrows)];
+            coeffs_[i] = coeffs_[i] / eq_mat[index_(i, i, nrows)];
         }
+        std::reverse(coeffs_.begin(), coeffs_.end());
     }
 
-    inline void pre ()  { coefficients_.clear(); }
+    inline void pre ()  { coeffs_.clear(); }
     inline void post ()  {  }
-    inline const result_type &get_result () const  { return (coefficients_); }
-    inline result_type &get_result ()  { return (coefficients_); }
-    inline value_type get_slope () const  { return (coefficients_[0]); }
+    inline const result_type &get_result () const  { return (coeffs_); }
+    inline result_type &get_result ()  { return (coeffs_); }
+    inline value_type get_slope () const  { return (coeffs_[0]); }
 
     explicit PolyFitVisitor(size_type d) : degree_(d)  {  }
 
 private:
 
-    result_type     coefficients_ {  };
+    result_type     coeffs_ {  };
     const size_type degree_;
 };
 

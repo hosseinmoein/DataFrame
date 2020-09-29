@@ -33,9 +33,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/DataFrameTypes.h>
 
 #include <algorithm>
+#include <cmath>
 #include <functional>
 #include <iterator>
 #include <limits>
+#include <numeric>
+#include <vector>
 
 // ----------------------------------------------------------------------------
 
@@ -68,7 +71,7 @@ struct ReturnVisitor  {
         // Log return
         std::function<value_type(value_type, value_type)>   func =
             [](value_type lhs, value_type rhs) -> value_type  {
-                return (::log(lhs / rhs));
+                return (std::log(lhs / rhs));
             };
 
         if (ret_p_ == return_policy::percentage)
@@ -296,7 +299,8 @@ public:
         : upper_band_multiplier_(upper_band_multiplier),
           lower_band_multiplier_(lower_band_multiplier),
           mean_roller_(std::move(MeanVisitor<T, I>()), moving_mean_period),
-          std_roller_(std::move(StdVisitor<T, I>(biased)), moving_mean_period) {
+          std_roller_(std::move(StdVisitor<T, I>(biased)),
+                      moving_mean_period) {
     }
 
     template <typename K, typename H>
@@ -1080,6 +1084,133 @@ private:
     const return_policy rp_;
     const value_type    avg_period_;
     result_type         result_ { };
+};
+// ----------------------------------------------------------------------------
+
+template<typename T,
+         typename I = unsigned long,
+         typename =
+             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+struct HurstExponentVisitor {
+
+    DEFINE_VISIT_BASIC_TYPES_2
+
+    using RangeVec = std::vector<size_type>;
+
+private:
+
+    struct  range_data  {
+
+        size_type   id { 0 };
+        size_type   begin { 0 };
+        size_type   end { 0 };
+        value_type  mean { 0 };
+        value_type  st_dev { 0 };
+        value_type  rescaled_range { 0 };
+    };
+
+public:
+
+    explicit
+    HurstExponentVisitor(RangeVec &&ranges) : ranges_ (std::move(ranges)) {  }
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &i_begin,
+                const K &i_end,
+                const H &c_begin,
+                const H &c_end)  {
+
+        const size_type         col_s = std::distance(c_begin, c_end);
+        std::vector<range_data> buckets;
+        MeanVisitor<T, I>       mv;
+        StdVisitor<T, I>        sv;
+
+        // Calculate each range basic stats
+        buckets.reserve(std::accumulate(ranges_.begin(), ranges_.end(), 0));
+        for (auto range : ranges_)  {
+            const size_type ch_size = col_s / range;
+
+            for (size_type i = 0; i < range; ++i)  {
+                range_data  rd;
+
+                rd.id = range;
+                rd.begin = ch_size * i;
+                rd.end = ch_size * i + ch_size;
+                mv.pre();
+                sv.pre();
+                mv(i_begin, i_end, c_begin + rd.begin, c_begin + rd.end);
+                sv(i_begin, i_end, c_begin + rd.begin, c_begin + rd.end);
+                mv.post();
+                sv.post();
+                rd.mean = mv.get_result();
+                rd.st_dev = sv.get_result();
+                buckets.push_back(rd);
+            }
+        }
+
+        // Calculate the so-called rescaled range
+        for (auto &iter : buckets)  {
+            value_type  total { 0 };  // Cumulative sum (CumSum)
+            value_type  max_dev { std::numeric_limits<T>::min() };
+            value_type  min_dev { std::numeric_limits<T>::max() };
+
+            for (size_type i = iter.begin; i < iter.end; ++i)  {
+                total += *(c_begin + i) - iter.mean;
+                if (total > max_dev)  max_dev = total;
+                if (total < min_dev)  min_dev = total;
+            }
+            iter.rescaled_range = (max_dev - min_dev) / iter.st_dev;
+        }
+
+        // Caluculate Hurst exponent
+        size_type               prev_id { 0 };
+        size_type               prev_size { 0 };
+        value_type              count { 0 };
+        value_type              total_rescaled_range  { 0 };
+        std::vector<value_type> log_rescaled_mean;
+        std::vector<value_type> log_size;
+
+        log_rescaled_mean.reserve(ranges_.size());
+        log_size.reserve(ranges_.size());
+        for (auto citer : buckets)  {
+            if (citer.id != prev_id && count > 0)  {
+                log_size.push_back(std::log(prev_size));
+                log_rescaled_mean.push_back(
+                    std::log(total_rescaled_range / count));
+                total_rescaled_range = 0;
+                count = 0;
+            }
+            total_rescaled_range += citer.rescaled_range;
+            count += 1;
+            prev_size = citer.end - citer.begin;
+            prev_id = citer.id;
+        }
+        if (count > 0)  {
+            log_size.push_back(std::log(prev_size));
+            log_rescaled_mean.push_back(
+                std::log(total_rescaled_range / count));
+        }
+
+        PolyFitVisitor<T, I>    pfv (1);  // First degree
+
+        pfv.pre();
+        pfv (i_begin, i_end,
+             log_size.begin(), log_size.end(),
+             log_rescaled_mean.begin(), log_rescaled_mean.end());
+        pfv.post();
+
+        exponent_ = pfv.get_slope();
+    }
+
+    inline void pre ()  { exponent_ = -1; }
+    inline void post ()  {  }
+    inline result_type get_result () const  { return (exponent_); }
+
+private:
+
+    const RangeVec  ranges_;
+    result_type     exponent_ { -1 };
 };
 
 } // namespace hmdf

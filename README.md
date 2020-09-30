@@ -41,6 +41,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 This is a C++ statistical library that provides an interface similar to Pandas package in Python.<BR>
 <B>A DataFrame can have one index column and many data columns of any built-in or user-defined type</B>.<BR>
 You could slice the data in many different ways. You could join, merge, group-by the data. You could run various statistical, summarization and ML algorithms on the data. You could add your custom algorithms easily. You could multi-column sort, custom pick and delete the data. And more …<BR>
+DataFrame also includes a large collection of analytical routines in form of visitors -- see documentation below. These are from basic stats such as <I>Mean, Std Deviation, Return, …</I> to more involved analysis such as <I>Affinity Propagation, Polynomial Fit, Hurst Exponent, …</I> -- See documentation below for a complete list with code samples, and how you can add your custom algorithms.<BR>
 
 <B>I have followed a few principles in this library:</B><BR>
 

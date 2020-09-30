@@ -37,20 +37,20 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <img src="docs/pandalion.png" alt="drawing" width="500"/>
 
-# DataFrame
-This is a C++ statistical library that provides an interface similar to Pandas package in Python.<BR>
+# Data Framing
+This is a C++ statistical library that provides an interface similar to that of Pandas package in Python.<BR>
 <B>A DataFrame can have one index column and many data columns of any built-in or user-defined type</B>.<BR>
-You could slice the data in many different ways. You could join, merge, group-by the data. You could run various statistical, summarization and ML algorithms on the data. You could add your custom algorithms easily. You could multi-column sort, custom pick and delete the data. And more …<BR>
-DataFrame also includes a large collection of analytical routines in form of visitors -- see documentation below. These are from basic stats such as <I>Mean, Std Deviation, Return, …</I> to more involved analysis such as <I>Affinity Propagation, Polynomial Fit, Hurst Exponent, …</I> -- See documentation below for a complete list with code samples, and how you can add your custom algorithms.<BR>
+You can slice the data in many different ways. You can join, merge, group-by the data. You can run various statistical, summarization and ML algorithms on the data. You can add your custom algorithms easily. You can multi-column sort, custom pick and delete the data. And many more …<BR>
+Data Framing also includes a large collection of analytical routines in form of visitors -- Checkout documentation below. These are from basic stats such as <I>Mean, Std Deviation, Return, …</I> to more involved analysis such as <I>Affinity Propagation, Polynomial Fit, Hurst Exponent, …</I> -- Checkout documentation below for a complete list with code samples, and how you can add your custom algorithms.<BR>
 
 <B>I have followed a few principles in this library:</B><BR>
 
-1.  Support any type either built-in or user defined without needing new code<BR>
+1.  Support any type, either built-in or user defined without needing new code.<BR>
 2.  Never chase pointers ala `linked lists`, `std::any`, `pointer to base`, ..., including `virtual function calls`<BR>
-3.  Have all column data in continuous memory space. Also, be mindful of cache-line aliasing misses between multiple columns<BR>
+3.  Have all column data in continuous memory space. Also, be mindful of cache-line aliasing misses between multiple columns.<BR>
 4.  Never use more space than you need ala `unions`, `std::variant`, ...<BR>
-5.  Avoid copying data as much as possible. Unfortunately, sometimes you have to<BR>
-6.  Use multi-threading but only when it makes sense<BR>
+5.  Avoid copying data as much as possible. <BR>
+6.  Use multi-threading but only when it makes sense.<BR>
 7.  Do not attempt to protect the user against `garbage in, garbage out`<BR>
 
 <B>Views</B><BR>
@@ -58,13 +58,13 @@ DataFrame also includes a large collection of analytical routines in form of vis
 
 <B>Multithreading</B><BR>
 1.  DataFrame uses static containers to achieve type heterogeneity. By default, these static containers are unprotected. This is done by design. So by default, there is no locking overhead. If you use DataFrame in a multithreaded program you must provide a _SpinLock_ defined in <a href="include/DataFrame/Utils/ThreadGranularity.h">ThreadGranularity.h</a> file. DataFrame will use your _SpinLock_ to protect the containers.<BR>Please see <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html">documentation</a>, <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/remove_lock.html">set_lock()</a>, <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/remove_lock.html">remove_lock()</a>, and <a href="test/dataframe_tester.cc#L3768">dataframe_tester.cc</a> for code example.<BR>
-2.  In addition, instances of DataFrame are not multithreaded safe either. In other words, a single instance of DataFrame must not be used in multiple threads without protection, unless it is used as read-only.<BR>
+2.  In addition, instances of DataFrame are not multithreaded safe . In other words, a single instance of DataFrame must not be used in multiple threads without protection, unless it is used as read-only.<BR>
 3.  In the meantime, DataFrame utilizes multithreading in two different ways internally:<BR>
     1.  <B>Async Interface:</B> There are asynchronous versions of some methods. For example, you have _sort()_/_sort_async()_, _visit()_/_visit_async()_, ... more. The latter versions return a _std::future_ that could execute in parallel.<BR>
     2.  DataFrame uses multiple threads, internally and unbeknown to the user, in some of its algorithms when appropriate. User can control (or turn off) the multithreading by calling _set_thread_level()_ which sets the max number of threads to be used. The default is 0. The optimal number of threads is a function of users hardware/software environment and usually obtained by trail and error. _set_thread_level()_ and threading level in general is a static property and once set, it applies to all instances.<BR>
 
 <B><a href="docs/DateTimeDoc.pdf">DateTime</a></B><BR>
--    DateTime class included in this library is a very cool and handy object to manipulate date/time with nanosecond precision.<BR>
+-    DateTime class included in this library is a very cool and handy object to manipulate  with nanosecond precision.<BR>
 
 ---
 
@@ -105,7 +105,7 @@ make uninstall
 ```
 
 ### Package managers
-If you are using Conan to manage your dependencies, merely add `dataframe/x.y.z@` to your requires, where x.y.z is the release version you want to use. Conan will acquire DataFrame, build it from source in your computer, and provide CMake integration support for your projects. See the [conan docs](https://docs.conan.io/en/latest/) for more information.<BR> Sample `conanfile.txt`:
+If you are using Conan to manage your dependencies, rarely add `dataframe/x.y.z@` to your requires, where x.y.z is the release version you want to use. Conan will acquire DataFrame, build it from source in your computer, and provide CMake integration support for your projects. Checkout the [conan docs](https://docs.conan.io/en/latest/) for more information.<BR> Sample `conanfile.txt`:
 
 ```text
 [requires]
@@ -123,9 +123,9 @@ _pandas_performance.py_ is ran with Pandas 1.1.0 and Python 3.7.<BR>
 I ran both on my mac-book, doing the following:<BR>
 <img src="docs/MacSize.png" alt="drawing" width="500"/>
 
-1.  Generate ~1.6 billion second resolution timestamps and load it into the DataFrame/Pandas as index.<BR>
-2.  Generate ~1.6 billion random numbers each for 3 columns with normal, log normal, and exponential distributions and load them into the DataFrame/Pandas.<BR>
-3.  Calculate the mean of each of the 3 columns.<BR>
+1.  Generates ~1.6 billion second resolution timestamps and load it into the DataFrame/Pandas as index.<BR>
+2.  Generates ~1.6 billion random numbers each for 3 columns with normal, log normal, and exponential distributions and load them into the DataFrame/Pandas.<BR>
+3.  Calculates the mean of each of the 3 columns.<BR>
 
 Result:
 ```bash
@@ -149,4 +149,4 @@ sys   2m3.451s
 2.  In case of Pandas, allocating memory + random number generation takes almost the same amount of time as calculating means.<BR>
 3.  In case of DataFrame 85% of the time is spent in allocating memory + random number generation.<BR>
 4.  You load data once, but calculate statistics many times. So DataFrame, in general, is about 11x faster than parts of Pandas that are implemented in Numpy. I leave parts of Pandas that are purely in Python to imagination.<BR>
-5.  Pandas process image at its peak is ~105GB. C++ DataFrame process image at its peak is ~68GB.
+5.  Pandas process image at its peak i.e. ~105GB. C++ DataFrame process image at its peak i.e. ~68GB.

@@ -2970,9 +2970,8 @@ public:
 
     explicit
     PolyFitVisitor(size_type d, weight_func w_func =
-                       [](const I &, std::size_t) -> value_type  {
-                           return (T(1));
-                       }) : degree_(d), weights_(w_func)  {   }
+                       [](const I &, std::size_t) -> T  { return (1); })
+        : degree_(d), weights_(w_func)  {   }
 
 private:
 

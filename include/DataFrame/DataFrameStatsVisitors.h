@@ -2840,6 +2840,9 @@ private:
 
 public:
 
+    using weight_func =
+        std::function<value_type(const index_type &idx, size_type val_index)>;
+
     template<typename K, typename H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
@@ -2850,7 +2853,7 @@ public:
 
         assert((col_s == std::distance(y_begin, y_end)));
 
-        // degree needs to change
+        // degree needs to change to contain the slope (0-degree)
         size_type       deg = degree_;
         const size_type nrows = deg + 1;
 
@@ -2862,11 +2865,11 @@ public:
             // consecutive positions of the array will store
             // col_s, sigma(xi), sigma(xi^2), sigma(xi^3) ... sigma(xi^2n)
             for (size_type j = 0; j < col_s; ++j)
-                sigma_x[i] = sigma_x[i] + std::pow(*(x_begin + j), i);
+                sigma_x[i] += std::pow(*(x_begin + j), i);
         }
 
         // eq_mat is the Normal matrix (augmented) that will store the
-        // equations
+        // equations. The extra column is the y column.
         std::vector<value_type> eq_mat (nrows * (deg + 2), 0);
 
         for (size_type i = 0; i <= deg; ++i)  {
@@ -2885,8 +2888,7 @@ public:
             // consecutive positions will store
             // sigma(yi), sigma(xi * yi), sigma(xi^2 * yi) ... sigma(xi^n * yi)
             for (size_type j = 0; j < col_s; ++j)
-                sigma_y[i] =
-                    sigma_y[i] + std::pow(*(x_begin + j), i) * *(y_begin + j);
+                sigma_y[i] += std::pow(*(x_begin + j), i) * *(y_begin + j);
         }
 
         // load the values of sigma_y as the last column of eq_mat
@@ -2909,7 +2911,7 @@ public:
                                   eq_mat[index_(k, j, nrows)]);
         }
 
-        // loop to perform the gauss elimination
+        // loop to perform the Gauss elimination
         for (size_type i = 0; i < deg - 1; ++i)  {
             for (size_type k = i + 1; k < deg; ++k) {
                 const value_type    t =
@@ -2927,7 +2929,8 @@ public:
         coeffs_.resize(deg, 0);
 
         // back-substitution
-        // x is an array whose values correspond to the values of x, y, z ...
+        // coeffs_ is a vector whose values correspond to the values
+        // of x, y, z ...
         for (int i = int(deg) - 1; i >= 0; --i) {
             // make the variable to be calculated equal to the rhs of the last
             // equation
@@ -2944,21 +2947,40 @@ public:
             // variable to be calculated
             coeffs_[i] = coeffs_[i] / eq_mat[index_(i, i, nrows)];
         }
-        std::reverse(coeffs_.begin(), coeffs_.end());
+
+        for (size_type i = 0; i < col_s; ++i)  {
+            value_type  pred = 0;
+
+            for (size_type j = 0; j < deg; ++j)
+                pred += coeffs_[j] * std::pow(*(x_begin + i), j);
+
+            const value_type    w = weights_(*(idx_begin + i), i);
+
+            residual_ +=
+                ((*(y_begin + i) - pred) * w) * ((*(y_begin + i) - pred) * w);
+        }
     }
 
-    inline void pre ()  { coeffs_.clear(); }
+    inline void pre ()  { coeffs_.clear(); residual_ = 0; }
     inline void post ()  {  }
     inline const result_type &get_result () const  { return (coeffs_); }
     inline result_type &get_result ()  { return (coeffs_); }
     inline value_type get_slope () const  { return (coeffs_[0]); }
+    inline value_type get_residual () const  { return (residual_); }
 
-    explicit PolyFitVisitor(size_type d) : degree_(d)  {  }
+    explicit
+    PolyFitVisitor(size_type d, weight_func w_func =
+                       [](const index_type &, size_type) -> value_type  {
+                           return (value_type(1));
+                       }
+                   ) : degree_(d), weights_(w_func)  {   }
 
 private:
 
     result_type     coeffs_ {  };
+    value_type      residual_ { 0 };
     const size_type degree_;
+    weight_func     weights_;
 };
 
 } // namespace hmdf

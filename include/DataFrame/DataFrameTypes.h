@@ -85,14 +85,14 @@ inline constexpr const char *const  DF_INDEX_COL_NAME = "INDEX";
 
 enum class nan_policy : bool  {
     pad_with_nans = true,
-    dont_pad_with_nans = false
+    dont_pad_with_nans = false,
 };
 
 // ----------------------------------------------------------------------------
 
 enum class sort_state : bool  {
     sorted = true,
-    not_sorted = false
+    not_sorted = false,
 };
 
 // ----------------------------------------------------------------------------
@@ -108,7 +108,7 @@ enum class join_policy : unsigned char  {
     inner_join = 1,
     left_join = 2,
     right_join = 3,
-    left_right_join = 4  // This is merge
+    left_right_join = 4,  // This is merge
 };
 
 // ----------------------------------------------------------------------------
@@ -134,16 +134,24 @@ enum class shift_policy : unsigned char  {
 // ----------------------------------------------------------------------------
 
 enum class fill_policy : unsigned char  {
+
+    // Fill all missing values with the given substitute
     value = 1,
+
+    // Fill the missing values with the previous value
     fill_forward = 2,
+
+    // Fill the missing values with the next value
     fill_backward = 3,
 
     //           X - X1
-    // Y = Y1 + ------- * (Y2 - Y1)
-    //          X2 - X1
+    // Y = Y1 + --------- * (Y2 - Y1)
+    //           X2 - X1
     linear_interpolate = 4,  // Using the index as X coordinate
     linear_extrapolate = 5,  // Using the index as X coordinate
-    mid_point = 6,           // Mid-point of x and y
+
+	// Fill missing values with mid-point of surrounding values
+    mid_point = 6,
 };
 
 // ----------------------------------------------------------------------------
@@ -160,7 +168,7 @@ enum class quantile_policy : unsigned char  {
 enum class drop_policy : unsigned char  {
     all = 1,       // Remove row if all columns are nan
     any = 2,       // Remove row if any column is nan
-    threshold = 3  // Remove row if threshold number of columns are nan
+    threshold = 3, // Remove row if threshold number of columns are nan
 };
 
 // ----------------------------------------------------------------------------
@@ -175,7 +183,7 @@ enum class hampel_type : unsigned char  {
 enum class remove_dup_spec : unsigned char  {
     keep_first = 1,  // Keep the first duplicated row
     keep_last = 2,   // Keep the last duplicated row
-    keep_none = 3    // Discard all duplicated rows
+    keep_none = 3,   // Discard all duplicated rows
 };
 
 // ----------------------------------------------------------------------------
@@ -221,7 +229,7 @@ enum class time_frequency : unsigned char  {
     secondly = 7,
     millisecondly = 8,
     // microsecondly = 9,
-    // nanosecondly = 10
+    // nanosecondly = 10,
 };
 
 // ----------------------------------------------------------------------------

@@ -1362,18 +1362,28 @@ static void test_PolyFitVisitor()  {
                            nan_policy::dont_pad_with_nans);
 
     PolyFitVisitor<double>  poly_v1 (2);
+    PolyFitVisitor<double>  poly_v12 (
+        2,
+        [](const unsigned int &, std::size_t) -> double { return (2.0); });
     auto                    result1 =
         df.single_act_visit<double, double>("X1", "Y1", poly_v1).get_result();
-    auto                    actual1 = std::vector<double> { -1, 5.6, 0.8 };
+    auto                    result12 =
+        df.single_act_visit<double, double>("X1", "Y1", poly_v12).get_result();
+    auto                    actual1 = std::vector<double> { 0.8, 5.6, -1 };
 
+    assert(std::fabs(poly_v1.get_residual() - 5.6) < 0.00001);
     for (size_t idx = 0; idx < result1.size(); ++idx)
        assert(fabs(result1[idx] - actual1[idx]) < 0.00001);
+    assert(std::fabs(poly_v12.get_residual() - 22.4) < 0.00001);
+    for (size_t idx = 0; idx < result12.size(); ++idx)
+       assert(fabs(result12[idx] - actual1[idx]) < 0.00001);
+
 
     PolyFitVisitor<double>  poly_v2 (3);
     auto                    result2 =
         df.single_act_visit<double, double>("X2", "Y2", poly_v2).get_result();
     auto                    actual2 =
-        std::vector<double> { 0.087037, -0.813492, 1.69312, -0.0396825 };
+        std::vector<double> { -0.0396825, 1.69312, -0.813492, 0.087037 };
 
     for (size_t idx = 0; idx < result2.size(); ++idx)
        assert(fabs(result2[idx] - actual2[idx]) < 0.00001);

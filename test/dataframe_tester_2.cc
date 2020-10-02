@@ -1337,17 +1337,9 @@ static void test_PolyFitVisitor()  {
           123467, 123468, 123469, 123470, 123471, 123472, 123473,
           123467, 123468, 123469, 123470, 123471, 123472, 123473,
         };
-    std::vector<double>         d1 =
-        { 2.5, 2.45, -1.65, -0.1, -1.1, 1.87, 0.98,
-          0.34, 1.56, -12.34, 2.3, -0.34, -1.9, 0.387,
-          0.123, 1.06, -0.65, 2.03, 0.4, -1.0, 0.59,
-          0.125, 1.9, -0.68, 2.0045, 50.8, -1.0, 0.78,
-          0.48, 1.99, -0.97, 1.03, 8.678, -1.4, 1.59,
-        };
     MyDataFrame                 df;
 
-    df.load_data(std::move(idx),
-                 std::make_pair("dbl_col", d1));
+    df.load_index(std::move(idx));
     df.load_column<double>("X1",
                            { 1, 2, 3, 4, 5 },
                            nan_policy::dont_pad_with_nans);
@@ -1364,20 +1356,26 @@ static void test_PolyFitVisitor()  {
     PolyFitVisitor<double>  poly_v1 (2);
     PolyFitVisitor<double>  poly_v12 (
         2,
-        [](const unsigned int &, std::size_t) -> double { return (2.0); });
+        [](const unsigned int &, std::size_t idx) -> double {
+            const std::array<double, 5> weights = { 0.1, 0.8, 0.3, 0.5, 0.2 };
+
+            return (weights[idx]);
+        });
     auto                    result1 =
         df.single_act_visit<double, double>("X1", "Y1", poly_v1).get_result();
     auto                    result12 =
         df.single_act_visit<double, double>("X1", "Y1", poly_v12).get_result();
     auto                    actual1 = std::vector<double> { 0.8, 5.6, -1 };
+    auto                    actual12 =
+        std::vector<double> { -1.97994, 6.99713, -1.14327 };
 
     assert(std::fabs(poly_v1.get_residual() - 5.6) < 0.00001);
     for (size_t idx = 0; idx < result1.size(); ++idx)
        assert(fabs(result1[idx] - actual1[idx]) < 0.00001);
-    assert(std::fabs(poly_v12.get_residual() - 22.4) < 0.00001);
-    for (size_t idx = 0; idx < result12.size(); ++idx)
-       assert(fabs(result12[idx] - actual1[idx]) < 0.00001);
 
+    assert(std::fabs(poly_v12.get_residual() - 0.70981) < 0.00001);
+    for (size_t idx = 0; idx < result12.size(); ++idx)
+       assert(fabs(result12[idx] - actual12[idx]) < 0.00001);
 
     PolyFitVisitor<double>  poly_v2 (3);
     auto                    result2 =

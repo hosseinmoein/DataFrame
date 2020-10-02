@@ -2864,8 +2864,11 @@ public:
         for (size_type i = 0; i < sigma_x.size(); ++i) {
             // consecutive positions of the array will store
             // col_s, sigma(xi), sigma(xi^2), sigma(xi^3) ... sigma(xi^2n)
-            for (size_type j = 0; j < col_s; ++j)
-                sigma_x[i] += std::pow(*(x_begin + j), i);
+            for (size_type j = 0; j < col_s; ++j)  {
+                const value_type    w = weights_(*(idx_begin + j), j);
+
+                sigma_x[i] += std::pow(*(x_begin + j), i) * w;
+            }
         }
 
         // eq_mat is the Normal matrix (augmented) that will store the
@@ -2887,8 +2890,11 @@ public:
         for (size_type i = 0; i < sigma_y.size(); ++i) {
             // consecutive positions will store
             // sigma(yi), sigma(xi * yi), sigma(xi^2 * yi) ... sigma(xi^n * yi)
-            for (size_type j = 0; j < col_s; ++j)
-                sigma_y[i] += std::pow(*(x_begin + j), i) * *(y_begin + j);
+            for (size_type j = 0; j < col_s; ++j)  {
+                const value_type    w = weights_(*(idx_begin + j), j);
+
+                sigma_y[i] += std::pow(*(x_begin + j), i) * *(y_begin + j) * w;
+            }
         }
 
         // load the values of sigma_y as the last column of eq_mat

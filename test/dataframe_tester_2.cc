@@ -1433,6 +1433,53 @@ static void test_HurstExponentVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_LogFitVisitor()  {
+
+    std::cout << "\nTesting LogFitVisitor{  } ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466,
+          123467, 123468, 123469, 123470, 123471, 123472, 123473,
+          123467, 123468, 123469, 123470, 123471, 123472, 123473,
+          123467, 123468, 123469, 123470, 123471, 123472, 123473,
+        };
+    MyDataFrame                 df;
+
+    df.load_index(std::move(idx));
+    df.load_column<double>("X1",
+                           { 1, 2, 3, 4, 5 },
+                           nan_policy::dont_pad_with_nans);
+    df.load_column<double>("Y1",
+                           { 6, 7, 8, 9, 3 },
+                           nan_policy::dont_pad_with_nans);
+    df.load_column<double>("X2", { 1, 2, 4, 6, 8 },
+                           nan_policy::dont_pad_with_nans);
+    df.load_column<double>("Y2", { 1, 3, 4, 5, 6 },
+                           nan_policy::dont_pad_with_nans);
+
+    LogFitVisitor<double>   log_v1;
+    auto                    result1 =
+        df.single_act_visit<double, double>("X1", "Y1", log_v1).get_result();
+    auto                    actual1 =
+        std::vector<double> { 6.98618, -0.403317 };
+
+    assert(std::fabs(log_v1.get_residual() - 20.9372) < 0.0001);
+    for (size_t idx = 0; idx < result1.size(); ++idx)
+       assert(fabs(result1[idx] - actual1[idx]) < 0.00001);
+
+    LogFitVisitor<double>   log_v2;
+    auto                    result2 =
+        df.single_act_visit<double, double>("X2", "Y2", log_v2).get_result();
+    auto                    actual2 = std::vector<double> { 1.11199, 2.25859 };
+
+    assert(std::fabs(log_v2.get_residual() - 0.237476) < 0.00001);
+    for (size_t idx = 0; idx < result2.size(); ++idx)
+       assert(fabs(result2[idx] - actual2[idx]) < 0.00001);
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int argc, char *argv[]) {
 
     test_get_reindexed();
@@ -1458,6 +1505,7 @@ int main(int argc, char *argv[]) {
     test_HampelFilterVisitor();
     test_PolyFitVisitor();
     test_HurstExponentVisitor();
+    test_LogFitVisitor();
 
     return (0);
 }

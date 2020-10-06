@@ -2843,11 +2843,11 @@ public:
     using weight_func =
         std::function<value_type(const index_type &idx, size_type val_index)>;
 
-    template<typename K, typename H>
+    template<typename K, typename Hx, typename Hy>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
-                const H &x_begin, const H &x_end,
-                const H &y_begin, const H &y_end)  {
+                const Hx &x_begin, const Hx &x_end,
+                const Hy &y_begin, const Hy &y_end)  {
 
         const size_type col_s = std::distance(x_begin, x_end);
 
@@ -2962,8 +2962,8 @@ public:
 
             const value_type    w = weights_(*(idx_begin + i), i);
 
-            residual_ +=
-                ((*(y_begin + i) - pred) * w) * ((*(y_begin + i) - pred) * w);
+            residual_ += ((*(y_begin + i) - pred) * w) *
+                         ((*(y_begin + i) - pred) * w);
         }
     }
 
@@ -2985,6 +2985,74 @@ private:
     value_type      residual_ { 0 };
     const size_type degree_;
     weight_func     weights_;
+};
+
+// ----------------------------------------------------------------------------
+
+template<typename T,
+         typename I = unsigned long,
+         typename =
+             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+struct LogFitVisitor {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+private:
+
+    static inline size_type
+    index_(size_type row, size_type col, size_type num_rows)  {
+
+        return (col * num_rows + row);
+    }
+
+public:
+
+    using weight_func =
+        std::function<value_type(const index_type &idx, size_type val_index)>;
+
+    template<typename K, typename H>
+    inline void
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &x_begin, const H &x_end,
+                const H &y_begin, const H &y_end)  {
+
+        std::vector<value_type> logx (x_begin, x_end);
+
+        std::transform(logx.begin(), logx.end(), logx.begin(),
+                       (value_type(*)(value_type)) std::log);
+        poly_fit_(idx_begin, idx_end, logx.begin(), logx.end(), y_begin, y_end);
+
+        const size_type col_s = std::distance(x_begin, x_end);
+
+        for (size_type i = 0; i < col_s; ++i)  {
+            const value_type    pred =
+                poly_fit_.get_result()[0] +
+                poly_fit_.get_result()[1] * std::log(*(x_begin + i));
+            const value_type    w = weights_(*(idx_begin + i), i);
+
+            residual_ += ((*(y_begin + i) - pred) * w) *
+                         ((*(y_begin + i) - pred) * w);
+        }
+    }
+
+    inline void pre ()  { poly_fit_.pre(); residual_ = 0; }
+    inline void post ()  { poly_fit_.post(); }
+    inline const result_type &
+    get_result () const  { return (poly_fit_.get_result()); }
+    inline result_type &get_result ()  { return (poly_fit_.get_result()); }
+    inline value_type get_slope () const  { return (poly_fit_.get_slope()); }
+    inline value_type get_residual () const  { return (residual_); }
+
+    explicit
+    LogFitVisitor(weight_func w_func =
+                      [](const I &, std::size_t) -> T  { return (1); })
+        : poly_fit_(1, w_func), weights_(w_func)  {   }
+
+private:
+
+    PolyFitVisitor<T, I>    poly_fit_ {  };
+    weight_func             weights_;
+    value_type              residual_ { 0 };
 };
 
 } // namespace hmdf

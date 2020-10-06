@@ -39,8 +39,7 @@ struct CategoryVisitor;
         </B></PRE></font>
       </td>
       <td>
-        This is a “single action visitor”, meaning it is passed the whole data vector
-        in one call and you must use the single_action_visit() interface.<BR>
+        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
         This functor categorizes the given column values with unsigned long start with 0. The result is a vector of integers with the same length as the column. Each unique value in the column has a unique integer associated with it. This could be used to create statistical category columns.<BR>
         The constructor takes an unsigned value to represent NaN values. The default is unsigned long value of -1.<BR>
             <PRE>

@@ -78,7 +78,7 @@ struct BoxCoxVisitor;
         </B></PRE></font>
       </td>
       <td>
-        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_action_visit() interface.<BR>
+        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
         This visitor implements the Box-Cox transformation. This is a power transformation to a normal distribution. It is not guaranteed to always work.<BR>
         The most important factor in this transformation is the power lambda factor. Lambda is usually between -5 and 5.<BR>
         In case of <I>original</I> and <I>geometric_mean</I>, all series values must be positive. If there are negative values, you must set the <I>is_all_positive</I> flag to false. In this case the visitor will shift the series. The shift value is the absolute value of the min of the series + <I>0.0000001</I>.<BR>

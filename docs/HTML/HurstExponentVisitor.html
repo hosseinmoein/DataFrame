@@ -34,6 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>#include &lt;DataFrame/DataFrameFinancialVisitors.h&gt;
+
 template&lt;typename T,
          typename I = unsigned long,
          typename =
@@ -42,7 +43,7 @@ struct HurstExponentVisitor;
         </B></PRE></font>
       </td>
       <td>
-        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_action_visit() interface.<BR>
+        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
         This functor calculates the Hurst exponent for the given column.<BR>
         A hurst exponent, H, between 0 to 0.5 is said to correspond to a mean reverting process (anti-persistent), H=0.5 corresponds to Geometric Brownian Motion (Random Walk), while H >= 0.5 corresponds to a process which is trending (persistent).<BR><BR>
         <I>explicit HurstExponentVisitor(std::vector&lt;size_t&gt; &amp;&amp;ranges)</I><BR>

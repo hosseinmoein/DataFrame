@@ -6,6 +6,8 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
+option(ENABLE_TESTING "Enable testing" ON)
+
 # We use:
 # - InstallBasicPackageFiles
 #       (http://robotology.github.io/ycm/gh-pages/v0.8/
@@ -219,6 +221,8 @@ endif(MSVC)
 # Add the uninstall target
 include(AddUninstallTarget)
 
+if (ENABLE_TESTING)
+
 # Build the test binary
 add_executable(dataframe_tester  test/dataframe_tester.cc)
 add_executable(dataframe_tester_2  test/dataframe_tester_2.cc)
@@ -339,3 +343,5 @@ file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data_string_index.csv
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data_string_index.csv
           DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Release)
 message("-- Copying files for testing - done")
+
+endif(ENABLE_TESTING)

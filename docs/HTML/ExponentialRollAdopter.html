@@ -41,15 +41,15 @@ struct ExponentialRollAdopter;
       <td>
         This functor applies functor F to the data in an exponentially decaying rolling progression. The roll count is given to the constructor of ExponentialRollAdopter. The other parameters to the constructor determine how the decay is calculated. Please see the exponential_decay_spec type above.<BR>
         The result is a vector of values with same number of items as the given column. The first roll_count items, in the result, will be NAN.<BR>
-        The formula used is: <I>(decay * Xt) + ((1 − decay) * Yt-1)</I><BR>
+        The formula used is: <I>(decay * X<sub>t</sub>) + ((1 − decay) * Y<sub>t-1</sub>)</I><BR>
         Where:<BR>
-        <I>Xt</I> is current value<BR>
-        <I>Yt-1</I> is last calculated stats<BR>
+        <I>X<sub>t</sub></I> is current value<BR>
+        <I>Y<sub>t-1</sub></I> is last calculated stats<BR>
         <PRE>
-    inline ExponentialRollAdopter(F &&functor,
-                                  size_t roll_count,
-                                  exponential_decay_spec eds,
-                                  double value)
+inline ExponentialRollAdopter(F &&functor,
+                              size_t roll_count,
+                              exponential_decay_spec eds,
+                              double value);
         </PRE>
       </td>
       <td width="12%">

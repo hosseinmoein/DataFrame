@@ -78,7 +78,7 @@ struct LogFitVisitor;
       </td>
       <td>
         This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
-        This functor fits a <I>y = b0 + b1 * log(x)</I> through the given x-y coordinates by the way of calling PolyFit above on log(x).<BR>
+        This functor fits a <I>y = b<sub>0</sub> + b<sub>1</sub> * log(x)</I> through the given x-y coordinates by the way of calling PolyFit above on log(x).<BR>
         The result gives you the vector of two coefficients.<BR><BR>
 		There is also a method <I>get_slope()</I> which returns the first (0-degree) coefficient.<BR>
 		There is also a method <I>get_residual()</I> which returns the sum of weighted squared residuals.

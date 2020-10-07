@@ -45,11 +45,11 @@ struct ExpoSmootherVisitor;
       <td>
         This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
 		This functor is a transformer and changes the column data. It does exponential smoothing of the time-series by<BR>
-		<I>Y0 = X0</I><BR>
-		<I>Yt = aXt + (1 - a)Yt-1</I><BR>
-        <I>a</I> is the smoothing factor, and  0 < a < 1. A factor of 1 would not change the data.
+		<I>Y<sub>0</sub> = X<sub>0</sub></I><BR>
+		<I>Y<sub>t</sub> = aX<sub>t</sub> + (1 - a)Y<sub>t-1</sub></I><BR>
+        <I>a</I> is the smoothing factor, and  0 < a < 1. Factor of 1 will not change the data.
         <PRE>
-explicit ExpoSmootherVisitor(value_type data_smoothing_factor);
+explicit ExpoSmootherVisitor(std::size_t data_smoothing_factor);
         </PRE>
       </td>
       <td width="12%">
@@ -73,15 +73,19 @@ struct HWExpoSmootherVisitor;
         This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
 		This functor is a transformer and changes the column data. It does double exponential smoothing by Holt-Winters method. The advantage for this over the above visitor is that HW takes care of trends in the data<BR>
         <I>
-        Y0 = X0<BR>
-		B0 = X1 - X0<BR>
+        Y<sub>0</sub> = X<sub>0</sub><BR>
+		B<sub>0</sub> = X<sub>1</sub> - X<sub>0</sub><BR>
         </I>
         And for t > 0:<BR>
         <I>
-        Yt = aXt + (1 - a)(Yt-1 + Bt-1)<BR>
-        Bt = b(Yt - Yt-1) + (1 - b)Bt-1<BR>
+        Y<sub>t</sub> = aX<sub>t</sub> + (1 - a) (Y<sub>t-1</sub> + B<sub>t-1</sub>)<BR>
+        B<sub>t</sub> = b(Y<sub>t</sub> - Y<sub>t-1</sub>) + (1 - b)B<sub>t-1</sub><BR>
         </I>
         where a is the data smoothing factor, 0 < a < 1, and b is the trend smoothing factor, 0 < b < 1
+        <PRE>
+HWExpoSmootherVisitor(std::size_t data_smoothing_factor,
+                      std::size_t trend_smoothing_factor);
+        </PRE>
       </td>
       <td width="12%">
         <B>T</B>: Column data type.<BR>

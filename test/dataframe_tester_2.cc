@@ -1480,6 +1480,140 @@ static void test_LogFitVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_ExpoSmootherVisitor()  {
+
+    std::cout << "\nTesting ExpoSmootherVisitor{  } ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466,
+          123467, 123468, 123469, 123470, 123471, 123472, 123473,
+          123467, 123468, 123469, 123470, 123471, 123472, 123473,
+          123467, 123468, 123469, 123470, 123471, 123472, 123473,
+        };
+    std::vector<double>         d1 =
+        { 2.5, 2.45, -1.65, -0.1, -1.1, 1.87, 0.98,
+          0.34, 1.56, -12.34, 2.3, -0.34, -1.9, 0.387,
+          0.123, 1.06, -0.65, 2.03, 0.4, -1.0, 0.59,
+          0.125, 1.9, -0.68, 2.0045, 50.8, -1.0, 0.78,
+          0.48, 1.99, -0.97, 1.03, 8.678, -1.4, 1.59,
+        };
+    std::vector<double>         d1_copy = d1;
+    MyDataFrame                 df;
+
+    df.load_data(std::move(idx), std::make_pair("dbl_col", d1));
+
+    ExpoSmootherVisitor<double> es_v1(1);
+
+    df.single_act_visit<double>("dbl_col", es_v1);
+
+    const auto  &col1 = df.get_column<double>("dbl_col");
+
+    for (size_t idx = 0; idx < col1.size(); ++idx)
+       assert(fabs(col1[idx] - d1_copy[idx]) < 0.00001);
+
+    ExpoSmootherVisitor<double> es_v2(0.3);
+
+    df.single_act_visit<double>("dbl_col", es_v2);
+
+    auto    actual2 = std::vector<double> {
+        2.5, 2.485, 1.22, -1.185, -0.4, -0.209, 1.603,
+        0.788, 0.706, -2.61, -7.948, 1.508, -0.808, -1.2139,
+        0.3078, 0.4041, 0.547, 0.154, 1.541, -0.02, -0.523,
+        0.4505, 0.6575, 1.126, 0.12535, 16.6431, 35.26, -0.466,
+        0.69, 0.933, 1.102, -0.37, 3.3244, 5.6546, -0.503
+    };
+
+    for (size_t idx = 0; idx < col1.size(); ++idx)
+       assert(fabs(col1[idx] - actual2[idx]) < 0.0001);
+
+    df.get_column<double>("dbl_col") = d1_copy;
+
+    ExpoSmootherVisitor<double> es_v3(0.8);
+
+    df.single_act_visit<double>("dbl_col", es_v3);
+
+    auto    actual3 = std::vector<double> {
+        2.5, 2.46, -0.83, -0.41, -0.9, 1.276, 1.158,
+        0.468, 1.316, -9.56, -0.628, 0.188, -1.588, -0.0704,
+        0.1758, 0.8726, -0.308, 1.494, 0.726, -0.72, 0.272,
+        0.218, 1.545, -0.164, 1.4676, 41.0409, 9.36, 0.424,
+        0.54, 1.688, -0.378, 0.63, 7.1484, 0.6156, 0.992
+    };
+
+    for (size_t idx = 0; idx < col1.size(); ++idx)
+       assert(fabs(col1[idx] - actual3[idx]) < 0.0001);
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_HWExpoSmootherVisitor()  {
+
+    std::cout << "\nTesting HWExpoSmootherVisitor{  } ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466,
+          123467, 123468, 123469, 123470, 123471, 123472, 123473,
+          123467, 123468, 123469, 123470, 123471, 123472, 123473,
+          123467, 123468, 123469, 123470, 123471, 123472, 123473,
+        };
+    std::vector<double>         d1 =
+        { 2.5, 2.45, -1.65, -0.1, -1.1, 1.87, 0.98,
+          0.34, 1.56, -12.34, 2.3, -0.34, -1.9, 0.387,
+          0.123, 1.06, -0.65, 2.03, 0.4, -1.0, 0.59,
+          0.125, 1.9, -0.68, 2.0045, 50.8, -1.0, 0.78,
+          0.48, 1.99, -0.97, 1.03, 8.678, -1.4, 1.59,
+        };
+    std::vector<double>         d1_copy = d1;
+    MyDataFrame                 df;
+
+    df.load_data(std::move(idx), std::make_pair("dbl_col", d1));
+
+    HWExpoSmootherVisitor<double>   es_v1(1, 1);
+
+    df.single_act_visit<double>("dbl_col", es_v1);
+
+    const auto  &col1 = df.get_column<double>("dbl_col");
+
+    for (size_t idx = 0; idx < col1.size(); ++idx)
+       assert(fabs(col1[idx] - d1_copy[idx]) < 0.00001);
+
+    HWExpoSmootherVisitor<double>   es_v2(0.3, 0.4);
+
+    df.single_act_visit<double>("dbl_col", es_v2);
+
+    auto    actual2 = std::vector<double> {
+        2.5, 2.45, 1.185, -2.354, -0.6674, -0.64944, 2.17034,
+        0.879202, 0.581521, -2.34309, -11.6799, 3.36809, -0.431147, -1.42459,
+        0.821747, 0.638548, 0.950029, -0.0829826, 2.14921, -0.111474, -0.969884,
+        0.627569, 0.633542, 1.60863, -0.307475, 17.1351, 49.2179, -6.59525,
+        -2.48915, -1.05849, 0.329906, -1.66206, 3.10917, 7.6669, -2.11746,
+    };
+
+    for (size_t idx = 0; idx < col1.size(); ++idx)
+       assert(fabs(col1[idx] - actual2[idx]) < 0.0001);
+
+    df.get_column<double>("dbl_col") = d1_copy;
+
+    HWExpoSmootherVisitor<double>   es_v3(0.8, 0.8);
+
+    df.single_act_visit<double>("dbl_col", es_v3);
+
+    auto    actual3 = std::vector<double> {
+        2.5, 2.45, -0.84, -1.068, -0.7836, 1.13928, 1.60586,
+        0.415171, 1.20303, -9.38739, -2.81748, 2.0925, -1.6295, -0.3283,
+        0.49014, 0.893228, -0.153954, 1.25121, 1.10624, -0.904752, 0.0110497,
+        0.42021, 1.51104, 0.113208, 1.11024, 41.3989, 17.2389, -6.28822,
+        -0.517644, 1.42847, -0.188306, 0.194339, 7.38127, 1.88585, -0.366429
+    };
+
+    for (size_t idx = 0; idx < col1.size(); ++idx)
+       assert(fabs(col1[idx] - actual3[idx]) < 0.0001);
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int argc, char *argv[]) {
 
     test_get_reindexed();
@@ -1506,6 +1640,8 @@ int main(int argc, char *argv[]) {
     test_PolyFitVisitor();
     test_HurstExponentVisitor();
     test_LogFitVisitor();
+    test_ExpoSmootherVisitor();
+    test_HWExpoSmootherVisitor();
 
     return (0);
 }

@@ -32,13 +32,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/DataFrameStatsVisitors.h>
 #include <DataFrame/DataFrameTypes.h>
 
+#include <cassert>
+
 // ----------------------------------------------------------------------------
 
 namespace hmdf
 {
 
 template<typename T, typename I = unsigned long>
-struct ClipVisitor  {
+struct  ClipVisitor  {
 
     using value_type = T;
     using index_type = I;
@@ -83,7 +85,7 @@ private:
 // ----------------------------------------------------------------------------
 
 template<typename T, typename I = unsigned long>
-struct HampelFilterVisitor {
+struct  HampelFilterVisitor {
 
 public:
 
@@ -169,6 +171,95 @@ private:
     const hampel_type           type_;
     const value_type            num_of_std_;
     result_type                 count_ { 0 };
+};
+
+// ----------------------------------------------------------------------------
+
+// The exponential smoothing could be done multiple times, if there is a
+// trend in the data
+template<typename T, typename I = unsigned long>
+struct  ExpoSmootherVisitor {
+
+    using value_type = T;
+    using index_type = I;
+    using size_type = std::size_t;
+    using result_type = size_type;
+
+    template<typename K, typename H>
+    inline void
+    operator() (K i_begin, K i_end, H c_begin, H c_end)  {
+
+        count_ = std::distance(c_begin, c_end);
+
+        value_type  prev_v = *c_begin;
+
+        // Y0 = X0
+        // Yt = aXt + (1 - a)Yt-1
+        for (size_type i = 1; i < count_; ++i)  {
+            const value_type    curr_v = *(c_begin + i);
+
+            *(c_begin + i) = prev_v + alfa_ * (curr_v - prev_v);
+            prev_v = curr_v;
+        }
+    }
+
+    inline void pre ()  { count_ = 0; }
+    inline void post ()  {  }
+    inline result_type get_result () const  { return (count_); }
+
+    explicit ExpoSmootherVisitor(value_type data_smoothing_factor)
+        : alfa_(data_smoothing_factor)  {   }
+
+private:
+
+    const value_type    alfa_;
+    result_type         count_ { 0 };
+};
+
+// ----------------------------------------------------------------------------
+
+// Holt-Winters double exponential smoothing
+template<typename T, typename I = unsigned long>
+struct  HWExpoSmootherVisitor {
+
+    using value_type = T;
+    using index_type = I;
+    using size_type = std::size_t;
+    using result_type = size_type;
+
+    template<typename K, typename H>
+    inline void
+    operator() (K i_begin, K i_end, H c_begin, H c_end)  {
+
+        count_ = std::distance(c_begin, c_end);
+
+        assert(count_ > 2);
+
+        value_type  prev_v = *c_begin;
+        value_type  tf = *(c_begin + 1) - prev_v;
+
+        for (size_type i = 1; i < count_; ++i)  {
+            const value_type    curr_v = *(c_begin + i);
+
+            *(c_begin + i) = alfa_ * curr_v + (T(1) - alfa_) * (prev_v + tf);
+            tf = beta_ * (curr_v - prev_v) + (T(1) - beta_) * tf;
+            prev_v = curr_v;
+        }
+    }
+
+    inline void pre ()  { count_ = 0; }
+    inline void post ()  {  }
+    inline result_type get_result () const  { return (count_); }
+
+    HWExpoSmootherVisitor(value_type data_smoothing_factor,
+                          value_type trend_smoothing_factor)
+        : alfa_(data_smoothing_factor), beta_(trend_smoothing_factor)  {   }
+
+private:
+
+    const value_type    alfa_;
+    const value_type    beta_;
+    result_type         count_ { 0 };
 };
 
 } // namespace hmdf

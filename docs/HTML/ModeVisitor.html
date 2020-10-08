@@ -44,14 +44,14 @@ struct ModeVisitor;
         The result is an array of N items each of this type:<BR>
         <PRE>
     struct  DataItem  {
-        // Value of the column item
-        value_type               value;
-        // List of indices where value occurred
-        std::vector<index_type>  indices;
+        value_type                value;    // Value of the column item
+        std::vector&lt;I&gt;            indices;  // List of indices where value occurred
+
         // Number of times value occurred
-        inline size_type repeat_count() const  { return (indices.size()); }
+        inline std::size_t repeat_count() const  { return (indices.size()); }
+
         // List of column indices where value occurred
-        std::vector<size_type>   value_indices_in_col;
+        std::vector&lt;std::size_t&gt;  value_indices_in_col;
     };
         </PRE>
       </td>

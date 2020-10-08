@@ -35,27 +35,28 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <td bgcolor="maroon"> <font color="white">
 	<PRE><B>
 enum class fill_policy : unsigned char  {
+    // Fill all missing values with the given substitute
     value = 1,
+
+    // Fill the missing values with the previous value
     fill_forward = 2,
+
+    // Fill the missing values with the next value
     fill_backward = 3,
-    linear_interpolate = 4, // Using the index as X coordinate
-    linear_extrapolate = 5, // Using the index as X coordinate
-    mid_point = 6,          // Mid-point of x and y
+
+    //           X - X<sub>1</sub>
+    // Y = Y<sub>1</sub> + --------- * (Y<sub>2</sub> - Y<sub>1</sub>)
+    //           X<sub>2</sub> - X<sub>1</sub>
+    // Use the index column as X coordinate and the given column as Y coordinate
+    linear_interpolate = 4,
+    linear_extrapolate = 5,
+
+    // Fill missing values with mid-point of surrounding values
+    mid_point = 6,
 };</B></PRE></font>
       </td>
       <td>
         This policy determines how to fill missing values in the DataFrame<BR>
-        value: Fill all the missing values, in a given column, with the given value.<BR>
-        <B>fill_forward</B>: Fill the missing values, in a given column, with the last valid value before the missing value<BR>
-        <B>fill_backward</B>: Fill the missing values, in a given column, with the first valid value after the missing value<BR>
-        <B>linear_interpolate</B>:<BR>
-        <B>linear_extrapolate</B>:<BR>
-        Use the index column as X coordinate and the given column as Y coordinate And do interpolation/extrapolation as follows:<BR>
-        <PRE>
-               X - X1
-    Y = Y1 + ----------- * (Y2 - Y1)
-               X2 - X1
-        </PRE>
       </td>
     </tr>
 

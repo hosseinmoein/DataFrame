@@ -54,7 +54,7 @@ DataFrame also includes a large collection of analytical routines in form of vis
 7.  Do not attempt to protect the user against `garbage in, garbage out`<BR>
 
 <B>Views</B><BR>
--    You can slice the data frame and instead of getting another data frame you can opt to get a view. A view is a data frame that is a reference to a slice of the original data frame. So if you change the data in the view the corresponding data in the original data frame will also be changed (and vice versa).<BR>
+You can slice the data frame and instead of getting another data frame you can opt to get a view. A view is a data frame that is a reference to a slice of the original data frame. So if you change the data in the view the corresponding data in the original data frame will also be changed (and vice versa).<BR>
 
 <B>Multithreading</B><BR>
 1.  DataFrame uses static containers to achieve type heterogeneity. By default, these static containers are unprotected. This is done by design. So by default, there is no locking overhead. If you use DataFrame in a multithreaded program you must provide a _SpinLock_ defined in <a href="include/DataFrame/Utils/ThreadGranularity.h">ThreadGranularity.h</a> file. DataFrame will use your _SpinLock_ to protect the containers.<BR>Please see <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html">documentation</a>, <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/remove_lock.html">set_lock()</a>, <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/remove_lock.html">remove_lock()</a>, and <a href="test/dataframe_tester.cc#L3768">dataframe_tester.cc</a> for code example.<BR>
@@ -64,11 +64,11 @@ DataFrame also includes a large collection of analytical routines in form of vis
     2.  DataFrame uses multiple threads, internally and unbeknown to the user, in some of its algorithms when appropriate. User can control (or turn off) the multithreading by calling _set_thread_level()_ which sets the max number of threads to be used. The default is 0. The optimal number of threads is a function of users hardware/software environment and usually obtained by trail and error. _set_thread_level()_ and threading level in general is a static property and once set, it applies to all instances.<BR>
 
 <B><a href="docs/DateTimeDoc.pdf">DateTime</a></B><BR>
--    DateTime class included in this library is a very cool and handy object to manipulate date/time with nanosecond precision.<BR>
+DateTime class included in this library is a very cool and handy object to manipulate date/time with nanosecond precision.<BR>
 
 ---
 
-## [DataFrame Documentation / Code Samples](https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html)
+## [*DataFrame Documentation / Code Samples*](https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html)
 <!--
 ## [DataFrame Documentation](docs/DataFrameDoc.pdf)
 -->

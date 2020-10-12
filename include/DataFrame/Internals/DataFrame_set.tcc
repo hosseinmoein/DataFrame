@@ -1055,6 +1055,69 @@ remove_duplicates (const char *name1,
     return(remove_dups_common_<data_map, Ts ...>(*this, rds, row_table, index));
 }
 
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename OLD_T1, typename OLD_T2, typename NEW_T, typename F>
+void DataFrame<I, H>::
+consolidate(const char *old_col_name1,
+            const char *old_col_name2,
+            const char *new_col_name,
+            F &functor,
+            bool delete_old_cols)  {
+
+    static_assert(std::is_base_of<HeteroVector, H>::value,
+                  "Only a StdDataFrame can call consolidate()");
+
+    const ColumnVecType<OLD_T1> &vec1 = get_column<OLD_T1>(old_col_name1);
+    const ColumnVecType<OLD_T2> &vec2 = get_column<OLD_T2>(old_col_name2);
+
+    load_column<NEW_T>(new_col_name,
+                       std::move(functor(indices_.begin(), indices_.end(),
+                                         vec1.begin(), vec1.end(),
+                                         vec2.begin(), vec2.end())),
+                       nan_policy::dont_pad_with_nans);
+    if (delete_old_cols)  {
+        remove_column(old_col_name1);
+        remove_column(old_col_name2);
+    }
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename OLD_T1, typename OLD_T2, typename OLD_T3,
+         typename NEW_T, typename F>
+void DataFrame<I, H>::
+consolidate(const char *old_col_name1,
+            const char *old_col_name2,
+            const char *old_col_name3,
+            const char *new_col_name,
+            F &functor,
+            bool delete_old_cols)  {
+
+    static_assert(std::is_base_of<HeteroVector, H>::value,
+                  "Only a StdDataFrame can call consolidate()");
+
+    const ColumnVecType<OLD_T1> &vec1 = get_column<OLD_T1>(old_col_name1);
+    const ColumnVecType<OLD_T2> &vec2 = get_column<OLD_T2>(old_col_name2);
+    const ColumnVecType<OLD_T3> &vec3 = get_column<OLD_T3>(old_col_name3);
+
+    load_column<NEW_T>(new_col_name,
+                       std::move(functor(indices_.begin(), indices_.end(),
+                                         vec1.begin(), vec1.end(),
+                                         vec2.begin(), vec2.end(),
+                                         vec3.begin(), vec3.end())),
+                       nan_policy::dont_pad_with_nans);
+    if (delete_old_cols)  {
+        remove_column(old_col_name1);
+        remove_column(old_col_name2);
+        remove_column(old_col_name3);
+    }
+    return;
+}
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

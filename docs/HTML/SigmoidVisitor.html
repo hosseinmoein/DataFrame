@@ -35,13 +35,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>
 enum class sigmoid_type : unsigned char  {
-    logistic = 1,        // f(x) = 1 / (1 + exp(-x))
-    algebraic = 2,       // f(x) = 1 / sqrt(1 + pow(x, 2.0))
-    hyperbolic_tan = 3,  // f(x) = [(exp(x) - exp(-x)) / (exp(x) + exp(-x))] = tanh(x)
+    logistic = 1,        // f(x) = 1 / (1 + e<sup>-x</sup>)
+    algebraic = 2,       // f(x) = 1 / sqrt(1 + x<sup>2</sup>)
+    hyperbolic_tan = 3,  // f(x) = [(e<sup>x</sup> - e<sup>-x</sup>) / (e<sup>x</sup> + e<sup>-x</sup>)] = tanh(x)
     arc_tan = 4,         // f(x) = atan(x)
-    error_function = 5,  // f(x) = 2/sqrt(pi) * ∫exp(-pow(t, 2) dt
+    error_function = 5,  // f(x) = 2 / sqrt(pi) * ∫ e<sup>-t<sup>2</sup></sup> dt
     gudermannian = 6,    // f(x) = atan(sinh(x))
-    smoothstep = 7,      // f(x) = 0 if x <= 0, 1 if x >= 1 else 3pow(x, 2) - 2pow(x, 3)
+    smoothstep = 7,      // f(x) = 0 if x <= 0, 1 if x >= 1 else 3x<sup>2</sup> - 2x<sup>3</sup>
 };</B></PRE> </font>
       </td>
       <td>
@@ -71,7 +71,7 @@ struct SigmoidVisitor;
       </td>
       <td>
         This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
-        This functor class calculates Sigmoid function for each item in the given column. The Sigmoid fuction is based on the sigmoid_type above.<BR>
+        This functor class calculates Sigmoid function for each item in the given column. The Sigmoid fuction is based on the sigmoid_type above.<BR><BR>
         <I>explicit SigmoidVisitor(sigmoid_type st)</I>
       </td>
       <td width="12%">

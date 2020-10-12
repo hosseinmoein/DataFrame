@@ -2997,16 +2997,6 @@ struct LogFitVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-private:
-
-    static inline size_type
-    index_(size_type row, size_type col, size_type num_rows)  {
-
-        return (col * num_rows + row);
-    }
-
-public:
-
     using weight_func =
         std::function<value_type(const index_type &idx, size_type val_index)>;
 

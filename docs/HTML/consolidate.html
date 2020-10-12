@@ -1,0 +1,195 @@
+<!--
+Copyright (c) 2019-2022, Hossein Moein
+All rights reserved.
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+* Redistributions of source code must retain the above copyright
+  notice, this list of conditions and the following disclaimer.
+* Redistributions in binary form must reproduce the above copyright
+  notice, this list of conditions and the following disclaimer in the
+  documentation and/or other materials provided with the distribution.
+* Neither the name of Hossein Moein and/or the DataFrame nor the
+  names of its contributors may be used to endorse or promote products
+  derived from this software without specific prior written permission.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL Hossein Moein BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+<!DOCTYPE html>
+<html>
+<body>
+  <table align="center" border="1">
+
+    <tr bgcolor="lightblue">
+        <th>Signature</th> <th>Description</th> <th>Parameters</th>
+    </tr>
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        <PRE><B>
+template&lt;typename OLD_T1, typename OLD_T2,
+         typename NEW_T, typename F&gt;
+void
+consolidate(const char *old_col_name1,
+            const char *old_col_name2,
+            const char *new_col_name,
+            F &functor,
+            bool delete_old_cols = true);
+        </B></PRE></font>
+      </td>
+      <td>
+        This method feeds old_col_name1 and old_col_name2 of types OLD_T1 and OLD_T2 to functor which returns a std::vector<NEW_T> which will be loaded into self as column new_col_name. Both old columns will be removed, if delete_old_cols is true<BR>
+        Functor "functor" should implement the logic of consolidating two columns into one. Functor signature is:<BR>
+        <PRE>
+  template&lt;typename ITR1, typename ITR2&gt;
+  std::vector&lt;NEW_T&gt; (IndexVecType::const_iterator idx_begin,
+                      IndexVecType::const_iterator idx_end,
+                      ITR1 col1_begin, ITR1 col1_end,
+                      ITR2 col2_begin, ITR2 col2_end);
+  Where ITR[12] are iterators for columns 1 and 2.
+  They are iterators of std::vector.
+        </PRE>
+        <B>NOTE</B>: This method could not be called from views.
+      </td>
+      <td>
+        <B>OLD_T1</B>: Type of existing column named old_col_name1<BR>
+        <B>OLD_T2</B>: Type of existing column named old_col_name2<BR>
+        <B>NEW_T</B>: Type of the new column new_col_name which is the consolidation of the two existing columns<BR>
+        <B>F</B>: Type of the consildating functor<BR>
+        <B>old_col_name1</B>: Name of the first existing column<BR>
+        <B>old_col_name2</B>: Name of the second existing column<BR>
+        <B>new_col_name</B>: Name of the new consolidated column<BR>
+        <B>functor</B>: Consolidating functor<BR>
+        <B>delete_old_cols</B>: If true, old columns will be removed<BR>
+      </td>
+    </tr>
+
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        <PRE><B>
+template&lt;typename OLD_T1, typename OLD_T2,
+         typename OLD_T3,
+         typename NEW_T, typename F&gt;
+void
+consolidate(const char *old_col_name1,
+            const char *old_col_name2,
+            const char *old_col_name3,
+            const char *new_col_name,
+            F &functor,
+            bool delete_old_cols = true);
+        </B></PRE></font>
+      </td>
+      <td>
+        This is the same as above consolidate(), but it consolidates 3 columns into one.<BR>
+        Functor signature is:<BR>
+        <PRE>
+  template&lt;typename ITR1, typename ITR2, typename ITR3&gt;
+  std::vector&lt;NEW_T&gt; (IndexVecType::const_iterator idx_begin,
+                      IndexVecType::const_iterator idx_end,
+                      ITR1 col1_begin, ITR1 col1_end,
+                      ITR2 col2_begin, ITR2 col2_end,
+                      ITR3 col3_begin, ITR3 col3_end);
+  Where ITR[123] are iterators for columns 1, 2 and 3. They are
+  iterators of std::vector.
+        </PRE>
+        <B>NOTE</B>: This method could not be called from views.
+      </td>
+      <td>
+        <B>OLD_T1</B>: Type of existing column named old_col_name1<BR>
+        <B>OLD_T2</B>: Type of existing column named old_col_name2<BR>
+        <B>OLD_T3</B>: Type of existing column named old_col_name3<BR>
+        <B>NEW_T</B>: Type of the new column new_col_name which is the consolidation of the two existing columns<BR>
+        <B>F</B>: Type of the consildating functor<BR>
+        <B>old_col_name1</B>: Name of the first existing column<BR>
+        <B>old_col_name2</B>: Name of the second existing column<BR>
+        <B>old_col_name3</B>: Name of the third existing column<BR>
+        <B>new_col_name</B>: Name of the new consolidated column<BR>
+        <B>functor</B>: Consolidating functor<BR>
+        <B>delete_old_cols</B>: If true, old columns will be removed<BR>
+      </td>
+    </tr>
+
+  </table>
+
+<pre style='color:#000000;background:#ffffff;'><span style='color:#800000; font-weight:bold; '>static</span> std<span style='color:#800080; '>::</span>vector<span style='color:#808030; '>&lt;</span>std<span style='color:#800080; '>::</span>string<span style='color:#808030; '>></span>
+add_columns<span style='color:#808030; '>(</span>MyDataFrame<span style='color:#800080; '>::</span>IndexVecType<span style='color:#800080; '>::</span>const_iterator idx_begin<span style='color:#808030; '>,</span>
+            MyDataFrame<span style='color:#800080; '>::</span>IndexVecType<span style='color:#800080; '>::</span>const_iterator idx_end<span style='color:#808030; '>,</span>
+            std<span style='color:#800080; '>::</span>vector<span style='color:#808030; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#808030; '>></span><span style='color:#800080; '>::</span>const_iterator b_citer1<span style='color:#808030; '>,</span>
+            std<span style='color:#800080; '>::</span>vector<span style='color:#808030; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#808030; '>></span><span style='color:#800080; '>::</span>const_iterator e_citer1<span style='color:#808030; '>,</span>
+            std<span style='color:#800080; '>::</span>vector<span style='color:#808030; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#808030; '>></span><span style='color:#800080; '>::</span>const_iterator b_citer2<span style='color:#808030; '>,</span>
+            std<span style='color:#800080; '>::</span>vector<span style='color:#808030; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#808030; '>></span><span style='color:#800080; '>::</span>const_iterator e_citer2<span style='color:#808030; '>,</span>
+            std<span style='color:#800080; '>::</span>vector<span style='color:#808030; '>&lt;</span>std<span style='color:#800080; '>::</span>string<span style='color:#808030; '>></span><span style='color:#800080; '>::</span>const_iterator b_citer3<span style='color:#808030; '>,</span>
+            std<span style='color:#800080; '>::</span>vector<span style='color:#808030; '>&lt;</span>std<span style='color:#800080; '>::</span>string<span style='color:#808030; '>></span><span style='color:#800080; '>::</span>const_iterator e_citer3<span style='color:#808030; '>)</span>  <span style='color:#800080; '>{</span>
+
+    <span style='color:#800000; font-weight:bold; '>const</span> std<span style='color:#800080; '>::</span><span style='color:#603000; '>size_t</span>           col_s <span style='color:#808030; '>=</span>
+        std<span style='color:#800080; '>::</span><span style='color:#603000; '>min</span> <span style='color:#808030; '>(</span><span style='color:#ffffff; background:#dd0000; font-weight:bold; font-style:italic; '>{</span> std<span style='color:#800080; '>::</span>distance<span style='color:#808030; '>(</span>b_citer1<span style='color:#808030; '>,</span> e_citer1<span style='color:#808030; '>)</span><span style='color:#808030; '>,</span> std<span style='color:#800080; '>::</span>distance<span style='color:#808030; '>(</span>b_citer2<span style='color:#808030; '>,</span> e_citer2<span style='color:#808030; '>)</span><span style='color:#808030; '>,</span> std<span style='color:#800080; '>::</span>distance<span style='color:#808030; '>(</span>b_citer3<span style='color:#808030; '>,</span> e_citer3<span style='color:#808030; '>)</span> <span style='color:#ffffff; background:#dd0000; font-weight:bold; font-style:italic; '>}</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    std<span style='color:#800080; '>::</span>vector<span style='color:#808030; '>&lt;</span>std<span style='color:#800080; '>::</span>string<span style='color:#808030; '>></span>    result <span style='color:#808030; '>(</span>col_s<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+
+    <span style='color:#800000; font-weight:bold; '>for</span> <span style='color:#808030; '>(</span>std<span style='color:#800080; '>::</span><span style='color:#603000; '>size_t</span> i <span style='color:#808030; '>=</span> <span style='color:#008c00; '>0</span><span style='color:#800080; '>;</span> i <span style='color:#808030; '>&lt;</span> col_s<span style='color:#800080; '>;</span> <span style='color:#808030; '>+</span><span style='color:#808030; '>+</span>i<span style='color:#808030; '>)</span>
+        result<span style='color:#808030; '>[</span>i<span style='color:#808030; '>]</span> <span style='color:#808030; '>=</span> <span style='color:#808030; '>*</span><span style='color:#808030; '>(</span>b_citer3 <span style='color:#808030; '>+</span> i<span style='color:#808030; '>)</span> <span style='color:#808030; '>+</span> std<span style='color:#800080; '>::</span>to_string<span style='color:#808030; '>(</span><span style='color:#808030; '>*</span><span style='color:#808030; '>(</span>b_citer1 <span style='color:#808030; '>+</span> i<span style='color:#808030; '>)</span> <span style='color:#808030; '>+</span> <span style='color:#808030; '>*</span><span style='color:#808030; '>(</span>b_citer2 <span style='color:#808030; '>+</span> i<span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    <span style='color:#800000; font-weight:bold; '>return</span> <span style='color:#808030; '>(</span>result<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+<span style='color:#800080; '>}</span>
+
+<span style='color:#696969; '>// --------------------------------------</span>
+
+<span style='color:#800000; font-weight:bold; '>static</span> <span style='color:#800000; font-weight:bold; '>void</span> test_consolidate<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span>  <span style='color:#800080; '>{</span>
+
+    std<span style='color:#800080; '>::</span>cout <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#800000; '>"</span><span style='color:#0f69ff; '>\n</span><span style='color:#0000e6; '>Testing consolidate( ) ...</span><span style='color:#800000; '>"</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> std<span style='color:#800080; '>::</span>endl<span style='color:#800080; '>;</span>
+
+    MyDataFrame df<span style='color:#800080; '>;</span>
+
+    std<span style='color:#800080; '>::</span>vector<span style='color:#808030; '>&lt;</span><span style='color:#800000; font-weight:bold; '>unsigned</span> <span style='color:#800000; font-weight:bold; '>long</span><span style='color:#808030; '>></span>  idxvec <span style='color:#808030; '>=</span> <span style='color:#800080; '>{</span>
+        <span style='color:#008c00; '>1</span><span style='color:#006600; '>UL</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>2</span><span style='color:#006600; '>UL</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>3</span><span style='color:#006600; '>UL</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>10</span><span style='color:#006600; '>UL</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>5</span><span style='color:#006600; '>UL</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>7</span><span style='color:#006600; '>UL</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>8</span><span style='color:#006600; '>UL</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>12</span><span style='color:#006600; '>UL</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>9</span><span style='color:#006600; '>UL</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>12</span><span style='color:#006600; '>UL</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>10</span><span style='color:#006600; '>UL</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>13</span><span style='color:#006600; '>UL</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>10</span><span style='color:#006600; '>UL</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>15</span><span style='color:#006600; '>UL</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>14</span><span style='color:#006600; '>UL</span>
+    <span style='color:#800080; '>}</span><span style='color:#800080; '>;</span>
+    std<span style='color:#800080; '>::</span>vector<span style='color:#808030; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#808030; '>></span>         dblvec <span style='color:#808030; '>=</span> <span style='color:#800080; '>{</span>
+        <span style='color:#008000; '>0.0</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>15.0</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>14.0</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>2.0</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>1.0</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>12.0</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>11.0</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>8.0</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>7.0</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>6.0</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>5.0</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>4.0</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>3.0</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>9.0</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>10.0</span>
+    <span style='color:#800080; '>}</span><span style='color:#800080; '>;</span>
+    std<span style='color:#800080; '>::</span>vector<span style='color:#808030; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#808030; '>></span>         dblvec2 <span style='color:#808030; '>=</span> <span style='color:#800080; '>{</span>
+        <span style='color:#008000; '>100.0</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>101.0</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>102.0</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>103.0</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>104.0</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>105.0</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>106.55</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>107.34</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>1.8</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>111.0</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>112.0</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>113.0</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>114.0</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>115.0</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>116.0</span>
+    <span style='color:#800080; '>}</span><span style='color:#800080; '>;</span>
+    std<span style='color:#800080; '>::</span>vector<span style='color:#808030; '>&lt;</span><span style='color:#800000; font-weight:bold; '>int</span><span style='color:#808030; '>></span>            intvec <span style='color:#808030; '>=</span> <span style='color:#800080; '>{</span> <span style='color:#008c00; '>1</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>2</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>3</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>4</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>5</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>8</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>6</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>7</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>11</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>14</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>9</span> <span style='color:#800080; '>}</span><span style='color:#800080; '>;</span>
+    std<span style='color:#800080; '>::</span>vector<span style='color:#808030; '>&lt;</span>std<span style='color:#800080; '>::</span>string<span style='color:#808030; '>></span>    strvec <span style='color:#808030; '>=</span> <span style='color:#800080; '>{</span>
+        <span style='color:#800000; '>"</span><span style='color:#0000e6; '>zz</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>bb</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>cc</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>ww</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>ee</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>ff</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>gg</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>hh</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>ii</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>jj</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>kk</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>ll</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>mm</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>nn</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>oo</span><span style='color:#800000; '>"</span>
+    <span style='color:#800080; '>}</span><span style='color:#800080; '>;</span>
+
+    df<span style='color:#808030; '>.</span>load_data<span style='color:#808030; '>(</span>std<span style='color:#800080; '>::</span>move<span style='color:#808030; '>(</span>idxvec<span style='color:#808030; '>)</span><span style='color:#808030; '>,</span>
+                 std<span style='color:#800080; '>::</span>make_pair<span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>dbl_col</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> dblvec<span style='color:#808030; '>)</span><span style='color:#808030; '>,</span>
+                 std<span style='color:#800080; '>::</span>make_pair<span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>dbl_col_2</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> dblvec2<span style='color:#808030; '>)</span><span style='color:#808030; '>,</span>
+                 std<span style='color:#800080; '>::</span>make_pair<span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>str_col</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> strvec<span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    df<span style='color:#808030; '>.</span>load_column<span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>int_col</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> std<span style='color:#800080; '>::</span>move<span style='color:#808030; '>(</span>intvec<span style='color:#808030; '>)</span><span style='color:#808030; '>,</span> nan_policy<span style='color:#800080; '>::</span>dont_pad_with_nans<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+
+    df<span style='color:#808030; '>.</span>consolidate<span style='color:#808030; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#808030; '>,</span> <span style='color:#800000; font-weight:bold; '>double</span><span style='color:#808030; '>,</span> std<span style='color:#800080; '>::</span>string<span style='color:#808030; '>,</span> std<span style='color:#800080; '>::</span>string<span style='color:#808030; '>></span>
+        <span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>dbl_col</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>dbl_col_2</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>str_col</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>new_str_col</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> add_columns<span style='color:#808030; '>,</span> true<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    assert<span style='color:#808030; '>(</span><span style='color:#808030; '>!</span> df<span style='color:#808030; '>.</span>has_column<span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>dbl_col</span><span style='color:#800000; '>"</span><span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    assert<span style='color:#808030; '>(</span><span style='color:#808030; '>!</span> df<span style='color:#808030; '>.</span>has_column<span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>dbl_col_2</span><span style='color:#800000; '>"</span><span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    assert<span style='color:#808030; '>(</span><span style='color:#808030; '>!</span> df<span style='color:#808030; '>.</span>has_column<span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>str_col</span><span style='color:#800000; '>"</span><span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    assert<span style='color:#808030; '>(</span>df<span style='color:#808030; '>.</span>has_column<span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>new_str_col</span><span style='color:#800000; '>"</span><span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+
+    <span style='color:#800000; font-weight:bold; '>const</span> <span style='color:#800000; font-weight:bold; '>auto</span>                     <span style='color:#808030; '>&amp;</span>new_str_col <span style='color:#808030; '>=</span> df<span style='color:#808030; '>.</span>get_column<span style='color:#808030; '>&lt;</span>std<span style='color:#800080; '>::</span>string<span style='color:#808030; '>></span><span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>new_str_col</span><span style='color:#800000; '>"</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    <span style='color:#800000; font-weight:bold; '>const</span> std<span style='color:#800080; '>::</span>vector<span style='color:#808030; '>&lt;</span><span style='color:#800000; font-weight:bold; '>const</span> <span style='color:#800000; font-weight:bold; '>char</span> <span style='color:#808030; '>*</span><span style='color:#808030; '>></span> actual <span style='color:#808030; '>=</span> <span style='color:#800080; '>{</span>
+        <span style='color:#800000; '>"</span><span style='color:#0000e6; '>zz100.000000</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>bb116.000000</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>cc116.000000</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>ww105.000000</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>ee105.000000</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>ff117.000000</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>gg117.550000</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>hh115.340000</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span>
+        <span style='color:#800000; '>"</span><span style='color:#0000e6; '>ii8.800000</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>jj117.000000</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>kk117.000000</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>ll117.000000</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>mm117.000000</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>nn124.000000</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>oo126.000000</span><span style='color:#800000; '>"</span>
+    <span style='color:#800080; '>}</span><span style='color:#800080; '>;</span>
+
+    <span style='color:#800000; font-weight:bold; '>for</span> <span style='color:#808030; '>(</span><span style='color:#603000; '>size_t</span> idx <span style='color:#808030; '>=</span> <span style='color:#008c00; '>0</span><span style='color:#800080; '>;</span> idx <span style='color:#808030; '>&lt;</span> actual<span style='color:#808030; '>.</span>size<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span> <span style='color:#808030; '>+</span><span style='color:#808030; '>+</span>idx<span style='color:#808030; '>)</span>
+       assert<span style='color:#808030; '>(</span>new_str_col<span style='color:#808030; '>[</span>idx<span style='color:#808030; '>]</span> <span style='color:#808030; '>=</span><span style='color:#808030; '>=</span> actual<span style='color:#808030; '>[</span>idx<span style='color:#808030; '>]</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+<span style='color:#800080; '>}</span>
+</pre>
+<!--Created using ToHtml.com on 2020-10-12 12:20:39 UTC -->
+
+</body>
+</html>
+
+<!--
+Local Variables:
+mode:HTML
+tab-width:4
+c-basic-offset:4
+End:
+-->

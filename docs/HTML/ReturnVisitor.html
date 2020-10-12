@@ -35,17 +35,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>
 enum class return_policy : unsigned char  {
-    log = 1,
-    percentage = 2,
-    monetary = 3,
+    log = 1,         // log(X<sub>t</sub> / X<sub>t-1</sub>)
+    percentage = 2,  // (X<sub>t</sub> - X<sub>t-1</sub>) / X<sub>t-1</sub> 
+    monetary = 3,    // X<sub>t</sub> - X<sub>t-1</sub>
 };
         </B></PRE></font>
       </td>
       <td>
         This policy specifies the type of return to be calculated<BR>
-        <B>log</B>: log(present / past)<BR>
-        <B>percentage</B>: (present - past) / past)<BR>
-        <B>monetary</B>: present - past
       </td>
     </tr>
 

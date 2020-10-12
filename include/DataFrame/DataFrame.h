@@ -465,7 +465,7 @@ public:  // Load/append/remove interfaces
     // of the duplicated rows to keep.
     //
     // NOTE: The two given column types must be hash-able and must have
-    //       equality (==) operator well defined. 
+    //       equality (==) operator well defined.
     //
     // T1:
     //   Type of the first named column
@@ -1848,6 +1848,98 @@ public: // Read/access and slicing interfaces
             const DF2 &df2,
             const DF3 &df3,
             F &functor) const;
+
+    // This method feeds old_col_name1 and old_col_name2 of types OLD_T1 and
+    // OLD_T2 to functor which returns a std::vector<NEW_T> which will be
+    // loaded into self as column new_col_name. Both old columns will be
+    // removed, if delete_old_cols is true
+    // Functor "functor" should implement the logic of consolidating two
+    // columns into one. Functor signature is:
+    //     template<typename ITR1, typename ITR2>
+    //     std::vector<NEW_T> (IndexVecType::const_iterator idx_begin,
+    //                         IndexVecType::const_iterator idx_end,
+    //                         ITR1 col1_begin, ITR1 col1_end,
+    //                         ITR2 col2_begin, ITR2 col2_end);
+    //     Where ITR[12] are iterators for columns 1 and 2. They are iterators
+    //     of std::vector.
+    //
+    // NOTE: This method could not be called from views.
+    //
+    // OLD_T1:
+    //   Type of existing column named old_col_name1
+    // OLD_T2:
+    //   Type of existing column named old_col_name2
+    // NEW_T:
+    //   Type of the new column new_col_name which is the consolidation of the
+    //   two existing columns
+    // F:
+    //   Type of the consildating functor
+    // old_col_name1:
+    //   Name of the first existing column
+    // old_col_name2:
+    //   Name of the second existing column
+    // new_col_name:
+    //   Name of the new consolidated column
+    // functor:
+    //   Consolidating functor
+    // delete_old_cols:
+    //   If true, old columns will be removed
+    //
+    template<typename OLD_T1, typename OLD_T2, typename NEW_T, typename F>
+    void
+    consolidate(const char *old_col_name1,
+                const char *old_col_name2,
+                const char *new_col_name,
+                F &functor,
+                bool delete_old_cols = true);
+
+    // This is the same as above consolidate(), but it consolidates 3 columns
+    // into one.
+    // Functor signature is:
+    //     template<typename ITR1, typename ITR2, typename ITR3>
+    //     std::vector<NEW_T> (IndexVecType::const_iterator idx_begin,
+    //                         IndexVecType::const_iterator idx_end,
+    //                         ITR1 col1_begin, ITR1 col1_end,
+    //                         ITR2 col2_begin, ITR2 col2_end,
+    //                         ITR3 col3_begin, ITR3 col3_end);
+    //     Where ITR[123] are iterators for columns 1, 2 and 3. They are
+    //     iterators of std::vector.
+    //
+    // NOTE: This method could not be called from views.
+    //
+    // OLD_T1:
+    //   Type of existing column named old_col_name1
+    // OLD_T2:
+    //   Type of existing column named old_col_name2
+    // OLD_T3:
+    //   Type of existing column named old_col_name3
+    // NEW_T:
+    //   Type of the new column new_col_name which is the consolidation of the
+    //   two existing columns
+    // F:
+    //   Type of the consildating functor
+    // old_col_name1:
+    //   Name of the first existing column
+    // old_col_name2:
+    //   Name of the second existing column
+    // old_col_name3:
+    //   Name of the third existing column
+    // new_col_name:
+    //   Name of the new consolidated column
+    // functor:
+    //   Consolidating functor
+    // delete_old_cols:
+    //   If true, old columns will be removed
+    //
+    template<typename OLD_T1, typename OLD_T2, typename OLD_T3,
+             typename NEW_T, typename F>
+    void
+    consolidate(const char *old_col_name1,
+                const char *old_col_name2,
+                const char *old_col_name3,
+                const char *new_col_name,
+                F &functor,
+                bool delete_old_cols = true);
 
 public:  // Visitors
 

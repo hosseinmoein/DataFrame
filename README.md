@@ -49,7 +49,7 @@ DataFrame also includes a large collection of analytical routines in form of vis
 2.  Never chase pointers ala `linked lists`, `std::any`, `pointer to base`, ..., including `virtual function calls`<BR>
 3.  Have all column data in continuous memory space. Also, be mindful of cache-line aliasing misses between multiple columns<BR>
 4.  Never use more space than you need ala `unions`, `std::variant`, ...<BR>
-5.  Avoid copying data as much as possible. Unfortunately, sometimes you have to<BR>
+5.  Avoid copying data as much as possible<BR>
 6.  Use multi-threading but only when it makes sense<BR>
 7.  Do not attempt to protect the user against `garbage in, garbage out`<BR>
 

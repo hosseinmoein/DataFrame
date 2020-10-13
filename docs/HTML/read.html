@@ -43,8 +43,8 @@ read(const char *file_name, io_format iof = io_format::csv);
         The <B>CSV</B> file format must be:<BR>
         <PRE>
   INDEX:&lt;Number of data points&gt;:&lt;Comma delimited list of values&gt;
-  &lt;Column1 name&gt;:&lt;Number of data points&gt;:&lt;Column1 type&gt;:&lt;Comma delimited list of values&gt;
-  &lt;Column2 name&gt;:&lt;Number of data points&gt;:&lt;Column2 type&gt;:&lt;Comma delimited list of values&gt;
+  &lt;Column1 label&gt;:&lt;Number of data points&gt;:&lt;Column1 type&gt;:&lt;Comma delimited list of values&gt;
+  &lt;Column2 label&gt;:&lt;Number of data points&gt;:&lt;Column2 type&gt;:&lt;Comma delimited list of values&gt;
       .
       .
       .
@@ -53,7 +53,7 @@ read(const char *file_name, io_format iof = io_format::csv);
 
         The <B>CSV2</B> file format must be (this like regular Pandas-like format):<BR>
         <PRE>
-  INDEX:&lt;Number of data points&gt;:&lt;Index type&gt;:,&lt;Column1 name&gt;:&lt;Number of data points&gt;:&lt;Column1 type&gt;,&lt;Column2 name&gt;:&lt;Number of data points&gt;:&lt;Column2 type&gt;, . . .
+  INDEX:&lt;Number of data points&gt;:&lt;Index type&gt;:,&lt;Column1 label&gt;:&lt;Number of data points&gt;:&lt;Column1 type&gt;,&lt;Column2 label&gt;:&lt;Number of data points&gt;:&lt;Column2 type&gt;, . . .
   Comma delimited rows of values
       .
       .

@@ -36,17 +36,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         <PRE><B>
 template&lt;typename T, typename V&gt;
 V &amp;
-visit(const char *name, V &amp;visitor); </font>
+visit(const char *label, V &amp;visitor); </font>
         </B></PRE>
       </td>
       <td>
-        It passes the values of each index and the named column to the functor visitor sequentially from beginning to end<BR>
+        It passes the values of each index and the labeled column to the functor visitor sequentially from beginning to end<BR>
         <B>NOTE:</B> There is also a const version of this method.
       </td>
       <td width = "33.3%">
-        <B>T</B>: Type of the named column<BR>
+        <B>T</B>: Type of the labeled column<BR>
         <B>V</B>: Type of the visitor functor<BR>
-        <B>name</B>: Name of the data column
+        <B>label</B>: Name of the data column
       </td>
     </tr>
 
@@ -55,7 +55,7 @@ visit(const char *name, V &amp;visitor); </font>
         <PRE><B>
 template&lt;typename T, typename V&gt;
 std::future&lt;V &amp;&gt;
-visit_async(const char *name, V &amp;visitor); </font>
+visit_async(const char *label, V &amp;visitor); </font>
         </B></PRE>
       </td>
       <td>
@@ -73,19 +73,19 @@ visit_async(const char *name, V &amp;visitor); </font>
         <PRE><B>
 template&lt;typename T1, typename T2, typename V&gt;
 V &amp;
-visit(const char *name1, const char *name2, V &amp;visitor); </font>
+visit(const char *label1, const char *label2, V &amp;visitor); </font>
         </B></PRE>
       </td>
       <td>
-        It passes the values of each index and the two named columns to the functor visitor sequentially from beginning to end<BR>
+        It passes the values of each index and the two labeled columns to the functor visitor sequentially from beginning to end<BR>
         <B>NOTE:</B> There is also a const version of this method.
       </td>
       <td>
-        <B>T1</B>: Type of the first named column<BR>
-        <B>T2</B>: Type of the second named column<BR>
+        <B>T1</B>: Type of the first labeled column<BR>
+        <B>T2</B>: Type of the second labeled column<BR>
         <B>V</B>: Type of the visitor functor<BR>
-        <B>name1</B>: Name of the first data column<BR>
-        <B>name2</B>: Name of the second data column
+        <B>label1</B>: Name of the first data column<BR>
+        <B>label2</B>: Name of the second data column
       </td>
     </tr>
 
@@ -94,7 +94,7 @@ visit(const char *name1, const char *name2, V &amp;visitor); </font>
         <PRE><B>
 template&lt;typename T1, typename T2, typename V&gt;
 std::future&lt;V &amp;&gt;
-visit_async(const char *name1, const char *name2, V &amp;visitor); </font>
+visit_async(const char *label1, const char *label2, V &amp;visitor); </font>
         </B></PRE>
       </td>
       <td>
@@ -112,22 +112,22 @@ visit_async(const char *name1, const char *name2, V &amp;visitor); </font>
         <PRE><B>
 template&lt;typename T1, typename T2, typename T3, typename V&gt;
 V &amp;
-visit(const char *name1, const char *name2,
-      const char *name3, V &amp;visitor); </font>
+visit(const char *label1, const char *label2,
+      const char *label3, V &amp;visitor); </font>
         </B></PRE>
       </td>
       <td>
-        It passes the values of each index and the three named columns to the functor visitor sequentially from beginning to end<BR>
+        It passes the values of each index and the three labeled columns to the functor visitor sequentially from beginning to end<BR>
         <B>NOTE:</B> There is also a const version of this method.
       </td>
       <td>
-        <B>T1</B>: Type of the first named column<BR>
-        <B>T2</B>: Type of the second named column<BR>
-        <B>T3</B>: Type of the third named column<BR>
+        <B>T1</B>: Type of the first labeled column<BR>
+        <B>T2</B>: Type of the second labeled column<BR>
+        <B>T3</B>: Type of the third labeled column<BR>
         <B>V</B>: Type of the visitor functor<BR>
-        <B>name1</B>: Name of the first data column<BR>
-        <B>name2</B>: Name of the second data column<BR>
-        <B>name3</B>: Name of the third data column
+        <B>label1</B>: Name of the first data column<BR>
+        <B>label2</B>: Name of the second data column<BR>
+        <B>label3</B>: Name of the third data column
       </td>
     </tr>
 
@@ -136,8 +136,8 @@ visit(const char *name1, const char *name2,
         <PRE><B>
 template&lt;typename T1, typename T2, typename T3, typename V&gt;
 std::future&lt;V &amp;&gt;
-visit_async(const char *name1, const char *name2,
-            const char *name3, V &amp;visitor); </font>
+visit_async(const char *label1, const char *label2,
+            const char *label3, V &amp;visitor); </font>
         </B></PRE>
       </td>
       <td>
@@ -156,25 +156,25 @@ visit_async(const char *name1, const char *name2,
 template&lt;typename T1, typename T2, typename T3, typename T4,
          typename V&gt;
 V &amp;
-visit(const char *name1, const char *name2,
-      const char *name3, const char *name4,
+visit(const char *label1, const char *label2,
+      const char *label3, const char *label4,
       V &amp;visitor); </font>
         </B></PRE>
       </td>
       <td>
-        It passes the values of each index and the four named columns to the functor visitor sequentially from beginning to end<BR>
+        It passes the values of each index and the four labeled columns to the functor visitor sequentially from beginning to end<BR>
         <B>NOTE:</B> There is also a const version of this method.
       </td>
       <td>
-        <B>T1</B>: Type of the first named column<BR>
-        <B>T2</B>: Type of the second named column<BR>
-        <B>T3</B>: Type of the third named column<BR>
-        <B>T4</B>: Type of the fourth named column<BR>
+        <B>T1</B>: Type of the first labeled column<BR>
+        <B>T2</B>: Type of the second labeled column<BR>
+        <B>T3</B>: Type of the third labeled column<BR>
+        <B>T4</B>: Type of the fourth labeled column<BR>
         <B>V</B>: Type of the visitor functor<BR>
-        <B>name1</B>: Name of the first data column<BR>
-        <B>name2</B>: Name of the second data column<BR>
-        <B>name3</B>: Name of the third data column<BR>
-        <B>name4</B>: Name of the fourth data column
+        <B>label1</B>: Name of the first data column<BR>
+        <B>label2</B>: Name of the second data column<BR>
+        <B>label3</B>: Name of the third data column<BR>
+        <B>label4</B>: Name of the fourth data column
       </td>
     </tr>
 
@@ -184,8 +184,8 @@ visit(const char *name1, const char *name2,
 template&lt;typename T1, typename T2, typename T3, typename T4,
          typename V&gt;
 std::future&lt;V &amp;&gt;
-visit_async(const char *name1, const char *name2,
-            const char *name3, const char *name4,
+visit_async(const char *label1, const char *label2,
+            const char *label3, const char *label4,
             V &amp;visitor); </font>
         </B></PRE>
       </td>
@@ -205,27 +205,27 @@ visit_async(const char *name1, const char *name2,
 template&lt;typename T1, typename T2, typename T3, typename T4,
          typename T5, typename V&gt;
 V &amp;
-visit(const char *name1, const char *name2,
-      const char *name3, const char *name4,
-      const char *name5, V &amp;visitor); </font>
+visit(const char *label1, const char *label2,
+      const char *label3, const char *label4,
+      const char *label5, V &amp;visitor); </font>
         </B></PRE>
       </td>
       <td>
-        It passes the values of each index and the five named columns to the functor visitor sequentially from beginning to end<BR>
+        It passes the values of each index and the five labeled columns to the functor visitor sequentially from beginning to end<BR>
         <B>NOTE:</B> There is also a const version of this method.
       </td>
       <td>
-        <B>T1</B>: Type of the first named column<BR>
-        <B>T2</B>: Type of the second named column<BR>
-        <B>T3</B>: Type of the third named column<BR>
-        <B>T4</B>: Type of the fourth named column<BR>
-        <B>T5</B>: Type of the fifth named column<BR>
+        <B>T1</B>: Type of the first labeled column<BR>
+        <B>T2</B>: Type of the second labeled column<BR>
+        <B>T3</B>: Type of the third labeled column<BR>
+        <B>T4</B>: Type of the fourth labeled column<BR>
+        <B>T5</B>: Type of the fifth labeled column<BR>
         <B>V</B>: Type of the visitor functor<BR>
-        <B>name1</B>: Name of the first data column<BR>
-        <B>name2</B>: Name of the second data column<BR>
-        <B>name3</B>: Name of the third data column<BR>
-        <B>name4</B>: Name of the fourth data column<BR>
-        <B>name5</B>: Name of the fifth data column
+        <B>label1</B>: Name of the first data column<BR>
+        <B>label2</B>: Name of the second data column<BR>
+        <B>label3</B>: Name of the third data column<BR>
+        <B>label4</B>: Name of the fourth data column<BR>
+        <B>label5</B>: Name of the fifth data column
       </td>
     </tr>
 
@@ -235,9 +235,9 @@ visit(const char *name1, const char *name2,
 template&lt;typename T1, typename T2, typename T3, typename T4,
          typename T5, typename V&gt;
 std::future&lt;V &amp;&gt;
-visit_async(const char *name1, const char *name2,
-            const char *name3, const char *name4,
-            const char *name5, V &amp;visitor); </font>
+visit_async(const char *label1, const char *label2,
+            const char *label3, const char *label4,
+            const char *label5, V &amp;visitor); </font>
         </B></PRE>
       </td>
       <td>

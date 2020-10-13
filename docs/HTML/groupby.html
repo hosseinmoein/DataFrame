@@ -38,12 +38,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 template&lt;typename F, typename T, typename ... Ts&gt;
 DataFrame
 groupby (F &amp;&amp;func,
-         const char *gb_col_name,
+         const char *gb_col_label,
          sort_state already_sorted = sort_state::not_sorted) const; </font>
         </B></PRE>
       </td>
       <td>
-        Groupby copies the DataFrame into a temp DataFrame and sorts the temp df by gb_col_name before performing groupby. If gb_col_name is DF_INDEX_COL_NAME, it groups by index.<BR><BR>
+        Groupby copies the DataFrame into a temp DataFrame and sorts the temp df by gb_col_label before performing groupby. If gb_col_label is DF_INDEX_COL_NAME, it groups by index.<BR><BR>
         The first argument to groupby is an aggregator functor. All built-in groupby aggregators are in <I>GroupbyAggregators.h</I> file. Examples are <I>GroupbySum</I>, <I>GroupbyMax</I>, <I>GroupbyMean</I>, …
       </td>
       <td>
@@ -51,8 +51,8 @@ groupby (F &amp;&amp;func,
         <B>T</B>: Type of the groupby column 1. In case of index (DF_INDEX_COL_NAME), it is type of index (DataFrame::IndexType)<BR>
         <B>Ts</B>: List of the types of all data columns. A type should be specified in the list only once.<BR>
         <B>func</B>: The aggregator functor to do the groupby.<BR>
-        <B>gb_col_name</B>: Name of the column. If it is the index, it should be DF_INDEX_COL_NAME<BR>
-        <B>already_sorted</B>: If the DataFrame is already sorted by gb_col_name, this will save the expensive sort operation
+        <B>gb_col_label</B>: Name of the column. If it is the index, it should be DF_INDEX_COL_NAME<BR>
+        <B>already_sorted</B>: If the DataFrame is already sorted by gb_col_label, this will save the expensive sort operation
       </td>
     </tr>
 
@@ -62,8 +62,8 @@ groupby (F &amp;&amp;func,
 template&lt;typename F, typename T1, typename T2, typename ... Ts&gt;
 DataFrame
 groupby (F &amp;&amp;func,
-         const char *gb_col_name1,
-         const char *gb_col_name2,
+         const char *gb_col_label1,
+         const char *gb_col_label2,
          sort_state already_sorted = sort_state::not_sorted) const; </font>
         </B></PRE>
       </td>
@@ -76,9 +76,9 @@ groupby (F &amp;&amp;func,
         <B>T2</B>: Type of the groupby second column. In case of index (DF_INDEX_COL_NAME), it is type of index (DataFrame::IndexType)<BR>
         <B>Ts</B>: List of the types of all data columns. A type should be specified in the list only once.<BR>
         <B>func</B>: The aggregator functor to do the groupby.<BR>
-        <B>gb_col_name1</B>: Name of the first column. If it is the index, it should be DF_INDEX_COL_NAME<BR>
-        <B>gb_col_name2</B>: Name of the second column. If it is the index, it should be DF_INDEX_COL_NAME<BR>
-        <B>already_sorted</B>: If the DataFrame is already sorted by gb_col_name, this will save the expensive sort operation
+        <B>gb_col_label1</B>: Name of the first column. If it is the index, it should be DF_INDEX_COL_NAME<BR>
+        <B>gb_col_label2</B>: Name of the second column. If it is the index, it should be DF_INDEX_COL_NAME<BR>
+        <B>already_sorted</B>: If the DataFrame is already sorted by gb_col_label, this will save the expensive sort operation
       </td>
     </tr>
 
@@ -88,7 +88,7 @@ groupby (F &amp;&amp;func,
 template&lt;typename F, typename T, typename ... Ts&gt;
 std::future&lt;DataFrame&gt;
 groupby_async (F &amp;&amp;func,
-               const char *gb_col_name,
+               const char *gb_col_label,
                sort_state already_sorted = sort_state::not_sorted) const; </font>
         </B></PRE>
       </td>
@@ -105,8 +105,8 @@ groupby_async (F &amp;&amp;func,
 template&lt;typename F, typename T1, typename T2, typename ... Ts&gt;
 std::future&lt;DataFrame&gt;
 groupby_async (F &amp;&amp;func,
-               const char *gb_col_name1,
-               const char *gb_col_name2,
+               const char *gb_col_label1,
+               const char *gb_col_label2,
                sort_state already_sorted = sort_state::not_sorted) const; </font>
         </B></PRE>
       </td>

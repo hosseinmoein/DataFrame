@@ -36,19 +36,19 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 template&lt;typename T, typename ... Ts&gt;
 StdDataFrame&lt;T&gt;
 get_reindexed(const char *col_to_be_index,
-              const char *old_index_name = nullptr) const;
+              const char *old_index_label = nullptr) const;
         </B></PRE></font>
       </td>
       <td>
-        It creates and returns a new DataFrame which has the col_to_be_index column as the index. If old_index_name is not null, it will be loaded as a regular column in the result under the name old_index_name.<BR>
+        It creates and returns a new DataFrame which has the col_to_be_index column as the index. If old_index_label is not null, it will be loaded as a regular column in the result under the label old_index_label.<BR>
         <B>NOTE</B>: If the new index column is shorter than other columns, every column will be cut to that length.<BR>
         <B>NOTE</B>: Columns will not be padded by nan
       </td>
       <td>
         <B>T</B>: Type of the "new index" column<BR>
         <B>Ts</B>: List all the types of all data columns. A type should be specified in the list only once.<BR>
-        <B>col_to_be_index</B>: Name of the column you want as the new index. This name will not be a column in the result anymore<BR>
-        <B>old_index_name</B>: Name of the current index, if converted into a regular column in the result. If this is null, the current index will not be loaded into the result as a column.<BR>
+        <B>col_to_be_index</B>: Name of the column you want as the new index. This label will not be a column in the result anymore<BR>
+        <B>old_index_label</B>: Name of the current index, if converted into a regular column in the result. If this is null, the current index will not be loaded into the result as a column.<BR>
       </td>
     </tr>
 
@@ -58,7 +58,7 @@ get_reindexed(const char *col_to_be_index,
 template&lt;typename T, typename ... Ts&gt;
 StdDataFrame&lt;T&gt;
 get_reindexed_view(const char *col_to_be_index,
-                   const char *old_index_name = nullptr) const;
+                   const char *old_index_label = nullptr) const;
         </B></PRE></font>
       </td>
       <td>
@@ -69,8 +69,8 @@ get_reindexed_view(const char *col_to_be_index,
       <td>
         <B>T</B>: Type of the "new index" column<BR>
         <B>Ts</B>: List all the types of all data columns. A type should be specified in the list only once.<BR>
-        <B>col_to_be_index</B>: Name of the column you want as the new index. This name will not be a column in the result anymore<BR>
-        <B>old_index_name</B>: Name of the current index, if converted into a regular column in the result. If this is null, the current index will not be loaded into the result as a column.<BR>
+        <B>col_to_be_index</B>: Name of the column you want as the new index. This label will not be a column in the result anymore<BR>
+        <B>old_index_label</B>: Name of the current index, if converted into a regular column in the result. If this is null, the current index will not be loaded into the result as a column.<BR>
       </td>
     </tr>
 

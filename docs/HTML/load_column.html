@@ -36,19 +36,19 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         <PRE><B>
 template&lt;typename T, typename ITR&gt;
 size_type
-load_column(const char *name,
+load_column(const char *label,
             Index2D&lt;const ITR &amp;&gt; range,
             nan_policy padding = nan_policy::pad_with_nans);
         </B></PRE></font>
       </td>
       <td>
-        It copies the data from iterators begin to end to the named column. If column does not exist, it will be created. If the column exist, it will be over written.<BR>
+        It copies the data from iterators begin to end to the labeled column. If column does not exist, it will be created. If the column exist, it will be over written.<BR>
         Returns number of items loaded
       </td>
       <td>
         <B>T</B>: Type of data being copied<BR>
         <B>ITR</B>: Type of the iterator<BR>
-        <B>name</B>: Name of the column<BR>
+        <B>label</B>: Name of the column<BR>
         <B>range</B>: The begin and end iterators for data<BR>
         <B>padding</B>: If true, it pads the data column with nan if it is shorter than the index column.<BR>
       </td>
@@ -59,19 +59,19 @@ load_column(const char *name,
         <PRE><B>
 template&lt;typename&gt;
 size_type
-load_column(const char *name,
+load_column(const char *label,
             std::vector&lt;T&gt; &amp;&amp;data,
             nan_policy padding = nan_policy::pad_with_nans);
         </B></PRE></font>
       </td>
       <td>
-        It moves the data to the named column in DataFrame. If column does not exist, it will be created. If the column exist, it will be over written.<BR>
+        It moves the data to the labeled column in DataFrame. If column does not exist, it will be created. If the column exist, it will be over written.<BR>
         Returns number of items loaded
       </td>
       <td>
         <B>T</B>: Type of data being copied<BR>
         <B>ITR</B>: Type of the iterator<BR>
-        <B>name</B>: Name of the column<BR>
+        <B>label</B>: Name of the column<BR>
         <B>data</B>: Data vector<BR>
         <B>range</B>: The begin and end iterators for data<BR>
         <B>padding</B>: If true, it pads the data column with nan if it is shorter than the index column.<BR>
@@ -83,19 +83,19 @@ load_column(const char *name,
         <PRE><B>
 template&lt;typename&gt;
 size_type
-load_column(const char *name,
+load_column(const char *label,
             const std::vector&lt;T&gt; &amp;data,
             nan_policy padding = nan_policy::pad_with_nans);
         </B></PRE></font>
       </td>
       <td>
-        It copies the data to the named column in DataFrame. If column does not exist, it will be created. If the column exist, it will be over written.<BR>
+        It copies the data to the labeled column in DataFrame. If column does not exist, it will be created. If the column exist, it will be over written.<BR>
         Returns number of items loaded
       </td>
       <td>
         <B>T</B>: Type of data being copied<BR>
         <B>ITR</B>: Type of the iterator<BR>
-        <B>name</B>: Name of the column<BR>
+        <B>label</B>: Name of the column<BR>
         <B>data</B>: Data vector<BR>
         <B>range</B>: The begin and end iterators for data<BR>
         <B>padding</B>: If true, it pads the data column with nan if it is shorter than the index column.<BR>
@@ -108,7 +108,7 @@ load_column(const char *name,
 template&lt;typename&gt;
 size_type
 load_align_column(
-    const char *name,
+    const char *label,
     const std::vector&lt;T&gt; &amp;&amp;data,
     size_type interval,
     bool start_from_beginning,
@@ -128,7 +128,7 @@ load_align_column(
       </td>
       <td>
         <B>T</B>: Type of data being loaded<BR>
-        <B>name</B>: Name of the column<BR>
+        <B>label</B>: Name of the column<BR>
         <B>data</B>: Data vector<BR>
         <B>interval</B>: Bucket interval measured in index units distance<BR>
         <B>start_from_beginning</B>: If true, the first data value will be associated with the first index value. If false, the first data value will be associated with index value interval away from the first index value<BR>

@@ -36,21 +36,21 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         <PRE><B>
 template&lt;typename T, typename F, typename ... Ts&gt;
 void
-remove_data_by_sel(const char *name, F &amp;sel_functor) const;
+remove_data_by_sel(const char *label, F &amp;sel_functor) const;
         </B></PRE></font>
       </td>
       <td width = "33.3%">
-        It removes data rows by boolean filtering selection via the sel_functor (e.g. a functor, function, or lambda). Each element of the named column along with its corresponding index is passed to the sel_functor. If sel_functor returns true, that row will be removed.<BR>
+        It removes data rows by boolean filtering selection via the sel_functor (e.g. a functor, function, or lambda). Each element of the labeled column along with its corresponding index is passed to the sel_functor. If sel_functor returns true, that row will be removed.<BR>
         The signature of sel_fucntor:<BR>
         <PRE>
     bool ()(const IndexType &, const T &)
         </PRE>
         <B>NOTE</B>: If the selection logic results in empty column(s), the empty column(s) will _not_ be padded with NaN's. You can always call make_consistent() afterwards to make all columns into consistent length
       <td>
-        <B>T</B>: Type of the named column<BR>
+        <B>T</B>: Type of the labeled column<BR>
         <B>F</B>: Type of the selecting functor<BR>
         <B>Ts</B>: The list of types for all columns. A type should be specified only once<BR>
-        <B>name</B>: Name of the data column<BR>
+        <B>label</B>: Name of the data column<BR>
         <B>sel_functor</B>: A reference to the selecting functor<BR>
       </td>
     </tr>
@@ -60,7 +60,7 @@ remove_data_by_sel(const char *name, F &amp;sel_functor) const;
         <PRE><B>
 template&lt;typename T1, typename T2, typename F, typename ... Ts&gt;
 void
-remove_data_by_sel(const char *name1, const char *name2,
+remove_data_by_sel(const char *label1, const char *label2,
                    F &amp;sel_functor) const;
         </B></PRE></font>
       </td>
@@ -72,12 +72,12 @@ remove_data_by_sel(const char *name1, const char *name2,
         </PRE>
       </td>
       <td>
-        <B>T1</B>: Type of the first named column<BR>
-        <B>T2</B>: Type of the second named column<BR>
+        <B>T1</B>: Type of the first labeled column<BR>
+        <B>T2</B>: Type of the second labeled column<BR>
         <B>F</B>: Type of the selecting functor<BR>
         <B>Ts</B>: The list of types for all columns. A type should be specified only once<BR>
-        <B>name1</B>: Name of the first data column<BR>
-        <B>name2</B>: Name of the second data column<BR>
+        <B>label1</B>: Name of the first data column<BR>
+        <B>label2</B>: Name of the second data column<BR>
         <B>sel_functor</B>: A reference to the selecting functor<BR>
       </td>
     </tr>
@@ -88,8 +88,8 @@ remove_data_by_sel(const char *name1, const char *name2,
 template&lt;typename T1, typename T2, typename T3,
          typename F, typename ... Ts&gt;
 void
-remove_data_by_sel(const char *name1, const char *name2,
-                   const char *name3,
+remove_data_by_sel(const char *label1, const char *label2,
+                   const char *label3,
                    F &amp;sel_functor) const;
         </B></PRE></font>
       </td>
@@ -101,14 +101,14 @@ remove_data_by_sel(const char *name1, const char *name2,
         </PRE>
       </td>
       <td>
-        <B>T1</B>: Type of the first named column<BR>
-        <B>T2</B>: Type of the second named column<BR>
-        <B>T3</B>: Type of the third named column<BR>
+        <B>T1</B>: Type of the first labeled column<BR>
+        <B>T2</B>: Type of the second labeled column<BR>
+        <B>T3</B>: Type of the third labeled column<BR>
         <B>F</B>: Type of the selecting functor<BR>
         <B>Ts</B>: The list of types for all columns. A type should be specified only once<BR>
-        <B>name1</B>: Name of the first data column<BR>
-        <B>name2</B>: Name of the second data column<BR>
-        <B>name3</B>: Name of the third data column<BR>
+        <B>label1</B>: Name of the first data column<BR>
+        <B>label2</B>: Name of the second data column<BR>
+        <B>label3</B>: Name of the third data column<BR>
         <B>sel_functor</B>: A reference to the selecting functor<BR>
       </td>
     </tr>

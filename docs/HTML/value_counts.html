@@ -35,26 +35,26 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         <PRE><B>
 template&lt;typename T&gt;
 StdDataFrame&lt;T&gt;
-value_counts (const char *col_name) const; </font>
+value_counts (const char *col_label) const; </font>
         </B></PRE>
       </td>
       <td>
-        It counts the unique values in the named column.<BR>
+        It counts the unique values in the labeled column.<BR>
         It returns a StdDataFrame of following specs:<BR>
         <OL>
-          <LI>The index is of type T and contains all unique values in the named column.</LI>
-          <LI>There is only one column named "counts" of type size_type that contains the count for each index row.</LI>
+          <LI>The index is of type T and contains all unique values in the labeled column.</LI>
+          <LI>There is only one column labeled "counts" of type size_type that contains the count for each index row.</LI>
         </OL>
         For this method to compile and work, 3 conditions must be met:<BR>
         <OL>
           <LI>Type T must be hashable. If this is a user defined type, you must enable and specialize std::hash.</LI>
           <LI>The equality operator (==) must be well defined for type T.</LI>
-          <LI>Type T must match the actual type of the named column.</LI>
+          <LI>Type T must match the actual type of the labeled column.</LI>
         </OL>
         Of course, if you never call this method in your application, you need not be worried about these conditions.
       </td>
       <td>
-        <b>T</b>: Type of the named column<BR>
+        <b>T</b>: Type of the labeled column<BR>
       </td>
     </tr>
 

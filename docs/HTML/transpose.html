@@ -37,7 +37,7 @@ template&lt;typename T, typename V&gt;
 DataFrame
 transpose(IndexVecType &amp;&amp;indices,
           const V &amp;current_col_order,
-          const V &amp;new_col_names) const; </font>
+          const V &amp;new_col_labels) const; </font>
         </B></PRE>
       </td>
       <td>
@@ -47,10 +47,10 @@ transpose(IndexVecType &amp;&amp;indices,
       </td>
       <td width = "33.3%">
         <B>T</B>: The single type for all data columns<BR>
-        <B>V</B>: The type of string vector specifying the new names for new columns after transpose<BR>
+        <B>V</B>: The type of string vector specifying the new labels for new columns after transpose<BR>
         <B>indices</B>: A vector on indices for the new transposed DataFrame. Its length must equal the number of rows in this DataFrame. Otherwise an exception is thrown<BR>
         <B>current_col_order</B>: A vector of strings specifying the order of columns in the original DataFrame.<BR>
-        <B>new_col_names</B>: A vector of strings, specifying the column names for the new transposed DataFrame. Its length must equal the number of rows in this DataFrame. Otherwise an exception is thrown<BR>
+        <B>new_col_labels</B>: A vector of strings, specifying the column labels for the new transposed DataFrame. Its length must equal the number of rows in this DataFrame. Otherwise an exception is thrown<BR>
       </td>
     </tr>
 
@@ -74,12 +74,12 @@ transpose(IndexVecType &amp;&amp;indices,
                  std<span style='color:#800080; '>::</span>make_pair<span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>col_4</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> d4<span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
 
     std<span style='color:#800080; '>::</span>vector<span style='color:#808030; '>&lt;</span><span style='color:#800000; font-weight:bold; '>unsigned</span> <span style='color:#800000; font-weight:bold; '>long</span><span style='color:#808030; '>></span>  tidx <span style='color:#808030; '>=</span> <span style='color:#800080; '>{</span> <span style='color:#008c00; '>100</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>101</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>102</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>104</span> <span style='color:#800080; '>}</span><span style='color:#800080; '>;</span>
-    std<span style='color:#800080; '>::</span>vector<span style='color:#808030; '>&lt;</span><span style='color:#800000; font-weight:bold; '>const</span> <span style='color:#800000; font-weight:bold; '>char</span> <span style='color:#808030; '>*</span><span style='color:#808030; '>></span>   tcol_names <span style='color:#808030; '>=</span>
+    std<span style='color:#800080; '>::</span>vector<span style='color:#808030; '>&lt;</span><span style='color:#800000; font-weight:bold; '>const</span> <span style='color:#800000; font-weight:bold; '>char</span> <span style='color:#808030; '>*</span><span style='color:#808030; '>></span>   tcol_labels <span style='color:#808030; '>=</span>
         <span style='color:#800080; '>{</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>tcol_1</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>tcol_2</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>tcol_3</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>tcol_4</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>tcol_5</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>tcol_6</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>tcol_7</span><span style='color:#800000; '>"</span> <span style='color:#800080; '>}</span><span style='color:#800080; '>;</span>
     MyDataFrame                 tdf <span style='color:#808030; '>=</span>
         df<span style='color:#808030; '>.</span>transpose<span style='color:#808030; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#808030; '>></span><span style='color:#808030; '>(</span>std<span style='color:#800080; '>::</span>move<span style='color:#808030; '>(</span>tidx<span style='color:#808030; '>)</span><span style='color:#808030; '>,</span>
                              <span style='color:#ffffff; background:#dd0000; font-weight:bold; font-style:italic; '>{</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>col_1</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>col_2</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>col_3</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>col_4</span><span style='color:#800000; '>"</span> <span style='color:#ffffff; background:#dd0000; font-weight:bold; font-style:italic; '>}</span><span style='color:#808030; '>,</span>
-                             tcol_names<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+                             tcol_labels<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
 
     std<span style='color:#800080; '>::</span>cout <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>Original DataFrame:</span><span style='color:#800000; '>"</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> std<span style='color:#800080; '>::</span>endl<span style='color:#800080; '>;</span>
     df<span style='color:#808030; '>.</span>write<span style='color:#808030; '>&lt;</span>std<span style='color:#800080; '>::</span>ostream<span style='color:#808030; '>,</span> <span style='color:#800000; font-weight:bold; '>unsigned</span> <span style='color:#800000; font-weight:bold; '>long</span><span style='color:#808030; '>,</span> <span style='color:#800000; font-weight:bold; '>double</span><span style='color:#808030; '>></span><span style='color:#808030; '>(</span>std<span style='color:#800080; '>::</span>cout<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>

@@ -60,7 +60,7 @@ enum class remove_dup_spec : unsigned char  {
         <PRE><B>
 template&lt;typename T1, typename T2, typename ... Ts&gt;
 [[nodiscard]] DataFrame
-remove_duplicates(const char *name1, const char *name2,
+remove_duplicates(const char *label1, const char *label2,
                   bool include_index, remove_dup_spec rds) const;
         </B></PRE></font>
       </td>
@@ -69,11 +69,11 @@ remove_duplicates(const char *name1, const char *name2,
         <BR>
         <B>NOTE</B>: The two given column types must be hash-able and must have equality (==) operator well defined.
       <td>
-        <B>T1</B>: Type of the first named column<BR>
-        <B>T2</B>: Type of the second named column<BR>
+        <B>T1</B>: Type of the first labeled column<BR>
+        <B>T2</B>: Type of the second labeled column<BR>
         <B>Ts</B>: List all the types of all data columns. A type should be specified in the list only once.<BR>
-        <B>name1</B>: Name of the first data column<BR>
-        <B>name2</B>: Name of the second data column<BR>
+        <B>label1</B>: Name of the first data column<BR>
+        <B>label2</B>: Name of the second data column<BR>
         <B>include_index</B>: If true, it includes the index column to determine uniqueness<BR>
         <B>rds</B>: Determined which of the duplicated columns to keep<BR>
       </td>
@@ -84,20 +84,20 @@ remove_duplicates(const char *name1, const char *name2,
         <PRE><B>
 template&lt;typename T1, typename T2, typename T3, typename ... Ts&gt;
 [[nodiscard]] DataFrame
-remove_duplicates(const char *name1, const char *name2, const char *name3,
+remove_duplicates(const char *label1, const char *label2, const char *label3,
                   bool include_index, remove_dup_spec rds) const;
         </B></PRE></font>
       </td>
       <td width = "33.3%">
         Same as above, but there are 3 columns involved
       <td>
-        <B>T1</B>: Type of the first named column<BR>
-        <B>T2</B>: Type of the second named column<BR>
-        <B>T3</B>: Type of the third named column<BR>
+        <B>T1</B>: Type of the first labeled column<BR>
+        <B>T2</B>: Type of the second labeled column<BR>
+        <B>T3</B>: Type of the third labeled column<BR>
         <B>Ts</B>: List all the types of all data columns. A type should be specified in the list only once.<BR>
-        <B>name1</B>: Name of the first data column<BR>
-        <B>name2</B>: Name of the second data column<BR>
-        <B>name3</B>: Name of the third data column<BR>
+        <B>label1</B>: Name of the first data column<BR>
+        <B>label2</B>: Name of the second data column<BR>
+        <B>label3</B>: Name of the third data column<BR>
         <B>include_index</B>: If true, it includes the index column to determine uniqueness<BR>
         <B>rds</B>: Determined which of the duplicated columns to keep<BR>
       </td>
@@ -108,23 +108,23 @@ remove_duplicates(const char *name1, const char *name2, const char *name3,
         <PRE><B>
 template&lt;typename T1, typename T2, typename T3, typename T4, typename ... Ts&gt;
 [[nodiscard]] DataFrame
-remove_duplicates(const char *name1, const char *name2,
-                  const char *name3, const char *name4,
+remove_duplicates(const char *label1, const char *label2,
+                  const char *label3, const char *label4,
                   bool include_index, remove_dup_spec rds) const;
         </B></PRE></font>
       </td>
       <td width = "33.3%">
         Same as above, but there are 4 columns involved
       <td>
-        <B>T1</B>: Type of the first named column<BR>
-        <B>T2</B>: Type of the second named column<BR>
-        <B>T3</B>: Type of the third named column<BR>
-        <B>T4</B>: Type of the fourth named column<BR>
+        <B>T1</B>: Type of the first labeled column<BR>
+        <B>T2</B>: Type of the second labeled column<BR>
+        <B>T3</B>: Type of the third labeled column<BR>
+        <B>T4</B>: Type of the fourth labeled column<BR>
         <B>Ts</B>: List all the types of all data columns. A type should be specified in the list only once.<BR>
-        <B>name1</B>: Name of the first data column<BR>
-        <B>name2</B>: Name of the second data column<BR>
-        <B>name3</B>: Name of the third data column<BR>
-        <B>name4</B>: Name of the fourth data column<BR>
+        <B>label1</B>: Name of the first data column<BR>
+        <B>label2</B>: Name of the second data column<BR>
+        <B>label3</B>: Name of the third data column<BR>
+        <B>label4</B>: Name of the fourth data column<BR>
         <B>include_index</B>: If true, it includes the index column to determine uniqueness<BR>
         <B>rds</B>: Determined which of the duplicated columns to keep<BR>
       </td>
@@ -136,25 +136,25 @@ remove_duplicates(const char *name1, const char *name2,
 template&lt;typename T1, typename T2, typename T3, typename T4,
          typename T5, typename ... Ts&gt;
 [[nodiscard]] DataFrame
-remove_duplicates(const char *name1, const char *name2,
-                  const char *name3, const char *name4, const char *name5,
+remove_duplicates(const char *label1, const char *label2,
+                  const char *label3, const char *label4, const char *label5,
                   bool include_index, remove_dup_spec rds) const;
         </B></PRE></font>
       </td>
       <td width = "33.3%">
         Same as above, but there are 5 columns involved
       <td>
-        <B>T1</B>: Type of the first named column<BR>
-        <B>T2</B>: Type of the second named column<BR>
-        <B>T3</B>: Type of the third named column<BR>
-        <B>T4</B>: Type of the fourth named column<BR>
-        <B>T5</B>: Type of the fifth named column<BR>
+        <B>T1</B>: Type of the first labeled column<BR>
+        <B>T2</B>: Type of the second labeled column<BR>
+        <B>T3</B>: Type of the third labeled column<BR>
+        <B>T4</B>: Type of the fourth labeled column<BR>
+        <B>T5</B>: Type of the fifth labeled column<BR>
         <B>Ts</B>: List all the types of all data columns. A type should be specified in the list only once.<BR>
-        <B>name1</B>: Name of the first data column<BR>
-        <B>name2</B>: Name of the second data column<BR>
-        <B>name3</B>: Name of the third data column<BR>
-        <B>name4</B>: Name of the fourth data column<BR>
-        <B>name5</B>: Name of the fifth data column<BR>
+        <B>label1</B>: Name of the first data column<BR>
+        <B>label2</B>: Name of the second data column<BR>
+        <B>label3</B>: Name of the third data column<BR>
+        <B>label4</B>: Name of the fourth data column<BR>
+        <B>label5</B>: Name of the fifth data column<BR>
         <B>include_index</B>: If true, it includes the index column to determine uniqueness<BR>
         <B>rds</B>: Determined which of the duplicated columns to keep<BR>
       </td>
@@ -166,28 +166,28 @@ remove_duplicates(const char *name1, const char *name2,
 template&lt;typename T1, typename T2, typename T3, typename T4,
          typename T5, typename T6, typename ... Ts&gt;
 [[nodiscard]] DataFrame
-remove_duplicates(const char *name1, const char *name2,
-                  const char *name3, const char *name4,
-                  const char *name5, const char *name6,
+remove_duplicates(const char *label1, const char *label2,
+                  const char *label3, const char *label4,
+                  const char *label5, const char *label6,
                   bool include_index, remove_dup_spec rds) const;
         </B></PRE></font>
       </td>
       <td width = "33.3%">
         Same as above, but there are 6 columns involved
       <td>
-        <B>T1</B>: Type of the first named column<BR>
-        <B>T2</B>: Type of the second named column<BR>
-        <B>T3</B>: Type of the third named column<BR>
-        <B>T4</B>: Type of the fourth named column<BR>
-        <B>T5</B>: Type of the fifth named column<BR>
-        <B>T6</B>: Type of the sixth named column<BR>
+        <B>T1</B>: Type of the first labeled column<BR>
+        <B>T2</B>: Type of the second labeled column<BR>
+        <B>T3</B>: Type of the third labeled column<BR>
+        <B>T4</B>: Type of the fourth labeled column<BR>
+        <B>T5</B>: Type of the fifth labeled column<BR>
+        <B>T6</B>: Type of the sixth labeled column<BR>
         <B>Ts</B>: List all the types of all data columns. A type should be specified in the list only once.<BR>
-        <B>name1</B>: Name of the first data column<BR>
-        <B>name2</B>: Name of the second data column<BR>
-        <B>name3</B>: Name of the third data column<BR>
-        <B>name4</B>: Name of the fourth data column<BR>
-        <B>name5</B>: Name of the fifth data column<BR>
-        <B>name6</B>: Name of the sixth data column<BR>
+        <B>label1</B>: Name of the first data column<BR>
+        <B>label2</B>: Name of the second data column<BR>
+        <B>label3</B>: Name of the third data column<BR>
+        <B>label4</B>: Name of the fourth data column<BR>
+        <B>label5</B>: Name of the fifth data column<BR>
+        <B>label6</B>: Name of the sixth data column<BR>
         <B>include_index</B>: If true, it includes the index column to determine uniqueness<BR>
         <B>rds</B>: Determined which of the duplicated columns to keep<BR>
       </td>

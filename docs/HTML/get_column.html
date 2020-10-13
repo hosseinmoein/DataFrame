@@ -35,14 +35,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         <PRE><B>
 template&lt;typename T&gt;
 [[nodiscard]] ColumnVecType&lt;T&gt; &amp;
-get_column (const char *name);
+get_column (const char *label);
         </B></PRE></font>
       </td>
       <td>
-        It returns a reference to the container of named data column The return type depends on if we are in standard or view mode
+        It returns a reference to the container of labeled data column The return type depends on if we are in standard or view mode
       </td>
       <td>
-        <b>T</b>: Type of the named data column<BR>
+        <b>T</b>: Type of the labeled data column<BR>
       </td>
     </tr>
 
@@ -51,14 +51,14 @@ get_column (const char *name);
         <PRE><B>
 template&lt;typename T&gt;
 [[nodiscard]] const ColumnVecType&lt;T&gt; &amp;
-get_column (const char *name) const;
+get_column (const char *label) const;
         </B></PRE></font>
       </td>
       <td>
-        It returns a const reference to the container of named data column The return type depends on if we are in standard or view mode
+        It returns a const reference to the container of labeled data column The return type depends on if we are in standard or view mode
       </td>
       <td>
-        <B>T</B>: Type of the named data column<BR>
+        <B>T</B>: Type of the labeled data column<BR>
       </td>
     </tr>
 

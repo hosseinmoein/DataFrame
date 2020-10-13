@@ -36,16 +36,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 template&lt;size_t N, typename ... Ts&gt;
 void
 shuffle(const std::array&lt;const char *, N&gt;
-        col_names,
+        col_labels,
         bool also_shuffle_index); </font>
         </B></PRE>
       </td>
       <td>
-        It randomly shuffles the named column(s) non-deterministically.
+        It randomly shuffles the labeled column(s) non-deterministically.
       </td>
       <td width = "33.3%">
-        <B>also_shuffle_index</B>: If true, it shuffles the named column(s) and the index column. Otherwise, index is not shuffled.<BR>
-        <B>N</B>: Number of named columns<BR>
+        <B>also_shuffle_index</B>: If true, it shuffles the labeled column(s) and the index column. Otherwise, index is not shuffled.<BR>
+        <B>N</B>: Number of labeled columns<BR>
         <B>Ts</B>: The list of types for all columns. A type should be specified only once.
       </td>
     </tr>

@@ -36,17 +36,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         <PRE><B>
 template&lt;typename T, typename V&gt;
 V &amp;
-single_act_visit(const char *name, V &amp;visitor); </font>
+single_act_visit(const char *label, V &amp;visitor); </font>
         </B></PRE>
       </td>
       <td width = "40%">
-        This is similar to visit(), but it passes a const reference to the index vector and the named column vector at once the functor visitor. This is convenient for calculations that need the whole data vector, for example auto-correlation.<BR>
+        This is similar to visit(), but it passes a const reference to the index vector and the labeled column vector at once the functor visitor. This is convenient for calculations that need the whole data vector, for example auto-correlation.<BR>
         <B>NOTE:</B> There is also a const version of this method.
       </td>
       <td>
-        <B>T</B>: Type of the named column<BR>
+        <B>T</B>: Type of the labeled column<BR>
         <B>V</B>: Type of the visitor functor<BR>
-        <B>name</B>: Name of the data column
+        <B>label</B>: Name of the data column
       </td>
     </tr>
 
@@ -55,7 +55,7 @@ single_act_visit(const char *name, V &amp;visitor); </font>
         <PRE><B>
 template&lt;typename T, typename V&gt;
 std::future&lt;V &amp;&gt;
-single_act_visit_async(const char *name, V &amp;visitor); </font>
+single_act_visit_async(const char *label, V &amp;visitor); </font>
         </B></PRE>
       </td>
       <td width = "40%">
@@ -73,19 +73,19 @@ single_act_visit_async(const char *name, V &amp;visitor); </font>
         <PRE><B>
 template&lt;typename T1, typename T2, typename V&gt;
 V &amp;
-single_act_visit(const char *name1, const char *name2, V &amp;visitor); </font>
+single_act_visit(const char *label1, const char *label2, V &amp;visitor); </font>
         </B></PRE>
       </td>
       <td width = "40%">
-        This is similar to visit(), but it passes a const reference to the index vector and the two named column vectors at once the functor visitor. This is convenient for calculations that need the whole data vector.<BR>
+        This is similar to visit(), but it passes a const reference to the index vector and the two labeled column vectors at once the functor visitor. This is convenient for calculations that need the whole data vector.<BR>
         <B>NOTE:</B> There is also a const version of this method.
       </td>
       <td>
-        <B>T1</B>: Type of the first named column<BR>
-        <B>T2</B>: Type of the second named column<BR>
+        <B>T1</B>: Type of the first labeled column<BR>
+        <B>T2</B>: Type of the second labeled column<BR>
         <B>V</B>: Type of the visitor functor<BR>
-        <B>name1</B>: Name of the first data column<BR>
-        <B>name2</B>: Name of the second data column
+        <B>label1</B>: Name of the first data column<BR>
+        <B>label2</B>: Name of the second data column
       </td>
     </tr>
 
@@ -94,7 +94,7 @@ single_act_visit(const char *name1, const char *name2, V &amp;visitor); </font>
         <PRE><B>
 template&lt;typename T1, typename T2, typename V&gt;
 std::future&lt;V &amp;&gt;
-single_act_visit_async(const char *name1, const char *name2, V &amp;visitor); </font>
+single_act_visit_async(const char *label1, const char *label2, V &amp;visitor); </font>
         </B></PRE>
       </td>
       <td width = "40%">

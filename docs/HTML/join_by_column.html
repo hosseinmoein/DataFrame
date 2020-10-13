@@ -63,27 +63,27 @@ enum class join_policy : unsigned char  {
 template&lt;typename RHS_T, typename T, typename ... Ts&gt;
 StdDataFrame&lt;unsigned int&gt;
 join_by_column(const RHS_T &amp;rhs,
-               const char *name,
+               const char *label,
                join_policy jp) const;
         </B></PRE></font>
       </td>
       <td WIDTH="33.3%">
         It joins the data between self (lhs) and rhs and returns the joined data in a StdDataFrame, based on specification in join_policy.<BR>
-        The returned DataFrame is indexed by a sequence of unsigned integers from 0 to N. The returned DataFrame will at least have two columns names lhs.INDEX and rhs.INDEX containing the lhs and rhs indices based on join policy.<BR>
+        The returned DataFrame is indexed by a sequence of unsigned integers from 0 to N. The returned DataFrame will at least have two columns labels lhs.INDEX and rhs.INDEX containing the lhs and rhs indices based on join policy.<BR>
         The following conditions must be meet for this method<BR>
         to compile and work properly:<BR>
         <OL>
-          <LI>Ordering (< > != ==) must be well defined for the type of the named column.</LI>
-          <LI>Both lhs and rhs must contain the named column</LI>
-          <LI>In both lhs and rhs, columns with the same name must have the same type</LI>
+          <LI>Ordering (< > != ==) must be well defined for the type of the labeled column.</LI>
+          <LI>Both lhs and rhs must contain the labeled column</LI>
+          <LI>In both lhs and rhs, columns with the same label must have the same type</LI>
         </OL>
       </td>
       <td WIDTH="33.3%">
         <B>RHS_T</B>: Type of DataFrame rhs<BR>
-        <B>T</B>: Type of the named column<BR>
+        <B>T</B>: Type of the labeled column<BR>
         <B>Ts</B>: List all the types of all data columns. A type should be specified in the list only once.<BR>
         <B>rhs</B>: The rhs DataFrame<BR>
-        <B>name</B>: Name of the column which the join will be based on<BR>
+        <B>label</B>: Name of the column which the join will be based on<BR>
         <B>join_policy</B>: Specifies how to join. For example inner join, or left join, etc.  (See join_policy definition)
       </td>
     </tr>
@@ -104,7 +104,7 @@ join_by_index(const RHS_T &amp;rhs, join_policy jp) const;
         <OL>
           <LI>I type must be the same between lhs and rhs.</LI>
           <LI>Ordering (< > != ==) must be well defined for type I</LI>
-          <LI>In both lhs and rhs, columns with the same name must have the same Type</LI>
+          <LI>In both lhs and rhs, columns with the same label must have the same Type</LI>
         </OL>
       </td>
       <td WIDTH="33.3%">

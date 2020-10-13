@@ -39,9 +39,9 @@ multi_visit(Ts ... args);
         </B></PRE></font>
       </td>
       <td width = "33.3%">
-        This is the most generalized visit function. It visits multiple columns with the corresponding function objects sequentially. Each function object is passed every single value of the given column along with its name and the corresponding index value. All functions objects must have this signature<BR>
+        This is the most generalized visit function. It visits multiple columns with the corresponding function objects sequentially. Each function object is passed every single value of the given column along with its label and the corresponding index value. All functions objects must have this signature<BR>
         <PRE>
-    bool (const IndexType &i, const char *name, T &col_value)<BR>
+    bool (const IndexType &i, const char *label, T &col_value)<BR>
         </PRE>
         If the function object returns false, the DataFrame will stop iterating at that point on that column..<BR>
         <B>NOTE</B>: This method could be used to implement a pivot table.
@@ -50,10 +50,10 @@ multi_visit(Ts ... args);
         <B>Ts</B>: The list of types for columns in args<BR>
         <B>args</B>: A variable list of arguments consisting of<BR>
         <PRE>
-    std::pair(const char *name,
+    std::pair(const char *label,
               &std::function&lt;bool (const IndexType &, const char *, T &)&gt;)
         </PRE>
-        Each pair represents a column name and the functor to run on it.<BR>
+        Each pair represents a column label and the functor to run on it.<BR>
         <B>NOTE</b>: The second member of pair is a _pointer_ to the function or functor object
       </td>
     </tr>

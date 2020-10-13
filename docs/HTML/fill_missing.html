@@ -74,7 +74,7 @@ enum class fill_policy : unsigned char  {
         <PRE><B>
 template&lt;typename T, size_t N&gt;
 void
-fill_missing(const std::array<const char *, N> col_names,
+fill_missing(const std::array<const char *, N> col_labels,
              fill_policy policy,
              const std::array<T, N> values = { },
              int limit = -1);
@@ -86,11 +86,11 @@ fill_missing(const std::array<const char *, N> col_names,
         For types without NaN (e.g. string), default value is considered missing value
       </td>
       <td>
-        <B>T</B>: Type of the column(s) in col_names array<BR>
-        <B>N</B>: Size of col_names and values array
-        <B>col_names</B>: An array of names specifying the columns to fill.<BR>
+        <B>T</B>: Type of the column(s) in col_labels array<BR>
+        <B>N</B>: Size of col_labels and values array
+        <B>col_labels</B>: An array of labels specifying the columns to fill.<BR>
         <B>policy</B>: Specifies the method to use to fill the missing values. For example; forward fill, values, etc.<BR>
-        <B>values</B>: If the policy is "values", use these values to fill the missing holes. Each value corresponds to the same index in the col_names array.<BR>
+        <B>values</B>: If the policy is "values", use these values to fill the missing holes. Each value corresponds to the same index in the col_labels array.<BR>
         <B>limit</B>: Specifies how many values to fill. Default is -1 meaning fill all missing values.
       </td>
     </tr>

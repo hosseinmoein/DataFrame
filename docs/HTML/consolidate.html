@@ -36,15 +36,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 template&lt;typename OLD_T1, typename OLD_T2,
          typename NEW_T, typename F&gt;
 void
-consolidate(const char *old_col_name1,
-            const char *old_col_name2,
-            const char *new_col_name,
+consolidate(const char *old_col_label1,
+            const char *old_col_label2,
+            const char *new_col_label,
             F &functor,
             bool delete_old_cols = true);
         </B></PRE></font>
       </td>
       <td>
-        This method feeds old_col_name1 and old_col_name2 of types OLD_T1 and OLD_T2 to functor which returns a std::vector<NEW_T> which will be loaded into self as column new_col_name. Both old columns will be removed, if delete_old_cols is true<BR>
+        This method feeds old_col_label1 and old_col_label2 of types OLD_T1 and OLD_T2 to functor which returns a std::vector<NEW_T> which will be loaded into self as column new_col_label. Both old columns will be removed, if delete_old_cols is true<BR>
         Functor "functor" should implement the logic of consolidating two columns into one. Functor signature is:<BR>
         <PRE>
   template&lt;typename ITR1, typename ITR2&gt;
@@ -58,13 +58,13 @@ consolidate(const char *old_col_name1,
         <B>NOTE</B>: This method could not be called from views.
       </td>
       <td>
-        <B>OLD_T1</B>: Type of existing column named old_col_name1<BR>
-        <B>OLD_T2</B>: Type of existing column named old_col_name2<BR>
-        <B>NEW_T</B>: Type of the new column new_col_name which is the consolidation of the two existing columns<BR>
+        <B>OLD_T1</B>: Type of existing column labeled old_col_label1<BR>
+        <B>OLD_T2</B>: Type of existing column labeled old_col_label2<BR>
+        <B>NEW_T</B>: Type of the new column new_col_label which is the consolidation of the two existing columns<BR>
         <B>F</B>: Type of the consildating functor<BR>
-        <B>old_col_name1</B>: Name of the first existing column<BR>
-        <B>old_col_name2</B>: Name of the second existing column<BR>
-        <B>new_col_name</B>: Name of the new consolidated column<BR>
+        <B>old_col_label1</B>: Name of the first existing column<BR>
+        <B>old_col_label2</B>: Name of the second existing column<BR>
+        <B>new_col_label</B>: Name of the new consolidated column<BR>
         <B>functor</B>: Consolidating functor<BR>
         <B>delete_old_cols</B>: If true, old columns will be removed<BR>
       </td>
@@ -77,10 +77,10 @@ template&lt;typename OLD_T1, typename OLD_T2,
          typename OLD_T3,
          typename NEW_T, typename F&gt;
 void
-consolidate(const char *old_col_name1,
-            const char *old_col_name2,
-            const char *old_col_name3,
-            const char *new_col_name,
+consolidate(const char *old_col_label1,
+            const char *old_col_label2,
+            const char *old_col_label3,
+            const char *new_col_label,
             F &functor,
             bool delete_old_cols = true);
         </B></PRE></font>
@@ -101,15 +101,15 @@ consolidate(const char *old_col_name1,
         <B>NOTE</B>: This method could not be called from views.
       </td>
       <td>
-        <B>OLD_T1</B>: Type of existing column named old_col_name1<BR>
-        <B>OLD_T2</B>: Type of existing column named old_col_name2<BR>
-        <B>OLD_T3</B>: Type of existing column named old_col_name3<BR>
-        <B>NEW_T</B>: Type of the new column new_col_name which is the consolidation of the two existing columns<BR>
+        <B>OLD_T1</B>: Type of existing column labeled old_col_label1<BR>
+        <B>OLD_T2</B>: Type of existing column labeled old_col_label2<BR>
+        <B>OLD_T3</B>: Type of existing column labeled old_col_label3<BR>
+        <B>NEW_T</B>: Type of the new column new_col_label which is the consolidation of the two existing columns<BR>
         <B>F</B>: Type of the consildating functor<BR>
-        <B>old_col_name1</B>: Name of the first existing column<BR>
-        <B>old_col_name2</B>: Name of the second existing column<BR>
-        <B>old_col_name3</B>: Name of the third existing column<BR>
-        <B>new_col_name</B>: Name of the new consolidated column<BR>
+        <B>old_col_label1</B>: Name of the first existing column<BR>
+        <B>old_col_label2</B>: Name of the second existing column<BR>
+        <B>old_col_label3</B>: Name of the third existing column<BR>
+        <B>new_col_label</B>: Name of the new consolidated column<BR>
         <B>functor</B>: Consolidating functor<BR>
         <B>delete_old_cols</B>: If true, old columns will be removed<BR>
       </td>

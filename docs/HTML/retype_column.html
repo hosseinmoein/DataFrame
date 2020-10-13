@@ -36,7 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         <PRE><B>
 template&lt;typename FROM_T, typename TO_T&gt;
 void
-retype_column(const char *name,
+retype_column(const char *label,
               std::function&lt;TO_T (const FROM_T &amp;)&gt; convert_func =
                   [](const FROM_T &amp;val) -> TO_T  {
                       return ((TO_T) (*(&amp;val)));
@@ -44,14 +44,14 @@ retype_column(const char *name,
         </B></PRE></font>
       </td>
       <td>
-        It changes the type of the named column. The change happens by calling convert_func on each element of named column.<BR>
+        It changes the type of the labeled column. The change happens by calling convert_func on each element of labeled column.<BR>
         <B>NOTE</B>: This will copy data.
       </td>
       <td width = "33.3%">
-        <B>FROM_T</B>: Current type of the named column<BR>
-        <B>TO_T</B>: New type to be of the named column<BR>
-        <B>name</B>: Column name<BR>
-        <B>convert_func</B>: A function to change each element of named column from <I>FROM_T</I> to <I>TO_T</I> type. The default is C-style cast
+        <B>FROM_T</B>: Current type of the labeled column<BR>
+        <B>TO_T</B>: New type to be of the labeled column<BR>
+        <B>label</B>: Column label<BR>
+        <B>convert_func</B>: A function to change each element of labeled column from <I>FROM_T</I> to <I>TO_T</I> type. The default is C-style cast
       </td>
     </tr>
 

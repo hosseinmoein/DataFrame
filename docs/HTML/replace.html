@@ -36,22 +36,22 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         <PRE><B>
 template&lt;typename T, size_t N&gt;
 size_type
-replace(const char *col_name,
+replace(const char *col_label,
         const std::array&lt;T, N&gt; old_values,
         const std::array&lt;T, N&gt; new_values,
         int limit = -1);
         </B></PRE></font>
       </td>
       <td width = "33.3%">
-        It iterates over the column named col_name (or index, if col_name == "INDEX") and replaces all values in old_values with the corresponding values in new_values up to the limit. If limit is omitted, all values will be replaced.<BR>
+        It iterates over the column labeled col_label (or index, if col_label == "INDEX") and replaces all values in old_values with the corresponding values in new_values up to the limit. If limit is omitted, all values will be replaced.<BR>
         It returns number of items replaced.
       </td>
       <td>
-        <B>T</B>: Type on column col_name. If this is index it would be the same as I.<BR>
+        <B>T</B>: Type on column col_label. If this is index it would be the same as I.<BR>
         <B>N</B>: Size of old_values and new_values arrays<BR>
-        <B>col_name</B>: Name of the column<BR>
-        <B>old_array</B>: An array of values to be replaced in col_name column<BR>
-        <B>new_array</B>: An array of values to replace the old_values in col_name column<BR>
+        <B>col_label</B>: Name of the column<BR>
+        <B>old_array</B>: An array of values to be replaced in col_label column<BR>
+        <B>new_array</B>: An array of values to replace the old_values in col_label column<BR>
         <B>limit</B>: Limit of how many items to replace. Default is to replace all.
       </td>
     </tr>
@@ -62,7 +62,7 @@ replace(const char *col_name,
         <PRE><B>
  emplate&lt;typename T, size_t N&gt;
 std::future&lt;size_type&gt;
-replace_async(const char *col_name,
+replace_async(const char *col_label,
               const std::array&lt;T, N&gt; old_values,
               const std::array&lt;T, N&gt; new_values,
               int limit = -1);
@@ -82,22 +82,22 @@ replace_async(const char *col_name,
         <PRE><B>
 template&lt;typename T, typename F&gt;
 void
-replace(const char *col_name, F &amp;functor);
+replace(const char *col_label, F &amp;functor);
         </B></PRE></font>
       </td>
       <td>
-        This is similar to replace() above but it lets a functor replace the values in the named column. The functor is passed every value of the column along with a const reference of the corresponding index value.<BR>
+        This is similar to replace() above but it lets a functor replace the values in the labeled column. The functor is passed every value of the column along with a const reference of the corresponding index value.<BR>
         Unlike the replace version above, this replace can only work on data columns. It will not work on index column.<BR>
         The functor must have the following interface at minimum:<BR>
         <PRE>
     bool operator() (const IndexType &ts, T &value);
         </PRE>
-        A false return from the above operator method stops the iteration through named column values.
+        A false return from the above operator method stops the iteration through labeled column values.
       </td>
       <td>
-        <B>T</B>: Type on column col_name. If this is index it would be the same as I.<BR>
+        <B>T</B>: Type on column col_label. If this is index it would be the same as I.<BR>
         <B>F</B>: The functor type<BR>
-        <B>col_name</B>: Name of the column<BR>
+        <B>col_label</B>: Name of the column<BR>
         <B>functor</B>: An instance of the functor
       <td>
       </td>
@@ -109,7 +109,7 @@ replace(const char *col_name, F &amp;functor);
         <PRE><B>
 template&lt;typename T, typename F&gt;
 std::future&lt;void&gt;
-replace_async(const char *col_name, F &amp;functor);
+replace_async(const char *col_label, F &amp;functor);
         </B></PRE></font>
       </td>
       <td>
@@ -136,8 +136,8 @@ replace_index(const std::array&lt;IndexType, N&gt; old_values,
       </td>
       <td>
         <B>N</B>: Size of old_values and new_values arrays<BR>
-        <B>old_array</B>: An array of values to be replaced in col_name column<BR>
-        <B>new_array</B>: An array of values to replace the old_values in col_name column<BR>
+        <B>old_array</B>: An array of values to be replaced in col_label column<BR>
+        <B>new_array</B>: An array of values to replace the old_values in col_label column<BR>
         <B>limit</B>: Limit of how many items to replace. Default is to replace all.
       </td>
     </tr>

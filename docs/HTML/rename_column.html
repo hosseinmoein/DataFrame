@@ -39,11 +39,11 @@ rename_column (const char *from, const char *to);
         </B></PRE></font>
       </td>
       <td>
-        It renames column named from to to. If column from does not exists, it throws an exception<BR>
+        It relabels column labeled from to to. If column from does not exists, it throws an exception<BR>
       </td>
       <td>
-        <B>from</B>: Current column name.<BR>
-        <B>to</B>: New column name<BR>
+        <B>from</B>: Current column label.<BR>
+        <B>to</B>: New column label<BR>
       <td>
 
   </table> 
@@ -68,7 +68,7 @@ rename_column (const char *from, const char *to);
 
     <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>cout</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>Before rename</span><span style='color:#800000; '>"</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>endl</span><span style='color:#800080; '>;</span>
     df<span style='color:#808030; '>.</span>write<span style='color:#800080; '>&lt;</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>ostream</span><span style='color:#808030; '>,</span> <span style='color:#800000; font-weight:bold; '>double</span><span style='color:#808030; '>,</span> <span style='color:#800000; font-weight:bold; '>int</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>cout</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
-    df<span style='color:#808030; '>.</span>rename_column<span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>col_2</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>renamed_column</span><span style='color:#800000; '>"</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    df<span style='color:#808030; '>.</span>rename_column<span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>col_2</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>relabeled_column</span><span style='color:#800000; '>"</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
     <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>cout</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>After rename</span><span style='color:#800000; '>"</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>endl</span><span style='color:#800080; '>;</span>
     df<span style='color:#808030; '>.</span>write<span style='color:#800080; '>&lt;</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>ostream</span><span style='color:#808030; '>,</span> <span style='color:#800000; font-weight:bold; '>double</span><span style='color:#808030; '>,</span> <span style='color:#800000; font-weight:bold; '>int</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>cout</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
 <span style='color:#800080; '>}</span>

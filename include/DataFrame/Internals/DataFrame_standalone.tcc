@@ -541,11 +541,11 @@ _generate_ts_index_<DateTime>(std::vector<DateTime> &index_vec,
 template<typename S, typename T>
 inline static S &
 _write_csv2_df_header_(S &o,
-                       const char *col_name,
+                       const char *col_label,
                        std::size_t col_size,
                        char last_delimit)  {
 
-    o << col_name << ':' << col_size << ':';
+    o << col_label << ':' << col_size << ':';
 
     if (typeid(T) == typeid(float))
         o << "<float>" << last_delimit;
@@ -584,9 +584,9 @@ _write_csv2_df_header_(S &o,
 
 template<typename S, typename T>
 inline static S &
-_write_json_df_header_(S &o, const char *col_name, std::size_t col_size)  {
+_write_json_df_header_(S &o, const char *col_label, std::size_t col_size)  {
 
-    o << '"' << col_name << "\":{\"N\":" << col_size << ',';
+    o << '"' << col_label << "\":{\"N\":" << col_size << ',';
 
     if (typeid(T) == typeid(float))
         o << "\"T\":\"float\",";

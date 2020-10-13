@@ -84,9 +84,9 @@ struct load_functor_ : DataVec::template visitor_base<Ts ...>  {
                           std::size_t e,
                           LHS &d,
                           nan_policy np = nan_policy::pad_with_nans)
-    : name (n), begin (b), end (e), df(d), nan_p(np)  {   }
+    : label (n), begin (b), end (e), df(d), nan_p(np)  {   }
 
-    const char          *name;
+    const char          *label;
     const std::size_t   begin;
     const std::size_t   end;
     LHS                 &df;
@@ -101,9 +101,9 @@ struct load_functor_ : DataVec::template visitor_base<Ts ...>  {
 template<typename ... Ts>
 struct load_all_functor_ : DataVec::template visitor_base<Ts ...>  {
 
-    inline load_all_functor_ (const char *n, DataFrame &d) : name(n), df(d) { }
+    inline load_all_functor_ (const char *n, DataFrame &d) : label(n), df(d) { }
 
-    const char  *name;
+    const char  *label;
     DataFrame   &df;
 
     template<typename T>
@@ -134,9 +134,9 @@ struct view_setup_functor_ : DataVec::template visitor_base<Ts ...>  {
                                 std::size_t b,
                                 std::size_t e,
                                 LHS &d)
-        : name (n), begin (b), end (e), dfv(d)  {   }
+        : label (n), begin (b), end (e), dfv(d)  {   }
 
-    const char          *name;
+    const char          *label;
     const std::size_t   begin;
     const std::size_t   end;
     LHS                 &dfv;
@@ -154,9 +154,9 @@ template<typename ... Ts>
 struct add_col_functor_ : DataVec::template visitor_base<Ts ...>  {
 
     inline add_col_functor_ (const char *n, DataFrame &d)
-        : name (n), df(d)  {   }
+        : label (n), df(d)  {   }
 
-    const char  *name;
+    const char  *label;
     DataFrame   &df;
 
     template<typename T>
@@ -174,9 +174,9 @@ struct groupby_functor_ : DataVec::template visitor_base<Ts ...>  {
                              const IndexVecType &iv,
                              F &f,
                              DataFrame &d)
-        : name(n), begin(b), end(e), index_vec(iv), functor(f), df(d) {  }
+        : label(n), begin(b), end(e), index_vec(iv), functor(f), df(d) {  }
 
-    const char          *name;
+    const char          *label;
     const std::size_t   begin;
     const std::size_t   end;
     const IndexVecType  &index_vec;
@@ -197,9 +197,9 @@ struct bucket_functor_ : DataVec::template visitor_base<Ts ...>  {
                             const IndexType &i,
                             F &f,
                             DataFrame &d)
-        : name(n), indices(ts), interval(i), functor(f), df(d) {  }
+        : label(n), indices(ts), interval(i), functor(f), df(d) {  }
 
-    const char          *name;
+    const char          *label;
     const IndexVecType  &indices;
     const IndexType     &interval;
     F                   &functor;
@@ -215,9 +215,9 @@ template<typename ... Ts>
 struct print_csv_functor_ : DataVec::template visitor_base<Ts ...>  {
 
     inline print_csv_functor_ (const char *n, std::ostream &o)
-        : name(n), os(o)  {   }
+        : label(n), os(o)  {   }
 
-    const char      *name;
+    const char      *label;
     std::ostream    &os;
 
     template<typename T>
@@ -231,9 +231,9 @@ template<typename ... Ts>
 struct print_json_functor_ : DataVec::template visitor_base<Ts ...>  {
 
     inline print_json_functor_ (const char *n, bool npc, std::ostream &o)
-        : name(n), need_pre_comma(npc), os(o)  {   }
+        : label(n), need_pre_comma(npc), os(o)  {   }
 
-    const char      *name;
+    const char      *label;
     const bool      need_pre_comma;
     std::ostream    &os;
 
@@ -247,9 +247,9 @@ template<typename S, typename ... Ts>
 struct print_csv2_header_functor_ : DataVec::template visitor_base<Ts ...>  {
 
     inline print_csv2_header_functor_ (const char *n, S &o)
-        : name(n), os(o)  {   }
+        : label(n), os(o)  {   }
 
-    const char  *name;
+    const char  *label;
     S           &os;
 
     template<typename T>
@@ -276,9 +276,9 @@ template<typename ... Ts>
 struct equal_functor_ : DataVec::template visitor_base<Ts ...>  {
 
     inline equal_functor_ (const char *n, const DataFrame &d)
-        : name(n), df(d)  {  }
+        : label(n), df(d)  {  }
 
-    const char      *name;
+    const char      *label;
     const DataFrame &df;
     bool            result { true };
 
@@ -295,9 +295,9 @@ struct mod_by_idx_functor_ : DataVec::template visitor_base<Ts ...>  {
                                 const DataFrame &d,
                                 size_type li,
                                 size_type ri)
-        : name(n), rhs_df(d), lhs_idx(li), rhs_idx(ri)  {  }
+        : label(n), rhs_df(d), lhs_idx(li), rhs_idx(ri)  {  }
 
-    const char      *name;
+    const char      *label;
     const DataFrame &rhs_df;
     const size_type lhs_idx;
     const size_type rhs_idx;
@@ -316,9 +316,9 @@ struct  index_join_functor_common_ : DataVec::template visitor_base<Ts ...>  {
         const DataFrame &r,
         const IndexIdxVector &mii,
         RES_T &res)
-        : name(n), rhs(r), joined_index_idx(mii), result(res)  {  }
+        : label(n), rhs(r), joined_index_idx(mii), result(res)  {  }
 
-    const char              *name;
+    const char              *label;
     const DataFrame         &rhs;
     const IndexIdxVector    &joined_index_idx;
     RES_T                   &result;
@@ -338,9 +338,9 @@ struct  index_join_functor_oneside_
         const char *n,
         const IndexIdxVector &mii,
         RES_T &res)
-        : name(n), joined_index_idx(mii), result(res)  {  }
+        : label(n), joined_index_idx(mii), result(res)  {  }
 
-    const char              *name;
+    const char              *label;
     const IndexIdxVector    &joined_index_idx;
     RES_T                   &result;
 
@@ -354,9 +354,9 @@ template<typename RES_T, typename ... Ts>
 struct  concat_functor_ : DataVec::template visitor_base<Ts ...>  {
 
     inline concat_functor_ (const char *n, RES_T &res, bool ic, size_type ois)
-        : name(n), result(res), insert_col(ic), original_index_s(ois)  {  }
+        : label(n), result(res), insert_col(ic), original_index_s(ois)  {  }
 
-    const char      *name;
+    const char      *label;
     RES_T           &result;
     const bool      insert_col;
     const size_type original_index_s;
@@ -410,20 +410,20 @@ struct operator_functor_ : DataVec::template visitor_base<Ts ...>  {
                               const std::vector<IDX> &rhsidx,
                               const std::vector<IDX> &newidx,
                               const StdDataFrame<IDX> &rhsdf,
-                              const char *colname,
+                              const char *collabel,
                               StdDataFrame<IDX> &resultdf)
          : lhs_idx(lhsidx),
            rhs_idx(rhsidx),
            new_idx(newidx),
            rhs_df(rhsdf),
-           col_name(colname),
+           col_label(collabel),
            result_df(resultdf)  {  }
 
     const std::vector<IDX>  &lhs_idx;
     const std::vector<IDX>  &rhs_idx;
     const std::vector<IDX>  &new_idx;
     const StdDataFrame<IDX> &rhs_df;
-    const char              *col_name;
+    const char              *col_label;
     StdDataFrame<IDX>       &result_df;
 
     template<typename T>
@@ -494,9 +494,9 @@ struct sel_load_functor_ : DataVec::template visitor_base<Ts ...>  {
                               const std::vector<IT> &si,
                               size_type is,
                               DataFrame &d)
-        : name (n), sel_indices (si), indices_size(is), df(d)  {   }
+        : label (n), sel_indices (si), indices_size(is), df(d)  {   }
 
-    const char              *name;
+    const char              *label;
     const std::vector<IT>   &sel_indices;
     const size_type         indices_size;
     DataFrame               &df;
@@ -514,9 +514,9 @@ struct sel_load_view_functor_ : DataVec::template visitor_base<Ts ...>  {
                                    const std::vector<IT> &si,
                                    size_type is,
                                    DataFramePtrView<IndexType> &d)
-        : name (n), sel_indices (si), indices_size(is), dfv(d)  {   }
+        : label (n), sel_indices (si), indices_size(is), dfv(d)  {   }
 
-    const char                  *name;
+    const char                  *label;
     const std::vector<IT>       &sel_indices;
     const size_type             indices_size;
     DataFramePtrView<IndexType> &dfv;
@@ -559,9 +559,9 @@ struct random_load_data_functor_ : DataVec::template visitor_base<Ts ...>  {
         const char *n,
         const std::vector<std::size_t>  &ri,
         DataFrame &d)
-        : name (n), rand_indices (ri), df(d)  {   }
+        : label (n), rand_indices (ri), df(d)  {   }
 
-    const char                      *name;
+    const char                      *label;
     const std::vector<std::size_t>  &rand_indices;
     DataFrame                       &df;
 
@@ -578,9 +578,9 @@ struct random_load_view_functor_ : DataVec::template visitor_base<Ts ...>  {
         const char *n,
         const std::vector<std::size_t>  &ri,
         DataFramePtrView<IndexType> &d)
-        : name (n), rand_indices (ri), dfv(d)  {   }
+        : label (n), rand_indices (ri), dfv(d)  {   }
 
-    const char                      *name;
+    const char                      *label;
     const std::vector<std::size_t>  &rand_indices;
     DataFramePtrView<IndexType>     &dfv;
 
@@ -594,13 +594,13 @@ template<typename ... Ts>
 struct columns_info_functor_ : DataVec::template visitor_base<Ts ...>  {
 
     using result_t =
-        std::vector<std::tuple<ColNameType, size_type, std::type_index>>;
+        std::vector<std::tuple<ColLabelType, size_type, std::type_index>>;
 
     inline columns_info_functor_ (result_t &r, const char *n)
-        : result(r), name(n)  {   }
+        : result(r), label(n)  {   }
 
     result_t    &result;
-    const char  *name;
+    const char  *label;
 
     template<typename T>
     void operator() (const T &vec);
@@ -614,9 +614,9 @@ struct copy_remove_functor_ : DataVec::template visitor_base<Ts ...>  {
     inline copy_remove_functor_ (const char *n,
                                  const std::vector<std::size_t>  &td,
                                  DataFrame &d)
-        : name(n), to_delete (td), df(d)  {   }
+        : label(n), to_delete (td), df(d)  {   }
 
-    const char                      *name;
+    const char                      *label;
     const std::vector<std::size_t>  &to_delete;
     DataFrame                       &df;
 

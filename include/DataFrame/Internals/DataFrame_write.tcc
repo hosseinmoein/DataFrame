@@ -34,9 +34,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace hmdf
 {
 
-template<typename I, typename H>
+template<typename I, typename H, typename CLT>
 template<typename S, typename ...Ts>
-bool DataFrame<I, H>::write (S &o, io_format iof) const  {
+bool DataFrame<I, H, CLT>::write (S &o, io_format iof) const  {
 
     if (iof != io_format::csv &&
         iof != io_format::json &&
@@ -125,9 +125,9 @@ bool DataFrame<I, H>::write (S &o, io_format iof) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, typename CLT>
 template<typename S, typename ...Ts>
-std::future<bool> DataFrame<I, H>::
+std::future<bool> DataFrame<I, H, CLT>::
 write_async (S &o, io_format iof) const  {
 
     return (std::async(std::launch::async,

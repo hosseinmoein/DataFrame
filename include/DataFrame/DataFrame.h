@@ -31,7 +31,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <DataFrame/DataFrameTypes.h>
 #include <DataFrame/Utils/DateTime.h>
-#include <DataFrame/Utils/FixedSizeString.h>
 #include <DataFrame/Utils/ThreadGranularity.h>
 
 #include <array>
@@ -57,7 +56,7 @@ namespace hmdf
 // A DataFrame may contain one index and any number of columns of any built-in
 // or user-defined types.
 //
-template<typename I, typename H>
+template<typename I, typename H, typename CLT = DefaultColLabelType>
 class LIBRARY_API DataFrame : public ThreadGranularity {
 
     static_assert(std::is_base_of<HeteroVector, H>::value ||
@@ -70,7 +69,7 @@ class LIBRARY_API DataFrame : public ThreadGranularity {
     using DataVec = H;
     using DataVecVec = std::vector<DataVec>;
 
-    template<typename II, typename HH>
+    template<typename I2, typename H2, typename CLT2>
     friend class DataFrame;
 
 public:
@@ -78,7 +77,7 @@ public:
     using size_type = typename std::vector<DataVec>::size_type;
     using IndexType = I;
     using IndexVecType = typename type_declare<DataVec, IndexType>::type;
-    using ColNameType = String64;
+    using ColLabelType = CLT;
 
     template<typename T>
     using ColumnVecType = typename type_declare<DataVec, T>::type;
@@ -94,7 +93,7 @@ public:
 private:
 
     using ColumnTable =
-        std::unordered_map<ColNameType, size_type, std::hash<VirtualString>>;
+        std::unordered_map<ColLabelType, size_type, std::hash<VirtualString>>;
 
     // Data fields
     //
@@ -114,45 +113,45 @@ public:  // Load/append/remove interfaces
     static void set_lock (SpinLock *sl)  { lock_ = sl; }
     static void remove_lock ()  { lock_ = nullptr; }
 
-    // It creates an empty column named name
+    // It creates an empty column labeled label
     //
     // T:
     //   Type of column being added
     //
     template<typename T>
     std::vector<T> &
-    create_column(const char *name);
+    create_column(const char *label);
 
-    // It removes a column named name.
+    // It removes a column labeled label.
     // The actual data vector is not deleted, but the column is dropped from
     // DataFrame
     //
     void
-    remove_column(const char *name);
+    remove_column(const char *label);
 
-    // It renames column named from to to. If column from does not exist,
+    // It relabels column labeled from to to. If column from does not exist,
     // it throws an exception
     //
     void
     rename_column(const char *from, const char *to);
 
-    // It changes the type of the named column. The change happens by
-    // calling convert_func on each element of named column.
+    // It changes the type of the labeled column. The change happens by
+    // calling convert_func on each element of labeled column.
     // NOTE: This will copy data
     //
     // FROM_T:
-    //   Current type of the named column
+    //   Current type of the labeled column
     // TO_T:
-    //   New type to be of the named column
-    // name:
-    //   Column name
+    //   New type to be of the labeled column
+    // label:
+    //   Column label
     // convert_func:
-    //   A function to change each element of named column from FROM_T to TO_T
+    //   A function to change each element of labeled column from FROM_T to TO_T
     //   type. The default is C-style cast
     //
     template<typename FROM_T, typename TO_T>
     void
-    retype_column(const char *name,
+    retype_column(const char *label,
                   std::function<TO_T (const FROM_T &)> convert_func =
                       [](const FROM_T &val) -> TO_T  {
                           return ((TO_T) (*(&val)));
@@ -168,8 +167,8 @@ public:  // Load/append/remove interfaces
     //   A vector of indices of type IndexType;
     // args:
     //   A variable list of arguments consisting of
-    //     std::pair(<const char *name, std::vector<T> &&data>).
-    //   Each pair, represents a column data and its name
+    //     std::pair(<const char *label, std::vector<T> &&data>).
+    //   Each pair, represents a column data and its label
     //
     template<typename ... Ts>
     size_type
@@ -189,7 +188,7 @@ public:  // Load/append/remove interfaces
     size_type
     load_index(IndexVecType &&idx);
 
-    // It copies the data from iterators begin to end to the named column.
+    // It copies the data from iterators begin to end to the labeled column.
     // If column does not exist, it will be created. If the column exists,
     // it will be over written.
     //
@@ -197,8 +196,8 @@ public:  // Load/append/remove interfaces
     //   Type of data being copied
     // ITR:
     //   Type of the iterator
-    // name:
-    //   Name of the column
+    // label:
+    //   Label of the column
     // range:
     //   The begin and end iterators for data
     // padding:
@@ -207,18 +206,18 @@ public:  // Load/append/remove interfaces
     //
     template<typename T, typename ITR>
     size_type
-    load_column(const char *name,
+    load_column(const char *label,
                 Index2D<const ITR &> range,
                 nan_policy padding = nan_policy::pad_with_nans);
 
-    // It moves the data to the named column in DataFrame.
+    // It moves the data to the labeled column in DataFrame.
     // If column does not exist, it will be created. If the column exists,
     // it will be over written.
     //
     // T:
     //   Type of data being moved
-    // name:
-    //   Name of the column
+    // label:
+    //   Label of the column
     // data:
     //   Data vector
     // padding:
@@ -227,13 +226,13 @@ public:  // Load/append/remove interfaces
     //
     template<typename T>
     size_type
-    load_column(const char *name,
+    load_column(const char *label,
                 std::vector<T> &&data,
                 nan_policy padding = nan_policy::pad_with_nans);
 
     template<typename T>
     size_type
-    load_column(const char *name,
+    load_column(const char *label,
                 const std::vector<T> &data,
                 nan_policy padding = nan_policy::pad_with_nans);
 
@@ -253,8 +252,8 @@ public:  // Load/append/remove interfaces
     //
     // T:
     //   Type of data being loaded
-    // name:
-    //   Name of the column
+    // label:
+    //   Label of the column
     // data:
     //   Data vector
     // interval:
@@ -273,17 +272,17 @@ public:  // Load/append/remove interfaces
     template<typename T>
     size_type
     load_align_column(
-        const char *name,
+        const char *label,
         std::vector<T> &&data,
         size_type interval,
         bool start_from_beginning,
         const T &null_value = DataFrame::_get_nan<T>(),
-        std::function<typename DataFrame<I, H>::size_type (
-            const typename DataFrame<I, H>::IndexType &,
-            const typename DataFrame<I, H>::IndexType &)> diff_func =
-            [](const typename DataFrame<I, H>::IndexType &t_1,
-               const typename DataFrame<I, H>::IndexType &t) ->
-                   typename DataFrame<I, H>::size_type  {
+        std::function<typename DataFrame<I, H, CLT>::size_type (
+            const typename DataFrame<I, H, CLT>::IndexType &,
+            const typename DataFrame<I, H, CLT>::IndexType &)> diff_func =
+            [](const typename DataFrame<I, H, CLT>::IndexType &t_1,
+               const typename DataFrame<I, H, CLT>::IndexType &t) ->
+                   typename DataFrame<I, H, CLT>::size_type  {
                 return (static_cast<std::size_t>(t - t_1));
             });
 
@@ -292,20 +291,20 @@ public:  // Load/append/remove interfaces
     size_type
     append_index(const IndexType &val);
 
-    // It appends val to the end of the named data column.
+    // It appends val to the end of the labeled data column.
     // If data column doesn't exist, it throws an exception.
     //
     // T:
-    //   Type of the named data column
-    // name:
-    //   Name of the column
+    //   Type of the labeled data column
+    // label:
+    //   Label of the column
     // padding:
     //   If true, it pads the data column with nan, if it is shorter than the
     //   index column.
     //
     template<typename T>
     size_type
-    append_column(const char *name,
+    append_column(const char *label,
                   const T &val,
                   nan_policy padding = nan_policy::pad_with_nans);
 
@@ -320,15 +319,15 @@ public:  // Load/append/remove interfaces
     size_type
     append_index(Index2D<const ITR &> range);
 
-    // It appends the range begin to end to the end of the named data column.
+    // It appends the range begin to end to the end of the labeled data column.
     // If data column doesn't exist, it throws an exception.
     //
     // T:
-    //   Type of the named data column
+    //   Type of the labeled data column
     // ITR:
     //   Type of the iterator
-    // name:
-    //   Name of the column
+    // label:
+    //   Label of the column
     // range:
     //   The begin and end iterators for data
     // padding:
@@ -337,7 +336,7 @@ public:  // Load/append/remove interfaces
     //
     template<typename T, typename ITR>
     size_type
-    append_column(const char *name,
+    append_column(const char *label,
                   Index2D<const ITR &> range,
                   nan_policy padding = nan_policy::pad_with_nans);
 
@@ -375,7 +374,7 @@ public:  // Load/append/remove interfaces
 
     // It removes data rows by boolean filtering selection via the sel_functor
     // (e.g. a functor, function, or lambda).
-    // Each element of the named column along with its corresponding index
+    // Each element of the labeled column along with its corresponding index
     // is passed to the sel_functor. If sel_functor returns true, that row
     // will be removed.
     // The signature of sel_fucntor:
@@ -387,20 +386,20 @@ public:  // Load/append/remove interfaces
     //       length
     //
     // T:
-    //   Type of the named column
+    //   Type of the labeled column
     // F:
     //   Type of the selecting functor
     // Ts:
     //   List all the types of all data columns. A type should be specified in
     //   the list only once.
-    // name:
-    //   Name of the data column
+    // label:
+    //   Label of the data column
     // sel_functor:
     //   A reference to the selecting functor
     //
     template<typename T, typename F, typename ... Ts>
     void
-    remove_data_by_sel(const char *name, F &sel_functor);
+    remove_data_by_sel(const char *label, F &sel_functor);
 
     // This does the same function as above remove_data_by_sel() but operating
     // on two columns.
@@ -408,24 +407,24 @@ public:  // Load/append/remove interfaces
     //     bool ()(const IndexType &, const T1 &, const T2 &)
     //
     // T1:
-    //   Type of the first named column
+    //   Type of the first labeled column
     // T2:
-    //   Type of the second named column
+    //   Type of the second labeled column
     // F:
     //   Type of the selecting functor
     // Ts:
     //   List all the types of all data columns. A type should be specified in
     //   the list only once.
-    // name1:
-    //   Name of the first data column
-    // name2:
-    //   Name of the second data column
+    // label1:
+    //   Label of the first data column
+    // label2:
+    //   Label of the second data column
     // sel_functor:
     //   A reference to the selecting functor
     //
     template<typename T1, typename T2, typename F, typename ... Ts>
     void
-    remove_data_by_sel(const char *name1, const char *name2, F &sel_functor);
+    remove_data_by_sel(const char *label1, const char *label2, F &sel_functor);
 
     // This does the same function as above remove_data_by_sel() but operating
     // on three columns.
@@ -433,31 +432,31 @@ public:  // Load/append/remove interfaces
     //     bool ()(const IndexType &, const T1 &, const T2 &, const T3 &)
     //
     // T1:
-    //   Type of the first named column
+    //   Type of the first labeled column
     // T2:
-    //   Type of the second named column
+    //   Type of the second labeled column
     // T3:
-    //   Type of the third named column
+    //   Type of the third labeled column
     // F:
     //   Type of the selecting functor
     // Ts:
     //   List all the types of all data columns. A type should be specified in
     //   the list only once.
-    // name1:
-    //   Name of the first data column
-    // name2:
-    //   Name of the second data column
-    // name3:
-    //   Name of the third data column
+    // label1:
+    //   Label of the first data column
+    // label2:
+    //   Label of the second data column
+    // label3:
+    //   Label of the third data column
     // sel_functor:
     //   A reference to the selecting functor
     //
     template<typename T1, typename T2, typename T3, typename F,
              typename ... Ts>
     void
-    remove_data_by_sel(const char *name1,
-                       const char *name2,
-                       const char *name3,
+    remove_data_by_sel(const char *label1,
+                       const char *label2,
+                       const char *label3,
                        F &sel_functor);
 
     // It removes duplicate rows and returns a new DataFrame. Duplication is
@@ -468,16 +467,16 @@ public:  // Load/append/remove interfaces
     //       equality (==) operator well defined.
     //
     // T1:
-    //   Type of the first named column
+    //   Type of the first labeled column
     // T2:
-    //   Type of the second named column
+    //   Type of the second labeled column
     // Ts:
     //   List all the types of all data columns. A type should be specified in
     //   the list only once.
-    // name1:
-    //   Name of the first data column
-    // name2:
-    //   Name of the second data column
+    // label1:
+    //   Label of the first data column
+    // label2:
+    //   Label of the second data column
     // include_index:
     //   If true, it includes the index column to determine uniqueness
     // rds:
@@ -485,28 +484,28 @@ public:  // Load/append/remove interfaces
     //
     template<typename T1, typename T2, typename ... Ts>
     [[nodiscard]] DataFrame
-    remove_duplicates(const char *name1,
-                      const char *name2,
+    remove_duplicates(const char *label1,
+                      const char *label2,
                       bool include_index,
                       remove_dup_spec rds) const;
 
     // Same as above, but there are 3 columns involved
     //
     // T1:
-    //   Type of the first named column
+    //   Type of the first labeled column
     // T2:
-    //   Type of the second named column
+    //   Type of the second labeled column
     // T3:
-    //   Type of the third named column
+    //   Type of the third labeled column
     // Ts:
     //   List all the types of all data columns. A type should be specified in
     //   the list only once.
-    // name1:
-    //   Name of the first data column
-    // name2:
-    //   Name of the second data column
-    // name3:
-    //   Name of the third data column
+    // label1:
+    //   Label of the first data column
+    // label2:
+    //   Label of the second data column
+    // label3:
+    //   Label of the third data column
     // include_index:
     //   If true, it includes the index column to determine uniqueness
     // rds:
@@ -514,33 +513,33 @@ public:  // Load/append/remove interfaces
     //
     template<typename T1, typename T2, typename T3, typename ... Ts>
     [[nodiscard]] DataFrame
-    remove_duplicates(const char *name1,
-                      const char *name2,
-                      const char *name3,
+    remove_duplicates(const char *label1,
+                      const char *label2,
+                      const char *label3,
                       bool include_index,
                       remove_dup_spec rds) const;
 
     // Same as above, but there are 4 columns involved
     //
     // T1:
-    //   Type of the first named column
+    //   Type of the first labeled column
     // T2:
-    //   Type of the second named column
+    //   Type of the second labeled column
     // T3:
-    //   Type of the third named column
+    //   Type of the third labeled column
     // T4:
-    //   Type of the fourth named column
+    //   Type of the fourth labeled column
     // Ts:
     //   List all the types of all data columns. A type should be specified in
     //   the list only once.
-    // name1:
-    //   Name of the first data column
-    // name2:
-    //   Name of the second data column
-    // name3:
-    //   Name of the third data column
-    // name4:
-    //   Name of the fourth data column
+    // label1:
+    //   Label of the first data column
+    // label2:
+    //   Label of the second data column
+    // label3:
+    //   Label of the third data column
+    // label4:
+    //   Label of the fourth data column
     // include_index:
     //   If true, it includes the index column to determine uniqueness
     // rds:
@@ -549,38 +548,38 @@ public:  // Load/append/remove interfaces
     template<typename T1, typename T2, typename T3, typename T4,
              typename ... Ts>
     [[nodiscard]] DataFrame
-    remove_duplicates(const char *name1,
-                      const char *name2,
-                      const char *name3,
-                      const char *name4,
+    remove_duplicates(const char *label1,
+                      const char *label2,
+                      const char *label3,
+                      const char *label4,
                       bool include_index,
                       remove_dup_spec rds) const;
 
     // Same as above, but there are 5 columns involved
     //
     // T1:
-    //   Type of the first named column
+    //   Type of the first labeled column
     // T2:
-    //   Type of the second named column
+    //   Type of the second labeled column
     // T3:
-    //   Type of the third named column
+    //   Type of the third labeled column
     // T4:
-    //   Type of the fourth named column
+    //   Type of the fourth labeled column
     // T5:
-    //   Type of the fifth named column
+    //   Type of the fifth labeled column
     // Ts:
     //   List all the types of all data columns. A type should be specified in
     //   the list only once.
-    // name1:
-    //   Name of the first data column
-    // name2:
-    //   Name of the second data column
-    // name3:
-    //   Name of the third data column
-    // name4:
-    //   Name of the fourth data column
-    // name5:
-    //   Name of the fifth data column
+    // label1:
+    //   Label of the first data column
+    // label2:
+    //   Label of the second data column
+    // label3:
+    //   Label of the third data column
+    // label4:
+    //   Label of the fourth data column
+    // label5:
+    //   Label of the fifth data column
     // include_index:
     //   If true, it includes the index column to determine uniqueness
     // rds:
@@ -589,43 +588,43 @@ public:  // Load/append/remove interfaces
     template<typename T1, typename T2, typename T3, typename T4, typename T5,
              typename ... Ts>
     [[nodiscard]] DataFrame
-    remove_duplicates(const char *name1,
-                      const char *name2,
-                      const char *name3,
-                      const char *name4,
-                      const char *name5,
+    remove_duplicates(const char *label1,
+                      const char *label2,
+                      const char *label3,
+                      const char *label4,
+                      const char *label5,
                       bool include_index,
                       remove_dup_spec rds) const;
 
     // Same as above, but there are 6 columns involved
     //
     // T1:
-    //   Type of the first named column
+    //   Type of the first labeled column
     // T2:
-    //   Type of the second named column
+    //   Type of the second labeled column
     // T3:
-    //   Type of the third named column
+    //   Type of the third labeled column
     // T4:
-    //   Type of the fourth named column
+    //   Type of the fourth labeled column
     // T5:
-    //   Type of the fifth named column
+    //   Type of the fifth labeled column
     // T6:
-    //   Type of the sixth named column
+    //   Type of the sixth labeled column
     // Ts:
     //   List all the types of all data columns. A type should be specified in
     //   the list only once.
-    // name1:
-    //   Name of the first data column
-    // name2:
-    //   Name of the second data column
-    // name3:
-    //   Name of the third data column
-    // name4:
-    //   Name of the fourth data column
-    // name5:
-    //   Name of the fifth data column
-    // name6:
-    //   Name of the sixth data column
+    // label1:
+    //   Label of the first data column
+    // label2:
+    //   Label of the second data column
+    // label3:
+    //   Label of the third data column
+    // label4:
+    //   Label of the fourth data column
+    // label5:
+    //   Label of the fifth data column
+    // label6:
+    //   Label of the sixth data column
     // include_index:
     //   If true, it includes the index column to determine uniqueness
     // rds:
@@ -634,30 +633,30 @@ public:  // Load/append/remove interfaces
     template<typename T1, typename T2, typename T3, typename T4, typename T5,
              typename T6, typename ... Ts>
     [[nodiscard]] DataFrame
-    remove_duplicates(const char *name1,
-                      const char *name2,
-                      const char *name3,
-                      const char *name4,
-                      const char *name5,
-                      const char *name6,
+    remove_duplicates(const char *label1,
+                      const char *label2,
+                      const char *label3,
+                      const char *label4,
+                      const char *label5,
+                      const char *label6,
                       bool include_index,
                       remove_dup_spec rds) const;
 
 public:  // Data manipulation
 
-    // It randomly shuffles the named column(s) non-deterministically.
+    // It randomly shuffles the labeled column(s) non-deterministically.
     //
-    // also_shuffle_index: If true, it shuffles the named column(s) and the
+    // also_shuffle_index: If true, it shuffles the labeled column(s) and the
     //                     index column. Otherwise, index is not shuffled.
     // N:
-    //   Number of named columns
+    //   Number of labeled columns
     // Ts:
     //   List all the types of all data columns. A type should be specified in
     //   the list only once.
     //
     template<size_t N, typename ... Ts>
     void
-    shuffle(const std::array<const char *, N> col_names,
+    shuffle(const std::array<const char *, N> col_labels,
             bool also_shuffle_index);
 
     // It fills all the "missing values" with the given values, and/or using
@@ -666,24 +665,25 @@ public:  // Data manipulation
     // without NaN (e.g. string), default value is considered missing value.
     //
     // T:
-    //   Type of the column(s) in col_names array
+    //   Type of the column(s) in col_labels array
     // N:
-    //   Size of col_names and values array
-    // col_names:
-    //   An array of names specifying the columns to fill.
+    //   Size of col_labels and values array
+    // col_labels:
+    //   An array of labels specifying the columns to fill.
     // fp:
     //   Specifies the method to use to fill the missing values. For example;
     //   forward fill, values, etc.
     // values:
     //   If the policy is "values", use these values to fill the missing
-    //   holes. Each value corresponds to the same index in the col_names array.
+    //   holes. Each value corresponds to the same index in the col_labels
+    //   array.
     // limit:
     //   Specifies how many values to fill. Default is -1 meaning fill all
     //   missing values.
     //
     template<typename T, size_t N>
     void
-    fill_missing(const std::array<const char *, N> col_names,
+    fill_missing(const std::array<const char *, N> col_labels,
                  fill_policy policy,
                  const std::array<T, N> values = { },
                  int limit = -1);
@@ -702,28 +702,28 @@ public:  // Data manipulation
     void
     drop_missing(drop_policy policy, size_type threshold = 0);
 
-    // It iterates over the column named col_name and replaces all values
+    // It iterates over the column labeled col_label and replaces all values
     // in old_values with the corresponding values in new_values up to the
     // limit. If limit is omitted, all values will be replaced.
     // It returns number of items replaced.
     //
     // T:
-    //   Type on column col_name. If this is index it would be the same as
+    //   Type on column col_label. If this is index it would be the same as
     //   IndexType.
     // N:
     //   Size of old_values and new_values arrays
-    // col_name:
-    //   Name of the column
+    // col_label:
+    //   Label of the column
     // old_array:
-    //   An array of values to be replaced in col_name column
+    //   An array of values to be replaced in col_label column
     // new_array:
-    //   An array of values to to replace the old_values in col_name column
+    //   An array of values to to replace the old_values in col_label column
     // limit:
     //   Limit of how many items to replace. Default is to replace all.
     //
     template<typename T, size_t N>
     size_type
-    replace(const char *col_name,
+    replace(const char *col_label,
             const std::array<T, N> old_values,
             const std::array<T, N> new_values,
             int limit = -1);
@@ -735,34 +735,34 @@ public:  // Data manipulation
     //
     template<typename T, size_t N>
     [[nodiscard]] std::future<size_type>
-    replace_async(const char *col_name,
+    replace_async(const char *col_label,
                   const std::array<T, N> old_values,
                   const std::array<T, N> new_values,
                   int limit = -1);
 
     // This is similar to replace() above but it lets a functor replace the
-    // values in the named column. The functor is passed every value of the
+    // values in the labeled column. The functor is passed every value of the
     // column along with a const reference of the corresponding index value.
     // Unlike the replace version above, this replace can only work on data
     // columns. It will not work on index column.
     // The functor must have the following interface at minimum:
     //     bool operator() (const IndexType &ts, T &value);
     // A false return from the above operator method stops the iteration
-    // through named column values.
+    // through labeled column values.
     //
     // T:
-    //   Type on column col_name. If this is index it would be the same as
+    //   Type on column col_label. If this is index it would be the same as
     //   IndexType.
     // F:
     //   The functor type
-    // col_name:
-    //   Name of the column
+    // col_label:
+    //   Label of the column
     // functor:
     //   An instance of the functor
     //
     template<typename T, typename F>
     void
-    replace(const char *col_name, F &functor);
+    replace(const char *col_label, F &functor);
 
     // Same as replace() above, but executed asynchronously
     //
@@ -771,13 +771,13 @@ public:  // Data manipulation
     //
     template<typename T, typename F>
     [[nodiscard]] std::future<void>
-    replace_async(const char *col_name, F &functor);
+    replace_async(const char *col_label, F &functor);
 
     // This does the same thing as replace() above for the index column
     //
     // N: Size of old_values and new_values arrays
-    // old_array: An array of values to be replaced in col_name column
-    // new_array: An array of values to to replace the old_values in col_name
+    // old_array: An array of values to be replaced in col_label column
+    // new_array: An array of values to to replace the old_values in col_label
     //            column
     // limit:
     //   Limit of how many items to replace. Default is to replace all.
@@ -788,52 +788,52 @@ public:  // Data manipulation
                   const std::array<IndexType, N> new_values,
                   int limit = -1);
 
-    // Sort the DataFrame by the named column. If name equals "INDEX" or
-    // DF_INDEX_COL_NAME, it sorts by index. Otherwise it sorts by the named
+    // Sort the DataFrame by the labeled column. If label equals "INDEX" or
+    // DF_INDEX_COL_NAME, it sorts by index. Otherwise it sorts by the labeled
     // column.
     // NOTE: Sort first calls make_consistent() that may add nan values to
     //       data columns.
     //       nan values make sorting nondeterministic.
     //
     // T:
-    //   Type of the named column. You always must specify this type,
+    //   Type of the labeled column. You always must specify this type,
     //   even if it is being sorted by the index.
     // Ts:
     //   List all the types of all data columns. A type should be specified in
     //   the list only once.
-    // name:
-    //   The name of a column or string "INDEX" or DF_INDEX_COL_NAME
+    // label:
+    //   The label of a column or string "INDEX" or DF_INDEX_COL_NAME
     // dir:
     //   Direction of sorting, ascending or descending
     //
     template<typename T, typename ... Ts>
     void
-    sort(const char *name, sort_spec dir);
+    sort(const char *label, sort_spec dir);
 
     // This sort function sorts DataFrame based on two columns, also
     // specified by the two directions.
-    // name[n] could be "INDEX" (or DF_INDEX_COL_NAME) in whcih case the index
+    // label[n] could be "INDEX" (or DF_INDEX_COL_NAME) in whcih case the index
     // column is taken as the sorting column.
     // NOTE: The order of T[n] type specifications must match the order of
-    //       name[n] column names. In addition, all column types must be
+    //       label[n] column labels. In addition, all column types must be
     //       specified separately. Otherwise, the behavior is undefined.
     // NOTE: Sort first calls make_consistent() that may add nan values to
     //       data columns.
     //       nan values make sorting nondeterministic.
     //
     // T1:
-    //   Type of the first named column. You always must specify this type,
+    //   Type of the first labeled column. You always must specify this type,
     //   even if it is being sorted by the index.
     // T2:
-    //   Type of the second named column. You always must specify this type,
+    //   Type of the second labeled column. You always must specify this type,
     //   even if it is being sorted by the index.
     // Ts:
     //   List all the types of all data columns. A type should be specified in
     //   the list only once.
-    // name1:
-    //   Name of the first column or string "INDEX" or DF_INDEX_COL_NAME
-    // name2:
-    //   Name of the second column or string "INDEX" or DF_INDEX_COL_NAME
+    // label1:
+    //   Label of the first column or string "INDEX" or DF_INDEX_COL_NAME
+    // label2:
+    //   Label of the second column or string "INDEX" or DF_INDEX_COL_NAME
     // dir1:
     //   Direction of sorting for the first column
     // dir2:
@@ -841,75 +841,75 @@ public:  // Data manipulation
     //
     template<typename T1, typename T2, typename ... Ts>
     void
-    sort(const char *name1, sort_spec dir1,
-         const char *name2, sort_spec dir2);
+    sort(const char *label1, sort_spec dir1,
+         const char *label2, sort_spec dir2);
 
     // This sort function is similar to above, but it uses 3 columns
     //
     template<typename T1, typename T2, typename T3, typename ... Ts>
     void
-    sort(const char *name1, sort_spec dir1,
-         const char *name2, sort_spec dir2,
-         const char *name3, sort_spec dir3);
+    sort(const char *label1, sort_spec dir1,
+         const char *label2, sort_spec dir2,
+         const char *label3, sort_spec dir3);
 
     // This sort function is similar to above, but it uses 4 columns
     //
     template<typename T1, typename T2, typename T3, typename T4,
              typename ... Ts>
     void
-    sort(const char *name1, sort_spec dir1,
-         const char *name2, sort_spec dir2,
-         const char *name3, sort_spec dir3,
-         const char *name4, sort_spec dir4);
+    sort(const char *label1, sort_spec dir1,
+         const char *label2, sort_spec dir2,
+         const char *label3, sort_spec dir3,
+         const char *label4, sort_spec dir4);
 
     // This sort function is similar to above, but it uses 5 columns
     //
     template<typename T1, typename T2, typename T3, typename T4, typename T5,
              typename ... Ts>
     void
-    sort(const char *name1, sort_spec dir1,
-         const char *name2, sort_spec dir2,
-         const char *name3, sort_spec dir3,
-         const char *name4, sort_spec dir4,
-         const char *name5, sort_spec dir5);
+    sort(const char *label1, sort_spec dir1,
+         const char *label2, sort_spec dir2,
+         const char *label3, sort_spec dir3,
+         const char *label4, sort_spec dir4,
+         const char *label5, sort_spec dir5);
 
     // Same as sort() above, but executed asynchronously
     //
     template<typename T, typename ... Ts>
     [[nodiscard]] std::future<void>
-    sort_async(const char *name, sort_spec dir);
+    sort_async(const char *label, sort_spec dir);
 
     template<typename T1, typename T2, typename ... Ts>
     [[nodiscard]] std::future<void>
-    sort_async(const char *name1, sort_spec dir1,
-               const char *name2, sort_spec dir2);
+    sort_async(const char *label1, sort_spec dir1,
+               const char *label2, sort_spec dir2);
 
     template<typename T1, typename T2, typename T3, typename ... Ts>
     [[nodiscard]] std::future<void>
-    sort_async(const char *name1, sort_spec dir1,
-               const char *name2, sort_spec dir2,
-               const char *name3, sort_spec dir3);
+    sort_async(const char *label1, sort_spec dir1,
+               const char *label2, sort_spec dir2,
+               const char *label3, sort_spec dir3);
 
     template<typename T1, typename T2, typename T3, typename T4,
              typename ... Ts>
     [[nodiscard]] std::future<void>
-    sort_async(const char *name1, sort_spec dir1,
-               const char *name2, sort_spec dir2,
-               const char *name3, sort_spec dir3,
-               const char *name4, sort_spec dir4);
+    sort_async(const char *label1, sort_spec dir1,
+               const char *label2, sort_spec dir2,
+               const char *label3, sort_spec dir3,
+               const char *label4, sort_spec dir4);
 
     template<typename T1, typename T2, typename T3, typename T4, typename T5,
              typename ... Ts>
     [[nodiscard]] std::future<void>
-    sort_async(const char *name1, sort_spec dir1,
-               const char *name2, sort_spec dir2,
-               const char *name3, sort_spec dir3,
-               const char *name4, sort_spec dir4,
-               const char *name5, sort_spec dir5);
+    sort_async(const char *label1, sort_spec dir1,
+               const char *label2, sort_spec dir2,
+               const char *label3, sort_spec dir3,
+               const char *label4, sort_spec dir4,
+               const char *label5, sort_spec dir5);
 
     // Groupby copies the DataFrame into a temp DataFrame and sorts
-    // the temp df by gb_col_name before performing groupby.
-    // If gb_col_name is DF_INDEX_COL_NAME, it groups by index.
+    // the temp df by gb_col_label before performing groupby.
+    // If gb_col_label is DF_INDEX_COL_NAME, it groups by index.
     //
     // F:
     //   type functor to be applied to columns to group by
@@ -921,16 +921,16 @@ public:  // Data manipulation
     // func:
     //   The aggregator functor to do the groupby. All built-in groupby
     //   aggregators are defined in GroupbyAggregators.h file
-    // gb_col_name:
-    //   Name of the column
+    // gb_col_label:
+    //   Label of the column
     // already_sorted:
-    //   If the DataFrame is already sorted by gb_col_name, this will save the
+    //   If the DataFrame is already sorted by gb_col_label, this will save the
     //   expensive sort operation
     //
     template<typename F, typename T, typename ... Ts>
     [[nodiscard]] DataFrame
     groupby(F &&func,
-            const char *gb_col_name,
+            const char *gb_col_label,
             sort_state already_sorted = sort_state::not_sorted) const;
 
     // This is the same as above groupby() but it groups by two columns
@@ -938,8 +938,8 @@ public:  // Data manipulation
     template<typename F, typename T1, typename T2, typename ... Ts>
     [[nodiscard]] DataFrame
     groupby(F &&func,
-            const char *gb_col_name1,
-            const char *gb_col_name2,
+            const char *gb_col_label1,
+            const char *gb_col_label2,
             sort_state already_sorted = sort_state::not_sorted) const;
 
     // Same as groupby() above, but executed asynchronously
@@ -947,7 +947,7 @@ public:  // Data manipulation
     template<typename F, typename T, typename ... Ts>
     [[nodiscard]] std::future<DataFrame>
     groupby_async(F &&func,
-                  const char *gb_col_name,
+                  const char *gb_col_label,
                   sort_state already_sorted = sort_state::not_sorted) const;
 
     // Same as groupby() above, but executed asynchronously
@@ -955,32 +955,32 @@ public:  // Data manipulation
     template<typename F, typename T1, typename T2, typename ... Ts>
     [[nodiscard]] std::future<DataFrame>
     groupby_async(F &&func,
-                  const char *gb_col_name1,
-                  const char *gb_col_name2,
+                  const char *gb_col_label1,
+                  const char *gb_col_label2,
                   sort_state already_sorted = sort_state::not_sorted) const;
 
-    // It counts the unique values in the named column.
+    // It counts the unique values in the labeled column.
     // It returns a StdDataFrame of following specs:
     //   1) The index is of type T and contains all unique values in
-    //      the named column.
-    //   2) There is only one column named "counts" of type size_type that
+    //      the labeled column.
+    //   2) There is only one column labeled "counts" of type size_type that
     //      contains the count for each index row.
     // For this method to compile and work, 3 conditions must be met:
     //   1) Type T must be hashable. If this is a user defined type, you
     //      must enable and specialize std::hash.
     //   2) The equality operator (==) must be well defined for type T.
-    //   3) Type T must match the actual type of the named column.
+    //   3) Type T must match the actual type of the labeled column.
     // Of course, if you never call this method in your application,
     // you need not be worried about these conditions.
     //
     // T:
-    //   Type of the col_name column.
-    // col_name:
-    //   Name of the column
+    //   Type of the col_label column.
+    // col_label:
+    //   Label of the column
     //
     template<typename T>
     [[nodiscard]] StdDataFrame<T>
-    value_counts(const char *col_name) const;
+    value_counts(const char *col_label) const;
 
     // It bucketizes the data and index into bucket_interval's,
     // based on index values and calls the functor for each bucket.
@@ -1040,7 +1040,7 @@ public:  // Data manipulation
     // T:
     //   The single type for all data columns
     // V:
-    //   The type of string vector specifying the new names for new columns
+    //   The type of string vector specifying the new labels for new columns
     //    after transpose
     // indices:
     //   A vector on indices for the new transposed DataFrame. Its length must
@@ -1049,8 +1049,8 @@ public:  // Data manipulation
     // current_col_order:
     //   A vector of strings specifying the order of columns in the original
     //   DataFrame.
-    // new_col_names:
-    //   A vector of strings, specifying the column names for the new
+    // new_col_labels:
+    //   A vector of strings, specifying the column labels for the new
     //   transposed DataFrame. Its length must equal the number of rows in this
     //   DataFrame. Otherwise an exception is thrown
     //
@@ -1058,7 +1058,7 @@ public:  // Data manipulation
     [[nodiscard]] DataFrame
     transpose(IndexVecType &&indices,
               const V &current_col_order,
-              const V &new_col_names) const;
+              const V &new_col_labels) const;
 
     // It joins the data between self (lhs) and rhs and returns the joined data
     // in a StdDataFrame, based on specification in join_policy.
@@ -1066,7 +1066,7 @@ public:  // Data manipulation
     // to compile and work properly:
     //   1) IndexType type must be the same between lhs and rhs.
     //   2) Ordering (< > != ==) must be well defined for type IndexType
-    //   3) In both lhs and rhs, columns with the same name must have the same
+    //   3) In both lhs and rhs, columns with the same label must have the same
     //      type
     //
     // RHS_T:
@@ -1087,35 +1087,35 @@ public:  // Data manipulation
     // It joins the data between self (lhs) and rhs and returns the joined data
     // in a StdDataFrame, based on specification in join_policy.
     // The returned DataFrame is indexed by a sequence of unsigned integers from
-    // 0 to N. The returned DataFrame will at least have two columns names
+    // 0 to N. The returned DataFrame will at least have two columns labels
     // lhs.INDEX and rhs.INDEX containing the lhs and rhs indices based on join
     // policy.
     // The following conditions must be meet for this method
     // to compile and work properly:
     //   1) Ordering (< > != ==) must be well defined for the type of the
-    //      named column.
-    //   2) Both lhs and rhs must contain the named column
-    //   3) In both lhs and rhs, columns with the same name must have the same
+    //      labeled column.
+    //   2) Both lhs and rhs must contain the labeled column
+    //   3) In both lhs and rhs, columns with the same label must have the same
     //      type
     //
     // RHS_T:
     //   Type of DataFrame rhs
     // T:
-    //   Type of the named column
+    //   Type of the labeled column
     // Ts:
     //   List all the types of all data columns. A type should be specified in
     //   the list only once.
     // rhs:
     //   The rhs DataFrame
-    // name:
-    //   Name of the column which the join will be based on
+    // label:
+    //   Label of the column which the join will be based on
     // join_policy:
     //   Specifies how to join. For example inner join, or left join, etc.
     //   (See join_policy definition)
     //
     template<typename RHS_T, typename T, typename ... Ts>
     [[nodiscard]] StdDataFrame<unsigned int>
-    join_by_column(const RHS_T &rhs, const char *name, join_policy jp) const;
+    join_by_column(const RHS_T &rhs, const char *label, join_policy jp) const;
 
     // It concatenates rhs to the end of self and returns the result as
     // another DataFrame.
@@ -1213,36 +1213,36 @@ public: // Read/access and slicing interfaces
     inline bool
     shapeless() const noexcept  { return (empty() && column_tb_.empty()); }
 
-    // It returns a reference to the container of named data column
+    // It returns a reference to the container of labeled data column
     // The return type depends on if we are in standard or view mode
     //
     // T:
-    //   Data type of the named column
+    //   Data type of the labeled column
     //
     template<typename T>
     [[nodiscard]] ColumnVecType<T> &
-    get_column(const char *name);
+    get_column(const char *label);
 
-    // It returns a const reference to the container of named data column
+    // It returns a const reference to the container of labeled data column
     // The return type depends on if we are in standard or view mode
     //
     // T:
-    //   Type of the named column.
-    // name:
-    //   Name of the column
+    //   Type of the labeled column.
+    // label:
+    //   Label of the column
     //
     template<typename T>
     [[nodiscard]] const ColumnVecType<T> &
-    get_column(const char *name) const;
+    get_column(const char *label) const;
 
-    // Returns true if self has the named column, otherwise false
+    // Returns true if self has the labeled column, otherwise false
     // NOTE: Even if the column exists, it may not be of the type you expect.
     //
-    // name:
-    //   Name of the column
+    // label:
+    //   Label of the column
     //
     bool
-    has_column(const char *name) const;
+    has_column(const char *label) const;
 
     // This method returns true if the given column follows the given pattern,
     // otherwise it returns false. Epsilon is used for approximation.
@@ -1250,9 +1250,9 @@ public: // Read/access and slicing interfaces
     // DataFrameTypes.h file.
     //
     // T:
-    //   Type of the named column.
-    // col_name:
-    //   Name of the column
+    //   Type of the labeled column.
+    // col_label:
+    //   Label of the column
     // pattern:
     //   The pattern we are looking for specified in DataFrameTypes.h
     // epsilon:
@@ -1260,50 +1260,50 @@ public: // Read/access and slicing interfaces
     //
     template<typename T>
     [[nodiscard]] bool
-    pattern_match(const char *col_name,
+    pattern_match(const char *col_label,
                   pattern_spec pattern,
                   double epsilon = 0.0) const;
 
-    // It returns the data in row row_num for columns in col_names.
+    // It returns the data in row row_num for columns in col_labels.
     // The order of data items in the returned vector is the same as order
-    // of columns on col_names.
+    // of columns on col_labels.
     // The first item in the returned vector is always the index value
     // corresponding to the row_num
     // It returns a HeteroVector which contains a different type
     // for each column.
     //
     // N:
-    //   Size of col_names and values array
+    //   Size of col_labels and values array
     // Ts:
     //   List all the types of all data columns. A type should be specified in
     //   the list only once.
     // row_num:
     //   The row number
-    // col_names:
-    //   Names of columns to get data from. It also specifies the order of data
+    // col_labels:
+    //   Labels of columns to get data from. It also specifies the order of data
     //   in the returned vector
     //
     template<size_t N, typename ... Ts>
     [[nodiscard]] HeteroVector
     get_row(size_type row_num,
-            const std::array<const char *, N> col_names) const;
+            const std::array<const char *, N> col_labels) const;
 
-    // It returns a vector of unique values in the named column in the same
+    // It returns a vector of unique values in the labeled column in the same
     // order that exists in the column.
     // For this method to compile and work, 3 conditions must be met:
     //   1) Type T must be hashable. If this is a user defined type, you
     //      must enable and specialize std::hash.
     //   2) The equality operator (==) must be well defined for type T.
-    //   3) Type T must match the actual type of the named column.
+    //   3) Type T must match the actual type of the labeled column.
     // Of course, if you never call this method in your application,
     // you need not be worried about these conditions.
     //
     // T:
-    //   Data type of the named column
+    //   Data type of the labeled column
     //
     template<typename T>
     [[nodiscard]] std::vector<T>
-    get_col_unique_values(const char *name) const;
+    get_col_unique_values(const char *label) const;
 
     // It returns a DataFrame (including the index and data columns)
     // containing the data from index begin to index end.
@@ -1454,7 +1454,7 @@ public: // Read/access and slicing interfaces
 
     // This method does boolean filtering selection via the sel_functor
     // (e.g. a functor, function, or lambda). It returns a new DataFrame.
-    // Each element of the named column along with its corresponding index
+    // Each element of the labeled column along with its corresponding index
     // is passed to the sel_functor. If sel_functor returns true, that index
     // is selected and all the elements of all column for that index will be
     // included in the returned DataFrame.
@@ -1467,20 +1467,20 @@ public: // Read/access and slicing interfaces
     //       all columns into consistent length
     //
     // T:
-    //   Type of the named column
+    //   Type of the labeled column
     // F:
     //   Type of the selecting functor
     // Ts:
     //   List all the types of all data columns. A type should be specified in
     //   the list only once.
-    // name:
-    //   Name of the data column
+    // label:
+    //   Label of the data column
     // sel_functor:
     //   A reference to the selecting functor
     //
     template<typename T, typename F, typename ... Ts>
     [[nodiscard]] DataFrame
-    get_data_by_sel(const char *name, F &sel_functor) const;
+    get_data_by_sel(const char *label, F &sel_functor) const;
 
     // This is identical with above get_data_by_sel(), but:
     //   1) The result is a view
@@ -1491,20 +1491,20 @@ public: // Read/access and slicing interfaces
     //       could still be modified through the returned view
     //
     // T:
-    //   Type of the named column
+    //   Type of the labeled column
     // F:
     //   Type of the selecting functor
     // Ts:
     //   List all the types of all data columns. A type should be specified in
     //   the list only once.
-    // name:
-    //   Name of the data column
+    // label:
+    //   Label of the data column
     // sel_functor:
     //   A reference to the selecting functor
     //
     template<typename T, typename F, typename ... Ts>
     [[nodiscard]] DataFramePtrView<IndexType>
-    get_view_by_sel(const char *name, F &sel_functor) const;
+    get_view_by_sel(const char *label, F &sel_functor) const;
 
     // This does the same function as above get_data_by_sel() but operating
     // on two columns.
@@ -1512,25 +1512,25 @@ public: // Read/access and slicing interfaces
     //     bool ()(const IndexType &, const T1 &, const T2 &)
     //
     // T1:
-    //   Type of the first named column
+    //   Type of the first labeled column
     // T2:
-    //   Type of the second named column
+    //   Type of the second labeled column
     // F:
     //   Type of the selecting functor
     // Ts:
     //   List all the types of all data columns. A type should be specified in
     //   the list only once.
-    // name1:
-    //   Name of the first data column
-    // name2:
-    //   Name of the second data column
+    // label1:
+    //   Label of the first data column
+    // label2:
+    //   Label of the second data column
     // sel_functor:
     //   A reference to the selecting functor
     //
     template<typename T1, typename T2, typename F, typename ... Ts>
     [[nodiscard]] DataFrame
-    get_data_by_sel(const char *name1,
-                    const char *name2,
+    get_data_by_sel(const char *label1,
+                    const char *label2,
                     F &sel_functor) const;
 
     // This is identical with above get_data_by_sel(), but:
@@ -1542,24 +1542,25 @@ public: // Read/access and slicing interfaces
     //       could still be modified through the returned view
     //
     // T1:
-    //   Type of the first named column
+    //   Type of the first labeled column
     // T2:
-    //   Type of the second named column
+    //   Type of the second labeled column
     // F:
     //   Type of the selecting functor
     // Ts:
     //   List all the types of all data columns. A type should be specified in
     //   the list only once.
-    // name1:
-    //   Name of the first data column
-    // name2:
-    //   Name of the second data column
+    // label1:
+    //   Label of the first data column
+    // label2:
+    //   Label of the second data column
     // sel_functor:
     //   A reference to the selecting functor
     //
     template<typename T1, typename T2, typename F, typename ... Ts>
     [[nodiscard]] DataFramePtrView<IndexType>
-    get_view_by_sel(const char *name1, const char *name2, F &sel_functor) const;
+    get_view_by_sel(const char *label1, const char *label2,
+                    F &sel_functor) const;
 
     // This does the same function as above get_data_by_sel() but operating
     // on three columns.
@@ -1567,31 +1568,31 @@ public: // Read/access and slicing interfaces
     //     bool ()(const IndexType &, const T1 &, const T2 &, const T3 &)
     //
     // T1:
-    //   Type of the first named column
+    //   Type of the first labeled column
     // T2:
-    //   Type of the second named column
+    //   Type of the second labeled column
     // T3:
-    //   Type of the third named column
+    //   Type of the third labeled column
     // F:
     //   Type of the selecting functor
     // Ts:
     //   List all the types of all data columns. A type should be specified in
     //   the list only once.
-    // name1:
-    //   Name of the first data column
-    // name2:
-    //   Name of the second data column
-    // name3:
-    //   Name of the third data column
+    // label1:
+    //   Label of the first data column
+    // label2:
+    //   Label of the second data column
+    // label3:
+    //   Label of the third data column
     // sel_functor:
     //   A reference to the selecting functor
     //
     template<typename T1, typename T2, typename T3, typename F,
              typename ... Ts>
     [[nodiscard]] DataFrame
-    get_data_by_sel(const char *name1,
-                    const char *name2,
-                    const char *name3,
+    get_data_by_sel(const char *label1,
+                    const char *label2,
+                    const char *label3,
                     F &sel_functor) const;
 
     // This is identical with above get_data_by_sel(), but:
@@ -1603,31 +1604,31 @@ public: // Read/access and slicing interfaces
     //       could still be modified through the returned view
     //
     // T1:
-    //   Type of the first named column
+    //   Type of the first labeled column
     // T2:
-    //   Type of the second named column
+    //   Type of the second labeled column
     // T3:
-    //   Type of the third named column
+    //   Type of the third labeled column
     // F:
     //   Type of the selecting functor
     // Ts:
     //   List all the types of all data columns. A type should be specified in
     //   the list only once.
-    // name1:
-    //   Name of the first data column
-    // name2:
-    //   Name of the second data column
-    // name3:
-    //   Name of the third data column
+    // label1:
+    //   Label of the first data column
+    // label2:
+    //   Label of the second data column
+    // label3:
+    //   Label of the third data column
     // sel_functor:
     //   A reference to the selecting functor
     //
     template<typename T1, typename T2, typename T3, typename F,
              typename ... Ts>
     [[nodiscard]] DataFramePtrView<IndexType>
-    get_view_by_sel(const char *name1,
-                    const char *name2,
-                    const char *name3,
+    get_view_by_sel(const char *label1,
+                    const char *label2,
+                    const char *label3,
                     F &sel_functor) const;
 
     // It returns a DataFrame (including the index and data columns)
@@ -1699,8 +1700,8 @@ public: // Read/access and slicing interfaces
     get_index()  { return (indices_); }
 
     // It creates and returns a new DataFrame which has the col_to_be_index
-    // column as the index. If old_index_name is not null, it will be loaded
-    // as a regular column in the result under the name old_index_name.
+    // column as the index. If old_index_label is not null, it will be loaded
+    // as a regular column in the result under the label old_index_label.
     //
     // NOTE: If the new index column is shorter than other columns, every
     //       column will be cut to that length.
@@ -1712,17 +1713,17 @@ public: // Read/access and slicing interfaces
     //   List all the types of all data columns. A type should be specified in
     //   the list only once.
     // col_to_be_index:
-    //   Name of the column you want as the new index. This name will not be a
+    //   Label of the column you want as the new index. This label will not be a
     //   column in the result anymore
-    // old_index_name:
-    //   Name of the current index, if converted into a regular column in the
+    // old_index_label:
+    //   Label of the current index, if converted into a regular column in the
     //   result. If this is null, the current index will not be loaded into
     //   the result as a column.
     //
     template<typename T, typename ... Ts>
     [[nodiscard]] StdDataFrame<T>
     get_reindexed(const char *col_to_be_index,
-                  const char *old_index_name = nullptr) const;
+                  const char *old_index_label = nullptr) const;
 
     // This is similar to get_reindexed(), but it returns a view. Please read
     // above for specs.
@@ -1738,21 +1739,21 @@ public: // Read/access and slicing interfaces
     //   List all the types of all data columns. A type should be specified in
     //   the list only once.
     // col_to_be_index:
-    //   Name of the column you want as the new index. This name will not be a
+    //   Label of the column you want as the new index. This label will not be a
     //   column in the result anymore
-    // old_index_name:
-    //   Name of the current index, if converted into a regular column in the
+    // old_index_label:
+    //   Label of the current index, if converted into a regular column in the
     //   result. If this is null, the current index will not be loaded into
     //   the result as a column.
     //
     template<typename T, typename ... Ts>
     [[nodiscard]] DataFrameView<T>
     get_reindexed_view(const char *col_to_be_index,
-                       const char *old_index_name = nullptr) const;
+                       const char *old_index_label = nullptr) const;
 
-    // This method combines the content of column col_name between self and
+    // This method combines the content of column col_label between self and
     // rhs based on the logic in functor. Both self and rhs must contain
-    // col_name column with the same type as T.
+    // col_label column with the same type as T.
     // It returns the result as a vector that could be moved into one of the
     // dataframes consequently. The length of the result vector will be the min
     // length of the columns in self and rhs.
@@ -1761,16 +1762,16 @@ public: // Read/access and slicing interfaces
     //       in self and rhs are properly aligned.
     //
     // T:
-    //   Type on column col_name. If this is index it would be the same as
+    //   Type on column col_label. If this is index it would be the same as
     //   IndexType.
     // DF:
     //   Type of the rhs dataframe
     // F:
     //   The functor type
-    // col_name:
-    //   Name of the column
+    // col_label:
+    //   Label of the column
     // rhs:
-    //   An instance of a dataframe that contains the same col_name with the
+    //   An instance of a dataframe that contains the same col_label with the
     //   same type (T)
     // functor:
     //   An instance of the functor with signature:
@@ -1778,12 +1779,12 @@ public: // Read/access and slicing interfaces
     //
     template<typename T, typename DF, typename F>
     [[nodiscard]] std::vector<T>
-    combine(const char *col_name, const DF &rhs, F &functor) const;
+    combine(const char *col_label, const DF &rhs, F &functor) const;
 
     // Same as the combine() above but it combines 3 columns.
     //
     // T:
-    //   Type on column col_name. If this is index it would be the same as
+    //   Type on column col_label. If this is index it would be the same as
     //   IndexType.
     // DF1:
     //   Type of the df1 dataframe
@@ -1791,13 +1792,13 @@ public: // Read/access and slicing interfaces
     //   Type of the df2 dataframe
     // F:
     //   The functor type
-    // col_name:
-    //   Name of the column
+    // col_label:
+    //   Label of the column
     // df1:
-    //   An instance of a dataframe that contains the same col_name with the
+    //   An instance of a dataframe that contains the same col_label with the
     //   same type (T)
     // df2:
-    //   Another instance of a dataframe that contains the same col_name with
+    //   Another instance of a dataframe that contains the same col_label with
     //   the same type (T)
     // functor:
     //   An instance of the functor with signature:
@@ -1805,7 +1806,7 @@ public: // Read/access and slicing interfaces
     //
     template<typename T, typename DF1, typename DF2, typename F>
     [[nodiscard]] std::vector<T>
-    combine(const char *col_name,
+    combine(const char *col_label,
             const DF1 &df1,
             const DF2 &df2,
             F &functor) const;
@@ -1813,7 +1814,7 @@ public: // Read/access and slicing interfaces
     // Same as the combine() above but it combines 4 columns.
     //
     // T:
-    //   Type on column col_name. If this is index it would be the same as
+    //   Type on column col_label. If this is index it would be the same as
     //   IndexType.
     // DF1:
     //   Type of the df1 dataframe
@@ -1823,16 +1824,16 @@ public: // Read/access and slicing interfaces
     //   Type of the df3 dataframe
     // F:
     //   The functor type
-    // col_name:
-    //   Name of the column
+    // col_label:
+    //   Label of the column
     // df1:
-    //   An instance of a dataframe that contains the same col_name with the
+    //   An instance of a dataframe that contains the same col_label with the
     //   same type (T)
     // df2:
-    //   Another instance of a dataframe that contains the same col_name with
+    //   Another instance of a dataframe that contains the same col_label with
     //   the same type (T)
     // df3:
-    //   Another instance of a dataframe that contains the same col_name with
+    //   Another instance of a dataframe that contains the same col_label with
     //   the same type (T)
     // functor:
     //   An instance of the functor with signature:
@@ -1843,15 +1844,15 @@ public: // Read/access and slicing interfaces
     //
     template<typename T, typename DF1, typename DF2, typename DF3, typename F>
     [[nodiscard]] std::vector<T>
-    combine(const char *col_name,
+    combine(const char *col_label,
             const DF1 &df1,
             const DF2 &df2,
             const DF3 &df3,
             F &functor) const;
 
-    // This method feeds old_col_name1 and old_col_name2 of types OLD_T1 and
+    // This method feeds old_col_label1 and old_col_label2 of types OLD_T1 and
     // OLD_T2 to functor which returns a std::vector<NEW_T> which will be
-    // loaded into self as column new_col_name. Both old columns will be
+    // loaded into self as column new_col_label. Both old columns will be
     // removed, if delete_old_cols is true
     // Functor "functor" should implement the logic of consolidating two
     // columns into one. Functor signature is:
@@ -1866,20 +1867,20 @@ public: // Read/access and slicing interfaces
     // NOTE: This method could not be called from views.
     //
     // OLD_T1:
-    //   Type of existing column named old_col_name1
+    //   Type of existing column labeled old_col_label1
     // OLD_T2:
-    //   Type of existing column named old_col_name2
+    //   Type of existing column labeled old_col_label2
     // NEW_T:
-    //   Type of the new column new_col_name which is the consolidation of the
+    //   Type of the new column new_col_label which is the consolidation of the
     //   two existing columns
     // F:
     //   Type of the consildating functor
-    // old_col_name1:
-    //   Name of the first existing column
-    // old_col_name2:
-    //   Name of the second existing column
-    // new_col_name:
-    //   Name of the new consolidated column
+    // old_col_label1:
+    //   Label of the first existing column
+    // old_col_label2:
+    //   Label of the second existing column
+    // new_col_label:
+    //   Label of the new consolidated column
     // functor:
     //   Consolidating functor
     // delete_old_cols:
@@ -1887,9 +1888,9 @@ public: // Read/access and slicing interfaces
     //
     template<typename OLD_T1, typename OLD_T2, typename NEW_T, typename F>
     void
-    consolidate(const char *old_col_name1,
-                const char *old_col_name2,
-                const char *new_col_name,
+    consolidate(const char *old_col_label1,
+                const char *old_col_label2,
+                const char *new_col_label,
                 F &functor,
                 bool delete_old_cols = true);
 
@@ -1908,24 +1909,24 @@ public: // Read/access and slicing interfaces
     // NOTE: This method could not be called from views.
     //
     // OLD_T1:
-    //   Type of existing column named old_col_name1
+    //   Type of existing column labeled old_col_label1
     // OLD_T2:
-    //   Type of existing column named old_col_name2
+    //   Type of existing column labeled old_col_label2
     // OLD_T3:
-    //   Type of existing column named old_col_name3
+    //   Type of existing column labeled old_col_label3
     // NEW_T:
-    //   Type of the new column new_col_name which is the consolidation of the
+    //   Type of the new column new_col_label which is the consolidation of the
     //   two existing columns
     // F:
     //   Type of the consildating functor
-    // old_col_name1:
-    //   Name of the first existing column
-    // old_col_name2:
-    //   Name of the second existing column
-    // old_col_name3:
-    //   Name of the third existing column
-    // new_col_name:
-    //   Name of the new consolidated column
+    // old_col_label1:
+    //   Label of the first existing column
+    // old_col_label2:
+    //   Label of the second existing column
+    // old_col_label3:
+    //   Label of the third existing column
+    // new_col_label:
+    //   Label of the new consolidated column
     // functor:
     //   Consolidating functor
     // delete_old_cols:
@@ -1934,10 +1935,10 @@ public: // Read/access and slicing interfaces
     template<typename OLD_T1, typename OLD_T2, typename OLD_T3,
              typename NEW_T, typename F>
     void
-    consolidate(const char *old_col_name1,
-                const char *old_col_name2,
-                const char *old_col_name3,
-                const char *new_col_name,
+    consolidate(const char *old_col_label1,
+                const char *old_col_label2,
+                const char *old_col_label3,
+                const char *new_col_label,
                 F &functor,
                 bool delete_old_cols = true);
 
@@ -1946,9 +1947,9 @@ public:  // Visitors
     // This is the most generalized visit function. It visits multiple
     // columns with the corresponding function objects sequentially.
     // Each function object is passed every single value of the given
-    // column along with its name and the corresponding index value.
+    // column along with its label and the corresponding index value.
     // All functions objects must have this signature
-    //     bool (const IndexType &i, const char *name, [const] T &col_value)
+    //     bool (const IndexType &i, const char *label, [const] T &col_value)
     // If the function object returns false, the DataFrame will stop iterating
     // at that point on that column.
     //
@@ -1958,11 +1959,11 @@ public:  // Visitors
     //   The list of types for columns in args
     // args:
     //   A variable list of arguments consisting of
-    //       std::pair(<const char *name,
+    //       std::pair(<const char *label,
     //                  &std::function<bool (const IndexType &,
     //                                       const char *,
     //                                       [const] T &)>)
-    //   Each pair represents a column name and the functor to run on it.
+    //   Each pair represents a column label and the functor to run on it.
     //
     // NOTE: The second member of pair is a _pointer_ to the function or
     //       functor object
@@ -1978,27 +1979,27 @@ public:  // Visitors
         const_cast<DataFrame *>(this)->multi_visit<Ts ...>(args ...);
     }
 
-    // It passes the values of each index and each named column to the
+    // It passes the values of each index and each labeled column to the
     // functor visitor sequentially from beginning to end
     //
     // NOTE: This method could be used to implement a pivot table.
     //
     // T:
-    //   Type of the named column
+    //   Type of the labeled column
     // V:
     //   Type of the visitor functor
-    // name:
-    //   Name of the data column
+    // label:
+    //   Label of the data column
     //
     template<typename T, typename V>
     V &
-    visit(const char *name, V &visitor);
+    visit(const char *label, V &visitor);
 
     template<typename T, typename V>
     V &
-    visit(const char *name, V &visitor) const  {
+    visit(const char *label, V &visitor) const  {
 
-        return(const_cast<DataFrame *>(this)->visit<T, V>(name, visitor));
+        return(const_cast<DataFrame *>(this)->visit<T, V>(label, visitor));
     }
 
     // These are identical to above visit() but could execute asynchronously.
@@ -2010,38 +2011,38 @@ public:  // Visitors
     //
     template<typename T, typename V>
     [[nodiscard]] std::future<V &>
-    visit_async(const char *name, V &visitor);
+    visit_async(const char *label, V &visitor);
 
     template<typename T, typename V>
     [[nodiscard]] std::future<V &>
-    visit_async(const char *name, V &visitor) const;
+    visit_async(const char *label, V &visitor) const;
 
-    // It passes the values of each index and the two named columns to the
+    // It passes the values of each index and the two labeled columns to the
     // functor visitor sequentially from beginning to end
     //
     // NOTE: This method could be used to implement a pivot table.
     //
     // T1:
-    //   Type of the first named column
+    //   Type of the first labeled column
     // T2:
-    //   Type of the second named column
+    //   Type of the second labeled column
     // V:
     //   Type of the visitor functor
-    // name1:
-    //   Name of the first data column
-    // name2:
-    //   Name of the second data column
+    // label1:
+    //   Label of the first data column
+    // label2:
+    //   Label of the second data column
     //
     template<typename T1, typename T2, typename V>
     V &
-    visit(const char *name1, const char *name2, V &visitor);
+    visit(const char *label1, const char *label2, V &visitor);
 
     template<typename T1, typename T2, typename V>
     V &
-    visit(const char *name1, const char *name2, V &visitor) const  {
+    visit(const char *label1, const char *label2, V &visitor) const  {
 
         return(const_cast<DataFrame *>(this)->visit<T1, T2, V>
-               (name1, name2, visitor));
+               (label1, label2, visitor));
     }
 
     // These are identical to above visit() but could execute asynchronously.
@@ -2053,45 +2054,46 @@ public:  // Visitors
     //
     template<typename T1, typename T2, typename V>
     [[nodiscard]] std::future<V &>
-    visit_async(const char *name1, const char *name2, V &visitor);
+    visit_async(const char *label1, const char *label2, V &visitor);
 
     template<typename T1, typename T2, typename V>
     [[nodiscard]] std::future<V &>
-    visit_async(const char *name1, const char *name2, V &visitor) const;
+    visit_async(const char *label1, const char *label2, V &visitor) const;
 
-    // It passes the values of each index and the three named columns to the
+    // It passes the values of each index and the three labeled columns to the
     // functor visitor sequentially from beginning to end
     //
     // NOTE: This method could be used to implement a pivot table.
     //
     // T1:
-    //   Type of the first named column
+    //   Type of the first labeled column
     // T2:
-    //   Type of the second named column
+    //   Type of the second labeled column
     // T3:
-    //   Type of the third named column
+    //   Type of the third labeled column
     // V:
     //   Type of the visitor functor
-    // name1:
-    //   Name of the first data column
-    // name2:
-    //   Name of the second data column
-    // name3:
-    //   Name of the third data column
+    // label1:
+    //   Label of the first data column
+    // label2:
+    //   Label of the second data column
+    // label3:
+    //   Label of the third data column
     //
     template<typename T1, typename T2, typename T3, typename V>
     V &
-    visit(const char *name1, const char *name2, const char *name3, V &visitor);
+    visit(const char *label1, const char *label2, const char *label3,
+          V &visitor);
 
     template<typename T1, typename T2, typename T3, typename V>
     V &
-    visit(const char *name1,
-          const char *name2,
-          const char *name3,
+    visit(const char *label1,
+          const char *label2,
+          const char *label3,
           V &visitor) const  {
 
         return(const_cast<DataFrame *>(this)->visit<T1, T2, T3, V>
-               (name1, name2, name3, visitor));
+               (label1, label2, label3, visitor));
     }
 
     // These are identical to above visit() but could execute asynchronously.
@@ -2103,60 +2105,60 @@ public:  // Visitors
     //
     template<typename T1, typename T2, typename T3, typename V>
     [[nodiscard]] std::future<V &>
-    visit_async(const char *name1,
-                const char *name2,
-                const char *name3,
+    visit_async(const char *label1,
+                const char *label2,
+                const char *label3,
                 V &visitor);
 
     template<typename T1, typename T2, typename T3, typename V>
     [[nodiscard]] std::future<V &>
-    visit_async(const char *name1,
-                const char *name2,
-                const char *name3,
+    visit_async(const char *label1,
+                const char *label2,
+                const char *label3,
                 V &visitor) const;
 
-    // It passes the values of each index and the four named columns to the
+    // It passes the values of each index and the four labeled columns to the
     // functor visitor sequentially from beginning to end
     //
     // NOTE: This method could be used to implement a pivot table.
     //
     // T1:
-    //   Type of the first named column
+    //   Type of the first labeled column
     // T2:
-    //   Type of the second named column
+    //   Type of the second labeled column
     // T3:
-    //   Type of the third named column
+    //   Type of the third labeled column
     // T4:
-    //   Type of the fourth named column
+    //   Type of the fourth labeled column
     // V:
     //   Type of the visitor functor
-    // name1:
-    //   Name of the first data column
-    // name2:
-    //   Name of the second data column
-    // name3:
-    //   Name of the third data column
-    // name4:
-    //   Name of the fourth data column
+    // label1:
+    //   Label of the first data column
+    // label2:
+    //   Label of the second data column
+    // label3:
+    //   Label of the third data column
+    // label4:
+    //   Label of the fourth data column
     //
     template<typename T1, typename T2, typename T3, typename T4, typename V>
     V &
-    visit(const char *name1,
-          const char *name2,
-          const char *name3,
-          const char *name4,
+    visit(const char *label1,
+          const char *label2,
+          const char *label3,
+          const char *label4,
           V &visitor);
 
     template<typename T1, typename T2, typename T3, typename T4, typename V>
     V &
-    visit(const char *name1,
-          const char *name2,
-          const char *name3,
-          const char *name4,
+    visit(const char *label1,
+          const char *label2,
+          const char *label3,
+          const char *label4,
           V &visitor) const  {
 
         return(const_cast<DataFrame *>(this)->visit<T1, T2, T3, T4, V>
-               (name1, name2, name3, name4, visitor));
+               (label1, label2, label3, label4, visitor));
     }
 
     // These are identical to above visit() but could execute asynchronously.
@@ -2168,70 +2170,70 @@ public:  // Visitors
     //
     template<typename T1, typename T2, typename T3, typename T4, typename V>
     [[nodiscard]] std::future<V &>
-    visit_async(const char *name1,
-                const char *name2,
-                const char *name3,
-                const char *name4,
+    visit_async(const char *label1,
+                const char *label2,
+                const char *label3,
+                const char *label4,
                 V &visitor);
 
     template<typename T1, typename T2, typename T3, typename T4, typename V>
     [[nodiscard]] std::future<V &>
-    visit_async(const char *name1,
-                const char *name2,
-                const char *name3,
-                const char *name4,
+    visit_async(const char *label1,
+                const char *label2,
+                const char *label3,
+                const char *label4,
                 V &visitor) const;
 
-    // It passes the values of each index and the five named columns to the
+    // It passes the values of each index and the five labeled columns to the
     // functor visitor sequentially from beginning to end
     //
     // NOTE: This method could be used to implement a pivot table.
     //
     // T1:
-    //   Type of the first named column
+    //   Type of the first labeled column
     // T2:
-    //   Type of the second named column
+    //   Type of the second labeled column
     // T3:
-    //   Type of the third named column
+    //   Type of the third labeled column
     // T4:
-    //   Type of the fourth named column
+    //   Type of the fourth labeled column
     // T5:
-    //   Type of the fifth named column
+    //   Type of the fifth labeled column
     // V:
     //   Type of the visitor functor
-    // name1:
-    //   Name of the first data column
-    // name2:
-    //   Name of the second data column
-    // name3:
-    //   Name of the third data column
-    // name4:
-    //   Name of the fourth data column
-    // name5:
-    //   Name of the fifth data column
+    // label1:
+    //   Label of the first data column
+    // label2:
+    //   Label of the second data column
+    // label3:
+    //   Label of the third data column
+    // label4:
+    //   Label of the fourth data column
+    // label5:
+    //   Label of the fifth data column
     //
     template<typename T1, typename T2, typename T3, typename T4, typename T5,
              typename V>
     V &
-    visit(const char *name1,
-          const char *name2,
-          const char *name3,
-          const char *name4,
-          const char *name5,
+    visit(const char *label1,
+          const char *label2,
+          const char *label3,
+          const char *label4,
+          const char *label5,
           V &visitor);
 
     template<typename T1, typename T2, typename T3, typename T4, typename T5,
              typename V>
     V &
-    visit(const char *name1,
-          const char *name2,
-          const char *name3,
-          const char *name4,
-          const char *name5,
+    visit(const char *label1,
+          const char *label2,
+          const char *label3,
+          const char *label4,
+          const char *label5,
           V &visitor) const  {
 
         return(const_cast<DataFrame *>(this)->visit<T1, T2, T3, T4, T5, V>
-               (name1, name2, name3, name4, name5, visitor));
+               (label1, label2, label3, label4, label5, visitor));
     }
 
     // These are identical to above visit() but could execute asynchronously.
@@ -2244,45 +2246,45 @@ public:  // Visitors
     template<typename T1, typename T2, typename T3, typename T4, typename T5,
              typename V>
     [[nodiscard]] std::future<V &>
-    visit_async(const char *name1,
-                const char *name2,
-                const char *name3,
-                const char *name4,
-                const char *name5,
+    visit_async(const char *label1,
+                const char *label2,
+                const char *label3,
+                const char *label4,
+                const char *label5,
                 V &visitor);
 
     template<typename T1, typename T2, typename T3, typename T4, typename T5,
              typename V>
     [[nodiscard]] std::future<V &>
-    visit_async(const char *name1,
-                const char *name2,
-                const char *name3,
-                const char *name4,
-                const char *name5,
+    visit_async(const char *label1,
+                const char *label2,
+                const char *label3,
+                const char *label4,
+                const char *label5,
                 V &visitor) const;
 
     // This is similar to visit(), but it passes a const reference to the index
-    // vector and the named column vector at once the functor visitor.
+    // vector and the labeled column vector at once the functor visitor.
     // This is convenient for calculations that need the whole data vector,
     // for example auto-correlation.
     //
     // T:
-    //   Type of the named column
+    //   Type of the labeled column
     // V:
     //   Type of the visitor functor
-    // name:
-    //   Name of the data column
+    // label:
+    //   Label of the data column
     //
     template<typename T, typename V>
     V &
-    single_act_visit(const char *name, V &visitor);
+    single_act_visit(const char *label, V &visitor);
 
     template<typename T, typename V>
     V &
-    single_act_visit(const char *name, V &visitor) const  {
+    single_act_visit(const char *label, V &visitor) const  {
 
         return(const_cast<DataFrame *>(this)->single_act_visit<T, V>
-               (name, visitor));
+               (label, visitor));
     }
 
     // These are identical to above single_act_visit() but could execute
@@ -2295,39 +2297,40 @@ public:  // Visitors
     //
     template<typename T1, typename V>
     [[nodiscard]] std::future<V &>
-    single_act_visit_async(const char *name, V &visitor);
+    single_act_visit_async(const char *label, V &visitor);
 
     template<typename T1, typename V>
     [[nodiscard]] std::future<V &>
-    single_act_visit_async(const char *name, V &visitor) const;
+    single_act_visit_async(const char *label, V &visitor) const;
 
     // This is similar to visit(), but it passes a const reference to the index
-    // vector and the two named column vectors at once the functor visitor.
+    // vector and the two labeled column vectors at once the functor visitor.
     // This is convenient for calculations that need the whole data vector.
     //
     // NOTE: This method could be used to implement a pivot table.
     //
     // T1:
-    //   Type of the first named column
+    //   Type of the first labeled column
     // T2:
-    //   Type of the second named column
+    //   Type of the second labeled column
     // V:
     //   Type of the visitor functor
-    // name1:
-    //   Name of the first data column
-    // name2:
-    //   Name of the second data column
+    // label1:
+    //   Label of the first data column
+    // label2:
+    //   Label of the second data column
     //
     template<typename T1, typename T2, typename V>
     V &
-    single_act_visit(const char *name1, const char *name2, V &visitor);
+    single_act_visit(const char *label1, const char *label2, V &visitor);
 
     template<typename T1, typename T2, typename V>
     V &
-    single_act_visit(const char *name1, const char *name2, V &visitor) const  {
+    single_act_visit(const char *label1, const char *label2,
+                     V &visitor) const  {
 
         return(const_cast<DataFrame *>(this)->single_act_visit<T1, T2, V>
-               (name1, name2, visitor));
+               (label1, label2, visitor));
     }
 
     // These are identical to above single_act_visit() but could execute
@@ -2340,18 +2343,18 @@ public:  // Visitors
     //
     template<typename T1, typename T2, typename V>
     [[nodiscard]] std::future<V &>
-    single_act_visit_async(const char *name1, const char *name2, V &visitor);
+    single_act_visit_async(const char *label1, const char *label2, V &visitor);
 
     template<typename T1, typename T2, typename V>
     [[nodiscard]] std::future<V &>
-    single_act_visit_async(const char *name1,
-                           const char *name2,
+    single_act_visit_async(const char *label1,
+                           const char *label2,
                            V &visitor) const;
 
 public:  // Operators
 
     // It compares self with rhs. If both have the sanme indices,
-    // same number of columns, same names for each column, and all
+    // same number of columns, same labels for each column, and all
     // columns are equal, then it returns true. Otherwise it returns false
     //
     // Ts:
@@ -2404,14 +2407,14 @@ public:  // Utilities and miscellaneous
     shape() const;
 
     // It returns information about each column. The result is a vector of
-    // tuples containing each column name, size, and std::type_index(typeid).
+    // tuples containing each column label, size, and std::type_index(typeid).
     //
     // Ts:
     //   List all the types of all data columns. A type should be specified in
     //   the list only once.
     //
     template<typename ... Ts>
-    [[nodiscard]] std::vector<std::tuple<ColNameType,
+    [[nodiscard]] std::vector<std::tuple<ColLabelType,
                                          size_type,
                                          std::type_index>>
     get_columns_info() const;
@@ -2428,13 +2431,13 @@ public:  // Utilities and miscellaneous
     //       in the result
     //
     // T:
-    //   Type of the col_name column.
-    // col_name:
-    //   Name of the column
+    //   Type of the col_label column.
+    // col_label:
+    //   Label of the column
     //
     template<typename T>
     [[nodiscard]] MemUsage
-    get_memory_usage(const char *col_name) const;
+    get_memory_usage(const char *col_label) const;
 
     // This will reclaim unused/reserve memory from all columns including the
     // index.
@@ -2602,7 +2605,7 @@ protected:
 
     template<typename T1, typename T2>
     size_type
-    _load_pair(std::pair<T1, T2> &col_name_data);
+    _load_pair(std::pair<T1, T2> &col_label_data);
 
     template<typename T>
     static inline constexpr
@@ -2620,7 +2623,7 @@ private:  // Static helper functions
 
     template<typename CF, typename ... Ts>
     static void
-    sort_common_(DataFrame<I, H> &df, CF &&comp_func);
+    sort_common_(DataFrame<I, H, CLT> &df, CF &&comp_func);
 
     template<typename T>
     static void
@@ -2680,7 +2683,7 @@ private:  // Static helper functions
 
     template<typename T, typename ITR>
     void
-    setup_view_column_(const char *name, Index2D<ITR> range);
+    setup_view_column_(const char *label, Index2D<ITR> range);
 
     using IndexIdxVector = std::vector<std::tuple<size_type, size_type>>;
     template<typename T>
@@ -2692,7 +2695,7 @@ private:  // Static helper functions
                         const RHS_T &rhs,
                         const IndexIdxVector &joined_index_idx,
                         StdDataFrame<IDX_T> &result,
-                        const char *skip_col_name = nullptr);
+                        const char *skip_col_label = nullptr);
 
     template<typename LHS_T, typename RHS_T, typename ... Ts>
     static StdDataFrame<IndexType>
@@ -2704,7 +2707,7 @@ private:  // Static helper functions
     static StdDataFrame<unsigned int>
     column_join_helper_(const LHS_T &lhs,
                         const RHS_T &rhs,
-                        const char *col_name,
+                        const char *col_label,
                         const IndexIdxVector &joined_index_idx);
 
     template<typename T>
@@ -2724,7 +2727,7 @@ private:  // Static helper functions
     static StdDataFrame<unsigned int>
     column_inner_join_(const LHS_T &lhs,
                        const RHS_T &rhs,
-                       const char *col_name,
+                       const char *col_label,
                        const std::vector<JoinSortingPair<T>> &col_vec_lhs,
                        const std::vector<JoinSortingPair<T>> &col_vec_rhs);
 
@@ -2745,7 +2748,7 @@ private:  // Static helper functions
     static StdDataFrame<unsigned int>
     column_left_join_(const LHS_T &lhs,
                       const RHS_T &rhs,
-                      const char *col_name,
+                      const char *col_label,
                       const std::vector<JoinSortingPair<T>> &col_vec_lhs,
                       const std::vector<JoinSortingPair<T>> &col_vec_rhs);
 
@@ -2766,7 +2769,7 @@ private:  // Static helper functions
     static StdDataFrame<unsigned int>
     column_right_join_(const LHS_T &lhs,
                        const RHS_T &rhs,
-                       const char *col_name,
+                       const char *col_label,
                        const std::vector<JoinSortingPair<T>> &col_vec_lhs,
                        const std::vector<JoinSortingPair<T>> &col_vec_rhs);
 
@@ -2799,7 +2802,7 @@ private:  // Static helper functions
     column_left_right_join_(
         const LHS_T &lhs,
         const RHS_T &rhs,
-        const char *col_name,
+        const char *col_label,
         const std::vector<JoinSortingPair<T>> &col_vec_lhs,
         const std::vector<JoinSortingPair<T>> &col_vec_rhs);
 

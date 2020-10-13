@@ -29,9 +29,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
 
+#include <DataFrame/Utils/FixedSizeString.h>
 #include <DataFrame/Vectors/HeteroVector.h>
 
 #include <cmath>
+#include <cstring>
 #include <limits>
 #include <stdexcept>
 #include <tuple>
@@ -76,6 +78,10 @@ struct NotImplemented : public DataFrameError  {
 
     NotImplemented (const char *desc) : DataFrameError (desc)  {   }
 };
+
+// ----------------------------------------------------------------------------
+
+using DefaultColLabelType = String64;
 
 // ----------------------------------------------------------------------------
 
@@ -373,34 +379,34 @@ struct type_declare<HeteroPtrView, U>  { using type = VectorPtrView<U>; };
 
 // H stands for a heterogeneous vector
 //
-template<typename I, typename H>
+template<typename I, typename H, typename CLT>
 class DataFrame;
 
-template<typename I>
-using StdDataFrame = DataFrame<I, HeteroVector>;
+template<typename I, typename CLT = DefaultColLabelType>
+using StdDataFrame = DataFrame<I, HeteroVector, CLT>;
 
-template<typename I>
-using DataFrameView = DataFrame<I, HeteroView>;
+template<typename I, typename CLT = DefaultColLabelType>
+using DataFrameView = DataFrame<I, HeteroView, CLT>;
 
-template<typename I>
-using DataFramePtrView = DataFrame<I, HeteroPtrView>;
+template<typename I, typename CLT = DefaultColLabelType>
+using DataFramePtrView = DataFrame<I, HeteroPtrView, CLT>;
 
 // ----------------------------------------------------------------------------
 
 // These are templated, so they work for all types
 
 template<typename T>
-inline bool is_nan__(const T &)  { return(false); }
+inline bool is_nan__(const T &)  { return (false); }
 
 template<>
-inline bool is_nan__<double>(const double &val)  { return(std::isnan(val)); }
+inline bool is_nan__<double>(const double &val)  { return (std::isnan(val)); }
 
 template<>
-inline bool is_nan__<float>(const float &val)  { return(std::isnan(val)); }
+inline bool is_nan__<float>(const float &val)  { return (std::isnan(val)); }
 
 template<>
 inline bool
-is_nan__<long double>(const long double &val)  { return(std::isnan(val)); }
+is_nan__<long double>(const long double &val)  { return (std::isnan(val)); }
 
 // ----------------------------------------------------------------------------
 

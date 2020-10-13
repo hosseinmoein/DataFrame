@@ -37,9 +37,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace hmdf
 {
 
-template<typename I, typename H>
+template<typename I, typename H, typename CLT>
 template<typename ... types>
-void DataFrame<I, H>::self_shift(size_type periods, shift_policy sp)  {
+void DataFrame<I, H, CLT>::self_shift(size_type periods, shift_policy sp)  {
 
     static_assert(std::is_base_of<HeteroVector, DataVec>::value,
                   "Only a StdDataFrame can call self_shift()");
@@ -75,9 +75,9 @@ void DataFrame<I, H>::self_shift(size_type periods, shift_policy sp)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, typename CLT>
 template<typename ... types>
-StdDataFrame<I> DataFrame<I, H>::
+StdDataFrame<I> DataFrame<I, H, CLT>::
 shift(size_type periods, shift_policy sp) const  {
 
     static_assert(std::is_base_of<HeteroVector, DataVec>::value,
@@ -91,9 +91,9 @@ shift(size_type periods, shift_policy sp) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, typename CLT>
 template<typename ... types>
-void DataFrame<I, H>::self_rotate(size_type periods, shift_policy sp)  {
+void DataFrame<I, H, CLT>::self_rotate(size_type periods, shift_policy sp)  {
 
     static_assert(std::is_base_of<HeteroVector, DataVec>::value,
                   "Only a StdDataFrame can call self_rotate()");
@@ -128,9 +128,9 @@ void DataFrame<I, H>::self_rotate(size_type periods, shift_policy sp)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, typename CLT>
 template<typename ... types>
-StdDataFrame<I> DataFrame<I, H>::
+StdDataFrame<I> DataFrame<I, H, CLT>::
 rotate(size_type periods, shift_policy sp) const  {
 
     static_assert(std::is_base_of<HeteroVector, DataVec>::value,
@@ -144,9 +144,9 @@ rotate(size_type periods, shift_policy sp) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, typename CLT>
 template<typename V>
-void DataFrame<I, H>::shift_right_(V &vec, size_type n)  {
+void DataFrame<I, H, CLT>::shift_right_(V &vec, size_type n)  {
 
     using value_type =
         typename std::remove_reference<decltype(vec)>::type::value_type;
@@ -169,9 +169,9 @@ void DataFrame<I, H>::shift_right_(V &vec, size_type n)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, typename CLT>
 template<typename V>
-void DataFrame<I, H>::shift_left_(V &vec, size_type n)  {
+void DataFrame<I, H, CLT>::shift_left_(V &vec, size_type n)  {
 
     using value_type =
         typename std::remove_reference<decltype(vec)>::type::value_type;
@@ -194,9 +194,9 @@ void DataFrame<I, H>::shift_left_(V &vec, size_type n)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, typename CLT>
 template<typename V>
-void DataFrame<I, H>::rotate_right_(V &vec, size_type n)  {
+void DataFrame<I, H, CLT>::rotate_right_(V &vec, size_type n)  {
 
     // There is no checking the value of n
     std::rotate(vec.rbegin(), vec.rbegin() + n, vec.rend());
@@ -205,9 +205,9 @@ void DataFrame<I, H>::rotate_right_(V &vec, size_type n)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, typename CLT>
 template<typename V>
-void DataFrame<I, H>::rotate_left_(V &vec, size_type n)  {
+void DataFrame<I, H, CLT>::rotate_left_(V &vec, size_type n)  {
 
     // There is no checking the value of n
     std::rotate(vec.begin(), vec.begin() + n, vec.end());

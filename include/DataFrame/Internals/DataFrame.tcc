@@ -42,9 +42,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace hmdf
 {
 
-template<typename I, typename H>
+template<typename I, typename H, typename CLT>
 template<typename CF, typename ... Ts>
-void DataFrame<I, H>::sort_common_(DataFrame<I, H> &df, CF &&comp_func)  {
+void DataFrame<I, H, CLT>::
+sort_common_(DataFrame<I, H, CLT> &df, CF &&comp_func)  {
 
     const size_type         idx_s = df.indices_.size();
     std::vector<size_type>  sorting_idxs(idx_s, 0);
@@ -61,10 +62,10 @@ void DataFrame<I, H>::sort_common_(DataFrame<I, H> &df, CF &&comp_func)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, typename CLT>
 template<size_t N, typename ... Ts>
 void
-DataFrame<I, H>::shuffle(const std::array<const char *, N> col_names,
+DataFrame<I, H, CLT>::shuffle(const std::array<const char *, N> col_labels,
                          bool also_shuffle_index)  {
 
     if (also_shuffle_index)  {
@@ -76,15 +77,15 @@ DataFrame<I, H>::shuffle(const std::array<const char *, N> col_names,
 
     shuffle_functor_<Ts ...>    functor;
 
-    for (auto name_citer : col_names)  {
-        const auto  citer = column_tb_.find (name_citer);
+    for (auto label_citer : col_labels)  {
+        const auto  citer = column_tb_.find (label_citer);
 
         if (citer == column_tb_.end())  {
             char buffer [512];
 
             sprintf(buffer,
                     "DataFrame::shuffle(): ERROR: Cannot find column '%s'",
-                    name_citer);
+                    label_citer);
             throw ColNotFound(buffer);
         }
 
@@ -94,9 +95,9 @@ DataFrame<I, H>::shuffle(const std::array<const char *, N> col_names,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, typename CLT>
 template<typename T>
-inline constexpr T DataFrame<I, H>::_get_nan()  {
+inline constexpr T DataFrame<I, H, CLT>::_get_nan()  {
 
     if (std::numeric_limits<T>::has_quiet_NaN)
         return (std::numeric_limits<T>::quiet_NaN());
@@ -105,9 +106,9 @@ inline constexpr T DataFrame<I, H>::_get_nan()  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, typename CLT>
 template<typename T>
-inline constexpr bool DataFrame<I, H>::_is_nan(const T &val)  {
+inline constexpr bool DataFrame<I, H, CLT>::_is_nan(const T &val)  {
 
     if (std::numeric_limits<T>::has_quiet_NaN)
         return (is_nan__(val));
@@ -116,9 +117,9 @@ inline constexpr bool DataFrame<I, H>::_is_nan(const T &val)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, typename CLT>
 template<typename T>
-void DataFrame<I, H>::
+void DataFrame<I, H, CLT>::
 fill_missing_value_(ColumnVecType<T> &vec,
                     const T &value,
                     int limit,
@@ -145,9 +146,9 @@ fill_missing_value_(ColumnVecType<T> &vec,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, typename CLT>
 template<typename T>
-void DataFrame<I, H>::
+void DataFrame<I, H, CLT>::
 fill_missing_ffill_(ColumnVecType<T> &vec, int limit, size_type col_num)  {
 
     const size_type vec_size = vec.size();
@@ -181,11 +182,11 @@ fill_missing_ffill_(ColumnVecType<T> &vec, int limit, size_type col_num)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, typename CLT>
 template<typename T,
          typename std::enable_if<! std::is_arithmetic<T>::value ||
                                  ! std::is_arithmetic<I>::value>::type*>
-void DataFrame<I, H>::
+void DataFrame<I, H, CLT>::
 fill_missing_midpoint_(ColumnVecType<T> &vec, int limit, size_type col_num)  {
 
     throw NotFeasible("fill_missing_midpoint_(): ERROR: Mid-point filling is "
@@ -194,11 +195,11 @@ fill_missing_midpoint_(ColumnVecType<T> &vec, int limit, size_type col_num)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, typename CLT>
 template<typename T,
          typename std::enable_if<std::is_arithmetic<T>::value &&
                                  std::is_arithmetic<I>::value>::type*>
-void DataFrame<I, H>::
+void DataFrame<I, H, CLT>::
 fill_missing_midpoint_(ColumnVecType<T> &vec, int limit, size_type col_num)  {
 
     const size_type vec_size = vec.size();
@@ -229,9 +230,9 @@ fill_missing_midpoint_(ColumnVecType<T> &vec, int limit, size_type col_num)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, typename CLT>
 template<typename T>
-void DataFrame<I, H>::
+void DataFrame<I, H, CLT>::
 fill_missing_bfill_(ColumnVecType<T> &vec, int limit)  {
 
     const long  vec_size = static_cast<long>(vec.size());
@@ -254,11 +255,11 @@ fill_missing_bfill_(ColumnVecType<T> &vec, int limit)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, typename CLT>
 template<typename T,
          typename std::enable_if<! std::is_arithmetic<T>::value ||
                                  ! std::is_arithmetic<I>::value>::type*>
-void DataFrame<I, H>::
+void DataFrame<I, H, CLT>::
 fill_missing_linter_(ColumnVecType<T> &, const IndexVecType &, int)  {
 
     throw NotFeasible("fill_missing_linter_(): ERROR: Interpolation is "
@@ -267,11 +268,11 @@ fill_missing_linter_(ColumnVecType<T> &, const IndexVecType &, int)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, typename CLT>
 template<typename T,
          typename std::enable_if<std::is_arithmetic<T>::value &&
                                  std::is_arithmetic<I>::value>::type*>
-void DataFrame<I, H>::
+void DataFrame<I, H, CLT>::
 fill_missing_linter_(ColumnVecType<T> &vec,
                      const IndexVecType &index,
                      int limit)  {
@@ -332,10 +333,10 @@ fill_missing_linter_(ColumnVecType<T> &vec,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, typename CLT>
 template<typename T, size_t N>
-void DataFrame<I, H>::
-fill_missing(const std::array<const char *, N> col_names,
+void DataFrame<I, H, CLT>::
+fill_missing(const std::array<const char *, N> col_labels,
              fill_policy fp,
              const std::array<T, N> values,
              int limit)  {
@@ -344,7 +345,7 @@ fill_missing(const std::array<const char *, N> col_names,
     size_type                       thread_count = 0;
 
     for (size_type i = 0; i < N; ++i)  {
-        ColumnVecType<T>    &vec = get_column<T>(col_names[i]);
+        ColumnVecType<T>    &vec = get_column<T>(col_labels[i]);
 
         if (fp == fill_policy::value)  {
             if (thread_count >= get_thread_level())
@@ -429,9 +430,9 @@ fill_missing(const std::array<const char *, N> col_names,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, typename CLT>
 template<typename T>
-void DataFrame<I, H>::
+void DataFrame<I, H, CLT>::
 drop_missing_rows_(T &vec,
                    const DropRowMap missing_row_map,
                    drop_policy policy,
@@ -466,9 +467,9 @@ drop_missing_rows_(T &vec,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, typename CLT>
 template<typename ... Ts>
-void DataFrame<I, H>::
+void DataFrame<I, H, CLT>::
 drop_missing(drop_policy policy, size_type threshold)  {
 
     DropRowMap                      missing_row_map;
@@ -538,15 +539,15 @@ drop_missing(drop_policy policy, size_type threshold)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, typename CLT>
 template<typename T, size_t N>
-typename DataFrame<I, H>::size_type DataFrame<I, H>::
-replace(const char *col_name,
+typename DataFrame<I, H, CLT>::size_type DataFrame<I, H, CLT>::
+replace(const char *col_label,
         const std::array<T, N> old_values,
         const std::array<T, N> new_values,
         int limit)  {
 
-    ColumnVecType<T>    &vec = get_column<T>(col_name);
+    ColumnVecType<T>    &vec = get_column<T>(col_label);
     size_type           count = 0;
 
     _replace_vector_vals_<ColumnVecType<T>, T, N>
@@ -557,9 +558,9 @@ replace(const char *col_name,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, typename CLT>
 template<size_t N>
-typename DataFrame<I, H>::size_type DataFrame<I, H>::
+typename DataFrame<I, H, CLT>::size_type DataFrame<I, H, CLT>::
 replace_index(const std::array<IndexType, N> old_values,
               const std::array<IndexType, N> new_values,
               int limit)  {
@@ -574,12 +575,12 @@ replace_index(const std::array<IndexType, N> old_values,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, typename CLT>
 template<typename T, typename F>
-void DataFrame<I, H>::
-replace(const char *col_name, F &functor)  {
+void DataFrame<I, H, CLT>::
+replace(const char *col_label, F &functor)  {
 
-    ColumnVecType<T>    &vec = get_column<T>(col_name);
+    ColumnVecType<T>    &vec = get_column<T>(col_label);
     const size_type     vec_s = vec.size();
 
     for (size_type i = 0; i < vec_s; ++i)
@@ -590,10 +591,10 @@ replace(const char *col_name, F &functor)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, typename CLT>
 template<typename T, size_t N>
-std::future<typename DataFrame<I, H>::size_type> DataFrame<I, H>::
-replace_async(const char *col_name,
+std::future<typename DataFrame<I, H, CLT>::size_type> DataFrame<I, H, CLT>::
+replace_async(const char *col_label,
               const std::array<T, N> old_values,
               const std::array<T, N> new_values,
               int limit)  {
@@ -601,7 +602,7 @@ replace_async(const char *col_name,
     return (std::async(std::launch::async,
                        &DataFrame::replace<T, N>,
                            this,
-                           col_name,
+                           col_label,
                            old_values,
                            new_values,
                            limit));
@@ -609,23 +610,23 @@ replace_async(const char *col_name,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, typename CLT>
 template<typename T, typename F>
-std::future<void> DataFrame<I, H>::
-replace_async(const char *col_name, F &functor)  {
+std::future<void> DataFrame<I, H, CLT>::
+replace_async(const char *col_label, F &functor)  {
 
     return (std::async(std::launch::async,
                        &DataFrame::replace<T, F>,
                            this,
-                           col_name,
+                           col_label,
                            std::ref(functor)));
 }
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, typename CLT>
 template<typename ...Ts>
-void DataFrame<I, H>::make_consistent ()  {
+void DataFrame<I, H, CLT>::make_consistent ()  {
 
     static_assert(std::is_base_of<HeteroVector, H>::value,
                   "Only a StdDataFrame can call make_consistent()");
@@ -639,9 +640,9 @@ void DataFrame<I, H>::make_consistent ()  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, typename CLT>
 template<typename ...Ts>
-void DataFrame<I, H>::shrink_to_fit ()  {
+void DataFrame<I, H, CLT>::shrink_to_fit ()  {
 
     indices_.shrink_to_fit();
 
@@ -653,13 +654,13 @@ void DataFrame<I, H>::shrink_to_fit ()  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, typename CLT>
 template<typename T, typename ...Ts>
-void DataFrame<I, H>::sort(const char *name, sort_spec dir)  {
+void DataFrame<I, H, CLT>::sort(const char *label, sort_spec dir)  {
 
     make_consistent<Ts ...>();
 
-    if (! ::strcmp(name, DF_INDEX_COL_NAME))  {
+    if (! ::strcmp(label, DF_INDEX_COL_NAME))  {
         auto    a = [this](size_type i, size_type j) -> bool  {
                         return (this->indices_[i] < this->indices_[j]);
                     };
@@ -674,7 +675,7 @@ void DataFrame<I, H>::sort(const char *name, sort_spec dir)  {
             sort_common_<decltype(d), Ts ...>(*this, std::move(d));
     }
     else  {
-        const ColumnVecType<T>  &idx_vec = get_column<T>(name);
+        const ColumnVecType<T>  &idx_vec = get_column<T>(label);
 
         auto    a = [&x = idx_vec](size_type i, size_type j) -> bool {
                         return (x[i] < x[j]);
@@ -694,25 +695,25 @@ void DataFrame<I, H>::sort(const char *name, sort_spec dir)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, typename CLT>
 template<typename T1, typename T2, typename ... Ts>
-void DataFrame<I, H>::
-sort(const char *name1, sort_spec dir1, const char *name2, sort_spec dir2)  {
+void DataFrame<I, H, CLT>::
+sort(const char *label1, sort_spec dir1, const char *label2, sort_spec dir2)  {
 
     make_consistent<Ts ...>();
 
     ColumnVecType<T1>   *vec1 { nullptr};
     ColumnVecType<T2>   *vec2 { nullptr};
 
-    if (! ::strcmp(name1, DF_INDEX_COL_NAME))
+    if (! ::strcmp(label1, DF_INDEX_COL_NAME))
         vec1 = reinterpret_cast<ColumnVecType<T1> *>(&indices_);
     else
-        vec1 = &(get_column<T1>(name1));
+        vec1 = &(get_column<T1>(label1));
 
-    if (! ::strcmp(name2, DF_INDEX_COL_NAME))
+    if (! ::strcmp(label2, DF_INDEX_COL_NAME))
         vec2 = reinterpret_cast<ColumnVecType<T2> *>(&indices_);
     else
-        vec2 = &(get_column<T2>(name2));
+        vec2 = &(get_column<T2>(label2));
 
     auto    cf =
         [vec1, vec2, dir1, dir2](size_type i, size_type j) -> bool {
@@ -740,12 +741,12 @@ sort(const char *name1, sort_spec dir1, const char *name2, sort_spec dir2)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, typename CLT>
 template<typename T1, typename T2, typename T3, typename ... Ts>
-void DataFrame<I, H>::
-sort(const char *name1, sort_spec dir1,
-     const char *name2, sort_spec dir2,
-     const char *name3, sort_spec dir3)  {
+void DataFrame<I, H, CLT>::
+sort(const char *label1, sort_spec dir1,
+     const char *label2, sort_spec dir2,
+     const char *label3, sort_spec dir3)  {
 
     make_consistent<Ts ...>();
 
@@ -753,20 +754,20 @@ sort(const char *name1, sort_spec dir1,
     ColumnVecType<T2>   *vec2 { nullptr};
     ColumnVecType<T3>   *vec3 { nullptr};
 
-    if (! ::strcmp(name1, DF_INDEX_COL_NAME))
+    if (! ::strcmp(label1, DF_INDEX_COL_NAME))
         vec1 = reinterpret_cast<ColumnVecType<T1> *>(&indices_);
     else
-        vec1 = &(get_column<T1>(name1));
+        vec1 = &(get_column<T1>(label1));
 
-    if (! ::strcmp(name2, DF_INDEX_COL_NAME))
+    if (! ::strcmp(label2, DF_INDEX_COL_NAME))
         vec2 = reinterpret_cast<ColumnVecType<T2> *>(&indices_);
     else
-        vec2 = &(get_column<T2>(name2));
+        vec2 = &(get_column<T2>(label2));
 
-    if (! ::strcmp(name3, DF_INDEX_COL_NAME))
+    if (! ::strcmp(label3, DF_INDEX_COL_NAME))
         vec3 = reinterpret_cast<ColumnVecType<T3> *>(&indices_);
     else
-        vec3 = &(get_column<T3>(name3));
+        vec3 = &(get_column<T3>(label3));
 
     auto    cf =
         [vec1, vec2, vec3, dir1, dir2, dir3]
@@ -807,13 +808,13 @@ sort(const char *name1, sort_spec dir1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, typename CLT>
 template<typename T1, typename T2, typename T3, typename T4, typename ... Ts>
-void DataFrame<I, H>::
-sort(const char *name1, sort_spec dir1,
-     const char *name2, sort_spec dir2,
-     const char *name3, sort_spec dir3,
-     const char *name4, sort_spec dir4)  {
+void DataFrame<I, H, CLT>::
+sort(const char *label1, sort_spec dir1,
+     const char *label2, sort_spec dir2,
+     const char *label3, sort_spec dir3,
+     const char *label4, sort_spec dir4)  {
 
     make_consistent<Ts ...>();
 
@@ -822,25 +823,25 @@ sort(const char *name1, sort_spec dir1,
     ColumnVecType<T3>   *vec3 { nullptr};
     ColumnVecType<T4>   *vec4 { nullptr};
 
-    if (! ::strcmp(name1, DF_INDEX_COL_NAME))
+    if (! ::strcmp(label1, DF_INDEX_COL_NAME))
         vec1 = reinterpret_cast<ColumnVecType<T1> *>(&indices_);
     else
-        vec1 = &(get_column<T1>(name1));
+        vec1 = &(get_column<T1>(label1));
 
-    if (! ::strcmp(name2, DF_INDEX_COL_NAME))
+    if (! ::strcmp(label2, DF_INDEX_COL_NAME))
         vec2 = reinterpret_cast<ColumnVecType<T2> *>(&indices_);
     else
-        vec2 = &(get_column<T2>(name2));
+        vec2 = &(get_column<T2>(label2));
 
-    if (! ::strcmp(name3, DF_INDEX_COL_NAME))
+    if (! ::strcmp(label3, DF_INDEX_COL_NAME))
         vec3 = reinterpret_cast<ColumnVecType<T3> *>(&indices_);
     else
-        vec3 = &(get_column<T3>(name3));
+        vec3 = &(get_column<T3>(label3));
 
-    if (! ::strcmp(name4, DF_INDEX_COL_NAME))
+    if (! ::strcmp(label4, DF_INDEX_COL_NAME))
         vec4 = reinterpret_cast<ColumnVecType<T4> *>(&indices_);
     else
-        vec4 = &(get_column<T4>(name4));
+        vec4 = &(get_column<T4>(label4));
 
     auto    cf =
         [vec1, vec2, vec3, vec4, dir1, dir2, dir3, dir4]
@@ -893,15 +894,15 @@ sort(const char *name1, sort_spec dir1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, typename CLT>
 template<typename T1, typename T2, typename T3, typename T4, typename T5,
          typename ... Ts>
-void DataFrame<I, H>::
-sort(const char *name1, sort_spec dir1,
-     const char *name2, sort_spec dir2,
-     const char *name3, sort_spec dir3,
-     const char *name4, sort_spec dir4,
-     const char *name5, sort_spec dir5)  {
+void DataFrame<I, H, CLT>::
+sort(const char *label1, sort_spec dir1,
+     const char *label2, sort_spec dir2,
+     const char *label3, sort_spec dir3,
+     const char *label4, sort_spec dir4,
+     const char *label5, sort_spec dir5)  {
 
     make_consistent<Ts ...>();
 
@@ -911,30 +912,30 @@ sort(const char *name1, sort_spec dir1,
     ColumnVecType<T4>   *vec4 { nullptr};
     ColumnVecType<T5>   *vec5 { nullptr};
 
-    if (! ::strcmp(name1, DF_INDEX_COL_NAME))
+    if (! ::strcmp(label1, DF_INDEX_COL_NAME))
         vec1 = reinterpret_cast<ColumnVecType<T1> *>(&indices_);
     else
-        vec1 = &(get_column<T1>(name1));
+        vec1 = &(get_column<T1>(label1));
 
-    if (! ::strcmp(name2, DF_INDEX_COL_NAME))
+    if (! ::strcmp(label2, DF_INDEX_COL_NAME))
         vec2 = reinterpret_cast<ColumnVecType<T2> *>(&indices_);
     else
-        vec2 = &(get_column<T2>(name2));
+        vec2 = &(get_column<T2>(label2));
 
-    if (! ::strcmp(name3, DF_INDEX_COL_NAME))
+    if (! ::strcmp(label3, DF_INDEX_COL_NAME))
         vec3 = reinterpret_cast<ColumnVecType<T3> *>(&indices_);
     else
-        vec3 = &(get_column<T3>(name3));
+        vec3 = &(get_column<T3>(label3));
 
-    if (! ::strcmp(name4, DF_INDEX_COL_NAME))
+    if (! ::strcmp(label4, DF_INDEX_COL_NAME))
         vec4 = reinterpret_cast<ColumnVecType<T4> *>(&indices_);
     else
-        vec4 = &(get_column<T4>(name4));
+        vec4 = &(get_column<T4>(label4));
 
-    if (! ::strcmp(name4, DF_INDEX_COL_NAME))
+    if (! ::strcmp(label4, DF_INDEX_COL_NAME))
         vec5 = reinterpret_cast<ColumnVecType<T5> *>(&indices_);
     else
-        vec5 = &(get_column<T5>(name5));
+        vec5 = &(get_column<T5>(label5));
 
     auto    cf =
         [vec1, vec2, vec3, vec4, vec5, dir1, dir2, dir3, dir4, dir5]
@@ -999,108 +1000,108 @@ sort(const char *name1, sort_spec dir1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, typename CLT>
 template<typename T, typename ...Ts>
 std::future<void>
-DataFrame<I, H>::sort_async(const char *name, sort_spec dir)  {
+DataFrame<I, H, CLT>::sort_async(const char *label, sort_spec dir)  {
 
     return (std::async(std::launch::async,
-                       [name, dir, this] () -> void {
-                           this->sort<T, Ts ...>(name, dir);
+                       [label, dir, this] () -> void {
+                           this->sort<T, Ts ...>(label, dir);
                        }));
 }
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, typename CLT>
 template<typename T1, typename T2, typename ... Ts>
 std::future<void>
-DataFrame<I, H>::
-sort_async(const char *name1, sort_spec dir1,
-           const char *name2, sort_spec dir2)  {
+DataFrame<I, H, CLT>::
+sort_async(const char *label1, sort_spec dir1,
+           const char *label2, sort_spec dir2)  {
 
     return (std::async(std::launch::async,
-                       [name1, dir1, name2, dir2, this] () -> void {
-                           this->sort<T1, T2, Ts ...>(name1, dir1,
-                                                      name2, dir2);
+                       [label1, dir1, label2, dir2, this] () -> void {
+                           this->sort<T1, T2, Ts ...>(label1, dir1,
+                                                      label2, dir2);
                        }));
 }
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, typename CLT>
 template<typename T1, typename T2, typename T3, typename ... Ts>
 std::future<void>
-DataFrame<I, H>::
-sort_async(const char *name1, sort_spec dir1,
-           const char *name2, sort_spec dir2,
-           const char *name3, sort_spec dir3)  {
+DataFrame<I, H, CLT>::
+sort_async(const char *label1, sort_spec dir1,
+           const char *label2, sort_spec dir2,
+           const char *label3, sort_spec dir3)  {
 
     return (std::async(std::launch::async,
-                       [name1, dir1, name2, dir2, name3, dir3,
+                       [label1, dir1, label2, dir2, label3, dir3,
                         this] () -> void {
-                           this->sort<T1, T2, T3, Ts ...>(name1, dir1,
-                                                          name2, dir2,
-                                                          name3, dir3);
+                           this->sort<T1, T2, T3, Ts ...>(label1, dir1,
+                                                          label2, dir2,
+                                                          label3, dir3);
                        }));
 }
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, typename CLT>
 template<typename T1, typename T2, typename T3, typename T4, typename ... Ts>
 std::future<void>
-DataFrame<I, H>::
-sort_async(const char *name1, sort_spec dir1,
-           const char *name2, sort_spec dir2,
-           const char *name3, sort_spec dir3,
-           const char *name4, sort_spec dir4)  {
+DataFrame<I, H, CLT>::
+sort_async(const char *label1, sort_spec dir1,
+           const char *label2, sort_spec dir2,
+           const char *label3, sort_spec dir3,
+           const char *label4, sort_spec dir4)  {
 
     return (std::async(std::launch::async,
-                       [name1, dir1, name2, dir2, name3, dir3, name4, dir4,
+                       [label1, dir1, label2, dir2, label3, dir3, label4, dir4,
                         this] () -> void {
-                           this->sort<T1, T2, T3, T4, Ts ...>(name1, dir1,
-                                                              name2, dir2,
-                                                              name3, dir3,
-                                                              name4, dir4);
+                           this->sort<T1, T2, T3, T4, Ts ...>(label1, dir1,
+                                                              label2, dir2,
+                                                              label3, dir3,
+                                                              label4, dir4);
                        }));
 }
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, typename CLT>
 template<typename T1, typename T2, typename T3, typename T4, typename T5,
          typename ... Ts>
 std::future<void>
-DataFrame<I, H>::
-sort_async(const char *name1, sort_spec dir1,
-           const char *name2, sort_spec dir2,
-           const char *name3, sort_spec dir3,
-           const char *name4, sort_spec dir4,
-           const char *name5, sort_spec dir5)  {
+DataFrame<I, H, CLT>::
+sort_async(const char *label1, sort_spec dir1,
+           const char *label2, sort_spec dir2,
+           const char *label3, sort_spec dir3,
+           const char *label4, sort_spec dir4,
+           const char *label5, sort_spec dir5)  {
 
     return (std::async(std::launch::async,
-                       [name1, dir1, name2, dir2, name3, dir3, name4, dir4,
-                        name5, dir5, this] () -> void {
-                           this->sort<T1, T2, T3, T4, T5, Ts ...>(name1, dir1,
-                                                                  name2, dir2,
-                                                                  name3, dir3,
-                                                                  name4, dir4,
-                                                                  name5, dir5);
+                       [label1, dir1, label2, dir2, label3, dir3, label4, dir4,
+                        label5, dir5, this] () -> void {
+                           this->sort<T1, T2, T3, T4, T5, Ts ...>(label1, dir1,
+                                                                  label2, dir2,
+                                                                  label3, dir3,
+                                                                  label4, dir4,
+                                                                  label5, dir5);
                        }));
 }
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, typename CLT>
 template<typename F, typename T, typename ...Ts>
-DataFrame<I, H> DataFrame<I, H>::
-groupby (F &&func, const char *gb_col_name, sort_state already_sorted) const  {
+DataFrame<I, H, CLT> DataFrame<I, H, CLT>::
+groupby (F &&func, const char *gb_col_label, sort_state already_sorted) const  {
 
     DataFrame   tmp_df = *this;
 
     if (already_sorted == sort_state::not_sorted)
-        tmp_df.sort<T, Ts ...>(gb_col_name, sort_spec::ascen);
+        tmp_df.sort<T, Ts ...>(gb_col_label, sort_spec::ascen);
 
     DataFrame   result;
 
@@ -1112,7 +1113,7 @@ groupby (F &&func, const char *gb_col_name, sort_state already_sorted) const  {
 
     size_type   marker = 0;
 
-    if (! ::strcmp(gb_col_name, DF_INDEX_COL_NAME))  { // Index
+    if (! ::strcmp(gb_col_label, DF_INDEX_COL_NAME))  { // Index
         const size_type vec_size = tmp_df.indices_.size();
 
         for (size_type i = 0; i < vec_size; ++i)  {
@@ -1147,7 +1148,7 @@ groupby (F &&func, const char *gb_col_name, sort_state already_sorted) const  {
         }
     }
     else  { // Non-index column
-        const ColumnVecType<T>  &gb_vec = tmp_df.get_column<T>(gb_col_name);
+        const ColumnVecType<T>  &gb_vec = tmp_df.get_column<T>(gb_col_label);
         const size_type         vec_size = gb_vec.size();
 
         for (size_type i = 0; i < vec_size; ++i)  {
@@ -1160,12 +1161,12 @@ groupby (F &&func, const char *gb_col_name, sort_state already_sorted) const  {
                                                            result);
 
                 ts_functor(tmp_df.indices_);
-                result.append_column<T>(gb_col_name,
+                result.append_column<T>(gb_col_label,
                                         gb_vec [marker],
                                         nan_policy::dont_pad_with_nans);
 
                 for (const auto &iter : tmp_df.column_tb_)  {
-                    if (iter.first != gb_col_name)  {
+                    if (iter.first != gb_col_label)  {
                         groupby_functor_<F, Ts...>  functor(iter.first.c_str(),
                                                             marker,
                                                             i,
@@ -1190,12 +1191,12 @@ groupby (F &&func, const char *gb_col_name, sort_state already_sorted) const  {
                                                        result);
 
             ts_functor(tmp_df.indices_);
-            result.append_column<T>(gb_col_name,
+            result.append_column<T>(gb_col_label,
                                     gb_vec [vec_size - 1],
                                     nan_policy::dont_pad_with_nans);
 
             for (const auto &iter : tmp_df.column_tb_)  {
-                if (iter.first != gb_col_name)  {
+                if (iter.first != gb_col_label)  {
                     groupby_functor_<F, Ts...>  functor(iter.first.c_str(),
                                                         marker,
                                                         vec_size,
@@ -1214,19 +1215,19 @@ groupby (F &&func, const char *gb_col_name, sort_state already_sorted) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, typename CLT>
 template<typename F, typename T1, typename T2, typename ...Ts>
-DataFrame<I, H> DataFrame<I, H>::
+DataFrame<I, H, CLT> DataFrame<I, H, CLT>::
 groupby (F &&func,
-         const char *gb_col_name1,
-         const char *gb_col_name2,
+         const char *gb_col_label1,
+         const char *gb_col_label2,
          sort_state already_sorted) const  {
 
     DataFrame   tmp_df = *this;
 
     if (already_sorted == sort_state::not_sorted)
-        tmp_df.sort<T1, T2, Ts ...>(gb_col_name1, sort_spec::ascen,
-                                    gb_col_name2, sort_spec::ascen);
+        tmp_df.sort<T1, T2, Ts ...>(gb_col_label1, sort_spec::ascen,
+                                    gb_col_label2, sort_spec::ascen);
 
     DataFrame   result;
 
@@ -1237,20 +1238,20 @@ groupby (F &&func,
     }
 
     const bool  index_col_involved =
-        ! ::strcmp(gb_col_name2, DF_INDEX_COL_NAME);
+        ! ::strcmp(gb_col_label2, DF_INDEX_COL_NAME);
 
     const ColumnVecType<T1> *gb_vec1 { nullptr};
     const ColumnVecType<T2> *gb_vec2 { nullptr};
 
-    if (! ::strcmp(gb_col_name1, DF_INDEX_COL_NAME))
+    if (! ::strcmp(gb_col_label1, DF_INDEX_COL_NAME))
         gb_vec1 = reinterpret_cast<const ColumnVecType<T1> *>(&tmp_df.indices_);
     else
-        gb_vec1 = &(tmp_df.get_column<T1>(gb_col_name1));
+        gb_vec1 = &(tmp_df.get_column<T1>(gb_col_label1));
 
-    if (! ::strcmp(gb_col_name2, DF_INDEX_COL_NAME))
+    if (! ::strcmp(gb_col_label2, DF_INDEX_COL_NAME))
         gb_vec2 = reinterpret_cast<const ColumnVecType<T2> *>(&tmp_df.indices_);
     else
-        gb_vec2 = &(tmp_df.get_column<T2>(gb_col_name2));
+        gb_vec2 = &(tmp_df.get_column<T2>(gb_col_label2));
 
     size_type       marker = 0;
     const size_type vec_size = std::min(gb_vec1->size(), gb_vec2->size());
@@ -1298,12 +1299,12 @@ groupby (F &&func,
                                                            result);
 
                 ts_functor(tmp_df.indices_);
-                result.append_column<T2>(gb_col_name2,
+                result.append_column<T2>(gb_col_label2,
                                          gb_vec2->at(marker),
                                          nan_policy::dont_pad_with_nans);
 
                 for (const auto &iter : tmp_df.column_tb_)  {
-                    if (iter.first != gb_col_name2)  {
+                    if (iter.first != gb_col_label2)  {
                         groupby_functor_<F, Ts...>  functor(iter.first.c_str(),
                                                             marker,
                                                             i,
@@ -1328,12 +1329,12 @@ groupby (F &&func,
                                                        result);
 
             ts_functor(tmp_df.indices_);
-            result.append_column<T2>(gb_col_name2,
+            result.append_column<T2>(gb_col_label2,
                                      gb_vec2->at(vec_size - 1),
                                      nan_policy::dont_pad_with_nans);
 
             for (const auto &iter : tmp_df.column_tb_)  {
-                if (iter.first != gb_col_name2)  {
+                if (iter.first != gb_col_label2)  {
                     groupby_functor_<F, Ts...>  functor(iter.first.c_str(),
                                                         marker,
                                                         vec_size,
@@ -1352,53 +1353,53 @@ groupby (F &&func,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, typename CLT>
 template<typename F, typename T, typename ...Ts>
-std::future<DataFrame<I, H>>
-DataFrame<I, H>::groupby_async (F &&func,
-                                const char *gb_col_name,
+std::future<DataFrame<I, H, CLT>>
+DataFrame<I, H, CLT>::groupby_async (F &&func,
+                                const char *gb_col_label,
                                 sort_state already_sorted) const  {
 
     return (std::async(
                 std::launch::async,
-                [func = std::forward<F>(func), gb_col_name,
+                [func = std::forward<F>(func), gb_col_label,
                  already_sorted, this] () mutable -> DataFrame  {
                     return (this->groupby<F, T, Ts ...>(std::move(func),
-                                                        gb_col_name,
+                                                        gb_col_label,
                                                         already_sorted));
                 }));
 }
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, typename CLT>
 template<typename F, typename T1, typename T2, typename ...Ts>
-std::future<DataFrame<I, H>>
-DataFrame<I, H>::groupby_async (F &&func,
-                                const char *gb_col_name1,
-                                const char *gb_col_name2,
+std::future<DataFrame<I, H, CLT>>
+DataFrame<I, H, CLT>::groupby_async (F &&func,
+                                const char *gb_col_label1,
+                                const char *gb_col_label2,
                                 sort_state already_sorted) const  {
 
     return (std::async(
                 std::launch::async,
                 [func = std::forward<decltype(func)>(func),
-                 gb_col_name1, gb_col_name2,
+                 gb_col_label1, gb_col_label2,
                  already_sorted, this] () mutable -> DataFrame  {
                     return (this->groupby<F, T1, T2, Ts ...>(std::move(func),
-                                                             gb_col_name1,
-                                                             gb_col_name2,
+                                                             gb_col_label1,
+                                                             gb_col_label2,
                                                              already_sorted));
                 }));
 }
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, typename CLT>
 template<typename T>
 StdDataFrame<T>
-DataFrame<I, H>::value_counts (const char *col_name) const  {
+DataFrame<I, H, CLT>::value_counts (const char *col_label) const  {
 
-    const ColumnVecType<T>  &vec = get_column<T>(col_name);
+    const ColumnVecType<T>  &vec = get_column<T>(col_label);
     auto                    hash_func =
         [](std::reference_wrapper<const T> v) -> std::size_t  {
             return(std::hash<T>{}(v.get()));
@@ -1454,10 +1455,10 @@ DataFrame<I, H>::value_counts (const char *col_name) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, typename CLT>
 template<typename F, typename ...Ts>
-DataFrame<I, H>
-DataFrame<I, H>::
+DataFrame<I, H, CLT>
+DataFrame<I, H, CLT>::
 bucketize (F &&func, const IndexType &bucket_interval) const  {
 
     DataFrame   result;
@@ -1483,10 +1484,10 @@ bucketize (F &&func, const IndexType &bucket_interval) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, typename CLT>
 template<typename F, typename ...Ts>
-std::future<DataFrame<I, H>>
-DataFrame<I, H>::
+std::future<DataFrame<I, H, CLT>>
+DataFrame<I, H, CLT>::
 bucketize_async (F &&func, const IndexType &bucket_interval) const  {
 
     return (std::async(std::launch::async,
@@ -1498,12 +1499,12 @@ bucketize_async (F &&func, const IndexType &bucket_interval) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, typename CLT>
 template<typename T, typename V>
-DataFrame<I, H> DataFrame<I, H>::
+DataFrame<I, H, CLT> DataFrame<I, H, CLT>::
 transpose(IndexVecType &&indices,
           const V &current_col_order,
-          const V &new_col_names) const  {
+          const V &new_col_labels) const  {
 
     const size_type num_cols = column_tb_.size();
 
@@ -1511,9 +1512,9 @@ transpose(IndexVecType &&indices,
         throw InconsistentData ("DataFrame::transpose(): ERROR: "
                                 "Length of current_col_order is not equal "
                                 "to number of columns");
-    if (new_col_names.size() != indices_.size())
+    if (new_col_labels.size() != indices_.size())
         throw InconsistentData ("DataFrame::transpose(): ERROR: "
-                                "Length of new_col_names is not equal "
+                                "Length of new_col_labels is not equal "
                                 "to number of rows");
 
     std::vector<const std::vector<T> *> current_cols;
@@ -1537,8 +1538,8 @@ transpose(IndexVecType &&indices,
     }
 
     df.load_index(std::move(indices));
-    for (size_type i = 0; i < new_col_names.size(); ++i)
-        df.load_column(&(new_col_names[i][0]), std::move(trans_cols[i]));
+    for (size_type i = 0; i < new_col_labels.size(); ++i)
+        df.load_column(&(new_col_labels[i][0]), std::move(trans_cols[i]));
 
     return (df);
 }

@@ -374,9 +374,7 @@ DateTime &DateTime::operator = (DateType the_date)  {
 
 DateTime::EpochType DateTime::compare (const DateTime &rhs) const  {
 
-    const EpochType t = this->time() - rhs.time();
-
-    return (t == 0 ? nanosec () - rhs.nanosec () : t);
+    return (long_time () - rhs.long_time ());
 }
 
 // ----------------------------------------------------------------------------

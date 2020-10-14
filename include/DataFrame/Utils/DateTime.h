@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <cstdio>
 #include <ctime>
+#include <functional>
 #include <limits>
 #include <stdexcept>
 #include <string>
@@ -389,6 +390,21 @@ inline S &operator << (S &o, const DateTime &rhs)  {
 }
 
 } // namespace hmdf
+
+// ----------------------------------------------------------------------------
+
+namespace std  {
+template<>
+struct  hash<typename hmdf::DateTime>  {
+
+    inline size_t
+    operator()(const typename hmdf::DateTime &key) const noexcept {
+
+        return (hash<typename hmdf::DateTime::LongTimeType>()(key.long_time()));
+    }
+};
+
+} // namespace std
 
 // ----------------------------------------------------------------------------
 

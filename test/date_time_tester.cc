@@ -845,6 +845,21 @@ int main (int argc, char *argv [])  {
         assert(now.long_time() == 1559229305500000000);
     }
 
+    {
+        // Testing DateTime's hash value
+
+        DateTime    now (20190530, 11, 15, 5, 123000000,
+                         DT_TIME_ZONE::AM_NEW_YORK);
+
+        std::cout << "Hash Value:      " << std::hash<DateTime>()(now)
+                  << std::endl;
+        std::cout << "Long Time Value: " << now.long_time() << std::endl;
+        now.add_nanoseconds (1040506079);
+        std::cout << "Hash Value:      " << std::hash<DateTime>()(now)
+                  << std::endl;
+        std::cout << "Long Time Value: " << now.long_time() << std::endl;
+    }
+
     return (EXIT_SUCCESS);
 }
 

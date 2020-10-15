@@ -844,6 +844,73 @@ private:
 
 // ----------------------------------------------------------------------------
 
+template<typename T, typename I = unsigned long>
+struct MaxSubArrayVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_2
+
+    inline void operator() (const index_type &, const value_type &val)  {
+
+        if (val > min_to_consider_ && val <= max_to_consider_)  {
+            const value_type    current_plus_val = current_sum_ + val;
+
+            if (current_plus_val < val)  {
+                // Start a new sequence at the current element
+                current_begin_idx_ = current_end_idx_;
+                current_sum_ = val;
+            }
+            else // Extend the existing sequence with the current element
+                current_sum_ = current_plus_val;
+
+            if (current_sum_ > best_sum_)  {
+                best_sum_ = current_sum_;
+                best_begin_idx_ = current_begin_idx_;
+                best_end_idx_ = current_end_idx_ + 1;  // Make end_idx exclusive
+            }
+        }
+        current_end_idx_ += 1;
+    }
+    template <typename K, typename H>
+    inline void
+    operator() (K idx_begin, K idx_end, H column_begin, H column_end)  {
+
+        while (column_begin < column_end)
+            (*this)(*idx_begin, *column_begin++);
+    }
+
+    inline void pre ()  {
+        best_sum_ = -std::numeric_limits<value_type>::max();
+        best_begin_idx_ = 0;
+        best_end_idx_ = 0;
+        current_begin_idx_ = 0;
+        current_end_idx_ = 0;
+        current_sum_ = -std::numeric_limits<value_type>::max();
+    }
+    inline void post ()  {  }
+    inline result_type get_result () const  { return (best_sum_); }
+    inline size_type get_best_begin_idx () const  { return (best_begin_idx_); }
+    inline size_type get_best_end_idx () const  { return (best_end_idx_); }
+
+    explicit MaxSubArrayVisitor(
+        value_type min_to_consider = -std::numeric_limits<value_type>::max(),
+        value_type max_to_consider = std::numeric_limits<value_type>::max())
+        : min_to_consider_(min_to_consider),
+          max_to_consider_(max_to_consider)  {   }
+
+private:
+
+    result_type         best_sum_ { -std::numeric_limits<value_type>::max() };
+    size_type           best_begin_idx_ { 0 };
+    size_type           best_end_idx_ { 0 };
+    size_type           current_begin_idx_ { 0 };
+    size_type           current_end_idx_ { 0 };
+    result_type         current_sum_ { -std::numeric_limits<value_type>::max() };
+    const value_type    min_to_consider_;
+    const value_type    max_to_consider_;
+};
+
+// ----------------------------------------------------------------------------
+
 // Simple rolling adoptor for visitors
 //
 template<typename F, typename T, typename I = unsigned long>

@@ -39,8 +39,10 @@ struct MaxSubArrayVisitor;
         </B></PRE></font>
       </td>
       <td>
-        This functor finds the subinterval with the column vector which contains elements with maximum sum. It does it in O(n). In the constructor, the user can specify maximum and minimum values to consider. The default is to consider all values.<BR>
-        <I>get_result()</I> returns the maximum sum. There are also <I>get_best_begin_idx()</I> and <I>get_best_end_idx()</I> that return the begin and end indices of the interval within the column vector<BR>
+        This functor finds the subinterval within the given column that contains elements with maximum sum than any other interval. It does it in O(n). In the constructor, the user can specify maximum and minimum values to consider. The default is to consider all values.<BR>
+        <I>get_result()</I> returns the maximum sum.<BR>
+		<I>get_best_begin_idx()</I> returns the beginning index of the interval<BR>
+		<I>get_best_end_idx()</I> returns the end (exclusive) index of the interval<BR>
         <PRE>
 explicit MaxSubArrayVisitor(T min_to_consider = -std::numeric_limits&lt;T&gt;::max(),
                             T max_to_consider = std::numeric_limits&lt;T&gt;::max());

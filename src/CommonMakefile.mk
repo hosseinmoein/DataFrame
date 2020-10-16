@@ -54,7 +54,8 @@ HEADERS = $(LOCAL_INCLUDE_DIR)/DataFrame/Vectors/HeteroVector.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Vectors/VectorPtrView.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/ThreadGranularity.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/DateTime.h \
-          $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/FixedSizeString.h
+          $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/FixedSizeString.h \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/FixedSizePriorityQueue.h
 
 LIB_NAME = DataFrame
 TARGET_LIB = $(LOCAL_LIB_DIR)/lib$(LIB_NAME).a

@@ -33,6 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <array>
 #include <functional>
 #include <iterator>
+#include <vector>
 
 #if defined(_WIN32) && defined(HMDF_SHARED)
 #  ifdef LIBRARY_EXPORTS
@@ -56,6 +57,7 @@ class LIBRARY_API FixedSizePriorityQueue  {
 
     using container_type = std::array<T, N>;
     using iterator = typename container_type::iterator;
+    using const_iterator = typename container_type::const_iterator;
 
 public:
 
@@ -65,29 +67,49 @@ public:
 
     void push(value_type item)  {
 
-        if (iter_ != vector_.end())  {
-            *iter_++ = std::move(item);
-            std::push_heap(vector_.begin(), iter_, cmp_);
+        if (data_end_ != array_.end())  {
+            *data_end_++ = std::move(item);
+            std::push_heap(array_.begin(), data_end_, cmp_);
         }
         else  {
-            std::sort_heap(vector_.begin(), vector_.end(), cmp_);
-            if (cmp_(vector_.front(), item))
-                vector_[0] = std::move(item);
-            std::make_heap(vector_.begin(), vector_.end(), cmp_);
+            std::sort_heap(array_.begin(), array_.end(), cmp_);
+            if (cmp_(array_.front(), item))
+                array_[0] = std::move(item);
+            std::make_heap(array_.begin(), array_.end(), cmp_);
         }
     }
 
-    const value_type &top() const noexcept  { return (vector_.front()); }
-    void pop()  { std::pop_heap(vector_.begin(), iter_--, cmp_); }
+    inline const value_type &top() const noexcept  { return (array_.front()); }
+    inline void pop()  {
 
-    size_type
-    size() const noexcept  { return (std::distance(vector_.begin(), iter_)); }
-    bool empty() const noexcept  { return (size() == 0); }
+        if (! empty())
+            std::pop_heap(array_.begin(), data_end_--, cmp_);
+    }
+
+    inline size_type size() const noexcept {
+
+        return (std::distance(array_.begin(),
+                              static_cast<const_iterator>(data_end_)));
+    }
+    inline bool empty() const noexcept  { return (size() == 0); }
+
+    inline void clear()  { data_end_ = array_.begin(); }
+
+    inline std::vector<value_type> data() const  {
+
+        std::vector<value_type> result;
+
+        result.reserve(size());
+        for (auto citer = array_.begin(); citer < data_end_; ++citer)
+            result.push_back(*citer);
+        std::sort_heap(result.begin(), result.end(), cmp_);
+        return (result);
+    }
 
 private:
 
-    container_type  vector_ {  };
-    iterator        iter_ { vector_.begin() };
+    container_type  array_ {  };
+    iterator        data_end_ { array_.begin() };
     cmp_type        cmp_ {  };
 };
 

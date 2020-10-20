@@ -357,6 +357,14 @@ struct Index2D  {
 
 // ----------------------------------------------------------------------------
 
+template<typename, typename>
+struct template_switch {  };
+
+template<typename A, template<typename> typename C, typename B>
+struct template_switch<A, C<B>> { using type = C<A>; };
+
+// ----------------------------------------------------------------------------
+
 template<typename T, typename U>
 struct type_declare;
 

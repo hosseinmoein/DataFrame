@@ -1690,9 +1690,9 @@ static void test_consolidate()  {
 
 // -----------------------------------------------------------------------------
 
-static void test_MaxSubArrayVisitor()  {
+static void test_ExtremumSubArrayVisitor()  {
 
-    std::cout << "\nTesting MaxSubArrayVisitor{  } ..." << std::endl;
+    std::cout << "\nTesting ExtremumSubArrayVisitor{  } ..." << std::endl;
 
     std::vector<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
@@ -1711,17 +1711,91 @@ static void test_MaxSubArrayVisitor()  {
                            { -3, 1, -8, 4, -1, 2, 1, -5, 5 },
                            nan_policy::dont_pad_with_nans);
 
-    MaxSubArrayVisitor<double>  msa_v;
+    ExtremumSubArrayVisitor<double> msa_v;
 
     df.visit<double>("dbl_col1", msa_v);
     assert(msa_v.get_result() == 55);
-    assert(msa_v.get_best_begin_idx() == 0);
-    assert(msa_v.get_best_end_idx() == 10);
+    assert(msa_v.get_begin_idx() == 0);
+    assert(msa_v.get_end_idx() == 10);
 
     df.visit<double>("dbl_col2", msa_v);
     assert(msa_v.get_result() == 6);
-    assert(msa_v.get_best_begin_idx() == 3);
-    assert(msa_v.get_best_end_idx() == 7);
+    assert(msa_v.get_begin_idx() == 3);
+    assert(msa_v.get_end_idx() == 7);
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_NExtremumSubArrayVisitor()  {
+
+    std::cout << "\nTesting NExtremumSubArrayVisitor{  } ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466,
+          123467, 123468, 123469, 123470, 123471, 123472, 123473,
+          123467, 123468, 123469, 123470, 123471, 123472, 123473,
+          123467, 123468, 123469, 123470, 123471, 123472, 123473,
+        };
+    MyDataFrame                 df;
+
+    df.load_index(std::move(idx));
+    df.load_column<double>("dbl_col1",
+                           { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 },
+                           nan_policy::dont_pad_with_nans);
+    df.load_column<double>("dbl_col2",
+                           { -3, 1, -8, 4, -1, 2, 1, -5, 5 },
+                           nan_policy::dont_pad_with_nans);
+
+    NExtremumSubArrayVisitor<5, double> msa_v;
+
+    df.visit<double>("dbl_col1", msa_v);
+    assert((msa_v.get_result()[0].sum == 21));
+    assert((msa_v.get_result()[0].begin_index == 0));
+    assert((msa_v.get_result()[0].end_index == 6));
+    assert((msa_v.get_result()[1].sum == 28));
+    assert((msa_v.get_result()[1].begin_index == 0));
+    assert((msa_v.get_result()[1].end_index == 7));
+    assert((msa_v.get_result()[2].sum == 36));
+    assert((msa_v.get_result()[2].begin_index == 0));
+    assert((msa_v.get_result()[2].end_index == 8));
+    assert((msa_v.get_result()[3].sum == 45));
+    assert((msa_v.get_result()[3].begin_index == 0));
+    assert((msa_v.get_result()[3].end_index == 9));
+    assert((msa_v.get_result()[4].sum == 55));
+    assert((msa_v.get_result()[4].begin_index == 0));
+    assert((msa_v.get_result()[4].end_index == 10));
+
+    NExtremumSubArrayVisitor<4, double> msa_v2;
+
+    df.visit<double>("dbl_col2", msa_v2);
+    assert((msa_v2.get_result()[0].sum == 1));
+    assert((msa_v2.get_result()[0].begin_index == 1));
+    assert((msa_v2.get_result()[0].end_index == 2));
+    assert((msa_v2.get_result()[1].sum == 4));
+    assert((msa_v2.get_result()[1].begin_index == 3));
+    assert((msa_v2.get_result()[1].end_index == 4));
+    assert((msa_v2.get_result()[2].sum == 5));
+    assert((msa_v2.get_result()[2].begin_index == 3));
+    assert((msa_v2.get_result()[2].end_index == 6));
+    assert((msa_v2.get_result()[3].sum == 6));
+    assert((msa_v2.get_result()[3].begin_index == 3));
+    assert((msa_v2.get_result()[3].end_index == 7));
+
+    NMinSubArrayVisitor<5, double, unsigned long>   msa_v3;
+
+    df.visit<double>("dbl_col1", msa_v3);
+    assert((msa_v3.get_result()[0].sum == 1));
+    assert((msa_v3.get_result()[0].begin_index == 0));
+    assert((msa_v3.get_result()[0].end_index == 1));
+
+    df.visit<double>("dbl_col2", msa_v3);
+    assert((msa_v3.get_result()[0].sum == -3));
+    assert((msa_v3.get_result()[0].begin_index == 0));
+    assert((msa_v3.get_result()[0].end_index == 1));
+    assert((msa_v3.get_result()[1].sum == -10));
+    assert((msa_v3.get_result()[1].begin_index == 0));
+    assert((msa_v3.get_result()[1].end_index == 3));
 }
 
 // -----------------------------------------------------------------------------
@@ -1755,7 +1829,8 @@ int main(int argc, char *argv[]) {
     test_ExpoSmootherVisitor();
     test_HWExpoSmootherVisitor();
     test_consolidate();
-    test_MaxSubArrayVisitor();
+    test_ExtremumSubArrayVisitor();
+    test_NExtremumSubArrayVisitor();
 
     return (0);
 }

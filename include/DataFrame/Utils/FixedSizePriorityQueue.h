@@ -62,7 +62,7 @@ class LIBRARY_API FixedSizePriorityQueue  {
 public:
 
     using value_type = T;
-    using cmp_type = Cmp;
+    using compare_type = Cmp;
     using size_type = std::size_t;
 
     void push(value_type item)  {
@@ -110,7 +110,7 @@ private:
 
     container_type  array_ {  };
     iterator        data_end_ { array_.begin() };
-    cmp_type        cmp_ {  };
+    compare_type    cmp_ {  };
 };
 
 } // namespace std

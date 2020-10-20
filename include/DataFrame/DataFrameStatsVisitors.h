@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 
 #include <DataFrame/DataFrameTypes.h>
+#include <DataFrame/Utils/FixedSizePriorityQueue.h>
 
 #include <algorithm>
 #include <cassert>
@@ -377,7 +378,7 @@ struct  NLargestVisitor {
             if (min_index_ < 0 || val < items_[min_index_].value)
                 min_index_ = static_cast<int>(counter_);
         }
-        else if (val > items_[min_index_].value)  {
+        else if (items_[min_index_].value < val)  {
             items_[min_index_] = { val, idx };
             min_index_ = 0;
             for (int i = 1; i < N; ++i)
@@ -455,7 +456,7 @@ struct  NSmallestVisitor {
             if (max_index_ < 0 || val > items_[max_index_].value)
                 max_index_ = static_cast<int>(counter_);
         }
-        else if (val < items_[max_index_].value)  {
+        else if (items_[max_index_].value > val)  {
             items_[max_index_] = { val, idx };
             max_index_ = 0;
             for (int i = 1; i < N; ++i)
@@ -844,17 +845,19 @@ private:
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long>
-struct MaxSubArrayVisitor  {
+template<typename T, typename I = unsigned long, typename Cmp = std::less<T>>
+struct ExtremumSubArrayVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_2
 
+    using compare_type = Cmp;
+
     inline void operator() (const index_type &, const value_type &val)  {
 
-        if (val > min_to_consider_ && val <= max_to_consider_)  {
+        if (val >= min_to_consider_ && val <= max_to_consider_)  {
             const value_type    current_plus_val = current_sum_ + val;
 
-            if (current_plus_val < val)  {
+            if (cmp_(current_plus_val, val))  {
                 // Start a new sequence at the current element
                 current_begin_idx_ = current_end_idx_;
                 current_sum_ = val;
@@ -862,10 +865,10 @@ struct MaxSubArrayVisitor  {
             else // Extend the existing sequence with the current element
                 current_sum_ = current_plus_val;
 
-            if (current_sum_ > best_sum_)  {
+            if (cmp_(best_sum_, current_sum_))  {
                 best_sum_ = current_sum_;
                 best_begin_idx_ = current_begin_idx_;
-                best_end_idx_ = current_end_idx_ + 1;  // Make end_idx exclusive
+                best_end_idx_ = current_end_idx_ + 1; // Make end_idx exclusive
             }
         }
         current_end_idx_ += 1;
@@ -879,19 +882,26 @@ struct MaxSubArrayVisitor  {
     }
 
     inline void pre ()  {
-        best_sum_ = -std::numeric_limits<value_type>::max();
+
+        best_sum_ = cmp_(-std::numeric_limits<value_type>::max(),
+                         std::numeric_limits<value_type>::max())
+                        ? -std::numeric_limits<value_type>::max()
+                        : std::numeric_limits<value_type>::max();
         best_begin_idx_ = 0;
         best_end_idx_ = 0;
         current_begin_idx_ = 0;
         current_end_idx_ = 0;
-        current_sum_ = -std::numeric_limits<value_type>::max();
+        current_sum_ = cmp_(-std::numeric_limits<value_type>::max(),
+                            std::numeric_limits<value_type>::max())
+                           ? -std::numeric_limits<value_type>::max()
+                           : std::numeric_limits<value_type>::max();
     }
     inline void post ()  {  }
     inline result_type get_result () const  { return (best_sum_); }
-    inline size_type get_best_begin_idx () const  { return (best_begin_idx_); }
-    inline size_type get_best_end_idx () const  { return (best_end_idx_); }
+    inline size_type get_begin_idx () const  { return (best_begin_idx_); }
+    inline size_type get_end_idx () const  { return (best_end_idx_); }
 
-    explicit MaxSubArrayVisitor(
+    explicit ExtremumSubArrayVisitor(
         value_type min_to_consider = -std::numeric_limits<value_type>::max(),
         value_type max_to_consider = std::numeric_limits<value_type>::max())
         : min_to_consider_(min_to_consider),
@@ -899,15 +909,111 @@ struct MaxSubArrayVisitor  {
 
 private:
 
-    result_type         best_sum_ { -std::numeric_limits<value_type>::max() };
+    const value_type    min_to_consider_;
+    const value_type    max_to_consider_;
+    compare_type        cmp_ {  };
+    result_type         best_sum_ {
+        cmp_(-std::numeric_limits<value_type>::max(),
+             std::numeric_limits<value_type>::max())
+            ? -std::numeric_limits<value_type>::max()
+            : std::numeric_limits<value_type>::max()
+    };
     size_type           best_begin_idx_ { 0 };
     size_type           best_end_idx_ { 0 };
     size_type           current_begin_idx_ { 0 };
     size_type           current_end_idx_ { 0 };
-    result_type         current_sum_ { -std::numeric_limits<value_type>::max() };
-    const value_type    min_to_consider_;
-    const value_type    max_to_consider_;
+    result_type         current_sum_ {
+        cmp_(-std::numeric_limits<value_type>::max(),
+             std::numeric_limits<value_type>::max())
+            ? -std::numeric_limits<value_type>::max()
+            : std::numeric_limits<value_type>::max()
+    };
 };
+
+template<typename T, typename I>
+using MaxSubArrayVisitor = ExtremumSubArrayVisitor<T, I, std::less<T>>;
+template<typename T, typename I>
+using MinSubArrayVisitor = ExtremumSubArrayVisitor<T, I, std::greater<T>>;
+
+// ----------------------------------------------------------------------------
+
+template<std::size_t N, typename T, typename I = unsigned long,
+         typename Cmp = std::less<T>>
+struct NExtremumSubArrayVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES
+
+    struct  SubArrayInfo  {
+
+        value_type  sum { };
+        size_type   begin_index { 0 };
+        size_type   end_index { 0 };
+
+        friend inline bool
+        operator < (const SubArrayInfo &lhs, const SubArrayInfo &rhs)  {
+
+            return (lhs.sum < rhs.sum);
+        }
+        friend inline bool
+        operator > (const SubArrayInfo &lhs, const SubArrayInfo &rhs)  {
+
+            return (lhs.sum > rhs.sum);
+        }
+    };
+
+    using result_type = std::vector<SubArrayInfo>;
+    using compare_type = Cmp;
+
+    inline void operator() (const index_type &idx, const value_type &val)  {
+
+        const value_type    prev_sum = max_sub_array_.get_result();
+
+        max_sub_array_(idx, val);
+        if (cmp_(prev_sum, max_sub_array_.get_result()))
+            q_.push(SubArrayInfo { max_sub_array_.get_result(),
+                                   max_sub_array_.get_begin_idx(),
+                                   max_sub_array_.get_end_idx() });
+    }
+    template <typename K, typename H>
+    inline void
+    operator() (K idx_begin, K idx_end, H column_begin, H column_end)  {
+
+        while (column_begin < column_end)
+            (*this)(*idx_begin, *column_begin++);
+    }
+
+    inline void pre ()  {
+
+        max_sub_array_.pre();
+        q_.clear();
+        result_.clear();
+    }
+    inline void post ()  {
+
+        max_sub_array_.post();
+        result_ = std::move(q_.data());
+    }
+    inline const result_type &get_result () const  { return (result_); }
+
+    explicit NExtremumSubArrayVisitor(
+        value_type min_to_consider = -std::numeric_limits<value_type>::max(),
+        value_type max_to_consider = std::numeric_limits<value_type>::max())
+        : max_sub_array_(min_to_consider, max_to_consider)  {   }
+
+private:
+
+    ExtremumSubArrayVisitor<T, I, Cmp>                      max_sub_array_;
+    FixedSizePriorityQueue<
+        SubArrayInfo, N,
+        typename template_switch<SubArrayInfo, Cmp>::type>  q_ {  };
+    result_type                                             result_ {  };
+    compare_type                                            cmp_ {  };
+};
+
+template<std::size_t N, typename T, typename I>
+using NMaxSubArrayVisitor = NExtremumSubArrayVisitor<N, T, I, std::less<T>>;
+template<std::size_t N, typename T, typename I>
+using NMinSubArrayVisitor = NExtremumSubArrayVisitor<N, T, I, std::greater<T>>;
 
 // ----------------------------------------------------------------------------
 

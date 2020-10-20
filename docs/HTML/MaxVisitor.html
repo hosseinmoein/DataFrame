@@ -32,14 +32,21 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        <PRE><B>#include &lt;DataFrame/DataFrameStatsVisitors.h&gt;
-			  
-template&lt;typename T, typename I = unsigned long&gt;
+        <PRE><B>
+#include &lt;DataFrame/DataFrameStatsVisitors.h&gt;
+
+template&lt;typename T, typename I = unsigned long, typename Cmp = std::less&lt;T&gt;&gt;
 struct MaxVisitor;
+# ---------------------------------
+
+template&lt;typename T, typename I = unsigned long&gt;
+using <U>MaxVisitor</U> = ExtremumVisitor&lt;T, I, std::less&lt;T&gt;&gt;;
+template&lt;typename T, typename I = unsigned long&gt;
+using <U>MinVisitor</U> = ExtremumVisitor&lt;T, I, std::greater&lt;T&gt;&gt;;
         </B></PRE></font>
       </td>
       <td>
-        This functor class calculates the maximum of a given column. The constructor takes a single optional Boolean argument to whether skip NaN values. The default is True.<BR>
+        This functor class calculates the maximum/minimum (depending on the type of <I>Cmp</I>. the default is maximum) of a given column. The constructor takes a single optional Boolean argument to whether skip NaN values. The default is True.<BR>
       </td>
       <td width="12%">
         <B>T</B>: Column data type<BR>
@@ -47,7 +54,7 @@ struct MaxVisitor;
       </td>
     </tr>
 
-  </table> 
+  </table>
 </body>
 </html>
 

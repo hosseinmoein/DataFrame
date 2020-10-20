@@ -32,14 +32,22 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        <PRE><B>#include &lt;DataFrame/DataFrameStatsVisitors.h&gt;
-			  
-template&lt;typename T, typename I = unsigned long&gt;
-struct NLargestVisitor;
+        <PRE><B>
+#include &lt;DataFrame/DataFrameStatsVisitors.h&gt;
+
+template&lt;std::size_t N, typename T, typename I = unsigned long,
+         typename Cmp = std::less&lt;T&gt;&gt;
+struct  NExtremumVisitor;
+# ---------------------------------
+
+template&lt;std::size_t N, typename T, typename I = unsigned long&gt;
+using <U>NLargestVisitor</U> = NExtremumVisitor&lt;N, T, I, std::less&lt;T&gt;&gt;;
+template&lt;std::size_t N, typename T, typename I = unsigned long&gt;
+using <U>NSmallestVisitor</U> = NExtremumVisitor&lt;N, T, I, std::greater&lt;T&gt;&gt;;
         </B></PRE></font>
       </td>
       <td>
-        This functor class calculates the N smallest values of a column. I runs in O(N*M), where N is the number of largest values and M is the total number of all values.<BR>
+        This functor class calculates the N smallest/largest values depending on type of <I>Cmp</I> (the default is N largest) of a column. I runs in O(N*M), where N is the number of largest values and M is the total number of all values.<BR>
         If N is relatively small this is better than O(M*logM). The constructor takes a single optional Boolean argument to whether skip NaN values. The default is True.<BR>
       </td>
       <td width = "12%">
@@ -110,7 +118,7 @@ struct NLargestVisitor;
 <span style='color:#800080; '>}</span>
 </pre>
   <!--Created using ToHtml.com on 2020-05-05 17:52:08 UTC -->
-  
+
 </body>
 </html>
 

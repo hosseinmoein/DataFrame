@@ -33,25 +33,25 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>#include &lt;DataFrame/DataFrameStatsVisitors.h&gt;
-			  
+
 template&lt;typename T, typename I = unsigned long,
          typename Cmp = std::less&lt;T&gt;&gt;
 struct ExtremumSubArrayVisitor;
 # ---------------------------------
 
-template&lt;typename T, typename I&gt;
-using MaxSubArrayVisitor =
+template&lt;typename T, typename I = unsigned long&gt;
+using <U>MaxSubArrayVisitor</U> =
     ExtremumSubArrayVisitor&lt;T, I, std::less&lt;T&gt;&gt;;
-template&lt;typename T, typename I&gt;
-using MinSubArrayVisitor =
+template&lt;typename T, typename I = unsigned long&gt;
+using <U>MinSubArrayVisitor</U> =
     ExtremumSubArrayVisitor&lt;T, I, std::greater&lt;T&gt;&gt;;
         </B></PRE></font>
       </td>
       <td>
         This functor finds the subinterval within the given column that contains elements with maximum or minimum (depending on <I>Cmp</I>. The defualt is maximum) sum than any other interval. It does it in O(n). In the constructor, the user can specify maximum and minimum values to consider. The default is to consider all values.<BR>
         <I>get_result()</I> returns the maximum sum.<BR>
-		<I>get_begin_idx()</I> returns the beginning index of the interval<BR>
-		<I>get_end_idx()</I> returns the end (exclusive) index of the interval<BR>
+        <I>get_begin_idx()</I> returns the beginning index of the interval<BR>
+        <I>get_end_idx()</I> returns the end (exclusive) index of the interval<BR>
         <PRE>
 explicit ExtremumSubArrayVisitor(T min_to_consider = -std::numeric_limits&lt;T&gt;::max(),
                                  T max_to_consider = std::numeric_limits&lt;T&gt;::max());
@@ -66,17 +66,17 @@ explicit ExtremumSubArrayVisitor(T min_to_consider = -std::numeric_limits&lt;T&g
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>#include &lt;DataFrame/DataFrameStatsVisitors.h&gt;
-			  
+
 template&lt;std::size_t N, typename T, typename I = unsigned long,
          typename Cmp = std::less&lt;T&gt;&gt;
 struct NExtremumSubArrayVisitor;
 # ---------------------------------
 
 template&lt;std::size_t N, typename T, typename I&gt;
-using NMaxSubArrayVisitor =
+using <U>NMaxSubArrayVisitor</U> =
     NExtremumSubArrayVisitor&lt;N, T, I, std::less&lt;T&gt;&gt;;
 template&lt;std::size_t N, typename T, typename I&gt;
-using NMinSubArrayVisitor =
+using <U>NMinSubArrayVisitor</U> =
     NExtremumSubArrayVisitor&lt;N, T, I, std::greater&lt;T&gt;&gt;;
         </B></PRE></font>
       </td>

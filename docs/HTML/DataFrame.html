@@ -72,28 +72,28 @@ DataFrame class is defined as:
 <!-- CSS goes in the document HEAD or added to your external stylesheet -->
 <style type="text/css">
 table.hovertable {
-	font-family: verdana,arial,sans-serif,bold;
-	font-size:14px;
-	color:#333333;
-	border-width: 1px;
-	border-color: #999999;
-	border-collapse: collapse;
+    font-family: verdana,arial,sans-serif,bold;
+    font-size:14px;
+    color:#333333;
+    border-width: 1px;
+    border-color: #999999;
+    border-collapse: collapse;
 }
 table.hovertable th {
-	background-color:darkgray;
-	border-width: 5px;
-	padding: 10px;
-	border-style: solid;
-	border-color: #a9c6c9;
+    background-color:darkgray;
+    border-width: 5px;
+    padding: 10px;
+    border-style: solid;
+    border-color: #a9c6c9;
 }
 table.hovertable tr {
-	background-color:#d4e3e5;
+    background-color:#d4e3e5;
 }
 table.hovertable td {
-	border-width: 1px;
-	padding: 10px;
-	border-style: solid;
-	border-color: #a9c6c9;
+    border-width: 1px;
+    padding: 10px;
+    border-style: solid;
+    border-color: #a9c6c9;
 }
 </style>
 
@@ -159,7 +159,7 @@ table.hovertable td {
     <tr onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
       <td title="Fills missing values"><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/fill_missing.html">fill_missing</a>( )</td>
       <td title="Average around average types">enum class <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/MADVisitor.html">mad_type</a>{  }</td>
-      <td title="Calculates cumulative mins">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/CumMinVisitor.html">CumMinVisitor</a>{  }</td>
+      <td title="Calculates cumulative mins">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/CumMaxVisitor.html">CumMinVisitor</a>{  }</td>
       <td title="Generates gamma random numbers"><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/gen_gamma_dist.html">gen_gamma_dist</a>( )</td>
     </tr>
 
@@ -278,7 +278,7 @@ table.hovertable td {
     <tr onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
       <td title="Gets view by selection"><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/get_data_by_sel.html">get_view_by_sel</a>( 3 )</td>
       <td title="Pattern types">enum class <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/pattern_spec.html">pattern_spec</a>{  }</td>
-      <td title="Calculates  min">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/MinVisitor.html">MinVisitor</a>{  }</td>
+      <td title="Calculates  min">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/MaxVisitor.html">MinVisitor</a>{  }</td>
       <td></td>
     </tr>
 
@@ -299,7 +299,7 @@ table.hovertable td {
     <tr onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
       <td title="Returns true if the column exists"><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/has_column.html">has_column</a>( )</td>
       <td title="Multiplication operator for DataFrames"><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/global_operators.html">df_multiplies</a> operator</td>
-      <td title="Finds N smallest values">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/NSmallestVisitor.html">NSmallestVisitor</a>{  }</td>
+      <td title="Finds N smallest values">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/NLargestVisitor.html">NSmallestVisitor</a>{  }</td>
       <td></td>
     </tr>
 
@@ -670,7 +670,7 @@ table.hovertable td {
 
   <H1><font color="blue">Visitors</font></H1>
   <P>
-    Visitors are the main mechanism to implement analytical (i.e. statistical, financial, machine-learning) algorithms. You can easily follow the visitor's interface to add your custom algorithm by which you will extend the DataFrame package.<BR> 
+    Visitors are the main mechanism to implement analytical (i.e. statistical, financial, machine-learning) algorithms. You can easily follow the visitor's interface to add your custom algorithm by which you will extend the DataFrame package.<BR>
     There are two visitor interfaces:<BR>
     <OL>
       <LI>Regular visit. This visitor is called by calling the <I>visit()</I> method on a DataFrame instance. In this case DataFrame passes the given index and column(s) data points one-by-one to the visitor functor. This is convenient for algorithms that can operate one data point at a time. Examples are <I>correlation</I> or <I>variance</I> visitors. They are implemented in <I> DataFrameStatsVisitors.h</I> file.</LI>

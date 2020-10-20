@@ -253,23 +253,25 @@ private:
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long>
-struct MaxVisitor {
+template<typename T, typename I = unsigned long, typename Cmp = std::less<T>>
+struct ExtremumVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_2
+
+    using compare_type = Cmp;
 
     inline void operator() (const index_type &idx, const value_type &val)  {
 
         if (is_nan__(val))  {
             if (skip_nan_)  return;
             else  {
-                max_ = std::numeric_limits<value_type>::quiet_NaN();
+                extremum_ = std::numeric_limits<value_type>::quiet_NaN();
                 is_first = false;
             }
         }
 
-        if (val > max_ || is_first) {
-            max_ = val;
+        if (cmp_(extremum_, val) || is_first) {
+            extremum_ = val;
             index_ = idx;
             is_first = false;
         }
@@ -286,66 +288,24 @@ struct MaxVisitor {
 
     inline void pre ()  { is_first = true; }
     inline void post ()  {  }
-    inline result_type get_result () const  { return (max_); }
+    inline result_type get_result () const  { return (extremum_); }
     inline index_type get_index () const  { return (index_); }
 
-    explicit MaxVisitor(bool skipnan = true) : skip_nan_(skipnan)  {   }
+    explicit ExtremumVisitor(bool skipnan = true) : skip_nan_(skipnan)  {   }
 
 private:
 
-    value_type  max_ { };
-    index_type  index_ { };
-    bool        is_first { true };
-    const bool  skip_nan_ { };
+    value_type      extremum_ { };
+    index_type      index_ { };
+    bool            is_first { true };
+    compare_type    cmp_ {  };
+    const bool      skip_nan_ { };
 };
-
-// ----------------------------------------------------------------------------
 
 template<typename T, typename I = unsigned long>
-struct MinVisitor {
-
-    DEFINE_VISIT_BASIC_TYPES_2
-
-    inline void operator() (const index_type &idx, const value_type &val)  {
-
-        if (is_nan__(val))  {
-            if (skip_nan_)  return;
-            else  {
-                min_ = std::numeric_limits<value_type>::quiet_NaN();
-                is_first = false;
-            }
-        }
-
-        if (val < min_ || is_first) {
-            min_ = val;
-            index_ = idx;
-            is_first = false;
-        }
-    }
-    template <typename K, typename H>
-    inline void
-    operator() (K idx_begin, K idx_end, H column_begin, H column_end)  {
-
-        const auto  &dummy = *idx_begin;
-
-        while (column_begin < column_end)
-            (*this)(dummy, *column_begin++);
-    }
-
-    inline void pre ()  { is_first = true; }
-    inline void post ()  {  }
-    inline result_type get_result () const  { return (min_); }
-    inline index_type get_index () const  { return (index_); }
-
-    explicit MinVisitor(bool skipnan = true) : skip_nan_(skipnan)  {   }
-
-private:
-
-    value_type  min_ { };
-    index_type  index_ { };
-    bool        is_first { true };
-    const bool  skip_nan_ { };
-};
+using MaxVisitor = ExtremumVisitor<T, I, std::less<T>>;
+template<typename T, typename I = unsigned long>
+using MinVisitor = ExtremumVisitor<T, I, std::greater<T>>;
 
 // ----------------------------------------------------------------------------
 
@@ -356,9 +316,11 @@ private:
 // I could have used a priority queue, but that requires a std::vector
 // instaed of std::array. I think the advantage of using std::array is bigger
 // than O(MlogM) vs. O(N*M) for majority of usage.
+// By default, this is a NLargestVisitor
 //
-template<std::size_t N, typename T, typename I = unsigned long>
-struct  NLargestVisitor {
+template<std::size_t N, typename T, typename I = unsigned long,
+         typename Cmp = std::less<T>>
+struct  NExtremumVisitor {
 
     DEFINE_VISIT_BASIC_TYPES
 
@@ -367,6 +329,7 @@ struct  NLargestVisitor {
         index_type  index { };
     };
 
+    using compare_type = Cmp;
     using result_type = std::array<DataItem, N>;
 
     inline void operator() (const index_type &idx, const value_type &val)  {
@@ -375,15 +338,15 @@ struct  NLargestVisitor {
 
         if (counter_ < N)  {
             items_[counter_] = { val, idx };
-            if (min_index_ < 0 || val < items_[min_index_].value)
-                min_index_ = static_cast<int>(counter_);
+            if (extremum_index_ < 0 || cmp_(val, items_[extremum_index_].value))
+                extremum_index_ = static_cast<int>(counter_);
         }
-        else if (items_[min_index_].value < val)  {
-            items_[min_index_] = { val, idx };
-            min_index_ = 0;
+        else if (cmp_(items_[extremum_index_].value, val))  {
+            items_[extremum_index_] = { val, idx };
+            extremum_index_ = 0;
             for (int i = 1; i < N; ++i)
-                if (items_[i].value < items_[min_index_].value)
-                    min_index_ = i;
+                if (cmp_(items_[i].value, items_[extremum_index_].value))
+                    extremum_index_ = i;
         }
 
         counter_ += 1;
@@ -396,7 +359,7 @@ struct  NLargestVisitor {
             (*this)(*idx_begin, *column_begin++);
     }
 
-    inline void pre ()  { counter_ = 0; min_index_ = -1; }
+    inline void pre ()  { counter_ = 0; extremum_index_ = -1; }
     inline void post ()  {  }
     inline const result_type &get_result () const  { return (items_); }
 
@@ -415,93 +378,21 @@ struct  NLargestVisitor {
                   });
     }
 
-    explicit NLargestVisitor(bool skipnan = true) : skip_nan_(skipnan)  {   }
+    explicit NExtremumVisitor(bool skipnan = true) : skip_nan_(skipnan)  {   }
 
 private:
 
-    result_type items_ { };
-    size_type   counter_ { 0 };
-    int         min_index_ { -1 };
-    const bool  skip_nan_ { };
+    result_type     items_ { };
+    size_type       counter_ { 0 };
+    int             extremum_index_ { -1 };
+    compare_type    cmp_ {  };
+    const bool      skip_nan_ { };
 };
 
-// ----------------------------------------------------------------------------
-
-// This visitor takes, at most (when the sequance is already sorted), O(N*M)
-// time, where N is the number of largest values and M is the total number
-// of all values. The assumption is that N should be relatively small, so the
-// complexity is not bad.
-// I could have used a priority queue, but that requires a std::vector
-// instaed of std::array. I think the advantage of using std::array is bigger
-// than O(MlogM) vs. O(N*M) for majority of usage.
-//
 template<std::size_t N, typename T, typename I = unsigned long>
-struct  NSmallestVisitor {
-
-    DEFINE_VISIT_BASIC_TYPES
-
-    struct  DataItem  {
-        value_type  value { };
-        index_type  index { };
-    };
-
-    using result_type = std::array<DataItem, N>;
-
-    inline void operator() (const index_type &idx, const value_type &val)  {
-
-        if (skip_nan_ && is_nan__(val))  return;
-
-        if (counter_ < N)  {
-            items_[counter_] = { val, idx };
-            if (max_index_ < 0 || val > items_[max_index_].value)
-                max_index_ = static_cast<int>(counter_);
-        }
-        else if (items_[max_index_].value > val)  {
-            items_[max_index_] = { val, idx };
-            max_index_ = 0;
-            for (int i = 1; i < N; ++i)
-                if (items_[i].value > items_[max_index_].value)
-                    max_index_ = i;
-        }
-
-        counter_ += 1;
-    }
-    template <typename K, typename H>
-    inline void
-    operator() (K idx_begin, K idx_end, H column_begin, H column_end)  {
-
-        while (column_begin < column_end)
-            (*this)(*idx_begin, *column_begin++);
-    }
-
-    inline void pre ()  { counter_ = 0; max_index_ = -1; }
-    inline void post ()  {  }
-    inline const result_type &get_result () const  { return (items_); }
-
-    inline void sort_by_index()  {
-
-        std::sort(items_.begin(), items_.end(),
-                  [](const DataItem &lhs, const DataItem &rhs) -> bool  {
-                      return (lhs.index < rhs.index);
-                  });
-    }
-    inline void sort_by_value()  {
-
-        std::sort(items_.begin(), items_.end(),
-                  [](const DataItem &lhs, const DataItem &rhs) -> bool  {
-                      return (lhs.value < rhs.value);
-                  });
-    }
-
-    explicit NSmallestVisitor(bool skipnan = true) : skip_nan_(skipnan)  {   }
-
-private:
-
-    result_type items_ { };
-    size_type   counter_ { 0 };
-    int         max_index_ { -1 };
-    const bool  skip_nan_ { };
-};
+using NLargestVisitor = NExtremumVisitor<N, T, I, std::less<T>>;
+template<std::size_t N, typename T, typename I = unsigned long>
+using NSmallestVisitor = NExtremumVisitor<N, T, I, std::greater<T>>;
 
 // ----------------------------------------------------------------------------
 
@@ -930,9 +821,9 @@ private:
     };
 };
 
-template<typename T, typename I>
+template<typename T, typename I = unsigned long>
 using MaxSubArrayVisitor = ExtremumSubArrayVisitor<T, I, std::less<T>>;
-template<typename T, typename I>
+template<typename T, typename I = unsigned long>
 using MinSubArrayVisitor = ExtremumSubArrayVisitor<T, I, std::greater<T>>;
 
 // ----------------------------------------------------------------------------
@@ -966,13 +857,13 @@ struct NExtremumSubArrayVisitor  {
 
     inline void operator() (const index_type &idx, const value_type &val)  {
 
-        const value_type    prev_sum = max_sub_array_.get_result();
+        const value_type    prev_sum = extremum_sub_array_.get_result();
 
-        max_sub_array_(idx, val);
-        if (cmp_(prev_sum, max_sub_array_.get_result()))
-            q_.push(SubArrayInfo { max_sub_array_.get_result(),
-                                   max_sub_array_.get_begin_idx(),
-                                   max_sub_array_.get_end_idx() });
+        extremum_sub_array_(idx, val);
+        if (cmp_(prev_sum, extremum_sub_array_.get_result()))
+            q_.push(SubArrayInfo { extremum_sub_array_.get_result(),
+                                   extremum_sub_array_.get_begin_idx(),
+                                   extremum_sub_array_.get_end_idx() });
     }
     template <typename K, typename H>
     inline void
@@ -984,13 +875,13 @@ struct NExtremumSubArrayVisitor  {
 
     inline void pre ()  {
 
-        max_sub_array_.pre();
+        extremum_sub_array_.pre();
         q_.clear();
         result_.clear();
     }
     inline void post ()  {
 
-        max_sub_array_.post();
+        extremum_sub_array_.post();
         result_ = std::move(q_.data());
     }
     inline const result_type &get_result () const  { return (result_); }
@@ -998,11 +889,11 @@ struct NExtremumSubArrayVisitor  {
     explicit NExtremumSubArrayVisitor(
         value_type min_to_consider = -std::numeric_limits<value_type>::max(),
         value_type max_to_consider = std::numeric_limits<value_type>::max())
-        : max_sub_array_(min_to_consider, max_to_consider)  {   }
+        : extremum_sub_array_(min_to_consider, max_to_consider)  {   }
 
 private:
 
-    ExtremumSubArrayVisitor<T, I, Cmp>                      max_sub_array_;
+    ExtremumSubArrayVisitor<T, I, Cmp>                      extremum_sub_array_;
     FixedSizePriorityQueue<
         SubArrayInfo, N,
         typename template_switch<SubArrayInfo, Cmp>::type>  q_ {  };
@@ -1010,9 +901,9 @@ private:
     compare_type                                            cmp_ {  };
 };
 
-template<std::size_t N, typename T, typename I>
+template<std::size_t N, typename T, typename I = unsigned long>
 using NMaxSubArrayVisitor = NExtremumSubArrayVisitor<N, T, I, std::less<T>>;
-template<std::size_t N, typename T, typename I>
+template<std::size_t N, typename T, typename I = unsigned long>
 using NMinSubArrayVisitor = NExtremumSubArrayVisitor<N, T, I, std::greater<T>>;
 
 // ----------------------------------------------------------------------------
@@ -1531,10 +1422,12 @@ private:
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long>
-struct CumMaxVisitor {
+template<typename T, typename I = unsigned long, typename Cmp = std::less<T>>
+struct CumExtremumVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_3
+
+    using compare_type = Cmp;
 
     template <typename K, typename H>
     inline void
@@ -1543,85 +1436,45 @@ struct CumMaxVisitor {
                 const H &column_begin,
                 const H &column_end)  {
 
-        const size_type idx_size = std::distance(idx_begin, idx_end);
         const size_type col_size = std::distance(column_begin, column_end);
 
         if (col_size == 0)  return;
 
-        value_type      running_max = *column_begin;
-        const size_type col_s = std::min(idx_size, col_size);
+        value_type      running_extremum = *column_begin;
+        const size_type col_s =
+            std::min(static_cast<size_type>(std::distance(idx_begin, idx_end)),
+                     col_size);
 
-        max_.reserve(col_s);
+        extremum_.reserve(col_s);
         for (size_type i = 0; i < col_s; ++i)  {
             const value_type    &value = *(column_begin + i);
 
             if (! skip_nan_ || ! is_nan__(value))  {
-                if (value > running_max)
-                    running_max = value;
-                max_.push_back(running_max);
+                if (cmp_(running_extremum, value))
+                    running_extremum = value;
+                extremum_.push_back(running_extremum);
             }
             else
-                max_.push_back(value);
+                extremum_.push_back(value);
         }
     }
-    inline void pre ()  { max_.clear(); }
+    inline void pre ()  { extremum_.clear(); }
     inline void post ()  {  }
-    inline const result_type &get_result () const  { return (max_); }
+    inline const result_type &get_result () const  { return (extremum_); }
 
-    explicit CumMaxVisitor(bool skipnan = true) : skip_nan_(skipnan)  {   }
+    explicit CumExtremumVisitor(bool skipnan = true) : skip_nan_(skipnan)  {   }
 
 private:
 
-    std::vector<value_type> max_ {  };
+    std::vector<value_type> extremum_ {  };
+    compare_type            cmp_ {  };
     const bool              skip_nan_ { };
 };
-
-// ----------------------------------------------------------------------------
 
 template<typename T, typename I = unsigned long>
-struct CumMinVisitor {
-
-    DEFINE_VISIT_BASIC_TYPES_3
-
-    template <typename K, typename H>
-    inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &column_begin,
-                const H &column_end)  {
-
-        const size_type idx_size = std::distance(idx_begin, idx_end);
-        const size_type col_size = std::distance(column_begin, column_end);
-
-        if (col_size == 0)  return;
-
-        value_type      running_min = *column_begin;
-        const size_type col_s = std::min(idx_size, col_size);
-
-        min_.reserve(col_s);
-        for (size_type i = 0; i < col_s; ++i)  {
-            const value_type    &value = *(column_begin + i);
-
-            if (! skip_nan_ || ! is_nan__(value))  {
-                if (value < running_min)
-                    running_min = value;
-                min_.push_back(running_min);
-            }
-            else
-                min_.push_back(value);
-        }
-    }
-    inline void pre ()  { min_.clear(); }
-    inline void post ()  {  }
-    inline const result_type &get_result () const  { return (min_); }
-
-    explicit CumMinVisitor(bool skipnan = true) : skip_nan_(skipnan)  {   }
-
-private:
-
-    std::vector<value_type> min_ {  };
-    const bool              skip_nan_ { };
-};
+using CumMaxVisitor = CumExtremumVisitor<T, I, std::less<T>>;
+template<typename T, typename I = unsigned long>
+using CumMinVisitor = CumExtremumVisitor<T, I, std::greater<T>>;
 
 // ----------------------------------------------------------------------------
 

@@ -149,17 +149,6 @@ public:
 
     inline VectorPtrView &operator = (const VectorPtrView &) = default;
     inline VectorPtrView &operator = (VectorPtrView &&) = default;
-    inline VectorPtrView &operator = (const std::vector<T> &rhs)  {
-
-        VectorPtrView   tmp_vec;
-        const size_type vec_size = rhs.size();
-
-        reserve(vec_size);
-        for (size_type idx = 0; idx < vec_size; ++idx)
-            tmp_vec.push_back(&(rhs[idx]));
-        swap(tmp_vec);
-        return (*this);
-    }
     inline VectorPtrView &operator = (std::vector<T> &rhs)  {
 
         VectorPtrView   tmp_vec;

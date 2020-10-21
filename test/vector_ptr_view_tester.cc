@@ -129,13 +129,23 @@ int main (int argCnt, char *argVctr [])  {
     assert(vec_view2[4] == 4);
     assert(vec_view2[20] == 1);
     assert(vec_view2[19] == 2);
-	
+
     VectorPtrView<int>::const_iterator item = vec_view.begin();
 
-    assert(*item == 1);    
+    assert(*item == 1);
     assert(*(item++) == 1);
-    assert(*item == 2);    
-	
+    assert(*item == 2);
+
+    std::vector<int>    ivec { 0, 1, 2, 3 };
+    VectorPtrView<int>  vpw = ivec;
+
+    assert(vpw.size() == 4);
+
+    const std::vector<int>  civec { 0, 1, 2, 3 };
+    VectorConstPtrView<int> cvpw = civec;
+
+    assert(cvpw.size() == 4);
+
     return (EXIT_SUCCESS);
 }
 

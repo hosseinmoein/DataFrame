@@ -149,6 +149,7 @@ public:
 
     inline VectorPtrView &operator = (const VectorPtrView &) = default;
     inline VectorPtrView &operator = (VectorPtrView &&) = default;
+    VectorPtrView &operator = (const std::vector<T> &rhs) = delete;
     inline VectorPtrView &operator = (std::vector<T> &rhs)  {
 
         VectorPtrView   tmp_vec;

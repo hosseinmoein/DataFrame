@@ -28,7 +28,7 @@ def lowess(np.ndarray[DTYPE_t, ndim = 1] depend_var,  # endogenous (Y)
            np.ndarray[DTYPE_t, ndim = 1] xvals,
            np.ndarray[DTYPE_t, ndim = 1] resid_weights,
            double frac = 2.0 / 3.0,
-           Py_ssize_t it = 3,
+           Py_ssize_t n_loop = 3,
            double delta = 0.0,
            bint given_xvals = False):
     """lowess(depend_var, independ_var, frac=2.0/3.0, it=3, delta=0.0)
@@ -49,7 +49,7 @@ def lowess(np.ndarray[DTYPE_t, ndim = 1] depend_var,  # endogenous (Y)
     frac : float
         Between 0 and 1. The fraction of the data used
         when estimating each y-value.
-    it : int
+    n_loop : int
         The number of residual-based reweightings
         to perform.
     delta : float
@@ -76,13 +76,13 @@ def lowess(np.ndarray[DTYPE_t, ndim = 1] depend_var,  # endogenous (Y)
     to (x_i, y_i) based on their x values and estimating y_i
     using a weighted linear regression. The weight for (x_j, y_j)
     is tricube function applied to |x_i - x_j|.
-    If it > 1, then further weighted local linear regressions
+    If n_loop > 1, then further weighted local linear regressions
     are performed, where the weights are the same as above
     times the _lowess_bisquare function of the residuals. Each iteration
     takes approximately the same amount of time as the original fit,
     so these iterations are expensive. They are most useful when
     the noise has extremely heavy tails, such as Cauchy noise.
-    Noise with less heavy-tails, such as t-distributions with df>2,
+    Noise with less heavy-tails, such as t-distributions with df > 2,
     are less problematic. The weights downgrade the influence of
     points with large residuals. In the extreme case, points whose
     residuals are larger than 6 times the median absolute residual
@@ -120,7 +120,7 @@ def lowess(np.ndarray[DTYPE_t, ndim = 1] depend_var,  # endogenous (Y)
     >>> lowess = sm.nonparametric.lowess
     >>> x = np.random.uniform(low = -2 * np.pi, high = 2 * np.pi, size=500)
     >>> y = np.sin(x) + stats.cauchy.rvs(size=len(x))
-    >>> z = lowess(y, x, frac= 1. / 3, it=0)
+    >>> z = lowess(y, x, frac= 1. / 3, n_loop=0)
     >>> w = lowess(y, x, frac=1. / 3)
     """
 
@@ -137,7 +137,6 @@ def lowess(np.ndarray[DTYPE_t, ndim = 1] depend_var,  # endogenous (Y)
     y = depend_var   # now just alias
     x = independ_var
 
-
     if not 0 <= frac <= 1:
         raise ValueError("Lowess `frac` must be in the range [0,1]!")
 
@@ -146,7 +145,7 @@ def lowess(np.ndarray[DTYPE_t, ndim = 1] depend_var,  # endogenous (Y)
 
     # The number of neighbors in each regression.
     # round up if close to integer
-    k =  int(frac * n + 1e-10)
+    k = int(frac * n + 1e-10)
 
     # frac should be set, so that 2 <= k <= n.
     # Conform them instead of throwing error.
@@ -157,10 +156,10 @@ def lowess(np.ndarray[DTYPE_t, ndim = 1] depend_var,  # endogenous (Y)
 
     y_fit = np.zeros(out_n, dtype = DTYPE)
 
-    it += 1 # Add one to it for initial run.
-    for robiter in range(it):
-        i = 0
-        last_fit_i = -1
+    n_loop += 1 # Add one to n_loop for initial run.
+    for robiter in range(n_loop):
+        curr_idx = 0
+        last_fit_idx = -1
         left_end = 0
         right_end = k
         y_fit = np.zeros(out_n, dtype = DTYPE)
@@ -168,7 +167,7 @@ def lowess(np.ndarray[DTYPE_t, ndim = 1] depend_var,  # endogenous (Y)
         # 'do' Fit y[i]'s 'until' the end of the regression
         while True:
             # The x value at which we will fit this time
-            xval  = xvals[i]
+            xval = xvals[curr_idx]
 
             # Re-initialize the weights for each point xval.
             weights = np.zeros(n, dtype = DTYPE)
@@ -195,7 +194,7 @@ def lowess(np.ndarray[DTYPE_t, ndim = 1] depend_var,  # endogenous (Y)
             # If ok, run the regression
             calculate_y_fit(x,
                             y,
-                            i,
+                            curr_idx,
                             xval,
                             y_fit,
                             weights,
@@ -207,20 +206,20 @@ def lowess(np.ndarray[DTYPE_t, ndim = 1] depend_var,  # endogenous (Y)
 
             # If we skipped some points (because of how delta was set), go back
             # and fit them by linear interpolation.
-            if last_fit_i < (i - 1):
-                interpolate_skipped_fits(xvals, y_fit, i, last_fit_i)
+            if last_fit_idx < (curr_idx - 1):
+                interpolate_skipped_fits(xvals, y_fit, curr_idx, last_fit_idx)
 
             # Update the last fit counter to indicate we've now fit this point.
             # Find the next i for which we'll run a regression.
-            i, last_fit_i = update_indices(xvals,
-                                           y_fit,
-                                           delta,
-                                           i,
-                                           out_n,
-                                           last_fit_i
+            curr_idx, last_fit_idx = update_indices(xvals,
+                                                    y_fit,
+                                                    delta,
+                                                    curr_idx,
+                                                    out_n,
+                                                    last_fit_idx
             )
 
-            if last_fit_i >= out_n-1:
+            if last_fit_idx >= out_n - 1:
                 break
 
         # Calculate residual weights
@@ -233,7 +232,7 @@ def lowess(np.ndarray[DTYPE_t, ndim = 1] depend_var,  # endogenous (Y)
 
 def update_neighborhood(np.ndarray[DTYPE_t, ndim = 1] x,
                         DTYPE_t xval,
-                        Py_ssize_t n,
+                        Py_ssize_t idx,
                         Py_ssize_t left_end,
                         Py_ssize_t right_end):
     """
@@ -244,7 +243,7 @@ def update_neighborhood(np.ndarray[DTYPE_t, ndim = 1] x,
         The input x-values
     xval : float
         The x-value of the point currently being fit.
-    n : indexing integer
+    idx : indexing integer
         The length of the input vectors, x and y.
     left_end : indexing integer
         The index of the left-most point in the neighborhood
@@ -279,7 +278,7 @@ def update_neighborhood(np.ndarray[DTYPE_t, ndim = 1] x,
     # Once the right end hits the end of the data, hold the
     # neighborhood the same for the remaining xvals.
     while True:
-        if right_end < n:
+        if right_end < idx:
             if (xval > (x[left_end] + x[right_end]) / 2.0):
                 left_end += 1
                 right_end += 1
@@ -363,7 +362,7 @@ cdef bool calculate_weights(np.ndarray[DTYPE_t, ndim = 1] x,
 
 cdef void calculate_y_fit(np.ndarray[DTYPE_t, ndim = 1] x,
                           np.ndarray[DTYPE_t, ndim = 1] y,
-                          Py_ssize_t i,
+                          Py_ssize_t idx,
                           DTYPE_t xval,
                           np.ndarray[DTYPE_t, ndim = 1] y_fit,
                           np.ndarray[DTYPE_t, ndim = 1] weights,
@@ -379,7 +378,7 @@ cdef void calculate_y_fit(np.ndarray[DTYPE_t, ndim = 1] x,
         The vector of input x-values.
     y : 1-D numpy array
         The vector of input y-values.
-    i : indexing integer
+    idx : indexing integer
         The index of the point currently being fit.
     xval: float
         The x-value of the point currently being fit.
@@ -397,50 +396,50 @@ cdef void calculate_y_fit(np.ndarray[DTYPE_t, ndim = 1] x,
     reg_ok : bool
         If True, at least some points have positive weight, and the
         regression will be run. If False, the regression is skipped
-        and y_fit[i] is set to equal y[i].
+        and y_fit[idx] is set to equal y[idx].
     fill_with_nans: bool
         If True, values with no valid regression will be filled with NaN
         Otherwise, we use the original value in `y` of that point.
         If x and xval are not the same, this must be False.
     Returns
     -------
-    Nothing. Changes y_fit[i] in-place.
+    Nothing. Changes y_fit[idx] in-place.
     Notes
     -----
     No regression function (e.g. lstsq) is called. Instead "projection
-    vector" p_i_j is calculated, and y_fit[i] = sum(p_i_j * y[j]) = y_fit[i]
-    for j s.t. x[j] is in the neighborhood of xval. p_i_j is a function of
+    vector" p_idx_j is calculated, and y_fit[i] = sum(p_idx_j * y[j]) = y_fit[i]
+    for j s.t. x[j] is in the neighborhood of xval. p_idx_j is a function of
     the weights, xval, and its neighbors.
     """
 
     cdef:
-       double sum_weighted_x = 0, weighted_sqdev_x = 0, p_i_j
+       double sum_weighted_x = 0, weighted_sqdev_x = 0, p_idx_j
 
     if not reg_ok:
         if fill_with_nans:
             # Fill a bad regression (weights all zeros) with nans
-            y_fit[i] = NAN
+            y_fit[idx] = NAN
         else:
             # Fill a bad regression with the original value
             # only possible when not using xvals distinct from x
-            y_fit[i] = y[i]
+            y_fit[idx] = y[idx]
     else:
         for j in range(left_end, right_end):
             sum_weighted_x += weights[j] * x[j]
         for j in range(left_end, right_end):
             weighted_sqdev_x += weights[j] * (x[j] - sum_weighted_x) ** 2
         for j in range(left_end, right_end):
-            p_i_j = weights[j] *
+            p_idx_j = weights[j] *
                     (1.0 + (xval - sum_weighted_x) * (x[j] - sum_weighted_x) /
                      weighted_sqdev_x)
-            y_fit[i] += p_i_j * y[j]
+            y_fit[idx] += p_idx_j * y[j]
 
 # -----------------------------------------------------------------------------
 
 cdef void interpolate_skipped_fits(np.ndarray[DTYPE_t, ndim = 1] xvals,
                                    np.ndarray[DTYPE_t, ndim = 1] y_fit,
-                                   Py_ssize_t i,
-                                   Py_ssize_t last_fit_i):
+                                   Py_ssize_t idx,
+                                   Py_ssize_t last_fit_idx):
     """
     Calculate smoothed/fitted y by linear interpolation between the current
     and previous y fitted by weighted regression.
@@ -451,10 +450,10 @@ cdef void interpolate_skipped_fits(np.ndarray[DTYPE_t, ndim = 1] xvals,
         The vector of x-values where regression is performed.
     y_fit : 1-D numpy array
         The vector of fitted y-values
-    i : indexing integer
+    idx : indexing integer
         The index of the point currently being fit by weighted
         regression.
-    last_fit_i : indexing integer
+    last_fit_idx : indexing integer
         The index of the last point fit by weighted regression.
     Returns
     -------
@@ -464,9 +463,10 @@ cdef void interpolate_skipped_fits(np.ndarray[DTYPE_t, ndim = 1] xvals,
 
     cdef np.ndarray[DTYPE_t, ndim = 1] a
 
-    a = xvals[(last_fit_i + 1): i] - xvals[last_fit_i]
-    a =  a / (xvals[i] - xvals[last_fit_i])
-    y_fit[(last_fit_i + 1): i] = a * y_fit[i] + (1.0 - a) * y_fit[last_fit_i]
+    a = xvals[(last_fit_idx + 1) : idx] - xvals[last_fit_idx]
+    a =  a / (xvals[idx] - xvals[last_fit_idx])
+    y_fit[(last_fit_idx + 1) : idx] = \
+        a * y_fit[idx] + (1.0 - a) * y_fit[last_fit_idx]
 
 
 # -----------------------------------------------------------------------------
@@ -474,9 +474,9 @@ cdef void interpolate_skipped_fits(np.ndarray[DTYPE_t, ndim = 1] xvals,
 def update_indices(np.ndarray[DTYPE_t, ndim = 1] xvals,
                    np.ndarray[DTYPE_t, ndim = 1] y_fit,
                    double delta,
-                   Py_ssize_t i,
+                   Py_ssize_t idx,
                    Py_ssize_t out_n,
-                   Py_ssize_t last_fit_i):
+                   Py_ssize_t last_fit_idx):
     """
     Update the counters of the local regression.
     Parameters
@@ -489,30 +489,30 @@ def update_indices(np.ndarray[DTYPE_t, ndim = 1] xvals,
         Indicates the range of x values within which linear
         interpolation should be used to estimate y_fit instead
         of weighted regression.
-    i : indexing integer
+    idx : indexing integer
         The index of the current point being fit.
     out_n : indexing integer
         The length of the input vector xvals.
-    last_fit_i : indexing integer
+    last_fit_idx : indexing integer
         The last point at which y_fit was calculated.
     Returns
     -------
-    i : indexing integer
+    idx : indexing integer
         The next point at which to run a weighted regression.
-    last_fit_i : indexing integer
+    last_fit_idx : indexing integer
         The updated last point at which y_fit was calculated
     Notes
     -----
-    The relationship between the outputs is s.t. xvals[i+1] >
-    xvals[last_fit_i] + delta.
+    The relationship between the outputs is
+    s.t. xvals[idx + 1] > xvals[last_fit_idx] + delta.
     """
 
     cdef:
         Py_ssize_t k
         double cutpoint
 
-    last_fit_i = i
-    k = last_fit_i
+    last_fit_idx = idx
+    k = last_fit_idx
     # For most points within delta of the current point, we skip the
     # weighted linear regression (which save much computation of
     # weights and fitted points). Instead, we'll jump to the last
@@ -521,23 +521,23 @@ def update_indices(np.ndarray[DTYPE_t, ndim = 1] xvals,
 
     # This loop increments until we fall just outside of delta distance,
     # copying the results for any repeated x's along the way.
-    cutpoint = xvals[last_fit_i] + delta
-    for k in range(last_fit_i + 1, out_n):
+    cutpoint = xvals[last_fit_idx] + delta
+    for k in range(last_fit_idx + 1, out_n):
         if xvals[k] > cutpoint:
             break
-        if xvals[k] == xvals[last_fit_i]:
+        if xvals[k] == xvals[last_fit_idx]:
             # if tied with previous x-value, just use the already
             # fitted y, and update the last-fit counter.
-            y_fit[k] = y_fit[last_fit_i]
-            last_fit_i = k
+            y_fit[k] = y_fit[last_fit_idx]
+            last_fit_idx = k
 
-    # i, which indicates the next point to fit the regression at, is
+    # idx, which indicates the next point to fit the regression at, is
     # either one prior to k (since k should be the first point outside
-    # of delta) or is just incremented + 1 if k = i+1. This insures we
+    # of delta) or is just incremented + 1 if k = idx + 1. This insures we
     # always step forward.
-    i = max(k - 1, last_fit_i + 1)
+    idx = max(k - 1, last_fit_idx + 1)
 
-    return i, last_fit_i
+    return idx, last_fit_idx
 
 # -----------------------------------------------------------------------------
 

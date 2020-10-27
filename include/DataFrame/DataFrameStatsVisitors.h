@@ -3071,6 +3071,347 @@ private:
     value_type              residual_ { 0 };
 };
 
+// ----------------------------------------------------------------------------
+
+// LOcally WEighted Scatterplot Smoothing
+// A LOWESS function outputs smoothed estimates of dependent var (y) at the
+// given independent var (x) values.
+//
+template<typename T,
+         typename I = unsigned long,
+         typename =
+             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+struct LowessVisitor {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+private:
+
+    template<typename H>
+    inline static void bi_square_(H &x_begin, H &x_end)  {
+
+        constexpr value_type    one = value_type(1);
+
+        while (x_begin != x_end)  {
+            const value_type    val = *x_begin * *x_begin;
+
+            *x_begin++ = (one - val) * (one - val);
+        }
+    }
+
+    template<typename H>
+    inline static void cube_(H &x_begin, H &x_end)  {
+
+        while (x_begin != x_end)  {
+            const value_type    val = *x_begin * *x_begin;
+
+            *x_begin++ *= val;
+        }
+    }
+
+    template<typename H>
+    inline static void tri_cube_(H &x_begin, H &x_end)  {
+
+        constexpr value_type    one = value_type(1);
+
+        while (x_begin != x_end)  {
+            const value_type    val = *x_begin * *x_begin * *x_begin;
+
+            *x_begin++ = (one - val) * (one - val) * (one - val);
+        }
+    }
+
+    // Calculate residual weights for the next `robustifying` iteration.
+    //
+    template<typename H>
+    inline void
+    calc_residual_weights_(const H &y_begin, const H &y_end,
+                           const H &y_fit_begin, const H &y_fit_end)  {
+
+        const size_type col_s = std::distance(y_begin, y_end);
+
+        resid_weights_.clear();
+        resid_weights_.reserve(col_s);
+        for (size_type i = 0; i < col_s; ++i)
+            resid_weights_.push_back(
+                std::fabs(*(y_begin + i) - *(y_fit_begin + i)));
+
+        MedianVisitor<T, I> median_v;
+        std::vector<I>      dummy;
+
+        median_v.pre();
+        median_v(dummy.begin(), dummy.end(),
+                 resid_weights_.begin(), resid_weights_.end());
+        median_v.post();
+
+        if (median_v.get_result() == 0)  {
+            std::replace_if(resid_weights_.begin(), resid_weights_.end(),
+                            std::bind(std::greater<value_type>(),
+                                      std::placeholders::_1, value_type(0)),
+                            value_type(1));
+        }
+        else  {
+            const value_type    val = value_type(6) * median_v.get_result();
+
+            std::transform(resid_weights_.begin(), resid_weights_.end(),
+                           resid_weights_.begin(),
+                           [val](auto &c) -> value_type { return (*c / val); });
+        }
+
+        // Some trimming of outlier residuals.
+        std::replace_if(resid_weights_.begin(), resid_weights_.end(),
+                        std::bind(std::greater<value_type>(),
+                                  std::placeholders::_1, value_type(1)),
+                        value_type(1));
+        // std::replace_if(resid_weights_.begin(), resid_weights_.end(),
+        //                 std::bind(std::greater_equal<value_type>(),
+        //                           std::placeholders::_1, value_type(0.999)),
+        //                 value_type(1));
+        // std::replace_if(resid_weights_.begin(), resid_weights_.end(),
+        //                 std::bind(std::less_equal<value_type>(),
+        //                           std::placeholders::_1, value_type(0.001)),
+        //                 value_type(0));
+        bi_square_(resid_weights_.begin(), resid_weights_.end());
+    }
+
+    // For most points within delta of the current point, we skip the weighted
+    // linear regression (which save much computation of weights and fitted
+    // points). Instead, we'll jump to the last point within delta, fit the
+    // weighted regression at that point, and linearly interpolate in between.
+    //
+    template<typename H>
+    inline static void
+    update_indices_(const H &x_begin, const H &x_end,
+                    const H &y_fit_begin, const H &y_fit_end,
+                    value_type delta,
+                    size_type &curr_idx, size_type &last_fit_idx)  {
+
+        const size_type     col_s = std::distance(x_begin, x_end);
+
+        last_fit_idx = curr_idx;
+
+        // This loop increments until we fall just outside of delta distance,
+        // copying the results for any repeated x's along the way.
+        const value_type    cutoff = *(x_begin + last_fit_idx) + delta;
+        size_type           k = last_fit_idx + 1;
+        bool                looped = false;
+
+        for ( ; k < col_s; ++k)  {
+            looped = true;
+            if (*(x_begin + k) > cutoff)  break;
+            if (*(x_begin + k) == *(x_begin + last_fit_idx))  {
+                // if tied with previous x-value, just use the already fitted
+                // y, and update the last-fit counter.
+                *(y_fit_begin + k) = *(y_fit_begin + last_fit_idx);
+                last_fit_idx = k;
+            }
+        }
+
+        // curr_idx, which indicates the next point to fit the regression at,
+        // is either one prior to k (since k should be the first point outside
+        // of delta) or is just incremented + 1 if k = curr_idx + 1.
+        // This insures we always step forward.
+        curr_idx = std::max(k - (looped ? 1 : 2), last_fit_idx + 1);
+    }
+
+    // Calculate smoothed/fitted y by linear interpolation between the current
+    // and previous y fitted by weighted regression.
+    // Called only if delta > 0.
+    //
+    template<typename H>
+    inline void
+    interpolate_skipped_fits_(const H &x_begin, const H &x_end,
+                              H &y_fit_begin, H &y_fit_end,
+                              size_type curr_idx, size_type last_fit_idx)  {
+
+        auxiliary_vec_.clear();
+        auxiliary_vec_.reserve(curr_idx - last_fit_idx);
+
+        const value_type    last_fit_xval = *(x_begin + last_fit_idx);
+
+        for (size_type i = last_fit_idx + 1; i < curr_idx; ++i)
+            auxiliary_vec_.push_back(*(x_begin + i) - last_fit_xval);
+
+        const value_type    x_diff = *(x_begin + curr_idx) - last_fit_xval;
+
+        for (auto &iter : auxiliary_vec_)
+            *iter /= x_diff;
+
+        constexpr value_type    one = value_type(1);
+        const value_type        last_fit_yval = *(y_fit_begin + last_fit_idx);
+        const value_type        curr_idx_yval = *(y_fit_begin + curr_idx);
+
+        for (size_type i = last_fit_idx + 1; i < curr_idx; ++i)
+            *(y_fit_begin + i) =
+                auxiliary_vec_[i] * curr_idx_yval +
+                (one - auxiliary_vec_[i]) * last_fit_yval;
+    }
+
+    // Calculate smoothed/fitted y-value by weighted regression.
+    // No regression function (e.g. lstsq) is called. Instead "projection
+    // vector" p_idx_j is calculated,
+    // and y_fit[i] = sum(p_idx_j * y[j]) = y_fit[i]
+    // for j s.t. x[j] is in the neighborhood of xval. p_idx_j is a function of
+    // the weights, xval, and its neighbors.
+    //
+    template<typename H>
+    inline static void
+    calculate_y_fit_(const H &x_begin, const H &x_end,
+                     const H &y_begin, const H &y_end,
+                     size_type curr_idx,
+                     value_type xval,
+                     H &y_fit_begin, H &y_fit_end,
+                     const H &w_begin, const H &w_end,
+                     size_type left_end, size_type right_end,
+                     bool reg_ok, bool fill_with_nans)  {
+
+        if (! reg_ok)  {
+            // Fill a bad regression (weights all zeros) with nans
+            // or
+            // Fill a bad regression with the original value only possible
+            // when not using xvals distinct from x
+            *(y_fit_begin + curr_idx) =
+                fill_with_nans
+                    ? std::numeric_limits<value_type>::quiet_NaN()
+                    : *(y_begin + curr_idx);
+        }
+        else  {
+            value_type  sum_weighted_x = 0;
+
+            for (size_type j = left_end; j < right_end; ++j)
+                sum_weighted_x += *(w_begin + j) * *(x_begin + j);
+
+            value_type  weighted_sqdev_x = 0;
+
+            for (size_type j = left_end; j < right_end; ++j)
+                weighted_sqdev_x +=
+                    *(w_begin + j) *
+                    ((*(x_begin + j) - sum_weighted_x) *
+                     (*(x_begin + j) - sum_weighted_x));
+
+            constexpr value_type    one = value_type(1);
+
+            for (size_type j = left_end; j < right_end; ++j)  {
+                const value_type    p_idx_j =
+                    *(w_begin + j) *
+                    (one + (xval - sum_weighted_x) *
+                     (*(x_begin + j) - sum_weighted_x) / weighted_sqdev_x);
+
+                *(y_begin + curr_idx) = p_idx_j * *(y_begin + j);
+            }
+        }
+    }
+
+    // If it returns True, at least some points have positive weight, and the
+    // regression will be run. If False, the regression is skipped and
+    // y_fit[i] is set to equal y[i].
+    //
+    template<typename H>
+    inline bool
+    calculate_weights_(
+        const H &x_begin, const H &x_end,
+        const H &w_begin, const H &w_end, // Regression weights
+        value_type xval,  // The x-value of the point currently being fit
+        size_type left_end, size_type right_end,
+        // The radius of the current neighborhood. The larger of distances
+        // between x[i] and its left-most or right-most neighbor.
+        value_type radius)  {
+
+        x_j_.clear();
+        dist_i_j_.clear();
+        x_j_.reserve(right_end - left_end);
+        dist_i_j_.reserve(right_end - left_end);
+
+        for (size_type j = left_end; j < right_end; ++j)  {
+            x_j_.push_back(*(x_begin + j));
+            dist_i_j_.push_back(std::fabs(*(x_begin + j) - xval) / radius);
+
+            // Assign the distance measure to the weights, then apply the
+            // tricube function to change in-place.
+            *(w_begin + j) = dist_i_j_.back();
+        }
+
+        tri_cube_(w_begin + left_end, w_begin + right_end);
+        for (size_type j = left_end; j < right_end; ++j)
+            *(w_begin + j) *= resid_weights_[j];
+
+        value_type    sum_weights = 0;
+        size_type     non_zero_cnt = 0;
+
+        for (size_type j = left_end; j < right_end; ++j)  {
+            if (*(w_begin + j) != 0)  {
+                sum_weights += *(w_begin + j);
+                non_zero_cnt += 1;
+            }
+        }
+
+        bool    reg_ok = true;
+
+        // 2nd condition checks if only 1 local weight is non-zero, which
+        // will give a divisor of zero in calculate_y_fit
+        if (sum_weights <= 0 || non_zero_cnt == 1)
+            reg_ok = false;
+        else
+            for (size_type j = left_end; j < right_end; ++j)
+                *(w_begin + j) /= sum_weights;
+
+        return (reg_ok);
+    }
+
+    // It returns the radius of the current neighborhood. The larger of
+    // distances between xval and its left-most or right-most neighbor.
+    //
+    template<typename H>
+    inline static value_type
+    update_neighborhood_(const H &x_begin, const H &x_end,
+                         value_type xval,
+                         size_type curr_idx,
+                         size_type left_end, size_type right_end)  {
+
+        // A subtle loop. Start from the current neighborhood range:
+        // [left_end, right_end). Shift both ends rightwards by one (so that
+        // the neighborhood still contains k points), until the current point
+        // is in the center (or just to the left of the center) of the
+        // neighborhood. This neighborhood will contain the k-nearest
+        // neighbors of xval.
+        //
+        // Once the right end hits the end of the data, hold the neighborhood
+        // the same for the remaining xvals.
+        while (true)  {
+            if (right_end < curr_idx)  {
+                if (xval > (*(x_begin + left_end) +
+                            *(x_begin + right_end)) / value_type(2))  {
+                    left_end += 1
+                    right_end += 1
+                }
+                else  break;
+            }
+            else  break;
+        }
+
+        return (std::max(xval - *(x_begin + left_end),
+                         *(x_begin + (right_end - 1)) - xval));
+    }
+
+public:
+
+    inline void pre ()  {
+
+        resid_weights_.clear();
+        auxiliary_vec_.clear();
+        x_j_.clear();
+        dist_i_j_.clear();
+    }
+    inline void post ()  {  }
+
+private:
+
+    result_type resid_weights_ {  };
+    result_type auxiliary_vec_ {  };
+    result_type x_j_ {  };
+    result_type dist_i_j_ {  };
+};
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

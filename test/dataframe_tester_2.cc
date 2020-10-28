@@ -1264,10 +1264,11 @@ static void test_NormalizeVisitor()  {
         0.400295, 0.128279, 0.198961, 0.640818, 0.270233, 0.341498,
     };
     std::vector<double>         stand_result = {
-        -1.00542, -0.744444, -0.48347, -0.222497, 0.0384758, -0.544669, -1.06664,
-        1.28214, -0.218452, -1.32524, 0.760197, -0.747654, -0.457686, 2.74359,
-        1.54312, 0.0425209, -1.06427, -0.776674, 1.02117, -0.48668, -0.196713,
-        1.80409, 0.303494, -0.803293, -0.515701, 1.28214, -0.225707, 0.06426
+        -1.00542, -0.744444, -0.48347, -0.222497, 0.0384758, -0.544669,
+        -1.06664, 1.28214, -0.218452, -1.32524, 0.760197, -0.747654, -0.457686,
+        2.74359, 1.54312, 0.0425209, -1.06427, -0.776674, 1.02117, -0.48668,
+        -0.196713, 1.80409, 0.303494, -0.803293, -0.515701, 1.28214, -0.225707,
+        0.06426
     };
 
     for (size_t idx = 0; idx < result.size(); ++idx)
@@ -1666,7 +1667,8 @@ static void test_consolidate()  {
                  std::make_pair("dbl_col", dblvec),
                  std::make_pair("dbl_col_2", dblvec2),
                  std::make_pair("str_col", strvec));
-    df.load_column("int_col", std::move(intvec), nan_policy::dont_pad_with_nans);
+    df.load_column("int_col", std::move(intvec),
+                   nan_policy::dont_pad_with_nans);
 
     df.consolidate<double, double, std::string, std::string>
         ("dbl_col", "dbl_col_2", "str_col", "new_str_col", add_columns, true);
@@ -1800,6 +1802,48 @@ static void test_NExtremumSubArrayVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_LowessVisitor()  {
+
+    std::cout << "\nTesting LowessVisitor{  } ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466,
+          123467, 123468, 123469, 123470, 123471, 123472, 123473,
+        };
+    std::vector<double>         x_vec = {
+        0.5578196, 2.0217271, 2.5773252, 3.4140288, 4.3014084, 4.7448394,
+        5.1073781, 6.5411662, 6.7216176, 7.2600583, 8.1335874, 9.1224379,
+        1.9296663, 2.3797674, 3.2728619, 4.2767453, 5.3731026, 5.6476637,
+        8.5605355, 8.5866354, 8.7572812,
+    };
+    std::vector<double>         y_vec = {
+        18.63654, 103.49646, 150.35391, 190.51031, 208.70115, 213.71135,
+        228.49353, 233.55387, 234.55054, 223.89225, 227.68339, 223.91982,
+        168.01999, 164.95750, 152.61107, 160.78742, 168.55567, 152.42658,
+        221.70702, 222.69040, 243.18828,
+    };
+
+    MyDataFrame                 df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("independent_var", x_vec),
+                 std::make_pair("dependent_var", y_vec));
+
+    LowessVisitor<double>   l_v(3, 2.0 / 7.0);
+
+    df.single_act_visit<double, double>("independent_var", "dependent_var",
+                                        l_v);
+	for (auto citer : l_v.get_result())
+		std::cout << citer << ", ";
+	std::cout << std::endl;
+	for (auto citer : l_v.get_residual_weights())
+		std::cout << citer << ", ";
+	std::cout << std::endl;
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int argc, char *argv[]) {
 
     test_get_reindexed();
@@ -1831,6 +1875,7 @@ int main(int argc, char *argv[]) {
     test_consolidate();
     test_ExtremumSubArrayVisitor();
     test_NExtremumSubArrayVisitor();
+    test_LowessVisitor();
 
     return (0);
 }

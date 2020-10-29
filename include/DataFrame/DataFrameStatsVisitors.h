@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 
 #include <DataFrame/DataFrameTypes.h>
+#include <DataFrame/Internals/DataFrame_standalone.tcc>
 #include <DataFrame/Utils/FixedSizePriorityQueue.h>
 
 #include <algorithm>
@@ -40,6 +41,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iterator>
 #include <map>
 #include <numeric>
+#include <utility>
 
 // ----------------------------------------------------------------------------
 
@@ -3069,6 +3071,516 @@ private:
     PolyFitVisitor<T, I>    poly_fit_ {  };
     weight_func             weights_;
     value_type              residual_ { 0 };
+};
+
+// ----------------------------------------------------------------------------
+
+// LOcally WEighted Scatterplot Smoothing
+// A LOWESS function outputs smoothed estimates of dependent var (y) at the
+// given independent var (x) values.
+//
+// This lowess function implements the algorithm given in the
+// reference below using local linear estimates.
+// Suppose the input data has N points. The algorithm works by
+// estimating the `smooth` y_i by taking the frac * N closest points
+// to (x_i, y_i) based on their x values and estimating y_i
+// using a weighted linear regression. The weight for (x_j, y_j)
+// is tricube function applied to |x_i - x_j|.
+// If n_loop > 1, then further weighted local linear regressions
+// are performed, where the weights are the same as above
+// times the _lowess_bisquare function of the residuals. Each iteration
+// takes approximately the same amount of time as the original fit,
+// so these iterations are expensive. They are most useful when
+// the noise has extremely heavy tails, such as Cauchy noise.
+// Noise with less heavy-tails, such as t-distributions with df > 2,
+// are less problematic. The weights downgrade the influence of
+// points with large residuals. In the extreme case, points whose
+// residuals are larger than 6 times the median absolute residual
+// are given weight 0.
+// delta can be used to save computations. For each x_i, regressions
+// are skipped for points closer than delta. The next regression is
+// fit for the farthest point within delta of x_i and all points in
+// between are estimated by linearly interpolating between the two
+// regression fits.
+// Judicious choice of delta can cut computation time considerably
+// for large data (N > 5000). A good choice is delta = 0.01 *
+// range(independ_var).
+// Some experimentation is likely required to find a good
+// choice of frac and iter for a particular dataset.
+// References
+// ----------
+// Cleveland, W.S. (1979) "Robust Locally Weighted Regression
+// and Smoothing Scatterplots". Journal of the American Statistical
+// Association 74 (368): 829-836.
+//
+template<typename T,
+         typename I = unsigned long,
+         typename =
+             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+struct LowessVisitor {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+private:
+
+    // The bi-square function (1 - x^2)^2. Used to weight the residuals in the
+    // robustifying iterations. Called by the calculate_residual_weights
+    // function.
+    template<typename H>
+    inline static void bi_square_(H x_begin, H x_end)  {
+
+        while (x_begin != x_end)  {
+            const value_type    val = one_ - *x_begin * *x_begin;
+
+            *x_begin++ = val * val;
+        }
+    }
+
+    // The tri-cubic function (1 - x^3)^3. Used to weight neighboring points
+    // along the x-axis based on their distance to the current point.
+    template<typename H>
+    inline static void tri_cube_(H x_begin, H x_end)  {
+
+        while (x_begin != x_end)  {
+            const value_type    val = one_ - *x_begin * *x_begin * *x_begin;
+
+            *x_begin++ = val * val * val;
+        }
+    }
+
+    // Calculate residual weights for the next robustifying iteration.
+    //
+    template<typename H, typename K>
+    inline void
+    calc_residual_weights_(const H &y_begin, const H &y_end,
+                           const K &y_fits_begin, const K &y_fits_end,
+                           size_type col_s)  {
+
+        for (size_type i = 0; i < col_s; ++i)
+            resid_weights_[i] =
+                std::fabs(*(y_begin + i) - *(y_fits_begin + i));
+
+        MedianVisitor<T, I> median_v;
+        std::vector<I>      dummy;
+
+        median_v.pre();
+        median_v(dummy.begin(), dummy.end(),
+                 resid_weights_.begin(), resid_weights_.end());
+        median_v.post();
+
+        if (median_v.get_result() == 0)  {
+            std::replace_if(resid_weights_.begin(), resid_weights_.end(),
+                            std::bind(std::greater<value_type>(),
+                                      std::placeholders::_1, value_type(0)),
+                            one_);
+        }
+        else  {
+            const value_type    val = value_type(6) * median_v.get_result();
+
+            std::transform(resid_weights_.begin(), resid_weights_.end(),
+                           resid_weights_.begin(),
+                           [val](auto c) -> value_type { return (c / val); });
+        }
+
+        // Some trimming of outlier residuals.
+        std::replace_if(resid_weights_.begin(), resid_weights_.end(),
+                        std::bind(std::greater<value_type>(),
+                                  std::placeholders::_1, one_),
+                        one_);
+        // std::replace_if(resid_weights_.begin(), resid_weights_.end(),
+        //                 std::bind(std::greater_equal<value_type>(),
+        //                           std::placeholders::_1, value_type(0.999)),
+        //                 one_);
+        // std::replace_if(resid_weights_.begin(), resid_weights_.end(),
+        //                 std::bind(std::less_equal<value_type>(),
+        //                           std::placeholders::_1, value_type(0.001)),
+        //                 value_type(0));
+        bi_square_(resid_weights_.begin(), resid_weights_.end());
+    }
+
+    // Update the counters of the local regression.
+    // For most points within delta of the current point, we skip the weighted
+    // linear regression (which save much computation of weights and fitted
+    // points). Instead, we'll jump to the last point within delta, fit the
+    // weighted regression at that point, and linearly interpolate in between.
+    //
+    template<typename H, typename K>
+    inline static void
+    update_indices_(const H &x_begin, const H &x_end,
+                    const K &y_fits_begin, const K &y_fits_end,
+                    value_type delta,
+                    long &curr_idx, long &last_fit_idx,
+                    size_type col_s)  {
+
+        last_fit_idx = curr_idx;
+
+        // This loop increments until we fall just outside of delta distance,
+        // copying the results for any repeated x's along the way.
+        const value_type    cutoff = *(x_begin + last_fit_idx) + delta;
+        long                k = last_fit_idx + 1;
+        bool                looped = false;
+
+        for ( ; k < col_s; ++k)  {
+            looped = true;
+            if (*(x_begin + k) > cutoff)  break;
+            if (*(x_begin + k) == *(x_begin + last_fit_idx))  {
+                // if tied with previous x-value, just use the already fitted
+                // y, and update the last-fit counter.
+                *(y_fits_begin + k) = *(y_fits_begin + last_fit_idx);
+                last_fit_idx = k;
+            }
+        }
+
+        // curr_idx, which indicates the next point to fit the regression at,
+        // is either one prior to k (since k should be the first point outside
+        // of delta) or is just incremented + 1 if k = curr_idx + 1.
+        // This insures we always step forward.
+        curr_idx = std::max(k - (looped ? 1 : 2), last_fit_idx + 1);
+    }
+
+    // Calculate smoothed/fitted y by linear interpolation between the current
+    // and previous y fitted by weighted regression.
+    // Called only if delta > 0.
+    //
+    template<typename H, typename K>
+    inline void
+    interpolate_skipped_fits_(const H x_begin, const H x_end,
+                              K y_fits_begin, K y_fits_end,
+                              long curr_idx, long last_fit_idx)  {
+
+        auxiliary_vec_.clear();
+        auxiliary_vec_.reserve(curr_idx - last_fit_idx);
+
+        const value_type    last_fit_xval = *(x_begin + last_fit_idx);
+
+        for (size_type i = last_fit_idx + 1; i < curr_idx; ++i)
+            auxiliary_vec_.push_back(*(x_begin + i) - last_fit_xval);
+
+        const value_type    x_diff = *(x_begin + curr_idx) - last_fit_xval;
+
+        for (auto iter : auxiliary_vec_)
+            iter /= x_diff;
+
+        const value_type    last_fit_yval = *(y_fits_begin + last_fit_idx);
+        const value_type    curr_idx_yval = *(y_fits_begin + curr_idx);
+
+        for (size_type i = last_fit_idx + 1; i < curr_idx; ++i)
+            *(y_fits_begin + i) =
+                auxiliary_vec_[i] * curr_idx_yval +
+                (one_ - auxiliary_vec_[i]) * last_fit_yval;
+    }
+
+    // Calculate smoothed/fitted y-value by weighted regression.
+    // No regression function (e.g. lstsq) is called. Instead "projection
+    // vector" p_idx_j is calculated,
+    // and y_fit[i] = sum(p_idx_j * y[j]) = y_fit[i]
+    // for j s.t. x[j] is in the neighborhood of xval. p_idx_j is a function of
+    // the weights, xval, and its neighbors.
+    //
+    template<typename H, typename K, typename Y, typename W>
+    inline static void
+    calculate_y_fits_(const H x_begin, const H x_end,
+                      const K y_begin, const K y_end,
+                      const W w_begin, const W w_end,
+                      Y y_fits_begin, Y y_fits_end,
+                      long curr_idx,
+                      value_type xval,
+                      size_type left_end, size_type right_end,
+                      bool reg_ok, bool fill_with_nans)  {
+
+        if (! reg_ok)  {
+            // Fill a bad regression (weights all zeros) with nans
+            // or
+            // Fill a bad regression with the original value only possible
+            // when not using xvals distinct from x
+            *(y_fits_begin + curr_idx) =
+                fill_with_nans
+                    ? std::numeric_limits<value_type>::quiet_NaN()
+                    : *(y_begin + curr_idx);
+        }
+        else  {
+            value_type  sum_weighted_x = 0;
+
+            for (size_type j = left_end; j < right_end; ++j)
+                sum_weighted_x += *(w_begin + j) * *(x_begin + j);
+
+            value_type  weighted_sqdev_x = 0;
+
+            for (size_type j = left_end; j < right_end; ++j)  {
+                const value_type    val = *(x_begin + j) - sum_weighted_x;
+
+                weighted_sqdev_x += *(w_begin + j) * val * val;
+            }
+
+            for (size_type j = left_end; j < right_end; ++j)  {
+                const value_type    p_idx_j =
+                    *(w_begin + j) *
+                    (one_ + (xval - sum_weighted_x) *
+                     (*(x_begin + j) - sum_weighted_x) / weighted_sqdev_x);
+
+                *(y_fits_begin + curr_idx) += p_idx_j * *(y_begin + j);
+            }
+        }
+    }
+
+    // If it returns True, at least some points have positive weight, and the
+    // regression will be run. If False, the regression is skipped and
+    // y_fit[i] is set to equal y[i].
+    //
+    template<typename H, typename K>
+    inline bool
+    calculate_weights_(const H &x_begin, const H &x_end,
+                       const K &w_begin, const K &w_end, // Regression weights
+                       // The x-value of the point currently being fit
+                       value_type xval,
+                       size_type left_end, size_type right_end,
+                       // The radius of the current neighborhood. The larger
+                       // of distances between x[i] and its left-most or
+                       // right-most neighbor.
+                       value_type radius)  {
+
+        x_j_.clear();
+        dist_i_j_.clear();
+        x_j_.reserve(right_end - left_end);
+        dist_i_j_.reserve(right_end - left_end);
+
+        for (size_type j = left_end; j < right_end; ++j)  {
+            x_j_.push_back(*(x_begin + j));
+            dist_i_j_.push_back(std::fabs(*(x_begin + j) - xval) / radius);
+
+            // Assign the distance measure to the weights, then apply the
+            // tricube function to change in-place.
+            *(w_begin + j) = dist_i_j_.back();
+        }
+
+        tri_cube_(w_begin + left_end, w_begin + right_end);
+        for (size_type j = left_end; j < right_end; ++j)
+            *(w_begin + j) *= resid_weights_[j];
+
+        value_type    sum_weights = 0;
+        size_type     non_zero_cnt = 0;
+
+        for (size_type j = left_end; j < right_end; ++j)  {
+            if (*(w_begin + j) != 0)  {
+                sum_weights += *(w_begin + j);
+                non_zero_cnt += 1;
+            }
+        }
+
+        bool    reg_ok = true;
+
+        // 2nd condition checks if only 1 local weight is non-zero, which
+        // will give a divisor of zero in calculate_y_fit
+        if (sum_weights <= 0 || non_zero_cnt == 1)
+            reg_ok = false;
+        else
+            for (size_type j = left_end; j < right_end; ++j)
+                *(w_begin + j) /= sum_weights;
+
+        return (reg_ok);
+    }
+
+    // Find the indices bounding the k-nearest-neighbors of the current point.
+    // It returns the radius of the current neighborhood. The larger of
+    // distances between xval and its left-most or right-most neighbor.
+    //
+    template<typename H>
+    inline static value_type
+    update_neighborhood_(const H &x_begin, const H &x_end,
+                         value_type xval,
+                         long curr_idx,
+                         size_type &left_end, size_type &right_end)  {
+
+        // A subtle loop. Start from the current neighborhood range:
+        // [left_end, right_end). Shift both ends rightwards by one (so that
+        // the neighborhood still contains k points), until the current point
+        // is in the center (or just to the left of the center) of the
+        // neighborhood. This neighborhood will contain the k-nearest
+        // neighbors of xval.
+        //
+        // Once the right end hits the end of the data, hold the neighborhood
+        // the same for the remaining xvals.
+        while (true)  {
+            if (right_end < curr_idx)  {
+                if (xval > ((*(x_begin + left_end) +
+                             *(x_begin + right_end)) / value_type(2)))  {
+                    left_end += 1;
+                    right_end += 1;
+                }
+                else  break;
+            }
+            else  break;
+        }
+
+        return (std::max(xval - *(x_begin + left_end),
+                         *(x_begin + (right_end - 1)) - xval));
+    }
+
+    template<typename H>
+    inline void
+    lowess_(const H &y_begin, const H &y_end,  // dependent variable
+            const H &x_begin, const H &x_end)  {  // independent variable
+
+        const size_type col_s = std::distance(x_begin, x_end);
+
+        // The number of neighbors in each regression. round up if close
+        // to integer
+        size_type   k =
+            size_type (frac_ * value_type(col_s) + value_type(1e-10));
+
+        // frac_ should be set, so that 2 <= k <= n. Conform them instead of
+        // throwing error.
+        if (k < 2)  k = 2;
+        if (k > col_s)  k = col_s;
+
+        result_type weights (col_s, 0);
+
+        y_fits_.resize(col_s, 0);
+        resid_weights_.resize(col_s, one_);
+        for (size_type l = 0; l < loop_n_; ++l)  {
+            long        curr_idx = 0;
+            long        last_fit_idx = -1;
+            size_type   left_end = 0;
+            size_type   right_end = k;
+
+            // Fit y[i]'s until the end of the regression
+            std::fill(y_fits_.begin(), y_fits_.end(), 0);
+            while (true)  {
+                // The x value at which we will fit this time
+                const value_type    xval = *(x_begin + curr_idx);
+                // Describe the neighborhood around the current xval.
+                const value_type    radius =
+                    update_neighborhood_(x_begin, x_end,
+                                         xval,
+                                         col_s,
+                                         left_end, right_end);
+
+                // Re-initialize the weights for each point xval.
+                std::fill(weights.begin(), weights.end(), 0);
+
+                // Calculate the weights for the regression in this
+                // neighborhood. Determine if at least some weights are
+                // positive, so a regression is ok.
+                const bool  reg_ok =
+                    calculate_weights_(x_begin, x_end,
+                                       weights.begin(), weights.end(),
+                                       xval,
+                                       left_end, right_end,
+                                       radius);
+
+                // If ok, run the regression
+                calculate_y_fits_(x_begin, x_end,
+                                  y_begin, y_end,
+                                  weights.begin(), weights.end(),
+                                  y_fits_.begin(), y_fits_.end(),
+                                  curr_idx,
+                                  xval,
+                                  left_end, right_end,
+                                  reg_ok, false);
+
+                // If we skipped some points, because of how delta_ was set,
+                // go back and fit them by linear interpolation.
+                if (last_fit_idx < (curr_idx - 1))
+                    interpolate_skipped_fits_(x_begin, x_end,
+                                              y_fits_.begin(), y_fits_.end(),
+                                              curr_idx, last_fit_idx);
+
+                // Update the last fit counter to indicate we've now fit this
+                // point. Find the next i for which we'll run a regression.
+                update_indices_(x_begin, x_end,
+                                y_fits_.begin(), y_fits_.end(),
+                                delta_,
+                                curr_idx, last_fit_idx,
+                                col_s);
+
+                if (last_fit_idx >= (col_s - 1))  break;
+            }
+
+            calc_residual_weights_(y_begin, y_end,
+                                   y_fits_.begin(), y_fits_.end(),
+                                   col_s);
+        }
+    }
+
+public:
+
+    template<typename K, typename H>
+    inline void
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &y_begin, const H &y_end,  // dependent variable
+                const H &x_begin, const H &x_end)  {  // independent variable
+
+        assert(frac_ >= 0 && frac_ <= 1);
+        assert(loop_n_ > 2);
+
+        if (sorted_)
+            lowess_(y_begin, y_end, x_begin, x_end);
+        else  {  // Sort x and y in ascending order of x
+            const size_type         col_s = std::distance(x_begin, x_end);
+            std::vector<value_type> xvals (x_begin, x_end);
+            std::vector<value_type> yvals (y_begin, y_end);
+            std::vector<size_type>  sorting_idxs (col_s);
+
+            std::iota(sorting_idxs.begin(), sorting_idxs.end(), 0);
+            std::sort(sorting_idxs.begin(), sorting_idxs.end(),
+                      [&xvals] (auto lhs, auto rhs) -> bool  {
+                          return (xvals[lhs] < xvals[rhs]);
+                      });
+            std::sort(xvals.begin(), xvals.end(),
+                      [] (auto lhs, auto rhs) -> bool  {
+                          return (lhs < rhs);
+                      });
+            _sort_by_sorted_index_(yvals, sorting_idxs, col_s);
+            lowess_(yvals.begin(), yvals.end(), xvals.begin(), xvals.end());
+        }
+    }
+
+    explicit
+    LowessVisitor (size_type loop_n = 3,
+                   value_type frac = value_type(2) / value_type(3),
+                   value_type delta = 0,
+                   bool sorted = false)
+        : frac_(frac),
+          loop_n_(loop_n + 1),
+          delta_(delta),
+          sorted_(sorted)  {   }
+
+    inline const result_type &get_result () const  { return (y_fits_); }
+    inline result_type &get_result ()  { return (y_fits_); }
+    inline const result_type &
+    get_residual_weights () const  { return (resid_weights_); }
+    inline result_type &get_residual_weights ()  { return (resid_weights_); }
+
+    inline void pre ()  {
+
+        y_fits_.clear();
+        resid_weights_.clear();
+        auxiliary_vec_.clear();
+        x_j_.clear();
+        dist_i_j_.clear();
+    }
+    inline void post ()  {  }
+
+private:
+
+    // Between 0 and 1. The fraction of the data used when estimating
+    // each y-value.
+    const value_type            frac_;
+    // The number of residual-based reweightings to perform.
+    const size_type             loop_n_;
+    // Distance within which to use linear-interpolation instead of weighted
+    // regression.
+    const value_type            delta_;
+    // Are x and y vectors sorted in the ascending order of values in x vector
+    const bool                  sorted_;
+
+    result_type                 y_fits_ {  };
+    result_type                 resid_weights_ {  };
+
+    result_type                 auxiliary_vec_ {  };
+    result_type                 x_j_ {  };
+    result_type                 dist_i_j_ {  };
+    static constexpr value_type one_ { value_type (1) };
 };
 
 } // namespace hmdf

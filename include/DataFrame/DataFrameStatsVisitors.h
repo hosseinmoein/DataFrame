@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 
 #include <DataFrame/DataFrameTypes.h>
+#include <DataFrame/Internals/DataFrame_standalone.tcc>
 #include <DataFrame/Utils/FixedSizePriorityQueue.h>
 
 #include <algorithm>
@@ -40,6 +41,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iterator>
 #include <map>
 #include <numeric>
+#include <utility>
 
 // ----------------------------------------------------------------------------
 
@@ -3151,9 +3153,8 @@ private:
     template<typename H, typename K>
     inline void
     calc_residual_weights_(const H &y_begin, const H &y_end,
-                           const K &y_fits_begin, const K &y_fits_end)  {
-
-        const size_type col_s = std::distance(y_begin, y_end);
+                           const K &y_fits_begin, const K &y_fits_end,
+                           size_type col_s)  {
 
         for (size_type i = 0; i < col_s; ++i)
             resid_weights_[i] =
@@ -3197,6 +3198,7 @@ private:
         bi_square_(resid_weights_.begin(), resid_weights_.end());
     }
 
+    // Update the counters of the local regression.
     // For most points within delta of the current point, we skip the weighted
     // linear regression (which save much computation of weights and fitted
     // points). Instead, we'll jump to the last point within delta, fit the
@@ -3207,9 +3209,8 @@ private:
     update_indices_(const H &x_begin, const H &x_end,
                     const K &y_fits_begin, const K &y_fits_end,
                     value_type delta,
-                    long &curr_idx, long &last_fit_idx)  {
-
-        const size_type     col_s = std::distance(x_begin, x_end);
+                    long &curr_idx, long &last_fit_idx,
+                    size_type col_s)  {
 
         last_fit_idx = curr_idx;
 
@@ -3305,11 +3306,11 @@ private:
 
             value_type  weighted_sqdev_x = 0;
 
-            for (size_type j = left_end; j < right_end; ++j)
-                weighted_sqdev_x +=
-                    *(w_begin + j) *
-                    ((*(x_begin + j) - sum_weighted_x) *
-                     (*(x_begin + j) - sum_weighted_x));
+            for (size_type j = left_end; j < right_end; ++j)  {
+                const value_type    val = *(x_begin + j) - sum_weighted_x;
+
+                weighted_sqdev_x += *(w_begin + j) * val * val;
+            }
 
             for (size_type j = left_end; j < right_end; ++j)  {
                 const value_type    p_idx_j =
@@ -3328,14 +3329,15 @@ private:
     //
     template<typename H, typename K>
     inline bool
-    calculate_weights_(
-        const H &x_begin, const H &x_end,
-        const K &w_begin, const K &w_end, // Regression weights
-        value_type xval,  // The x-value of the point currently being fit
-        size_type left_end, size_type right_end,
-        // The radius of the current neighborhood. The larger of distances
-        // between x[i] and its left-most or right-most neighbor.
-        value_type radius)  {
+    calculate_weights_(const H &x_begin, const H &x_end,
+                       const K &w_begin, const K &w_end, // Regression weights
+                       // The x-value of the point currently being fit
+                       value_type xval,
+                       size_type left_end, size_type right_end,
+                       // The radius of the current neighborhood. The larger
+                       // of distances between x[i] and its left-most or
+                       // right-most neighbor.
+                       value_type radius)  {
 
         x_j_.clear();
         dist_i_j_.clear();
@@ -3378,6 +3380,7 @@ private:
         return (reg_ok);
     }
 
+    // Find the indices bounding the k-nearest-neighbors of the current point.
     // It returns the radius of the current neighborhood. The larger of
     // distances between xval and its left-most or right-most neighbor.
     //
@@ -3399,8 +3402,8 @@ private:
         // the same for the remaining xvals.
         while (true)  {
             if (right_end < curr_idx)  {
-                if (xval > (*(x_begin + left_end) +
-                            *(x_begin + right_end)) / value_type(2))  {
+                if (xval > ((*(x_begin + left_end) +
+                             *(x_begin + right_end)) / value_type(2)))  {
                     left_end += 1;
                     right_end += 1;
                 }
@@ -3413,34 +3416,27 @@ private:
                          *(x_begin + (right_end - 1)) - xval));
     }
 
-public:
-
-    template<typename K, typename H>
+    template<typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &y_begin, const H &y_end,  // dependent variable
-                const H &x_begin, const H &x_end)  {  // independent variable
+    lowess_(const H &y_begin, const H &y_end,  // dependent variable
+            const H &x_begin, const H &x_end)  {  // independent variable
 
-        assert(frac_ >= 0 && frac_ <= 1);
-        assert(loop_n_ > 2);
-
-        const size_type x_size = std::distance(x_begin, x_end);
-        const size_type y_size = std::distance(y_begin, y_end);
+        const size_type col_s = std::distance(x_begin, x_end);
 
         // The number of neighbors in each regression. round up if close
         // to integer
         size_type   k =
-            size_type (frac_ * value_type(x_size) + value_type(1e-10));
+            size_type (frac_ * value_type(col_s) + value_type(1e-10));
 
         // frac_ should be set, so that 2 <= k <= n. Conform them instead of
         // throwing error.
         if (k < 2)  k = 2;
-        if (k > x_size)  k = x_size;
+        if (k > col_s)  k = col_s;
 
-        result_type weights (x_size, 0);
+        result_type weights (col_s, 0);
 
-        y_fits_.resize(x_size, 0);
-        resid_weights_.resize(y_size, one_);
+        y_fits_.resize(col_s, 0);
+        resid_weights_.resize(col_s, one_);
         for (size_type l = 0; l < loop_n_; ++l)  {
             long        curr_idx = 0;
             long        last_fit_idx = -1;
@@ -3456,7 +3452,7 @@ public:
                 const value_type    radius =
                     update_neighborhood_(x_begin, x_end,
                                          xval,
-                                         x_size,
+                                         col_s,
                                          left_end, right_end);
 
                 // Re-initialize the weights for each point xval.
@@ -3494,21 +3490,60 @@ public:
                 update_indices_(x_begin, x_end,
                                 y_fits_.begin(), y_fits_.end(),
                                 delta_,
-                                curr_idx, last_fit_idx);
+                                curr_idx, last_fit_idx,
+                                col_s);
 
-                if (last_fit_idx >= (x_size - 1))  break;
+                if (last_fit_idx >= (col_s - 1))  break;
             }
 
             calc_residual_weights_(y_begin, y_end,
-                                   y_fits_.begin(), y_fits_.end());
+                                   y_fits_.begin(), y_fits_.end(),
+                                   col_s);
+        }
+    }
+
+public:
+
+    template<typename K, typename H>
+    inline void
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &y_begin, const H &y_end,  // dependent variable
+                const H &x_begin, const H &x_end)  {  // independent variable
+
+        assert(frac_ >= 0 && frac_ <= 1);
+        assert(loop_n_ > 2);
+
+        if (sorted_)
+            lowess_(y_begin, y_end, x_begin, x_end);
+        else  {  // Sort x and y in ascending order of x
+            const size_type         col_s = std::distance(x_begin, x_end);
+            std::vector<value_type> xvals (x_begin, x_end);
+            std::vector<value_type> yvals (y_begin, y_end);
+            std::vector<size_type>  sorting_idxs (col_s);
+
+            std::iota(sorting_idxs.begin(), sorting_idxs.end(), 0);
+            std::sort(sorting_idxs.begin(), sorting_idxs.end(),
+                      [&xvals] (auto lhs, auto rhs) -> bool  {
+                          return (xvals[lhs] < xvals[rhs]);
+                      });
+            std::sort(xvals.begin(), xvals.end(),
+                      [] (auto lhs, auto rhs) -> bool  {
+                          return (lhs < rhs);
+                      });
+            _sort_by_sorted_index_(yvals, sorting_idxs, col_s);
+            lowess_(yvals.begin(), yvals.end(), xvals.begin(), xvals.end());
         }
     }
 
     explicit
     LowessVisitor (size_type loop_n = 3,
                    value_type frac = value_type(2) / value_type(3),
-                   value_type delta = 0)
-        : frac_(frac), loop_n_(loop_n + 1), delta_(delta)  {   }
+                   value_type delta = 0,
+                   bool sorted = false)
+        : frac_(frac),
+          loop_n_(loop_n + 1),
+          delta_(delta),
+          sorted_(sorted)  {   }
 
     inline const result_type &get_result () const  { return (y_fits_); }
     inline result_type &get_result ()  { return (y_fits_); }
@@ -3536,6 +3571,8 @@ private:
     // Distance within which to use linear-interpolation instead of weighted
     // regression.
     const value_type            delta_;
+    // Are x and y vectors sorted in the ascending order of values in x vector
+    const bool                  sorted_;
 
     result_type                 y_fits_ {  };
     result_type                 resid_weights_ {  };

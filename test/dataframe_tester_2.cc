@@ -1823,23 +1823,34 @@ static void test_LowessVisitor()  {
         168.01999, 164.95750, 152.61107, 160.78742, 168.55567, 152.42658,
         221.70702, 222.69040, 243.18828,
     };
-
     MyDataFrame                 df;
 
     df.load_data(std::move(idx),
-                 std::make_pair("independent_var", x_vec),
-                 std::make_pair("dependent_var", y_vec));
+                 std::make_pair("indep_var", x_vec),
+                 std::make_pair("dep_var", y_vec));
 
-    LowessVisitor<double>   l_v(3, 2.0 / 7.0);
+    LowessVisitor<double>   l_v;
 
-    df.single_act_visit<double, double>("independent_var", "dependent_var",
-                                        l_v);
-	for (auto citer : l_v.get_result())
-		std::cout << citer << ", ";
-	std::cout << std::endl;
-	for (auto citer : l_v.get_residual_weights())
-		std::cout << citer << ", ";
-	std::cout << std::endl;
+    df.single_act_visit<double, double>("dep_var", "indep_var", l_v);
+
+    auto    actual_yfit = std::vector<double> {
+        68.1432, 119.432, 122.75, 135.633, 142.724, 165.905, 169.447, 185.617,
+        186.017, 191.865, 198.03, 202.234, 206.178, 215.053, 216.586, 220.408,
+        226.671, 229.052, 229.185, 230.023, 231.657,
+    };
+
+    for (size_t idx = 0; idx < actual_yfit.size(); ++idx)
+        assert(fabs(l_v.get_result()[idx] - actual_yfit[idx]) < 0.001);
+
+    auto    actual_weights = std::vector<double> {
+        0.641773, 0.653544, 0.940738, 0.865302, 0.990575, 0.971522, 0.92929,
+        0.902444, 0.918228, 0.924041, 0.855054, 0.824388, 0.586045, 0.945216,
+        0.94831, 0.998031, 0.999834, 0.991263, 0.993165, 0.972067, 0.990308,
+    };
+
+    for (size_t idx = 0; idx < actual_weights.size(); ++idx)
+        assert(fabs(l_v.get_residual_weights()[idx] -
+                    actual_weights[idx]) < 0.00001);
 }
 
 // -----------------------------------------------------------------------------

@@ -39,7 +39,7 @@ struct StepRollAdopter;
         </B></PRE></font>
       </td>
       <td>
-        This functor applies functor F to the data in a rolling progression. It applies F to every Nth item, always atarting from the first item. N is given in the constructor<BR>
+        This functor applies functor F to the data in a rolling progression. It applies F to every Nth item, always starting from the first item. N is given in the constructor<BR>
         The result is the result of F (i.e. visitor) result. This is somewhat similar to numpy <I>array[N::M]</I><BR>
         <PRE>
     inline StepRollAdopter(F &&functor, size_type period);

@@ -970,6 +970,57 @@ public:
 
 // ----------------------------------------------------------------------------
 
+// This can only work with visitors that accept one data item at a time
+//
+template<typename F, typename T, typename I = unsigned long>
+struct  StepRollAdopter  {
+
+private:
+
+    using visitor_type = F;
+
+    visitor_type    visitor_ {  };
+    const size_t    period_;
+
+public:
+
+    DEFINE_VISIT_BASIC_TYPES
+    using result_type = typename visitor_type::result_type;
+
+    inline StepRollAdopter(F &&functor, size_type period)
+        : visitor_(std::move(functor)), period_(period)  {   }
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &column_begin,
+                const H &column_end)  {
+
+        if (period_ == 0)  return;
+
+        const size_type idx_size =
+            static_cast<size_type>(std::distance(idx_begin, idx_end));
+        const size_type col_size = std::distance(column_begin, column_end);
+        const size_type col_s = std::min(idx_size, col_size);
+
+        for (size_type i = 0; i < col_s; ++i)  {
+            const size_type idx = i * period_;
+
+            if (idx < col_s)  visitor_(idx_begin[idx], column_begin[idx]);
+            else  break;
+        }
+    }
+
+    inline void pre ()  { visitor_.pre(); }
+    inline void post ()  { visitor_.post(); }
+    inline const result_type &
+    get_result () const  { return (visitor_.get_result()); }
+    inline result_type get_result ()  { return (visitor_.get_result()); }
+};
+
+// ----------------------------------------------------------------------------
+
 // Expanding rolling adoptor for visitors
 //
 template<typename F, typename T, typename I = unsigned long>
@@ -3126,8 +3177,8 @@ private:
     // The bi-square function (1 - x^2)^2. Used to weight the residuals in the
     // robustifying iterations. Called by the calculate_residual_weights
     // function.
-    template<typename H>
-    inline static void bi_square_(H x_begin, H x_end)  {
+    template<typename X>
+    inline static void bi_square_(X x_begin, X x_end)  {
 
         while (x_begin != x_end)  {
             const value_type    val = one_ - *x_begin * *x_begin;
@@ -3138,8 +3189,8 @@ private:
 
     // The tri-cubic function (1 - x^3)^3. Used to weight neighboring points
     // along the x-axis based on their distance to the current point.
-    template<typename H>
-    inline static void tri_cube_(H x_begin, H x_end)  {
+    template<typename X>
+    inline static void tri_cube_(X x_begin, X x_end)  {
 
         while (x_begin != x_end)  {
             const value_type    val = one_ - *x_begin * *x_begin * *x_begin;
@@ -3150,9 +3201,9 @@ private:
 
     // Calculate residual weights for the next robustifying iteration.
     //
-    template<typename H, typename K>
+    template<typename Y, typename K>
     inline void
-    calc_residual_weights_(const H &y_begin, const H &y_end,
+    calc_residual_weights_(const Y &y_begin, const Y &y_end,
                            const K &y_fits_begin, const K &y_fits_end,
                            size_type col_s)  {
 
@@ -3204,9 +3255,9 @@ private:
     // points). Instead, we'll jump to the last point within delta, fit the
     // weighted regression at that point, and linearly interpolate in between.
     //
-    template<typename H, typename K>
+    template<typename X, typename K>
     inline static void
-    update_indices_(const H &x_begin, const H &x_end,
+    update_indices_(const X &x_begin, const X &x_end,
                     const K &y_fits_begin, const K &y_fits_end,
                     value_type delta,
                     long &curr_idx, long &last_fit_idx,
@@ -3242,9 +3293,9 @@ private:
     // and previous y fitted by weighted regression.
     // Called only if delta > 0.
     //
-    template<typename H, typename K>
+    template<typename X, typename K>
     inline void
-    interpolate_skipped_fits_(const H x_begin, const H x_end,
+    interpolate_skipped_fits_(const X x_begin, const X x_end,
                               K y_fits_begin, K y_fits_end,
                               long curr_idx, long last_fit_idx)  {
 
@@ -3277,9 +3328,9 @@ private:
     // for j s.t. x[j] is in the neighborhood of xval. p_idx_j is a function of
     // the weights, xval, and its neighbors.
     //
-    template<typename H, typename K, typename Y, typename W>
+    template<typename X, typename K, typename Y, typename W>
     inline static void
-    calculate_y_fits_(const H x_begin, const H x_end,
+    calculate_y_fits_(const X x_begin, const X x_end,
                       const K y_begin, const K y_end,
                       const W w_begin, const W w_end,
                       Y y_fits_begin, Y y_fits_end,
@@ -3327,9 +3378,9 @@ private:
     // regression will be run. If False, the regression is skipped and
     // y_fit[i] is set to equal y[i].
     //
-    template<typename H, typename K>
+    template<typename X, typename K>
     inline bool
-    calculate_weights_(const H &x_begin, const H &x_end,
+    calculate_weights_(const X &x_begin, const X &x_end,
                        const K &w_begin, const K &w_end, // Regression weights
                        // The x-value of the point currently being fit
                        value_type xval,
@@ -3384,9 +3435,9 @@ private:
     // It returns the radius of the current neighborhood. The larger of
     // distances between xval and its left-most or right-most neighbor.
     //
-    template<typename H>
+    template<typename X>
     inline static value_type
-    update_neighborhood_(const H &x_begin, const H &x_end,
+    update_neighborhood_(const X &x_begin, const X &x_end,
                          value_type xval,
                          long curr_idx,
                          size_type &left_end, size_type &right_end)  {
@@ -3416,10 +3467,10 @@ private:
                          *(x_begin + (right_end - 1)) - xval));
     }
 
-    template<typename H>
+    template<typename Y, typename X>
     inline void
-    lowess_(const H &y_begin, const H &y_end,  // dependent variable
-            const H &x_begin, const H &x_end)  {  // independent variable
+    lowess_(const Y &y_begin, const Y &y_end,  // dependent variable
+            const X &x_begin, const X &x_end)  {  // independent variable
 
         const size_type col_s = std::distance(x_begin, x_end);
 
@@ -3504,11 +3555,11 @@ private:
 
 public:
 
-    template<typename K, typename H>
+    template<typename K, typename Y, typename X>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
-                const H &y_begin, const H &y_end,  // dependent variable
-                const H &x_begin, const H &x_end)  {  // independent variable
+                const Y &y_begin, const Y &y_end,  // dependent variable
+                const X &x_begin, const X &x_end)  {  // independent variable
 
         assert(frac_ >= 0 && frac_ <= 1);
         assert(loop_n_ > 2);
@@ -3581,6 +3632,125 @@ private:
     result_type                 x_j_ {  };
     result_type                 dist_i_j_ {  };
     static constexpr value_type one_ { value_type (1) };
+};
+
+// ----------------------------------------------------------------------------
+
+template<typename T,
+         typename I = unsigned long,
+         typename =
+             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+struct DecomposeVisitor {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template<typename K, typename H>
+    inline void
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &y_begin, const H &y_end)  {
+
+        const size_type col_s = std::distance(y_begin, y_end);
+
+        assert(s_period_ <= col_s / 2);
+
+        std::vector<value_type> xvals (col_s);
+
+        std::iota(xvals.begin(), xvals.end(), 0);
+
+        LowessVisitor<value_type>   l_v (3, frac_,
+                                         delta_ * value_type(col_s),
+                                         true);
+
+        // Calculate trend and remove it from observations in y
+        l_v.pre();
+        l_v (idx_begin, idx_end, y_begin, y_end, xvals.begin(), xvals.end());
+        l_v.post();
+        trend_ = std::move(l_v.get_result());
+
+        // We want to resue the vector, so just rename it.
+        // This way nobody gets confused
+        std::vector<value_type> &detrended = xvals;
+
+        std::transform(y_begin, y_end,
+                       trend_.begin(),
+                       detrended.begin(),
+                       std::minus<value_type>());
+
+        StepRollAdopter<MeanVisitor<value_type>, value_type>    sr_mean (
+            MeanVisitor<value_type>(), s_period_);
+
+        seasonal_.resize(col_s, 0);
+        // Calculate one-period seasonality
+        for (size_type i = 0; i < s_period_; ++i)  {
+            sr_mean.pre();
+            sr_mean (idx_begin + i, idx_end,
+                     detrended.begin() + i, detrended.end());
+            sr_mean.post();
+            seasonal_[i] = sr_mean.get_result();
+        }
+
+        MeanVisitor<value_type> m_v;
+
+        // 0-center the period means
+        m_v.pre();
+        m_v (idx_begin, idx_end + s_period_,
+             seasonal_.begin(), seasonal_.begin() + s_period_);
+        m_v.post();
+        for (size_type i = 0; i < s_period_; ++i)
+            seasonal_[i] -= m_v.get_result();
+
+        // Tile the one-time seasone over the seasonal_ vector
+        for (size_type i = s_period_; i < col_s; ++i)
+            seasonal_[i] = seasonal_[i % s_period_];
+
+        // What is left is residual
+        residual_.resize(col_s, 0);
+        std::transform(detrended.begin(), detrended.end(),
+                       seasonal_.begin(),
+                       residual_.begin(),
+                       std::minus<value_type>());
+    }
+
+    inline void pre ()  {
+
+        trend_.clear();
+        seasonal_.clear();
+        residual_.clear();
+    }
+    inline void post ()  {  }
+
+    inline const result_type &get_result () const  { return (trend_); }
+    inline result_type &get_result ()  { return (trend_); }
+
+    inline const result_type &get_trend () const  { return (trend_); }
+    inline result_type &get_trend ()  { return (trend_); }
+
+    inline const result_type &get_seasonal () const  { return (seasonal_); }
+    inline result_type &get_seasonal ()  { return (seasonal_); }
+
+    inline const result_type &get_residual () const  { return (residual_); }
+    inline result_type &get_residual ()  { return (residual_); }
+
+    DecomposeVisitor (size_type s_period,
+                      value_type frac = value_type(0.6),
+                      value_type delta = value_type(0.01))
+        : frac_(frac), s_period_(s_period), delta_(delta)  {   }
+
+private:
+
+    // Between 0 and 1. The fraction of the data used when estimating
+    // each y-value.
+    const value_type    frac_;
+    // Seasonal period in unit of one observation. There must be at least
+    // two seasons in the data
+    const size_type     s_period_;
+    // Distance within which to use linear-interpolation instead of weighted
+    // regression.
+    const value_type    delta_;
+
+    result_type         trend_ {  };
+    result_type         seasonal_ {  };
+    result_type         residual_ {  };
 };
 
 } // namespace hmdf

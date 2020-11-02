@@ -3731,6 +3731,7 @@ struct DecomposeVisitor {
     inline const result_type &get_residual () const  { return (residual_); }
     inline result_type &get_residual ()  { return (residual_); }
 
+    explicit
     DecomposeVisitor (size_type s_period,
                       value_type frac = value_type(0.6),
                       value_type delta = value_type(0.01))

@@ -2441,12 +2441,11 @@ struct ZScoreVisitor {
                 const H &column_begin,
                 const H &column_end)  {
 
-        MeanVisitor<value_type> mvisit;
-        StdVisitor<value_type>  svisit;
-        const size_type         idx_size = std::distance(idx_begin, idx_end);
-        const size_type         col_size =
-            std::distance(column_begin, column_end);
-        const size_type         col_s = std::min(idx_size, col_size);
+        MeanVisitor<T, I>   mvisit;
+        StdVisitor<T, I>    svisit;
+        const size_type     idx_size = std::distance(idx_begin, idx_end);
+        const size_type     col_size = std::distance(column_begin, column_end);
+        const size_type     col_s = std::min(idx_size, col_size);
 
         mvisit.pre();
         svisit.pre();
@@ -2498,14 +2497,13 @@ struct SampleZScoreVisitor {
                 const H &sample_begin,
                 const H &sample_end)  {
 
-        MeanVisitor<value_type> p_mvisit;
-        StdVisitor<value_type>  p_svisit;
-        MeanVisitor<value_type> s_mvisit;
-        const size_type         p_col_s =
+        MeanVisitor<T, I>   p_mvisit;
+        StdVisitor<T, I>    p_svisit;
+        MeanVisitor<T, I>   s_mvisit;
+        const size_type     p_col_s =
             std::distance(population_begin, population_end);
-        const size_type         s_col_s =
-            std::distance(sample_begin, sample_end);
-        const size_type         max_s = std::max(p_col_s, s_col_s);
+        const size_type     s_col_s = std::distance(sample_begin, sample_end);
+        const size_type     max_s = std::max(p_col_s, s_col_s);
 
         p_mvisit.pre();
         p_svisit.pre();
@@ -3657,9 +3655,7 @@ struct DecomposeVisitor {
 
         std::iota(xvals.begin(), xvals.end(), 0);
 
-        LowessVisitor<value_type>   l_v (3, frac_,
-                                         delta_ * value_type(col_s),
-                                         true);
+        LowessVisitor<T, I> l_v (3, frac_, delta_ * value_type(col_s), true);
 
         // Calculate trend and remove it from observations in y
         l_v.pre();
@@ -3676,8 +3672,8 @@ struct DecomposeVisitor {
                        detrended.begin(),
                        std::minus<value_type>());
 
-        StepRollAdopter<MeanVisitor<value_type>, value_type>    sr_mean (
-            MeanVisitor<value_type>(), s_period_);
+        StepRollAdopter<MeanVisitor<T, I>, value_type, I>   sr_mean (
+            MeanVisitor<T, I>(), s_period_);
 
         seasonal_.resize(col_s, 0);
         // Calculate one-period seasonality
@@ -3689,7 +3685,7 @@ struct DecomposeVisitor {
             seasonal_[i] = sr_mean.get_result();
         }
 
-        MeanVisitor<value_type> m_v;
+        MeanVisitor<T, I>   m_v;
 
         // 0-center the period means
         m_v.pre();
@@ -3732,9 +3728,7 @@ struct DecomposeVisitor {
     inline result_type &get_residual ()  { return (residual_); }
 
     explicit
-    DecomposeVisitor (size_type s_period,
-                      value_type frac = value_type(0.6),
-                      value_type delta = value_type(0.01))
+    DecomposeVisitor (size_type s_period, value_type frac, value_type delta)
         : frac_(frac), s_period_(s_period), delta_(delta)  {   }
 
 private:

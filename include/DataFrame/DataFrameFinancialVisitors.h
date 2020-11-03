@@ -969,10 +969,10 @@ struct SharpeRatioVisitor {
             throw NotFeasible (err);
         }
 
-        value_type                          cum_return { 0.0 };
-        StdVisitor<value_type, index_type>  std_vis(biased_);
-        auto                                a_citer = asset_ret_begin;
-        const index_type                    &index_val = *idx_begin; // Ignored
+        value_type          cum_return { 0.0 };
+        StdVisitor<T, I>    std_vis(biased_);
+        auto                a_citer = asset_ret_begin;
+        const index_type    &index_val = *idx_begin; // Ignored
 
         std_vis.pre();
         for (auto b_citer = benchmark_ret_begin;
@@ -1032,7 +1032,7 @@ struct RSIVisitor {
         // This data doesn't make sense
         if (avg_period_ >= col_s - 3)  return;
 
-        ReturnVisitor<value_type>   return_v (rp_);
+        ReturnVisitor<T, I> return_v (rp_);
 
         return_v.pre();
         return_v (idx_begin, idx_end, prices_begin, prices_end);

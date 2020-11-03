@@ -1910,7 +1910,7 @@ static void test_DecomposeVisitor()  {
     df.load_data(std::move(MyDataFrame::gen_sequence_index(0, y_vec.size(), 1)),
                  std::make_pair("IBM_closes", y_vec));
 
-    DecomposeVisitor<double>    d_v (7);
+    DecomposeVisitor<double>    d_v (7, 0.6, 0.01);
 
     df.single_act_visit<double>("IBM_closes", d_v);
 
@@ -1977,6 +1977,36 @@ static void test_DecomposeVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_IBM_data()  {
+
+    std::cout << "\nTesting IBM_data(  ) ..." << std::endl;
+
+    typedef StdDataFrame<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+
+    DecomposeVisitor<double, std::string>   d_v (178, 2.0 / 3.0, 0);
+
+    df.single_act_visit<double>("IBM_Adj_Close", d_v);
+
+    const auto  &ibm_closes = df.get_column<double>("IBM_Adj_Close");
+
+    for (std::size_t i = 0; i < ibm_closes.size(); ++i)
+        std::cout << ibm_closes[i] << ","
+                  << d_v.get_trend()[i] << ","
+                  << d_v.get_seasonal()[i] << ","
+                  << d_v.get_residual()[i] << std::endl;
+}
+
+// --------------------------------------------------------------------
+
 int main(int argc, char *argv[]) {
 
     test_get_reindexed();
@@ -2011,6 +2041,7 @@ int main(int argc, char *argv[]) {
     test_LowessVisitor();
     test_StepRollAdopter();
     test_DecomposeVisitor();
+    // test_IBM_data();
 
     return (0);
 }

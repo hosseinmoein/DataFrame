@@ -49,8 +49,8 @@ struct DecomposeVisitor;
         <PRE>
 explicit
 DecomposeVisitor (size_type s_period,
-                  value_type frac = 0.6,
-                  value_type delta = 0.01);
+                  value_type frac,
+                  value_type delta);
 <B>s_period</B>: Length of a season in untis of one observation.
           There must be at least two seasons in the data
 <B>frac</B>: Between 0 and 1. The fraction of the data used when estimating each y-value.

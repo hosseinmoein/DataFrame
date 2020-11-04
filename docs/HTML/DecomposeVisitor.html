@@ -29,6 +29,31 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   <table align="center" border="1">
 
     <tr bgcolor="lightblue">
+      <th>Signature</th> <th>Description</th>
+    </tr>
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        <PRE><B>
+enum class decompose_type : unsigned char  {
+    additive = 1,        // Y<sub>t</sub> = Trend + Seasonal + Residual
+    multiplicative = 2,  // Y<sub>t</sub> = Trend * Seasonal * Residual
+};</B></PRE> </font>
+      </td>
+      <td>
+        The additive decomposition is the most appropriate if the magnitude of the seasonal fluctuations, or the variation around the trend-cycle, does not vary with the level of the time series. When the variation in the seasonal pattern, or the variation around the trend-cycle, appears to be proportional to the level of the time series, then a multiplicative decomposition is more appropriate. Multiplicative decompositions are common with economic time series.<BR>
+
+        An alternative to using a multiplicative decomposition is to first transform the data until the variation in the series appears to be stable over time, then use an additive decomposition. When a log transformation has been used, this is equivalent to using a multiplicative decomposition because:<BR>
+        <I>Y<sub>t</sub> = T * S * R is equivalent to log(Y<sub>t</sub>) = log(T) + logt(S) + log(R)</I>
+      </td>
+    </tr>
+
+  </table>
+
+  <BR>
+  
+  <table align="center" border="1">
+
+    <tr bgcolor="lightblue">
       <th>Signature</th> <th>Description</th> <th>Parameters</th>
     </tr>
     <tr bgcolor="lightgrey">
@@ -44,17 +69,19 @@ struct DecomposeVisitor;
       </td>
       <td>
         This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
-        This visitor creates a seasonal-trend (with Loess, aka "STL") decomposition of observed time series data. This implementation is modeled after the <I>statsmodels.tsa.seasonal_decompose</I> method but substitutes a Lowess regression for a convolution in its trend estimation. This is an additive model, <I>Y[t] = T[t] + S[t] + e[t]</I><BR>
+        This visitor creates a seasonal-trend (with Loess, aka "STL") decomposition of observed time series data. This implementation is modeled after the <I>statsmodels.tsa.seasonal_decompose</I> method but substitutes a Lowess regression for a convolution in its trend estimation.<BR>
         <I>get_result()</I> returns the <B>Trend</B> vector. There are 3 get result methods: <I>get_trend(), get_seasonal(), get_residual()</I>. They return the corresponding vectors
         <PRE>
 explicit
 DecomposeVisitor (size_type s_period,
                   value_type frac,
-                  value_type delta);
+                  value_type delta,
+                  decompose_type type = decompose_type::additive);
 <B>s_period</B>: Length of a season in untis of one observation.
           There must be at least two seasons in the data
 <B>frac</B>: Between 0 and 1. The fraction of the data used when estimating each y-value.
-<B>delta</B>: Distance within which to use linear-interpolation instead of weighted regression.</PRE>
+<B>delta</B>: Distance within which to use linear-interpolation instead of weighted regression.
+<B>type</B>: Model type. See above.</PRE>
       </td>
       <td width="12%">
         <B>T</B>: Column data type.<BR>
@@ -128,6 +155,36 @@ DecomposeVisitor (size_type s_period,
 <span style='color:#800080; '>}</span>
 </pre>
 <!--Created using ToHtml.com on 2020-11-02 18:13:51 UTC -->
+
+
+<pre style='color:#000000;background:#ffffff;'>
+<span style='color:#696969; '>// -----------------------------------------------------------------------------</span>
+
+<span style='color:#800000; font-weight:bold; '>static</span> <span style='color:#800000; font-weight:bold; '>void</span> test_IBM_data<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span>  <span style='color:#800080; '>{</span>
+
+    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>cout</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#800000; '>"</span><span style='color:#0f69ff; '>\n</span><span style='color:#0000e6; '>Testing IBM_data(  ) ...</span><span style='color:#800000; '>"</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>endl</span><span style='color:#800080; '>;</span>
+
+    <span style='color:#800000; font-weight:bold; '>typedef</span> StdDataFrame<span style='color:#800080; '>&lt;</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>string</span><span style='color:#800080; '>></span> StrDataFrame<span style='color:#800080; '>;</span>
+
+    StrDataFrame    df<span style='color:#800080; '>;</span>
+
+    df<span style='color:#808030; '>.</span>read<span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>IBM.csv</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> io_format<span style='color:#800080; '>::</span>csv2<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+
+    DecomposeVisitor<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#808030; '>,</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>string</span><span style='color:#800080; '>></span> d_v<span style='color:#808030; '>(</span><span style='color:#008c00; '>178</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>2.0</span> <span style='color:#808030; '>/</span> <span style='color:#008000; '>3.0</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>0</span><span style='color:#808030; '>,</span> decompose_type<span style='color:#800080; '>::</span>multiplicative<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    <span style='color:#696969; '>// decompose_type::additive);</span>
+
+    df<span style='color:#808030; '>.</span>single_act_visit<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>IBM_Adj_Close</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> d_v<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+
+    <span style='color:#800000; font-weight:bold; '>const</span> <span style='color:#800000; font-weight:bold; '>auto</span>  <span style='color:#808030; '>&amp;</span>ibm_closes <span style='color:#808030; '>=</span> df<span style='color:#808030; '>.</span>get_column<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>IBM_Adj_Close</span><span style='color:#800000; '>"</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+
+    <span style='color:#800000; font-weight:bold; '>for</span> <span style='color:#808030; '>(</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>size_t</span> i <span style='color:#808030; '>=</span> <span style='color:#008c00; '>0</span><span style='color:#800080; '>;</span> i <span style='color:#808030; '>&lt;</span> ibm_closes<span style='color:#808030; '>.</span>size<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span> <span style='color:#808030; '>+</span><span style='color:#808030; '>+</span>i<span style='color:#808030; '>)</span>
+        <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>cout</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> ibm_closes<span style='color:#808030; '>[</span>i<span style='color:#808030; '>]</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>,</span><span style='color:#800000; '>"</span>
+                  <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> d_v<span style='color:#808030; '>.</span>get_trend<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span>i<span style='color:#808030; '>]</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>,</span><span style='color:#800000; '>"</span>
+                  <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> d_v<span style='color:#808030; '>.</span>get_seasonal<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span>i<span style='color:#808030; '>]</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>,</span><span style='color:#800000; '>"</span>
+                  <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> d_v<span style='color:#808030; '>.</span>get_residual<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span>i<span style='color:#808030; '>]</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>endl</span><span style='color:#800080; '>;</span>
+<span style='color:#800080; '>}</span>
+</pre>
+<!--Created using ToHtml.com on 2020-11-04 17:49:01 UTC -->
 
 </body>
 </html>

@@ -112,16 +112,16 @@ struct GeometricMeanVisitor {
 
         if (skip_nan_ && is_nan__(val))  return;
 
-        mean_ *= val;
+        mean_ += std::log(val);
         cnt_ += 1;
     }
-    inline void pre ()  { mean_ = value_type(1); cnt_ = 0; }
+    inline void pre ()  { mean_ = 0; cnt_ = 0; }
     inline void post ()  {  }
     inline size_type get_count () const  { return (cnt_); }
     inline value_type get_sum () const  { return (mean_); }
     inline result_type get_result () const  {
 
-        return (std::pow(mean_, value_type(1) / value_type(cnt_)));
+        return (std::exp(mean_ / value_type(cnt_)));
     }
     template <typename K, typename H>
     inline void
@@ -3642,6 +3642,86 @@ struct DecomposeVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
+private:
+
+    template<typename K, typename H>
+    inline void
+    do_trend_(const K &idx_begin, const K &idx_end,
+              const H &y_begin, const H &y_end,
+              size_type col_s,
+              std::vector<value_type> &xvals)  {
+
+        std::iota(xvals.begin(), xvals.end(), 0);
+
+        LowessVisitor<T, I> l_v (3, frac_, delta_ * value_type(col_s), true);
+
+        // Calculate trend
+        l_v.pre();
+        l_v (idx_begin, idx_end, y_begin, y_end, xvals.begin(), xvals.end());
+        l_v.post();
+        trend_ = std::move(l_v.get_result());
+    }
+
+    template<typename MEAN, typename K>
+    inline void
+    do_seasonal_(size_type col_s, const K &idx_begin, const K &idx_end,
+                 const std::vector<value_type> &detrended)  {
+
+        StepRollAdopter<MEAN, value_type, I>    sr_mean (MEAN(), s_period_);
+
+        // Calculate one-period seasonality
+        seasonal_.resize(col_s, 0);
+        for (size_type i = 0; i < s_period_; ++i)  {
+            sr_mean.pre();
+            sr_mean (idx_begin + i, idx_end,
+                     detrended.begin() + i, detrended.end());
+            sr_mean.post();
+            seasonal_[i] = sr_mean.get_result();
+        }
+
+        // [01]-center the period means depending on the type
+        MEAN    m_v;
+
+        m_v.pre();
+        m_v (idx_begin, idx_begin + s_period_,
+             seasonal_.begin(), seasonal_.begin() + s_period_);
+        m_v.post();
+
+        const value_type    result = m_v.get_result();
+
+        if (type_ == decompose_type::additive)  {
+            for (size_type i = 0; i < s_period_; ++i)
+                seasonal_[i] -= result;
+        }
+        else  {
+            for (size_type i = 0; i < s_period_; ++i)
+                seasonal_[i] /= result;
+        }
+
+        // Tile the one-time seasone over the seasonal_ vector
+        for (size_type i = s_period_; i < col_s; ++i)
+            seasonal_[i] = seasonal_[i % s_period_];
+    }
+
+    inline void
+    do_residual_(const std::vector<value_type> &detrended, size_type col_s)  {
+
+        // What is left is residual
+        residual_.resize(col_s, 0);
+        if (type_ == decompose_type::additive)
+            std::transform(detrended.begin(), detrended.end(),
+                           seasonal_.begin(),
+                           residual_.begin(),
+                           std::minus<value_type>());
+        else
+            std::transform(detrended.begin(), detrended.end(),
+                           seasonal_.begin(),
+                           residual_.begin(),
+                           std::divides<value_type>());
+	}
+	
+public:
+
     template<typename K, typename H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
@@ -3653,58 +3733,32 @@ struct DecomposeVisitor {
 
         std::vector<value_type> xvals (col_s);
 
-        std::iota(xvals.begin(), xvals.end(), 0);
+        do_trend_(idx_begin, idx_end, y_begin, y_end, col_s, xvals);
 
-        LowessVisitor<T, I> l_v (3, frac_, delta_ * value_type(col_s), true);
-
-        // Calculate trend and remove it from observations in y
-        l_v.pre();
-        l_v (idx_begin, idx_end, y_begin, y_end, xvals.begin(), xvals.end());
-        l_v.post();
-        trend_ = std::move(l_v.get_result());
-
-        // We want to resue the vector, so just rename it.
+        // We want to reuse the vector, so just rename it.
         // This way nobody gets confused
         std::vector<value_type> &detrended = xvals;
 
-        std::transform(y_begin, y_end,
-                       trend_.begin(),
-                       detrended.begin(),
-                       std::minus<value_type>());
+        // Remove trend from observations in y
+        if (type_ == decompose_type::additive)
+            std::transform(y_begin, y_end,
+                           trend_.begin(),
+                           detrended.begin(),
+                           std::minus<value_type>());
+        else
+            std::transform(y_begin, y_end,
+                           trend_.begin(),
+                           detrended.begin(),
+                           std::divides<value_type>());
 
-        StepRollAdopter<MeanVisitor<T, I>, value_type, I>   sr_mean (
-            MeanVisitor<T, I>(), s_period_);
+        if (type_ == decompose_type::additive)
+            do_seasonal_<MeanVisitor<T, I>>
+                (col_s, idx_begin, idx_end, detrended);
+        else
+            do_seasonal_<GeometricMeanVisitor<T, I>>
+                (col_s, idx_begin, idx_end, detrended);
 
-        seasonal_.resize(col_s, 0);
-        // Calculate one-period seasonality
-        for (size_type i = 0; i < s_period_; ++i)  {
-            sr_mean.pre();
-            sr_mean (idx_begin + i, idx_end,
-                     detrended.begin() + i, detrended.end());
-            sr_mean.post();
-            seasonal_[i] = sr_mean.get_result();
-        }
-
-        MeanVisitor<T, I>   m_v;
-
-        // 0-center the period means
-        m_v.pre();
-        m_v (idx_begin, idx_end + s_period_,
-             seasonal_.begin(), seasonal_.begin() + s_period_);
-        m_v.post();
-        for (size_type i = 0; i < s_period_; ++i)
-            seasonal_[i] -= m_v.get_result();
-
-        // Tile the one-time seasone over the seasonal_ vector
-        for (size_type i = s_period_; i < col_s; ++i)
-            seasonal_[i] = seasonal_[i % s_period_];
-
-        // What is left is residual
-        residual_.resize(col_s, 0);
-        std::transform(detrended.begin(), detrended.end(),
-                       seasonal_.begin(),
-                       residual_.begin(),
-                       std::minus<value_type>());
+        do_residual_(detrended, col_s);
     }
 
     inline void pre ()  {
@@ -3727,25 +3781,28 @@ struct DecomposeVisitor {
     inline const result_type &get_residual () const  { return (residual_); }
     inline result_type &get_residual ()  { return (residual_); }
 
-    explicit
-    DecomposeVisitor (size_type s_period, value_type frac, value_type delta)
-        : frac_(frac), s_period_(s_period), delta_(delta)  {   }
+    DecomposeVisitor (size_type s_period,
+                      value_type frac,
+                      value_type delta,
+                      decompose_type t = decompose_type::additive)
+        : frac_(frac), s_period_(s_period), delta_(delta), type_(t)  {   }
 
 private:
 
     // Between 0 and 1. The fraction of the data used when estimating
     // each y-value.
-    const value_type    frac_;
+    const value_type        frac_;
     // Seasonal period in unit of one observation. There must be at least
     // two seasons in the data
-    const size_type     s_period_;
+    const size_type         s_period_;
     // Distance within which to use linear-interpolation instead of weighted
-    // regression.
-    const value_type    delta_;
+    // regression. 0 or small values cause longer/more accurate processing
+    const value_type        delta_;
+    const decompose_type    type_;
 
-    result_type         trend_ {  };
-    result_type         seasonal_ {  };
-    result_type         residual_ {  };
+    result_type             trend_ {  };
+    result_type             seasonal_ {  };
+    result_type             residual_ {  };
 };
 
 } // namespace hmdf

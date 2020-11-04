@@ -1904,7 +1904,7 @@ static void test_DecomposeVisitor()  {
           146.783, 147.173, 146.939, 147.290, 145.946, 142.624, 138.027,
           136.118, 129.650, 126.767, 130.809, 125.550, 130.732, 126.183,
           124.410, 114.748, 121.527, 114.904, 100.138, 105.144,
-    };
+        };
     MyDataFrame                 df;
 
     df.load_data(std::move(MyDataFrame::gen_sequence_index(0, y_vec.size(), 1)),
@@ -1985,14 +1985,11 @@ static void test_IBM_data()  {
 
     StrDataFrame    df;
 
-    try  {
-        df.read("IBM.csv", io_format::csv2);
-    }
-    catch (const DataFrameError &ex)  {
-        std::cout << ex.what() << std::endl;
-    }
+    df.read("IBM.csv", io_format::csv2);
 
-    DecomposeVisitor<double, std::string>   d_v (178, 2.0 / 3.0, 0);
+    DecomposeVisitor<double, std::string> d_v(178, 2.0 / 3.0, 0,
+                                              decompose_type::multiplicative);
+    // decompose_type::additive);
 
     df.single_act_visit<double>("IBM_Adj_Close", d_v);
 

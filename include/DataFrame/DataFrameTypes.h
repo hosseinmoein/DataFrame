@@ -297,6 +297,27 @@ enum class sigmoid_type : unsigned char  {
 
 // ----------------------------------------------------------------------------
 
+// The additive decomposition is the most appropriate if the magnitude of the
+// seasonal fluctuations, or the variation around the trend-cycle, does not
+// vary with the level of the time series. When the variation in the seasonal
+// pattern, or the variation around the trend-cycle, appears to be
+// proportional to the level of the time series, then a multiplicative
+// decomposition is more appropriate. Multiplicative decompositions are common
+// with economic time series.
+
+// An alternative to using a multiplicative decomposition is to first
+// transform the data until the variation in the series appears to be stable
+// over time, then use an additive decomposition. When a log transformation
+// has been used, this is equivalent to using a multiplicative decomposition
+// because:
+//    Y[t] = T * S * R is equivalent to log(Y[t]) = log(T) + logt(S) + log(R)
+enum class decompose_type : unsigned char  {
+    additive = 1,        // Y(t) = Trend + Seasonal + Residual
+    multiplicative = 2,  // Y(t) = Trend * Seasonal * Residual
+};
+
+// ----------------------------------------------------------------------------
+
 enum class box_cox_type : unsigned char  {
     // y(λ) = (y^λ - 1) / λ,  if λ != 0
     // y(λ) = log(y),         if λ == 0

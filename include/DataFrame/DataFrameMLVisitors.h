@@ -130,10 +130,9 @@ public:
                 const H &column_begin,
                 const H &column_end)  {
 
-        const size_type idx_size = std::distance(idx_begin, idx_end);
-        const size_type col_size = std::distance(column_begin, column_end);
+        GET_COL_SIZE
 
-        calc_k_means_(column_begin, std::min(idx_size, col_size));
+        calc_k_means_(column_begin, col_s);
     }
 
     // Using the calculated means, separate the given column into clusters
@@ -145,17 +144,15 @@ public:
                  const H &column_begin,
                  const H &column_end)  {
 
-        const size_type idx_s = std::distance(idx_begin, idx_end);
-        const size_type col_s = std::distance(column_begin, column_end);
-        const size_type col_size = std::min(idx_s, col_s);
+        GET_COL_SIZE
         cluster_type    clusters;
 
         for (size_type i = 0; i < K; ++i)  {
-            clusters[i].reserve(col_size / K + 2);
+            clusters[i].reserve(col_s / K + 2);
             clusters[i].push_back(const_cast<value_type *>(&(k_means_[i])));
         }
 
-        for (size_type j = 0; j < col_size; ++j)  {
+        for (size_type j = 0; j < col_s; ++j)  {
             double      min_dist = std::numeric_limits<double>::max();
             size_type   min_idx;
 
@@ -177,7 +174,9 @@ public:
     inline void pre ()  {  }
     inline void post ()  {  }
     inline const result_type &get_result () const  { return (k_means_); }
+    inline result_type &get_result ()  { return (k_means_); }
 
+    explicit
     KMeansVisitor(
         size_type num_of_iter,
         distance_func f =
@@ -321,21 +320,17 @@ public:
                 const H &column_begin,
                 const H &column_end)  {
 
-        const size_type             idx_size =
-            std::distance(idx_begin, idx_end);
-        const size_type             col_size =
-            std::distance(column_begin, column_end);
-        const size_type             csize = std::min(idx_size, col_size);
+        GET_COL_SIZE
         const std::vector<double>   simil =
-            std::move(get_similarity_(column_begin, csize));
+            std::move(get_similarity_(column_begin, col_s));
         std::vector<double>         avail;
         std::vector<double>         respon;
 
-        get_avail_and_respon(simil, csize, avail, respon);
+        get_avail_and_respon(simil, col_s, avail, respon);
 
-        centers_.reserve(std::min(csize / 100, size_type(16)));
-        for (size_type i = 0; i < csize; ++i)  {
-            if (respon[i * csize + i] + avail[i * csize + i] > 0.0)
+        centers_.reserve(std::min(col_s / 100, size_type(16)));
+        for (size_type i = 0; i < col_s; ++i)  {
+            if (respon[i * col_s + i] + avail[i * col_s + i] > 0.0)
                 centers_.push_back(
                     const_cast<value_type *>(&*(column_begin + i)));
         }
@@ -350,18 +345,16 @@ public:
                  const H &column_begin,
                  const H &column_end)  {
 
-        const size_type idx_size = std::distance(idx_begin, idx_end);
-        const size_type col_size = std::distance(column_begin, column_end);
-        const size_type csize = std::min(idx_size, col_size);
+        GET_COL_SIZE
         const size_type centers_size = centers_.size();
         cluster_type    clusters;
 
         if (centers_size > 0)  {
             clusters.resize(centers_size);
             for (size_type i = 0; i < centers_size; ++i)
-                clusters[i].reserve(csize / centers_size);
+                clusters[i].reserve(col_s / centers_size);
 
-            for (size_type j = 0; j < csize; ++j)  {
+            for (size_type j = 0; j < col_s; ++j)  {
                 double      min_dist = std::numeric_limits<double>::max();
                 size_type   min_idx;
 
@@ -385,7 +378,9 @@ public:
     inline void pre ()  {  }
     inline void post ()  {  }
     inline const result_type &get_result () const  { return (centers_); }
+    inline result_type &get_result ()  { return (centers_); }
 
+    explicit
     AffinityPropVisitor(
         size_type num_of_iter,
         distance_func f =

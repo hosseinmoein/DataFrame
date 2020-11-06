@@ -58,15 +58,7 @@ struct  ClipVisitor  {
             count_ += 1;
         }
     }
-    template <typename K, typename H>
-    inline void
-    operator() (K idx_begin, K idx_end, H column_begin, H column_end)  {
-
-        const auto  &dummy = *idx_begin;
-
-        while (column_begin < column_end)
-            (*this)(dummy, *column_begin++);
-    }
+    PASS_DATA_ONE_BY_ONE
 
     inline void pre ()  { count_ = 0; }
     inline void post ()  {  }
@@ -104,7 +96,7 @@ private:
         aggr(idx_begin, idx_end, column_begin, column_end);
         aggr.post();
 
-        const size_type col_s = std::distance(column_begin, column_end);
+        GET_COL_SIZE
         std::vector<T>  diff;
 
         diff.reserve(col_s);
@@ -157,9 +149,10 @@ public:
     inline void post ()  {  }
     inline result_type get_result () const  { return (count_); }
 
-    explicit HampelFilterVisitor(size_type widnow_size,
-                                 hampel_type ht = hampel_type::median,
-                                 value_type num_of_std = 3)
+    explicit
+    HampelFilterVisitor(size_type widnow_size,
+                        hampel_type ht = hampel_type::median,
+                        value_type num_of_std = 3)
         : window_size_(widnow_size),
           type_(ht),
           num_of_std_(num_of_std)  {   }
@@ -187,18 +180,18 @@ struct  ExpoSmootherVisitor {
 
     template<typename K, typename H>
     inline void
-    operator() (K i_begin, K i_end, H c_begin, H c_end)  {
+    operator() (K idx_begin, K idx_end, H column_begin, H column_end)  {
 
-        count_ = std::distance(c_begin, c_end);
+        count_ = std::distance(column_begin, column_end);
 
-        value_type  prev_v = *c_begin;
+        value_type  prev_v = *column_begin;
 
         // Y0 = X0
         // Yt = aXt + (1 - a)Yt-1
         for (size_type i = 1; i < count_; ++i)  {
-            const value_type    curr_v = *(c_begin + i);
+            const value_type    curr_v = *(column_begin + i);
 
-            *(c_begin + i) = prev_v + alfa_ * (curr_v - prev_v);
+            *(column_begin + i) = prev_v + alfa_ * (curr_v - prev_v);
             prev_v = curr_v;
         }
     }
@@ -229,19 +222,20 @@ struct  HWExpoSmootherVisitor {
 
     template<typename K, typename H>
     inline void
-    operator() (K i_begin, K i_end, H c_begin, H c_end)  {
+    operator() (K idx_begin, K idx_end, H column_begin, H column_end)  {
 
-        count_ = std::distance(c_begin, c_end);
+        count_ = std::distance(column_begin, column_end);
 
         assert(count_ > 2);
 
-        value_type  prev_v = *c_begin;
-        value_type  tf = *(c_begin + 1) - prev_v;
+        value_type  prev_v = *column_begin;
+        value_type  tf = *(column_begin + 1) - prev_v;
 
         for (size_type i = 1; i < count_; ++i)  {
-            const value_type    curr_v = *(c_begin + i);
+            const value_type    curr_v = *(column_begin + i);
 
-            *(c_begin + i) = alfa_ * curr_v + (T(1) - alfa_) * (prev_v + tf);
+            *(column_begin + i) =
+                alfa_ * curr_v + (T(1) - alfa_) * (prev_v + tf);
             tf = beta_ * (curr_v - prev_v) + (T(1) - beta_) * tf;
             prev_v = curr_v;
         }

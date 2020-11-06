@@ -53,20 +53,16 @@ struct ReturnVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    explicit ReturnVisitor (return_policy rp) : ret_p_(rp)  {   }
-
     template <typename K, typename H>
     inline void
     operator() (const K &idx_begin,
                 const K &idx_end,
-                const H &prices_begin,
-                const H &prices_end)  {
+                const H &column_begin,
+                const H &column_end)  {
 
-        const size_type idx_size = std::distance(idx_begin, idx_end);
-        const size_type col_size = std::distance(prices_begin, prices_end);
-        const size_type col_len = std::min(idx_size, col_size);
+        GET_COL_SIZE
 
-        if (col_len < 3)  return;
+        if (col_s < 3)  return;
 
         // Log return
         std::function<value_type(value_type, value_type)>   func =
@@ -85,8 +81,8 @@ struct ReturnVisitor  {
 
         result_type tmp_result;
 
-        tmp_result.reserve(col_len);
-        std::adjacent_difference (prices_begin, prices_end,
+        tmp_result.reserve(col_s);
+        std::adjacent_difference (column_begin, column_end,
                                   std::back_inserter (tmp_result),
                                   func);
         tmp_result.erase (tmp_result.begin ());
@@ -97,6 +93,8 @@ struct ReturnVisitor  {
     inline void post ()  {   }
     inline const result_type &get_result () const  { return (result_); }
     inline result_type &get_result ()  { return (result_); }
+
+    explicit ReturnVisitor (return_policy rp) : ret_p_(rp)  {   }
 
 private:
 
@@ -167,9 +165,6 @@ public:
     using size_type = std::size_t;
     using result_type = std::vector<value_type>;
 
-    inline DoubleCrossOver(S_RT &&sr, L_RT &&lr)
-        : short_roller_(std::move(sr)), long_roller_(std::move(lr))  {   }
-
     template <typename K, typename H>
     inline void
     operator() (const K &idx_begin,
@@ -231,13 +226,19 @@ public:
         short_roller_.post();
         long_roller_.post();
     }
-
     const result_type &
     get_raw_to_short_term() const  { return (col_to_short_term_); }
+    result_type &get_raw_to_short_term()  { return (col_to_short_term_); }
     const result_type &
     get_raw_to_long_term() const  { return (col_to_long_term_); }
+    result_type &get_raw_to_long_term()  { return (col_to_long_term_); }
     const result_type &
     get_short_term_to_long_term() const  { return (short_term_to_long_term_); }
+    result_type &
+    get_short_term_to_long_term()  { return (short_term_to_long_term_); }
+
+    inline DoubleCrossOver(S_RT &&sr, L_RT &&lr)
+        : short_roller_(std::move(sr)), long_roller_(std::move(lr))  {   }
 
 private:
 
@@ -291,17 +292,6 @@ public:
     using index_type = I;
     using size_type = std::size_t;
     using result_type = std::vector<value_type>;
-
-    inline BollingerBand(double upper_band_multiplier,
-                         double lower_band_multiplier,
-                         size_type moving_mean_period,
-                         bool biased = false)
-        : upper_band_multiplier_(upper_band_multiplier),
-          lower_band_multiplier_(lower_band_multiplier),
-          mean_roller_(std::move(MeanVisitor<T, I>()), moving_mean_period),
-          std_roller_(std::move(StdVisitor<T, I>(biased)),
-                      moving_mean_period) {
-    }
 
     template <typename K, typename H>
     inline void
@@ -366,11 +356,23 @@ public:
         raw_to_lower_band_.clear();
     }
     inline void post ()  {  }
-
     const result_type &
     get_upper_band_to_raw() const  { return (upper_band_to_raw_); }
+    result_type &get_upper_band_to_raw()  { return (upper_band_to_raw_); }
     const result_type &
     get_raw_to_lower_band() const  { return (raw_to_lower_band_); }
+    result_type &get_raw_to_lower_band()  { return (raw_to_lower_band_); }
+
+    inline BollingerBand(double upper_band_multiplier,
+                         double lower_band_multiplier,
+                         size_type moving_mean_period,
+                         bool biased = false)
+        : upper_band_multiplier_(upper_band_multiplier),
+          lower_band_multiplier_(lower_band_multiplier),
+          mean_roller_(std::move(MeanVisitor<T, I>()), moving_mean_period),
+          std_roller_(std::move(StdVisitor<T, I>(biased)),
+                      moving_mean_period) {
+    }
 
 private:
 
@@ -402,19 +404,6 @@ public:
     using index_type = I;
     using size_type = std::size_t;
     using result_type = std::vector<value_type>;
-
-    inline MACDVisitor(
-        size_type short_mean_period,  // e.g. 12-day
-        size_type long_mean_period,   // e.g. 26-day
-        size_type signal_line_period, // e.g.  9-day
-        exponential_decay_spec ed_spec = exponential_decay_spec::span,
-        double expo_decay_value = 0.2)
-        : short_mean_period_(short_mean_period),
-          long_mean_period_(long_mean_period),
-          signal_line_roller_(std::move(MeanVisitor<T, I>()),
-                              signal_line_period,
-                              ed_spec, expo_decay_value)  {
-    }
 
     template <typename K, typename H>
     inline void
@@ -469,11 +458,27 @@ public:
         macd_histogram_.clear();
     }
     inline void post ()  {  }
-
     const result_type &get_macd_line() const { return (macd_line_); }
+    result_type &get_macd_line()  { return (macd_line_); }
     const result_type &
     get_signal_line() const { return (signal_line_roller_.get_result()); }
+    result_type &
+    get_signal_line()  { return (signal_line_roller_.get_result()); }
     const result_type &get_macd_histogram() const { return (macd_histogram_); }
+    result_type &get_macd_histogram()  { return (macd_histogram_); }
+
+    inline MACDVisitor(
+        size_type short_mean_period,  // e.g. 12-day
+        size_type long_mean_period,   // e.g. 26-day
+        size_type signal_line_period, // e.g.  9-day
+        exponential_decay_spec ed_spec = exponential_decay_spec::span,
+        double expo_decay_value = 0.2)
+        : short_mean_period_(short_mean_period),
+          long_mean_period_(long_mean_period),
+          signal_line_roller_(std::move(MeanVisitor<T, I>()),
+                              signal_line_period,
+                              ed_spec, expo_decay_value)  {
+    }
 
 private:
 
@@ -538,15 +543,7 @@ struct  VWAPVisitor {
             }
         }
     }
-    template <typename K, typename H>
-    inline void
-    operator() (K idx_begin, K idx_end,
-                H price_begin, H price_end,
-                H size_begin, H size_end)  {
-
-        while (price_begin < price_end && size_begin < size_end)
-            (*this)(*idx_begin, *price_begin++, *size_begin++);
-    }
+    PASS_DATA_ONE_BY_ONE_2
 
     inline void pre ()  {
 
@@ -595,6 +592,7 @@ struct  VWAPVisitor {
         }
     }
     inline const result_type &get_result () const  { return (result_); }
+    inline result_type &get_result ()  { return (result_); }
 
     explicit
     VWAPVisitor(double interval,
@@ -829,6 +827,7 @@ struct  VWBASVisitor {
         }
     }
     inline const result_type &get_result () const  { return (result_); }
+    inline result_type &get_result ()  { return (result_); }
 
     explicit
     VWBASVisitor(double interval,
@@ -938,9 +937,6 @@ struct SharpeRatioVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_2
 
-    explicit
-    SharpeRatioVisitor(bool biased = false) : biased_ (biased) {  }
-
     template <typename K, typename H>
     inline void
     operator() (const K &idx_begin,
@@ -987,6 +983,9 @@ struct SharpeRatioVisitor {
     inline void pre ()  { result_ = 0; }
     inline void post ()  {  }
     inline result_type get_result () const  { return (result_); }
+
+    explicit
+    SharpeRatioVisitor(bool biased = false) : biased_ (biased) {  }
 
 private:
 
@@ -1071,13 +1070,13 @@ struct RSIVisitor {
         }
     }
 
-    explicit RSIVisitor(return_policy rp, size_type avg_period = 14)
-        : rp_(rp), avg_period_(value_type(avg_period))  {   }
-
     inline void pre ()  { result_.clear(); }
     inline void post ()  {  }
     inline const result_type &get_result () const  { return (result_); }
     inline result_type &get_result ()  { return (result_); }
+
+    explicit RSIVisitor(return_policy rp, size_type avg_period = 14)
+        : rp_(rp), avg_period_(value_type(avg_period))  {   }
 
 private:
 
@@ -1111,17 +1110,14 @@ private:
 
 public:
 
-    explicit
-    HurstExponentVisitor(RangeVec &&ranges) : ranges_ (std::move(ranges)) {  }
-
     template <typename K, typename H>
     inline void
-    operator() (const K &i_begin,
-                const K &i_end,
-                const H &c_begin,
-                const H &c_end)  {
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &column_begin,
+                const H &column_end)  {
 
-        const size_type         col_s = std::distance(c_begin, c_end);
+        GET_COL_SIZE
         std::vector<range_data> buckets;
         MeanVisitor<T, I>       mv;
         StdVisitor<T, I>        sv;
@@ -1139,8 +1135,10 @@ public:
                 rd.end = ch_size * i + ch_size;
                 mv.pre();
                 sv.pre();
-                mv(i_begin, i_end, c_begin + rd.begin, c_begin + rd.end);
-                sv(i_begin, i_end, c_begin + rd.begin, c_begin + rd.end);
+                mv(idx_begin, idx_end,
+                   column_begin + rd.begin, column_begin + rd.end);
+                sv(idx_begin, idx_end,
+                   column_begin + rd.begin, column_begin + rd.end);
                 mv.post();
                 sv.post();
                 rd.mean = mv.get_result();
@@ -1156,7 +1154,7 @@ public:
             value_type  min_dev { std::numeric_limits<T>::max() };
 
             for (size_type i = iter.begin; i < iter.end; ++i)  {
-                total += *(c_begin + i) - iter.mean;
+                total += *(column_begin + i) - iter.mean;
                 if (total > max_dev)  max_dev = total;
                 if (total < min_dev)  min_dev = total;
             }
@@ -1195,7 +1193,7 @@ public:
         PolyFitVisitor<T, I>    pfv (1);  // First degree
 
         pfv.pre();
-        pfv (i_begin, i_end,
+        pfv (idx_begin, idx_end,
              log_size.begin(), log_size.end(),
              log_rescaled_mean.begin(), log_rescaled_mean.end());
         pfv.post();
@@ -1206,6 +1204,9 @@ public:
     inline void pre ()  { exponent_ = -1; }
     inline void post ()  {  }
     inline result_type get_result () const  { return (exponent_); }
+
+    explicit
+    HurstExponentVisitor(RangeVec &&ranges) : ranges_ (std::move(ranges)) {  }
 
 private:
 

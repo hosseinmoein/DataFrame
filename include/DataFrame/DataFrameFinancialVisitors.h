@@ -160,10 +160,7 @@ private:
 
 public:
 
-    using value_type = T;
-    using index_type = I;
-    using size_type = std::size_t;
-    using result_type = std::vector<value_type>;
+    DEFINE_VISIT_BASIC_TYPES_3
 
     template <typename K, typename H>
     inline void
@@ -288,10 +285,7 @@ private:
 
 public:
 
-    using value_type = T;
-    using index_type = I;
-    using size_type = std::size_t;
-    using result_type = std::vector<value_type>;
+    DEFINE_VISIT_BASIC_TYPES_3
 
     template <typename K, typename H>
     inline void
@@ -400,10 +394,7 @@ private:
 
 public:
 
-    using value_type = T;
-    using index_type = I;
-    using size_type = std::size_t;
-    using result_type = std::vector<value_type>;
+    DEFINE_VISIT_BASIC_TYPES_3
 
     template <typename K, typename H>
     inline void
@@ -495,9 +486,7 @@ template<typename T,
              typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
 struct  VWAPVisitor {
 
-    using value_type = T;
-    using index_type = I;
-    using size_type = std::size_t;
+    DEFINE_VISIT_BASIC_TYPES
 
     struct  VWAP  {
         value_type  average_price { 0 };
@@ -670,9 +659,7 @@ template<typename T,
              typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
 struct  VWBASVisitor {
 
-    using value_type = T;
-    using index_type = I;
-    using size_type = std::size_t;
+    DEFINE_VISIT_BASIC_TYPES
 
     struct  VWBAS  {
         value_type  spread { 0 };

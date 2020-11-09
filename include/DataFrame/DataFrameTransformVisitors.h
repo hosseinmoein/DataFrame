@@ -39,13 +39,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace hmdf
 {
 
+#define DEFINE_VISIT_BASIC_TYPES_4 \
+    DEFINE_VISIT_BASIC_TYPES \
+    using result_type = size_type;
+
+// ----------------------------------------------------------------------------
+
 template<typename T, typename I = unsigned long>
 struct  ClipVisitor  {
 
-    using value_type = T;
-    using index_type = I;
-    using size_type = std::size_t;
-    using result_type = size_type;
+    DEFINE_VISIT_BASIC_TYPES_4
 
     inline void operator() (const index_type &, value_type &val)  {
 
@@ -81,10 +84,7 @@ struct  HampelFilterVisitor {
 
 public:
 
-    using value_type = T;
-    using index_type = I;
-    using size_type = std::size_t;
-    using result_type = size_type;
+    DEFINE_VISIT_BASIC_TYPES_4
 
 private:
 
@@ -173,10 +173,7 @@ private:
 template<typename T, typename I = unsigned long>
 struct  ExpoSmootherVisitor {
 
-    using value_type = T;
-    using index_type = I;
-    using size_type = std::size_t;
-    using result_type = size_type;
+    DEFINE_VISIT_BASIC_TYPES_4
 
     template<typename K, typename H>
     inline void
@@ -215,10 +212,7 @@ private:
 template<typename T, typename I = unsigned long>
 struct  HWExpoSmootherVisitor {
 
-    using value_type = T;
-    using index_type = I;
-    using size_type = std::size_t;
-    using result_type = size_type;
+    DEFINE_VISIT_BASIC_TYPES_4
 
     template<typename K, typename H>
     inline void

@@ -401,7 +401,7 @@ gen_log_space_nums(std::size_t n, T first, T last, T base)  {
 
     const T         step = (last - first) / (T(n) - T(1));
     T               current = first;
-    std::vector<T>  result(n);
+    std::vector<T>  result (n);
 
     for (auto iter = result.begin(); iter < result.end(); ++iter)  {
         const T val = ::pow(base, current);
@@ -409,6 +409,24 @@ gen_log_space_nums(std::size_t n, T first, T last, T base)  {
         current += step;
         *iter = val;
     }
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
+std::vector<T>
+gen_even_space_nums(std::size_t n, T first, T last)  {
+
+    const T         step = (last - first) / T(n);
+    std::vector<T>  result;
+
+    result.reserve(n + 1); // Make it efficient, if user wants to add last
+    result.push_back(first);
+    for (std::size_t i = 1; i < n; ++i)
+        result.push_back(result[i - 1] + step);
+
     return (result);
 }
 

@@ -363,6 +363,16 @@ template<typename T>
 std::vector<T>
 gen_log_space_nums(std::size_t n, T first, T last, T base);
 
+// ----------------------------------------------------------------------------
+
+// This function generates n evenly spaced numbers between the given first and
+// last parameters.
+// The result vector always starts with first and ends shy of last
+//
+template<typename T>
+std::vector<T>
+gen_even_space_nums(std::size_t n, T first, T last);
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

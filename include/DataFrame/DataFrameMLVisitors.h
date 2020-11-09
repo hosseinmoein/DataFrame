@@ -45,9 +45,8 @@ struct  KMeansVisitor  {
 
 public:
 
-    using value_type = T;
-    using index_type = I;
-    using size_type = std::size_t;
+    DEFINE_VISIT_BASIC_TYPES
+
     using result_type = std::array<value_type, K>;
     using cluster_type = std::array<VectorPtrView<value_type>, K>;
     using distance_func =
@@ -193,9 +192,8 @@ struct  AffinityPropVisitor  {
 
 public:
 
-    using value_type = T;
-    using index_type = I;
-    using size_type = std::size_t;
+    DEFINE_VISIT_BASIC_TYPES
+
     using result_type = VectorPtrView<value_type>;
     using cluster_type = std::vector<VectorPtrView<value_type>>;
     using distance_func =

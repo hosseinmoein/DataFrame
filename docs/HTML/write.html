@@ -91,6 +91,22 @@ write(S &amp;o,
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>
+template&lt;typename ... Ts&gt;
+std::future&lt;bool&gt;
+write(const char *file_name,
+      io_format iof = io_format::csv) const; </font>
+        </B></PRE>
+      </td>
+      <td>
+        Same as write() above, but it takes a file name
+      </td>
+      <td>
+      </td>
+    </tr>
+
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        <PRE><B>
 template&lt;typename S, typename ... Ts&gt;
 std::future&lt;bool&gt;
 write_async(S &amp;o,
@@ -99,6 +115,22 @@ write_async(S &amp;o,
       </td>
       <td>
         Same as write() above, but executed asynchronously
+      </td>
+      <td>
+      </td>
+    </tr>
+
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        <PRE><B>
+template&lt;typename ... Ts&gt;
+std::future&lt;bool&gt;
+write_async(const char *file_name,
+            io_format iof = io_format::csv) const; </font>
+        </B></PRE>
+      </td>
+      <td>
+        Same as write_async() above, but it takes a file name
       </td>
       <td>
       </td>

@@ -2546,11 +2546,19 @@ public:  // Utilities and miscellaneous
     bool
     write(S &o, io_format iof = io_format::csv) const;
 
+    template<typename ... Ts>
+    bool
+    write(const char *file_name, io_format iof = io_format::csv) const;
+
     // Same as write() above, but executed asynchronously
     //
     template<typename S, typename ... Ts>
     [[nodiscard]] std::future<bool>
     write_async(S &o, io_format iof = io_format::csv) const;
+
+    template<typename ... Ts>
+    [[nodiscard]] std::future<bool>
+    write_async(const char *file_name, io_format iof = io_format::csv) const;
 
     // It inputs the contents of a text file into itself (i.e. DataFrame).
     // Currently two formats (i.e. csv, json) are supported specified by
@@ -2584,6 +2592,10 @@ public:  // Utilities and miscellaneous
     // iof:
     //   Specifies the I/O format. The default is CSV
     //
+    template<typename S>
+    bool
+    read(S &in_s, io_format iof = io_format::csv);
+
     bool
     read(const char *file_name, io_format iof = io_format::csv);
 
@@ -2591,6 +2603,10 @@ public:  // Utilities and miscellaneous
     //
     [[nodiscard]] std::future<bool>
     read_async(const char *file_name, io_format iof = io_format::csv);
+
+    template<typename S>
+    [[nodiscard]] std::future<bool>
+    read_async(S &in_s, io_format iof = io_format::csv);
 
 private:  // Friend Operators
 

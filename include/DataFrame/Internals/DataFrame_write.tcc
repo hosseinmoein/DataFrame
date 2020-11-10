@@ -35,7 +35,27 @@ namespace hmdf
 {
 
 template<typename I, typename H>
-template<typename S, typename ...Ts>
+template<typename ... Ts>
+bool DataFrame<I, H>::write(const char *file_name, io_format iof) const  {
+
+    std::ofstream   file;
+
+    file.open(file_name, std::ios::out);  // Open for writing
+    if (file.fail())  {
+        String1K    err;
+
+        err.printf("write(): ERROR: Unable to open file '%s'", file_name);
+        throw DataFrameError(err.c_str());
+    }
+    this->write(file, iof);
+    file.close();
+    return (true);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename S, typename ... Ts>
 bool DataFrame<I, H>::write (S &o, io_format iof) const  {
 
     if (iof != io_format::csv &&
@@ -126,15 +146,27 @@ bool DataFrame<I, H>::write (S &o, io_format iof) const  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename S, typename ...Ts>
+template<typename ... Ts>
+std::future<bool> DataFrame<I, H>::
+write_async (const char *file_name, io_format iof) const  {
+
+    return (std::async(std::launch::async,
+                       [file_name, iof, this] () -> bool  {
+                           return (this->write(file_name, iof));
+                       }));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename S, typename ... Ts>
 std::future<bool> DataFrame<I, H>::
 write_async (S &o, io_format iof) const  {
 
     return (std::async(std::launch::async,
-                       &DataFrame::write<S, Ts ...>,
-                       this,
-                       std::ref(o),
-                       iof));
+                       [&o, iof, this] () -> bool  {
+                           return (this->write(o, iof));
+                       }));
 }
 
 } // namespace hmdf

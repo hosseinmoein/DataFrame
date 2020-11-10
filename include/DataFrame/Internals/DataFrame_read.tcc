@@ -668,7 +668,7 @@ void DataFrame<I, H>::read_csv2_(std::ifstream &file)  {
                             nan_policy::dont_pad_with_nans);
             else if (col_spec.type_spec == "ulong")
                 load_column(col_spec.col_name.c_str(),
-                            std::move(std::any_cast<std::vector<unsigned long> &>
+                            std::move(std::any_cast<std::vector<unsigned long>&>
                                           (col_spec.col_vec)),
                             nan_policy::dont_pad_with_nans);
             else if (col_spec.type_spec == "ulonglong")
@@ -701,9 +701,6 @@ void DataFrame<I, H>::read_csv2_(std::ifstream &file)  {
 template<typename I, typename  H>
 bool DataFrame<I, H>::read (const char *file_name, io_format iof)  {
 
-    static_assert(std::is_base_of<HeteroVector, DataVec>::value,
-                  "Only a StdDataFrame can call read()");
-
     std::ifstream   file;
 
     file.open(file_name, std::ios::in);  // Open for reading
@@ -714,16 +711,29 @@ bool DataFrame<I, H>::read (const char *file_name, io_format iof)  {
         throw DataFrameError(err.c_str());
     }
 
+    read(file, iof);
+    file.close();
+    return(true);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename S>
+bool DataFrame<I, H>::read (S &in_s, io_format iof)  {
+
+    static_assert(std::is_base_of<HeteroVector, DataVec>::value,
+                  "Only a StdDataFrame can call read()");
+
     if (iof == io_format::csv)
-        read_csv_ (file);
+        read_csv_ (in_s);
     else if (iof == io_format::csv2)
-        read_csv2_ (file);
+        read_csv2_ (in_s);
     else if (iof == io_format::json)
-        read_json_ (file);
+        read_json_ (in_s);
     else
         throw NotImplemented("read(): This io_format is not implemented");
 
-    file.close();
     return(true);
 }
 
@@ -734,10 +744,22 @@ std::future<bool> DataFrame<I, H>::
 read_async(const char *file_name, io_format iof) {
 
     return (std::async(std::launch::async,
-                       &DataFrame::read,
-                       this,
-                       file_name,
-                       iof));
+                       [file_name, iof, this] () -> bool  {
+                           return (this->read(file_name, iof));
+                       }));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename S>
+std::future<bool> DataFrame<I, H>::
+read_async(S &in_s, io_format iof) {
+
+    return (std::async(std::launch::async,
+                       [&in_s, iof, this] () -> bool  {
+                           return (this->read(in_s, iof));
+                       }));
 }
 
 } // namespace hmdf

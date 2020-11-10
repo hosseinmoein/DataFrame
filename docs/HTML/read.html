@@ -35,7 +35,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <td bgcolor="maroon" width = "33.3%"> <font color="white">
         <PRE><B>
 bool
-read(const char *file_name, io_format iof = io_format::csv);
+read(const char *file_name,
+     io_format iof = io_format::csv);
         </B></PRE></font>
       </td>
       <td>
@@ -87,12 +88,49 @@ read(const char *file_name, io_format iof = io_format::csv);
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon" width = "33.3%"> <font color="white">
         <PRE><B>
+template&lt;typename S&gt;
+bool
+read(S &amp;in_s,
+     io_format iof = io_format::csv);
+        </B></PRE></font>
+      </td>
+      <td>
+        Same as read() above, but takes a reference to a stream
+      </td>
+      <td>
+        <B>file_name</B>: Complete path to the file<BR>
+        <B>iof</B>: Specifies the I/O format. The default is CSV
+      </td>
+    </tr>
+
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon" width = "33.3%"> <font color="white">
+        <PRE><B>
 std::future&lt;bool&gt;
-read_async(const char *file_name, io_format iof = io_format::csv);
+read_async(const char *file_name,
+           io_format iof = io_format::csv);
         </B></PRE></font>
       </td>
       <td>
         Same as read() above, but executed asynchronously
+      </td>
+      <td>
+        <B>file_name</B>: Complete path to the file<BR>
+        <B>iof</B>: Specifies the I/O format. The default is CSV
+      </td>
+    </tr>
+
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon" width = "33.3%"> <font color="white">
+        <PRE><B>
+template&lt;typename S&gt;
+std::future&lt;bool&gt;
+read_async(S &amp;in_s,
+           io_format iof = io_format::csv);
+        </B></PRE></font>
+      </td>
+      <td>
+        Same as read_async() above, but takes a reference to a stream
       </td>
       <td>
         <B>file_name</B>: Complete path to the file<BR>

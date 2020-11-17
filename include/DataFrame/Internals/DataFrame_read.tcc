@@ -758,7 +758,7 @@ read_async(S &in_s, io_format iof) {
 
     return (std::async(std::launch::async,
                        [&in_s, iof, this] () -> bool  {
-                           return (this->read(in_s, iof));
+                           return (this->read<S>(in_s, iof));
                        }));
 }
 

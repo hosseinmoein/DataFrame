@@ -147,7 +147,7 @@ write_async (const char *file_name, io_format iof) const  {
 
     return (std::async(std::launch::async,
                        [file_name, iof, this] () -> bool  {
-                           return (this->write(file_name, iof));
+                           return (this->write<Ts ...>(file_name, iof));
                        }));
 }
 
@@ -160,7 +160,7 @@ write_async (S &o, io_format iof) const  {
 
     return (std::async(std::launch::async,
                        [&o, iof, this] () -> bool  {
-                           return (this->write(o, iof));
+                           return (this->write<S, Ts ...>(o, iof));
                        }));
 }
 

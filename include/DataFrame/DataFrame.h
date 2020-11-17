@@ -93,7 +93,7 @@ public:
 
 private:
 
-    using ColNameTable =
+    using ColNameDict =
         std::unordered_map<ColNameType, size_type, std::hash<VirtualString>>;
     using ColNameList = std::vector<std::pair<ColNameType, size_type>>;
 
@@ -101,7 +101,7 @@ private:
     //
     DataVecVec      data_ { };       // Vector of Heterogeneous vectors
     IndexVecType    indices_ { };    // Vector
-    ColNameTable    column_tb_ { };  // Hash table of name -> vector index
+    ColNameDict     column_tb_ { };  // Hash table of name -> vector index
 
     // This is necessary to have a deterministic column order across all
     // implementations

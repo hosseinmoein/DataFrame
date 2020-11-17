@@ -1104,7 +1104,7 @@ groupby (F &&func, const char *gb_col_name, sort_state already_sorted) const  {
 
     DataFrame   result;
 
-    for (const auto &iter : tmp_df.column_tb_)  {
+    for (const auto &iter : tmp_df.column_list_)  {
         add_col_functor_<Ts ...>    functor (iter.first.c_str(), result);
 
         tmp_df.data_[iter.second].change(functor);
@@ -1118,7 +1118,7 @@ groupby (F &&func, const char *gb_col_name, sort_state already_sorted) const  {
         for (size_type i = 0; i < vec_size; ++i)  {
             if (tmp_df.indices_[i] != tmp_df.indices_[marker])  {
                 result.append_index(tmp_df.indices_[marker]);
-                for (const auto &iter : tmp_df.column_tb_)  {
+                for (const auto &iter : tmp_df.column_list_)  {
                     groupby_functor_<F, Ts...>  functor(iter.first.c_str(),
                                                         marker,
                                                         i,
@@ -1134,7 +1134,7 @@ groupby (F &&func, const char *gb_col_name, sort_state already_sorted) const  {
         }
         if (marker < vec_size)  {
             result.append_index(tmp_df.indices_[vec_size - 1]);
-            for (const auto &iter : tmp_df.column_tb_)  {
+            for (const auto &iter : tmp_df.column_list_)  {
                 groupby_functor_<F, Ts...>  functor(iter.first.c_str(),
                                                     marker,
                                                     vec_size,
@@ -1164,7 +1164,7 @@ groupby (F &&func, const char *gb_col_name, sort_state already_sorted) const  {
                                         gb_vec [marker],
                                         nan_policy::dont_pad_with_nans);
 
-                for (const auto &iter : tmp_df.column_tb_)  {
+                for (const auto &iter : tmp_df.column_list_)  {
                     if (iter.first != gb_col_name)  {
                         groupby_functor_<F, Ts...>  functor(iter.first.c_str(),
                                                             marker,
@@ -1194,7 +1194,7 @@ groupby (F &&func, const char *gb_col_name, sort_state already_sorted) const  {
                                     gb_vec [vec_size - 1],
                                     nan_policy::dont_pad_with_nans);
 
-            for (const auto &iter : tmp_df.column_tb_)  {
+            for (const auto &iter : tmp_df.column_list_)  {
                 if (iter.first != gb_col_name)  {
                     groupby_functor_<F, Ts...>  functor(iter.first.c_str(),
                                                         marker,
@@ -1230,7 +1230,7 @@ groupby (F &&func,
 
     DataFrame   result;
 
-    for (const auto &iter : tmp_df.column_tb_)  {
+    for (const auto &iter : tmp_df.column_list_)  {
         add_col_functor_<Ts ...>    functor (iter.first.c_str(), result);
 
         tmp_df.data_[iter.second].change(functor);
@@ -1259,7 +1259,7 @@ groupby (F &&func,
         for (size_type i = 0; i < vec_size; ++i)  {
             if (tmp_df.indices_[i] != tmp_df.indices_[marker])  {
                 result.append_index(tmp_df.indices_[marker]);
-                for (const auto &iter : tmp_df.column_tb_)  {
+                for (const auto &iter : tmp_df.column_list_)  {
                     groupby_functor_<F, Ts...>  functor(iter.first.c_str(),
                                                         marker,
                                                         i,
@@ -1275,7 +1275,7 @@ groupby (F &&func,
         }
         if (marker < vec_size)  {
             result.append_index(tmp_df.indices_[vec_size - 1]);
-            for (const auto &iter : tmp_df.column_tb_)  {
+            for (const auto &iter : tmp_df.column_list_)  {
                 groupby_functor_<F, Ts...>  functor(iter.first.c_str(),
                                                     marker,
                                                     vec_size,
@@ -1302,7 +1302,7 @@ groupby (F &&func,
                                          gb_vec2->at(marker),
                                          nan_policy::dont_pad_with_nans);
 
-                for (const auto &iter : tmp_df.column_tb_)  {
+                for (const auto &iter : tmp_df.column_list_)  {
                     if (iter.first != gb_col_name2)  {
                         groupby_functor_<F, Ts...>  functor(iter.first.c_str(),
                                                             marker,
@@ -1332,7 +1332,7 @@ groupby (F &&func,
                                      gb_vec2->at(vec_size - 1),
                                      nan_policy::dont_pad_with_nans);
 
-            for (const auto &iter : tmp_df.column_tb_)  {
+            for (const auto &iter : tmp_df.column_list_)  {
                 if (iter.first != gb_col_name2)  {
                     groupby_functor_<F, Ts...>  functor(iter.first.c_str(),
                                                         marker,
@@ -1462,13 +1462,13 @@ bucketize (F &&func, const IndexType &bucket_interval) const  {
 
     DataFrame   result;
 
-    for (const auto &iter : column_tb_)  {
+    for (const auto &iter : column_list_)  {
         add_col_functor_<Ts ...>    functor (iter.first.c_str(), result);
 
         data_[iter.second].change(functor);
     }
 
-    for (const auto &iter : column_tb_)  {
+    for (const auto &iter : column_list_)  {
         bucket_functor_<F, Ts...>   functor(iter.first.c_str(),
                                             indices_,
                                             bucket_interval,
@@ -1505,7 +1505,7 @@ transpose(IndexVecType &&indices,
           const V &current_col_order,
           const V &new_col_names) const  {
 
-    const size_type num_cols = column_tb_.size();
+    const size_type num_cols = column_list_.size();
 
     if (current_col_order.size() != num_cols)
         throw InconsistentData ("DataFrame::transpose(): ERROR: "

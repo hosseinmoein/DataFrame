@@ -761,6 +761,7 @@ operator() (T &vec)  {
     dfv.data_.emplace_back(data_vec_t(std::move(new_col)));
     guard.release();
     dfv.column_tb_.emplace (name, dfv.data_.size() - 1);
+    dfv.column_list_.emplace_back (name, dfv.data_.size() - 1);
     return;
 }
 
@@ -873,6 +874,7 @@ random_load_view_functor_<Ts ...>::operator() (const T &vec)  {
     dfv.data_.emplace_back(data_vec_t(std::move(new_vec)));
     guard.release();
     dfv.column_tb_.emplace (name, dfv.data_.size() - 1);
+    dfv.column_list_.emplace_back (name, dfv.data_.size() - 1);
     return;
 }
 

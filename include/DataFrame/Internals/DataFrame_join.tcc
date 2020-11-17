@@ -159,7 +159,7 @@ join_helper_common_(const LHS_T &lhs,
                     const char *skip_col_name)  {
 
     // Load the common and lhs columns
-    for (auto &iter : lhs.column_tb_)  {
+    for (auto &iter : lhs.column_list_)  {
         auto    rhs_citer = rhs.column_tb_.find(iter.first);
 
         if (skip_col_name && iter.first == skip_col_name)  continue;
@@ -186,7 +186,7 @@ join_helper_common_(const LHS_T &lhs,
     }
 
     // Load the rhs columns
-    for (auto &iter : rhs.column_tb_)  {
+    for (auto &iter : rhs.column_list_)  {
         auto    lhs_citer = lhs.column_tb_.find(iter.first);
 
         if (skip_col_name && iter.first == skip_col_name)  continue;
@@ -602,7 +602,7 @@ concat_helper_(LHS_T &lhs, const RHS_T &rhs, bool add_new_columns)  {
                            rhs.get_index().begin(), rhs.get_index().end());
 
     // Load common columns
-    for (auto &lhs_iter : lhs.column_tb_)  {
+    for (auto &lhs_iter : lhs.column_list_)  {
         auto    rhs_citer = rhs.column_tb_.find(lhs_iter.first);
 
         if (rhs_citer != rhs.column_tb_.end())  {
@@ -617,7 +617,7 @@ concat_helper_(LHS_T &lhs, const RHS_T &rhs, bool add_new_columns)  {
 
     // Load columns from rhs that do not exist in lhs
     if (add_new_columns)  {
-        for (auto &rhs_citer : rhs.column_tb_)  {
+        for (auto &rhs_citer : rhs.column_list_)  {
             auto    lhs_iter = lhs.column_tb_.find(rhs_citer.first);
 
             if (lhs_iter == lhs.column_tb_.end())  {
@@ -675,7 +675,7 @@ DataFrame<I, H>::concat(const RHS_T &rhs, concat_policy cp) const  {
     }
     else if (cp == concat_policy::common_columns)  {
         result.load_index(this->get_index().begin(), this->get_index().end());
-        for (auto &lhs_citer : column_tb_)  {
+        for (auto &lhs_citer : column_list_)  {
             auto    rhs_citer = rhs.column_tb_.find(lhs_citer.first);
 
             if (rhs_citer != rhs.column_tb_.end())  {

@@ -45,7 +45,7 @@ std::pair<typename DataFrame<I, H>::size_type,
           typename DataFrame<I, H>::size_type>
 DataFrame<I, H>::shape() const  {
 
-    return (std::make_pair(indices_.size(), column_tb_.size()));
+    return (std::make_pair(indices_.size(), column_list_.size()));
 }
 
 // ----------------------------------------------------------------------------
@@ -760,7 +760,7 @@ DataFrame<I, H>::get_data_by_idx (Index2D<IndexType> range) const  {
                                                    ? upper
                                                    : indices_.end());
 
-        for (auto &iter : column_tb_)  {
+        for (auto &iter : column_list_)  {
             load_functor_<DataFrame, Ts ...>    functor (iter.first.c_str(),
                                                          b_dist,
                                                          e_dist,
@@ -798,7 +798,7 @@ DataFrame<I, H>::get_data_by_idx(const std::vector<IndexType> &values) const  {
     DataFrame   df;
 
     df.load_index(std::move(new_index));
-    for (auto col_citer : column_tb_)  {
+    for (auto col_citer : column_list_)  {
         sel_load_functor_<size_type, Ts ...>    functor (
             col_citer.first.c_str(),
             locations,
@@ -843,7 +843,7 @@ DataFrame<I, H>::get_view_by_idx (Index2D<IndexType> range) const  {
                                                    ? upper
                                                    : nc_this->indices_.end());
 
-        for (auto &iter : nc_this->column_tb_)  {
+        for (auto &iter : nc_this->column_list_)  {
             view_setup_functor_<DataFrameView<IndexType>, Ts ...>   functor (
                 iter.first.c_str(),
                 b_dist,
@@ -891,7 +891,7 @@ get_view_by_idx(const std::vector<IndexType> &values) const  {
 
     dfv.indices_ = std::move(new_index);
 
-    for (auto col_citer : nc_this->column_tb_)  {
+    for (auto col_citer : nc_this->column_list_)  {
         sel_load_view_functor_<size_type, Ts ...>   functor (
             col_citer.first.c_str(),
             locations,
@@ -923,7 +923,7 @@ DataFrame<I, H>::get_data_by_loc (Index2D<long> range) const  {
         df.load_index(indices_.begin() + static_cast<size_type>(range.begin),
                       indices_.begin() + static_cast<size_type>(range.end));
 
-        for (auto &iter : column_tb_)  {
+        for (auto &iter : column_list_)  {
             load_functor_<DataFrame, Ts ...>    functor (
                 iter.first.c_str(),
                 static_cast<size_type>(range.begin),
@@ -965,7 +965,7 @@ DataFrame<I, H>::get_data_by_loc (const std::vector<long> &locations) const  {
     }
     df.load_index(std::move(new_index));
 
-    for (auto col_citer : column_tb_)  {
+    for (auto col_citer : column_list_)  {
         sel_load_functor_<long, Ts ...>  functor (
             col_citer.first.c_str(),
             locations,
@@ -1004,7 +1004,7 @@ DataFrame<I, H>::get_view_by_loc (Index2D<long> range) const  {
             typename DataFrameView<IndexType>::IndexVecType(
                 &*(nc_this->indices_.begin() + range.begin),
                 &*(nc_this->indices_.begin() + range.end));
-        for (const auto &iter : nc_this->column_tb_)  {
+        for (const auto &iter : nc_this->column_list_)  {
             view_setup_functor_<DataFrameView<IndexType>, Ts ...>   functor (
                 iter.first.c_str(),
                 static_cast<size_type>(range.begin),
@@ -1054,7 +1054,7 @@ DataFrame<I, H>::get_view_by_loc (const std::vector<long> &locations) const  {
     }
     dfv.indices_ = std::move(new_index);
 
-    for (auto col_citer : nc_this->column_tb_)  {
+    for (auto col_citer : nc_this->column_list_)  {
         sel_load_view_functor_<long, Ts ...>    functor (
             col_citer.first.c_str(),
             locations,
@@ -1092,7 +1092,7 @@ get_data_by_sel (const char *name, F &sel_functor) const  {
         new_index.push_back(indices_[citer]);
     df.load_index(std::move(new_index));
 
-    for (auto col_citer : column_tb_)  {
+    for (auto col_citer : column_list_)  {
         sel_load_functor_<size_type, Ts ...>    functor (
             col_citer.first.c_str(),
             col_indices,
@@ -1137,7 +1137,7 @@ get_view_by_sel (const char *name, F &sel_functor) const  {
         new_index.push_back(&(nc_this->indices_[citer]));
     dfv.indices_ = std::move(new_index);
 
-    for (auto col_citer : nc_this->column_tb_)  {
+    for (auto col_citer : nc_this->column_list_)  {
         sel_load_view_functor_<size_type, Ts ...>   functor (
             col_citer.first.c_str(),
             col_indices,
@@ -1180,7 +1180,7 @@ get_data_by_sel (const char *name1, const char *name2, F &sel_functor) const  {
         new_index.push_back(indices_[citer]);
     df.load_index(std::move(new_index));
 
-    for (auto col_citer : column_tb_)  {
+    for (auto col_citer : column_list_)  {
         sel_load_functor_<size_type, Ts ...>    functor (
             col_citer.first.c_str(),
             col_indices,
@@ -1230,7 +1230,7 @@ get_view_by_sel (const char *name1, const char *name2, F &sel_functor) const  {
         new_index.push_back(&(nc_this->indices_[citer]));
     dfv.indices_ = std::move(new_index);
 
-    for (auto col_citer : nc_this->column_tb_)  {
+    for (auto col_citer : nc_this->column_list_)  {
         sel_load_view_functor_<size_type, Ts ...>   functor (
             col_citer.first.c_str(),
             col_indices,
@@ -1279,7 +1279,7 @@ get_data_by_sel (const char *name1,
         new_index.push_back(indices_[citer]);
     df.load_index(std::move(new_index));
 
-    for (auto col_citer : column_tb_)  {
+    for (auto col_citer : column_list_)  {
         sel_load_functor_<size_type, Ts ...>    functor (
             col_citer.first.c_str(),
             col_indices,
@@ -1335,7 +1335,7 @@ get_view_by_sel (const char *name1,
         new_index.push_back(&(nc_this->indices_[citer]));
     dfv.indices_ = std::move(new_index);
 
-    for (auto col_citer : nc_this->column_tb_)  {
+    for (auto col_citer : nc_this->column_list_)  {
         sel_load_view_functor_<size_type, Ts ...>   functor (
             col_citer.first.c_str(),
             col_indices,
@@ -1396,7 +1396,7 @@ get_data_by_rand (random_policy spec, double n, size_type seed) const  {
         DataFrame   df;
 
         df.load_index(std::move(new_index));
-        for (auto &iter : column_tb_)  {
+        for (auto &iter : column_list_)  {
             random_load_data_functor_<Ts ...>   functor (
                 iter.first.c_str(),
                 rand_indices,
@@ -1472,11 +1472,10 @@ get_view_by_rand (random_policy spec, double n, size_type seed) const  {
         TheView dfv;
 
         dfv.indices_ = std::move(new_index);
-        for (auto &iter : column_tb_)  {
-            random_load_view_functor_<Ts ...>   functor (
-                iter.first.c_str(),
-                rand_indices,
-                dfv);
+        for (auto &iter : column_list_)  {
+            random_load_view_functor_<Ts ...>   functor (iter.first.c_str(),
+                                                         rand_indices,
+                                                         dfv);
 
             data_[iter.second].change(functor);
         }
@@ -1518,7 +1517,7 @@ get_reindexed(const char *col_to_be_index, const char *old_index_name) const  {
             old_index_name, { curr_idx.begin(), curr_idx.begin() + col_s });
     }
 
-    for (auto citer : column_tb_)  {
+    for (auto citer : column_list_)  {
         if (citer.first == col_to_be_index)  continue;
 
         load_functor_<StdDataFrame<T>, Ts ...>  functor (
@@ -1564,7 +1563,7 @@ get_reindexed_view(const char *col_to_be_index,
             (old_index_name, { curr_idx.begin(), curr_idx.begin() + col_s });
     }
 
-    for (auto citer : column_tb_)  {
+    for (auto citer : column_list_)  {
         if (citer.first == col_to_be_index)  continue;
 
         view_setup_functor_<DataFrameView<T>, Ts ...>   functor (
@@ -1590,8 +1589,8 @@ DataFrame<I, H>::get_columns_info () const  {
 
     std::vector<std::tuple<ColNameType, size_type, std::type_index>> result;
 
-    result.reserve(column_tb_.size());
-    for (auto &citer : column_tb_)  {
+    result.reserve(column_list_.size());
+    for (auto &citer : column_list_)  {
         columns_info_functor_<Ts ...>   functor (result, citer.first.c_str());
 
         data_[citer.second].change(functor);

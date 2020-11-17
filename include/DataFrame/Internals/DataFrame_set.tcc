@@ -46,9 +46,23 @@ std::vector<T> &DataFrame<I, H>::create_column (const char *name)  {
     if (! ::strcmp(name, DF_INDEX_COL_NAME))
         throw DataFrameError ("DataFrame::create_column(): ERROR: "
                               "Data column name cannot be 'INDEX'");
+    if (column_tb_.find(name) != column_tb_.end())  {
+        char    buffer [512];
 
+        sprintf (buffer,
+                 "DataFrame::create_column(): "
+                 "ERROR: Column '%s' already exists",
+                 name);
+        throw DataFrameError (buffer);
+    }
+
+    if (column_list_.empty())  {
+        column_list_.reserve(32);
+        data_.reserve(32);
+    }
     data_.emplace_back (DataVec());
     column_tb_.emplace (name, data_.size() - 1);
+    column_list_.emplace_back (name, data_.size() - 1);
 
     DataVec         &hv = data_.back();
     const SpinGuard guard(lock_);
@@ -71,7 +85,7 @@ void DataFrame<I, H>::remove_column (const char *name)  {
     const auto  iter = column_tb_.find (name);
 
     if (iter == column_tb_.end())  {
-        char buffer [512];
+        char    buffer [512];
 
         sprintf (buffer,
                  "DataFrame::remove_column(): ERROR: Cannot find column '%s'",
@@ -83,6 +97,13 @@ void DataFrame<I, H>::remove_column (const char *name)  {
     // indices in the hash table column_tb_
     /* data_.erase (data_.begin() + iter->second); */
     column_tb_.erase (iter);
+    for (size_type i = 0; i < column_list_.size(); ++i)  {
+        if (column_list_[i].first == name)  {
+            column_list_.erase(column_list_.begin() + i);
+            break;
+        }
+    }
+
     return;
 }
 
@@ -99,9 +120,9 @@ void DataFrame<I, H>::rename_column (const char *from, const char *to)  {
         throw DataFrameError ("DataFrame::rename_column(): ERROR: "
                               "Data column name cannot be 'INDEX'");
 
-    const auto  iter = column_tb_.find (from);
+    const auto  from_iter = column_tb_.find (from);
 
-    if (iter == column_tb_.end())  {
+    if (from_iter == column_tb_.end())  {
         char buffer [512];
 
         sprintf (buffer,
@@ -109,9 +130,19 @@ void DataFrame<I, H>::rename_column (const char *from, const char *to)  {
                  from);
         throw ColNotFound (buffer);
     }
+    if (column_tb_.find (to) != column_tb_.end())  {
+        char buffer [512];
 
-    column_tb_.emplace (to, iter->second);
-    column_tb_.erase (iter);
+        sprintf (buffer,
+                 "DataFrame::rename_column(): "
+                 "ERROR: Column '%s' already exists",
+                 to);
+        throw DataFrameError (buffer);
+    }
+
+    column_tb_.emplace (to, from_iter->second);
+    column_list_.emplace_back (to, from_iter->second);
+    remove_column(from);
     return;
 }
 
@@ -369,6 +400,7 @@ setup_view_column_ (const char *name, Index2D<ITR> range)  {
     dv.set_begin_end_special(&*(range.begin), &*(range.end - 1));
     data_.emplace_back (dv);
     column_tb_.emplace (name, data_.size() - 1);
+    column_list_.emplace_back (name, data_.size() - 1);
 
     return;
 }
@@ -613,7 +645,7 @@ void DataFrame<I, H>::remove_data_by_idx (Index2D<IndexType> range)  {
 
         remove_functor_<Ts ...> functor (b_dist, e_dist);
 
-        for (auto &iter : column_tb_)
+        for (auto &iter : column_list_)
             data_[iter.second].change(functor);
     }
 
@@ -644,7 +676,7 @@ void DataFrame<I, H>::remove_data_by_loc (Index2D<long> range)  {
             static_cast<size_type>(range.begin),
             static_cast<size_type>(range.end));
 
-        for (auto &iter : column_tb_)
+        for (auto &iter : column_list_)
             data_[iter.second].change(functor);
 
         return;
@@ -678,7 +710,7 @@ void DataFrame<I, H>::remove_data_by_sel (const char *name, F &sel_functor)  {
         if (sel_functor (indices_[i], vec[i]))
             col_indices.push_back(i);
 
-    for (auto col_citer : column_tb_)  {
+    for (auto col_citer : column_list_)  {
         sel_remove_functor_<Ts ...> functor (col_indices);
 
         data_[col_citer.second].change(functor);
@@ -714,7 +746,7 @@ remove_data_by_sel (const char *name1, const char *name2, F &sel_functor)  {
                          i < col_s2 ? vec2[i] : _get_nan<T2>()))
             col_indices.push_back(i);
 
-    for (auto col_citer : column_tb_)  {
+    for (auto col_citer : column_list_)  {
         sel_remove_functor_<Ts ...> functor (col_indices);
 
         data_[col_citer.second].change(functor);
@@ -756,7 +788,7 @@ remove_data_by_sel (const char *name1,
                          i < col_s3 ? vec3[i] : _get_nan<T3>()))
             col_indices.push_back(i);
 
-    for (auto col_citer : column_tb_)  {
+    for (auto col_citer : column_list_)  {
         sel_remove_functor_<Ts ...> functor (col_indices);
 
         data_[col_citer.second].change(functor);
@@ -814,7 +846,7 @@ remove_dups_common_(const DataFrame &s_df,
                      });
     new_df.load_index(std::move(new_index));
 
-    for (auto citer : s_df.column_tb_)  {
+    for (auto citer : s_df.column_list_)  {
         copy_remove_functor_<Ts ...>    functor (citer.first.c_str(),
                                                  rows_to_del,
                                                  new_df);

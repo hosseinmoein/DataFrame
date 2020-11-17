@@ -40,12 +40,12 @@ template<typename I, typename  H>
 template<typename ... Ts>
 bool DataFrame<I, H>::is_equal (const DataFrame &rhs) const  {
 
-    if (column_tb_.size() != rhs.column_tb_.size())
+    if (column_list_.size() != rhs.column_list_.size())
         return (false);
     if (indices_ != rhs.indices_)
         return (false);
 
-    for (const auto &iter : column_tb_)  {
+    for (const auto &iter : column_list_)  {
         auto    rhs_citer = rhs.column_tb_.find(iter.first);
 
         if (rhs_citer == rhs.column_tb_.end())  return (false);
@@ -81,11 +81,11 @@ modify_by_idx (DataFrame &rhs, sort_state already_sorted)  {
             lhs_i += 1;
 
         if (indices_[lhs_i] == rhs.indices_[rhs_i])  {
-            for (auto &iter : column_tb_)  {
+            for (auto &iter : column_list_)  {
                 mod_by_idx_functor_<Ts ...>  functor (iter.first.c_str(),
-                                                         rhs,
-                                                         lhs_i,
-                                                         rhs_i);
+                                                      rhs,
+                                                      lhs_i,
+                                                      rhs_i);
 
                 data_[iter.second].change(functor);
             }

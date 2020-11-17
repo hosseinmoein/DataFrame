@@ -93,14 +93,19 @@ public:
 
 private:
 
-    using ColumnTable =
+    using ColNameTable =
         std::unordered_map<ColNameType, size_type, std::hash<VirtualString>>;
+    using ColNameList = std::vector<std::pair<ColNameType, size_type>>;
 
     // Data fields
     //
     DataVecVec      data_ { };       // Vector of Heterogeneous vectors
     IndexVecType    indices_ { };    // Vector
-    ColumnTable     column_tb_ { };  // Hash table of name -> vector index
+    ColNameTable    column_tb_ { };  // Hash table of name -> vector index
+
+    // This is necessary to have a deterministic column order across all
+    // implementations
+    ColNameList     column_list_ { }; // Vector of column names and indices
 
     inline static SpinLock *lock_ { nullptr };    // It is null by default
 
@@ -1211,7 +1216,7 @@ public: // Read/access and slicing interfaces
 
     inline bool empty() const noexcept  { return (indices_.empty()); }
     inline bool
-    shapeless() const noexcept  { return (empty() && column_tb_.empty()); }
+    shapeless() const noexcept  { return (empty() && column_list_.empty()); }
 
     // It returns a reference to the container of named data column
     // The return type depends on if we are in standard or view mode

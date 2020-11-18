@@ -121,14 +121,16 @@ enum class concat_policy : unsigned char  {
 
 // ----------------------------------------------------------------------------
 // This policy is relative to a tabular data structure
-// There is no right or left shift (like Pandas), because columns in DataFrame
-// have no ordering. They can only be accessed by name
 //
 enum class shift_policy : unsigned char  {
     // Shift/rotate the content of all columns down, keep index unchanged
     down = 1,
     // Shift/rotate the content of all columns up, keep index unchanged
     up = 2,
+    // Shift/rotate the columns to the left
+    left = 3,
+    // Shift/rotate the columns to the right
+    right = 4,
 };
 
 // ----------------------------------------------------------------------------

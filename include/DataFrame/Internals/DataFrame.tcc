@@ -1501,16 +1501,10 @@ bucketize_async (F &&func, const IndexType &bucket_interval) const  {
 template<typename I, typename H>
 template<typename T, typename V>
 DataFrame<I, H> DataFrame<I, H>::
-transpose(IndexVecType &&indices,
-          const V &current_col_order,
-          const V &new_col_names) const  {
+transpose(IndexVecType &&indices, const V &new_col_names) const  {
 
     const size_type num_cols = column_list_.size();
 
-    if (current_col_order.size() != num_cols)
-        throw InconsistentData ("DataFrame::transpose(): ERROR: "
-                                "Length of current_col_order is not equal "
-                                "to number of columns");
     if (new_col_names.size() != indices_.size())
         throw InconsistentData ("DataFrame::transpose(): ERROR: "
                                 "Length of new_col_names is not equal "
@@ -1519,8 +1513,8 @@ transpose(IndexVecType &&indices,
     std::vector<const std::vector<T> *> current_cols;
 
     current_cols.reserve(num_cols);
-    for (const auto citer : current_col_order)
-        current_cols.push_back(&(get_column<T>(citer)));
+    for (const auto citer : column_list_)
+        current_cols.push_back(&(get_column<T>(citer.first.c_str())));
 
     std::vector<std::vector<T>> trans_cols(indices_.size());
     DataFrame                   df;

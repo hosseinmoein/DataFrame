@@ -1039,9 +1039,6 @@ public:  // Data manipulation
     // The transpose() is only defined for DataFrame's that have a single
     // data type.
     //
-    // NOTE: Since DataFrame columns have no ordering, the user must specify
-    //       the order with current_col_order.
-    //
     // T:
     //   The single type for all data columns
     // V:
@@ -1051,9 +1048,6 @@ public:  // Data manipulation
     //   A vector on indices for the new transposed DataFrame. Its length must
     //   equal the number of rows in this DataFrame. Otherwise an exception is
     //   thrown
-    // current_col_order:
-    //   A vector of strings specifying the order of columns in the original
-    //   DataFrame.
     // new_col_names:
     //   A vector of strings, specifying the column names for the new
     //   transposed DataFrame. Its length must equal the number of rows in this
@@ -1061,9 +1055,7 @@ public:  // Data manipulation
     //
     template<typename T, typename V>
     [[nodiscard]] DataFrame
-    transpose(IndexVecType &&indices,
-              const V &current_col_order,
-              const V &new_col_names) const;
+    transpose(IndexVecType &&indices, const V &new_col_names) const;
 
     // It joins the data between self (lhs) and rhs and returns the joined data
     // in a StdDataFrame, based on specification in join_policy.
@@ -1164,9 +1156,13 @@ public:  // Data manipulation
     void
     self_concat(const RHS_T &rhs, bool add_new_columns = true);
 
-    // It shifts all the columns in self up or down based on shift_policy.
-    // Values that are shifted will be assigned to NaN. The index column
-    // remains unchanged.
+    // It shifts all the columns in self up, down, left or right based on
+    // shift_policy.
+    // When shifting up or down, values that are shifted out will be assigned
+    // to NaN.
+    // When shifting left or right, columns that are shifted out will be
+    // removed from the DataFrame.
+    // The index column remains unchanged.
     // If user shifts with periods that is larger than the column length,
     // all values in that column become NaN.
     //
@@ -1175,7 +1171,7 @@ public:  // Data manipulation
     //   the list only once.
     // periods:
     //   Number of periods to shift shift_policy: Specifies the direction
-    //   (i.e. up/down) to shift
+    //   (i.e. up/down, left/right) to shift
     //
     template<typename ... Ts>
     void
@@ -1188,7 +1184,8 @@ public:  // Data manipulation
     [[nodiscard]] StdDataFrame<IndexType>
     shift(size_type periods, shift_policy sp) const;
 
-    // It rotates all the columns in self up or down based on shift_policy.
+    // It rotates all the columns in self up, down, left, or right based on
+    // shift_policy.
     // The index column remains unchanged.
     // If user rotates with periods that is larger than the column length,
     // the behavior is undefined.
@@ -1199,7 +1196,7 @@ public:  // Data manipulation
     // periods:
     //   Number of periods to rotate
     // shift_policy:
-    //   Specifies the direction (i.e. up/down) to rotate
+    //   Specifies the direction (i.e. up/down, left/right) to rotate
     //
     template<typename ... Ts>
     void
@@ -2532,7 +2529,7 @@ public:  // Utilities and miscellaneous
     //     "col_1":{"N":3,"T":"double","D":[1,2,3.456]}
     //     }
     // Please note DataFrame json does not follow json spec 100%. In json,
-    // there is not particular order in dictionary fields. But in DataFrame
+    // there is no particular order in dictionary fields. But in DataFrame
     // json:
     //   1) Column “INDEX” must be the first column
     //   2) Fields in column dictionaries must be in N, T, D order
@@ -2587,7 +2584,7 @@ public:  // Utilities and miscellaneous
     //     "col_1":{"N":3,"T":"double","D":[1,2,3.456]}
     //     }
     // Please note DataFrame json does not follow json spec 100%. In json,
-    // there is not particular order in dictionary fields. But in DataFrame
+    // there is no particular order in dictionary fields. But in DataFrame
     // json:
     //   1) Column “INDEX” must be the first column
     //   2) Fields in column dictionaries must be in N, T, D order

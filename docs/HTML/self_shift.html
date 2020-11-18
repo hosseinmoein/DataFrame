@@ -35,13 +35,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>
 enum class shift_policy : unsigned char  {
-    down = 1, // Shift/rotate the content of all columns down, keep index unchanged
-    up = 2,   // Shift/rotate the content of all columns up, keep index unchanged
+    down = 1,  // Shift/rotate the content of all columns down
+    up = 2,    // Shift/rotate the content of all columns up
+    left = 3,  // Shift/rotate the columns to the left
+    right = 4, // Shift/rotate the columns to the right
 }; </B></PRE> </font>
       </td>
       <td width="50%">
-        This policy is relative to a tabular data structure<BR>
-        There is no right or left shift (like Pandas), because columns in DataFrame have no ordering. They can only be accessed by name
+        This policy is relative to a tabular data structure. The index column always remains unchanged<BR>
       </td>
     </tr>
 
@@ -64,10 +65,11 @@ self_shift(size_type periods, shift_policy sp);
         </B></PRE></font>
       </td>
       <td width = "33.3%">
-        It shifts all the columns in self up or down based on shift_policy.
-        Values that are shifted will be assigned to NaN. The index column remains unchanged.
-        If user shifts with periods that is larger than the column length,
-        all values in that column become NaN.
+        It shifts all the columns in self up, down, left or right based on shift_policy.<BR>
+        When shifting up or down, values that are shifted out will be assigned to NaN.<BR>
+        When shifting left or right, columns that are shifted out will be removed from the DataFrame.<BR>
+        The index column remains unchanged.<BR>
+        If user shifts with periods that is larger than the column length, all values in that column become NaN.<BR>
       </td>
       <td>
         <B>Ts</B>: The list of types for all columns. A type should be specified only once.<BR>

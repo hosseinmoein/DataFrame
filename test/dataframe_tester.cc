@@ -609,9 +609,7 @@ static void test_transpose()  {
         { "tcol_1", "tcol_2", "tcol_3",
           "tcol_4", "tcol_5", "tcol_6", "tcol_7" };
     MyDataFrame                 tdf =
-        df.transpose<double>(std::move(tidx),
-                             { "col_1", "col_2", "col_3", "col_4" },
-                             tcol_names);
+        df.transpose<double>(std::move(tidx), tcol_names);
 
     std::cout << "Original DataFrame:" << std::endl;
     df.write<std::ostream, unsigned long, double>(std::cout);
@@ -1236,7 +1234,7 @@ static void test_largest_smallest_visitors()  {
 
 static void test_shifting_up_down()  {
 
-    std::cout << "\nTesting Shifting Up/Down ..." << std::endl;
+    std::cout << "\nTesting Shifting Up/Down/Left/Right ..." << std::endl;
 
     std::vector<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
@@ -1266,13 +1264,23 @@ static void test_shifting_up_down()  {
 
     std::cout << "Shifted Down DF:" << std::endl;
     sddf.write<std::ostream, double, int, std::string>(std::cout);
+
+    auto    sldf = df.shift<double, int, std::string>(2, shift_policy::left);
+
+    std::cout << "Shifted Left DF:" << std::endl;
+    sldf.write<std::ostream, double, int, std::string>(std::cout);
+
+    auto    srdf = df.shift<double, int, std::string>(2, shift_policy::right);
+
+    std::cout << "Shifted Right DF:" << std::endl;
+    srdf.write<std::ostream, double, int, std::string>(std::cout);
 }
 
 // -----------------------------------------------------------------------------
 
 static void test_rotating_up_down()  {
 
-    std::cout << "\nTesting Rotating Up/Down ..." << std::endl;
+    std::cout << "\nTesting Rotating Up/Down/Left/Right ..." << std::endl;
 
     std::vector<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
@@ -1302,6 +1310,16 @@ static void test_rotating_up_down()  {
 
     std::cout << "Rotated Down DF:" << std::endl;
     rddf.write<std::ostream, double, int, std::string>(std::cout);
+
+    auto    rldf = df.rotate<double, int, std::string>(2, shift_policy::left);
+
+    std::cout << "Rotated Left DF:" << std::endl;
+    rldf.write<std::ostream, double, int, std::string>(std::cout);
+
+    auto    rrdf = df.rotate<double, int, std::string>(2, shift_policy::right);
+
+    std::cout << "Rotated Right DF:" << std::endl;
+    rrdf.write<std::ostream, double, int, std::string>(std::cout);
 }
 
 // -----------------------------------------------------------------------------

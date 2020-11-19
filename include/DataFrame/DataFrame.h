@@ -466,6 +466,31 @@ public:  // Load/append/remove interfaces
                        F &sel_functor);
 
     // It removes duplicate rows and returns a new DataFrame. Duplication is
+    // determined by the given column. remove_dup_spec determines which
+    // of the duplicated rows to keep.
+    //
+    // NOTE: The given column type must be hash-able and must have
+    //       equality (==) operator well defined.
+    //
+    // T:
+    //   Type of the first named column
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // name:
+    //   Name of the data column
+    // include_index:
+    //   If true, it includes the index column to determine uniqueness
+    // rds:
+    //   Determined which of the duplicated columns to keep
+    //
+    template<typename T, typename ... Ts>
+    [[nodiscard]] DataFrame
+    remove_duplicates(const char *name,
+                      bool include_index,
+                      remove_dup_spec rds) const;
+
+    // It removes duplicate rows and returns a new DataFrame. Duplication is
     // determined by the two given columns. remove_dup_spec determines which
     // of the duplicated rows to keep.
     //
@@ -1211,8 +1236,9 @@ public:  // Data manipulation
 
 public: // Read/access and slicing interfaces
 
-    inline bool empty() const noexcept  { return (indices_.empty()); }
-    inline bool
+    [[nodiscard]] bool
+    empty() const noexcept  { return (indices_.empty()); }
+    [[nodiscard]] bool
     shapeless() const noexcept  { return (empty() && column_list_.empty()); }
 
     // It returns a reference to the container of named data column
@@ -1243,7 +1269,7 @@ public: // Read/access and slicing interfaces
     // name:
     //   Name of the column
     //
-    bool
+    [[nodiscard]] bool
     has_column(const char *name) const;
 
     // This method returns true if the given column follows the given pattern,
@@ -1690,14 +1716,12 @@ public: // Read/access and slicing interfaces
 
     // It returns a const reference to the index container
     //
-    inline
-    const IndexVecType &
+    [[nodiscard]] const IndexVecType &
     get_index() const  { return (indices_); }
 
     // It returns a reference to the index container
     //
-    inline
-    IndexVecType &
+    [[nodiscard]] IndexVecType &
     get_index()  { return (indices_); }
 
     // It creates and returns a new DataFrame which has the col_to_be_index

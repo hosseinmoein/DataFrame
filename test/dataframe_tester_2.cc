@@ -935,6 +935,21 @@ static void test_remove_duplicates()  {
     assert(result5.get_index().size() == 15);
     assert(result5.get_column<double>("dbl_col_2") == actual_d);
     assert(result5.get_column<std::string>("str_col") == actual_s);
+
+    auto    result6 =
+        df.remove_duplicates<double, double, std::string, int>
+        ("dbl_col", false, remove_dup_spec::keep_first);
+
+    actual_d = std::vector<double>
+        { 100, 101, 102, 103, 105, 106.55, 107.34, 1.8, 111, 112, 113, 114,
+          115, 116 };
+    actual_s = std::vector<std::string>
+        { "zz", "bb", "cc", "ww", "ff", "gg", "hh", "ii", "jj", "kk", "ll",
+          "mm", "nn", "oo"
+        };
+    assert(result6.get_index().size() == 14);
+    assert(result6.get_column<double>("dbl_col_2") == actual_d);
+    assert(result6.get_column<std::string>("str_col") == actual_s);
 }
 
 // -----------------------------------------------------------------------------

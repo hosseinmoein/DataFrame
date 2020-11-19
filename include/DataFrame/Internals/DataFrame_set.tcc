@@ -859,6 +859,41 @@ remove_dups_common_(const DataFrame &s_df,
 // ----------------------------------------------------------------------------
 
 template<typename I, typename  H>
+template<typename T, typename ... Ts>
+DataFrame<I, H> DataFrame<I, H>::
+remove_duplicates (const char *name,
+                   bool include_index,
+                   remove_dup_spec rds) const  {
+
+    using data_tuple = std::tuple<const T &, const IndexType &>;
+    using count_vec = std::vector<size_type>;
+    using data_map = std::unordered_map<data_tuple, count_vec>;
+
+    const ColumnVecType<T>  &vec = get_column<T>(name);
+    const auto              &index = get_index();
+    const size_type         col_s = std::min(vec.size(), index.size());
+    data_map                row_table;
+    count_vec               dummy_vec;
+    const IndexType         dummy_idx { };
+
+    for (size_type i = 0; i < col_s; ++i)  {
+        auto    insert_res =
+            row_table.emplace(
+                std::forward_as_tuple(vec[i],
+                                      include_index ? index[i] : dummy_idx),
+                dummy_vec);
+
+        if (insert_res.second)
+            insert_res.first->second.reserve(8);
+        insert_res.first->second.push_back(i);
+    }
+
+    return(remove_dups_common_<data_map, Ts ...>(*this, rds, row_table, index));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
 template<typename T1, typename T2, typename ... Ts>
 DataFrame<I, H> DataFrame<I, H>::
 remove_duplicates (const char *name1,

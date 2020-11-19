@@ -58,10 +58,34 @@ enum class remove_dup_spec : unsigned char  {
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>
+template&lt;typename T, typename ... Ts&gt;
+[[nodiscard]] DataFrame
+remove_duplicates(const char *name,
+                  bool include_index,
+                  remove_dup_spec rds) const;
+        </B></PRE></font>
+      </td>
+      <td width = "33.3%">
+        It removes duplicate rows and returns a new DataFrame. Duplication is determined by the given column. remove_dup_spec determines which of the duplicated rows to keep.<BR>
+        <BR>
+        <B>NOTE</B>: The given column type must be hash-able and must have equality (==) operator well defined.
+      <td>
+        <B>T</B>: Type of the first named column<BR>
+        <B>Ts</B>: List all the types of all data columns. A type should be specified in the list only once.<BR>
+        <B>name</B>: Name of the data column<BR>
+        <B>include_index</B>: If true, it includes the index column to determine uniqueness<BR>
+        <B>rds</B>: Determined which of the duplicated columns to keep<BR>
+      </td>
+    </tr>
+	
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        <PRE><B>
 template&lt;typename T1, typename T2, typename ... Ts&gt;
 [[nodiscard]] DataFrame
 remove_duplicates(const char *name1, const char *name2,
-                  bool include_index, remove_dup_spec rds) const;
+                  bool include_index,
+                  remove_dup_spec rds) const;
         </B></PRE></font>
       </td>
       <td width = "33.3%">
@@ -82,10 +106,13 @@ remove_duplicates(const char *name1, const char *name2,
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>
-template&lt;typename T1, typename T2, typename T3, typename ... Ts&gt;
+template&lt;typename T1, typename T2, typename T3,
+         typename ... Ts&gt;
 [[nodiscard]] DataFrame
-remove_duplicates(const char *name1, const char *name2, const char *name3,
-                  bool include_index, remove_dup_spec rds) const;
+remove_duplicates(const char *name1, const char *name2,
+                  const char *name3,
+                  bool include_index,
+                  remove_dup_spec rds) const;
         </B></PRE></font>
       </td>
       <td width = "33.3%">
@@ -106,11 +133,13 @@ remove_duplicates(const char *name1, const char *name2, const char *name3,
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>
-template&lt;typename T1, typename T2, typename T3, typename T4, typename ... Ts&gt;
+template&lt;typename T1, typename T2, typename T3, typename T4,
+         typename ... Ts&gt;
 [[nodiscard]] DataFrame
 remove_duplicates(const char *name1, const char *name2,
                   const char *name3, const char *name4,
-                  bool include_index, remove_dup_spec rds) const;
+                  bool include_index,
+                  remove_dup_spec rds) const;
         </B></PRE></font>
       </td>
       <td width = "33.3%">
@@ -137,8 +166,10 @@ template&lt;typename T1, typename T2, typename T3, typename T4,
          typename T5, typename ... Ts&gt;
 [[nodiscard]] DataFrame
 remove_duplicates(const char *name1, const char *name2,
-                  const char *name3, const char *name4, const char *name5,
-                  bool include_index, remove_dup_spec rds) const;
+                  const char *name3, const char *name4,
+                  const char *name5,
+                  bool include_index,
+                  remove_dup_spec rds) const;
         </B></PRE></font>
       </td>
       <td width = "33.3%">
@@ -169,7 +200,8 @@ template&lt;typename T1, typename T2, typename T3, typename T4,
 remove_duplicates(const char *name1, const char *name2,
                   const char *name3, const char *name4,
                   const char *name5, const char *name6,
-                  bool include_index, remove_dup_spec rds) const;
+                  bool include_index,
+                  remove_dup_spec rds) const;
         </B></PRE></font>
       </td>
       <td width = "33.3%">

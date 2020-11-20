@@ -35,7 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         <PRE><B>
 template&lt;typename T&gt;
 bool
-has_column(const char *name);
+has_column(const char *name) const;
         </B></PRE></font>
       </td>
       <td>
@@ -44,6 +44,24 @@ has_column(const char *name);
       <td>
         <b>T</b>: Type of the named data column<BR>
         <B>name</B>: Name of the column
+      </td>
+    </tr>
+
+    </tr>
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        <PRE><B>
+template&lt;typename T&gt;
+bool
+has_column(size_type index) const;
+        </B></PRE></font>
+      </td>
+      <td>
+        Returns true if self has the indexed column, otherwise false
+      </td>
+      <td>
+        <b>T</b>: Type of the named data column<BR>
+        <B>index</B>: Index of the column
       </td>
     </tr>
 

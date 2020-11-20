@@ -135,6 +135,12 @@ public:  // Load/append/remove interfaces
     void
     remove_column(const char *name);
 
+    void
+    remove_column(size_type index)  {
+
+        return (remove_column(column_list_[index].first.c_str()));
+    }
+
     // It renames column named from to to. If column from does not exist,
     // it throws an exception
     //
@@ -1012,6 +1018,13 @@ public:  // Data manipulation
     [[nodiscard]] StdDataFrame<T>
     value_counts(const char *col_name) const;
 
+    template<typename T>
+    [[nodiscard]] StdDataFrame<T>
+    value_counts(size_type index) const  {
+
+        return (value_counts<T>(column_list_[index].first.c_str()));
+	}
+
     // It bucketizes the data and index into bucket_interval's,
     // based on index values and calls the functor for each bucket.
     // The result of each bucket will be stored in a new DataFrame with
@@ -1251,6 +1264,13 @@ public: // Read/access and slicing interfaces
     [[nodiscard]] ColumnVecType<T> &
     get_column(const char *name);
 
+    template<typename T>
+    [[nodiscard]] ColumnVecType<T> &
+    get_column(size_type index)  {
+
+        return (get_column<T>(column_list_[index].first.c_str()));
+    }
+
     // It returns a const reference to the container of named data column
     // The return type depends on if we are in standard or view mode
     //
@@ -1263,6 +1283,13 @@ public: // Read/access and slicing interfaces
     [[nodiscard]] const ColumnVecType<T> &
     get_column(const char *name) const;
 
+    template<typename T>
+    [[nodiscard]] const ColumnVecType<T> &
+    get_column(size_type index) const  {
+
+        return (get_column<T>(column_list_[index].first.c_str()));
+    }
+
     // Returns true if self has the named column, otherwise false
     // NOTE: Even if the column exists, it may not be of the type you expect.
     //
@@ -1271,6 +1298,9 @@ public: // Read/access and slicing interfaces
     //
     [[nodiscard]] bool
     has_column(const char *name) const;
+
+    [[nodiscard]] bool
+    has_column(size_type index) const { return (index < column_list_.size()); }
 
     // This method returns true if the given column follows the given pattern,
     // otherwise it returns false. Epsilon is used for approximation.

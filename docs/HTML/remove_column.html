@@ -46,6 +46,23 @@ remove_column(const char *name);
       </td>
     </tr>
 
+    </tr>
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        <PRE><B>
+void
+remove_column(size_type index);
+        </B></PRE></font>
+      </td>
+      <td>
+        It removes a column based on index.<BR>
+        The actual data vector is not deleted, but the column is dropped from DataFrame
+      </td>
+      <td>
+        <B>index</B>: Column index
+      </td>
+    </tr>
+
   </table>
 
   <pre style='color:#000000;background:#ffffff;'><span style='color:#800000; font-weight:bold; '>static</span> <span style='color:#800000; font-weight:bold; '>void</span> test_remove_column<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span>  <span style='color:#800080; '>{</span>

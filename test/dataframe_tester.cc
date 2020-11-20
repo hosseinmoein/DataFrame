@@ -125,6 +125,8 @@ static void test_haphazard()  {
 
     std::vector<int>    ivec = df.get_column<int> ("int_col");
 
+	std::cout << std::endl;
+    assert(df.get_column<int>("int_col") == df.get_column<int>(std::size_t(1)));
     assert(df.get_column<double> ("dbl_col")[2] == 3.2345);
 
     std::cout << "\nTesting Visitors 1 ..." << std::endl;
@@ -938,7 +940,10 @@ static void test_value_counts()  {
     df.write<std::ostream, double, int>(std::cout);
 
     auto    result = df.value_counts<double>("col_3");
+    auto    result2 = df.value_counts<int>("col_4");
+    auto    result3 = df.value_counts<int>(3);
 
+    assert((result2.is_equal<double, int>(result3)));
     std::cout << "After calling value_counts(cols_3)" << std::endl;
     result.write<std::ostream, size_t>(std::cout);
 }

@@ -282,17 +282,13 @@ if (ENABLE_TESTING)
            COMMAND dataframe_tester
            WORKING_DIRECTORY $<TARGET_FILE_DIR:dataframe_tester>)
 
-  # For some unknown reason to me, these tests sigfaults in AppVeyor
-  #
-  if (NOT MSVC)
-    add_test(NAME dataframe_tester_2
-             COMMAND dataframe_tester_2
-             WORKING_DIRECTORY $<TARGET_FILE_DIR:dataframe_tester_2>)
+  add_test(NAME dataframe_tester_2
+           COMMAND dataframe_tester_2
+           WORKING_DIRECTORY $<TARGET_FILE_DIR:dataframe_tester_2>)
 
-    add_test(NAME vectors_tester
-             COMMAND vectors_tester
-             WORKING_DIRECTORY $<TARGET_FILE_DIR:vectors_tester>)
-  endif(NOT MSVC)
+  add_test(NAME vectors_tester
+           COMMAND vectors_tester
+           WORKING_DIRECTORY $<TARGET_FILE_DIR:vectors_tester>)
 
   add_test(NAME vector_ptr_view_tester
            COMMAND vector_ptr_view_tester

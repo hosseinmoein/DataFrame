@@ -1218,6 +1218,88 @@ private:
 
 // ----------------------------------------------------------------------------
 
+template<typename T,
+         typename I = unsigned long,
+         typename =
+             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+struct TTestVisitor  {
+
+public:
+
+    DEFINE_VISIT_BASIC_TYPES_2
+
+    inline void operator() (const index_type &idx,
+                            const value_type &x,
+                            const value_type &y)  {
+
+        if (skip_nan_ && (is_nan__(x) || is_nan__(y)))  return;
+
+        if (! related_ts_)  {
+            m_x_(idx, x);
+            m_y_(idx, y);
+            v_x_(idx, x);
+            v_y_(idx, y);
+            deg_freedom_ += 2;
+        }
+        else  {
+            m_x_(idx, x - y);
+            v_x_(idx, x - y);
+            deg_freedom_ += 1;
+        }
+    }
+    PASS_DATA_ONE_BY_ONE_2
+
+    inline void pre ()  {
+
+        m_x_.pre();
+        m_y_.pre();
+        v_x_.pre();
+        v_y_.pre();
+        result_ = 0;
+        deg_freedom_ = 0;
+    }
+    inline void post ()  {
+
+        m_x_.post();
+        m_y_.post();
+        v_x_.post();
+        v_y_.post();
+        if (! related_ts_)  {
+            result_ =
+                (m_x_.get_result() - m_y_.get_result()) /
+                std::sqrt(v_x_.get_result() / value_type(m_x_.get_count()) +
+                          v_y_.get_result() / value_type(m_y_.get_count()));
+            deg_freedom_ -= 2;
+        }
+        else  {
+            result_ =
+                m_x_.get_result() /
+                (std::sqrt(v_x_.get_result()) /
+                 std::sqrt(value_type(m_x_.get_count())));
+            deg_freedom_ -= 1;
+        }
+    }
+
+    inline result_type get_result () const  { return (result_); }
+    inline size_type get_deg_freedom () const  { return (deg_freedom_); }
+
+    explicit TTestVisitor(bool is_related_ts, bool skipnan = true)
+        : related_ts_(is_related_ts), skip_nan_(skipnan)  {  }
+
+private:
+
+    MeanVisitor<T, I>   m_x_ {  };
+    MeanVisitor<T, I>   m_y_ {  };
+    VarVisitor<T, I>    v_x_ {  };
+    VarVisitor<T, I>    v_y_ {  };
+    result_type         result_ { 0 };
+    size_type           deg_freedom_ { 0 };
+    const bool          related_ts_;
+    const bool          skip_nan_;
+};
+
+// ----------------------------------------------------------------------------
+
 //
 // Single Action Visitors
 //

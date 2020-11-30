@@ -2019,6 +2019,63 @@ static void test_IBM_data()  {
 
 // --------------------------------------------------------------------
 
+static void test_TTestVisitor()  {
+
+    std::cout << "\nTesting TTestVisitor{  } ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466,
+          123467, 123468, 123469, 123470, 123471, 123472, 123473,
+        };
+    std::vector<double>         x_vec = {
+        0.5578196, 2.0217271, 2.5773252, 3.4140288, 4.3014084, 4.7448394,
+        5.1073781, 6.5411662, 6.7216176, 7.2600583, 8.1335874, 9.1224379,
+        1.9296663, 2.3797674, 3.2728619, 4.2767453, 5.3731026, 5.6476637,
+        8.5605355, 8.5866354, 8.7572812,
+    };
+    std::vector<double>         y_vec = {
+        18.63654, 103.49646, 150.35391, 190.51031, 208.70115, 213.71135,
+        228.49353, 233.55387, 234.55054, 223.89225, 227.68339, 223.91982,
+        168.01999, 164.95750, 152.61107, 160.78742, 168.55567, 152.42658,
+        221.70702, 222.69040, 243.18828,
+    };
+    std::vector<double>         z_vec = {
+        0.5578296, 2.0217275, 2.5773252, 3.4140288, 4.3084084, 4.7448394,
+        5.1079781, 6.5411662, 6.1216176, 7.1600583, 8.1335174, 9.1223379,
+        1.9296663, 2.3727674, 3.2728619, 4.2767953, 5.3731056, 5.6426637,
+        8.5602355, 8.5866354, 8.7572819,
+    };
+    MyDataFrame                 df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("x_data", x_vec),
+                 std::make_pair("y_data", y_vec),
+                 std::make_pair("z_data", z_vec));
+
+    TTestVisitor<double>    tt_v (false);
+
+    df.visit<double, double>("x_data", "y_data", tt_v);
+    assert(fabs(tt_v.get_result() - -15.3585) < 0.0001);
+    assert(tt_v.get_deg_freedom() == 40);
+
+    df.visit<double, double>("x_data", "z_data", tt_v);
+    assert(fabs(tt_v.get_result() - 0.0421697) < 0.000001);
+    assert(tt_v.get_deg_freedom() == 40);
+
+    TTestVisitor<double>    tt_v2 (true);
+
+    df.visit<double, double>("x_data", "y_data", tt_v2);
+    assert(fabs(tt_v2.get_result() - -15.9748) < 0.0001);
+    assert(tt_v2.get_deg_freedom() == 20);
+
+    df.visit<double, double>("x_data", "z_data", tt_v2);
+    assert(fabs(tt_v2.get_result() - 1.16854) < 0.00001);
+    assert(tt_v2.get_deg_freedom() == 20);
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int argc, char *argv[]) {
 
     test_get_reindexed();
@@ -2054,6 +2111,7 @@ int main(int argc, char *argv[]) {
     test_StepRollAdopter();
     test_DecomposeVisitor();
     // test_IBM_data();
+    test_TTestVisitor();
 
     return (0);
 }

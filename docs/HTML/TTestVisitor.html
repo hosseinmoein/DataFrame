@@ -1,0 +1,121 @@
+<!--
+Copyright (c) 2019-2022, Hossein Moein
+All rights reserved.
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+* Redistributions of source code must retain the above copyright
+  notice, this list of conditions and the following disclaimer.
+* Redistributions in binary form must reproduce the above copyright
+  notice, this list of conditions and the following disclaimer in the
+  documentation and/or other materials provided with the distribution.
+* Neither the name of Hossein Moein and/or the DataFrame nor the
+  names of its contributors may be used to endorse or promote products
+  derived from this software without specific prior written permission.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL Hossein Moein BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+<!DOCTYPE html>
+<html>
+<body>
+  <table align="center" border="1">
+
+    <tr bgcolor="lightblue">
+      <th>Signature</th> <th>Description</th> <th>Parameters</th>
+    </tr>
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        <PRE><B>#include &lt;DataFrame/DataFrameStatsVisitors.h&gt;
+
+template&lt;typename T,
+         typename I = unsigned long,
+         typename =
+             typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;
+struct TTestVisitor;
+        </B></PRE></font>
+      </td>
+      <td>
+        This functor class calculates student t-test.<BR>
+        It calculates two kinds of t-test: <I>unpaired/unrelated two sample t-test</I> or <I>paired/related t-test</I>, depending on the value of parameter <I>is_related</I>. The unrelated calculation follows <I>Welch t-test</I>, meaning it assumes  X and Y do <B>not</B> follow bivariate normal distribution with equal variances.<BR>
+        <I>get_result()</I> returns the value of t-test<BR>
+		<I>get_deg_freedom()<I> returns degrees of freedom<BR>
+        <PRE>
+    explicit TTestVisitor(bool is_related, bool skipnan = true);
+        </PRE>
+        <B>is_related</B>: Are two time-series related or completely independent
+      </td>
+      <td width="15%">
+        <B>T</B>: Column data type. T must be an arithmetic-enabled type<BR>
+        <B>I</B>: Index type.
+      </td>
+    </tr>
+
+  </table>
+
+<pre style='color:#000000;background:#ffffff;'><span style='color:#800000; font-weight:bold; '>static</span> <span style='color:#800000; font-weight:bold; '>void</span> test_TTestVisitor<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span>  <span style='color:#800080; '>{</span>
+
+    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>cout</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#800000; '>"</span><span style='color:#0f69ff; '>\n</span><span style='color:#0000e6; '>Testing TTestVisitor{  } ...</span><span style='color:#800000; '>"</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>endl</span><span style='color:#800080; '>;</span>
+
+    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>vector</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>unsigned</span> <span style='color:#800000; font-weight:bold; '>long</span><span style='color:#800080; '>></span>  idx <span style='color:#808030; '>=</span>
+        <span style='color:#800080; '>{</span> <span style='color:#008c00; '>123450</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123451</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123452</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123453</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123454</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123455</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123456</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123457</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123458</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123459</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123460</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123461</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123462</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123466</span><span style='color:#808030; '>,</span>
+          <span style='color:#008c00; '>123467</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123468</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123469</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123470</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123471</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123472</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123473</span><span style='color:#808030; '>,</span>
+        <span style='color:#800080; '>}</span><span style='color:#800080; '>;</span>
+    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>vector</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span>         x_vec <span style='color:#808030; '>=</span> <span style='color:#800080; '>{</span>
+        <span style='color:#008000; '>0.5578196</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>2.0217271</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>2.5773252</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>3.4140288</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>4.3014084</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>4.7448394</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>5.1073781</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>6.5411662</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>6.7216176</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>7.2600583</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>8.1335874</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>9.1224379</span><span style='color:#808030; '>,</span>
+        <span style='color:#008000; '>1.9296663</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>2.3797674</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>3.2728619</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>4.2767453</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>5.3731026</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>5.6476637</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>8.5605355</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>8.5866354</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>8.7572812</span><span style='color:#808030; '>,</span>
+    <span style='color:#800080; '>}</span><span style='color:#800080; '>;</span>
+    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>vector</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span>         y_vec <span style='color:#808030; '>=</span> <span style='color:#800080; '>{</span>
+        <span style='color:#008000; '>18.63654</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>103.49646</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>150.35391</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>190.51031</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>208.70115</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>213.71135</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>228.49353</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>233.55387</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>234.55054</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>223.89225</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>227.68339</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>223.91982</span><span style='color:#808030; '>,</span>
+        <span style='color:#008000; '>168.01999</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>164.95750</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>152.61107</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>160.78742</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>168.55567</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>152.42658</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>221.70702</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>222.69040</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>243.18828</span><span style='color:#808030; '>,</span>
+    <span style='color:#800080; '>}</span><span style='color:#800080; '>;</span>
+    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>vector</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span>         z_vec <span style='color:#808030; '>=</span> <span style='color:#800080; '>{</span>
+        <span style='color:#008000; '>0.5578296</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>2.0217275</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>2.5773252</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>3.4140288</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>4.3084084</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>4.7448394</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>5.1079781</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>6.5411662</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>6.1216176</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>7.1600583</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>8.1335174</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>9.1223379</span><span style='color:#808030; '>,</span>
+        <span style='color:#008000; '>1.9296663</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>2.3727674</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>3.2728619</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>4.2767953</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>5.3731056</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>5.6426637</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>8.5602355</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>8.5866354</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>8.7572819</span><span style='color:#808030; '>,</span>
+    <span style='color:#800080; '>}</span><span style='color:#800080; '>;</span>
+    MyDataFrame                 df<span style='color:#800080; '>;</span>
+
+    df<span style='color:#808030; '>.</span>load_data<span style='color:#808030; '>(</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>move</span><span style='color:#808030; '>(</span>idx<span style='color:#808030; '>)</span><span style='color:#808030; '>,</span>
+                 <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span>make_pair<span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>x_data</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> x_vec<span style='color:#808030; '>)</span><span style='color:#808030; '>,</span>
+                 <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span>make_pair<span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>y_data</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> y_vec<span style='color:#808030; '>)</span><span style='color:#808030; '>,</span>
+                 <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span>make_pair<span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>z_data</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> z_vec<span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+
+    TTestVisitor<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span>    tt_v <span style='color:#808030; '>(</span><span style='color:#800000; font-weight:bold; '>false</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+
+    df<span style='color:#808030; '>.</span>visit<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#808030; '>,</span> <span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>x_data</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>y_data</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> tt_v<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    assert<span style='color:#808030; '>(</span><span style='color:#603000; '>fabs</span><span style='color:#808030; '>(</span>tt_v<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>-</span> <span style='color:#808030; '>-</span><span style='color:#008000; '>15.3585</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>&lt;</span> <span style='color:#008000; '>0.0001</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    assert<span style='color:#808030; '>(</span>tt_v<span style='color:#808030; '>.</span>get_deg_freedom<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>=</span><span style='color:#808030; '>=</span> <span style='color:#008c00; '>40</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+
+    df<span style='color:#808030; '>.</span>visit<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#808030; '>,</span> <span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>x_data</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>z_data</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> tt_v<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    assert<span style='color:#808030; '>(</span><span style='color:#603000; '>fabs</span><span style='color:#808030; '>(</span>tt_v<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>-</span> <span style='color:#008000; '>0.0421697</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>&lt;</span> <span style='color:#008000; '>0.000001</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    assert<span style='color:#808030; '>(</span>tt_v<span style='color:#808030; '>.</span>get_deg_freedom<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>=</span><span style='color:#808030; '>=</span> <span style='color:#008c00; '>40</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+
+    TTestVisitor<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span>    tt_v2 <span style='color:#808030; '>(</span><span style='color:#800000; font-weight:bold; '>true</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+
+    df<span style='color:#808030; '>.</span>visit<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#808030; '>,</span> <span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>x_data</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>y_data</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> tt_v2<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    assert<span style='color:#808030; '>(</span><span style='color:#603000; '>fabs</span><span style='color:#808030; '>(</span>tt_v2<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>-</span> <span style='color:#808030; '>-</span><span style='color:#008000; '>15.9748</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>&lt;</span> <span style='color:#008000; '>0.0001</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    assert<span style='color:#808030; '>(</span>tt_v2<span style='color:#808030; '>.</span>get_deg_freedom<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>=</span><span style='color:#808030; '>=</span> <span style='color:#008c00; '>20</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+
+    df<span style='color:#808030; '>.</span>visit<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#808030; '>,</span> <span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>x_data</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>z_data</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> tt_v2<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    assert<span style='color:#808030; '>(</span><span style='color:#603000; '>fabs</span><span style='color:#808030; '>(</span>tt_v2<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>-</span> <span style='color:#008000; '>1.16854</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>&lt;</span> <span style='color:#008000; '>0.00001</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    assert<span style='color:#808030; '>(</span>tt_v2<span style='color:#808030; '>.</span>get_deg_freedom<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>=</span><span style='color:#808030; '>=</span> <span style='color:#008c00; '>20</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+<span style='color:#800080; '>}</span>
+</pre>
+<!--Created using ToHtml.com on 2020-11-25 20:26:37 UTC -->
+
+</body>
+</html>
+
+<!--
+Local Variables:
+mode:HTML
+tab-width:4
+c-basic-offset:4
+End:
+-->

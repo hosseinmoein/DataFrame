@@ -90,9 +90,6 @@ public:
     DataFrame &operator= (DataFrame &&) = default;
 
     ~DataFrame() {
-        column_list_.clear();
-        column_tb_.clear();
-        indices_.clear();
         const SpinGuard guard(lock_);
         data_.clear();
     };

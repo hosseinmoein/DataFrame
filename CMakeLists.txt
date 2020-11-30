@@ -231,6 +231,7 @@ if (ENABLE_TESTING)
   add_executable(vector_ptr_view_tester test/vector_ptr_view_tester.cc)
   add_executable(date_time_tester  test/date_time_tester.cc)
   add_executable(gen_rand_tester  test/gen_rand_tester.cc)
+  add_executable(dataframe_thread_safety  test/dataframe_thread_safety.cc)
 
   # Link the DataFrame library to the test binary
   target_link_libraries(dataframe_tester DataFrame)
@@ -253,6 +254,9 @@ if (ENABLE_TESTING)
   # Link the DataFrame library to the test binary
   target_link_libraries(gen_rand_tester DataFrame)
 
+  # Link the DataFrame library to the test binary
+  target_link_libraries(dataframe_thread_safety DataFrame)
+
   if (UNIX)
     # Find pthreads library
     set(THREADS_PREFER_PTHREAD_FLAG ON)
@@ -264,6 +268,7 @@ if (ENABLE_TESTING)
     target_link_libraries(vector_ptr_view_tester Threads::Threads)
     target_link_libraries(date_time_tester Threads::Threads)
     target_link_libraries(gen_rand_tester Threads::Threads)
+    target_link_libraries(dataframe_thread_safety Threads::Threads)
   endif (UNIX)
 
   if (UNIX AND NOT APPLE)
@@ -274,6 +279,7 @@ if (ENABLE_TESTING)
     target_link_libraries(vector_ptr_view_tester rt)
     target_link_libraries(date_time_tester rt)
     target_link_libraries(gen_rand_tester rt)
+    target_link_libraries(dataframe_thread_safety rt)
   endif()
 
   # Enable ctest, testing so we can see if unit tests pass or fail in CI
@@ -304,6 +310,10 @@ if (ENABLE_TESTING)
   add_test(NAME gen_rand_tester
            COMMAND gen_rand_tester
            WORKING_DIRECTORY $<TARGET_FILE_DIR:gen_rand_tester>)
+
+  add_test(NAME dataframe_thread_safety
+           COMMAND dataframe_thread_safety
+           WORKING_DIRECTORY $<TARGET_FILE_DIR:dataframe_thread_safety>)
 
   message("-- Copying files for testing")
   # Ctest require this files in the build dir, on all platforms

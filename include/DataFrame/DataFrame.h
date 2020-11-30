@@ -89,7 +89,10 @@ public:
     DataFrame &operator= (const DataFrame &) = default;
     DataFrame &operator= (DataFrame &&) = default;
 
-    ~DataFrame() = default;
+    ~DataFrame() {
+        const SpinGuard guard(lock_);
+        data_.clear();
+    };
 
 private:
 

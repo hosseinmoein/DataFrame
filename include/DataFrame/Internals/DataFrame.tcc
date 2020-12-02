@@ -1518,7 +1518,6 @@ transpose(IndexVecType &&indices, const V &new_col_names) const  {
 
     std::vector<std::vector<T>> trans_cols(indices_.size());
     DataFrame                   df;
-    size_type                   idx = 0;
 
     for (size_type i = 0; i < indices_.size(); ++i)  {
         trans_cols[i].reserve(num_cols);

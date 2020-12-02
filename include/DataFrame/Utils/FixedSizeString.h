@@ -171,8 +171,6 @@ public:
     inline size_type
     find (const VirtualString &token, size_type pos = 0) const noexcept  {
 
-        const size_type len = size ();
-
         return (find (token.c_str (), pos));
     }
 

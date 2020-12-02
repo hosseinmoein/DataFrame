@@ -701,7 +701,6 @@ void DataFrame<I, H>::remove_data_by_sel (const char *name, F &sel_functor)  {
                   "Only a StdDataFrame can call remove_data_by_loc()");
 
     const ColumnVecType<T>  &vec = get_column<T>(name);
-    const size_type         idx_s = indices_.size();
     const size_type         col_s = vec.size();
     std::vector<size_type>  col_indices;
 

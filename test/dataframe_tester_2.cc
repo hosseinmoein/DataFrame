@@ -1423,7 +1423,7 @@ static void test_HurstExponentVisitor()  {
 
     MyDataFrame df;
 
-    df.load_index(std::move(MyDataFrame::gen_sequence_index(0, 1024, 1)));
+    df.load_index(MyDataFrame::gen_sequence_index(0, 1024, 1));
     df.load_column("d1_col", std::move(d1), nan_policy::dont_pad_with_nans);
     df.load_column("d2_col", std::move(d2), nan_policy::dont_pad_with_nans);
     df.load_column("d3_col", std::move(d3), nan_policy::dont_pad_with_nans);
@@ -1922,7 +1922,7 @@ static void test_DecomposeVisitor()  {
         };
     MyDataFrame                 df;
 
-    df.load_data(std::move(MyDataFrame::gen_sequence_index(0, y_vec.size(), 1)),
+    df.load_data(MyDataFrame::gen_sequence_index(0, y_vec.size(), 1),
                  std::make_pair("IBM_closes", y_vec));
 
     DecomposeVisitor<double>    d_v (7, 0.6, 0.01);

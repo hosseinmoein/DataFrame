@@ -43,6 +43,16 @@ namespace hmdf
 {
 
 template<typename I, typename H>
+DataFrame<I, H>::~DataFrame()  {
+
+    const SpinGuard guard(lock_);
+
+    data_.clear();
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
 template<typename CF, typename ... Ts>
 void DataFrame<I, H>::sort_common_(DataFrame<I, H> &df, CF &&comp_func)  {
 

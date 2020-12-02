@@ -89,10 +89,9 @@ public:
     DataFrame &operator= (const DataFrame &) = default;
     DataFrame &operator= (DataFrame &&) = default;
 
-    ~DataFrame() {
-        const SpinGuard guard(lock_);
-        data_.clear();
-    };
+    // Because of thread safety, this needs tender loving care 
+    //
+    ~DataFrame();
 
 private:
 
@@ -108,9 +107,10 @@ private:
 
     // This is necessary to have a deterministic column order across all
     // implementations
-    ColNameList     column_list_ { }; // Vector of column names and indices
+    //
+    ColNameList     column_list_ { };  // Vector of column names and indices
 
-    inline static SpinLock *lock_ { nullptr };    // It is null by default
+    inline static SpinLock *lock_ { nullptr };  // No lock safety by default
 
 public:  // Load/append/remove interfaces
 
@@ -1026,7 +1026,7 @@ public:  // Data manipulation
     value_counts(size_type index) const  {
 
         return (value_counts<T>(column_list_[index].first.c_str()));
-	}
+    }
 
     // It bucketizes the data and index into bucket_interval's,
     // based on index values and calls the functor for each bucket.
@@ -2099,8 +2099,8 @@ public:  // Visitors
     V &
     visit(const char *name1, const char *name2, V &visitor) const  {
 
-        return(const_cast<DataFrame *>(this)->visit<T1, T2, V>
-               (name1, name2, visitor));
+        return (const_cast<DataFrame *>(this)->visit<T1, T2, V>
+                (name1, name2, visitor));
     }
 
     // These are identical to above visit() but could execute asynchronously.
@@ -2149,8 +2149,8 @@ public:  // Visitors
           const char *name3,
           V &visitor) const  {
 
-        return(const_cast<DataFrame *>(this)->visit<T1, T2, T3, V>
-               (name1, name2, name3, visitor));
+        return (const_cast<DataFrame *>(this)->visit<T1, T2, T3, V>
+                (name1, name2, name3, visitor));
     }
 
     // These are identical to above visit() but could execute asynchronously.
@@ -2214,8 +2214,8 @@ public:  // Visitors
           const char *name4,
           V &visitor) const  {
 
-        return(const_cast<DataFrame *>(this)->visit<T1, T2, T3, T4, V>
-               (name1, name2, name3, name4, visitor));
+        return (const_cast<DataFrame *>(this)->visit<T1, T2, T3, T4, V>
+                (name1, name2, name3, name4, visitor));
     }
 
     // These are identical to above visit() but could execute asynchronously.
@@ -2289,8 +2289,8 @@ public:  // Visitors
           const char *name5,
           V &visitor) const  {
 
-        return(const_cast<DataFrame *>(this)->visit<T1, T2, T3, T4, T5, V>
-               (name1, name2, name3, name4, name5, visitor));
+        return (const_cast<DataFrame *>(this)->visit<T1, T2, T3, T4, T5, V>
+                (name1, name2, name3, name4, name5, visitor));
     }
 
     // These are identical to above visit() but could execute asynchronously.
@@ -2340,8 +2340,8 @@ public:  // Visitors
     V &
     single_act_visit(const char *name, V &visitor) const  {
 
-        return(const_cast<DataFrame *>(this)->single_act_visit<T, V>
-               (name, visitor));
+        return (const_cast<DataFrame *>(this)->single_act_visit<T, V>
+                (name, visitor));
     }
 
     // These are identical to above single_act_visit() but could execute
@@ -2385,8 +2385,8 @@ public:  // Visitors
     V &
     single_act_visit(const char *name1, const char *name2, V &visitor) const  {
 
-        return(const_cast<DataFrame *>(this)->single_act_visit<T1, T2, V>
-               (name1, name2, visitor));
+        return (const_cast<DataFrame *>(this)->single_act_visit<T1, T2, V>
+                (name1, name2, visitor));
     }
 
     // These are identical to above single_act_visit() but could execute

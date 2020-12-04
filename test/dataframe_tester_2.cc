@@ -2076,6 +2076,47 @@ static void test_TTestVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_MassIndexVisitor()  {
+
+    std::cout << "\nTesting MassIndexVisitor{  } ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456, 123457,
+          123458, 123459, 123460, 123461, 123462, 123466, 123467, 123468,
+          123469, 123470, 123471, 123472, 123473,
+        };
+    std::vector<double>         high = {
+        121.75, 122.75, 124.83, 124.39, 135.5, 132, 128.25, 127.15, 126.94,
+        125.22, 126.43, 127.35, 120.15, 117.69, 116.06, 116.62, 114.9, 112.22,
+        109.73, 109.64, 111.8,
+    };
+    std::vector<double>         low = {
+        118.82, 121.05, 121.59, 122.32, 129.77, 127.6, 126.44, 124.46, 125.13,
+        123.85, 124.66, 125.08, 116.84, 114.79, 112.98, 115.53, 111.84, 110.03,
+        105.92, 106.55, 107.75,
+    };
+    MyDataFrame                 df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("high", high),
+                 std::make_pair("low", low));
+
+    MassIndexVisitor<double>    mi_v (3, 5);
+
+    // The values here are nonsensical, because the time-series and periods
+    // are too short
+    df.single_act_visit<double, double>("high", "low", mi_v);
+    assert(mi_v.get_result().size() == 21);
+    assert(std::isnan(mi_v.get_result()[0]));
+    assert(std::isnan(mi_v.get_result()[3]));
+    assert(fabs(mi_v.get_result()[6] - 5.20339) < 0.00001);
+    assert(fabs(mi_v.get_result()[10] - 4.35729) < 0.00001);
+    assert(fabs(mi_v.get_result()[20] - 5.29241) < 0.00001);
+    assert(fabs(mi_v.get_result()[17] - 5.004) < 0.0001);
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int argc, char *argv[]) {
 
     test_get_reindexed();
@@ -2112,6 +2153,7 @@ int main(int argc, char *argv[]) {
     test_DecomposeVisitor();
     // test_IBM_data();
     test_TTestVisitor();
+    test_MassIndexVisitor();
 
     return (0);
 }

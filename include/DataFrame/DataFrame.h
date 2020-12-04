@@ -2057,7 +2057,7 @@ public:  // Visitors
     V &
     visit(const char *name, V &visitor) const  {
 
-        return(const_cast<DataFrame *>(this)->visit<T, V>(name, visitor));
+        return (const_cast<DataFrame *>(this)->visit<T, V>(name, visitor));
     }
 
     // These are identical to above visit() but could execute asynchronously.

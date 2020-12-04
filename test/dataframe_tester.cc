@@ -4544,26 +4544,26 @@ static void test_MACDVisitor()  {
 
     assert(macd_result.size() == 40);
     assert(std::isnan(macd_result[3]));
-    assert(fabs(macd_result[8] - 0.526749) < 0.000001);
-    assert(fabs(macd_result[12] - 0.104049) < 0.000001);
-    assert(fabs(macd_result[38] - 2.74705e-06) < 0.000001);
-    assert(fabs(macd_result[39] - -1.83136e-06) < 0.000001);
+    assert(fabs(macd_result[8] - 1.5) < 0.000001);
+    assert(fabs(macd_result[12] - 1.5) < 0.000001);
+    assert(fabs(macd_result[38] - -0.777175) < 0.000001);
+    assert(fabs(macd_result[39] - -1.12938) < 0.00001);
 
     assert(signal_line.size() == 40);
     assert(std::isnan(signal_line[2]));
     assert(std::isnan(signal_line[4]));
-    assert(fabs(signal_line[8] - 2.50206) < 0.00001);
-    assert(fabs(signal_line[12] - 1.18789) < 0.00001);
-    assert(fabs(signal_line[38] - 0.000150401) < 0.000001);
-    assert(fabs(signal_line[39] - -0.000103319) < 0.000001);
+    assert(fabs(signal_line[8] - 1.5) < 0.00001);
+    assert(fabs(signal_line[12] - 1.5) < 0.00001);
+    assert(fabs(signal_line[38] - -1.08524) < 0.00001);
+    assert(fabs(signal_line[39] - -1.09785) < 0.00001);
 
     assert(macd_histo.size() == 40);
     assert(std::isnan(macd_histo[0]));
     assert(std::isnan(macd_histo[4]));
-    assert(fabs(macd_histo[8] - -1.97531) < 0.00001);
-    assert(fabs(macd_histo[12] - -1.08385) < 0.00001);
-    assert(fabs(macd_histo[38] - -0.000147654) < 0.000001);
-    assert(fabs(macd_histo[39] - 0.000101488) < 0.000001);
+    assert(fabs(macd_histo[8] - 0) < 0.00001);
+    assert(fabs(macd_histo[12] - 0) < 0.00001);
+    assert(fabs(macd_histo[38] - 0.308069) < 0.000001);
+    assert(fabs(macd_histo[39] - -0.0315231) < 0.000001);
 }
 
 // -----------------------------------------------------------------------------

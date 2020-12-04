@@ -405,7 +405,8 @@ public:
 
         macd_roller_t   short_roller(std::move(MeanVisitor<T, I>()),
                                      short_mean_period_,
-                                     exponential_decay_spec::span, 0.2);
+                                     exponential_decay_spec::span,
+                                     short_mean_period_);
 
         short_roller.pre();
         short_roller(idx_begin, idx_end, column_begin, column_end);
@@ -413,7 +414,8 @@ public:
 
         macd_roller_t   long_roller(std::move(MeanVisitor<T, I>()),
                                     long_mean_period_,
-                                    exponential_decay_spec::span, 0.2);
+                                    exponential_decay_spec::span,
+                                    long_mean_period_);
 
         long_roller.pre();
         long_roller(idx_begin, idx_end, column_begin, column_end);
@@ -461,14 +463,13 @@ public:
     inline MACDVisitor(
         size_type short_mean_period,  // e.g. 12-day
         size_type long_mean_period,   // e.g. 26-day
-        size_type signal_line_period, // e.g.  9-day
-        exponential_decay_spec ed_spec = exponential_decay_spec::span,
-        double expo_decay_value = 0.2)
+        size_type signal_line_period) // e.g.  9-day
         : short_mean_period_(short_mean_period),
           long_mean_period_(long_mean_period),
           signal_line_roller_(std::move(MeanVisitor<T, I>()),
                               signal_line_period,
-                              ed_spec, expo_decay_value)  {
+                              exponential_decay_spec::span,
+                              signal_line_period)  {
     }
 
 private:
@@ -1071,6 +1072,7 @@ private:
     const value_type    avg_period_;
     result_type         result_ { };
 };
+
 // ----------------------------------------------------------------------------
 
 template<typename T,
@@ -1199,6 +1201,99 @@ private:
 
     const RangeVec  ranges_;
     result_type     exponent_ { -1 };
+};
+
+// ----------------------------------------------------------------------------
+
+template<typename T,
+         typename I = unsigned long,
+         typename =
+             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+struct MassIndexVisitor {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &high_begin,
+                const H &high_end,
+                const H &low_begin,
+                const H &low_end)  {
+
+        const size_type col_s = std::distance(high_begin, high_end);
+
+        assert((col_s == std::distance(low_begin, low_end)));
+        assert(fast_ < slow_);
+
+        result_.reserve(col_s);
+        for (size_type i = 0; i < col_s; ++i)  {
+            const value_type    v = *(high_begin + i) - *(low_begin + i);
+
+            result_.push_back(v > 0 ? v : std::numeric_limits<T>::epsilon());
+        }
+
+        erm_t   fast_roller(std::move(MeanVisitor<T, I>()), fast_,
+                            exponential_decay_spec::span, fast_);
+
+        fast_roller.pre();
+        fast_roller(idx_begin, idx_end, result_.begin(), result_.end());
+        fast_roller.post();
+
+        // Backfill the result with simple averges
+        value_type  sum = 0;
+
+        for (size_type i = 0; i < col_s; ++i)  {
+            if (is_nan__(fast_roller.get_result()[i]))  {
+                sum += result_[i];
+                fast_roller.get_result()[i] = sum / value_type(i + 1);
+            }
+            else  break;
+        }
+        result_ = std::move(fast_roller.get_result());
+        fast_roller.pre();
+        fast_roller(idx_begin, idx_end, result_.begin(), result_.end());
+        fast_roller.post();
+
+        // Backfill the result with simple averges
+        sum = 0;
+        for (size_type i = 0; i < col_s; ++i)  {
+            if (is_nan__(fast_roller.get_result()[i]))  {
+                sum += result_[i];
+                fast_roller.get_result()[i] = sum / value_type(i + 1);
+            }
+            else  break;
+        }
+
+        for (size_type i = 0; i < col_s; ++i)
+            result_[i] = result_[i] / fast_roller.get_result()[i];
+
+        srs_t   slow_roller(std::move(SumVisitor<T, I>()), slow_);
+
+        slow_roller.pre();
+        slow_roller(idx_begin, idx_end, result_.begin(), result_.end());
+        slow_roller.post();
+        result_ = std::move(slow_roller.get_result());
+    }
+
+    inline void pre ()  { result_.clear(); }
+    inline void post ()  {  }
+    inline const result_type &get_result () const  { return (result_); }
+    inline result_type &get_result ()  { return (result_); }
+
+    explicit
+    MassIndexVisitor(size_type fast_period = 9, size_type slow_period = 25)
+        : fast_(fast_period), slow_(slow_period)  {  }
+
+private:
+
+    using erm_t = ExponentialRollAdopter<MeanVisitor<T, I>, T, I>;
+    using srs_t = SimpleRollAdopter<SumVisitor<T, I>, T, I>;
+
+    result_type     result_ {  };
+    const size_type slow_;
+    const size_type fast_;
 };
 
 } // namespace hmdf

@@ -131,15 +131,17 @@ static void test_haphazard()  {
 
     std::cout << "\nTesting Visitors 1 ..." << std::endl;
 
-    MeanVisitor<int>    ivisitor;
-    MeanVisitor<double> dvisitor;
-    const MyDataFrame   const_df = df;
-    auto                const_fut =
+    MeanVisitor<int>            ivisitor;
+    MeanVisitor<double>         dvisitor;
+    WeightedMeanVisitor<double> wm_dvisitor;
+    const MyDataFrame           const_df = df;
+    auto                        const_fut =
         const_df.visit_async<int>("int_col", ivisitor);
 
     assert(const_fut.get().get_result() == 1);
 
     auto    fut = df.visit_async<double>("dbl_col", dvisitor);
+    auto    wm_fut = df.visit_async<double>("dbl_col", wm_dvisitor);
 
     assert(abs(fut.get().get_result() - 3.2345) < 0.00001);
 
@@ -148,6 +150,8 @@ static void test_haphazard()  {
     df.get_column<double>("dbl_col")[7] = 8.5;
     assert(::abs(df.visit<double>("dbl_col", dvisitor).get_result() -
                  4.83406) < 0.0001);
+    assert(::abs(df.visit<double>("dbl_col", wm_dvisitor).get_result() -
+                 6.05604) < 0.0001);
 
     std::vector<double> dvec = df.get_column<double> ("dbl_col");
     std::vector<double> dvec2 = df.get_column<double> ("dbl_col_2");

@@ -99,18 +99,50 @@ struct MeanVisitor {
 
         SKIP_NAN
 
-        sum_ += val;
         cnt_ += 1;
+        sum_ += val;
     }
     PASS_DATA_ONE_BY_ONE
 
-    inline void pre ()  { sum_ = 0; mean_ = 0; cnt_ = 0; }
+    inline void pre ()  { sum_ = mean_ = 0; cnt_ = 0; }
     inline void post ()  { mean_ = sum_ / value_type(cnt_); }
     inline size_type get_count () const  { return (cnt_); }
     inline value_type get_sum () const  { return (sum_); }
     inline result_type get_result () const  { return (mean_); }
 
     explicit MeanVisitor(bool skipnan = true) : skip_nan_(skipnan)  {   }
+
+private:
+
+    value_type  sum_ { 0 };
+    value_type  mean_ { 0 };
+    size_type   cnt_ { 0 };
+    const bool  skip_nan_;
+};
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename I = unsigned long>
+struct WeightedMeanVisitor {
+
+    DEFINE_VISIT_BASIC_TYPES_2
+
+    inline void operator() (const index_type &, const value_type &val)  {
+
+        SKIP_NAN
+
+        cnt_ += 1;
+        sum_ += val * value_type(cnt_);
+    }
+    PASS_DATA_ONE_BY_ONE
+
+    inline void pre()  { sum_ = mean_ = 0; cnt_ = 0; }
+    inline void post() { mean_ = sum_ / value_type((cnt_ * (cnt_ + 1)) / 2); }
+    inline size_type get_count() const  { return (cnt_); }
+    inline value_type get_sum() const  { return (sum_); }
+    inline result_type get_result() const  { return (mean_); }
+
+    explicit WeightedMeanVisitor(bool skipnan = true) : skip_nan_(skipnan) {  }
 
 private:
 
@@ -131,12 +163,12 @@ struct GeometricMeanVisitor {
 
         SKIP_NAN
 
-        sum_ += std::log(val);
         cnt_ += 1;
+        sum_ += std::log(val);
     }
     PASS_DATA_ONE_BY_ONE
 
-    inline void pre ()  { sum_ = 0; mean_ = 0; cnt_ = 0; }
+    inline void pre ()  { sum_ = mean_ = 0; cnt_ = 0; }
     inline void post ()  { mean_ = std::exp(sum_ / value_type(cnt_)); }
     inline size_type get_count () const  { return (cnt_); }
     inline value_type get_sum () const  { return (sum_); }
@@ -167,12 +199,12 @@ struct HarmonicMeanVisitor {
 
         SKIP_NAN
 
-        sum_ += value_type(1) / val;
         cnt_ += 1;
+        sum_ += value_type(1) / val;
     }
     PASS_DATA_ONE_BY_ONE
 
-    inline void pre ()  { sum_ = 0; mean_ = 0; cnt_ = 0; }
+    inline void pre ()  { sum_ = mean_ = 0; cnt_ = 0; }
     inline void post ()  { mean_ = value_type(cnt_) / sum_; }
     inline size_type get_count () const  { return (cnt_); }
     inline value_type get_sum () const  { return (sum_); }

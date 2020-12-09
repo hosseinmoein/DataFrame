@@ -133,6 +133,7 @@ static void test_haphazard()  {
 
     MeanVisitor<int>            ivisitor;
     MeanVisitor<double>         dvisitor;
+    MeanVisitor<double>         rev_dvisitor;
     WeightedMeanVisitor<double> wm_dvisitor;
     const MyDataFrame           const_df = df;
     auto                        const_fut =
@@ -141,6 +142,7 @@ static void test_haphazard()  {
     assert(const_fut.get().get_result() == 1);
 
     auto    fut = df.visit_async<double>("dbl_col", dvisitor);
+    auto    rev_fut = df.visit_async<double>("dbl_col", rev_dvisitor);
     auto    wm_fut = df.visit_async<double>("dbl_col", wm_dvisitor);
 
     assert(abs(fut.get().get_result() - 3.2345) < 0.00001);
@@ -149,6 +151,8 @@ static void test_haphazard()  {
     df.get_column<double>("dbl_col")[6] = 7.5;
     df.get_column<double>("dbl_col")[7] = 8.5;
     assert(::abs(df.visit<double>("dbl_col", dvisitor).get_result() -
+                 4.83406) < 0.0001);
+    assert(::abs(df.visit<double>("dbl_col", rev_dvisitor, true).get_result() -
                  4.83406) < 0.0001);
     assert(::abs(df.visit<double>("dbl_col", wm_dvisitor).get_result() -
                  6.05604) < 0.0001);
@@ -291,11 +295,17 @@ static void test_haphazard()  {
     std::cout << "\nTesting Correlation Visitor ..." << std::endl;
 
     CorrVisitor<double> corr_visitor;
+    CorrVisitor<double> rev_corr_visitor;
     auto                fut10 =
         df.visit_async<double, double>("dbl_col", "dbl_col_2", corr_visitor);
+    auto                rev_fut10 =
+        df.visit_async<double, double>("dbl_col", "dbl_col_2",
+                                       rev_corr_visitor, true);
     const double        corr = fut10.get().get_result();
+    const double        rev_corr = rev_fut10.get().get_result();
 
     assert(fabs(corr - -0.358381) < 0.000001);
+    assert(fabs(rev_corr - -0.358381) < 0.000001);
 
     std::cout << "\nTesting Stats Visitor ..." << std::endl;
 
@@ -1204,7 +1214,7 @@ static void test_largest_smallest_visitors()  {
 
     NLargestVisitor<5, double> nl_visitor;
 
-    df.visit<double>("col_3", nl_visitor);
+    df.visit<double>("col_3", nl_visitor, true);
     std::cout << "N largest result for col_3:" << std::endl;
     for (auto iter : nl_visitor.get_result())
         std::cout << iter.index << '|' << iter.value << " ";
@@ -2222,7 +2232,7 @@ static void test_median()  {
 
     MedianVisitor<double>   med_visit;
     double                  result =
-        df.single_act_visit<double>("dblcol_1", med_visit).get_result();
+        df.single_act_visit<double>("dblcol_1", med_visit, true).get_result();
 
     assert(result == 10.0);
 
@@ -2286,7 +2296,7 @@ static void test_tracking_error()  {
 
     result = df.visit<double, double>("dblcol_1",
                                       "dblcol_3",
-                                      tracking_visit).get_result();
+                                      tracking_visit, true).get_result();
     assert(fabs(result - 0.256416) < 0.00001);
 
     result = df.visit<double, double>("dblcol_1",
@@ -3881,11 +3891,12 @@ static void test_view_visitors()  {
     assert(fabs(dfv.visit<double, double>("dbl_col1", "dbl_col2",
                                  dp_visitor).get_result() - 45.98) < 0.00001);
 
-
     SimpleRollAdopter<MeanVisitor<double>, double>
         mean_roller1(MeanVisitor<double>(), 3);
     const auto &res_sra =
-        dfv.single_act_visit<double>("dbl_col1", mean_roller1).get_result();
+        dfv.single_act_visit<double>("dbl_col1",
+                                     mean_roller1,
+                                     true).get_result();
 
     assert(fabs(res_sra[2] - 3.3) < 0.00001);
 

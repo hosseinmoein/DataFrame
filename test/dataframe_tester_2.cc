@@ -579,7 +579,7 @@ static void test_SharpeRatioVisitor()  {
     SharpeRatioVisitor<double>  sh_ratio;
     const auto                  result =
         df.single_act_visit<double, double>("asset", "benchmark",
-                                            sh_ratio).get_result();
+                                            sh_ratio, true).get_result();
 
     assert(fabs(result - 0.425631) < 0.00001);
 }
@@ -1442,7 +1442,7 @@ static void test_HurstExponentVisitor()  {
 
     HurstExponentVisitor<double>    he_v3 ({ 1, 2, 4 });
     auto                            result3 =
-        df.single_act_visit<double>("d3_col", he_v3).get_result();
+        df.single_act_visit<double>("d3_col", he_v3, true).get_result();
 
     assert(result3 - 0.903057 < 0.00001);
 }

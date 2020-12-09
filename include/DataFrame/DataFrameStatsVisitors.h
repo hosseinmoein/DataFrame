@@ -84,9 +84,9 @@ namespace hmdf
 #define SKIP_NAN if (skip_nan_ && is_nan__(val))  { return; }
 
 #define GET_COL_SIZE \
-        const size_t    col_s = \
-            std::min(std::distance(idx_begin, idx_end), \
-                     std::distance(column_begin, column_end));
+    const std::size_t   col_s = \
+        std::min(std::distance(idx_begin, idx_end), \
+                 std::distance(column_begin, column_end));
 
 // ----------------------------------------------------------------------------
 

@@ -2048,16 +2048,21 @@ public:  // Visitors
     //   Type of the visitor functor
     // name:
     //   Name of the data column
+    // visitor:
+    //   An instance of the visitor
+    // in_reverse:
+    //   If true, it will iterate over the column in reverse order
     //
     template<typename T, typename V>
     V &
-    visit(const char *name, V &visitor);
+    visit(const char *name, V &visitor, bool in_reverse = false);
 
     template<typename T, typename V>
     V &
-    visit(const char *name, V &visitor) const  {
+    visit(const char *name, V &visitor, bool in_reverse = false) const  {
 
-        return (const_cast<DataFrame *>(this)->visit<T, V>(name, visitor));
+        return (const_cast<DataFrame *>(this)->visit<T, V>
+                (name, visitor, in_reverse));
     }
 
     // These are identical to above visit() but could execute asynchronously.
@@ -2069,11 +2074,11 @@ public:  // Visitors
     //
     template<typename T, typename V>
     [[nodiscard]] std::future<V &>
-    visit_async(const char *name, V &visitor);
+    visit_async(const char *name, V &visitor, bool in_reverse = false);
 
     template<typename T, typename V>
     [[nodiscard]] std::future<V &>
-    visit_async(const char *name, V &visitor) const;
+    visit_async(const char *name, V &visitor, bool in_reverse = false) const;
 
     // It passes the values of each index and the two named columns to the
     // functor visitor sequentially from beginning to end
@@ -2090,17 +2095,23 @@ public:  // Visitors
     //   Name of the first data column
     // name2:
     //   Name of the second data column
+    // visitor:
+    //   An instance of the visitor
+    // in_reverse:
+    //   If true, it will iterate over columns in reverse order
     //
     template<typename T1, typename T2, typename V>
     V &
-    visit(const char *name1, const char *name2, V &visitor);
+    visit(const char *name1, const char *name2, V &visitor,
+          bool in_reverse = false);
 
     template<typename T1, typename T2, typename V>
     V &
-    visit(const char *name1, const char *name2, V &visitor) const  {
+    visit(const char *name1, const char *name2, V &visitor,
+          bool in_reverse = false) const  {
 
         return (const_cast<DataFrame *>(this)->visit<T1, T2, V>
-                (name1, name2, visitor));
+                (name1, name2, visitor, in_reverse));
     }
 
     // These are identical to above visit() but could execute asynchronously.
@@ -2112,11 +2123,13 @@ public:  // Visitors
     //
     template<typename T1, typename T2, typename V>
     [[nodiscard]] std::future<V &>
-    visit_async(const char *name1, const char *name2, V &visitor);
+    visit_async(const char *name1, const char *name2, V &visitor,
+                bool in_reverse = false);
 
     template<typename T1, typename T2, typename V>
     [[nodiscard]] std::future<V &>
-    visit_async(const char *name1, const char *name2, V &visitor) const;
+    visit_async(const char *name1, const char *name2, V &visitor,
+                bool in_reverse = false) const;
 
     // It passes the values of each index and the three named columns to the
     // functor visitor sequentially from beginning to end
@@ -2137,20 +2150,26 @@ public:  // Visitors
     //   Name of the second data column
     // name3:
     //   Name of the third data column
+    // visitor:
+    //   An instance of the visitor
+    // in_reverse:
+    //   If true, it will iterate over columns in reverse order
     //
     template<typename T1, typename T2, typename T3, typename V>
     V &
-    visit(const char *name1, const char *name2, const char *name3, V &visitor);
+    visit(const char *name1, const char *name2, const char *name3, V &visitor,
+          bool in_reverse = false);
 
     template<typename T1, typename T2, typename T3, typename V>
     V &
     visit(const char *name1,
           const char *name2,
           const char *name3,
-          V &visitor) const  {
+          V &visitor,
+          bool in_reverse = false) const  {
 
         return (const_cast<DataFrame *>(this)->visit<T1, T2, T3, V>
-                (name1, name2, name3, visitor));
+                (name1, name2, name3, visitor, in_reverse));
     }
 
     // These are identical to above visit() but could execute asynchronously.
@@ -2165,14 +2184,16 @@ public:  // Visitors
     visit_async(const char *name1,
                 const char *name2,
                 const char *name3,
-                V &visitor);
+                V &visitor,
+                bool in_reverse = false);
 
     template<typename T1, typename T2, typename T3, typename V>
     [[nodiscard]] std::future<V &>
     visit_async(const char *name1,
                 const char *name2,
                 const char *name3,
-                V &visitor) const;
+                V &visitor,
+                bool in_reverse = false) const;
 
     // It passes the values of each index and the four named columns to the
     // functor visitor sequentially from beginning to end
@@ -2197,6 +2218,10 @@ public:  // Visitors
     //   Name of the third data column
     // name4:
     //   Name of the fourth data column
+    // visitor:
+    //   An instance of the visitor
+    // in_reverse:
+    //   If true, it will iterate over columns in reverse order
     //
     template<typename T1, typename T2, typename T3, typename T4, typename V>
     V &
@@ -2204,7 +2229,8 @@ public:  // Visitors
           const char *name2,
           const char *name3,
           const char *name4,
-          V &visitor);
+          V &visitor,
+          bool in_reverse = false);
 
     template<typename T1, typename T2, typename T3, typename T4, typename V>
     V &
@@ -2212,10 +2238,11 @@ public:  // Visitors
           const char *name2,
           const char *name3,
           const char *name4,
-          V &visitor) const  {
+          V &visitor,
+          bool in_reverse = false) const  {
 
         return (const_cast<DataFrame *>(this)->visit<T1, T2, T3, T4, V>
-                (name1, name2, name3, name4, visitor));
+                (name1, name2, name3, name4, visitor, in_reverse));
     }
 
     // These are identical to above visit() but could execute asynchronously.
@@ -2231,7 +2258,8 @@ public:  // Visitors
                 const char *name2,
                 const char *name3,
                 const char *name4,
-                V &visitor);
+                V &visitor,
+                bool in_reverse = false);
 
     template<typename T1, typename T2, typename T3, typename T4, typename V>
     [[nodiscard]] std::future<V &>
@@ -2239,7 +2267,8 @@ public:  // Visitors
                 const char *name2,
                 const char *name3,
                 const char *name4,
-                V &visitor) const;
+                V &visitor,
+                bool in_reverse = false) const;
 
     // It passes the values of each index and the five named columns to the
     // functor visitor sequentially from beginning to end
@@ -2268,6 +2297,10 @@ public:  // Visitors
     //   Name of the fourth data column
     // name5:
     //   Name of the fifth data column
+    // visitor:
+    //   An instance of the visitor
+    // in_reverse:
+    //   If true, it will iterate over columns in reverse order
     //
     template<typename T1, typename T2, typename T3, typename T4, typename T5,
              typename V>
@@ -2277,7 +2310,8 @@ public:  // Visitors
           const char *name3,
           const char *name4,
           const char *name5,
-          V &visitor);
+          V &visitor,
+          bool in_reverse = false);
 
     template<typename T1, typename T2, typename T3, typename T4, typename T5,
              typename V>
@@ -2287,10 +2321,11 @@ public:  // Visitors
           const char *name3,
           const char *name4,
           const char *name5,
-          V &visitor) const  {
+          V &visitor,
+          bool in_reverse = false) const  {
 
         return (const_cast<DataFrame *>(this)->visit<T1, T2, T3, T4, T5, V>
-                (name1, name2, name3, name4, name5, visitor));
+                (name1, name2, name3, name4, name5, visitor, in_reverse));
     }
 
     // These are identical to above visit() but could execute asynchronously.
@@ -2308,7 +2343,8 @@ public:  // Visitors
                 const char *name3,
                 const char *name4,
                 const char *name5,
-                V &visitor);
+                V &visitor,
+                bool in_reverse = false);
 
     template<typename T1, typename T2, typename T3, typename T4, typename T5,
              typename V>
@@ -2318,7 +2354,8 @@ public:  // Visitors
                 const char *name3,
                 const char *name4,
                 const char *name5,
-                V &visitor) const;
+                V &visitor,
+                bool in_reverse = false) const;
 
     // This is similar to visit(), but it passes a const reference to the index
     // vector and the named column vector at once the functor visitor.
@@ -2331,17 +2368,23 @@ public:  // Visitors
     //   Type of the visitor functor
     // name:
     //   Name of the data column
+    // visitor:
+    //   An instance of the visitor
+    // in_reverse:
+    //   If true, it will iterate over the column in reverse order
     //
     template<typename T, typename V>
     V &
-    single_act_visit(const char *name, V &visitor);
+    single_act_visit(const char *name, V &visitor, bool in_reverse = false);
 
     template<typename T, typename V>
     V &
-    single_act_visit(const char *name, V &visitor) const  {
+    single_act_visit(const char *name,
+                     V &visitor,
+                     bool in_reverse = false) const  {
 
         return (const_cast<DataFrame *>(this)->single_act_visit<T, V>
-                (name, visitor));
+                (name, visitor, in_reverse));
     }
 
     // These are identical to above single_act_visit() but could execute
@@ -2354,11 +2397,15 @@ public:  // Visitors
     //
     template<typename T1, typename V>
     [[nodiscard]] std::future<V &>
-    single_act_visit_async(const char *name, V &visitor);
+    single_act_visit_async(const char *name,
+                           V &visitor,
+                           bool in_reverse = false);
 
     template<typename T1, typename V>
     [[nodiscard]] std::future<V &>
-    single_act_visit_async(const char *name, V &visitor) const;
+    single_act_visit_async(const char *name,
+                           V &visitor,
+                           bool in_reverse = false) const;
 
     // This is similar to visit(), but it passes a const reference to the index
     // vector and the two named column vectors at once the functor visitor.
@@ -2376,17 +2423,27 @@ public:  // Visitors
     //   Name of the first data column
     // name2:
     //   Name of the second data column
+    // visitor:
+    //   An instance of the visitor
+    // in_reverse:
+    //   If true, it will iterate over columns in reverse order
     //
     template<typename T1, typename T2, typename V>
     V &
-    single_act_visit(const char *name1, const char *name2, V &visitor);
+    single_act_visit(const char *name1,
+                     const char *name2,
+                     V &visitor,
+                     bool in_reverse = false);
 
     template<typename T1, typename T2, typename V>
     V &
-    single_act_visit(const char *name1, const char *name2, V &visitor) const  {
+    single_act_visit(const char *name1,
+                     const char *name2,
+                     V &visitor,
+                     bool in_reverse = false) const  {
 
         return (const_cast<DataFrame *>(this)->single_act_visit<T1, T2, V>
-                (name1, name2, visitor));
+                (name1, name2, visitor, in_reverse));
     }
 
     // These are identical to above single_act_visit() but could execute
@@ -2399,13 +2456,17 @@ public:  // Visitors
     //
     template<typename T1, typename T2, typename V>
     [[nodiscard]] std::future<V &>
-    single_act_visit_async(const char *name1, const char *name2, V &visitor);
+    single_act_visit_async(const char *name1,
+                           const char *name2,
+                           V &visitor,
+                           bool in_reverse = false);
 
     template<typename T1, typename T2, typename V>
     [[nodiscard]] std::future<V &>
     single_act_visit_async(const char *name1,
                            const char *name2,
-                           V &visitor) const;
+                           V &visitor,
+                           bool in_reverse = false) const;
 
 public:  // Operators
 
@@ -2958,6 +3019,7 @@ private:  // Tuple stuff
 #  include <DataFrame/Internals/DataFrame_read.tcc>
 #  include <DataFrame/Internals/DataFrame_set.tcc>
 #  include <DataFrame/Internals/DataFrame_shift.tcc>
+#  include <DataFrame/Internals/DataFrame_visit.tcc>
 #  include <DataFrame/Internals/DataFrame_write.tcc>
 #endif // HMDF_DO_NOT_INCLUDE_TCC_FILES
 

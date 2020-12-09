@@ -104,6 +104,7 @@ set(${LIBRARY_TARGET_NAME}_HDR
   include/DataFrame/DataFrame.h
   include/DataFrame/Internals/DataFrame.tcc
   include/DataFrame/Internals/DataFrame_get.tcc
+  include/DataFrame/Internals/DataFrame_visit.tcc
   include/DataFrame/Internals/DataFrame_misc.tcc
   include/DataFrame/Internals/DataFrame_standalone.tcc
   include/DataFrame/Internals/DataFrame_opt.tcc

@@ -286,6 +286,7 @@ struct ExtremumVisitor {
 
     inline void operator() (const index_type &idx, const value_type &val)  {
 
+        counter_ += 1;
         if (is_nan__(val))  {
             if (skip_nan_)  return;
             else  {
@@ -297,15 +298,17 @@ struct ExtremumVisitor {
         if (cmp_(extremum_, val) || is_first) {
             extremum_ = val;
             index_ = idx;
+            pos_ = counter_;
             is_first = false;
         }
     }
     PASS_DATA_ONE_BY_ONE
 
-    inline void pre ()  { is_first = true; }
+    inline void pre ()  { is_first = true; pos_ = 0; counter_ = 0; }
     inline void post ()  {  }
     inline result_type get_result () const  { return (extremum_); }
     inline index_type get_index () const  { return (index_); }
+    inline size_type get_position () const  { return (pos_); }
 
     explicit ExtremumVisitor(bool skipnan = true) : skip_nan_(skipnan)  {   }
 
@@ -314,6 +317,8 @@ private:
     value_type      extremum_ { };
     index_type      index_ { };
     bool            is_first { true };
+    size_type       pos_ { 0 };
+    size_type       counter_ { 0 };
     compare_type    cmp_ {  };
     const bool      skip_nan_;
 };

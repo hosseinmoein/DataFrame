@@ -36,17 +36,21 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         <PRE><B>
 template&lt;typename T, typename V&gt;
 V &amp;
-visit(const char *name, V &amp;visitor); </font>
+visit(const char *name,
+      V &amp;visitor,
+      bool in_reverse = false); </font>
         </B></PRE>
       </td>
       <td>
         It passes the values of each index and the named column to the functor visitor sequentially from beginning to end<BR>
         <B>NOTE:</B> There is also a const version of this method.
       </td>
-      <td width = "33.3%">
+      <td>
         <B>T</B>: Type of the named column<BR>
         <B>V</B>: Type of the visitor functor<BR>
-        <B>name</B>: Name of the data column
+        <B>name</B>: Name of the data column<BR>
+        <B>visitor</B>: An instance of the visitor<BR>
+        <B>in_reverse</B>: If true, it will iterate over the column in reverse order
       </td>
     </tr>
 
@@ -55,7 +59,9 @@ visit(const char *name, V &amp;visitor); </font>
         <PRE><B>
 template&lt;typename T, typename V&gt;
 std::future&lt;V &amp;&gt;
-visit_async(const char *name, V &amp;visitor); </font>
+visit_async(const char *name,
+            V &amp;visitor,
+            bool in_reverse = false); </font>
         </B></PRE>
       </td>
       <td>
@@ -64,7 +70,7 @@ visit_async(const char *name, V &amp;visitor); </font>
         <B>NOTE:</B> It should be safe to run multiple read-only visits on the same column or different columns at the same time<BR>
         <B>NOTE:</B> There is also a const version of this method.
       </td>
-      <td width = "33.3%">
+      <td>
       </td>
     </tr>
 
@@ -73,7 +79,10 @@ visit_async(const char *name, V &amp;visitor); </font>
         <PRE><B>
 template&lt;typename T1, typename T2, typename V&gt;
 V &amp;
-visit(const char *name1, const char *name2, V &amp;visitor); </font>
+visit(const char *name1,
+      const char *name2,
+      V &amp;visitor,
+      bool in_reverse = false); </font>
         </B></PRE>
       </td>
       <td>
@@ -85,7 +94,9 @@ visit(const char *name1, const char *name2, V &amp;visitor); </font>
         <B>T2</B>: Type of the second named column<BR>
         <B>V</B>: Type of the visitor functor<BR>
         <B>name1</B>: Name of the first data column<BR>
-        <B>name2</B>: Name of the second data column
+        <B>name2</B>: Name of the second data column<BR>
+        <B>visitor</B>: An instance of the visitor<BR>
+        <B>in_reverse</B>: If true, it will iterate over the columns in reverse order
       </td>
     </tr>
 
@@ -94,7 +105,10 @@ visit(const char *name1, const char *name2, V &amp;visitor); </font>
         <PRE><B>
 template&lt;typename T1, typename T2, typename V&gt;
 std::future&lt;V &amp;&gt;
-visit_async(const char *name1, const char *name2, V &amp;visitor); </font>
+visit_async(const char *name1,
+            const char *name2,
+            V &amp;visitor,
+            bool in_reverse = false); </font>
         </B></PRE>
       </td>
       <td>
@@ -112,8 +126,11 @@ visit_async(const char *name1, const char *name2, V &amp;visitor); </font>
         <PRE><B>
 template&lt;typename T1, typename T2, typename T3, typename V&gt;
 V &amp;
-visit(const char *name1, const char *name2,
-      const char *name3, V &amp;visitor); </font>
+visit(const char *name1,
+      const char *name2,
+      const char *name3,
+      V &amp;visitor,
+      bool in_reverse = false); </font>
         </B></PRE>
       </td>
       <td>
@@ -127,7 +144,9 @@ visit(const char *name1, const char *name2,
         <B>V</B>: Type of the visitor functor<BR>
         <B>name1</B>: Name of the first data column<BR>
         <B>name2</B>: Name of the second data column<BR>
-        <B>name3</B>: Name of the third data column
+        <B>name3</B>: Name of the third data column<BR>
+        <B>visitor</B>: An instance of the visitor<BR>
+        <B>in_reverse</B>: If true, it will iterate over the columns in reverse order
       </td>
     </tr>
 
@@ -136,8 +155,11 @@ visit(const char *name1, const char *name2,
         <PRE><B>
 template&lt;typename T1, typename T2, typename T3, typename V&gt;
 std::future&lt;V &amp;&gt;
-visit_async(const char *name1, const char *name2,
-            const char *name3, V &amp;visitor); </font>
+visit_async(const char *name1,
+            const char *name2,
+            const char *name3,
+            V &amp;visitor,
+            bool in_reverse = false); </font>
         </B></PRE>
       </td>
       <td>
@@ -156,9 +178,12 @@ visit_async(const char *name1, const char *name2,
 template&lt;typename T1, typename T2, typename T3, typename T4,
          typename V&gt;
 V &amp;
-visit(const char *name1, const char *name2,
-      const char *name3, const char *name4,
-      V &amp;visitor); </font>
+visit(const char *name1,
+      const char *name2,
+      const char *name3,
+      const char *name4,
+      V &amp;visitor,
+      bool in_reverse = false); </font>
         </B></PRE>
       </td>
       <td>
@@ -174,7 +199,9 @@ visit(const char *name1, const char *name2,
         <B>name1</B>: Name of the first data column<BR>
         <B>name2</B>: Name of the second data column<BR>
         <B>name3</B>: Name of the third data column<BR>
-        <B>name4</B>: Name of the fourth data column
+        <B>name4</B>: Name of the fourth data column<BR>
+        <B>visitor</B>: An instance of the visitor<BR>
+        <B>in_reverse</B>: If true, it will iterate over the columns in reverse order
       </td>
     </tr>
 
@@ -184,9 +211,12 @@ visit(const char *name1, const char *name2,
 template&lt;typename T1, typename T2, typename T3, typename T4,
          typename V&gt;
 std::future&lt;V &amp;&gt;
-visit_async(const char *name1, const char *name2,
-            const char *name3, const char *name4,
-            V &amp;visitor); </font>
+visit_async(const char *name1,
+            const char *name2,
+            const char *name3,
+            const char *name4,
+            V &amp;visitor,
+            bool in_reverse = false); </font>
         </B></PRE>
       </td>
       <td>
@@ -205,9 +235,13 @@ visit_async(const char *name1, const char *name2,
 template&lt;typename T1, typename T2, typename T3, typename T4,
          typename T5, typename V&gt;
 V &amp;
-visit(const char *name1, const char *name2,
-      const char *name3, const char *name4,
-      const char *name5, V &amp;visitor); </font>
+visit(const char *name1,
+      const char *name2,
+      const char *name3,
+      const char *name4,
+      const char *name5,
+      V &amp;visitor,
+      bool in_reverse = false); </font>
         </B></PRE>
       </td>
       <td>
@@ -225,7 +259,9 @@ visit(const char *name1, const char *name2,
         <B>name2</B>: Name of the second data column<BR>
         <B>name3</B>: Name of the third data column<BR>
         <B>name4</B>: Name of the fourth data column<BR>
-        <B>name5</B>: Name of the fifth data column
+        <B>name5</B>: Name of the fifth data column<BR>
+        <B>visitor</B>: An instance of the visitor<BR>
+        <B>in_reverse</B>: If true, it will iterate over the columns in reverse order
       </td>
     </tr>
 
@@ -235,9 +271,13 @@ visit(const char *name1, const char *name2,
 template&lt;typename T1, typename T2, typename T3, typename T4,
          typename T5, typename V&gt;
 std::future&lt;V &amp;&gt;
-visit_async(const char *name1, const char *name2,
-            const char *name3, const char *name4,
-            const char *name5, V &amp;visitor); </font>
+visit_async(const char *name1,
+            const char *name2,
+            const char *name3,
+            const char *name4,
+            const char *name5,
+            V &amp;visitor,
+            bool in_reverse = false); </font>
         </B></PRE>
       </td>
       <td>

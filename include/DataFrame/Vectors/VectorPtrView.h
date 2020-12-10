@@ -90,7 +90,7 @@ public:
 
     inline reference front () noexcept  { return (*(vector_.front ())); }
     inline const_reference
-    front() const noexcept { return(*(vector_.front())); }
+    front() const noexcept { return (*(vector_.front())); }
     inline reference back () noexcept { return (*(vector_.back ())); }
     inline const_reference
     back () const noexcept { return (*(vector_.back ())); }

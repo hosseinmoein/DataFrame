@@ -36,17 +36,21 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         <PRE><B>
 template&lt;typename T, typename V&gt;
 V &amp;
-single_act_visit(const char *name, V &amp;visitor); </font>
+single_act_visit(const char *name,
+                 V &amp;visitor,
+                 bool in_reverse = false); </font>
         </B></PRE>
       </td>
-      <td width = "40%">
+      <td>
         This is similar to visit(), but it passes a const reference to the index vector and the named column vector at once the functor visitor. This is convenient for calculations that need the whole data vector, for example auto-correlation.<BR>
         <B>NOTE:</B> There is also a const version of this method.
       </td>
       <td>
         <B>T</B>: Type of the named column<BR>
         <B>V</B>: Type of the visitor functor<BR>
-        <B>name</B>: Name of the data column
+        <B>name</B>: Name of the data column<BR>
+        <B>visitor</B>: An instance of the visitor<BR>
+        <B>in_reverse</B>: If true, it will iterate over the column in reverse order
       </td>
     </tr>
 
@@ -55,10 +59,12 @@ single_act_visit(const char *name, V &amp;visitor); </font>
         <PRE><B>
 template&lt;typename T, typename V&gt;
 std::future&lt;V &amp;&gt;
-single_act_visit_async(const char *name, V &amp;visitor); </font>
+single_act_visit_async(const char *name,
+                       V &amp;visitor,
+                       bool in_reverse = false); </font>
         </B></PRE>
       </td>
-      <td width = "40%">
+      <td>
         These are identical to above single_act_visit() but could execute asynchronously.<BR>
         <B>NOTE:</B> It should be safe to run multiple single_act_visit on different columns at the same time (as long as the index column is not being modified).<BR>
         <B>NOTE:</B> It should be safe to run multiple read-only single_act_visit on the same column or different columns at the same time<BR>
@@ -73,10 +79,13 @@ single_act_visit_async(const char *name, V &amp;visitor); </font>
         <PRE><B>
 template&lt;typename T1, typename T2, typename V&gt;
 V &amp;
-single_act_visit(const char *name1, const char *name2, V &amp;visitor); </font>
+single_act_visit(const char *name1,
+                 const char *name2,
+                 V &amp;visitor,
+                 bool in_reverse = false); </font>
         </B></PRE>
       </td>
-      <td width = "40%">
+      <td>
         This is similar to visit(), but it passes a const reference to the index vector and the two named column vectors at once the functor visitor. This is convenient for calculations that need the whole data vector.<BR>
         <B>NOTE:</B> There is also a const version of this method.
       </td>
@@ -85,7 +94,9 @@ single_act_visit(const char *name1, const char *name2, V &amp;visitor); </font>
         <B>T2</B>: Type of the second named column<BR>
         <B>V</B>: Type of the visitor functor<BR>
         <B>name1</B>: Name of the first data column<BR>
-        <B>name2</B>: Name of the second data column
+        <B>name2</B>: Name of the second data column<BR>
+        <B>visitor</B>: An instance of the visitor<BR>
+        <B>in_reverse</B>: If true, it will iterate over the columns in reverse order
       </td>
     </tr>
 
@@ -94,10 +105,13 @@ single_act_visit(const char *name1, const char *name2, V &amp;visitor); </font>
         <PRE><B>
 template&lt;typename T1, typename T2, typename V&gt;
 std::future&lt;V &amp;&gt;
-single_act_visit_async(const char *name1, const char *name2, V &amp;visitor); </font>
+single_act_visit_async(const char *name1,
+                       const char *name2,
+                       V &amp;visitor,
+                       bool in_reverse = false); </font>
         </B></PRE>
       </td>
-      <td width = "40%">
+      <td>
         These are identical to above single_act_visit() but could execute asynchronously.<BR>
         <B>NOTE:</B> It should be safe to run multiple single_act_visit on different columns at the same time (as long as the index column is not being modified).<BR>
         <B>NOTE:</B> It should be safe to run multiple read-only single_act_visit on the same column or different columns at the same time<BR>

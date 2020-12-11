@@ -35,15 +35,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>#include &lt;DataFrame/DataFrameStatsVisitors.h&gt;
 
-template&lt;typename T,
-         typename I = unsigned long,
-         typename =
-             typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;
+template&lt;typename T, typename I = unsigned long&gt;
 struct MeanVisitor;
         </B></PRE></font>
       </td>
       <td>
-        This functor class calculates the mean of a given column. The constructor takes a single optional Boolean argument to whether skip NaN values. The default is True. <BR>
+        This functor class calculates the mean of a given column.<BR>
+        The constructor takes a single optional Boolean argument to whether skip NaN values. The default is True. <BR>
       </td>
       <td width="12%">
         <B>T</B>: Column data type<BR>
@@ -55,17 +53,14 @@ struct MeanVisitor;
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>#include &lt;DataFrame/DataFrameStatsVisitors.h&gt;
 
-template&lt;typename T,
-         typename I = unsigned long,
-         typename =
-             typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;
+template&lt;typename T, typename I = unsigned long&gt;
 struct WeightedMeanVisitor;
         </B></PRE></font>
       </td>
       <td>
         This functor class calculates weighted mean of a given column. It favors more recent data.<BR>
         The numerator is <I>V<sub>0</sub> * 1 + V<sub>1</sub> * 2 + ... + V<sub>n-1</sub> * n</I>. The denominator is <I>(n * (n + 1)) / 2</I>.<BR>
-		The constructor takes a single optional Boolean argument to whether skip NaN values. The default is True. <BR>
+        The constructor takes a single optional Boolean argument to whether skip NaN values. The default is True. <BR>
       </td>
       <td width="12%">
         <B>T</B>: Column data type<BR>
@@ -77,15 +72,13 @@ struct WeightedMeanVisitor;
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>#include &lt;DataFrame/DataFrameStatsVisitors.h&gt;
 
-template&lt;typename T,
-         typename I = unsigned long,
-         typename =
-             typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;
+template&lt;typename T, typename I = unsigned long&gt;
 struct GeometricMeanVisitor;
         </B></PRE></font>
       </td>
       <td>
-        This functor class calculates the geometric mean of a given column. The constructor takes a single optional Boolean argument to whether skip NaN values. The default is True.<BR>
+        This functor class calculates the geometric mean of a given column.<BR>
+        The constructor takes a single optional Boolean argument to whether skip NaN values. The default is True.<BR>
       </td>
       <td width="12%">
         <B>T</B>: Column data type.<BR>
@@ -97,19 +90,36 @@ struct GeometricMeanVisitor;
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>#include &lt;DataFrame/DataFrameStatsVisitors.h&gt;
 
-template&lt;typename T,
-         typename I = unsigned long,
-         typename =
-             typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;
+template&lt;typename T, typename I = unsigned long&gt;
 struct HarmonicMeanVisitor;
         </B></PRE></font>
       </td>
       <td>
-        This functor class calculates the harmonic mean of a given column. The constructor takes a single optional Boolean argument to whether skip NaN values. The default is True.<BR>
+        This functor class calculates the harmonic mean of a given column.<BR>
+        The constructor takes a single optional Boolean argument to whether skip NaN values. The default is True.<BR>
       </td>
       <td width="12%">
         <B>T</B>: Column data type.<BR>
         <B>I</B>: Index type.
+      </td>
+    </tr>
+
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        <PRE><B>#include &lt;DataFrame/DataFrameStatsVisitors.h&gt;
+
+template&lt;typename T, typename I = unsigned long&gt;
+struct QuadraticMeanVisitor;
+        </B></PRE></font>
+      </td>
+      <td>
+        This functor class calculates weighted mean of a given column. It favors more recent data.<BR>
+        The mean is calculated as &radic;<span style="text-decoration:overline;">(X0<sup>2</sup> + X1<sup>2</sup> + ... + Xn-1<sup>2</sup>) / n</span><BR>
+        The constructor takes a single optional Boolean argument to whether skip NaN values. The default is True. <BR>
+      </td>
+      <td width="12%">
+        <B>T</B>: Column data type<BR>
+        <B>I</B>: Index type
       </td>
     </tr>
 

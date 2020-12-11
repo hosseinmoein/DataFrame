@@ -81,6 +81,10 @@ namespace hmdf
             (*this)(*idx_begin, *column_begin1++, *column_begin2++); \
     }
 
+#define DECL_CTOR(name) \
+    explicit \
+    name(bool skipnan = true) : skip_nan_(skipnan)  {   }
+
 #define SKIP_NAN if (skip_nan_ && is_nan__(val))  { return; }
 
 #define GET_COL_SIZE \
@@ -110,7 +114,7 @@ struct MeanVisitor {
     inline value_type get_sum () const  { return (sum_); }
     inline result_type get_result () const  { return (mean_); }
 
-    explicit MeanVisitor(bool skipnan = true) : skip_nan_(skipnan)  {   }
+    DECL_CTOR(MeanVisitor)
 
 private:
 
@@ -142,7 +146,7 @@ struct WeightedMeanVisitor {
     inline value_type get_sum() const  { return (sum_); }
     inline result_type get_result() const  { return (mean_); }
 
-    explicit WeightedMeanVisitor(bool skipnan = true) : skip_nan_(skipnan) {  }
+    DECL_CTOR(WeightedMeanVisitor)
 
 private:
 
@@ -174,8 +178,7 @@ struct GeometricMeanVisitor {
     inline value_type get_sum () const  { return (sum_); }
     inline result_type get_result () const  { return (mean_); }
 
-    explicit
-    GeometricMeanVisitor(bool skipnan = true) : skip_nan_(skipnan)  {   }
+    DECL_CTOR(GeometricMeanVisitor)
 
 private:
 
@@ -187,10 +190,7 @@ private:
 
 // ----------------------------------------------------------------------------
 
-template<typename T,
-         typename I = unsigned long,
-         typename =
-             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+template<typename T, typename I = unsigned long>
 struct HarmonicMeanVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_2
@@ -210,8 +210,39 @@ struct HarmonicMeanVisitor {
     inline value_type get_sum () const  { return (sum_); }
     inline result_type get_result () const  { return (mean_); }
 
-    explicit
-    HarmonicMeanVisitor(bool skipnan = true) : skip_nan_(skipnan)  {   }
+    DECL_CTOR(HarmonicMeanVisitor)
+
+private:
+
+    value_type  sum_ { 0 };
+    value_type  mean_ { 0 };
+    size_type   cnt_ { 0 };
+    const bool  skip_nan_;
+};
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename I = unsigned long>
+struct QuadraticMeanVisitor {
+
+    DEFINE_VISIT_BASIC_TYPES_2
+
+    inline void operator() (const index_type &, const value_type &val)  {
+
+        SKIP_NAN
+
+        cnt_ += 1;
+        sum_ += val * val;
+    }
+    PASS_DATA_ONE_BY_ONE
+
+    inline void pre()  { sum_ = mean_ = 0; cnt_ = 0; }
+    inline void post() { mean_ = std::sqrt(sum_ / value_type(cnt_)); }
+    inline size_type get_count() const  { return (cnt_); }
+    inline value_type get_sum() const  { return (sum_); }
+    inline result_type get_result() const  { return (mean_); }
+
+    DECL_CTOR(QuadraticMeanVisitor)
 
 private:
 
@@ -240,7 +271,7 @@ struct SumVisitor {
     inline void post ()  {  }
     inline result_type get_result () const  { return (sum_); }
 
-    explicit SumVisitor(bool skipnan = true) : skip_nan_(skipnan)  {   }
+    DECL_CTOR(SumVisitor)
 
 private:
 
@@ -267,7 +298,7 @@ struct ProdVisitor {
     inline void post ()  {  }
     inline result_type get_result () const  { return (prod_); }
 
-    explicit ProdVisitor(bool skipnan = true) : skip_nan_(skipnan)  {   }
+    DECL_CTOR(ProdVisitor)
 
 private:
 
@@ -310,7 +341,7 @@ struct ExtremumVisitor {
     inline index_type get_index () const  { return (index_); }
     inline size_type get_position () const  { return (pos_); }
 
-    explicit ExtremumVisitor(bool skipnan = true) : skip_nan_(skipnan)  {   }
+    DECL_CTOR(ExtremumVisitor)
 
 private:
 
@@ -394,7 +425,7 @@ struct  NExtremumVisitor {
                   });
     }
 
-    explicit NExtremumVisitor(bool skipnan = true) : skip_nan_(skipnan)  {   }
+    DECL_CTOR(NExtremumVisitor)
 
 private:
 
@@ -1166,7 +1197,7 @@ struct StatsVisitor  {
             (value_type(n_) * m4_ / (m2_ * m2_) - 3.0);
     }
 
-    explicit StatsVisitor(bool skipnan = true) : skip_nan_(skipnan)  {   }
+    DECL_CTOR(StatsVisitor)
 
 private:
 
@@ -1430,7 +1461,7 @@ struct CumSumVisitor {
     inline void post ()  {  }
     inline const result_type &get_result () const  { return (sum_); }
 
-    explicit CumSumVisitor(bool skipnan = true) : skip_nan_(skipnan)  {   }
+    DECL_CTOR(CumSumVisitor)
 
 private:
 
@@ -1476,7 +1507,7 @@ struct CumProdVisitor {
     inline const result_type &get_result () const  { return (prod_); }
     inline result_type &get_result ()  { return (prod_); }
 
-    explicit CumProdVisitor(bool skipnan = true) : skip_nan_(skipnan)  {   }
+    DECL_CTOR(CumProdVisitor)
 
 private:
 
@@ -1525,7 +1556,7 @@ struct CumExtremumVisitor {
     inline const result_type &get_result () const  { return (extremum_); }
     inline result_type &get_result ()  { return (extremum_); }
 
-    explicit CumExtremumVisitor(bool skipnan = true) : skip_nan_(skipnan)  {  }
+    DECL_CTOR(CumExtremumVisitor)
 
 private:
 
@@ -2477,7 +2508,7 @@ struct ZScoreVisitor {
     inline const result_type &get_result () const  { return (zscore_); }
     inline result_type &get_result ()  { return (zscore_); }
 
-    explicit ZScoreVisitor(bool skipnan = true) : skip_nan_(skipnan)  {   }
+    DECL_CTOR(ZScoreVisitor)
 
 private:
 
@@ -2540,8 +2571,7 @@ struct SampleZScoreVisitor {
     inline void post ()  {  }
     inline result_type get_result () const  { return (zscore_); }
 
-    explicit
-    SampleZScoreVisitor(bool skipnan = true) : skip_nan_(skipnan)  {   }
+    DECL_CTOR(SampleZScoreVisitor)
 
 private:
 

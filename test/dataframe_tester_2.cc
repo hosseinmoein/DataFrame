@@ -2117,6 +2117,45 @@ static void test_MassIndexVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_HullRollingMeanVisitor()  {
+
+    std::cout << "\nTesting HullRollingMeanVisitor{ } ..." << std::endl;
+
+    std::vector<unsigned long>  ulgvec2 =
+        { 123450, 123451, 123452, 123450, 123455, 123450, 123449,
+          123450, 123451, 123450, 123452, 123450, 123455, 123450,
+          123454, 123450, 123450, 123457, 123458, 123459, 123450,
+          123441, 123442, 123432, 123450, 123450, 123435, 123450,
+          123441, 123442, 123432, 123450, 123450, 123435, 123450,
+          123441, 123442, 123432, 123450, 123450, 123435, 123450 };
+    std::vector<double>         dbl_vec =
+        { 1, 2, 3, 4, 5, 3, 7, 3, 9, 10, 3, 2, 3, 14,
+          2, 2, 2, 3, 2, 3, 3, 3, 3, 3, 36, 2, 45, 2,
+          2, 3, 5, 6, 7, 7, 8, 1, 10, 11, 9, 8, 7, 6 };
+    MyDataFrame                 df;
+
+    df.load_data(std::move(ulgvec2), std::make_pair("col_1", dbl_vec));
+
+    HullRollingMeanVisitor<double>  hull_roller(6);
+    const auto                      &result =
+        df.single_act_visit<double>("col_1", hull_roller).get_result();
+
+    assert(result.size() == 42);
+    assert(std::isnan(result[0]));
+    assert(std::isnan(result[1]));
+    assert(std::isnan(result[4]));
+    assert(abs(result[5] - 4.19048) < 0.00001);
+    assert(abs(result[6] - 5.42857) < 0.00001);
+    assert(abs(result[10] - 7.61905) < 0.00001);
+    assert(abs(result[20] - 2.95238) < 0.00001);
+    assert(abs(result[41] - 6.8254) < 0.0001);
+    assert(abs(result[40] - 7.84127) < 0.00001);
+    assert(abs(result[39] - 9.93651) < 0.00001);
+    assert(abs(result[38] - 10.9365) < 0.00001);
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int argc, char *argv[]) {
 
     test_get_reindexed();
@@ -2154,6 +2193,7 @@ int main(int argc, char *argv[]) {
     // test_IBM_data();
     test_TTestVisitor();
     test_MassIndexVisitor();
+    test_HullRollingMeanVisitor();
 
     return (0);
 }

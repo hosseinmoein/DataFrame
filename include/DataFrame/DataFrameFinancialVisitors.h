@@ -1296,6 +1296,66 @@ private:
     const size_type fast_;
 };
 
+// ----------------------------------------------------------------------------
+
+template<typename T, typename I = unsigned long>
+struct  HullRollingMeanVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &column_begin,
+                const H &column_end)  {
+
+        if (roll_count_ == 0)  return;
+
+        using wma_t = SimpleRollAdopter<WeightedMeanVisitor<T, I>, T, I>;
+
+        GET_COL_SIZE
+
+        wma_t   wma_half (WeightedMeanVisitor<T, I>(), roll_count_ / 2);
+
+        wma_half.pre();
+        wma_half (idx_begin, idx_end, column_begin, column_end);
+        wma_half.post();
+
+        wma_t   wma_full (WeightedMeanVisitor<T, I>(), roll_count_);
+
+        wma_full.pre();
+        wma_full (idx_begin, idx_end, column_begin, column_end);
+        wma_full.post();
+
+        result_ = std::move(wma_half.get_result());
+        for (size_type i = 0; i < col_s - 1 && i < col_s; ++i)
+            result_[i] = value_type(2) * result_[i] - wma_full.get_result()[i];
+
+        wma_t   wma_sqrt (WeightedMeanVisitor<T, I>(),
+                          size_type(std::sqrt(roll_count_)));
+
+        wma_sqrt.pre();
+        wma_sqrt (idx_begin, idx_end, result_.begin(), result_.end());
+        wma_sqrt.post();
+
+        result_ = std::move(wma_sqrt.get_result());
+    }
+
+    inline void pre ()  { result_.clear(); }
+    inline void post ()  {  }
+    inline const result_type &get_result () const  { return (result_); }
+    inline result_type &get_result ()  { return (result_); }
+
+    explicit
+    HullRollingMeanVisitor(size_type r_count = 10) : roll_count_(r_count) {   }
+
+private:
+
+    const size_t    roll_count_;
+    result_type     result_ { };
+};
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

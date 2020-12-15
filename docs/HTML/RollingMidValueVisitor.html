@@ -1,0 +1,102 @@
+<!--
+Copyright (c) 2019-2022, Hossein Moein
+All rights reserved.
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+* Redistributions of source code must retain the above copyright
+  notice, this list of conditions and the following disclaimer.
+* Redistributions in binary form must reproduce the above copyright
+  notice, this list of conditions and the following disclaimer in the
+  documentation and/or other materials provided with the distribution.
+* Neither the name of Hossein Moein and/or the DataFrame nor the
+  names of its contributors may be used to endorse or promote products
+  derived from this software without specific prior written permission.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL Hossein Moein BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+<!DOCTYPE html>
+<html>
+<body>
+  <table align="center" border="1">
+
+    <tr bgcolor="lightblue">
+      <th>Signature</th> <th>Description</th> <th>Parameters</th>
+    </tr>
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        <PRE><B>#include &lt;DataFrame/DataFrameFinancialVisitors.h&gt;
+
+template&lt;typename T, typename I = unsigned long&gt;
+struct RollingMidValueVisitor;
+        </B></PRE></font>
+      </td>
+      <td>
+        This visitor calculates the rolling averages of the lowest values of the first time-series and highest values of the second time-series rolling window. For example the first time-series could be low or bid prices of stocks and the second time-series could be high or ask prices of stocks<BR>
+        The result is a vector of values with same number of items as the given column. The first roll_count items, in the result, will be NAN.<BR>
+        <PRE>
+    explicit RollingMidValueVisitor(size_t roll_count)
+        </PRE>
+      </td>
+      <td width="12%">
+        <B>T</B>: Column data type<BR>
+        <B>I</B>: Index type
+      </td>
+    </tr>
+
+  </table>
+
+<pre style='color:#000000;background:#ffffff;'><span style='color:#800000; font-weight:bold; '>static</span> <span style='color:#800000; font-weight:bold; '>void</span> test_RollingMidValueVisitor<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span>  <span style='color:#800080; '>{</span>
+
+    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>cout</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#800000; '>"</span><span style='color:#0f69ff; '>\n</span><span style='color:#0000e6; '>Testing RollingMidValueVisitor{  } ...</span><span style='color:#800000; '>"</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>endl</span><span style='color:#800080; '>;</span>
+
+    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>vector</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>unsigned</span> <span style='color:#800000; font-weight:bold; '>long</span><span style='color:#800080; '>></span>  idx <span style='color:#808030; '>=</span>
+        <span style='color:#800080; '>{</span> <span style='color:#008c00; '>123450</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123451</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123452</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123453</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123454</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123455</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123456</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123457</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123458</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123459</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123460</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123461</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123462</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123466</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123467</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123468</span><span style='color:#808030; '>,</span>
+          <span style='color:#008c00; '>123469</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123470</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123471</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123472</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123473</span><span style='color:#808030; '>,</span>
+        <span style='color:#800080; '>}</span><span style='color:#800080; '>;</span>
+    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>vector</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span>         high <span style='color:#808030; '>=</span> <span style='color:#800080; '>{</span>
+        <span style='color:#008c00; '>121</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>122</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>124</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>124.5</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>135.5</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>132</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>128</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>127</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>126</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>125</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>126.5</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>127</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>120</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>117</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>116</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>116.5</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>114</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>112</span><span style='color:#808030; '>,</span>
+        <span style='color:#008c00; '>109</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>109.5</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>111</span><span style='color:#808030; '>,</span>
+    <span style='color:#800080; '>}</span><span style='color:#800080; '>;</span>
+    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>vector</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span>         low <span style='color:#808030; '>=</span> <span style='color:#800080; '>{</span>
+        <span style='color:#008c00; '>118</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>121</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>121.5</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>122</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>129</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>127</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>126</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>124</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>125</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>123</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>124</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>125</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>116</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>114</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>112</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>115</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>111</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>110</span><span style='color:#808030; '>,</span>
+        <span style='color:#008c00; '>105</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>106</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>107</span><span style='color:#808030; '>,</span>
+    <span style='color:#800080; '>}</span><span style='color:#800080; '>;</span>
+    MyDataFrame                 df<span style='color:#800080; '>;</span>
+
+    df<span style='color:#808030; '>.</span>load_data<span style='color:#808030; '>(</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>move</span><span style='color:#808030; '>(</span>idx<span style='color:#808030; '>)</span><span style='color:#808030; '>,</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span>make_pair<span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>high</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> high<span style='color:#808030; '>)</span><span style='color:#808030; '>,</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span>make_pair<span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>low</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> low<span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+
+    RollingMidValueVisitor<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span>  rmv_v <span style='color:#808030; '>(</span><span style='color:#008c00; '>5</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+
+    df<span style='color:#808030; '>.</span>single_act_visit<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#808030; '>,</span> <span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>low</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>high</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> rmv_v<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    assert<span style='color:#808030; '>(</span>rmv_v<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>.</span>size<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>=</span><span style='color:#808030; '>=</span> <span style='color:#008c00; '>21</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    assert<span style='color:#808030; '>(</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span>isnan<span style='color:#808030; '>(</span>rmv_v<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span><span style='color:#008c00; '>0</span><span style='color:#808030; '>]</span><span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    assert<span style='color:#808030; '>(</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span>isnan<span style='color:#808030; '>(</span>rmv_v<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span><span style='color:#008c00; '>1</span><span style='color:#808030; '>]</span><span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    assert<span style='color:#808030; '>(</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span>isnan<span style='color:#808030; '>(</span>rmv_v<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span><span style='color:#008c00; '>3</span><span style='color:#808030; '>]</span><span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    assert<span style='color:#808030; '>(</span>rmv_v<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span><span style='color:#008c00; '>4</span><span style='color:#808030; '>]</span> <span style='color:#808030; '>=</span><span style='color:#808030; '>=</span> <span style='color:#008000; '>126.75</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    assert<span style='color:#808030; '>(</span>rmv_v<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span><span style='color:#008c00; '>5</span><span style='color:#808030; '>]</span> <span style='color:#808030; '>=</span><span style='color:#808030; '>=</span> <span style='color:#008000; '>128.25</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    assert<span style='color:#808030; '>(</span>rmv_v<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span><span style='color:#008c00; '>10</span><span style='color:#808030; '>]</span> <span style='color:#808030; '>=</span><span style='color:#808030; '>=</span> <span style='color:#008000; '>125.5</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    assert<span style='color:#808030; '>(</span>rmv_v<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span><span style='color:#008c00; '>11</span><span style='color:#808030; '>]</span> <span style='color:#808030; '>=</span><span style='color:#808030; '>=</span> <span style='color:#008c00; '>125</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    assert<span style='color:#808030; '>(</span>rmv_v<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span><span style='color:#008c00; '>20</span><span style='color:#808030; '>]</span> <span style='color:#808030; '>=</span><span style='color:#808030; '>=</span> <span style='color:#008000; '>109.5</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    assert<span style='color:#808030; '>(</span>rmv_v<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span><span style='color:#008c00; '>19</span><span style='color:#808030; '>]</span> <span style='color:#808030; '>=</span><span style='color:#808030; '>=</span> <span style='color:#008000; '>110.75</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+<span style='color:#800080; '>}</span>
+</pre>
+<!--Created using ToHtml.com on 2020-12-15 18:45:27 UTC -->
+
+</body>
+</html>
+
+<!--
+Local Variables:
+mode:HTML
+tab-width:4
+c-basic-offset:4
+End:
+-->

@@ -1356,6 +1356,69 @@ private:
     result_type     result_ { };
 };
 
+// ----------------------------------------------------------------------------
+
+template<typename T, typename I = unsigned long>
+struct  RollingMidValueVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &low_begin,
+                const H &low_end,
+                const H &high_begin,
+                const H &high_end)  {
+
+        if (roll_count_ == 0)  return;
+
+        const size_type col_s = std::distance(high_begin, high_end);
+
+        assert((col_s == std::distance(low_begin, low_end)));
+
+        result_.reserve(col_s);
+        for (size_type i = 0; i < roll_count_ - 1 && i < col_s; ++i)
+            result_.push_back(std::numeric_limits<value_type>::quiet_NaN());
+
+        value_type  min_v = *low_begin;
+        value_type  max_v = *high_begin;
+
+        for (size_type i = 0; i < col_s; ++i)  {
+            const size_type limit = i + roll_count_;
+
+            if (limit <= col_s)  {
+                for (size_type j = i; j < limit; ++j)  {
+                    if (*(low_begin + j) < min_v)
+                        min_v = *(low_begin + j);
+                    if (*(high_begin + j) > max_v)
+                        max_v = *(high_begin + j);
+                }
+                result_.push_back((min_v + max_v) * value_type(0.5));
+                if (limit < col_s)  {
+                    min_v = *(low_begin + limit);
+                    max_v = *(high_begin + limit);
+                }
+            }
+            else  break;
+        }
+    }
+
+    inline void pre ()  { result_.clear(); }
+    inline void post ()  {  }
+    inline const result_type &get_result () const  { return (result_); }
+    inline result_type &get_result ()  { return (result_); }
+
+    explicit
+    RollingMidValueVisitor(size_type r_count) : roll_count_(r_count) {   }
+
+private:
+
+    const size_t    roll_count_;
+    result_type     result_ { };
+};
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

@@ -2156,6 +2156,48 @@ static void test_HullRollingMeanVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_RollingMidValueVisitor()  {
+
+    std::cout << "\nTesting RollingMidValueVisitor{  } ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456, 123457,
+          123458, 123459, 123460, 123461, 123462, 123466, 123467, 123468,
+          123469, 123470, 123471, 123472, 123473,
+        };
+    std::vector<double>         high = {
+        121, 122, 124, 124.5, 135.5, 132, 128, 127, 126,
+        125, 126.5, 127, 120, 117, 116, 116.5, 114, 112,
+        109, 109.5, 111,
+    };
+    std::vector<double>         low = {
+        118, 121, 121.5, 122, 129, 127, 126, 124, 125,
+        123, 124, 125, 116, 114, 112, 115, 111, 110,
+        105, 106, 107,
+    };
+    MyDataFrame                 df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("high", high),
+                 std::make_pair("low", low));
+
+    RollingMidValueVisitor<double>  rmv_v (5);
+
+    df.single_act_visit<double, double>("low", "high", rmv_v);
+    assert(rmv_v.get_result().size() == 21);
+    assert(std::isnan(rmv_v.get_result()[0]));
+    assert(std::isnan(rmv_v.get_result()[1]));
+    assert(std::isnan(rmv_v.get_result()[3]));
+    assert(rmv_v.get_result()[4] == 126.75);
+    assert(rmv_v.get_result()[5] == 128.25);
+    assert(rmv_v.get_result()[10] == 125.5);
+    assert(rmv_v.get_result()[11] == 125);
+    assert(rmv_v.get_result()[20] == 109.5);
+    assert(rmv_v.get_result()[19] == 110.75);
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int argc, char *argv[]) {
 
     test_get_reindexed();
@@ -2194,6 +2236,7 @@ int main(int argc, char *argv[]) {
     test_TTestVisitor();
     test_MassIndexVisitor();
     test_HullRollingMeanVisitor();
+    test_RollingMidValueVisitor();
 
     return (0);
 }

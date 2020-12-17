@@ -1419,6 +1419,65 @@ private:
     result_type     result_ { };
 };
 
+// ----------------------------------------------------------------------------
+
+template<typename T, typename I = unsigned long>
+struct  DrawdownVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &column_begin,
+                const H &column_end)  {
+
+        GET_COL_SIZE
+
+        CumMaxVisitor<T, I> cm_v;
+
+        cm_v.pre();
+        cm_v (idx_begin, idx_end, column_begin, column_end);
+        cm_v.post();
+
+        const auto  &cm_result = cm_v.get_result();
+
+        drawdown_.reserve(col_s);
+        pct_drawdown_.reserve(col_s);
+        log_drawdown_.reserve(col_s);
+        for (size_type i = 0; i < col_s; ++i)  {
+            drawdown_.push_back(cm_result[i] - *(column_begin + i));
+            pct_drawdown_.push_back(
+                value_type(1) - *(column_begin + i) / cm_result[i]);
+            log_drawdown_.push_back(
+                std::log(cm_result[i] / *(column_begin + i)));
+        }
+    }
+
+    inline void pre ()  {
+
+        drawdown_.clear();
+        pct_drawdown_.clear();
+        log_drawdown_.clear();
+    }
+    inline void post ()  {  }
+    inline const result_type &get_result () const  { return (drawdown_); }
+    inline result_type &get_result ()  { return (drawdown_); }
+    inline const result_type &
+    get_log_drawdown () const  { return (log_drawdown_); }
+    inline result_type &get_log_drawdown ()  { return (log_drawdown_); }
+    inline const result_type &
+    get_pct_drawdown () const  { return (pct_drawdown_); }
+    inline result_type &get_pct_drawdown ()  { return (pct_drawdown_); }
+
+private:
+
+    result_type drawdown_ { };
+    result_type pct_drawdown_ { };
+    result_type log_drawdown_ { };
+};
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

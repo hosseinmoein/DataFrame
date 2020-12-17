@@ -2198,6 +2198,55 @@ static void test_RollingMidValueVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_DrawdownVisitor()  {
+
+    std::cout << "\nTesting DrawdownVisitor{  } ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456, 123457,
+          123458, 123459, 123460, 123461, 123462, 123466, 123467, 123468,
+          123469, 123470, 123471, 123472, 123473,
+        };
+    std::vector<double>         close = {
+        121, 122, 124, 124.5, 135.5, 132, 128, 127, 126,
+        125, 126.5, 127, 120, 135.6, 116, 116.5, 114, 112,
+        109, 136, 111,
+    };
+    MyDataFrame                 df;
+
+    df.load_data(std::move(idx), std::make_pair("close", close));
+
+    DrawdownVisitor<double> dd_v;
+
+    df.single_act_visit<double>("close", dd_v);
+    assert(dd_v.get_result().size() == 21);
+    assert(dd_v.get_log_drawdown().size() == 21);
+    assert(dd_v.get_pct_drawdown().size() == 21);
+    assert(dd_v.get_result()[0] == 0);
+    assert(dd_v.get_log_drawdown()[0] == 0);
+    assert(dd_v.get_pct_drawdown()[0] == 0);
+    assert(dd_v.get_result()[3] == 0);
+    assert(dd_v.get_log_drawdown()[3] == 0);
+    assert(dd_v.get_pct_drawdown()[3] == 0);
+    assert(dd_v.get_result()[13] == 0);
+    assert(dd_v.get_log_drawdown()[13] == 0);
+    assert(dd_v.get_pct_drawdown()[13] == 0);
+    assert(dd_v.get_result()[19] == 0);
+    assert(dd_v.get_log_drawdown()[19] == 0);
+    assert(dd_v.get_pct_drawdown()[19] == 0);
+    assert(dd_v.get_result()[8] == 9.5);
+    assert(std::abs(dd_v.get_log_drawdown()[8] - 0.0726897) < 0.000001);
+    assert(std::abs(dd_v.get_pct_drawdown()[8] - 0.0701107) < 0.000001);
+    assert(std::abs(dd_v.get_result()[15] - 19.1) < 0.00001);
+    assert(std::abs(dd_v.get_log_drawdown()[15] - 0.151818) < 0.00001);
+    assert(std::abs(dd_v.get_pct_drawdown()[15] - 0.140855) < 0.00001);
+    assert(std::abs(dd_v.get_result()[20] - 25) < 0.00001);
+    assert(std::abs(dd_v.get_log_drawdown()[20] - 0.203125) < 0.00001);
+    assert(std::abs(dd_v.get_pct_drawdown()[20] - 0.183824) < 0.00001);
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int argc, char *argv[]) {
 
     test_get_reindexed();
@@ -2237,6 +2286,7 @@ int main(int argc, char *argv[]) {
     test_MassIndexVisitor();
     test_HullRollingMeanVisitor();
     test_RollingMidValueVisitor();
+    test_DrawdownVisitor();
 
     return (0);
 }

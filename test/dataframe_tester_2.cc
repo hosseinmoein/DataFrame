@@ -2092,7 +2092,7 @@ static void test_MassIndexVisitor()  {
     };
     std::vector<double>         low = {
         118.82, 121.05, 121.59, 122.32, 129.77, 127.6, 126.44, 124.46, 125.13,
-        123.85, 124.66, 125.08, 116.84, 114.79, 112.98, 115.53, 111.84, 110.03,
+        123.85, 124.66, 125.08, 116.84, 117.69, 112.98, 115.53, 111.84, 110.03,
         105.92, 106.55, 107.75,
     };
     MyDataFrame                 df;
@@ -2111,8 +2111,8 @@ static void test_MassIndexVisitor()  {
     assert(std::isnan(mi_v.get_result()[3]));
     assert(fabs(mi_v.get_result()[6] - 5.20339) < 0.00001);
     assert(fabs(mi_v.get_result()[10] - 4.35729) < 0.00001);
-    assert(fabs(mi_v.get_result()[20] - 5.29241) < 0.00001);
-    assert(fabs(mi_v.get_result()[17] - 5.004) < 0.0001);
+    assert(fabs(mi_v.get_result()[20] - 5.51908) < 0.00001);
+    assert(fabs(mi_v.get_result()[17] - 4.87229) < 0.0001);
 }
 
 // -----------------------------------------------------------------------------

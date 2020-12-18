@@ -1227,12 +1227,20 @@ struct MassIndexVisitor {
         assert((col_s == std::distance(low_begin, low_end)));
         assert(fast_ < slow_);
 
+        size_type   adj_for_0 = col_s + 1;
+
         result_.reserve(col_s);
         for (size_type i = 0; i < col_s; ++i)  {
             const value_type    v = *(high_begin + i) - *(low_begin + i);
 
-            result_.push_back(v > 0 ? v : std::numeric_limits<T>::epsilon());
+            if (v == value_type(0) && adj_for_0 > col_s)
+                adj_for_0 = i;
+            result_.push_back(
+                adj_for_0 > col_s ? v : v + std::numeric_limits<T>::epsilon());
         }
+        if (adj_for_0 < col_s)
+            for (size_type i = 0; i < adj_for_0; ++i)
+                result_[i] += std::numeric_limits<T>::epsilon();
 
         erm_t   fast_roller(std::move(MeanVisitor<T, I>()), fast_,
                             exponential_decay_spec::span, fast_);

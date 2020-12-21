@@ -13,9 +13,10 @@ df.set_index("timestamp")
 
 print("All memory allocations are done. Calculating means ...")
 
-df["normal"].mean()
-df["log_normal"].mean()
-df["exponential"].mean()
+m1: float = df["normal"].mean()
+m2: float = df["log_normal"].mean()
+m3: float = df["exponential"].mean()
+print(f"{m1}, {m2}, {m3}")
 
 # ------------------------------------------------------------------------------
 

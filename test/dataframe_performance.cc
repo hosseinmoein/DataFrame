@@ -39,13 +39,15 @@ typedef StdDataFrame<time_t> MyDataFrame;
 
 int main(int argc, char *argv[]) {
 
-    MyDataFrame             df;
-    const size_t            index_sz =
-        df.load_index(MyDataFrame::gen_datetime_index("01/01/1970", "08/15/2019", time_frequency::secondly, 1));
+    MyDataFrame df;
+    auto        index_vec =
+        MyDataFrame::gen_datetime_index("01/01/1970", "08/15/2019", time_frequency::secondly, 1);
+    const auto  index_sz = index_vec.size();
 
-    df.load_column("normal", gen_normal_dist<double>(index_sz));
-    df.load_column("log_normal", gen_lognormal_dist<double>(index_sz));
-    df.load_column("exponential", gen_exponential_dist<double>(index_sz));
+    df.load_data(std::move(index_vec),
+                 std::make_pair("normal", gen_normal_dist<double>(index_sz)),
+                 std::make_pair("log_normal", gen_lognormal_dist<double>(index_sz)),
+                 std::make_pair("exponential", gen_exponential_dist<double>(index_sz)));
 
     std::cout << "All memory allocations are done. Calculating means ..." << std::endl;
 
@@ -57,9 +59,9 @@ int main(int argc, char *argv[]) {
     auto    fut2 = df.visit_async<double>("log_normal", ln_mv);
     auto    fut3 = df.visit_async<double>("exponential", e_mv);
 
-    fut1.get();
-    fut2.get();
-    fut3.get();
+    std::cout << fut1.get().get_result() << ", "
+              << fut2.get().get_result() << ", "
+              << fut3.get().get_result() << std::endl;
     return (0);
 }
 

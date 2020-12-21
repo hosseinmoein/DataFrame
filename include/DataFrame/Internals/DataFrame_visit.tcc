@@ -27,8 +27,6 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <DataFrame/DataFrame.h>
-
 #include <future>
 #include <tuple>
 
@@ -705,6 +703,186 @@ single_act_visit_async(const char *name1,
         this,
         name1,
         name2,
+        std::ref(visitor),
+        in_reverse));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename T1, typename T2, typename T3, typename V>
+V &DataFrame<I, H>::
+single_act_visit (const char *name1,
+                  const char *name2,
+                  const char *name3,
+                  V &visitor,
+                  bool in_reverse)  {
+
+    const ColumnVecType<T1> &vec1 = get_column<T1>(name1);
+    const ColumnVecType<T2> &vec2 = get_column<T2>(name2);
+    const ColumnVecType<T3> &vec3 = get_column<T3>(name3);
+
+    visitor.pre();
+    if (! in_reverse)
+        visitor (indices_.begin(), indices_.end(),
+                 vec1.begin(), vec1.end(),
+                 vec2.begin(), vec2.end(),
+                 vec3.begin(), vec3.end());
+    else
+        visitor (indices_.rbegin(), indices_.rend(),
+                 vec1.rbegin(), vec1.rend(),
+                 vec2.rbegin(), vec2.rend(),
+                 vec3.rbegin(), vec3.rend());
+    visitor.post();
+
+    return (visitor);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename T1, typename T2, typename T3, typename V>
+std::future<V &> DataFrame<I, H>::
+single_act_visit_async(const char *name1,
+                       const char *name2,
+                       const char *name3,
+                       V &visitor,
+                       bool in_reverse)  {
+
+    return (std::async(
+        std::launch::async,
+        static_cast<V &(DataFrame::*)(const char *,
+                                      const char *,
+                                      const char *,
+                                      V &,
+                                      bool)>
+            (&DataFrame::single_act_visit<T1, T2, T3, V>),
+        this,
+        name1,
+        name2,
+        name3,
+        std::ref(visitor),
+        in_reverse));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename T1, typename T2, typename T3, typename V>
+std::future<V &> DataFrame<I, H>::
+single_act_visit_async(const char *name1,
+                       const char *name2,
+                       const char *name3,
+                       V &visitor,
+                       bool in_reverse) const  {
+
+    return (std::async(
+        std::launch::async,
+        static_cast<V &(DataFrame::*)(const char *,
+                                      const char *,
+                                      const char *,
+                                      V &,
+                                      bool) const>
+            (&DataFrame::single_act_visit<T1, T2, T3, V>),
+        this,
+        name1,
+        name2,
+        name3,
+        std::ref(visitor),
+        in_reverse));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename T1, typename T2, typename T3, typename T4, typename V>
+V &DataFrame<I, H>::
+single_act_visit (const char *name1,
+                  const char *name2,
+                  const char *name3,
+                  const char *name4,
+                  V &visitor,
+                  bool in_reverse)  {
+
+    const ColumnVecType<T1> &vec1 = get_column<T1>(name1);
+    const ColumnVecType<T2> &vec2 = get_column<T2>(name2);
+    const ColumnVecType<T3> &vec3 = get_column<T3>(name3);
+    const ColumnVecType<T4> &vec4 = get_column<T4>(name4);
+
+    visitor.pre();
+    if (! in_reverse)
+        visitor (indices_.begin(), indices_.end(),
+                 vec1.begin(), vec1.end(),
+                 vec2.begin(), vec2.end(),
+                 vec3.begin(), vec3.end(),
+                 vec4.begin(), vec4.end());
+    else
+        visitor (indices_.rbegin(), indices_.rend(),
+                 vec1.rbegin(), vec1.rend(),
+                 vec2.rbegin(), vec2.rend(),
+                 vec3.rbegin(), vec3.rend(),
+                 vec4.rbegin(), vec4.rend());
+    visitor.post();
+
+    return (visitor);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename T1, typename T2, typename T3, typename T4, typename V>
+std::future<V &> DataFrame<I, H>::
+single_act_visit_async(const char *name1,
+                       const char *name2,
+                       const char *name3,
+                       const char *name4,
+                       V &visitor,
+                       bool in_reverse)  {
+
+    return (std::async(
+        std::launch::async,
+        static_cast<V &(DataFrame::*)(const char *,
+                                      const char *,
+                                      const char *,
+                                      const char *,
+                                      V &,
+                                      bool)>
+            (&DataFrame::single_act_visit<T1, T2, T3, T4, V>),
+        this,
+        name1,
+        name2,
+        name3,
+        name4,
+        std::ref(visitor),
+        in_reverse));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename T1, typename T2, typename T3, typename T4, typename V>
+std::future<V &> DataFrame<I, H>::
+single_act_visit_async(const char *name1,
+                       const char *name2,
+                       const char *name3,
+                       const char *name4,
+                       V &visitor,
+                       bool in_reverse) const  {
+
+    return (std::async(
+        std::launch::async,
+        static_cast<V &(DataFrame::*)(const char *,
+                                      const char *,
+                                      const char *,
+                                      const char *,
+                                      V &,
+                                      bool) const>
+            (&DataFrame::single_act_visit<T1, T2, T3, T4, V>),
+        this,
+        name1,
+        name2,
+        name3,
+        name4,
         std::ref(visitor),
         in_reverse));
 }

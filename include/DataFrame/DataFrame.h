@@ -2468,6 +2468,153 @@ public:  // Visitors
                            V &visitor,
                            bool in_reverse = false) const;
 
+    // This is similar to visit(), but it passes a const reference to the index
+    // vector and the 3 named column vectors at once to the functor visitor.
+    // This is convenient for calculations that need the whole data vector.
+    //
+    // NOTE: This method could be used to implement a pivot table.
+    //
+    // T1:
+    //   Type of the first named column
+    // T2:
+    //   Type of the second named column
+    // T3:
+    //   Type of the third named column
+    // V:
+    //   Type of the visitor functor
+    // name1:
+    //   Name of the first data column
+    // name2:
+    //   Name of the second data column
+    // name3:
+    //   Name of the third data column
+    // visitor:
+    //   An instance of the visitor
+    // in_reverse:
+    //   If true, it will iterate over columns in reverse order
+    //
+    template<typename T1, typename T2, typename T3, typename V>
+    V &
+    single_act_visit(const char *name1,
+                     const char *name2,
+                     const char *name3,
+                     V &visitor,
+                     bool in_reverse = false);
+
+    template<typename T1, typename T2, typename T3, typename V>
+    V &
+    single_act_visit(const char *name1,
+                     const char *name2,
+                     const char *name3,
+                     V &visitor,
+                     bool in_reverse = false) const  {
+
+        return (const_cast<DataFrame *>(this)->single_act_visit<T1, T2, T3, V>
+                (name1, name2, name3, visitor, in_reverse));
+    }
+
+    // These are identical to above single_act_visit() but could execute
+    // asynchronously.
+    // NOTE: It should be safe to run multiple single_act_visit on different
+    //       columns at the same time (as long as the index column is not being
+    //       modified).
+    // NOTE: It should be safe to run multiple read-only single_act_visit on
+    //       the same column or different columns at the same time
+    //
+    template<typename T1, typename T2, typename T3, typename V>
+    [[nodiscard]] std::future<V &>
+    single_act_visit_async(const char *name1,
+                           const char *name2,
+                           const char *name3,
+                           V &visitor,
+                           bool in_reverse = false);
+
+    template<typename T1, typename T2, typename T3, typename V>
+    [[nodiscard]] std::future<V &>
+    single_act_visit_async(const char *name1,
+                           const char *name2,
+                           const char *name3,
+                           V &visitor,
+                           bool in_reverse = false) const;
+
+    // This is similar to visit(), but it passes a const reference to the index
+    // vector and the 4 named column vectors at once to the functor visitor.
+    // This is convenient for calculations that need the whole data vector.
+    //
+    // NOTE: This method could be used to implement a pivot table.
+    //
+    // T1:
+    //   Type of the first named column
+    // T2:
+    //   Type of the second named column
+    // T3:
+    //   Type of the third named column
+    // T4:
+    //   Type of the fourth named column
+    // V:
+    //   Type of the visitor functor
+    // name1:
+    //   Name of the first data column
+    // name2:
+    //   Name of the second data column
+    // name3:
+    //   Name of the third data column
+    // name4:
+    //   Name of the fourth data column
+    // visitor:
+    //   An instance of the visitor
+    // in_reverse:
+    //   If true, it will iterate over columns in reverse order
+    //
+    template<typename T1, typename T2, typename T3, typename T4, typename V>
+    V &
+    single_act_visit(const char *name1,
+                     const char *name2,
+                     const char *name3,
+                     const char *name4,
+                     V &visitor,
+                     bool in_reverse = false);
+
+    template<typename T1, typename T2, typename T3, typename T4, typename V>
+    V &
+    single_act_visit(const char *name1,
+                     const char *name2,
+                     const char *name3,
+                     const char *name4,
+                     V &visitor,
+                     bool in_reverse = false) const  {
+
+        return (
+            const_cast<DataFrame *>(this)->single_act_visit<T1, T2, T3, T4, V>
+                (name1, name2, name3, name4, visitor, in_reverse));
+    }
+
+    // These are identical to above single_act_visit() but could execute
+    // asynchronously.
+    // NOTE: It should be safe to run multiple single_act_visit on different
+    //       columns at the same time (as long as the index column is not being
+    //       modified).
+    // NOTE: It should be safe to run multiple read-only single_act_visit on
+    //       the same column or different columns at the same time
+    //
+    template<typename T1, typename T2, typename T3, typename T4, typename V>
+    [[nodiscard]] std::future<V &>
+    single_act_visit_async(const char *name1,
+                           const char *name2,
+                           const char *name3,
+                           const char *name4,
+                           V &visitor,
+                           bool in_reverse = false);
+
+    template<typename T1, typename T2, typename T3, typename T4, typename V>
+    [[nodiscard]] std::future<V &>
+    single_act_visit_async(const char *name1,
+                           const char *name2,
+                           const char *name3,
+                           const char *name4,
+                           V &visitor,
+                           bool in_reverse = false) const;
+
 public:  // Operators
 
     // It compares self with rhs. If both have the sanme indices,

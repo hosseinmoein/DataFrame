@@ -200,7 +200,7 @@ struct HarmonicMeanVisitor {
         SKIP_NAN
 
         cnt_ += 1;
-        sum_ += value_type(1) / val;
+        sum_ += one_ / val;
     }
     PASS_DATA_ONE_BY_ONE
 
@@ -214,10 +214,11 @@ struct HarmonicMeanVisitor {
 
 private:
 
-    value_type  sum_ { 0 };
-    value_type  mean_ { 0 };
-    size_type   cnt_ { 0 };
-    const bool  skip_nan_;
+    value_type                  sum_ { 0 };
+    value_type                  mean_ { 0 };
+    size_type                   cnt_ { 0 };
+    const bool                  skip_nan_;
+    static constexpr value_type one_ { 1 };
 };
 
 // ----------------------------------------------------------------------------
@@ -722,7 +723,7 @@ struct DotProdVisitor  {
     }
     PASS_DATA_ONE_BY_ONE_2
 
-    inline void pre ()  { dot_prod_ = value_type(0); }
+    inline void pre ()  { dot_prod_ = 0; }
     inline void post ()  {  }
     inline result_type get_result () const  { return (dot_prod_); }
 
@@ -1173,7 +1174,7 @@ struct StatsVisitor  {
     inline void pre ()  {
 
         n_ = 0;
-        m1_ = m2_ = m3_ = m4_ = value_type(0);
+        m1_ = m2_ = m3_ = m4_ = 0;
     }
     inline void post ()  {  }
 
@@ -2843,7 +2844,7 @@ private:
     const box_cox_type          box_cox_type_;
     const value_type            lambda_;
     const bool                  is_all_positive_;
-    static constexpr value_type one_ { value_type(1) };
+    static constexpr value_type one_ { 1 };
 };
 
 // ----------------------------------------------------------------------------
@@ -3260,11 +3261,11 @@ private:
         if (median_v.get_result() == 0)  {
             std::replace_if(resid_weights_.begin(), resid_weights_.end(),
                             std::bind(std::greater<value_type>(),
-                                      std::placeholders::_1, value_type(0)),
+                                      std::placeholders::_1, z_),
                             one_);
         }
         else  {
-            const value_type    val = value_type(6) * median_v.get_result();
+            const value_type    val = six_ * median_v.get_result();
 
             std::transform(resid_weights_.begin(), resid_weights_.end(),
                            resid_weights_.begin(),
@@ -3283,7 +3284,7 @@ private:
         // std::replace_if(resid_weights_.begin(), resid_weights_.end(),
         //                 std::bind(std::less_equal<value_type>(),
         //                           std::placeholders::_1, value_type(0.001)),
-        //                 value_type(0));
+        //                 z_);
         bi_square_(resid_weights_.begin(), resid_weights_.end());
     }
 
@@ -3492,7 +3493,7 @@ private:
         while (true)  {
             if (right_end < curr_idx)  {
                 if (xval > ((*(x_begin + left_end) +
-                             *(x_begin + right_end)) / value_type(2)))  {
+                             *(x_begin + right_end)) / two_))  {
                     left_end += 1;
                     right_end += 1;
                 }
@@ -3645,7 +3646,7 @@ public:
 
     explicit
     LowessVisitor (size_type loop_n = 3,
-                   value_type frac = value_type(2) / value_type(3),
+                   value_type frac = two_ / three_,
                    value_type delta = 0,
                    bool sorted = false)
         : frac_(frac),
@@ -3672,7 +3673,11 @@ private:
     result_type                 auxiliary_vec_ {  };
     result_type                 x_j_ {  };
     result_type                 dist_i_j_ {  };
-    static constexpr value_type one_ { value_type (1) };
+    static constexpr value_type z_ { 0 };
+    static constexpr value_type one_ { 1 };
+    static constexpr value_type two_ { 2 };
+    static constexpr value_type three_ { 3 };
+    static constexpr value_type six_ { 6 };
 };
 
 // ----------------------------------------------------------------------------

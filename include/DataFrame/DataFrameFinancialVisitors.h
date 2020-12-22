@@ -1025,9 +1025,10 @@ struct RSIVisitor {
         return_v (idx_begin, idx_end, prices_begin, prices_end);
         return_v.post();
 
-        value_type          avg_up = 0;
-        value_type          avg_down = 0;
-        const value_type    avg_period_1 = avg_period_ - value_type(1);
+        static constexpr value_type one { 1 };
+        value_type                  avg_up = 0;
+        value_type                  avg_down = 0;
+        const value_type            avg_period_1 = avg_period_ - one;
 
         for (size_type i = 0; i < avg_period_; ++i)  {
             const value_type    value = return_v.get_result()[i];
@@ -1040,10 +1041,9 @@ struct RSIVisitor {
 
         result_.reserve(col_s - static_cast<size_type>(avg_period_));
 
-        constexpr value_type    hundred = value_type(100);
-        constexpr value_type    one = value_type(1);
+        static constexpr value_type h { 100 };
 
-        result_.push_back(hundred - (hundred / (one + avg_up / avg_down)));
+        result_.push_back(h - (h / (one + avg_up / avg_down)));
 
         const size_type ret_s = return_v.get_result().size();
 
@@ -1054,7 +1054,7 @@ struct RSIVisitor {
                 avg_up = (avg_up * avg_period_1 + value) / avg_period_;
             else if (value < 0)
                 avg_down = (avg_down * avg_period_1 - value) / avg_period_;
-            result_.push_back(hundred - (hundred / (one + avg_up / avg_down)));
+            result_.push_back(h - (h / (one + avg_up / avg_down)));
         }
     }
 
@@ -1336,9 +1336,11 @@ struct  HullRollingMeanVisitor  {
         wma_full (idx_begin, idx_end, column_begin, column_end);
         wma_full.post();
 
+        static constexpr value_type two { 2 };
+
         result_ = std::move(wma_half.get_result());
         for (size_type i = 0; i < col_s - 1 && i < col_s; ++i)
-            result_[i] = value_type(2) * result_[i] - wma_full.get_result()[i];
+            result_[i] = two * result_[i] - wma_full.get_result()[i];
 
         wma_t   wma_sqrt (WeightedMeanVisitor<T, I>(),
                           size_type(std::sqrt(roll_count_)));
@@ -1390,8 +1392,9 @@ struct  RollingMidValueVisitor  {
         for (size_type i = 0; i < roll_count_ - 1 && i < col_s; ++i)
             result_.push_back(std::numeric_limits<value_type>::quiet_NaN());
 
-        value_type  min_v = *low_begin;
-        value_type  max_v = *high_begin;
+        value_type                  min_v = *low_begin;
+        value_type                  max_v = *high_begin;
+        static constexpr value_type p5 { 0.5 };
 
         for (size_type i = 0; i < col_s; ++i)  {
             const size_type limit = i + roll_count_;
@@ -1403,7 +1406,7 @@ struct  RollingMidValueVisitor  {
                     if (*(high_begin + j) > max_v)
                         max_v = *(high_begin + j);
                 }
-                result_.push_back((min_v + max_v) * value_type(0.5));
+                result_.push_back((min_v + max_v) * p5);
                 if (limit < col_s)  {
                     min_v = *(low_begin + limit);
                     max_v = *(high_begin + limit);
@@ -1449,15 +1452,15 @@ struct  DrawdownVisitor  {
         cm_v (idx_begin, idx_end, column_begin, column_end);
         cm_v.post();
 
-        const auto  &cm_result = cm_v.get_result();
+        const auto                  &cm_result = cm_v.get_result();
+        static constexpr value_type one { 1 };
 
         drawdown_.reserve(col_s);
         pct_drawdown_.reserve(col_s);
         log_drawdown_.reserve(col_s);
         for (size_type i = 0; i < col_s; ++i)  {
             drawdown_.push_back(cm_result[i] - *(column_begin + i));
-            pct_drawdown_.push_back(
-                value_type(1) - *(column_begin + i) / cm_result[i]);
+            pct_drawdown_.push_back(one - *(column_begin + i) / cm_result[i]);
             log_drawdown_.push_back(
                 std::log(cm_result[i] / *(column_begin + i)));
         }
@@ -1484,6 +1487,71 @@ private:
     result_type drawdown_ { };
     result_type pct_drawdown_ { };
     result_type log_drawdown_ { };
+};
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename I = unsigned long>
+struct  WilliamPrcRVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &low_begin,
+                const H &low_end,
+                const H &high_begin,
+                const H &high_end,
+                const H &close_begin,
+                const H &close_end)  {
+
+        if (roll_count_ == 0)  return;
+
+        const size_type col_s = std::distance(close_begin, close_end);
+
+        assert((col_s == std::distance(low_begin, low_end)));
+        assert((col_s == std::distance(high_begin, high_end)));
+
+        SimpleRollAdopter<MinVisitor<T, I>, T, I>   min_v (MinVisitor<T, I>(),
+                                                           roll_count_);
+
+        min_v.pre();
+        min_v (idx_begin, idx_end, low_begin, low_end);
+        min_v.post();
+
+        SimpleRollAdopter<MaxVisitor<T, I>, T, I>   max_v (MaxVisitor<T, I>(),
+                                                           roll_count_);
+
+        max_v.pre();
+        max_v (idx_begin, idx_end, high_begin, high_end);
+        max_v.post();
+        result_ = std::move(max_v.get_result());
+
+        static constexpr value_type h { 100 };
+        static constexpr value_type one { 1 };
+
+        for (size_type i = 0; i < col_s; ++i)  {
+            const value_type    low = min_v.get_result()[i];
+
+            result_[i] =
+                h * ((*(close_begin + i) - low) / (result_[i] - low) - one);
+        }
+    }
+
+    inline void pre ()  { result_.clear(); }
+    inline void post ()  {  }
+    inline const result_type &get_result () const  { return (result_); }
+    inline result_type &get_result ()  { return (result_); }
+
+    explicit
+    WilliamPrcRVisitor(size_type r_count = 14) : roll_count_(r_count) {   }
+
+private:
+
+    const size_t    roll_count_;
+    result_type     result_ { };
 };
 
 } // namespace hmdf

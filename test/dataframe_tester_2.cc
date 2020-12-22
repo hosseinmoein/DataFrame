@@ -2247,6 +2247,37 @@ static void test_DrawdownVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_WilliamPrcRVisitor()  {
+
+    std::cout << "\nTesting WilliamPrcRVisitor{  } ..." << std::endl;
+
+    typedef StdDataFrame<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("IBM.csv", io_format::csv2);
+
+        WilliamPrcRVisitor<double, std::string> wpr_v;
+
+        df.single_act_visit<double, double, double>
+            ("IBM_Low", "IBM_High", "IBM_Close", wpr_v);
+
+        assert(wpr_v.get_result().size() == 5031);
+        assert(std::isnan(wpr_v.get_result()[0]));
+        assert(std::isnan(wpr_v.get_result()[12]));
+        assert(std::abs(wpr_v.get_result()[14] - -46.0784) < 0.0001);
+        assert(std::abs(wpr_v.get_result()[20] - -85.2941) < 0.0001);
+        assert(std::abs(wpr_v.get_result()[5030] - -73.2151) < 0.0001);
+        assert(std::abs(wpr_v.get_result()[5026] - -98.3939) < 0.0001);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int argc, char *argv[]) {
 
     test_get_reindexed();
@@ -2287,6 +2318,7 @@ int main(int argc, char *argv[]) {
     test_HullRollingMeanVisitor();
     test_RollingMidValueVisitor();
     test_DrawdownVisitor();
+    test_WilliamPrcRVisitor();
 
     return (0);
 }

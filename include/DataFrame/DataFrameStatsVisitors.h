@@ -920,7 +920,7 @@ public:
                 const H &column_begin,
                 const H &column_end)  {
 
-        if (roll_count_ == 0)  return;
+        assert(roll_count_ != 0);
 
         GET_COL_SIZE
 
@@ -1026,7 +1026,7 @@ public:
                 const H &column_begin,
                 const H &column_end)  {
 
-        if (init_roll_count_ == 0)  return;
+        assert(init_roll_count_ != 0);
 
         GET_COL_SIZE
 
@@ -1094,7 +1094,7 @@ public:
 
         GET_COL_SIZE
 
-        if (roll_count_ == 0 || roll_count_ >= col_s)  return;
+        assert(roll_count_ != 0 && roll_count_ < col_s);
 
         result_.resize(col_s, std::numeric_limits<f_result_type>::quiet_NaN());
 

@@ -125,7 +125,7 @@ static void test_haphazard()  {
 
     std::vector<int>    ivec = df.get_column<int> ("int_col");
 
-	std::cout << std::endl;
+    std::cout << std::endl;
     assert(df.get_column<int>("int_col") == df.get_column<int>(std::size_t(1)));
     assert(df.get_column<double> ("dbl_col")[2] == 3.2345);
 
@@ -3213,33 +3213,19 @@ static void test_ExponentialRollAdopter()  {
         MeanVisitor<double>(), 3, exponential_decay_spec::halflife, 0.5);
     const auto                                          &hl_expo_result =
         df.single_act_visit<double>("col_3", hl_expo_mean_roller).get_result();
+
+    assert(hl_expo_result.size() == 11);
+    assert(std::isnan(hl_expo_result[0]));
+    assert(std::isnan(hl_expo_result[1]));
+    assert(hl_expo_result[2] == 16.0);
+    assert(fabs(hl_expo_result[5] - 19.6562) < 0.0001);
+    assert(fabs(hl_expo_result[8] - 22.6665) < 0.0001);
+
     ExponentialRollAdopter<MeanVisitor<double>, double> cg_expo_mean_roller(
         MeanVisitor<double>(), 3, exponential_decay_spec::center_of_gravity,
         0.5);
     const auto                                          &cg_expo_result =
         df.single_act_visit<double>("col_3", cg_expo_mean_roller).get_result();
-    ExponentialRollAdopter<MeanVisitor<double>, double> s_expo_mean_roller(
-        MeanVisitor<double>(), 3, exponential_decay_spec::span, 1.5);
-    const auto                                          &s_expo_result =
-        df.single_act_visit<double>("col_3", s_expo_mean_roller).get_result();
-    ExponentialRollAdopter<MeanVisitor<double>, double> f_expo_mean_roller(
-        MeanVisitor<double>(), 3, exponential_decay_spec::fixed, 0.5);
-    const auto                                          &f_expo_result =
-        df.single_act_visit<double>("col_3", f_expo_mean_roller).get_result();
-
-    assert(s_expo_result.size() == 11);
-    assert(std::isnan(s_expo_result[0]));
-    assert(std::isnan(s_expo_result[1]));
-    assert(s_expo_result[2] == 16.0);
-    assert(s_expo_result[5] == 19.744);
-    assert(fabs(s_expo_result[8] - 22.75) < 0.0001);
-
-    assert(f_expo_result.size() == 11);
-    assert(std::isnan(f_expo_result[0]));
-    assert(std::isnan(f_expo_result[1]));
-    assert(f_expo_result[2] == 16.0);
-    assert(f_expo_result[5] == 19.0);
-    assert(f_expo_result[8] == 22.0);
 
     assert(cg_expo_result.size() == 11);
     assert(std::isnan(cg_expo_result[0]));
@@ -3248,12 +3234,41 @@ static void test_ExponentialRollAdopter()  {
     assert(fabs(cg_expo_result[5] - 19.4815) < 0.0001);
     assert(fabs(cg_expo_result[8] - 22.4993) < 0.0001);
 
-    assert(hl_expo_result.size() == 11);
-    assert(std::isnan(hl_expo_result[0]));
-    assert(std::isnan(hl_expo_result[1]));
-    assert(hl_expo_result[2] == 16.0);
-    assert(fabs(hl_expo_result[5] - 19.6562) < 0.0001);
-    assert(fabs(hl_expo_result[8] - 22.6665) < 0.0001);
+    ExponentialRollAdopter<MeanVisitor<double>, double> s_expo_mean_roller(
+        MeanVisitor<double>(), 3, exponential_decay_spec::span, 1.5);
+    const auto                                          &s_expo_result =
+        df.single_act_visit<double>("col_3", s_expo_mean_roller).get_result();
+
+    assert(s_expo_result.size() == 11);
+    assert(std::isnan(s_expo_result[0]));
+    assert(std::isnan(s_expo_result[1]));
+    assert(s_expo_result[2] == 16.0);
+    assert(s_expo_result[5] == 19.744);
+    assert(fabs(s_expo_result[8] - 22.75) < 0.0001);
+
+    ExponentialRollAdopter<MeanVisitor<double>, double> f_expo_mean_roller(
+        MeanVisitor<double>(), 3, exponential_decay_spec::fixed, 0.5);
+    const auto                                          &f_expo_result =
+        df.single_act_visit<double>("col_3", f_expo_mean_roller).get_result();
+
+    assert(f_expo_result.size() == 11);
+    assert(std::isnan(f_expo_result[0]));
+    assert(std::isnan(f_expo_result[1]));
+    assert(f_expo_result[2] == 16.0);
+    assert(f_expo_result[5] == 19.0);
+    assert(f_expo_result[8] == 22.0);
+
+    ExponentialRollAdopter<MeanVisitor<double>, double> expo_mean_roller_3(
+        MeanVisitor<double>(), 3, exponential_decay_spec::span, 3, 3);
+    const auto                                          &expo_result_3 =
+        df.single_act_visit<double>("col_3", expo_mean_roller_3).get_result();
+
+    assert(expo_result_3.size() == 11);
+    assert(std::isnan(expo_result_3[0]));
+    assert(std::isnan(expo_result_3[1]));
+    assert(expo_result_3[2] == 16.0);
+    assert(std::fabs(expo_result_3[5] - 18.125) < 0.0001);
+    assert(std::fabs(expo_result_3[8] - 21.0156) < 0.0001);
 }
 
 // -----------------------------------------------------------------------------

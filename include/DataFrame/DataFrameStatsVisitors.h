@@ -905,7 +905,7 @@ private:
     using f_result_type = typename visitor_type::result_type;
 
     visitor_type                visitor_ { };
-    const size_t                roll_count_ { 0 };
+    const std::size_t           roll_count_ { 0 };
     std::vector<f_result_type>  result_ { };
 
 public:
@@ -960,8 +960,8 @@ private:
 
     using visitor_type = F;
 
-    visitor_type    visitor_ {  };
-    const size_t    period_;
+    visitor_type        visitor_ {  };
+    const std::size_t   period_;
 
 public:
 
@@ -1010,8 +1010,8 @@ private:
     using f_result_type = typename visitor_type::result_type;
 
     visitor_type                visitor_ { };
-    const size_t                init_roll_count_ { 0 };
-    const size_t                increment_count_ { 0 };
+    const std::size_t           init_roll_count_ { 0 };
+    const std::size_t           increment_count_ { 0 };
     std::vector<f_result_type>  result_ { };
 
 public:
@@ -1032,16 +1032,16 @@ public:
 
         result_.reserve(col_s);
 
-        size_t  rc = init_roll_count_;
+        std::size_t rc = init_roll_count_;
 
-        for (size_t i = 0; i < rc - 1 && i < col_s; ++i)
+        for (std::size_t i = 0; i < rc - 1 && i < col_s; ++i)
             result_.push_back(std::numeric_limits<f_result_type>::quiet_NaN());
 
-        for (size_t i = 0; i < col_s; ++i, rc += increment_count_)  {
-            size_t  r = 0;
+        for (std::size_t i = 0; i < col_s; ++i, rc += increment_count_)  {
+            std::size_t r = 0;
 
             visitor_.pre();
-            for (size_t j = i; r < rc && j < col_s; ++j, ++r)
+            for (std::size_t j = i; r < rc && j < col_s; ++j, ++r)
                 visitor_(*(idx_begin + j), *(column_begin + j));
             visitor_.post();
             if (r == rc)
@@ -1055,7 +1055,9 @@ public:
     inline const result_type &get_result () const  { return (result_); }
     inline result_type &get_result ()  { return (result_); }
 
-    ExpandingRollAdopter(F &&functor, size_t r_count, size_t i_count = 1)
+    ExpandingRollAdopter(F &&functor,
+                         std::size_t r_count,
+                         std::size_t i_count = 1)
         : visitor_(std::move(functor)),
           init_roll_count_(r_count),
           increment_count_(i_count)  {   }
@@ -1076,13 +1078,15 @@ private:
 
     std::vector<f_result_type>  result_ { };
     visitor_type                visitor_ { };
-    const size_t                roll_count_;
+    const std::size_t           roll_count_;
+    const std::size_t           repeat_count_;
     const double                decay_;
     const bool                  skip_nan_;
 
 public:
 
     DEFINE_VISIT_BASIC_TYPES
+
     using result_type = std::vector<f_result_type>;
 
     template <typename K, typename H>
@@ -1098,21 +1102,23 @@ public:
 
         result_.resize(col_s, std::numeric_limits<f_result_type>::quiet_NaN());
 
-        size_t  i = 0;
+        std::size_t i = 0;
 
         visitor_.pre();
         for (; i < roll_count_; ++i)
             visitor_(*(idx_begin + i), *(column_begin + i));
         visitor_.post();
-        result_[--i] = visitor_.get_result();
-        i += 1;
+        result_[i - 1] = visitor_.get_result();
 
         for (; i < col_s; ++i)  {
             if (skip_nan_ && is_nan__(*(column_begin + i)))  continue;
-            result_[i] =
-                decay_ * *(column_begin + i) +
-                ((1.0 - decay_) * result_[i - 1]);
+            result_[i] = calc_value_(*(column_begin + i), result_[i - 1]);
         }
+        for (i = 1; i < repeat_count_; ++i)
+            for (std::size_t j = roll_count_; j < col_s; ++j)  {
+                if (skip_nan_ && is_nan__(result_[i]))  continue;
+                result_[j] = calc_value_(result_[j], result_[j - 1]);
+            }
     }
 
     inline void pre ()  { visitor_.pre(); result_.clear(); }
@@ -1121,12 +1127,14 @@ public:
     inline result_type &get_result ()  { return (result_); }
 
     ExponentialRollAdopter(F &&functor,
-                           size_t r_count,
+                           std::size_t r_count,
                            exponential_decay_spec eds,
                            double value,
+                           std::size_t repeat_count = 1,
                            bool skip_nan = true)
         : visitor_(std::move(functor)),
           roll_count_(r_count),
+          repeat_count_(repeat_count),
           decay_(eds == exponential_decay_spec::center_of_gravity
                      ? 1.0 / (1.0 + value)
                      : eds == exponential_decay_spec::span
@@ -1135,6 +1143,13 @@ public:
                              ? 1.0 - std::exp(std::log(0.5) / value)
                              : value),
           skip_nan_(skip_nan)  {   }
+
+private:
+
+    inline value_type calc_value_(value_type i_value, value_type i_1_value)  {
+
+        return (decay_ * i_value + (1.0 - decay_) * i_1_value);
+    }
 };
 
 // ----------------------------------------------------------------------------

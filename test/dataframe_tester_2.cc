@@ -1519,6 +1519,8 @@ static void test_ExpoSmootherVisitor()  {
 
     df.load_data(std::move(idx), std::make_pair("dbl_col", d1));
 
+    MyDataFrame df2 = df;
+
     ExpoSmootherVisitor<double> es_v1(1);
 
     df.single_act_visit<double>("dbl_col", es_v1);
@@ -1559,6 +1561,22 @@ static void test_ExpoSmootherVisitor()  {
 
     for (size_t idx = 0; idx < col1.size(); ++idx)
        assert(fabs(col1[idx] - actual3[idx]) < 0.0001);
+
+    ExpoSmootherVisitor<double> es_v3_4 (0.8, 4);
+    const auto                  &col21 = df2.get_column<double>("dbl_col");
+
+    df2.single_act_visit<double>("dbl_col", es_v3_4);
+
+    auto    actual4 = std::vector<double> {
+        2.5, 2.47952, 0.77968, -0.27248, -0.67824, 0.261712, 0.9932, 0.799584,
+        0.97488, -4.33518, -3.8625, -1.05213, -0.877632, -0.632813, -0.087968,
+        0.494816, 0.193696, 0.731832, 0.922821, 0.051104, -0.055568, 0.152752,
+        0.895104, 0.532416, 0.838499, 21.5731, 20.6916, 7.763, 1.66618,
+        1.1872, 0.509888, 0.343776, 3.87912, 3.11763, 1.43558
+    };
+
+    for (size_t idx = 0; idx < col21.size(); ++idx)
+       assert(fabs(col21[idx] - actual4[idx]) < 0.0001);
 }
 
 // -----------------------------------------------------------------------------

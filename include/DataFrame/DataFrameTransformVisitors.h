@@ -181,28 +181,33 @@ struct  ExpoSmootherVisitor {
 
         count_ = std::distance(column_begin, column_end);
 
-        value_type  prev_v = *column_begin;
+        for (size_type j = 0; j < repeat_count_; ++j)  {
+            value_type  prev_v = *column_begin;
 
-        // Y0 = X0
-        // Yt = aXt + (1 - a)Yt-1
-        for (size_type i = 1; i < count_; ++i)  {
-            const value_type    curr_v = *(column_begin + i);
+            // Y0 = X0
+            // Yt = aXt + (1 - a)Yt-1
+            for (size_type i = 1; i < count_; ++i)  {
+                const value_type    curr_v = *(column_begin + i);
 
-            *(column_begin + i) = prev_v + alfa_ * (curr_v - prev_v);
-            prev_v = curr_v;
-        }
+                *(column_begin + i) = prev_v + alfa_ * (curr_v - prev_v);
+                prev_v = curr_v;
+            }
+		}
     }
 
     inline void pre ()  { count_ = 0; }
     inline void post ()  {  }
     inline result_type get_result () const  { return (count_); }
 
-    explicit ExpoSmootherVisitor(value_type data_smoothing_factor)
-        : alfa_(data_smoothing_factor)  {   }
+    explicit
+    ExpoSmootherVisitor(value_type data_smoothing_factor, size_type rc = 1)
+        : alfa_(data_smoothing_factor),
+          repeat_count_(rc)  {   }
 
 private:
 
     const value_type    alfa_;
+    const size_type     repeat_count_;
     result_type         count_ { 0 };
 };
 

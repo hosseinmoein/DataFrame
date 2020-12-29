@@ -237,9 +237,10 @@ enum class time_frequency : unsigned char  {
 // ----------------------------------------------------------------------------
 
 enum class return_policy : unsigned char  {
-    log = 1,
-    percentage = 2,
-    monetary = 3,
+    log = 1,         // log(t1 / t0)
+    percentage = 2,  // (t1 - t0) / t0
+    monetary = 3,    // t1 - t0
+    trinary = 4,     // 1 if t1 - t0 > 0, -1 if t1 - t0 < 0, else 0
 };
 
 // ----------------------------------------------------------------------------

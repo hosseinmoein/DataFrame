@@ -2296,6 +2296,46 @@ static void test_WilliamPrcRVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_PSLVisitor()  {
+
+    std::cout << "\nTesting PSLVisitor{  } ..." << std::endl;
+
+    typedef StdDataFrame<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("IBM.csv", io_format::csv2);
+
+        PSLVisitor<double, std::string> psl_v;
+
+        df.single_act_visit<double, double>("IBM_Close", "IBM_Open", psl_v);
+        assert(psl_v.get_result().size() == 5031);
+        assert(std::isnan(psl_v.get_result()[0]));
+        assert(std::isnan(psl_v.get_result()[12]));
+        assert(std::abs(psl_v.get_result()[14] - 57.1429) < 0.0001);
+        assert(std::abs(psl_v.get_result()[20] - 42.8571) < 0.0001);
+        assert(std::abs(psl_v.get_result()[5030] - 42.8571) < 0.0001);
+        assert(std::abs(psl_v.get_result()[5026] - 42.8571) < 0.0001);
+        assert(std::abs(psl_v.get_result()[5021] - 57.1429) < 0.0001);
+
+        df.single_act_visit<double>("IBM_Close", psl_v);
+        assert(psl_v.get_result().size() == 5031);
+        assert(std::isnan(psl_v.get_result()[0]));
+        assert(std::isnan(psl_v.get_result()[12]));
+        assert(std::abs(psl_v.get_result()[14] - 50) < 0.0001);
+        assert(std::abs(psl_v.get_result()[20] - 42.8571) < 0.0001);
+        assert(std::abs(psl_v.get_result()[5030] - 42.8571) < 0.0001);
+        assert(std::abs(psl_v.get_result()[5026] - 42.8571) < 0.0001);
+        assert(std::abs(psl_v.get_result()[5021] - 42.8571) < 0.0001);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int argc, char *argv[]) {
 
     test_get_reindexed();
@@ -2337,6 +2377,7 @@ int main(int argc, char *argv[]) {
     test_RollingMidValueVisitor();
     test_DrawdownVisitor();
     test_WilliamPrcRVisitor();
+    test_PSLVisitor();
 
     return (0);
 }

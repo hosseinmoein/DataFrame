@@ -78,6 +78,12 @@ struct ReturnVisitor  {
             func = [](value_type lhs, value_type rhs) -> value_type  {
                        return (lhs - rhs);
                    };
+        else if (ret_p_ == return_policy::trinary)
+            func = [](value_type lhs, value_type rhs) -> value_type  {
+                       const value_type diff = lhs - rhs;
+
+                       return ((diff > 0) ? 1 : ((diff < 0) ? -1 : 0));
+                   };
 
         result_type tmp_result;
 
@@ -1549,6 +1555,84 @@ struct  WilliamPrcRVisitor  {
     WilliamPrcRVisitor(size_type r_count = 14) : roll_count_(r_count) {   }
 
 private:
+
+    const size_t    roll_count_;
+    result_type     result_ { };
+};
+
+// ----------------------------------------------------------------------------
+
+// Psychological Line (PSL) is an oscillator-type indicator
+//
+template<typename T, typename I = unsigned long>
+struct  PSLVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator()(const K &idx_begin,
+               const K &idx_end,
+               const H &close_begin,
+               const H &close_end)  {
+
+        const size_type col_s = std::distance(close_begin, close_end);
+
+        result_.reserve(col_s);
+        result_.push_back(0);
+        for (size_type i = 1; i < col_s; ++i)
+            result_.push_back(
+                (*(close_begin + i) - *(close_begin + (i - 1)) > 0) ? 1 : 0);
+        calculate_(idx_begin, idx_end);
+    }
+
+    template <typename K, typename H>
+    inline void
+    operator()(const K &idx_begin,
+               const K &idx_end,
+               const H &close_begin,
+               const H &close_end,
+               const H &open_begin,
+               const H &open_end)  {
+
+        const size_type col_s = std::distance(close_begin, close_end);
+
+        assert((col_s == std::distance(open_begin, open_end)));
+
+        result_.reserve(col_s);
+        for (size_type i = 0; i < col_s; ++i)
+            result_.push_back(
+                (*(close_begin + i) - *(open_begin + i) > 0) ? 1 : 0);
+        calculate_(idx_begin, idx_end);
+    }
+
+    inline void pre ()  { result_.clear(); }
+    inline void post ()  {  }
+    inline const result_type &get_result () const  { return (result_); }
+    inline result_type &get_result ()  { return (result_); }
+
+    explicit
+    PSLVisitor(size_type r_count = 14) : roll_count_(r_count) {   }
+
+private:
+
+    template <typename K>
+    inline void calculate_(const K &idx_begin, const K &idx_end)  {
+
+        SimpleRollAdopter<SumVisitor<T, I>, T, I>   sum_r (SumVisitor<T, I>(),
+                                                           roll_count_);
+
+        sum_r.pre();
+        sum_r(idx_begin, idx_end, result_.begin(), result_.end());
+        sum_r.post();
+
+        const size_type col_s = result_.size();
+
+        for (size_type i = 0; i < col_s; ++i)
+            result_[i] =
+                sum_r.get_result()[i] * value_type(100) /
+                value_type(roll_count_);
+    }
 
     const size_t    roll_count_;
     result_type     result_ { };

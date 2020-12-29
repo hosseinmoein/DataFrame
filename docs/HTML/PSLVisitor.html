@@ -1,0 +1,107 @@
+<!--
+Copyright (c) 2019-2022, Hossein Moein
+All rights reserved.
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+* Redistributions of source code must retain the above copyright
+  notice, this list of conditions and the following disclaimer.
+* Redistributions in binary form must reproduce the above copyright
+  notice, this list of conditions and the following disclaimer in the
+  documentation and/or other materials provided with the distribution.
+* Neither the name of Hossein Moein and/or the DataFrame nor the
+  names of its contributors may be used to endorse or promote products
+  derived from this software without specific prior written permission.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL Hossein Moein BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+<!DOCTYPE html>
+<html>
+<body>
+  <table align="center" border="1">
+
+    <tr bgcolor="lightblue">
+      <th>Signature</th> <th>Description</th> <th>Parameters</th>
+    </tr>
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        <PRE><B>#include &lt;DataFrame/DataFrameFinancialVisitors.h&gt;
+
+template&lt;typename T, typename I = unsigned long&gt;
+struct PSLVisitor;
+        </B></PRE></font>
+      </td>
+      <td>
+        This visitor calculates the rolling values of Psychological Line. It requires either one or two input column(s) in the order of <I>close, open</I> or only <I>close</I>.<BR>
+        The result is a vector of values with same number of items as the given column(s). The first roll_count items, in the result, will be NAN.<BR>
+        The Psychological Line (PSL) indicator is the ratio of the number of rising periods over the total number of periods. It reflects the buying power in relation to the selling power. If PSL is above 50%, it indicates that buyers are in control. Likewise, if it is below 50%, it indicates the sellers are in control. If the PSL moves along the 50% area, it indicates balance between the buyers and sellers and therefore there is no direction movement for the market.<BR>
+        There are two ways you can use PSLVisitor; with close and open time-series or only with the close time series. In the latter case, a one period diff of close will be the basis. In the former case the difference between close and open is the basis. Please see code sample below.<BR>
+        <PRE>
+    explicit PSLVisitor(size_t roll_count = 14);
+        </PRE>
+      </td>
+      <td width="12%">
+        <B>T</B>: Column data type<BR>
+        <B>I</B>: Index type
+      </td>
+    </tr>
+
+  </table>
+
+<pre style='color:#000000;background:#ffffff;'><span style='color:#800000; font-weight:bold; '>static</span> <span style='color:#800000; font-weight:bold; '>void</span> test_PSLVisitor<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span>  <span style='color:#800080; '>{</span>
+
+    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>cout</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#800000; '>"</span><span style='color:#0f69ff; '>\n</span><span style='color:#0000e6; '>Testing PSLVisitor{  } ...</span><span style='color:#800000; '>"</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>endl</span><span style='color:#800080; '>;</span>
+
+    <span style='color:#800000; font-weight:bold; '>typedef</span> StdDataFrame<span style='color:#800080; '>&lt;</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>string</span><span style='color:#800080; '>></span> StrDataFrame<span style='color:#800080; '>;</span>
+
+    StrDataFrame    df<span style='color:#800080; '>;</span>
+
+    <span style='color:#800000; font-weight:bold; '>try</span>  <span style='color:#800080; '>{</span>
+        df<span style='color:#808030; '>.</span>read<span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>IBM.csv</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> io_format<span style='color:#800080; '>::</span>csv2<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+
+        PSLVisitor<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#808030; '>,</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>string</span><span style='color:#800080; '>></span> psl_v<span style='color:#800080; '>;</span>
+
+        df<span style='color:#808030; '>.</span>single_act_visit<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#808030; '>,</span> <span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>IBM_Close</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>IBM_Open</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> psl_v<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+        assert<span style='color:#808030; '>(</span>psl_v<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>.</span>size<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>=</span><span style='color:#808030; '>=</span> <span style='color:#008c00; '>5031</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+        assert<span style='color:#808030; '>(</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span>isnan<span style='color:#808030; '>(</span>psl_v<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span><span style='color:#008c00; '>0</span><span style='color:#808030; '>]</span><span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+        assert<span style='color:#808030; '>(</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span>isnan<span style='color:#808030; '>(</span>psl_v<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span><span style='color:#008c00; '>12</span><span style='color:#808030; '>]</span><span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+        assert<span style='color:#808030; '>(</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>abs</span><span style='color:#808030; '>(</span>psl_v<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span><span style='color:#008c00; '>14</span><span style='color:#808030; '>]</span> <span style='color:#808030; '>-</span> <span style='color:#008000; '>57.1429</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>&lt;</span> <span style='color:#008000; '>0.0001</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+        assert<span style='color:#808030; '>(</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>abs</span><span style='color:#808030; '>(</span>psl_v<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span><span style='color:#008c00; '>20</span><span style='color:#808030; '>]</span> <span style='color:#808030; '>-</span> <span style='color:#008000; '>42.8571</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>&lt;</span> <span style='color:#008000; '>0.0001</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+        assert<span style='color:#808030; '>(</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>abs</span><span style='color:#808030; '>(</span>psl_v<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span><span style='color:#008c00; '>5030</span><span style='color:#808030; '>]</span> <span style='color:#808030; '>-</span> <span style='color:#008000; '>42.8571</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>&lt;</span> <span style='color:#008000; '>0.0001</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+        assert<span style='color:#808030; '>(</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>abs</span><span style='color:#808030; '>(</span>psl_v<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span><span style='color:#008c00; '>5026</span><span style='color:#808030; '>]</span> <span style='color:#808030; '>-</span> <span style='color:#008000; '>42.8571</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>&lt;</span> <span style='color:#008000; '>0.0001</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+        assert<span style='color:#808030; '>(</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>abs</span><span style='color:#808030; '>(</span>psl_v<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span><span style='color:#008c00; '>5021</span><span style='color:#808030; '>]</span> <span style='color:#808030; '>-</span> <span style='color:#008000; '>57.1429</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>&lt;</span> <span style='color:#008000; '>0.0001</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+
+        df<span style='color:#808030; '>.</span>single_act_visit<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>IBM_Close</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> psl_v<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+        assert<span style='color:#808030; '>(</span>psl_v<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>.</span>size<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>=</span><span style='color:#808030; '>=</span> <span style='color:#008c00; '>5031</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+        assert<span style='color:#808030; '>(</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span>isnan<span style='color:#808030; '>(</span>psl_v<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span><span style='color:#008c00; '>0</span><span style='color:#808030; '>]</span><span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+        assert<span style='color:#808030; '>(</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span>isnan<span style='color:#808030; '>(</span>psl_v<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span><span style='color:#008c00; '>12</span><span style='color:#808030; '>]</span><span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+        assert<span style='color:#808030; '>(</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>abs</span><span style='color:#808030; '>(</span>psl_v<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span><span style='color:#008c00; '>14</span><span style='color:#808030; '>]</span> <span style='color:#808030; '>-</span> <span style='color:#008c00; '>50</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>&lt;</span> <span style='color:#008000; '>0.0001</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+        assert<span style='color:#808030; '>(</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>abs</span><span style='color:#808030; '>(</span>psl_v<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span><span style='color:#008c00; '>20</span><span style='color:#808030; '>]</span> <span style='color:#808030; '>-</span> <span style='color:#008000; '>42.8571</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>&lt;</span> <span style='color:#008000; '>0.0001</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+        assert<span style='color:#808030; '>(</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>abs</span><span style='color:#808030; '>(</span>psl_v<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span><span style='color:#008c00; '>5030</span><span style='color:#808030; '>]</span> <span style='color:#808030; '>-</span> <span style='color:#008000; '>42.8571</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>&lt;</span> <span style='color:#008000; '>0.0001</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+        assert<span style='color:#808030; '>(</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>abs</span><span style='color:#808030; '>(</span>psl_v<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span><span style='color:#008c00; '>5026</span><span style='color:#808030; '>]</span> <span style='color:#808030; '>-</span> <span style='color:#008000; '>42.8571</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>&lt;</span> <span style='color:#008000; '>0.0001</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+        assert<span style='color:#808030; '>(</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>abs</span><span style='color:#808030; '>(</span>psl_v<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span><span style='color:#008c00; '>5021</span><span style='color:#808030; '>]</span> <span style='color:#808030; '>-</span> <span style='color:#008000; '>42.8571</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>&lt;</span> <span style='color:#008000; '>0.0001</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    <span style='color:#800080; '>}</span>
+    <span style='color:#800000; font-weight:bold; '>catch</span> <span style='color:#808030; '>(</span><span style='color:#800000; font-weight:bold; '>const</span> DataFrameError <span style='color:#808030; '>&amp;</span>ex<span style='color:#808030; '>)</span>  <span style='color:#800080; '>{</span>
+        <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>cout</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> ex<span style='color:#808030; '>.</span>what<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>endl</span><span style='color:#800080; '>;</span>
+    <span style='color:#800080; '>}</span>
+<span style='color:#800080; '>}</span>
+</pre>
+<!--Created using ToHtml.com on 2020-12-29 18:21:21 UTC -->
+
+</body>
+</html>
+
+<!--
+Local Variables:
+mode:HTML
+tab-width:4
+c-basic-offset:4
+End:
+-->

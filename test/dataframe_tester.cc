@@ -2202,6 +2202,17 @@ static void test_return()  {
     assert(fabs(result3[16] - 1.13882) < 0.00001);
     assert(fabs(result3[6] - -4.12333) < 0.00001);
     assert(fabs(result3[10] - -1.91172) < 0.00001);
+
+    ReturnVisitor<double>   return_visit4(return_policy::trinary);
+    const auto              &result4 =
+        df.single_act_visit<double>("col_1", return_visit4).get_result();
+
+    assert(result4.size() == 20);
+    assert(result4[0] == 1);
+    assert(result4[1] == -1);
+    assert(result4[16] == 1);
+    assert(result4[6] == -1);
+    assert(result4[10] == -1);
 }
 
 // -----------------------------------------------------------------------------

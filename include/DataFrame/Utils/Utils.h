@@ -102,22 +102,22 @@ is_nan__<long double>(const long double &val)  { return(std::isnan(val)); }
 // ----------------------------------------------------------------------------
 
 template<typename T>
-inline constexpr T
+inline T
 get_nan()  { return (T()); }
 
 template<>
-inline constexpr double
+inline double
 get_nan<double>()  { return (std::numeric_limits<double>::quiet_NaN()); }
 
 template<>
-inline constexpr long double
+inline long double
 get_nan<long double>()  {
 
     return (std::numeric_limits<long double>::quiet_NaN());
 }
 
 template<>
-inline constexpr float
+inline float
 get_nan<float>()  { return (std::numeric_limits<float>::quiet_NaN()); }
 
 // ----------------------------------------------------------------------------

@@ -292,7 +292,7 @@ public:  // Load/append/remove interfaces
         std::vector<T> &&data,
         size_type interval,
         bool start_from_beginning,
-        const T &null_value = get_nan<T>(),
+        const T &null_value = hmdf::get_nan<T>(),
         std::function<typename DataFrame<I, H>::size_type (
             const typename DataFrame<I, H>::IndexType &,
             const typename DataFrame<I, H>::IndexType &)> diff_func =

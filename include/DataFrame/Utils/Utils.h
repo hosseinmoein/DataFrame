@@ -118,7 +118,7 @@ is_nan(const T &val)  {
     return (get_nan<T>() == val);
 }
 
-} // namespace std
+} // namespace hmdf
 
 // ----------------------------------------------------------------------------
 

@@ -84,13 +84,16 @@ for_each_in_tuple(std::tuple<Ts...> &tu, F func)  {
 // ----------------------------------------------------------------------------
 
 template<typename T>
-inline bool is_nan__(const T &)  { return (false); }
+inline bool
+is_nan__(const T &)  { return (false); }
 
 template<>
-inline bool is_nan__<double>(const double &val)  { return(std::isnan(val)); }
+inline bool
+is_nan__<double>(const double &val)  { return(std::isnan(val)); }
 
 template<>
-inline bool is_nan__<float>(const float &val)  { return(std::isnan(val)); }
+inline bool
+is_nan__<float>(const float &val)  { return(std::isnan(val)); }
 
 template<>
 inline bool
@@ -100,12 +103,22 @@ is_nan__<long double>(const long double &val)  { return(std::isnan(val)); }
 
 template<typename T>
 inline constexpr T
-get_nan()  {
+get_nan()  { return (T()); }
 
-    if (std::numeric_limits<T>::has_quiet_NaN)
-        return (std::numeric_limits<T>::quiet_NaN());
-    return (T());
+template<>
+inline constexpr double
+get_nan<double>()  { return (std::numeric_limits<double>::quiet_NaN()); }
+
+template<>
+inline constexpr long double
+get_nan<long double>()  {
+
+    return (std::numeric_limits<long double>::quiet_NaN());
 }
+
+template<>
+inline constexpr float
+get_nan<float>()  { return (std::numeric_limits<float>::quiet_NaN()); }
 
 // ----------------------------------------------------------------------------
 

@@ -182,9 +182,9 @@ get_col_unique_values(const char *name) const  {
 
     result.reserve(vec.size());
     for (auto citer : vec)  {
-        if (_is_nan<T>(citer) && ! counted_nan)  {
+        if (is_nan<T>(citer) && ! counted_nan)  {
             counted_nan = true;
-            result.push_back(_get_nan<T>());
+            result.push_back(get_nan<T>());
             continue;
         }
 
@@ -627,8 +627,8 @@ get_data_by_sel (const char *name1, const char *name2, F &sel_functor) const  {
     col_indices.reserve(idx_s / 2);
     for (size_type i = 0; i < col_s; ++i)
         if (sel_functor (indices_[i],
-                         i < col_s1 ? vec1[i] : _get_nan<T1>(),
-                         i < col_s2 ? vec2[i] : _get_nan<T2>()))
+                         i < col_s1 ? vec1[i] : get_nan<T1>(),
+                         i < col_s2 ? vec2[i] : get_nan<T2>()))
             col_indices.push_back(i);
 
     DataFrame       df;
@@ -673,8 +673,8 @@ get_view_by_sel (const char *name1, const char *name2, F &sel_functor) const  {
     col_indices.reserve(idx_s / 2);
     for (size_type i = 0; i < col_s; ++i)
         if (sel_functor (indices_[i],
-                         i < col_s1 ? vec1[i] : _get_nan<T1>(),
-                         i < col_s2 ? vec2[i] : _get_nan<T2>()))
+                         i < col_s1 ? vec1[i] : get_nan<T1>(),
+                         i < col_s2 ? vec2[i] : get_nan<T2>()))
             col_indices.push_back(i);
 
     using TheView = DataFramePtrView<IndexType>;
@@ -725,9 +725,9 @@ get_data_by_sel (const char *name1,
     col_indices.reserve(idx_s / 2);
     for (size_type i = 0; i < col_s; ++i)
         if (sel_functor (indices_[i],
-                         i < col_s1 ? vec1[i] : _get_nan<T1>(),
-                         i < col_s2 ? vec2[i] : _get_nan<T2>(),
-                         i < col_s3 ? vec3[i] : _get_nan<T3>()))
+                         i < col_s1 ? vec1[i] : get_nan<T1>(),
+                         i < col_s2 ? vec2[i] : get_nan<T2>(),
+                         i < col_s3 ? vec3[i] : get_nan<T3>()))
             col_indices.push_back(i);
 
     DataFrame       df;
@@ -777,9 +777,9 @@ get_view_by_sel (const char *name1,
     col_indices.reserve(idx_s / 2);
     for (size_type i = 0; i < col_s; ++i)
         if (sel_functor (indices_[i],
-                         i < col_s1 ? vec1[i] : _get_nan<T1>(),
-                         i < col_s2 ? vec2[i] : _get_nan<T2>(),
-                         i < col_s3 ? vec3[i] : _get_nan<T3>()))
+                         i < col_s1 ? vec1[i] : get_nan<T1>(),
+                         i < col_s2 ? vec2[i] : get_nan<T2>(),
+                         i < col_s3 ? vec3[i] : get_nan<T3>()))
             col_indices.push_back(i);
 
     using TheView = DataFramePtrView<IndexType>;

@@ -419,23 +419,6 @@ using DataFramePtrView = DataFrame<I, HeteroPtrView>;
 
 // ----------------------------------------------------------------------------
 
-// These are templated, so they work for all types
-
-template<typename T>
-inline bool is_nan__(const T &)  { return(false); }
-
-template<>
-inline bool is_nan__<double>(const double &val)  { return(std::isnan(val)); }
-
-template<>
-inline bool is_nan__<float>(const float &val)  { return(std::isnan(val)); }
-
-template<>
-inline bool
-is_nan__<long double>(const long double &val)  { return(std::isnan(val)); }
-
-// ----------------------------------------------------------------------------
-
 // Evertyhting is in bytes. The numbers are estimates, since memory allocated
 // is really unknown to the objects such as vectors.
 // If type has dynamically allocated memory, it is not counted here

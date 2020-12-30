@@ -56,6 +56,7 @@ HEADERS = $(LOCAL_INCLUDE_DIR)/DataFrame/Vectors/HeteroVector.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Vectors/VectorPtrView.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/ThreadGranularity.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/DateTime.h \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/Utils.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/FixedSizeString.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/FixedSizePriorityQueue.h
 

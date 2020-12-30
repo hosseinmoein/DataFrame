@@ -183,7 +183,7 @@ void DataFrame<I, H>::shift_right_(V &vec, size_type n)  {
             *riter = std::move(*(riter + n));
         }
         else  {
-            *riter = std::move(_get_nan<value_type>());
+            *riter = std::move(get_nan<value_type>());
         }
 
     return;
@@ -208,7 +208,7 @@ void DataFrame<I, H>::shift_left_(V &vec, size_type n)  {
             *iter = std::move(*(iter + n));
         }
         else  {
-            *iter = std::move(_get_nan<value_type>());
+            *iter = std::move(get_nan<value_type>());
         }
 
     return;

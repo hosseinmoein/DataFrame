@@ -34,7 +34,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cmath>
 #include <functional>
 #include <future>
-#include <limits>
 #include <random>
 
 // ----------------------------------------------------------------------------
@@ -106,28 +105,6 @@ DataFrame<I, H>::shuffle(const std::array<const char *, N> col_names,
 
 template<typename I, typename H>
 template<typename T>
-inline constexpr T DataFrame<I, H>::_get_nan()  {
-
-    if (std::numeric_limits<T>::has_quiet_NaN)
-        return (std::numeric_limits<T>::quiet_NaN());
-    return (T());
-}
-
-// ----------------------------------------------------------------------------
-
-template<typename I, typename H>
-template<typename T>
-inline constexpr bool DataFrame<I, H>::_is_nan(const T &val)  {
-
-    if (std::numeric_limits<T>::has_quiet_NaN)
-        return (is_nan__(val));
-    return (_get_nan<T>() == val);
-}
-
-// ----------------------------------------------------------------------------
-
-template<typename I, typename H>
-template<typename T>
 void DataFrame<I, H>::
 fill_missing_value_(ColumnVecType<T> &vec,
                     const T &value,
@@ -145,7 +122,7 @@ fill_missing_value_(ColumnVecType<T> &vec,
             vec.push_back(value);
             count += 1;
         }
-        else if (_is_nan<T>(vec[i]))  {
+        else if (is_nan<T>(vec[i]))  {
             vec[i] = value;
             count += 1;
         }
@@ -170,7 +147,7 @@ fill_missing_ffill_(ColumnVecType<T> &vec, int limit, size_type col_num)  {
     for (size_type i = 1; i < col_num; ++i)  {
         if (limit >= 0 && count >= limit)  break;
         if (i >= vec_size)  {
-            if (! _is_nan(last_value))  {
+            if (! is_nan(last_value))  {
                 vec.reserve(col_num);
                 vec.push_back(last_value);
                 count += 1;
@@ -178,9 +155,9 @@ fill_missing_ffill_(ColumnVecType<T> &vec, int limit, size_type col_num)  {
             else  break;
         }
         else  {
-            if (! _is_nan<T>(vec[i]))
+            if (! is_nan<T>(vec[i]))
                 last_value = vec[i];
-            else if (! _is_nan<T>(last_value))  {
+            else if (! is_nan<T>(last_value))  {
                 vec[i] = last_value;
                 count += 1;
             }
@@ -221,11 +198,11 @@ fill_missing_midpoint_(ColumnVecType<T> &vec, int limit, size_type col_num)  {
     for (size_type i = 1; i < vec_size - 1; ++i)  {
         if (limit >= 0 && count >= limit)  break;
 
-        if (! _is_nan<T>(vec[i]))
+        if (! is_nan<T>(vec[i]))
             last_value = vec[i];
-        else if (! _is_nan<T>(last_value))  {
+        else if (! is_nan<T>(last_value))  {
             for (size_type j = i + 1; j < vec_size; ++j)  {
-                if (! _is_nan<T>(vec[j]))  {
+                if (! is_nan<T>(vec[j]))  {
                     vec[i] = (last_value + vec[j]) / T(2);
                     last_value = vec[i];
                     count += 1;
@@ -253,8 +230,8 @@ fill_missing_bfill_(ColumnVecType<T> &vec, int limit)  {
 
     for (long i = vec_size - 1; i >= 0; --i)  {
         if (limit >= 0 && count >= limit)  break;
-        if (! _is_nan<T>(vec[i]))  last_value = vec[i];
-        if (_is_nan<T>(vec[i]) && ! _is_nan<T>(last_value))  {
+        if (! is_nan<T>(vec[i]))  last_value = vec[i];
+        if (is_nan<T>(vec[i]) && ! is_nan<T>(last_value))  {
             vec[i] = last_value;
             count += 1;
         }
@@ -299,12 +276,12 @@ fill_missing_linter_(ColumnVecType<T> &vec,
 
     for (long i = 1; i < vec_size - 1; ++i)  {
         if (limit >= 0 && count >= limit)  break;
-        if (_is_nan<T>(vec[i]))  {
-            if (_is_nan<T>(*y2))  {
+        if (is_nan<T>(vec[i]))  {
+            if (is_nan<T>(*y2))  {
                 bool    found = false;
 
                 for (long j = i + 1; j < vec_size; ++j)  {
-                    if (! _is_nan(vec[j]))  {
+                    if (! is_nan(vec[j]))  {
                         y2 = &(vec[j]);
                         x2 = &(index[j]);
                         found = true;
@@ -313,9 +290,9 @@ fill_missing_linter_(ColumnVecType<T> &vec,
                 }
                 if (! found)  break;
             }
-            if (_is_nan<T>(*y1))  {
+            if (is_nan<T>(*y1))  {
                 for (long j = i - 1; j >= 0; --j)  {
-                    if (! _is_nan(vec[j]))  {
+                    if (! is_nan(vec[j]))  {
                         y1 = &(vec[j]);
                         x1 = &(index[j]);
                         break;
@@ -1428,7 +1405,7 @@ DataFrame<I, H>::value_counts (const char *col_name) const  {
 
     // take care of nans
     for (auto citer : vec)  {
-        if (_is_nan<T>(citer))  {
+        if (is_nan<T>(citer))  {
             ++nan_count;
             continue;
         }
@@ -1450,7 +1427,7 @@ DataFrame<I, H>::value_counts (const char *col_name) const  {
         counts.emplace_back(citer.second);
     }
     if (nan_count > 0)  {
-        res_indices.push_back(_get_nan<T>());
+        res_indices.push_back(get_nan<T>());
         counts.emplace_back(nan_count);
     }
 
@@ -1535,7 +1512,7 @@ transpose(IndexVecType &&indices, const V &new_col_names) const  {
             if (current_cols[j]->size() > i)
                 trans_cols[i].push_back((*(current_cols[j]))[i]);
             else
-                trans_cols[i].push_back(_get_nan<T>());
+                trans_cols[i].push_back(get_nan<T>());
         }
     }
 

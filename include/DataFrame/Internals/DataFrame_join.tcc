@@ -275,12 +275,12 @@ column_join_helper_(const LHS_T &lhs,
         }
         else  {
             named_col_vec.push_back(rhs_named_col_vec[right_i]);
-            lhs_index.push_back(DataFrame::_get_nan<left_idx_t>());
+            lhs_index.push_back(get_nan<left_idx_t>());
         }
         if (right_i != std::numeric_limits<size_type>::max())
             rhs_index.push_back(rhs.indices_[right_i]);
         else
-            rhs_index.push_back(DataFrame::_get_nan<right_idx_t>());
+            rhs_index.push_back(get_nan<right_idx_t>());
     }
 
     char    buffer[64];

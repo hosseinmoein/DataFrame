@@ -32,6 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/DataFrameTypes.h>
 #include <DataFrame/Internals/DataFrame_standalone.tcc>
 #include <DataFrame/Utils/FixedSizePriorityQueue.h>
+#include <DataFrame/Utils/Utils.h>
 
 #include <algorithm>
 #include <cassert>
@@ -2426,6 +2427,7 @@ struct DiffVisitor  {
 
         GET_COL_SIZE
 
+        assert(col_s > 0 && std::abs(periods_) < (col_s - 1));
         result_.reserve(col_s);
         if (periods_ >= 0)  {
             if (! skip_nan_)  {
@@ -2435,23 +2437,24 @@ struct DiffVisitor  {
                         std::numeric_limits<value_type>::quiet_NaN());
             }
 
-            auto    i = column_begin;
+            auto    i = column_begin + periods_;
 
-            i += periods_;
             for (auto j = column_begin; i < column_end; ++i, ++j) {
                 if (skip_nan_ && (is_nan__(*i) || is_nan__(*j)))  continue;
                 result_.push_back(*i - *j);
             }
         }
         else {
-            auto    i = column_end;
-            auto    j = column_end;
+            auto    i = column_end - (1 + std::abs(periods_));
+            auto    j = column_end - 1;
 
-            i -= (1 + std::abs(periods_));
-            j -= 1;
-            for ( ; i >= column_begin; --i, --j) {
+            for ( ; i > column_begin; --i, --j) {
                 if (skip_nan_ && (is_nan__(*i) || is_nan__(*j)))  continue;
                 result_.push_back(*i - *j);
+            }
+            if (i == column_begin)  {
+                if (! (skip_nan_ && (is_nan__(*i) || is_nan__(*j))))
+                    result_.push_back(*i - *j);
             }
             std::reverse(result_.begin(), result_.end());
 
@@ -2459,8 +2462,7 @@ struct DiffVisitor  {
             for (size_type i = 0;
                  i < static_cast<size_type>(std::abs(periods_)) && i < col_s;
                  ++i)
-                result_.push_back(
-                    std::numeric_limits<value_type>::quiet_NaN());
+                result_.push_back(std::numeric_limits<value_type>::quiet_NaN());
         }
     }
 

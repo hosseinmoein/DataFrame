@@ -117,6 +117,7 @@ set(${LIBRARY_TARGET_NAME}_HDR
   include/DataFrame/Internals/RandGen.tcc
   include/DataFrame/Utils/ThreadGranularity.h
   include/DataFrame/Utils/DateTime.h
+  include/DataFrame/Utils/Utils.h
   include/DataFrame/Utils/FixedSizeString.h
   include/DataFrame/Utils/FixedSizePriorityQueue.h
 )

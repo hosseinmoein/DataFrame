@@ -430,51 +430,6 @@ mod_by_idx_functor_<Ts ...>::operator() (T &lhs_vec) const  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename ... Ts, typename F, std::size_t ... Is>
-void DataFrame<I, H>::
-for_each_in_tuple_ (const std::tuple<Ts ...> &tu,
-                    F func,
-                    std::index_sequence<Is ...>)  {
-
-    using expander = int[];
-    (void) expander { 0, (func(std::get<Is>(tu)), 0) ... };
-}
-
-// ----------------------------------------------------------------------------
-
-template<typename I, typename H>
-template<typename ... Ts, typename F, std::size_t ... Is>
-void DataFrame<I, H>::
-for_each_in_tuple_ (std::tuple<Ts ...> &tu,
-                    F func,
-                    std::index_sequence<Is ...>)  {
-
-    using expander = int[];
-    (void) expander { 0, (func(std::get<Is>(tu)), 0) ... };
-}
-
-// ----------------------------------------------------------------------------
-
-template<typename I, typename H>
-template<typename ... Ts, typename F>
-void DataFrame<I, H>::
-for_each_in_tuple_ (const std::tuple<Ts...> &tu, F func)  {
-
-    for_each_in_tuple_(tu, func, std::make_index_sequence<sizeof...(Ts)>());
-}
-
-// ----------------------------------------------------------------------------
-
-template<typename I, typename H>
-template<typename ... Ts, typename F>
-void DataFrame<I, H>::for_each_in_tuple_ (std::tuple<Ts...> &tu, F func) {
-
-    for_each_in_tuple_(tu, func, std::make_index_sequence<sizeof...(Ts)>());
-}
-
-// ----------------------------------------------------------------------------
-
-template<typename I, typename H>
 template<typename RES_T, typename ... Ts>
 template<typename T>
 void
@@ -496,10 +451,10 @@ index_join_functor_common_<RES_T, Ts ...>::operator()(const T &lhs_vec)  {
 
         lhs_result_col.push_back(
             left_i != std::numeric_limits<size_type>::max()
-                ? lhs_vec[left_i] : DataFrame::_get_nan<ValueType>());
+                ? lhs_vec[left_i] : get_nan<ValueType>());
         rhs_result_col.push_back(
             right_i != std::numeric_limits<size_type>::max()
-                ? rhs_vec[right_i] : DataFrame::_get_nan<ValueType>());
+                ? rhs_vec[right_i] : get_nan<ValueType>());
     }
 
     char    lhs_str[256];
@@ -530,7 +485,7 @@ operator()(const T &vec)  {
 
         result_col.push_back(
             i != std::numeric_limits<size_type>::max()
-                ? vec[i] : DataFrame::_get_nan<ValueType>());
+                ? vec[i] : get_nan<ValueType>());
     }
 
     result.load_column(name, std::move(result_col));
@@ -549,7 +504,7 @@ operator()(const T &vec)  {
 
     if (insert_col)  {
         std::vector<ValueType>  res_vec(original_index_s + vec.size(),
-                                        DataFrame::_get_nan<ValueType>());
+                                        get_nan<ValueType>());
 
         std::copy(vec.begin(), vec.end(), res_vec.begin() + original_index_s);
         result.load_column(name, res_vec);
@@ -655,7 +610,7 @@ operator()(const T &vec)  {
     const size_type vec_size = vec.size();
 
     for (size_type idx = 0; idx < index_rows; ++idx)  {
-        if (idx >= vec_size || DataFrame::_is_nan(vec[idx]))  {
+        if (idx >= vec_size || is_nan(vec[idx]))  {
             auto result = missing_row_map.emplace(idx, 0);
 
             result.first->second += 1;
@@ -693,7 +648,7 @@ operator()(const T &vec)  {
     if (row_num < vec.size())
         result.push_back(vec[row_num]);
     else
-        result.push_back(_get_nan<typename T::value_type>());
+        result.push_back(get_nan<typename T::value_type>());
     return;
 }
 

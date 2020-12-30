@@ -33,6 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/Utils/DateTime.h>
 #include <DataFrame/Utils/FixedSizeString.h>
 #include <DataFrame/Utils/ThreadGranularity.h>
+#include <DataFrame/Utils/Utils.h>
 
 #include <array>
 #include <fstream>
@@ -291,7 +292,7 @@ public:  // Load/append/remove interfaces
         std::vector<T> &&data,
         size_type interval,
         bool start_from_beginning,
-        const T &null_value = DataFrame::_get_nan<T>(),
+        const T &null_value = get_nan<T>(),
         std::function<typename DataFrame<I, H>::size_type (
             const typename DataFrame<I, H>::IndexType &,
             const typename DataFrame<I, H>::IndexType &)> diff_func =
@@ -2887,14 +2888,6 @@ protected:
     size_type
     _load_pair(std::pair<T1, T2> &col_name_data);
 
-    template<typename T>
-    static inline constexpr
-    T _get_nan();
-
-    template<typename T>
-    static inline constexpr bool
-    _is_nan(const T &val);
-
 private:  // Static helper functions
 
     void read_json_(std::ifstream &file);
@@ -3128,28 +3121,6 @@ private:  // Static helper functions
 
     // Visiting functors
 #   include <DataFrame/Internals/DataFrame_functors.h>
-
-private:  // Tuple stuff
-
-    template<typename ... Ts, typename F, std::size_t ... Is>
-    static void
-    for_each_in_tuple_(const std::tuple<Ts ...> &tu,
-                       F func,
-                       std::index_sequence<Is ...>);
-
-    template<typename ... Ts, typename F, std::size_t ... Is>
-    static void
-    for_each_in_tuple_(std::tuple<Ts ...> &tu,
-                       F func,
-                       std::index_sequence<Is ...>);
-
-    template<typename ... Ts, typename F>
-    static void
-    for_each_in_tuple_(const std::tuple<Ts...> &tu, F func);
-
-    template<typename ... Ts, typename F>
-    static void
-    for_each_in_tuple_(std::tuple<Ts...> &tu, F func);
 };
 
 } // namespace hmdf

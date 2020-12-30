@@ -52,7 +52,7 @@ void DataFrame<I, H>::multi_visit (Ts ... args)  {
         this->visit<T, V>(pa.first, functor);
     };
 
-    for_each_in_tuple_ (args_tuple, fc);
+    for_each_in_tuple (args_tuple, fc);
     return;
 }
 
@@ -66,7 +66,7 @@ V &DataFrame<I, H>::visit (const char *name, V &visitor, bool in_reverse)  {
     const size_type idx_s = indices_.size();
     const size_type min_s = std::min<size_type>(vec.size(), idx_s);
     size_type       i = 0;
-    T               nan_val = _get_nan<T>();
+    T               nan_val = get_nan<T>();
 
     visitor.pre();
     if (! in_reverse)  {
@@ -137,8 +137,8 @@ visit (const char *name1, const char *name2, V &visitor, bool in_reverse)  {
     const size_type data_s2 = vec2.size();
     const size_type min_s = std::min<size_type>({ idx_s, data_s1, data_s2 });
     size_type       i = 0;
-    T1              nan_val1 = _get_nan<T1>();
-    T2              nan_val2 = _get_nan<T2>();
+    T1              nan_val1 = get_nan<T1>();
+    T2              nan_val2 = get_nan<T2>();
 
     visitor.pre();
     if (! in_reverse)  {
@@ -233,9 +233,9 @@ visit (const char *name1,
     const size_type min_s =
         std::min<size_type>({ idx_s, data_s1, data_s2, data_s3 });
     size_type       i = 0;
-    T1              nan_val1 = _get_nan<T1>();
-    T2              nan_val2 = _get_nan<T2>();
-    T3              nan_val3 = _get_nan<T3>();
+    T1              nan_val1 = get_nan<T1>();
+    T2              nan_val2 = get_nan<T2>();
+    T3              nan_val3 = get_nan<T3>();
 
     visitor.pre();
     if (! in_reverse)  {
@@ -345,10 +345,10 @@ visit (const char *name1,
     const size_type min_s =
         std::min<size_type>({ idx_s, data_s1, data_s2, data_s3, data_s4 });
     size_type       i = 0;
-    T1              nan_val1 = _get_nan<T1>();
-    T2              nan_val2 = _get_nan<T2>();
-    T3              nan_val3 = _get_nan<T3>();
-    T4              nan_val4 = _get_nan<T4>();
+    T1              nan_val1 = get_nan<T1>();
+    T2              nan_val2 = get_nan<T2>();
+    T3              nan_val3 = get_nan<T3>();
+    T4              nan_val4 = get_nan<T4>();
 
     visitor.pre();
     if (! in_reverse)  {
@@ -472,11 +472,11 @@ visit (const char *name1,
         std::min<size_type>(
             { idx_s, data_s1, data_s2, data_s3, data_s4, data_s5 });
     size_type       i = 0;
-    T1              nan_val1 = _get_nan<T1>();
-    T2              nan_val2 = _get_nan<T2>();
-    T3              nan_val3 = _get_nan<T3>();
-    T4              nan_val4 = _get_nan<T4>();
-    T5              nan_val5 = _get_nan<T5>();
+    T1              nan_val1 = get_nan<T1>();
+    T2              nan_val2 = get_nan<T2>();
+    T3              nan_val3 = get_nan<T3>();
+    T4              nan_val4 = get_nan<T4>();
+    T5              nan_val5 = get_nan<T5>();
 
     visitor.pre();
     if (! in_reverse)  {

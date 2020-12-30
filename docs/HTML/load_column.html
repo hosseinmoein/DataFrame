@@ -112,7 +112,7 @@ load_align_column(
     const std::vector&lt;T&gt; &amp;&amp;data,
     size_type interval,
     bool start_from_beginning,
-    const T &amp;null_value = DataFrame::_get_nan&lt;T&gt;(),
+    const T &amp;null_value = get_nan&lt;T&gt;(),
     std::function&lt;size_type (const IndexType &amp;,
                              const IndexType &amp;)&gt; diff_func =
         [](const IndexType &amp;t_1, const IndexType &amp;t) -&gt; size_type  {

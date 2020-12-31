@@ -228,11 +228,19 @@ static void test_load_align_column()  {
 
     df.load_data(std::move(idxvec),
                  std::make_pair("int_col", intvec));
-    df.load_align_column("summary_col", std::move(summary_vec), 5, true);
+    df.load_align_column("summary_col",
+                         std::move(summary_vec),
+                         5,
+                         true,
+                         std::sqrt(-1));
 
     std::vector<double> summary_vec_2 = { 102, 202, 302, 402, 502 };
 
-    df.load_align_column("summary_col_2", std::move(summary_vec_2), 5, false);
+    df.load_align_column("summary_col_2",
+                         std::move(summary_vec_2),
+                         5,
+                         false,
+                         std::sqrt(-1));
 
     assert(df.get_column<double>("summary_col").size() == 28);
     assert(df.get_column<double>("summary_col_2").size() == 28);

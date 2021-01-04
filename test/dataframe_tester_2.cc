@@ -2344,6 +2344,37 @@ static void test_PSLVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_CCIVisitor()  {
+
+    std::cout << "\nTesting CCIVisitor{  } ..." << std::endl;
+
+    typedef StdDataFrame<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("IBM.csv", io_format::csv2);
+
+        CCIVisitor<double, std::string> cci_v;
+
+        df.single_act_visit<double, double, double>
+            ("IBM_Low", "IBM_High", "IBM_Close", cci_v);
+
+        assert(cci_v.get_result().size() == 5031);
+        assert(std::isnan(cci_v.get_result()[0]));
+        assert(std::isnan(cci_v.get_result()[12]));
+        assert(std::abs(cci_v.get_result()[14] - 30.3681) < 0.0001);
+        assert(std::abs(cci_v.get_result()[20] - -178.37) < 0.001);
+        assert(std::abs(cci_v.get_result()[5030] - -77.4585) < 0.0001);
+        assert(std::abs(cci_v.get_result()[5026] - -127.358) < 0.001);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int argc, char *argv[]) {
 
     test_get_reindexed();
@@ -2386,6 +2417,7 @@ int main(int argc, char *argv[]) {
     test_DrawdownVisitor();
     test_WilliamPrcRVisitor();
     test_PSLVisitor();
+    test_CCIVisitor();
 
     return (0);
 }

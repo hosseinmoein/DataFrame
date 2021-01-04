@@ -1556,7 +1556,7 @@ struct  WilliamPrcRVisitor  {
 
 private:
 
-    const size_t    roll_count_;
+    const size_type roll_count_;
     result_type     result_ { };
 };
 
@@ -1634,9 +1634,80 @@ private:
                 value_type(roll_count_);
     }
 
-    const size_t    roll_count_;
+    const size_type roll_count_;
     result_type     result_ { };
 };
+
+// ----------------------------------------------------------------------------
+
+// Commodity Channel Index (CCI)
+//
+template<typename T, typename I = unsigned long>
+struct  CCIVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &low_begin,
+                const H &low_end,
+                const H &high_begin,
+                const H &high_end,
+                const H &close_begin,
+                const H &close_end)  {
+
+        if (roll_count_ == 0)  return;
+
+        const size_type col_s = std::distance(close_begin, close_end);
+
+        assert((col_s == std::distance(low_begin, low_end)));
+        assert((col_s == std::distance(high_begin, high_end)));
+
+        result_.reserve(col_s);
+        for (size_type i = 0; i < col_s; ++i)
+            result_.push_back(
+                (*(low_begin + i) + *(high_begin + i) + *(close_begin + i)) /
+                value_type(3));
+
+        SimpleRollAdopter<MeanVisitor<T, I>, T, I>  avg_v (
+            MeanVisitor<T, I>(), roll_count_);
+
+        avg_v.pre();
+        avg_v (idx_begin, idx_end, result_.begin(), result_.end());
+        avg_v.post();
+
+        SimpleRollAdopter<MADVisitor<T, I>, T, I>   mad_v (
+            MADVisitor<T, I>(mad_type::mean_abs_dev_around_mean), roll_count_);
+
+        mad_v.pre();
+        mad_v (idx_begin, idx_end, result_.begin(), result_.end());
+        mad_v.post();
+
+        for (size_type i = 0; i < col_s; ++i)
+            result_[i] =
+                (result_[i] - avg_v.get_result()[i]) /
+                (lambert_const_ * mad_v.get_result()[i]);
+    }
+
+    inline void pre ()  { result_.clear(); }
+    inline void post ()  {  }
+    inline const result_type &get_result () const  { return (result_); }
+    inline result_type &get_result ()  { return (result_); }
+
+    explicit
+    CCIVisitor(size_type r_count = 14,
+               value_type lambert_const = value_type(0.015))
+        : roll_count_(r_count), lambert_const_(lambert_const)  {   }
+
+private:
+
+    const size_type     roll_count_;
+    const value_type    lambert_const_;
+    result_type         result_ { };
+};
+
 
 } // namespace hmdf
 

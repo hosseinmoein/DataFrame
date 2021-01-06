@@ -47,7 +47,7 @@ using <U>NSmallestVisitor</U> = NExtremumVisitor&lt;N, T, I, std::greater&lt;T&g
         </B></PRE></font>
       </td>
       <td>
-        This functor class calculates the N smallest/largest values depending on type of <I>Cmp</I> (the default is N largest) of a column. I runs in O(N*M), where N is the number of largest values and M is the total number of all values.<BR>
+        This functor class calculates the N smallest/largest values depending on type of <I>Cmp</I> (the default is N largest) of a column. It runs in O(N*M), where N is the number of largest values and M is the total number of all values.<BR>
         If N is relatively small this is better than O(M*logM). The constructor takes a single optional Boolean argument to whether skip NaN values. The default is True.<BR>
       </td>
       <td width = "12%">

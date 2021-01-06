@@ -121,8 +121,8 @@ load_align_column(
         </B></PRE></font>
       </td>
       <td>
-        This method creates a column similar to above, but assumes data is bucket or bar values. That means the data vector contains statistical figure(s) for time buckets and must be aligned with the index column at bucket intervals.<BR>
-        For example, index column is in minutes unit. The data vector is the sum of 5-minute buckets of some column, or some set not even present in DataFrame. The values in data vector will be aligned with the index column at every 5 minutes. The in-between values will “null_value”.<BR>
+        This method creates a column similar to above, but it assumes data is bucketed (bar) values. That means the data vector contains statistical figure(s) for time buckets and must be aligned with the index column at bucket intervals.<BR>
+        For example, index column is in minutes unit. And data vector is the sum of 5-minute buckets of some column, or some data set not present in DataFrame. The values in data vector will be aligned with the index column at every 5 minutes interval. The in-between values will be “null_value”.<BR>
         <B>NOTE</B>: The data vector must contain (index size / interval) number of values or less, if index has values per interval. Otherwise, data must contain appropriate number of values.<BR>
         <B>NOTE</B>: The index must be in ascending order<BR>
       </td>

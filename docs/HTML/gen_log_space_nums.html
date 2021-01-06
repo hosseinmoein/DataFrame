@@ -36,7 +36,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         <PRE><B>
 template&lt;typename T&gt;
 std::vector&lt;T&gt;
-gen_log_space_nums(std::size_t n, T first, T last, T base);
+gen_log_space_nums(std::size_t n,
+                   T first,
+                   T last,
+                   T base);
         </B></PRE></font>
       </td>
       <td>
@@ -58,7 +61,9 @@ gen_log_space_nums(std::size_t n, T first, T last, T base);
         <PRE><B>
 template&lt;typename T&gt;
 std::vector&lt;T&gt;
-gen_even_space_nums(std::size_t n, T first, T last);
+gen_even_space_nums(std::size_t n,
+                    T first,
+                    T last);
         </B></PRE></font>
       </td>
       <td>
@@ -71,6 +76,29 @@ gen_even_space_nums(std::size_t n, T first, T last);
         <B>n</B>: Number of values to generate<BR>
         <B>first</B>: Starting value<BR>
         <B>last</B>: Last value (excluded)<BR>
+      </td>
+    </tr>
+
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        <PRE><B>
+template&lt;typename T&gt;
+std::vector&lt;T&gt;
+gen_triangular_nums(T last,
+                    T first = 1);
+        </B></PRE></font>
+      </td>
+      <td>
+        A number is termed as triangular number if we can represent it in the form of triangular grid of points such that the points form an equilateral triangle and each row contains as many points as the row number, i.e., the first row has one point, second row has two points, third row has three points and so on.<BR>
+        This function generates n triangle numbers arranged in an equilateral triangle. The n-th triangular number is equal to the sum of the n natural numbers from 1 to n (assuming first is 1 and last is n).<BR>
+        The result vector always starts with a value >= than first and ends with a value <= than last.<BR>
+        <BR>
+        It returns the vector of results<BR>
+      </td>
+      <td width="20%">
+        <B>T</B>: Any type that supports arithmetic<BR>
+        <B>last</B>: Last value<BR>
+        <B>last</B>: Starting value defaulted to 1<BR>
       </td>
     </tr>
 

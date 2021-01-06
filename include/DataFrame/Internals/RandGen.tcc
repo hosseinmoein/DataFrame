@@ -430,6 +430,26 @@ gen_even_space_nums(std::size_t n, T first, T last)  {
     return (result);
 }
 
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
+std::vector<T>
+gen_triangular_nums(T last, T first)  {
+
+    std::vector<T>  result;
+
+    // With arbitrary first and last values, it is hard to do result.reserve();
+    //
+    for (T i = first, val = i * (i + T(1)) / T(2);
+         val <= last;
+         ++i, val = i * (i + T(1)) / T(2))
+        result.push_back(val);
+
+    result.shrink_to_fit();
+    return (result);
+}
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

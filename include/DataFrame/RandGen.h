@@ -373,6 +373,23 @@ template<typename T>
 std::vector<T>
 gen_even_space_nums(std::size_t n, T first, T last);
 
+// ----------------------------------------------------------------------------
+
+// A number is termed as triangular number if we can represent it in the form
+// of triangular grid of points such that the points form an equilateral
+// triangle and each row contains as many points as the row number, i.e., the
+// first row has one point, second row has two points, third row has three
+// points and so on.
+// This function generates n triangle numbers arranged in an equilateral
+// triangle. The n-th triangular number is equal to the sum of the n natural
+// numbers from 1 to n (assuming first is 1 and last is n).
+// The result vector always starts with a value >= than first and ends with
+// a value <= than last.
+//
+template<typename T>
+std::vector<T>
+gen_triangular_nums(T last, T first = T(1));
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

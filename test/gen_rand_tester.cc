@@ -189,6 +189,22 @@ int main(int argc, char *argv[]) {
         std::cout << std::endl;
     }
 
+    {
+        auto    r = gen_triangular_nums<int>(55, 1);
+
+        std::cout << '\n' << std::endl;
+        for (auto citer : r)
+            std::cout << citer << ", ";
+        std::cout << std::endl;
+
+        auto    r2 = gen_triangular_nums<int>(500, 10);
+
+        std::cout << '\n' << std::endl;
+        for (auto citer : r2)
+            std::cout << citer << ", ";
+        std::cout << std::endl;
+    }
+
     return (0);
 }
 

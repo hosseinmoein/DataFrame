@@ -911,7 +911,7 @@ table.hovertable td {
   <div class="column">
   <table id="my_table" align="center" class="hovertable">
     <tr>
-      <th><font color="white">Random Generators</font></th>
+      <th><font color="white">Numeric Generators</font></th>
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
@@ -979,6 +979,10 @@ table.hovertable td {
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
+      <td title="Generates triangular numbers"><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/gen_log_space_nums.html">gen_triangular_nums</a>( )</td>
+    </tr>
+
+    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
       <td title="Generates uniform integer random numbers"><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/gen_uniform_int_dist.html">gen_uniform_int_dist</a>( )</td>
     </tr>
 
@@ -1021,9 +1025,9 @@ table.hovertable td {
   </P>
 <HR>
 
-  <H1><font color="blue">Random Generators</font></H1>
+  <H1><font color="blue">Numeric Generators</font></H1>
   <P>
-    Random generators were added as a series of convenient stand-alone functions to generate random numbers (it covers all C++ standard distributions). You can seamlessly use these routines to generate random DataFrame columns.<BR>
+    Random generators, and a few other numeric generators, were added as a series of convenient stand-alone functions to generate random numbers (it covers all C++ standard distributions). You can seamlessly use these routines to generate random DataFrame columns.<BR>
     See this document and file <I>RandGen.h</I> and <I>dataframe_tester.cc.</I>
     For the definition and defaults of <I>RandGenParams</I>, see this document and file <I>DataFrameTypes.h</I>
   </P>

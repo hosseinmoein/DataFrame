@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 
 #include <cmath>
+#include <iterator>
 #include <limits>
 #include <tuple>
 #include <utility>
@@ -129,6 +130,98 @@ is_nan(const T &val)  {
     if (std::numeric_limits<T>::has_quiet_NaN)
         return (is_nan__(val));
     return (get_nan<T>() == val);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename V>
+inline bool
+is_monotonic_increasing(const V &column)  {
+
+    const std::size_t   col_s = column.size();
+
+    for (std::size_t i = 1; i < col_s; ++i)
+        if (column[i] < column[i - 1])
+            return (false);
+    return (true);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename V>
+inline bool
+is_strictly_monotonic_increasing(const V &column)  {
+
+    const std::size_t   col_s = column.size();
+
+    for (std::size_t i = 1; i < col_s; ++i)
+        if (column[i] <= column[i - 1])
+            return (false);
+    return (true);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename V>
+inline bool
+is_monotonic_decreasing(const V &column)  {
+
+    const std::size_t   col_s = column.size();
+
+    for (std::size_t i = 1; i < col_s; ++i)
+        if (column[i] > column[i - 1])
+            return (false);
+    return (true);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename V>
+inline bool
+is_strictly_monotonic_decreasing(const V &column)  {
+
+    const std::size_t   col_s = column.size();
+
+    for (std::size_t i = 1; i < col_s; ++i)
+        if (column[i] >= column[i - 1])
+            return (false);
+    return (true);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename V>
+inline void
+shift_right(V &vec, std::size_t n)  {
+
+    using value_type = typename V::value_type;
+
+    const auto  vec_rend = vec.rend();
+
+    for (auto riter = vec.rbegin(); riter != vec_rend; ++riter)  {
+        if (std::distance(riter, vec_rend) > n)
+            *riter = std::move(*(riter + n));
+        else
+            *riter = std::move(get_nan<value_type>());
+    }
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename V>
+inline void
+shift_left(V &vec, std::size_t n)  {
+
+    using value_type = typename V::value_type;
+
+    const auto  vec_end = vec.end();
+
+    for (auto iter = vec.begin(); iter != vec_end; ++iter)  {
+        if (std::distance(iter, vec_end) > n)
+            *iter = std::move(*(iter + n));
+        else
+            *iter = std::move(get_nan<value_type>());
+    }
 }
 
 } // namespace hmdf

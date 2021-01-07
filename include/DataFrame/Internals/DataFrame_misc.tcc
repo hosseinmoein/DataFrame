@@ -526,9 +526,9 @@ void DataFrame<I, H>::vertical_shift_functor_<Ts ...>::
 operator() (T &vec) const  {
 
     if (sp == shift_policy::up)
-        DataFrame::shift_left_(vec, n);
+        shift_left(vec, n);
     else
-        DataFrame::shift_right_(vec, n);
+        shift_right(vec, n);
 }
 
 // ----------------------------------------------------------------------------
@@ -539,10 +539,12 @@ template<typename T>
 void DataFrame<I, H>::rotate_functor_<Ts ...>::
 operator() (T &vec) const  {
 
-    if (sp == shift_policy::up)
-        DataFrame::rotate_left_(vec, n);
-    else
-        DataFrame::rotate_right_(vec, n);
+    if (sp == shift_policy::up)  // Rotate left
+        // There is no checking the value of n
+        std::rotate(vec.begin(), vec.begin() + n, vec.end());
+    else  // Rotate right
+        // There is no checking the value of n
+        std::rotate(vec.rbegin(), vec.rbegin() + n, vec.rend());
 }
 
 // ----------------------------------------------------------------------------

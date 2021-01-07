@@ -3079,46 +3079,6 @@ private:  // Static helper functions
         const std::vector<JoinSortingPair<T>> &col_vec_lhs,
         const std::vector<JoinSortingPair<T>> &col_vec_rhs);
 
-    template<typename V>
-    static bool
-    is_monotonic_increasing_(const V &column);
-
-    template<typename V>
-    static bool
-    is_strictly_monotonic_increasing_(const V &column);
-
-    template<typename V>
-    static bool
-    is_monotonic_decreasing_(const V &column);
-
-    template<typename V>
-    static bool
-    is_strictly_monotonic_decreasing_(const V &column);
-
-    template<typename V>
-    static bool
-    is_normal_(const V &column, double epsilon, bool check_for_standard);
-
-    template<typename V>
-    static bool
-    is_lognormal_(const V &column, double epsilon);
-
-    template<typename V>
-    static void
-    shift_right_(V &vec, size_type n);
-
-    template<typename V>
-    static void
-    shift_left_(V &vec, size_type n);
-
-    template<typename V>
-    static void
-    rotate_right_(V &vec, size_type n);
-
-    template<typename V>
-    static void
-    rotate_left_(V &vec, size_type n);
-
     // Visiting functors
 #   include <DataFrame/Internals/DataFrame_functors.h>
 };

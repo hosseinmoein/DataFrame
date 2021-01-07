@@ -39,6 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cmath>
 #include <cstddef>
 #include <functional>
+#include <future>
 #include <iterator>
 #include <map>
 #include <numeric>
@@ -3865,6 +3866,121 @@ private:
     result_type             seasonal_ {  };
     result_type             residual_ {  };
 };
+
+// ----------------------------------------------------------------------------
+
+template<typename V>
+inline bool
+is_normal(const V &column, double epsilon, bool check_for_standard)  {
+
+    using value_type = typename V::value_type;
+
+    const int                       dummy_idx { int() };
+    StatsVisitor<value_type, int>   svisit;
+
+    svisit.pre();
+    for (auto citer : column)
+        svisit(dummy_idx, citer);
+    svisit.post();
+
+    const value_type    mean = static_cast<value_type>(svisit.get_mean());
+    const value_type    std = static_cast<value_type>(svisit.get_std());
+    const value_type    high_band_1 = static_cast<value_type>(mean + std);
+    const value_type    low_band_1 = static_cast<value_type>(mean - std);
+    double              count_1 = 0.0;
+    const value_type    high_band_2 = static_cast<value_type>(mean + std * 2.0);
+    const value_type    low_band_2 = static_cast<value_type>(mean - std * 2.0);
+    double              count_2 = 0.0;
+    const value_type    high_band_3 = static_cast<value_type>(mean + std * 3.0);
+    const value_type    low_band_3 = static_cast<value_type>(mean - std * 3.0);
+    double              count_3 = 0.0;
+
+    for (auto citer : column)  {
+        if (citer >= low_band_1 && citer < high_band_1)  {
+            count_3 += 1;
+            count_2 += 1;
+            count_1 += 1;
+        }
+        else if (citer >= low_band_2 && citer < high_band_2)  {
+            count_3 += 1;
+            count_2 += 1;
+        }
+        else if (citer >= low_band_3 && citer < high_band_3)  {
+            count_3 += 1;
+        }
+    }
+
+    const double    col_s = static_cast<double>(column.size());
+
+    if (std::fabs((count_1 / col_s) - 0.68) <= epsilon &&
+        std::fabs((count_2 / col_s) - 0.95) <= epsilon &&
+        std::fabs((count_3 / col_s) - 0.997) <= epsilon)  {
+        if (check_for_standard)
+            return (std::fabs(mean - 0) <= epsilon &&
+                    std::fabs(std - 1.0) <= epsilon);
+        return (true);
+    }
+    return (false);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename V>
+inline bool
+is_lognormal(const V &column, double epsilon)  {
+
+    using value_type = typename V::value_type;
+
+    const int                       dummy_idx { int() };
+    StatsVisitor<value_type, int>   svisit;
+    StatsVisitor<value_type, int>   log_visit;
+
+    svisit.pre();
+    for (auto citer : column)  {
+        svisit(dummy_idx, static_cast<value_type>(std::log(citer)));
+        log_visit(dummy_idx, citer);
+    }
+    svisit.post();
+
+    const value_type    mean = static_cast<value_type>(svisit.get_mean());
+    const value_type    std = static_cast<value_type>(svisit.get_std());
+    const value_type    high_band_1 = static_cast<value_type>(mean + std);
+    const value_type    low_band_1 = static_cast<value_type>(mean - std);
+    double              count_1 = 0.0;
+    const value_type    high_band_2 = static_cast<value_type>(mean + std * 2.0);
+    const value_type    low_band_2 = static_cast<value_type>(mean - std * 2.0);
+    double              count_2 = 0.0;
+    const value_type    high_band_3 = static_cast<value_type>(mean + std * 3.0);
+    const value_type    low_band_3 = static_cast<value_type>(mean - std * 3.0);
+    double              count_3 = 0.0;
+
+    for (auto citer : column)  {
+        const auto  log_val = std::log(citer);
+
+        if (log_val >= low_band_1 && log_val < high_band_1)  {
+            count_3 += 1;
+            count_2 += 1;
+            count_1 += 1;
+        }
+        else if (log_val >= low_band_2 && log_val < high_band_2)  {
+            count_3 += 1;
+            count_2 += 1;
+        }
+        else if (log_val >= low_band_3 && log_val < high_band_3)  {
+            count_3 += 1;
+        }
+    }
+
+    const double    col_s = static_cast<double>(column.size());
+
+    if (std::fabs((count_1 / col_s) - 0.68) <= epsilon &&
+        std::fabs((count_2 / col_s) - 0.95) <= epsilon &&
+        std::fabs((count_3 / col_s) - 0.997) <= epsilon &&
+        log_visit.get_skew() > 10.0 * svisit.get_skew() &&
+        log_visit.get_kurtosis() > 10.0 * svisit.get_kurtosis())
+        return (true);
+    return (false);
+}
 
 } // namespace hmdf
 

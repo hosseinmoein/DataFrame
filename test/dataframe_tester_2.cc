@@ -2375,6 +2375,41 @@ static void test_CCIVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_EntropyVisitor()  {
+
+    std::cout << "\nTesting EntropyVisitor{  } ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456, 123457,
+          123458, 123459, 123460, 123461, 123462, 123466, 123467, 123468,
+          123469, 123470, 123471, 123472, 123473, 22, 23, 24, 25, 26, 27, 28
+        };
+    std::vector<double>         close =
+        { 1.80, 2.80, 1.90, 14.00, 1.10, 6.00, 13.00, 8.00, 9.00, 2.80, 1.90,
+          4.30, 20.00, 1.85, 3.00, 34.00, 67.00, 23.00, 87.00, 9.00, 45.00,
+          1.00, 11.00, 456.00, 34.00, 7.00, 7778.00, 5.00
+        };
+    MyDataFrame                 df;
+
+    df.load_data(std::move(idx), std::make_pair("close", close));
+
+    EntropyVisitor<double>  e_v (5);
+
+    df.single_act_visit<double>("close", e_v);
+
+    assert(e_v.get_result().size() == 28);
+    assert(std::isnan(e_v.get_result()[0]));
+    assert(std::isnan(e_v.get_result()[7]));
+    assert(std::abs(e_v.get_result()[8] - 2.18974) < 0.00001);
+    assert(std::abs(e_v.get_result()[10] - 1.98477) < 0.00001);
+    assert(std::abs(e_v.get_result()[14] - 1.7154) < 0.0001);
+    assert(std::abs(e_v.get_result()[27] - 0.596666) < 0.00001);
+    assert(std::abs(e_v.get_result()[25] - 0.822228) < 0.00001);
+    assert(std::abs(e_v.get_result()[22] - 1.49397) < 0.0001);
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int argc, char *argv[]) {
 
     test_get_reindexed();
@@ -2418,6 +2453,7 @@ int main(int argc, char *argv[]) {
     test_WilliamPrcRVisitor();
     test_PSLVisitor();
     test_CCIVisitor();
+    test_EntropyVisitor();
 
     return (0);
 }

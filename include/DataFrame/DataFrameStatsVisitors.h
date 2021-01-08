@@ -3869,6 +3869,65 @@ private:
 
 // ----------------------------------------------------------------------------
 
+template<typename T, typename I = unsigned long>
+struct  EntropyVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &column_begin,
+                const H &column_end)  {
+
+        if (roll_count_ == 0)  return;
+
+        GET_COL_SIZE
+
+        SimpleRollAdopter<SumVisitor<T, I>, T, I>   sum_v (SumVisitor<T, I>(),
+                                                           roll_count_);
+
+        sum_v.pre();
+        sum_v (idx_begin, idx_end, column_begin, column_end);
+        sum_v.post();
+        result_ = std::move(sum_v.get_result());
+
+        for (size_type i = 0; i < col_s; ++i)  {
+            const value_type    val = *(column_begin + i) / result_[i];
+
+            result_[i] = (-val * std::log(val) / std::log(log_base_));
+        }
+
+        sum_v.pre();
+        sum_v (idx_begin + (roll_count_ - 1), idx_end,
+               result_.begin() + (roll_count_ - 1), result_.end());
+        sum_v.post();
+
+        for (size_type i = 0; i < roll_count_ - 1; ++i)
+            result_[i] = get_nan<value_type>();
+        for (size_type i = 0; i < sum_v.get_result().size(); ++i)
+            result_[i + roll_count_ - 1] = sum_v.get_result()[i];
+    }
+
+    inline void pre ()  { result_.clear(); }
+    inline void post ()  {  }
+    inline const result_type &get_result () const  { return (result_); }
+    inline result_type &get_result ()  { return (result_); }
+
+    explicit
+    EntropyVisitor(size_type roll_count, value_type log_base = 2)
+        : roll_count_(roll_count), log_base_(log_base)  {   }
+
+private:
+
+    const size_type     roll_count_;
+    const value_type    log_base_;
+    result_type         result_ { };
+};
+
+// ----------------------------------------------------------------------------
+
 template<typename V>
 inline bool
 is_normal(const V &column, double epsilon, bool check_for_standard)  {

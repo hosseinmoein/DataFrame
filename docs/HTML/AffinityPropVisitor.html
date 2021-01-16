@@ -44,16 +44,19 @@ struct AffinityPropVisitor;
         The constructor takes three parameters<BR>
         1. Number of iterations<BR>
         2. A function to calculate distance between to data points of type T with a default value<BR>
+        3. Damping factor used in the algorithm. The default is 0.9. (1 – damping factor) prevents numerical oscillations.<BR>
         <I>
         <PRE>
-    KMeansVisitor(size_type num_of_iter,
-                  distance_func f =
-                      [](const value_type &x, const value_type &y) -> double {
-                          return ((x - y) * (x - y));
-                      })
+    explicit
+    AffinityPropVisitor(
+        size_type num_of_iter,
+        distance_func f =
+            [](const value_type &x, const value_type &y) -> double {
+                return ((x - y) * (x - y));
+            },
+        double damping_factor = 0.9);
         </PRE>
-        </I>
-        3. Damping factor used in the algorithm. The default is 0.9. (1 – damping factor) prevents numerical oscillations.<BR>
+        </I><BR>
         The result type is VectorPtrView of type T containing the centers of clusters.<BR>
         There is also a get_clusters() method that returns an vector of VectorPtrView’s which contain the data clustered around the centers.
       </td>

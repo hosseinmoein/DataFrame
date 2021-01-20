@@ -1708,6 +1708,81 @@ private:
     result_type         result_ { };
 };
 
+// ----------------------------------------------------------------------------
+
+template<typename T,
+         typename I = unsigned long,
+         typename =
+             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+struct GarmanKlassVolVisitor {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &low_begin,
+                const H &low_end,
+                const H &high_begin,
+                const H &high_end,
+                const H &open_begin,
+                const H &open_end,
+                const H &close_begin,
+                const H &close_end)  {
+
+        const size_type col_s = std::distance(close_begin, close_end);
+
+        assert((col_s == std::distance(low_begin, low_end)));
+        assert((col_s == std::distance(open_begin, open_end)));
+        assert((col_s == std::distance(high_begin, high_end)));
+        assert((roll_count_ < (col_s - 1)));
+
+        // 2 * log(2) - 1
+        constexpr value_type    cf =
+            value_type(2) * value_type(0.69314718056) - value_type(1);
+        constexpr value_type    hlf = 0.5;
+
+        result_.reserve(col_s);
+        for (size_type i = 0; i < roll_count_ - 1; ++i)
+            result_.push_back(std::numeric_limits<value_type>::quiet_NaN());
+        for (size_type i = 0; i < col_s; ++i)  {
+            if (i + roll_count_ <= col_s)  {
+                value_type  sum { 0 };
+                size_type   cnt { 0 };
+
+                for (size_type j = i; j < (i + roll_count_); ++j)  {
+                    const value_type    hl_rt =
+                        std::log(*(high_begin + j) / *(low_begin + j));
+                    const value_type    co_rt =
+                        std::log(*(close_begin + j) / *(open_begin + j));
+
+                    sum += hlf * hl_rt * hl_rt - cf * co_rt * co_rt;
+                    cnt += 1;
+                }
+                result_.push_back(
+                    std::sqrt((sum / value_type(cnt)) * trading_periods_));
+            }
+            else  break;
+        }
+    }
+
+    inline void pre ()  { result_.clear(); }
+    inline void post ()  {  }
+    inline const result_type &get_result () const  { return (result_); }
+    inline result_type &get_result ()  { return (result_); }
+
+    explicit
+    GarmanKlassVolVisitor(size_type roll_count = 30,
+                          size_type trading_periods = 252)
+        : roll_count_(roll_count), trading_periods_(trading_periods)  {  }
+
+private:
+
+    result_type     result_ {  };
+    const size_type roll_count_;
+    const size_type trading_periods_;
+};
 
 } // namespace hmdf
 

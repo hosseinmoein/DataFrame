@@ -1784,6 +1784,102 @@ private:
     const size_type trading_periods_;
 };
 
+// ----------------------------------------------------------------------------
+
+template<typename T,
+         typename I = unsigned long,
+         typename =
+             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+struct YangZhangVolVisitor {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &low_begin,
+                const H &low_end,
+                const H &high_begin,
+                const H &high_end,
+                const H &open_begin,
+                const H &open_end,
+                const H &close_begin,
+                const H &close_end)  {
+
+        const size_type col_s = std::distance(close_begin, close_end);
+
+        assert((col_s == std::distance(low_begin, low_end)));
+        assert((col_s == std::distance(open_begin, open_end)));
+        assert((col_s == std::distance(high_begin, high_end)));
+        assert((roll_count_ < (col_s - 1)));
+
+        const value_type    k =
+            T(0.34) / (T(1) + T(roll_count_ + 1) / T(roll_count_ - 1));
+        const value_type    one_k = T(1) - k;
+        const value_type    norm = T(1) / T(roll_count_ - 1);
+
+        result_.reserve(col_s);
+        for (size_type i = 0; i < roll_count_ - 1; ++i)
+            result_.push_back(std::numeric_limits<value_type>::quiet_NaN());
+
+        for (size_type i = 0; i < col_s; ++i)  {
+            if (i + roll_count_ <= col_s)  {
+                value_type  close_vol_sum { 0 };
+                value_type  open_vol_sum { 0 };
+                value_type  rs_vol_sum { 0 };
+                size_type   cnt { 0 };
+
+                for (size_type j = i; j < (i + roll_count_); ++j)  {
+                    const value_type    ho_rt =
+                        std::log(*(high_begin + j) / *(open_begin + j));
+                    const value_type    lo_rt =
+                        std::log(*(low_begin + j) / *(open_begin + j));
+                    const value_type    co_rt =
+                        std::log(*(close_begin + j) / *(open_begin + j));
+                    const value_type    oc_rt = j > 0
+                        ? std::log(*(open_begin + j) /
+                                   *(close_begin + (j - 1)))
+                        : std::numeric_limits<value_type>::quiet_NaN();
+                    const value_type    cc_rt = j > 0
+                        ? std::log(*(close_begin + j) /
+                                   *(close_begin + (j - 1)))
+                        : std::numeric_limits<value_type>::quiet_NaN();
+                    // Rogers-Satchell volatility
+                    const value_type    rs_vol =
+                        ho_rt * (ho_rt - co_rt) + lo_rt * (lo_rt - co_rt);
+
+                    close_vol_sum += cc_rt * cc_rt * norm;
+                    open_vol_sum += oc_rt * oc_rt * norm;
+                    rs_vol_sum += rs_vol * norm;
+                }
+                result_.push_back(
+                    std::sqrt(open_vol_sum +
+                              k * close_vol_sum +
+                              one_k * rs_vol_sum) *
+                    std::sqrt(trading_periods_));
+            }
+            else  break;
+        }
+    }
+
+    inline void pre ()  { result_.clear(); }
+    inline void post ()  {  }
+    inline const result_type &get_result () const  { return (result_); }
+    inline result_type &get_result ()  { return (result_); }
+
+    explicit
+    YangZhangVolVisitor(size_type roll_count = 30,
+                          size_type trading_periods = 252)
+        : roll_count_(roll_count), trading_periods_(trading_periods)  {  }
+
+private:
+
+    result_type     result_ {  };
+    const size_type roll_count_;
+    const size_type trading_periods_;
+};
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

@@ -2442,6 +2442,38 @@ static void test_GarmanKlassVolVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_YangZhangVolVisitor()  {
+
+    std::cout << "\nTesting YangZhangVolVisitor{  } ..." << std::endl;
+
+    typedef StdDataFrame<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("FORD.csv", io_format::csv2);
+
+        YangZhangVolVisitor<double, std::string>    yz_v;
+
+        df.single_act_visit<double, double, double, double>
+            ("FORD_Low", "FORD_High", "FORD_Open", "FORD_Close", yz_v);
+
+        assert(yz_v.get_result().size() == 12265);
+        assert(std::isnan(yz_v.get_result()[0]));
+        assert(std::isnan(yz_v.get_result()[29]));
+        assert(std::abs(yz_v.get_result()[30] - 0.169461) < 0.00001);
+        assert(std::abs(yz_v.get_result()[35] - 0.181149) < 0.00001);
+        assert(std::abs(yz_v.get_result()[12264] - 0.292034) < 0.00001);
+        assert(std::abs(yz_v.get_result()[12260] - 0.279347) < 0.00001);
+        assert(std::abs(yz_v.get_result()[12255] - 0.293528) < 0.00001);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int argc, char *argv[]) {
 
     test_get_reindexed();
@@ -2487,6 +2519,7 @@ int main(int argc, char *argv[]) {
     test_CCIVisitor();
     test_EntropyVisitor();
     test_GarmanKlassVolVisitor();
+    test_YangZhangVolVisitor();
 
     return (0);
 }

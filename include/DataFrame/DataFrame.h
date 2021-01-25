@@ -2809,24 +2809,30 @@ public:  // Utilities and miscellaneous
     //   Reference to an streamable object (e.g. cout)
     // iof:
     //   Specifies the I/O format. The default is CSV
+    // columns_only:
+    //   If true, it won't write the index column
     //
     template<typename S, typename ... Ts>
     bool
-    write(S &o, io_format iof = io_format::csv) const;
+    write(S &o, io_format iof = io_format::csv,
+          bool columns_only = false) const;
 
     template<typename ... Ts>
     bool
-    write(const char *file_name, io_format iof = io_format::csv) const;
+    write(const char *file_name, io_format iof = io_format::csv,
+          bool columns_only = false) const;
 
     // Same as write() above, but executed asynchronously
     //
     template<typename S, typename ... Ts>
     [[nodiscard]] std::future<bool>
-    write_async(S &o, io_format iof = io_format::csv) const;
+    write_async(S &o, io_format iof = io_format::csv,
+                bool columns_only = false) const;
 
     template<typename ... Ts>
     [[nodiscard]] std::future<bool>
-    write_async(const char *file_name, io_format iof = io_format::csv) const;
+    write_async(const char *file_name, io_format iof = io_format::csv,
+                bool columns_only = false) const;
 
     // It inputs the contents of a text file into itself (i.e. DataFrame).
     // Currently two formats (i.e. csv, json) are supported specified by
@@ -2859,22 +2865,29 @@ public:  // Utilities and miscellaneous
     //   Complete path to the file
     // iof:
     //   Specifies the I/O format. The default is CSV
+    // columns_only:
+    //   If true, it won't read the index column. It assumes an index with
+    //   matching granularity already exists.
     //
     template<typename S>
     bool
-    read(S &in_s, io_format iof = io_format::csv);
+    read(S &in_s, io_format iof = io_format::csv,
+         bool columns_only = false);
 
     bool
-    read(const char *file_name, io_format iof = io_format::csv);
+    read(const char *file_name, io_format iof = io_format::csv,
+         bool columns_only = false);
 
     // Same as read() above, but executed asynchronously
     //
     [[nodiscard]] std::future<bool>
-    read_async(const char *file_name, io_format iof = io_format::csv);
+    read_async(const char *file_name, io_format iof = io_format::csv,
+               bool columns_only = false);
 
     template<typename S>
     [[nodiscard]] std::future<bool>
-    read_async(S &in_s, io_format iof = io_format::csv);
+    read_async(S &in_s, io_format iof = io_format::csv,
+               bool columns_only = false);
 
 private:  // Friend Operators
 

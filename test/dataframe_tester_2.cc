@@ -2474,6 +2474,126 @@ static void test_YangZhangVolVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+static void test_no_index_writes()  {
+
+    std::cout << "\nTesting no_index_writes( ) ..." << std::endl;
+
+    std::vector<unsigned long>  ulgvec2 =
+        { 123450, 123451, 123452, 123450, 123455, 123450, 123449,
+          123450, 123451, 123450, 123452, 123450, 123455, 123450,
+          123454, 123450, 123450, 123457, 123458, 123459, 123450,
+          123441, 123442, 123432, 123450, 123450, 123435, 123450 };
+    std::vector<unsigned long>  xulgvec2 = ulgvec2;
+    std::vector<int>            intvec2 =
+        { 1, 2, 3, 4, 5, 3, 7, 3, 9, 10, 3, 2, 3, 14,
+          2, 2, 2, 3, 2, 3, 3, 3, 3, 3, 36, 2, 45, 2 };
+    std::vector<double>         xdblvec2 =
+        { 1.2345, 2.2345, 3.2345, 4.2345, 5.2345, 3.0, 0.9999,
+          10.0, 4.25, 0.009, 8.0, 2.2222, 3.3333,
+          11.0, 5.25, 1.009, 2.111, 9.0, 3.2222, 4.3333,
+          12.0, 6.25, 2.009, 3.111, 10.0, 4.2222, 5.3333 };
+    std::vector<double>         dblvec22 =
+        { 0.998, 0.3456, 0.056, 0.15678, 0.00345, 0.923, 0.06743,
+          0.1, 0.0056, 0.07865, 0.0111, 0.1002, -0.8888,
+          0.14, 0.0456, 0.078654, -0.8999, 0.8002, -0.9888,
+          0.2, 0.1056, 0.87865, -0.6999, 0.4111, 0.1902, -0.4888 };
+    std::vector<std::string>    strvec2 =
+        { "4% of something", "Description 4/5", "This is bad",
+          "3.4% of GDP", "Market drops", "Market pulls back",
+          "$15 increase", "Running fast", "C++14 development",
+          "Some explanation", "More strings", "Bonds vs. Equities",
+          "Almost done", "XXXX04",
+          "XXXX2", "XXXX3", "XXXX4", "XXXX4", "XXXX5", "XXXX6",
+          "XXXX7", "XXXX10", "XXXX11", "XXXX02", "XXXX03" };
+    std::vector<bool>           boolvec =
+        { true, true, true, false, false, true };
+
+    MyDataFrame df;
+
+    df.load_data(std::move(ulgvec2),
+                 std::make_pair("ul_col", xulgvec2));
+    df.load_column("xint_col",
+                   std::move(intvec2),
+                   nan_policy::dont_pad_with_nans);
+    df.load_column("str_col",
+                   std::move(strvec2),
+                   nan_policy::dont_pad_with_nans);
+    df.load_column("dbl_col",
+                   std::move(xdblvec2),
+                   nan_policy::dont_pad_with_nans);
+    df.load_column("dbl_col_2",
+                   std::move(dblvec22),
+                   nan_policy::dont_pad_with_nans);
+    df.load_column("bool_col",
+                   std::move(boolvec),
+                   nan_policy::dont_pad_with_nans);
+
+    df.write<std::ostream,
+             int,
+             unsigned long,
+             double,
+             bool,
+             std::string>(std::cout, io_format::csv, false);
+    std::cout << std::endl;
+    df.write<std::ostream,
+             int,
+             unsigned long,
+             double,
+             bool,
+             std::string>(std::cout, io_format::csv, true);
+    std::cout << '\n' << std::endl;
+
+    df.write<std::ostream,
+             int,
+             unsigned long,
+             double,
+             bool,
+             std::string>(std::cout, io_format::csv2, false);
+    std::cout << std::endl;
+    df.write<std::ostream,
+             int,
+             unsigned long,
+             double,
+             bool,
+             std::string>(std::cout, io_format::csv2, true);
+    std::cout << '\n' << std::endl;
+
+    df.write<std::ostream,
+             int,
+             unsigned long,
+             double,
+             bool,
+             std::string>(std::cout, io_format::json, false);
+    std::cout << std::endl;
+    df.write<std::ostream,
+             int,
+             unsigned long,
+             double,
+             bool,
+             std::string>(std::cout, io_format::json, true);
+    std::cout << '\n' << std::endl;
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int argc, char *argv[]) {
 
     test_get_reindexed();
@@ -2520,6 +2640,7 @@ int main(int argc, char *argv[]) {
     test_EntropyVisitor();
     test_GarmanKlassVolVisitor();
     test_YangZhangVolVisitor();
+    test_no_index_writes();
 
     return (0);
 }

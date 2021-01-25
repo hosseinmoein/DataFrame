@@ -699,7 +699,8 @@ void DataFrame<I, H>::read_csv2_(std::ifstream &file)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename  H>
-bool DataFrame<I, H>::read (const char *file_name, io_format iof)  {
+bool DataFrame<I, H>::
+read (const char *file_name, io_format iof, bool columns_only)  {
 
     std::ifstream   file;
 
@@ -711,7 +712,7 @@ bool DataFrame<I, H>::read (const char *file_name, io_format iof)  {
         throw DataFrameError(err.c_str());
     }
 
-    read(file, iof);
+    read(file, iof, columns_only);
     file.close();
     return(true);
 }
@@ -720,7 +721,7 @@ bool DataFrame<I, H>::read (const char *file_name, io_format iof)  {
 
 template<typename I, typename  H>
 template<typename S>
-bool DataFrame<I, H>::read (S &in_s, io_format iof)  {
+bool DataFrame<I, H>::read (S &in_s, io_format iof, bool columns_only)  {
 
     static_assert(std::is_base_of<HeteroVector, DataVec>::value,
                   "Only a StdDataFrame can call read()");
@@ -741,11 +742,11 @@ bool DataFrame<I, H>::read (S &in_s, io_format iof)  {
 
 template<typename I, typename  H>
 std::future<bool> DataFrame<I, H>::
-read_async(const char *file_name, io_format iof) {
+read_async(const char *file_name, io_format iof, bool columns_only) {
 
     return (std::async(std::launch::async,
-                       [file_name, iof, this] () -> bool  {
-                           return (this->read(file_name, iof));
+                       [file_name, iof, columns_only, this] () -> bool  {
+                           return (this->read(file_name, iof, columns_only));
                        }));
 }
 
@@ -754,11 +755,11 @@ read_async(const char *file_name, io_format iof) {
 template<typename I, typename  H>
 template<typename S>
 std::future<bool> DataFrame<I, H>::
-read_async(S &in_s, io_format iof) {
+read_async(S &in_s, io_format iof, bool columns_only) {
 
     return (std::async(std::launch::async,
-                       [&in_s, iof, this] () -> bool  {
-                           return (this->read<S>(in_s, iof));
+                       [&in_s, iof, columns_only, this] () -> bool  {
+                           return (this->read<S>(in_s, iof, columns_only));
                        }));
 }
 

@@ -36,7 +36,8 @@ namespace hmdf
 
 template<typename I, typename H>
 template<typename ... Ts>
-bool DataFrame<I, H>::write(const char *file_name, io_format iof) const  {
+bool DataFrame<I, H>::
+write(const char *file_name, io_format iof, bool columns_only) const  {
 
     std::ofstream   file;
 
@@ -47,7 +48,7 @@ bool DataFrame<I, H>::write(const char *file_name, io_format iof) const  {
         err.printf("write(): ERROR: Unable to open file '%s'", file_name);
         throw DataFrameError(err.c_str());
     }
-    this->write(file, iof);
+    this->write(file, iof, columns_only);
     file.close();
     return (true);
 }
@@ -56,7 +57,7 @@ bool DataFrame<I, H>::write(const char *file_name, io_format iof) const  {
 
 template<typename I, typename H>
 template<typename S, typename ... Ts>
-bool DataFrame<I, H>::write (S &o, io_format iof) const  {
+bool DataFrame<I, H>::write (S &o, io_format iof, bool columns_only) const  {
 
     if (iof != io_format::csv &&
         iof != io_format::json &&
@@ -70,18 +71,20 @@ bool DataFrame<I, H>::write (S &o, io_format iof) const  {
     const size_type index_s = indices_.size();
 
     if (iof == io_format::json)  {
-        _write_json_df_header_<S, IndexType>(o, DF_INDEX_COL_NAME, index_s);
+        if (! columns_only)  {
+            _write_json_df_header_<S, IndexType>(o, DF_INDEX_COL_NAME, index_s);
 
-        o << "\"D\":[";
-        if (index_s != 0)  {
-            _write_json_df_index_(o, indices_[0]);
-            for (size_type i = 1; i < index_s; ++i)  {
-                o << ',';
-                _write_json_df_index_(o, indices_[i]);
+            o << "\"D\":[";
+            if (index_s != 0)  {
+                _write_json_df_index_(o, indices_[0]);
+                for (size_type i = 1; i < index_s; ++i)  {
+                    o << ',';
+                    _write_json_df_index_(o, indices_[i]);
+                }
             }
+            o << "]}";
+            need_pre_comma = true;
         }
-        o << "]}";
-        need_pre_comma = true;
 
         for (const auto &iter : column_list_)  {
             print_json_functor_<Ts ...> functor (iter.first.c_str(),
@@ -93,12 +96,14 @@ bool DataFrame<I, H>::write (S &o, io_format iof) const  {
         }
     }
     else if (iof == io_format::csv)  {
-        _write_csv2_df_header_<S, IndexType>
-            (o, DF_INDEX_COL_NAME, index_s, ':');
+        if (! columns_only)  {
+            _write_csv2_df_header_<S, IndexType>
+                (o, DF_INDEX_COL_NAME, index_s, ':');
 
-        for (size_type i = 0; i < index_s; ++i)
-            _write_csv_df_index_(o, indices_[i]) << ',';
-        o << '\n';
+            for (size_type i = 0; i < index_s; ++i)
+                _write_csv_df_index_(o, indices_[i]) << ',';
+            o << '\n';
+        }
 
         for (const auto &iter : column_list_)  {
             print_csv_functor_<Ts ...>  functor (iter.first.c_str(), o);
@@ -107,11 +112,15 @@ bool DataFrame<I, H>::write (S &o, io_format iof) const  {
         }
     }
     else if (iof == io_format::csv2)  {
-        _write_csv2_df_header_<S, IndexType>
-            (o, DF_INDEX_COL_NAME, index_s, '\0');
+        if (! columns_only)  {
+            _write_csv2_df_header_<S, IndexType>
+                (o, DF_INDEX_COL_NAME, index_s, '\0');
+            need_pre_comma = true;
+        }
 
         for (const auto &iter : column_list_)  {
-            o << ',';
+            if (need_pre_comma)  o << ',';
+            else  need_pre_comma = true;
             print_csv2_header_functor_<S, Ts ...>   functor(
                 iter.first.c_str(), o);
 
@@ -119,13 +128,22 @@ bool DataFrame<I, H>::write (S &o, io_format iof) const  {
         }
         o << '\n';
 
+        need_pre_comma = false;
         for (size_type i = 0; i < index_s; ++i)  {
-            o << indices_[i];
+            size_type   count = 0;
+
+            if (! columns_only)  {
+                o << indices_[i];
+                need_pre_comma = true;
+                count += 1;
+            }
+
             for (auto citer = column_list_.begin();
-                 citer != column_list_.end(); ++citer)  {
+                 citer != column_list_.end(); ++citer, ++count)  {
                 print_csv2_data_functor_<S, Ts ...>  functor (i, o);
 
-                o << ',';
+                if (need_pre_comma && count > 0)  o << ',';
+                else  need_pre_comma = true;
                 data_[citer->second].change(functor);
             }
             o << '\n';
@@ -143,11 +161,13 @@ bool DataFrame<I, H>::write (S &o, io_format iof) const  {
 template<typename I, typename H>
 template<typename ... Ts>
 std::future<bool> DataFrame<I, H>::
-write_async (const char *file_name, io_format iof) const  {
+write_async (const char *file_name, io_format iof, bool columns_only) const  {
 
     return (std::async(std::launch::async,
-                       [file_name, iof, this] () -> bool  {
-                           return (this->write<Ts ...>(file_name, iof));
+                       [file_name, iof, columns_only, this] () -> bool  {
+                           return (this->write<Ts ...>(file_name,
+                                                       iof,
+                                                       columns_only));
                        }));
 }
 
@@ -156,11 +176,13 @@ write_async (const char *file_name, io_format iof) const  {
 template<typename I, typename H>
 template<typename S, typename ... Ts>
 std::future<bool> DataFrame<I, H>::
-write_async (S &o, io_format iof) const  {
+write_async (S &o, io_format iof, bool columns_only) const  {
 
     return (std::async(std::launch::async,
-                       [&o, iof, this] () -> bool  {
-                           return (this->write<S, Ts ...>(o, iof));
+                       [&o, iof, columns_only, this] () -> bool  {
+                           return (this->write<S, Ts ...>(o,
+                                                          iof,
+                                                          columns_only));
                        }));
 }
 

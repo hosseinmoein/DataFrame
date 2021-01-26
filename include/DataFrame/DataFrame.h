@@ -2903,9 +2903,9 @@ protected:
 
 private:  // Static helper functions
 
-    void read_json_(std::ifstream &file);
-    void read_csv_(std::ifstream &file);
-    void read_csv2_(std::ifstream &file);
+    void read_json_(std::ifstream &file, bool columns_only);
+    void read_csv_(std::ifstream &file, bool columns_only);
+    void read_csv2_(std::ifstream &file, bool columns_only);
 
     template<typename CF, typename ... Ts>
     static void

@@ -45,7 +45,7 @@ namespace hmdf
 // ----------------------------------------------------------------------------
 
 template<typename I, typename  H>
-void DataFrame<I, H>::read_json_(std::ifstream &file)  {
+void DataFrame<I, H>::read_json_(std::ifstream &file, bool columns_only)  {
 
     char    c { '\0' };
     char    col_name[256];
@@ -59,6 +59,7 @@ void DataFrame<I, H>::read_json_(std::ifstream &file)  {
             "DataFrame::read_json_(): ERROR: Expected '{' (0)");
 
     bool    first_col = true;
+    bool    has_index = true;
 
     while (file.get(c)) {
         if (c == ' ' || c == '\n' || c == '\t')  continue;
@@ -66,16 +67,18 @@ void DataFrame<I, H>::read_json_(std::ifstream &file)  {
             throw DataFrameError(
                 "DataFrame::read_json_(): ERROR: Expected '\"' (1)");
         _get_token_from_file_(file, '"', col_name);
-        if (first_col)  {
+        if (first_col && ! columns_only)  {
             if (strcmp(col_name, DF_INDEX_COL_NAME))
                 throw DataFrameError("DataFrame::read_json_(): ERROR: "
                                      "Expected column name 'INDEX'");
         }
-        else {
+        else if (! first_col)  {
             if (! strcmp(col_name, DF_INDEX_COL_NAME))
                 throw DataFrameError("DataFrame::read_json_(): ERROR: "
                                      "column name 'INDEX' is not allowed");
         }
+        if (first_col && strcmp(col_name, DF_INDEX_COL_NAME))
+            has_index = false;
 
         while (file.get(c))
             if (c != ' ' && c != '\n' && c != '\t')  break;
@@ -155,12 +158,14 @@ void DataFrame<I, H>::read_json_(std::ifstream &file)  {
             throw DataFrameError(
                 "DataFrame::read_json_(): ERROR: Expected ']' (15)");
 
-        if (first_col)  {  // This is the index column
+        // Is this the index column, and should we load it?
+        if (first_col && has_index)  {
             IndexVecType    vec;
 
             vec.reserve(col_size);
             _IdxParserFunctor_<IndexType>()(vec, file, io_format::json);
-            load_index(std::forward<IndexVecType &&>(vec));
+            if (! columns_only)
+                load_index(std::forward<IndexVecType &&>(vec));
         }
         else  {
             if (! ::strcmp(col_type, "float"))  {
@@ -274,7 +279,7 @@ void DataFrame<I, H>::read_json_(std::ifstream &file)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename  H>
-void DataFrame<I, H>::read_csv_(std::ifstream &file)  {
+void DataFrame<I, H>::read_csv_(std::ifstream &file, bool columns_only)  {
 
     char    col_name[256];
     char    value[32];
@@ -308,7 +313,8 @@ void DataFrame<I, H>::read_csv_(std::ifstream &file)  {
 
             vec.reserve(::atoi(value));
             _IdxParserFunctor_<IndexType>()(vec, file);
-            load_index(std::forward<IndexVecType &&>(vec));
+            if (! columns_only)
+                load_index(std::forward<IndexVecType &&>(vec));
         }
         else  {
             if (! ::strcmp(type_str, "float"))  {
@@ -422,8 +428,10 @@ struct _col_data_spec_  {
     }
 };
 
+// --------------------------------------
+
 template<typename I, typename  H>
-void DataFrame<I, H>::read_csv2_(std::ifstream &file)  {
+void DataFrame<I, H>::read_csv2_(std::ifstream &file, bool columns_only)  {
 
     char                            value[8192];
     char                            c;
@@ -622,13 +630,17 @@ void DataFrame<I, H>::read_csv2_(std::ifstream &file)  {
     const size_type spec_s = spec_vec.size();
 
     if (spec_s > 0)  {
-        if (spec_vec[0].col_name != DF_INDEX_COL_NAME)
+        if (spec_vec[0].col_name != DF_INDEX_COL_NAME && ! columns_only)
             throw DataFrameError("DataFrame::read_csv2_(): ERROR: "
                                  "Index column is not the first column");
+        if (! columns_only)
+            load_index(std::move(
+                std::any_cast<IndexVecType &>(spec_vec[0].col_vec)));
 
-        load_index(std::move(
-                       std::any_cast<IndexVecType &>(spec_vec[0].col_vec)));
-        for (size_type i = 1; i < spec_s; ++i)  {
+        const size_type begin =
+            spec_vec[0].col_name == DF_INDEX_COL_NAME ? 1 : 0;
+
+        for (size_type i = begin; i < spec_s; ++i)  {
             _col_data_spec_ col_spec = spec_vec[i];
 
             if (col_spec.type_spec == "float")
@@ -727,11 +739,11 @@ bool DataFrame<I, H>::read (S &in_s, io_format iof, bool columns_only)  {
                   "Only a StdDataFrame can call read()");
 
     if (iof == io_format::csv)
-        read_csv_ (in_s);
+        read_csv_ (in_s, columns_only);
     else if (iof == io_format::csv2)
-        read_csv2_ (in_s);
+        read_csv2_ (in_s, columns_only);
     else if (iof == io_format::json)
-        read_json_ (in_s);
+        read_json_ (in_s, columns_only);
     else
         throw NotImplemented("read(): This io_format is not implemented");
 

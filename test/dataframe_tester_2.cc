@@ -2474,27 +2474,9 @@ static void test_YangZhangVolVisitor()  {
 
 // -----------------------------------------------------------------------------
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 static void test_no_index_writes()  {
 
-    std::cout << "\nTesting no_index_writes( ) ..." << std::endl;
+    std::cout << "\nTesting no_index_writes ..." << std::endl;
 
     std::vector<unsigned long>  ulgvec2 =
         { 123450, 123451, 123452, 123450, 123455, 123450, 123449,
@@ -2589,7 +2571,54 @@ static void test_no_index_writes()  {
              double,
              bool,
              std::string>(std::cout, io_format::json, true);
-    std::cout << '\n' << std::endl;
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_no_index_reads()  {
+
+    std::cout << "\nTesting no_index_reads ..." << std::endl;
+
+    MyDataFrame df;
+    MyDataFrame df2;
+    MyDataFrame df3;
+
+    try  {
+        df.read("csv2_format_data.csv", io_format::csv2, false);
+        df.read("csv2_format_data_2.csv", io_format::csv2, true);
+        df.read("csv2_format_data_no_index.csv", io_format::csv2, true);
+        df.write<std::ostream,
+                 int,
+                 unsigned long,
+                 double,
+                 bool,
+                 std::string>(std::cout, io_format::csv2);
+
+        std::cout << '\n' << std::endl;
+        df2.read("sample_data.csv", io_format::csv, false);
+        df2.read("sample_data_2.csv", io_format::csv, true);
+        df2.read("sample_data_no_index.csv", io_format::csv, true);
+        df2.write<std::ostream,
+                  int,
+                  unsigned long,
+                  double,
+                  bool,
+                  std::string>(std::cout, io_format::csv2);
+
+        std::cout << '\n' << std::endl;
+        df3.read("sample_data.json", io_format::json, false);
+        df3.read("sample_data_2.json", io_format::json, true);
+        df3.read("sample_data_no_index.json", io_format::json, true);
+        df3.write<std::ostream,
+                  int,
+                  unsigned long,
+                  double,
+                  bool,
+                  std::string>(std::cout, io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
 }
 
 // -----------------------------------------------------------------------------
@@ -2641,6 +2670,7 @@ int main(int argc, char *argv[]) {
     test_GarmanKlassVolVisitor();
     test_YangZhangVolVisitor();
     test_no_index_writes();
+    test_no_index_reads();
 
     return (0);
 }

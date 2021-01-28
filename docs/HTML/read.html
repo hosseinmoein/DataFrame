@@ -41,7 +41,7 @@ read(const char *file_name,
         </B></PRE></font>
       </td>
       <td>
-        It inputs the contents of a text file into itself (i.e. DataFrame). Currently two formats (i.e. csv, json) are supported specified by the iof parameter.<BR>
+        It inputs the contents of a text file/stream into itself (i.e. DataFrame). Currently 3 formats (i.e. csv, csv2, json) are supported. See io_format documentation page<BR>
         The <B>CSV</B> file format must be:<BR>
         <PRE>
   INDEX:&lt;Number of data points&gt;:&lt;Comma delimited list of values&gt;
@@ -51,9 +51,9 @@ read(const char *file_name,
       .
       .
         </PRE>
-        All empty lines or lines starting with # will be skipped.<BR><BR>
+        All empty lines or lines starting with # will be skipped. For examples see files in test directory<BR><BR>
 
-        The <B>CSV2</B> file format must be (this like regular Pandas-like format):<BR>
+        The <B>CSV2</B> file format must be (this is similar to Pandas csv format):<BR>
         <PRE>
   INDEX:&lt;Number of data points&gt;:&lt;Index type&gt;:,&lt;Column1 name&gt;:&lt;Number of data points&gt;:&lt;Column1 type&gt;,&lt;Column2 name&gt;:&lt;Number of data points&gt;:&lt;Column2 type&gt;, . . .
   Comma delimited rows of values
@@ -61,7 +61,7 @@ read(const char *file_name,
       .
       .
         </PRE>
-        All empty lines or lines starting with # will be skipped.<BR><BR>
+        All empty lines or lines starting with # will be skipped. For examples see IBM and FORD files in test directory<BR><BR>
 
         The <B>JSON</B> file format looks like this:<BR>
         <PRE>

@@ -2034,7 +2034,7 @@ struct QuantileVisitor  {
             ! (col_s & 0x01) || double(int_idx) < vec_len_frac;
 
         if (qt_ == 0.0 || qt_ == 1.0)  {
-            KthValueVisitor<T, I>   kth_value((qt_ == 0.0 ) ? 1 : col_s);
+            KthValueVisitor<T, I>   kth_value((qt_ == 0.0) ? 1 : col_s);
 
             kth_value.pre();
             kth_value(idx_begin, idx_end, column_begin, column_end);
@@ -2429,6 +2429,9 @@ struct DiffVisitor  {
         GET_COL_SIZE
 
         assert(col_s > 0 && std::abs(periods_) < (col_s - 1));
+
+        bool    there_is_zero = false;
+
         result_.reserve(col_s);
         if (periods_ >= 0)  {
             if (! skip_nan_)  {
@@ -2442,7 +2445,11 @@ struct DiffVisitor  {
 
             for (auto j = column_begin; i < column_end; ++i, ++j) {
                 if (skip_nan_ && (is_nan__(*i) || is_nan__(*j)))  continue;
-                result_.push_back(*i - *j);
+
+                const value_type    val = *i - *j;
+
+                result_.push_back(val);
+                if (val == 0)  there_is_zero = true;
             }
         }
         else {
@@ -2451,20 +2458,36 @@ struct DiffVisitor  {
 
             for ( ; i > column_begin; --i, --j) {
                 if (skip_nan_ && (is_nan__(*i) || is_nan__(*j)))  continue;
-                result_.push_back(*i - *j);
+
+                const value_type    val = *i - *j;
+
+                result_.push_back(val);
+                if (val == 0)  there_is_zero = true;
             }
             if (i == column_begin)  {
-                if (! (skip_nan_ && (is_nan__(*i) || is_nan__(*j))))
-                    result_.push_back(*i - *j);
+                if (! (skip_nan_ && (is_nan__(*i) || is_nan__(*j))))  {
+                    const value_type    val = *i - *j;
+
+                    result_.push_back(val);
+                    if (val == 0)  there_is_zero = true;
+                }
             }
             std::reverse(result_.begin(), result_.end());
 
-            if (skip_nan_ )  return;
-            for (size_type i = 0;
-                 i < static_cast<size_type>(std::abs(periods_)) && i < col_s;
-                 ++i)
-                result_.push_back(std::numeric_limits<value_type>::quiet_NaN());
+            if (! skip_nan_)
+                for (size_type i = 0;
+                     i < static_cast<size_type>(std::abs(periods_)) &&
+                         i < col_s;
+                     ++i)
+                    result_.push_back(
+                        std::numeric_limits<value_type>::quiet_NaN());
         }
+
+        if (non_zero_ && there_is_zero)
+            std::for_each(result_.begin(), result_.end(),
+                          [](value_type &v) {
+                              v += std::numeric_limits<value_type>::epsilon();
+                          });
     }
 
     inline void pre ()  { result_.clear(); }
@@ -2472,14 +2495,16 @@ struct DiffVisitor  {
     inline const result_type &get_result () const  { return (result_); }
     inline result_type &get_result ()  { return (result_); }
 
-    explicit DiffVisitor(long periods = 1, bool skipnan = true)
-        : periods_(periods), skip_nan_(skipnan) {  }
+    explicit
+    DiffVisitor(long periods = 1, bool skipnan = true, bool non_zero = false)
+        : periods_(periods), skip_nan_(skipnan), non_zero_(non_zero) {  }
 
 private:
 
     result_type result_ { };
     const long  periods_;
     const bool  skip_nan_;
+    const bool  non_zero_;
 };
 
 // ----------------------------------------------------------------------------
@@ -3930,7 +3955,7 @@ private:
 
 template<typename V>
 inline bool
-is_normal(const V &column, double epsilon, bool check_for_standard)  {
+is_normal(const V &column, double epsl, bool check_for_standard)  {
 
     using value_type = typename V::value_type;
 
@@ -3971,12 +3996,12 @@ is_normal(const V &column, double epsilon, bool check_for_standard)  {
 
     const double    col_s = static_cast<double>(column.size());
 
-    if (std::fabs((count_1 / col_s) - 0.68) <= epsilon &&
-        std::fabs((count_2 / col_s) - 0.95) <= epsilon &&
-        std::fabs((count_3 / col_s) - 0.997) <= epsilon)  {
+    if (std::fabs((count_1 / col_s) - 0.68) <= epsl &&
+        std::fabs((count_2 / col_s) - 0.95) <= epsl &&
+        std::fabs((count_3 / col_s) - 0.997) <= epsl)  {
         if (check_for_standard)
-            return (std::fabs(mean - 0) <= epsilon &&
-                    std::fabs(std - 1.0) <= epsilon);
+            return (std::fabs(mean - 0) <= epsl &&
+                    std::fabs(std - 1.0) <= epsl);
         return (true);
     }
     return (false);
@@ -3986,7 +4011,7 @@ is_normal(const V &column, double epsilon, bool check_for_standard)  {
 
 template<typename V>
 inline bool
-is_lognormal(const V &column, double epsilon)  {
+is_lognormal(const V &column, double epsl)  {
 
     using value_type = typename V::value_type;
 
@@ -4032,9 +4057,9 @@ is_lognormal(const V &column, double epsilon)  {
 
     const double    col_s = static_cast<double>(column.size());
 
-    if (std::fabs((count_1 / col_s) - 0.68) <= epsilon &&
-        std::fabs((count_2 / col_s) - 0.95) <= epsilon &&
-        std::fabs((count_3 / col_s) - 0.997) <= epsilon &&
+    if (std::fabs((count_1 / col_s) - 0.68) <= epsl &&
+        std::fabs((count_2 / col_s) - 0.95) <= epsl &&
+        std::fabs((count_3 / col_s) - 0.997) <= epsl &&
         log_visit.get_skew() > 10.0 * svisit.get_skew() &&
         log_visit.get_kurtosis() > 10.0 * svisit.get_kurtosis())
         return (true);

@@ -1252,3 +1252,5 @@ INDEX:12:<ulong> ,col_3:12:<double> ,col_4:6:<double> ,col_str:12:<string> ,col_
 123460,25,,88,18,11,25,,88,18,11,25,,88,18,11
 555555,555.543,,This is a test,777.78,55.55,555.543,,This is a test,777.78,55.55,555.543,,This is a test,777.78,55.55
 
+
+Testing KamaVisitor{  } ...

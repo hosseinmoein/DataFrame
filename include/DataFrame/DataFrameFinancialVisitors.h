@@ -1244,7 +1244,7 @@ struct MassIndexVisitor {
         }
         if (there_is_zero)
             std::for_each(result_.begin(), result_.end(),
-                          [](value_type &v) {
+                          [](value_type &v)  {
                               v += std::numeric_limits<value_type>::epsilon();
                           });
 
@@ -1882,16 +1882,6 @@ private:
 
 // ----------------------------------------------------------------------------
 
-
-
-
-
-
-
-
-
-
-
 // Kaufman's Adaptive Moving Average
 template<typename T, typename I = unsigned long>
 struct  KamaVisitor  {
@@ -1905,38 +1895,48 @@ struct  KamaVisitor  {
                 const H &column_begin,
                 const H &column_end)  {
 
-        if (roll_count_ == 0)  return;
-
-        using wma_t = SimpleRollAdopter<WeightedMeanVisitor<T, I>, T, I>;
+        if (roll_count_ < 2)  return;
 
         GET_COL_SIZE
 
-        wma_t   wma_half (WeightedMeanVisitor<T, I>(), roll_count_ / 2);
+        std::vector<value_type> change_diff (
+            col_s,
+            std::numeric_limits<value_type>::quiet_NaN());
 
-        wma_half.pre();
-        wma_half (idx_begin, idx_end, column_begin, column_end);
-        wma_half.post();
+        for (size_type i = roll_count_; i < col_s; ++i)
+            change_diff[i] =
+                std::fabs(*(column_begin + (i - roll_count_)) -
+                          *(column_begin + i));
 
-        wma_t   wma_full (WeightedMeanVisitor<T, I>(), roll_count_);
+        std::vector<value_type> peer_diff (
+            col_s,
+            std::numeric_limits<value_type>::quiet_NaN());
 
-        wma_full.pre();
-        wma_full (idx_begin, idx_end, column_begin, column_end);
-        wma_full.post();
+        for (size_type i = 1; i < col_s; ++i)
+            peer_diff[i] =
+                std::fabs(*(column_begin + (i - 1)) - *(column_begin + i));
 
-        static constexpr value_type two { 2 };
+        SimpleRollAdopter<SumVisitor<T, I>, T, I>   vol (
+            SumVisitor<T, I>(), roll_count_);
 
-        result_ = std::move(wma_half.get_result());
-        for (size_type i = 0; i < col_s - 1 && i < col_s; ++i)
-            result_[i] = two * result_[i] - wma_full.get_result()[i];
+        vol.pre();
+        vol(idx_begin, idx_end, peer_diff.begin(), peer_diff.end());
+        vol.post();
 
-        wma_t   wma_sqrt (WeightedMeanVisitor<T, I>(),
-                          size_type(std::sqrt(roll_count_)));
+        result_.reserve(col_s);
+        for (size_type i = 0; i < roll_count_ - 1; ++i)
+            result_.push_back(std::numeric_limits<value_type>::quiet_NaN());
+        result_.push_back(0);
+        for (size_type i = roll_count_; i < col_s; ++i)  {
+            const value_type    exp_ratio =
+                change_diff[i] / vol.get_result()[i];
+            value_type          smoothing_const =
+                exp_ratio * (fast_sc_ - slow_sc_) + slow_sc_;
 
-        wma_sqrt.pre();
-        wma_sqrt (idx_begin, idx_end, result_.begin(), result_.end());
-        wma_sqrt.post();
-
-        result_ = std::move(wma_sqrt.get_result());
+            smoothing_const *= smoothing_const;
+            result_.push_back(smoothing_const * *(column_begin + i) +
+                              (T(1) - smoothing_const) * result_[i - 1]);
+        }
     }
 
     inline void pre ()  { result_.clear(); }
@@ -1945,19 +1945,19 @@ struct  KamaVisitor  {
     inline result_type &get_result ()  { return (result_); }
 
     explicit
-    KamaVisitor(size_type r_count = 10,
+    KamaVisitor(size_type roll_count = 10,
                 size_type fast_smoothing_const = 2,
                 size_type slow_smoothing_const = 30)
-        : roll_count_(r_count),
+        : roll_count_(roll_count),
           fast_sc_(T(2) / T(fast_smoothing_const + 1)),
           slow_sc_(T(2) / T(slow_smoothing_const + 1)) {   }
 
 private:
 
-    const size_type roll_count_;
-    const size_type fast_sc_;
-    const size_type slow_sc_;
-    result_type     result_ { };
+    const size_type     roll_count_;
+    const value_type    fast_sc_;
+    const value_type    slow_sc_;
+    result_type         result_ { };
 };
 
 } // namespace hmdf

@@ -2623,6 +2623,38 @@ static void test_no_index_reads()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_KamaVisitor()  {
+
+    std::cout << "\nTesting KamaVisitor{  } ..." << std::endl;
+
+    typedef StdDataFrame<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("IBM.csv", io_format::csv2);
+
+        KamaVisitor<double, std::string>    k_v;
+
+        df.single_act_visit<double>("IBM_Close", k_v);
+
+        assert(k_v.get_result().size() == 5031);
+        assert(std::isnan(k_v.get_result()[0]));
+        assert(std::isnan(k_v.get_result()[8]));
+        assert(k_v.get_result()[9] == 0);
+        assert(std::abs(k_v.get_result()[29] - 31.6281) < 0.0001);
+        assert(std::abs(k_v.get_result()[34] - 47.2049) < 0.0001);
+        assert(std::abs(k_v.get_result()[5030] - 112.438) < 0.001);
+        assert(std::abs(k_v.get_result()[5026] - 118.829) < 0.001);
+        assert(std::abs(k_v.get_result()[5021] - 125.937) < 0.001);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int argc, char *argv[]) {
 
     test_get_reindexed();
@@ -2671,6 +2703,7 @@ int main(int argc, char *argv[]) {
     test_YangZhangVolVisitor();
     test_no_index_writes();
     test_no_index_reads();
+    test_KamaVisitor();
 
     return (0);
 }

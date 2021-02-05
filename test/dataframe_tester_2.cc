@@ -2655,6 +2655,38 @@ static void test_KamaVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_FisherTransVisitor()  {
+
+    std::cout << "\nTesting FisherTransVisitor{  } ..." << std::endl;
+
+    typedef StdDataFrame<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("IBM.csv", io_format::csv2);
+
+        FisherTransVisitor<double, std::string> ft_v;
+
+        df.single_act_visit<double, double>("IBM_Low", "IBM_High", ft_v);
+
+        assert(ft_v.get_result().size() == 5031);
+        assert(std::isnan(ft_v.get_result()[0]));
+        assert(std::isnan(ft_v.get_result()[7]));
+        assert(ft_v.get_result()[8] == 0);
+        assert(std::abs(ft_v.get_result()[29] - -1.47814) < 0.00001);
+        assert(std::abs(ft_v.get_result()[34] - -2.12198) < 0.00001);
+        assert(std::abs(ft_v.get_result()[5030] - -2.82683) < 0.00001);
+        assert(std::abs(ft_v.get_result()[5026] - -2.12427) < 0.00001);
+        assert(std::abs(ft_v.get_result()[5021] - -0.266774) < 0.000001);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int argc, char *argv[]) {
 
     test_get_reindexed();
@@ -2704,6 +2736,7 @@ int main(int argc, char *argv[]) {
     test_no_index_writes();
     test_no_index_reads();
     test_KamaVisitor();
+    test_FisherTransVisitor();
 
     return (0);
 }

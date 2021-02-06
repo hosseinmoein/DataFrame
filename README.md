@@ -92,11 +92,7 @@ cd [Debug | Release]
 cmake -DCMAKE_BUILD_TYPE=[Debug | Release] ..
 make
 make install
-```
 
-### Uninstalling
-
-```bash
 cd [Debug | Release]
 make uninstall
 ```

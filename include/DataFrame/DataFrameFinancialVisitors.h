@@ -1883,6 +1883,7 @@ private:
 // ----------------------------------------------------------------------------
 
 // Kaufman's Adaptive Moving Average
+//
 template<typename T, typename I = unsigned long>
 struct  KamaVisitor  {
 
@@ -1958,6 +1959,92 @@ private:
     const value_type    fast_sc_;
     const value_type    slow_sc_;
     result_type         result_ { };
+};
+
+// ----------------------------------------------------------------------------
+
+// Fisher Transform Indicator
+//
+template<typename T,
+         typename I = unsigned long,
+         typename =
+             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+struct FisherTransVisitor {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &low_begin,
+                const H &low_end,
+                const H &high_begin,
+                const H &high_end)  {
+
+        const size_type col_s = std::distance(low_begin, low_end);
+
+        assert((col_s == std::distance(high_begin, high_end)));
+        assert((roll_count_ < (col_s - 1)));
+
+        std::vector<value_type> mid_hl;
+
+        mid_hl.reserve(col_s);
+        for (size_type i = 0; i < col_s; ++i)
+            mid_hl.push_back((*(low_begin + i) + *(high_begin + i)) * T(0.5));
+
+        SimpleRollAdopter<MaxVisitor<T, I>, T, I>   max_v (MaxVisitor<T, I>(),
+                                                           roll_count_);
+        SimpleRollAdopter<MinVisitor<T, I>, T, I>   min_v (MinVisitor<T, I>(),
+                                                           roll_count_);
+
+        max_v.pre();
+        max_v (idx_begin, idx_end, mid_hl.begin(), mid_hl.end());
+        max_v.post();
+        min_v.pre();
+        min_v (idx_begin, idx_end, mid_hl.begin(), mid_hl.end());
+        min_v.post();
+
+        result_.reserve(col_s);
+        for (size_type i = 0; i < col_s; ++i)  {
+            const value_type    v =
+                max_v.get_result()[i] - min_v.get_result()[i];
+
+            result_.push_back(((mid_hl[i] - min_v.get_result()[i]) /
+                               (v >= T(0.001) ? v : T(0.001))) - T(0.5));
+        }
+
+        size_type   i = 0;
+        value_type  val = 0;
+
+        // This is done for effciency, so we do not use a third vector
+        //
+        std::swap(result_, mid_hl);
+        for ( ; i < roll_count_ - 1; ++i)
+            result_[i] = std::numeric_limits<value_type>::quiet_NaN();
+        result_[i++] = 0;
+        for ( ; i < col_s; ++i)  {
+            val = T(0.66) * mid_hl[i] + T(0.67) * val;
+            if (val < T(-0.99))  val = -0.999;
+            else if (val > T(0.99))  val = 0.999;
+            result_[i] =
+                T(0.5) *
+                (std::log((T(1) + val) / (T(1) - val)) + result_[i - 1]);
+        }
+    }
+
+    inline void pre ()  { result_.clear(); }
+    inline void post ()  {  }
+    inline const result_type &get_result () const  { return (result_); }
+    inline result_type &get_result ()  { return (result_); }
+
+    explicit
+    FisherTransVisitor(size_type roll_count = 9) : roll_count_(roll_count) {  }
+
+private:
+
+    result_type     result_ {  };
+    const size_type roll_count_;
 };
 
 } // namespace hmdf

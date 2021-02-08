@@ -39,6 +39,8 @@ struct RollingMidValueVisitor;
         </B></PRE></font>
       </td>
       <td>
+        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
+		
         This visitor calculates the rolling averages of the lowest values of the first time-series and highest values of the second time-series rolling window. For example the first time-series could be low or bid prices of stocks and the second time-series could be high or ask prices of stocks<BR>
         The result is a vector of values with same number of items as the given column. The first roll_count items, in the result, will be NAN.<BR>
         <PRE>

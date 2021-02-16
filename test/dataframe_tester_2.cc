@@ -2687,6 +2687,42 @@ static void test_FisherTransVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_PercentPriceOsciVisitor()  {
+
+    std::cout << "\nTesting PercentPriceOsciVisitor{  } ..." << std::endl;
+
+    typedef StdDataFrame<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("IBM.csv", io_format::csv2);
+
+        PercentPriceOsciVisitor<double, std::string>    ppo_v;
+
+        df.single_act_visit<double>("IBM_Close", ppo_v);
+
+        assert(ppo_v.get_result().size() == 5031);
+        assert(std::isnan(ppo_v.get_result()[0]));
+        assert(std::isnan(ppo_v.get_result()[24]));
+        assert(std::abs(ppo_v.get_result()[25] - -1.01156) < 0.00001);
+        assert(std::abs(ppo_v.get_result()[29] - -1.63896) < 0.00001);
+        assert(std::abs(ppo_v.get_result()[34] - -3.17651) < 0.00001);
+        assert(std::abs(ppo_v.get_result()[5030] - -3.46821) < 0.00001);
+        assert(std::abs(ppo_v.get_result()[5026] - -0.00785639) < 0.00001);
+        assert(std::abs(ppo_v.get_result()[5021] - 1.69995) < 0.00001);
+
+        for (auto citer : ppo_v.get_histogram())
+			std::cout << citer << ", ";
+		std::cout << std::endl;
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int argc, char *argv[]) {
 
     test_get_reindexed();
@@ -2737,6 +2773,7 @@ int main(int argc, char *argv[]) {
     test_no_index_reads();
     test_KamaVisitor();
     test_FisherTransVisitor();
+    test_PercentPriceOsciVisitor();
 
     return (0);
 }

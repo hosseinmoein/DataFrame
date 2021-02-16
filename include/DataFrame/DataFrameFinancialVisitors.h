@@ -2047,6 +2047,87 @@ private:
     const size_type roll_count_;
 };
 
+// ----------------------------------------------------------------------------
+
+// Percentage Price Oscillator (PPO)
+//
+template<typename T,
+         typename I = unsigned long,
+         typename =
+             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+struct PercentPriceOsciVisitor {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &close_begin,
+                const H &close_end)  {
+
+        const size_type col_s = std::distance(close_begin, close_end);
+
+        assert(fast_ < slow_);
+
+        srs_t   fast_roller(std::move(MeanVisitor<T, I>()), fast_);
+
+        fast_roller.pre();
+        fast_roller(idx_begin, idx_end, close_begin, close_end);
+        fast_roller.post();
+
+        srs_t   slow_roller (std::move(MeanVisitor<T, I>()), slow_);
+
+        slow_roller.pre();
+        slow_roller(idx_begin, idx_end, close_begin, close_end);
+        slow_roller.post();
+
+        result_ = std::move(slow_roller.get_result());
+        for (size_type i = 0; i < col_s; ++i)
+            result_[i] =
+                (T(100) * (fast_roller.get_result()[i] - result_[i])) /
+                result_[i];
+
+        erm_t   signal_roller (std::move(MeanVisitor<T, I>()), signal_,
+                               exponential_decay_spec::span, signal_);
+
+        signal_roller.pre();
+        signal_roller(idx_begin + slow_, idx_end,
+					  result_.begin() + slow_, result_.end());
+        signal_roller.post();
+
+        histogram_.reserve(col_s);
+        for (size_type i = 0; i < slow_; ++i)
+            histogram_.push_back(std::numeric_limits<value_type>::quiet_NaN());
+        for (size_type i = slow_; i < col_s; ++i)
+            histogram_.push_back(result_[i] - signal_roller.get_result()[i]);
+    }
+
+    inline void pre ()  { result_.clear(); histogram_.clear(); }
+    inline void post ()  {  }
+    inline const result_type &get_result () const  { return (result_); }
+    inline result_type &get_result ()  { return (result_); }
+    inline const result_type &get_histogram () const  { return (histogram_); }
+    inline result_type &get_histogram ()  { return (histogram_); }
+
+    explicit
+    PercentPriceOsciVisitor(size_type fast_period = 12,
+                            size_type slow_period = 26,
+                            size_type signal_line = 9)
+        : fast_(fast_period), slow_(slow_period), signal_(signal_line)  {  }
+
+private:
+
+    using erm_t = ExponentialRollAdopter<MeanVisitor<T, I>, T, I>;
+    using srs_t = SimpleRollAdopter<MeanVisitor<T, I>, T, I>;
+
+    result_type     result_ {  };
+    result_type     histogram_ {  };
+    const size_type slow_;
+    const size_type fast_;
+    const size_type signal_;
+};
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

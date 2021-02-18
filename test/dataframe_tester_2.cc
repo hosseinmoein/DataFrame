@@ -2723,6 +2723,38 @@ static void test_PercentPriceOsciVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_SlopeVisitor()  {
+
+    std::cout << "\nTesting SlopeVisitor{  } ..." << std::endl;
+
+    typedef StdDataFrame<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("IBM.csv", io_format::csv2);
+
+        SlopeVisitor<double, std::string>   s_v (10, true, true);
+
+        df.single_act_visit<double>("IBM_Close", s_v);
+
+        assert(s_v.get_result().size() == 5031);
+        assert(std::isnan(s_v.get_result()[0]));
+        assert(std::isnan(s_v.get_result()[9]));
+        assert(std::abs(s_v.get_result()[10] - 4.64508) < 0.00001);
+        assert(std::abs(s_v.get_result()[29] - -40.5718) < 0.0001);
+        assert(std::abs(s_v.get_result()[34] - -47.07) < 0.001);
+        assert(std::abs(s_v.get_result()[5030] - -54.9783) < 0.0001);
+        assert(std::abs(s_v.get_result()[5026] - -56.2923) < 0.0001);
+        assert(std::abs(s_v.get_result()[5021] - 19.341) < 0.001);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int argc, char *argv[]) {
 
     test_get_reindexed();
@@ -2774,6 +2806,7 @@ int main(int argc, char *argv[]) {
     test_KamaVisitor();
     test_FisherTransVisitor();
     test_PercentPriceOsciVisitor();
+    test_SlopeVisitor();
 
     return (0);
 }

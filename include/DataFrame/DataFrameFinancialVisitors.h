@@ -2128,6 +2128,64 @@ private:
     const size_type signal_;
 };
 
+// ----------------------------------------------------------------------------
+
+template<typename T, typename I = unsigned long>
+struct  SlopeVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &column_begin,
+                const H &column_end)  {
+
+        if (periods_ < 2)  return;
+
+        assert(! ((! as_angle_) && in_degrees_));
+
+        GET_COL_SIZE
+
+        DiffVisitor<T, I>   diff (periods_, false);
+
+        diff.pre();
+        diff (idx_begin, idx_end, column_begin, column_end);
+        diff.post();
+        result_ = std::move(diff.get_result());
+
+        constexpr value_type    pi_180 = value_type(180) / value_type(M_PI);
+
+        for (size_type i = 0; i < col_s; ++i)  {
+            result_[i] /= value_type(periods_);
+            if (as_angle_)  {
+                result_[i] = std::atan(result_[i]);
+                if (in_degrees_)
+                    result_[i] *= pi_180;
+            }
+        }
+    }
+
+    inline void pre ()  { result_.clear(); }
+    inline void post ()  {  }
+    inline const result_type &get_result () const  { return (result_); }
+    inline result_type &get_result ()  { return (result_); }
+
+    explicit
+    SlopeVisitor(size_type periods = 1,
+                 bool as_angle = false,
+                 bool in_degrees = false)
+        : periods_(periods), as_angle_(as_angle), in_degrees_(in_degrees)  {  }
+
+private:
+
+    const size_type periods_;
+    const bool      as_angle_;
+    const bool      in_degrees_;
+    result_type     result_ { };
+};
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

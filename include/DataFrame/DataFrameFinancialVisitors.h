@@ -2047,7 +2047,6 @@ private:
     const size_type roll_count_;
 };
 
-
 // ----------------------------------------------------------------------------
 
 template<typename T, typename I = unsigned long>

@@ -62,7 +62,7 @@ table {
 
 <H1 style="text-align:center">DataFrame</H1>
 <P>
-  <font size="+2">DataFrame</font> is a templatized C++ class that provides functionalities similar to Python Pandas or R data.frame.<BR>
+  <font size="+1">DataFrame</font> is a templatized C++ class that provides functionalities similar to Python Pandas or R data.frame.<BR>
   Columns in the DataFrame are in order of creation and they could be accessed by name or index. You could rotate or shift the columns in which case their order will change.<BR>
 DataFrame class is defined as:
 <pre style='color:#000000;background:#ffffff;'><span style='color:#800000; font-weight:bold; '>template</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>typename</span> I<span style='color:#808030; '>,</span> <span style='color:#800000; font-weight:bold; '>typename</span> H<span style='color:#800080; '>></span>
@@ -101,7 +101,7 @@ DataFrame class is defined as:
 <HR>
 
 <P>
-  <font size="+2">Code Examples</font> are in <I>test/dataframe_tester.cc</I> and <I>test/dataframe_tester_2.cc</I>. You should find at least one example for each feature. Also in the table below, you will find code examples for each feature.
+  <font size="+1">Code Examples</font> are in <I>test/dataframe_tester.cc</I> and <I>test/dataframe_tester_2.cc</I>. You should find at least one example for each feature. Also in the table below, you will find code examples for each feature.
 </P>
 <HR>
 
@@ -136,7 +136,7 @@ table.hovertable td {
 
 
 
-  <H2 style="text-align:center">Table of Features (with Code Samples)</H2>
+  <H2><font color="green">Table of Features (with Code Samples)</font></H2>
 
 <div class="row">
   <div class="column">
@@ -1024,7 +1024,7 @@ table.hovertable td {
 
 <HR>
 
-  <H1><font color="blue">Views</font></H1>
+  <H2><font color="green">Views</font></H2>
   <P>
     Views were added in the second wave of development. It is a very useful concept with practical use-cases. A view is a slice of a DataFrame that is a reference to the original DataFrame. It appears exactly the same as a DataFrame, but if you modify any data in the view, the corresponding data point(s) in the original DataFrame will also be modified.<BR>
     There are certain things you cannot do in views. For example, you cannot add or delete columns, extend the index column, ...<BR>
@@ -1032,7 +1032,7 @@ table.hovertable td {
   </P>
 <HR>
 
-  <H1><font color="blue">Visitors</font></H1>
+  <H2><font color="green">Visitors</font></H2>
   <P>
     Visitors are the main mechanism to implement analytical (i.e. statistical, financial, machine-learning) algorithms. You can easily follow the visitor's interface to add your custom algorithm by which you will extend the DataFrame package.<BR>
     There are two visitor interfaces:<BR>
@@ -1049,7 +1049,7 @@ table.hovertable td {
   </P>
 <HR>
 
-  <H1><font color="blue">Numeric Generators</font></H1>
+  <H2><font color="green">Numeric Generators</font></H2>
   <P>
     Random generators, and a few other numeric generators, were added as a series of convenient stand-alone functions to generate random numbers (it covers all C++ standard distributions). You can seamlessly use these routines to generate random DataFrame columns.<BR>
     See this document and file <I>RandGen.h</I> and <I>dataframe_tester.cc.</I>
@@ -1057,22 +1057,22 @@ table.hovertable td {
   </P>
 <HR>
 
-  <H1><font color="blue">Code Structure</font></H1>
+  <H2><font color="green">Code Structure</font></H2>
   <P>
     The DataFrame library is “almost” a header-only library with a few boilerplate source file exceptions, <I>HeteroVector.cc</I> and <I>HeteroView.cc</I> and a few others. Also there is <I>DateTime.cc.</I><BR>
     <BR>
     Starting from the root directory;<BR>
-    <font size="+2">include</font> directory contains most of the code. It includes <I>.h</I> and <I>.tcc</I> files. The latter are C++ template code files (they are mostly located in the <I>Internals</I> subdirectory). The main header file is <I>DataFrame.h.</I> It contains the DataFrame class and its interface. There are comprehensive comments for each public interface call in that file. The rest of the files there will show you how the sausage is made.<BR>
+    <font size="+1">include</font> directory contains most of the code. It includes <I>.h</I> and <I>.tcc</I> files. The latter are C++ template code files (they are mostly located in the <I>Internals</I> subdirectory). The main header file is <I>DataFrame.h.</I> It contains the DataFrame class and its interface. There are comprehensive comments for each public interface call in that file. The rest of the files there will show you how the sausage is made.<BR>
     Include directory also contains subdirectories that contain mostly internal DataFrame implementation.<BR>
     One exception, the <I>DateTime.h</I> is located in the Utils subdirectory<BR>
     <BR>
-    <font size="+2">src</font> directory contains Linux-only make files and a few subdirectories that contain various source codes.<BR>
+    <font size="+1">src</font> directory contains Linux-only make files and a few subdirectories that contain various source codes.<BR>
     <BR>
-    <font size="+2">test</font> directory contains all the test source files, mocked data files, and test output files. The main test source file is <I>dataframe_tester.cc.</I> It contains test cases for all functionalities of DataFrame. It is not in a very organized structure. I plan to make the test cases more organized.
+    <font size="+1">test</font> directory contains all the test source files, mocked data files, and test output files. The main test source file is <I>dataframe_tester.cc.</I> It contains test cases for all functionalities of DataFrame. It is not in a very organized structure. I plan to make the test cases more organized.
   </P>
 <HR>
 
-  <H1><font color="blue">Build Instructions</font></H1>
+  <H2><font color="green">Build Instructions</font></H2>
   <P>
     <font size="+2">Using plain make and make-files</font><BR>
     Go to the root of the repository, where license file is, and execute build_all.sh. This will build the library and test executables for Linux flavors <BR>
@@ -1081,7 +1081,7 @@ table.hovertable td {
   </P>
 <HR>
 
-  <H1><font color="blue">Motivation</font></H1>
+  <H1><font color="green">Motivation</font></H1>
   <P>
     Although Pandas has a spot-on interface and it is full of useful functionalities, it lacks performance and scalability. For example, it is hard to decipher high-frequency intraday data such as Options data or S&amp;P500 constituents tick-by-tick data using Pandas.<BR>
     Another issue I have encountered often is the research is done using Python, because it has such tools as Pandas, but the execution in production is in C++ for its efficiency, reliability and scalability. Therefore, there is this translation, or sometimes a bridge, between research and executions.<BR>

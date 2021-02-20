@@ -130,6 +130,7 @@ endif(UNIX)
 
 if (MSVC)
   add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+  add_definitions(-D_USE_MATH_DEFINES)
   add_library(${LIBRARY_TARGET_NAME} ${${LIBRARY_TARGET_NAME}_SRC})
 
   # If shared:

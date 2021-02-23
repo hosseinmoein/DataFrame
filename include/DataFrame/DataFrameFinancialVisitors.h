@@ -2186,6 +2186,141 @@ private:
     result_type     result_ { };
 };
 
+// ----------------------------------------------------------------------------
+
+// Ultimate Oscillator indicator
+//
+template<typename T, typename I = unsigned long>
+struct  UltimateOSCIVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &low_begin,
+                const H &low_end,
+                const H &high_begin,
+                const H &high_end,
+                const H &close_begin,
+                const H &close_end)  {
+
+        const size_type col_s = std::distance(close_begin, close_end);
+
+        assert((col_s == std::distance(low_begin, low_end)));
+        assert((col_s == std::distance(high_begin, high_end)));
+
+        std::vector<value_type> max_high;
+
+        max_high.reserve(col_s);
+        max_high.push_back(std::numeric_limits<value_type>::quiet_NaN());
+        for (size_type i = 1; i < col_s; ++i)
+            max_high.push_back(std::max(*(high_begin + i),
+                                        *(close_begin + (i - 1))));
+
+        std::vector<value_type> min_low;
+
+        min_low.reserve(col_s);
+        min_low.push_back(std::numeric_limits<value_type>::quiet_NaN());
+        for (size_type i = 1; i < col_s; ++i)
+            min_low.push_back(std::min(*(low_begin + i),
+                                       *(close_begin + (i - 1))));
+
+        std::vector<value_type> buying_pressure;
+
+        buying_pressure.reserve(col_s);
+        for (size_type i = 0; i < col_s; ++i)
+            buying_pressure.push_back(*(close_begin + i) - min_low[i]);
+
+        std::vector<value_type> true_range;
+
+        true_range.reserve(col_s);
+        for (size_type i = 0; i < col_s; ++i)
+            true_range.push_back(max_high[i] - min_low[i]);
+
+        ssr_t   fast_bp_sum (SumVisitor<T, I>(), fast_);
+        ssr_t   fast_tr_sum (SumVisitor<T, I>(), fast_);
+
+        fast_bp_sum.pre();
+        fast_tr_sum.pre();
+        fast_bp_sum (idx_begin, idx_end,
+                     buying_pressure.begin(), buying_pressure.end());
+        fast_tr_sum (idx_begin, idx_end, true_range.begin(), true_range.end());
+        fast_bp_sum.post();
+        fast_tr_sum.post();
+
+        ssr_t   med_bp_sum (SumVisitor<T, I>(), medium_);
+        ssr_t   med_tr_sum (SumVisitor<T, I>(), medium_);
+
+        med_bp_sum.pre();
+        med_tr_sum.pre();
+        med_bp_sum (idx_begin, idx_end,
+                    buying_pressure.begin(), buying_pressure.end());
+        med_tr_sum (idx_begin, idx_end, true_range.begin(), true_range.end());
+        med_bp_sum.post();
+        med_tr_sum.post();
+
+        ssr_t   slow_bp_sum (SumVisitor<T, I>(), slow_);
+        ssr_t   slow_tr_sum (SumVisitor<T, I>(), slow_);
+
+        slow_bp_sum.pre();
+        slow_tr_sum.pre();
+        slow_bp_sum (idx_begin, idx_end,
+                     buying_pressure.begin(), buying_pressure.end());
+        slow_tr_sum (idx_begin, idx_end, true_range.begin(), true_range.end());
+        slow_bp_sum.post();
+        slow_tr_sum.post();
+
+        const value_type    total_weights = slow_w_ + fast_w_ + medium_w_;
+
+        result_.reserve(col_s);
+        for (size_type i = 0; i < col_s; ++i)  {
+            const value_type    weights =
+                (fast_w_ *
+                 (fast_bp_sum.get_result()[i] / fast_tr_sum.get_result()[i]) +
+                 medium_w_ *
+                 (med_bp_sum.get_result()[i] / med_tr_sum.get_result()[i]) +
+                 slow_w_ *
+                 (slow_bp_sum.get_result()[i] / slow_tr_sum.get_result()[i])) *
+                T(100);
+
+            result_.push_back(weights / total_weights);
+        }
+    }
+
+    inline void pre ()  { result_.clear(); }
+    inline void post ()  {  }
+    inline const result_type &get_result () const  { return (result_); }
+    inline result_type &get_result ()  { return (result_); }
+
+    explicit
+    UltimateOSCIVisitor(size_type slow_roll = 28,
+                        size_type fast_roll = 7,
+                        size_type medium_roll = 14,
+                        value_type slow_weight = 1.0,
+                        value_type fast_weight = 4.0,
+                        value_type medium_weight = 2.0)
+        : slow_(slow_roll),
+          fast_(fast_roll),
+          medium_(medium_roll),
+          slow_w_(slow_weight),
+          fast_w_(fast_weight),
+          medium_w_(medium_weight)  {   }
+
+private:
+
+    using ssr_t = SimpleRollAdopter<SumVisitor<T, I>, T, I>;
+
+    const size_type     slow_;
+    const size_type     fast_;
+    const size_type     medium_;
+    const value_type    slow_w_;
+    const value_type    fast_w_;
+    const value_type    medium_w_;
+    result_type         result_ { };
+};
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

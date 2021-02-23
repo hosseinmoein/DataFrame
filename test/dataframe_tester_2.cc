@@ -2719,6 +2719,37 @@ static void test_SlopeVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_UltimateOSCIVisitor()  {
+
+    std::cout << "\nTesting UltimateOSCIVisitor{  } ..." << std::endl;
+
+    typedef StdDataFrame<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("IBM.csv", io_format::csv2);
+
+        UltimateOSCIVisitor<double, std::string> uo_v;
+
+        df.single_act_visit<double, double, double>
+            ("IBM_Low", "IBM_High", "IBM_Close", uo_v);
+
+        assert(uo_v.get_result().size() == 5031);
+        assert(std::isnan(uo_v.get_result()[0]));
+        assert(std::isnan(uo_v.get_result()[26]));
+        assert(std::abs(uo_v.get_result()[27] - 41.3509) < 0.0001);
+        assert(std::abs(uo_v.get_result()[31] - 32.1768) < 0.0001);
+        assert(std::abs(uo_v.get_result()[5030] - 45.076) < 0.001);
+        assert(std::abs(uo_v.get_result()[5026] - 31.3935) < 0.0001);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int argc, char *argv[]) {
 
     test_get_reindexed();
@@ -2770,6 +2801,7 @@ int main(int argc, char *argv[]) {
     test_KamaVisitor();
     test_FisherTransVisitor();
     test_SlopeVisitor();
+    test_UltimateOSCIVisitor();
 
     return (0);
 }

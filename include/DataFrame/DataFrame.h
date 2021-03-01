@@ -2001,6 +2001,124 @@ public: // Read/access and slicing interfaces
                 F &functor,
                 bool delete_old_cols = true);
 
+    // This is the same as above consolidate(), but it consolidates 4 columns
+    // into one.
+    // Functor signature is:
+    //     template<typename ITR1, typename ITR2, typename ITR3,
+    //              typename ITR4>
+    //     std::vector<NEW_T> (IndexVecType::const_iterator idx_begin,
+    //                         IndexVecType::const_iterator idx_end,
+    //                         ITR1 col1_begin, ITR1 col1_end,
+    //                         ITR2 col2_begin, ITR2 col2_end,
+    //                         ITR3 col3_begin, ITR3 col3_end,
+    //                         ITR4 col4_begin, ITR4 col4_end);
+    //     Where ITR[1234] are iterators for columns 1, 2, 3, and 4. They are
+    //     iterators of std::vector.
+    //
+    // NOTE: This method could not be called from views.
+    //
+    // OLD_T1:
+    //   Type of existing column named old_col_name1
+    // OLD_T2:
+    //   Type of existing column named old_col_name2
+    // OLD_T3:
+    //   Type of existing column named old_col_name3
+    // OLD_T4:
+    //   Type of existing column named old_col_name4
+    // NEW_T:
+    //   Type of the new column new_col_name which is the consolidation of the
+    //   two existing columns
+    // F:
+    //   Type of the consildating functor
+    // old_col_name1:
+    //   Name of the first existing column
+    // old_col_name2:
+    //   Name of the second existing column
+    // old_col_name3:
+    //   Name of the third existing column
+    // old_col_name4:
+    //   Name of the forth existing column
+    // new_col_name:
+    //   Name of the new consolidated column
+    // functor:
+    //   Consolidating functor
+    // delete_old_cols:
+    //   If true, old columns will be removed
+    //
+    template<typename OLD_T1, typename OLD_T2, typename OLD_T3,
+             typename OLD_T4,
+             typename NEW_T, typename F>
+    void
+    consolidate(const char *old_col_name1,
+                const char *old_col_name2,
+                const char *old_col_name3,
+                const char *old_col_name4,
+                const char *new_col_name,
+                F &functor,
+                bool delete_old_cols = true);
+
+    // This is the same as above consolidate(), but it consolidates 5 columns
+    // into one.
+    // Functor signature is:
+    //     template<typename ITR1, typename ITR2, typename ITR3,
+    //              typename ITR4, typename ITR5>
+    //     std::vector<NEW_T> (IndexVecType::const_iterator idx_begin,
+    //                         IndexVecType::const_iterator idx_end,
+    //                         ITR1 col1_begin, ITR1 col1_end,
+    //                         ITR2 col2_begin, ITR2 col2_end,
+    //                         ITR3 col3_begin, ITR3 col3_end,
+    //                         ITR4 col4_begin, ITR4 col4_end,
+    //                         ITR5 col5_begin, ITR5 col5_end);
+    //     Where ITR[12345] are iterators for columns 1, 2, 3, 4, and 5.
+    //     They are iterators of std::vector.
+    //
+    // NOTE: This method could not be called from views.
+    //
+    // OLD_T1:
+    //   Type of existing column named old_col_name1
+    // OLD_T2:
+    //   Type of existing column named old_col_name2
+    // OLD_T3:
+    //   Type of existing column named old_col_name3
+    // OLD_T4:
+    //   Type of existing column named old_col_name4
+    // OLD_T5:
+    //   Type of existing column named old_col_name5
+    // NEW_T:
+    //   Type of the new column new_col_name which is the consolidation of the
+    //   two existing columns
+    // F:
+    //   Type of the consildating functor
+    // old_col_name1:
+    //   Name of the first existing column
+    // old_col_name2:
+    //   Name of the second existing column
+    // old_col_name3:
+    //   Name of the third existing column
+    // old_col_name4:
+    //   Name of the forth existing column
+    // old_col_name5:
+    //   Name of the fifth existing column
+    // new_col_name:
+    //   Name of the new consolidated column
+    // functor:
+    //   Consolidating functor
+    // delete_old_cols:
+    //   If true, old columns will be removed
+    //
+    template<typename OLD_T1, typename OLD_T2, typename OLD_T3,
+             typename OLD_T4, typename OLD_T5,
+             typename NEW_T, typename F>
+    void
+    consolidate(const char *old_col_name1,
+                const char *old_col_name2,
+                const char *old_col_name3,
+                const char *old_col_name4,
+                const char *old_col_name5,
+                const char *new_col_name,
+                F &functor,
+                bool delete_old_cols = true);
+
 public:  // Visitors
 
     // This is the most generalized visit function. It visits multiple

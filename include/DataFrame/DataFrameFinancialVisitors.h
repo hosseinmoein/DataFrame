@@ -2055,7 +2055,7 @@ template<typename T,
          typename I = unsigned long,
          typename =
              typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
-struct PercentPriceOsciVisitor {
+struct PercentPriceOSCIVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
@@ -2107,11 +2107,9 @@ struct PercentPriceOsciVisitor {
     inline void post ()  {  }
     inline const result_type &get_result () const  { return (result_); }
     inline result_type &get_result ()  { return (result_); }
-    inline const result_type &get_histogram () const  { return (histogram_); }
-    inline result_type &get_histogram ()  { return (histogram_); }
 
     explicit
-    PercentPriceOsciVisitor(size_type fast_period = 12,
+    PercentPriceOSCIVisitor(size_type fast_period = 12,
                             size_type slow_period = 26,
                             size_type signal_line = 9)
         : fast_(fast_period), slow_(slow_period), signal_(signal_line)  {  }

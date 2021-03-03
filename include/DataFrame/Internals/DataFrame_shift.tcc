@@ -102,6 +102,23 @@ shift(size_type periods, shift_policy sp) const  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
+template<typename T>
+std::vector<T> DataFrame<I, H>::
+shift(const char *col_name, size_type periods, shift_policy sp) const  {
+
+    static_assert(std::is_base_of<HeteroVector, DataVec>::value,
+                  "Only a StdDataFrame can call shift()");
+
+    std::vector<T>              result = get_column<T>(col_name);
+    vertical_shift_functor_<T>  functor(periods, sp);
+
+    functor (result);
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
 template<typename ... Ts>
 void DataFrame<I, H>::self_rotate(size_type periods, shift_policy sp)  {
 

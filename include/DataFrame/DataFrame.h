@@ -1212,8 +1212,9 @@ public:  // Data manipulation
     //   List all the types of all data columns. A type should be specified in
     //   the list only once.
     // periods:
-    //   Number of periods to shift shift_policy: Specifies the direction
-    //   (i.e. up/down, left/right) to shift
+    //   Number of periods to shift
+    // shift_policy:
+    //   Specifies the direction (i.e. up/down, left/right) to shift
     //
     template<typename ... Ts>
     void
@@ -1225,6 +1226,24 @@ public:  // Data manipulation
     template<typename ... Ts>
     [[nodiscard]] StdDataFrame<IndexType>
     shift(size_type periods, shift_policy sp) const;
+
+    // This copies the named column into another vector and shifts it up or down
+    // and returns it.
+    // It is handy to create columns of shifted data in the dataframe for
+    // machine-learning analysis
+    //
+    // T:
+    //   Type of the col_name column.
+    // col_name:
+    //   Name of the column
+    // periods:
+    //   Number of periods to shift
+    // shift_policy:
+    //   Specifies the direction. In this case it is only up or down. 
+    //
+    template<typename T>
+    [[nodiscard]] std::vector<T>
+    shift(const char *col_name, size_type periods, shift_policy sp) const;
 
     // It rotates all the columns in self up, down, left, or right based on
     // shift_policy.

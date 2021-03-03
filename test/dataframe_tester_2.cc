@@ -2782,6 +2782,54 @@ static void test_UltimateOSCIVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_shifting_column()  {
+
+    std::cout << "\nTesting shifting columns ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466 };
+    std::vector<double>         d1 =
+        { 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28 };
+    MyDataFrame                 df;
+
+    df.load_data(std::move(idx), std::make_pair("dbl_col", d1));
+
+    df.load_column("dbl_col t-1",
+                   df.shift<double>("dbl_col", 1, shift_policy::down));
+    df.load_column("dbl_col t-2",
+                   df.shift<double>("dbl_col", 2, shift_policy::down));
+    df.load_column("dbl_col t-3",
+                   df.shift<double>("dbl_col", 3, shift_policy::down));
+    df.load_column("dbl_col t-4",
+                   df.shift<double>("dbl_col", 4, shift_policy::down));
+    df.load_column("dbl_col t-5",
+                   df.shift<double>("dbl_col", 5, shift_policy::down));
+    df.load_column("dbl_col t-6",
+                   df.shift<double>("dbl_col", 6, shift_policy::down));
+    df.load_column("dbl_col t-7",
+                   df.shift<double>("dbl_col", 7, shift_policy::down));
+
+    df.load_column("dbl_col t+1",
+                   df.shift<double>("dbl_col", 1, shift_policy::up));
+    df.load_column("dbl_col t+2",
+                   df.shift<double>("dbl_col", 2, shift_policy::up));
+    df.load_column("dbl_col t+3",
+                   df.shift<double>("dbl_col", 3, shift_policy::up));
+    df.load_column("dbl_col t+4",
+                   df.shift<double>("dbl_col", 4, shift_policy::up));
+    df.load_column("dbl_col t+5",
+                   df.shift<double>("dbl_col", 5, shift_policy::up));
+    df.load_column("dbl_col t+6",
+                   df.shift<double>("dbl_col", 6, shift_policy::up));
+    df.load_column("dbl_col t+7",
+                   df.shift<double>("dbl_col", 7, shift_policy::up));
+
+    df.write<std::ostream, double>(std::cout, io_format::csv2);
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int argc, char *argv[]) {
 
     test_get_reindexed();
@@ -2835,6 +2883,7 @@ int main(int argc, char *argv[]) {
     test_PercentPriceOSCIVisitor();
     test_SlopeVisitor();
     test_UltimateOSCIVisitor();
+    test_shifting_column();
 
     return (0);
 }

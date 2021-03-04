@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <algorithm>
 #include <atomic>
+#include <thread>
 
 #pragma once
 
@@ -76,8 +77,9 @@ protected:
 
 private:
 
-    static unsigned int         num_of_threads_;
-    static const unsigned int   supported_threads_;
+    inline static unsigned int          num_of_threads_ { 0 };
+    inline static const unsigned int    supported_threads_ {
+        std::thread::hardware_concurrency() };
 };
 
 // ----------------------------------------------------------------------------

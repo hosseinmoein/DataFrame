@@ -36,6 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdexcept>
 #include <string>
 #include <sys/timeb.h>
+#include <time.h>
 
 #if defined(_WIN32)
 #  include <windows.h>
@@ -180,19 +181,103 @@ private:
     template<typename T>
     using INVALID_VALUE_ = typename std::numeric_limits<T>;
 
-    static const char       *TIMEZONES_[];
-    static const EpochType  INVALID_TIME_T_ = INVALID_VALUE_<EpochType>::max();
-    static const DateType   INVALID_DATE_ = INVALID_VALUE_<DateType>::max();
-    static const HourType   INVALID_HOUR_ = INVALID_VALUE_<HourType>::max();
-    static const MinuteType INVALID_MINUTE_ = INVALID_VALUE_<MinuteType>::max();
-    static const SecondType INVALID_SECOND_ = INVALID_VALUE_<SecondType>::max();
+    inline static const char    *TIMEZONES_[] {
+#ifdef _WIN32
+        "\"TZ=GMT\"",
+        "\"TZ=Argentina Standard Time\"",        // "America/Buenos_Aires",
+        "\"TZ=Central Standard Time\"",          // "America/Chicago",
+        "\"TZ=Pacific Standard Time\"",          // "America/Los_Angeles",
+        "\"TZ=Central Standard Time (Mexico)\"", // "America/Mexico_City",
+        "\"TZ=Eastern Standard Time\"",          // "America/New_York",
+        "\"TZ=Arabian Standard Time\"",          // "Asia/Dubai",
+        "\"TZ=China Standard Time\"",            // "Asia/Hong_Kong",
+        "\"TZ=China Standard Time\"",            // "Asia/Shanghai",
+        "\"TZ=Singapore Standard Time\"",        // "Asia/Singapore",
+        "\"TZ=Iran Standard Time\"",             // "Asia/Tehran",
+        "\"TZ=Israel Standard Time\"",           // "Asia/Tel_Aviv",
+        "\"TZ=Tokyo Standard Time\"",            // "Asia/Tokyo",
+        "\"TZ=AUS Eastern Standard Time\"",      // "Australia/Melbourne",
+        "\"TZ=GMT-10\"",                         // "Australia/NSW",
+        "\"TZ=E. South America Standard Time\"", // "Brazil/East",
+        "\"TZ=W. Europe Standard Time\"",        // "Europe/Berlin",
+        "\"TZ=GMT Standard Time\"",              // "Europe/London",
+        "\"TZ=Russian Standard Time\"",          // "Europe/Moscow",
+        "\"TZ=Romance Standard Time\"",          // "Europe/Paris",
+        "\"TZ=W. Europe Standard Time\"",        // "Europe/Rome",
+        "\"TZ=W. Europe Standard Time\"",        // "Europe/Vienna",
+        "\"TZ=W. Europe Standard Time\"",        // "Europe/Zurich",
+        "\"TZ=GMT+00\"",                         // "UTC",
+        "\"TZ=Korea Standard Time\"",            // "Asia/Seoul",
+        "\"TZ=Taipei Standard Time\"",           // "Asia/Taipei",
+        "\"TZ=W. Europe Standard Time\"",        // "Eurpoe/Sweden",
+        "\"TZ=New Zealand Standard Time\"",      // "NZ",
+        "\"TZ=Central Europe Standard Time\"",   // "Europe/Oslo",
+        "\"TZ=Central European Standard Time\"", // "Europe/Warsaw",
+        "\"TZ=Central Europe Standard Time\""    // "Europe/Budapest"
+#else
+        "GMT",
+        "America/Buenos_Aires",
+        "America/Chicago",
+        "America/Los_Angeles",
+        "America/Mexico_City",
+        "America/New_York",
+        "Asia/Dubai",
+        "Asia/Hong_Kong",
+        "Asia/Shanghai",
+        "Asia/Singapore",
+        "Asia/Tehran",
+        "Asia/Tel_Aviv",
+        "Asia/Tokyo",
+        "Australia/Melbourne",
+        "Australia/NSW",
+        "Brazil/East",
+        "Europe/Berlin",
+        "Europe/London",
+        "Europe/Moscow",
+        "Europe/Paris",
+        "Europe/Rome",
+        "Europe/Vienna",
+        "Europe/Zurich",
+        "UTC",
+        "Asia/Seoul",
+        "Asia/Taipei",
+        "Eurpoe/Stockholm",
+        "NZ",
+        "Europe/Oslo",
+        "Europe/Warsaw",
+        "Europe/Budapest"
+#endif // _WIN32
+    };
+    inline static const EpochType   INVALID_TIME_T_ {
+        INVALID_VALUE_<EpochType>::max()
+    };
+    inline static const DateType    INVALID_DATE_ {
+        INVALID_VALUE_<DateType>::max()
+    };
+    inline static const HourType    INVALID_HOUR_ {
+        INVALID_VALUE_<HourType>::max()
+    };
+    inline static const MinuteType  INVALID_MINUTE_ {
+        INVALID_VALUE_<MinuteType>::max()
+    };
+    inline static const SecondType  INVALID_SECOND_ {
+        INVALID_VALUE_<SecondType>::max()
+    };
 
     // This guy initializes anything that needs to be initialized
     // statically.
     //
-    class   DT_initializer  { public: DT_initializer () noexcept; };
+    struct  DT_initializer  {
+        DT_initializer () noexcept  {
+#ifdef _WIN32
+            _tzset ();
+#else
+            ::tzset ();
+#endif // _WIN32
+        }
+    };
 
-    static const DT_initializer dt_init_;
+    inline static const DT_initializer  dt_init_ {  };
 
     friend class    DT_initializer;
 
@@ -333,10 +418,46 @@ private:
     //
     void breaktime_ (EpochType the_time, NanosecondType nanosec) noexcept;
 
-    static const char *const    MONTH_[];
-    static const char *const    MONTH_BR_[];
-    static const char *const    WDAY_[];
-    static const char *const    WDAY_BR_[];
+    inline static const char *const MONTH_[] {
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December"
+    };
+    inline static const char *const MONTH_BR_[] {
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec"
+    };
+    inline static const char *const WDAY_[] {
+        "Sunday",
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+    };
+    inline static const char *const WDAY_BR_[] {
+        "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
+    };
 };
 
 // ----------------------------------------------------------------------------

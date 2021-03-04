@@ -30,8 +30,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/Utils/DateTime.h>
 #include <DataFrame/Utils/FixedSizeString.h>
 
-#include <time.h>
-
 #ifdef _WIN32
 #  if defined(_MSC_VER) || defined(_MSC_EXTENSIONS)
 #    define DELTA_EPOCH_IN_MICROSECS  11644473600000000Ui64
@@ -46,115 +44,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace hmdf
 {
-
-#ifdef _WIN32
-const char  *DateTime::TIMEZONES_[] =
-{
-    "\"TZ=GMT\"",
-    "\"TZ=Argentina Standard Time\"",        // "America/Buenos_Aires",
-    "\"TZ=Central Standard Time\"",          // "America/Chicago",
-    "\"TZ=Pacific Standard Time\"",          // "America/Los_Angeles",
-    "\"TZ=Central Standard Time (Mexico)\"", // "America/Mexico_City",
-    "\"TZ=Eastern Standard Time\"",          // "America/New_York",
-    "\"TZ=Arabian Standard Time\"",          // "Asia/Dubai",
-    "\"TZ=China Standard Time\"",            // "Asia/Hong_Kong",
-    "\"TZ=China Standard Time\"",            // "Asia/Shanghai",
-    "\"TZ=Singapore Standard Time\"",        // "Asia/Singapore",
-    "\"TZ=Iran Standard Time\"",             // "Asia/Tehran",
-    "\"TZ=Israel Standard Time\"",           // "Asia/Tel_Aviv",
-    "\"TZ=Tokyo Standard Time\"",            // "Asia/Tokyo",
-    "\"TZ=AUS Eastern Standard Time\"",      // "Australia/Melbourne",
-    "\"TZ=GMT-10\"",                         // "Australia/NSW",
-    "\"TZ=E. South America Standard Time\"", // "Brazil/East",
-    "\"TZ=W. Europe Standard Time\"",        // "Europe/Berlin",
-    "\"TZ=GMT Standard Time\"",              // "Europe/London",
-    "\"TZ=Russian Standard Time\"",          // "Europe/Moscow",
-    "\"TZ=Romance Standard Time\"",          // "Europe/Paris",
-    "\"TZ=W. Europe Standard Time\"",        // "Europe/Rome",
-    "\"TZ=W. Europe Standard Time\"",        // "Europe/Vienna",
-    "\"TZ=W. Europe Standard Time\"",        // "Europe/Zurich",
-    "\"TZ=GMT+00\"",                         // "UTC",
-    "\"TZ=Korea Standard Time\"",            // "Asia/Seoul",
-    "\"TZ=Taipei Standard Time\"",           // "Asia/Taipei",
-    "\"TZ=W. Europe Standard Time\"",        // "Eurpoe/Sweden",
-    "\"TZ=New Zealand Standard Time\"",      // "NZ",
-    "\"TZ=Central Europe Standard Time\"",   // "Europe/Oslo",
-    "\"TZ=Central European Standard Time\"", // "Europe/Warsaw",
-    "\"TZ=Central Europe Standard Time\""    // "Europe/Budapest"
-};
-#else
-const char  *DateTime::TIMEZONES_[] =
-{
-    "GMT",
-    "America/Buenos_Aires",
-    "America/Chicago",
-    "America/Los_Angeles",
-    "America/Mexico_City",
-    "America/New_York",
-    "Asia/Dubai",
-    "Asia/Hong_Kong",
-    "Asia/Shanghai",
-    "Asia/Singapore",
-    "Asia/Tehran",
-    "Asia/Tel_Aviv",
-    "Asia/Tokyo",
-    "Australia/Melbourne",
-    "Australia/NSW",
-    "Brazil/East",
-    "Europe/Berlin",
-    "Europe/London",
-    "Europe/Moscow",
-    "Europe/Paris",
-    "Europe/Rome",
-    "Europe/Vienna",
-    "Europe/Zurich",
-    "UTC",
-    "Asia/Seoul",
-    "Asia/Taipei",
-    "Eurpoe/Stockholm",
-    "NZ",
-    "Europe/Oslo",
-    "Europe/Warsaw",
-    "Europe/Budapest"
-};
-#endif // _WIN32
-
-const DateTime::DT_initializer  DateTime::dt_init_;
-
-// ----------------------------------------------------------------------------
-
-DateTime::DT_initializer::DT_initializer() noexcept  {
-
-#ifdef _WIN32
-    _tzset ();
-#else
-    ::tzset ();
-#endif // _WIN32
-}
-
-// ----------------------------------------------------------------------------
-
-const char *const   DateTime::MONTH_[] =
-{
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
-};
-const char *const   DateTime::MONTH_BR_[] =
-{
-    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-};
-const char *const   DateTime::WDAY_[] =
-{
-    "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday",
-    "Friday", "Saturday"
-};
-const char *const   DateTime::WDAY_BR_[] =
-{
-    "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
-};
-
-// ----------------------------------------------------------------------------
 
 DateTime::DateTime (DT_TIME_ZONE tz) : time_zone_(tz)  {
 

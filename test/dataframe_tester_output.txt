@@ -1282,3 +1282,5 @@ INDEX:14:<ulong>,dbl_col:14:<double>,dbl_col t-1:14:<double>,dbl_col t-2:14:<dou
 123462,27,26,25,24,23,22,21,20,28,nan,nan,nan,nan,nan,nan
 123466,28,27,26,25,24,23,22,21,nan,nan,nan,nan,nan,nan,nan
 
+
+Testing UlcerIndexVisitor{  } ...

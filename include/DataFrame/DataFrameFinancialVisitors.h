@@ -2093,7 +2093,7 @@ struct PercentPriceOSCIVisitor {
 
         signal_roller.pre();
         signal_roller(idx_begin + slow_, idx_end,
-					  result_.begin() + slow_, result_.end());
+                      result_.begin() + slow_, result_.end());
         signal_roller.post();
 
         histogram_.reserve(col_s);
@@ -2317,6 +2317,78 @@ private:
     const value_type    fast_w_;
     const value_type    medium_w_;
     result_type         result_ { };
+};
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename I = unsigned long>
+struct  UlcerIndexVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &column_begin,
+                const H &column_end)  {
+
+        if (periods_ < 2)  return;
+
+        GET_COL_SIZE
+
+        SimpleRollAdopter<MaxVisitor<T, I>, T, I>   high (MaxVisitor<T, I>(),
+                                                          periods_);
+
+        high.pre();
+        high (idx_begin, idx_end, column_begin, column_end);
+        high.post();
+        result_ = std::move(high.get_result());
+
+        for (size_type i = 0; i < col_s; ++i)  {
+            const value_type    val =
+                (T(100) * (*(column_begin + i) - result_[i])) / result_[i];
+
+            result_[i] = val * val;
+        }
+
+        SimpleRollAdopter<SumVisitor<T, I>, T, I>   sum (SumVisitor<T, I>(),
+                                                         periods_);
+        SimpleRollAdopter<MeanVisitor<T, I>, T, I>  avg (MeanVisitor<T, I>(),
+                                                         periods_);
+
+        if (use_sum_)  {
+            sum.pre();
+            sum (idx_begin, idx_end, result_.begin(), result_.end());
+            sum.post();
+        }
+        else  {
+            avg.pre();
+            avg (idx_begin, idx_end, result_.begin(), result_.end());
+            avg.post();
+        }
+
+        const result_type   &vec =
+            use_sum_ ? sum.get_result() : avg.get_result();
+
+        for (size_type i = 0; i < col_s; ++i)
+            result_[i] = std::sqrt(vec[i] / T(periods_));
+    }
+
+    inline void pre ()  { result_.clear(); }
+    inline void post ()  {  }
+    inline const result_type &get_result () const  { return (result_); }
+    inline result_type &get_result ()  { return (result_); }
+
+    explicit
+    UlcerIndexVisitor(size_type periods = 14, bool use_sum = true)
+        : periods_(periods), use_sum_(use_sum)  {   }
+
+private:
+
+    const size_type periods_;
+    const bool      use_sum_;
+    result_type     result_ { };
 };
 
 } // namespace hmdf

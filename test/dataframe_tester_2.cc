@@ -2830,6 +2830,50 @@ static void test_shifting_column()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_UlcerIndexVisitor()  {
+
+    std::cout << "\nTesting UlcerIndexVisitor{  } ..." << std::endl;
+
+    typedef StdDataFrame<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("IBM.csv", io_format::csv2);
+
+        UlcerIndexVisitor<double, std::string>  ui_v;
+
+        df.single_act_visit<double>("IBM_Close", ui_v);
+
+        assert(ui_v.get_result().size() == 5031);
+        assert(std::isnan(ui_v.get_result()[0]));
+        assert(std::isnan(ui_v.get_result()[12]));
+        assert(ui_v.get_result()[13] == 0);
+        assert(std::abs(ui_v.get_result()[27] - 6.10378) < 0.00001);
+        assert(std::abs(ui_v.get_result()[31] - 8.48463) < 0.00001);
+        assert(std::abs(ui_v.get_result()[5030] - 11.1348) < 0.0001);
+        assert(std::abs(ui_v.get_result()[5026] - 7.98096) < 0.00001);
+
+        UlcerIndexVisitor<double, std::string>  ui_v2 (14, false);
+
+        df.single_act_visit<double>("IBM_Close", ui_v2);
+
+        assert(ui_v2.get_result().size() == 5031);
+        assert(std::isnan(ui_v2.get_result()[0]));
+        assert(std::isnan(ui_v2.get_result()[12]));
+        assert(ui_v2.get_result()[13] == 0);
+        assert(std::abs(ui_v2.get_result()[27] - 1.6313) < 0.0001);
+        assert(std::abs(ui_v2.get_result()[31] - 2.26761) < 0.00001);
+        assert(std::abs(ui_v2.get_result()[5030] - 2.9759) < 0.0001);
+        assert(std::abs(ui_v2.get_result()[5026] - 2.133) < 0.001);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int argc, char *argv[]) {
 
     test_get_reindexed();
@@ -2884,6 +2928,7 @@ int main(int argc, char *argv[]) {
     test_SlopeVisitor();
     test_UltimateOSCIVisitor();
     test_shifting_column();
+    test_UlcerIndexVisitor();
 
     return (0);
 }

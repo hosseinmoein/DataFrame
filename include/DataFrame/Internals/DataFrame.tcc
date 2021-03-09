@@ -1442,6 +1442,27 @@ DataFrame<I, H>::value_counts (const char *col_name) const  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
+template<typename ...Ts>
+DataFrame<I, H>
+DataFrame<I, H>::bucketize(const IndexType &interval, Ts&& ... args) const  {
+
+    DataFrame   result;
+
+    auto    args_tuple = std::tuple<Ts ...>(args ...);
+    auto    func =
+        [this, &result, &interval](auto &triple) mutable -> void {
+            _load_bucket_data_(*this, result, interval, triple);
+        };
+
+    for_each_in_tuple (args_tuple, func);
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+/*
+template<typename I, typename H>
 template<typename F, typename ...Ts>
 DataFrame<I, H>
 DataFrame<I, H>::
@@ -1467,20 +1488,21 @@ bucketize (F &&func, const IndexType &bucket_interval) const  {
 
     return (result);
 }
+*/
 
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename F, typename ...Ts>
+template<typename ... Ts>
 std::future<DataFrame<I, H>>
 DataFrame<I, H>::
-bucketize_async (F &&func, const IndexType &bucket_interval) const  {
+bucketize_async (const IndexType &bucket_interval, Ts&& ... args) const  {
 
     return (std::async(std::launch::async,
-                       &DataFrame::bucketize<F, Ts ...>,
+                       &DataFrame::bucketize<Ts ...>,
                            this,
-                           std::move(func),
-                           std::cref(bucket_interval)));
+                           std::cref(bucket_interval),
+                           std::ref(args ...)));
 }
 
 // ----------------------------------------------------------------------------

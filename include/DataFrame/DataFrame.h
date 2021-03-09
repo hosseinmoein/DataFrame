@@ -48,15 +48,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace hmdf
 {
 
-// I: Index (e.g. Timestamp) type. Although an index column need not necessarily
-//    represent time, it could be any built-in or user-defined type.
+// I: Index (e.g. Timestamp) type. Although an index column need not
+//    necessarily represent time, it could be any built-in or user-defined type
 // H: See the static assert below. It can only be either
 //    a HeteroVector (typedef'ed below to StdDataFrame) or
 //    a HeteroView (typedef'ed below to DataFrameView) or
 //    a HeteroPtrView (typedef'ed below to DataFramePtrView)
 //
 // A DataFrame may contain one index and any number of columns of any built-in
-// or user-defined types.
+// or user-defined types
 //
 template<typename I, typename H>
 class LIBRARY_API DataFrame : public ThreadGranularity {
@@ -1029,6 +1029,23 @@ public:  // Data manipulation
         return (value_counts<T>(column_list_[index].first.c_str()));
     }
 
+
+
+
+
+
+
+
+    template<typename ... Ts>
+    [[nodiscard]] DataFrame
+    bucketize(const IndexType &bucket_interval, Ts&& ... args) const;
+
+
+
+
+
+
+
     // It bucketizes the data and index into bucket_interval's,
     // based on index values and calls the functor for each bucket.
     // The result of each bucket will be stored in a new DataFrame with
@@ -1056,15 +1073,17 @@ public:  // Data manipulation
     //   index is in minutes, bucket_interval will be in the unit of minutes
     //   and so on.
     //
+	/*
     template<typename F, typename ... Ts>
     [[nodiscard]] DataFrame
     bucketize(F &&func, const IndexType &bucket_interval) const;
+	*/
 
     // Same as bucketize() above, but executed asynchronously
     //
-    template<typename F, typename ... Ts>
+    template<typename ... Ts>
     [[nodiscard]] std::future<DataFrame>
-    bucketize_async(F &&func, const IndexType &bucket_interval) const;
+    bucketize_async(const IndexType &bucket_interval, Ts&& ... args) const;
 
     // This is exactly the same as bucketize() above. The only difference is
     // it stores the result in itself and returns void.

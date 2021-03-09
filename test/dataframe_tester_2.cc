@@ -2446,14 +2446,12 @@ static void test_YangZhangVolVisitor()  {
 
     std::cout << "\nTesting YangZhangVolVisitor{  } ..." << std::endl;
 
-    typedef StdDataFrame<std::string> StrDataFrame;
-
-    StrDataFrame    df;
+    MyDataFrame df;
 
     try  {
         df.read("FORD.csv", io_format::csv2);
 
-        YangZhangVolVisitor<double, std::string>    yz_v;
+        YangZhangVolVisitor<double> yz_v;
 
         df.single_act_visit<double, double, double, double>
             ("FORD_Low", "FORD_High", "FORD_Open", "FORD_Close", yz_v);
@@ -2874,6 +2872,23 @@ static void test_UlcerIndexVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_bucketize()  {
+
+    std::cout << "\nTesting bucketize( ) ..." << std::endl;
+
+    MyDataFrame df;
+
+    try  {
+        df.read("FORD.csv", io_format::csv2);
+
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int argc, char *argv[]) {
 
     test_get_reindexed();
@@ -2929,6 +2944,7 @@ int main(int argc, char *argv[]) {
     test_UltimateOSCIVisitor();
     test_shifting_column();
     test_UlcerIndexVisitor();
+    test_bucketize();
 
     return (0);
 }

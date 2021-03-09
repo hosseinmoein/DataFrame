@@ -456,23 +456,6 @@ static void test_haphazard()  {
               double,
               std::string>(std::cout);
 
-    std::cout << "\nTesting Bucketize() ..." << std::endl;
-
-    const MyDataFrame::IndexType    interval = 4;
-    std::future<MyDataFrame>        b_fut =
-        dfx.bucketize_async<GroupbySum,
-                            int,
-                            unsigned long,
-                            std::string,
-                            double>(GroupbySum(), interval);
-    const MyDataFrame               buck_df = b_fut.get();
-
-    buck_df.write<std::ostream,
-                  int,
-                  unsigned long,
-                  double,
-                  std::string>(std::cout);
-
     std::cout << "\nTesting multi_visit() ..." << std::endl;
 
     MeanVisitor<int>            ivisitor2;

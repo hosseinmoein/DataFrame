@@ -34,6 +34,53 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace hmdf
 {
 
+template<typename DF, typename I, typename T>
+static inline void
+_load_bucket_data_(const DF &source,
+                   DF &dest,
+                   const I &interval,
+                   T &triple) {
+
+    std::size_t marker = 0;
+    auto        &dst_idx = dest.get_index();
+    const auto  &src_idx = source.get_index();
+
+    if (dst_idx.empty())  {
+        const std::size_t   idx_s = src_idx.size();
+
+        dst_idx.reserve(idx_s / interval + 1);
+        for (std::size_t i = 0; i < idx_s; ++i)  {
+            if (src_idx[i] - src_idx[marker] >= interval)  {
+                dst_idx.push_back(src_idx[i - 1]);
+                marker = i;
+            }
+        }
+    }
+
+    using ValueType = typename std::tuple_element<2, T>::value_type;
+
+    auto                &src_vec =
+        source.template get_column<ValueType>(std::get<0>(triple));
+    const auto          &dst_vec =
+        dest.template create_column<ValueType>(std::get<1>(triple));
+    const std::size_t   vec_s = src_vec.size();
+    auto                &visitor = std::get<2>(triple);
+
+    dst_vec.reserve(vec_s / interval + 1);
+    visitor.pre();
+    for (std::size_t i = 0, marker = 0; i < vec_s; ++i)  {
+        if (src_idx[i] - src_idx[marker] >= interval)  {
+            visitor.post();
+            dst_vec.push_back(visitor.get_result());
+            visitor.pre();
+            marker = i;
+        }
+        visitor(src_idx[i], src_vec[i]);
+    }
+}
+
+// ----------------------------------------------------------------------------
+
 template<typename T>
 static inline void
 _sort_by_sorted_index_(T &to_be_sorted,

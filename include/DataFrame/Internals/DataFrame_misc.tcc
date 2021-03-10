@@ -204,46 +204,6 @@ DataFrame<I, H>::groupby_functor_<F, Ts ...>::operator() (const T &vec)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename F, typename ... Ts>
-template<typename T>
-void
-DataFrame<I, H>::bucket_functor_<F, Ts ...>::operator() (const T &vec)  {
-
-    using VecType = typename std::remove_reference<T>::type;
-    using ValueType = typename VecType::value_type;
-
-    const std::size_t   ts_s = indices.size();
-    std::size_t         marker = 0;
-
-    if (df.indices_.empty())
-        for (std::size_t i = 0; i < ts_s; ++i)
-            if (indices[i] - indices[marker] >= interval)  {
-                df.indices_.push_back(indices[i - 1]);
-                marker = i;
-            }
-
-    auto    visitor = functor.template get_aggregator<ValueType, I>();
-
-    visitor.pre();
-    for (std::size_t i = 0, marker = 0; i < ts_s; ++i)  {
-        if (indices[i] - indices[marker] >= interval)  {
-            visitor.post();
-            df.append_column<ValueType>(name,
-                                        visitor.get_result(),
-                                        nan_policy::dont_pad_with_nans);
-            visitor.pre();
-            marker = i;
-        }
-        visitor(indices.begin() + i, indices.begin() + i + 1,
-                vec.begin() + i, vec.begin() + i + 1);
-    }
-
-    return;
-}
-
-// ----------------------------------------------------------------------------
-
-template<typename I, typename H>
 template<typename ... Ts>
 template<typename T>
 void

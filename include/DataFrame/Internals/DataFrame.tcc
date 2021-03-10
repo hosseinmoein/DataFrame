@@ -1461,37 +1461,6 @@ DataFrame<I, H>::bucketize(const IndexType &interval, Ts&& ... args) const  {
 
 // ----------------------------------------------------------------------------
 
-/*
-template<typename I, typename H>
-template<typename F, typename ...Ts>
-DataFrame<I, H>
-DataFrame<I, H>::
-bucketize (F &&func, const IndexType &bucket_interval) const  {
-
-    DataFrame   result;
-
-    for (const auto &iter : column_list_)  {
-        add_col_functor_<Ts ...>    functor (iter.first.c_str(), result);
-
-        data_[iter.second].change(functor);
-    }
-
-    for (const auto &iter : column_list_)  {
-        bucket_functor_<F, Ts...>   functor(iter.first.c_str(),
-                                            indices_,
-                                            bucket_interval,
-                                            func,
-                                            result);
-
-        data_[iter.second].change(functor);
-    }
-
-    return (result);
-}
-*/
-
-// ----------------------------------------------------------------------------
-
 template<typename I, typename H>
 template<typename ... Ts>
 std::future<DataFrame<I, H>>

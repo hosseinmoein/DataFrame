@@ -189,28 +189,6 @@ struct groupby_functor_ : DataVec::template visitor_base<Ts ...>  {
 
 // ----------------------------------------------------------------------------
 
-template<typename F, typename ... Ts>
-struct bucket_functor_ : DataVec::template visitor_base<Ts ...>  {
-
-    inline bucket_functor_ (const char *n,
-                            const IndexVecType &ts,
-                            const IndexType &i,
-                            F &f,
-                            DataFrame &d)
-        : name(n), indices(ts), interval(i), functor(f), df(d) {  }
-
-    const char          *name;
-    const IndexVecType  &indices;
-    const IndexType     &interval;
-    F                   &functor;
-    DataFrame           &df;
-
-    template<typename T>
-    void operator() (const T &vec);
-};
-
-// ----------------------------------------------------------------------------
-
 template<typename ... Ts>
 struct print_csv_functor_ : DataVec::template visitor_base<Ts ...>  {
 

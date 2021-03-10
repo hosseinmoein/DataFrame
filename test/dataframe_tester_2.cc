@@ -2883,7 +2883,7 @@ static void test_bucketize()  {
 
         auto        fut =
             df.bucketize_async(
-                14,
+                100,
                 std::make_tuple("Date", "Date", LastVisitor<std::string>()),
                 std::make_tuple("FORD_Close", "High", MaxVisitor<double>()),
                 std::make_tuple("FORD_Close", "Low", MinVisitor<double>()),

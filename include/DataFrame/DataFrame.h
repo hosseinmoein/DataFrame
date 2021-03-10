@@ -90,7 +90,7 @@ public:
     DataFrame &operator= (const DataFrame &) = default;
     DataFrame &operator= (DataFrame &&) = default;
 
-    // Because of thread safety, this needs tender loving care 
+    // Because of thread safety, this needs tender loving care
     //
     ~DataFrame();
 
@@ -1029,72 +1029,40 @@ public:  // Data manipulation
         return (value_counts<T>(column_list_[index].first.c_str()));
     }
 
-
-
-
-
-
-
-
-    template<typename ... Ts>
-    [[nodiscard]] DataFrame
-    bucketize(const IndexType &bucket_interval, Ts&& ... args) const;
-
-
-
-
-
-
-
     // It bucketizes the data and index into bucket_interval's,
-    // based on index values and calls the functor for each bucket.
-    // The result of each bucket will be stored in a new DataFrame with
-    // same shape and returned.
+    // based on index values.
+    // You must specify how each column is bucketized by providing 3-member
+    // tuples (triples). Each triple has the format:
+    //    1. Current DataFrame column name
+    //    2. Column name for the new bucketized DataFrame
+    //    3. A visitor to aggregate/bucketize current column to new column
+    //
+    // The result of each bucket will be stored in a new DataFrame and returned.
     // Every data bucket is guaranteed to be as wide as bucket_interval.
-    // This mean some data items at the end may not be included in the
+    // This means some data items at the end may not be included in the
     // new bucketized DataFrame.
     // The index of each bucket will be the last index in the original
     // DataFrame that is less than bucket_interval away from the
     // previous bucket
     //
-    // NOTE:The DataFrame must already be sorted by index.
+    // NOTE: The DataFrame must already be sorted by index.
     //
-    // F:
-    //   Functor type to be applied to columns to bucketize
-    // Ts:
-    //   List all the types of all data columns. A type should be specified in
-    //   the list only once.
-    // func:
-    //   The functor to do summarization and bucktization.
-    //   All built-in bucket aggregators are defined in
-    //   GroupbyAggregators.h file
     // bucket_interval:
     //   Bucket interval is in the index's single value unit. For example if
     //   index is in minutes, bucket_interval will be in the unit of minutes
     //   and so on.
+    // args:
+    //   Variable argument list of triples as specified above
     //
-	/*
-    template<typename F, typename ... Ts>
+    template<typename ... Ts>
     [[nodiscard]] DataFrame
-    bucketize(F &&func, const IndexType &bucket_interval) const;
-	*/
+    bucketize(const IndexType &bucket_interval, Ts&& ... args) const;
 
     // Same as bucketize() above, but executed asynchronously
     //
     template<typename ... Ts>
     [[nodiscard]] std::future<DataFrame>
     bucketize_async(const IndexType &bucket_interval, Ts&& ... args) const;
-
-    // This is exactly the same as bucketize() above. The only difference is
-    // it stores the result in itself and returns void.
-    // So after the return the original data is lost and replaced with
-    // bucketized data
-    //
-    // NOTE:The DataFrame must already be sorted by index.
-    //
-    template<typename F, typename ... Ts>
-    void
-    self_bucketize(F &&func, const IndexType &bucket_interval);
 
     // It transposes the data in the DataFrame.
     // The transpose() is only defined for DataFrame's that have a single
@@ -1258,7 +1226,7 @@ public:  // Data manipulation
     // periods:
     //   Number of periods to shift
     // shift_policy:
-    //   Specifies the direction. In this case it is only up or down. 
+    //   Specifies the direction. In this case it is only up or down.
     //
     template<typename T>
     [[nodiscard]] std::vector<T>

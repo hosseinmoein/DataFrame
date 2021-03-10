@@ -1442,7 +1442,7 @@ DataFrame<I, H>::value_counts (const char *col_name) const  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename ...Ts>
+template<typename ... Ts>
 DataFrame<I, H>
 DataFrame<I, H>::bucketize(const IndexType &interval, Ts&& ... args) const  {
 
@@ -1502,7 +1502,7 @@ bucketize_async (const IndexType &bucket_interval, Ts&& ... args) const  {
                        &DataFrame::bucketize<Ts ...>,
                            this,
                            std::cref(bucket_interval),
-                           std::ref(args ...)));
+                           args ...));
 }
 
 // ----------------------------------------------------------------------------

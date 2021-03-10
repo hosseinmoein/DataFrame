@@ -2881,6 +2881,21 @@ static void test_bucketize()  {
     try  {
         df.read("FORD.csv", io_format::csv2);
 
+        auto        fut =
+            df.bucketize_async(
+                14,
+                std::make_tuple("Date", "Date", LastVisitor<std::string>()),
+                std::make_tuple("FORD_Close", "High", MaxVisitor<double>()),
+                std::make_tuple("FORD_Close", "Low", MinVisitor<double>()),
+                std::make_tuple("FORD_Close", "Open", FirstVisitor<double>()),
+                std::make_tuple("FORD_Close", "Close", LastVisitor<double>()),
+                std::make_tuple("FORD_Close", "Mean", MeanVisitor<double>()),
+                std::make_tuple("FORD_Close", "Std", StdVisitor<double>()),
+                std::make_tuple("FORD_Volume", "Volume", SumVisitor<long>()));
+        MyDataFrame result = fut.get();
+
+        result.write<std::ostream, std::string, double, long>
+            (std::cout, io_format::csv2);
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;

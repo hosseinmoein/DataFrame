@@ -29,6 +29,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
 
+#include <tuple>
+
 // ----------------------------------------------------------------------------
 
 namespace hmdf
@@ -57,11 +59,11 @@ _load_bucket_data_(const DF &source,
         }
     }
 
-    using ValueType = typename std::tuple_element<2, T>::value_type;
+    using ValueType = typename std::tuple_element<2, T>::type::value_type;
 
-    auto                &src_vec =
+    const auto          &src_vec =
         source.template get_column<ValueType>(std::get<0>(triple));
-    const auto          &dst_vec =
+    auto                &dst_vec =
         dest.template create_column<ValueType>(std::get<1>(triple));
     const std::size_t   vec_s = src_vec.size();
     auto                &visitor = std::get<2>(triple);

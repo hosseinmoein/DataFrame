@@ -381,6 +381,11 @@ struct Index2D  {
 
 // ----------------------------------------------------------------------------
 
+template<typename V>
+using GroupBySpec = std::tuple<const char *, const char *, V>;
+
+// ----------------------------------------------------------------------------
+
 template<typename, typename>
 struct template_switch {  };
 

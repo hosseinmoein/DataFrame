@@ -42,9 +42,9 @@ namespace hmdf
 
 template<typename ... Ts, typename F, std::size_t ... Is>
 inline void
-for_each_in_tuple(const std::tuple<Ts ...> &tu,
-                  F func,
-                  std::index_sequence<Is ...>)  {
+in_tuple_helper(const std::tuple<Ts ...> &tu,
+                F func,
+                std::index_sequence<Is ...>)  {
 
     using expander = int[];
 
@@ -55,9 +55,7 @@ for_each_in_tuple(const std::tuple<Ts ...> &tu,
 
 template<typename ... Ts, typename F, std::size_t ... Is>
 inline void
-for_each_in_tuple(std::tuple<Ts ...> &tu,
-                  F func,
-                  std::index_sequence<Is ...>)  {
+in_tuple_helper(std::tuple<Ts ...> &tu, F func, std::index_sequence<Is ...>)  {
 
     using expander = int[];
 
@@ -70,7 +68,7 @@ template<typename ... Ts, typename F>
 inline void
 for_each_in_tuple(const std::tuple<Ts...> &tu, F func)  {
 
-    for_each_in_tuple(tu, func, std::make_index_sequence<sizeof...(Ts)>());
+    in_tuple_helper(tu, func, std::make_index_sequence<sizeof...(Ts)>());
 }
 
 // ----------------------------------------------------------------------------
@@ -79,7 +77,25 @@ template<typename ... Ts, typename F>
 inline void
 for_each_in_tuple(std::tuple<Ts...> &tu, F func)  {
 
-    for_each_in_tuple(tu, func, std::make_index_sequence<sizeof...(Ts)>());
+    in_tuple_helper(tu, func, std::make_index_sequence<sizeof...(Ts)>());
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename F, typename H, typename ... T>
+inline void unpacker(F func, H &head, T& ... tail);
+
+template<typename F, typename H>
+inline void head_exec(F func, H &head)  { func(head); }
+
+template<typename F>
+inline void unpacker(F func)  {   }
+
+template<typename F, typename H, typename ... T>
+inline void unpacker(F func, H &head, T& ... tail)  {
+
+    head_exec(func, head);
+    unpacker(func, tail ...);
 }
 
 // ----------------------------------------------------------------------------

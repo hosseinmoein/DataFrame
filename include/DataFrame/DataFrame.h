@@ -961,43 +961,43 @@ public:  // Data manipulation
     // func:
     //   The aggregator functor to do the groupby. All built-in groupby
     //   aggregators are defined in GroupbyAggregators.h file
-    // gb_col_name:
+    // col_name:
     //   Name of the column
     // already_sorted:
-    //   If the DataFrame is already sorted by gb_col_name, this will save the
+    //   If the DataFrame is already sorted by col_name, this will save the
     //   expensive sort operation
     //
-    template<typename F, typename T, typename ... Ts>
+    template<typename T, typename ... Ts>
     [[nodiscard]] DataFrame
-    groupby(F &&func,
-            const char *gb_col_name,
-            sort_state already_sorted = sort_state::not_sorted) const;
+    groupby1(const char *col_name,
+             bool already_sorted,
+             Ts&& ... args) const;
 
     // This is the same as above groupby() but it groups by two columns
     //
-    template<typename F, typename T1, typename T2, typename ... Ts>
+    template<typename T1, typename T2, typename ... Ts>
     [[nodiscard]] DataFrame
-    groupby(F &&func,
-            const char *gb_col_name1,
-            const char *gb_col_name2,
-            sort_state already_sorted = sort_state::not_sorted) const;
+    groupby2(const char *col_name1,
+             const char *col_name2,
+             bool already_sorted,
+             Ts&& ... args) const;
 
     // Same as groupby() above, but executed asynchronously
     //
-    template<typename F, typename T, typename ... Ts>
+    template<typename T, typename ... Ts>
     [[nodiscard]] std::future<DataFrame>
-    groupby_async(F &&func,
-                  const char *gb_col_name,
-                  sort_state already_sorted = sort_state::not_sorted) const;
+    groupby1_async(const char *col_name,
+                   bool already_sorted,
+                   Ts&& ... args) const;
 
     // Same as groupby() above, but executed asynchronously
     //
-    template<typename F, typename T1, typename T2, typename ... Ts>
+    template<typename T1, typename T2, typename ... Ts>
     [[nodiscard]] std::future<DataFrame>
-    groupby_async(F &&func,
-                  const char *gb_col_name1,
-                  const char *gb_col_name2,
-                  sort_state already_sorted = sort_state::not_sorted) const;
+    groupby2_async(const char *col_name1,
+                   const char *col_name2,
+                   bool already_sorted,
+                   Ts&& ... args) const;
 
     // It counts the unique values in the named column.
     // It returns a StdDataFrame of following specs:

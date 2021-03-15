@@ -208,6 +208,8 @@ DateTime::DateTime (const char *s, DT_DATE_STYLE ds, DT_TIME_ZONE tz)
 //
 DateTime &DateTime::operator = (const char *s)  {
 
+    time_ = INVALID_TIME_T_;
+
     const char  *str = s;
 
     while (::isspace (*str)) ++str;

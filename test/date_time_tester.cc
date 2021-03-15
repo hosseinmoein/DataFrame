@@ -906,6 +906,14 @@ int main (int argc, char *argv [])  {
         std::cout << "Long Time Value: " << now.long_time() << std::endl;
     }
 
+    {
+        DateTime    dt("2015/01/05 09:40:00", hmdf::DT_DATE_STYLE::EUR_STYLE);
+        DateTime    dt2;
+
+        dt2 = "20150105 09:40:00";
+        assert(dt == dt2);
+    }
+
     test_priority_queue();
     return (EXIT_SUCCESS);
 }

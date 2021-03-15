@@ -59,7 +59,7 @@ _load_bucket_data_(const DF &source,
         }
     }
 
-    using ValueType = typename std::tuple_element<2, T>::type::value_type;
+    using ValueType = typename std::tuple_element<2, T>::type::result_type;
 
     const auto          &src_vec =
         source.template get_column<ValueType>(std::get<0>(triple));

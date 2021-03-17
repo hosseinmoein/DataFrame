@@ -28,7 +28,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include <DataFrame/DataFrame.h>
-#include <DataFrame/GroupbyAggregators.h>
 
 #include <algorithm>
 #include <cmath>
@@ -1082,12 +1081,10 @@ sort_async(const char *name1, sort_spec dir1,
 template<typename I, typename H>
 template<typename T, typename ... Ts>
 DataFrame<I, H> DataFrame<I, H>::
-groupby1(const char *col_name,
-         bool already_sorted,
-         Ts&& ... args) const  {
+groupby1(const char *col_name, bool already_sorted, Ts&& ... args) const  {
 
-    DataFrame   tmp_df;
-    DataFrame   *sorted_df = this;
+    DataFrame       tmp_df;
+    const DataFrame *sorted_df = this;
 
     if (! already_sorted)  {
         tmp_df = *this;
@@ -1095,112 +1092,21 @@ groupby1(const char *col_name,
         sorted_df = &tmp_df;
     }
 
+    const ColumnVecType<T>  *gb_vec { nullptr};
+
+    if (! ::strcmp(col_name, DF_INDEX_COL_NAME))
+        gb_vec = &(sorted_df->indices_);
+    else
+        gb_vec = &(sorted_df->get_column<T>(col_name));
+
     DataFrame   result;
+    auto        args_tuple = std::tuple<Ts ...>(args ...);
+    auto        func =
+        [sorted_df, &result, col_name, gb_vec](auto &triple) mutable -> void {
+            _load_bucket_data_1(*sorted_df, result, triple, *gb_vec, col_name);
+        };
 
-    for (const auto &iter : sorted_df->column_list_)  {
-        add_col_functor_<Ts ...>    functor (iter.first.c_str(), result);
-
-        sorted_df->data_[iter.second].change(functor);
-    }
-
-    size_type   marker = 0;
-
-    if (! ::strcmp(col_name, DF_INDEX_COL_NAME))  { // Index
-        const size_type vec_size = sorted_df->indices_.size();
-
-        for (size_type i = 0; i < vec_size; ++i)  {
-            if (sorted_df->indices_[i] != sorted_df->indices_[marker])  {
-                result.append_index(sorted_df->indices_[marker]);
-                for (const auto &iter : sorted_df->column_list_)  {
-                    groupby_functor_<F, Ts...>  functor(iter.first.c_str(),
-                                                        marker,
-                                                        i,
-                                                        sorted_df->indices_,
-                                                        func,
-                                                        result);
-
-                    sorted_df->data_[iter.second].change(functor);
-                }
-
-                marker = i;
-            }
-        }
-        if (marker < vec_size)  {
-            result.append_index(sorted_df->indices_[vec_size - 1]);
-            for (const auto &iter : sorted_df->column_list_)  {
-                groupby_functor_<F, Ts...>  functor(iter.first.c_str(),
-                                                    marker,
-                                                    vec_size,
-                                                    sorted_df->indices_,
-                                                    func,
-                                                    result);
-
-                sorted_df->data_[iter.second].change(functor);
-            }
-        }
-    }
-    else  { // Non-index column
-        const ColumnVecType<T>  &gb_vec = sorted_df->get_column<T>(col_name);
-        const size_type         vec_size = gb_vec.size();
-
-        for (size_type i = 0; i < vec_size; ++i)  {
-            if (gb_vec[i] != gb_vec[marker])  {
-                groupby_functor_<F, IndexType>  ts_functor(DF_INDEX_COL_NAME,
-                                                           marker,
-                                                           i,
-                                                           sorted_df->indices_,
-                                                           func,
-                                                           result);
-
-                ts_functor(sorted_df->indices_);
-                result.append_column<T>(col_name,
-                                        gb_vec [marker],
-                                        nan_policy::dont_pad_with_nans);
-
-                for (const auto &iter : sorted_df->column_list_)  {
-                    if (iter.first != col_name)  {
-                        groupby_functor_<F, Ts...>  functor(iter.first.c_str(),
-                                                            marker,
-                                                            i,
-                                                            sorted_df->indices_,
-                                                            func,
-                                                            result);
-
-                        sorted_df->data_[iter.second].change(functor);
-                    }
-                }
-
-                marker = i;
-            }
-        }
-
-        if (marker < vec_size)  {
-            groupby_functor_<F, IndexType>  ts_functor(DF_INDEX_COL_NAME,
-                                                       marker,
-                                                       vec_size,
-                                                       sorted_df->indices_,
-                                                       func,
-                                                       result);
-
-            ts_functor(sorted_df->indices_);
-            result.append_column<T>(col_name,
-                                    gb_vec [vec_size - 1],
-                                    nan_policy::dont_pad_with_nans);
-
-            for (const auto &iter : sorted_df->column_list_)  {
-                if (iter.first != col_name)  {
-                    groupby_functor_<F, Ts...>  functor(iter.first.c_str(),
-                                                        marker,
-                                                        vec_size,
-                                                        sorted_df->indices_,
-                                                        func,
-                                                        result);
-
-                    sorted_df->data_[iter.second].change(functor);
-                }
-            }
-        }
-    }
+    for_each_in_tuple (args_tuple, func);
 
     return (result);
 }
@@ -1215,131 +1121,51 @@ groupby2(const char *col_name1,
          bool already_sorted,
          Ts&& ... args) const  {
 
+    DataFrame       tmp_df;
+    const DataFrame *sorted_df = this;
 
-    DataFrame   tmp_df = *this;
-
-    if (already_sorted == sort_state::not_sorted)
+    if (! already_sorted)  {
+        tmp_df = *this;
         tmp_df.sort<T1, T2, Ts ...>(col_name1, sort_spec::ascen,
                                     col_name2, sort_spec::ascen);
-
-    DataFrame   result;
-
-    for (const auto &iter : tmp_df.column_list_)  {
-        add_col_functor_<Ts ...>    functor (iter.first.c_str(), result);
-
-        tmp_df.data_[iter.second].change(functor);
+        sorted_df = &tmp_df;
     }
-
-    const bool  index_col_involved =
-        ! ::strcmp(col_name2, DF_INDEX_COL_NAME);
 
     const ColumnVecType<T1> *gb_vec1 { nullptr};
     const ColumnVecType<T2> *gb_vec2 { nullptr};
 
-    if (! ::strcmp(col_name1, DF_INDEX_COL_NAME))
-        gb_vec1 = reinterpret_cast<const ColumnVecType<T1> *>(&tmp_df.indices_);
-    else
-        gb_vec1 = &(tmp_df.get_column<T1>(col_name1));
-
-    if (! ::strcmp(col_name2, DF_INDEX_COL_NAME))
-        gb_vec2 = reinterpret_cast<const ColumnVecType<T2> *>(&tmp_df.indices_);
-    else
-        gb_vec2 = &(tmp_df.get_column<T2>(col_name2));
-
-    size_type       marker = 0;
-    const size_type vec_size = std::min(gb_vec1->size(), gb_vec2->size());
-
-    if (index_col_involved)  { // Index is involved
-        for (size_type i = 0; i < vec_size; ++i)  {
-            if (tmp_df.indices_[i] != tmp_df.indices_[marker])  {
-                result.append_index(tmp_df.indices_[marker]);
-                for (const auto &iter : tmp_df.column_list_)  {
-                    groupby_functor_<F, Ts...>  functor(iter.first.c_str(),
-                                                        marker,
-                                                        i,
-                                                        tmp_df.indices_,
-                                                        func,
-                                                        result);
-
-                    tmp_df.data_[iter.second].change(functor);
-                }
-
-                marker = i;
-            }
-        }
-        if (marker < vec_size)  {
-            result.append_index(tmp_df.indices_[vec_size - 1]);
-            for (const auto &iter : tmp_df.column_list_)  {
-                groupby_functor_<F, Ts...>  functor(iter.first.c_str(),
-                                                    marker,
-                                                    vec_size,
-                                                    tmp_df.indices_,
-                                                    func,
-                                                    result);
-
-                tmp_df.data_[iter.second].change(functor);
-            }
-        }
+    if (! ::strcmp(col_name1, DF_INDEX_COL_NAME))  {
+        gb_vec1 = &(sorted_df->indices_);
+        gb_vec2 = &(sorted_df->get_column<T2>(col_name2));
     }
-    else  { // Index is not involved
-        for (size_type i = 0; i < vec_size; ++i)  {
-            if (gb_vec2->at(i) != gb_vec2->at(marker))  {
-                groupby_functor_<F, IndexType>  ts_functor(DF_INDEX_COL_NAME,
-                                                           marker,
-                                                           i,
-                                                           tmp_df.indices_,
-                                                           func,
-                                                           result);
-
-                ts_functor(tmp_df.indices_);
-                result.append_column<T2>(col_name2,
-                                         gb_vec2->at(marker),
-                                         nan_policy::dont_pad_with_nans);
-
-                for (const auto &iter : tmp_df.column_list_)  {
-                    if (iter.first != col_name2)  {
-                        groupby_functor_<F, Ts...>  functor(iter.first.c_str(),
-                                                            marker,
-                                                            i,
-                                                            tmp_df.indices_,
-                                                            func,
-                                                            result);
-
-                        tmp_df.data_[iter.second].change(functor);
-                    }
-                }
-
-                marker = i;
-            }
-        }
-
-        if (marker < vec_size)  {
-            groupby_functor_<F, IndexType>  ts_functor(DF_INDEX_COL_NAME,
-                                                       marker,
-                                                       vec_size,
-                                                       tmp_df.indices_,
-                                                       func,
-                                                       result);
-
-            ts_functor(tmp_df.indices_);
-            result.append_column<T2>(col_name2,
-                                     gb_vec2->at(vec_size - 1),
-                                     nan_policy::dont_pad_with_nans);
-
-            for (const auto &iter : tmp_df.column_list_)  {
-                if (iter.first != col_name2)  {
-                    groupby_functor_<F, Ts...>  functor(iter.first.c_str(),
-                                                        marker,
-                                                        vec_size,
-                                                        tmp_df.indices_,
-                                                        func,
-                                                        result);
-
-                    tmp_df.data_[iter.second].change(functor);
-                }
-            }
-        }
+    else if (! ::strcmp(col_name2, DF_INDEX_COL_NAME))  {
+        gb_vec1 = &(sorted_df->get_column<T1>(col_name1));
+        gb_vec2 = &(sorted_df->indices_);
     }
+    else  {
+        gb_vec1 = &(sorted_df->get_column<T1>(col_name1));
+        gb_vec2 = &(sorted_df->get_column<T2>(col_name2));
+    }
+
+    DataFrame   result;
+    auto        args_tuple = std::tuple<Ts ...>(args ...);
+    auto        func =
+        [sorted_df,
+         &result,
+         col_name1,
+         col_name2,
+         gb_vec1,
+         gb_vec2](auto &triple) mutable -> void {
+            _load_bucket_data_2(*sorted_df,
+                                result,
+                                triple,
+                                *gb_vec1,
+                                *gb_vec2,
+                                col_name1,
+                                col_name2);
+        };
+
+    for_each_in_tuple (args_tuple, func);
 
     return (result);
 }

@@ -30,7 +30,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/DataFrameMLVisitors.h>
 #include <DataFrame/DataFrameOperators.h>
 #include <DataFrame/DataFrameStatsVisitors.h>
-#include <DataFrame/GroupbyAggregators.h>
 #include <DataFrame/RandGen.h>
 
 #include <cassert>
@@ -379,57 +378,14 @@ static void test_haphazard()  {
               double,
               std::string>(std::cout);
 
-    const MyDataFrame   dfxx =
-        dfx.groupby<GroupbySum,
-                    unsigned long,
-                    int,
-                    unsigned long,
-                    std::string,
-                    double>(GroupbySum(), DF_INDEX_COL_NAME);
-
-    dfxx.write<std::ostream,
-               int,
-               unsigned long,
-               double,
-               std::string>(std::cout);
-
-    const MyDataFrame   dfxx2 =
-        dfx.groupby<GroupbySum,
-                    std::string,
-                    int,
-                    unsigned long,
-                    std::string,
-                    double>(GroupbySum(), "str_col");
-
-    dfxx2.write<std::ostream,
-                int,
-                unsigned long,
-                double,
-                std::string>(std::cout);
-
-    std::future<MyDataFrame>    gb_fut =
-        dfx.groupby_async<GroupbySum,
-                          double,
-                          int,
-                          unsigned long,
-                          std::string,
-                          double>(GroupbySum(), "dbl_col_2");
-    const MyDataFrame           dfxx3 = gb_fut.get();
-
-    dfxx3.write<std::ostream,
-                int,
-                unsigned long,
-                double,
-                std::string>(std::cout);
-
     std::cout << "\nTesting Async write ..." << std::endl;
 
     std::future<bool>   fut2 =
-        dfxx3.write_async<std::ostream,
-                          int,
-                          unsigned long,
-                          double,
-                          std::string>(std::cout);
+        dfx.write_async<std::ostream,
+                        int,
+                        unsigned long,
+                        double,
+                        std::string>(std::cout);
 
     fut2.get();
 
@@ -489,10 +445,6 @@ static void test_haphazard()  {
                                  unsigned long,
                                  double,
                                  std::string>(dfx)));
-    assert((! df_copy_con.is_equal<int,
-                                   unsigned long,
-                                   double,
-                                   std::string>(dfxx)));
 
     df_copy_con.get_column<double>("dbl_col")[7] = 88.888888;
     assert(dfx.get_column<double>("dbl_col")[7] == 10.0);

@@ -1081,34 +1081,38 @@ sort_async(const char *name1, sort_spec dir1,
 template<typename I, typename H>
 template<typename T, typename ... Ts>
 DataFrame<I, H> DataFrame<I, H>::
-groupby1(const char *col_name, bool already_sorted, Ts&& ... args) const  {
+groupby1(const char *col_name, Ts&& ... args) const  {
 
-    DataFrame       tmp_df;
-    const DataFrame *sorted_df = this;
-
-    if (! already_sorted)  {
-        tmp_df = *this;
-        tmp_df.sort<T, Ts ...>(col_name, sort_spec::ascen);
-        sorted_df = &tmp_df;
-    }
-
-    const ColumnVecType<T>  *gb_vec { nullptr};
+    const ColumnVecType<T>  *gb_vec { nullptr };
 
     if (! ::strcmp(col_name, DF_INDEX_COL_NAME))
-        gb_vec = &(sorted_df->indices_);
+        gb_vec = (ColumnVecType<T> *) &(get_index());
     else
-        gb_vec = &(sorted_df->get_column<T>(col_name));
+        gb_vec = (ColumnVecType<T> *) &(get_column<T>(col_name));
 
-    DataFrame   result;
+    std::vector<std::size_t>    sort_v(gb_vec->size(), 0);
+
+    std::iota(sort_v.begin(), sort_v.end(), 0);
+    std::sort(sort_v.begin(), sort_v.end(),
+              [gb_vec](std::size_t i, std::size_t j) -> bool  {
+                  return (gb_vec->at(i) < gb_vec->at(j));
+              });
+
+    DataFrame   res;
     auto        args_tuple = std::tuple<Ts ...>(args ...);
     auto        func =
-        [sorted_df, &result, col_name, gb_vec](auto &triple) mutable -> void {
-            _load_bucket_data_1(*sorted_df, result, triple, *gb_vec, col_name);
+        [this, &res, gb_vec, &sort_v, col_name](auto &triple) mutable -> void {
+            _load_groupby_data_1_(*this,
+                                  res,
+                                  triple,
+                                  *gb_vec,
+                                  sort_v,
+                                  col_name);
         };
 
     for_each_in_tuple (args_tuple, func);
 
-    return (result);
+    return (res);
 }
 
 // ----------------------------------------------------------------------------
@@ -1118,56 +1122,61 @@ template<typename T1, typename T2, typename ... Ts>
 DataFrame<I, H> DataFrame<I, H>::
 groupby2(const char *col_name1,
          const char *col_name2,
-         bool already_sorted,
          Ts&& ... args) const  {
 
-    DataFrame       tmp_df;
-    const DataFrame *sorted_df = this;
-
-    if (! already_sorted)  {
-        tmp_df = *this;
-        tmp_df.sort<T1, T2, Ts ...>(col_name1, sort_spec::ascen,
-                                    col_name2, sort_spec::ascen);
-        sorted_df = &tmp_df;
-    }
-
-    const ColumnVecType<T1> *gb_vec1 { nullptr};
-    const ColumnVecType<T2> *gb_vec2 { nullptr};
+    const ColumnVecType<T1> *gb_vec1 { nullptr };
+    const ColumnVecType<T2> *gb_vec2 { nullptr };
 
     if (! ::strcmp(col_name1, DF_INDEX_COL_NAME))  {
-        gb_vec1 = &(sorted_df->indices_);
-        gb_vec2 = &(sorted_df->get_column<T2>(col_name2));
+        gb_vec1 = (ColumnVecType<T1> *) &(get_index());
+        gb_vec2 = (ColumnVecType<T2> *) &(get_column<T2>(col_name2));
     }
     else if (! ::strcmp(col_name2, DF_INDEX_COL_NAME))  {
-        gb_vec1 = &(sorted_df->get_column<T1>(col_name1));
-        gb_vec2 = &(sorted_df->indices_);
+        gb_vec1 = (ColumnVecType<T1> *) &(get_column<T1>(col_name1));
+        gb_vec2 = (ColumnVecType<T2> *) &(get_index());
     }
     else  {
-        gb_vec1 = &(sorted_df->get_column<T1>(col_name1));
-        gb_vec2 = &(sorted_df->get_column<T2>(col_name2));
+        gb_vec1 = (ColumnVecType<T1> *) &(get_column<T1>(col_name1));
+        gb_vec2 = (ColumnVecType<T2> *) &(get_column<T2>(col_name2));
     }
 
-    DataFrame   result;
+    std::vector<std::size_t>    sort_v(std::min(gb_vec1->size(),
+                                                gb_vec2->size()),
+                                       0);
+
+    std::iota(sort_v.begin(), sort_v.end(), 0);
+    std::sort(sort_v.begin(), sort_v.end(),
+              [gb_vec1, gb_vec2](std::size_t i, std::size_t j) -> bool  {
+                  if (gb_vec1->at(i) < gb_vec1->at(j))
+                      return (true);
+                  else if (gb_vec1->at(i) > gb_vec1->at(j))
+                      return (false);
+                  return (gb_vec2->at(i) < gb_vec2->at(j));
+              });
+
+    DataFrame   res;
     auto        args_tuple = std::tuple<Ts ...>(args ...);
     auto        func =
-        [sorted_df,
-         &result,
-         col_name1,
-         col_name2,
+        [*this,
+         &res,
          gb_vec1,
-         gb_vec2](auto &triple) mutable -> void {
-            _load_bucket_data_2(*sorted_df,
-                                result,
-                                triple,
-                                *gb_vec1,
-                                *gb_vec2,
-                                col_name1,
-                                col_name2);
+         gb_vec2,
+         &sort_v,
+         col_name1,
+         col_name2](auto &triple) mutable -> void {
+            _load_groupby_data_2_(*this,
+                                  res,
+                                  triple,
+                                  *gb_vec1,
+                                  *gb_vec2,
+                                  sort_v,
+                                  col_name1,
+                                  col_name2);
         };
 
     for_each_in_tuple (args_tuple, func);
 
-    return (result);
+    return (res);
 }
 
 // ----------------------------------------------------------------------------
@@ -1175,14 +1184,12 @@ groupby2(const char *col_name1,
 template<typename I, typename H>
 template<typename T, typename ... Ts>
 std::future<DataFrame<I, H>> DataFrame<I, H>::
-groupby1_async(const char *col_name,
-               bool already_sorted,
-               Ts&& ... args) const  {
+groupby1_async(const char *col_name, Ts&& ... args) const  {
 
     return (std::async(std::launch::async,
                        &DataFrame::groupby1<T, Ts ...>,
+                           this,
                            col_name,
-                           already_sorted,
                            args ...));
 }
 
@@ -1193,14 +1200,13 @@ template<typename T1, typename T2, typename ... Ts>
 std::future<DataFrame<I, H>> DataFrame<I, H>::
 groupby2_async(const char *col_name1,
                const char *col_name2,
-               bool already_sorted,
                Ts&& ... args) const  {
 
     return (std::async(std::launch::async,
                        &DataFrame::groupby2<T1, T2, Ts ...>,
+                           this,
                            col_name1,
                            col_name2,
-                           already_sorted,
                            args ...));
 }
 

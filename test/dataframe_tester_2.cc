@@ -24,7 +24,6 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-
 #include <DataFrame/DataFrame.h>
 #include <DataFrame/DataFrameFinancialVisitors.h>
 #include <DataFrame/DataFrameStatsVisitors.h>
@@ -962,6 +961,38 @@ static void test_remove_duplicates()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_bucketize()  {
+
+    std::cout << "\nTesting bucketize( ) ..." << std::endl;
+
+    MyDataFrame df;
+
+    try  {
+        df.read("FORD.csv", io_format::csv2);
+
+        auto        fut =
+            df.bucketize_async(
+                100,
+                std::make_tuple("Date", "Date", LastVisitor<std::string>()),
+                std::make_tuple("FORD_Close", "High", MaxVisitor<double>()),
+                std::make_tuple("FORD_Close", "Low", MinVisitor<double>()),
+                std::make_tuple("FORD_Close", "Open", FirstVisitor<double>()),
+                std::make_tuple("FORD_Close", "Close", LastVisitor<double>()),
+                std::make_tuple("FORD_Close", "Mean", MeanVisitor<double>()),
+                std::make_tuple("FORD_Close", "Std", StdVisitor<double>()),
+                std::make_tuple("FORD_Volume", "Volume", SumVisitor<long>()));
+        MyDataFrame result = fut.get();
+
+        result.write<std::ostream, std::string, double, long>
+            (std::cout, io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 static void test_groupby()  {
 
     std::cout << "\nTesting groupby( ) ..." << std::endl;
@@ -976,23 +1007,17 @@ static void test_groupby()  {
         { 1, 2, 3, 4, 5, 3, 7, 3, 9, 10, 3, 2, 3, 14,
           2, 2, 2, 3, 2, 3, 3, 3, 3, 3, 36, 2, 45, 2 };
     std::vector<double>         xdblvec2 =
-        { 1.2345, 2.2345, 3.2345, 4.2345, 5.2345, 3.0, 0.9999,
-          10.0, 4.25, 0.009, 1.111, 8.0, 2.2222, 3.3333,
-          11.0, 5.25, 1.009, 2.111, 9.0, 3.2222, 4.3333,
-          12.0, 6.25, 2.009, 3.111, 10.0, 4.2222, 5.3333 };
+        { 10, 20, 11, 11, 30, 40, 50, 40, 60, 70, 80, 90, 50, 100, 11, 25, 20,
+          30, 1, 3, 4, 12, 6, 2, 3, 10, 4, 5 };
     std::vector<double>         dblvec22 =
-        { 0.998, 0.3456, 0.056, 0.15678, 0.00345, 0.923, 0.06743,
-          0.1, 0.0056, 0.07865, -0.9999, 0.0111, 0.1002, -0.8888,
-          0.14, 0.0456, 0.078654, -0.8999, 0.01119, 0.8002, -0.9888,
-          0.2, 0.1056, 0.87865, -0.6999, 0.4111, 0.1902, -0.4888 };
+        { 0.998, 1.545, 0.056, 0.15678, 1.545, 0.923, 0.06743,
+          0.1, -1.545, 0.07865, -0.9999, 1.545, 0.1002, -0.8888,
+          0.14, 0.0456, -1.545, -0.8999, 0.01119, 0.8002, -1.545,
+          0.2, 0.1056, 0.87865, -0.6999, 1.545, 0.1902, -1.545 };
     std::vector<std::string>    strvec2 =
-        { "4% of something", "Description 4/5", "This is bad",
-          "3.4% of GDP", "Market drops", "Market pulls back",
-          "$15 increase", "Running fast", "C++14 development",
-          "Some explanation", "More strings", "Bonds vs. Equities",
-          "Almost done", "Here comes the sun", "XXXX1", "XXXX04",
-          "XXXX2", "XXXX3", "XXXX4", "XXXX4", "XXXX5", "XXXX6",
-          "XXXX7", "XXXX10", "XXXX11", "XXXX01", "XXXX02", "XXXX03" };
+        { "A", "B", "C", "D", "X", "Y", "W", "P", "Z", "S", "M", "B",
+          "A", "H", "X", "Q", "V", "P", "W", "K", "I", "L", "J", "N",
+          "Y", "G", "T", "U" };
 
     MyDataFrame df;
 
@@ -1003,51 +1028,41 @@ static void test_groupby()  {
                  std::make_pair("str_col", strvec2),
                  std::make_pair("ul_col", xulgvec2));
 
-    auto    result =
-        df.groupby<GroupbySum,
-                    unsigned long,
-                    int,
-                    unsigned long,
-                    std::string,
-                    double>(GroupbySum(), DF_INDEX_COL_NAME);
+    auto    fut1 =
+        df.groupby1_async<unsigned long>
+            (DF_INDEX_COL_NAME,
+             std::make_tuple("str_col", "sum_str", SumVisitor<std::string>()),
+             std::make_tuple("xint_col", "max_int", MaxVisitor<int>()),
+             std::make_tuple("xint_col", "min_int", MinVisitor<int>()),
+             std::make_tuple("dbl_col", "sum_dbl", SumVisitor<double>()));
+    auto    result1 = fut1.get();
 
-    assert((result.get_index() ==
-            std::vector<unsigned long> {
-                123432, 123435, 123441, 123442, 123449, 123450, 123451, 123452,
-                123454, 123455, 123457, 123458, 123459
-            }));
-    assert((result.get_column<int>("xint_col") ==
-            std::vector<int> { 3, 45, 3, 3, 7, 84, 11, 6, 2, 8, 3, 2, 3 }));
-    assert((result.get_column<std::string>("str_col") ==
-            std::vector<std::string> {
-                "XXXX10", "XXXX02", "XXXX6", "XXXX7", "$15 increase",
-                "4% of something3.4% of GDPMarket pulls backRunning fastSome explanationBonds vs. EquitiesHere comes the sunXXXX04XXXX2XXXX5XXXX11XXXX01XXXX03",
-                "Description 4/5C++14 development", "This is badMore strings",
-                "XXXX1", "Market dropsAlmost done", "XXXX3", "XXXX4", "XXXX4"
-            }));
+    result1.write<std::ostream, std::string, double, int>
+        (std::cout, io_format::csv2);
 
-    result = df.groupby<GroupbyMax,
-                        int,
-                        int,
-                        unsigned long,
-                        std::string,
-                        double>(GroupbyMax(), "xint_col");
-    assert((result.get_index() ==
-            std::vector<unsigned long> {
-                123450, 123458, 123459, 123450, 123455, 123449, 123451, 123450,
-                123450, 123450, 123435
-            }));
-    assert((result.get_column<double>("dbl_col_2") ==
-            std::vector<double> {
-                0.998, 0.4111, 0.923, 0.15678, 0.00345, 0.06743, 0.0056,
-                0.07865, -0.8888, -0.6999, 0.1902
-            }));
-    assert((result.get_column<std::string>("str_col") ==
-            std::vector<std::string> {
-                "4% of something", "XXXX4", "XXXX7", "3.4% of GDP",
-                "Market drops", "$15 increase", "C++14 development",
-                "Some explanation", "Here comes the sun", "XXXX11", "XXXX02"
-            }));
+    auto    fut2 =
+        df.groupby1_async<unsigned long>
+            ("ul_col",
+             std::make_tuple("str_col", "sum_str", SumVisitor<std::string>()),
+             std::make_tuple("xint_col", "max_int", MaxVisitor<int>()),
+             std::make_tuple("xint_col", "min_int", MinVisitor<int>()),
+             std::make_tuple("dbl_col", "sum_dbl", SumVisitor<double>()));
+    auto    result2 = fut2.get();
+
+    result2.write<std::ostream, std::string, double, int, unsigned long>
+        (std::cout, io_format::csv2);
+
+    auto    fut3 =
+        df.groupby1_async<double>
+            ("dbl_col_2",
+             std::make_tuple("str_col", "sum_str", SumVisitor<std::string>()),
+             std::make_tuple("xint_col", "max_int", MaxVisitor<int>()),
+             std::make_tuple("xint_col", "min_int", MinVisitor<int>()),
+             std::make_tuple("dbl_col", "sum_dbl", SumVisitor<double>()));
+    auto    result3 = fut3.get();
+
+    result3.write<std::ostream, std::string, double, int>
+        (std::cout, io_format::csv2);
 }
 
 // -----------------------------------------------------------------------------
@@ -1066,23 +1081,17 @@ static void test_groupby_2()  {
         { 1, 2, 3, 4, 5, 3, 7, 3, 9, 10, 3, 2, 3, 14,
           2, 2, 2, 3, 2, 3, 3, 3, 3, 3, 36, 2, 45, 2 };
     std::vector<double>         xdblvec2 =
-        { 1.2345, 2.2345, 3.2345, 4.2345, 5.2345, 3.0, 0.9999,
-          10.0, 4.25, 0.009, 1.111, 8.0, 2.2222, 3.3333,
-          11.0, 5.25, 1.009, 2.111, 9.0, 3.2222, 4.3333,
-          12.0, 6.25, 2.009, 3.111, 10.0, 4.2222, 5.3333 };
+        { 10, 20, 11, 11, 30, 40, 50, 40, 60, 70, 80, 90, 50, 100, 11, 25, 20,
+          30, 1, 3, 4, 12, 6, 2, 3, 10, 4, 5 };
     std::vector<double>         dblvec22 =
-        { 0.998, 0.3456, 0.056, 0.15678, 0.00345, 0.923, 0.06743,
-          0.1, 0.0056, 0.07865, -0.9999, 0.0111, 0.1002, -0.8888,
-          0.14, 0.0456, 0.078654, -0.8999, 0.01119, 0.8002, -0.9888,
-          0.2, 0.1056, 0.87865, -0.6999, 0.4111, 0.1902, -0.4888 };
+        { 0.998, 1.545, 0.056, 0.15678, 1.545, 0.923, 0.06743,
+          0.1, -1.545, 0.07865, -0.9999, 1.545, 0.1002, -0.8888,
+          0.14, 0.0456, -1.545, -0.8999, 0.01119, 0.8002, -1.545,
+          0.2, 0.1056, 0.87865, -0.6999, 1.545, 0.1902, -1.545 };
     std::vector<std::string>    strvec2 =
-        { "4% of something", "Description 4/5", "This is bad",
-          "3.4% of GDP", "Market drops", "Market pulls back",
-          "$15 increase", "Running fast", "C++14 development",
-          "Some explanation", "More strings", "Bonds vs. Equities",
-          "Almost done", "Here comes the sun", "XXXX1", "XXXX04",
-          "XXXX2", "XXXX3", "XXXX4", "XXXX4", "XXXX5", "XXXX6",
-          "XXXX7", "XXXX10", "XXXX11", "XXXX01", "XXXX02", "XXXX03" };
+        { "A", "B", "C", "D", "X", "Y", "W", "P", "Z", "S", "M", "B",
+          "A", "H", "X", "Q", "V", "P", "W", "K", "I", "L", "J", "N",
+          "Y", "G", "T", "U" };
 
     MyDataFrame df;
 
@@ -1093,36 +1102,77 @@ static void test_groupby_2()  {
                  std::make_pair("str_col", strvec2),
                  std::make_pair("ul_col", xulgvec2));
 
-    auto    fut =
-        df.groupby_async<GroupbySum,
-                         MyDataFrame::IndexType,
-                         int,
-                         int,
-                         unsigned long,
-                         std::string,
-                         double>(GroupbySum(), DF_INDEX_COL_NAME, "xint_col");
-    auto    result = fut.get();
+    auto    fut1 =
+        df.groupby2_async<unsigned long, double>
+            (DF_INDEX_COL_NAME,
+             "dbl_col_2",
+             std::make_tuple("str_col", "sum_str", SumVisitor<std::string>()),
+             std::make_tuple("xint_col", "max_int", MaxVisitor<int>()),
+             std::make_tuple("xint_col", "min_int", MinVisitor<int>()),
+             std::make_tuple("dbl_col_2", "cnt_dbl", CountVisitor<double>()),
+             std::make_tuple("dbl_col", "sum_dbl", SumVisitor<double>()));
+    auto    result1 = fut1.get();
 
-    assert((result.get_index() ==
-            std::vector<unsigned long> {
-                123432, 123435, 246883, 123449, 123450, 617250, 370350, 123450,
-                123450, 123450, 123450, 123451, 123451, 246904, 123454, 123455,
-                123455, 123457, 123458, 123459
-            }));
-    assert((result.get_column<int>("xint_col") ==
-            std::vector<int> {
-                3, 45, 3, 7, 1, 2, 3, 4, 10, 14, 36, 2, 9, 3, 2, 3, 5, 3, 2, 3
-            }));
-    assert((result.get_column<std::string>("str_col") ==
-            std::vector<std::string> {
-                "XXXX10", "XXXX02", "XXXX6XXXX7", "$15 increase",
-                "4% of something", "Bonds vs. EquitiesXXXX04XXXX2XXXX01XXXX03",
-                "Market pulls backRunning fastXXXX5", "3.4% of GDP",
-                "Some explanation", "Here comes the sun", "XXXX11",
-                "Description 4/5", "C++14 development",
-                "This is badMore strings", "XXXX1", "Almost done",
-                "Market drops", "XXXX3", "XXXX4", "XXXX4"
-            }));
+    result1.write<std::ostream, std::string, double, std::size_t, int>
+        (std::cout, io_format::csv2);
+
+    auto    fut2 =
+        df.groupby2_async<double, unsigned long>
+            ("dbl_col_2",
+             DF_INDEX_COL_NAME,
+             std::make_tuple("str_col", "sum_str", SumVisitor<std::string>()),
+             std::make_tuple("xint_col", "max_int", MaxVisitor<int>()),
+             std::make_tuple("xint_col", "min_int", MinVisitor<int>()),
+             std::make_tuple("dbl_col_2", "cnt_dbl", CountVisitor<double>()),
+             std::make_tuple("dbl_col", "sum_dbl", SumVisitor<double>()));
+    auto    result2 = fut2.get();
+
+    result2.write<std::ostream, std::string, double, std::size_t, int>
+        (std::cout, io_format::csv2);
+
+    auto    fut3 =
+        df.groupby2_async<double, int>
+            ("dbl_col_2",
+             "xint_col",
+             std::make_tuple("str_col", "sum_str", SumVisitor<std::string>()),
+             std::make_tuple("xint_col", "max_int", MaxVisitor<int>()),
+             std::make_tuple("xint_col", "min_int", MinVisitor<int>()),
+             std::make_tuple("dbl_col_2", "cnt_dbl", CountVisitor<double>()),
+             std::make_tuple("dbl_col", "sum_dbl", SumVisitor<double>()));
+    auto    result3 = fut3.get();
+
+    result3.write<std::ostream, std::string, double, std::size_t, int>
+        (std::cout, io_format::csv2);
+
+    auto    fut4 =
+        df.groupby2_async<int, double>
+            ("xint_col",
+             "dbl_col_2",
+             std::make_tuple("str_col", "sum_str", SumVisitor<std::string>()),
+             std::make_tuple("xint_col", "max_int", MaxVisitor<int>()),
+             std::make_tuple("xint_col", "min_int", MinVisitor<int>()),
+             std::make_tuple("dbl_col_2", "cnt_dbl", CountVisitor<double>()),
+             std::make_tuple("dbl_col", "sum_dbl", SumVisitor<double>()));
+    auto    result4 = fut4.get();
+
+    result4.write<std::ostream, std::string, double, std::size_t, int>
+        (std::cout, io_format::csv2);
+
+    auto    fut5 =
+        df.groupby2_async<std::string, unsigned long>
+            ("str_col",
+             DF_INDEX_COL_NAME,
+             std::make_tuple("str_col", "sum_str", SumVisitor<std::string>()),
+             std::make_tuple("xint_col", "max_int", MaxVisitor<int>()),
+             std::make_tuple("xint_col", "min_int", MinVisitor<int>()),
+             std::make_tuple("dbl_col_2", "cnt_dbl", CountVisitor<double>()),
+             std::make_tuple("dbl_col", "sum_dbl", SumVisitor<double>()));
+    auto    result5 = fut5.get();
+
+    result5.write<std::ostream, std::string, double, std::size_t, int>
+        (std::cout, io_format::csv2);
+
+    exit(0);
 }
 
 // -----------------------------------------------------------------------------
@@ -2864,38 +2914,6 @@ static void test_UlcerIndexVisitor()  {
         assert(std::abs(ui_v2.get_result()[31] - 2.26761) < 0.00001);
         assert(std::abs(ui_v2.get_result()[5030] - 2.9759) < 0.0001);
         assert(std::abs(ui_v2.get_result()[5026] - 2.133) < 0.001);
-    }
-    catch (const DataFrameError &ex)  {
-        std::cout << ex.what() << std::endl;
-    }
-}
-
-// -----------------------------------------------------------------------------
-
-static void test_bucketize()  {
-
-    std::cout << "\nTesting bucketize( ) ..." << std::endl;
-
-    MyDataFrame df;
-
-    try  {
-        df.read("FORD.csv", io_format::csv2);
-
-        auto        fut =
-            df.bucketize_async(
-                100,
-                std::make_tuple("Date", "Date", LastVisitor<std::string>()),
-                std::make_tuple("FORD_Close", "High", MaxVisitor<double>()),
-                std::make_tuple("FORD_Close", "Low", MinVisitor<double>()),
-                std::make_tuple("FORD_Close", "Open", FirstVisitor<double>()),
-                std::make_tuple("FORD_Close", "Close", LastVisitor<double>()),
-                std::make_tuple("FORD_Close", "Mean", MeanVisitor<double>()),
-                std::make_tuple("FORD_Close", "Std", StdVisitor<double>()),
-                std::make_tuple("FORD_Volume", "Volume", SumVisitor<long>()));
-        MyDataFrame result = fut.get();
-
-        result.write<std::ostream, std::string, double, long>
-            (std::cout, io_format::csv2);
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;

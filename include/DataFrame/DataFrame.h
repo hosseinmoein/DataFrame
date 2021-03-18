@@ -969,26 +969,19 @@ public:  // Data manipulation
     //
     template<typename T, typename ... Ts>
     [[nodiscard]] DataFrame
-    groupby1(const char *col_name,
-             bool already_sorted,
-             Ts&& ... args) const;
+    groupby1(const char *col_name, Ts&& ... args) const;
 
     // This is the same as above groupby() but it groups by two columns
     //
     template<typename T1, typename T2, typename ... Ts>
     [[nodiscard]] DataFrame
-    groupby2(const char *col_name1,
-             const char *col_name2,
-             bool already_sorted,
-             Ts&& ... args) const;
+    groupby2(const char *col_name1, const char *col_name2, Ts&& ... args) const;
 
     // Same as groupby() above, but executed asynchronously
     //
     template<typename T, typename ... Ts>
     [[nodiscard]] std::future<DataFrame>
-    groupby1_async(const char *col_name,
-                   bool already_sorted,
-                   Ts&& ... args) const;
+    groupby1_async(const char *col_name, Ts&& ... args) const;
 
     // Same as groupby() above, but executed asynchronously
     //
@@ -996,7 +989,6 @@ public:  // Data manipulation
     [[nodiscard]] std::future<DataFrame>
     groupby2_async(const char *col_name1,
                    const char *col_name2,
-                   bool already_sorted,
                    Ts&& ... args) const;
 
     // It counts the unique values in the named column.

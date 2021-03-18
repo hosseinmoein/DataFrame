@@ -1102,8 +1102,8 @@ static void test_groupby_2()  {
                  std::make_pair("str_col", strvec2),
                  std::make_pair("ul_col", xulgvec2));
 
-    auto    fut1 =
-        df.groupby2_async<unsigned long, double>
+    auto    result1 =
+        df.groupby2<unsigned long, double>
             (DF_INDEX_COL_NAME,
              "dbl_col_2",
              std::make_tuple("str_col", "sum_str", SumVisitor<std::string>()),
@@ -1111,13 +1111,12 @@ static void test_groupby_2()  {
              std::make_tuple("xint_col", "min_int", MinVisitor<int>()),
              std::make_tuple("dbl_col_2", "cnt_dbl", CountVisitor<double>()),
              std::make_tuple("dbl_col", "sum_dbl", SumVisitor<double>()));
-    auto    result1 = fut1.get();
 
     result1.write<std::ostream, std::string, double, std::size_t, int>
         (std::cout, io_format::csv2);
 
-    auto    fut2 =
-        df.groupby2_async<double, unsigned long>
+    auto    result2 =
+        df.groupby2<double, unsigned long>
             ("dbl_col_2",
              DF_INDEX_COL_NAME,
              std::make_tuple("str_col", "sum_str", SumVisitor<std::string>()),
@@ -1125,13 +1124,12 @@ static void test_groupby_2()  {
              std::make_tuple("xint_col", "min_int", MinVisitor<int>()),
              std::make_tuple("dbl_col_2", "cnt_dbl", CountVisitor<double>()),
              std::make_tuple("dbl_col", "sum_dbl", SumVisitor<double>()));
-    auto    result2 = fut2.get();
 
     result2.write<std::ostream, std::string, double, std::size_t, int>
         (std::cout, io_format::csv2);
 
-    auto    fut3 =
-        df.groupby2_async<double, int>
+    auto    result3 =
+        df.groupby2<double, int>
             ("dbl_col_2",
              "xint_col",
              std::make_tuple("str_col", "sum_str", SumVisitor<std::string>()),
@@ -1139,13 +1137,12 @@ static void test_groupby_2()  {
              std::make_tuple("xint_col", "min_int", MinVisitor<int>()),
              std::make_tuple("dbl_col_2", "cnt_dbl", CountVisitor<double>()),
              std::make_tuple("dbl_col", "sum_dbl", SumVisitor<double>()));
-    auto    result3 = fut3.get();
 
     result3.write<std::ostream, std::string, double, std::size_t, int>
         (std::cout, io_format::csv2);
 
-    auto    fut4 =
-        df.groupby2_async<int, double>
+    auto    result4 =
+        df.groupby2<int, double>
             ("xint_col",
              "dbl_col_2",
              std::make_tuple("str_col", "sum_str", SumVisitor<std::string>()),
@@ -1153,13 +1150,12 @@ static void test_groupby_2()  {
              std::make_tuple("xint_col", "min_int", MinVisitor<int>()),
              std::make_tuple("dbl_col_2", "cnt_dbl", CountVisitor<double>()),
              std::make_tuple("dbl_col", "sum_dbl", SumVisitor<double>()));
-    auto    result4 = fut4.get();
 
     result4.write<std::ostream, std::string, double, std::size_t, int>
         (std::cout, io_format::csv2);
 
-    auto    fut5 =
-        df.groupby2_async<std::string, unsigned long>
+    auto    result5 =
+        df.groupby2<std::string, unsigned long>
             ("str_col",
              DF_INDEX_COL_NAME,
              std::make_tuple("str_col", "sum_str", SumVisitor<std::string>()),
@@ -1167,12 +1163,9 @@ static void test_groupby_2()  {
              std::make_tuple("xint_col", "min_int", MinVisitor<int>()),
              std::make_tuple("dbl_col_2", "cnt_dbl", CountVisitor<double>()),
              std::make_tuple("dbl_col", "sum_dbl", SumVisitor<double>()));
-    auto    result5 = fut5.get();
 
     result5.write<std::ostream, std::string, double, std::size_t, int>
         (std::cout, io_format::csv2);
-
-    exit(0);
 }
 
 // -----------------------------------------------------------------------------

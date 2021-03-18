@@ -79,7 +79,7 @@ struct NotImplemented : public DataFrameError  {
 
 // ----------------------------------------------------------------------------
 
-inline constexpr const char *const  DF_INDEX_COL_NAME = "INDEX";
+inline constexpr const char *DF_INDEX_COL_NAME = "INDEX";
 
 // ----------------------------------------------------------------------------
 

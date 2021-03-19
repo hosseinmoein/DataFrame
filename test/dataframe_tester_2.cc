@@ -1069,6 +1069,9 @@ static void test_groupby()  {
 
 static void test_groupby_2()  {
 
+#ifndef _WIN32  // Due to a bug in MS VC++ compiler being used by appveyor, this
+                // cannot be compiled by them
+
     std::cout << "\nTesting groupby_2( ) ..." << std::endl;
 
     std::vector<unsigned long>  ulgvec2 =
@@ -1166,6 +1169,7 @@ static void test_groupby_2()  {
 
     result5.write<std::ostream, std::string, double, std::size_t, int>
         (std::cout, io_format::csv2);
+#endif // _WIN32
 }
 
 // -----------------------------------------------------------------------------

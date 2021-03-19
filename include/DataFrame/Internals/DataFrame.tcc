@@ -1090,7 +1090,7 @@ groupby1(const char *col_name, Ts&& ... args) const  {
     else
         gb_vec = (ColumnVecType<T> *) &(get_column<T>(col_name));
 
-    std::vector<std::size_t>    sort_v(gb_vec->size(), 0);
+    std::vector<std::size_t>    sort_v (gb_vec->size(), 0);
 
     std::iota(sort_v.begin(), sort_v.end(), 0);
     std::sort(sort_v.begin(), sort_v.end(),
@@ -1120,9 +1120,7 @@ groupby1(const char *col_name, Ts&& ... args) const  {
 template<typename I, typename H>
 template<typename T1, typename T2, typename ... Ts>
 DataFrame<I, H> DataFrame<I, H>::
-groupby2(const char *col_name1,
-         const char *col_name2,
-         Ts&& ... args) const  {
+groupby2(const char *col_name1, const char *col_name2, Ts&& ... args) const  {
 
     const ColumnVecType<T1> *gb_vec1 { nullptr };
     const ColumnVecType<T2> *gb_vec2 { nullptr };
@@ -1140,9 +1138,9 @@ groupby2(const char *col_name1,
         gb_vec2 = (ColumnVecType<T2> *) &(get_column<T2>(col_name2));
     }
 
-    std::vector<std::size_t>    sort_v(std::min(gb_vec1->size(),
-                                                gb_vec2->size()),
-                                       0);
+    std::vector<std::size_t>    sort_v (std::min(gb_vec1->size(),
+                                                 gb_vec2->size()),
+                                        0);
 
     std::iota(sort_v.begin(), sort_v.end(), 0);
     std::sort(sort_v.begin(), sort_v.end(),

@@ -947,43 +947,64 @@ public:  // Data manipulation
                const char *name4, sort_spec dir4,
                const char *name5, sort_spec dir5);
 
-    // Groupby copies the DataFrame into a temp DataFrame and sorts
-    // the temp df by gb_col_name before performing groupby.
-    // If gb_col_name is DF_INDEX_COL_NAME, it groups by index.
+    // This method groups the DataFrame by the named column of type T.
+    // The group-by’ing is done by equality.
+    // The comparison and equality operators must be well defined for type T.
+    // It returns a new DataFrame that has been group-by’ed.
+    // The summarization of columns is specified by a list of 3-member-tuples
+    // (triples) of the following format:
+    //    1. Current DataFrame column name
+    //    2. Column name for the new bucketized DataFrame
+    //    3. A visitor to aggregate current column to new column
     //
-    // F:
-    //   type functor to be applied to columns to group by
+    // The index column is never summarized in the returned DataFrame. If the
+    // named column is not the index column, than the index of the returned
+    // DataFrame is the last index items of the original DataFrame for the
+    // named column.
+    // If the named column is other than index column, then the returned
+    // DataFrame also has a column with the same name which has the unique
+    // values of the named column.
+    // Also see bucketize().
+    //
     // T:
-    //   type of the groupby column. In case if index, it is type of index
+    //   Type of groupby column. In case if index, it is type of index
     // Ts:
-    //   List all the types of all data columns. A type should be specified in
-    //   the list only once.
-    // func:
-    //   The aggregator functor to do the groupby. All built-in groupby
-    //   aggregators are defined in GroupbyAggregators.h file
+    //   Types of triples to specify the column summarization
     // col_name:
-    //   Name of the column
-    // already_sorted:
-    //   If the DataFrame is already sorted by col_name, this will save the
-    //   expensive sort operation
+    //   Name of the grouop-by'ing column
+    // args:
+    //   List of triples to specify the column summarization
     //
     template<typename T, typename ... Ts>
     [[nodiscard]] DataFrame
     groupby1(const char *col_name, Ts&& ... args) const;
 
-    // This is the same as above groupby() but it groups by two columns
+    // This is the same as above groupby1() but it groups by two columns
+    //
+    // T1:
+    //   Type of first groupby column. In case if index, it is type of index
+    // T2:
+    //   Type of second groupby column. In case if index, it is type of index
+    // Ts:
+    //   Types of triples to specify the column summarization
+    // col_name1:
+    //   Name of the first grouop-by'ing column
+    // col_name2:
+    //   Name of the second grouop-by'ing column
+    // args:
+    //   List of triples to specify the column summarization
     //
     template<typename T1, typename T2, typename ... Ts>
     [[nodiscard]] DataFrame
     groupby2(const char *col_name1, const char *col_name2, Ts&& ... args) const;
 
-    // Same as groupby() above, but executed asynchronously
+    // Same as groupby1() above, but executed asynchronously
     //
     template<typename T, typename ... Ts>
     [[nodiscard]] std::future<DataFrame>
     groupby1_async(const char *col_name, Ts&& ... args) const;
 
-    // Same as groupby() above, but executed asynchronously
+    // Same as groupby2() above, but executed asynchronously
     //
     template<typename T1, typename T2, typename ... Ts>
     [[nodiscard]] std::future<DataFrame>

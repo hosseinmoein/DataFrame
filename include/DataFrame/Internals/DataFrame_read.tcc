@@ -618,17 +618,17 @@ void DataFrame<I, H>::read_csv2_(std::istream &file, bool columns_only)  {
             else if (col_spec.type_spec == "DateTimeAME")  {
                 std::any_cast<std::vector<DateTime> &>
                     (col_spec.col_vec).emplace_back(
-                        DateTime(value, DT_DATE_STYLE::AME_STYLE));
+                        value, DT_DATE_STYLE::AME_STYLE);
             }
             else if (col_spec.type_spec == "DateTimeEUR")  {
                 std::any_cast<std::vector<DateTime> &>
                     (col_spec.col_vec).emplace_back(
-                        DateTime(value, DT_DATE_STYLE::EUR_STYLE));
+                        value, DT_DATE_STYLE::EUR_STYLE);
             }
             else if (col_spec.type_spec == "DateTimeISO")  {
                 std::any_cast<std::vector<DateTime> &>
                     (col_spec.col_vec).emplace_back(
-                        DateTime(value, DT_DATE_STYLE::ISO_STYLE));
+                        value, DT_DATE_STYLE::ISO_STYLE);
             }
             else if (col_spec.type_spec == "bool")  {
                 if (value[0] != '\0')  {

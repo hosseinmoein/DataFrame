@@ -2065,29 +2065,22 @@ static void test_DecomposeVisitor()  {
 
 // -----------------------------------------------------------------------------
 
-static void test_IBM_data()  {
+static void test_DT_IBM_data()  {
 
-    std::cout << "\nTesting IBM_data(  ) ..." << std::endl;
+    std::cout << "\nTesting DT_IBM_data(  ) ..." << std::endl;
 
-    typedef StdDataFrame<std::string> StrDataFrame;
+    typedef StdDataFrame<DateTime>  DT_DataFrame;
 
-    StrDataFrame    df;
+    DT_DataFrame    df;
 
-    df.read("IBM.csv", io_format::csv2);
+    df.read("DT_IBM.csv", io_format::csv2);
 
-    DecomposeVisitor<double, std::string> d_v(178, 2.0 / 3.0, 0,
-                                              decompose_type::multiplicative);
-    // decompose_type::additive);
-
-    df.single_act_visit<double>("IBM_Adj_Close", d_v);
-
-    const auto  &ibm_closes = df.get_column<double>("IBM_Adj_Close");
-
-    for (std::size_t i = 0; i < ibm_closes.size(); ++i)
-        std::cout << ibm_closes[i] << ","
-                  << d_v.get_trend()[i] << ","
-                  << d_v.get_seasonal()[i] << ","
-                  << d_v.get_residual()[i] << std::endl;
+    assert(df.get_column<double>("IBM_Open")[0] == 98.4375);
+    assert(df.get_column<double>("IBM_Close")[18] == 97.875);
+    assert(df.get_index()[18] == DateTime(20001128));
+    assert(fabs(df.get_column<double>("IBM_High")[5030] - 111.8) < 0.001);
+    assert(df.get_column<long>("IBM_Volume")[5022] == 21501100L);
+    assert(df.get_index()[5020] == DateTime(20201016));
 }
 
 // --------------------------------------------------------------------
@@ -2953,7 +2946,7 @@ int main(int argc, char *argv[]) {
     test_LowessVisitor();
     test_StepRollAdopter();
     test_DecomposeVisitor();
-    // test_IBM_data();
+    test_DT_IBM_data();
     test_TTestVisitor();
     test_MassIndexVisitor();
     test_HullRollingMeanVisitor();

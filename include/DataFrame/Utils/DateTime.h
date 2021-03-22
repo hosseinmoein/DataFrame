@@ -152,11 +152,13 @@ enum class DT_MONTH : unsigned char  {
 
 // AME_STYLE: MM/DD/YYYY
 // EUR_STYLE: YYYY/MM/DD
+// ISO_STYLE: YYYY-MM-DD
 //
 enum class DT_DATE_STYLE : unsigned char  {
     YYYYMMDD = 1,
     AME_STYLE = 2,
-    EUR_STYLE = 3
+    EUR_STYLE = 3,
+    ISO_STYLE = 4,
 };
 
 // ----------------------------------------------------------------------------
@@ -320,6 +322,13 @@ public:
     //  (9)  YYYY/MM/DD HH:MM
     //  (10) YYYY/MM/DD HH:MM:SS
     //  (11) YYYY/MM/DD HH:MM:SS.MMM
+    //
+    // ISO_STYLE:
+    //  (12) YYYY-MM-DD
+    //  (13) YYYY-MM-DD HH
+    //  (14) YYYY-MM-DD HH:MM
+    //  (15) YYYY-MM-DD HH:MM:SS
+    //  (16) YYYY-MM-DD HH:MM:SS.MMM
     explicit DateTime (const char *s,
                        DT_DATE_STYLE ds = DT_DATE_STYLE::YYYYMMDD,
                        DT_TIME_ZONE tz = DT_TIME_ZONE::LOCAL);

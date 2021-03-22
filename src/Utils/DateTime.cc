@@ -123,6 +123,13 @@ DateTime::DateTime (DateType d,
 //  (4)  YYYY/MM/DD HH:MM:SS
 //  (5)  YYYY/MM/DD HH:MM:SS.MMM
 //
+// ISO_STYLE:
+//  (12) YYYY-MM-DD
+//  (13) YYYY-MM-DD HH
+//  (14) YYYY-MM-DD HH:MM
+//  (15) YYYY-MM-DD HH:MM:SS
+//  (16) YYYY-MM-DD HH:MM:SS.MMM
+//
 DateTime::DateTime (const char *s, DT_DATE_STYLE ds, DT_TIME_ZONE tz)
     : time_zone_ (tz)  {
 
@@ -138,7 +145,7 @@ DateTime::DateTime (const char *s, DT_DATE_STYLE ds, DT_TIME_ZONE tz)
 
         hour_ = minute_ = second_ = nanosecond_ = 0;
         if (ds == DT_DATE_STYLE::AME_STYLE)  {
-            if (str_len == 10)  {
+            if (str_len <= 10)  {
                 ::sscanf (str, "%d/%d/%d", &month, &day, &year);
             }
             else if (str_len == 13)  {
@@ -161,7 +168,7 @@ DateTime::DateTime (const char *s, DT_DATE_STYLE ds, DT_TIME_ZONE tz)
             }
         }
         else if (ds == DT_DATE_STYLE::EUR_STYLE)  {
-            if (str_len == 10)  {
+            if (str_len <= 10)  {
                 ::sscanf (str, "%d/%d/%d", &year, &month, &day);
             }
             else if (str_len == 13)  {
@@ -179,6 +186,29 @@ DateTime::DateTime (const char *s, DT_DATE_STYLE ds, DT_TIME_ZONE tz)
                 MillisecondType ms { 0 };
 
                 ::sscanf (str, "%d/%d/%d %hd:%hd:%hd.%hd",
+                          &year, &month, &day, &hour_, &minute_, &second_, &ms);
+                nanosecond_ = ms * 1000000;
+            }
+        }
+        else if (ds == DT_DATE_STYLE::ISO_STYLE)  {
+            if (str_len <= 10)  {
+                ::sscanf (str, "%d-%d-%d", &year, &month, &day);
+            }
+            else if (str_len == 13)  {
+                ::sscanf (str, "%d-%d-%d %hd", &year, &month, &day, &hour_);
+            }
+            else if (str_len == 16)  {
+                ::sscanf (str, "%d-%d-%d %hd:%hd",
+                          &year, &month, &day, &hour_, &minute_);
+            }
+            else if (str_len == 19)  {
+                ::sscanf (str, "%d-%d-%d %hd:%hd:%hd",
+                          &year, &month, &day, &hour_, &minute_, &second_);
+            }
+            else if (str_len == 23)  {
+                MillisecondType ms { 0 };
+
+                ::sscanf (str, "%d-%d-%d %hd:%hd:%hd.%hd",
                           &year, &month, &day, &hour_, &minute_, &second_, &ms);
                 nanosecond_ = ms * 1000000;
             }

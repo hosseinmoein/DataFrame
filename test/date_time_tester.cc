@@ -914,6 +914,13 @@ int main (int argc, char *argv [])  {
         assert(dt == dt2);
     }
 
+    {
+        DateTime    dt("2015/01/05 09:40:30", hmdf::DT_DATE_STYLE::EUR_STYLE);
+        DateTime    dt2("2015-01-05 09:40:30", hmdf::DT_DATE_STYLE::ISO_STYLE);
+
+        assert(dt == dt2);
+    }
+
     test_priority_queue();
     return (EXIT_SUCCESS);
 }

@@ -32,6 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <any>
 #include <cstdlib>
+#include <fstream>
 #include <functional>
 
 // ----------------------------------------------------------------------------
@@ -45,7 +46,7 @@ namespace hmdf
 // ----------------------------------------------------------------------------
 
 template<typename I, typename  H>
-void DataFrame<I, H>::read_json_(std::ifstream &file, bool columns_only)  {
+void DataFrame<I, H>::read_json_(std::istream &file, bool columns_only)  {
 
     char    c { '\0' };
     char    col_name[256];
@@ -53,7 +54,7 @@ void DataFrame<I, H>::read_json_(std::ifstream &file, bool columns_only)  {
     char    token[256];
 
     while (file.get(c))
-        if (c != ' ' && c != '\n' && c != '\t')  break;
+        if (c != ' ' && c != '\n' && c != '\t' && c != '\r')  break;
     if (c != '{')
         throw DataFrameError(
             "DataFrame::read_json_(): ERROR: Expected '{' (0)");
@@ -62,7 +63,7 @@ void DataFrame<I, H>::read_json_(std::ifstream &file, bool columns_only)  {
     bool    has_index = true;
 
     while (file.get(c)) {
-        if (c == ' ' || c == '\n' || c == '\t')  continue;
+        if (c == ' ' || c == '\n' || c == '\t' || c == '\r')  continue;
         if (c != '"')
             throw DataFrameError(
                 "DataFrame::read_json_(): ERROR: Expected '\"' (1)");
@@ -81,18 +82,18 @@ void DataFrame<I, H>::read_json_(std::ifstream &file, bool columns_only)  {
             has_index = false;
 
         while (file.get(c))
-            if (c != ' ' && c != '\n' && c != '\t')  break;
+            if (c != ' ' && c != '\n' && c != '\t' && c != '\r')  break;
         if (c != ':')
             throw DataFrameError(
                 "DataFrame::read_json_(): ERROR: Expected ':' (2)");
         while (file.get(c))
-            if (c != ' ' && c != '\n' && c != '\t')  break;
+            if (c != ' ' && c != '\n' && c != '\t' && c != '\r')  break;
         if (c != '{')
             throw DataFrameError(
                 "DataFrame::read_json_(): ERROR: Expected '{' (3)");
 
         while (file.get(c))
-            if (c != ' ' && c != '\n' && c != '\t')  break;
+            if (c != ' ' && c != '\n' && c != '\t' && c != '\r')  break;
         if (c != '"')
             throw DataFrameError(
                 "DataFrame::read_json_(): ERROR: Expected '\"' (4)");
@@ -102,18 +103,18 @@ void DataFrame<I, H>::read_json_(std::ifstream &file, bool columns_only)  {
             throw DataFrameError(
                  "DataFrame::read_json_(): ERROR: Expected 'N' (5)");
         while (file.get(c))
-            if (c != ' ' && c != '\n' && c != '\t')  break;
+            if (c != ' ' && c != '\n' && c != '\t' && c != '\r')  break;
         if (c != ':')
             throw DataFrameError(
                 "DataFrame::read_json_(): ERROR: Expected ':' (6)");
         while (file.get(c))
-            if (c != ' ' && c != '\n' && c != '\t')  break;
+            if (c != ' ' && c != '\n' && c != '\t' && c != '\r')  break;
         _get_token_from_file_(file, ',', token);
 
         const size_type col_size = ::atoi(token);
 
         while (file.get(c))
-            if (c != ' ' && c != '\n' && c != '\t')  break;
+            if (c != ' ' && c != '\n' && c != '\t' && c != '\r')  break;
         if (c != '"')
             throw DataFrameError(
                 "DataFrame::read_json_(): ERROR: Expected '\"' (7)");
@@ -122,24 +123,24 @@ void DataFrame<I, H>::read_json_(std::ifstream &file, bool columns_only)  {
             throw DataFrameError(
                  "DataFrame::read_json_(): ERROR: Expected 'T' (8)");
         while (file.get(c))
-            if (c != ' ' && c != '\n' && c != '\t')  break;
+            if (c != ' ' && c != '\n' && c != '\t' && c != '\r')  break;
         if (c != ':')
             throw DataFrameError(
                 "DataFrame::read_json_(): ERROR: Expected ':' (9)");
         while (file.get(c))
-            if (c != ' ' && c != '\n' && c != '\t')  break;
+            if (c != ' ' && c != '\n' && c != '\t' && c != '\r')  break;
         if (c != '"')
             throw DataFrameError(
                 "DataFrame::read_json_(): ERROR: Expected '\"' (10)");
         _get_token_from_file_(file, '"', col_type);
 
         while (file.get(c))
-            if (c != ' ' && c != '\n' && c != '\t')  break;
+            if (c != ' ' && c != '\n' && c != '\t' && c != '\r')  break;
         if (c != ',')
             throw DataFrameError(
                 "DataFrame::read_json_(): ERROR: Expected ',' (11)");
         while (file.get(c))
-            if (c != ' ' && c != '\n' && c != '\t')  break;
+            if (c != ' ' && c != '\n' && c != '\t' && c != '\r')  break;
         if (c != '"')
             throw DataFrameError(
                 "DataFrame::read_json_(): ERROR: Expected '\"' (12)");
@@ -148,12 +149,12 @@ void DataFrame<I, H>::read_json_(std::ifstream &file, bool columns_only)  {
             throw DataFrameError(
                  "DataFrame::read_json_(): ERROR: Expected 'D' (13)");
         while (file.get(c))
-            if (c != ' ' && c != '\n' && c != '\t')  break;
+            if (c != ' ' && c != '\n' && c != '\t' && c != '\r')  break;
         if (c != ':')
             throw DataFrameError(
                 "DataFrame::read_json_(): ERROR: Expected ':' (14)");
         while (file.get(c))
-            if (c != ' ' && c != '\n' && c != '\t')  break;
+            if (c != ' ' && c != '\n' && c != '\t' && c != '\r')  break;
         if (c != '[')
             throw DataFrameError(
                 "DataFrame::read_json_(): ERROR: Expected ']' (15)");
@@ -255,12 +256,12 @@ void DataFrame<I, H>::read_json_(std::ifstream &file, bool columns_only)  {
                     "DataFrame::read_json_(): ERROR: Unknown column type");
         }
         while (file.get(c))
-            if (c != ' ' && c != '\n' && c != '\t')  break;
+            if (c != ' ' && c != '\n' && c != '\t' && c != '\r')  break;
         if (c != '}')
             throw DataFrameError(
                 "DataFrame::read_json_(): ERROR: Expected '}' (16)");
         while (file.get(c))
-            if (c != ' ' && c != '\n' && c != '\t')  break;
+            if (c != ' ' && c != '\n' && c != '\t' && c != '\r')  break;
         if (c != ',')  {
             file.unget();
             break;
@@ -269,7 +270,7 @@ void DataFrame<I, H>::read_json_(std::ifstream &file, bool columns_only)  {
         first_col = false;
     }
     while (file.get(c))
-        if (c != ' ' && c != '\n' && c != '\t')  break;
+        if (c != ' ' && c != '\n' && c != '\t' && c != '\r')  break;
     if (c != '}')
         throw DataFrameError(
             "DataFrame::read_json_(): ERROR: Expected '}' (17)");
@@ -279,7 +280,7 @@ void DataFrame<I, H>::read_json_(std::ifstream &file, bool columns_only)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename  H>
-void DataFrame<I, H>::read_csv_(std::ifstream &file, bool columns_only)  {
+void DataFrame<I, H>::read_csv_(std::istream &file, bool columns_only)  {
 
     char    col_name[256];
     char    value[32];
@@ -287,7 +288,7 @@ void DataFrame<I, H>::read_csv_(std::ifstream &file, bool columns_only)  {
     char    c;
 
     while (file.get(c)) {
-        if (c == '#' || c == '\n' || c == '\0') {
+        if (c == '#' || c == '\n' || c == '\0' || c == '\r') {
             if (c == '#')
                 while (file.get(c))
                     if (c == '\n') break;
@@ -431,7 +432,7 @@ struct _col_data_spec_  {
 // --------------------------------------
 
 template<typename I, typename  H>
-void DataFrame<I, H>::read_csv2_(std::ifstream &file, bool columns_only)  {
+void DataFrame<I, H>::read_csv2_(std::istream &file, bool columns_only)  {
 
     char                            value[8192];
     char                            c;
@@ -441,7 +442,7 @@ void DataFrame<I, H>::read_csv2_(std::ifstream &file, bool columns_only)  {
 
     spec_vec.reserve(32);
     while (file.get(c)) {
-        if (c == '#' || c == '\n' || c == '\0') {
+        if (c == '#' || c == '\n' || c == '\r' || c == '\0') {
             if (c == '#')  {
                 while (file.get(c))
                     if (c == '\n') break;
@@ -466,7 +467,7 @@ void DataFrame<I, H>::read_csv2_(std::ifstream &file, bool columns_only)  {
                                      "'<' char to specify column type");
             _get_token_from_file_(file, '>', type_str);
             file.get(c);
-            if (c == '\n')  header_read = true;
+            if (c == '\n' || c == '\r')  header_read = true;
 
             if (! ::strcmp(type_str, "float"))
                 spec_vec.emplace_back(std::vector<float>(),
@@ -518,7 +519,8 @@ void DataFrame<I, H>::read_csv2_(std::ifstream &file, bool columns_only)  {
                                       type_str,
                                       col_name,
                                       ::atoi(value));
-            else if (! ::strcmp(type_str, "DateTime"))
+            // This includes DateTime, DateTimeAME, DateTimeEUR, DateTimeISO
+            else if (! ::strncmp(type_str, "DateTime", 8))
                 spec_vec.emplace_back(std::vector<DateTime>(),
                                       type_str,
                                       col_name,
@@ -613,6 +615,21 @@ void DataFrame<I, H>::read_csv2_(std::ifstream &file, bool columns_only)  {
                             std::move(dt));
                 }
             }
+            else if (col_spec.type_spec == "DateTimeAME")  {
+                std::any_cast<std::vector<DateTime> &>
+                    (col_spec.col_vec).emplace_back(
+                        DateTime(value, DT_DATE_STYLE::AME_STYLE));
+            }
+            else if (col_spec.type_spec == "DateTimeEUR")  {
+                std::any_cast<std::vector<DateTime> &>
+                    (col_spec.col_vec).emplace_back(
+                        DateTime(value, DT_DATE_STYLE::EUR_STYLE));
+            }
+            else if (col_spec.type_spec == "DateTimeISO")  {
+                std::any_cast<std::vector<DateTime> &>
+                    (col_spec.col_vec).emplace_back(
+                        DateTime(value, DT_DATE_STYLE::ISO_STYLE));
+            }
             else if (col_spec.type_spec == "bool")  {
                 if (value[0] != '\0')  {
                     const bool          v =
@@ -694,7 +711,7 @@ void DataFrame<I, H>::read_csv2_(std::ifstream &file, bool columns_only)  {
                             std::move(std::any_cast<std::vector<std::string> &>
                                           (col_spec.col_vec)),
                             nan_policy::dont_pad_with_nans);
-            else if (col_spec.type_spec == "DateTime")
+            else if (! ::strncmp(col_spec.type_spec.c_str(), "DateTime", 8))
                 load_column(col_spec.col_name.c_str(),
                             std::move(std::any_cast<std::vector<DateTime> &>
                                           (col_spec.col_vec)),

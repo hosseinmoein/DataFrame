@@ -310,7 +310,7 @@ inline static S &_write_json_df_index_(S &o, const std::string &value)  {
 // ----------------------------------------------------------------------------
 
 inline static void
-_get_token_from_file_ (std::ifstream &file,
+_get_token_from_file_ (std::istream &file,
                        char delim,
                        char *value,
                        char alt_delim = '\0') {
@@ -338,7 +338,7 @@ _get_token_from_file_ (std::ifstream &file,
 template<typename T, typename V>
 inline static void
 _col_vector_push_back_(V &vec,
-                       std::ifstream &file,
+                       std::istream &file,
                        T (*converter)(const char *, char **, int),
                        io_format file_type = io_format::csv)  {
 
@@ -360,7 +360,7 @@ _col_vector_push_back_(V &vec,
 template<typename T, typename V>
 inline static void
 _col_vector_push_back_(V &vec,
-                       std::ifstream &file,
+                       std::istream &file,
                        T (*converter)(const char *, char **),
                        io_format file_type = io_format::csv)  {
 
@@ -383,7 +383,7 @@ template<>
 inline void
 _col_vector_push_back_<const char *, std::vector<std::string>>(
     std::vector<std::string> &vec,
-    std::ifstream &file,
+    std::istream &file,
     const char * (*converter)(const char *, char **),
     io_format file_type)  {
 
@@ -404,7 +404,7 @@ _col_vector_push_back_<const char *, std::vector<std::string>>(
 
 inline void
 _json_str_col_vector_push_back_(std::vector<std::string> &vec,
-                                std::ifstream &file)  {
+                                std::istream &file)  {
 
     char    value[1024];
     char    c = 0;
@@ -454,7 +454,7 @@ template<>
 inline void
 _col_vector_push_back_<DateTime, std::vector<DateTime>>(
     std::vector<DateTime> &vec,
-    std::ifstream &file,
+    std::istream &file,
     DateTime (*converter)(const char *, char **),
     io_format file_type)  {
 
@@ -488,7 +488,7 @@ template<typename T>
 struct  _IdxParserFunctor_  {
 
     void operator()(std::vector<T> &,
-                    std::ifstream &file,
+                    std::istream &file,
                     io_format file_type = io_format::csv)  {   }
 };
 
@@ -498,7 +498,7 @@ template<>
 struct  _IdxParserFunctor_<float>  {
 
     inline void operator()(std::vector<float> &vec,
-                           std::ifstream &file,
+                           std::istream &file,
                            io_format file_type = io_format::csv)  {
 
         _col_vector_push_back_(vec, file, &::strtof, file_type);
@@ -511,7 +511,7 @@ template<>
 struct  _IdxParserFunctor_<double>  {
 
     inline void operator()(std::vector<double> &vec,
-                           std::ifstream &file,
+                           std::istream &file,
                            io_format file_type = io_format::csv)  {
 
         _col_vector_push_back_(vec, file, &::strtod, file_type);
@@ -524,7 +524,7 @@ template<>
 struct  _IdxParserFunctor_<long double>  {
 
     inline void operator()(std::vector<long double> &vec,
-                           std::ifstream &file,
+                           std::istream &file,
                            io_format file_type = io_format::csv)  {
 
         _col_vector_push_back_(vec, file, &::strtold, file_type);
@@ -537,7 +537,7 @@ template<>
 struct  _IdxParserFunctor_<int>  {
 
     inline void operator()(std::vector<int> &vec,
-                           std::ifstream &file,
+                           std::istream &file,
                            io_format file_type = io_format::csv)  {
 
         _col_vector_push_back_(vec, file, &::strtol, file_type);
@@ -550,7 +550,7 @@ template<>
 struct  _IdxParserFunctor_<long>  {
 
     inline void operator()(std::vector<long> &vec,
-                           std::ifstream &file,
+                           std::istream &file,
                            io_format file_type = io_format::csv)  {
 
         _col_vector_push_back_(vec, file, &::strtol, file_type);
@@ -563,7 +563,7 @@ template<>
 struct  _IdxParserFunctor_<long long>  {
 
     inline void operator()(std::vector<long long> &vec,
-                           std::ifstream &file,
+                           std::istream &file,
                            io_format file_type = io_format::csv)  {
 
         _col_vector_push_back_(vec, file, &::strtoll, file_type);
@@ -576,7 +576,7 @@ template<>
 struct  _IdxParserFunctor_<unsigned int>  {
 
     inline void operator()(std::vector<unsigned int> &vec,
-                           std::ifstream &file,
+                           std::istream &file,
                            io_format file_type = io_format::csv)  {
 
         _col_vector_push_back_(vec, file, &::strtoul, file_type);
@@ -589,7 +589,7 @@ template<>
 struct  _IdxParserFunctor_<unsigned long>  {
 
     inline void operator()(std::vector<unsigned long> &vec,
-                           std::ifstream &file,
+                           std::istream &file,
                            io_format file_type = io_format::csv)  {
 
         _col_vector_push_back_(vec, file, &::strtoul, file_type);
@@ -602,7 +602,7 @@ template<>
 struct  _IdxParserFunctor_<unsigned long long>  {
 
     inline void operator()(std::vector<unsigned long long> &vec,
-                           std::ifstream &file,
+                           std::istream &file,
                            io_format file_type = io_format::csv)  {
 
         _col_vector_push_back_(vec, file, &::strtoull, file_type);
@@ -615,7 +615,7 @@ template<>
 struct  _IdxParserFunctor_<std::string>  {
 
     inline void operator()(std::vector<std::string> &vec,
-                           std::ifstream &file,
+                           std::istream &file,
                            io_format file_type = io_format::csv)  {
 
         auto    converter =
@@ -632,7 +632,7 @@ template<>
 struct  _IdxParserFunctor_<DateTime>  {
 
     inline void operator()(std::vector<DateTime> &vec,
-                           std::ifstream &file,
+                           std::istream &file,
                            io_format file_type = io_format::csv)  {
 
         auto    converter =
@@ -649,7 +649,7 @@ template<>
 struct  _IdxParserFunctor_<bool>  {
 
     inline void operator()(std::vector<bool> &vec,
-                           std::ifstream &file,
+                           std::istream &file,
                            io_format file_type = io_format::csv)  {
 
         _col_vector_push_back_(vec, file, &::strtol, file_type);

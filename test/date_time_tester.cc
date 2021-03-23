@@ -98,6 +98,9 @@ int main (int argc, char *argv [])  {
          << "   Nanoseconds: " << now.nanosec () << endl;
     cout << "GMT Time is: " << gmnow.string_format (DT_FORMAT::DT_TM2)
          << "   Microseconds: " << now.microsec () << endl;
+    cout << "Local Time is: " << now.string_format (DT_FORMAT::ISO_DT) << endl;
+    cout << "Local Time is: " << now.string_format (DT_FORMAT::ISO_DT_TM)
+         << endl;
 
     now = 19721202;
     assert(now.string_format (DT_FORMAT::DT_TM2) == "12/02/1972 00:00:00.000");
@@ -917,8 +920,13 @@ int main (int argc, char *argv [])  {
     {
         DateTime    dt("2015/01/05 09:40:30", hmdf::DT_DATE_STYLE::EUR_STYLE);
         DateTime    dt2("2015-01-05 09:40:30", hmdf::DT_DATE_STYLE::ISO_STYLE);
+        DateTime    dt3("2015/01/05 09:40:30.123",
+                       hmdf::DT_DATE_STYLE::EUR_STYLE);
+        DateTime    dt4("2015-01-05 09:40:30.123",
+                       hmdf::DT_DATE_STYLE::ISO_STYLE);
 
         assert(dt == dt2);
+        assert(dt3 == dt4);
     }
 
     test_priority_queue();

@@ -42,7 +42,7 @@ read(const char *file_name,
       </td>
       <td>
         It inputs the contents of a text file/stream into itself (i.e. DataFrame). Currently 3 formats (i.e. csv, csv2, json) are supported. See io_format documentation page<BR>
-        The <B>CSV</B> file format must be:<BR>
+        <B>CSV</B> file format must be:<BR>
         <PRE>
   INDEX:&lt;Number of data points&gt;:&lt;Comma delimited list of values&gt;
   &lt;Column1 name&gt;:&lt;Number of data points&gt;:&lt;Column1 type&gt;:&lt;Comma delimited list of values&gt;
@@ -53,7 +53,7 @@ read(const char *file_name,
         </PRE>
         All empty lines or lines starting with # will be skipped. For examples see files in test directory<BR><BR>
 
-        The <B>CSV2</B> file format must be (this is similar to Pandas csv format):<BR>
+        <B>CSV2</B> file format must be (this is similar to Pandas csv format):<BR>
         <PRE>
   INDEX:&lt;Number of data points&gt;:&lt;Index type&gt;:,&lt;Column1 name&gt;:&lt;Number of data points&gt;:&lt;Column1 type&gt;,&lt;Column2 name&gt;:&lt;Number of data points&gt;:&lt;Column2 type&gt;, . . .
   Comma delimited rows of values
@@ -63,7 +63,7 @@ read(const char *file_name,
         </PRE>
         All empty lines or lines starting with # will be skipped. For examples see IBM and FORD files in test directory<BR><BR>
 
-        The <B>JSON</B> file format looks like this:<BR>
+        <B>JSON</B> file format looks like this:<BR>
         <PRE>
   {
     "INDEX":{"N":3,"T":"ulong","D":[123450,123451,123452]},
@@ -79,6 +79,29 @@ read(const char *file_name,
           <LI>Column “INDEX” must be the first column, if it exists</LI>
           <LI>Fields in column dictionaries must be in N (name), T (type), D (data) order</LI>
         </OL>
+        <BR>
+        <BR>
+        In all formats the following data types are supported:
+        <PRE>
+          float
+          double
+          longdouble  -- long double
+          int
+          uint        -- unsigned int
+          long
+          longlong    -- long long int
+          ulong       -- unsigned long
+          ulonglong   -- unsigned long long int
+          string
+          bool
+          DateTime    -- DateTime data in format of &lt;Epoch seconds&gt;.&lt;nanoseconds&gt; (1516179600.874123908)
+        </PRE>
+        In case of io_format::csv2 the following additional types are also supported:
+        <PRE>
+          DateTimeAME -- DateTime string printed in American style (MM/DD/YYYY HH:MM:SS.mmm)
+          DateTimeEUR -- DateTime string printed in European style (YYYY/MM/DD HH:MM:SS.mmm)
+          DateTimeISO -- DateTime string printed in ISO style (YYYY-MM-DD HH:MM:SS.mmm)
+        </PRE>
       </td>
       <td>
         <PRE>
@@ -226,6 +249,26 @@ read_async(S &amp;in_s,
         <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>cout</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> ex<span style='color:#808030; '>.</span>what<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>endl</span><span style='color:#800080; '>;</span>
     <span style='color:#800080; '>}</span>
     df_read<span style='color:#808030; '>.</span>write<span style='color:#800080; '>&lt;</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>ostream</span><span style='color:#808030; '>,</span> <span style='color:#800000; font-weight:bold; '>int</span><span style='color:#808030; '>,</span> <span style='color:#800000; font-weight:bold; '>unsigned</span> <span style='color:#800000; font-weight:bold; '>long</span><span style='color:#808030; '>,</span> <span style='color:#800000; font-weight:bold; '>double</span><span style='color:#808030; '>,</span> <span style='color:#800000; font-weight:bold; '>bool</span><span style='color:#808030; '>,</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>string</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>cout</span><span style='color:#808030; '>,</span> <span style='color:#800000; font-weight:bold; '>false</span><span style='color:#808030; '>,</span> io_format<span style='color:#800080; '>::</span>csv2<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+<span style='color:#800080; '>}</span>
+
+<span style='color:#696969; '>// -----------------------------------------------------------------------------</span>
+
+<span style='color:#800000; font-weight:bold; '>static</span> <span style='color:#800000; font-weight:bold; '>void</span> test_DT_IBM_data<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span>  <span style='color:#800080; '>{</span>
+
+    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>cout</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#800000; '>"</span><span style='color:#0f69ff; '>\n</span><span style='color:#0000e6; '>Testing DT_IBM_data(  ) ...</span><span style='color:#800000; '>"</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>endl</span><span style='color:#800080; '>;</span>
+
+    <span style='color:#800000; font-weight:bold; '>typedef</span> StdDataFrame<span style='color:#800080; '>&lt;</span>DateTime<span style='color:#800080; '>></span>  DT_DataFrame<span style='color:#800080; '>;</span>
+
+    DT_DataFrame    df<span style='color:#800080; '>;</span>
+
+    df<span style='color:#808030; '>.</span>read<span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>DT_IBM.csv</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> io_format<span style='color:#800080; '>::</span>csv2<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+
+    assert<span style='color:#808030; '>(</span>df<span style='color:#808030; '>.</span>get_column<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>IBM_Open</span><span style='color:#800000; '>"</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span><span style='color:#008c00; '>0</span><span style='color:#808030; '>]</span> <span style='color:#808030; '>=</span><span style='color:#808030; '>=</span> <span style='color:#008000; '>98.4375</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    assert<span style='color:#808030; '>(</span>df<span style='color:#808030; '>.</span>get_column<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>IBM_Close</span><span style='color:#800000; '>"</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span><span style='color:#008c00; '>18</span><span style='color:#808030; '>]</span> <span style='color:#808030; '>=</span><span style='color:#808030; '>=</span> <span style='color:#008000; '>97.875</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    assert<span style='color:#808030; '>(</span>df<span style='color:#808030; '>.</span>get_index<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span><span style='color:#008c00; '>18</span><span style='color:#808030; '>]</span> <span style='color:#808030; '>=</span><span style='color:#808030; '>=</span> DateTime<span style='color:#808030; '>(</span><span style='color:#008c00; '>20001128</span><span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    assert<span style='color:#808030; '>(</span><span style='color:#603000; '>fabs</span><span style='color:#808030; '>(</span>df<span style='color:#808030; '>.</span>get_column<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>IBM_High</span><span style='color:#800000; '>"</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span><span style='color:#008c00; '>5030</span><span style='color:#808030; '>]</span> <span style='color:#808030; '>-</span> <span style='color:#008000; '>111.8</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>&lt;</span> <span style='color:#008000; '>0.001</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    assert<span style='color:#808030; '>(</span>df<span style='color:#808030; '>.</span>get_column<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>long</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>IBM_Volume</span><span style='color:#800000; '>"</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span><span style='color:#008c00; '>5022</span><span style='color:#808030; '>]</span> <span style='color:#808030; '>=</span><span style='color:#808030; '>=</span> <span style='color:#008c00; '>21501100</span><span style='color:#006600; '>L</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    assert<span style='color:#808030; '>(</span>df<span style='color:#808030; '>.</span>get_index<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span><span style='color:#008c00; '>5020</span><span style='color:#808030; '>]</span> <span style='color:#808030; '>=</span><span style='color:#808030; '>=</span> DateTime<span style='color:#808030; '>(</span><span style='color:#008c00; '>20201016</span><span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
 <span style='color:#800080; '>}</span>
 </pre>
 <!--Created using ToHtml.com on 2020-09-19 22:29:59 UTC -->

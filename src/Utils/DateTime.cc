@@ -206,11 +206,20 @@ DateTime::DateTime (const char *s, DT_DATE_STYLE ds, DT_TIME_ZONE tz)
                           &year, &month, &day, &hour_, &minute_, &second_);
             }
             else if (str_len == 23)  {
-                MillisecondType ms { 0 };
+                MillisecondType millis { 0 };
 
                 ::sscanf (str, "%d-%d-%d %hd:%hd:%hd.%hd",
-                          &year, &month, &day, &hour_, &minute_, &second_, &ms);
-                nanosecond_ = ms * 1000000;
+                          &year, &month, &day, &hour_, &minute_,
+                          &second_, &millis);
+                nanosecond_ = millis * 1000000;
+            }
+            else if (str_len > 23)  {
+                MicrosecondType micros { 0 };
+
+                ::sscanf (str, "%d-%d-%d %hd:%hd:%hd.%d",
+                          &year, &month, &day, &hour_, &minute_,
+                          &second_, &micros);
+                nanosecond_ = micros * 1000;
             }
         }
         if (year == 0 && month == 0 && day == 0)  {
@@ -1028,6 +1037,26 @@ void DateTime::date_to_str (DT_FORMAT format, T &result) const  {
                            static_cast<int>(minute ()),
                            static_cast<int>(sec ()),
                            static_cast<int>(msec ()));
+        } break;
+
+        case DT_FORMAT::ISO_DT_TM:
+        {
+            buffer.printf ("%d-%002d-%002d %002d:%002d:%002d.%0000006d",
+                           static_cast<int>(year ()),
+                           static_cast<int>(month ()),
+                           static_cast<int>(dmonth ()),
+                           static_cast<int>(hour ()),
+                           static_cast<int>(minute ()),
+                           static_cast<int>(sec ()),
+                           static_cast<int>(microsec ()));
+        } break;
+
+        case DT_FORMAT::ISO_DT:
+        {
+            buffer.printf ("%d-%002d-%002d",
+                           static_cast<int>(year ()),
+                           static_cast<int>(month ()),
+                           static_cast<int>(dmonth ()));
         } break;
 
         case DT_FORMAT::DT_DATETIME:

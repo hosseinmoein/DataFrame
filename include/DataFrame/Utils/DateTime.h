@@ -77,7 +77,8 @@ enum class DT_FORMAT : unsigned short int  {
     DT_TM2 = 9,        // e.g. 09/16/1999 13:51:04.256
     DT_DATETIME = 10,  // e.g. 20010103   09:31:15.124
     DT_PRECISE = 11,   // e.g. 1516179600.874123908 = Epoch.Nanoseconds
-    ISO_DT_TM = 12,    // e.g. 2015-05-05 13:51:04.r56
+    ISO_DT_TM = 12,    // e.g. 2015-05-05 13:51:04.000234
+    ISO_DT = 13,       // e.g. 2015-05-05
 };
 
 // DO NOT change the values of these enums. They are offsets to an

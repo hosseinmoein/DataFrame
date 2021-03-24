@@ -97,8 +97,7 @@ bool DataFrame<I, H>::write (S &o, io_format iof, bool columns_only) const  {
     }
     else if (iof == io_format::csv)  {
         if (! columns_only)  {
-            _write_csv2_df_header_<S, IndexType>
-                (o, DF_INDEX_COL_NAME, index_s, ':');
+            _write_csv_df_header_<S, IndexType>(o, DF_INDEX_COL_NAME, index_s);
 
             for (size_type i = 0; i < index_s; ++i)
                 _write_csv_df_index_(o, indices_[i]) << ',';
@@ -113,8 +112,7 @@ bool DataFrame<I, H>::write (S &o, io_format iof, bool columns_only) const  {
     }
     else if (iof == io_format::csv2)  {
         if (! columns_only)  {
-            _write_csv2_df_header_<S, IndexType>
-                (o, DF_INDEX_COL_NAME, index_s, '\0');
+            _write_csv2_df_header_<S, IndexType>(o, DF_INDEX_COL_NAME, index_s);
             need_pre_comma = true;
         }
 

@@ -747,48 +747,67 @@ _generate_ts_index_<DateTime>(std::vector<DateTime> &index_vec,
 
 template<typename S, typename T>
 inline static S &
-_write_csv2_df_header_(S &o,
-                       const char *col_name,
-                       std::size_t col_size,
-                       char last_delimit)  {
+_write_csv_df_header_base_(S &o, const char *col_name, std::size_t col_size)  {
 
     o << col_name << ':' << col_size << ':';
 
     if (typeid(T) == typeid(float))
-        o << "<float>" << last_delimit;
+        o << "<float>";
     else if (typeid(T) == typeid(double))
-        o << "<double>" << last_delimit;
+        o << "<double>";
     else if (typeid(T) == typeid(long double))
-        o << "<longdouble>" << last_delimit;
+        o << "<longdouble>";
     else if (typeid(T) == typeid(short int))
-        o << "<short>" << last_delimit;
+        o << "<short>";
     else if (typeid(T) == typeid(unsigned short int))
-        o << "<ushort>" << last_delimit;
+        o << "<ushort>";
     else if (typeid(T) == typeid(int))
-        o << "<int>" << last_delimit;
+        o << "<int>";
     else if (typeid(T) == typeid(unsigned int))
-        o << "<uint>" << last_delimit;
+        o << "<uint>";
     else if (typeid(T) == typeid(long int))
-        o << "<long>" << last_delimit;
+        o << "<long>";
     else if (typeid(T) == typeid(long long int))
-        o << "<longlong>" << last_delimit;
+        o << "<longlong>";
     else if (typeid(T) == typeid(unsigned long int))
-        o << "<ulong>" << last_delimit;
+        o << "<ulong>";
     else if (typeid(T) == typeid(unsigned long long int))
-        o << "<ulonglong>" << last_delimit;
+        o << "<ulonglong>";
     else if (typeid(T) == typeid(std::string))
-        o << "<string>" << last_delimit;
+        o << "<string>";
     else if (typeid(T) == typeid(bool))
-        o << "<bool>" << last_delimit;
-    else if (typeid(T) == typeid(DateTime))
-        o << "<DateTime>" << last_delimit;
-    else
-        o << "<N/A>" << last_delimit;
+        o << "<bool>";
     return (o);
 }
 
 // ----------------------------------------------------------------------------
 
+template<typename S, typename T>
+inline static S &
+_write_csv_df_header_(S &o, const char *col_name, std::size_t col_size)  {
+
+    _write_csv_df_header_base_<S, T>(o, col_name, col_size);
+	
+    if (typeid(T) == typeid(DateTime))
+        o << "<DateTime>";
+    return (o << ':');
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename S, typename T>
+inline static S &
+_write_csv2_df_header_(S &o, const char *col_name, std::size_t col_size)  {
+
+    _write_csv_df_header_base_<S, T>(o, col_name, col_size);
+
+    if (typeid(T) == typeid(DateTime))
+        o << "<DateTimeAME>";
+    return (o);
+}
+
+// ----------------------------------------------------------------------------
+	
 template<typename S, typename T>
 inline static S &
 _write_json_df_header_(S &o, const char *col_name, std::size_t col_size)  {

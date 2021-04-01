@@ -988,6 +988,9 @@ static void test_bucketize()  {
         result.write<std::ostream, std::string, double, long>
             (std::cout, io_format::csv2);
 
+        // FORD index is just an increasing number starting from 0.
+        // So, by_count should give the same result as by_distance
+        //
         auto        fut2 =
             df.bucketize_async(
                 bucket_type::by_count,

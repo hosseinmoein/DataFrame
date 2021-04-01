@@ -1272,11 +1272,11 @@ DataFrame<I, H>::value_counts (const char *col_name) const  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename V, typename I_S, typename ... Ts>
+template<typename V, typename I_V, typename ... Ts>
 DataFrame<I, H> DataFrame<I, H>::
 bucketize(bucket_type bt,
           const V &value,
-          I_S &&idx_visitor,
+          I_V &&idx_visitor,
           Ts&& ... args) const  {
 
     DataFrame       result;
@@ -1300,16 +1300,16 @@ bucketize(bucket_type bt,
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename V, typename I_S, typename ... Ts>
+template<typename V, typename I_V, typename ... Ts>
 std::future<DataFrame<I, H>>
 DataFrame<I, H>::
 bucketize_async(bucket_type bt,
                 const V &value,
-                I_S &&idx_visitor,
+                I_V &&idx_visitor,
                 Ts&& ... args) const  {
 
     return (std::async(std::launch::async,
-                       &DataFrame::bucketize<V, I_S, Ts ...>,
+                       &DataFrame::bucketize<V, I_V, Ts ...>,
                            this,
                            bt,
                            std::cref(value),

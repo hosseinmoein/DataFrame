@@ -1043,45 +1043,53 @@ public:  // Data manipulation
         return (value_counts<T>(column_list_[index].first.c_str()));
     }
 
-    // It bucketizes the data and index into bucket_interval's,
-    // based on index values.
-    // You must specify how each column is bucketized by providing 3-member
-    // tuples (triples). Each triple has the format:
+    // It bucketizes the data and index into intervals, based on index values
+    // and bucket_type.
+    // You must specify how the index column is bucketized, by providing
+    // a visitor.
+    // You must specify how each column is bucketized, by providing 3-member
+    // tuples (triples). Each triple must have the following members:
     //    1. Current DataFrame column name
     //    2. Column name for the new bucketized DataFrame
     //    3. A visitor to aggregate/bucketize current column to new column
     //
     // The result of each bucket will be stored in a new DataFrame and returned.
-    // Every data bucket is guaranteed to be as wide as bucket_interval.
-    // This means some data items at the end may not be included in the
-    // new bucketized DataFrame.
-    // The index of each bucket will be the last index in the original
-    // DataFrame that is less than bucket_interval away from the
-    // previous bucket
+    // Some data at the end of source columns may not be included in the result
+    // columns, because based on bucket_type they may not fit into the bucket.
+    // The index of each bucket will be determined by idx_visitor.
     //
-    // NOTE: The DataFrame must already be sorted by index.
-    //
-    // bucket_interval:
-    //   Bucket interval is in the index's single value unit. For example if
-    //   index is in minutes, bucket_interval will be in the unit of minutes
-    //   and so on.
+    // V:
+    //   Type of value to be uased for bucketizing based on bucket_type
+    // I_V:
+    //   Type of visitor to be used to bucketize the index column
+    // Ts:
+    //   Types of triples to specify each column's bucketization
+    // bt:
+    //   bucket_type to specify bucketization logic
+    // value:
+    //   The value to be uased to bucketize based on bucket_type. For example,
+    //   if bucket_type is by_distance, then value is the distance between two
+    //   index values. If bucket_type is by_count, then value is an integer
+    //   count.
+    // idx_visitor:
+    //   A visitor to specify the index bucketization
     // args:
     //   Variable argument list of triples as specified above
     //
-    template<typename V, typename I_S, typename ... Ts>
+    template<typename V, typename I_V, typename ... Ts>
     [[nodiscard]] DataFrame
     bucketize(bucket_type bt,
               const V &value,
-              I_S &&idx_visitor,
+              I_V &&idx_visitor,
               Ts&& ... args) const;
 
     // Same as bucketize() above, but executed asynchronously
     //
-    template<typename V, typename I_S, typename ... Ts>
+    template<typename V, typename I_V, typename ... Ts>
     [[nodiscard]] std::future<DataFrame>
     bucketize_async(bucket_type bt,
                     const V &value,
-                    I_S &&idx_visitor,
+                    I_V &&idx_visitor,
                     Ts&& ... args) const;
 
     // It transposes the data in the DataFrame.

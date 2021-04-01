@@ -972,7 +972,9 @@ static void test_bucketize()  {
 
         auto        fut =
             df.bucketize_async(
+                bucket_type::by_distance,
                 100,
+                LastVisitor<MyDataFrame::IndexType, MyDataFrame::IndexType>(), 
                 std::make_tuple("Date", "Date", LastVisitor<std::string>()),
                 std::make_tuple("FORD_Close", "High", MaxVisitor<double>()),
                 std::make_tuple("FORD_Close", "Low", MinVisitor<double>()),
@@ -985,6 +987,23 @@ static void test_bucketize()  {
 
         result.write<std::ostream, std::string, double, long>
             (std::cout, io_format::csv2);
+
+        auto        fut2 =
+            df.bucketize_async(
+                bucket_type::by_count,
+                100,
+                LastVisitor<MyDataFrame::IndexType, MyDataFrame::IndexType>(), 
+                std::make_tuple("Date", "Date", LastVisitor<std::string>()),
+                std::make_tuple("FORD_Close", "High", MaxVisitor<double>()),
+                std::make_tuple("FORD_Close", "Low", MinVisitor<double>()),
+                std::make_tuple("FORD_Close", "Open", FirstVisitor<double>()),
+                std::make_tuple("FORD_Close", "Close", LastVisitor<double>()),
+                std::make_tuple("FORD_Close", "Mean", MeanVisitor<double>()),
+                std::make_tuple("FORD_Close", "Std", StdVisitor<double>()),
+                std::make_tuple("FORD_Volume", "Volume", SumVisitor<long>()));
+        MyDataFrame result2 = fut2.get();
+
+        assert(result.is_equal(result2));
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;

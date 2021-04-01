@@ -1272,16 +1272,24 @@ DataFrame<I, H>::value_counts (const char *col_name) const  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename ... Ts>
-DataFrame<I, H>
-DataFrame<I, H>::bucketize(const IndexType &interval, Ts&& ... args) const  {
+template<typename V, typename I_S, typename ... Ts>
+DataFrame<I, H> DataFrame<I, H>::
+bucketize(bucket_type bt,
+          const V &value,
+          I_S &&idx_visitor,
+          Ts&& ... args) const  {
 
-    DataFrame   result;
+    DataFrame       result;
+    auto            &dst_idx = result.get_index();
+    const auto      &src_idx = get_index();
+    const size_type idx_s = src_idx.size();
+
+    _bucketize_core_(dst_idx, src_idx, src_idx, value, idx_visitor, idx_s, bt);
 
     auto    args_tuple = std::tuple<Ts ...>(args ...);
     auto    func =
-        [this, &result, &interval](auto &triple) mutable -> void {
-            _load_bucket_data_(*this, result, interval, triple);
+        [this, &result, &value, bt](auto &triple) mutable -> void {
+            _load_bucket_data_(*this, result, value, bt, triple);
         };
 
     for_each_in_tuple (args_tuple, func);
@@ -1292,15 +1300,20 @@ DataFrame<I, H>::bucketize(const IndexType &interval, Ts&& ... args) const  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename ... Ts>
+template<typename V, typename I_S, typename ... Ts>
 std::future<DataFrame<I, H>>
 DataFrame<I, H>::
-bucketize_async (const IndexType &bucket_interval, Ts&& ... args) const  {
+bucketize_async(bucket_type bt,
+                const V &value,
+                I_S &&idx_visitor,
+                Ts&& ... args) const  {
 
     return (std::async(std::launch::async,
-                       &DataFrame::bucketize<Ts ...>,
+                       &DataFrame::bucketize<V, I_S, Ts ...>,
                            this,
-                           std::cref(bucket_interval),
+                           bt,
+                           std::cref(value),
+                           idx_visitor,
                            args ...));
 }
 

@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
 
+#include <DataFrame/DataFrameStatsVisitors.h>
 #include <DataFrame/DataFrameTypes.h>
 #include <DataFrame/Utils/DateTime.h>
 #include <DataFrame/Utils/FixedSizeString.h>
@@ -1067,15 +1068,21 @@ public:  // Data manipulation
     // args:
     //   Variable argument list of triples as specified above
     //
-    template<typename ... Ts>
+    template<typename V, typename I_S, typename ... Ts>
     [[nodiscard]] DataFrame
-    bucketize(const IndexType &bucket_interval, Ts&& ... args) const;
+    bucketize(bucket_type bt,
+              const V &value,
+              I_S &&idx_visitor,
+              Ts&& ... args) const;
 
     // Same as bucketize() above, but executed asynchronously
     //
-    template<typename ... Ts>
+    template<typename V, typename I_S, typename ... Ts>
     [[nodiscard]] std::future<DataFrame>
-    bucketize_async(const IndexType &bucket_interval, Ts&& ... args) const;
+    bucketize_async(bucket_type bt,
+                    const V &value,
+                    I_S &&idx_visitor,
+                    Ts&& ... args) const;
 
     // It transposes the data in the DataFrame.
     // The transpose() is only defined for DataFrame's that have a single

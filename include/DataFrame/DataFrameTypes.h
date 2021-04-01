@@ -338,6 +338,15 @@ enum class box_cox_type : unsigned char  {
 
 // ----------------------------------------------------------------------------
 
+enum class bucket_type : unsigned char  {
+    // Bucketize by distance between two index values (i.g. X2 - X1 = N)
+    by_distance = 1,
+    // Bucketize by counting of index values (e.g. every N index items)
+    by_count = 2,
+};
+
+// ----------------------------------------------------------------------------
+	
 template<typename T>
 struct  RandGenParams  {
     T   min_value { std::numeric_limits<T>::min() };

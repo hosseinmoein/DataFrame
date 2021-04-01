@@ -29,6 +29,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
 
+#include <DataFrame/Utils/DateTime.h>
+
+#include <iostream>
 #include <tuple>
 #include <utility>
 
@@ -196,45 +199,64 @@ _load_groupby_data_2_(const DF &source,
 
 // ----------------------------------------------------------------------------
 
-template<typename DF, typename I, typename T>
+template<typename DV, typename SI, typename SV, typename V, typename VIS>
 static inline void
-_load_bucket_data_(const DF &source, DF &dest, const I &interval, T &triple) {
+_bucketize_core_(DV &dst_vec,
+                 const SI &src_idx,
+                 const SV &src_vec,
+                 const V &value,
+                 VIS &visitor,
+                 std::size_t src_s,
+                 bucket_type bt)  {
 
-    std::size_t marker = 0;
-    auto        &dst_idx = dest.get_index();
-    const auto  &src_idx = source.get_index();
+    dst_vec.reserve(src_s / 5);
+    if (bt == bucket_type::by_distance)  {
+        std::size_t marker { 0 };
 
-    if (dst_idx.empty())  {
-        const std::size_t   idx_s = src_idx.size();
-
-        dst_idx.reserve(idx_s / interval + 1);
-        for (std::size_t i = 0; i < idx_s; ++i)  {
-            if (src_idx[i] - src_idx[marker] >= interval)  {
-                dst_idx.push_back(src_idx[i - 1]);
+        visitor.pre();
+        for (std::size_t i = 0; i < src_s; ++i)  {
+            if (src_idx[i] - src_idx[marker] >= value)  {
+                visitor.post();
+                dst_vec.push_back(visitor.get_result());
+                visitor.pre();
                 marker = i;
             }
+            visitor(src_idx[i], src_vec[i]);
         }
     }
+    else if (bt == bucket_type::by_count)  {
+        if (src_s < value)  return;
+
+        for (std::size_t i = 0; (i + value) < src_s; i += value)  {
+            visitor.pre();
+            for (std::size_t j = 0; j < value; ++j)
+                visitor(src_idx[i + j], src_vec[i + j]);
+            visitor.post();
+            dst_vec.push_back(visitor.get_result());
+        }
+    }
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename DF, typename I, typename T>
+static inline void
+_load_bucket_data_(const DF &source,
+                   DF &dest,
+                   const I &value,
+                   bucket_type bt,
+                   T &triple) {
 
     using ValueType = typename std::tuple_element<2, T>::type::value_type;
 
+    const auto          &src_idx = source.get_index();
     const auto          &src_vec =
         source.template get_column<ValueType>(std::get<0>(triple));
     auto                &dst_vec = _create_column_from_triple_(dest, triple);
-    const std::size_t   src_vec_size = src_vec.size();
+    const std::size_t   src_s = std::min(src_vec.size(), src_idx.size());
     auto                &visitor = std::get<2>(triple);
 
-    dst_vec.reserve(src_vec_size / interval + 1);
-    visitor.pre();
-    for (std::size_t i = 0, marker = 0; i < src_vec_size; ++i)  {
-        if (src_idx[i] - src_idx[marker] >= interval)  {
-            visitor.post();
-            dst_vec.push_back(visitor.get_result());
-            visitor.pre();
-            marker = i;
-        }
-        visitor(src_idx[i], src_vec[i]);
-    }
+    _bucketize_core_(dst_vec, src_idx, src_vec, value, visitor, src_s, bt);
 }
 
 // ----------------------------------------------------------------------------
@@ -787,7 +809,7 @@ inline static S &
 _write_csv_df_header_(S &o, const char *col_name, std::size_t col_size)  {
 
     _write_csv_df_header_base_<S, T>(o, col_name, col_size);
-	
+
     if (typeid(T) == typeid(DateTime))
         o << "<DateTime>";
     return (o << ':');
@@ -807,7 +829,7 @@ _write_csv2_df_header_(S &o, const char *col_name, std::size_t col_size)  {
 }
 
 // ----------------------------------------------------------------------------
-	
+
 template<typename S, typename T>
 inline static S &
 _write_json_df_header_(S &o, const char *col_name, std::size_t col_size)  {

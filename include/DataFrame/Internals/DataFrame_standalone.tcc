@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <DataFrame/Utils/DateTime.h>
 
+#include <cstring>
 #include <iostream>
 #include <tuple>
 #include <utility>

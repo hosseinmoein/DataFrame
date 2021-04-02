@@ -2099,7 +2099,11 @@ struct PercentPriceOSCIVisitor {
         histogram_.reserve(col_s);
         for (size_type i = 0; i < slow_; ++i)
             histogram_.push_back(std::numeric_limits<value_type>::quiet_NaN());
-        for (size_type i = slow_; i < col_s; ++i)
+
+        const size_type new_col_s =
+            std::min(col_s, signal_roller.get_result().size());
+
+        for (size_type i = slow_; i < new_col_s; ++i)
             histogram_.push_back(result_[i] - signal_roller.get_result()[i]);
     }
 

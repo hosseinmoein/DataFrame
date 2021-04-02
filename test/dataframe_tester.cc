@@ -494,7 +494,7 @@ static void test_read()  {
     MyDataFrame df_read;
 
     try  {
-        std::future<bool>   fut2 = df_read.read_async("sample_data.csv");
+        std::future<bool>   fut2 = df_read.read_async("data/sample_data.csv");
 
         fut2.get();
     }
@@ -511,7 +511,7 @@ static void test_read()  {
     StdDataFrame<std::string>   df_read_str;
 
     try  {
-        df_read_str.read("sample_data_string_index.csv");
+        df_read_str.read("data/sample_data_string_index.csv");
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
@@ -526,7 +526,7 @@ static void test_read()  {
     StdDataFrame<DateTime>  df_read_dt;
 
     try  {
-        df_read_dt.read("sample_data_dt_index.csv");
+        df_read_dt.read("data/sample_data_dt_index.csv");
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
@@ -1325,8 +1325,8 @@ static void test_dataframe_friend_plus_operator()  {
     MyDataFrame df2;
 
     try  {
-        df1.read("sample_data.csv");
-        df2.read("sample_data.csv");
+        df1.read("data/sample_data.csv");
+        df2.read("data/sample_data.csv");
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
@@ -1373,8 +1373,8 @@ static void test_dataframe_friend_minus_operator()  {
     MyDataFrame df2;
 
     try  {
-        df1.read("sample_data.csv");
-        df2.read("sample_data.csv");
+        df1.read("data/sample_data.csv");
+        df2.read("data/sample_data.csv");
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
@@ -3469,7 +3469,7 @@ static void test_reading_writing_json()  {
     MyDataFrame df;
 
     try  {
-        df.read("sample_data.json", io_format::json);
+        df.read("data/sample_data.json", io_format::json);
         assert(df.get_index().size() == 12);
         assert(df.get_index()[0] == 123450);
         assert(df.get_index()[4] == 123454);

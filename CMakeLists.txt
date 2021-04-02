@@ -320,54 +320,56 @@ if (ENABLE_TESTING)
   # Ctest require this files in the build dir, on all platforms
   add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
                      COMMAND ${CMAKE_COMMAND} -E copy
-                     ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data.csv
-                     ${CMAKE_CURRENT_BINARY_DIR}/sample_data.csv)
+                     ${CMAKE_CURRENT_SOURCE_DIR}/test/data/sample_data.csv
+                     ${CMAKE_CURRENT_BINARY_DIR}/data/sample_data.csv)
   add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
                      COMMAND ${CMAKE_COMMAND} -E copy
-                     ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data.json
-                     ${CMAKE_CURRENT_BINARY_DIR}/sample_data.json)
+                     ${CMAKE_CURRENT_SOURCE_DIR}/test/data/sample_data.json
+                     ${CMAKE_CURRENT_BINARY_DIR}/data/sample_data.json)
   add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
                      COMMAND ${CMAKE_COMMAND} -E copy
-                     ${CMAKE_CURRENT_SOURCE_DIR}/test/csv2_format_data.csv
-                     ${CMAKE_CURRENT_BINARY_DIR}/csv2_format_data.csv)
-  add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-                     COMMAND ${CMAKE_COMMAND} -E copy
-                     ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data_dt_index.csv
-                     ${CMAKE_CURRENT_BINARY_DIR}/sample_data_dt_index.csv)
-  add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-                     COMMAND ${CMAKE_COMMAND} -E copy
-                     ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data_string_index.csv
-                     ${CMAKE_CURRENT_BINARY_DIR}/sample_data_string_index.csv)
+                     ${CMAKE_CURRENT_SOURCE_DIR}/test/data/csv2_format_data.csv
+                     ${CMAKE_CURRENT_BINARY_DIR}/data/csv2_format_data.csv)
   add_custom_command(
       TARGET ${PROJECT_NAME} POST_BUILD
       COMMAND ${CMAKE_COMMAND} -E copy
-      ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data_dt_index.csv
-      ${CMAKE_CURRENT_BINARY_DIR}/sample_data_dt_index.csv)
+      ${CMAKE_CURRENT_SOURCE_DIR}/test/data/sample_data_dt_index.csv
+      ${CMAKE_CURRENT_BINARY_DIR}/data/sample_data_dt_index.csv)
   add_custom_command(
       TARGET ${PROJECT_NAME} POST_BUILD
       COMMAND ${CMAKE_COMMAND} -E copy
-      ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data_string_index.csv
-      ${CMAKE_CURRENT_BINARY_DIR}/sample_data_string_index.csv)
+      ${CMAKE_CURRENT_SOURCE_DIR}/test/data/sample_data_string_index.csv
+      ${CMAKE_CURRENT_BINARY_DIR}/data/sample_data_string_index.csv)
+  add_custom_command(
+      TARGET ${PROJECT_NAME} POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy
+      ${CMAKE_CURRENT_SOURCE_DIR}/test/data/sample_data_dt_index.csv
+      ${CMAKE_CURRENT_BINARY_DIR}/data/sample_data_dt_index.csv)
+  add_custom_command(
+      TARGET ${PROJECT_NAME} POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy
+      ${CMAKE_CURRENT_SOURCE_DIR}/test/data/sample_data_string_index.csv
+      ${CMAKE_CURRENT_BINARY_DIR}/data/sample_data_string_index.csv)
 
-  file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data.csv
-            DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Debug)
-  file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data.csv
-            DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Release)
-  file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data.json
-            DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Debug)
-  file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data.json
-            DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Release)
-  file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data_dt_index.csv
-            DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Debug)
-  file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data_dt_index.csv
-            DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Release)
-  file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data_string_index.csv
-            DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Debug)
-  file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/sample_data_string_index.csv
-            DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Release)
-  file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/csv2_format_data.csv
-            DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Debug)
-  file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/csv2_format_data.csv
-            DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Release)
+  file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/data/sample_data.csv
+            DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Debug/data/.)
+  file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/data/sample_data.csv
+            DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Release/data/.)
+  file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/data/sample_data.json
+            DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Debug/data/.)
+  file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/data/sample_data.json
+            DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Release/data/.)
+  file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/data/sample_data_dt_index.csv
+            DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Debug/data/.)
+  file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/data/sample_data_dt_index.csv
+            DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Release/data/.)
+  file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/data/sample_data_string_index.csv
+            DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Debug/data/.)
+  file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/data/sample_data_string_index.csv
+            DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Release/data/.)
+  file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/data/csv2_format_data.csv
+            DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Debug/data/.)
+  file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/data/csv2_format_data.csv
+            DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Release/data/.)
   message("-- Copying files for testing - done")
 endif(ENABLE_TESTING)

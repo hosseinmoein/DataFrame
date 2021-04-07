@@ -52,11 +52,12 @@ _create_column_from_triple_(DF &df, T &triple) {
 
 // ----------------------------------------------------------------------------
 
-template<typename DF, typename T, typename V>
+template<typename DF, typename T, typename I_V, typename V>
 static inline void
 _load_groupby_data_1_(const DF &source,
                       DF &dest,
                       T &triple,
+                      I_V &&idx_visitor,
                       const V &input_v,
                       const std::vector<std::size_t> &sort_v,
                       const char *col_name) {
@@ -78,13 +79,21 @@ _load_groupby_data_1_(const DF &source,
         if (col_vec)  col_vec->reserve(vec_size / 2 + 1);
         for (std::size_t i = 0; i < vec_size; ++i)  {
             if (input_v[sort_v[i]] != input_v[sort_v[marker]])  {
-                dst_idx.push_back(src_idx[sort_v[i - 1]]);
+                idx_visitor.pre();
+                for (std::size_t j = marker; j < i; ++j)
+                    idx_visitor(src_idx[sort_v[j]], src_idx[sort_v[j]]);
+                idx_visitor.post();
+                dst_idx.push_back(idx_visitor.get_result());
                 if (col_vec)  col_vec->push_back(input_v[sort_v[i - 1]]);
                 marker = i;
             }
         }
         if (marker < vec_size - 1)  {
-            dst_idx.push_back(src_idx[sort_v[vec_size - 1]]);
+            idx_visitor.pre();
+            for (std::size_t j = marker; j < vec_size; ++j)
+                idx_visitor(src_idx[sort_v[j]], src_idx[sort_v[j]]);
+            idx_visitor.post();
+            dst_idx.push_back(idx_visitor.get_result());
             if (col_vec)  col_vec->push_back(input_v[sort_v[vec_size - 1]]);
         }
     }
@@ -120,11 +129,12 @@ _load_groupby_data_1_(const DF &source,
 
 // ----------------------------------------------------------------------------
 
-template<typename DF, typename T, typename V1, typename V2>
+template<typename DF, typename T, typename I_V, typename V1, typename V2>
 static inline void
 _load_groupby_data_2_(const DF &source,
                       DF &dest,
                       T &triple,
+                      I_V &&idx_visitor,
                       const V1 &input_v1,
                       const V2 &input_v2,
                       const std::vector<std::size_t> &sort_v,
@@ -155,14 +165,22 @@ _load_groupby_data_2_(const DF &source,
         for (std::size_t i = 0; i < vec_size; ++i)  {
             if (input_v1[sort_v[i]] != input_v1[sort_v[marker]] ||
                 input_v2[sort_v[i]] != input_v2[sort_v[marker]])  {
-                dst_idx.push_back(src_idx[sort_v[i - 1]]);
+                idx_visitor.pre();
+                for (std::size_t j = marker; j < i; ++j)
+                    idx_visitor(src_idx[sort_v[j]], src_idx[sort_v[j]]);
+                idx_visitor.post();
+                dst_idx.push_back(idx_visitor.get_result());
                 if (col_vec1) col_vec1->push_back(input_v1[sort_v[i - 1]]);
                 if (col_vec2) col_vec2->push_back(input_v2[sort_v[i - 1]]);
                 marker = i;
             }
         }
         if (marker < vec_size - 1)  {
-            dst_idx.push_back(src_idx[sort_v[vec_size - 1]]);
+            idx_visitor.pre();
+            for (std::size_t j = marker; j < vec_size; ++j)
+                idx_visitor(src_idx[sort_v[j]], src_idx[sort_v[j]]);
+            idx_visitor.post();
+            dst_idx.push_back(idx_visitor.get_result());
             if (col_vec1) col_vec1->push_back(input_v1[sort_v[vec_size - 1]]);
             if (col_vec2) col_vec2->push_back(input_v2[sort_v[vec_size - 1]]);
         }

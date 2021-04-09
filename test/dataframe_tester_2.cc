@@ -36,7 +36,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 using namespace hmdf;
 
-typedef StdDataFrame<unsigned long> MyDataFrame;
+// A DataFrame with ulong index type
+//
+using MyDataFrame = StdDataFrame<unsigned long>;
 
 // -----------------------------------------------------------------------------
 
@@ -225,8 +227,7 @@ static void test_load_align_column()  {
 
     MyDataFrame df;
 
-    df.load_data(std::move(idxvec),
-                 std::make_pair("int_col", intvec));
+    df.load_data(std::move(idxvec), std::make_pair("int_col", intvec));
     df.load_align_column("summary_col",
                          std::move(summary_vec),
                          5,
@@ -264,19 +265,19 @@ static void test_get_columns_info()  {
 
     MyDataFrame df;
 
-    std::vector<unsigned long>  idxvec = { 1UL, 2UL, 3UL, 10UL, 5UL,
-                                           7UL, 8UL, 12UL, 9UL, 12UL,
-                                           10UL, 13UL, 10UL, 15UL, 14UL };
-    std::vector<double>         dblvec = { 0.0, 15.0, 14.0, 2.0, 1.0,
-                                           12.0, 11.0, 8.0, 7.0, 6.0,
-                                           5.0, 4.0, 3.0, 9.0, 10.0};
-    std::vector<double>         dblvec2 = { 100.0, 101.0, 102.0, 103.0, 104.0,
-                                            105.0, 106.55, 107.34, 1.8, 111.0,
-                                            112.0, 113.0, 114.0, 115.0, 116.0};
+    std::vector<unsigned long>  idxvec =
+        { 1UL, 2UL, 3UL, 10UL, 5UL, 7UL, 8UL, 12UL, 9UL, 12UL, 10UL, 13UL,
+          10UL, 15UL, 14UL };
+    std::vector<double>         dblvec =
+        { 0.0, 15.0, 14.0, 2.0, 1.0, 12.0, 11.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0,
+          9.0, 10.0 };
+    std::vector<double>         dblvec2 =
+        { 100.0, 101.0, 102.0, 103.0, 104.0, 105.0, 106.55, 107.34, 1.8, 111.0,
+          112.0, 113.0, 114.0, 115.0, 116.0 };
     std::vector<int>            intvec = { 1, 2, 3, 4, 5, 8, 6, 7, 11, 14, 9 };
-    std::vector<std::string>    strvec = { "zz", "bb", "cc", "ww", "ee",
-                                           "ff", "gg", "hh", "ii", "jj",
-                                           "kk", "ll", "mm", "nn", "oo" };
+    std::vector<std::string>    strvec =
+        { "zz", "bb", "cc", "ww", "ee", "ff", "gg", "hh", "ii", "jj", "kk",
+          "ll", "mm", "nn", "oo" };
 
     df.load_data(std::move(idxvec),
                  std::make_pair("dbl_col", dblvec),
@@ -328,16 +329,16 @@ static void test_CategoryVisitor()  {
 
     MyDataFrame df;
 
-    std::vector<unsigned long>  idxvec = { 1UL, 2UL, 3UL, 10UL, 5UL,
-                                           7UL, 8UL, 12UL, 9UL, 12UL,
-                                           10UL, 13UL, 10UL, 15UL, 14UL };
-    std::vector<double>         dblvec = { 0.0, 15.0, 14.0, 15.0, 1.0,
-                                           12.0, 11.0, 8.0, 15.0, 6.0,
-                                           sqrt(-1), 4.0, 14.0, 14.0, 20.0};
+    std::vector<unsigned long>  idxvec =
+        { 1UL, 2UL, 3UL, 10UL, 5UL, 7UL, 8UL, 12UL, 9UL, 12UL, 10UL, 13UL,
+          10UL, 15UL, 14UL };
+    std::vector<double>         dblvec =
+        { 0.0, 15.0, 14.0, 15.0, 1.0, 12.0, 11.0, 8.0, 15.0, 6.0, sqrt(-1),
+          4.0, 14.0, 14.0, 20.0 };
     std::vector<int>            intvec = { 1, 2, 3, 4, 5, 8, 6, 7, 11, 14, 9 };
-    std::vector<std::string>    strvec = { "zz", "bb", "zz", "ww", "ee",
-                                           "ff", "gg", "zz", "ii", "jj",
-                                           "kk", "ll", "mm", "ee", "" };
+    std::vector<std::string>    strvec =
+        { "zz", "bb", "zz", "ww", "ee", "ff", "gg", "zz", "ii", "jj", "kk",
+          "ll", "mm", "ee", "" };
 
     df.load_data(std::move(idxvec),
                  std::make_pair("dbl_col", dblvec),
@@ -381,19 +382,19 @@ static void test_FactorizeVisitor()  {
 
     MyDataFrame df;
 
-    std::vector<unsigned long>  idxvec = { 1UL, 2UL, 3UL, 10UL, 5UL,
-                                           7UL, 8UL, 12UL, 9UL, 12UL,
-                                           10UL, 13UL, 10UL, 15UL, 14UL };
-    std::vector<double>         dblvec = { 0.0, 15.0, 14.0, 2.0, 1.0,
-                                           12.0, 11.0, 8.0, 7.0, 6.0,
-                                           5.0, 4.0, 3.0, 9.0, 10.0};
-    std::vector<double>         dblvec2 = { 100.0, 101.0, 102.0, 103.0, 104.0,
-                                            105.0, 106.55, 107.34, 1.8, 111.0,
-                                            112.0, 113.0, 114.0, 115.0, 116.0};
+    std::vector<unsigned long>  idxvec =
+        { 1UL, 2UL, 3UL, 10UL, 5UL, 7UL, 8UL, 12UL, 9UL, 12UL, 10UL, 13UL,
+          10UL, 15UL, 14UL };
+    std::vector<double>         dblvec =
+        { 0.0, 15.0, 14.0, 2.0, 1.0, 12.0, 11.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0,
+          9.0, 10.0 };
+    std::vector<double>         dblvec2 =
+        { 100.0, 101.0, 102.0, 103.0, 104.0, 105.0, 106.55, 107.34, 1.8, 111.0,
+          112.0, 113.0, 114.0, 115.0, 116.0 };
     std::vector<int>            intvec = { 1, 2, 3, 4, 5, 8, 6, 7, 11, 14, 9 };
-    std::vector<std::string>    strvec = { "zz", "bb", "cc", "ww", "ee",
-                                           "ff", "gg", "hh", "ii", "jj",
-                                           "kk", "ll", "mm", "nn", "oo" };
+    std::vector<std::string>    strvec =
+        { "zz", "bb", "cc", "ww", "ee", "ff", "gg", "hh", "ii", "jj", "kk",
+          "ll", "mm", "nn", "oo" };
 
     df.load_data(std::move(idxvec),
                  std::make_pair("dbl_col", dblvec),
@@ -528,16 +529,16 @@ static void test_ClipVisitor()  {
 
     MyDataFrame df;
 
-    std::vector<unsigned long>  idxvec = { 1UL, 2UL, 3UL, 10UL, 5UL,
-                                           7UL, 8UL, 12UL, 9UL, 12UL,
-                                           10UL, 13UL, 10UL, 15UL, 14UL };
-    std::vector<double>         dblvec = { 0.0, 15.0, 14.0, 15.0, 1.0,
-                                           12.0, 11.0, 8.0, 15.0, 6.0,
-                                           sqrt(-1), 4.0, 14.0, 14.0, 20.0};
+    std::vector<unsigned long>  idxvec =
+        { 1UL, 2UL, 3UL, 10UL, 5UL, 7UL, 8UL, 12UL, 9UL, 12UL, 10UL, 13UL,
+          10UL, 15UL, 14UL };
+    std::vector<double>         dblvec =
+        { 0.0, 15.0, 14.0, 15.0, 1.0, 12.0, 11.0, 8.0, 15.0, 6.0, sqrt(-1),
+          4.0, 14.0, 14.0, 20.0 };
     std::vector<int>            intvec = { 1, 2, 3, 4, 5, 8, 6, 7, 11, 14, 9 };
-    std::vector<std::string>    strvec = { "zz", "bb", "zz", "ww", "ee",
-                                           "ff", "gg", "zz", "ii", "jj",
-                                           "kk", "ll", "mm", "ee", "" };
+    std::vector<std::string>    strvec =
+        { "zz", "bb", "zz", "ww", "ee", "ff", "gg", "zz", "ii", "jj", "kk",
+          "ll", "mm", "ee", "" };
 
     df.load_data(std::move(idxvec),
                  std::make_pair("dbl_col", dblvec),
@@ -643,18 +644,18 @@ static void test_RankVisitor()  {
     const auto  last_result2 =
         df.single_act_visit<double>("d2_col", last_rank_v).get_result();
 
-    std::vector<double> ar_equal {8, 1, 2, 3, 4, 12, 5, 6, 7, 9, 0, 11, 13,
-                                  10, 15, 16, 17, 18, 19, 20, 14 };
+    std::vector<double> ar_equal { 8, 1, 2, 3, 4, 12, 5, 6, 7, 9, 0, 11, 13,
+                                   10, 15, 16, 17, 18, 19, 20, 14 };
 
     assert(actual_result2 == ar_equal);
-    ar_equal = std::vector<double> {9, 1, 2, 3, 4, 13, 5, 6, 7, 9, 0, 11, 13,
-                                    9, 15, 16, 17, 18, 19, 20, 13};
+    ar_equal = std::vector<double> { 9, 1, 2, 3, 4, 13, 5, 6, 7, 9, 0, 11, 13,
+                                     9, 15, 16, 17, 18, 19, 20, 13 };
     assert(avg_result2 == ar_equal);
-    ar_equal = std::vector<double> {8, 1, 2, 3, 4, 12, 5, 6, 7, 8, 0, 11, 12,
-                                    8, 15, 16, 17, 18, 19, 20, 12};
+    ar_equal = std::vector<double> { 8, 1, 2, 3, 4, 12, 5, 6, 7, 8, 0, 11, 12,
+                                     8, 15, 16, 17, 18, 19, 20, 12 };
     assert(first_result2 == ar_equal);
-    ar_equal = std::vector<double> {10, 1, 2, 3, 4, 14, 5, 6, 7, 10, 0, 11, 14,
-                                    10, 15, 16, 17, 18, 19, 20, 14};
+    ar_equal = std::vector<double> { 10, 1, 2, 3, 4, 14, 5, 6, 7, 10, 0, 11, 14,
+                                     10, 15, 16, 17, 18, 19, 20, 14 };
     assert(last_result2 == ar_equal);
 }
 
@@ -858,10 +859,10 @@ static void test_remove_duplicates()  {
           10UL, 13UL, 10UL, 15UL, 14UL };
     std::vector<double>         dblvec =
         { 0.0, 15.0, 14.0, 2.0, 15.0, 12.0, 11.0, 8.0, 7.0, 6.0,
-          5.0, 4.0, 3.0, 9.0, 10.0};
+          5.0, 4.0, 3.0, 9.0, 10.0 };
     std::vector<double>         dblvec2 =
         { 100.0, 101.0, 102.0, 103.0, 101.0, 105.0, 106.55, 107.34, 1.8, 111.0,
-          112.0, 113.0, 114.0, 115.0, 116.0};
+          112.0, 113.0, 114.0, 115.0, 116.0 };
     std::vector<int>            intvec = { 1, 2, 3, 4, 2, 8, 6, 7, 11, 14, 9 };
     std::vector<std::string>    strvec =
         { "zz", "bb", "cc", "ww", "bb", "ff", "gg", "hh", "ii", "jj",
@@ -974,7 +975,7 @@ static void test_bucketize()  {
             df.bucketize_async(
                 bucket_type::by_distance,
                 100,
-                LastVisitor<MyDataFrame::IndexType, MyDataFrame::IndexType>(), 
+                LastVisitor<MyDataFrame::IndexType, MyDataFrame::IndexType>(),
                 std::make_tuple("Date", "Date", LastVisitor<std::string>()),
                 std::make_tuple("FORD_Close", "High", MaxVisitor<double>()),
                 std::make_tuple("FORD_Close", "Low", MinVisitor<double>()),
@@ -995,7 +996,7 @@ static void test_bucketize()  {
             df.bucketize_async(
                 bucket_type::by_count,
                 100,
-                LastVisitor<MyDataFrame::IndexType, MyDataFrame::IndexType>(), 
+                LastVisitor<MyDataFrame::IndexType, MyDataFrame::IndexType>(),
                 std::make_tuple("Date", "Date", LastVisitor<std::string>()),
                 std::make_tuple("FORD_Close", "High", MaxVisitor<double>()),
                 std::make_tuple("FORD_Close", "Low", MinVisitor<double>()),
@@ -1006,7 +1007,7 @@ static void test_bucketize()  {
                 std::make_tuple("FORD_Volume", "Volume", SumVisitor<long>()));
         MyDataFrame result2 = fut2.get();
 
-        assert(result.is_equal(result2));
+        assert((result.is_equal<double, std::string, long>(result2)));
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
@@ -1053,7 +1054,7 @@ static void test_groupby()  {
     auto    fut1 =
         df.groupby1_async<unsigned long>
             (DF_INDEX_COL_NAME,
-             LastVisitor<MyDataFrame::IndexType, MyDataFrame::IndexType>(), 
+             LastVisitor<MyDataFrame::IndexType, MyDataFrame::IndexType>(),
              std::make_tuple("str_col", "sum_str", SumVisitor<std::string>()),
              std::make_tuple("xint_col", "max_int", MaxVisitor<int>()),
              std::make_tuple("xint_col", "min_int", MinVisitor<int>()),
@@ -1066,7 +1067,7 @@ static void test_groupby()  {
     auto    fut2 =
         df.groupby1_async<unsigned long>
             ("ul_col",
-             LastVisitor<MyDataFrame::IndexType, MyDataFrame::IndexType>(), 
+             LastVisitor<MyDataFrame::IndexType, MyDataFrame::IndexType>(),
              std::make_tuple("str_col", "sum_str", SumVisitor<std::string>()),
              std::make_tuple("xint_col", "max_int", MaxVisitor<int>()),
              std::make_tuple("xint_col", "min_int", MinVisitor<int>()),
@@ -1079,7 +1080,7 @@ static void test_groupby()  {
     auto    fut3 =
         df.groupby1_async<double>
             ("dbl_col_2",
-             MaxVisitor<MyDataFrame::IndexType, MyDataFrame::IndexType>(), 
+             MaxVisitor<MyDataFrame::IndexType, MyDataFrame::IndexType>(),
              std::make_tuple("str_col", "sum_str", SumVisitor<std::string>()),
              std::make_tuple("xint_col", "max_int", MaxVisitor<int>()),
              std::make_tuple("xint_col", "min_int", MinVisitor<int>()),
@@ -1136,7 +1137,7 @@ static void test_groupby_2()  {
         df.groupby2<unsigned long, double>
             (DF_INDEX_COL_NAME,
              "dbl_col_2",
-             LastVisitor<MyDataFrame::IndexType, MyDataFrame::IndexType>(), 
+             LastVisitor<MyDataFrame::IndexType, MyDataFrame::IndexType>(),
              std::make_tuple("str_col", "sum_str", SumVisitor<std::string>()),
              std::make_tuple("xint_col", "max_int", MaxVisitor<int>()),
              std::make_tuple("xint_col", "min_int", MinVisitor<int>()),
@@ -1150,7 +1151,7 @@ static void test_groupby_2()  {
         df.groupby2<double, unsigned long>
             ("dbl_col_2",
              DF_INDEX_COL_NAME,
-             MinVisitor<MyDataFrame::IndexType, MyDataFrame::IndexType>(), 
+             MinVisitor<MyDataFrame::IndexType, MyDataFrame::IndexType>(),
              std::make_tuple("str_col", "sum_str", SumVisitor<std::string>()),
              std::make_tuple("xint_col", "max_int", MaxVisitor<int>()),
              std::make_tuple("xint_col", "min_int", MinVisitor<int>()),
@@ -1164,7 +1165,7 @@ static void test_groupby_2()  {
         df.groupby2<double, int>
             ("dbl_col_2",
              "xint_col",
-             MaxVisitor<MyDataFrame::IndexType, MyDataFrame::IndexType>(), 
+             MaxVisitor<MyDataFrame::IndexType, MyDataFrame::IndexType>(),
              std::make_tuple("str_col", "sum_str", SumVisitor<std::string>()),
              std::make_tuple("xint_col", "max_int", MaxVisitor<int>()),
              std::make_tuple("xint_col", "min_int", MinVisitor<int>()),
@@ -1178,7 +1179,7 @@ static void test_groupby_2()  {
         df.groupby2<int, double>
             ("xint_col",
              "dbl_col_2",
-             FirstVisitor<MyDataFrame::IndexType, MyDataFrame::IndexType>(), 
+             FirstVisitor<MyDataFrame::IndexType, MyDataFrame::IndexType>(),
              std::make_tuple("str_col", "sum_str", SumVisitor<std::string>()),
              std::make_tuple("xint_col", "max_int", MaxVisitor<int>()),
              std::make_tuple("xint_col", "min_int", MinVisitor<int>()),
@@ -1192,7 +1193,7 @@ static void test_groupby_2()  {
         df.groupby2<std::string, unsigned long>
             ("str_col",
              DF_INDEX_COL_NAME,
-             FirstVisitor<MyDataFrame::IndexType, MyDataFrame::IndexType>(), 
+             FirstVisitor<MyDataFrame::IndexType, MyDataFrame::IndexType>(),
              std::make_tuple("str_col", "sum_str", SumVisitor<std::string>()),
              std::make_tuple("xint_col", "max_int", MaxVisitor<int>()),
              std::make_tuple("xint_col", "min_int", MinVisitor<int>()),
@@ -2184,11 +2185,11 @@ static void test_MassIndexVisitor()  {
 
     std::cout << "\nTesting MassIndexVisitor{  } ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
-        { 123450, 123451, 123452, 123453, 123454, 123455, 123456, 123457,
-          123458, 123459, 123460, 123461, 123462, 123466, 123467, 123468,
-          123469, 123470, 123471, 123472, 123473,
-        };
+    std::vector<unsigned long>  idx = {
+        123450, 123451, 123452, 123453, 123454, 123455, 123456, 123457,
+        123458, 123459, 123460, 123461, 123462, 123466, 123467, 123468,
+        123469, 123470, 123471, 123472, 123473,
+    };
     std::vector<double>         high = {
         121.75, 122.75, 124.83, 124.39, 135.5, 132, 128.25, 127.15, 126.94,
         125.22, 126.43, 127.35, 120.15, 117.69, 116.06, 116.62, 114.9, 112.22,

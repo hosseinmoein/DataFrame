@@ -41,7 +41,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 using namespace hmdf;
 
-typedef StdDataFrame<unsigned long> MyDataFrame;
+// A DataFrame with ulong index type
+//
+using MyDataFrame = StdDataFrame<unsigned long>;
 
 // -----------------------------------------------------------------------------
 
@@ -331,7 +333,7 @@ static void test_haphazard()  {
     assert(fabs(slr_visitor.get_intercept() - 0.602674) < 0.00001);
     assert(fabs(slr_visitor.get_corr() - -0.358381) < 0.00001);
     assert(fabs(df.visit<double, double>("dbl_col", "dbl_col_2",
-                                        corr_visitor).get_result() -
+                                         corr_visitor).get_result() -
                -0.358381) < 0.00001);
 
     std::cout << "\nTesting GROUPBY ..." << std::endl;
@@ -604,15 +606,13 @@ static void test_get_data_by_loc_slicing()  {
     df5.write<std::ostream, double>(std::cout);
 
     try  {
-        MyDataFrame df2 =
-            df.get_data_by_loc<double>(Index2D<long> { 3, 8 });
+        MyDataFrame df2 = df.get_data_by_loc<double>(Index2D<long> { 3, 8 });
     }
     catch (const BadRange &ex)  {
         std::cout << "Caught: " << ex.what() << std::endl;
     }
     try  {
-        MyDataFrame df2 =
-            df.get_data_by_loc<double>(Index2D<long> { -8, -1 });
+        MyDataFrame df2 = df.get_data_by_loc<double>(Index2D<long> { -8, -1 });
     }
     catch (const BadRange &ex)  {
         std::cout << "Caught: " << ex.what() << std::endl;
@@ -627,13 +627,13 @@ static void test_get_view_by_loc()  {
 
     std::vector<unsigned long>  idx =
         { 123450, 123451, 123452, 123450, 123455, 123450, 123449 };
-    std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7 };
-    std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14 };
-    std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21 };
-    std::vector<double> d4 = { 22, 23, 24, 25 };
-    std::vector<std::string> s1 =
+    std::vector<double>         d1 = { 1, 2, 3, 4, 5, 6, 7 };
+    std::vector<double>         d2 = { 8, 9, 10, 11, 12, 13, 14 };
+    std::vector<double>         d3 = { 15, 16, 17, 18, 19, 20, 21 };
+    std::vector<double>         d4 = { 22, 23, 24, 25 };
+    std::vector<std::string>    s1 =
         { "11", "22", "33", "xx", "yy", "gg", "string" };
-    MyDataFrame         df;
+    MyDataFrame                 df;
 
     df.load_data(std::move(idx),
                  std::make_pair("col_1", d1),
@@ -671,13 +671,13 @@ static void test_remove_column()  {
 
     std::vector<unsigned long>  idx =
         { 123450, 123451, 123452, 123450, 123455, 123450, 123449 };
-    std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7 };
-    std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14 };
-    std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21 };
-    std::vector<int>    i1 = { 22, 23, 24, 25 };
-    std::vector<std::string> s1 =
+    std::vector<double>         d1 = { 1, 2, 3, 4, 5, 6, 7 };
+    std::vector<double>         d2 = { 8, 9, 10, 11, 12, 13, 14 };
+    std::vector<double>         d3 = { 15, 16, 17, 18, 19, 20, 21 };
+    std::vector<int>            i1 = { 22, 23, 24, 25 };
+    std::vector<std::string>    s1 =
         { "11", "22", "33", "xx", "yy", "gg", "string" };
-    MyDataFrame         df;
+    MyDataFrame                 df;
 
     df.load_data(std::move(idx),
                  std::make_pair("col_1", d1),
@@ -983,16 +983,16 @@ static void test_index_left_join()  {
     std::vector<unsigned long>  idx2 =
         { 123452, 123453, 123455, 123458, 123466, 223450, 223451,
           223454, 223456, 223457, 223459, 223460, 223461, 223462 };
-    std::vector<double> d12 =
+    std::vector<double>         d12 =
            { 11, 12, 13, 14, 15, 16, 17, 18, 19, 110, 111, 112, 113, 114 };
-    std::vector<double> d22 =
+    std::vector<double>         d22 =
         { 18, 19, 110, 111, 112, 113, 114, 120, 122, 123,
           130, 131, 132, 11.89 };
-    std::vector<double> d32 =
+    std::vector<double>         d32 =
         { 115, 116, 115, 118, 119, 116, 121,
           10.34, 11.56, 10.34, 12.3, 10.34, 119.0 };
-    std::vector<int>    i12 = { 122, 123, 124, 125, 199 };
-    MyDataFrame         df2;
+    std::vector<int>            i12 = { 122, 123, 124, 125, 199 };
+    MyDataFrame                 df2;
 
     df2.load_data(std::move(idx2),
                   std::make_pair("xcol_1", d12),
@@ -2485,21 +2485,21 @@ static void test_replace_1()  {
 
     std::cout << "\nTesting replace(1) ..." << std::endl;
 
-    std::vector<double> d1 = { 1.0, 10, 8, 18, 19, 16, 21,
-                               17, 20, 3, 2, 11, 7.0, 5,
-                               9, 15, 14, 13, 12, 6, 4 };
-    std::vector<double> d2 = { 1.0, 10, 8, 18, 19, 16, 21,
-                               17, 20, 3, 2, 11, 7.0, 5,
-                               9, 15, 14, 13, 12, 6, 4 };
-    std::vector<double> d3 = { 1.1, 10.09, 8.2, 18.03, 19.4, 15.9, 20.8,
-                               17.1, 19.9, 3.3, 2.2, 10.8, 7.4, 5.3,
-                               9.1, 14.9, 14.8, 13.2, 12.6, 6.1, 4.4 };
-    std::vector<double> d4 = { 0.1, 9.09, 7.2, 17.03, 18.4, 14.9, 19.8,
-                               16.1, 18.9, 2.3, 1.2, 9.8, 6.4, 4.3,
-                               8.1, 13.9, 13.8, 12.2, 11.6, 5.1, 3.4 };
-    std::vector<double> d5 = { 20.0, 10.1, -30.2, 18.5, 1.1, 16.2, 30.8,
-                               -1.56, 20.1, 25.5, 30.89, 11.1, 7.4, 5.3,
-                               19, 15.1, 1.3, 1.2, 12.6, 23.2, 40.1 };
+    std::vector<double> d1 =
+        { 1.0, 10, 8, 18, 19, 16, 21, 17, 20, 3, 2, 11, 7.0, 5, 9, 15, 14, 13,
+          12, 6, 4 };
+    std::vector<double> d2 =
+        { 1.0, 10, 8, 18, 19, 16, 21, 17, 20, 3, 2, 11, 7.0, 5, 9, 15, 14, 13,
+          12, 6, 4 };
+    std::vector<double> d3 =
+        { 1.1, 10.09, 8.2, 18.03, 19.4, 15.9, 20.8, 17.1, 19.9, 3.3, 2.2, 10.8,
+          7.4, 5.3, 9.1, 14.9, 14.8, 13.2, 12.6, 6.1, 4.4 };
+    std::vector<double> d4 =
+        { 0.1, 9.09, 7.2, 17.03, 18.4, 14.9, 19.8, 16.1, 18.9, 2.3, 1.2, 9.8,
+          6.4, 4.3, 8.1, 13.9, 13.8, 12.2, 11.6, 5.1, 3.4 };
+    std::vector<double> d5 =
+        { 20.0, 10.1, -30.2, 18.5, 1.1, 16.2, 30.8, -1.56, 20.1, 25.5, 30.89,
+          11.1, 7.4, 5.3, 19, 15.1, 1.3, 1.2, 12.6, 23.2, 40.1 };
     MyDataFrame         df;
 
     df.load_data(MyDataFrame::gen_datetime_index(
@@ -2571,21 +2571,21 @@ static void test_replace_2()  {
 
     std::cout << "\nTesting replace(2) ..." << std::endl;
 
-    std::vector<double> d1 = { 1.0, 10, 8, 18, 19, 16, 21,
-                               17, 20, 3, 2, 11, 7.0, 5,
-                               9, 15, 14, 13, 12, 6, 4 };
-    std::vector<double> d2 = { 1.0, 10, 8, 18, 19, 16, 21,
-                               17, 20, 3, 2, 11, 7.0, 5,
-                               9, 15, 14, 13, 12, 6, 4 };
-    std::vector<double> d3 = { 1.1, 10.09, 8.2, 18.03, 19.4, 15.9, 20.8,
-                               17.1, 19.9, 3.3, 2.2, 10.8, 7.4, 5.3,
-                               9.1, 14.9, 14.8, 13.2, 12.6, 6.1, 4.4 };
-    std::vector<double> d4 = { 0.1, 9.09, 7.2, 17.03, 18.4, 14.9, 19.8,
-                               16.1, 18.9, 2.3, 1.2, 9.8, 6.4, 4.3,
-                               8.1, 13.9, 13.8, 12.2, 11.6, 5.1, 3.4 };
-    std::vector<double> d5 = { 20.0, 10.1, -30.2, 18.5, 1.1, 16.2, 30.8,
-                               -1.56, 20.1, 25.5, 30.89, 11.1, 7.4, 5.3,
-                               19, 15.1, 1.3, 1.2, 12.6, 23.2, 40.1 };
+    std::vector<double> d1 =
+        { 1.0, 10, 8, 18, 19, 16, 21, 17, 20, 3, 2, 11, 7.0, 5, 9, 15, 14, 13,
+          12, 6, 4 };
+    std::vector<double> d2 =
+        { 1.0, 10, 8, 18, 19, 16, 21, 17, 20, 3, 2, 11, 7.0, 5, 9, 15, 14, 13,
+          12, 6, 4 };
+    std::vector<double> d3 =
+        { 1.1, 10.09, 8.2, 18.03, 19.4, 15.9, 20.8, 17.1, 19.9, 3.3, 2.2, 10.8,
+          7.4, 5.3, 9.1, 14.9, 14.8, 13.2, 12.6, 6.1, 4.4 };
+    std::vector<double> d4 =
+        { 0.1, 9.09, 7.2, 17.03, 18.4, 14.9, 19.8, 16.1, 18.9, 2.3, 1.2, 9.8,
+          6.4, 4.3, 8.1, 13.9, 13.8, 12.2, 11.6, 5.1, 3.4 };
+    std::vector<double> d5 =
+        { 20.0, 10.1, -30.2, 18.5, 1.1, 16.2, 30.8, -1.56, 20.1, 25.5, 30.89,
+          11.1, 7.4, 5.3, 19, 15.1, 1.3, 1.2, 12.6, 23.2, 40.1 };
     MyDataFrame         df;
 
     df.load_data(MyDataFrame::gen_datetime_index(
@@ -3230,8 +3230,8 @@ static void test_get_data_by_rand()  {
     std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18 };
     std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25 };
     std::vector<double> d4 = { 22, 23, 24, 25, 26, 27 };
-    std::vector<std::string> s1 = { "11", "22", "33", "aa", "bb", "cc",
-                                    "dd", "tt", "uu", "ii", "88" };
+    std::vector<std::string> s1 =
+        { "11", "22", "33", "aa", "bb", "cc", "dd", "tt", "uu", "ii", "88" };
     MyDataFrame         df;
 
     df.load_data(std::move(idx),
@@ -3274,8 +3274,8 @@ static void test_get_view_by_rand()  {
     std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18 };
     std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25 };
     std::vector<double> d4 = { 22, 23, 24, 25, 26, 27 };
-    std::vector<std::string> s1 = { "11", "22", "33", "aa", "bb", "cc",
-                                    "dd", "tt", "uu", "ii", "88" };
+    std::vector<std::string> s1 =
+        { "11", "22", "33", "aa", "bb", "cc", "dd", "tt", "uu", "ii", "88" };
     MyDataFrame         df;
 
     df.load_data(std::move(idx),
@@ -3323,8 +3323,8 @@ static void test_write_json()  {
     std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18 };
     std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25 };
     std::vector<double> d4 = { 22, 23, 24, 25, 26, 27 };
-    std::vector<std::string> s1 = { "11", "22", "33", "aa", "bb", "cc",
-                                    "dd", "tt", "uu", "ii", "88" };
+    std::vector<std::string> s1 =
+        { "11", "22", "33", "aa", "bb", "cc", "dd", "tt", "uu", "ii", "88" };
     MyDataFrame         df;
 
     df.load_data(std::move(idx),
@@ -3823,16 +3823,16 @@ static void test_view_visitors()  {
 
     MyDataFrame         df;
 
-    std::vector<unsigned long>  idxvec = { 1UL, 2UL, 3UL, 4UL, 5UL,
-                                           6UL, 7UL, 8UL, 9UL, 10UL };
+    std::vector<unsigned long>  idxvec =
+        { 1UL, 2UL, 3UL, 4UL, 5UL, 6UL, 7UL, 8UL, 9UL, 10UL };
     std::vector<double>         dblvec1 = { 1.1, 2.2, 3.3, 4.4, 5.5 };
     std::vector<double>         dblvec2 = { 2.2, 3.3, 4.4, 5.5, 6.6 };
-    std::vector<double>         dblvec3 = { 0.0, 1.1, 2.2, 3.3, 4.4,
-                                            5.5, 6.6, 7.7, 8.8, 9.9 };
-    std::vector<double>         dblvec4 = { 5.9, 4.4, 1.0, 9.8, 5.3,
-                                            7.2, 3.8, 4.1 };
-    std::vector<double>         dblvec5 = { 1.1, 5.9, 4.4, 1.0, 9.8,
-                                            5.3, 7.2, 3.8, 4.1, 10.1 };
+    std::vector<double>         dblvec3 =
+        { 0.0, 1.1, 2.2, 3.3, 4.4, 5.5, 6.6, 7.7, 8.8, 9.9 };
+    std::vector<double>         dblvec4 =
+        { 5.9, 4.4, 1.0, 9.8, 5.3, 7.2, 3.8, 4.1 };
+    std::vector<double>         dblvec5 =
+        { 1.1, 5.9, 4.4, 1.0, 9.8, 5.3, 7.2, 3.8, 4.1, 10.1 };
     std::vector<double>         dblvec6 = { 1.1, 1.1, 3.3, 3.3, 1.1 };
 
     df.load_data(std::move(idxvec),
@@ -4224,21 +4224,20 @@ static void test_multi_col_sort()  {
 
     MyDataFrame df;
 
-    std::vector<unsigned long>  idxvec = { 1UL, 2UL, 3UL, 10UL, 5UL,
-                                           7UL, 8UL, 12UL, 9UL, 12UL,
-                                           10UL, 13UL, 10UL, 15UL, 14UL };
-    std::vector<double>         dblvec = { 0.0, 15.0, 14.0, 2.0, 1.0,
-                                           12.0, 11.0, 8.0, 7.0, 6.0,
-                                           5.0, 4.0, 3.0, 9.0, 10.0 };
-    std::vector<double>         dblvec2 = { 100.0, 101.0, 102.0, 103.0, 104.0,
-                                           105.0, 106.55, 107.34, 1.8, 111.0,
-                                           112.0, 113.0, 114.0, 115.0, 116.0 };
-    std::vector<int>            intvec = { 1, 2, 3, 4, 5,
-                                           8, 6, 7, 11, 14,
-                                           9, 10, 15, 12, 13 };
-    std::vector<std::string>    strvec = { "zz", "bb", "cc", "ww", "ee",
-                                           "ff", "gg", "hh", "ii", "jj",
-                                           "kk", "ll", "mm", "nn", "oo" };
+    std::vector<unsigned long>  idxvec =
+        { 1UL, 2UL, 3UL, 10UL, 5UL, 7UL, 8UL, 12UL, 9UL, 12UL, 10UL, 13UL,
+          10UL, 15UL, 14UL };
+    std::vector<double>         dblvec =
+        { 0.0, 15.0, 14.0, 2.0, 1.0, 12.0, 11.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0,
+          9.0, 10.0 };
+    std::vector<double>         dblvec2 =
+        { 100.0, 101.0, 102.0, 103.0, 104.0, 105.0, 106.55, 107.34, 1.8, 111.0,
+          112.0, 113.0, 114.0, 115.0, 116.0 };
+    std::vector<int>            intvec =
+        { 1, 2, 3, 4, 5, 8, 6, 7, 11, 14, 9, 10, 15, 12, 13 };
+    std::vector<std::string>    strvec =
+        { "zz", "bb", "cc", "ww", "ee", "ff", "gg", "hh", "ii", "jj", "kk",
+          "ll", "mm", "nn", "oo" };
 
     df.load_data(std::move(idxvec),
                  std::make_pair("dbl_col", dblvec),
@@ -4295,10 +4294,10 @@ static void test_join_by_column()  {
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466 };
     std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
-    std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23,
-                               30, 31, 32, 1.89 };
-    std::vector<double> d3 = { 15, 16, 15, 18, 19, 16, 21,
-                               0.34, 1.56, 0.34, 2.3, 0.34, 19.0 };
+    std::vector<double> d2 =
+        { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23, 30, 31, 32, 1.89 };
+    std::vector<double> d3 =
+        { 15, 16, 15, 18, 19, 16, 21, 0.34, 1.56, 0.34, 2.3, 0.34, 19.0 };
     std::vector<int>    i1 = { 22, 23, 24, 25, 99 };
     MyDataFrame         df;
 
@@ -4314,11 +4313,10 @@ static void test_join_by_column()  {
     std::vector<double> d12 =
            { 11, 12, 13, 14, 15, 16, 17, 18, 19, 110, 111, 112, 113, 114 };
     std::vector<double> d22 =
-        { 8, 19, 110, 111, 9, 113, 114, 99, 122, 123,
-          130, 131, 20, 11.89 };
+        { 8, 19, 110, 111, 9, 113, 114, 99, 122, 123, 130, 131, 20, 11.89 };
     std::vector<double> d32 =
-        { 115, 116, 115, 118, 119, 116, 121,
-          10.34, 11.56, 10.34, 12.3, 10.34, 119.0 };
+        { 115, 116, 115, 118, 119, 116, 121, 10.34, 11.56, 10.34, 12.3, 10.34,
+          119.0 };
     std::vector<int>    i12 = { 122, 123, 124, 125, 199 };
     MyDataFrame         df2;
 
@@ -4991,20 +4989,20 @@ static void test_self_concat()  {
 
     MyDataFrame df1;
 
-    std::vector<unsigned long>  idxvec = { 1UL, 2UL, 3UL, 10UL, 5UL,
-                                           7UL, 8UL, 12UL, 9UL, 12UL,
-                                           10UL, 13UL, 10UL, 15UL, 14UL };
-    std::vector<double>         dblvec = { 0.0, 15.0, 14.0, 2.0, 1.0,
-                                           12.0, 11.0, 8.0, 7.0, 6.0,
-                                           5.0, 4.0, 3.0, 9.0, 10.0 };
-    std::vector<double>         dblvec2 = { 100.0, 101.0, 102.0, 103.0, 104.0,
-                                            105.0, 106.55, 107.34, 1.8, 111.0,
-                                            112.0, 113.0, 114.0, 115.0, 116.0 };
-    std::vector<int>            intvec = { 1, 2, 3, 4, 5, 8, 6, 7, 11, 14,
-                                           9, 10, 15, 12, 13 };
-    std::vector<std::string>    strvec = { "zz", "bb", "cc", "ww", "ee",
-                                           "ff", "gg", "hh", "ii", "jj",
-                                           "kk", "ll", "mm", "nn", "oo" };
+    std::vector<unsigned long>  idxvec =
+        { 1UL, 2UL, 3UL, 10UL, 5UL, 7UL, 8UL, 12UL, 9UL, 12UL, 10UL, 13UL,
+          10UL, 15UL, 14UL };
+    std::vector<double>         dblvec =
+        { 0.0, 15.0, 14.0, 2.0, 1.0, 12.0, 11.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0,
+          9.0, 10.0 };
+    std::vector<double>         dblvec2 =
+        { 100.0, 101.0, 102.0, 103.0, 104.0, 105.0, 106.55, 107.34, 1.8, 111.0,
+          112.0, 113.0, 114.0, 115.0, 116.0 };
+    std::vector<int>            intvec =
+        { 1, 2, 3, 4, 5, 8, 6, 7, 11, 14, 9, 10, 15, 12, 13 };
+    std::vector<std::string>    strvec =
+        { "zz", "bb", "cc", "ww", "ee", "ff", "gg", "hh", "ii", "jj", "kk",
+          "ll", "mm", "nn", "oo" };
 
     df1.load_data(std::move(idxvec),
                   std::make_pair("dbl_col", dblvec),
@@ -5045,20 +5043,20 @@ static void test_concat()  {
 
     MyDataFrame df1;
 
-    std::vector<unsigned long>  idxvec = { 1UL, 2UL, 3UL, 10UL, 5UL,
-                                           7UL, 8UL, 12UL, 9UL, 12UL,
-                                           10UL, 13UL, 10UL, 15UL, 14UL };
-    std::vector<double>         dblvec = { 0.0, 15.0, 14.0, 2.0, 1.0,
-                                           12.0, 11.0, 8.0, 7.0, 6.0,
-                                           5.0, 4.0, 3.0, 9.0, 10.0 };
-    std::vector<double>         dblvec2 = { 100.0, 101.0, 102.0, 103.0, 104.0,
-                                            105.0, 106.55, 107.34, 1.8, 111.0,
-                                            112.0, 113.0, 114.0, 115.0, 116.0 };
-    std::vector<int>            intvec = { 1, 2, 3, 4, 5, 8, 6, 7, 11, 14,
-                                           9, 10, 15, 12, 13 };
-    std::vector<std::string>    strvec = { "zz", "bb", "cc", "ww", "ee",
-                                           "ff", "gg", "hh", "ii", "jj",
-                                           "kk", "ll", "mm", "nn", "oo" };
+    std::vector<unsigned long>  idxvec =
+        { 1UL, 2UL, 3UL, 10UL, 5UL, 7UL, 8UL, 12UL, 9UL, 12UL, 10UL, 13UL,
+          10UL, 15UL, 14UL };
+    std::vector<double>         dblvec =
+        { 0.0, 15.0, 14.0, 2.0, 1.0, 12.0, 11.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0,
+          9.0, 10.0 };
+    std::vector<double>         dblvec2 =
+        { 100.0, 101.0, 102.0, 103.0, 104.0, 105.0, 106.55, 107.34, 1.8, 111.0,
+          112.0, 113.0, 114.0, 115.0, 116.0 };
+    std::vector<int>            intvec =
+        { 1, 2, 3, 4, 5, 8, 6, 7, 11, 14, 9, 10, 15, 12, 13 };
+    std::vector<std::string>    strvec =
+        { "zz", "bb", "cc", "ww", "ee", "ff", "gg", "hh", "ii", "jj", "kk",
+          "ll", "mm", "nn", "oo" };
 
     df1.load_data(std::move(idxvec),
                   std::make_pair("dbl_col", dblvec),

@@ -2587,8 +2587,7 @@ static void test_no_index_writes()  {
 
     MyDataFrame df;
 
-    df.load_data(std::move(ulgvec2),
-                 std::make_pair("ul_col", xulgvec2));
+    df.load_data(std::move(ulgvec2), std::make_pair("ul_col", xulgvec2));
     df.load_column("xint_col",
                    std::move(intvec2),
                    nan_policy::dont_pad_with_nans);

@@ -1040,9 +1040,21 @@ table.hovertable td {
 
 <HR>
 
+  <H2><font color="green">Multithreading</font></H2>
+    <OL>
+      <LI>DataFrame uses static containers to achieve type heterogeneity. By default, these static containers are unprotected. This is done by design. So by default, there is no locking overhead. If you use DataFrame in a multithreaded program you must provide a <I>SpinLock</I> defined in <I>ThreadGranularity.h</I> file. DataFrame will use your <I>SpinLock</I> to protect the containers.<BR>Please see above, <I>set_lock()</I>, <I>remove_lock()</I>, and <I>dataframe_tester.cc</I> for code example.</LI>
+      <LI>In addition, instances of DataFrame are not multithreaded safe either. In other words, a single instance of DataFrame must not be used in multiple threads without protection, unless it is used as read-only.</LI>
+      <LI>In the meantime, DataFrame utilizes multithreading in two different ways internally:</LI>
+      <OL>
+        <LI><B>Async Interface:</B> There are asynchronous versions of some methods. For example, you have <I>sort()/sort_async()</I>, <I>visit()/visit_async()</I>, ... more. The latter versions return a <I>std::future</I> that could execute in parallel.</LI>
+        <LI>DataFrame uses multiple threads, internally and unbeknown to the user, in some of its algorithms when appropriate. User can control (or turn off) the multithreading by calling <I>set_thread_level()</I> which sets the max number of threads to be used. The default is 0. The optimal number of threads is a function of users hardware/software environment and usually obtained by trail and error. <I>set_thread_level()</I> and threading level in general is a static property and once set, it applies to all instances.</LI>
+      </OL>
+    </OL>
+<HR>
+
   <H2><font color="green">Views</font></H2>
   <P>
-    Views were added in the second wave of development. It is a very useful concept with practical use-cases. A view is a slice of a DataFrame that is a reference to the original DataFrame. It appears exactly the same as a DataFrame, but if you modify any data in the view, the corresponding data point(s) in the original DataFrame will also be modified.<BR>
+    Views are very useful concept with practical use-cases. A view is a slice of a DataFrame that is a reference to the original DataFrame. It appears exactly the same as a DataFrame, but if you modify any data in the view, the corresponding data point(s) in the original DataFrame will also be modified (and vice versa).<BR>
     There are certain things you cannot do in views. For example, you cannot add or delete columns, extend the index column, ...<BR>
     For more understanding, look at this document further and/or the test files.
   </P>

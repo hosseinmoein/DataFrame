@@ -37,7 +37,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <img src="docs/pandalion.png" alt="drawing" width="500"/>
 
-# DataFrame
+## [*DataFrame Documentation / Code Samples*](https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html)
 This is a C++ statistical library that provides an interface similar to Pandas package in Python.<BR>
 <B>A DataFrame can have one index column and many data columns of any built-in or user-defined type</B>.<BR>
 You could slice the data in many different ways. You could join, merge, group-by the data. You could run various statistical, summarization and ML algorithms on the data. You could add your custom algorithms easily. You could multi-column sort, custom pick and delete the data. And more …<BR>
@@ -53,23 +53,45 @@ DataFrame also includes a large collection of analytical routines in form of vis
 6.  Use multi-threading but only when it makes sense
 7.  Do not attempt to protect the user against `garbage in, garbage out`
 
-<B>Views</B><BR>
-You can slice the data frame and instead of getting another data frame you can opt to get a view. A view is a data frame that is a reference to a slice of the original data frame. So if you change the data in the view the corresponding data in the original data frame will also be changed (and vice versa).<BR>
-
-<B>Multithreading</B><BR>
-1.  DataFrame uses static containers to achieve type heterogeneity. By default, these static containers are unprotected. This is done by design. So by default, there is no locking overhead. If you use DataFrame in a multithreaded program you must provide a _SpinLock_ defined in <a href="include/DataFrame/Utils/ThreadGranularity.h">ThreadGranularity.h</a> file. DataFrame will use your _SpinLock_ to protect the containers.<BR>Please see <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html">documentation</a>, <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/remove_lock.html">set_lock()</a>, <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/remove_lock.html">remove_lock()</a>, and <a href="test/dataframe_tester.cc#L3770">dataframe_tester.cc</a> for code example.
-2.  In addition, instances of DataFrame are not multithreaded safe either. In other words, a single instance of DataFrame must not be used in multiple threads without protection, unless it is used as read-only.
-3.  In the meantime, DataFrame utilizes multithreading in two different ways internally:
-    1.  <B>Async Interface:</B> There are asynchronous versions of some methods. For example, you have _sort()_/_sort_async()_, _visit()_/_visit_async()_, ... more. The latter versions return a _std::future_ that could execute in parallel.
-    2.  DataFrame uses multiple threads, internally and unbeknown to the user, in some of its algorithms when appropriate. User can control (or turn off) the multithreading by calling _set_thread_level()_ which sets the max number of threads to be used. The default is 0. The optimal number of threads is a function of users hardware/software environment and usually obtained by trail and error. _set_thread_level()_ and threading level in general is a static property and once set, it applies to all instances.
-
-<B><a href="docs/DateTimeDoc.pdf">DateTime</a></B><BR>
+[DateTime](docs/DateTimeDoc.pdf)<BR>
 DateTime class included in this library is a very cool and handy object to manipulate date/time with nanosecond precision.<BR>
 
 ---
 
-## [*DataFrame Documentation / Code Samples*](https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html)
-[DateTime Documentation](docs/DateTimeDoc.pdf)
+### Performance
+There is a test program [_dataframe_performance_](test/dataframe_performance.cc) that should give you some sense of how this library performs. As a comparison, there is also a Pandas Python [_pandas_performance_](test/pandas_performance.py) script that does exactly the same thing.<BR>
+_dataframe_performance.cc_ uses DataFrame async interface and is compiled with gcc compiler with -O3 flag.<BR>
+_pandas_performance.py_ is ran with Pandas 1.1.0 and Python 3.7.<BR>
+I ran both on my mac-book, doing the following:<BR>
+<img src="docs/MacSize.png" alt="drawing" width="500"/>
+
+1.  Generate ~1.6 billion second resolution timestamps and load it into the DataFrame/Pandas as index.<BR>
+2.  Generate ~1.6 billion random numbers each for 3 columns with normal, log normal, and exponential distributions and load them into the DataFrame/Pandas.<BR>
+3.  Calculate the mean of each of the 3 columns.<BR>
+
+Result:
+```bash
+MacBook> time python test/pandas_performance.py
+All memory allocations are done. Calculating means ...
+
+real  17m18.916s
+user  4m47.113s
+sys   5m31.901s
+
+
+MacBook> time bin/Linux.GCC64/dataframe_performance
+All memory allocations are done. Calculating means ...
+
+real  5m25.641s
+user  2m37.362s
+sys   2m3.451s
+```
+<B>The Interesting Part:</B><BR>
+1.  Pandas script, I believe, is entirely implemented in Numpy which is in C.
+2.  In case of Pandas, allocating memory + random number generation takes almost the same amount of time as calculating means.
+3.  In case of DataFrame 90% of the time is spent in allocating memory + random number generation.
+4.  You load data once, but calculate statistics many times. So DataFrame, in general, is about 17x faster than parts of Pandas that are implemented in Numpy. I leave parts of Pandas that are purely in Python to imagination.
+5.  Pandas process image at its peak is ~105GB. C++ DataFrame process image at its peak is ~68GB.
 
 ---
 
@@ -107,39 +129,3 @@ dataframe/1.16.0@
 [generators]
 cmake
 ```
----
-
-### Performance
-There is a test program [_dataframe_performance_](test/dataframe_performance.cc) that should give you some sense of how this library performs. As a comparison, there is also a Pandas Python [_pandas_performance_](test/pandas_performance.py) script that does exactly the same thing.<BR>
-_dataframe_performance.cc_ uses DataFrame async interface and is compiled with gcc compiler with -O3 flag.<BR>
-_pandas_performance.py_ is ran with Pandas 1.1.0 and Python 3.7.<BR>
-I ran both on my mac-book, doing the following:<BR>
-<img src="docs/MacSize.png" alt="drawing" width="500"/>
-
-1.  Generate ~1.6 billion second resolution timestamps and load it into the DataFrame/Pandas as index.<BR>
-2.  Generate ~1.6 billion random numbers each for 3 columns with normal, log normal, and exponential distributions and load them into the DataFrame/Pandas.<BR>
-3.  Calculate the mean of each of the 3 columns.<BR>
-
-Result:
-```bash
-MacBook> time python test/pandas_performance.py
-All memory allocations are done. Calculating means ...
-
-real  17m18.916s
-user  4m47.113s
-sys   5m31.901s
-
-
-MacBook> time bin/Linux.GCC64/dataframe_performance
-All memory allocations are done. Calculating means ...
-
-real  5m25.641s
-user  2m37.362s
-sys   2m3.451s
-```
-<B>The interesting part:</B><BR>
-1.  Pandas script, I believe, is entirely implemented in Numpy which is in C.
-2.  In case of Pandas, allocating memory + random number generation takes almost the same amount of time as calculating means.
-3.  In case of DataFrame 90% of the time is spent in allocating memory + random number generation.
-4.  You load data once, but calculate statistics many times. So DataFrame, in general, is about 17x faster than parts of Pandas that are implemented in Numpy. I leave parts of Pandas that are purely in Python to imagination.
-5.  Pandas process image at its peak is ~105GB. C++ DataFrame process image at its peak is ~68GB.

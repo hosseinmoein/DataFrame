@@ -89,20 +89,17 @@ DataFrame class is defined as:
 </pre>
 <!--Created using ToHtml.com on 2020-06-10 15:24:27 UTC -->
 
-  <BR>
-  DataFrame library interface is separated into two categories:
-  <OL>
-    <LI>Accessing, adding, slicing & dicing, joining, and groupby'ing, ... the data</LI>
-    <LI>Analytical algorithms being statistical, machine-learning, financial analysis …</LI>
-  </OL>
-  I employ regular parameterized methods to implement item 1. For item 2., I chose the visitor pattern.<BR>
-  Please see below table for a comprehensive list of methods, visitors, and types along with documentation and sample code for each feature
-</P>
 <HR>
 
-<P>
-  <font size="+1">Code Examples</font> are in <I>test/dataframe_tester.cc</I> and <I>test/dataframe_tester_2.cc</I>. You should find at least one example for each feature. Also in the table below, you will find code examples for each feature.
+  DataFrame library interface is separated into two categories:
+  <OL>
+    <LI>Accessing, adding, slicing &amp; dicing, joining, and groupby'ing, ... the data</LI>
+    <LI>Analytical algorithms being statistical, machine-learning, financial analysis …</LI>
+  </OL>
+  I employ regular parameterized methods (i.e. member functions) to implement item (1). For item (2), I chose the visitor pattern.<BR>
+  Please see the table below for a comprehensive list of methods, visitors, and types along with documentation and sample code for each feature
 </P>
+
 <HR>
 
 <!-- CSS goes in the document HEAD or added to your external stylesheet -->
@@ -143,7 +140,7 @@ table.hovertable td {
   <table id="my_table" align="center" class="hovertable">
 
     <tr>
-      <th><font color="white">DataFrame Methods</font></th>
+      <th><font color="white">DataFrame Member Methods</font></th>
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
@@ -1042,7 +1039,7 @@ table.hovertable td {
 
   <H2><font color="green">Multithreading</font></H2>
     <OL>
-      <LI>DataFrame uses static containers to achieve type heterogeneity. By default, these static containers are unprotected. This is done by design. So by default, there is no locking overhead. If you use DataFrame in a multithreaded program you must provide a <I>SpinLock</I> defined in <I>ThreadGranularity.h</I> file. DataFrame will use your <I>SpinLock</I> to protect the containers.<BR>Please see above, <I>set_lock()</I>, <I>remove_lock()</I>, and <I>dataframe_tester.cc</I> for code example.</LI>
+      <LI>DataFrame uses static containers to achieve type heterogeneity. By default, these static containers are unprotected. This is done by design. So by default, there is no locking overhead. If you use DataFrame in a multithreaded program you must provide a <I>SpinLock</I> defined in <I>ThreadGranularity.h</I> file. DataFrame will use your <I>SpinLock</I> to protect the containers.<BR>Please see above, <I>set_lock()</I>, <I>remove_lock()</I>, and <I>dataframe_tester.cc#3767</I> for code example.</LI>
       <LI>In addition, instances of DataFrame are not multithreaded safe either. In other words, a single instance of DataFrame must not be used in multiple threads without protection, unless it is used as read-only.</LI>
       <LI>In the meantime, DataFrame utilizes multithreading in two different ways internally:</LI>
       <OL>
@@ -1050,6 +1047,7 @@ table.hovertable td {
         <LI>DataFrame uses multiple threads, internally and unbeknown to the user, in some of its algorithms when appropriate. User can control (or turn off) the multithreading by calling <I>set_thread_level()</I> which sets the max number of threads to be used. The default is 0. The optimal number of threads is a function of users hardware/software environment and usually obtained by trail and error. <I>set_thread_level()</I> and threading level in general is a static property and once set, it applies to all instances.</LI>
       </OL>
     </OL>
+
 <HR>
 
   <H2><font color="green">Views</font></H2>
@@ -1058,6 +1056,7 @@ table.hovertable td {
     There are certain things you cannot do in views. For example, you cannot add or delete columns, extend the index column, ...<BR>
     For more understanding, look at this document further and/or the test files.
   </P>
+
 <HR>
 
   <H2><font color="green">Visitors</font></H2>
@@ -1075,6 +1074,7 @@ table.hovertable td {
     <BR>
     See this document, <I>DataFrameStatsVisitors.h, DataFrameMLVisitors.h, DataFrameFinancialVisitors.h, DataFrameTransformVisitors.h</I>, and <I>test/dataframe_tester.cc</I> for more examples and documentation.
   </P>
+
 <HR>
 
   <H2><font color="green">Numeric Generators</font></H2>
@@ -1083,6 +1083,7 @@ table.hovertable td {
     See this document and file <I>RandGen.h</I> and <I>dataframe_tester.cc.</I>
     For the definition and defaults of <I>RandGenParams</I>, see this document and file <I>DataFrameTypes.h</I>
   </P>
+
 <HR>
 
   <H2><font color="green">Code Structure</font></H2>
@@ -1096,20 +1097,22 @@ table.hovertable td {
     <BR>
     <font size="+1">src</font> directory contains Linux-only make files and a few subdirectories that contain various source codes.<BR>
     <BR>
-    <font size="+1">test</font> directory contains all the test source files, mocked data files, and test output files. The main test source file is <I>dataframe_tester.cc.</I> It contains test cases for all functionalities of DataFrame. It is not in a very organized structure. I plan to make the test cases more organized.
+    <font size="+1">test</font> directory contains all the test source files, mocked data files, and test output files. The main test source files are <I>dataframe_tester.cc</I> and <I>dataframe_tester2.cc</I>. It contains test cases for all functionalities of DataFrame. It is not in a very organized structure. I plan to make the test cases more organized.
   </P>
+
 <HR>
 
   <H2><font color="green">Build Instructions</font></H2>
   <P>
-    <font size="+2">Using plain make and make-files</font><BR>
-    Go to the root of the repository, where license file is, and execute build_all.sh. This will build the library and test executables for Linux flavors <BR>
-    <font size="+2">Using cmake</font><BR>
+    <font size="+2">Using plain make and make-files:</font><BR>
+    Go to the root of the repository, where license file is, and execute build_all.sh. This will build the library and test executables for Linux/Unix flavors only<BR>
+    <font size="+2">Using cmake:</font><BR>
     Please see README file. Thanks to @justinjk007, you should be able to build this in Linux, Windows, Mac, and more
   </P>
+
 <HR>
 
-  <H1><font color="green">Motivation</font></H1>
+  <H2><font color="green">Motivation</font></H2>
   <P>
     Although Pandas has a spot-on interface and it is full of useful functionalities, it lacks performance and scalability. For example, it is hard to decipher high-frequency intraday data such as Options data or S&amp;P500 constituents tick-by-tick data using Pandas.<BR>
     Another issue I have encountered often is the research is done using Python, because it has such tools as Pandas, but the execution in production is in C++ for its efficiency, reliability and scalability. Therefore, there is this translation, or sometimes a bridge, between research and executions.<BR>
@@ -1117,6 +1120,7 @@ table.hovertable td {
     Mainly because of these factors, I implemented the C++ DataFrame.<BR>
     <I>I welcome all contributions from people with expertise, interest, and time to do it. I will add more functionalities from time to time, but currently my spare time is limited.</I>
   </P>
+
 <HR>
 
   <BR><BR>

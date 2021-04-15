@@ -38,9 +38,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <img src="docs/pandalion.png" alt="drawing" width="500"/>
 
 ## [*DataFrame Documentation / Code Samples*](https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html)
-This is a C++ statistical library that provides an interface similar to Pandas package in Python.<BR>
-<B>A DataFrame can have one index column and many data columns of any built-in or user-defined type</B>.<BR>
-You could slice the data in many different ways. You could join, merge, group-by the data. You could run various statistical, summarization and ML algorithms on the data. You could add your custom algorithms easily. You could multi-column sort, custom pick and delete the data. And more …<BR>
+This is a C++ analytical library that provides interface and functionality similar to packages/libraries in Python and R. For example, you could compare this to Pandas or data.frame.<BR>
+<B>A DataFrame can have one index column and many data columns of any built-in or user-defined types</B>.<BR>
+You could slice the data in many different ways. You could join, merge, group-by the data. You could run various statistical, summarization, financial, and ML algorithms on the data. You could add your custom algorithms easily. You could multi-column sort, custom pick and delete the data. And more …<BR>
 DataFrame also includes a large collection of analytical algorithms in form of visitors -- see [documentation](https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html). These are from basic stats such as <I>Mean</I>, <I>Std Deviation</I>, <I>Return</I>, … to more involved analysis such as <I>Affinity Propagation</I>, <I>Polynomial Fit</I>, <I>Hurst Exponent</I>, … -- See [documentation](https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html) for a complete list with code samples, and how you can add your custom algorithms.<BR>
 
 I have followed a few <B>principles in this library</B>:<BR>
@@ -54,19 +54,19 @@ I have followed a few <B>principles in this library</B>:<BR>
 7.  Do not attempt to protect the user against `garbage in`, `garbage out`
 
 [DateTime](docs/DateTimeDoc.pdf)<BR>
-DateTime class included in this library is a very cool and handy object to manipulate date/time with nanosecond precision.<BR>
+DateTime class included in this library is a very cool and handy object to manipulate date/time with nanosecond precision and multi timezone capability.<BR>
 
 ---
 
 ### Performance
-There is a test program [_dataframe_performance_](test/dataframe_performance.cc) that should give you some sense of how this library performs. As a comparison, there is also a Pandas [_pandas_performance_](test/pandas_performance.py) script that does exactly the same thing.<BR>
+There is a test program [_dataframe_performance_](test/dataframe_performance.cc) that should give you a sense of how this library performs. As a comparison, there is also a Pandas [_pandas_performance_](test/pandas_performance.py) script that does exactly the same thing.<BR>
 <I>dataframe_performance.cc</I> uses DataFrame <B>async interface</B> and is compiled with gcc compiler with -O3 flag.<BR>
 <I>pandas_performance.py</I> is ran with Pandas 1.2 and Python 3.7.<BR>
 I ran both on my mac-book, doing the following:<BR>
 <img src="docs/MacSize.png" alt="drawing" width="500"/>
 
 1.  Generate ~1.6 billion timestamps (second resolution) and load them into the DataFrame/Pandas as index.<BR>
-2.  Generate ~1.6 billion random numbers for 3 columns each with normal, log normal, and exponential distributions and load them into the DataFrame/Pandas.<BR>
+2.  Generate ~1.6 billion random numbers for 3 columns with normal, log normal, and exponential distributions and load them into the DataFrame/Pandas.<BR>
 3.  Calculate the mean of each of the 3 columns.<BR>
 
 Result:
@@ -120,7 +120,7 @@ make uninstall
 ```
 
 ### Package managers
-If you are using Conan to manage your dependencies, add `dataframe/x.y.z@` to your requires, where x.y.z is the release version you want to use. Conan will acquire DataFrame, build it from source in your computer, and provide CMake integration support for your projects. See the [conan docs](https://docs.conan.io/en/latest/) for more information.<BR> Sample `conanfile.txt`:
+If you are using _Conan_ to manage your dependencies, add `dataframe/x.y.z@` to your requires, where `x.y.z` is the release version you want to use. _Conan_ will acquire DataFrame, build it from source in your computer, and provide CMake integration support for your projects. See the [_Conan_ docs](https://docs.conan.io/en/latest/) for more information.<BR> Sample `conanfile.txt`:
 
 ```text
 [requires]

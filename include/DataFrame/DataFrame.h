@@ -1008,6 +1008,38 @@ public:  // Data manipulation
              I_V &&idx_visitor,
              Ts&& ... args) const;
 
+    // This is the same as above groupby2() but it groups by three columns
+    //
+    // T1:
+    //   Type of first groupby column. In case if index, it is type of index
+    // T2:
+    //   Type of second groupby column. In case if index, it is type of index
+    // T3:
+    //   Type of third groupby column. In case if index, it is type of index
+    // I_V:
+    //   Type of visitor to be used to summarize the index column
+    // Ts:
+    //   Types of triples to specify the column summarization
+    // col_name1:
+    //   Name of the first grouop-by'ing column
+    // col_name2:
+    //   Name of the second grouop-by'ing column
+    // col_name3:
+    //   Name of the third grouop-by'ing column
+    // idx_visitor:
+    //   A visitor to specify the index summarization
+    // args:
+    //   List of triples to specify the column summarization
+    //
+    template<typename T1, typename T2, typename T3,
+             typename I_V, typename ... Ts>
+    [[nodiscard]] DataFrame
+    groupby3(const char *col_name1,
+             const char *col_name2,
+             const char *col_name3,
+             I_V &&idx_visitor,
+             Ts&& ... args) const;
+
     // Same as groupby1() above, but executed asynchronously
     //
     template<typename T, typename I_V, typename ... Ts>
@@ -1022,6 +1054,17 @@ public:  // Data manipulation
     [[nodiscard]] std::future<DataFrame>
     groupby2_async(const char *col_name1,
                    const char *col_name2,
+                   I_V &&idx_visitor,
+                   Ts&& ... args) const;
+
+    // Same as groupby3() above, but executed asynchronously
+    //
+    template<typename T1, typename T2, typename T3,
+             typename I_V, typename ... Ts>
+    [[nodiscard]] std::future<DataFrame>
+    groupby3_async(const char *col_name1,
+                   const char *col_name2,
+                   const char *col_name3,
                    I_V &&idx_visitor,
                    Ts&& ... args) const;
 

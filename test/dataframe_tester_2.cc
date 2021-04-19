@@ -1208,6 +1208,64 @@ static void test_groupby_2()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_groupby_3()  {
+
+// Due to a bug in MS VC++ compiler being used by appveyor, this cannot be
+// compiled by them
+//
+#ifndef _WIN32
+
+    std::cout << "\nTesting groupby_3( ) ..." << std::endl;
+
+    std::vector<unsigned long>  ulgvec2 =
+        { 1, 2, 2, 2, 3, 4, 5, 5, 6, 6, 6, 7, 8, 9, 10, 10, 10, 11, 11, 11, 12,
+          13, 13, 14, 15, 16, 17, 17 };
+    std::vector<unsigned long>  xulgvec2 = ulgvec2;
+    std::vector<int>            intvec2 =
+        { 1, 2, 3, 4, 5, 3, 7, 3, 9, 10, 3, 2, 3, 14,
+          2, 2, 2, 3, 2, 3, 3, 3, 3, 3, 36, 2, 45, 2 };
+    std::vector<double>         xdblvec2 =
+        { 10, 20, 20, 11, 30, 40, 50, 50, 50, 50, 80, 90, 50, 11, 11, 25, 20,
+          30, 1, 2, 2, 2, 6, 2, 3, 10, 4, 5 };
+    std::vector<double>         dblvec22 =
+        { 0.998, 1.545, 0.056, 0.15678, 1.545, 0.923, 0.06743,
+          0.1, -1.545, 0.07865, -0.9999, 1.545, 0.1002, -0.8888,
+          0.14, 0.0456, -1.545, -0.8999, 0.01119, 0.8002, -1.545,
+          0.2, 0.1056, 0.87865, -0.6999, 1.545, 0.1902, -1.545 };
+    std::vector<std::string>    strvec2 =
+        { "A", "A", "A", "B", "C", "C", "C", "C", "Z", "S", "M", "B",
+          "A", "H", "X", "B", "Y", "Y", "W", "K", "K", "K", "J", "N",
+          "Y", "G", "K", "B" };
+
+    MyDataFrame df;
+
+    df.load_data(std::move(ulgvec2),
+                 std::make_pair("xint_col", intvec2),
+                 std::make_pair("dbl_col", xdblvec2),
+                 std::make_pair("dbl_col_2", dblvec22),
+                 std::make_pair("str_col", strvec2),
+                 std::make_pair("ul_col", xulgvec2));
+
+    auto    result1 =
+        df.groupby3<double, unsigned long, std::string>
+            ("dbl_col",
+             DF_INDEX_COL_NAME,
+             "str_col",
+             LastVisitor<MyDataFrame::IndexType, MyDataFrame::IndexType>(),
+             std::make_tuple("str_col", "sum_str", SumVisitor<std::string>()),
+             std::make_tuple("xint_col", "max_int", MaxVisitor<int>()),
+             std::make_tuple("xint_col", "min_int", MinVisitor<int>()),
+             std::make_tuple("dbl_col_2", "cnt_dbl", CountVisitor<double>()),
+             std::make_tuple("dbl_col", "sum_dbl", SumVisitor<double>()));
+
+    result1.write<std::ostream, std::string, double, std::size_t, int>
+        (std::cout, io_format::csv2);
+
+#endif // _WIN32
+}
+
+// -----------------------------------------------------------------------------
+
 static void test_io_format_csv2()  {
 
     std::cout << "\nTesting io_format_csv2( ) ..." << std::endl;
@@ -2969,6 +3027,7 @@ int main(int argc, char *argv[]) {
     test_remove_duplicates();
     test_groupby();
     test_groupby_2();
+    test_groupby_3();
     test_io_format_csv2();
     test_BoxCoxVisitor();
     test_NormalizeVisitor();

@@ -1191,6 +1191,91 @@ groupby2(const char *col_name1,
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
+template<typename T1, typename T2, typename T3, typename I_V, typename ... Ts>
+DataFrame<I, H> DataFrame<I, H>::
+groupby3(const char *col_name1,
+         const char *col_name2,
+         const char *col_name3,
+         I_V &&idx_visitor,
+         Ts&& ... args) const  {
+
+    const ColumnVecType<T1> *gb_vec1 { nullptr };
+    const ColumnVecType<T2> *gb_vec2 { nullptr };
+    const ColumnVecType<T3> *gb_vec3 { nullptr };
+
+    if (! ::strcmp(col_name1, DF_INDEX_COL_NAME))  {
+        gb_vec1 = (const ColumnVecType<T1> *) &(get_index());
+        gb_vec2 = (const ColumnVecType<T2> *) &(get_column<T2>(col_name2));
+        gb_vec3 = (const ColumnVecType<T3> *) &(get_column<T3>(col_name3));
+    }
+    else if (! ::strcmp(col_name2, DF_INDEX_COL_NAME))  {
+        gb_vec1 = (const ColumnVecType<T1> *) &(get_column<T1>(col_name1));
+        gb_vec2 = (const ColumnVecType<T2> *) &(get_index());
+        gb_vec3 = (const ColumnVecType<T3> *) &(get_column<T3>(col_name3));
+    }
+    else if (! ::strcmp(col_name3, DF_INDEX_COL_NAME))  {
+        gb_vec1 = (const ColumnVecType<T1> *) &(get_column<T1>(col_name1));
+        gb_vec2 = (const ColumnVecType<T2> *) &(get_column<T2>(col_name2));
+        gb_vec3 = (const ColumnVecType<T3> *) &(get_index());
+    }
+    else  {
+        gb_vec1 = (const ColumnVecType<T1> *) &(get_column<T1>(col_name1));
+        gb_vec2 = (const ColumnVecType<T2> *) &(get_column<T2>(col_name2));
+        gb_vec3 = (const ColumnVecType<T3> *) &(get_column<T3>(col_name3));
+    }
+
+    std::vector<std::size_t>    sort_v(
+        std::min({ gb_vec1->size(), gb_vec2->size(), gb_vec3->size() }), 0);
+
+    std::iota(sort_v.begin(), sort_v.end(), 0);
+    std::sort(sort_v.begin(), sort_v.end(),
+              [gb_vec1, gb_vec2, gb_vec3](std::size_t i,
+                                          std::size_t j) -> bool  {
+                  if (gb_vec1->at(i) < gb_vec1->at(j))
+                      return (true);
+                  else if (gb_vec1->at(i) > gb_vec1->at(j))
+                      return (false);
+                  else if (gb_vec2->at(i) < gb_vec2->at(j))
+                      return (true);
+                  else if (gb_vec2->at(i) > gb_vec2->at(j))
+                      return (false);
+                  return (gb_vec3->at(i) < gb_vec3->at(j));
+              });
+
+    DataFrame   res;
+    auto        args_tuple = std::tuple<Ts ...>(args ...);
+    auto        func =
+        [*this,
+         &res,
+         gb_vec1,
+         gb_vec2,
+         gb_vec3,
+         &sort_v,
+         idx_visitor = std::forward<I_V>(idx_visitor),
+         col_name1,
+         col_name2,
+         col_name3](auto &triple) mutable -> void {
+            _load_groupby_data_3_(*this,
+                                  res,
+                                  triple,
+                                  idx_visitor,
+                                  *gb_vec1,
+                                  *gb_vec2,
+                                  *gb_vec3,
+                                  sort_v,
+                                  col_name1,
+                                  col_name2,
+                                  col_name3);
+        };
+
+    for_each_in_tuple (args_tuple, func);
+
+    return (res);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
 template<typename T, typename I_V, typename ... Ts>
 std::future<DataFrame<I, H>> DataFrame<I, H>::
 groupby1_async(const char *col_name, I_V &&idx_visitor, Ts&& ... args) const {
@@ -1218,6 +1303,27 @@ groupby2_async(const char *col_name1,
                            this,
                            col_name1,
                            col_name2,
+                           idx_visitor,
+                           args ...));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename T1, typename T2, typename T3, typename I_V, typename ... Ts>
+std::future<DataFrame<I, H>> DataFrame<I, H>::
+groupby3_async(const char *col_name1,
+               const char *col_name2,
+               const char *col_name3,
+               I_V &&idx_visitor,
+               Ts&& ... args) const  {
+
+    return (std::async(std::launch::async,
+                       &DataFrame::groupby3<T1, T2, T3, I_V, Ts ...>,
+                           this,
+                           col_name1,
+                           col_name2,
+                           col_name3,
                            idx_visitor,
                            args ...));
 }

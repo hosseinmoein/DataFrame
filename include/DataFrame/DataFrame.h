@@ -37,9 +37,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/Utils/Utils.h>
 
 #include <array>
-#include <iostream>
 #include <functional>
 #include <future>
+#include <iostream>
 #include <map>
 #include <tuple>
 #include <typeindex>
@@ -52,9 +52,9 @@ namespace hmdf
 // I: Index (e.g. Timestamp) type. Although an index column need not
 //    necessarily represent time, it could be any built-in or user-defined type
 // H: See the static assert below. It can only be either
-//    a HeteroVector (typedef'ed below to StdDataFrame) or
-//    a HeteroView (typedef'ed below to DataFrameView) or
-//    a HeteroPtrView (typedef'ed below to DataFramePtrView)
+//    a HeteroVector (typedef'ed to StdDataFrame) or
+//    a HeteroView (typedef'ed to DataFrameView) or
+//    a HeteroPtrView (typedef'ed to DataFramePtrView)
 //
 // A DataFrame may contain one index and any number of columns of any built-in
 // or user-defined types
@@ -72,10 +72,7 @@ class LIBRARY_API DataFrame : public ThreadGranularity {
     using DataVec = H;
     using DataVecVec = std::vector<DataVec>;
 
-    template<typename II, typename HH>
-    friend class DataFrame;
-
-public:
+ public:  // Construction
 
     using size_type = typename std::vector<DataVec>::size_type;
     using IndexType = I;
@@ -95,25 +92,6 @@ public:
     //
     ~DataFrame();
 
-private:
-
-    using ColNameDict =
-        std::unordered_map<ColNameType, size_type, std::hash<VirtualString>>;
-    using ColNameList = std::vector<std::pair<ColNameType, size_type>>;
-
-    // Data fields
-    //
-    DataVecVec      data_ { };       // Vector of Heterogeneous vectors
-    IndexVecType    indices_ { };    // Vector
-    ColNameDict     column_tb_ { };  // Hash table of name -> vector index
-
-    // This is necessary to have a deterministic column order across all
-    // implementations
-    //
-    ColNameList     column_list_ { };  // Vector of column names and indices
-
-    inline static SpinLock *lock_ { nullptr };  // No lock safety by default
-
 public:  // Load/append/remove interfaces
 
     // DataFrame has unprotected static data. If you are using DataFrame in a
@@ -121,8 +99,11 @@ public:  // Load/append/remove interfaces
     // your SpinLock to protect its static data.
     // This is done this way, so by default, there is no locking overhead.
     //
-    static void set_lock (SpinLock *sl)  { lock_ = sl; }
-    static void remove_lock ()  { lock_ = nullptr; }
+    static void
+    set_lock (SpinLock *sl);
+
+    static void
+    remove_lock ();
 
     // It creates an empty column named name
     //
@@ -141,10 +122,7 @@ public:  // Load/append/remove interfaces
     remove_column(const char *name);
 
     void
-    remove_column(size_type index)  {
-
-        return (remove_column(column_list_[index].first.c_str()));
-    }
+    remove_column(size_type index);
 
     // It renames column named from to to. If column from does not exist,
     // it throws an exception
@@ -1093,10 +1071,7 @@ public:  // Data manipulation
 
     template<typename T>
     [[nodiscard]] StdDataFrame<T>
-    value_counts(size_type index) const  {
-
-        return (value_counts<T>(column_list_[index].first.c_str()));
-    }
+    value_counts(size_type index) const;
 
     // It bucketizes the data and index into intervals, based on index values
     // and bucket_type.
@@ -1342,10 +1317,15 @@ public:  // Data manipulation
 
 public: // Read/access and slicing interfaces
 
+    // Returns true, if there is no data in DataFrame
+    //
     [[nodiscard]] bool
-    empty() const noexcept  { return (indices_.empty()); }
+    empty() const noexcept;
+
+    // Returns true, if there is no column created in the DataFrame
+    //
     [[nodiscard]] bool
-    shapeless() const noexcept  { return (empty() && column_list_.empty()); }
+    shapeless() const noexcept;
 
     // It returns a reference to the container of named data column
     // The return type depends on if we are in standard or view mode
@@ -1359,10 +1339,7 @@ public: // Read/access and slicing interfaces
 
     template<typename T>
     [[nodiscard]] ColumnVecType<T> &
-    get_column(size_type index)  {
-
-        return (get_column<T>(column_list_[index].first.c_str()));
-    }
+    get_column(size_type index);
 
     // It returns a const reference to the container of named data column
     // The return type depends on if we are in standard or view mode
@@ -1378,10 +1355,7 @@ public: // Read/access and slicing interfaces
 
     template<typename T>
     [[nodiscard]] const ColumnVecType<T> &
-    get_column(size_type index) const  {
-
-        return (get_column<T>(column_list_[index].first.c_str()));
-    }
+    get_column(size_type index) const;
 
     // Returns true if self has the named column, otherwise false
     // NOTE: Even if the column exists, it may not be of the type you expect.
@@ -1393,7 +1367,7 @@ public: // Read/access and slicing interfaces
     has_column(const char *name) const;
 
     [[nodiscard]] bool
-    has_column(size_type index) const { return (index < column_list_.size()); }
+    has_column(size_type index) const;
 
     // This method returns true if the given column follows the given pattern,
     // otherwise it returns false. Epsilon is used for approximation.
@@ -1840,12 +1814,12 @@ public: // Read/access and slicing interfaces
     // It returns a const reference to the index container
     //
     [[nodiscard]] const IndexVecType &
-    get_index() const  { return (indices_); }
+    get_index() const;
 
     // It returns a reference to the index container
     //
     [[nodiscard]] IndexVecType &
-    get_index()  { return (indices_); }
+    get_index();
 
     // It creates and returns a new DataFrame which has the col_to_be_index
     // column as the index. If old_index_name is not null, it will be loaded
@@ -2240,10 +2214,7 @@ public:  // Visitors
 
     template<typename ... Ts>
     void
-    multi_visit(Ts ... args) const  {
-
-        const_cast<DataFrame *>(this)->multi_visit<Ts ...>(args ...);
-    }
+    multi_visit(Ts ... args) const;
 
     // It passes the values of each index and each named column to the
     // functor visitor sequentially from beginning to end
@@ -2267,11 +2238,7 @@ public:  // Visitors
 
     template<typename T, typename V>
     V &
-    visit(const char *name, V &visitor, bool in_reverse = false) const  {
-
-        return (const_cast<DataFrame *>(this)->visit<T, V>
-                (name, visitor, in_reverse));
-    }
+    visit(const char *name, V &visitor, bool in_reverse = false) const;
 
     // These are identical to above visit() but could execute asynchronously.
     // NOTE: It should be safe to run multiple visits on different columns
@@ -2316,11 +2283,7 @@ public:  // Visitors
     template<typename T1, typename T2, typename V>
     V &
     visit(const char *name1, const char *name2, V &visitor,
-          bool in_reverse = false) const  {
-
-        return (const_cast<DataFrame *>(this)->visit<T1, T2, V>
-                (name1, name2, visitor, in_reverse));
-    }
+          bool in_reverse = false) const;
 
     // These are identical to above visit() but could execute asynchronously.
     // NOTE: It should be safe to run multiple visits on different columns
@@ -2374,11 +2337,7 @@ public:  // Visitors
           const char *name2,
           const char *name3,
           V &visitor,
-          bool in_reverse = false) const  {
-
-        return (const_cast<DataFrame *>(this)->visit<T1, T2, T3, V>
-                (name1, name2, name3, visitor, in_reverse));
-    }
+          bool in_reverse = false) const;
 
     // These are identical to above visit() but could execute asynchronously.
     // NOTE: It should be safe to run multiple visits on different columns
@@ -2447,11 +2406,7 @@ public:  // Visitors
           const char *name3,
           const char *name4,
           V &visitor,
-          bool in_reverse = false) const  {
-
-        return (const_cast<DataFrame *>(this)->visit<T1, T2, T3, T4, V>
-                (name1, name2, name3, name4, visitor, in_reverse));
-    }
+          bool in_reverse = false) const;
 
     // These are identical to above visit() but could execute asynchronously.
     // NOTE: It should be safe to run multiple visits on different columns
@@ -2530,11 +2485,7 @@ public:  // Visitors
           const char *name4,
           const char *name5,
           V &visitor,
-          bool in_reverse = false) const  {
-
-        return (const_cast<DataFrame *>(this)->visit<T1, T2, T3, T4, T5, V>
-                (name1, name2, name3, name4, name5, visitor, in_reverse));
-    }
+          bool in_reverse = false) const;
 
     // These are identical to above visit() but could execute asynchronously.
     // NOTE: It should be safe to run multiple visits on different columns
@@ -2589,11 +2540,7 @@ public:  // Visitors
     V &
     single_act_visit(const char *name,
                      V &visitor,
-                     bool in_reverse = false) const  {
-
-        return (const_cast<DataFrame *>(this)->single_act_visit<T, V>
-                (name, visitor, in_reverse));
-    }
+                     bool in_reverse = false) const;
 
     // These are identical to above single_act_visit() but could execute
     // asynchronously.
@@ -2648,11 +2595,7 @@ public:  // Visitors
     single_act_visit(const char *name1,
                      const char *name2,
                      V &visitor,
-                     bool in_reverse = false) const  {
-
-        return (const_cast<DataFrame *>(this)->single_act_visit<T1, T2, V>
-                (name1, name2, visitor, in_reverse));
-    }
+                     bool in_reverse = false) const;
 
     // These are identical to above single_act_visit() but could execute
     // asynchronously.
@@ -2715,11 +2658,7 @@ public:  // Visitors
                      const char *name2,
                      const char *name3,
                      V &visitor,
-                     bool in_reverse = false) const  {
-
-        return (const_cast<DataFrame *>(this)->single_act_visit<T1, T2, T3, V>
-                (name1, name2, name3, visitor, in_reverse));
-    }
+                     bool in_reverse = false) const;
 
     // These are identical to above single_act_visit() but could execute
     // asynchronously.
@@ -2790,12 +2729,7 @@ public:  // Visitors
                      const char *name3,
                      const char *name4,
                      V &visitor,
-                     bool in_reverse = false) const  {
-
-        return (
-            const_cast<DataFrame *>(this)->single_act_visit<T1, T2, T3, T4, V>
-                (name1, name2, name3, name4, visitor, in_reverse));
-    }
+                     bool in_reverse = false) const;
 
     // These are identical to above single_act_visit() but could execute
     // asynchronously.
@@ -3096,210 +3030,34 @@ public:  // Utilities and miscellaneous
     read_async(S &in_s, io_format iof = io_format::csv,
                bool columns_only = false);
 
-private:  // Friend Operators
+private:
 
-    template<typename DF, template<typename> class OPT, typename ... Ts>
-    friend DF
-    binary_operation(const DF &lhs, const DF &rhs);
+    template<typename II, typename HH>
+    friend class DataFrame;
 
-protected:
+    using ColNameDict =
+        std::unordered_map<ColNameType, size_type, std::hash<VirtualString>>;
+    using ColNameList = std::vector<std::pair<ColNameType, size_type>>;
 
-    template<typename T1, typename T2>
-    size_type
-    _load_pair(std::pair<T1, T2> &col_name_data);
+    // Data fields
+    //
+    DataVecVec      data_ { };       // Vector of Heterogeneous vectors
+    IndexVecType    indices_ { };    // Vector
+    ColNameDict     column_tb_ { };  // Hash table of name -> vector index
 
-private:  // Static helper functions
+    // This is necessary to have a deterministic column order across all
+    // implementations
+    //
+    ColNameList     column_list_ { };  // Vector of column names and indices
 
-    void read_json_(std::istream &file, bool columns_only);
-    void read_csv_(std::istream &file, bool columns_only);
-    void read_csv2_(std::istream &file, bool columns_only);
+    inline static SpinLock *lock_ { nullptr };  // No lock safety by default
 
-    template<typename CF, typename ... Ts>
-    static void
-    sort_common_(DataFrame<I, H> &df, CF &&comp_func);
-
-    template<typename T>
-    static void
-    fill_missing_value_(ColumnVecType<T> &vec,
-                        const T &value,
-                        int limit,
-                        size_type col_num);
-
-    template<typename T>
-    static void
-    fill_missing_ffill_(ColumnVecType<T> &vec, int limit, size_type col_num);
-
-    template<typename T,
-             typename std::enable_if<
-                 std::is_arithmetic<T>::value &&
-                 std::is_arithmetic<IndexType>::value>::type* = nullptr>
-    static void
-    fill_missing_midpoint_(ColumnVecType<T> &vec, int limit, size_type col_num);
-
-    template<typename T,
-             typename std::enable_if<
-                 ! std::is_arithmetic<T>::value ||
-                 ! std::is_arithmetic<IndexType>::value>::type* = nullptr>
-    static void
-    fill_missing_midpoint_(ColumnVecType<T> &vec, int limit, size_type col_num);
-
-    template<typename T>
-    static void
-    fill_missing_bfill_(ColumnVecType<T> &vec, int limit);
-
-    template<typename T,
-             typename std::enable_if<
-                 std::is_arithmetic<T>::value &&
-                 std::is_arithmetic<IndexType>::value>::type* = nullptr>
-    static void
-    fill_missing_linter_(ColumnVecType<T> &vec,
-                         const IndexVecType &index,
-                         int limit);
-
-    template<typename T,
-             typename std::enable_if<
-                 ! std::is_arithmetic<T>::value ||
-                 ! std::is_arithmetic<IndexType>::value>::type* = nullptr>
-    static void
-    fill_missing_linter_(ColumnVecType<T> &, const IndexVecType &, int);
-
-    // Maps row number -> number of missing column(s)
-    using DropRowMap = std::map<size_type, size_type>;
-
-    template<typename T>
-    static void
-    drop_missing_rows_(T &vec,
-                       const DropRowMap missing_row_map,
-                       drop_policy policy,
-                       size_type threshold,
-                       size_type col_num);
-
-    template<typename T, typename ITR>
-    void
-    setup_view_column_(const char *name, Index2D<ITR> range);
-
-    using IndexIdxVector = std::vector<std::tuple<size_type, size_type>>;
-    template<typename T>
-    using JoinSortingPair = std::pair<const T *, size_type>;
-
-    template<typename LHS_T, typename RHS_T, typename IDX_T, typename ... Ts>
-    static void
-    join_helper_common_(const LHS_T &lhs,
-                        const RHS_T &rhs,
-                        const IndexIdxVector &joined_index_idx,
-                        StdDataFrame<IDX_T> &result,
-                        const char *skip_col_name = nullptr);
-
-    template<typename LHS_T, typename RHS_T, typename ... Ts>
-    static StdDataFrame<IndexType>
-    index_join_helper_(const LHS_T &lhs,
-                       const RHS_T &rhs,
-                       const IndexIdxVector &joined_index_idx);
-
-    template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
-    static StdDataFrame<unsigned int>
-    column_join_helper_(const LHS_T &lhs,
-                        const RHS_T &rhs,
-                        const char *col_name,
-                        const IndexIdxVector &joined_index_idx);
-
-    template<typename T>
-    static IndexIdxVector
-    get_inner_index_idx_vector_(
-        const std::vector<JoinSortingPair<T>> &col_vec_lhs,
-        const std::vector<JoinSortingPair<T>> &col_vec_rhs);
-
-    template<typename LHS_T, typename RHS_T, typename ... Ts>
-    static StdDataFrame<IndexType>
-    index_inner_join_(
-        const LHS_T &lhs, const RHS_T &rhs,
-        const std::vector<JoinSortingPair<IndexType>> &col_vec_lhs,
-        const std::vector<JoinSortingPair<IndexType>> &col_vec_rhs);
-
-    template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
-    static StdDataFrame<unsigned int>
-    column_inner_join_(const LHS_T &lhs,
-                       const RHS_T &rhs,
-                       const char *col_name,
-                       const std::vector<JoinSortingPair<T>> &col_vec_lhs,
-                       const std::vector<JoinSortingPair<T>> &col_vec_rhs);
-
-    template<typename T>
-    static IndexIdxVector
-    get_left_index_idx_vector_(
-        const std::vector<JoinSortingPair<T>> &col_vec_lhs,
-        const std::vector<JoinSortingPair<T>> &col_vec_rhs);
-
-    template<typename LHS_T, typename RHS_T, typename ... Ts>
-    static StdDataFrame<IndexType>
-    index_left_join_(
-        const LHS_T &lhs, const RHS_T &rhs,
-        const std::vector<JoinSortingPair<IndexType>> &col_vec_lhs,
-        const std::vector<JoinSortingPair<IndexType>> &col_vec_rhs);
-
-    template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
-    static StdDataFrame<unsigned int>
-    column_left_join_(const LHS_T &lhs,
-                      const RHS_T &rhs,
-                      const char *col_name,
-                      const std::vector<JoinSortingPair<T>> &col_vec_lhs,
-                      const std::vector<JoinSortingPair<T>> &col_vec_rhs);
-
-    template<typename T>
-    static IndexIdxVector
-    get_right_index_idx_vector_(
-        const std::vector<JoinSortingPair<T>> &col_vec_lhs,
-        const std::vector<JoinSortingPair<T>> &col_vec_rhs);
-
-    template<typename LHS_T, typename RHS_T, typename ... Ts>
-    static StdDataFrame<IndexType>
-    index_right_join_(
-        const LHS_T &lhs, const RHS_T &rhs,
-        const std::vector<JoinSortingPair<IndexType>> &col_vec_lhs,
-        const std::vector<JoinSortingPair<IndexType>> &col_vec_rhs);
-
-    template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
-    static StdDataFrame<unsigned int>
-    column_right_join_(const LHS_T &lhs,
-                       const RHS_T &rhs,
-                       const char *col_name,
-                       const std::vector<JoinSortingPair<T>> &col_vec_lhs,
-                       const std::vector<JoinSortingPair<T>> &col_vec_rhs);
-
-    template<typename MAP, typename ... Ts>
-    static StdDataFrame<IndexType>
-    remove_dups_common_(const DataFrame &s_df,
-                        remove_dup_spec rds,
-                        const MAP &row_table,
-                        const IndexVecType &index);
-
-    template<typename LHS_T, typename RHS_T, typename ... Ts>
-    static void
-    concat_helper_(LHS_T &lhs, const RHS_T &rhs, bool add_new_columns);
-
-    template<typename T>
-    static IndexIdxVector
-    get_left_right_index_idx_vector_(
-        const std::vector<JoinSortingPair<T>> &col_vec_lhs,
-        const std::vector<JoinSortingPair<T>> &col_vec_rhs);
-
-    template<typename LHS_T, typename RHS_T, typename ... Ts>
-    static StdDataFrame<IndexType>
-    index_left_right_join_(
-        const LHS_T &lhs, const RHS_T &rhs,
-        const std::vector<JoinSortingPair<IndexType>> &col_vec_lhs,
-        const std::vector<JoinSortingPair<IndexType>> &col_vec_rhs);
-
-    template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
-    static StdDataFrame<unsigned int>
-    column_left_right_join_(
-        const LHS_T &lhs,
-        const RHS_T &rhs,
-        const char *col_name,
-        const std::vector<JoinSortingPair<T>> &col_vec_lhs,
-        const std::vector<JoinSortingPair<T>> &col_vec_rhs);
+    // Private methods
+    //
+#   include <DataFrame/Internals/DataFrame_private_decl.h>
 
     // Visiting functors
+    //
 #   include <DataFrame/Internals/DataFrame_functors.h>
 };
 
@@ -3307,6 +3065,8 @@ private:  // Static helper functions
 
 // ----------------------------------------------------------------------------
 
+// All the implementations
+//
 #ifndef HMDF_DO_NOT_INCLUDE_TCC_FILES
 #  include <DataFrame/Internals/DataFrame_standalone.tcc>
 #  include <DataFrame/Internals/DataFrame.tcc>

@@ -110,6 +110,14 @@ void DataFrame<I, H>::remove_column (const char *name)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename  H>
+void DataFrame<I, H>::remove_column(size_type index)  {
+
+    return (remove_column(column_list_[index].first.c_str()));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
 void DataFrame<I, H>::rename_column (const char *from, const char *to)  {
 
     static_assert(std::is_base_of<HeteroVector, DataVec>::value,
@@ -188,7 +196,7 @@ DataFrame<I, H>::load_data (IndexVecType &&indices, Ts&& ... args)  {
     //     std::tuple_size<decltype(args_tuple)>::value;
     auto            fc =
         [this, &cnt](auto &pa) mutable -> void {
-            cnt += this->_load_pair(pa);
+            cnt += this->load_pair_(pa);
         };
 
     for_each_in_tuple (args_tuple, fc);
@@ -529,7 +537,7 @@ load_column (const char *name,
 template<typename I, typename  H>
 template<typename T1, typename T2>
 typename DataFrame<I, H>::size_type
-DataFrame<I, H>::_load_pair(std::pair<T1, T2> &col_name_data)  {
+DataFrame<I, H>::load_pair_(std::pair<T1, T2> &col_name_data)  {
 
     return (load_column<typename decltype(col_name_data.second)::value_type>(
                 col_name_data.first, // column name

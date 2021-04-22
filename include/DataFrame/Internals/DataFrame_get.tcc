@@ -93,13 +93,28 @@ DataFrame<I, H>::get_column (const char *name)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename  H>
-bool
-DataFrame<I, H>::has_column (const char *name) const  {
+template<typename T>
+typename DataFrame<I, H>::template ColumnVecType<T> &
+DataFrame<I, H>::get_column(size_type index)  {
+
+    return (get_column<T>(column_list_[index].first.c_str()));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+bool DataFrame<I, H>::has_column (const char *name) const  {
 
     auto    iter = column_tb_.find (name);
 
     return (iter != column_tb_.end());
 }
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+bool DataFrame<I, H>::
+has_column(size_type index) const { return (index < column_list_.size()); }
 
 // ----------------------------------------------------------------------------
 
@@ -110,6 +125,28 @@ DataFrame<I, H>::get_column (const char *name) const  {
 
     return (const_cast<DataFrame *>(this)->get_column<T>(name));
 }
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename T>
+const typename DataFrame<I, H>::template ColumnVecType<T> &
+DataFrame<I, H>::get_column(size_type index) const  {
+
+    return (get_column<T>(column_list_[index].first.c_str()));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+const typename DataFrame<I, H>::IndexVecType &
+DataFrame<I, H>::get_index() const  { return (indices_); }
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+typename DataFrame<I, H>::IndexVecType &
+DataFrame<I, H>::get_index()  { return (indices_); }
 
 // ----------------------------------------------------------------------------
 

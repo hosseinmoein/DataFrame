@@ -51,6 +51,28 @@ DataFrame<I, H>::~DataFrame()  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
+bool DataFrame<I, H>::empty() const noexcept  { return (indices_.empty()); }
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+bool DataFrame<I, H>::
+shapeless() const noexcept  { return (empty() && column_list_.empty()); }
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+void DataFrame<I, H>::set_lock (SpinLock *sl)  { lock_ = sl; }
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+void DataFrame<I, H>::remove_lock ()  { lock_ = nullptr; }
+
+// ----------------------------------------------------------------------------
+
+
+template<typename I, typename H>
 template<typename CF, typename ... Ts>
 void DataFrame<I, H>::sort_common_(DataFrame<I, H> &df, CF &&comp_func)  {
 
@@ -1387,6 +1409,15 @@ DataFrame<I, H>::value_counts (const char *col_name) const  {
     result_df.load_column("counts", std::move(counts));
 
     return(result_df);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename T>
+StdDataFrame<T> DataFrame<I, H>::value_counts(size_type index) const  {
+
+    return (value_counts<T>(column_list_[index].first.c_str()));
 }
 
 // ----------------------------------------------------------------------------

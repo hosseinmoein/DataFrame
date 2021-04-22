@@ -44,7 +44,8 @@ void DataFrame<I, H>::multi_visit (Ts ... args)  {
         auto &functor = *(pa.second);
 
         using T =
-            typename std::remove_reference<decltype(functor)>::type::value_type;
+            typename std::remove_reference<
+                decltype(functor)>::type::value_type;
         using V =
             typename std::remove_const<
                 typename std::remove_reference<decltype(functor)>::type>::type;
@@ -54,6 +55,15 @@ void DataFrame<I, H>::multi_visit (Ts ... args)  {
 
     for_each_in_tuple (args_tuple, fc);
     return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename ... Ts>
+void DataFrame<I, H>::multi_visit(Ts ... args) const  {
+
+    const_cast<DataFrame *>(this)->multi_visit<Ts ...>(args ...);
 }
 
 // ----------------------------------------------------------------------------
@@ -87,6 +97,17 @@ V &DataFrame<I, H>::visit (const char *name, V &visitor, bool in_reverse)  {
     visitor.post();
 
     return (visitor);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename T, typename V>
+V &DataFrame<I, H>::
+visit (const char *name, V &visitor, bool in_reverse) const  {
+
+    return (const_cast<DataFrame *>(this)->visit<T, V>
+                (name, visitor, in_reverse));
 }
 
 // ----------------------------------------------------------------------------
@@ -165,6 +186,20 @@ visit (const char *name1, const char *name2, V &visitor, bool in_reverse)  {
     visitor.post();
 
     return (visitor);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename T1, typename T2, typename V>
+V &DataFrame<I, H>::
+visit (const char *name1,
+       const char *name2,
+       V &visitor,
+       bool in_reverse) const  {
+
+    return (const_cast<DataFrame *>(this)->visit<T1, T2, V>
+                (name1, name2, visitor, in_reverse));
 }
 
 // ----------------------------------------------------------------------------
@@ -265,6 +300,21 @@ visit (const char *name1,
     visitor.post();
 
     return (visitor);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename T1, typename T2, typename T3, typename V>
+V &DataFrame<I, H>::
+visit (const char *name1,
+       const char *name2,
+       const char *name3,
+       V &visitor,
+       bool in_reverse) const  {
+
+    return (const_cast<DataFrame *>(this)->visit<T1, T2, T3, V>
+                (name1, name2, name3, visitor, in_reverse));
 }
 
 // ----------------------------------------------------------------------------
@@ -381,6 +431,22 @@ visit (const char *name1,
     visitor.post();
 
     return (visitor);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename T1, typename T2, typename T3, typename T4, typename V>
+V &DataFrame<I, H>::
+visit (const char *name1,
+       const char *name2,
+       const char *name3,
+       const char *name4,
+       V &visitor,
+       bool in_reverse) const  {
+
+    return (const_cast<DataFrame *>(this)->visit<T1, T2, T3, T4, V>
+                (name1, name2, name3, name4, visitor, in_reverse));
 }
 
 // ----------------------------------------------------------------------------
@@ -519,6 +585,24 @@ visit (const char *name1,
 template<typename I, typename  H>
 template<typename T1, typename T2, typename T3, typename T4, typename T5,
          typename V>
+V &DataFrame<I, H>::
+visit (const char *name1,
+       const char *name2,
+       const char *name3,
+       const char *name4,
+       const char *name5,
+       V &visitor,
+       bool in_reverse) const  {
+
+    return (const_cast<DataFrame *>(this)->visit<T1, T2, T3, T4, T5, V>
+                (name1, name2, name3, name4, name5, visitor, in_reverse));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename T1, typename T2, typename T3, typename T4, typename T5,
+         typename V>
 std::future<V &> DataFrame<I, H>::
 visit_async(const char *name1,
             const char *name2,
@@ -599,6 +683,17 @@ single_act_visit (const char *name, V &visitor, bool in_reverse)  {
     visitor.post();
 
     return (visitor);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename T, typename V>
+V &DataFrame<I, H>::
+single_act_visit (const char *name, V &visitor, bool in_reverse) const  {
+
+    return (const_cast<DataFrame *>(this)->single_act_visit<T, V>
+                (name, visitor, in_reverse));
 }
 
 // ----------------------------------------------------------------------------
@@ -687,6 +782,20 @@ single_act_visit_async(const char *name1,
 
 template<typename I, typename  H>
 template<typename T1, typename T2, typename V>
+V &DataFrame<I, H>::
+single_act_visit (const char *name1,
+                  const char *name2,
+                  V &visitor,
+                  bool in_reverse) const  {
+
+    return (const_cast<DataFrame *>(this)->single_act_visit<T1, T2, V>
+                (name1, name2, visitor, in_reverse));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename T1, typename T2, typename V>
 std::future<V &> DataFrame<I, H>::
 single_act_visit_async(const char *name1,
                        const char *name2,
@@ -736,6 +845,21 @@ single_act_visit (const char *name1,
     visitor.post();
 
     return (visitor);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename T1, typename T2, typename T3, typename V>
+V &DataFrame<I, H>::
+single_act_visit (const char *name1,
+                  const char *name2,
+                  const char *name3,
+                  V &visitor,
+                  bool in_reverse) const  {
+
+    return (const_cast<DataFrame *>(this)->single_act_visit<T1, T2, T3, V>
+                (name1, name2, name3, visitor, in_reverse));
 }
 
 // ----------------------------------------------------------------------------
@@ -825,6 +949,22 @@ single_act_visit (const char *name1,
     visitor.post();
 
     return (visitor);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename T1, typename T2, typename T3, typename T4, typename V>
+V &DataFrame<I, H>::
+single_act_visit (const char *name1,
+                  const char *name2,
+                  const char *name3,
+                  const char *name4,
+                  V &visitor,
+                  bool in_reverse) const  {
+
+    return (const_cast<DataFrame *>(this)->single_act_visit<T1, T2, T3, T4, V>
+                (name1, name2, name3, name4, visitor, in_reverse));
 }
 
 // ----------------------------------------------------------------------------

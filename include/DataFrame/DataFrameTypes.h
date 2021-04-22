@@ -52,26 +52,45 @@ namespace hmdf
 
 // ----------------------------------------------------------------------------
 
+// Generic DataFrame error
+//
 struct DataFrameError : public std::runtime_error  {
 
     DataFrameError (const char *desc) : std::runtime_error (desc)  {   }
 };
+
+// Column does not exist error
+//
 struct ColNotFound : public DataFrameError  {
 
     ColNotFound (const char *desc) : DataFrameError (desc)  {   }
 };
+
+// Something in DataFrame/operation is not proper error. For example, trying
+// to load a column with more data than there is in index
+//
 struct InconsistentData : public DataFrameError  {
 
     InconsistentData (const char *desc) : DataFrameError (desc)  {   }
 };
+
+// Bad data range specification error
+//
 struct BadRange : public DataFrameError  {
 
     BadRange (const char *desc) : DataFrameError (desc)  {   }
 };
+
+// The operation is not feasible error. For example, trying to do interpolation
+// on non-arithmetic types
+//
 struct NotFeasible : public DataFrameError  {
 
     NotFeasible (const char *desc) : DataFrameError (desc)  {   }
 };
+
+// The functionality is not implemented error
+//
 struct NotImplemented : public DataFrameError  {
 
     NotImplemented (const char *desc) : DataFrameError (desc)  {   }

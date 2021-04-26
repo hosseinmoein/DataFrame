@@ -180,6 +180,126 @@ public:
     using EpochType = time_t;                // Signed epoch
     using LongTimeType = long long int;      // Nano seconds since epoch
 
+    // Initialized to now
+    //
+    explicit DateTime (DT_TIME_ZONE tz = DT_TIME_ZONE::LOCAL);
+
+    explicit DateTime (DateType d,
+                       HourType hr = 0,
+                       MinuteType mn = 0,
+                       SecondType sc = 0,
+                       NanosecondType ns = 0,
+                       DT_TIME_ZONE tz = DT_TIME_ZONE::LOCAL);
+
+    // Currently, the following formats are supported:
+    //  (1)  YYYYMMDD
+    // AME_STYLE:
+    //  (2)  MM/DD/YYYY
+    //  (3)  MM/DD/YYYY HH
+    //  (4)  MM/DD/YYYY HH:MM
+    //  (5)  MM/DD/YYYY HH:MM:SS
+    //  (6)  MM/DD/YYYY HH:MM:SS.MMM
+    //
+    // EUR_STYLE:
+    //  (7)  YYYY/MM/DD
+    //  (8)  YYYY/MM/DD HH
+    //  (9)  YYYY/MM/DD HH:MM
+    //  (10) YYYY/MM/DD HH:MM:SS
+    //  (11) YYYY/MM/DD HH:MM:SS.MMM
+    //
+    // ISO_STYLE:
+    //  (12) YYYY-MM-DD
+    //  (13) YYYY-MM-DD HH
+    //  (14) YYYY-MM-DD HH:MM
+    //  (15) YYYY-MM-DD HH:MM:SS
+    //  (16) YYYY-MM-DD HH:MM:SS.MMM
+    //
+    explicit DateTime (const char *s,
+                       DT_DATE_STYLE ds = DT_DATE_STYLE::YYYYMMDD,
+                       DT_TIME_ZONE tz = DT_TIME_ZONE::LOCAL);
+
+    DateTime (const DateTime &that) = default;
+    DateTime (DateTime &&that) = default;
+    ~DateTime () = default;
+
+    DateTime &operator = (const DateTime &rhs) = default;
+    DateTime &operator = (DateTime &&rhs) = default;
+
+    // A convenient method, if you already have a DateTime instance
+    // and want to change the date/time quickly
+    //
+    void set_time (EpochType the_time, NanosecondType nanosec = 0) noexcept;
+
+    // NOTE: This method is not multithread-safe. This method
+    //       modifies the TZ environment variable which changes the
+    //       time zone for the entire program.
+    //
+    void set_timezone (DT_TIME_ZONE tz);
+    DT_TIME_ZONE get_timezone () const;
+
+    DateTime &operator = (DateType rhs);  // dt = 20181223
+
+    // Currently, the following formats are supported:
+    //  1)  YYYYMMDD [LOCAL | GMT]
+    //  2)  YYYYMMDD HH:MM:SS.MMM [LOCAL | GMT]
+    //
+    DateTime &operator = (const char *rhs);  // dt = "20181223"
+
+    // this (lhs) compared with rhs
+    //
+    EpochType compare(const DateTime &rhs) const;
+
+    DateType date () const noexcept;            // eg. 20020303
+    DatePartType year () const noexcept;        // eg. 1990
+    DT_MONTH month () const noexcept;           // JAN - DEC
+    DatePartType dmonth () const noexcept;      // 1 - 31
+    DatePartType dyear () const noexcept;       // 1 - 366
+    DT_WEEKDAY dweek () const noexcept;         // SUN - SAT
+    HourType hour () const noexcept;            // 0 - 23
+    MinuteType minute () const noexcept;        // 0 - 59
+    SecondType sec () const noexcept;           // 0 - 59
+    MillisecondType msec () const noexcept;     // 0 - 999
+    MicrosecondType microsec () const noexcept; // 0 - 999,999
+    NanosecondType nanosec () const noexcept;   // 0 - 999,999,999
+    EpochType time () const noexcept;           // Like ::time()
+    LongTimeType long_time () const noexcept;   // Nano seconds since epoch
+
+    DatePartType days_in_month () const noexcept;  // 28, 29, 30, 31
+
+    // These return the diff including the fraction of the unit.
+    // That is why they return a double.
+    // The diff could be +/- based on "this - that"
+    //
+    double diff_seconds (const DateTime &that) const;
+    double diff_minutes (const DateTime &that) const noexcept;
+    double diff_hours (const DateTime &that) const noexcept;
+    double diff_days (const DateTime &that) const noexcept;
+    double diff_weekdays (const DateTime &that) const noexcept;
+    double diff_weeks (const DateTime &that) const noexcept;
+
+    // The parameter to these methods could be +/-.
+    // It will advance/pull back the date/time accordingly.
+    //
+    void add_nanoseconds (long nanosecs) noexcept;
+    void add_seconds (EpochType secs) noexcept;
+    void add_days (long days) noexcept;
+    void add_weekdays (long days) noexcept;
+    void add_months (long months) noexcept;
+    void add_years (long years) noexcept;
+
+    bool is_weekend () const noexcept;
+    bool is_newyear () const noexcept;
+    bool is_xmas () const noexcept;
+    bool is_us_business_day () const noexcept;
+    bool is_us_bank_holiday () const noexcept;
+    bool is_valid () const noexcept;
+
+    // Formats date/time into a string based on format parameter
+    //
+    template<typename T>
+    void date_to_str (DT_FORMAT format, T &result) const;
+    std::string string_format (DT_FORMAT format) const;
+
 private:
 
     template<typename T>
@@ -296,123 +416,6 @@ private:
 
     inline static void change_env_timezone_(DT_TIME_ZONE time_zone);
     inline static void reset_env_timezone_(DT_TIME_ZONE time_zone);
-
-public:
-
-    // Initialized to now
-    explicit DateTime (DT_TIME_ZONE tz = DT_TIME_ZONE::LOCAL);
-
-    explicit DateTime (DateType d,
-                       HourType hr = 0,
-                       MinuteType mn = 0,
-                       SecondType sc = 0,
-                       NanosecondType ns = 0,
-                       DT_TIME_ZONE tz = DT_TIME_ZONE::LOCAL);
-
-    // Currently, the following formats are supported:
-    //  (1)  YYYYMMDD
-    // AME_STYLE:
-    //  (2)  MM/DD/YYYY
-    //  (3)  MM/DD/YYYY HH
-    //  (4)  MM/DD/YYYY HH:MM
-    //  (5)  MM/DD/YYYY HH:MM:SS
-    //  (6)  MM/DD/YYYY HH:MM:SS.MMM
-    //
-    // EUR_STYLE:
-    //  (7)  YYYY/MM/DD
-    //  (8)  YYYY/MM/DD HH
-    //  (9)  YYYY/MM/DD HH:MM
-    //  (10) YYYY/MM/DD HH:MM:SS
-    //  (11) YYYY/MM/DD HH:MM:SS.MMM
-    //
-    // ISO_STYLE:
-    //  (12) YYYY-MM-DD
-    //  (13) YYYY-MM-DD HH
-    //  (14) YYYY-MM-DD HH:MM
-    //  (15) YYYY-MM-DD HH:MM:SS
-    //  (16) YYYY-MM-DD HH:MM:SS.MMM
-    explicit DateTime (const char *s,
-                       DT_DATE_STYLE ds = DT_DATE_STYLE::YYYYMMDD,
-                       DT_TIME_ZONE tz = DT_TIME_ZONE::LOCAL);
-
-    DateTime (const DateTime &that) = default;
-    DateTime (DateTime &&that) = default;
-    ~DateTime () = default;
-
-    DateTime &operator = (const DateTime &rhs) = default;
-    DateTime &operator = (DateTime &&rhs) = default;
-
-    // A convenient method, if you already have a DateTime instance
-    // and want to change the date/time quickly
-    void set_time (EpochType the_time, NanosecondType nanosec = 0) noexcept;
-
-    // NOTE: This method is not multithread-safe. This method
-    //       modifies the TZ environment variable which changes the
-    //       time zone for the entire program.
-    //
-    void set_timezone (DT_TIME_ZONE tz);
-    inline DT_TIME_ZONE get_timezone () const  { return (time_zone_); }
-
-    DateTime &operator = (DateType rhs);  // dt = 20181223
-
-    // Currently, the following formats are supported:
-    //  1)  YYYYMMDD [LOCAL | GMT]
-    //  2)  YYYYMMDD HH:MM:SS.MMM [LOCAL | GMT]
-    //
-    DateTime &operator = (const char *rhs);  // dt = "20181223"
-
-    // this (lhs) compared with rhs
-    EpochType compare(const DateTime &rhs) const;
-
-    DateType date () const noexcept;            // eg. 20020303
-    DatePartType year () const noexcept;        // eg. 1990
-    DT_MONTH month () const noexcept;           // JAN - DEC
-    DatePartType dmonth () const noexcept;      // 1 - 31
-    DatePartType dyear () const noexcept;       // 1 - 366
-    DT_WEEKDAY dweek () const noexcept;         // SUN - SAT
-    HourType hour () const noexcept;            // 0 - 23
-    MinuteType minute () const noexcept;        // 0 - 59
-    SecondType sec () const noexcept;           // 0 - 59
-    MillisecondType msec () const noexcept;     // 0 - 999
-    MicrosecondType microsec () const noexcept; // 0 - 999,999
-    NanosecondType nanosec () const noexcept;   // 0 - 999,999,999
-    EpochType time () const noexcept;           // Like ::time()
-    LongTimeType long_time () const noexcept;   // Nano seconds since epoch
-
-    DatePartType days_in_month () const noexcept;  // 28, 29, 30, 31
-
-    // These return the diff including the fraction of the unit.
-    // That is why they return a double.
-    // The diff could be +/- based on "this - that"
-    double diff_seconds (const DateTime &that) const;
-    double diff_minutes (const DateTime &that) const noexcept;
-    double diff_hours (const DateTime &that) const noexcept;
-    double diff_days (const DateTime &that) const noexcept;
-    double diff_weekdays (const DateTime &that) const noexcept;
-    double diff_weeks (const DateTime &that) const noexcept;
-
-    // The parameter to these methods could be +/-.
-    // It will advance/pull back the date/time accordingly.
-    void add_nanoseconds (long nanosecs) noexcept;
-    void add_seconds (EpochType secs) noexcept;
-    void add_days (long days) noexcept;
-    void add_weekdays (long days) noexcept;
-    void add_months (long months) noexcept;
-    void add_years (long years) noexcept;
-
-    bool is_weekend () const noexcept;
-    bool is_newyear () const noexcept;
-    bool is_xmas () const noexcept;
-    bool is_us_business_day () const noexcept;
-    bool is_us_bank_holiday () const noexcept;
-    bool is_valid () const noexcept;
-
-    // Formats date/time into a string based on format parameter
-    template<typename T>
-    void date_to_str (DT_FORMAT format, T &result) const;
-    std::string string_format (DT_FORMAT format) const;
-
-private:
 
     static DatePartType
     days_in_month_ (DT_MONTH month, DatePartType year) noexcept;

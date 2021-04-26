@@ -45,8 +45,6 @@ namespace hmdf
 //
 struct  HeteroVector  {
 
-public:
-
     using size_type = size_t;
 
     HeteroVector();
@@ -162,6 +160,38 @@ public:
     inline const_reverse_iterator<T>
     rend () const noexcept { return (get_vector<T>().rend()); }
 
+    template<typename... Ts>
+    struct type_list  {   };
+
+    template<typename... Ts>
+    struct visitor_base  { using types = type_list<Ts ...>; };
+
+    template<typename T>
+    void visit (T &&visitor)  {
+
+        visit_impl_ (visitor, typename std::decay_t<T>::types { });
+    }
+    template<typename T>
+    void visit (T &&visitor) const  {
+
+        visit_impl_ (visitor, typename std::decay_t<T>::types { });
+    }
+    template<typename T>
+    void sort (T &&functor)  {
+
+        sort_impl_ (functor, typename std::decay_t<T>::types { });
+    }
+    template<typename T>
+    void change (T &&functor)  {
+
+        change_impl_ (functor, typename std::decay_t<T>::types { });
+    }
+    template<typename T>
+    void change (T &&functor) const  {
+
+        change_impl_ (functor, typename std::decay_t<T>::types { });
+    }
+
 private:
 
     template<typename T>
@@ -203,40 +233,6 @@ private:
     void change_impl_ (T &&functor, TLIST<TYPES...>);
     template<class T, template<class...> class TLIST, class... TYPES>
     void change_impl_ (T &&functor, TLIST<TYPES...>) const;
-
-public:
-
-    template<typename... Ts>
-    struct type_list  {   };
-
-    template<typename... Ts>
-    struct visitor_base  { using types = type_list<Ts ...>; };
-
-    template<typename T>
-    void visit (T &&visitor)  {
-
-        visit_impl_ (visitor, typename std::decay_t<T>::types { });
-    }
-    template<typename T>
-    void visit (T &&visitor) const  {
-
-        visit_impl_ (visitor, typename std::decay_t<T>::types { });
-    }
-    template<typename T>
-    void sort (T &&functor)  {
-
-        sort_impl_ (functor, typename std::decay_t<T>::types { });
-    }
-    template<typename T>
-    void change (T &&functor)  {
-
-        change_impl_ (functor, typename std::decay_t<T>::types { });
-    }
-    template<typename T>
-    void change (T &&functor) const  {
-
-        change_impl_ (functor, typename std::decay_t<T>::types { });
-    }
 };
 
 } // namespace hmdf

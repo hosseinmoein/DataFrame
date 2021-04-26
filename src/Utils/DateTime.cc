@@ -58,7 +58,9 @@ DateTime::DateTime (DT_TIME_ZONE tz) : time_zone_(tz)  {
     tmpres |= ft.dwLowDateTime;
 
     tmpres /= 10;  // convert into microseconds
+
     // converting file time to unix epoch
+    //
     tmpres -= DELTA_EPOCH_IN_MICROSECS;
 
     set_time(tmpres / 1000000UL, (tmpres % 1000000UL) * 1000000);
@@ -483,6 +485,10 @@ void DateTime::set_timezone (DT_TIME_ZONE tz)  {
     breaktime_ (t, nanosec ());
     return;
 }
+
+// ----------------------------------------------------------------------------
+
+DT_TIME_ZONE DateTime::get_timezone () const  { return (time_zone_); }
 
 // ----------------------------------------------------------------------------
 

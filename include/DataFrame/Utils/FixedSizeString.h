@@ -61,7 +61,8 @@ namespace hmdf
 //       OF THE PROGRAMMER TO TAKE CARE OF THAT.
 //
 
-class LIBRARY_API VirtualString {
+class LIBRARY_API   VirtualString {
+
 public:
 
     using size_type = std::size_t;
@@ -70,11 +71,10 @@ public:
     using const_pointer = const value_type *;
     using reference = value_type &;
     using const_reference = const value_type &;
-
     using iterator = pointer;
     using const_iterator = const_pointer;
 
-    static const size_type  npos = static_cast<size_type>(-1);
+    inline static const size_type  npos = static_cast<size_type>(-1);
 
     inline iterator begin () noexcept  { return (string_); }
     inline const_iterator begin () const noexcept  { return (string_); }
@@ -82,17 +82,8 @@ public:
     // Unfortunately, the following two methods are not as cheap as they are
     // supposed to be.
     //
-    inline iterator end () noexcept  { return (string_ + size ()); }
-    inline const_iterator end () const noexcept  {
-
-        return (string_ + size ());
-    }
-
-protected:
-
-    inline VirtualString (pointer str) noexcept : string_ (str)  {  }
-
-public:
+    inline iterator end() noexcept  { return (string_ + size ()); }
+    inline const_iterator end() const noexcept  { return (string_ + size ()); }
 
     VirtualString () = delete;
     VirtualString (const VirtualString &) = delete;
@@ -207,11 +198,11 @@ public:
 
     inline int printf (const char *format_str, ...) noexcept  {
 
-        va_list     argument_ptr;
+        va_list argument_ptr;
 
         va_start (argument_ptr, format_str);
 
-        const   int ret = ::vsprintf (string_, format_str, argument_ptr);
+        const int   ret = ::vsprintf (string_, format_str, argument_ptr);
 
         va_end (argument_ptr);
         return (ret);
@@ -219,11 +210,11 @@ public:
 
     inline int append_printf (const char *format_str, ...) noexcept  {
 
-        va_list     argument_ptr;
+        va_list argument_ptr;
 
         va_start (argument_ptr, format_str);
 
-        const   int ret =
+        const int   ret =
             ::vsprintf (string_ + size (), format_str, argument_ptr);
 
         va_end (argument_ptr);
@@ -313,6 +304,10 @@ public:
         while (*(s++)) { h = (h ^ *s) * 1099511628211UL; } // 64bit prime
         return (h);
     }
+
+protected:
+
+    inline VirtualString (pointer str) noexcept : string_ (str)  {  }
 
 private:
 

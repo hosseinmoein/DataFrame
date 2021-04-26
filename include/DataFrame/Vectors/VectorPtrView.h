@@ -50,13 +50,9 @@ namespace hmdf
 {
 
 template<typename T>
-class LIBRARY_API VectorPtrView {
-
-private:
+class LIBRARY_API   VectorPtrView {
 
     using vector_type = std::vector<T *>;
-
-    vector_type vector_ {  };
 
 public:
 
@@ -70,8 +66,6 @@ public:
     using difference_type = typename vector_type::difference_type;
 
     static const size_type  value_size = sizeof(T);
-
-public:
 
     inline size_type size() const noexcept { return (vector_.size ()); }
     inline size_type max_size() const noexcept { return (vector_.max_size()); }
@@ -267,7 +261,7 @@ public:
         }
         inline iterator operator ++ (int) noexcept  {  // Postfix++
 
-            iter_type ret_node = node_;
+            iter_type   ret_node = node_;
 
             node_ += 1;
             return (iterator (ret_node));
@@ -286,7 +280,7 @@ public:
         }
         inline iterator operator -- (int) noexcept  {  // Postfix--
 
-            iter_type ret_node = node_;
+            iter_type   ret_node = node_;
 
             node_ -= 1;
             return (iterator (ret_node));
@@ -416,7 +410,7 @@ public:
        //
         inline const_iterator operator ++ (int) noexcept  {
 
-            iter_type ret_node = node_;
+            iter_type   ret_node = node_;
 
             node_ += 1;
             return (const_iterator (ret_node));
@@ -440,7 +434,7 @@ public:
        //
         inline const_iterator operator -- (int) noexcept  {
 
-            iter_type ret_node = node_;
+            iter_type   ret_node = node_;
 
             node_ -= 1;
             return (const_iterator (ret_node));
@@ -489,8 +483,6 @@ public:
         iter_type   node_ {  };
     };
 
-public:
-
     inline iterator begin () noexcept  { return (iterator(vector_.begin())); }
     inline iterator end () noexcept { return (iterator(vector_.end())); }
     inline const_iterator
@@ -506,18 +498,18 @@ public:
     rbegin() const noexcept { return (std::make_reverse_iterator(end())); }
     inline std::reverse_iterator<const_iterator>
     rend() const noexcept { return (std::make_reverse_iterator(begin())); }
+
+private:
+
+    vector_type vector_ {  };
 };
 
 // ----------------------------------------------------------------------------
 
 template<typename T>
-class LIBRARY_API VectorConstPtrView  {
-
-private:
+class LIBRARY_API   VectorConstPtrView  {
 
     using vector_type = std::vector<const T *>;
-
-    vector_type vector_ {  };
 
 public:
 
@@ -531,8 +523,6 @@ public:
     using difference_type = typename vector_type::difference_type;
 
     static const size_type  value_size = sizeof(T);
-
-public:
 
     inline size_type size() const noexcept { return (vector_.size ()); }
     inline size_type max_size() const noexcept { return (vector_.max_size()); }
@@ -723,7 +713,7 @@ public:
        //
         inline const_iterator operator ++ (int) noexcept  {
 
-            iter_type ret_node = node_;
+            iter_type   ret_node = node_;
 
             node_ += 1;
             return (const_iterator (ret_node));
@@ -747,7 +737,7 @@ public:
        //
         inline const_iterator operator -- (int) noexcept  {
 
-            iter_type ret_node = node_;
+            iter_type   ret_node = node_;
 
             node_ -= 1;
             return (const_iterator (ret_node));
@@ -796,8 +786,6 @@ public:
         iter_type   node_ {  };
     };
 
-public:
-
     inline const_iterator
     begin() const noexcept { return (const_iterator(vector_.begin())); }
     inline const_iterator
@@ -807,6 +795,10 @@ public:
     rbegin() const noexcept { return (std::make_reverse_iterator(end())); }
     inline std::reverse_iterator<const_iterator>
     rend() const noexcept { return (std::make_reverse_iterator(begin())); }
+
+private:
+
+    vector_type vector_ {  };
 };
 
 } // namespace hmdf

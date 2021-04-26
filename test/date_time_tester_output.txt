@@ -1,13 +1,15 @@
-Local Time is: 03/23/2020 10:33:55.874   Nanoseconds: 873843000
-GMT Time is: 03/23/2020 14:33:55.874   Microseconds: 873843
+Local Time is: 04/22/2021 14:21:24.271   Nanoseconds: 270949000
+GMT Time is: 04/22/2021 18:21:24.271   Microseconds: 270949
+Local Time is: 2021-04-22
+Local Time is: 2021-04-22 14:21:24.270949
 
 ----- Testing DateTime's GMT vs Local time
 
-GMT now time: 03/23/2020 14:33:55.876   1584974035
-GMT ALT Constructor time: 03/23/2020 14:33:55.000   1584974035
+GMT now time: 04/22/2021 18:21:24.273   1619115684
+GMT ALT Constructor time: 04/22/2021 18:21:24.000   1619115684
 
-Local now time: 03/23/2020 10:33:55.876   1584974035
-Local ALT Constructor time: 03/23/2020 10:33:55.000   1584974035
+Local now time: 04/22/2021 14:21:24.273   1619115684
+Local ALT Constructor time: 04/22/2021 14:21:24.000   1619115684
 
 Local 1970 ALT Constructor time: 01/01/1970 00:00:00.000   18000
 GMT 1970 ALT Constructor time: 01/01/1970 00:00:00.000   0
@@ -187,24 +189,28 @@ After adding 10000 weekdays days to 19700101, the date is 04/30/2008 00:00:00.00
 
 ----- Testing DateTime's time zone changes
 
-Now Local:        03/23/2020 10:33:55.976
-GMT Local:        03/23/2020 14:33:55.976
-Now Buenos Aires: 03/23/2020 11:33:55.976
-Now Tehran:       03/23/2020 19:03:55.976
-Now Tokyo:        03/23/2020 23:33:55.976
-Now Sydeny:       03/24/2020 01:33:55.976
-Now New Zealand:  03/24/2020 03:33:55.976
-Now Moscow:       03/23/2020 17:33:55.976
-Now Shanghai:     03/23/2020 22:33:55.976
-Now Berlin:       03/23/2020 15:33:55.976
-Now Paris:        03/23/2020 15:33:55.976
-Now Stockholm:    03/23/2020 14:33:55.976
-Now New York:     03/23/2020 10:33:55.976
-Now Los Amgeles:  03/23/2020 07:33:55.976
-Now Local (2):    03/23/2020 10:33:55.976
+Now Local:        04/22/2021 14:21:24.383
+GMT Local:        04/22/2021 18:21:24.383
+Now Buenos Aires: 04/22/2021 15:21:24.383
+Now Tehran:       04/22/2021 22:51:24.383
+Now Tokyo:        04/23/2021 03:21:24.383
+Now Sydeny:       04/23/2021 04:21:24.383
+Now New Zealand:  04/23/2021 06:21:24.383
+Now Moscow:       04/22/2021 21:21:24.383
+Now Shanghai:     04/23/2021 02:21:24.383
+Now Berlin:       04/22/2021 20:21:24.383
+Now Paris:        04/22/2021 20:21:24.383
+Now Stockholm:    04/22/2021 18:21:24.383
+Now New York:     04/22/2021 14:21:24.383
+Now Los Amgeles:  04/22/2021 11:21:24.383
+Now Local (2):    04/22/2021 14:21:24.383
 
-Going from Local to Sydney: 03/24/2020 01:33:55.976
+Going from Local to Sydney: 04/23/2021 04:21:24.383
 
 Local Date/Time: 11/23/2009 09:38:43.000
 
 Local changed to Sydney: 11/24/2009 01:38:43.000
+Hash Value:      1559229305123000000
+Long Time Value: 1559229305123000000
+Hash Value:      1559229306163506079
+Long Time Value: 1559229306163506079

@@ -52,7 +52,7 @@ namespace hmdf
 // It also gives you STL conformant iterators.
 //
 template <typename T>
-class LIBRARY_API VectorView {
+class LIBRARY_API   VectorView {
 
 public:
 
@@ -65,8 +65,6 @@ public:
     using const_reference = const value_type &;
 
     static const size_type  value_size = sizeof(value_type);
-
-public:
 
     VectorView() = default;
     VectorView(const VectorView &) = default;
@@ -137,11 +135,6 @@ public:
         swap(vw);
         return (*this);
     }
-
-private:
-
-    value_type  *begin_ptr_ { nullptr };
-    value_type  *end_ptr_ { nullptr };
 
 public:
 
@@ -396,8 +389,6 @@ public:
         friend class    VectorView::const_iterator;
     };
 
-public:
-
     inline iterator begin () noexcept  { return (iterator (begin_ptr_)); }
     inline iterator end () noexcept  { return (iterator (end_ptr_)); }
     inline const_iterator
@@ -413,12 +404,17 @@ public:
     rbegin() const noexcept { return (std::make_reverse_iterator(end())); }
     inline std::reverse_iterator<const_iterator>
     rend() const noexcept { return (std::make_reverse_iterator(begin())); }
+
+private:
+
+    value_type  *begin_ptr_ { nullptr };
+    value_type  *end_ptr_ { nullptr };
 };
 
 // ----------------------------------------------------------------------------
 
 template <typename T>
-class LIBRARY_API VectorConstView {
+class LIBRARY_API   VectorConstView {
 
 public:
 
@@ -431,8 +427,6 @@ public:
     using const_reference = const value_type &;
 
     static const size_type  value_size = sizeof(value_type);
-
-public:
 
     VectorConstView() = default;
     VectorConstView(const VectorConstView &) = default;
@@ -496,11 +490,6 @@ public:
         swap(vw);
         return (*this);
     }
-
-private:
-
-    const value_type    *begin_ptr_ { nullptr };
-    const value_type    *end_ptr_ { nullptr };
 
 public:
 
@@ -628,8 +617,6 @@ public:
         const_pointer   node_ { nullptr };
     };
 
-public:
-
     inline const_iterator
     begin () const noexcept  { return (const_iterator (begin_ptr_)); }
     inline const_iterator
@@ -639,6 +626,11 @@ public:
     rbegin() const noexcept { return (std::make_reverse_iterator(end())); }
     inline std::reverse_iterator<const_iterator>
     rend() const noexcept { return (std::make_reverse_iterator(begin())); }
+
+private:
+
+    const value_type    *begin_ptr_ { nullptr };
+    const value_type    *end_ptr_ { nullptr };
 };
 
 } // namespace hmdf

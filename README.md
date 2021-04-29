@@ -38,8 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <img src="docs/pandalion.png" alt="drawing" width="500"/>
 
 ## [*DataFrame Documentation / Code Samples*](https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html)
-This is a C++ analytical library that provides interface and functionality similar to packages/libraries in Python and R. For example, you could compare this to Pandas or data.frame.<BR>
-<B>A DataFrame can have one index column and many data columns of any built-in or user-defined types</B>.<BR>
+This is a C++ analytical library that provides interface and functionality similar to packages/libraries in Python and R. For example, you could compare this to Pandas or R data.frame.<BR>
 You could slice the data in many different ways. You could join, merge, group-by the data. You could run various statistical, summarization, financial, and ML algorithms on the data. You could add your custom algorithms easily. You could multi-column sort, custom pick and delete the data. And more …<BR>
 DataFrame also includes a large collection of analytical algorithms in form of visitors -- see [documentation](https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html). These are from basic stats such as <I>Mean</I>, <I>Std Deviation</I>, <I>Return</I>, … to more involved analysis such as <I>Affinity Propagation</I>, <I>Polynomial Fit</I>, <I>Hurst Exponent</I>, … -- See [documentation](https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html) for a complete list with code samples, and how you can add your custom algorithms.<BR>
 
@@ -60,9 +59,7 @@ DateTime class included in this library is a very cool and handy object to manip
 
 ### Performance
 There is a test program [_dataframe_performance_](test/dataframe_performance.cc) that should give you a sense of how this library performs. As a comparison, there is also a Pandas [_pandas_performance_](test/pandas_performance.py) script that does exactly the same thing.<BR>
-<I>dataframe_performance.cc</I> uses DataFrame <B>async interface</B> and is compiled with gcc compiler with -O3 flag.<BR>
-<I>pandas_performance.py</I> is ran with Pandas 1.2 and Python 3.7.<BR>
-I ran both on my mac-book, doing the following:<BR>
+<I>dataframe_performance.cc</I> uses DataFrame <B>async interface</B> and is compiled with gcc compiler with -O3 flag. <I>pandas_performance.py</I> is ran with Pandas 1.2 and Python 3.7. I ran both on my mac-book, doing the following:<BR>
 <img src="docs/MacSize.png" alt="drawing" width="500"/>
 
 1.  Generate ~1.6 billion timestamps (second resolution) and load them into the DataFrame/Pandas as index.<BR>

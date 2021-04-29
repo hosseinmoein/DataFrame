@@ -48,7 +48,7 @@ write(const char *file_name, io_format iof, bool columns_only) const  {
         err.printf("write(): ERROR: Unable to open file '%s'", file_name);
         throw DataFrameError(err.c_str());
     }
-    this->write(file, iof, columns_only);
+    write<std::ostream, Ts ...>(file, iof, columns_only);
     file.close();
     return (true);
 }

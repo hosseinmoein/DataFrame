@@ -741,7 +741,7 @@ read (const char *file_name, io_format iof, bool columns_only)  {
         throw DataFrameError(err.c_str());
     }
 
-    read(file, iof, columns_only);
+    read<std::istream>(file, iof, columns_only);
     file.close();
     return(true);
 }

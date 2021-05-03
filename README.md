@@ -123,7 +123,7 @@ If you are using _Conan_ to manage your dependencies, add `dataframe/x.y.z@` to 
 
 ```text
 [requires]
-dataframe/1.16.0@
+dataframe/1.17.0@
 
 [generators]
 cmake

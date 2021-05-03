@@ -70,6 +70,7 @@ Result:
 ```bash
 MacBook> time python test/pandas_performance.py
 All memory allocations are done. Calculating means ...
+-4.318030613360519e-05, 1.6486147626420655, 1.0000042573786951
 
 real  17m18.916s
 user  4m47.113s
@@ -78,17 +79,18 @@ sys   5m31.901s
 
 MacBook> time bin/Linux.GCC64/dataframe_performance
 All memory allocations are done. Calculating means ...
+1, 1.64879, 0.999994
 
-real  5m25.641s
-user  2m37.362s
-sys   2m3.451s
+real  4m15.786s
+user  2m30.841s
+sys   1m36.944s
 ```
 <B>The Interesting Part:</B><BR>
 1.  Pandas script, I believe, is entirely implemented in Numpy which is in C.
 2.  In case of Pandas, allocating memory + random number generation takes almost the same amount of time as calculating means.
 3.  In case of DataFrame ~90% of the time is spent in allocating memory + random number generation.
-4.  You load data once, but calculate statistics many times. So DataFrame, in general, is about ~17x faster than parts of Pandas that are implemented in Numpy. I leave parts of Pandas that are purely in Python to imagination.
-5.  Pandas process image at its peak is ~105GB. C++ DataFrame process image at its peak is ~68GB.
+4.  You load data once, but calculate statistics many times. So DataFrame, in general, is about ~21x faster than parts of Pandas that are implemented in Numpy. I leave parts of Pandas that are purely in Python to imagination.
+5.  Pandas process image at its peak is ~105GB. C++ DataFrame process image at its peak is ~56GB.
 
 ---
 

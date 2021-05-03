@@ -526,7 +526,7 @@ drop_missing(drop_policy policy, size_type threshold)  {
         else  {
             auto    to_be_called =
                 static_cast
-                    <void(DataVec::*)(drop_missing_rows_functor_<Ts ...>&&)>
+                    <void(DataVec::*)(drop_missing_rows_functor_<Ts ...> &&)>
                         (&DataVec::template
                              change<drop_missing_rows_functor_<Ts ...>>);
 
@@ -1306,8 +1306,8 @@ groupby1_async(const char *col_name, I_V &&idx_visitor, Ts&& ... args) const {
                        &DataFrame::groupby1<T, I_V, Ts ...>,
                            this,
                            col_name,
-                           idx_visitor,
-                           args ...));
+                           std::forward<I_V>(idx_visitor),
+                           std::forward<Ts>(args) ...));
 }
 
 // ----------------------------------------------------------------------------
@@ -1325,8 +1325,8 @@ groupby2_async(const char *col_name1,
                            this,
                            col_name1,
                            col_name2,
-                           idx_visitor,
-                           args ...));
+                           std::forward<I_V>(idx_visitor),
+                           std::forward<Ts>(args) ...));
 }
 
 // ----------------------------------------------------------------------------
@@ -1346,8 +1346,8 @@ groupby3_async(const char *col_name1,
                            col_name1,
                            col_name2,
                            col_name3,
-                           idx_visitor,
-                           args ...));
+                           std::forward<I_V>(idx_visitor),
+                           std::forward<Ts>(args) ...));
 }
 
 // ----------------------------------------------------------------------------
@@ -1464,8 +1464,8 @@ bucketize_async(bucket_type bt,
                            this,
                            bt,
                            std::cref(value),
-                           idx_visitor,
-                           args ...));
+                           std::forward<I_V>(idx_visitor),
+                           std::forward<Ts>(args) ...));
 }
 
 // ----------------------------------------------------------------------------

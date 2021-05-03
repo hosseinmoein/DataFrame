@@ -221,8 +221,10 @@ if (MSVC)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj /wd4251")
 endif(MSVC)
 
-# Add the uninstall target
-include(AddUninstallTarget)
+# Add the uninstall target if its not defined
+if(NOT TARGET uninstall)
+  include(AddUninstallTarget)
+endif()
 
 if (ENABLE_TESTING)
   # Build the test binary

@@ -102,6 +102,28 @@ gen_triangular_nums(T last,
       </td>
     </tr>
 
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        <PRE><B>
+template&lt;typename T&gt;
+std::vector&lt;T&gt;
+gen_sym_triangle(std::size_t n,
+                 const T &amp;start_val,
+                 bool normalize = false);
+        </B></PRE></font>
+      </td>
+      <td>
+        This generates a set of number that represent the upper portion of a symmetric triangle. For example, n = 10 will generate [1, 2, 3, 4, 5, 5, 4, 3, 2, 1], n = 9 will generate [1, 2, 3, 4, 5, 4, 3, 2, 1]. If normalize is true, the numbers are normalized by the sum of all numbers.<BR>
+        <BR>
+        It returns the vector of results<BR>
+      </td>
+      <td width="20%">
+        <B>T</B>: Any type that supports arithmetic<BR>
+        <B>start_val</B>: Starting vlaue of the result<BR>
+        <B>normalize</B>: if true, result numbers are divided by the sum of all numbers<BR>
+      </td>
+    </tr>
+
   </table>
 
 </body>

@@ -390,6 +390,22 @@ template<typename T>
 std::vector<T>
 gen_triangular_nums(T last, T first = T(1));
 
+// ----------------------------------------------------------------------------
+
+// This generates a set of number that represent the upper portion of a
+// symmetric triangle.
+// For example, n = 10 will generate [1, 2, 3, 4, 5, 5, 4, 3, 2, 1]
+//           5 5
+//          4   4
+//         3     3
+//        2       2
+//       1         1
+// If normalize is true, the numbers are normalized by the sum of all numbers
+//
+template<typename T>
+std::vector<T>
+gen_sym_triangle(std::size_t n, const T &start_val, bool normalize = false);
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

@@ -1497,6 +1497,8 @@ private:
 
 // ----------------------------------------------------------------------------
 
+// Also called Stochastic Oscillator
+//
 template<typename T, typename I = unsigned long>
 struct  WilliamPrcRVisitor  {
 

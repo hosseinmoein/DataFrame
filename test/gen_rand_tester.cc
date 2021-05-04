@@ -205,6 +205,30 @@ int main(int argc, char *argv[]) {
         std::cout << std::endl;
     }
 
+
+    {
+        auto    r = gen_sym_triangle<double>(10, 1, true);
+
+        std::cout << '\n' << std::endl;
+        for (auto citer : r)
+            std::cout << citer << ", ";
+        std::cout << std::endl;
+
+        auto    r2 = gen_sym_triangle<double>(9, 1);
+
+        std::cout << '\n' << std::endl;
+        for (auto citer : r2)
+            std::cout << citer << ", ";
+        std::cout << std::endl;
+
+        auto    r3 = gen_sym_triangle<double>(15, 5);
+
+        std::cout << '\n' << std::endl;
+        for (auto citer : r3)
+            std::cout << citer << ", ";
+        std::cout << std::endl;
+    }
+
     return (0);
 }
 

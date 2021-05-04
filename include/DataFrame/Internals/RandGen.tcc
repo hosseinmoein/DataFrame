@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/RandGen.h>
 
 #include <cmath>
+#include <functional>
 #include <random>
 #include <type_traits>
 
@@ -430,7 +431,6 @@ gen_even_space_nums(std::size_t n, T first, T last)  {
     return (result);
 }
 
-
 // ----------------------------------------------------------------------------
 
 template<typename T>
@@ -447,6 +447,38 @@ gen_triangular_nums(T last, T first)  {
         result.push_back(val);
 
     result.shrink_to_fit();
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
+std::vector<T>
+gen_sym_triangle(std::size_t n, const T &start_val, bool normalize)  {
+
+    std::vector<T>      result;
+    const bool          is_even = ! (n & std::size_t(0x01)); 
+    const std::size_t   max_loop { n / 2 + (is_even ? 0 : 1) };
+    T                   sum { 0 };
+
+    result.reserve(n);
+    for (std::size_t i = 0; i < max_loop; ++i)  {
+        const T val = start_val + i;
+
+        result.push_back(val);
+        sum += val;
+    }
+    for (long i = max_loop - (is_even ? 1 : 2); i >= 0; --i)  {
+        const T &val = result[i];
+
+        result.push_back(val);
+        sum += val;
+    }
+    if (normalize)
+        std::transform(result.begin(), result.end(), result.begin(),
+                       std::bind(std::divides<T>(), std::placeholders::_1,
+                                 sum));
+
     return (result);
 }
 

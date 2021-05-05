@@ -1081,6 +1081,123 @@ private:
 
 // ----------------------------------------------------------------------------
 
+// RSX is a "noise free" version of RSI, with no added lag.
+//
+template<typename T,
+         typename I = unsigned long,
+         typename =
+             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+struct RSXVisitor {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &column_begin,
+                const H &column_end)  {
+
+        GET_COL_SIZE
+
+        assert(avg_period_ < col_s);
+
+        value_type  vc { 0 }, v1c { 0 };
+        value_type  v4 { 0 }, v8 { 0 }, v10 { 0 }, v14 { 0 }, v18 { 0 },
+                    v20 { 0 };
+        value_type  f0 { 0 }, f8 { 0 }, f10 { 0 }, f18 { 0 }, f20 { 0 },
+                    f28 { 0 }, f30 { 0 }, f38 { 0 },  f40 { 0 }, f48 { 0 },
+                    f50 { 0 }, f58 { 0 }, f60 { 0 }, f68 { 0 }, f70 { 0 },
+                    f78 { 0 }, f80 { 0 }, f88 { 0 }, f90 { 0 };
+
+        constexpr value_type    zero { 0 };
+        constexpr value_type    epsilon { 0.0000000001 };
+        constexpr value_type    half { 0.5 };
+        constexpr value_type    one_half { 1.5 };
+        constexpr value_type    one { 1 };
+        constexpr value_type    two { 2 };
+        constexpr value_type    three { 3 };
+        constexpr value_type    five { 5 };
+        constexpr value_type    fifty { 50 };
+        constexpr value_type    hundred { 100 };
+
+        result_.resize(col_s, std::numeric_limits<value_type>::quiet_NaN());
+        result_[avg_period_ - 1] = 0;
+        for (size_type i = avg_period_; i < col_s; ++i)  {
+            if (f90 == zero)  {
+                f90 = one;
+                f0 = zero;
+                if (avg_period_ - 1 >= 5)
+                    f88 = T(avg_period_) - one;
+                else
+                    f88 = five;
+                f8 = hundred * *(column_begin + i);
+                f18 = three / (T(avg_period_) + two);
+                f20 = one - f18;
+            }
+            else  {
+                if (f88 <= f90)
+                    f90 = f88 + one;
+                else
+                    f90 = f90 + one;
+                f10 = f8;
+                f8 = hundred * *(column_begin + i);
+                v8 = f8 - f10;
+                f28 = f20 * f28 + f18 * v8;
+                f30 = f18 * f28 + f20 * f30;
+                vc = one_half * f28 - half * f30;
+                f38 = f20 * f38 + f18 * vc;
+                f40 = f18 * f38 + f20 * f40;
+                v10 = one_half * f38 - half * f40;
+                f48 = f20 * f48 + f18 * v10;
+                f50 = f18 * f48 + f20 * f50;
+                v14 = one_half * f48 - half * f50;
+                f58 = f20 * f58 + f18 * std::fabs(v8);
+                f60 = f18 * f58 + f20 * f60;
+                v18 = one_half * f58 - half * f60;
+                f68 = f20 * f68 + f18 * v18;
+                f70 = f18 * f68 + f20 * f70;
+                v1c = one_half * f68 - half * f70;
+                f78 = f20 * f78 + f18 * v1c;
+                f80 = f18 * f78 + f20 * f80;
+                v20 = one_half * f78 - half * f80;
+
+                if (f88 >= f90 && f8 != f10)
+                    f0 = one;
+                if (f88 == f90 && f0 == zero)
+                    f90 = zero;
+            }
+
+            if (f88 < f90 && v20 > epsilon)  {
+                v4 = (v14 / v20 + one) * fifty;
+                if (v4 > hundred)
+                    v4 = hundred;
+                if (v4 < zero)
+                    v4 = zero;
+            }
+            else
+                v4 = fifty;
+
+            result_[i] = v4;
+        }
+    }
+
+    inline void pre ()  { result_.clear(); }
+    inline void post ()  {  }
+    inline const result_type &get_result () const  { return (result_); }
+    inline result_type &get_result ()  { return (result_); }
+
+    explicit RSXVisitor(size_type avg_period = 14)
+        : avg_period_(value_type(avg_period))  {   }
+
+private:
+
+    const value_type    avg_period_;
+    result_type         result_ { };
+};
+
+// ----------------------------------------------------------------------------
+
 template<typename T,
          typename I = unsigned long,
          typename =

@@ -3008,6 +3008,39 @@ static void test_UlcerIndexVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_RSXVisitor()  {
+
+    std::cout << "\nTesting RSXVisitor{  } ..." << std::endl;
+
+    typedef StdDataFrame<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("data/IBM.csv", io_format::csv2);
+
+        RSXVisitor<double, std::string> rsx_v;
+
+        df.single_act_visit<double>("IBM_Close", rsx_v);
+
+        assert(rsx_v.get_result().size() == 5031);
+        assert(std::isnan(rsx_v.get_result()[0]));
+        assert(std::isnan(rsx_v.get_result()[12]));
+        assert(rsx_v.get_result()[13] == 0);
+        assert(rsx_v.get_result()[14] == 50.0);
+        assert(rsx_v.get_result()[26] == 50.0);
+        assert(std::abs(rsx_v.get_result()[29] - 44.2103) < 0.0001);
+        assert(std::abs(rsx_v.get_result()[34] - 37.4583) < 0.0001);
+        assert(std::abs(rsx_v.get_result()[5030] - 21.0277) < 0.0001);
+        assert(std::abs(rsx_v.get_result()[5026] - 31.1071) < 0.0001);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int argc, char *argv[]) {
 
     test_get_reindexed();
@@ -3065,6 +3098,7 @@ int main(int argc, char *argv[]) {
     test_shifting_column();
     test_UlcerIndexVisitor();
     test_bucketize();
+    test_RSXVisitor();
 
     return (0);
 }

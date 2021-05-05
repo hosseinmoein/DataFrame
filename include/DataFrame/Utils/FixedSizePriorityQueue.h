@@ -65,7 +65,7 @@ public:
     using compare_type = Cmp;
     using size_type = std::size_t;
 
-    void push(value_type item)  {
+    void push(value_type &&item)  {
 
         if (data_end_ != array_.end())  {
             *data_end_++ = std::move(item);

@@ -57,6 +57,28 @@ struct RSIVisitor;
       </td>
     </tr>
 
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        <PRE><B>#include &lt;DataFrame/DataFrameStatsVisitors.h&gt;
+
+template&lt;typename T,
+         typename I = unsigned long,
+         typename =
+             typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;
+struct RSXVisitor;
+        </B></PRE></font>
+      </td>
+      <td>
+        RSI is a popular indicator, yet it can be very noisy, inducing false signals and triggers. RSX is superior, providing an ultra smooth, low lag trend strength indicator. The code implemented is based on published code found at 'prorealcode.com'.<BR>
+        <BR>
+        <I>explicit RSXVisitor(size_type avg_period = 14)</I>
+      </td>
+      <td width="12%">
+        <B>T</B>: Column data type.<BR>
+        <B>I</B>: Index type.
+      </td>
+    </tr>
+
   </table>
 
  <pre style='color:#000000;background:#ffffff;'><span style='color:#800000; font-weight:bold; '>static</span> <span style='color:#800000; font-weight:bold; '>void</span> test_RSIVisitor<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span>  <span style='color:#800080; '>{</span>
@@ -87,6 +109,41 @@ struct RSIVisitor;
 <span style='color:#800080; '>}</span>
 </pre>
 <!--Created using ToHtml.com on 2020-08-13 19:03:32 UTC -->
+
+<pre style='color:#000000;background:#ffffff;'><span style='color:#696969; '>// -----------------------------------------------------------------------------</span>
+
+<span style='color:#800000; font-weight:bold; '>static</span> <span style='color:#800000; font-weight:bold; '>void</span> test_RSXVisitor<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span>  <span style='color:#800080; '>{</span>
+
+    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>cout</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#800000; '>"</span><span style='color:#0f69ff; '>\n</span><span style='color:#0000e6; '>Testing RSXVisitor{  } ...</span><span style='color:#800000; '>"</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>endl</span><span style='color:#800080; '>;</span>
+
+    <span style='color:#800000; font-weight:bold; '>typedef</span> StdDataFrame<span style='color:#800080; '>&lt;</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>string</span><span style='color:#800080; '>></span> StrDataFrame<span style='color:#800080; '>;</span>
+
+    StrDataFrame    df<span style='color:#800080; '>;</span>
+
+    <span style='color:#800000; font-weight:bold; '>try</span>  <span style='color:#800080; '>{</span>
+        df<span style='color:#808030; '>.</span>read<span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>data/IBM.csv</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> io_format<span style='color:#800080; '>::</span>csv2<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+
+        RSXVisitor<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#808030; '>,</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>string</span><span style='color:#800080; '>></span> rsx_v<span style='color:#800080; '>;</span>
+
+        df<span style='color:#808030; '>.</span>single_act_visit<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>IBM_Close</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> rsx_v<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+
+        assert<span style='color:#808030; '>(</span>rsx_v<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>.</span>size<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>=</span><span style='color:#808030; '>=</span> <span style='color:#008c00; '>5031</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+        assert<span style='color:#808030; '>(</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span>isnan<span style='color:#808030; '>(</span>rsx_v<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span><span style='color:#008c00; '>0</span><span style='color:#808030; '>]</span><span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+        assert<span style='color:#808030; '>(</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span>isnan<span style='color:#808030; '>(</span>rsx_v<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span><span style='color:#008c00; '>12</span><span style='color:#808030; '>]</span><span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+        assert<span style='color:#808030; '>(</span>rsx_v<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span><span style='color:#008c00; '>13</span><span style='color:#808030; '>]</span> <span style='color:#808030; '>=</span><span style='color:#808030; '>=</span> <span style='color:#008c00; '>0</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+        assert<span style='color:#808030; '>(</span>rsx_v<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span><span style='color:#008c00; '>14</span><span style='color:#808030; '>]</span> <span style='color:#808030; '>=</span><span style='color:#808030; '>=</span> <span style='color:#008000; '>50.0</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+        assert<span style='color:#808030; '>(</span>rsx_v<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span><span style='color:#008c00; '>26</span><span style='color:#808030; '>]</span> <span style='color:#808030; '>=</span><span style='color:#808030; '>=</span> <span style='color:#008000; '>50.0</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+        assert<span style='color:#808030; '>(</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>abs</span><span style='color:#808030; '>(</span>rsx_v<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span><span style='color:#008c00; '>29</span><span style='color:#808030; '>]</span> <span style='color:#808030; '>-</span> <span style='color:#008000; '>44.2103</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>&lt;</span> <span style='color:#008000; '>0.0001</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+        assert<span style='color:#808030; '>(</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>abs</span><span style='color:#808030; '>(</span>rsx_v<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span><span style='color:#008c00; '>34</span><span style='color:#808030; '>]</span> <span style='color:#808030; '>-</span> <span style='color:#008000; '>37.4583</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>&lt;</span> <span style='color:#008000; '>0.0001</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+        assert<span style='color:#808030; '>(</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>abs</span><span style='color:#808030; '>(</span>rsx_v<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span><span style='color:#008c00; '>5030</span><span style='color:#808030; '>]</span> <span style='color:#808030; '>-</span> <span style='color:#008000; '>21.0277</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>&lt;</span> <span style='color:#008000; '>0.0001</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+        assert<span style='color:#808030; '>(</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>abs</span><span style='color:#808030; '>(</span>rsx_v<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span><span style='color:#008c00; '>5026</span><span style='color:#808030; '>]</span> <span style='color:#808030; '>-</span> <span style='color:#008000; '>31.1071</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>&lt;</span> <span style='color:#008000; '>0.0001</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    <span style='color:#800080; '>}</span>
+    <span style='color:#800000; font-weight:bold; '>catch</span> <span style='color:#808030; '>(</span><span style='color:#800000; font-weight:bold; '>const</span> DataFrameError <span style='color:#808030; '>&amp;</span>ex<span style='color:#808030; '>)</span>  <span style='color:#800080; '>{</span>
+        <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>cout</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> ex<span style='color:#808030; '>.</span>what<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>endl</span><span style='color:#800080; '>;</span>
+    <span style='color:#800080; '>}</span>
+<span style='color:#800080; '>}</span>
+</pre>
+<!--Created using ToHtml.com on 2021-05-04 19:30:41 UTC -->
 
 </body>
 </html>

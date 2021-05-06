@@ -2514,6 +2514,70 @@ private:
     result_type     result_ { };
 };
 
+// ----------------------------------------------------------------------------
+
+// Trade To Market trend indicator
+//
+template<typename T, typename I = unsigned long>
+struct  TTMTrendVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES
+
+    using result_type = std::vector<bool>;
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &low_begin,
+                const H &low_end,
+                const H &high_begin,
+                const H &high_end,
+                const H &close_begin,
+                const H &close_end)  {
+
+        assert(bar_periods_ > 0);
+
+        const size_type col_s = std::distance(close_begin, close_end);
+
+        assert((col_s == std::distance(low_begin, low_end)));
+        assert((col_s == std::distance(high_begin, high_end)));
+        assert(((bar_periods_ + 1) < col_s));
+
+        std::vector<T>  trend_avg;
+
+        trend_avg.reserve(col_s);
+        for (size_type i = 0; i < bar_periods_; ++i)
+            trend_avg.push_back(std::numeric_limits<value_type>::quiet_NaN());
+        for (size_type i = bar_periods_; i < col_s; ++i)
+            trend_avg.push_back((*(high_begin + i) + *(low_begin + i)) / T(2));
+        for (size_type i = 1; i <= bar_periods_; ++i)
+            for (size_type j = i; j < col_s; ++j)
+                trend_avg[j] +=
+                    (*(high_begin + (j - i)) + *(low_begin + (j - i))) / T(2);
+        std::transform(trend_avg.begin(), trend_avg.end(), trend_avg.begin(),
+                       std::bind(std::divides<T>(), std::placeholders::_1,
+                                 T(bar_periods_ + 1)));
+
+        result_.reserve(col_s);
+        for (size_type i = 0; i < col_s; ++i)
+            result_.push_back(*(close_begin + i) > trend_avg[i]);
+    }
+
+    inline void pre ()  { result_.clear(); }
+    inline void post ()  {  }
+    inline const result_type &get_result () const  { return (result_); }
+    inline result_type &get_result ()  { return (result_); }
+
+    explicit
+    TTMTrendVisitor(size_type bar_periods = 5) : bar_periods_(bar_periods) {  }
+
+private:
+
+    const size_type bar_periods_;
+    result_type     result_ { };
+};
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

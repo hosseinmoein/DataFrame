@@ -3041,6 +3041,39 @@ static void test_RSXVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_TTMTrendVisitor()  {
+
+    std::cout << "\nTesting TTMTrendVisitor{  } ..." << std::endl;
+
+    typedef StdDataFrame<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("data/IBM.csv", io_format::csv2);
+
+        TTMTrendVisitor<double, std::string> ttmt_v;
+
+        df.single_act_visit<double, double, double>
+            ("IBM_Low", "IBM_High", "IBM_Close", ttmt_v);
+
+        assert(ttmt_v.get_result().size() == 5031);
+        assert((! ttmt_v.get_result()[0]));
+        assert((! ttmt_v.get_result()[8]));
+        assert(ttmt_v.get_result()[9]);
+        assert(ttmt_v.get_result()[13]);
+        assert((! ttmt_v.get_result()[14]));
+        assert(ttmt_v.get_result()[5030]);
+        assert((! ttmt_v.get_result()[5027]));
+        assert(ttmt_v.get_result()[5016]);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int argc, char *argv[]) {
 
     test_get_reindexed();
@@ -3099,6 +3132,7 @@ int main(int argc, char *argv[]) {
     test_UlcerIndexVisitor();
     test_bucketize();
     test_RSXVisitor();
+    test_TTMTrendVisitor();
 
     return (0);
 }

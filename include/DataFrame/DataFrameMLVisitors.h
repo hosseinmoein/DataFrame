@@ -56,7 +56,7 @@ private:
 
     const size_type iter_num_;
     distance_func   dfunc_;
-    result_type     k_means_ { };
+    result_type     result_ { };  // K-Means
 
     template<typename H>
     inline void calc_k_means_(const H &column_begin, size_type col_size)  {
@@ -66,7 +66,7 @@ private:
         std::uniform_int_distribution<size_type>    rd_gen(0, col_size - 1);
 
         // Pick centroids as random points from the col.
-        for (auto &k_mean : k_means_)
+        for (auto &k_mean : result_)
             k_mean = *(column_begin + rd_gen(gen));
 
         std::vector<size_type>  assignments(col_size, 0);
@@ -79,7 +79,7 @@ private:
 
                 for (size_type cluster = 0; cluster < K; ++cluster) {
                     const double    distance =
-                        dfunc_(*(column_begin + point), k_means_[cluster]);
+                        dfunc_(*(column_begin + point), result_[cluster]);
 
                     if (distance < best_distance) {
                         best_distance = distance;
@@ -110,9 +110,9 @@ private:
                     std::max<double>(1.0, counts[cluster]);
                 const value_type    value = new_means[cluster] / count;
 
-                if (dfunc_(value, k_means_[cluster]) > 0.0000001)  {
+                if (dfunc_(value, result_[cluster]) > 0.0000001)  {
                     done = false;
-                    k_means_[cluster] = value;
+                    result_[cluster] = value;
                 }
             }
 
@@ -148,7 +148,7 @@ public:
 
         for (size_type i = 0; i < K; ++i)  {
             clusters[i].reserve(col_s / K + 2);
-            clusters[i].push_back(const_cast<value_type *>(&(k_means_[i])));
+            clusters[i].push_back(const_cast<value_type *>(&(result_[i])));
         }
 
         for (size_type j = 0; j < col_s; ++j)  {
@@ -156,7 +156,7 @@ public:
             size_type   min_idx;
 
             for (size_type i = 0; i < K; ++i)  {
-                const double    dist = dfunc_(*(column_begin + j), k_means_[i]);
+                const double    dist = dfunc_(*(column_begin + j), result_[i]);
 
                 if (dist < min_dist)  {
                     min_dist = dist;
@@ -172,8 +172,8 @@ public:
 
     inline void pre ()  {  }
     inline void post ()  {  }
-    inline const result_type &get_result () const  { return (k_means_); }
-    inline result_type &get_result ()  { return (k_means_); }
+    inline const result_type &get_result () const  { return (result_); }
+    inline result_type &get_result ()  { return (result_); }
 
     explicit
     KMeansVisitor(
@@ -204,7 +204,7 @@ private:
     const size_type iter_num_;
     distance_func   dfunc_;
     const double    dfactor_;
-    result_type     centers_ { };
+    result_type     result_ { };  // Centers
 
     template<typename H>
     inline std::vector<double>
@@ -326,10 +326,10 @@ public:
 
         get_avail_and_respon(simil, col_s, avail, respon);
 
-        centers_.reserve(std::min(col_s / 100, size_type(16)));
+        result_.reserve(std::min(col_s / 100, size_type(16)));
         for (size_type i = 0; i < col_s; ++i)  {
             if (respon[i * col_s + i] + avail[i * col_s + i] > 0.0)
-                centers_.push_back(
+                result_.push_back(
                     const_cast<value_type *>(&*(column_begin + i)));
         }
     }
@@ -344,7 +344,7 @@ public:
                  const H &column_end)  {
 
         GET_COL_SIZE
-        const size_type centers_size = centers_.size();
+        const size_type centers_size = result_.size();
         cluster_type    clusters;
 
         if (centers_size > 0)  {
@@ -358,7 +358,7 @@ public:
 
                 for (size_type i = 0; i < centers_size; ++i)  {
                     const double    dist =
-                        dfunc_(*(column_begin + j), centers_[i]);
+                        dfunc_(*(column_begin + j), result_[i]);
 
                     if (dist < min_dist)  {
                         min_dist = dist;
@@ -373,10 +373,8 @@ public:
         return (clusters);
     }
 
-    inline void pre ()  {  }
-    inline void post ()  {  }
-    inline const result_type &get_result () const  { return (centers_); }
-    inline result_type &get_result ()  { return (centers_); }
+    DEFINE_PRE_POST
+    DEFINE_RESULT
 
     explicit
     AffinityPropVisitor(

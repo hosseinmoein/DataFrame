@@ -95,10 +95,8 @@ struct ReturnVisitor  {
         tmp_result.swap(result_);
     }
 
-    inline void pre ()  { result_.clear(); }
-    inline void post ()  {   }
-    inline const result_type &get_result () const  { return (result_); }
-    inline result_type &get_result ()  { return (result_); }
+    DEFINE_PRE_POST
+    DEFINE_RESULT
 
     explicit ReturnVisitor (return_policy rp) : ret_p_(rp)  {   }
 
@@ -1064,10 +1062,8 @@ struct RSIVisitor {
         }
     }
 
-    inline void pre ()  { result_.clear(); }
-    inline void post ()  {  }
-    inline const result_type &get_result () const  { return (result_); }
-    inline result_type &get_result ()  { return (result_); }
+    DEFINE_PRE_POST
+    DEFINE_RESULT
 
     explicit RSIVisitor(return_policy rp, size_type avg_period = 14)
         : rp_(rp), avg_period_(value_type(avg_period))  {   }
@@ -1182,10 +1178,8 @@ struct RSXVisitor {
         }
     }
 
-    inline void pre ()  { result_.clear(); }
-    inline void post ()  {  }
-    inline const result_type &get_result () const  { return (result_); }
-    inline result_type &get_result ()  { return (result_); }
+    DEFINE_PRE_POST
+    DEFINE_RESULT
 
     explicit RSXVisitor(size_type avg_period = 14)
         : avg_period_(value_type(avg_period))  {   }
@@ -1408,10 +1402,8 @@ struct MassIndexVisitor {
         result_ = std::move(slow_roller.get_result());
     }
 
-    inline void pre ()  { result_.clear(); }
-    inline void post ()  {  }
-    inline const result_type &get_result () const  { return (result_); }
-    inline result_type &get_result ()  { return (result_); }
+    DEFINE_PRE_POST
+    DEFINE_RESULT
 
     explicit
     MassIndexVisitor(size_type fast_period = 9, size_type slow_period = 25)
@@ -1475,10 +1467,8 @@ struct  HullRollingMeanVisitor  {
         result_ = std::move(wma_sqrt.get_result());
     }
 
-    inline void pre ()  { result_.clear(); }
-    inline void post ()  {  }
-    inline const result_type &get_result () const  { return (result_); }
-    inline result_type &get_result ()  { return (result_); }
+    DEFINE_PRE_POST
+    DEFINE_RESULT
 
     explicit
     HullRollingMeanVisitor(size_type r_count = 10) : roll_count_(r_count) {   }
@@ -1539,10 +1529,8 @@ struct  RollingMidValueVisitor  {
         }
     }
 
-    inline void pre ()  { result_.clear(); }
-    inline void post ()  {  }
-    inline const result_type &get_result () const  { return (result_); }
-    inline result_type &get_result ()  { return (result_); }
+    DEFINE_PRE_POST
+    DEFINE_RESULT
 
     explicit
     RollingMidValueVisitor(size_type r_count) : roll_count_(r_count) {   }
@@ -1665,10 +1653,8 @@ struct  WilliamPrcRVisitor  {
         }
     }
 
-    inline void pre ()  { result_.clear(); }
-    inline void post ()  {  }
-    inline const result_type &get_result () const  { return (result_); }
-    inline result_type &get_result ()  { return (result_); }
+    DEFINE_PRE_POST
+    DEFINE_RESULT
 
     explicit
     WilliamPrcRVisitor(size_type r_count = 14) : roll_count_(r_count) {   }
@@ -1725,10 +1711,8 @@ struct  PSLVisitor  {
         calculate_(idx_begin, idx_end);
     }
 
-    inline void pre ()  { result_.clear(); }
-    inline void post ()  {  }
-    inline const result_type &get_result () const  { return (result_); }
-    inline result_type &get_result ()  { return (result_); }
+    DEFINE_PRE_POST
+    DEFINE_RESULT
 
     explicit
     PSLVisitor(size_type r_count = 14) : roll_count_(r_count) {   }
@@ -1810,10 +1794,8 @@ struct  CCIVisitor  {
                 (lambert_const_ * mad_v.get_result()[i]);
     }
 
-    inline void pre ()  { result_.clear(); }
-    inline void post ()  {  }
-    inline const result_type &get_result () const  { return (result_); }
-    inline result_type &get_result ()  { return (result_); }
+    DEFINE_PRE_POST
+    DEFINE_RESULT
 
     explicit
     CCIVisitor(size_type r_count = 14,
@@ -1886,10 +1868,8 @@ struct GarmanKlassVolVisitor {
         }
     }
 
-    inline void pre ()  { result_.clear(); }
-    inline void post ()  {  }
-    inline const result_type &get_result () const  { return (result_); }
-    inline result_type &get_result ()  { return (result_); }
+    DEFINE_PRE_POST
+    DEFINE_RESULT
 
     explicit
     GarmanKlassVolVisitor(size_type roll_count = 30,
@@ -1982,10 +1962,8 @@ struct YangZhangVolVisitor {
         }
     }
 
-    inline void pre ()  { result_.clear(); }
-    inline void post ()  {  }
-    inline const result_type &get_result () const  { return (result_); }
-    inline result_type &get_result ()  { return (result_); }
+    DEFINE_PRE_POST
+    DEFINE_RESULT
 
     explicit
     YangZhangVolVisitor(size_type roll_count = 30,
@@ -2059,10 +2037,8 @@ struct  KamaVisitor  {
         }
     }
 
-    inline void pre ()  { result_.clear(); }
-    inline void post ()  {  }
-    inline const result_type &get_result () const  { return (result_); }
-    inline result_type &get_result ()  { return (result_); }
+    DEFINE_PRE_POST
+    DEFINE_RESULT
 
     explicit
     KamaVisitor(size_type roll_count = 10,
@@ -2152,10 +2128,8 @@ struct FisherTransVisitor {
         }
     }
 
-    inline void pre ()  { result_.clear(); }
-    inline void post ()  {  }
-    inline const result_type &get_result () const  { return (result_); }
-    inline result_type &get_result ()  { return (result_); }
+    DEFINE_PRE_POST
+    DEFINE_RESULT
 
     explicit
     FisherTransVisitor(size_type roll_count = 9) : roll_count_(roll_count) {  }
@@ -2228,8 +2202,7 @@ struct PercentPriceOSCIVisitor {
 
     inline void pre ()  { result_.clear(); histogram_.clear(); }
     inline void post ()  {  }
-    inline const result_type &get_result () const  { return (result_); }
-    inline result_type &get_result ()  { return (result_); }
+    DEFINE_RESULT
 
     explicit
     PercentPriceOSCIVisitor(size_type fast_period = 12,
@@ -2288,10 +2261,8 @@ struct  SlopeVisitor  {
         }
     }
 
-    inline void pre ()  { result_.clear(); }
-    inline void post ()  {  }
-    inline const result_type &get_result () const  { return (result_); }
-    inline result_type &get_result ()  { return (result_); }
+    DEFINE_PRE_POST
+    DEFINE_RESULT
 
     explicit
     SlopeVisitor(size_type periods = 1,
@@ -2410,10 +2381,8 @@ struct  UltimateOSCIVisitor  {
         }
     }
 
-    inline void pre ()  { result_.clear(); }
-    inline void post ()  {  }
-    inline const result_type &get_result () const  { return (result_); }
-    inline result_type &get_result ()  { return (result_); }
+    DEFINE_PRE_POST
+    DEFINE_RESULT
 
     explicit
     UltimateOSCIVisitor(size_type slow_roll = 28,
@@ -2498,10 +2467,8 @@ struct  UlcerIndexVisitor  {
             result_[i] = std::sqrt(vec[i] / T(periods_));
     }
 
-    inline void pre ()  { result_.clear(); }
-    inline void post ()  {  }
-    inline const result_type &get_result () const  { return (result_); }
-    inline result_type &get_result ()  { return (result_); }
+    DEFINE_PRE_POST
+    DEFINE_RESULT
 
     explicit
     UlcerIndexVisitor(size_type periods = 14, bool use_sum = true)
@@ -2564,10 +2531,8 @@ struct  TTMTrendVisitor  {
             result_.push_back(*(close_begin + i) > trend_avg[i]);
     }
 
-    inline void pre ()  { result_.clear(); }
-    inline void post ()  {  }
-    inline const result_type &get_result () const  { return (result_); }
-    inline result_type &get_result ()  { return (result_); }
+    DEFINE_PRE_POST
+    DEFINE_RESULT
 
     explicit
     TTMTrendVisitor(size_type bar_periods = 5) : bar_periods_(bar_periods) {  }
@@ -2577,6 +2542,65 @@ private:
     const size_type bar_periods_;
     result_type     result_ { };
 };
+
+// ----------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+// Parabolic Stop And Reverse (PSAR)
+//
+template<typename T, typename I = unsigned long>
+struct  ParabolicSARVisitorVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &low_begin,
+                const H &low_end,
+                const H &high_begin,
+                const H &high_end,
+                const H &close_begin,
+                const H &close_end)  {
+
+        const size_type col_s = std::distance(close_begin, close_end);
+
+        assert((col_s == std::distance(low_begin, low_end)));
+        assert((col_s == std::distance(high_begin, high_end)));
+
+        std::vector<T>  trend_avg;
+
+        trend_avg.reserve(col_s);
+    }
+
+    DEFINE_PRE_POST
+    DEFINE_RESULT
+
+    explicit
+    ParabolicSARVisitorVisitor(value_type acceleration_factor = T(0.02),
+							   value_type max_acceleration_factor = T(0.2))
+		: af_(acceleration_factor),
+		  max_af_(max_acceleration_factor) {  }
+
+private:
+
+    const value_type af_;
+    const value_type max_af_;
+    result_type     result_ { };
+};
+*/
 
 } // namespace hmdf
 

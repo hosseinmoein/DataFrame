@@ -1799,7 +1799,7 @@ struct  CCIVisitor  {
 
     explicit
     CCIVisitor(size_type r_count = 14,
-               value_type lambert_const = value_type(0.015))
+               value_type lambert_const = T(0.015))
         : roll_count_(r_count), lambert_const_(lambert_const)  {   }
 
 private:
@@ -1967,7 +1967,7 @@ struct YangZhangVolVisitor {
 
     explicit
     YangZhangVolVisitor(size_type roll_count = 30,
-                          size_type trading_periods = 252)
+                        size_type trading_periods = 252)
         : roll_count_(roll_count), trading_periods_(trading_periods)  {  }
 
 private:
@@ -2388,9 +2388,9 @@ struct  UltimateOSCIVisitor  {
     UltimateOSCIVisitor(size_type slow_roll = 28,
                         size_type fast_roll = 7,
                         size_type medium_roll = 14,
-                        value_type slow_weight = 1.0,
-                        value_type fast_weight = 4.0,
-                        value_type medium_weight = 2.0)
+                        value_type slow_weight = T(1.0),
+                        value_type fast_weight = T(4.0),
+                        value_type medium_weight = T(2.0))
         : slow_(slow_roll),
           fast_(fast_roll),
           medium_(medium_roll),
@@ -2545,24 +2545,14 @@ private:
 
 // ----------------------------------------------------------------------------
 
-
-
-
-
-
-
-
-
-
-
-
-/*
 // Parabolic Stop And Reverse (PSAR)
 //
 template<typename T, typename I = unsigned long>
 struct  ParabolicSARVisitorVisitor  {
 
-    DEFINE_VISIT_BASIC_TYPES_3
+    DEFINE_VISIT_BASIC_TYPES
+
+    using result_type = std::vector<bool>;
 
     template <typename K, typename H>
     inline void
@@ -2579,28 +2569,120 @@ struct  ParabolicSARVisitorVisitor  {
 
         assert((col_s == std::distance(low_begin, low_end)));
         assert((col_s == std::distance(high_begin, high_end)));
+        assert(col_s > 2);
 
-        std::vector<T>  trend_avg;
+        bool                    bullish { true };
+        value_type              high_point { *high_begin };
+        value_type              low_point { *low_begin };
+        std::vector<value_type> sar { close_begin, close_end };
+        value_type              current_af { af_ };
+        std::vector<value_type> long_vec(
+            col_s, std::numeric_limits<value_type>::quiet_NaN());
+        std::vector<value_type> short_vec { long_vec };
+        std::vector<value_type> accel_fact { long_vec };
+        std::vector<bool>       reversal(col_s, false);
 
-        trend_avg.reserve(col_s);
+        accel_fact[0] = accel_fact[1] = current_af;
+        for (size_type i = 2; i < col_s; ++i)  {
+            bool    reverse { false };
+
+            accel_fact[i] = current_af;
+            if (bullish)  {
+                sar[i] = sar[i - 1] + current_af * (high_point - sar[i - 1]);
+                if (*(low_begin + i) < sar[i])  {
+                    bullish = false;
+                    reverse = true;
+                    current_af = af_;
+                    sar[i] = high_point;
+                    low_point = *(low_begin + i);
+                }
+            }
+            else  {
+                sar[i] = sar[i - 1] + current_af * (low_point - sar[i - 1]);
+                if (*(high_begin + i) > sar[i])  {
+                    bullish = true;
+                    reverse = true;
+                    current_af = af_;
+                    sar[i] = low_point;
+                    high_point = *(high_begin + i);
+                }
+            }
+
+            reversal[i] = reverse;
+
+            if (! reverse)  {
+                if (bullish)  {
+                    if (*(high_begin + i) > high_point)  {
+                        high_point = *(high_begin + i);
+                        current_af = std::min(current_af + af_, max_af_);
+                    }
+                    if (*(low_begin + (i - 1)) < sar[i])
+                        sar[i] = *(low_begin + (i - 1));
+                    if (*(low_begin + (i - 2)) < sar[i])
+                        sar[i] = *(low_begin + (i - 2));
+                }
+                else  {
+                    if (*(low_begin + i) < low_point)  {
+                        low_point = *(low_begin + i);
+                        current_af = std::min(current_af + af_, max_af_);
+                    }
+                    if (*(high_begin + (i - 1)) > sar[i])
+                        sar[i] = *(high_begin + (i - 1));
+                    if (*(high_begin + (i - 2)) > sar[i])
+                        sar[i] = *(high_begin + (i - 2));
+                }
+            }
+
+            if (bullish)
+                long_vec[i] = sar[i];
+            else
+                short_vec[i] = sar[i];
+        }
+
+        result_.swap(reversal);
+        long_.swap(long_vec);
+        short_.swap(short_vec);
+        accel_fact_.swap(accel_fact);
     }
 
-    DEFINE_PRE_POST
+    inline void pre ()  {
+
+        result_.clear();
+        long_.clear();
+        short_.clear();
+        accel_fact_.clear();
+    }
+    inline void post ()  {  }
     DEFINE_RESULT
+
+    inline const std::vector<value_type> &
+    get_longs () const  { return (long_); }
+    inline std::vector<value_type> &get_longs ()  { return (long_); }
+
+    inline const std::vector<value_type> &
+    get_shorts () const  { return (short_); }
+    inline std::vector<value_type> &get_shorts ()  { return (short_); }
+
+    inline const std::vector<value_type> &
+    get_acceleration_factors () const  { return (accel_fact_); }
+    inline std::vector<value_type> &
+    get_acceleration_factors ()  { return (accel_fact_); }
 
     explicit
     ParabolicSARVisitorVisitor(value_type acceleration_factor = T(0.02),
-							   value_type max_acceleration_factor = T(0.2))
-		: af_(acceleration_factor),
-		  max_af_(max_acceleration_factor) {  }
+                               value_type max_acceleration_factor = T(0.2))
+        : af_(acceleration_factor),
+          max_af_(max_acceleration_factor) {  }
 
 private:
 
-    const value_type af_;
-    const value_type max_af_;
-    result_type     result_ { };
+    const value_type        af_;
+    const value_type        max_af_;
+    result_type             result_ { };
+    std::vector<value_type> long_ { };
+    std::vector<value_type> short_ { };
+    std::vector<value_type> accel_fact_ { };
 };
-*/
 
 } // namespace hmdf
 

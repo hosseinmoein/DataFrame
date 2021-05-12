@@ -3074,6 +3074,63 @@ static void test_TTMTrendVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_ParabolicSARVisitorVisitor()  {
+
+    std::cout << "\nTesting ParabolicSARVisitorVisitor{  } ..." << std::endl;
+
+    typedef StdDataFrame<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("data/SHORT_IBM.csv", io_format::csv2);
+
+        ParabolicSARVisitorVisitor<double, std::string> psar_v;
+
+        df.single_act_visit<double, double, double>
+            ("IBM_Low", "IBM_High", "IBM_Close", psar_v);
+
+        assert(psar_v.get_result().size() == 1721);
+        assert((! psar_v.get_result()[0]));
+        assert((psar_v.get_result()[2]));
+        assert((psar_v.get_result()[3]));
+        assert((psar_v.get_result()[26]));
+        assert((! psar_v.get_result()[1720]));
+        assert((! psar_v.get_result()[1718]));
+        assert((psar_v.get_result()[1709]));
+
+        assert(psar_v.get_longs().size() == 1721);
+        assert(std::isnan(psar_v.get_longs()[0]));
+        assert(std::isnan(psar_v.get_longs()[2]));
+        assert(std::abs(psar_v.get_longs()[5] - 185.401) < 0.001);
+        assert(std::abs(psar_v.get_longs()[11] - 183.86) < 0.01);
+        assert(std::isnan(psar_v.get_longs()[18]));
+        assert(std::isnan(psar_v.get_longs()[1720]));
+        assert(std::abs(psar_v.get_longs()[1708] - 124.46) < 0.01);
+
+        assert(psar_v.get_shorts().size() == 1721);
+        assert(std::isnan(psar_v.get_shorts()[0]));
+        assert(std::abs(psar_v.get_shorts()[2] - 187.4) < 0.1);
+        assert(std::isnan(psar_v.get_shorts()[6]));
+        assert(std::abs(psar_v.get_shorts()[7] - 190.35) < 0.01);
+        assert(std::abs(psar_v.get_shorts()[1720] - 120.7) < 0.1);
+        assert(std::isnan(psar_v.get_shorts()[1708]));
+
+        assert(psar_v.get_acceleration_factors().size() == 1721);
+        assert(psar_v.get_acceleration_factors()[0] == 0.02);
+        assert(psar_v.get_acceleration_factors()[2] == 0.02);
+        assert(psar_v.get_acceleration_factors()[15] == 0.02);
+        assert(psar_v.get_acceleration_factors()[16] == 0.04);
+        assert(psar_v.get_acceleration_factors()[1720] == 0.14);
+        assert(std::abs(psar_v.get_acceleration_factors()[1718] - 0.12) < 0.01);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int argc, char *argv[]) {
 
     test_get_reindexed();
@@ -3133,6 +3190,7 @@ int main(int argc, char *argv[]) {
     test_bucketize();
     test_RSXVisitor();
     test_TTMTrendVisitor();
+    test_ParabolicSARVisitorVisitor();
 
     return (0);
 }

@@ -2684,6 +2684,95 @@ private:
     std::vector<value_type> accel_fact_ { };
 };
 
+// ----------------------------------------------------------------------------
+
+// Even Better Sine Wave (EBSW) indicator
+//
+template<typename T, typename I = unsigned long>
+struct  EBSineWaveVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &close_begin,
+                const H &close_end)  {
+
+        const size_type col_s = std::distance(close_begin, close_end);
+
+        assert(hp_period_ > 38 && bar_period_ < col_s);
+        assert(bar_period_ > 0 && hp_period_ < col_s);
+
+        std::vector<T>      result(
+            col_s, std::numeric_limits<value_type>::quiet_NaN());
+        value_type          last_close = *close_begin;
+        value_type          last_high_pass { 0 };
+        value_type          filter_hist[2] = { 0, 0 };
+        const value_type    sin_hp = std::sin(T(360) / T(hp_period_));
+        const value_type    cos_hp = std::cos(T(360) / T(hp_period_));
+        const value_type    cos_bar =
+            std::cos(std::sqrt(T(2)) * T(180) / T(bar_period_));
+        const value_type    alpha1 = (T(1) - sin_hp) / cos_hp;
+        const value_type    alpha1_effect = T(0.5) * (T(1) + alpha1);
+
+        // Smooth with a Super Smoother Filter from equation 3-3
+        //
+        const value_type    alpha2 =
+            std::exp(-std::sqrt(T(2)) * T(M_PI) / T(bar_period_));
+        const value_type    c2 = T(2) * alpha2 * cos_bar;
+        const value_type    c3 = T(-1) * alpha2 * alpha2;
+        const value_type    c1 = T(1) - c2 - c3;
+
+        for (size_type i = 1; i < col_s; ++i)  {
+            const value_type    this_close = *(close_begin + i);
+
+            // High pass filter cyclic components whose periods are shorter
+            // than duration input
+            //
+            const value_type    high_pass =
+                alpha1_effect * (this_close - last_close) +
+                alpha1 * last_high_pass;
+            const value_type    filter =
+                c1 * (high_pass + last_high_pass) / T(2) +
+                c2 * filter_hist[1] + c3 * filter_hist[0];
+
+            // 3 bar average of wave amplitude and power
+            //
+            const value_type    wave =
+                (filter + filter_hist[1] + filter_hist[0]) / T(3);
+            const value_type    power =
+                (filter * filter +
+                 filter_hist[1] * filter_hist[1] +
+                 filter_hist[0] * filter_hist[0]) / T(3);
+
+            // Normalize the average wave to square root of the average power
+            //
+            result[i] = wave / std::sqrt(power);
+
+            filter_hist[0] = filter_hist[1];  filter_hist[1] = filter;
+            last_high_pass = high_pass;
+            last_close = this_close;
+        }
+        result_.swap(result);
+    }
+
+    DEFINE_PRE_POST
+    DEFINE_RESULT
+
+    explicit
+    EBSineWaveVisitor(size_type high_pass_period = 40,
+                      size_type bar_period = 10)
+        : hp_period_(high_pass_period), bar_period_(bar_period) {  }
+
+private:
+
+    const size_type hp_period_;
+    const size_type bar_period_;
+    result_type     result_ { };
+};
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

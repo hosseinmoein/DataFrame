@@ -3052,7 +3052,7 @@ static void test_TTMTrendVisitor()  {
     try  {
         df.read("data/IBM.csv", io_format::csv2);
 
-        TTMTrendVisitor<double, std::string> ttmt_v;
+        TTMTrendVisitor<double, std::string>    ttmt_v;
 
         df.single_act_visit<double, double, double>
             ("IBM_Low", "IBM_High", "IBM_Close", ttmt_v);
@@ -3129,6 +3129,38 @@ static void test_ParabolicSARVisitorVisitor()  {
     }
 }
 
+
+// -----------------------------------------------------------------------------
+
+static void test_EBSineWaveVisitor()  {
+
+    std::cout << "\nTesting EBSineWaveVisitor{  } ..." << std::endl;
+
+    typedef StdDataFrame<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("data/SHORT_IBM.csv", io_format::csv2);
+
+        EBSineWaveVisitor<double, std::string>  ebsw_v;
+
+        df.single_act_visit<double>("IBM_Close", ebsw_v);
+
+        assert(ebsw_v.get_result().size() == 1721);
+        assert(std::isnan(ebsw_v.get_result()[0]));
+        assert(std::abs(ebsw_v.get_result()[5] - 0.927837) < 0.00001);
+        assert(std::abs(ebsw_v.get_result()[14] - -0.560866) < 0.00001);
+        assert(std::abs(ebsw_v.get_result()[25] - -0.36883) < 0.00001);
+        assert(std::abs(ebsw_v.get_result()[1720] - -0.901317) < 0.00001);
+        assert(std::abs(ebsw_v.get_result()[1712] - -0.730321) < 0.00001);
+        assert(std::abs(ebsw_v.get_result()[1707] - 0.841759) < 0.00001);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
 // -----------------------------------------------------------------------------
 
 int main(int argc, char *argv[]) {
@@ -3191,6 +3223,7 @@ int main(int argc, char *argv[]) {
     test_RSXVisitor();
     test_TTMTrendVisitor();
     test_ParabolicSARVisitorVisitor();
+    test_EBSineWaveVisitor();
 
     return (0);
 }

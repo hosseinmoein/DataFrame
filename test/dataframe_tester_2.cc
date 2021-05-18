@@ -569,13 +569,11 @@ static void test_SharpeRatioVisitor()  {
           123457, 123458, 123459, 123460, 123461, 123462, 123466,
           123467, 123468, 123469, 123470, 123471, 123472, 123473 };
     std::vector<double>         d1 =
-        { 2.5, 2.45, -0.65, -0.1, -1.1, 1.87, 0.98,
-          0.34, 1.56, -0.34, 2.3, -0.34, -1.9, 0.387,
-          0.123, 1.06, -0.65, 2.03, 0.4, -1.0, 0.59 };
+        { 2.5, 2.45, -0.65, -0.1, -1.1, 1.87, 0.98, 0.34, 1.56, -0.34, 2.3,
+          -0.34, -1.9, 0.387, 0.123, 1.06, -0.65, 2.03, 0.4, -1.0, 0.59 };
     std::vector<double>         d2 =
-        { 0.2, 0.58, -0.60, -0.08, 0.05, 0.87, 0.2,
-          0.4, 0.5, 0.06, 0.3, -0.34, -0.9, 0.8,
-          -0.4, 0.86, 0.01, 1.02, -0.02, -1.5, 0.2 };
+        { 0.2, 0.58, -0.60, -0.08, 0.05, 0.87, 0.2, 0.4, 0.5, 0.06, 0.3, -0.34,
+          -0.9, 0.8, -0.4, 0.86, 0.01, 1.02, -0.02, -1.5, 0.2 };
     std::vector<int>            i1 = { 22, 23, 24, 25, 99 };
     MyDataFrame                 df;
 
@@ -1302,8 +1300,7 @@ static void test_io_format_csv2()  {
 
     MyDataFrame df;
 
-    df.load_data(std::move(ulgvec2),
-                 std::make_pair("ul_col", xulgvec2));
+    df.load_data(std::move(ulgvec2), std::make_pair("ul_col", xulgvec2));
     df.load_column("xint_col",
                    std::move(intvec2),
                    nan_policy::dont_pad_with_nans);
@@ -1616,9 +1613,11 @@ static void test_LogFitVisitor()  {
     df.load_column<double>("Y1",
                            { 6, 7, 8, 9, 3 },
                            nan_policy::dont_pad_with_nans);
-    df.load_column<double>("X2", { 1, 2, 4, 6, 8 },
+    df.load_column<double>("X2",
+                           { 1, 2, 4, 6, 8 },
                            nan_policy::dont_pad_with_nans);
-    df.load_column<double>("Y2", { 1, 3, 4, 5, 6 },
+    df.load_column<double>("Y2",
+                           { 1, 3, 4, 5, 6 },
                            nan_policy::dont_pad_with_nans);
 
     LogFitVisitor<double>   log_v1;
@@ -3129,7 +3128,6 @@ static void test_ParabolicSARVisitorVisitor()  {
     }
 }
 
-
 // -----------------------------------------------------------------------------
 
 static void test_EBSineWaveVisitor()  {
@@ -3155,6 +3153,49 @@ static void test_EBSineWaveVisitor()  {
         assert(std::abs(ebsw_v.get_result()[1720] - -0.901317) < 0.00001);
         assert(std::abs(ebsw_v.get_result()[1712] - -0.730321) < 0.00001);
         assert(std::abs(ebsw_v.get_result()[1707] - 0.841759) < 0.00001);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_EhlerSuperSmootherVisitor()  {
+
+    std::cout << "\nTesting EhlerSuperSmootherVisitor{  } ..." << std::endl;
+
+    typedef StdDataFrame<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("data/SHORT_IBM.csv", io_format::csv2);
+
+        EhlerSuperSmootherVisitor<double, std::string>  ssf_v2; // poles = 2
+        EhlerSuperSmootherVisitor<double, std::string>  ssf_v3(3); // poles = 3
+
+        df.single_act_visit<double>("IBM_Close", ssf_v2);
+        df.single_act_visit<double>("IBM_Close", ssf_v3);
+
+        assert(ssf_v2.get_result().size() == 1721);
+        assert(ssf_v3.get_result().size() == 1721);
+
+        assert(std::abs(ssf_v2.get_result()[0] - 185.53) < 0.01);
+        assert(std::abs(ssf_v2.get_result()[5] - 188.117) < 0.001);
+        assert(std::abs(ssf_v2.get_result()[14] - 185.497) < 0.001);
+        assert(std::abs(ssf_v2.get_result()[25] - 174.736) < 0.001);
+        assert(std::abs(ssf_v2.get_result()[1720] - 109.294) < 0.001);
+        assert(std::abs(ssf_v2.get_result()[1712] - 123.43) < 0.01);
+        assert(std::abs(ssf_v2.get_result()[1707] - 127.323) < 0.001);
+
+        assert(std::abs(ssf_v3.get_result()[0] - 185.53) < 0.01);
+        assert(std::abs(ssf_v3.get_result()[5] - 186.159) < 0.001);
+        assert(std::abs(ssf_v3.get_result()[14] - 186.681) < 0.001);
+        assert(std::abs(ssf_v3.get_result()[25] - 174.294) < 0.001);
+        assert(std::abs(ssf_v3.get_result()[1720] - 109.187) < 0.001);
+        assert(std::abs(ssf_v3.get_result()[1712] - 124.31) < 0.01);
+        assert(std::abs(ssf_v3.get_result()[1707] - 127.603) < 0.001);
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
@@ -3224,6 +3265,7 @@ int main(int argc, char *argv[]) {
     test_TTMTrendVisitor();
     test_ParabolicSARVisitorVisitor();
     test_EBSineWaveVisitor();
+    test_EhlerSuperSmootherVisitor();
 
     return (0);
 }

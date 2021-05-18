@@ -969,7 +969,7 @@ struct SharpeRatioVisitor {
             cum_return += *a_citer - *b_citer;
         }
         std_vis.post();
-        result_ = (cum_return / value_type(vec_s)) / std_vis.get_result();
+        result_ = (cum_return / T(vec_s)) / std_vis.get_result();
     }
 
     inline void pre ()  { result_ = 0; }
@@ -1066,7 +1066,7 @@ struct RSIVisitor {
     DEFINE_RESULT
 
     explicit RSIVisitor(return_policy rp, size_type avg_period = 14)
-        : rp_(rp), avg_period_(value_type(avg_period))  {   }
+        : rp_(rp), avg_period_(T(avg_period))  {   }
 
 private:
 
@@ -1182,7 +1182,7 @@ struct RSXVisitor {
     DEFINE_RESULT
 
     explicit RSXVisitor(size_type avg_period = 14)
-        : avg_period_(value_type(avg_period))  {   }
+        : avg_period_(T(avg_period))  {   }
 
 private:
 
@@ -1372,7 +1372,7 @@ struct MassIndexVisitor {
         for (size_type i = 0; i < col_s; ++i)  {
             if (is_nan__(fast_roller.get_result()[i]))  {
                 sum += result_[i];
-                fast_roller.get_result()[i] = sum / value_type(i + 1);
+                fast_roller.get_result()[i] = sum / T(i + 1);
             }
             else  break;
         }
@@ -1386,7 +1386,7 @@ struct MassIndexVisitor {
         for (size_type i = 0; i < col_s; ++i)  {
             if (is_nan__(fast_roller.get_result()[i]))  {
                 sum += result_[i];
-                fast_roller.get_result()[i] = sum / value_type(i + 1);
+                fast_roller.get_result()[i] = sum / T(i + 1);
             }
             else  break;
         }
@@ -1732,9 +1732,7 @@ private:
         const size_type col_s = result_.size();
 
         for (size_type i = 0; i < col_s; ++i)
-            result_[i] =
-                sum_r.get_result()[i] * value_type(100) /
-                value_type(roll_count_);
+            result_[i] = sum_r.get_result()[i] * T(100) / T(roll_count_);
     }
 
     const size_type roll_count_;
@@ -1772,7 +1770,7 @@ struct  CCIVisitor  {
         for (size_type i = 0; i < col_s; ++i)
             result_.push_back(
                 (*(low_begin + i) + *(high_begin + i) + *(close_begin + i)) /
-                value_type(3));
+                T(3));
 
         SimpleRollAdopter<MeanVisitor<T, I>, T, I>  avg_v (
             MeanVisitor<T, I>(), roll_count_);
@@ -1840,8 +1838,7 @@ struct GarmanKlassVolVisitor {
         assert((roll_count_ < (col_s - 1)));
 
         // 2 * log(2) - 1
-        constexpr value_type    cf =
-            value_type(2) * value_type(0.69314718056) - value_type(1);
+        constexpr value_type    cf = T(2) * T(0.69314718056) - T(1);
         constexpr value_type    hlf = 0.5;
 
         result_.reserve(col_s);
@@ -1861,8 +1858,7 @@ struct GarmanKlassVolVisitor {
                     sum += hlf * hl_rt * hl_rt - cf * co_rt * co_rt;
                     cnt += 1;
                 }
-                result_.push_back(
-                    std::sqrt((sum / value_type(cnt)) * trading_periods_));
+                result_.push_back(std::sqrt((sum / T(cnt)) * trading_periods_));
             }
             else  break;
         }
@@ -2249,10 +2245,10 @@ struct  SlopeVisitor  {
         diff.post();
         result_ = std::move(diff.get_result());
 
-        constexpr value_type    pi_180 = value_type(180) / value_type(M_PI);
+        constexpr value_type    pi_180 = T(180) / T(M_PI);
 
         for (size_type i = 0; i < col_s; ++i)  {
-            result_[i] /= value_type(periods_);
+            result_[i] /= T(periods_);
             if (as_angle_)  {
                 result_[i] = std::atan(result_[i]);
                 if (in_degrees_)
@@ -2769,6 +2765,77 @@ struct  EBSineWaveVisitor  {
 private:
 
     const size_type hp_period_;
+    const size_type bar_period_;
+    result_type     result_ { };
+};
+
+// ----------------------------------------------------------------------------
+
+// Ehler's Super Smoother Filter (SSF) indicator
+//
+template<typename T, typename I = unsigned long>
+struct  EhlerSuperSmootherVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &column_begin,
+                const H &column_end)  {
+
+        GET_COL_SIZE
+
+        assert(poles_ == 2 || poles_ == 3);
+        assert(bar_period_ > 0 && bar_period_ < col_s);
+
+        std::vector<T>  result(column_begin, column_end);
+
+        if (poles_ == 2)  {
+            const value_type    x = T(M_PI) * std::sqrt(T(2)) / T(bar_period_);
+            const value_type    a0 = std::exp(-x);
+            const value_type    a1 = -a0 * a0;
+            const value_type    c0 = T(2) * a0 * std::cos(x);
+            const value_type    c1 = T(1) - a1 - c0;
+
+            for (size_type i = poles_; i < col_s; ++i)
+                result[i] =
+                    c1 * *(column_begin + i) +
+                    c0 * result[i - 1] +
+                    a1 * result[i - 2];
+        }
+        else if (poles_ == 3)  {
+            const value_type    x = T(M_PI) / T(bar_period_);
+            const value_type    a0 = std::exp(-x);
+            const value_type    b0 = T(2) * a0 * std::cos(std::sqrt(T(3)) * x);
+            const value_type    a1 = a0 * a0;
+            const value_type    a2 = a1 * a1;
+            const value_type    c2 = -a1 * (T(1) + b0);
+            const value_type    c0 = a1 + b0;
+            const value_type    c1 = T(1) - c0 - c2 - a2;
+
+            for (size_type i = poles_; i < col_s; ++i)
+                result[i] =
+                    c1 * *(column_begin + i) +
+                    c0 * result[i - 1] +
+                    c2 * result[i - 2] +
+                    a2 * result[i - 3];
+        }
+
+        result_.swap(result);
+    }
+
+    DEFINE_PRE_POST
+    DEFINE_RESULT
+
+    explicit
+    EhlerSuperSmootherVisitor(size_type poles = 2, size_type bar_period = 10)
+        : poles_(poles), bar_period_(bar_period)  {  }
+
+private:
+
+    const size_type poles_;
     const size_type bar_period_;
     result_type     result_ { };
 };

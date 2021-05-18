@@ -66,9 +66,15 @@ table {
 
 <H1 style="text-align:center"><font color="blue">DataFrame</font></H1>
 <P>
-  This is a templatized and heterogeneous C++ container that provides analytical interface and functionaly. A DataFrame can have one index column and many data columns of any built-in or user-defined types. Each column in DataFrame could be at most as long as the index column.
-  Columns in the DataFrame are in order of creation and they could be accessed by name or index. You could rotate or shift the columns in which case their order will change.<BR>
-  To access a column for any operation, you must know its <B>name</B> (or index) and its <B>type</B> at compile time.<BR>
+  This is a templatized and heterogeneous C++ container with data-analysis functionality and interface.
+  <UL>
+    <LI>A DataFrame can have one index column and many data columns of any built-in or user-defined types</LI>
+    <LI>Each column in DataFrame could be at most as long as the index columun</LI>
+    <LI>Columns in the DataFrame are in order of creation and they could be accessed by name or index. If you rotate the columns, their order changes</LI>
+    <LI>To access a column for any operation, you must know its <B>name</B> (or index) and its <B>type</B> at compile time</LI>
+    <LI>DataFrame has both sync and async interfaces, latter returning C++ std::futures</LI>
+    <LI><font size="+1"><I>Read <B>views</B>, <B>visitors</B>, and <B>multithreading</B> sections below, before using this library</I></font></LI>
+  </UL>
 
 <HR>
 
@@ -736,6 +742,10 @@ table.hovertable td {
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
       <td title="Calculates Even Better Sine Wave (EBSW) indicator">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/EBSineWaveVisitor.html">EBSineWaveVisitor</a>{  }</td>
+    </tr>
+
+    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
+      <td title="Calculates Ehler's Super Smoother Filter (SSF) indicator">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/EhlerSuperSmootherVisitor.html">EhlerSuperSmootherVisitor</a>{  }</td>
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">

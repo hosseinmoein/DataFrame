@@ -48,12 +48,14 @@ struct ExpoSmootherVisitor;
         <I>Y<sub>0</sub> = X<sub>0</sub></I><BR>
         <I>Y<sub>t</sub> = aX<sub>t</sub> + (1 - a)Y<sub>t-1</sub></I><BR>
         <I>a</I> is the smoothing factor, and  0 < a < 1. Factor of 1 will not change the data.
+        <I>
         <PRE>
     explicit
     ExpoSmootherVisitor(std::size_t data_smoothing_factor,
                         // You can do multiple smoothing in one call
                         std::size_t repeat_count = 1);
         </PRE>
+        </I>
       </td>
       <td width="12%">
         <B>T</B>: Column data type.<BR>
@@ -85,10 +87,12 @@ struct HWExpoSmootherVisitor;
         B<sub>t</sub> = b(Y<sub>t</sub> - Y<sub>t-1</sub>) + (1 - b)B<sub>t-1</sub><BR>
         </I>
         where a is the data smoothing factor, 0 < a < 1, and b is the trend smoothing factor, 0 < b < 1
+        <I>
         <PRE>
     HWExpoSmootherVisitor(std::size_t data_smoothing_factor,
                           std::size_t trend_smoothing_factor);
         </PRE>
+        </I>
       </td>
       <td width="12%">
         <B>T</B>: Column data type.<BR>

@@ -41,9 +41,12 @@ struct KthValueVisitor;
       <td>
         This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
         This functor class finds the Kth element in the given column in linear time.<BR>
+        <I>
         <PRE>
-    explicit KthValueVisitor (size_type ke, bool skipnan = true);
+    explicit
+    KthValueVisitor (size_type ke, bool skipnan = true);
         </PRE>
+        </I>
       </td>
       <td width="12%">
         <B>T</B>: Column data type<BR>

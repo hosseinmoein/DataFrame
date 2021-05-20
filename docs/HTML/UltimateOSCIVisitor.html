@@ -39,6 +39,7 @@ struct UltimateOSCIVisitor;
         </B></PRE></font>
       </td>
       <td>
+        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
         This visitor calculates the rolling values of Ultimate Oscillator. It requires 3 input columns in the order of <I>low, high, close</I>.<BR>
         The result is a vector of values with same number of items as the given columns. The first slow_roll items, in the result, will be NAN.<BR><BR>
 		The Ultimate Oscillator is a technical indicator that was developed by Larry Williams in 1976 to measure the price momentum of an asset across multiple timeframes. By using the weighted average of three different timeframes the indicator has less volatility and fewer trade signals compared to other oscillators that rely on a single timeframe. Buy and sell signals are generated following divergences. The Ultimately Oscillator generates fewer divergence signals than other oscillators due to its multi-timeframe construction.<BR>
@@ -46,6 +47,7 @@ struct UltimateOSCIVisitor;
         The shorter timeframe has the most weight in the calculation, while the longer timeframe has the least weight.<BR>
         Buy signals occur when there is bullish divergence, the divergence low is below 30 on the indicator, and the oscillator then rises above the divergence high.<BR>
         A sell signal occurs when there is bearish divergence, the divergence high is above 70, and the oscillator then falls below the divergence low.<BR>
+        <I>
         <PRE>
     explicit
     UltimateOSCIVisitor(size_type slow_roll = 28,
@@ -55,6 +57,7 @@ struct UltimateOSCIVisitor;
                         value_type fast_weight = 4.0,
                         value_type medium_weight = 2.0);
         </PRE>
+        </I>
       </td>
       <td width="12%">
         <B>T</B>: Column data type<BR>

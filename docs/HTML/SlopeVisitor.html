@@ -43,12 +43,14 @@ struct SlopeVisitor;
 		
         This visitor calculates slope of the diff. The slope indicator measures the rise-over-run of a linear regression, which is the line of best fit for a price series. Fluctuating above and below zero, the Slope indicator best resembles a momentum oscillator without boundaries. It is not well suited for overbought/oversold levels, but can measure the direction and strength of a trend. It can also be used with other indicators to identify potential entry points within an ongoing trend.<BR>
         The result is a vector of values with same number of items as the given column. The first periods items, in the result, will be NAN.<BR>
+        <I>
         <PRE>
     explicit
     SlopeVisitor(size_type periods = 1,
                  bool as_angle = false,
                  bool in_degrees = false)
         </PRE>
+        </I>
       </td>
       <td width="12%">
         <B>T</B>: Column data type<BR>

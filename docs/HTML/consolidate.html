@@ -46,7 +46,7 @@ consolidate(const char *old_col_name1,
       <td>
         This method feeds old_col_name1 and old_col_name2 of types OLD_T1 and OLD_T2 to functor which returns a std::vector<NEW_T> which will be loaded into self as column new_col_name. Both old columns will be removed, if delete_old_cols is true<BR>
         Functor "functor" should implement the logic of consolidating two columns into one. Functor signature is:<BR>
-        <PRE>
+        <I><PRE>
   template&lt;typename ITR1, typename ITR2&gt;
   std::vector&lt;NEW_T&gt; (IndexVecType::const_iterator idx_begin,
                       IndexVecType::const_iterator idx_end,
@@ -54,7 +54,7 @@ consolidate(const char *old_col_name1,
                       ITR2 col2_begin, ITR2 col2_end);
   Where ITR[12] are iterators for columns 1 and 2.
   They are iterators of std::vector.
-        </PRE>
+        </PRE></I>
         <B>NOTE</B>: This method could not be called from views.
       </td>
       <td>
@@ -88,7 +88,7 @@ consolidate(const char *old_col_name1,
       <td>
         This is the same as above consolidate(), but it consolidates 3 columns into one.<BR>
         Functor signature is:<BR>
-        <PRE>
+        <I><PRE>
   template&lt;typename ITR1, typename ITR2, typename ITR3&gt;
   std::vector&lt;NEW_T&gt; (IndexVecType::const_iterator idx_begin,
                       IndexVecType::const_iterator idx_end,
@@ -97,7 +97,7 @@ consolidate(const char *old_col_name1,
                       ITR3 col3_begin, ITR3 col3_end);
   Where ITR[123] are iterators for columns 1, 2, and 3. They are
   iterators of std::vector.
-        </PRE>
+        </PRE></I>
         <B>NOTE</B>: This method could not be called from views.
       </td>
       <td>
@@ -134,7 +134,7 @@ consolidate(const char *old_col_name1,
       <td>
         This is the same as above consolidate(), but it consolidates 4 columns into one.<BR>
         Functor signature is:<BR>
-        <PRE>
+        <I><PRE>
   template&lt;typename ITR1, typename ITR2, typename ITR3, typename ITR4&gt;
   std::vector&lt;NEW_T&gt; (IndexVecType::const_iterator idx_begin,
                       IndexVecType::const_iterator idx_end,
@@ -144,7 +144,7 @@ consolidate(const char *old_col_name1,
                       ITR4 col4_begin, ITR4 col4_end);
   Where ITR[1234] are iterators for columns 1, 2, 3, and 4. They are
   iterators of std::vector.
-        </PRE>
+        </PRE></I>
         <B>NOTE</B>: This method could not be called from views.
       </td>
       <td>
@@ -185,7 +185,7 @@ consolidate(const char *old_col_name1,
       <td>
         This is the same as above consolidate(), but it consolidates 5 columns into one.<BR>
         Functor signature is:<BR>
-        <PRE>
+        <I><PRE>
   template&lt;typename ITR1, typename ITR2, typename ITR3, typename ITR4, typename ITR5&gt;
   std::vector&lt;NEW_T&gt; (IndexVecType::const_iterator idx_begin,
                       IndexVecType::const_iterator idx_end,
@@ -196,7 +196,7 @@ consolidate(const char *old_col_name1,
                       ITR5 col5_begin, ITR5 col5_end);
   Where ITR[12345] are iterators for columns 1, 2, 3, 4, and 5. They are
   iterators of std::vector.
-        </PRE>
+        </PRE></I>
         <B>NOTE</B>: This method could not be called from views.
       </td>
       <td>

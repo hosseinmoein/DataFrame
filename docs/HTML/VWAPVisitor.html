@@ -49,31 +49,36 @@ This functor class calculates VWAP – and more - between the two column values.
 <LI>Total Volume Limit: Stops calculations when the cumulative volume exceeds Total Volume Limit. 0 means there is no limit.</LI>
 <LI>A function to calculates the difference between two index values. The default is a simple subtraction.</LI>
 </UL>
+<I>
 <PRE>
-  VWAPVisitor(double interval,
-              double max_volume = 0,
-              double total_volume_limit = 0,
-              distance_func f =
-                  [](const I &idx1, const I &idx2) -> double {
-                      return (static_cast<double>(idx2 - idx1));
-                  })
+    explicit
+    VWAPVisitor(double interval,
+                double max_volume = 0,
+                double total_volume_limit = 0,
+                distance_func f =
+                    [](const I &idx1, const I &idx2) -> double {
+                        return (static_cast<double>(idx2 - idx1));
+                });
 </PRE>
+</I>
 The result is a vector of following structs:<BR>
+<I>
 <PRE>
-  struct  VWAP  {
-      value_type    vwap;
-      index_type    index_value;
-      size_type     event_count;
-      value_type    total_volume;
-      value_type    high_price;
-      value_type    low_price;
-      value_type    cumulative_vwap;
-      size_type     cumulative_event_count;
-      value_type    cumulative_total_volume;
-      value_type    cumulative_high_price;
-      value_type    comulative_low_price;
-  }
+    struct  VWAP  {
+        value_type    vwap;
+        index_type    index_value;
+        size_type     event_count;
+        value_type    total_volume;
+        value_type    high_price;
+        value_type    low_price;
+        value_type    cumulative_vwap;
+        size_type     cumulative_event_count;
+        value_type    cumulative_total_volume;
+        value_type    cumulative_high_price;
+        value_type    comulative_low_price;
+    };
 </PRE>
+</I>
       </td>
       <td width="12%">
         <B>T</B>: Column data type.<BR>

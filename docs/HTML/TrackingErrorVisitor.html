@@ -43,10 +43,12 @@ struct TrackingErrorVisitor;
       </td>
       <td>
         This functor class calculates the tracking error between two columns. Tracking error is the standard deviation of the difference vector.<BR>
+        <I>
         <PRE>
-    explicit TrackingErrorVisitor(bool bias = true);
+    explicit
+    TrackingErrorVisitor(bool bias = true);
         </PRE>
-        See this document and dataframe_tester.cc for examples.<BR>
+        </I>
       </td>
       <td width="12%">
         <B>T</B>: Column data type.<BR>

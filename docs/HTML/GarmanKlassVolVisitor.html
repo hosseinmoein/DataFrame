@@ -39,14 +39,17 @@ struct GarmanKlassVolVisitor;
         </B></PRE></font>
       </td>
       <td>
+        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
         This visitor calculates the rolling values of Garman Klass volatility. It requires 4 input columns in the order of <I>low, high, open, close</I>.<BR>
         The result is a vector of values with same number of items as the given columns. The first roll_count items, in the result, will be NAN. The values are annulaized by <I>trading_periods</I><BR><BR>
         The Garman and Klass estimator for estimating historical volatility assumes Brownian motion with zero drift and no opening jumps (i.e. the opening = close of the previous period). This estimator is 7.4 times more efficient than the close-to-close estimator. 
+        <I>
         <PRE>
     explicit
     GarmanKlassVolVisitor(size_type roll_count = 30,
                           size_type trading_periods = 252);
         </PRE>
+        </I>
       </td>
       <td width="12%">
         <B>T</B>: Column data type<BR>

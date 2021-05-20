@@ -39,6 +39,7 @@ struct ParabolicSARVisitorVisitor;
         </B></PRE></font>
       </td>
       <td>
+        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
         This visitor calculates of Parabolic Stop And Reverse (PSAR) indicator. It requires 3 input columns in the order of <I>low, high, close</I>.<BR>
         The result is a vector of boolean values with same number of items as the given columns. The first bar_periods items.<BR><BR>
         The parabolic SAR indicator, developed by J. Wells Wilder, is used by traders to determine trend direction and potential reversals in price. The indicator uses a trailing stop and reverse method called "SAR," or stop and reverse, to identify suitable exit and entry points. Traders also refer to the indicator as the parabolic stop and reverse, parabolic SAR, or PSAR.<BR><BR>
@@ -47,12 +48,13 @@ struct ParabolicSARVisitorVisitor;
         <B>get_longs()</B>: Returns a vector of prices for periods the buy signal is on, otherwise the value is a nan<BR>
         <B>get_shorts()</B>: Returns a vector of prices for periods the sell signal is on, otherwise the value is a nan<BR>
         <B>get_acceleration_factors()</B>: Returns the vector of acceleration factors in effect for each period<BR><BR>
-
+        <I>
         <PRE>
     explicit
     ParabolicSARVisitorVisitor(value_type acceleration_factor = 0.02,
                                value_type max_acceleration_factor = 0.2);
         </PRE>
+        </I>
       </td>
       <td width="12%">
         <B>T</B>: Column data type<BR>

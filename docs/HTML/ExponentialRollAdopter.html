@@ -45,14 +45,16 @@ struct ExponentialRollAdopter;
         Where:<BR>
         <I>X<sub>t</sub></I> is current value<BR>
         <I>Y<sub>t-1</sub></I> is last calculated stats<BR>
+        <I>
         <PRE>
-inline ExponentialRollAdopter(F &&functor,
-                              std::size_t roll_count,        // Rolling window size
-                              exponential_decay_spec eds,    // See exponential_decay_spec type
-                              double value,                  // Value of decay factor
-                              std::size_t repeat_count = 1,  // Repeat count, for multiple smoothing
-                              bool skip_nan = true);
+    ExponentialRollAdopter(F &&functor,
+                           std::size_t roll_count,       // Rolling window size
+                           exponential_decay_spec eds,   // See exponential_decay_spec type
+                           double value,                 // Value of decay factor
+                           std::size_t repeat_count = 1, // Repeat count, for multiple smoothing
+                           bool skip_nan = true);
         </PRE>
+        </I>
       </td>
       <td width="12%">
         <B>F</B>: Functor type<BR>

@@ -71,8 +71,13 @@ struct SigmoidVisitor;
       </td>
       <td>
         This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
-        This functor class calculates Sigmoid function for each item in the given column. The Sigmoid fuction is based on the sigmoid_type above.<BR><BR>
-        <I>explicit SigmoidVisitor(sigmoid_type st)</I>
+        This functor class calculates Sigmoid function for each item in the given column. The Sigmoid fuction is based on the sigmoid_type above.<BR>
+        <I>
+        <PRE>
+    explicit
+    SigmoidVisitor(sigmoid_type st);
+        </PRE>
+		</I>
       </td>
       <td width="12%">
         <B>T</B>: Column data type.<BR>

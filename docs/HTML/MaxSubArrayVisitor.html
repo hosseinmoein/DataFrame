@@ -52,10 +52,13 @@ using <U>MinSubArrayVisitor</U> =
         <I>get_result()</I> returns the maximum sum.<BR>
         <I>get_begin_idx()</I> returns the beginning index of the interval<BR>
         <I>get_end_idx()</I> returns the end (exclusive) index of the interval<BR>
+        <I>
         <PRE>
-explicit ExtremumSubArrayVisitor(T min_to_consider = -std::numeric_limits&lt;T&gt;::max(),
-                                 T max_to_consider = std::numeric_limits&lt;T&gt;::max());
+    explicit
+    ExtremumSubArrayVisitor(T min_to_consider = -std::numeric_limits&lt;T&gt;::max(),
+                            T max_to_consider = std::numeric_limits&lt;T&gt;::max());
         </PRE>
+        </I>
       </td>
       <td width="15%">
         <B>T</B>: Column data type. T must be an arithmetic-enabled type<BR>
@@ -84,16 +87,19 @@ using <U>NMinSubArrayVisitor</U> =
         This functor is similar to the above <I>ExtremumSubArrayVisitor</I>, but it finds at most N subintervals within the given column that contain elements with maximum or minimum sum than any other interval. It does it in O(n + kNlog(N)); where <I>n</I> = column length, <I>k</I> = a multiplier less than <I>n</I>, <I>N</I> = number of max sums to find<BR>
         The reason these two visitors are separated is because of performance complexity<BR><BR>
         <I>get_result()</I> returns a std::vector of the folloing struct sorted <I>Cmp</I> parameter.<BR>
+        <I>
         <PRE>
-struct  SubArrayInfo  {
-    value_type  sum { };
-    size_type   begin_index { 0 };
-    size_type   end_index { 0 };
-};
+    struct  SubArrayInfo  {
+        value_type  sum { };
+        size_type   begin_index { 0 };
+        size_type   end_index { 0 };
+    };
 
-explicit NExtremumSubArrayVisitor(T min_to_consider = -std::numeric_limits&lt;T&gt;::max(),
-                                  T max_to_consider = std::numeric_limits&lt;T&gt;::max());
+    explicit
+    NExtremumSubArrayVisitor(T min_to_consider = -std::numeric_limits&lt;T&gt;::max(),
+                             T max_to_consider = std::numeric_limits&lt;T&gt;::max());
         </PRE>
+        </I>
       </td>
       <td width="15%">
         <B>T</B>: Column data type. T must be an arithmetic-enabled type<BR>

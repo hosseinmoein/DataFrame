@@ -52,12 +52,14 @@ struct BollingerBand;
           <LI>Number of periods for a simple moving mean and std.</LI>
           <LI>Biased; whether the moving std is biased. The default is false meaning the denominator is “n – 1”.</LI>
         </UL>
+        <I>
         <PRE>
     BollingerBand(double upper_band_multiplier,
                   double lower_band_multiplier,
                   size_type moving_mean_period,
                   bool biased = false)
         </PRE>
+        </I>
         There are 2 methods that give you the results:<BR>
         <OL>
           <LI>const result_type &amp;get_upper_band_to_raw() const – Returns a vector of upper band minus data column.</LI>

@@ -45,17 +45,19 @@ struct KMeansVisitor;
         <OL>
         <LI>Number of iterations</LI>
         <LI>A function to calculate distance between to data points of type T with a default value<BR>
+        <I>
         <PRE>
-    KMeansVisitor(size_type num_of_iter,
-                  distance_func f =
-                      [](const value_type &x, const value_type &y) -> double {
-                          return ((x - y) * (x - y));
-                      })
+KMeansVisitor(size_type num_of_iter,
+              distance_func f =
+                  [](const value_type &x, const value_type &y) -> double {
+                      return ((x - y) * (x - y));
+                  })
         </PRE>
+        </I>
         </LI>
         </OL>
         The result type is an array of K means of type T.<BR>
-        There is also a get_clusters() method that returns an array of K VectorPtrView’s which contain the data clustered around the K-Means. The first element in each VectorPtrView is the mean and the reset are the data points belonging to that cluster.
+        There is also a <I>get_clusters()</I> method that returns an array of K <I>VectorPtrView</I>’s which contain the data clustered around the K-Means. The first element in each <I>VectorPtrView</I> is the mean and the reset are the data points belonging to that cluster.
       </td>
       <td width="12%">
         <B>K</B>: Number of means to find<BR>

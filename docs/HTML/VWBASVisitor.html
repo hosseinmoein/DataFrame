@@ -49,39 +49,44 @@ struct VWBASVisitor;
           <LI>Max Volume: Excludes trades whose size is equal or greater than Max Volume. 0 means include everything.</LI>
           <LI>A function to calculates the difference between two index values. The default is a simple subtraction.</LI>
           </UL>
+        <I>
         <PRE>
-  VWBASVisitor(double interval,
-               double max_volume = 0,
-               distance_func f =
-                   [](const I &idx1, const I &idx2) -> double {
-                       return (static_cast<double>(idx2 - idx1));
-                   })
+    VWBASVisitor(double interval,
+                 double max_volume = 0,
+                 distance_func f =
+                     [](const I &idx1, const I &idx2) -> double {
+                         return (static_cast<double>(idx2 - idx1));
+                     }
+                );
         </PRE>
+        </I>
         The result is a vector of following structs:<BR>
+        <I>
 <PRE>
-  struct  VWBAS  {
-      value_type    spread;
-      value_type    percent_spread; // with respect to bid side
-      value_type    vwbas;
-      value_type    percent_vwbas; // with respect to bid side
-      index_type    index_value;
-      size_type     event_count;
-      value_type    total_ask_volume;
-      value_type    total_bid_volume;
-      value_type    high_ask_price;
-      value_type    low_ask_price;
-      value_type    high_bid_price;
-      value_type    low_bid_price;
-      value_type    cumulative_vwbas;
-      size_type     cumulative_event_count;
-      value_type    cumulative_total_ask_volume;
-      value_type    cumulative_total_bid_volume;
-      value_type    cumulative_high_ask_price;
-      value_type    comulative_low_ask_price;
-      value_type    cumulative_high_bid_price;
-      value_type    comulative_low_bid_price;
-  }
+    struct  VWBAS  {
+        value_type    spread;
+        value_type    percent_spread; // with respect to bid side
+        value_type    vwbas;
+        value_type    percent_vwbas;  // with respect to bid side
+        index_type    index_value;
+        size_type     event_count;
+        value_type    total_ask_volume;
+        value_type    total_bid_volume;
+        value_type    high_ask_price;
+        value_type    low_ask_price;
+        value_type    high_bid_price;
+        value_type    low_bid_price;
+        value_type    cumulative_vwbas;
+        size_type     cumulative_event_count;
+        value_type    cumulative_total_ask_volume;
+        value_type    cumulative_total_bid_volume;
+        value_type    cumulative_high_ask_price;
+        value_type    comulative_low_ask_price;
+        value_type    cumulative_high_bid_price;
+        value_type    comulative_low_bid_price;
+    };
 </PRE>
+        </I>
       </td>
       <td width = "12%">
         <B>T</B>: Column data type.<BR>

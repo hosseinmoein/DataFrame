@@ -43,11 +43,13 @@ struct KamaVisitor;
 		
         Developed by Perry Kaufman, Kaufman's Adaptive Moving Average (KAMA) is a moving average designed to account for market noise or volatility. KAMA will closely follow prices when the price swings are relatively small and the noise is low. KAMA will adjust when the price swings widen and follow prices from a greater distance. This trend-following indicator can be used to identify the overall trend, time turning points and filter price movements.<BR>
         The result is a vector of values with same number of items as the given column. The first roll_count items, in the result, will be NAN.<BR>
+        <I>
         <PRE>
     KamaVisitor(size_type roll_count = 10,
                 size_type fast_smoothing_const = 2,
                 size_type slow_smoothing_const = 30);
         </PRE>
+        </I>
       </td>
       <td width="12%">
         <B>T</B>: Column data type<BR>

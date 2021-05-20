@@ -52,7 +52,7 @@ write(S &amp;o,
       .
       .
         </PRE>
-        All empty lines or lines starting with # will be skipped. For examples see files in test directory<BR><BR>
+        All empty lines or lines starting with # will be skipped. For examples, see files in test directory<BR><BR>
 
         The <B>CSV2</B> file format must be (this is similar to Pandas csv format):<BR>
         <PRE>
@@ -62,7 +62,7 @@ write(S &amp;o,
       .
       .
         </PRE>
-        All empty lines or lines starting with # will be skipped. For examples see IBM and FORD files in test directory<BR><BR>
+        All empty lines or lines starting with # will be skipped. For examples, see IBM and FORD files in test directory<BR><BR>
 
         The <B>JSON</B> file format looks like this:<BR>
         <PRE>
@@ -80,6 +80,29 @@ write(S &amp;o,
           <LI>Column “INDEX” must be the first column, if it exists</LI>
           <LI>Fields in column dictionaries must be in N (name), T (type), D (data) order</LI>
         </OL>
+        <BR>
+        <BR>
+        In all formats the following data types are supported:
+        <PRE>
+          float
+          double
+          longdouble  -- long double
+          int
+          uint        -- unsigned int
+          long
+          longlong    -- long long int
+          ulong       -- unsigned long
+          ulonglong   -- unsigned long long int
+          string
+          bool
+          DateTime    -- DateTime data in format of &lt;Epoch seconds&gt;.&lt;nanoseconds&gt; (1516179600.874123908)
+        </PRE>
+        In case of io_format::csv2 the following additional types are also supported:
+        <PRE>
+          DateTimeAME -- DateTime string printed in American style (MM/DD/YYYY HH:MM:SS.mmm)
+          DateTimeEUR -- DateTime string printed in European style (YYYY/MM/DD HH:MM:SS.mmm)
+          DateTimeISO -- DateTime string printed in ISO style (YYYY-MM-DD HH:MM:SS.mmm)
+        </PRE>
       </td>
       <td>
         <PRE>

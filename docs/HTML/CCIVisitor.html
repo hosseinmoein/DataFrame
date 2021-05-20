@@ -39,14 +39,17 @@ struct CCIVisitor;
         </B></PRE></font>
       </td>
       <td>
+        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
         This visitor calculates the rolling values of Commodity Channel Index (CCI). It requires 3 input columns in the order of <I>low, high, close</I>.<BR>
         The result is a vector of values with same number of items as the given columns. The first roll_count items, in the result, will be NAN.<BR><BR>
         Developed by Donald Lambert and featured in Commodities magazine in 1980, the Commodity Channel Index (CCI) is a versatile indicator that can be used to identify a new trend or warn of extreme conditions. Lambert originally developed CCI to identify cyclical turns in commodities, but the indicator can be successfully applied to indices, ETFs, stocks and other securities. In general, CCI measures the current price level relative to an average price level over a given period of time. CCI is relatively high when prices are far above their average, but is relatively low when prices are far below their average. In this manner, CCI can be used to identify overbought and oversold levels.<BR>
+        <I>
         <PRE>
     explicit
     CCIVisitor(size_type roll_count = 14,
                value_type lambert_const = 0.015);
         </PRE>
+        </I>
       </td>
       <td width="12%">
         <B>T</B>: Column data type<BR>

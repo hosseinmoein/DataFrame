@@ -43,9 +43,9 @@ get_data_by_sel(const char *name,
       <td>
         This method does Boolean filtering selection via the sel_functor (e.g. a functor, function, or lambda). It returns a new DataFrame. Each element of the named column along with its corresponding index is passed to the sel_functor. If sel_functor returns true, that index is selected and all the elements of all column for that index will be included in the returned DataFrame.<BR>
 The signature of sel_fucntor:<BR>
-        <PRE>
+        <I><PRE>
     bool ()(const IndexType &, const T &)
-        </PRE>
+        </PRE></I>
         <B>NOTE</B> If the selection logic results in empty column(s), the result empty columns will _not_ be padded with NaN's. You can always call make_consistent() on the original or result DataFrame to make all columns into consistent length<BR>
       </td>
       <td>
@@ -99,9 +99,9 @@ get_data_by_sel(const char *name1,
       <td>
         This does the same function as above get_data_be_sel() but operating on two columns.<BR>
         The signature of sel_fucntor:<BR>
-        <PRE>
+        <I><PRE>
     bool ()(const IndexType &, const T1 &, const T2 &)
-        </PRE>
+        </PRE></I>
       </td>
       <td>
         <B>T1</B>: Type of the first named column<BR>
@@ -160,9 +160,9 @@ get_data_by_sel(const char *name1,
       <td>
         This does the same function as above get_data_be_sel() but operating on three columns.<BR>
         The signature of sel_fucntor:<BR>
-        <PRE>
+        <I><PRE>
     bool ()(const IndexType &, const T1 &, const T2 &, const T3 &)
-        </PRE>
+        </PRE></I>
       </td>
       <td>
         <B>T1</B>: Type of the first named column<BR>

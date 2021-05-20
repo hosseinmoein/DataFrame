@@ -36,22 +36,27 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <PRE><B>
 enum class fill_policy : unsigned char  {
     // Fill all missing values with the given substitute
+    //
     value = 1,
 
     // Fill the missing values with the previous value
+    //
     fill_forward = 2,
 
     // Fill the missing values with the next value
+    //
     fill_backward = 3,
 
     //           X - X<sub>1</sub>
     // Y = Y<sub>1</sub> + --------- * (Y<sub>2</sub> - Y<sub>1</sub>)
     //           X<sub>2</sub> - X<sub>1</sub>
     // Use the index column as X coordinate and the given column as Y coordinate
+    //
     linear_interpolate = 4,
     linear_extrapolate = 5,
 
     // Fill missing values with mid-point of surrounding values
+    //
     mid_point = 6,
 };</B></PRE></font>
       </td>

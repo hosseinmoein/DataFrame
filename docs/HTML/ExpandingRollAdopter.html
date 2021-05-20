@@ -39,13 +39,16 @@ struct ExpandingRollAdopter;
         </B></PRE></font>
       </td>
       <td>
+        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
         This functor applies functor F to the data in an expanding rolling progression. The roll count and the step increment count are given to the constructor.<BR>
         The result is a vector of T type values. The first roll_count items, in the result, will be NAN.<BR>
+        <I>
         <PRE>
-    inline ExpandingRollAdopter(F &&functor,
-                                size_t roll_count,
-                                size_t increment_count = 1)
+    ExpandingRollAdopter(F &&functor,
+                         size_t roll_count,
+                         size_t increment_count = 1);
         </PRE>
+        </I>
       </td>
       <td width="12%">
         <B>F</B>: Functor type<BR>

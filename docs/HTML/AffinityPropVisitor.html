@@ -48,13 +48,12 @@ struct AffinityPropVisitor;
         <I>
         <PRE>
     explicit
-    AffinityPropVisitor(
-        size_type num_of_iter,
-        distance_func f =
-            [](const value_type &x, const value_type &y) -> double {
-                return ((x - y) * (x - y));
-            },
-        double damping_factor = 0.9);
+    AffinityPropVisitor(size_type num_of_iter,
+                        distance_func f =
+                            [](const value_type &x, const value_type &y) -> double {
+                                return ((x - y) * (x - y));
+                            },
+                        double damping_factor = 0.9);
         </PRE>
         </I><BR>
         The result type is VectorPtrView of type T containing the centers of clusters.<BR>

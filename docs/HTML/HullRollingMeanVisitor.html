@@ -43,9 +43,12 @@ struct HullRollingMeanVisitor;
 		
         The Hull Moving Average (HMA), developed by Alan Hull, is an extremely fast and smooth moving average. In fact, the HMA almost eliminates lag altogether and manages to improve smoothing at the same time.<BR>
         The result is a vector of values with same number of items as the given column. The first roll_count items, in the result, will be NAN.<BR>
+        <I>
         <PRE>
-    explicit HullRollingMeanVisitor(size_t roll_count = 10)
+    explicit
+    HullRollingMeanVisitor(size_t roll_count = 10);
         </PRE>
+        </I>
       </td>
       <td width="12%">
         <B>T</B>: Column data type<BR>

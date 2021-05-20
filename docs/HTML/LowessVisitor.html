@@ -55,15 +55,19 @@ struct LowessVisitor;
         <I>get_result()</I> returns the vector of fitted y values. There is also <I>get_residual_weights()</I> that returns the residual weights.<BR>
         The first column passed must be the dependent (y) or endog column. The second column passed must be the independent (x) or exog column.<BR><BR>
 
+        <I>
         <PRE>
-<I>explicit LowessVisitor (size_type loop_n = 3,
-                        value_type frac = 2.0 / 3.0,
-                        value_type delta = 0,
-                        bool sorted = false)</I>
-<B>loop_n</B>: The noumber of iterations.
-<B>frac</B>: Between 0 and 1. The fraction of the data used when estimating each y-value.
-<B>delta</B>: Distance within which to use linear-interpolation instead of weighted regression.
-<B>sorted</B>: Whether the x and y columns are already sorted in order of ascending x values.<PRE>
+    explicit
+    LowessVisitor (size_type loop_n = 3,
+                   value_type frac = 2.0 / 3.0,
+                   value_type delta = 0,
+                   bool sorted = false);
+        </PRE>
+		</I>
+<B>loop_n</B>: The noumber of iterations.<BR>
+<B>frac</B>: Between 0 and 1. The fraction of the data used when estimating each y-value.<BR>
+<B>delta</B>: Distance within which to use linear-interpolation instead of weighted regression.<BR>
+<B>sorted</B>: Whether the x and y columns are already sorted in order of ascending x values.<BR>
       </td>
       <td width="12%">
         <B>T</B>: Column data type.<BR>

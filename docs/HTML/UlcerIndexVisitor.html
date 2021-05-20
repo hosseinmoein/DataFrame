@@ -39,18 +39,19 @@ struct UlcerIndexVisitor;
         </B></PRE></font>
       </td>
       <td>
+        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
         This visitor calculates the rolling values of Ulcer Index.<BR>
         The result is a vector of values with same number of items as the given column. The first periods items, in the result, will be NAN.<BR><BR>
         The Ulcer Index (UI) is a technical indicator that measures downside risk in terms of both the depth and duration of price declines. The index increases in value as the price moves farther away from a recent high and falls as the price rises to new highs. The indicator is usually calculated over a 14-day period, with the Ulcer Index showing the percentage drawdown a trader can expect from the high over that period.<BR>
         The greater the value of the Ulcer Index, the longer it takes for a stock to get back to the former high. Simply stated, it is designed as one measure of volatility only on the downside.<BR>
+        <I>
         <PRE>
     explicit
     UlcerIndexVisitor(size_type periods = 14, bool use_sum = true);
-
-    <B>periods</B>: The daily period to calculate over
-    <B>use_sum</B>: If true, the final calculation is done over the rolling sum of periods.
-             If false, the final calculation is done over rolling average of periods
         </PRE>
+        </I>
+    <B>periods</B>: The daily period to calculate over<BR>
+    <B>use_sum</B>: If true, the final calculation is done over the rolling sum of periods. If false, the final calculation is done over rolling average of periods<BR>
       </td>
       <td width="12%">
         <B>T</B>: Column data type<BR>

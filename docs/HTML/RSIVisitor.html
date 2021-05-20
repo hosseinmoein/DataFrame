@@ -43,13 +43,19 @@ struct RSIVisitor;
         </B></PRE></font>
       </td>
       <td>
+        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
         Relative Strength Index (RSI) is a technical indicator used in the analysis of financial markets. It is intended to chart the current and historical strength or weakness of a stock or market based on the closing prices of a recent trading period. The indicator should not be confused with relative strength.<BR>
         The RSI is classified as a momentum oscillator, measuring the velocity and magnitude of price movements.<BR>
         The RSI is most typically used on a 14-day (a parameter in this visitor) time frame, measured on a scale from 0 to 100.<BR>
         Traditional interpretation and usage of the RSI are that values of 70 or above indicate that a security is becoming overbought or overvalued and may be primed for a trend reversal or corrective pullback in price. An RSI reading of 30 or below indicates an oversold or undervalued condition.<BR><BR>
         <B>NOTE:</B> The input (column) to this visitor is assumed to be instrument prices.<BR>
-        <B>NOTE:</B> The length of the result vector is <I>length of column - avg_period</I>.<BR><BR>
-        <I>explicit RSIVisitor(return_policy rp, size_type avg_period = 14)</I>
+        <B>NOTE:</B> The length of the result vector is <I>length of column - avg_period</I>.<BR>
+		<I>
+        <PRE>
+    explicit
+    RSIVisitor(return_policy rp, size_type avg_period = 14);
+        </PRE>
+		</I>
       </td>
       <td width="12%">
         <B>T</B>: Column data type.<BR>
@@ -69,9 +75,14 @@ struct RSXVisitor;
         </B></PRE></font>
       </td>
       <td>
+        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
         RSI is a popular indicator, yet it can be very noisy, inducing false signals and triggers. RSX is superior, providing an ultra smooth, low lag trend strength indicator. The code implemented is based on published code found at 'prorealcode.com'.<BR>
-        <BR>
-        <I>explicit RSXVisitor(size_type avg_period = 14)</I>
+		<I>
+        <PRE>
+    explicit
+    RSXVisitor(size_type avg_period = 14);
+        </PRE>
+		</I>
       </td>
       <td width="12%">
         <B>T</B>: Column data type.<BR>

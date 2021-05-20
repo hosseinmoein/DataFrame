@@ -42,13 +42,16 @@ struct EntropyVisitor;
         </B></PRE></font>
       </td>
       <td>
+        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
         This visitor calculates the rolling values of information entropy<BR>
         In information theory, the entropy of a random variable is the average level of "information", "surprise", or "uncertainty" inherent in the variable's possible outcomes. The concept of information entropy was introduced by Claude Shannon in his 1948 paper.<BR>
         A die has higher entropy (p=1/6) versus a coin (p=1/2).<BR>
+        <I>
         <PRE>
     explicit
     EntropyVisitor(size_type roll_count, value_type log_base = 2);
         </PRE>
+        </I>
       </td>
       <td width="12%">
         <B>T</B>: Column data type.<BR>

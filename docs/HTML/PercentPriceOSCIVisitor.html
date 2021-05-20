@@ -39,15 +39,18 @@ struct PercentPriceOSCIVisitor;
         </B></PRE></font>
       </td>
       <td>
+        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
         This visitor calculates the rolling values of Percentage Price Oscillator. It requires 3 input columns in the order of <I>low, high, close</I>.<BR>
         The result is a vector of values with same number of items as the given columns. The first slow_roll items, in the result, will be NAN.<BR><BR>
         The percentage price oscillator (PPO) is a technical momentum indicator that shows the relationship between two moving averages in percentage terms. The moving averages are a 26-period and 12-period exponential moving average (EMA).<BR>
         The PPO is used to compare asset performance and volatility, spot divergence which could lead to price reversals, generate trade signals, and help confirm trend direction. The PPO is identical to the moving average convergence divergence (MACD) indicator, except the PPO measures percentage difference between two EMAs, while the MACD measures absolute (dollar) difference. Some traders prefer the PPO because readings are comparable between assets with different prices, whereas MACD readings are not comparable.
+        <I>
         <PRE>
     explicit
     PercentPriceOSCIVisitor(size_type fast_period = 12,
                             size_type slow_period = 26);
         </PRE>
+        </I>
       </td>
       <td width="12%">
         <B>T</B>: Column data type<BR>

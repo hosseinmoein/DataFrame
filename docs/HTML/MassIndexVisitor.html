@@ -46,9 +46,15 @@ struct MassIndexVisitor;
         This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
         This functor calculates the Mass Index for the given high/low columns.<BR>
         Developed by Donald Dorsey, the Mass Index uses the high-low range to identify trend reversals based on range expansions. In this sense, the Mass Index is a volatility indicator that does not have a directional bias. Instead, the Mass Index identifies range bulges that can foreshadow a reversal of the current trend.<BR>
-        <I>explicit MassIndexVisitor(size_type fast_period = 9, size_type slow_period = 25);</I><BR>
-        <B>fast_period</B> A shorter exponential MA period for two high/low averages<BR>
-        <B>slow_period</B> A longer exponential MA period for final summation<BR>
+        <I>
+        <PRE>
+    explicit
+    MassIndexVisitor(size_type fast_period = 9,
+                     size_type slow_period = 25);
+        </PRE>
+		</I>
+        <B>fast_period</B>: A shorter exponential MA period for two high/low averages<BR>
+        <B>slow_period</B>: A longer exponential MA period for final summation<BR>
       </td>
       <td width="12%">
         <B>T</B>: Column data type.<BR>

@@ -34,8 +34,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>
 enum class concat_policy : unsigned char  {
+    // Only apply concatenation to the common columns
+    //
     common_columns = 1,
+
+    // Concatenate all columns. If a column does not exist in self,
+    // create one in the result and prepend with nan
+    //
     all_columns = 2,
+
+    // The result will have all the columns in self,
+    // but only common columns and index are concatenated
+    //
     lhs_and_common_columns = 3,
 };</B></PRE> </font>
       </td>
@@ -70,14 +80,7 @@ concat(const RHS_T &amp;rhs,
         <B>RHS_T</B>: Type of DataFrame rhs<BR>
         <B>Ts</B>: List all the types of all data columns. A type should be specified in the list only once.<BR>
         <B>rhs</B>: The rhs DataFrame<BR>
-        <B>cp</B>: Concatenation policy:<BR>
-        <PRE>
-    <B>all_columns</B>: concatenate all columns. If a column does not exist in self,
-                 create one in the result and prepend with nan
-    <B>common_columns</B>: only apply concatenation to the common columns
-    <B>lhs_and_common_columns</B>: the result will have all the columns in self,
-                            but only common columns and index are concatenated
-        <PRE>
+        <B>cp</B>: Concatenation policy. See above<BR>
       </td>
     </tr>
 

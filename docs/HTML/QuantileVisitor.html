@@ -71,7 +71,12 @@ struct QuantileVisitor;
       <td>
         This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
         This functor class finds the quantile specified by quantile and q_policy. Please see quantile_policy for more explanation.<BR>
-        <I>explicit QuantileVisitor (value_type quantile, quantile_policy q_policy);</I>
+        <I>
+        <PRE>
+    QuantileVisitor (value_type quantile,
+                     quantile_policy q_policy);
+        </PRE>
+        </I>
       </td>
       <td width="12%">
         <B>T</B>: Column data type.<BR>

@@ -52,11 +52,13 @@ struct MACDVisitor;
           <LI>Decay type for the exponential moving averages.</LI>
           <LI>Decay value for the exponential moving averages (See DataFrame Types and Exponential Roll Adopter).</LI>
         </UL>
+        <I>
         <PRE>
-    MACDVisitor(size_type short_mean_period,  // e.g. 12-day
-                size_type long_mean_period,   // e.g. 26-day
-                size_type signal_line_period) // e.g.  9-day
+    MACDVisitor(size_type short_mean_period,   // e.g. 12-day
+                size_type long_mean_period,    // e.g. 26-day
+                size_type signal_line_period); // e.g.  9-day
         </PRE>
+        </I>
         <OL>
         There are 3 methods that give you the results:
           <LI>const result_type &amp;get_macd_line() const – Returns vector of MACD Line (See above).</LI>

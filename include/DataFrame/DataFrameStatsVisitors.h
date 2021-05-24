@@ -485,15 +485,16 @@ struct  NExtremumVisitor {
         SKIP_NAN
 
         if (counter_ < N)  {
-            items_[counter_] = { val, idx };
-            if (extremum_index_ < 0 || cmp_(val, items_[extremum_index_].value))
+            result_[counter_] = { val, idx };
+            if (extremum_index_ < 0 ||
+                cmp_(val, result_[extremum_index_].value))
                 extremum_index_ = static_cast<int>(counter_);
         }
-        else if (cmp_(items_[extremum_index_].value, val))  {
-            items_[extremum_index_] = { val, idx };
+        else if (cmp_(result_[extremum_index_].value, val))  {
+            result_[extremum_index_] = { val, idx };
             extremum_index_ = 0;
             for (int i = 1; i < N; ++i)
-                if (cmp_(items_[i].value, items_[extremum_index_].value))
+                if (cmp_(result_[i].value, result_[extremum_index_].value))
                     extremum_index_ = i;
         }
 
@@ -503,19 +504,19 @@ struct  NExtremumVisitor {
 
     inline void pre ()  { counter_ = 0; extremum_index_ = -1; }
     inline void post ()  {  }
-    inline const result_type &get_result () const  { return (items_); }
-    inline result_type &get_result ()  { return (items_); }
+    inline const result_type &get_result () const  { return (result_); }
+    inline result_type &get_result ()  { return (result_); }
 
     inline void sort_by_index()  {
 
-        std::sort(items_.begin(), items_.end(),
+        std::sort(result_.begin(), result_.end(),
                   [](const DataItem &lhs, const DataItem &rhs) -> bool  {
                       return (lhs.index < rhs.index);
                   });
     }
     inline void sort_by_value()  {
 
-        std::sort(items_.begin(), items_.end(),
+        std::sort(result_.begin(), result_.end(),
                   [](const DataItem &lhs, const DataItem &rhs) -> bool  {
                       return (lhs.value < rhs.value);
                   });
@@ -525,7 +526,7 @@ struct  NExtremumVisitor {
 
 private:
 
-    result_type     items_ { };
+    result_type     result_ { };
     size_type       counter_ { 0 };
     int             extremum_index_ { -1 };
     compare_type    cmp_ {  };
@@ -966,6 +967,7 @@ struct NExtremumSubArrayVisitor  {
         result_ = std::move(q_.data());
     }
     inline const result_type &get_result () const  { return (result_); }
+    inline result_type &get_result ()  { return (result_); }
 
     explicit NExtremumSubArrayVisitor(
         value_type min_to_consider = -std::numeric_limits<value_type>::max(),
@@ -1362,6 +1364,7 @@ public:
 
         // Sum of the squares of the difference between each x and
         // the mean x value.
+        //
         const value_type    s_xx =
             x_stats_.get_variance() * value_type(n_ - 1);
 
@@ -1387,6 +1390,7 @@ private:
 
     // Sum of the product of the difference between x and its mean and
     // the difference between y and its mean.
+    //
     value_type                              s_xy_ { 0 };
     StatsVisitor<value_type, index_type>    x_stats_ {  };
     StatsVisitor<value_type, index_type>    y_stats_ {  };
@@ -1499,17 +1503,20 @@ struct CumSumVisitor {
         value_type      running_sum = 0;
         GET_COL_SIZE
 
-        result_.reserve(col_s);
+        result_type result;
+
+        result.reserve(col_s);
         for (size_type i = 0; i < col_s; ++i)  {
             const value_type    &value = *(column_begin + i);
 
             if (! skip_nan_ || ! is_nan__(value))  {
                 running_sum += value;
-                result_.push_back(running_sum);
+                result.push_back(running_sum);
             }
             else
-                result_.push_back(value);
+                result.push_back(value);
         }
+        result_.swap(result);
     }
 
     DEFINE_PRE_POST
@@ -1543,17 +1550,20 @@ struct CumProdVisitor {
         value_type      running_prod = 1;
         GET_COL_SIZE
 
-        result_.reserve(col_s);
+        result_type result;
+
+        result.reserve(col_s);
         for (size_type i = 0; i < col_s; ++i)  {
             const value_type    &value = *(column_begin + i);
 
             if (! skip_nan_ || ! is_nan__(value))  {
                 running_prod *= value;
-                result_.push_back(running_prod);
+                result.push_back(running_prod);
             }
             else
-                result_.push_back(value);
+                result.push_back(value);
         }
+        result_.swap(result);
     }
 
     DEFINE_PRE_POST
@@ -1588,32 +1598,33 @@ struct CumExtremumVisitor {
         if (col_s == 0)  return;
 
         value_type  running_extremum = *column_begin;
+        result_type result;
 
-        result_.reserve(col_s);
+        result.reserve(col_s);
         for (size_type i = 0; i < col_s; ++i)  {
             const value_type    &value = *(column_begin + i);
 
             if (! skip_nan_ || ! is_nan__(value))  {
                 if (cmp_(running_extremum, value))
                     running_extremum = value;
-                result_.push_back(running_extremum);
+                result.push_back(running_extremum);
             }
             else
-                result_.push_back(value);
+                result.push_back(value);
         }
+        result_.swap(result);
     }
 
-    inline void pre ()  { result_.clear(); }
-    inline void post ()  {  }
+    DEFINE_PRE_POST
     DEFINE_RESULT
 
     DECL_CTOR(CumExtremumVisitor)
 
 private:
 
-    std::vector<value_type> result_ {  };  // Extremum
-    compare_type            cmp_ {  };
-    const bool              skip_nan_;
+    result_type     result_ {  };  // Extremum
+    compare_type    cmp_ {  };
+    const bool      skip_nan_;
 };
 
 template<typename T, typename I = unsigned long>
@@ -1650,7 +1661,9 @@ public:
 
         GET_COL_SIZE
 
-        result_.reserve(col_s);
+        result_type result;
+
+        result.reserve(col_s);
 
         size_type   cat = nan_ != 0 ? 0 : 1;
 
@@ -1658,7 +1671,7 @@ public:
             const value_type    &value = *(column_begin + i);
 
             if (is_nan__(value))  {
-                result_.push_back(nan_);
+                result.push_back(nan_);
                 continue;
             }
 
@@ -1667,13 +1680,14 @@ public:
 
             if (citer == cat_map_.end())  {
                 cat_map_.insert({ &value, cat });
-                result_.push_back(cat);
+                result.push_back(cat);
                 cat += 1;
                 if (cat == nan_)  cat += 1;
             }
             else
-                result_.push_back(citer->second);
+                result.push_back(citer->second);
         }
+        result_.swap(result);
     }
 
     inline void pre ()  { result_.clear(); cat_map_.clear(); }
@@ -1720,8 +1734,8 @@ public:
             [&column_begin](size_type lhs, size_type rhs) -> bool {
                 return *(column_begin + lhs) < *(column_begin + rhs);
             });
-        result_.resize(col_s);
 
+        result_type         result(col_s);
         const value_type    *prev_value = &*(column_begin + rank_vec[0]);
 
         for (size_type i = 0; i < col_s; ++i)  {
@@ -1741,25 +1755,25 @@ public:
                 case rank_policy::average:
                 {
                     for (; i < col_s && i < j; ++i)
-                        result_[rank_vec[i]] = avg_val;
+                        result[rank_vec[i]] = avg_val;
                     break;
                 }
                 case rank_policy::first:
                 {
                     for (; i < col_s && i < j; ++i)
-                        result_[rank_vec[i]] = first_val;
+                        result[rank_vec[i]] = first_val;
                     break;
                 }
                 case rank_policy::last:
                 {
                     for (; i < col_s && i < j; ++i)
-                        result_[rank_vec[i]] = last_val;
+                        result[rank_vec[i]] = last_val;
                     break;
                 }
                 case rank_policy::actual:
                 {
                     for (; i < col_s && i < j; ++i)
-                        result_[rank_vec[i]] = static_cast<double>(i);
+                        result[rank_vec[i]] = static_cast<double>(i);
                     break;
                 }
             }
@@ -1767,6 +1781,7 @@ public:
                 prev_value = &*(column_begin + rank_vec[i]);
             i -= 1;  // Because the outer loop does ++i
         }
+        result_.swap(result);
     }
 
     DEFINE_PRE_POST
@@ -1800,10 +1815,14 @@ struct FactorizeVisitor  {
                 const H &column_begin,
                 const H &column_end)  {
 
-        result_.reserve(std::distance(column_begin, column_end));
+        result_type result;
+
+        result.reserve(std::distance(column_begin, column_end));
 
         for (auto citer = column_begin; citer < column_end; ++citer)
-            result_.push_back(ffunc_(*citer));
+            result.push_back(ffunc_(*citer));
+
+        result_.swap(result);
     }
 
     DEFINE_PRE_POST
@@ -2132,14 +2151,18 @@ struct  ModeVisitor {
 
     struct  DataItem  {
         // Value of the column item
+        //
         const value_type                *value { nullptr };
         // List of indices where value occurred
+        //
         VectorConstPtrView<index_type>  indices { };
 
         // Number of times value occurred
+        //
         inline size_type repeat_count() const  { return (indices.size()); }
 
         // List of column indices where value occurred
+        //
         std::vector<size_type>  value_indices_in_col {  };
 
         DataItem() = default;
@@ -2231,24 +2254,24 @@ public:
                       return (lhs.repeat_count() > rhs.repeat_count()); // dec
                   });
         for (size_type i = 0; i < N && i < val_vec.size(); ++i)
-            items_[i] = val_vec[i];
+            result_[i] = val_vec[i];
     }
 
-    inline void pre ()  { result_type x; items_.swap (x); }
+    inline void pre ()  { result_type x; result_.swap (x); }
     inline void post ()  {  }
-    inline const result_type &get_result () const  { return (items_); }
-    inline result_type &get_result ()  { return (items_); }
+    inline const result_type &get_result () const  { return (result_); }
+    inline result_type &get_result ()  { return (result_); }
 
     inline void sort_by_repeat_count()  {
 
-        std::sort(items_.begin(), items_.end(),
+        std::sort(result_.begin(), result_.end(),
                   [](const DataItem &lhs, const DataItem &rhs) -> bool  {
                       return (lhs.repeat_count() < rhs.repeat_count());
                   });
     }
     inline void sort_by_value()  {
 
-        std::sort(items_.begin(), items_.end(),
+        std::sort(result_.begin(), result_.end(),
                   [](const DataItem &lhs, const DataItem &rhs) -> bool  {
                       return (*(lhs.value) < *(rhs.value));
                   });
@@ -2256,7 +2279,7 @@ public:
 
 private:
 
-    result_type items_ { };
+    result_type result_ { };
 };
 
 // ----------------------------------------------------------------------------
@@ -2456,14 +2479,15 @@ struct DiffVisitor  {
 
         assert(col_s > 0 && std::abs(periods_) < (col_s - 1));
 
-        bool    there_is_zero = false;
+        bool        there_is_zero = false;
+        result_type result;
 
-        result_.reserve(col_s);
+        result.reserve(col_s);
         if (periods_ >= 0)  {
             if (! skip_nan_)  {
                 for (long i = 0;
                      i < periods_ && static_cast<size_type>(i) < col_s; ++i)
-                    result_.push_back(
+                    result.push_back(
                         std::numeric_limits<value_type>::quiet_NaN());
             }
 
@@ -2474,7 +2498,7 @@ struct DiffVisitor  {
 
                 const value_type    val = *i - *j;
 
-                result_.push_back(val);
+                result.push_back(val);
                 if (val == 0)  there_is_zero = true;
             }
         }
@@ -2487,33 +2511,35 @@ struct DiffVisitor  {
 
                 const value_type    val = *i - *j;
 
-                result_.push_back(val);
+                result.push_back(val);
                 if (val == 0)  there_is_zero = true;
             }
             if (i == column_begin)  {
                 if (! (skip_nan_ && (is_nan__(*i) || is_nan__(*j))))  {
                     const value_type    val = *i - *j;
 
-                    result_.push_back(val);
+                    result.push_back(val);
                     if (val == 0)  there_is_zero = true;
                 }
             }
-            std::reverse(result_.begin(), result_.end());
+            std::reverse(result.begin(), result.end());
 
             if (! skip_nan_)
                 for (size_type i = 0;
                      i < static_cast<size_type>(std::abs(periods_)) &&
                          i < col_s;
                      ++i)
-                    result_.push_back(
+                    result.push_back(
                         std::numeric_limits<value_type>::quiet_NaN());
         }
 
         if (non_zero_ && there_is_zero)
-            std::for_each(result_.begin(), result_.end(),
+            std::for_each(result.begin(), result.end(),
                           [](value_type &v) {
                               v += std::numeric_limits<value_type>::epsilon();
                           });
+
+        result_.swap(result);
     }
 
     DEFINE_PRE_POST
@@ -2565,10 +2591,13 @@ struct ZScoreVisitor {
 
         const value_type    m = mvisit.get_result();
         const value_type    s = svisit.get_result();
+        result_type         result;
 
-        result_.reserve(col_s);
+        result.reserve(col_s);
         for (auto citer = column_begin; citer < column_end; ++citer)
-            result_.push_back((*citer - m) / s);
+            result.push_back((*citer - m) / s);
+
+        result_.swap(result);
     }
 
     DEFINE_PRE_POST
@@ -2936,10 +2965,13 @@ struct NormalizeVisitor {
 
         const value_type    diff = maxv.get_result() - minv.get_result();
         H                   citer = column_begin;
+        result_type         result;
 
-        result_.reserve(std::distance(column_begin, column_end));
+        result.reserve(std::distance(column_begin, column_end));
         while (citer < column_end)
-            result_.push_back((*citer++ - minv.get_result()) / diff);
+            result.push_back((*citer++ - minv.get_result()) / diff);
+
+        result_.swap(result);
     }
 
     DEFINE_PRE_POST
@@ -2977,11 +3009,14 @@ struct StandardizeVisitor {
         mv.post();
         sv.post();
 
-        H   citer = column_begin;
+        H           citer = column_begin;
+        result_type result;
 
-        result_.reserve(std::distance(column_begin, column_end));
+        result.reserve(std::distance(column_begin, column_end));
         while (citer < column_end)
-            result_.push_back((*citer++ - mv.get_result()) / sv.get_result());
+            result.push_back((*citer++ - mv.get_result()) / sv.get_result());
+
+        result_.swap(result);
     }
 
     DEFINE_PRE_POST
@@ -3026,16 +3061,19 @@ public:
         assert((col_s == std::distance(y_begin, y_end)));
 
         // degree needs to change to contain the slope (0-degree)
+        //
         size_type       deg = degree_;
         const size_type nrows = deg + 1;
 
         // Array that will store the values of
         // sigma(xi), sigma(xi^2), sigma(xi^3) ... sigma(xi^2n)
+        //
         std::vector<value_type> sigma_x (2 * nrows, 0);
 
         for (size_type i = 0; i < sigma_x.size(); ++i) {
             // consecutive positions of the array will store
             // col_s, sigma(xi), sigma(xi^2), sigma(xi^3) ... sigma(xi^2n)
+            //
             for (size_type j = 0; j < col_s; ++j)  {
                 const value_type    w = weights_(*(idx_begin + j), j);
 
@@ -3045,23 +3083,27 @@ public:
 
         // eq_mat is the Normal matrix (augmented) that will store the
         // equations. The extra column is the y column.
+        //
         std::vector<value_type> eq_mat (nrows * (deg + 2), 0);
 
         for (size_type i = 0; i <= deg; ++i)  {
             // Build the Normal matrix by storing the corresponding
             // coefficients at the right positions except the last column
             // of the matrix
+            //
             for (size_type j = 0; j <= deg; ++j)
                 eq_mat[index_(i, j, nrows)] = sigma_x[i + j];
         }
 
         // Array to store the values of
         // sigma(yi), sigma(xi * yi), sigma(xi^2 * yi) ... sigma(xi^n * yi)
+        //
         std::vector<value_type> sigma_y (nrows, 0);
 
         for (size_type i = 0; i < sigma_y.size(); ++i) {
             // consecutive positions will store
             // sigma(yi), sigma(xi * yi), sigma(xi^2 * yi) ... sigma(xi^n * yi)
+            //
             for (size_type j = 0; j < col_s; ++j)  {
                 const value_type    w = weights_(*(idx_begin + j), j);
 
@@ -3071,16 +3113,19 @@ public:
 
         // load the values of sigma_y as the last column of eq_mat
         // (Normal Matrix but augmented)
+        //
         for (size_type i = 0; i <= deg; ++i)
             eq_mat[index_(i, nrows, nrows)] = sigma_y[i];
 
         // deg is made deg + 1 because the Gaussian elimination part
         // below was for deg equations, but here deg is the deg of
         // polynomial and for deg we get deg + 1 equations
+        //
         deg += 1;
 
         // From now Gaussian elimination starts (can be ignored) to solve the
         // set of linear equations (Pivotisation)
+        //
         for (size_type i = 0; i < deg; ++i)  {
             for (size_type k = i + 1; k < deg; ++k)
                 if (eq_mat[index_(i, i, nrows)] < eq_mat[index_(k, i, nrows)])
@@ -3090,6 +3135,7 @@ public:
         }
 
         // loop to perform the Gauss elimination
+        //
         for (size_type i = 0; i < deg - 1; ++i)  {
             for (size_type k = i + 1; k < deg; ++k) {
                 const value_type    t =
@@ -3097,6 +3143,7 @@ public:
 
                 // make the elements below the pivot elements equal to zero
                 // or elimnate the variables
+                //
                 for (size_type j = 0; j <= deg; ++j)
                     eq_mat[index_(k, j, nrows)] =
                         eq_mat[index_(k, j, nrows)] -
@@ -3109,13 +3156,16 @@ public:
         // back-substitution
         // coeffs_ is a vector whose values correspond to the values
         // of x, y, z ...
+        //
         for (int i = int(deg) - 1; i >= 0; --i) {
             // make the variable to be calculated equal to the rhs of the last
             // equation
+            //
             coeffs_[i] = eq_mat[index_(i, deg, nrows)];
             for (int j = 0; j < deg; ++j)  {
                 // then subtract all the lhs values except the coefficient of
                 // the variable whose value is being calculated
+                //
                 if (j != i)
                     coeffs_[i] =
                         coeffs_[i] - eq_mat[index_(i, j, nrows)] * coeffs_[j];
@@ -3123,6 +3173,7 @@ public:
 
             // now finally divide the rhs by the coefficient of the
             // variable to be calculated
+            //
             coeffs_[i] = coeffs_[i] / eq_mat[index_(i, i, nrows)];
         }
 
@@ -3271,6 +3322,7 @@ private:
     // The bi-square function (1 - x^2)^2. Used to weight the residuals in the
     // robustifying iterations. Called by the calculate_residual_weights
     // function.
+    //
     template<typename X>
     inline static void bi_square_(X x_begin, X x_end)  {
 
@@ -3283,6 +3335,7 @@ private:
 
     // The tri-cubic function (1 - x^3)^3. Used to weight neighboring points
     // along the x-axis based on their distance to the current point.
+    //
     template<typename X>
     inline static void tri_cube_(X x_begin, X x_end)  {
 
@@ -3328,10 +3381,12 @@ private:
         }
 
         // Some trimming of outlier residuals.
+        //
         std::replace_if(resid_weights_.begin(), resid_weights_.end(),
                         std::bind(std::greater<value_type>(),
                                   std::placeholders::_1, one_),
                         one_);
+
         // std::replace_if(resid_weights_.begin(), resid_weights_.end(),
         //                 std::bind(std::greater_equal<value_type>(),
         //                           std::placeholders::_1, value_type(0.999)),
@@ -3340,6 +3395,7 @@ private:
         //                 std::bind(std::less_equal<value_type>(),
         //                           std::placeholders::_1, value_type(0.001)),
         //                 z_);
+
         bi_square_(resid_weights_.begin(), resid_weights_.end());
     }
 
@@ -3361,6 +3417,7 @@ private:
 
         // This loop increments until we fall just outside of delta distance,
         // copying the results for any repeated x's along the way.
+        //
         const value_type    cutoff = *(x_begin + last_fit_idx) + delta;
         long                k = last_fit_idx + 1;
         bool                looped = false;
@@ -3371,6 +3428,7 @@ private:
             if (*(x_begin + k) == *(x_begin + last_fit_idx))  {
                 // if tied with previous x-value, just use the already fitted
                 // y, and update the last-fit counter.
+                //
                 *(y_fits_begin + k) = *(y_fits_begin + last_fit_idx);
                 last_fit_idx = k;
             }
@@ -3380,6 +3438,7 @@ private:
         // is either one prior to k (since k should be the first point outside
         // of delta) or is just incremented + 1 if k = curr_idx + 1.
         // This insures we always step forward.
+        //
         curr_idx = std::max(k - (looped ? 1 : 2), last_fit_idx + 1);
     }
 
@@ -3438,6 +3497,7 @@ private:
             // or
             // Fill a bad regression with the original value only possible
             // when not using xvals distinct from x
+            //
             *(y_fits_begin + curr_idx) =
                 fill_with_nans
                     ? std::numeric_limits<value_type>::quiet_NaN()
@@ -3477,11 +3537,13 @@ private:
     calculate_weights_(const X &x_begin, const X &x_end,
                        const K &w_begin, const K &w_end, // Regression weights
                        // The x-value of the point currently being fit
+                       //
                        value_type xval,
                        size_type left_end, size_type right_end,
                        // The radius of the current neighborhood. The larger
                        // of distances between x[i] and its left-most or
                        // right-most neighbor.
+                       //
                        value_type radius)  {
 
         x_j_.clear();
@@ -3495,6 +3557,7 @@ private:
 
             // Assign the distance measure to the weights, then apply the
             // tricube function to change in-place.
+            //
             *(w_begin + j) = dist_i_j_.back();
         }
 
@@ -3516,6 +3579,7 @@ private:
 
         // 2nd condition checks if only 1 local weight is non-zero, which
         // will give a divisor of zero in calculate_y_fit
+        //
         if (sum_weights <= 0 || non_zero_cnt == 1)
             reg_ok = false;
         else
@@ -3545,6 +3609,7 @@ private:
         //
         // Once the right end hits the end of the data, hold the neighborhood
         // the same for the remaining xvals.
+        //
         while (true)  {
             if (right_end < curr_idx)  {
                 if (xval > ((*(x_begin + left_end) +
@@ -3571,11 +3636,13 @@ private:
 
         // The number of neighbors in each regression. round up if close
         // to integer
+        //
         size_type   k =
             size_type (frac_ * value_type(col_s) + value_type(1e-10));
 
         // frac_ should be set, so that 2 <= k <= n. Conform them instead of
         // throwing error.
+        //
         if (k < 2)  k = 2;
         if (k > col_s)  k = col_s;
 
@@ -3590,11 +3657,14 @@ private:
             size_type   right_end = k;
 
             // Fit y[i]'s until the end of the regression
+            //
             std::fill(y_fits_.begin(), y_fits_.end(), 0);
             while (true)  {
                 // The x value at which we will fit this time
+                //
                 const value_type    xval = *(x_begin + curr_idx);
                 // Describe the neighborhood around the current xval.
+                //
                 const value_type    radius =
                     update_neighborhood_(x_begin, x_end,
                                          xval,
@@ -3602,11 +3672,13 @@ private:
                                          left_end, right_end);
 
                 // Re-initialize the weights for each point xval.
+                //
                 std::fill(weights.begin(), weights.end(), 0);
 
                 // Calculate the weights for the regression in this
                 // neighborhood. Determine if at least some weights are
                 // positive, so a regression is ok.
+                //
                 const bool  reg_ok =
                     calculate_weights_(x_begin, x_end,
                                        weights.begin(), weights.end(),
@@ -3615,6 +3687,7 @@ private:
                                        radius);
 
                 // If ok, run the regression
+                //
                 calculate_y_fits_(x_begin, x_end,
                                   y_begin, y_end,
                                   weights.begin(), weights.end(),
@@ -3626,6 +3699,7 @@ private:
 
                 // If we skipped some points, because of how delta_ was set,
                 // go back and fit them by linear interpolation.
+                //
                 if (last_fit_idx < (curr_idx - 1))
                     interpolate_skipped_fits_(x_begin, x_end,
                                               y_fits_.begin(), y_fits_.end(),
@@ -3633,6 +3707,7 @@ private:
 
                 // Update the last fit counter to indicate we've now fit this
                 // point. Find the next i for which we'll run a regression.
+                //
                 update_indices_(x_begin, x_end,
                                 y_fits_.begin(), y_fits_.end(),
                                 delta_,
@@ -3713,13 +3788,17 @@ private:
 
     // Between 0 and 1. The fraction of the data used when estimating
     // each y-value.
+    //
     const value_type            frac_;
     // The number of residual-based reweightings to perform.
+    //
     const size_type             loop_n_;
     // Distance within which to use linear-interpolation instead of weighted
     // regression.
+    //
     const value_type            delta_;
     // Are x and y vectors sorted in the ascending order of values in x vector
+    //
     const bool                  sorted_;
 
     result_type                 y_fits_ {  };
@@ -3759,6 +3838,7 @@ private:
         LowessVisitor<T, I> l_v (3, frac_, delta_ * value_type(col_s), true);
 
         // Calculate trend
+        //
         l_v.pre();
         l_v (idx_begin, idx_end, y_begin, y_end, xvals.begin(), xvals.end());
         l_v.post();
@@ -3773,6 +3853,7 @@ private:
         StepRollAdopter<MEAN, value_type, I>    sr_mean (MEAN(), s_period_);
 
         // Calculate one-period seasonality
+        //
         seasonal_.resize(col_s, 0);
         for (size_type i = 0; i < s_period_; ++i)  {
             sr_mean.pre();
@@ -3783,6 +3864,7 @@ private:
         }
 
         // [01]-center the period means depending on the type
+        //
         MEAN    m_v;
 
         m_v.pre();
@@ -3802,6 +3884,7 @@ private:
         }
 
         // Tile the one-time seasone over the seasonal_ vector
+        //
         for (size_type i = s_period_; i < col_s; ++i)
             seasonal_[i] = seasonal_[i % s_period_];
     }
@@ -3810,6 +3893,7 @@ private:
     do_residual_(const std::vector<value_type> &detrended, size_type col_s)  {
 
         // What is left is residual
+        //
         residual_.resize(col_s, 0);
         if (type_ == decompose_type::additive)
             std::transform(detrended.begin(), detrended.end(),
@@ -3840,9 +3924,11 @@ public:
 
         // We want to reuse the vector, so just rename it.
         // This way nobody gets confused
+        //
         std::vector<value_type> &detrended = xvals;
 
         // Remove trend from observations in y
+        //
         if (type_ == decompose_type::additive)
             std::transform(y_begin, y_end,
                            trend_.begin(),
@@ -3890,12 +3976,15 @@ private:
 
     // Between 0 and 1. The fraction of the data used when estimating
     // each y-value.
+    //
     const value_type        frac_;
     // Seasonal period in unit of one observation. There must be at least
     // two seasons in the data
+    //
     const size_type         s_period_;
     // Distance within which to use linear-interpolation instead of weighted
     // regression. 0 or small values cause longer/more accurate processing
+    //
     const value_type        delta_;
     const decompose_type    type_;
 
@@ -3922,29 +4011,32 @@ struct  EntropyVisitor  {
 
         GET_COL_SIZE
 
-        SimpleRollAdopter<SumVisitor<T, I>, T, I>   sum_v (SumVisitor<T, I>(),
-                                                           roll_count_);
+        SimpleRollAdopter<SumVisitor<T, I>, T, I>   sum_v(SumVisitor<T, I>(),
+                                                          roll_count_);
 
         sum_v.pre();
         sum_v (idx_begin, idx_end, column_begin, column_end);
         sum_v.post();
-        result_ = std::move(sum_v.get_result());
+
+        result_type result = std::move(sum_v.get_result());
 
         for (size_type i = 0; i < col_s; ++i)  {
-            const value_type    val = *(column_begin + i) / result_[i];
+            const value_type    val = *(column_begin + i) / result[i];
 
-            result_[i] = (-val * std::log(val) / std::log(log_base_));
+            result[i] = (-val * std::log(val) / std::log(log_base_));
         }
 
         sum_v.pre();
         sum_v (idx_begin + (roll_count_ - 1), idx_end,
-               result_.begin() + (roll_count_ - 1), result_.end());
+               result.begin() + (roll_count_ - 1), result.end());
         sum_v.post();
 
         for (size_type i = 0; i < roll_count_ - 1; ++i)
-            result_[i] = get_nan<value_type>();
+            result[i] = get_nan<value_type>();
         for (size_type i = 0; i < sum_v.get_result().size(); ++i)
-            result_[i + roll_count_ - 1] = sum_v.get_result()[i];
+            result[i + roll_count_ - 1] = sum_v.get_result()[i];
+
+        result_.swap(result);
     }
 
     DEFINE_PRE_POST

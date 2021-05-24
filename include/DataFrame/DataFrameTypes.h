@@ -139,16 +139,21 @@ enum class concat_policy : unsigned char  {
 };
 
 // ----------------------------------------------------------------------------
+
 // This policy is relative to a tabular data structure
 //
 enum class shift_policy : unsigned char  {
     // Shift/rotate the content of all columns down, keep index unchanged
+    //
     down = 1,
     // Shift/rotate the content of all columns up, keep index unchanged
+    //
     up = 2,
     // Shift/rotate the columns to the left
+    //
     left = 3,
     // Shift/rotate the columns to the right
+    //
     right = 4,
 };
 
@@ -157,21 +162,26 @@ enum class shift_policy : unsigned char  {
 enum class fill_policy : unsigned char  {
 
     // Fill all missing values with the given substitute
+    //
     value = 1,
 
     // Fill the missing values with the previous value
+    //
     fill_forward = 2,
 
     // Fill the missing values with the next value
+    //
     fill_backward = 3,
 
     //           X - X1
     // Y = Y1 + --------- * (Y2 - Y1)
     //           X2 - X1
+    //
     linear_interpolate = 4,  // Using the index as X coordinate
     linear_extrapolate = 5,  // Using the index as X coordinate
 
     // Fill missing values with mid-point of surrounding values
+    //
     mid_point = 6,
 };
 
@@ -333,6 +343,7 @@ enum class sigmoid_type : unsigned char  {
 // has been used, this is equivalent to using a multiplicative decomposition
 // because:
 //    Y[t] = T * S * R is equivalent to log(Y[t]) = log(T) + logt(S) + log(R)
+//
 enum class decompose_type : unsigned char  {
     additive = 1,        // Y(t) = Trend + Seasonal + Residual
     multiplicative = 2,  // Y(t) = Trend * Seasonal * Residual
@@ -343,15 +354,19 @@ enum class decompose_type : unsigned char  {
 enum class box_cox_type : unsigned char  {
     // y(λ) = (y^λ - 1) / λ,  if λ != 0
     // y(λ) = log(y),         if λ == 0
+    //
     original = 1,
     // y(λ) = (y^λ - 1) / (λ * GM^(λ - 1)),  if λ != 0
     // y(λ) = GM * log(y),                   if λ == 0
+    //
     geometric_mean = 2,
     // y(λ) = sign(y) * (((|y| + 1)^λ - 1) / λ),  if λ != 0
     // y(λ) = sign(y) * log(|y| + 1),             if λ == 0
+    //
     modulus = 3,
     // y(λ) = (e^λy - 1) / λ,  if λ != 0
     // y(λ) = y,               if λ == 0
+    //
     exponential = 4,
 };
 
@@ -359,8 +374,10 @@ enum class box_cox_type : unsigned char  {
 
 enum class bucket_type : unsigned char  {
     // Bucketize by distance between two index values (i.g. X2 - X1 = N)
+    //
     by_distance = 1,
     // Bucketize by counting of index values (e.g. every N index items)
+    //
     by_count = 2,
 };
 
@@ -374,26 +391,37 @@ struct  RandGenParams  {
     unsigned int    seed { static_cast<unsigned int>(-1) };
 
     // The p distribution parameter (probability of generating true)
+    //
     double      prob_true { 0.5 };
     // The t or k distribution parameter (number of trials)
+    //
     std::size_t t_dist { 1 };
     // The μ distribution parameter (the mean of the distribution)
+    //
     double      mean { 1.0 };
     // the σ distribution parameter (standard deviation)
+    //
     double      std { 0 };
     // The λ distribution parameter (the rate parameter)
+    //
     double      lambda { 1.0 };
     // The α distribution parameter (shape, location)
+    //
     double      alpha { 1.0 };
     // The β distribution parameter (scale)
+    //
     double      beta { 1.0 };
     // The m distribution parameter (log-scale)
+    //
     double      m { 0 };
     // The s distribution parameter (shape)
+    //
     double      s { 1.0 };
     // The n distribution parameter (degrees of freedom)
+    //
     double      n { 1.0 };
     // degrees of freedom for fisher_f_distribution
+    //
     double      n2 { 1.0 };
 };
 

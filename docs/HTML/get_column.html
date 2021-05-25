@@ -70,7 +70,7 @@ get_column (const char *name) const;
         <PRE><B>
 template&lt;typename T&gt;
 [[nodiscard]] ColumnVecType&lt;T&gt; &amp;
-get_column (size_type index);
+get_column (std::size_t index);
         </B></PRE></font>
       </td>
       <td>
@@ -87,7 +87,7 @@ get_column (size_type index);
         <PRE><B>
 template&lt;typename T&gt;
 [[nodiscard]] const ColumnVecType&lt;T&gt; &amp;
-get_column (size_type index) const;
+get_column (std::size_t index) const;
         </B></PRE></font>
       </td>
       <td>

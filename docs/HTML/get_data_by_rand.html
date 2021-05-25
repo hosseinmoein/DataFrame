@@ -66,7 +66,7 @@ template&lt;typename ... Ts&gt;
 DataFrame&lt;I&gt;
 get_data_by_rand(random_policy spec,
                  double n,
-                 size_type seed = 0) const;
+                 std::size_t seed = 0) const;
         </B></PRE></font>
       </td>
       <td>
@@ -89,7 +89,7 @@ template&lt;typename ... Ts&gt;
 DataFramePtrView&lt;I&gt;
 get_view_by_rand(random_policy spec,
                  double n,
-                 size_type seed = 0) const;
+                 std::size_t seed = 0) const;
         </B></PRE></font>
       </td>
       <td>

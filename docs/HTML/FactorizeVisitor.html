@@ -44,7 +44,7 @@ struct FactorizeVisitor;
         The constructor takes one parameter which is the factorization function<BR>
             <I>
             <PRE>
-    using factor_func = std::function&lt;bool(const value_type &amp;val)&gt;;
+    using factor_func = std::function&lt;bool(const T &amp;val)&gt;;
 
     explicit FactorizeVisitor(factor_func f);
             </PRE>

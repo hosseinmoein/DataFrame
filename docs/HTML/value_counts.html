@@ -43,7 +43,7 @@ value_counts (const char *col_name) const; </font>
         It returns a StdDataFrame of following specs:<BR>
         <OL>
           <LI>The index is of type T and contains all unique values in the named column.</LI>
-          <LI>There is only one column named "counts" of type size_type that contains the count for each index row.</LI>
+          <LI>There is only one column named "counts" of type std::size_t that contains the count for each index row.</LI>
         </OL>
         For this method to compile and work, 3 conditions must be met:<BR>
         <OL>
@@ -65,7 +65,7 @@ value_counts (const char *col_name) const; </font>
         <PRE><B>
 template&lt;typename T&gt;
 StdDataFrame&lt;T&gt;
-value_counts (size_type index) const; </font>
+value_counts (std::size_t index) const; </font>
         </B></PRE>
       </td>
       <td>

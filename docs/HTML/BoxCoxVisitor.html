@@ -70,10 +70,7 @@ enum class box_cox_type : unsigned char  {
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>#include &lt;DataFrame/DataFrameStatsVisitors.h&gt;
 
-template&lt;typename T,
-         typename I = unsigned long,
-         typename =
-             typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;
+template&lt;typename T, typename I = unsigned long&gt;
 struct BoxCoxVisitor;
         </B></PRE></font>
       </td>
@@ -85,7 +82,7 @@ struct BoxCoxVisitor;
         In other types, the series could have both +/- values.<BR><BR>
         <I><PRE>
     BoxCoxVisitor(box_cox_type bc_type,
-                  value_type lambda,
+                  T lambda,
                   bool is_all_positive);
         </PRE></I>
       </td>

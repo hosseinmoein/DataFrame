@@ -35,10 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>#include &lt;DataFrame/DataFrameStatsVisitors.h&gt;
 
-template&lt;typename T,
-         typename I = unsigned long,
-         typename =
-             typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;
+template&lt;typename T, typename I = unsigned long&gt;
 struct LowessVisitor;
         </B></PRE></font>
       </td>
@@ -58,9 +55,9 @@ struct LowessVisitor;
         <I>
         <PRE>
     explicit
-    LowessVisitor (size_type loop_n = 3,
-                   value_type frac = 2.0 / 3.0,
-                   value_type delta = 0,
+    LowessVisitor (std::size_t loop_n = 3,
+                   T frac = 2.0 / 3.0,
+                   T delta = 0,
                    bool sorted = false);
         </PRE>
 		</I>

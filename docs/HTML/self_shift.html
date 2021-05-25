@@ -61,7 +61,7 @@ enum class shift_policy : unsigned char  {
         <PRE><B>
 template&lt;typename ... Ts&gt;
 void
-self_shift(size_type periods, shift_policy sp);
+self_shift(std::size_t periods, shift_policy sp);
         </B></PRE></font>
       </td>
       <td width = "33.3%">
@@ -83,7 +83,7 @@ self_shift(size_type periods, shift_policy sp);
         <PRE><B>
 template&lt;typename ... Ts&gt;
 StdDataFrame&lt;I&gt;
-shift(size_type periods, shift_policy sp) const; </font>
+shift(std::size_t periods, shift_policy sp) const; </font>
         </B></PRE>
       </td>
       <td>
@@ -102,7 +102,7 @@ shift(size_type periods, shift_policy sp) const; </font>
 template&lt;typename T&gt;
 std::vector<T>
 shift(const char *col_name,
-      size_type periods,
+      std::size_t periods,
       shift_policy sp) const;
         </B></PRE></font>
       </td>

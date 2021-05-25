@@ -35,7 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>
 template&lt;typename T, size_t N&gt;
-size_type
+std::size_t
 replace(const char *col_name,
         const std::array&lt;T, N&gt; old_values,
         const std::array&lt;T, N&gt; new_values,
@@ -61,7 +61,7 @@ replace(const char *col_name,
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>
 template&lt;typename T, size_t N&gt;
-std::future&lt;size_type&gt;
+std::future&lt;std::size_t&gt;
 replace_async(const char *col_name,
               const std::array&lt;T, N&gt; old_values,
               const std::array&lt;T, N&gt; new_values,
@@ -125,7 +125,7 @@ replace_async(const char *col_name, F &amp;functor);
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>
 template&lt;size_t N&gt;
-size_type
+std::size_t
 replace_index(const std::array&lt;IndexType, N&gt; old_values,
               const std::array&lt;IndexType, N&gt; new_values,
               int limit = -1);

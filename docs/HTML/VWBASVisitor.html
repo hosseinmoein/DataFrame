@@ -34,10 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>#include &lt;DataFrame/DataFrameFinancialVisitors.h&gt;
 
-template&lt;typename T,
-         typename I = unsigned long,
-         typename =
-             typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;
+template&lt;typename T, typename I = unsigned long&gt;
 struct VWBASVisitor;
         </B></PRE></font>
       </td>
@@ -64,26 +61,26 @@ struct VWBASVisitor;
         <I>
 <PRE>
     struct  VWBAS  {
-        value_type    spread;
-        value_type    percent_spread; // with respect to bid side
-        value_type    vwbas;
-        value_type    percent_vwbas;  // with respect to bid side
-        index_type    index_value;
-        size_type     event_count;
-        value_type    total_ask_volume;
-        value_type    total_bid_volume;
-        value_type    high_ask_price;
-        value_type    low_ask_price;
-        value_type    high_bid_price;
-        value_type    low_bid_price;
-        value_type    cumulative_vwbas;
-        size_type     cumulative_event_count;
-        value_type    cumulative_total_ask_volume;
-        value_type    cumulative_total_bid_volume;
-        value_type    cumulative_high_ask_price;
-        value_type    comulative_low_ask_price;
-        value_type    cumulative_high_bid_price;
-        value_type    comulative_low_bid_price;
+        T            spread;
+        T            percent_spread; // with respect to bid side
+        T            vwbas;
+        T            percent_vwbas;  // with respect to bid side
+        I            index_value;
+        std::size_t  event_count;
+        T            total_ask_volume;
+        T            total_bid_volume;
+        T            high_ask_price;
+        T            low_ask_price;
+        T            high_bid_price;
+        T            low_bid_price;
+        T            cumulative_vwbas;
+        std::size_t  cumulative_event_count;
+        T            cumulative_total_ask_volume;
+        T            cumulative_total_bid_volume;
+        T            cumulative_high_ask_price;
+        T            comulative_low_ask_price;
+        T            cumulative_high_bid_price;
+        T            comulative_low_bid_price;
     };
 </PRE>
         </I>

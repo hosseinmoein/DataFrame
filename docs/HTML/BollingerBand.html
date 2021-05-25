@@ -34,10 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>#include &lt;DataFrame/DataFrameFinancialVisitors.h&gt;
 
-template&lt;typename T,
-         typename I = unsigned long,
-         typename =
-             typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;
+template&lt;typename T, typename I = unsigned long&gt;
 struct BollingerBand;
         </B></PRE></font>
       </td>
@@ -56,7 +53,7 @@ struct BollingerBand;
         <PRE>
     BollingerBand(double upper_band_multiplier,
                   double lower_band_multiplier,
-                  size_type moving_mean_period,
+                  std::size_t moving_mean_period,
                   bool biased = false)
         </PRE>
         </I>

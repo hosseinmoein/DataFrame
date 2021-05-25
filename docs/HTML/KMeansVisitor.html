@@ -47,9 +47,9 @@ struct KMeansVisitor;
         <LI>A function to calculate distance between to data points of type T with a default value<BR>
         <I>
         <PRE>
-KMeansVisitor(size_type num_of_iter,
+KMeansVisitor(std::size_t num_of_iter,
               distance_func f =
-                  [](const value_type &x, const value_type &y) -> double {
+                  [](const T &x, const T &y) -> double {
                       return ((x - y) * (x - y));
                   })
         </PRE>

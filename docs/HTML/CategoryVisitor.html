@@ -44,10 +44,10 @@ struct CategoryVisitor;
         The constructor takes an unsigned value to represent NaN values. The default is unsigned long value of -1.<BR>
             <I>
             <PRE>
-    explicit CategoryVisitor(size_type nan_val = size_type(-1));
+    explicit CategoryVisitor(std::size_t nan_val = std::size_t(-1));
             </PRE>
             </I>
-        The result is a vector of size_type
+        The result is a vector of std::size_t
       </td>
       <td width="12%">
         <B>T</B>: Column data type.<BR>

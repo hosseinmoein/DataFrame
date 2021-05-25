@@ -34,10 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>#include &lt;DataFrame/DataFrameFinancialVisitors.h&gt;
 
-template&lt;typename T,
-         typename I = unsigned long,
-         typename =
-             typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;
+template&lt;typename T, typename I = unsigned long&gt;
 struct VWAPVisitor;
         </B></PRE></font>
       </td>
@@ -65,17 +62,17 @@ The result is a vector of following structs:<BR>
 <I>
 <PRE>
     struct  VWAP  {
-        value_type    vwap;
-        index_type    index_value;
-        size_type     event_count;
-        value_type    total_volume;
-        value_type    high_price;
-        value_type    low_price;
-        value_type    cumulative_vwap;
-        size_type     cumulative_event_count;
-        value_type    cumulative_total_volume;
-        value_type    cumulative_high_price;
-        value_type    comulative_low_price;
+        T            vwap;
+        I            index_value;
+        std::size_t  event_count;
+        T            total_volume;
+        T            high_price;
+        T            low_price;
+        T            cumulative_vwap;
+        std::size_t  cumulative_event_count;
+        T            cumulative_total_volume;
+        T            cumulative_high_price;
+        T            comulative_low_price;
     };
 </PRE>
 </I>

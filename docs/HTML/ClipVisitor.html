@@ -42,7 +42,7 @@ struct ClipVisitor;
         This visitor actually changes the given column’s data. It sets any column value greater than upper to upper and any value smaller than lower to lower.<BR>
         The <I>get_result()</I> method returns the number of items changed.<BR><BR>
         <I><PRE>
-    ClipVisitor(const value_type &amp;upper, const value_type &amp;lower)
+    ClipVisitor(const T &amp;upper, const T &amp;lower)
         </PRE></I>
       </td>
       <td width="12%">

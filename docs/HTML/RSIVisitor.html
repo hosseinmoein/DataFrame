@@ -35,10 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>#include &lt;DataFrame/DataFrameStatsVisitors.h&gt;
 
-template&lt;typename T,
-         typename I = unsigned long,
-         typename =
-             typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;
+template&lt;typename T, typename I = unsigned long&gt;
 struct RSIVisitor;
         </B></PRE></font>
       </td>
@@ -53,7 +50,7 @@ struct RSIVisitor;
 		<I>
         <PRE>
     explicit
-    RSIVisitor(return_policy rp, size_type avg_period = 14);
+    RSIVisitor(return_policy rp, std::size_t avg_period = 14);
         </PRE>
 		</I>
       </td>
@@ -67,10 +64,7 @@ struct RSIVisitor;
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>#include &lt;DataFrame/DataFrameStatsVisitors.h&gt;
 
-template&lt;typename T,
-         typename I = unsigned long,
-         typename =
-             typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;
+template&lt;typename T, typename I = unsigned long&gt;
 struct RSXVisitor;
         </B></PRE></font>
       </td>
@@ -80,7 +74,7 @@ struct RSXVisitor;
 		<I>
         <PRE>
     explicit
-    RSXVisitor(size_type avg_period = 14);
+    RSXVisitor(std::size_t avg_period = 14);
         </PRE>
 		</I>
       </td>

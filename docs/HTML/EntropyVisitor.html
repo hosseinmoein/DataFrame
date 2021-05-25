@@ -34,10 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>#include &lt;DataFrame/DataFrameStatsVisitors.h&gt;
 
-template&lt;typename T,
-         typename I = unsigned long,
-         typename =
-             typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;
+template&lt;typename T, typename I = unsigned long&gt;
 struct EntropyVisitor;
         </B></PRE></font>
       </td>
@@ -49,7 +46,7 @@ struct EntropyVisitor;
         <I>
         <PRE>
     explicit
-    EntropyVisitor(size_type roll_count, value_type log_base = 2);
+    EntropyVisitor(std::size_t roll_count, T log_base = 2);
         </PRE>
         </I>
       </td>

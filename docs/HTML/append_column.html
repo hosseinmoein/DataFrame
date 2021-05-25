@@ -34,7 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>
 template&lt;typename T&gt;
-size_type
+std::size_t
 append_column(const char *name,
               const T &amp;val,
               nan_policy padding = nan_policy::pad_with_nans);
@@ -55,7 +55,7 @@ append_column(const char *name,
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>
 template&lt;typename T, typename ITR&gt;
-size_type
+std::size_t
 append_column(const char *name,
               Index2D&lt;const ITR &amp;&gt; range,
               nan_policy padding = nan_policy::pad_with_nans);

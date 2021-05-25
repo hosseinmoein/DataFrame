@@ -60,10 +60,7 @@ enum class decompose_type : unsigned char  {
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>#include &lt;DataFrame/DataFrameStatsVisitors.h&gt;
 
-template&lt;typename T,
-         typename I = unsigned long,
-         typename =
-             typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;
+template&lt;typename T, typename I = unsigned long&gt;
 struct DecomposeVisitor;
         </B></PRE></font>
       </td>
@@ -74,9 +71,9 @@ struct DecomposeVisitor;
         <I>
         <PRE>
     explicit
-    DecomposeVisitor(size_type s_period,
-                     value_type frac,
-                     value_type delta,
+    DecomposeVisitor(std::size_t s_period,
+                     T frac,
+                     T delta,
                      decompose_type type = decompose_type::additive);
         </PRE>
         </I>

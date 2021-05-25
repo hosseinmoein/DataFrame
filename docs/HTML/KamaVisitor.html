@@ -45,9 +45,9 @@ struct KamaVisitor;
         The result is a vector of values with same number of items as the given column. The first roll_count items, in the result, will be NAN.<BR>
         <I>
         <PRE>
-    KamaVisitor(size_type roll_count = 10,
-                size_type fast_smoothing_const = 2,
-                size_type slow_smoothing_const = 30);
+    KamaVisitor(std::size_t roll_count = 10,
+                std::size_t fast_smoothing_const = 2,
+                std::size_t slow_smoothing_const = 30);
         </PRE>
         </I>
       </td>

@@ -35,7 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>
 template&lt;typename T, typename ITR&gt;
-size_type
+std::size_t
 load_column(const char *name,
             Index2D&lt;const ITR &amp;&gt; range,
             nan_policy padding = nan_policy::pad_with_nans);
@@ -58,7 +58,7 @@ load_column(const char *name,
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>
 template&lt;typename&gt;
-size_type
+std::size_t
 load_column(const char *name,
             std::vector&lt;T&gt; &amp;&amp;data,
             nan_policy padding = nan_policy::pad_with_nans);
@@ -82,7 +82,7 @@ load_column(const char *name,
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>
 template&lt;typename&gt;
-size_type
+std::size_t
 load_column(const char *name,
             const std::vector&lt;T&gt; &amp;data,
             nan_policy padding = nan_policy::pad_with_nans);
@@ -106,17 +106,17 @@ load_column(const char *name,
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>
 template&lt;typename&gt;
-size_type
+std::size_t
 load_align_column(
     const char *name,
     const std::vector&lt;T&gt; &amp;&amp;data,
-    size_type interval,
+    std::size_t interval,
     bool start_from_beginning,
     const T &amp;null_value = get_nan&lt;T&gt;(),
-    std::function&lt;size_type (const IndexType &amp;,
+    std::function&lt;std::size_t (const IndexType &amp;,
                              const IndexType &amp;)&gt; diff_func =
-        [](const IndexType &amp;t_1, const IndexType &amp;t) -&gt; size_type  {
-            return (static_cast&lt;size_type&gt;(t - t_1));
+        [](const IndexType &amp;t_1, const IndexType &amp;t) -&gt; std::size_t  {
+            return (static_cast&lt;std::size_t&gt;(t - t_1));
         });
         </B></PRE></font>
       </td>

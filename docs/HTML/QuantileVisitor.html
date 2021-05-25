@@ -61,10 +61,7 @@ enum class quantile_policy : unsigned char  {
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>#include &lt;DataFrame/DataFrameStatsVisitors.h&gt;
 
-template&lt;typename T,
-         typename I = unsigned long,
-         typename =
-             typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;
+template&lt;typename T, typename I = unsigned long&gt;
 struct QuantileVisitor;
         </B></PRE></font>
       </td>
@@ -73,7 +70,7 @@ struct QuantileVisitor;
         This functor class finds the quantile specified by quantile and q_policy. Please see quantile_policy for more explanation.<BR>
         <I>
         <PRE>
-    QuantileVisitor (value_type quantile,
+    QuantileVisitor (T quantile,
                      quantile_policy q_policy);
         </PRE>
         </I>

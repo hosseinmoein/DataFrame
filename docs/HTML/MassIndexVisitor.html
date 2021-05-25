@@ -35,10 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>#include &lt;DataFrame/DataFrameFinancialVisitors.h&gt;
 
-template&lt;typename T,
-         typename I = unsigned long,
-         typename =
-             typename std::enable_if&lt;std::is_arithmetic&lt;T&gt;::value, T&gt;::type&gt;
+template&lt;typename T, typename I = unsigned long&gt;
 struct MassIndexVisitor;
         </B></PRE></font>
       </td>
@@ -49,8 +46,8 @@ struct MassIndexVisitor;
         <I>
         <PRE>
     explicit
-    MassIndexVisitor(size_type fast_period = 9,
-                     size_type slow_period = 25);
+    MassIndexVisitor(std::size_t fast_period = 9,
+                     std::size_t slow_period = 25);
         </PRE>
 		</I>
         <B>fast_period</B>: A shorter exponential MA period for two high/low averages<BR>

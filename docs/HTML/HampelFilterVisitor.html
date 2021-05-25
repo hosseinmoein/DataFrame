@@ -67,9 +67,9 @@ struct HampelFilterVisitor;
         This functor class applies Hampel filter to weed out outliers. It replaces the outliers with NaN. The functor result is number of items replaced. The filter is done by using either mean absolute deviation or median absolute deviation<BR><BR>
         <I><PRE>
     explicit
-    HampelFilterVisitor(size_type widnow_size,
+    HampelFilterVisitor(std::size_t widnow_size,
                         hampel_type ht = hampel_type::median,
-                        value_type num_of_std = 3);
+                        T num_of_std = 3);
         </PRE>
 		</I>
       </td>

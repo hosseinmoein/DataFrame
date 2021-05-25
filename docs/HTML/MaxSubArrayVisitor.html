@@ -90,9 +90,9 @@ using <U>NMinSubArrayVisitor</U> =
         <I>
         <PRE>
     struct  SubArrayInfo  {
-        value_type  sum { };
-        size_type   begin_index { 0 };
-        size_type   end_index { 0 };
+        T            sum { };
+        std::size_t  begin_index { 0 };
+        std::size_t  end_index { 0 };
     };
 
     explicit

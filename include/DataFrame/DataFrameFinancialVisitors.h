@@ -580,8 +580,8 @@ struct  VWAPVisitor {
             }
             else  {
                 result_.push_back (
-                    { std::numeric_limits<value_type>::quiet_NaN(),
-                      std::numeric_limits<value_type>::quiet_NaN(),
+                    { std::numeric_limits<T>::quiet_NaN(),
+                      std::numeric_limits<T>::quiet_NaN(),
                       last_time_,
                       event_count_,
                     });
@@ -813,10 +813,10 @@ struct  VWBASVisitor {
             }
             else  {
                 result_.push_back (
-                    { std::numeric_limits<value_type>::quiet_NaN(),
-                      std::numeric_limits<value_type>::quiet_NaN(),
-                      std::numeric_limits<value_type>::quiet_NaN(),
-                      std::numeric_limits<value_type>::quiet_NaN(),
+                    { std::numeric_limits<T>::quiet_NaN(),
+                      std::numeric_limits<T>::quiet_NaN(),
+                      std::numeric_limits<T>::quiet_NaN(),
+                      std::numeric_limits<T>::quiet_NaN(),
                       last_time_,
                       event_count_,
                     });
@@ -1525,7 +1525,7 @@ struct  RollingMidValueVisitor  {
 
         result.reserve(col_s);
         for (size_type i = 0; i < roll_count_ - 1 && i < col_s; ++i)
-            result.push_back(std::numeric_limits<value_type>::quiet_NaN());
+            result.push_back(std::numeric_limits<T>::quiet_NaN());
 
         value_type                  min_v = *low_begin;
         value_type                  max_v = *high_begin;
@@ -1873,7 +1873,7 @@ struct GarmanKlassVolVisitor {
 
         result.reserve(col_s);
         for (size_type i = 0; i < roll_count_ - 1; ++i)
-            result.push_back(std::numeric_limits<value_type>::quiet_NaN());
+            result.push_back(std::numeric_limits<T>::quiet_NaN());
         for (size_type i = 0; i < col_s; ++i)  {
             if (i + roll_count_ <= col_s)  {
                 value_type  sum { 0 };
@@ -1948,7 +1948,7 @@ struct YangZhangVolVisitor {
 
         result.reserve(col_s);
         for (size_type i = 0; i < roll_count_ - 1; ++i)
-            result.push_back(std::numeric_limits<value_type>::quiet_NaN());
+            result.push_back(std::numeric_limits<T>::quiet_NaN());
 
         for (size_type i = 0; i < col_s; ++i)  {
             if (i + roll_count_ <= col_s)  {
@@ -1967,11 +1967,11 @@ struct YangZhangVolVisitor {
                     const value_type    oc_rt = j > 0
                         ? std::log(*(open_begin + j) /
                                    *(close_begin + (j - 1)))
-                        : std::numeric_limits<value_type>::quiet_NaN();
+                        : std::numeric_limits<T>::quiet_NaN();
                     const value_type    cc_rt = j > 0
                         ? std::log(*(close_begin + j) /
                                    *(close_begin + (j - 1)))
-                        : std::numeric_limits<value_type>::quiet_NaN();
+                        : std::numeric_limits<T>::quiet_NaN();
                     // Rogers-Satchell volatility
                     const value_type    rs_vol =
                         ho_rt * (ho_rt - co_rt) + lo_rt * (lo_rt - co_rt);
@@ -2024,18 +2024,14 @@ struct  KamaVisitor  {
 
         GET_COL_SIZE
 
-        std::vector<value_type> change_diff (
-            col_s,
-            std::numeric_limits<value_type>::quiet_NaN());
+        result_type change_diff (col_s, std::numeric_limits<T>::quiet_NaN());
 
         for (size_type i = roll_count_; i < col_s; ++i)
             change_diff[i] =
                 std::fabs(*(column_begin + (i - roll_count_)) -
                           *(column_begin + i));
 
-        std::vector<value_type> peer_diff (
-            col_s,
-            std::numeric_limits<value_type>::quiet_NaN());
+        result_type peer_diff (col_s, std::numeric_limits<T>::quiet_NaN());
 
         for (size_type i = 1; i < col_s; ++i)
             peer_diff[i] =
@@ -2052,7 +2048,7 @@ struct  KamaVisitor  {
 
         result.reserve(col_s);
         for (size_type i = 0; i < roll_count_ - 1; ++i)
-            result.push_back(std::numeric_limits<value_type>::quiet_NaN());
+            result.push_back(std::numeric_limits<T>::quiet_NaN());
         result.push_back(0);
         for (size_type i = roll_count_; i < col_s; ++i)  {
             const value_type    exp_ratio =
@@ -2148,7 +2144,7 @@ struct FisherTransVisitor {
         //
         std::swap(result, mid_hl);
         for ( ; i < roll_count_ - 1; ++i)
-            result[i] = std::numeric_limits<value_type>::quiet_NaN();
+            result[i] = std::numeric_limits<T>::quiet_NaN();
         result[i++] = 0;
         for ( ; i < col_s; ++i)  {
             val = T(0.66) * mid_hl[i] + T(0.67) * val;
@@ -2225,7 +2221,7 @@ struct PercentPriceOSCIVisitor {
 
         histogram_.reserve(col_s);
         for (size_type i = 0; i < slow_; ++i)
-            histogram_.push_back(std::numeric_limits<value_type>::quiet_NaN());
+            histogram_.push_back(std::numeric_limits<T>::quiet_NaN());
 
         const size_type new_col_s =
             std::min(col_s, signal_roller.get_result().size());
@@ -2343,7 +2339,7 @@ struct  UltimateOSCIVisitor  {
         std::vector<value_type> max_high;
 
         max_high.reserve(col_s);
-        max_high.push_back(std::numeric_limits<value_type>::quiet_NaN());
+        max_high.push_back(std::numeric_limits<T>::quiet_NaN());
         for (size_type i = 1; i < col_s; ++i)
             max_high.push_back(std::max(*(high_begin + i),
                                         *(close_begin + (i - 1))));
@@ -2351,7 +2347,7 @@ struct  UltimateOSCIVisitor  {
         std::vector<value_type> min_low;
 
         min_low.reserve(col_s);
-        min_low.push_back(std::numeric_limits<value_type>::quiet_NaN());
+        min_low.push_back(std::numeric_limits<T>::quiet_NaN());
         for (size_type i = 1; i < col_s; ++i)
             min_low.push_back(std::min(*(low_begin + i),
                                        *(close_begin + (i - 1))));
@@ -2557,7 +2553,7 @@ struct  TTMTrendVisitor  {
 
         trend_avg.reserve(col_s);
         for (size_type i = 0; i < bar_periods_; ++i)
-            trend_avg.push_back(std::numeric_limits<value_type>::quiet_NaN());
+            trend_avg.push_back(std::numeric_limits<T>::quiet_NaN());
         for (size_type i = bar_periods_; i < col_s; ++i)
             trend_avg.push_back((*(high_begin + i) + *(low_begin + i)) / T(2));
         for (size_type i = 1; i <= bar_periods_; ++i)
@@ -2623,7 +2619,7 @@ struct  ParabolicSARVisitorVisitor  {
         std::vector<value_type> sar { close_begin, close_end };
         value_type              current_af { af_ };
         std::vector<value_type> long_vec(
-            col_s, std::numeric_limits<value_type>::quiet_NaN());
+            col_s, std::numeric_limits<T>::quiet_NaN());
         std::vector<value_type> short_vec { long_vec };
         std::vector<value_type> accel_fact { long_vec };
         std::vector<bool>       reversal(col_s, false);
@@ -2751,8 +2747,7 @@ struct  EBSineWaveVisitor  {
         assert(hp_period_ > 38 && bar_period_ < col_s);
         assert(bar_period_ > 0 && hp_period_ < col_s);
 
-        std::vector<T>      result(
-            col_s, std::numeric_limits<value_type>::quiet_NaN());
+        std::vector<T>      result(col_s, std::numeric_limits<T>::quiet_NaN());
         value_type          last_close = *close_begin;
         value_type          last_high_pass { 0 };
         value_type          filter_hist[2] = { 0, 0 };
@@ -2840,7 +2835,7 @@ struct  EhlerSuperSmootherVisitor  {
         assert(poles_ == 2 || poles_ == 3);
         assert(bar_period_ > 0 && bar_period_ < col_s);
 
-        std::vector<T>  result(column_begin, column_end);
+        result_type result(column_begin, column_end);
 
         if (poles_ == 2)  {
             const value_type    x = T(M_PI) * std::sqrt(T(2)) / T(bar_period_);
@@ -2887,6 +2882,89 @@ private:
 
     const size_type poles_;
     const size_type bar_period_;
+    result_type     result_ { };
+};
+
+// ----------------------------------------------------------------------------
+
+// Variable Index Dynamic Average (VIDYA) indicator
+//
+template<typename T, typename I = unsigned long>
+struct  VarIdxDynAvgVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &column_begin,
+                const H &column_end)  {
+
+        GET_COL_SIZE
+
+        assert(roll_period_ > 1 && roll_period_ < col_s);
+
+        DiffVisitor<T, I>   diff(1, false);
+
+        diff.pre();
+        diff (idx_begin, idx_end, column_begin, column_end);
+        diff.post();
+
+        result_type positive = std::move(diff.get_result());
+
+        positive[0] = 0;
+
+        result_type negative = positive;
+
+        for (size_type i = 0; i < col_s; ++i)  {
+            if (positive[i] < 0)  positive[i] = 0;
+            if (negative[i] > 0)
+                negative[i] = 0;
+            else
+                negative[i] = std::fabs(negative[i]);
+        }
+
+        SimpleRollAdopter<SumVisitor<T, I>, T, I>   sum (SumVisitor<T, I>(),
+                                                         roll_period_);
+
+        sum.pre();
+        sum (idx_begin, idx_end, positive.begin(), positive.end());
+        sum.post();
+        positive = std::move(sum.get_result());
+        sum.pre();
+        sum (idx_begin, idx_end, negative.begin(), negative.end());
+        sum.post();
+        negative = std::move(sum.get_result());
+
+        result_type result(col_s, std::numeric_limits<T>::quiet_NaN());
+
+        for (size_type i = roll_period_; i < col_s; ++i)
+            result[i] =
+                std::fabs((positive[i] - negative[i]) /
+                          (positive[i] + negative[i]));
+
+        const value_type    alpha = T(2) / (T(roll_period_) + T(1));
+
+        result[roll_period_ - 1] = 0;
+        for (size_type i = roll_period_; i < col_s; ++i)
+            result[i] =
+                alpha * result[i] * *(column_begin + i) +
+                result[i - 1] * (T(1) - alpha * result[i]);
+
+        result_.swap(result);
+    }
+
+    DEFINE_PRE_POST
+    DEFINE_RESULT
+
+    explicit
+    VarIdxDynAvgVisitor(size_type roll_period = 14)
+        : roll_period_(roll_period)  {  }
+
+private:
+
+    const size_type roll_period_;
     result_type     result_ { };
 };
 

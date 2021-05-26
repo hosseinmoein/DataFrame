@@ -3204,6 +3204,40 @@ static void test_EhlerSuperSmootherVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_VarIdxDynAvgVisitor()  {
+
+    std::cout << "\nTesting VarIdxDynAvgVisitor{  } ..." << std::endl;
+
+    typedef StdDataFrame<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("data/SHORT_IBM.csv", io_format::csv2);
+
+        VarIdxDynAvgVisitor<double, std::string>    vidya_v;
+
+        df.single_act_visit<double>("IBM_Close", vidya_v);
+
+        assert(vidya_v.get_result().size() == 1721);
+
+        assert(std::isnan(vidya_v.get_result()[0]));
+        assert(std::isnan(vidya_v.get_result()[12]));
+        assert(vidya_v.get_result()[13] == 0);
+        assert(std::abs(vidya_v.get_result()[14] - 2.70068) < 0.00001);
+        assert(std::abs(vidya_v.get_result()[21] - 57.6682) < 0.0001);
+        assert(std::abs(vidya_v.get_result()[31] - 106.451) < 0.001);
+        assert(std::abs(vidya_v.get_result()[1720] - 118.962) < 0.001);
+        assert(std::abs(vidya_v.get_result()[1712] - 123.811) < 0.001);
+        assert(std::abs(vidya_v.get_result()[1707] - 123.712) < 0.001);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int argc, char *argv[]) {
 
     test_get_reindexed();
@@ -3266,6 +3300,7 @@ int main(int argc, char *argv[]) {
     test_ParabolicSARVisitorVisitor();
     test_EBSineWaveVisitor();
     test_EhlerSuperSmootherVisitor();
+    test_VarIdxDynAvgVisitor();
 
     return (0);
 }

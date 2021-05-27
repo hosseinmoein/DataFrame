@@ -3238,6 +3238,51 @@ static void test_VarIdxDynAvgVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_AbsVisitor()  {
+
+    std::cout << "\nTesting AbsVisitor{ } ..." << std::endl;
+
+    MyDataFrame df;
+
+    std::vector<unsigned long>  idxvec =
+        { 1UL, 2UL, 3UL, 10UL, 5UL, 7UL, 8UL, 12UL, 9UL, 12UL, 10UL, 13UL,
+          10UL, 15UL, 14UL };
+    std::vector<double>         dblvec =
+        { 0.0, -15.0, 14.0, 15.0, -1.0, 12.0, 11.0, -8.0, 15.0, 6.0, -1,
+          4.0, 14.0, 14.0, -20.0 };
+    std::vector<int>            intvec =
+        { -1, 2, 3, 4, 5, 8, -6, 7, 11, -14, 9, -3, -5, -4, 9 };
+    std::vector<std::string>    strvec =
+        { "zz", "bb", "zz", "ww", "ee", "ff", "gg", "zz", "ii", "jj", "kk",
+          "ll", "mm", "ee", "" };
+
+    df.load_data(std::move(idxvec),
+                 std::make_pair("dbl_col", dblvec),
+                 std::make_pair("int_col", intvec),
+                 std::make_pair("str_col", strvec));
+
+    AbsVisitor<double>  abs_v;
+    AbsVisitor<int>     abs_v_int;
+    auto                result =
+        df.visit<double>("dbl_col", abs_v).get_result();
+    auto                result_int =
+        df.single_act_visit<int>("int_col", abs_v_int).get_result();
+
+    assert(result == 5);
+    assert(result_int == 6);
+
+    std::vector<double> abs_dblvec =
+        { 0.0, 15.0, 14.0, 15.0, 1.0, 12.0, 11.0, 8.0, 15.0, 6.0, 1,
+          4.0, 14.0, 14.0, 20.0 };
+    std::vector<int>    abs_intvec =
+        { 1, 2, 3, 4, 5, 8, 6, 7, 11, 14, 9, 3, 5, 4, 9 };
+
+    assert((df.get_column<double>("dbl_col") == abs_dblvec));
+    assert((df.get_column<int>("int_col") == abs_intvec));
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int argc, char *argv[]) {
 
     test_get_reindexed();
@@ -3301,6 +3346,7 @@ int main(int argc, char *argv[]) {
     test_EBSineWaveVisitor();
     test_EhlerSuperSmootherVisitor();
     test_VarIdxDynAvgVisitor();
+    test_AbsVisitor();
 
     return (0);
 }

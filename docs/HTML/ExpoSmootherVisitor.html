@@ -41,7 +41,8 @@ struct ExpoSmootherVisitor;
       </td>
       <td>
         This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
-        This functor is a transformer and changes the column data. It does exponential smoothing of the time-series by<BR>
+        This is a transformer visitor. It means the column(s) passed to this visitor is not read-only and its values may change<BR><BR>
+        This functor does exponential smoothing of the time-series by<BR>
         <I>Y<sub>0</sub> = X<sub>0</sub></I><BR>
         <I>Y<sub>t</sub> = aX<sub>t</sub> + (1 - a)Y<sub>t-1</sub></I><BR>
         <I>a</I> is the smoothing factor, and  0 < a < 1. Factor of 1 will not change the data.
@@ -70,7 +71,8 @@ struct HWExpoSmootherVisitor;
       </td>
       <td>
         This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
-        This functor is a transformer and changes the column data. It does double exponential smoothing by Holt-Winters method. The advantage for this over the above visitor is that HW takes care of trends in the data<BR>
+        This is a transformer visitor. It means the column(s) passed to this visitor is not read-only and its values may change<BR><BR>
+        This functor does double exponential smoothing by Holt-Winters method. The advantage for this over the above visitor is that HW takes care of trends in the data<BR>
         <I>
         Y<sub>0</sub> = X<sub>0</sub><BR>
         B<sub>0</sub> = X<sub>1</sub> - X<sub>0</sub><BR>

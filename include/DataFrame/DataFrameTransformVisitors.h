@@ -33,6 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/DataFrameTypes.h>
 
 #include <cassert>
+#include <type_traits>
 
 // ----------------------------------------------------------------------------
 
@@ -42,6 +43,11 @@ namespace hmdf
 #define DEFINE_VISIT_BASIC_TYPES_4 \
     DEFINE_VISIT_BASIC_TYPES \
     using result_type = size_type;
+
+#define DEFINE_PRE_POST_2 \
+    inline void pre ()  { count_ = 0; } \
+    inline void post ()  {  } \
+    inline result_type get_result () const  { return (count_); }
 
 // ----------------------------------------------------------------------------
 
@@ -63,9 +69,7 @@ struct  ClipVisitor  {
     }
     PASS_DATA_ONE_BY_ONE
 
-    inline void pre ()  { count_ = 0; }
-    inline void post ()  {  }
-    inline result_type get_result () const  { return (count_); }
+    DEFINE_PRE_POST_2
 
     ClipVisitor(const value_type &u, const value_type &l)
         : upper_(u), lower_(l)  {   }
@@ -75,6 +79,34 @@ private:
     result_type         count_ { 0 };
     const value_type    &upper_;
     const value_type    &lower_;
+};
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename I = unsigned long>
+struct  AbsVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_4
+
+    inline void operator() (const index_type &, value_type &val)  {
+
+        if (val < T(0))  {
+            if constexpr (std::is_floating_point<T>::value)
+                val = std::fabs(val);
+            else
+                val = std::abs(val);
+            count_ += 1;
+        }
+    }
+    PASS_DATA_ONE_BY_ONE
+
+    DEFINE_PRE_POST_2
+
+    AbsVisitor() = default;
+
+private:
+
+    result_type count_ { 0 };
 };
 
 // ----------------------------------------------------------------------------
@@ -145,9 +177,7 @@ public:
                         (MeanVisitor<T, I>(), window_size_));
     }
 
-    inline void pre ()  { count_ = 0; }
-    inline void post ()  {  }
-    inline result_type get_result () const  { return (count_); }
+    DEFINE_PRE_POST_2
 
     explicit
     HampelFilterVisitor(size_type widnow_size,
@@ -192,12 +222,10 @@ struct  ExpoSmootherVisitor {
                 *(column_begin + i) = prev_v + alfa_ * (curr_v - prev_v);
                 prev_v = curr_v;
             }
-		}
+        }
     }
 
-    inline void pre ()  { count_ = 0; }
-    inline void post ()  {  }
-    inline result_type get_result () const  { return (count_); }
+    DEFINE_PRE_POST_2
 
     explicit
     ExpoSmootherVisitor(value_type data_smoothing_factor, size_type rc = 1)
@@ -240,9 +268,7 @@ struct  HWExpoSmootherVisitor {
         }
     }
 
-    inline void pre ()  { count_ = 0; }
-    inline void post ()  {  }
-    inline result_type get_result () const  { return (count_); }
+    DEFINE_PRE_POST_2
 
     HWExpoSmootherVisitor(value_type data_smoothing_factor,
                           value_type trend_smoothing_factor)

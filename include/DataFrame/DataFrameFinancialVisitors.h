@@ -2590,7 +2590,7 @@ private:
 // Parabolic Stop And Reverse (PSAR)
 //
 template<typename T, typename I = unsigned long>
-struct  ParabolicSARVisitorVisitor  {
+struct  ParabolicSARVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES
 
@@ -2711,8 +2711,8 @@ struct  ParabolicSARVisitorVisitor  {
     get_acceleration_factors ()  { return (accel_fact_); }
 
     explicit
-    ParabolicSARVisitorVisitor(value_type acceleration_factor = T(0.02),
-                               value_type max_acceleration_factor = T(0.2))
+    ParabolicSARVisitor(value_type acceleration_factor = T(0.02),
+                        value_type max_acceleration_factor = T(0.2))
         : af_(acceleration_factor),
           max_af_(max_acceleration_factor) {  }
 
@@ -2966,6 +2966,110 @@ private:
 
     const size_type roll_period_;
     result_type     result_ { };
+};
+
+// ----------------------------------------------------------------------------
+
+// Pivot Points, Supports and Resistances indicators
+//
+template<typename T, typename I = unsigned long>
+struct  PivotPointSRVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &low_begin,
+                const H &low_end,
+                const H &high_begin,
+                const H &high_end,
+                const H &close_begin,
+                const H &close_end)  {
+
+        const size_type col_s = std::distance(close_begin, close_end);
+
+        assert(col_s > 1);
+        assert((col_s == std::distance(low_begin, low_end)));
+        assert((col_s == std::distance(high_begin, high_end)));
+
+        constexpr value_type two = 2;
+
+        result_type pivot_point(col_s, std::numeric_limits<T>::quiet_NaN());
+        result_type resist_1(col_s, std::numeric_limits<T>::quiet_NaN());
+        result_type resist_2(col_s, std::numeric_limits<T>::quiet_NaN());
+        result_type resist_3(col_s, std::numeric_limits<T>::quiet_NaN());
+        result_type support_1(col_s, std::numeric_limits<T>::quiet_NaN());
+        result_type support_2(col_s, std::numeric_limits<T>::quiet_NaN());
+        result_type support_3(col_s, std::numeric_limits<T>::quiet_NaN());
+
+        for (size_type i = 0; i < col_s; ++i)  {
+            const value_type    low = *(low_begin + i);
+            const value_type    high = *(high_begin + i);
+            const value_type    pp = (low + high + *(close_begin + i)) / T(3);
+
+            pivot_point[i] = pp;
+            resist_1[i] = two * pp - low;
+            support_1[i] = two * pp - high;
+            resist_2[i] = pp + high - low;
+            support_2[i] = pp - high + low;
+            resist_3[i] = high + two * (pp - low);
+            support_3[i] = low - two * (high - pp);
+        }
+
+        result_.swap(pivot_point);
+        resist_1_.swap(resist_1);
+        resist_2_.swap(resist_2);
+        resist_3_.swap(resist_3);
+        support_1_.swap(support_1);
+        support_2_.swap(support_2);
+        support_3_.swap(support_3);
+    }
+
+    inline void pre ()  {
+
+        result_.clear();
+        resist_1_.clear();
+        resist_2_.clear();
+        resist_3_.clear();
+        support_1_.clear();
+        support_2_.clear();
+        support_3_.clear();
+    }
+    inline void post ()  {  }
+
+    DEFINE_RESULT
+
+    inline const result_type &get_resist_1 () const  { return (resist_1_); }
+    inline result_type &get_resist_1 ()  { return (resist_1_); }
+
+    inline const result_type &get_resist_2 () const  { return (resist_2_); }
+    inline result_type &get_resist_2 ()  { return (resist_2_); }
+
+    inline const result_type &get_resist_3 () const  { return (resist_3_); }
+    inline result_type &get_resist_3 ()  { return (resist_3_); }
+
+    inline const result_type &get_support_1 () const  { return (support_1_); }
+    inline result_type &get_support_1 ()  { return (support_1_); }
+
+    inline const result_type &get_support_2 () const  { return (support_2_); }
+    inline result_type &get_support_2 ()  { return (support_2_); }
+
+    inline const result_type &get_support_3 () const  { return (support_3_); }
+    inline result_type &get_support_3 ()  { return (support_3_); }
+
+    PivotPointSRVisitor() = default;
+
+private:
+
+    result_type result_ { };  // Pivot point
+    result_type resist_1_ { };
+    result_type resist_2_ { };
+    result_type resist_3_ { };
+    result_type support_1_ { };
+    result_type support_2_ { };
+    result_type support_3_ { };
 };
 
 } // namespace hmdf

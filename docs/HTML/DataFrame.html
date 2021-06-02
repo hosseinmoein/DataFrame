@@ -73,6 +73,7 @@ table {
     <LI>Columns in the DataFrame are in order of creation and they could be accessed by name or index. If you rotate the columns, their order changes</LI>
     <LI>To access a column for any operation, you must know its <B>name</B> (or index) and its <B>type</B> at compile time</LI>
     <LI>DataFrame has both sync and async interfaces, latter returning C++ std::futures</LI>
+    <LI>DataFrame is <I>almost</I> a header-only library. More than 95% of the code is in header files, so if you don’t use a feature you don’t pay for it in binary size</LI>
     <LI><font size="+1"><I>Read <B>views</B>, <B>visitors</B>, and <B>multithreading</B> sections below, before using this library</I></font></LI>
   </UL>
 
@@ -785,11 +786,15 @@ table.hovertable td {
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
-      <td title="Calculates Parabolic Stop And Reverse indicator">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/ParabolicSARVisitorVisitor.html">ParabolicSARVisitorVisitor</a>{  }</td>
+      <td title="Calculates Parabolic Stop And Reverse indicator">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/ParabolicSARVisitor.html">ParabolicSARVisitor</a>{  }</td>
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
       <td title="Calculates rolling Percetage Price Oscillator">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/PercentPriceOSCIVisitor.html">PercentPriceOSCIVisitor</a>{  }</td>
+    </tr>
+
+    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
+      <td title="Calculates Pivot Points, Supports and Resistances indicators">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/PivotPointSRVisitor.html">PivotPointSRVisitor</a>{  }</td>
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">

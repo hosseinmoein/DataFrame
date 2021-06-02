@@ -3073,9 +3073,9 @@ static void test_TTMTrendVisitor()  {
 
 // -----------------------------------------------------------------------------
 
-static void test_ParabolicSARVisitorVisitor()  {
+static void test_ParabolicSARVisitor()  {
 
-    std::cout << "\nTesting ParabolicSARVisitorVisitor{  } ..." << std::endl;
+    std::cout << "\nTesting ParabolicSARVisitor{  } ..." << std::endl;
 
     typedef StdDataFrame<std::string> StrDataFrame;
 
@@ -3084,7 +3084,7 @@ static void test_ParabolicSARVisitorVisitor()  {
     try  {
         df.read("data/SHORT_IBM.csv", io_format::csv2);
 
-        ParabolicSARVisitorVisitor<double, std::string> psar_v;
+        ParabolicSARVisitor<double, std::string>    psar_v;
 
         df.single_act_visit<double, double, double>
             ("IBM_Low", "IBM_High", "IBM_Close", psar_v);
@@ -3283,6 +3283,92 @@ static void test_AbsVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_PivotPointSRVisitor()  {
+
+    std::cout << "\nTesting PivotPointSRVisitor{  } ..." << std::endl;
+
+    typedef StdDataFrame<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("data/SHORT_IBM.csv", io_format::csv2);
+
+        PivotPointSRVisitor<double, std::string>    ppsr_v;
+
+        df.single_act_visit<double, double, double>
+            ("IBM_Low", "IBM_High", "IBM_Close", ppsr_v);
+
+        assert(ppsr_v.get_result().size() == 1721);
+        assert(std::abs(ppsr_v.get_result()[0] - 186.043) < 0.001);
+        assert(std::abs(ppsr_v.get_result()[5] - 187.81) < 0.01);
+        assert(std::abs(ppsr_v.get_result()[14] - 182.387) < 0.001);
+        assert(std::abs(ppsr_v.get_result()[25] - 176.627) < 0.001);
+        assert(std::abs(ppsr_v.get_result()[1720] - 110.403) < 0.001);
+        assert(std::abs(ppsr_v.get_result()[1712] - 118.12) < 0.01);
+        assert(std::abs(ppsr_v.get_result()[1707] - 125.57) < 0.01);
+
+        assert(ppsr_v.get_resist_1().size() == 1721);
+        assert(std::abs(ppsr_v.get_resist_1()[0] - 186.887) < 0.001);
+        assert(std::abs(ppsr_v.get_resist_1()[5] - 189.07) < 0.01);
+        assert(std::abs(ppsr_v.get_resist_1()[14] - 184.063) < 0.001);
+        assert(std::abs(ppsr_v.get_resist_1()[25] - 178.183) < 0.001);
+        assert(std::abs(ppsr_v.get_resist_1()[1720] - 113.057) < 0.001);
+        assert(std::abs(ppsr_v.get_resist_1()[1712] - 119.4) < 0.01);
+        assert(std::abs(ppsr_v.get_resist_1()[1707] - 126.68) < 0.01);
+
+        assert(ppsr_v.get_support_1().size() == 1721);
+        assert(std::abs(ppsr_v.get_support_1()[0] - 184.687) < 0.001);
+        assert(std::abs(ppsr_v.get_support_1()[5] - 186.12) < 0.01);
+        assert(std::abs(ppsr_v.get_support_1()[14] - 181.053) < 0.001);
+        assert(std::abs(ppsr_v.get_support_1()[25] - 175.693) < 0.001);
+        assert(std::abs(ppsr_v.get_support_1()[1720] - 109.007) < 0.001);
+        assert(std::abs(ppsr_v.get_support_1()[1712] - 116.09) < 0.01);
+        assert(std::abs(ppsr_v.get_support_1()[1707] - 123.99) < 0.01);
+
+        assert(ppsr_v.get_resist_2().size() == 1721);
+        assert(std::abs(ppsr_v.get_resist_2()[0] - 188.243) < 0.001);
+        assert(std::abs(ppsr_v.get_resist_2()[5] - 190.76) < 0.01);
+        assert(std::abs(ppsr_v.get_resist_2()[14] - 185.397) < 0.001);
+        assert(std::abs(ppsr_v.get_resist_2()[25] - 179.117) < 0.001);
+        assert(std::abs(ppsr_v.get_resist_2()[1720] - 114.453) < 0.001);
+        assert(std::abs(ppsr_v.get_resist_2()[1712] - 121.43) < 0.01);
+        assert(std::abs(ppsr_v.get_resist_2()[1707] - 128.26) < 0.01);
+
+        assert(ppsr_v.get_support_2().size() == 1721);
+        assert(std::abs(ppsr_v.get_support_2()[0] - 183.843) < 0.001);
+        assert(std::abs(ppsr_v.get_support_2()[5] - 184.86) < 0.01);
+        assert(std::abs(ppsr_v.get_support_2()[14] - 179.377) < 0.001);
+        assert(std::abs(ppsr_v.get_support_2()[25] - 174.137) < 0.001);
+        assert(std::abs(ppsr_v.get_support_2()[1720] - 106.353) < 0.001);
+        assert(std::abs(ppsr_v.get_support_2()[1712] - 114.81) < 0.01);
+        assert(std::abs(ppsr_v.get_support_2()[1707] - 122.88) < 0.01);
+
+        assert(ppsr_v.get_resist_3().size() == 1721);
+        assert(std::abs(ppsr_v.get_resist_3()[0] - 189.087) < 0.001);
+        assert(std::abs(ppsr_v.get_resist_3()[5] - 192.02) < 0.01);
+        assert(std::abs(ppsr_v.get_resist_3()[14] - 187.073) < 0.001);
+        assert(std::abs(ppsr_v.get_resist_3()[25] - 180.673) < 0.001);
+        assert(std::abs(ppsr_v.get_resist_3()[1720] - 117.107) < 0.001);
+        assert(std::abs(ppsr_v.get_resist_3()[1712] - 122.71) < 0.01);
+        assert(std::abs(ppsr_v.get_resist_3()[1707] - 129.37) < 0.01);
+
+        assert(ppsr_v.get_support_3().size() == 1721);
+        assert(std::abs(ppsr_v.get_support_3()[0] - 182.487) < 0.001);
+        assert(std::abs(ppsr_v.get_support_3()[5] - 183.17) < 0.01);
+        assert(std::abs(ppsr_v.get_support_3()[14] - 178.043) < 0.001);
+        assert(std::abs(ppsr_v.get_support_3()[25] - 173.203) < 0.001);
+        assert(std::abs(ppsr_v.get_support_3()[1720] - 104.957) < 0.001);
+        assert(std::abs(ppsr_v.get_support_3()[1712] - 112.78) < 0.01);
+        assert(std::abs(ppsr_v.get_support_3()[1707] - 121.3) < 0.01);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int argc, char *argv[]) {
 
     test_get_reindexed();
@@ -3342,11 +3428,12 @@ int main(int argc, char *argv[]) {
     test_bucketize();
     test_RSXVisitor();
     test_TTMTrendVisitor();
-    test_ParabolicSARVisitorVisitor();
+    test_ParabolicSARVisitor();
     test_EBSineWaveVisitor();
     test_EhlerSuperSmootherVisitor();
     test_VarIdxDynAvgVisitor();
     test_AbsVisitor();
+    test_PivotPointSRVisitor();
 
     return (0);
 }

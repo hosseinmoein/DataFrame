@@ -604,11 +604,11 @@ void DataFrame<I, H>::read_csv2_(std::istream &file, bool columns_only)  {
                     int         n;
                     DateTime    dt;
 
-#ifdef _WIN32
+#ifdef _MSC_VER
                     ::sscanf(value, "%lld.%d", &t, &n);
 #else
                     ::sscanf(value, "%ld.%d", &t, &n);
-#endif // _WIN32
+#endif // _MSC_VER
                     dt.set_time(t, n);
                     std::any_cast<std::vector<DateTime> &>
                         (col_spec.col_vec).emplace_back(

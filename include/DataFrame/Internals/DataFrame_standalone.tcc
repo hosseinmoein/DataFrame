@@ -616,11 +616,11 @@ _col_vector_push_back_<DateTime, std::vector<DateTime>>(
         int         n;
         DateTime    dt;
 
-#ifdef _WIN32
+#ifdef _MSC_VER
         ::sscanf(value, "%lld.%d", &t, &n);
 #else
         ::sscanf(value, "%ld.%d", &t, &n);
-#endif // _WIN32
+#endif // _MSC_VER
         dt.set_time(t, n);
         vec.emplace_back(std::move(dt));
     }

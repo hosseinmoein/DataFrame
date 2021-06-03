@@ -36,14 +36,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace hmdf
 {
 
-#if defined(WIN32) || defined(_WIN32)
+#ifdef _MSC_VER
 #  ifdef min
 #    undef min
 #  endif // min
 #  ifdef max
 #    undef max
 #  endif // max
-#endif // WIN32 || _WIN32
+#endif // _MSC_VER
 
 // Both lhs and rhs must be already sorted by index, otherwise the result
 // is nonsensical.

@@ -355,11 +355,11 @@ load_column (const char *name,
         char buffer [512];
 
         sprintf (buffer, "DataFrame::load_column(): ERROR: "
-#ifdef _WIN32
+#ifdef _MSC_VER
                          "data size of %zu is larger than index size of %zu",
 #else
                          "data size of %lu is larger than index size of %lu",
-#endif // _WIN32
+#endif // _MSC_VER
                  s, idx_s);
         throw InconsistentData (buffer);
     }
@@ -429,11 +429,11 @@ load_column (const char *name, std::vector<T> &&column, nan_policy padding)  {
         char buffer [512];
 
         sprintf (buffer, "DataFrame::load_column(): ERROR: "
-#ifdef _WIN32
+#ifdef _MSC_VER
                          "data size of %zu is larger than index size of %zu",
 #else
                          "data size of %lu is larger than index size of %lu",
-#endif // _WIN32
+#endif // _MSC_VER
                  data_s, idx_s);
         throw InconsistentData (buffer);
     }
@@ -486,11 +486,11 @@ load_align_column(
         char buffer [512];
 
         sprintf (buffer, "DataFrame::load_align_column(): ERROR: "
-#ifdef _WIN32
+#ifdef _MSC_VER
                          "data size of %zu is larger than index size of %zu",
 #else
                          "data size of %lu is larger than index size of %lu",
-#endif // _WIN32
+#endif // _MSC_VER
                  data_s, idx_s);
         throw InconsistentData (buffer);
     }
@@ -564,11 +564,11 @@ append_column (const char *name,
         char buffer [512];
 
         sprintf (buffer, "DataFrame::append_column(): ERROR: "
-#ifdef _WIN32
+#ifdef _MSC_VER
                          "data size of %zu is larger than index size of %zu",
 #else
                          "data size of %lu is larger than index size of %lu",
-#endif // _WIN32
+#endif // _MSC_VER
                  s, idx_s);
         throw InconsistentData (buffer);
     }
@@ -604,11 +604,11 @@ append_column (const char *name, const T &val, nan_policy padding)  {
         char buffer [512];
 
         sprintf (buffer, "DataFrame::append_column(): ERROR: "
-#ifdef _WIN32
+#ifdef _MSC_VER
                          "data size of %zu is larger than index size of %zu",
 #else
                          "data size of %lu is larger than index size of %lu",
-#endif // _WIN32
+#endif // _MSC_VER
                  s, idx_s);
         throw InconsistentData (buffer);
     }

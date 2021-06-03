@@ -1962,11 +1962,11 @@ private:
             char    err[512];
 
             sprintf (err,
-#ifdef _WIN32
+#ifdef _MSC_VER
                      "find_kth_element_(): vector length = %zu and k = %zu.",
 #else
                      "find_kth_element_(): vector length = %lu and k = %lu.",
-#endif // _WIN32
+#endif // _MSC_VER
                      vec_size, k);
             throw NotFeasible (err);
         }
@@ -2063,11 +2063,11 @@ struct QuantileVisitor  {
 
             sprintf (buffer,
                      "QuantileVisitor{}: unable to do quantile: "
-#ifdef _WIN32
+#ifdef _MSC_VER
                      "qt: %f, Column Len: %zu",
 #else
                      "qt: %f, Column Len: %lu",
-#endif // _WIN32
+#endif // _MSC_VER
                      qt_, col_s);
             throw NotFeasible(buffer);
         }

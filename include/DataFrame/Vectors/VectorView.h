@@ -32,7 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iterator>
 #include <vector>
 
-#if defined(_WIN32) && defined(HMDF_SHARED)
+#ifdef _MSC_VER
 #  ifdef LIBRARY_EXPORTS
 #    define LIBRARY_API __declspec(dllexport)
 #  else
@@ -40,7 +40,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #  endif // LIBRARY_EXPORTS
 #else
 #  define LIBRARY_API
-#endif // _WIN32
+#endif // _MSC_VER
 
 // ----------------------------------------------------------------------------
 

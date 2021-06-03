@@ -33,7 +33,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/DataFrameTypes.h>
 
 #include <algorithm>
+
 #include <cmath>
+#ifndef M_PI
+#  define M_PI 3.14159265358979323846264338327950288
+#endif
+
 #include <functional>
 #include <iterator>
 #include <limits>
@@ -951,13 +956,13 @@ struct SharpeRatioVisitor {
             char    err[512];
 
             sprintf (err,
-#ifdef _WIN32
+#ifdef _MSC_VER
                      "SharpeRatioVisitor: Size of asset = %zu and "
                      "benchmark = %zu time-series are not feasible.",
 #else
                      "SharpeRatioVisitor: Size of asset = %lu and "
                      "benchmark = %lu time-series are not feasible.",
-#endif // _WIN32
+#endif // _MSC_VER
                      vec_s, b_s);
             throw NotFeasible (err);
         }

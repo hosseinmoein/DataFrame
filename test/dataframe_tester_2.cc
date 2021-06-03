@@ -1096,7 +1096,7 @@ static void test_groupby_2()  {
 // Due to a bug in MS VC++ compiler being used by appveyor, this cannot be
 // compiled by them
 //
-#ifndef _WIN32
+#ifndef _MSC_VER
 
     std::cout << "\nTesting groupby_2( ) ..." << std::endl;
 
@@ -1201,7 +1201,7 @@ static void test_groupby_2()  {
     result5.write<std::ostream, std::string, double, std::size_t, int>
         (std::cout, io_format::csv2);
 
-#endif // _WIN32
+#endif // !_MSC_VER
 }
 
 // -----------------------------------------------------------------------------
@@ -1211,7 +1211,7 @@ static void test_groupby_3()  {
 // Due to a bug in MS VC++ compiler being used by appveyor, this cannot be
 // compiled by them
 //
-#ifndef _WIN32
+#ifndef _MSC_VER
 
     std::cout << "\nTesting groupby_3( ) ..." << std::endl;
 
@@ -1259,7 +1259,7 @@ static void test_groupby_3()  {
     result1.write<std::ostream, std::string, double, std::size_t, int>
         (std::cout, io_format::csv2);
 
-#endif // _WIN32
+#endif // !_MSC_VER
 }
 
 // -----------------------------------------------------------------------------

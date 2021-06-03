@@ -120,7 +120,7 @@ void HeteroPtrView::visit_impl_help_ (T &visitor)  {
     auto    iter = views_<U>.find (this);
 
     if (iter != views_<U>.end())  {
-#ifndef _WIN32
+#ifndef _MSC_VER
         for (auto &&element : iter->second)
             visitor(element);
 #else
@@ -128,7 +128,7 @@ void HeteroPtrView::visit_impl_help_ (T &visitor)  {
 
         for (size_type i = 0; i < vec_size; ++i)
             visitor(iter->second[i]);
-#endif // _WIN32
+#endif // !_MSC_VER
     }
 }
 
@@ -140,7 +140,7 @@ void HeteroPtrView::visit_impl_help_ (T &visitor) const  {
     const auto  citer = views_<U>.find (this);
 
     if (citer != views_<U>.end())  {
-#ifndef _WIN32
+#ifndef _MSC_VER
         for (auto &&element : citer->second)
             visitor(element);
 #else
@@ -148,7 +148,7 @@ void HeteroPtrView::visit_impl_help_ (T &visitor) const  {
 
         for (size_type i = 0; i < vec_size; ++i)
             visitor(citer->second[i]);
-#endif // _WIN32
+#endif // !_MSC_VER
     }
 }
 

@@ -158,11 +158,11 @@ get_row(size_type row_num, const std::array<const char *, N> col_names) const {
     if (row_num >= indices_.size())  {
         char buffer [512];
 
-#ifdef _WIN32
+#ifdef _MSC_VER
         sprintf(buffer, "DataFrame::get_row(): ERROR: There aren't %zu rows",
 #else
         sprintf(buffer, "DataFrame::get_row(): ERROR: There aren't %lu rows",
-#endif // _WIN32
+#endif // _MSC_VER
                 row_num);
         throw BadRange(buffer);
     }
@@ -908,11 +908,11 @@ get_data_by_rand (random_policy spec, double n, size_type seed) const  {
 
     sprintf (buffer,
              "DataFrame::get_data_by_rand(): ERROR: "
-#ifdef _WIN32
+#ifdef _MSC_VER
              "Number of rows requested %zu is more than available rows %zu",
 #else
              "Number of rows requested %lu is more than available rows %lu",
-#endif // _WIN32
+#endif // _MSC_VER
              n_rows, index_s);
     throw BadRange (buffer);
 }
@@ -983,11 +983,11 @@ get_view_by_rand (random_policy spec, double n, size_type seed) const  {
 
     sprintf (buffer,
              "DataFrame::get_view_by_rand(): ERROR: "
-#ifdef _WIN32
+#ifdef _MSC_VER
              "Number of rows requested %zu is more than available rows %zu",
 #else
              "Number of rows requested %lu is more than available rows %lu",
-#endif // _WIN32
+#endif // _MSC_VER
              n_rows, index_s);
     throw BadRange (buffer);
 }

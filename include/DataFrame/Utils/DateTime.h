@@ -38,15 +38,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <sys/timeb.h>
 #include <time.h>
 
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(_WIN64)
 #  include <windows.h>
-#  if defined(HMDF_SHARED)
+#  ifdef _MSC_VER
 #    ifdef LIBRARY_EXPORTS
 #      define LIBRARY_API __declspec(dllexport)
 #    else
 #      define LIBRARY_API __declspec(dllimport)
 #    endif // LIBRARY_EXPORTS
-#  endif // HMDF_SHARED
+#  else
+#    define LIBRARY_API
+#  endif // _MSC_VER
 #  ifdef min
 #    undef min
 #  endif // min
@@ -55,7 +57,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #  endif // max
 #else
 #  define LIBRARY_API
-#endif // _WIN32
+#endif // _WIN32 || _WIN64
 
 // ----------------------------------------------------------------------------
 
@@ -306,7 +308,7 @@ private:
     using INVALID_VALUE_ = typename std::numeric_limits<T>;
 
     inline static const char    *TIMEZONES_[] {
-#ifdef _WIN32
+#ifdef _MSC_VER
         "\"TZ=GMT\"",
         "\"TZ=Argentina Standard Time\"",        // "America/Buenos_Aires",
         "\"TZ=Central Standard Time\"",          // "America/Chicago",
@@ -370,7 +372,7 @@ private:
         "Europe/Oslo",
         "Europe/Warsaw",
         "Europe/Budapest"
-#endif // _WIN32
+#endif // _MSC_VER
     };
     inline static const EpochType   INVALID_TIME_T_ {
         INVALID_VALUE_<EpochType>::max()
@@ -393,11 +395,11 @@ private:
     //
     struct  DT_initializer  {
         DT_initializer () noexcept  {
-#ifdef _WIN32
+#ifdef _MSC_VER
             _tzset ();
 #else
             ::tzset ();
-#endif // _WIN32
+#endif // _MSC_VER
         }
     };
 

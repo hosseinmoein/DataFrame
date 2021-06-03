@@ -36,15 +36,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iostream>
 #include <string.h>
 
-#if defined(_WIN32) && defined(HMDF_SHARED)
-#  ifdef LIBRARY_EXPORTS
-#    define LIBRARY_API __declspec(dllexport)
+#if defined(_WIN32) || defined(_WIN64)
+#  ifdef _MSC_VER
+#    ifdef LIBRARY_EXPORTS
+#      define LIBRARY_API __declspec(dllexport)
+#    else
+#      define LIBRARY_API __declspec(dllimport)
+#    endif // LIBRARY_EXPORTS
 #  else
-#    define LIBRARY_API __declspec(dllimport)
-#  endif // LIBRARY_EXPORTS
-#else
-#  define LIBRARY_API
-#endif // _WIN32
+#    define LIBRARY_API
+#  endif // _MSC_VER
+#endif // _WIN32 || _WIN64
 
 // ----------------------------------------------------------------------------
 

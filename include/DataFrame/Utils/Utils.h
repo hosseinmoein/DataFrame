@@ -215,7 +215,7 @@ shift_right(V &vec, std::size_t n)  {
     const auto  vec_rend = vec.rend();
 
     for (auto riter = vec.rbegin(); riter != vec_rend; ++riter)  {
-        if (std::distance(riter, vec_rend) > n)
+        if (std::size_t(std::distance(riter, vec_rend)) > n)
             *riter = std::move(*(riter + n));
         else
             *riter = std::move(get_nan<value_type>());
@@ -233,7 +233,7 @@ shift_left(V &vec, std::size_t n)  {
     const auto  vec_end = vec.end();
 
     for (auto iter = vec.begin(); iter != vec_end; ++iter)  {
-        if (std::distance(iter, vec_end) > n)
+        if (std::size_t(std::distance(iter, vec_end)) > n)
             *iter = std::move(*(iter + n));
         else
             *iter = std::move(get_nan<value_type>());

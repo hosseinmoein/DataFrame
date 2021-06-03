@@ -1001,10 +1001,6 @@ private:
     using visitor_type = F;
     using f_result_type = typename visitor_type::result_type;
 
-    visitor_type                visitor_ { };
-    const std::size_t           roll_count_ { 0 };
-    std::vector<f_result_type>  result_ { };
-
 public:
 
     DEFINE_VISIT_BASIC_TYPES
@@ -1028,8 +1024,8 @@ public:
         for (size_type i = 0; i < col_s; ++i)  {
             if (i + roll_count_ <= col_s)  {
                 visitor_.pre();
-                visitor_(idx_begin + i, idx_begin + i + roll_count_,
-                         column_begin + i, column_begin + i + roll_count_);
+                visitor_(idx_begin + i, idx_begin + (i + roll_count_),
+                         column_begin + i, column_begin + (i + roll_count_));
                 visitor_.post();
                 result_.push_back(visitor_.get_result());
             }
@@ -1044,6 +1040,12 @@ public:
 
     SimpleRollAdopter(F &&functor, size_type r_count)
         : visitor_(std::move(functor)), roll_count_(r_count)  {   }
+
+private:
+
+    visitor_type                visitor_ { };
+    const size_type             roll_count_ { 0 };
+    std::vector<f_result_type>  result_ { };
 };
 
 // ----------------------------------------------------------------------------
@@ -1915,7 +1917,7 @@ private:
 
         corr.pre();
         for (size_type i = 0; i < col_s - lag; ++i)
-            corr (dummy, *(column_begin + i), *(column_begin + i + lag));
+            corr (dummy, *(column_begin + i), *(column_begin + (i + lag)));
         corr.post();
 
         return (CorrResult(lag, corr.get_result()));

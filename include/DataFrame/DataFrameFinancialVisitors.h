@@ -393,16 +393,6 @@ template<typename T,
              typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
 struct MACDVisitor {
 
-private:
-
-    using macd_roller_t = ExponentialRollAdopter<MeanVisitor<T, I>, T, I>;
-
-    const std::size_t   short_mean_period_;
-    const std::size_t   long_mean_period_;
-    macd_roller_t       signal_line_roller_;
-
-public:
-
     DEFINE_VISIT_BASIC_TYPES_3
 
     template <typename K, typename H>
@@ -483,8 +473,14 @@ public:
 
 private:
 
-    result_type macd_line_;       // short-mean EMA - long-mean EMA
-    result_type macd_histogram_;  // MACD Line - Signal Line
+
+    using macd_roller_t = ExponentialRollAdopter<MeanVisitor<T, I>, T, I>;
+
+    const size_type short_mean_period_;
+    const size_type long_mean_period_;
+    macd_roller_t   signal_line_roller_;
+    result_type     macd_line_ { };       // short-mean EMA - long-mean EMA
+    result_type     macd_histogram_ { };  // MACD Line - Signal Line
 };
 
 // ----------------------------------------------------------------------------
@@ -1032,7 +1028,7 @@ struct RSIVisitor {
 
         // This data doesn't make sense
         //
-        if (avg_period_ >= col_s - 3)  return;
+        if (avg_period_ >= T(col_s - 3))  return;
 
         ReturnVisitor<T, I> return_v (rp_);
 

@@ -204,6 +204,17 @@ enum class drop_policy : unsigned char  {
 
 // ----------------------------------------------------------------------------
 
+enum class mean_type : unsigned char  {
+
+    arithmetic = 1, // sum(value) / count
+    weighted = 2,   // sum(weighted value) / ((count * (count + 1)) / 2)
+    geometric = 3,  // exp(log(sum(value)) / count)
+    harmonic = 4,   // count / sum(1 / value)
+    quadratic = 5,  // sqrt(sum(value * value) / count)
+};
+
+// ----------------------------------------------------------------------------
+
 enum class hampel_type : unsigned char  {
     mean = 1,   // Use mean absolute deviation
     median = 2, // Use median absolute deviation
@@ -382,7 +393,7 @@ enum class bucket_type : unsigned char  {
 };
 
 // ----------------------------------------------------------------------------
-	
+
 template<typename T>
 struct  RandGenParams  {
     T   min_value { std::numeric_limits<T>::min() };

@@ -97,6 +97,7 @@ namespace hmdf
     name(bool skipnan = true) : skip_nan_(skipnan)  {   }
 
 #define SKIP_NAN if (skip_nan_ && is_nan__(val))  { return; }
+#define SKIP_NAN_BASE if (BaseClass::skip_nan_ && is_nan__(val))  { return; }
 
 #define GET_COL_SIZE \
     const std::size_t   col_s = \
@@ -139,7 +140,7 @@ struct FirstVisitor {
     inline void
     operator() (const index_type &, const value_type &val)  {
 
-        if (! started_)  {  
+        if (! started_)  {
             if (! skip_nan_ || ! is_nan__(val))  {
                 result_ = val;
                 started_ = true;
@@ -190,167 +191,6 @@ private:
 // ----------------------------------------------------------------------------
 
 template<typename T, typename I = unsigned long>
-struct MeanVisitor {
-
-    DEFINE_VISIT_BASIC_TYPES_2
-
-    inline void operator() (const index_type &, const value_type &val)  {
-
-        SKIP_NAN
-
-        cnt_ += 1;
-        sum_ += val;
-    }
-    PASS_DATA_ONE_BY_ONE
-
-    inline void pre ()  { sum_ = mean_ = 0; cnt_ = 0; }
-    inline void post ()  { mean_ = sum_ / value_type(cnt_); }
-    inline size_type get_count () const  { return (cnt_); }
-    inline value_type get_sum () const  { return (sum_); }
-    inline result_type get_result () const  { return (mean_); }
-
-    DECL_CTOR(MeanVisitor)
-
-private:
-
-    value_type  sum_ { 0 };
-    value_type  mean_ { 0 };
-    size_type   cnt_ { 0 };
-    const bool  skip_nan_;
-};
-
-// ----------------------------------------------------------------------------
-
-template<typename T, typename I = unsigned long>
-struct WeightedMeanVisitor {
-
-    DEFINE_VISIT_BASIC_TYPES_2
-
-    inline void operator() (const index_type &, const value_type &val)  {
-
-        SKIP_NAN
-
-        cnt_ += 1;
-        sum_ += val * value_type(cnt_);
-    }
-    PASS_DATA_ONE_BY_ONE
-
-    inline void pre()  { sum_ = mean_ = 0; cnt_ = 0; }
-    inline void post() { mean_ = sum_ / value_type((cnt_ * (cnt_ + 1)) / 2); }
-    inline size_type get_count() const  { return (cnt_); }
-    inline value_type get_sum() const  { return (sum_); }
-    inline result_type get_result() const  { return (mean_); }
-
-    DECL_CTOR(WeightedMeanVisitor)
-
-private:
-
-    value_type  sum_ { 0 };
-    value_type  mean_ { 0 };
-    size_type   cnt_ { 0 };
-    const bool  skip_nan_;
-};
-
-// ----------------------------------------------------------------------------
-
-template<typename T, typename I = unsigned long>
-struct GeometricMeanVisitor {
-
-    DEFINE_VISIT_BASIC_TYPES_2
-
-    inline void operator() (const index_type &, const value_type &val)  {
-
-        SKIP_NAN
-
-        cnt_ += 1;
-        sum_ += std::log(val);
-    }
-    PASS_DATA_ONE_BY_ONE
-
-    inline void pre ()  { sum_ = mean_ = 0; cnt_ = 0; }
-    inline void post ()  { mean_ = std::exp(sum_ / value_type(cnt_)); }
-    inline size_type get_count () const  { return (cnt_); }
-    inline value_type get_sum () const  { return (sum_); }
-    inline result_type get_result () const  { return (mean_); }
-
-    DECL_CTOR(GeometricMeanVisitor)
-
-private:
-
-    value_type  sum_ { 0 };
-    value_type  mean_ { 0 };
-    size_type   cnt_ { 0 };
-    const bool  skip_nan_;
-};
-
-// ----------------------------------------------------------------------------
-
-template<typename T, typename I = unsigned long>
-struct HarmonicMeanVisitor {
-
-    DEFINE_VISIT_BASIC_TYPES_2
-
-    inline void operator() (const index_type &, const value_type &val)  {
-
-        SKIP_NAN
-
-        cnt_ += 1;
-        sum_ += one_ / val;
-    }
-    PASS_DATA_ONE_BY_ONE
-
-    inline void pre ()  { sum_ = mean_ = 0; cnt_ = 0; }
-    inline void post ()  { mean_ = value_type(cnt_) / sum_; }
-    inline size_type get_count () const  { return (cnt_); }
-    inline value_type get_sum () const  { return (sum_); }
-    inline result_type get_result () const  { return (mean_); }
-
-    DECL_CTOR(HarmonicMeanVisitor)
-
-private:
-
-    value_type                  sum_ { 0 };
-    value_type                  mean_ { 0 };
-    size_type                   cnt_ { 0 };
-    const bool                  skip_nan_;
-    static constexpr value_type one_ { 1 };
-};
-
-// ----------------------------------------------------------------------------
-
-template<typename T, typename I = unsigned long>
-struct QuadraticMeanVisitor {
-
-    DEFINE_VISIT_BASIC_TYPES_2
-
-    inline void operator() (const index_type &, const value_type &val)  {
-
-        SKIP_NAN
-
-        cnt_ += 1;
-        sum_ += val * val;
-    }
-    PASS_DATA_ONE_BY_ONE
-
-    inline void pre()  { sum_ = mean_ = 0; cnt_ = 0; }
-    inline void post() { mean_ = std::sqrt(sum_ / value_type(cnt_)); }
-    inline size_type get_count() const  { return (cnt_); }
-    inline value_type get_sum() const  { return (sum_); }
-    inline result_type get_result() const  { return (mean_); }
-
-    DECL_CTOR(QuadraticMeanVisitor)
-
-private:
-
-    value_type  sum_ { 0 };
-    value_type  mean_ { 0 };
-    size_type   cnt_ { 0 };
-    const bool  skip_nan_;
-};
-
-// ----------------------------------------------------------------------------
-
-template<typename T, typename I = unsigned long>
 struct SumVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_2
@@ -373,6 +213,162 @@ private:
 
     value_type  result_ { 0 };
     const bool  skip_nan_;
+};
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename I = unsigned long>
+struct MeanBase {
+
+    DEFINE_VISIT_BASIC_TYPES_2
+
+    inline void pre ()  { sum_.pre(); mean_ = 0; cnt_ = 0; }
+    inline size_type get_count () const  { return (cnt_); }
+    inline value_type get_sum () const  { return (sum_.get_result()); }
+    inline result_type get_result () const  { return (mean_); }
+
+    DECL_CTOR(MeanBase)
+
+protected:
+
+    const bool          skip_nan_;
+    value_type          mean_ { 0 };
+    size_type           cnt_ { 0 };
+    SumVisitor<T, I>    sum_ { skip_nan_ };
+};
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename I = unsigned long>
+struct MeanVisitor : public MeanBase<T, I>  {
+
+    using BaseClass = MeanBase<T, I>;
+
+    inline void operator() (const I &idx, const T &val)  {
+
+        SKIP_NAN_BASE
+
+        BaseClass::cnt_ += 1;
+        BaseClass::sum_(idx, val);
+    }
+    PASS_DATA_ONE_BY_ONE
+
+    inline void post ()  {
+
+        BaseClass::sum_.post();
+        BaseClass::mean_ = BaseClass::sum_.get_result() / T(BaseClass::cnt_);
+    }
+
+    MeanVisitor(bool skipnan = true) : BaseClass(skipnan)  {   }
+};
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename I = unsigned long>
+struct WeightedMeanVisitor : public MeanBase<T, I>  {
+
+    using BaseClass = MeanBase<T, I>;
+
+    inline void operator() (const I &idx, const T &val)  {
+
+        SKIP_NAN_BASE
+
+        BaseClass::cnt_ += 1;
+        BaseClass::sum_(idx, val * T(BaseClass::cnt_));
+    }
+    PASS_DATA_ONE_BY_ONE
+
+    inline void
+    post() {
+
+        BaseClass::sum_.post();
+        BaseClass::mean_ =
+            BaseClass::sum_.get_result() /
+            (T((BaseClass::cnt_ * (BaseClass::cnt_ + 1))) / T(2));
+    }
+
+    WeightedMeanVisitor(bool skipnan = true) : BaseClass(skipnan)  {   }
+};
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename I = unsigned long>
+struct GeometricMeanVisitor : public MeanBase<T, I>  {
+
+    using BaseClass = MeanBase<T, I>;
+
+    inline void operator() (const I &idx, const T &val)  {
+
+        SKIP_NAN_BASE
+
+        BaseClass::cnt_ += 1;
+        BaseClass::sum_(idx, std::log(val));
+    }
+    PASS_DATA_ONE_BY_ONE
+
+    inline void post ()  {
+
+        BaseClass::sum_.post();
+        BaseClass::mean_ =
+            std::exp(BaseClass::sum_.get_result() / T(BaseClass::cnt_));
+    }
+
+    GeometricMeanVisitor(bool skipnan = true) : BaseClass(skipnan)  {   }
+};
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename I = unsigned long>
+struct HarmonicMeanVisitor : public MeanBase<T, I>  {
+
+    using BaseClass = MeanBase<T, I>;
+
+    inline void operator() (const I &idx, const T &val)  {
+
+        SKIP_NAN_BASE
+
+        BaseClass::cnt_ += 1;
+        BaseClass::sum_(idx, one_ / val);
+    }
+    PASS_DATA_ONE_BY_ONE
+
+    inline void post ()  {
+
+        BaseClass::sum_.post();
+        BaseClass::mean_ = T(BaseClass::cnt_) / BaseClass::sum_.get_result();
+    }
+
+    HarmonicMeanVisitor(bool skipnan = true) : BaseClass(skipnan)  {   }
+
+private:
+
+    static constexpr T  one_ { 1 };
+};
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename I = unsigned long>
+struct QuadraticMeanVisitor : public MeanBase<T, I>  {
+
+    using BaseClass = MeanBase<T, I>;
+
+    inline void operator() (const I &idx, const T &val)  {
+
+        SKIP_NAN_BASE
+
+        BaseClass::cnt_ += 1;
+        BaseClass::sum_(idx, val * val);
+    }
+    PASS_DATA_ONE_BY_ONE
+
+    inline void post() {
+
+        BaseClass::sum_.post();
+        BaseClass::mean_ =
+            std::sqrt(BaseClass::sum_.get_result() / T(BaseClass::cnt_));
+    }
+
+    QuadraticMeanVisitor(bool skipnan = true) : BaseClass(skipnan)  {   }
 };
 
 // ----------------------------------------------------------------------------
@@ -3277,34 +3273,28 @@ private:
 // A LOWESS function outputs smoothed estimates of dependent var (y) at the
 // given independent var (x) values.
 //
-// This lowess function implements the algorithm given in the
-// reference below using local linear estimates.
-// Suppose the input data has N points. The algorithm works by
-// estimating the `smooth` y_i by taking the frac * N closest points
-// to (x_i, y_i) based on their x values and estimating y_i
-// using a weighted linear regression. The weight for (x_j, y_j)
-// is tricube function applied to |x_i - x_j|.
-// If n_loop > 1, then further weighted local linear regressions
-// are performed, where the weights are the same as above
-// times the _lowess_bisquare function of the residuals. Each iteration
-// takes approximately the same amount of time as the original fit,
-// so these iterations are expensive. They are most useful when
-// the noise has extremely heavy tails, such as Cauchy noise.
-// Noise with less heavy-tails, such as t-distributions with df > 2,
-// are less problematic. The weights downgrade the influence of
-// points with large residuals. In the extreme case, points whose
-// residuals are larger than 6 times the median absolute residual
-// are given weight 0.
-// delta can be used to save computations. For each x_i, regressions
-// are skipped for points closer than delta. The next regression is
-// fit for the farthest point within delta of x_i and all points in
-// between are estimated by linearly interpolating between the two
-// regression fits.
-// Judicious choice of delta can cut computation time considerably
-// for large data (N > 5000). A good choice is delta = 0.01 *
-// range(independ_var).
-// Some experimentation is likely required to find a good
-// choice of frac and iter for a particular dataset.
+// This lowess function implements the algorithm given in the reference below
+// using local linear estimates.
+// Suppose the input data has N points. The algorithm works by estimating the
+// `smooth` y_i by taking the frac * N closest points to (x_i, y_i) based on
+// their x values and estimating y_i using a weighted linear regression. The
+// weight for (x_j, y_j) is tricube function applied to |x_i - x_j|.
+// If n_loop > 1, then further weighted local linear regressions are performed,
+// where the weights are the same as above times the _lowess_bisquare function
+// of the residuals. Each iteration takes approximately the same amount of time
+// as the original fit, so these iterations are expensive. They are most useful
+// when the noise has extremely heavy tails, such as Cauchy noise. Noise with
+// less heavy-tails, such as t-distributions with df > 2, are less problematic.
+// The weights downgrade the influence of points with large residuals. In the
+// extreme case, points whose residuals are larger than 6 times the median
+// absolute residual are given weight 0. Delta can be used to save
+// computations. For each x_i, regressions are skipped for points closer than
+// delta. The next regression is fit for the farthest point within delta of
+// x_i and all points in between are estimated by linearly interpolating
+// between the two regression fits. Judicious choice of delta can cut
+// computation time considerably for large data (N > 5000). A good choice is
+// delta = 0.01 * range(independ_var). Some experimentation is likely required
+// to find a good choice of frac and iter for a particular dataset.
 // References
 // ----------
 // Cleveland, W.S. (1979) "Robust Locally Weighted Regression

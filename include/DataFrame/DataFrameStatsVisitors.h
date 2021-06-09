@@ -731,6 +731,9 @@ private:
     result_type                         result_ { 0 };
 };
 
+template<typename T, typename I = unsigned long>
+using sem_v = SEMVisitor<T, I>;
+
 // ----------------------------------------------------------------------------
 
 template<typename T,
@@ -759,6 +762,9 @@ private:
 
     StdVisitor<value_type, index_type>  std_;
 };
+
+template<typename T, typename I = unsigned long>
+using te_v = TrackingErrorVisitor<T, I>;
 
 // ----------------------------------------------------------------------------
 
@@ -1174,7 +1180,7 @@ private:
     visitor_type                visitor_ { };
     const std::size_t           roll_count_;
     const std::size_t           repeat_count_;
-    const double                decay_;
+    const T                     decay_;
     const bool                  skip_nan_;
 
 public:
@@ -1241,7 +1247,7 @@ private:
 
     inline value_type calc_value_(value_type i_value, value_type i_1_value)  {
 
-        return (decay_ * i_value + (1.0 - decay_) * i_1_value);
+        return (decay_ * i_value + (T(1) - decay_) * i_1_value);
     }
 };
 
@@ -1922,6 +1928,73 @@ private:
 
 // ----------------------------------------------------------------------------
 
+// Exponential rolling adoptor for visitors
+// (decay * Xt) + ((1 − decay) * AVGt-1)
+//
+template<typename T, typename I = unsigned long>
+struct  ExponentiallyWeightedMeanVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &column_begin,
+                const H &column_end)  {
+
+        GET_COL_SIZE
+
+        result_type result(col_s, std::numeric_limits<T>::quiet_NaN());
+        size_type   i = 0;
+
+        if (skip_nan_)
+            for (; i < col_s; ++i)
+                if (! is_nan__(*(column_begin + i)))  break;
+        if (i < col_s)
+            result[i] = *(column_begin + i);
+        i += 1;
+        for (; i < col_s; ++i)  {
+            result[i] = calc_value_(*(column_begin + i), result[i - 1]);
+            if (skip_nan_ && is_nan__(*(column_begin + i)))
+                result[i] = result[i - 1];
+        }
+
+        result_.swap(result);
+    }
+
+    DEFINE_PRE_POST
+    DEFINE_RESULT
+
+    ExponentiallyWeightedMeanVisitor(exponential_decay_spec eds,
+                                     value_type value,
+                                     bool skip_nan = true)
+        : decay_(eds == exponential_decay_spec::center_of_gravity
+                 ? T(1) / (T(1) + value)
+                     : eds == exponential_decay_spec::span
+                         ? T(2) / (T(1) + value)
+                         : eds == exponential_decay_spec::halflife
+                             ? T(1) - std::exp(std::log(T(0.5)) / value)
+                             : value),
+          skip_nan_(skip_nan)  {   }
+
+private:
+
+    inline value_type calc_value_(value_type i_value, value_type i_1_value)  {
+
+        return ((decay_ * i_value) + ((T(1) - decay_) * i_1_value));
+    }
+
+    const value_type    decay_;
+    const bool          skip_nan_;
+    result_type         result_ {  };
+};
+
+template<typename T, typename I = unsigned long>
+using ewm_v = ExponentiallyWeightedMeanVisitor<T, I>;
+
+// ----------------------------------------------------------------------------
+
 template<typename T, typename I = unsigned long>
 struct KthValueVisitor  {
 
@@ -1997,6 +2070,9 @@ private:
     }
 };
 
+template<typename T, typename I = unsigned long>
+using kthv_v = KthValueVisitor<T, I>;
+
 // ----------------------------------------------------------------------------
 
 template<typename T, typename I = unsigned long>
@@ -2039,6 +2115,9 @@ private:
 
     result_type result_ {  };
 };
+
+template<typename T, typename I = unsigned long>
+using med_v = MedianVisitor<T, I>;
 
 // ----------------------------------------------------------------------------
 
@@ -2133,6 +2212,9 @@ private:
     const double            qt_;
     const quantile_policy   policy_;
 };
+
+template<typename T, typename I = unsigned long>
+using qt_v = QuantileVisitor<T, I>;
 
 // ----------------------------------------------------------------------------
 
@@ -2279,6 +2361,9 @@ private:
 
     result_type result_ { };
 };
+
+template<std::size_t N, typename T, typename I = unsigned long>
+using mode_v = ModeVisitor<N, T, I>;
 
 // ----------------------------------------------------------------------------
 
@@ -2456,6 +2541,9 @@ private:
     result_type result_ {  };
 };
 
+template<typename T, typename I = unsigned long>
+using mad_v = MADVisitor<T, I>;
+
 // ----------------------------------------------------------------------------
 
 template<typename T,
@@ -2555,6 +2643,9 @@ private:
     const bool  non_zero_;
 };
 
+template<typename T, typename I = unsigned long>
+using diff_v = DiffVisitor<T, I>;
+
 // ----------------------------------------------------------------------------
 
 template<typename T,
@@ -2608,6 +2699,9 @@ private:
     result_type result_ {  };  // Z Score
     const bool  skip_nan_;
 };
+
+template<typename T, typename I = unsigned long>
+using zs_v = ZScoreVisitor<T, I>;
 
 // ----------------------------------------------------------------------------
 
@@ -2671,6 +2765,9 @@ private:
     value_type  result_ {  };  // Z Score
     const bool  skip_nan_;
 };
+
+template<typename T, typename I = unsigned long>
+using szs_v = SampleZScoreVisitor<T, I>;
 
 // ----------------------------------------------------------------------------
 
@@ -2769,6 +2866,9 @@ private:
     result_type         result_ {  }; // Sigmoids
     const sigmoid_type  sigmoid_type_;
 };
+
+template<typename T, typename I = unsigned long>
+using sigm_v = SigmoidVisitor<T, I>;
 
 // ----------------------------------------------------------------------------
 
@@ -2934,6 +3034,9 @@ private:
     static constexpr value_type one_ { 1 };
 };
 
+template<typename T, typename I = unsigned long>
+using bcox_v = BoxCoxVisitor<T, I>;
+
 // ----------------------------------------------------------------------------
 
 template<typename T,
@@ -2980,6 +3083,9 @@ private:
     result_type result_ {  };  // Normalized
 };
 
+template<typename T, typename I = unsigned long>
+using norm_v = NormalizeVisitor<T, I>;
+
 // ----------------------------------------------------------------------------
 
 template<typename T,
@@ -3024,6 +3130,9 @@ private:
 
     result_type result_ {  }; // Standardized
 };
+
+template<typename T, typename I = unsigned long>
+using stand_v = StandardizeVisitor<T, I>;
 
 // ----------------------------------------------------------------------------
 
@@ -3209,6 +3318,9 @@ private:
     weight_func     weights_;
 };
 
+template<typename T, typename I = unsigned long>
+using pfit_v = PolyFitVisitor<T, I>;
+
 // ----------------------------------------------------------------------------
 
 template<typename T,
@@ -3266,6 +3378,9 @@ private:
     weight_func             weights_;
     value_type              residual_ { 0 };
 };
+
+template<typename T, typename I = unsigned long>
+using lfit_v = LogFitVisitor<T, I>;
 
 // ----------------------------------------------------------------------------
 
@@ -3806,6 +3921,9 @@ private:
     static constexpr value_type six_ { 6 };
 };
 
+template<typename T, typename I = unsigned long>
+using lowess_v = LowessVisitor<T, I>;
+
 // ----------------------------------------------------------------------------
 
 template<typename T,
@@ -3985,6 +4103,9 @@ private:
     result_type             residual_ {  };
 };
 
+template<typename T, typename I = unsigned long>
+using decom_v = DecomposeVisitor<T, I>;
+
 // ----------------------------------------------------------------------------
 
 template<typename T, typename I = unsigned long>
@@ -4044,6 +4165,9 @@ private:
     const value_type    log_base_;
     result_type         result_ { };
 };
+
+template<typename T, typename I = unsigned long>
+using ent_v = EntropyVisitor<T, I>;
 
 // ----------------------------------------------------------------------------
 

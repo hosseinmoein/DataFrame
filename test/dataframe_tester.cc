@@ -3216,6 +3216,92 @@ static void test_ExponentialRollAdopter()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_ExponentiallyWeightedMeanVisitor()  {
+
+    std::cout << "\nTesting ExponentiallyWeightedMeanVisitor{ } ..."
+              << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460 };
+    std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
+    std::vector<double> d2 = { 8, 9, 10, 11,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               13, 14,
+                               std::numeric_limits<double>::quiet_NaN(),
+                               16, 17, 18 };
+    std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25 };
+    std::vector<double> d4 = { 22, 23, 24, 25, 26, 27 };
+    std::vector<std::string> s1 =
+        { "11", "22", "33", "aa", "bb", "cc", "dd" "tt", "uu", "ii", "88" };
+    MyDataFrame         df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("col_1", d1),
+                 std::make_pair("col_2", d2),
+                 std::make_pair("col_3", d3),
+                 std::make_pair("col_str", s1));
+    df.load_column("col_4", std::move(d4), nan_policy::dont_pad_with_nans);
+
+    ewm_v<double>   expo_mean_roller_3(exponential_decay_spec::span, 3);
+    const auto      &expo_result_3 =
+        df.single_act_visit<double>("col_3", expo_mean_roller_3).get_result();
+
+    assert(expo_result_3.size() == 11);
+    assert(expo_result_3[0] == 15.0);
+    assert(std::fabs(expo_result_3[1] - 15.5) < 0.01);
+    assert(std::fabs(expo_result_3[2] - 16.25) < 0.001);
+    assert(std::fabs(expo_result_3[5] - 19.0312) < 0.0001);
+    assert(std::fabs(expo_result_3[8] - 22.0039) < 0.0001);
+
+    ewm_v<double>   hl_expo_mean_roller(exponential_decay_spec::halflife, 0.5);
+    const auto      &hl_expo_result =
+        df.single_act_visit<double>("col_3", hl_expo_mean_roller).get_result();
+
+    assert(hl_expo_result.size() == 11);
+    assert(hl_expo_result[0] == 15.0);
+    assert(fabs(hl_expo_result[1] - 15.75) < 0.01);
+    assert(fabs(hl_expo_result[2] - 16.6875) < 0.0001);
+    assert(fabs(hl_expo_result[5] - 19.667) < 0.001);
+    assert(fabs(hl_expo_result[8] - 22.6667) < 0.0001);
+
+    ewm_v<double>   cg_expo_mean_roller(
+        exponential_decay_spec::center_of_gravity, 0.5);
+    const auto      &cg_expo_result =
+        df.single_act_visit<double>("col_3", cg_expo_mean_roller).get_result();
+
+    assert(cg_expo_result.size() == 11);
+    assert(cg_expo_result[0] == 15.0);
+    assert(fabs(cg_expo_result[1] - 15.6667) < 0.0001);
+    assert(fabs(cg_expo_result[2] - 16.5556) < 0.0001);
+    assert(fabs(cg_expo_result[5] - 19.5021) < 0.0001);
+    assert(fabs(cg_expo_result[8] - 22.5001) < 0.0001);
+
+    ewm_v<double>   s_expo_mean_roller(exponential_decay_spec::span, 1.5);
+    const auto      &s_expo_result =
+        df.single_act_visit<double>("col_3", s_expo_mean_roller).get_result();
+
+    assert(s_expo_result.size() == 11);
+    assert(s_expo_result[0] == 15.0);
+    assert(fabs(s_expo_result[1] - 15.8) < 0.01);
+    assert(fabs(s_expo_result[2] - 16.76) < 0.001);
+    assert(fabs(s_expo_result[5] - 19.7501) < 0.0001);
+    assert(fabs(s_expo_result[8] - 22.75) < 0.001);
+
+    ewm_v<double>   f_expo_mean_roller(exponential_decay_spec::fixed, 0.5);
+    const auto      &f_expo_result =
+        df.single_act_visit<double>("col_3", f_expo_mean_roller).get_result();
+
+    assert(f_expo_result.size() == 11);
+    assert(f_expo_result[0] == 15.0);
+    assert(fabs(f_expo_result[1] - 15.5) < 0.01);
+    assert(fabs(f_expo_result[2] - 16.25) < 0.001);
+    assert(fabs(f_expo_result[5] - 19.0312) < 0.0001);
+    assert(fabs(f_expo_result[8] - 22.0039) < 0.0001);
+}
+
+// -----------------------------------------------------------------------------
+
 static void test_get_data_by_rand()  {
 
     std::cout << "\nTesting get_data_by_rand() ..." << std::endl;
@@ -4403,15 +4489,12 @@ static void test_DoubleCrossOver()  {
     df.load_data(std::move(idx), std::make_pair("col_1", d1));
 
     using geo_mean_t = GeometricMeanVisitor<double>;
-    using mean_t = MeanVisitor<double>;
     using short_roller_t = SimpleRollAdopter<geo_mean_t, double>;
-    using long_roller_t = ExponentialRollAdopter<mean_t, double>;
-    using double_cross_t =
-        DoubleCrossOver<short_roller_t, long_roller_t, double>;
+    using long_roller_t = ewm_v<double>;
+    using double_cross_t = dco_v<short_roller_t, long_roller_t, double>;
 
-    double_cross_t  visitor(
-       short_roller_t(geo_mean_t(), 3),
-       long_roller_t(mean_t(), 4, exponential_decay_spec::span, 1.5));
+    double_cross_t  visitor(short_roller_t(geo_mean_t(), 3),
+                            long_roller_t(exponential_decay_spec::span, 1.5));
 
     df.single_act_visit<double>("col_1", visitor);
 
@@ -4427,15 +4510,16 @@ static void test_DoubleCrossOver()  {
     assert(fabs(raw_to_short[38] - 0.3506) < 0.00001);
 
     assert(raw_to_long.size() == 40);
-    assert(std::isnan(raw_to_long[2]));
-    assert(fabs(raw_to_long[8] - 0.2504) < 0.00001);
-    assert(fabs(raw_to_long[12] - 0.250001) < 0.00001);
+    assert(fabs(raw_to_long[2] - 0.24) < 0.001);
+    assert(fabs(raw_to_long[8] - 0.249999) < 0.000001);
+    assert(fabs(raw_to_long[12] - 0.25) < 0.001);
     assert(fabs(raw_to_long[39] - -0.370008) < 0.00001);
     assert(fabs(raw_to_long[38] - 0.149962) < 0.00001);
 
     assert(short_to_long.size() == 40);
     assert(std::isnan(short_to_long[0]));
-    assert(fabs(short_to_long[8] - -0.791486) < 0.00001);
+    assert(std::isnan(short_to_long[1]));
+    assert(fabs(short_to_long[8] - -0.791886) < 0.00001);
     assert(fabs(short_to_long[12] - -0.777842) < 0.00001);
     assert(fabs(short_to_long[39] - 0.573914) < 0.00001);
     assert(fabs(short_to_long[38] - -0.200639) < 0.00001);
@@ -4518,27 +4602,29 @@ static void test_MACDVisitor()  {
     auto    &macd_histo = visitor.get_macd_histogram();
 
     assert(macd_result.size() == 40);
-    assert(std::isnan(macd_result[3]));
-    assert(fabs(macd_result[8] - 1.5) < 0.000001);
-    assert(fabs(macd_result[12] - 1.5) < 0.000001);
+    assert(macd_result[0] == 0);
+    assert(fabs(macd_result[3] - 0.925926) < 0.000001);
+    assert(fabs(macd_result[8] - 1.42204) < 0.00001);
+    assert(fabs(macd_result[12] - 1.48459) < 0.00001);
     assert(fabs(macd_result[38] - -0.777175) < 0.000001);
     assert(fabs(macd_result[39] - -1.12938) < 0.00001);
 
     assert(signal_line.size() == 40);
-    assert(std::isnan(signal_line[2]));
-    assert(std::isnan(signal_line[4]));
-    assert(fabs(signal_line[8] - 1.5) < 0.00001);
-    assert(fabs(signal_line[12] - 1.5) < 0.00001);
-    assert(fabs(signal_line[38] - -1.08524) < 0.00001);
-    assert(fabs(signal_line[39] - -1.09785) < 0.00001);
+    assert(signal_line[0] == 0);
+    assert(fabs(signal_line[2] - 0.258503) < 0.00001);
+    assert(fabs(signal_line[4] - 0.638314) < 0.00001);
+    assert(fabs(signal_line[8] - 1.17688) < 0.00001);
+    assert(fabs(signal_line[12] - 1.3963) < 0.0001);
+    assert(fabs(signal_line[38] - -1.08527) < 0.00001);
+    assert(fabs(signal_line[39] - -1.09787) < 0.00001);
 
     assert(macd_histo.size() == 40);
-    assert(std::isnan(macd_histo[0]));
-    assert(std::isnan(macd_histo[4]));
-    assert(fabs(macd_histo[8] - 0) < 0.00001);
-    assert(fabs(macd_histo[12] - 0) < 0.00001);
-    assert(fabs(macd_histo[38] - 0.308069) < 0.000001);
-    assert(fabs(macd_histo[39] - -0.0315231) < 0.000001);
+    assert(macd_histo[0] == 0);
+    assert(fabs(macd_histo[4] - 0.472797) < 0.00001);
+    assert(fabs(macd_histo[8] - 0.245164) < 0.00001);
+    assert(fabs(macd_histo[12] - 0.0882894) < 0.000001);
+    assert(fabs(macd_histo[38] - 0.308093) < 0.000001);
+    assert(fabs(macd_histo[39] - -0.0315057) < 0.000001);
 }
 
 // -----------------------------------------------------------------------------
@@ -5174,6 +5260,7 @@ int main(int argc, char *argv[]) {
     test_multi_col_sort();
     test_join_by_column();
     test_ExponentialRollAdopter();
+    test_ExponentiallyWeightedMeanVisitor();
     test_DoubleCrossOver();
     test_BollingerBand();
     test_MACDVisitor();

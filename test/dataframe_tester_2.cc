@@ -2267,14 +2267,16 @@ static void test_MassIndexVisitor()  {
 
     // The values here are nonsensical, because the time-series and periods
     // are too short
+    //
     df.single_act_visit<double, double>("high", "low", mi_v);
+
     assert(mi_v.get_result().size() == 21);
     assert(std::isnan(mi_v.get_result()[0]));
     assert(std::isnan(mi_v.get_result()[3]));
-    assert(fabs(mi_v.get_result()[6] - 5.20339) < 0.00001);
-    assert(fabs(mi_v.get_result()[10] - 4.35729) < 0.00001);
-    assert(fabs(mi_v.get_result()[20] - 5.51908) < 0.00001);
-    assert(fabs(mi_v.get_result()[17] - 4.87229) < 0.0001);
+    assert(fabs(mi_v.get_result()[6] - 5.21367) < 0.00001);
+    assert(fabs(mi_v.get_result()[10] - 4.3473) < 0.0001);
+    assert(fabs(mi_v.get_result()[20] - 5.51902) < 0.00001);
+    assert(fabs(mi_v.get_result()[17] - 4.87194) < 0.0001);
 }
 
 // -----------------------------------------------------------------------------

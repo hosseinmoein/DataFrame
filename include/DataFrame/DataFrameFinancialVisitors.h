@@ -119,7 +119,7 @@ template<typename S_RT,  // Short duration rolling adopter
          typename I = unsigned long,
          typename =
              typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
-struct DoubleCrossOver {
+struct  DoubleCrossOver {
 
 private:
 
@@ -252,6 +252,9 @@ private:
     result_type col_to_long_term_;
     result_type short_term_to_long_term_;
 };
+
+template<typename S_RT, typename L_RT, typename T, typename I = unsigned long>
+using dco_v = DoubleCrossOver<S_RT, L_RT, T, I>;
 
 // ----------------------------------------------------------------------------
 
@@ -402,18 +405,14 @@ struct MACDVisitor {
                 const H &column_begin,
                 const H &column_end)  {
 
-        macd_roller_t   short_roller(std::move(MeanVisitor<T, I>()),
-                                     short_mean_period_,
-                                     exponential_decay_spec::span,
+        macd_roller_t   short_roller(exponential_decay_spec::span,
                                      short_mean_period_);
 
         short_roller.pre();
         short_roller(idx_begin, idx_end, column_begin, column_end);
         short_roller.post();
 
-        macd_roller_t   long_roller(std::move(MeanVisitor<T, I>()),
-                                    long_mean_period_,
-                                    exponential_decay_spec::span,
+        macd_roller_t   long_roller(exponential_decay_spec::span,
                                     long_mean_period_);
 
         long_roller.pre();
@@ -465,16 +464,14 @@ struct MACDVisitor {
         size_type signal_line_period) // e.g.  9-day
         : short_mean_period_(short_mean_period),
           long_mean_period_(long_mean_period),
-          signal_line_roller_(std::move(MeanVisitor<T, I>()),
-                              signal_line_period,
-                              exponential_decay_spec::span,
+          signal_line_roller_(exponential_decay_spec::span,
                               signal_line_period)  {
     }
 
 private:
 
 
-    using macd_roller_t = ExponentialRollAdopter<MeanVisitor<T, I>, T, I>;
+    using macd_roller_t = ewm_v<T, I>;
 
     const size_type short_mean_period_;
     const size_type long_mean_period_;
@@ -1375,8 +1372,7 @@ struct MassIndexVisitor {
                               v += std::numeric_limits<value_type>::epsilon();
                           });
 
-        erm_t   fast_roller(std::move(MeanVisitor<T, I>()), fast_,
-                            exponential_decay_spec::span, fast_);
+        erm_t   fast_roller(exponential_decay_spec::span, fast_);
 
         fast_roller.pre();
         fast_roller(idx_begin, idx_end, result.begin(), result.end());
@@ -1431,7 +1427,7 @@ struct MassIndexVisitor {
 
 private:
 
-    using erm_t = ExponentialRollAdopter<MeanVisitor<T, I>, T, I>;
+    using erm_t = ewm_v<T, I>;
     using srs_t = SimpleRollAdopter<SumVisitor<T, I>, T, I>;
 
     result_type     result_ {  };
@@ -2212,8 +2208,7 @@ struct PercentPriceOSCIVisitor {
                 (T(100) * (fast_roller.get_result()[i] - result[i])) /
                 result[i];
 
-        erm_t   signal_roller (std::move(MeanVisitor<T, I>()), signal_,
-                               exponential_decay_spec::span, signal_);
+        erm_t   signal_roller (exponential_decay_spec::span, signal_);
 
         signal_roller.pre();
         signal_roller(idx_begin + slow_, idx_end,
@@ -2245,7 +2240,7 @@ struct PercentPriceOSCIVisitor {
 
 private:
 
-    using erm_t = ExponentialRollAdopter<MeanVisitor<T, I>, T, I>;
+    using erm_t = ewm_v<T, I>;
     using srs_t = SimpleRollAdopter<MeanVisitor<T, I>, T, I>;
 
     result_type     result_ {  };

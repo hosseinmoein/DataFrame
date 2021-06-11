@@ -3243,17 +3243,6 @@ static void test_ExponentiallyWeightedMeanVisitor()  {
                  std::make_pair("col_str", s1));
     df.load_column("col_4", std::move(d4), nan_policy::dont_pad_with_nans);
 
-    ewm_v<double>   expo_mean_roller_3(exponential_decay_spec::span, 3);
-    const auto      &expo_result_3 =
-        df.single_act_visit<double>("col_3", expo_mean_roller_3).get_result();
-
-    assert(expo_result_3.size() == 11);
-    assert(expo_result_3[0] == 15.0);
-    assert(std::fabs(expo_result_3[1] - 15.5) < 0.01);
-    assert(std::fabs(expo_result_3[2] - 16.25) < 0.001);
-    assert(std::fabs(expo_result_3[5] - 19.0312) < 0.0001);
-    assert(std::fabs(expo_result_3[8] - 22.0039) < 0.0001);
-
     ewm_v<double>   hl_expo_mean_roller(exponential_decay_spec::halflife, 0.5);
     const auto      &hl_expo_result =
         df.single_act_visit<double>("col_3", hl_expo_mean_roller).get_result();
@@ -3298,6 +3287,28 @@ static void test_ExponentiallyWeightedMeanVisitor()  {
     assert(fabs(f_expo_result[2] - 16.25) < 0.001);
     assert(fabs(f_expo_result[5] - 19.0312) < 0.0001);
     assert(fabs(f_expo_result[8] - 22.0039) < 0.0001);
+
+    ewm_v<double>   expo_mean_roller_3(exponential_decay_spec::span, 3);
+    const auto      &expo_result_3 =
+        df.single_act_visit<double>("col_3", expo_mean_roller_3).get_result();
+
+    assert(expo_result_3.size() == 11);
+    assert(expo_result_3[0] == 15.0);
+    assert(std::fabs(expo_result_3[1] - 15.5) < 0.01);
+    assert(std::fabs(expo_result_3[2] - 16.25) < 0.001);
+    assert(std::fabs(expo_result_3[5] - 19.0312) < 0.0001);
+    assert(std::fabs(expo_result_3[8] - 22.0039) < 0.0001);
+
+    ewm_v<double>   expo_mean_roller_3_t(exponential_decay_spec::span, 3, true);
+    const auto      &expo_result_3_t =
+        df.single_act_visit<double>("col_3", expo_mean_roller_3_t).get_result();
+
+    assert(expo_result_3_t.size() == 11);
+    assert(expo_result_3_t[0] == 15.0);
+    assert(std::fabs(expo_result_3_t[1] - 15.6667) < 0.0001);
+    assert(std::fabs(expo_result_3_t[2] - 16.4286) < 0.0001);
+    assert(std::fabs(expo_result_3_t[5] - 19.0952) < 0.0001);
+    assert(std::fabs(expo_result_3_t[8] - 22.0176) < 0.0001);
 }
 
 // -----------------------------------------------------------------------------

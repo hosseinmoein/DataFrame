@@ -1929,7 +1929,11 @@ private:
 // ----------------------------------------------------------------------------
 
 // Exponential rolling adoptor for visitors
-// (decay * Xt) + ((1 − decay) * AVGt-1)
+// decay * Xt + (1 − decay) * Xt-1
+// or
+//    Xt + (1 - decay)Xt-1 + (1 - decay)^2 Xt-2 + ... + (1 - decay)^t X0
+// ------------------------------------------------------------------------
+//          1 + (1 - decay) + (1 - decay)^2 + ... + (1 - decay)^t
 //
 template<typename T, typename I = unsigned long>
 struct  ExponentiallyWeightedMeanVisitor  {
@@ -1944,20 +1948,43 @@ struct  ExponentiallyWeightedMeanVisitor  {
                 const H &column_end)  {
 
         GET_COL_SIZE
+        assert(col_s > 3);
 
-        result_type result(col_s, std::numeric_limits<T>::quiet_NaN());
-        size_type   i = 0;
+        result_type         result (col_s);
+        const value_type    decay_comp = T(1) - decay_;
 
-        if (skip_nan_)
-            for (; i < col_s; ++i)
-                if (! is_nan__(*(column_begin + i)))  break;
-        if (i < col_s)
-            result[i] = *(column_begin + i);
-        i += 1;
-        for (; i < col_s; ++i)  {
-            result[i] = calc_value_(*(column_begin + i), result[i - 1]);
-            if (skip_nan_ && is_nan__(*(column_begin + i)))
-                result[i] = result[i - 1];
+        result[0] = *column_begin;
+        if (! finite_adjust_)  {
+            for (size_type i = 1; i < col_s; ++i)
+                result[i] =
+                    decay_ * *(column_begin + i) + decay_comp * result[i - 1];
+        }
+        else  {  // Adjust for the fact that this is not an infinite data set
+            value_type  denominator = 1;
+            value_type  dc_p = 1;
+            value_type  numerator = result[0];
+
+            for (size_type i = 1; i < col_s; ++i)  {
+                dc_p *= decay_comp;
+                denominator += dc_p;
+                numerator = numerator * decay_comp + *(column_begin + i);
+                result[i] = numerator / denominator;
+            }
+
+            /*
+            for (size_type i = 1; i < col_s; ++i)  {
+                value_type  denominator = 0;
+                value_type  dc_p = 1;
+                value_type  numerator = 0;
+
+                for (long j = static_cast<long>(i); j >= 0; --j)  {
+                    numerator += dc_p * *(column_begin + j);
+                    denominator += dc_p;
+                    dc_p *= decay_comp;
+                }
+                result[i] = numerator / denominator;
+            }
+            */
         }
 
         result_.swap(result);
@@ -1968,7 +1995,7 @@ struct  ExponentiallyWeightedMeanVisitor  {
 
     ExponentiallyWeightedMeanVisitor(exponential_decay_spec eds,
                                      value_type value,
-                                     bool skip_nan = true)
+                                     bool finite_adjust = false)
         : decay_(eds == exponential_decay_spec::center_of_gravity
                  ? T(1) / (T(1) + value)
                      : eds == exponential_decay_spec::span
@@ -1976,17 +2003,12 @@ struct  ExponentiallyWeightedMeanVisitor  {
                          : eds == exponential_decay_spec::halflife
                              ? T(1) - std::exp(std::log(T(0.5)) / value)
                              : value),
-          skip_nan_(skip_nan)  {   }
+          finite_adjust_(finite_adjust)  {   }
 
 private:
 
-    inline value_type calc_value_(value_type i_value, value_type i_1_value)  {
-
-        return ((decay_ * i_value) + ((T(1) - decay_) * i_1_value));
-    }
-
     const value_type    decay_;
-    const bool          skip_nan_;
+    const bool          finite_adjust_;
     result_type         result_ {  };
 };
 

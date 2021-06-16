@@ -196,6 +196,9 @@ private:
     result_type                 count_ { 0 };
 };
 
+template<typename T, typename I = unsigned long>
+using hamf_v = HampelFilterVisitor<T, I>;
+
 // ----------------------------------------------------------------------------
 
 // The exponential smoothing could be done multiple times, if there is a
@@ -239,6 +242,9 @@ private:
     result_type         count_ { 0 };
 };
 
+template<typename T, typename I = unsigned long>
+using exs_v = ExpoSmootherVisitor<T, I>;
+
 // ----------------------------------------------------------------------------
 
 // Holt-Winters double exponential smoothing
@@ -280,6 +286,9 @@ private:
     const value_type    beta_;
     result_type         count_ { 0 };
 };
+
+template<typename T, typename I = unsigned long>
+using hwexp_v = HWExpoSmootherVisitor<T, I>;
 
 } // namespace hmdf
 

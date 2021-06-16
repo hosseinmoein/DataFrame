@@ -480,6 +480,9 @@ private:
     result_type     macd_histogram_ { };  // MACD Line - Signal Line
 };
 
+template<typename T, typename I = unsigned long>
+using macd_v = MACDVisitor<T, I>;
+
 // ----------------------------------------------------------------------------
 
 // Volume Weighted Average Price
@@ -655,6 +658,9 @@ private:
     const double    max_volume_;
     const double    total_volume_limit_;
 };
+
+template<typename T, typename I = unsigned long>
+using vwap_v = VWAPVisitor<T, I>;
 
 // ----------------------------------------------------------------------------
 
@@ -919,6 +925,9 @@ private:
     const double    max_volume_;
 };
 
+template<typename T, typename I = unsigned long>
+using vwbas_v = VWBASVisitor<T, I>;
+
 // ----------------------------------------------------------------------------
 
 // This is meaningfull, only if the return series is close to normal
@@ -987,6 +996,9 @@ private:
     const bool  biased_;
     result_type result_ { 0 };
 };
+
+template<typename T, typename I = unsigned long>
+using sharper_v = SharpeRatioVisitor<T, I>;
 
 // ----------------------------------------------------------------------------
 
@@ -1081,6 +1093,9 @@ private:
     const value_type    avg_period_;
     result_type         result_ { };
 };
+
+template<typename T, typename I = unsigned long>
+using rsi_v = RSIVisitor<T, I>;
 
 // ----------------------------------------------------------------------------
 
@@ -1198,6 +1213,9 @@ private:
     const value_type    avg_period_;
     result_type         result_ { };
 };
+
+template<typename T, typename I = unsigned long>
+using rsx_v = RSXVisitor<T, I>;
 
 // ----------------------------------------------------------------------------
 
@@ -1332,6 +1350,9 @@ private:
     result_type     exponent_ { -1 };
 };
 
+template<typename T, typename I = unsigned long>
+using hexpo_v = HurstExponentVisitor<T, I>;
+
 // ----------------------------------------------------------------------------
 
 template<typename T,
@@ -1435,6 +1456,9 @@ private:
     const size_type fast_;
 };
 
+template<typename T, typename I = unsigned long>
+using mass_idx_v = MassIndexVisitor<T, I>;
+
 // ----------------------------------------------------------------------------
 
 template<typename T, typename I = unsigned long>
@@ -1495,6 +1519,9 @@ private:
     const size_type roll_count_;
     result_type     result_ { };
 };
+
+template<typename T, typename I = unsigned long>
+using hull_mean_v = HullRollingMeanVisitor<T, I>;
 
 // ----------------------------------------------------------------------------
 
@@ -1560,6 +1587,9 @@ private:
     const size_t    roll_count_;
     result_type     result_ { };
 };
+
+template<typename T, typename I = unsigned long>
+using mid_val_v = RollingMidValueVisitor<T, I>;
 
 // ----------------------------------------------------------------------------
 
@@ -1686,6 +1716,9 @@ private:
     const size_type roll_count_;
     result_type     result_ { };
 };
+
+template<typename T, typename I = unsigned long>
+using willp_v = WilliamPrcRVisitor<T, I>;
 
 // ----------------------------------------------------------------------------
 
@@ -1907,6 +1940,9 @@ private:
     const size_type trading_periods_;
 };
 
+template<typename T, typename I = unsigned long>
+using gk_vol_v = GarmanKlassVolVisitor<T, I>;
+
 // ----------------------------------------------------------------------------
 
 template<typename T,
@@ -2000,6 +2036,9 @@ private:
     const size_type roll_count_;
     const size_type trading_periods_;
 };
+
+template<typename T, typename I = unsigned long>
+using yz_vol_v = YangZhangVolVisitor<T, I>;
 
 // ----------------------------------------------------------------------------
 
@@ -2166,6 +2205,9 @@ private:
     const size_type roll_count_;
 };
 
+template<typename T, typename I = unsigned long>
+using ftrans_v = FisherTransVisitor<T, I>;
+
 // ----------------------------------------------------------------------------
 
 // Percentage Price Oscillator (PPO)
@@ -2249,6 +2291,9 @@ private:
     const size_type fast_;
     const size_type signal_;
 };
+
+template<typename T, typename I = unsigned long>
+using pp_osc_v = PercentPriceOSCIVisitor<T, I>;
 
 // ----------------------------------------------------------------------------
 
@@ -2442,6 +2487,9 @@ private:
     result_type         result_ { };
 };
 
+template<typename T, typename I = unsigned long>
+using u_osc_v = UltimateOSCIVisitor<T, I>;
+
 // ----------------------------------------------------------------------------
 
 template<typename T, typename I = unsigned long>
@@ -2515,6 +2563,9 @@ private:
     result_type     result_ { };
 };
 
+template<typename T, typename I = unsigned long>
+using u_idx_v = UlcerIndexVisitor<T, I>;
+
 // ----------------------------------------------------------------------------
 
 // Trade To Market trend indicator
@@ -2580,6 +2631,9 @@ private:
     const size_type bar_periods_;
     result_type     result_ { };
 };
+
+template<typename T, typename I = unsigned long>
+using ttmt_v = TTMTrendVisitor<T, I>;
 
 // ----------------------------------------------------------------------------
 
@@ -2722,6 +2776,9 @@ private:
     std::vector<value_type> accel_fact_ { };
 };
 
+template<typename T, typename I = unsigned long>
+using psar_v = ParabolicSARVisitor<T, I>;
+
 // ----------------------------------------------------------------------------
 
 // Even Better Sine Wave (EBSW) indicator
@@ -2810,6 +2867,9 @@ private:
     result_type     result_ { };
 };
 
+template<typename T, typename I = unsigned long>
+using ebsw_v = EBSineWaveVisitor<T, I>;
+
 // ----------------------------------------------------------------------------
 
 // Ehler's Super Smoother Filter (SSF) indicator
@@ -2880,6 +2940,9 @@ private:
     const size_type bar_period_;
     result_type     result_ { };
 };
+
+template<typename T, typename I = unsigned long>
+using ess_v = EhlerSuperSmootherVisitor<T, I>;
 
 // ----------------------------------------------------------------------------
 
@@ -2963,6 +3026,9 @@ private:
     const size_type roll_period_;
     result_type     result_ { };
 };
+
+template<typename T, typename I = unsigned long>
+using vidya_v = VarIdxDynAvgVisitor<T, I>;
 
 // ----------------------------------------------------------------------------
 
@@ -3067,6 +3133,9 @@ private:
     result_type support_2_ { };
     result_type support_3_ { };
 };
+
+template<typename T, typename I = unsigned long>
+using ppsr_v = PivotPointSRVisitor<T, I>;
 
 } // namespace hmdf
 

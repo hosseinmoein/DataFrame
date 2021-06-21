@@ -3137,6 +3137,113 @@ private:
 template<typename T, typename I = unsigned long>
 using ppsr_v = PivotPointSRVisitor<T, I>;
 
+
+
+
+
+
+
+
+
+// ----------------------------------------------------------------------------
+
+// Average Directional Movement Index (ADX)
+//
+template<typename T, typename I = unsigned long>
+struct  AvgDirMovIdxVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &low_begin,
+                const H &low_end,
+                const H &high_begin,
+                const H &high_end,
+                const H &close_begin,
+                const H &close_end)  {
+
+        const size_type col_s = std::distance(close_begin, close_end);
+
+        assert(col_s > 3);
+        assert((col_s == std::distance(low_begin, low_end)));
+        assert((col_s == std::distance(high_begin, high_end)));
+
+        result_type pos_di(col_s);
+        result_type neg_di(col_s);
+        result_type true_range(col_s);
+        result_type result(col_s);
+
+        for (size_type i = 0; i < col_s - 1; ++i)  {
+            const value_type    nxt_h = *(high_begin + (i + 1));
+            const value_type    nxt_l = *(low_begin + (i + 1));
+            const value_type    pos_move = nxt_h - *(high_begin + i);
+            const value_type    neg_move = *(low_begin + i) - nxt_l;
+
+            pos_di[i] = (pos_move > neg_move && pos_move > 0) ? pos_move : 0;
+            neg_di[i] = (neg_move > pos_move && neg_move > 0) ? neg_move : 0;
+
+            const value_type    close = *(close_begin + i);
+
+            true_range[i] = std::max(nxt_h, close) - std::min(nxt_l, close);
+        }
+
+        ewm_v<double>   ewm(exponential_decay_spec::span, dir_smoother_, true);
+
+        ewm.pre();
+        ewm (idx_begin, idx_end, true_range.begin(), true_range.end());
+        ewm.post();
+        true_range.swap(ewm.get_result());
+
+        ewm.pre();
+        ewm (idx_begin, idx_end, pos_di.begin(), pos_di.end());
+        ewm.post();
+        pos_di.swap(ewm.get_result());
+
+        ewm.pre();
+        ewm (idx_begin, idx_end, neg_di.begin(), neg_di.end());
+        ewm.post();
+        neg_di.swap(ewm.get_result());
+
+        result_type dx(col_s);
+        value_type  prev_val = 0;
+
+        for (size_type i = 0; i < col_s - 1; ++i)  {
+            const value_type    pos_val = pos_di[i] / true_range[i];
+            const value_type    neg_val = neg_di[i] / true_range[i];
+            const value_type    val =
+                std::fabs(pos_val - neg_val) / (pos_val + neg_val);
+
+            if (! is_nan__(val))  prev_val = val;
+            dx[i] = prev_val;
+        }
+
+        ewm_v<double>   ewm2(exponential_decay_spec::span, adx_smoother_, true);
+
+        ewm2.pre();
+        ewm2 (idx_begin, idx_end, dx.begin(), dx.end());
+        ewm2.post();
+        result_.swap(ewm2.get_result());
+    }
+
+    DEFINE_PRE_POST
+    DEFINE_RESULT
+
+    AvgDirMovIdxVisitor(value_type dir_smoother, value_type adx_smoother)
+        : dir_smoother_(dir_smoother), adx_smoother_(adx_smoother)   {  }
+
+private:
+
+    const value_type    dir_smoother_;
+    const value_type    adx_smoother_;
+    result_type         result_ { };
+};
+
+template<typename T, typename I = unsigned long>
+using adx_v = AvgDirMovIdxVisitor<T, I>;
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

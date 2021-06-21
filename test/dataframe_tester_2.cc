@@ -3371,6 +3371,38 @@ static void test_PivotPointSRVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_AvgDirMovIdxVisitor()  {
+
+    std::cout << "\nTesting AvgDirMovIdxVisitor{  } ..." << std::endl;
+
+    typedef StdDataFrame<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("data/SHORT_IBM.csv", io_format::csv2);
+
+        adx_v<double, std::string>  adx_v (3, 4);
+
+        df.single_act_visit<double, double, double>
+            ("IBM_Low", "IBM_High", "IBM_Close", adx_v);
+
+        assert(adx_v.get_result().size() == 1721);
+        assert(adx_v.get_result()[0] == 0);
+        assert(std::abs(adx_v.get_result()[10] - 0.73029) < 0.00001);
+        assert(std::abs(adx_v.get_result()[14] - 0.735792) < 0.000001);
+        assert(std::abs(adx_v.get_result()[25] - 0.691082) < 0.000001);
+        assert(std::abs(adx_v.get_result()[1720] - 0.372184) < 0.000001);
+        assert(std::abs(adx_v.get_result()[1712] - 0.703394) < 0.000001);
+        assert(std::abs(adx_v.get_result()[1707] - 0.383002) < 0.000001);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int argc, char *argv[]) {
 
     test_get_reindexed();
@@ -3436,6 +3468,7 @@ int main(int argc, char *argv[]) {
     test_VarIdxDynAvgVisitor();
     test_AbsVisitor();
     test_PivotPointSRVisitor();
+    test_AvgDirMovIdxVisitor();
 
     return (0);
 }

@@ -3698,8 +3698,10 @@ private:
         size_type     non_zero_cnt = 0;
 
         for (size_type j = left_end; j < right_end; ++j)  {
-            if (*(w_begin + j) != 0)  {
-                sum_weights += *(w_begin + j);
+            const value_type    val = *(w_begin + j);
+
+            if (val != 0)  {
+                sum_weights += val;
                 non_zero_cnt += 1;
             }
         }

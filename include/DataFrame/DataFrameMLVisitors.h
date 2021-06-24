@@ -273,17 +273,18 @@ private:
             // Update availability
             for (size_type i = 0; i < csize; ++i)  {
                 for (size_type j = 0; j < csize; ++j)  {
+                    const size_type s1 = j * csize;
+
                     if (i == j)  {
                         double  sum = 0.0;
 
                         for (size_type ii = 0; ii < i; ++ii)
-                            sum += std::max(0.0, respon[j * csize + ii]);
+                            sum += std::max(0.0, respon[s1 + ii]);
                         for(size_type ii = i + 1; ii < csize; ++ii)
-                            sum += std::max(0.0, respon[j * csize + ii]);
+                            sum += std::max(0.0, respon[s1 + ii]);
 
-                        avail[j * csize + i] =
-                            (1.0 - dfactor_) * sum +
-                            dfactor_ * avail[j * csize + i];
+                        avail[s1 + i] =
+                            (1.0 - dfactor_) * sum + dfactor_ * avail[s1 + i];
                     }
                     else  {
                         double          sum = 0.0;
@@ -291,16 +292,16 @@ private:
                         const size_type min_i_j = std::min(i, j);
 
                         for (size_type ii = 0; ii < min_i_j; ++ii)
-                            sum += std::max(0.0, respon[j * csize + ii]);
+                            sum += std::max(0.0, respon[s1 + ii]);
                         for (size_type ii = min_i_j + 1; ii < max_i_j; ++ii)
-                            sum += std::max(0.0, respon[j * csize + ii]);
+                            sum += std::max(0.0, respon[s1 + ii]);
                         for (size_type ii = max_i_j + 1; ii < csize; ++ii)
-                            sum += std::max(0.0, respon[j * csize + ii]);
+                            sum += std::max(0.0, respon[s1 + ii]);
 
-                        avail[j * csize + i] =
+                        avail[s1 + i] =
                             (1.0 - dfactor_) *
-                            std::min(0.0, respon[j * csize + j] + sum) +
-                            dfactor_ * avail[j * csize + i];
+                            std::min(0.0, respon[s1 + j] + sum) + dfactor_ *
+                            avail[s1 + i];
                     }
                 }
             }

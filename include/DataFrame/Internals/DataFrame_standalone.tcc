@@ -1090,7 +1090,6 @@ struct  hash<std::tuple<TT ...>>  {
     }
 };
 
-
 // ----------------------------------------------------------------------------
 
 // Specialized version of std::remove_copy

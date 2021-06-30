@@ -1991,19 +1991,18 @@ struct YangZhangVolVisitor {
                 size_type   cnt { 0 };
 
                 for (size_type j = i; j < (i + roll_count_); ++j)  {
+                    const value_type    open = *(open_begin + j);
+                    const value_type    close = *(close_begin + j);
                     const value_type    ho_rt =
-                        std::log(*(high_begin + j) / *(open_begin + j));
+                        std::log(*(high_begin + j) / open);
                     const value_type    lo_rt =
-                        std::log(*(low_begin + j) / *(open_begin + j));
-                    const value_type    co_rt =
-                        std::log(*(close_begin + j) / *(open_begin + j));
+                        std::log(*(low_begin + j) / open);
+                    const value_type    co_rt = std::log(close/ open);
                     const value_type    oc_rt = j > 0
-                        ? std::log(*(open_begin + j) /
-                                   *(close_begin + (j - 1)))
+                        ? std::log(open / *(close_begin + (j - 1)))
                         : std::numeric_limits<T>::quiet_NaN();
                     const value_type    cc_rt = j > 0
-                        ? std::log(*(close_begin + j) /
-                                   *(close_begin + (j - 1)))
+                        ? std::log(close / *(close_begin + (j - 1)))
                         : std::numeric_limits<T>::quiet_NaN();
                     // Rogers-Satchell volatility
                     const value_type    rs_vol =

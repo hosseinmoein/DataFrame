@@ -724,8 +724,7 @@ template<typename I, typename H>
 template<typename ... Ts>
 template<typename T>
 void
-DataFrame<I, H>::
-random_load_view_functor_<Ts ...>::operator() (const T &vec)  {
+DataFrame<I, H>::random_load_view_functor_<Ts ...>::operator() (const T &vec) {
 
     using VecType = typename std::remove_reference<T>::type;
     using ValueType = typename VecType::value_type;
@@ -764,8 +763,7 @@ template<typename I, typename H>
 template<typename ... Ts>
 template<typename T>
 void
-DataFrame<I, H>::
-columns_info_functor_<Ts ...>::operator() (const T &vec)  {
+DataFrame<I, H>::columns_info_functor_<Ts ...>::operator() (const T &vec)  {
 
     using VecType = typename std::remove_reference<T>::type;
     using ValueType = typename VecType::value_type;
@@ -779,8 +777,7 @@ template<typename I, typename H>
 template<typename ... Ts>
 template<typename T>
 void
-DataFrame<I, H>::
-copy_remove_functor_<Ts ...>::operator() (const T &vec)  {
+DataFrame<I, H>::copy_remove_functor_<Ts ...>::operator() (const T &vec)  {
 
     using VecType = typename std::remove_reference<T>::type;
     using ValueType = typename VecType::value_type;
@@ -796,6 +793,29 @@ copy_remove_functor_<Ts ...>::operator() (const T &vec)  {
     df.load_column<ValueType>(name,
                               std::move(new_vec),
                               nan_policy::dont_pad_with_nans);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename DF, typename ... Ts>
+template<typename T>
+void
+DataFrame<I, H>::fill_missing_functor_<DF, Ts ...>::operator() (T &vec)  {
+
+    using VecType = typename std::remove_reference<T>::type;
+    using ValueType = typename VecType::value_type;
+
+    try  {
+        const auto      &rhs_vec = rhs.template get_column<ValueType>(col_name);
+        const size_type col_s = std::min(
+            { vec.size(), rhs_vec.size(), self_idx.size(), rhs_idx.size() });
+
+        for (size_type i = 0; i < col_s; ++i)
+            if (is_nan(vec[i]) && self_idx[i] == rhs_idx[i])
+                vec[i] = rhs_vec[i];
+    }
+    catch (const ColNotFound &)  {   }
 }
 
 } // namespace hmdf

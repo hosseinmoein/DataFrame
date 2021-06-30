@@ -580,6 +580,27 @@ struct copy_remove_functor_ : DataVec::template visitor_base<Ts ...>  {
 
 // ----------------------------------------------------------------------------
 
+template<typename DF, typename ... Ts>
+struct fill_missing_functor_ :
+    DataVec::template visitor_base<Ts ...>  {
+
+    inline fill_missing_functor_ (const IndexVecType &sidx,
+                                  const IndexVecType &ridx,
+                                  const DF &r,
+                                  const char *cname)
+        : self_idx(sidx), rhs_idx(ridx), rhs(r), col_name(cname)  {   }
+
+    const IndexVecType  &self_idx;;
+    const IndexVecType  &rhs_idx;;
+    const DF            &rhs;
+    const char          *col_name;
+
+    template<typename T>
+    void operator() (T &vec);
+};
+
+// ----------------------------------------------------------------------------
+
 // Local Variables:
 // mode:C++
 // tab-width:4

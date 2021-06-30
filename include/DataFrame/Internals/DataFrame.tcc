@@ -438,6 +438,25 @@ fill_missing(const std::array<const char *, N> col_names,
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
+template<typename DF, typename ... Ts>
+void DataFrame<I, H>::fill_missing (const DF &rhs)  {
+
+    const auto  &self_idx = get_index();
+    const auto  &rhs_idx = rhs.get_index();
+
+    for (auto col_citer : column_list_)  {
+        fill_missing_functor_<DF, Ts ...>   functor (
+            self_idx, rhs_idx, rhs, col_citer.first.c_str());
+
+        data_[col_citer.second].change(functor);
+    }
+
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
 template<typename T>
 void DataFrame<I, H>::
 drop_missing_rows_(T &vec,
@@ -484,8 +503,8 @@ drop_missing(drop_policy policy, size_type threshold)  {
     size_type                       thread_count = 0;
     const size_type                 data_size = data_.size();
 
-    map_missing_rows_functor_<Ts ...>   functor (indices_.size(),
-                                                 missing_row_map);
+    map_missing_rows_functor_<Ts ...>   functor (
+        indices_.size(), missing_row_map);
 
     for (size_type idx = 0; idx < data_size; ++idx)  {
         if (thread_count >= get_thread_level())
@@ -515,10 +534,8 @@ drop_missing(drop_policy policy, size_type threshold)  {
                        threshold,
                        data_size);
 
-    drop_missing_rows_functor_<Ts ...>  functor2 (missing_row_map,
-                                                  policy,
-                                                  threshold,
-                                                  data_.size());
+    drop_missing_rows_functor_<Ts ...>  functor2 (
+        missing_row_map, policy, threshold, data_.size());
 
     for (size_type idx = 0; idx < data_size; ++idx)  {
         if (thread_count >= get_thread_level())

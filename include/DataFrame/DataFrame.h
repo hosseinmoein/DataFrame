@@ -707,6 +707,30 @@ public:  // Data manipulation
                  const std::array<T, N> values = { },
                  int limit = -1);
 
+    // It fills the missing values in all columns in self by investigating the
+    // rhs DataFrame. It attempts to find columns with the same name and type
+    // in rhs. If there are such columns in rhs, it fills the missing values
+    // in the corresponding columns in self that also have the same index value.
+    //
+    // NOTE: This means that self and rhs must be aligned/ordered the same way
+    //       for all common columns including index column. Otherwise, the
+    //       result is either nonsense (or not applied, if index column is in a
+    //       different order).
+    // NOTE: Self and rhs must have the same type index. The == operator must
+    //       be well defined on the index type
+    // NOTE: This method does not extend any of the columns in self. It just
+    //       fills the holes, if data is present in rhs.
+    //
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // rhs:
+    //   DataFrame to be used to find the missing values in self
+    //
+    template<typename DF, typename ... Ts>
+    void
+    fill_missing(const DF &rhs);
+
     // It removes a row if any or all or some of the columns are NaN, based
     // on drop policy
     //
@@ -726,9 +750,9 @@ public:  // Data manipulation
     // limit. If limit is omitted, all values will be replaced.
     // It returns number of items replaced.
     //
-    // T:
-    //   Type on column col_name. If this is index it would be the same as
-    //   IndexType.
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
     // N:
     //   Size of old_values and new_values arrays
     // col_name:

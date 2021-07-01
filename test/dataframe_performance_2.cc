@@ -33,35 +33,42 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 using namespace hmdf;
 
-typedef StdDataFrame<time_t> MyDataFrame;
+typedef StdDataFrame<unsigned int> MyDataFrame;
 
 // -----------------------------------------------------------------------------
 
 int main(int argc, char *argv[]) {
 
+    std::cout << "Starting ... " << time(nullptr) << std::endl;
+
     MyDataFrame df;
-    auto        index_vec =
-        MyDataFrame::gen_datetime_index("01/01/1985", "08/15/2019", time_frequency::secondly, 1);
+    auto        index_vec = std::move(MyDataFrame::gen_sequence_index(0, 1100000000));
     const auto  index_sz = index_vec.size();
 
+    RandGenParams<double>   p;
+
+    p.mean = 0;
+    p.std = 1;
+    p.s = 1;
+    p.lambda = 1;
     df.load_data(std::move(index_vec),
-                 std::make_pair("normal", gen_normal_dist<double>(index_sz)),
-                 std::make_pair("log_normal", gen_lognormal_dist<double>(index_sz)),
-                 std::make_pair("exponential", gen_exponential_dist<double>(index_sz)));
+                 std::make_pair("normal", gen_normal_dist<double>(index_sz, p)),
+                 std::make_pair("log_normal", gen_lognormal_dist<double>(index_sz, p)),
+                 std::make_pair("exponential", gen_exponential_dist<double>(index_sz, p)));
 
-    std::cout << "All memory allocations are done. Calculating means ..." << std::endl;
+    std::cout << "All memory allocations are done. Calculating means ... " << time(nullptr)<< std::endl;
 
-    ewm_v<double, time_t>   n_mv(exponential_decay_spec::span, 3, true);
-    ewm_v<double, time_t>   ln_mv(exponential_decay_spec::span, 3, true);
-    ewm_v<double, time_t>   e_mv(exponential_decay_spec::span, 3, true);
+    ewm_v<double, unsigned int> n_mv(exponential_decay_spec::span, 3, true);
+    ewm_v<double, unsigned int> ln_mv(exponential_decay_spec::span, 3, true);
+    ewm_v<double, unsigned int> e_mv(exponential_decay_spec::span, 3, true);
+    auto                        fut1 = df.single_act_visit_async<double>("normal", n_mv);
+    auto                        fut2 = df.single_act_visit_async<double>("log_normal", ln_mv);
+    auto                        fut3 = df.single_act_visit_async<double>("exponential", e_mv);
 
-    auto    fut1 = df.single_act_visit_async<double>("normal", n_mv);
-    auto    fut2 = df.single_act_visit_async<double>("log_normal", ln_mv);
-    auto    fut3 = df.single_act_visit_async<double>("exponential", e_mv);
-
-    std::cout << fut1.get().get_result()[100] << ", "
-              << fut2.get().get_result()[100] << ", "
-              << fut3.get().get_result()[100] << std::endl;
+    std::cout << fut1.get().get_result()[100000] << ", "
+              << fut2.get().get_result()[100000] << ", "
+              << fut3.get().get_result()[100000] << std::endl;
+    std::cout << time(nullptr) << " ... Done" << std::endl;
     return (0);
 }
 

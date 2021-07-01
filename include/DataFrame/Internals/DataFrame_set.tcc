@@ -875,7 +875,7 @@ remove_duplicates (const char *name,
 
     using data_tuple = std::tuple<const T &, const IndexType &>;
     using count_vec = std::vector<size_type>;
-    using data_map = std::unordered_map<data_tuple, count_vec>;
+    using data_map = std::unordered_map<data_tuple, count_vec, TupleHash>;
 
     const ColumnVecType<T>  &vec = get_column<T>(name);
     const auto              &index = get_index();
@@ -911,7 +911,7 @@ remove_duplicates (const char *name1,
 
     using data_tuple = std::tuple<const T1 &, const T2 &, const IndexType &>;
     using count_vec = std::vector<size_type>;
-    using data_map = std::unordered_map<data_tuple, count_vec>;
+    using data_map = std::unordered_map<data_tuple, count_vec, TupleHash>;
 
     const ColumnVecType<T1> &vec1 = get_column<T1>(name1);
     const ColumnVecType<T2> &vec2 = get_column<T2>(name2);
@@ -951,7 +951,7 @@ remove_duplicates (const char *name1,
     using data_tuple = std::tuple<const T1 &, const T2 &, const T3 &,
                                   const IndexType &>;
     using count_vec = std::vector<size_type>;
-    using data_map = std::unordered_map<data_tuple, count_vec>;
+    using data_map = std::unordered_map<data_tuple, count_vec, TupleHash>;
 
     const ColumnVecType<T1> &vec1 = get_column<T1>(name1);
     const ColumnVecType<T2> &vec2 = get_column<T2>(name2);
@@ -995,7 +995,7 @@ remove_duplicates (const char *name1,
                                   const T3 &, const T4 &,
                                   const IndexType &>;
     using count_vec = std::vector<size_type>;
-    using data_map = std::unordered_map<data_tuple, count_vec>;
+    using data_map = std::unordered_map<data_tuple, count_vec, TupleHash>;
 
     const ColumnVecType<T1> &vec1 = get_column<T1>(name1);
     const ColumnVecType<T2> &vec2 = get_column<T2>(name2);
@@ -1043,7 +1043,7 @@ remove_duplicates (const char *name1,
                                   const T3 &, const T4 &, const T5 &,
                                   const IndexType &>;
     using count_vec = std::vector<size_type>;
-    using data_map = std::unordered_map<data_tuple, count_vec>;
+    using data_map = std::unordered_map<data_tuple, count_vec, TupleHash>;
 
     const ColumnVecType<T1> &vec1 = get_column<T1>(name1);
     const ColumnVecType<T2> &vec2 = get_column<T2>(name2);
@@ -1096,7 +1096,7 @@ remove_duplicates (const char *name1,
                                   const T5 &, const T6 &,
                                   const IndexType &>;
     using count_vec = std::vector<size_type>;
-    using data_map = std::unordered_map<data_tuple, count_vec>;
+    using data_map = std::unordered_map<data_tuple, count_vec, TupleHash>;
 
     const ColumnVecType<T1> &vec1 = get_column<T1>(name1);
     const ColumnVecType<T2> &vec2 = get_column<T2>(name2);

@@ -1075,17 +1075,14 @@ struct  _hash_value_impl_<Tuple, 0>  {
     }
 };
 
-} // namespace hmdf
+struct  TupleHash  {
 
-namespace std  {
-template<typename ... TT>
-struct  hash<std::tuple<TT ...>>  {
+    template<typename ... TT>
+    inline std::size_t operator()(std::tuple<TT ...> const &input) const  {
 
-    inline size_t operator()(std::tuple<TT ...> const &in_tuple) const  {
+        std::size_t seed = 0;
 
-        size_t  seed = 0;
-
-        hmdf::_hash_value_impl_<std::tuple<TT ...>>::apply(seed, in_tuple);
+        _hash_value_impl_<std::tuple<TT ...>>::apply(seed, input);
         return (seed);
     }
 };
@@ -1105,7 +1102,7 @@ inline static O _remove_copy_if_(I first, I last, O d_first, PRE predicate)  {
     return d_first;
 }
 
-} // namespace std
+} // namespace hmdf
 
 // ----------------------------------------------------------------------------
 

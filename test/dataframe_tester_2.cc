@@ -3403,6 +3403,65 @@ static void test_AvgDirMovIdxVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_HoltWinterChannelVisitor()  {
+
+    std::cout << "\nTesting HoltWinterChannelVisitor{  } ..." << std::endl;
+
+    typedef StdDataFrame<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("data/SHORT_IBM.csv", io_format::csv2);
+
+        hwc_v<double, std::string>  hwc;
+
+        df.single_act_visit<double>("IBM_Close", hwc);
+
+        assert(hwc.get_result().size() == 1721);
+        assert(std::abs(hwc.get_result()[0] - 185.53) < 0.001);
+        assert(std::abs(hwc.get_result()[5] - 187.349) < 0.001);
+        assert(std::abs(hwc.get_result()[14] - 186.534) < 0.001);
+        assert(std::abs(hwc.get_result()[25] - 171.785) < 0.001);
+        assert(std::abs(hwc.get_result()[1720] - 111.435) < 0.001);
+        assert(std::abs(hwc.get_result()[1712] - 126.602) < 0.001);
+        assert(std::abs(hwc.get_result()[1707] - 126.443) < 0.001);
+
+        assert(hwc.get_upper_band().size() == 1721);
+        assert(std::abs(hwc.get_upper_band()[0] - 185.53) < 0.001);
+        assert(std::abs(hwc.get_upper_band()[5] - 188.322) < 0.001);
+        assert(std::abs(hwc.get_upper_band()[14] - 187.683) < 0.001);
+        assert(std::abs(hwc.get_upper_band()[25] - 174.518) < 0.001);
+        assert(std::abs(hwc.get_upper_band()[1720] - 117.324) < 0.001);
+        assert(std::abs(hwc.get_upper_band()[1712] - 129.354) < 0.001);
+        assert(std::abs(hwc.get_upper_band()[1707] - 129.713) < 0.001);
+
+        assert(hwc.get_lower_band().size() == 1721);
+        assert(std::abs(hwc.get_lower_band()[0] - 185.53) < 0.001);
+        assert(std::abs(hwc.get_lower_band()[5] - 186.375) < 0.001);
+        assert(std::abs(hwc.get_lower_band()[14] - 185.386) < 0.001);
+        assert(std::abs(hwc.get_lower_band()[25] - 169.053) < 0.001);
+        assert(std::abs(hwc.get_lower_band()[1720] - 105.545) < 0.001);
+        assert(std::abs(hwc.get_lower_band()[1712] - 123.851) < 0.001);
+        assert(std::abs(hwc.get_lower_band()[1707] - 123.173) < 0.001);
+
+        assert(hwc.get_pct_diff().size() == 1721);
+        assert(std::isnan(hwc.get_pct_diff()[0]));
+        assert(std::isnan(hwc.get_pct_diff()[2]));
+        assert(std::abs(hwc.get_pct_diff()[5] - 0.516164) < 0.00001);
+        assert(std::abs(hwc.get_pct_diff()[14] - -1.15602) < 0.00001);
+        assert(std::abs(hwc.get_pct_diff()[25] - 1.50004) < 0.00001);
+        assert(std::abs(hwc.get_pct_diff()[1720] - 0.51913) < 0.00001);
+        assert(std::abs(hwc.get_pct_diff()[1712] - -1.17764) < 0.00001);
+        assert(std::abs(hwc.get_pct_diff()[1707] - 0.294638) < 0.00001);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int argc, char *argv[]) {
 
     test_get_reindexed();
@@ -3469,6 +3528,7 @@ int main(int argc, char *argv[]) {
     test_AbsVisitor();
     test_PivotPointSRVisitor();
     test_AvgDirMovIdxVisitor();
+    test_HoltWinterChannelVisitor();
 
     return (0);
 }

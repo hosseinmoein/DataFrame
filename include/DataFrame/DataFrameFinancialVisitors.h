@@ -3136,14 +3136,6 @@ private:
 template<typename T, typename I = unsigned long>
 using ppsr_v = PivotPointSRVisitor<T, I>;
 
-
-
-
-
-
-
-
-
 // ----------------------------------------------------------------------------
 
 // Average Directional Movement Index (ADX)
@@ -3242,6 +3234,112 @@ private:
 
 template<typename T, typename I = unsigned long>
 using adx_v = AvgDirMovIdxVisitor<T, I>;
+
+// ----------------------------------------------------------------------------
+
+// Holt-Winter Channel (HWC) indicator
+//
+template<typename T, typename I = unsigned long>
+struct  HoltWinterChannelVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &close_begin,
+                const H &close_end)  {
+
+        const size_type col_s = std::distance(close_begin, close_end);
+
+        assert(col_s > 3);
+
+        result_type result (col_s, std::numeric_limits<T>::quiet_NaN());
+        result_type upper (col_s, std::numeric_limits<T>::quiet_NaN());
+        result_type lower (col_s, std::numeric_limits<T>::quiet_NaN());
+        result_type pct_diff (col_s, std::numeric_limits<T>::quiet_NaN());
+        value_type  last_a = 0;
+        value_type  last_v = 0;
+        value_type  last_var = 0;
+        value_type  last_f = *close_begin;
+        value_type  last_price = last_f;
+        value_type  last_result = last_f;
+
+        for (size_type i = 0; i < col_s; ++i)  {
+            const value_type    val = *(close_begin + i);
+            const value_type    f =
+                (T(1) - na_) * (last_f + last_v + T(0.5) * last_a) + na_ * val;
+            const value_type    v =
+                (T(1) - nb_) * (last_v + last_a) + nb_ * (f - last_f);
+            const value_type    a =
+                (T(1) - nc_) * last_a + nc_ * (v - last_v);
+            const value_type    var =
+                (T(1) - nd_) * last_var +
+                nd_ * (last_price - last_result) * (last_price - last_result);
+            const value_type    stddev = std::sqrt(last_var);
+
+            last_result = result[i] = f + v + T(0.5) * a;
+            upper[i] = result[i] + stddev;
+            lower[i] = result[i] - stddev;
+
+            const value_type    diff = upper[i] - lower[i];
+
+            if (diff > 0)
+                pct_diff[i] = (val - lower[i]) / diff;
+
+            last_price = val;
+            last_a = a;
+            last_f = f;
+            last_v = v;
+            last_var = var;
+        }
+
+        result_.swap(result);
+        upper_band_.swap(upper);
+        lower_band_.swap(lower);
+        pct_diff_.swap(pct_diff);
+    }
+
+    inline void pre ()  {
+
+        result_.clear();
+        upper_band_.clear();
+        lower_band_.clear();
+        pct_diff_.clear();
+    }
+    inline void post ()  { }
+
+    DEFINE_RESULT
+    const result_type &get_upper_band() const  { return (upper_band_); }
+    result_type &get_upper_band()  { return (upper_band_); }
+    const result_type &get_lower_band() const  { return (lower_band_); }
+    result_type &get_lower_band()  { return (lower_band_); }
+    const result_type &get_pct_diff() const  { return (pct_diff_); }
+    result_type &get_pct_diff()  { return (pct_diff_); }
+
+    explicit
+    HoltWinterChannelVisitor(value_type na = T(0.2),
+                             value_type nb = T(0.1),
+                             value_type nc = T(0.1),
+                             value_type nd = T(0.1))
+        : na_(na), nb_(nb), nc_(nc), nd_(nd)  {   }
+
+private:
+
+    const value_type    na_;
+    const value_type    nb_;
+    const value_type    nc_;
+    const value_type    nd_;
+    result_type         result_ { };
+    result_type         upper_band_ { };
+    result_type         lower_band_ { };
+    result_type         pct_diff_ { };
+};
+
+template<typename T, typename I = unsigned long>
+using hwc_v = HoltWinterChannelVisitor<T, I>;
+
 
 } // namespace hmdf
 

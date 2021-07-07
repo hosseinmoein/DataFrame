@@ -26,6 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include <DataFrame/DataFrame.h>
 #include <DataFrame/DataFrameFinancialVisitors.h>
+#include <DataFrame/DataFrameMLVisitors.h>
 #include <DataFrame/DataFrameStatsVisitors.h>
 #include <DataFrame/DataFrameTransformVisitors.h>
 #include <DataFrame/RandGen.h>
@@ -3521,6 +3522,61 @@ static void test_HeikinAshiCndlVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_FastFourierTransVisitor()  {
+
+    std::cout << "\nTesting FastFourierTransVisitor{  } ..." << std::endl;
+
+    std::vector<unsigned long>  idxvec =
+        { 1UL, 2UL, 3UL, 10UL, 5UL, 7UL, 8UL, 12UL };
+    std::vector<double>         dblvec = { 1, 1, 1, 1, 0, 0, 0, 0 };
+    std::vector<std::string>    strvec =
+        { "11", "22", "33", "44", "55", "66", "-77", "88" };
+
+    MyDataFrame df;
+
+    df.load_data(std::move(idxvec),
+                 std::make_pair("str_col", strvec),
+                 std::make_pair("dbl_col", dblvec));
+
+    fft_v<double>   fft;
+
+    df.single_act_visit<double>("dbl_col", fft);
+    df.load_column("FFT int col", fft.get_result());
+
+    for (auto citer : fft.get_result())
+        std::cout << citer << " | ";
+    std::cout << std::endl;
+
+    fft_v<std::complex<double>> i_fft (true);
+
+    df.single_act_visit<std::complex<double>>("FFT int col", i_fft);
+
+    for (auto citer : i_fft.get_result())
+        std::cout << citer << " | ";
+    std::cout << std::endl;
+
+    typedef StdDataFrame<std::string> StrDataFrame;
+
+    try  {
+        StrDataFrame    df2;
+
+        df2.read("data/SHORT_IBM.csv", io_format::csv2);
+
+        fft_v<double, std::string>  fft2;
+
+        df2.single_act_visit<double>("IBM_Close", fft2);
+
+        for (auto citer : fft2.get_magnitude())
+            std::cout << citer << ", ";
+        std::cout << std::endl;
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int argc, char *argv[]) {
 
     test_get_reindexed();
@@ -3589,6 +3645,7 @@ int main(int argc, char *argv[]) {
     test_AvgDirMovIdxVisitor();
     test_HoltWinterChannelVisitor();
     test_HeikinAshiCndlVisitor();
+    test_FastFourierTransVisitor();
 
     return (0);
 }

@@ -32,9 +32,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/Vectors/HeteroVector.h>
 
 #include <cmath>
+#include <complex>
 #include <limits>
 #include <stdexcept>
 #include <tuple>
+#include <type_traits>
 
 // ----------------------------------------------------------------------------
 
@@ -472,6 +474,15 @@ struct type_declare<HeteroView, U>  { using type = VectorView<U>; };
 
 template<typename U>
 struct type_declare<HeteroPtrView, U>  { using type = VectorPtrView<U>; };
+
+// ----------------------------------------------------------------------------
+
+template<typename T> struct is_complex  {
+    inline static const bool    value = false;
+};
+template<typename T> struct is_complex<std::complex<T>>  {
+    inline static const bool    value = true;
+};
 
 // ----------------------------------------------------------------------------
 

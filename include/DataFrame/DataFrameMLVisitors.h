@@ -30,10 +30,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 
 #include <DataFrame/DataFrameStatsVisitors.h>
+#include <DataFrame/DataFrameTypes.h>
 #include <DataFrame/Vectors/VectorPtrView.h>
 
+#include <algorithm>
+#include <complex>
 #include <functional>
 #include <iterator>
+#include <type_traits>
 
 // ----------------------------------------------------------------------------
 
@@ -387,6 +391,179 @@ public:
         double damping_factor = 0.9)
         : iter_num_(num_of_iter), dfunc_(f), dfactor_(damping_factor)  {   }
 };
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename I = unsigned long>
+struct FastFourierTransVisitor {
+
+public:
+
+    DEFINE_VISIT_BASIC_TYPES
+
+    using result_type =
+        typename std::conditional<is_complex<T>::value,
+                                  std::vector<T>,
+                                  std::vector<std::complex<T>>>::type;
+    using numeric_type = double;
+
+private:
+
+    using cplx =
+        typename std::conditional<is_complex<T>::value,
+                                  T,
+                                  std::complex<T>>::type;
+
+    inline void fft_(result_type &data, size_type data_s)  {
+
+        // Discrete Fourier Transform
+        //
+        const numeric_type  theta_t = M_PI / numeric_type(data_s);
+        cplx                phi_t = cplx(std::cos(theta_t), -std::sin(theta_t));
+        size_type           k = data_s;
+
+        while (k > 1)  {
+            const size_type n = k;
+
+            k >>= 1;
+            phi_t = phi_t * phi_t;
+
+            cplx    tt = numeric_type(1);
+
+            for (size_type l = 0; l < k; ++l)  {
+                for (size_type a = l; a < data_s; a += n)  {
+                    const size_type b = a + k;
+                    const cplx      t = data[a] - data[b];
+
+                    data[a] += data[b];
+                    data[b] = t * tt;
+                }
+                tt *= phi_t;
+            }
+        }
+
+        // Decimate
+        //
+        const size_type m = static_cast<size_type>(std::log2(data_s));
+
+        for (size_type a = 0; a < data_s; ++a)  {
+            size_type   b = a;
+
+            // Reverse bits
+            //
+            b = (((b & 0xAAAAAAAA) >> 1) | ((b & 0x55555555) << 1));
+            b = (((b & 0xCCCCCCCC) >> 2) | ((b & 0x33333333) << 2));
+            b = (((b & 0xF0F0F0F0) >> 4) | ((b & 0x0F0F0F0F) << 4));
+            b = (((b & 0xFF00FF00) >> 8) | ((b & 0x00FF00FF) << 8));
+            b = ((b >> 16) | (b << 16)) >> (32 - m);
+
+            if (b > a)  std::swap(data[a], data[b]);
+        }
+    }
+
+    inline void ifft_(result_type &data, size_type data_s)  {
+
+        // Conjugate the complex numbers
+        //
+        for (auto &iter : data)  iter = std::conj(iter);
+
+        // Forward fft
+        //
+        fft_ (data, data_s);
+
+        // Conjugate the complex numbers again
+        //
+        for (auto &iter : data)  iter = std::conj(iter);
+
+        // Scale the numbers
+        //
+        for (auto &iter : data)  iter = iter / numeric_type(data_s);
+    }
+
+public:
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &column_begin,
+                const H &column_end)  {
+
+        const size_type col_s = std::distance(column_begin, column_end);
+        result_type     result(col_s);
+
+        if constexpr (is_complex<T>::value)  {
+            std::transform(column_begin, column_end,
+                           result.begin(),
+                           [] (T v) { return (v); });
+        }
+        else  {
+            std::transform(column_begin, column_end,
+                           result.begin(),
+                           [] (T v) { return (std::complex<T>(v, 0)); });
+        }
+
+        if (! inverse_)  fft_(result, col_s);
+        else  ifft_(result, col_s);
+
+        result_.swap(result);
+    }
+
+    inline void pre ()  {
+
+        result_.clear();
+        magnitude_.clear();
+        angle_.clear();
+    }
+    inline void post ()  {  }
+
+    DEFINE_RESULT
+    inline const std::vector<numeric_type> &
+    get_magnitude() const  {
+
+        return (const_cast<FastFourierTransVisitor<T, I> *>
+                    (this)->get_magnitude());
+    }
+    inline std::vector<numeric_type> &
+    get_magnitude()  {
+
+        if (magnitude_.empty())  {
+            magnitude_.reserve(result_.size());
+            for (const auto &citer : result_)
+                magnitude_.push_back(std::sqrt(std::norm(citer)));
+        }
+        return (magnitude_);
+    }
+    inline const std::vector<numeric_type> &
+    get_angle() const  {
+
+        return (const_cast<FastFourierTransVisitor<T, I> *>
+                    (this)->get_angle());
+    }
+    inline std::vector<numeric_type> &
+    get_angle()  {
+
+        if (angle_.empty())  {
+            angle_.reserve(result_.size());
+            for (const auto &citer : result_)
+                angle_.push_back(std::arg(citer));
+        }
+        return (angle_);
+    }
+
+    explicit
+    FastFourierTransVisitor(bool inverse = false) : inverse_(inverse)  {   }
+
+private:
+
+    const bool                  inverse_;
+    result_type                 result_ {  };
+    std::vector<numeric_type>   magnitude_ {  };
+    std::vector<numeric_type>   angle_ {  };
+};
+
+template<typename T, typename I = unsigned long>
+using fft_v = FastFourierTransVisitor<T, I>;
 
 } // namespace hmdf
 

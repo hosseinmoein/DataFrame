@@ -15,6 +15,7 @@ SRCS = Vectors/HeteroVector.cc \
        ../test/dataframe_tester_2.cc \
        ../test/dataframe_thread_safety.cc \
        ../test/dataframe_performance.cc \
+       ../test/dataframe_performance_2.cc \
        Vectors/HeteroView.cc \
        Vectors/HeteroPtrView.cc \
        ../test/vectors_tester.cc \
@@ -67,6 +68,7 @@ TARGETS += $(TARGET_LIB) \
            $(LOCAL_BIN_DIR)/dataframe_tester_2 \
            $(LOCAL_BIN_DIR)/dataframe_thread_safety \
            $(LOCAL_BIN_DIR)/dataframe_performance \
+           $(LOCAL_BIN_DIR)/dataframe_performance_2 \
            $(LOCAL_BIN_DIR)/vectors_tester \
            $(LOCAL_BIN_DIR)/vector_ptr_view_tester \
            $(LOCAL_BIN_DIR)/date_time_tester \
@@ -138,6 +140,10 @@ DATAFRAME_PERFORMANCE_OBJ = $(LOCAL_OBJ_DIR)/dataframe_performance.o
 $(LOCAL_BIN_DIR)/dataframe_performance: $(TARGET_LIB) $(DATAFRAME_PERFORMANCE_OBJ)
 	$(CXX) -o $@ $(DATAFRAME_PERFORMANCE_OBJ) $(LIBS)
 
+DATAFRAME_PERFORMANCE_2_OBJ = $(LOCAL_OBJ_DIR)/dataframe_performance_2.o
+$(LOCAL_BIN_DIR)/dataframe_performance_2: $(TARGET_LIB) $(DATAFRAME_PERFORMANCE_2_OBJ)
+	$(CXX) -o $@ $(DATAFRAME_PERFORMANCE_2_OBJ) $(LIBS)
+
 VECTORS_TESTER_OBJ = $(LOCAL_OBJ_DIR)/vectors_tester.o
 $(LOCAL_BIN_DIR)/vectors_tester: $(TARGET_LIB) $(VECTORS_TESTER_OBJ)
 	$(CXX) -o $@ $(VECTORS_TESTER_OBJ) $(LIBS)
@@ -163,8 +169,8 @@ clean:
 	rm -f $(LIB_OBJS) $(TARGETS) $(DATAFRAME_TESTER_OBJ) $(VECTORS_TESTER_OBJ) \
           $(DATE_TIME_TESTER_OBJ) $(VECTOR_PTR_VIEW_TESTER_OBJ) \
           $(GEN_RAND_TESTER_OBJ) \
-          $(DATAFRAME_PERFORMACE_OBJ) $(DATAFRAME_TESTER_OBJ_2) \
-          $(DATAFRAME_THREAD_SAFTY_OBJ)
+          $(DATAFRAME_PERFORMANCE_OBJ) $(DATAFRAME_TESTER_OBJ_2) \
+          $(DATAFRAME_PERFORMANCE_2_OBJ) $(DATAFRAME_THREAD_SAFTY_OBJ)
 
 clobber:
 	rm -f $(LIB_OBJS) $(TARGETS) $(DATAFRAME_TESTER_OBJ) $(VECTORS_TESTER_OBJ) \

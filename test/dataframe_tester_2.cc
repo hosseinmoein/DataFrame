@@ -3566,9 +3566,9 @@ static void test_FastFourierTransVisitor()  {
 
         df2.single_act_visit<double>("IBM_Close", fft2);
 
-        for (auto citer : fft2.get_magnitude())
-            std::cout << citer << ", ";
-        std::cout << std::endl;
+        // for (auto citer : fft2.get_magnitude())
+        //     std::cout << citer << ", ";
+        // std::cout << std::endl;
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;

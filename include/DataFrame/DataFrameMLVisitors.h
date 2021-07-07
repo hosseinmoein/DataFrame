@@ -433,10 +433,13 @@ private:
             for (size_type l = 0; l < k; ++l)  {
                 for (size_type a = l; a < data_s; a += n)  {
                     const size_type b = a + k;
-                    const cplx      t = data[a] - data[b];
 
-                    data[a] += data[b];
-                    data[b] = t * tt;
+                    if (b < data_s)  {
+                        const cplx  t = data[a] - data[b];
+
+                        data[a] += data[b];
+                        data[b] = t * tt;
+                    }
                 }
                 tt *= phi_t;
             }
@@ -457,7 +460,15 @@ private:
             b = (((b & 0xFF00FF00) >> 8) | ((b & 0x00FF00FF) << 8));
             b = ((b >> 16) | (b << 16)) >> (32 - m);
 
-            if (b > a)  std::swap(data[a], data[b]);
+            if (b > a && b < data_s)  std::swap(data[a], data[b]);
+        }
+
+        // Normalize
+        //
+        if (normalize_)  {
+            const cplx  f = numeric_type(1) / std::sqrt(numeric_type(data_s));
+
+            for (auto &iter : data)  iter *= f;
         }
     }
 
@@ -477,7 +488,7 @@ private:
 
         // Scale the numbers
         //
-        for (auto &iter : data)  iter = iter / numeric_type(data_s);
+        for (auto &iter : data)  iter /= numeric_type(data_s);
     }
 
 public:
@@ -552,11 +563,13 @@ public:
     }
 
     explicit
-    FastFourierTransVisitor(bool inverse = false) : inverse_(inverse)  {   }
+    FastFourierTransVisitor(bool inverse = false, bool normalize = false)
+        : inverse_(inverse), normalize_(normalize)  {   }
 
 private:
 
     const bool                  inverse_;
+    const bool                  normalize_;
     result_type                 result_ {  };
     std::vector<numeric_type>   magnitude_ {  };
     std::vector<numeric_type>   angle_ {  };

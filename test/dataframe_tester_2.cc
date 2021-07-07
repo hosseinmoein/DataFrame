@@ -3462,6 +3462,65 @@ static void test_HoltWinterChannelVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_HeikinAshiCndlVisitor()  {
+
+    std::cout << "\nTesting HeikinAshiCndlVisitor{  } ..." << std::endl;
+
+    typedef StdDataFrame<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("data/SHORT_IBM.csv", io_format::csv2);
+
+        ha_cdl_v<double, std::string>  ha;
+
+        df.single_act_visit<double, double, double, double>
+            ("IBM_Low", "IBM_High", "IBM_Open", "IBM_Close", ha);
+
+        assert(ha.get_result().size() == 1721);
+        assert(std::abs(ha.get_result()[0] - 186.335) < 0.001);
+        assert(std::abs(ha.get_result()[10] - 188.02) < 0.001);
+        assert(std::abs(ha.get_result()[14] - 182.147) < 0.001);
+        assert(std::abs(ha.get_result()[25] - 176.38) < 0.001);
+        assert(std::abs(ha.get_result()[1720] - 109.778) < 0.001);
+        assert(std::abs(ha.get_result()[1712] - 118.54) < 0.001);
+        assert(std::abs(ha.get_result()[1707] - 125.82) < 0.001);
+
+        assert(ha.get_open().size() == 1721);
+        assert(std::abs(ha.get_open()[0] - 186.37) < 0.001);
+        assert(std::abs(ha.get_open()[10] - 186.432) < 0.001);
+        assert(std::abs(ha.get_open()[14] - 185.131) < 0.001);
+        assert(std::abs(ha.get_open()[25] - 174.113) < 0.001);
+        assert(std::abs(ha.get_open()[1720] - 109.256) < 0.001);
+        assert(std::abs(ha.get_open()[1712] - 125.839) < 0.001);
+        assert(std::abs(ha.get_open()[1707] - 128.034) < 0.001);
+
+        assert(ha.get_high().size() == 1721);
+        assert(std::abs(ha.get_high()[0] - 187.4) < 0.001);
+        assert(std::abs(ha.get_high()[10] - 188.99) < 0.01);
+        assert(std::abs(ha.get_high()[14] - 185.131) < 0.001);
+        assert(std::abs(ha.get_high()[25] - 177.56) < 0.001);
+        assert(std::abs(ha.get_high()[1720] - 111.8) < 0.001);
+        assert(std::abs(ha.get_high()[1712] - 125.839) < 0.001);
+        assert(std::abs(ha.get_high()[1707] - 128.034) < 0.001);
+
+        assert(ha.get_low().size() == 1721);
+        assert(std::abs(ha.get_low()[0] - 185.2) < 0.001);
+        assert(std::abs(ha.get_low()[10] - 186.432) < 0.001);
+        assert(std::abs(ha.get_low()[14] - 180.71) < 0.001);
+        assert(std::abs(ha.get_low()[25] - 174.113) < 0.001);
+        assert(std::abs(ha.get_low()[1720] - 107.75) < 0.001);
+        assert(std::abs(ha.get_low()[1712] - 116.84) < 0.001);
+        assert(std::abs(ha.get_low()[1707] - 124.46) < 0.001);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int argc, char *argv[]) {
 
     test_get_reindexed();
@@ -3529,6 +3588,7 @@ int main(int argc, char *argv[]) {
     test_PivotPointSRVisitor();
     test_AvgDirMovIdxVisitor();
     test_HoltWinterChannelVisitor();
+    test_HeikinAshiCndlVisitor();
 
     return (0);
 }

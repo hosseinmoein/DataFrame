@@ -3340,6 +3340,90 @@ private:
 template<typename T, typename I = unsigned long>
 using hwc_v = HoltWinterChannelVisitor<T, I>;
 
+// ----------------------------------------------------------------------------
+
+template<typename T,
+         typename I = unsigned long,
+         typename =
+             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+struct HeikinAshiCndlVisitor {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &low_begin,
+                const H &low_end,
+                const H &high_begin,
+                const H &high_end,
+                const H &open_begin,
+                const H &open_end,
+                const H &close_begin,
+                const H &close_end)  {
+
+        const size_type col_s = std::distance(close_begin, close_end);
+
+        assert((col_s == std::distance(low_begin, low_end)));
+        assert((col_s == std::distance(open_begin, open_end)));
+        assert((col_s == std::distance(high_begin, high_end)));
+
+        result_type result (col_s, std::numeric_limits<T>::quiet_NaN());
+        result_type open (col_s, std::numeric_limits<T>::quiet_NaN());
+        result_type high (col_s, std::numeric_limits<T>::quiet_NaN());
+        result_type low (col_s, std::numeric_limits<T>::quiet_NaN());
+
+        result[0] =
+            T(0.25) * (*open_begin + *high_begin + *low_begin + *close_begin);
+        high[0] = *high_begin;
+        low[0] = *low_begin;
+        open[0] = T(0.5) * (*open_begin + *close_begin);
+        for (size_type i = 1; i < col_s; ++i)  {
+            const value_type    hval = *(high_begin + i);
+            const value_type    lval = *(low_begin + i);
+
+            result[i] =
+                T(0.25) *
+                (*(open_begin + i) + hval + lval + *(close_begin + i));
+            open[i] = T(0.5) * (open[i - 1] + result[i - 1]);
+            high[i] = std::max({ open[i], hval, result[i] });
+            low[i] = std::min({ open[i], lval, result[i] });
+        }
+
+        result_.swap(result);
+        open_.swap(open);
+        high_.swap(high);
+        low_.swap(low);
+    }
+
+    inline void pre ()  {
+
+        result_.clear();
+        open_.clear();
+        high_.clear();
+        low_.clear();
+    }
+    inline void post ()  { }
+
+    DEFINE_RESULT
+    const result_type &get_open() const  { return (open_); }
+    result_type &get_open()  { return (open_); }
+    const result_type &get_high() const  { return (high_); }
+    result_type &get_high()  { return (high_); }
+    const result_type &get_low() const  { return (low_); }
+    result_type &get_low()  { return (low_); }
+
+private:
+
+    result_type result_ {  };  // Close
+    result_type open_ {  };
+    result_type high_ {  };
+    result_type low_ {  };
+};
+
+template<typename T, typename I = unsigned long>
+using ha_cdl_v = HeikinAshiCndlVisitor<T, I>;
 
 } // namespace hmdf
 

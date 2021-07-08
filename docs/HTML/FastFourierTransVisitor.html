@@ -1,0 +1,156 @@
+<!--
+Copyright (c) 2019-2022, Hossein Moein
+All rights reserved.
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+* Redistributions of source code must retain the above copyright
+  notice, this list of conditions and the following disclaimer.
+* Redistributions in binary form must reproduce the above copyright
+  notice, this list of conditions and the following disclaimer in the
+  documentation and/or other materials provided with the distribution.
+* Neither the name of Hossein Moein and/or the DataFrame nor the
+  names of its contributors may be used to endorse or promote products
+  derived from this software without specific prior written permission.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL Hossein Moein BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+<!DOCTYPE html>
+<html>
+<body>
+  <table align="center" border="1">
+
+    <tr bgcolor="lightblue">
+      <th>Signature</th> <th>Description</th> <th>Parameters</th>
+    </tr>
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        <PRE><B>#include &lt;DataFrame/DataFrameFinancialVisitors.h&gt;
+
+template&lt;typename T, typename I = unsigned long&gt;
+struct FastFourierTransVisitor;
+
+// -------------------------------------
+
+template&lt;typename T, typename I = unsigned long&gt;
+using fft_v = FastFourierTransVisitor&lt;T, I&gt;;
+        </B></PRE></font>
+      </td>
+      <td>
+        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
+        This visitor calculates Fast Fourier Transform on a column. If column length is a power of 2, the algorithm will be more efficient in terms of time and memory.
+        The result is a vector of complex values with same number of items as the given column.<BR>
+        <I>get_result()</I> returns the FFT vector in complex values<BR>
+        <I>get_magnitude()</I> returns vector of magnitudes<BR>
+        <I>get_angle()</I> returns vector of phase angles<BR><BR>
+        A fast Fourier transform (FFT) is an algorithm that computes the discrete Fourier transform (DFT) of a sequence, or its inverse (IDFT). Fourier analysis converts a signal from its original domain (often time or space) to a representation in the frequency domain and vice versa. The DFT is obtained by decomposing a sequence of values into components of different frequencies. This operation is useful in many fields, but computing it directly from the definition is often too slow to be practical. This process has many engineering applications including decomposing a time-series and finding seasonality in a time-series.<BR><BR>
+    <I>
+    <PRE>
+    explicit
+    FastFourierTransVisitor(bool inverse = false);
+
+    <B>inverse</B>: Calculate the inverse.
+    </PRE>
+    </I>
+      </td>
+      <td width="12%">
+        <B>T</B>: Column data type<BR>
+        <B>I</B>: Index type
+      </td>
+    </tr>
+
+  </table>
+
+<pre style='color:#000000;background:#ffffff;'><span style='color:#800000; font-weight:bold; '>static</span> <span style='color:#800000; font-weight:bold; '>void</span> test_FastFourierTransVisitor<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span>  <span style='color:#800080; '>{</span>
+
+    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>cout</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#800000; '>"</span><span style='color:#0f69ff; '>\n</span><span style='color:#0000e6; '>Testing FastFourierTransVisitor{  } ...</span><span style='color:#800000; '>"</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>endl</span><span style='color:#800080; '>;</span>
+
+    <span style='color:#800000; font-weight:bold; '>using</span> cx <span style='color:#808030; '>=</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span>complex<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span><span style='color:#800080; '>;</span>
+
+    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>vector</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>unsigned</span> <span style='color:#800000; font-weight:bold; '>long</span><span style='color:#800080; '>></span>  idxvec <span style='color:#808030; '>=</span> <span style='color:#800080; '>{</span> <span style='color:#008c00; '>1</span><span style='color:#006600; '>UL</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>2</span><span style='color:#006600; '>UL</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>3</span><span style='color:#006600; '>UL</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>10</span><span style='color:#006600; '>UL</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>5</span><span style='color:#006600; '>UL</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>7</span><span style='color:#006600; '>UL</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>8</span><span style='color:#006600; '>UL</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>12</span><span style='color:#006600; '>UL</span> <span style='color:#800080; '>}</span><span style='color:#800080; '>;</span>
+    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>vector</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span>         dblvec <span style='color:#808030; '>=</span> <span style='color:#800080; '>{</span> <span style='color:#008c00; '>1</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>1</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>1</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>1</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>0</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>0</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>0</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>0</span> <span style='color:#800080; '>}</span><span style='color:#800080; '>;</span>
+    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>vector</span><span style='color:#800080; '>&lt;</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>string</span><span style='color:#800080; '>></span>    strvec <span style='color:#808030; '>=</span> <span style='color:#800080; '>{</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>11</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>22</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>33</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>44</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>55</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>66</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>-77</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>88</span><span style='color:#800000; '>"</span> <span style='color:#800080; '>}</span><span style='color:#800080; '>;</span>
+    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>vector</span><span style='color:#800080; '>&lt;</span>cx<span style='color:#800080; '>></span>             cplxvec <span style='color:#808030; '>=</span> <span style='color:#800080; '>{</span> cx<span style='color:#808030; '>(</span><span style='color:#008c00; '>0</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>0</span><span style='color:#808030; '>)</span><span style='color:#808030; '>,</span> cx<span style='color:#808030; '>(</span><span style='color:#008c00; '>1</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>1</span><span style='color:#808030; '>)</span><span style='color:#808030; '>,</span> cx<span style='color:#808030; '>(</span><span style='color:#008c00; '>3</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>3</span><span style='color:#808030; '>)</span><span style='color:#808030; '>,</span> cx<span style='color:#808030; '>(</span><span style='color:#008c00; '>4</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>4</span><span style='color:#808030; '>)</span><span style='color:#808030; '>,</span> cx<span style='color:#808030; '>(</span><span style='color:#008c00; '>4</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>4</span><span style='color:#808030; '>)</span><span style='color:#808030; '>,</span> cx<span style='color:#808030; '>(</span><span style='color:#008c00; '>3</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>3</span><span style='color:#808030; '>)</span><span style='color:#808030; '>,</span> cx<span style='color:#808030; '>(</span><span style='color:#008c00; '>1</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>1</span><span style='color:#808030; '>)</span> <span style='color:#800080; '>}</span><span style='color:#800080; '>;</span>
+
+    MyDataFrame df<span style='color:#800080; '>;</span>
+
+    df<span style='color:#808030; '>.</span>load_data<span style='color:#808030; '>(</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>move</span><span style='color:#808030; '>(</span>idxvec<span style='color:#808030; '>)</span><span style='color:#808030; '>,</span>
+                 <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span>make_pair<span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>str_col</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> strvec<span style='color:#808030; '>)</span><span style='color:#808030; '>,</span>
+                 <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span>make_pair<span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>dbl_col</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> dblvec<span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    df<span style='color:#808030; '>.</span>load_column<span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>cplx_col</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> cplxvec<span style='color:#808030; '>,</span> nan_policy<span style='color:#800080; '>::</span>dont_pad_with_nans<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+
+    fft_v<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span>   fft<span style='color:#800080; '>;</span>
+
+    df<span style='color:#808030; '>.</span>single_act_visit<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>dbl_col</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> fft<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+
+    <span style='color:#800000; font-weight:bold; '>for</span> <span style='color:#808030; '>(</span><span style='color:#800000; font-weight:bold; '>auto</span> citer <span style='color:#800080; '>:</span> fft<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>)</span>
+        <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>cout</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> citer <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '> | </span><span style='color:#800000; '>"</span><span style='color:#800080; '>;</span>
+    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>cout</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>endl</span><span style='color:#800080; '>;</span>
+    df<span style='color:#808030; '>.</span>load_column<span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>FFT int col</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> fft<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>,</span> nan_policy<span style='color:#800080; '>::</span>dont_pad_with_nans<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+
+    fft_v<span style='color:#808030; '>&lt;</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span>complex<span style='color:#808030; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#808030; '>></span><span style='color:#808030; '>></span> i_fft <span style='color:#808030; '>(</span><span style='color:#800000; font-weight:bold; '>true</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+
+    df<span style='color:#808030; '>.</span>single_act_visit<span style='color:#808030; '>&lt;</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span>complex<span style='color:#808030; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#808030; '>></span><span style='color:#808030; '>></span><span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>FFT int col</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> i_fft<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+
+    <span style='color:#800000; font-weight:bold; '>for</span> <span style='color:#808030; '>(</span><span style='color:#800000; font-weight:bold; '>auto</span> citer <span style='color:#800080; '>:</span> i_fft<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>)</span>
+        <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>cout</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> citer <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '> | </span><span style='color:#800000; '>"</span><span style='color:#800080; '>;</span>
+    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>cout</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>endl</span><span style='color:#800080; '>;</span>
+
+    <span style='color:#696969; '>// The case of size is not a power of 2</span>
+    <span style='color:#696969; '>//</span>
+    fft_v<span style='color:#800080; '>&lt;</span>cx<span style='color:#800080; '>></span>   fft_cx<span style='color:#800080; '>;</span>
+
+    df<span style='color:#808030; '>.</span>single_act_visit<span style='color:#800080; '>&lt;</span>cx<span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>cplx_col</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> fft_cx<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+
+    <span style='color:#800000; font-weight:bold; '>for</span> <span style='color:#808030; '>(</span><span style='color:#800000; font-weight:bold; '>auto</span> citer <span style='color:#800080; '>:</span> fft_cx<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>)</span>
+        <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>cout</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> citer <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '> | </span><span style='color:#800000; '>"</span><span style='color:#800080; '>;</span>
+    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>cout</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>endl</span><span style='color:#800080; '>;</span>
+    df<span style='color:#808030; '>.</span>load_column<span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>FFT int col 2</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> fft_cx<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>,</span> nan_policy<span style='color:#800080; '>::</span>dont_pad_with_nans<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+
+    fft_v<span style='color:#800080; '>&lt;</span>cx<span style='color:#800080; '>></span>   i_fft2 <span style='color:#808030; '>(</span><span style='color:#800000; font-weight:bold; '>true</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+
+    df<span style='color:#808030; '>.</span>single_act_visit<span style='color:#808030; '>&lt;</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span>complex<span style='color:#808030; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#808030; '>></span><span style='color:#808030; '>></span><span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>FFT int col 2</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> i_fft2<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+
+    <span style='color:#800000; font-weight:bold; '>for</span> <span style='color:#808030; '>(</span><span style='color:#800000; font-weight:bold; '>auto</span> citer <span style='color:#800080; '>:</span> i_fft2<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>)</span>
+        <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>cout</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> citer <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '> | </span><span style='color:#800000; '>"</span><span style='color:#800080; '>;</span>
+    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>cout</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>endl</span><span style='color:#800080; '>;</span>
+
+    <span style='color:#800000; font-weight:bold; '>try</span>  <span style='color:#800080; '>{</span>
+        <span style='color:#800000; font-weight:bold; '>typedef</span> StdDataFrame<span style='color:#800080; '>&lt;</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>string</span><span style='color:#800080; '>></span> StrDataFrame<span style='color:#800080; '>;</span>
+
+        StrDataFrame    df2<span style='color:#800080; '>;</span>
+
+        df2<span style='color:#808030; '>.</span>read<span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>data/SHORT_IBM.csv</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> io_format<span style='color:#800080; '>::</span>csv2<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+
+        fft_v<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#808030; '>,</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>string</span><span style='color:#800080; '>></span>  fft2<span style='color:#800080; '>;</span>
+
+        df2<span style='color:#808030; '>.</span>single_act_visit<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>IBM_Close</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> fft2<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+
+        <span style='color:#696969; '>// for (auto citer : fft2.get_magnitude())</span>
+        <span style='color:#696969; '>//     std::cout &lt;&lt; citer &lt;&lt; ", ";</span>
+        <span style='color:#696969; '>// std::cout &lt;&lt; std::endl;</span>
+    <span style='color:#800080; '>}</span>
+    <span style='color:#800000; font-weight:bold; '>catch</span> <span style='color:#808030; '>(</span><span style='color:#800000; font-weight:bold; '>const</span> DataFrameError <span style='color:#808030; '>&amp;</span>ex<span style='color:#808030; '>)</span>  <span style='color:#800080; '>{</span>
+        <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>cout</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> ex<span style='color:#808030; '>.</span>what<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>endl</span><span style='color:#800080; '>;</span>
+    <span style='color:#800080; '>}</span>
+<span style='color:#800080; '>}</span>
+</pre>
+<!--Created using ToHtml.com on 2021-07-08 17:09:11 UTC -->
+
+</body>
+</html>
+
+<!--
+Local Variables:
+mode:HTML
+tab-width:4
+c-basic-offset:4
+End:
+-->

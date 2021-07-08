@@ -409,12 +409,9 @@ public:
 
 private:
 
-    using cplx =
-        typename std::conditional<is_complex<T>::value,
-                                  T,
-                                  std::complex<T>>::type;
+    using cplx = typename result_type::value_type;
 
-    static inline void fft_pow2_(result_type &column)  {
+    static inline void fft_radix2_(result_type &column)  {
 
         // Discrete Fourier Transform
         //
@@ -566,7 +563,7 @@ private:
 
         if (inverse)  ifft_(column);
         else if ((col_s & (col_s - 1)) == 0)  // Is power of 2
-            fft_pow2_(column);
+            fft_radix2_(column);
         else  // More complicated algorithm for arbitrary sizes
             fft_gen_(column);
     }

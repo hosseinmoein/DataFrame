@@ -3526,26 +3526,33 @@ static void test_FastFourierTransVisitor()  {
 
     std::cout << "\nTesting FastFourierTransVisitor{  } ..." << std::endl;
 
+    using cx = std::complex<double>;
+
     std::vector<unsigned long>  idxvec =
         { 1UL, 2UL, 3UL, 10UL, 5UL, 7UL, 8UL, 12UL };
     std::vector<double>         dblvec = { 1, 1, 1, 1, 0, 0, 0, 0 };
     std::vector<std::string>    strvec =
         { "11", "22", "33", "44", "55", "66", "-77", "88" };
+    std::vector<cx>             cplxvec =
+        { cx(0, 0), cx(1, 1), cx(3, 3), cx(4, 4),
+          cx(4, 4), cx(3, 3), cx(1, 1) };
 
     MyDataFrame df;
 
     df.load_data(std::move(idxvec),
                  std::make_pair("str_col", strvec),
                  std::make_pair("dbl_col", dblvec));
+    df.load_column("cplx_col", cplxvec, nan_policy::dont_pad_with_nans);
 
     fft_v<double>   fft;
 
     df.single_act_visit<double>("dbl_col", fft);
-    df.load_column("FFT int col", fft.get_result());
 
     for (auto citer : fft.get_result())
         std::cout << citer << " | ";
     std::cout << std::endl;
+    df.load_column("FFT int col", fft.get_result(),
+                   nan_policy::dont_pad_with_nans);
 
     fft_v<std::complex<double>> i_fft (true);
 
@@ -3555,9 +3562,29 @@ static void test_FastFourierTransVisitor()  {
         std::cout << citer << " | ";
     std::cout << std::endl;
 
-    typedef StdDataFrame<std::string> StrDataFrame;
+    // The case of size is not a power of 2
+    //
+    fft_v<cx>   fft_cx;
+
+    df.single_act_visit<cx>("cplx_col", fft_cx);
+
+    for (auto citer : fft_cx.get_result())
+        std::cout << citer << " | ";
+    std::cout << std::endl;
+    df.load_column("FFT int col 2", fft_cx.get_result(),
+                   nan_policy::dont_pad_with_nans);
+
+    fft_v<cx>   i_fft2 (true);
+
+    df.single_act_visit<std::complex<double>>("FFT int col 2", i_fft2);
+
+    for (auto citer : i_fft2.get_result())
+        std::cout << citer << " | ";
+    std::cout << std::endl;
 
     try  {
+        typedef StdDataFrame<std::string> StrDataFrame;
+
         StrDataFrame    df2;
 
         df2.read("data/SHORT_IBM.csv", io_format::csv2);

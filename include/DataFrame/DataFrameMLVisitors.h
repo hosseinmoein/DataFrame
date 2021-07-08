@@ -405,7 +405,7 @@ public:
         typename std::conditional<is_complex<T>::value,
                                   std::vector<T>,
                                   std::vector<std::complex<T>>>::type;
-    using numeric_type = double;
+    using real_t = typename result_type::value_type::value_type;
 
 private:
 
@@ -414,42 +414,43 @@ private:
                                   T,
                                   std::complex<T>>::type;
 
-    inline void fft_(result_type &data, size_type data_s)  {
+    static inline void fft_pow2_(result_type &column)  {
 
         // Discrete Fourier Transform
         //
-        const numeric_type  theta_t = M_PI / numeric_type(data_s);
-        cplx                phi_t = cplx(std::cos(theta_t), -std::sin(theta_t));
-        size_type           k = data_s;
+        const size_type col_s = column.size();
+        const real_t    theta = real_t(M_PI) / real_t(col_s);
+        cplx            phi = cplx (std::cos(theta), -std::sin(theta));
+        size_type       k = col_s;
 
         while (k > 1)  {
             const size_type n = k;
 
             k >>= 1;
-            phi_t = phi_t * phi_t;
+            phi *= phi;
 
-            cplx    tt = numeric_type(1);
+            cplx    phi_pow = real_t(1);
 
             for (size_type l = 0; l < k; ++l)  {
-                for (size_type a = l; a < data_s; a += n)  {
+                for (size_type a = l; a < col_s; a += n)  {
                     const size_type b = a + k;
 
-                    if (b < data_s)  {
-                        const cplx  t = data[a] - data[b];
+                    if (b < col_s)  {
+                        const cplx  ab_diff = column[a] - column[b];
 
-                        data[a] += data[b];
-                        data[b] = t * tt;
+                        column[a] += column[b];
+                        column[b] = ab_diff * phi_pow;
                     }
                 }
-                tt *= phi_t;
+                phi_pow *= phi;
             }
         }
 
         // Decimate
         //
-        const size_type m = static_cast<size_type>(std::log2(data_s));
+        const size_type m = static_cast<size_type>(std::log2(col_s));
 
-        for (size_type a = 0; a < data_s; ++a)  {
+        for (size_type a = 0; a < col_s; ++a)  {
             size_type   b = a;
 
             // Reverse bits
@@ -460,35 +461,114 @@ private:
             b = (((b & 0xFF00FF00) >> 8) | ((b & 0x00FF00FF) << 8));
             b = ((b >> 16) | (b << 16)) >> (32 - m);
 
-            if (b > a && b < data_s)  std::swap(data[a], data[b]);
+            if (b > a && b < col_s)  std::swap(column[a], column[b]);
         }
 
         // Normalize
         //
+        /*
         if (normalize_)  {
-            const cplx  f = numeric_type(1) / std::sqrt(numeric_type(data_s));
+            const cplx  f = real_t(1) / std::sqrt(real_t(col_s));
 
-            for (auto &iter : data)  iter *= f;
+            for (auto &iter : column)  iter *= f;
         }
+        */
     }
 
-    inline void ifft_(result_type &data, size_type data_s)  {
+    static inline void ifft_(result_type &column)  {
 
         // Conjugate the complex numbers
         //
-        for (auto &iter : data)  iter = std::conj(iter);
+        for (auto &iter : column)  iter = std::conj(iter);
 
         // Forward fft
         //
-        fft_ (data, data_s);
+        transform_(column, false);
 
         // Conjugate the complex numbers again
         //
-        for (auto &iter : data)  iter = std::conj(iter);
+        for (auto &iter : column)  iter = std::conj(iter);
+
+        const size_type col_s = column.size();
 
         // Scale the numbers
         //
-        for (auto &iter : data)  iter /= numeric_type(data_s);
+        for (auto &iter : column)  iter /= real_t(col_s);
+    }
+
+    static inline result_type convolve_(result_type xvec, result_type yvec)  {
+
+        transform_(xvec, false);
+        transform_(yvec, false);
+
+        const size_type col_s = xvec.size();
+
+        for (size_type i = 0; i < col_s; i++)
+            xvec[i] *= yvec[i];
+        transform_(xvec, true);
+
+        // Scaling (because this FFT implementation omits it)
+        //
+        for (size_type i = 0; i < col_s; i++)
+            xvec[i] /= real_t(col_s);
+        return (xvec);
+    }
+
+    static inline void fft_gen_(result_type &column) {
+
+        const size_type col_s = column.size();
+
+        // Trigonometric table
+        //
+        result_type     exp_table(col_s);
+        const size_type col_s_2 = col_s * 2;
+
+        for (size_type i = 0; i < col_s; i++) {
+            const size_type sq = (i * i) % col_s_2;
+
+            exp_table[i] =
+                std::polar(real_t(1),
+                           real_t(M_PI) * real_t(sq) / real_t(col_s));
+        }
+
+        // Find a power-of-2 convolution length m such that m >= col_s * 2 + 1
+        //
+        size_type   m = 1;
+
+        while (m / 2 <= col_s)   m *= 2;
+
+        // Temporary vectors and preprocessing
+        //
+        result_type avec (m, cplx(0, 0));
+
+        for (size_type i = 0; i < col_s; i++)
+            avec[i] = column[i] * exp_table[i];
+
+        result_type bvec(m, cplx(0, 0));
+
+        bvec[0] = exp_table[0];
+        for (size_type i = 1; i < col_s; i++)
+            bvec[i] = bvec[m - i] = std::conj(exp_table[i]);
+
+        // Convolution
+        //
+        const result_type   cvec = convolve_(std::move(avec), std::move(bvec));
+
+        // Postprocessing
+        //
+        for (size_type i = 0; i < col_s; i++)
+            column[i] = cvec[i] * exp_table[i];
+    }
+
+    static inline void transform_(result_type &column, bool inverse) {
+
+        const size_type col_s = column.size();
+
+        if (inverse)  ifft_(column);
+        else if ((col_s & (col_s - 1)) == 0)  // Is power of 2
+            fft_pow2_(column);
+        else  // More complicated algorithm for arbitrary sizes
+            fft_gen_(column);
     }
 
 public:
@@ -500,8 +580,8 @@ public:
                 const H &column_begin,
                 const H &column_end)  {
 
-        const size_type col_s = std::distance(column_begin, column_end);
-        result_type     result(col_s);
+        GET_COL_SIZE
+        result_type result (col_s);
 
         if constexpr (is_complex<T>::value)  {
             std::transform(column_begin, column_end,
@@ -514,9 +594,7 @@ public:
                            [] (T v) { return (std::complex<T>(v, 0)); });
         }
 
-        if (! inverse_)  fft_(result, col_s);
-        else  ifft_(result, col_s);
-
+        transform_(result, inverse_);
         result_.swap(result);
     }
 
@@ -529,13 +607,13 @@ public:
     inline void post ()  {  }
 
     DEFINE_RESULT
-    inline const std::vector<numeric_type> &
+    inline const std::vector<real_t> &
     get_magnitude() const  {
 
         return (const_cast<FastFourierTransVisitor<T, I> *>
                     (this)->get_magnitude());
     }
-    inline std::vector<numeric_type> &
+    inline std::vector<real_t> &
     get_magnitude()  {
 
         if (magnitude_.empty())  {
@@ -545,13 +623,13 @@ public:
         }
         return (magnitude_);
     }
-    inline const std::vector<numeric_type> &
+    inline const std::vector<real_t> &
     get_angle() const  {
 
         return (const_cast<FastFourierTransVisitor<T, I> *>
                     (this)->get_angle());
     }
-    inline std::vector<numeric_type> &
+    inline std::vector<real_t> &
     get_angle()  {
 
         if (angle_.empty())  {
@@ -563,16 +641,14 @@ public:
     }
 
     explicit
-    FastFourierTransVisitor(bool inverse = false, bool normalize = false)
-        : inverse_(inverse), normalize_(normalize)  {   }
+    FastFourierTransVisitor(bool inverse = false) : inverse_(inverse)  {   }
 
 private:
 
-    const bool                  inverse_;
-    const bool                  normalize_;
-    result_type                 result_ {  };
-    std::vector<numeric_type>   magnitude_ {  };
-    std::vector<numeric_type>   angle_ {  };
+    const bool          inverse_;
+    result_type         result_ {  };
+    std::vector<real_t> magnitude_ {  };
+    std::vector<real_t> angle_ {  };
 };
 
 template<typename T, typename I = unsigned long>

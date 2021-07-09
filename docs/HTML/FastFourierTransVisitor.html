@@ -46,7 +46,7 @@ using fft_v = FastFourierTransVisitor&lt;T, I&gt;;
       <td>
         This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
         This visitor calculates Fast Fourier Transform on a column. If column length is a power of 2, the algorithm will be more efficient in terms of time and memory.
-        The result is a vector of complex values with same number of items as the given column.<BR>
+        The input could be either a column of floating-point values or a column of complex vlaues. The result is always a vector of complex values with same number of items as the given column.<BR>
         <I>get_result()</I> returns the FFT vector in complex values<BR>
         <I>get_magnitude()</I> returns vector of magnitudes<BR>
         <I>get_angle()</I> returns vector of phase angles<BR><BR>
@@ -132,17 +132,24 @@ using fft_v = FastFourierTransVisitor&lt;T, I&gt;;
         fft_v<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#808030; '>,</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>string</span><span style='color:#800080; '>></span>  fft2<span style='color:#800080; '>;</span>
 
         df2<span style='color:#808030; '>.</span>single_act_visit<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>IBM_Close</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> fft2<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+        df2<span style='color:#808030; '>.</span>load_column<span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>FFT Close</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> fft2<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
 
-        <span style='color:#696969; '>// for (auto citer : fft2.get_magnitude())</span>
-        <span style='color:#696969; '>//     std::cout &lt;&lt; citer &lt;&lt; ", ";</span>
-        <span style='color:#696969; '>// std::cout &lt;&lt; std::endl;</span>
+        fft_v<span style='color:#800080; '>&lt;</span>cx<span style='color:#800080; '>></span>   i_fft2 <span style='color:#808030; '>(</span><span style='color:#800000; font-weight:bold; '>true</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+
+        df2<span style='color:#808030; '>.</span>single_act_visit<span style='color:#800080; '>&lt;</span>cx<span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>FFT Close</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> i_fft2<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+
+        <span style='color:#696969; '>/*</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;for (auto citer : i_fft2.get_result())</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;std::cout &lt;&lt; citer &lt;&lt; ", ";</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;std::cout &lt;&lt; std::endl;</span>
+<span style='color:#696969; '>&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;&#xa0;*/</span>
     <span style='color:#800080; '>}</span>
     <span style='color:#800000; font-weight:bold; '>catch</span> <span style='color:#808030; '>(</span><span style='color:#800000; font-weight:bold; '>const</span> DataFrameError <span style='color:#808030; '>&amp;</span>ex<span style='color:#808030; '>)</span>  <span style='color:#800080; '>{</span>
         <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>cout</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> ex<span style='color:#808030; '>.</span>what<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>endl</span><span style='color:#800080; '>;</span>
     <span style='color:#800080; '>}</span>
 <span style='color:#800080; '>}</span>
 </pre>
-<!--Created using ToHtml.com on 2021-07-08 17:09:11 UTC -->
+<!--Created using ToHtml.com on 2021-07-09 13:08:38 UTC -->
 
 </body>
 </html>

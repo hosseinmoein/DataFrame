@@ -411,82 +411,24 @@ private:
 
     using cplx = typename result_type::value_type;
 
-    static inline void fft_radix2_(result_type &column)  {
-
-        // Discrete Fourier Transform
-        //
-        const size_type col_s = column.size();
-        const real_t    theta = real_t(M_PI) / real_t(col_s);
-        cplx            phi = cplx (std::cos(theta), -std::sin(theta));
-        size_type       k = col_s;
-
-        while (k > 1)  {
-            const size_type n = k;
-
-            k >>= 1;
-            phi *= phi;
-
-            cplx    phi_pow = real_t(1);
-
-            for (size_type l = 0; l < k; ++l)  {
-                for (size_type a = l; a < col_s; a += n)  {
-                    const size_type b = a + k;
-
-                    if (b < col_s)  {
-                        const cplx  ab_diff = column[a] - column[b];
-
-                        column[a] += column[b];
-                        column[b] = ab_diff * phi_pow;
-                    }
-                }
-                phi_pow *= phi;
-            }
-        }
-
-        // Decimate
-        //
-        const size_type m = static_cast<size_type>(std::log2(col_s));
-
-        for (size_type a = 0; a < col_s; ++a)  {
-            size_type   b = a;
-
-            // Reverse bits
-            //
-            b = (((b & 0xAAAAAAAA) >> 1) | ((b & 0x55555555) << 1));
-            b = (((b & 0xCCCCCCCC) >> 2) | ((b & 0x33333333) << 2));
-            b = (((b & 0xF0F0F0F0) >> 4) | ((b & 0x0F0F0F0F) << 4));
-            b = (((b & 0xFF00FF00) >> 8) | ((b & 0x00FF00FF) << 8));
-            b = ((b >> 16) | (b << 16)) >> (32 - m);
-
-            if (b > a && b < col_s)  std::swap(column[a], column[b]);
-        }
-
-        // Normalize
-        //
-        /*
-        if (normalize_)  {
-            const cplx  f = real_t(1) / std::sqrt(real_t(col_s));
-
-            for (auto &iter : column)  iter *= f;
-        }
-        */
-    }
-
-    static inline void ifft_(result_type &column)  {
+    static inline void itransform_(result_type &column)  {
 
         // Conjugate the complex numbers
         //
         for (auto &iter : column)  iter = std::conj(iter);
 
+        const size_type col_s = column.size();
+
         // Forward fft
         //
-        transform_(column, false);
+        if ((col_s & (col_s - 1)) == 0)  // Is power of 2
+            fft_radix2_(column, false);
+        else // More complicated algorithm for arbitrary sizes
+            fft_bluestein_(column, false);
 
         // Conjugate the complex numbers again
         //
         for (auto &iter : column)  iter = std::conj(iter);
-
-        const size_type col_s = column.size();
 
         // Scale the numbers
         //
@@ -511,7 +453,62 @@ private:
         return (xvec);
     }
 
-    static inline void fft_gen_(result_type &column) {
+    static inline size_type reverse_bits_(size_type val, size_type width) {
+
+        size_type   result = 0;
+
+        for (size_type i = 0; i < width; i++, val >>= 1)
+            result = (result << 1) | (val & 1U);
+        return (result);
+    }
+
+    static inline void fft_radix2_(result_type &column, bool reverse) {
+
+        const size_type col_s = column.size();
+        size_type       levels = 0;  // Compute levels = floor(log2(col_s))
+
+        for (size_type i = col_s; i > 1; i >>= 1)
+            levels += 1;
+
+        // Trigonometric table
+        //
+        result_type exp_table (col_s / 2);
+
+        for (size_type i = 0; i < col_s / 2; i++)
+            exp_table[i] =
+                std::polar(real_t(1),
+                           (reverse ? real_t(2) : -real_t(2)) *
+                           real_t(M_PI) * real_t(i) / real_t(col_s));
+
+        // Bit-reversed addressing permutation
+        //
+        for (size_type i = 0; i < col_s; i++) {
+            const size_type j = reverse_bits_(i, levels);
+
+            if (j > i)  std::swap(column[i], column[j]);
+        }
+
+        // Cooley-Tukey decimation-in-time radix-2 FFT
+        //
+        for (size_type s = 2; s <= col_s; s *= 2) {
+            const size_type half_size = s / 2;
+            const size_type table_step = col_s / s;
+
+            for (size_type i = 0; i < col_s; i += s) {
+                for (size_type j = i, k = 0; j < i + half_size;
+                     j++, k += table_step) {
+                    const cplx  temp = column[j + half_size] * exp_table[k];
+
+                    column[j + half_size] = column[j] - temp;
+                    column[j] += temp;
+                }
+            }
+            if (s == col_s)  // Prevent overflow in 's *= 2'
+                break;
+        }
+    }
+
+    static inline void fft_bluestein_(result_type &column, bool reverse) {
 
         const size_type col_s = column.size();
 
@@ -525,10 +522,11 @@ private:
 
             exp_table[i] =
                 std::polar(real_t(1),
-                           real_t(M_PI) * real_t(sq) / real_t(col_s));
+                           (reverse ? real_t(M_PI) : -real_t(M_PI)) *
+                           real_t(sq) / real_t(col_s));
         }
 
-        // Find a power-of-2 convolution length m such that m >= col_s * 2 + 1
+        // Find a power of 2 convolution length m such that m >= col_s * 2 + 1
         //
         size_type   m = 1;
 
@@ -557,15 +555,18 @@ private:
             column[i] = cvec[i] * exp_table[i];
     }
 
-    static inline void transform_(result_type &column, bool inverse) {
+    static inline void transform_(result_type &column, bool reverse) {
 
         const size_type col_s = column.size();
 
-        if (inverse)  ifft_(column);
-        else if ((col_s & (col_s - 1)) == 0)  // Is power of 2
-            fft_radix2_(column);
-        else  // More complicated algorithm for arbitrary sizes
-            fft_gen_(column);
+        if (col_s == 0)
+            return;
+        if ((col_s & (col_s - 1)) == 0)  {  // Is power of 2
+            fft_radix2_(column, reverse);
+        }
+        else  { // More complicated algorithm for arbitrary sizes
+            fft_bluestein_(column, reverse);
+        }
     }
 
 public:
@@ -591,7 +592,10 @@ public:
                            [] (T v) { return (std::complex<T>(v, 0)); });
         }
 
-        transform_(result, inverse_);
+        if (inverse_)
+            itransform_(result);
+        else
+            transform_(result, false);
         result_.swap(result);
     }
 

@@ -3420,6 +3420,66 @@ private:
 template<typename T, typename I = unsigned long>
 using ha_cdl_v = HeikinAshiCndlVisitor<T, I>;
 
+// ----------------------------------------------------------------------------
+
+// Also called Stochastic Oscillator
+//
+template<typename T, typename I = unsigned long>
+struct  CenterOfGravityVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &column_begin,
+                const H &column_end)  {
+
+        if (roll_count_ == 0)  return;
+
+        GET_COL_SIZE
+        assert (col_s > roll_count_);
+
+        result_type result (col_s, std::numeric_limits<T>::quiet_NaN());
+
+        for (size_type i = roll_count_ - 1; i < col_s; ++i)  {
+            size_type   count { 0 };
+            value_type  dot_prd { 0 };
+
+            for (size_type j = (i + 1) - roll_count_; j <= i; ++j, ++count)
+                dot_prd += *(column_begin + j) * (roll_count_ - count);
+            result[i] = dot_prd;
+        }
+
+        SimpleRollAdopter<SumVisitor<T, I>, T, I>   sum_v
+            { SumVisitor<T, I>(), roll_count_ };
+
+        sum_v.pre();
+        sum_v (idx_begin, idx_end, column_begin, column_end);
+        sum_v.post();
+
+        for (size_type i = 0; i < col_s; ++i)
+            result[i] /= -sum_v.get_result()[i];
+        result_.swap(result);
+    }
+
+    DEFINE_PRE_POST
+    DEFINE_RESULT
+
+    explicit
+    CenterOfGravityVisitor(size_type r_count = 10) : roll_count_(r_count) {   }
+
+private:
+
+    const size_type roll_count_;
+    result_type     result_ { };
+};
+
+template<typename T, typename I = unsigned long>
+using cog_v = CenterOfGravityVisitor<T, I>;
+
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

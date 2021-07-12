@@ -3611,6 +3611,37 @@ static void test_FastFourierTransVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_CenterOfGravityVisitor()  {
+
+    std::cout << "\nTesting CenterOfGravityVisitor{  } ..." << std::endl;
+
+    typedef StdDataFrame<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("data/SHORT_IBM.csv", io_format::csv2);
+
+        cog_v<double, std::string>  cog;
+
+        df.single_act_visit<double>("IBM_Close", cog);
+
+        assert(cog.get_result().size() == 1721);
+        assert(std::isnan(cog.get_result()[0]));
+        assert(std::isnan(cog.get_result()[8]));
+        assert(std::abs(cog.get_result()[10] - -5.4998) < 0.0001);
+        assert(std::abs(cog.get_result()[14] - -5.51127) < 0.0001);
+        assert(std::abs(cog.get_result()[25] - -5.51401) < 0.0001);
+        assert(std::abs(cog.get_result()[1720] - -5.60765) < 0.0001);
+        assert(std::abs(cog.get_result()[1712] - -5.54681) < 0.0001);
+        assert(std::abs(cog.get_result()[1707] - -5.44354) < 0.0001);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
 int main(int argc, char *argv[]) {
 
     test_get_reindexed();
@@ -3680,6 +3711,7 @@ int main(int argc, char *argv[]) {
     test_HoltWinterChannelVisitor();
     test_HeikinAshiCndlVisitor();
     test_FastFourierTransVisitor();
+    test_CenterOfGravityVisitor();
 
     return (0);
 }

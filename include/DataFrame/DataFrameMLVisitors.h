@@ -409,29 +409,32 @@ public:
 
 private:
 
-    using cplx = typename result_type::value_type;
+    using cplx_t = typename result_type::value_type;
 
     static inline result_type convolve_(result_type xvec, result_type yvec)  {
 
         transform_(xvec, false);
         transform_(yvec, false);
 
-        const size_type col_s = xvec.size();
-
         std::transform(xvec.begin(), xvec.end(),
                        yvec.begin(), xvec.begin(),
-                       std::multiplies<cplx>());
+                       std::multiplies<cplx_t>());
+
         transform_(xvec, true);
 
-        // Scaling (because this FFT implementation omits it)
-        //
-        for (auto &iter : xvec)  iter /= real_t(col_s);
+        const real_t    col_s  = xvec.size();
+
+        std::transform(xvec.begin(), xvec.end(),
+                       xvec.begin(),
+                       [col_s] (const cplx_t &v) -> cplx_t {
+                           return (v / col_s);
+                       });
         return (xvec);
     }
 
     static inline size_type reverse_bits_(size_type val, size_type width) {
 
-        size_type   result = 0;
+        size_type   result { 0 };
 
         for (size_type i = 0; i < width; i++, val >>= 1)
             result = (result << 1) | (val & 1U);
@@ -440,17 +443,17 @@ private:
 
     static inline void fft_radix2_(result_type &column, bool reverse) {
 
-        const size_type col_s = column.size();
-        size_type       levels = 0;  // Compute levels = floor(log2(col_s))
+        const size_type col_s { column.size() };
+        size_type       levels { 0 };  // Compute levels = floor(log2(col_s))
 
         for (size_type i = col_s; i > 1; i >>= 1)
             levels += 1;
 
         // Trigonometric table
         //
-        const size_type half_col_s = col_s / 2;
-        const real_t    two_pi =
-            (reverse ? real_t(2) : -real_t(2)) * real_t(M_PI);
+        const size_type half_col_s { col_s / 2 };
+        const real_t    two_pi
+            { (reverse ? real_t(2) : -real_t(2)) * real_t(M_PI) };
         result_type     exp_table (half_col_s);
 
         for (size_type i = 0; i < half_col_s; i++)
@@ -460,7 +463,7 @@ private:
         // Bit-reversed addressing permutation
         //
         for (size_type i = 0; i < col_s; i++) {
-            const size_type rb = reverse_bits_(i, levels);
+            const size_type rb { reverse_bits_(i, levels) };
 
             if (rb > i)  std::swap(column[i], column[rb]);
         }
@@ -468,13 +471,14 @@ private:
         // Cooley-Tukey decimation-in-time radix-2 FFT
         //
         for (size_type s = 2; s <= col_s; s *= 2) {
-            const size_type half_size = s / 2;
-            const size_type table_step = col_s / s;
+            const size_type half_size { s / 2 };
+            const size_type table_step { col_s / s };
 
             for (size_type i = 0; i < col_s; i += s) {
                 for (size_type j = i, k = 0; j < i + half_size;
                      j++, k += table_step) {
-                    const cplx  temp = column[j + half_size] * exp_table[k];
+                    const cplx_t    temp
+                        { column[j + half_size] * exp_table[k] };
 
                     column[j + half_size] = column[j] - temp;
                     column[j] += temp;
@@ -485,35 +489,34 @@ private:
 
     static inline void fft_bluestein_(result_type &column, bool reverse) {
 
-        const size_type col_s = column.size();
+        const size_type col_s { column.size() };
 
         // Trigonometric table
         //
-        result_type     exp_table(col_s);
-        const size_type col_s_2 = col_s * 2;
-        const real_t    pi = reverse ? real_t(M_PI) : -real_t(M_PI);
+        result_type     exp_table (col_s);
+        const size_type col_s_2 { col_s * 2 };
+        const real_t    pi { reverse ? real_t(M_PI) : -real_t(M_PI) };
 
         for (size_type i = 0; i < col_s; i++) {
-            const size_type sq = (i * i) % col_s_2;
+            const real_t    sq = (i * i) % col_s_2;
 
-            exp_table[i] =
-                std::polar(real_t(1), pi * real_t(sq) / real_t(col_s));
+            exp_table[i] = std::polar(real_t(1), pi * sq / real_t(col_s));
         }
 
         // Find a power of 2 convolution length m such that m >= col_s * 2 + 1
         //
-        size_type   m = 1;
+        size_type   m { 1 };
 
         while (m / 2 <= col_s)   m *= 2;
 
         // Temporary vectors and preprocessing
         //
-        result_type xvec (m, cplx(0, 0));
+        result_type xvec (m, cplx_t(0, 0));
 
         for (size_type i = 0; i < col_s; i++)
             xvec[i] = column[i] * exp_table[i];
 
-        result_type yvec(m, cplx(0, 0));
+        result_type yvec(m, cplx_t(0, 0));
 
         yvec[0] = exp_table[0];
         for (size_type i = 1; i < col_s; i++)
@@ -521,18 +524,18 @@ private:
 
         // Convolution
         //
-        const result_type   conv = convolve_(std::move(xvec), std::move(yvec));
+        const result_type   conv (convolve_(std::move(xvec), std::move(yvec)));
 
         // Postprocessing
         //
         std::transform(exp_table.begin(), exp_table.end(),
                        conv.begin(), column.begin(),
-                       std::multiplies<cplx>());
+                       std::multiplies<cplx_t>());
     }
 
     static inline void transform_(result_type &column, bool reverse) {
 
-        const size_type col_s = column.size();
+        const size_type col_s { column.size() };
 
         if (col_s == 0)
             return;
@@ -546,9 +549,13 @@ private:
 
         // Conjugate the complex numbers
         //
-        for (auto &iter : column)  iter = std::conj(iter);
+        std::transform(column.begin(), column.end(),
+                       column.begin(),
+                       [] (const cplx_t &v) -> cplx_t {
+                           return (std::conj(v));
+                       });
 
-        const size_type col_s = column.size();
+        const size_type col_s { column.size() };
 
         // Forward fft
         //
@@ -559,11 +566,19 @@ private:
 
         // Conjugate the complex numbers again
         //
-        for (auto &iter : column)  iter = std::conj(iter);
+        std::transform(column.begin(), column.end(),
+                       column.begin(),
+                       [] (const cplx_t &v) -> cplx_t {
+                           return (std::conj(v));
+                       });
 
         // Scale the numbers
         //
-        for (auto &iter : column)  iter /= real_t(col_s);
+        std::transform(column.begin(), column.end(),
+                       column.begin(),
+                       [col_s] (const cplx_t &v) -> cplx_t {
+                           return (v / real_t(col_s));
+                       });
     }
 
 public:
@@ -581,12 +596,14 @@ public:
         if constexpr (is_complex<T>::value)  {
             std::transform(column_begin, column_end,
                            result.begin(),
-                           [] (T v) { return (v); });
+                           [] (T v) -> cplx_t { return (v); });
         }
         else  {
             std::transform(column_begin, column_end,
                            result.begin(),
-                           [] (T v) { return (std::complex<T>(v, 0)); });
+                           [] (T v) -> cplx_t {
+                               return (std::complex<T>(v, 0));
+                           });
         }
 
         if (inverse_)

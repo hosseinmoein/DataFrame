@@ -3479,6 +3479,75 @@ private:
 template<typename T, typename I = unsigned long>
 using cog_v = CenterOfGravityVisitor<T, I>;
 
+// ----------------------------------------------------------------------------
+
+// Arnaud Legoux Moving Average
+//
+template<typename T, typename I = unsigned long>
+struct  ArnaudLegouxMAVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &column_begin,
+                const H &column_end)  {
+
+        if (roll_count_ == 0)  return;
+
+        GET_COL_SIZE
+        assert (roll_count_ > 1);
+        assert (col_s > roll_count_);
+
+        result_type result (col_s, std::numeric_limits<T>::quiet_NaN());
+
+        for (size_type i = roll_count_; i < col_s; ++i)  {
+            value_type  win_sum { 0 };
+
+            for (size_type j = 0; j < roll_count_; ++j)
+                win_sum += wtd_[j] * *(column_begin + (i - j));
+
+            result[i] = win_sum / cum_sum_;
+        }
+
+        result_.swap(result);
+    }
+
+    DEFINE_PRE_POST
+    DEFINE_RESULT
+
+    explicit
+    ArnaudLegouxMAVisitor(size_type r_count = 10,
+                          value_type sigma = 6.0,
+                          value_type dist_offset = 0.85)
+        : roll_count_(r_count),
+          m_(dist_offset * T(r_count - 1)),
+          s_(T(r_count) / sigma),
+          wtd_(r_count)  {
+
+        for (size_type i = 0; i < roll_count_; ++i)  {
+            wtd_[i] =
+                std::exp(T(-1) *
+                         ((T(i) - m_) * (T(i) - m_)) /
+                         ((T(2) * s_ * s_)));
+            cum_sum_ += wtd_[i];
+        }
+    }
+
+private:
+
+    const size_type         roll_count_;
+    const value_type        m_;
+    const value_type        s_;
+    value_type              cum_sum_ { 0 };
+    std::vector<value_type> wtd_;
+    result_type             result_ { };
+};
+
+template<typename T, typename I = unsigned long>
+using alma_v = ArnaudLegouxMAVisitor<T, I>;
 
 } // namespace hmdf
 

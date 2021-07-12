@@ -3642,6 +3642,39 @@ static void test_CenterOfGravityVisitor()  {
 }
 
 // -----------------------------------------------------------------------------
+
+static void test_ArnaudLegouxMAVisitor()  {
+
+    std::cout << "\nTesting ArnaudLegouxMAVisitor{  } ..." << std::endl;
+
+    typedef StdDataFrame<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("data/SHORT_IBM.csv", io_format::csv2);
+
+        alma_v<double, std::string> alma;
+
+        df.single_act_visit<double>("IBM_Close", alma);
+
+        assert(alma.get_result().size() == 1721);
+        assert(std::isnan(alma.get_result()[0]));
+        assert(std::isnan(alma.get_result()[9]));
+        assert(std::abs(alma.get_result()[10] - 187.533) < 0.001);
+        assert(std::abs(alma.get_result()[14] - 186.359) < 0.001);
+        assert(std::abs(alma.get_result()[25] - 176.892) < 0.001);
+        assert(std::abs(alma.get_result()[1720] - 117.841) < 0.001);
+        assert(std::abs(alma.get_result()[1712] - 127.677) < 0.001);
+        assert(std::abs(alma.get_result()[1707] - 121.435) < 0.001);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+
+// -----------------------------------------------------------------------------
 int main(int argc, char *argv[]) {
 
     test_get_reindexed();
@@ -3712,6 +3745,7 @@ int main(int argc, char *argv[]) {
     test_HeikinAshiCndlVisitor();
     test_FastFourierTransVisitor();
     test_CenterOfGravityVisitor();
+    test_ArnaudLegouxMAVisitor();
 
     return (0);
 }

@@ -3549,6 +3549,51 @@ private:
 template<typename T, typename I = unsigned long>
 using alma_v = ArnaudLegouxMAVisitor<T, I>;
 
+// ----------------------------------------------------------------------------
+
+template<typename T, typename I = unsigned long>
+struct  RateOfChangeVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &column_begin,
+                const H &column_end)  {
+
+        GET_COL_SIZE
+        assert (period_ > 0);
+
+        DiffVisitor<T, I>   diff(period_, false);
+
+        diff.pre();
+        diff (idx_begin, idx_end, column_begin, column_end);
+        diff.post();
+
+        result_type result = std::move(diff.get_result());
+
+        for (size_type i = period_; i < col_s; ++i)
+            result[i] /= *(column_begin + (i - period_));
+        result_.swap(result);
+    }
+
+    DEFINE_PRE_POST
+    DEFINE_RESULT
+
+    explicit
+    RateOfChangeVisitor(size_type period) : period_(period)  {   }
+
+private:
+
+    const size_type period_;
+    result_type     result_ { };
+};
+
+template<typename T, typename I = unsigned long>
+using roc_v = RateOfChangeVisitor<T, I>;
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

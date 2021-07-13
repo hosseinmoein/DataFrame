@@ -3673,6 +3673,37 @@ static void test_ArnaudLegouxMAVisitor()  {
     }
 }
 
+// -----------------------------------------------------------------------------
+
+static void test_RateOfChangeVisitor()  {
+
+    std::cout << "\nTesting RateOfChangeVisitor{  } ..." << std::endl;
+
+    typedef StdDataFrame<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("data/SHORT_IBM.csv", io_format::csv2);
+
+        roc_v<double, std::string>  roc (10); // 10 period rate of change
+
+        df.single_act_visit<double>("IBM_Close", roc);
+
+        assert(roc.get_result().size() == 1721);
+        assert(std::isnan(roc.get_result()[0]));
+        assert(std::isnan(roc.get_result()[9]));
+        assert(std::abs(roc.get_result()[10] - 0.0174096) < 0.000001);
+        assert(std::abs(roc.get_result()[14] - -0.0278768) < 0.000001);
+        assert(std::abs(roc.get_result()[25] - -0.0133044) < 0.000001);
+        assert(std::abs(roc.get_result()[1720] - -0.113317) < 0.00001);
+        assert(std::abs(roc.get_result()[1712] - -0.0377142) < 0.000001);
+        assert(std::abs(roc.get_result()[1707] - 0.0343972) < 0.000001);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
 
 // -----------------------------------------------------------------------------
 int main(int argc, char *argv[]) {
@@ -3746,6 +3777,7 @@ int main(int argc, char *argv[]) {
     test_FastFourierTransVisitor();
     test_CenterOfGravityVisitor();
     test_ArnaudLegouxMAVisitor();
+    test_RateOfChangeVisitor();
 
     return (0);
 }

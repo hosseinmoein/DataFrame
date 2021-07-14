@@ -3706,6 +3706,41 @@ static void test_RateOfChangeVisitor()  {
 }
 
 // -----------------------------------------------------------------------------
+
+static void test_AccumDistVisitor()  {
+
+    std::cout << "\nTesting AccumDistVisitor{  } ..." << std::endl;
+
+    typedef StdDataFrame<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("data/SHORT_IBM.csv", io_format::csv2);
+
+        ad_v<double, std::string>   ad;
+
+        std::future<ad_v<double, std::string> &>   fut =
+            df.single_act_visit_async<double, double, double, double, long>
+            ("IBM_Low", "IBM_High", "IBM_Open", "IBM_Close", "IBM_Volume", ad);
+
+        fut.get();
+        assert(ad.get_result().size() == 1721);
+        assert(std::abs(ad.get_result()[0] - -3471893.994401) < 0.00001);
+        assert(std::abs(ad.get_result()[10] - -3089366.572853) < 0.00001);
+        assert(std::abs(ad.get_result()[14] - 3190895.313251) < 0.00001);
+        assert(std::abs(ad.get_result()[25] - -4599921.087384) < 0.00001);
+        assert(std::abs(ad.get_result()[1720] - -70588883.462685) < 0.00001);
+        assert(std::abs(ad.get_result()[1712] - -61812361.976164) < 0.00001);
+        assert(std::abs(ad.get_result()[1707] - -47503851.035966) < 0.00001);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int argc, char *argv[]) {
 
     test_get_reindexed();
@@ -3778,6 +3813,7 @@ int main(int argc, char *argv[]) {
     test_CenterOfGravityVisitor();
     test_ArnaudLegouxMAVisitor();
     test_RateOfChangeVisitor();
+    test_AccumDistVisitor();
 
     return (0);
 }

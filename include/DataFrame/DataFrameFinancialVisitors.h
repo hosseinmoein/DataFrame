@@ -3594,6 +3594,67 @@ private:
 template<typename T, typename I = unsigned long>
 using roc_v = RateOfChangeVisitor<T, I>;
 
+// ----------------------------------------------------------------------------
+
+// Accumulation/Distribution (AD) indicator
+//
+template<typename T, typename I = unsigned long>
+struct AccumDistVisitor {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H, typename V>
+    inline void
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &low_begin,
+                const H &low_end,
+                const H &high_begin,
+                const H &high_end,
+                const H &open_begin,
+                const H &open_end,
+                const H &close_begin,
+                const H &close_end,
+                const V &volume_begin,
+                const V &volume_end)  {
+
+        const size_type col_s = std::distance(close_begin, close_end);
+
+        assert((col_s == std::distance(low_begin, low_end)));
+        assert((col_s == std::distance(open_begin, open_end)));
+        assert((col_s == std::distance(high_begin, high_end)));
+        assert((col_s == std::distance(volume_begin, volume_end)));
+
+        result_type result (col_s, std::numeric_limits<T>::quiet_NaN());
+
+        for (size_type i = 0; i < col_s; ++i)  {
+            const value_type    co = *(close_begin + i) - *(open_begin + i);
+            const value_type    hl = *(high_begin + i) - *(low_begin + i);
+
+            result[i] = co * T(*(volume_begin + i)) / hl;
+        }
+
+        CumSumVisitor<T, I> cumsum;
+
+        cumsum.pre();
+        cumsum (idx_begin, idx_end, result.begin(), result.end());
+        cumsum.post();
+        result = std::move(cumsum.get_result());
+
+        result_.swap(result);
+    }
+
+    DEFINE_PRE_POST
+    DEFINE_RESULT
+
+private:
+
+    result_type result_ {  };
+};
+
+template<typename T, typename I = unsigned long>
+using ad_v = AccumDistVisitor<T, I>;
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

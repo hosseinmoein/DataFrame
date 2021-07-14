@@ -1027,6 +1027,133 @@ single_act_visit_async(const char *name1,
         in_reverse));
 }
 
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename T1, typename T2, typename T3, typename T4, typename T5,
+         typename V>
+V &DataFrame<I, H>::
+single_act_visit (const char *name1,
+                  const char *name2,
+                  const char *name3,
+                  const char *name4,
+                  const char *name5,
+                  V &visitor,
+                  bool in_reverse)  {
+
+    const ColumnVecType<T1> &vec1 = get_column<T1>(name1);
+    const ColumnVecType<T2> &vec2 = get_column<T2>(name2);
+    const ColumnVecType<T3> &vec3 = get_column<T3>(name3);
+    const ColumnVecType<T4> &vec4 = get_column<T4>(name4);
+    const ColumnVecType<T5> &vec5 = get_column<T5>(name5);
+
+    visitor.pre();
+    if (! in_reverse)
+        visitor (indices_.begin(), indices_.end(),
+                 vec1.begin(), vec1.end(),
+                 vec2.begin(), vec2.end(),
+                 vec3.begin(), vec3.end(),
+                 vec4.begin(), vec4.end(),
+                 vec5.begin(), vec5.end());
+    else
+        visitor (indices_.rbegin(), indices_.rend(),
+                 vec1.rbegin(), vec1.rend(),
+                 vec2.rbegin(), vec2.rend(),
+                 vec3.rbegin(), vec3.rend(),
+                 vec4.rbegin(), vec4.rend(),
+                 vec5.rbegin(), vec5.rend());
+    visitor.post();
+
+    return (visitor);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename T1, typename T2, typename T3, typename T4, typename T5,
+         typename V>
+V &DataFrame<I, H>::
+single_act_visit (const char *name1,
+                  const char *name2,
+                  const char *name3,
+                  const char *name4,
+                  const char *name5,
+                  V &visitor,
+                  bool in_reverse) const  {
+
+    return (const_cast<DataFrame *>(this)->single_act_visit
+                <T1, T2, T3, T4, T5, V>
+                (name1, name2, name3, name4, name5, visitor, in_reverse));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename T1, typename T2, typename T3, typename T4, typename T5,
+         typename V>
+std::future<V &> DataFrame<I, H>::
+single_act_visit_async(const char *name1,
+                       const char *name2,
+                       const char *name3,
+                       const char *name4,
+                       const char *name5,
+                       V &visitor,
+                       bool in_reverse)  {
+
+    return (std::async(
+        std::launch::async,
+        static_cast<V &(DataFrame::*)(const char *,
+                                      const char *,
+                                      const char *,
+                                      const char *,
+                                      const char *,
+                                      V &,
+                                      bool)>
+        (&DataFrame::single_act_visit<T1, T2, T3, T4, T5, V>),
+        this,
+        name1,
+        name2,
+        name3,
+        name4,
+        name5,
+        std::ref(visitor),
+        in_reverse));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename T1, typename T2, typename T3, typename T4, typename T5,
+         typename V>
+std::future<V &> DataFrame<I, H>::
+single_act_visit_async(const char *name1,
+                       const char *name2,
+                       const char *name3,
+                       const char *name4,
+                       const char *name5,
+                       V &visitor,
+                       bool in_reverse) const  {
+
+    return (std::async(
+        std::launch::async,
+        static_cast<V &(DataFrame::*)(const char *,
+                                      const char *,
+                                      const char *,
+                                      const char *,
+                                      const char *,
+                                      V &,
+                                      bool) const>
+        (&DataFrame::single_act_visit<T1, T2, T3, T4, T5, V>),
+        this,
+        name1,
+        name2,
+        name3,
+        name4,
+        name5,
+        std::ref(visitor),
+        in_reverse));
+}
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

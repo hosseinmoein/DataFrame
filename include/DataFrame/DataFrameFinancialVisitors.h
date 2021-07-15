@@ -3655,6 +3655,81 @@ private:
 template<typename T, typename I = unsigned long>
 using ad_v = AccumDistVisitor<T, I>;
 
+// ----------------------------------------------------------------------------
+
+// Chaikin Money Flow (CMF) indicator
+//
+template<typename T, typename I = unsigned long>
+struct ChaikinMoneyFlowVisitor {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H, typename V>
+    inline void
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &low_begin,
+                const H &low_end,
+                const H &high_begin,
+                const H &high_end,
+                const H &open_begin,
+                const H &open_end,
+                const H &close_begin,
+                const H &close_end,
+                const V &volume_begin,
+                const V &volume_end)  {
+
+        const size_type col_s = std::distance(close_begin, close_end);
+
+        assert((col_s == std::distance(low_begin, low_end)));
+        assert((col_s == std::distance(open_begin, open_end)));
+        assert((col_s == std::distance(high_begin, high_end)));
+        assert((col_s == std::distance(volume_begin, volume_end)));
+        assert (period_ > 0 && period_ < col_s);
+
+        result_type result (col_s, std::numeric_limits<T>::quiet_NaN());
+
+        for (size_type i = 0; i < col_s; ++i)  {
+            const value_type    co = *(close_begin + i) - *(open_begin + i);
+            const value_type    hl = *(high_begin + i) - *(low_begin + i);
+
+            result[i] = co * T(*(volume_begin + i)) / hl;
+        }
+
+        SimpleRollAdopter<SumVisitor<T, I>, T, I>   sum
+            { SumVisitor<T, I>(), period_ };
+
+        sum.pre();
+        sum (idx_begin, idx_end, result.begin(), result.end());
+        sum.post();
+        result = std::move(sum.get_result());
+
+        sum.pre();
+        sum (idx_begin, idx_end, volume_begin, volume_end);
+        sum.post();
+        std::transform(result.begin(), result.end(),
+                       sum.get_result().begin(),
+                       result.begin(),
+                       std::divides<T>());
+
+        result_.swap(result);
+    }
+
+    DEFINE_PRE_POST
+    DEFINE_RESULT
+
+    explicit
+    ChaikinMoneyFlowVisitor(size_type period = 21) : period_(period)  {   }
+
+private:
+
+    const size_type period_;
+    result_type     result_ {  };
+};
+
+template<typename T, typename I = unsigned long>
+using cmf_v = ChaikinMoneyFlowVisitor<T, I>;
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

@@ -3776,6 +3776,38 @@ static void test_ChaikinMoneyFlowVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_VertHorizFilterVisitor()  {
+
+    std::cout << "\nTesting VertHorizFilterVisitor{  } ..." << std::endl;
+
+    typedef StdDataFrame<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("data/SHORT_IBM.csv", io_format::csv2);
+
+        vhf_v<double, std::string>  vhf;
+
+        df.single_act_visit<double>("IBM_Close", vhf);
+
+        assert(vhf.get_result().size() == 1721);
+        assert(std::isnan(vhf.get_result()[0]));
+        assert(std::isnan(vhf.get_result()[27]));
+        assert(std::abs(vhf.get_result()[28] - 0.385992) < 0.000001);
+        assert(std::abs(vhf.get_result()[30] - 0.371847) < 0.000001);
+        assert(std::abs(vhf.get_result()[35] - 0.417574) < 0.000001);
+        assert(std::abs(vhf.get_result()[1720] - 0.450244) < 0.00001);
+        assert(std::abs(vhf.get_result()[1712] - 0.301387) < 0.000001);
+        assert(std::abs(vhf.get_result()[1707] - 0.297249) < 0.000001);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int argc, char *argv[]) {
 
     test_get_reindexed();
@@ -3850,6 +3882,7 @@ int main(int argc, char *argv[]) {
     test_RateOfChangeVisitor();
     test_AccumDistVisitor();
     test_ChaikinMoneyFlowVisitor();
+    test_VertHorizFilterVisitor();
 
     return (0);
 }

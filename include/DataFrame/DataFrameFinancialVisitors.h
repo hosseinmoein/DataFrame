@@ -3730,6 +3730,80 @@ private:
 template<typename T, typename I = unsigned long>
 using cmf_v = ChaikinMoneyFlowVisitor<T, I>;
 
+// ----------------------------------------------------------------------------
+
+// Vertical Horizontal Filter (VHF) indicator
+//
+template<typename T, typename I = unsigned long>
+struct  VertHorizFilterVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &column_begin,
+                const H &column_end)  {
+
+        GET_COL_SIZE
+        assert (period_ > 0 && period_ < col_s);
+
+        SimpleRollAdopter<MaxVisitor<T, I>, T, I>   mx
+            { MaxVisitor<T, I>(), period_ };
+
+        mx.pre();
+        mx (idx_begin, idx_end, column_begin, column_end);
+        mx.post();
+
+        SimpleRollAdopter<MinVisitor<T, I>, T, I>   mn
+            { MinVisitor<T, I>(), period_ };
+
+        mn.pre();
+        mn (idx_begin, idx_end, column_begin, column_end);
+        mn.post();
+
+        DiffVisitor<T, I>   diff(1, false);
+
+        diff.pre();
+        diff (idx_begin, idx_end, column_begin, column_end);
+        diff.post();
+        for (size_type i = 0; i < col_s; ++i)
+            diff.get_result()[i] = std::fabs(diff.get_result()[i]);
+
+        SimpleRollAdopter<SumVisitor<T, I>, T, I>   diff_sum
+            { SumVisitor<T, I>(), period_ };
+
+        diff_sum.pre();
+        diff_sum (idx_begin, idx_end,
+                  diff.get_result().begin(), diff.get_result().end());
+        diff_sum.post();
+
+        result_type result (col_s, std::numeric_limits<T>::quiet_NaN());
+
+        for (size_type i = period_; i < col_s; ++i)
+            result[i] =
+                std::fabs(mx.get_result()[i] - mn.get_result()[i]) /
+                diff_sum.get_result()[i];
+
+        result_.swap(result);
+    }
+
+    DEFINE_PRE_POST
+    DEFINE_RESULT
+
+    explicit
+    VertHorizFilterVisitor(size_type period = 28) : period_(period)  {   }
+
+private:
+
+    const size_type period_;
+    result_type     result_ { };
+};
+
+template<typename T, typename I = unsigned long>
+using vhf_v = VertHorizFilterVisitor<T, I>;
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

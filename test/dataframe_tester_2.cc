@@ -3841,6 +3841,42 @@ static void test_OnBalanceVolumeVisitor()  {
     }
 }
 
+
+// -----------------------------------------------------------------------------
+
+static void test_TrueRangeVisitor()  {
+
+    std::cout << "\nTesting TrueRangeVisitor{  } ..." << std::endl;
+
+    typedef StdDataFrame<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("data/SHORT_IBM.csv", io_format::csv2);
+
+        TrueRangeVisitor<double, std::string>   tr;
+
+        std::future<TrueRangeVisitor<double, std::string> &>    fut =
+            df.single_act_visit_async<double, double, double>
+            ("IBM_Low", "IBM_High", "IBM_Close", tr);
+
+        fut.get();
+        assert(tr.get_result().size() == 1721);
+        assert(std::isnan(tr.get_result()[0]));
+        assert(std::abs(tr.get_result()[19] - 1.5) < 0.1);
+        assert(std::abs(tr.get_result()[20] - 2.5) < 0.1);
+        assert(std::abs(tr.get_result()[24] - 1.06001) < 0.00001);
+        assert(std::abs(tr.get_result()[25] - 2.89) < 0.01);
+        assert(std::abs(tr.get_result()[1720] - 4.05) < 0.01);
+        assert(std::abs(tr.get_result()[1712] - 8.68) < 0.01);
+        assert(std::abs(tr.get_result()[1707] - 2.75) < 0.01);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
 // -----------------------------------------------------------------------------
 
 int main(int argc, char *argv[]) {
@@ -3919,6 +3955,7 @@ int main(int argc, char *argv[]) {
     test_ChaikinMoneyFlowVisitor();
     test_VertHorizFilterVisitor();
     test_OnBalanceVolumeVisitor();
+    test_TrueRangeVisitor();
 
     return (0);
 }

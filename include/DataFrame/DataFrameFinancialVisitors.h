@@ -3341,7 +3341,7 @@ template<typename T,
          typename I = unsigned long,
          typename =
              typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
-struct HeikinAshiCndlVisitor {
+struct  HeikinAshiCndlVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
@@ -3599,7 +3599,7 @@ using roc_v = RateOfChangeVisitor<T, I>;
 // Accumulation/Distribution (AD) indicator
 //
 template<typename T, typename I = unsigned long>
-struct AccumDistVisitor {
+struct  AccumDistVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
@@ -3660,7 +3660,7 @@ using ad_v = AccumDistVisitor<T, I>;
 // Chaikin Money Flow (CMF) indicator
 //
 template<typename T, typename I = unsigned long>
-struct ChaikinMoneyFlowVisitor {
+struct  ChaikinMoneyFlowVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
@@ -3809,7 +3809,7 @@ using vhf_v = VertHorizFilterVisitor<T, I>;
 // On Balance Volume (OBV) indicator
 //
 template<typename T, typename I = unsigned long>
-struct OnBalanceVolumeVisitor {
+struct  OnBalanceVolumeVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
@@ -3856,6 +3856,48 @@ private:
 
 template<typename T, typename I = unsigned long>
 using obv_v = OnBalanceVolumeVisitor<T, I>;
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename I = unsigned long>
+struct  TrueRangeVisitor {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &low_begin,
+                const H &low_end,
+                const H &high_begin,
+                const H &high_end,
+                const H &close_begin,
+                const H &close_end)  {
+
+        const size_type col_s = std::distance(close_begin, close_end);
+        result_type     result (col_s, std::numeric_limits<T>::quiet_NaN());
+
+        for (size_type i = 1; i < col_s; ++i)  {
+            const value_type    high = *(high_begin + i);
+            const value_type    low = *(low_begin + i);
+            const value_type    prev_c = *(close_begin + (i - 1));
+
+            result[i] = std::max({ std::fabs(high - low),
+                                   std::fabs(high - prev_c),
+                                   std::fabs(prev_c - low) });
+        }
+
+        result_.swap(result);
+    }
+
+    DEFINE_PRE_POST
+    DEFINE_RESULT
+
+private:
+
+    result_type result_ {  };
+};
 
 } // namespace hmdf
 

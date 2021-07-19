@@ -2108,45 +2108,49 @@ static void test_return()  {
     const auto              &result =
         df.single_act_visit<double>("col_1", return_visit).get_result();
 
-    assert(result.size() == 20);
-    assert(result[0] == 1.0);
-    assert(result[1] == -1.0);
-    assert(result[16] == 1.38);
-    assert(result[6] == -20.66);
-    assert(fabs(result[10] - -1.96) < 0.00001);
+    assert(result.size() == 21);
+    assert(std::isnan(result[0]));
+    assert(result[1] == 1.0);
+    assert(result[2] == -1.0);
+    assert(result[17] == 1.38);
+    assert(result[7] == -20.66);
+    assert(fabs(result[11] - -1.96) < 0.00001);
 
     ReturnVisitor<double>   return_visit2(return_policy::percentage);
     const auto              &result2 =
         df.single_act_visit<double>("col_1", return_visit2).get_result();
 
-    assert(result2.size() == 20);
-    assert(fabs(result2[0] - 0.0666667) < 0.00001);
-    assert(fabs(result2[1] - -0.0625) < 0.00001);
-    assert(fabs(result2[16] - 2.12308) < 0.00001);
-    assert(fabs(result2[6] - -0.98381) < 0.00001);
-    assert(fabs(result2[10] - -0.852174) < 0.00001);
+    assert(result2.size() == 21);
+    assert(std::isnan(result2[0]));
+    assert(fabs(result2[1] - 0.0666667) < 0.00001);
+    assert(fabs(result2[2] - -0.0625) < 0.00001);
+    assert(fabs(result2[17] - 2.12308) < 0.00001);
+    assert(fabs(result2[7] - -0.98381) < 0.00001);
+    assert(fabs(result2[11] - -0.852174) < 0.00001);
 
     ReturnVisitor<double>   return_visit3(return_policy::log);
     const auto              &result3 =
         df.single_act_visit<double>("col_1", return_visit3).get_result();
 
-    assert(result3.size() == 20);
-    assert(fabs(result3[0] - 0.0645385) < 0.00001);
-    assert(fabs(result3[1] - -0.0645385) < 0.00001);
-    assert(fabs(result3[16] - 1.13882) < 0.00001);
-    assert(fabs(result3[6] - -4.12333) < 0.00001);
-    assert(fabs(result3[10] - -1.91172) < 0.00001);
+    assert(result3.size() == 21);
+    assert(std::isnan(result3[0]));
+    assert(fabs(result3[1] - 0.0645385) < 0.00001);
+    assert(fabs(result3[2] - -0.0645385) < 0.00001);
+    assert(fabs(result3[17] - 1.13882) < 0.00001);
+    assert(fabs(result3[7] - -4.12333) < 0.00001);
+    assert(fabs(result3[11] - -1.91172) < 0.00001);
 
     ReturnVisitor<double>   return_visit4(return_policy::trinary);
     const auto              &result4 =
         df.single_act_visit<double>("col_1", return_visit4).get_result();
 
-    assert(result4.size() == 20);
-    assert(result4[0] == 1);
-    assert(result4[1] == -1);
-    assert(result4[16] == 1);
-    assert(result4[6] == -1);
-    assert(result4[10] == -1);
+    assert(result4.size() == 21);
+    assert(std::isnan(result4[0]));
+    assert(result4[1] == 1);
+    assert(result4[2] == -1);
+    assert(result4[17] == 1);
+    assert(result4[7] == -1);
+    assert(result4[11] == -1);
 }
 
 // -----------------------------------------------------------------------------
@@ -4015,8 +4019,9 @@ static void test_view_visitors()  {
     ReturnVisitor<double> ret_visitor(return_policy::monetary);
     const auto &res_ret =
         df.single_act_visit<double>("dbl_col4", ret_visitor).get_result();
-    assert(fabs(res_ret[0] - -1.5) < 0.00001);
-    assert(fabs(res_ret[6] - 0.3) < 0.00001);
+    assert(std::isnan(res_ret[0]));
+    assert(fabs(res_ret[1] - -1.5) < 0.00001);
+    assert(fabs(res_ret[7] - 0.3) < 0.00001);
 
     MedianVisitor<double> med_visitor;
     const auto &res_med =

@@ -91,7 +91,7 @@ struct ReturnVisitor  {
         std::adjacent_difference (column_begin, column_end,
                                   std::back_inserter (tmp_result),
                                   func);
-        tmp_result.erase (tmp_result.begin ());
+        tmp_result[0] = std::numeric_limits<T>::quiet_NaN();
         tmp_result.swap(result_);
     }
 
@@ -1045,7 +1045,7 @@ struct RSIVisitor {
         value_type                  avg_down = 0;
         const value_type            avg_period_1 = avg_period_ - one;
 
-        for (size_type i = 0; i < avg_period_; ++i)  {
+        for (size_type i = 1; i < avg_period_; ++i)  {
             const value_type    value = return_v.get_result()[i];
 
             if (value > 0)
@@ -3834,7 +3834,7 @@ struct  OnBalanceVolumeVisitor {
 
         result_type result = std::move(ret.get_result());
 
-        result.insert(result.begin(), T(1));
+        result[0] = T(1);
         for (size_type i = 0; i < col_s; ++i)
             result[i] *= T(*(volume_begin + i));
 

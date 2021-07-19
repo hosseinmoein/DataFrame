@@ -3804,6 +3804,59 @@ private:
 template<typename T, typename I = unsigned long>
 using vhf_v = VertHorizFilterVisitor<T, I>;
 
+// ----------------------------------------------------------------------------
+
+// On Balance Volume (OBV) indicator
+//
+template<typename T, typename I = unsigned long>
+struct OnBalanceVolumeVisitor {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H, typename V>
+    inline void
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &close_begin,
+                const H &close_end,
+                const V &volume_begin,
+                const V &volume_end)  {
+
+        const size_type col_s = std::distance(close_begin, close_end);
+
+        assert((col_s == std::distance(volume_begin, volume_end)));
+
+        ReturnVisitor<T, I> ret (return_policy::trinary);
+
+        ret.pre();
+        ret (idx_begin, idx_end, close_begin, close_end);
+        ret.post();
+
+        result_type result = std::move(ret.get_result());
+
+        result.insert(result.begin(), T(1));
+        for (size_type i = 0; i < col_s; ++i)
+            result[i] *= T(*(volume_begin + i));
+
+        CumSumVisitor<T, I> cumsum;
+
+        cumsum.pre();
+        cumsum (idx_begin, idx_end, result.begin(), result.end());
+        cumsum.post();
+        result_.swap(cumsum.get_result());
+    }
+
+    DEFINE_PRE_POST
+    DEFINE_RESULT
+
+private:
+
+    result_type result_ {  };
+};
+
+template<typename T, typename I = unsigned long>
+using obv_v = OnBalanceVolumeVisitor<T, I>;
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

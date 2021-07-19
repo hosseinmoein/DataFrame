@@ -3808,6 +3808,41 @@ static void test_VertHorizFilterVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_OnBalanceVolumeVisitor()  {
+
+    std::cout << "\nTesting OnBalanceVolumeVisitor{  } ..." << std::endl;
+
+    typedef StdDataFrame<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("data/SHORT_IBM.csv", io_format::csv2);
+
+        obv_v<double, std::string>  obv;
+
+        std::future<obv_v<double, std::string> &>   fut =
+            df.single_act_visit_async<double, long>
+            ("IBM_Close", "IBM_Volume", obv);
+
+        fut.get();
+        assert(obv.get_result().size() == 1721);
+        assert(std::abs(obv.get_result()[0] - 4546500) < 0.001);
+        assert(std::abs(obv.get_result()[19] - -21855500) < 0.001);
+        assert(std::abs(obv.get_result()[20] - -27048900) < 0.001);
+        assert(std::abs(obv.get_result()[24] - -29581000) < 0.001);
+        assert(std::abs(obv.get_result()[25] - -24888100) < 0.001);
+        assert(std::abs(obv.get_result()[1720] - -18817000) < 0.001);
+        assert(std::abs(obv.get_result()[1712] - -12925800) < 0.001);
+        assert(std::abs(obv.get_result()[1707] - 10998800) < 0.001);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int argc, char *argv[]) {
 
     test_get_reindexed();
@@ -3883,6 +3918,7 @@ int main(int argc, char *argv[]) {
     test_AccumDistVisitor();
     test_ChaikinMoneyFlowVisitor();
     test_VertHorizFilterVisitor();
+    test_OnBalanceVolumeVisitor();
 
     return (0);
 }

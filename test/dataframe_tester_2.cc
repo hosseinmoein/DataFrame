@@ -3879,6 +3879,38 @@ static void test_TrueRangeVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_DecayVisitor()  {
+
+    std::cout << "\nTesting DecayVisitor{  } ..." << std::endl;
+
+    typedef StdDataFrame<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("data/SHORT_IBM.csv", io_format::csv2);
+
+        DecayVisitor<double, std::string>  decay(5, true);
+
+        df.single_act_visit<double>("IBM_Close", decay);
+
+        assert(decay.get_result().size() == 1721);
+        assert(std::abs(decay.get_result()[0] - 185.53) < 0.01);
+        assert(std::abs(decay.get_result()[27] - 179.7) < 0.01);
+        assert(std::abs(decay.get_result()[28] - 180.24) < 0.01);
+        assert(std::abs(decay.get_result()[30] - 183.69) < 0.01);
+        assert(std::abs(decay.get_result()[35] - 183.45) < 0.01);
+        assert(std::abs(decay.get_result()[1720] - 111.66) < 0.01);
+        assert(std::abs(decay.get_result()[1712] - 125.513) < 0.01);
+        assert(std::abs(decay.get_result()[1707] - 127.203) < 0.01);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int argc, char *argv[]) {
 
     test_get_reindexed();
@@ -3956,6 +3988,7 @@ int main(int argc, char *argv[]) {
     test_VertHorizFilterVisitor();
     test_OnBalanceVolumeVisitor();
     test_TrueRangeVisitor();
+    test_DecayVisitor();
 
     return (0);
 }

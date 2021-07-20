@@ -1963,6 +1963,8 @@ struct YangZhangVolVisitor {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
+        assert(roll_count_ > 1);
+
         assert((col_s == std::distance(low_begin, low_end)));
         assert((col_s == std::distance(open_begin, open_end)));
         assert((col_s == std::distance(high_begin, high_end)));
@@ -3897,6 +3899,53 @@ struct  TrueRangeVisitor {
 private:
 
     result_type result_ {  };
+};
+
+// ----------------------------------------------------------------------------
+
+// Decay indicator
+//
+template<typename T, typename I = unsigned long>
+struct  DecayVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &column_begin,
+                const H &column_end)  {
+
+        GET_COL_SIZE
+        assert (period_ > 0 && period_ < col_s);
+
+        result_type         result (col_s);
+        const value_type    decay =
+            expo_ ? std::exp(-T(period_)) : (T(1) / T(period_));
+
+        result[0] = *column_begin;
+        for (size_type i = 1; i < col_s; ++i)
+            result[i] =
+                std::max({ *(column_begin + i),
+                           *(column_begin + (i - 1)) - decay,
+                           T(0) });
+
+        result_.swap(result);
+    }
+
+    DEFINE_PRE_POST
+    DEFINE_RESULT
+
+    explicit
+    DecayVisitor(size_type period = 5, bool exponential = false)
+        : period_(period), expo_(exponential)  {   }
+
+private:
+
+    const size_type period_;
+    const bool      expo_;
+    result_type     result_ { };
 };
 
 } // namespace hmdf

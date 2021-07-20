@@ -46,7 +46,8 @@ using yz_vol_v = YangZhangVolVisitor&lt;T, I&gt;;
       <td>
         This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
         This visitor calculates the rolling values of Yang Zhang volatility. It requires 4 input columns in the order of <I>low, high, open, close</I>.<BR>
-        The result is a vector of values with same number of items as the given columns. The first roll_count items, in the result, will be NAN. The values are annulaized by <I>trading_periods</I><BR><BR>
+        The result is a vector of values with same number of items as the given columns. The first roll_count items, in the result, will be NAN. The values are annulaized by <I>trading_periods</I><BR>
+        <BR><B>NOTE</B>: Roll count must be greater than 1<BR><BR>
         Yang Zhang is a historical volatility estimator that handles both opening jumps and the drift and has a minimum estimation error.<BR>
         We can think of the Yang-Zhang volatility as the combination of the overnight (close-to-open volatility) and a weighted average of the Rogers-Satchell volatility and the day’s open-to-close volatility. It is considered to be 14 times more efficient than the close-to-close estimator.<BR>
         <I>

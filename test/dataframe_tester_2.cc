@@ -3929,13 +3929,46 @@ static void test_HodgesTompkinsVolVisitor()  {
         assert(ht.get_result().size() == 1721);
         assert(std::isnan(ht.get_result()[0]));
         assert(std::isnan(ht.get_result()[28]));
-        assert(std::abs(ht.get_result()[29] - 0.187655) < 0.0001);
-        assert(std::abs(ht.get_result()[30] - 0.187132) < 0.0001);
-        assert(std::abs(ht.get_result()[31] - 0.186253) < 0.0001);
-        assert(std::abs(ht.get_result()[35] - 0.177077) < 0.0001);
-        assert(std::abs(ht.get_result()[1720] - 0.365188) < 0.0001);
-        assert(std::abs(ht.get_result()[1712] - 0.326883) < 0.0001);
-        assert(std::abs(ht.get_result()[1707] - 0.298478) < 0.0001);
+        assert(std::abs(ht.get_result()[29] - 0.187655) < 0.00001);
+        assert(std::abs(ht.get_result()[30] - 0.187132) < 0.00001);
+        assert(std::abs(ht.get_result()[31] - 0.186253) < 0.00001);
+        assert(std::abs(ht.get_result()[35] - 0.177077) < 0.00001);
+        assert(std::abs(ht.get_result()[1720] - 0.365188) < 0.00001);
+        assert(std::abs(ht.get_result()[1712] - 0.326883) < 0.00001);
+        assert(std::abs(ht.get_result()[1707] - 0.298478) < 0.00001);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_ParkinsonVolVisitor()  {
+
+    std::cout << "\nTesting ParkinsonVolVisitor{  } ..." << std::endl;
+
+    typedef StdDataFrame<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("data/SHORT_IBM.csv", io_format::csv2);
+
+        p_vol_v<double, std::string>    pv;
+
+        df.single_act_visit<double, double>("IBM_Low", "IBM_High", pv);
+
+        assert(pv.get_result().size() == 1721);
+        assert(std::isnan(pv.get_result()[0]));
+        assert(std::isnan(pv.get_result()[28]));
+        assert(std::abs(pv.get_result()[29] - 0.143397) < 0.00001);
+        assert(std::abs(pv.get_result()[30] - 0.145651) < 0.00001);
+        assert(std::abs(pv.get_result()[31] - 0.145266) < 0.00001);
+        assert(std::abs(pv.get_result()[35] - 0.144596) < 0.00001);
+        assert(std::abs(pv.get_result()[1720] - 0.225651) < 0.00001);
+        assert(std::abs(pv.get_result()[1712] - 0.208081) < 0.00001);
+        assert(std::abs(pv.get_result()[1707] - 0.236226) < 0.00001);
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
@@ -4023,6 +4056,7 @@ int main(int argc, char *argv[]) {
     test_TrueRangeVisitor();
     test_DecayVisitor();
     test_HodgesTompkinsVolVisitor();
+    test_ParkinsonVolVisitor();
 
     return (0);
 }

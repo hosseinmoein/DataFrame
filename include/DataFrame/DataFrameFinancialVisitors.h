@@ -4015,6 +4015,72 @@ private:
 template<typename T, typename I = unsigned long>
 using ht_vol_v = HodgesTompkinsVolVisitor<T, I>;
 
+// ----------------------------------------------------------------------------
+
+template<typename T,
+         typename I = unsigned long,
+         typename =
+             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+struct ParkinsonVolVisitor {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &low_begin,
+                const H &low_end,
+                const H &high_begin,
+                const H &high_end)  {
+
+        const size_type col_s = std::distance(low_begin, low_end);
+
+        assert((col_s == std::distance(high_begin, high_end)));
+        assert (roll_count_ > 0 && roll_count_ < col_s);
+
+        result_type         result (col_s);
+        const value_type    factor = T(1) / (T(4) * std::log(T(2)));
+
+        for (size_type i = 0; i < col_s; ++i)  {
+            const value_type    val =
+                std::log(*(high_begin + i) / *(low_begin + i));
+
+            result[i] = factor * val * val;
+        }
+
+        SimpleRollAdopter<MeanVisitor<T, I>, T, I>  avg
+            { MeanVisitor<T, I>(), roll_count_ } ;
+
+        avg.pre();
+        avg (idx_begin, idx_end, result.begin(), result.end());
+        avg.post();
+        result = std::move(avg.get_result());
+
+        for (size_type i = roll_count_ - 1; i < col_s; ++i)
+            result[i] = std::sqrt(result[i] * T(trading_periods_));
+
+        result_.swap(result);
+    }
+
+    DEFINE_PRE_POST
+    DEFINE_RESULT
+
+    explicit
+    ParkinsonVolVisitor(size_type roll_count = 30,
+                        size_type trading_periods = 252)
+        : roll_count_(roll_count), trading_periods_(trading_periods)  {  }
+
+private:
+
+    result_type     result_ {  };
+    const size_type roll_count_;
+    const size_type trading_periods_;
+};
+
+template<typename T, typename I = unsigned long>
+using p_vol_v = ParkinsonVolVisitor<T, I>;
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

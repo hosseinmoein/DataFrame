@@ -3948,6 +3948,73 @@ private:
     result_type     result_ { };
 };
 
+// ----------------------------------------------------------------------------
+
+template<typename T,
+         typename I = unsigned long,
+         typename =
+             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+struct HodgesTompkinsVolVisitor {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin,
+                const K &idx_end,
+                const H &column_begin,
+                const H &column_end)  {
+
+        GET_COL_SIZE
+        assert (roll_count_ > 0 && roll_count_ < col_s);
+
+        ReturnVisitor<T, I> ret (return_policy::log);
+
+        ret.pre();
+        ret (idx_begin, idx_end, column_begin, column_end);
+        ret.post();
+
+        SimpleRollAdopter<StdVisitor<T, I>, T, I>   stdev
+            { StdVisitor<T, I>(), roll_count_ };
+
+        stdev.pre();
+        stdev (idx_begin, idx_end,
+               ret.get_result().begin(), ret.get_result().end());
+        stdev.post();
+
+        result_type         result = std::move(stdev.get_result());
+        const value_type    annual = std::sqrt(trading_periods_);
+        const value_type    n = T(col_s - roll_count_ + 1);
+        const value_type    adj_factor =
+            T(1) / (T(1) -
+                    (T(roll_count_) / n) +
+                    ((T(roll_count_ * roll_count_) - T(1)) / (T(3) * n * n)));
+
+        std::transform(result.begin(), result.end(), result.begin(),
+                       std::bind(std::multiplies<T>(), std::placeholders::_1,
+                                 annual * adj_factor));
+
+        result_.swap(result);
+    }
+
+    DEFINE_PRE_POST
+    DEFINE_RESULT
+
+    explicit
+    HodgesTompkinsVolVisitor(size_type roll_count = 30,
+                             size_type trading_periods = 252)
+        : roll_count_(roll_count), trading_periods_(trading_periods)  {  }
+
+private:
+
+    result_type     result_ {  };
+    const size_type roll_count_;
+    const size_type trading_periods_;
+};
+
+template<typename T, typename I = unsigned long>
+using ht_vol_v = HodgesTompkinsVolVisitor<T, I>;
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

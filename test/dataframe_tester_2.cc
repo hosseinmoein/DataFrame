@@ -3911,6 +3911,39 @@ static void test_DecayVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_HodgesTompkinsVolVisitor()  {
+
+    std::cout << "\nTesting HodgesTompkinsVolVisitor{  } ..." << std::endl;
+
+    typedef StdDataFrame<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("data/SHORT_IBM.csv", io_format::csv2);
+
+        ht_vol_v<double, std::string>   ht;
+
+        df.single_act_visit<double>("IBM_Close", ht);
+
+        assert(ht.get_result().size() == 1721);
+        assert(std::isnan(ht.get_result()[0]));
+        assert(std::isnan(ht.get_result()[28]));
+        assert(std::abs(ht.get_result()[29] - 0.187655) < 0.0001);
+        assert(std::abs(ht.get_result()[30] - 0.187132) < 0.0001);
+        assert(std::abs(ht.get_result()[31] - 0.186253) < 0.0001);
+        assert(std::abs(ht.get_result()[35] - 0.177077) < 0.0001);
+        assert(std::abs(ht.get_result()[1720] - 0.365188) < 0.0001);
+        assert(std::abs(ht.get_result()[1712] - 0.326883) < 0.0001);
+        assert(std::abs(ht.get_result()[1707] - 0.298478) < 0.0001);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int argc, char *argv[]) {
 
     test_get_reindexed();
@@ -3989,6 +4022,7 @@ int main(int argc, char *argv[]) {
     test_OnBalanceVolumeVisitor();
     test_TrueRangeVisitor();
     test_DecayVisitor();
+    test_HodgesTompkinsVolVisitor();
 
     return (0);
 }

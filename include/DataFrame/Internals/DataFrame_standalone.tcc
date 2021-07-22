@@ -88,10 +88,13 @@ _load_groupby_data_1_(const DF &source,
                 marker = i;
             }
         }
-        if (marker < vec_size - 1)  {
+        if (marker < vec_size - 1 || vec_size == 1)  {
             idx_visitor.pre();
-            for (std::size_t j = marker; j < vec_size; ++j)
-                idx_visitor(src_idx[sort_v[j]], src_idx[sort_v[j]]);
+            if (vec_size == 1)
+                idx_visitor(src_idx[sort_v[0]], src_idx[sort_v[0]]);
+            else
+                for (std::size_t j = marker; j < vec_size; ++j)
+                    idx_visitor(src_idx[sort_v[j]], src_idx[sort_v[j]]);
             idx_visitor.post();
             dst_idx.push_back(idx_visitor.get_result());
             if (col_vec)  col_vec->push_back(input_v[sort_v[vec_size - 1]]);
@@ -118,10 +121,13 @@ _load_groupby_data_1_(const DF &source,
             marker = i;
         }
     }
-    if (marker < max_count)  {
+    if (marker < max_count || max_count == 1)  {
         visitor.pre();
-        for (std::size_t j = marker; j < max_count; ++j)
-            visitor(src_idx[sort_v[j]], src_vec[sort_v[j]]);
+        if (max_count == 1)
+            visitor(src_idx[sort_v[0]], src_vec[sort_v[0]]);
+        else
+            for (std::size_t j = marker; j < max_count; ++j)
+                visitor(src_idx[sort_v[j]], src_vec[sort_v[j]]);
         visitor.post();
         dst_vec.push_back(visitor.get_result());
     }
@@ -175,10 +181,13 @@ _load_groupby_data_2_(const DF &source,
                 marker = i;
             }
         }
-        if (marker < vec_size - 1)  {
+        if (marker < vec_size - 1 || vec_size == 1)  {
             idx_visitor.pre();
-            for (std::size_t j = marker; j < vec_size; ++j)
-                idx_visitor(src_idx[sort_v[j]], src_idx[sort_v[j]]);
+            if (vec_size == 1)
+                idx_visitor(src_idx[sort_v[0]], src_idx[sort_v[0]]);
+            else
+                for (std::size_t j = marker; j < vec_size; ++j)
+                    idx_visitor(src_idx[sort_v[j]], src_idx[sort_v[j]]);
             idx_visitor.post();
             dst_idx.push_back(idx_visitor.get_result());
             if (col_vec1) col_vec1->push_back(input_v1[sort_v[vec_size - 1]]);
@@ -207,10 +216,13 @@ _load_groupby_data_2_(const DF &source,
             marker = i;
         }
     }
-    if (marker < max_count)  {
+    if (marker < max_count || max_count == 1)  {
         visitor.pre();
-        for (std::size_t j = marker; j < max_count; ++j)
-            visitor(src_idx[sort_v[j]], src_vec[sort_v[j]]);
+        if (max_count == 1)
+            visitor(src_idx[sort_v[0]], src_vec[sort_v[0]]);
+        else
+            for (std::size_t j = marker; j < max_count; ++j)
+                visitor(src_idx[sort_v[j]], src_vec[sort_v[j]]);
         visitor.post();
         dst_vec.push_back(visitor.get_result());
     }
@@ -276,10 +288,13 @@ _load_groupby_data_3_(const DF &source,
                 marker = i;
             }
         }
-        if (marker < vec_size - 1)  {
+        if (marker < vec_size - 1 || vec_size == 1)  {
             idx_visitor.pre();
-            for (std::size_t j = marker; j < vec_size; ++j)
-                idx_visitor(src_idx[sort_v[j]], src_idx[sort_v[j]]);
+            if (vec_size == 1)
+                idx_visitor(src_idx[sort_v[0]], src_idx[sort_v[0]]);
+            else
+                for (std::size_t j = marker; j < vec_size; ++j)
+                    idx_visitor(src_idx[sort_v[j]], src_idx[sort_v[j]]);
             idx_visitor.post();
             dst_idx.push_back(idx_visitor.get_result());
             if (col_vec1) col_vec1->push_back(input_v1[sort_v[vec_size - 1]]);
@@ -310,10 +325,13 @@ _load_groupby_data_3_(const DF &source,
             marker = i;
         }
     }
-    if (marker < max_count)  {
+    if (marker < max_count || max_count == 1)  {
         visitor.pre();
-        for (std::size_t j = marker; j < max_count; ++j)
-            visitor(src_idx[sort_v[j]], src_vec[sort_v[j]]);
+        if (max_count == 1)
+            visitor(src_idx[sort_v[0]], src_vec[sort_v[0]]);
+        else
+            for (std::size_t j = marker; j < max_count; ++j)
+                visitor(src_idx[sort_v[j]], src_vec[sort_v[j]]);
         visitor.post();
         dst_vec.push_back(visitor.get_result());
     }

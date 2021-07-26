@@ -46,15 +46,8 @@ std::vector<T> &DataFrame<I, H>::create_column (const char *name)  {
     if (! ::strcmp(name, DF_INDEX_COL_NAME))
         throw DataFrameError ("DataFrame::create_column(): ERROR: "
                               "Data column name cannot be 'INDEX'");
-    if (column_tb_.find(name) != column_tb_.end())  {
-        char    buffer [512];
-
-        sprintf (buffer,
-                 "DataFrame::create_column(): "
-                 "ERROR: Column '%s' already exists",
-                 name);
-        throw DataFrameError (buffer);
-    }
+    if (column_tb_.find(name) != column_tb_.end())
+       return (get_column<T>(name));
 
     if (column_list_.empty())  {
         column_list_.reserve(32);

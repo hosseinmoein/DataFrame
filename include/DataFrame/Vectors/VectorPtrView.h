@@ -102,6 +102,11 @@ public:
         return (lhs.vector_ == rhs.vector_);
     }
     inline friend bool
+    operator != (const VectorPtrView &lhs, const VectorPtrView &rhs) {
+
+        return (lhs.vector_ != rhs.vector_);
+    }
+    inline friend bool
     operator < (const VectorPtrView &lhs, const VectorPtrView &rhs) {
 
         return (lhs.vector_ < rhs.vector_);

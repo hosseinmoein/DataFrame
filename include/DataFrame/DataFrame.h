@@ -1250,6 +1250,31 @@ public:  // Data manipulation
     concat(const RHS_T &rhs,
            concat_policy cp = concat_policy::all_columns) const;
 
+    // This behaves just lie concat(), but retunrs a view instead of another
+    // DataFrame.
+    //
+    // NOTE: concat_policy cannot be concat_policy::all_columns. In this caae
+    //       a NotFeasible exception will be thrown.
+    //
+    // RHS_T:
+    //   Type of DataFrame rhs
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // rhs:
+    //   The rhs DataFrame
+    // cp:
+    //   Concatenation policy:
+    //   common_columns: only apply concatenation to the common columns
+    //   lhs_and_common_columns: the result will have all the columns in self,
+    //                           but only common columns and index are
+    //                           concatenated
+    //
+    template<typename RHS_T, typename ... Ts>
+    [[nodiscard]] DataFramePtrView<IndexType>
+    concat_view(const RHS_T &rhs,
+                concat_policy cp = concat_policy::common_columns) const;
+
     // This is similar to concat() method but it is applied to self. It changes
     // self.
     //

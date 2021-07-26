@@ -40,7 +40,7 @@ create_column(const char *name);
       </td>
       <td>
         It creates an empty column named “name”<BR>
-        Returns a reference to the vector for that column
+        Returns a reference to the vector for that column. If a column with the same name and type already exists, it retunrs a reference to it.
       </td>
       <td>
         <B>T</B>: Type of the column

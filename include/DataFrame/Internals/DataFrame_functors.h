@@ -481,6 +481,21 @@ struct sel_load_view_functor_ : DataVec::template visitor_base<Ts ...>  {
 
 // ----------------------------------------------------------------------------
 
+template<typename LHS, typename ... Ts>
+struct concat_load_view_functor_ : DataVec::template visitor_base<Ts ...>  {
+
+    inline concat_load_view_functor_ (const char *n, LHS &r)
+        : name (n), result(r)  {   }
+
+    const char  *name;
+    LHS         &result;
+
+    template<typename T>
+    void operator() (const T &vec);
+};
+
+// ----------------------------------------------------------------------------
+
 template<typename ... Ts>
 struct sel_remove_functor_ : DataVec::template visitor_base<Ts ...>  {
 

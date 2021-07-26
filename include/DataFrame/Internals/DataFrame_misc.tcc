@@ -645,6 +645,45 @@ operator() (T &vec)  {
     return;
 }
 
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename IT, typename ... Ts>
+template<typename T>
+void
+DataFrame<I, H>::
+concat_load_view_functor_<IT, Ts ...>::
+operator() (const T &vec)  {
+
+    using VecType = typename std::remove_reference<T>::type;
+    using ValueType = typename VecType::value_type;
+
+    const size_type rhs_s = vec.size();
+    const bool      has_col = result.has_column(name);
+
+    if (has_col)  {
+        auto            &result_vec =
+            result.template get_column<ValueType>(name);
+        const size_type max_s =
+            std::min(result_vec.size() + rhs_s, result.get_index().size());
+        size_type       count { vec.size() };
+
+        result_vec.reserve(max_s);
+        for (size_type i = 0; i < rhs_s && count < max_s; ++i, ++count)
+            result_vec.push_back(const_cast<ValueType *>(&(vec[i])));
+    }
+    else  {
+        T   &nc_vec = const_cast<T &>(vec);
+		
+        result.template setup_view_column_<ValueType,
+                                           typename VecType::iterator>(
+            name, { nc_vec.begin(), nc_vec.end() });
+    }
+
+    return;
+}
+
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>

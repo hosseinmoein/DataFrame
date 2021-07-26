@@ -91,11 +91,98 @@ static void test_groupby_edge()  {
         (std::cout, io_format::csv2);
 }
 
+
+
+
+
+
+
+
+
+
+
+// -----------------------------------------------------------------------------
+
+static void test_concat_view()  {
+
+    std::cout << "\nTesting concat_view( ) ..." << std::endl;
+
+    MyDataFrame df1;
+
+    std::vector<unsigned long>  idxvec =
+        { 1UL, 2UL, 3UL, 10UL, 5UL, 7UL, 8UL, 12UL, 9UL, 12UL, 10UL, 13UL,
+          10UL, 15UL, 14UL };
+    std::vector<double>         dblvec =
+        { 0.0, 15.0, 14.0, 2.0, 1.0, 12.0, 11.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0,
+          9.0, 10.0 };
+    std::vector<double>         dblvec2 =
+        { 100.0, 101.0, 102.0, 103.0, 104.0, 105.0, 106.55, 107.34, 1.8, 111.0,
+          112.0, 113.0, 114.0, 115.0, 116.0 };
+    std::vector<int>            intvec =
+        { 1, 2, 3, 4, 5, 8, 6, 7, 11, 14, 9, 10, 15, 12, 13 };
+    std::vector<std::string>    strvec =
+        { "zz", "bb", "cc", "ww", "ee", "ff", "gg", "hh", "ii", "jj", "kk",
+          "ll", "mm", "nn", "oo" };
+
+    df1.load_data(std::move(idxvec),
+                  std::make_pair("dbl_col", dblvec),
+                  std::make_pair("int_col", intvec),
+                  std::make_pair("str_col", strvec));
+
+    MyDataFrame df2 = df1;
+
+    df2.load_column("dbl_col_2", std::move(dblvec2));
+
+    auto    result1 =
+        df1.concat_view<decltype(df2), double, int, std::string>(df2);
+
+    result1.write<std::ostream, int, double, std::string>(std::cout);
+
+    assert(result1.get_index().size() == 30);
+    assert(result1.get_column<double>("dbl_col_2").size() == 30);
+    assert(result1.get_column<double>("dbl_col").size() == 30);
+    assert(result1.get_column<std::string>("str_col").size() == 30);
+    assert(result1.get_column<int>("int_col").size() == 30);
+    assert(result1.get_index()[0] == 1);
+    assert(result1.get_index()[14] == 14);
+    assert(result1.get_index()[15] == 1);
+    assert(result1.get_index()[29] == 14);
+    assert(std::isnan(result1.get_column<double>("dbl_col_2")[0]));
+    assert(std::isnan(result1.get_column<double>("dbl_col_2")[14]));
+    assert(result1.get_column<double>("dbl_col_2")[15] == 100.0);
+    assert(result1.get_column<double>("dbl_col_2")[29] == 116.0);
+    assert(result1.get_column<std::string>("str_col")[0] == "zz");
+    assert(result1.get_column<std::string>("str_col")[14] == "oo");
+    assert(result1.get_column<std::string>("str_col")[15] == "zz");
+    assert(result1.get_column<int>("int_col")[0] == 1);
+    assert(result1.get_column<int>("int_col")[14] == 13);
+    assert(result1.get_column<int>("int_col")[15] == 1);
+
+    auto    result2 =
+        df1.concat_view<decltype(df2), double, int, std::string>
+            (df2, concat_policy::lhs_and_common_columns);
+
+    assert(result2.get_index().size() == 30);
+    assert(result2.get_column<double>("dbl_col").size() == 30);
+    assert(result2.get_column<std::string>("str_col").size() == 30);
+    assert(result2.get_column<std::string>("str_col")[0] == "zz");
+    assert(result2.get_column<std::string>("str_col")[14] == "oo");
+    assert(result2.get_column<std::string>("str_col")[15] == "zz");
+    assert(! result2.has_column("dbl_col_2"));
+
+    auto    result3 =
+        df1.concat_view<decltype(df2), double, int, std::string>
+            (df2, concat_policy::lhs_and_common_columns);
+
+    assert((result2.is_equal<int, double, std::string>(result3)));
+}
+
 // -----------------------------------------------------------------------------
 
 int main(int argc, char *argv[]) {
 
     test_groupby_edge();
+    test_concat_view();
 
     return (0);
 }

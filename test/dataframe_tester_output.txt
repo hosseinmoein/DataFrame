@@ -1664,3 +1664,6 @@ INDEX:1:<ulong>,dbl_col:1:<double>,dbl_col_2:1:<double>,str_col:1:<string>,int_c
 INDEX:1:<ulong>,bool_col:1:<bool>,sum_dbl2:1:<double>,cnt_dbl2:1:<ulong>
 1,0,100,1
 
+
+Testing concat_view( ) ...
+

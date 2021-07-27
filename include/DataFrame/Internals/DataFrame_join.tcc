@@ -719,9 +719,20 @@ DataFrame<I, H>::concat_view(const RHS_T &rhs, concat_policy cp) const  {
         result_idx.push_back(const_cast<IndexType *>(&(rhs.get_index()[i])));
     result.indices_ = std::move(result_idx);
 
-    if (cp == concat_policy::all_columns)
-        throw NotFeasible("concat_view(): "
-                          "Cannot create a view with 'all_columns' option");
+    if (cp == concat_policy::all_columns)  {
+        for (auto &lhs_citer : column_list_)  {
+            concat_load_view_functor_<DataFramePtrView<I>, Ts ...> functor(
+                lhs_citer.first.c_str(), result);
+
+            data_[lhs_citer.second].change(functor);
+        }
+        for (auto &rhs_citer : rhs.column_list_)  {
+            concat_load_view_functor_<DataFramePtrView<I>, Ts ...> functor(
+                rhs_citer.first.c_str(), result);
+
+            rhs.data_[rhs_citer.second].change(functor);
+        }
+    }
     else if (cp == concat_policy::lhs_and_common_columns)  {
         for (auto &lhs_citer : column_list_)  {
             concat_load_view_functor_<DataFramePtrView<I>, Ts ...> functor(

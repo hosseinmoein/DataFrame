@@ -1253,9 +1253,6 @@ public:  // Data manipulation
     // This behaves just lie concat(), but retunrs a view instead of another
     // DataFrame.
     //
-    // NOTE: concat_policy cannot be concat_policy::all_columns. In this caae
-    //       a NotFeasible exception will be thrown.
-    //
     // RHS_T:
     //   Type of DataFrame rhs
     // Ts:

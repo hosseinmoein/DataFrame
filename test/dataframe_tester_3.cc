@@ -155,6 +155,22 @@ static void test_concat_view()  {
     assert(result2.get_column<double>("dbl_col_2")[0] == 100.0);
     assert(result2.get_column<double>("dbl_col_2")[5] == 105.0);
     assert(result2.get_column<double>("dbl_col_2")[10] == 112.0);
+
+    auto    result3 =
+        df1.concat_view<decltype(df1), double, int, std::string>
+            (df2, concat_policy::all_columns);
+
+    assert(result3.get_index().size() == 30);
+    assert(result3.get_column<double>("dbl_col").size() == 30);
+    assert(result3.get_column<std::string>("str_col").size() == 30);
+    assert(result3.get_column<double>("dbl_col_2").size() == 15);
+    assert(result3.get_column<std::string>("str_col")[0] == "zz");
+    assert(result3.get_column<std::string>("str_col")[14] == "oo");
+    assert(result3.get_column<std::string>("str_col")[15] == "zz");
+    assert(result3.get_column<double>("dbl_col_2").size() == 15);
+    assert(result3.get_column<double>("dbl_col_2")[0] == 100.0);
+    assert(result3.get_column<double>("dbl_col_2")[5] == 105.0);
+    assert(result3.get_column<double>("dbl_col_2")[10] == 112.0);
 }
 
 // -----------------------------------------------------------------------------

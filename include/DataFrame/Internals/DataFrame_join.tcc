@@ -699,13 +699,10 @@ template<typename RHS_T, typename ... Ts>
 DataFramePtrView<I>
 DataFrame<I, H>::concat_view(const RHS_T &rhs, concat_policy cp) const  {
 
-    static_assert((std::is_base_of<StdDataFrame<I>, RHS_T>::value ||
-                   std::is_base_of<DataFrameView<I>, RHS_T>::value ||
-                   std::is_base_of<DataFramePtrView<I>, RHS_T>::value) &&
+    static_assert(! std::is_base_of<StdDataFrame<I>, RHS_T>::value ||
                   ! std::is_base_of<StdDataFrame<I>, decltype(*this)>::value,
-                  "The rhs argument to concat_view() can only be "
-                  "StdDataFrame<IndexType> or DataFrame[Ptr]View<IndexType>. "
-                  "Self must be StdDataFrame<IndexType>");
+                  "Currently, arguments to concat_view() can only be "
+                  "StdDataFrame<IndexType>.");
 
     DataFramePtrView<I> result;
 

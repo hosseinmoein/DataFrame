@@ -88,7 +88,7 @@ _load_groupby_data_1_(const DF &source,
                 marker = i;
             }
         }
-        if (marker < vec_size - 1 || vec_size == 1)  {
+        if (marker < vec_size || vec_size == 1)  {
             idx_visitor.pre();
             if (vec_size == 1)
                 idx_visitor(src_idx[sort_v[0]], src_idx[sort_v[0]]);
@@ -181,7 +181,7 @@ _load_groupby_data_2_(const DF &source,
                 marker = i;
             }
         }
-        if (marker < vec_size - 1 || vec_size == 1)  {
+        if (marker < vec_size || vec_size == 1)  {
             idx_visitor.pre();
             if (vec_size == 1)
                 idx_visitor(src_idx[sort_v[0]], src_idx[sort_v[0]]);
@@ -288,7 +288,7 @@ _load_groupby_data_3_(const DF &source,
                 marker = i;
             }
         }
-        if (marker < vec_size - 1 || vec_size == 1)  {
+        if (marker < vec_size || vec_size == 1)  {
             idx_visitor.pre();
             if (vec_size == 1)
                 idx_visitor(src_idx[sort_v[0]], src_idx[sort_v[0]]);

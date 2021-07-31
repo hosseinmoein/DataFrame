@@ -14,6 +14,7 @@ SRCS = Vectors/HeteroVector.cc \
        ../test/dataframe_tester.cc \
        ../test/dataframe_tester_2.cc \
        ../test/dataframe_tester_3.cc \
+       ../test/hello_world.cc \
        ../test/dataframe_thread_safety.cc \
        ../test/dataframe_performance.cc \
        ../test/dataframe_performance_2.cc \
@@ -68,6 +69,7 @@ TARGETS += $(TARGET_LIB) \
            $(LOCAL_BIN_DIR)/dataframe_tester \
            $(LOCAL_BIN_DIR)/dataframe_tester_2 \
            $(LOCAL_BIN_DIR)/dataframe_tester_3 \
+           $(LOCAL_BIN_DIR)/hello_world \
            $(LOCAL_BIN_DIR)/dataframe_thread_safety \
            $(LOCAL_BIN_DIR)/dataframe_performance \
            $(LOCAL_BIN_DIR)/dataframe_performance_2 \
@@ -138,6 +140,10 @@ DATAFRAME_TESTER_OBJ_3 = $(LOCAL_OBJ_DIR)/dataframe_tester_3.o
 $(LOCAL_BIN_DIR)/dataframe_tester_3: $(TARGET_LIB) $(DATAFRAME_TESTER_OBJ_3)
 	$(CXX) -o $@ $(DATAFRAME_TESTER_OBJ_3) $(LIBS)
 
+HELLO_WORLD_OBJ = $(LOCAL_OBJ_DIR)/hello_world.o
+$(LOCAL_BIN_DIR)/hello_world: $(TARGET_LIB) $(HELLO_WORLD_OBJ)
+	$(CXX) -o $@ $(HELLO_WORLD_OBJ) $(LIBS)
+
 DATAFRAME_THREAD_SAFTY_OBJ = $(LOCAL_OBJ_DIR)/dataframe_thread_safety.o
 $(LOCAL_BIN_DIR)/dataframe_thread_safety: $(TARGET_LIB) $(DATAFRAME_THREAD_SAFTY_OBJ)
 	$(CXX) -o $@ $(DATAFRAME_THREAD_SAFTY_OBJ) $(LIBS)
@@ -176,7 +182,7 @@ clean:
           $(DATE_TIME_TESTER_OBJ) $(VECTOR_PTR_VIEW_TESTER_OBJ) \
           $(GEN_RAND_TESTER_OBJ) \
           $(DATAFRAME_PERFORMANCE_OBJ) $(DATAFRAME_TESTER_OBJ_2) \
-          $(DATAFRAME_TESTER_OBJ_3) \
+          $(DATAFRAME_TESTER_OBJ_3) $(HELLO_WORLD_OBJ) \
           $(DATAFRAME_PERFORMANCE_2_OBJ) $(DATAFRAME_THREAD_SAFTY_OBJ)
 
 clobber:
@@ -184,7 +190,7 @@ clobber:
           $(DATE_TIME_TESTER_OBJ) $(VECTOR_PTR_VIEW_TESTER_OBJ) \
           $(GEN_RAND_TESTER_OBJ) $(DATAFRAME_PERFORMACE_OBJ) \
           $(DATAFRAME_TESTER_OBJ_2) $(DATAFRAME_THREAD_SAFTY_OBJ) \
-          $(DATAFRAME_TESTER_OBJ_3)
+          $(DATAFRAME_TESTER_OBJ_3) $(HELLO_WORLD_OBJ)
 
 install_lib:
 	cp -pf $(TARGET_LIB) $(PROJECT_LIB_DIR)/.

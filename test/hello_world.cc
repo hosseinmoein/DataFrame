@@ -24,6 +24,7 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
+
 #include <DataFrame/DataFrame.h>  // Main DataFrame header
 #include <DataFrame/DataFrameFinancialVisitors.h>  // Financial algorithms
 #include <DataFrame/DataFrameMLVisitors.h>  // Machine-learning algorithms
@@ -43,7 +44,7 @@ using ULDataFrame = StdDataFrame<unsigned long>;
 //
 using StrDataFrame = StdDataFrame<std::string>;
 
-struct MyData  {
+struct  MyData  {
     int         i { 10 };
     double      d { 5.5 };
     std::string s { "Boo" };
@@ -64,7 +65,7 @@ int main(int argc, char *argv[]) {
     std::vector<MyData>         mydata_col(10);
     std::vector<int>            int_col1 = { 1, 2, -3, -4, 5, 6, 7, 8, 9, -10 };
     std::vector<double>         dbl_col1 =
-        { 0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1 };
+        { 0.01, 0.02, 0.03, 0.03, 0.05, 0.06, 0.03, 0.08, 0.09, 0.03 };
 
     ULDataFrame ul_df1;
 
@@ -97,13 +98,70 @@ int main(int argc, char *argv[]) {
                      std::make_pair("New York", str_col2),
                      std::make_pair("numbers", dbl_col2));
 
-    StrDataFrame    str_df1;
+    StrDataFrame    ibm_df;
 
     // Also, you can load data into a DataFrame from a file, suporting a few
     // different formats.
     // If the file cannot be found, an exception will be thrown.
     //
-    str_df1.read("data/SHORT_IBM.csv", io_format::csv2);
+    ibm_df.read("data/SHORT_IBM.csv", io_format::csv2);
+
+    // To access a column, you must know its name (or index) and its type
+    //
+    auto       &str_col_ref = ul_df2.get_column<std::string>("string col");
+    const auto &close_const_ref = ibm_df.get_column<double>("IBM_Close");
+
+    // In case of a "standard" DataFrame (not a view), the columns are returned
+    // as a reference to a std::vector
+    //
+    for (auto citer : str_col_ref)
+        std::cout << citer << std::endl;
+    for (std::size_t i = 0; i < str_col_ref.size(); ++i)
+        std::cout << str_col_ref[i] << std::endl;
+
+    // You can write the data to a file or stdout in a few formats
+    // You must specify all the column types but only once
+    //
+    ul_df2.write<std::ostream, std::string, double>(std::cout, io_format::csv2);
+    ibm_df.write<double, long>("/tmp/test.json", io_format::json);
+
+    // You can sort by one or multiple columns
+    // You must specify all the column types but only once
+    //
+    // Sort first by the index column in ascending order than by "string col"
+    // column in descending order
+    //
+    ul_df2.sort<ULDataFrame::IndexType, std::string, double, std::string>
+        (DF_INDEX_COL_NAME, sort_spec::ascen, "string col", sort_spec::desce);
+
+    // You could get another DataFrame by selecting on one or multiple columns
+    // You must specify all the column types but only once
+    //
+    auto    functor =
+        [](const std::string &, const double &val)-> bool {
+            return (val > 150.0);
+        };
+    auto  above_150_df =
+        ibm_df.get_data_by_sel<double, decltype(functor), double, long>
+            ("IBM_Close", functor);
+
+    // Or, you could choose to get a view. See docs for views
+    //
+    auto  above_150_view =
+        ibm_df.get_view_by_sel<double, decltype(functor), double, long>
+            ("IBM_Close", functor);
+
+    // You could get another DataFrame by group-bying on one or multiple columns
+    // You must specify only the type(s) of column(s), you are group-bying
+    //
+    // Group-by column dbl_col, and I am specifying how to summarize the index
+    // column and each of the ohter columns
+    //
+    auto    gb_df = ul_df1.groupby1<double>(
+        "dbl_col",
+        LastVisitor<ULDataFrame::IndexType, ULDataFrame::IndexType>(),
+        std::make_tuple("integers", "sum_int", SumVisitor<int>()),
+        std::make_tuple("my_data_col", "last_my_data", LastVisitor<MyData>()));
 
     return (0);
 }

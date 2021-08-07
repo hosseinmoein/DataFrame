@@ -192,6 +192,40 @@ get_row(size_type row_num, const std::array<const char *, N> col_names) const {
     return (ret_vec);
 }
 
+
+
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename ... Ts>
+HeteroVector DataFrame<I, H>::
+get_row(size_type row_num) const {
+
+    if (row_num >= indices_.size())  {
+        char buffer [512];
+
+#ifdef _MSC_VER
+        sprintf(buffer, "DataFrame::get_row(): ERROR: There aren't %zu rows",
+#else
+        sprintf(buffer, "DataFrame::get_row(): ERROR: There aren't %lu rows",
+#endif // _MSC_VER
+                row_num);
+        throw BadRange(buffer);
+    }
+
+    HeteroVector ret_vec;
+
+    ret_vec.reserve<IndexType>(1);
+    ret_vec.push_back(indices_[row_num]);
+
+    get_row_functor_<Ts ...>    functor(ret_vec, row_num);
+
+    for (auto citer : column_list_)
+        data_[citer.second].change(functor);
+    return (ret_vec);
+}
+
 // ----------------------------------------------------------------------------
 
 template<typename I, typename  H>

@@ -1459,6 +1459,21 @@ public: // Read/access and slicing interfaces
     get_row(size_type row_num,
             const std::array<const char *, N> col_names) const;
 
+    // This is same as get_row() above. But it always includes all the columns
+    // in the returned row. The order is the column creation order. If you
+    // have rotated the columns, the creation order has changed. You can always
+    // use column_name_to_idx() and column_idx_to_name() methods.
+    //
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // row_num:
+    //   The row number
+    //
+    template<typename ... Ts>
+    [[nodiscard]] HeteroVector
+    get_row(size_type row_num) const;
+
     // It returns a vector of unique values in the named column in the same
     // order that exists in the column.
     // For this method to compile and work, 3 conditions must be met:

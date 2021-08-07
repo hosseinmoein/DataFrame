@@ -2006,16 +2006,26 @@ static void test_get_row()  {
 
     std::array<const char *, 6> columns =
         {"col_1", "col_2", "col_3", "col_4", "col_str", "col_int"};
-    auto                        row =
+    auto                        row2 =
         df.get_row<6, int, double, std::string>(2, columns);
 
-    assert(row.at<MyDataFrame::IndexType>(0) == 123452);
-    assert(row.at<double>(0) == 3.0);
-    assert(row.at<double>(1) == 10.0);
-    assert(row.at<double>(2) == 500.5);
-    assert(row.at<int>(0) == 34);
-    assert(row.at<int>(1) == 0);
-    assert(row.at<std::string>(0) == "eeee");
+    assert(row2.at<MyDataFrame::IndexType>(0) == 123452);
+    assert(row2.at<double>(0) == 3.0);
+    assert(row2.at<double>(1) == 10.0);
+    assert(row2.at<double>(2) == 500.5);
+    assert(row2.at<int>(0) == 34);
+    assert(row2.at<int>(1) == 0);
+    assert(row2.at<std::string>(0) == "eeee");
+
+    auto    row3 = df.get_row<int, double, std::string>(3);
+
+    assert(row3.at<MyDataFrame::IndexType>(0) == 123453);
+    assert(row3.at<double>(0) == 4.0);
+    assert(row3.at<double>(1) == 11.0);
+    assert(row3.at<double>(2) == 18.0);
+    assert(row3.at<int>(0) == 25);
+    assert(row3.at<int>(1) == 0);
+    assert(row3.at<std::string>(0) == "rrrr");
 }
 
 // -----------------------------------------------------------------------------

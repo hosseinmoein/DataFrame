@@ -34,6 +34,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // -----------------------------------------------------------------------------
 
+// DataFrame library is entirely under hmdf name-space
+//
 using namespace hmdf;
 
 // A DataFrame with ulong index type
@@ -44,6 +46,8 @@ using ULDataFrame = StdDataFrame<unsigned long>;
 //
 using StrDataFrame = StdDataFrame<std::string>;
 
+// This is just some arbitrary type to show how any type could be in DataFrame
+//
 struct  MyData  {
     int         i { 10 };
     double      d { 5.5 };
@@ -89,7 +93,7 @@ int main(int argc, char *argv[]) {
         { "K", "H", "L", "M", "N", "O", "P", "Q", "R", "S" };
     std::vector<double>         dbl_col2 =
         { 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0};
-    ULDataFrame ul_df2;
+    ULDataFrame                 ul_df2;
 
     // Also, you can load data into a DataFrame all at once
     //
@@ -102,7 +106,9 @@ int main(int argc, char *argv[]) {
 
     // Also, you can load data into a DataFrame from a file, suporting a few
     // different formats.
-    // If the file cannot be found, an exception will be thrown.
+    // If the file cannot be found, an exception will be thrown. If the DataFrame
+    // test directory is your current directory when running this, it should work
+    // fine.
     //
     ibm_df.read("data/SHORT_IBM.csv", io_format::csv2);
 
@@ -110,9 +116,10 @@ int main(int argc, char *argv[]) {
     //
     auto       &str_col_ref = ul_df2.get_column<std::string>("string col");
     const auto &close_const_ref = ibm_df.get_column<double>("IBM_Close");
+    const auto &index_vec = ibm_df.get_index();
 
     // In case of a "standard" DataFrame (not a view), the columns are returned
-    // as a reference to a std::vector
+    // as a reference to a std::vector of type of that column.
     //
     for (auto citer : str_col_ref)
         std::cout << citer << std::endl;
@@ -120,13 +127,14 @@ int main(int argc, char *argv[]) {
         std::cout << str_col_ref[i] << std::endl;
 
     // You can write the data to a file or stdout in a few formats
-    // You must specify all the column types but only once
+    // You must specify all the column types, but only once
+    // When writing to a file, the file name/path must be create-able.
     //
     ul_df2.write<std::ostream, std::string, double>(std::cout, io_format::csv2);
     ibm_df.write<double, long>("/tmp/test.json", io_format::json);
 
     // You can sort by one or multiple columns
-    // You must specify all the column types but only once
+    // You must specify all the column types, but only once
     //
     // Sort first by the index column in ascending order than by "string col"
     // column in descending order
@@ -135,33 +143,49 @@ int main(int argc, char *argv[]) {
         (DF_INDEX_COL_NAME, sort_spec::ascen, "string col", sort_spec::desce);
 
     // You could get another DataFrame by selecting on one or multiple columns
-    // You must specify all the column types but only once
+    // You must specify all the column types, but only once
     //
     auto    functor =
         [](const std::string &, const double &val)-> bool {
             return (val > 150.0);
         };
-    auto  above_150_df =
+    auto    above_150_df =
         ibm_df.get_data_by_sel<double, decltype(functor), double, long>
             ("IBM_Close", functor);
 
     // Or, you could choose to get a view. See docs for views
     //
-    auto  above_150_view =
+    auto    above_150_view =
         ibm_df.get_view_by_sel<double, decltype(functor), double, long>
             ("IBM_Close", functor);
 
-    // You could get another DataFrame by group-bying on one or multiple columns
+    // You can get another DataFrame by group-bying on one or multiple columns
     // You must specify only the type(s) of column(s), you are group-bying
     //
     // Group-by column dbl_col, and I am specifying how to summarize the index
-    // column and each of the ohter columns
+    // column and each of the other columns
     //
     auto    gb_df = ul_df1.groupby1<double>(
         "dbl_col",
         LastVisitor<ULDataFrame::IndexType, ULDataFrame::IndexType>(),
         std::make_tuple("integers", "sum_int", SumVisitor<int>()),
         std::make_tuple("my_data_col", "last_my_data", LastVisitor<MyData>()));
+
+    // You can run statistical, financial, ML, … algorithms on one or multiple
+    // columns by using visitors. You must specify the column(s) type(s)
+    //
+    StdVisitor<double, std::string>     stdev;
+    CorrVisitor<double, std::string>    corrl;
+
+    ibm_df.visit<double>("IBM_Close", stdev);
+    std::cout << "Standard deviation of IBM close prices: "
+              << stdev.get_result()
+              << std::endl;
+
+    std::cout << "Correlation between IBM open and close prices: "
+              << ibm_df.visit<double, double>
+                     ("IBM_Open", "IBM_Close", corrl).get_result()
+              << std::endl;
 
     return (0);
 }

@@ -55,10 +55,8 @@ struct ReturnVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &column_begin,
-                const H &column_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
 
@@ -168,10 +166,8 @@ public:
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &prices_begin,
-                const H &prices_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &prices_begin, const H &prices_end)  {
 
         const size_type thread_level =
             ThreadGranularity::get_sensible_thread_level();
@@ -296,10 +292,8 @@ public:
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &prices_begin,
-                const H &prices_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &prices_begin, const H &prices_end)  {
 
         const size_type thread_level =
             ThreadGranularity::get_sensible_thread_level();
@@ -395,10 +389,8 @@ struct MACDVisitor {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &column_begin,
-                const H &column_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
 
         macd_roller_t   short_roller(exponential_decay_spec::span,
                                      short_mean_period_);
@@ -515,9 +507,10 @@ struct  VWAPVisitor {
     // The second value is assimed to be the size of a traded instrument.
     // The provided "dfunc" measures time elapsed between two index values
     //
-    inline void operator() (const index_type &idx,
-                            const value_type &price,
-                            const value_type &size)  {
+    inline void
+    operator() (const index_type &idx,
+                const value_type &price,
+                const value_type &size)  {
 
         // If reached the limit, stop
         //
@@ -705,11 +698,12 @@ struct  VWBASVisitor {
     // The fourth value is assimed to be the ask size of a traded instrument.
     // The provided "dfunc" measures time elapsed between two index values
     //
-    inline void operator() (const index_type &idx,
-                            const value_type &bid_price,
-                            const value_type &ask_price,
-                            const value_type &bid_size,
-                            const value_type &ask_size)  {
+    inline void
+    operator() (const index_type &idx,
+                const value_type &bid_price,
+                const value_type &ask_price,
+                const value_type &bid_size,
+                const value_type &ask_size)  {
 
         if (started_ && dfunc_(last_time_, idx) >= interval_)  {
             post();
@@ -938,12 +932,9 @@ struct SharpeRatioVisitor {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &asset_ret_begin,
-                const H &asset_ret_end,
-                const H &benchmark_ret_begin,
-                const H &benchmark_ret_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &asset_ret_begin, const H &asset_ret_end,
+                const H &benchmark_ret_begin, const H &benchmark_ret_end)  {
 
         const size_type vec_s = std::distance(asset_ret_begin, asset_ret_end);
         const size_type b_s =
@@ -1023,10 +1014,8 @@ struct RSIVisitor {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &prices_begin,
-                const H &prices_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &prices_begin, const H &prices_end)  {
 
         const size_type col_s = std::distance(prices_begin, prices_end);
 
@@ -1106,10 +1095,8 @@ struct RSXVisitor {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &column_begin,
-                const H &column_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
 
@@ -1240,10 +1227,8 @@ public:
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &column_begin,
-                const H &column_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
         std::vector<range_data> buckets;
@@ -1360,12 +1345,9 @@ struct MassIndexVisitor {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &high_begin,
-                const H &high_end,
-                const H &low_begin,
-                const H &low_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &high_begin, const H &high_end,
+                const H &low_begin, const H &low_end)  {
 
         const size_type col_s = std::distance(high_begin, high_end);
 
@@ -1463,10 +1445,8 @@ struct  HullRollingMeanVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &column_begin,
-                const H &column_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
 
         if (roll_count_ == 0)  return;
 
@@ -1527,12 +1507,9 @@ struct  RollingMidValueVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &low_begin,
-                const H &low_end,
-                const H &high_begin,
-                const H &high_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &low_begin, const H &low_end,
+                const H &high_begin, const H &high_end)  {
 
         if (roll_count_ == 0)  return;
 
@@ -1595,10 +1572,8 @@ struct  DrawdownVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &column_begin,
-                const H &column_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
 
@@ -1656,14 +1631,10 @@ struct  WilliamPrcRVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &low_begin,
-                const H &low_end,
-                const H &high_begin,
-                const H &high_end,
-                const H &close_begin,
-                const H &close_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &low_begin, const H &low_end,
+                const H &high_begin, const H &high_end,
+                const H &close_begin, const H &close_end)  {
 
         if (roll_count_ == 0)  return;
 
@@ -1726,10 +1697,8 @@ struct  PSLVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator()(const K &idx_begin,
-               const K &idx_end,
-               const H &close_begin,
-               const H &close_end)  {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &close_begin, const H &close_end)  {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
@@ -1743,12 +1712,9 @@ struct  PSLVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator()(const K &idx_begin,
-               const K &idx_end,
-               const H &close_begin,
-               const H &close_end,
-               const H &open_begin,
-               const H &open_end)  {
+    operator()(const K &idx_begin, const K &idx_end,
+               const H &close_begin, const H &close_end,
+               const H &open_begin, const H &open_end)  {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
@@ -1800,14 +1766,10 @@ struct  CCIVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &low_begin,
-                const H &low_end,
-                const H &high_begin,
-                const H &high_end,
-                const H &close_begin,
-                const H &close_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &low_begin, const H &low_end,
+                const H &high_begin, const H &high_end,
+                const H &close_begin, const H &close_end)  {
 
         if (roll_count_ == 0)  return;
 
@@ -1873,16 +1835,11 @@ struct GarmanKlassVolVisitor {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &low_begin,
-                const H &low_end,
-                const H &high_begin,
-                const H &high_end,
-                const H &open_begin,
-                const H &open_end,
-                const H &close_begin,
-                const H &close_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &low_begin, const H &low_end,
+                const H &high_begin, const H &high_end,
+                const H &open_begin, const H &open_end,
+                const H &close_begin, const H &close_end)  {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
@@ -1950,16 +1907,11 @@ struct YangZhangVolVisitor {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &low_begin,
-                const H &low_end,
-                const H &high_begin,
-                const H &high_end,
-                const H &open_begin,
-                const H &open_end,
-                const H &close_begin,
-                const H &close_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &low_begin, const H &low_end,
+                const H &high_begin, const H &high_end,
+                const H &open_begin, const H &open_end,
+                const H &close_begin, const H &close_end)  {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
@@ -2047,10 +1999,8 @@ struct  KamaVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &column_begin,
-                const H &column_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
 
         if (roll_count_ < 2)  return;
 
@@ -2128,12 +2078,9 @@ struct FisherTransVisitor {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &low_begin,
-                const H &low_end,
-                const H &high_begin,
-                const H &high_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &low_begin, const H &low_end,
+                const H &high_begin, const H &high_end)  {
 
         const size_type col_s = std::distance(low_begin, low_end);
 
@@ -2218,10 +2165,8 @@ struct PercentPriceOSCIVisitor {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &close_begin,
-                const H &close_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &close_begin, const H &close_end)  {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
@@ -2300,10 +2245,8 @@ struct  SlopeVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &column_begin,
-                const H &column_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
 
         if (periods_ < 2)  return;
 
@@ -2359,14 +2302,10 @@ struct  UltimateOSCIVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &low_begin,
-                const H &low_end,
-                const H &high_begin,
-                const H &high_end,
-                const H &close_begin,
-                const H &close_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &low_begin, const H &low_end,
+                const H &high_begin, const H &high_end,
+                const H &close_begin, const H &close_end)  {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
@@ -2495,10 +2434,8 @@ struct  UlcerIndexVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &column_begin,
-                const H &column_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
 
         if (periods_ < 2)  return;
 
@@ -2575,14 +2512,10 @@ struct  TTMTrendVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &low_begin,
-                const H &low_end,
-                const H &high_begin,
-                const H &high_end,
-                const H &close_begin,
-                const H &close_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &low_begin, const H &low_end,
+                const H &high_begin, const H &high_end,
+                const H &close_begin, const H &close_end)  {
 
         assert(bar_periods_ > 0);
 
@@ -2644,14 +2577,10 @@ struct  ParabolicSARVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &low_begin,
-                const H &low_end,
-                const H &high_begin,
-                const H &high_end,
-                const H &close_begin,
-                const H &close_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &low_begin, const H &low_end,
+                const H &high_begin, const H &high_end,
+                const H &close_begin, const H &close_end)  {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
@@ -2786,10 +2715,8 @@ struct  EBSineWaveVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &close_begin,
-                const H &close_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &close_begin, const H &close_end)  {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
@@ -2877,10 +2804,8 @@ struct  EhlerSuperSmootherVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &column_begin,
-                const H &column_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
 
@@ -2951,10 +2876,8 @@ struct  VarIdxDynAvgVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &column_begin,
-                const H &column_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
 
@@ -3037,14 +2960,10 @@ struct  PivotPointSRVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &low_begin,
-                const H &low_end,
-                const H &high_begin,
-                const H &high_end,
-                const H &close_begin,
-                const H &close_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &low_begin, const H &low_end,
+                const H &high_begin, const H &high_end,
+                const H &close_begin, const H &close_end)  {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
@@ -3144,14 +3063,10 @@ struct  AvgDirMovIdxVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &low_begin,
-                const H &low_end,
-                const H &high_begin,
-                const H &high_end,
-                const H &close_begin,
-                const H &close_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &low_begin, const H &low_end,
+                const H &high_begin, const H &high_end,
+                const H &close_begin, const H &close_end)  {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
@@ -3243,10 +3158,8 @@ struct  HoltWinterChannelVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &close_begin,
-                const H &close_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &close_begin, const H &close_end)  {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
@@ -3349,16 +3262,11 @@ struct  HeikinAshiCndlVisitor {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &low_begin,
-                const H &low_end,
-                const H &high_begin,
-                const H &high_end,
-                const H &open_begin,
-                const H &open_end,
-                const H &close_begin,
-                const H &close_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &low_begin, const H &low_end,
+                const H &high_begin, const H &high_end,
+                const H &open_begin, const H &open_end,
+                const H &close_begin, const H &close_end)  {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
@@ -3433,10 +3341,8 @@ struct  CenterOfGravityVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &column_begin,
-                const H &column_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
 
         if (roll_count_ == 0)  return;
 
@@ -3492,10 +3398,8 @@ struct  ArnaudLegouxMAVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &column_begin,
-                const H &column_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
 
         if (roll_count_ == 0)  return;
 
@@ -3560,10 +3464,8 @@ struct  RateOfChangeVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &column_begin,
-                const H &column_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
         assert (period_ > 0);
@@ -3607,18 +3509,12 @@ struct  AccumDistVisitor {
 
     template <typename K, typename H, typename V>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &low_begin,
-                const H &low_end,
-                const H &high_begin,
-                const H &high_end,
-                const H &open_begin,
-                const H &open_end,
-                const H &close_begin,
-                const H &close_end,
-                const V &volume_begin,
-                const V &volume_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &low_begin, const H &low_end,
+                const H &high_begin, const H &high_end,
+                const H &open_begin, const H &open_end,
+                const H &close_begin, const H &close_end,
+                const V &volume_begin, const V &volume_end)  {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
@@ -3668,18 +3564,12 @@ struct  ChaikinMoneyFlowVisitor {
 
     template <typename K, typename H, typename V>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &low_begin,
-                const H &low_end,
-                const H &high_begin,
-                const H &high_end,
-                const H &open_begin,
-                const H &open_end,
-                const H &close_begin,
-                const H &close_end,
-                const V &volume_begin,
-                const V &volume_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &low_begin, const H &low_end,
+                const H &high_begin, const H &high_end,
+                const H &open_begin, const H &open_end,
+                const H &close_begin, const H &close_end,
+                const V &volume_begin, const V &volume_end)  {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
@@ -3743,10 +3633,8 @@ struct  VertHorizFilterVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &column_begin,
-                const H &column_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
         assert (period_ > 0 && period_ < col_s);
@@ -3817,12 +3705,9 @@ struct  OnBalanceVolumeVisitor {
 
     template <typename K, typename H, typename V>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &close_begin,
-                const H &close_end,
-                const V &volume_begin,
-                const V &volume_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &close_begin, const H &close_end,
+                const V &volume_begin, const V &volume_end)  {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
@@ -3868,14 +3753,10 @@ struct  TrueRangeVisitor {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &low_begin,
-                const H &low_end,
-                const H &high_begin,
-                const H &high_end,
-                const H &close_begin,
-                const H &close_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &low_begin, const H &low_end,
+                const H &high_begin, const H &high_end,
+                const H &close_begin, const H &close_end)  {
 
         const size_type col_s = std::distance(close_begin, close_end);
         result_type     result (col_s, std::numeric_limits<T>::quiet_NaN());
@@ -3912,10 +3793,8 @@ struct  DecayVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &column_begin,
-                const H &column_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
         assert (period_ > 0 && period_ < col_s);
@@ -3960,10 +3839,8 @@ struct HodgesTompkinsVolVisitor {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &column_begin,
-                const H &column_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
         assert (roll_count_ > 0 && roll_count_ < col_s);
@@ -4027,12 +3904,9 @@ struct ParkinsonVolVisitor {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &low_begin,
-                const H &low_end,
-                const H &high_begin,
-                const H &high_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &low_begin, const H &low_end,
+                const H &high_begin, const H &high_end)  {
 
         const size_type col_s = std::distance(low_begin, low_end);
 

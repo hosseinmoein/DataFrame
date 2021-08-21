@@ -128,10 +128,8 @@ public:
 
     template<typename IV, typename H>
     inline void
-    operator() (const IV &idx_begin,
-                const IV &idx_end,
-                const H &column_begin,
-                const H &column_end)  {
+    operator() (const IV &idx_begin, const IV &idx_end,
+                const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
 
@@ -318,10 +316,8 @@ public:
 
     template<typename IV, typename H>
     inline void
-    operator() (const IV &idx_begin,
-                const IV &idx_end,
-                const H &column_begin,
-                const H &column_end)  {
+    operator() (const IV &idx_begin, const IV &idx_end,
+                const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
         const std::vector<double>   simil =
@@ -585,10 +581,8 @@ public:
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &column_begin,
-                const H &column_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
         result_type result (col_s);

@@ -60,8 +60,7 @@ DateTime class included in this library is a very cool and handy object to manip
 
 ### Performance
 There is a test program [_dataframe_performance_](test/dataframe_performance.cc) that should give you a sense of how this library performs. As a comparison, there is also a Pandas [_pandas_performance_](test/pandas_performance.py) script that does exactly the same thing.<BR>
-<I>dataframe_performance.cc</I> uses DataFrame <B>async interface</B> and is compiled with gcc compiler with -O3 flag. <I>pandas_performance.py</I> is ran with Pandas 1.2 and Python 3.7. I ran both on my mac-book, doing the following:<BR>
-<img src="docs/MacSize.png" alt="drawing" width="500"/>
+<I>dataframe_performance.cc</I> uses DataFrame <B>async interface</B> and is compiled with gcc (10.3.0) compiler with -O3 flag. <I>pandas_performance.py</I> is ran with Pandas 1.3.2, Numpy 1.21.2 and Python 3.7 on Xeon E5-2667 v2. What the test program roughly does:<BR>
 
 1.  Generate ~1.6 billion timestamps (second resolution) and load them into the DataFrame/Pandas as index.<BR>
 2.  Generate ~1.6 billion random numbers for 3 columns with normal, log normal, and exponential distributions and load them into the DataFrame/Pandas.<BR>
@@ -69,22 +68,22 @@ There is a test program [_dataframe_performance_](test/dataframe_performance.cc)
 
 Result:
 ```bash
-MacBook> time python test/pandas_performance.py
+$time python test/pandas_performance.py
 All memory allocations are done. Calculating means ...
--4.318030613360519e-05, 1.6486147626420655, 1.0000042573786951
+-9.988731426750974e-06, 1.6486985707329185, 1.000038273533297
 
-real  17m18.916s
-user  4m47.113s
-sys   5m31.901s
+real    5m51.598s
+user    3m3.485s
+sys     1m26.292s
 
 
-MacBook> time bin/Linux.GCC64/dataframe_performance
+$time Release/bin/dataframe_performance
 All memory allocations are done. Calculating means ...
-1, 1.64879, 0.999994
-
-real  4m15.786s
-user  2m30.841s
-sys   1m36.944s
+1, 1.64877, 0.999963
+                                                                                                    
+real    3m34.241s                                                                                                                      
+user    3m14.250s
+sys     0m25.983s
 ```
 <B>The Interesting Part:</B><BR>
 1.  Pandas script, I believe, is entirely implemented in Numpy which is in C.

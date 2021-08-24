@@ -22,7 +22,7 @@ m2: pd.Series = df["log_normal"].ewm(span=3).mean()
 m3: pd.Series = df["exponential"].ewm(span=3).mean()
 
 print(f"{m1[100000]}, {m2[100000]}, {m3[100000]}")
-print(f"{int(time.time())} .. Done");
+print(f"{int(time.time())} ... Done");
 
 # ------------------------------------------------------------------------------
 

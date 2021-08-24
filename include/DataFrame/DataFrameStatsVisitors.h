@@ -550,8 +550,7 @@ struct CovVisitor {
     DEFINE_VISIT_BASIC_TYPES_2
 
     inline void operator() (const index_type &,
-                            const value_type &val1,
-                            const value_type &val2)  {
+                            const value_type &val1, const value_type &val2)  {
 
         if (skip_nan_ && (is_nan__(val1) || is_nan__(val2)))  return;
 
@@ -643,10 +642,9 @@ struct BetaVisitor  {
     DEFINE_VISIT_BASIC_TYPES_2
 
     inline void operator() (const index_type &idx,
-                            const value_type &val1,
-                            const value_type &benchmark)  {
+                            const value_type &val, const value_type &bmark)  {
 
-        cov_ (idx, val1, benchmark);
+        cov_ (idx, val, bmark);
     }
     PASS_DATA_ONE_BY_ONE_2
 
@@ -750,8 +748,7 @@ struct TrackingErrorVisitor {
     DEFINE_VISIT_BASIC_TYPES_2
 
     inline void operator() (const index_type &idx,
-                            const value_type &val1,
-                            const value_type &val2)  {
+                            const value_type &val1, const value_type &val2)  {
 
         std_ (idx, val1 - val2);
     }
@@ -784,8 +781,7 @@ public:
     DEFINE_VISIT_BASIC_TYPES_2
 
     inline void operator() (const index_type &idx,
-                            const value_type &val1,
-                            const value_type &val2)  {
+                            const value_type &val1, const value_type &val2)  {
 
         cov_ (idx, val1, val2);
     }
@@ -819,8 +815,7 @@ struct DotProdVisitor  {
     DEFINE_VISIT_BASIC_TYPES_2
 
     inline void operator() (const index_type &,
-                            const value_type &val1,
-                            const value_type &val2)  {
+                            const value_type &val1, const value_type &val2)  {
 
         result_ += (val1 * val2);
     }
@@ -1015,10 +1010,8 @@ public:
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &column_begin,
-                const H &column_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
 
         assert(roll_count_ != 0);
 
@@ -1076,10 +1069,8 @@ public:
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &column_begin,
-                const H &column_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
 
         if (period_ == 0)  return;
 
@@ -1127,10 +1118,8 @@ public:
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &column_begin,
-                const H &column_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
 
         assert(init_roll_count_ != 0);
 
@@ -1196,10 +1185,8 @@ public:
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &column_begin,
-                const H &column_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
 
@@ -1344,8 +1331,7 @@ public:
     DEFINE_VISIT_BASIC_TYPES_2
 
     inline void operator() (const index_type &idx,
-                            const value_type &x,
-                            const value_type &y)  {
+                            const value_type &x, const value_type &y)  {
 
         if (skip_nan_ && (is_nan__(x) || is_nan__(y)))  return;
 
@@ -1419,8 +1405,7 @@ public:
     DEFINE_VISIT_BASIC_TYPES_2
 
     inline void operator() (const index_type &idx,
-                            const value_type &x,
-                            const value_type &y)  {
+                            const value_type &x, const value_type &y)  {
 
         if (skip_nan_ && (is_nan__(x) || is_nan__(y)))  return;
 
@@ -1504,10 +1489,8 @@ struct CumSumVisitor {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &column_begin,
-                const H &column_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
 
         value_type      running_sum = 0;
         GET_COL_SIZE
@@ -1551,10 +1534,8 @@ struct CumProdVisitor {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &column_begin,
-                const H &column_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
 
         value_type      running_prod = 1;
         GET_COL_SIZE
@@ -1597,10 +1578,8 @@ struct CumExtremumVisitor {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &column_begin,
-                const H &column_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
 
@@ -1663,10 +1642,8 @@ public:
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &column_begin,
-                const H &column_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
 
@@ -1729,10 +1706,8 @@ public:
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &column_begin,
-                const H &column_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
         std::vector<size_type>  rank_vec(col_s);
@@ -1819,10 +1794,8 @@ struct FactorizeVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &column_begin,
-                const H &column_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
 
         result_type result;
 
@@ -1858,10 +1831,8 @@ public:
     DEFINE_VISIT_BASIC_TYPES_3
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &column_begin,
-                const H &column_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
 
@@ -1947,10 +1918,8 @@ struct  ExponentiallyWeightedMeanVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &column_begin,
-                const H &column_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
         assert(col_s > 3);
@@ -2029,10 +1998,8 @@ struct KthValueVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &values_begin,
-                const H &values_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &values_begin, const H &values_end)  {
 
         result_ = find_kth_element_(values_begin, values_end, kth_element_);
     }
@@ -2109,10 +2076,8 @@ struct MedianVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &column_begin,
-                const H &column_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
         KthValueVisitor<value_type, index_type> kv_visitor (col_s >> 1);
@@ -2155,10 +2120,8 @@ struct QuantileVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &column_begin,
-                const H &column_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
 
@@ -2317,10 +2280,8 @@ public:
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &column_begin,
-                const H &column_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
 
         DataItem        nan_item;
         GET_COL_SIZE
@@ -2532,10 +2493,8 @@ public:
         : mad_type_(mt), skip_nan_(skip_nan)  {   }
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &column_begin,
-                const H &column_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
 
         switch (mad_type_)  {
             case mad_type::mean_abs_dev_around_mean:
@@ -2583,10 +2542,8 @@ struct DiffVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &column_begin,
-                const H &column_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
 
@@ -2685,10 +2642,8 @@ struct ZScoreVisitor {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &column_begin,
-                const H &column_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
 
         MeanVisitor<T, I>   mvisit;
         StdVisitor<T, I>    svisit;
@@ -2742,12 +2697,9 @@ struct SampleZScoreVisitor {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &population_begin,
-                const H &population_end,
-                const H &sample_begin,
-                const H &sample_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &population_begin, const H &population_end,
+                const H &sample_begin, const H &sample_end)  {
 
         MeanVisitor<T, I>   p_mvisit;
         StdVisitor<T, I>    p_svisit;
@@ -2861,10 +2813,8 @@ public:
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &column_begin,
-                const H &column_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
 
         result_.reserve(std::distance(column_begin, column_end));
         if (sigmoid_type_ == sigmoid_type::logistic)
@@ -3014,10 +2964,8 @@ public:
 
     template<typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &column_begin,
-                const H &column_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
 
         value_type  shift = 0;
 
@@ -3076,10 +3024,8 @@ struct NormalizeVisitor {
 
     template<typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &column_begin,
-                const H &column_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
 
         MinVisitor<T, I>    minv;
         MaxVisitor<T, I>    maxv;
@@ -3125,10 +3071,8 @@ struct StandardizeVisitor {
 
     template<typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &column_begin,
-                const H &column_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
 
         MeanVisitor<T, I>   mv;
         StdVisitor<T, I>    sv;
@@ -4144,10 +4088,8 @@ struct  EntropyVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin,
-                const K &idx_end,
-                const H &column_begin,
-                const H &column_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
 
         if (roll_count_ == 0)  return;
 

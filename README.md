@@ -68,35 +68,25 @@ There is a test program [_dataframe_performance_](test/dataframe_performance.cc)
 
 Result:
 ```bash
-$time python test/pandas_performance.py
-All memory allocations are done. Calculating means ...
--9.988731426750974e-06, 1.6486985707329185, 1.000038273533297
-
-real    5m51.598s
-user    3m3.485s
-sys     1m26.292s
-
-
-$time Release/bin/dataframe_performance
-All memory allocations are done. Calculating means ...
-1, 1.64877, 0.999963
-                                                                                                    
-real    3m34.241s                                                                                                                      
-user    3m14.250s
-sys     0m25.983s
-  
-
 $ python3 test/pandas_performance.py
 Starting ... 1629817655
 All memory allocations are done. Calculating means ... 1629817883
 6.166675403767268e-05, 1.6487168460770107, 0.9999539627671375
 1629817894 ... Done
-  
+
+real    5m51.598s
+user    3m3.485s
+sys     1m26.292s
+
 $ Release/bin/dataframe_performance
 Starting ... 1629818332
 All memory allocations are done. Calculating means ... 1629818535
 1, 1.64873, 1
 1629818536 ... Done
+  
+real    3m34.241s                                                                                                                      
+user    3m14.250s
+sys     0m25.983s
 ```
 <B>The Interesting Part:</B><BR>
 1.  Pandas script, I believe, is entirely implemented in Numpy which is in C.

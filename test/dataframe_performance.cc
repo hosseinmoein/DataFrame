@@ -39,6 +39,8 @@ typedef StdDataFrame<time_t> MyDataFrame;
 
 int main(int argc, char *argv[]) {
 
+    std::cout << "Starting ... " << time(nullptr) << std::endl;
+
     MyDataFrame df;
     auto        index_vec =
         MyDataFrame::gen_datetime_index("01/01/1970", "08/15/2019", time_frequency::secondly, 1);
@@ -49,7 +51,7 @@ int main(int argc, char *argv[]) {
                  std::make_pair("log_normal", gen_lognormal_dist<double>(index_sz)),
                  std::make_pair("exponential", gen_exponential_dist<double>(index_sz)));
 
-    std::cout << "All memory allocations are done. Calculating means ..." << std::endl;
+    std::cout << "All memory allocations are done. Calculating means ... " << time(nullptr)<< std::endl;
 
     MeanVisitor<double, time_t> n_mv;
     MeanVisitor<double, time_t> ln_mv;
@@ -62,6 +64,7 @@ int main(int argc, char *argv[]) {
     std::cout << fut1.get().get_result() << ", "
               << fut2.get().get_result() << ", "
               << fut3.get().get_result() << std::endl;
+    std::cout << time(nullptr) << " ... Done" << std::endl;
     return (0);
 }
 

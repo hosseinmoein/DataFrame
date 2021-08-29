@@ -105,9 +105,9 @@ DataFrame<I, H>::get_column(size_type index)  {
 template<typename I, typename  H>
 bool DataFrame<I, H>::has_column (const char *name) const  {
 
-    auto    iter = column_tb_.find (name);
+    auto    citer = column_tb_.find (name);
 
-    return (iter != column_tb_.end());
+    return (citer != column_tb_.end());
 }
 
 // ----------------------------------------------------------------------------
@@ -115,6 +115,47 @@ bool DataFrame<I, H>::has_column (const char *name) const  {
 template<typename I, typename  H>
 bool DataFrame<I, H>::
 has_column(size_type index) const { return (index < column_list_.size()); }
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+typename DataFrame<I, H>::size_type DataFrame<I, H>::
+col_name_to_col_idx (const char *col_name) const  {
+
+    auto    citer = column_tb_.find (col_name);
+
+    if (citer != column_tb_.end())
+        return (citer->second);
+
+    char buffer [512];
+
+    sprintf (buffer, "DataFrame::col_name_to_col_idx(): ERROR: "
+                     "Cannot find column '%s'",
+             col_name);
+    throw ColNotFound (buffer);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+const char * DataFrame<I, H>::
+col_idx_to_col_name (size_type col_idx) const  {
+
+    for (auto citer : column_list_)
+        if (citer.second == col_idx)
+            return (citer.first.c_str());
+
+    char buffer [512];
+
+    sprintf (buffer, "DataFrame::col_idx_to_col_name(): ERROR: "
+#ifdef _MSC_VER
+                     "Cannot find column index %zu",
+#else
+                     "Cannot find column index %lu",
+#endif // _MSC_VER
+             col_idx);
+    throw ColNotFound (buffer);
+}
 
 // ----------------------------------------------------------------------------
 

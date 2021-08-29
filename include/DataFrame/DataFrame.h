@@ -1415,6 +1415,21 @@ public: // Read/access and slicing interfaces
     [[nodiscard]] bool
     has_column(size_type index) const;
 
+    // These two methods map column name to its index in DataFrame and
+    // vice verse.
+    //
+    // col_name:
+    //   Name of the column
+    //
+    [[nodiscard]] size_type
+    col_name_to_col_idx (const char *col_name) const;
+
+    // col_idx:
+    //   Index of the column
+    //
+    [[nodiscard]] const char *
+    col_idx_to_col_name (size_type col_idx) const;
+
     // This method returns true if the given column follows the given pattern,
     // otherwise it returns false. Epsilon is used for approximation.
     // List of supported patterns are specified in pattern_spec enum in

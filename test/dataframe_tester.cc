@@ -3874,7 +3874,11 @@ static void test_thread_safety()  {
 
     const size_t    vec_size = 100000;
 
+#ifdef _MSC_VER
+    auto  do_work = [vec_size]() {
+#else
     auto  do_work = []() {
+#endif // _MSC_VER
         MyDataFrame         df;
         std::vector<size_t> vec;
 

@@ -1421,7 +1421,7 @@ struct MassIndexVisitor {
 
     explicit
     MassIndexVisitor(size_type fast_period = 9, size_type slow_period = 25)
-        : fast_(fast_period), slow_(slow_period)  {  }
+        : slow_(slow_period), fast_(fast_period)  {  }
 
 private:
 
@@ -1937,7 +1937,6 @@ struct YangZhangVolVisitor {
                 value_type  c_vol_sum { 0 };
                 value_type  o_vol_sum { 0 };
                 value_type  rs_vol_sum { 0 };
-                size_type   cnt { 0 };
 
                 for (size_type j = i; j < (i + roll_count_); ++j)  {
                     const value_type    open = *(open_begin + j);
@@ -2219,7 +2218,7 @@ struct PercentPriceOSCIVisitor {
     PercentPriceOSCIVisitor(size_type fast_period = 12,
                             size_type slow_period = 26,
                             size_type signal_line = 9)
-        : fast_(fast_period), slow_(slow_period), signal_(signal_line)  {  }
+        : slow_(slow_period), fast_(fast_period), signal_(signal_line)  {  }
 
 private:
 

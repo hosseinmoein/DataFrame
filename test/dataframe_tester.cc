@@ -78,9 +78,9 @@ static void test_haphazard()  {
 
     std::cout << "\nTesting load_data ..." << std::endl;
 
-    MyDataFrame         df;
-    std::vector<int>    &col0 =
-        df.create_column<int>(static_cast<const char *>("col_name"));
+    MyDataFrame df;
+
+    df.create_column<int>(static_cast<const char *>("col_name"));
 
     std::vector<int>            intvec = { 1, 2, 3, 4, 5 };
     std::vector<double>         dblvec =
@@ -92,14 +92,6 @@ static void test_haphazard()  {
     std::vector<unsigned long>  ulgvec =
         { 1UL, 2UL, 3UL, 4UL, 5UL, 8UL, 7UL, 6UL };
     std::vector<unsigned long>  xulgvec = ulgvec;
-    const size_t                total_count =
-        ulgvec.size() +
-        intvec.size() +
-        dblvec.size() +
-        dblvec2.size() +
-        strvec.size() +
-        xulgvec.size() +
-        9;  // NaN inserterd
 
     MyDataFrame::size_type  rc =
         df.load_data(std::move(ulgvec),
@@ -2544,8 +2536,9 @@ static void test_replace_1()  {
 
     auto    result1 = df.replace_async<double, 3>(
         "dblcol_1", { 10.0, 21.0, 11.0 }, { 1000.0, 2100.0, 1100.0 });
-    auto    idx_result = df.replace_index<3>(
-        { 20180101, 20180102, 20180103 }, { 1000, 2100, 1100 });
+
+    df.replace_index<3>({ 20180101, 20180102, 20180103 }, { 1000, 2100, 1100 });
+
     auto    result2 = df.replace_async<double, 6>(
         "dblcol_5",
         { -45.0, -100.0, -30.2, 30.89, 40.1, 1.2 },
@@ -3881,7 +3874,7 @@ static void test_thread_safety()  {
 
     const size_t    vec_size = 100000;
 
-    auto  do_work = [vec_size]() {
+    auto  do_work = []() {
         MyDataFrame         df;
         std::vector<size_t> vec;
 
@@ -4116,9 +4109,9 @@ static void test_k_means()  {
     const auto  clusters =
         km_visitor.get_clusters(df.get_index().begin(), df.get_index().end(),
                                 col1.begin(), col1.end());
+/*
     bool        found = false;
 
-/*
     for (auto iter : clusters)  {
         if (::fabs(iter[0] - 1.89348) < 0.00001)  {
             if (::fabs(iter[6] - 1.44231) < 0.00001)  {

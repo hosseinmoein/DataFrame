@@ -115,7 +115,7 @@ int main (int argc, char *argv [])  {
     now = "20100207 12:32:12";
 
     try  {
-        long  diff = static_cast<long> (now.diff_seconds (gmnow));
+        now.diff_seconds (gmnow);
 
         assert(false);
     }

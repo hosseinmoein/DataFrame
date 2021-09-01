@@ -40,6 +40,49 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace hmdf
 {
 
+// Notice memeber variables are initialized twice, but that's cheap
+//
+template<typename I, typename H>
+DataFrame<I, H>::DataFrame(DataFrame &&that)  { *this = std::move(that); }
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+DataFrame<I, H> &
+DataFrame<I, H>::operator= (const DataFrame &that)  {
+
+    if (this != &that)  {
+        indices_ = that.indices_;
+        column_tb_ = that.column_tb_;
+        column_list_ = that.column_list_;
+
+        const SpinGuard guard(lock_);
+
+        data_ = that.data_;
+    }
+    return (*this);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+DataFrame<I, H> &
+DataFrame<I, H>::operator= (DataFrame &&that)  {
+
+    if (this != &that)  {
+        indices_ = std::exchange(that.indices_, IndexVecType { });
+        column_tb_ = std::exchange(that.column_tb_, ColNameDict { });
+        column_list_ = std::exchange(that.column_list_, ColNameList { });
+
+        const SpinGuard guard(lock_);
+
+        data_ = std::exchange(that.data_, DataVecVec { });
+    }
+    return (*this);
+}
+
+// ----------------------------------------------------------------------------
+
 template<typename I, typename H>
 DataFrame<I, H>::~DataFrame()  {
 

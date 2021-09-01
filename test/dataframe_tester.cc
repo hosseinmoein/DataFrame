@@ -124,6 +124,11 @@ static void test_haphazard()  {
 
     std::cout << "\nTesting Visitors 1 ..." << std::endl;
 
+    MyDataFrame df_dup = df;
+    MyDataFrame df_dup2(std::move(df));
+
+	df = std::move(df_dup);
+
     MeanVisitor<int>                ivisitor;
     MeanVisitor<double>             dvisitor;
     MeanVisitor<double>             rev_dvisitor;

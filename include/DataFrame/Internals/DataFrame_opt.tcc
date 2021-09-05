@@ -51,6 +51,7 @@ bool DataFrame<I, H>::is_equal (const DataFrame &rhs) const  {
         if (rhs_citer == rhs.column_tb_.end())  return (false);
 
         equal_functor_<Ts ...>   functor (iter.first.c_str(), *this);
+        const SpinGuard          guard(lock_);
 
         rhs.data_[rhs_citer->second].change(functor);
         if (! functor.result)
@@ -86,6 +87,7 @@ modify_by_idx (DataFrame &rhs, sort_state already_sorted)  {
                                                       rhs,
                                                       lhs_i,
                                                       rhs_i);
+                const SpinGuard              guard(lock_);
 
                 data_[iter.second].change(functor);
             }

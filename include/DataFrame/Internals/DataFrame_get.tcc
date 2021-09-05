@@ -84,10 +84,11 @@ DataFrame<I, H>::get_column (const char *name)  {
         throw ColNotFound (buffer);
     }
 
-    DataVec         &hv = data_[iter->second];
     const SpinGuard guard(lock_);
+    DataVec         &hv = data_[iter->second];
+    auto            &data_vec = hv.template get_vector<T>();
 
-    return (hv.template get_vector<T>());
+    return (data_vec);
 }
 
 // ----------------------------------------------------------------------------
@@ -186,6 +187,8 @@ get_row(size_type row_num, const std::array<const char *, N> col_names) const {
             throw ColNotFound(buffer);
         }
 
+        const SpinGuard guard(lock_);
+
         data_[citer->second].change(functor);
     }
 
@@ -221,8 +224,11 @@ get_row(size_type row_num) const {
 
     get_row_functor_<Ts ...>    functor(ret_vec, row_num);
 
-    for (auto citer : column_list_)
+    for (auto citer : column_list_)  {
+        const SpinGuard guard(lock_);
+
         data_[citer.second].change(functor);
+    }
     return (ret_vec);
 }
 
@@ -295,6 +301,7 @@ DataFrame<I, H>::get_data_by_idx (Index2D<IndexType> range) const  {
                                                          b_dist,
                                                          e_dist,
                                                          df);
+            const SpinGuard                     guard(lock_);
 
             data_[iter.second].change(functor);
         }
@@ -334,6 +341,7 @@ DataFrame<I, H>::get_data_by_idx(const std::vector<IndexType> &values) const  {
             locations,
             idx_s,
             df);
+        const SpinGuard                         guard(lock_);
 
         data_[col_citer.second].change(functor);
     }
@@ -379,6 +387,7 @@ DataFrame<I, H>::get_view_by_idx (Index2D<IndexType> range) const  {
                 b_dist,
                 e_dist,
                 dfv);
+            const SpinGuard                                        guard(lock_);
 
             nc_this->data_[iter.second].change(functor);
         }
@@ -427,6 +436,7 @@ get_view_by_idx(const std::vector<IndexType> &values) const  {
             locations,
             idx_s,
             dfv);
+        const SpinGuard                             guard(lock_);
 
         nc_this->data_[col_citer.second].change(functor);
     }
@@ -459,6 +469,7 @@ DataFrame<I, H>::get_data_by_loc (Index2D<long> range) const  {
                 static_cast<size_type>(range.begin),
                 static_cast<size_type>(range.end),
                 df);
+            const SpinGuard                     guard(lock_);
 
             data_[iter.second].change(functor);
         }
@@ -501,6 +512,7 @@ DataFrame<I, H>::get_data_by_loc (const std::vector<long> &locations) const  {
             locations,
             idx_s,
             df);
+        const SpinGuard                  guard(lock_);
 
         data_[col_citer.second].change(functor);
     }
@@ -540,6 +552,7 @@ DataFrame<I, H>::get_view_by_loc (Index2D<long> range) const  {
                 static_cast<size_type>(range.begin),
                 static_cast<size_type>(range.end),
                 dfv);
+            const SpinGuard                                        guard(lock_);
 
             nc_this->data_[iter.second].change(functor);
         }
@@ -590,6 +603,7 @@ DataFrame<I, H>::get_view_by_loc (const std::vector<long> &locations) const  {
             locations,
             indices_.size(),
             dfv);
+        const SpinGuard                         guard(lock_);
 
         nc_this->data_[col_citer.second].change(functor);
     }
@@ -628,6 +642,7 @@ get_data_by_sel (const char *name, F &sel_functor) const  {
             col_indices,
             idx_s,
             df);
+        const SpinGuard                         guard(lock_);
 
         data_[col_citer.second].change(functor);
     }
@@ -673,6 +688,7 @@ get_view_by_sel (const char *name, F &sel_functor) const  {
             col_indices,
             idx_s,
             dfv);
+        const SpinGuard                             guard(lock_);
 
         nc_this->data_[col_citer.second].change(functor);
     }
@@ -716,6 +732,7 @@ get_data_by_sel (const char *name1, const char *name2, F &sel_functor) const  {
             col_indices,
             idx_s,
             df);
+        const SpinGuard                         guard(lock_);
 
         data_[col_citer.second].change(functor);
     }
@@ -766,6 +783,7 @@ get_view_by_sel (const char *name1, const char *name2, F &sel_functor) const  {
             col_indices,
             idx_s,
             dfv);
+        const SpinGuard                             guard(lock_);
 
         nc_this->data_[col_citer.second].change(functor);
     }
@@ -815,6 +833,7 @@ get_data_by_sel (const char *name1,
             col_indices,
             idx_s,
             df);
+        const SpinGuard                         guard(lock_);
 
         data_[col_citer.second].change(functor);
     }
@@ -871,6 +890,7 @@ get_view_by_sel (const char *name1,
             col_indices,
             idx_s,
             dfv);
+        const SpinGuard                             guard(lock_);
 
         nc_this->data_[col_citer.second].change(functor);
     }
@@ -931,6 +951,7 @@ get_data_by_rand (random_policy spec, double n, size_type seed) const  {
                 iter.first.c_str(),
                 rand_indices,
                 df);
+            const SpinGuard                     guard(lock_);
 
             data_[iter.second].change(functor);
         }
@@ -1006,6 +1027,7 @@ get_view_by_rand (random_policy spec, double n, size_type seed) const  {
             random_load_view_functor_<Ts ...>   functor (iter.first.c_str(),
                                                          rand_indices,
                                                          dfv);
+            const SpinGuard                     guard(lock_);
 
             data_[iter.second].change(functor);
         }
@@ -1056,6 +1078,7 @@ get_reindexed(const char *col_to_be_index, const char *old_index_name) const  {
             new_idx_s,
             result,
             nan_policy::dont_pad_with_nans);
+        const SpinGuard                         guard(lock_);
 
         data_[citer.second].change(functor);
     }
@@ -1101,6 +1124,7 @@ get_reindexed_view(const char *col_to_be_index,
             0,
             new_idx_s,
             result);
+        const SpinGuard                                 guard(lock_);
 
         nc_this->data_[citer.second].change(functor);
     }
@@ -1122,6 +1146,7 @@ DataFrame<I, H>::get_columns_info () const  {
     result.reserve(column_list_.size());
     for (auto &citer : column_list_)  {
         columns_info_functor_<Ts ...>   functor (result, citer.first.c_str());
+        const SpinGuard                 guard(lock_);
 
         data_[citer.second].change(functor);
     }

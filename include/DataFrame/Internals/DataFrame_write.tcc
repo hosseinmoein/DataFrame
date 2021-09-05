@@ -90,6 +90,7 @@ bool DataFrame<I, H>::write (S &o, io_format iof, bool columns_only) const  {
             print_json_functor_<Ts ...> functor (iter.first.c_str(),
                                                  need_pre_comma,
                                                  o);
+            const SpinGuard             guard(lock_);
 
             data_[iter.second].change(functor);
             need_pre_comma = true;
@@ -106,6 +107,7 @@ bool DataFrame<I, H>::write (S &o, io_format iof, bool columns_only) const  {
 
         for (const auto &iter : column_list_)  {
             print_csv_functor_<Ts ...>  functor (iter.first.c_str(), o);
+            const SpinGuard             guard(lock_);
 
             data_[iter.second].change(functor);
         }
@@ -121,6 +123,7 @@ bool DataFrame<I, H>::write (S &o, io_format iof, bool columns_only) const  {
             else  need_pre_comma = true;
             print_csv2_header_functor_<S, Ts ...>   functor(
                 iter.first.c_str(), o);
+            const SpinGuard                         guard(lock_);
 
             data_[iter.second].change(functor);
         }
@@ -139,6 +142,7 @@ bool DataFrame<I, H>::write (S &o, io_format iof, bool columns_only) const  {
             for (auto citer = column_list_.begin();
                  citer != column_list_.end(); ++citer, ++count)  {
                 print_csv2_data_functor_<S, Ts ...>  functor (i, o);
+                const SpinGuard                      guard(lock_);
 
                 if (need_pre_comma && count > 0)  o << ',';
                 else  need_pre_comma = true;

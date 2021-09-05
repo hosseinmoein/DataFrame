@@ -52,6 +52,8 @@ void DataFrame<I, H>::self_shift(size_type periods, shift_policy sp)  {
             const size_type                 data_size = data_.size();
 
             for (size_type idx = 0; idx < data_size; ++idx)  {
+                const SpinGuard guard(lock_);
+
                 if (thread_count >= get_thread_level())
                     data_[idx].change(functor);
                 else  {
@@ -133,6 +135,8 @@ void DataFrame<I, H>::self_rotate(size_type periods, shift_policy sp)  {
             const size_type                 data_size = data_.size();
 
             for (size_type idx = 0; idx < data_size; ++idx)  {
+                const SpinGuard guard(lock_);
+
                 if (thread_count >= get_thread_level())
                     data_[idx].change(functor);
                 else  {

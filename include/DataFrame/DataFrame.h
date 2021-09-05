@@ -84,12 +84,12 @@ class LIBRARY_API DataFrame : public ThreadGranularity {
 
     DataFrame() = default;
     DataFrame(const DataFrame &) = default;
-    DataFrame(DataFrame &&) = default;
-    DataFrame &operator= (const DataFrame &) = default;
-    DataFrame &operator= (DataFrame &&) = default;
 
-    // Because of thread safety, this needs tender loving care
+    // Because of thread safety, these need tender loving care
     //
+    DataFrame(DataFrame &&that);
+    DataFrame &operator= (const DataFrame &that);
+    DataFrame &operator= (DataFrame &&that);
     ~DataFrame();
 
 public:  // Load/append/remove interfaces

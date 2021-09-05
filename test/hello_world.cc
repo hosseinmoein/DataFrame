@@ -106,8 +106,9 @@ int main(int argc, char *argv[]) {
 
     // Also, you can load data into a DataFrame from a file, suporting a few
     // different formats.
-    // If the file cannot be found, an exception will be thrown. If the DataFrame
-    // test directory is your current directory when running this, it should work
+    // If the file cannot be found, an exception will be thrown.
+    // If the DataFrame test directory is your current directory when running
+    // this, it should work
     // fine.
     //
     ibm_df.read("data/SHORT_IBM.csv", io_format::csv2);
@@ -125,6 +126,10 @@ int main(int argc, char *argv[]) {
         std::cout << citer << std::endl;
     for (std::size_t i = 0; i < str_col_ref.size(); ++i)
         std::cout << str_col_ref[i] << std::endl;
+    std::cout << "There are " << close_const_ref.size() << " IBM close prices"
+              << std::endl;
+    std::cout << "There are " << index_vec.size() << " IBM indices"
+              << std::endl;
 
     // You can write the data to a file or stdout in a few formats
     // You must specify all the column types, but only once

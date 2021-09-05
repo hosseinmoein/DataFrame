@@ -40,6 +40,49 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace hmdf
 {
 
+// Notice memeber variables are initialized twice, but that's cheap
+//
+template<typename I, typename H>
+DataFrame<I, H>::DataFrame(DataFrame &&that)  { *this = std::move(that); }
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+DataFrame<I, H> &
+DataFrame<I, H>::operator= (const DataFrame &that)  {
+
+    if (this != &that)  {
+        indices_ = that.indices_;
+        column_tb_ = that.column_tb_;
+        column_list_ = that.column_list_;
+
+        const SpinGuard guard(lock_);
+
+        data_ = that.data_;
+    }
+    return (*this);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+DataFrame<I, H> &
+DataFrame<I, H>::operator= (DataFrame &&that)  {
+
+    if (this != &that)  {
+        indices_ = std::exchange(that.indices_, IndexVecType { });
+        column_tb_ = std::exchange(that.column_tb_, ColNameDict { });
+        column_list_ = std::exchange(that.column_list_, ColNameList { });
+
+        const SpinGuard guard(lock_);
+
+        data_ = std::exchange(that.data_, DataVecVec { });
+    }
+    return (*this);
+}
+
+// ----------------------------------------------------------------------------
+
 template<typename I, typename H>
 DataFrame<I, H>::~DataFrame()  {
 
@@ -82,10 +125,13 @@ void DataFrame<I, H>::sort_common_(DataFrame<I, H> &df, CF &&comp_func)  {
     std::iota(sorting_idxs.begin(), sorting_idxs.end(), 0);
     std::sort(sorting_idxs.begin(), sorting_idxs.end(), comp_func);
 
-    sort_functor_<Ts ...>   functor (sorting_idxs, idx_s);
+    {
+        sort_functor_<Ts ...>   functor (sorting_idxs, idx_s);
+        const SpinGuard         guard(lock_);
 
-    for (auto &iter : df.data_)
-        iter.change(functor);
+        for (auto &iter : df.data_)
+            iter.change(functor);
+    }
     _sort_by_sorted_index_(df.indices_, sorting_idxs, idx_s);
 }
 
@@ -117,6 +163,8 @@ DataFrame<I, H>::shuffle(const std::array<const char *, N> col_names,
                     name_citer);
             throw ColNotFound(buffer);
         }
+
+        const SpinGuard guard(lock_);
 
         data_[citer->second].change(functor);
     }
@@ -447,6 +495,7 @@ void DataFrame<I, H>::fill_missing (const DF &rhs)  {
     for (auto col_citer : column_list_)  {
         fill_missing_functor_<DF, Ts ...>   functor (
             self_idx, rhs_idx, rhs, col_citer.first.c_str());
+        const SpinGuard                     guard(lock_);
 
         data_[col_citer.second].change(functor);
     }
@@ -507,6 +556,8 @@ drop_missing(drop_policy policy, size_type threshold)  {
         indices_.size(), missing_row_map);
 
     for (size_type idx = 0; idx < data_size; ++idx)  {
+        const SpinGuard guard(lock_);
+
         if (thread_count >= get_thread_level())
             data_[idx].change(functor);
         else  {
@@ -538,6 +589,8 @@ drop_missing(drop_policy policy, size_type threshold)  {
         missing_row_map, policy, threshold, data_.size());
 
     for (size_type idx = 0; idx < data_size; ++idx)  {
+        const SpinGuard guard(lock_);
+
         if (thread_count >= get_thread_level())
             data_[idx].change(functor2);
         else  {
@@ -657,6 +710,7 @@ void DataFrame<I, H>::make_consistent ()  {
 
     const size_type             idx_s = indices_.size();
     consistent_functor_<Ts ...> functor (idx_s);
+    const SpinGuard             guard(lock_);
 
     for (auto &iter : data_)
         iter.change(functor);
@@ -671,6 +725,7 @@ void DataFrame<I, H>::shrink_to_fit ()  {
     indices_.shrink_to_fit();
 
     shrink_to_fit_functor_<Ts ...>  functor;
+    const SpinGuard                 guard(lock_);
 
     for (auto &iter : data_)
         iter.change(functor);

@@ -803,8 +803,7 @@ static void test_combine()  {
     df3.load_data(std::move(idx3), std::make_pair("d1_col", d3));
     df4.load_data(std::move(idx4), std::make_pair("d1_col", d4));
 
-    df1.load_column("d2_col",
-                    std::move(df1.combine<double>("d1_col", df2, df3, my_max)));
+    df1.load_column("d2_col", df1.combine<double>("d1_col", df2, df3, my_max));
 
     std::vector<double> result {
         1, 2, 5000, 4, 5, 6, 7, 8, 9, 10, 11, 7000, 13, 14, 15, 16, 17, 18,

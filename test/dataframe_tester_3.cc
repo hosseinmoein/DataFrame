@@ -175,10 +175,82 @@ static void test_concat_view()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_test(int j)  {
+
+    std::cout << "\nTesting test ..." << std::endl;
+
+    MyDataFrame                df;
+    std::vector<unsigned long>  idxvec =
+        { 1UL, 2UL, 3UL, 10UL, 5UL, 7UL, 8UL, 12UL, 9UL, 12UL, 10UL, 13UL,
+          10UL, 15UL, 14UL };
+    std::vector<double>         dblvec =
+        { 0.0, 15.0, -14.0, 2.0, 1.0, 12.0, 11.0, 8.0, 7.0, 6.0, 5.0, 4.0,
+          3.0, 9.0, 10.0};
+    std::vector<double>         dblvec2 =
+        { 100.0, 101.0, 102.0, 103.0, 104.0, 105.0, 106.55, 107.34, 1.8,
+          111.0, 112.0, 113.0, 114.0, 115.0, 116.0};
+    std::vector<int>            intvec = { 1, 2, 3, 4, 5, 8, 6, 7, 11, 14, 9 };
+    std::vector<std::string>    strvec =
+        { "zz", "bb", "cc", "ww", "ee", "ff", "gg", "hh", "ii", "jj", "kk",
+          "ll", "mm", "nn", "oo" };
+
+    df.load_data(std::move(idxvec),
+                 std::make_pair("dbl_col", dblvec),
+                 std::make_pair("dbl_col_2", dblvec2),
+                 std::make_pair("str_col", strvec));
+    df.load_column("int_col", std::move(intvec),
+                   nan_policy::dont_pad_with_nans);
+	std::cout << "PRINTING FIRST ..." << std::endl;
+    df.write<std::ostream, std::string, double, int, bool>
+        (std::cout, io_format::json);
+    FactorizeVisitor<double>    fact([] (const double &f) -> bool {
+                                         return (f > 11106.0 && f < 114.0);
+                                     });
+    df.load_column("bool_col",
+                   df.single_act_visit<double>("dbl_col_2", fact).get_result());
+
+    auto& xvec = df.get_column<std::string>("str_col");
+    auto& yvec = df.get_column<double>("dbl_col_2");
+    auto m = df;
+	std::cout << "PRINTING AFTER FACTOR ..." << std::endl;
+    m.write<std::ostream, std::string, double, int, bool>
+        (std::cout, io_format::json);
+
+    auto bool_df = m.groupby1<bool>(
+        "bool_col",
+        LastVisitor<MyDataFrame::IndexType, MyDataFrame::IndexType>(),
+        std::make_tuple("dbl_col_2", "sum_dbl2", SumVisitor<double>()),
+        std::make_tuple("dbl_col_2", "cnt_dbl2", CountVisitor<double>()));
+	std::cout << "PRINTING AFTER GROUPBY ..." << std::endl;
+    bool_df.write<std::ostream, double, std::size_t, bool>
+        (std::cout, io_format::json);
+}
+
+
 int main(int argc, char *argv[]) {
 
-    test_groupby_edge();
-    test_concat_view();
+    // test_groupby_edge();
+    // test_concat_view();
+
+
+
+
+    for (int i = 0; i < 1; ++i)  {
+        hmdf::SpinLock locker;
+
+        MyDataFrame::set_lock(&locker);
+
+        const int   kThreadCount = 10;
+        std::thread threads[kThreadCount];
+
+        for (size_t j = 0; j < kThreadCount; ++j) {
+            threads[j] = std::thread(test_test, j);
+        }
+        for (size_t j = 0; j < kThreadCount; ++j) {
+            threads[j].join();
+        }
+        MyDataFrame::remove_lock();
+	}
 
     return (0);
 }

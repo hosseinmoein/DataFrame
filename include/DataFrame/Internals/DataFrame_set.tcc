@@ -49,6 +49,8 @@ std::vector<T> &DataFrame<I, H>::create_column (const char *name)  {
     if (column_tb_.find(name) != column_tb_.end())
        return (get_column<T>(name));
 
+    const SpinGuard guard(lock_);
+
     if (column_list_.empty())  {
         column_list_.reserve(32);
         data_.reserve(32);
@@ -57,10 +59,10 @@ std::vector<T> &DataFrame<I, H>::create_column (const char *name)  {
     column_tb_.emplace (name, data_.size() - 1);
     column_list_.emplace_back (name, data_.size() - 1);
 
-    DataVec         &hv = data_.back();
-    const SpinGuard guard(lock_);
+    DataVec &hv = data_.back();
+    auto    &data_vec = hv.template get_vector<T>();
 
-    return (hv.template get_vector<T>());
+    return (data_vec);
 }
 
 // ----------------------------------------------------------------------------
@@ -363,8 +365,8 @@ load_column (const char *name,
     if (iter == column_tb_.end())
         vec_ptr = &(create_column<T>(name));
     else  {
-        DataVec         &hv = data_[iter->second];
         const SpinGuard guard(lock_);
+        DataVec         &hv = data_[iter->second];
 
         vec_ptr = &(hv.template get_vector<T>());
     }
@@ -400,6 +402,9 @@ setup_view_column_ (const char *name, Index2D<ITR> range)  {
     DataVec dv;
 
     dv.set_begin_end_special(&*(range.begin), &*(range.end - 1));
+
+    const SpinGuard guard(lock_);
+
     data_.emplace_back (dv);
     column_tb_.emplace (name, data_.size() - 1);
     column_list_.emplace_back (name, data_.size() - 1);
@@ -446,8 +451,8 @@ load_column (const char *name, std::vector<T> &&column, nan_policy padding)  {
     if (iter == column_tb_.end())
         vec_ptr = &(create_column<T>(name));
     else  {
-        DataVec         &hv = data_[iter->second];
         const SpinGuard guard(lock_);
+        DataVec         &hv = data_[iter->second];
 
         vec_ptr = &(hv.template get_vector<T>());
     }
@@ -647,8 +652,11 @@ void DataFrame<I, H>::remove_data_by_idx (Index2D<IndexType> range)  {
 
         remove_functor_<Ts ...> functor (b_dist, e_dist);
 
-        for (auto &iter : column_list_)
+        for (auto &iter : column_list_)  {
+            const SpinGuard guard(lock_);
+
             data_[iter.second].change(functor);
+        }
     }
 
     return;
@@ -678,8 +686,11 @@ void DataFrame<I, H>::remove_data_by_loc (Index2D<long> range)  {
             static_cast<size_type>(range.begin),
             static_cast<size_type>(range.end));
 
-        for (auto &iter : column_list_)
+        for (auto &iter : column_list_)  {
+            const SpinGuard guard(lock_);
+
             data_[iter.second].change(functor);
+        }
 
         return;
     }
@@ -713,6 +724,7 @@ void DataFrame<I, H>::remove_data_by_sel (const char *name, F &sel_functor)  {
 
     for (auto col_citer : column_list_)  {
         sel_remove_functor_<Ts ...> functor (col_indices);
+        const SpinGuard             guard(lock_);
 
         data_[col_citer.second].change(functor);
     }
@@ -749,6 +761,7 @@ remove_data_by_sel (const char *name1, const char *name2, F &sel_functor)  {
 
     for (auto col_citer : column_list_)  {
         sel_remove_functor_<Ts ...> functor (col_indices);
+        const SpinGuard             guard(lock_);
 
         data_[col_citer.second].change(functor);
     }
@@ -791,6 +804,7 @@ remove_data_by_sel (const char *name1,
 
     for (auto col_citer : column_list_)  {
         sel_remove_functor_<Ts ...> functor (col_indices);
+        const SpinGuard             guard(lock_);
 
         data_[col_citer.second].change(functor);
     }
@@ -851,6 +865,7 @@ remove_dups_common_(const DataFrame &s_df,
         copy_remove_functor_<Ts ...>    functor (citer.first.c_str(),
                                                  rows_to_del,
                                                  new_df);
+        const SpinGuard                 guard(lock_);
 
         s_df.data_[citer.second].change(functor);
     }

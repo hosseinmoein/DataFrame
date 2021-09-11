@@ -175,7 +175,8 @@ static void test_concat_view()  {
 
 // -----------------------------------------------------------------------------
 
-static void test_test(int j)  {
+/*
+static void test_multithreading(int j)  {
 
     std::cout << "\nTesting test ..." << std::endl;
 
@@ -200,7 +201,7 @@ static void test_test(int j)  {
                  std::make_pair("str_col", strvec));
     df.load_column("int_col", std::move(intvec),
                    nan_policy::dont_pad_with_nans);
-	std::cout << "PRINTING FIRST ..." << std::endl;
+    std::cout << "PRINTING FIRST ..." << std::endl;
     df.write<std::ostream, std::string, double, int, bool>
         (std::cout, io_format::json);
     FactorizeVisitor<double>    fact([] (const double &f) -> bool {
@@ -212,7 +213,7 @@ static void test_test(int j)  {
     auto& xvec = df.get_column<std::string>("str_col");
     auto& yvec = df.get_column<double>("dbl_col_2");
     auto m = df;
-	std::cout << "PRINTING AFTER FACTOR ..." << std::endl;
+    std::cout << "PRINTING AFTER FACTOR ..." << std::endl;
     m.write<std::ostream, std::string, double, int, bool>
         (std::cout, io_format::json);
 
@@ -221,21 +222,21 @@ static void test_test(int j)  {
         LastVisitor<MyDataFrame::IndexType, MyDataFrame::IndexType>(),
         std::make_tuple("dbl_col_2", "sum_dbl2", SumVisitor<double>()),
         std::make_tuple("dbl_col_2", "cnt_dbl2", CountVisitor<double>()));
-	std::cout << "PRINTING AFTER GROUPBY ..." << std::endl;
+    std::cout << "PRINTING AFTER GROUPBY ..." << std::endl;
     bool_df.write<std::ostream, double, std::size_t, bool>
         (std::cout, io_format::json);
 }
+*/
 
+// -----------------------------------------------------------------------------
 
 int main(int argc, char *argv[]) {
 
-    // test_groupby_edge();
-    // test_concat_view();
+    test_groupby_edge();
+    test_concat_view();
 
-
-
-
-    for (int i = 0; i < 1; ++i)  {
+    /*
+    for (int i = 0; i < 10; ++i)  {
         hmdf::SpinLock locker;
 
         MyDataFrame::set_lock(&locker);
@@ -244,13 +245,14 @@ int main(int argc, char *argv[]) {
         std::thread threads[kThreadCount];
 
         for (size_t j = 0; j < kThreadCount; ++j) {
-            threads[j] = std::thread(test_test, j);
+            threads[j] = std::thread(test_multithreading, j);
         }
         for (size_t j = 0; j < kThreadCount; ++j) {
             threads[j].join();
         }
         MyDataFrame::remove_lock();
-	}
+    }
+    */
 
     return (0);
 }

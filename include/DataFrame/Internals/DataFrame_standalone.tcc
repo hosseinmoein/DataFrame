@@ -349,13 +349,15 @@ _bucketize_core_(DV &dst_vec,
                  std::size_t src_s,
                  bucket_type bt)  {
 
+    using src_type = typename SI::value_type;
+
     dst_vec.reserve(src_s / 5);
     if (bt == bucket_type::by_distance)  {
         std::size_t marker { 0 };
 
         visitor.pre();
         for (std::size_t i = 0; i < src_s; ++i)  {
-            if (src_idx[i] - src_idx[marker] >= value)  {
+            if (src_idx[i] - src_idx[marker] >= src_type(value))  {
                 visitor.post();
                 dst_vec.push_back(visitor.get_result());
                 visitor.pre();
@@ -365,11 +367,11 @@ _bucketize_core_(DV &dst_vec,
         }
     }
     else if (bt == bucket_type::by_count)  {
-        if (src_s < value)  return;
+        if (src_s < src_type(value))  return;
 
         for (std::size_t i = 0; (i + value) < src_s; i += value)  {
             visitor.pre();
-            for (std::size_t j = 0; j < value; ++j)
+            for (std::size_t j = 0; j < std::size_t(value); ++j)
                 visitor(src_idx[i + j], src_vec[i + j]);
             visitor.post();
             dst_vec.push_back(visitor.get_result());

@@ -494,9 +494,9 @@ struct  NExtremumVisitor {
         else if (cmp_(result_[extremum_index_].value, val))  {
             result_[extremum_index_] = { val, idx };
             extremum_index_ = 0;
-            for (int i = 1; i < N; ++i)
+            for (size_type i = 1; i < N; ++i)
                 if (cmp_(result_[i].value, result_[extremum_index_].value))
-                    extremum_index_ = i;
+                    extremum_index_ = static_cast<int>(i);
         }
 
         counter_ += 1;
@@ -2547,7 +2547,7 @@ struct DiffVisitor  {
 
         GET_COL_SIZE
 
-        assert(col_s > 0 && std::abs(periods_) < (col_s - 1));
+			assert(col_s > 0 && size_type(std::abs(periods_)) < (col_s - 1));
 
         bool        there_is_zero = false;
         result_type result;
@@ -3136,7 +3136,7 @@ public:
 
         const size_type col_s = std::distance(x_begin, x_end);
 
-        assert((col_s == std::distance(y_begin, y_end)));
+        assert((col_s == size_type(std::distance(y_begin, y_end))));
 
         // degree needs to change to contain the slope (0-degree)
         //
@@ -3240,7 +3240,7 @@ public:
             // equation
             //
             coeffs_[i] = eq_mat[index_(i, deg, nrows)];
-            for (int j = 0; j < deg; ++j)  {
+            for (int j = 0; j < int(deg); ++j)  {
                 // then subtract all the lhs values except the coefficient of
                 // the variable whose value is being calculated
                 //
@@ -3500,7 +3500,7 @@ private:
         long                k = last_fit_idx + 1;
         bool                looped = false;
 
-        for ( ; k < col_s; ++k)  {
+        for ( ; size_type(k) < col_s; ++k)  {
             looped = true;
             if (*(x_begin + k) > cutoff)  break;
             if (*(x_begin + k) == *(x_begin + last_fit_idx))  {
@@ -3535,7 +3535,7 @@ private:
 
         const value_type    last_fit_xval = *(x_begin + last_fit_idx);
 
-        for (size_type i = last_fit_idx + 1; i < curr_idx; ++i)
+        for (long i = last_fit_idx + 1; i < curr_idx; ++i)
             auxiliary_vec_.push_back(*(x_begin + i) - last_fit_xval);
 
         const value_type    x_diff = *(x_begin + curr_idx) - last_fit_xval;
@@ -3546,7 +3546,7 @@ private:
         const value_type    last_fit_yval = *(y_fits_begin + last_fit_idx);
         const value_type    curr_idx_yval = *(y_fits_begin + curr_idx);
 
-        for (size_type i = last_fit_idx + 1; i < curr_idx; ++i)
+        for (long i = last_fit_idx + 1; i < curr_idx; ++i)
             *(y_fits_begin + i) =
                 auxiliary_vec_[i] * curr_idx_yval +
                 (one_ - auxiliary_vec_[i]) * last_fit_yval;
@@ -3677,7 +3677,7 @@ private:
     inline static value_type
     update_neighborhood_(const X &x_begin, const X &x_end,
                          value_type xval,
-                         long curr_idx,
+                         size_type curr_idx,
                          size_type &left_end, size_type &right_end)  {
 
         // A subtle loop. Start from the current neighborhood range:
@@ -3794,7 +3794,7 @@ private:
                                 curr_idx, last_fit_idx,
                                 col_s);
 
-                if (last_fit_idx >= (col_s - 1))  break;
+                if (last_fit_idx >= (long(col_s) - 1L))  break;
             }
 
             calc_residual_weights_(idx_begin, idx_end,

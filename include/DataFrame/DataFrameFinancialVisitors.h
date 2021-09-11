@@ -1351,7 +1351,7 @@ struct MassIndexVisitor {
 
         const size_type col_s = std::distance(high_begin, high_end);
 
-        assert((col_s == std::distance(low_begin, low_end)));
+        assert((col_s == size_type(std::distance(low_begin, low_end))));
         assert(fast_ < slow_);
 
         bool        there_is_zero = false;
@@ -1515,7 +1515,7 @@ struct  RollingMidValueVisitor  {
 
         const size_type col_s = std::distance(high_begin, high_end);
 
-        assert((col_s == std::distance(low_begin, low_end)));
+        assert((col_s == size_type(std::distance(low_begin, low_end))));
 
         result_type result;
 
@@ -1640,8 +1640,8 @@ struct  WilliamPrcRVisitor  {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
-        assert((col_s == std::distance(low_begin, low_end)));
-        assert((col_s == std::distance(high_begin, high_end)));
+        assert((col_s == size_type(std::distance(low_begin, low_end))));
+        assert((col_s == size_type(std::distance(high_begin, high_end))));
 
         SimpleRollAdopter<MinVisitor<T, I>, T, I>   min_v (MinVisitor<T, I>(),
                                                            roll_count_);
@@ -1718,7 +1718,7 @@ struct  PSLVisitor  {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
-        assert((col_s == std::distance(open_begin, open_end)));
+        assert((col_s == size_type(std::distance(open_begin, open_end))));
 
         result_.reserve(col_s);
         for (size_type i = 0; i < col_s; ++i)
@@ -1775,8 +1775,8 @@ struct  CCIVisitor  {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
-        assert((col_s == std::distance(low_begin, low_end)));
-        assert((col_s == std::distance(high_begin, high_end)));
+        assert((col_s == size_type(std::distance(low_begin, low_end))));
+        assert((col_s == size_type(std::distance(high_begin, high_end))));
 
         result_type result;
 
@@ -1843,9 +1843,9 @@ struct GarmanKlassVolVisitor {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
-        assert((col_s == std::distance(low_begin, low_end)));
-        assert((col_s == std::distance(open_begin, open_end)));
-        assert((col_s == std::distance(high_begin, high_end)));
+        assert((col_s == size_type(std::distance(low_begin, low_end))));
+        assert((col_s == size_type(std::distance(open_begin, open_end))));
+        assert((col_s == size_type(std::distance(high_begin, high_end))));
         assert((roll_count_ < (col_s - 1)));
 
         // 2 * log(2) - 1
@@ -1917,9 +1917,9 @@ struct YangZhangVolVisitor {
 
         assert(roll_count_ > 1);
 
-        assert((col_s == std::distance(low_begin, low_end)));
-        assert((col_s == std::distance(open_begin, open_end)));
-        assert((col_s == std::distance(high_begin, high_end)));
+        assert((col_s == size_type(std::distance(low_begin, low_end))));
+        assert((col_s == size_type(std::distance(open_begin, open_end))));
+        assert((col_s == size_type(std::distance(high_begin, high_end))));
         assert((roll_count_ < (col_s - 1)));
 
         const value_type    k =
@@ -2083,7 +2083,7 @@ struct FisherTransVisitor {
 
         const size_type col_s = std::distance(low_begin, low_end);
 
-        assert((col_s == std::distance(high_begin, high_end)));
+        assert((col_s == size_type(std::distance(high_begin, high_end))));
         assert((roll_count_ < (col_s - 1)));
 
         std::vector<value_type> mid_hl;
@@ -2308,8 +2308,8 @@ struct  UltimateOSCIVisitor  {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
-        assert((col_s == std::distance(low_begin, low_end)));
-        assert((col_s == std::distance(high_begin, high_end)));
+        assert((col_s == size_type(std::distance(low_begin, low_end))));
+        assert((col_s == size_type(std::distance(high_begin, high_end))));
 
         std::vector<value_type> max_high;
 
@@ -2520,8 +2520,8 @@ struct  TTMTrendVisitor  {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
-        assert((col_s == std::distance(low_begin, low_end)));
-        assert((col_s == std::distance(high_begin, high_end)));
+        assert((col_s == size_type(std::distance(low_begin, low_end))));
+        assert((col_s == size_type(std::distance(high_begin, high_end))));
         assert(((bar_periods_ + 1) < col_s));
 
         std::vector<T>  trend_avg;
@@ -2583,8 +2583,8 @@ struct  ParabolicSARVisitor  {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
-        assert((col_s == std::distance(low_begin, low_end)));
-        assert((col_s == std::distance(high_begin, high_end)));
+        assert((col_s == size_type(std::distance(low_begin, low_end))));
+        assert((col_s == size_type(std::distance(high_begin, high_end))));
         assert(col_s > 2);
 
         bool                    bullish { true };
@@ -2967,8 +2967,8 @@ struct  PivotPointSRVisitor  {
         const size_type col_s = std::distance(close_begin, close_end);
 
         assert(col_s > 1);
-        assert((col_s == std::distance(low_begin, low_end)));
-        assert((col_s == std::distance(high_begin, high_end)));
+        assert((col_s == size_type(std::distance(low_begin, low_end))));
+        assert((col_s == size_type(std::distance(high_begin, high_end))));
 
         constexpr value_type two = 2;
 
@@ -3070,8 +3070,8 @@ struct  AvgDirMovIdxVisitor  {
         const size_type col_s = std::distance(close_begin, close_end);
 
         assert(col_s > 3);
-        assert((col_s == std::distance(low_begin, low_end)));
-        assert((col_s == std::distance(high_begin, high_end)));
+        assert((col_s == size_type(std::distance(low_begin, low_end))));
+        assert((col_s == size_type(std::distance(high_begin, high_end))));
 
         result_type pos_di(col_s);
         result_type neg_di(col_s);
@@ -3269,9 +3269,9 @@ struct  HeikinAshiCndlVisitor {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
-        assert((col_s == std::distance(low_begin, low_end)));
-        assert((col_s == std::distance(open_begin, open_end)));
-        assert((col_s == std::distance(high_begin, high_end)));
+        assert((col_s == size_type(std::distance(low_begin, low_end))));
+        assert((col_s == size_type(std::distance(open_begin, open_end))));
+        assert((col_s == size_type(std::distance(high_begin, high_end))));
 
         result_type result (col_s, std::numeric_limits<T>::quiet_NaN());
         result_type open (col_s, std::numeric_limits<T>::quiet_NaN());
@@ -3517,10 +3517,10 @@ struct  AccumDistVisitor {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
-        assert((col_s == std::distance(low_begin, low_end)));
-        assert((col_s == std::distance(open_begin, open_end)));
-        assert((col_s == std::distance(high_begin, high_end)));
-        assert((col_s == std::distance(volume_begin, volume_end)));
+        assert((col_s == size_type(std::distance(low_begin, low_end))));
+        assert((col_s == size_type(std::distance(open_begin, open_end))));
+        assert((col_s == size_type(std::distance(high_begin, high_end))));
+        assert((col_s == size_type(std::distance(volume_begin, volume_end))));
 
         result_type result (col_s, std::numeric_limits<T>::quiet_NaN());
 
@@ -3572,10 +3572,10 @@ struct  ChaikinMoneyFlowVisitor {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
-        assert((col_s == std::distance(low_begin, low_end)));
-        assert((col_s == std::distance(open_begin, open_end)));
-        assert((col_s == std::distance(high_begin, high_end)));
-        assert((col_s == std::distance(volume_begin, volume_end)));
+        assert((col_s == size_type(std::distance(low_begin, low_end))));
+        assert((col_s == size_type(std::distance(open_begin, open_end))));
+        assert((col_s == size_type(std::distance(high_begin, high_end))));
+        assert((col_s == size_type(std::distance(volume_begin, volume_end))));
         assert (period_ > 0 && period_ < col_s);
 
         result_type result (col_s, std::numeric_limits<T>::quiet_NaN());
@@ -3710,7 +3710,7 @@ struct  OnBalanceVolumeVisitor {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
-        assert((col_s == std::distance(volume_begin, volume_end)));
+        assert((col_s == size_type(std::distance(volume_begin, volume_end))));
 
         ReturnVisitor<T, I> ret (return_policy::trinary);
 
@@ -3909,7 +3909,7 @@ struct ParkinsonVolVisitor {
 
         const size_type col_s = std::distance(low_begin, low_end);
 
-        assert((col_s == std::distance(high_begin, high_end)));
+        assert((col_s == size_type(std::distance(high_begin, high_end))));
         assert (roll_count_ > 0 && roll_count_ < col_s);
 
         result_type         result (col_s);

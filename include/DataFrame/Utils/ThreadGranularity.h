@@ -79,6 +79,40 @@ public:
         std::is_same<decltype(check_<T>(0)), yes>::value;
 };
 
+// --------------------------------------
+
+struct  identity  {
+    template<typename T>
+    T operator() (T &&x) const  { return (std::forward<T>(x)); }
+};
+
+template<bool C>  // C for Condition
+struct  statement  {
+    template<typename F>
+    void then (const F &f)  { f (identity()); }
+
+    template<typename F>
+    void else_ (const F &)  {   }
+};
+
+template<>
+struct  statement<false>  {
+    template<typename F>
+    void then (const F &)  {   }
+
+    template<typename F>
+    void else_ (const F &f)  { f (identity()); }
+};
+
+template<bool C, typename F>
+statement<C> static_if (F const &f)  {
+
+    statement<C>    if_;
+
+    if_.then(f);
+    return (if_);
+}
+
 } // namespace hmdf_p
 
 // ----------------------------------------------------------------------------
@@ -128,15 +162,15 @@ struct  SpinLock  {
         if (thr_id == owner_)
             count_ += 1;
         else  {
-            if constexpr (hmdf_p::has_test_method<std::atomic_flag>::value)  {
+            hmdf_p::static_if
+                <hmdf_p::has_test_method<std::atomic_flag>::value>([&](auto) {
                 while (true) {
                     if (! lock_.test_and_set(std::memory_order_acquire)) break;
                     while (lock_.test(std::memory_order_relaxed)) ;
                 }
-            }
-            else  {
+            }).else_([&](auto)  {
                 while (lock_.test_and_set(std::memory_order_acquire)) ;
-            }
+            });
             owner_ = thr_id;
             count_ += 1;
         }

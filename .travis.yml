@@ -15,7 +15,8 @@ matrix:
           packages:
             - g++-7
       env:
-        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
+        - MATRIX_EVAL="CC=gcc-10 && CXX=g++-10"
+#        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
 #    - os: osx
 #      osx_image: xcode11.2
 #      env:

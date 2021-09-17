@@ -19,7 +19,7 @@ build_script:
   - mkdir build
   - cd build
   - cmake --version
-  - cmake C:\Repos\source -G "Visual Studio 19 2019%arch%"
+  - cmake C:\Repos\source -G "Visual Studio 17 2022%arch%"
   - cmake --build . --config "Release"
 
 test_script:

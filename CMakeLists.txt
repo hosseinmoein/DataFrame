@@ -334,26 +334,19 @@ if (ENABLE_TESTING)
                        COMMAND ${CMAKE_COMMAND} -E copy
                        ${CMAKE_CURRENT_SOURCE_DIR}/test/data/csv2_format_data.csv
                        ${CMAKE_CURRENT_BINARY_DIR}/data/csv2_format_data.csv)
-    add_custom_command(
-        TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy
-        ${CMAKE_CURRENT_SOURCE_DIR}/test/data/sample_data_dt_index.csv
-        ${CMAKE_CURRENT_BINARY_DIR}/data/sample_data_dt_index.csv)
-    add_custom_command(
-        TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy
-        ${CMAKE_CURRENT_SOURCE_DIR}/test/data/sample_data_string_index.csv
-        ${CMAKE_CURRENT_BINARY_DIR}/data/sample_data_string_index.csv)
-    add_custom_command(
-        TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy
-        ${CMAKE_CURRENT_SOURCE_DIR}/test/data/sample_data_dt_index.csv
-        ${CMAKE_CURRENT_BINARY_DIR}/data/sample_data_dt_index.csv)
-    add_custom_command(
-        TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy
-        ${CMAKE_CURRENT_SOURCE_DIR}/test/data/sample_data_string_index.csv
-        ${CMAKE_CURRENT_BINARY_DIR}/data/sample_data_string_index.csv)
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+                       COMMAND ${CMAKE_COMMAND} -E copy
+                       ${CMAKE_CURRENT_SOURCE_DIR}/test/data/SHORT_IBM.csv
+                       ${CMAKE_CURRENT_BINARY_DIR}/data/SHORT_IBM.csv)
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+                       COMMAND ${CMAKE_COMMAND} -E copy
+                       ${CMAKE_CURRENT_SOURCE_DIR}/test/data/sample_data_dt_index.csv
+                       ${CMAKE_CURRENT_BINARY_DIR}/data/sample_data_dt_index.csv)
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+                       COMMAND ${CMAKE_COMMAND} -E copy
+                       ${CMAKE_CURRENT_SOURCE_DIR}/test/data/sample_data_string_index.csv
+                       ${CMAKE_CURRENT_BINARY_DIR}/data/sample_data_string_index.csv)
+   
 
     file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/data/sample_data.csv
               DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Debug/data/.)
@@ -374,6 +367,10 @@ if (ENABLE_TESTING)
     file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/data/csv2_format_data.csv
               DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Debug/data/.)
     file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/data/csv2_format_data.csv
+              DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Release/data/.)
+     file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/data/SHORT_IBM.csv
+              DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Debug/data/.)
+     file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/data/SHORT_IBM.csv
               DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/bin/Release/data/.)
     message("-- Copying files for testing - done")
 endif(ENABLE_TESTING)

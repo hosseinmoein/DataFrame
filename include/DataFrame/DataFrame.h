@@ -83,10 +83,10 @@ class LIBRARY_API DataFrame : public ThreadGranularity {
     using ColumnVecType = typename type_declare<DataVec, T>::type;
 
     DataFrame() = default;
-    DataFrame(const DataFrame &) = default;
 
     // Because of thread safety, these need tender loving care
     //
+    DataFrame(const DataFrame &that);
     DataFrame(DataFrame &&that);
     DataFrame &operator= (const DataFrame &that);
     DataFrame &operator= (DataFrame &&that);

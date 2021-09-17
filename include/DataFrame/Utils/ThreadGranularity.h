@@ -93,13 +93,51 @@ struct  SpinLock  {
     SpinLock () = default;
     ~SpinLock() = default;
 
-    inline void
-    lock() noexcept { while (lock_.test_and_set(std::memory_order_acquire)) ; }
+    inline void lock() noexcept {
+
+        const std::thread::id   thr_id = std::this_thread::get_id();
+
+        if (thr_id == owner_)
+            count_ += 1;
+        else  {
+            while (true) {
+                if (! lock_.test_and_set(std::memory_order_acquire))  break;
+                while (lock_.test(std::memory_order_relaxed)) ;
+            }
+            owner_ = thr_id;
+            count_ += 1;
+        }
+    }
     inline bool try_lock() noexcept {
 
-        return (! lock_.test_and_set(std::memory_order_acquire));
+        const std::thread::id   thr_id = std::this_thread::get_id();
+
+        if (thr_id == owner_)  {
+            count_ += 1;
+            return (true);
+        }
+        else if (! lock_.test_and_set(std::memory_order_acquire))  {
+            owner_ = thr_id;
+            count_ += 1;
+            return (true);
+        }
+        return (false);
     }
-    inline void unlock() noexcept { lock_.clear(std::memory_order_release); }
+    inline void unlock() noexcept {
+
+        const std::thread::id   thr_id = std::this_thread::get_id();
+
+        if (thr_id == owner_)  {
+            count_ -= 1;
+
+            assert(count_ >= 0);
+            if (count_ == 0)  {
+                owner_ = std::thread::id { };
+                lock_.clear(std::memory_order_release);
+            }
+        }
+        else  assert(0);
+    }
 
     SpinLock (const SpinLock &) = delete;
     SpinLock &operator = (const SpinLock &) = delete;
@@ -107,6 +145,8 @@ struct  SpinLock  {
 private:
 
     std::atomic_flag    lock_ = ATOMIC_FLAG_INIT;
+    std::thread::id     owner_ { };
+    int                 count_ { 0 };
 };
 
 // ----------------------------------------------------------------------------

@@ -43,6 +43,9 @@ namespace hmdf
 // Notice memeber variables are initialized twice, but that's cheap
 //
 template<typename I, typename H>
+DataFrame<I, H>::DataFrame(const DataFrame &that)  { *this = that; }
+
+template<typename I, typename H>
 DataFrame<I, H>::DataFrame(DataFrame &&that)  { *this = std::move(that); }
 
 // ----------------------------------------------------------------------------

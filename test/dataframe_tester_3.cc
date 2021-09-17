@@ -236,22 +236,19 @@ int main(int argc, char *argv[]) {
     test_concat_view();
 
     /*
-    for (int i = 0; i < 10; ++i)  {
-        hmdf::SpinLock locker;
+    hmdf::SpinLock      locker;
+    static const int    thread_count = 10;
 
-        MyDataFrame::set_lock(&locker);
+    MyDataFrame::set_lock(&locker);
+    for (int i = 0; i < 100; ++i)  {
+        std::thread threads[thread_count];
 
-        const int   kThreadCount = 10;
-        std::thread threads[kThreadCount];
-
-        for (size_t j = 0; j < kThreadCount; ++j) {
+        for (size_t j = 0; j < thread_count; ++j)
             threads[j] = std::thread(test_multithreading, j);
-        }
-        for (size_t j = 0; j < kThreadCount; ++j) {
+        for (size_t j = 0; j < thread_count; ++j)
             threads[j].join();
-        }
-        MyDataFrame::remove_lock();
     }
+    MyDataFrame::remove_lock();
     */
 
     return (0);

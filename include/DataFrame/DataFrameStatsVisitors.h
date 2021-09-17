@@ -2573,8 +2573,8 @@ struct DiffVisitor  {
             }
         }
         else {
-            auto    i = column_end - (1 + std::abs(periods_));
-            auto    j = column_end - 1;
+            H   i = column_end - (1 + std::abs(periods_));
+            H   j = column_end - 1;
 
             for ( ; i > column_begin; --i, --j) {
                 if (skip_nan_ && (is_nan__(*i) || is_nan__(*j)))  continue;

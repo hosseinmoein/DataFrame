@@ -56,6 +56,33 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // ----------------------------------------------------------------------------
 
+namespace hmdf_p
+{
+template<typename T>
+struct  has_test_method  {
+
+private:
+
+    using yes = std::true_type;
+    using no = std::false_type;
+
+    template<typename U>
+    static auto check_(int) ->
+        decltype(std::declval<U>().test(std::memory_order_relaxed) == 1, yes());
+
+    template<typename>
+    static no check_(...);
+
+public:
+
+    static constexpr bool   value =
+        std::is_same<decltype(check_<T>(0)), yes>::value;
+};
+
+} // namespace hmdf_p
+
+// ----------------------------------------------------------------------------
+
 namespace hmdf
 {
 
@@ -101,9 +128,14 @@ struct  SpinLock  {
         if (thr_id == owner_)
             count_ += 1;
         else  {
-            while (true) {
-                if (! lock_.test_and_set(std::memory_order_acquire))  break;
-                while (lock_.test(std::memory_order_relaxed)) ;
+            if constexpr (hmdf_p::has_test_method<std::atomic_flag>::value)  {
+                while (true) {
+                    if (! lock_.test_and_set(std::memory_order_acquire)) break;
+                    while (lock_.test(std::memory_order_relaxed)) ;
+                }
+            }
+            else  {
+                while (lock_.test_and_set(std::memory_order_acquire)) ;
             }
             owner_ = thr_id;
             count_ += 1;

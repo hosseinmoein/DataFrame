@@ -56,67 +56,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // ----------------------------------------------------------------------------
 
-namespace hmdf_p
-{
-template<typename T>
-struct  has_test_method  {
-
-private:
-
-    using yes = std::true_type;
-    using no = std::false_type;
-
-    template<typename U>
-    static auto check_(int) ->
-        decltype(std::declval<U>().test(std::memory_order_relaxed) == 1, yes());
-
-    template<typename>
-    static no check_(...);
-
-public:
-
-    static constexpr bool   value =
-        std::is_same<decltype(check_<T>(0)), yes>::value;
-};
-
-// --------------------------------------
-
-struct  identity  {
-    template<typename T>
-    T operator() (T &&x) const  { return (std::forward<T>(x)); }
-};
-
-template<bool C>  // C for Condition
-struct  statement  {
-    template<typename F>
-    void then (const F &f)  { f (identity()); }
-
-    template<typename F>
-    void else_ (const F &)  {   }
-};
-
-template<>
-struct  statement<false>  {
-    template<typename F>
-    void then (const F &)  {   }
-
-    template<typename F>
-    void else_ (const F &f)  { f (identity()); }
-};
-
-template<bool C, typename F>
-statement<C> static_if (F const &f)  {
-
-    statement<C>    if_;
-
-    if_.then(f);
-    return (if_);
-}
-
-} // namespace hmdf_p
-
-// ----------------------------------------------------------------------------
-
 namespace hmdf
 {
 
@@ -162,15 +101,14 @@ struct  SpinLock  {
         if (thr_id == owner_)
             count_ += 1;
         else  {
-            hmdf_p::static_if
-                <hmdf_p::has_test_method<std::atomic_flag>::value>([&](auto) {
-                while (true) {
-                    if (! lock_.test_and_set(std::memory_order_acquire)) break;
-                    while (lock_.test(std::memory_order_relaxed)) ;
-                }
-            }).else_([&](auto)  {
-                while (lock_.test_and_set(std::memory_order_acquire)) ;
-            });
+#ifdef __cpp_lib_atomic_flag_test
+            while (true) {
+                if (! lock_.test_and_set(std::memory_order_acquire)) break;
+                while (lock_.test(std::memory_order_relaxed)) ;
+            }
+#else
+            while (lock_.test_and_set(std::memory_order_acquire)) ;
+#endif // __cpp_lib_atomic_flag_test
             owner_ = thr_id;
             count_ += 1;
         }

@@ -16,3 +16,12 @@
 * write an **explicit and comprehensive** test for your new addition/enhancement.
 * Make sure your new addition/enhancement and the test compile and run correctly on all supported platforms
 * issue a pull request
+
+In general, you should get familiarized with the project and its source code first. I suggest:
+
+1. Read the documentation from beginning to end
+2. Get comfortable with compiling the project
+3. Go through the Hello World
+4. Understand the Vectors code
+5. Go through the other test programs along with most of the features in the documentation
+6. Contribute + document + write test case

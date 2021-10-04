@@ -59,13 +59,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         sort(const char *name, sort_spec dir); </font>
       </td>
       <td width = "33.3%">
-        Sort the DataFrame by the named column. If name equals "INDEX", it sorts by index. Otherwise it sorts by the named column. Sort first calls make_consistent() that may add nan values to data columns.<BR>
+        Sort the DataFrame by the named column. If name equals DF_INDEX_COL_NAME, it sorts by index. Otherwise it sorts by the named column. Sort first calls make_consistent() that may add nan values to data columns.<BR>
         nan values make sorting nondeterministic.
       </td>
       <td>
         <B>T</B>: Type of the by_name column. You always of the specify this type, even if it is being sorted to the default index<BR>
         <B>Ts</B>: The list of types for all columns. A type should be specified only once.<BR>
-        <B>name</B>: The name of a column or string "INDEX".<BR>
+        <B>name</B>: The name of a column or string DF_INDEX_COL_NAME.<BR>
         <B>dir</B>: Direction of sorting, ascending or descending
       </td>
     </tr>
@@ -77,7 +77,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         sort(const char *name1, sort_spec dir1, const char *name2, sort_spec dir2); </font>
       </td>
       <td width = "33.3%">
-        This sort function sorts DataFrame based on two columns, also specified by the two directions. name[n] could be "INDEX" in whcih case the index column is taken as the sorting column.<BR>
+        This sort function sorts DataFrame based on two columns, also specified by the two directions. name[n] could be DF_INDEX_COL_NAME in whcih case the index column is taken as the sorting column.<BR>
         <B>NOTE</B>: The order of T[n] type specifications must match the order of name[n] column names. In addition, all column types must be specified separately. Otherwise, the behavior is undefined.<BR>
         <B>NOTE</B>: Sort first calls make_consistent() that may add nan values to data columns. nan values make sorting nondeterministic.
       </td>
@@ -85,8 +85,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         <B>T1</b>: Type of the first named column. You always must specify this type, even if it is being sorted by the index.<BR>
         <B>T2</b>: Type of the second named column. You always must specify this type, even if it is being sorted by the index.<BR>
         <B>Ts</b>: List all the types of all data columns. A type should be specified in the list only once.<BR>
-        <B>name1</b>: Name of the first column or string "INDEX"<BR>
-        <B>name2</b>: Name of the second column or string "INDEX"<BR>
+        <B>name1</b>: Name of the first column or string DF_INDEX_COL_NAME<BR>
+        <B>name2</b>: Name of the second column or string DF_INDEX_COL_NAME<BR>
         <B>dir1</b>: Direction of sorting for the first column<BR>
         <B>dir2</b>: Direction of sorting for the second column
       </td>
@@ -129,10 +129,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       </td>
       <td>
       </td>
-    </tr>
-
-    <tr bgcolor="lightblue">
-        <th>Signature</th> <th>Description</th> <th>Parameters</th>
     </tr>
 
     <tr bgcolor="lightgrey">

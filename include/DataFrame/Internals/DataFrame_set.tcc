@@ -336,14 +336,15 @@ DataFrame<I, H>::append_index(const IndexType &val)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename  H>
-template<typename T, typename ITR>
+template<typename ITR>
 typename DataFrame<I, H>::size_type
 DataFrame<I, H>::
 load_column (const char *name,
-             Index2D<const ITR &>
-             range, nan_policy padding)  {
+             const ITR &begin,
+             const ITR &end,
+             nan_policy padding)  {
 
-    size_type       s = std::distance(range.begin, range.end);
+    size_type       s = std::distance(begin, end);
     const size_type idx_s = indices_.size();
 
     if (s > idx_s)  {
@@ -359,27 +360,29 @@ load_column (const char *name,
         throw InconsistentData (buffer);
     }
 
-    const auto      iter = column_tb_.find (name);
-    std::vector<T>  *vec_ptr = nullptr;
+    using value_type = typename std::iterator_traits<ITR>::value_type;
+
+    const auto              iter = column_tb_.find (name);
+    std::vector<value_type> *vec_ptr = nullptr;
 
     if (iter == column_tb_.end())
-        vec_ptr = &(create_column<T>(name));
+        vec_ptr = &(create_column<value_type>(name));
     else  {
         const SpinGuard guard(lock_);
         DataVec         &hv = data_[iter->second];
 
-        vec_ptr = &(hv.template get_vector<T>());
+        vec_ptr = &(hv.template get_vector<value_type>());
     }
 
     vec_ptr->clear();
-    vec_ptr->insert (vec_ptr->end(), range.begin, range.end);
+    vec_ptr->insert (vec_ptr->end(), begin, end);
 
     size_type   ret_cnt = s;
 
     s = vec_ptr->size();
     if (padding == nan_policy::pad_with_nans && s < idx_s)  {
         for (size_type i = 0; i < idx_s - s; ++i)  {
-            vec_ptr->push_back (std::move(get_nan<T>()));
+            vec_ptr->push_back (std::move(get_nan<value_type>()));
             ret_cnt += 1;
         }
     }
@@ -547,16 +550,19 @@ DataFrame<I, H>::load_pair_(std::pair<T1, T2> &col_name_data)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename  H>
-template<typename T, typename ITR>
+template<typename ITR>
 typename DataFrame<I, H>::size_type
 DataFrame<I, H>::
 append_column (const char *name,
-               Index2D<const ITR &> range,
+               const ITR &begin,
+               const ITR &end,
                nan_policy padding)  {
 
-    std::vector<T>  &vec = get_column<T>(name);
-    size_type       s = std::distance(range.begin, range.end) + vec.size ();
-    const size_type idx_s = indices_.size();
+    using value_type = typename std::iterator_traits<ITR>::value_type;
+
+    std::vector<value_type> &vec = get_column<value_type>(name);
+    size_type               s = std::distance(begin, end) + vec.size ();
+    const size_type         idx_s = indices_.size();
 
     if (s > idx_s)  {
         char buffer [512];
@@ -571,14 +577,14 @@ append_column (const char *name,
         throw InconsistentData (buffer);
     }
 
-    vec.insert (vec.end (), range.begin, range.end);
+    vec.insert (vec.end (), begin, end);
 
     size_type   ret_cnt = s;
 
     s = vec.size();
     if (padding == nan_policy::pad_with_nans && s < idx_s)  {
         for (size_type i = 0; i < idx_s - s; ++i)  {
-            vec.push_back (std::move(get_nan<T>()));
+            vec.push_back (std::move(get_nan<value_type>()));
             ret_cnt += 1;
         }
     }

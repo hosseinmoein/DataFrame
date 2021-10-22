@@ -1050,8 +1050,8 @@ static void test_groupby()  {
                  std::make_pair("ul_col", xulgvec2));
 
     auto    fut1 =
-        df.groupby1_async<unsigned long>
-            (DF_INDEX_COL_NAME,
+        df.groupby1_async(
+             DF_INDEX_COL_NAME,
              LastVisitor<MyDataFrame::IndexType, MyDataFrame::IndexType>(),
              std::make_tuple("str_col", "sum_str", SumVisitor<std::string>()),
              std::make_tuple("xint_col", "max_int", MaxVisitor<int>()),
@@ -1063,8 +1063,8 @@ static void test_groupby()  {
         (std::cout, io_format::csv2);
 
     auto    fut2 =
-        df.groupby1_async<unsigned long>
-            ("ul_col",
+        df.groupby1_async(
+             "ul_col",
              LastVisitor<MyDataFrame::IndexType, MyDataFrame::IndexType>(),
              std::make_tuple("str_col", "sum_str", SumVisitor<std::string>()),
              std::make_tuple("xint_col", "max_int", MaxVisitor<int>()),
@@ -1076,8 +1076,8 @@ static void test_groupby()  {
         (std::cout, io_format::csv2);
 
     auto    fut3 =
-        df.groupby1_async<double>
-            ("dbl_col_2",
+        df.groupby1_async(
+             "dbl_col_2",
              MaxVisitor<MyDataFrame::IndexType, MyDataFrame::IndexType>(),
              std::make_tuple("str_col", "sum_str", SumVisitor<std::string>()),
              std::make_tuple("xint_col", "max_int", MaxVisitor<int>()),

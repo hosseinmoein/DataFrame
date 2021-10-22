@@ -444,8 +444,8 @@ struct  RandGenParams  {
 //
 template<typename T>
 struct Index2D  {
-    T   begin {};
-    T   end {};
+    T   begin { };
+    T   end { };
 };
 
 // ----------------------------------------------------------------------------

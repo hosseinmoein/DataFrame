@@ -1176,9 +1176,11 @@ sort_async(const char *name1, sort_spec dir1,
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename T, typename I_V, typename ... Ts>
+template<typename I_V, typename ... Ts>
 DataFrame<I, H> DataFrame<I, H>::
 groupby1(const char *col_name, I_V &&idx_visitor, Ts&& ... args) const  {
+
+    using T = typename I_V::value_type;
 
     const ColumnVecType<T>  *gb_vec { nullptr };
 
@@ -1373,12 +1375,12 @@ groupby3(const char *col_name1,
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename T, typename I_V, typename ... Ts>
+template<typename I_V, typename ... Ts>
 std::future<DataFrame<I, H>> DataFrame<I, H>::
 groupby1_async(const char *col_name, I_V &&idx_visitor, Ts&& ... args) const {
 
     return (std::async(std::launch::async,
-                       &DataFrame::groupby1<T, I_V, Ts ...>,
+                       &DataFrame::groupby1<I_V, Ts ...>,
                            this,
                            col_name,
                            std::forward<I_V>(idx_visitor),

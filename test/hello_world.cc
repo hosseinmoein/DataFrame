@@ -170,7 +170,7 @@ int main(int argc, char *argv[]) {
     // Group-by column dbl_col, and I am specifying how to summarize the index
     // column and each of the other columns
     //
-    auto    gb_df = ul_df1.groupby1<double>(
+    auto    gb_df = ul_df1.groupby1(
         "dbl_col",
         LastVisitor<ULDataFrame::IndexType, ULDataFrame::IndexType>(),
         std::make_tuple("integers", "sum_int", SumVisitor<int>()),

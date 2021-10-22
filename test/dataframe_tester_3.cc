@@ -82,7 +82,7 @@ static void test_groupby_edge()  {
     df.write<std::ostream, std::string, double, int, bool>
         (std::cout, io_format::csv2);
 
-    auto bool_df = df.groupby1<bool>(
+    auto bool_df = df.groupby1(
         "bool_col",
         LastVisitor<MyDataFrame::IndexType, MyDataFrame::IndexType>(),
         std::make_tuple("dbl_col_2", "sum_dbl2", SumVisitor<double>()),
@@ -217,7 +217,7 @@ static void test_multithreading(int j)  {
     m.write<std::ostream, std::string, double, int, bool>
         (std::cout, io_format::json);
 
-    auto bool_df = m.groupby1<bool>(
+    auto bool_df = m.groupby1(
         "bool_col",
         LastVisitor<MyDataFrame::IndexType, MyDataFrame::IndexType>(),
         std::make_tuple("dbl_col_2", "sum_dbl2", SumVisitor<double>()),

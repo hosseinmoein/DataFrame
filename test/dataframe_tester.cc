@@ -104,14 +104,14 @@ static void test_haphazard()  {
     assert(rc == 48);
 
     df.load_index(ulgvec.begin(), ulgvec.end());
-    df.load_column<int>("int_col", { intvec.begin(), intvec.end() },
-                        nan_policy::pad_with_nans);
-    df.load_column<std::string>("str_col", { strvec.begin(), strvec.end() },
-                                nan_policy::pad_with_nans);
-    df.load_column<double>("dbl_col", { dblvec.begin(), dblvec.end() },
-                           nan_policy::pad_with_nans);
-    df.load_column<double>("dbl_col_2", { dblvec2.begin(), dblvec2.end() },
-                           nan_policy::dont_pad_with_nans);
+    df.load_column("int_col", intvec.begin(), intvec.end(),
+                   nan_policy::pad_with_nans);
+    df.load_column("str_col", strvec.begin(), strvec.end(),
+                   nan_policy::pad_with_nans);
+    df.load_column("dbl_col", dblvec.begin(), dblvec.end(),
+                   nan_policy::pad_with_nans);
+    df.load_column("dbl_col_2", dblvec2.begin(), dblvec2.end(),
+                   nan_policy::dont_pad_with_nans);
 
     df.append_column<std::string>("str_col", "Additional column");
     df.append_column("dbl_col", 10.56);

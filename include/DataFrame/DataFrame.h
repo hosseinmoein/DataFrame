@@ -187,8 +187,6 @@ public:  // Load/append/remove interfaces
     // If column does not exist, it will be created. If the column exists,
     // it will be over written.
     //
-    // T:
-    //   Type of data being copied
     // ITR:
     //   Type of the iterator
     // name:
@@ -199,10 +197,11 @@ public:  // Load/append/remove interfaces
     //   If true, it pads the data column with nan, if it is shorter than the
     //   index column.
     //
-    template<typename T, typename ITR>
+    template<typename ITR>
     size_type
     load_column(const char *name,
-                Index2D<const ITR &> range,
+                const ITR &begin,
+                const ITR &end,
                 nan_policy padding = nan_policy::pad_with_nans);
 
     // It moves the data to the named column in DataFrame.
@@ -317,8 +316,6 @@ public:  // Load/append/remove interfaces
     // It appends the range begin to end to the end of the named data column.
     // If data column doesn't exist, it throws an exception.
     //
-    // T:
-    //   Type of the named data column
     // ITR:
     //   Type of the iterator
     // name:
@@ -329,10 +326,11 @@ public:  // Load/append/remove interfaces
     //   If true, it pads the data column with nan, if it is shorter than the
     //   index column.
     //
-    template<typename T, typename ITR>
+    template<typename ITR>
     size_type
     append_column(const char *name,
-                  Index2D<const ITR &> range,
+                  const ITR &begin,
+                  const ITR &end,
                   nan_policy padding = nan_policy::pad_with_nans);
 
     // It removes the data rows from index begin to index end.
@@ -967,8 +965,6 @@ public:  // Data manipulation
     // values of the named column.
     // Also see bucketize().
     //
-    // T:
-    //   Type of groupby column. In case if index, it is type of index
     // I_V:
     //   Type of visitor to be used to summarize the index column
     // Ts:
@@ -980,7 +976,7 @@ public:  // Data manipulation
     // args:
     //   List of triples to specify the column summarization
     //
-    template<typename T, typename I_V, typename ... Ts>
+    template<typename I_V, typename ... Ts>
     [[nodiscard]] DataFrame
     groupby1(const char *col_name, I_V &&idx_visitor, Ts&& ... args) const;
 
@@ -1044,7 +1040,7 @@ public:  // Data manipulation
 
     // Same as groupby1() above, but executed asynchronously
     //
-    template<typename T, typename I_V, typename ... Ts>
+    template<typename I_V, typename ... Ts>
     [[nodiscard]] std::future<DataFrame>
     groupby1_async(const char *col_name,
                    I_V &&idx_visitor,

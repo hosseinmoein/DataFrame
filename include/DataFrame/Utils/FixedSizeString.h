@@ -37,7 +37,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string.h>
 
 #if defined(_WIN32) || defined(_WIN64)
-#  ifdef _MSC_VER
+#  if defined(_MSC_VER) && defined(HMDF_SHARED)
 #    ifdef LIBRARY_EXPORTS
 #      define LIBRARY_API __declspec(dllexport)
 #    else

@@ -83,7 +83,7 @@ namespace hmdf
     operator() (K idx_begin, K idx_end, H column_begin, H column_end)  { \
 \
         while (column_begin < column_end) \
-            (*this)(*idx_begin, *column_begin++); \
+            (*this)(*idx_begin++, *column_begin++); \
     }
 
 #define PASS_DATA_ONE_BY_ONE_2 \
@@ -94,7 +94,7 @@ namespace hmdf
                 H column_begin2, H column_end2)  { \
 \
         while (column_begin1 < column_end1 && column_begin2 < column_end2) \
-            (*this)(*idx_begin, *column_begin1++, *column_begin2++); \
+            (*this)(*idx_begin++, *column_begin1++, *column_begin2++); \
     }
 
 #define DECL_CTOR(name) \

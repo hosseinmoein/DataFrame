@@ -32,7 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iterator>
 #include <vector>
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && defined(HMDF_SHARED)
 #  ifdef LIBRARY_EXPORTS
 #    define LIBRARY_API __declspec(dllexport)
 #  else

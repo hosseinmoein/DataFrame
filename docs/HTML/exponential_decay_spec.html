@@ -36,7 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 enum class exponential_decay_spec : unsigned char  {
     center_of_gravity = 1, // Decay = 1 / (1 + value)       -- for value >= 0
     span = 2,              // Decay = 2 / (1 + value)       -- for value >= 1
-    halflife = 3,          // Decay = 1 − e<sup>log(0.5) / value</sup>) -- for value > 0
+    halflife = 3,          // Decay = 1 - e<sup>log(0.5)/value</sup>     -- for value > 0
     fixed = 4,             // Decay = value                 -- for 0 < value <= 1
 };</B></PRE></font>
       </td>

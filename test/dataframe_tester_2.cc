@@ -548,7 +548,9 @@ static void test_ClipVisitor()  {
                    std::move(intvec),
                    nan_policy::dont_pad_with_nans);
 
-    ClipVisitor<double> clip (14, 5);
+    const double        upper = 14;
+    const double        lower = 5;
+    ClipVisitor<double> clip (upper, lower);
     auto                result = df.visit<double>("dbl_col", clip).get_result();
 
     assert(result == 7);
@@ -1795,8 +1797,8 @@ static void test_HWExpoSmootherVisitor()  {
 // -----------------------------------------------------------------------------
 
 static std::vector<std::string>
-add_columns(MyDataFrame::IndexVecType::const_iterator idx_begin,
-            MyDataFrame::IndexVecType::const_iterator idx_end,
+add_columns(MyDataFrame::IndexVecType::const_iterator /*idx_begin*/,
+            MyDataFrame::IndexVecType::const_iterator /*idx_end*/,
             std::vector<double>::const_iterator b_citer1,
             std::vector<double>::const_iterator e_citer1,
             std::vector<double>::const_iterator b_citer2,
@@ -3976,7 +3978,7 @@ static void test_ParkinsonVolVisitor()  {
 
 // -----------------------------------------------------------------------------
 
-int main(int argc, char *argv[]) {
+int main(int, char *[]) {
 
     test_get_reindexed();
     test_get_reindexed_view();

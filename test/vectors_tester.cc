@@ -67,7 +67,7 @@ struct change_functor : HeteroVector::visitor_base<int, double, std::string>  {
 
 // -----------------------------------------------------------------------------
 
-int main(int argc, char *argv[]) {
+int main(int, char *[]) {
 
     HeteroVector    hv;
     HeteroVector    hv2;

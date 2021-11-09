@@ -34,7 +34,7 @@ using namespace hmdf;
 
 // -----------------------------------------------------------------------------
 
-int main(int argc, char *argv[]) {
+int main(int, char *[]) {
 
     {
         RandGenParams<long> p;

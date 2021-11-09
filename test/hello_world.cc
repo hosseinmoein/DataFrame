@@ -63,7 +63,7 @@ struct  MyData  {
 // with code samples, see documentation at:
 // "https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html"
 //
-int main(int argc, char *argv[]) {
+int main(int, char *[]) {
 
     std::vector<unsigned long>  idx_col1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
     std::vector<MyData>         mydata_col (10);

@@ -245,7 +245,7 @@ template<typename T,
          typename std::enable_if<! std::is_arithmetic<T>::value ||
                                  ! std::is_arithmetic<I>::value>::type*>
 void DataFrame<I, H>::
-fill_missing_midpoint_(ColumnVecType<T> &vec, int limit, size_type col_num)  {
+fill_missing_midpoint_(ColumnVecType<T> &, int, size_type)  {
 
     throw NotFeasible("fill_missing_midpoint_(): ERROR: Mid-point filling is "
                       "not feasible on non-arithmetic types");
@@ -258,7 +258,7 @@ template<typename T,
          typename std::enable_if<std::is_arithmetic<T>::value &&
                                  std::is_arithmetic<I>::value>::type*>
 void DataFrame<I, H>::
-fill_missing_midpoint_(ColumnVecType<T> &vec, int limit, size_type col_num)  {
+fill_missing_midpoint_(ColumnVecType<T> &vec, int limit, size_type)  {
 
     const size_type vec_size = vec.size();
 

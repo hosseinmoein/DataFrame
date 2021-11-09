@@ -5321,7 +5321,7 @@ static void test_concat()  {
 
 // -----------------------------------------------------------------------------
 
-int main(int argc, char *argv[]) {
+int main(int, char *[]) {
 
     test_haphazard();
     test_read();

@@ -80,7 +80,7 @@ namespace hmdf
 #define PASS_DATA_ONE_BY_ONE \
     template <typename K, typename H> \
     inline void \
-    operator() (K idx_begin, K idx_end, H column_begin, H column_end)  { \
+    operator() (K idx_begin, K /*idx_end*/, H column_begin, H column_end)  { \
 \
         while (column_begin < column_end) \
             (*this)(*idx_begin++, *column_begin++); \
@@ -89,7 +89,7 @@ namespace hmdf
 #define PASS_DATA_ONE_BY_ONE_2 \
     template <typename K, typename H> \
     inline void \
-    operator() (K idx_begin, K idx_end, \
+    operator() (K idx_begin, K /*idx_end*/, \
                 H column_begin1, H column_end1, \
                 H column_begin2, H column_end2)  { \
 \
@@ -1794,7 +1794,7 @@ struct FactorizeVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
+    operator() (const K &, const K &,
                 const H &column_begin, const H &column_end)  {
 
         result_type result;
@@ -1998,7 +1998,7 @@ struct KthValueVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
+    operator() (const K &, const K &,
                 const H &values_begin, const H &values_end)  {
 
         result_ = find_kth_element_(values_begin, values_end, kth_element_);
@@ -2547,7 +2547,7 @@ struct DiffVisitor  {
 
         GET_COL_SIZE
 
-			assert(col_s > 0 && size_type(std::abs(periods_)) < (col_s - 1));
+        assert(col_s > 0 && size_type(std::abs(periods_)) < (col_s - 1));
 
         bool        there_is_zero = false;
         result_type result;
@@ -2697,7 +2697,7 @@ struct SampleZScoreVisitor {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
+    operator() (const K &idx_begin, const K &,
                 const H &population_begin, const H &population_end,
                 const H &sample_begin, const H &sample_end)  {
 
@@ -2813,7 +2813,7 @@ public:
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
+    operator() (const K &, const K &,
                 const H &column_begin, const H &column_end)  {
 
         result_.reserve(std::distance(column_begin, column_end));
@@ -3130,7 +3130,7 @@ public:
 
     template<typename K, typename Hx, typename Hy>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
+    operator() (const K &idx_begin, const K &,
                 const Hx &x_begin, const Hx &x_end,
                 const Hy &y_begin, const Hy &y_end)  {
 
@@ -3429,8 +3429,8 @@ private:
     template<typename IDX, typename Y, typename K>
     inline void
     calc_residual_weights_(const IDX &idx_begin, const IDX &idx_end,
-                           const Y &y_begin, const Y &y_end,
-                           const K &y_fits_begin, const K &y_fits_end,
+                           const Y &y_begin, const Y & /*y_end*/,
+                           const K &y_fits_begin, const K & /*y_fits_end*/,
                            size_type col_s)  {
 
         for (size_type i = 0; i < col_s; ++i)
@@ -3485,8 +3485,8 @@ private:
     //
     template<typename X, typename K>
     inline static void
-    update_indices_(const X &x_begin, const X &x_end,
-                    const K &y_fits_begin, const K &y_fits_end,
+    update_indices_(const X &x_begin, const X & /*x_end*/,
+                    const K &y_fits_begin, const K & /*y_fits_end*/,
                     value_type delta,
                     long &curr_idx, long &last_fit_idx,
                     size_type col_s)  {
@@ -3526,8 +3526,8 @@ private:
     //
     template<typename X, typename K>
     inline void
-    interpolate_skipped_fits_(const X x_begin, const X x_end,
-                              K y_fits_begin, K y_fits_end,
+    interpolate_skipped_fits_(const X x_begin, const X /*x_end*/,
+                              K y_fits_begin, K /*y_fits_end*/,
                               long curr_idx, long last_fit_idx)  {
 
         auxiliary_vec_.clear();
@@ -3561,10 +3561,10 @@ private:
     //
     template<typename X, typename K, typename Y, typename W>
     inline static void
-    calculate_y_fits_(const X x_begin, const X x_end,
-                      const K y_begin, const K y_end,
-                      const W w_begin, const W w_end,
-                      Y y_fits_begin, Y y_fits_end,
+    calculate_y_fits_(const X x_begin, const X /*x_end*/,
+                      const K y_begin, const K /*y_end*/,
+                      const W w_begin, const W /*w_end*/,
+                      Y y_fits_begin, Y /*y_fits_end*/,
                       long curr_idx,
                       value_type xval,
                       size_type left_end, size_type right_end,
@@ -3612,8 +3612,9 @@ private:
     //
     template<typename X, typename K>
     inline bool
-    calculate_weights_(const X &x_begin, const X &x_end,
-                       const K &w_begin, const K &w_end, // Regression weights
+    calculate_weights_(const X &x_begin, const X &/*x_end*/,
+                       // Regression weights
+                       const K &w_begin, const K &/*w_end*/,
                        // The x-value of the point currently being fit
                        //
                        value_type xval,
@@ -3675,7 +3676,7 @@ private:
     //
     template<typename X>
     inline static value_type
-    update_neighborhood_(const X &x_begin, const X &x_end,
+    update_neighborhood_(const X &x_begin, const X &/*x_end*/,
                          value_type xval,
                          size_type curr_idx,
                          size_type &left_end, size_type &right_end)  {

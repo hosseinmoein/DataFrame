@@ -155,7 +155,7 @@ template<typename I, typename H>
 template<typename ... Ts>
 template<typename T>
 void
-DataFrame<I, H>::add_col_functor_<Ts ...>::operator() (const T &vec)  {
+DataFrame<I, H>::add_col_functor_<Ts ...>::operator() (const T &)  {
 
     using VecType = typename std::remove_reference<T>::type;
     using ValueType = typename VecType::value_type;
@@ -738,7 +738,7 @@ random_load_data_functor_<Ts ...>::operator() (const T &vec)  {
     const size_type vec_s = vec.size();
     const size_type n_rows = rand_indices.size();
     VecType         new_vec;
-    size_type       prev_value;
+    size_type       prev_value { 0 };
 
     new_vec.reserve(n_rows);
     for (size_type i = 0; i < n_rows; ++i)  {
@@ -771,7 +771,7 @@ DataFrame<I, H>::random_load_view_functor_<Ts ...>::operator() (const T &vec) {
     const size_type             vec_s = vec.size();
     const size_type             n_rows = rand_indices.size();
     VectorPtrView<ValueType>    new_vec;
-    size_type                   prev_value;
+    size_type                   prev_value { 0 };
 
     new_vec.reserve(n_rows);
     for (size_type i = 0; i < n_rows; ++i)  {

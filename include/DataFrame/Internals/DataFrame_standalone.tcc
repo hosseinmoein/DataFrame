@@ -548,7 +548,7 @@ inline void
 _col_vector_push_back_<const char *, std::vector<std::string>>(
     std::vector<std::string> &vec,
     std::istream &file,
-    const char * (*converter)(const char *, char **),
+    const char * (*)(const char *, char **),
     io_format file_type)  {
 
     char    value[8192];
@@ -619,7 +619,7 @@ inline void
 _col_vector_push_back_<DateTime, std::vector<DateTime>>(
     std::vector<DateTime> &vec,
     std::istream &file,
-    DateTime (*converter)(const char *, char **),
+    DateTime (*)(const char *, char **),
     io_format file_type)  {
 
     char    value[1024];
@@ -651,9 +651,7 @@ _col_vector_push_back_<DateTime, std::vector<DateTime>>(
 template<typename T>
 struct  _IdxParserFunctor_  {
 
-    void operator()(std::vector<T> &,
-                    std::istream &file,
-                    io_format file_type = io_format::csv)  {   }
+    void operator()(std::vector<T> &, std::istream &, io_format)  {   }
 };
 
 // ----------------------------------------------------------------------------
@@ -1030,7 +1028,7 @@ inline static S &_write_csv_df_index_(S &o, const DateTime &value)  {
 // ----------------------------------------------------------------------------
 
 template<typename T>
-inline static void _get_mem_numbers_(const VectorView<T> &container,
+inline static void _get_mem_numbers_(const VectorView<T> &,
                                      size_t &used_mem,
                                      size_t &capacity_mem) {
 

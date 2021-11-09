@@ -230,7 +230,7 @@ static void test_multithreading(int j)  {
 
 // -----------------------------------------------------------------------------
 
-int main(int argc, char *argv[]) {
+int main(int, char *[]) {
 
     test_groupby_edge();
     test_concat_view();

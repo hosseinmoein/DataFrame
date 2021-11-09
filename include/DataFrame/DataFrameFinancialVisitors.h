@@ -719,7 +719,7 @@ struct  VWBASVisitor {
     }
     template <typename K, typename H>
     inline void
-    operator() (K idx_begin, K idx_end,
+    operator() (K idx_begin, K,
                 H bid_price_begin, H bid_price_end,
                 H ask_price_begin, H ask_price_end,
                 H bid_size_begin, H bid_size_end,
@@ -932,7 +932,7 @@ struct SharpeRatioVisitor {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
+    operator() (const K &idx_begin, const K &,
                 const H &asset_ret_begin, const H &asset_ret_end,
                 const H &benchmark_ret_begin, const H &benchmark_ret_end)  {
 
@@ -1507,7 +1507,7 @@ struct  RollingMidValueVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
+    operator() (const K &, const K &,
                 const H &low_begin, const H &low_end,
                 const H &high_begin, const H &high_end)  {
 
@@ -1835,7 +1835,7 @@ struct GarmanKlassVolVisitor {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
+    operator() (const K &, const K &,
                 const H &low_begin, const H &low_end,
                 const H &high_begin, const H &high_end,
                 const H &open_begin, const H &open_end,
@@ -1907,7 +1907,7 @@ struct YangZhangVolVisitor {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
+    operator() (const K &, const K &,
                 const H &low_begin, const H &low_end,
                 const H &high_begin, const H &high_end,
                 const H &open_begin, const H &open_end,
@@ -2511,7 +2511,7 @@ struct  TTMTrendVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
+    operator() (const K &, const K &,
                 const H &low_begin, const H &low_end,
                 const H &high_begin, const H &high_end,
                 const H &close_begin, const H &close_end)  {
@@ -2576,7 +2576,7 @@ struct  ParabolicSARVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
+    operator() (const K &, const K &,
                 const H &low_begin, const H &low_end,
                 const H &high_begin, const H &high_end,
                 const H &close_begin, const H &close_end)  {
@@ -2714,7 +2714,7 @@ struct  EBSineWaveVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
+    operator() (const K &, const K &,
                 const H &close_begin, const H &close_end)  {
 
         const size_type col_s = std::distance(close_begin, close_end);
@@ -2959,7 +2959,7 @@ struct  PivotPointSRVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
+    operator() (const K &, const K &,
                 const H &low_begin, const H &low_end,
                 const H &high_begin, const H &high_end,
                 const H &close_begin, const H &close_end)  {
@@ -3157,7 +3157,7 @@ struct  HoltWinterChannelVisitor  {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
+    operator() (const K &, const K &,
                 const H &close_begin, const H &close_end)  {
 
         const size_type col_s = std::distance(close_begin, close_end);
@@ -3261,7 +3261,7 @@ struct  HeikinAshiCndlVisitor {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
+    operator() (const K &, const K &,
                 const H &low_begin, const H &low_end,
                 const H &high_begin, const H &high_end,
                 const H &open_begin, const H &open_end,
@@ -3752,9 +3752,9 @@ struct  TrueRangeVisitor {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &low_begin, const H &low_end,
-                const H &high_begin, const H &high_end,
+    operator() (const K &, const K &,
+                const H &low_begin, const H &/*low_end*/,
+                const H &high_begin, const H &/*high_end*/,
                 const H &close_begin, const H &close_end)  {
 
         const size_type col_s = std::distance(close_begin, close_end);

@@ -210,7 +210,7 @@ struct  ExpoSmootherVisitor {
 
     template<typename K, typename H>
     inline void
-    operator() (K idx_begin, K idx_end, H column_begin, H column_end)  {
+    operator() (K, K, H column_begin, H column_end)  {
 
         count_ = std::distance(column_begin, column_end);
 
@@ -255,7 +255,7 @@ struct  HWExpoSmootherVisitor {
 
     template<typename K, typename H>
     inline void
-    operator() (K idx_begin, K idx_end, H column_begin, H column_end)  {
+    operator() (K /*idx_begin*/, K /*idx_end*/, H column_begin, H column_end)  {
 
         count_ = std::distance(column_begin, column_end);
 

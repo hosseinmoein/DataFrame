@@ -89,7 +89,7 @@ template<typename F, typename H>
 inline void head_exec(F func, H &head)  { func(head); }
 
 template<typename F>
-inline void unpacker(F func)  {   }
+inline void unpacker(F)  {   }
 
 template<typename F, typename H, typename ... T>
 inline void unpacker(F func, H &head, T& ... tail)  {

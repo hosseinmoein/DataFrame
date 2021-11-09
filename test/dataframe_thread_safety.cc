@@ -43,9 +43,9 @@ static void test_thread_safety()  {
     MyDataFrame::remove_lock();
 }
 
-// ---- MAIN ------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
-int main(int argc, char *argv[]) {
+int main(int, char *[]) {
 
     test_thread_safety();
     return (0);

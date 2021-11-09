@@ -85,7 +85,7 @@ static void test_priority_queue()  {
 
 // ----------------------------------------------------------------------------
 
-int main (int argc, char *argv [])  {
+int main (int, char *[])  {
 
     using namespace std;
 

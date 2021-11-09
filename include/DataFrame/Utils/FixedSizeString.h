@@ -53,6 +53,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace hmdf
 {
 
+#define snprintf_nowarn(...) (::snprintf(__VA_ARGS__) < 0 ? abort() : (void)0)
+
 // This abstract base class makes it possible to pass different template
 // instances around as one type and to be able to assign them interchangeably.
 // The only penalty paid for having this base class is to carry around one
@@ -105,7 +107,7 @@ public:
     }
     inline VirtualString &ncopy (const_pointer rhs, size_type len) noexcept  {
 
-        ::snprintf(string_, len, "%s", rhs);
+        snprintf_nowarn(string_, len, "%s", rhs);
         return (*this);
     }
 
@@ -350,7 +352,7 @@ public:
     }
     inline FixedSizeString &operator = (const_pointer rhs) noexcept {
 
-        ::snprintf(buffer_, S, "%s", rhs);
+        snprintf_nowarn(buffer_, S, "%s", rhs);
         return (*this);
     }
     inline FixedSizeString &operator = (const VirtualString &rhs) noexcept  {

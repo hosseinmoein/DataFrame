@@ -605,8 +605,8 @@ struct fill_missing_functor_ :
                                   const char *cname)
         : self_idx(sidx), rhs_idx(ridx), rhs(r), col_name(cname)  {   }
 
-    const IndexVecType  &self_idx;;
-    const IndexVecType  &rhs_idx;;
+    const IndexVecType  &self_idx;
+    const IndexVecType  &rhs_idx;
     const DF            &rhs;
     const char          *col_name;
 

@@ -1,3 +1,5 @@
+<img src="LionLookingUp.jpg" alt="drawing" width="200"/>
+
 # Thank you for choosing to contribute to DataFrame
 
 ### Did you find a bug

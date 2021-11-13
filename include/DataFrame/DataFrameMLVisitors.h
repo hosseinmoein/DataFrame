@@ -418,7 +418,7 @@ private:
 
         transform_(xvec, true);
 
-        const real_t    col_s  = xvec.size();
+        const real_t    col_s  = real_t(xvec.size());
 
         std::transform(xvec.begin(), xvec.end(),
                        xvec.begin(),
@@ -494,7 +494,7 @@ private:
         const real_t    pi { reverse ? real_t(M_PI) : -real_t(M_PI) };
 
         for (size_type i = 0; i < col_s; i++) {
-            const real_t    sq = (i * i) % col_s_2;
+            const real_t    sq = real_t((i * i) % col_s_2);
 
             exp_table[i] = std::polar(real_t(1), pi * sq / real_t(col_s));
         }

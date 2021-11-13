@@ -468,7 +468,7 @@ gen_sym_triangle(std::size_t n, const T &start_val, bool normalize)  {
         result.push_back(val);
         sum += val;
     }
-    for (long i = max_loop - (is_even ? 1 : 2); i >= 0; --i)  {
+    for (long i = long(max_loop - (is_even ? 1 : 2)); i >= 0; --i)  {
         const T &val = result[i];
 
         result.push_back(val);

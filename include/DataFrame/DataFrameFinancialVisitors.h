@@ -1124,16 +1124,16 @@ struct RSXVisitor {
         result_type result(col_s, std::numeric_limits<T>::quiet_NaN());
 
         result[avg_period_ - 1] = 0;
-        for (size_type i = avg_period_; i < col_s; ++i)  {
+        for (size_type i = size_type(avg_period_); i < col_s; ++i)  {
             if (f90 == zero)  {
                 f90 = one;
                 f0 = zero;
-                if (avg_period_ - 1 >= 5)
-                    f88 = T(avg_period_) - one;
+                if (avg_period_ - one >= five)
+                    f88 = avg_period_ - one;
                 else
                     f88 = five;
                 f8 = hundred * *(column_begin + i);
-                f18 = three / (T(avg_period_) + two);
+                f18 = three / (avg_period_ + two);
                 f20 = one - f18;
             }
             else  {

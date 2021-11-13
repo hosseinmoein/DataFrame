@@ -151,20 +151,20 @@ DateTime::DateTime (const char *s, DT_DATE_STYLE ds, DT_TIME_ZONE tz)
                 ::sscanf (str, "%d/%d/%d", &month, &day, &year);
             }
             else if (str_len == 13)  {
-                ::sscanf (str, "%d/%d/%d %hd", &month, &day, &year, &hour_);
+                ::sscanf (str, "%d/%d/%d %hu", &month, &day, &year, &hour_);
             }
             else if (str_len == 16)  {
-                ::sscanf (str, "%d/%d/%d %hd:%hd",
+                ::sscanf (str, "%d/%d/%d %hu:%hu",
                           &month, &day, &year, &hour_, &minute_);
             }
             else if (str_len == 19)  {
-                ::sscanf (str, "%d/%d/%d %hd:%hd:%hd",
+                ::sscanf (str, "%d/%d/%d %hu:%hu:%hu",
                           &month, &day, &year, &hour_, &minute_, &second_);
             }
             else if (str_len == 23)  {
                 MillisecondType ms { 0 };
 
-                ::sscanf (str, "%d/%d/%d %hd:%hd:%hd.%hd",
+                ::sscanf (str, "%d/%d/%d %hu:%hu:%hu.%hd",
                           &month, &day, &year, &hour_, &minute_, &second_, &ms);
                 nanosecond_ = ms * 1000000;
             }
@@ -174,20 +174,20 @@ DateTime::DateTime (const char *s, DT_DATE_STYLE ds, DT_TIME_ZONE tz)
                 ::sscanf (str, "%d/%d/%d", &year, &month, &day);
             }
             else if (str_len == 13)  {
-                ::sscanf (str, "%d/%d/%d %hd", &year, &month, &day, &hour_);
+                ::sscanf (str, "%d/%d/%d %hu", &year, &month, &day, &hour_);
             }
             else if (str_len == 16)  {
-                ::sscanf (str, "%d/%d/%d %hd:%hd",
+                ::sscanf (str, "%d/%d/%d %hu:%hu",
                           &year, &month, &day, &hour_, &minute_);
             }
             else if (str_len == 19)  {
-                ::sscanf (str, "%d/%d/%d %hd:%hd:%hd",
+                ::sscanf (str, "%d/%d/%d %hu:%hu:%hu",
                           &year, &month, &day, &hour_, &minute_, &second_);
             }
             else if (str_len == 23)  {
                 MillisecondType ms { 0 };
 
-                ::sscanf (str, "%d/%d/%d %hd:%hd:%hd.%hd",
+                ::sscanf (str, "%d/%d/%d %hu:%hu:%hu.%hd",
                           &year, &month, &day, &hour_, &minute_, &second_, &ms);
                 nanosecond_ = ms * 1000000;
             }
@@ -197,20 +197,20 @@ DateTime::DateTime (const char *s, DT_DATE_STYLE ds, DT_TIME_ZONE tz)
                 ::sscanf (str, "%d-%d-%d", &year, &month, &day);
             }
             else if (str_len == 13)  {
-                ::sscanf (str, "%d-%d-%d %hd", &year, &month, &day, &hour_);
+                ::sscanf (str, "%d-%d-%d %hu", &year, &month, &day, &hour_);
             }
             else if (str_len == 16)  {
-                ::sscanf (str, "%d-%d-%d %hd:%hd",
+                ::sscanf (str, "%d-%d-%d %hu:%hu",
                           &year, &month, &day, &hour_, &minute_);
             }
             else if (str_len == 19)  {
-                ::sscanf (str, "%d-%d-%d %hd:%hd:%hd",
+                ::sscanf (str, "%d-%d-%d %hu:%hu:%hu",
                           &year, &month, &day, &hour_, &minute_, &second_);
             }
             else if (str_len == 23)  {
                 MillisecondType millis { 0 };
 
-                ::sscanf (str, "%d-%d-%d %hd:%hd:%hd.%hd",
+                ::sscanf (str, "%d-%d-%d %hu:%hu:%hu.%hd",
                           &year, &month, &day, &hour_, &minute_,
                           &second_, &millis);
                 nanosecond_ = millis * 1000000;
@@ -218,7 +218,7 @@ DateTime::DateTime (const char *s, DT_DATE_STYLE ds, DT_TIME_ZONE tz)
             else if (str_len > 23)  {
                 MicrosecondType micros { 0 };
 
-                ::sscanf (str, "%d-%d-%d %hd:%hd:%hd.%d",
+                ::sscanf (str, "%d-%d-%d %hu:%hu:%hu.%d",
                           &year, &month, &day, &hour_, &minute_,
                           &second_, &micros);
                 nanosecond_ = micros * 1000;
@@ -259,24 +259,24 @@ DateTime &DateTime::operator = (const char *s)  {
 
     if (str_len == 8)  {
         hour_ = minute_ = second_ = nanosecond_ = 0;
-        ::sscanf (str, "%d", &date_);
+        ::sscanf (str, "%u", &date_);
     }
     else if (str_len == 11)  {
         minute_ = second_ = nanosecond_ = 0;
-        ::sscanf (str, "%d %hd", &date_, &hour_);
+        ::sscanf (str, "%u %hu", &date_, &hour_);
     }
     else if (str_len == 14)  {
         second_ = nanosecond_ = 0;
-        ::sscanf (str, "%d %hd:%hd", &date_, &hour_, &minute_);
+        ::sscanf (str, "%u %hu:%hu", &date_, &hour_, &minute_);
     }
     else if (str_len == 17)  {
         nanosecond_ = 0;
-        ::sscanf (str, "%d %hd:%hd:%hd", &date_, &hour_, &minute_, &second_);
+        ::sscanf (str, "%u %hu:%hu:%hu", &date_, &hour_, &minute_, &second_);
     }
     else if (str_len == 21)  {
         MillisecondType ms;
 
-        ::sscanf (str, "%d %hd:%hd:%hd.%hd",
+        ::sscanf (str, "%u %hu:%hu:%hu.%hd",
                   &date_, &hour_, &minute_, &second_, &ms);
         nanosecond_ = ms * 1000000;;
     }
@@ -346,14 +346,14 @@ days_in_month_ (DT_MONTH month, DatePartType year) noexcept  {
 //
 bool DateTime::is_valid () const noexcept  {
 
-    return (year () > 0 && year () < 9999 &&
-            month () > DT_MONTH::BAD_MONTH && month () <= DT_MONTH::DEC &&
-            dmonth () > 0 &&
-            dmonth () <= days_in_month_ (month(), year()) &&
-            hour () >= 0 && hour () < 24 &&
-            minute () >= 0 && minute () < 60 &&
-            sec () >= 0 && sec () < 60 &&
-            nanosec () >= 0 && nanosec () < 1000000000);
+    return (year() > 0 && year() < 9999 &&
+            month() > DT_MONTH::BAD_MONTH && month () <= DT_MONTH::DEC &&
+            dmonth() > 0 &&
+            dmonth() <= days_in_month_ (month(), year()) &&
+            hour() < 24 &&
+            minute() < 60 &&
+            sec() < 60 &&
+            nanosec() >= 0 && nanosec() < 1000000000);
 }
 
 // ----------------------------------------------------------------------------
@@ -691,7 +691,7 @@ double DateTime::diff_weekdays (const DateTime &that) const noexcept  {
 
     while (slug.date () != date ())  {
         if (! slug.is_weekend ())
-            ddays += static_cast<const double>(addend);
+            ddays += static_cast<double>(addend);
         slug.add_days (addend);
     }
 

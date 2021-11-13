@@ -103,7 +103,7 @@ int main (int, char *[])  {
     assert(std::size_t(counter) == vec_view3.size());
 #endif // !_MSC_VER
 
-    counter = int_vec2.size();
+    counter = static_cast<int>(int_vec2.size());
     for (std::vector<int>::const_iterator citer = int_vec2.begin();
          citer != int_vec2.end(); ++citer)  {
         assert(*citer == counter);

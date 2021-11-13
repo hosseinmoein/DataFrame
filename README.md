@@ -131,4 +131,4 @@ dataframe/1.18.0@
 [generators]
 cmake
 ```
-DataFrame is also available on Microsoft VCPKG platform
+DataFrame is also available on [_Microsoft VCPKG_](https://github.com/microsoft/vcpkg/tree/master/ports/dataframe) platform

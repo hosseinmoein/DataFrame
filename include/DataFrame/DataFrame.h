@@ -1872,6 +1872,17 @@ public: // Read/access and slicing interfaces
     [[nodiscard]] DataFramePtrView<IndexType>
     get_view_by_rand(random_policy spec, double n, size_type seed = 0) const;
 
+    template<typename ... Ts>
+    [[nodiscard]] DataFrame
+    get_data(const std::vector<const char *> col_names) const;
+
+    // NOTE: Views could not be const, becuase you can change original data
+    //       through views.
+    //
+    template<typename ... Ts>
+    [[nodiscard]] DataFrameView<IndexType>
+    get_view(const std::vector<const char *> col_names);
+
     // It returns a const reference to the index container
     //
     [[nodiscard]] const IndexVecType &

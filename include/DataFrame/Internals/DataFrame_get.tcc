@@ -1050,6 +1050,104 @@ get_view_by_rand (random_policy spec, double n, size_type seed) const  {
 
 // ----------------------------------------------------------------------------
 
+
+
+
+
+
+
+
+
+
+
+template<typename I, typename H>
+template<typename ... Ts>
+DataFrame<I, H> DataFrame<I, H>::
+get_data(const std::vector<const char *> col_names) const  {
+
+    DataFrame   df;
+
+    df.load_index(indices_.begin(), indices_.end());
+
+    for (auto name_citer : col_names)  {
+        const auto  citer = column_tb_.find (name_citer);
+
+        if (citer == column_tb_.end())  {
+            char buffer [512];
+
+            sprintf(buffer,
+                    "DataFrame::get_data(): ERROR: Cannot find column '%s'",
+                    name_citer);
+            throw ColNotFound(buffer);
+        }
+
+        load_all_functor_<Ts ...>   functor (name_citer, df);
+        const SpinGuard             guard(lock_);
+
+        data_[citer->second].change(functor);
+    }
+
+    return (df);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename ... Ts>
+DataFrameView<I> DataFrame<I, H>::
+get_view(const std::vector<const char *> col_names)  {
+
+    static_assert(std::is_base_of<HeteroVector, H>::value,
+                  "Only a StdDataFrame can call get_view()");
+
+    DataFrameView<I>    dfv;
+
+    dfv.indices_ =
+        typename DataFrameView<I>::IndexVecType(&*(indices_.begin()),
+                                                &*(indices_.end()));
+
+    const size_type idx_size = indices_.size();
+
+    for (auto name_citer : col_names)  {
+        const auto  citer = column_tb_.find (name_citer);
+
+        if (citer == column_tb_.end())  {
+            char buffer [512];
+
+            sprintf(buffer,
+                    "DataFrame::get_view(): ERROR: Cannot find column '%s'",
+                    name_citer);
+            throw ColNotFound(buffer);
+        }
+
+        view_setup_functor_<DataFrameView<I>, Ts ...>   functor (
+            citer->first.c_str(),
+            0,
+            idx_size,
+            dfv);
+        const SpinGuard                                 guard(lock_);
+
+        data_[citer->second].change(functor);
+    }
+
+    return (dfv);
+}
+
+// ----------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 template<typename I, typename  H>
 template<typename T, typename ... Ts>
 StdDataFrame<T> DataFrame<I, H>::

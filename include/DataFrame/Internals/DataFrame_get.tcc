@@ -1050,16 +1050,6 @@ get_view_by_rand (random_policy spec, double n, size_type seed) const  {
 
 // ----------------------------------------------------------------------------
 
-
-
-
-
-
-
-
-
-
-
 template<typename I, typename H>
 template<typename ... Ts>
 DataFrame<I, H> DataFrame<I, H>::
@@ -1134,19 +1124,6 @@ get_view(const std::vector<const char *> col_names)  {
 }
 
 // ----------------------------------------------------------------------------
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 template<typename I, typename  H>
 template<typename T, typename ... Ts>

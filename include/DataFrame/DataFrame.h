@@ -1843,7 +1843,7 @@ public: // Read/access and slicing interfaces
     [[nodiscard]] DataFrame
     get_data_by_rand(random_policy spec, double n, size_type seed = 0) const;
 
-    // It behaves like get_data_by_rand(), but it returns a DataFrameView.
+    // It behaves like get_data_by_rand(), but it returns a DataFramePtrView.
     // A view is a DataFrame that is a reference to the original DataFrame.
     // So if you modify anything in the view the original DataFrame will
     // also be modified.
@@ -1872,12 +1872,32 @@ public: // Read/access and slicing interfaces
     [[nodiscard]] DataFramePtrView<IndexType>
     get_view_by_rand(random_policy spec, double n, size_type seed = 0) const;
 
+    // This returns a DataFrame with index and col_names copied from the
+    // original DataFrame
+    //
+    // Ts:
+    //   List types of col_names
+    // col_names:
+    //   List of column names
+    //
     template<typename ... Ts>
     [[nodiscard]] DataFrame
     get_data(const std::vector<const char *> col_names) const;
 
+    // It behaves like get_data(), but it returns a DataFrameView.
+    // A view is a DataFrame that is a reference to the original DataFrame.
+    // So if you modify anything in the view the original DataFrame will
+    // also be modified.
+    //
+    // NOTE: There are certain operations that you cannot do with a view.
+    //       For example, you cannot add/delete columns, etc.
     // NOTE: Views could not be const, becuase you can change original data
     //       through views.
+    //
+    // Ts:
+    //   List types of col_names
+    // col_names:
+    //   List of column names
     //
     template<typename ... Ts>
     [[nodiscard]] DataFrameView<IndexType>

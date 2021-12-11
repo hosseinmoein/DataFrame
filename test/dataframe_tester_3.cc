@@ -268,7 +268,7 @@ static void test_get_data()  {
     assert((df3.get_column<int>("col_4")[8] == 2));
     assert((df3.get_index()[3] == 123453));
 
-	df3.get_index()[3] = 100;
+    df3.get_index()[3] = 100;
     df3.get_column<int>("col_4")[8] = 101;
     df3.get_column<double>("col_1")[11] = 102.2;
 

@@ -35,7 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 [![HitCount](http://hits.dwyl.io/hosseinmoein/DataFrame.svg)](http://hits.dwyl.io/hosseinmoein/DataFrame)
 -->
 
-<img src="docs/LionLookingUp.jpg" alt="drawing" width="400"/>
+<img src="docs/LionLookingUp.jpg" alt="DataFrame Lion" width="400" longdesc="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html"/>
 
 ## [*DataFrame Documentation / Code Samples*](https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html)
 This is a C++ analytical library that provides interface and functionality similar to packages/libraries in Python and R. For example, you could compare this to Pandas or R data.frame.<BR>

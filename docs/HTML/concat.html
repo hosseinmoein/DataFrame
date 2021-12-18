@@ -90,12 +90,13 @@ concat(const RHS_T &amp;rhs,
 template&lt;typename RHS_T, typename ... Ts&gt;
 StdDataFrame&lt;IndexType&gt;
 concat_view(
-    const RHS_T &amp;rhs,
-    concat_policy cp = concat_policy::common_columns) const;
+    RHS_T &amp;rhs,
+    concat_policy cp = concat_policy::common_columns);
         </B></PRE></font>
       </td>
       <td>
-        This behaves just lie concat(), but retunrs a view instead of another DataFrame.<BR>
+        This behaves just like concat(), but retunrs a view instead of another DataFrame.<BR>
+        <B>NOTE</B>: Views could not be const, becuase you can change original data through views.<BR>
       </td>
       <td>
         <B>RHS_T</B>: Type of DataFrame rhs<BR>

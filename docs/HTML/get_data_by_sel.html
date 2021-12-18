@@ -64,7 +64,7 @@ The signature of sel_fucntor:<BR>
 template&lt;typename T, typename F, typename ... Ts&gt;
 DataFramePtrView&lt;I&gt;
 get_view_by_sel(const char *name,
-                F &amp;sel_functor) const;
+                F &amp;sel_functor);
         </B></PRE></font>
       </td>
       <td>
@@ -74,7 +74,7 @@ get_view_by_sel(const char *name,
         <LI>Since the result is a view, you cannot call make_consistent() on the result.</LI>
         </OL>
         <B>NOTE</B>: There are certain operations that you cannot do with a view. For example, you cannot add/delete columns, etc.<BR>
-        <B>NOTE</B>: Although this is a const method, it returns a view. So, the data could still be modified through the returned view
+        <B>NOTE</B>: Views could not be const, becuase you can change original data through views.<BR>
       </td>
       <td>
         <B>T</B>: Type of the named column<BR>
@@ -122,7 +122,7 @@ template&lt;typename T1, typename T2, typename F,
 DataFramePtrView&lt;I&gt;
 get_view_by_sel(const char *name1,
                 const char *name2,
-                F &amp;sel_functor) const;
+                F &amp;sel_functor);
         </B></PRE></font>
       </td>
       <td>
@@ -132,7 +132,7 @@ get_view_by_sel(const char *name1,
         <LI>Since the result is a view, you cannot call make_consistent() on the result.</LI>
         </OL>
         <B>NOTE</B>: There are certain operations that you cannot do with a view. For example, you cannot add/delete columns, etc.<BR>
-        <B>NOTE</B>: Although this is a const method, it returns a view. So, the data could still be modified through the returned view
+        <B>NOTE</B>: Views could not be const, becuase you can change original data through views.<BR>
       </td>
       <td>
         <B>T1</B>: Type of the first named column<BR>
@@ -186,7 +186,7 @@ DataFramePtrView&lt;I&gt;
 get_view_by_sel(const char *name1,
                 const char *name2,
                 const char *name3,
-                F &amp;sel_functor) const;
+                F &amp;sel_functor);
         </B></PRE></font>
       </td>
       <td>
@@ -196,7 +196,7 @@ get_view_by_sel(const char *name1,
         <LI>Since the result is a view, you cannot call make_consistent() on the result.</LI>
         </OL>
         <B>NOTE</B>: There are certain operations that you cannot do with a view. For example, you cannot add/delete columns, etc.<BR>
-        <B>NOTE</B>: Although this is a const method, it returns a view. So, the data could still be modified through the returned view
+        <B>NOTE</B>: Views could not be const, becuase you can change original data through views.<BR>
       </td>
       <td>
         <B>T1</B>: Type of the first named column<BR>

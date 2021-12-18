@@ -697,7 +697,7 @@ DataFrame<I, H>::concat(const RHS_T &rhs, concat_policy cp) const  {
 template<typename I, typename H>
 template<typename RHS_T, typename ... Ts>
 DataFramePtrView<I>
-DataFrame<I, H>::concat_view(const RHS_T &rhs, concat_policy cp) const  {
+DataFrame<I, H>::concat_view(RHS_T &rhs, concat_policy cp)  {
 
     static_assert(! std::is_base_of<StdDataFrame<I>, RHS_T>::value ||
                   ! std::is_base_of<StdDataFrame<I>, decltype(*this)>::value,
@@ -714,9 +714,9 @@ DataFrame<I, H>::concat_view(const RHS_T &rhs, concat_policy cp) const  {
 
     result_idx.reserve(idx_s + rhs_idx_s);
     for (size_type i = 0; i < idx_s; ++i)
-        result_idx.push_back(const_cast<IndexType *>(&(get_index()[i])));
+        result_idx.push_back(&(get_index()[i]));
     for (size_type i = 0; i < rhs_idx_s; ++i)
-        result_idx.push_back(const_cast<IndexType *>(&(rhs.get_index()[i])));
+        result_idx.push_back(&(rhs.get_index()[i]));
     result.indices_ = std::move(result_idx);
 
     if (cp == concat_policy::all_columns)  {

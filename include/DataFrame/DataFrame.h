@@ -1250,9 +1250,12 @@ public:  // Data manipulation
     concat(const RHS_T &rhs,
            concat_policy cp = concat_policy::all_columns) const;
 
-    // This behaves just lie concat(), but retunrs a view instead of another
+    // This behaves just like concat(), but retunrs a view instead of another
     // DataFrame.
     //
+    // NOTE: Views could not be const, becuase you can change original data
+    //       through views.
+	//
     // RHS_T:
     //   Type of DataFrame rhs
     // Ts:
@@ -1267,10 +1270,13 @@ public:  // Data manipulation
     //                           but only common columns and index are
     //                           concatenated
     //
+    // NOTE: Views could not be const, becuase you can change original data
+    //       through views.
+    //
     template<typename RHS_T, typename ... Ts>
     [[nodiscard]] DataFramePtrView<IndexType>
-    concat_view(const RHS_T &rhs,
-                concat_policy cp = concat_policy::common_columns) const;
+    concat_view(RHS_T &rhs,
+                concat_policy cp = concat_policy::common_columns);
 
     // This is similar to concat() method but it is applied to self. It changes
     // self.
@@ -1530,8 +1536,8 @@ public: // Read/access and slicing interfaces
     //
     // NOTE: There are certain operations that you cannot do with a view.
     //       For example, you cannot add/delete columns, etc.
-    // NOTE: Although this is a const method, it returns a view. So, the data
-    //       could still be modified through the returned view
+    // NOTE: Views could not be const, becuase you can change original data
+    //       through views.
     //
     // Ts:
     //   List all the types of all data columns. A type should be specified in
@@ -1541,7 +1547,7 @@ public: // Read/access and slicing interfaces
     //
     template<typename ... Ts>
     [[nodiscard]] DataFrameView<IndexType>
-    get_view_by_idx(Index2D<IndexType> range) const;
+    get_view_by_idx(Index2D<IndexType> range);
 
     // It behaves like get_data_by_idx(values), but it returns a
     // DataFramePtrView.
@@ -1562,7 +1568,7 @@ public: // Read/access and slicing interfaces
     //
     template<typename ... Ts>
     [[nodiscard]] DataFramePtrView<IndexType>
-    get_view_by_idx(const std::vector<IndexType> &values) const;
+    get_view_by_idx(const std::vector<IndexType> &values);
 
     // It returns a DataFrame (including the index and data columns)
     // containing the data from location begin to location end within range.
@@ -1604,8 +1610,8 @@ public: // Read/access and slicing interfaces
     //
     // NOTE: There are certain operations that you cannot do with a view.
     //       For example, you cannot add/delete columns, etc.
-    // NOTE: Although this is a const method, it returns a view. So, the data
-    //       could still be modified through the returned view
+    // NOTE: Views could not be const, becuase you can change original data
+    //       through views.
     //
     // Ts:
     //   List all the types of all data columns. A type should be specified in
@@ -1615,7 +1621,7 @@ public: // Read/access and slicing interfaces
     //
     template<typename ... Ts>
     [[nodiscard]] DataFrameView<IndexType>
-    get_view_by_loc(Index2D<long> range) const;
+    get_view_by_loc(Index2D<long> range);
 
     // It behaves like get_data_by_loc(locations), but it returns a
     // DataFramePtrView.
@@ -1625,8 +1631,8 @@ public: // Read/access and slicing interfaces
     //
     // NOTE: There are certain operations that you cannot do with a view.
     //       For example, you cannot add/delete columns, etc.
-    // NOTE: Although this is a const method, it returns a view. So, the data
-    //       could still be modified through the returned view
+    // NOTE: Views could not be const, becuase you can change original data
+    //       through views.
     //
     // Ts:
     //   List all the types of all data columns. A type should be specified in
@@ -1636,7 +1642,7 @@ public: // Read/access and slicing interfaces
     //
     template<typename ... Ts>
     [[nodiscard]] DataFramePtrView<IndexType>
-    get_view_by_loc(const std::vector<long> &locations) const;
+    get_view_by_loc(const std::vector<long> &locations);
 
     // This method does boolean filtering selection via the sel_functor
     // (e.g. a functor, function, or lambda). It returns a new DataFrame.
@@ -1690,7 +1696,7 @@ public: // Read/access and slicing interfaces
     //
     template<typename T, typename F, typename ... Ts>
     [[nodiscard]] DataFramePtrView<IndexType>
-    get_view_by_sel(const char *name, F &sel_functor) const;
+    get_view_by_sel(const char *name, F &sel_functor);
 
     // This does the same function as above get_data_by_sel() but operating
     // on two columns.
@@ -1724,8 +1730,8 @@ public: // Read/access and slicing interfaces
     //   2) Since the result is a view, you cannot call make_consistent() on
     //      the result.
     //
-    // NOTE: Although this is a const method, it returns a view. So, the data
-    //       could still be modified through the returned view
+    // NOTE: Views could not be const, becuase you can change original data
+    //       through views.
     //
     // T1:
     //   Type of the first named column
@@ -1745,7 +1751,7 @@ public: // Read/access and slicing interfaces
     //
     template<typename T1, typename T2, typename F, typename ... Ts>
     [[nodiscard]] DataFramePtrView<IndexType>
-    get_view_by_sel(const char *name1, const char *name2, F &sel_functor) const;
+    get_view_by_sel(const char *name1, const char *name2, F &sel_functor);
 
     // This does the same function as above get_data_by_sel() but operating
     // on three columns.
@@ -1785,8 +1791,8 @@ public: // Read/access and slicing interfaces
     //   2) Since the result is a view, you cannot call make_consistent() on
     //      the result.
     //
-    // NOTE: Although this is a const method, it returns a view. So, the data
-    //       could still be modified through the returned view
+    // NOTE: Views could not be const, becuase you can change original data
+    //       through views.
     //
     // T1:
     //   Type of the first named column
@@ -1814,7 +1820,7 @@ public: // Read/access and slicing interfaces
     get_view_by_sel(const char *name1,
                     const char *name2,
                     const char *name3,
-                    F &sel_functor) const;
+                    F &sel_functor);
 
     // It returns a DataFrame (including the index and data columns)
     // containing the data from uniform random selection.
@@ -1851,8 +1857,8 @@ public: // Read/access and slicing interfaces
     // NOTE: There are certain operations that you cannot do with a view.
     //       For example, you cannot add/delete columns, etc.
     // NOTE: The columns in the result are not padded with NaN.
-    // NOTE: Although this is a const method, it returns a view. So, the data
-    //       could still be modified through the returned view
+    // NOTE: Views could not be const, becuase you can change original data
+    //       through views.
     //
     // Ts:
     //   List all the types of all data columns. A type should be specified in
@@ -1870,7 +1876,7 @@ public: // Read/access and slicing interfaces
     //
     template<typename ... Ts>
     [[nodiscard]] DataFramePtrView<IndexType>
-    get_view_by_rand(random_policy spec, double n, size_type seed = 0) const;
+    get_view_by_rand(random_policy spec, double n, size_type seed = 0);
 
     // This returns a DataFrame with index and col_names copied from the
     // original DataFrame
@@ -1944,8 +1950,8 @@ public: // Read/access and slicing interfaces
     //
     // NOTE: There are certain operations that you cannot do with a view.
     //       For example, you cannot add/delete columns, etc.
-    // NOTE: Although this is a const method, it returns a view. So, the data
-    //       could still be modified through the returned view
+    // NOTE: Views could not be const, becuase you can change original data
+    //       through views.
     //
     // T:
     //   Type of the "new index" column
@@ -1963,7 +1969,7 @@ public: // Read/access and slicing interfaces
     template<typename T, typename ... Ts>
     [[nodiscard]] DataFrameView<T>
     get_reindexed_view(const char *col_to_be_index,
-                       const char *old_index_name = nullptr) const;
+                       const char *old_index_name = nullptr);
 
     // This method combines the content of column col_name between self and
     // rhs based on the logic in functor. Both self and rhs must contain

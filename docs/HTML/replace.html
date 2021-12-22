@@ -34,11 +34,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>
-template&lt;typename T, size_t N&gt;
+template&lt;typename T&gt;
 std::size_t
 replace(const char *col_name,
-        const std::array&lt;T, N&gt; old_values,
-        const std::array&lt;T, N&gt; new_values,
+        const std::vector&lt;T&gt; &amp;old_values,
+        const std::vector&lt;T&gt; &amp;new_values,
         int limit = -1);
         </B></PRE></font>
       </td>
@@ -48,10 +48,10 @@ replace(const char *col_name,
       </td>
       <td>
         <B>T</B>: Type on column col_name. If this is index it would be the same as I.<BR>
-        <B>N</B>: Size of old_values and new_values arrays<BR>
+        <B>N</B>: Size of old_values and new_values vectors<BR>
         <B>col_name</B>: Name of the column<BR>
-        <B>old_array</B>: An array of values to be replaced in col_name column<BR>
-        <B>new_array</B>: An array of values to replace the old_values in col_name column<BR>
+        <B>old_values</B>: A vector of values to be replaced in col_name column<BR>
+        <B>new_values</B>: A vector of values to replace the old_values in col_name column<BR>
         <B>limit</B>: Limit of how many items to replace. Default is to replace all.
       </td>
     </tr>
@@ -60,11 +60,11 @@ replace(const char *col_name,
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>
-template&lt;typename T, size_t N&gt;
+template&lt;typename T&gt;
 std::future&lt;std::size_t&gt;
 replace_async(const char *col_name,
-              const std::array&lt;T, N&gt; old_values,
-              const std::array&lt;T, N&gt; new_values,
+              const std::vector&lt;T&gt; &amp;old_values,
+              const std::vector&lt;T&gt; &amp;new_values,
               int limit = -1);
         </B></PRE></font>
       </td>
@@ -124,10 +124,9 @@ replace_async(const char *col_name, F &amp;functor);
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>
-template&lt;size_t N&gt;
 std::size_t
-replace_index(const std::array&lt;IndexType, N&gt; old_values,
-              const std::array&lt;IndexType, N&gt; new_values,
+replace_index(const std::vector&lt;IndexType&gt; &amp;old_values,
+              const std::vector&lt;IndexType&gt; &amp;new_values,
               int limit = -1);
         </B></PRE></font>
       </td>
@@ -135,9 +134,9 @@ replace_index(const std::array&lt;IndexType, N&gt; old_values,
         This does the same thing as replace() above for the index column
       </td>
       <td>
-        <B>N</B>: Size of old_values and new_values arrays<BR>
-        <B>old_array</B>: An array of values to be replaced in col_name column<BR>
-        <B>new_array</B>: An array of values to replace the old_values in col_name column<BR>
+        <B>N</B>: Size of old_values and new_values vectors<BR>
+        <B>old_values</B>: A vector of values to be replaced in col_name column<BR>
+        <B>new_values</B>: A vector of values to replace the old_values in col_name column<BR>
         <B>limit</B>: Limit of how many items to replace. Default is to replace all.
       </td>
     </tr>
@@ -183,9 +182,9 @@ replace_index(const std::array&lt;IndexType, N&gt; old_values,
     assert<span style='color:#808030; '>(</span>df<span style='color:#808030; '>.</span>get_column<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>dblcol_5</span><span style='color:#800000; '>"</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span><span style='color:#008c00; '>17</span><span style='color:#808030; '>]</span> <span style='color:#808030; '>=</span><span style='color:#808030; '>=</span> <span style='color:#008000; '>1.2</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
     assert<span style='color:#808030; '>(</span>df<span style='color:#808030; '>.</span>get_column<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>dblcol_5</span><span style='color:#800000; '>"</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span><span style='color:#008c00; '>19</span><span style='color:#808030; '>]</span> <span style='color:#808030; '>=</span><span style='color:#808030; '>=</span> <span style='color:#008000; '>23.2</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
 
-    <span style='color:#800000; font-weight:bold; '>auto</span>    result1 <span style='color:#808030; '>=</span> df<span style='color:#808030; '>.</span>replace_async<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>3</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>dblcol_1</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#ffffff; background:#dd0000; font-weight:bold; font-style:italic; '>{</span> <span style='color:#008000; '>10.0</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>21.0</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>11.0</span> <span style='color:#ffffff; background:#dd0000; font-weight:bold; font-style:italic; '>}</span><span style='color:#808030; '>,</span> <span style='color:#ffffff; background:#dd0000; font-weight:bold; font-style:italic; '>{</span> <span style='color:#008000; '>1000.0</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>2100.0</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>1100.0</span> <span style='color:#ffffff; background:#dd0000; font-weight:bold; font-style:italic; '>}</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
-    <span style='color:#800000; font-weight:bold; '>auto</span>    idx_result <span style='color:#808030; '>=</span> df<span style='color:#808030; '>.</span>replace_index<span style='color:#800080; '>&lt;</span><span style='color:#008c00; '>3</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#ffffff; background:#dd0000; font-weight:bold; font-style:italic; '>{</span> <span style='color:#008c00; '>20180101</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>20180102</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>20180103</span> <span style='color:#ffffff; background:#dd0000; font-weight:bold; font-style:italic; '>}</span><span style='color:#808030; '>,</span> <span style='color:#ffffff; background:#dd0000; font-weight:bold; font-style:italic; '>{</span> <span style='color:#008c00; '>1000</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>2100</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>1100</span> <span style='color:#ffffff; background:#dd0000; font-weight:bold; font-style:italic; '>}</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
-    <span style='color:#800000; font-weight:bold; '>auto</span>    result2 <span style='color:#808030; '>=</span> df<span style='color:#808030; '>.</span>replace_async<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>6</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>dblcol_5</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#ffffff; background:#dd0000; font-weight:bold; font-style:italic; '>{</span> <span style='color:#808030; '>-</span><span style='color:#008000; '>45.0</span><span style='color:#808030; '>,</span> <span style='color:#808030; '>-</span><span style='color:#008000; '>100.0</span><span style='color:#808030; '>,</span> <span style='color:#808030; '>-</span><span style='color:#008000; '>30.2</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>30.89</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>40.1</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>1.2</span> <span style='color:#ffffff; background:#dd0000; font-weight:bold; font-style:italic; '>}</span><span style='color:#808030; '>,</span> <span style='color:#ffffff; background:#dd0000; font-weight:bold; font-style:italic; '>{</span> <span style='color:#008000; '>0.0</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.0</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>300.0</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>210.0</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>110.0</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>1200.0</span> <span style='color:#ffffff; background:#dd0000; font-weight:bold; font-style:italic; '>}</span><span style='color:#808030; '>,</span>
+    <span style='color:#800000; font-weight:bold; '>auto</span>    result1 <span style='color:#808030; '>=</span> df<span style='color:#808030; '>.</span>replace_async<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#808030; '></span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>dblcol_1</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#ffffff; background:#dd0000; font-weight:bold; font-style:italic; '>{</span> <span style='color:#008000; '>10.0</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>21.0</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>11.0</span> <span style='color:#ffffff; background:#dd0000; font-weight:bold; font-style:italic; '>}</span><span style='color:#808030; '>,</span> <span style='color:#ffffff; background:#dd0000; font-weight:bold; font-style:italic; '>{</span> <span style='color:#008000; '>1000.0</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>2100.0</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>1100.0</span> <span style='color:#ffffff; background:#dd0000; font-weight:bold; font-style:italic; '>}</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    <span style='color:#800000; font-weight:bold; '>auto</span>    idx_result <span style='color:#808030; '>=</span> df<span style='color:#808030; '>.</span>replace_index<span style='color:#800080; '></span><span style='color:#808030; '>(</span><span style='color:#ffffff; background:#dd0000; font-weight:bold; font-style:italic; '>{</span> <span style='color:#008c00; '>20180101</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>20180102</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>20180103</span> <span style='color:#ffffff; background:#dd0000; font-weight:bold; font-style:italic; '>}</span><span style='color:#808030; '>,</span> <span style='color:#ffffff; background:#dd0000; font-weight:bold; font-style:italic; '>{</span> <span style='color:#008c00; '>1000</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>2100</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>1100</span> <span style='color:#ffffff; background:#dd0000; font-weight:bold; font-style:italic; '>}</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    <span style='color:#800000; font-weight:bold; '>auto</span>    result2 <span style='color:#808030; '>=</span> df<span style='color:#808030; '>.</span>replace_async<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#808030; '></span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>dblcol_5</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#ffffff; background:#dd0000; font-weight:bold; font-style:italic; '>{</span> <span style='color:#808030; '>-</span><span style='color:#008000; '>45.0</span><span style='color:#808030; '>,</span> <span style='color:#808030; '>-</span><span style='color:#008000; '>100.0</span><span style='color:#808030; '>,</span> <span style='color:#808030; '>-</span><span style='color:#008000; '>30.2</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>30.89</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>40.1</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>1.2</span> <span style='color:#ffffff; background:#dd0000; font-weight:bold; font-style:italic; '>}</span><span style='color:#808030; '>,</span> <span style='color:#ffffff; background:#dd0000; font-weight:bold; font-style:italic; '>{</span> <span style='color:#008000; '>0.0</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.0</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>300.0</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>210.0</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>110.0</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>1200.0</span> <span style='color:#ffffff; background:#dd0000; font-weight:bold; font-style:italic; '>}</span><span style='color:#808030; '>,</span>
         <span style='color:#008c00; '>3</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
 
     <span style='color:#800000; font-weight:bold; '>auto</span>    <span style='color:#603000; '>count</span> <span style='color:#808030; '>=</span> result1<span style='color:#808030; '>.</span>get<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>

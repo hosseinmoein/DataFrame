@@ -141,9 +141,9 @@ void DataFrame<I, H>::sort_common_(DataFrame<I, H> &df, CF &&comp_func)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<size_t N, typename ... Ts>
+template<typename ... Ts>
 void
-DataFrame<I, H>::shuffle(const std::array<const char *, N> col_names,
+DataFrame<I, H>::shuffle(const std::vector<const char *> &col_names,
                          bool also_shuffle_index)  {
 
     if (also_shuffle_index)  {
@@ -392,17 +392,18 @@ fill_missing_linter_(ColumnVecType<T> &vec,
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename T, size_t N>
+template<typename T>
 void DataFrame<I, H>::
-fill_missing(const std::array<const char *, N> col_names,
+fill_missing(const std::vector<const char *> &col_names,
              fill_policy fp,
-             const std::array<T, N> values,
+             const std::vector<T> &values,
              int limit)  {
 
+    const size_type                 count = col_names.size();
     std::vector<std::future<void>>  futures(get_thread_level());
     size_type                       thread_count = 0;
 
-    for (size_type i = 0; i < N; ++i)  {
+    for (size_type i = 0; i < count; ++i)  {
         ColumnVecType<T>    &vec = get_column<T>(col_names[i]);
 
         if (fp == fill_policy::value)  {
@@ -550,10 +551,8 @@ template<typename ... Ts>
 void DataFrame<I, H>::
 drop_missing(drop_policy policy, size_type threshold)  {
 
-    DropRowMap                      missing_row_map;
-    std::vector<std::future<void>>  futures(get_thread_level());
-    size_type                       thread_count = 0;
-    const size_type                 data_size = data_.size();
+    DropRowMap      missing_row_map;
+    const size_type data_size = data_.size();
 
     map_missing_rows_functor_<Ts ...>   functor (
         indices_.size(), missing_row_map);
@@ -561,32 +560,10 @@ drop_missing(drop_policy policy, size_type threshold)  {
     for (size_type idx = 0; idx < data_size; ++idx)  {
         const SpinGuard guard(lock_);
 
-        if (thread_count >= get_thread_level())
-            data_[idx].change(functor);
-        else  {
-            auto    to_be_called =
-                static_cast
-                    <void(DataVec::*)(map_missing_rows_functor_<Ts ...> &&)>
-                        (&DataVec::template
-                             change<map_missing_rows_functor_<Ts ...>>);
-
-            futures[thread_count] =
-                std::async(std::launch::async,
-                           to_be_called,
-                           &(data_[idx]),
-                           std::move(functor));
-            thread_count += 1;
-        }
+        data_[idx].change(functor);
     }
-    for (size_type idx = 0; idx < thread_count; ++idx)
-        futures[idx].get();
-    thread_count = 0;
 
-    drop_missing_rows_(indices_,
-                       missing_row_map,
-                       policy,
-                       threshold,
-                       data_size);
+    drop_missing_rows_(indices_, missing_row_map, policy, threshold, data_size);
 
     drop_missing_rows_functor_<Ts ...>  functor2 (
         missing_row_map, policy, threshold, data_.size());
@@ -594,25 +571,8 @@ drop_missing(drop_policy policy, size_type threshold)  {
     for (size_type idx = 0; idx < data_size; ++idx)  {
         const SpinGuard guard(lock_);
 
-        if (thread_count >= get_thread_level())
-            data_[idx].change(functor2);
-        else  {
-            auto    to_be_called =
-                static_cast
-                    <void(DataVec::*)(drop_missing_rows_functor_<Ts ...> &&)>
-                        (&DataVec::template
-                             change<drop_missing_rows_functor_<Ts ...>>);
-
-            futures[thread_count] =
-                std::async(std::launch::async,
-                           to_be_called,
-                           &(data_[idx]),
-                           std::move(functor2));
-            thread_count += 1;
-        }
+        data_[idx].change(functor2);
     }
-    for (size_type idx = 0; idx < thread_count; ++idx)
-        futures[idx].get();
 
     return;
 }
@@ -620,17 +580,17 @@ drop_missing(drop_policy policy, size_type threshold)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename T, size_t N>
+template<typename T>
 typename DataFrame<I, H>::size_type DataFrame<I, H>::
 replace(const char *col_name,
-        const std::array<T, N> old_values,
-        const std::array<T, N> new_values,
+        const std::vector<T> &old_values,
+        const std::vector<T> &new_values,
         int limit)  {
 
     ColumnVecType<T>    &vec = get_column<T>(col_name);
     size_type           count = 0;
 
-    _replace_vector_vals_<ColumnVecType<T>, T, N>
+    _replace_vector_vals_<ColumnVecType<T>, T>
         (vec, old_values, new_values, count, limit);
 
     return (count);
@@ -639,15 +599,14 @@ replace(const char *col_name,
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<size_t N>
 typename DataFrame<I, H>::size_type DataFrame<I, H>::
-replace_index(const std::array<IndexType, N> old_values,
-              const std::array<IndexType, N> new_values,
+replace_index(const std::vector<IndexType> &old_values,
+              const std::vector<IndexType> &new_values,
               int limit)  {
 
     size_type   count = 0;
 
-    _replace_vector_vals_<IndexVecType, IndexType, N>
+    _replace_vector_vals_<IndexVecType, IndexType>
         (indices_, old_values, new_values, count, limit);
 
     return (count);
@@ -672,19 +631,19 @@ replace(const char *col_name, F &functor)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename T, size_t N>
+template<typename T>
 std::future<typename DataFrame<I, H>::size_type> DataFrame<I, H>::
 replace_async(const char *col_name,
-              const std::array<T, N> old_values,
-              const std::array<T, N> new_values,
+              const std::vector<T> &old_values,
+              const std::vector<T> &new_values,
               int limit)  {
 
     return (std::async(std::launch::async,
-                       &DataFrame::replace<T, N>,
+                       &DataFrame::replace<T>,
                            this,
                            col_name,
-                           old_values,
-                           new_values,
+                           std::forward<const std::vector<T>>(old_values),
+                           std::forward<const std::vector<T>>(new_values),
                            limit));
 }
 

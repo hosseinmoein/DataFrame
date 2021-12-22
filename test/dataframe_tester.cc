@@ -127,7 +127,7 @@ static void test_haphazard()  {
     MyDataFrame df_dup = df;
     MyDataFrame df_dup2(std::move(df));
 
-	df = std::move(df_dup);
+    df = std::move(df_dup);
 
     MeanVisitor<int>                ivisitor;
     MeanVisitor<double>             dvisitor;
@@ -1529,13 +1529,13 @@ static void test_fill_missing_values()  {
     std::cout << "Original DF:" << std::endl;
     df.write<std::ostream, int, double, std::string>(std::cout);
 
-    df.fill_missing<double, 3>({ "col_1", "col_2", "col_3" },
-                               fill_policy::value,
-                               { 1001, 1002, 1003 },
-                               3);
-    df.fill_missing<std::string, 1>({ "col_str" },
-                                    fill_policy::value,
-                                    { "XXXXXX" });
+    df.fill_missing<double>({ "col_1", "col_2", "col_3" },
+                            fill_policy::value,
+                            { 1001, 1002, 1003 },
+                            3);
+    df.fill_missing<std::string>({ "col_str" },
+                                 fill_policy::value,
+                                 { "XXXXXX" });
 
     std::cout << "After fill missing with values DF:" << std::endl;
     df.write<std::ostream, int, double, std::string>(std::cout);
@@ -1593,13 +1593,14 @@ static void test_fill_missing_fill_forward()  {
     std::cout << "Original DF:" << std::endl;
     df.write<std::ostream, int, double, std::string>(std::cout);
 
-    df.fill_missing<double, 3>({ "col_1", "col_2", "col_3" },
-                               fill_policy::fill_forward,
-                               { },
-                               3);
-    df.fill_missing<std::string, 1>({ "col_str" },
-                                    fill_policy::fill_forward,
-                                    {  }, 3);
+    df.fill_missing<double>({ "col_1", "col_2", "col_3" },
+                            fill_policy::fill_forward,
+                            { },
+                            3);
+    df.fill_missing<std::string>({ "col_str" },
+                                 fill_policy::fill_forward,
+                                 {  },
+                                 3);
 
     std::cout << "After fill missing with values DF:" << std::endl;
     df.write<std::ostream, int, double, std::string>(std::cout);
@@ -1656,9 +1657,9 @@ static void test_fill_missing_fill_backward()  {
     std::cout << "Original DF:" << std::endl;
     df.write<std::ostream, int, double, std::string>(std::cout);
 
-    df.fill_missing<double, 3>({ "col_1", "col_2", "col_3" },
-                               fill_policy::fill_backward);
-    df.fill_missing<std::string, 1>({ "col_str" }, fill_policy::fill_backward);
+    df.fill_missing<double>({ "col_1", "col_2", "col_3" },
+                            fill_policy::fill_backward);
+    df.fill_missing<std::string>({ "col_str" }, fill_policy::fill_backward);
 
     std::cout << "After fill missing with values DF:" << std::endl;
     df.write<std::ostream, int, double, std::string>(std::cout);
@@ -1711,8 +1712,8 @@ static void test_fill_missing_fill_linear_interpolation()  {
     std::cout << "Original DF:" << std::endl;
     df.write<std::ostream, int, double>(std::cout);
 
-    df.fill_missing<double, 3>({ "col_1", "col_2", "col_3" },
-                               fill_policy::linear_interpolate);
+    df.fill_missing<double>({ "col_1", "col_2", "col_3" },
+                            fill_policy::linear_interpolate);
 
     std::cout << "After fill missing with values DF:" << std::endl;
     df.write<std::ostream, int, double>(std::cout);
@@ -2001,10 +2002,10 @@ static void test_get_row()  {
     std::cout << "Original DF:" << std::endl;
     df.write<std::ostream, int, double, std::string>(std::cout);
 
-    std::array<const char *, 6> columns =
+    std::vector<const char *>   columns =
         {"col_1", "col_2", "col_3", "col_4", "col_str", "col_int"};
     auto                        row2 =
-        df.get_row<6, int, double, std::string>(2, columns);
+        df.get_row<int, double, std::string>(2, columns);
 
     assert(row2.at<MyDataFrame::IndexType>(0) == 123452);
     assert(row2.at<double>(0) == 3.0);
@@ -2539,12 +2540,12 @@ static void test_replace_1()  {
     assert(df.get_column<double>("dblcol_5")[17] == 1.2);
     assert(df.get_column<double>("dblcol_5")[19] == 23.2);
 
-    auto    result1 = df.replace_async<double, 3>(
+    auto    result1 = df.replace_async<double>(
         "dblcol_1", { 10.0, 21.0, 11.0 }, { 1000.0, 2100.0, 1100.0 });
 
-    df.replace_index<3>({ 20180101, 20180102, 20180103 }, { 1000, 2100, 1100 });
+    df.replace_index({ 20180101, 20180102, 20180103 }, { 1000, 2100, 1100 });
 
-    auto    result2 = df.replace_async<double, 6>(
+    auto    result2 = df.replace_async<double>(
         "dblcol_5",
         { -45.0, -100.0, -30.2, 30.89, 40.1, 1.2 },
         { 0.0, 0.0, 300.0, 210.0, 110.0, 1200.0 },
@@ -3047,11 +3048,11 @@ static void test_shuffle()  {
     // std::cout << "Original DatFrasme:" << std::endl;
     // df.write<std::ostream, int, double, std::string>(std::cout);
 
-    df.shuffle<2, double, std::string>({"col_1", "col_str"}, false);
+    df.shuffle<double, std::string>({"col_1", "col_str"}, false);
     // std::cout << "shuffle with no index:" << std::endl;
     // df.write<std::ostream, int, double, std::string>(std::cout);
 
-    df.shuffle<2, double>({"col_2", "col_3"}, true);
+    df.shuffle<double>({"col_2", "col_3"}, true);
     // std::cout << "shuffle with index:" << std::endl;
     // df.write<std::ostream, int, double, std::string>(std::cout);
 }
@@ -4300,7 +4301,7 @@ static void test_affinity_propagation()  {
 
     df.load_data(MyDataFrame::gen_sequence_index(0, item_cnt * 5, 1),
                  std::make_pair("col1", final_col));
-    df.shuffle<1, double>({"col1"}, false);
+    df.shuffle<double>({"col1"}, false);
 
     KMeansVisitor<5, double>    km_visitor(1000);
     AffinityPropVisitor<double> ap_visitor(50);
@@ -4806,8 +4807,8 @@ static void test_fill_missing_mid_point()  {
     // std::cout << "Original DF:" << std::endl;
     // df.write<std::ostream, int, double, std::string>(std::cout);
 
-    df.fill_missing<double, 3>({ "col_1", "col_2", "col_3" },
-                               fill_policy::mid_point);
+    df.fill_missing<double>({ "col_1", "col_2", "col_3" },
+                            fill_policy::mid_point);
 
     std::cout << "After fill missing with values DF:" << std::endl;
     df.write<std::ostream, int, double, std::string>(std::cout);
@@ -4930,7 +4931,7 @@ static void test_quantile()  {
     MyDataFrame         df;
 
     df.load_data(std::move(idx), std::make_pair("col_1", d1));
-    df.shuffle<1, double>({"col_1"}, false);
+    df.shuffle<double>({"col_1"}, false);
 
     QuantileVisitor<double> v1(1, quantile_policy::mid_point);
     auto                    result =

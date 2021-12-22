@@ -426,17 +426,21 @@ _sort_by_sorted_index_(T &to_be_sorted,
 
 // ----------------------------------------------------------------------------
 
-template<typename V, typename T, size_t N>
+template<typename V, typename T>
 inline static void
 _replace_vector_vals_(V &data_vec,
-                      const std::array<T, N> &old_values,
-                      const std::array<T, N> &new_values,
+                      const std::vector<T> &old_values,
+                      const std::vector<T> &new_values,
                       size_t &count,
                       int limit)  {
 
+    const size_t    vcnt = old_values.size();
+
+    assert(vcnt == new_values.size());
+
     const size_t    vec_s = data_vec.size();
 
-    for (size_t i = 0; i < N; ++i)  {
+    for (size_t i = 0; i < vcnt; ++i)  {
         for (size_t j = 0; j < vec_s; ++j)  {
             if (limit >= 0 && count >= static_cast<size_t>(limit))  return;
             if (old_values[i] == data_vec[j])  {

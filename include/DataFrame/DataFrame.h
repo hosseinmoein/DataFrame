@@ -36,7 +36,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/Utils/ThreadGranularity.h>
 #include <DataFrame/Utils/Utils.h>
 
-#include <array>
 #include <functional>
 #include <future>
 #include <iostream>
@@ -668,15 +667,13 @@ public:  // Data manipulation
     //
     // also_shuffle_index: If true, it shuffles the named column(s) and the
     //                     index column. Otherwise, index is not shuffled.
-    // N:
-    //   Number of named columns
     // Ts:
     //   List all the types of all data columns. A type should be specified in
     //   the list only once.
     //
-    template<size_t N, typename ... Ts>
+    template<typename ... Ts>
     void
-    shuffle(const std::array<const char *, N> col_names,
+    shuffle(const std::vector<const char *> &col_names,
             bool also_shuffle_index);
 
     // It fills all the "missing values" with the given values, and/or using
@@ -685,26 +682,27 @@ public:  // Data manipulation
     // without NaN (e.g. string), default value is considered missing value.
     //
     // T:
-    //   Type of the column(s) in col_names array
+    //   Type of the column(s) in col_names vector
     // N:
-    //   Size of col_names and values array
+    //   Size of col_names and values vector
     // col_names:
-    //   An array of names specifying the columns to fill.
+    //   A vector of names specifying the columns to fill.
     // fp:
     //   Specifies the method to use to fill the missing values. For example;
     //   forward fill, values, etc.
     // values:
     //   If the policy is "values", use these values to fill the missing
-    //   holes. Each value corresponds to the same index in the col_names array.
+    //   holes. Each value corresponds to the same index in the col_names
+    //   vector.
     // limit:
     //   Specifies how many values to fill. Default is -1 meaning fill all
     //   missing values.
     //
-    template<typename T, size_t N>
+    template<typename T>
     void
-    fill_missing(const std::array<const char *, N> col_names,
+    fill_missing(const std::vector<const char *> &col_names,
                  fill_policy policy,
-                 const std::array<T, N> values = { },
+                 const std::vector<T> &values = { },
                  int limit = -1);
 
     // It fills the missing values in all columns in self by investigating the
@@ -754,21 +752,21 @@ public:  // Data manipulation
     //   List all the types of all data columns. A type should be specified in
     //   the list only once.
     // N:
-    //   Size of old_values and new_values arrays
+    //   Size of old_values and new_values vectors
     // col_name:
     //   Name of the column
-    // old_array:
-    //   An array of values to be replaced in col_name column
-    // new_array:
-    //   An array of values to to replace the old_values in col_name column
+    // old_values:
+    //   A vector of values to be replaced in col_name column
+    // new_values:
+    //   A vector of values to to replace the old_values in col_name column
     // limit:
     //   Limit of how many items to replace. Default is to replace all.
     //
-    template<typename T, size_t N>
+    template<typename T>
     size_type
     replace(const char *col_name,
-            const std::array<T, N> old_values,
-            const std::array<T, N> new_values,
+            const std::vector<T> &old_values,
+            const std::vector<T> &new_values,
             int limit = -1);
 
     // Same as replace() above, but executed asynchronously
@@ -776,11 +774,11 @@ public:  // Data manipulation
     // NOTE: multiple instances of replace_async() maybe executed for
     //       different columns at the same time with no problem.
     //
-    template<typename T, size_t N>
+    template<typename T>
     [[nodiscard]] std::future<size_type>
     replace_async(const char *col_name,
-                  const std::array<T, N> old_values,
-                  const std::array<T, N> new_values,
+                  const std::vector<T> &old_values,
+                  const std::vector<T> &new_values,
                   int limit = -1);
 
     // This is similar to replace() above but it lets a functor replace the
@@ -818,17 +816,16 @@ public:  // Data manipulation
 
     // This does the same thing as replace() above for the index column
     //
-    // N: Size of old_values and new_values arrays
-    // old_array: An array of values to be replaced in col_name column
-    // new_array: An array of values to to replace the old_values in col_name
+    // N: Size of old_values and new_values vector
+    // old_values: A vector of values to be replaced in col_name column
+    // new_values: A vector of values to to replace the old_values in col_name
     //            column
     // limit:
     //   Limit of how many items to replace. Default is to replace all.
     //
-    template<size_t N>
     size_type
-    replace_index(const std::array<IndexType, N> old_values,
-                  const std::array<IndexType, N> new_values,
+    replace_index(const std::vector<IndexType> &old_values,
+                  const std::vector<IndexType> &new_values,
                   int limit = -1);
 
     // Sort the DataFrame by the named column. If name equals "INDEX" or
@@ -1255,7 +1252,7 @@ public:  // Data manipulation
     //
     // NOTE: Views could not be const, becuase you can change original data
     //       through views.
-	//
+    //
     // RHS_T:
     //   Type of DataFrame rhs
     // Ts:
@@ -1449,8 +1446,6 @@ public: // Read/access and slicing interfaces
     // It returns a HeteroVector which contains a different type
     // for each column.
     //
-    // N:
-    //   Size of col_names and values array
     // Ts:
     //   List all the types of all data columns. A type should be specified in
     //   the list only once.
@@ -1460,10 +1455,10 @@ public: // Read/access and slicing interfaces
     //   Names of columns to get data from. It also specifies the order of data
     //   in the returned vector
     //
-    template<size_t N, typename ... Ts>
+    template<typename ... Ts>
     [[nodiscard]] HeteroVector
     get_row(size_type row_num,
-            const std::array<const char *, N> col_names) const;
+            const std::vector<const char *> &col_names) const;
 
     // This is same as get_row() above. But it always includes all the columns
     // in the returned row. The order is the column creation order. If you
@@ -1888,7 +1883,7 @@ public: // Read/access and slicing interfaces
     //
     template<typename ... Ts>
     [[nodiscard]] DataFrame
-    get_data(const std::vector<const char *> col_names) const;
+    get_data(const std::vector<const char *> &col_names) const;
 
     // It behaves like get_data(), but it returns a DataFrameView.
     // A view is a DataFrame that is a reference to the original DataFrame.
@@ -1907,7 +1902,7 @@ public: // Read/access and slicing interfaces
     //
     template<typename ... Ts>
     [[nodiscard]] DataFrameView<IndexType>
-    get_view(const std::vector<const char *> col_names);
+    get_view(const std::vector<const char *> &col_names);
 
     // It returns a const reference to the index container
     //

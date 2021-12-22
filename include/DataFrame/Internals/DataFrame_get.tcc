@@ -152,9 +152,9 @@ DataFrame<I, H>::get_index()  { return (indices_); }
 // ----------------------------------------------------------------------------
 
 template<typename I, typename  H>
-template<size_t N, typename ... Ts>
+template<typename ... Ts>
 HeteroVector DataFrame<I, H>::
-get_row(size_type row_num, const std::array<const char *, N> col_names) const {
+get_row(size_type row_num, const std::vector<const char *> &col_names) const {
 
     if (row_num >= indices_.size())  {
         char buffer [512];
@@ -1033,7 +1033,7 @@ get_view_by_rand (random_policy spec, double n, size_type seed)  {
 template<typename I, typename H>
 template<typename ... Ts>
 DataFrame<I, H> DataFrame<I, H>::
-get_data(const std::vector<const char *> col_names) const  {
+get_data(const std::vector<const char *> &col_names) const  {
 
     DataFrame   df;
 
@@ -1065,7 +1065,7 @@ get_data(const std::vector<const char *> col_names) const  {
 template<typename I, typename H>
 template<typename ... Ts>
 DataFrameView<I> DataFrame<I, H>::
-get_view(const std::vector<const char *> col_names)  {
+get_view(const std::vector<const char *> &col_names)  {
 
     static_assert(std::is_base_of<HeteroVector, H>::value,
                   "Only a StdDataFrame can call get_view()");

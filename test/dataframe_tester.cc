@@ -2810,7 +2810,7 @@ static void test_get_data_by_sel()  {
         [](const unsigned long &,
            const double &val1,
            const double &val2,
-           const std::string val3)-> bool {
+           const std::string &val3)-> bool {
             return (val1 >= 5 || val2 == 15 || val3 == "33");
         };
     auto    result2 =
@@ -2840,6 +2840,49 @@ static void test_get_data_by_sel()  {
     assert(result2.get_column<double>("col_1")[0] == 1);
     assert(result2.get_column<double>("col_1")[1] == 3);
     assert(result2.get_column<double>("col_1")[2] == 5);
+
+    std::vector<std::string> s2 = { "aa", "bb", "cc", "10", "11", "12", "14" };
+
+    df.load_column("col_str2", s2);
+
+    auto    functor3 =
+        [](const unsigned long &,
+           const double &val1,
+           const double &,
+           const double &val3,
+           const std::string &,
+           const std::string &val5)-> bool {
+            return (val1 >= 5 || val3 == 15 || val5 == "cc");
+        };
+    auto    result3 =
+        df.get_data_by_sel<double,
+                           double,
+                           double,
+                           std::string,
+                           std::string,
+                           decltype(functor3),
+                           double, std::string>
+        ("col_1", "col_2", "col_3", "col_str", "col_str2", functor3);
+    auto    result4 =
+        df.get_view_by_sel<double,
+                           double,
+                           double,
+                           std::string,
+                           std::string,
+                           decltype(functor3),
+                           double, std::string>
+        ("col_1", "col_2", "col_3", "col_str", "col_str2", functor3);
+
+    assert(result3.get_index().size() == 5);
+    assert(result4.get_index().size() == 5);
+    assert(result3.get_column<double>("col_1").size() == 5);
+    assert(result4.get_column<double>("col_1").size() == 5);
+    assert(result3.get_column<double>("col_2")[3] == 13);
+    assert(result4.get_column<double>("col_2")[3] == 13);
+    assert(result3.get_column<std::string>("col_str")[2] == "ff");
+    assert(result4.get_column<std::string>("col_str")[2] == "ff");
+    assert(result3.get_column<double>("col_1")[2] == 5);
+    assert(result4.get_column<double>("col_1")[2] == 5);
 }
 
 // -----------------------------------------------------------------------------

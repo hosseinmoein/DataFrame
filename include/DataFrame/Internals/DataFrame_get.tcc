@@ -541,7 +541,7 @@ DataFrame<I, H>::get_view_by_loc (Index2D<long> range)  {
                 static_cast<size_type>(range.begin),
                 static_cast<size_type>(range.end),
                 dfv);
-            const SpinGuard	guard(lock_);
+            const SpinGuard guard(lock_);
 
             data_[iter.second].change(functor);
         }
@@ -693,11 +693,14 @@ get_data_by_sel (const char *name1, const char *name2, F &sel_functor) const  {
     const ColumnVecType<T2> &vec2 = get_column<T2>(name2);
     const size_type         col_s1 = vec1.size();
     const size_type         col_s2 = vec2.size();
-    const size_type         col_s = std::max(col_s1, col_s2);
+    const size_type         min_col_s = std::min(col_s1, col_s2);
     std::vector<size_type>  col_indices;
 
     col_indices.reserve(idx_s / 2);
-    for (size_type i = 0; i < col_s; ++i)
+    for (size_type i = 0; i < min_col_s; ++i)
+        if (sel_functor(indices_[i], vec1[i], vec2[i]))
+            col_indices.push_back(i);
+    for (size_type i = min_col_s; i < idx_s; ++i)
         if (sel_functor (indices_[i],
                          i < col_s1 ? vec1[i] : get_nan<T1>(),
                          i < col_s2 ? vec2[i] : get_nan<T2>()))
@@ -740,11 +743,14 @@ get_view_by_sel (const char *name1, const char *name2, F &sel_functor)  {
     const size_type         idx_s = indices_.size();
     const size_type         col_s1 = vec1.size();
     const size_type         col_s2 = vec2.size();
-    const size_type         col_s = std::max(col_s1, col_s2);
+    const size_type         min_col_s = std::min(col_s1, col_s2);
     std::vector<size_type>  col_indices;
 
     col_indices.reserve(idx_s / 2);
-    for (size_type i = 0; i < col_s; ++i)
+    for (size_type i = 0; i < min_col_s; ++i)
+        if (sel_functor(indices_[i], vec1[i], vec2[i]))
+            col_indices.push_back(i);
+    for (size_type i = min_col_s; i < idx_s; ++i)
         if (sel_functor (indices_[i],
                          i < col_s1 ? vec1[i] : get_nan<T1>(),
                          i < col_s2 ? vec2[i] : get_nan<T2>()))
@@ -791,11 +797,14 @@ get_data_by_sel (const char *name1,
     const size_type         col_s1 = vec1.size();
     const size_type         col_s2 = vec2.size();
     const size_type         col_s3 = vec3.size();
-    const size_type         col_s = std::max(std::max(col_s1, col_s2), col_s3);
+    const size_type         min_col_s = std::min({ col_s1, col_s2, col_s3 });
     std::vector<size_type>  col_indices;
 
     col_indices.reserve(idx_s / 2);
-    for (size_type i = 0; i < col_s; ++i)
+    for (size_type i = 0; i < min_col_s; ++i)
+        if (sel_functor(indices_[i], vec1[i], vec2[i], vec3[i]))
+            col_indices.push_back(i);
+    for (size_type i = min_col_s; i < idx_s; ++i)
         if (sel_functor (indices_[i],
                          i < col_s1 ? vec1[i] : get_nan<T1>(),
                          i < col_s2 ? vec2[i] : get_nan<T2>(),
@@ -844,11 +853,14 @@ get_view_by_sel (const char *name1,
     const size_type         col_s1 = vec1.size();
     const size_type         col_s2 = vec2.size();
     const size_type         col_s3 = vec3.size();
-    const size_type         col_s = std::max(std::max(col_s1, col_s2), col_s3);
+    const size_type         min_col_s = std::min({ col_s1, col_s2, col_s3 });
     std::vector<size_type>  col_indices;
 
     col_indices.reserve(idx_s / 2);
-    for (size_type i = 0; i < col_s; ++i)
+    for (size_type i = 0; i < min_col_s; ++i)
+        if (sel_functor(indices_[i], vec1[i], vec2[i], vec3[i]))
+            col_indices.push_back(i);
+    for (size_type i = min_col_s; i < idx_s; ++i)
         if (sel_functor (indices_[i],
                          i < col_s1 ? vec1[i] : get_nan<T1>(),
                          i < col_s2 ? vec2[i] : get_nan<T2>(),
@@ -882,9 +894,265 @@ get_view_by_sel (const char *name1,
 // ----------------------------------------------------------------------------
 
 template<typename I, typename  H>
+template<typename T1, typename T2, typename T3, typename T4,
+         typename F, typename ... Ts>
+DataFrame<I, H> DataFrame<I, H>::
+get_data_by_sel(const char *name1,
+                const char *name2,
+                const char *name3,
+                const char *name4,
+                F &sel_functor) const  {
+
+    const ColumnVecType<T1> &vec1 = get_column<T1>(name1);
+    const ColumnVecType<T2> &vec2 = get_column<T2>(name2);
+    const ColumnVecType<T3> &vec3 = get_column<T3>(name3);
+    const ColumnVecType<T4> &vec4 = get_column<T4>(name4);
+    const size_type         idx_s = indices_.size();
+    const size_type         col_s1 = vec1.size();
+    const size_type         col_s2 = vec2.size();
+    const size_type         col_s3 = vec3.size();
+    const size_type         col_s4 = vec4.size();
+    const size_type         min_col_s =
+        std::min({ col_s1, col_s2, col_s3, col_s4 });
+    std::vector<size_type>  col_indices;
+
+    col_indices.reserve(idx_s / 2);
+    for (size_type i = 0; i < min_col_s; ++i)
+        if (sel_functor(indices_[i], vec1[i], vec2[i], vec3[i], vec4[i]))
+            col_indices.push_back(i);
+    for (size_type i = min_col_s; i < idx_s; ++i)
+        if (sel_functor(indices_[i],
+                        i < col_s1 ? vec1[i] : get_nan<T1>(),
+                        i < col_s2 ? vec2[i] : get_nan<T2>(),
+                        i < col_s3 ? vec3[i] : get_nan<T3>(),
+                        i < col_s4 ? vec4[i] : get_nan<T4>()))
+            col_indices.push_back(i);
+
+    DataFrame       df;
+    IndexVecType    new_index;
+
+    new_index.reserve(col_indices.size());
+    for (const auto citer: col_indices)
+        new_index.push_back(indices_[citer]);
+    df.load_index(std::move(new_index));
+
+    for (auto col_citer : column_list_)  {
+        sel_load_functor_<size_type, Ts ...>    functor (
+            col_citer.first.c_str(),
+            col_indices,
+            idx_s,
+            df);
+        const SpinGuard                         guard(lock_);
+
+        data_[col_citer.second].change(functor);
+    }
+
+    return (df);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename T1, typename T2, typename T3, typename T4,
+         typename F, typename ... Ts>
+DataFramePtrView<I> DataFrame<I, H>::
+get_view_by_sel(const char *name1,
+                const char *name2,
+                const char *name3,
+                const char *name4,
+                F &sel_functor)  {
+
+    static_assert(std::is_base_of<HeteroVector, H>::value,
+                  "Only a StdDataFrame can call get_view_by_sel()");
+
+    const ColumnVecType<T1> &vec1 = get_column<T1>(name1);
+    const ColumnVecType<T2> &vec2 = get_column<T2>(name2);
+    const ColumnVecType<T3> &vec3 = get_column<T3>(name3);
+    const ColumnVecType<T4> &vec4 = get_column<T4>(name4);
+    const size_type         idx_s = indices_.size();
+    const size_type         col_s1 = vec1.size();
+    const size_type         col_s2 = vec2.size();
+    const size_type         col_s3 = vec3.size();
+    const size_type         col_s4 = vec4.size();
+    const size_type         min_col_s =
+        std::min({ col_s1, col_s2, col_s3, col_s4 });
+    std::vector<size_type>  col_indices;
+
+    col_indices.reserve(idx_s / 2);
+    for (size_type i = 0; i < min_col_s; ++i)
+        if (sel_functor(indices_[i], vec1[i], vec2[i], vec3[i], vec4[i]))
+            col_indices.push_back(i);
+    for (size_type i = min_col_s; i < idx_s; ++i)
+        if (sel_functor(indices_[i],
+                        i < col_s1 ? vec1[i] : get_nan<T1>(),
+                        i < col_s2 ? vec2[i] : get_nan<T2>(),
+                        i < col_s3 ? vec3[i] : get_nan<T3>(),
+                        i < col_s4 ? vec4[i] : get_nan<T4>()))
+            col_indices.push_back(i);
+
+    using TheView = DataFramePtrView<IndexType>;
+
+    TheView                         dfv;
+    typename TheView::IndexVecType  new_index;
+
+    new_index.reserve(col_indices.size());
+    for (const auto citer: col_indices)
+        new_index.push_back(&(indices_[citer]));
+    dfv.indices_ = std::move(new_index);
+
+    for (auto col_citer : column_list_)  {
+        sel_load_view_functor_<size_type, Ts ...>   functor (
+            col_citer.first.c_str(),
+            col_indices,
+            idx_s,
+            dfv);
+        const SpinGuard                             guard(lock_);
+
+        data_[col_citer.second].change(functor);
+    }
+
+    return (dfv);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename T1, typename T2, typename T3, typename T4, typename T5,
+         typename F, typename ... Ts>
+DataFrame<I, H> DataFrame<I, H>::
+get_data_by_sel(const char *name1,
+                const char *name2,
+                const char *name3,
+                const char *name4,
+                const char *name5,
+                F &sel_functor) const  {
+
+    const ColumnVecType<T1> &vec1 = get_column<T1>(name1);
+    const ColumnVecType<T2> &vec2 = get_column<T2>(name2);
+    const ColumnVecType<T3> &vec3 = get_column<T3>(name3);
+    const ColumnVecType<T4> &vec4 = get_column<T4>(name4);
+    const ColumnVecType<T5> &vec5 = get_column<T5>(name5);
+    const size_type         idx_s = indices_.size();
+    const size_type         col_s1 = vec1.size();
+    const size_type         col_s2 = vec2.size();
+    const size_type         col_s3 = vec3.size();
+    const size_type         col_s4 = vec4.size();
+    const size_type         col_s5 = vec5.size();
+    const size_type         min_col_s =
+        std::min({ col_s1, col_s2, col_s3, col_s4, col_s5 });
+    std::vector<size_type>  col_indices;
+
+    col_indices.reserve(idx_s / 2);
+    for (size_type i = 0; i < min_col_s; ++i)
+        if (sel_functor(indices_[i],
+                        vec1[i], vec2[i], vec3[i], vec4[i], vec5[i]))
+            col_indices.push_back(i);
+    for (size_type i = min_col_s; i < idx_s; ++i)
+        if (sel_functor(indices_[i],
+                        i < col_s1 ? vec1[i] : get_nan<T1>(),
+                        i < col_s2 ? vec2[i] : get_nan<T2>(),
+                        i < col_s3 ? vec3[i] : get_nan<T3>(),
+                        i < col_s4 ? vec4[i] : get_nan<T4>(),
+                        i < col_s5 ? vec5[i] : get_nan<T5>()))
+            col_indices.push_back(i);
+
+    DataFrame       df;
+    IndexVecType    new_index;
+
+    new_index.reserve(col_indices.size());
+    for (const auto citer: col_indices)
+        new_index.push_back(indices_[citer]);
+    df.load_index(std::move(new_index));
+
+    for (auto col_citer : column_list_)  {
+        sel_load_functor_<size_type, Ts ...>    functor (
+            col_citer.first.c_str(),
+            col_indices,
+            idx_s,
+            df);
+        const SpinGuard                         guard(lock_);
+
+        data_[col_citer.second].change(functor);
+    }
+
+    return (df);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename T1, typename T2, typename T3, typename T4, typename T5,
+         typename F, typename ... Ts>
+DataFramePtrView<I> DataFrame<I, H>::
+get_view_by_sel(const char *name1,
+                const char *name2,
+                const char *name3,
+                const char *name4,
+                const char *name5,
+                F &sel_functor)  {
+
+    static_assert(std::is_base_of<HeteroVector, H>::value,
+                  "Only a StdDataFrame can call get_view_by_sel()");
+
+    const ColumnVecType<T1> &vec1 = get_column<T1>(name1);
+    const ColumnVecType<T2> &vec2 = get_column<T2>(name2);
+    const ColumnVecType<T3> &vec3 = get_column<T3>(name3);
+    const ColumnVecType<T4> &vec4 = get_column<T4>(name4);
+    const ColumnVecType<T5> &vec5 = get_column<T5>(name5);
+    const size_type         idx_s = indices_.size();
+    const size_type         col_s1 = vec1.size();
+    const size_type         col_s2 = vec2.size();
+    const size_type         col_s3 = vec3.size();
+    const size_type         col_s4 = vec4.size();
+    const size_type         col_s5 = vec5.size();
+    const size_type         min_col_s =
+        std::min({ col_s1, col_s2, col_s3, col_s4, col_s5 });
+    std::vector<size_type>  col_indices;
+
+    col_indices.reserve(idx_s / 2);
+    for (size_type i = 0; i < min_col_s; ++i)
+        if (sel_functor(indices_[i],
+                        vec1[i], vec2[i], vec3[i], vec4[i], vec5[i]))
+            col_indices.push_back(i);
+    for (size_type i = min_col_s; i < idx_s; ++i)
+        if (sel_functor(indices_[i],
+                        i < col_s1 ? vec1[i] : get_nan<T1>(),
+                        i < col_s2 ? vec2[i] : get_nan<T2>(),
+                        i < col_s3 ? vec3[i] : get_nan<T3>(),
+                        i < col_s4 ? vec4[i] : get_nan<T4>(),
+                        i < col_s5 ? vec5[i] : get_nan<T5>()))
+            col_indices.push_back(i);
+
+    using TheView = DataFramePtrView<IndexType>;
+
+    TheView                         dfv;
+    typename TheView::IndexVecType  new_index;
+
+    new_index.reserve(col_indices.size());
+    for (const auto citer: col_indices)
+        new_index.push_back(&(indices_[citer]));
+    dfv.indices_ = std::move(new_index);
+
+    for (auto col_citer : column_list_)  {
+        sel_load_view_functor_<size_type, Ts ...>   functor (
+            col_citer.first.c_str(),
+            col_indices,
+            idx_s,
+            dfv);
+        const SpinGuard                             guard(lock_);
+
+        data_[col_citer.second].change(functor);
+    }
+
+    return (dfv);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
 template<typename ... Ts>
 DataFrame<I, H> DataFrame<I, H>::
-get_data_by_rand (random_policy spec, double n, size_type seed) const  {
+get_data_by_rand(random_policy spec, double n, size_type seed) const  {
 
     bool            use_seed = false;
     size_type       n_rows = static_cast<size_type>(n);

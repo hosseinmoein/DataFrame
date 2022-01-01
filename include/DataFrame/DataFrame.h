@@ -1817,6 +1817,176 @@ public: // Read/access and slicing interfaces
                     const char *name3,
                     F &sel_functor);
 
+    // This does the same function as above get_data_by_sel() but operating
+    // on four columns.
+    // The signature of sel_fucntor:
+    //     bool ()(const IndexType &,
+    //             const T1 &, const T2 &, const T3 &, const T4 &)
+    //
+    // T1:
+    //   Type of the first named column
+    // T2:
+    //   Type of the second named column
+    // T3:
+    //   Type of the third named column
+    // T4:
+    //   Type of the fourth named column
+    // F:
+    //   Type of the selecting functor
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // name1:
+    //   Name of the first data column
+    // name2:
+    //   Name of the second data column
+    // name3:
+    //   Name of the third data column
+    // name4:
+    //   Name of the fourth data column
+    // sel_functor:
+    //   A reference to the selecting functor
+    //
+    template<typename T1, typename T2, typename T3, typename T4, typename F,
+             typename ... Ts>
+    [[nodiscard]] DataFrame
+    get_data_by_sel(const char *name1,
+                    const char *name2,
+                    const char *name3,
+                    const char *name4,
+                    F &sel_functor) const;
+
+    // This is identical with above get_data_by_sel(), but:
+    //   1) The result is a view
+    //   2) Since the result is a view, you cannot call make_consistent() on
+    //      the result.
+    //
+    // NOTE: Views could not be const, becuase you can change original data
+    //       through views.
+    //
+    // T1:
+    //   Type of the first named column
+    // T2:
+    //   Type of the second named column
+    // T3:
+    //   Type of the third named column
+    // T4:
+    //   Type of the fourth named column
+    // F:
+    //   Type of the selecting functor
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // name1:
+    //   Name of the first data column
+    // name2:
+    //   Name of the second data column
+    // name3:
+    //   Name of the third data column
+    // name4:
+    //   Name of the fourth data column
+    // sel_functor:
+    //   A reference to the selecting functor
+    //
+    template<typename T1, typename T2, typename T3, typename T4, typename F,
+             typename ... Ts>
+    [[nodiscard]] DataFramePtrView<IndexType>
+    get_view_by_sel(const char *name1,
+                    const char *name2,
+                    const char *name3,
+                    const char *name4,
+                    F &sel_functor);
+
+    // This does the same function as above get_data_by_sel() but operating
+    // on five columns.
+    // The signature of sel_fucntor:
+    //     bool ()(const IndexType &,
+    //             const T1 &, const T2 &, const T3 &, const T4 &, const T5 &)
+    //
+    // T1:
+    //   Type of the first named column
+    // T2:
+    //   Type of the second named column
+    // T3:
+    //   Type of the third named column
+    // T4:
+    //   Type of the fourth named column
+    // T5:
+    //   Type of the fifth named column
+    // F:
+    //   Type of the selecting functor
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // name1:
+    //   Name of the first data column
+    // name2:
+    //   Name of the second data column
+    // name3:
+    //   Name of the third data column
+    // name4:
+    //   Name of the fourth data column
+    // name5:
+    //   Name of the fifth data column
+    // sel_functor:
+    //   A reference to the selecting functor
+    //
+    template<typename T1, typename T2, typename T3, typename T4, typename T5,
+             typename F, typename ... Ts>
+    [[nodiscard]] DataFrame
+    get_data_by_sel(const char *name1,
+                    const char *name2,
+                    const char *name3,
+                    const char *name4,
+                    const char *name5,
+                    F &sel_functor) const;
+
+    // This is identical with above get_data_by_sel(), but:
+    //   1) The result is a view
+    //   2) Since the result is a view, you cannot call make_consistent() on
+    //      the result.
+    //
+    // NOTE: Views could not be const, becuase you can change original data
+    //       through views.
+    //
+    // T1:
+    //   Type of the first named column
+    // T2:
+    //   Type of the second named column
+    // T3:
+    //   Type of the third named column
+    // T4:
+    //   Type of the fourth named column
+    // T5:
+    //   Type of the fifth named column
+    // F:
+    //   Type of the selecting functor
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // name1:
+    //   Name of the first data column
+    // name2:
+    //   Name of the second data column
+    // name3:
+    //   Name of the third data column
+    // name4:
+    //   Name of the fourth data column
+    // name5:
+    //   Name of the fifth data column
+    // sel_functor:
+    //   A reference to the selecting functor
+    //
+    template<typename T1, typename T2, typename T3, typename T4, typename T5,
+             typename F, typename ... Ts>
+    [[nodiscard]] DataFramePtrView<IndexType>
+    get_view_by_sel(const char *name1,
+                    const char *name2,
+                    const char *name3,
+                    const char *name4,
+                    const char *name5,
+                    F &sel_functor);
+
     // It returns a DataFrame (including the index and data columns)
     // containing the data from uniform random selection.
     // random_policy determines the behavior of method.

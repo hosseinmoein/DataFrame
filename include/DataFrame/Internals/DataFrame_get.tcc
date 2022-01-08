@@ -195,9 +195,6 @@ get_row(size_type row_num, const std::vector<const char *> &col_names) const {
     return (ret_vec);
 }
 
-
-
-
 // ----------------------------------------------------------------------------
 
 template<typename I, typename  H>
@@ -317,8 +314,7 @@ template<typename ... Ts>
 DataFrame<I, H>
 DataFrame<I, H>::get_data_by_idx(const std::vector<IndexType> &values) const  {
 
-    const std::unordered_set<IndexType> val_table(values.begin(),
-                                                  values.end());
+    const std::unordered_set<IndexType> val_table(values.begin(), values.end());
     IndexVecType                        new_index;
     std::vector<size_type>              locations;
     const size_type                     values_s = values.size();
@@ -373,6 +369,7 @@ DataFrame<I, H>::get_view_by_idx (Index2D<IndexType> range)  {
         const size_type e_dist = std::distance(indices_.begin(),
                                                upper < indices_.end()
                                                    ? upper : indices_.end());
+        const SpinGuard guard(lock_);
 
         for (auto &iter : column_list_)  {
             view_setup_functor_<DataFrameView<IndexType>, Ts ...>   functor (
@@ -380,7 +377,6 @@ DataFrame<I, H>::get_view_by_idx (Index2D<IndexType> range)  {
                 b_dist,
                 e_dist,
                 dfv);
-            const SpinGuard                                        guard(lock_);
 
             data_[iter.second].change(functor);
         }
@@ -421,13 +417,14 @@ get_view_by_idx(const std::vector<IndexType> &values)  {
 
     dfv.indices_ = std::move(new_index);
 
+    const SpinGuard guard(lock_);
+
     for (auto col_citer : column_list_)  {
         sel_load_view_functor_<size_type, Ts ...>   functor (
             col_citer.first.c_str(),
             locations,
             idx_s,
             dfv);
-        const SpinGuard                             guard(lock_);
 
         data_[col_citer.second].change(functor);
     }

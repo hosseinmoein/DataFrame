@@ -603,6 +603,7 @@ operator() (const T &vec)  {
         else
             break;
     }
+
     df.load_column(name, std::move(new_col), nan_policy::dont_pad_with_nans);
     return;
 }

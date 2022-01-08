@@ -651,12 +651,10 @@ void DataFrame<I, H>::remove_data_by_idx (Index2D<IndexType> range)  {
         indices_.erase(lower, upper);
 
         remove_functor_<Ts ...> functor (b_dist, e_dist);
+        const SpinGuard         guard(lock_);
 
-        for (auto &iter : column_list_)  {
-            const SpinGuard guard(lock_);
-
+        for (auto &iter : column_list_)
             data_[iter.second].change(functor);
-        }
     }
 
     return;
@@ -685,12 +683,10 @@ void DataFrame<I, H>::remove_data_by_loc (Index2D<long> range)  {
         remove_functor_<Ts ...> functor (
             static_cast<size_type>(range.begin),
             static_cast<size_type>(range.end));
+        const SpinGuard         guard(lock_);
 
-        for (auto &iter : column_list_)  {
-            const SpinGuard guard(lock_);
-
+        for (auto &iter : column_list_)
             data_[iter.second].change(functor);
-        }
 
         return;
     }
@@ -722,12 +718,12 @@ void DataFrame<I, H>::remove_data_by_sel (const char *name, F &sel_functor)  {
         if (sel_functor (indices_[i], vec[i]))
             col_indices.push_back(i);
 
-    for (auto col_citer : column_list_)  {
-        sel_remove_functor_<Ts ...> functor (col_indices);
-        const SpinGuard             guard(lock_);
+    const sel_remove_functor_<Ts ...>   functor (col_indices);
+    SpinGuard                           guard (lock_);
 
+    for (auto col_citer : column_list_)
         data_[col_citer.second].change(functor);
-    }
+    guard.release();
 
     const size_type col_indices_s = col_indices.size();
     size_type       del_count = 0;
@@ -747,24 +743,28 @@ remove_data_by_sel (const char *name1, const char *name2, F &sel_functor)  {
 
     const ColumnVecType<T1> &vec1 = get_column<T1>(name1);
     const ColumnVecType<T2> &vec2 = get_column<T2>(name2);
+    const size_type         idx_s = indices_.size();
     const size_type         col_s1 = vec1.size();
     const size_type         col_s2 = vec2.size();
-    const size_type         col_s = std::max(col_s1, col_s2);
+    const size_type         min_col_s = std::min(col_s1, col_s2);
     std::vector<size_type>  col_indices;
 
-    col_indices.reserve(indices_.size() / 2);
-    for (size_type i = 0; i < col_s; ++i)
+    col_indices.reserve(idx_s / 2);
+    for (size_type i = 0; i < min_col_s; ++i)
+        if (sel_functor (indices_[i], vec1[i], vec2[i]))
+            col_indices.push_back(i);
+    for (size_type i = min_col_s; i < idx_s; ++i)
         if (sel_functor (indices_[i],
                          i < col_s1 ? vec1[i] : get_nan<T1>(),
                          i < col_s2 ? vec2[i] : get_nan<T2>()))
             col_indices.push_back(i);
 
-    for (auto col_citer : column_list_)  {
-        sel_remove_functor_<Ts ...> functor (col_indices);
-        const SpinGuard             guard(lock_);
+    const sel_remove_functor_<Ts ...>   functor (col_indices);
+    SpinGuard                           guard(lock_);
 
+    for (auto col_citer : column_list_)
         data_[col_citer.second].change(functor);
-    }
+    guard.release();
 
     const size_type col_indices_s = col_indices.size();
     size_type       del_count = 0;
@@ -788,26 +788,30 @@ remove_data_by_sel (const char *name1,
     const ColumnVecType<T1> &vec1 = get_column<T1>(name1);
     const ColumnVecType<T2> &vec2 = get_column<T2>(name2);
     const ColumnVecType<T3> &vec3 = get_column<T3>(name3);
+    const size_type         idx_s = indices_.size();
     const size_type         col_s1 = vec1.size();
     const size_type         col_s2 = vec2.size();
     const size_type         col_s3 = vec3.size();
-    const size_type         col_s = std::max(std::max(col_s1, col_s2), col_s3);
+    const size_type         min_col_s = std::min({ col_s1, col_s2, col_s3 });
     std::vector<size_type>  col_indices;
 
-    col_indices.reserve(indices_.size() / 2);
-    for (size_type i = 0; i < col_s; ++i)
+    col_indices.reserve(idx_s / 2);
+    for (size_type i = 0; i < min_col_s; ++i)
+        if (sel_functor (indices_[i], vec1[i], vec2[i], vec3[i]))
+            col_indices.push_back(i);
+    for (size_type i = min_col_s; i < idx_s; ++i)
         if (sel_functor (indices_[i],
                          i < col_s1 ? vec1[i] : get_nan<T1>(),
                          i < col_s2 ? vec2[i] : get_nan<T2>(),
                          i < col_s3 ? vec3[i] : get_nan<T3>()))
             col_indices.push_back(i);
 
-    for (auto col_citer : column_list_)  {
-        sel_remove_functor_<Ts ...> functor (col_indices);
-        const SpinGuard             guard(lock_);
+    const sel_remove_functor_<Ts ...>   functor (col_indices);
+    SpinGuard                           guard(lock_);
 
+    for (auto col_citer : column_list_)
         data_[col_citer.second].change(functor);
-    }
+    guard.release();
 
     const size_type col_indices_s = col_indices.size();
     size_type       del_count = 0;
@@ -833,17 +837,25 @@ remove_dups_common_(const DataFrame &s_df,
     count_vec   rows_to_del;
 
     rows_to_del.reserve(8);
-    for (const auto &citer : row_table)  {
-        if (citer.second.size() > 1)  {
-            if (rds == remove_dup_spec::keep_first)  {
+    if (rds == remove_dup_spec::keep_first)  {
+        for (const auto &citer : row_table)  {
+            if (citer.second.size() > 1)  {
                 for (size_type i = 1; i < citer.second.size(); ++i)
                     rows_to_del.push_back(citer.second[i]);
             }
-            else if (rds == remove_dup_spec::keep_last)  {
+        }
+    }
+    else if (rds == remove_dup_spec::keep_last)  {
+        for (const auto &citer : row_table)  {
+            if (citer.second.size() > 1)  {
                 for (size_type i = 0; i < citer.second.size() - 1; ++i)
                     rows_to_del.push_back(citer.second[i]);
             }
-            else  {  // remove_dup_spec::keep_none
+        }
+    }
+    else  {  // remove_dup_spec::keep_none
+        for (const auto &citer : row_table)  {
+            if (citer.second.size() > 1)  {
                 for (size_type i = 0; i < citer.second.size(); ++i)
                     rows_to_del.push_back(citer.second[i]);
             }

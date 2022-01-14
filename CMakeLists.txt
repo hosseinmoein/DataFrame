@@ -124,24 +124,19 @@ target_compile_definitions(${LIBRARY_TARGET_NAME}
         $<$<CXX_COMPILER_ID:MSVC>:_CRT_SECURE_NO_WARNINGS>
         $<$<CXX_COMPILER_ID:MSVC>:_USE_MATH_DEFINES>
 )
-if(BUILD_SHARED_LIBS)
-    target_compile_definitions(${LIBRARY_TARGET_NAME}
-        PRIVATE
-            HMDF_EXPORTS
-        PUBLIC
-            HMDF_SHARED
-    )
-endif()
+
+# Export of symbols: generate a header to properly define HMDF_API
+include(GenerateExportHeader)
+set(EXPORT_MACRO_FILE "${CMAKE_CURRENT_BINARY_DIR}/include/${PROJECT_NAME}/DataFrameExports.h")
+generate_export_header(${LIBRARY_TARGET_NAME}
+    EXPORT_MACRO_NAME HMDF_API
+    EXPORT_FILE_NAME ${EXPORT_MACRO_FILE}
+)
 
 set_target_properties(${LIBRARY_TARGET_NAME}
     PROPERTIES
         CXX_VISIBILITY_PRESET hidden
         VISIBILITY_INLINES_HIDDEN ON
-        # Set two minimum target properties for the library.
-        # See https://cmake.org/cmake/help/latest/command/set_target_properties.html
-        # Properties are: 1) Library version number 2) list of corresponding public
-        # headers
-        #
         VERSION ${${PROJECT_NAME}_VERSION}
 )
 
@@ -152,8 +147,11 @@ set_target_properties(${LIBRARY_TARGET_NAME}
 #         cmake-packages.7.html#creating-relocatable-packages
 #
 target_include_directories(${LIBRARY_TARGET_NAME}
-    PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-    "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_INCLUDEDIR}>")
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+        $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_INCLUDEDIR}>
+)
 
 # Specify installation targets, typology and destination folders.
 #
@@ -166,6 +164,10 @@ install(TARGETS ${LIBRARY_TARGET_NAME}
 
 install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include/${PROJECT_NAME}" # src
         DESTINATION "include"  # target directory
+        COMPONENT dev
+)
+install(FILES ${EXPORT_MACRO_FILE}
+        DESTINATION "include/${PROJECT_NAME}"
         COMPONENT dev
 )
 

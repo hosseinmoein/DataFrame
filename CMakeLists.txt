@@ -163,11 +163,11 @@ install(TARGETS ${LIBRARY_TARGET_NAME}
 )
 
 install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include/${PROJECT_NAME}" # src
-        DESTINATION "include"  # target directory
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}  # target directory
         COMPONENT dev
 )
 install(FILES ${EXPORT_MACRO_FILE}
-        DESTINATION "include/${PROJECT_NAME}"
+        DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}"
         COMPONENT dev
 )
 

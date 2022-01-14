@@ -36,18 +36,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iostream>
 #include <string.h>
 
-#if defined(_WIN32) || defined(_WIN64)
-#  if defined(_MSC_VER) && defined(HMDF_SHARED)
-#    ifdef LIBRARY_EXPORTS
-#      define LIBRARY_API __declspec(dllexport)
-#    else
-#      define LIBRARY_API __declspec(dllimport)
-#    endif // LIBRARY_EXPORTS
-#  else
-#    define LIBRARY_API
-#  endif // _MSC_VER
-#endif // _WIN32 || _WIN64
-
 // ----------------------------------------------------------------------------
 
 namespace hmdf
@@ -65,7 +53,7 @@ namespace hmdf
 //       OF THE PROGRAMMER TO TAKE CARE OF THAT.
 //
 
-class LIBRARY_API   VirtualString {
+class VirtualString {
 
 public:
 

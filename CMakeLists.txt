@@ -118,35 +118,32 @@ set(${LIBRARY_TARGET_NAME}_HDR
 
 # Build the library
 #
-if (UNIX)
-    add_library(${LIBRARY_TARGET_NAME} ${${LIBRARY_TARGET_NAME}_SRC})
-endif(UNIX)
-
-if (MSVC)
-    add_definitions(-D_CRT_SECURE_NO_WARNINGS)
-    add_definitions(-D_USE_MATH_DEFINES)
-    add_library(${LIBRARY_TARGET_NAME} ${${LIBRARY_TARGET_NAME}_SRC})
-
-    # If shared:
-        # At build time: LIBRARY_EXPORTS and HMDF_SHARED defined
-        # At consume time: HMDF_SHARED defined
-    # If static: no definition at build and consume time
-    #
-    add_definitions(-DLIBRARY_EXPORTS)
-    add_definitions(-DHMDF_SHARED)
-endif(MSVC)
-
-if (MINGW)
-    add_library(${LIBRARY_TARGET_NAME} ${${LIBRARY_TARGET_NAME}_SRC})
+add_library(${LIBRARY_TARGET_NAME} ${${LIBRARY_TARGET_NAME}_SRC})
+target_compile_definitions(${LIBRARY_TARGET_NAME}
+    PRIVATE
+        $<$<CXX_COMPILER_ID:MSVC>:_CRT_SECURE_NO_WARNINGS>
+        $<$<CXX_COMPILER_ID:MSVC>:_USE_MATH_DEFINES>
+)
+if(BUILD_SHARED_LIBS)
+    target_compile_definitions(${LIBRARY_TARGET_NAME}
+        PRIVATE
+            LIBRARY_EXPORTS
+        PUBLIC
+            HMDF_SHARED
+    )
 endif()
 
-# Set two minimum target properties for the library.
-# See https://cmake.org/cmake/help/latest/command/set_target_properties.html
-# Properties are: 1) Library version number 2) list of corresponding public
-# headers
-#
 set_target_properties(${LIBRARY_TARGET_NAME}
-                      PROPERTIES VERSION ${${PROJECT_NAME}_VERSION})
+    PROPERTIES
+        CXX_VISIBILITY_PRESET hidden
+        VISIBILITY_INLINES_HIDDEN ON
+        # Set two minimum target properties for the library.
+        # See https://cmake.org/cmake/help/latest/command/set_target_properties.html
+        # Properties are: 1) Library version number 2) list of corresponding public
+        # headers
+        #
+        VERSION ${${PROJECT_NAME}_VERSION}
+)
 
 # Specify include directories for both compilation and installation process.
 # The $<INSTALL_PREFIX> generator expression is useful to ensure to create

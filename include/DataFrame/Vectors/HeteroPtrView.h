@@ -34,12 +34,26 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <functional>
 #include <unordered_map>
 
+#ifdef HMDF_SHARED
+#  ifdef _WIN32
+#    ifdef LIBRARY_EXPORTS
+#      define LIBRARY_API __declspec(dllexport)
+#    else
+#      define LIBRARY_API __declspec(dllimport)
+#    endif // LIBRARY_EXPORTS
+#  else
+#    define LIBRARY_API __attribute__((visibility("default")))
+#  endif // _WIN32
+#else
+#  define LIBRARY_API
+#endif // HMDF_SHARED
+
 // ----------------------------------------------------------------------------
 
 namespace hmdf
 {
 
-struct LIBRARY_API  HeteroPtrView {
+struct LIBRARY_API HeteroPtrView {
 
     using size_type = size_t;
 

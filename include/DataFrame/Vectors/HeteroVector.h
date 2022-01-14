@@ -34,6 +34,20 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <unordered_map>
 
+#ifdef HMDF_SHARED
+#  ifdef _WIN32
+#    ifdef LIBRARY_EXPORTS
+#      define LIBRARY_API __declspec(dllexport)
+#    else
+#      define LIBRARY_API __declspec(dllimport)
+#    endif // LIBRARY_EXPORTS
+#  else
+#    define LIBRARY_API __attribute__((visibility("default")))
+#  endif // _WIN32
+#else
+#  define LIBRARY_API
+#endif // HMDF_SHARED
+
 // ----------------------------------------------------------------------------
 
 namespace hmdf
@@ -43,7 +57,7 @@ namespace hmdf
 // are partly inspired by Andy G's Blog at:
 // https://gieseanw.wordpress.com/2017/05/03/a-true-heterogeneous-container/
 //
-struct  HeteroVector  {
+struct LIBRARY_API HeteroVector  {
 
     using size_type = size_t;
 

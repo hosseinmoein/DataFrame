@@ -127,7 +127,7 @@ target_compile_definitions(${LIBRARY_TARGET_NAME}
 if(BUILD_SHARED_LIBS)
     target_compile_definitions(${LIBRARY_TARGET_NAME}
         PRIVATE
-            LIBRARY_EXPORTS
+            HMDF_EXPORTS
         PUBLIC
             HMDF_SHARED
     )

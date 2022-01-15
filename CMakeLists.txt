@@ -104,14 +104,9 @@ target_compile_definitions(${LIBRARY_TARGET_NAME}
         $<$<CXX_COMPILER_ID:MSVC>:_CRT_SECURE_NO_WARNINGS>
         $<$<CXX_COMPILER_ID:MSVC>:_USE_MATH_DEFINES>
 )
-
-# Export of symbols: generate a header to properly define HMDF_API
-include(GenerateExportHeader)
-set(EXPORT_MACRO_FILE "${CMAKE_CURRENT_BINARY_DIR}/include/${PROJECT_NAME}/DataFrameExports.h")
-generate_export_header(${LIBRARY_TARGET_NAME}
-    EXPORT_MACRO_NAME HMDF_API
-    EXPORT_FILE_NAME ${EXPORT_MACRO_FILE}
-)
+if(BUILD_SHARED_LIBS)
+    target_compile_definitions(${LIBRARY_TARGET_NAME} PUBLIC HMDF_SHARED)
+endif()
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
@@ -136,7 +131,6 @@ set_target_properties(${LIBRARY_TARGET_NAME}
 target_include_directories(${LIBRARY_TARGET_NAME}
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
         $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
@@ -151,10 +145,6 @@ install(TARGETS ${LIBRARY_TARGET_NAME}
 
 install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include/${PROJECT_NAME}" # src
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}  # target directory
-        COMPONENT dev
-)
-install(FILES ${EXPORT_MACRO_FILE}
-        DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}"
         COMPONENT dev
 )
 

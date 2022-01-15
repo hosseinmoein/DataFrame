@@ -31,11 +31,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
  #ifdef HMDF_SHARED
  #  ifdef _WIN32
- #    ifdef HMDF_EXPORTS
+ #    ifdef DataFrame_EXPORTS
  #      define HMDF_API __declspec(dllexport)
  #    else
  #      define HMDF_API __declspec(dllimport)
- #    endif // HMDF_EXPORTS
+ #    endif // DataFrame_EXPORTS
  #  else
  #    define HMDF_API __attribute__((visibility("default")))
  #  endif // _WIN32

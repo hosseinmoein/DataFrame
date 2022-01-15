@@ -26,15 +26,6 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY
     "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}")
 
-# To build shared libraries in Windows,
-# we set CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS to TRUE.
-# See https://cmake.org/cmake/help/v3.4/variable/
-#         CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS.html
-# See https://blog.kitware.com/
-#   create-dlls-on-windows-without-declspec-using-new-cmake-export-all-feature/
-#
-## set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
-
 # Disable C and C++ compiler extensions. C/CXX_EXTENSIONS are ON by default to
 # allow the compilers to use extended variants of the C/CXX language. However,
 # this could expose cross-platform bugs in user code or in the headers of

@@ -29,6 +29,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
 
+#include <DataFrame/DataFrameExports.h>
+
 #include <cstdio>
 #include <ctime>
 #include <functional>
@@ -40,23 +42,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #if defined(_WIN32) || defined(_WIN64)
 #  include <windows.h>
-#  if defined(_MSC_VER) && defined(HMDF_SHARED)
-#    ifdef LIBRARY_EXPORTS
-#      define LIBRARY_API __declspec(dllexport)
-#    else
-#      define LIBRARY_API __declspec(dllimport)
-#    endif // LIBRARY_EXPORTS
-#  else
-#    define LIBRARY_API
-#  endif // _MSC_VER
 #  ifdef min
 #    undef min
 #  endif // min
 #  ifdef max
 #    undef max
 #  endif // max
-#else
-#  define LIBRARY_API
 #endif // _WIN32 || _WIN64
 
 // ----------------------------------------------------------------------------
@@ -167,7 +158,7 @@ enum class DT_DATE_STYLE : unsigned char  {
 
 // ----------------------------------------------------------------------------
 
-class LIBRARY_API DateTime {
+class HMDF_API DateTime {
 
 public:
 

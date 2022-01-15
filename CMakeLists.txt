@@ -23,15 +23,6 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY
     "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}")
 
-# To build shared libraries in Windows,
-# we set CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS to TRUE.
-# See https://cmake.org/cmake/help/v3.4/variable/
-#         CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS.html
-# See https://blog.kitware.com/
-#   create-dlls-on-windows-without-declspec-using-new-cmake-export-all-feature/
-#
-## set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
-
 # Enable RPATH support for installed binaries and libraries
 #
 include(AddInstallRPATHSupport)
@@ -106,38 +97,28 @@ set(${LIBRARY_TARGET_NAME}_HDR
 
 # Build the library
 #
-if (UNIX)
-    add_library(${LIBRARY_TARGET_NAME} ${${LIBRARY_TARGET_NAME}_SRC})
-    target_compile_features(${LIBRARY_TARGET_NAME} PUBLIC cxx_std_17)
-endif(UNIX)
+add_library(${LIBRARY_TARGET_NAME} ${${LIBRARY_TARGET_NAME}_SRC})
+target_compile_features(${LIBRARY_TARGET_NAME} PUBLIC cxx_std_17)
+target_compile_definitions(${LIBRARY_TARGET_NAME}
+    PUBLIC
+        $<$<CXX_COMPILER_ID:MSVC>:_CRT_SECURE_NO_WARNINGS>
+        $<$<CXX_COMPILER_ID:MSVC>:_USE_MATH_DEFINES>
+)
 
-if (MSVC)
-    add_definitions(-D_CRT_SECURE_NO_WARNINGS)
-    add_definitions(-D_USE_MATH_DEFINES)
-    add_library(${LIBRARY_TARGET_NAME} ${${LIBRARY_TARGET_NAME}_SRC})
-    target_compile_features(${LIBRARY_TARGET_NAME} PUBLIC cxx_std_17)
+# Export of symbols: generate a header to properly define HMDF_API
+include(GenerateExportHeader)
+set(EXPORT_MACRO_FILE "${CMAKE_CURRENT_BINARY_DIR}/include/${PROJECT_NAME}/DataFrameExports.h")
+generate_export_header(${LIBRARY_TARGET_NAME}
+    EXPORT_MACRO_NAME HMDF_API
+    EXPORT_FILE_NAME ${EXPORT_MACRO_FILE}
+)
 
-    # If shared:
-        # At build time: LIBRARY_EXPORTS and HMDF_SHARED defined
-        # At consume time: HMDF_SHARED defined
-    # If static: no definition at build and consume time
-    #
-    add_definitions(-DLIBRARY_EXPORTS)
-    add_definitions(-DHMDF_SHARED)
-endif(MSVC)
-
-if (MINGW)
-    add_library(${LIBRARY_TARGET_NAME} ${${LIBRARY_TARGET_NAME}_SRC})
-    target_compile_features(${LIBRARY_TARGET_NAME} PUBLIC cxx_std_17)
-endif()
-
-# Set two minimum target properties for the library.
-# See https://cmake.org/cmake/help/latest/command/set_target_properties.html
-# Properties are: 1) Library version number 2) list of corresponding public
-# headers
-#
 set_target_properties(${LIBRARY_TARGET_NAME}
-                      PROPERTIES VERSION ${${PROJECT_NAME}_VERSION})
+    PROPERTIES
+        CXX_VISIBILITY_PRESET hidden
+        VISIBILITY_INLINES_HIDDEN ON
+        VERSION ${${PROJECT_NAME}_VERSION}
+)
 
 # Specify include directories for both compilation and installation process.
 # The $<INSTALL_PREFIX> generator expression is useful to ensure to create
@@ -146,8 +127,11 @@ set_target_properties(${LIBRARY_TARGET_NAME}
 #         cmake-packages.7.html#creating-relocatable-packages
 #
 target_include_directories(${LIBRARY_TARGET_NAME}
-    PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-    "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_INCLUDEDIR}>")
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+        $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_INCLUDEDIR}>
+)
 
 # Specify installation targets, typology and destination folders.
 #
@@ -159,7 +143,11 @@ install(TARGETS ${LIBRARY_TARGET_NAME}
 )
 
 install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include/${PROJECT_NAME}" # src
-        DESTINATION "include"  # target directory
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}  # target directory
+        COMPONENT dev
+)
+install(FILES ${EXPORT_MACRO_FILE}
+        DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}"
         COMPONENT dev
 )
 

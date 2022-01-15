@@ -217,20 +217,17 @@ if (ENABLE_TESTING)
 
     # Link the DataFrame library to the test binary
     #
-    target_link_libraries(dataframe_tester PRIVATE DataFrame)
-    target_link_libraries(dataframe_tester_2 PRIVATE DataFrame)
-    target_link_libraries(dataframe_tester_3 PRIVATE DataFrame)
-    target_link_libraries(hello_world PRIVATE DataFrame)
-    target_link_libraries(dataframe_performance PRIVATE DataFrame)
-    target_link_libraries(dataframe_performance_2 PRIVATE DataFrame)
-    target_link_libraries(vectors_tester PRIVATE DataFrame)
-    target_link_libraries(vector_ptr_view_tester PRIVATE DataFrame)
-    target_link_libraries(date_time_tester PRIVATE DataFrame)
-    target_link_libraries(gen_rand_tester PRIVATE DataFrame)
-    target_link_libraries(dataframe_thread_safety PRIVATE DataFrame)
-
-    target_link_libraries(dataframe_tester PRIVATE Threads::Threads)
-    target_link_libraries(dataframe_thread_safety PRIVATE Threads::Threads)
+    target_link_libraries(dataframe_tester PRIVATE ${LIBRARY_TARGET_NAME} Threads::Threads)
+    target_link_libraries(dataframe_tester_2 PRIVATE ${LIBRARY_TARGET_NAME})
+    target_link_libraries(dataframe_tester_3 PRIVATE ${LIBRARY_TARGET_NAME})
+    target_link_libraries(hello_world PRIVATE ${LIBRARY_TARGET_NAME})
+    target_link_libraries(dataframe_performance PRIVATE ${LIBRARY_TARGET_NAME})
+    target_link_libraries(dataframe_performance_2 PRIVATE ${LIBRARY_TARGET_NAME})
+    target_link_libraries(vectors_tester PRIVATE ${LIBRARY_TARGET_NAME})
+    target_link_libraries(vector_ptr_view_tester PRIVATE ${LIBRARY_TARGET_NAME})
+    target_link_libraries(date_time_tester PRIVATE ${LIBRARY_TARGET_NAME})
+    target_link_libraries(gen_rand_tester PRIVATE ${LIBRARY_TARGET_NAME})
+    target_link_libraries(dataframe_thread_safety PRIVATE ${LIBRARY_TARGET_NAME} Threads::Threads)
 
     # Enable ctest, testing so we can see if unit tests pass or fail in CI
     #

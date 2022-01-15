@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 
 #include <DataFrame/Vectors/VectorPtrView.h>
+#include <DataFrame/DataFrameExports.h>
 
 #include <functional>
 #include <unordered_map>
@@ -39,7 +40,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace hmdf
 {
 
-struct LIBRARY_API  HeteroPtrView {
+struct HMDF_API HeteroPtrView {
 
     using size_type = size_t;
 

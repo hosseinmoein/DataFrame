@@ -124,6 +124,13 @@ generate_export_header(${LIBRARY_TARGET_NAME}
     EXPORT_FILE_NAME ${EXPORT_MACRO_FILE}
 )
 
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+target_link_libraries(${LIBRARY_TARGET_NAME} INTERFACE Threads::Threads)
+if (UNIX AND NOT APPLE)
+    target_link_libraries(${LIBRARY_TARGET_NAME} INTERFACE rt)
+endif()
+
 set_target_properties(${LIBRARY_TARGET_NAME}
     PROPERTIES
         CXX_VISIBILITY_PRESET hidden
@@ -231,49 +238,20 @@ if (ENABLE_TESTING)
 
     # Link the DataFrame library to the test binary
     #
-    target_link_libraries(dataframe_tester DataFrame)
-    target_link_libraries(dataframe_tester_2 DataFrame)
-    target_link_libraries(dataframe_tester_3 DataFrame)
-    target_link_libraries(hello_world DataFrame)
-    target_link_libraries(dataframe_performance DataFrame)
-    target_link_libraries(dataframe_performance_2 DataFrame)
-    target_link_libraries(vectors_tester DataFrame)
-    target_link_libraries(vector_ptr_view_tester DataFrame)
-    target_link_libraries(date_time_tester DataFrame)
-    target_link_libraries(gen_rand_tester DataFrame)
-    target_link_libraries(dataframe_thread_safety DataFrame)
+    target_link_libraries(dataframe_tester PRIVATE DataFrame)
+    target_link_libraries(dataframe_tester_2 PRIVATE DataFrame)
+    target_link_libraries(dataframe_tester_3 PRIVATE DataFrame)
+    target_link_libraries(hello_world PRIVATE DataFrame)
+    target_link_libraries(dataframe_performance PRIVATE DataFrame)
+    target_link_libraries(dataframe_performance_2 PRIVATE DataFrame)
+    target_link_libraries(vectors_tester PRIVATE DataFrame)
+    target_link_libraries(vector_ptr_view_tester PRIVATE DataFrame)
+    target_link_libraries(date_time_tester PRIVATE DataFrame)
+    target_link_libraries(gen_rand_tester PRIVATE DataFrame)
+    target_link_libraries(dataframe_thread_safety PRIVATE DataFrame)
 
-    if (UNIX)
-        # Find pthreads library
-        #
-        set(THREADS_PREFER_PTHREAD_FLAG ON)
-        find_package(Threads REQUIRED)
-        target_link_libraries(dataframe_tester Threads::Threads)
-        target_link_libraries(dataframe_tester_2 Threads::Threads)
-        target_link_libraries(dataframe_tester_3 Threads::Threads)
-        target_link_libraries(hello_world Threads::Threads)
-        target_link_libraries(dataframe_performance Threads::Threads)
-        target_link_libraries(dataframe_performance_2 Threads::Threads)
-        target_link_libraries(vectors_tester Threads::Threads)
-        target_link_libraries(vector_ptr_view_tester Threads::Threads)
-        target_link_libraries(date_time_tester Threads::Threads)
-        target_link_libraries(gen_rand_tester Threads::Threads)
-        target_link_libraries(dataframe_thread_safety Threads::Threads)
-    endif (UNIX)
-
-    if (UNIX AND NOT APPLE)
-        target_link_libraries(dataframe_tester rt)
-        target_link_libraries(dataframe_tester_2 rt)
-        target_link_libraries(dataframe_tester_3 rt)
-        target_link_libraries(hello_world rt)
-        target_link_libraries(dataframe_performance rt)
-        target_link_libraries(dataframe_performance_2 rt)
-        target_link_libraries(vectors_tester rt)
-        target_link_libraries(vector_ptr_view_tester rt)
-        target_link_libraries(date_time_tester rt)
-        target_link_libraries(gen_rand_tester rt)
-        target_link_libraries(dataframe_thread_safety rt)
-    endif()
+    target_link_libraries(dataframe_tester PRIVATE Threads::Threads)
+    target_link_libraries(dataframe_thread_safety PRIVATE Threads::Threads)
 
     # Enable ctest, testing so we can see if unit tests pass or fail in CI
     #

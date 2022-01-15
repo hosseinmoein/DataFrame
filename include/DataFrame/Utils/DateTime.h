@@ -31,24 +31,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <DataFrame/DataFrameExports.h>
 
-#include <cstdio>
-#include <ctime>
-#include <functional>
 #include <limits>
-#include <stdexcept>
 #include <string>
-#include <sys/timeb.h>
 #include <time.h>
-
-#if defined(_WIN32) || defined(_WIN64)
-#  include <windows.h>
-#  ifdef min
-#    undef min
-#  endif // min
-#  ifdef max
-#    undef max
-#  endif // max
-#endif // _WIN32 || _WIN64
 
 // ----------------------------------------------------------------------------
 

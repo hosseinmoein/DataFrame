@@ -30,7 +30,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/Utils/DateTime.h>
 #include <DataFrame/Utils/FixedSizeString.h>
 
-#ifdef _MSC_VER
+#include <cctype>
+#include <cstdio>
+#include <cstring>
+#include <stdexcept>
+
+#ifdef _WIN32
+#  define WIN32_LEAN_AND_MEAN
+#  include <windows.h>
 #  ifdef _MSC_EXTENSIONS
 #    define DELTA_EPOCH_IN_MICROSECS  11644473600000000Ui64
 #  else
@@ -38,7 +45,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #  endif // _MSC_EXTENSIONS
 #else
 #  include <sys/time.h>
-#endif // _MSC_VER
+#endif // _WIN32
 
 // ----------------------------------------------------------------------------
 
@@ -47,7 +54,7 @@ namespace hmdf
 
 DateTime::DateTime (DT_TIME_ZONE tz) : time_zone_(tz)  {
 
-#ifdef _MSC_VER
+#ifdef _WIN32
     FILETIME            ft;
     unsigned __int64    tmpres = 0;
 
@@ -74,7 +81,7 @@ DateTime::DateTime (DT_TIME_ZONE tz) : time_zone_(tz)  {
 
     ::gettimeofday(&tv, nullptr);
     set_time(tv.tv_sec, tv.tv_usec * 1000);
-#endif // _MSC_VER
+#endif // _WIN32
 }
 
 // ----------------------------------------------------------------------------
@@ -902,14 +909,14 @@ std::string DateTime::string_format (DT_FORMAT format) const  {
 inline void DateTime::change_env_timezone_(DT_TIME_ZONE time_zone)  {
 
     if (time_zone != DT_TIME_ZONE::LOCAL)  {
-#ifdef _MSC_VER
+#ifdef _WIN32
         // SetEnvironmentVariable (L"TZ", TIMEZONES_ [time_zone]);
         _putenv (TIMEZONES_[static_cast<int>(time_zone)]);
         _tzset ();
 #else
         ::setenv ("TZ", TIMEZONES_[static_cast<int>(time_zone)], 1);
         ::tzset ();
-#endif // _MSC_VER
+#endif // _WIN32
     }
 }
 
@@ -918,14 +925,14 @@ inline void DateTime::change_env_timezone_(DT_TIME_ZONE time_zone)  {
 inline void DateTime::reset_env_timezone_(DT_TIME_ZONE time_zone)  {
 
     if (time_zone != DT_TIME_ZONE::LOCAL)  {
-#ifdef _MSC_VER
+#ifdef _WIN32
         // SetEnvironmentVariable (L"TZ", nullptr);
         _putenv ("TZ=");
         _tzset ();
 #else
         ::unsetenv ("TZ");
         ::tzset ();
-#endif // _MSC_VER
+#endif // _WIN32
     }
 }
 
@@ -958,11 +965,11 @@ DateTime::breaktime_ (EpochType the_time, NanosecondType nanosec) noexcept  {
 
     struct tm   ltime;
 
-#ifdef _MSC_VER
+#ifdef _WIN32
     localtime_s (&ltime, &the_time);
 #else
     localtime_r (&the_time, &ltime);
-#endif // _MSC_VER
+#endif // _WIN32
 
     reset_env_timezone_(time_zone_);
 

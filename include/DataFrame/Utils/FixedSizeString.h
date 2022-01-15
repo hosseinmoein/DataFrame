@@ -31,10 +31,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <cstdarg>
 #include <cstdio>
-#include <cstdlib>
+#include <cstring>
 #include <functional>
-#include <iostream>
-#include <string.h>
 
 // ----------------------------------------------------------------------------
 

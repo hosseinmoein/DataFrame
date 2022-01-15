@@ -27,21 +27,12 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#pragma once
+
 #include <algorithm>
 #include <atomic>
 #include <cassert>
 #include <thread>
-
-#pragma once
-
-#if defined(_WIN32) || defined(_WIN64)
-#  ifdef min
-#    undef min
-#  endif // min
-#  ifdef max
-#    undef max
-#  endif // max
-#endif // _WIN32 || _WIN64
 
 // ----------------------------------------------------------------------------
 

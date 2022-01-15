@@ -31,26 +31,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <DataFrame/Vectors/HeteroVector.h>
 
-#include <cmath>
 #include <complex>
 #include <limits>
 #include <stdexcept>
 #include <tuple>
-#include <type_traits>
+#include <vector>
 
 // ----------------------------------------------------------------------------
 
 namespace hmdf
 {
-
-#if defined(_WIN32) || defined(_WIN64)
-#  ifdef min
-#    undef min
-#  endif // min
-#  ifdef max
-#    undef max
-#  endif // max
-#endif // _WIN32 || _WIN64
 
 // ----------------------------------------------------------------------------
 

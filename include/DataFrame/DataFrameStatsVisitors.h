@@ -36,6 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/Utils/Utils.h>
 
 #include <algorithm>
+#include <array>
 #include <cassert>
 
 #include <cmath>
@@ -47,9 +48,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <functional>
 #include <future>
 #include <iterator>
+#include <limits>
 #include <map>
 #include <numeric>
+#include <type_traits>
+#include <unordered_map>
 #include <utility>
+#include <vector>
 
 // ----------------------------------------------------------------------------
 

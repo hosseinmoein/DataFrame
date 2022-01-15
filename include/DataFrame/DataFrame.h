@@ -38,10 +38,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <functional>
 #include <future>
-#include <iostream>
-#include <map>
 #include <tuple>
+#include <type_traits>
 #include <typeindex>
+#include <unordered_map>
+#include <utility>
+#include <vector>
 
 // ----------------------------------------------------------------------------
 

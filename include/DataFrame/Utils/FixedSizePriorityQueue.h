@@ -33,6 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <array>
 #include <functional>
 #include <iterator>
+#include <utility>
 #include <vector>
 
 // ----------------------------------------------------------------------------

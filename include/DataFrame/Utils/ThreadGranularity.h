@@ -35,23 +35,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 
 #if defined(_WIN32) || defined(_WIN64)
-#  if defined(_MSC_VER) && defined(HMDF_SHARED)
-#    ifdef LIBRARY_EXPORTS
-#      define LIBRARY_API __declspec(dllexport)
-#    else
-#      define LIBRARY_API __declspec(dllimport)
-#    endif // LIBRARY_EXPORTS
-#  else
-#    define LIBRARY_API
-#  endif // _MSC_VER
 #  ifdef min
 #    undef min
 #  endif // min
 #  ifdef max
 #    undef max
 #  endif // max
-#else
-#  define LIBRARY_API
 #endif // _WIN32 || _WIN64
 
 // ----------------------------------------------------------------------------
@@ -59,7 +48,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace hmdf
 {
 
-struct LIBRARY_API ThreadGranularity {
+struct ThreadGranularity {
 
     static inline void
     set_thread_level(unsigned int n)  { num_of_threads_ = n; }

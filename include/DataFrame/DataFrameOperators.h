@@ -40,15 +40,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace hmdf
 {
 
-#ifdef _MSC_VER
-#  ifdef min
-#    undef min
-#  endif // min
-#  ifdef max
-#    undef max
-#  endif // max
-#endif // _MSC_VER
-
 // Both lhs and rhs must be already sorted by index, otherwise the result
 // is nonsensical.
 //

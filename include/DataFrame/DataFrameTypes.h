@@ -42,15 +42,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace hmdf
 {
 
-#if defined(_WIN32) || defined(_WIN64)
-#  ifdef min
-#    undef min
-#  endif // min
-#  ifdef max
-#    undef max
-#  endif // max
-#endif // _WIN32 || _WIN64
-
 // ----------------------------------------------------------------------------
 
 // Generic DataFrame error

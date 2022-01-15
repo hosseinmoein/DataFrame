@@ -76,14 +76,18 @@ private:
         std::vector<size_type>  assignments(col_size, 0);
 
         for (size_type iter = 0; iter < iter_num_; ++iter) {
+            result_type             new_means { value_type() };
+            std::array<double, K>   counts { 0.0 };
+
             // Find assignments.
             for (size_type point = 0; point < col_size; ++point) {
-                double      best_distance = std::numeric_limits<double>::max();
-                size_type   best_cluster = 0;
+                double              best_distance =
+                    std::numeric_limits<double>::max();
+                size_type           best_cluster = 0;
+                const value_type    &value = *(column_begin + point);
 
                 for (size_type cluster = 0; cluster < K; ++cluster) {
-                    const double    distance =
-                        dfunc_(*(column_begin + point), result_[cluster]);
+                    const double    distance = dfunc_(value, result_[cluster]);
 
                     if (distance < best_distance) {
                         best_distance = distance;
@@ -91,32 +95,29 @@ private:
                     }
                 }
                 assignments[point] = best_cluster;
-            }
 
-            // Sum up and count points for each cluster.
-            result_type             new_means { value_type() };
-            std::array<double, K>   counts { 0.0 };
-
-            for (size_type point = 0; point < col_size; ++point) {
+                // Sum up and count points for each cluster.
+                //
                 const size_type cluster = assignments[point];
 
-                new_means[cluster] =
-                    new_means[cluster] + *(column_begin + point);
+                new_means[cluster] = new_means[cluster] + value;
                 counts[cluster] += 1.0;
             }
 
             bool    done = true;
 
             // Divide sums by counts to get new centroids.
+            //
             for (size_type cluster = 0; cluster < K; ++cluster) {
                 // Turn 0/0 into 0/1 to avoid zero division.
                 const double        count =
                     std::max<double>(1.0, counts[cluster]);
                 const value_type    value = new_means[cluster] / count;
+                value_type          &result = result_[cluster];
 
-                if (dfunc_(value, result_[cluster]) > 0.0000001)  {
+                if (dfunc_(value, result) > 0.0000001)  {
                     done = false;
-                    result_[cluster] = value;
+                    result = value;
                 }
             }
 
@@ -154,19 +155,19 @@ public:
         }
 
         for (size_type j = 0; j < col_s; ++j)  {
-            double      min_dist = std::numeric_limits<double>::max();
-            size_type   min_idx;
+            double              min_dist = std::numeric_limits<double>::max();
+            size_type           min_idx;
+            const value_type    &value = *(column_begin + j);
 
             for (size_type i = 0; i < K; ++i)  {
-                const double    dist = dfunc_(*(column_begin + j), result_[i]);
+                const double    dist = dfunc_(value, result_[i]);
 
                 if (dist < min_dist)  {
                     min_dist = dist;
                     min_idx = i;
                 }
             }
-            clusters[min_idx].push_back(
-                const_cast<value_type *>(&*(column_begin + j)));
+            clusters[min_idx].push_back(const_cast<value_type *>(&value));
         }
 
         return (clusters);
@@ -213,21 +214,23 @@ private:
     get_similarity_(const H &column_begin, size_type csize)  {
 
         std::vector<double> simil((csize * (csize + 1)) / 2, 0.0);
-        double              min_val = std::numeric_limits<double>::max();
+        double              min_dist = std::numeric_limits<double>::max();
 
         // Compute similarity between distinct data points i and j
-        for (size_type i = 0; i < csize - 1; ++i)
-            for (size_type j = i + 1; j < csize; ++j)  {
-                const double    val =
-                    -dfunc_(*(column_begin + i), *(column_begin + j));
+        for (size_type i = 0; i < csize - 1; ++i)  {
+            const value_type    &i_val = *(column_begin + i);
 
-                simil[(i * csize) + j - ((i * (i + 1)) >> 1)] = val;
-                if (val < min_val)  min_val = val;
+            for (size_type j = i + 1; j < csize; ++j)  {
+                const double    dist = -dfunc_(i_val, *(column_begin + j));
+
+                simil[(i * csize) + j - ((i * (i + 1)) >> 1)] = dist;
+                if (dist < min_dist)  min_dist = dist;
             }
+        }
 
         // Assign min to diagonals
         for (size_type i = 0; i < csize; ++i)
-            simil[(i * csize) + i - ((i * (i + 1)) >> 1)] = min_val;
+            simil[(i * csize) + i - ((i * (i + 1)) >> 1)] = min_dist;
 
         return (simil);
     }
@@ -247,21 +250,15 @@ private:
                 for (size_type j = 0; j < csize; ++j)  {
                     double  max_diff = -std::numeric_limits<double>::max();
 
-                    for (size_type jj = 0; jj < j; ++jj)  {
-                        const double    value =
-                            simil[(i * csize) + jj - ((i * (i + 1)) >> 1)] +
-                            avail[jj * csize + i];
+                    for (size_type jj = 0; jj < csize; ++jj)  {
+                        if (jj ^ j)   {
+                            const double    value =
+                                simil[(i * csize) + jj - ((i * (i + 1)) >> 1)] +
+                                avail[jj * csize + i];
 
-                        if (value > max_diff)
-                            max_diff = value;
-                    }
-                    for (size_type jj = j + 1; jj < csize; ++jj)  {
-                        const double    value =
-                            simil[(i * csize) + jj - ((i * (i + 1)) >> 1)] +
-                            avail[jj * csize + i];
-
-                        if (value > max_diff)
-                            max_diff = value;
+                            if (value > max_diff)
+                                max_diff = value;
+                        }
                     }
 
                     respon[j * csize + i] =
@@ -273,22 +270,22 @@ private:
             }
 
             // Update availability
+            // Do diagonals first
+            for (size_type i = 0; i < csize; ++i)  {
+                const size_type s1 = i * csize;
+                double          sum = 0.0;
+
+                for (size_type ii = 0; ii < csize; ++ii)
+                    if (ii ^ i)
+                        sum += std::max(0.0, respon[s1 + ii]);
+
+                avail[s1 + i] =
+                    (1.0 - dfactor_) * sum + dfactor_ * avail[s1 + i];
+            }
             for (size_type i = 0; i < csize; ++i)  {
                 for (size_type j = 0; j < csize; ++j)  {
-                    const size_type s1 = j * csize;
-
-                    if (i == j)  {
-                        double  sum = 0.0;
-
-                        for (size_type ii = 0; ii < i; ++ii)
-                            sum += std::max(0.0, respon[s1 + ii]);
-                        for(size_type ii = i + 1; ii < csize; ++ii)
-                            sum += std::max(0.0, respon[s1 + ii]);
-
-                        avail[s1 + i] =
-                            (1.0 - dfactor_) * sum + dfactor_ * avail[s1 + i];
-                    }
-                    else  {
+                    if (i ^ j)  {  // Not equal
+                        const size_type s1 = j * csize;
                         double          sum = 0.0;
                         const size_type max_i_j = std::max(i, j);
                         const size_type min_i_j = std::min(i, j);
@@ -354,20 +351,20 @@ public:
                 clusters[i].reserve(col_s / centers_size);
 
             for (size_type j = 0; j < col_s; ++j)  {
-                double      min_dist = std::numeric_limits<double>::max();
-                size_type   min_idx;
+                double              min_dist =
+                    std::numeric_limits<double>::max();
+                size_type           min_idx;
+                const value_type    &j_val = *(column_begin + j);
 
                 for (size_type i = 0; i < centers_size; ++i)  {
-                    const double    dist =
-                        dfunc_(*(column_begin + j), result_[i]);
+                    const double    dist = dfunc_(j_val, result_[i]);
 
                     if (dist < min_dist)  {
                         min_dist = dist;
                         min_idx = i;
                     }
                 }
-                clusters[min_idx].push_back(
-                    const_cast<value_type *>(&*(column_begin + j)));
+                clusters[min_idx].push_back(const_cast<value_type *>(&j_val));
             }
         }
 

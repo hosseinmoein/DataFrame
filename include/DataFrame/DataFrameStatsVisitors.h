@@ -1018,7 +1018,6 @@ public:
         GET_COL_SIZE
 
         result_.reserve(col_s);
-
         for (size_type i = 0; i < roll_count_ - 1 && i < col_s; ++i)
             result_.push_back(std::numeric_limits<f_result_type>::quiet_NaN());
         for (size_type i = 0; i < col_s; ++i)  {
@@ -1076,12 +1075,8 @@ public:
 
         GET_COL_SIZE
 
-        for (size_type i = 0; i < col_s; ++i)  {
-            const size_type idx = i * period_;
-
-            if (idx < col_s)  visitor_(idx_begin[idx], column_begin[idx]);
-            else  break;
-        }
+        for (size_type i = 0; i < col_s; i += period_)
+            visitor_(idx_begin[i], column_begin[i]);
     }
 
     inline void pre ()  { visitor_.pre(); }
@@ -1131,7 +1126,6 @@ public:
 
         for (std::size_t i = 0; i < rc - 1 && i < col_s; ++i)
             result_.push_back(std::numeric_limits<f_result_type>::quiet_NaN());
-
         for (std::size_t i = 0; i < col_s; ++i, rc += increment_count_)  {
             std::size_t r = 0;
 
@@ -1800,7 +1794,6 @@ struct FactorizeVisitor  {
         result_type result;
 
         result.reserve(std::distance(column_begin, column_end));
-
         for (auto citer = column_begin; citer < column_end; ++citer)
             result.push_back(ffunc_(*citer));
 
@@ -2378,20 +2371,22 @@ private:
 
         GET_COL_SIZE
         MeanVisitor<T, I>   mean_visitor(skip_nan_);
+        index_type          &idx_value = *idx_begin;
 
         mean_visitor.pre();
         for (std::size_t i = 0; i < col_s; ++i)
-            mean_visitor(*(idx_begin + i), *(column_begin + i));
+            mean_visitor(idx_value, *(column_begin + i));
         mean_visitor.post();
 
         MeanVisitor<T, I>   mean_mean_visitor(skip_nan_);
 
         mean_mean_visitor.pre();
         for (std::size_t i = 0; i < col_s; ++i)  {
-            if (skip_nan_ && is_nan__(*(column_begin + i)))  continue;
-            mean_mean_visitor(*(idx_begin + i),
-                              std::fabs(*(column_begin + i) -
-                                        mean_visitor.get_result()));
+            const value_type    value = *(column_begin + i);
+
+            if (skip_nan_ && is_nan__(value))  continue;
+            mean_mean_visitor(idx_value,
+                              std::fabs(value - mean_visitor.get_result()));
         }
         mean_mean_visitor.post();
 
@@ -2413,13 +2408,15 @@ private:
 
         GET_COL_SIZE
         MeanVisitor<T, I>   mean_median_visitor(skip_nan_);
+        index_type          &idx_value = *idx_begin;
 
         mean_median_visitor.pre();
         for (std::size_t i = 0; i < col_s; ++i)  {
-            if (skip_nan_ && is_nan__(*(column_begin + i)))  continue;
-            mean_median_visitor(
-                *(idx_begin + i),
-                std::fabs(*(column_begin + i) - median_visitor.get_result()));
+            const value_type    value = *(column_begin + i);
+
+            if (skip_nan_ && is_nan__(value))  continue;
+            mean_median_visitor(idx_value,
+                                std::fabs(value - median_visitor.get_result()));
         }
         mean_median_visitor.post();
 
@@ -2434,11 +2431,12 @@ private:
                                      const H &column_end)  {
 
         MeanVisitor<T, I>   mean_visitor(skip_nan_);
+        index_type          &idx_value = *idx_begin;
         GET_COL_SIZE
 
         mean_visitor.pre();
         for (std::size_t i = 0; i < col_s; ++i)
-            mean_visitor(*(idx_begin + i), *(column_begin + i));
+            mean_visitor(idx_value, *(column_begin + i));
         mean_visitor.post();
 
         MedianVisitor<T, I> median_mean_visitor;
@@ -2569,7 +2567,7 @@ struct DiffVisitor  {
                 const value_type    val = *i - *j;
 
                 result.push_back(val);
-                if (val == 0)  there_is_zero = true;
+                there_is_zero = val == 0;
             }
         }
         else {
@@ -2582,7 +2580,7 @@ struct DiffVisitor  {
                 const value_type    val = *i - *j;
 
                 result.push_back(val);
-                if (val == 0)  there_is_zero = true;
+                there_is_zero = val == 0;
             }
             if (i == column_begin)  {
                 if (! (skip_nan_ && (is_nan__(*i) || is_nan__(*j))))  {
@@ -2649,12 +2647,18 @@ struct ZScoreVisitor {
         StdVisitor<T, I>    svisit;
         GET_COL_SIZE
 
+        // None of these visitors look at the index value
+        //
+        index_type  &idx_value = *idx_begin;
+
         mvisit.pre();
         svisit.pre();
         for (size_type i = 0; i < col_s; ++i)  {
-            if (! skip_nan_ || ! is_nan__(*(column_begin + i)))  {
-                mvisit(*(idx_begin + i), *(column_begin + i));
-                svisit(*(idx_begin + i), *(column_begin + i));
+            const value_type    value = *(column_begin + i);
+
+            if (! skip_nan_ || ! is_nan__(value))  {
+                mvisit(idx_value, value);
+                svisit(idx_value, value);
             }
         }
         mvisit.post();
@@ -2709,19 +2713,27 @@ struct SampleZScoreVisitor {
         const size_type     s_col_s = std::distance(sample_begin, sample_end);
         const size_type     max_s = std::max(p_col_s, s_col_s);
 
+        // None of these visitors look at the index value
+        //
+        index_type  &idx_value = *idx_begin;
+
         p_mvisit.pre();
         p_svisit.pre();
         s_mvisit.pre();
         for (size_type i = 0; i < max_s; ++i)  {
             if (i < p_col_s)  {
-                if (! skip_nan_ || ! is_nan__(*(population_begin + i)))  {
-                    p_mvisit(*(idx_begin + i), *(population_begin + i));
-                    p_svisit(*(idx_begin + i), *(population_begin + i));
+                const value_type    value = *(population_begin + i);
+
+                if (! skip_nan_ || ! is_nan__(value))  {
+                    p_mvisit(idx_value, value);
+                    p_svisit(idx_value, value);
                 }
             }
             if (i < s_col_s)  {
-                if (! skip_nan_ || ! is_nan__(*(sample_begin + i)))  {
-                    s_mvisit(*(idx_begin + i), *(sample_begin + i));
+                const value_type    value = *(sample_begin + i);
+
+                if (! skip_nan_ || ! is_nan__(value))  {
+                    s_mvisit(idx_value, value);
                 }
             }
         }
@@ -3502,8 +3514,11 @@ private:
 
         for ( ; size_type(k) < col_s; ++k)  {
             looped = true;
-            if (*(x_begin + k) > cutoff)  break;
-            if (*(x_begin + k) == *(x_begin + last_fit_idx))  {
+
+            const value_type    xvalue = *(x_begin + k);
+
+            if (xvalue > cutoff)  break;
+            if (xvalue == *(x_begin + last_fit_idx))  {
                 // if tied with previous x-value, just use the already fitted
                 // y, and update the last-fit counter.
                 //
@@ -3546,10 +3561,12 @@ private:
         const value_type    last_fit_yval = *(y_fits_begin + last_fit_idx);
         const value_type    curr_idx_yval = *(y_fits_begin + curr_idx);
 
-        for (long i = last_fit_idx + 1; i < curr_idx; ++i)
+        for (long i = last_fit_idx + 1; i < curr_idx; ++i)  {
+            const value_type    avalue = auxiliary_vec_[i];
+
             *(y_fits_begin + i) =
-                auxiliary_vec_[i] * curr_idx_yval +
-                (one_ - auxiliary_vec_[i]) * last_fit_yval;
+                avalue * curr_idx_yval + (one_ - avalue) * last_fit_yval;
+        }
     }
 
     // Calculate smoothed/fitted y-value by weighted regression.

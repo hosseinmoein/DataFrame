@@ -1247,6 +1247,7 @@ public:
                 rd.id = range;
                 rd.begin = ch_size * i;
                 rd.end = ch_size * i + ch_size;
+
                 mv.pre();
                 sv.pre();
                 mv(idx_begin, idx_end,
@@ -1255,6 +1256,7 @@ public:
                    column_begin + rd.begin, column_begin + rd.end);
                 mv.post();
                 sv.post();
+
                 rd.mean = mv.get_result();
                 rd.st_dev = sv.get_result();
                 buckets.push_back(rd);
@@ -1404,7 +1406,7 @@ struct MassIndexVisitor {
         }
 
         for (size_type i = 0; i < col_s; ++i)
-            result[i] = result[i] / fast_roller.get_result()[i];
+            result[i] /= fast_roller.get_result()[i];
 
         srs_t   slow_roller(std::move(SumVisitor<T, I>()), slow_);
 
@@ -1532,10 +1534,11 @@ struct  RollingMidValueVisitor  {
 
             if (limit <= col_s)  {
                 for (size_type j = i; j < limit; ++j)  {
-                    if (*(low_begin + j) < min_v)
-                        min_v = *(low_begin + j);
-                    if (*(high_begin + j) > max_v)
-                        max_v = *(high_begin + j);
+                    const value_type    low = *(low_begin + j);
+                    const value_type    high = *(high_begin + j);
+
+                    if (low < min_v)  min_v = low;
+                    if (high > max_v)  max_v = high;
                 }
                 result.push_back((min_v + max_v) * p5);
                 if (limit < col_s)  {
@@ -1590,10 +1593,12 @@ struct  DrawdownVisitor  {
         pct_drawdown_.reserve(col_s);
         log_drawdown_.reserve(col_s);
         for (size_type i = 0; i < col_s; ++i)  {
-            drawdown_.push_back(cm_result[i] - *(column_begin + i));
-            pct_drawdown_.push_back(one - *(column_begin + i) / cm_result[i]);
-            log_drawdown_.push_back(
-                std::log(cm_result[i] / *(column_begin + i)));
+            const value_type    col_val = *(column_begin + i);
+            const value_type    cm_val = cm_result[i];
+
+            drawdown_.push_back(cm_val - col_val);
+            pct_drawdown_.push_back(one - col_val / cm_val);
+            log_drawdown_.push_back(std::log(cm_val / col_val));
         }
     }
 
@@ -2185,10 +2190,11 @@ struct PercentPriceOSCIVisitor {
 
         result_type result = std::move(slow_roller.get_result());
 
-        for (size_type i = 0; i < col_s; ++i)
-            result[i] =
-                (T(100) * (fast_roller.get_result()[i] - result[i])) /
-                result[i];
+        for (size_type i = 0; i < col_s; ++i)  {
+            const value_type    r = result[i];
+
+            result[i] = (T(100) * (fast_roller.get_result()[i] - r)) / r;
+        }
 
         erm_t   signal_roller (exponential_decay_spec::span, signal_);
 
@@ -2263,11 +2269,13 @@ struct  SlopeVisitor  {
         constexpr value_type    pi_180 = T(180) / T(M_PI);
 
         for (size_type i = 0; i < col_s; ++i)  {
-            result[i] /= T(periods_);
+            value_type  &r = result[i];
+
+            r /= T(periods_);
             if (as_angle_)  {
-                result[i] = std::atan(result[i]);
+                r = std::atan(r);
                 if (in_degrees_)
-                    result[i] *= pi_180;
+                    r *= pi_180;
             }
         }
         result_.swap(result);
@@ -2600,27 +2608,29 @@ struct  ParabolicSARVisitor  {
 
         accel_fact[0] = accel_fact[1] = current_af;
         for (size_type i = 2; i < col_s; ++i)  {
-            bool    reverse { false };
+            bool                reverse { false };
+            const value_type    low { *(low_begin + i) };
+            const value_type    high { *(high_begin + i) };
 
             accel_fact[i] = current_af;
             if (bullish)  {
                 sar[i] = sar[i - 1] + current_af * (high_point - sar[i - 1]);
-                if (*(low_begin + i) < sar[i])  {
+                if (low < sar[i])  {
                     bullish = false;
                     reverse = true;
                     current_af = af_;
                     sar[i] = high_point;
-                    low_point = *(low_begin + i);
+                    low_point = low;
                 }
             }
             else  {
                 sar[i] = sar[i - 1] + current_af * (low_point - sar[i - 1]);
-                if (*(high_begin + i) > sar[i])  {
+                if (high > sar[i])  {
                     bullish = true;
                     reverse = true;
                     current_af = af_;
                     sar[i] = low_point;
-                    high_point = *(high_begin + i);
+                    high_point = high;
                 }
             }
 
@@ -2628,8 +2638,8 @@ struct  ParabolicSARVisitor  {
 
             if (! reverse)  {
                 if (bullish)  {
-                    if (*(high_begin + i) > high_point)  {
-                        high_point = *(high_begin + i);
+                    if (high > high_point)  {
+                        high_point = high;
                         current_af = std::min(current_af + af_, max_af_);
                     }
                     if (*(low_begin + (i - 1)) < sar[i])
@@ -2638,8 +2648,8 @@ struct  ParabolicSARVisitor  {
                         sar[i] = *(low_begin + (i - 2));
                 }
                 else  {
-                    if (*(low_begin + i) < low_point)  {
-                        low_point = *(low_begin + i);
+                    if (low < low_point)  {
+                        low_point = low;
                         current_af = std::min(current_af + af_, max_af_);
                     }
                     if (*(high_begin + (i - 1)) > sar[i])
@@ -2896,10 +2906,8 @@ struct  VarIdxDynAvgVisitor  {
 
         for (size_type i = 0; i < col_s; ++i)  {
             if (positive[i] < 0)  positive[i] = 0;
-            if (negative[i] > 0)
-                negative[i] = 0;
-            else
-                negative[i] = std::fabs(negative[i]);
+            if (negative[i] > 0)  negative[i] = 0;
+            else  negative[i] = std::fabs(negative[i]);
         }
 
         SimpleRollAdopter<SumVisitor<T, I>, T, I>   sum (SumVisitor<T, I>(),
@@ -3435,8 +3443,7 @@ struct  ArnaudLegouxMAVisitor  {
         for (size_type i = 0; i < roll_count_; ++i)  {
             wtd_[i] =
                 std::exp(T(-1) *
-                         ((T(i) - m_) * (T(i) - m_)) /
-                         ((T(2) * s_ * s_)));
+                         ((T(i) - m_) * (T(i) - m_)) / ((T(2) * s_ * s_)));
             cum_sum_ += wtd_[i];
         }
     }

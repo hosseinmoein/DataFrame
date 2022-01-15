@@ -44,12 +44,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #  else
 #    define LIBRARY_API
 #  endif // _MSC_VER
-#  ifdef min
-#    undef min
-#  endif // min
-#  ifdef max
-#    undef max
-#  endif // max
 #else
 #  define LIBRARY_API
 #endif // _WIN32 || _WIN64

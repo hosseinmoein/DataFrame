@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/Vectors/HeteroVector.h>
 
 #include <algorithm>
+#include <utility>
 
 // ----------------------------------------------------------------------------
 

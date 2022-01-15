@@ -33,11 +33,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/DataFrameTypes.h>
 
 #include <algorithm>
-
+#include <cmath>
 #include <functional>
+#include <future>
 #include <iterator>
 #include <limits>
 #include <numeric>
+#include <type_traits>
+#include <utility>
 #include <vector>
 
 // ----------------------------------------------------------------------------

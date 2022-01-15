@@ -29,17 +29,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
 
-#include <cstdio>
-#include <ctime>
-#include <functional>
 #include <limits>
-#include <stdexcept>
 #include <string>
-#include <sys/timeb.h>
 #include <time.h>
 
 #if defined(_WIN32) || defined(_WIN64)
-#  include <windows.h>
 #  if defined(_MSC_VER) && defined(HMDF_SHARED)
 #    ifdef LIBRARY_EXPORTS
 #      define LIBRARY_API __declspec(dllexport)
@@ -49,12 +43,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #  else
 #    define LIBRARY_API
 #  endif // _MSC_VER
-#  ifdef min
-#    undef min
-#  endif // min
-#  ifdef max
-#    undef max
-#  endif // max
 #else
 #  define LIBRARY_API
 #endif // _WIN32 || _WIN64

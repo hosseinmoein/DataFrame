@@ -30,7 +30,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/Utils/DateTime.h>
 #include <DataFrame/Utils/FixedSizeString.h>
 
+#include <cctype>
+#include <cstdio>
+#include <cstring>
+#include <stdexcept>
+
 #ifdef _MSC_VER
+#  define WIN32_LEAN_AND_MEAN
+#  include <windows.h>
 #  ifdef _MSC_EXTENSIONS
 #    define DELTA_EPOCH_IN_MICROSECS  11644473600000000Ui64
 #  else

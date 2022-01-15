@@ -31,12 +31,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <DataFrame/Vectors/HeteroVector.h>
 
-#include <cmath>
 #include <complex>
 #include <limits>
 #include <stdexcept>
 #include <tuple>
-#include <type_traits>
+#include <vector>
 
 // ----------------------------------------------------------------------------
 

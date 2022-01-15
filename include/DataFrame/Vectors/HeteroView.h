@@ -32,6 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/Vectors/VectorView.h>
 
 #include <functional>
+#include <type_traits>
 #include <unordered_map>
 
 // ----------------------------------------------------------------------------

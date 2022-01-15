@@ -32,7 +32,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/Vectors/HeteroPtrView.h>
 #include <DataFrame/Vectors/HeteroView.h>
 
+#include <functional>
+#include <type_traits>
 #include <unordered_map>
+#include <vector>
 
 // ----------------------------------------------------------------------------
 

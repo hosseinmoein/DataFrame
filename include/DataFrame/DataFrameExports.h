@@ -29,16 +29,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
 
- #ifdef HMDF_SHARED
- #  ifdef _WIN32
- #    ifdef DataFrame_EXPORTS
- #      define HMDF_API __declspec(dllexport)
- #    else
- #      define HMDF_API __declspec(dllimport)
- #    endif // DataFrame_EXPORTS
- #  else
- #    define HMDF_API __attribute__((visibility("default")))
- #  endif // _WIN32
- #else
- #  define HMDF_API
- #endif // HMDF_SHARED
+#ifdef HMDF_SHARED
+#  ifdef _WIN32
+#    ifdef DataFrame_EXPORTS
+#      define HMDF_API __declspec(dllexport)
+#    else
+#      define HMDF_API __declspec(dllimport)
+#    endif // DataFrame_EXPORTS
+#  else
+#    define HMDF_API __attribute__((visibility("default")))
+#  endif // _WIN32
+#else
+#  define HMDF_API
+#endif // HMDF_SHARED

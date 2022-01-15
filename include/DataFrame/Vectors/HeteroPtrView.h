@@ -34,7 +34,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <functional>
 #include <type_traits>
 #include <unordered_map>
-#include <type_traits>
 
 // ----------------------------------------------------------------------------
 

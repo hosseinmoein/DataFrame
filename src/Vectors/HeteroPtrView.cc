@@ -29,6 +29,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <DataFrame/Vectors/HeteroPtrView.h>
 
+#include <utility>
+
 // ----------------------------------------------------------------------------
 
 namespace hmdf

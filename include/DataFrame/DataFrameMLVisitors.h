@@ -34,10 +34,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/Vectors/VectorPtrView.h>
 
 #include <algorithm>
+#include <array>
+#include <cmath>
 #include <complex>
 #include <functional>
-#include <iterator>
+#include <limits>
+#include <random>
 #include <type_traits>
+#include <utility>
+#include <vector>
 
 // ----------------------------------------------------------------------------
 

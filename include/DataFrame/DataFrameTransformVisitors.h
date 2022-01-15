@@ -32,8 +32,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/DataFrameStatsVisitors.h>
 #include <DataFrame/DataFrameTypes.h>
 
+#include <algorithm>
 #include <cassert>
+#include <cmath>
+#include <iterator>
+#include <limits>
 #include <type_traits>
+#include <vector>
 
 // ----------------------------------------------------------------------------
 

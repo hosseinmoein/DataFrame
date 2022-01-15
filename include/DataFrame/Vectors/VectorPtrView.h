@@ -34,23 +34,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iterator>
 #include <vector>
 
-#if defined(_MSC_VER) && defined(HMDF_SHARED)
-#  ifdef LIBRARY_EXPORTS
-#    define LIBRARY_API __declspec(dllexport)
-#  else
-#    define LIBRARY_API __declspec(dllimport)
-#  endif // LIBRARY_EXPORTS
-#else
-#  define LIBRARY_API
-#endif // _MSC_VER
-
 // ----------------------------------------------------------------------------
 
 namespace hmdf
 {
 
 template<typename T>
-class LIBRARY_API   VectorPtrView {
+class VectorPtrView {
 
     using vector_type = std::vector<T *>;
 
@@ -512,7 +502,7 @@ private:
 // ----------------------------------------------------------------------------
 
 template<typename T>
-class LIBRARY_API   VectorConstPtrView  {
+class VectorConstPtrView  {
 
     using vector_type = std::vector<const T *>;
 

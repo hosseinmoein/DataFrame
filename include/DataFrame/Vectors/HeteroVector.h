@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <DataFrame/Vectors/HeteroPtrView.h>
 #include <DataFrame/Vectors/HeteroView.h>
+#include <DataFrame/DataFrameExports.h>
 
 #include <functional>
 #include <type_traits>
@@ -46,7 +47,7 @@ namespace hmdf
 // are partly inspired by Andy G's Blog at:
 // https://gieseanw.wordpress.com/2017/05/03/a-true-heterogeneous-container/
 //
-struct  HeteroVector  {
+struct HMDF_API HeteroVector  {
 
     using size_type = size_t;
 

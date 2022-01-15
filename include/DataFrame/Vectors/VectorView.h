@@ -33,16 +33,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <utility>
 #include <vector>
 
-#if defined(_MSC_VER) && defined(HMDF_SHARED)
-#  ifdef LIBRARY_EXPORTS
-#    define LIBRARY_API __declspec(dllexport)
-#  else
-#    define LIBRARY_API __declspec(dllimport)
-#  endif // LIBRARY_EXPORTS
-#else
-#  define LIBRARY_API
-#endif // _MSC_VER
-
 // ----------------------------------------------------------------------------
 
 namespace hmdf
@@ -53,7 +43,7 @@ namespace hmdf
 // It also gives you STL conformant iterators.
 //
 template <typename T>
-class LIBRARY_API   VectorView {
+class VectorView {
 
 public:
 
@@ -415,7 +405,7 @@ private:
 // ----------------------------------------------------------------------------
 
 template <typename T>
-class LIBRARY_API   VectorConstView {
+class VectorConstView {
 
 public:
 

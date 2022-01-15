@@ -27,33 +27,19 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#pragma once
+
 #include <algorithm>
 #include <atomic>
 #include <cassert>
 #include <thread>
-
-#pragma once
-
-#if defined(_WIN32) || defined(_WIN64)
-#  if defined(_MSC_VER) && defined(HMDF_SHARED)
-#    ifdef LIBRARY_EXPORTS
-#      define LIBRARY_API __declspec(dllexport)
-#    else
-#      define LIBRARY_API __declspec(dllimport)
-#    endif // LIBRARY_EXPORTS
-#  else
-#    define LIBRARY_API
-#  endif // _MSC_VER
-#else
-#  define LIBRARY_API
-#endif // _WIN32 || _WIN64
 
 // ----------------------------------------------------------------------------
 
 namespace hmdf
 {
 
-struct LIBRARY_API ThreadGranularity {
+struct ThreadGranularity {
 
     static inline void
     set_thread_level(unsigned int n)  { num_of_threads_ = n; }

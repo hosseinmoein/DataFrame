@@ -36,16 +36,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <utility>
 #include <vector>
 
-#if defined(_WIN32) && defined(HMDF_SHARED)
-#  ifdef LIBRARY_EXPORTS
-#    define LIBRARY_API __declspec(dllexport)
-#  else
-#    define LIBRARY_API __declspec(dllimport)
-#  endif // LIBRARY_EXPORTS
-#else
-#  define LIBRARY_API
-#endif // _WIN32
-
 // ----------------------------------------------------------------------------
 
 namespace hmdf
@@ -54,7 +44,7 @@ namespace hmdf
 // Fixed size priority queue. By default, it is a max heap
 //
 template <typename T, std::size_t N, typename Cmp = std::less<T>>
-class LIBRARY_API   FixedSizePriorityQueue  {
+class FixedSizePriorityQueue  {
 
     using container_type = std::array<T, N>;
     using iterator = typename container_type::iterator;

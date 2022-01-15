@@ -1,10 +1,7 @@
-cmake_minimum_required (VERSION 3.5)
+cmake_minimum_required (VERSION 3.8)
 project (DataFrame VERSION 1.0.0)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON) # Produce cmpile_commands.json
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 option(ENABLE_TESTING "Enable testing" ON)
 
@@ -25,15 +22,6 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY
     "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY
     "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}")
-
-# Disable C and C++ compiler extensions. C/CXX_EXTENSIONS are ON by default to
-# allow the compilers to use extended variants of the C/CXX language. However,
-# this could expose cross-platform bugs in user code or in the headers of
-# third-party dependencies and thus it is strongly suggested to turn
-# extensions off.
-#
-set(CMAKE_C_EXTENSIONS OFF)
-set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Enable RPATH support for installed binaries and libraries
 #
@@ -110,6 +98,7 @@ set(${LIBRARY_TARGET_NAME}_HDR
 # Build the library
 #
 add_library(${LIBRARY_TARGET_NAME} ${${LIBRARY_TARGET_NAME}_SRC})
+target_compile_features(${LIBRARY_TARGET_NAME} PUBLIC cxx_std_17)
 target_compile_definitions(${LIBRARY_TARGET_NAME}
     PUBLIC
         $<$<CXX_COMPILER_ID:MSVC>:_CRT_SECURE_NO_WARNINGS>

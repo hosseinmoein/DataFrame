@@ -4,9 +4,9 @@ project(DataFrame
     LANGUAGES CXX
 )
 
-option(ENABLE_TESTING "Enable testing" ON)
-option(DATAFRAME_BUILD_EXAMPLES "Build Examples" ON)
-option(DATAFRAME_BUILD_BENCHMARKS "Build Benchmarks" ON)
+option(ENABLE_TESTING "Enable testing" OFF)
+option(HMDF_EXAMPLES "Build Examples" OFF)
+option(HMDF_BENCHMARKS "Build Benchmarks" OFF)
 
 if(ENABLE_TESTING)
     enable_testing()
@@ -148,11 +148,11 @@ if(ENABLE_TESTING)
 endif()
 
 # Examples
-if(DATAFRAME_BUILD_EXAMPLES)
+if(HMDF_EXAMPLES)
     add_subdirectory(examples)
 endif()
 
 # Benchmarks
-if(DATAFRAME_BUILD_BENCHMARKS)
+if(HMDF_BENCHMARKS)
     add_subdirectory(benchmarks)
 endif()

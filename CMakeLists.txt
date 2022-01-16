@@ -42,7 +42,6 @@ target_compile_features(DataFrame PUBLIC cxx_std_17)
 target_compile_definitions(DataFrame
     PUBLIC
         $<$<CXX_COMPILER_ID:MSVC>:_USE_MATH_DEFINES>
-        $<$<BOOL:${BUILD_SHARED_LIBS}>:HMDF_SHARED>
 )
 target_compile_options(DataFrame
     PRIVATE
@@ -56,11 +55,18 @@ target_compile_options(DataFrame
 )
 set_target_properties(DataFrame
     PROPERTIES
-        CXX_VISIBILITY_PRESET hidden
-        VISIBILITY_INLINES_HIDDEN ON
         VERSION ${PROJECT_VERSION}
         SOVERSION ${PROJECT_VERSION_MAJOR}
 )
+
+if(BUILD_SHARED_LIBS)
+    set_target_properties(DataFrame
+        PROPERTIES
+            CXX_VISIBILITY_PRESET hidden
+            VISIBILITY_INLINES_HIDDEN ON
+    )
+    target_compile_definitions(DataFrame PUBLIC HMDF_SHARED)
+endif()
 
 target_link_libraries(DataFrame
     INTERFACE

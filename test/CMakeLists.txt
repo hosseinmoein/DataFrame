@@ -35,9 +35,10 @@ dataframe_target_data_files(
         ${PROJECT_SOURCE_DIR}/data/sample_data.json
         ${PROJECT_SOURCE_DIR}/data/SHORT_IBM.csv
 )
-if(NOT MSVC)
+add_test(NAME dataframe_tester_2 COMMAND $<TARGET_FILE:dataframe_tester_2>)
+if(MSVC)
     # For some unknown reason to me, this test sigfaults in AppVeyor
-    add_test(NAME dataframe_tester_2 COMMAND $<TARGET_FILE:dataframe_tester_2>)
+    set_tests_properties(dataframe_tester_2 PROPERTIES DISABLED TRUE)
 endif()
 
 add_executable(dataframe_tester_3 dataframe_tester_3.cc)
@@ -46,9 +47,10 @@ add_test(NAME dataframe_tester_3 COMMAND $<TARGET_FILE:dataframe_tester_3>)
 
 add_executable(vectors_tester vectors_tester.cc)
 target_link_libraries(vectors_tester PRIVATE DataFrame)
-if(NOT MSVC)
+add_test(NAME vectors_tester COMMAND $<TARGET_FILE:vectors_tester>)
+if(MSVC)
     # For some unknown reason to me, this test sigfaults in AppVeyor
-    add_test(NAME vectors_tester COMMAND $<TARGET_FILE:vectors_tester>)
+    set_tests_properties(vectors_tester PROPERTIES DISABLED TRUE)
 endif()
 
 add_executable(vector_ptr_view_tester vector_ptr_view_tester.cc)

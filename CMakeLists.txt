@@ -5,6 +5,8 @@ project(DataFrame
 )
 
 option(ENABLE_TESTING "Enable testing" ON)
+option(DATAFRAME_BUILD_EXAMPLES "Build Examples" ON)
+option(DATAFRAME_BUILD_BENCHMARKS "Build Benchmarks" ON)
 
 if(ENABLE_TESTING)
     enable_testing()
@@ -143,4 +145,14 @@ export(PACKAGE DataFrame)
 # Tests
 if(ENABLE_TESTING)
     add_subdirectory(test)
+endif()
+
+# Examples
+if(DATAFRAME_BUILD_EXAMPLES)
+    add_subdirectory(examples)
+endif()
+
+# Benchmarks
+if(DATAFRAME_BUILD_BENCHMARKS)
+    add_subdirectory(benchmarks)
 endif()

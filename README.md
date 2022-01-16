@@ -44,7 +44,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 This is a C++ analytical library that provides interface and functionality similar to packages/libraries in Python and R. For example, you could compare this to Pandas or R data.frame.<BR>
 You could slice the data in many different ways. You could join, merge, group-by the data. You could run various statistical, summarization, financial, and ML algorithms on the data. You could add your custom algorithms easily. You could multi-column sort, custom pick and delete the data. And more …<BR>
 DataFrame also includes a large collection of analytical algorithms in form of visitors. These are from basic stats such as <I>Mean</I>, <I>Std Deviation</I>, <I>Return</I>, … to more involved analysis such as <I>Affinity Propagation</I>, <I>Polynomial Fit</I>, <I>Fast Fourier transform of arbitrary length</I> … including a good collection of trading indicators. You could also easily add your own algorithms.<BR>
-For basic operations to start you off, see [Hello World](test/hello_world.cc). For a complete list of features with code samples, see [documentation](https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html).
+For basic operations to start you off, see [Hello World](examples/hello_world.cc). For a complete list of features with code samples, see [documentation](https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html).
 
 I have followed a few <B>principles in this library</B>:<BR>
 
@@ -62,7 +62,7 @@ DateTime class included in this library is a very cool and handy object to manip
 ---
 
 ### Performance
-There is a test program [_dataframe_performance_](test/dataframe_performance.cc) that should give you a sense of how this library performs. As a comparison, there is also a Pandas [_pandas_performance_](test/pandas_performance.py) script that does exactly the same thing.<BR>
+There is a test program [_dataframe_performance_](benchmarks/dataframe_performance.cc) that should give you a sense of how this library performs. As a comparison, there is also a Pandas [_pandas_performance_](benchmarks/pandas_performance.py) script that does exactly the same thing.<BR>
 <I>dataframe_performance.cc</I> uses DataFrame <B>async interface</B> and is compiled with gcc (10.3.0) compiler with -O3 flag. <I>pandas_performance.py</I> is ran with Pandas 1.3.2, Numpy 1.21.2 and Python 3.7 on Xeon E5-2667 v2. What the test program roughly does:<BR>
 
 1.  Generate ~1.6 billion timestamps (second resolution) and load them into the DataFrame/Pandas as index.<BR>
@@ -71,7 +71,7 @@ There is a test program [_dataframe_performance_](test/dataframe_performance.cc)
 
 Result:
 ```bash
-$ python3 test/pandas_performance.py
+$ python3 benckmarks/pandas_performance.py
 Starting ... 1629817655
 All memory allocations are done. Calculating means ... 1629817883
 6.166675403767268e-05, 1.6487168460770107, 0.9999539627671375

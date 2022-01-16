@@ -14,10 +14,10 @@ SRCS = Vectors/HeteroVector.cc \
        ../test/dataframe_tester.cc \
        ../test/dataframe_tester_2.cc \
        ../test/dataframe_tester_3.cc \
-       ../test/hello_world.cc \
+       ../examples/hello_world.cc \
        ../test/dataframe_thread_safety.cc \
-       ../test/dataframe_performance.cc \
-       ../test/dataframe_performance_2.cc \
+       ../benchmarks/dataframe_performance.cc \
+       ../benchmarks/dataframe_performance_2.cc \
        Vectors/HeteroView.cc \
        Vectors/HeteroPtrView.cc \
        ../test/vectors_tester.cc \
@@ -103,6 +103,10 @@ LIB_OBJS = $(LOCAL_OBJ_DIR)/HeteroVector.o \
 .SUFFIXES: .cc
 
 $(LOCAL_OBJ_DIR)/%.o: %.cc
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+$(LOCAL_OBJ_DIR)/%.o: ../benchmarks/%.cc
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+$(LOCAL_OBJ_DIR)/%.o: ../examples/%.cc
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 $(LOCAL_OBJ_DIR)/%.o: ../test/%.cc
 	$(CXX) $(CXXFLAGS) -c $< -o $@

@@ -1,6 +1,10 @@
+#ifdef NDEBUG
+#undef NDEBUG
+#endif
+#include <cassert>
+
 #include <DataFrame/DataFrame.h>
 
-#include <cassert>
 #include <iostream>
 #include <string>
 

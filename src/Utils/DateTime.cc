@@ -242,6 +242,16 @@ DateTime::DateTime (const char *s, DT_DATE_STYLE ds, DT_TIME_ZONE tz)
     }
 }
 
+DateTime::DateTime (const DateTime &that) = default;
+
+DateTime::DateTime (DateTime &&that) = default;
+
+DateTime::~DateTime () = default;
+
+DateTime &DateTime::operator = (const DateTime &rhs) = default;
+
+DateTime &DateTime::operator = (DateTime &&rhs) = default;
+
 // ----------------------------------------------------------------------------
 
 // There are many different ways of representing

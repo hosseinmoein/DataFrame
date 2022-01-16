@@ -36,6 +36,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace hmdf
 {
 
+HeteroPtrView::HeteroPtrView() = default;
+
 HeteroPtrView::HeteroPtrView (const HeteroPtrView &that)  { *this = that; }
 HeteroPtrView::HeteroPtrView (HeteroPtrView &&that)  { *this = that; }
 

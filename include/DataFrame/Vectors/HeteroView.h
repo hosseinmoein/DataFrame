@@ -41,11 +41,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace hmdf
 {
 
-struct HMDF_API HeteroView  {
+struct HeteroView  {
 
     using size_type = size_t;
 
-    HeteroView() = default;
+    HMDF_API HeteroView();
     template<typename T>
     HeteroView(T *begin_ptr, T *end_ptr);
 
@@ -61,13 +61,13 @@ struct HMDF_API HeteroView  {
     template<typename T>
     void set_begin_end_special(T *bp, T *ep_1);
 
-    HeteroView(const HeteroView &that);
-    HeteroView(HeteroView &&that);
+    HMDF_API HeteroView(const HeteroView &that);
+    HMDF_API HeteroView(HeteroView &&that);
 
     ~HeteroView() { clear(); }
 
-    HeteroView &operator= (const HeteroView &rhs);
-    HeteroView &operator= (HeteroView &&rhs);
+    HMDF_API HeteroView &operator= (const HeteroView &rhs);
+    HMDF_API HeteroView &operator= (HeteroView &&rhs);
 
     template<typename T>
     VectorView<T> &get_vector();
@@ -78,7 +78,7 @@ struct HMDF_API HeteroView  {
     typename VectorView<T>::
     size_type size () const { return (get_vector<T>().size()); }
 
-    void clear();
+    HMDF_API void clear();
 
     template<typename T>
     bool empty() const noexcept;

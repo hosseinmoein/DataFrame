@@ -47,18 +47,18 @@ namespace hmdf
 // are partly inspired by Andy G's Blog at:
 // https://gieseanw.wordpress.com/2017/05/03/a-true-heterogeneous-container/
 //
-struct HMDF_API HeteroVector  {
+struct HeteroVector  {
 
     using size_type = size_t;
 
-    HeteroVector();
-    HeteroVector(const HeteroVector &that);
-    HeteroVector(HeteroVector &&that);
+    HMDF_API HeteroVector();
+    HMDF_API HeteroVector(const HeteroVector &that);
+    HMDF_API HeteroVector(HeteroVector &&that);
 
     ~HeteroVector() { clear(); }
 
-    HeteroVector &operator= (const HeteroVector &rhs);
-    HeteroVector &operator= (HeteroVector &&rhs);
+    HMDF_API HeteroVector &operator= (const HeteroVector &rhs);
+    HMDF_API HeteroVector &operator= (HeteroVector &&rhs);
 
     template<typename T>
     std::vector<T> &get_vector();
@@ -91,7 +91,7 @@ struct HMDF_API HeteroVector  {
     template<typename T>
     size_type size () const { return (get_vector<T>().size()); }
 
-    void clear();
+    HMDF_API void clear();
 
     template<typename T>
     void erase(size_type pos);

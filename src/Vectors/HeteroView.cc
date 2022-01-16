@@ -36,6 +36,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace hmdf
 {
 
+HeteroView::HeteroView() = default;
+
 HeteroView::HeteroView (const HeteroView &that)  { *this = that; }
 HeteroView::HeteroView (HeteroView &&that)  { *this = that; }
 

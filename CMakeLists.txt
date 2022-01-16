@@ -104,14 +104,9 @@ target_compile_definitions(${LIBRARY_TARGET_NAME}
         $<$<CXX_COMPILER_ID:MSVC>:_CRT_SECURE_NO_WARNINGS>
         $<$<CXX_COMPILER_ID:MSVC>:_USE_MATH_DEFINES>
 )
-
-# Export of symbols: generate a header to properly define HMDF_API
-include(GenerateExportHeader)
-set(EXPORT_MACRO_FILE "${CMAKE_CURRENT_BINARY_DIR}/include/${PROJECT_NAME}/DataFrameExports.h")
-generate_export_header(${LIBRARY_TARGET_NAME}
-    EXPORT_MACRO_NAME HMDF_API
-    EXPORT_FILE_NAME ${EXPORT_MACRO_FILE}
-)
+if(BUILD_SHARED_LIBS)
+    target_compile_definitions(${LIBRARY_TARGET_NAME} PUBLIC HMDF_SHARED)
+endif()
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
@@ -136,7 +131,6 @@ set_target_properties(${LIBRARY_TARGET_NAME}
 target_include_directories(${LIBRARY_TARGET_NAME}
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
         $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
@@ -151,10 +145,6 @@ install(TARGETS ${LIBRARY_TARGET_NAME}
 
 install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include/${PROJECT_NAME}" # src
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}  # target directory
-        COMPONENT dev
-)
-install(FILES ${EXPORT_MACRO_FILE}
-        DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}"
         COMPONENT dev
 )
 
@@ -227,20 +217,17 @@ if (ENABLE_TESTING)
 
     # Link the DataFrame library to the test binary
     #
-    target_link_libraries(dataframe_tester PRIVATE DataFrame)
-    target_link_libraries(dataframe_tester_2 PRIVATE DataFrame)
-    target_link_libraries(dataframe_tester_3 PRIVATE DataFrame)
-    target_link_libraries(hello_world PRIVATE DataFrame)
-    target_link_libraries(dataframe_performance PRIVATE DataFrame)
-    target_link_libraries(dataframe_performance_2 PRIVATE DataFrame)
-    target_link_libraries(vectors_tester PRIVATE DataFrame)
-    target_link_libraries(vector_ptr_view_tester PRIVATE DataFrame)
-    target_link_libraries(date_time_tester PRIVATE DataFrame)
-    target_link_libraries(gen_rand_tester PRIVATE DataFrame)
-    target_link_libraries(dataframe_thread_safety PRIVATE DataFrame)
-
-    target_link_libraries(dataframe_tester PRIVATE Threads::Threads)
-    target_link_libraries(dataframe_thread_safety PRIVATE Threads::Threads)
+    target_link_libraries(dataframe_tester PRIVATE ${LIBRARY_TARGET_NAME} Threads::Threads)
+    target_link_libraries(dataframe_tester_2 PRIVATE ${LIBRARY_TARGET_NAME})
+    target_link_libraries(dataframe_tester_3 PRIVATE ${LIBRARY_TARGET_NAME})
+    target_link_libraries(hello_world PRIVATE ${LIBRARY_TARGET_NAME})
+    target_link_libraries(dataframe_performance PRIVATE ${LIBRARY_TARGET_NAME})
+    target_link_libraries(dataframe_performance_2 PRIVATE ${LIBRARY_TARGET_NAME})
+    target_link_libraries(vectors_tester PRIVATE ${LIBRARY_TARGET_NAME})
+    target_link_libraries(vector_ptr_view_tester PRIVATE ${LIBRARY_TARGET_NAME})
+    target_link_libraries(date_time_tester PRIVATE ${LIBRARY_TARGET_NAME})
+    target_link_libraries(gen_rand_tester PRIVATE ${LIBRARY_TARGET_NAME})
+    target_link_libraries(dataframe_thread_safety PRIVATE ${LIBRARY_TARGET_NAME} Threads::Threads)
 
     # Enable ctest, testing so we can see if unit tests pass or fail in CI
     #

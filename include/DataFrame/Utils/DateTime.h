@@ -143,7 +143,7 @@ enum class DT_DATE_STYLE : unsigned char  {
 
 // ----------------------------------------------------------------------------
 
-class HMDF_API DateTime {
+class DateTime {
 
 public:
 
@@ -160,14 +160,14 @@ public:
 
     // Initialized to now
     //
-    explicit DateTime (DT_TIME_ZONE tz = DT_TIME_ZONE::LOCAL);
+    HMDF_API explicit DateTime (DT_TIME_ZONE tz = DT_TIME_ZONE::LOCAL);
 
-    explicit DateTime (DateType d,
-                       HourType hr = 0,
-                       MinuteType mn = 0,
-                       SecondType sc = 0,
-                       NanosecondType ns = 0,
-                       DT_TIME_ZONE tz = DT_TIME_ZONE::LOCAL);
+    HMDF_API explicit DateTime (DateType d,
+                                HourType hr = 0,
+                                MinuteType mn = 0,
+                                SecondType sc = 0,
+                                NanosecondType ns = 0,
+                                DT_TIME_ZONE tz = DT_TIME_ZONE::LOCAL);
 
     // Currently, the following formats are supported:
     //  (1)  YYYYMMDD
@@ -192,91 +192,91 @@ public:
     //  (15) YYYY-MM-DD HH:MM:SS
     //  (16) YYYY-MM-DD HH:MM:SS.MMM
     //
-    explicit DateTime (const char *s,
-                       DT_DATE_STYLE ds = DT_DATE_STYLE::YYYYMMDD,
-                       DT_TIME_ZONE tz = DT_TIME_ZONE::LOCAL);
+    HMDF_API explicit DateTime (const char *s,
+                                DT_DATE_STYLE ds = DT_DATE_STYLE::YYYYMMDD,
+                                DT_TIME_ZONE tz = DT_TIME_ZONE::LOCAL);
 
-    DateTime (const DateTime &that) = default;
-    DateTime (DateTime &&that) = default;
-    ~DateTime () = default;
+    HMDF_API DateTime (const DateTime &that);
+    HMDF_API DateTime (DateTime &&that);
+    HMDF_API ~DateTime ();
 
-    DateTime &operator = (const DateTime &rhs) = default;
-    DateTime &operator = (DateTime &&rhs) = default;
+    HMDF_API DateTime &operator = (const DateTime &rhs);
+    HMDF_API DateTime &operator = (DateTime &&rhs);
 
     // A convenient method, if you already have a DateTime instance
     // and want to change the date/time quickly
     //
-    void set_time (EpochType the_time, NanosecondType nanosec = 0) noexcept;
+    HMDF_API void set_time (EpochType the_time, NanosecondType nanosec = 0) noexcept;
 
     // NOTE: This method is not multithread-safe. This method
     //       modifies the TZ environment variable which changes the
     //       time zone for the entire program.
     //
-    void set_timezone (DT_TIME_ZONE tz);
-    DT_TIME_ZONE get_timezone () const;
+    HMDF_API void set_timezone (DT_TIME_ZONE tz);
+    HMDF_API DT_TIME_ZONE get_timezone () const;
 
-    DateTime &operator = (DateType rhs);  // dt = 20181223
+    HMDF_API DateTime &operator = (DateType rhs);  // dt = 20181223
 
     // Currently, the following formats are supported:
     //  1)  YYYYMMDD [LOCAL | GMT]
     //  2)  YYYYMMDD HH:MM:SS.MMM [LOCAL | GMT]
     //
-    DateTime &operator = (const char *rhs);  // dt = "20181223"
+    HMDF_API DateTime &operator = (const char *rhs);  // dt = "20181223"
 
     // this (lhs) compared with rhs
     //
-    EpochType compare(const DateTime &rhs) const;
+    HMDF_API EpochType compare(const DateTime &rhs) const;
 
-    DateType date () const noexcept;            // eg. 20020303
-    DatePartType year () const noexcept;        // eg. 1990
-    DT_MONTH month () const noexcept;           // JAN - DEC
-    DatePartType dmonth () const noexcept;      // 1 - 31
-    DatePartType dyear () const noexcept;       // 1 - 366
-    DT_WEEKDAY dweek () const noexcept;         // SUN - SAT
-    HourType hour () const noexcept;            // 0 - 23
-    MinuteType minute () const noexcept;        // 0 - 59
-    SecondType sec () const noexcept;           // 0 - 59
-    MillisecondType msec () const noexcept;     // 0 - 999
-    MicrosecondType microsec () const noexcept; // 0 - 999,999
-    NanosecondType nanosec () const noexcept;   // 0 - 999,999,999
-    EpochType time () const noexcept;           // Like ::time()
-    LongTimeType long_time () const noexcept;   // Nano seconds since epoch
+    HMDF_API DateType date () const noexcept;            // eg. 20020303
+    HMDF_API DatePartType year () const noexcept;        // eg. 1990
+    HMDF_API DT_MONTH month () const noexcept;           // JAN - DEC
+    HMDF_API DatePartType dmonth () const noexcept;      // 1 - 31
+    HMDF_API DatePartType dyear () const noexcept;       // 1 - 366
+    HMDF_API DT_WEEKDAY dweek () const noexcept;         // SUN - SAT
+    HMDF_API HourType hour () const noexcept;            // 0 - 23
+    HMDF_API MinuteType minute () const noexcept;        // 0 - 59
+    HMDF_API SecondType sec () const noexcept;           // 0 - 59
+    HMDF_API MillisecondType msec () const noexcept;     // 0 - 999
+    HMDF_API MicrosecondType microsec () const noexcept; // 0 - 999,999
+    HMDF_API NanosecondType nanosec () const noexcept;   // 0 - 999,999,999
+    HMDF_API EpochType time () const noexcept;           // Like ::time()
+    HMDF_API LongTimeType long_time () const noexcept;   // Nano seconds since epoch
 
-    DatePartType days_in_month () const noexcept;  // 28, 29, 30, 31
+    HMDF_API DatePartType days_in_month () const noexcept;  // 28, 29, 30, 31
 
     // These return the diff including the fraction of the unit.
     // That is why they return a double.
     // The diff could be +/- based on "this - that"
     //
-    double diff_seconds (const DateTime &that) const;
-    double diff_minutes (const DateTime &that) const noexcept;
-    double diff_hours (const DateTime &that) const noexcept;
-    double diff_days (const DateTime &that) const noexcept;
-    double diff_weekdays (const DateTime &that) const noexcept;
-    double diff_weeks (const DateTime &that) const noexcept;
+    HMDF_API double diff_seconds (const DateTime &that) const;
+    HMDF_API double diff_minutes (const DateTime &that) const noexcept;
+    HMDF_API double diff_hours (const DateTime &that) const noexcept;
+    HMDF_API double diff_days (const DateTime &that) const noexcept;
+    HMDF_API double diff_weekdays (const DateTime &that) const noexcept;
+    HMDF_API double diff_weeks (const DateTime &that) const noexcept;
 
     // The parameter to these methods could be +/-.
     // It will advance/pull back the date/time accordingly.
     //
-    void add_nanoseconds (long nanosecs) noexcept;
-    void add_seconds (EpochType secs) noexcept;
-    void add_days (long days) noexcept;
-    void add_weekdays (long days) noexcept;
-    void add_months (long months) noexcept;
-    void add_years (long years) noexcept;
+    HMDF_API void add_nanoseconds (long nanosecs) noexcept;
+    HMDF_API void add_seconds (EpochType secs) noexcept;
+    HMDF_API void add_days (long days) noexcept;
+    HMDF_API void add_weekdays (long days) noexcept;
+    HMDF_API void add_months (long months) noexcept;
+    HMDF_API void add_years (long years) noexcept;
 
-    bool is_weekend () const noexcept;
-    bool is_newyear () const noexcept;
-    bool is_xmas () const noexcept;
-    bool is_us_business_day () const noexcept;
-    bool is_us_bank_holiday () const noexcept;
-    bool is_valid () const noexcept;
+    HMDF_API bool is_weekend () const noexcept;
+    HMDF_API bool is_newyear () const noexcept;
+    HMDF_API bool is_xmas () const noexcept;
+    HMDF_API bool is_us_business_day () const noexcept;
+    HMDF_API bool is_us_bank_holiday () const noexcept;
+    HMDF_API bool is_valid () const noexcept;
 
     // Formats date/time into a string based on format parameter
     //
     template<typename T>
     void date_to_str (DT_FORMAT format, T &result) const;
-    std::string string_format (DT_FORMAT format) const;
+    HMDF_API std::string string_format (DT_FORMAT format) const;
 
 private:
 

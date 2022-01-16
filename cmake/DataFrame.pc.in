@@ -1,6 +1,7 @@
 prefix=@CMAKE_INSTALL_PREFIX@
-libdir=${prefix}/@CMAKE_INSTALL_LIBDIR@
-includedir=${prefix}/include
+exec_prefix=${prefix}
+includedir=${prefix}/@CMAKE_INSTALL_INCLUDEDIR@
+libdir=${exec_prefix}/@CMAKE_INSTALL_LIBDIR@
 
 Name: DataFrame
 Description: C++ DataFrame for statistical, Financial, and ML analysis -- in modern C++ using native types and contiguous memory storage

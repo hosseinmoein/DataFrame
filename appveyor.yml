@@ -19,7 +19,7 @@ build_script:
   - mkdir build
   - cd build
   - cmake --version
-  - cmake C:\Repos\source -G "Visual Studio 15 2017%arch%" -DENABLE_TESTING=ON -DHMDF_EXAMPLES=ON -DHMDF_BENCHMARKS=ON
+  - cmake C:\Repos\source -G "Visual Studio 15 2017%arch%" -DHMDF_TESTING=ON -DHMDF_EXAMPLES=ON -DHMDF_BENCHMARKS=ON
   - cmake --build . --config "Release"
 
 test_script:

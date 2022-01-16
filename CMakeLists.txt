@@ -4,11 +4,11 @@ project(DataFrame
     LANGUAGES CXX
 )
 
-option(ENABLE_TESTING "Enable testing" OFF)
+option(HMDF_TESTING "Enable testing" OFF)
 option(HMDF_EXAMPLES "Build Examples" OFF)
 option(HMDF_BENCHMARKS "Build Benchmarks" OFF)
 
-if(ENABLE_TESTING)
+if(HMDF_TESTING)
     enable_testing()
 endif()
 
@@ -149,7 +149,7 @@ install(
 export(PACKAGE DataFrame)
 
 # Tests
-if(ENABLE_TESTING)
+if(HMDF_TESTING)
     add_subdirectory(test)
 endif()
 

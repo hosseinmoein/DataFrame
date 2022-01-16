@@ -1,0 +1,9 @@
+prefix=@CMAKE_INSTALL_PREFIX@
+libdir=${prefix}/@CMAKE_INSTALL_LIBDIR@
+includedir=${prefix}/include
+
+Name: DataFrame
+Description: C++ DataFrame for statistical, Financial, and ML analysis -- in modern C++ using native types and contiguous memory storage
+Version: @PROJECT_VERSION@
+Cflags: -I${includedir}
+Libs: -L${libdir} -lDataFrame@PKGCONFIG_SYSTEM_LIBS@

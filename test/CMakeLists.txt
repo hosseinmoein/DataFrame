@@ -3,8 +3,7 @@ target_link_libraries(dataframe_tester PRIVATE DataFrame Threads::Threads)
 target_compile_options(dataframe_tester
     PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/bigobj>
 )
-dataframe_target_data_files(
-    TARGET dataframe_tester
+hmdf_target_data_files(dataframe_tester
     DATA_FILES
         ${PROJECT_SOURCE_DIR}/data/sample_data_dt_index.csv
         ${PROJECT_SOURCE_DIR}/data/sample_data_string_index.csv
@@ -18,8 +17,7 @@ target_link_libraries(dataframe_tester_2 PRIVATE DataFrame)
 target_compile_options(dataframe_tester_2
     PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/bigobj>
 )
-dataframe_target_data_files(
-    TARGET dataframe_tester_2
+hmdf_target_data_files(dataframe_tester_2
     DATA_FILES
         ${PROJECT_SOURCE_DIR}/data/csv2_format_data_2.csv
         ${PROJECT_SOURCE_DIR}/data/csv2_format_data_no_index.csv

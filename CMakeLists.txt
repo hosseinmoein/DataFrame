@@ -25,7 +25,7 @@ include(CheckSymbolExists)
 include(CMakePackageConfigHelpers)
 include(GNUInstallDirs)
 
-include(dataframe_target_data_files)
+include(HmdfTargetDataFiles)
 
 # Build DataFrame library
 check_symbol_exists(clock_gettime "time.h" HMDF_HAVE_CLOCK_GETTIME)

@@ -1,4 +1,9 @@
 cmake_minimum_required(VERSION 3.8)
+
+if(POLICY CMP0090)
+    cmake_policy(SET CMP0090 NEW)
+endif()
+
 project(DataFrame
     VERSION 1.19.0
     LANGUAGES CXX

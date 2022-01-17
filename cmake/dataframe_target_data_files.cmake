@@ -7,7 +7,7 @@ function(dataframe_target_data_files)
         if(NOT TARGET ${_data_file_target})
             set(_data_file_output
                 ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/data/${_data_file_name})
-            add_custom_target(${_data_file_target} ALL
+            add_custom_target(${_data_file_target}
                 DEPENDS ${_data_file_output}
             )
             get_filename_component(_data_file_abs_path ${_data_file} REALPATH)

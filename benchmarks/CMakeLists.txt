@@ -1,0 +1,5 @@
+add_executable(dataframe_performance dataframe_performance.cc)
+target_link_libraries(dataframe_performance PRIVATE DataFrame)
+
+add_executable(dataframe_performance_2 dataframe_performance_2.cc)
+target_link_libraries(dataframe_performance_2 PRIVATE DataFrame)

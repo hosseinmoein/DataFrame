@@ -28,6 +28,6 @@ script:
  - cmake --version
  - mkdir build
  - cd build
- - cmake ..
+ - cmake .. -DHMDF_TESTING=ON -DHMDF_EXAMPLES=ON -DHMDF_BENCHMARKS=ON
  - cmake --build . -- -j4
  - ctest --output-on-failure

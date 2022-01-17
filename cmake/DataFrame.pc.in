@@ -7,4 +7,4 @@ Name: DataFrame
 Description: C++ DataFrame for statistical, Financial, and ML analysis -- in modern C++ using native types and contiguous memory storage
 Version: @PROJECT_VERSION@
 Cflags: -I${includedir}
-Libs: -L${libdir} -lDataFrame@PKGCONFIG_SYSTEM_LIBS@
+Libs: -L${libdir} -lDataFrame@DATAFRAME_PKG_EXTRA_LIBS@

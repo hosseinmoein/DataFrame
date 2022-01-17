@@ -104,7 +104,7 @@ install(
 
 ## pkgconfig file
 if(UNIX AND NOT APPLE)
-    set(PKGCONFIG_SYSTEM_LIBS " -lpthread -lrt")
+    set(DATAFRAME_PKG_EXTRA_LIBS " -lpthread -lrt")
 endif()
 
 configure_file(

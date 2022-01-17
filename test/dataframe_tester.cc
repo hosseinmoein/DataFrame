@@ -3118,7 +3118,7 @@ static void test_SimpleRollAdopter()  {
     std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25 };
     std::vector<double> d4 = { 22, 23, 24, 25, 26, 27 };
     std::vector<std::string> s1 =
-        { "11", "22", "33", "aa", "bb", "cc", "dd" "tt", "uu", "ii", "88" };
+        { "11", "22", "33", "aa", "bb", "cc", "dd", "tt", "uu", "ii", "88" };
     MyDataFrame         df;
 
     df.load_data(std::move(idx),
@@ -3198,7 +3198,7 @@ static void test_ExponentialRollAdopter()  {
     std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25 };
     std::vector<double> d4 = { 22, 23, 24, 25, 26, 27 };
     std::vector<std::string> s1 =
-        { "11", "22", "33", "aa", "bb", "cc", "dd" "tt", "uu", "ii", "88" };
+        { "11", "22", "33", "aa", "bb", "cc", "dd", "tt", "uu", "ii", "88" };
     MyDataFrame         df;
 
     df.load_data(std::move(idx),
@@ -3289,7 +3289,7 @@ static void test_ExponentiallyWeightedMeanVisitor()  {
     std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25 };
     std::vector<double> d4 = { 22, 23, 24, 25, 26, 27 };
     std::vector<std::string> s1 =
-        { "11", "22", "33", "aa", "bb", "cc", "dd" "tt", "uu", "ii", "88" };
+        { "11", "22", "33", "aa", "bb", "cc", "dd", "tt", "uu", "ii", "88" };
     MyDataFrame         df;
 
     df.load_data(std::move(idx),

@@ -37,7 +37,7 @@ typedef StdDataFrame<time_t> MyDataFrame;
 
 // -----------------------------------------------------------------------------
 
-int main(int argc, char *argv[]) {
+int main(int, char *[]) {
 
     std::cout << "Starting ... " << time(nullptr) << std::endl;
 

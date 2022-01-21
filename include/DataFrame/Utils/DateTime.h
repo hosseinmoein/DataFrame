@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 
 #include <DataFrame/DataFrameExports.h>
+#include <DataFrame/Utils/FixedSizeString.h>
 
 #include <limits>
 #include <string>
@@ -240,7 +241,7 @@ public:
     HMDF_API MicrosecondType microsec () const noexcept; // 0 - 999,999
     HMDF_API NanosecondType nanosec () const noexcept;   // 0 - 999,999,999
     HMDF_API EpochType time () const noexcept;           // Like ::time()
-    HMDF_API LongTimeType long_time () const noexcept;   // Nano seconds since epoch
+    HMDF_API LongTimeType long_time () const noexcept;   // Nano sec since epoch
 
     HMDF_API DatePartType days_in_month () const noexcept;  // 28, 29, 30, 31
 
@@ -449,6 +450,143 @@ private:
         "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
     };
 };
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
+void DateTime::date_to_str (DT_FORMAT format, T &result) const  {
+
+    String128   buffer;
+
+    switch (format)  {
+        case DT_FORMAT::AMR_DT:
+        {
+            buffer.printf ("%002d/%002d/%002d",
+                           static_cast<int>(month ()),
+                           static_cast<int>(dmonth ()),
+                           static_cast<int>(year ()) % 100);
+        } break;
+
+        case DT_FORMAT::AMR_DT_CTY:
+        {
+            buffer.printf ("%002d/%002d/%d",
+                           static_cast<int>(month ()),
+                           static_cast<int>(dmonth ()),
+                           static_cast<int>(year ()));
+        } break;
+
+        case DT_FORMAT::EUR_DT:
+        {
+            buffer.printf ("%002d/%002d/%002d",
+                           static_cast<int>(dmonth ()),
+                           static_cast<int>(month ()),
+                           static_cast<int>(year ()) % 100);
+        } break;
+
+        case DT_FORMAT::EUR_DT_CTY:
+        {
+            buffer.printf ("%002d/%002d/%d",
+                           static_cast<int>(dmonth ()),
+                           static_cast<int>(month ()),
+                           static_cast<int>(year ()));
+        } break;
+
+        case DT_FORMAT::DT_TM:
+        {
+            buffer.printf ("%002d/%002d/%d %002d:%002d:%002d",
+                           static_cast<int>(month ()),
+                           static_cast<int>(dmonth ()),
+                           static_cast<int>(year ()),
+                           static_cast<int>(hour ()),
+                           static_cast<int>(minute ()),
+                           static_cast<int>(sec ()));
+        } break;
+
+        case DT_FORMAT::DT_TM2:
+        {
+            buffer.printf ("%002d/%002d/%d %002d:%002d:%002d.%0003d",
+                           static_cast<int>(month ()),
+                           static_cast<int>(dmonth ()),
+                           static_cast<int>(year ()),
+                           static_cast<int>(hour ()),
+                           static_cast<int>(minute ()),
+                           static_cast<int>(sec ()),
+                           static_cast<int>(msec ()));
+        } break;
+
+        case DT_FORMAT::ISO_DT_TM:
+        {
+            buffer.printf ("%d-%002d-%002d %002d:%002d:%002d.%0000006d",
+                           static_cast<int>(year ()),
+                           static_cast<int>(month ()),
+                           static_cast<int>(dmonth ()),
+                           static_cast<int>(hour ()),
+                           static_cast<int>(minute ()),
+                           static_cast<int>(sec ()),
+                           static_cast<int>(microsec ()));
+        } break;
+
+        case DT_FORMAT::ISO_DT:
+        {
+            buffer.printf ("%d-%002d-%002d",
+                           static_cast<int>(year ()),
+                           static_cast<int>(month ()),
+                           static_cast<int>(dmonth ()));
+        } break;
+
+        case DT_FORMAT::DT_DATETIME:
+        {
+            buffer.printf ("%d%002d%002d  %002d:%002d:%002d.%0003d",
+                           static_cast<int>(year ()),
+                           static_cast<int>(month ()),
+                           static_cast<int>(dmonth ()),
+                           static_cast<int>(hour ()),
+                           static_cast<int>(minute ()),
+                           static_cast<int>(sec ()),
+                           static_cast<int>(msec ()));
+        } break;
+
+        case DT_FORMAT::SCT_DT:
+        {
+            buffer.printf ("%s %002d, %d",
+                           MONTH_BR_ [static_cast<int>(month ()) - 1],
+                           static_cast<int>(dmonth ()),
+                           static_cast<int>(year ()));
+        } break;
+
+        case DT_FORMAT::DT_MMDDYYYY:
+        {
+            buffer.printf ("%002d%002d%d",
+                           static_cast<int>(month ()),
+                           static_cast<int>(dmonth ()),
+                           static_cast<int>(year ()));
+        } break;
+
+        case DT_FORMAT::DT_YYYYMMDD:
+        {
+            buffer.printf ("%002d%002d%002d",
+                           static_cast<int>(year ()),
+                           static_cast<int>(month ()),
+                           static_cast<int>(dmonth ()));
+        } break;
+
+        case DT_FORMAT::DT_PRECISE:  // e.g. Epoch.Nanoseconds
+        {
+            buffer.printf ("%ld.%d", this->time(), nanosec());
+        } break;
+
+        default:
+        {
+            buffer.printf ("ERROR: DateTime::date_to_str(): "
+                           "Unknown format: '%u'",
+                           format);
+            throw std::runtime_error (buffer.c_str ());
+        }
+    }
+
+    result = buffer.c_str ();
+    return;
+}
 
 // ----------------------------------------------------------------------------
 

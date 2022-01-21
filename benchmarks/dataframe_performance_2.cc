@@ -37,12 +37,12 @@ typedef StdDataFrame<unsigned int> MyDataFrame;
 
 // -----------------------------------------------------------------------------
 
-int main(int argc, char *argv[]) {
+int main(int, char *[]) {
 
     std::cout << "Starting ... " << time(nullptr) << std::endl;
 
     MyDataFrame df;
-    auto        index_vec = std::move(MyDataFrame::gen_sequence_index(0, 1100000000));
+    auto        index_vec = MyDataFrame::gen_sequence_index(0, 1100000000);
     const auto  index_sz = index_vec.size();
 
     RandGenParams<double>   p;

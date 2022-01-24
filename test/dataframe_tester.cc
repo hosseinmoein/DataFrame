@@ -728,7 +728,7 @@ static void test_get_view_by_idx_slicing()  {
             Index2D<MyDataFrame::IndexType> { 123452, 123460 });
     MyDataFrameView dfv =
         df.get_view_by_idx<double, int>(
-            Index2D<MyDataFrame::IndexType> { 123452, 123460 });
+            Index2D<MyDataFrame::IndexType> { 123452, 123466 });
 
     df.write<std::ostream, double, int>(std::cout);
     df2.write<std::ostream, double, int>(std::cout);
@@ -738,6 +738,8 @@ static void test_get_view_by_idx_slicing()  {
     assert(dfv.get_column<double>("col_3")[0] ==
            df.get_column<double>("col_3")[2]);
     assert(dfv.get_column<double>("col_3")[0] == 88.0);
+    assert(dfv.shape().first == 12);  // added
+	exit(0);
 }
 
 // -----------------------------------------------------------------------------

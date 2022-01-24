@@ -361,14 +361,20 @@ DataFrame<I, H>::get_view_by_idx (Index2D<IndexType> range)  {
         std::upper_bound (indices_.begin(), indices_.end(), range.end);
     DataFrameView<IndexType>    dfv;
 
-    if (lower != indices_.end())  {
-        dfv.indices_ =
-            typename DataFrameView<IndexType>::IndexVecType(&*lower, &*upper);
-
+    if (lower != indices_.end() &&
+        (upper != indices_.end() || indices_.back() == range.end))  {
+        IndexType       *upper_address = nullptr;
         const size_type b_dist = std::distance(indices_.begin(), lower);
-        const size_type e_dist = std::distance(indices_.begin(),
-                                               upper < indices_.end()
-                                                   ? upper : indices_.end());
+        const size_type e_dist = std::distance(indices_.begin(), upper);
+
+        if (upper != indices_.end())
+            upper_address = &*upper;
+        else
+            upper_address = &*(indices_.begin()) + e_dist;
+        dfv.indices_ =
+            typename DataFrameView<IndexType>::IndexVecType(&*lower,
+                                                            upper_address);
+
         const SpinGuard guard(lock_);
 
         for (auto &iter : column_list_)  {

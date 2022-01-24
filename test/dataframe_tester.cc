@@ -739,7 +739,6 @@ static void test_get_view_by_idx_slicing()  {
            df.get_column<double>("col_3")[2]);
     assert(dfv.get_column<double>("col_3")[0] == 88.0);
     assert(dfv.shape().first == 12);  // added
-	exit(0);
 }
 
 // -----------------------------------------------------------------------------

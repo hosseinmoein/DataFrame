@@ -33,6 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/Utils/FixedSizeString.h>
 
 #include <limits>
+#include <stdexcept>
 #include <string>
 #include <time.h>
 

@@ -32,9 +32,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/DataFrameExports.h>
 #include <DataFrame/Utils/FixedSizeString.h>
 
+#include <ctime>
 #include <limits>
+#include <stdexcept>
 #include <string>
-#include <time.h>
 
 // ----------------------------------------------------------------------------
 

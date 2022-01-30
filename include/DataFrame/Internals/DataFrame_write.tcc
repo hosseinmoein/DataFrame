@@ -5,7 +5,7 @@ Copyright (c) 2019-2022, Hossein Moein
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
+odification, are permitted provided that the following conditions are met:
 * Redistributions of source code must retain the above copyright
   notice, this list of conditions and the following disclaimer.
 * Redistributions in binary form must reproduce the above copyright
@@ -29,6 +29,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <DataFrame/DataFrame.h>
 
+#include <sstream>
+
 // ----------------------------------------------------------------------------
 
 namespace hmdf
@@ -39,18 +41,31 @@ template<typename ... Ts>
 bool DataFrame<I, H>::
 write(const char *file_name, io_format iof, bool columns_only) const  {
 
-    std::ofstream   file;
+    std::ofstream   stream;
 
-    file.open(file_name, std::ios::out);  // Open for writing
-    if (file.fail())  {
+    stream.open(file_name, std::ios::out);  // Open for writing
+    if (stream.fail())  {
         String1K    err;
 
         err.printf("write(): ERROR: Unable to open file '%s'", file_name);
         throw DataFrameError(err.c_str());
     }
-    write<std::ostream, Ts ...>(file, iof, columns_only);
-    file.close();
+    write<std::ostream, Ts ...>(stream, iof, columns_only);
+    stream.close();
     return (true);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename ... Ts>
+std::string
+DataFrame<I, H>::to_string(io_format iof) const  {
+
+    std::stringstream   ss (std::ios_base::out);
+
+    write<std::ostream, Ts ...>(ss, iof, false);
+    return (ss.str());
 }
 
 // ----------------------------------------------------------------------------
@@ -186,6 +201,17 @@ write_async (S &o, io_format iof, bool columns_only) const  {
                                                           iof,
                                                           columns_only));
                        }));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename ... Ts>
+std::future<std::string>
+DataFrame<I, H>::to_string_async (io_format iof) const  {
+
+    return (std::async(std::launch::async,
+                       &DataFrame::to_string<Ts ...>, this, iof));
 }
 
 } // namespace hmdf

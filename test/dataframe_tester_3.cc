@@ -282,11 +282,53 @@ static void test_get_data()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_to_from_string()  {
+
+    std::cout << "\nTesting to_from_string() ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466 };
+    std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
+    std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23,
+                               30, 31, 32, 1.89 };
+    std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21,
+                               0.34, 1.56, 0.34, 2.3, 0.1, 0.89, 0.45 };
+    std::vector<int>    i1 = { 22, 23, 24, 25, 99, 100, 101, 3, 2 };
+    std::vector<std::string>    strvec =
+        { "zz", "bb", "cc", "ww", "ee", "ff", "gg", "hh", "ii", "jj", "kk",
+          "ll", "mm", "nn" };
+    MyDataFrame         df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("col_1", d1),
+                 std::make_pair("col_2", d2),
+                 std::make_pair("col_3", d3),
+                 std::make_pair("col_4", i1),
+                 std::make_pair("str_col", strvec));
+
+    std::future<std::string>    f =
+        df.to_string_async<double, int, std::string>();
+    const std::string           str_dump = f.get();
+
+    // std::cout << str_dump << std::endl;
+
+    MyDataFrame df2;
+
+    df2.from_string(str_dump.c_str());
+    // std::cout << '\n' << std::endl;
+    // df2.write<std::ostream, double, int, std::string>(std::cout);
+    assert((df.is_equal<double, int, std::string>(df2)));
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     test_groupby_edge();
     test_concat_view();
     test_get_data();
+    test_to_from_string();
 
     /*
     hmdf::SpinLock      locker;

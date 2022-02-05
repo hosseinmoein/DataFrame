@@ -103,7 +103,7 @@ int main(int, char *[]) {
     // Also, you can load data into a DataFrame from a file, suporting a few
     // different formats.
     // If the file cannot be found, an exception will be thrown.
-    // If the DataFrame test directory is your current directory when running
+    // If the DataFrame root directory is your current directory when running
     // this, it should work
     // fine.
     //
@@ -131,6 +131,24 @@ int main(int, char *[]) {
     //
     ul_df2.write<std::ostream, std::string, double>(std::cout, io_format::csv2);
     ibm_df.write<double, long>("/tmp/test.json", io_format::json);
+
+    // You can convert a DataFrame to a string and from a string back into a
+    // DataFrame.
+    // This could be used to transmit a DataFrame from one place to another
+    // or store a DataFrame in databases, caches, …
+    //
+    const std::string  str_ibm = ibm_df.to_string<double, long>();
+    StrDataFrame       ibm_df_2;
+
+    ibm_df_2.from_string(str_ibm.c_str());
+    // std::cout << str_ibm << std::endl;
+    // ** assert((ibm_df.is_equal<double, long>(ibm_df_2))); **
+    //
+    // Since we convert from native type to string and back, if you have
+    // floating point numbers with long precisions, you may run into precision
+    // mismatches.
+    // to_string() has a precision parameter you can adjust. The defualt is 12
+    // which is a relatively high precision.
 
     // You can sort by one or multiple columns
     // You must specify all the column types, but only once

@@ -46,7 +46,7 @@ using fft_v = FastFourierTransVisitor&lt;T, I&gt;;
       <td>
         This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
         This visitor calculates Fast Fourier Transform on a column. If column length is a power of 2, the algorithm will be more efficient in terms of time and memory.
-        The input could be either a column of floating-point values or a column of complex vlaues. The result is always a vector of complex values with same number of items as the given column.<BR>
+        The input could be either a column of floating-point values or a column of complex values. The result is always a vector of complex values with same number of items as the given column.<BR>
         <I>get_result()</I> returns the FFT vector in complex values<BR>
         <I>get_magnitude()</I> returns vector of magnitudes<BR>
         <I>get_angle()</I> returns vector of phase angles<BR><BR>

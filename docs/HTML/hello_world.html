@@ -30,7 +30,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	<img src="https://github.com/hosseinmoein/DataFrame/blob/master/docs/LionLookingUp.jpg?raw=true" alt="C++ DataFrame" width="200" height="150"/>
   </center>
 
-<P>
 <pre style='color:#000000;background:#ffffff;'><span style='color:#696969; '>/*</span>
 <span style='color:#696969; '>Copyright (c) 2019-2022, Hossein Moein</span>
 <span style='color:#696969; '>All rights reserved.</span>
@@ -96,10 +95,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <span style='color:#696969; '>// with code samples, see documentation at:</span>
 <span style='color:#696969; '>// "</span><span style='color:#5555dd; '>https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html</span><span style='color:#696969; '>"</span>
 <span style='color:#696969; '>//</span>
-<span style='color:#800000; font-weight:bold; '>int</span> <span style='color:#400000; '>main</span><span style='color:#808030; '>(</span><span style='color:#800000; font-weight:bold; '>int</span> argc<span style='color:#808030; '>,</span> <span style='color:#800000; font-weight:bold; '>char</span> <span style='color:#808030; '>*</span>argv<span style='color:#808030; '>[</span><span style='color:#808030; '>]</span><span style='color:#808030; '>)</span> <span style='color:#800080; '>{</span>
+<span style='color:#800000; font-weight:bold; '>int</span> <span style='color:#400000; '>main</span><span style='color:#808030; '>(</span><span style='color:#800000; font-weight:bold; '>int</span><span style='color:#808030; '>,</span> <span style='color:#800000; font-weight:bold; '>char</span> <span style='color:#808030; '>*</span><span style='color:#808030; '>[</span><span style='color:#808030; '>]</span><span style='color:#808030; '>)</span> <span style='color:#800080; '>{</span>
 
     <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>vector</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>unsigned</span> <span style='color:#800000; font-weight:bold; '>long</span><span style='color:#800080; '>></span>  idx_col1 <span style='color:#808030; '>=</span> <span style='color:#800080; '>{</span> <span style='color:#008c00; '>1</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>2</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>3</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>4</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>5</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>6</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>7</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>8</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>9</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>10</span> <span style='color:#800080; '>}</span><span style='color:#800080; '>;</span>
-    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>vector</span><span style='color:#800080; '>&lt;</span>MyData<span style='color:#800080; '>></span>         mydata_col<span style='color:#808030; '>(</span><span style='color:#008c00; '>10</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>vector</span><span style='color:#800080; '>&lt;</span>MyData<span style='color:#800080; '>></span>         mydata_col <span style='color:#808030; '>(</span><span style='color:#008c00; '>10</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
     <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>vector</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>int</span><span style='color:#800080; '>></span>            int_col1 <span style='color:#808030; '>=</span> <span style='color:#800080; '>{</span> <span style='color:#008c00; '>1</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>2</span><span style='color:#808030; '>,</span> <span style='color:#808030; '>-</span><span style='color:#008c00; '>3</span><span style='color:#808030; '>,</span> <span style='color:#808030; '>-</span><span style='color:#008c00; '>4</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>5</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>6</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>7</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>8</span><span style='color:#808030; '>,</span> <span style='color:#008c00; '>9</span><span style='color:#808030; '>,</span> <span style='color:#808030; '>-</span><span style='color:#008c00; '>10</span> <span style='color:#800080; '>}</span><span style='color:#800080; '>;</span>
     <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>vector</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span>         dbl_col1 <span style='color:#808030; '>=</span> <span style='color:#800080; '>{</span> <span style='color:#008000; '>0.01</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.02</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.03</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.03</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.05</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.06</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.03</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.08</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.09</span><span style='color:#808030; '>,</span> <span style='color:#008000; '>0.03</span> <span style='color:#800080; '>}</span><span style='color:#800080; '>;</span>
 
@@ -135,8 +134,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <span style='color:#696969; '>// Also, you can load data into a DataFrame from a file, suporting a few</span>
     <span style='color:#696969; '>// different formats.</span>
-    <span style='color:#696969; '>// If the file cannot be found, an exception will be thrown. If the DataFrame</span>
-    <span style='color:#696969; '>// test directory is your current directory when running this, it should work</span>
+    <span style='color:#696969; '>// If the file cannot be found, an exception will be thrown.</span>
+    <span style='color:#696969; '>// If the DataFrame root directory is your current directory when running</span>
+    <span style='color:#696969; '>// this, it should work</span>
     <span style='color:#696969; '>// fine.</span>
     <span style='color:#696969; '>//</span>
     ibm_df<span style='color:#808030; '>.</span>read<span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>data/SHORT_IBM.csv</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> io_format<span style='color:#800080; '>::</span>csv2<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
@@ -154,6 +154,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>cout</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> citer <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>endl</span><span style='color:#800080; '>;</span>
     <span style='color:#800000; font-weight:bold; '>for</span> <span style='color:#808030; '>(</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>size_t</span> i <span style='color:#808030; '>=</span> <span style='color:#008c00; '>0</span><span style='color:#800080; '>;</span> i <span style='color:#808030; '>&lt;</span> str_col_ref<span style='color:#808030; '>.</span>size<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span> <span style='color:#808030; '>+</span><span style='color:#808030; '>+</span>i<span style='color:#808030; '>)</span>
         <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>cout</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> str_col_ref<span style='color:#808030; '>[</span>i<span style='color:#808030; '>]</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>endl</span><span style='color:#800080; '>;</span>
+    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>cout</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>There are </span><span style='color:#800000; '>"</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> close_const_ref<span style='color:#808030; '>.</span>size<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '> IBM close prices</span><span style='color:#800000; '>"</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>endl</span><span style='color:#800080; '>;</span>
+    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>cout</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>There are </span><span style='color:#800000; '>"</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> index_vec<span style='color:#808030; '>.</span>size<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '> IBM indices</span><span style='color:#800000; '>"</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>endl</span><span style='color:#800080; '>;</span>
 
     <span style='color:#696969; '>// You can write the data to a file or stdout in a few formats</span>
     <span style='color:#696969; '>// You must specify all the column types, but only once</span>
@@ -161,6 +163,24 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <span style='color:#696969; '>//</span>
     ul_df2<span style='color:#808030; '>.</span>write<span style='color:#800080; '>&lt;</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>ostream</span><span style='color:#808030; '>,</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>string</span><span style='color:#808030; '>,</span> <span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>cout</span><span style='color:#808030; '>,</span> io_format<span style='color:#800080; '>::</span>csv2<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
     ibm_df<span style='color:#808030; '>.</span>write<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#808030; '>,</span> <span style='color:#800000; font-weight:bold; '>long</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>/tmp/test.json</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> io_format<span style='color:#800080; '>::</span>json<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+
+    <span style='color:#696969; '>// You can convert a DataFrame to a string and from a string back into a</span>
+    <span style='color:#696969; '>// DataFrame.</span>
+    <span style='color:#696969; '>// This could be used to transmit a DataFrame from one place to another</span>
+    <span style='color:#696969; '>// or store a DataFrame in databases, caches, …</span>
+    <span style='color:#696969; '>//</span>
+    <span style='color:#800000; font-weight:bold; '>const</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>string</span>  str_ibm <span style='color:#808030; '>=</span> ibm_df<span style='color:#808030; '>.</span>to_string<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#808030; '>,</span> <span style='color:#800000; font-weight:bold; '>long</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    StrDataFrame       ibm_df_2<span style='color:#800080; '>;</span>
+
+    ibm_df_2<span style='color:#808030; '>.</span>from_string<span style='color:#808030; '>(</span>str_ibm<span style='color:#808030; '>.</span>c_str<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>cout</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> str_ibm <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>endl</span><span style='color:#800080; '>;</span>
+    <span style='color:#696969; '>// ** assert((ibm_df.is_equal&lt;double, long>(ibm_df_2))); **</span>
+    <span style='color:#696969; '>//</span>
+    <span style='color:#696969; '>// Since we convert from native type to string and back, if you have</span>
+    <span style='color:#696969; '>// floating point numbers with long precisions, you may run into precision</span>
+    <span style='color:#696969; '>// mismatches.</span>
+    <span style='color:#696969; '>// to_string() has a precision parameter you can adjust. The defualt is 12</span>
+    <span style='color:#696969; '>// which is a relatively high precision.</span>
 
     <span style='color:#696969; '>// You can sort by one or multiple columns</span>
     <span style='color:#696969; '>// You must specify all the column types, but only once</span>
@@ -208,16 +228,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <span style='color:#800000; font-weight:bold; '>return</span> <span style='color:#808030; '>(</span><span style='color:#008c00; '>0</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
 <span style='color:#800080; '>}</span>
-
-<span style='color:#696969; '>// -----------------------------------------------------------------------------</span>
-
-<span style='color:#696969; '>// Local Variables:</span>
-<span style='color:#696969; '>// mode:C++</span>
-<span style='color:#696969; '>// tab-width:4</span>
-<span style='color:#696969; '>// c-basic-offset:4</span>
-<span style='color:#696969; '>// End:</span>
 </pre>
-<!--Created using ToHtml.com on 2021-08-14 13:57:29 UTC -->
+<!--Created using ToHtml.com on 2022-02-02 16:40:51 UTC -->
 
 </body>
 </html>

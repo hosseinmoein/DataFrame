@@ -39,7 +39,10 @@ namespace hmdf
 template<typename I, typename H>
 template<typename ... Ts>
 bool DataFrame<I, H>::
-write(const char *file_name, io_format iof, bool columns_only) const  {
+write(const char *file_name,
+      io_format iof,
+      std::streamsize precision,
+      bool columns_only) const  {
 
     std::ofstream   stream;
 
@@ -50,21 +53,22 @@ write(const char *file_name, io_format iof, bool columns_only) const  {
         err.printf("write(): ERROR: Unable to open file '%s'", file_name);
         throw DataFrameError(err.c_str());
     }
-    write<std::ostream, Ts ...>(stream, iof, columns_only);
+    write<std::ostream, Ts ...>(stream, iof, precision, columns_only);
     stream.close();
     return (true);
 }
+// cout.setf(ios::fixed, ios::floatfield);
 
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
 template<typename ... Ts>
 std::string
-DataFrame<I, H>::to_string(io_format iof) const  {
+DataFrame<I, H>::to_string(io_format iof, std::streamsize precision) const  {
 
     std::stringstream   ss (std::ios_base::out);
 
-    write<std::ostream, Ts ...>(ss, iof, false);
+    write<std::ostream, Ts ...>(ss, iof, precision, false);
     return (ss.str());
 }
 
@@ -72,20 +76,23 @@ DataFrame<I, H>::to_string(io_format iof) const  {
 
 template<typename I, typename H>
 template<typename S, typename ... Ts>
-bool DataFrame<I, H>::write (S &o, io_format iof, bool columns_only) const  {
+bool DataFrame<I, H>::
+write (S &o,
+       io_format iof,
+       std::streamsize precision,
+       bool columns_only) const  {
 
     if (iof != io_format::csv &&
         iof != io_format::json &&
         iof != io_format::csv2)
         throw NotImplemented("write(): This io_format is not implemented");
 
-    if (iof == io_format::json)
-        o << "{\n";
-
     bool            need_pre_comma = false;
     const size_type index_s = indices_.size();
 
+    o.precision(precision);
     if (iof == io_format::json)  {
+        o << "{\n";
         if (! columns_only)  {
             _write_json_df_header_<S, IndexType>(o, DF_INDEX_COL_NAME, index_s);
 
@@ -178,12 +185,20 @@ bool DataFrame<I, H>::write (S &o, io_format iof, bool columns_only) const  {
 template<typename I, typename H>
 template<typename ... Ts>
 std::future<bool> DataFrame<I, H>::
-write_async (const char *file_name, io_format iof, bool columns_only) const  {
+write_async (const char *file_name,
+             io_format iof,
+             std::streamsize precision,
+             bool columns_only) const  {
 
     return (std::async(std::launch::async,
-                       [file_name, iof, columns_only, this] () -> bool  {
+                       [file_name,
+                        iof,
+                        precision,
+                        columns_only,
+                        this] () -> bool  {
                            return (this->write<Ts ...>(file_name,
                                                        iof,
+                                                       precision,
                                                        columns_only));
                        }));
 }
@@ -193,12 +208,16 @@ write_async (const char *file_name, io_format iof, bool columns_only) const  {
 template<typename I, typename H>
 template<typename S, typename ... Ts>
 std::future<bool> DataFrame<I, H>::
-write_async (S &o, io_format iof, bool columns_only) const  {
+write_async (S &o,
+             io_format iof,
+             std::streamsize precision,
+             bool columns_only) const  {
 
     return (std::async(std::launch::async,
-                       [&o, iof, columns_only, this] () -> bool  {
+                       [&o, iof, precision, columns_only, this] () -> bool  {
                            return (this->write<S, Ts ...>(o,
                                                           iof,
+                                                          precision,
                                                           columns_only));
                        }));
 }
@@ -207,11 +226,11 @@ write_async (S &o, io_format iof, bool columns_only) const  {
 
 template<typename I, typename H>
 template<typename ... Ts>
-std::future<std::string>
-DataFrame<I, H>::to_string_async (io_format iof) const  {
+std::future<std::string> DataFrame<I, H>::
+to_string_async (io_format iof, std::streamsize precision) const  {
 
     return (std::async(std::launch::async,
-                       &DataFrame::to_string<Ts ...>, this, iof));
+                       &DataFrame::to_string<Ts ...>, this, iof, precision));
 }
 
 } // namespace hmdf

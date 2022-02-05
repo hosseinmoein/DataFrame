@@ -1,3 +1,4 @@
+<h1></h1>
 <!--
 Copyright (c) 2019-2022, Hossein Moein
 All rights reserved.
@@ -47,14 +48,29 @@ using hexpo_v = HurstExponentVisitor&lt;T, I&gt;;
       <td>
         This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
         This functor calculates the Hurst exponent for the given column.<BR>
-        A hurst exponent, H, between 0 to 0.5 is said to correspond to a mean reverting process (anti-persistent), H=0.5 corresponds to Geometric Brownian Motion (Random Walk), while H >= 0.5 corresponds to a process which is trending (persistent).<BR><BR>
+		We can use the Hurst exponent (H) as a measure for long-term memory of a time series, that is, to measure the amount by which that series deviates from a random walk. The scalar represents the relative tendency of a time series either to regress strongly to the mean (mean-reverting pattern) or to cluster in a certain direction (trending pattern).<BR>
+        The values of the Hurst exponent range between 0 and 1. Based on the value of H, we can classify any time series into one of the three categories:<BR>
+		<UL>
+          <LI>
+		    H < 0.5 — a mean-reverting (anti-persistent) series. The closer the value is to 0, the stronger the mean-reversion process is. In practice, it means that a high value is followed by a low value and vice-versa.
+          </LI>
+          <LI>
+		    H = 0.5 — a geometric random walk.<BR>
+          </LI>
+          <LI>
+		    H > 0.5 — a trending (persistent) series. The closer the value is to 1, the stronger the trend. In practice, it means that a high value is followed by a higher one.<BR>
+          </LI>
+		</UL>
         <I>
         <PRE>
     explicit
     HurstExponentVisitor(std::vector&lt;size_t&gt; &amp;&amp;ranges)
+
+    <B>ranges</B>: A vector of column length divisors.
+            For example, {1, 2, 4 } means calculate Hurst exponent in 3 steps.
+            It divides the time-series column to 1 chunk, 2 chunks and 4 chunks.
         </PRE>
-		</I>
-        <B>ranges</B>: A vector of column length divisors. For example, {1, 2, 4 } means calculate Hurst exponent in 3 steps.  It divides the time-series column to 1 chunk, 2 chunks and 4 chunks.
+	</I>
       </td>
       <td width="12%">
         <B>T</B>: Column data type.<BR>

@@ -38,6 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <functional>
 #include <future>
+#include <ios>
 #include <string>
 #include <tuple>
 #include <type_traits>
@@ -3265,6 +3266,8 @@ public:  // Utilities and miscellaneous
                        const IndexType &end_value,
                        long increment = 1);
 
+public:  // Reading and writing
+
     // It outputs the content of DataFrame into the stream o.
     // Currently two formats (i.e. csv, json) are supported specified by
     // the iof parameter.
@@ -3301,6 +3304,8 @@ public:  // Utilities and miscellaneous
     //   Reference to an streamable object (e.g. cout)
     // iof:
     //   Specifies the I/O format. The default is CSV
+    // precision:
+    //   Specifies the precision for floating point numbers
     // columns_only:
     //   If true, it won't write the index column
     //
@@ -3308,12 +3313,14 @@ public:  // Utilities and miscellaneous
     bool
     write(S &o,
           io_format iof = io_format::csv,
+          std::streamsize precision = 12,
           bool columns_only = false) const;
 
     template<typename ... Ts>
     bool
     write(const char *file_name,
           io_format iof = io_format::csv,
+          std::streamsize precision = 12,
           bool columns_only = false) const;
 
     // Same as write() above, but executed asynchronously
@@ -3322,12 +3329,14 @@ public:  // Utilities and miscellaneous
     [[nodiscard]] std::future<bool>
     write_async(S &o,
                 io_format iof = io_format::csv,
+                std::streamsize precision = 12,
                 bool columns_only = false) const;
 
     template<typename ... Ts>
     [[nodiscard]] std::future<bool>
     write_async(const char *file_name,
                 io_format iof = io_format::csv,
+                std::streamsize precision = 12,
                 bool columns_only = false) const;
 
     // This is a convenient function (simple implementation) to convert a
@@ -3341,16 +3350,20 @@ public:  // Utilities and miscellaneous
     //   the list only once.
     // iof:
     //   Specifies the I/O format. The default is CSV
+    // precision:
+    //   Specifies the precision for floating point numbers
     //
     template<typename ... Ts>
     [[nodiscard]] std::string
-    to_string(io_format iof = io_format::csv) const;
+    to_string(io_format iof = io_format::csv,
+              std::streamsize precision = 12) const;
 
     // Same as to_string() above, but executed asynchronously
     //
     template<typename ... Ts>
     [[nodiscard]] std::future<std::string>
-    to_string_async(io_format iof = io_format::csv) const;
+    to_string_async(io_format iof = io_format::csv,
+                    std::streamsize precision = 12) const;
 
     // It inputs the contents of a text file into itself (i.e. DataFrame).
     // Currently two formats (i.e. csv, json) are supported specified by
@@ -3430,7 +3443,7 @@ public:  // Utilities and miscellaneous
 
 private:
 
-    template<typename II, typename HH>
+    template<typename ALT_I, typename ALT_H>
     friend class DataFrame;
 
     using ColNameDict =

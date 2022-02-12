@@ -323,12 +323,44 @@ static void test_to_from_string()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_CoppockCurveVisitor()  {
+
+    std::cout << "\nTesting CoppockCurveVisitor{  } ..." << std::endl;
+
+    typedef StdDataFrame<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("data/SHORT_IBM.csv", io_format::csv2);
+
+        coppc_v<double, std::string>  copp;
+
+        df.single_act_visit<double>("IBM_Close", copp);
+
+        assert(copp.get_result().size() == 1721);
+        assert(std::isnan(copp.get_result()[0]));
+        assert(std::abs(copp.get_result()[14] - -0.051884971603) < 0.0000001);
+        assert(std::abs(copp.get_result()[18] - -0.100660882748) < 0.0000001);
+        assert(std::abs(copp.get_result()[25] - -0.124090378548) < 0.0000001);
+        assert(std::abs(copp.get_result()[1720] - -0.219247796696) < 0.0000001);
+        assert(std::abs(copp.get_result()[1712] - 0.0630742594051) < 0.0000001);
+        assert(std::abs(copp.get_result()[1707] - 0.0766481878384) < 0.0000001);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     test_groupby_edge();
     test_concat_view();
     test_get_data();
     test_to_from_string();
+    test_CoppockCurveVisitor();
 
     /*
     hmdf::SpinLock      locker;

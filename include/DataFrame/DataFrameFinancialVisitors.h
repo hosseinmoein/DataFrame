@@ -3964,6 +3964,70 @@ private:
 template<typename T, typename I = unsigned long>
 using p_vol_v = ParkinsonVolVisitor<T, I>;
 
+// ----------------------------------------------------------------------------
+
+template<typename T, typename I = unsigned long>
+struct  CoppockCurveVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
+
+        GET_COL_SIZE
+
+        roc_v<T, I> roc_l (roc_long_);
+
+        roc_l.pre();
+        roc_l (idx_begin, idx_end, column_begin, column_end);
+        roc_l.post();
+
+        roc_v<T, I> roc_s (roc_short_);
+
+        roc_s.pre();
+        roc_s (idx_begin, idx_end, column_begin, column_end);
+        roc_s.post();
+
+        result_type result = std::move(roc_l.get_result());
+
+        for (size_type i = 0; i < col_s; ++i)
+            result[i] += roc_s.get_result()[i];
+
+        using wma_t = SimpleRollAdopter<WeightedMeanVisitor<T, I>, T, I>;
+
+        wma_t   wma (WeightedMeanVisitor<T, I>(), wma_period_);
+
+        wma.pre();
+        wma (idx_begin, idx_end, result.begin(), result.end());
+        wma.post();
+
+        result_.swap(wma.get_result());
+    }
+
+    DEFINE_PRE_POST
+    DEFINE_RESULT
+
+    explicit
+    CoppockCurveVisitor(size_type roc_long = 14,
+                        size_type roc_short = 11,
+                        size_type wma_period = 10)
+        : roc_long_(roc_long),
+          roc_short_(roc_short),
+          wma_period_(wma_period) {   }
+
+private:
+
+    const size_type roc_long_;
+    const size_type roc_short_;
+    const size_type wma_period_;
+    result_type     result_ { };
+};
+
+template<typename T, typename I = unsigned long>
+using coppc_v = CoppockCurveVisitor<T, I>;
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

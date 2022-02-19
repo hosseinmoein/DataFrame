@@ -647,9 +647,12 @@ static void test_get_view_by_loc()  {
 
     MyDataFrameView dfv =
         df.get_view_by_loc<double, std::string>(Index2D<long> { 3, 6 });
+    MyDataFrameView dfv2 =
+        df.get_view_by_loc<double, std::string>(Index2D<long> { -5, -1 });
 
     dfv.shrink_to_fit<double, std::string>();
     dfv.write<std::ostream, double, std::string>(std::cout);
+    dfv2.write<std::ostream, double, std::string>(std::cout);
     dfv.get_column<double>("col_3")[0] = 88.0;
     assert(dfv.get_column<double>("col_3")[0] ==
            df.get_column<double>("col_3")[3]);

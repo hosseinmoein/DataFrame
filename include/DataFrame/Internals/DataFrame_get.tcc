@@ -448,7 +448,7 @@ DataFrame<I, H>::get_data_by_loc (Index2D<long> range) const  {
     if (range.begin < 0)
         range.begin = static_cast<long>(indices_.size()) + range.begin;
     if (range.end < 0)
-        range.end = static_cast<long>(indices_.size()) + range.end;
+        range.end = static_cast<long>(indices_.size()) + range.end + 1;
 
     if (range.end <= static_cast<long>(indices_.size()) &&
         range.begin <= range.end && range.begin >= 0)  {
@@ -529,7 +529,7 @@ DataFrame<I, H>::get_view_by_loc (Index2D<long> range)  {
     if (range.begin < 0)
         range.begin = idx_s + range.begin;
     if (range.end < 0)
-        range.end = idx_s + range.end;
+        range.end = idx_s + range.end + 1;
 
     if (range.end <= idx_s && range.begin <= range.end && range.begin >= 0)  {
         DataFrameView<IndexType>    dfv;

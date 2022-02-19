@@ -4278,6 +4278,55 @@ is_lognormal(const V &column, double epsl)  {
     return (false);
 }
 
+// ----------------------------------------------------------------------------
+
+template<typename A, typename T, typename I = unsigned long>
+struct  BiasVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+    using avg_type = A;
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
+
+        GET_COL_SIZE
+
+        if (roll_period_ == 0 || roll_period_ >= col_s)  return;
+
+        SimpleRollAdopter<avg_type, T, I>   avger(std::move(avg_v_),
+                                                  roll_period_);
+
+        avger.pre();
+        avger (idx_begin, idx_end, column_begin, column_end);
+        avger.post();
+
+        result_type result = std::move(avger.get_result());
+
+        for (size_type i = roll_period_ - 1; i < col_s; ++i)
+            result[i] = (*(column_begin + i) / result[i]) - T(1);
+
+        result_.swap(result);
+    }
+
+    DEFINE_PRE_POST
+    DEFINE_RESULT
+
+    explicit
+    BiasVisitor(avg_type avg, size_type roll_period = 26)
+        : roll_period_(roll_period), avg_v_(avg)  {   }
+
+private:
+
+    const size_type roll_period_;
+    avg_type        avg_v_;
+    result_type     result_ { };
+};
+
+template<typename A, typename T, typename I = unsigned long>
+using bias_v = BiasVisitor<A, T, I>;
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

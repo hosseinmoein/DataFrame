@@ -354,6 +354,89 @@ static void test_CoppockCurveVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_BiasVisitor()  {
+
+    std::cout << "\nTesting BiasVisitor{  } ..." << std::endl;
+
+    typedef StdDataFrame<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("data/SHORT_IBM.csv", io_format::csv2);
+        df.remove_data_by_loc<double, long>({ 0, 1500 });
+
+        using avg1 = MeanVisitor<double, std::string>;
+        avg1                                avg1_v;
+        bias_v<avg1, double, std::string>   bias1 (avg1_v);
+
+        df.single_act_visit<double>("IBM_Close", bias1);
+
+        assert(bias1.get_result().size() == 221);
+        assert(std::isnan(bias1.get_result()[0]));
+        assert(std::isnan(bias1.get_result()[24]));
+        assert(std::abs(bias1.get_result()[25] - 0.0309200276798) < 0.0000001);
+        assert(std::abs(bias1.get_result()[30] - 0.0476593371104) < 0.0000001);
+        assert(std::abs(bias1.get_result()[35] - 0.0907365898372) < 0.0000001);
+        assert(std::abs(bias1.get_result()[220] - -0.0698159942975) < 0.0000001);
+        assert(std::abs(bias1.get_result()[215] - -0.0490304287419) < 0.0000001);
+        assert(std::abs(bias1.get_result()[210] - 0.0241670104275) < 0.0000001);
+
+        using avg2 = WeightedMeanVisitor<double, std::string>;
+        avg2                                avg2_v;
+        bias_v<avg2, double, std::string>   bias2 (avg2_v);
+
+        df.single_act_visit<double>("IBM_Close", bias2);
+
+        assert(bias2.get_result().size() == 221);
+        assert(std::isnan(bias2.get_result()[0]));
+        assert(std::isnan(bias2.get_result()[24]));
+        assert(std::abs(bias2.get_result()[25] - 0.0223801539494) < 0.0000001);
+        assert(std::abs(bias2.get_result()[30] - 0.0381200363743) < 0.0000001);
+        assert(std::abs(bias2.get_result()[35] - 0.0680336039203) < 0.0000001);
+        assert(std::abs(bias2.get_result()[220] - -0.0531597856151) < 0.0000001);
+        assert(std::abs(bias2.get_result()[215] - -0.0496184340849) < 0.0000001);
+        assert(std::abs(bias2.get_result()[210] - 0.0167619968949) < 0.0000001);
+
+        using avg3 = GeometricMeanVisitor<double, std::string>;
+        avg3                                avg3_v;
+        bias_v<avg3, double, std::string>   bias3 (avg3_v);
+
+        df.single_act_visit<double>("IBM_Close", bias3);
+
+        assert(bias3.get_result().size() == 221);
+        assert(std::isnan(bias3.get_result()[0]));
+        assert(std::isnan(bias3.get_result()[24]));
+        assert(std::abs(bias3.get_result()[25] - 0.0311124066852) < 0.0000001);
+        assert(std::abs(bias3.get_result()[30] - 0.0478966127265) < 0.0000001);
+        assert(std::abs(bias3.get_result()[35] - 0.091868546875) < 0.0000001);
+        assert(std::abs(bias3.get_result()[220] - -0.0685320277298) < 0.0000001);
+        assert(std::abs(bias3.get_result()[215] - -0.0485339684272) < 0.0000001);
+        assert(std::abs(bias3.get_result()[210] - 0.0244743019131) < 0.0000001);
+
+        using avg4 = HarmonicMeanVisitor<double, std::string>;
+        avg4                                avg4_v;
+        bias_v<avg4, double, std::string>   bias4 (avg4_v);
+
+        df.single_act_visit<double>("IBM_Close", bias4);
+
+        assert(bias4.get_result().size() == 221);
+        assert(std::isnan(bias4.get_result()[0]));
+        assert(std::isnan(bias4.get_result()[24]));
+        assert(std::abs(bias4.get_result()[25] - 0.0313014165062) < 0.0000001);
+        assert(std::abs(bias4.get_result()[30] - 0.0481311022152) < 0.0000001);
+        assert(std::abs(bias4.get_result()[35] - 0.0929602802742) < 0.0000001);
+        assert(std::abs(bias4.get_result()[220] - -0.0672223160327) < 0.0000001);
+        assert(std::abs(bias4.get_result()[215] - -0.0480392086163) < 0.0000001);
+        assert(std::abs(bias4.get_result()[210] - 0.0247781127377) < 0.0000001);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     test_groupby_edge();
@@ -361,6 +444,7 @@ int main(int, char *[]) {
     test_get_data();
     test_to_from_string();
     test_CoppockCurveVisitor();
+    test_BiasVisitor();
 
     /*
     hmdf::SpinLock      locker;

@@ -2606,13 +2606,11 @@ struct DiffVisitor  {
                         std::numeric_limits<value_type>::quiet_NaN());
         }
 
-        if (non_zero_ && there_is_zero)  {
-            constexpr value_type    epsilon =
-                std::numeric_limits<value_type>::epsilon();
-
+        if (non_zero_ && there_is_zero)
             std::for_each(result.begin(), result.end(),
-                          [](value_type &v) { v += epsilon; });
-        }
+                          [](value_type &v) {
+                              v += std::numeric_limits<value_type>::epsilon();
+                          });
 
         result_.swap(result);
     }
@@ -4358,13 +4356,11 @@ struct  NonZeroRangeVisitor {
             result.push_back(v);
             if (v == 0)  there_is_zero = true;
         }
-        if (there_is_zero)  {
-            constexpr value_type    epsilon =
-                std::numeric_limits<value_type>::epsilon();
-
+        if (there_is_zero)
             std::for_each(result.begin(), result.end(),
-                          [](value_type &v)  { v += epsilon; });
-        }
+                          [](value_type &v)  {
+                              v += std::numeric_limits<value_type>::epsilon();
+                          });
 
         result_.swap(result);
     }

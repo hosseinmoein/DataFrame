@@ -87,7 +87,7 @@ int main(int, char *[]) {
 
     std::vector<unsigned long>  idx_col2 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
     std::vector<std::string>    str_col1 = { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J" };
-    std::vector<std::string>    str_col2 = { "K", "H", "L", "M", "N", "O", "P", "Q", "R", "S" };
+    std::vector<std::string>    str_col2 = { "K", "Hello World!", "L", "M", "N", "O", "P", "Q", "R", "S" };
     std::vector<double>         dbl_col2 = { 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0};
     ULDataFrame                 ul_df2;
 
@@ -99,6 +99,7 @@ int main(int, char *[]) {
                      std::make_pair("numbers", dbl_col2));
 
     StrDataFrame    ibm_df;
+    ULDataFrame     ford_df;
 
     // Also, you can load data into a DataFrame from a file, suporting a few
     // different formats.
@@ -107,7 +108,8 @@ int main(int, char *[]) {
     // this, it should work
     // fine.
     //
-    ibm_df.read("data/SHORT_IBM.csv", io_format::csv2);
+    ibm_df.read("data/IBM.csv", io_format::csv2);
+    ford_df.read("data/FORD.csv", io_format::csv2);
 
     // To access a column, you must know its name (or index) and its type
     //
@@ -118,10 +120,13 @@ int main(int, char *[]) {
     // In case of a "standard" DataFrame (not a view), the columns are returned
     // as a reference to a std::vector of type of that column.
     //
+    std::cout << ul_df2.get_column<std::string>("New York")[1] << std::endl;
     for (auto citer : str_col_ref)
-        std::cout << citer << std::endl;
+        std::cout << citer << ", ";
+    std::cout << std::endl;
     for (std::size_t i = 0; i < str_col_ref.size(); ++i)
-        std::cout << str_col_ref[i] << std::endl;
+        std::cout << str_col_ref[i] << ", ";
+    std::cout << std::endl;
     std::cout << "There are " << close_const_ref.size() << " IBM close prices" << std::endl;
     std::cout << "There are " << index_vec.size() << " IBM indices" << std::endl;
 
@@ -187,16 +192,26 @@ int main(int, char *[]) {
     // You can run statistical, financial, ML, … algorithms on one or multiple
     // columns by using visitors. You must specify the column(s) type(s)
     //
-    StdVisitor<double, std::string>     stdev;
-    CorrVisitor<double, std::string>    corrl;
+    StdVisitor<double, std::string>     ibm_stdev;
+    CorrVisitor<double, std::string>    ibm_corrl;
 
-    ibm_df.visit<double>("IBM_Close", stdev);
+    ibm_df.visit<double>("IBM_Close", ibm_stdev);
     std::cout << "Standard deviation of IBM close prices: "
-              << stdev.get_result()
+              << ibm_stdev.get_result()
+              << std::endl;
+    std::cout << "Correlation between IBM open and close prices: "
+              << ibm_df.visit<double, double>("IBM_Open", "IBM_Close", ibm_corrl).get_result()
               << std::endl;
 
-    std::cout << "Correlation between IBM open and close prices: "
-              << ibm_df.visit<double, double>("IBM_Open", "IBM_Close", corrl).get_result()
+    StdVisitor<double>  ford_stdev;
+    CorrVisitor<double> ford_corrl;
+
+    ford_df.visit<double>("FORD_Close", ford_stdev);
+    std::cout << "Standard deviation of Ford close prices: "
+              << ford_stdev.get_result()
+              << std::endl;
+    std::cout << "Correlation between Ford open and close prices: "
+              << ford_df.visit<double, double>("FORD_Open", "FORD_Close", ford_corrl).get_result()
               << std::endl;
 
     return (0);

@@ -460,7 +460,6 @@ struct MACDVisitor {
 
 private:
 
-
     using macd_roller_t = ewm_v<T, I>;
 
     const size_type short_mean_period_;
@@ -1114,7 +1113,7 @@ struct RSXVisitor {
                     f78 { 0 }, f80 { 0 }, f88 { 0 }, f90 { 0 };
 
         constexpr value_type    zero { 0 };
-        constexpr value_type    epsilon { 0.0000000001 };
+        constexpr value_type    epsilon = std::numeric_limits<T>::epsilon();
         constexpr value_type    half { 0.5 };
         constexpr value_type    one_half { 1.5 };
         constexpr value_type    one { 1 };
@@ -1359,21 +1358,14 @@ struct MassIndexVisitor {
         assert((col_s == size_type(std::distance(low_begin, low_end))));
         assert(fast_ < slow_);
 
-        bool        there_is_zero = false;
-        result_type result;
+        nzr_v<T, I> non_z_range;
 
-        result.reserve(col_s);
-        for (size_type i = 0; i < col_s; ++i)  {
-            const value_type    v = *(high_begin + i) - *(low_begin + i);
+        non_z_range.pre();
+        non_z_range(idx_begin, idx_end,
+                    high_begin, high_end, low_begin, low_end);
+        non_z_range.post();
 
-            result.push_back(v);
-            if (v == 0)  there_is_zero = true;
-        }
-        if (there_is_zero)
-            std::for_each(result.begin(), result.end(),
-                          [](value_type &v)  {
-                              v += std::numeric_limits<value_type>::epsilon();
-                          });
+        result_type result = std::move(non_z_range.get_result());
 
         erm_t   fast_roller(exponential_decay_spec::span, fast_);
 
@@ -4027,6 +4019,76 @@ private:
 
 template<typename T, typename I = unsigned long>
 using coppc_v = CoppockCurveVisitor<T, I>;
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename I = unsigned long>
+struct  BalanceOfPowerVisitor {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &low_begin, const H &low_end,
+                const H &high_begin, const H &high_end,
+                const H &open_begin, const H &open_end,
+                const H &close_begin, const H &close_end)  {
+
+        const size_type col_s = std::distance(close_begin, close_end);
+
+        assert((col_s == size_type(std::distance(low_begin, low_end))));
+        assert((col_s == size_type(std::distance(open_begin, open_end))));
+        assert((col_s == size_type(std::distance(high_begin, high_end))));
+
+        nzr_v<T, I> non_z_range;
+
+        non_z_range.pre();
+        non_z_range(idx_begin, idx_end,
+                    close_begin, close_end, open_begin, open_end);
+        non_z_range.post();
+
+        result_type result = std::move(non_z_range.get_result());;
+
+        non_z_range.pre();
+        non_z_range(idx_begin, idx_end,
+                    high_begin, high_end, low_begin, low_end);
+        non_z_range.post();
+
+        for (size_type i = 0; i < col_s; ++i)
+            result[i] /= non_z_range.get_result()[i];
+
+        if (rolling_avg_)  {
+            SimpleRollAdopter<MeanVisitor<T, I>, T, I>  avg
+                { MeanVisitor<T, I>(), rolling_period_ } ;
+
+            avg.pre();
+            avg (idx_begin, idx_end, result.begin(), result.end());
+            avg.post();
+            result_ = std::move(avg.get_result());
+
+        }
+        else
+            result_.swap(result);
+    }
+
+    DEFINE_PRE_POST
+    DEFINE_RESULT
+
+    explicit
+    BalanceOfPowerVisitor(bool rolling_avg = false,
+                          size_type rolling_period = 14)
+        : rolling_avg_(rolling_avg), rolling_period_(rolling_period)  {  }
+
+private:
+
+    result_type     result_ {  };
+    const bool      rolling_avg_;
+    const size_type rolling_period_;
+};
+
+template<typename T, typename I = unsigned long>
+using bop_v = BalanceOfPowerVisitor<T, I>;
 
 } // namespace hmdf
 

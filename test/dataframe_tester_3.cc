@@ -375,12 +375,12 @@ static void test_BiasVisitor()  {
         assert(bias1.get_result().size() == 221);
         assert(std::isnan(bias1.get_result()[0]));
         assert(std::isnan(bias1.get_result()[24]));
-        assert(std::abs(bias1.get_result()[25] - 0.0309200276798) < 0.0000001);
-        assert(std::abs(bias1.get_result()[30] - 0.0476593371104) < 0.0000001);
-        assert(std::abs(bias1.get_result()[35] - 0.0907365898372) < 0.0000001);
-        assert(std::abs(bias1.get_result()[220] - -0.0698159942975) < 0.0000001);
-        assert(std::abs(bias1.get_result()[215] - -0.0490304287419) < 0.0000001);
-        assert(std::abs(bias1.get_result()[210] - 0.0241670104275) < 0.0000001);
+        assert(std::abs(bias1.get_result()[25] - 0.0309) < 0.0001);
+        assert(std::abs(bias1.get_result()[30] - 0.0477) < 0.0001);
+        assert(std::abs(bias1.get_result()[35] - 0.0907) < 0.0001);
+        assert(std::abs(bias1.get_result()[220] - -0.0698) < 0.0001);
+        assert(std::abs(bias1.get_result()[215] - -0.049) < 0.0001);
+        assert(std::abs(bias1.get_result()[210] - 0.0242) < 0.0001);
 
         using avg2 = WeightedMeanVisitor<double, std::string>;
         avg2                                avg2_v;
@@ -391,12 +391,12 @@ static void test_BiasVisitor()  {
         assert(bias2.get_result().size() == 221);
         assert(std::isnan(bias2.get_result()[0]));
         assert(std::isnan(bias2.get_result()[24]));
-        assert(std::abs(bias2.get_result()[25] - 0.0223801539494) < 0.0000001);
-        assert(std::abs(bias2.get_result()[30] - 0.0381200363743) < 0.0000001);
-        assert(std::abs(bias2.get_result()[35] - 0.0680336039203) < 0.0000001);
-        assert(std::abs(bias2.get_result()[220] - -0.0531597856151) < 0.0000001);
-        assert(std::abs(bias2.get_result()[215] - -0.0496184340849) < 0.0000001);
-        assert(std::abs(bias2.get_result()[210] - 0.0167619968949) < 0.0000001);
+        assert(std::abs(bias2.get_result()[25] - 0.0224) < 0.0001);
+        assert(std::abs(bias2.get_result()[30] - 0.0381) < 0.0001);
+        assert(std::abs(bias2.get_result()[35] - 0.068) < 0.0001);
+        assert(std::abs(bias2.get_result()[220] - -0.0532) < 0.0001);
+        assert(std::abs(bias2.get_result()[215] - -0.0496) < 0.0001);
+        assert(std::abs(bias2.get_result()[210] - 0.0168) < 0.0001);
 
         using avg3 = GeometricMeanVisitor<double, std::string>;
         avg3                                avg3_v;
@@ -407,12 +407,12 @@ static void test_BiasVisitor()  {
         assert(bias3.get_result().size() == 221);
         assert(std::isnan(bias3.get_result()[0]));
         assert(std::isnan(bias3.get_result()[24]));
-        assert(std::abs(bias3.get_result()[25] - 0.0311124066852) < 0.0000001);
-        assert(std::abs(bias3.get_result()[30] - 0.0478966127265) < 0.0000001);
-        assert(std::abs(bias3.get_result()[35] - 0.091868546875) < 0.0000001);
-        assert(std::abs(bias3.get_result()[220] - -0.0685320277298) < 0.0000001);
-        assert(std::abs(bias3.get_result()[215] - -0.0485339684272) < 0.0000001);
-        assert(std::abs(bias3.get_result()[210] - 0.0244743019131) < 0.0000001);
+        assert(std::abs(bias3.get_result()[25] - 0.0311) < 0.0001);
+        assert(std::abs(bias3.get_result()[30] - 0.0479) < 0.0001);
+        assert(std::abs(bias3.get_result()[35] - 0.0919) < 0.0001);
+        assert(std::abs(bias3.get_result()[220] - -0.0685) < 0.0001);
+        assert(std::abs(bias3.get_result()[215] - -0.0485) < 0.0001);
+        assert(std::abs(bias3.get_result()[210] - 0.0245) < 0.0001);
 
         using avg4 = HarmonicMeanVisitor<double, std::string>;
         avg4                                avg4_v;
@@ -423,12 +423,59 @@ static void test_BiasVisitor()  {
         assert(bias4.get_result().size() == 221);
         assert(std::isnan(bias4.get_result()[0]));
         assert(std::isnan(bias4.get_result()[24]));
-        assert(std::abs(bias4.get_result()[25] - 0.0313014165062) < 0.0000001);
-        assert(std::abs(bias4.get_result()[30] - 0.0481311022152) < 0.0000001);
-        assert(std::abs(bias4.get_result()[35] - 0.0929602802742) < 0.0000001);
-        assert(std::abs(bias4.get_result()[220] - -0.0672223160327) < 0.0000001);
-        assert(std::abs(bias4.get_result()[215] - -0.0480392086163) < 0.0000001);
-        assert(std::abs(bias4.get_result()[210] - 0.0247781127377) < 0.0000001);
+        assert(std::abs(bias4.get_result()[25] - 0.0313) < 0.0001);
+        assert(std::abs(bias4.get_result()[30] - 0.0481) < 0.0001);
+        assert(std::abs(bias4.get_result()[35] - 0.093) < 0.0001);
+        assert(std::abs(bias4.get_result()[220] - -0.0672) < 0.0001);
+        assert(std::abs(bias4.get_result()[215] - -0.048) < 0.0001);
+        assert(std::abs(bias4.get_result()[210] - 0.0248) < 0.0001);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_BalanceOfPowerVisitor()  {
+
+    std::cout << "\nTesting BalanceOfPowerVisitor{  } ..." << std::endl;
+
+    typedef StdDataFrame<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("data/SHORT_IBM.csv", io_format::csv2);
+
+        bop_v<double, std::string>  bop;
+
+        df.single_act_visit<double, double, double, double>
+            ("IBM_Low", "IBM_High", "IBM_Open", "IBM_Close", bop);
+
+        assert(bop.get_result().size() == 1721);
+        assert(std::abs(bop.get_result()[0] - -0.7636) < 0.0001);
+        assert(std::abs(bop.get_result()[14] - 0.4319) < 0.0001);
+        assert(std::abs(bop.get_result()[18] - 0.1591) < 0.0001);
+        assert(std::abs(bop.get_result()[25] - 0.6466) < 0.0001);
+        assert(std::abs(bop.get_result()[1720] - 0.9284) < 0.0001);
+        assert(std::abs(bop.get_result()[1712] - -0.7341) < 0.0001);
+        assert(std::abs(bop.get_result()[1707] - -0.5465) < 0.0001);
+
+        bop_v<double, std::string>  bop2 (true);
+
+        df.single_act_visit<double, double, double, double>
+            ("IBM_Low", "IBM_High", "IBM_Open", "IBM_Close", bop2);
+
+        assert(bop2.get_result().size() == 1721);
+        assert(std::isnan(bop2.get_result()[0]));
+        assert(std::isnan(bop2.get_result()[12]));
+        assert(std::abs(bop2.get_result()[13] - -0.0328) < 0.0001);
+        assert(std::abs(bop2.get_result()[18] - -0.0743) < 0.0001);
+        assert(std::abs(bop2.get_result()[25] - -0.0421) < 0.0001);
+        assert(std::abs(bop2.get_result()[1720] - -0.1183) < 0.0001);
+        assert(std::abs(bop2.get_result()[1712] - -0.0729) < 0.0001);
+        assert(std::abs(bop2.get_result()[1707] - -0.0102) < 0.0001);
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
@@ -445,6 +492,7 @@ int main(int, char *[]) {
     test_to_from_string();
     test_CoppockCurveVisitor();
     test_BiasVisitor();
+    test_BalanceOfPowerVisitor();
 
     /*
     hmdf::SpinLock      locker;

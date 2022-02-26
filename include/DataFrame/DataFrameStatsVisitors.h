@@ -2606,11 +2606,13 @@ struct DiffVisitor  {
                         std::numeric_limits<value_type>::quiet_NaN());
         }
 
-        if (non_zero_ && there_is_zero)
+        if (non_zero_ && there_is_zero)  {
+            constexpr value_type    epsilon =
+                std::numeric_limits<value_type>::epsilon();
+
             std::for_each(result.begin(), result.end(),
-                          [](value_type &v) {
-                              v += std::numeric_limits<value_type>::epsilon();
-                          });
+                          [](value_type &v) { v += epsilon; });
+        }
 
         result_.swap(result);
     }
@@ -4326,6 +4328,59 @@ private:
 
 template<typename A, typename T, typename I = unsigned long>
 using bias_v = BiasVisitor<A, T, I>;
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename I = unsigned long>
+struct  NonZeroRangeVisitor {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column1_begin, const H &column1_end,
+                const H &column2_begin, const H &column2_end)  {
+
+        const std::size_t   col_s =
+            std::min(std::distance(idx_begin, idx_end), \
+                     std::distance(column1_begin, column1_end));
+
+        assert((col_s == size_type(std::distance(column2_begin, column2_end))));
+
+        bool        there_is_zero = false;
+        result_type result;
+
+        result.reserve(col_s);
+        for (size_type i = 0; i < col_s; ++i)  {
+            const value_type    v = *(column1_begin + i) - *(column2_begin + i);
+
+            result.push_back(v);
+            if (v == 0)  there_is_zero = true;
+        }
+        if (there_is_zero)  {
+            constexpr value_type    epsilon =
+                std::numeric_limits<value_type>::epsilon();
+
+            std::for_each(result.begin(), result.end(),
+                          [](value_type &v)  { v += epsilon; });
+        }
+
+        result_.swap(result);
+    }
+
+    DEFINE_PRE_POST
+    DEFINE_RESULT
+
+    NonZeroRangeVisitor() = default;
+
+private:
+
+    result_type result_ {  };
+};
+
+template<typename T, typename I = unsigned long>
+using nzr_v = NonZeroRangeVisitor<T, I>;
 
 } // namespace hmdf
 

@@ -45,6 +45,8 @@ target_sources(DataFrame
 
 target_compile_features(DataFrame PUBLIC cxx_std_17)
 target_compile_definitions(DataFrame
+    PRIVATE
+        $<$<BOOL:${HMDF_HAVE_CLOCK_GETTIME}>:HMDF_HAVE_CLOCK_GETTIME>
     PUBLIC
         $<$<CXX_COMPILER_ID:MSVC>:_USE_MATH_DEFINES>
 )

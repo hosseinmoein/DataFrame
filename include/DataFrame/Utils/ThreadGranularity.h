@@ -78,9 +78,7 @@ struct  SpinLock  {
 
         const std::thread::id   thr_id = std::this_thread::get_id();
 
-        if (thr_id == owner_)
-            count_ += 1;
-        else  {
+        if (thr_id != owner_)  {
 #ifdef __cpp_lib_atomic_flag_test
             while (true) {
                 if (! lock_.test_and_set(std::memory_order_acquire)) break;
@@ -90,8 +88,9 @@ struct  SpinLock  {
             while (lock_.test_and_set(std::memory_order_acquire)) ;
 #endif // __cpp_lib_atomic_flag_test
             owner_ = thr_id;
-            count_ += 1;
         }
+
+        count_ += 1;
     }
     inline bool try_lock() noexcept {
 

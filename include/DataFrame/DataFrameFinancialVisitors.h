@@ -3754,14 +3754,15 @@ struct  TrueRangeVisitor {
 
     template <typename K, typename H>
     inline void
-    operator() (const K &, const K &,
+    operator() (const K &idx_begin, const K &idx_end,
                 const H &low_begin, const H &/*low_end*/,
                 const H &high_begin, const H &/*high_end*/,
                 const H &close_begin, const H &close_end)  {
 
         const size_type col_s = std::distance(close_begin, close_end);
-        result_type     result (col_s, std::numeric_limits<T>::quiet_NaN());
+        result_type     result (col_s);
 
+        result[0] = *high_begin - *low_begin;
         for (size_type i = 1; i < col_s; ++i)  {
             const value_type    high = *(high_begin + i);
             const value_type    low = *(low_begin + i);
@@ -3772,15 +3773,32 @@ struct  TrueRangeVisitor {
                                    std::fabs(prev_c - low) });
         }
 
-        result_.swap(result);
+        if (rolling_avg_)  {
+            SimpleRollAdopter<MeanVisitor<T, I>, T, I>  avg
+                { MeanVisitor<T, I>(), rolling_period_ } ;
+
+            avg.pre();
+            avg (idx_begin, idx_end, result.begin(), result.end());
+            avg.post();
+            result_ = std::move(avg.get_result());
+
+        }
+        else
+            result_.swap(result);
     }
 
     DEFINE_PRE_POST
     DEFINE_RESULT
 
+    explicit
+    TrueRangeVisitor(bool rolling_avg = true, size_type rolling_period = 14)
+        : rolling_avg_(rolling_avg), rolling_period_(rolling_period)  {  }
+
 private:
 
-    result_type result_ {  };
+    result_type     result_ {  };
+    const bool      rolling_avg_;
+    const size_type rolling_period_;
 };
 
 // ----------------------------------------------------------------------------
@@ -4089,6 +4107,112 @@ private:
 
 template<typename T, typename I = unsigned long>
 using bop_v = BalanceOfPowerVisitor<T, I>;
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename I = unsigned long>
+struct  ChandeKrollStopVisitor {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &low_begin, const H &low_end,
+                const H &high_begin, const H &high_end,
+                const H &close_begin, const H &close_end)  {
+
+        const size_type col_s = std::distance(close_begin, close_end);
+
+        assert((col_s == size_type(std::distance(low_begin, low_end))));
+        assert((col_s == size_type(std::distance(high_begin, high_end))));
+
+        TrueRangeVisitor<T, I>  atr(true, p_period_);
+
+        atr.pre();
+        atr(idx_begin, idx_end,
+            low_begin, low_end,
+            high_begin, high_end,
+            close_begin, close_end);
+        atr.post();
+
+        SimpleRollAdopter<MaxVisitor<T, I>, T, I>   max1
+            { MaxVisitor<T, I>(), p_period_ };
+
+        max1.pre();
+        max1 (idx_begin, idx_end, high_begin, high_end);
+        max1.post();
+
+        result_type long_stop = std::move(max1.get_result());;
+
+        for (size_type i = 0; i < col_s; ++i)
+            long_stop[i] -= multiplier_ * atr.get_result()[i];
+
+        SimpleRollAdopter<MaxVisitor<T, I>, T, I>   max2
+            { MaxVisitor<T, I>(), q_period_ };
+
+        max2.pre();
+        max2 (idx_begin, idx_end, long_stop.begin(), long_stop.end());
+        max2.post();
+        long_stop = std::move(max2.get_result());
+
+        SimpleRollAdopter<MinVisitor<T, I>, T, I>   min1
+            { MinVisitor<T, I>(), p_period_ };
+
+        min1.pre();
+        min1 (idx_begin, idx_end, low_begin, low_end);
+        min1.post();
+
+        result_type short_stop = std::move(min1.get_result());;
+
+        for (size_type i = 0; i < col_s; ++i)
+            short_stop[i] += multiplier_ * atr.get_result()[i];
+
+        SimpleRollAdopter<MaxVisitor<T, I>, T, I>   min2
+            { MaxVisitor<T, I>(), q_period_ };
+
+        min2.pre();
+        min2 (idx_begin, idx_end, short_stop.begin(), short_stop.end());
+        min2.post();
+        short_stop = std::move(min2.get_result());
+
+        long_stop_ = std::move(long_stop);
+        short_stop_ = std::move(short_stop);
+    }
+
+    inline void pre ()  {
+
+        long_stop_.clear();
+        short_stop_.clear();
+    }
+    inline void post ()  {   }
+
+    const result_type &get_result() const  { return (long_stop_); }
+    result_type &get_result()  { return (long_stop_); }
+    const result_type &get_long_stop() const  { return (long_stop_); }
+    result_type &get_long_stop()  { return (long_stop_); }
+    const result_type &get_short_stop() const  { return (short_stop_); }
+    result_type &get_short_stop()  { return (short_stop_); }
+
+    explicit
+    ChandeKrollStopVisitor(size_type p_period = 10,
+                           size_type q_period = 20,
+                           value_type multiplier = 3)
+        : p_period_(p_period),
+          q_period_(q_period),
+          multiplier_(multiplier)  {  }
+
+private:
+
+    result_type         long_stop_ {  };
+    result_type         short_stop_ {  };
+    const size_type     p_period_;
+    const size_type     q_period_;
+    const value_type    multiplier_; // X
+};
+
+template<typename T, typename I = unsigned long>
+using cksp_v = ChandeKrollStopVisitor<T, I>;
 
 } // namespace hmdf
 

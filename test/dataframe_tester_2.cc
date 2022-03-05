@@ -3865,13 +3865,14 @@ static void test_TrueRangeVisitor()  {
         fut.get();
         assert(tr.get_result().size() == 1721);
         assert(std::isnan(tr.get_result()[0]));
-        assert(std::abs(tr.get_result()[19] - 1.5) < 0.1);
-        assert(std::abs(tr.get_result()[20] - 2.5) < 0.1);
-        assert(std::abs(tr.get_result()[24] - 1.06001) < 0.00001);
-        assert(std::abs(tr.get_result()[25] - 2.89) < 0.01);
-        assert(std::abs(tr.get_result()[1720] - 4.05) < 0.01);
-        assert(std::abs(tr.get_result()[1712] - 8.68) < 0.01);
-        assert(std::abs(tr.get_result()[1707] - 2.75) < 0.01);
+        assert(std::isnan(tr.get_result()[12]));
+        assert(std::abs(tr.get_result()[19] - 3.1071) < 0.0001);
+        assert(std::abs(tr.get_result()[20] - 3.1221) < 0.0001);
+        assert(std::abs(tr.get_result()[24] - 2.9714) < 0.0001);
+        assert(std::abs(tr.get_result()[25] - 2.9671) < 0.0001);
+        assert(std::abs(tr.get_result()[1720] - 3.1857) < 0.0001);
+        assert(std::abs(tr.get_result()[1712] - 3.625) < 0.0001);
+        assert(std::abs(tr.get_result()[1707] - 3.3629) < 0.0001);
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;

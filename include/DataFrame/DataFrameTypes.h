@@ -502,6 +502,43 @@ using DataFramePtrView = DataFrame<I, HeteroPtrView>;
 
 // ----------------------------------------------------------------------------
 
+// Helper macro for building DataFrame
+// e.g.:
+// struct MyDfSchema
+// {
+//     DECL_COL(Col0, std::string);
+//     DECL_COL(Col1, int32_t);
+//     DECL_COL(Col2, int64_t);
+//     DECL_COL(Col3, double);
+// };
+//
+// then usage:
+// df.load_column<MyDfSchema::Col0::type>(MyDfSchema::Col0::name,
+//                                        std::move(col_vec));
+
+#define DECL_COL(COLUMN_NAME, C_TYPE) \
+    struct COLUMN_NAME \
+    { \
+        constexpr static const char* name = {#COLUMN_NAME}; \
+        using type = C_TYPE; \
+        const char* col_name() const { return name; } \
+    }; \
+
+template <typename T>
+struct CommonColumn
+{
+    CommonColumn(std::string_view col_name)
+        : name_{col_name}
+    {}
+
+    using type = T;
+    const char* col_name() const { return name_.c_str(); }
+
+    std::string name_;
+};
+
+// ----------------------------------------------------------------------------
+
 // Evertyhting is in bytes. The numbers are estimates, since memory allocated
 // is really unknown to the objects such as vectors.
 // If type has dynamically allocated memory, it is not counted here

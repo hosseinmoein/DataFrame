@@ -166,6 +166,11 @@ struct  HeteroVector  {
     template<typename... Ts>
     struct visitor_base  { using types = type_list<Ts ...>; };
 
+    template <typename... Ts>
+    struct visitor_base<std::tuple<Ts...>> {
+        using types = type_list<Ts ...>;
+    };
+
     template<typename T>
     void visit (T &&visitor)  {
 

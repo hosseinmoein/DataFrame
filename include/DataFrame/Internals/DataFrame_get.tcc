@@ -95,6 +95,16 @@ DataFrame<I, H>::get_column (const char *name)  {
 
 template<typename I, typename  H>
 template<typename T>
+typename DataFrame<I, H>::template ColumnVecType<typename T::type> &
+DataFrame<I, H>::get_column ()  {
+
+    return (get_column<typename T::type>(T::name));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename T>
 typename DataFrame<I, H>::template ColumnVecType<T> &
 DataFrame<I, H>::get_column(size_type index)  {
 
@@ -125,6 +135,17 @@ const typename DataFrame<I, H>::template ColumnVecType<T> &
 DataFrame<I, H>::get_column (const char *name) const  {
 
     return (const_cast<DataFrame *>(this)->get_column<T>(name));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename T>
+const typename DataFrame<I, H>::template ColumnVecType<typename T::type> &
+DataFrame<I, H>::get_column () const  {
+
+    return (const_cast<DataFrame *>(this)->get_column<typename T::type>(
+                T::name));
 }
 
 // ----------------------------------------------------------------------------
@@ -824,6 +845,127 @@ get_data_by_sel (const char *name1,
 
     for (auto col_citer : column_list_)  {
         sel_load_functor_<size_type, Ts ...>    functor (
+            col_citer.first.c_str(),
+            col_indices,
+            idx_s,
+            df);
+        const SpinGuard                         guard(lock_);
+
+        data_[col_citer.second].change(functor);
+    }
+
+    return (df);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename Tuple, typename F, typename... FilterCols>
+DataFrame<I, H> DataFrame<I, H>::
+get_data_by_sel (F &sel_functor) const  {
+
+    const size_type idx_s = indices_.size();
+    // Get columns to std::tuple
+    std::tuple cols_for_filter(
+        get_column<typename FilterCols::type>(FilterCols::name)...);
+    // Calculate the max size in all columns
+    size_type col_s = 0;
+    std::apply([&](auto&&... col) {
+        using expander = int[];
+        (void)expander{0, ((col_s = col.size() > col_s ?
+                            col.size() : col_s), 0)...};
+    }, cols_for_filter);
+
+    // Get the index of all records that meet the filters
+    std::vector<size_type> col_indices;
+    col_indices.reserve(idx_s / 2);
+    for (size_type i = 0; i < col_s; ++i)
+    {
+        std::apply([&](auto&&... col) {
+            if (sel_functor(indices_[i],
+                            (i < col.size() ?
+                             col[i] :
+                             // Get default value based on vec::value_type
+                             get_nan<typename std::decay<decltype(col)>
+                             ::type::value_type>())...))
+            {
+                col_indices.push_back(i);
+            }
+        }, cols_for_filter);
+    }
+
+    // Get the records based on indices
+    DataFrame       df;
+    IndexVecType    new_index;
+
+    new_index.reserve(col_indices.size());
+    for (const auto citer: col_indices)
+        new_index.push_back(indices_[citer]);
+    df.load_index(std::move(new_index));
+
+    for (auto col_citer : column_list_)  {
+        sel_load_functor_<size_type, Tuple>    functor (
+            col_citer.first.c_str(),
+            col_indices,
+            idx_s,
+            df);
+        const SpinGuard                         guard(lock_);
+
+        data_[col_citer.second].change(functor);
+    }
+
+    return (df);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename Tuple, typename F, typename... FilterCols>
+DataFrame<I, H> DataFrame<I, H>::
+get_data_by_sel (F &sel_functor, FilterCols&&... filter_cols) const  {
+
+    const size_type idx_s = indices_.size();
+    // Get columns to std::tuple
+    std::tuple cols_for_filter(
+        get_column<typename std::decay<decltype(filter_cols)>::type::type>(
+            filter_cols.col_name())...);
+
+    // Calculate the max size in all columns
+    size_type col_s = 0;
+    std::apply([&](auto&&... col) {
+        using expander = int[];
+        (void)expander{0, ((col_s = col.size() > col_s ?
+                            col.size() : col_s), 0)...};
+    }, cols_for_filter);
+
+    // Get the index of all records that meet the filters
+    std::vector<size_type> col_indices;
+    col_indices.reserve(idx_s / 2);
+    for (size_type i = 0; i < col_s; ++i)
+    {
+        std::apply([&](auto&&... col) {
+            if (sel_functor(indices_[i],
+                            (i < col.size() ?
+                             col[i] :
+                             get_nan<typename std::decay<decltype(col)>
+                             ::type::value_type>())...))
+            {
+                col_indices.push_back(i);
+            }
+        }, cols_for_filter);
+    }
+
+    DataFrame       df;
+    IndexVecType    new_index;
+
+    // Get the records based on indices
+    new_index.reserve(col_indices.size());
+    for (const auto citer: col_indices)
+        new_index.push_back(indices_[citer]);
+    df.load_index(std::move(new_index));
+
+    for (auto col_citer : column_list_)  {
+        sel_load_functor_<size_type, Tuple>    functor (
             col_citer.first.c_str(),
             col_indices,
             idx_s,

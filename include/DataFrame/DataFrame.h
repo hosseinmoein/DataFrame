@@ -1391,6 +1391,10 @@ public: // Read/access and slicing interfaces
     get_column(const char *name);
 
     template<typename T>
+    [[nodiscard]] ColumnVecType<typename T::type> &
+    get_column();
+
+    template<typename T>
     [[nodiscard]] ColumnVecType<T> &
     get_column(size_type index);
 
@@ -1405,6 +1409,10 @@ public: // Read/access and slicing interfaces
     template<typename T>
     [[nodiscard]] const ColumnVecType<T> &
     get_column(const char *name) const;
+
+    template<typename T>
+    [[nodiscard]] const ColumnVecType<typename T::type> &
+    get_column() const;
 
     template<typename T>
     [[nodiscard]] const ColumnVecType<T> &
@@ -1990,6 +1998,82 @@ public: // Read/access and slicing interfaces
                     const char *name4,
                     const char *name5,
                     F &sel_functor);
+
+    // This method does boolean filtering selection via the sel_functor
+    // (e.g. a functor, function, or lambda). It returns a new DataFrame.
+    // Each element of the named column along with its corresponding index
+    // is passed to the sel_functor. If sel_functor returns true, that index
+    // is selected and all the elements of all column for that index will be
+    // included in the returned DataFrame.
+    // The signature of sel_fucntor:
+    //     bool ()(const IndexType &, const T &, ...)
+    //
+    // NOTE: If the selection logic results in empty column(s), the result
+    //       empty columns will _not_ be padded with NaN's. You can always
+    //       call make_consistent() on the original or result DataFrame to make
+    //       all columns into consistent length
+    //
+    // Tuple:
+    //   Tuple to collect the columns which will be shown in the return
+    //   DataFrame. Use `projection_list` to set columns.
+    // F:
+    //   Type of the selecting functor
+    // Cols:
+    //   List all data columns which need to be declared
+    //   by DECL_COL defined in DataFrameTypes.h, e.g.:
+    //     struct MyDfSchema
+    //     {
+    //         DECL_COL(Col0, std::string);
+    //         DECL_COL(Col1, int32_t);
+    //         DECL_COL(Col2, int64_t);
+    //         DECL_COL(Col3, double);
+    //     };
+    //
+    // sel_functor:
+    //   A reference to the selecting functor
+    //
+    template<typename Tuple, typename F, typename... FilterCols>
+    [[nodiscard]] DataFrame
+    get_data_by_sel(F &sel_functor) const;
+
+    // This method does boolean filtering selection via the sel_functor
+    // (e.g. a functor, function, or lambda). It returns a new DataFrame.
+    // Each element of the named column along with its corresponding index
+    // is passed to the sel_functor. If sel_functor returns true, that index
+    // is selected and all the elements of all column for that index will be
+    // included in the returned DataFrame.
+    // The signature of sel_fucntor:
+    //     bool ()(const IndexType &, const T &, ...)
+    //
+    // NOTE: If the selection logic results in empty column(s), the result
+    //       empty columns will _not_ be padded with NaN's. You can always
+    //       call make_consistent() on the original or result DataFrame to make
+    //       all columns into consistent length
+    //
+    // Tuple:
+    //   Tuple to collect types of the named columns which will be shown
+    //   in the return DataFrame. Use `projection_type_list` to set columns.
+    // F:
+    //   Type of the selecting functor
+    // FilterCols:
+    //   The types of input parameter `filter_cols`
+    //
+    // sel_functor:
+    //   A reference to the selecting functor
+    //
+    // filter_cols:
+    //   These will be as input parameter definition of sel_functor.
+    //   The arguments will be defined like:
+    //   struct XXXColumn
+    //   {
+    //       using type = T;
+    //       const char* Name() const { return xxx; }
+    //   };
+    //   So you can just use `struct CommonColumn` defined in `DataFrameTypes.h`
+    //
+    template<typename Tuple, typename F, typename... FilterCols>
+    [[nodiscard]] DataFrame
+    get_data_by_sel(F &sel_functor, FilterCols&&... filter_cols) const;
 
     // It returns a DataFrame (including the index and data columns)
     // containing the data from uniform random selection.

@@ -82,6 +82,70 @@ for_each_in_tuple(std::tuple<Ts...> &tu, F func)  {
 
 // ----------------------------------------------------------------------------
 
+template <typename Tuple, typename T>
+struct tuple_contain
+{};
+
+template <typename First, typename... Rest, typename T>
+struct tuple_contain<std::tuple<First, Rest...>, T> : tuple_contain<std::tuple<Rest...>, T>
+{};
+
+template <typename... Rest, typename T>
+struct tuple_contain<std::tuple<T, Rest...>, T> : std::true_type
+{};
+
+template <typename T>
+struct tuple_contain<std::tuple<>, T> : std::false_type
+{};
+
+template <class Out, class In>
+struct tuple_filter;
+
+template <class... Out, class InFirst, class... InRest>
+struct tuple_filter<std::tuple<Out...>, std::tuple<InFirst, InRest...>>
+{
+  using type = typename std::conditional<
+    tuple_contain<std::tuple<Out...>, InFirst>::value,
+      typename tuple_filter<std::tuple<Out...>, std::tuple<InRest...>>::type,
+      typename tuple_filter<std::tuple<Out..., InFirst>, std::tuple<InRest...>>::type
+  >::type;
+};
+
+template <class Out>
+struct tuple_filter<Out, std::tuple<>>
+{
+  using type = Out;
+};
+
+template <class Tuple>
+using make_tuple_types_unique = typename tuple_filter<std::tuple<>, Tuple>::type;
+
+template <typename Out, typename Tuple>
+struct append_inner_type;
+
+template <class... Out, class InFirst, class... InRest>
+struct append_inner_type<std::tuple<Out...>, std::tuple<InFirst, InRest...>>
+{
+    using type = typename append_inner_type<
+        std::tuple<typename InFirst::type, Out...>,
+        std::tuple<InRest...>>::type;
+};
+
+template <typename Out>
+struct append_inner_type<Out, std::tuple<>>
+{
+    using type = Out;
+};
+
+template <typename... Args>
+using projection_list = make_tuple_types_unique<
+    typename append_inner_type<std::tuple<>, std::tuple<Args...>>::type>;
+
+template <typename... Args>
+using projection_type_list = make_tuple_types_unique<std::tuple<Args...>>;
+
+// ----------------------------------------------------------------------------
+
 template<typename F, typename H, typename ... T>
 inline void unpacker(F func, H &head, T& ... tail);
 

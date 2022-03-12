@@ -43,6 +43,10 @@ add_executable(dataframe_tester_3 dataframe_tester_3.cc)
 target_link_libraries(dataframe_tester_3 PRIVATE DataFrame)
 add_test(NAME dataframe_tester_3 COMMAND dataframe_tester_3)
 
+add_executable(dataframe_tester_schema dataframe_tester_schema.cc)
+target_link_libraries(dataframe_tester_schema PRIVATE DataFrame)
+add_test(NAME dataframe_tester_schema COMMAND dataframe_tester_schema)
+
 add_executable(vectors_tester vectors_tester.cc)
 target_link_libraries(vectors_tester PRIVATE DataFrame)
 add_test(NAME vectors_tester COMMAND vectors_tester)

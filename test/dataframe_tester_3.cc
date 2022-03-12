@@ -527,6 +527,49 @@ static void test_ChandeKrollStopVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_VortexVisitor()  {
+
+    std::cout << "\nTesting VortexVisitor{  } ..." << std::endl;
+
+    typedef StdDataFrame<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("data/SHORT_IBM.csv", io_format::csv2);
+
+        vtx_v<double, std::string>  vtx;
+
+        df.single_act_visit<double, double, double>
+            ("IBM_Low", "IBM_High", "IBM_Close", vtx);
+
+        assert(vtx.get_result().size() == 1721);
+        assert(std::isnan(vtx.get_plus_indicator()[0]));
+        assert(std::isnan(vtx.get_plus_indicator()[12]));
+        assert(std::abs(vtx.get_plus_indicator()[20] - 0.7804) < 0.0001);
+        assert(std::abs(vtx.get_plus_indicator()[25] - 0.7063) < 0.0001);
+        assert(std::abs(vtx.get_plus_indicator()[35] - 1.2725) < 0.0001);
+        assert(std::abs(vtx.get_plus_indicator()[1720] - 0.6619) < 0.0001);
+        assert(std::abs(vtx.get_plus_indicator()[1712] - 0.8658) < 0.0001);
+        assert(std::abs(vtx.get_plus_indicator()[1707] - 0.9571) < 0.0001);
+
+        assert(vtx.get_minus_indicator().size() == 1721);
+        assert(std::isnan(vtx.get_minus_indicator()[0]));
+        assert(std::isnan(vtx.get_minus_indicator()[12]));
+        assert(std::abs(vtx.get_minus_indicator()[20] - 1.1256) < 0.0001);
+        assert(std::abs(vtx.get_minus_indicator()[25] - 1.1854) < 0.0001);
+        assert(std::abs(vtx.get_minus_indicator()[35] - 0.7427) < 0.0001);
+        assert(std::abs(vtx.get_minus_indicator()[1720] - 1.187) < 0.0001);
+        assert(std::abs(vtx.get_minus_indicator()[1712] - 1.016) < 0.0001);
+        assert(std::abs(vtx.get_minus_indicator()[1707] - 0.9819) < 0.0001);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     test_groupby_edge();
@@ -537,6 +580,7 @@ int main(int, char *[]) {
     test_BiasVisitor();
     test_BalanceOfPowerVisitor();
     test_ChandeKrollStopVisitor();
+    test_VortexVisitor();
 
     /*
     hmdf::SpinLock      locker;

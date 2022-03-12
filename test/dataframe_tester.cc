@@ -3937,12 +3937,19 @@ static void test_thread_safety()  {
 
         for (size_t i = 0; i < vec_size; ++i)
             vec.push_back(i);
+        df.load_data(MyDataFrame::gen_sequence_index(
+                         0,
+                         static_cast<unsigned long>(vec_size),
+                         1),
+                     std::make_pair("col1", vec));
 
-        df.load_data(
-            MyDataFrame::gen_sequence_index(0,
-                static_cast<unsigned long>(vec_size),
-                1),
-            std::make_pair("col1", vec));
+        auto    functor =
+            [](const unsigned long &, const size_t &val)-> bool {
+                return (val < size_t(100001));
+            };
+        auto    df2 =
+            df.get_data_by_sel<size_t, decltype(functor), size_t>
+                ("col1", functor);
 
         // This is an extremely inefficient way of doing it, especially in
         // a multithreaded program. Each “get_column” is a hash table
@@ -3953,11 +3960,12 @@ static void test_thread_safety()  {
         // between threads are bulletproof.
         //
         for (size_t i = 0; i < vec_size; ++i)  {
-            const size_t    j = df.get_column<size_t>("col1")[i];
+            const size_t    j = df2.get_column<size_t>("col1")[i];
 
             assert(i == j);
         }
         df.shrink_to_fit<size_t>();
+        df2.shrink_to_fit<size_t>();
     };
 
     SpinLock                    lock;

@@ -16,6 +16,7 @@ SRCS = Vectors/HeteroVector.cc \
        ../test/dataframe_tester_3.cc \
        ../examples/hello_world.cc \
        ../test/dataframe_thread_safety.cc \
+       ../test/dataframe_tester_schema.cc \
        ../benchmarks/dataframe_performance.cc \
        ../benchmarks/dataframe_performance_2.cc \
        Vectors/HeteroView.cc \
@@ -71,6 +72,7 @@ TARGETS += $(TARGET_LIB) \
            $(LOCAL_BIN_DIR)/dataframe_tester_3 \
            $(LOCAL_BIN_DIR)/hello_world \
            $(LOCAL_BIN_DIR)/dataframe_thread_safety \
+           $(LOCAL_BIN_DIR)/dataframe_tester_schema \
            $(LOCAL_BIN_DIR)/dataframe_performance \
            $(LOCAL_BIN_DIR)/dataframe_performance_2 \
            $(LOCAL_BIN_DIR)/vectors_tester \
@@ -152,6 +154,10 @@ DATAFRAME_THREAD_SAFTY_OBJ = $(LOCAL_OBJ_DIR)/dataframe_thread_safety.o
 $(LOCAL_BIN_DIR)/dataframe_thread_safety: $(TARGET_LIB) $(DATAFRAME_THREAD_SAFTY_OBJ)
 	$(CXX) -o $@ $(DATAFRAME_THREAD_SAFTY_OBJ) $(LIBS)
 
+DATAFRAME_TESTER_SCHEMA_OBJ = $(LOCAL_OBJ_DIR)/dataframe_tester_schema.o
+$(LOCAL_BIN_DIR)/dataframe_tester_schema: $(TARGET_LIB) $(DATAFRAME_TESTER_SCHEMA_OBJ)
+	$(CXX) -o $@ $(DATAFRAME_TESTER_SCHEMA_OBJ) $(LIBS)
+
 DATAFRAME_PERFORMANCE_OBJ = $(LOCAL_OBJ_DIR)/dataframe_performance.o
 $(LOCAL_BIN_DIR)/dataframe_performance: $(TARGET_LIB) $(DATAFRAME_PERFORMANCE_OBJ)
 	$(CXX) -o $@ $(DATAFRAME_PERFORMANCE_OBJ) $(LIBS)
@@ -187,14 +193,16 @@ clean:
           $(GEN_RAND_TESTER_OBJ) \
           $(DATAFRAME_PERFORMANCE_OBJ) $(DATAFRAME_TESTER_OBJ_2) \
           $(DATAFRAME_TESTER_OBJ_3) $(HELLO_WORLD_OBJ) \
-          $(DATAFRAME_PERFORMANCE_2_OBJ) $(DATAFRAME_THREAD_SAFTY_OBJ)
+          $(DATAFRAME_PERFORMANCE_2_OBJ) $(DATAFRAME_THREAD_SAFTY_OBJ) \
+          $(DATAFRAME_TESTER_SCHEMA_OBJ)
 
 clobber:
 	rm -f $(LIB_OBJS) $(TARGETS) $(DATAFRAME_TESTER_OBJ) $(VECTORS_TESTER_OBJ) \
           $(DATE_TIME_TESTER_OBJ) $(VECTOR_PTR_VIEW_TESTER_OBJ) \
           $(GEN_RAND_TESTER_OBJ) $(DATAFRAME_PERFORMACE_OBJ) \
           $(DATAFRAME_TESTER_OBJ_2) $(DATAFRAME_THREAD_SAFTY_OBJ) \
-          $(DATAFRAME_TESTER_OBJ_3) $(HELLO_WORLD_OBJ)
+          $(DATAFRAME_TESTER_OBJ_3) $(HELLO_WORLD_OBJ) \
+          $(DATAFRAME_TESTER_SCHEMA_OBJ)
 
 install_lib:
 	cp -pf $(TARGET_LIB) $(PROJECT_LIB_DIR)/.

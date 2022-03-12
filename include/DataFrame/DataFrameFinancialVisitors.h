@@ -4214,6 +4214,107 @@ private:
 template<typename T, typename I = unsigned long>
 using cksp_v = ChandeKrollStopVisitor<T, I>;
 
+// ----------------------------------------------------------------------------
+
+template<typename T, typename I = unsigned long>
+struct  VortexVisitor {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &low_begin, const H &low_end,
+                const H &high_begin, const H &high_end,
+                const H &close_begin, const H &close_end)  {
+
+        const size_type col_s = std::distance(close_begin, close_end);
+
+        assert((col_s == size_type(std::distance(low_begin, low_end))));
+        assert((col_s == size_type(std::distance(high_begin, high_end))));
+        assert((roll_period_ < (col_s - 1)));
+
+        TrueRangeVisitor<T, I>  tr (false);
+
+        tr.pre();
+        tr(idx_begin, idx_end,
+           low_begin, low_end,
+           high_begin, high_end,
+           close_begin, close_end);
+        tr.post();
+
+        SimpleRollAdopter<SumVisitor<T, I>, T, I>   tr_sum
+            { SumVisitor<T, I>(), roll_period_ };
+
+        tr_sum.pre();
+        tr_sum (idx_begin, idx_end,
+                tr.get_result().begin(), tr.get_result().end());
+        tr_sum.post();
+
+        result_type plus_indicator(col_s, std::numeric_limits<T>::quiet_NaN());
+        result_type minus_indicator(col_s, std::numeric_limits<T>::quiet_NaN());
+
+        for (size_type i = 1; i < col_s; ++i)  {
+            plus_indicator[i] =
+                std::fabs(*(high_begin + i) - *(low_begin + (i - 1)));
+            minus_indicator[i] =
+                std::fabs(*(low_begin + i) - *(high_begin + (i - 1)));
+        }
+
+        SimpleRollAdopter<SumVisitor<T, I>, T, I>   vtx_sum
+            { SumVisitor<T, I>(), roll_period_ };
+
+        vtx_sum.pre();
+        vtx_sum (idx_begin, idx_end,
+                 plus_indicator.begin(), plus_indicator.end());
+        vtx_sum.post();
+        plus_indicator = std::move(vtx_sum.get_result());
+
+        vtx_sum.pre();
+        vtx_sum (idx_begin, idx_end,
+                 minus_indicator.begin(), minus_indicator.end());
+        vtx_sum.post();
+        minus_indicator = std::move(vtx_sum.get_result());
+
+        for (size_type i = 0; i < col_s; ++i)  {
+            const value_type    val = tr_sum.get_result()[i];
+
+            plus_indicator[i] /= val;
+            minus_indicator[i] /= val;
+        }
+
+        plus_indicator_ = std::move(plus_indicator);
+        minus_indicator_ = std::move(minus_indicator);
+    }
+
+    inline void pre ()  {
+
+        plus_indicator_.clear();
+        minus_indicator_.clear();
+    }
+    inline void post ()  {   }
+
+    const result_type &get_result() const  { return (plus_indicator_); }
+    result_type &get_result()  { return (plus_indicator_); }
+    const result_type &get_plus_indicator() const  { return (plus_indicator_); }
+    result_type &get_plus_indicator()  { return (plus_indicator_); }
+    const result_type &
+    get_minus_indicator() const  { return (minus_indicator_); }
+    result_type &get_minus_indicator()  { return (minus_indicator_); }
+
+    explicit
+    VortexVisitor(size_type roll_period = 14) : roll_period_(roll_period)  {  }
+
+private:
+
+    result_type     plus_indicator_ {  };
+    result_type     minus_indicator_ {  };
+    const size_type roll_period_;
+};
+
+template<typename T, typename I = unsigned long>
+using vtx_v = VortexVisitor<T, I>;
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

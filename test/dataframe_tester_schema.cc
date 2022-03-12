@@ -9,11 +9,11 @@ using MyDataFrame = StdDataFrame<MyDataFrameIdxType>;
 
 struct MyDfSchema
 {
-    DECL_COL(col_1, double);
-    DECL_COL(col_2, double);
-    DECL_COL(col_3, double);
-    DECL_COL(col_4, double);
-    DECL_COL(col_str, std::string);
+    DECL_COL(col_1, double)
+    DECL_COL(col_2, double)
+    DECL_COL(col_3, double)
+    DECL_COL(col_4, double)
+    DECL_COL(col_str, std::string)
 };
 
 static void test_get_data_by_sel_with_input_param()
@@ -49,8 +49,8 @@ static void test_get_data_by_sel_with_input_param()
                    std::move(s1),
                    nan_policy::dont_pad_with_nans);
 
-    auto functor = [](const MyDataFrameIdxType& index,
-                      const MyDfSchema::col_1::type& val)-> bool {
+    auto functor = [](const MyDataFrameIdxType &,
+                      const MyDfSchema::col_1::type &val)-> bool {
         return (val >= 5);
     };
 
@@ -126,9 +126,10 @@ static void test_get_data_by_sel_with_input_param()
     assert(result2.get_column<MyDfSchema::col_1>()[2] == 5);
 }
 
-static void test_get_data_by_sel_without_input_param()
-{
-    std::cout << "\nTesting test_get_data_by_sel_without_input_param with schema ..."
+static void test_get_data_by_sel_without_input_param()  {
+
+    std::cout << "\nTesting test_get_data_by_sel_without_input_param "
+                 "with schema ..."
               << std::endl;
 
     std::vector<MyDataFrameIdxType> idx = {
@@ -150,8 +151,8 @@ static void test_get_data_by_sel_without_input_param()
                    std::move(d4),
                    nan_policy::dont_pad_with_nans);
 
-    auto functor = [](const MyDataFrameIdxType& index,
-                      const MyDfSchema::col_1::type& val)-> bool {
+    auto functor = [](const MyDataFrameIdxType &,
+                      const MyDfSchema::col_1::type &val)-> bool {
         return (val >= 5);
     };
     auto result = df.get_data_by_sel<
@@ -211,9 +212,10 @@ static void test_get_data_by_sel_without_input_param()
     assert(result2.get_column<MyDfSchema::col_1>()[2] == 5);
 }
 
-int main(int argc, char *argv[])
-{
+int main (int, char *[])  {
+
     test_get_data_by_sel_with_input_param();
     test_get_data_by_sel_without_input_param();
-    return 0;
+
+    return (0);
 }

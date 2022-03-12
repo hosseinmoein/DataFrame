@@ -494,8 +494,7 @@ using DataFramePtrView = DataFrame<I, HeteroPtrView>;
 
 // Helper macro for building DataFrame
 // e.g.:
-// struct MyDfSchema
-// {
+// struct MyDfSchema  {
 //     DECL_COL(Col0, std::string);
 //     DECL_COL(Col1, int32_t);
 //     DECL_COL(Col2, int64_t);
@@ -507,22 +506,23 @@ using DataFramePtrView = DataFrame<I, HeteroPtrView>;
 //                                        std::move(col_vec));
 
 #define DECL_COL(COLUMN_NAME, C_TYPE) \
-    struct COLUMN_NAME \
-    { \
-        constexpr static const char* name = {#COLUMN_NAME}; \
+    struct  COLUMN_NAME  { \
+\
+        constexpr static const char *name = {#COLUMN_NAME}; \
+\
         using type = C_TYPE; \
-        const char* col_name() const { return name; } \
+\
+        const char *col_name() const  { return (name); } \
     }; \
 
 template <typename T>
-struct CommonColumn
-{
-    CommonColumn(std::string_view col_name)
-        : name_{col_name}
-    {}
+struct  CommonColumn  {
+
+    CommonColumn(std::string_view col_name) : name_ (col_name)  {  }
 
     using type = T;
-    const char* col_name() const { return name_.c_str(); }
+
+    const char *col_name() const  { return (name_.c_str()); }
 
     std::string name_;
 };

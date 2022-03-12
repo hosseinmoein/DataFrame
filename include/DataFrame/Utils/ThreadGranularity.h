@@ -39,7 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace hmdf
 {
 
-struct ThreadGranularity {
+struct  ThreadGranularity  {
 
     static inline void
     set_thread_level(unsigned int n)  { num_of_threads_ = n; }
@@ -96,16 +96,13 @@ struct  SpinLock  {
 
         const std::thread::id   thr_id = std::this_thread::get_id();
 
-        if (thr_id == owner_)  {
-            count_ += 1;
-            return (true);
-        }
-        else if (! lock_.test_and_set(std::memory_order_acquire))  {
+        if (thr_id == owner_ ||
+            ! lock_.test_and_set(std::memory_order_acquire))  {
             owner_ = thr_id;
             count_ += 1;
-            return (true);
         }
-        return (false);
+
+        return (thr_id == owner_);
     }
     inline void unlock() noexcept {
 

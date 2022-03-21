@@ -570,6 +570,49 @@ static void test_VortexVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_KeltnerChannelsVisitor()  {
+
+    std::cout << "\nTesting KeltnerChannelsVisitor{  } ..." << std::endl;
+
+    typedef StdDataFrame<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("data/SHORT_IBM.csv", io_format::csv2);
+
+        kch_v<double, std::string>  kch;
+
+        df.single_act_visit<double, double, double>
+            ("IBM_Low", "IBM_High", "IBM_Close", kch);
+
+        assert(kch.get_result().size() == 1721);
+        assert(std::abs(kch.get_upper_band()[0] - 189.93) < 0.0001);
+        assert(std::abs(kch.get_upper_band()[12] - 193.3376) < 0.0001);
+        assert(std::abs(kch.get_upper_band()[20] - 187.5627) < 0.0001);
+        assert(std::abs(kch.get_upper_band()[25] - 184.0657) < 0.0001);
+        assert(std::abs(kch.get_upper_band()[35] - 186.5203) < 0.0001);
+        assert(std::abs(kch.get_upper_band()[1720] - 123.722) < 0.0001);
+        assert(std::abs(kch.get_upper_band()[1712] - 130.6271) < 0.0001);
+        assert(std::abs(kch.get_upper_band()[1707] - 130.4991) < 0.0001);
+
+        assert(kch.get_lower_band().size() == 1721);
+        assert(std::abs(kch.get_lower_band()[0] - 181.13) < 0.0001);
+        assert(std::abs(kch.get_lower_band()[12] - 181.8944) < 0.0001);
+        assert(std::abs(kch.get_lower_band()[20] - 175.9381) < 0.0001);
+        assert(std::abs(kch.get_lower_band()[25] - 173.3489) < 0.0001);
+        assert(std::abs(kch.get_lower_band()[35] - 175.6794) < 0.0001);
+        assert(std::abs(kch.get_lower_band()[1720] - 110.3163) < 0.0001);
+        assert(std::abs(kch.get_lower_band()[1712] - 116.7584) < 0.0001);
+        assert(std::abs(kch.get_lower_band()[1707] - 117.0264) < 0.0001);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     test_groupby_edge();
@@ -581,6 +624,7 @@ int main(int, char *[]) {
     test_BalanceOfPowerVisitor();
     test_ChandeKrollStopVisitor();
     test_VortexVisitor();
+    test_KeltnerChannelsVisitor();
 
     /*
     hmdf::SpinLock      locker;

@@ -4315,6 +4315,95 @@ private:
 template<typename T, typename I = unsigned long>
 using vtx_v = VortexVisitor<T, I>;
 
+// ----------------------------------------------------------------------------
+
+template<typename T,
+         typename I = unsigned long,
+         typename =
+             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+struct  KeltnerChannelsVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &low_begin, const H &low_end,
+                const H &high_begin, const H &high_end,
+                const H &close_begin, const H &close_end)  {
+
+        const size_type col_s = std::distance(close_begin, close_end);
+
+        assert((col_s == size_type(std::distance(low_begin, low_end))));
+        assert((col_s == size_type(std::distance(high_begin, high_end))));
+        assert((roll_period_ < (col_s - 1)));
+
+        TrueRangeVisitor<T, I>  tr (false);
+
+        tr.pre();
+        tr(idx_begin, idx_end,
+           low_begin, low_end,
+           high_begin, high_end,
+           close_begin, close_end);
+        tr.post();
+
+        ewm_v<T, I> basis(exponential_decay_spec::span, roll_period_, true);
+
+        basis.pre();
+        basis (idx_begin, idx_end, close_begin, close_end);
+        basis.post();
+
+        ewm_v<T, I> band(exponential_decay_spec::span, roll_period_, true);
+
+        band.pre();
+        band (idx_begin, idx_end,
+              tr.get_result().begin(), tr.get_result().end());
+        band.post();
+
+        result_type lower_band = std::move(tr.get_result());
+
+        for (size_type i = 0; i < col_s; ++i)
+            lower_band[i] =
+                basis.get_result()[i] - b_mult_ * band.get_result()[i];
+
+        result_type upper_band = std::move(basis.get_result());
+
+        for (size_type i = 0; i < col_s; ++i)
+            upper_band[i] += b_mult_ * band.get_result()[i];
+
+        upper_band_ = std::move(upper_band);
+        lower_band_ = std::move(lower_band);
+    }
+
+    inline void pre ()  {
+
+        upper_band_.clear();
+        lower_band_.clear();
+    }
+    inline void post ()  {  }
+    const result_type &get_result() const  { return (upper_band_); }
+    result_type &get_result()  { return (upper_band_); }
+    const result_type &get_upper_band() const  { return (upper_band_); }
+    result_type &get_upper_band()  { return (upper_band_); }
+    const result_type &get_lower_band() const  { return (lower_band_); }
+    result_type &get_lower_band()  { return (lower_band_); }
+
+    explicit
+    KeltnerChannelsVisitor(size_type roll_period = 20,
+                           value_type band_multiplier = 2.0)
+        : roll_period_(roll_period), b_mult_(band_multiplier)  {   }
+
+private:
+
+    result_type         upper_band_ { };
+    result_type         lower_band_ { };
+    const size_type     roll_period_;
+    const value_type    b_mult_;
+};
+
+template<typename T, typename I = unsigned long>
+using kch_v = KeltnerChannelsVisitor<T, I>;
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

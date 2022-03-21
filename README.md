@@ -100,13 +100,6 @@ sys     0m25.983s
 
 ---
 
-[DataFrame Test File](test/dataframe_tester.cc)<BR>
-[DataFrame Test File 2](test/dataframe_tester_2.cc)<BR>
-[Heterogeneous Vectors Test File](test/vectors_tester.cc)<BR>
-[Date/Time Test File](test/date_time_tester.cc)
-
----
-
 [Contributions](docs/CONTRIBUTING.md)<BR>
 [License](License)
 

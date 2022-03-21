@@ -105,8 +105,7 @@ int main(int, char *[]) {
     // different formats.
     // If the file cannot be found, an exception will be thrown.
     // If the DataFrame root directory is your current directory when running
-    // this, it should work
-    // fine.
+    // this, it should work fine.
     //
     ibm_df.read("data/IBM.csv", io_format::csv2);
     ford_df.read("data/FORD.csv", io_format::csv2);

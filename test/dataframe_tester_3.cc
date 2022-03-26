@@ -503,22 +503,22 @@ static void test_ChandeKrollStopVisitor()  {
         assert(cksp.get_result().size() == 1721);
         assert(std::isnan(cksp.get_long_stop()[0]));
         assert(std::isnan(cksp.get_long_stop()[18]));
-        assert(std::abs(cksp.get_long_stop()[20] - 182.305) < 0.0001);
-        assert(std::abs(cksp.get_long_stop()[25] - 182.305) < 0.0001);
-        assert(std::abs(cksp.get_long_stop()[35] - 181.18) < 0.0001);
-        assert(std::abs(cksp.get_long_stop()[1720] - 125.321) < 0.0001);
-        assert(std::abs(cksp.get_long_stop()[1712] - 125.321) < 0.0001);
-        assert(std::abs(cksp.get_long_stop()[1707] - 124.976) < 0.0001);
+        assert(std::abs(cksp.get_long_stop()[20] - 182.5875) < 0.0001);
+        assert(std::abs(cksp.get_long_stop()[25] - 182.5875) < 0.0001);
+        assert(std::abs(cksp.get_long_stop()[35] - 182.5875) < 0.0001);
+        assert(std::abs(cksp.get_long_stop()[1720] - 127.2591) < 0.0001);
+        assert(std::abs(cksp.get_long_stop()[1712] - 127.2591) < 0.0001);
+        assert(std::abs(cksp.get_long_stop()[1707] - 124.5657) < 0.0001);
 
         assert(cksp.get_short_stop().size() == 1721);
         assert(std::isnan(cksp.get_short_stop()[0]));
         assert(std::isnan(cksp.get_short_stop()[18]));
-        assert(std::abs(cksp.get_short_stop()[20] - 192.827) < 0.0001);
-        assert(std::abs(cksp.get_short_stop()[25] - 192.827) < 0.0001);
-        assert(std::abs(cksp.get_short_stop()[35] - 188.094) < 0.0001);
-        assert(std::abs(cksp.get_short_stop()[1720] - 131.796) < 0.0001);
-        assert(std::abs(cksp.get_short_stop()[1712] - 131.796) < 0.0001);
-        assert(std::abs(cksp.get_short_stop()[1707] - 129.975) < 0.0001);
+        assert(std::abs(cksp.get_short_stop()[20] - 192.6438) < 0.0001);
+        assert(std::abs(cksp.get_short_stop()[25] - 192.6438) < 0.0001);
+        assert(std::abs(cksp.get_short_stop()[35] - 187.8592) < 0.0001);
+        assert(std::abs(cksp.get_short_stop()[1720] - 131.7065) < 0.0001);
+        assert(std::abs(cksp.get_short_stop()[1712] - 131.7065) < 0.0001);
+        assert(std::abs(cksp.get_short_stop()[1707] - 131.7065) < 0.0001);
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;

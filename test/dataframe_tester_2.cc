@@ -3863,16 +3863,36 @@ static void test_TrueRangeVisitor()  {
             ("IBM_Low", "IBM_High", "IBM_Close", tr);
 
         fut.get();
+
         assert(tr.get_result().size() == 1721);
-        assert(std::isnan(tr.get_result()[0]));
-        assert(std::isnan(tr.get_result()[12]));
-        assert(std::abs(tr.get_result()[19] - 3.1071) < 0.0001);
-        assert(std::abs(tr.get_result()[20] - 3.1221) < 0.0001);
-        assert(std::abs(tr.get_result()[24] - 2.9714) < 0.0001);
-        assert(std::abs(tr.get_result()[25] - 2.9671) < 0.0001);
-        assert(std::abs(tr.get_result()[1720] - 3.1857) < 0.0001);
-        assert(std::abs(tr.get_result()[1712] - 3.625) < 0.0001);
-        assert(std::abs(tr.get_result()[1707] - 3.3629) < 0.0001);
+        assert(std::abs(tr.get_result()[0] - 2.2) < 0.0001);
+        assert(std::abs(tr.get_result()[12] - 2.8906) < 0.0001);
+        assert(std::abs(tr.get_result()[19] - 2.8988) < 0.0001);
+        assert(std::abs(tr.get_result()[20] - 2.8429) < 0.0001);
+        assert(std::abs(tr.get_result()[24] - 2.5409) < 0.0001);
+        assert(std::abs(tr.get_result()[25] - 2.5886) < 0.0001);
+        assert(std::abs(tr.get_result()[1720] - 3.4109) < 0.0001);
+        assert(std::abs(tr.get_result()[1712] - 3.6414) < 0.0001);
+        assert(std::abs(tr.get_result()[1707] - 3.5273) < 0.0001);
+
+        TrueRangeVisitor<double, std::string>   tr2 (true, 14, true);
+
+        std::future<TrueRangeVisitor<double, std::string> &>    fut2 =
+            df.single_act_visit_async<double, double, double>
+            ("IBM_Low", "IBM_High", "IBM_Close", tr2);
+
+        fut2.get();
+
+        assert(tr2.get_result().size() == 1721);
+        assert(std::abs(tr2.get_result()[0] - 1.1858) < 0.0001);
+        assert(std::abs(tr2.get_result()[12] - 1.534) < 0.0001);
+        assert(std::abs(tr2.get_result()[19] - 1.6344) < 0.0001);
+        assert(std::abs(tr2.get_result()[20] - 1.609) < 0.0001);
+        assert(std::abs(tr2.get_result()[24] - 1.4547) < 0.0001);
+        assert(std::abs(tr2.get_result()[25] - 1.4604) < 0.0001);
+        assert(std::abs(tr2.get_result()[1720] - 3.0547) < 0.0001);
+        assert(std::abs(tr2.get_result()[1712] - 3.1025) < 0.0001);
+        assert(std::abs(tr2.get_result()[1707] - 2.8196) < 0.0001);
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;

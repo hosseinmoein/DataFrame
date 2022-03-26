@@ -3774,31 +3774,40 @@ struct  TrueRangeVisitor {
         }
 
         if (rolling_avg_)  {
-            SimpleRollAdopter<MeanVisitor<T, I>, T, I>  avg
-                { MeanVisitor<T, I>(), rolling_period_ } ;
+            ewm_v<T, I> avg(exponential_decay_spec::span,
+                            rolling_period_,
+                            true);
 
             avg.pre();
             avg (idx_begin, idx_end, result.begin(), result.end());
             avg.post();
-            result_ = std::move(avg.get_result());
+            result = std::move(avg.get_result());
 
+            if (normalize_)
+                for (size_type i = 0; i < col_s; ++i)
+                    result[i] *= T(100) / *(close_begin + i);
         }
-        else
-            result_.swap(result);
+
+        result_.swap(result);
     }
 
     DEFINE_PRE_POST
     DEFINE_RESULT
 
     explicit
-    TrueRangeVisitor(bool rolling_avg = true, size_type rolling_period = 14)
-        : rolling_avg_(rolling_avg), rolling_period_(rolling_period)  {  }
+    TrueRangeVisitor(bool rolling_avg = true,
+                     size_type rolling_period = 14,
+                     bool normalize = false)
+        : rolling_period_(rolling_period),
+          rolling_avg_(rolling_avg),
+          normalize_(normalize)  {  }
 
 private:
 
     result_type     result_ {  };
-    const bool      rolling_avg_;
     const size_type rolling_period_;
+    const bool      rolling_avg_;
+    const bool      normalize_;
 };
 
 // ----------------------------------------------------------------------------

@@ -1,0 +1,133 @@
+<!--
+Copyright (c) 2019-2022, Hossein Moein
+All rights reserved.
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+* Redistributions of source code must retain the above copyright
+  notice, this list of conditions and the following disclaimer.
+* Redistributions in binary form must reproduce the above copyright
+  notice, this list of conditions and the following disclaimer in the
+  documentation and/or other materials provided with the distribution.
+* Neither the name of Hossein Moein and/or the DataFrame nor the
+  names of its contributors may be used to endorse or promote products
+  derived from this software without specific prior written permission.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL Hossein Moein BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+<!DOCTYPE html>
+<html>
+<body>
+  <table align="center" border="1">
+
+    <tr bgcolor="lightblue">
+      <th>Signature</th> <th>Description</th> <th>Parameters</th>
+    </tr>
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        <PRE><B>#include &lt;DataFrame/DataFrameFinancialVisitors.h&gt;
+
+template&lt;typename T, typename I = unsigned long&gt;
+struct TrixVisitor;
+
+// -------------------------------------
+
+template&lt;typename T, typename I = unsigned long&gt;
+using trix_v = TrixVisitor&lt;T, I&gt;;
+        </B></PRE></font>
+      </td>
+      <td>
+        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
+        This visitor calculates the balance of power indicator. It requires 4 input columns in the order of <I>low, high, open, close</I>.<BR>
+        The result is a vector of values with same number of items as the given columns. The first item, in the result will be NaN, if <I>signal_roll_period</I> is false. If avg_signal is true, the <I>first signal_roll_period - 1</I> will be NaN<BR><BR>
+        Developed by Jack Hutson in the early 1980s, the triple exponential average (TRIX) has become a popular technical analysis tool to aid chartists in spotting diversions and directional cues in stock trading patterns. Although many consider TRIX to be very similar to MACD, the primary difference between the two is that TRIX outputs are smoother due to the triple smoothing of the exponential moving average (EMA).<BR>
+
+        As a powerful oscillator indicator, TRIX can be used to identify oversold and overbought markets, and it can also be used as a momentum indicator. Like many oscillators, TRIX oscillates around a zero line. When it is used as an oscillator, an extreme positive value indicates an overbought market while an extreme negative value indicates an oversold market.<BR>
+        <I>
+        <PRE>
+    explicit
+    TrixVisitor (size_type roll_period = 14,
+                 bool avg_signal = false,
+                 size_type signal_roll_period = 7);
+
+    <B>rolling_avg</B>: Averaging period for triple exponential average
+    <B>avg_signal</B>: If true, the resulting return is averaged in a simple rolling window
+    <B>signal_roll_period</B>: rolling period for averaging the return, if <I>avg_signal</I> is true
+        </PRE>
+        </I>
+      </td>
+      <td width="12%">
+        <B>T</B>: Column data type<BR>
+        <B>I</B>: Index type
+      </td>
+    </tr>
+
+  </table>
+
+<pre style='color:#000000;background:#ffffff;'><span style='color:#800000; font-weight:bold; '>static</span> <span style='color:#800000; font-weight:bold; '>void</span> test_TrixVisitor<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span>  <span style='color:#800080; '>{</span>
+
+    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>cout</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#800000; '>"</span><span style='color:#0f69ff; '>\n</span><span style='color:#0000e6; '>Testing TrixVisitor{  } ...</span><span style='color:#800000; '>"</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>endl</span><span style='color:#800080; '>;</span>
+
+    <span style='color:#800000; font-weight:bold; '>typedef</span> StdDataFrame<span style='color:#800080; '>&lt;</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>string</span><span style='color:#800080; '>></span> StrDataFrame<span style='color:#800080; '>;</span>
+
+    StrDataFrame    df<span style='color:#800080; '>;</span>
+
+    <span style='color:#800000; font-weight:bold; '>try</span>  <span style='color:#800080; '>{</span>
+        df<span style='color:#808030; '>.</span>read<span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>data/SHORT_IBM.csv</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> io_format<span style='color:#800080; '>::</span>csv2<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+
+        trix_v<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#808030; '>,</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>string</span><span style='color:#800080; '>></span> trix<span style='color:#800080; '>;</span>
+
+        df<span style='color:#808030; '>.</span>single_act_visit<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>IBM_Close</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> trix<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+
+        assert<span style='color:#808030; '>(</span>trix<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>.</span>size<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>=</span><span style='color:#808030; '>=</span> <span style='color:#008c00; '>1721</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+        assert<span style='color:#808030; '>(</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span>isnan<span style='color:#808030; '>(</span>trix<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span><span style='color:#008c00; '>0</span><span style='color:#808030; '>]</span><span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+        assert<span style='color:#808030; '>(</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>abs</span><span style='color:#808030; '>(</span>trix<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span><span style='color:#008c00; '>4</span><span style='color:#808030; '>]</span> <span style='color:#808030; '>-</span> <span style='color:#008000; '>0.0009</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>&lt;</span> <span style='color:#008000; '>0.0001</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+        assert<span style='color:#808030; '>(</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>abs</span><span style='color:#808030; '>(</span>trix<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span><span style='color:#008c00; '>14</span><span style='color:#808030; '>]</span> <span style='color:#808030; '>-</span> <span style='color:#008000; '>0.0001</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>&lt;</span> <span style='color:#008000; '>0.0001</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+        assert<span style='color:#808030; '>(</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>abs</span><span style='color:#808030; '>(</span>trix<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span><span style='color:#008c00; '>18</span><span style='color:#808030; '>]</span> <span style='color:#808030; '>-</span> <span style='color:#808030; '>-</span><span style='color:#008000; '>0.001</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>&lt;</span> <span style='color:#008000; '>0.0001</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+        assert<span style='color:#808030; '>(</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>abs</span><span style='color:#808030; '>(</span>trix<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span><span style='color:#008c00; '>25</span><span style='color:#808030; '>]</span> <span style='color:#808030; '>-</span> <span style='color:#808030; '>-</span><span style='color:#008000; '>0.0024</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>&lt;</span> <span style='color:#008000; '>0.0001</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+        assert<span style='color:#808030; '>(</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>abs</span><span style='color:#808030; '>(</span>trix<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span><span style='color:#008c00; '>1720</span><span style='color:#808030; '>]</span> <span style='color:#808030; '>-</span> <span style='color:#808030; '>-</span><span style='color:#008000; '>0.0027</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>&lt;</span> <span style='color:#008000; '>0.0001</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+        assert<span style='color:#808030; '>(</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>abs</span><span style='color:#808030; '>(</span>trix<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span><span style='color:#008c00; '>1712</span><span style='color:#808030; '>]</span> <span style='color:#808030; '>-</span> <span style='color:#008000; '>0.0008</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>&lt;</span> <span style='color:#008000; '>0.0001</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+        assert<span style='color:#808030; '>(</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>abs</span><span style='color:#808030; '>(</span>trix<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span><span style='color:#008c00; '>1707</span><span style='color:#808030; '>]</span> <span style='color:#808030; '>-</span> <span style='color:#008000; '>0.0003</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>&lt;</span> <span style='color:#008000; '>0.0001</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+
+        trix_v<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#808030; '>,</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>string</span><span style='color:#800080; '>></span> trix2 <span style='color:#808030; '>(</span><span style='color:#008c00; '>14</span><span style='color:#808030; '>,</span> <span style='color:#800000; font-weight:bold; '>true</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+
+        df<span style='color:#808030; '>.</span>single_act_visit<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>IBM_Close</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> trix2<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+
+        assert<span style='color:#808030; '>(</span>trix2<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>.</span>size<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>=</span><span style='color:#808030; '>=</span> <span style='color:#008c00; '>1721</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+        assert<span style='color:#808030; '>(</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span>isnan<span style='color:#808030; '>(</span>trix2<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span><span style='color:#008c00; '>0</span><span style='color:#808030; '>]</span><span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+        assert<span style='color:#808030; '>(</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span>isnan<span style='color:#808030; '>(</span>trix2<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span><span style='color:#008c00; '>5</span><span style='color:#808030; '>]</span><span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+        assert<span style='color:#808030; '>(</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>abs</span><span style='color:#808030; '>(</span>trix2<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span><span style='color:#008c00; '>6</span><span style='color:#808030; '>]</span> <span style='color:#808030; '>-</span> <span style='color:#008000; '>0.0008</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>&lt;</span> <span style='color:#008000; '>0.0001</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+        assert<span style='color:#808030; '>(</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>abs</span><span style='color:#808030; '>(</span>trix2<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span><span style='color:#008c00; '>14</span><span style='color:#808030; '>]</span> <span style='color:#808030; '>-</span> <span style='color:#008000; '>0.0003</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>&lt;</span> <span style='color:#008000; '>0.0001</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+        assert<span style='color:#808030; '>(</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>abs</span><span style='color:#808030; '>(</span>trix2<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span><span style='color:#008c00; '>18</span><span style='color:#808030; '>]</span> <span style='color:#808030; '>-</span> <span style='color:#808030; '>-</span><span style='color:#008000; '>0.0002</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>&lt;</span> <span style='color:#008000; '>0.0001</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+        assert<span style='color:#808030; '>(</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>abs</span><span style='color:#808030; '>(</span>trix2<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span><span style='color:#008c00; '>25</span><span style='color:#808030; '>]</span> <span style='color:#808030; '>-</span> <span style='color:#808030; '>-</span><span style='color:#008000; '>0.0019</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>&lt;</span> <span style='color:#008000; '>0.0001</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+        assert<span style='color:#808030; '>(</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>abs</span><span style='color:#808030; '>(</span>trix2<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span><span style='color:#008c00; '>1720</span><span style='color:#808030; '>]</span> <span style='color:#808030; '>-</span> <span style='color:#808030; '>-</span><span style='color:#008000; '>0.0011</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>&lt;</span> <span style='color:#008000; '>0.0001</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+        assert<span style='color:#808030; '>(</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>abs</span><span style='color:#808030; '>(</span>trix2<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span><span style='color:#008c00; '>1712</span><span style='color:#808030; '>]</span> <span style='color:#808030; '>-</span> <span style='color:#008000; '>0.0006</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>&lt;</span> <span style='color:#008000; '>0.0001</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+        assert<span style='color:#808030; '>(</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>abs</span><span style='color:#808030; '>(</span>trix2<span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>[</span><span style='color:#008c00; '>1707</span><span style='color:#808030; '>]</span> <span style='color:#808030; '>-</span> <span style='color:#808030; '>-</span><span style='color:#008000; '>0.0005</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>&lt;</span> <span style='color:#008000; '>0.0001</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    <span style='color:#800080; '>}</span>
+    <span style='color:#800000; font-weight:bold; '>catch</span> <span style='color:#808030; '>(</span><span style='color:#800000; font-weight:bold; '>const</span> DataFrameError <span style='color:#808030; '>&amp;</span>ex<span style='color:#808030; '>)</span>  <span style='color:#800080; '>{</span>
+        <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>cout</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> ex<span style='color:#808030; '>.</span>what<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>endl</span><span style='color:#800080; '>;</span>
+    <span style='color:#800080; '>}</span>
+<span style='color:#800080; '>}</span>
+</pre>
+<!--Created using ToHtml.com on 2022-04-02 16:44:50 UTC -->
+
+  <img src="https://github.com/hosseinmoein/DataFrame/blob/master/docs/LionLookingUp.jpg?raw=true" alt="C++ DataFrame"
+       width="200" height="150" style="float:right"/>
+
+</body>
+</html>
+
+<!--
+Local Variables:
+mode:HTML
+tab-width:4
+c-basic-offset:4
+End:
+-->

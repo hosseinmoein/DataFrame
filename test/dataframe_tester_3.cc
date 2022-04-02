@@ -613,6 +613,53 @@ static void test_KeltnerChannelsVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_TrixVisitor()  {
+
+    std::cout << "\nTesting TrixVisitor{  } ..." << std::endl;
+
+    typedef StdDataFrame<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("data/SHORT_IBM.csv", io_format::csv2);
+
+        trix_v<double, std::string> trix;
+
+        df.single_act_visit<double>("IBM_Close", trix);
+
+        assert(trix.get_result().size() == 1721);
+        assert(std::isnan(trix.get_result()[0]));
+        assert(std::abs(trix.get_result()[4] - 0.0009) < 0.0001);
+        assert(std::abs(trix.get_result()[14] - 0.0001) < 0.0001);
+        assert(std::abs(trix.get_result()[18] - -0.001) < 0.0001);
+        assert(std::abs(trix.get_result()[25] - -0.0024) < 0.0001);
+        assert(std::abs(trix.get_result()[1720] - -0.0027) < 0.0001);
+        assert(std::abs(trix.get_result()[1712] - 0.0008) < 0.0001);
+        assert(std::abs(trix.get_result()[1707] - 0.0003) < 0.0001);
+
+        trix_v<double, std::string> trix2 (14, true);
+
+        df.single_act_visit<double>("IBM_Close", trix2);
+
+        assert(trix2.get_result().size() == 1721);
+        assert(std::isnan(trix2.get_result()[0]));
+        assert(std::isnan(trix2.get_result()[5]));
+        assert(std::abs(trix2.get_result()[6] - 0.0008) < 0.0001);
+        assert(std::abs(trix2.get_result()[14] - 0.0003) < 0.0001);
+        assert(std::abs(trix2.get_result()[18] - -0.0002) < 0.0001);
+        assert(std::abs(trix2.get_result()[25] - -0.0019) < 0.0001);
+        assert(std::abs(trix2.get_result()[1720] - -0.0011) < 0.0001);
+        assert(std::abs(trix2.get_result()[1712] - 0.0006) < 0.0001);
+        assert(std::abs(trix2.get_result()[1707] - -0.0005) < 0.0001);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     test_groupby_edge();
@@ -625,6 +672,7 @@ int main(int, char *[]) {
     test_ChandeKrollStopVisitor();
     test_VortexVisitor();
     test_KeltnerChannelsVisitor();
+    test_TrixVisitor();
 
     /*
     hmdf::SpinLock      locker;

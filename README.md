@@ -118,7 +118,7 @@ make uninstall
 ```
 
 ### Package managers
-If you are using _Conan_ to manage your dependencies, add `dataframe/x.y.z@` to your requires, where `x.y.z` is the release version you want to use. _Conan_ will acquire DataFrame, build it from source in your computer, and provide CMake integration support for your projects. See the [_Conan_ docs](https://docs.conan.io/en/latest/) for more information.<BR> Sample `conanfile.txt`:
+DataFrame is available on _Conan_ platform. Add `dataframe/x.y.z@` to your requires, where `x.y.z` is the release version you want to use. _Conan_ will acquire DataFrame, build it from source in your computer, and provide CMake integration support for your projects. See the [_Conan_ docs](https://docs.conan.io/en/latest/) for more information.<BR> Sample `conanfile.txt`:
 
 ```text
 [requires]
@@ -128,3 +128,10 @@ dataframe/1.20.0@
 cmake
 ```
 DataFrame is also available on [_Microsoft VCPKG_](https://vcpkg.io/en/index.html) platform
+```bash
+git clone https://github.com/Microsoft/vcpkg.git
+cd vcpkg
+./bootstrap-vcpkg.sh
+./vcpkg integrate install
+vcpkg install DataFrame
+```

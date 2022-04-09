@@ -4496,6 +4496,79 @@ private:
 template<typename T, typename I = unsigned long>
 using trix_v = TrixVisitor<T, I>;
 
+// ----------------------------------------------------------------------------
+
+template<typename T,
+         typename I = unsigned long,
+         typename =
+             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+struct PrettyGoodOsciVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &low_begin, const H &low_end,
+                const H &high_begin, const H &high_end,
+                const H &close_begin, const H &close_end)  {
+
+        const size_type col_s = std::distance(close_begin, close_end);
+
+        assert((col_s == size_type(std::distance(low_begin, low_end))));
+        assert((col_s == size_type(std::distance(high_begin, high_end))));
+        assert((roll_period_ < (col_s - 1)));
+
+        SimpleRollAdopter<MeanVisitor<T, I>, T, I>  savg
+            { MeanVisitor<T, I>(), roll_period_ } ;
+
+        savg.pre();
+        savg (idx_begin, idx_end, close_begin, close_end);
+        savg.post();
+
+        TrueRangeVisitor<T, I>  atr(true, roll_period_);
+
+        atr.pre();
+        atr(idx_begin, idx_end,
+            low_begin, low_end,
+            high_begin, high_end,
+            close_begin, close_end);
+        atr.post();
+
+        result_type result = std::move(savg.get_result());
+
+        for (size_type i = 0; i < col_s; ++i)
+            result[i] = *(close_begin + i) - result[i];
+
+        ewm_v<T, I> ewm(exponential_decay_spec::span, roll_period_, true);
+
+        ewm.pre();
+        ewm (idx_begin, idx_end,
+             atr.get_result().begin(), atr.get_result().end());
+        ewm.post();
+
+        for (size_type i = 0; i < col_s; ++i)
+            result[i] /= ewm.get_result()[i];
+
+        result_ = std::move(result);
+    }
+
+    DEFINE_PRE_POST
+    DEFINE_RESULT
+
+    explicit
+    PrettyGoodOsciVisitor (size_type roll_period = 14)
+        : roll_period_(roll_period)  {   }
+
+private:
+
+    result_type     result_ {  };
+    const size_type roll_period_;
+};
+
+template<typename T, typename I = unsigned long>
+using pgo_v = PrettyGoodOsciVisitor<T, I>;
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

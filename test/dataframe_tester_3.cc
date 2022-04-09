@@ -660,6 +660,40 @@ static void test_TrixVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_PrettyGoodOsciVisitor()  {
+
+    std::cout << "\nTesting PrettyGoodOsciVisitor{  } ..." << std::endl;
+
+    typedef StdDataFrame<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("data/SHORT_IBM.csv", io_format::csv2);
+
+        pgo_v<double, std::string>  pgo;
+
+        df.single_act_visit<double, double, double>
+            ("IBM_Low", "IBM_High", "IBM_Close", pgo);
+
+        assert(pgo.get_result().size() == 1721);
+        assert(std::isnan(pgo.get_result()[0]));
+        assert(std::isnan(pgo.get_result()[12]));
+        assert(std::abs(pgo.get_result()[14] - -1.3523) < 0.0001);
+        assert(std::abs(pgo.get_result()[20] - -1.8941) < 0.0001);
+        assert(std::abs(pgo.get_result()[25] - -0.2143) < 0.0001);
+        assert(std::abs(pgo.get_result()[35] - 1.3048) < 0.0001);
+        assert(std::abs(pgo.get_result()[1720] - -1.7059) < 0.0001);
+        assert(std::abs(pgo.get_result()[1712] - -2.2014) < 0.0001);
+        assert(std::abs(pgo.get_result()[1707] - 0.652) < 0.0001);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     test_groupby_edge();
@@ -673,6 +707,7 @@ int main(int, char *[]) {
     test_VortexVisitor();
     test_KeltnerChannelsVisitor();
     test_TrixVisitor();
+    test_PrettyGoodOsciVisitor();
 
     /*
     hmdf::SpinLock      locker;

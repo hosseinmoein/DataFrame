@@ -694,6 +694,61 @@ static void test_PrettyGoodOsciVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_col_name_to_idx()  {
+
+    std::cout << "\nTesting col_name_to_idx( )/col_idx_to_name( ) ..." <<
+              std::endl;
+
+    MyDataFrame df;
+
+    std::vector<unsigned long>  idxvec =
+        { 1UL, 2UL, 3UL, 10UL, 5UL, 7UL, 8UL, 12UL, 9UL, 12UL, 10UL, 13UL,
+          10UL, 15UL, 14UL };
+    std::vector<double>         dblvec =
+        { 0.0, 15.0, 14.0, 2.0, 1.0, 12.0, 11.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0,
+          9.0, 10.0 };
+    std::vector<double>         dblvec2 =
+        { 100.0, 101.0, 102.0, 103.0, 104.0, 105.0, 106.55, 107.34, 1.8, 111.0,
+          112.0, 113.0, 114.0, 115.0, 116.0 };
+    std::vector<int>            intvec =
+        { 1, 2, 3, 4, 5, 8, 6, 7, 11, 14, 9, 10, 15, 12, 13 };
+    std::vector<std::string>    strvec =
+        { "zz", "bb", "cc", "ww", "ee", "ff", "gg", "hh", "ii", "jj", "kk",
+          "ll", "mm", "nn", "oo" };
+
+    df.load_data(std::move(idxvec),
+                 std::make_pair("dbl_col", dblvec),
+                 std::make_pair("int_col", intvec),
+                 std::make_pair("str_col", strvec));
+
+    assert ((df.col_name_to_idx("int_col") == 1));
+    assert ((df.col_name_to_idx("str_col") == 2));
+    try  {
+        std::cout << df.col_name_to_idx("xxxxx") << std::endl;
+        assert(false);
+    }
+    catch (const ColNotFound &)  {
+        assert(true);
+    }
+
+    df.load_column("dbl_col_2", std::move(dblvec2));
+
+    assert ((df.col_name_to_idx("int_col") == 1));
+    assert ((df.col_name_to_idx("str_col") == 2));
+    assert ((df.col_name_to_idx("dbl_col_2") == 3));
+    assert ((! strcmp(df.col_idx_to_name(0), "dbl_col")));
+    assert ((! strcmp(df.col_idx_to_name(3), "dbl_col_2")));
+    try  {
+        std::cout << df.col_idx_to_name(5) << std::endl;
+        assert(false);
+    }
+    catch (const ColNotFound &)  {
+        assert(true);
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     test_groupby_edge();
@@ -708,6 +763,7 @@ int main(int, char *[]) {
     test_KeltnerChannelsVisitor();
     test_TrixVisitor();
     test_PrettyGoodOsciVisitor();
+    test_col_name_to_idx();
 
     /*
     hmdf::SpinLock      locker;

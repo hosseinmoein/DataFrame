@@ -131,7 +131,7 @@ DataFrame is also available on [_Microsoft VCPKG_](https://vcpkg.io/en/index.htm
 ```bash
 git clone https://github.com/Microsoft/vcpkg.git
 cd vcpkg
-./bootstrap-vcpkg.sh
-./vcpkg integrate install
-vcpkg install DataFrame
+bootstrap-vcpkg.bat
+vcpkg.exe integrate install
+vcpkg.exe install DataFrame
 ```

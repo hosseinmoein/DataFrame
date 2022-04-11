@@ -50,7 +50,7 @@ I have followed a few <B>principles in this library</B>:<BR>
 
 1.  Support any type either built-in or user defined without needing new code
 2.  Never chase pointers ala `linked lists`, `std::any`, `pointer to base`, ..., including `virtual functions`
-3.  Have all column data in continuous memory space. Also, be mindful of cache-line aliasing misses between multiple columns
+3.  Have all column data in contiguous memory space. Also, be mindful of cache-line aliasing misses between multiple columns
 4.  Never use more space than you need ala `unions`, `std::variant`, ...
 5.  Avoid copying data as much as possible
 6.  Use multi-threading but only when it makes sense

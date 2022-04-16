@@ -1317,82 +1317,6 @@ private:
 
 // ----------------------------------------------------------------------------
 
-// One pass simple linear regression
-//
-template<typename T,
-         typename I = unsigned long,
-         typename =
-             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
-struct SLRegressionVisitor  {
-
-public:
-
-    DEFINE_VISIT_BASIC_TYPES_2
-
-    inline void operator() (const index_type &idx,
-                            const value_type &x, const value_type &y)  {
-
-        if (skip_nan_ && (is_nan__(x) || is_nan__(y)))  return;
-
-        s_xy_ += (x_stats_.get_mean() - x) *
-                 (y_stats_.get_mean() - y) *
-                 value_type(n_) / value_type(n_ + 1);
-
-        x_stats_(idx, x);
-        y_stats_(idx, y);
-        n_ += 1;
-    }
-    PASS_DATA_ONE_BY_ONE_2
-
-    inline void pre ()  {
-
-        n_ = 0;
-        s_xy_ = 0;
-        x_stats_.pre();
-        y_stats_.pre();
-    }
-    inline void post ()  {  }
-
-    inline size_type get_count () const { return (n_); }
-    inline result_type get_slope () const  {
-
-        // Sum of the squares of the difference between each x and
-        // the mean x value.
-        //
-        const value_type    s_xx =
-            x_stats_.get_variance() * value_type(n_ - 1);
-
-        return (s_xy_ / s_xx);
-    }
-    inline result_type get_intercept () const  {
-
-        return (y_stats_.get_mean() - get_slope() * x_stats_.get_mean());
-    }
-    inline result_type get_corr () const  {
-
-        const value_type    t = x_stats_.get_std() * y_stats_.get_std();
-
-        return (s_xy_ / (value_type(n_ - 1) * t));
-    }
-
-    explicit SLRegressionVisitor(bool skipnan = true)
-        : x_stats_(skipnan), y_stats_(skipnan), skip_nan_(skipnan)  {   }
-
-private:
-
-    size_type                               n_ { 0 };
-
-    // Sum of the product of the difference between x and its mean and
-    // the difference between y and its mean.
-    //
-    value_type                              s_xy_ { 0 };
-    StatsVisitor<value_type, index_type>    x_stats_ {  };
-    StatsVisitor<value_type, index_type>    y_stats_ {  };
-    const bool                              skip_nan_;
-};
-
-// ----------------------------------------------------------------------------
-
 template<typename T,
          typename I = unsigned long,
          typename =
@@ -1986,6 +1910,55 @@ private:
 
 template<typename T, typename I = unsigned long>
 using ewm_v = ExponentiallyWeightedMeanVisitor<T, I>;
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename I = unsigned long>
+struct  ZeroLagMovingMeanVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
+
+        GET_COL_SIZE
+        assert(col_s > 3);
+        assert(roll_period_ < col_s - 1);
+
+        const size_type lag = size_type (0.5 * double(roll_period_ - 1));
+
+        result_.resize (col_s, std::numeric_limits<T>::quiet_NaN());
+        for (size_type i = lag; i < col_s; ++i)
+            result_[i] =
+                T(2) * *(column_begin + i) - *(column_begin + (i - lag));
+
+        ewm_v<T, I> ewm(exponential_decay_spec::span, roll_period_, true);
+
+        ewm.pre();
+        ewm (idx_begin, idx_end, result_.begin() + lag, result_.end());
+        ewm.post();
+
+        std::copy(ewm.get_result().begin(), ewm.get_result().end(),
+                  result_.begin() + lag);
+    }
+
+    DEFINE_PRE_POST
+    DEFINE_RESULT
+
+    explicit
+    ZeroLagMovingMeanVisitor(size_type roll_period)
+        : roll_period_(roll_period)  {   }
+
+private:
+
+    const size_type roll_period_;
+    result_type     result_ {  };
+};
+
+template<typename T, typename I = unsigned long>
+using zlmm_v = ZeroLagMovingMeanVisitor<T, I>;
 
 // ----------------------------------------------------------------------------
 

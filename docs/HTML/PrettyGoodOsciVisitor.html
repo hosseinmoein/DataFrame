@@ -45,7 +45,7 @@ using pgo_v = PrettyGoodOsciVisitor&lt;T, I&gt;;
       </td>
       <td>
         This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
-        This visitor calculates the the so-called pretty good oscillator. It requires 3 input columns in the order of <I>low, high, close</I>.<BR>
+        This visitor calculates the so-called pretty good oscillator. It requires 3 input columns in the order of <I>low, high, close</I>.<BR>
         The result is a vector of values with same number of items as the given columns. The first <I>rolling periods - 1</I> items in the result will be NaN<BR><BR>
         The “Pretty Good Oscillator” (PGO) by Mark Johnson measures the distance of the current close from its simple moving average of period average, expressed in terms of an average true range (see Average True Range) over a similar period. For instance, a PGO value of +2.5 would mean the current close is 2.5 average days’ range above the SMA. Johnson’s approach was to use it as a breakout system for longer-term trades. If the PGO rises above 3.0, then go long, or below -3.0, then go short, and in both cases exit on returning to zero (which is a close back at the SMA).<BR>
         The Pretty Good Oscillator is an Oscillator indicator, and it measures the distance between the present close and its N-day simple moving average. It is also possible to catch divergences with the Pretty Good Oscillator, and they occur when the indicator and price do not move in the same direction.<BR>

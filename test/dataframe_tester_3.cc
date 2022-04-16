@@ -749,6 +749,39 @@ static void test_col_name_to_idx()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_ZeroLagMovingMeanVisitor()  {
+
+    std::cout << "\nTesting ZeroLagMovingMeanVisitor{  } ..." << std::endl;
+
+    typedef StdDataFrame<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("data/SHORT_IBM.csv", io_format::csv2);
+
+        zlmm_v<double, std::string>  zlmm(10);
+
+        df.single_act_visit<double>("IBM_Close", zlmm);
+
+        assert(zlmm.get_result().size() == 1721);
+        assert(std::isnan(zlmm.get_result()[0]));
+        assert(std::isnan(zlmm.get_result()[3]));
+        assert(std::abs(zlmm.get_result()[14] - 184.6943) < 0.0001);
+        assert(std::abs(zlmm.get_result()[20] - 175.7459) < 0.0001);
+        assert(std::abs(zlmm.get_result()[25] - 174.5764) < 0.0001);
+        assert(std::abs(zlmm.get_result()[35] - 183.6864) < 0.0001);
+        assert(std::abs(zlmm.get_result()[1720] - 108.6729) < 0.0001);
+        assert(std::abs(zlmm.get_result()[1712] - 122.576) < 0.0001);
+        assert(std::abs(zlmm.get_result()[1707] - 127.9991) < 0.0001);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     test_groupby_edge();
@@ -764,6 +797,7 @@ int main(int, char *[]) {
     test_TrixVisitor();
     test_PrettyGoodOsciVisitor();
     test_col_name_to_idx();
+    test_ZeroLagMovingMeanVisitor();
 
     /*
     hmdf::SpinLock      locker;

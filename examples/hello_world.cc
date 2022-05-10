@@ -87,7 +87,8 @@ int main(int, char *[]) {
 
     std::vector<unsigned long>  idx_col2 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
     std::vector<std::string>    str_col1 = { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J" };
-    std::vector<std::string>    str_col2 = { "K", "Hello World!", "L", "M", "N", "O", "P", "Q", "R", "S" };
+    std::vector<std::string>    str_col2 =
+        { "Azadi", "Hello", " World", "!", "Hype", "cubic spline", "Foo", "Silverado", "Arash", "Pardis" };
     std::vector<double>         dbl_col2 = { 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0};
     ULDataFrame                 ul_df2;
 
@@ -95,7 +96,7 @@ int main(int, char *[]) {
     //
     ul_df2.load_data(std::move(idx_col2),
                      std::make_pair("string col", str_col1),
-                     std::make_pair("New York", str_col2),
+                     std::make_pair("Cool Column", str_col2),
                      std::make_pair("numbers", dbl_col2));
 
     StrDataFrame    ibm_df;
@@ -119,7 +120,10 @@ int main(int, char *[]) {
     // In case of a "standard" DataFrame (not a view), the columns are returned
     // as a reference to a std::vector of type of that column.
     //
-    std::cout << ul_df2.get_column<std::string>("New York")[1] << std::endl;
+    std::cout << ul_df2.get_column<std::string>("Cool Column")[1]
+              << ul_df2.get_column<std::string>("Cool Column")[2]
+              << ul_df2.get_column<std::string>("Cool Column")[3]
+              << std::endl;
     for (auto citer : str_col_ref)
         std::cout << citer << ", ";
     std::cout << std::endl;

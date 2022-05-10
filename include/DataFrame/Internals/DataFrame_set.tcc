@@ -611,7 +611,6 @@ append_column (const char *name, const T &val, nan_policy padding)  {
         throw InconsistentData (buffer);
     }
 
-    vec.reserve (idx_s);
     vec.push_back (val);
 
     size_type   ret_cnt = s;

@@ -382,6 +382,22 @@ static void test_BiasVisitor()  {
         assert(std::abs(bias1.get_result()[215] - -0.049) < 0.0001);
         assert(std::abs(bias1.get_result()[210] - 0.0242) < 0.0001);
 
+        using s_avg1 = StableMeanVisitor<double, std::string>;
+        s_avg1                              s_avg1_v;
+        bias_v<s_avg1, double, std::string> s_bias1 (s_avg1_v);
+
+        df.single_act_visit<double>("IBM_Close", s_bias1);
+
+        assert(s_bias1.get_result().size() == 221);
+        assert(std::isnan(s_bias1.get_result()[0]));
+        assert(std::isnan(s_bias1.get_result()[24]));
+        assert(std::abs(s_bias1.get_result()[25] - 0.0309) < 0.0001);
+        assert(std::abs(s_bias1.get_result()[30] - 0.0477) < 0.0001);
+        assert(std::abs(s_bias1.get_result()[35] - 0.0907) < 0.0001);
+        assert(std::abs(s_bias1.get_result()[220] - -0.0698) < 0.0001);
+        assert(std::abs(s_bias1.get_result()[215] - -0.049) < 0.0001);
+        assert(std::abs(s_bias1.get_result()[210] - 0.0242) < 0.0001);
+
         using avg2 = WeightedMeanVisitor<double, std::string>;
         avg2                                avg2_v;
         bias_v<avg2, double, std::string>   bias2 (avg2_v);

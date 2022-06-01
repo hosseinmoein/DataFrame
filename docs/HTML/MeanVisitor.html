@@ -33,7 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        <PRE><B>#include &lt;DataFrame/DataFrameStatsVisitors.h&gt;
+<PRE><B>#include &lt;DataFrame/DataFrameStatsVisitors.h&gt;
 
 template&lt;typename T, typename I = unsigned long&gt;
 struct MeanVisitor;
@@ -51,7 +51,26 @@ struct MeanVisitor;
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        <PRE><B>#include &lt;DataFrame/DataFrameStatsVisitors.h&gt;
+<PRE><B>#include &lt;DataFrame/DataFrameStatsVisitors.h&gt;
+
+template&lt;typename T, typename I = unsigned long&gt;
+struct StableMeanVisitor;
+        </B></PRE></font>
+      </td>
+      <td>
+        This functor class calculates running mean using Welford's algorithm for numerical stability<BR>
+        mean<sub>t</sub> += (X<sub>t</sub> - mean<sub>t-1</sub>) / count<BR>
+        The constructor takes a single optional Boolean argument to whether skip NaN values. The default is True. <BR>
+      </td>
+      <td width="12%">
+        <B>T</B>: Column data type<BR>
+        <B>I</B>: Index type
+      </td>
+    </tr>
+
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+<PRE><B>#include &lt;DataFrame/DataFrameStatsVisitors.h&gt;
 
 template&lt;typename T, typename I = unsigned long&gt;
 struct WeightedMeanVisitor;
@@ -70,7 +89,7 @@ struct WeightedMeanVisitor;
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        <PRE><B>#include &lt;DataFrame/DataFrameStatsVisitors.h&gt;
+<PRE><B>#include &lt;DataFrame/DataFrameStatsVisitors.h&gt;
 
 template&lt;typename T, typename I = unsigned long&gt;
 struct GeometricMeanVisitor;
@@ -88,7 +107,7 @@ struct GeometricMeanVisitor;
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        <PRE><B>#include &lt;DataFrame/DataFrameStatsVisitors.h&gt;
+<PRE><B>#include &lt;DataFrame/DataFrameStatsVisitors.h&gt;
 
 template&lt;typename T, typename I = unsigned long&gt;
 struct HarmonicMeanVisitor;
@@ -106,7 +125,7 @@ struct HarmonicMeanVisitor;
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        <PRE><B>#include &lt;DataFrame/DataFrameStatsVisitors.h&gt;
+<PRE><B>#include &lt;DataFrame/DataFrameStatsVisitors.h&gt;
 
 template&lt;typename T, typename I = unsigned long&gt;
 struct QuadraticMeanVisitor;

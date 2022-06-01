@@ -274,6 +274,39 @@ struct MeanVisitor : public MeanBase<T, I>  {
 
 // ----------------------------------------------------------------------------
 
+// Welford's algorithm for the running mean
+//
+template<typename T, typename I = unsigned long>
+struct StableMeanVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_2
+
+    inline void operator() (const I &, const T &val)  {
+
+        SKIP_NAN
+
+        cnt_ += 1;
+        mean_ += (val - mean_) / T(cnt_);
+    }
+    PASS_DATA_ONE_BY_ONE
+
+
+    inline void pre ()  { mean_ = 0; cnt_ = 0; }
+    inline size_type get_count () const  { return (cnt_); }
+    inline result_type get_result () const  { return (mean_); }
+    inline void post ()  {  }
+
+    StableMeanVisitor(bool skipnan = true) : skip_nan_(skipnan)  {   }
+
+private:
+
+    const bool  skip_nan_;
+    value_type  mean_ { 0 };
+    size_type   cnt_ { 0 };
+};
+
+// ----------------------------------------------------------------------------
+
 template<typename T, typename I = unsigned long>
 struct WeightedMeanVisitor : public MeanBase<T, I>  {
 

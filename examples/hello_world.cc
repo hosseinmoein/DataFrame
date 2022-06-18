@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/DataFrameFinancialVisitors.h>  // Financial algorithms
 #include <DataFrame/DataFrameMLVisitors.h>  // Machine-learning algorithms
 #include <DataFrame/DataFrameStatsVisitors.h>  // Statistical algorithms
+#include <DataFrame/Utils/DateTime.h>  // Cool and handy date-time object
 
 #include <iostream>
 
@@ -45,6 +46,10 @@ using ULDataFrame = StdDataFrame<unsigned long>;
 // A DataFrame with string index type
 //
 using StrDataFrame = StdDataFrame<std::string>;
+
+// A DataFrame with DateTime index type
+//
+using DTDataFrame = StdDataFrame<DateTime>;
 
 // This is just some arbitrary type to show how any type could be in DataFrame
 //
@@ -100,7 +105,6 @@ int main(int, char *[]) {
                      std::make_pair("numbers", dbl_col2));
 
     StrDataFrame    ibm_df;
-    ULDataFrame     ford_df;
 
     // Also, you can load data into a DataFrame from a file, suporting a few
     // different formats.
@@ -109,7 +113,6 @@ int main(int, char *[]) {
     // this, it should work fine.
     //
     ibm_df.read("data/IBM.csv", io_format::csv2);
-    ford_df.read("data/FORD.csv", io_format::csv2);
 
     // To access a column, you must know its name (or index) and its type
     //
@@ -206,15 +209,29 @@ int main(int, char *[]) {
               << ibm_df.visit<double, double>("IBM_Open", "IBM_Close", ibm_corrl).get_result()
               << std::endl;
 
-    StdVisitor<double>  ford_stdev;
-    CorrVisitor<double> ford_corrl;
+    // Now Let’s declare two DataFrames with index type of DateTime
+    // which is a handy object for date/time manipulations.
+    //
+    DTDataFrame dt_ibm;
+    DTDataFrame dt_aapl;
 
-    ford_df.visit<double>("FORD_Close", ford_stdev);
-    std::cout << "Standard deviation of Ford close prices: "
-              << ford_stdev.get_result()
-              << std::endl;
-    std::cout << "Correlation between Ford open and close prices: "
-              << ford_df.visit<double, double>("FORD_Open", "FORD_Close", ford_corrl).get_result()
+    // Let’s read the AAPL and IBM market data from their files.
+    // The data for these two stocks start and end at different dates.
+    // But there is overlapping data between them
+    //
+    dt_ibm.read("data/DT_IBM.csv", io_format::csv2);
+    dt_aapl.read("data/DT_AAPL.csv", io_format::csv2);
+
+    // Now we join the AAPL and IBM DataFrames using their indices and applying inner-join policy
+    //
+    DTDataFrame aapl_ibm = dt_ibm.join_by_index<DTDataFrame, double, long>(dt_aapl, join_policy::inner_join);
+
+    // Now we calculate the Pearson correlation coefficient between AAPL and IBM close prices
+    //
+    CorrVisitor<double, DateTime>   aapl_ibm_corrl;
+
+    std::cout << "Correlation between AAPL and IBM close prices: "
+              << aapl_ibm.visit<double, double>("AAPL_Close", "IBM_Close", aapl_ibm_corrl).get_result()
               << std::endl;
 
     return (0);

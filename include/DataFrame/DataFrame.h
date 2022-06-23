@@ -1380,6 +1380,20 @@ public: // Read/access and slicing interfaces
     [[nodiscard]] bool
     shapeless() const noexcept;
 
+    // It returns the column index for the given column name. If column name
+    // does not exist, a ColNotFound will be thrown.
+    // This method uses a linear search.
+    //
+    [[nodiscard]] size_type
+    col_name_to_idx(const char *col_name) const;
+
+    // It returns the column name for the given column index. If column index
+    // does not exist, a ColNotFound will be thrown.
+    // This method uses a linear search.
+    //
+    [[nodiscard]] const char *
+    col_idx_to_name(size_type col_idx) const;
+
     // It returns a reference to the container of named data column
     // The return type depends on if we are in standard or view mode
     //
@@ -1475,7 +1489,7 @@ public: // Read/access and slicing interfaces
     // This is same as get_row() above. But it always includes all the columns
     // in the returned row. The order is the column creation order. If you
     // have rotated the columns, the creation order has changed. You can always
-    // use column_name_to_idx() and column_idx_to_name() methods.
+    // use col_name_to_idx() and col_idx_to_name() methods.
     //
     // Ts:
     //   List all the types of all data columns. A type should be specified in

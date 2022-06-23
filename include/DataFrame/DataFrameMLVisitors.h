@@ -49,6 +49,82 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace hmdf
 {
 
+// One pass simple linear regression
+//
+template<typename T,
+         typename I = unsigned long,
+         typename =
+             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+struct SLRegressionVisitor  {
+
+public:
+
+    DEFINE_VISIT_BASIC_TYPES_2
+
+    inline void operator() (const index_type &idx,
+                            const value_type &x, const value_type &y)  {
+
+        if (skip_nan_ && (is_nan__(x) || is_nan__(y)))  return;
+
+        s_xy_ += (x_stats_.get_mean() - x) *
+                 (y_stats_.get_mean() - y) *
+                 value_type(n_) / value_type(n_ + 1);
+
+        x_stats_(idx, x);
+        y_stats_(idx, y);
+        n_ += 1;
+    }
+    PASS_DATA_ONE_BY_ONE_2
+
+    inline void pre ()  {
+
+        n_ = 0;
+        s_xy_ = 0;
+        x_stats_.pre();
+        y_stats_.pre();
+    }
+    inline void post ()  {  }
+
+    inline size_type get_count () const { return (n_); }
+    inline result_type get_slope () const  {
+
+        // Sum of the squares of the difference between each x and
+        // the mean x value.
+        //
+        const value_type    s_xx =
+            x_stats_.get_variance() * value_type(n_ - 1);
+
+        return (s_xy_ / s_xx);
+    }
+    inline result_type get_intercept () const  {
+
+        return (y_stats_.get_mean() - get_slope() * x_stats_.get_mean());
+    }
+    inline result_type get_corr () const  {
+
+        const value_type    t = x_stats_.get_std() * y_stats_.get_std();
+
+        return (s_xy_ / (value_type(n_ - 1) * t));
+    }
+
+    explicit SLRegressionVisitor(bool skipnan = true)
+        : x_stats_(skipnan), y_stats_(skipnan), skip_nan_(skipnan)  {   }
+
+private:
+
+    size_type                               n_ { 0 };
+
+    // Sum of the product of the difference between x and its mean and
+    // the difference between y and its mean.
+    //
+    value_type                              s_xy_ { 0 };
+    StatsVisitor<value_type, index_type>    x_stats_ {  };
+    StatsVisitor<value_type, index_type>    y_stats_ {  };
+    const bool                              skip_nan_;
+};
+
+// ----------------------------------------------------------------------------
+
 template<size_t K, typename T, typename I = unsigned long>
 struct  KMeansVisitor  {
 

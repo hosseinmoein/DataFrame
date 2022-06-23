@@ -69,6 +69,46 @@ MemUsage DataFrame<I, H>::get_memory_usage(const char *col_name) const  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename  H>
+typename DataFrame<I, H>::size_type
+DataFrame<I, H>::col_name_to_idx (const char *col_name) const  {
+
+    for (auto citer : column_list_)
+        if (citer.first == col_name)
+            return (citer.second);
+
+    char buffer [512];
+
+    sprintf (buffer, "DataFrame::col_name_to_idx(): ERROR: "
+                     "Cannot find column '%s'",
+             col_name);
+    throw ColNotFound (buffer);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+const char *
+DataFrame<I, H>::col_idx_to_name (size_type col_idx) const  {
+
+    for (auto citer : column_list_)
+        if (citer.second == col_idx)
+            return (citer.first.c_str());
+
+    char buffer [512];
+
+    sprintf (buffer, "DataFrame::col_idx_to_name(): ERROR: "
+#ifdef _MSC_VER
+                     "Cannot find column index %zu",
+#else
+                     "Cannot find column index %lu",
+#endif // _MSC_VER
+             col_idx);
+    throw ColNotFound (buffer);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
 template<typename T>
 typename DataFrame<I, H>::template ColumnVecType<T> &
 DataFrame<I, H>::get_column (const char *name)  {

@@ -50,7 +50,7 @@ I have followed a few <B>principles in this library</B>:<BR>
 
 1.  Support any type either built-in or user defined without needing new code
 2.  Never chase pointers ala `linked lists`, `std::any`, `pointer to base`, ..., including `virtual functions`
-3.  Have all column data in continuous memory space. Also, be mindful of cache-line aliasing misses between multiple columns
+3.  Have all column data in contiguous memory space. Also, be mindful of cache-line aliasing misses between multiple columns
 4.  Never use more space than you need ala `unions`, `std::variant`, ...
 5.  Avoid copying data as much as possible
 6.  Use multi-threading but only when it makes sense
@@ -118,7 +118,7 @@ make uninstall
 ```
 
 ### Package managers
-If you are using _Conan_ to manage your dependencies, add `dataframe/x.y.z@` to your requires, where `x.y.z` is the release version you want to use. _Conan_ will acquire DataFrame, build it from source in your computer, and provide CMake integration support for your projects. See the [_Conan_ docs](https://docs.conan.io/en/latest/) for more information.<BR> Sample `conanfile.txt`:
+DataFrame is available on _Conan_ platform. Add `dataframe/x.y.z@` to your requires, where `x.y.z` is the release version you want to use. _Conan_ will acquire DataFrame, build it from source in your computer, and provide CMake integration support for your projects. See the [_Conan_ docs](https://docs.conan.io/en/latest/) for more information.<BR> Sample `conanfile.txt`:
 
 ```text
 [requires]
@@ -128,3 +128,10 @@ dataframe/1.20.0@
 cmake
 ```
 DataFrame is also available on [_Microsoft VCPKG_](https://vcpkg.io/en/index.html) platform
+```bash
+git clone https://github.com/Microsoft/vcpkg.git
+cd vcpkg
+bootstrap-vcpkg.[bat|sh]
+vcpkg(.exe) integrate install
+vcpkg(.exe) install DataFrame
+```

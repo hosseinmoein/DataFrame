@@ -86,14 +86,14 @@ struct ReturnVisitor  {
                        return ((diff > 0) ? 1 : ((diff < 0) ? -1 : 0));
                    };
 
-        result_type tmp_result;
+        result_type result;
 
-        tmp_result.reserve(col_s);
+        result.reserve(col_s);
         std::adjacent_difference (column_begin, column_end,
-                                  std::back_inserter (tmp_result),
+                                  std::back_inserter (result),
                                   func);
-        tmp_result[0] = std::numeric_limits<T>::quiet_NaN();
-        tmp_result.swap(result_);
+        result[0] = std::numeric_limits<T>::quiet_NaN();
+        result.swap(result_);
     }
 
     DEFINE_PRE_POST
@@ -4075,7 +4075,7 @@ struct  BalanceOfPowerVisitor {
                     close_begin, close_end, open_begin, open_end);
         non_z_range.post();
 
-        result_type result = std::move(non_z_range.get_result());;
+        result_type result = std::move(non_z_range.get_result());
 
         non_z_range.pre();
         non_z_range(idx_begin, idx_end,
@@ -4152,7 +4152,7 @@ struct  ChandeKrollStopVisitor {
         max1 (idx_begin, idx_end, high_begin, high_end);
         max1.post();
 
-        result_type long_stop = std::move(max1.get_result());;
+        result_type long_stop = std::move(max1.get_result());
 
         for (size_type i = 0; i < col_s; ++i)
             long_stop[i] -= multiplier_ * atr.get_result()[i];
@@ -4172,7 +4172,7 @@ struct  ChandeKrollStopVisitor {
         min1 (idx_begin, idx_end, low_begin, low_end);
         min1.post();
 
-        result_type short_stop = std::move(min1.get_result());;
+        result_type short_stop = std::move(min1.get_result());
 
         for (size_type i = 0; i < col_s; ++i)
             short_stop[i] += multiplier_ * atr.get_result()[i];
@@ -4412,6 +4412,162 @@ private:
 
 template<typename T, typename I = unsigned long>
 using kch_v = KeltnerChannelsVisitor<T, I>;
+
+// ----------------------------------------------------------------------------
+
+template<typename T,
+         typename I = unsigned long,
+         typename =
+             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+struct TrixVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
+
+        GET_COL_SIZE
+
+        assert(col_s > 3);
+
+        ewm_v<T, I> ewm13(exponential_decay_spec::span, roll_period_, true);
+
+        ewm13.pre();
+        ewm13 (idx_begin, idx_end, column_begin, column_end);
+        ewm13.post();
+
+        ewm_v<T, I> ewm2(exponential_decay_spec::span, roll_period_, true);
+
+        ewm2.pre();
+        ewm2 (idx_begin, idx_end,
+              ewm13.get_result().begin(), ewm13.get_result().end());
+        ewm2.post();
+
+        ewm13.pre();
+        ewm13 (idx_begin, idx_end,
+               ewm2.get_result().begin(), ewm2.get_result().end());
+        ewm13.post();
+
+        ReturnVisitor<T, I> ret(return_policy::percentage);
+
+        ret.get_result().swap(ewm2.get_result());
+        ret.pre();
+        ret (idx_begin, idx_end,
+             ewm13.get_result().begin(), ewm13.get_result().end());
+        ret.post();
+
+        result_type result = std::move(ret.get_result());
+
+        if (avg_signal_)  {
+            SimpleRollAdopter<MeanVisitor<T, I>, T, I>  avg
+                { MeanVisitor<T, I>(), sroll_period_ } ;
+
+            avg.get_result().swap(ewm13.get_result());
+            avg.pre();
+            avg (idx_begin, idx_end, result.begin(), result.end());
+            avg.post();
+            result = std::move(avg.get_result());
+        }
+
+        result_ = std::move(result);
+    }
+
+    DEFINE_PRE_POST
+    DEFINE_RESULT
+
+    explicit
+    TrixVisitor (size_type roll_period = 14,
+                 bool avg_signal = false,
+                 size_type signal_roll_period = 7)
+        : roll_period_(roll_period),
+          sroll_period_(signal_roll_period),
+          avg_signal_(avg_signal)  {   }
+
+private:
+
+    result_type     result_ {  };
+    const size_type roll_period_;
+    const size_type sroll_period_;
+    const bool      avg_signal_;
+};
+
+template<typename T, typename I = unsigned long>
+using trix_v = TrixVisitor<T, I>;
+
+// ----------------------------------------------------------------------------
+
+template<typename T,
+         typename I = unsigned long,
+         typename =
+             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+struct PrettyGoodOsciVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &low_begin, const H &low_end,
+                const H &high_begin, const H &high_end,
+                const H &close_begin, const H &close_end)  {
+
+        const size_type col_s = std::distance(close_begin, close_end);
+
+        assert((col_s == size_type(std::distance(low_begin, low_end))));
+        assert((col_s == size_type(std::distance(high_begin, high_end))));
+        assert((roll_period_ < (col_s - 1)));
+
+        SimpleRollAdopter<MeanVisitor<T, I>, T, I>  savg
+            { MeanVisitor<T, I>(), roll_period_ } ;
+
+        savg.pre();
+        savg (idx_begin, idx_end, close_begin, close_end);
+        savg.post();
+
+        TrueRangeVisitor<T, I>  atr(true, roll_period_);
+
+        atr.pre();
+        atr(idx_begin, idx_end,
+            low_begin, low_end,
+            high_begin, high_end,
+            close_begin, close_end);
+        atr.post();
+
+        result_type result = std::move(savg.get_result());
+
+        for (size_type i = 0; i < col_s; ++i)
+            result[i] = *(close_begin + i) - result[i];
+
+        ewm_v<T, I> ewm(exponential_decay_spec::span, roll_period_, true);
+
+        ewm.pre();
+        ewm (idx_begin, idx_end,
+             atr.get_result().begin(), atr.get_result().end());
+        ewm.post();
+
+        for (size_type i = 0; i < col_s; ++i)
+            result[i] /= ewm.get_result()[i];
+
+        result_ = std::move(result);
+    }
+
+    DEFINE_PRE_POST
+    DEFINE_RESULT
+
+    explicit
+    PrettyGoodOsciVisitor (size_type roll_period = 14)
+        : roll_period_(roll_period)  {   }
+
+private:
+
+    result_type     result_ {  };
+    const size_type roll_period_;
+};
+
+template<typename T, typename I = unsigned long>
+using pgo_v = PrettyGoodOsciVisitor<T, I>;
 
 } // namespace hmdf
 

@@ -5377,6 +5377,194 @@ static void test_concat()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_head()  {
+
+    std::cout << "\nTesting head() ..." << std::endl;
+
+    {
+    std::vector<unsigned long>  idx = { };
+    std::vector<double> d1 = { };
+    std::vector<double> d2 = { };
+    std::vector<double> d3 = { };
+    std::vector<double> d4 = { };
+    std::vector<std::string> s1 = { };
+    MyDataFrame         df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("col_1", d1),
+                 std::make_pair("col_2", d2),
+                 std::make_pair("col_3", d3),
+                 std::make_pair("col_str", s1));
+    df.load_column("col_4", std::move(d4), nan_policy::dont_pad_with_nans);
+    auto result = df.head<double, std::string> (3);
+    assert(result.get_index().size() == 0);
+    assert(result.get_column<double>("col_1").size() == 0);
+    assert(result.get_column<double>("col_2").size() == 0);
+    assert(result.get_column<double>("col_3").size() == 0);
+    assert(result.get_column<double>("col_4").size() == 0);
+    }
+
+    {
+    std::vector<unsigned long>  idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456 };
+    std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7 };
+    std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14 };
+    std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21 };
+    std::vector<double> d4 = { 22, 23, 24, 25 };
+    std::vector<std::string> s1 = { "11", "22", "33", "ee", "ff", "gg", "ll" };
+    MyDataFrame         df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("col_1", d1),
+                 std::make_pair("col_2", d2),
+                 std::make_pair("col_3", d3),
+                 std::make_pair("col_str", s1));
+    df.load_column("col_4", std::move(d4), nan_policy::dont_pad_with_nans);
+
+    auto result = df.head<double, std::string> (3);
+    assert(result.get_index().size() == 3);
+    assert(result.get_column<double>("col_1").size() == 3);
+    assert(result.get_column<double>("col_2").size() == 3);
+    assert(result.get_column<double>("col_3").size() == 3);
+    assert(result.get_column<double>("col_4").size() == 3);
+    assert(result.get_column<std::string>("col_str").size() == 3);
+    assert(result.get_index()[0] == 123450);
+    assert(result.get_index()[1] == 123451);
+    assert(result.get_index()[2] == 123452);
+    assert(result.get_column<double>("col_1")[0] == 1);
+    assert(result.get_column<double>("col_1")[1] == 2);
+    assert(result.get_column<double>("col_1")[2] == 3);
+    assert(result.get_column<double>("col_2")[0] == 8);
+    assert(result.get_column<double>("col_2")[1] == 9);
+    assert(result.get_column<double>("col_2")[2] == 10);
+    assert(result.get_column<double>("col_4")[0] == 22);
+    assert(result.get_column<double>("col_4")[1] == 23);
+    assert(result.get_column<double>("col_4")[2] == 24);
+    assert(result.get_column<std::string>("col_str")[0] == "11");
+    assert(result.get_column<std::string>("col_str")[1] == "22");
+    assert(result.get_column<std::string>("col_str")[2] == "33");
+
+    result = df.head<double, std::string> (5);
+    assert(result.get_index().size() == 5);
+    assert(result.get_column<double>("col_1").size() == 5);
+    assert(result.get_column<double>("col_2").size() == 5);
+    assert(result.get_column<double>("col_3").size() == 5);
+    assert(result.get_column<double>("col_4").size() == 4);
+    assert(result.get_column<std::string>("col_str").size() == 5);
+    assert(result.get_index()[0] == 123450);
+    assert(result.get_index()[1] == 123451);
+    assert(result.get_index()[2] == 123452);
+    assert(result.get_column<double>("col_1")[0] == 1);
+    assert(result.get_column<double>("col_1")[1] == 2);
+    assert(result.get_column<double>("col_1")[2] == 3);
+    assert(result.get_column<double>("col_2")[0] == 8);
+    assert(result.get_column<double>("col_2")[1] == 9);
+    assert(result.get_column<double>("col_2")[2] == 10);
+    assert(result.get_column<double>("col_2")[4] == 12);
+    assert(result.get_column<double>("col_4")[0] == 22);
+    assert(result.get_column<double>("col_4")[1] == 23);
+    assert(result.get_column<double>("col_4")[2] == 24);
+    }
+
+    std::cout << "Testing head() done" << std::endl;
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_tail()  {
+
+    std::cout << "\nTesting tail() ..." << std::endl;
+
+    {
+    std::vector<unsigned long>  idx = { };
+    std::vector<double> d1 = { };
+    std::vector<double> d2 = { };
+    std::vector<double> d3 = { };
+    std::vector<double> d4 = { };
+    std::vector<std::string> s1 = { };
+    MyDataFrame         df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("col_1", d1),
+                 std::make_pair("col_2", d2),
+                 std::make_pair("col_3", d3),
+                 std::make_pair("col_str", s1));
+    df.load_column("col_4", std::move(d4), nan_policy::dont_pad_with_nans);
+    auto result = df.tail<double, std::string> (3);
+    assert(result.get_index().size() == 0);
+    assert(result.get_column<double>("col_1").size() == 0);
+    assert(result.get_column<double>("col_2").size() == 0);
+    assert(result.get_column<double>("col_3").size() == 0);
+    assert(result.get_column<double>("col_4").size() == 0);
+    }
+
+    {
+    std::vector<unsigned long>  idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456 };
+    std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7 };
+    std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14 };
+    std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21 };
+    std::vector<double> d4 = { 22, 23, 24, 25 };
+    std::vector<std::string> s1 = { "11", "22", "33", "ee", "ff", "gg", "ll" };
+    MyDataFrame         df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("col_1", d1),
+                 std::make_pair("col_2", d2),
+                 std::make_pair("col_3", d3),
+                 std::make_pair("col_str", s1));
+    df.load_column("col_4", std::move(d4), nan_policy::dont_pad_with_nans);
+
+    auto result = df.tail<double, std::string> (3);
+    assert(result.get_index().size() == 3);
+    assert(result.get_column<double>("col_1").size() == 3);
+    assert(result.get_column<double>("col_2").size() == 3);
+    assert(result.get_column<double>("col_3").size() == 3);
+    assert(result.get_column<double>("col_4").size() == 0);
+    assert(result.get_column<std::string>("col_str").size() == 3);
+    assert(result.get_index()[0] == 123454);
+    assert(result.get_index()[1] == 123455);
+    assert(result.get_index()[2] == 123456);
+    assert(result.get_column<double>("col_1")[0] == 5);
+    assert(result.get_column<double>("col_1")[1] == 6);
+    assert(result.get_column<double>("col_1")[2] == 7);
+    assert(result.get_column<double>("col_2")[0] == 12);
+    assert(result.get_column<double>("col_2")[1] == 13);
+    assert(result.get_column<double>("col_2")[2] == 14);
+    assert(result.get_column<std::string>("col_str")[0] == "ff");
+    assert(result.get_column<std::string>("col_str")[1] == "gg");
+    assert(result.get_column<std::string>("col_str")[2] == "ll");
+
+    result = df.tail<double, std::string> (5);
+    assert(result.get_index().size() == 5);
+    assert(result.get_column<double>("col_1").size() == 5);
+    assert(result.get_column<double>("col_2").size() == 5);
+    assert(result.get_column<double>("col_3").size() == 5);
+    assert(result.get_column<double>("col_4").size() == 2);
+    assert(result.get_column<std::string>("col_str").size() == 5);
+    assert(result.get_index()[0] == 123452);
+    assert(result.get_index()[1] == 123453);
+    assert(result.get_index()[2] == 123454);
+    assert(result.get_index()[3] == 123455);
+    assert(result.get_index()[4] == 123456);
+    assert(result.get_column<double>("col_1")[0] == 3);
+    assert(result.get_column<double>("col_1")[1] == 4);
+    assert(result.get_column<double>("col_1")[2] == 5);
+    assert(result.get_column<double>("col_1")[3] == 6);
+    assert(result.get_column<double>("col_1")[4] == 7);
+    assert(result.get_column<double>("col_2")[0] == 10);
+    assert(result.get_column<double>("col_2")[1] == 11);
+    assert(result.get_column<double>("col_2")[2] == 12);
+    assert(result.get_column<double>("col_2")[4] == 14);
+    assert(result.get_column<double>("col_4")[0] == 24);
+    assert(result.get_column<double>("col_4")[1] == 25);
+    }
+
+    std::cout << "Testing tail() done" << std::endl;
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     test_haphazard();
@@ -5458,6 +5646,8 @@ int main(int, char *[]) {
     test_VWBAS();
     test_self_concat();
     test_concat();
+    test_head();
+    test_tail();
 
     return (0);
 }

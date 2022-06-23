@@ -1505,6 +1505,34 @@ public: // Read/access and slicing interfaces
     get_col_unique_values(const char *name) const;
 
     // It returns a DataFrame (including the index and data columns)
+    // containing the first n value(s).
+    //
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // n:
+    //   Number of values to select. For negative values of n, it will return
+    //   all values.
+    //
+    template<typename ... Ts>
+    [[nodiscard]] DataFrame
+    head(size_t n) const;
+
+    // It returns a DataFrame (including the index and data columns)
+    // containing the last n value(s).
+    //
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // n:
+    //   Number of values to select. For negative values of n, it will return
+    //   all values.
+    //
+    template<typename ... Ts>
+    [[nodiscard]] DataFrame
+    tail(size_t n) const;
+
+    // It returns a DataFrame (including the index and data columns)
     // containing the data from index begin to index end.
     // DataFrame must be sorted by index or behavior is undefined.
     //

@@ -442,6 +442,46 @@ struct get_row_functor_ : DataVec::template visitor_base<Ts ...>  {
 // ----------------------------------------------------------------------------
 
 template<typename IT, typename ... Ts>
+struct head_load_functor_ : DataVec::template visitor_base<Ts ...>  {
+
+    inline head_load_functor_ (const char *n,
+                              const std::vector<IT> &si,
+                              size_type is,
+                              DataFrame &d)
+        : name (n), sel_indices (si), indices_size(is), df(d)  {   }
+
+    const char              *name;
+    const std::vector<IT>   &sel_indices;
+    const size_type         indices_size;
+    DataFrame               &df;
+
+    template<typename T>
+    void operator() (const T &vec);
+};
+
+// ----------------------------------------------------------------------------
+
+template<typename IT, typename ... Ts>
+struct tail_load_functor_ : DataVec::template visitor_base<Ts ...>  {
+
+    inline tail_load_functor_ (const char *n,
+                              const std::vector<IT> &si,
+                              size_type is,
+                              DataFrame &d)
+        : name (n), sel_indices (si), indices_size(is), df(d)  {   }
+
+    const char              *name;
+    const std::vector<IT>   &sel_indices;
+    const size_type         indices_size;
+    DataFrame               &df;
+
+    template<typename T>
+    void operator() (const T &vec);
+};
+
+// ----------------------------------------------------------------------------
+
+template<typename IT, typename ... Ts>
 struct sel_load_functor_ : DataVec::template visitor_base<Ts ...>  {
 
     inline sel_load_functor_ (const char *n,

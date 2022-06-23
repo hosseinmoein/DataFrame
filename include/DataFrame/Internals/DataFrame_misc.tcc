@@ -584,6 +584,53 @@ template<typename IT, typename ... Ts>
 template<typename T>
 void
 DataFrame<I, H>::
+head_load_functor_<IT, Ts ...>::
+operator() (const T &vec)  {
+
+    using VecType = typename std::remove_reference<T>::type;
+    using ValueType = typename VecType::value_type;
+
+    std::vector<ValueType> new_col;
+    const size_type vec_size = vec.size();
+    const size_type copy_size = std::min(sel_indices.size(), vec_size);
+
+    new_col.reserve(copy_size);
+    std::copy(vec.begin(), vec.begin() + copy_size,
+              std::back_inserter(new_col));
+    df.load_column(name, std::move(new_col), nan_policy::dont_pad_with_nans);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename IT, typename ... Ts>
+template<typename T>
+void
+DataFrame<I, H>::
+tail_load_functor_<IT, Ts ...>::
+operator() (const T &vec)  {
+
+    using VecType = typename std::remove_reference<T>::type;
+    using ValueType = typename VecType::value_type;
+
+    std::vector<ValueType> new_col;
+    if (sel_indices.size() > 0) {
+        const size_type first_pos_index =
+            std::distance(vec.begin() + sel_indices[0], vec.end());
+        new_col.reserve(first_pos_index >= 0 ? first_pos_index : 0);
+        std::copy(vec.begin() + sel_indices[0], vec.end(),
+                  std::back_inserter(new_col));
+    }
+    df.load_column(name, std::move(new_col), nan_policy::dont_pad_with_nans);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename IT, typename ... Ts>
+template<typename T>
+void
+DataFrame<I, H>::
 sel_load_functor_<IT, Ts ...>::
 operator() (const T &vec)  {
 

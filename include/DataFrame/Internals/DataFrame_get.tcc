@@ -253,6 +253,73 @@ get_row(size_type row_num) const {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename  H>
+template<typename ... Ts>
+DataFrame<I, H> DataFrame<I, H>::
+head (size_t n) const  {
+
+    const size_type idx_s = std::min(n, indices_.size());
+
+    DataFrame df;
+    IndexVecType new_index;
+    new_index.reserve(idx_s);
+    std::copy(indices_.begin(), indices_.begin() + idx_s,
+              std::back_inserter(new_index));
+    df.load_index(std::move(new_index));
+
+    std::vector<size_type> col_indices(idx_s);
+    std::iota(col_indices.begin(), col_indices.end(), 0);
+
+    for (auto col_citer : column_list_)  {
+        head_load_functor_<size_type, Ts ...> functor(
+            col_citer.first.c_str(),
+            col_indices,
+            idx_s,
+            df);
+        const SpinGuard guard(lock_);
+
+        data_[col_citer.second].change(functor);
+    }
+
+    return (df);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename ... Ts>
+DataFrame<I, H> DataFrame<I, H>::
+tail (size_t n) const  {
+
+    const size_type idx_s = std::min(n, indices_.size());
+
+    DataFrame df;
+    IndexVecType new_index;
+    new_index.reserve(idx_s);
+    std::copy(indices_.end() - idx_s, indices_.end(),
+              std::back_inserter(new_index));
+    df.load_index(std::move(new_index));
+
+    std::vector<size_type> col_indices(idx_s);
+    std::iota(col_indices.begin(), col_indices.end(),
+              (indices_.size() - idx_s));
+
+    for (auto col_citer : column_list_)  {
+        tail_load_functor_<size_type, Ts ...> functor(
+            col_citer.first.c_str(),
+            col_indices,
+            idx_s,
+            df);
+        const SpinGuard guard(lock_);
+
+        data_[col_citer.second].change(functor);
+    }
+
+    return (df);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
 template<typename T>
 std::vector<T> DataFrame<I, H>::
 get_col_unique_values(const char *name) const  {

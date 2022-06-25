@@ -101,6 +101,8 @@ int main (int, char *[])  {
     cout << "Local Time is: " << now.string_format (DT_FORMAT::ISO_DT) << endl;
     cout << "Local Time is: " << now.string_format (DT_FORMAT::ISO_DT_TM)
          << endl;
+    cout.precision(20);
+    cout << "Local now as double is: " << double(now) << endl;
 
     now = 19721202;
     assert(now.string_format(DT_FORMAT::DT_TM2) == "12/02/1972 00:00:00.000");

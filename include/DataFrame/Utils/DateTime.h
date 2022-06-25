@@ -244,13 +244,15 @@ public:
     HMDF_API EpochType time () const noexcept;           // Like ::time()
     HMDF_API LongTimeType long_time () const noexcept;   // Nano sec since epoch
 
+    HMDF_API operator double() const noexcept;
+
     HMDF_API DatePartType days_in_month () const noexcept;  // 28, 29, 30, 31
 
     // These return the diff including the fraction of the unit.
     // That is why they return a double.
     // The diff could be +/- based on "this - that"
     //
-    HMDF_API double diff_seconds (const DateTime &that) const;
+    HMDF_API double diff_seconds (const DateTime &that) const noexcept;
     HMDF_API double diff_minutes (const DateTime &that) const noexcept;
     HMDF_API double diff_hours (const DateTime &that) const noexcept;
     HMDF_API double diff_days (const DateTime &that) const noexcept;

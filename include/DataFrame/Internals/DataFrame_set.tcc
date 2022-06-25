@@ -340,8 +340,8 @@ template<typename T, typename ITR>
 typename DataFrame<I, H>::size_type
 DataFrame<I, H>::
 load_column (const char *name,
-             Index2D<const ITR &>
-             range, nan_policy padding)  {
+             Index2D<const ITR &> range,
+             nan_policy padding)  {
 
     size_type       s = std::distance(range.begin, range.end);
     const size_type idx_s = indices_.size();

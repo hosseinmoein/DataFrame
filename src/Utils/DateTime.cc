@@ -654,7 +654,15 @@ DateTime::LongTimeType DateTime::long_time () const noexcept  {
 
 // ----------------------------------------------------------------------------
 
-double DateTime::diff_seconds (const DateTime &that) const  {
+DateTime::operator double() const noexcept  {
+
+    return (static_cast<double>(this->time()) +
+            static_cast<double>(nanosec()) / 1000000000.0);
+}
+
+// ----------------------------------------------------------------------------
+
+double DateTime::diff_seconds (const DateTime &that) const noexcept  {
 
     // Currently I don't have time to implement this. There are
     // more important things to do. But we should do it at some

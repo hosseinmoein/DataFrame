@@ -252,7 +252,7 @@ public:
     // That is why they return a double.
     // The diff could be +/- based on "this - that"
     //
-    HMDF_API double diff_seconds (const DateTime &that) const noexcept;
+    HMDF_API double diff_seconds (const DateTime &that) const;
     HMDF_API double diff_minutes (const DateTime &that) const noexcept;
     HMDF_API double diff_hours (const DateTime &that) const noexcept;
     HMDF_API double diff_days (const DateTime &that) const noexcept;

@@ -241,6 +241,8 @@ DateTime::DateTime (const char *s, DT_DATE_STYLE ds, DT_TIME_ZONE tz)
     }
 }
 
+// ----------------------------------------------------------------------------
+
 DateTime::DateTime (const DateTime &that) = default;
 
 DateTime::DateTime (DateTime &&that) = default;
@@ -343,9 +345,7 @@ days_in_month_ (DT_MONTH month, DatePartType year) noexcept  {
         case DT_MONTH::SEP:
         case DT_MONTH::NOV:
             return (30);
-        case DT_MONTH::FEB:
-            // This I remember from CML.
-            //
+        case DT_MONTH::FEB:  // This I remember from CML.
             if ((year % 4 == 0 && year % 100 != 0) || year % 400 == 0)
                 return (29);
             else
@@ -395,16 +395,16 @@ bool DateTime::is_us_business_day () const noexcept  {
                //
                (date_part == 19450815 || date_part == 19450816) ||
 
-              // Assassination of President John F. Kennedy (November 22, 1963)
-              //
+               // Assassination of President John F. Kennedy (Nov 22, 1963)
+               //
                (date_part == 19631122) ||
 
-               // President Harry S. Truman day of mourning (December 28, 1972)
+               // President Harry S. Truman day of mourning (Dec 28, 1972)
                //
                (date_part == 19721228) ||
 
-              // President Lyndon B. Johnson day of mourning (January 25, 1973)
-              //
+               // President Lyndon B. Johnson day of mourning (Jan 25, 1973)
+               //
                (date_part == 19730125) ||
 
                // New York City black out (July 14, 1977)
@@ -419,12 +419,12 @@ bool DateTime::is_us_business_day () const noexcept  {
                //
                (date_part == 20040611) ||
 
-               // President Gerald R. Ford day of mourning (January 2, 2007)
+               // President Gerald R. Ford day of mourning (Jan 2, 2007)
                //
                (date_part == 20070102) ||
 
-              // President George H. W. Bush day of mourning (December 5, 2018)
-              //
+               // President George H. W. Bush day of mourning (Dec 5, 2018)
+               //
                (date_part == 20181205) ||
 
                // World Trade Center attack (September 11-14, 2001)
@@ -627,8 +627,7 @@ DateTime::NanosecondType DateTime::nanosec () const noexcept  {
 // The reason for time_ being INVALID_TIME_T_ is performance. sometimes
 // time_ has to be calculated by mktime() which is very expensive. In
 // those cases we assign INVALID_TIME_T_ to time_ and whenever, it
-// becomes necessary to calculate time_ (i.e. below), we do it only
-// then.
+// becomes necessary to calculate time_ (i.e. below), we do it only then.
 //
 DateTime::EpochType DateTime::time () const noexcept  {
 
@@ -686,28 +685,28 @@ double DateTime::diff_seconds (const DateTime &that) const  {
 
 // ----------------------------------------------------------------------------
 
-double DateTime::diff_minutes (const DateTime &that) const noexcept  {
+double DateTime::diff_minutes (const DateTime &that) const  {
 
     return (diff_seconds (that) / 60.0);
 }
 
 // ----------------------------------------------------------------------------
 
-double DateTime::diff_hours (const DateTime &that) const noexcept  {
+double DateTime::diff_hours (const DateTime &that) const  {
 
     return (diff_minutes (that) / 60.0);
 }
 
 // ----------------------------------------------------------------------------
 
-double DateTime::diff_days (const DateTime &that) const noexcept  {
+double DateTime::diff_days (const DateTime &that) const  {
 
     return (diff_hours (that) / 24.0);
 }
 
 // ----------------------------------------------------------------------------
 
-double DateTime::diff_weekdays (const DateTime &that) const noexcept  {
+double DateTime::diff_weekdays (const DateTime &that) const  {
 
     const int   addend = compare(that) ? -1 : 1;
     DateTime    slug (that);
@@ -724,7 +723,7 @@ double DateTime::diff_weekdays (const DateTime &that) const noexcept  {
 
 // ----------------------------------------------------------------------------
 
-double DateTime::diff_weeks (const DateTime &that) const noexcept  {
+double DateTime::diff_weeks (const DateTime &that) const  {
 
     return (diff_days (that) / 7.0);
 }
@@ -746,8 +745,8 @@ void DateTime::add_nanoseconds (long nanosecs) noexcept  {
         static_cast<long long int>(nanosec());
 
     new_time += static_cast<long long int>(nanosecs);
-    set_time(static_cast<EpochType>(new_time / 1000000000LL),
-             static_cast<NanosecondType>(new_time % 1000000000LL));
+    set_time (static_cast<EpochType>(new_time / 1000000000LL),
+              static_cast<NanosecondType>(new_time % 1000000000LL));
     return;
 }
 

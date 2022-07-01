@@ -145,7 +145,7 @@ enum class DT_DATE_STYLE : unsigned char  {
 
 // ----------------------------------------------------------------------------
 
-class DateTime {
+class   DateTime {
 
 public:
 
@@ -208,7 +208,9 @@ public:
     // A convenient method, if you already have a DateTime instance
     // and want to change the date/time quickly
     //
-    HMDF_API void set_time (EpochType the_time, NanosecondType nanosec = 0) noexcept;
+    HMDF_API void
+    set_time (EpochType the_time,
+              NanosecondType nanosec = 0) noexcept;
 
     // NOTE: This method is not multithread-safe. This method
     //       modifies the TZ environment variable which changes the
@@ -225,7 +227,7 @@ public:
     //
     HMDF_API DateTime &operator = (const char *rhs);  // dt = "20181223"
 
-    // this (lhs) compared with rhs
+    // This compares lhs (self) with rhs
     //
     HMDF_API EpochType compare(const DateTime &rhs) const;
 
@@ -242,7 +244,7 @@ public:
     HMDF_API MicrosecondType microsec () const noexcept; // 0 - 999,999
     HMDF_API NanosecondType nanosec () const noexcept;   // 0 - 999,999,999
     HMDF_API EpochType time () const noexcept;           // Like ::time()
-    HMDF_API LongTimeType long_time () const noexcept;   // Nano sec since epoch
+    HMDF_API LongTimeType long_time () const noexcept;   // Nanosec since epoch
 
     HMDF_API operator double() const noexcept;
 
@@ -253,11 +255,11 @@ public:
     // The diff could be +/- based on "this - that"
     //
     HMDF_API double diff_seconds (const DateTime &that) const;
-    HMDF_API double diff_minutes (const DateTime &that) const noexcept;
-    HMDF_API double diff_hours (const DateTime &that) const noexcept;
-    HMDF_API double diff_days (const DateTime &that) const noexcept;
-    HMDF_API double diff_weekdays (const DateTime &that) const noexcept;
-    HMDF_API double diff_weeks (const DateTime &that) const noexcept;
+    HMDF_API double diff_minutes (const DateTime &that) const;
+    HMDF_API double diff_hours (const DateTime &that) const;
+    HMDF_API double diff_days (const DateTime &that) const;
+    HMDF_API double diff_weekdays (const DateTime &that) const;
+    HMDF_API double diff_weeks (const DateTime &that) const;
 
     // The parameter to these methods could be +/-.
     // It will advance/pull back the date/time accordingly.
@@ -279,7 +281,8 @@ public:
     // Formats date/time into a string based on format parameter
     //
     template<typename T>
-    void date_to_str (DT_FORMAT format, T &result) const;
+    void date_to_str (DT_FORMAT format,
+                      T &result) const;
     HMDF_API std::string string_format (DT_FORMAT format) const;
 
 private:
@@ -398,7 +401,8 @@ private:
     inline static void reset_env_timezone_(DT_TIME_ZONE time_zone);
 
     static DatePartType
-    days_in_month_ (DT_MONTH month, DatePartType year) noexcept;
+    days_in_month_ (DT_MONTH month,
+                    DatePartType year) noexcept;
 
     // NOTE: This method is not multithread-safe. This method
     //       modifies the TZ environment variable which changes the
@@ -410,7 +414,8 @@ private:
     //       modifies the TZ environment variable which changes the
     //       time zone for the entire program.
     //
-    void breaktime_ (EpochType the_time, NanosecondType nanosec) noexcept;
+    void breaktime_ (EpochType the_time,
+                     NanosecondType nanosec) noexcept;
 
     inline static const char *const MONTH_[] {
         "January",
@@ -652,7 +657,7 @@ struct  hash<typename hmdf::DateTime>  {
     inline size_t
     operator()(const typename hmdf::DateTime &key) const noexcept {
 
-        return (hash<typename hmdf::DateTime::LongTimeType>()(key.long_time()));
+        return (hash<double>()(double(key)));
     }
 };
 

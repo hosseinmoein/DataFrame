@@ -187,7 +187,10 @@ void DataFrame<I, H>::read_json_(std::istream &stream, bool columns_only)  {
                     create_column<long double>(col_name);
 
                 vec.reserve(col_size);
-                _col_vector_push_back_(vec, stream, &::strtold, io_format::json);
+                _col_vector_push_back_(vec,
+                                       stream,
+                                       &::strtold,
+                                       io_format::json);
             }
             else if (! ::strcmp(col_type, "int"))  {
                 std::vector<int> &vec = create_column<int>(col_name);
@@ -200,7 +203,10 @@ void DataFrame<I, H>::read_json_(std::istream &stream, bool columns_only)  {
                     create_column<unsigned int>(col_name);
 
                 vec.reserve(col_size);
-                _col_vector_push_back_(vec, stream, &::strtoul, io_format::json);
+                _col_vector_push_back_(vec,
+                                       stream,
+                                       &::strtoul,
+                                       io_format::json);
             }
             else if (! ::strcmp(col_type, "long"))  {
                 std::vector<long>   &vec = create_column<long>(col_name);
@@ -213,14 +219,20 @@ void DataFrame<I, H>::read_json_(std::istream &stream, bool columns_only)  {
                     create_column<long long>(col_name);
 
                 vec.reserve(col_size);
-                _col_vector_push_back_(vec, stream, &::strtoll, io_format::json);
+                _col_vector_push_back_(vec,
+                                       stream,
+                                       &::strtoll,
+                                       io_format::json);
             }
             else if (! ::strcmp(col_type, "ulong"))  {
                 std::vector<unsigned long>  &vec =
                     create_column<unsigned long>(col_name);
 
                 vec.reserve(col_size);
-                _col_vector_push_back_(vec, stream, &::strtoul, io_format::json);
+                _col_vector_push_back_(vec,
+                                       stream,
+                                       &::strtoul,
+                                       io_format::json);
             }
             else if (! ::strcmp(col_type, "ulonglong"))  {
                 std::vector<unsigned long long> &vec =
@@ -773,11 +785,11 @@ bool DataFrame<I, H>::read (S &in_s, io_format iof, bool columns_only)  {
 
 template<typename I, typename  H>
 bool
-DataFrame<I, H>::from_string (const char *data_frame, io_format iof)  {
+DataFrame<I, H>::from_string (const char *data_frame)  {
 
     std::stringstream   ss (std::string(data_frame), std::ios_base::in);
 
-    read<std::istream>(ss, iof, false);
+    read<std::istream>(ss, io_format::csv, false);
     return (true);
 }
 
@@ -810,10 +822,10 @@ read_async(S &in_s, io_format iof, bool columns_only) {
 
 template<typename I, typename H>
 std::future<bool>
-DataFrame<I, H>::from_string_async(const char *data_frame, io_format iof)  {
+DataFrame<I, H>::from_string_async(const char *data_frame)  {
 
     return (std::async(std::launch::async,
-                       &DataFrame::from_string, this, data_frame, iof));
+                       &DataFrame::from_string, this, data_frame));
 }
 
 } // namespace hmdf

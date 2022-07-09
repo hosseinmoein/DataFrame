@@ -132,7 +132,7 @@ void DataFrame<I, H>::sort_common_(DataFrame<I, H> &df, CF &&comp_func)  {
         sort_functor_<Ts ...>   functor (sorting_idxs, idx_s);
         const SpinGuard         guard(lock_);
 
-        for (auto &iter : df.data_)
+        for (const auto &iter : df.data_)
             iter.change(functor);
     }
     _sort_by_sorted_index_(df.indices_, sorting_idxs, idx_s);
@@ -496,7 +496,7 @@ void DataFrame<I, H>::fill_missing (const DF &rhs)  {
     const auto  &self_idx = get_index();
     const auto  &rhs_idx = rhs.get_index();
 
-    for (auto col_citer : column_list_)  {
+    for (const auto &col_citer : column_list_)  {
         fill_missing_functor_<DF, Ts ...>   functor (
             self_idx, rhs_idx, rhs, col_citer.first.c_str());
         const SpinGuard                     guard(lock_);
@@ -520,7 +520,7 @@ drop_missing_rows_(T &vec,
 
     size_type   erase_count = 0;
 
-    for (auto &iter : missing_row_map)  {
+    for (const auto &iter : missing_row_map)  {
         if (policy == drop_policy::all)  {
             if (iter.second == col_num)  {
                 vec.erase(vec.begin() + (iter.first - erase_count));
@@ -554,25 +554,23 @@ drop_missing(drop_policy policy, size_type threshold)  {
     DropRowMap      missing_row_map;
     const size_type data_size = data_.size();
 
-    map_missing_rows_functor_<Ts ...>   functor (
-        indices_.size(), missing_row_map);
+    {
+        map_missing_rows_functor_<Ts ...>   functor (
+            indices_.size(), missing_row_map);
+        const SpinGuard                     guard(lock_);
 
-    for (size_type idx = 0; idx < data_size; ++idx)  {
-        const SpinGuard guard(lock_);
-
-        data_[idx].change(functor);
+        for (size_type idx = 0; idx < data_size; ++idx)
+            data_[idx].change(functor);
     }
 
     drop_missing_rows_(indices_, missing_row_map, policy, threshold, data_size);
 
     drop_missing_rows_functor_<Ts ...>  functor2 (
         missing_row_map, policy, threshold, data_.size());
+    const SpinGuard                     guard(lock_);
 
-    for (size_type idx = 0; idx < data_size; ++idx)  {
-        const SpinGuard guard(lock_);
-
+    for (size_type idx = 0; idx < data_size; ++idx)
         data_[idx].change(functor2);
-    }
 
     return;
 }
@@ -674,7 +672,7 @@ void DataFrame<I, H>::make_consistent ()  {
     consistent_functor_<Ts ...> functor (idx_s);
     const SpinGuard             guard(lock_);
 
-    for (auto &iter : data_)
+    for (const auto &iter : data_)
         iter.change(functor);
 }
 
@@ -687,10 +685,12 @@ void DataFrame<I, H>::shrink_to_fit ()  {
     indices_.shrink_to_fit();
 
     shrink_to_fit_functor_<Ts ...>  functor;
-    const SpinGuard                 guard(lock_);
 
-    for (auto &iter : data_)
+    for (const auto &iter : data_)  {
+        const SpinGuard guard(lock_);
+
         iter.change(functor);
+    }
 }
 
 // ----------------------------------------------------------------------------
@@ -1410,7 +1410,7 @@ DataFrame<I, H>::value_counts (const char *col_name) const  {
     size_type                   nan_count = 0;
 
     // take care of nans
-    for (auto citer : vec)  {
+    for (const auto &citer : vec)  {
         if (is_nan<T>(citer))  {
             ++nan_count;
             continue;
@@ -1428,7 +1428,7 @@ DataFrame<I, H>::value_counts (const char *col_name) const  {
     counts.reserve(values_map.size());
     res_indices.reserve(values_map.size());
 
-    for (const auto citer : values_map)  {
+    for (const auto &citer : values_map)  {
         res_indices.push_back(citer.first);
         counts.emplace_back(citer.second);
     }
@@ -1519,7 +1519,7 @@ transpose(IndexVecType &&indices, const V &new_col_names) const  {
     std::vector<const std::vector<T> *> current_cols;
 
     current_cols.reserve(num_cols);
-    for (const auto citer : column_list_)
+    for (const auto &citer : column_list_)
         current_cols.push_back(&(get_column<T>(citer.first.c_str())));
 
     std::vector<std::vector<T>> trans_cols(indices_.size());

@@ -64,11 +64,11 @@ write(const char *file_name,
 template<typename I, typename H>
 template<typename ... Ts>
 std::string
-DataFrame<I, H>::to_string(io_format iof, std::streamsize precision) const  {
+DataFrame<I, H>::to_string(std::streamsize precision) const  {
 
     std::stringstream   ss (std::ios_base::out);
 
-    write<std::ostream, Ts ...>(ss, iof, precision, false);
+    write<std::ostream, Ts ...>(ss, io_format::csv, precision, false);
     return (ss.str());
 }
 
@@ -227,10 +227,10 @@ write_async (S &o,
 template<typename I, typename H>
 template<typename ... Ts>
 std::future<std::string> DataFrame<I, H>::
-to_string_async (io_format iof, std::streamsize precision) const  {
+to_string_async (std::streamsize precision) const  {
 
     return (std::async(std::launch::async,
-                       &DataFrame::to_string<Ts ...>, this, iof, precision));
+                       &DataFrame::to_string<Ts ...>, this, precision));
 }
 
 } // namespace hmdf

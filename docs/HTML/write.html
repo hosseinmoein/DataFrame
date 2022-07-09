@@ -176,8 +176,7 @@ write_async(const char *file_name,
         <PRE><B>
 template&lt;typename ... Ts&gt;
 std::string
-to_string(io_format iof = io_format::csv,
-          std::streamsize precision = 12) const; </font>
+to_string(std::streamsize precision = 12) const; </font>
         </B></PRE>
       </td>
       <td>
@@ -186,7 +185,6 @@ to_string(io_format iof = io_format::csv,
       </td>
       <td>
         <B>Ts</B>: The list of types for all columns. A type should be specified only once<BR>
-        <B>iof</B>: Specifies the I/O format. The default is CSV<BR>
         <B>precision</B>: Specifies the precision for floating point numbers<BR>
       </td>
     </tr>
@@ -196,8 +194,7 @@ to_string(io_format iof = io_format::csv,
         <PRE><B>
 template&lt;typename ... Ts&gt;
 std::fututre&lt;std::string&gt;
-to_string_async(io_format iof = io_format::csv,
-                std::streamsize precision = 12) const; </font>
+to_string_async(std::streamsize precision = 12) const; </font>
         </B></PRE>
       </td>
       <td>

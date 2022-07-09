@@ -159,7 +159,7 @@ join_helper_common_(const LHS_T &lhs,
                     const char *skip_col_name)  {
 
     // Load the common and lhs columns
-    for (auto &iter : lhs.column_list_)  {
+    for (const auto &iter : lhs.column_list_)  {
         auto    rhs_citer = rhs.column_tb_.find(iter.first);
 
         if (skip_col_name && iter.first == skip_col_name)  continue;
@@ -186,7 +186,7 @@ join_helper_common_(const LHS_T &lhs,
     }
 
     // Load the rhs columns
-    for (auto &iter : rhs.column_list_)  {
+    for (const auto &iter : rhs.column_list_)  {
         auto    lhs_citer = lhs.column_tb_.find(iter.first);
 
         if (skip_col_name && iter.first == skip_col_name)  continue;
@@ -217,7 +217,7 @@ index_join_helper_(const LHS_T &lhs,
 
     // Load the index
     result_index.reserve(joined_index_idx.size());
-    for (const auto &citer : joined_index_idx)  {
+    for (auto citer : joined_index_idx)  {
         const size_type left_i = std::get<0>(citer);
 
         result_index.push_back(
@@ -265,7 +265,7 @@ column_join_helper_(const LHS_T &lhs,
     lhs_index.reserve(jii_s);
     rhs_index.reserve(jii_s);
     named_col_vec.reserve(jii_s);
-    for (const auto &citer : joined_index_idx)  {
+    for (auto citer : joined_index_idx)  {
         const size_type left_i = std::get<0>(citer);
         const size_type right_i = std::get<1>(citer);
 
@@ -602,7 +602,7 @@ concat_helper_(LHS_T &lhs, const RHS_T &rhs, bool add_new_columns)  {
                            rhs.get_index().begin(), rhs.get_index().end());
 
     // Load common columns
-    for (auto &lhs_iter : lhs.column_list_)  {
+    for (const auto &lhs_iter : lhs.column_list_)  {
         auto    rhs_citer = rhs.column_tb_.find(lhs_iter.first);
 
         if (rhs_citer != rhs.column_tb_.end())  {
@@ -617,7 +617,7 @@ concat_helper_(LHS_T &lhs, const RHS_T &rhs, bool add_new_columns)  {
 
     // Load columns from rhs that do not exist in lhs
     if (add_new_columns)  {
-        for (auto &rhs_citer : rhs.column_list_)  {
+        for (const auto &rhs_citer : rhs.column_list_)  {
             auto    lhs_iter = lhs.column_tb_.find(rhs_citer.first);
 
             if (lhs_iter == lhs.column_tb_.end())  {
@@ -676,7 +676,7 @@ DataFrame<I, H>::concat(const RHS_T &rhs, concat_policy cp) const  {
     }
     else if (cp == concat_policy::common_columns)  {
         result.load_index(this->get_index().begin(), this->get_index().end());
-        for (auto &lhs_citer : column_list_)  {
+        for (const auto &lhs_citer : column_list_)  {
             auto    rhs_citer = rhs.column_tb_.find(lhs_citer.first);
 
             if (rhs_citer != rhs.column_tb_.end())  {
@@ -720,13 +720,13 @@ DataFrame<I, H>::concat_view(RHS_T &rhs, concat_policy cp)  {
     result.indices_ = std::move(result_idx);
 
     if (cp == concat_policy::all_columns)  {
-        for (auto &lhs_citer : column_list_)  {
+        for (const auto &lhs_citer : column_list_)  {
             concat_load_view_functor_<DataFramePtrView<I>, Ts ...> functor(
                 lhs_citer.first.c_str(), result);
 
             data_[lhs_citer.second].change(functor);
         }
-        for (auto &rhs_citer : rhs.column_list_)  {
+        for (const auto &rhs_citer : rhs.column_list_)  {
             concat_load_view_functor_<DataFramePtrView<I>, Ts ...> functor(
                 rhs_citer.first.c_str(), result);
 
@@ -734,7 +734,7 @@ DataFrame<I, H>::concat_view(RHS_T &rhs, concat_policy cp)  {
         }
     }
     else if (cp == concat_policy::lhs_and_common_columns)  {
-        for (auto &lhs_citer : column_list_)  {
+        for (const auto &lhs_citer : column_list_)  {
             concat_load_view_functor_<DataFramePtrView<I>, Ts ...> functor(
                 lhs_citer.first.c_str(), result);
 
@@ -747,7 +747,7 @@ DataFrame<I, H>::concat_view(RHS_T &rhs, concat_policy cp)  {
         }
     }
     else if (cp == concat_policy::common_columns)  {
-        for (auto &lhs_citer : column_list_)  {
+        for (const auto &lhs_citer : column_list_)  {
             concat_load_view_functor_<DataFramePtrView<I>, Ts ...> functor(
                 lhs_citer.first.c_str(), result);
             auto                                                   rhs_citer =

@@ -652,7 +652,7 @@ void DataFrame<I, H>::remove_data_by_idx (Index2D<IndexType> range)  {
         remove_functor_<Ts ...> functor (b_dist, e_dist);
         const SpinGuard         guard(lock_);
 
-        for (auto &iter : column_list_)
+        for (const auto &iter : column_list_)
             data_[iter.second].change(functor);
     }
 
@@ -684,7 +684,7 @@ void DataFrame<I, H>::remove_data_by_loc (Index2D<long> range)  {
             static_cast<size_type>(range.end));
         const SpinGuard         guard(lock_);
 
-        for (auto &iter : column_list_)
+        for (const auto &iter : column_list_)
             data_[iter.second].change(functor);
 
         return;
@@ -720,7 +720,7 @@ void DataFrame<I, H>::remove_data_by_sel (const char *name, F &sel_functor)  {
     const sel_remove_functor_<Ts ...>   functor (col_indices);
     SpinGuard                           guard (lock_);
 
-    for (auto col_citer : column_list_)
+    for (const auto &col_citer : column_list_)
         data_[col_citer.second].change(functor);
     guard.release();
 
@@ -761,7 +761,7 @@ remove_data_by_sel (const char *name1, const char *name2, F &sel_functor)  {
     const sel_remove_functor_<Ts ...>   functor (col_indices);
     SpinGuard                           guard(lock_);
 
-    for (auto col_citer : column_list_)
+    for (const auto &col_citer : column_list_)
         data_[col_citer.second].change(functor);
     guard.release();
 
@@ -808,7 +808,7 @@ remove_data_by_sel (const char *name1,
     const sel_remove_functor_<Ts ...>   functor (col_indices);
     SpinGuard                           guard(lock_);
 
-    for (auto col_citer : column_list_)
+    for (const auto &col_citer : column_list_)
         data_[col_citer.second].change(functor);
     guard.release();
 
@@ -872,11 +872,12 @@ remove_dups_common_(const DataFrame &s_df,
                      });
     new_df.load_index(std::move(new_index));
 
-    for (auto citer : s_df.column_list_)  {
+    const SpinGuard guard(lock_);
+
+    for (const auto &citer : s_df.column_list_)  {
         copy_remove_functor_<Ts ...>    functor (citer.first.c_str(),
                                                  rows_to_del,
                                                  new_df);
-        const SpinGuard                 guard(lock_);
 
         s_df.data_[citer.second].change(functor);
     }

@@ -82,7 +82,7 @@ modify_by_idx (DataFrame &rhs, sort_state already_sorted)  {
             lhs_i += 1;
 
         if (indices_[lhs_i] == rhs.indices_[rhs_i])  {
-            for (auto &iter : column_list_)  {
+            for (const auto &iter : column_list_)  {
                 mod_by_idx_functor_<Ts ...>  functor (iter.first.c_str(),
                                                       rhs,
                                                       lhs_i,

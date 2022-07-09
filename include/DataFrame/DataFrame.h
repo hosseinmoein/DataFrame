@@ -3453,15 +3453,13 @@ public:  // Reading and writing
     //
     template<typename ... Ts>
     [[nodiscard]] std::string
-    to_string(io_format iof = io_format::csv,
-              std::streamsize precision = 12) const;
+    to_string(std::streamsize precision = 12) const;
 
     // Same as to_string() above, but executed asynchronously
     //
     template<typename ... Ts>
     [[nodiscard]] std::future<std::string>
-    to_string_async(io_format iof = io_format::csv,
-                    std::streamsize precision = 12) const;
+    to_string_async(std::streamsize precision = 12) const;
 
     // It inputs the contents of a text file into itself (i.e. DataFrame).
     // Currently two formats (i.e. csv, json) are supported specified by
@@ -3533,11 +3531,11 @@ public:  // Reading and writing
     //   Specifies the I/O format. The default is CSV
     //
     bool
-    from_string(const char *data_frame, io_format iof = io_format::csv);
+    from_string(const char *data_frame);
 
     // Same as from_string() above, but executed asynchronously
     [[nodiscard]] std::future<bool>
-    from_string_async(const char *data_frame, io_format iof = io_format::csv);
+    from_string_async(const char *data_frame);
 
 private:
 

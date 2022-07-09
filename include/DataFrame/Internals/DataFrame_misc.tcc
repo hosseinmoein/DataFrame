@@ -207,8 +207,8 @@ DataFrame<I, H>::print_csv_functor_<Ts ...>::operator() (const T &vec)  {
     else
         os << "<N/A>:";
 
-    for (std::size_t i = 0; i < vec.size(); ++i)
-        os << vec[i] << ',';
+    for (const auto &citer : vec)
+        os << citer << ',';
     os << '\n';
 
     return;
@@ -368,7 +368,7 @@ index_join_functor_common_<RES_T, Ts ...>::operator()(const T &lhs_vec)  {
 
     lhs_result_col.reserve(joined_index_idx.size());
     rhs_result_col.reserve(joined_index_idx.size());
-    for (auto &citer : joined_index_idx)  {
+    for (const auto &citer : joined_index_idx)  {
         const size_type left_i = std::get<0>(citer);
         const size_type right_i = std::get<1>(citer);
 
@@ -403,7 +403,7 @@ operator()(const T &vec)  {
     std::vector<ValueType>  result_col;
 
     result_col.reserve(joined_index_idx.size());
-    for (auto &citer : joined_index_idx)  {
+    for (const auto &citer : joined_index_idx)  {
         const size_type i = std::get<SIDE>(citer);
 
         result_col.push_back(
@@ -594,7 +594,7 @@ operator() (const T &vec)  {
     const size_type         vec_size = vec.size();
 
     new_col.reserve(std::min(sel_indices.size(), vec_size));
-    for (const auto citer : sel_indices)  {
+    for (auto citer : sel_indices)  {
         const size_type index =
             citer >= 0 ? citer : static_cast<IT>(indices_size) + citer;
 
@@ -625,7 +625,7 @@ operator() (T &vec)  {
     const size_type             vec_size = vec.size();
 
     new_col.reserve(std::min(sel_indices.size(), vec_size));
-    for (const auto citer : sel_indices)  {
+    for (auto citer : sel_indices)  {
         const size_type index =
             citer >= 0 ? citer : static_cast<IT>(indices_size) + citer;
 

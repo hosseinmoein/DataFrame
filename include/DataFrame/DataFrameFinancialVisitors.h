@@ -132,10 +132,11 @@ private:
         short_roller_(idx_begin, idx_end, prices_begin, prices_end);
 
         const auto          &result = short_roller_.get_result();
-        const size_type     idx_size = std::distance(idx_begin, idx_end);
-        const size_type     col_size = std::distance(prices_begin, prices_end);
         const std::size_t   col_s =
-            std::min<std::size_t>({ idx_size, col_size, result.size() });
+            std::min<std::size_t>(
+                { size_t(std::distance(idx_begin, idx_end)),
+                  size_t(std::distance(prices_begin, prices_end)),
+                  result.size() });
 
         col_to_short_term_.reserve(col_s);
         for (size_type i = 0; i < col_s; ++i)
@@ -152,10 +153,11 @@ private:
         long_roller_(idx_begin, idx_end, prices_begin, prices_end);
 
         const auto          &result = long_roller_.get_result();
-        const size_type     idx_size = std::distance(idx_begin, idx_end);
-        const size_type     col_size = std::distance(prices_begin, prices_end);
         const std::size_t   col_s =
-            std::min<std::size_t>({ idx_size, col_size, result.size() });
+            std::min<std::size_t>(
+                { size_t(std::distance(idx_begin, idx_end)),
+                  size_t(std::distance(prices_begin, prices_end)),
+                  result.size() });
 
         col_to_long_term_.reserve(col_s);
         for (size_type i = 0; i < col_s; ++i)
@@ -327,25 +329,27 @@ public:
             run_std_roller_(idx_begin, idx_end, prices_begin, prices_end);
         }
 
-        const size_type idx_size = std::distance(idx_begin, idx_end);
-        const size_type col_size = std::distance(prices_begin, prices_end);
         const auto      &std_result = std_roller_.get_result();
         const auto      &mean_result = mean_roller_.get_result();
         const size_type col_s =
             std::min<size_type>(
-                { idx_size, col_size, std_result.size(), mean_result.size() });
+                { size_t(std::distance(idx_begin, idx_end)),
+                  size_t(std::distance(prices_begin, prices_end)),
+                  std_result.size(),
+                  mean_result.size() });
 
         upper_band_to_raw_.reserve(col_s);
-        for (size_type i = 0; i < col_s; ++i)
-            upper_band_to_raw_.push_back(
-                (mean_result[i] + std_result[i] * upper_band_multiplier_) -
-                *(prices_begin + i));
-
         raw_to_lower_band_.reserve(col_s);
-        for (size_type i = 0; i < col_s; ++i)
+        for (size_type i = 0; i < col_s; ++i)  {
+            const value_type    p = *(prices_begin + i);
+            const value_type    mr = mean_result[i];
+            const value_type    sr = std_result[i];
+
+            upper_band_to_raw_.push_back(
+                (mr + sr * upper_band_multiplier_) - p);
             raw_to_lower_band_.push_back(
-                *(prices_begin + i) -
-                (mean_result[i] - std_result[i] * lower_band_multiplier_));
+                p - (mr - sr * lower_band_multiplier_));
+        }
     }
 
     inline void pre ()  {
@@ -368,8 +372,7 @@ public:
         : upper_band_multiplier_(upper_band_multiplier),
           lower_band_multiplier_(lower_band_multiplier),
           mean_roller_(std::move(MeanVisitor<T, I>()), moving_mean_period),
-          std_roller_(std::move(StdVisitor<T, I>(biased)),
-                      moving_mean_period) {
+          std_roller_(std::move(StdVisitor<T, I>(biased)), moving_mean_period) {
     }
 
 private:
@@ -409,13 +412,14 @@ struct MACDVisitor {
         long_roller(idx_begin, idx_end, column_begin, column_end);
         long_roller.post();
 
-        const size_type idx_size = std::distance(idx_begin, idx_end);
-        const size_type col_size = std::distance(column_begin, column_end);
         const auto      &short_result = short_roller.get_result();
         const auto      &long_result = long_roller.get_result();
         const size_type col_s =
             std::min<size_type>(
-                {idx_size, col_size, short_result.size(), long_result.size()});
+                { size_t(std::distance(idx_begin, idx_end)),
+                  size_t(std::distance(column_begin, column_end)),
+                  short_result.size(),
+                  long_result.size() });
 
         macd_line_.reserve(col_s);
         for (size_type i = 0; i < col_s; ++i)
@@ -1233,6 +1237,7 @@ public:
                 const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
+
         std::vector<range_data> buckets;
         MeanVisitor<T, I>       mv;
         StdVisitor<T, I>        sv;
@@ -1445,7 +1450,7 @@ struct  HullRollingMeanVisitor  {
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
 
-        if (roll_count_ == 0)  return;
+        if (roll_count_ <= 1)  return;
 
         using wma_t = SimpleRollAdopter<WeightedMeanVisitor<T, I>, T, I>;
 

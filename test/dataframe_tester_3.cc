@@ -796,6 +796,29 @@ static void test_ZeroLagMovingMeanVisitor()  {
     }
 }
 
+
+// -----------------------------------------------------------------------------
+
+static void test_describe()  {
+
+    std::cout << "\nTesting describe( ) ..." << std::endl;
+
+    typedef StdDataFrame<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("data/SHORT_IBM.csv", io_format::csv2);
+
+        auto    desc = df.describe<double, long>();
+
+        desc.write<std::ostream, double>(std::cout, io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
 // -----------------------------------------------------------------------------
 
 int main(int, char *[]) {
@@ -814,6 +837,7 @@ int main(int, char *[]) {
     test_PrettyGoodOsciVisitor();
     test_col_name_to_idx();
     test_ZeroLagMovingMeanVisitor();
+    test_describe();
 
     /*
     hmdf::SpinLock      locker;

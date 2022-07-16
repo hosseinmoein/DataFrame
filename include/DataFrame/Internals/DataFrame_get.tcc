@@ -1669,6 +1669,27 @@ DataFrame<I, H>::get_columns_info () const  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename  H>
+template<typename ... Ts>
+StdDataFrame<std::string>
+DataFrame<I, H>::describe() const  {
+
+    StdDataFrame<std::string>   result;
+
+    result.load_index(describe_index_col.begin(), describe_index_col.end());
+
+    for (const auto &citer : column_list_)  {
+        describe_functor_<Ts ...>   functor (citer.first.c_str(), result);
+        const SpinGuard             guard(lock_);
+
+        data_[citer.second].change(functor);
+    }
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
 template<typename T>
 bool DataFrame<I, H>::
 pattern_match(const char *col_name,

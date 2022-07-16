@@ -2238,6 +2238,27 @@ public: // Read/access and slicing interfaces
     get_reindexed_view(const char *col_to_be_index,
                        const char *old_index_name = nullptr);
 
+    // This function returns a DataFrame indexed by std::string that provides
+    // a few statistics about the columns of the calling DataFrame.
+    // The statistics are:
+    //  -- Number of items in the column
+    //  -- Number of items missing in the column
+    //  -- Mean of the items
+    //  -- Standard deviation of the items
+    //  -- Minimum item in the column
+    //  -- Maximum item in the column
+    //  -- 25% quantile item in the column
+    //  -- 50% quantile item in the column
+    //  -- 75% quantile item in the column
+    //
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    //
+    template<typename ... Ts>
+    [[nodiscard]] StdDataFrame<std::string>
+    describe() const;
+
     // This method combines the content of column col_name between self and
     // rhs based on the logic in functor. Both self and rhs must contain
     // col_name column with the same type as T.

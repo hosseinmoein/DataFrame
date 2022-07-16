@@ -4776,13 +4776,13 @@ static void test_MADVisitor()  {
     const auto          result3 =
         df.single_act_visit<double>("col_1", mad_visitor3).get_result();
 
-    assert(result3 == 5.25);
+    assert(result3 == 10.0);
 
     MADVisitor<double>  mad_visitor4(mad_type::median_abs_dev_around_median);
     const auto          result4 =
         df.single_act_visit<double>("col_1", mad_visitor4).get_result();
 
-    assert(result4 == 5.25);
+    assert(result4 == 10.0);
 }
 
 // -----------------------------------------------------------------------------

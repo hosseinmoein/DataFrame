@@ -2005,7 +2005,9 @@ struct KthValueVisitor  {
     operator() (const K &, const K &,
                 const H &values_begin, const H &values_end)  {
 
-        result_ = find_kth_element_(values_begin, values_end, kth_element_);
+        std::vector<value_type> aux (values_begin, values_end);
+
+        result_ = find_kth_element_(aux, 0, aux.size() - 1, kth_element_);
     }
 
     inline void pre ()  { result_ = value_type(); }
@@ -2021,50 +2023,43 @@ private:
     const size_type kth_element_;
     const bool      skip_nan_;
 
-    template<typename It>
+    template<typename V>
+    inline size_type
+    parttition_ (V &vec, size_type begin, size_type end) const  {
+
+        const value_type x = vec[end];
+        size_type        i = begin;
+
+        for (size_type j = begin; j < end; ++j) {
+            if (vec[j] <= x) {
+                std::swap(vec[i], vec[j]);
+                i += 1;
+            }
+        }
+
+        std::swap(vec[i], vec[end]);
+        return (i);
+    }
+
+    template<typename V>
     inline value_type
-    find_kth_element_ (It begin, It end, size_type k) const  {
+    find_kth_element_ (V &vec,
+                       size_type begin,
+                       size_type end,
+                       size_type k) const  {
 
-        const size_type vec_size = std::distance(begin, end);
+        // If k is smaller than number of elements in array
+        if (k > 0 && k <= end - begin + 1)  {
+            const size_type pos = parttition_(vec, begin, end);
 
-        if (k > vec_size || k <= 0)  {
-            char    err[512];
-
-            sprintf (err,
-#ifdef _MSC_VER
-                     "find_kth_element_(): vector length = %zu and k = %zu.",
-#else
-                     "find_kth_element_(): vector length = %lu and k = %lu.",
-#endif // _MSC_VER
-                     vec_size, k);
-            throw NotFeasible (err);
+            if (pos - begin == k - 1)
+                return (vec[pos]);
+            if (pos - begin > k - 1)
+                return (find_kth_element_(vec, begin, pos - 1, k));
+            return (find_kth_element_(vec, pos + 1, end, k - pos + begin - 1));
         }
 
-        std::vector<value_type> tmp_vec (vec_size - 1);
-        value_type              kth_value =
-            *(begin + static_cast<long>(vec_size / 2));
-        size_type               less_count = 0;
-        size_type               great_count = vec_size - 2;
-
-        for (auto citer = begin; citer < end; ++citer)  {
-            if (skip_nan_ && is_nan__(*citer))  continue;
-
-            if (*citer < kth_value)
-                tmp_vec [less_count++] = *citer;
-            else if (*citer > kth_value)
-                tmp_vec [great_count--] = *citer;
-        }
-
-        if (less_count > k - 1)
-            return (find_kth_element_ (tmp_vec.begin (),
-                                       tmp_vec.begin () + less_count,
-                                       k));
-        else if (less_count < k - 1)
-            return (find_kth_element_ (tmp_vec.begin () + less_count,
-                                       tmp_vec.end (),
-                                       k - less_count - 1));
-        else
-            return (kth_value);
+        throw NotFeasible ("find_kth_element_(): Cannot find Kth element");
     }
 };
 
@@ -2196,7 +2191,7 @@ struct QuantileVisitor  {
     inline result_type get_result () const  { return (result_); }
 
     explicit
-    QuantileVisitor (value_type quantile = 0.5,
+    QuantileVisitor (double quantile = 0.5,
                      quantile_policy q_policy = quantile_policy::mid_point)
         : qt_(quantile), policy_(q_policy)  {   }
 

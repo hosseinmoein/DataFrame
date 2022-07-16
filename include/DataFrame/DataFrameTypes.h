@@ -492,6 +492,12 @@ using DataFramePtrView = DataFrame<I, HeteroPtrView>;
 
 // ----------------------------------------------------------------------------
 
+inline static const std::vector<std::string>   describe_index_col {
+    "COUNT", "MISSING", "MEAN", "STD", "MIN", "MAX", "25%", "50%", "75%"
+};
+
+// ----------------------------------------------------------------------------
+
 // Helper macro for building DataFrame
 // e.g.:
 // struct MyDfSchema  {

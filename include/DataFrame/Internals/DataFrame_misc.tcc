@@ -676,7 +676,7 @@ operator() (const T &vec)  {
     }
     else  {
         T   &nc_vec = const_cast<T &>(vec);
-		
+
         result.template setup_view_column_<ValueType,
                                            typename VecType::iterator>(
             name, { nc_vec.begin(), nc_vec.end() });
@@ -856,6 +856,78 @@ DataFrame<I, H>::fill_missing_functor_<DF, Ts ...>::operator() (T &vec)  {
                 vec[i] = rhs_vec[i];
     }
     catch (const ColNotFound &)  {   }
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename ... Ts>
+template<typename T>
+void
+DataFrame<I, H>::describe_functor_<Ts ...>::operator() (const T &vec)  {
+
+    const size_type vec_s = vec.size();
+
+    if (vec_s < 3)  return;
+
+    using VecType = typename std::remove_reference<T>::type;
+    using ValueType = typename VecType::value_type;
+
+    std::vector<double> col_to_load;
+
+    col_to_load.reserve(describe_index_col.size());
+    col_to_load.push_back(double(vec_s));
+
+    size_type   missing_cnt =  0;
+    ValueType   minv = vec[0];
+    ValueType   maxv = vec[0];
+    ValueType   sum = vec[0];
+
+    if (is_nan<ValueType>(vec[0]))  missing_cnt += 1;
+    for (size_type i = 1; i < vec_s; ++i)  {
+        if (is_nan<ValueType>(vec[i]))
+            missing_cnt += 1;
+        else  {
+            if (vec[i] > maxv)  maxv = vec[i];
+            if (vec[i] < minv)  minv = vec[i];
+            sum += vec[i];
+        }
+    }
+    col_to_load.push_back(double(missing_cnt));
+    col_to_load.push_back(sum  / double(vec_s - missing_cnt));
+
+    StdVisitor<ValueType, ValueType>    stdev;
+
+    stdev.pre();
+    stdev(vec.begin(), vec.end(), vec.begin(), vec.end());
+    stdev.post();
+
+    col_to_load.push_back(double(stdev.get_result()));
+    col_to_load.push_back(double(minv));
+    col_to_load.push_back(double(maxv));
+
+    QuantileVisitor<ValueType, ValueType>   qt25(0.25);
+
+    qt25.pre();
+    qt25(vec.begin(), vec.end(), vec.begin(), vec.end());
+    qt25.post();
+    col_to_load.push_back(double(qt25.get_result()));
+
+    QuantileVisitor<ValueType, ValueType>   qt50(0.5);
+
+    qt50.pre();
+    qt50(vec.begin(), vec.end(), vec.begin(), vec.end());
+    qt50.post();
+    col_to_load.push_back(double(qt50.get_result()));
+
+    QuantileVisitor<ValueType, ValueType>   qt75(0.75);
+
+    qt75.pre();
+    qt75(vec.begin(), vec.end(), vec.begin(), vec.end());
+    qt75.post();
+    col_to_load.push_back(double(qt75.get_result()));
+
+    result.load_column<double>(name, std::move(col_to_load));
 }
 
 } // namespace hmdf

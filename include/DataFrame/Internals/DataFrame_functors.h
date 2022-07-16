@@ -616,6 +616,21 @@ struct fill_missing_functor_ :
 
 // ----------------------------------------------------------------------------
 
+template<typename ... Ts>
+struct describe_functor_ : DataVec::template visitor_base<Ts ...>  {
+
+    inline describe_functor_ (const char *n, StdDataFrame<std::string> &r)
+        : name(n), result(r)  {  }
+
+    const char                  *name;
+    StdDataFrame<std::string>   &result;
+
+    template<typename T>
+    void operator() (const T &vec);
+};
+
+// ----------------------------------------------------------------------------
+
 // Local Variables:
 // mode:C++
 // tab-width:4

@@ -1,0 +1,97 @@
+<!--
+Copyright (c) 2019-2022, Hossein Moein
+All rights reserved.
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+* Redistributions of source code must retain the above copyright
+  notice, this list of conditions and the following disclaimer.
+* Redistributions in binary form must reproduce the above copyright
+  notice, this list of conditions and the following disclaimer in the
+  documentation and/or other materials provided with the distribution.
+* Neither the name of Hossein Moein and/or the DataFrame nor the
+  names of its contributors may be used to endorse or promote products
+  derived from this software without specific prior written permission.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL Hossein Moein BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+<!DOCTYPE html>
+<html>
+<body>
+  <table align="center" border="1">
+
+    <tr bgcolor="lightblue">
+      <th>Signature</th> <th>Description</th> <th>Parameters</th>
+    </tr>
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        <PRE><B>
+template&lt;typename ... Ts&gt;
+StdDataFrame&lt;std::string&gt;
+describe();
+        </B></PRE></font>
+      </td>
+      <td>
+        This function returns a DataFrame indexed by std::string that provides a few statistics about the columns of the calling DataFrame.<BR>
+        The statistics are:<BR>
+        <UL>
+          <LI>Number of items in the column</LI>
+          <LI>Number of items missing in the column</LI>
+          <LI>Mean of the items</LI>
+          <LI>Standard deviation of the items</LI>
+          <LI>Minimum item in the column</LI>
+          <LI>Maximum item in the column</LI>
+          <LI>25% quantile item in the column</LI>
+          <LI>50% quantile item in the column</LI>
+          <LI>75% quantile item in the column</LI>
+        </UL>
+      </td>
+      <td>
+        <B>Ts</B>:  List all the types of all data columns. A type should be specified in the list only once.<BR>
+      </td>
+    </tr>
+
+  </table>
+
+<pre style='color:#000000;background:#ffffff;'><span style='color:#800000; font-weight:bold; '>static</span> <span style='color:#800000; font-weight:bold; '>void</span> test_describe<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span>  <span style='color:#800080; '>{</span>
+
+    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>cout</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#800000; '>"</span><span style='color:#0f69ff; '>\n</span><span style='color:#0000e6; '>Testing describe( ) ...</span><span style='color:#800000; '>"</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>endl</span><span style='color:#800080; '>;</span>
+
+    <span style='color:#800000; font-weight:bold; '>typedef</span> StdDataFrame<span style='color:#800080; '>&lt;</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>string</span><span style='color:#800080; '>></span> StrDataFrame<span style='color:#800080; '>;</span>
+
+    StrDataFrame    df<span style='color:#800080; '>;</span>
+
+    <span style='color:#800000; font-weight:bold; '>try</span>  <span style='color:#800080; '>{</span>
+        df<span style='color:#808030; '>.</span>read<span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>data/SHORT_IBM.csv</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> io_format<span style='color:#800080; '>::</span>csv2<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+
+        <span style='color:#800000; font-weight:bold; '>auto</span>    desc <span style='color:#808030; '>=</span> df<span style='color:#808030; '>.</span>describe<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#808030; '>,</span> <span style='color:#800000; font-weight:bold; '>long</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+
+        desc<span style='color:#808030; '>.</span>write<span style='color:#800080; '>&lt;</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>ostream</span><span style='color:#808030; '>,</span> <span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>cout</span><span style='color:#808030; '>,</span> io_format<span style='color:#800080; '>::</span>csv2<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    <span style='color:#800080; '>}</span>
+    <span style='color:#800000; font-weight:bold; '>catch</span> <span style='color:#808030; '>(</span><span style='color:#800000; font-weight:bold; '>const</span> DataFrameError <span style='color:#808030; '>&amp;</span>ex<span style='color:#808030; '>)</span>  <span style='color:#800080; '>{</span>
+        <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>cout</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> ex<span style='color:#808030; '>.</span>what<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>endl</span><span style='color:#800080; '>;</span>
+    <span style='color:#800080; '>}</span>
+<span style='color:#800080; '>}</span>
+</pre>
+<!--Created using ToHtml.com on 2022-07-16 17:37:39 UTC -->
+
+  <img src="https://github.com/hosseinmoein/DataFrame/blob/master/docs/LionLookingUp.jpg?raw=true" alt="C++ DataFrame"
+       width="200" height="150" style="float:right"/>
+
+</body>
+</html>
+
+<!--
+Local Variables:
+mode:HTML
+tab-width:4
+c-basic-offset:4
+End:
+-->

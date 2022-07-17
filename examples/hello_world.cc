@@ -157,7 +157,7 @@ int main(int, char *[]) {
     using ul_idx_t = ULDataFrame::IndexType;  // This is just unsigned long
 
     // You can sort by one or multiple columns You must specify all the column types, but only once
-    // Sort first by the index column in ascending order than by "string col" column in descending order
+    // Sort first by the index column in ascending order then by "string col" column in descending order
     //
     ul_df2.sort<ul_idx_t, std::string, double, std::string>(DF_INDEX_COL_NAME, sort_spec::ascen,
                                                             "string col", sort_spec::desce);

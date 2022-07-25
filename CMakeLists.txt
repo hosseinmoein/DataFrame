@@ -5,7 +5,7 @@ if(POLICY CMP0090)
 endif()
 
 project(DataFrame
-    VERSION 1.19.0
+    VERSION 1.21.0
     LANGUAGES CXX
 )
 

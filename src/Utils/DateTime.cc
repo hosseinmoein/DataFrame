@@ -199,34 +199,38 @@ DateTime::DateTime (const char *s, DT_DATE_STYLE ds, DT_TIME_ZONE tz)
             }
         }
         else if (ds == DT_DATE_STYLE::ISO_STYLE)  {
+            char    slug;
+
             if (str_len <= 10)  {
                 ::sscanf (str, "%d-%d-%d", &year, &month, &day);
             }
             else if (str_len == 13)  {
-                ::sscanf (str, "%d-%d-%d %hu", &year, &month, &day, &hour_);
+                ::sscanf (str, "%d-%d-%d%c%hu",
+                          &year, &month, &day, &slug, &hour_);
             }
             else if (str_len == 16)  {
-                ::sscanf (str, "%d-%d-%d %hu:%hu",
-                          &year, &month, &day, &hour_, &minute_);
+                ::sscanf (str, "%d-%d-%d%c%hu:%hu",
+                          &year, &month, &day, &slug, &hour_, &minute_);
             }
             else if (str_len == 19)  {
-                ::sscanf (str, "%d-%d-%d %hu:%hu:%hu",
-                          &year, &month, &day, &hour_, &minute_, &second_);
+                ::sscanf (str, "%d-%d-%d%c%hu:%hu:%hu",
+                          &year, &month, &day, &slug,
+                          &hour_, &minute_, &second_);
             }
             else if (str_len == 23)  {
                 MillisecondType millis { 0 };
 
-                ::sscanf (str, "%d-%d-%d %hu:%hu:%hu.%hd",
-                          &year, &month, &day, &hour_, &minute_,
-                          &second_, &millis);
+                ::sscanf (str, "%d-%d-%d%c%hu:%hu:%hu.%hd",
+                          &year, &month, &day, &slug,
+                          &hour_, &minute_, &second_, &millis);
                 nanosecond_ = millis * 1000000;
             }
             else if (str_len > 23)  {
                 MicrosecondType micros { 0 };
 
-                ::sscanf (str, "%d-%d-%d %hu:%hu:%hu.%d",
-                          &year, &month, &day, &hour_, &minute_,
-                          &second_, &micros);
+                ::sscanf (str, "%d-%d-%d%c%hu:%hu:%hu.%d",
+                          &year, &month, &day, &slug,
+                          &hour_, &minute_, &second_, &micros);
                 nanosecond_ = micros * 1000;
             }
         }

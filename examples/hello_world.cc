@@ -237,7 +237,11 @@ int main(int, char *[]) {
                           std::make_tuple("AAPL_Close", "Std", StdVisitor<double, dt_idx_t>()),
                           std::make_tuple("AAPL_Volume", "Volume", SumVisitor<long, dt_idx_t>()));
 
-    // aapl_ohlc.write<std::ostream, double, long>(std::cout, io_format::csv2);
+    // Now, let's get a view of a random sample of appel data.
+    // We randomley sample 35% of the data
+    //
+    auto    random_view =
+        dt_aapl.get_view_by_rand<double, long>(random_policy::frac_rows_no_seed, 0.35);
 
     return (0);
 }

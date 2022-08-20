@@ -4574,6 +4574,99 @@ private:
 template<typename T, typename I = unsigned long>
 using pgo_v = PrettyGoodOsciVisitor<T, I>;
 
+// ----------------------------------------------------------------------------
+
+template<typename T,
+         typename I = unsigned long,
+         typename =
+             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+struct T3MovingMeanVisitor {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
+
+        erm_t   e1(exponential_decay_spec::span, rolling_period_);
+
+        e1.pre();
+        e1(idx_begin, idx_end, column_begin, column_end);
+        e1.post();
+
+        erm_t   e2(exponential_decay_spec::span, rolling_period_);
+
+        e2.pre();
+        e2(idx_begin, idx_end, e1.get_result().begin(), e1.get_result().end());
+        e2.post();
+
+        erm_t   e3(exponential_decay_spec::span, rolling_period_);
+
+        e3.pre();
+        e3(idx_begin, idx_end, e2.get_result().begin(), e2.get_result().end());
+        e3.post();
+
+        erm_t   e4(exponential_decay_spec::span, rolling_period_);
+
+        e4.pre();
+        e4(idx_begin, idx_end, e3.get_result().begin(), e3.get_result().end());
+        e4.post();
+
+        erm_t   e5(exponential_decay_spec::span, rolling_period_);
+
+        e5.pre();
+        e5(idx_begin, idx_end, e4.get_result().begin(), e4.get_result().end());
+        e5.post();
+
+        erm_t   e6(exponential_decay_spec::span, rolling_period_);
+
+        e6.pre();
+        e6(idx_begin, idx_end, e5.get_result().begin(), e5.get_result().end());
+        e6.post();
+
+        const size_type col_s = std::distance(column_begin, column_end);
+        const double    c1 = -v_factor_ * v_factor_ * v_factor_;
+        const double    c2 = 3.0 * v_factor_ * v_factor_ +
+                             3.0 * v_factor_ * v_factor_ * v_factor_;
+        const double    c3 = -6.0 * v_factor_ * v_factor_ -
+                             3.0 * v_factor_ -
+                             3.0 * v_factor_ * v_factor_ * v_factor_;
+        const double    c4 = v_factor_ * v_factor_ * v_factor_ +
+                             3.0 * v_factor_ * v_factor_ +
+                             3.0 * v_factor_ +
+                             1.0;
+        result_type     result = std::move(e6.get_result());
+
+        for (size_type i = 0; i < col_s; ++i)
+            result[i] = c1 * result[i] +
+                        c2 * e5.get_result()[i] +
+                        c3 * e4.get_result()[i] +
+                        c4 * e3.get_result()[i];
+
+        result_.swap(result);
+    }
+
+    DEFINE_PRE_POST
+    DEFINE_RESULT
+
+    explicit
+    T3MovingMeanVisitor(size_type rolling_period = 10,
+                        double volum_factor = 0.7)
+        : rolling_period_(rolling_period), v_factor_(volum_factor)  {  }
+
+private:
+
+    using erm_t = ewm_v<T, I>;
+
+    result_type     result_ {  };
+    const size_type rolling_period_;
+    const double    v_factor_;
+};
+
+template<typename T, typename I = unsigned long>
+using t3_v = T3MovingMeanVisitor<T, I>;
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

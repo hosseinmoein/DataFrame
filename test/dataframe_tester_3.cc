@@ -821,6 +821,36 @@ static void test_describe()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_T3MovingMeanVisitor()  {
+
+    std::cout << "\nTesting T3MovingMeanVisitor{  } ..." << std::endl;
+
+    typedef StdDataFrame<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("data/IBM.csv", io_format::csv2);
+
+        t3_v<double, std::string>   t3;
+
+        df.single_act_visit<double> ("IBM_Close", t3);
+
+        assert(t3.get_result().size() == 5031);
+        assert(std::abs(t3.get_result()[0] - 98.5625) < 0.0001);
+        assert(std::abs(t3.get_result()[12] - 99.065) < 0.001);
+        assert(std::abs(t3.get_result()[14] - 99.2797) < 0.0001);
+        assert(std::abs(t3.get_result()[20] - 99.3028) < 0.0001);
+        assert(std::abs(t3.get_result()[5030] - 116.5671) < 0.0001);
+        assert(std::abs(t3.get_result()[5026] - 122.7203) < 0.0001);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     test_groupby_edge();
@@ -838,6 +868,7 @@ int main(int, char *[]) {
     test_col_name_to_idx();
     test_ZeroLagMovingMeanVisitor();
     test_describe();
+    test_T3MovingMeanVisitor();
 
     /*
     hmdf::SpinLock      locker;

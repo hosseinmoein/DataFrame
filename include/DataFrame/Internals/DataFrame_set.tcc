@@ -629,6 +629,44 @@ append_column (const char *name, const T &val, nan_policy padding)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename  H>
+template<typename T>
+typename DataFrame<I, H>::size_type
+DataFrame<I, H>::append_row_(std::pair<const char *, T> &row_name_data)  {
+
+    return (append_column<T>(row_name_data.first, // column name
+                             std::forward<T>(row_name_data.second),
+							 nan_policy::dont_pad_with_nans));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename ... Ts>
+typename DataFrame<I, H>::size_type
+DataFrame<I, H>::append_row (IndexType *idx_val, Ts&& ... args)  {
+
+    static_assert(std::is_base_of<HeteroVector, DataVec>::value,
+                  "Only a StdDataFrame can call append_row()");
+
+    if (idx_val)
+        indices_.push_back(*idx_val);
+
+    size_type   cnt = 1;
+    auto        args_tuple =
+        std::move(std::tuple<Ts ...>(std::forward<Ts>(args) ...));
+    auto        fc =
+        [this, &cnt](auto &pa) mutable -> void {
+            cnt += this->append_row_(pa);
+        };
+
+    for_each_in_tuple (args_tuple, fc);
+
+    return (cnt);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
 template<typename ... Ts>
 void DataFrame<I, H>::remove_data_by_idx (Index2D<IndexType> range)  {
 

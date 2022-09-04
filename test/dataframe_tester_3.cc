@@ -851,6 +851,54 @@ static void test_T3MovingMeanVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_append_row()  {
+
+    std::cout << "\nTesting append_row( ) ..." << std::endl;
+
+    MyDataFrame                df;
+    std::vector<unsigned long>  idxvec =
+        { 1UL, 2UL, 3UL, 10UL, 5UL, 7UL, 8UL, 12UL, 9UL, 12UL, 10UL, 13UL,
+          10UL, 15UL, 14UL };
+    std::vector<double>         dblvec =
+        { 0.0, 15.0, -14.0, 2.0, 1.0, 12.0, 11.0, 8.0, 7.0, 6.0, 5.0, 4.0,
+          3.0, 9.0, 10.0};
+    std::vector<double>         dblvec2 =
+        { 100.0, 101.0, 102.0, 103.0, 104.0, 105.0, 106.55, 107.34, 1.8,
+          111.0, 112.0, 113.0, 114.0, 115.0, 116.0};
+    std::vector<int>            intvec = { 1, 2, 3, 4, 5, 8, 6, 7, 11, 14, 9 };
+    std::vector<std::string>    strvec =
+        { "zz", "bb", "cc", "ww", "ee", "ff", "gg", "hh", "ii", "jj", "kk",
+          "ll", "mm", "nn", "oo" };
+    df.load_data(std::move(idxvec),
+                 std::make_pair("dbl_col", dblvec),
+                 std::make_pair("dbl_col_2", dblvec2),
+                 std::make_pair("str_col", strvec));
+    df.load_column("int_col", std::move(intvec),
+                   nan_policy::dont_pad_with_nans);
+
+    df.write<std::ostream, std::string, double, int>
+        (std::cout, io_format::csv2);
+
+	unsigned long   index_val = 15;
+
+    df.append_row(&index_val,
+                  std::make_pair("dbl_col", 100.0),
+                  std::make_pair("dbl_col_2", 300.0),
+                  std::make_pair("str_col", std::string("APPEND")));
+    df.write<std::ostream, std::string, double, int>
+        (std::cout, io_format::csv2);
+
+    df.append_row(&index_val,
+                  std::make_pair("dbl_col", 200.0),
+                  std::make_pair("dbl_col_2", 600.0),
+                  std::make_pair("int_col", 10000),
+                  std::make_pair("str_col", std::string("HYPE")));
+    df.write<std::ostream, std::string, double, int>
+        (std::cout, io_format::csv2);
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     test_groupby_edge();
@@ -869,6 +917,7 @@ int main(int, char *[]) {
     test_ZeroLagMovingMeanVisitor();
     test_describe();
     test_T3MovingMeanVisitor();
+    test_append_row();
 
     /*
     hmdf::SpinLock      locker;

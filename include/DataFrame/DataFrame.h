@@ -338,6 +338,29 @@ public:  // Load/append/remove interfaces
                   Index2D<const ITR &> range,
                   nan_policy padding = nan_policy::pad_with_nans);
 
+    // This is a way to append data to multiple columns on a row.
+    // It appends the values in the args to the end of given columns.
+    //
+    // Ts:
+    //   The list of types for columns in args
+    // index_val:
+    //   A pointer to an index value. If this pointer is not null, the index
+    //   will alos be appended.
+    // args:
+    //   A variable list of arguments consisting of
+    //     std::pair(<const char *name, &&data>).
+    //   Each pair, represents a a pair of column name and a single column value
+    //
+    // NOTE: This is not the most efficient way of appending values to columns
+    //       in a rapid way, for example in a real-time system.
+    //       For the most efficient way of appending to columns, maintain a
+    //       reference to column vectors – by calling get_column() –
+    //       and simply use push_back().
+    //
+    template<typename ... Ts>
+    size_type
+    append_row(IndexType *idx_val, Ts&& ... args);
+
     // It removes the data rows from index begin to index end.
     // DataFrame must be sorted by index or behavior is undefined.
     // This function first calls make_consistent() that may add nan values to

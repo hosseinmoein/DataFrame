@@ -1359,7 +1359,7 @@ get_data_by_rand(random_policy spec, double n, size_type seed) const  {
         n_rows = static_cast<size_type>(n * double(index_s));
     }
 
-    if (index_s > 0 && n_rows < index_s - 1)  {
+    if (index_s > 0 && n_rows <= index_s)  {
         std::random_device  rd;
         std::mt19937        gen(rd());
 
@@ -1433,7 +1433,7 @@ get_view_by_rand (random_policy spec, double n, size_type seed)  {
         n_rows = static_cast<size_type>(n * double(index_s));
     }
 
-    if (index_s > 0 && n_rows < index_s - 1)  {
+    if (index_s > 0 && n_rows <= index_s)  {
         std::random_device  rd;
         std::mt19937        gen(rd());
 

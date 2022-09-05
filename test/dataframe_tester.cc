@@ -3403,16 +3403,69 @@ static void test_get_data_by_rand()  {
         (random_policy::frac_rows_with_seed, 0.8, 23);
 
     result2.write<std::ostream, double, std::string>(std::cout);
-/*
-    assert(result2.get_index().size() == 6);
-    assert(result2.get_column<double>("col_1").size() == 6);
-    assert(result2.get_column<double>("col_4").size() == 1);
-    assert(result2.get_column<std::string>("col_str").size() == 6);
-    assert(result2.get_column<double>("col_4")[0] == 25.0);
-    assert(result2.get_column<double>("col_3")[4] == 24.0);
-    assert(result2.get_column<double>("col_1")[5] == 11.0);
-    assert(result2.get_column<std::string>("col_str")[4] == "ii");
-*/
+
+    std::vector<unsigned long>  idx2 = { 123450 };
+    std::vector<double> d12 = { 1 };
+    std::vector<double> d22 = { 8 };
+    std::vector<double> d32 = { 15 };
+    std::vector<double> d42 = { 22 };
+    std::vector<std::string> s12 = { "11" };
+    MyDataFrame         df2;
+
+    df2.load_data(std::move(idx2),
+                  std::make_pair("col_1", d12),
+                  std::make_pair("col_2", d22),
+                  std::make_pair("col_3", d32),
+                  std::make_pair("col_str", s12));
+    df2.load_column("col_4", std::move(d42), nan_policy::dont_pad_with_nans);
+
+    auto    result3 =
+        df2.get_data_by_rand<double, std::string>
+            (random_policy::num_rows_no_seed, 1);
+
+    result3.write<std::ostream, double, std::string>(std::cout);
+
+    std::vector<unsigned long>  idx3 = { 123450, 123451 };
+    std::vector<double> d13 = { 1, 2 };
+    std::vector<double> d23 = { 8, 9 };
+    std::vector<double> d33 = { 15, 16 };
+    std::vector<double> d43 = { 22, 23 };
+    std::vector<std::string> s13 = { "11", "22" };
+    MyDataFrame         df3;
+
+    df3.load_data(std::move(idx3),
+                  std::make_pair("col_1", d13),
+                  std::make_pair("col_2", d23),
+                  std::make_pair("col_3", d33),
+                  std::make_pair("col_str", s13));
+    df3.load_column("col_4", std::move(d43), nan_policy::dont_pad_with_nans);
+
+    auto    result4 =
+        df3.get_data_by_rand<double, std::string>
+            (random_policy::num_rows_no_seed, 1);
+
+    result4.write<std::ostream, double, std::string>(std::cout);
+
+    std::vector<unsigned long>  idx4 = { 123450, 123451, 123452 };
+    std::vector<double> d14 = { 1, 2, 3 };
+    std::vector<double> d24 = { 8, 9, 10 };
+    std::vector<double> d34 = { 15, 16, 17 };
+    std::vector<double> d44 = { 22, 23, 24 };
+    std::vector<std::string> s14 = { "11", "22", "33" };
+    MyDataFrame         df4;
+
+    df4.load_data(std::move(idx4),
+                  std::make_pair("col_1", d14),
+                  std::make_pair("col_2", d24),
+                  std::make_pair("col_3", d34),
+                  std::make_pair("col_str", s14));
+    df4.load_column("col_4", std::move(d44), nan_policy::dont_pad_with_nans);
+
+    auto    result5 =
+        df4.get_data_by_rand<double, std::string>
+            (random_policy::num_rows_no_seed, 1);
+
+    result5.write<std::ostream, double, std::string>(std::cout);
 }
 
 // -----------------------------------------------------------------------------

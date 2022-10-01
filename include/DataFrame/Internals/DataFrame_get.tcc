@@ -595,8 +595,8 @@ DataFrame<I, H>::get_view_by_loc (Index2D<long> range)  {
 
         dfv.indices_ =
             typename DataFrameView<IndexType>::IndexVecType(
-                &*(indices_.begin() + range.begin),
-                &*(indices_.begin() + range.end));
+                &(indices_[0]) + range.begin,
+                &(indices_[0]) + range.end);
         for (const auto &iter : column_list_)  {
             view_setup_functor_<DataFrameView<IndexType>, Ts ...>   functor (
                 iter.first.c_str(),
@@ -1529,12 +1529,11 @@ get_view(const std::vector<const char *> &col_names)  {
                   "Only a StdDataFrame can call get_view()");
 
     DataFrameView<I>    dfv;
+    const size_type     idx_size = indices_.size();
 
     dfv.indices_ =
-        typename DataFrameView<I>::IndexVecType(&*(indices_.begin()),
-                                                &*(indices_.end()));
-
-    const size_type idx_size = indices_.size();
+        typename DataFrameView<I>::IndexVecType(&(indices_[0]),
+                                                &(indices_[0]) + idx_size);
 
     for (const auto &name_citer : col_names)  {
         const auto  citer = column_tb_.find (name_citer);

@@ -77,7 +77,7 @@ int main(int, char *[]) {
     ULDataFrame ul_df1;
 
     // One way to load data into the DataFrame is one column at a time.
-    // A DataFram column could be at most as long as its index column. So, you must load the index
+    // A DataFrame column could be at most as long as its index column. So, you must load the index
     // first before loading any column
     //
     // Once you load a column or index, the data is moved to DataFrame. The original vectors are now empty.
@@ -104,7 +104,7 @@ int main(int, char *[]) {
 
     StrDataFrame    ibm_df;
 
-    // Also, you can load data into a DataFrame from a file, suporting a few different formats.
+    // Also, you can load data into a DataFrame from a file, supporting a few different formats.
     // If the file cannot be found, an exception will be thrown.
     // If the DataFrame root directory is your current directory when running this, it should work fine.
     //
@@ -148,7 +148,7 @@ int main(int, char *[]) {
 
     // Since we convert from native type to string and back, if you have
     // floating point numbers with long precisions, you may run into precision mismatches.
-    // to_string() has a precision parameter you can adjust. The defualt is 12
+    // to_string() has a precision parameter you can adjust. The default is 12
     // which is a relatively high precision.
     //
     ibm_df_2.from_string(str_ibm.c_str());
@@ -156,7 +156,7 @@ int main(int, char *[]) {
 
     using ul_idx_t = ULDataFrame::IndexType;  // This is just unsigned long
 
-    // You can sort by one or multiple columns You must specify all the column types, but only once
+    // You can sort by one or multiple columns. You must specify all the column types, but only once
     // Sort first by the index column in ascending order then by "string col" column in descending order
     //
     ul_df2.sort<ul_idx_t, std::string, double, std::string>(DF_INDEX_COL_NAME, sort_spec::ascen,
@@ -196,7 +196,7 @@ int main(int, char *[]) {
     std::cout << "Standard deviation of IBM close prices: " << ibm_stdev.get_result()
               << std::endl;
 
-    // Now Let’s declare two DataFrames with index type of DateTime
+    // Now, let’s declare two DataFrames with index type of DateTime
     // which is a handy object for date/time manipulations.
     //
     DTDataFrame dt_ibm;
@@ -238,7 +238,7 @@ int main(int, char *[]) {
                           std::make_tuple("AAPL_Volume", "Volume", SumVisitor<long, dt_idx_t>()));
 
     // Now, let's get a view of a random sample of appel data.
-    // We randomley sample 35% of the data
+    // We randomly sample 35% of the data
     //
     auto    random_view =
         dt_aapl.get_view_by_rand<double, long>(random_policy::frac_rows_no_seed, 0.35);

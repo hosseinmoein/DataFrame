@@ -161,9 +161,9 @@ DataFrame<I, H>::shuffle(const std::vector<const char *> &col_names,
         if (citer == column_tb_.end())  {
             char buffer [512];
 
-            sprintf(buffer,
-                    "DataFrame::shuffle(): ERROR: Cannot find column '%s'",
-                    name_citer);
+            snprintf(buffer, sizeof(buffer) - 1,
+                     "DataFrame::shuffle(): ERROR: Cannot find column '%s'",
+                     name_citer);
             throw ColNotFound(buffer);
         }
 
@@ -474,8 +474,8 @@ fill_missing(const std::vector<const char *> &col_names,
         else if (fp == fill_policy::linear_extrapolate)  {
             char buffer [512];
 
-            sprintf (
-                buffer,
+            snprintf (
+                buffer, sizeof(buffer) - 1,
                 "DataFrame::fill_missing(): fill_policy %d is not implemented",
                 static_cast<int>(fp));
             throw NotImplemented(buffer);

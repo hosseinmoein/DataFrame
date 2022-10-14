@@ -168,11 +168,16 @@ struct add_col_functor_ : DataVec::template visitor_base<Ts ...>  {
 template<typename ... Ts>
 struct print_csv_functor_ : DataVec::template visitor_base<Ts ...>  {
 
-    inline print_csv_functor_ (const char *n, std::ostream &o)
-        : name(n), os(o)  {   }
+    inline print_csv_functor_ (const char *n,
+                                std::ostream &o,
+                                long sr,
+                                long er)
+        : name(n), os(o), start_row(sr), end_row(er) {   }
 
     const char      *name;
     std::ostream    &os;
+    const long      start_row;
+    const long      end_row;
 
     template<typename T>
     void operator() (const T &vec);
@@ -184,11 +189,17 @@ struct print_csv_functor_ : DataVec::template visitor_base<Ts ...>  {
 template<typename ... Ts>
 struct print_json_functor_ : DataVec::template visitor_base<Ts ...>  {
 
-    inline print_json_functor_ (const char *n, bool npc, std::ostream &o)
-        : name(n), need_pre_comma(npc), os(o)  {   }
+    inline print_json_functor_ (const char *n,
+                                bool npc,
+                                std::ostream &o,
+                                long sr,
+                                long er)
+        : name(n), need_pre_comma(npc), start_row(sr), end_row(er), os(o) {   }
 
     const char      *name;
     const bool      need_pre_comma;
+    const long      start_row;
+    const long      end_row;
     std::ostream    &os;
 
     template<typename T>
@@ -200,11 +211,12 @@ struct print_json_functor_ : DataVec::template visitor_base<Ts ...>  {
 template<typename S, typename ... Ts>
 struct print_csv2_header_functor_ : DataVec::template visitor_base<Ts ...>  {
 
-    inline print_csv2_header_functor_ (const char *n, S &o)
-        : name(n), os(o)  {   }
+    inline print_csv2_header_functor_ (const char *n, S &o, long cs)
+        : name(n), os(o), col_size(cs)  {   }
 
     const char  *name;
     S           &os;
+    const long  col_size;
 
     template<typename T>
     void operator() (const T &vec);
@@ -215,7 +227,8 @@ struct print_csv2_header_functor_ : DataVec::template visitor_base<Ts ...>  {
 template<typename S, typename ... Ts>
 struct print_csv2_data_functor_ : DataVec::template visitor_base<Ts ...>  {
 
-    inline print_csv2_data_functor_ (std::size_t i, S &o) : index(i), os(o) {  }
+    inline print_csv2_data_functor_ (std::size_t i, S &o)
+        : index(i), os(o)  {  }
 
     const std::size_t   index;
     S                   &os;

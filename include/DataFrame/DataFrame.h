@@ -39,6 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <functional>
 #include <future>
 #include <ios>
+#include <limits>
 #include <string>
 #include <tuple>
 #include <type_traits>
@@ -2209,6 +2210,23 @@ public: // Read/access and slicing interfaces
     [[nodiscard]] IndexVecType &
     get_index();
 
+    /*
+    // It prints to stdout n rows of all columns either from the beginning
+    // or end of the DataFrame. Print will be in csv2 format.
+    // If n is positive, n rows from the beginning of DataFrame are printed.
+    // If negative, n rows from the end of DataFrame are printed.
+    //
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // n:
+    //   Number of columns to print. It could be positive or negative
+    //
+    template<typename ... Ts>
+    void
+    head(long n) const;
+    */
+
     // It creates and returns a new DataFrame which has the col_to_be_index
     // column as the index. If old_index_name is not null, it will be loaded
     // as a regular column in the result under the name old_index_name.
@@ -3450,20 +3468,26 @@ public:  // Reading and writing
     //   Specifies the precision for floating point numbers
     // columns_only:
     //   If true, it won't write the index column
+    // max_recs:
+    //   Max number of rows to write. If it is positive, it will write max_recs
+    //   from the beginning of DataFrame. If it is negative, it will write
+    //   max_recs from the end of DataFrame
     //
     template<typename S, typename ... Ts>
     bool
     write(S &o,
           io_format iof = io_format::csv,
           std::streamsize precision = 12,
-          bool columns_only = false) const;
+          bool columns_only = false,
+          long max_recs = std::numeric_limits<long>::max()) const;
 
     template<typename ... Ts>
     bool
     write(const char *file_name,
           io_format iof = io_format::csv,
           std::streamsize precision = 12,
-          bool columns_only = false) const;
+          bool columns_only = false,
+          long max_recs = std::numeric_limits<long>::max()) const;
 
     // Same as write() above, but executed asynchronously
     //
@@ -3472,14 +3496,16 @@ public:  // Reading and writing
     write_async(S &o,
                 io_format iof = io_format::csv,
                 std::streamsize precision = 12,
-                bool columns_only = false) const;
+                bool columns_only = false,
+                long max_recs = std::numeric_limits<long>::max()) const;
 
     template<typename ... Ts>
     [[nodiscard]] std::future<bool>
     write_async(const char *file_name,
                 io_format iof = io_format::csv,
                 std::streamsize precision = 12,
-                bool columns_only = false) const;
+                bool columns_only = false,
+                long max_recs = std::numeric_limits<long>::max()) const;
 
     // This is a convenient function (simple implementation) to convert a
     // DataFrame into a string that could be restored later by calling

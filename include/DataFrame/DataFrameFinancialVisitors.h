@@ -949,13 +949,13 @@ struct SharpeRatioVisitor {
         if (vec_s != b_s || vec_s < 3)  {
             char    err[512];
 
-            sprintf (err,
+            snprintf (err, sizeof(err) - 1,
 #ifdef _MSC_VER
-                     "SharpeRatioVisitor: Size of asset = %zu and "
-                     "benchmark = %zu time-series are not feasible.",
+                      "SharpeRatioVisitor: Size of asset = %zu and "
+                      "benchmark = %zu time-series are not feasible.",
 #else
-                     "SharpeRatioVisitor: Size of asset = %lu and "
-                     "benchmark = %lu time-series are not feasible.",
+                      "SharpeRatioVisitor: Size of asset = %lu and "
+                      "benchmark = %lu time-series are not feasible.",
 #endif // _MSC_VER
                      vec_s, b_s);
             throw NotFeasible (err);

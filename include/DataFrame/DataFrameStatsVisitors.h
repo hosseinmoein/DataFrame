@@ -2127,12 +2127,12 @@ struct QuantileVisitor  {
         if (qt_ < 0.0 || qt_ > 1.0 || col_s == 0)  {
             char buffer [512];
 
-            sprintf (buffer,
-                     "QuantileVisitor{}: unable to do quantile: "
+            snprintf (buffer, sizeof(buffer) - 1,
+                      "QuantileVisitor{}: unable to do quantile: "
 #ifdef _MSC_VER
-                     "qt: %f, Column Len: %zu",
+                      "qt: %f, Column Len: %zu",
 #else
-                     "qt: %f, Column Len: %lu",
+                      "qt: %f, Column Len: %lu",
 #endif // _MSC_VER
                      qt_, col_s);
             throw NotFeasible(buffer);

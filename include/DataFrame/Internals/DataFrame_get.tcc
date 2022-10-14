@@ -78,8 +78,8 @@ DataFrame<I, H>::col_name_to_idx (const char *col_name) const  {
 
     char buffer [512];
 
-    sprintf (buffer, "DataFrame::col_name_to_idx(): ERROR: "
-                     "Cannot find column '%s'",
+    snprintf (buffer, sizeof(buffer) - 1,
+             "DataFrame::col_name_to_idx(): ERROR: Cannot find column '%s'",
              col_name);
     throw ColNotFound (buffer);
 }
@@ -96,11 +96,12 @@ DataFrame<I, H>::col_idx_to_name (size_type col_idx) const  {
 
     char buffer [512];
 
-    sprintf (buffer, "DataFrame::col_idx_to_name(): ERROR: "
+    snprintf (buffer, sizeof(buffer) - 1,
+              "DataFrame::col_idx_to_name(): ERROR: "
 #ifdef _MSC_VER
-                     "Cannot find column index %zu",
+              "Cannot find column index %zu",
 #else
-                     "Cannot find column index %lu",
+              "Cannot find column index %lu",
 #endif // _MSC_VER
              col_idx);
     throw ColNotFound (buffer);
@@ -118,8 +119,8 @@ DataFrame<I, H>::get_column (const char *name)  {
     if (iter == column_tb_.end())  {
         char buffer [512];
 
-        sprintf (buffer, "DataFrame::get_column(): ERROR: "
-                         "Cannot find column '%s'",
+        snprintf (buffer, sizeof(buffer) - 1,
+                  "DataFrame::get_column(): ERROR: Cannot find column '%s'",
                  name);
         throw ColNotFound (buffer);
     }
@@ -221,9 +222,11 @@ get_row(size_type row_num, const std::vector<const char *> &col_names) const {
         char buffer [512];
 
 #ifdef _MSC_VER
-        sprintf(buffer, "DataFrame::get_row(): ERROR: There aren't %zu rows",
+        snprintf(buffer, sizeof(buffer) - 1,
+                 "DataFrame::get_row(): ERROR: There aren't %zu rows",
 #else
-        sprintf(buffer, "DataFrame::get_row(): ERROR: There aren't %lu rows",
+        snprintf(buffer, sizeof(buffer) - 1,
+                 "DataFrame::get_row(): ERROR: There aren't %lu rows",
 #endif // _MSC_VER
                 row_num);
         throw BadRange(buffer);
@@ -243,7 +246,7 @@ get_row(size_type row_num, const std::vector<const char *> &col_names) const {
         if (citer == column_tb_.end())  {
             char buffer [512];
 
-            sprintf(buffer,
+            snprintf(buffer, sizeof(buffer) - 1,
                     "DataFrame::get_row(): ERROR: Cannot find column '%s'",
                     name_citer);
             throw ColNotFound(buffer);
@@ -266,9 +269,11 @@ get_row(size_type row_num) const {
         char buffer [512];
 
 #ifdef _MSC_VER
-        sprintf(buffer, "DataFrame::get_row(): ERROR: There aren't %zu rows",
+        snprintf(buffer, sizeof(buffer) - 1,
+                 "DataFrame::get_row(): ERROR: There aren't %zu rows",
 #else
-        sprintf(buffer, "DataFrame::get_row(): ERROR: There aren't %lu rows",
+        snprintf(buffer, sizeof(buffer) - 1,
+                 "DataFrame::get_row(): ERROR: There aren't %lu rows",
 #endif // _MSC_VER
                 row_num);
         throw BadRange(buffer);
@@ -532,10 +537,10 @@ DataFrame<I, H>::get_data_by_loc (Index2D<long> range) const  {
 
     char buffer [512];
 
-    sprintf (buffer,
-             "DataFrame::get_data_by_loc(): ERROR: "
-             "Bad begin, end range: %ld, %ld",
-             range.begin, range.end);
+    snprintf (buffer, sizeof(buffer) - 1,
+              "DataFrame::get_data_by_loc(): ERROR: "
+              "Bad begin, end range: %ld, %ld",
+              range.begin, range.end);
     throw BadRange (buffer);
 }
 
@@ -613,10 +618,10 @@ DataFrame<I, H>::get_view_by_loc (Index2D<long> range)  {
 
     char buffer [512];
 
-    sprintf (buffer,
-             "DataFrame::get_view_by_loc(): ERROR: "
-             "Bad begin, end range: %ld, %ld",
-             range.begin, range.end);
+    snprintf (buffer, sizeof(buffer) - 1,
+              "DataFrame::get_view_by_loc(): ERROR: "
+              "Bad begin, end range: %ld, %ld",
+              range.begin, range.end);
     throw BadRange (buffer);
 }
 
@@ -1400,12 +1405,12 @@ get_data_by_rand(random_policy spec, double n, size_type seed) const  {
 
     char buffer [512];
 
-    sprintf (buffer,
-             "DataFrame::get_data_by_rand(): ERROR: "
+    snprintf (buffer, sizeof(buffer) - 1,
+              "DataFrame::get_data_by_rand(): ERROR: "
 #ifdef _MSC_VER
-             "Number of rows requested %zu is more than available rows %zu",
+              "Number of rows requested %zu is more than available rows %zu",
 #else
-             "Number of rows requested %lu is more than available rows %lu",
+              "Number of rows requested %lu is more than available rows %lu",
 #endif // _MSC_VER
              n_rows, index_s);
     throw BadRange (buffer);
@@ -1475,12 +1480,12 @@ get_view_by_rand (random_policy spec, double n, size_type seed)  {
 
     char buffer [512];
 
-    sprintf (buffer,
-             "DataFrame::get_view_by_rand(): ERROR: "
+    snprintf (buffer, sizeof(buffer) - 1,
+              "DataFrame::get_view_by_rand(): ERROR: "
 #ifdef _MSC_VER
-             "Number of rows requested %zu is more than available rows %zu",
+              "Number of rows requested %zu is more than available rows %zu",
 #else
-             "Number of rows requested %lu is more than available rows %lu",
+              "Number of rows requested %lu is more than available rows %lu",
 #endif // _MSC_VER
              n_rows, index_s);
     throw BadRange (buffer);
@@ -1503,9 +1508,9 @@ get_data(const std::vector<const char *> &col_names) const  {
         if (citer == column_tb_.end())  {
             char buffer [512];
 
-            sprintf(buffer,
-                    "DataFrame::get_data(): ERROR: Cannot find column '%s'",
-                    name_citer);
+            snprintf(buffer, sizeof(buffer) - 1,
+                     "DataFrame::get_data(): ERROR: Cannot find column '%s'",
+                     name_citer);
             throw ColNotFound(buffer);
         }
 
@@ -1541,9 +1546,9 @@ get_view(const std::vector<const char *> &col_names)  {
         if (citer == column_tb_.end())  {
             char buffer [512];
 
-            sprintf(buffer,
-                    "DataFrame::get_view(): ERROR: Cannot find column '%s'",
-                    name_citer);
+            snprintf(buffer, sizeof(buffer) - 1,
+                     "DataFrame::get_view(): ERROR: Cannot find column '%s'",
+                     name_citer);
             throw ColNotFound(buffer);
         }
 

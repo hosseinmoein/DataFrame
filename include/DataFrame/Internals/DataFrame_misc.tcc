@@ -207,8 +207,14 @@ DataFrame<I, H>::print_csv_functor_<Ts ...>::operator() (const T &vec)  {
     else
         os << "<N/A>:";
 
-    for (const auto &citer : vec)
-        os << citer << ',';
+    const long  vec_size = vec.size();
+    const long  sr = std::min(start_row, vec_size);
+    const long  er = std::min(end_row, vec_size);
+
+    if (vec_size > 0)  {
+        for (long i = sr; i < er; ++i)
+            os << vec[i] << ',';
+    }
     os << '\n';
 
     return;
@@ -260,10 +266,14 @@ DataFrame<I, H>::print_json_functor_<Ts ...>::operator() (const T &vec)  {
     else
         os << "\"T\":\"N/A\",";
 
+    const long  vec_size = vec.size();
+    const long  sr = std::min(start_row, vec_size);
+    const long  er = std::min(end_row, vec_size);
+
     os << "\"D\":[";
-    if (! vec.empty())  {
-        _write_json_df_index_(os, vec[0]);
-        for (std::size_t i = 1; i < vec.size(); ++i)  {
+    if (vec_size > 0)  {
+        _write_json_df_index_(os, vec[start_row]);
+        for (long i = sr + 1; i < er; ++i)  {
             os << ',';
             _write_json_df_index_(os, vec[i]);
         }
@@ -284,7 +294,9 @@ print_csv2_header_functor_<S, Ts ...>::operator() (const T &vec)  {
     using VecType = typename std::remove_reference<T>::type;
     using ValueType = typename VecType::value_type;
 
-    _write_csv2_df_header_<S, ValueType>(os, name, vec.size());
+    _write_csv2_df_header_<S, ValueType>(os,
+                                         name,
+                                         std::min(col_size, long(vec.size())));
     return;
 }
 
@@ -383,8 +395,8 @@ index_join_functor_common_<RES_T, Ts ...>::operator()(const T &lhs_vec)  {
     char    lhs_str[256];
     char    rhs_str[256];
 
-    ::sprintf(lhs_str, "lhs.%s", name);
-    ::sprintf(rhs_str, "rhs.%s", name);
+    ::snprintf(lhs_str, sizeof(lhs_str) - 1, "lhs.%s", name);
+    ::snprintf(rhs_str, sizeof(rhs_str) - 1, "rhs.%s", name);
     result.load_column(lhs_str, std::move(lhs_result_col));
     result.load_column(rhs_str, std::move(rhs_result_col));
 }

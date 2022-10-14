@@ -42,7 +42,8 @@ bool DataFrame<I, H>::
 write(const char *file_name,
       io_format iof,
       std::streamsize precision,
-      bool columns_only) const  {
+      bool columns_only,
+      long max_recs) const  {
 
     std::ofstream   stream;
 
@@ -53,7 +54,7 @@ write(const char *file_name,
         err.printf("write(): ERROR: Unable to open file '%s'", file_name);
         throw DataFrameError(err.c_str());
     }
-    write<std::ostream, Ts ...>(stream, iof, precision, columns_only);
+    write<std::ostream, Ts ...>(stream, iof, precision, columns_only, max_recs);
     stream.close();
     return (true);
 }
@@ -68,7 +69,7 @@ DataFrame<I, H>::to_string(std::streamsize precision) const  {
 
     std::stringstream   ss (std::ios_base::out);
 
-    write<std::ostream, Ts ...>(ss, io_format::csv, precision, false);
+    write<std::ostream, Ts ...>(ss, io_format::csv, precision);
     return (ss.str());
 }
 
@@ -77,29 +78,38 @@ DataFrame<I, H>::to_string(std::streamsize precision) const  {
 template<typename I, typename H>
 template<typename S, typename ... Ts>
 bool DataFrame<I, H>::
-write (S &o,
-       io_format iof,
-       std::streamsize precision,
-       bool columns_only) const  {
+write(S &o,
+      io_format iof,
+      std::streamsize precision,
+      bool columns_only,
+      long max_recs) const  {
 
     if (iof != io_format::csv &&
         iof != io_format::json &&
         iof != io_format::csv2)
         throw NotImplemented("write(): This io_format is not implemented");
 
-    bool            need_pre_comma = false;
-    const size_type index_s = indices_.size();
+    bool    need_pre_comma = false;
+    long    end_row = indices_.size();
+    long    start_row = 0;
+
+    if (max_recs >= 0)
+        end_row = std::min(end_row, max_recs);
+    else
+        start_row = std::max(long(0), end_row + max_recs);
 
     o.precision(precision);
     if (iof == io_format::json)  {
         o << "{\n";
         if (! columns_only)  {
-            _write_json_df_header_<S, IndexType>(o, DF_INDEX_COL_NAME, index_s);
+            _write_json_df_header_<S, IndexType>(o,
+                                                 DF_INDEX_COL_NAME,
+                                                 end_row - start_row);
 
             o << "\"D\":[";
-            if (index_s != 0)  {
-                _write_json_df_index_(o, indices_[0]);
-                for (size_type i = 1; i < index_s; ++i)  {
+            if (end_row > start_row)  {
+                _write_json_df_index_(o, indices_[start_row]);
+                for (long i = start_row + 1; i < end_row; ++i)  {
                     o << ',';
                     _write_json_df_index_(o, indices_[i]);
                 }
@@ -108,11 +118,14 @@ write (S &o,
             need_pre_comma = true;
         }
 
+        const SpinGuard guard(lock_);
+
         for (const auto &iter : column_list_)  {
             print_json_functor_<Ts ...> functor (iter.first.c_str(),
                                                  need_pre_comma,
-                                                 o);
-            const SpinGuard             guard(lock_);
+                                                 o,
+                                                 start_row,
+                                                 end_row);
 
             data_[iter.second].change(functor);
             need_pre_comma = true;
@@ -120,39 +133,48 @@ write (S &o,
     }
     else if (iof == io_format::csv)  {
         if (! columns_only)  {
-            _write_csv_df_header_<S, IndexType>(o, DF_INDEX_COL_NAME, index_s);
+            _write_csv_df_header_<S, IndexType>(o,
+                                                DF_INDEX_COL_NAME,
+                                                end_row - start_row);
 
-            for (size_type i = 0; i < index_s; ++i)
+            for (long i = start_row; i < end_row; ++i)
                 _write_csv_df_index_(o, indices_[i]) << ',';
             o << '\n';
         }
 
+        const SpinGuard guard(lock_);
+
         for (const auto &iter : column_list_)  {
-            print_csv_functor_<Ts ...>  functor (iter.first.c_str(), o);
-            const SpinGuard             guard(lock_);
+            print_csv_functor_<Ts ...>  functor (iter.first.c_str(),
+                                                 o,
+                                                 start_row,
+                                                 end_row);
 
             data_[iter.second].change(functor);
         }
     }
     else if (iof == io_format::csv2)  {
         if (! columns_only)  {
-            _write_csv2_df_header_<S, IndexType>(o, DF_INDEX_COL_NAME, index_s);
+            _write_csv2_df_header_<S, IndexType>(o,
+                                                 DF_INDEX_COL_NAME,
+                                                 end_row - start_row);
             need_pre_comma = true;
         }
+
+        const SpinGuard guard(lock_);
 
         for (const auto &iter : column_list_)  {
             if (need_pre_comma)  o << ',';
             else  need_pre_comma = true;
             print_csv2_header_functor_<S, Ts ...>   functor(
-                iter.first.c_str(), o);
-            const SpinGuard                         guard(lock_);
+                iter.first.c_str(), o, end_row - start_row);
 
             data_[iter.second].change(functor);
         }
         o << '\n';
 
         need_pre_comma = false;
-        for (size_type i = 0; i < index_s; ++i)  {
+        for (long i = start_row; i < end_row; ++i)  {
             size_type   count = 0;
 
             if (! columns_only)  {
@@ -161,10 +183,11 @@ write (S &o,
                 count += 1;
             }
 
+            const SpinGuard guard(lock_);
+
             for (auto citer = column_list_.begin();
                  citer != column_list_.end(); ++citer, ++count)  {
                 print_csv2_data_functor_<S, Ts ...>  functor (i, o);
-                const SpinGuard                      guard(lock_);
 
                 if (need_pre_comma && count > 0)  o << ',';
                 else  need_pre_comma = true;
@@ -188,18 +211,21 @@ std::future<bool> DataFrame<I, H>::
 write_async (const char *file_name,
              io_format iof,
              std::streamsize precision,
-             bool columns_only) const  {
+             bool columns_only,
+             long max_recs) const  {
 
     return (std::async(std::launch::async,
                        [file_name,
                         iof,
                         precision,
                         columns_only,
+                        max_recs,
                         this] () -> bool  {
                            return (this->write<Ts ...>(file_name,
                                                        iof,
                                                        precision,
-                                                       columns_only));
+                                                       columns_only,
+                                                       max_recs));
                        }));
 }
 
@@ -211,14 +237,21 @@ std::future<bool> DataFrame<I, H>::
 write_async (S &o,
              io_format iof,
              std::streamsize precision,
-             bool columns_only) const  {
+             bool columns_only,
+             long max_recs) const  {
 
     return (std::async(std::launch::async,
-                       [&o, iof, precision, columns_only, this] () -> bool  {
+                       [&o,
+                        iof,
+                        precision,
+                        columns_only,
+                        max_recs,
+                        this] () -> bool  {
                            return (this->write<S, Ts ...>(o,
                                                           iof,
                                                           precision,
-                                                          columns_only));
+                                                          columns_only,
+                                                          max_recs));
                        }));
 }
 

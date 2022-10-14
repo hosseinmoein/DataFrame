@@ -39,7 +39,8 @@ bool
 write(S &amp;o,
       io_format iof = io_format::csv,
       std::streamsize precision = 12,
-      bool columns_only = false) const; </font>
+      bool columns_only = false,
+      long max_recs = std::numeric_limits<long>::max()) const; </font>
         </B></PRE>
       </td>
       <td>
@@ -113,6 +114,7 @@ write(S &amp;o,
  <B>iof</B>: Specifies the I/O format. The default is CSV
  <B>precision</B>: Specifies the precision for floating point numbers
  <B>columns_only</B>: If true, the index columns is not written into the stream
+ <B>max_recs</B>: Max number of rows to write. If it is positive, it will write max_recs from the beginning of DataFrame. If it is negative, it will write max_recs from the end of DataFrame
         </PRE>
       </td>
     </tr>
@@ -125,7 +127,8 @@ std::future&lt;bool&gt;
 write(const char *file_name,
       io_format iof = io_format::csv,
       std::streamsize precision = 12,
-      bool columns_only = false) const; </font>
+      bool columns_only = false,
+      long max_recs = std::numeric_limits<long>::max()) const; </font>
         </B></PRE>
       </td>
       <td>
@@ -143,7 +146,8 @@ std::future&lt;bool&gt;
 write_async(S &amp;o,
             io_format iof = io_format::csv,
             std::streamsize precision = 12,
-            bool columns_only = false) const; </font>
+            bool columns_only = false,
+            long max_recs = std::numeric_limits<long>::max()) const; </font>
         </B></PRE>
       </td>
       <td>
@@ -161,7 +165,8 @@ std::future&lt;bool&gt;
 write_async(const char *file_name,
             io_format iof = io_format::csv,
             std::streamsize precision = 12,
-            bool columns_only = false) const; </font>
+            bool columns_only = false,
+            long max_recs = std::numeric_limits<long>::max()) const; </font>
         </B></PRE>
       </td>
       <td>

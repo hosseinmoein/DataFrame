@@ -285,9 +285,9 @@ column_join_helper_(const LHS_T &lhs,
 
     char    buffer[64];
 
-    ::sprintf(buffer, "lhs.%s", DF_INDEX_COL_NAME);
+    ::snprintf(buffer, sizeof(buffer) - 1, "lhs.%s", DF_INDEX_COL_NAME);
     result.load_column(buffer, std::move(lhs_index));
-    ::sprintf(buffer, "rhs.%s", DF_INDEX_COL_NAME);
+    ::snprintf(buffer, sizeof(buffer) - 1, "rhs.%s", DF_INDEX_COL_NAME);
     result.load_column(buffer, std::move(rhs_index));
     result.load_column(col_name, std::move(named_col_vec));
 

@@ -82,9 +82,9 @@ void DataFrame<I, H>::remove_column (const char *name)  {
     if (iter == column_tb_.end())  {
         char    buffer [512];
 
-        sprintf (buffer,
-                 "DataFrame::remove_column(): ERROR: Cannot find column '%s'",
-                 name);
+        snprintf (buffer, sizeof(buffer) - 1,
+                  "DataFrame::remove_column(): ERROR: Cannot find column '%s'",
+                  name);
         throw ColNotFound (buffer);
     }
 
@@ -128,18 +128,18 @@ void DataFrame<I, H>::rename_column (const char *from, const char *to)  {
     if (from_iter == column_tb_.end())  {
         char buffer [512];
 
-        sprintf (buffer,
-                 "DataFrame::rename_column(): ERROR: Cannot find column '%s'",
-                 from);
+        snprintf (buffer, sizeof(buffer) - 1,
+                  "DataFrame::rename_column(): ERROR: Cannot find column '%s'",
+                  from);
         throw ColNotFound (buffer);
     }
     if (column_tb_.find (to) != column_tb_.end())  {
         char buffer [512];
 
-        sprintf (buffer,
-                 "DataFrame::rename_column(): "
-                 "ERROR: Column '%s' already exists",
-                 to);
+        snprintf (buffer, sizeof(buffer) - 1,
+                  "DataFrame::rename_column(): "
+                  "ERROR: Column '%s' already exists",
+                  to);
         throw DataFrameError (buffer);
     }
 
@@ -349,11 +349,12 @@ load_column (const char *name,
     if (s > idx_s)  {
         char buffer [512];
 
-        sprintf (buffer, "DataFrame::load_column(): ERROR: "
+        snprintf (buffer, sizeof(buffer) - 1,
+                  "DataFrame::load_column(): ERROR: "
 #ifdef _MSC_VER
-                         "data size of %zu is larger than index size of %zu",
+                  "data size of %zu is larger than index size of %zu",
 #else
-                         "data size of %lu is larger than index size of %lu",
+                  "data size of %lu is larger than index size of %lu",
 #endif // _MSC_VER
                  s, idx_s);
         throw InconsistentData (buffer);
@@ -426,11 +427,12 @@ load_column (const char *name, std::vector<T> &&column, nan_policy padding)  {
     if (data_s > idx_s)  {
         char buffer [512];
 
-        sprintf (buffer, "DataFrame::load_column(): ERROR: "
+        snprintf (buffer, sizeof(buffer) - 1,
+                  "DataFrame::load_column(): ERROR: "
 #ifdef _MSC_VER
-                         "data size of %zu is larger than index size of %zu",
+                  "data size of %zu is larger than index size of %zu",
 #else
-                         "data size of %lu is larger than index size of %lu",
+                  "data size of %lu is larger than index size of %lu",
 #endif // _MSC_VER
                  data_s, idx_s);
         throw InconsistentData (buffer);
@@ -483,11 +485,12 @@ load_align_column(
     if (data_s > idx_s || data_s == 0)  {
         char buffer [512];
 
-        sprintf (buffer, "DataFrame::load_align_column(): ERROR: "
+        snprintf (buffer, sizeof(buffer) - 1,
+                  "DataFrame::load_align_column(): ERROR: "
 #ifdef _MSC_VER
-                         "data size of %zu is larger than index size of %zu",
+                  "data size of %zu is larger than index size of %zu",
 #else
-                         "data size of %lu is larger than index size of %lu",
+                  "data size of %lu is larger than index size of %lu",
 #endif // _MSC_VER
                  data_s, idx_s);
         throw InconsistentData (buffer);
@@ -561,11 +564,12 @@ append_column (const char *name,
     if (s > idx_s)  {
         char buffer [512];
 
-        sprintf (buffer, "DataFrame::append_column(): ERROR: "
+        snprintf(buffer, sizeof(buffer) - 1,
+                 "DataFrame::append_column(): ERROR: "
 #ifdef _MSC_VER
-                         "data size of %zu is larger than index size of %zu",
+                 "data size of %zu is larger than index size of %zu",
 #else
-                         "data size of %lu is larger than index size of %lu",
+                 "data size of %lu is larger than index size of %lu",
 #endif // _MSC_VER
                  s, idx_s);
         throw InconsistentData (buffer);
@@ -601,11 +605,12 @@ append_column (const char *name, const T &val, nan_policy padding)  {
     if (s > idx_s)  {
         char buffer [512];
 
-        sprintf (buffer, "DataFrame::append_column(): ERROR: "
+        snprintf(buffer, sizeof(buffer) - 1,
+                 "DataFrame::append_column(): ERROR: "
 #ifdef _MSC_VER
-                         "data size of %zu is larger than index size of %zu",
+                 "data size of %zu is larger than index size of %zu",
 #else
-                         "data size of %lu is larger than index size of %lu",
+                 "data size of %lu is larger than index size of %lu",
 #endif // _MSC_VER
                  s, idx_s);
         throw InconsistentData (buffer);
@@ -730,7 +735,7 @@ void DataFrame<I, H>::remove_data_by_loc (Index2D<long> range)  {
 
     char buffer [512];
 
-    sprintf (buffer,
+    snprintf(buffer, sizeof(buffer) - 1,
              "DataFrame::remove_data_by_loc(): ERROR: "
              "Bad begin, end range: %ld, %ld",
              range.begin, range.end);

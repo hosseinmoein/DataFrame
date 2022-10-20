@@ -1305,6 +1305,16 @@ table.hovertable td {
     See this document, <I>DataFrameStatsVisitors.h, DataFrameMLVisitors.h, DataFrameFinancialVisitors.h, DataFrameTransformVisitors.h</I>, and <I>test/dataframe_tester[_2].cc</I> for more examples and documentation.
   </P>
 
+  I have been asked many times, why I chose the visitor pattern for algorithms as opposed to having member functions.<BR>
+  I had a few reasons:<BR>
+  <OL>
+    <LI>If I had implemented them as member functions, I would have had 100's of member function in DataFrame -- I already have too many. It wouldn't be a good design</LI>
+    <LI>I wanted users to be able to incorporate their custom algorithms without touching the DataFrame codebase. If you follow a simple interface, you can write your custom visitor and use it in DataFrame, easily</LI>
+    <LI>Algorithms sometime have complex results. Sometimes the result is a single number. But sometimes the result of an algorithms could be a single or multiple vectors. That's not efficient to implement as a member function</LI>
+    <LI>I wanted the algorithms to be self-contained. That means a single <I>object</I> should contain the algorithm, parameters, and results</LI>
+    <LI>Because algorithms are self-contained, they can be passed to other algorithms to be used</LI>
+  </OL>
+
 <HR>
 
   <H2><font color="blue">Numeric Generators</font></H2>

@@ -186,7 +186,15 @@ to_string(std::streamsize precision = 12) const; </font>
       </td>
       <td>
         This is a convenient function (simple implementation) to convert a DataFrame into a string that could be restored later by calling from_string(). It utilizes the write() member function of DataFrame.<BR>
-        These functions could be used to transmit a DataFrame from one place to another or store a DataFrame in databases, caches, … <BR>
+		These functions could be used to transmit a DataFrame from one place to another or store a DataFrame in databases, caches, … <BR><BR>
+
+        I have been asked why I implemented to_string instead of/before doing “to binary format”<BR>
+        Implementing a binary format as a form of serialization is a legit ask and I will add that option when I find time to implement it. But implementing a binary format is more involved. And binary format is not always more efficient than string format. Two issues stand out<BR>
+        <OL>
+          <LI>Consider Options market data. Options' prices and sizes are usually smaller numbers. For example, consider the number 0.5. In string format that is 3 bytes ".5|". In binary format it is always 8 bytes. So, if you have a dataset with millions/billions of this kind of numbers, it makes a significant difference</LI>
+          <LI>In binary format you must deal with big-endian vs. little-endian. It is a pain in the neck and affects efficiency</LI>
+        </OL>
+
       </td>
       <td>
         <B>Ts</B>: The list of types for all columns. A type should be specified only once<BR>

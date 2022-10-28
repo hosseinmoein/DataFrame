@@ -1,5 +1,5 @@
 <!--
-Copyright (c) 2019-2022, Hossein Moein
+Copyright (c) 2019-2026, Hossein Moein
 All rights reserved.
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
@@ -1311,7 +1311,7 @@ table.hovertable td {
     <LI>If I had implemented them as member functions, I would have had 100's of member function in DataFrame -- I already have too many. It wouldn't be a good design</LI>
     <LI>I wanted users to be able to incorporate their custom algorithms without touching the DataFrame codebase. If you follow a simple interface, you can write your custom visitor and use it in DataFrame, easily</LI>
     <LI>Algorithms sometime have complex results. Sometimes the result is a single number. But sometimes the result of an algorithms could be a single or multiple vectors. That's not efficient to implement as a member function</LI>
-    <LI>I wanted the algorithms to be self-contained. That means a single <I>object</I> should contain the algorithm, parameters, and results</LI>
+    <LI>I wanted the algorithms to be self-contained. That means a single <I>object</I> should contain the algorithm, input(s), parameter(s), and result(s)</LI>
     <LI>Because algorithms are self-contained, they can be passed to other algorithms to be used</LI>
   </OL>
 

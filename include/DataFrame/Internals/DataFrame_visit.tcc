@@ -1,7 +1,7 @@
 // Hossein Moein
 // December 8, 2020
 /*
-Copyright (c) 2019-2022, Hossein Moein
+Copyright (c) 2019-2026, Hossein Moein
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without

@@ -71,7 +71,12 @@ struct HeteroVector  {
     // There is no const version of this method
     //
     template<typename T>
-    HeteroView get_view(size_type begin = 0, size_type end = -1);
+    HeteroView<VectorView>
+    get_view(size_type begin = 0, size_type end = -1);
+
+    template<typename T>
+    HeteroView<VectorConstView>
+    get_view(size_type begin = 0, size_type end = -1) const;
 
     template<typename T>
     HeteroPtrView get_ptr_view(size_type begin = 0, size_type end = -1);

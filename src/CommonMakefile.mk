@@ -19,7 +19,6 @@ SRCS = Vectors/HeteroVector.cc \
        ../test/dataframe_tester_schema.cc \
        ../benchmarks/dataframe_performance.cc \
        ../benchmarks/dataframe_performance_2.cc \
-       Vectors/HeteroView.cc \
        Vectors/HeteroPtrView.cc \
        ../test/vectors_tester.cc \
        ../test/vector_ptr_view_tester.cc \
@@ -94,7 +93,6 @@ DEFINES = -Wall -D_REENTRANT -DHMDF_HAVE_CLOCK_GETTIME \
 # object file
 #
 LIB_OBJS = $(LOCAL_OBJ_DIR)/HeteroVector.o \
-           $(LOCAL_OBJ_DIR)/HeteroView.o \
            $(LOCAL_OBJ_DIR)/HeteroPtrView.o \
            $(LOCAL_OBJ_DIR)/DateTime.o
 

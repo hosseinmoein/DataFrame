@@ -41,9 +41,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace hmdf
 {
 
+template<template<typename> typename VV = VectorView> 
 struct HeteroView  {
 
     using size_type = size_t;
+    template<typename V>
+    using vec_view = VV<V>;
 
     HMDF_API HeteroView();
     template<typename T>
@@ -70,13 +73,13 @@ struct HeteroView  {
     HMDF_API HeteroView &operator= (HeteroView &&rhs);
 
     template<typename T>
-    VectorView<T> &get_vector();
+    vec_view<T> &get_vector();
     template<typename T>
-    const VectorView<T> &get_vector() const;
+    const vec_view<T> &get_vector() const;
 
     template<typename T>
-    typename VectorView<T>::
-    size_type size () const { return (get_vector<T>().size()); }
+    typename vec_view<T>::size_type
+    size () const { return (get_vector<T>().size()); }
 
     HMDF_API void clear();
 
@@ -99,14 +102,13 @@ struct HeteroView  {
     const T &front() const;
 
     template<typename T>
-    using iterator = typename VectorView<T>::iterator;
+    using iterator = typename vec_view<T>::iterator;
     template<typename T>
-    using const_iterator = typename VectorView<T>::const_iterator;
+    using const_iterator = typename vec_view<T>::const_iterator;
     template<typename T>
-    using reverse_iterator = typename VectorView<T>::reverse_iterator;
+    using reverse_iterator = typename vec_view<T>::reverse_iterator;
     template<typename T>
-    using const_reverse_iterator =
-        typename VectorView<T>::const_reverse_iterator;
+    using const_reverse_iterator = typename vec_view<T>::const_reverse_iterator;
 
     template<typename T>
     iterator<T> begin();
@@ -164,7 +166,7 @@ private:
 
     template<typename T>
     inline static
-    std::unordered_map<const HeteroView *, VectorView<T>>   views_ {  };
+    std::unordered_map<const HeteroView *, vec_view<T>>   views_ {  };
 
     std::function<void(HeteroView &)>   clear_function_ {
         [](HeteroView &) { return; }

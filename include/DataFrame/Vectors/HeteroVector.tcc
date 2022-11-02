@@ -68,11 +68,24 @@ std::vector<T> &HeteroVector::get_vector()  {
 // ----------------------------------------------------------------------------
 
 template<typename T>
-HeteroView HeteroVector::get_view(size_type begin, size_type end)  {
+HeteroView<VectorView>
+HeteroVector::get_view(size_type begin, size_type end)  {
 
     std::vector<T>  &vec = get_vector<T>();
 
-    return (HeteroView(
+    return (HeteroView<VectorView>(
+        &(vec[begin]), end == size_t(-1) ? &(vec.back()) : &(vec[end])));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
+HeteroView<VectorConstView>
+HeteroVector::get_view(size_type begin, size_type end) const  {
+
+    const std::vector<T>    &vec = get_vector<T>();
+
+    return (HeteroView<VectorConstView>(
         &(vec[begin]), end == size_t(-1) ? &(vec.back()) : &(vec[end])));
 }
 

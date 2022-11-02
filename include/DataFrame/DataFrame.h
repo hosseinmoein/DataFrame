@@ -67,7 +67,8 @@ template<typename I, typename H>
 class DataFrame : public ThreadGranularity {
 
     static_assert(std::is_base_of<HeteroVector, H>::value ||
-                      std::is_base_of<HeteroView, H>::value ||
+                      std::is_base_of<HeteroView<VectorView>, H>::value ||
+                      std::is_base_of<HeteroView<VectorConstView>, H>::value ||
                       std::is_base_of<HeteroPtrView, H>::value,
                   "H argument can only be either of "
                   "HeteroVector, HeteroView, HeteroPtrView "

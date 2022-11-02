@@ -98,11 +98,17 @@ int main(int, char *[]) {
     {
         // Tesing HeteroVector View
 
-        HeteroView  v = hv.get_view<double>();
+        HeteroView<VectorView>  v = hv.get_view<double>();
 
         assert(v.at<double>(3) == 1.05);
 
-        HeteroView  s = hv.get_view<std::string>(1, 3);
+        const HeteroVector                  &const_hv = hv;
+        const HeteroView<VectorConstView>   const_v =
+            const_hv.get_view<double>();
+
+        assert(const_v.at<double>(3) == 1.05);
+
+        HeteroView<VectorView>  s = hv.get_view<std::string>(1, 3);
 
         assert(s.at<std::string>(0) == "str_2");
         assert(s.size<std::string>() == 2);

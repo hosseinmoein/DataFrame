@@ -395,10 +395,12 @@ template<typename T, typename ITR>
 void DataFrame<I, H>::
 setup_view_column_ (const char *name, Index2D<ITR> range)  {
 
-    static_assert(std::is_base_of<HeteroView, DataVec>::value ||
-                      std::is_base_of<HeteroPtrView, DataVec>::value,
-                  "Only a DataFrameView or DataFramePtrView can "
-                  "call setup_view_column_()");
+    static_assert(
+        std::is_base_of<HeteroView<VectorView>, DataVec>::value ||
+        std::is_base_of<HeteroView<VectorConstView>, DataVec>::value ||
+        std::is_base_of<HeteroPtrView, DataVec>::value,
+        "Only a DataFrameView or DataFramePtrView can "
+        "call setup_view_column_()");
 
     DataVec dv;
 

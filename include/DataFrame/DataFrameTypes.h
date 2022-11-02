@@ -460,7 +460,13 @@ template<typename U>
 struct type_declare<HeteroVector, U>  { using type = std::vector<U>; };
 
 template<typename U>
-struct type_declare<HeteroView, U>  { using type = VectorView<U>; };
+struct type_declare<HeteroView<VectorView>, U>  { using type = VectorView<U>; };
+
+template<typename U>
+struct type_declare<HeteroView<VectorConstView>, U>  {
+
+   using type = VectorConstView<U>;
+};
 
 template<typename U>
 struct type_declare<HeteroPtrView, U>  { using type = VectorPtrView<U>; };
@@ -485,7 +491,10 @@ template<typename I>
 using StdDataFrame = DataFrame<I, HeteroVector>;
 
 template<typename I>
-using DataFrameView = DataFrame<I, HeteroView>;
+using DataFrameView = DataFrame<I, HeteroView<VectorView>>;
+
+template<typename I>
+using DataFrameConstView = DataFrame<I, HeteroView<VectorConstView>>;
 
 template<typename I>
 using DataFramePtrView = DataFrame<I, HeteroPtrView>;
@@ -535,7 +544,7 @@ struct  CommonColumn  {
 
 // ----------------------------------------------------------------------------
 
-// Evertyhting is in bytes. The numbers are estimates, since memory allocated
+// Everything is in bytes. The numbers are estimates, since memory allocated
 // is really unknown to the objects such as vectors.
 // If type has dynamically allocated memory, it is not counted here
 //

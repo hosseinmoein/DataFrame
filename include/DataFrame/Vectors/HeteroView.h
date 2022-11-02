@@ -41,7 +41,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace hmdf
 {
 
-template<template<typename> typename VV = VectorView> 
+template<template<typename> typename VV = VectorView>
 struct HeteroView  {
 
     using size_type = size_t;

@@ -38,17 +38,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace hmdf
 {
 
-template<template<typename> typename VV> 
+template<template<typename> typename VV>
 HeteroView<VV>::HeteroView() = default;
 
-template<template<typename> typename VV> 
+template<template<typename> typename VV>
 HeteroView<VV>::HeteroView (const HeteroView &that)  { *this = that; }
-template<template<typename> typename VV> 
+template<template<typename> typename VV>
 HeteroView<VV>::HeteroView (HeteroView &&that)  { *this = that; }
 
 // ----------------------------------------------------------------------------
 
-template<template<typename> typename VV> 
+template<template<typename> typename VV>
 HeteroView<VV> &HeteroView<VV>::operator= (const HeteroView &rhs)  {
 
     if (&rhs != this)  {
@@ -65,7 +65,7 @@ HeteroView<VV> &HeteroView<VV>::operator= (const HeteroView &rhs)  {
 
 // ----------------------------------------------------------------------------
 
-template<template<typename> typename VV> 
+template<template<typename> typename VV>
 HeteroView<VV> &HeteroView<VV>::operator= (HeteroView &&rhs)  {
 
     if (&rhs != this)  {
@@ -82,7 +82,7 @@ HeteroView<VV> &HeteroView<VV>::operator= (HeteroView &&rhs)  {
 
 // ----------------------------------------------------------------------------
 
-template<template<typename> typename VV> 
+template<template<typename> typename VV>
 void HeteroView<VV>::clear()  {
 
     clear_function_(*this);
@@ -90,7 +90,7 @@ void HeteroView<VV>::clear()  {
 
 // ----------------------------------------------------------------------------
 
-template<template<typename> typename VV> 
+template<template<typename> typename VV>
 template<typename T>
 HeteroView<VV>::HeteroView(T *begin_ptr, T *end_ptr)
     : clear_function_([](HeteroView &hv) { views_<T>.erase(&hv); }),
@@ -104,7 +104,7 @@ HeteroView<VV>::HeteroView(T *begin_ptr, T *end_ptr)
 
 // ----------------------------------------------------------------------------
 
-template<template<typename> typename VV> 
+template<template<typename> typename VV>
 template<typename T>
 void HeteroView<VV>::set_begin_end_special(T *bp, T *ep_1)  {
 
@@ -124,7 +124,7 @@ void HeteroView<VV>::set_begin_end_special(T *bp, T *ep_1)  {
 
 // ----------------------------------------------------------------------------
 
-template<template<typename> typename VV> 
+template<template<typename> typename VV>
 template<typename T>
 typename HeteroView<VV>::template vec_view<T> &
 HeteroView<VV>::get_vector()  {
@@ -140,7 +140,7 @@ HeteroView<VV>::get_vector()  {
 
 // ----------------------------------------------------------------------------
 
-template<template<typename> typename VV> 
+template<template<typename> typename VV>
 template<typename T>
 const typename HeteroView<VV>::template vec_view<T> &
 HeteroView<VV>::get_vector() const  {
@@ -156,69 +156,69 @@ HeteroView<VV>::get_vector() const  {
 
 // ----------------------------------------------------------------------------
 
-template<template<typename> typename VV> 
+template<template<typename> typename VV>
 template<typename T, typename U>
 void HeteroView<VV>::visit_impl_help_ (T &visitor)  {
 
-    auto    iter = views_<U>.find (this);
+    auto    iter = views_<T>.find (this);
 
-    if (iter != views_<U>.end())
+    if (iter != views_<T>.end())
         for (auto &&element : iter->second)
             visitor(element);
 }
 
 // ----------------------------------------------------------------------------
 
-template<template<typename> typename VV> 
+template<template<typename> typename VV>
 template<typename T, typename U>
 void HeteroView<VV>::visit_impl_help_ (T &visitor) const  {
 
-    const auto  citer = views_<U>.find (this);
+    const auto  citer = views_<T>.find (this);
 
-    if (citer != views_<U>.end())
+    if (citer != views_<T>.end())
         for (auto &&element : citer->second)
             visitor(element);
 }
 
 // ----------------------------------------------------------------------------
 
-template<template<typename> typename VV> 
+template<template<typename> typename VV>
 template<typename T, typename U>
 void HeteroView<VV>::sort_impl_help_ (T &functor)  {
 
-    auto    iter = views_<U>.find (this);
+    auto    iter = views_<T>.find (this);
 
-    if (iter != views_<U>.end())
+    if (iter != views_<T>.end())
         std::sort (iter->second.begin(), iter->second.end(), functor);
 }
 
 // ----------------------------------------------------------------------------
 
-template<template<typename> typename VV> 
+template<template<typename> typename VV>
 template<typename T, typename U>
 void HeteroView<VV>::change_impl_help_ (T &functor)  {
 
-    auto    iter = views_<U>.find (this);
+    auto    iter = views_<T>.find (this);
 
-    if (iter != views_<U>.end())
+    if (iter != views_<T>.end())
         functor(iter->second);
 }
 
 // ----------------------------------------------------------------------------
 
-template<template<typename> typename VV> 
+template<template<typename> typename VV>
 template<typename T, typename U>
 void HeteroView<VV>::change_impl_help_ (T &functor) const  {
 
-    const auto  citer = views_<U>.find (this);
+    const auto  citer = views_<T>.find (this);
 
-    if (citer != views_<U>.end())
+    if (citer != views_<T>.end())
         functor(citer->second);
 }
 
 // ----------------------------------------------------------------------------
 
-template<template<typename> typename VV> 
+template<template<typename> typename VV>
 template<class T, template<class...> class TLIST, class... TYPES>
 void HeteroView<VV>::visit_impl_ (T &&visitor, TLIST<TYPES...>)  {
 
@@ -229,7 +229,7 @@ void HeteroView<VV>::visit_impl_ (T &&visitor, TLIST<TYPES...>)  {
 
 // ----------------------------------------------------------------------------
 
-template<template<typename> typename VV> 
+template<template<typename> typename VV>
 template<class T, template<class...> class TLIST, class... TYPES>
 void HeteroView<VV>::visit_impl_ (T &&visitor, TLIST<TYPES...>) const  {
 
@@ -240,7 +240,7 @@ void HeteroView<VV>::visit_impl_ (T &&visitor, TLIST<TYPES...>) const  {
 
 // ----------------------------------------------------------------------------
 
-template<template<typename> typename VV> 
+template<template<typename> typename VV>
 template<class T, template<class...> class TLIST, class... TYPES>
 void HeteroView<VV>::sort_impl_ (T &&functor, TLIST<TYPES...>)  {
 
@@ -250,7 +250,7 @@ void HeteroView<VV>::sort_impl_ (T &&functor, TLIST<TYPES...>)  {
 
 // ----------------------------------------------------------------------------
 
-template<template<typename> typename VV> 
+template<template<typename> typename VV>
 template<class T, template<class...> class TLIST, class... TYPES>
 void HeteroView<VV>::change_impl_ (T &&functor, TLIST<TYPES...>)  {
 
@@ -260,7 +260,7 @@ void HeteroView<VV>::change_impl_ (T &&functor, TLIST<TYPES...>)  {
 
 // ----------------------------------------------------------------------------
 
-template<template<typename> typename VV> 
+template<template<typename> typename VV>
 template<class T, template<class...> class TLIST, class... TYPES>
 void HeteroView<VV>::change_impl_ (T &&functor, TLIST<TYPES...>) const  {
 
@@ -270,7 +270,7 @@ void HeteroView<VV>::change_impl_ (T &&functor, TLIST<TYPES...>) const  {
 
 // ----------------------------------------------------------------------------
 
-template<template<typename> typename VV> 
+template<template<typename> typename VV>
 template<typename T>
 bool HeteroView<VV>::empty() const noexcept  {
 
@@ -279,7 +279,7 @@ bool HeteroView<VV>::empty() const noexcept  {
 
 // ----------------------------------------------------------------------------
 
-template<template<typename> typename VV> 
+template<template<typename> typename VV>
 template<typename T>
 T &HeteroView<VV>::at(size_type idx)  {
 
@@ -288,7 +288,7 @@ T &HeteroView<VV>::at(size_type idx)  {
 
 // ----------------------------------------------------------------------------
 
-template<template<typename> typename VV> 
+template<template<typename> typename VV>
 template<typename T>
 const T &HeteroView<VV>::at(size_type idx) const  {
 
@@ -297,80 +297,80 @@ const T &HeteroView<VV>::at(size_type idx) const  {
 
 // ----------------------------------------------------------------------------
 
-template<template<typename> typename VV> 
+template<template<typename> typename VV>
 template<typename T>
 T &HeteroView<VV>::back()  { return (get_vector<T>().back ()); }
 
 // ----------------------------------------------------------------------------
 
-template<template<typename> typename VV> 
+template<template<typename> typename VV>
 template<typename T>
 const T &HeteroView<VV>::back() const  { return (get_vector<T>().back ()); }
 
 // ----------------------------------------------------------------------------
 
-template<template<typename> typename VV> 
+template<template<typename> typename VV>
 template<typename T>
 T &HeteroView<VV>::front()  { return (get_vector<T>().front ()); }
 
 // ----------------------------------------------------------------------------
 
-template<template<typename> typename VV> 
+template<template<typename> typename VV>
 template<typename T>
 const T &HeteroView<VV>::front() const  { return (get_vector<T>().front ()); }
 
 // ----------------------------------------------------------------------------
 
-template<template<typename> typename VV> 
+template<template<typename> typename VV>
 template<typename T>
 typename HeteroView<VV>::template iterator<T>
 HeteroView<VV>::begin()  { return (get_vector<T>().begin ()); }
 
 // ----------------------------------------------------------------------------
 
-template<template<typename> typename VV> 
+template<template<typename> typename VV>
 template<typename T>
 typename HeteroView<VV>::template const_iterator<T>
 HeteroView<VV>::begin() const  { return (get_vector<T>().begin ()); }
 
 // ----------------------------------------------------------------------------
 
-template<template<typename> typename VV> 
+template<template<typename> typename VV>
 template<typename T>
 typename HeteroView<VV>::template iterator<T>
 HeteroView<VV>::end()  { return (get_vector<T>().end ()); }
 
 // ----------------------------------------------------------------------------
 
-template<template<typename> typename VV> 
+template<template<typename> typename VV>
 template<typename T>
 typename HeteroView<VV>::template const_iterator<T>
 HeteroView<VV>::end() const  { return (get_vector<T>().end ()); }
 
 // ----------------------------------------------------------------------------
 
-template<template<typename> typename VV> 
+template<template<typename> typename VV>
 template<typename T>
 typename HeteroView<VV>::template reverse_iterator<T>
 HeteroView<VV>::rbegin()  { return (get_vector<T>().rbegin ()); }
 
 // ----------------------------------------------------------------------------
 
-template<template<typename> typename VV> 
+template<template<typename> typename VV>
 template<typename T>
 typename HeteroView<VV>::template const_reverse_iterator<T>
 HeteroView<VV>::rbegin() const  { return (get_vector<T>().rbegin ()); }
 
 // ----------------------------------------------------------------------------
 
-template<template<typename> typename VV> 
+template<template<typename> typename VV>
 template<typename T>
 typename HeteroView<VV>::template reverse_iterator<T>
 HeteroView<VV>::rend()  { return (get_vector<T>().rend ()); }
 
 // ----------------------------------------------------------------------------
 
-template<template<typename> typename VV> 
+template<template<typename> typename VV>
 template<typename T>
 typename HeteroView<VV>::template const_reverse_iterator<T>
 HeteroView<VV>::rend() const  { return (get_vector<T>().rend ()); }

@@ -20,6 +20,7 @@ SRCS = Vectors/HeteroVector.cc \
        ../benchmarks/dataframe_performance.cc \
        ../benchmarks/dataframe_performance_2.cc \
        Vectors/HeteroView.cc \
+       Vectors/HeteroConstView.cc \
        Vectors/HeteroPtrView.cc \
        ../test/vectors_tester.cc \
        ../test/vector_ptr_view_tester.cc \
@@ -31,6 +32,8 @@ HEADERS = $(LOCAL_INCLUDE_DIR)/DataFrame/Vectors/HeteroVector.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Vectors/HeteroVector.tcc \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Vectors/HeteroView.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Vectors/HeteroView.tcc \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/Vectors/HeteroConstView.h \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/Vectors/HeteroConstView.tcc \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Vectors/HeteroPtrView.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Vectors/HeteroPtrView.tcc \
           $(LOCAL_INCLUDE_DIR)/DataFrame/DataFrame.h \
@@ -95,6 +98,7 @@ DEFINES = -Wall -D_REENTRANT -DHMDF_HAVE_CLOCK_GETTIME \
 #
 LIB_OBJS = $(LOCAL_OBJ_DIR)/HeteroVector.o \
            $(LOCAL_OBJ_DIR)/HeteroView.o \
+           $(LOCAL_OBJ_DIR)/HeteroConstView.o \
            $(LOCAL_OBJ_DIR)/HeteroPtrView.o \
            $(LOCAL_OBJ_DIR)/DateTime.o
 

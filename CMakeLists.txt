@@ -40,6 +40,7 @@ target_sources(DataFrame
         src/Utils/DateTime.cc
         src/Vectors/HeteroVector.cc
         src/Vectors/HeteroView.cc
+        src/Vectors/HeteroConstView.cc
         src/Vectors/HeteroPtrView.cc
 )
 

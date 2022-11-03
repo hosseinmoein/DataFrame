@@ -396,7 +396,8 @@ void DataFrame<I, H>::
 setup_view_column_ (const char *name, Index2D<ITR> range)  {
 
     static_assert(std::is_base_of<HeteroView, DataVec>::value ||
-                      std::is_base_of<HeteroPtrView, DataVec>::value,
+                  std::is_base_of<HeteroConstView, DataVec>::value ||
+                  std::is_base_of<HeteroPtrView, DataVec>::value,
                   "Only a DataFrameView or DataFramePtrView can "
                   "call setup_view_column_()");
 

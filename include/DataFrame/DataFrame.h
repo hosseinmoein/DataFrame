@@ -58,6 +58,7 @@ namespace hmdf
 // H: See the static assert below. It can only be either
 //    a HeteroVector (typedef'ed to StdDataFrame) or
 //    a HeteroView (typedef'ed to DataFrameView) or
+//    a HeteroConstView (typedef'ed to DataFrameConstView) or
 //    a HeteroPtrView (typedef'ed to DataFramePtrView)
 //
 // A DataFrame may contain one index and any number of columns of any built-in
@@ -68,10 +69,11 @@ class DataFrame : public ThreadGranularity {
 
     static_assert(std::is_base_of<HeteroVector, H>::value ||
                       std::is_base_of<HeteroView, H>::value ||
+                      std::is_base_of<HeteroConstView, H>::value ||
                       std::is_base_of<HeteroPtrView, H>::value,
                   "H argument can only be either of "
-                  "HeteroVector, HeteroView, HeteroPtrView "
-                  "or their derived types");
+                  "HeteroVector, HeteroView, HeteroConstView, "
+                  "HeteroPtrView or their derived types");
 
     using DataVec = H;
     using DataVecVec = std::vector<DataVec>;

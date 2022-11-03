@@ -102,6 +102,11 @@ int main(int, char *[]) {
 
         assert(v.at<double>(3) == 1.05);
 
+        const HeteroVector    &const_hv = hv;
+        HeteroConstView       const_v = const_hv.get_view<double>();
+
+        assert(const_v.at<double>(3) == 1.05);
+
         HeteroView  s = hv.get_view<std::string>(1, 3);
 
         assert(s.at<std::string>(0) == "str_2");

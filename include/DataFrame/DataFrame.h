@@ -1674,6 +1674,10 @@ public: // Read/access and slicing interfaces
     [[nodiscard]] DataFrameView<IndexType>
     get_view_by_loc(Index2D<long> range);
 
+    template<typename ... Ts>
+    [[nodiscard]] DataFrameConstView<IndexType>
+    get_view_by_loc(Index2D<long> range) const;
+
     // It behaves like get_data_by_loc(locations), but it returns a
     // DataFramePtrView.
     // A view is a DataFrame that is a reference to the original DataFrame.
@@ -2206,6 +2210,10 @@ public: // Read/access and slicing interfaces
     [[nodiscard]] DataFrameView<IndexType>
     get_view(const std::vector<const char *> &col_names);
 
+    template<typename ... Ts>
+    [[nodiscard]] DataFrameConstView<IndexType>
+    get_view(const std::vector<const char *> &col_names) const;
+
     // It returns a const reference to the index container
     //
     [[nodiscard]] const IndexVecType &
@@ -2284,6 +2292,11 @@ public: // Read/access and slicing interfaces
     [[nodiscard]] DataFrameView<T>
     get_reindexed_view(const char *col_to_be_index,
                        const char *old_index_name = nullptr);
+
+    template<typename T, typename ... Ts>
+    [[nodiscard]] DataFrameConstView<T>
+    get_reindexed_view(const char *col_to_be_index,
+                       const char *old_index_name = nullptr) const;
 
     // This function returns a DataFrame indexed by std::string that provides
     // a few statistics about the columns of the calling DataFrame.

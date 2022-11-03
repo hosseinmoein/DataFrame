@@ -259,8 +259,11 @@ static void test_get_data()  {
     assert((df2.get_column<int>("col_4")[8] == 2));
     assert((df2.get_index()[3] == 123453));
 
-    DataFrameView<unsigned long>    df3 =
+    const MyDataFrame                    &const_df = df;
+    DataFrameView<unsigned long>         df3 =
         df.get_view<double, int>({ "col_1", "col_4"});
+    DataFrameConstView<unsigned long>   const_df3 =
+        const_df.get_view<double, int>({ "col_1", "col_4"});
 
     assert((! df3.has_column("col_2")));
     assert((! df3.has_column("col_3")));
@@ -278,6 +281,10 @@ static void test_get_data()  {
     assert((df.get_column<double>("col_1")[11] == 102.2));
     assert((df.get_column<int>("col_4")[8] == 101));
     assert((df.get_index()[3] == 100));
+
+    assert((const_df3.get_column<double>("col_1")[11] == 102.2));
+    assert((const_df3.get_column<int>("col_4")[8] == 101));
+    assert((const_df3.get_index()[3] == 100));
 }
 
 // -----------------------------------------------------------------------------

@@ -132,8 +132,12 @@ static void test_get_reindexed_view()  {
                    std::move(intvec),
                    nan_policy::dont_pad_with_nans);
 
-    auto    result1 =
+    const MyDataFrame   &const_df = df;
+    auto                result1 =
         df.get_reindexed_view<double, int, double, std::string>
+            ("dbl_col", "OLD_IDX");
+    auto                const_result1 =
+        const_df.get_reindexed_view<double, int, double, std::string>
             ("dbl_col", "OLD_IDX");
 
     assert(result1.get_index().size() == 15);
@@ -148,8 +152,23 @@ static void test_get_reindexed_view()  {
     assert(result1.get_column<std::string>("str_col")[5] == "ff");
     assert(result1.get_column<double>("dbl_col_2")[10] == 112.0);
 
+    assert(const_result1.get_index().size() == 15);
+    assert(const_result1.get_column<double>("dbl_col_2").size() == 15);
+    assert(const_result1.get_column<unsigned long>("OLD_IDX").size() == 15);
+    assert(const_result1.get_column<std::string>("str_col").size() == 15);
+    assert(const_result1.get_column<int>("int_col").size() == 11);
+    assert(const_result1.get_index()[0] == 0);
+    assert(const_result1.get_index()[14] == 10.0);
+    assert(const_result1.get_column<int>("int_col")[3] == 4);
+    assert(const_result1.get_column<int>("int_col")[9] == 14);
+    assert(const_result1.get_column<std::string>("str_col")[5] == "ff");
+    assert(const_result1.get_column<double>("dbl_col_2")[10] == 112.0);
+
     auto    result2 =
         df.get_reindexed_view<int, int, double, std::string>
+            ("int_col", "OLD_IDX");
+    auto    const_result2 =
+        const_df.get_reindexed_view<int, int, double, std::string>
             ("int_col", "OLD_IDX");
 
     assert(result2.get_index().size() == 11);
@@ -162,6 +181,17 @@ static void test_get_reindexed_view()  {
     assert(result2.get_column<std::string>("str_col")[5] == "ff");
     assert(result2.get_index()[0] == 1);
     assert(result2.get_index()[10] == 9);
+
+    assert(const_result2.get_index().size() == 11);
+    assert(const_result2.get_column<double>("dbl_col_2").size() == 11);
+    assert(const_result2.get_column<double>("dbl_col").size() == 11);
+    assert(const_result2.get_column<unsigned long>("OLD_IDX").size() == 11);
+    assert(const_result2.get_column<std::string>("str_col").size() == 11);
+    assert(const_result2.get_column<double>("dbl_col_2")[10] == 112.0);
+    assert(const_result2.get_column<double>("dbl_col")[3] == 2.0);
+    assert(const_result2.get_column<std::string>("str_col")[5] == "ff");
+    assert(const_result2.get_index()[0] == 1);
+    assert(const_result2.get_index()[10] == 9);
 
     result2.get_column<double>("dbl_col")[3] = 1002.45;
     assert(result2.get_column<double>("dbl_col")[3] == 1002.45);

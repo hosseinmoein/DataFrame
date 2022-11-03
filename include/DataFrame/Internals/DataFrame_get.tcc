@@ -676,6 +676,53 @@ DataFrame<I, H>::get_view_by_loc (Index2D<long> range)  {
 
 template<typename I, typename  H>
 template<typename ... Ts>
+DataFrameConstView<I>
+DataFrame<I, H>::get_view_by_loc (Index2D<long> range) const  {
+
+    static_assert(std::is_base_of<HeteroVector, H>::value,
+                  "Only a StdDataFrame can call get_view_by_loc()");
+
+    const long  idx_s = static_cast<long>(indices_.size());
+
+    if (range.begin < 0)
+        range.begin = idx_s + range.begin;
+    if (range.end < 0)
+        range.end = idx_s + range.end + 1;
+
+    if (range.end <= idx_s && range.begin <= range.end && range.begin >= 0)  {
+        DataFrameConstView<IndexType>   dfcv;
+
+        dfcv.indices_ =
+            typename DataFrameConstView<IndexType>::IndexVecType(
+                &(indices_[0]) + range.begin,
+                &(indices_[0]) + range.end);
+        for (const auto &iter : column_list_)  {
+            view_setup_functor_<DataFrameConstView<IndexType>, Ts ...>
+                functor (iter.first.c_str(),
+                         static_cast<size_type>(range.begin),
+                         static_cast<size_type>(range.end),
+                         dfcv);
+            const SpinGuard guard(lock_);
+
+            data_[iter.second].change(functor);
+        }
+
+        return (dfcv);
+    }
+
+    char buffer [512];
+
+    snprintf (buffer, sizeof(buffer) - 1,
+              "DataFrame::get_view_by_loc(): ERROR: "
+              "Bad begin, end range: %ld, %ld",
+              range.begin, range.end);
+    throw BadRange(buffer);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename ... Ts>
 DataFramePtrView<I>
 DataFrame<I, H>::get_view_by_loc (const std::vector<long> &locations)  {
 
@@ -1614,6 +1661,49 @@ get_view(const std::vector<const char *> &col_names)  {
 
 // ----------------------------------------------------------------------------
 
+template<typename I, typename H>
+template<typename ... Ts>
+DataFrameConstView<I> DataFrame<I, H>::
+get_view(const std::vector<const char *> &col_names) const  {
+
+    static_assert(std::is_base_of<HeteroVector, H>::value,
+                  "Only a StdDataFrame can call get_view()");
+
+    DataFrameConstView<I>   dfcv;
+    const size_type         idx_size = indices_.size();
+
+    dfcv.indices_ =
+        typename DataFrameConstView<I>::IndexVecType(
+            &(indices_[0]),
+            &(indices_[0]) + idx_size);
+
+    for (const auto &name_citer : col_names)  {
+        const auto  citer = column_tb_.find (name_citer);
+
+        if (citer == column_tb_.end())  {
+            char buffer [512];
+
+            snprintf(buffer, sizeof(buffer) - 1,
+                     "DataFrame::get_view(): ERROR: Cannot find column '%s'",
+                     name_citer);
+            throw ColNotFound(buffer);
+        }
+
+        view_setup_functor_<DataFrameConstView<I>, Ts ...>  functor (
+            citer->first.c_str(),
+            0,
+            idx_size,
+            dfcv);
+        const SpinGuard                                 guard(lock_);
+
+        data_[citer->second].change(functor);
+    }
+
+    return (dfcv);
+}
+
+// ----------------------------------------------------------------------------
+
 template<typename I, typename  H>
 template<typename T, typename ... Ts>
 StdDataFrame<T> DataFrame<I, H>::
@@ -1686,6 +1776,51 @@ get_reindexed_view(const char *col_to_be_index, const char *old_index_name)  {
             new_idx_s,
             result);
         const SpinGuard                                 guard(lock_);
+
+        data_[citer.second].change(functor);
+    }
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename T, typename ... Ts>
+DataFrameConstView<T> DataFrame<I, H>::
+get_reindexed_view(const char *col_to_be_index,
+                   const char *old_index_name) const  {
+
+    static_assert(std::is_base_of<HeteroVector, H>::value,
+                  "Only a StdDataFrame can call get_reindexed_view()");
+
+    DataFrameConstView<T>   result;
+    const auto              &new_idx = get_column<T>(col_to_be_index);
+    const size_type         new_idx_s = new_idx.size();
+
+    result.indices_ = typename DataFrameConstView<T>::IndexVecType();
+    result.indices_.set_begin_end_special(&*(new_idx.begin()),
+                                          &(new_idx.back()));
+    if (old_index_name)  {
+        auto            &curr_idx = get_index();
+        const size_type col_s =
+            curr_idx.size() >= new_idx_s ? new_idx_s : curr_idx.size();
+
+        result.template setup_view_column_<
+                IndexType,
+                typename IndexVecType::const_iterator>
+            (old_index_name, { curr_idx.begin(), curr_idx.begin() + col_s });
+    }
+
+    for (const auto &citer : column_list_)  {
+        if (citer.first == col_to_be_index)  continue;
+
+        view_setup_functor_<DataFrameConstView<T>, Ts ...>   functor (
+            citer.first.c_str(),
+            0,
+            new_idx_s,
+            result);
+        const SpinGuard guard(lock_);
 
         data_[citer.second].change(functor);
     }

@@ -644,11 +644,17 @@ static void test_get_view_by_loc()  {
     std::cout << "DataFrame Memory Usage:\n" << memory_use1 << std::endl;
 
     typedef DataFrameView<unsigned long> MyDataFrameView;
+    typedef DataFrameConstView<unsigned long> MyDataFrameConstView;
 
-    MyDataFrameView dfv =
+    const MyDataFrame   &const_df = df;
+    MyDataFrameView         dfv =
         df.get_view_by_loc<double, std::string>(Index2D<long> { 3, 6 });
-    MyDataFrameView dfv2 =
+    MyDataFrameView         dfv2 =
         df.get_view_by_loc<double, std::string>(Index2D<long> { -5, -1 });
+    MyDataFrameConstView    dfcv =
+        const_df.get_view_by_loc<double, std::string>(Index2D<long> { 3, 6 });
+    MyDataFrameConstView    dfcv2 =
+        const_df.get_view_by_loc<double, std::string>(Index2D<long> { -5, -1 });
 
     dfv.shrink_to_fit<double, std::string>();
     dfv.write<std::ostream, double, std::string>(std::cout);
@@ -657,6 +663,9 @@ static void test_get_view_by_loc()  {
     assert(dfv.get_column<double>("col_3")[0] ==
            df.get_column<double>("col_3")[3]);
     assert(dfv.get_column<double>("col_3")[0] == 88.0);
+    assert(dfcv.get_column<double>("col_3")[0] ==
+           df.get_column<double>("col_3")[3]);
+    assert(dfcv.get_column<double>("col_3")[0] == 88.0);
 
     auto  memory_use2 = dfv.get_memory_usage<double>("col_3");
 

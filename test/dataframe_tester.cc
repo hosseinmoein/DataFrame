@@ -725,12 +725,18 @@ static void test_get_view_by_idx_slicing()  {
                  std::make_pair("col_4", i1));
 
     typedef DataFrameView<unsigned long> MyDataFrameView;
+    typedef DataFrameConstView<unsigned long> MyDataFrameConstView;
 
-    MyDataFrame     df2 =
+    const MyDataFrame   &const_df = df;
+
+    MyDataFrame             df2 =
         df.get_data_by_idx<double, int>(
             Index2D<MyDataFrame::IndexType> { 123452, 123460 });
-    MyDataFrameView dfv =
+    MyDataFrameView         dfv =
         df.get_view_by_idx<double, int>(
+            Index2D<MyDataFrame::IndexType> { 123452, 123466 });
+    MyDataFrameConstView    dfcv =
+        const_df.get_view_by_idx<double, int>(
             Index2D<MyDataFrame::IndexType> { 123452, 123466 });
 
     df.write<std::ostream, double, int>(std::cout);
@@ -742,6 +748,10 @@ static void test_get_view_by_idx_slicing()  {
            df.get_column<double>("col_3")[2]);
     assert(dfv.get_column<double>("col_3")[0] == 88.0);
     assert(dfv.shape().first == 12);  // added
+    assert(dfcv.get_column<double>("col_3")[0] ==
+           df.get_column<double>("col_3")[2]);
+    assert(dfcv.get_column<double>("col_3")[0] == 88.0);
+    assert(dfcv.shape().first == 12);  // added
 }
 
 // -----------------------------------------------------------------------------

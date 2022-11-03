@@ -459,6 +459,53 @@ DataFrame<I, H>::get_view_by_idx (Index2D<IndexType> range)  {
 
 template<typename I, typename  H>
 template<typename ... Ts>
+DataFrameConstView<I>
+DataFrame<I, H>::get_view_by_idx (Index2D<IndexType> range) const  {
+
+    static_assert(std::is_base_of<HeteroVector, H>::value,
+                  "Only a StdDataFrame can call get_view_by_idx()");
+
+    auto                            lower =
+        std::lower_bound (indices_.begin(), indices_.end(), range.begin);
+    auto                            upper =
+        std::upper_bound (indices_.begin(), indices_.end(), range.end);
+    DataFrameConstView<IndexType>   dfcv;
+
+    if (lower != indices_.end() &&
+        (upper != indices_.end() || indices_.back() == range.end))  {
+        const IndexType *upper_address = nullptr;
+        const size_type b_dist = std::distance(indices_.begin(), lower);
+        const size_type e_dist = std::distance(indices_.begin(), upper);
+
+        if (upper != indices_.end())
+            upper_address = &*upper;
+        else
+            upper_address = &*(indices_.begin()) + e_dist;
+        dfcv.indices_ =
+            typename DataFrameConstView<IndexType>::IndexVecType(
+                &*lower,
+                upper_address);
+
+        const SpinGuard guard(lock_);
+
+        for (const auto &iter : column_list_)  {
+            view_setup_functor_<DataFrameConstView<IndexType>, Ts ...>
+                functor (iter.first.c_str(),
+                         b_dist,
+                         e_dist,
+                         dfcv);
+
+            data_[iter.second].change(functor);
+        }
+    }
+
+    return (dfcv);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename ... Ts>
 DataFramePtrView<I> DataFrame<I, H>::
 get_view_by_idx(const std::vector<IndexType> &values)  {
 

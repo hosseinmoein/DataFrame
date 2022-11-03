@@ -1596,6 +1596,10 @@ public: // Read/access and slicing interfaces
     [[nodiscard]] DataFrameView<IndexType>
     get_view_by_idx(Index2D<IndexType> range);
 
+    template<typename ... Ts>
+    [[nodiscard]] DataFrameConstView<IndexType>
+    get_view_by_idx(Index2D<IndexType> range) const;
+
     // It behaves like get_data_by_idx(values), but it returns a
     // DataFramePtrView.
     // A view is a DataFrame that is a reference to the original DataFrame.

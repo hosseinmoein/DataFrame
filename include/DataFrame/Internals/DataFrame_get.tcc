@@ -537,11 +537,58 @@ get_view_by_idx(const std::vector<IndexType> &values)  {
     const SpinGuard guard(lock_);
 
     for (const auto &col_citer : column_list_)  {
-        sel_load_view_functor_<size_type, Ts ...>   functor (
+        sel_load_view_functor_<size_type, TheView, Ts ...>   functor (
             col_citer.first.c_str(),
             locations,
             idx_s,
             dfv);
+
+        data_[col_citer.second].change(functor);
+    }
+
+    return (dfv);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename ... Ts>
+DataFrameConstPtrView<I> DataFrame<I, H>::
+get_view_by_idx(const std::vector<IndexType> &values) const  {
+
+    static_assert(std::is_base_of<HeteroVector, H>::value,
+                  "Only a StdDataFrame can call get_view_by_idx()");
+
+    using TheView = DataFrameConstPtrView<IndexType>;
+
+    const std::unordered_set<IndexType> val_table(values.begin(),
+                                                  values.end());
+    typename TheView::IndexVecType      new_index;
+    std::vector<size_type>              locations;
+    const size_type                     values_s = values.size();
+    const size_type                     idx_s = indices_.size();
+
+    new_index.reserve(values_s);
+    locations.reserve(values_s);
+
+    for (size_type i = 0; i < idx_s; ++i)
+        if (val_table.find(indices_[i]) != val_table.end())  {
+            new_index.push_back(&(indices_[i]));
+            locations.push_back(i);
+        }
+
+    TheView dfv;
+
+    dfv.indices_ = std::move(new_index);
+
+    const SpinGuard guard(lock_);
+
+    for (const auto &col_citer : column_list_)  {
+        sel_load_view_functor_<size_type, TheView, Ts ...>
+            functor (col_citer.first.c_str(),
+                     locations,
+                     idx_s,
+                     dfv);
 
         data_[col_citer.second].change(functor);
     }
@@ -746,7 +793,7 @@ DataFrame<I, H>::get_view_by_loc (const std::vector<long> &locations)  {
     dfv.indices_ = std::move(new_index);
 
     for (const auto &col_citer : column_list_)  {
-        sel_load_view_functor_<long, Ts ...>    functor (
+        sel_load_view_functor_<long, TheView, Ts ...>   functor (
             col_citer.first.c_str(),
             locations,
             indices_.size(),
@@ -829,7 +876,7 @@ get_view_by_sel (const char *name, F &sel_functor)  {
     dfv.indices_ = std::move(new_index);
 
     for (const auto &col_citer : column_list_)  {
-        sel_load_view_functor_<size_type, Ts ...>   functor (
+        sel_load_view_functor_<size_type, TheView, Ts ...>   functor (
             col_citer.first.c_str(),
             col_indices,
             idx_s,
@@ -928,7 +975,7 @@ get_view_by_sel (const char *name1, const char *name2, F &sel_functor)  {
     dfv.indices_ = std::move(new_index);
 
     for (const auto &col_citer : column_list_)  {
-        sel_load_view_functor_<size_type, Ts ...>   functor (
+        sel_load_view_functor_<size_type, TheView, Ts ...>   functor (
             col_citer.first.c_str(),
             col_indices,
             idx_s,
@@ -1167,7 +1214,7 @@ get_view_by_sel (const char *name1,
     dfv.indices_ = std::move(new_index);
 
     for (const auto &col_citer : column_list_)  {
-        sel_load_view_functor_<size_type, Ts ...>   functor (
+        sel_load_view_functor_<size_type, TheView, Ts ...>   functor (
             col_citer.first.c_str(),
             col_indices,
             idx_s,
@@ -1290,7 +1337,7 @@ get_view_by_sel(const char *name1,
     dfv.indices_ = std::move(new_index);
 
     for (const auto &col_citer : column_list_)  {
-        sel_load_view_functor_<size_type, Ts ...>   functor (
+        sel_load_view_functor_<size_type, TheView, Ts ...>   functor (
             col_citer.first.c_str(),
             col_indices,
             idx_s,
@@ -1423,7 +1470,7 @@ get_view_by_sel(const char *name1,
     dfv.indices_ = std::move(new_index);
 
     for (const auto &col_citer : column_list_)  {
-        sel_load_view_functor_<size_type, Ts ...>   functor (
+        sel_load_view_functor_<size_type, TheView, Ts ...>   functor (
             col_citer.first.c_str(),
             col_indices,
             idx_s,

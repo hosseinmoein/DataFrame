@@ -1307,6 +1307,11 @@ public:  // Data manipulation
     concat_view(RHS_T &rhs,
                 concat_policy cp = concat_policy::common_columns);
 
+    template<typename RHS_T, typename ... Ts>
+    [[nodiscard]] DataFrameConstPtrView<IndexType>
+    concat_view(RHS_T &rhs,
+                concat_policy cp = concat_policy::common_columns) const;
+
     // This is similar to concat() method but it is applied to self. It changes
     // self.
     //
@@ -1622,6 +1627,10 @@ public: // Read/access and slicing interfaces
     template<typename ... Ts>
     [[nodiscard]] DataFramePtrView<IndexType>
     get_view_by_idx(const std::vector<IndexType> &values);
+
+    template<typename ... Ts>
+    [[nodiscard]] DataFrameConstPtrView<IndexType>
+    get_view_by_idx(const std::vector<IndexType> &values) const;
 
     // It returns a DataFrame (including the index and data columns)
     // containing the data from location begin to location end within range.

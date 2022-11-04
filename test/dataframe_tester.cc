@@ -3894,11 +3894,19 @@ static void test_get_view_by_idx_values()  {
                  std::make_pair("col_3", d3),
                  std::make_pair("col_4", d4));
 
+    const MyDataFrame   &const_df = df;
+
     auto    dfv1 =
         df.get_view_by_idx<double>(
             std::vector<MyDataFrame::IndexType> { 123452, 123455 });
+    auto    const_dfv1 =
+        const_df.get_view_by_idx<double>(
+            std::vector<MyDataFrame::IndexType> { 123452, 123455 });
     auto    dfv2 =
         df.get_view_by_idx<double>(
+            std::vector<MyDataFrame::IndexType> { 123449, 123450 });
+    auto    const_dfv2 =
+        const_df.get_view_by_idx<double>(
             std::vector<MyDataFrame::IndexType> { 123449, 123450 });
 
     assert(dfv1.get_index().size() == 2);
@@ -3909,6 +3917,15 @@ static void test_get_view_by_idx_values()  {
     assert(dfv1.get_column<double>("col_3")[0] == 17.0);
     assert(dfv1.get_column<double>("col_2")[1] == 12.0);
     assert(std::isnan(dfv1.get_column<double>("col_4")[1]));
+
+    assert(const_dfv1.get_index().size() == 2);
+    assert(const_dfv1.get_column<double>("col_3").size() == 2);
+    assert(const_dfv1.get_column<double>("col_2").size() == 2);
+    assert(const_dfv1.get_index()[0] == 123452);
+    assert(const_dfv1.get_index()[1] == 123455);
+    assert(const_dfv1.get_column<double>("col_3")[0] == 17.0);
+    assert(const_dfv1.get_column<double>("col_2")[1] == 12.0);
+    assert(std::isnan(const_dfv1.get_column<double>("col_4")[1]));
 
     assert(dfv2.get_index().size() == 4);
     assert(dfv2.get_column<double>("col_3").size() == 4);
@@ -3924,6 +3941,21 @@ static void test_get_view_by_idx_values()  {
     assert(dfv2.get_column<double>("col_4")[1] == 25.0);
     assert(std::isnan(dfv2.get_column<double>("col_4")[2]));
     assert(std::isnan(dfv2.get_column<double>("col_4")[3]));
+
+    assert(const_dfv2.get_index().size() == 4);
+    assert(const_dfv2.get_column<double>("col_3").size() == 4);
+    assert(const_dfv2.get_column<double>("col_2").size() == 4);
+    assert(const_dfv2.get_column<double>("col_1").size() == 4);
+    assert(const_dfv2.get_index()[0] == 123450);
+    assert(const_dfv2.get_index()[1] == 123450);
+    assert(const_dfv2.get_index()[2] == 123450);
+    assert(const_dfv2.get_index()[3] == 123449);
+    assert(const_dfv2.get_column<double>("col_1")[0] == 1.0);
+    assert(const_dfv2.get_column<double>("col_2")[2] == 13.0);
+    assert(const_dfv2.get_column<double>("col_4")[0] == 22.0);
+    assert(const_dfv2.get_column<double>("col_4")[1] == 25.0);
+    assert(std::isnan(const_dfv2.get_column<double>("col_4")[2]));
+    assert(std::isnan(const_dfv2.get_column<double>("col_4")[3]));
 
     dfv2.get_column<double>("col_1")[0] = 101.0;
     assert(dfv2.get_column<double>("col_1")[0] == 101.0);

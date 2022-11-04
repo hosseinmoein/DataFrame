@@ -623,18 +623,19 @@ operator() (const T &vec)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename IT, typename ... Ts>
+template<typename IT, typename DF, typename ... Ts>
 template<typename T>
 void
 DataFrame<I, H>::
-sel_load_view_functor_<IT, Ts ...>::
+sel_load_view_functor_<IT, DF, Ts ...>::
 operator() (T &vec)  {
 
     using VecType = typename std::remove_reference<T>::type;
     using ValueType = typename VecType::value_type;
+    using ViewType = typename DF::template ColumnVecType<ValueType>; 
 
-    VectorPtrView<ValueType>    new_col;
-    const size_type             vec_size = vec.size();
+    ViewType        new_col;
+    const size_type vec_size = vec.size();
 
     new_col.reserve(std::min(sel_indices.size(), vec_size));
     for (auto citer : sel_indices)  {
@@ -647,7 +648,7 @@ operator() (T &vec)  {
             break;
     }
 
-    using data_vec_t = typename DataFramePtrView<I>::DataVec;
+    using data_vec_t = typename DF::DataVec;
 
     SpinGuard   guard(lock_);
 

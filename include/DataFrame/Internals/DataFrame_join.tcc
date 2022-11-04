@@ -764,6 +764,78 @@ DataFrame<I, H>::concat_view(RHS_T &rhs, concat_policy cp)  {
     return (result);
 }
 
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename RHS_T, typename ... Ts>
+DataFrameConstPtrView<I>
+DataFrame<I, H>::concat_view(RHS_T &rhs, concat_policy cp) const  {
+
+    static_assert(! std::is_base_of<StdDataFrame<I>, RHS_T>::value ||
+                  ! std::is_base_of<StdDataFrame<I>, decltype(*this)>::value,
+                  "Currently, arguments to concat_view() can only be "
+                  "StdDataFrame<IndexType>.");
+
+    DataFrameConstPtrView<I>    result;
+
+    using idxvec_t = typename DataFrameConstPtrView<I>::IndexVecType;
+
+    const size_type idx_s = get_index().size();
+    const size_type rhs_idx_s = rhs.get_index().size();
+    idxvec_t        result_idx;
+
+    result_idx.reserve(idx_s + rhs_idx_s);
+    for (size_type i = 0; i < idx_s; ++i)
+        result_idx.push_back(&(get_index()[i]));
+    for (size_type i = 0; i < rhs_idx_s; ++i)
+        result_idx.push_back(&(rhs.get_index()[i]));
+    result.indices_ = std::move(result_idx);
+
+    if (cp == concat_policy::all_columns)  {
+        for (const auto &lhs_citer : column_list_)  {
+            concat_load_view_functor_<DataFrameConstPtrView<I>, Ts ...> functor(
+                lhs_citer.first.c_str(), result);
+
+            data_[lhs_citer.second].change(functor);
+        }
+        for (const auto &rhs_citer : rhs.column_list_)  {
+            concat_load_view_functor_<DataFrameConstPtrView<I>, Ts ...> functor(
+                rhs_citer.first.c_str(), result);
+
+            rhs.data_[rhs_citer.second].change(functor);
+        }
+    }
+    else if (cp == concat_policy::lhs_and_common_columns)  {
+        for (const auto &lhs_citer : column_list_)  {
+            concat_load_view_functor_<DataFrameConstPtrView<I>, Ts ...> functor(
+                lhs_citer.first.c_str(), result);
+
+            data_[lhs_citer.second].change(functor);
+
+            auto    rhs_citer = rhs.column_tb_.find(lhs_citer.first);
+
+            if (rhs_citer != rhs.column_tb_.end())
+                rhs.data_[rhs_citer->second].change(functor);
+        }
+    }
+    else if (cp == concat_policy::common_columns)  {
+        for (const auto &lhs_citer : column_list_)  {
+            concat_load_view_functor_<DataFrameConstPtrView<I>, Ts ...> functor(
+                lhs_citer.first.c_str(), result);
+            auto                                                   rhs_citer =
+                rhs.column_tb_.find(lhs_citer.first);
+
+            if (rhs_citer != rhs.column_tb_.end())  {
+                data_[lhs_citer.second].change(functor);
+                rhs.data_[rhs_citer->second].change(functor);
+            }
+        }
+
+    }
+
+    return (result);
+}
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

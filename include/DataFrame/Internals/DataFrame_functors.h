@@ -474,19 +474,19 @@ struct sel_load_functor_ : DataVec::template visitor_base<Ts ...>  {
 
 // ----------------------------------------------------------------------------
 
-template<typename IT, typename ... Ts>
+template<typename IT, typename DF, typename ... Ts>
 struct sel_load_view_functor_ : DataVec::template visitor_base<Ts ...>  {
 
     inline sel_load_view_functor_ (const char *n,
                                    const std::vector<IT> &si,
                                    size_type is,
-                                   DataFramePtrView<IndexType> &d)
+                                   DF &d)
         : name (n), sel_indices (si), indices_size(is), dfv(d)  {   }
 
-    const char                  *name;
-    const std::vector<IT>       &sel_indices;
-    const size_type             indices_size;
-    DataFramePtrView<IndexType> &dfv;
+    const char              *name;
+    const std::vector<IT>   &sel_indices;
+    const size_type         indices_size;
+    DF                      &dfv;
 
     template<typename T>
     void operator() (T &vec);

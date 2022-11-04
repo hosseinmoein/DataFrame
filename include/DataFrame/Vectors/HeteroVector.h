@@ -29,8 +29,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
 
-#include <DataFrame/Vectors/HeteroPtrView.h>
+#include <DataFrame/Vectors/HeteroConstPtrView.h>
 #include <DataFrame/Vectors/HeteroConstView.h>
+#include <DataFrame/Vectors/HeteroPtrView.h>
 #include <DataFrame/Vectors/HeteroView.h>
 #include <DataFrame/DataFrameExports.h>
 
@@ -78,6 +79,9 @@ struct HeteroVector  {
 
     template<typename T>
     HeteroPtrView get_ptr_view(size_type begin = 0, size_type end = -1);
+    template<typename T>
+    HeteroConstPtrView
+    get_ptr_view(size_type begin = 0, size_type end = -1) const;
 
     template<typename T>
     void push_back(const T &v);

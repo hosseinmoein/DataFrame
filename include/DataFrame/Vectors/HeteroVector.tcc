@@ -102,6 +102,19 @@ HeteroPtrView HeteroVector::get_ptr_view(size_type begin, size_type end)  {
 // ----------------------------------------------------------------------------
 
 template<typename T>
+HeteroConstPtrView HeteroVector::
+get_ptr_view(size_type begin, size_type end) const  {
+
+    const std::vector<T>    &vec = get_vector<T>();
+
+    return (HeteroConstPtrView(
+        &(*(vec.begin() + begin)),
+        end == size_type(-1) ? &(*(vec.end())) : &(*(vec.begin() + end))));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
 const std::vector<T> &HeteroVector::get_vector() const  {
 
     return (const_cast<HeteroVector *>(this)->get_vector<T>());

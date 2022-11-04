@@ -42,6 +42,7 @@ target_sources(DataFrame
         src/Vectors/HeteroView.cc
         src/Vectors/HeteroConstView.cc
         src/Vectors/HeteroPtrView.cc
+        src/Vectors/HeteroConstPtrView.cc
 )
 
 target_compile_features(DataFrame PUBLIC cxx_std_17)

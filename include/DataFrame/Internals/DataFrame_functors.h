@@ -553,18 +553,18 @@ struct random_load_data_functor_ : DataVec::template visitor_base<Ts ...>  {
 
 // ----------------------------------------------------------------------------
 
-template<typename ... Ts>
+template<typename DF, typename ... Ts>
 struct random_load_view_functor_ : DataVec::template visitor_base<Ts ...>  {
 
     inline random_load_view_functor_ (
         const char *n,
         const std::vector<std::size_t>  &ri,
-        DataFramePtrView<IndexType> &d)
+        DF &d)
         : name (n), rand_indices (ri), dfv(d)  {   }
 
     const char                      *name;
     const std::vector<std::size_t>  &rand_indices;
-    DataFramePtrView<IndexType>     &dfv;
+    DF                              &dfv;
 
     template<typename T>
     void operator() (const T &vec);

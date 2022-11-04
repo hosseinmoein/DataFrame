@@ -659,7 +659,6 @@ operator() (T &vec)  {
     return;
 }
 
-
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
@@ -774,18 +773,19 @@ random_load_data_functor_<Ts ...>::operator() (const T &vec)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename ... Ts>
+template<typename DF, typename ... Ts>
 template<typename T>
-void
-DataFrame<I, H>::random_load_view_functor_<Ts ...>::operator() (const T &vec) {
+void DataFrame<I, H>::
+random_load_view_functor_<DF, Ts ...>::operator() (const T &vec) {
 
     using VecType = typename std::remove_reference<T>::type;
     using ValueType = typename VecType::value_type;
+    using ViewType = typename DF::template ColumnVecType<ValueType>;
 
-    const size_type             vec_s = vec.size();
-    const size_type             n_rows = rand_indices.size();
-    VectorPtrView<ValueType>    new_vec;
-    size_type                   prev_value { 0 };
+    const size_type vec_s = vec.size();
+    const size_type n_rows = rand_indices.size();
+    ViewType        new_vec;
+    size_type       prev_value { 0 };
 
     new_vec.reserve(n_rows);
     for (size_type i = 0; i < n_rows; ++i)  {
@@ -799,7 +799,7 @@ DataFrame<I, H>::random_load_view_functor_<Ts ...>::operator() (const T &vec) {
             break;
     }
 
-    using data_vec_t = typename DataFramePtrView<I>::DataVec;
+    using data_vec_t = typename DF::DataVec;
 
     SpinGuard   guard(lock_);
 

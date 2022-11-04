@@ -1710,6 +1710,10 @@ public: // Read/access and slicing interfaces
     [[nodiscard]] DataFramePtrView<IndexType>
     get_view_by_loc(const std::vector<long> &locations);
 
+    template<typename ... Ts>
+    [[nodiscard]] DataFrameConstPtrView<IndexType>
+    get_view_by_loc(const std::vector<long> &locations) const;
+
     // This method does boolean filtering selection via the sel_functor
     // (e.g. a functor, function, or lambda). It returns a new DataFrame.
     // Each element of the named column along with its corresponding index
@@ -1763,6 +1767,10 @@ public: // Read/access and slicing interfaces
     template<typename T, typename F, typename ... Ts>
     [[nodiscard]] DataFramePtrView<IndexType>
     get_view_by_sel(const char *name, F &sel_functor);
+
+    template<typename T, typename F, typename ... Ts>
+    [[nodiscard]] DataFrameConstPtrView<IndexType>
+    get_view_by_sel(const char *name, F &sel_functor) const;
 
     // This does the same function as above get_data_by_sel() but operating
     // on two columns.
@@ -1818,6 +1826,10 @@ public: // Read/access and slicing interfaces
     template<typename T1, typename T2, typename F, typename ... Ts>
     [[nodiscard]] DataFramePtrView<IndexType>
     get_view_by_sel(const char *name1, const char *name2, F &sel_functor);
+
+    template<typename T1, typename T2, typename F, typename ... Ts>
+    [[nodiscard]] DataFrameConstPtrView<IndexType>
+    get_view_by_sel(const char *name1, const char *name2, F &sel_functor) const;
 
     // This does the same function as above get_data_by_sel() but operating
     // on three columns.
@@ -1887,6 +1899,14 @@ public: // Read/access and slicing interfaces
                     const char *name2,
                     const char *name3,
                     F &sel_functor);
+
+    template<typename T1, typename T2, typename T3, typename F,
+             typename ... Ts>
+    [[nodiscard]] DataFrameConstPtrView<IndexType>
+    get_view_by_sel(const char *name1,
+                    const char *name2,
+                    const char *name3,
+                    F &sel_functor) const;
 
     // This does the same function as above get_data_by_sel() but operating
     // on four columns.
@@ -1967,6 +1987,15 @@ public: // Read/access and slicing interfaces
                     const char *name3,
                     const char *name4,
                     F &sel_functor);
+
+    template<typename T1, typename T2, typename T3, typename T4, typename F,
+             typename ... Ts>
+    [[nodiscard]] DataFrameConstPtrView<IndexType>
+    get_view_by_sel(const char *name1,
+                    const char *name2,
+                    const char *name3,
+                    const char *name4,
+                    F &sel_functor) const;
 
     // This does the same function as above get_data_by_sel() but operating
     // on five columns.
@@ -2057,6 +2086,16 @@ public: // Read/access and slicing interfaces
                     const char *name4,
                     const char *name5,
                     F &sel_functor);
+
+    template<typename T1, typename T2, typename T3, typename T4, typename T5,
+             typename F, typename ... Ts>
+    [[nodiscard]] DataFrameConstPtrView<IndexType>
+    get_view_by_sel(const char *name1,
+                    const char *name2,
+                    const char *name3,
+                    const char *name4,
+                    const char *name5,
+                    F &sel_functor) const;
 
     // This method does boolean filtering selection via the sel_functor
     // (e.g. a functor, function, or lambda). It returns a new DataFrame.
@@ -2189,6 +2228,10 @@ public: // Read/access and slicing interfaces
     template<typename ... Ts>
     [[nodiscard]] DataFramePtrView<IndexType>
     get_view_by_rand(random_policy spec, double n, size_type seed = 0);
+
+    template<typename ... Ts>
+    [[nodiscard]] DataFrameConstPtrView<IndexType>
+    get_view_by_rand(random_policy spec, double n, size_type seed = 0) const;
 
     // This returns a DataFrame with index and col_names copied from the
     // original DataFrame

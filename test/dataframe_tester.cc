@@ -3487,7 +3487,7 @@ static void test_get_data_by_rand()  {
             (random_policy::num_rows_no_seed, 5);
     auto    result2 =
         df.get_data_by_rand<double, std::string>
-        (random_policy::frac_rows_with_seed, 0.8, 23);
+            (random_policy::frac_rows_with_seed, 0.8, 23);
 
     result2.write<std::ostream, double, std::string>(std::cout);
 

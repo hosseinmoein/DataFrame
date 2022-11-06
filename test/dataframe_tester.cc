@@ -2680,152 +2680,6 @@ static void test_mode()  {
 
 // -----------------------------------------------------------------------------
 
-static void test_get_view_by_sel()  {
-
-    std::cout << "\nTesting get_view_by_sel() ..." << std::endl;
-
-    std::vector<unsigned long>  idx =
-        { 123450, 123451, 123452, 123453, 123454, 123455, 123456 };
-    std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7 };
-    std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14 };
-    std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21 };
-    std::vector<double> d4 = { 22, 23, 24, 25 };
-    std::vector<std::string> s1 = { "11", "22", "33", "ee", "ff", "gg", "ll" };
-    MyDataFrame         df;
-
-    df.load_data(std::move(idx),
-                 std::make_pair("col_1", d1),
-                 std::make_pair("col_2", d2),
-                 std::make_pair("col_3", d3),
-                 std::make_pair("col_str", s1));
-    df.load_column("col_4", std::move(d4), nan_policy::dont_pad_with_nans);
-
-    const MyDataFrame   &const_df = df;
-    auto    functor =
-        [](const unsigned long &, const double &val)-> bool {
-            return (val >= 5);
-        };
-    auto    result =
-        df.get_view_by_sel<double, decltype(functor), double, std::string>
-            ("col_1", functor);
-    auto    const_result =
-        const_df.get_view_by_sel<double, decltype(functor), double, std::string>
-            ("col_1", functor);
-
-    result.shrink_to_fit<double, std::string>();
-    assert(result.get_index().size() == 3);
-    assert(result.get_column<double>("col_1").size() == 3);
-    assert(result.get_column<std::string>("col_str").size() == 3);
-    assert(result.get_column<double>("col_4").size() == 0);
-    assert(result.get_index()[0] == 123454);
-    assert(result.get_index()[2] == 123456);
-    assert(result.get_column<double>("col_2")[1] == 13);
-    assert(result.get_column<std::string>("col_str")[1] == "gg");
-    assert(result.get_column<std::string>("col_str")[2] == "ll");
-    assert(result.get_column<double>("col_1")[1] == 6);
-    assert(result.get_column<double>("col_1")[2] == 7);
-
-    assert(const_result.get_index().size() == 3);
-    assert(const_result.get_column<double>("col_1").size() == 3);
-    assert(const_result.get_column<std::string>("col_str").size() == 3);
-    assert(const_result.get_column<double>("col_4").size() == 0);
-    assert(const_result.get_index()[0] == 123454);
-    assert(const_result.get_index()[2] == 123456);
-    assert(const_result.get_column<double>("col_2")[1] == 13);
-    assert(const_result.get_column<std::string>("col_str")[1] == "gg");
-    assert(const_result.get_column<std::string>("col_str")[2] == "ll");
-    assert(const_result.get_column<double>("col_1")[1] == 6);
-    assert(const_result.get_column<double>("col_1")[2] == 7);
-
-    result.get_column<double>("col_1")[1] = 600;
-    assert(result.get_column<double>("col_1")[1] == 600);
-    assert(const_result.get_column<double>("col_1")[1] == 600);
-    assert(df.get_column<double>("col_1")[5] == 600);
-
-    auto    functor2 =
-        [](const unsigned long &,
-           const double &val1,
-           const double &val2)-> bool {
-            return (val1 >= 5 || val2 == 15);
-        };
-    auto    result2 =
-        df.get_view_by_sel<double,
-                           double,
-                           decltype(functor2),
-                           double, std::string>
-        ("col_1", "col_3", functor2);
-    auto    const_result2 =
-        const_df.get_view_by_sel<double,
-                                 double,
-                                 decltype(functor2),
-                                 double, std::string>
-        ("col_1", "col_3", functor2);
-
-    auto    functor3 =
-        [](const unsigned long &,
-           const double &val1,
-           const double &val2,
-           const std::string val3)-> bool {
-            return (val1 >= 5 || val2 == 15 || val3 == "33");
-        };
-    auto    result3 =
-        df.get_view_by_sel<double,
-                           double,
-                           std::string,
-                           decltype(functor3),
-                           double, std::string>
-        ("col_1", "col_3", "col_str", functor3);
-    auto    const_result3 =
-        const_df.get_view_by_sel<double,
-                                 double,
-                                 std::string,
-                                 decltype(functor3),
-                                 double, std::string>
-        ("col_1", "col_3", "col_str", functor3);
-
-    assert(result3.get_index().size() == 5);
-    assert(result3.get_column<double>("col_1").size() == 5);
-    assert(result3.get_column<std::string>("col_str").size() == 5);
-    assert(result3.get_column<double>("col_4").size() == 2);
-    assert(result3.get_index()[0] == 123450);
-    assert(result3.get_index()[2] == 123454);
-    assert(result3.get_index()[4] == 123456);
-    assert(result3.get_column<double>("col_2")[0] == 8);
-    assert(result3.get_column<double>("col_2")[1] == 10);
-    assert(result3.get_column<double>("col_2")[3] == 13);
-    assert(result3.get_column<double>("col_4")[0] == 22);
-    assert(result3.get_column<double>("col_4")[1] == 24);
-    assert(result3.get_column<std::string>("col_str")[0] == "11");
-    assert(result3.get_column<std::string>("col_str")[1] == "33");
-    assert(result3.get_column<std::string>("col_str")[2] == "ff");
-    assert(result3.get_column<std::string>("col_str")[4] == "ll");
-    assert(result3.get_column<double>("col_1")[0] == 1);
-    assert(result3.get_column<double>("col_1")[1] == 3);
-    assert(result3.get_column<double>("col_1")[2] == 5);
-
-    assert(const_result3.get_index().size() == 5);
-    assert(const_result3.get_column<double>("col_1").size() == 5);
-    assert(const_result3.get_column<std::string>("col_str").size() == 5);
-    assert(const_result3.get_column<double>("col_4").size() == 2);
-    assert(const_result3.get_index()[0] == 123450);
-    assert(const_result3.get_index()[2] == 123454);
-    assert(const_result3.get_index()[4] == 123456);
-    assert(const_result3.get_column<double>("col_2")[0] == 8);
-    assert(const_result3.get_column<double>("col_2")[1] == 10);
-    assert(const_result3.get_column<double>("col_2")[3] == 13);
-    assert(const_result3.get_column<double>("col_4")[0] == 22);
-    assert(const_result3.get_column<double>("col_4")[1] == 24);
-    assert(const_result3.get_column<std::string>("col_str")[0] == "11");
-    assert(const_result3.get_column<std::string>("col_str")[1] == "33");
-    assert(const_result3.get_column<std::string>("col_str")[2] == "ff");
-    assert(const_result3.get_column<std::string>("col_str")[4] == "ll");
-    assert(const_result3.get_column<double>("col_1")[0] == 1);
-    assert(const_result3.get_column<double>("col_1")[1] == 3);
-    assert(const_result3.get_column<double>("col_1")[2] == 5);
-}
-
-// -----------------------------------------------------------------------------
-
 static void test_remove_data_by_sel()  {
 
     std::cout << "\nTesting remove_data_by_sel() ..." << std::endl;
@@ -3309,62 +3163,6 @@ static void test_get_data_by_rand()  {
 
 // -----------------------------------------------------------------------------
 
-static void test_get_view_by_rand()  {
-
-    std::cout << "\nTesting get_view_by_rand() ..." << std::endl;
-
-    std::vector<unsigned long>  idx =
-        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
-          123457, 123458, 123459, 123460 };
-    std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
-    std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18 };
-    std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25 };
-    std::vector<double> d4 = { 22, 23, 24, 25, 26, 27 };
-    std::vector<std::string> s1 =
-        { "11", "22", "33", "aa", "bb", "cc", "dd", "tt", "uu", "ii", "88" };
-    MyDataFrame         df;
-
-    df.load_data(std::move(idx),
-                 std::make_pair("col_1", d1),
-                 std::make_pair("col_2", d2),
-                 std::make_pair("col_3", d3),
-                 std::make_pair("col_str", s1));
-    df.load_column("col_4", std::move(d4), nan_policy::dont_pad_with_nans);
-
-    const MyDataFrame   &const_df = df;
-    auto    result =
-        df.get_view_by_rand<double, std::string>
-            (random_policy::num_rows_no_seed, 5);
-    auto    result2 =
-        df.get_view_by_rand<double, std::string>
-            (random_policy::frac_rows_with_seed, 0.8, 23);
-    auto    const_result =
-        const_df.get_view_by_rand<double, std::string>
-            (random_policy::num_rows_no_seed, 5);
-    auto    const_result2 =
-        const_df.get_view_by_rand<double, std::string>
-            (random_policy::frac_rows_with_seed, 0.8, 23);
-
-    result2.write<std::ostream, double, std::string>(std::cout);
-/*
-    assert(result2.get_index().size() == 6);
-    assert(result2.get_column<double>("col_1").size() == 6);
-    assert(result2.get_column<double>("col_4").size() == 1);
-    assert(result2.get_column<std::string>("col_str").size() == 6);
-    assert(result2.get_column<double>("col_4")[0] == 25.0);
-    assert(result2.get_column<double>("col_3")[4] == 24.0);
-    assert(result2.get_column<double>("col_1")[5] == 11.0);
-    assert(result2.get_column<std::string>("col_str")[4] == "ii");
-
-    result2.get_column<std::string>("col_str")[4] = "TEST";
-    assert(result2.get_column<std::string>("col_str")[4] == "TEST");
-    assert(result2.get_column<std::string>("col_str")[4] ==
-           df.get_column<std::string>("col_str")[9]);
-*/
-}
-
-// -----------------------------------------------------------------------------
-
 static void test_write_json()  {
 
     std::cout << "\nTesting write(json) ..." << std::endl;
@@ -3597,89 +3395,6 @@ static void test_get_data_by_loc_location()  {
 
 // -----------------------------------------------------------------------------
 
-static void test_get_view_by_loc_location()  {
-
-    std::cout << "\nTesting get_view_by_loc(locations) ..." << std::endl;
-
-    std::vector<unsigned long>  idx =
-        { 123450, 123451, 123452, 123450, 123455, 123450, 123449 };
-    std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7 };
-    std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14 };
-    std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21 };
-    std::vector<double> d4 = { 22, 23, 24, 25 };
-    MyDataFrame         df;
-
-    df.load_data(std::move(idx),
-                 std::make_pair("col_1", d1),
-                 std::make_pair("col_2", d2),
-                 std::make_pair("col_3", d3),
-                 std::make_pair("col_4", d4));
-
-    const MyDataFrame   &const_df = df;
-
-    auto    dfv1 = df.get_view_by_loc<double>(std::vector<long> { 3, 6 });
-    auto    dfv2 = df.get_view_by_loc<double>(std::vector<long> { -4, -1 , 5 });
-    auto    const_dfv1 =
-        const_df.get_view_by_loc<double>(std::vector<long> { 3, 6 });
-    auto    const_dfv2 =
-        const_df.get_view_by_loc<double>(std::vector<long> { -4, -1 , 5 });
-
-    assert(dfv1.get_index().size() == 2);
-    assert(dfv1.get_column<double>("col_3").size() == 2);
-    assert(dfv1.get_column<double>("col_2").size() == 2);
-    assert(dfv1.get_index()[0] == 123450);
-    assert(dfv1.get_index()[1] == 123449);
-    assert(dfv1.get_column<double>("col_3")[0] == 18.0);
-    assert(dfv1.get_column<double>("col_2")[1] == 14.0);
-    assert(std::isnan(dfv1.get_column<double>("col_4")[1]));
-
-    assert(const_dfv1.get_index().size() == 2);
-    assert(const_dfv1.get_column<double>("col_3").size() == 2);
-    assert(const_dfv1.get_column<double>("col_2").size() == 2);
-    assert(const_dfv1.get_index()[0] == 123450);
-    assert(const_dfv1.get_index()[1] == 123449);
-    assert(const_dfv1.get_column<double>("col_3")[0] == 18.0);
-    assert(const_dfv1.get_column<double>("col_2")[1] == 14.0);
-    assert(std::isnan(const_dfv1.get_column<double>("col_4")[1]));
-
-    assert(dfv2.get_index().size() == 3);
-    assert(dfv2.get_column<double>("col_3").size() == 3);
-    assert(dfv2.get_column<double>("col_2").size() == 3);
-    assert(dfv2.get_column<double>("col_1").size() == 3);
-    assert(dfv2.get_index()[0] == 123450);
-    assert(dfv2.get_index()[1] == 123449);
-    assert(dfv2.get_index()[2] == 123450);
-    assert(dfv2.get_column<double>("col_1")[0] == 4.0);
-    assert(dfv2.get_column<double>("col_2")[2] == 13.0);
-    assert(dfv2.get_column<double>("col_4")[0] == 25.0);
-    assert(std::isnan(dfv2.get_column<double>("col_4")[1]));
-    assert(std::isnan(dfv2.get_column<double>("col_4")[2]));
-
-    assert(const_dfv2.get_index().size() == 3);
-    assert(const_dfv2.get_column<double>("col_3").size() == 3);
-    assert(const_dfv2.get_column<double>("col_2").size() == 3);
-    assert(const_dfv2.get_column<double>("col_1").size() == 3);
-    assert(const_dfv2.get_index()[0] == 123450);
-    assert(const_dfv2.get_index()[1] == 123449);
-    assert(const_dfv2.get_index()[2] == 123450);
-    assert(const_dfv2.get_column<double>("col_1")[0] == 4.0);
-    assert(const_dfv2.get_column<double>("col_2")[2] == 13.0);
-    assert(const_dfv2.get_column<double>("col_4")[0] == 25.0);
-    assert(std::isnan(const_dfv2.get_column<double>("col_4")[1]));
-    assert(std::isnan(const_dfv2.get_column<double>("col_4")[2]));
-
-    dfv2.get_column<double>("col_1")[0] = 101.0;
-    assert(dfv2.get_column<double>("col_1")[0] == 101.0);
-    assert(const_dfv2.get_column<double>("col_1")[0] == 101.0);
-    assert(df.get_column<double>("col_1")[3] == 101.0);
-
-    auto  memory_use = dfv2.get_memory_usage<double>("col_3");
-
-    std::cout << "View Memory Usage:\n" << memory_use << std::endl;
-}
-
-// -----------------------------------------------------------------------------
-
 static void test_get_data_by_idx_values()  {
 
     std::cout << "\nTesting get_data_by_idx(values) ..." << std::endl;
@@ -3728,94 +3443,6 @@ static void test_get_data_by_idx_values()  {
     assert(df3.get_column<double>("col_4")[1] == 25.0);
     assert(std::isnan(df3.get_column<double>("col_4")[2]));
     assert(std::isnan(df3.get_column<double>("col_4")[3]));
-}
-
-// -----------------------------------------------------------------------------
-
-static void test_get_view_by_idx_values()  {
-
-    std::cout << "\nTesting get_view_by_idx(values) ..." << std::endl;
-
-    std::vector<unsigned long>  idx =
-        { 123450, 123451, 123452, 123450, 123455, 123450, 123449 };
-    std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7 };
-    std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14 };
-    std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21 };
-    std::vector<double> d4 = { 22, 23, 24, 25 };
-    MyDataFrame         df;
-
-    df.load_data(std::move(idx),
-                 std::make_pair("col_1", d1),
-                 std::make_pair("col_2", d2),
-                 std::make_pair("col_3", d3),
-                 std::make_pair("col_4", d4));
-
-    const MyDataFrame   &const_df = df;
-
-    auto    dfv1 =
-        df.get_view_by_idx<double>(
-            std::vector<MyDataFrame::IndexType> { 123452, 123455 });
-    auto    const_dfv1 =
-        const_df.get_view_by_idx<double>(
-            std::vector<MyDataFrame::IndexType> { 123452, 123455 });
-    auto    dfv2 =
-        df.get_view_by_idx<double>(
-            std::vector<MyDataFrame::IndexType> { 123449, 123450 });
-    auto    const_dfv2 =
-        const_df.get_view_by_idx<double>(
-            std::vector<MyDataFrame::IndexType> { 123449, 123450 });
-
-    assert(dfv1.get_index().size() == 2);
-    assert(dfv1.get_column<double>("col_3").size() == 2);
-    assert(dfv1.get_column<double>("col_2").size() == 2);
-    assert(dfv1.get_index()[0] == 123452);
-    assert(dfv1.get_index()[1] == 123455);
-    assert(dfv1.get_column<double>("col_3")[0] == 17.0);
-    assert(dfv1.get_column<double>("col_2")[1] == 12.0);
-    assert(std::isnan(dfv1.get_column<double>("col_4")[1]));
-
-    assert(const_dfv1.get_index().size() == 2);
-    assert(const_dfv1.get_column<double>("col_3").size() == 2);
-    assert(const_dfv1.get_column<double>("col_2").size() == 2);
-    assert(const_dfv1.get_index()[0] == 123452);
-    assert(const_dfv1.get_index()[1] == 123455);
-    assert(const_dfv1.get_column<double>("col_3")[0] == 17.0);
-    assert(const_dfv1.get_column<double>("col_2")[1] == 12.0);
-    assert(std::isnan(const_dfv1.get_column<double>("col_4")[1]));
-
-    assert(dfv2.get_index().size() == 4);
-    assert(dfv2.get_column<double>("col_3").size() == 4);
-    assert(dfv2.get_column<double>("col_2").size() == 4);
-    assert(dfv2.get_column<double>("col_1").size() == 4);
-    assert(dfv2.get_index()[0] == 123450);
-    assert(dfv2.get_index()[1] == 123450);
-    assert(dfv2.get_index()[2] == 123450);
-    assert(dfv2.get_index()[3] == 123449);
-    assert(dfv2.get_column<double>("col_1")[0] == 1.0);
-    assert(dfv2.get_column<double>("col_2")[2] == 13.0);
-    assert(dfv2.get_column<double>("col_4")[0] == 22.0);
-    assert(dfv2.get_column<double>("col_4")[1] == 25.0);
-    assert(std::isnan(dfv2.get_column<double>("col_4")[2]));
-    assert(std::isnan(dfv2.get_column<double>("col_4")[3]));
-
-    assert(const_dfv2.get_index().size() == 4);
-    assert(const_dfv2.get_column<double>("col_3").size() == 4);
-    assert(const_dfv2.get_column<double>("col_2").size() == 4);
-    assert(const_dfv2.get_column<double>("col_1").size() == 4);
-    assert(const_dfv2.get_index()[0] == 123450);
-    assert(const_dfv2.get_index()[1] == 123450);
-    assert(const_dfv2.get_index()[2] == 123450);
-    assert(const_dfv2.get_index()[3] == 123449);
-    assert(const_dfv2.get_column<double>("col_1")[0] == 1.0);
-    assert(const_dfv2.get_column<double>("col_2")[2] == 13.0);
-    assert(const_dfv2.get_column<double>("col_4")[0] == 22.0);
-    assert(const_dfv2.get_column<double>("col_4")[1] == 25.0);
-    assert(std::isnan(const_dfv2.get_column<double>("col_4")[2]));
-    assert(std::isnan(const_dfv2.get_column<double>("col_4")[3]));
-
-    dfv2.get_column<double>("col_1")[0] = 101.0;
-    assert(dfv2.get_column<double>("col_1")[0] == 101.0);
-    assert(df.get_column<double>("col_1")[0] == 101.0);
 }
 
 // -----------------------------------------------------------------------------
@@ -5381,19 +5008,15 @@ int main(int, char *[]) {
     test_replace_2();
     test_some_visitors();
     test_mode();
-    test_get_view_by_sel();
     test_remove_data_by_sel();
     test_shuffle();
     test_SimpleRollAdopter();
     test_get_data_by_rand();
-    test_get_view_by_rand();
     test_write_json();
     test_diff();
     test_reading_writing_json();
     test_get_data_by_loc_location();
-    test_get_view_by_loc_location();
     test_get_data_by_idx_values();
-    test_get_view_by_idx_values();
     test_z_score_visitor();
     test_thread_safety();
     test_view_visitors();

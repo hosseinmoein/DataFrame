@@ -4030,6 +4030,174 @@ static void test_ParkinsonVolVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_get_view_by_loc()  {
+
+    std::cout << "\nTesting get_view_by_loc() ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 123450, 123451, 123452, 123450, 123455, 123450, 123449 };
+    std::vector<double>         d1 = { 1, 2, 3, 4, 5, 6, 7 };
+    std::vector<double>         d2 = { 8, 9, 10, 11, 12, 13, 14 };
+    std::vector<double>         d3 = { 15, 16, 17, 18, 19, 20, 21 };
+    std::vector<double>         d4 = { 22, 23, 24, 25 };
+    std::vector<std::string>    s1 =
+        { "11", "22", "33", "xx", "yy", "gg", "string" };
+    MyDataFrame                 df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("col_1", d1),
+                 std::make_pair("col_2", d2),
+                 std::make_pair("col_3", d3),
+                 std::make_pair("col_4", d4),
+                 std::make_pair("col_str", s1));
+
+    auto  memory_use1 = df.get_memory_usage<double>("col_3");
+
+    std::cout << "DataFrame Memory Usage:\n" << memory_use1 << std::endl;
+
+    typedef DataFrameView<unsigned long> MyDataFrameView;
+    typedef DataFrameConstView<unsigned long> MyDataFrameConstView;
+
+    const MyDataFrame   &const_df = df;
+    MyDataFrameView         dfv =
+        df.get_view_by_loc<double, std::string>(Index2D<long> { 3, 6 });
+    MyDataFrameView         dfv2 =
+        df.get_view_by_loc<double, std::string>(Index2D<long> { -5, -1 });
+    MyDataFrameConstView    dfcv =
+        const_df.get_view_by_loc<double, std::string>(Index2D<long> { 3, 6 });
+    MyDataFrameConstView    dfcv2 =
+        const_df.get_view_by_loc<double, std::string>(Index2D<long> { -5, -1 });
+
+    dfv.shrink_to_fit<double, std::string>();
+    dfv.write<std::ostream, double, std::string>(std::cout);
+    dfv2.write<std::ostream, double, std::string>(std::cout);
+    dfv.get_column<double>("col_3")[0] = 88.0;
+    assert(dfv.get_column<double>("col_3")[0] ==
+           df.get_column<double>("col_3")[3]);
+    assert(dfv.get_column<double>("col_3")[0] == 88.0);
+    assert(dfcv.get_column<double>("col_3")[0] ==
+           df.get_column<double>("col_3")[3]);
+    assert(dfcv.get_column<double>("col_3")[0] == 88.0);
+
+    auto  memory_use2 = dfv.get_memory_usage<double>("col_3");
+
+    std::cout << "View Memory Usage:\n" << memory_use2 << std::endl;
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_get_view_by_idx_slicing()  {
+
+    std::cout << "\nTesting get_view_by_idx()/slicing ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466 };
+    std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
+    std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23,
+                               30, 31, 32, 1.89 };
+    std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21,
+                               0.34, 1.56, 0.34, 2.3, 0.1, 0.89, 0.45 };
+    std::vector<int>    i1 = { 22, 23, 24, 25, 99, 100, 101, 3, 2 };
+    MyDataFrame         df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("col_1", d1),
+                 std::make_pair("col_2", d2),
+                 std::make_pair("col_3", d3),
+                 std::make_pair("col_4", i1));
+
+    typedef DataFrameView<unsigned long> MyDataFrameView;
+    typedef DataFrameConstView<unsigned long> MyDataFrameConstView;
+
+    const MyDataFrame   &const_df = df;
+
+    MyDataFrame             df2 =
+        df.get_data_by_idx<double, int>(
+            Index2D<MyDataFrame::IndexType> { 123452, 123460 });
+    MyDataFrameView         dfv =
+        df.get_view_by_idx<double, int>(
+            Index2D<MyDataFrame::IndexType> { 123452, 123466 });
+    MyDataFrameConstView    dfcv =
+        const_df.get_view_by_idx<double, int>(
+            Index2D<MyDataFrame::IndexType> { 123452, 123466 });
+
+    df.write<std::ostream, double, int>(std::cout);
+    df2.write<std::ostream, double, int>(std::cout);
+    dfv.write<std::ostream, double, int>(std::cout);
+
+    dfv.get_column<double>("col_3")[0] = 88.0;
+    assert(dfv.get_column<double>("col_3")[0] ==
+           df.get_column<double>("col_3")[2]);
+    assert(dfv.get_column<double>("col_3")[0] == 88.0);
+    assert(dfv.shape().first == 12);  // added
+    assert(dfcv.get_column<double>("col_3")[0] ==
+           df.get_column<double>("col_3")[2]);
+    assert(dfcv.get_column<double>("col_3")[0] == 88.0);
+    assert(dfcv.shape().first == 12);  // added
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_get_data()  {
+
+    std::cout << "\nTesting get_[data|view]() ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466 };
+    std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
+    std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23,
+                               30, 31, 32, 1.89 };
+    std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21,
+                               0.34, 1.56, 0.34, 2.3, 0.1, 0.89, 0.45 };
+    std::vector<int>    i1 = { 22, 23, 24, 25, 99, 100, 101, 3, 2 };
+    MyDataFrame         df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("col_1", d1),
+                 std::make_pair("col_2", d2),
+                 std::make_pair("col_3", d3),
+                 std::make_pair("col_4", i1));
+
+    auto    df2 = df.get_data<double, int>({ "col_1", "col_4"});
+
+    assert((! df2.has_column("col_2")));
+    assert((! df2.has_column("col_3")));
+    assert((df2.get_column<double>("col_1")[11] == 12));
+    assert((df2.get_column<int>("col_4")[8] == 2));
+    assert((df2.get_index()[3] == 123453));
+
+    const MyDataFrame                    &const_df = df;
+    DataFrameView<unsigned long>         df3 =
+        df.get_view<double, int>({ "col_1", "col_4"});
+    DataFrameConstView<unsigned long>   const_df3 =
+        const_df.get_view<double, int>({ "col_1", "col_4"});
+
+    assert((! df3.has_column("col_2")));
+    assert((! df3.has_column("col_3")));
+    assert((df3.get_column<double>("col_1")[11] == 12));
+    assert((df3.get_column<int>("col_4")[8] == 2));
+    assert((df3.get_index()[3] == 123453));
+
+    df3.get_index()[3] = 100;
+    df3.get_column<int>("col_4")[8] = 101;
+    df3.get_column<double>("col_1")[11] = 102.2;
+
+    assert((df3.get_column<double>("col_1")[11] == 102.2));
+    assert((df3.get_column<int>("col_4")[8] == 101));
+    assert((df3.get_index()[3] == 100));
+    assert((df.get_column<double>("col_1")[11] == 102.2));
+    assert((df.get_column<int>("col_4")[8] == 101));
+    assert((df.get_index()[3] == 100));
+
+    assert((const_df3.get_column<double>("col_1")[11] == 102.2));
+    assert((const_df3.get_column<int>("col_4")[8] == 101));
+    assert((const_df3.get_index()[3] == 100));
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     test_get_reindexed();
@@ -4110,6 +4278,9 @@ int main(int, char *[]) {
     test_DecayVisitor();
     test_HodgesTompkinsVolVisitor();
     test_ParkinsonVolVisitor();
+    test_get_view_by_loc();
+    test_get_view_by_idx_slicing();
+    test_get_data();
 
     return (0);
 }

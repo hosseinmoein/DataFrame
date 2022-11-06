@@ -119,12 +119,16 @@ static void test_concat_view()  {
                   std::make_pair("int_col", intvec),
                   std::make_pair("str_col", strvec));
 
-    MyDataFrame df2 = df1;
+    MyDataFrame         df2 = df1;
+    const MyDataFrame   &const_df1 = df1;
+    const MyDataFrame   &const_df2 = df2;
 
     df2.load_column("dbl_col_2", std::move(dblvec2));
 
     auto    result1 =
         df1.concat_view<decltype(df2), double, int, std::string>(df2);
+    auto    const_result1 =
+        const_df1.concat_view<decltype(df2), double, int, std::string>(df2);
 
     assert(result1.get_index().size() == 30);
     assert(result1.get_column<double>("dbl_col").size() == 30);
@@ -141,8 +145,26 @@ static void test_concat_view()  {
     assert(result1.get_column<int>("int_col")[14] == 13);
     assert(result1.get_column<int>("int_col")[15] == 1);
 
+    assert(const_result1.get_index().size() == 30);
+    assert(const_result1.get_column<double>("dbl_col").size() == 30);
+    assert(const_result1.get_column<std::string>("str_col").size() == 30);
+    assert(const_result1.get_column<int>("int_col").size() == 30);
+    assert(const_result1.get_index()[0] == 1);
+    assert(const_result1.get_index()[14] == 14);
+    assert(const_result1.get_index()[15] == 1);
+    assert(const_result1.get_index()[29] == 14);
+    assert(const_result1.get_column<std::string>("str_col")[0] == "zz");
+    assert(const_result1.get_column<std::string>("str_col")[14] == "oo");
+    assert(const_result1.get_column<std::string>("str_col")[15] == "zz");
+    assert(const_result1.get_column<int>("int_col")[0] == 1);
+    assert(const_result1.get_column<int>("int_col")[14] == 13);
+    assert(const_result1.get_column<int>("int_col")[15] == 1);
+
     auto    result2 =
         df2.concat_view<decltype(df2), double, int, std::string>
+            (df1, concat_policy::lhs_and_common_columns);
+    auto    const_result2 =
+        const_df2.concat_view<decltype(df2), double, int, std::string>
             (df1, concat_policy::lhs_and_common_columns);
 
     assert(result2.get_index().size() == 30);
@@ -156,8 +178,22 @@ static void test_concat_view()  {
     assert(result2.get_column<double>("dbl_col_2")[5] == 105.0);
     assert(result2.get_column<double>("dbl_col_2")[10] == 112.0);
 
+    assert(const_result2.get_index().size() == 30);
+    assert(const_result2.get_column<double>("dbl_col").size() == 30);
+    assert(const_result2.get_column<std::string>("str_col").size() == 30);
+    assert(const_result2.get_column<std::string>("str_col")[0] == "zz");
+    assert(const_result2.get_column<std::string>("str_col")[14] == "oo");
+    assert(const_result2.get_column<std::string>("str_col")[15] == "zz");
+    assert(const_result2.get_column<double>("dbl_col_2").size() == 15);
+    assert(const_result2.get_column<double>("dbl_col_2")[0] == 100.0);
+    assert(const_result2.get_column<double>("dbl_col_2")[5] == 105.0);
+    assert(const_result2.get_column<double>("dbl_col_2")[10] == 112.0);
+
     auto    result3 =
         df1.concat_view<decltype(df1), double, int, std::string>
+            (df2, concat_policy::all_columns);
+    auto    const_result3 =
+        const_df1.concat_view<decltype(df1), double, int, std::string>
             (df2, concat_policy::all_columns);
 
     assert(result3.get_index().size() == 30);
@@ -171,6 +207,18 @@ static void test_concat_view()  {
     assert(result3.get_column<double>("dbl_col_2")[0] == 100.0);
     assert(result3.get_column<double>("dbl_col_2")[5] == 105.0);
     assert(result3.get_column<double>("dbl_col_2")[10] == 112.0);
+
+    assert(const_result3.get_index().size() == 30);
+    assert(const_result3.get_column<double>("dbl_col").size() == 30);
+    assert(const_result3.get_column<std::string>("str_col").size() == 30);
+    assert(const_result3.get_column<double>("dbl_col_2").size() == 15);
+    assert(const_result3.get_column<std::string>("str_col")[0] == "zz");
+    assert(const_result3.get_column<std::string>("str_col")[14] == "oo");
+    assert(const_result3.get_column<std::string>("str_col")[15] == "zz");
+    assert(const_result3.get_column<double>("dbl_col_2").size() == 15);
+    assert(const_result3.get_column<double>("dbl_col_2")[0] == 100.0);
+    assert(const_result3.get_column<double>("dbl_col_2")[5] == 105.0);
+    assert(const_result3.get_column<double>("dbl_col_2")[10] == 112.0);
 }
 
 // -----------------------------------------------------------------------------
@@ -227,58 +275,6 @@ static void test_multithreading(int j)  {
         (std::cout, io_format::json);
 }
 */
-
-// -----------------------------------------------------------------------------
-
-static void test_get_data()  {
-
-    std::cout << "\nTesting get_[data|view]() ..." << std::endl;
-
-    std::vector<unsigned long>  idx =
-        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
-          123457, 123458, 123459, 123460, 123461, 123462, 123466 };
-    std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
-    std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23,
-                               30, 31, 32, 1.89 };
-    std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21,
-                               0.34, 1.56, 0.34, 2.3, 0.1, 0.89, 0.45 };
-    std::vector<int>    i1 = { 22, 23, 24, 25, 99, 100, 101, 3, 2 };
-    MyDataFrame         df;
-
-    df.load_data(std::move(idx),
-                 std::make_pair("col_1", d1),
-                 std::make_pair("col_2", d2),
-                 std::make_pair("col_3", d3),
-                 std::make_pair("col_4", i1));
-
-    auto    df2 = df.get_data<double, int>({ "col_1", "col_4"});
-
-    assert((! df2.has_column("col_2")));
-    assert((! df2.has_column("col_3")));
-    assert((df2.get_column<double>("col_1")[11] == 12));
-    assert((df2.get_column<int>("col_4")[8] == 2));
-    assert((df2.get_index()[3] == 123453));
-
-    DataFrameView<unsigned long>    df3 =
-        df.get_view<double, int>({ "col_1", "col_4"});
-
-    assert((! df3.has_column("col_2")));
-    assert((! df3.has_column("col_3")));
-    assert((df3.get_column<double>("col_1")[11] == 12));
-    assert((df3.get_column<int>("col_4")[8] == 2));
-    assert((df3.get_index()[3] == 123453));
-
-    df3.get_index()[3] = 100;
-    df3.get_column<int>("col_4")[8] = 101;
-    df3.get_column<double>("col_1")[11] = 102.2;
-
-    assert((df3.get_column<double>("col_1")[11] == 102.2));
-    assert((df3.get_column<int>("col_4")[8] == 101));
-    assert((df3.get_index()[3] == 100));
-    assert((df.get_column<double>("col_1")[11] == 102.2));
-    assert((df.get_column<int>("col_4")[8] == 101));
-    assert((df.get_index()[3] == 100));
-}
 
 // -----------------------------------------------------------------------------
 
@@ -903,7 +899,6 @@ int main(int, char *[]) {
 
     test_groupby_edge();
     test_concat_view();
-    test_get_data();
     test_to_from_string();
     test_CoppockCurveVisitor();
     test_BiasVisitor();

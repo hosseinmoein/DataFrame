@@ -58,7 +58,9 @@ namespace hmdf
 // H: See the static assert below. It can only be either
 //    a HeteroVector (typedef'ed to StdDataFrame) or
 //    a HeteroView (typedef'ed to DataFrameView) or
+//    a HeteroConstView (typedef'ed to DataFrameConstView) or
 //    a HeteroPtrView (typedef'ed to DataFramePtrView)
+//    a HeteroConstPtrView (typedef'ed to DataFrameConstPtrView)
 //
 // A DataFrame may contain one index and any number of columns of any built-in
 // or user-defined types
@@ -68,10 +70,12 @@ class DataFrame : public ThreadGranularity {
 
     static_assert(std::is_base_of<HeteroVector, H>::value ||
                       std::is_base_of<HeteroView, H>::value ||
-                      std::is_base_of<HeteroPtrView, H>::value,
+                      std::is_base_of<HeteroConstView, H>::value ||
+                      std::is_base_of<HeteroPtrView, H>::value ||
+                      std::is_base_of<HeteroConstPtrView, H>::value,
                   "H argument can only be either of "
-                  "HeteroVector, HeteroView, HeteroPtrView "
-                  "or their derived types");
+                  "HeteroVector, HeteroView, HeteroConstView, "
+                  "HeteroPtrView, HeteroConstPtrView or their derived types");
 
     using DataVec = H;
     using DataVecVec = std::vector<DataVec>;
@@ -1303,6 +1307,11 @@ public:  // Data manipulation
     concat_view(RHS_T &rhs,
                 concat_policy cp = concat_policy::common_columns);
 
+    template<typename RHS_T, typename ... Ts>
+    [[nodiscard]] DataFrameConstPtrView<IndexType>
+    concat_view(RHS_T &rhs,
+                concat_policy cp = concat_policy::common_columns) const;
+
     // This is similar to concat() method but it is applied to self. It changes
     // self.
     //
@@ -1594,6 +1603,10 @@ public: // Read/access and slicing interfaces
     [[nodiscard]] DataFrameView<IndexType>
     get_view_by_idx(Index2D<IndexType> range);
 
+    template<typename ... Ts>
+    [[nodiscard]] DataFrameConstView<IndexType>
+    get_view_by_idx(Index2D<IndexType> range) const;
+
     // It behaves like get_data_by_idx(values), but it returns a
     // DataFramePtrView.
     // A view is a DataFrame that is a reference to the original DataFrame.
@@ -1614,6 +1627,10 @@ public: // Read/access and slicing interfaces
     template<typename ... Ts>
     [[nodiscard]] DataFramePtrView<IndexType>
     get_view_by_idx(const std::vector<IndexType> &values);
+
+    template<typename ... Ts>
+    [[nodiscard]] DataFrameConstPtrView<IndexType>
+    get_view_by_idx(const std::vector<IndexType> &values) const;
 
     // It returns a DataFrame (including the index and data columns)
     // containing the data from location begin to location end within range.
@@ -1668,6 +1685,10 @@ public: // Read/access and slicing interfaces
     [[nodiscard]] DataFrameView<IndexType>
     get_view_by_loc(Index2D<long> range);
 
+    template<typename ... Ts>
+    [[nodiscard]] DataFrameConstView<IndexType>
+    get_view_by_loc(Index2D<long> range) const;
+
     // It behaves like get_data_by_loc(locations), but it returns a
     // DataFramePtrView.
     // A view is a DataFrame that is a reference to the original DataFrame.
@@ -1688,6 +1709,10 @@ public: // Read/access and slicing interfaces
     template<typename ... Ts>
     [[nodiscard]] DataFramePtrView<IndexType>
     get_view_by_loc(const std::vector<long> &locations);
+
+    template<typename ... Ts>
+    [[nodiscard]] DataFrameConstPtrView<IndexType>
+    get_view_by_loc(const std::vector<long> &locations) const;
 
     // This method does boolean filtering selection via the sel_functor
     // (e.g. a functor, function, or lambda). It returns a new DataFrame.
@@ -1743,6 +1768,10 @@ public: // Read/access and slicing interfaces
     [[nodiscard]] DataFramePtrView<IndexType>
     get_view_by_sel(const char *name, F &sel_functor);
 
+    template<typename T, typename F, typename ... Ts>
+    [[nodiscard]] DataFrameConstPtrView<IndexType>
+    get_view_by_sel(const char *name, F &sel_functor) const;
+
     // This does the same function as above get_data_by_sel() but operating
     // on two columns.
     // The signature of sel_fucntor:
@@ -1797,6 +1826,10 @@ public: // Read/access and slicing interfaces
     template<typename T1, typename T2, typename F, typename ... Ts>
     [[nodiscard]] DataFramePtrView<IndexType>
     get_view_by_sel(const char *name1, const char *name2, F &sel_functor);
+
+    template<typename T1, typename T2, typename F, typename ... Ts>
+    [[nodiscard]] DataFrameConstPtrView<IndexType>
+    get_view_by_sel(const char *name1, const char *name2, F &sel_functor) const;
 
     // This does the same function as above get_data_by_sel() but operating
     // on three columns.
@@ -1866,6 +1899,14 @@ public: // Read/access and slicing interfaces
                     const char *name2,
                     const char *name3,
                     F &sel_functor);
+
+    template<typename T1, typename T2, typename T3, typename F,
+             typename ... Ts>
+    [[nodiscard]] DataFrameConstPtrView<IndexType>
+    get_view_by_sel(const char *name1,
+                    const char *name2,
+                    const char *name3,
+                    F &sel_functor) const;
 
     // This does the same function as above get_data_by_sel() but operating
     // on four columns.
@@ -1946,6 +1987,15 @@ public: // Read/access and slicing interfaces
                     const char *name3,
                     const char *name4,
                     F &sel_functor);
+
+    template<typename T1, typename T2, typename T3, typename T4, typename F,
+             typename ... Ts>
+    [[nodiscard]] DataFrameConstPtrView<IndexType>
+    get_view_by_sel(const char *name1,
+                    const char *name2,
+                    const char *name3,
+                    const char *name4,
+                    F &sel_functor) const;
 
     // This does the same function as above get_data_by_sel() but operating
     // on five columns.
@@ -2036,6 +2086,16 @@ public: // Read/access and slicing interfaces
                     const char *name4,
                     const char *name5,
                     F &sel_functor);
+
+    template<typename T1, typename T2, typename T3, typename T4, typename T5,
+             typename F, typename ... Ts>
+    [[nodiscard]] DataFrameConstPtrView<IndexType>
+    get_view_by_sel(const char *name1,
+                    const char *name2,
+                    const char *name3,
+                    const char *name4,
+                    const char *name5,
+                    F &sel_functor) const;
 
     // This method does boolean filtering selection via the sel_functor
     // (e.g. a functor, function, or lambda). It returns a new DataFrame.
@@ -2169,6 +2229,10 @@ public: // Read/access and slicing interfaces
     [[nodiscard]] DataFramePtrView<IndexType>
     get_view_by_rand(random_policy spec, double n, size_type seed = 0);
 
+    template<typename ... Ts>
+    [[nodiscard]] DataFrameConstPtrView<IndexType>
+    get_view_by_rand(random_policy spec, double n, size_type seed = 0) const;
+
     // This returns a DataFrame with index and col_names copied from the
     // original DataFrame
     //
@@ -2199,6 +2263,10 @@ public: // Read/access and slicing interfaces
     template<typename ... Ts>
     [[nodiscard]] DataFrameView<IndexType>
     get_view(const std::vector<const char *> &col_names);
+
+    template<typename ... Ts>
+    [[nodiscard]] DataFrameConstView<IndexType>
+    get_view(const std::vector<const char *> &col_names) const;
 
     // It returns a const reference to the index container
     //
@@ -2278,6 +2346,11 @@ public: // Read/access and slicing interfaces
     [[nodiscard]] DataFrameView<T>
     get_reindexed_view(const char *col_to_be_index,
                        const char *old_index_name = nullptr);
+
+    template<typename T, typename ... Ts>
+    [[nodiscard]] DataFrameConstView<T>
+    get_reindexed_view(const char *col_to_be_index,
+                       const char *old_index_name = nullptr) const;
 
     // This function returns a DataFrame indexed by std::string that provides
     // a few statistics about the columns of the calling DataFrame.

@@ -463,7 +463,15 @@ template<typename U>
 struct type_declare<HeteroView, U>  { using type = VectorView<U>; };
 
 template<typename U>
+struct type_declare<HeteroConstView, U>  { using type = VectorConstView<U>; };
+
+template<typename U>
 struct type_declare<HeteroPtrView, U>  { using type = VectorPtrView<U>; };
+
+template<typename U>
+struct type_declare<HeteroConstPtrView, U>  {
+    using type = VectorConstPtrView<U>;
+};
 
 // ----------------------------------------------------------------------------
 
@@ -488,7 +496,13 @@ template<typename I>
 using DataFrameView = DataFrame<I, HeteroView>;
 
 template<typename I>
+using DataFrameConstView = DataFrame<I, HeteroConstView>;
+
+template<typename I>
 using DataFramePtrView = DataFrame<I, HeteroPtrView>;
+
+template<typename I>
+using DataFrameConstPtrView = DataFrame<I, HeteroConstPtrView>;
 
 // ----------------------------------------------------------------------------
 

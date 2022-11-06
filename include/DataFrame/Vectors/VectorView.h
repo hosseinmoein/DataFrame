@@ -439,7 +439,8 @@ public:
     //        VectorView vv;
     //        vv.set_begin_end_special(&(*v.begin()), &(v.back()));
     //
-    inline void set_begin_end_special(value_type *bp, value_type *ep_1)  {
+    inline void
+    set_begin_end_special(const value_type *bp, const value_type *ep_1)  {
 
         begin_ptr_ = bp;
         end_ptr_ = ep_1;

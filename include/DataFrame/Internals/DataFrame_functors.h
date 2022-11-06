@@ -474,19 +474,19 @@ struct sel_load_functor_ : DataVec::template visitor_base<Ts ...>  {
 
 // ----------------------------------------------------------------------------
 
-template<typename IT, typename ... Ts>
+template<typename IT, typename DF, typename ... Ts>
 struct sel_load_view_functor_ : DataVec::template visitor_base<Ts ...>  {
 
     inline sel_load_view_functor_ (const char *n,
                                    const std::vector<IT> &si,
                                    size_type is,
-                                   DataFramePtrView<IndexType> &d)
+                                   DF &d)
         : name (n), sel_indices (si), indices_size(is), dfv(d)  {   }
 
-    const char                  *name;
-    const std::vector<IT>       &sel_indices;
-    const size_type             indices_size;
-    DataFramePtrView<IndexType> &dfv;
+    const char              *name;
+    const std::vector<IT>   &sel_indices;
+    const size_type         indices_size;
+    DF                      &dfv;
 
     template<typename T>
     void operator() (T &vec);
@@ -553,18 +553,18 @@ struct random_load_data_functor_ : DataVec::template visitor_base<Ts ...>  {
 
 // ----------------------------------------------------------------------------
 
-template<typename ... Ts>
+template<typename DF, typename ... Ts>
 struct random_load_view_functor_ : DataVec::template visitor_base<Ts ...>  {
 
     inline random_load_view_functor_ (
         const char *n,
         const std::vector<std::size_t>  &ri,
-        DataFramePtrView<IndexType> &d)
+        DF &d)
         : name (n), rand_indices (ri), dfv(d)  {   }
 
     const char                      *name;
     const std::vector<std::size_t>  &rand_indices;
-    DataFramePtrView<IndexType>     &dfv;
+    DF                              &dfv;
 
     template<typename T>
     void operator() (const T &vec);

@@ -94,7 +94,9 @@ DataFrame class is defined as:
   <UL>
     <LI><I>HeteroVector</I>: This is an actual heterogenous vector that would contain data. This will result in a "standard" data frame</LI>
     <LI><I>HeteroPtrView</I>: This is a heterogenous vector view. It will result in a data frame view into a <I>disjoined</I> slice of another data frame.</LI>
+    <LI><I>HeteroConstPtrView</I>: The const version of HeteroPtrView.</LI>
     <LI><I>HeteroView</I>: This is a heterogenous vector view. It will result in a data frame view into a <I>contiguous</I> slice of another data frame. This view is slightly more efficient than <I>HeteroPtrView</I></LI>
+    <LI><I>HeteroConstView</I>: The const version of HeteroView.</LI>
   </UL>
   Some of the methods in DataFrame return another DataFrame or one of the above views depending on what you asked for. DataFrame and view instances should be indistinguishable from the user's point of view.<BR>
   There are a few convenient typedef’s that are handy:<BR>
@@ -105,7 +107,13 @@ DataFrame class is defined as:
 <span style='color:#800000; font-weight:bold; '>using</span> DataFrameView <span style='color:#808030; '>=</span> DataFrame<span style='color:#800080; '>&lt;</span>I<span style='color:#808030; '>,</span> HeteroView<span style='color:#800080; '>></span><span style='color:#800080; '>;</span>
 
 <span style='color:#800000; font-weight:bold; '>template</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>typename</span> I<span style='color:#800080; '>></span>
+<span style='color:#800000; font-weight:bold; '>using</span> DataFrameConstView <span style='color:#808030; '>=</span> DataFrame<span style='color:#800080; '>&lt;</span>I<span style='color:#808030; '>,</span> HeteroConstView<span style='color:#800080; '>></span><span style='color:#800080; '>;</span>
+
+<span style='color:#800000; font-weight:bold; '>template</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>typename</span> I<span style='color:#800080; '>></span>
 <span style='color:#800000; font-weight:bold; '>using</span> DataFramePtrView <span style='color:#808030; '>=</span> DataFrame<span style='color:#800080; '>&lt;</span>I<span style='color:#808030; '>,</span> HeteroPtrView<span style='color:#800080; '>></span><span style='color:#800080; '>;</span>
+
+<span style='color:#800000; font-weight:bold; '>template</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>typename</span> I<span style='color:#800080; '>></span>
+<span style='color:#800000; font-weight:bold; '>using</span> DataFrameConstPtrView <span style='color:#808030; '>=</span> DataFrame<span style='color:#800080; '>&lt;</span>I<span style='color:#808030; '>,</span> HeteroConstPtrView<span style='color:#800080; '>></span><span style='color:#800080; '>;</span>
 </pre>
 <!--Created using ToHtml.com on 2020-06-10 15:24:27 UTC -->
 
@@ -1283,7 +1291,14 @@ table.hovertable td {
 
   <H2><font color="blue">Views</font></H2>
   <P>
-    Views have useful and practical use-cases. A view is a slice of a DataFrame that is a reference to the original DataFrame. It appears exactly the same as a DataFrame, but if you modify any data in the view, the corresponding data point(s) in the original DataFrame will also be modified and vice versa. There are certain things you cannot do in views. For example, you cannot add or delete columns, extend the index column, ...<BR>
+    Views have useful and practical use-cases. A view is a slice of a DataFrame that is a reference to the original DataFrame. It appears exactly the same as a DataFrame, but if you modify any data in the view, the corresponding data point(s) in the original DataFrame will also be modified and vice versa. There are certain things you cannot do in views. For example, you cannot add or delete columns, extend the index column, ...<BR><BR>
+
+	In general there are two kinds of views
+    <OL>
+      <LI>Regular Views: You can chnage data in the view or in the original DataFrame and see the change on both sides</LI>
+      <LI>Const Views: You can not change data in the view. But you can change the data in the original DataFrame or through another view and it will be refelcted in the const view</LI>
+    </OL>
+
     For more understanding, look at this document further and/or the test files.
   </P>
 

@@ -22,7 +22,7 @@ build_script:
   - mkdir build
   - cd build
   - cmake --version
-  - cmake C:\Repos\source -G "Visual Studio 2022 %arch%" -DHMDF_TESTING=ON -DHMDF_EXAMPLES=ON -DHMDF_BENCHMARKS=ON
+  - cmake C:\Repos\source -G "Visual Studio 17 2022" -DHMDF_TESTING=ON -DHMDF_EXAMPLES=ON -DHMDF_BENCHMARKS=ON
   - cmake --build . --config "Release"
 
 test_script:

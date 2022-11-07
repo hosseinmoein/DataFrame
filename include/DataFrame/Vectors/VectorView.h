@@ -121,7 +121,7 @@ public:
 
     VectorView &operator= (std::vector<T> &rhs)  {
 
-        VectorView  vw(&*(rhs.begin()), &*(rhs.end()));
+        VectorView  vw(&*(rhs.begin()), &(rhs.back()) + 1);
 
         swap(vw);
         return (*this);
@@ -477,7 +477,7 @@ public:
 
     VectorConstView &operator= (const std::vector<T> &rhs)  {
 
-        VectorConstView  vw(&*(rhs.begin()), &*(rhs.end()));
+        VectorConstView  vw(&*(rhs.begin()), &(rhs.back()) + 1);
 
         swap(vw);
         return (*this);

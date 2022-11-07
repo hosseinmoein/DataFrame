@@ -96,7 +96,7 @@ HeteroPtrView HeteroVector::get_ptr_view(size_type begin, size_type end)  {
 
     return (HeteroPtrView(
         &(*(vec.begin() + begin)),
-        end == size_type(-1) ? &(*(vec.end())) : &(*(vec.begin() + end))));
+        end == size_type(-1) ? &(vec.back()) + 1 : &(*(vec.begin() + end))));
 }
 
 // ----------------------------------------------------------------------------
@@ -109,7 +109,7 @@ get_ptr_view(size_type begin, size_type end) const  {
 
     return (HeteroConstPtrView(
         &(*(vec.begin() + begin)),
-        end == size_type(-1) ? &(*(vec.end())) : &(*(vec.begin() + end))));
+        end == size_type(-1) ? &(vec.back()) + 1 : &(*(vec.begin() + end))));
 }
 
 // ----------------------------------------------------------------------------

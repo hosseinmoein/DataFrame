@@ -6,4 +6,4 @@ hmdf_target_data_files(hello_world
         ${PROJECT_SOURCE_DIR}/data/DT_IBM.csv
         ${PROJECT_SOURCE_DIR}/data/DT_AAPL.csv
 )
-## add_test(NAME hello_world COMMAND hello_world)
+add_test(NAME hello_world COMMAND hello_world)

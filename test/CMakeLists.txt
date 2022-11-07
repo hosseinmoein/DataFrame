@@ -34,10 +34,10 @@ hmdf_target_data_files(dataframe_tester_2
         ${PROJECT_SOURCE_DIR}/data/SHORT_IBM.csv
 )
 add_test(NAME dataframe_tester_2 COMMAND dataframe_tester_2)
-if(MSVC)
-    # For some unknown reason to me, this test sigfaults in AppVeyor
-    set_tests_properties(dataframe_tester_2 PROPERTIES DISABLED TRUE)
-endif()
+# if(MSVC)
+#     # For some unknown reason to me, this test sigfaults in AppVeyor
+#     set_tests_properties(dataframe_tester_2 PROPERTIES DISABLED TRUE)
+# endif()
 
 add_executable(dataframe_tester_3 dataframe_tester_3.cc)
 target_link_libraries(dataframe_tester_3 PRIVATE DataFrame)

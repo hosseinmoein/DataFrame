@@ -1743,14 +1743,6 @@ get_view_by_sel(const char *name1,
 
 // ----------------------------------------------------------------------------
 
-
-
-
-
-
-
-
-
 template<typename I, typename  H>
 template<typename T1, typename T2, typename T3, typename T4, typename T5,
          typename F, typename ... Ts>

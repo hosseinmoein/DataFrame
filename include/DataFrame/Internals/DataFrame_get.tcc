@@ -2203,7 +2203,7 @@ get_reindexed_view(const char *col_to_be_index, const char *old_index_name)  {
     const size_type     new_idx_s = new_idx.size();
 
     result.indices_ = typename DataFrameView<T>::IndexVecType();
-    result.indices_.set_begin_end_special(&*(new_idx.begin()),
+    result.indices_.set_begin_end_special(&(new_idx.front()),
                                           &(new_idx.back()));
     if (old_index_name)  {
         auto            &curr_idx = get_index();
@@ -2247,7 +2247,7 @@ get_reindexed_view(const char *col_to_be_index,
     const size_type         new_idx_s = new_idx.size();
 
     result.indices_ = typename DataFrameConstView<T>::IndexVecType();
-    result.indices_.set_begin_end_special(&*(new_idx.begin()),
+    result.indices_.set_begin_end_special(&(new_idx.front()),
                                           &(new_idx.back()));
     if (old_index_name)  {
         auto            &curr_idx = get_index();

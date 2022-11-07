@@ -434,7 +434,7 @@ DataFrame<I, H>::get_view_by_idx (Index2D<IndexType> range)  {
         if (upper != indices_.end())
             upper_address = &*upper;
         else
-            upper_address = &*(indices_.begin()) + e_dist;
+            upper_address = &(indices_.front()) + e_dist;
         dfv.indices_ =
             typename DataFrameView<IndexType>::IndexVecType(&*lower,
                                                             upper_address);
@@ -480,7 +480,7 @@ DataFrame<I, H>::get_view_by_idx (Index2D<IndexType> range) const  {
         if (upper != indices_.end())
             upper_address = &*upper;
         else
-            upper_address = &*(indices_.begin()) + e_dist;
+            upper_address = &(indices_.front()) + e_dist;
         dfcv.indices_ =
             typename DataFrameConstView<IndexType>::IndexVecType(
                 &*lower,

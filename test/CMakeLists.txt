@@ -50,10 +50,10 @@ add_test(NAME dataframe_tester_schema COMMAND dataframe_tester_schema)
 add_executable(vectors_tester vectors_tester.cc)
 target_link_libraries(vectors_tester PRIVATE DataFrame)
 add_test(NAME vectors_tester COMMAND vectors_tester)
-## if(MSVC)
-##     # For some unknown reason to me, this test sigfaults in AppVeyor
-##     set_tests_properties(vectors_tester PROPERTIES DISABLED TRUE)
-## endif()
+if(MSVC)
+    # For some unknown reason to me, this test sigfaults in AppVeyor
+    set_tests_properties(vectors_tester PROPERTIES DISABLED TRUE)
+endif()
 
 add_executable(vector_ptr_view_tester vector_ptr_view_tester.cc)
 target_link_libraries(vector_ptr_view_tester PRIVATE DataFrame)

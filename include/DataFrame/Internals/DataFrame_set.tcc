@@ -391,6 +391,58 @@ load_column (const char *name,
 // ----------------------------------------------------------------------------
 
 template<typename I, typename  H>
+template<typename V>
+typename DataFrame<I, H>::size_type
+DataFrame<I, H>::
+load_result_as_column(V &visitor, const char *name, nan_policy padding)  {
+
+    const size_type idx_s = indices_.size();
+    auto            &new_col = visitor.get_result();
+    const size_type data_s = new_col.size();
+
+    if (data_s > idx_s)  {
+        char buffer [512];
+
+        snprintf (buffer, sizeof(buffer) - 1,
+                  "DataFrame::load_result_as_column(): ERROR: "
+#ifdef _MSC_VER
+                  "data size of %zu is larger than index size of %zu",
+#else
+                  "data size of %lu is larger than index size of %lu",
+#endif // _MSC_VER
+                 data_s, idx_s);
+        throw InconsistentData (buffer);
+    }
+
+    using new_type = typename V::result_type::value_type;
+
+    size_type   ret_cnt = data_s;
+
+    if (padding == nan_policy::pad_with_nans && data_s < idx_s)
+        for (size_type i = 0; i < idx_s - data_s; ++i)  {
+            new_col.push_back (std::move(get_nan<new_type>()));
+            ret_cnt += 1;
+        }
+
+    const auto              iter = column_tb_.find (name);
+    std::vector<new_type>   *vec_ptr = nullptr;
+
+    if (iter == column_tb_.end())
+        vec_ptr = &(create_column<new_type>(name));
+    else  {
+        const SpinGuard guard(lock_);
+        DataVec         &hv = data_[iter->second];
+
+        vec_ptr = &(hv.template get_vector<new_type>());
+    }
+
+    *vec_ptr = std::move(new_col);
+    return (ret_cnt);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
 template<typename T, typename ITR>
 void DataFrame<I, H>::
 setup_view_column_ (const char *name, Index2D<ITR> range)  {

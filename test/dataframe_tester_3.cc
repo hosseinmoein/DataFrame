@@ -895,6 +895,43 @@ static void test_append_row()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_load_result_as_column()  {
+
+    std::cout << "\nTesting load_result_as_column( ) ..." << std::endl;
+
+    typedef StdDataFrame<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("data/SHORT_IBM.csv", io_format::csv2);
+
+        // CoppockCurveVisitor
+        //
+        coppc_v<double, std::string>  copp;
+
+        df.single_act_visit<double>("IBM_Close", copp);
+        df.load_result_as_column(copp, "IBM_close_curve");
+
+        const auto curve_col = df.get_column<double>("IBM_close_curve");
+
+        assert(curve_col.size() == 1721);
+        assert(std::isnan(curve_col[0]));
+        assert(std::abs(curve_col[14] - -0.051884971603) < 0.0000001);
+        assert(std::abs(curve_col[18] - -0.100660882748) < 0.0000001);
+        assert(std::abs(curve_col[25] - -0.124090378548) < 0.0000001);
+        assert(std::abs(curve_col[1720] - -0.219247796696) < 0.0000001);
+        assert(std::abs(curve_col[1712] - 0.0630742594051) < 0.0000001);
+        assert(std::abs(curve_col[1707] - 0.0766481878384) < 0.0000001);
+        assert(copp.get_result().size() == 0); // Data was moved
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     test_groupby_edge();
@@ -913,6 +950,7 @@ int main(int, char *[]) {
     test_describe();
     test_T3MovingMeanVisitor();
     test_append_row();
+    test_load_result_as_column();
 
     /*
     hmdf::SpinLock      locker;

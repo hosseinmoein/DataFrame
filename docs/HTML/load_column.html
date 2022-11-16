@@ -57,7 +57,7 @@ load_column(const char *name,
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>
-template&lt;typename&gt;
+template&lt;typename T&gt;
 std::size_t
 load_column(const char *name,
             std::vector&lt;T&gt; &amp;&amp;data,
@@ -81,7 +81,7 @@ load_column(const char *name,
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>
-template&lt;typename&gt;
+template&lt;typename T&gt;
 std::size_t
 load_column(const char *name,
             const std::vector&lt;T&gt; &amp;data,
@@ -105,7 +105,7 @@ load_column(const char *name,
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>
-template&lt;typename&gt;
+template&lt;typename T&gt;
 std::size_t
 load_align_column(
     const char *name,
@@ -134,6 +134,34 @@ load_align_column(
         <B>start_from_beginning</B>: If true, the first data value will be associated with the first index value. If false, the first data value will be associated with index value interval away from the first index value<BR>
         <B>null_value</B>: The value to fill the new column in-between intervals. The default is T version of NaN. For None NaN'able types, it will be default value for T<BR>
         <B>diff_func</B>: Function to calculate distance between two index values
+      </td>
+    </tr>
+
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        <PRE><B>
+template&lt;typename V&gt;
+std::size_t
+load_result_as_column(V &amp;visitor,
+                      const char *name,
+                      nan_policy padding = nan_policy::pad_with_nans);
+        </B></PRE></font>
+      </td>
+      <td>
+        This is a convenient method to load the result of a visitor (i.e. algorithm) as a column in DataFrame<BR>
+		For this method to work:
+		<OL>
+          <LI>The visitor must have a <I>result()</I> method</LI>
+          <LI>The result must be a std::vector or similar</LI>
+          <LI>The visitor must define <I>result_type</I> type</LI>
+		</OL>
+        <B>NOTE:</B> This call moves the result vector to the DataFrame. After the call the the visitor's result vector will be empty
+      </td>
+      <td>
+        <B>V</B>: Visitor type<BR>
+        <B>visitor</B>: A reference to a visitor instance<BR>
+        <B>name</B>: Name of the column<BR>
+        <B>padding</B>: If true, it pads the data column with nan if it is shorter than the index column.<BR>
       </td>
     </tr>
 
@@ -173,6 +201,45 @@ load_align_column(
 <span style='color:#800080; '>}</span>
 </pre>
   <!--Created using ToHtml.com on 2020-05-06 16:04:09 UTC -->
+
+<!-- HTML generated using hilite.me --><div style="background: #ffffff; overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #888888">// -----------------------------------------------------------------------------</span>
+
+<span style="color: #008800; font-weight: bold">static</span> <span style="color: #333399; font-weight: bold">void</span> <span style="color: #0066BB; font-weight: bold">test_load_result_as_column</span>()  {
+
+    std<span style="color: #333333">::</span>cout <span style="color: #333333">&lt;&lt;</span> <span style="background-color: #fff0f0">&quot;</span><span style="color: #666666; font-weight: bold; background-color: #fff0f0">\n</span><span style="background-color: #fff0f0">Testing load_result_as_column( ) ...&quot;</span> <span style="color: #333333">&lt;&lt;</span> std<span style="color: #333333">::</span>endl;
+
+    <span style="color: #008800; font-weight: bold">typedef</span> StdDataFrame<span style="color: #333333">&lt;</span>std<span style="color: #333333">::</span>string<span style="color: #333333">&gt;</span> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read(<span style="background-color: #fff0f0">&quot;data/SHORT_IBM.csv&quot;</span>, io_format<span style="color: #333333">::</span>csv2);
+
+        <span style="color: #888888">// CoppockCurveVisitor</span>
+        <span style="color: #888888">//</span>
+        coppc_v<span style="color: #333333">&lt;</span><span style="color: #333399; font-weight: bold">double</span>, std<span style="color: #333333">::</span>string<span style="color: #333333">&gt;</span>  copp;
+
+        df.single_act_visit<span style="color: #333333">&lt;</span><span style="color: #333399; font-weight: bold">double</span><span style="color: #333333">&gt;</span>(<span style="background-color: #fff0f0">&quot;IBM_Close&quot;</span>, copp);
+        df.load_result_as_column(copp, <span style="background-color: #fff0f0">&quot;IBM_close_curve&quot;</span>);
+
+        <span style="color: #008800; font-weight: bold">const</span> <span style="color: #008800; font-weight: bold">auto</span> curve_col <span style="color: #333333">=</span> df.get_column<span style="color: #333333">&lt;</span><span style="color: #333399; font-weight: bold">double</span><span style="color: #333333">&gt;</span>(<span style="background-color: #fff0f0">&quot;IBM_close_curve&quot;</span>);
+
+        assert(curve_col.size() <span style="color: #333333">==</span> <span style="color: #0000DD; font-weight: bold">1721</span>);
+        assert(std<span style="color: #333333">::</span>isnan(curve_col[<span style="color: #0000DD; font-weight: bold">0</span>]));
+        assert(std<span style="color: #333333">::</span>abs(curve_col[<span style="color: #0000DD; font-weight: bold">14</span>] <span style="color: #333333">-</span> <span style="color: #333333">-</span><span style="color: #6600EE; font-weight: bold">0.051884971603</span>) <span style="color: #333333">&lt;</span> <span style="color: #6600EE; font-weight: bold">0.0000001</span>);
+        assert(std<span style="color: #333333">::</span>abs(curve_col[<span style="color: #0000DD; font-weight: bold">18</span>] <span style="color: #333333">-</span> <span style="color: #333333">-</span><span style="color: #6600EE; font-weight: bold">0.100660882748</span>) <span style="color: #333333">&lt;</span> <span style="color: #6600EE; font-weight: bold">0.0000001</span>);
+        assert(std<span style="color: #333333">::</span>abs(curve_col[<span style="color: #0000DD; font-weight: bold">25</span>] <span style="color: #333333">-</span> <span style="color: #333333">-</span><span style="color: #6600EE; font-weight: bold">0.124090378548</span>) <span style="color: #333333">&lt;</span> <span style="color: #6600EE; font-weight: bold">0.0000001</span>);
+        assert(std<span style="color: #333333">::</span>abs(curve_col[<span style="color: #0000DD; font-weight: bold">1720</span>] <span style="color: #333333">-</span> <span style="color: #333333">-</span><span style="color: #6600EE; font-weight: bold">0.219247796696</span>) <span style="color: #333333">&lt;</span> <span style="color: #6600EE; font-weight: bold">0.0000001</span>);
+        assert(std<span style="color: #333333">::</span>abs(curve_col[<span style="color: #0000DD; font-weight: bold">1712</span>] <span style="color: #333333">-</span> <span style="color: #6600EE; font-weight: bold">0.0630742594051</span>) <span style="color: #333333">&lt;</span> <span style="color: #6600EE; font-weight: bold">0.0000001</span>);
+        assert(std<span style="color: #333333">::</span>abs(curve_col[<span style="color: #0000DD; font-weight: bold">1707</span>] <span style="color: #333333">-</span> <span style="color: #6600EE; font-weight: bold">0.0766481878384</span>) <span style="color: #333333">&lt;</span> <span style="color: #6600EE; font-weight: bold">0.0000001</span>);
+        assert(copp.get_result().size() <span style="color: #333333">==</span> <span style="color: #0000DD; font-weight: bold">0</span>); <span style="color: #888888">// Data was moved</span>
+    }
+    <span style="color: #008800; font-weight: bold">catch</span> (<span style="color: #008800; font-weight: bold">const</span> DataFrameError <span style="color: #333333">&amp;</span>ex)  {
+        std<span style="color: #333333">::</span>cout <span style="color: #333333">&lt;&lt;</span> ex.what() <span style="color: #333333">&lt;&lt;</span> std<span style="color: #333333">::</span>endl;
+    }
+}
+</pre></div>
+
 
   <img src="https://github.com/hosseinmoein/DataFrame/blob/master/docs/LionLookingUp.jpg?raw=true" alt="C++ DataFrame"
        width="200" height="150" style="float:right"/>

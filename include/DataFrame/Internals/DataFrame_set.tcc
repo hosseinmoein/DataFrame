@@ -30,6 +30,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/DataFrame.h>
 
 #include <cstring>
+#include <string>
+#include <unordered_map>
 
 // ----------------------------------------------------------------------------
 
@@ -443,6 +445,44 @@ load_result_as_column(V &visitor, const char *name, nan_policy padding)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename  H>
+template<typename T, typename NT>
+typename DataFrame<I, H>::size_type
+DataFrame<I, H>::
+load_indicators(const char *cat_col_name, const char *numeric_cols_prefix)  {
+
+    using map_t = std::unordered_map<T, std::vector<NT> *>;
+
+    const auto  &cat_col = get_column<T>(cat_col_name);
+    const auto  col_s = cat_col.size();
+    map_t       val_map;
+    size_type   ret_cnt = 0;
+
+    val_map.reserve(col_s / 2);
+    for (size_type i = 0; i < col_s; ++i)  {
+        const auto  val = cat_col[i];
+        auto        in_ret = val_map.emplace(std::make_pair(val, nullptr));
+
+        if (in_ret.second)  {
+            ColNameType new_name;
+
+            if (numeric_cols_prefix)
+                new_name = numeric_cols_prefix;
+            new_name += _to_string_(val).c_str();
+
+            auto    *num_col = &(create_column<NT>(new_name.c_str()));
+
+            num_col->resize(col_s, NT(0));
+            in_ret.first->second = num_col;
+            ret_cnt += col_s;
+        }
+        in_ret.first->second->at(i) = NT(1);
+    }
+    return (ret_cnt);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
 template<typename T, typename ITR>
 void DataFrame<I, H>::
 setup_view_column_ (const char *name, Index2D<ITR> range)  {
@@ -694,7 +734,7 @@ DataFrame<I, H>::append_row_(std::pair<const char *, T> &row_name_data)  {
 
     return (append_column<T>(row_name_data.first, // column name
                              std::forward<T>(row_name_data.second),
-							 nan_policy::dont_pad_with_nans));
+                             nan_policy::dont_pad_with_nans));
 }
 
 // ----------------------------------------------------------------------------

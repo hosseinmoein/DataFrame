@@ -34,6 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cassert>
 #include <cstring>
 #include <iostream>
+#include <sstream>
 #include <tuple>
 #include <utility>
 
@@ -1123,6 +1124,17 @@ inline static O _remove_copy_if_(I first, I last, O d_first, PRE predicate)  {
             *d_first++ = *i;
 
     return d_first;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
+inline std::string _to_string_(const T &value)  {
+
+    std::stringstream   ss;
+
+    ss << value;
+    return (ss.str());
 }
 
 } // namespace hmdf

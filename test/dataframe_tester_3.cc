@@ -851,7 +851,7 @@ static void test_append_row()  {
 
     std::cout << "\nTesting append_row( ) ..." << std::endl;
 
-    MyDataFrame                df;
+    MyDataFrame                 df;
     std::vector<unsigned long>  idxvec =
         { 1UL, 2UL, 3UL, 10UL, 5UL, 7UL, 8UL, 12UL, 9UL, 12UL, 10UL, 13UL,
           10UL, 15UL, 14UL };
@@ -875,7 +875,7 @@ static void test_append_row()  {
     df.write<std::ostream, std::string, double, int>
         (std::cout, io_format::csv2);
 
-	unsigned long   index_val = 15;
+    unsigned long   index_val = 15;
 
     df.append_row(&index_val,
                   std::make_pair("dbl_col", 100.0),
@@ -932,6 +932,53 @@ static void test_load_result_as_column()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_load_indicators()  {
+
+    std::cout << "\nTesting load_indicators( ) ..." << std::endl;
+
+    MyDataFrame                 df;
+    std::vector<unsigned long>  idxvec =
+        { 1UL, 2UL, 3UL, 10UL, 5UL, 7UL, 8UL, 12UL, 9UL, 12UL, 10UL, 13UL,
+          10UL, 15UL, 14UL };
+    std::vector<double>         dblvec =
+        { 0.0, 15.0, 14.0, 0.0, 1.0, 14.0, 11.5, 11.5, 7.25, 7.25, 7.25, 14.0,
+          7.25, 15.0, 0.0};
+    std::vector<double>         dblvec2 =
+        { 100.0, 101.0, 102.0, 103.0, 104.0, 105.0, 106.55, 107.34, 1.8,
+          111.0, 112.0, 113.0, 114.0, 115.0, 116.0};
+    std::vector<int>            intvec = { 1, 2, 3, 4, 5, 8, 6, 7, 11, 14, 9 };
+    std::vector<std::string>    strvec =
+        { "blue", "blue", "red", "green", "black", "green", "white", "black",
+          "black", "white", "red", "yellow", "green", "green", "green" };
+    df.load_data(std::move(idxvec),
+                 std::make_pair("levels", dblvec),
+                 std::make_pair("dbl_col_2", dblvec2),
+                 std::make_pair("colors", strvec));
+    df.load_column("int_col", std::move(intvec),
+                   nan_policy::dont_pad_with_nans);
+
+    df.write<std::ostream, std::string, double, int>
+        (std::cout, io_format::csv2);
+
+    auto  count = df.load_indicators<std::string>("colors");
+
+    df.write<std::ostream, std::string, double, int>
+        (std::cout, io_format::csv2);
+    std::cout << "Load count: " << count << std::endl;
+
+    count = df.load_indicators<std::string, bool>("colors", "bool_");
+    df.write<std::ostream, std::string, double, int, bool>
+        (std::cout, io_format::csv2);
+    std::cout << "Load count: " << count << std::endl;
+
+    count = df.load_indicators<double, double>("levels", "level_");
+    df.write<std::ostream, std::string, double, int, bool>
+        (std::cout, io_format::csv2);
+    std::cout << "Load count: " << count << std::endl;
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     test_groupby_edge();
@@ -951,6 +998,7 @@ int main(int, char *[]) {
     test_T3MovingMeanVisitor();
     test_append_row();
     test_load_result_as_column();
+    test_load_indicators();
 
     /*
     hmdf::SpinLock      locker;

@@ -192,7 +192,10 @@ public:
 
         va_start (argument_ptr, format_str);
 
-        const int   ret = ::vsnprintf (string_, 1000000, format_str, argument_ptr);
+        const int   ret = ::vsnprintf (string_,
+                                       1000000,
+                                       format_str,
+                                       argument_ptr);
 
         va_end (argument_ptr);
         return (ret);

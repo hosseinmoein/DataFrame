@@ -1,0 +1,169 @@
+<!--
+Copyright (c) 2019-2026, Hossein Moein
+All rights reserved.
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+* Redistributions of source code must retain the above copyright
+  notice, this list of conditions and the following disclaimer.
+* Redistributions in binary form must reproduce the above copyright
+  notice, this list of conditions and the following disclaimer in the
+  documentation and/or other materials provided with the distribution.
+* Neither the name of Hossein Moein and/or the DataFrame nor the
+  names of its contributors may be used to endorse or promote products
+  derived from this software without specific prior written permission.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL Hossein Moein BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+<!DOCTYPE html>
+<html>
+<body>
+  <table align="center" border="1">
+
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        <PRE><B>
+template&lt;typename V, typename IT = int&gt;
+std::size_t
+load_indicators(const char *cat_col_name,
+                const char *numeric_cols_prefix = nullptr);
+        </B></PRE></font>
+      </td>
+      <td>
+        Given a categorical (nominal) column, it generates a series of numerical columns (0 or 1) for each category in the given column.<BR>
+        These numeric indictors encode categorical information.<BR>
+        In machine learning, this is also sometimes referred to as “one-hot” encoding of categorical data<BR><BR>
+        <B>NOTE:</B> The values of the categorical column must be converted to string to generate names for indicator columns<BR>
+        <B>NOTE:</B> The values of the categorical column must be hashable<BR>
+      </td>
+      <td>
+        <B>T</B>: Type of the named categorical column<BR>
+        <B>IT</B>: Type of the generated numerical indicator columns<BR>
+        <B>cat_col_name</B>: Name of the categorical column<BR>
+        <B>numeric_cols_prefix</B>: Optional prefix for generated column names<BR>
+      </td>
+    </tr>
+
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        <PRE><B>
+template&lt;typename V = int, typename CT = std::string&gt;
+std::size_t
+from_indicators(const std::vector<const char *> &amp;ind_col_names,
+                const char *cat_col_name,
+                const char *numeric_cols_prefix = nullptr);
+        </B></PRE></font>
+      </td>
+      <td>
+        This does the opposite of the load_indicators(). Given a bunch of one-hot indicator columns, it reconstructs the category column.<BR>
+      </td>
+      <td>
+        <B>T</B>: Type of the indicator columns<BR>
+        <B>CT</B>: Type of the new categorical column<BR>
+        <B>ind_col_names</B>: Names of the indicator columns<BR>
+        <B>cat_col_name</B>: Name of the new categorical column<BR>
+        <B>numeric_cols_prefix</B>: Prefix of indicator column names<BR>
+      </td>
+    </tr>
+
+  </table>
+
+<!-- HTML generated using hilite.me --><div style="background: #ffffff; overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #008800; font-weight: bold">static</span> <span style="color: #333399; font-weight: bold">void</span> <span style="color: #0066BB; font-weight: bold">test_load_indicators</span>()  {
+
+    std<span style="color: #333333">::</span>cout <span style="color: #333333">&lt;&lt;</span> <span style="background-color: #fff0f0">&quot;</span><span style="color: #666666; font-weight: bold; background-color: #fff0f0">\n</span><span style="background-color: #fff0f0">Testing load_indicators( ) ...&quot;</span> <span style="color: #333333">&lt;&lt;</span> std<span style="color: #333333">::</span>endl;
+
+    MyDataFrame                 df;
+    std<span style="color: #333333">::</span>vector<span style="color: #333333">&lt;</span><span style="color: #333399; font-weight: bold">unsigned</span> <span style="color: #333399; font-weight: bold">long</span><span style="color: #333333">&gt;</span>  idxvec <span style="color: #333333">=</span>
+        { <span style="color: #0000DD; font-weight: bold">1UL</span>, <span style="color: #0000DD; font-weight: bold">2UL</span>, <span style="color: #0000DD; font-weight: bold">3UL</span>, <span style="color: #0000DD; font-weight: bold">10UL</span>, <span style="color: #0000DD; font-weight: bold">5UL</span>, <span style="color: #0000DD; font-weight: bold">7UL</span>, <span style="color: #0000DD; font-weight: bold">8UL</span>, <span style="color: #0000DD; font-weight: bold">12UL</span>, <span style="color: #0000DD; font-weight: bold">9UL</span>, <span style="color: #0000DD; font-weight: bold">12UL</span>, <span style="color: #0000DD; font-weight: bold">10UL</span>, <span style="color: #0000DD; font-weight: bold">13UL</span>, <span style="color: #0000DD; font-weight: bold">10UL</span>, <span style="color: #0000DD; font-weight: bold">15UL</span>, <span style="color: #0000DD; font-weight: bold">14UL</span> };
+    std<span style="color: #333333">::</span>vector<span style="color: #333333">&lt;</span><span style="color: #333399; font-weight: bold">double</span><span style="color: #333333">&gt;</span>         dblvec <span style="color: #333333">=</span>
+        { <span style="color: #6600EE; font-weight: bold">0.0</span>, <span style="color: #6600EE; font-weight: bold">15.0</span>, <span style="color: #6600EE; font-weight: bold">14.0</span>, <span style="color: #6600EE; font-weight: bold">0.0</span>, <span style="color: #6600EE; font-weight: bold">1.0</span>, <span style="color: #6600EE; font-weight: bold">14.0</span>, <span style="color: #6600EE; font-weight: bold">11.5</span>, <span style="color: #6600EE; font-weight: bold">11.5</span>, <span style="color: #6600EE; font-weight: bold">7.25</span>, <span style="color: #6600EE; font-weight: bold">7.25</span>, <span style="color: #6600EE; font-weight: bold">7.25</span>, <span style="color: #6600EE; font-weight: bold">14.0</span>, <span style="color: #6600EE; font-weight: bold">7.25</span>, <span style="color: #6600EE; font-weight: bold">15.0</span>, <span style="color: #6600EE; font-weight: bold">0.0</span>};
+    std<span style="color: #333333">::</span>vector<span style="color: #333333">&lt;</span><span style="color: #333399; font-weight: bold">double</span><span style="color: #333333">&gt;</span>         dblvec2 <span style="color: #333333">=</span>
+        { <span style="color: #6600EE; font-weight: bold">100.0</span>, <span style="color: #6600EE; font-weight: bold">101.0</span>, <span style="color: #6600EE; font-weight: bold">102.0</span>, <span style="color: #6600EE; font-weight: bold">103.0</span>, <span style="color: #6600EE; font-weight: bold">104.0</span>, <span style="color: #6600EE; font-weight: bold">105.0</span>, <span style="color: #6600EE; font-weight: bold">106.55</span>, <span style="color: #6600EE; font-weight: bold">107.34</span>, <span style="color: #6600EE; font-weight: bold">1.8</span>, <span style="color: #6600EE; font-weight: bold">111.0</span>, <span style="color: #6600EE; font-weight: bold">112.0</span>, <span style="color: #6600EE; font-weight: bold">113.0</span>, <span style="color: #6600EE; font-weight: bold">114.0</span>, <span style="color: #6600EE; font-weight: bold">115.0</span>, <span style="color: #6600EE; font-weight: bold">116.0</span>};
+    std<span style="color: #333333">::</span>vector<span style="color: #333333">&lt;</span><span style="color: #333399; font-weight: bold">int</span><span style="color: #333333">&gt;</span>            intvec <span style="color: #333333">=</span> { <span style="color: #0000DD; font-weight: bold">1</span>, <span style="color: #0000DD; font-weight: bold">2</span>, <span style="color: #0000DD; font-weight: bold">3</span>, <span style="color: #0000DD; font-weight: bold">4</span>, <span style="color: #0000DD; font-weight: bold">5</span>, <span style="color: #0000DD; font-weight: bold">8</span>, <span style="color: #0000DD; font-weight: bold">6</span>, <span style="color: #0000DD; font-weight: bold">7</span>, <span style="color: #0000DD; font-weight: bold">11</span>, <span style="color: #0000DD; font-weight: bold">14</span>, <span style="color: #0000DD; font-weight: bold">9</span> };
+    std<span style="color: #333333">::</span>vector<span style="color: #333333">&lt;</span>std<span style="color: #333333">::</span>string<span style="color: #333333">&gt;</span>    strvec <span style="color: #333333">=</span>
+        { <span style="background-color: #fff0f0">&quot;blue&quot;</span>, <span style="background-color: #fff0f0">&quot;blue&quot;</span>, <span style="background-color: #fff0f0">&quot;red&quot;</span>, <span style="background-color: #fff0f0">&quot;green&quot;</span>, <span style="background-color: #fff0f0">&quot;black&quot;</span>, <span style="background-color: #fff0f0">&quot;green&quot;</span>, <span style="background-color: #fff0f0">&quot;white&quot;</span>, <span style="background-color: #fff0f0">&quot;black&quot;</span>,
+          <span style="background-color: #fff0f0">&quot;black&quot;</span>, <span style="background-color: #fff0f0">&quot;white&quot;</span>, <span style="background-color: #fff0f0">&quot;red&quot;</span>, <span style="background-color: #fff0f0">&quot;yellow&quot;</span>, <span style="background-color: #fff0f0">&quot;green&quot;</span>, <span style="background-color: #fff0f0">&quot;green&quot;</span>, <span style="background-color: #fff0f0">&quot;green&quot;</span> };
+    df.load_data(std<span style="color: #333333">::</span>move(idxvec),
+                 std<span style="color: #333333">::</span>make_pair(<span style="background-color: #fff0f0">&quot;levels&quot;</span>, dblvec),
+                 std<span style="color: #333333">::</span>make_pair(<span style="background-color: #fff0f0">&quot;dbl_col_2&quot;</span>, dblvec2),
+                 std<span style="color: #333333">::</span>make_pair(<span style="background-color: #fff0f0">&quot;colors&quot;</span>, strvec));
+    df.load_column(<span style="background-color: #fff0f0">&quot;int_col&quot;</span>, std<span style="color: #333333">::</span>move(intvec), nan_policy<span style="color: #333333">::</span>dont_pad_with_nans);
+
+    df.write<span style="color: #333333">&lt;</span>std<span style="color: #333333">::</span>ostream, std<span style="color: #333333">::</span>string, <span style="color: #333399; font-weight: bold">double</span>, <span style="color: #333399; font-weight: bold">int</span><span style="color: #333333">&gt;</span>(std<span style="color: #333333">::</span>cout, io_format<span style="color: #333333">::</span>csv2);
+
+    <span style="color: #008800; font-weight: bold">auto</span>  count <span style="color: #333333">=</span> df.load_indicators<span style="color: #333333">&lt;</span>std<span style="color: #333333">::</span>string<span style="color: #333333">&gt;</span>(<span style="background-color: #fff0f0">&quot;colors&quot;</span>);
+
+    df.write<span style="color: #333333">&lt;</span>std<span style="color: #333333">::</span>ostream, std<span style="color: #333333">::</span>string, <span style="color: #333399; font-weight: bold">double</span>, <span style="color: #333399; font-weight: bold">int</span><span style="color: #333333">&gt;</span>(std<span style="color: #333333">::</span>cout, io_format<span style="color: #333333">::</span>csv2);
+    std<span style="color: #333333">::</span>cout <span style="color: #333333">&lt;&lt;</span> <span style="background-color: #fff0f0">&quot;Load count: &quot;</span> <span style="color: #333333">&lt;&lt;</span> count <span style="color: #333333">&lt;&lt;</span> std<span style="color: #333333">::</span>endl;
+
+    count <span style="color: #333333">=</span> df.load_indicators<span style="color: #333333">&lt;</span>std<span style="color: #333333">::</span>string, <span style="color: #333399; font-weight: bold">bool</span><span style="color: #333333">&gt;</span>(<span style="background-color: #fff0f0">&quot;colors&quot;</span>, <span style="background-color: #fff0f0">&quot;bool_&quot;</span>);
+    df.write<span style="color: #333333">&lt;</span>std<span style="color: #333333">::</span>ostream, std<span style="color: #333333">::</span>string, <span style="color: #333399; font-weight: bold">double</span>, <span style="color: #333399; font-weight: bold">int</span>, <span style="color: #333399; font-weight: bold">bool</span><span style="color: #333333">&gt;</span>(std<span style="color: #333333">::</span>cout, io_format<span style="color: #333333">::</span>csv2);
+    std<span style="color: #333333">::</span>cout <span style="color: #333333">&lt;&lt;</span> <span style="background-color: #fff0f0">&quot;Load count: &quot;</span> <span style="color: #333333">&lt;&lt;</span> count <span style="color: #333333">&lt;&lt;</span> std<span style="color: #333333">::</span>endl;
+
+    count <span style="color: #333333">=</span> df.load_indicators<span style="color: #333333">&lt;</span><span style="color: #333399; font-weight: bold">double</span>, <span style="color: #333399; font-weight: bold">double</span><span style="color: #333333">&gt;</span>(<span style="background-color: #fff0f0">&quot;levels&quot;</span>, <span style="background-color: #fff0f0">&quot;level_&quot;</span>);
+    df.write<span style="color: #333333">&lt;</span>std<span style="color: #333333">::</span>ostream, std<span style="color: #333333">::</span>string, <span style="color: #333399; font-weight: bold">double</span>, <span style="color: #333399; font-weight: bold">int</span>, <span style="color: #333399; font-weight: bold">bool</span><span style="color: #333333">&gt;</span>(std<span style="color: #333333">::</span>cout, io_format<span style="color: #333333">::</span>csv2);
+    std<span style="color: #333333">::</span>cout <span style="color: #333333">&lt;&lt;</span> <span style="background-color: #fff0f0">&quot;Load count: &quot;</span> <span style="color: #333333">&lt;&lt;</span> count <span style="color: #333333">&lt;&lt;</span> std<span style="color: #333333">::</span>endl;
+}
+
+<span style="color: #888888">// -----------------------------------------------------------------------------</span>
+
+<span style="color: #008800; font-weight: bold">static</span> <span style="color: #333399; font-weight: bold">void</span> <span style="color: #0066BB; font-weight: bold">test_from_indicators</span>()  {
+
+    std<span style="color: #333333">::</span>cout <span style="color: #333333">&lt;&lt;</span> <span style="background-color: #fff0f0">&quot;</span><span style="color: #666666; font-weight: bold; background-color: #fff0f0">\n</span><span style="background-color: #fff0f0">Testing from_indicators( ) ...&quot;</span> <span style="color: #333333">&lt;&lt;</span> std<span style="color: #333333">::</span>endl;
+
+    MyDataFrame                 df;
+    std<span style="color: #333333">::</span>vector<span style="color: #333333">&lt;</span><span style="color: #333399; font-weight: bold">unsigned</span> <span style="color: #333399; font-weight: bold">long</span><span style="color: #333333">&gt;</span>  idxvec <span style="color: #333333">=</span>
+        { <span style="color: #0000DD; font-weight: bold">1UL</span>, <span style="color: #0000DD; font-weight: bold">2UL</span>, <span style="color: #0000DD; font-weight: bold">3UL</span>, <span style="color: #0000DD; font-weight: bold">10UL</span>, <span style="color: #0000DD; font-weight: bold">5UL</span>, <span style="color: #0000DD; font-weight: bold">7UL</span>, <span style="color: #0000DD; font-weight: bold">8UL</span>, <span style="color: #0000DD; font-weight: bold">12UL</span>, <span style="color: #0000DD; font-weight: bold">9UL</span>, <span style="color: #0000DD; font-weight: bold">12UL</span>, <span style="color: #0000DD; font-weight: bold">10UL</span>, <span style="color: #0000DD; font-weight: bold">13UL</span>, <span style="color: #0000DD; font-weight: bold">10UL</span>, <span style="color: #0000DD; font-weight: bold">15UL</span>, <span style="color: #0000DD; font-weight: bold">14UL</span> };
+    std<span style="color: #333333">::</span>vector<span style="color: #333333">&lt;</span><span style="color: #333399; font-weight: bold">double</span><span style="color: #333333">&gt;</span>         dblvec <span style="color: #333333">=</span>
+        { <span style="color: #6600EE; font-weight: bold">0.0</span>, <span style="color: #6600EE; font-weight: bold">15.0</span>, <span style="color: #6600EE; font-weight: bold">14.0</span>, <span style="color: #6600EE; font-weight: bold">0.0</span>, <span style="color: #6600EE; font-weight: bold">1.0</span>, <span style="color: #6600EE; font-weight: bold">14.0</span>, <span style="color: #6600EE; font-weight: bold">11.5</span>, <span style="color: #6600EE; font-weight: bold">11.5</span>, <span style="color: #6600EE; font-weight: bold">7.25</span>, <span style="color: #6600EE; font-weight: bold">7.25</span>, <span style="color: #6600EE; font-weight: bold">7.25</span>, <span style="color: #6600EE; font-weight: bold">14.0</span>, <span style="color: #6600EE; font-weight: bold">7.25</span>, <span style="color: #6600EE; font-weight: bold">15.0</span>, <span style="color: #6600EE; font-weight: bold">0.0</span>};
+    std<span style="color: #333333">::</span>vector<span style="color: #333333">&lt;</span><span style="color: #333399; font-weight: bold">double</span><span style="color: #333333">&gt;</span>         dblvec2 <span style="color: #333333">=</span>
+        { <span style="color: #6600EE; font-weight: bold">100.0</span>, <span style="color: #6600EE; font-weight: bold">101.0</span>, <span style="color: #6600EE; font-weight: bold">102.0</span>, <span style="color: #6600EE; font-weight: bold">103.0</span>, <span style="color: #6600EE; font-weight: bold">104.0</span>, <span style="color: #6600EE; font-weight: bold">105.0</span>, <span style="color: #6600EE; font-weight: bold">106.55</span>, <span style="color: #6600EE; font-weight: bold">107.34</span>, <span style="color: #6600EE; font-weight: bold">1.8</span>, <span style="color: #6600EE; font-weight: bold">111.0</span>, <span style="color: #6600EE; font-weight: bold">112.0</span>, <span style="color: #6600EE; font-weight: bold">113.0</span>, <span style="color: #6600EE; font-weight: bold">114.0</span>, <span style="color: #6600EE; font-weight: bold">115.0</span>, <span style="color: #6600EE; font-weight: bold">116.0</span>};
+    std<span style="color: #333333">::</span>vector<span style="color: #333333">&lt;</span><span style="color: #333399; font-weight: bold">int</span><span style="color: #333333">&gt;</span>            intvec <span style="color: #333333">=</span> { <span style="color: #0000DD; font-weight: bold">1</span>, <span style="color: #0000DD; font-weight: bold">2</span>, <span style="color: #0000DD; font-weight: bold">3</span>, <span style="color: #0000DD; font-weight: bold">4</span>, <span style="color: #0000DD; font-weight: bold">5</span>, <span style="color: #0000DD; font-weight: bold">8</span>, <span style="color: #0000DD; font-weight: bold">6</span>, <span style="color: #0000DD; font-weight: bold">7</span>, <span style="color: #0000DD; font-weight: bold">11</span>, <span style="color: #0000DD; font-weight: bold">14</span>, <span style="color: #0000DD; font-weight: bold">9</span> };
+    std<span style="color: #333333">::</span>vector<span style="color: #333333">&lt;</span>std<span style="color: #333333">::</span>string<span style="color: #333333">&gt;</span>    strvec <span style="color: #333333">=</span>
+        { <span style="background-color: #fff0f0">&quot;blue&quot;</span>, <span style="background-color: #fff0f0">&quot;blue&quot;</span>, <span style="background-color: #fff0f0">&quot;red&quot;</span>, <span style="background-color: #fff0f0">&quot;green&quot;</span>, <span style="background-color: #fff0f0">&quot;black&quot;</span>, <span style="background-color: #fff0f0">&quot;green&quot;</span>, <span style="background-color: #fff0f0">&quot;white&quot;</span>, <span style="background-color: #fff0f0">&quot;black&quot;</span>,
+          <span style="background-color: #fff0f0">&quot;black&quot;</span>, <span style="background-color: #fff0f0">&quot;white&quot;</span>, <span style="background-color: #fff0f0">&quot;red&quot;</span>, <span style="background-color: #fff0f0">&quot;yellow&quot;</span>, <span style="background-color: #fff0f0">&quot;green&quot;</span>, <span style="background-color: #fff0f0">&quot;green&quot;</span>, <span style="background-color: #fff0f0">&quot;green&quot;</span> };
+    df.load_data(std<span style="color: #333333">::</span>move(idxvec),
+                 std<span style="color: #333333">::</span>make_pair(<span style="background-color: #fff0f0">&quot;levels&quot;</span>, dblvec),
+                 std<span style="color: #333333">::</span>make_pair(<span style="background-color: #fff0f0">&quot;dbl_col_2&quot;</span>, dblvec2),
+                 std<span style="color: #333333">::</span>make_pair(<span style="background-color: #fff0f0">&quot;colors&quot;</span>, strvec));
+    df.load_column(<span style="background-color: #fff0f0">&quot;int_col&quot;</span>, std<span style="color: #333333">::</span>move(intvec), nan_policy<span style="color: #333333">::</span>dont_pad_with_nans);
+
+    df.load_indicators<span style="color: #333333">&lt;</span>std<span style="color: #333333">::</span>string<span style="color: #333333">&gt;</span>(<span style="background-color: #fff0f0">&quot;colors&quot;</span>);
+    df.load_indicators<span style="color: #333333">&lt;</span>std<span style="color: #333333">::</span>string, <span style="color: #333399; font-weight: bold">bool</span><span style="color: #333333">&gt;</span>(<span style="background-color: #fff0f0">&quot;colors&quot;</span>, <span style="background-color: #fff0f0">&quot;bool_&quot;</span>);
+    df.load_indicators<span style="color: #333333">&lt;</span><span style="color: #333399; font-weight: bold">double</span>, <span style="color: #333399; font-weight: bold">double</span><span style="color: #333333">&gt;</span>(<span style="background-color: #fff0f0">&quot;levels&quot;</span>, <span style="background-color: #fff0f0">&quot;level_&quot;</span>);
+
+    <span style="color: #008800; font-weight: bold">auto</span>  count <span style="color: #333333">=</span>
+        df.from_indicators({ <span style="background-color: #fff0f0">&quot;blue&quot;</span>, <span style="background-color: #fff0f0">&quot;green&quot;</span>, <span style="background-color: #fff0f0">&quot;white&quot;</span>, <span style="background-color: #fff0f0">&quot;black&quot;</span>, <span style="background-color: #fff0f0">&quot;red&quot;</span>, <span style="background-color: #fff0f0">&quot;yellow&quot;</span> }, <span style="background-color: #fff0f0">&quot;colors_copy&quot;</span>);
+
+    assert(count <span style="color: #333333">==</span> <span style="color: #0000DD; font-weight: bold">15</span>);
+    assert((df.get_column<span style="color: #333333">&lt;</span>std<span style="color: #333333">::</span>string<span style="color: #333333">&gt;</span>(<span style="background-color: #fff0f0">&quot;colors&quot;</span>) <span style="color: #333333">==</span> df.get_column<span style="color: #333333">&lt;</span>std<span style="color: #333333">::</span>string<span style="color: #333333">&gt;</span>(<span style="background-color: #fff0f0">&quot;colors_copy&quot;</span>)));
+
+    count <span style="color: #333333">=</span>
+        df.from_indicators<span style="color: #333333">&lt;</span><span style="color: #333399; font-weight: bold">double</span>, <span style="color: #333399; font-weight: bold">double</span><span style="color: #333333">&gt;</span>({ <span style="background-color: #fff0f0">&quot;level_0&quot;</span>, <span style="background-color: #fff0f0">&quot;level_15&quot;</span>, <span style="background-color: #fff0f0">&quot;level_14&quot;</span>, <span style="background-color: #fff0f0">&quot;level_1&quot;</span>, <span style="background-color: #fff0f0">&quot;level_11.5&quot;</span>, <span style="background-color: #fff0f0">&quot;level_7.25&quot;</span> },
+                                           <span style="background-color: #fff0f0">&quot;levels_copy&quot;</span>,
+                                           <span style="background-color: #fff0f0">&quot;level_&quot;</span>);
+    assert(count <span style="color: #333333">==</span> <span style="color: #0000DD; font-weight: bold">15</span>);
+    assert((df.get_column<span style="color: #333333">&lt;</span>std<span style="color: #333333">::</span>string<span style="color: #333333">&gt;</span>(<span style="background-color: #fff0f0">&quot;levels&quot;</span>) <span style="color: #333333">==</span> df.get_column<span style="color: #333333">&lt;</span>std<span style="color: #333333">::</span>string<span style="color: #333333">&gt;</span>(<span style="background-color: #fff0f0">&quot;levels_copy&quot;</span>)));
+}
+</pre></div>
+
+  <img src="https://github.com/hosseinmoein/DataFrame/blob/master/docs/LionLookingUp.jpg?raw=true" alt="C++ DataFrame"
+       width="200" height="150" style="float:right"/>
+
+</body>
+</html>
+
+<!--
+Local Variables:
+mode:HTML
+tab-width:4
+c-basic-offset:4
+End:
+-->

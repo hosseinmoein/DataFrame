@@ -30,6 +30,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/DataFrame.h>
 
 #include <cstring>
+#include <string>
+#include <unordered_map>
 
 // ----------------------------------------------------------------------------
 
@@ -291,8 +293,8 @@ gen_datetime_index(const char *start_datetime,
 template<typename I, typename  H>
 std::vector<I> DataFrame<I, H>::
 gen_sequence_index (const IndexType &start_value,
-                   const IndexType &end_value,
-                   long increment)  {
+                    const IndexType &end_value,
+                    long increment)  {
 
     std::vector<IndexType>  index_vec;
     IndexType               sv = start_value;
@@ -438,6 +440,77 @@ load_result_as_column(V &visitor, const char *name, nan_policy padding)  {
 
     *vec_ptr = std::move(new_col);
     return (ret_cnt);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename T, typename IT>
+typename DataFrame<I, H>::size_type
+DataFrame<I, H>::
+load_indicators(const char *cat_col_name, const char *numeric_cols_prefix)  {
+
+    using map_t = std::unordered_map<T, std::vector<IT> *>;
+
+    const auto  &cat_col = get_column<T>(cat_col_name);
+    const auto  col_s = cat_col.size();
+    map_t       val_map;
+    size_type   ret_cnt = 0;
+
+    val_map.reserve(col_s / 2);
+    for (size_type i = 0; i < col_s; ++i)  {
+        const auto  val = cat_col[i];
+        auto        in_ret = val_map.emplace(std::make_pair(val, nullptr));
+
+        if (in_ret.second)  {
+            ColNameType new_name;
+
+            if (numeric_cols_prefix)
+                new_name = numeric_cols_prefix;
+            new_name += _to_string_(val).c_str();
+
+            auto    *new_col = &(create_column<IT>(new_name.c_str()));
+
+            new_col->resize(col_s, IT(0));
+            in_ret.first->second = new_col;
+            ret_cnt += col_s;
+        }
+        in_ret.first->second->at(i) = IT(1);
+    }
+    return (ret_cnt);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename  H>
+template<typename T, typename CT>
+typename DataFrame<I, H>::size_type
+DataFrame<I, H>::
+from_indicators(const std::vector<const char *> &ind_col_names,
+                const char *cat_col_name,
+                const char *numeric_cols_prefixg)  {
+
+    const size_type                     ind_col_s = ind_col_names.size();
+    std::vector<const std::vector<T> *> ind_cols(ind_col_s, nullptr);
+
+    for (size_type i = 0; i < ind_col_s; ++i)
+        ind_cols[i] = &(get_column<T>(ind_col_names[i]));
+
+    const size_type col_s = ind_cols[0]->size();
+    auto            &new_col = create_column<CT>(cat_col_name);
+    const size_type pre_offset =
+        numeric_cols_prefixg == nullptr ? 0 : strlen(numeric_cols_prefixg);
+
+    new_col.reserve(col_s);
+    for (size_type i = 0; i < col_s; ++i)
+        for (size_type j = 0; j < ind_col_s; ++j)
+            if (ind_cols[j]->at(i))  {
+                new_col.push_back(_string_to_<CT>(
+                    ind_col_names[j] + pre_offset));
+                break;
+            }
+
+    return (col_s);
 }
 
 // ----------------------------------------------------------------------------
@@ -694,7 +767,7 @@ DataFrame<I, H>::append_row_(std::pair<const char *, T> &row_name_data)  {
 
     return (append_column<T>(row_name_data.first, // column name
                              std::forward<T>(row_name_data.second),
-							 nan_policy::dont_pad_with_nans));
+                             nan_policy::dont_pad_with_nans));
 }
 
 // ----------------------------------------------------------------------------

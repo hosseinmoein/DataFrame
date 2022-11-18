@@ -314,6 +314,50 @@ public:  // Load/append/remove interfaces
                           const char *name,
                           nan_policy padding = nan_policy::pad_with_nans);
 
+    // Given a categorical (nominal) column, it generates a series of numerical
+    // columns (0 or 1) for each category in the given column.
+    // These numeric indictors encode categorical information.
+    // In machine learning, this is also sometimes referred to as “one-hot”
+    // encoding of categorical data
+    //
+    // NOTE: The values of the categorical column must be converted to string
+    //       to generate names for indicator columns
+    // NOTE: The values of the categorical column must be hashable
+    //
+    // T:
+    //   Type of the named categorical column
+    // IT:
+    //   Type of the generated numerical indicator columns
+    // cat_col_name:
+    //   Name of the categorical column
+    // numeric_cols_prefix:
+    //   Optional prefix for generated column names
+    //
+    template<typename T, typename IT = int>
+    size_type
+    load_indicators(const char *cat_col_name,
+                    const char *numeric_cols_prefix = nullptr);
+
+    // This does the opposite of the load_indicators(). Given a bunch of
+    // one-hot indicator columns, it reconstructs the category column.
+    //
+    // T:
+    //   Type of the indicator columns
+    // CT:
+    //   Type of the new categorical column
+    // ind_col_names:
+    //   Names of the indicator columns
+    // cat_col_name:
+    //   Name of the new categorical column
+    // numeric_cols_prefix:
+    //   Prefix of indicator column names
+    //
+    template<typename T = int, typename CT = std::string>
+    size_type
+    from_indicators(const std::vector<const char *> &ind_col_names,
+                    const char *cat_col_name,
+                    const char *numeric_cols_prefix = nullptr);
+
     // It appends val to the end of the index column.
     //
     size_type

@@ -326,16 +326,36 @@ public:  // Load/append/remove interfaces
     //
     // T:
     //   Type of the named categorical column
-    // NT:
-    //   Type of of the generated numerical indicator columns
+    // IT:
+    //   Type of the generated numerical indicator columns
     // cat_col_name:
     //   Name of the categorical column
     // numeric_cols_prefix:
     //   Optional prefix for generated column names
     //
-    template<typename T, typename NT = int>
+    template<typename T, typename IT = int>
     size_type
     load_indicators(const char *cat_col_name,
+                    const char *numeric_cols_prefix = nullptr);
+
+    // This does the opposite of the load_indicators(). Given a bunch of
+    // one-hot indicator columns, it reconstructs the category column.
+    //
+    // T:
+    //   Type of the indicator columns
+    // CT:
+    //   Type of the new categorical column
+    // ind_col_names:
+    //   Names of the indicator columns
+    // cat_col_name:
+    //   Name of the new categorical column
+    // numeric_cols_prefix:
+    //   Prefix of indicator column names
+    //
+    template<typename T = int, typename CT = std::string>
+    size_type
+    from_indicators(const std::vector<const char *> &ind_col_names,
+                    const char *cat_col_name,
                     const char *numeric_cols_prefix = nullptr);
 
     // It appends val to the end of the index column.

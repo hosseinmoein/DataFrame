@@ -1129,12 +1129,24 @@ inline static O _remove_copy_if_(I first, I last, O d_first, PRE predicate)  {
 // ----------------------------------------------------------------------------
 
 template<typename T>
-inline std::string _to_string_(const T &value)  {
+inline static std::string _to_string_(const T &value)  {
 
     std::stringstream   ss;
 
     ss << value;
     return (ss.str());
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
+inline static T _string_to_(const char *value)  {
+
+    std::stringstream   ss { value };
+    T                   ret;
+
+    ss >> ret;
+    return (ret);
 }
 
 } // namespace hmdf

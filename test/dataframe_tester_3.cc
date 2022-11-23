@@ -1030,6 +1030,38 @@ static void test_from_indicators()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_TreynorRatioVisitor()  {
+
+    std::cout << "\nTesting TreynorRatioVisitor{  } ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466,
+          123467, 123468, 123469, 123470, 123471, 123472, 123473 };
+    std::vector<double>         d1 =
+        { 2.5, 2.45, -0.65, -0.1, -1.1, 1.87, 0.98, 0.34, 1.56, -0.34, 2.3,
+          -0.34, -1.9, 0.387, 0.123, 1.06, -0.65, 2.03, 0.4, -1.0, 0.59 };
+    std::vector<double>         d2 =
+        { 0.2, 0.58, -0.60, -0.08, 0.05, 0.87, 0.2, 0.4, 0.5, 0.06, 0.3, -0.34,
+          -0.9, 0.8, -0.4, 0.86, 0.01, 1.02, -0.02, -1.5, 0.2 };
+    std::vector<int>            i1 = { 22, 23, 24, 25, 99 };
+    MyDataFrame                 df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("asset", d1),
+                 std::make_pair("benchmark", d2),
+                 std::make_pair("col_3", i1));
+
+    treynorr_v<double>  ty_ratio;
+    const auto          result =
+        df.single_act_visit<double, double>("asset", "benchmark",
+                                            ty_ratio, true).get_result();
+
+    assert(fabs(result - 0.26761) < 0.00001);
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     test_groupby_edge();
@@ -1051,6 +1083,7 @@ int main(int, char *[]) {
     test_load_result_as_column();
     test_load_indicators();
     test_from_indicators();
+    test_TreynorRatioVisitor();
 
     /*
     hmdf::SpinLock      locker;

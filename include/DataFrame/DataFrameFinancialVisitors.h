@@ -4667,6 +4667,76 @@ private:
 template<typename T, typename I = unsigned long>
 using t3_v = T3MovingMeanVisitor<T, I>;
 
+// ----------------------------------------------------------------------------
+
+// This is meaningfull, only if the return series is close to normal
+// distribution
+//
+template<typename T,
+         typename I = unsigned long,
+         typename =
+             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+struct TreynorRatioVisitor {
+
+    DEFINE_VISIT_BASIC_TYPES_2
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin, const K &,
+                const H &asset_ret_begin, const H &asset_ret_end,
+                const H &benchmark_ret_begin, const H &benchmark_ret_end)  {
+
+        const size_type vec_s = std::distance(asset_ret_begin, asset_ret_end);
+        const size_type b_s =
+            std::distance(benchmark_ret_begin, benchmark_ret_end);
+
+        if (vec_s != b_s || vec_s < 3)  {
+            char    err[512];
+
+            snprintf (err, sizeof(err) - 1,
+#ifdef _MSC_VER
+                      "TreynorRatioVisitor: Size of asset = %zu and "
+                      "benchmark = %zu time-series are not feasible.",
+#else
+                      "TreynorRatioVisitor: Size of asset = %lu and "
+                      "benchmark = %lu time-series are not feasible.",
+#endif // _MSC_VER
+                     vec_s, b_s);
+            throw NotFeasible (err);
+        }
+
+        value_type          cum_return { 0.0 };
+        BetaVisitor<T, I>   beta_vis(biased_);
+        auto                a_citer = asset_ret_begin;
+        const index_type    &index_val = *idx_begin; // Ignored
+
+        beta_vis.pre();
+        for (auto b_citer = benchmark_ret_begin;
+             b_citer != benchmark_ret_end; ++a_citer, ++b_citer)  {
+            beta_vis (index_val, *a_citer, *b_citer);
+            cum_return += *a_citer - *b_citer;
+        }
+        beta_vis.post();
+        result_ = (cum_return / T(vec_s)) / beta_vis.get_result();
+    }
+
+    inline void pre ()  { result_ = 0; }
+    inline void post ()  {  }
+    inline result_type get_result () const  { return (result_); }
+
+    explicit
+    TreynorRatioVisitor(bool biased = false) : biased_ (biased) {  }
+
+private:
+
+    const bool  biased_;
+    result_type result_ { 0 };
+};
+
+template<typename T, typename I = unsigned long>
+using treynorr_v = TreynorRatioVisitor<T, I>;
+
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

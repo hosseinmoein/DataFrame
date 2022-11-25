@@ -990,6 +990,10 @@ table.hovertable td {
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
+      <td title="Calculates Treynor ratio">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/SharpeRatioVisitor.html">TreynorRatioVisitor</a>{  }</td>
+    </tr>
+
+    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
       <td title="Calculates rolling Triple Exponential Average return">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/TrixVisitor.html">TrixVisitor</a>{  }</td>
     </tr>
 
@@ -1311,6 +1315,13 @@ table.hovertable td {
       <LI>Const Views: You can not change data in the view. But you can change the data in the original DataFrame or through another view and it will be refelcted in the const view</LI>
     </OL>
 
+    Why would you use views
+    <UL>
+      <LI>To run algorithms/slicing on subsets of data, <I>without copying</I> data</LI>
+      <LI>To mix and compare different data subsets, <I>without copying</I> data</LI>
+      <LI>To have one source of truth, while having different datasets <I>without copying</I> data </LI>
+    </UL>
+
     For more understanding, look at this document further and/or the test files.
   </P>
 
@@ -1334,13 +1345,13 @@ table.hovertable td {
 
   I have been asked many times, why I chose the visitor pattern for algorithms as opposed to having member functions.<BR>
   I had a few reasons:<BR>
-  <OL>
+  <UL>
     <LI>If I had implemented them as member functions, I would have had 100's of member function in DataFrame -- I already have too many. It wouldn't be a good design</LI>
     <LI>I wanted users to be able to incorporate their custom algorithms without touching the DataFrame codebase. If you follow a simple interface, you can write your custom visitor and use it in DataFrame, easily</LI>
     <LI>Algorithms sometime have complex results. Sometimes the result is a single number. But sometimes the result of an algorithms could be a single or multiple vectors. That's not efficient to implement as a member function</LI>
     <LI>I wanted the algorithms to be self-contained. That means a single <I>object</I> should contain the algorithm, input(s), parameter(s), and result(s)</LI>
     <LI>Because algorithms are self-contained, they can be passed to other algorithms to be used</LI>
-  </OL>
+  </UL>
 
 <HR>
 

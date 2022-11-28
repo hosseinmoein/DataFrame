@@ -1675,6 +1675,56 @@ static void test_LogFitVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_ExponentialFitVisitor()  {
+
+    std::cout << "\nTesting ExponentialFitVisitor{  } ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466,
+          123467, 123468, 123469, 123470, 123471, 123472, 123473,
+          123467, 123468, 123469, 123470, 123471, 123472, 123473,
+          123467, 123468, 123469, 123470, 123471, 123472, 123473,
+        };
+    MyDataFrame                 df;
+
+    df.load_index(std::move(idx));
+    df.load_column<double>("X1",
+                           { 1, 2, 3, 4, 5 },
+                           nan_policy::dont_pad_with_nans);
+    df.load_column<double>("Y1",
+                           { 6, 7, 8, 9, 3 },
+                           nan_policy::dont_pad_with_nans);
+    df.load_column<double>("X2",
+                           { 1, 2, 4, 6, 8 },
+                           nan_policy::dont_pad_with_nans);
+    df.load_column<double>("Y2",
+                           { 1, 3, 4, 5, 6 },
+                           nan_policy::dont_pad_with_nans);
+
+    ExponentialFitVisitor<double>   exp_v1;
+    auto                            result1 =
+        df.single_act_visit<double, double>("X1", "Y1", exp_v1).get_result();
+    auto                            actual1 =
+        std::vector<double> { 7.7647, 6.9316, 6.1879, 5.5239, 4.93126 };
+
+    assert(std::fabs(exp_v1.get_residual() - 22.2154) < 0.0001);
+    for (size_t idx = 0; idx < result1.size(); ++idx)
+        assert(fabs(result1[idx] - actual1[idx]) < 0.0001);
+
+    efit_v<double>  exp_v2;
+    auto            result2 =
+        df.single_act_visit<double, double>("X2", "Y2", exp_v2).get_result();
+    auto            actual2 =
+        std::vector<double> { 1.63751, 2.02776, 3.10952, 4.76833, 7.31206 };
+
+    assert(std::fabs(exp_v2.get_residual() - 3.919765) < 0.00001);
+    for (size_t idx = 0; idx < result2.size(); ++idx)
+        assert(fabs(result2[idx] - actual2[idx]) < 0.0001);
+}
+
+// -----------------------------------------------------------------------------
+
 static void test_ExpoSmootherVisitor()  {
 
     std::cout << "\nTesting ExpoSmootherVisitor{  } ..." << std::endl;
@@ -4737,6 +4787,7 @@ int main(int, char *[]) {
     test_PolyFitVisitor();
     test_HurstExponentVisitor();
     test_LogFitVisitor();
+    test_ExponentialFitVisitor();
     test_ExpoSmootherVisitor();
     test_HWExpoSmootherVisitor();
     test_consolidate();

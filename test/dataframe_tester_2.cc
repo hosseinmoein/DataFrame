@@ -742,49 +742,49 @@ static void test_SigmoidVisitor()  {
         0.999665, 0.999877, 0.999955, 0.999983, 0.999994, 0.999998, 0.999999,
         1, 1, 1, 1, 1, 1, 1 };
 
-    for (size_t idx = 0; idx < result.size(); ++idx)
-        assert(fabs(result[idx] - log_result[idx]) < 0.00001);
+    for (size_t i = 0; i < result.size(); ++i)
+        assert(fabs(result[i] - log_result[i]) < 0.00001);
 
     result = std::vector<double> {
         0.707107, 0.447214, 0.316228, 0.242536, 0.196116, 0.164399, 0.141421,
         0.124035, 0.110432, 0.0995037, 0.0905357, 0.0830455, 0.0766965,
         0.071247, 0.066519, 0.0623783, 0.058722, 0.05547, 0.0525588,
         0.0499376, 0.0475651 };
-    for (size_t idx = 0; idx < result.size(); ++idx)
-        assert(fabs(result[idx] - alg_result[idx]) < 0.00001);
+    for (size_t i = 0; i < result.size(); ++i)
+        assert(fabs(result[i] - alg_result[i]) < 0.00001);
 
     result = std::vector<double> {
         0.761594, 0.964028, 0.995055, 0.999329, 0.999909, 0.999988, 0.999998,
         1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
-    for (size_t idx = 0; idx < result.size(); ++idx)
-        assert(fabs(result[idx] - tan_result[idx]) < 0.00001);
+    for (size_t i = 0; i < result.size(); ++i)
+        assert(fabs(result[i] - tan_result[i]) < 0.00001);
 
     result = std::vector<double> {
         0.785398, 1.10715, 1.24905, 1.32582, 1.3734, 1.40565, 1.4289, 1.44644,
         1.46014, 1.47113, 1.48014, 1.48766, 1.49402, 1.49949, 1.50423, 1.50838,
         1.51204, 1.5153, 1.51821, 1.52084, 1.52321 };
-    for (size_t idx = 0; idx < result.size(); ++idx)
-        assert(fabs(result[idx] - atan_result[idx]) < 0.00001);
+    for (size_t i = 0; i < result.size(); ++i)
+        assert(fabs(result[i] - atan_result[i]) < 0.00001);
 
     result = std::vector<double> {
         0.842701, 0.995322, 0.999978, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
         1, 1, 1, 1 };
-    for (size_t idx = 0; idx < result.size(); ++idx)
-       assert(fabs(result[idx] - err_result[idx]) < 0.00001);
+    for (size_t i = 0; i < result.size(); ++i)
+       assert(fabs(result[i] - err_result[i]) < 0.00001);
 
     result = std::vector<double> {
         0.865769, 1.30176, 1.4713, 1.53417, 1.55732, 1.56584, 1.56897, 1.57013,
         1.57055, 1.57071, 1.57076, 1.57078, 1.57079, 1.57079, 1.5708, 1.5708,
         1.5708, 1.5708, 1.5708, 1.5708, 1.5708 };
-    for (size_t idx = 0; idx < result.size(); ++idx)
-       assert(fabs(result[idx] - gud_result[idx]) < 0.00001);
+    for (size_t i = 0; i < result.size(); ++i)
+       assert(fabs(result[i] - gud_result[i]) < 0.00001);
 
     result = std::vector<double> {
         0.134366, 0.15625, 0.163054, 0.167648, 0.176974, 0.180518, 0.190088,
         0.197377, 0.203522, 0.216, 0.5, 0, 1, 0, 1, 0, 0, 0.57475, 0.618976,
         0.648, 0.784 };
-    for (size_t idx = 0; idx < result.size(); ++idx)
-       assert(fabs(result[idx] - smo_result[idx]) < 0.00001);
+    for (size_t i = 0; i < result.size(); ++i)
+       assert(fabs(result[i] - smo_result[i]) < 0.00001);
 }
 
 // -----------------------------------------------------------------------------
@@ -1463,11 +1463,11 @@ static void test_NormalizeVisitor()  {
         0.06426
     };
 
-    for (size_t idx = 0; idx < result.size(); ++idx)
-       assert(fabs(result[idx] - norm_result[idx]) < 0.00001);
+    for (size_t i = 0; i < result.size(); ++i)
+       assert(fabs(result[i] - norm_result[i]) < 0.00001);
     result = df.single_act_visit<double>("dbl_col", stand_v).get_result();
-    for (size_t idx = 0; idx < result.size(); ++idx)
-       assert(fabs(result[idx] - stand_result[idx]) < 0.00001);
+    for (size_t i = 0; i < result.size(); ++i)
+       assert(fabs(result[i] - stand_result[i]) < 0.00001);
 }
 
 // -----------------------------------------------------------------------------
@@ -1507,13 +1507,13 @@ static void test_HampelFilterVisitor()  {
     const auto                  &column = df.get_column<double>("dbl_col");
 
     assert(result == 2);
-    for (size_t idx = 0; idx < hampel_result.size(); ++idx)  {
-        const auto  v = column[idx];
+    for (size_t i = 0; i < hampel_result.size(); ++i)  {
+        const auto  v = column[i];
 
         if (std::isnan(v))
-            assert(std::isnan(hampel_result[idx]));
+            assert(std::isnan(hampel_result[i]));
         else
-            assert(hampel_result[idx] == v);
+            assert(hampel_result[i] == v);
     }
 }
 
@@ -1549,10 +1549,10 @@ static void test_PolyFitVisitor()  {
     PolyFitVisitor<double>  poly_v1 (2);
     PolyFitVisitor<double>  poly_v12 (
         2,
-        [](const unsigned int &, std::size_t idx) -> double {
+        [](const unsigned int &, std::size_t i) -> double {
             const std::array<double, 5> weights = { 0.1, 0.8, 0.3, 0.5, 0.2 };
 
-            return (weights[idx]);
+            return (weights[i]);
         });
     auto                    result1 =
         df.single_act_visit<double, double>("X1", "Y1", poly_v1).get_result();
@@ -1563,12 +1563,12 @@ static void test_PolyFitVisitor()  {
         std::vector<double> { -1.97994, 6.99713, -1.14327 };
 
     assert(std::fabs(poly_v1.get_residual() - 5.6) < 0.00001);
-    for (size_t idx = 0; idx < result1.size(); ++idx)
-       assert(fabs(result1[idx] - actual1[idx]) < 0.00001);
+    for (size_t i = 0; i < result1.size(); ++i)
+       assert(fabs(result1[i] - actual1[i]) < 0.00001);
 
     assert(std::fabs(poly_v12.get_residual() - 0.70981) < 0.00001);
-    for (size_t idx = 0; idx < result12.size(); ++idx)
-       assert(fabs(result12[idx] - actual12[idx]) < 0.00001);
+    for (size_t i = 0; i < result12.size(); ++i)
+       assert(fabs(result12[i] - actual12[i]) < 0.00001);
 
     PolyFitVisitor<double>  poly_v2 (3);
     auto                    result2 =
@@ -1576,8 +1576,8 @@ static void test_PolyFitVisitor()  {
     auto                    actual2 =
         std::vector<double> { -0.0396825, 1.69312, -0.813492, 0.087037 };
 
-    for (size_t idx = 0; idx < result2.size(); ++idx)
-       assert(fabs(result2[idx] - actual2[idx]) < 0.00001);
+    for (size_t i = 0; i < result2.size(); ++i)
+       assert(fabs(result2[i] - actual2[i]) < 0.00001);
 }
 
 // -----------------------------------------------------------------------------
@@ -1660,8 +1660,8 @@ static void test_LogFitVisitor()  {
         std::vector<double> { 6.98618, -0.403317 };
 
     assert(std::fabs(log_v1.get_residual() - 20.9372) < 0.0001);
-    for (size_t idx = 0; idx < result1.size(); ++idx)
-       assert(fabs(result1[idx] - actual1[idx]) < 0.00001);
+    for (size_t i = 0; i < result1.size(); ++i)
+       assert(fabs(result1[i] - actual1[i]) < 0.00001);
 
     LogFitVisitor<double>   log_v2;
     auto                    result2 =
@@ -1669,8 +1669,8 @@ static void test_LogFitVisitor()  {
     auto                    actual2 = std::vector<double> { 1.11199, 2.25859 };
 
     assert(std::fabs(log_v2.get_residual() - 0.237476) < 0.00001);
-    for (size_t idx = 0; idx < result2.size(); ++idx)
-       assert(fabs(result2[idx] - actual2[idx]) < 0.00001);
+    for (size_t i = 0; i < result2.size(); ++i)
+       assert(fabs(result2[i] - actual2[i]) < 0.00001);
 }
 
 // -----------------------------------------------------------------------------
@@ -1709,8 +1709,8 @@ static void test_ExponentialFitVisitor()  {
         std::vector<double> { 7.7647, 6.9316, 6.1879, 5.5239, 4.93126 };
 
     assert(std::fabs(exp_v1.get_residual() - 22.2154) < 0.0001);
-    for (size_t idx = 0; idx < result1.size(); ++idx)
-        assert(fabs(result1[idx] - actual1[idx]) < 0.0001);
+    for (size_t i = 0; i < result1.size(); ++i)
+        assert(fabs(result1[i] - actual1[i]) < 0.0001);
 
     efit_v<double>  exp_v2;
     auto            result2 =
@@ -1719,8 +1719,8 @@ static void test_ExponentialFitVisitor()  {
         std::vector<double> { 1.63751, 2.02776, 3.10952, 4.76833, 7.31206 };
 
     assert(std::fabs(exp_v2.get_residual() - 3.919765) < 0.00001);
-    for (size_t idx = 0; idx < result2.size(); ++idx)
-        assert(fabs(result2[idx] - actual2[idx]) < 0.0001);
+    for (size_t i = 0; i < result2.size(); ++i)
+        assert(fabs(result2[i] - actual2[i]) < 0.0001);
 }
 
 // -----------------------------------------------------------------------------
@@ -1756,8 +1756,8 @@ static void test_ExpoSmootherVisitor()  {
 
     const auto  &col1 = df.get_column<double>("dbl_col");
 
-    for (size_t idx = 0; idx < col1.size(); ++idx)
-       assert(fabs(col1[idx] - d1_copy[idx]) < 0.00001);
+    for (size_t i = 0; i < col1.size(); ++i)
+       assert(fabs(col1[i] - d1_copy[i]) < 0.00001);
 
     ExpoSmootherVisitor<double> es_v2(0.3);
 
@@ -1771,8 +1771,8 @@ static void test_ExpoSmootherVisitor()  {
         0.69, 0.933, 1.102, -0.37, 3.3244, 5.6546, -0.503
     };
 
-    for (size_t idx = 0; idx < col1.size(); ++idx)
-       assert(fabs(col1[idx] - actual2[idx]) < 0.0001);
+    for (size_t i = 0; i < col1.size(); ++i)
+       assert(fabs(col1[i] - actual2[i]) < 0.0001);
 
     df.get_column<double>("dbl_col") = d1_copy;
 
@@ -1788,8 +1788,8 @@ static void test_ExpoSmootherVisitor()  {
         0.54, 1.688, -0.378, 0.63, 7.1484, 0.6156, 0.992
     };
 
-    for (size_t idx = 0; idx < col1.size(); ++idx)
-       assert(fabs(col1[idx] - actual3[idx]) < 0.0001);
+    for (size_t i = 0; i < col1.size(); ++i)
+       assert(fabs(col1[i] - actual3[i]) < 0.0001);
 
     ExpoSmootherVisitor<double> es_v3_4 (0.8, 4);
     const auto                  &col21 = df2.get_column<double>("dbl_col");
@@ -1804,8 +1804,8 @@ static void test_ExpoSmootherVisitor()  {
         1.1872, 0.509888, 0.343776, 3.87912, 3.11763, 1.43558
     };
 
-    for (size_t idx = 0; idx < col21.size(); ++idx)
-       assert(fabs(col21[idx] - actual4[idx]) < 0.0001);
+    for (size_t i = 0; i < col21.size(); ++i)
+       assert(fabs(col21[i] - actual4[i]) < 0.0001);
 }
 
 // -----------------------------------------------------------------------------
@@ -1839,8 +1839,8 @@ static void test_HWExpoSmootherVisitor()  {
 
     const auto  &col1 = df.get_column<double>("dbl_col");
 
-    for (size_t idx = 0; idx < col1.size(); ++idx)
-       assert(fabs(col1[idx] - d1_copy[idx]) < 0.00001);
+    for (size_t i = 0; i < col1.size(); ++i)
+       assert(fabs(col1[i] - d1_copy[i]) < 0.00001);
 
     HWExpoSmootherVisitor<double>   es_v2(0.3, 0.4);
 
@@ -1854,8 +1854,8 @@ static void test_HWExpoSmootherVisitor()  {
         -2.48915, -1.05849, 0.329906, -1.66206, 3.10917, 7.6669, -2.11746,
     };
 
-    for (size_t idx = 0; idx < col1.size(); ++idx)
-       assert(fabs(col1[idx] - actual2[idx]) < 0.0001);
+    for (size_t i = 0; i < col1.size(); ++i)
+       assert(fabs(col1[i] - actual2[i]) < 0.0001);
 
     df.get_column<double>("dbl_col") = d1_copy;
 
@@ -1871,8 +1871,8 @@ static void test_HWExpoSmootherVisitor()  {
         -0.517644, 1.42847, -0.188306, 0.194339, 7.38127, 1.88585, -0.366429
     };
 
-    for (size_t idx = 0; idx < col1.size(); ++idx)
-       assert(fabs(col1[idx] - actual3[idx]) < 0.0001);
+    for (size_t i = 0; i < col1.size(); ++i)
+       assert(fabs(col1[i] - actual3[i]) < 0.0001);
 }
 
 // -----------------------------------------------------------------------------

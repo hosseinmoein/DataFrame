@@ -3414,8 +3414,9 @@ struct ExponentialFitVisitor {
             (col_s * sum_xy - sum_x * sum_y) / (col_s * sum_x2 - sum_x * sum_x);
 
         // The intercept of best fit line
-        const value_type    intercept = (sum_y - slope_ * sum_x) / col_s;
-        const value_type    prefactor = std::exp(intercept);
+        intercept_ = (sum_y - slope_ * sum_x) / col_s;
+
+        const value_type    prefactor = std::exp(intercept_);
 
         y_fits_.reserve(col_s);
         for (size_type i = 0; i < col_s; ++i)  {
@@ -3431,13 +3432,20 @@ struct ExponentialFitVisitor {
         }
     }
 
-    inline void pre ()  { y_fits_.clear(); residual_ = 0; slope_ = 0; }
+    inline void pre ()  {
+
+        y_fits_.clear();
+        residual_ = 0;
+        slope_ = 0;
+        intercept_ = 0;
+    }
     inline void post ()  {  }
     inline const result_type &
     get_result () const  { return (y_fits_); }
     inline result_type &get_result ()  { return (y_fits_); }
     inline value_type get_residual () const  { return (residual_); }
     inline value_type get_slope () const  { return (slope_); }
+    inline value_type get_intercept () const  { return (intercept_); }
 
     ExponentialFitVisitor()  {   }
 
@@ -3446,6 +3454,7 @@ private:
     result_type y_fits_ {  };
     value_type  residual_ { 0 };
     value_type  slope_ { 0 };
+    value_type  intercept_ { 0 };
 };
 
 template<typename T, typename I = unsigned long>

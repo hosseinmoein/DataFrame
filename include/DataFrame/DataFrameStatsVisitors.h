@@ -3373,6 +3373,95 @@ using lfit_v = LogFitVisitor<T, I>;
 
 // ----------------------------------------------------------------------------
 
+template<typename T,
+         typename I = unsigned long,
+         typename =
+             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+struct ExponentialFitVisitor {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    using weight_func =
+        std::function<value_type(const index_type &idx, size_type val_index)>;
+
+    template<typename K, typename H>
+    inline void
+    operator() (const K &, const K &,
+                const H &x_begin, const H &x_end,
+                const H &y_begin, const H &y_end)  {
+
+        const size_type col_s = std::distance(x_begin, x_end);
+
+        assert((col_s == size_type(std::distance(y_begin, y_end))));
+
+        value_type  sum_x = 0;   // Sum of all observed x
+        value_type  sum_y = 0;   // Sum of all observed y
+        value_type  sum_x2 = 0;  // Sum of all observed x squared
+        value_type  sum_xy = 0;  // Sum of all x times sum of all observed y
+
+        for (size_type i = 0; i < col_s; ++i)  {
+            const value_type    x = *(x_begin + i);
+            const value_type    log_y = std::log(*(y_begin + i));
+
+            sum_x += x;
+            sum_y += log_y;
+            sum_xy += x * log_y;
+            sum_x2 += x * x;
+        }
+
+        // The slope (the the power of exp) of best fit line
+        slope_ =
+            (col_s * sum_xy - sum_x * sum_y) / (col_s * sum_x2 - sum_x * sum_x);
+
+        // The intercept of best fit line
+        intercept_ = (sum_y - slope_ * sum_x) / col_s;
+
+        const value_type    prefactor = std::exp(intercept_);
+
+        y_fits_.reserve(col_s);
+        for (size_type i = 0; i < col_s; ++i)  {
+            const value_type    x = *(x_begin + i);
+            const value_type    pred = prefactor * std::exp(x * slope_);
+
+            // y fits at given x points
+            y_fits_.push_back(pred);
+
+            const value_type    r = *(y_begin + i) - pred;
+
+            residual_ += r * r;
+        }
+    }
+
+    inline void pre ()  {
+
+        y_fits_.clear();
+        residual_ = 0;
+        slope_ = 0;
+        intercept_ = 0;
+    }
+    inline void post ()  {  }
+    inline const result_type &
+    get_result () const  { return (y_fits_); }
+    inline result_type &get_result ()  { return (y_fits_); }
+    inline value_type get_residual () const  { return (residual_); }
+    inline value_type get_slope () const  { return (slope_); }
+    inline value_type get_intercept () const  { return (intercept_); }
+
+    ExponentialFitVisitor()  {   }
+
+private:
+
+    result_type y_fits_ {  };
+    value_type  residual_ { 0 };
+    value_type  slope_ { 0 };
+    value_type  intercept_ { 0 };
+};
+
+template<typename T, typename I = unsigned long>
+using efit_v = ExponentialFitVisitor<T, I>;
+
+// ----------------------------------------------------------------------------
+
 // LOcally WEighted Scatterplot Smoothing
 // A LOWESS function outputs smoothed estimates of dependent var (y) at the
 // given independent var (x) values.

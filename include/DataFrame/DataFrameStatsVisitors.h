@@ -3273,6 +3273,7 @@ public:
             coeffs_[i] = coeffs_[i] / eq_mat[index_(i, i, nrows)];
         }
 
+        y_fits_.reserve(col_s);
         for (size_type i = 0; i < col_s; ++i)  {
             value_type  pred = 0;
 
@@ -3281,6 +3282,9 @@ public:
 
             const value_type    w = weights_(*(idx_begin + i), i);
 
+            // y fits at given x points
+            //
+            y_fits_.push_back(pred);
             residual_ += ((*(y_begin + i) - pred) * w) *
                          ((*(y_begin + i) - pred) * w);
         }
@@ -3292,6 +3296,8 @@ public:
     inline result_type &get_result ()  { return (coeffs_); }
     inline value_type get_slope () const  { return (coeffs_[0]); }
     inline value_type get_residual () const  { return (residual_); }
+    inline const result_type &get_y_fits () const  { return (y_fits_); }
+    inline result_type &get_y_fits ()  { return (y_fits_); }
 
     explicit
     PolyFitVisitor(size_type d,
@@ -3301,6 +3307,7 @@ public:
 
 private:
 
+    result_type     y_fits_ {  };
     result_type     coeffs_ {  };
     value_type      residual_ { 0 };
     const size_type degree_;
@@ -3337,12 +3344,16 @@ struct LogFitVisitor {
 
         const size_type col_s = std::distance(x_begin, x_end);
 
+        y_fits_.reserve(col_s);
         for (size_type i = 0; i < col_s; ++i)  {
             const value_type    pred =
                 poly_fit_.get_result()[0] +
                 poly_fit_.get_result()[1] * std::log(*(x_begin + i));
             const value_type    w = weights_(*(idx_begin + i), i);
 
+            // y fits at given x points
+            //
+            y_fits_.push_back(pred);
             residual_ += ((*(y_begin + i) - pred) * w) *
                          ((*(y_begin + i) - pred) * w);
         }
@@ -3355,6 +3366,8 @@ struct LogFitVisitor {
     inline result_type &get_result ()  { return (poly_fit_.get_result()); }
     inline value_type get_slope () const  { return (poly_fit_.get_slope()); }
     inline value_type get_residual () const  { return (residual_); }
+    inline const result_type &get_y_fits () const  { return (y_fits_); }
+    inline result_type &get_y_fits ()  { return (y_fits_); }
 
     explicit
     LogFitVisitor(weight_func w_func =
@@ -3363,6 +3376,7 @@ struct LogFitVisitor {
 
 private:
 
+    result_type             y_fits_ {  };
     PolyFitVisitor<T, I>    poly_fit_ {  };
     weight_func             weights_;
     value_type              residual_ { 0 };
@@ -3380,9 +3394,6 @@ template<typename T,
 struct ExponentialFitVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_3
-
-    using weight_func =
-        std::function<value_type(const index_type &idx, size_type val_index)>;
 
     template<typename K, typename H>
     inline void
@@ -3410,10 +3421,12 @@ struct ExponentialFitVisitor {
         }
 
         // The slope (the the power of exp) of best fit line
+        //
         slope_ =
             (col_s * sum_xy - sum_x * sum_y) / (col_s * sum_x2 - sum_x * sum_x);
 
         // The intercept of best fit line
+        //
         intercept_ = (sum_y - slope_ * sum_x) / col_s;
 
         const value_type    prefactor = std::exp(intercept_);
@@ -3424,6 +3437,7 @@ struct ExponentialFitVisitor {
             const value_type    pred = prefactor * std::exp(x * slope_);
 
             // y fits at given x points
+            //
             y_fits_.push_back(pred);
 
             const value_type    r = *(y_begin + i) - pred;
@@ -3440,8 +3454,7 @@ struct ExponentialFitVisitor {
         intercept_ = 0;
     }
     inline void post ()  {  }
-    inline const result_type &
-    get_result () const  { return (y_fits_); }
+    inline const result_type &get_result () const  { return (y_fits_); }
     inline result_type &get_result ()  { return (y_fits_); }
     inline value_type get_residual () const  { return (residual_); }
     inline value_type get_slope () const  { return (slope_); }
@@ -3459,6 +3472,92 @@ private:
 
 template<typename T, typename I = unsigned long>
 using efit_v = ExponentialFitVisitor<T, I>;
+
+// ----------------------------------------------------------------------------
+
+template<typename T,
+         typename I = unsigned long,
+         typename =
+             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+struct LinearFitVisitor {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template<typename K, typename H>
+    inline void
+    operator() (const K &, const K &,
+                const H &x_begin, const H &x_end,
+                const H &y_begin, const H &y_end)  {
+
+        const size_type col_s = std::distance(x_begin, x_end);
+
+        assert((col_s == size_type(std::distance(y_begin, y_end))));
+
+        value_type  sum_x = 0;   // Sum of all observed x
+        value_type  sum_y = 0;   // Sum of all observed y
+        value_type  sum_x2 = 0;  // Sum of all observed x squared
+        value_type  sum_xy = 0;  // Sum of all x times sum of all observed y
+
+        for (size_type i = 0; i < col_s; ++i)  {
+            const value_type    x = *(x_begin + i);
+            const value_type    y = *(y_begin + i);
+
+            sum_x += x;
+            sum_y += y;
+            sum_xy += x * y;
+            sum_x2 += x * x;
+        }
+
+        // The slope (the the power of exp) of best fit line
+        //
+        slope_ = (col_s * sum_xy - sum_x * sum_y) /
+                 (sum_x2 * col_s - sum_x * sum_x);
+
+        // The intercept of best fit line
+        //
+        intercept_ = (sum_x2 * sum_y - sum_x * sum_xy) /
+                     (sum_x2 * col_s - sum_x * sum_x);
+
+        y_fits_.reserve(col_s);
+        for (size_type i = 0; i < col_s; ++i)  {
+            const value_type    pred = slope_ * *(x_begin + i) + intercept_;
+
+            // y fits at given x points
+            //
+            y_fits_.push_back(pred);
+
+            const value_type    r = *(y_begin + i) - pred;
+
+            residual_ += r * r;
+        }
+    }
+
+    inline void pre ()  {
+
+        y_fits_.clear();
+        residual_ = 0;
+        slope_ = 0;
+        intercept_ = 0;
+    }
+    inline void post ()  {  }
+    inline const result_type &get_result () const  { return (y_fits_); }
+    inline result_type &get_result ()  { return (y_fits_); }
+    inline value_type get_residual () const  { return (residual_); }
+    inline value_type get_slope () const  { return (slope_); }
+    inline value_type get_intercept () const  { return (intercept_); }
+
+    LinearFitVisitor()  {   }
+
+private:
+
+    result_type y_fits_ {  };
+    value_type  residual_ { 0 };
+    value_type  slope_ { 0 };
+    value_type  intercept_ { 0 };
+};
+
+template<typename T, typename I = unsigned long>
+using linfit_v = LinearFitVisitor<T, I>;
 
 // ----------------------------------------------------------------------------
 

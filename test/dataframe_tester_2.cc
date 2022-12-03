@@ -1559,12 +1559,16 @@ static void test_PolyFitVisitor()  {
     auto                    result12 =
         df.single_act_visit<double, double>("X1", "Y1", poly_v12).get_result();
     auto                    actual1 = std::vector<double> { 0.8, 5.6, -1 };
+    auto                    actual1_y =
+        std::vector<double> { 5.4, 8, 8.6, 7.2, 3.8 };
     auto                    actual12 =
         std::vector<double> { -1.97994, 6.99713, -1.14327 };
 
     assert(std::fabs(poly_v1.get_residual() - 5.6) < 0.00001);
     for (size_t i = 0; i < result1.size(); ++i)
        assert(fabs(result1[i] - actual1[i]) < 0.00001);
+    for (size_t i = 0; i < poly_v1.get_y_fits().size(); ++i)
+       assert(fabs(poly_v1.get_y_fits()[i] - actual1_y[i]) < 0.01);
 
     assert(std::fabs(poly_v12.get_residual() - 0.70981) < 0.00001);
     for (size_t i = 0; i < result12.size(); ++i)
@@ -1658,10 +1662,14 @@ static void test_LogFitVisitor()  {
         df.single_act_visit<double, double>("X1", "Y1", log_v1).get_result();
     auto                    actual1 =
         std::vector<double> { 6.98618, -0.403317 };
+    auto                    actual1_y =
+        std::vector<double> { 6.98618, 6.70662, 6.54309, 6.42706, 6.33706 };
 
     assert(std::fabs(log_v1.get_residual() - 20.9372) < 0.0001);
     for (size_t i = 0; i < result1.size(); ++i)
        assert(fabs(result1[i] - actual1[i]) < 0.00001);
+    for (size_t i = 0; i < log_v1.get_y_fits().size(); ++i)
+       assert(fabs(log_v1.get_y_fits()[i] - actual1_y[i]) < 0.01);
 
     LogFitVisitor<double>   log_v2;
     auto                    result2 =
@@ -1719,6 +1727,56 @@ static void test_ExponentialFitVisitor()  {
         std::vector<double> { 1.63751, 2.02776, 3.10952, 4.76833, 7.31206 };
 
     assert(std::fabs(exp_v2.get_residual() - 3.919765) < 0.00001);
+    for (size_t i = 0; i < result2.size(); ++i)
+        assert(fabs(result2[i] - actual2[i]) < 0.0001);
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_LinearFitVisitor()  {
+
+    std::cout << "\nTesting LinearFitVisitor{  } ..." << std::endl;
+
+    std::vector<unsigned long>  idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466,
+          123467, 123468, 123469, 123470, 123471, 123472, 123473,
+          123467, 123468, 123469, 123470, 123471, 123472, 123473,
+          123467, 123468, 123469, 123470, 123471, 123472, 123473,
+        };
+    MyDataFrame                 df;
+
+    df.load_index(std::move(idx));
+    df.load_column<double>("X1",
+                           { 1, 2, 3, 4, 5 },
+                           nan_policy::dont_pad_with_nans);
+    df.load_column<double>("Y1",
+                           { 6, 7, 8, 9, 3 },
+                           nan_policy::dont_pad_with_nans);
+    df.load_column<double>("X2",
+                           { 1, 2, 4, 6, 8 },
+                           nan_policy::dont_pad_with_nans);
+    df.load_column<double>("Y2",
+                           { 1, 3, 4, 5, 6 },
+                           nan_policy::dont_pad_with_nans);
+
+    LinearFitVisitor<double>    lin_v1;
+    auto                        result1 =
+        df.single_act_visit<double, double>("X1", "Y1", lin_v1).get_result();
+    auto                        actual1 =
+        std::vector<double> { 7.4, 7, 6.6, 6.2, 5.8 };
+
+    assert(std::fabs(lin_v1.get_residual() - 19.6) < 0.01);
+    for (size_t i = 0; i < result1.size(); ++i)
+        assert(fabs(result1[i] - actual1[i]) < 0.0001);
+
+    linfit_v<double>    lin_v2;
+    auto                result2 =
+        df.single_act_visit<double, double>("X2", "Y2", lin_v2).get_result();
+    auto                actual2 =
+        std::vector<double> { 1.73171, 2.37805, 3.67073, 4.96341, 6.2561 };
+
+    assert(std::fabs(lin_v2.get_residual() - 1.097561) < 0.00001);
     for (size_t i = 0; i < result2.size(); ++i)
         assert(fabs(result2[i] - actual2[i]) < 0.0001);
 }
@@ -4788,6 +4846,7 @@ int main(int, char *[]) {
     test_HurstExponentVisitor();
     test_LogFitVisitor();
     test_ExponentialFitVisitor();
+    test_LinearFitVisitor();
     test_ExpoSmootherVisitor();
     test_HWExpoSmootherVisitor();
     test_consolidate();

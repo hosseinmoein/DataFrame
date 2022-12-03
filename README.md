@@ -109,7 +109,7 @@ sys     0m25.983s
 ```bash
 mkdir [Debug | Release]
 cd [Debug | Release]
-cmake -DCMAKE_BUILD_TYPE=[Debug | Release] ..
+cmake -DCMAKE_BUILD_TYPE=[Debug | Release] -DHMDF_BENCHMARKS=1 -DHMDF_EXAMPLES=1 -DHMDF_TESTING=1 ..
 make
 make install
 

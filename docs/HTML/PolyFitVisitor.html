@@ -138,6 +138,42 @@ using efit_v = ExponentialFitVisitor&lt;T, I&gt;;
       </td>
     </tr>
 
+
+
+
+
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        <PRE><B>#include &lt;DataFrame/DataFrameStatsVisitors.h&gt;
+
+template&lt;typename T, typename I = unsigned long&gt;
+struct LinearFitVisitor;
+
+// -------------------------------------
+
+template&lt;typename T, typename I = unsigned long&gt;
+using linfit_v = LinearFitVisitor&lt;T, I&gt;;
+        </B></PRE></font>
+      </td>
+      <td>
+        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
+        The result gives you the vector of y fits for each given x.<BR><BR>
+
+        There is also a method <I>get_slope()</I> which returns the slope -- coefficient of the exponetial function.<BR>
+        There is also a method <I>get_residual()</I> which returns the sum of squared residuals.<BR>
+        There is also a method <I>get_intercept()</I> which returns the intercept.<BR>
+        <I>
+        <PRE>
+    LinearFitVisitor();
+		</PRE>
+        </I>
+      </td>
+      <td width="12%">
+        <B>T</B>: Column data type.<BR>
+        <B>I</B>: Index type.
+      </td>
+    </tr>
+
   </table>
 
 <!-- HTML generated using hilite.me --><div style="background: #ffffff; overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #008800; font-weight: bold">static</span> <span style="color: #333399; font-weight: bold">void</span> <span style="color: #0066BB; font-weight: bold">test_PolyFitVisitor</span>()  {

@@ -55,6 +55,10 @@ if(MSVC)
     set_tests_properties(vectors_tester PROPERTIES DISABLED TRUE)
 endif()
 
+add_executable(allocator_tester allocator_tester.cc)
+target_link_libraries(allocator_tester PRIVATE DataFrame)
+add_test(NAME allocator_tester COMMAND allocator_tester)
+
 add_executable(vector_ptr_view_tester vector_ptr_view_tester.cc)
 target_link_libraries(vector_ptr_view_tester PRIVATE DataFrame)
 add_test(NAME vector_ptr_view_tester COMMAND vector_ptr_view_tester)

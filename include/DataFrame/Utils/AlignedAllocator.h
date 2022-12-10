@@ -147,7 +147,8 @@ public:
         const auto  bytes = n_items * sizeof(value_type);
 
         return(reinterpret_cast<pointer>(
-                   ::operator new[](bytes, AlignedValue<T, AS>::align_value)));
+                   ::operator new[](bytes,
+                                    AlignedAllocator<T, AS>::align_value)));
     }
 
     // This is the same for all allocators that ignore hints.
@@ -166,7 +167,7 @@ public:
         // The size argument can be omitted but if present must also be equal
         // to the one used in new
         //
-        ::operator delete[](ptr, AlignedValue<T, AS>::align_value);
+        ::operator delete[](ptr, AlignedAllocator<T, AS>::align_value);
     }
 };
 

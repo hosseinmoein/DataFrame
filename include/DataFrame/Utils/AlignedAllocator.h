@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 
 #include <limits>
+#include <memory>
 #include <new>
 
 // ----------------------------------------------------------------------------
@@ -37,21 +38,30 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace hmdf
 {
 
-// Returns aligned pointers when allocations are requested. Default alignment
-// is 64B = 512b, sufficient for AVX-512 and most cache line sizes.
+template<typename T, std::size_t AS>
+struct  AlignedValue  {
+
+    static constexpr std::align_val_t   align_value { AS };
+};
+
+template<typename T>
+struct  AlignedValue<T, 0>  {
+
+    static constexpr std::align_val_t   align_value { alignof(T) };
+};
+
+// ----------------------------------------------------------------------------
+
+// By default the alignment is system defined alignment for the type
 //
-template<typename T, std::size_t AS = 64>
-class   AlignedAllocator  {
+template<typename T, std::size_t AS = 0>
+class   AlignedAllocator : public AlignedValue<T, AS>  {
 
-private:
-
-    static_assert(AS >= alignof(T),
+    static_assert(AS == 0 || AS >= alignof(T),
                   "ERROR: The requested alignment must be bigger or equal "
                   "to Type alignment");
 
 public:
-
-    static constexpr std::align_val_t   align_value { AS };
 
     // std::allocator_traits stuff
     //
@@ -76,9 +86,10 @@ public:
     template<class U>
     struct  rebind  { using other = AlignedAllocator<U, AS>; };
 
-    [[nodiscard]] inline pointer address(reference r) const  { return (&r); }
-    [[nodiscard]] inline const_pointer
-    address(const_reference cr) const  { return (&cr); }
+    [[nodiscard]] inline constexpr pointer
+    address(reference r) const  { return (std::addressof(r)); }
+    [[nodiscard]] inline constexpr const_pointer
+    address(const_reference cr) const  { return (std::addressof(cr)); }
 
     [[nodiscard]] constexpr size_type max_size() const  {
 
@@ -109,11 +120,11 @@ public:
 
     inline void construct(pointer p, const_reference val) const  {
 
-		new (static_cast<void *>(p)) T(val);
+        new (static_cast<void *>(p)) value_type(val);
     }
     inline void construct(pointer p) const  {
 
-		new (static_cast<void *>(p)) T();
+        new (static_cast<void *>(p)) value_type();
     }
 
     template<typename U, typename ... Ts >
@@ -122,7 +133,7 @@ public:
         new (static_cast<void *>(p)) U(std::forward<Ts>(args) ...);
     }
 
-    inline void destroy(pointer p) const  { p->~T(); }
+    inline void destroy(pointer p) const  { p->~value_type(); }
 
     template<typename U>
     inline void destroy(U *p) const  { p->~U(); }
@@ -135,7 +146,8 @@ public:
 
         const auto  bytes = n_items * sizeof(value_type);
 
-        return(reinterpret_cast<pointer>(::operator new[](bytes, align_value)));
+        return(reinterpret_cast<pointer>(
+                   ::operator new[](bytes, AlignedValue<T, AS>::align_value)));
     }
 
     // This is the same for all allocators that ignore hints.
@@ -154,7 +166,7 @@ public:
         // The size argument can be omitted but if present must also be equal
         // to the one used in new
         //
-        ::operator delete[](ptr, align_value);
+        ::operator delete[](ptr, AlignedValue<T, AS>::align_value);
     }
 };
 

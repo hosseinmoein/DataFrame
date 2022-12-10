@@ -27,6 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <DataFrame/Utils/AlignedAllocator.h>
 
+#include <cassert>
 #include <iostream>
 #include <vector>
 
@@ -47,11 +48,32 @@ const std::size_t   NUM = 5;
 int main(int, char *[]) {
 
     {
-        std::vector<double, AlignedAllocator<double>>   vec;
+        AlignedAllocator<double>        a1;
+        AlignedAllocator<int>           a2;
+        AlignedAllocator<double, 512>   a3;
+        AlignedAllocator<int, 512>      a4;
+
+        std::cout << "ai1 value: " << std::size_t(a1.align_value) << std::endl; 
+        std::cout << "ai2 value: " << std::size_t(a2.align_value) << std::endl; 
+        std::cout << "ai3 value: " << std::size_t(a3.align_value) << std::endl; 
+        std::cout << "ai4 value: " << std::size_t(a4.align_value) << std::endl; 
+    }
+    {
+        std::vector<double, AlignedAllocator<double, 512>>  vec;
 
         vec.reserve(NUM - 1);
         for (std::size_t i = 0; i < NUM; ++i)
             vec.push_back(double(i));
+        for (auto citer : vec)
+            std::cout << citer << ", ";
+        std::cout << std::endl;
+    }
+    {
+        std::vector<int, AlignedAllocator<int, 64>> vec;
+
+        vec.reserve(NUM - 1);
+        for (std::size_t i = 0; i < NUM; ++i)
+            vec.push_back(int(i));
         for (auto citer : vec)
             std::cout << citer << ", ";
         std::cout << std::endl;
@@ -77,7 +99,7 @@ int main(int, char *[]) {
         std::cout << std::endl;
     }
     {
-        std::vector<char, AlignedAllocator<char>>   vec;
+        std::vector<char, AlignedAllocator<char, 512>>  vec;
 
         vec.reserve(NUM - 1);
         for (std::size_t i = 101; i < 101 + NUM; ++i)
@@ -87,7 +109,7 @@ int main(int, char *[]) {
         std::cout << std::endl;
     }
     {
-        std::vector<long double, AlignedAllocator<long double>> vec;
+        std::vector<long double, AlignedAllocator<long double, 512>>    vec;
 
         vec.reserve(NUM);
         for (std::size_t i = 0; i < NUM; ++i)
@@ -97,13 +119,25 @@ int main(int, char *[]) {
         std::cout << std::endl;
     }
     {
-        std::vector<MyData, AlignedAllocator<MyData>>   vec(NUM);
+        std::vector<MyData, AlignedAllocator<MyData, 512>>  vec(NUM);
 
         vec[1].i = 1001;
         vec[3].i = 3001;
         for (auto &citer : vec)
             std::cout << citer.i << ", ";
         std::cout << std::endl;
+    }
+    {
+        std::vector<int, AlignedAllocator<int, 1024>>   vec1;
+        std::vector<int, AlignedAllocator<int>>         vec2;
+
+        vec1.reserve(NUM);
+        for (std::size_t i = 0; i < NUM; ++i)  {
+            vec1.push_back(int(i));
+            vec2.push_back(int(i));
+        }
+        for (std::size_t i = 0; i < NUM; ++i)
+            assert(vec1[i] == vec2[i]);
     }
 
     // This must fail to compile

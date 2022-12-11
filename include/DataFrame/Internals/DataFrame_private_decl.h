@@ -55,7 +55,7 @@ void read_csv2_(std::istream &file, bool columns_only);
 
 template<typename CF, typename ... Ts>
 static void
-sort_common_(DataFrame<I, H> &df, CF &&comp_func);
+sort_common_(DataFrame<I, H, A> &df, CF &&comp_func);
 
 template<typename T>
 static void
@@ -126,17 +126,17 @@ static void
 join_helper_common_(const LHS_T &lhs,
                     const RHS_T &rhs,
                     const IndexIdxVector &joined_index_idx,
-                    StdDataFrame<IDX_T> &result,
+                    DataFrame<IDX_T, HeteroVector, A> &result,
                     const char *skip_col_name = nullptr);
 
 template<typename LHS_T, typename RHS_T, typename ... Ts>
-static StdDataFrame<IndexType>
+static DataFrame
 index_join_helper_(const LHS_T &lhs,
                    const RHS_T &rhs,
                    const IndexIdxVector &joined_index_idx);
 
 template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
-static StdDataFrame<unsigned int>
+static DataFrame<unsigned int, HeteroVector, A>
 column_join_helper_(const LHS_T &lhs,
                     const RHS_T &rhs,
                     const char *col_name,
@@ -149,14 +149,14 @@ get_inner_index_idx_vector_(
     const std::vector<JoinSortingPair<T>> &col_vec_rhs);
 
 template<typename LHS_T, typename RHS_T, typename ... Ts>
-static StdDataFrame<IndexType>
+static DataFrame
 index_inner_join_(
     const LHS_T &lhs, const RHS_T &rhs,
     const std::vector<JoinSortingPair<IndexType>> &col_vec_lhs,
     const std::vector<JoinSortingPair<IndexType>> &col_vec_rhs);
 
 template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
-static StdDataFrame<unsigned int>
+static DataFrame<unsigned int, HeteroVector, A>
 column_inner_join_(const LHS_T &lhs,
                    const RHS_T &rhs,
                    const char *col_name,
@@ -170,14 +170,14 @@ get_left_index_idx_vector_(
     const std::vector<JoinSortingPair<T>> &col_vec_rhs);
 
 template<typename LHS_T, typename RHS_T, typename ... Ts>
-static StdDataFrame<IndexType>
+static DataFrame
 index_left_join_(
     const LHS_T &lhs, const RHS_T &rhs,
     const std::vector<JoinSortingPair<IndexType>> &col_vec_lhs,
     const std::vector<JoinSortingPair<IndexType>> &col_vec_rhs);
 
 template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
-static StdDataFrame<unsigned int>
+static DataFrame<unsigned int, HeteroVector, A>
 column_left_join_(const LHS_T &lhs,
                   const RHS_T &rhs,
                   const char *col_name,
@@ -191,14 +191,14 @@ get_right_index_idx_vector_(
     const std::vector<JoinSortingPair<T>> &col_vec_rhs);
 
 template<typename LHS_T, typename RHS_T, typename ... Ts>
-static StdDataFrame<IndexType>
+static DataFrame
 index_right_join_(
     const LHS_T &lhs, const RHS_T &rhs,
     const std::vector<JoinSortingPair<IndexType>> &col_vec_lhs,
     const std::vector<JoinSortingPair<IndexType>> &col_vec_rhs);
 
 template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
-static StdDataFrame<unsigned int>
+static DataFrame<unsigned int, HeteroVector, A>
 column_right_join_(const LHS_T &lhs,
                    const RHS_T &rhs,
                    const char *col_name,
@@ -206,7 +206,7 @@ column_right_join_(const LHS_T &lhs,
                    const std::vector<JoinSortingPair<T>> &col_vec_rhs);
 
 template<typename MAP, typename ... Ts>
-static StdDataFrame<IndexType>
+static DataFrame
 remove_dups_common_(const DataFrame &s_df,
                     remove_dup_spec rds,
                     const MAP &row_table,
@@ -223,14 +223,14 @@ get_left_right_index_idx_vector_(
     const std::vector<JoinSortingPair<T>> &col_vec_rhs);
 
 template<typename LHS_T, typename RHS_T, typename ... Ts>
-static StdDataFrame<IndexType>
+static DataFrame
 index_left_right_join_(
     const LHS_T &lhs, const RHS_T &rhs,
     const std::vector<JoinSortingPair<IndexType>> &col_vec_lhs,
     const std::vector<JoinSortingPair<IndexType>> &col_vec_rhs);
 
 template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
-static StdDataFrame<unsigned int>
+static DataFrame<unsigned int, HeteroVector, A>
 column_left_right_join_(
     const LHS_T &lhs,
     const RHS_T &rhs,

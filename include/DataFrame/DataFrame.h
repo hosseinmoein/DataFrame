@@ -32,6 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/DataFrameStatsVisitors.h>
 #include <DataFrame/DataFrameTypes.h>
 #include <DataFrame/Utils/DateTime.h>
+#include <DataFrame/Utils/AlignedAllocator.h>
 #include <DataFrame/Utils/FixedSizeString.h>
 #include <DataFrame/Utils/ThreadGranularity.h>
 #include <DataFrame/Utils/Utils.h>
@@ -65,7 +66,7 @@ namespace hmdf
 // A DataFrame may contain one index and any number of columns of any built-in
 // or user-defined types
 //
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A = 0>
 class DataFrame : public ThreadGranularity {
 
     static_assert(std::is_base_of<HeteroVector, H>::value ||
@@ -86,6 +87,18 @@ class DataFrame : public ThreadGranularity {
     using IndexType = I;
     using IndexVecType = typename type_declare<DataVec, IndexType>::type;
     using ColNameType = String64;
+
+    template<typename II>
+    using DataFrameView = DataFrame<II, HeteroView, A>;
+
+    template<typename II>
+    using DataFrameConstView = DataFrame<II, HeteroConstView, A>;
+
+    template<typename II>
+    using DataFramePtrView = DataFrame<II, HeteroPtrView, A>;
+
+    template<typename II>
+    using DataFrameConstPtrView = DataFrame<II, HeteroConstPtrView, A>;
 
     template<typename T>
     using ColumnVecType = typename type_declare<DataVec, T>::type;
@@ -280,12 +293,12 @@ public:  // Load/append/remove interfaces
         size_type interval,
         bool start_from_beginning,
         const T &null_value = hmdf::get_nan<T>(),
-        std::function<typename DataFrame<I, H>::size_type (
-            const typename DataFrame<I, H>::IndexType &,
-            const typename DataFrame<I, H>::IndexType &)> diff_func =
-            [](const typename DataFrame<I, H>::IndexType &t_1,
-               const typename DataFrame<I, H>::IndexType &t) ->
-                   typename DataFrame<I, H>::size_type  {
+        std::function<std::size_t (
+            const typename DataFrame<I, H, A>::IndexType &,
+            const typename DataFrame<I, H, A>::IndexType &)> diff_func =
+            [](const typename DataFrame<I, H, A>::IndexType &t_1,
+               const typename DataFrame<I, H, A>::IndexType &t) ->
+                   typename DataFrame<I, H, A>::size_type  {
                 return (static_cast<std::size_t>(t - t_1));
             });
 
@@ -1188,11 +1201,11 @@ public:  // Data manipulation
     //   Name of the column
     //
     template<typename T>
-    [[nodiscard]] StdDataFrame<T>
+    [[nodiscard]] DataFrame<T, HeteroVector, A>
     value_counts(const char *col_name) const;
 
     template<typename T>
-    [[nodiscard]] StdDataFrame<T>
+    [[nodiscard]] DataFrame<T, HeteroVector, A>
     value_counts(size_type index) const;
 
     // It bucketizes the data and index into intervals, based on index values
@@ -1287,7 +1300,7 @@ public:  // Data manipulation
     //   (See join_policy definition)
     //
     template<typename RHS_T, typename ... Ts>
-    [[nodiscard]] StdDataFrame<IndexType>
+    [[nodiscard]] DataFrame
     join_by_index(const RHS_T &rhs, join_policy jp) const;
 
     // It joins the data between self (lhs) and rhs and returns the joined data
@@ -1320,7 +1333,7 @@ public:  // Data manipulation
     //   (See join_policy definition)
     //
     template<typename RHS_T, typename T, typename ... Ts>
-    [[nodiscard]] StdDataFrame<unsigned int>
+    [[nodiscard]] DataFrame<unsigned int, HeteroVector, A>
     join_by_column(const RHS_T &rhs, const char *name, join_policy jp) const;
 
     // It concatenates rhs to the end of self and returns the result as
@@ -1344,7 +1357,7 @@ public:  // Data manipulation
     //                           concatenated
     //
     template<typename RHS_T, typename ... Ts>
-    [[nodiscard]] StdDataFrame<IndexType>
+    [[nodiscard]] DataFrame
     concat(const RHS_T &rhs,
            concat_policy cp = concat_policy::all_columns) const;
 
@@ -1424,7 +1437,7 @@ public:  // Data manipulation
     // and returns a new DataFrame with columns shifted.
     //
     template<typename ... Ts>
-    [[nodiscard]] StdDataFrame<IndexType>
+    [[nodiscard]] DataFrame
     shift(size_type periods, shift_policy sp) const;
 
     // This copies the named column into another vector and shifts it up or down
@@ -1467,7 +1480,7 @@ public:  // Data manipulation
     // and returns a new DataFrame with columns rotated.
     //
     template<typename ... Ts>
-    [[nodiscard]] StdDataFrame<IndexType>
+    [[nodiscard]] DataFrame
     rotate(size_type periods, shift_policy sp) const;
 
 public: // Read/access and slicing interfaces
@@ -2386,7 +2399,7 @@ public: // Read/access and slicing interfaces
     //   the result as a column.
     //
     template<typename T, typename ... Ts>
-    [[nodiscard]] StdDataFrame<T>
+    [[nodiscard]] DataFrame<T, HeteroVector, A>
     get_reindexed(const char *col_to_be_index,
                   const char *old_index_name = nullptr) const;
 
@@ -2439,7 +2452,7 @@ public: // Read/access and slicing interfaces
     //   the list only once.
     //
     template<typename ... Ts>
-    [[nodiscard]] StdDataFrame<std::string>
+    [[nodiscard]] DataFrame<std::string, HeteroVector, A>
     describe() const;
 
     // This method combines the content of column col_name between self and
@@ -3751,7 +3764,7 @@ public:  // Reading and writing
 
 private:
 
-    template<typename ALT_I, typename ALT_H>
+    template<typename ALT_I, typename ALT_H, std::size_t ALT_A>
     friend class DataFrame;
 
     using ColNameDict =

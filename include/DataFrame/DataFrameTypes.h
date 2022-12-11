@@ -486,23 +486,17 @@ template<typename T> struct is_complex<std::complex<T>>  {
 
 // H stands for a heterogeneous vector
 //
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 class DataFrame;
 
 template<typename I>
-using StdDataFrame = DataFrame<I, HeteroVector>;
+using StdDataFrame = DataFrame<I, HeteroVector, 0>;
 
 template<typename I>
-using DataFrameView = DataFrame<I, HeteroView>;
+using StdDataFrame64 = DataFrame<I, HeteroVector, 64>;
 
 template<typename I>
-using DataFrameConstView = DataFrame<I, HeteroConstView>;
-
-template<typename I>
-using DataFramePtrView = DataFrame<I, HeteroPtrView>;
-
-template<typename I>
-using DataFrameConstPtrView = DataFrame<I, HeteroConstPtrView>;
+using StdDataFrame512 = DataFrame<I, HeteroVector, 512>;
 
 // ----------------------------------------------------------------------------
 

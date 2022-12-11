@@ -42,17 +42,17 @@ namespace hmdf
 
 // Notice memeber variables are initialized twice, but that's cheap
 //
-template<typename I, typename H>
-DataFrame<I, H>::DataFrame(const DataFrame &that)  { *this = that; }
+template<typename I, typename H, std::size_t A>
+DataFrame<I, H, A>::DataFrame(const DataFrame &that)  { *this = that; }
 
-template<typename I, typename H>
-DataFrame<I, H>::DataFrame(DataFrame &&that)  { *this = std::move(that); }
+template<typename I, typename H, std::size_t A>
+DataFrame<I, H, A>::DataFrame(DataFrame &&that)  { *this = std::move(that); }
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
-DataFrame<I, H> &
-DataFrame<I, H>::operator= (const DataFrame &that)  {
+template<typename I, typename H, std::size_t A>
+DataFrame<I, H, A> &
+DataFrame<I, H, A>::operator= (const DataFrame &that)  {
 
     if (this != &that)  {
         indices_ = that.indices_;
@@ -68,9 +68,9 @@ DataFrame<I, H>::operator= (const DataFrame &that)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
-DataFrame<I, H> &
-DataFrame<I, H>::operator= (DataFrame &&that)  {
+template<typename I, typename H, std::size_t A>
+DataFrame<I, H, A> &
+DataFrame<I, H, A>::operator= (DataFrame &&that)  {
 
     if (this != &that)  {
         indices_ = std::exchange(that.indices_, IndexVecType { });
@@ -86,8 +86,8 @@ DataFrame<I, H>::operator= (DataFrame &&that)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
-DataFrame<I, H>::~DataFrame()  {
+template<typename I, typename H, std::size_t A>
+DataFrame<I, H, A>::~DataFrame()  {
 
     const SpinGuard guard(lock_);
 
@@ -96,31 +96,31 @@ DataFrame<I, H>::~DataFrame()  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
-bool DataFrame<I, H>::empty() const noexcept  { return (indices_.empty()); }
+template<typename I, typename H, std::size_t A>
+bool DataFrame<I, H, A>::empty() const noexcept  { return (indices_.empty()); }
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
-bool DataFrame<I, H>::
+template<typename I, typename H, std::size_t A>
+bool DataFrame<I, H, A>::
 shapeless() const noexcept  { return (empty() && column_list_.empty()); }
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
-void DataFrame<I, H>::set_lock (SpinLock *sl)  { lock_ = sl; }
+template<typename I, typename H, std::size_t A>
+void DataFrame<I, H, A>::set_lock (SpinLock *sl)  { lock_ = sl; }
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
-void DataFrame<I, H>::remove_lock ()  { lock_ = nullptr; }
+template<typename I, typename H, std::size_t A>
+void DataFrame<I, H, A>::remove_lock ()  { lock_ = nullptr; }
 
 // ----------------------------------------------------------------------------
 
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename CF, typename ... Ts>
-void DataFrame<I, H>::sort_common_(DataFrame<I, H> &df, CF &&comp_func)  {
+void DataFrame<I, H, A>::sort_common_(DataFrame<I, H, A> &df, CF &&comp_func)  {
 
     const size_type         idx_s = df.indices_.size();
     std::vector<size_type>  sorting_idxs(idx_s, 0);
@@ -140,10 +140,10 @@ void DataFrame<I, H>::sort_common_(DataFrame<I, H> &df, CF &&comp_func)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename ... Ts>
 void
-DataFrame<I, H>::shuffle(const std::vector<const char *> &col_names,
+DataFrame<I, H, A>::shuffle(const std::vector<const char *> &col_names,
                          bool also_shuffle_index)  {
 
     if (also_shuffle_index)  {
@@ -175,9 +175,9 @@ DataFrame<I, H>::shuffle(const std::vector<const char *> &col_names,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename T>
-void DataFrame<I, H>::
+void DataFrame<I, H, A>::
 fill_missing_value_(ColumnVecType<T> &vec,
                     const T &value,
                     int limit,
@@ -204,9 +204,9 @@ fill_missing_value_(ColumnVecType<T> &vec,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename T>
-void DataFrame<I, H>::
+void DataFrame<I, H, A>::
 fill_missing_ffill_(ColumnVecType<T> &vec, int limit, size_type col_num)  {
 
     const size_type vec_size = vec.size();
@@ -240,11 +240,11 @@ fill_missing_ffill_(ColumnVecType<T> &vec, int limit, size_type col_num)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename T,
          typename std::enable_if<! std::is_arithmetic<T>::value ||
                                  ! std::is_arithmetic<I>::value>::type*>
-void DataFrame<I, H>::
+void DataFrame<I, H, A>::
 fill_missing_midpoint_(ColumnVecType<T> &, int, size_type)  {
 
     throw NotFeasible("fill_missing_midpoint_(): ERROR: Mid-point filling is "
@@ -253,11 +253,11 @@ fill_missing_midpoint_(ColumnVecType<T> &, int, size_type)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename T,
          typename std::enable_if<std::is_arithmetic<T>::value &&
                                  std::is_arithmetic<I>::value>::type*>
-void DataFrame<I, H>::
+void DataFrame<I, H, A>::
 fill_missing_midpoint_(ColumnVecType<T> &vec, int limit, size_type)  {
 
     const size_type vec_size = vec.size();
@@ -288,9 +288,9 @@ fill_missing_midpoint_(ColumnVecType<T> &vec, int limit, size_type)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename T>
-void DataFrame<I, H>::
+void DataFrame<I, H, A>::
 fill_missing_bfill_(ColumnVecType<T> &vec, int limit)  {
 
     const long  vec_size = static_cast<long>(vec.size());
@@ -313,11 +313,11 @@ fill_missing_bfill_(ColumnVecType<T> &vec, int limit)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename T,
          typename std::enable_if<! std::is_arithmetic<T>::value ||
                                  ! std::is_arithmetic<I>::value>::type*>
-void DataFrame<I, H>::
+void DataFrame<I, H, A>::
 fill_missing_linter_(ColumnVecType<T> &, const IndexVecType &, int)  {
 
     throw NotFeasible("fill_missing_linter_(): ERROR: Interpolation is "
@@ -326,11 +326,11 @@ fill_missing_linter_(ColumnVecType<T> &, const IndexVecType &, int)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename T,
          typename std::enable_if<std::is_arithmetic<T>::value &&
                                  std::is_arithmetic<I>::value>::type*>
-void DataFrame<I, H>::
+void DataFrame<I, H, A>::
 fill_missing_linter_(ColumnVecType<T> &vec,
                      const IndexVecType &index,
                      int limit)  {
@@ -391,9 +391,9 @@ fill_missing_linter_(ColumnVecType<T> &vec,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename T>
-void DataFrame<I, H>::
+void DataFrame<I, H, A>::
 fill_missing(const std::vector<const char *> &col_names,
              fill_policy fp,
              const std::vector<T> &values,
@@ -489,9 +489,9 @@ fill_missing(const std::vector<const char *> &col_names,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename DF, typename ... Ts>
-void DataFrame<I, H>::fill_missing (const DF &rhs)  {
+void DataFrame<I, H, A>::fill_missing (const DF &rhs)  {
 
     const auto  &self_idx = get_index();
     const auto  &rhs_idx = rhs.get_index();
@@ -509,9 +509,9 @@ void DataFrame<I, H>::fill_missing (const DF &rhs)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename T>
-void DataFrame<I, H>::
+void DataFrame<I, H, A>::
 drop_missing_rows_(T &vec,
                    const DropRowMap missing_row_map,
                    drop_policy policy,
@@ -546,9 +546,9 @@ drop_missing_rows_(T &vec,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename ... Ts>
-void DataFrame<I, H>::
+void DataFrame<I, H, A>::
 drop_missing(drop_policy policy, size_type threshold)  {
 
     DropRowMap      missing_row_map;
@@ -577,9 +577,9 @@ drop_missing(drop_policy policy, size_type threshold)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename T>
-typename DataFrame<I, H>::size_type DataFrame<I, H>::
+typename DataFrame<I, H, A>::size_type DataFrame<I, H, A>::
 replace(const char *col_name,
         const std::vector<T> &old_values,
         const std::vector<T> &new_values,
@@ -596,8 +596,8 @@ replace(const char *col_name,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
-typename DataFrame<I, H>::size_type DataFrame<I, H>::
+template<typename I, typename H, std::size_t A>
+typename DataFrame<I, H, A>::size_type DataFrame<I, H, A>::
 replace_index(const std::vector<IndexType> &old_values,
               const std::vector<IndexType> &new_values,
               int limit)  {
@@ -612,9 +612,9 @@ replace_index(const std::vector<IndexType> &old_values,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename T, typename F>
-void DataFrame<I, H>::
+void DataFrame<I, H, A>::
 replace(const char *col_name, F &functor)  {
 
     ColumnVecType<T>    &vec = get_column<T>(col_name);
@@ -628,9 +628,9 @@ replace(const char *col_name, F &functor)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename T>
-std::future<typename DataFrame<I, H>::size_type> DataFrame<I, H>::
+std::future<typename DataFrame<I, H, A>::size_type> DataFrame<I, H, A>::
 replace_async(const char *col_name,
               const std::vector<T> &old_values,
               const std::vector<T> &new_values,
@@ -647,9 +647,9 @@ replace_async(const char *col_name,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename T, typename F>
-std::future<void> DataFrame<I, H>::
+std::future<void> DataFrame<I, H, A>::
 replace_async(const char *col_name, F &functor)  {
 
     return (std::async(std::launch::async,
@@ -661,9 +661,9 @@ replace_async(const char *col_name, F &functor)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename ...Ts>
-void DataFrame<I, H>::make_consistent ()  {
+void DataFrame<I, H, A>::make_consistent ()  {
 
     static_assert(std::is_base_of<HeteroVector, H>::value,
                   "Only a StdDataFrame can call make_consistent()");
@@ -678,9 +678,9 @@ void DataFrame<I, H>::make_consistent ()  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename ...Ts>
-void DataFrame<I, H>::shrink_to_fit ()  {
+void DataFrame<I, H, A>::shrink_to_fit ()  {
 
     indices_.shrink_to_fit();
 
@@ -695,9 +695,9 @@ void DataFrame<I, H>::shrink_to_fit ()  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename T, typename ...Ts>
-void DataFrame<I, H>::sort(const char *name, sort_spec dir)  {
+void DataFrame<I, H, A>::sort(const char *name, sort_spec dir)  {
 
     make_consistent<Ts ...>();
 
@@ -736,9 +736,9 @@ void DataFrame<I, H>::sort(const char *name, sort_spec dir)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename T1, typename T2, typename ... Ts>
-void DataFrame<I, H>::
+void DataFrame<I, H, A>::
 sort(const char *name1, sort_spec dir1, const char *name2, sort_spec dir2)  {
 
     make_consistent<Ts ...>();
@@ -782,9 +782,9 @@ sort(const char *name1, sort_spec dir1, const char *name2, sort_spec dir2)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename T1, typename T2, typename T3, typename ... Ts>
-void DataFrame<I, H>::
+void DataFrame<I, H, A>::
 sort(const char *name1, sort_spec dir1,
      const char *name2, sort_spec dir2,
      const char *name3, sort_spec dir3)  {
@@ -849,9 +849,9 @@ sort(const char *name1, sort_spec dir1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename T1, typename T2, typename T3, typename T4, typename ... Ts>
-void DataFrame<I, H>::
+void DataFrame<I, H, A>::
 sort(const char *name1, sort_spec dir1,
      const char *name2, sort_spec dir2,
      const char *name3, sort_spec dir3,
@@ -935,10 +935,10 @@ sort(const char *name1, sort_spec dir1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename T1, typename T2, typename T3, typename T4, typename T5,
          typename ... Ts>
-void DataFrame<I, H>::
+void DataFrame<I, H, A>::
 sort(const char *name1, sort_spec dir1,
      const char *name2, sort_spec dir2,
      const char *name3, sort_spec dir3,
@@ -1041,10 +1041,10 @@ sort(const char *name1, sort_spec dir1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename T, typename ...Ts>
 std::future<void>
-DataFrame<I, H>::sort_async(const char *name, sort_spec dir)  {
+DataFrame<I, H, A>::sort_async(const char *name, sort_spec dir)  {
 
     return (std::async(std::launch::async,
                        [name, dir, this] () -> void {
@@ -1054,10 +1054,10 @@ DataFrame<I, H>::sort_async(const char *name, sort_spec dir)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename T1, typename T2, typename ... Ts>
 std::future<void>
-DataFrame<I, H>::
+DataFrame<I, H, A>::
 sort_async(const char *name1, sort_spec dir1,
            const char *name2, sort_spec dir2)  {
 
@@ -1070,10 +1070,10 @@ sort_async(const char *name1, sort_spec dir1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename T1, typename T2, typename T3, typename ... Ts>
 std::future<void>
-DataFrame<I, H>::
+DataFrame<I, H, A>::
 sort_async(const char *name1, sort_spec dir1,
            const char *name2, sort_spec dir2,
            const char *name3, sort_spec dir3)  {
@@ -1089,10 +1089,10 @@ sort_async(const char *name1, sort_spec dir1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename T1, typename T2, typename T3, typename T4, typename ... Ts>
 std::future<void>
-DataFrame<I, H>::
+DataFrame<I, H, A>::
 sort_async(const char *name1, sort_spec dir1,
            const char *name2, sort_spec dir2,
            const char *name3, sort_spec dir3,
@@ -1110,11 +1110,11 @@ sort_async(const char *name1, sort_spec dir1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename T1, typename T2, typename T3, typename T4, typename T5,
          typename ... Ts>
 std::future<void>
-DataFrame<I, H>::
+DataFrame<I, H, A>::
 sort_async(const char *name1, sort_spec dir1,
            const char *name2, sort_spec dir2,
            const char *name3, sort_spec dir3,
@@ -1134,9 +1134,9 @@ sort_async(const char *name1, sort_spec dir1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename T, typename I_V, typename ... Ts>
-DataFrame<I, H> DataFrame<I, H>::
+DataFrame<I, H, A> DataFrame<I, H, A>::
 groupby1(const char *col_name, I_V &&idx_visitor, Ts&& ... args) const  {
 
     const ColumnVecType<T>  *gb_vec { nullptr };
@@ -1179,9 +1179,9 @@ groupby1(const char *col_name, I_V &&idx_visitor, Ts&& ... args) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename T1, typename T2, typename I_V, typename ... Ts>
-DataFrame<I, H> DataFrame<I, H>::
+DataFrame<I, H, A> DataFrame<I, H, A>::
 groupby2(const char *col_name1,
          const char *col_name2,
          I_V &&idx_visitor,
@@ -1246,9 +1246,9 @@ groupby2(const char *col_name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename T1, typename T2, typename T3, typename I_V, typename ... Ts>
-DataFrame<I, H> DataFrame<I, H>::
+DataFrame<I, H, A> DataFrame<I, H, A>::
 groupby3(const char *col_name1,
          const char *col_name2,
          const char *col_name3,
@@ -1331,9 +1331,9 @@ groupby3(const char *col_name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename T, typename I_V, typename ... Ts>
-std::future<DataFrame<I, H>> DataFrame<I, H>::
+std::future<DataFrame<I, H, A>> DataFrame<I, H, A>::
 groupby1_async(const char *col_name, I_V &&idx_visitor, Ts&& ... args) const {
 
     return (std::async(std::launch::async,
@@ -1346,9 +1346,9 @@ groupby1_async(const char *col_name, I_V &&idx_visitor, Ts&& ... args) const {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename T1, typename T2, typename I_V, typename ... Ts>
-std::future<DataFrame<I, H>> DataFrame<I, H>::
+std::future<DataFrame<I, H, A>> DataFrame<I, H, A>::
 groupby2_async(const char *col_name1,
                const char *col_name2,
                I_V &&idx_visitor,
@@ -1365,9 +1365,9 @@ groupby2_async(const char *col_name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename T1, typename T2, typename T3, typename I_V, typename ... Ts>
-std::future<DataFrame<I, H>> DataFrame<I, H>::
+std::future<DataFrame<I, H, A>> DataFrame<I, H, A>::
 groupby3_async(const char *col_name1,
                const char *col_name2,
                const char *col_name3,
@@ -1386,10 +1386,10 @@ groupby3_async(const char *col_name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename T>
-StdDataFrame<T>
-DataFrame<I, H>::value_counts (const char *col_name) const  {
+DataFrame<T, HeteroVector, A>
+DataFrame<I, H, A>::value_counts (const char *col_name) const  {
 
     const ColumnVecType<T>  &vec = get_column<T>(col_name);
     auto                    hash_func =
@@ -1437,7 +1437,7 @@ DataFrame<I, H>::value_counts (const char *col_name) const  {
         counts.emplace_back(nan_count);
     }
 
-    StdDataFrame<T> result_df;
+    DataFrame<T, HeteroVector, A>   result_df;
 
     result_df.load_index(std::move(res_indices));
     result_df.load_column("counts", std::move(counts));
@@ -1447,18 +1447,19 @@ DataFrame<I, H>::value_counts (const char *col_name) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename T>
-StdDataFrame<T> DataFrame<I, H>::value_counts(size_type index) const  {
+DataFrame<T, HeteroVector, A>
+DataFrame<I, H, A>::value_counts(size_type index) const  {
 
     return (value_counts<T>(column_list_[index].first.c_str()));
 }
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename V, typename I_V, typename ... Ts>
-DataFrame<I, H> DataFrame<I, H>::
+DataFrame<I, H, A> DataFrame<I, H, A>::
 bucketize(bucket_type bt,
           const V &value,
           I_V &&idx_visitor,
@@ -1484,10 +1485,10 @@ bucketize(bucket_type bt,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename V, typename I_V, typename ... Ts>
-std::future<DataFrame<I, H>>
-DataFrame<I, H>::
+std::future<DataFrame<I, H, A>>
+DataFrame<I, H, A>::
 bucketize_async(bucket_type bt,
                 const V &value,
                 I_V &&idx_visitor,
@@ -1504,9 +1505,9 @@ bucketize_async(bucket_type bt,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename T, typename V>
-DataFrame<I, H> DataFrame<I, H>::
+DataFrame<I, H, A> DataFrame<I, H, A>::
 transpose(IndexVecType &&indices, const V &new_col_names) const  {
 
     const size_type num_cols = column_list_.size();

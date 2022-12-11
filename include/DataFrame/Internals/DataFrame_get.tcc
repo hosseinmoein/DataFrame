@@ -40,19 +40,19 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace hmdf
 {
 
-template<typename I, typename  H>
-std::pair<typename DataFrame<I, H>::size_type,
-          typename DataFrame<I, H>::size_type>
-DataFrame<I, H>::shape() const  {
+template<typename I, typename H, std::size_t A>
+std::pair<typename DataFrame<I, H, A>::size_type,
+          typename DataFrame<I, H, A>::size_type>
+DataFrame<I, H, A>::shape() const  {
 
     return (std::make_pair(indices_.size(), column_list_.size()));
 }
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T>
-MemUsage DataFrame<I, H>::get_memory_usage(const char *col_name) const  {
+MemUsage DataFrame<I, H, A>::get_memory_usage(const char *col_name) const  {
 
     MemUsage    result;
 
@@ -68,9 +68,9 @@ MemUsage DataFrame<I, H>::get_memory_usage(const char *col_name) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
-typename DataFrame<I, H>::size_type
-DataFrame<I, H>::col_name_to_idx (const char *col_name) const  {
+template<typename I, typename H, std::size_t A>
+typename DataFrame<I, H, A>::size_type
+DataFrame<I, H, A>::col_name_to_idx (const char *col_name) const  {
 
     for (const auto &citer : column_list_)
         if (citer.first == col_name)
@@ -86,9 +86,9 @@ DataFrame<I, H>::col_name_to_idx (const char *col_name) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 const char *
-DataFrame<I, H>::col_idx_to_name (size_type col_idx) const  {
+DataFrame<I, H, A>::col_idx_to_name (size_type col_idx) const  {
 
     for (const auto &citer : column_list_)
         if (citer.second == col_idx)
@@ -109,10 +109,10 @@ DataFrame<I, H>::col_idx_to_name (size_type col_idx) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T>
-typename DataFrame<I, H>::template ColumnVecType<T> &
-DataFrame<I, H>::get_column (const char *name)  {
+typename DataFrame<I, H, A>::template ColumnVecType<T> &
+DataFrame<I, H, A>::get_column (const char *name)  {
 
     auto    iter = column_tb_.find (name);
 
@@ -134,28 +134,28 @@ DataFrame<I, H>::get_column (const char *name)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T>
-typename DataFrame<I, H>::template ColumnVecType<typename T::type> &
-DataFrame<I, H>::get_column ()  {
+typename DataFrame<I, H, A>::template ColumnVecType<typename T::type> &
+DataFrame<I, H, A>::get_column ()  {
 
     return (get_column<typename T::type>(T::name));
 }
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T>
-typename DataFrame<I, H>::template ColumnVecType<T> &
-DataFrame<I, H>::get_column(size_type index)  {
+typename DataFrame<I, H, A>::template ColumnVecType<T> &
+DataFrame<I, H, A>::get_column(size_type index)  {
 
     return (get_column<T>(column_list_[index].first.c_str()));
 }
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
-bool DataFrame<I, H>::has_column (const char *name) const  {
+template<typename I, typename H, std::size_t A>
+bool DataFrame<I, H, A>::has_column (const char *name) const  {
 
     auto    iter = column_tb_.find (name);
 
@@ -164,26 +164,26 @@ bool DataFrame<I, H>::has_column (const char *name) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
-bool DataFrame<I, H>::
+template<typename I, typename H, std::size_t A>
+bool DataFrame<I, H, A>::
 has_column(size_type index) const { return (index < column_list_.size()); }
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T>
-const typename DataFrame<I, H>::template ColumnVecType<T> &
-DataFrame<I, H>::get_column (const char *name) const  {
+const typename DataFrame<I, H, A>::template ColumnVecType<T> &
+DataFrame<I, H, A>::get_column (const char *name) const  {
 
     return (const_cast<DataFrame *>(this)->get_column<T>(name));
 }
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T>
-const typename DataFrame<I, H>::template ColumnVecType<typename T::type> &
-DataFrame<I, H>::get_column () const  {
+const typename DataFrame<I, H, A>::template ColumnVecType<typename T::type> &
+DataFrame<I, H, A>::get_column () const  {
 
     return (const_cast<DataFrame *>(this)->get_column<typename T::type>(
                 T::name));
@@ -191,31 +191,31 @@ DataFrame<I, H>::get_column () const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T>
-const typename DataFrame<I, H>::template ColumnVecType<T> &
-DataFrame<I, H>::get_column(size_type index) const  {
+const typename DataFrame<I, H, A>::template ColumnVecType<T> &
+DataFrame<I, H, A>::get_column(size_type index) const  {
 
     return (get_column<T>(column_list_[index].first.c_str()));
 }
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
-const typename DataFrame<I, H>::IndexVecType &
-DataFrame<I, H>::get_index() const  { return (indices_); }
+template<typename I, typename H, std::size_t A>
+const typename DataFrame<I, H, A>::IndexVecType &
+DataFrame<I, H, A>::get_index() const  { return (indices_); }
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
-typename DataFrame<I, H>::IndexVecType &
-DataFrame<I, H>::get_index()  { return (indices_); }
+template<typename I, typename H, std::size_t A>
+typename DataFrame<I, H, A>::IndexVecType &
+DataFrame<I, H, A>::get_index()  { return (indices_); }
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename ... Ts>
-HeteroVector DataFrame<I, H>::
+HeteroVector DataFrame<I, H, A>::
 get_row(size_type row_num, const std::vector<const char *> &col_names) const {
 
     if (row_num >= indices_.size())  {
@@ -260,9 +260,9 @@ get_row(size_type row_num, const std::vector<const char *> &col_names) const {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename ... Ts>
-HeteroVector DataFrame<I, H>::
+HeteroVector DataFrame<I, H, A>::
 get_row(size_type row_num) const {
 
     if (row_num >= indices_.size())  {
@@ -295,9 +295,9 @@ get_row(size_type row_num) const {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T>
-std::vector<T> DataFrame<I, H>::
+std::vector<T> DataFrame<I, H, A>::
 get_col_unique_values(const char *name) const  {
 
     const ColumnVecType<T>  &vec = get_column<T>(name);
@@ -337,10 +337,10 @@ get_col_unique_values(const char *name) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename ... Ts>
-DataFrame<I, H>
-DataFrame<I, H>::get_data_by_idx (Index2D<IndexType> range) const  {
+DataFrame<I, H, A>
+DataFrame<I, H, A>::get_data_by_idx (Index2D<IndexType> range) const  {
 
     const auto  &lower =
         std::lower_bound (indices_.begin(), indices_.end(), range.begin);
@@ -373,10 +373,10 @@ DataFrame<I, H>::get_data_by_idx (Index2D<IndexType> range) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename ... Ts>
-DataFrame<I, H>
-DataFrame<I, H>::get_data_by_idx(const std::vector<IndexType> &values) const  {
+DataFrame<I, H, A> DataFrame<I, H, A>::
+get_data_by_idx(const std::vector<IndexType> &values) const  {
 
     const std::unordered_set<IndexType> val_table(values.begin(), values.end());
     IndexVecType                        new_index;
@@ -411,10 +411,10 @@ DataFrame<I, H>::get_data_by_idx(const std::vector<IndexType> &values) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename ... Ts>
-DataFrameView<I>
-DataFrame<I, H>::get_view_by_idx (Index2D<IndexType> range)  {
+typename DataFrame<I, H, A>::template DataFrameView<I>
+DataFrame<I, H, A>::get_view_by_idx (Index2D<IndexType> range)  {
 
     static_assert(std::is_base_of<HeteroVector, H>::value,
                   "Only a StdDataFrame can call get_view_by_idx()");
@@ -457,10 +457,10 @@ DataFrame<I, H>::get_view_by_idx (Index2D<IndexType> range)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename ... Ts>
-DataFrameConstView<I>
-DataFrame<I, H>::get_view_by_idx (Index2D<IndexType> range) const  {
+typename DataFrame<I, H, A>::template DataFrameConstView<I>
+DataFrame<I, H, A>::get_view_by_idx (Index2D<IndexType> range) const  {
 
     static_assert(std::is_base_of<HeteroVector, H>::value,
                   "Only a StdDataFrame can call get_view_by_idx()");
@@ -504,9 +504,9 @@ DataFrame<I, H>::get_view_by_idx (Index2D<IndexType> range) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename ... Ts>
-DataFramePtrView<I> DataFrame<I, H>::
+typename DataFrame<I, H, A>::template DataFramePtrView<I> DataFrame<I, H, A>::
 get_view_by_idx(const std::vector<IndexType> &values)  {
 
     static_assert(std::is_base_of<HeteroVector, H>::value,
@@ -551,9 +551,10 @@ get_view_by_idx(const std::vector<IndexType> &values)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename ... Ts>
-DataFrameConstPtrView<I> DataFrame<I, H>::
+typename DataFrame<I, H, A>::template DataFrameConstPtrView<I>
+DataFrame<I, H, A>::
 get_view_by_idx(const std::vector<IndexType> &values) const  {
 
     static_assert(std::is_base_of<HeteroVector, H>::value,
@@ -598,10 +599,10 @@ get_view_by_idx(const std::vector<IndexType> &values) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename ... Ts>
-DataFrame<I, H>
-DataFrame<I, H>::get_data_by_loc (Index2D<long> range) const  {
+DataFrame<I, H, A>
+DataFrame<I, H, A>::get_data_by_loc (Index2D<long> range) const  {
 
     if (range.begin < 0)
         range.begin = static_cast<long>(indices_.size()) + range.begin;
@@ -640,10 +641,10 @@ DataFrame<I, H>::get_data_by_loc (Index2D<long> range) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename ... Ts>
-DataFrame<I, H>
-DataFrame<I, H>::get_data_by_loc (const std::vector<long> &locations) const  {
+DataFrame<I, H, A> DataFrame<I, H, A>::
+get_data_by_loc (const std::vector<long> &locations) const  {
 
     const size_type idx_s = indices_.size();
     DataFrame       df;
@@ -674,10 +675,10 @@ DataFrame<I, H>::get_data_by_loc (const std::vector<long> &locations) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename ... Ts>
-DataFrameView<I>
-DataFrame<I, H>::get_view_by_loc (Index2D<long> range)  {
+typename DataFrame<I, H, A>::template DataFrameView<I>
+DataFrame<I, H, A>::get_view_by_loc (Index2D<long> range)  {
 
     static_assert(std::is_base_of<HeteroVector, H>::value,
                   "Only a StdDataFrame can call get_view_by_loc()");
@@ -721,10 +722,10 @@ DataFrame<I, H>::get_view_by_loc (Index2D<long> range)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename ... Ts>
-DataFrameConstView<I>
-DataFrame<I, H>::get_view_by_loc (Index2D<long> range) const  {
+typename DataFrame<I, H, A>::template DataFrameConstView<I>
+DataFrame<I, H, A>::get_view_by_loc (Index2D<long> range) const  {
 
     static_assert(std::is_base_of<HeteroVector, H>::value,
                   "Only a StdDataFrame can call get_view_by_loc()");
@@ -768,10 +769,10 @@ DataFrame<I, H>::get_view_by_loc (Index2D<long> range) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename ... Ts>
-DataFramePtrView<I>
-DataFrame<I, H>::get_view_by_loc (const std::vector<long> &locations)  {
+typename DataFrame<I, H, A>::template DataFramePtrView<I>
+DataFrame<I, H, A>::get_view_by_loc (const std::vector<long> &locations)  {
 
     static_assert(std::is_base_of<HeteroVector, H>::value,
                   "Only a StdDataFrame can call get_view_by_loc()");
@@ -808,10 +809,11 @@ DataFrame<I, H>::get_view_by_loc (const std::vector<long> &locations)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename ... Ts>
-DataFrameConstPtrView<I>
-DataFrame<I, H>::get_view_by_loc (const std::vector<long> &locations) const  {
+typename DataFrame<I, H, A>::template DataFrameConstPtrView<I>
+DataFrame<I, H, A>::
+get_view_by_loc (const std::vector<long> &locations) const  {
 
     static_assert(std::is_base_of<HeteroVector, H>::value,
                   "Only a StdDataFrame can call get_view_by_loc()");
@@ -848,9 +850,9 @@ DataFrame<I, H>::get_view_by_loc (const std::vector<long> &locations) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T, typename F, typename ... Ts>
-DataFrame<I, H> DataFrame<I, H>::
+DataFrame<I, H, A> DataFrame<I, H, A>::
 get_data_by_sel (const char *name, F &sel_functor) const  {
 
     const ColumnVecType<T>  &vec = get_column<T>(name);
@@ -887,9 +889,9 @@ get_data_by_sel (const char *name, F &sel_functor) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T, typename F, typename ... Ts>
-DataFramePtrView<I> DataFrame<I, H>::
+typename DataFrame<I, H, A>::template DataFramePtrView<I> DataFrame<I, H, A>::
 get_view_by_sel (const char *name, F &sel_functor)  {
 
     static_assert(std::is_base_of<HeteroVector, H>::value,
@@ -931,9 +933,10 @@ get_view_by_sel (const char *name, F &sel_functor)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T, typename F, typename ... Ts>
-DataFrameConstPtrView<I> DataFrame<I, H>::
+typename DataFrame<I, H, A>::template DataFrameConstPtrView<I>
+DataFrame<I, H, A>::
 get_view_by_sel (const char *name, F &sel_functor) const  {
 
     static_assert(std::is_base_of<HeteroVector, H>::value,
@@ -975,9 +978,9 @@ get_view_by_sel (const char *name, F &sel_functor) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T1, typename T2, typename F, typename ... Ts>
-DataFrame<I, H> DataFrame<I, H>::
+DataFrame<I, H, A> DataFrame<I, H, A>::
 get_data_by_sel (const char *name1, const char *name2, F &sel_functor) const  {
 
     const size_type         idx_s = indices_.size();
@@ -1022,9 +1025,9 @@ get_data_by_sel (const char *name1, const char *name2, F &sel_functor) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T1, typename T2, typename F, typename ... Ts>
-DataFramePtrView<I> DataFrame<I, H>::
+typename DataFrame<I, H, A>::template DataFramePtrView<I> DataFrame<I, H, A>::
 get_view_by_sel (const char *name1, const char *name2, F &sel_functor)  {
 
     static_assert(std::is_base_of<HeteroVector, H>::value,
@@ -1074,9 +1077,10 @@ get_view_by_sel (const char *name1, const char *name2, F &sel_functor)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T1, typename T2, typename F, typename ... Ts>
-DataFrameConstPtrView<I> DataFrame<I, H>::
+typename DataFrame<I, H, A>::template DataFrameConstPtrView<I>
+DataFrame<I, H, A>::
 get_view_by_sel (const char *name1, const char *name2, F &sel_functor) const  {
 
     static_assert(std::is_base_of<HeteroVector, H>::value,
@@ -1126,9 +1130,9 @@ get_view_by_sel (const char *name1, const char *name2, F &sel_functor) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T1, typename T2, typename T3, typename F, typename ... Ts>
-DataFrame<I, H> DataFrame<I, H>::
+DataFrame<I, H, A> DataFrame<I, H, A>::
 get_data_by_sel (const char *name1,
                  const char *name2,
                  const char *name3,
@@ -1179,9 +1183,9 @@ get_data_by_sel (const char *name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename Tuple, typename F, typename... FilterCols>
-DataFrame<I, H> DataFrame<I, H>::
+DataFrame<I, H, A> DataFrame<I, H, A>::
 get_data_by_sel (F &sel_functor) const  {
 
     const size_type idx_s = indices_.size();
@@ -1244,9 +1248,9 @@ get_data_by_sel (F &sel_functor) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename Tuple, typename F, typename... FilterCols>
-DataFrame<I, H> DataFrame<I, H>::
+DataFrame<I, H, A> DataFrame<I, H, A>::
 get_data_by_sel (F &sel_functor, FilterCols && ... filter_cols) const  {
 
     const size_type idx_s = indices_.size();
@@ -1307,9 +1311,9 @@ get_data_by_sel (F &sel_functor, FilterCols && ... filter_cols) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T1, typename T2, typename T3, typename F, typename ... Ts>
-DataFramePtrView<I> DataFrame<I, H>::
+typename DataFrame<I, H, A>::template DataFramePtrView<I> DataFrame<I, H, A>::
 get_view_by_sel (const char *name1,
                  const char *name2,
                  const char *name3,
@@ -1365,9 +1369,10 @@ get_view_by_sel (const char *name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T1, typename T2, typename T3, typename F, typename ... Ts>
-DataFrameConstPtrView<I> DataFrame<I, H>::
+typename DataFrame<I, H, A>::template DataFrameConstPtrView<I>
+DataFrame<I, H, A>::
 get_view_by_sel (const char *name1,
                  const char *name2,
                  const char *name3,
@@ -1423,10 +1428,10 @@ get_view_by_sel (const char *name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T1, typename T2, typename T3, typename T4,
          typename F, typename ... Ts>
-DataFrame<I, H> DataFrame<I, H>::
+DataFrame<I, H, A> DataFrame<I, H, A>::
 get_data_by_sel(const char *name1,
                 const char *name2,
                 const char *name3,
@@ -1482,10 +1487,10 @@ get_data_by_sel(const char *name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T1, typename T2, typename T3, typename T4,
          typename F, typename ... Ts>
-DataFramePtrView<I> DataFrame<I, H>::
+typename DataFrame<I, H, A>::template DataFramePtrView<I> DataFrame<I, H, A>::
 get_view_by_sel(const char *name1,
                 const char *name2,
                 const char *name3,
@@ -1546,10 +1551,11 @@ get_view_by_sel(const char *name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T1, typename T2, typename T3, typename T4,
          typename F, typename ... Ts>
-DataFrameConstPtrView<I> DataFrame<I, H>::
+typename DataFrame<I, H, A>::template DataFrameConstPtrView<I>
+DataFrame<I, H, A>::
 get_view_by_sel(const char *name1,
                 const char *name2,
                 const char *name3,
@@ -1610,10 +1616,10 @@ get_view_by_sel(const char *name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T1, typename T2, typename T3, typename T4, typename T5,
          typename F, typename ... Ts>
-DataFrame<I, H> DataFrame<I, H>::
+DataFrame<I, H, A> DataFrame<I, H, A>::
 get_data_by_sel(const char *name1,
                 const char *name2,
                 const char *name3,
@@ -1674,10 +1680,10 @@ get_data_by_sel(const char *name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T1, typename T2, typename T3, typename T4, typename T5,
          typename F, typename ... Ts>
-DataFramePtrView<I> DataFrame<I, H>::
+typename DataFrame<I, H, A>::template DataFramePtrView<I> DataFrame<I, H, A>::
 get_view_by_sel(const char *name1,
                 const char *name2,
                 const char *name3,
@@ -1743,10 +1749,11 @@ get_view_by_sel(const char *name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T1, typename T2, typename T3, typename T4, typename T5,
          typename F, typename ... Ts>
-DataFrameConstPtrView<I> DataFrame<I, H>::
+typename DataFrame<I, H, A>::template DataFrameConstPtrView<I>
+DataFrame<I, H, A>::
 get_view_by_sel(const char *name1,
                 const char *name2,
                 const char *name3,
@@ -1812,9 +1819,9 @@ get_view_by_sel(const char *name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename ... Ts>
-DataFrame<I, H> DataFrame<I, H>::
+DataFrame<I, H, A> DataFrame<I, H, A>::
 get_data_by_rand(random_policy spec, double n, size_type seed) const  {
 
     bool            use_seed = false;
@@ -1886,9 +1893,9 @@ get_data_by_rand(random_policy spec, double n, size_type seed) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename ... Ts>
-DataFramePtrView<I> DataFrame<I, H>::
+typename DataFrame<I, H, A>::template DataFramePtrView<I> DataFrame<I, H, A>::
 get_view_by_rand (random_policy spec, double n, size_type seed)  {
 
     bool            use_seed = false;
@@ -1960,9 +1967,10 @@ get_view_by_rand (random_policy spec, double n, size_type seed)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename ... Ts>
-DataFrameConstPtrView<I> DataFrame<I, H>::
+typename DataFrame<I, H, A>::template DataFrameConstPtrView<I>
+DataFrame<I, H, A>::
 get_view_by_rand (random_policy spec, double n, size_type seed) const  {
 
     bool            use_seed = false;
@@ -2035,9 +2043,9 @@ get_view_by_rand (random_policy spec, double n, size_type seed) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename ... Ts>
-DataFrame<I, H> DataFrame<I, H>::
+DataFrame<I, H, A> DataFrame<I, H, A>::
 get_data(const std::vector<const char *> &col_names) const  {
 
     DataFrame   df;
@@ -2067,9 +2075,9 @@ get_data(const std::vector<const char *> &col_names) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename ... Ts>
-DataFrameView<I> DataFrame<I, H>::
+typename DataFrame<I, H, A>::template DataFrameView<I> DataFrame<I, H, A>::
 get_view(const std::vector<const char *> &col_names)  {
 
     static_assert(std::is_base_of<HeteroVector, H>::value,
@@ -2109,9 +2117,10 @@ get_view(const std::vector<const char *> &col_names)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename ... Ts>
-DataFrameConstView<I> DataFrame<I, H>::
+typename DataFrame<I, H, A>::template DataFrameConstView<I>
+DataFrame<I, H, A>::
 get_view(const std::vector<const char *> &col_names) const  {
 
     static_assert(std::is_base_of<HeteroVector, H>::value,
@@ -2152,14 +2161,14 @@ get_view(const std::vector<const char *> &col_names) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T, typename ... Ts>
-StdDataFrame<T> DataFrame<I, H>::
+DataFrame<T, HeteroVector, A> DataFrame<I, H, A>::
 get_reindexed(const char *col_to_be_index, const char *old_index_name) const  {
 
-    StdDataFrame<T> result;
-    const auto      &new_idx = get_column<T>(col_to_be_index);
-    const size_type new_idx_s =
+    DataFrame<T, HeteroVector, A>   result;
+    const auto                      &new_idx = get_column<T>(col_to_be_index);
+    const size_type                 new_idx_s =
         result.load_index(new_idx.begin(), new_idx.end());
 
     if (old_index_name)  {
@@ -2174,7 +2183,7 @@ get_reindexed(const char *col_to_be_index, const char *old_index_name) const  {
     for (const auto &citer : column_list_)  {
         if (citer.first == col_to_be_index)  continue;
 
-        load_functor_<StdDataFrame<T>, Ts ...>  functor (
+        load_functor_<DataFrame<T, HeteroVector, A>, Ts ...>    functor (
             citer.first.c_str(),
             0,
             new_idx_s,
@@ -2190,9 +2199,9 @@ get_reindexed(const char *col_to_be_index, const char *old_index_name) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T, typename ... Ts>
-DataFrameView<T> DataFrame<I, H>::
+typename DataFrame<I, H, A>::template DataFrameView<T> DataFrame<I, H, A>::
 get_reindexed_view(const char *col_to_be_index, const char *old_index_name)  {
 
     static_assert(std::is_base_of<HeteroVector, H>::value,
@@ -2233,9 +2242,10 @@ get_reindexed_view(const char *col_to_be_index, const char *old_index_name)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T, typename ... Ts>
-DataFrameConstView<T> DataFrame<I, H>::
+typename DataFrame<I, H, A>::template DataFrameConstView<T>
+DataFrame<I, H, A>::
 get_reindexed_view(const char *col_to_be_index,
                    const char *old_index_name) const  {
 
@@ -2278,12 +2288,12 @@ get_reindexed_view(const char *col_to_be_index,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename ... Ts>
-std::vector<std::tuple<typename DataFrame<I, H>::ColNameType,
-                       typename DataFrame<I, H>::size_type,
+std::vector<std::tuple<typename DataFrame<I, H, A>::ColNameType,
+                       typename DataFrame<I, H, A>::size_type,
                        std::type_index>>
-DataFrame<I, H>::get_columns_info () const  {
+DataFrame<I, H, A>::get_columns_info () const  {
 
     std::vector<std::tuple<ColNameType, size_type, std::type_index>> result;
 
@@ -2302,12 +2312,12 @@ DataFrame<I, H>::get_columns_info () const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename ... Ts>
-StdDataFrame<std::string>
-DataFrame<I, H>::describe() const  {
+DataFrame<std::string, HeteroVector, A>
+DataFrame<I, H, A>::describe() const  {
 
-    StdDataFrame<std::string>   result;
+    DataFrame<std::string, HeteroVector, A> result;
 
     result.load_index(describe_index_col.begin(), describe_index_col.end());
 
@@ -2323,9 +2333,9 @@ DataFrame<I, H>::describe() const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T>
-bool DataFrame<I, H>::
+bool DataFrame<I, H, A>::
 pattern_match(const char *col_name,
               pattern_spec pattern,
               double epsilon) const  {
@@ -2355,9 +2365,9 @@ pattern_match(const char *col_name,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T, typename DF, typename F>
-std::vector<T> DataFrame<I, H>::
+std::vector<T> DataFrame<I, H, A>::
 combine(const char *col_name, const DF &rhs, F &functor) const  {
 
     const auto      &lhs_col = get_column<T>(col_name);
@@ -2374,9 +2384,9 @@ combine(const char *col_name, const DF &rhs, F &functor) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T, typename DF1, typename DF2, typename F>
-std::vector<T> DataFrame<I, H>::
+std::vector<T> DataFrame<I, H, A>::
 combine(const char *col_name,
         const DF1 &df1,
         const DF2 &df2,
@@ -2399,9 +2409,9 @@ combine(const char *col_name,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T, typename DF1, typename DF2, typename DF3, typename F>
-std::vector<T> DataFrame<I, H>::
+std::vector<T> DataFrame<I, H, A>::
 combine(const char *col_name,
         const DF1 &df1,
         const DF2 &df2,

@@ -130,7 +130,7 @@ join_helper_common_(const LHS_T &lhs,
                     const char *skip_col_name = nullptr);
 
 template<typename LHS_T, typename RHS_T, typename ... Ts>
-static DataFrame
+static DataFrame<I, HeteroVector, A>
 index_join_helper_(const LHS_T &lhs,
                    const RHS_T &rhs,
                    const IndexIdxVector &joined_index_idx);
@@ -149,7 +149,7 @@ get_inner_index_idx_vector_(
     const std::vector<JoinSortingPair<T>> &col_vec_rhs);
 
 template<typename LHS_T, typename RHS_T, typename ... Ts>
-static DataFrame
+static DataFrame<I, HeteroVector, A>
 index_inner_join_(
     const LHS_T &lhs, const RHS_T &rhs,
     const std::vector<JoinSortingPair<IndexType>> &col_vec_lhs,
@@ -170,7 +170,7 @@ get_left_index_idx_vector_(
     const std::vector<JoinSortingPair<T>> &col_vec_rhs);
 
 template<typename LHS_T, typename RHS_T, typename ... Ts>
-static DataFrame
+static DataFrame<I, HeteroVector, A>
 index_left_join_(
     const LHS_T &lhs, const RHS_T &rhs,
     const std::vector<JoinSortingPair<IndexType>> &col_vec_lhs,
@@ -191,7 +191,7 @@ get_right_index_idx_vector_(
     const std::vector<JoinSortingPair<T>> &col_vec_rhs);
 
 template<typename LHS_T, typename RHS_T, typename ... Ts>
-static DataFrame
+static DataFrame<I, HeteroVector, A>
 index_right_join_(
     const LHS_T &lhs, const RHS_T &rhs,
     const std::vector<JoinSortingPair<IndexType>> &col_vec_lhs,
@@ -223,7 +223,7 @@ get_left_right_index_idx_vector_(
     const std::vector<JoinSortingPair<T>> &col_vec_rhs);
 
 template<typename LHS_T, typename RHS_T, typename ... Ts>
-static DataFrame
+static DataFrame<I, HeteroVector, A>
 index_left_right_join_(
     const LHS_T &lhs, const RHS_T &rhs,
     const std::vector<JoinSortingPair<IndexType>> &col_vec_lhs,

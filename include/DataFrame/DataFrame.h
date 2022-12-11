@@ -1300,7 +1300,7 @@ public:  // Data manipulation
     //   (See join_policy definition)
     //
     template<typename RHS_T, typename ... Ts>
-    [[nodiscard]] DataFrame
+    [[nodiscard]] DataFrame<I, HeteroVector, A>
     join_by_index(const RHS_T &rhs, join_policy jp) const;
 
     // It joins the data between self (lhs) and rhs and returns the joined data
@@ -1357,7 +1357,7 @@ public:  // Data manipulation
     //                           concatenated
     //
     template<typename RHS_T, typename ... Ts>
-    [[nodiscard]] DataFrame
+    [[nodiscard]] DataFrame<I, HeteroVector, A>
     concat(const RHS_T &rhs,
            concat_policy cp = concat_policy::all_columns) const;
 

@@ -43,8 +43,8 @@ join_by_index (const RHS_T &rhs, join_policy mp) const  {
 
     static_assert(
         std::is_base_of<DataFrame<I, HeteroVector, A>, RHS_T>::value ||
-        std::is_base_of<DataFrameView<I>, RHS_T>::value ||
-        std::is_base_of<DataFramePtrView<I>, RHS_T>::value,
+        std::is_base_of<View, RHS_T>::value ||
+        std::is_base_of<PtrView, RHS_T>::value,
         "The rhs argument to join_by_index() can only be "
         "StdDataFrame<IndexType> or DataFrame[Ptr]View<IndexType>");
 
@@ -100,8 +100,8 @@ join_by_column (const RHS_T &rhs, const char *name, join_policy mp) const  {
 
     static_assert(
         std::is_base_of<DataFrame<I, HeteroVector, A>, RHS_T>::value ||
-        std::is_base_of<DataFrameView<I>, RHS_T>::value ||
-        std::is_base_of<DataFramePtrView<I>, RHS_T>::value,
+        std::is_base_of<View, RHS_T>::value ||
+        std::is_base_of<PtrView, RHS_T>::value,
         "The rhs argument to join_by_column() can only be "
         "StdDataFrame<IndexType> or DataFrame[Ptr]View<IndexType>");
 
@@ -644,8 +644,8 @@ DataFrame<I, H, A>::self_concat(const RHS_T &rhs, bool add_new_columns)  {
 
     static_assert(
         (std::is_base_of<DataFrame<I, HeteroVector, A>, RHS_T>::value ||
-         std::is_base_of<DataFrameView<I>, RHS_T>::value ||
-         std::is_base_of<DataFramePtrView<I>, RHS_T>::value) &&
+         std::is_base_of<View, RHS_T>::value ||
+         std::is_base_of<PtrView, RHS_T>::value) &&
         ! std::is_base_of<DataFrame<I, HeteroVector, A>,
                           decltype(*this)>::value,
         "The rhs argument to self_concat() can only be "
@@ -664,8 +664,8 @@ DataFrame<I, H, A>::concat(const RHS_T &rhs, concat_policy cp) const  {
 
     static_assert(
         (std::is_base_of<DataFrame<I, HeteroVector, A>, RHS_T>::value ||
-         std::is_base_of<DataFrameView<I>, RHS_T>::value ||
-         std::is_base_of<DataFramePtrView<I>, RHS_T>::value) &&
+         std::is_base_of<View, RHS_T>::value ||
+         std::is_base_of<PtrView, RHS_T>::value) &&
         ! std::is_base_of<DataFrame<I, HeteroVector, A>,
                           decltype(*this)>::value,
         "The rhs argument to concat() can only be "
@@ -702,7 +702,7 @@ DataFrame<I, H, A>::concat(const RHS_T &rhs, concat_policy cp) const  {
 
 template<typename I, typename H, std::size_t A>
 template<typename RHS_T, typename ... Ts>
-typename DataFrame<I, H, A>::template DataFramePtrView<I>
+typename DataFrame<I, H, A>::PtrView
 DataFrame<I, H, A>::concat_view(RHS_T &rhs, concat_policy cp)  {
 
     static_assert(
@@ -712,9 +712,9 @@ DataFrame<I, H, A>::concat_view(RHS_T &rhs, concat_policy cp)  {
         "Currently, arguments to concat_view() can only be "
         "StdDataFrame<IndexType>.");
 
-    DataFramePtrView<I> result;
+    PtrView result;
 
-    using idxvec_t = typename DataFramePtrView<I>::IndexVecType;
+    using idxvec_t = typename PtrView::IndexVecType;
 
     const size_type idx_s = get_index().size();
     const size_type rhs_idx_s = rhs.get_index().size();
@@ -729,13 +729,13 @@ DataFrame<I, H, A>::concat_view(RHS_T &rhs, concat_policy cp)  {
 
     if (cp == concat_policy::all_columns)  {
         for (const auto &lhs_citer : column_list_)  {
-            concat_load_view_functor_<DataFramePtrView<I>, Ts ...> functor(
+            concat_load_view_functor_<PtrView, Ts ...> functor(
                 lhs_citer.first.c_str(), result);
 
             data_[lhs_citer.second].change(functor);
         }
         for (const auto &rhs_citer : rhs.column_list_)  {
-            concat_load_view_functor_<DataFramePtrView<I>, Ts ...> functor(
+            concat_load_view_functor_<PtrView, Ts ...> functor(
                 rhs_citer.first.c_str(), result);
 
             rhs.data_[rhs_citer.second].change(functor);
@@ -743,7 +743,7 @@ DataFrame<I, H, A>::concat_view(RHS_T &rhs, concat_policy cp)  {
     }
     else if (cp == concat_policy::lhs_and_common_columns)  {
         for (const auto &lhs_citer : column_list_)  {
-            concat_load_view_functor_<DataFramePtrView<I>, Ts ...> functor(
+            concat_load_view_functor_<PtrView, Ts ...> functor(
                 lhs_citer.first.c_str(), result);
 
             data_[lhs_citer.second].change(functor);
@@ -756,7 +756,7 @@ DataFrame<I, H, A>::concat_view(RHS_T &rhs, concat_policy cp)  {
     }
     else if (cp == concat_policy::common_columns)  {
         for (const auto &lhs_citer : column_list_)  {
-            concat_load_view_functor_<DataFramePtrView<I>, Ts ...> functor(
+            concat_load_view_functor_<PtrView, Ts ...> functor(
                 lhs_citer.first.c_str(), result);
             auto                                                   rhs_citer =
                 rhs.column_tb_.find(lhs_citer.first);
@@ -776,7 +776,7 @@ DataFrame<I, H, A>::concat_view(RHS_T &rhs, concat_policy cp)  {
 
 template<typename I, typename H, std::size_t A>
 template<typename RHS_T, typename ... Ts>
-typename DataFrame<I, H, A>::template DataFrameConstPtrView<I>
+typename DataFrame<I, H, A>::ConstPtrView
 DataFrame<I, H, A>::concat_view(RHS_T &rhs, concat_policy cp) const  {
 
     static_assert(
@@ -786,9 +786,9 @@ DataFrame<I, H, A>::concat_view(RHS_T &rhs, concat_policy cp) const  {
         "Currently, arguments to concat_view() can only be "
         "StdDataFrame<IndexType>.");
 
-    DataFrameConstPtrView<I>    result;
+    ConstPtrView    result;
 
-    using idxvec_t = typename DataFrameConstPtrView<I>::IndexVecType;
+    using idxvec_t = typename ConstPtrView::IndexVecType;
 
     const size_type idx_s = get_index().size();
     const size_type rhs_idx_s = rhs.get_index().size();
@@ -803,13 +803,13 @@ DataFrame<I, H, A>::concat_view(RHS_T &rhs, concat_policy cp) const  {
 
     if (cp == concat_policy::all_columns)  {
         for (const auto &lhs_citer : column_list_)  {
-            concat_load_view_functor_<DataFrameConstPtrView<I>, Ts ...> functor(
+            concat_load_view_functor_<ConstPtrView, Ts ...> functor(
                 lhs_citer.first.c_str(), result);
 
             data_[lhs_citer.second].change(functor);
         }
         for (const auto &rhs_citer : rhs.column_list_)  {
-            concat_load_view_functor_<DataFrameConstPtrView<I>, Ts ...> functor(
+            concat_load_view_functor_<ConstPtrView, Ts ...> functor(
                 rhs_citer.first.c_str(), result);
 
             rhs.data_[rhs_citer.second].change(functor);
@@ -817,7 +817,7 @@ DataFrame<I, H, A>::concat_view(RHS_T &rhs, concat_policy cp) const  {
     }
     else if (cp == concat_policy::lhs_and_common_columns)  {
         for (const auto &lhs_citer : column_list_)  {
-            concat_load_view_functor_<DataFrameConstPtrView<I>, Ts ...> functor(
+            concat_load_view_functor_<ConstPtrView, Ts ...> functor(
                 lhs_citer.first.c_str(), result);
 
             data_[lhs_citer.second].change(functor);
@@ -830,7 +830,7 @@ DataFrame<I, H, A>::concat_view(RHS_T &rhs, concat_policy cp) const  {
     }
     else if (cp == concat_policy::common_columns)  {
         for (const auto &lhs_citer : column_list_)  {
-            concat_load_view_functor_<DataFrameConstPtrView<I>, Ts ...> functor(
+            concat_load_view_functor_<ConstPtrView, Ts ...> functor(
                 lhs_citer.first.c_str(), result);
             auto                                                   rhs_citer =
                 rhs.column_tb_.find(lhs_citer.first);

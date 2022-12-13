@@ -58,10 +58,10 @@ namespace hmdf
 //    necessarily represent time, it could be any built-in or user-defined type
 // H: See the static assert below. It can only be either
 //    a HeteroVector (typedef'ed to StdDataFrame) or
-//    a HeteroView (typedef'ed to DataFrameView) or
-//    a HeteroConstView (typedef'ed to DataFrameConstView) or
-//    a HeteroPtrView (typedef'ed to DataFramePtrView)
-//    a HeteroConstPtrView (typedef'ed to DataFrameConstPtrView)
+//    a HeteroView (typedef'ed to View) or
+//    a HeteroConstView (typedef'ed to ConstView) or
+//    a HeteroPtrView (typedef'ed to PtrView)
+//    a HeteroConstPtrView (typedef'ed to ConstPtrView)
 //
 // A DataFrame may contain one index and any number of columns of any built-in
 // or user-defined types
@@ -88,17 +88,22 @@ public:  // Construction
     using IndexVecType = typename type_declare<DataVec, IndexType>::type;
     using ColNameType = String64;
 
-    template<typename II>
-    using DataFrameView = DataFrame<II, HeteroView, A>;
-
-    template<typename II>
-    using DataFrameConstView = DataFrame<II, HeteroConstView, A>;
-
-    template<typename II>
-    using DataFramePtrView = DataFrame<II, HeteroPtrView, A>;
-
-    template<typename II>
-    using DataFrameConstPtrView = DataFrame<II, HeteroConstPtrView, A>;
+    using View =
+        typename std::conditional<std::is_base_of<HeteroVector, H>::value,
+                                  DataFrame<I, HeteroView, A>,
+                                  void>::type;
+    using ConstView =
+        typename std::conditional<std::is_base_of<HeteroVector, H>::value,
+                                  DataFrame<I, HeteroConstView, A>,
+                                  void>::type;
+    using PtrView =
+        typename std::conditional<std::is_base_of<HeteroVector, H>::value,
+                                  DataFrame<I, HeteroPtrView, A>,
+                                  void>::type;
+    using ConstPtrView =
+        typename std::conditional<std::is_base_of<HeteroVector, H>::value,
+                                  DataFrame<I, HeteroConstPtrView, A>,
+                                  void>::type;
 
     template<typename T>
     using ColumnVecType = typename type_declare<DataVec, T>::type;
@@ -1385,12 +1390,12 @@ public:  // Data manipulation
     //       through views.
     //
     template<typename RHS_T, typename ... Ts>
-    [[nodiscard]] DataFramePtrView<IndexType>
+    [[nodiscard]] PtrView
     concat_view(RHS_T &rhs,
                 concat_policy cp = concat_policy::common_columns);
 
     template<typename RHS_T, typename ... Ts>
-    [[nodiscard]] DataFrameConstPtrView<IndexType>
+    [[nodiscard]] ConstPtrView
     concat_view(RHS_T &rhs,
                 concat_policy cp = concat_policy::common_columns) const;
 
@@ -1665,7 +1670,7 @@ public: // Read/access and slicing interfaces
     [[nodiscard]] DataFrame
     get_data_by_idx(const std::vector<IndexType> &values) const;
 
-    // It behaves like get_data_by_idx(range), but it returns a DataFrameView.
+    // It behaves like get_data_by_idx(range), but it returns a View.
     // A view is a DataFrame that is a reference to the original DataFrame.
     // So if you modify anything in the view the original DataFrame will
     // also be modified.
@@ -1682,15 +1687,14 @@ public: // Read/access and slicing interfaces
     //   The begin and end iterators for index specified with index values
     //
     template<typename ... Ts>
-    [[nodiscard]] DataFrameView<IndexType>
+    [[nodiscard]] View
     get_view_by_idx(Index2D<IndexType> range);
 
     template<typename ... Ts>
-    [[nodiscard]] DataFrameConstView<IndexType>
+    [[nodiscard]] ConstView
     get_view_by_idx(Index2D<IndexType> range) const;
 
-    // It behaves like get_data_by_idx(values), but it returns a
-    // DataFramePtrView.
+    // It behaves like get_data_by_idx(values), but it returns a PtrView.
     // A view is a DataFrame that is a reference to the original DataFrame.
     // So if you modify anything in the view the original DataFrame will
     // also be modified.
@@ -1707,11 +1711,11 @@ public: // Read/access and slicing interfaces
     //   List of indices to copy data from
     //
     template<typename ... Ts>
-    [[nodiscard]] DataFramePtrView<IndexType>
+    [[nodiscard]] PtrView
     get_view_by_idx(const std::vector<IndexType> &values);
 
     template<typename ... Ts>
-    [[nodiscard]] DataFrameConstPtrView<IndexType>
+    [[nodiscard]] ConstPtrView
     get_view_by_idx(const std::vector<IndexType> &values) const;
 
     // It returns a DataFrame (including the index and data columns)
@@ -1747,7 +1751,7 @@ public: // Read/access and slicing interfaces
     [[nodiscard]] DataFrame
     get_data_by_loc(const std::vector<long> &locations) const;
 
-    // It behaves like get_data_by_loc(range), but it returns a DataFrameView.
+    // It behaves like get_data_by_loc(range), but it returns a View.
     // A view is a DataFrame that is a reference to the original DataFrame.
     // So if you modify anything in the view the original DataFrame will
     // also be modified.
@@ -1764,15 +1768,14 @@ public: // Read/access and slicing interfaces
     //   The begin and end iterators for data
     //
     template<typename ... Ts>
-    [[nodiscard]] DataFrameView<IndexType>
+    [[nodiscard]] View
     get_view_by_loc(Index2D<long> range);
 
     template<typename ... Ts>
-    [[nodiscard]] DataFrameConstView<IndexType>
+    [[nodiscard]] ConstView
     get_view_by_loc(Index2D<long> range) const;
 
-    // It behaves like get_data_by_loc(locations), but it returns a
-    // DataFramePtrView.
+    // It behaves like get_data_by_loc(locations), but it returns a PtrView.
     // A view is a DataFrame that is a reference to the original DataFrame.
     // So if you modify anything in the view the original DataFrame will
     // also be modified.
@@ -1789,11 +1792,11 @@ public: // Read/access and slicing interfaces
     //   List of indices into the index column to copy data
     //
     template<typename ... Ts>
-    [[nodiscard]] DataFramePtrView<IndexType>
+    [[nodiscard]] PtrView
     get_view_by_loc(const std::vector<long> &locations);
 
     template<typename ... Ts>
-    [[nodiscard]] DataFrameConstPtrView<IndexType>
+    [[nodiscard]] ConstPtrView
     get_view_by_loc(const std::vector<long> &locations) const;
 
     // This method does boolean filtering selection via the sel_functor
@@ -1847,11 +1850,11 @@ public: // Read/access and slicing interfaces
     //   A reference to the selecting functor
     //
     template<typename T, typename F, typename ... Ts>
-    [[nodiscard]] DataFramePtrView<IndexType>
+    [[nodiscard]] PtrView
     get_view_by_sel(const char *name, F &sel_functor);
 
     template<typename T, typename F, typename ... Ts>
-    [[nodiscard]] DataFrameConstPtrView<IndexType>
+    [[nodiscard]] ConstPtrView
     get_view_by_sel(const char *name, F &sel_functor) const;
 
     // This does the same function as above get_data_by_sel() but operating
@@ -1906,11 +1909,11 @@ public: // Read/access and slicing interfaces
     //   A reference to the selecting functor
     //
     template<typename T1, typename T2, typename F, typename ... Ts>
-    [[nodiscard]] DataFramePtrView<IndexType>
+    [[nodiscard]] PtrView
     get_view_by_sel(const char *name1, const char *name2, F &sel_functor);
 
     template<typename T1, typename T2, typename F, typename ... Ts>
-    [[nodiscard]] DataFrameConstPtrView<IndexType>
+    [[nodiscard]] ConstPtrView
     get_view_by_sel(const char *name1, const char *name2, F &sel_functor) const;
 
     // This does the same function as above get_data_by_sel() but operating
@@ -1976,7 +1979,7 @@ public: // Read/access and slicing interfaces
     //
     template<typename T1, typename T2, typename T3, typename F,
              typename ... Ts>
-    [[nodiscard]] DataFramePtrView<IndexType>
+    [[nodiscard]] PtrView
     get_view_by_sel(const char *name1,
                     const char *name2,
                     const char *name3,
@@ -1984,7 +1987,7 @@ public: // Read/access and slicing interfaces
 
     template<typename T1, typename T2, typename T3, typename F,
              typename ... Ts>
-    [[nodiscard]] DataFrameConstPtrView<IndexType>
+    [[nodiscard]] ConstPtrView
     get_view_by_sel(const char *name1,
                     const char *name2,
                     const char *name3,
@@ -2063,7 +2066,7 @@ public: // Read/access and slicing interfaces
     //
     template<typename T1, typename T2, typename T3, typename T4, typename F,
              typename ... Ts>
-    [[nodiscard]] DataFramePtrView<IndexType>
+    [[nodiscard]] PtrView
     get_view_by_sel(const char *name1,
                     const char *name2,
                     const char *name3,
@@ -2072,7 +2075,7 @@ public: // Read/access and slicing interfaces
 
     template<typename T1, typename T2, typename T3, typename T4, typename F,
              typename ... Ts>
-    [[nodiscard]] DataFrameConstPtrView<IndexType>
+    [[nodiscard]] ConstPtrView
     get_view_by_sel(const char *name1,
                     const char *name2,
                     const char *name3,
@@ -2161,7 +2164,7 @@ public: // Read/access and slicing interfaces
     //
     template<typename T1, typename T2, typename T3, typename T4, typename T5,
              typename F, typename ... Ts>
-    [[nodiscard]] DataFramePtrView<IndexType>
+    [[nodiscard]] PtrView
     get_view_by_sel(const char *name1,
                     const char *name2,
                     const char *name3,
@@ -2171,7 +2174,7 @@ public: // Read/access and slicing interfaces
 
     template<typename T1, typename T2, typename T3, typename T4, typename T5,
              typename F, typename ... Ts>
-    [[nodiscard]] DataFrameConstPtrView<IndexType>
+    [[nodiscard]] ConstPtrView
     get_view_by_sel(const char *name1,
                     const char *name2,
                     const char *name3,
@@ -2282,7 +2285,7 @@ public: // Read/access and slicing interfaces
     [[nodiscard]] DataFrame
     get_data_by_rand(random_policy spec, double n, size_type seed = 0) const;
 
-    // It behaves like get_data_by_rand(), but it returns a DataFramePtrView.
+    // It behaves like get_data_by_rand(), but it returns a PtrView.
     // A view is a DataFrame that is a reference to the original DataFrame.
     // So if you modify anything in the view the original DataFrame will
     // also be modified.
@@ -2308,11 +2311,11 @@ public: // Read/access and slicing interfaces
     //   seed should always produce the same random selection.
     //
     template<typename ... Ts>
-    [[nodiscard]] DataFramePtrView<IndexType>
+    [[nodiscard]] PtrView
     get_view_by_rand(random_policy spec, double n, size_type seed = 0);
 
     template<typename ... Ts>
-    [[nodiscard]] DataFrameConstPtrView<IndexType>
+    [[nodiscard]] ConstPtrView
     get_view_by_rand(random_policy spec, double n, size_type seed = 0) const;
 
     // This returns a DataFrame with index and col_names copied from the
@@ -2327,7 +2330,7 @@ public: // Read/access and slicing interfaces
     [[nodiscard]] DataFrame
     get_data(const std::vector<const char *> &col_names) const;
 
-    // It behaves like get_data(), but it returns a DataFrameView.
+    // It behaves like get_data(), but it returns a View.
     // A view is a DataFrame that is a reference to the original DataFrame.
     // So if you modify anything in the view the original DataFrame will
     // also be modified.
@@ -2343,11 +2346,11 @@ public: // Read/access and slicing interfaces
     //   List of column names
     //
     template<typename ... Ts>
-    [[nodiscard]] DataFrameView<IndexType>
+    [[nodiscard]] View
     get_view(const std::vector<const char *> &col_names);
 
     template<typename ... Ts>
-    [[nodiscard]] DataFrameConstView<IndexType>
+    [[nodiscard]] ConstView
     get_view(const std::vector<const char *> &col_names) const;
 
     // It returns a const reference to the index container
@@ -2425,12 +2428,12 @@ public: // Read/access and slicing interfaces
     //   the result as a column.
     //
     template<typename T, typename ... Ts>
-    [[nodiscard]] DataFrameView<T>
+    [[nodiscard]] typename DataFrame<T, H, A>::View
     get_reindexed_view(const char *col_to_be_index,
                        const char *old_index_name = nullptr);
 
     template<typename T, typename ... Ts>
-    [[nodiscard]] DataFrameConstView<T>
+    [[nodiscard]] typename DataFrame<T, H, A>::ConstView
     get_reindexed_view(const char *col_to_be_index,
                        const char *old_index_name = nullptr) const;
 

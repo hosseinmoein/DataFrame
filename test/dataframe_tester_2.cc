@@ -4163,10 +4163,8 @@ static void test_get_view_by_loc()  {
 
     std::cout << "DataFrame Memory Usage:\n" << memory_use1 << std::endl;
 
-    typedef StdDataFrame<unsigned long>::DataFrameView<unsigned long>
-        MyDataFrameView;
-    typedef StdDataFrame<unsigned long>::DataFrameConstView<unsigned long>
-        MyDataFrameConstView;
+    typedef StdDataFrame<unsigned long>::View MyDataFrameView;
+    typedef StdDataFrame<unsigned long>::ConstView MyDataFrameConstView;
 
 
     const MyDataFrame   &const_df = df;
@@ -4218,10 +4216,8 @@ static void test_get_view_by_idx_slicing()  {
                  std::make_pair("col_3", d3),
                  std::make_pair("col_4", i1));
 
-    typedef StdDataFrame<unsigned long>::DataFrameView<unsigned long>
-        MyDataFrameView;
-    typedef StdDataFrame<unsigned long>::DataFrameConstView<unsigned long>
-        MyDataFrameConstView;
+    typedef StdDataFrame<unsigned long>::View MyDataFrameView;
+    typedef StdDataFrame<unsigned long>::ConstView MyDataFrameConstView;
 
     const MyDataFrame   &const_df = df;
 
@@ -4281,10 +4277,8 @@ static void test_get_data()  {
     assert((df2.get_column<int>("col_4")[8] == 2));
     assert((df2.get_index()[3] == 123453));
 
-    typedef StdDataFrame<unsigned long>::DataFrameView<unsigned long>
-        MyDataFrameView;
-    typedef StdDataFrame<unsigned long>::DataFrameConstView<unsigned long>
-        MyDataFrameConstView;
+    typedef StdDataFrame<unsigned long>::View MyDataFrameView;
+    typedef StdDataFrame<unsigned long>::ConstView MyDataFrameConstView;
 
     const MyDataFrame       &const_df = df;
     MyDataFrameView         df3 =

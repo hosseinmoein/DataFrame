@@ -103,11 +103,11 @@ public:
     AlignedAllocator(AlignedAllocator &&) noexcept = default;
     ~AlignedAllocator() noexcept = default;
 
-    AlignedAllocator &operator=(AlignedAllocator &&) = default;
+    AlignedAllocator &operator=(AlignedAllocator &&) noexcept = default;
     AlignedAllocator &operator=(const AlignedAllocator &) = delete;
 
     template<typename U>
-    AlignedAllocator(AlignedAllocator<U, AS> const &) noexcept  {  }
+    inline AlignedAllocator(AlignedAllocator<U, AS> const &) noexcept  {  }
 
     // Always return true for stateless allocators.
     //
@@ -141,13 +141,12 @@ public:
     [[nodiscard]] inline pointer allocate(size_type n_items) const  {
 
         if (n_items == 0)  return (nullptr);
-        if (n_items >= max_size())
+        if (n_items > max_size())
             throw std::bad_array_new_length();
 
-        const auto  bytes = n_items * sizeof(value_type);
-
         return(reinterpret_cast<pointer>(
-                   ::operator new[](bytes, AlignedAllocator::align_value)));
+                   ::operator new[](n_items * sizeof(value_type),
+                                    AlignedAllocator::align_value)));
     }
 
     // This is the same for all allocators that ignore hints.

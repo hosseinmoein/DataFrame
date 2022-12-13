@@ -37,9 +37,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace hmdf
 {
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename ... Ts>
-void DataFrame<I, H>::self_shift(size_type periods, shift_policy sp)  {
+void DataFrame<I, H, A>::self_shift(size_type periods, shift_policy sp)  {
 
     static_assert(std::is_base_of<HeteroVector, DataVec>::value,
                   "Only a StdDataFrame can call self_shift()");
@@ -87,15 +87,15 @@ void DataFrame<I, H>::self_shift(size_type periods, shift_policy sp)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename ... Ts>
-StdDataFrame<I> DataFrame<I, H>::
+DataFrame<I, H, A> DataFrame<I, H, A>::
 shift(size_type periods, shift_policy sp) const  {
 
     static_assert(std::is_base_of<HeteroVector, DataVec>::value,
                   "Only a StdDataFrame can call shift()");
 
-    StdDataFrame<IndexType> slug = *this;
+    DataFrame   slug = *this;
 
     slug.template self_shift<Ts ...>(periods, sp);
     return (slug);
@@ -103,9 +103,9 @@ shift(size_type periods, shift_policy sp) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename T>
-std::vector<T> DataFrame<I, H>::
+std::vector<T> DataFrame<I, H, A>::
 shift(const char *col_name, size_type periods, shift_policy sp) const  {
 
     static_assert(std::is_base_of<HeteroVector, DataVec>::value,
@@ -120,9 +120,9 @@ shift(const char *col_name, size_type periods, shift_policy sp) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename ... Ts>
-void DataFrame<I, H>::self_rotate(size_type periods, shift_policy sp)  {
+void DataFrame<I, H, A>::self_rotate(size_type periods, shift_policy sp)  {
 
     static_assert(std::is_base_of<HeteroVector, DataVec>::value,
                   "Only a StdDataFrame can call self_rotate()");
@@ -171,9 +171,9 @@ void DataFrame<I, H>::self_rotate(size_type periods, shift_policy sp)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename ... Ts>
-StdDataFrame<I> DataFrame<I, H>::
+DataFrame<I, H, A> DataFrame<I, H, A>::
 rotate(size_type periods, shift_policy sp) const  {
 
     static_assert(std::is_base_of<HeteroVector, DataVec>::value,

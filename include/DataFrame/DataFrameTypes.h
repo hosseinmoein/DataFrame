@@ -484,7 +484,9 @@ template<typename T> struct is_complex<std::complex<T>>  {
 
 // ----------------------------------------------------------------------------
 
-// H stands for a heterogeneous vector
+// I stands for Index type
+// H stands for Heterogeneous vector
+// A stands for memory Alignment
 //
 template<typename I, typename H, std::size_t A>
 class DataFrame;
@@ -492,8 +494,16 @@ class DataFrame;
 template<typename I>
 using StdDataFrame = DataFrame<I, HeteroVector, 0>;
 
+// Convenient typedefs to facilitate SIMD operations
+//
 template<typename I>
 using StdDataFrame64 = DataFrame<I, HeteroVector, 64>;
+
+template<typename I>
+using StdDataFrame128 = DataFrame<I, HeteroVector, 128>;
+
+template<typename I>
+using StdDataFrame256 = DataFrame<I, HeteroVector, 256>;
 
 template<typename I>
 using StdDataFrame512 = DataFrame<I, HeteroVector, 512>;

@@ -3596,7 +3596,8 @@ static void test_view_visitors()  {
                  std::make_pair("dbl_col5", dblvec5),
                  std::make_pair("dbl_col6", dblvec6));
 
-    typedef DataFrameView<unsigned long> MyDataFrameView;
+    typedef StdDataFrame<unsigned long>::DataFrameView<unsigned long>
+        MyDataFrameView;
 
     MyDataFrameView dfv =
         df.get_view_by_idx<double>(Index2D<unsigned long> { 2, 4 });

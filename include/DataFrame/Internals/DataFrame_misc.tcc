@@ -39,11 +39,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace hmdf
 {
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename ... Ts>
 template<typename T>
 void
-DataFrame<I, H>::consistent_functor_<Ts ...>::operator() (T &vec) const  {
+DataFrame<I, H, A>::consistent_functor_<Ts ...>::operator() (T &vec) const  {
 
     using ValueType =
         typename std::remove_reference<decltype(vec)>::type::value_type;
@@ -53,11 +53,11 @@ DataFrame<I, H>::consistent_functor_<Ts ...>::operator() (T &vec) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename ... Ts>
 template<typename T>
 void
-DataFrame<I, H>::shrink_to_fit_functor_<Ts ...>::operator() (T &vec) const  {
+DataFrame<I, H, A>::shrink_to_fit_functor_<Ts ...>::operator() (T &vec) const  {
 
     using value_type = typename T::value_type;
 
@@ -71,11 +71,11 @@ DataFrame<I, H>::shrink_to_fit_functor_<Ts ...>::operator() (T &vec) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename ... Ts>
 template<typename T2>
 void
-DataFrame<I, H>::sort_functor_<Ts ...>::operator() (T2 &vec)  {
+DataFrame<I, H, A>::sort_functor_<Ts ...>::operator() (T2 &vec)  {
 
     sorted_idxs_copy = sorted_idxs;
     _sort_by_sorted_index_(vec, sorted_idxs_copy, idx_s);
@@ -84,11 +84,11 @@ DataFrame<I, H>::sort_functor_<Ts ...>::operator() (T2 &vec)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename LHS, typename ... Ts>
 template<typename T>
 void
-DataFrame<I, H>::load_functor_<LHS, Ts ...>::operator() (const T &vec)  {
+DataFrame<I, H, A>::load_functor_<LHS, Ts ...>::operator() (const T &vec)  {
 
     using VecType = typename std::remove_reference<T>::type;
     using ValueType = typename VecType::value_type;
@@ -103,11 +103,11 @@ DataFrame<I, H>::load_functor_<LHS, Ts ...>::operator() (const T &vec)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename ... Ts>
 template<typename T>
 void
-DataFrame<I, H>::load_all_functor_<Ts ...>::operator() (const T &vec)  {
+DataFrame<I, H, A>::load_all_functor_<Ts ...>::operator() (const T &vec)  {
 
     using VecType = typename std::remove_reference<T>::type;
     using ValueType = typename VecType::value_type;
@@ -119,11 +119,11 @@ DataFrame<I, H>::load_all_functor_<Ts ...>::operator() (const T &vec)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename ... Ts>
 template<typename T>
 void
-DataFrame<I, H>::remove_functor_<Ts ...>::operator() (T &vec)  {
+DataFrame<I, H, A>::remove_functor_<Ts ...>::operator() (T &vec)  {
 
     vec.erase(vec.begin() + begin, vec.begin() + end);
     return;
@@ -131,11 +131,11 @@ DataFrame<I, H>::remove_functor_<Ts ...>::operator() (T &vec)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename LHS, typename ... Ts>
 template<typename T>
 void
-DataFrame<I, H>::view_setup_functor_<LHS, Ts ...>::
+DataFrame<I, H, A>::view_setup_functor_<LHS, Ts ...>::
 operator() (T &vec)  {
 
     using VecType = typename std::remove_reference<T>::type;
@@ -151,11 +151,11 @@ operator() (T &vec)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename ... Ts>
 template<typename T>
 void
-DataFrame<I, H>::add_col_functor_<Ts ...>::operator() (const T &)  {
+DataFrame<I, H, A>::add_col_functor_<Ts ...>::operator() (const T &)  {
 
     using VecType = typename std::remove_reference<T>::type;
     using ValueType = typename VecType::value_type;
@@ -166,11 +166,11 @@ DataFrame<I, H>::add_col_functor_<Ts ...>::operator() (const T &)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename ... Ts>
 template<typename T>
 void
-DataFrame<I, H>::print_csv_functor_<Ts ...>::operator() (const T &vec)  {
+DataFrame<I, H, A>::print_csv_functor_<Ts ...>::operator() (const T &vec)  {
 
     if (vec.empty())  return;
 
@@ -222,11 +222,11 @@ DataFrame<I, H>::print_csv_functor_<Ts ...>::operator() (const T &vec)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename ... Ts>
 template<typename T>
 void
-DataFrame<I, H>::print_json_functor_<Ts ...>::operator() (const T &vec)  {
+DataFrame<I, H, A>::print_json_functor_<Ts ...>::operator() (const T &vec)  {
 
     if (vec.empty())  return;
 
@@ -285,10 +285,10 @@ DataFrame<I, H>::print_json_functor_<Ts ...>::operator() (const T &vec)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename S, typename ... Ts>
 template<typename T>
-void DataFrame<I, H>::
+void DataFrame<I, H, A>::
 print_csv2_header_functor_<S, Ts ...>::operator() (const T &vec)  {
 
     using VecType = typename std::remove_reference<T>::type;
@@ -302,10 +302,10 @@ print_csv2_header_functor_<S, Ts ...>::operator() (const T &vec)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename S, typename ... Ts>
 template<typename T>
-void DataFrame<I, H>::
+void DataFrame<I, H, A>::
 print_csv2_data_functor_<S, Ts ...>::operator() (const T &vec)  {
 
     if (vec.size() > index)  os << vec[index];
@@ -314,11 +314,11 @@ print_csv2_data_functor_<S, Ts ...>::operator() (const T &vec)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename ... Ts>
 template<typename T>
 void
-DataFrame<I, H>::
+DataFrame<I, H, A>::
 equal_functor_<Ts ...>::operator() (const T &lhs_vec)  {
 
     using VecType = typename std::remove_reference<T>::type;
@@ -342,11 +342,11 @@ equal_functor_<Ts ...>::operator() (const T &lhs_vec)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename ... Ts>
 template<typename T>
 void
-DataFrame<I, H>::
+DataFrame<I, H, A>::
 mod_by_idx_functor_<Ts ...>::operator() (T &lhs_vec) const  {
 
     using VecType = typename std::remove_reference<T>::type;
@@ -364,11 +364,11 @@ mod_by_idx_functor_<Ts ...>::operator() (T &lhs_vec) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename RES_T, typename ... Ts>
 template<typename T>
 void
-DataFrame<I, H>::
+DataFrame<I, H, A>::
 index_join_functor_common_<RES_T, Ts ...>::operator()(const T &lhs_vec)  {
 
     using VecType = typename std::remove_reference<T>::type;
@@ -403,10 +403,10 @@ index_join_functor_common_<RES_T, Ts ...>::operator()(const T &lhs_vec)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<int SIDE, typename RES_T, typename ... Ts>
 template<typename T>
-void DataFrame<I, H>::index_join_functor_oneside_<SIDE, RES_T, Ts ...>::
+void DataFrame<I, H, A>::index_join_functor_oneside_<SIDE, RES_T, Ts ...>::
 operator()(const T &vec)  {
 
     using VecType = typename std::remove_reference<T>::type;
@@ -428,10 +428,10 @@ operator()(const T &vec)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename RES_T, typename ... Ts>
 template<typename T>
-void DataFrame<I, H>::concat_functor_<RES_T, Ts ...>::
+void DataFrame<I, H, A>::concat_functor_<RES_T, Ts ...>::
 operator()(const T &vec)  {
 
     using VecType = typename std::remove_reference<T>::type;
@@ -454,10 +454,10 @@ operator()(const T &vec)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename ... Ts>
 template<typename T>
-void DataFrame<I, H>::vertical_shift_functor_<Ts ...>::
+void DataFrame<I, H, A>::vertical_shift_functor_<Ts ...>::
 operator() (T &vec) const  {
 
     if (sp == shift_policy::up)
@@ -468,10 +468,10 @@ operator() (T &vec) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename ... Ts>
 template<typename T>
-void DataFrame<I, H>::rotate_functor_<Ts ...>::
+void DataFrame<I, H, A>::rotate_functor_<Ts ...>::
 operator() (T &vec) const  {
 
     if (sp == shift_policy::up)  // Rotate left
@@ -484,11 +484,11 @@ operator() (T &vec) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename TST, template<typename> class OPT, typename ... Ts>
 template<typename T>
 void
-DataFrame<I, H>::
+DataFrame<I, H, A>::
 operator_functor_<TST, OPT, Ts ...>::
 operator()(const T &lhs_vec)  {
 
@@ -536,11 +536,11 @@ operator()(const T &lhs_vec)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename ... Ts>
 template<typename T>
 void
-DataFrame<I, H>::
+DataFrame<I, H, A>::
 map_missing_rows_functor_<Ts ...>::
 operator()(const T &vec)  {
 
@@ -559,11 +559,11 @@ operator()(const T &vec)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename ... Ts>
 template<typename T>
 void
-DataFrame<I, H>::
+DataFrame<I, H, A>::
 drop_missing_rows_functor_<Ts ...>::
 operator()(T &vec)  {
 
@@ -573,11 +573,11 @@ operator()(T &vec)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename ... Ts>
 template<typename T>
 void
-DataFrame<I, H>::
+DataFrame<I, H, A>::
 get_row_functor_<Ts ...>::
 operator()(const T &vec)  {
 
@@ -591,11 +591,11 @@ operator()(const T &vec)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename IT, typename ... Ts>
 template<typename T>
 void
-DataFrame<I, H>::
+DataFrame<I, H, A>::
 sel_load_functor_<IT, Ts ...>::
 operator() (const T &vec)  {
 
@@ -622,11 +622,11 @@ operator() (const T &vec)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename IT, typename DF, typename ... Ts>
 template<typename T>
 void
-DataFrame<I, H>::
+DataFrame<I, H, A>::
 sel_load_view_functor_<IT, DF, Ts ...>::
 operator() (T &vec)  {
 
@@ -661,11 +661,11 @@ operator() (T &vec)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename IT, typename ... Ts>
 template<typename T>
 void
-DataFrame<I, H>::
+DataFrame<I, H, A>::
 concat_load_view_functor_<IT, Ts ...>::
 operator() (const T &vec)  {
 
@@ -699,11 +699,11 @@ operator() (const T &vec)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename ... Ts>
 template<typename T>
 void
-DataFrame<I, H>::
+DataFrame<I, H, A>::
 sel_remove_functor_<Ts ...>::
 operator() (T &vec) const  {
 
@@ -721,11 +721,11 @@ operator() (T &vec) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename ... Ts>
 template<typename T>
 void
-DataFrame<I, H>::
+DataFrame<I, H, A>::
 shuffle_functor_<Ts ...>::
 operator() (T &vec) const  {
 
@@ -738,11 +738,11 @@ operator() (T &vec) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename ... Ts>
 template<typename T>
 void
-DataFrame<I, H>::
+DataFrame<I, H, A>::
 random_load_data_functor_<Ts ...>::operator() (const T &vec)  {
 
     using VecType = typename std::remove_reference<T>::type;
@@ -772,10 +772,10 @@ random_load_data_functor_<Ts ...>::operator() (const T &vec)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename DF, typename ... Ts>
 template<typename T>
-void DataFrame<I, H>::
+void DataFrame<I, H, A>::
 random_load_view_functor_<DF, Ts ...>::operator() (const T &vec) {
 
     using VecType = typename std::remove_reference<T>::type;
@@ -812,11 +812,11 @@ random_load_view_functor_<DF, Ts ...>::operator() (const T &vec) {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename ... Ts>
 template<typename T>
 void
-DataFrame<I, H>::columns_info_functor_<Ts ...>::operator() (const T &vec)  {
+DataFrame<I, H, A>::columns_info_functor_<Ts ...>::operator() (const T &vec)  {
 
     using VecType = typename std::remove_reference<T>::type;
     using ValueType = typename VecType::value_type;
@@ -826,11 +826,11 @@ DataFrame<I, H>::columns_info_functor_<Ts ...>::operator() (const T &vec)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename ... Ts>
 template<typename T>
 void
-DataFrame<I, H>::copy_remove_functor_<Ts ...>::operator() (const T &vec)  {
+DataFrame<I, H, A>::copy_remove_functor_<Ts ...>::operator() (const T &vec)  {
 
     using VecType = typename std::remove_reference<T>::type;
     using ValueType = typename VecType::value_type;
@@ -850,11 +850,11 @@ DataFrame<I, H>::copy_remove_functor_<Ts ...>::operator() (const T &vec)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename DF, typename ... Ts>
 template<typename T>
 void
-DataFrame<I, H>::fill_missing_functor_<DF, Ts ...>::operator() (T &vec)  {
+DataFrame<I, H, A>::fill_missing_functor_<DF, Ts ...>::operator() (T &vec)  {
 
     using VecType = typename std::remove_reference<T>::type;
     using ValueType = typename VecType::value_type;
@@ -873,11 +873,11 @@ DataFrame<I, H>::fill_missing_functor_<DF, Ts ...>::operator() (T &vec)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 template<typename ... Ts>
 template<typename T>
 void
-DataFrame<I, H>::describe_functor_<Ts ...>::operator() (const T &vec)  {
+DataFrame<I, H, A>::describe_functor_<Ts ...>::operator() (const T &vec)  {
 
     const size_type vec_s = vec.size();
 

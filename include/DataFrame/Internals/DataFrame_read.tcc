@@ -46,8 +46,8 @@ namespace hmdf
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
-void DataFrame<I, H>::read_json_(std::istream &stream, bool columns_only)  {
+template<typename I, typename H, std::size_t A>
+void DataFrame<I, H, A>::read_json_(std::istream &stream, bool columns_only)  {
 
     char    c { '\0' };
     char    col_name[256];
@@ -293,8 +293,8 @@ void DataFrame<I, H>::read_json_(std::istream &stream, bool columns_only)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
-void DataFrame<I, H>::read_csv_(std::istream &stream, bool columns_only)  {
+template<typename I, typename H, std::size_t A>
+void DataFrame<I, H, A>::read_csv_(std::istream &stream, bool columns_only)  {
 
     char    col_name[256];
     char    value[32];
@@ -445,8 +445,8 @@ struct _col_data_spec_  {
 
 // --------------------------------------
 
-template<typename I, typename  H>
-void DataFrame<I, H>::read_csv2_(std::istream &stream, bool columns_only)  {
+template<typename I, typename H, std::size_t A>
+void DataFrame<I, H, A>::read_csv2_(std::istream &stream, bool columns_only)  {
 
     char                            value[8192];
     char                            c;
@@ -741,8 +741,8 @@ void DataFrame<I, H>::read_csv2_(std::istream &stream, bool columns_only)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
-bool DataFrame<I, H>::
+template<typename I, typename H, std::size_t A>
+bool DataFrame<I, H, A>::
 read (const char *file_name, io_format iof, bool columns_only)  {
 
     std::ifstream   stream;
@@ -762,9 +762,9 @@ read (const char *file_name, io_format iof, bool columns_only)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename S>
-bool DataFrame<I, H>::read (S &in_s, io_format iof, bool columns_only)  {
+bool DataFrame<I, H, A>::read (S &in_s, io_format iof, bool columns_only)  {
 
     static_assert(std::is_base_of<HeteroVector, DataVec>::value,
                   "Only a StdDataFrame can call read()");
@@ -783,9 +783,9 @@ bool DataFrame<I, H>::read (S &in_s, io_format iof, bool columns_only)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 bool
-DataFrame<I, H>::from_string (const char *data_frame)  {
+DataFrame<I, H, A>::from_string (const char *data_frame)  {
 
     std::stringstream   ss (std::string(data_frame), std::ios_base::in);
 
@@ -795,8 +795,8 @@ DataFrame<I, H>::from_string (const char *data_frame)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
-std::future<bool> DataFrame<I, H>::
+template<typename I, typename H, std::size_t A>
+std::future<bool> DataFrame<I, H, A>::
 read_async(const char *file_name, io_format iof, bool columns_only) {
 
     return (std::async(std::launch::async,
@@ -807,9 +807,9 @@ read_async(const char *file_name, io_format iof, bool columns_only) {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename S>
-std::future<bool> DataFrame<I, H>::
+std::future<bool> DataFrame<I, H, A>::
 read_async(S &in_s, io_format iof, bool columns_only) {
 
     return (std::async(std::launch::async,
@@ -820,9 +820,9 @@ read_async(S &in_s, io_format iof, bool columns_only) {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H>
+template<typename I, typename H, std::size_t A>
 std::future<bool>
-DataFrame<I, H>::from_string_async(const char *data_frame)  {
+DataFrame<I, H, A>::from_string_async(const char *data_frame)  {
 
     return (std::async(std::launch::async,
                        &DataFrame::from_string, this, data_frame));

@@ -35,9 +35,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace hmdf
 {
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename ... Ts>
-void DataFrame<I, H>::multi_visit (Ts ... args)  {
+void DataFrame<I, H, A>::multi_visit (Ts ... args)  {
 
     auto    args_tuple = std::tuple<Ts ...>(args ...);
     auto    fc = [this](auto &pa) mutable -> void {
@@ -59,18 +59,18 @@ void DataFrame<I, H>::multi_visit (Ts ... args)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename ... Ts>
-void DataFrame<I, H>::multi_visit(Ts ... args) const  {
+void DataFrame<I, H, A>::multi_visit(Ts ... args) const  {
 
     const_cast<DataFrame *>(this)->multi_visit<Ts ...>(args ...);
 }
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T, typename V>
-V &DataFrame<I, H>::visit (const char *name, V &visitor, bool in_reverse)  {
+V &DataFrame<I, H, A>::visit (const char *name, V &visitor, bool in_reverse)  {
 
     auto            &vec = get_column<T>(name);
     const size_type idx_s = indices_.size();
@@ -101,9 +101,9 @@ V &DataFrame<I, H>::visit (const char *name, V &visitor, bool in_reverse)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T, typename V>
-V &DataFrame<I, H>::
+V &DataFrame<I, H, A>::
 visit (const char *name, V &visitor, bool in_reverse) const  {
 
     return (const_cast<DataFrame *>(this)->visit<T, V>
@@ -112,9 +112,9 @@ visit (const char *name, V &visitor, bool in_reverse) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T, typename V>
-std::future<V &> DataFrame<I, H>::
+std::future<V &> DataFrame<I, H, A>::
 visit_async(const char *name, V &visitor, bool in_reverse)  {
 
     return (std::async(std::launch::async,
@@ -128,9 +128,9 @@ visit_async(const char *name, V &visitor, bool in_reverse)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T, typename V>
-std::future<V &> DataFrame<I, H>::
+std::future<V &> DataFrame<I, H, A>::
 visit_async(const char *name, V &visitor, bool in_reverse) const  {
 
     return (std::async(std::launch::async,
@@ -146,9 +146,9 @@ visit_async(const char *name, V &visitor, bool in_reverse) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T1, typename T2, typename V>
-V &DataFrame<I, H>::
+V &DataFrame<I, H, A>::
 visit (const char *name1, const char *name2, V &visitor, bool in_reverse)  {
 
     auto            &vec1 = get_column<T1>(name1);
@@ -190,9 +190,9 @@ visit (const char *name1, const char *name2, V &visitor, bool in_reverse)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T1, typename T2, typename V>
-V &DataFrame<I, H>::
+V &DataFrame<I, H, A>::
 visit (const char *name1,
        const char *name2,
        V &visitor,
@@ -204,9 +204,9 @@ visit (const char *name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T1, typename T2, typename V>
-std::future<V &> DataFrame<I, H>::
+std::future<V &> DataFrame<I, H, A>::
 visit_async(const char *name1,
             const char *name2,
             V &visitor,
@@ -225,9 +225,9 @@ visit_async(const char *name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T1, typename T2, typename V>
-std::future<V &> DataFrame<I, H>::
+std::future<V &> DataFrame<I, H, A>::
 visit_async(const char *name1,
             const char *name2,
             V &visitor,
@@ -249,9 +249,9 @@ visit_async(const char *name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T1, typename T2, typename T3, typename V>
-V &DataFrame<I, H>::
+V &DataFrame<I, H, A>::
 visit (const char *name1,
        const char *name2,
        const char *name3,
@@ -304,9 +304,9 @@ visit (const char *name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T1, typename T2, typename T3, typename V>
-V &DataFrame<I, H>::
+V &DataFrame<I, H, A>::
 visit (const char *name1,
        const char *name2,
        const char *name3,
@@ -319,9 +319,9 @@ visit (const char *name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T1, typename T2, typename T3, typename V>
-std::future<V &> DataFrame<I, H>::
+std::future<V &> DataFrame<I, H, A>::
 visit_async(const char *name1,
             const char *name2,
             const char *name3,
@@ -346,9 +346,9 @@ visit_async(const char *name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T1, typename T2, typename T3, typename V>
-std::future<V &> DataFrame<I, H>::
+std::future<V &> DataFrame<I, H, A>::
 visit_async(const char *name1,
             const char *name2,
             const char *name3,
@@ -373,9 +373,9 @@ visit_async(const char *name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T1, typename T2, typename T3, typename T4, typename V>
-V &DataFrame<I, H>::
+V &DataFrame<I, H, A>::
 visit (const char *name1,
        const char *name2,
        const char *name3,
@@ -435,9 +435,9 @@ visit (const char *name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T1, typename T2, typename T3, typename T4, typename V>
-V &DataFrame<I, H>::
+V &DataFrame<I, H, A>::
 visit (const char *name1,
        const char *name2,
        const char *name3,
@@ -451,9 +451,9 @@ visit (const char *name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T1, typename T2, typename T3, typename T4, typename V>
-std::future<V &> DataFrame<I, H>::
+std::future<V &> DataFrame<I, H, A>::
 visit_async(const char *name1,
             const char *name2,
             const char *name3,
@@ -481,9 +481,9 @@ visit_async(const char *name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T1, typename T2, typename T3, typename T4, typename V>
-std::future<V &> DataFrame<I, H>::
+std::future<V &> DataFrame<I, H, A>::
 visit_async(const char *name1,
             const char *name2,
             const char *name3,
@@ -511,10 +511,10 @@ visit_async(const char *name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T1, typename T2, typename T3, typename T4, typename T5,
          typename V>
-V &DataFrame<I, H>::
+V &DataFrame<I, H, A>::
 visit (const char *name1,
        const char *name2,
        const char *name3,
@@ -582,10 +582,10 @@ visit (const char *name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T1, typename T2, typename T3, typename T4, typename T5,
          typename V>
-V &DataFrame<I, H>::
+V &DataFrame<I, H, A>::
 visit (const char *name1,
        const char *name2,
        const char *name3,
@@ -600,10 +600,10 @@ visit (const char *name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T1, typename T2, typename T3, typename T4, typename T5,
          typename V>
-std::future<V &> DataFrame<I, H>::
+std::future<V &> DataFrame<I, H, A>::
 visit_async(const char *name1,
             const char *name2,
             const char *name3,
@@ -634,10 +634,10 @@ visit_async(const char *name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T1, typename T2, typename T3, typename T4, typename T5,
          typename V>
-std::future<V &> DataFrame<I, H>::
+std::future<V &> DataFrame<I, H, A>::
 visit_async(const char *name1,
             const char *name2,
             const char *name3,
@@ -668,9 +668,9 @@ visit_async(const char *name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T, typename V>
-V &DataFrame<I, H>::
+V &DataFrame<I, H, A>::
 single_act_visit (const char *name, V &visitor, bool in_reverse)  {
 
     auto    &vec = get_column<T>(name);
@@ -687,9 +687,9 @@ single_act_visit (const char *name, V &visitor, bool in_reverse)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T, typename V>
-V &DataFrame<I, H>::
+V &DataFrame<I, H, A>::
 single_act_visit (const char *name, V &visitor, bool in_reverse) const  {
 
     return (const_cast<DataFrame *>(this)->single_act_visit<T, V>
@@ -698,9 +698,9 @@ single_act_visit (const char *name, V &visitor, bool in_reverse) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T, typename V>
-std::future<V &> DataFrame<I, H>::
+std::future<V &> DataFrame<I, H, A>::
 single_act_visit_async(const char *name, V &visitor, bool in_reverse)  {
 
     return (std::async(
@@ -715,9 +715,9 @@ single_act_visit_async(const char *name, V &visitor, bool in_reverse)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T, typename V>
-std::future<V &> DataFrame<I, H>::
+std::future<V &> DataFrame<I, H, A>::
 single_act_visit_async(const char *name, V &visitor, bool in_reverse) const  {
 
     return (std::async(
@@ -732,9 +732,9 @@ single_act_visit_async(const char *name, V &visitor, bool in_reverse) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T1, typename T2, typename V>
-V &DataFrame<I, H>::
+V &DataFrame<I, H, A>::
 single_act_visit (const char *name1,
                   const char *name2,
                   V &visitor,
@@ -759,9 +759,9 @@ single_act_visit (const char *name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T1, typename T2, typename V>
-std::future<V &> DataFrame<I, H>::
+std::future<V &> DataFrame<I, H, A>::
 single_act_visit_async(const char *name1,
                        const char *name2,
                        V &visitor,
@@ -780,9 +780,9 @@ single_act_visit_async(const char *name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T1, typename T2, typename V>
-V &DataFrame<I, H>::
+V &DataFrame<I, H, A>::
 single_act_visit (const char *name1,
                   const char *name2,
                   V &visitor,
@@ -794,9 +794,9 @@ single_act_visit (const char *name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T1, typename T2, typename V>
-std::future<V &> DataFrame<I, H>::
+std::future<V &> DataFrame<I, H, A>::
 single_act_visit_async(const char *name1,
                        const char *name2,
                        V &visitor,
@@ -818,9 +818,9 @@ single_act_visit_async(const char *name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T1, typename T2, typename T3, typename V>
-V &DataFrame<I, H>::
+V &DataFrame<I, H, A>::
 single_act_visit (const char *name1,
                   const char *name2,
                   const char *name3,
@@ -849,9 +849,9 @@ single_act_visit (const char *name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T1, typename T2, typename T3, typename V>
-V &DataFrame<I, H>::
+V &DataFrame<I, H, A>::
 single_act_visit (const char *name1,
                   const char *name2,
                   const char *name3,
@@ -864,9 +864,9 @@ single_act_visit (const char *name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T1, typename T2, typename T3, typename V>
-std::future<V &> DataFrame<I, H>::
+std::future<V &> DataFrame<I, H, A>::
 single_act_visit_async(const char *name1,
                        const char *name2,
                        const char *name3,
@@ -891,9 +891,9 @@ single_act_visit_async(const char *name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T1, typename T2, typename T3, typename V>
-std::future<V &> DataFrame<I, H>::
+std::future<V &> DataFrame<I, H, A>::
 single_act_visit_async(const char *name1,
                        const char *name2,
                        const char *name3,
@@ -918,9 +918,9 @@ single_act_visit_async(const char *name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T1, typename T2, typename T3, typename T4, typename V>
-V &DataFrame<I, H>::
+V &DataFrame<I, H, A>::
 single_act_visit (const char *name1,
                   const char *name2,
                   const char *name3,
@@ -953,9 +953,9 @@ single_act_visit (const char *name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T1, typename T2, typename T3, typename T4, typename V>
-V &DataFrame<I, H>::
+V &DataFrame<I, H, A>::
 single_act_visit (const char *name1,
                   const char *name2,
                   const char *name3,
@@ -969,9 +969,9 @@ single_act_visit (const char *name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T1, typename T2, typename T3, typename T4, typename V>
-std::future<V &> DataFrame<I, H>::
+std::future<V &> DataFrame<I, H, A>::
 single_act_visit_async(const char *name1,
                        const char *name2,
                        const char *name3,
@@ -999,9 +999,9 @@ single_act_visit_async(const char *name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T1, typename T2, typename T3, typename T4, typename V>
-std::future<V &> DataFrame<I, H>::
+std::future<V &> DataFrame<I, H, A>::
 single_act_visit_async(const char *name1,
                        const char *name2,
                        const char *name3,
@@ -1029,10 +1029,10 @@ single_act_visit_async(const char *name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T1, typename T2, typename T3, typename T4, typename T5,
          typename V>
-V &DataFrame<I, H>::
+V &DataFrame<I, H, A>::
 single_act_visit (const char *name1,
                   const char *name2,
                   const char *name3,
@@ -1069,10 +1069,10 @@ single_act_visit (const char *name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T1, typename T2, typename T3, typename T4, typename T5,
          typename V>
-V &DataFrame<I, H>::
+V &DataFrame<I, H, A>::
 single_act_visit (const char *name1,
                   const char *name2,
                   const char *name3,
@@ -1088,10 +1088,10 @@ single_act_visit (const char *name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T1, typename T2, typename T3, typename T4, typename T5,
          typename V>
-std::future<V &> DataFrame<I, H>::
+std::future<V &> DataFrame<I, H, A>::
 single_act_visit_async(const char *name1,
                        const char *name2,
                        const char *name3,
@@ -1122,10 +1122,10 @@ single_act_visit_async(const char *name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H, std::size_t A>
 template<typename T1, typename T2, typename T3, typename T4, typename T5,
          typename V>
-std::future<V &> DataFrame<I, H>::
+std::future<V &> DataFrame<I, H, A>::
 single_act_visit_async(const char *name1,
                        const char *name2,
                        const char *name3,

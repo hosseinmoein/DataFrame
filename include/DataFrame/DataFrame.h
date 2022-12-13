@@ -81,7 +81,7 @@ class DataFrame : public ThreadGranularity {
     using DataVec = H;
     using DataVecVec = std::vector<DataVec>;
 
- public:  // Construction
+public:  // Construction
 
     using size_type = typename std::vector<DataVec>::size_type;
     using IndexType = I;
@@ -298,7 +298,7 @@ public:  // Load/append/remove interfaces
             const typename DataFrame<I, H, A>::IndexType &)> diff_func =
             [](const typename DataFrame<I, H, A>::IndexType &t_1,
                const typename DataFrame<I, H, A>::IndexType &t) ->
-                   typename DataFrame<I, H, A>::size_type  {
+                   typename std::size_t  {
                 return (static_cast<std::size_t>(t - t_1));
             });
 

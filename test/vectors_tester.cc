@@ -36,7 +36,8 @@ using namespace hmdf;
 
 // -----------------------------------------------------------------------------
 
-struct my_visitor : HeteroVector::visitor_base<int, double, std::string>  {
+struct my_visitor :
+    HeteroVector<512>::visitor_base<int, double, std::string>  {
 
     template<class T>
     void operator() (T &i)  { i += i; std::cout << "-- " << i << std::endl;}
@@ -44,7 +45,8 @@ struct my_visitor : HeteroVector::visitor_base<int, double, std::string>  {
 
 // -----------------------------------------------------------------------------
 
-struct sort_functor : HeteroVector::visitor_base<int, double, std::string>  {
+struct sort_functor :
+    HeteroVector<512>::visitor_base<int, double, std::string>  {
 
     template<class T>
     bool operator() (const T &lhs, const T &rhs)  {
@@ -55,7 +57,8 @@ struct sort_functor : HeteroVector::visitor_base<int, double, std::string>  {
 
 // -----------------------------------------------------------------------------
 
-struct change_functor : HeteroVector::visitor_base<int, double, std::string>  {
+struct change_functor :
+    HeteroVector<512>::visitor_base<int, double, std::string>  {
 
     template<typename T>
     void operator() (T &val)  {
@@ -69,11 +72,11 @@ struct change_functor : HeteroVector::visitor_base<int, double, std::string>  {
 
 int main(int, char *[]) {
 
-    HeteroVector    hv;
-    HeteroVector    hv2;
-    HeteroVector    hv3;
+    HeteroVector<512>   hv;
+    HeteroVector<512>   hv2;
+    HeteroVector<512>   hv3;
 
-    const std::vector<int>  &int_vec = hv.get_vector<int>();
+    const auto  &int_vec = hv.get_vector<int>();
 
     hv.push_back (3);
     hv.emplace_back<int> (4);
@@ -102,8 +105,8 @@ int main(int, char *[]) {
 
         assert(v.at<double>(3) == 1.05);
 
-        const HeteroVector    &const_hv = hv;
-        HeteroConstView       const_v = const_hv.get_view<double>();
+        const HeteroVector<512> &const_hv = hv;
+        HeteroConstView         const_v = const_hv.get_view<double>();
 
         assert(const_v.at<double>(3) == 1.05);
 
@@ -121,8 +124,8 @@ int main(int, char *[]) {
 
         assert(v.at<double>(3) == 1.05);
 
-        const HeteroVector    &const_hv = hv;
-        HeteroConstPtrView    const_v = const_hv.get_ptr_view<double>();
+        const HeteroVector<512> &const_hv = hv;
+        HeteroConstPtrView      const_v = const_hv.get_ptr_view<double>();
 
         assert(const_v.at<double>(3) == 1.05);
 
@@ -140,7 +143,7 @@ int main(int, char *[]) {
     hv2 = hv;
     hv3 = std::move(hv2);
 
-    const std::vector<double>  &dbl_vec = hv3.get_vector<double>();
+    const auto  &dbl_vec = hv3.get_vector<double>();
 
     for (const auto &iter : int_vec)
         std::cout << iter << std::endl;
@@ -190,7 +193,7 @@ int main(int, char *[]) {
         vec_view[5] = 100;
         assert(vec_view[5] == 100);
 
-        VectorView<int>::const_iterator item = vec_view.begin();
+        VectorView<int, 0>::const_iterator  item = vec_view.begin();
 
         assert(*item == 1);
         assert(*(item++) == 1);

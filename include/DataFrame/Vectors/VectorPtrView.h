@@ -29,6 +29,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
 
+#include <DataFrame/Utils/AlignedAllocator.h>
+
 #include <algorithm>
 #include <functional>
 #include <iterator>
@@ -39,12 +41,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace hmdf
 {
 
-template<typename T>
+template<typename T, std::size_t A = 0>
 class VectorPtrView {
 
-    using vector_type = std::vector<T *>;
+    using vector_type =
+        std::vector<T *, typename allocator_declare<T *, A>::type>;
 
 public:
+
+    static constexpr std::align_val_t   align_value { A };
 
     using value_type = T;
     using pointer = T *;
@@ -501,12 +506,15 @@ private:
 
 // ----------------------------------------------------------------------------
 
-template<typename T>
+template<typename T, std::size_t A = 0>
 class VectorConstPtrView  {
 
-    using vector_type = std::vector<const T *>;
+    using vector_type =
+        std::vector<const T *, typename allocator_declare<const T *, A>::type>;
 
 public:
+
+    static constexpr std::align_val_t   align_value { A };
 
     using value_type = T;
     using pointer = const T *;

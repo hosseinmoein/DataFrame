@@ -36,9 +36,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace hmdf
 {
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename ... Ts>
-bool DataFrame<I, H, A>::
+bool DataFrame<I, H>::
 write(const char *file_name,
       io_format iof,
       std::streamsize precision,
@@ -62,10 +62,10 @@ write(const char *file_name,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename ... Ts>
 std::string
-DataFrame<I, H, A>::to_string(std::streamsize precision) const  {
+DataFrame<I, H>::to_string(std::streamsize precision) const  {
 
     std::stringstream   ss (std::ios_base::out);
 
@@ -75,9 +75,9 @@ DataFrame<I, H, A>::to_string(std::streamsize precision) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename S, typename ... Ts>
-bool DataFrame<I, H, A>::
+bool DataFrame<I, H>::
 write(S &o,
       io_format iof,
       std::streamsize precision,
@@ -205,9 +205,9 @@ write(S &o,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename ... Ts>
-std::future<bool> DataFrame<I, H, A>::
+std::future<bool> DataFrame<I, H>::
 write_async (const char *file_name,
              io_format iof,
              std::streamsize precision,
@@ -231,9 +231,9 @@ write_async (const char *file_name,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename S, typename ... Ts>
-std::future<bool> DataFrame<I, H, A>::
+std::future<bool> DataFrame<I, H>::
 write_async (S &o,
              io_format iof,
              std::streamsize precision,
@@ -257,9 +257,9 @@ write_async (S &o,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename ... Ts>
-std::future<std::string> DataFrame<I, H, A>::
+std::future<std::string> DataFrame<I, H>::
 to_string_async (std::streamsize precision) const  {
 
     return (std::async(std::launch::async,

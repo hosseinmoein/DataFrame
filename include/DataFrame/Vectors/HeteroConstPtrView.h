@@ -33,6 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/DataFrameExports.h>
 
 #include <functional>
+#include <new>
 #include <type_traits>
 #include <unordered_map>
 
@@ -41,7 +42,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace hmdf
 {
 
-struct HeteroConstPtrView {
+template<std::size_t A = 0>
+struct  HeteroConstPtrView {
+
+    static constexpr std::align_val_t   align_value { A };
 
     using size_type = size_t;
 
@@ -62,9 +66,9 @@ struct HeteroConstPtrView {
     void set_begin_end_special(const T *bp, const T *ep_1);
 
     template<typename T>
-    HeteroConstPtrView(VectorConstPtrView<T> &vec);
+    HeteroConstPtrView(VectorConstPtrView<T, A> &vec);
     template<typename T>
-    HeteroConstPtrView(VectorConstPtrView<T> &&vec);
+    HeteroConstPtrView(VectorConstPtrView<T, A> &&vec);
     HMDF_API HeteroConstPtrView(const HeteroConstPtrView &that);
     HMDF_API HeteroConstPtrView(HeteroConstPtrView &&that);
 
@@ -74,12 +78,12 @@ struct HeteroConstPtrView {
     HMDF_API HeteroConstPtrView &operator= (HeteroConstPtrView &&rhs);
 
     template<typename T>
-    VectorConstPtrView<T> &get_vector();
+    VectorConstPtrView<T, A> &get_vector();
     template<typename T>
-    const VectorConstPtrView<T> &get_vector() const;
+    const VectorConstPtrView<T, A> &get_vector() const;
 
     template<typename T>
-    typename VectorConstPtrView<T>::size_type
+    typename VectorConstPtrView<T, A>::size_type
     size () const { return (get_vector<T>().size()); }
 
     HMDF_API void clear();
@@ -117,7 +121,7 @@ private:
 
     template<typename T>
     inline static
-    std::unordered_map<const HeteroConstPtrView *, VectorConstPtrView<T>>
+    std::unordered_map<const HeteroConstPtrView *, VectorConstPtrView<T, A>>
         views_ {  };
 
     std::function<void(HeteroConstPtrView &)>

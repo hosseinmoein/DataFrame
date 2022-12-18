@@ -38,11 +38,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace hmdf
 {
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename T>
-std::vector<T> &DataFrame<I, H, A>::create_column (const char *name)  {
+std::vector<T> &DataFrame<I, H>::create_column (const char *name)  {
 
-    static_assert(std::is_base_of<HeteroVector, DataVec>::value,
+    static_assert(std::is_base_of<HeteroVector<align_value>, DataVec>::value,
                   "Only a StdDataFrame can call create_column()");
 
     if (! ::strcmp(name, DF_INDEX_COL_NAME))
@@ -69,10 +69,10 @@ std::vector<T> &DataFrame<I, H, A>::create_column (const char *name)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
-void DataFrame<I, H, A>::remove_column (const char *name)  {
+template<typename I, typename H>
+void DataFrame<I, H>::remove_column (const char *name)  {
 
-    static_assert(std::is_base_of<HeteroVector, DataVec>::value,
+    static_assert(std::is_base_of<HeteroVector<align_value>, DataVec>::value,
                   "Only a StdDataFrame can call remove_column()");
 
     if (! ::strcmp(name, DF_INDEX_COL_NAME))
@@ -106,18 +106,18 @@ void DataFrame<I, H, A>::remove_column (const char *name)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
-void DataFrame<I, H, A>::remove_column(size_type index)  {
+template<typename I, typename H>
+void DataFrame<I, H>::remove_column(size_type index)  {
 
     return (remove_column(column_list_[index].first.c_str()));
 }
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
-void DataFrame<I, H, A>::rename_column (const char *from, const char *to)  {
+template<typename I, typename H>
+void DataFrame<I, H>::rename_column (const char *from, const char *to)  {
 
-    static_assert(std::is_base_of<HeteroVector, DataVec>::value,
+    static_assert(std::is_base_of<HeteroVector<align_value>, DataVec>::value,
                   "Only a StdDataFrame can call rename_column()");
 
     if (! ::strcmp(from, DF_INDEX_COL_NAME) ||
@@ -153,13 +153,13 @@ void DataFrame<I, H, A>::rename_column (const char *from, const char *to)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename FROM_T, typename TO_T>
-void DataFrame<I, H, A>::
+void DataFrame<I, H>::
 retype_column (const char *name,
                std::function<TO_T (const FROM_T &)> convert_func)  {
 
-    static_assert(std::is_base_of<HeteroVector, DataVec>::value,
+    static_assert(std::is_base_of<HeteroVector<align_value>, DataVec>::value,
                   "Only a StdDataFrame can call retype_column()");
 
     if (! ::strcmp(name, DF_INDEX_COL_NAME))
@@ -179,12 +179,12 @@ retype_column (const char *name,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename ... Ts>
-typename DataFrame<I, H, A>::size_type
-DataFrame<I, H, A>::load_data (IndexVecType &&indices, Ts&& ... args)  {
+typename DataFrame<I, H>::size_type
+DataFrame<I, H>::load_data (IndexVecType &&indices, Ts&& ... args)  {
 
-    static_assert(std::is_base_of<HeteroVector, DataVec>::value,
+    static_assert(std::is_base_of<HeteroVector<align_value>, DataVec>::value,
                   "Only a StdDataFrame can call load_data()");
 
     size_type   cnt = load_index(std::forward<IndexVecType>(indices));
@@ -204,12 +204,12 @@ DataFrame<I, H, A>::load_data (IndexVecType &&indices, Ts&& ... args)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename ITR>
-typename DataFrame<I, H, A>::size_type
-DataFrame<I, H, A>::load_index(const ITR &begin, const ITR &end)  {
+typename DataFrame<I, H>::size_type
+DataFrame<I, H>::load_index(const ITR &begin, const ITR &end)  {
 
-    static_assert(std::is_base_of<HeteroVector, DataVec>::value,
+    static_assert(std::is_base_of<HeteroVector<align_value>, DataVec>::value,
                   "Only a StdDataFrame can call load_index()");
 
     indices_.clear();
@@ -219,11 +219,11 @@ DataFrame<I, H, A>::load_index(const ITR &begin, const ITR &end)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
-typename DataFrame<I, H, A>::size_type
-DataFrame<I, H, A>::load_index(IndexVecType &&idx)  {
+template<typename I, typename H>
+typename DataFrame<I, H>::size_type
+DataFrame<I, H>::load_index(IndexVecType &&idx)  {
 
-    static_assert(std::is_base_of<HeteroVector, DataVec>::value,
+    static_assert(std::is_base_of<HeteroVector<align_value>, DataVec>::value,
                   "Only a StdDataFrame can call load_index()");
 
     indices_ = idx;
@@ -232,8 +232,8 @@ DataFrame<I, H, A>::load_index(IndexVecType &&idx)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
-std::vector<I> DataFrame<I, H, A>::
+template<typename I, typename H>
+std::vector<I> DataFrame<I, H>::
 gen_datetime_index(const char *start_datetime,
                    const char *end_datetime,
                    time_frequency t_freq,
@@ -290,8 +290,8 @@ gen_datetime_index(const char *start_datetime,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
-std::vector<I> DataFrame<I, H, A>::
+template<typename I, typename H>
+std::vector<I> DataFrame<I, H>::
 gen_sequence_index (const IndexType &start_value,
                     const IndexType &end_value,
                     long increment)  {
@@ -308,12 +308,12 @@ gen_sequence_index (const IndexType &start_value,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename ITR>
-typename DataFrame<I, H, A>::size_type
-DataFrame<I, H, A>::append_index(Index2D<const ITR &> range)  {
+typename DataFrame<I, H>::size_type
+DataFrame<I, H>::append_index(Index2D<const ITR &> range)  {
 
-    static_assert(std::is_base_of<HeteroVector, DataVec>::value,
+    static_assert(std::is_base_of<HeteroVector<align_value>, DataVec>::value,
                   "Only a StdDataFrame can call append_index()");
 
     const size_type s = std::distance(range.begin, range.end);
@@ -324,11 +324,11 @@ DataFrame<I, H, A>::append_index(Index2D<const ITR &> range)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
-typename DataFrame<I, H, A>::size_type
-DataFrame<I, H, A>::append_index(const IndexType &val)  {
+template<typename I, typename H>
+typename DataFrame<I, H>::size_type
+DataFrame<I, H>::append_index(const IndexType &val)  {
 
-    static_assert(std::is_base_of<HeteroVector, DataVec>::value,
+    static_assert(std::is_base_of<HeteroVector<align_value>, DataVec>::value,
                   "Only a StdDataFrame can call append_index()");
 
     indices_.push_back (val);
@@ -337,10 +337,10 @@ DataFrame<I, H, A>::append_index(const IndexType &val)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename T, typename ITR>
-typename DataFrame<I, H, A>::size_type
-DataFrame<I, H, A>::
+typename DataFrame<I, H>::size_type
+DataFrame<I, H>::
 load_column (const char *name,
              Index2D<const ITR &> range,
              nan_policy padding)  {
@@ -392,10 +392,10 @@ load_column (const char *name,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename V>
-typename DataFrame<I, H, A>::size_type
-DataFrame<I, H, A>::
+typename DataFrame<I, H>::size_type
+DataFrame<I, H>::
 load_result_as_column(V &visitor, const char *name, nan_policy padding)  {
 
     const size_type idx_s = indices_.size();
@@ -444,10 +444,10 @@ load_result_as_column(V &visitor, const char *name, nan_policy padding)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename T, typename IT>
-typename DataFrame<I, H, A>::size_type
-DataFrame<I, H, A>::
+typename DataFrame<I, H>::size_type
+DataFrame<I, H>::
 load_indicators(const char *cat_col_name, const char *numeric_cols_prefix)  {
 
     using map_t = std::unordered_map<T, std::vector<IT> *>;
@@ -482,10 +482,10 @@ load_indicators(const char *cat_col_name, const char *numeric_cols_prefix)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename T, typename CT>
-typename DataFrame<I, H, A>::size_type
-DataFrame<I, H, A>::
+typename DataFrame<I, H>::size_type
+DataFrame<I, H>::
 from_indicators(const std::vector<const char *> &ind_col_names,
                 const char *cat_col_name,
                 const char *numeric_cols_prefixg)  {
@@ -515,17 +515,18 @@ from_indicators(const std::vector<const char *> &ind_col_names,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename T, typename ITR>
-void DataFrame<I, H, A>::
+void DataFrame<I, H>::
 setup_view_column_ (const char *name, Index2D<ITR> range)  {
 
-    static_assert(std::is_base_of<HeteroView, DataVec>::value ||
-                  std::is_base_of<HeteroConstView, DataVec>::value ||
-                  std::is_base_of<HeteroPtrView, DataVec>::value ||
-                  std::is_base_of<HeteroConstPtrView, DataVec>::value,
-                  "Only a DataFrameView or DataFramePtrView can "
-                  "call setup_view_column_()");
+    static_assert(
+        std::is_base_of<HeteroView<align_value>, DataVec>::value ||
+        std::is_base_of<HeteroConstView<align_value>, DataVec>::value ||
+        std::is_base_of<HeteroPtrView<align_value>, DataVec>::value ||
+        std::is_base_of<HeteroConstPtrView<align_value>, DataVec>::value,
+        "Only a DataFrameView or DataFramePtrView can "
+        "call setup_view_column_()");
 
     DataVec dv;
 
@@ -542,10 +543,10 @@ setup_view_column_ (const char *name, Index2D<ITR> range)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename T>
-typename DataFrame<I, H, A>::size_type
-DataFrame<I, H, A>::
+typename DataFrame<I, H>::size_type
+DataFrame<I, H>::
 load_column (const char *name, std::vector<T> &&column, nan_policy padding)  {
 
     const size_type idx_s = indices_.size();
@@ -592,10 +593,10 @@ load_column (const char *name, std::vector<T> &&column, nan_policy padding)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename T>
-typename DataFrame<I, H, A>::size_type
-DataFrame<I, H, A>::
+typename DataFrame<I, H>::size_type
+DataFrame<I, H>::
 load_align_column(
     const char *name,
     std::vector<T> &&column,
@@ -650,10 +651,10 @@ load_align_column(
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename T>
-typename DataFrame<I, H, A>::size_type
-DataFrame<I, H, A>::
+typename DataFrame<I, H>::size_type
+DataFrame<I, H>::
 load_column (const char *name,
              const std::vector<T> &data,
              nan_policy padding)  {
@@ -663,10 +664,10 @@ load_column (const char *name,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename T1, typename T2>
-typename DataFrame<I, H, A>::size_type
-DataFrame<I, H, A>::load_pair_(std::pair<T1, T2> &col_name_data)  {
+typename DataFrame<I, H>::size_type
+DataFrame<I, H>::load_pair_(std::pair<T1, T2> &col_name_data)  {
 
     return (load_column<typename decltype(col_name_data.second)::value_type>(
                 col_name_data.first, // column name
@@ -676,10 +677,10 @@ DataFrame<I, H, A>::load_pair_(std::pair<T1, T2> &col_name_data)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename T, typename ITR>
-typename DataFrame<I, H, A>::size_type
-DataFrame<I, H, A>::
+typename DataFrame<I, H>::size_type
+DataFrame<I, H>::
 append_column (const char *name,
                Index2D<const ITR &> range,
                nan_policy padding)  {
@@ -719,10 +720,10 @@ append_column (const char *name,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename T>
-typename DataFrame<I, H, A>::size_type
-DataFrame<I, H, A>::
+typename DataFrame<I, H>::size_type
+DataFrame<I, H>::
 append_column (const char *name, const T &val, nan_policy padding)  {
 
     std::vector<T>  &vec = get_column<T>(name);
@@ -760,10 +761,10 @@ append_column (const char *name, const T &val, nan_policy padding)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename T>
-typename DataFrame<I, H, A>::size_type
-DataFrame<I, H, A>::append_row_(std::pair<const char *, T> &row_name_data)  {
+typename DataFrame<I, H>::size_type
+DataFrame<I, H>::append_row_(std::pair<const char *, T> &row_name_data)  {
 
     return (append_column<T>(row_name_data.first, // column name
                              std::forward<T>(row_name_data.second),
@@ -772,12 +773,12 @@ DataFrame<I, H, A>::append_row_(std::pair<const char *, T> &row_name_data)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename ... Ts>
-typename DataFrame<I, H, A>::size_type
-DataFrame<I, H, A>::append_row (IndexType *idx_val, Ts&& ... args)  {
+typename DataFrame<I, H>::size_type
+DataFrame<I, H>::append_row (IndexType *idx_val, Ts&& ... args)  {
 
-    static_assert(std::is_base_of<HeteroVector, DataVec>::value,
+    static_assert(std::is_base_of<HeteroVector<align_value>, DataVec>::value,
                   "Only a StdDataFrame can call append_row()");
 
     if (idx_val)
@@ -798,11 +799,11 @@ DataFrame<I, H, A>::append_row (IndexType *idx_val, Ts&& ... args)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename ... Ts>
-void DataFrame<I, H, A>::remove_data_by_idx (Index2D<IndexType> range)  {
+void DataFrame<I, H>::remove_data_by_idx (Index2D<IndexType> range)  {
 
-    static_assert(std::is_base_of<HeteroVector, H>::value,
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
                   "Only a StdDataFrame can call remove_data_by_idx()");
 
     const auto  &lower =
@@ -831,11 +832,11 @@ void DataFrame<I, H, A>::remove_data_by_idx (Index2D<IndexType> range)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename ... Ts>
-void DataFrame<I, H, A>::remove_data_by_loc (Index2D<long> range)  {
+void DataFrame<I, H>::remove_data_by_loc (Index2D<long> range)  {
 
-    static_assert(std::is_base_of<HeteroVector, H>::value,
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
                   "Only a StdDataFrame can call remove_data_by_loc()");
 
     if (range.begin < 0)
@@ -871,11 +872,11 @@ void DataFrame<I, H, A>::remove_data_by_loc (Index2D<long> range)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename T, typename F, typename ... Ts>
-void DataFrame<I, H, A>::remove_data_by_sel (const char *name, F &sel_functor)  {
+void DataFrame<I, H>::remove_data_by_sel (const char *name, F &sel_functor)  {
 
-    static_assert(std::is_base_of<HeteroVector, H>::value,
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
                   "Only a StdDataFrame can call remove_data_by_loc()");
 
     const ColumnVecType<T>  &vec = get_column<T>(name);
@@ -905,9 +906,9 @@ void DataFrame<I, H, A>::remove_data_by_sel (const char *name, F &sel_functor)  
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename T1, typename T2, typename F, typename ... Ts>
-void DataFrame<I, H, A>::
+void DataFrame<I, H>::
 remove_data_by_sel (const char *name1, const char *name2, F &sel_functor)  {
 
     const ColumnVecType<T1> &vec1 = get_column<T1>(name1);
@@ -946,9 +947,9 @@ remove_data_by_sel (const char *name1, const char *name2, F &sel_functor)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename T1, typename T2, typename T3, typename F, typename ... Ts>
-void DataFrame<I, H, A>::
+void DataFrame<I, H>::
 remove_data_by_sel (const char *name1,
                     const char *name2,
                     const char *name3,
@@ -993,9 +994,9 @@ remove_data_by_sel (const char *name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename MAP, typename ... Ts>
-DataFrame<I, H, A> DataFrame<I, H, A>::
+DataFrame<I, H> DataFrame<I, H>::
 remove_dups_common_(const DataFrame &s_df,
                     remove_dup_spec rds,
                     const MAP &row_table,
@@ -1056,9 +1057,9 @@ remove_dups_common_(const DataFrame &s_df,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename T, typename ... Ts>
-DataFrame<I, H, A> DataFrame<I, H, A>::
+DataFrame<I, H> DataFrame<I, H>::
 remove_duplicates (const char *name,
                    bool include_index,
                    remove_dup_spec rds) const  {
@@ -1091,9 +1092,9 @@ remove_duplicates (const char *name,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename T1, typename T2, typename ... Ts>
-DataFrame<I, H, A> DataFrame<I, H, A>::
+DataFrame<I, H> DataFrame<I, H>::
 remove_duplicates (const char *name1,
                    const char *name2,
                    bool include_index,
@@ -1129,9 +1130,9 @@ remove_duplicates (const char *name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename T1, typename T2, typename T3, typename ... Ts>
-DataFrame<I, H, A> DataFrame<I, H, A>::
+DataFrame<I, H> DataFrame<I, H>::
 remove_duplicates (const char *name1,
                    const char *name2,
                    const char *name3,
@@ -1171,9 +1172,9 @@ remove_duplicates (const char *name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename T1, typename T2, typename T3, typename T4, typename ... Ts>
-DataFrame<I, H, A> DataFrame<I, H, A>::
+DataFrame<I, H> DataFrame<I, H>::
 remove_duplicates (const char *name1,
                    const char *name2,
                    const char *name3,
@@ -1217,10 +1218,10 @@ remove_duplicates (const char *name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename T1, typename T2, typename T3, typename T4, typename T5,
          typename ... Ts>
-DataFrame<I, H, A> DataFrame<I, H, A>::
+DataFrame<I, H> DataFrame<I, H>::
 remove_duplicates (const char *name1,
                    const char *name2,
                    const char *name3,
@@ -1267,11 +1268,11 @@ remove_duplicates (const char *name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename T1, typename T2, typename T3, typename T4,
          typename T5, typename T6,
          typename ... Ts>
-DataFrame<I, H, A> DataFrame<I, H, A>::
+DataFrame<I, H> DataFrame<I, H>::
 remove_duplicates (const char *name1,
                    const char *name2,
                    const char *name3,
@@ -1322,16 +1323,16 @@ remove_duplicates (const char *name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename OLD_T1, typename OLD_T2, typename NEW_T, typename F>
-void DataFrame<I, H, A>::
+void DataFrame<I, H>::
 consolidate(const char *old_col_name1,
             const char *old_col_name2,
             const char *new_col_name,
             F &functor,
             bool delete_old_cols)  {
 
-    static_assert(std::is_base_of<HeteroVector, H>::value,
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
                   "Only a StdDataFrame can call consolidate()");
 
     const ColumnVecType<OLD_T1> &vec1 = get_column<OLD_T1>(old_col_name1);
@@ -1351,10 +1352,10 @@ consolidate(const char *old_col_name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename OLD_T1, typename OLD_T2, typename OLD_T3,
          typename NEW_T, typename F>
-void DataFrame<I, H, A>::
+void DataFrame<I, H>::
 consolidate(const char *old_col_name1,
             const char *old_col_name2,
             const char *old_col_name3,
@@ -1362,7 +1363,7 @@ consolidate(const char *old_col_name1,
             F &functor,
             bool delete_old_cols)  {
 
-    static_assert(std::is_base_of<HeteroVector, H>::value,
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
                   "Only a StdDataFrame can call consolidate()");
 
     const ColumnVecType<OLD_T1> &vec1 = get_column<OLD_T1>(old_col_name1);
@@ -1385,10 +1386,10 @@ consolidate(const char *old_col_name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename OLD_T1, typename OLD_T2, typename OLD_T3, typename OLD_T4,
          typename NEW_T, typename F>
-void DataFrame<I, H, A>::
+void DataFrame<I, H>::
 consolidate(const char *old_col_name1,
             const char *old_col_name2,
             const char *old_col_name3,
@@ -1397,7 +1398,7 @@ consolidate(const char *old_col_name1,
             F &functor,
             bool delete_old_cols)  {
 
-    static_assert(std::is_base_of<HeteroVector, H>::value,
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
                   "Only a StdDataFrame can call consolidate()");
 
     const ColumnVecType<OLD_T1> &vec1 = get_column<OLD_T1>(old_col_name1);
@@ -1423,11 +1424,11 @@ consolidate(const char *old_col_name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename OLD_T1, typename OLD_T2, typename OLD_T3,
          typename OLD_T4, typename OLD_T5,
          typename NEW_T, typename F>
-void DataFrame<I, H, A>::
+void DataFrame<I, H>::
 consolidate(const char *old_col_name1,
             const char *old_col_name2,
             const char *old_col_name3,
@@ -1437,7 +1438,7 @@ consolidate(const char *old_col_name1,
             F &functor,
             bool delete_old_cols)  {
 
-    static_assert(std::is_base_of<HeteroVector, H>::value,
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
                   "Only a StdDataFrame can call consolidate()");
 
     const ColumnVecType<OLD_T1> &vec1 = get_column<OLD_T1>(old_col_name1);

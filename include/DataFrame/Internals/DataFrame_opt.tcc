@@ -36,9 +36,9 @@ namespace hmdf
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename ... Ts>
-bool DataFrame<I, H, A>::is_equal (const DataFrame &rhs) const  {
+bool DataFrame<I, H>::is_equal (const DataFrame &rhs) const  {
 
     if (column_list_.size() != rhs.column_list_.size())
         return (false);
@@ -63,9 +63,9 @@ bool DataFrame<I, H, A>::is_equal (const DataFrame &rhs) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename ... Ts>
-DataFrame<I, H, A> &DataFrame<I, H, A>::
+DataFrame<I, H> &DataFrame<I, H>::
 modify_by_idx (DataFrame &rhs, sort_state already_sorted)  {
 
     if (already_sorted == sort_state::not_sorted)  {

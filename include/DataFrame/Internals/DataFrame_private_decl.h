@@ -55,7 +55,7 @@ void read_csv2_(std::istream &file, bool columns_only);
 
 template<typename CF, typename ... Ts>
 static void
-sort_common_(DataFrame<I, H, A> &df, CF &&comp_func);
+sort_common_(DataFrame<I, H> &df, CF &&comp_func);
 
 template<typename T>
 static void
@@ -126,17 +126,19 @@ static void
 join_helper_common_(const LHS_T &lhs,
                     const RHS_T &rhs,
                     const IndexIdxVector &joined_index_idx,
-                    DataFrame<IDX_T, HeteroVector, A> &result,
+                    DataFrame<
+                        IDX_T,
+                        HeteroVector<std::size_t(H::align_value)>> &result,
                     const char *skip_col_name = nullptr);
 
 template<typename LHS_T, typename RHS_T, typename ... Ts>
-static DataFrame<I, HeteroVector, A>
+static DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
 index_join_helper_(const LHS_T &lhs,
                    const RHS_T &rhs,
                    const IndexIdxVector &joined_index_idx);
 
 template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
-static DataFrame<unsigned int, HeteroVector, A>
+static DataFrame<unsigned int, HeteroVector<std::size_t(H::align_value)>>
 column_join_helper_(const LHS_T &lhs,
                     const RHS_T &rhs,
                     const char *col_name,
@@ -149,14 +151,14 @@ get_inner_index_idx_vector_(
     const std::vector<JoinSortingPair<T>> &col_vec_rhs);
 
 template<typename LHS_T, typename RHS_T, typename ... Ts>
-static DataFrame<I, HeteroVector, A>
+static DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
 index_inner_join_(
     const LHS_T &lhs, const RHS_T &rhs,
     const std::vector<JoinSortingPair<IndexType>> &col_vec_lhs,
     const std::vector<JoinSortingPair<IndexType>> &col_vec_rhs);
 
 template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
-static DataFrame<unsigned int, HeteroVector, A>
+static DataFrame<unsigned int, HeteroVector<std::size_t(H::align_value)>>
 column_inner_join_(const LHS_T &lhs,
                    const RHS_T &rhs,
                    const char *col_name,
@@ -170,14 +172,14 @@ get_left_index_idx_vector_(
     const std::vector<JoinSortingPair<T>> &col_vec_rhs);
 
 template<typename LHS_T, typename RHS_T, typename ... Ts>
-static DataFrame<I, HeteroVector, A>
+static DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
 index_left_join_(
     const LHS_T &lhs, const RHS_T &rhs,
     const std::vector<JoinSortingPair<IndexType>> &col_vec_lhs,
     const std::vector<JoinSortingPair<IndexType>> &col_vec_rhs);
 
 template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
-static DataFrame<unsigned int, HeteroVector, A>
+static DataFrame<unsigned int, HeteroVector<std::size_t(H::align_value)>>
 column_left_join_(const LHS_T &lhs,
                   const RHS_T &rhs,
                   const char *col_name,
@@ -191,14 +193,14 @@ get_right_index_idx_vector_(
     const std::vector<JoinSortingPair<T>> &col_vec_rhs);
 
 template<typename LHS_T, typename RHS_T, typename ... Ts>
-static DataFrame<I, HeteroVector, A>
+static DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
 index_right_join_(
     const LHS_T &lhs, const RHS_T &rhs,
     const std::vector<JoinSortingPair<IndexType>> &col_vec_lhs,
     const std::vector<JoinSortingPair<IndexType>> &col_vec_rhs);
 
 template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
-static DataFrame<unsigned int, HeteroVector, A>
+static DataFrame<unsigned int, HeteroVector<std::size_t(H::align_value)>>
 column_right_join_(const LHS_T &lhs,
                    const RHS_T &rhs,
                    const char *col_name,
@@ -223,14 +225,14 @@ get_left_right_index_idx_vector_(
     const std::vector<JoinSortingPair<T>> &col_vec_rhs);
 
 template<typename LHS_T, typename RHS_T, typename ... Ts>
-static DataFrame<I, HeteroVector, A>
+static DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
 index_left_right_join_(
     const LHS_T &lhs, const RHS_T &rhs,
     const std::vector<JoinSortingPair<IndexType>> &col_vec_lhs,
     const std::vector<JoinSortingPair<IndexType>> &col_vec_rhs);
 
 template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
-static DataFrame<unsigned int, HeteroVector, A>
+static DataFrame<unsigned int, HeteroVector<std::size_t(H::align_value)>>
 column_left_right_join_(
     const LHS_T &lhs,
     const RHS_T &rhs,

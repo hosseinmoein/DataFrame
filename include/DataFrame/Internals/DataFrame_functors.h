@@ -442,11 +442,11 @@ struct drop_missing_rows_functor_ :
 template<typename ... Ts>
 struct get_row_functor_ : DataVec::template visitor_base<Ts ...>  {
 
-    inline get_row_functor_ (HeteroVector &r, size_type rn)
+    inline get_row_functor_ (HeteroVector<align_value> &r, size_type rn)
         : result(r), row_num(rn)  {   }
 
-    HeteroVector    &result;
-    const size_type row_num;
+    HeteroVector<align_value>   &result;
+    const size_type             row_num;
 
     template<typename T>
     void operator() (const T &vec);

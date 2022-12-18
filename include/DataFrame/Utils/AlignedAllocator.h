@@ -169,6 +169,18 @@ public:
     }
 };
 
+// ----------------------------------------------------------------------------
+
+template<typename T, std::size_t A>
+struct  allocator_declare  {
+    using type = AlignedAllocator<T, A>;
+};
+
+template<typename T>
+struct  allocator_declare<T, 0>  {
+    using type = std::allocator<T>;
+};
+
 } // namespace std
 
 // ----------------------------------------------------------------------------

@@ -33,6 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/DataFrameExports.h>
 
 #include <functional>
+#include <new>
 #include <type_traits>
 #include <unordered_map>
 
@@ -41,7 +42,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace hmdf
 {
 
+template<std::size_t A = 0>
 struct HeteroPtrView {
+
+    static constexpr std::align_val_t   align_value { A };
 
     using size_type = size_t;
 
@@ -62,9 +66,9 @@ struct HeteroPtrView {
     void set_begin_end_special(T *bp, T *ep_1);
 
     template<typename T>
-    HeteroPtrView(VectorPtrView<T> &vec);
+    HeteroPtrView(VectorPtrView<T, A> &vec);
     template<typename T>
-    HeteroPtrView(VectorPtrView<T> &&vec);
+    HeteroPtrView(VectorPtrView<T, A> &&vec);
     HMDF_API HeteroPtrView(const HeteroPtrView &that);
     HMDF_API HeteroPtrView(HeteroPtrView &&that);
 
@@ -74,9 +78,9 @@ struct HeteroPtrView {
     HMDF_API HeteroPtrView &operator= (HeteroPtrView &&rhs);
 
     template<typename T>
-    VectorPtrView<T> &get_vector();
+    VectorPtrView<T, A> &get_vector();
     template<typename T>
-    const VectorPtrView<T> &get_vector() const;
+    const VectorPtrView<T, A> &get_vector() const;
 
     template<typename T>
     void reserve (size_type r)  { get_vector<T>().reserve (r); }
@@ -84,7 +88,7 @@ struct HeteroPtrView {
     void shrink_to_fit () { get_vector<T>().shrink_to_fit (); }
 
     template<typename T>
-    typename VectorPtrView<T>::
+    typename VectorPtrView<T, A>::
     size_type size () const { return (get_vector<T>().size()); }
 
     HMDF_API void clear();
@@ -142,7 +146,7 @@ struct HeteroPtrView {
 private:
 
     template<typename T>
-    inline static std::unordered_map<const HeteroPtrView *, VectorPtrView<T>>
+    inline static std::unordered_map<const HeteroPtrView *, VectorPtrView<T, A>>
         views_ {  };
 
     std::function<void(HeteroPtrView &)>

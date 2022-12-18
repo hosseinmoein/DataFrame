@@ -10,8 +10,7 @@ PROJECT_INCLUDE_DIR = ../../include
 
 # -----------------------------------------------------------------------------
 
-SRCS = Vectors/HeteroVector.cc \
-       ../test/dataframe_tester.cc \
+SRCS = ../test/dataframe_tester.cc \
        ../test/dataframe_tester_2.cc \
        ../test/dataframe_tester_3.cc \
        ../examples/hello_world.cc \
@@ -19,10 +18,6 @@ SRCS = Vectors/HeteroVector.cc \
        ../test/dataframe_tester_schema.cc \
        ../benchmarks/dataframe_performance.cc \
        ../benchmarks/dataframe_performance_2.cc \
-       Vectors/HeteroView.cc \
-       Vectors/HeteroConstView.cc \
-       Vectors/HeteroPtrView.cc \
-       Vectors/HeteroConstPtrView.cc \
        ../test/vectors_tester.cc \
        ../test/vector_ptr_view_tester.cc \
        ../test/date_time_tester.cc \
@@ -100,12 +95,7 @@ DEFINES = -Wall -D_REENTRANT -DHMDF_HAVE_CLOCK_GETTIME \
 
 # object file
 #
-LIB_OBJS = $(LOCAL_OBJ_DIR)/HeteroVector.o \
-           $(LOCAL_OBJ_DIR)/HeteroView.o \
-           $(LOCAL_OBJ_DIR)/HeteroConstView.o \
-           $(LOCAL_OBJ_DIR)/HeteroPtrView.o \
-           $(LOCAL_OBJ_DIR)/HeteroConstPtrView.o \
-           $(LOCAL_OBJ_DIR)/DateTime.o
+LIB_OBJS = $(LOCAL_OBJ_DIR)/DateTime.o
 
 # -----------------------------------------------------------------------------
 
@@ -215,7 +205,8 @@ clobber:
           $(GEN_RAND_TESTER_OBJ) $(DATAFRAME_PERFORMACE_OBJ) \
           $(DATAFRAME_TESTER_OBJ_2) $(DATAFRAME_THREAD_SAFTY_OBJ) \
           $(DATAFRAME_TESTER_OBJ_3) $(HELLO_WORLD_OBJ) \
-          $(DATAFRAME_TESTER_SCHEMA_OBJ) $(ALLOCATOR_TESTER_OBJ)
+          $(DATAFRAME_TESTER_SCHEMA_OBJ) $(ALLOCATOR_TESTER_OBJ) \
+          $(DATAFRAME_PERFORMANCE_OBJ) $(DATAFRAME_PERFORMANCE_2_OBJ)
 
 install_lib:
 	cp -pf $(TARGET_LIB) $(PROJECT_LIB_DIR)/.

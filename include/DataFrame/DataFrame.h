@@ -66,47 +66,50 @@ namespace hmdf
 // A DataFrame may contain one index and any number of columns of any built-in
 // or user-defined types
 //
-template<typename I, typename H, std::size_t A = 0>
+template<typename I, class H>
 class DataFrame : public ThreadGranularity {
-
-    static_assert(std::is_base_of<HeteroVector, H>::value ||
-                      std::is_base_of<HeteroView, H>::value ||
-                      std::is_base_of<HeteroConstView, H>::value ||
-                      std::is_base_of<HeteroPtrView, H>::value ||
-                      std::is_base_of<HeteroConstPtrView, H>::value,
-                  "H argument can only be either of "
-                  "HeteroVector, HeteroView, HeteroConstView, "
-                  "HeteroPtrView, HeteroConstPtrView or their derived types");
 
     using DataVec = H;
     using DataVecVec = std::vector<DataVec>;
 
 public:  // Construction
 
+    
+    static constexpr std::size_t    align_value { std::size_t(H::align_value) };
+
+    template<typename T>
+    using AllocatorType = typename allocator_declare<T, align_value>::type;
+	
     using size_type = typename std::vector<DataVec>::size_type;
     using IndexType = I;
-    using IndexVecType = typename type_declare<DataVec, IndexType>::type;
+    using IndexVecType =
+        typename type_declare<DataVec, IndexType, align_value>::type;
     using ColNameType = String64;
 
     using View =
-        typename std::conditional<std::is_base_of<HeteroVector, H>::value,
-                                  DataFrame<I, HeteroView, A>,
-                                  void>::type;
+        typename std::conditional<
+            std::is_base_of<HeteroVector<align_value>, H>::value,
+                            DataFrame<I, HeteroView<align_value>>,
+            void>::type;
     using ConstView =
-        typename std::conditional<std::is_base_of<HeteroVector, H>::value,
-                                  DataFrame<I, HeteroConstView, A>,
-                                  void>::type;
+        typename std::conditional<
+            std::is_base_of<HeteroVector<align_value>, H>::value,
+                            DataFrame<I, HeteroConstView<align_value>>,
+            void>::type;
     using PtrView =
-        typename std::conditional<std::is_base_of<HeteroVector, H>::value,
-                                  DataFrame<I, HeteroPtrView, A>,
-                                  void>::type;
+        typename std::conditional<
+            std::is_base_of<HeteroVector<align_value>, H>::value,
+                            DataFrame<I, HeteroPtrView<align_value>>,
+            void>::type;
     using ConstPtrView =
-        typename std::conditional<std::is_base_of<HeteroVector, H>::value,
-                                  DataFrame<I, HeteroConstPtrView, A>,
-                                  void>::type;
+        typename std::conditional<
+            std::is_base_of<HeteroVector<align_value>, H>::value,
+                            DataFrame<I, HeteroConstPtrView<align_value>>,
+            void>::type;
 
     template<typename T>
-    using ColumnVecType = typename type_declare<DataVec, T>::type;
+    using ColumnVecType =
+        typename type_declare<DataVec, T, align_value>::type;
 
     DataFrame() = default;
 
@@ -299,10 +302,10 @@ public:  // Load/append/remove interfaces
         bool start_from_beginning,
         const T &null_value = hmdf::get_nan<T>(),
         std::function<std::size_t (
-            const typename DataFrame<I, H, A>::IndexType &,
-            const typename DataFrame<I, H, A>::IndexType &)> diff_func =
-            [](const typename DataFrame<I, H, A>::IndexType &t_1,
-               const typename DataFrame<I, H, A>::IndexType &t) ->
+            const typename DataFrame<I, H>::IndexType &,
+            const typename DataFrame<I, H>::IndexType &)> diff_func =
+            [](const typename DataFrame<I, H>::IndexType &t_1,
+               const typename DataFrame<I, H>::IndexType &t) ->
                    typename std::size_t  {
                 return (static_cast<std::size_t>(t - t_1));
             });
@@ -1206,11 +1209,11 @@ public:  // Data manipulation
     //   Name of the column
     //
     template<typename T>
-    [[nodiscard]] DataFrame<T, HeteroVector, A>
+    [[nodiscard]] DataFrame<T, HeteroVector<std::size_t(H::align_value)>>
     value_counts(const char *col_name) const;
 
     template<typename T>
-    [[nodiscard]] DataFrame<T, HeteroVector, A>
+    [[nodiscard]] DataFrame<T, HeteroVector<std::size_t(H::align_value)>>
     value_counts(size_type index) const;
 
     // It bucketizes the data and index into intervals, based on index values
@@ -1305,7 +1308,7 @@ public:  // Data manipulation
     //   (See join_policy definition)
     //
     template<typename RHS_T, typename ... Ts>
-    [[nodiscard]] DataFrame<I, HeteroVector, A>
+    [[nodiscard]] DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
     join_by_index(const RHS_T &rhs, join_policy jp) const;
 
     // It joins the data between self (lhs) and rhs and returns the joined data
@@ -1338,7 +1341,8 @@ public:  // Data manipulation
     //   (See join_policy definition)
     //
     template<typename RHS_T, typename T, typename ... Ts>
-    [[nodiscard]] DataFrame<unsigned int, HeteroVector, A>
+    [[nodiscard]] DataFrame<unsigned int,
+                            HeteroVector<std::size_t(H::align_value)>>
     join_by_column(const RHS_T &rhs, const char *name, join_policy jp) const;
 
     // It concatenates rhs to the end of self and returns the result as
@@ -1362,7 +1366,7 @@ public:  // Data manipulation
     //                           concatenated
     //
     template<typename RHS_T, typename ... Ts>
-    [[nodiscard]] DataFrame<I, HeteroVector, A>
+    [[nodiscard]] DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
     concat(const RHS_T &rhs,
            concat_policy cp = concat_policy::all_columns) const;
 
@@ -1602,7 +1606,7 @@ public: // Read/access and slicing interfaces
     //   in the returned vector
     //
     template<typename ... Ts>
-    [[nodiscard]] HeteroVector
+    [[nodiscard]] HeteroVector<std::size_t(H::align_value)>
     get_row(size_type row_num,
             const std::vector<const char *> &col_names) const;
 
@@ -1618,7 +1622,7 @@ public: // Read/access and slicing interfaces
     //   The row number
     //
     template<typename ... Ts>
-    [[nodiscard]] HeteroVector
+    [[nodiscard]] HeteroVector<std::size_t(H::align_value)>
     get_row(size_type row_num) const;
 
     // It returns a vector of unique values in the named column in the same
@@ -2402,7 +2406,7 @@ public: // Read/access and slicing interfaces
     //   the result as a column.
     //
     template<typename T, typename ... Ts>
-    [[nodiscard]] DataFrame<T, HeteroVector, A>
+    [[nodiscard]] DataFrame<T, HeteroVector<std::size_t(H::align_value)>>
     get_reindexed(const char *col_to_be_index,
                   const char *old_index_name = nullptr) const;
 
@@ -2428,12 +2432,12 @@ public: // Read/access and slicing interfaces
     //   the result as a column.
     //
     template<typename T, typename ... Ts>
-    [[nodiscard]] typename DataFrame<T, H, A>::View
+    [[nodiscard]] typename DataFrame<T, H>::View
     get_reindexed_view(const char *col_to_be_index,
                        const char *old_index_name = nullptr);
 
     template<typename T, typename ... Ts>
-    [[nodiscard]] typename DataFrame<T, H, A>::ConstView
+    [[nodiscard]] typename DataFrame<T, H>::ConstView
     get_reindexed_view(const char *col_to_be_index,
                        const char *old_index_name = nullptr) const;
 
@@ -2455,7 +2459,8 @@ public: // Read/access and slicing interfaces
     //   the list only once.
     //
     template<typename ... Ts>
-    [[nodiscard]] DataFrame<std::string, HeteroVector, A>
+    [[nodiscard]] DataFrame<std::string,
+                            HeteroVector<std::size_t(H::align_value)>>
     describe() const;
 
     // This method combines the content of column col_name between self and
@@ -3767,7 +3772,7 @@ public:  // Reading and writing
 
 private:
 
-    template<typename ALT_I, typename ALT_H, std::size_t ALT_A>
+    template<typename ALT_I, typename ALT_H>
     friend class DataFrame;
 
     using ColNameDict =

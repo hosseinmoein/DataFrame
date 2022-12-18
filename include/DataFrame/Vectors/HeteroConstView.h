@@ -41,7 +41,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace hmdf
 {
 
+template<std::size_t A = 0>
 struct HeteroConstView  {
+
+    static constexpr std::align_val_t   align_value { A };
 
     using size_type = size_t;
 
@@ -71,12 +74,12 @@ struct HeteroConstView  {
     HMDF_API HeteroConstView &operator= (HeteroConstView &&rhs);
 
     template<typename T>
-    VectorConstView<T> &get_vector();
+    VectorConstView<T, A> &get_vector();
     template<typename T>
-    const VectorConstView<T> &get_vector() const;
+    const VectorConstView<T, A> &get_vector() const;
 
     template<typename T>
-    typename VectorConstView<T>::size_type
+    typename VectorConstView<T, A>::size_type
     size () const { return (get_vector<T>().size()); }
 
     HMDF_API void clear();
@@ -94,10 +97,10 @@ struct HeteroConstView  {
     const T &front() const;
 
     template<typename T>
-    using const_iterator = typename VectorConstView<T>::const_iterator;
+    using const_iterator = typename VectorConstView<T, A>::const_iterator;
     template<typename T>
     using const_reverse_iterator =
-        typename VectorConstView<T>::const_reverse_iterator;
+        typename VectorConstView<T, A>::const_reverse_iterator;
 
     template<typename T>
     const_iterator<T> begin() const;
@@ -129,7 +132,7 @@ private:
 
     template<typename T>
     inline static
-    std::unordered_map<const HeteroConstView *, VectorConstView<T>>
+    std::unordered_map<const HeteroConstView *, VectorConstView<T, A>>
 	    views_ {  };
 
     std::function<void(HeteroConstView &)>

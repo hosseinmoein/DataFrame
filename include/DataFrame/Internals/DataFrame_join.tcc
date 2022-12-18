@@ -36,13 +36,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace hmdf
 {
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename RHS_T, typename ... Ts>
-DataFrame<I, HeteroVector, A> DataFrame<I, H, A>::
+DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
+DataFrame<I, H>::
 join_by_index (const RHS_T &rhs, join_policy mp) const  {
 
     static_assert(
-        std::is_base_of<DataFrame<I, HeteroVector, A>, RHS_T>::value ||
+        std::is_base_of<DataFrame<I, HeteroVector<std::size_t(H::align_value)>>,
+                        RHS_T>::value ||
         std::is_base_of<View, RHS_T>::value ||
         std::is_base_of<PtrView, RHS_T>::value,
         "The rhs argument to join_by_index() can only be "
@@ -93,13 +95,17 @@ join_by_index (const RHS_T &rhs, join_policy mp) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename RHS_T, typename T, typename ... Ts>
-DataFrame<unsigned int, HeteroVector, A> DataFrame<I, H, A>::
+DataFrame<unsigned int, HeteroVector<std::size_t(H::align_value)>>
+DataFrame<I, H>::
 join_by_column (const RHS_T &rhs, const char *name, join_policy mp) const  {
 
     static_assert(
-        std::is_base_of<DataFrame<I, HeteroVector, A>, RHS_T>::value ||
+        std::is_base_of<
+            DataFrame<I,
+                      HeteroVector<std::size_t(H::align_value)>>,
+                      RHS_T>::value ||
         std::is_base_of<View, RHS_T>::value ||
         std::is_base_of<PtrView, RHS_T>::value,
         "The rhs argument to join_by_column() can only be "
@@ -151,14 +157,15 @@ join_by_column (const RHS_T &rhs, const char *name, join_policy mp) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename LHS_T, typename RHS_T, typename IDX_T, typename ... Ts>
-void DataFrame<I, H, A>::
-join_helper_common_(const LHS_T &lhs,
-                    const RHS_T &rhs,
-                    const IndexIdxVector &joined_index_idx,
-                    DataFrame<IDX_T, HeteroVector, A> &result,
-                    const char *skip_col_name)  {
+void DataFrame<I, H>::
+join_helper_common_(
+    const LHS_T &lhs,
+    const RHS_T &rhs,
+    const IndexIdxVector &joined_index_idx,
+    DataFrame<IDX_T, HeteroVector<std::size_t(H::align_value)>> &result,
+    const char *skip_col_name)  {
 
     // Load the common and lhs columns
     for (const auto &iter : lhs.column_list_)  {
@@ -207,15 +214,15 @@ join_helper_common_(const LHS_T &lhs,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename LHS_T, typename RHS_T, typename ... Ts>
-DataFrame<I, HeteroVector, A> DataFrame<I, H, A>::
+DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
 index_join_helper_(const LHS_T &lhs,
                    const RHS_T &rhs,
                    const IndexIdxVector &joined_index_idx)  {
 
-    DataFrame<IndexType, HeteroVector, A>   result;
-    std::vector<IndexType>                  result_index;
+    DataFrame<IndexType, HeteroVector<align_value>> result;
+    std::vector<IndexType>                          result_index;
 
     // Load the index
     result_index.reserve(joined_index_idx.size());
@@ -235,9 +242,10 @@ index_join_helper_(const LHS_T &lhs,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
-DataFrame<unsigned int, HeteroVector, A> DataFrame<I, H, A>::
+DataFrame<unsigned int, HeteroVector<std::size_t(H::align_value)>>
+DataFrame<I, H>::
 column_join_helper_(const LHS_T &lhs,
                     const RHS_T &rhs,
                     const char *col_name,
@@ -246,12 +254,14 @@ column_join_helper_(const LHS_T &lhs,
     using left_idx_t = typename std::remove_reference<LHS_T>::type::IndexType;
     using right_idx_t = typename std::remove_reference<RHS_T>::type::IndexType;
 
-    const size_type                             jii_s = joined_index_idx.size();
-    DataFrame<unsigned int, HeteroVector, A>    result;
+    const size_type                                     jii_s =
+        joined_index_idx.size();
+    DataFrame<unsigned int, HeteroVector<align_value>>  result;
 
     // Load the new result index
     result.load_index(
-        DataFrame<unsigned int, HeteroVector, A>::gen_sequence_index(
+        DataFrame<unsigned int,
+                  HeteroVector<align_value>>::gen_sequence_index(
             0, static_cast<unsigned int>(jii_s), 1));
 
     // Load the lhs and rhs indices into two columns in the result
@@ -300,10 +310,10 @@ column_join_helper_(const LHS_T &lhs,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename T>
-typename DataFrame<I, H, A>::IndexIdxVector
-DataFrame<I, H, A>::get_inner_index_idx_vector_(
+typename DataFrame<I, H>::IndexIdxVector
+DataFrame<I, H>::get_inner_index_idx_vector_(
     const std::vector<JoinSortingPair<T>> &col_vec_lhs,
     const std::vector<JoinSortingPair<T>> &col_vec_rhs)  {
 
@@ -333,9 +343,9 @@ DataFrame<I, H, A>::get_inner_index_idx_vector_(
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename LHS_T, typename RHS_T, typename ... Ts>
-DataFrame<I, HeteroVector, A> DataFrame<I, H, A>::
+DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
 index_inner_join_(const LHS_T &lhs, const RHS_T &rhs,
                   const std::vector<JoinSortingPair<IndexType>> &col_vec_lhs,
                   const std::vector<JoinSortingPair<IndexType>> &col_vec_rhs) {
@@ -347,9 +357,10 @@ index_inner_join_(const LHS_T &lhs, const RHS_T &rhs,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
-DataFrame<unsigned int, HeteroVector, A> DataFrame<I, H, A>::
+DataFrame<unsigned int, HeteroVector<std::size_t(H::align_value)>>
+DataFrame<I, H>::
 column_inner_join_(const LHS_T &lhs,
                    const RHS_T &rhs,
                    const char *col_name,
@@ -363,10 +374,10 @@ column_inner_join_(const LHS_T &lhs,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename T>
-typename DataFrame<I, H, A>::IndexIdxVector
-DataFrame<I, H, A>::get_left_index_idx_vector_(
+typename DataFrame<I, H>::IndexIdxVector
+DataFrame<I, H>::get_left_index_idx_vector_(
     const std::vector<JoinSortingPair<T>> &col_vec_lhs,
     const std::vector<JoinSortingPair<T>> &col_vec_rhs)  {
 
@@ -404,9 +415,9 @@ DataFrame<I, H, A>::get_left_index_idx_vector_(
 }
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename LHS_T, typename RHS_T, typename ... Ts>
-DataFrame<I, HeteroVector, A> DataFrame<I, H, A>::
+DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
 index_left_join_(const LHS_T &lhs, const RHS_T &rhs,
                  const std::vector<JoinSortingPair<IndexType>> &col_vec_lhs,
                  const std::vector<JoinSortingPair<IndexType>> &col_vec_rhs) {
@@ -418,9 +429,10 @@ index_left_join_(const LHS_T &lhs, const RHS_T &rhs,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
-DataFrame<unsigned int, HeteroVector, A> DataFrame<I, H, A>::
+DataFrame<unsigned int, HeteroVector<std::size_t(H::align_value)>>
+DataFrame<I, H>::
 column_left_join_(const LHS_T &lhs,
                   const RHS_T &rhs,
                   const char *col_name,
@@ -434,10 +446,10 @@ column_left_join_(const LHS_T &lhs,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename T>
-typename DataFrame<I, H, A>::IndexIdxVector
-DataFrame<I, H, A>::get_right_index_idx_vector_(
+typename DataFrame<I, H>::IndexIdxVector
+DataFrame<I, H>::get_right_index_idx_vector_(
     const std::vector<JoinSortingPair<T>> &col_vec_lhs,
     const std::vector<JoinSortingPair<T>> &col_vec_rhs)  {
 
@@ -479,9 +491,9 @@ DataFrame<I, H, A>::get_right_index_idx_vector_(
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename LHS_T, typename RHS_T, typename ... Ts>
-DataFrame<I, HeteroVector, A> DataFrame<I, H, A>::
+DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
 index_right_join_(const LHS_T &lhs, const RHS_T &rhs,
                   const std::vector<JoinSortingPair<IndexType>> &col_vec_lhs,
                   const std::vector<JoinSortingPair<IndexType>> &col_vec_rhs) {
@@ -493,9 +505,9 @@ index_right_join_(const LHS_T &lhs, const RHS_T &rhs,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
-DataFrame<unsigned int, HeteroVector, A> DataFrame<I, H, A>::
+DataFrame<unsigned int, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
 column_right_join_(const LHS_T &lhs,
                    const RHS_T &rhs,
                    const char *col_name,
@@ -509,10 +521,10 @@ column_right_join_(const LHS_T &lhs,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename T>
-typename DataFrame<I, H, A>::IndexIdxVector
-DataFrame<I, H, A>::get_left_right_index_idx_vector_(
+typename DataFrame<I, H>::IndexIdxVector
+DataFrame<I, H>::get_left_right_index_idx_vector_(
     const std::vector<JoinSortingPair<T>> &col_vec_lhs,
     const std::vector<JoinSortingPair<T>> &col_vec_rhs)  {
 
@@ -561,9 +573,9 @@ DataFrame<I, H, A>::get_left_right_index_idx_vector_(
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename LHS_T, typename RHS_T, typename ... Ts>
-DataFrame<I, HeteroVector, A> DataFrame<I, H, A>::
+DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
 index_left_right_join_(
     const LHS_T &lhs,
     const RHS_T &rhs,
@@ -577,9 +589,10 @@ index_left_right_join_(
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
-DataFrame<unsigned int, HeteroVector, A> DataFrame<I, H, A>::
+DataFrame<unsigned int, HeteroVector<std::size_t(H::align_value)>>
+DataFrame<I, H>::
 column_left_right_join_(const LHS_T &lhs,
                         const RHS_T &rhs,
                         const char *col_name,
@@ -593,9 +606,9 @@ column_left_right_join_(const LHS_T &lhs,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename LHS_T, typename RHS_T, typename ... Ts>
-void DataFrame<I, H, A>::
+void DataFrame<I, H>::
 concat_helper_(LHS_T &lhs, const RHS_T &rhs, bool add_new_columns)  {
 
     const size_type orig_index_s = lhs.get_index().size();
@@ -637,16 +650,20 @@ concat_helper_(LHS_T &lhs, const RHS_T &rhs, bool add_new_columns)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename RHS_T, typename ... Ts>
 void
-DataFrame<I, H, A>::self_concat(const RHS_T &rhs, bool add_new_columns)  {
+DataFrame<I, H>::self_concat(const RHS_T &rhs, bool add_new_columns)  {
 
     static_assert(
-        (std::is_base_of<DataFrame<I, HeteroVector, A>, RHS_T>::value ||
+        (std::is_base_of<
+             DataFrame<I,
+                       HeteroVector<std::size_t(H::align_value)>>,
+                       RHS_T>::value ||
          std::is_base_of<View, RHS_T>::value ||
          std::is_base_of<PtrView, RHS_T>::value) &&
-        ! std::is_base_of<DataFrame<I, HeteroVector, A>,
+        ! std::is_base_of<DataFrame<I,
+                                    HeteroVector<std::size_t(H::align_value)>>,
                           decltype(*this)>::value,
         "The rhs argument to self_concat() can only be "
         "StdDataFrame<IndexType> or DataFrame[Ptr]View<IndexType>. "
@@ -657,22 +674,26 @@ DataFrame<I, H, A>::self_concat(const RHS_T &rhs, bool add_new_columns)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename RHS_T, typename ... Ts>
-DataFrame<I, HeteroVector, A>
-DataFrame<I, H, A>::concat(const RHS_T &rhs, concat_policy cp) const  {
+DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
+DataFrame<I, H>::concat(const RHS_T &rhs, concat_policy cp) const  {
 
     static_assert(
-        (std::is_base_of<DataFrame<I, HeteroVector, A>, RHS_T>::value ||
+        (std::is_base_of<
+             DataFrame<I,
+                       HeteroVector<std::size_t(H::align_value)>>,
+                       RHS_T>::value ||
          std::is_base_of<View, RHS_T>::value ||
          std::is_base_of<PtrView, RHS_T>::value) &&
-        ! std::is_base_of<DataFrame<I, HeteroVector, A>,
+        ! std::is_base_of<DataFrame<I,
+		                            HeteroVector<std::size_t(H::align_value)>>,
                           decltype(*this)>::value,
         "The rhs argument to concat() can only be "
         "StdDataFrame<IndexType> or DataFrame[Ptr]View<IndexType>. "
         "Self must be StdDataFrame<IndexType>");
 
-    DataFrame<I, HeteroVector, A>   result;
+    DataFrame<I, HeteroVector<align_value>> result;
 
     if (cp == concat_policy::all_columns ||
         cp == concat_policy::lhs_and_common_columns)  {
@@ -700,14 +721,18 @@ DataFrame<I, H, A>::concat(const RHS_T &rhs, concat_policy cp) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename RHS_T, typename ... Ts>
-typename DataFrame<I, H, A>::PtrView
-DataFrame<I, H, A>::concat_view(RHS_T &rhs, concat_policy cp)  {
+typename DataFrame<I, H>::PtrView
+DataFrame<I, H>::concat_view(RHS_T &rhs, concat_policy cp)  {
 
     static_assert(
-        ! std::is_base_of<DataFrame<I, HeteroVector, A>, RHS_T>::value ||
-        ! std::is_base_of<DataFrame<I, HeteroVector, A>,
+        ! std::is_base_of<
+              DataFrame<I,
+                        HeteroVector<std::size_t(H::align_value)>>,
+                        RHS_T>::value ||
+        ! std::is_base_of<DataFrame<I,
+                                    HeteroVector<std::size_t(H::align_value)>>,
                           decltype(*this)>::value,
         "Currently, arguments to concat_view() can only be "
         "StdDataFrame<IndexType>.");
@@ -774,14 +799,18 @@ DataFrame<I, H, A>::concat_view(RHS_T &rhs, concat_policy cp)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename H, std::size_t A>
+template<typename I, typename H>
 template<typename RHS_T, typename ... Ts>
-typename DataFrame<I, H, A>::ConstPtrView
-DataFrame<I, H, A>::concat_view(RHS_T &rhs, concat_policy cp) const  {
+typename DataFrame<I, H>::ConstPtrView
+DataFrame<I, H>::concat_view(RHS_T &rhs, concat_policy cp) const  {
 
     static_assert(
-        ! std::is_base_of<DataFrame<I, HeteroVector, A>, RHS_T>::value ||
-        ! std::is_base_of<DataFrame<I, HeteroVector, A>,
+        ! std::is_base_of<
+              DataFrame<I,
+                        HeteroVector<std::size_t(H::align_value)>>,
+                        RHS_T>::value ||
+        ! std::is_base_of<DataFrame<I,
+                                    HeteroVector<std::size_t(H::align_value)>>,
                           decltype(*this)>::value,
         "Currently, arguments to concat_view() can only be "
         "StdDataFrame<IndexType>.");

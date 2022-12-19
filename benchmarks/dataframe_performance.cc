@@ -33,7 +33,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 using namespace hmdf;
 
-typedef StdDataFrame<time_t> MyDataFrame;
+constexpr std::size_t   ALIGNMENT = 64;
+
+typedef StdDataFrame64<time_t> MyDataFrame;
 
 // -----------------------------------------------------------------------------
 
@@ -43,15 +45,16 @@ int main(int, char *[]) {
 
     const auto  first = time(nullptr);
     auto        index_vec =
-        MyDataFrame::gen_datetime_index("01/01/1970", "08/15/2019",
+        MyDataFrame::gen_datetime_index("01/01/1980", "08/15/2019",
                                         time_frequency::secondly, 1);
     const auto  index_sz = index_vec.size();
     MyDataFrame df;
 
-    df.load_data(std::move(index_vec),
-                 std::make_pair("normal", gen_normal_dist<double>(index_sz)),
-                 std::make_pair("log_normal", gen_lognormal_dist<double>(index_sz)),
-                 std::make_pair("exponential", gen_exponential_dist<double>(index_sz)));
+    df.load_data(
+        std::move(index_vec),
+        std::make_pair("normal", gen_normal_dist<double, ALIGNMENT>(index_sz)),
+        std::make_pair("log_normal", gen_lognormal_dist<double, ALIGNMENT>(index_sz)),
+        std::make_pair("exponential", gen_exponential_dist<double, ALIGNMENT>(index_sz)));
 
     const auto  second = time(nullptr);
 

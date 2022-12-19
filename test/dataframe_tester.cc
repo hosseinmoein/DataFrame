@@ -649,7 +649,7 @@ static void test_remove_column()  {
 
     std::vector<double> d22 = { 8, 9, 10, 11, 12, 13, 14 };
 
-    df.load_column("col_2", std::move(d22));
+    df.load_column<double>("col_2", std::move(d22));
     std::cout << "After adding back column `col_2`" << std::endl;
     df.write<std::ostream, double, int, std::string>(std::cout);
 }
@@ -1438,7 +1438,9 @@ static void test_fill_missing_values()  {
     std::vector<std::string>    s1 =
         { "qqqq", "wwww", "eeee", "rrrr", "tttt", "yyyy", "iiii", "oooo" };
 
-    df.load_column("col_str", std::move(s1), nan_policy::dont_pad_with_nans);
+    df.load_column<std::string>("col_str",
+                                std::move(s1),
+                                nan_policy::dont_pad_with_nans);
 
     std::cout << "Original DF:" << std::endl;
     df.write<std::ostream, int, double, std::string>(std::cout);
@@ -1502,7 +1504,9 @@ static void test_fill_missing_fill_forward()  {
     std::vector<std::string>    s1 =
         { "qqqq", "wwww", "eeee", "rrrr", "tttt", "yyyy", "iiii", "oooo" };
 
-    df.load_column("col_str", std::move(s1), nan_policy::dont_pad_with_nans);
+    df.load_column<std::string>("col_str",
+                                std::move(s1),
+                                nan_policy::dont_pad_with_nans);
 
     std::cout << "Original DF:" << std::endl;
     df.write<std::ostream, int, double, std::string>(std::cout);
@@ -1907,11 +1911,15 @@ static void test_get_row()  {
     std::vector<std::string>    s1 =
         { "qqqq", "wwww", "eeee", "rrrr", "tttt", "yyyy", "iiii", "oooo" };
 
-    df.load_column("col_str", std::move(s1), nan_policy::dont_pad_with_nans);
+    df.load_column<std::string>("col_str",
+                                std::move(s1),
+                                nan_policy::dont_pad_with_nans);
 
     std::vector<int>    i2 = { 22, 11 };
 
-    df.load_column("col_int", std::move(i2), nan_policy::dont_pad_with_nans);
+    df.load_column<int>("col_int",
+                        std::move(i2),
+                        nan_policy::dont_pad_with_nans);
 
     std::cout << "Original DF:" << std::endl;
     df.write<std::ostream, int, double, std::string>(std::cout);
@@ -2102,8 +2110,12 @@ static void test_median()  {
     df.load_data(std::move(idx),
                  std::make_pair("dblcol_1", d1),
                  std::make_pair("intcol_1", i1));
-    df.load_column("dblcol_2", std::move(d2), nan_policy::dont_pad_with_nans);
-    df.load_column("intcol_2", std::move(i2), nan_policy::dont_pad_with_nans);
+    df.load_column<double>("dblcol_2",
+                           std::move(d2),
+                           nan_policy::dont_pad_with_nans);
+    df.load_column<int>("intcol_2",
+                        std::move(i2),
+                        nan_policy::dont_pad_with_nans);
 
     MedianVisitor<double>   med_visit;
     double                  result =
@@ -2234,23 +2246,23 @@ static void test_beta()  {
 
     ReturnVisitor<double>   return_visit(return_policy::log);
 
-    df.load_column(
+    df.load_column<double>(
         "dblcol_1_return",
         df.single_act_visit<double>("dblcol_1", return_visit).get_result(),
         nan_policy::dont_pad_with_nans);
-    df.load_column(
+    df.load_column<double>(
         "dblcol_2_return",
         df.single_act_visit<double>("dblcol_2", return_visit).get_result(),
         nan_policy::dont_pad_with_nans);
-    df.load_column(
+    df.load_column<double>(
         "dblcol_3_return",
         df.single_act_visit<double>("dblcol_3", return_visit).get_result(),
         nan_policy::dont_pad_with_nans);
-    df.load_column(
+    df.load_column<double>(
         "dblcol_4_return",
         df.single_act_visit<double>("dblcol_4", return_visit).get_result(),
         nan_policy::dont_pad_with_nans);
-    df.load_column(
+    df.load_column<double>(
         "dblcol_5_return",
         df.single_act_visit<double>("dblcol_5", return_visit).get_result(),
         nan_policy::dont_pad_with_nans);
@@ -2580,9 +2592,15 @@ static void test_some_visitors()  {
     df.load_data(std::move(idx),
                  std::make_pair("dblcol_1", d1),
                  std::make_pair("intcol_1", i1));
-    df.load_column("dblcol_2", std::move(d2), nan_policy::dont_pad_with_nans);
-    df.load_column("intcol_2", std::move(i2), nan_policy::dont_pad_with_nans);
-    df.load_column("dblcol_3", std::move(d3), nan_policy::dont_pad_with_nans);
+    df.load_column<double>("dblcol_2",
+                           std::move(d2),
+                           nan_policy::dont_pad_with_nans);
+    df.load_column<int>("intcol_2",
+                        std::move(i2),
+                        nan_policy::dont_pad_with_nans);
+    df.load_column<double>("dblcol_3",
+                           std::move(d3),
+                           nan_policy::dont_pad_with_nans);
 
     SumVisitor<int>     sum_visit;
     ProdVisitor<int>    prod_visit;
@@ -2650,9 +2668,15 @@ static void test_mode()  {
     df.load_data(std::move(idx),
                  std::make_pair("dblcol_1", d1),
                  std::make_pair("intcol_1", i1));
-    df.load_column("dblcol_2", std::move(d2), nan_policy::dont_pad_with_nans);
-    df.load_column("intcol_2", std::move(i2), nan_policy::dont_pad_with_nans);
-    df.load_column("dblcol_3", std::move(d3), nan_policy::dont_pad_with_nans);
+    df.load_column<double>("dblcol_2",
+                           std::move(d2),
+                           nan_policy::dont_pad_with_nans);
+    df.load_column<int>("intcol_2",
+                        std::move(i2),
+                        nan_policy::dont_pad_with_nans);
+    df.load_column<double>("dblcol_3",
+                           std::move(d3),
+                           nan_policy::dont_pad_with_nans);
 
     ModeVisitor<3, double>  mode_visit;
     const auto              &result =

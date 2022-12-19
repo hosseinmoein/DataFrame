@@ -56,13 +56,14 @@ _create_column_from_triple_(DF &df, T &triple) {
 
 template<typename DF, typename T, typename I_V, typename V>
 static inline void
-_load_groupby_data_1_(const DF &source,
-                      DF &dest,
-                      T &triple,
-                      I_V &&idx_visitor,
-                      const V &input_v,
-                      const std::vector<std::size_t> &sort_v,
-                      const char *col_name) {
+_load_groupby_data_1_(
+    const DF &source,
+    DF &dest,
+    T &triple,
+    I_V &&idx_visitor,
+    const V &input_v,
+    const typename DF::template ColumnVecType<std::size_t> &sort_v,
+    const char *col_name) {
 
     std::size_t         marker = 0;
     auto                &dst_idx = dest.get_index();
@@ -139,15 +140,16 @@ _load_groupby_data_1_(const DF &source,
 
 template<typename DF, typename T, typename I_V, typename V1, typename V2>
 static inline void
-_load_groupby_data_2_(const DF &source,
-                      DF &dest,
-                      T &triple,
-                      I_V &&idx_visitor,
-                      const V1 &input_v1,
-                      const V2 &input_v2,
-                      const std::vector<std::size_t> &sort_v,
-                      const char *col_name1,
-                      const char *col_name2) {
+_load_groupby_data_2_(
+    const DF &source,
+    DF &dest,
+    T &triple,
+    I_V &&idx_visitor,
+    const V1 &input_v1,
+    const V2 &input_v2,
+    const typename DF::template ColumnVecType<std::size_t> &sort_v,
+    const char *col_name1,
+    const char *col_name2) {
 
     std::size_t         marker = 0;
     auto                &dst_idx = dest.get_index();
@@ -235,17 +237,18 @@ _load_groupby_data_2_(const DF &source,
 template<typename DF, typename T, typename I_V,
          typename V1, typename V2, typename V3>
 static inline void
-_load_groupby_data_3_(const DF &source,
-                      DF &dest,
-                      T &triple,
-                      I_V &&idx_visitor,
-                      const V1 &input_v1,
-                      const V2 &input_v2,
-                      const V3 &input_v3,
-                      const std::vector<std::size_t> &sort_v,
-                      const char *col_name1,
-                      const char *col_name2,
-                      const char *col_name3) {
+_load_groupby_data_3_(
+    const DF &source,
+    DF &dest,
+    T &triple,
+    I_V &&idx_visitor,
+    const V1 &input_v1,
+    const V2 &input_v2,
+    const V3 &input_v3,
+    const typename DF::template ColumnVecType<std::size_t> &sort_v,
+    const char *col_name1,
+    const char *col_name2,
+    const char *col_name3) {
 
     std::size_t         marker = 0;
     auto                &dst_idx = dest.get_index();

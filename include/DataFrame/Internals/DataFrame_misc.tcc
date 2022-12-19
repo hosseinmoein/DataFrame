@@ -375,8 +375,8 @@ index_join_functor_common_<RES_T, Ts ...>::operator()(const T &lhs_vec)  {
     using ValueType = typename VecType::value_type;
 
     const ColumnVecType<ValueType>  &rhs_vec = rhs.get_column<ValueType>(name);
-    std::vector<ValueType>          lhs_result_col;
-    std::vector<ValueType>          rhs_result_col;
+    ColumnVecType<ValueType>          lhs_result_col;
+    ColumnVecType<ValueType>          rhs_result_col;
 
     lhs_result_col.reserve(joined_index_idx.size());
     rhs_result_col.reserve(joined_index_idx.size());
@@ -412,7 +412,7 @@ operator()(const T &vec)  {
     using VecType = typename std::remove_reference<T>::type;
     using ValueType = typename VecType::value_type;
 
-    std::vector<ValueType>  result_col;
+    ColumnVecType<ValueType>  result_col;
 
     result_col.reserve(joined_index_idx.size());
     for (const auto &citer : joined_index_idx)  {
@@ -438,14 +438,14 @@ operator()(const T &vec)  {
     using ValueType = typename VecType::value_type;
 
     if (insert_col)  {
-        std::vector<ValueType>  res_vec(original_index_s + vec.size(),
+        ColumnVecType<ValueType>  res_vec(original_index_s + vec.size(),
                                         get_nan<ValueType>());
 
         std::copy(vec.begin(), vec.end(), res_vec.begin() + original_index_s);
         result.load_column(name, res_vec);
     }
     else  {
-        std::vector<ValueType>  &res_vec =
+        ColumnVecType<ValueType>  &res_vec =
             result.template get_column<ValueType>(name);
 
         res_vec.insert(res_vec.end(), vec.begin(), vec.end());
@@ -507,7 +507,7 @@ operator()(const T &lhs_vec)  {
 
     const size_type new_col_size =
         std::min(std::min(lhs_vec.size(), rhs_vec.size()), new_idx.size());
-    std::vector<ValueType>  new_col;
+    ColumnVecType<ValueType>  new_col;
     auto                    Operator = OPT<ValueType>();
     size_type               lcounter = 0;
     size_type               rcounter = 0;
@@ -602,7 +602,7 @@ operator() (const T &vec)  {
     using VecType = typename std::remove_reference<T>::type;
     using ValueType = typename VecType::value_type;
 
-    std::vector<ValueType>  new_col;
+    ColumnVecType<ValueType>  new_col;
     const size_type         vec_size = vec.size();
 
     new_col.reserve(std::min(sel_indices.size(), vec_size));
@@ -886,7 +886,7 @@ DataFrame<I, H>::describe_functor_<Ts ...>::operator() (const T &vec)  {
     using VecType = typename std::remove_reference<T>::type;
     using ValueType = typename VecType::value_type;
 
-    std::vector<double> col_to_load;
+    ColumnVecType<double> col_to_load;
 
     col_to_load.reserve(describe_index_col.size());
     col_to_load.push_back(double(vec_s));

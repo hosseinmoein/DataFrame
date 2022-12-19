@@ -216,7 +216,7 @@ DataFrame<I, H>::get_index()  { return (indices_); }
 template<typename I, typename H>
 template<typename ... Ts>
 HeteroVector<std::size_t(H::align_value)> DataFrame<I, H>::
-get_row(size_type row_num, const std::vector<const char *> &col_names) const {
+get_row(size_type row_num, const ColumnVecType<const char *> &col_names) const {
 
     if (row_num >= indices_.size())  {
         char buffer [512];
@@ -297,7 +297,7 @@ get_row(size_type row_num) const {
 
 template<typename I, typename H>
 template<typename T>
-std::vector<T> DataFrame<I, H>::
+typename DataFrame<I, H>::template ColumnVecType<T> DataFrame<I, H>::
 get_col_unique_values(const char *name) const  {
 
     const ColumnVecType<T>  &vec = get_column<T>(name);
@@ -316,7 +316,7 @@ get_col_unique_values(const char *name) const  {
         decltype(hash_func),
         decltype(equal_func)>   table(vec.size(), hash_func, equal_func);
     bool                        counted_nan = false;
-    std::vector<T>              result;
+    ColumnVecType<T>              result;
 
     result.reserve(vec.size());
     for (const auto &citer : vec)  {
@@ -376,11 +376,11 @@ DataFrame<I, H>::get_data_by_idx (Index2D<IndexType> range) const  {
 template<typename I, typename H>
 template<typename ... Ts>
 DataFrame<I, H> DataFrame<I, H>::
-get_data_by_idx(const std::vector<IndexType> &values) const  {
+get_data_by_idx(const ColumnVecType<IndexType> &values) const  {
 
     const std::unordered_set<IndexType> val_table(values.begin(), values.end());
     IndexVecType                        new_index;
-    std::vector<size_type>              locations;
+    ColumnVecType<size_type>              locations;
     const size_type                     values_s = values.size();
     const size_type                     idx_s = indices_.size();
 
@@ -501,7 +501,7 @@ DataFrame<I, H>::get_view_by_idx (Index2D<IndexType> range) const  {
 template<typename I, typename H>
 template<typename ... Ts>
 typename DataFrame<I, H>::PtrView DataFrame<I, H>::
-get_view_by_idx(const std::vector<IndexType> &values)  {
+get_view_by_idx(const ColumnVecType<IndexType> &values)  {
 
     static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
                   "Only a StdDataFrame can call get_view_by_idx()");
@@ -511,7 +511,7 @@ get_view_by_idx(const std::vector<IndexType> &values)  {
     const std::unordered_set<IndexType> val_table(values.begin(),
                                                   values.end());
     typename TheView::IndexVecType      new_index;
-    std::vector<size_type>              locations;
+    ColumnVecType<size_type>              locations;
     const size_type                     values_s = values.size();
     const size_type                     idx_s = indices_.size();
 
@@ -549,7 +549,7 @@ template<typename I, typename H>
 template<typename ... Ts>
 typename DataFrame<I, H>::ConstPtrView
 DataFrame<I, H>::
-get_view_by_idx(const std::vector<IndexType> &values) const  {
+get_view_by_idx(const ColumnVecType<IndexType> &values) const  {
 
     static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
                   "Only a StdDataFrame can call get_view_by_idx()");
@@ -559,7 +559,7 @@ get_view_by_idx(const std::vector<IndexType> &values) const  {
     const std::unordered_set<IndexType> val_table(values.begin(),
                                                   values.end());
     typename TheView::IndexVecType      new_index;
-    std::vector<size_type>              locations;
+    ColumnVecType<size_type>              locations;
     const size_type                     values_s = values.size();
     const size_type                     idx_s = indices_.size();
 
@@ -638,7 +638,7 @@ DataFrame<I, H>::get_data_by_loc (Index2D<long> range) const  {
 template<typename I, typename H>
 template<typename ... Ts>
 DataFrame<I, H> DataFrame<I, H>::
-get_data_by_loc (const std::vector<long> &locations) const  {
+get_data_by_loc (const ColumnVecType<long> &locations) const  {
 
     const size_type idx_s = indices_.size();
     DataFrame       df;
@@ -768,7 +768,7 @@ DataFrame<I, H>::get_view_by_loc (Index2D<long> range) const  {
 template<typename I, typename H>
 template<typename ... Ts>
 typename DataFrame<I, H>::PtrView
-DataFrame<I, H>::get_view_by_loc (const std::vector<long> &locations)  {
+DataFrame<I, H>::get_view_by_loc (const ColumnVecType<long> &locations)  {
 
     static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
                   "Only a StdDataFrame can call get_view_by_loc()");
@@ -809,7 +809,7 @@ template<typename I, typename H>
 template<typename ... Ts>
 typename DataFrame<I, H>::ConstPtrView
 DataFrame<I, H>::
-get_view_by_loc (const std::vector<long> &locations) const  {
+get_view_by_loc (const ColumnVecType<long> &locations) const  {
 
     static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
                   "Only a StdDataFrame can call get_view_by_loc()");
@@ -854,7 +854,7 @@ get_data_by_sel (const char *name, F &sel_functor) const  {
     const ColumnVecType<T>  &vec = get_column<T>(name);
     const size_type         idx_s = indices_.size();
     const size_type         col_s = vec.size();
-    std::vector<size_type>  col_indices;
+    ColumnVecType<size_type>  col_indices;
 
     col_indices.reserve(idx_s / 2);
     for (size_type i = 0; i < col_s; ++i)
@@ -896,7 +896,7 @@ get_view_by_sel (const char *name, F &sel_functor)  {
     const ColumnVecType<T>  &vec = get_column<T>(name);
     const size_type         idx_s = indices_.size();
     const size_type         col_s = vec.size();
-    std::vector<size_type>  col_indices;
+    ColumnVecType<size_type>  col_indices;
 
     col_indices.reserve(idx_s / 2);
     for (size_type i = 0; i < col_s; ++i)
@@ -941,7 +941,7 @@ get_view_by_sel (const char *name, F &sel_functor) const  {
     const ColumnVecType<T>  &vec = get_column<T>(name);
     const size_type         idx_s = indices_.size();
     const size_type         col_s = vec.size();
-    std::vector<size_type>  col_indices;
+    ColumnVecType<size_type>  col_indices;
 
     col_indices.reserve(idx_s / 2);
     for (size_type i = 0; i < col_s; ++i)
@@ -985,7 +985,7 @@ get_data_by_sel (const char *name1, const char *name2, F &sel_functor) const  {
     const size_type         col_s1 = vec1.size();
     const size_type         col_s2 = vec2.size();
     const size_type         min_col_s = std::min(col_s1, col_s2);
-    std::vector<size_type>  col_indices;
+    ColumnVecType<size_type>  col_indices;
 
     col_indices.reserve(idx_s / 2);
     for (size_type i = 0; i < min_col_s; ++i)
@@ -1035,7 +1035,7 @@ get_view_by_sel (const char *name1, const char *name2, F &sel_functor)  {
     const size_type         col_s1 = vec1.size();
     const size_type         col_s2 = vec2.size();
     const size_type         min_col_s = std::min(col_s1, col_s2);
-    std::vector<size_type>  col_indices;
+    ColumnVecType<size_type>  col_indices;
 
     col_indices.reserve(idx_s / 2);
     for (size_type i = 0; i < min_col_s; ++i)
@@ -1088,7 +1088,7 @@ get_view_by_sel (const char *name1, const char *name2, F &sel_functor) const  {
     const size_type         col_s1 = vec1.size();
     const size_type         col_s2 = vec2.size();
     const size_type         min_col_s = std::min(col_s1, col_s2);
-    std::vector<size_type>  col_indices;
+    ColumnVecType<size_type>  col_indices;
 
     col_indices.reserve(idx_s / 2);
     for (size_type i = 0; i < min_col_s; ++i)
@@ -1142,7 +1142,7 @@ get_data_by_sel (const char *name1,
     const size_type         col_s2 = vec2.size();
     const size_type         col_s3 = vec3.size();
     const size_type         min_col_s = std::min({ col_s1, col_s2, col_s3 });
-    std::vector<size_type>  col_indices;
+    ColumnVecType<size_type>  col_indices;
 
     col_indices.reserve(idx_s / 2);
     for (size_type i = 0; i < min_col_s; ++i)
@@ -1201,7 +1201,7 @@ get_data_by_sel (F &sel_functor) const  {
         cols_for_filter);
 
     // Get the index of all records that meet the filters
-    std::vector<size_type>  col_indices;
+    ColumnVecType<size_type>  col_indices;
 
     col_indices.reserve(idx_s / 2);
     for (size_type i = 0; i < col_s; ++i)  {
@@ -1266,7 +1266,7 @@ get_data_by_sel (F &sel_functor, FilterCols && ... filter_cols) const  {
         cols_for_filter);
 
     // Get the index of all records that meet the filters
-    std::vector<size_type>  col_indices;
+    ColumnVecType<size_type>  col_indices;
 
     col_indices.reserve(idx_s / 2);
     for (size_type i = 0; i < col_s; ++i)  {
@@ -1326,7 +1326,7 @@ get_view_by_sel (const char *name1,
     const size_type         col_s2 = vec2.size();
     const size_type         col_s3 = vec3.size();
     const size_type         min_col_s = std::min({ col_s1, col_s2, col_s3 });
-    std::vector<size_type>  col_indices;
+    ColumnVecType<size_type>  col_indices;
 
     col_indices.reserve(idx_s / 2);
     for (size_type i = 0; i < min_col_s; ++i)
@@ -1385,7 +1385,7 @@ get_view_by_sel (const char *name1,
     const size_type         col_s2 = vec2.size();
     const size_type         col_s3 = vec3.size();
     const size_type         min_col_s = std::min({ col_s1, col_s2, col_s3 });
-    std::vector<size_type>  col_indices;
+    ColumnVecType<size_type>  col_indices;
 
     col_indices.reserve(idx_s / 2);
     for (size_type i = 0; i < min_col_s; ++i)
@@ -1445,7 +1445,7 @@ get_data_by_sel(const char *name1,
     const size_type         col_s4 = vec4.size();
     const size_type         min_col_s =
         std::min({ col_s1, col_s2, col_s3, col_s4 });
-    std::vector<size_type>  col_indices;
+    ColumnVecType<size_type>  col_indices;
 
     col_indices.reserve(idx_s / 2);
     for (size_type i = 0; i < min_col_s; ++i)
@@ -1507,7 +1507,7 @@ get_view_by_sel(const char *name1,
     const size_type         col_s4 = vec4.size();
     const size_type         min_col_s =
         std::min({ col_s1, col_s2, col_s3, col_s4 });
-    std::vector<size_type>  col_indices;
+    ColumnVecType<size_type>  col_indices;
 
     col_indices.reserve(idx_s / 2);
     for (size_type i = 0; i < min_col_s; ++i)
@@ -1572,7 +1572,7 @@ get_view_by_sel(const char *name1,
     const size_type         col_s4 = vec4.size();
     const size_type         min_col_s =
         std::min({ col_s1, col_s2, col_s3, col_s4 });
-    std::vector<size_type>  col_indices;
+    ColumnVecType<size_type>  col_indices;
 
     col_indices.reserve(idx_s / 2);
     for (size_type i = 0; i < min_col_s; ++i)
@@ -1636,7 +1636,7 @@ get_data_by_sel(const char *name1,
     const size_type         col_s5 = vec5.size();
     const size_type         min_col_s =
         std::min({ col_s1, col_s2, col_s3, col_s4, col_s5 });
-    std::vector<size_type>  col_indices;
+    ColumnVecType<size_type>  col_indices;
 
     col_indices.reserve(idx_s / 2);
     for (size_type i = 0; i < min_col_s; ++i)
@@ -1703,7 +1703,7 @@ get_view_by_sel(const char *name1,
     const size_type         col_s5 = vec5.size();
     const size_type         min_col_s =
         std::min({ col_s1, col_s2, col_s3, col_s4, col_s5 });
-    std::vector<size_type>  col_indices;
+    ColumnVecType<size_type>  col_indices;
 
     col_indices.reserve(idx_s / 2);
     for (size_type i = 0; i < min_col_s; ++i)
@@ -1773,7 +1773,7 @@ get_view_by_sel(const char *name1,
     const size_type         col_s5 = vec5.size();
     const size_type         min_col_s =
         std::min({ col_s1, col_s2, col_s3, col_s4, col_s5 });
-    std::vector<size_type>  col_indices;
+    ColumnVecType<size_type>  col_indices;
 
     col_indices.reserve(idx_s / 2);
     for (size_type i = 0; i < min_col_s; ++i)
@@ -1842,7 +1842,7 @@ get_data_by_rand(random_policy spec, double n, size_type seed) const  {
         if (use_seed)  gen.seed(static_cast<unsigned int>(seed));
 
         std::uniform_int_distribution<size_type>    dis(0, index_s - 1);
-        std::vector<size_type>                      rand_indices(n_rows);
+        ColumnVecType<size_type>                      rand_indices(n_rows);
 
         for (size_type i = 0; i < n_rows; ++i)
             rand_indices[i] = dis(gen);
@@ -1916,7 +1916,7 @@ get_view_by_rand (random_policy spec, double n, size_type seed)  {
         if (use_seed)  gen.seed(static_cast<unsigned int>(seed));
 
         std::uniform_int_distribution<size_type>    dis(0, index_s - 1);
-        std::vector<size_type>                      rand_indices(n_rows);
+        ColumnVecType<size_type>                      rand_indices(n_rows);
 
         for (size_type i = 0; i < n_rows; ++i)
             rand_indices[i] = dis(gen);
@@ -1991,7 +1991,7 @@ get_view_by_rand (random_policy spec, double n, size_type seed) const  {
         if (use_seed)  gen.seed(static_cast<unsigned int>(seed));
 
         std::uniform_int_distribution<size_type>    dis(0, index_s - 1);
-        std::vector<size_type>                      rand_indices(n_rows);
+        ColumnVecType<size_type>                      rand_indices(n_rows);
 
         for (size_type i = 0; i < n_rows; ++i)
             rand_indices[i] = dis(gen);
@@ -2042,7 +2042,7 @@ get_view_by_rand (random_policy spec, double n, size_type seed) const  {
 template<typename I, typename H>
 template<typename ... Ts>
 DataFrame<I, H> DataFrame<I, H>::
-get_data(const std::vector<const char *> &col_names) const  {
+get_data(const ColumnVecType<const char *> &col_names) const  {
 
     DataFrame   df;
 
@@ -2074,7 +2074,7 @@ get_data(const std::vector<const char *> &col_names) const  {
 template<typename I, typename H>
 template<typename ... Ts>
 typename DataFrame<I, H>::View DataFrame<I, H>::
-get_view(const std::vector<const char *> &col_names)  {
+get_view(const ColumnVecType<const char *> &col_names)  {
 
     static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
                   "Only a StdDataFrame can call get_view()");
@@ -2115,7 +2115,7 @@ template<typename I, typename H>
 template<typename ... Ts>
 typename DataFrame<I, H>::ConstView
 DataFrame<I, H>::
-get_view(const std::vector<const char *> &col_names) const  {
+get_view(const ColumnVecType<const char *> &col_names) const  {
 
     static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
                   "Only a StdDataFrame can call get_view()");
@@ -2287,12 +2287,13 @@ get_reindexed_view(const char *col_to_be_index,
 
 template<typename I, typename H>
 template<typename ... Ts>
-std::vector<std::tuple<typename DataFrame<I, H>::ColNameType,
-                       typename DataFrame<I, H>::size_type,
-                       std::type_index>>
+typename DataFrame<I, H>::template ColumnVecType<
+    std::tuple<typename DataFrame<I, H>::ColNameType,
+               typename DataFrame<I, H>::size_type,
+               std::type_index>>
 DataFrame<I, H>::get_columns_info () const  {
 
-    std::vector<std::tuple<ColNameType, size_type, std::type_index>> result;
+    ColumnVecType<std::tuple<ColNameType, size_type, std::type_index>> result;
 
     result.reserve(column_list_.size());
 
@@ -2364,13 +2365,13 @@ pattern_match(const char *col_name,
 
 template<typename I, typename H>
 template<typename T, typename DF, typename F>
-std::vector<T> DataFrame<I, H>::
+typename DataFrame<I, H>::template ColumnVecType<T> DataFrame<I, H>::
 combine(const char *col_name, const DF &rhs, F &functor) const  {
 
     const auto      &lhs_col = get_column<T>(col_name);
     const auto      &rhs_col = rhs.template get_column<T>(col_name);
     const size_type col_s = std::min(lhs_col.size(), rhs_col.size());
-    std::vector<T>  result;
+    ColumnVecType<T>  result;
 
     result.reserve(col_s);
     for (size_type i = 0; i < col_s; ++i)
@@ -2383,7 +2384,7 @@ combine(const char *col_name, const DF &rhs, F &functor) const  {
 
 template<typename I, typename H>
 template<typename T, typename DF1, typename DF2, typename F>
-std::vector<T> DataFrame<I, H>::
+typename DataFrame<I, H>::template ColumnVecType<T> DataFrame<I, H>::
 combine(const char *col_name,
         const DF1 &df1,
         const DF2 &df2,
@@ -2394,7 +2395,7 @@ combine(const char *col_name,
     const auto      &df2_col = df2.template get_column<T>(col_name);
     const size_type col_s =
         std::min<size_type>({ lhs_col.size(), df1_col.size(), df2_col.size() });
-    std::vector<T>  result;
+    ColumnVecType<T>  result;
 
     result.reserve(col_s);
     for (size_type i = 0; i < col_s; ++i)
@@ -2408,7 +2409,7 @@ combine(const char *col_name,
 
 template<typename I, typename H>
 template<typename T, typename DF1, typename DF2, typename DF3, typename F>
-std::vector<T> DataFrame<I, H>::
+typename DataFrame<I, H>::template ColumnVecType<T> DataFrame<I, H>::
 combine(const char *col_name,
         const DF1 &df1,
         const DF2 &df2,
@@ -2421,7 +2422,7 @@ combine(const char *col_name,
     const auto      &df3_col = df3.template get_column<T>(col_name);
     const size_type col_s = std::min<size_type>(
         { lhs_col.size(), df1_col.size(), df2_col.size(), df3_col.size() });
-    std::vector<T>  result;
+    ColumnVecType<T>  result;
 
     result.reserve(col_s);
     for (size_type i = 0; i < col_s; ++i)

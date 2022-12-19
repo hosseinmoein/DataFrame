@@ -40,7 +40,8 @@ namespace hmdf
 
 template<typename I, typename H>
 template<typename T>
-std::vector<T> &DataFrame<I, H>::create_column (const char *name)  {
+typename DataFrame<I, H>::template ColumnVecType<T> &
+DataFrame<I, H>::create_column (const char *name)  {
 
     static_assert(std::is_base_of<HeteroVector<align_value>, DataVec>::value,
                   "Only a StdDataFrame can call create_column()");
@@ -167,7 +168,7 @@ retype_column (const char *name,
                               "Data column name cannot be 'INDEX'");
 
     const ColumnVecType<FROM_T> &old_vec = get_column<FROM_T>(name);
-    std::vector<TO_T>           new_vec;
+    ColumnVecType<TO_T>           new_vec;
 
     new_vec.reserve(old_vec.size());
     for (const auto &citer : old_vec)
@@ -233,7 +234,8 @@ DataFrame<I, H>::load_index(IndexVecType &&idx)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-std::vector<I> DataFrame<I, H>::
+typename DataFrame<I, H>::template ColumnVecType<I>
+DataFrame<I, H>::
 gen_datetime_index(const char *start_datetime,
                    const char *end_datetime,
                    time_frequency t_freq,
@@ -244,7 +246,7 @@ gen_datetime_index(const char *start_datetime,
                                      DT_DATE_STYLE::AME_STYLE, tz);
     const DateTime          end_di(end_datetime, DT_DATE_STYLE::AME_STYLE, tz);
     const double            diff = end_di.diff_seconds(start_di);
-    std::vector<IndexType>  index_vec;
+    ColumnVecType<IndexType>  index_vec;
 
     switch(t_freq)  {
     case time_frequency::annual:
@@ -291,12 +293,13 @@ gen_datetime_index(const char *start_datetime,
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-std::vector<I> DataFrame<I, H>::
+typename DataFrame<I, H>::template ColumnVecType<I>
+DataFrame<I, H>::
 gen_sequence_index (const IndexType &start_value,
                     const IndexType &end_value,
                     long increment)  {
 
-    std::vector<IndexType>  index_vec;
+    ColumnVecType<IndexType>  index_vec;
     IndexType               sv = start_value;
 
     while (sv < end_value)  {
@@ -363,7 +366,7 @@ load_column (const char *name,
     }
 
     const auto      iter = column_tb_.find (name);
-    std::vector<T>  *vec_ptr = nullptr;
+    ColumnVecType<T>  *vec_ptr = nullptr;
 
     if (iter == column_tb_.end())
         vec_ptr = &(create_column<T>(name));
@@ -427,7 +430,7 @@ load_result_as_column(V &visitor, const char *name, nan_policy padding)  {
         }
 
     const auto              iter = column_tb_.find (name);
-    std::vector<new_type>   *vec_ptr = nullptr;
+    ColumnVecType<new_type>   *vec_ptr = nullptr;
 
     if (iter == column_tb_.end())
         vec_ptr = &(create_column<new_type>(name));
@@ -450,7 +453,7 @@ typename DataFrame<I, H>::size_type
 DataFrame<I, H>::
 load_indicators(const char *cat_col_name, const char *numeric_cols_prefix)  {
 
-    using map_t = std::unordered_map<T, std::vector<IT> *>;
+    using map_t = std::unordered_map<T, ColumnVecType<IT> *>;
 
     const auto  &cat_col = get_column<T>(cat_col_name);
     const auto  col_s = cat_col.size();
@@ -486,12 +489,12 @@ template<typename I, typename H>
 template<typename T, typename CT>
 typename DataFrame<I, H>::size_type
 DataFrame<I, H>::
-from_indicators(const std::vector<const char *> &ind_col_names,
+from_indicators(const ColumnVecType<const char *> &ind_col_names,
                 const char *cat_col_name,
                 const char *numeric_cols_prefixg)  {
 
     const size_type                     ind_col_s = ind_col_names.size();
-    std::vector<const std::vector<T> *> ind_cols(ind_col_s, nullptr);
+    ColumnVecType<const ColumnVecType<T> *> ind_cols(ind_col_s, nullptr);
 
     for (size_type i = 0; i < ind_col_s; ++i)
         ind_cols[i] = &(get_column<T>(ind_col_names[i]));
@@ -547,7 +550,9 @@ template<typename I, typename H>
 template<typename T>
 typename DataFrame<I, H>::size_type
 DataFrame<I, H>::
-load_column (const char *name, std::vector<T> &&column, nan_policy padding)  {
+load_column (const char *name,
+             ColumnVecType<T> &&column,
+             nan_policy padding)  {
 
     const size_type idx_s = indices_.size();
     const size_type data_s = column.size();
@@ -576,7 +581,7 @@ load_column (const char *name, std::vector<T> &&column, nan_policy padding)  {
     }
 
     const auto      iter = column_tb_.find (name);
-    std::vector<T>  *vec_ptr = nullptr;
+    ColumnVecType<T>  *vec_ptr = nullptr;
 
     if (iter == column_tb_.end())
         vec_ptr = &(create_column<T>(name));
@@ -599,7 +604,7 @@ typename DataFrame<I, H>::size_type
 DataFrame<I, H>::
 load_align_column(
     const char *name,
-    std::vector<T> &&column,
+    ColumnVecType<T> &&column,
     size_type interval,
     bool start_from_beginning,
     const T &null_value,
@@ -624,7 +629,7 @@ load_align_column(
         throw InconsistentData (buffer);
     }
 
-    std::vector<T>  new_col(idx_s, null_value);
+    ColumnVecType<T>  new_col(idx_s, null_value);
     size_type       idx_idx { 0 };
 
     if (start_from_beginning)  {
@@ -656,7 +661,7 @@ template<typename T>
 typename DataFrame<I, H>::size_type
 DataFrame<I, H>::
 load_column (const char *name,
-             const std::vector<T> &data,
+             const ColumnVecType<T> &data,
              nan_policy padding)  {
 
     return (load_column<T>(name, { data.begin(), data.end() }, padding));
@@ -685,7 +690,7 @@ append_column (const char *name,
                Index2D<const ITR &> range,
                nan_policy padding)  {
 
-    std::vector<T>  &vec = get_column<T>(name);
+    ColumnVecType<T>  &vec = get_column<T>(name);
     size_type       s = std::distance(range.begin, range.end) + vec.size ();
     const size_type idx_s = indices_.size();
 
@@ -726,7 +731,7 @@ typename DataFrame<I, H>::size_type
 DataFrame<I, H>::
 append_column (const char *name, const T &val, nan_policy padding)  {
 
-    std::vector<T>  &vec = get_column<T>(name);
+    ColumnVecType<T>  &vec = get_column<T>(name);
     size_type       s = 1;
     const size_type idx_s = indices_.size();
 
@@ -881,7 +886,7 @@ void DataFrame<I, H>::remove_data_by_sel (const char *name, F &sel_functor)  {
 
     const ColumnVecType<T>  &vec = get_column<T>(name);
     const size_type         col_s = vec.size();
-    std::vector<size_type>  col_indices;
+    ColumnVecType<size_type>  col_indices;
 
     col_indices.reserve(indices_.size() / 2);
     for (size_type i = 0; i < col_s; ++i)
@@ -917,7 +922,7 @@ remove_data_by_sel (const char *name1, const char *name2, F &sel_functor)  {
     const size_type         col_s1 = vec1.size();
     const size_type         col_s2 = vec2.size();
     const size_type         min_col_s = std::min(col_s1, col_s2);
-    std::vector<size_type>  col_indices;
+    ColumnVecType<size_type>  col_indices;
 
     col_indices.reserve(idx_s / 2);
     for (size_type i = 0; i < min_col_s; ++i)
@@ -963,7 +968,7 @@ remove_data_by_sel (const char *name1,
     const size_type         col_s2 = vec2.size();
     const size_type         col_s3 = vec3.size();
     const size_type         min_col_s = std::min({ col_s1, col_s2, col_s3 });
-    std::vector<size_type>  col_indices;
+    ColumnVecType<size_type>  col_indices;
 
     col_indices.reserve(idx_s / 2);
     for (size_type i = 0; i < min_col_s; ++i)
@@ -1002,7 +1007,7 @@ remove_dups_common_(const DataFrame &s_df,
                     const MAP &row_table,
                     const IndexVecType &index)  {
 
-    using count_vec = std::vector<size_type>;
+    using count_vec = ColumnVecType<size_type>;
 
     count_vec   rows_to_del;
 
@@ -1065,7 +1070,7 @@ remove_duplicates (const char *name,
                    remove_dup_spec rds) const  {
 
     using data_tuple = std::tuple<const T &, const IndexType &>;
-    using count_vec = std::vector<size_type>;
+    using count_vec = ColumnVecType<size_type>;
     using data_map = std::unordered_map<data_tuple, count_vec, TupleHash>;
 
     const ColumnVecType<T>  &vec = get_column<T>(name);
@@ -1101,7 +1106,7 @@ remove_duplicates (const char *name1,
                    remove_dup_spec rds) const  {
 
     using data_tuple = std::tuple<const T1 &, const T2 &, const IndexType &>;
-    using count_vec = std::vector<size_type>;
+    using count_vec = ColumnVecType<size_type>;
     using data_map = std::unordered_map<data_tuple, count_vec, TupleHash>;
 
     const ColumnVecType<T1> &vec1 = get_column<T1>(name1);
@@ -1141,7 +1146,7 @@ remove_duplicates (const char *name1,
 
     using data_tuple = std::tuple<const T1 &, const T2 &, const T3 &,
                                   const IndexType &>;
-    using count_vec = std::vector<size_type>;
+    using count_vec = ColumnVecType<size_type>;
     using data_map = std::unordered_map<data_tuple, count_vec, TupleHash>;
 
     const ColumnVecType<T1> &vec1 = get_column<T1>(name1);
@@ -1185,7 +1190,7 @@ remove_duplicates (const char *name1,
     using data_tuple = std::tuple<const T1 &, const T2 &,
                                   const T3 &, const T4 &,
                                   const IndexType &>;
-    using count_vec = std::vector<size_type>;
+    using count_vec = ColumnVecType<size_type>;
     using data_map = std::unordered_map<data_tuple, count_vec, TupleHash>;
 
     const ColumnVecType<T1> &vec1 = get_column<T1>(name1);
@@ -1233,7 +1238,7 @@ remove_duplicates (const char *name1,
     using data_tuple = std::tuple<const T1 &, const T2 &,
                                   const T3 &, const T4 &, const T5 &,
                                   const IndexType &>;
-    using count_vec = std::vector<size_type>;
+    using count_vec = ColumnVecType<size_type>;
     using data_map = std::unordered_map<data_tuple, count_vec, TupleHash>;
 
     const ColumnVecType<T1> &vec1 = get_column<T1>(name1);
@@ -1286,7 +1291,7 @@ remove_duplicates (const char *name1,
                                   const T3 &, const T4 &,
                                   const T5 &, const T6 &,
                                   const IndexType &>;
-    using count_vec = std::vector<size_type>;
+    using count_vec = ColumnVecType<size_type>;
     using data_map = std::unordered_map<data_tuple, count_vec, TupleHash>;
 
     const ColumnVecType<T1> &vec1 = get_column<T1>(name1);

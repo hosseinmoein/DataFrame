@@ -47,7 +47,7 @@ void DataFrame<I, H>::self_shift(size_type periods, shift_policy sp)  {
     if (periods > 0)  {
         if (sp == shift_policy::down || sp == shift_policy::up)  {
             vertical_shift_functor_<Ts ...> functor(periods, sp);
-            ColumnVecType<std::future<void>>  futures(get_thread_level());
+            StlVecType<std::future<void>>  futures(get_thread_level());
             size_type                       thread_count = 0;
             const size_type                 data_size = data_.size();
 
@@ -105,13 +105,13 @@ shift(size_type periods, shift_policy sp) const  {
 
 template<typename I, typename H>
 template<typename T>
-typename DataFrame<I, H>::template ColumnVecType<T> DataFrame<I, H>::
+typename DataFrame<I, H>::template StlVecType<T> DataFrame<I, H>::
 shift(const char *col_name, size_type periods, shift_policy sp) const  {
 
     static_assert(std::is_base_of<HeteroVector<align_value>, DataVec>::value,
                   "Only a StdDataFrame can call shift()");
 
-    ColumnVecType<T>              result = get_column<T>(col_name);
+    StlVecType<T>              result = get_column<T>(col_name);
     vertical_shift_functor_<T>  functor(periods, sp);
 
     functor (result);
@@ -130,7 +130,7 @@ void DataFrame<I, H>::self_rotate(size_type periods, shift_policy sp)  {
     if (periods > 0)  {
         if (sp == shift_policy::down || sp == shift_policy::up)  {
             rotate_functor_<Ts ...>         functor(periods, sp);
-            ColumnVecType<std::future<void>>  futures(get_thread_level());
+            StlVecType<std::future<void>>  futures(get_thread_level());
             size_type                       thread_count = 0;
             const size_type                 data_size = data_.size();
 

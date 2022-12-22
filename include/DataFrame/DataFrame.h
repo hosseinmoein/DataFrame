@@ -72,7 +72,9 @@ class DataFrame : public ThreadGranularity {
     using DataVec = H;
     using DataVecVec =
         std::vector<DataVec,
-                    typename allocator_declare<DataVec, std::size_t(H::align_value)>::type>;
+                    typename allocator_declare<
+                        DataVec,
+                        std::size_t(H::align_value)>::type>;
 
 public:  // Construction
 
@@ -110,8 +112,13 @@ public:  // Construction
             void>::type;
 
     template<typename T>
-    using ColumnVecType =
-        typename type_declare<DataVec, T, align_value>::type;
+    using ColumnVecType = typename type_declare<DataVec, T, align_value>::type;
+
+    template<typename T>
+    using StlVecType =
+        std::vector<T, typename allocator_declare<
+                           T,
+                           std::size_t(H::align_value)>::type>;
 
     DataFrame() = default;
 
@@ -253,13 +260,13 @@ public:  // Load/append/remove interfaces
     template<typename T>
     size_type
     load_column(const char *name,
-                ColumnVecType<T> &&data,
+                StlVecType<T> &&data,
                 nan_policy padding = nan_policy::pad_with_nans);
 
     template<typename T>
     size_type
     load_column(const char *name,
-                const ColumnVecType<T> &data,
+                const StlVecType<T> &data,
                 nan_policy padding = nan_policy::pad_with_nans);
 
     // This method creates a column similar to above, but assumes data is
@@ -299,7 +306,7 @@ public:  // Load/append/remove interfaces
     size_type
     load_align_column(
         const char *name,
-        ColumnVecType<T> &&data,
+        StlVecType<T> &&data,
         size_type interval,
         bool start_from_beginning,
         const T &null_value = hmdf::get_nan<T>(),
@@ -377,7 +384,7 @@ public:  // Load/append/remove interfaces
     //
     template<typename T = int, typename CT = std::string>
     size_type
-    from_indicators(const ColumnVecType<const char *> &ind_col_names,
+    from_indicators(const StlVecType<const char *> &ind_col_names,
                     const char *cat_col_name,
                     const char *numeric_cols_prefix = nullptr);
 
@@ -797,7 +804,7 @@ public:  // Data manipulation
     //
     template<typename ... Ts>
     void
-    shuffle(const ColumnVecType<const char *> &col_names,
+    shuffle(const StlVecType<const char *> &col_names,
             bool also_shuffle_index);
 
     // It fills all the "missing values" with the given values, and/or using
@@ -824,9 +831,9 @@ public:  // Data manipulation
     //
     template<typename T>
     void
-    fill_missing(const ColumnVecType<const char *> &col_names,
+    fill_missing(const StlVecType<const char *> &col_names,
                  fill_policy policy,
-                 const ColumnVecType<T> &values = { },
+                 const StlVecType<T> &values = { },
                  int limit = -1);
 
     // It fills the missing values in all columns in self by investigating the
@@ -889,8 +896,8 @@ public:  // Data manipulation
     template<typename T>
     size_type
     replace(const char *col_name,
-            const ColumnVecType<T> &old_values,
-            const ColumnVecType<T> &new_values,
+            const StlVecType<T> &old_values,
+            const StlVecType<T> &new_values,
             int limit = -1);
 
     // Same as replace() above, but executed asynchronously
@@ -901,8 +908,8 @@ public:  // Data manipulation
     template<typename T>
     [[nodiscard]] std::future<size_type>
     replace_async(const char *col_name,
-                  const ColumnVecType<T> &old_values,
-                  const ColumnVecType<T> &new_values,
+                  const StlVecType<T> &old_values,
+                  const StlVecType<T> &new_values,
                   int limit = -1);
 
     // This is similar to replace() above but it lets a functor replace the
@@ -948,8 +955,8 @@ public:  // Data manipulation
     //   Limit of how many items to replace. Default is to replace all.
     //
     size_type
-    replace_index(const ColumnVecType<IndexType> &old_values,
-                  const ColumnVecType<IndexType> &new_values,
+    replace_index(const StlVecType<IndexType> &old_values,
+                  const StlVecType<IndexType> &new_values,
                   int limit = -1);
 
     // Sort the DataFrame by the named column. If name equals "INDEX" or
@@ -1466,7 +1473,7 @@ public:  // Data manipulation
     //   Specifies the direction. In this case it is only up or down.
     //
     template<typename T>
-    [[nodiscard]] ColumnVecType<T>
+    [[nodiscard]] StlVecType<T>
     shift(const char *col_name, size_type periods, shift_policy sp) const;
 
     // It rotates all the columns in self up, down, left, or right based on
@@ -1610,7 +1617,7 @@ public: // Read/access and slicing interfaces
     template<typename ... Ts>
     [[nodiscard]] HeteroVector<std::size_t(H::align_value)>
     get_row(size_type row_num,
-            const ColumnVecType<const char *> &col_names) const;
+            const StlVecType<const char *> &col_names) const;
 
     // This is same as get_row() above. But it always includes all the columns
     // in the returned row. The order is the column creation order. If you
@@ -1674,7 +1681,7 @@ public: // Read/access and slicing interfaces
     //
     template<typename ... Ts>
     [[nodiscard]] DataFrame
-    get_data_by_idx(const ColumnVecType<IndexType> &values) const;
+    get_data_by_idx(const StlVecType<IndexType> &values) const;
 
     // It behaves like get_data_by_idx(range), but it returns a View.
     // A view is a DataFrame that is a reference to the original DataFrame.
@@ -1718,11 +1725,11 @@ public: // Read/access and slicing interfaces
     //
     template<typename ... Ts>
     [[nodiscard]] PtrView
-    get_view_by_idx(const ColumnVecType<IndexType> &values);
+    get_view_by_idx(const StlVecType<IndexType> &values);
 
     template<typename ... Ts>
     [[nodiscard]] ConstPtrView
-    get_view_by_idx(const ColumnVecType<IndexType> &values) const;
+    get_view_by_idx(const StlVecType<IndexType> &values) const;
 
     // It returns a DataFrame (including the index and data columns)
     // containing the data from location begin to location end within range.
@@ -1755,7 +1762,7 @@ public: // Read/access and slicing interfaces
     //
     template<typename ... Ts>
     [[nodiscard]] DataFrame
-    get_data_by_loc(const ColumnVecType<long> &locations) const;
+    get_data_by_loc(const StlVecType<long> &locations) const;
 
     // It behaves like get_data_by_loc(range), but it returns a View.
     // A view is a DataFrame that is a reference to the original DataFrame.
@@ -1799,11 +1806,11 @@ public: // Read/access and slicing interfaces
     //
     template<typename ... Ts>
     [[nodiscard]] PtrView
-    get_view_by_loc(const ColumnVecType<long> &locations);
+    get_view_by_loc(const StlVecType<long> &locations);
 
     template<typename ... Ts>
     [[nodiscard]] ConstPtrView
-    get_view_by_loc(const ColumnVecType<long> &locations) const;
+    get_view_by_loc(const StlVecType<long> &locations) const;
 
     // This method does boolean filtering selection via the sel_functor
     // (e.g. a functor, function, or lambda). It returns a new DataFrame.
@@ -2334,7 +2341,7 @@ public: // Read/access and slicing interfaces
     //
     template<typename ... Ts>
     [[nodiscard]] DataFrame
-    get_data(const ColumnVecType<const char *> &col_names) const;
+    get_data(const StlVecType<const char *> &col_names) const;
 
     // It behaves like get_data(), but it returns a View.
     // A view is a DataFrame that is a reference to the original DataFrame.
@@ -2353,11 +2360,11 @@ public: // Read/access and slicing interfaces
     //
     template<typename ... Ts>
     [[nodiscard]] View
-    get_view(const ColumnVecType<const char *> &col_names);
+    get_view(const StlVecType<const char *> &col_names);
 
     template<typename ... Ts>
     [[nodiscard]] ConstView
-    get_view(const ColumnVecType<const char *> &col_names) const;
+    get_view(const StlVecType<const char *> &col_names) const;
 
     // It returns a const reference to the index container
     //
@@ -2492,7 +2499,7 @@ public: // Read/access and slicing interfaces
     //       T func(const T &self_data, const T &rhs_data)
     //
     template<typename T, typename DF, typename F>
-    [[nodiscard]] ColumnVecType<T>
+    [[nodiscard]] StlVecType<T>
     combine(const char *col_name, const DF &rhs, F &functor) const;
 
     // Same as the combine() above but it combines 3 columns.
@@ -2519,7 +2526,7 @@ public: // Read/access and slicing interfaces
     //       T func(const T &self_data, const T &df1_data, const T &df2_data)
     //
     template<typename T, typename DF1, typename DF2, typename F>
-    [[nodiscard]] ColumnVecType<T>
+    [[nodiscard]] StlVecType<T>
     combine(const char *col_name,
             const DF1 &df1,
             const DF2 &df2,
@@ -2557,7 +2564,7 @@ public: // Read/access and slicing interfaces
     //              const T &df3_data)
     //
     template<typename T, typename DF1, typename DF2, typename DF3, typename F>
-    [[nodiscard]] ColumnVecType<T>
+    [[nodiscard]] StlVecType<T>
     combine(const char *col_name,
             const DF1 &df1,
             const DF2 &df2,
@@ -2565,18 +2572,18 @@ public: // Read/access and slicing interfaces
             F &functor) const;
 
     // This method feeds old_col_name1 and old_col_name2 of types OLD_T1 and
-    // OLD_T2 to functor which returns a ColumnVecType<NEW_T> which will be
+    // OLD_T2 to functor which returns a StlVecType<NEW_T> which will be
     // loaded into self as column new_col_name. Both old columns will be
     // removed, if delete_old_cols is true
     // Functor "functor" should implement the logic of consolidating two
     // columns into one. Functor signature is:
     //     template<typename ITR1, typename ITR2>
-    //     ColumnVecType<NEW_T> (IndexVecType::const_iterator idx_begin,
+    //     StlVecType<NEW_T> (IndexVecType::const_iterator idx_begin,
     //                         IndexVecType::const_iterator idx_end,
     //                         ITR1 col1_begin, ITR1 col1_end,
     //                         ITR2 col2_begin, ITR2 col2_end);
     //     Where ITR[12] are iterators for columns 1 and 2. They are iterators
-    //     of ColumnVecType.
+    //     of StlVecType.
     //
     // NOTE: This method could not be called from views.
     //
@@ -2612,13 +2619,13 @@ public: // Read/access and slicing interfaces
     // into one.
     // Functor signature is:
     //     template<typename ITR1, typename ITR2, typename ITR3>
-    //     ColumnVecType<NEW_T> (IndexVecType::const_iterator idx_begin,
+    //     StlVecType<NEW_T> (IndexVecType::const_iterator idx_begin,
     //                         IndexVecType::const_iterator idx_end,
     //                         ITR1 col1_begin, ITR1 col1_end,
     //                         ITR2 col2_begin, ITR2 col2_end,
     //                         ITR3 col3_begin, ITR3 col3_end);
     //     Where ITR[123] are iterators for columns 1, 2 and 3. They are
-    //     iterators of ColumnVecType.
+    //     iterators of StlVecType.
     //
     // NOTE: This method could not be called from views.
     //
@@ -2661,14 +2668,14 @@ public: // Read/access and slicing interfaces
     // Functor signature is:
     //     template<typename ITR1, typename ITR2, typename ITR3,
     //              typename ITR4>
-    //     ColumnVecType<NEW_T> (IndexVecType::const_iterator idx_begin,
+    //     StlVecType<NEW_T> (IndexVecType::const_iterator idx_begin,
     //                         IndexVecType::const_iterator idx_end,
     //                         ITR1 col1_begin, ITR1 col1_end,
     //                         ITR2 col2_begin, ITR2 col2_end,
     //                         ITR3 col3_begin, ITR3 col3_end,
     //                         ITR4 col4_begin, ITR4 col4_end);
     //     Where ITR[1234] are iterators for columns 1, 2, 3, and 4. They are
-    //     iterators of ColumnVecType.
+    //     iterators of StlVecType.
     //
     // NOTE: This method could not be called from views.
     //
@@ -2717,7 +2724,7 @@ public: // Read/access and slicing interfaces
     // Functor signature is:
     //     template<typename ITR1, typename ITR2, typename ITR3,
     //              typename ITR4, typename ITR5>
-    //     ColumnVecType<NEW_T> (IndexVecType::const_iterator idx_begin,
+    //     StlVecType<NEW_T> (IndexVecType::const_iterator idx_begin,
     //                         IndexVecType::const_iterator idx_end,
     //                         ITR1 col1_begin, ITR1 col1_end,
     //                         ITR2 col2_begin, ITR2 col2_end,
@@ -2725,7 +2732,7 @@ public: // Read/access and slicing interfaces
     //                         ITR4 col4_begin, ITR4 col4_end,
     //                         ITR5 col5_begin, ITR5 col5_end);
     //     Where ITR[12345] are iterators for columns 1, 2, 3, 4, and 5.
-    //     They are iterators of ColumnVecType.
+    //     They are iterators of StlVecType.
     //
     // NOTE: This method could not be called from views.
     //
@@ -3497,9 +3504,8 @@ public:  // Utilities and miscellaneous
     //   the list only once.
     //
     template<typename ... Ts>
-    [[nodiscard]] ColumnVecType<std::tuple<ColNameType,
-                                         size_type,
-                                         std::type_index>>
+    [[nodiscard]]
+    StlVecType<std::tuple<ColNameType, size_type, std::type_index>>
     get_columns_info() const;
 
     // It returns the memory used by the given column and index column.
@@ -3565,7 +3571,7 @@ public:  // Utilities and miscellaneous
     // NOTE: It is the responsibility of the programmer to make sure
     //       IndexType type is big enough to contain the frequency.
     //
-    static ColumnVecType<I>
+    static StlVecType<I>
     gen_datetime_index(const char *start_datetime,
                        const char *end_datetime,
                        time_frequency t_freq,
@@ -3586,7 +3592,7 @@ public:  // Utilities and miscellaneous
     // increment:
     //   Increment by value
     //
-    static ColumnVecType<I>
+    static StlVecType<I>
     gen_sequence_index(const IndexType &start_value,
                        const IndexType &end_value,
                        long increment = 1);
@@ -3779,7 +3785,7 @@ private:
 
     using ColNameDict =
         std::unordered_map<ColNameType, size_type, std::hash<VirtualString>>;
-    using ColNameList = ColumnVecType<std::pair<ColNameType, size_type>>;
+    using ColNameList = StlVecType<std::pair<ColNameType, size_type>>;
 
     // Data fields
     //

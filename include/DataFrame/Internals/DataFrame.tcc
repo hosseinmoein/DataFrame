@@ -123,7 +123,7 @@ template<typename CF, typename ... Ts>
 void DataFrame<I, H>::sort_common_(DataFrame<I, H> &df, CF &&comp_func)  {
 
     const size_type         idx_s = df.indices_.size();
-    ColumnVecType<size_type>  sorting_idxs(idx_s, 0);
+    StlVecType<size_type>  sorting_idxs(idx_s, 0);
 
     std::iota(sorting_idxs.begin(), sorting_idxs.end(), 0);
     std::sort(sorting_idxs.begin(), sorting_idxs.end(), comp_func);
@@ -143,7 +143,7 @@ void DataFrame<I, H>::sort_common_(DataFrame<I, H> &df, CF &&comp_func)  {
 template<typename I, typename H>
 template<typename ... Ts>
 void
-DataFrame<I, H>::shuffle(const ColumnVecType<const char *> &col_names,
+DataFrame<I, H>::shuffle(const StlVecType<const char *> &col_names,
                          bool also_shuffle_index)  {
 
     if (also_shuffle_index)  {
@@ -178,7 +178,7 @@ DataFrame<I, H>::shuffle(const ColumnVecType<const char *> &col_names,
 template<typename I, typename H>
 template<typename T>
 void DataFrame<I, H>::
-fill_missing_value_(ColumnVecType<T> &vec,
+fill_missing_value_(StlVecType<T> &vec,
                     const T &value,
                     int limit,
                     size_type col_num)  {
@@ -207,7 +207,7 @@ fill_missing_value_(ColumnVecType<T> &vec,
 template<typename I, typename H>
 template<typename T>
 void DataFrame<I, H>::
-fill_missing_ffill_(ColumnVecType<T> &vec, int limit, size_type col_num)  {
+fill_missing_ffill_(StlVecType<T> &vec, int limit, size_type col_num)  {
 
     const size_type vec_size = vec.size();
 
@@ -245,7 +245,7 @@ template<typename T,
          typename std::enable_if<! std::is_arithmetic<T>::value ||
                                  ! std::is_arithmetic<I>::value>::type*>
 void DataFrame<I, H>::
-fill_missing_midpoint_(ColumnVecType<T> &, int, size_type)  {
+fill_missing_midpoint_(StlVecType<T> &, int, size_type)  {
 
     throw NotFeasible("fill_missing_midpoint_(): ERROR: Mid-point filling is "
                       "not feasible on non-arithmetic types");
@@ -258,7 +258,7 @@ template<typename T,
          typename std::enable_if<std::is_arithmetic<T>::value &&
                                  std::is_arithmetic<I>::value>::type*>
 void DataFrame<I, H>::
-fill_missing_midpoint_(ColumnVecType<T> &vec, int limit, size_type)  {
+fill_missing_midpoint_(StlVecType<T> &vec, int limit, size_type)  {
 
     const size_type vec_size = vec.size();
 
@@ -291,7 +291,7 @@ fill_missing_midpoint_(ColumnVecType<T> &vec, int limit, size_type)  {
 template<typename I, typename H>
 template<typename T>
 void DataFrame<I, H>::
-fill_missing_bfill_(ColumnVecType<T> &vec, int limit)  {
+fill_missing_bfill_(StlVecType<T> &vec, int limit)  {
 
     const long  vec_size = static_cast<long>(vec.size());
 
@@ -318,7 +318,7 @@ template<typename T,
          typename std::enable_if<! std::is_arithmetic<T>::value ||
                                  ! std::is_arithmetic<I>::value>::type*>
 void DataFrame<I, H>::
-fill_missing_linter_(ColumnVecType<T> &, const IndexVecType &, int)  {
+fill_missing_linter_(StlVecType<T> &, const IndexVecType &, int)  {
 
     throw NotFeasible("fill_missing_linter_(): ERROR: Interpolation is "
                       "not feasible on non-arithmetic types");
@@ -331,7 +331,7 @@ template<typename T,
          typename std::enable_if<std::is_arithmetic<T>::value &&
                                  std::is_arithmetic<I>::value>::type*>
 void DataFrame<I, H>::
-fill_missing_linter_(ColumnVecType<T> &vec,
+fill_missing_linter_(StlVecType<T> &vec,
                      const IndexVecType &index,
                      int limit)  {
 
@@ -394,17 +394,17 @@ fill_missing_linter_(ColumnVecType<T> &vec,
 template<typename I, typename H>
 template<typename T>
 void DataFrame<I, H>::
-fill_missing(const ColumnVecType<const char *> &col_names,
+fill_missing(const StlVecType<const char *> &col_names,
              fill_policy fp,
-             const ColumnVecType<T> &values,
+             const StlVecType<T> &values,
              int limit)  {
 
     const size_type                 count = col_names.size();
-    ColumnVecType<std::future<void>>  futures(get_thread_level());
+    StlVecType<std::future<void>>  futures(get_thread_level());
     size_type                       thread_count = 0;
 
     for (size_type i = 0; i < count; ++i)  {
-        ColumnVecType<T>    &vec = get_column<T>(col_names[i]);
+        StlVecType<T>    &vec = get_column<T>(col_names[i]);
 
         if (fp == fill_policy::value)  {
             if (thread_count >= get_thread_level())
@@ -581,14 +581,14 @@ template<typename I, typename H>
 template<typename T>
 typename DataFrame<I, H>::size_type DataFrame<I, H>::
 replace(const char *col_name,
-        const ColumnVecType<T> &old_values,
-        const ColumnVecType<T> &new_values,
+        const StlVecType<T> &old_values,
+        const StlVecType<T> &new_values,
         int limit)  {
 
-    ColumnVecType<T>    &vec = get_column<T>(col_name);
+    StlVecType<T>    &vec = get_column<T>(col_name);
     size_type           count = 0;
 
-    _replace_vector_vals_<ColumnVecType<T>, T>
+    _replace_vector_vals_<StlVecType<T>, T>
         (vec, old_values, new_values, count, limit);
 
     return (count);
@@ -598,8 +598,8 @@ replace(const char *col_name,
 
 template<typename I, typename H>
 typename DataFrame<I, H>::size_type DataFrame<I, H>::
-replace_index(const ColumnVecType<IndexType> &old_values,
-              const ColumnVecType<IndexType> &new_values,
+replace_index(const StlVecType<IndexType> &old_values,
+              const StlVecType<IndexType> &new_values,
               int limit)  {
 
     size_type   count = 0;
@@ -617,7 +617,7 @@ template<typename T, typename F>
 void DataFrame<I, H>::
 replace(const char *col_name, F &functor)  {
 
-    ColumnVecType<T>    &vec = get_column<T>(col_name);
+    StlVecType<T>    &vec = get_column<T>(col_name);
     const size_type     vec_s = vec.size();
 
     for (size_type i = 0; i < vec_s; ++i)
@@ -632,16 +632,16 @@ template<typename I, typename H>
 template<typename T>
 std::future<typename DataFrame<I, H>::size_type> DataFrame<I, H>::
 replace_async(const char *col_name,
-              const ColumnVecType<T> &old_values,
-              const ColumnVecType<T> &new_values,
+              const StlVecType<T> &old_values,
+              const StlVecType<T> &new_values,
               int limit)  {
 
     return (std::async(std::launch::async,
                        &DataFrame::replace<T>,
                            this,
                            col_name,
-                           std::forward<const ColumnVecType<T>>(old_values),
-                           std::forward<const ColumnVecType<T>>(new_values),
+                           std::forward<const StlVecType<T>>(old_values),
+                           std::forward<const StlVecType<T>>(new_values),
                            limit));
 }
 
@@ -716,7 +716,7 @@ void DataFrame<I, H>::sort(const char *name, sort_spec dir)  {
             sort_common_<decltype(d), Ts ...>(*this, std::move(d));
     }
     else  {
-        const ColumnVecType<T>  &idx_vec = get_column<T>(name);
+        const StlVecType<T>  &idx_vec = get_column<T>(name);
 
         auto    a = [&x = idx_vec](size_type i, size_type j) -> bool {
                         return (x[i] < x[j]);
@@ -743,16 +743,16 @@ sort(const char *name1, sort_spec dir1, const char *name2, sort_spec dir2)  {
 
     make_consistent<Ts ...>();
 
-    ColumnVecType<T1>   *vec1 { nullptr};
-    ColumnVecType<T2>   *vec2 { nullptr};
+    StlVecType<T1>   *vec1 { nullptr};
+    StlVecType<T2>   *vec2 { nullptr};
 
     if (! ::strcmp(name1, DF_INDEX_COL_NAME))
-        vec1 = reinterpret_cast<ColumnVecType<T1> *>(&indices_);
+        vec1 = reinterpret_cast<StlVecType<T1> *>(&indices_);
     else
         vec1 = &(get_column<T1>(name1));
 
     if (! ::strcmp(name2, DF_INDEX_COL_NAME))
-        vec2 = reinterpret_cast<ColumnVecType<T2> *>(&indices_);
+        vec2 = reinterpret_cast<StlVecType<T2> *>(&indices_);
     else
         vec2 = &(get_column<T2>(name2));
 
@@ -791,22 +791,22 @@ sort(const char *name1, sort_spec dir1,
 
     make_consistent<Ts ...>();
 
-    ColumnVecType<T1>   *vec1 { nullptr};
-    ColumnVecType<T2>   *vec2 { nullptr};
-    ColumnVecType<T3>   *vec3 { nullptr};
+    StlVecType<T1>   *vec1 { nullptr};
+    StlVecType<T2>   *vec2 { nullptr};
+    StlVecType<T3>   *vec3 { nullptr};
 
     if (! ::strcmp(name1, DF_INDEX_COL_NAME))
-        vec1 = reinterpret_cast<ColumnVecType<T1> *>(&indices_);
+        vec1 = reinterpret_cast<StlVecType<T1> *>(&indices_);
     else
         vec1 = &(get_column<T1>(name1));
 
     if (! ::strcmp(name2, DF_INDEX_COL_NAME))
-        vec2 = reinterpret_cast<ColumnVecType<T2> *>(&indices_);
+        vec2 = reinterpret_cast<StlVecType<T2> *>(&indices_);
     else
         vec2 = &(get_column<T2>(name2));
 
     if (! ::strcmp(name3, DF_INDEX_COL_NAME))
-        vec3 = reinterpret_cast<ColumnVecType<T3> *>(&indices_);
+        vec3 = reinterpret_cast<StlVecType<T3> *>(&indices_);
     else
         vec3 = &(get_column<T3>(name3));
 
@@ -859,28 +859,28 @@ sort(const char *name1, sort_spec dir1,
 
     make_consistent<Ts ...>();
 
-    ColumnVecType<T1>   *vec1 { nullptr};
-    ColumnVecType<T2>   *vec2 { nullptr};
-    ColumnVecType<T3>   *vec3 { nullptr};
-    ColumnVecType<T4>   *vec4 { nullptr};
+    StlVecType<T1>   *vec1 { nullptr};
+    StlVecType<T2>   *vec2 { nullptr};
+    StlVecType<T3>   *vec3 { nullptr};
+    StlVecType<T4>   *vec4 { nullptr};
 
     if (! ::strcmp(name1, DF_INDEX_COL_NAME))
-        vec1 = reinterpret_cast<ColumnVecType<T1> *>(&indices_);
+        vec1 = reinterpret_cast<StlVecType<T1> *>(&indices_);
     else
         vec1 = &(get_column<T1>(name1));
 
     if (! ::strcmp(name2, DF_INDEX_COL_NAME))
-        vec2 = reinterpret_cast<ColumnVecType<T2> *>(&indices_);
+        vec2 = reinterpret_cast<StlVecType<T2> *>(&indices_);
     else
         vec2 = &(get_column<T2>(name2));
 
     if (! ::strcmp(name3, DF_INDEX_COL_NAME))
-        vec3 = reinterpret_cast<ColumnVecType<T3> *>(&indices_);
+        vec3 = reinterpret_cast<StlVecType<T3> *>(&indices_);
     else
         vec3 = &(get_column<T3>(name3));
 
     if (! ::strcmp(name4, DF_INDEX_COL_NAME))
-        vec4 = reinterpret_cast<ColumnVecType<T4> *>(&indices_);
+        vec4 = reinterpret_cast<StlVecType<T4> *>(&indices_);
     else
         vec4 = &(get_column<T4>(name4));
 
@@ -947,34 +947,34 @@ sort(const char *name1, sort_spec dir1,
 
     make_consistent<Ts ...>();
 
-    ColumnVecType<T1>   *vec1 { nullptr};
-    ColumnVecType<T2>   *vec2 { nullptr};
-    ColumnVecType<T3>   *vec3 { nullptr};
-    ColumnVecType<T4>   *vec4 { nullptr};
-    ColumnVecType<T5>   *vec5 { nullptr};
+    StlVecType<T1>   *vec1 { nullptr};
+    StlVecType<T2>   *vec2 { nullptr};
+    StlVecType<T3>   *vec3 { nullptr};
+    StlVecType<T4>   *vec4 { nullptr};
+    StlVecType<T5>   *vec5 { nullptr};
 
     if (! ::strcmp(name1, DF_INDEX_COL_NAME))
-        vec1 = reinterpret_cast<ColumnVecType<T1> *>(&indices_);
+        vec1 = reinterpret_cast<StlVecType<T1> *>(&indices_);
     else
         vec1 = &(get_column<T1>(name1));
 
     if (! ::strcmp(name2, DF_INDEX_COL_NAME))
-        vec2 = reinterpret_cast<ColumnVecType<T2> *>(&indices_);
+        vec2 = reinterpret_cast<StlVecType<T2> *>(&indices_);
     else
         vec2 = &(get_column<T2>(name2));
 
     if (! ::strcmp(name3, DF_INDEX_COL_NAME))
-        vec3 = reinterpret_cast<ColumnVecType<T3> *>(&indices_);
+        vec3 = reinterpret_cast<StlVecType<T3> *>(&indices_);
     else
         vec3 = &(get_column<T3>(name3));
 
     if (! ::strcmp(name4, DF_INDEX_COL_NAME))
-        vec4 = reinterpret_cast<ColumnVecType<T4> *>(&indices_);
+        vec4 = reinterpret_cast<StlVecType<T4> *>(&indices_);
     else
         vec4 = &(get_column<T4>(name4));
 
     if (! ::strcmp(name4, DF_INDEX_COL_NAME))
-        vec5 = reinterpret_cast<ColumnVecType<T5> *>(&indices_);
+        vec5 = reinterpret_cast<StlVecType<T5> *>(&indices_);
     else
         vec5 = &(get_column<T5>(name5));
 
@@ -1139,14 +1139,14 @@ template<typename T, typename I_V, typename ... Ts>
 DataFrame<I, H> DataFrame<I, H>::
 groupby1(const char *col_name, I_V &&idx_visitor, Ts&& ... args) const  {
 
-    const ColumnVecType<T>  *gb_vec { nullptr };
+    const StlVecType<T>  *gb_vec { nullptr };
 
     if (! ::strcmp(col_name, DF_INDEX_COL_NAME))
-        gb_vec = (const ColumnVecType<T> *) &(get_index());
+        gb_vec = (const StlVecType<T> *) &(get_index());
     else
-        gb_vec = (const ColumnVecType<T> *) &(get_column<T>(col_name));
+        gb_vec = (const StlVecType<T> *) &(get_column<T>(col_name));
 
-    ColumnVecType<std::size_t>    sort_v (gb_vec->size(), 0);
+    StlVecType<std::size_t>    sort_v (gb_vec->size(), 0);
 
     std::iota(sort_v.begin(), sort_v.end(), 0);
     std::sort(sort_v.begin(), sort_v.end(),
@@ -1187,23 +1187,23 @@ groupby2(const char *col_name1,
          I_V &&idx_visitor,
          Ts&& ... args) const  {
 
-    const ColumnVecType<T1> *gb_vec1 { nullptr };
-    const ColumnVecType<T2> *gb_vec2 { nullptr };
+    const StlVecType<T1> *gb_vec1 { nullptr };
+    const StlVecType<T2> *gb_vec2 { nullptr };
 
     if (! ::strcmp(col_name1, DF_INDEX_COL_NAME))  {
-        gb_vec1 = (const ColumnVecType<T1> *) &(get_index());
-        gb_vec2 = (const ColumnVecType<T2> *) &(get_column<T2>(col_name2));
+        gb_vec1 = (const StlVecType<T1> *) &(get_index());
+        gb_vec2 = (const StlVecType<T2> *) &(get_column<T2>(col_name2));
     }
     else if (! ::strcmp(col_name2, DF_INDEX_COL_NAME))  {
-        gb_vec1 = (const ColumnVecType<T1> *) &(get_column<T1>(col_name1));
-        gb_vec2 = (const ColumnVecType<T2> *) &(get_index());
+        gb_vec1 = (const StlVecType<T1> *) &(get_column<T1>(col_name1));
+        gb_vec2 = (const StlVecType<T2> *) &(get_index());
     }
     else  {
-        gb_vec1 = (const ColumnVecType<T1> *) &(get_column<T1>(col_name1));
-        gb_vec2 = (const ColumnVecType<T2> *) &(get_column<T2>(col_name2));
+        gb_vec1 = (const StlVecType<T1> *) &(get_column<T1>(col_name1));
+        gb_vec2 = (const StlVecType<T2> *) &(get_column<T2>(col_name2));
     }
 
-    ColumnVecType<std::size_t>    sort_v (std::min(gb_vec1->size(),
+    StlVecType<std::size_t>    sort_v (std::min(gb_vec1->size(),
                                                  gb_vec2->size()),
                                         0);
 
@@ -1255,32 +1255,32 @@ groupby3(const char *col_name1,
          I_V &&idx_visitor,
          Ts&& ... args) const  {
 
-    const ColumnVecType<T1> *gb_vec1 { nullptr };
-    const ColumnVecType<T2> *gb_vec2 { nullptr };
-    const ColumnVecType<T3> *gb_vec3 { nullptr };
+    const StlVecType<T1> *gb_vec1 { nullptr };
+    const StlVecType<T2> *gb_vec2 { nullptr };
+    const StlVecType<T3> *gb_vec3 { nullptr };
 
     if (! ::strcmp(col_name1, DF_INDEX_COL_NAME))  {
-        gb_vec1 = (const ColumnVecType<T1> *) &(get_index());
-        gb_vec2 = (const ColumnVecType<T2> *) &(get_column<T2>(col_name2));
-        gb_vec3 = (const ColumnVecType<T3> *) &(get_column<T3>(col_name3));
+        gb_vec1 = (const StlVecType<T1> *) &(get_index());
+        gb_vec2 = (const StlVecType<T2> *) &(get_column<T2>(col_name2));
+        gb_vec3 = (const StlVecType<T3> *) &(get_column<T3>(col_name3));
     }
     else if (! ::strcmp(col_name2, DF_INDEX_COL_NAME))  {
-        gb_vec1 = (const ColumnVecType<T1> *) &(get_column<T1>(col_name1));
-        gb_vec2 = (const ColumnVecType<T2> *) &(get_index());
-        gb_vec3 = (const ColumnVecType<T3> *) &(get_column<T3>(col_name3));
+        gb_vec1 = (const StlVecType<T1> *) &(get_column<T1>(col_name1));
+        gb_vec2 = (const StlVecType<T2> *) &(get_index());
+        gb_vec3 = (const StlVecType<T3> *) &(get_column<T3>(col_name3));
     }
     else if (! ::strcmp(col_name3, DF_INDEX_COL_NAME))  {
-        gb_vec1 = (const ColumnVecType<T1> *) &(get_column<T1>(col_name1));
-        gb_vec2 = (const ColumnVecType<T2> *) &(get_column<T2>(col_name2));
-        gb_vec3 = (const ColumnVecType<T3> *) &(get_index());
+        gb_vec1 = (const StlVecType<T1> *) &(get_column<T1>(col_name1));
+        gb_vec2 = (const StlVecType<T2> *) &(get_column<T2>(col_name2));
+        gb_vec3 = (const StlVecType<T3> *) &(get_index());
     }
     else  {
-        gb_vec1 = (const ColumnVecType<T1> *) &(get_column<T1>(col_name1));
-        gb_vec2 = (const ColumnVecType<T2> *) &(get_column<T2>(col_name2));
-        gb_vec3 = (const ColumnVecType<T3> *) &(get_column<T3>(col_name3));
+        gb_vec1 = (const StlVecType<T1> *) &(get_column<T1>(col_name1));
+        gb_vec2 = (const StlVecType<T2> *) &(get_column<T2>(col_name2));
+        gb_vec3 = (const StlVecType<T3> *) &(get_column<T3>(col_name3));
     }
 
-    ColumnVecType<std::size_t>    sort_v(
+    StlVecType<std::size_t>    sort_v(
         std::min({ gb_vec1->size(), gb_vec2->size(), gb_vec3->size() }), 0);
 
     std::iota(sort_v.begin(), sort_v.end(), 0);
@@ -1391,7 +1391,7 @@ template<typename T>
 DataFrame<T, HeteroVector<std::size_t(H::align_value)>>
 DataFrame<I, H>::value_counts (const char *col_name) const  {
 
-    const ColumnVecType<T>  &vec = get_column<T>(col_name);
+    const StlVecType<T>  &vec = get_column<T>(col_name);
     auto                    hash_func =
         [](std::reference_wrapper<const T> v) -> std::size_t  {
             return(std::hash<T>{}(v.get()));
@@ -1422,8 +1422,8 @@ DataFrame<I, H>::value_counts (const char *col_name) const  {
             insert_result.first->second += 1;
     }
 
-    ColumnVecType<T>          res_indices;
-    ColumnVecType<size_type>  counts;
+    StlVecType<T>          res_indices;
+    StlVecType<size_type>  counts;
 
     counts.reserve(values_map.size());
     res_indices.reserve(values_map.size());
@@ -1440,7 +1440,7 @@ DataFrame<I, H>::value_counts (const char *col_name) const  {
     DataFrame<T, HeteroVector<align_value>> result_df;
 
     result_df.load_index(std::move(res_indices));
-    result_df.load_column("counts", std::move(counts));
+    result_df.template load_column<size_type>("counts", std::move(counts));
 
     return(result_df);
 }
@@ -1517,13 +1517,13 @@ transpose(IndexVecType &&indices, const V &new_col_names) const  {
                                 "Length of new_col_names is not equal "
                                 "to number of rows");
 
-    ColumnVecType<const ColumnVecType<T> *> current_cols;
+    StlVecType<const StlVecType<T> *> current_cols;
 
     current_cols.reserve(num_cols);
     for (const auto &citer : column_list_)
         current_cols.push_back(&(get_column<T>(citer.first.c_str())));
 
-    ColumnVecType<ColumnVecType<T>> trans_cols(indices_.size());
+    StlVecType<StlVecType<T>> trans_cols(indices_.size());
     DataFrame                   df;
 
     for (size_type i = 0; i < indices_.size(); ++i)  {
@@ -1538,7 +1538,8 @@ transpose(IndexVecType &&indices, const V &new_col_names) const  {
 
     df.load_index(std::move(indices));
     for (size_type i = 0; i < new_col_names.size(); ++i)
-        df.load_column(&(new_col_names[i][0]), std::move(trans_cols[i]));
+        df.template load_column<T>(&(new_col_names[i][0]),
+                                   std::move(trans_cols[i]));
 
     return (df);
 }

@@ -54,8 +54,8 @@ join_by_index (const RHS_T &rhs, join_policy mp) const  {
     const auto                              &rhs_idx = rhs.get_index();
     const size_type                         lhs_idx_s = lhs_idx.size();
     const size_type                         rhs_idx_s = rhs_idx.size();
-    ColumnVecType<JoinSortingPair<IndexType>> idx_vec_lhs;
-    ColumnVecType<JoinSortingPair<IndexType>> idx_vec_rhs;
+    StlVecType<JoinSortingPair<IndexType>> idx_vec_lhs;
+    StlVecType<JoinSortingPair<IndexType>> idx_vec_rhs;
 
     idx_vec_lhs.reserve(lhs_idx_s);
     for (size_type i = 0; i < lhs_idx_s; ++i)
@@ -116,8 +116,8 @@ join_by_column (const RHS_T &rhs, const char *name, join_policy mp) const  {
     const size_type lhs_vec_s = lhs_vec.size();
     const size_type rhs_vec_s = rhs_vec.size();
 
-    ColumnVecType<JoinSortingPair<T>> col_vec_lhs;
-    ColumnVecType<JoinSortingPair<T>> col_vec_rhs;
+    StlVecType<JoinSortingPair<T>> col_vec_lhs;
+    StlVecType<JoinSortingPair<T>> col_vec_rhs;
 
     col_vec_lhs.reserve(lhs_vec_s);
     for (size_type i = 0; i < lhs_vec_s; ++i)
@@ -222,7 +222,7 @@ index_join_helper_(const LHS_T &lhs,
                    const IndexIdxVector &joined_index_idx)  {
 
     DataFrame<IndexType, HeteroVector<align_value>> result;
-    ColumnVecType<IndexType>                          result_index;
+    StlVecType<IndexType>                          result_index;
 
     // Load the index
     result_index.reserve(joined_index_idx.size());
@@ -266,9 +266,9 @@ column_join_helper_(const LHS_T &lhs,
 
     // Load the lhs and rhs indices into two columns in the result
     // Also load the unified named column
-    ColumnVecType<left_idx_t>     lhs_index;
-    ColumnVecType<right_idx_t>    rhs_index;
-    ColumnVecType<T>              named_col_vec;
+    StlVecType<left_idx_t>     lhs_index;
+    StlVecType<right_idx_t>    rhs_index;
+    StlVecType<T>              named_col_vec;
     const ColumnVecType<T>      &lhs_named_col_vec =
         lhs.template get_column<T>(col_name);
     const ColumnVecType<T>      &rhs_named_col_vec =
@@ -298,10 +298,10 @@ column_join_helper_(const LHS_T &lhs,
     char    buffer[64];
 
     ::snprintf(buffer, sizeof(buffer) - 1, "lhs.%s", DF_INDEX_COL_NAME);
-    result.load_column(buffer, std::move(lhs_index));
+    result.template load_column<left_idx_t>(buffer, std::move(lhs_index));
     ::snprintf(buffer, sizeof(buffer) - 1, "rhs.%s", DF_INDEX_COL_NAME);
-    result.load_column(buffer, std::move(rhs_index));
-    result.load_column(col_name, std::move(named_col_vec));
+    result.template load_column<right_idx_t>(buffer, std::move(rhs_index));
+    result.template load_column<T>(col_name, std::move(named_col_vec));
 
     join_helper_common_<LHS_T, RHS_T, unsigned int, Ts ...>
         (lhs, rhs, joined_index_idx, result, col_name);
@@ -314,8 +314,8 @@ template<typename I, typename H>
 template<typename T>
 typename DataFrame<I, H>::IndexIdxVector
 DataFrame<I, H>::get_inner_index_idx_vector_(
-    const ColumnVecType<JoinSortingPair<T>> &col_vec_lhs,
-    const ColumnVecType<JoinSortingPair<T>> &col_vec_rhs)  {
+    const StlVecType<JoinSortingPair<T>> &col_vec_lhs,
+    const StlVecType<JoinSortingPair<T>> &col_vec_rhs)  {
 
     size_type       lhs_current = 0;
     const size_type lhs_end = col_vec_lhs.size();
@@ -348,12 +348,12 @@ template<typename LHS_T, typename RHS_T, typename ... Ts>
 DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
 index_inner_join_(
     const LHS_T &lhs, const RHS_T &rhs,
-    const ColumnVecType<JoinSortingPair<IndexType>> &col_vec_lhs,
-    const ColumnVecType<JoinSortingPair<IndexType>> &col_vec_rhs) {
+    const StlVecType<JoinSortingPair<IndexType>> &col_vec_lhs,
+    const StlVecType<JoinSortingPair<IndexType>> &col_vec_rhs) {
 
     return (index_join_helper_<LHS_T, RHS_T, Ts ...>
-                (lhs, rhs,
-                 get_inner_index_idx_vector_(col_vec_lhs, col_vec_rhs)));
+        (lhs, rhs,
+         get_inner_index_idx_vector_<IndexType>(col_vec_lhs, col_vec_rhs)));
 }
 
 // ----------------------------------------------------------------------------
@@ -365,12 +365,12 @@ DataFrame<I, H>::
 column_inner_join_(const LHS_T &lhs,
                    const RHS_T &rhs,
                    const char *col_name,
-                   const ColumnVecType<JoinSortingPair<T>> &col_vec_lhs,
-                   const ColumnVecType<JoinSortingPair<T>> &col_vec_rhs)  {
+                   const StlVecType<JoinSortingPair<T>> &col_vec_lhs,
+                   const StlVecType<JoinSortingPair<T>> &col_vec_rhs)  {
 
     return (column_join_helper_<LHS_T, RHS_T, T, Ts ...>
                 (lhs, rhs, col_name,
-                 get_inner_index_idx_vector_(col_vec_lhs, col_vec_rhs)));
+                 get_inner_index_idx_vector_<T>(col_vec_lhs, col_vec_rhs)));
 }
 
 // ----------------------------------------------------------------------------
@@ -379,8 +379,8 @@ template<typename I, typename H>
 template<typename T>
 typename DataFrame<I, H>::IndexIdxVector
 DataFrame<I, H>::get_left_index_idx_vector_(
-    const ColumnVecType<JoinSortingPair<T>> &col_vec_lhs,
-    const ColumnVecType<JoinSortingPair<T>> &col_vec_rhs)  {
+    const StlVecType<JoinSortingPair<T>> &col_vec_lhs,
+    const StlVecType<JoinSortingPair<T>> &col_vec_rhs)  {
 
     size_type       lhs_current = 0;
     const size_type lhs_end = col_vec_lhs.size();
@@ -420,12 +420,13 @@ template<typename I, typename H>
 template<typename LHS_T, typename RHS_T, typename ... Ts>
 DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
 index_left_join_(const LHS_T &lhs, const RHS_T &rhs,
-                 const ColumnVecType<JoinSortingPair<IndexType>> &col_vec_lhs,
-                 const ColumnVecType<JoinSortingPair<IndexType>> &col_vec_rhs) {
+                 const StlVecType<JoinSortingPair<IndexType>> &col_vec_lhs,
+                 const StlVecType<JoinSortingPair<IndexType>> &col_vec_rhs) {
 
     return (index_join_helper_<LHS_T, RHS_T, Ts ...>
                 (lhs, rhs,
-                 get_left_index_idx_vector_(col_vec_lhs, col_vec_rhs)));
+                 get_left_index_idx_vector_<IndexType>(col_vec_lhs,
+                                                       col_vec_rhs)));
 }
 
 // ----------------------------------------------------------------------------
@@ -437,12 +438,12 @@ DataFrame<I, H>::
 column_left_join_(const LHS_T &lhs,
                   const RHS_T &rhs,
                   const char *col_name,
-                  const ColumnVecType<JoinSortingPair<T>> &col_vec_lhs,
-                  const ColumnVecType<JoinSortingPair<T>> &col_vec_rhs)  {
+                  const StlVecType<JoinSortingPair<T>> &col_vec_lhs,
+                  const StlVecType<JoinSortingPair<T>> &col_vec_rhs)  {
 
     return (column_join_helper_<LHS_T, RHS_T, T, Ts ...>
                 (lhs, rhs, col_name,
-                 get_left_index_idx_vector_(col_vec_lhs, col_vec_rhs)));
+                 get_left_index_idx_vector_<T>(col_vec_lhs, col_vec_rhs)));
 }
 
 // ----------------------------------------------------------------------------
@@ -451,8 +452,8 @@ template<typename I, typename H>
 template<typename T>
 typename DataFrame<I, H>::IndexIdxVector
 DataFrame<I, H>::get_right_index_idx_vector_(
-    const ColumnVecType<JoinSortingPair<T>> &col_vec_lhs,
-    const ColumnVecType<JoinSortingPair<T>> &col_vec_rhs)  {
+    const StlVecType<JoinSortingPair<T>> &col_vec_lhs,
+    const StlVecType<JoinSortingPair<T>> &col_vec_rhs)  {
 
     size_type       lhs_current = 0;
     const size_type lhs_end = col_vec_lhs.size();
@@ -497,12 +498,13 @@ template<typename LHS_T, typename RHS_T, typename ... Ts>
 DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
 index_right_join_(
     const LHS_T &lhs, const RHS_T &rhs,
-    const ColumnVecType<JoinSortingPair<IndexType>> &col_vec_lhs,
-    const ColumnVecType<JoinSortingPair<IndexType>> &col_vec_rhs) {
+    const StlVecType<JoinSortingPair<IndexType>> &col_vec_lhs,
+    const StlVecType<JoinSortingPair<IndexType>> &col_vec_rhs) {
 
     return (index_join_helper_<LHS_T, RHS_T, Ts ...>
                 (lhs, rhs,
-                 get_right_index_idx_vector_(col_vec_lhs, col_vec_rhs)));
+                 get_right_index_idx_vector_<IndexType>(col_vec_lhs,
+                                                        col_vec_rhs)));
 }
 
 // ----------------------------------------------------------------------------
@@ -514,12 +516,12 @@ DataFrame<I, H>::
 column_right_join_(const LHS_T &lhs,
                    const RHS_T &rhs,
                    const char *col_name,
-                   const ColumnVecType<JoinSortingPair<T>> &col_vec_lhs,
-                   const ColumnVecType<JoinSortingPair<T>> &col_vec_rhs)  {
+                   const StlVecType<JoinSortingPair<T>> &col_vec_lhs,
+                   const StlVecType<JoinSortingPair<T>> &col_vec_rhs)  {
 
     return (column_join_helper_<LHS_T, RHS_T, T, Ts ...>
                 (lhs, rhs, col_name,
-                 get_right_index_idx_vector_(col_vec_lhs, col_vec_rhs)));
+                 get_right_index_idx_vector_<T>(col_vec_lhs, col_vec_rhs)));
 }
 
 // ----------------------------------------------------------------------------
@@ -528,8 +530,8 @@ template<typename I, typename H>
 template<typename T>
 typename DataFrame<I, H>::IndexIdxVector
 DataFrame<I, H>::get_left_right_index_idx_vector_(
-    const ColumnVecType<JoinSortingPair<T>> &col_vec_lhs,
-    const ColumnVecType<JoinSortingPair<T>> &col_vec_rhs)  {
+    const StlVecType<JoinSortingPair<T>> &col_vec_lhs,
+    const StlVecType<JoinSortingPair<T>> &col_vec_rhs)  {
 
     size_type       lhs_current = 0;
     const size_type lhs_end = col_vec_lhs.size();
@@ -582,12 +584,13 @@ DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
 index_left_right_join_(
     const LHS_T &lhs,
     const RHS_T &rhs,
-    const ColumnVecType<JoinSortingPair<IndexType>> &col_vec_lhs,
-    const ColumnVecType<JoinSortingPair<IndexType>> &col_vec_rhs) {
+    const StlVecType<JoinSortingPair<IndexType>> &col_vec_lhs,
+    const StlVecType<JoinSortingPair<IndexType>> &col_vec_rhs) {
 
     return (index_join_helper_<LHS_T, RHS_T, Ts ...>
                 (lhs, rhs,
-                 get_left_right_index_idx_vector_(col_vec_lhs, col_vec_rhs)));
+                 get_left_right_index_idx_vector_<IndexType>(col_vec_lhs,
+                                                             col_vec_rhs)));
 }
 
 // ----------------------------------------------------------------------------
@@ -599,12 +602,13 @@ DataFrame<I, H>::
 column_left_right_join_(const LHS_T &lhs,
                         const RHS_T &rhs,
                         const char *col_name,
-                        const ColumnVecType<JoinSortingPair<T>> &col_vec_lhs,
-                        const ColumnVecType<JoinSortingPair<T>> &col_vec_rhs)  {
+                        const StlVecType<JoinSortingPair<T>> &col_vec_lhs,
+                        const StlVecType<JoinSortingPair<T>> &col_vec_rhs)  {
 
     return (column_join_helper_<LHS_T, RHS_T, T, Ts ...>
                 (lhs, rhs, col_name,
-                 get_left_right_index_idx_vector_(col_vec_lhs, col_vec_rhs)));
+                 get_left_right_index_idx_vector_<T>(col_vec_lhs,
+                                                     col_vec_rhs)));
 }
 
 // ----------------------------------------------------------------------------

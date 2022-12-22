@@ -63,11 +63,11 @@ struct shrink_to_fit_functor_ : DataVec::template visitor_base<Ts ...>  {
 template<typename ... Ts>
 struct sort_functor_ : DataVec::template visitor_base<Ts ...>  {
 
-    inline sort_functor_ (const ColumnVecType<size_t> &si, size_t is)
+    inline sort_functor_ (const StlVecType<size_t> &si, size_t is)
         : sorted_idxs(si), idx_s(is)  {   }
 
-    const ColumnVecType<size_t>   &sorted_idxs;
-    ColumnVecType<size_t>         sorted_idxs_copy;
+    const StlVecType<size_t>   &sorted_idxs;
+    StlVecType<size_t>         sorted_idxs_copy;
     const size_t                idx_s;
 
     template<typename T2>
@@ -373,12 +373,12 @@ friend struct rotate_functor_;
 template<typename IDX, template<typename> class OPT, typename ... Ts>
 struct operator_functor_ : DataVec::template visitor_base<Ts ...>  {
 
-    inline operator_functor_ (const ColumnVecType<IDX> &lhsidx,
-                              const ColumnVecType<IDX> &rhsidx,
-                              const ColumnVecType<IDX> &newidx,
-                              const StdDataFrame<IDX> &rhsdf,
+    inline operator_functor_ (const StlVecType<IDX> &lhsidx,
+                              const StlVecType<IDX> &rhsidx,
+                              const StlVecType<IDX> &newidx,
+                              const DataFrame<IDX, H> &rhsdf,
                               const char *colname,
-                              StdDataFrame<IDX> &resultdf)
+                              DataFrame<IDX, H> &resultdf)
          : lhs_idx(lhsidx),
            rhs_idx(rhsidx),
            new_idx(newidx),
@@ -386,12 +386,12 @@ struct operator_functor_ : DataVec::template visitor_base<Ts ...>  {
            col_name(colname),
            result_df(resultdf)  {  }
 
-    const ColumnVecType<IDX>  &lhs_idx;
-    const ColumnVecType<IDX>  &rhs_idx;
-    const ColumnVecType<IDX>  &new_idx;
-    const StdDataFrame<IDX> &rhs_df;
+    const StlVecType<IDX>   &lhs_idx;
+    const StlVecType<IDX>   &rhs_idx;
+    const StlVecType<IDX>   &new_idx;
+    const DataFrame<IDX, H> &rhs_df;
     const char              *col_name;
-    StdDataFrame<IDX>       &result_df;
+    DataFrame<IDX, H>       &result_df;
 
     template<typename T>
     void operator() (const T &lhs_vec);
@@ -458,13 +458,13 @@ template<typename IT, typename ... Ts>
 struct sel_load_functor_ : DataVec::template visitor_base<Ts ...>  {
 
     inline sel_load_functor_ (const char *n,
-                              const ColumnVecType<IT> &si,
+                              const StlVecType<IT> &si,
                               size_type is,
                               DataFrame &d)
         : name (n), sel_indices (si), indices_size(is), df(d)  {   }
 
     const char              *name;
-    const ColumnVecType<IT>   &sel_indices;
+    const StlVecType<IT>   &sel_indices;
     const size_type         indices_size;
     DataFrame               &df;
 
@@ -478,13 +478,13 @@ template<typename IT, typename DF, typename ... Ts>
 struct sel_load_view_functor_ : DataVec::template visitor_base<Ts ...>  {
 
     inline sel_load_view_functor_ (const char *n,
-                                   const ColumnVecType<IT> &si,
+                                   const StlVecType<IT> &si,
                                    size_type is,
                                    DF &d)
         : name (n), sel_indices (si), indices_size(is), dfv(d)  {   }
 
     const char              *name;
-    const ColumnVecType<IT>   &sel_indices;
+    const StlVecType<IT>   &sel_indices;
     const size_type         indices_size;
     DF                      &dfv;
 
@@ -512,10 +512,10 @@ struct concat_load_view_functor_ : DataVec::template visitor_base<Ts ...>  {
 template<typename ... Ts>
 struct sel_remove_functor_ : DataVec::template visitor_base<Ts ...>  {
 
-    inline sel_remove_functor_ (const ColumnVecType<size_type> &si)
+    inline sel_remove_functor_ (const StlVecType<size_type> &si)
         : sel_indices (si)  {   }
 
-    const ColumnVecType<size_type>    &sel_indices;
+    const StlVecType<size_type>    &sel_indices;
 
     template<typename T>
     void operator() (T &vec) const;
@@ -539,12 +539,12 @@ struct random_load_data_functor_ : DataVec::template visitor_base<Ts ...>  {
 
     inline random_load_data_functor_ (
         const char *n,
-        const ColumnVecType<std::size_t>  &ri,
+        const StlVecType<std::size_t>  &ri,
         DataFrame &d)
         : name (n), rand_indices (ri), df(d)  {   }
 
     const char                      *name;
-    const ColumnVecType<std::size_t>  &rand_indices;
+    const StlVecType<std::size_t>  &rand_indices;
     DataFrame                       &df;
 
     template<typename T>
@@ -558,12 +558,12 @@ struct random_load_view_functor_ : DataVec::template visitor_base<Ts ...>  {
 
     inline random_load_view_functor_ (
         const char *n,
-        const ColumnVecType<std::size_t>  &ri,
+        const StlVecType<std::size_t>  &ri,
         DF &d)
         : name (n), rand_indices (ri), dfv(d)  {   }
 
     const char                      *name;
-    const ColumnVecType<std::size_t>  &rand_indices;
+    const StlVecType<std::size_t>  &rand_indices;
     DF                              &dfv;
 
     template<typename T>
@@ -576,7 +576,7 @@ template<typename ... Ts>
 struct columns_info_functor_ : DataVec::template visitor_base<Ts ...>  {
 
     using result_t =
-        ColumnVecType<std::tuple<ColNameType, size_type, std::type_index>>;
+        StlVecType<std::tuple<ColNameType, size_type, std::type_index>>;
 
     inline columns_info_functor_ (result_t &r, const char *n)
         : result(r), name(n)  {   }
@@ -594,12 +594,12 @@ template<typename ... Ts>
 struct copy_remove_functor_ : DataVec::template visitor_base<Ts ...>  {
 
     inline copy_remove_functor_ (const char *n,
-                                 const ColumnVecType<std::size_t>  &td,
+                                 const StlVecType<std::size_t>  &td,
                                  DataFrame &d)
         : name(n), to_delete (td), df(d)  {   }
 
     const char                      *name;
-    const ColumnVecType<std::size_t>  &to_delete;
+    const StlVecType<std::size_t>  &to_delete;
     DataFrame                       &df;
 
     template<typename T>
@@ -632,11 +632,11 @@ struct fill_missing_functor_ :
 template<typename ... Ts>
 struct describe_functor_ : DataVec::template visitor_base<Ts ...>  {
 
-    inline describe_functor_ (const char *n, StdDataFrame<std::string> &r)
+    inline describe_functor_ (const char *n, DataFrame<std::string, H> &r)
         : name(n), result(r)  {  }
 
     const char                  *name;
-    StdDataFrame<std::string>   &result;
+    DataFrame<std::string, H>   &result;
 
     template<typename T>
     void operator() (const T &vec);

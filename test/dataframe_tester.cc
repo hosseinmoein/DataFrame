@@ -45,6 +45,9 @@ using namespace hmdf;
 //
 using MyDataFrame = StdDataFrame<unsigned long>;
 
+template<typename T>
+using StlVecType = typename MyDataFrame::template StlVecType<T>;
+
 // -----------------------------------------------------------------------------
 
 struct ReplaceFunctor  {
@@ -82,16 +85,16 @@ static void test_haphazard()  {
 
     df.create_column<int>(static_cast<const char *>("col_name"));
 
-    std::vector<int>            intvec = { 1, 2, 3, 4, 5 };
-    std::vector<double>         dblvec =
+    StlVecType<int>            intvec = { 1, 2, 3, 4, 5 };
+    StlVecType<double>         dblvec =
         { 1.2345, 2.2345, 3.2345, 4.2345, 5.2345 };
-    std::vector<double>         dblvec2 =
+    StlVecType<double>         dblvec2 =
         { 0.998, 0.3456, 0.056, 0.15678, 0.00345, 0.923, 0.06743, 0.1 };
-    std::vector<std::string>    strvec =
+    StlVecType<std::string>    strvec =
         { "Col_name", "Col_name", "Col_name", "Col_name", "Col_name" };
-    std::vector<unsigned long>  ulgvec =
+    StlVecType<unsigned long>  ulgvec =
         { 1UL, 2UL, 3UL, 4UL, 5UL, 8UL, 7UL, 6UL };
-    std::vector<unsigned long>  xulgvec = ulgvec;
+    StlVecType<unsigned long>  xulgvec = ulgvec;
 
     MyDataFrame::size_type  rc =
         df.load_data(std::move(ulgvec),
@@ -116,7 +119,7 @@ static void test_haphazard()  {
     df.append_column<std::string>("str_col", "Additional column");
     df.append_column("dbl_col", 10.56);
 
-    std::vector<int>    ivec = df.get_column<int> ("int_col");
+    StlVecType<int>    ivec = df.get_column<int> ("int_col");
 
     std::cout << std::endl;
     assert(df.get_column<int>("int_col") == df.get_column<int>(std::size_t(1)));
@@ -159,8 +162,8 @@ static void test_haphazard()  {
     assert(::abs(df.visit<double>("dbl_col", quad_dvisitor).get_result() -
                  5.39745) < 0.0001);
 
-    std::vector<double> dvec = df.get_column<double> ("dbl_col");
-    std::vector<double> dvec2 = df.get_column<double> ("dbl_col_2");
+    StlVecType<double> dvec = df.get_column<double> ("dbl_col");
+    StlVecType<double> dvec2 = df.get_column<double> ("dbl_col_2");
 
     assert(dvec.size() == 9);
     assert(dvec[0] == 1.2345);
@@ -335,26 +338,26 @@ static void test_haphazard()  {
 
     std::cout << "\nTesting GROUPBY ..." << std::endl;
 
-    std::vector<unsigned long>  ulgvec2 =
+    StlVecType<unsigned long>  ulgvec2 =
         { 123450, 123451, 123452, 123450, 123455, 123450, 123449,
           123448, 123451, 123452, 123452, 123450, 123455, 123450,
           123454, 123453, 123456, 123457, 123458, 123459, 123460,
           123441, 123442, 123432, 123433, 123434, 123435, 123436 };
-    std::vector<unsigned long>  xulgvec2 = ulgvec2;
-    std::vector<int>            intvec2 =
+    StlVecType<unsigned long>  xulgvec2 = ulgvec2;
+    StlVecType<int>            intvec2 =
         { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
           15, 20, 22, 23, 24, 25, 30, 33, 34, 35, 36, 40, 45, 46 };
-    std::vector<double>         xdblvec2 =
+    StlVecType<double>         xdblvec2 =
         { 1.2345, 2.2345, 3.2345, 4.2345, 5.2345, 3.0, 0.9999,
           10.0, 4.25, 0.009, 1.111, 8.0, 2.2222, 3.3333,
           11.0, 5.25, 1.009, 2.111, 9.0, 3.2222, 4.3333,
           12.0, 6.25, 2.009, 3.111, 10.0, 4.2222, 5.3333 };
-    std::vector<double>         dblvec22 =
+    StlVecType<double>         dblvec22 =
         { 0.998, 0.3456, 0.056, 0.15678, 0.00345, 0.923, 0.06743,
           0.1, 0.0056, 0.07865, -0.9999, 0.0111, 0.1002, -0.8888,
           0.14, 0.0456, 0.078654, -0.8999, 0.01119, 0.8002, -0.9888,
           0.2, 0.1056, 0.87865, -0.6999, 0.4111, 0.1902, -0.4888 };
-    std::vector<std::string>    strvec2 =
+    StlVecType<std::string>    strvec2 =
         { "4% of something", "Description 4/5", "This is bad",
           "3.4% of GDP", "Market drops", "Market pulls back",
           "$15 increase", "Running fast", "C++14 development",
@@ -544,12 +547,12 @@ static void test_transpose()  {
 
     std::cout << "\nTesting transpose() ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
             { 123450, 123451, 123452, 123450, 123455, 123450, 123449 };
-    std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7 };
-    std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14 };
-    std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21 };
-    std::vector<double> d4 = { 22, 23, 24, 25 };
+    StlVecType<double> d1 = { 1, 2, 3, 4, 5, 6, 7 };
+    StlVecType<double> d2 = { 8, 9, 10, 11, 12, 13, 14 };
+    StlVecType<double> d3 = { 15, 16, 17, 18, 19, 20, 21 };
+    StlVecType<double> d4 = { 22, 23, 24, 25 };
     MyDataFrame         df;
 
     df.load_data(std::move(idx),
@@ -558,8 +561,8 @@ static void test_transpose()  {
                  std::make_pair("col_3", d3),
                  std::make_pair("col_4", d4));
 
-    std::vector<unsigned long>  tidx = { 100, 101, 102, 104 };
-    std::vector<const char *>   tcol_names =
+    StlVecType<unsigned long>  tidx = { 100, 101, 102, 104 };
+    StlVecType<const char *>   tcol_names =
         { "tcol_1", "tcol_2", "tcol_3",
           "tcol_4", "tcol_5", "tcol_6", "tcol_7" };
     MyDataFrame                 tdf =
@@ -577,12 +580,12 @@ static void test_get_data_by_loc_slicing()  {
 
     std::cout << "\nTesting get_data_by_loc()/slicing ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123450, 123455, 123450, 123449 };
-    std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7 };
-    std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14 };
-    std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21 };
-    std::vector<double> d4 = { 22, 23, 24, 25 };
+    StlVecType<double> d1 = { 1, 2, 3, 4, 5, 6, 7 };
+    StlVecType<double> d2 = { 8, 9, 10, 11, 12, 13, 14 };
+    StlVecType<double> d3 = { 15, 16, 17, 18, 19, 20, 21 };
+    StlVecType<double> d4 = { 22, 23, 24, 25 };
     MyDataFrame         df;
 
     df.load_data(std::move(idx),
@@ -622,13 +625,13 @@ static void test_remove_column()  {
 
     std::cout << "\nTesting remove_column() ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123450, 123455, 123450, 123449 };
-    std::vector<double>         d1 = { 1, 2, 3, 4, 5, 6, 7 };
-    std::vector<double>         d2 = { 8, 9, 10, 11, 12, 13, 14 };
-    std::vector<double>         d3 = { 15, 16, 17, 18, 19, 20, 21 };
-    std::vector<int>            i1 = { 22, 23, 24, 25 };
-    std::vector<std::string>    s1 =
+    StlVecType<double>         d1 = { 1, 2, 3, 4, 5, 6, 7 };
+    StlVecType<double>         d2 = { 8, 9, 10, 11, 12, 13, 14 };
+    StlVecType<double>         d3 = { 15, 16, 17, 18, 19, 20, 21 };
+    StlVecType<int>            i1 = { 22, 23, 24, 25 };
+    StlVecType<std::string>    s1 =
         { "11", "22", "33", "xx", "yy", "gg", "string" };
     MyDataFrame                 df;
 
@@ -647,7 +650,7 @@ static void test_remove_column()  {
     std::cout << "After removing column `col_str`" << std::endl;
     df.write<std::ostream, double, int, std::string>(std::cout);
 
-    std::vector<double> d22 = { 8, 9, 10, 11, 12, 13, 14 };
+    StlVecType<double> d22 = { 8, 9, 10, 11, 12, 13, 14 };
 
     df.load_column<double>("col_2", std::move(d22));
     std::cout << "After adding back column `col_2`" << std::endl;
@@ -660,15 +663,15 @@ static void test_rename_column()  {
 
     std::cout << "\nTesting rename_column() ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466 };
-    std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
-    std::vector<double> d2 =
+    StlVecType<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
+    StlVecType<double> d2 =
         { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23, 30, 31, 32, 1.89 };
-    std::vector<double> d3 =
+    StlVecType<double> d3 =
         { 15, 16, 17, 18, 19, 20, 21, 0.34, 1.56, 0.34, 2.3, 0.1, 0.89, 0.45 };
-    std::vector<int>    i1 = { 22, 23, 24, 25, 99, 100, 101, 3, 2 };
+    StlVecType<int>    i1 = { 22, 23, 24, 25, 99, 100, 101, 3, 2 };
     MyDataFrame         df;
 
     df.load_data(std::move(idx),
@@ -690,15 +693,15 @@ static void test_get_col_unique_values()  {
 
     std::cout << "\nTesting get_col_unique_values() ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466 };
-    std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
-    std::vector<double> d2 =
+    StlVecType<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
+    StlVecType<double> d2 =
         { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23, 30, 31, 32, 1.89 };
-    std::vector<double> d3 =
+    StlVecType<double> d3 =
         { 15, 16, 15, 18, 19, 16, 21, 0.34, 1.56, 0.34, 2.3, 0.34, 0.89, 19.0 };
-    std::vector<int>    i1 = { 22, 23, 24, 25, 99, 100, 101, 3, 2 };
+    StlVecType<int>    i1 = { 22, 23, 24, 25, 99, 100, 101, 3, 2 };
     MyDataFrame         df;
 
     df.load_data(std::move(idx),
@@ -710,7 +713,7 @@ static void test_get_col_unique_values()  {
     df.write<std::ostream, double, int>(std::cout);
     std::cout << "Getting unique values in column col_3" << std::endl;
 
-    const std::vector<double>   result =
+    const StlVecType<double>   result =
         df.get_col_unique_values<double>("col_3");
 
     for (auto &iter : result)
@@ -724,15 +727,15 @@ static void test_remove_data_by_idx()  {
 
     std::cout << "\nTesting remove_data_by_idx() ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466 };
-    std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
-    std::vector<double> d2 =
+    StlVecType<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
+    StlVecType<double> d2 =
         { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23, 30, 31, 32, 1.89 };
-    std::vector<double> d3 =
+    StlVecType<double> d3 =
         { 15, 16, 17, 18, 19, 20, 21, 0.34, 1.56, 0.34, 2.3, 0.1, 0.89, 0.45 };
-    std::vector<int>    i1 = { 22, 23, 24, 25, 99, 100, 101, 3, 2 };
+    StlVecType<int>    i1 = { 22, 23, 24, 25, 99, 100, 101, 3, 2 };
     MyDataFrame         df;
 
     df.load_data(std::move(idx),
@@ -753,15 +756,15 @@ static void test_remove_data_by_loc()  {
 
     std::cout << "\nTesting remove_data_by_loc() ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466 };
-    std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
-    std::vector<double> d2 =
+    StlVecType<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
+    StlVecType<double> d2 =
         { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23, 30, 31, 32, 1.89 };
-    std::vector<double> d3 =
+    StlVecType<double> d3 =
         { 15, 16, 17, 18, 19, 20, 21, 0.34, 1.56, 0.34, 2.3, 0.1, 0.89, 0.45 };
-    std::vector<int>    i1 = { 22, 23, 24, 25, 99 };
+    StlVecType<int>    i1 = { 22, 23, 24, 25, 99 };
     MyDataFrame         df;
 
     df.load_data(std::move(idx),
@@ -783,16 +786,16 @@ static void test_value_counts()  {
     std::cout << "\nTesting value_counts() ..." << std::endl;
 
     const double                my_nan = sqrt(-1);
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466 };
-    std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
-    std::vector<double> d2 =
+    StlVecType<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
+    StlVecType<double> d2 =
         { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23, 30, 31, 32, 1.89 };
-    std::vector<double> d3 =
+    StlVecType<double> d3 =
         { 15, 16, 15, 18, 19, 16, 21, my_nan, 0.34, 1.56, 0.34, 2.3, 0.34,
           19.0 };
-    std::vector<int>    i1 = { 22, 23, 24, 25, 99 };
+    StlVecType<int>    i1 = { 22, 23, 24, 25, 99 };
     MyDataFrame         df;
 
     df.load_data(std::move(idx),
@@ -818,15 +821,15 @@ static void test_index_inner_join()  {
 
     std::cout << "\nTesting Index Inner Join ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123456, 123451, 123452, 123453, 123454, 123455, 123450,
           123457, 123458, 123459, 123460, 123461, 123462, 123466 };
-    std::vector<double> d1 = { 7, 2, 3, 4, 5, 6, 1, 8, 9, 10, 11, 12, 13, 14 };
-    std::vector<double> d2 =
+    StlVecType<double> d1 = { 7, 2, 3, 4, 5, 6, 1, 8, 9, 10, 11, 12, 13, 14 };
+    StlVecType<double> d2 =
         { 14, 9, 10, 11, 12, 13, 8, 20, 22, 23, 30, 31, 32, 1.89 };
-    std::vector<double> d3 =
+    StlVecType<double> d3 =
         { 21, 16, 15, 18, 19, 16, 15, 0.34, 1.56, 0.34, 2.3, 0.34, 19.0 };
-    std::vector<int>    i1 = { 22, 23, 24, 25, 99 };
+    StlVecType<int>    i1 = { 22, 23, 24, 25, 99 };
     MyDataFrame         df;
 
     df.load_data(std::move(idx),
@@ -835,18 +838,18 @@ static void test_index_inner_join()  {
                  std::make_pair("col_3", d3),
                  std::make_pair("col_4", i1));
 
-    std::vector<unsigned long>  idx2 =
+    StlVecType<unsigned long>  idx2 =
         { 123452, 123453, 123455, 123458, 123466, 223450, 223451,
           223454, 223456, 223457, 223459, 223460, 223462, 223461 };
-    std::vector<double> d12 =
+    StlVecType<double> d12 =
            { 11, 12, 13, 14, 15, 16, 17, 18, 19, 110, 111, 112, 114, 113 };
-    std::vector<double> d22 =
+    StlVecType<double> d22 =
         { 18, 19, 110, 111, 112, 113, 114, 120, 122, 123,
           130, 131, 11.89, 132 };
-    std::vector<double> d32 =
+    StlVecType<double> d32 =
         { 115, 116, 115, 118, 119, 116, 121,
           10.34, 11.56, 10.34, 12.3, 119.0, 10.34 };
-    std::vector<int>    i12 = { 122, 123, 124, 125, 199 };
+    StlVecType<int>    i12 = { 122, 123, 124, 125, 199 };
     MyDataFrame         df2;
 
     df2.load_data(std::move(idx2),
@@ -874,15 +877,15 @@ static void test_index_left_join()  {
 
     std::cout << "\nTesting Index Left Join ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466 };
-    std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
-    std::vector<double> d2 =
+    StlVecType<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
+    StlVecType<double> d2 =
         { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23, 30, 31, 32, 1.89 };
-    std::vector<double> d3 =
+    StlVecType<double> d3 =
         { 15, 16, 15, 18, 19, 16, 21, 0.34, 1.56, 0.34, 2.3, 0.34, 19.0 };
-    std::vector<int>    i1 = { 22, 23, 24, 25, 99 };
+    StlVecType<int>    i1 = { 22, 23, 24, 25, 99 };
     MyDataFrame         df;
 
     df.load_data(std::move(idx),
@@ -891,18 +894,18 @@ static void test_index_left_join()  {
                  std::make_pair("col_3", d3),
                  std::make_pair("col_4", i1));
 
-    std::vector<unsigned long>  idx2 =
+    StlVecType<unsigned long>  idx2 =
         { 123452, 123453, 123455, 123458, 123466, 223450, 223451,
           223454, 223456, 223457, 223459, 223460, 223461, 223462 };
-    std::vector<double>         d12 =
+    StlVecType<double>         d12 =
            { 11, 12, 13, 14, 15, 16, 17, 18, 19, 110, 111, 112, 113, 114 };
-    std::vector<double>         d22 =
+    StlVecType<double>         d22 =
         { 18, 19, 110, 111, 112, 113, 114, 120, 122, 123,
           130, 131, 132, 11.89 };
-    std::vector<double>         d32 =
+    StlVecType<double>         d32 =
         { 115, 116, 115, 118, 119, 116, 121,
           10.34, 11.56, 10.34, 12.3, 10.34, 119.0 };
-    std::vector<int>            i12 = { 122, 123, 124, 125, 199 };
+    StlVecType<int>            i12 = { 122, 123, 124, 125, 199 };
     MyDataFrame                 df2;
 
     df2.load_data(std::move(idx2),
@@ -930,15 +933,15 @@ static void test_index_right_join()  {
 
     std::cout << "\nTesting Index Right Join ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466 };
-    std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
-    std::vector<double> d2 =
+    StlVecType<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
+    StlVecType<double> d2 =
         { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23, 30, 31, 32, 1.89 };
-    std::vector<double> d3 =
+    StlVecType<double> d3 =
         { 15, 16, 15, 18, 19, 16, 21, 0.34, 1.56, 0.34, 2.3, 0.34, 19.0 };
-    std::vector<int>    i1 = { 22, 23, 24, 25, 99 };
+    StlVecType<int>    i1 = { 22, 23, 24, 25, 99 };
     MyDataFrame         df;
 
     df.load_data(std::move(idx),
@@ -947,18 +950,18 @@ static void test_index_right_join()  {
                  std::make_pair("col_3", d3),
                  std::make_pair("col_4", i1));
 
-    std::vector<unsigned long>  idx2 =
+    StlVecType<unsigned long>  idx2 =
         { 123452, 123453, 123455, 123458, 123466, 223450, 223451,
           223454, 223456, 223457, 223459, 223460, 223461, 223462 };
-    std::vector<double> d12 =
+    StlVecType<double> d12 =
            { 11, 12, 13, 14, 15, 16, 17, 18, 19, 110, 111, 112, 113, 114 };
-    std::vector<double> d22 =
+    StlVecType<double> d22 =
         { 18, 19, 110, 111, 112, 113, 114, 120, 122, 123,
           130, 131, 132, 11.89 };
-    std::vector<double> d32 =
+    StlVecType<double> d32 =
         { 115, 116, 115, 118, 119, 116, 121,
           10.34, 11.56, 10.34, 12.3, 10.34, 119.0 };
-    std::vector<int>    i12 = { 122, 123, 124, 125, 199 };
+    StlVecType<int>    i12 = { 122, 123, 124, 125, 199 };
     MyDataFrame         df2;
 
     df2.load_data(std::move(idx2),
@@ -986,15 +989,15 @@ static void test_index_left_right_join()  {
 
     std::cout << "\nTesting Index Left Right Join ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123466, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123450 };
-    std::vector<double> d1 = { 14, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 1 };
-    std::vector<double> d2 =
+    StlVecType<double> d1 = { 14, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 1 };
+    StlVecType<double> d2 =
         { 1.89, 9, 10, 11, 12, 13, 14, 20, 22, 23, 30, 31, 32, 8 };
-    std::vector<double> d3 =
+    StlVecType<double> d3 =
         { 19.0, 16, 15, 18, 19, 16, 21, 0.34, 1.56, 0.34, 2.3, 0.34, 15.0 };
-    std::vector<int>    i1 = { 22, 23, 24, 25, 99 };
+    StlVecType<int>    i1 = { 22, 23, 24, 25, 99 };
     MyDataFrame         df;
 
     df.load_data(std::move(idx),
@@ -1003,18 +1006,18 @@ static void test_index_left_right_join()  {
                  std::make_pair("col_3", d3),
                  std::make_pair("col_4", i1));
 
-    std::vector<unsigned long>  idx2 =
+    StlVecType<unsigned long>  idx2 =
         { 123452, 123453, 123455, 123458, 123466, 223450, 223451,
           223454, 223456, 223457, 223459, 223461, 223460, 223462 };
-    std::vector<double> d12 =
+    StlVecType<double> d12 =
            { 11, 12, 13, 14, 15, 16, 17, 18, 19, 110, 111, 113, 112, 114 };
-    std::vector<double> d22 =
+    StlVecType<double> d22 =
         { 18, 19, 110, 111, 112, 113, 114, 120, 122, 123,
           130, 132, 131, 11.89 };
-    std::vector<double> d32 =
+    StlVecType<double> d32 =
         { 115, 116, 115, 118, 119, 116, 121,
           10.34, 11.56, 10.34, 10.34, 12.3, 119.0 };
-    std::vector<int>    i12 = { 122, 123, 124, 125, 199 };
+    StlVecType<int>    i12 = { 122, 123, 124, 125, 199 };
     MyDataFrame         df2;
 
     df2.load_data(std::move(idx2),
@@ -1042,15 +1045,15 @@ static void test_largest_smallest_visitors()  {
 
     std::cout << "\nTesting Largest/Smallest visitors ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466 };
-    std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
-    std::vector<double> d2 =
+    StlVecType<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
+    StlVecType<double> d2 =
         { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23, 30, 31, 32, 1.89 };
-    std::vector<double> d3 =
+    StlVecType<double> d3 =
         { 15, 16, 15, 18, 19, 16, 21, 0.34, 1.56, 0.34, 2.3, 0.34, 19.0 };
-    std::vector<int>    i1 = { 22, 23, 24, 25, 99 };
+    StlVecType<int>    i1 = { 22, 23, 24, 25, 99 };
     MyDataFrame         df;
 
     df.load_data(std::move(idx),
@@ -1105,13 +1108,13 @@ static void test_shifting_up_down()  {
 
     std::cout << "\nTesting Shifting Up/Down/Left/Right ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466 };
-    std::vector<double>         d1 =
+    StlVecType<double>         d1 =
         { 15, 16, 15, 18, 19, 16, 21, 0.34, 1.56, 0.34, 2.3, 0.34, 19.0 };
-    std::vector<int>            i1 = { 22, 23, 24, 25, 99 };
-    std::vector<std::string>    s1 =
+    StlVecType<int>            i1 = { 22, 23, 24, 25, 99 };
+    StlVecType<std::string>    s1 =
         { "qqqq", "wwww", "eeee", "rrrr", "tttt", "yyyy", "uuuu",
           "iiii", "oooo", "pppp", "2222", "aaaa", "dddd", "ffff" };
     MyDataFrame                 df;
@@ -1151,13 +1154,13 @@ static void test_rotating_up_down()  {
 
     std::cout << "\nTesting Rotating Up/Down/Left/Right ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466 };
-    std::vector<double>         d1 =
+    StlVecType<double>         d1 =
         { 15, 16, 15, 18, 19, 16, 21, 0.34, 1.56, 0.34, 2.3, 0.34, 19.0 };
-    std::vector<int>            i1 = { 22, 23, 24, 25, 99 };
-    std::vector<std::string>    s1 =
+    StlVecType<int>            i1 = { 22, 23, 24, 25, 99 };
+    StlVecType<std::string>    s1 =
         { "qqqq", "wwww", "eeee", "rrrr", "tttt", "yyyy", "uuuu",
           "iiii", "oooo", "pppp", "2222", "aaaa", "dddd", "ffff" };
     MyDataFrame                 df;
@@ -1198,10 +1201,10 @@ static void test_dataframe_with_datetime()  {
     std::cout << "\nTesting DataFrame with DateTime ..." << std::endl;
 
     DateTime                    dt(20010102);
-    std::vector<DateTime>       idx;
-    std::vector<double>         d1;
-    std::vector<int>            i1;
-    std::vector<std::string>    s1;
+    StlVecType<DateTime>       idx;
+    StlVecType<double>         d1;
+    StlVecType<int>            i1;
+    StlVecType<std::string>    s1;
 
     idx.reserve(20);
     d1.reserve(20);
@@ -1329,13 +1332,13 @@ static void test_dataframe_friend_multiplies_operator()  {
     std::cout << "\nTesting DataFrame friend multiplies operator ..."
               << std::endl;
 
-    std::vector<unsigned long>  idx1 =
+    StlVecType<unsigned long>  idx1 =
         { 1, 2, 3, 4, 5, 6, 7, 8, 9, 25, 40, 55 };
-    std::vector<unsigned long>  idx2 = { 1, 2, 3, 4, 5, 8, 9, 22, 25, 40 };
-    std::vector<double>         d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
-    std::vector<double>         d2 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
-    std::vector<double>         s1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
-    std::vector<int>            s2 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+    StlVecType<unsigned long>  idx2 = { 1, 2, 3, 4, 5, 8, 9, 22, 25, 40 };
+    StlVecType<double>         d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
+    StlVecType<double>         d2 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+    StlVecType<double>         s1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
+    StlVecType<int>            s2 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
 
     MyDataFrame df1;
     MyDataFrame df2;
@@ -1363,13 +1366,13 @@ static void test_dataframe_friend_divides_operator()  {
 
     std::cout << "\nTesting DataFrame friend divides operator ..." << std::endl;
 
-    std::vector<unsigned long>  idx1 =
+    StlVecType<unsigned long>  idx1 =
         { 1, 2, 3, 4, 5, 6, 7, 8, 9, 25, 40, 55 };
-    std::vector<unsigned long>  idx2 = { 1, 2, 3, 4, 5, 8, 9, 22, 25, 40 };
-    std::vector<double>         d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
-    std::vector<double>         d2 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
-    std::vector<double>         s1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
-    std::vector<int>            s2 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+    StlVecType<unsigned long>  idx2 = { 1, 2, 3, 4, 5, 8, 9, 22, 25, 40 };
+    StlVecType<double>         d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
+    StlVecType<double>         d2 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+    StlVecType<double>         s1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
+    StlVecType<int>            s2 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
 
     MyDataFrame df1;
     MyDataFrame df2;
@@ -1397,17 +1400,17 @@ static void test_fill_missing_values()  {
 
     std::cout << "\nTesting fill_missing(values) ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466 };
-    std::vector<double> d1 = { 1, 2, 3, 4,
+    StlVecType<double> d1 = { 1, 2, 3, 4,
                                std::numeric_limits<double>::quiet_NaN(),
                                6, 7,
                                std::numeric_limits<double>::quiet_NaN(),
                                std::numeric_limits<double>::quiet_NaN(),
                                std::numeric_limits<double>::quiet_NaN(),
                                11, 12, 13, 14 };
-    std::vector<double> d2 = { 8, 9,
+    StlVecType<double> d2 = { 8, 9,
                                std::numeric_limits<double>::quiet_NaN(),
                                11, 12,
                                std::numeric_limits<double>::quiet_NaN(),
@@ -1415,14 +1418,14 @@ static void test_fill_missing_values()  {
                                20, 22, 23, 30, 31,
                                std::numeric_limits<double>::quiet_NaN(),
                                1.89 };
-    std::vector<double> d3 = { std::numeric_limits<double>::quiet_NaN(),
+    StlVecType<double> d3 = { std::numeric_limits<double>::quiet_NaN(),
                                16,
                                std::numeric_limits<double>::quiet_NaN(),
                                18, 19, 16,
                                std::numeric_limits<double>::quiet_NaN(),
                                0.34, 1.56, 0.34, 2.3, 0.34,
                                std::numeric_limits<double>::quiet_NaN() };
-    std::vector<int>    i1 = { 22,
+    StlVecType<int>    i1 = { 22,
                                std::numeric_limits<int>::quiet_NaN(),
                                std::numeric_limits<int>::quiet_NaN(),
                                25,
@@ -1435,7 +1438,7 @@ static void test_fill_missing_values()  {
                  std::make_pair("col_3", d3),
                  std::make_pair("col_4", i1));
 
-    std::vector<std::string>    s1 =
+    StlVecType<std::string>    s1 =
         { "qqqq", "wwww", "eeee", "rrrr", "tttt", "yyyy", "iiii", "oooo" };
 
     df.load_column<std::string>("col_str",
@@ -1463,17 +1466,17 @@ static void test_fill_missing_fill_forward()  {
 
     std::cout << "\nTesting fill_missing(fill_forward) ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466 };
-    std::vector<double> d1 = { 1, 2, 3, 4,
+    StlVecType<double> d1 = { 1, 2, 3, 4,
                                std::numeric_limits<double>::quiet_NaN(),
                                6, 7,
                                std::numeric_limits<double>::quiet_NaN(),
                                std::numeric_limits<double>::quiet_NaN(),
                                std::numeric_limits<double>::quiet_NaN(),
                                11, 12, 13, 14 };
-    std::vector<double> d2 = { 8, 9,
+    StlVecType<double> d2 = { 8, 9,
                                std::numeric_limits<double>::quiet_NaN(),
                                11, 12,
                                std::numeric_limits<double>::quiet_NaN(),
@@ -1481,14 +1484,14 @@ static void test_fill_missing_fill_forward()  {
                                20, 22, 23, 30, 31,
                                std::numeric_limits<double>::quiet_NaN(),
                                1.89 };
-    std::vector<double> d3 = { std::numeric_limits<double>::quiet_NaN(),
+    StlVecType<double> d3 = { std::numeric_limits<double>::quiet_NaN(),
                                16,
                                std::numeric_limits<double>::quiet_NaN(),
                                18, 19, 16,
                                std::numeric_limits<double>::quiet_NaN(),
                                0.34, 1.56, 0.34, 2.3, 0.34,
                                std::numeric_limits<double>::quiet_NaN() };
-    std::vector<int>    i1 = { 22,
+    StlVecType<int>    i1 = { 22,
                                std::numeric_limits<int>::quiet_NaN(),
                                std::numeric_limits<int>::quiet_NaN(),
                                25,
@@ -1501,7 +1504,7 @@ static void test_fill_missing_fill_forward()  {
                  std::make_pair("col_3", d3),
                  std::make_pair("col_4", i1));
 
-    std::vector<std::string>    s1 =
+    StlVecType<std::string>    s1 =
         { "qqqq", "wwww", "eeee", "rrrr", "tttt", "yyyy", "iiii", "oooo" };
 
     df.load_column<std::string>("col_str",
@@ -1530,17 +1533,17 @@ static void test_fill_missing_fill_backward()  {
 
     std::cout << "\nTesting fill_missing(fill_backward) ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466 };
-    std::vector<double> d1 = { 1, 2, 3, 4,
+    StlVecType<double> d1 = { 1, 2, 3, 4,
                                std::numeric_limits<double>::quiet_NaN(),
                                6, 7,
                                std::numeric_limits<double>::quiet_NaN(),
                                std::numeric_limits<double>::quiet_NaN(),
                                std::numeric_limits<double>::quiet_NaN(),
                                11, 12, 13, 14 };
-    std::vector<double> d2 = { 8, 9,
+    StlVecType<double> d2 = { 8, 9,
                                std::numeric_limits<double>::quiet_NaN(),
                                11, 12,
                                std::numeric_limits<double>::quiet_NaN(),
@@ -1548,19 +1551,19 @@ static void test_fill_missing_fill_backward()  {
                                20, 22, 23, 30, 31,
                                std::numeric_limits<double>::quiet_NaN(),
                                1.89 };
-    std::vector<double> d3 = { std::numeric_limits<double>::quiet_NaN(),
+    StlVecType<double> d3 = { std::numeric_limits<double>::quiet_NaN(),
                                16,
                                std::numeric_limits<double>::quiet_NaN(),
                                18, 19, 16,
                                std::numeric_limits<double>::quiet_NaN(),
                                0.34, 1.56, 0.34, 2.3, 0.34,
                                std::numeric_limits<double>::quiet_NaN() };
-    std::vector<int>    i1 = { 22,
+    StlVecType<int>    i1 = { 22,
                                std::numeric_limits<int>::quiet_NaN(),
                                std::numeric_limits<int>::quiet_NaN(),
                                25,
                                std::numeric_limits<int>::quiet_NaN() };
-    std::vector<std::string>    s1 =
+    StlVecType<std::string>    s1 =
         { "qqqq", "wwww", "eeee", "rrrr", "tttt", "yyyy",
           "iiii", "oooo", "pppp", "2222", "aaaa", "dddd" };
     MyDataFrame         df;
@@ -1589,17 +1592,17 @@ static void test_fill_missing_fill_linear_interpolation()  {
 
     std::cout << "\nTesting fill_missing(linear_interpolate) ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466 };
-    std::vector<double> d1 = { 1, 2, 3, 4,
+    StlVecType<double> d1 = { 1, 2, 3, 4,
                                std::numeric_limits<double>::quiet_NaN(),
                                6, 7,
                                std::numeric_limits<double>::quiet_NaN(),
                                std::numeric_limits<double>::quiet_NaN(),
                                std::numeric_limits<double>::quiet_NaN(),
                                11, 12, 13, 14 };
-    std::vector<double> d2 = { 8, 9,
+    StlVecType<double> d2 = { 8, 9,
                                std::numeric_limits<double>::quiet_NaN(),
                                11, 12,
                                std::numeric_limits<double>::quiet_NaN(),
@@ -1607,14 +1610,14 @@ static void test_fill_missing_fill_linear_interpolation()  {
                                20, 22, 23, 30, 31,
                                std::numeric_limits<double>::quiet_NaN(),
                                1.89 };
-    std::vector<double> d3 = { std::numeric_limits<double>::quiet_NaN(),
+    StlVecType<double> d3 = { std::numeric_limits<double>::quiet_NaN(),
                                16,
                                std::numeric_limits<double>::quiet_NaN(),
                                18, 19, 16,
                                std::numeric_limits<double>::quiet_NaN(),
                                0.34, 1.56, 0.34, 2.3, 0.34,
                                std::numeric_limits<double>::quiet_NaN() };
-    std::vector<int>    i1 = { 22,
+    StlVecType<int>    i1 = { 22,
                                std::numeric_limits<int>::quiet_NaN(),
                                std::numeric_limits<int>::quiet_NaN(),
                                25,
@@ -1643,17 +1646,17 @@ static void test_drop_missing_all_no_drop()  {
 
     std::cout << "\nTesting drop_missing(all) no drop ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466 };
-    std::vector<double> d1 = { 1, 2, 3, 4,
+    StlVecType<double> d1 = { 1, 2, 3, 4,
                                std::numeric_limits<double>::quiet_NaN(),
                                6, 7,
                                std::numeric_limits<double>::quiet_NaN(),
                                std::numeric_limits<double>::quiet_NaN(),
                                std::numeric_limits<double>::quiet_NaN(),
                                11, 12, 13, 14 };
-    std::vector<double> d2 = { 8, 9,
+    StlVecType<double> d2 = { 8, 9,
                                std::numeric_limits<double>::quiet_NaN(),
                                11, 12,
                                std::numeric_limits<double>::quiet_NaN(),
@@ -1661,19 +1664,19 @@ static void test_drop_missing_all_no_drop()  {
                                20, 22, 23, 30, 31,
                                std::numeric_limits<double>::quiet_NaN(),
                                1.89 };
-    std::vector<double> d3 = { std::numeric_limits<double>::quiet_NaN(),
+    StlVecType<double> d3 = { std::numeric_limits<double>::quiet_NaN(),
                                16,
                                std::numeric_limits<double>::quiet_NaN(),
                                18, 19, 16,
                                std::numeric_limits<double>::quiet_NaN(),
                                0.34, 1.56, 0.34, 2.3, 0.34,
                                std::numeric_limits<double>::quiet_NaN() };
-    std::vector<int>    i1 = { 22,
+    StlVecType<int>    i1 = { 22,
                                std::numeric_limits<int>::quiet_NaN(),
                                std::numeric_limits<int>::quiet_NaN(),
                                25,
                                std::numeric_limits<int>::quiet_NaN() };
-    std::vector<std::string>    s1 =
+    StlVecType<std::string>    s1 =
         { "qqqq", "wwww", "eeee", "rrrr", "tttt", "yyyy",
           "iiii", "oooo", "pppp", "2222", "aaaa", "dddd" };
     MyDataFrame         df;
@@ -1700,10 +1703,10 @@ static void test_drop_missing_all_2_drop()  {
 
     std::cout << "\nTesting drop_missing(all) 2 drop ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466 };
-    std::vector<double> d1 = { 1, 2, 3, 4,
+    StlVecType<double> d1 = { 1, 2, 3, 4,
                                std::numeric_limits<double>::quiet_NaN(),
                                std::numeric_limits<double>::quiet_NaN(),
                                7,
@@ -1712,7 +1715,7 @@ static void test_drop_missing_all_2_drop()  {
                                std::numeric_limits<double>::quiet_NaN(),
                                std::numeric_limits<double>::quiet_NaN(),
                                12, 13, 14 };
-    std::vector<double> d2 = { 8, 9,
+    StlVecType<double> d2 = { 8, 9,
                                std::numeric_limits<double>::quiet_NaN(),
                                11, 12,
                                std::numeric_limits<double>::quiet_NaN(),
@@ -1722,7 +1725,7 @@ static void test_drop_missing_all_2_drop()  {
                                31,
                                std::numeric_limits<double>::quiet_NaN(),
                                1.89 };
-    std::vector<double> d3 = { std::numeric_limits<double>::quiet_NaN(),
+    StlVecType<double> d3 = { std::numeric_limits<double>::quiet_NaN(),
                                16,
                                std::numeric_limits<double>::quiet_NaN(),
                                18, 19,
@@ -1732,12 +1735,12 @@ static void test_drop_missing_all_2_drop()  {
                                std::numeric_limits<double>::quiet_NaN(),
                                0.34,
                                std::numeric_limits<double>::quiet_NaN() };
-    std::vector<int>    i1 = { 22,
+    StlVecType<int>    i1 = { 22,
                                std::numeric_limits<int>::quiet_NaN(),
                                std::numeric_limits<int>::quiet_NaN(),
                                25,
                                std::numeric_limits<int>::quiet_NaN() };
-    std::vector<std::string>    s1 =
+    StlVecType<std::string>    s1 =
         { "qqqq", "wwww", "eeee", "rrrr", "tttt", "",
           "iiii", "oooo", "pppp", "2222", "", "dddd" };
     MyDataFrame         df;
@@ -1764,17 +1767,17 @@ static void test_drop_missing_any()  {
 
     std::cout << "\nTesting drop_missing(any) ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466 };
-    std::vector<double> d1 = { 1, 2, 3, 4,
+    StlVecType<double> d1 = { 1, 2, 3, 4,
                                std::numeric_limits<double>::quiet_NaN(),
                                6, 7,
                                std::numeric_limits<double>::quiet_NaN(),
                                std::numeric_limits<double>::quiet_NaN(),
                                std::numeric_limits<double>::quiet_NaN(),
                                11, 12, 13, 14 };
-    std::vector<double> d2 = { 8, 9,
+    StlVecType<double> d2 = { 8, 9,
                                std::numeric_limits<double>::quiet_NaN(),
                                11, 12,
                                std::numeric_limits<double>::quiet_NaN(),
@@ -1782,19 +1785,19 @@ static void test_drop_missing_any()  {
                                20, 22, 23, 30, 31,
                                std::numeric_limits<double>::quiet_NaN(),
                                1.89 };
-    std::vector<double> d3 = { std::numeric_limits<double>::quiet_NaN(),
+    StlVecType<double> d3 = { std::numeric_limits<double>::quiet_NaN(),
                                16,
                                std::numeric_limits<double>::quiet_NaN(),
                                18, 19, 16,
                                std::numeric_limits<double>::quiet_NaN(),
                                0.34, 1.56, 0.34, 2.3, 0.34,
                                std::numeric_limits<double>::quiet_NaN() };
-    std::vector<int>    i1 = { 22,
+    StlVecType<int>    i1 = { 22,
                                std::numeric_limits<int>::quiet_NaN(),
                                std::numeric_limits<int>::quiet_NaN(),
                                25,
                                std::numeric_limits<int>::quiet_NaN() };
-    std::vector<std::string>    s1 =
+    StlVecType<std::string>    s1 =
         { "qqqq", "wwww", "eeee", "rrrr", "tttt", "yyyy",
           "iiii", "oooo", "pppp", "2222", "aaaa", "dddd" };
     MyDataFrame         df;
@@ -1821,17 +1824,17 @@ static void test_drop_threashold_3()  {
 
     std::cout << "\nTesting drop_missing(threshold=3) ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466 };
-    std::vector<double> d1 = { 1, 2, 3, 4,
+    StlVecType<double> d1 = { 1, 2, 3, 4,
                                std::numeric_limits<double>::quiet_NaN(),
                                6, 7,
                                std::numeric_limits<double>::quiet_NaN(),
                                std::numeric_limits<double>::quiet_NaN(),
                                std::numeric_limits<double>::quiet_NaN(),
                                11, 12, 13, 14 };
-    std::vector<double> d2 = { 8, 9,
+    StlVecType<double> d2 = { 8, 9,
                                std::numeric_limits<double>::quiet_NaN(),
                                11, 12,
                                std::numeric_limits<double>::quiet_NaN(),
@@ -1839,19 +1842,19 @@ static void test_drop_threashold_3()  {
                                20, 22, 23, 30, 31,
                                std::numeric_limits<double>::quiet_NaN(),
                                1.89 };
-    std::vector<double> d3 = { std::numeric_limits<double>::quiet_NaN(),
+    StlVecType<double> d3 = { std::numeric_limits<double>::quiet_NaN(),
                                16,
                                std::numeric_limits<double>::quiet_NaN(),
                                18, 19, 16,
                                std::numeric_limits<double>::quiet_NaN(),
                                0.34, 1.56, 0.34, 2.3, 0.34,
                                std::numeric_limits<double>::quiet_NaN() };
-    std::vector<int>    i1 = { 22,
+    StlVecType<int>    i1 = { 22,
                                std::numeric_limits<int>::quiet_NaN(),
                                std::numeric_limits<int>::quiet_NaN(),
                                25,
                                std::numeric_limits<int>::quiet_NaN() };
-    std::vector<std::string>    s1 =
+    StlVecType<std::string>    s1 =
         { "qqqq", "wwww", "eeee", "rrrr", "tttt", "yyyy",
           "iiii", "oooo", "pppp", "2222", "aaaa", "dddd" };
     MyDataFrame         df;
@@ -1878,27 +1881,27 @@ static void test_get_row()  {
 
     std::cout << "\nTesting get_row() ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466 };
-    std::vector<double> d1 = { 1, 2, 3, 4,
+    StlVecType<double> d1 = { 1, 2, 3, 4,
                                std::numeric_limits<double>::quiet_NaN(),
                                6, 7,
                                std::numeric_limits<double>::quiet_NaN(),
                                std::numeric_limits<double>::quiet_NaN(),
                                std::numeric_limits<double>::quiet_NaN(),
                                11, 12, 13, 14 };
-    std::vector<double> d2 = { 8, 9, 10, 11, 12,
+    StlVecType<double> d2 = { 8, 9, 10, 11, 12,
                                std::numeric_limits<double>::quiet_NaN(),
                                std::numeric_limits<double>::quiet_NaN(),
                                20, 22, 23, 30, 31,
                                std::numeric_limits<double>::quiet_NaN(),
                                1.89 };
-    std::vector<double> d3 = { 400.4, 16, 500.5, 18, 19, 16,
+    StlVecType<double> d3 = { 400.4, 16, 500.5, 18, 19, 16,
                                std::numeric_limits<double>::quiet_NaN(),
                                0.34, 1.56, 0.34, 2.3, 0.34,
                                std::numeric_limits<double>::quiet_NaN() };
-    std::vector<int>    i1 = { 22, 11, 34, 25,
+    StlVecType<int>    i1 = { 22, 11, 34, 25,
                                std::numeric_limits<int>::quiet_NaN() };
     MyDataFrame         df;
 
@@ -1908,14 +1911,14 @@ static void test_get_row()  {
                  std::make_pair("col_3", d3),
                  std::make_pair("col_4", i1));
 
-    std::vector<std::string>    s1 =
+    StlVecType<std::string>    s1 =
         { "qqqq", "wwww", "eeee", "rrrr", "tttt", "yyyy", "iiii", "oooo" };
 
     df.load_column<std::string>("col_str",
                                 std::move(s1),
                                 nan_policy::dont_pad_with_nans);
 
-    std::vector<int>    i2 = { 22, 11 };
+    StlVecType<int>    i2 = { 22, 11 };
 
     df.load_column<int>("col_int",
                         std::move(i2),
@@ -1924,7 +1927,7 @@ static void test_get_row()  {
     std::cout << "Original DF:" << std::endl;
     df.write<std::ostream, int, double, std::string>(std::cout);
 
-    std::vector<const char *>   columns =
+    StlVecType<const char *>   columns =
         {"col_1", "col_2", "col_3", "col_4", "col_str", "col_int"};
     auto                        row2 =
         df.get_row<int, double, std::string>(2, columns);
@@ -1954,19 +1957,19 @@ static void test_auto_correlation()  {
 
     std::cout << "\nTesting Auto Correlation ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466,
           123467, 123468, 123469, 123470, 123471, 123472, 123473 };
-    std::vector<double>         d1 =
+    StlVecType<double>         d1 =
         { 15, 16, 15, 18, 19, 16, 21,
           0.34, 1.56, 0.34, 2.3, 0.34, 19.0, 0.387,
           0.123, 1.06, 0.65, 2.03, 0.4, 1.0, 0.007 };
-    std::vector<double>         d2 =
+    StlVecType<double>         d2 =
         { 1.23, 1.22, 1.21, 1.20, 1.19, 1.185, 1.181,
           1.19, 1.195, 1.189, 1.185, 1.18, 1.181, 1.186,
           1.189, 1.19, 1.194, 1.198, 1.199, 1.197, 1.193 };
-    std::vector<int>            i1 = { 22, 23, 24, 25, 99 };
+    StlVecType<int>            i1 = { 22, 23, 24, 25, 99 };
     MyDataFrame                 df;
 
     df.load_data(std::move(idx),
@@ -2015,18 +2018,18 @@ static void test_return()  {
 
     std::cout << "\nTesting Return ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466,
           123467, 123468, 123469, 123470, 123471, 123472, 123473 };
-    std::vector<double>         d1 =
+    StlVecType<double>         d1 =
         { 15, 16, 15, 18, 19, 16, 21, 0.34, 1.56, 0.34, 2.3, 0.34, 19.0, 0.387,
           0.123, 1.06, 0.65, 2.03, 0.4, 1.0, 0.59 };
-    std::vector<double>         d2 =
+    StlVecType<double>         d2 =
         { 1.23, 1.22, 1.21, 1.20, 1.19, 1.185, 1.181,
           1.19, 1.195, 1.189, 1.185, 1.18, 1.181, 1.186,
           1.189, 1.19, 1.194, 1.198, 1.199, 1.197, 1.193 };
-    std::vector<int>            i1 = { 22, 23, 24, 25, 99 };
+    StlVecType<int>            i1 = { 22, 23, 24, 25, 99 };
     MyDataFrame                 df;
 
     df.load_data(std::move(idx),
@@ -2089,20 +2092,20 @@ static void test_median()  {
 
     std::cout << "\nTesting Median ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466,
           123467, 123468, 123469, 123470, 123471, 123472, 123473 };
-    std::vector<double>         d1 =
+    StlVecType<double>         d1 =
         { 1.0, 10, 8, 18, 19, 16, 21, 17, 20, 3, 2, 11, 7.0, 5,
           9, 15, 14, 13, 12, 6, 4 };
-    std::vector<double>         d2 =
+    StlVecType<double>         d2 =
         { 1.0, 10, 8, 18, 19, 16, 17, 20, 3, 2, 11, 7.0, 5,
           9, 15, 14, 13, 12, 6, 4 };
-    std::vector<int>           i1 =
+    StlVecType<int>           i1 =
         { 1, 10, 8, 18, 19, 16, 21, 17, 20, 3, 2, 11, 7, 5,
           9, 15, 14, 13, 12, 6, 4 };
-    std::vector<int>            i2 =
+    StlVecType<int>            i2 =
         { 1, 10, 8, 18, 19, 16, 17, 20, 3, 2, 11, 7, 5,
           9, 15, 14, 13, 12, 6, 4 };
     MyDataFrame                 df;
@@ -2142,25 +2145,25 @@ static void test_tracking_error()  {
 
     std::cout << "\nTesting Tracking Error ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466,
           123467, 123468, 123469, 123470, 123471, 123472, 123473 };
-    std::vector<double>         d1 =
+    StlVecType<double>         d1 =
         { 1.0, 10, 8, 18, 19, 16, 21, 17, 20, 3, 2, 11, 7.0, 5,
           9, 15, 14, 13, 12, 6, 4 };
-    std::vector<double>         d2 =
+    StlVecType<double>         d2 =
         { 1.0, 10, 8, 18, 19, 16, 21, 17, 20, 3, 2, 11, 7.0, 5,
           9, 15, 14, 13, 12, 6, 4 };
-    std::vector<double>         d3 =
+    StlVecType<double>         d3 =
         { 1.1, 10.09, 8.2, 18.03, 19.4, 15.9, 20.8,
           17.1, 19.9, 3.3, 2.2, 10.8, 7.4, 5.3,
           9.1, 14.9, 14.8, 13.2, 12.6, 6.1, 4.4 };
-    std::vector<double>         d4 =
+    StlVecType<double>         d4 =
         { 0.1, 9.09, 7.2, 17.03, 18.4, 14.9, 19.8,
           16.1, 18.9, 2.3, 1.2, 9.8, 6.4, 4.3,
           8.1, 13.9, 13.8, 12.2, 11.6, 5.1, 3.4 };
-    std::vector<double>         d5 =
+    StlVecType<double>         d5 =
         { 20.0, 10.1, -30.2, 18.5, 1.1, 16.2, 30.8,
           -1.56, 20.1, 25.5, 30.89, 11.1, 7.4, 5.3,
           19, 15.1, 1.3, 1.2, 12.6, 23.2, 40.1 };
@@ -2213,25 +2216,25 @@ static void test_beta()  {
 
     std::cout << "\nTesting Beta ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466,
           123467, 123468, 123469, 123470, 123471, 123472, 123473 };
-    std::vector<double>         d1 =
+    StlVecType<double>         d1 =
         { 1.0, 10, 8, 18, 19, 16, 21, 17, 20, 3, 2, 11, 7.0, 5,
           9, 15, 14, 13, 12, 6, 4 };
-    std::vector<double>         d2 =
+    StlVecType<double>         d2 =
         { 1.0, 10, 8, 18, 19, 16, 21, 17, 20, 3, 2, 11, 7.0, 5,
           9, 15, 14, 13, 12, 6, 4 };
-    std::vector<double>         d3 =
+    StlVecType<double>         d3 =
         { 1.1, 10.09, 8.2, 18.03, 19.4, 15.9, 20.8,
           17.1, 19.9, 3.3, 2.2, 10.8, 7.4, 5.3,
           9.1, 14.9, 14.8, 13.2, 12.6, 6.1, 4.4 };
-    std::vector<double>         d4 =
+    StlVecType<double>         d4 =
         { 0.1, 9.09, 7.2, 17.03, 18.4, 14.9, 19.8,
           16.1, 18.9, 2.3, 1.2, 9.8, 6.4, 4.3,
           8.1, 13.9, 13.8, 12.2, 11.6, 5.1, 3.4 };
-    std::vector<double>         d5 =
+    StlVecType<double>         d5 =
         { 20.0, 10.1, -30.2, 18.5, 1.1, 16.2, 30.8,
           -1.56, 20.1, 25.5, 30.89, 11.1, 7.4, 5.3,
           19, 15.1, 1.3, 1.2, 12.6, 23.2, 40.1 };
@@ -2299,7 +2302,7 @@ static void test_gen_datetime_index()  {
     // I am commenting some of these out because with timezone spec,
     // it will take too long for the test to run
 
-    std::vector<unsigned long>  idx_vec1 =
+    StlVecType<unsigned long>  idx_vec1 =
         MyDataFrame::gen_datetime_index("01/01/2018",
                                         "12/31/2038",
                                         time_frequency::annual,
@@ -2395,7 +2398,7 @@ static void test_gen_datetime_index()  {
     assert(idx_vec1[73202] == 1514819401000000000);
     assert(idx_vec1[73203] == 1514819401500000000);
 
-    std::vector<DateTime>   idx_vec2 =
+    StlVecType<DateTime>   idx_vec2 =
         StdDataFrame<DateTime>::gen_datetime_index(
             "01/01/2018",
             "12/31/2022",
@@ -2422,19 +2425,19 @@ static void test_replace_1()  {
 
     std::cout << "\nTesting replace(1) ..." << std::endl;
 
-    std::vector<double> d1 =
+    StlVecType<double> d1 =
         { 1.0, 10, 8, 18, 19, 16, 21, 17, 20, 3, 2, 11, 7.0, 5, 9, 15, 14, 13,
           12, 6, 4 };
-    std::vector<double> d2 =
+    StlVecType<double> d2 =
         { 1.0, 10, 8, 18, 19, 16, 21, 17, 20, 3, 2, 11, 7.0, 5, 9, 15, 14, 13,
           12, 6, 4 };
-    std::vector<double> d3 =
+    StlVecType<double> d3 =
         { 1.1, 10.09, 8.2, 18.03, 19.4, 15.9, 20.8, 17.1, 19.9, 3.3, 2.2, 10.8,
           7.4, 5.3, 9.1, 14.9, 14.8, 13.2, 12.6, 6.1, 4.4 };
-    std::vector<double> d4 =
+    StlVecType<double> d4 =
         { 0.1, 9.09, 7.2, 17.03, 18.4, 14.9, 19.8, 16.1, 18.9, 2.3, 1.2, 9.8,
           6.4, 4.3, 8.1, 13.9, 13.8, 12.2, 11.6, 5.1, 3.4 };
-    std::vector<double> d5 =
+    StlVecType<double> d5 =
         { 20.0, 10.1, -30.2, 18.5, 1.1, 16.2, 30.8, -1.56, 20.1, 25.5, 30.89,
           11.1, 7.4, 5.3, 19, 15.1, 1.3, 1.2, 12.6, 23.2, 40.1 };
     MyDataFrame         df;
@@ -2508,19 +2511,19 @@ static void test_replace_2()  {
 
     std::cout << "\nTesting replace(2) ..." << std::endl;
 
-    std::vector<double> d1 =
+    StlVecType<double> d1 =
         { 1.0, 10, 8, 18, 19, 16, 21, 17, 20, 3, 2, 11, 7.0, 5, 9, 15, 14, 13,
           12, 6, 4 };
-    std::vector<double> d2 =
+    StlVecType<double> d2 =
         { 1.0, 10, 8, 18, 19, 16, 21, 17, 20, 3, 2, 11, 7.0, 5, 9, 15, 14, 13,
           12, 6, 4 };
-    std::vector<double> d3 =
+    StlVecType<double> d3 =
         { 1.1, 10.09, 8.2, 18.03, 19.4, 15.9, 20.8, 17.1, 19.9, 3.3, 2.2, 10.8,
           7.4, 5.3, 9.1, 14.9, 14.8, 13.2, 12.6, 6.1, 4.4 };
-    std::vector<double> d4 =
+    StlVecType<double> d4 =
         { 0.1, 9.09, 7.2, 17.03, 18.4, 14.9, 19.8, 16.1, 18.9, 2.3, 1.2, 9.8,
           6.4, 4.3, 8.1, 13.9, 13.8, 12.2, 11.6, 5.1, 3.4 };
-    std::vector<double> d5 =
+    StlVecType<double> d5 =
         { 20.0, 10.1, -30.2, 18.5, 1.1, 16.2, 30.8, -1.56, 20.1, 25.5, 30.89,
           11.1, 7.4, 5.3, 19, 15.1, 1.3, 1.2, 12.6, 23.2, 40.1 };
     MyDataFrame         df;
@@ -2567,22 +2570,22 @@ static void test_some_visitors()  {
 
     std::cout << "\nTesting some visitors ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466,
           123467, 123468, 123469, 123470, 123471, 123472, 123473 };
-    std::vector<double>         d1 =
+    StlVecType<double>         d1 =
         { 1.0, 10, 8, 18, 19, 16, 21, 17, 20, 3, 2, 11, 7.0, 5,
           9, 15, 14, 13, 12, 6, 4 };
-    std::vector<double>         d2 =
+    StlVecType<double>         d2 =
         { 1.0, 10, 8, 18, 19, 16, 17, 20, 3, 2, 11, 7.0, 5,
           9, 15, 14, 13, 12, 6, 4 };
-    std::vector<int>           i1 =
+    StlVecType<int>           i1 =
         { 1, 1, 2, 4, 3, 4, 5, 2, 1, 2, 2, 3, 4, 5, 7, 1, 2, 3, 2, 6, 4 };
-    std::vector<int>            i2 =
+    StlVecType<int>            i2 =
         { 1, 10, 8, 18, 19, 16, 17, 20, 3, 2, 11, 7, 5,
           9, 15, 14, 13, 12, 6, 4 };
-    std::vector<double>         d3 =
+    StlVecType<double>         d3 =
         { 1, 10, std::numeric_limits<double>::quiet_NaN(), 18, 19, 16,
           17, 20, std::numeric_limits<double>::quiet_NaN(),
           2, 11, 7, std::numeric_limits<double>::quiet_NaN(), 5,
@@ -2613,7 +2616,7 @@ static void test_some_visitors()  {
     assert(prod_result == 464486400);
 
     CumSumVisitor<double>       cum_sum_visit;
-    const std::vector<double>   &cum_sum_result =
+    const StlVecType<double>   &cum_sum_result =
         df.single_act_visit<double>("dblcol_3", cum_sum_visit).get_result();
 
     assert(cum_sum_result.size() == 20);
@@ -2625,7 +2628,7 @@ static void test_some_visitors()  {
     assert(std::isnan(cum_sum_result[8]));
 
     CumMaxVisitor<double>       cum_max_visit;
-    const std::vector<double>   &cum_max_result =
+    const StlVecType<double>   &cum_max_result =
         df.single_act_visit<double>("dblcol_3", cum_max_visit).get_result();
 
     assert(cum_max_result.size() == 20);
@@ -2643,22 +2646,22 @@ static void test_mode()  {
 
     std::cout << "\nTesting Mode ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466,
           123467, 123468, 123469, 123470, 123471, 123472, 123473 };
-    std::vector<double>         d1 =
+    StlVecType<double>         d1 =
         { 1.0, 10, 8, 18, 19, 16, 21, 17, 20, 3, 2, 11, 7.0, 5,
           9, 15, 14, 13, 12, 6, 4 };
-    std::vector<double>         d2 =
+    StlVecType<double>         d2 =
         { 1.0, 10, 8, 18, 19, 16, 17, 20, 3, 2, 11, 7.0, 5,
           9, 15, 14, 13, 12, 6, 4 };
-    std::vector<int>           i1 =
+    StlVecType<int>           i1 =
         { 1, 1, 2, 4, 3, 4, 5, 2, 1, 2, 2, 3, 4, 5, 7, 1, 2, 3, 2, 6, 4 };
-    std::vector<int>            i2 =
+    StlVecType<int>            i2 =
         { 1, 10, 8, 18, 19, 16, 17, 20, 3, 2, 11, 7, 5,
           9, 15, 14, 13, 12, 6, 4 };
-    std::vector<double>         d3 =
+    StlVecType<double>         d3 =
         { 1, 10, std::numeric_limits<double>::quiet_NaN(), 18, 19, 16,
           17, 20, std::numeric_limits<double>::quiet_NaN(),
           2, 11, 7, std::numeric_limits<double>::quiet_NaN(), 5,
@@ -2708,13 +2711,13 @@ static void test_remove_data_by_sel()  {
 
     std::cout << "\nTesting remove_data_by_sel() ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456 };
-    std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7 };
-    std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14 };
-    std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21 };
-    std::vector<double> d4 = { 22, 23, 24, 25 };
-    std::vector<std::string> s1 = { "11", "22", "33", "ee", "ff", "gg", "ll" };
+    StlVecType<double> d1 = { 1, 2, 3, 4, 5, 6, 7 };
+    StlVecType<double> d2 = { 8, 9, 10, 11, 12, 13, 14 };
+    StlVecType<double> d3 = { 15, 16, 17, 18, 19, 20, 21 };
+    StlVecType<double> d4 = { 22, 23, 24, 25 };
+    StlVecType<std::string> s1 = { "11", "22", "33", "ee", "ff", "gg", "ll" };
     MyDataFrame         df;
 
     auto    shape = df.shape();
@@ -2727,7 +2730,9 @@ static void test_remove_data_by_sel()  {
                  std::make_pair("col_2", d2),
                  std::make_pair("col_3", d3),
                  std::make_pair("col_str", s1));
-    df.load_column("col_4", std::move(d4), nan_policy::dont_pad_with_nans);
+    df.load_column<double>("col_4",
+                           std::move(d4),
+                           nan_policy::dont_pad_with_nans);
 
     shape = df.shape();
     assert(shape.first == 7);
@@ -2793,13 +2798,13 @@ static void test_shuffle()  {
 
     std::cout << "\nTesting shuffle() ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456 };
-    std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7 };
-    std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14 };
-    std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21 };
-    std::vector<double> d4 = { 22, 23, 24, 25 };
-    std::vector<std::string> s1 = { "11", "22", "33", "aa", "bb", "cc", "dd" };
+    StlVecType<double> d1 = { 1, 2, 3, 4, 5, 6, 7 };
+    StlVecType<double> d2 = { 8, 9, 10, 11, 12, 13, 14 };
+    StlVecType<double> d3 = { 15, 16, 17, 18, 19, 20, 21 };
+    StlVecType<double> d4 = { 22, 23, 24, 25 };
+    StlVecType<std::string> s1 = { "11", "22", "33", "aa", "bb", "cc", "dd" };
     MyDataFrame         df;
 
     df.load_data(std::move(idx),
@@ -2807,7 +2812,9 @@ static void test_shuffle()  {
                  std::make_pair("col_2", d2),
                  std::make_pair("col_3", d3),
                  std::make_pair("col_str", s1));
-    df.load_column("col_4", std::move(d4), nan_policy::dont_pad_with_nans);
+    df.load_column<double>("col_4",
+                           std::move(d4),
+                           nan_policy::dont_pad_with_nans);
 
     // std::cout << "Original DatFrasme:" << std::endl;
     // df.write<std::ostream, int, double, std::string>(std::cout);
@@ -2827,18 +2834,18 @@ static void test_SimpleRollAdopter()  {
 
     std::cout << "\nTesting SimpleRollAdopter{ } ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460 };
-    std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
-    std::vector<double> d2 = { 8, 9, 10, 11,
+    StlVecType<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
+    StlVecType<double> d2 = { 8, 9, 10, 11,
                                std::numeric_limits<double>::quiet_NaN(),
                                13, 14,
                                std::numeric_limits<double>::quiet_NaN(),
                                16, 17, 18 };
-    std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25 };
-    std::vector<double> d4 = { 22, 23, 24, 25, 26, 27 };
-    std::vector<std::string> s1 =
+    StlVecType<double> d3 = { 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25 };
+    StlVecType<double> d4 = { 22, 23, 24, 25, 26, 27 };
+    StlVecType<std::string> s1 =
         { "11", "22", "33", "aa", "bb", "cc", "dd", "tt", "uu", "ii", "88" };
     MyDataFrame         df;
 
@@ -2847,7 +2854,9 @@ static void test_SimpleRollAdopter()  {
                  std::make_pair("col_2", d2),
                  std::make_pair("col_3", d3),
                  std::make_pair("col_str", s1));
-    df.load_column("col_4", std::move(d4), nan_policy::dont_pad_with_nans);
+    df.load_column<double>("col_4",
+                           std::move(d4),
+                           nan_policy::dont_pad_with_nans);
 
     SimpleRollAdopter<MinVisitor<double>, double>   min_roller(
         MinVisitor<double>(), 3);
@@ -2907,18 +2916,18 @@ static void test_ExponentialRollAdopter()  {
 
     std::cout << "\nTesting ExponentialRollAdopter{ } ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460 };
-    std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
-    std::vector<double> d2 = { 8, 9, 10, 11,
+    StlVecType<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
+    StlVecType<double> d2 = { 8, 9, 10, 11,
                                std::numeric_limits<double>::quiet_NaN(),
                                13, 14,
                                std::numeric_limits<double>::quiet_NaN(),
                                16, 17, 18 };
-    std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25 };
-    std::vector<double> d4 = { 22, 23, 24, 25, 26, 27 };
-    std::vector<std::string> s1 =
+    StlVecType<double> d3 = { 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25 };
+    StlVecType<double> d4 = { 22, 23, 24, 25, 26, 27 };
+    StlVecType<std::string> s1 =
         { "11", "22", "33", "aa", "bb", "cc", "dd", "tt", "uu", "ii", "88" };
     MyDataFrame         df;
 
@@ -2927,7 +2936,9 @@ static void test_ExponentialRollAdopter()  {
                  std::make_pair("col_2", d2),
                  std::make_pair("col_3", d3),
                  std::make_pair("col_str", s1));
-    df.load_column("col_4", std::move(d4), nan_policy::dont_pad_with_nans);
+    df.load_column<double>("col_4",
+                           std::move(d4),
+                           nan_policy::dont_pad_with_nans);
 
     ExponentialRollAdopter<MeanVisitor<double>, double> hl_expo_mean_roller(
         MeanVisitor<double>(), 3, exponential_decay_spec::halflife, 0.5);
@@ -2998,18 +3009,18 @@ static void test_ExponentiallyWeightedMeanVisitor()  {
     std::cout << "\nTesting ExponentiallyWeightedMeanVisitor{ } ..."
               << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460 };
-    std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
-    std::vector<double> d2 = { 8, 9, 10, 11,
+    StlVecType<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
+    StlVecType<double> d2 = { 8, 9, 10, 11,
                                std::numeric_limits<double>::quiet_NaN(),
                                13, 14,
                                std::numeric_limits<double>::quiet_NaN(),
                                16, 17, 18 };
-    std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25 };
-    std::vector<double> d4 = { 22, 23, 24, 25, 26, 27 };
-    std::vector<std::string> s1 =
+    StlVecType<double> d3 = { 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25 };
+    StlVecType<double> d4 = { 22, 23, 24, 25, 26, 27 };
+    StlVecType<std::string> s1 =
         { "11", "22", "33", "aa", "bb", "cc", "dd", "tt", "uu", "ii", "88" };
     MyDataFrame         df;
 
@@ -3018,7 +3029,9 @@ static void test_ExponentiallyWeightedMeanVisitor()  {
                  std::make_pair("col_2", d2),
                  std::make_pair("col_3", d3),
                  std::make_pair("col_str", s1));
-    df.load_column("col_4", std::move(d4), nan_policy::dont_pad_with_nans);
+    df.load_column<double>("col_4",
+                           std::move(d4),
+                           nan_policy::dont_pad_with_nans);
 
     ewm_v<double>   hl_expo_mean_roller(exponential_decay_spec::halflife, 0.5);
     const auto      &hl_expo_result =
@@ -3094,14 +3107,14 @@ static void test_get_data_by_rand()  {
 
     std::cout << "\nTesting get_data_by_rand() ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460 };
-    std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
-    std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18 };
-    std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25 };
-    std::vector<double> d4 = { 22, 23, 24, 25, 26, 27 };
-    std::vector<std::string> s1 =
+    StlVecType<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
+    StlVecType<double> d2 = { 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18 };
+    StlVecType<double> d3 = { 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25 };
+    StlVecType<double> d4 = { 22, 23, 24, 25, 26, 27 };
+    StlVecType<std::string> s1 =
         { "11", "22", "33", "aa", "bb", "cc", "dd", "tt", "uu", "ii", "88" };
     MyDataFrame         df;
 
@@ -3110,7 +3123,9 @@ static void test_get_data_by_rand()  {
                  std::make_pair("col_2", d2),
                  std::make_pair("col_3", d3),
                  std::make_pair("col_str", s1));
-    df.load_column("col_4", std::move(d4), nan_policy::dont_pad_with_nans);
+    df.load_column<double>("col_4",
+                           std::move(d4),
+                           nan_policy::dont_pad_with_nans);
 
     auto    result =
         df.get_data_by_rand<double, std::string>
@@ -3121,12 +3136,12 @@ static void test_get_data_by_rand()  {
 
     result2.write<std::ostream, double, std::string>(std::cout);
 
-    std::vector<unsigned long>  idx2 = { 123450 };
-    std::vector<double> d12 = { 1 };
-    std::vector<double> d22 = { 8 };
-    std::vector<double> d32 = { 15 };
-    std::vector<double> d42 = { 22 };
-    std::vector<std::string> s12 = { "11" };
+    StlVecType<unsigned long>  idx2 = { 123450 };
+    StlVecType<double> d12 = { 1 };
+    StlVecType<double> d22 = { 8 };
+    StlVecType<double> d32 = { 15 };
+    StlVecType<double> d42 = { 22 };
+    StlVecType<std::string> s12 = { "11" };
     MyDataFrame         df2;
 
     df2.load_data(std::move(idx2),
@@ -3134,7 +3149,9 @@ static void test_get_data_by_rand()  {
                   std::make_pair("col_2", d22),
                   std::make_pair("col_3", d32),
                   std::make_pair("col_str", s12));
-    df2.load_column("col_4", std::move(d42), nan_policy::dont_pad_with_nans);
+    df2.load_column<double>("col_4",
+                           std::move(d42),
+                           nan_policy::dont_pad_with_nans);
 
     auto    result3 =
         df2.get_data_by_rand<double, std::string>
@@ -3142,12 +3159,12 @@ static void test_get_data_by_rand()  {
 
     result3.write<std::ostream, double, std::string>(std::cout);
 
-    std::vector<unsigned long>  idx3 = { 123450, 123451 };
-    std::vector<double> d13 = { 1, 2 };
-    std::vector<double> d23 = { 8, 9 };
-    std::vector<double> d33 = { 15, 16 };
-    std::vector<double> d43 = { 22, 23 };
-    std::vector<std::string> s13 = { "11", "22" };
+    StlVecType<unsigned long>  idx3 = { 123450, 123451 };
+    StlVecType<double> d13 = { 1, 2 };
+    StlVecType<double> d23 = { 8, 9 };
+    StlVecType<double> d33 = { 15, 16 };
+    StlVecType<double> d43 = { 22, 23 };
+    StlVecType<std::string> s13 = { "11", "22" };
     MyDataFrame         df3;
 
     df3.load_data(std::move(idx3),
@@ -3155,7 +3172,9 @@ static void test_get_data_by_rand()  {
                   std::make_pair("col_2", d23),
                   std::make_pair("col_3", d33),
                   std::make_pair("col_str", s13));
-    df3.load_column("col_4", std::move(d43), nan_policy::dont_pad_with_nans);
+    df3.load_column<double>("col_4",
+                           std::move(d43),
+                           nan_policy::dont_pad_with_nans);
 
     auto    result4 =
         df3.get_data_by_rand<double, std::string>
@@ -3163,12 +3182,12 @@ static void test_get_data_by_rand()  {
 
     result4.write<std::ostream, double, std::string>(std::cout);
 
-    std::vector<unsigned long>  idx4 = { 123450, 123451, 123452 };
-    std::vector<double> d14 = { 1, 2, 3 };
-    std::vector<double> d24 = { 8, 9, 10 };
-    std::vector<double> d34 = { 15, 16, 17 };
-    std::vector<double> d44 = { 22, 23, 24 };
-    std::vector<std::string> s14 = { "11", "22", "33" };
+    StlVecType<unsigned long>  idx4 = { 123450, 123451, 123452 };
+    StlVecType<double> d14 = { 1, 2, 3 };
+    StlVecType<double> d24 = { 8, 9, 10 };
+    StlVecType<double> d34 = { 15, 16, 17 };
+    StlVecType<double> d44 = { 22, 23, 24 };
+    StlVecType<std::string> s14 = { "11", "22", "33" };
     MyDataFrame         df4;
 
     df4.load_data(std::move(idx4),
@@ -3176,7 +3195,9 @@ static void test_get_data_by_rand()  {
                   std::make_pair("col_2", d24),
                   std::make_pair("col_3", d34),
                   std::make_pair("col_str", s14));
-    df4.load_column("col_4", std::move(d44), nan_policy::dont_pad_with_nans);
+    df4.load_column<double>("col_4",
+                           std::move(d44),
+                           nan_policy::dont_pad_with_nans);
 
     auto    result5 =
         df4.get_data_by_rand<double, std::string>
@@ -3191,14 +3212,14 @@ static void test_write_json()  {
 
     std::cout << "\nTesting write(json) ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460 };
-    std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
-    std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18 };
-    std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25 };
-    std::vector<double> d4 = { 22, 23, 24, 25, 26, 27 };
-    std::vector<std::string> s1 =
+    StlVecType<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
+    StlVecType<double> d2 = { 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18 };
+    StlVecType<double> d3 = { 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25 };
+    StlVecType<double> d4 = { 22, 23, 24, 25, 26, 27 };
+    StlVecType<std::string> s1 =
         { "11", "22", "33", "aa", "bb", "cc", "dd", "tt", "uu", "ii", "88" };
     MyDataFrame         df;
 
@@ -3207,7 +3228,9 @@ static void test_write_json()  {
                  std::make_pair("col_2", d2),
                  std::make_pair("col_3", d3),
                  std::make_pair("col_str", s1));
-    df.load_column("col_4", std::move(d4), nan_policy::dont_pad_with_nans);
+    df.load_column<double>("col_4",
+                           std::move(d4),
+                           nan_policy::dont_pad_with_nans);
 
     std::cout << "Writing in JSON:" << std::endl;
     df.write<std::ostream, int, double, std::string>(std::cout,
@@ -3223,19 +3246,19 @@ static void test_diff()  {
     const double    my_nan = std::numeric_limits<double>::quiet_NaN();
     const double    epsilon = 0.0000001;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466,
           123467, 123468, 123469, 123470, 123471, 123472, 123473 };
-    std::vector<double>         d1 =
+    StlVecType<double>         d1 =
         { my_nan, 16, 15, 18, my_nan, 16, 21,
           0.34, 1.56, 0.34, 2.3, my_nan, 19.0, 0.387,
           0.123, 1.06, my_nan, 2.03, 0.4, 1.0, my_nan };
-    std::vector<double>         d2 =
+    StlVecType<double>         d2 =
         { 1.23, 1.22, 1.21, 1.20, 1.19, 1.185, 1.181,
           1.19, 1.195, 1.189, 1.185, 1.18, 1.181, 1.186,
           1.189, 1.19, 1.194, 1.198, 1.199, 1.197, 1.193 };
-    std::vector<int>            i1 = { 22, 23, 24, 25, 99 };
+    StlVecType<int>            i1 = { 22, 23, 24, 25, 99 };
     MyDataFrame                 df;
 
     df.load_data(std::move(idx),
@@ -3376,12 +3399,12 @@ static void test_get_data_by_loc_location()  {
 
     std::cout << "\nTesting get_data_by_loc(locations) ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123450, 123455, 123450, 123449 };
-    std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7 };
-    std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14 };
-    std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21 };
-    std::vector<double> d4 = { 22, 23, 24, 25 };
+    StlVecType<double> d1 = { 1, 2, 3, 4, 5, 6, 7 };
+    StlVecType<double> d2 = { 8, 9, 10, 11, 12, 13, 14 };
+    StlVecType<double> d3 = { 15, 16, 17, 18, 19, 20, 21 };
+    StlVecType<double> d4 = { 22, 23, 24, 25 };
     MyDataFrame         df;
 
     df.load_data(std::move(idx),
@@ -3390,9 +3413,9 @@ static void test_get_data_by_loc_location()  {
                  std::make_pair("col_3", d3),
                  std::make_pair("col_4", d4));
 
-    MyDataFrame df2 = df.get_data_by_loc<double>(std::vector<long> { 3, 6 });
+    MyDataFrame df2 = df.get_data_by_loc<double>(StlVecType<long> { 3, 6 });
     MyDataFrame df3 =
-        df.get_data_by_loc<double>(std::vector<long> { -4, -1 , 5 });
+        df.get_data_by_loc<double>(StlVecType<long> { -4, -1 , 5 });
 
     assert(df2.get_index().size() == 2);
     assert(df2.get_column<double>("col_3").size() == 2);
@@ -3423,12 +3446,12 @@ static void test_get_data_by_idx_values()  {
 
     std::cout << "\nTesting get_data_by_idx(values) ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123450, 123455, 123450, 123449 };
-    std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7 };
-    std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14 };
-    std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21 };
-    std::vector<double> d4 = { 22, 23, 24, 25 };
+    StlVecType<double> d1 = { 1, 2, 3, 4, 5, 6, 7 };
+    StlVecType<double> d2 = { 8, 9, 10, 11, 12, 13, 14 };
+    StlVecType<double> d3 = { 15, 16, 17, 18, 19, 20, 21 };
+    StlVecType<double> d4 = { 22, 23, 24, 25 };
     MyDataFrame         df;
 
     df.load_data(std::move(idx),
@@ -3439,10 +3462,10 @@ static void test_get_data_by_idx_values()  {
 
     MyDataFrame df2 =
         df.get_data_by_idx<double>(
-            std::vector<MyDataFrame::IndexType> { 123452, 123455 });
+            StlVecType<MyDataFrame::IndexType> { 123452, 123455 });
     MyDataFrame df3 =
         df.get_data_by_idx<double>(
-            std::vector<MyDataFrame::IndexType> { 123449, 123450 });
+            StlVecType<MyDataFrame::IndexType> { 123449, 123450 });
 
     assert(df2.get_index().size() == 2);
     assert(df2.get_column<double>("col_3").size() == 2);
@@ -3475,16 +3498,16 @@ static void test_z_score_visitor()  {
 
     std::cout << "\nTesting Z-Score visitors ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466,
           123467, 123468, 123469, 123470, 123471, 123472, 123473 };
-    std::vector<double>         d1 =
+    StlVecType<double>         d1 =
         { 99.00011, 99.00012, 99.00013, 99.00014, 99.00015, 99.00016,
           99.000113, 99.000112, 99.000111, 99.00019, 99.00018, 99.00017,
           99.000114, 99.000115, 99.000116, 99.000117, 99.000118, 99.000119,
           99.0001114, 99.0001113, 99.0001112 };
-    std::vector<double>         d2 =
+    StlVecType<double>         d2 =
         { 10.1, 20.1, 30.1, 40.1, 50.1, 60.1, 70.1,
           120.1, 110.1, 28.1, 18.1, 100.1, 90.1, 80.1,
           130.1, 140.1, 150.1, 160.1, 170.1, 180.1, 190.1 };
@@ -3544,7 +3567,7 @@ static void test_thread_safety()  {
     auto  do_work = []() {
 #endif // _MSC_VER
         MyDataFrame         df;
-        std::vector<size_t> vec;
+        StlVecType<size_t> vec;
 
         for (size_t i = 0; i < vec_size; ++i)
             vec.push_back(i);
@@ -3580,7 +3603,7 @@ static void test_thread_safety()  {
     };
 
     SpinLock                    lock;
-    std::vector<std::thread>    thr_vec;
+    StlVecType<std::thread>    thr_vec;
 
     MyDataFrame::set_lock(&lock);
 
@@ -3600,17 +3623,17 @@ static void test_view_visitors()  {
 
     MyDataFrame         df;
 
-    std::vector<unsigned long>  idxvec =
+    StlVecType<unsigned long>  idxvec =
         { 1UL, 2UL, 3UL, 4UL, 5UL, 6UL, 7UL, 8UL, 9UL, 10UL };
-    std::vector<double>         dblvec1 = { 1.1, 2.2, 3.3, 4.4, 5.5 };
-    std::vector<double>         dblvec2 = { 2.2, 3.3, 4.4, 5.5, 6.6 };
-    std::vector<double>         dblvec3 =
+    StlVecType<double>         dblvec1 = { 1.1, 2.2, 3.3, 4.4, 5.5 };
+    StlVecType<double>         dblvec2 = { 2.2, 3.3, 4.4, 5.5, 6.6 };
+    StlVecType<double>         dblvec3 =
         { 0.0, 1.1, 2.2, 3.3, 4.4, 5.5, 6.6, 7.7, 8.8, 9.9 };
-    std::vector<double>         dblvec4 =
+    StlVecType<double>         dblvec4 =
         { 5.9, 4.4, 1.0, 9.8, 5.3, 7.2, 3.8, 4.1 };
-    std::vector<double>         dblvec5 =
+    StlVecType<double>         dblvec5 =
         { 1.1, 5.9, 4.4, 1.0, 9.8, 5.3, 7.2, 3.8, 4.1, 10.1 };
-    std::vector<double>         dblvec6 = { 1.1, 1.1, 3.3, 3.3, 1.1 };
+    StlVecType<double>         dblvec6 = { 1.1, 1.1, 3.3, 3.3, 1.1 };
 
     df.load_data(std::move(idxvec),
                  std::make_pair("dbl_col1", dblvec1),
@@ -3842,12 +3865,12 @@ static void test_k_means()  {
     p.seed = 4356;
 
     auto                y_vec = gen_lognormal_dist<double>(item_cnt, p);
-    std::vector<Point>  points;
+    StlVecType<Point>  points;
 
     points.reserve(item_cnt);
     for (size_t i = 0; i < item_cnt; ++i)
         points.push_back(Point(x_vec[i], y_vec[i]));
-    df.load_column("point_col", std::move(points));
+    df.load_column<Point>("point_col", std::move(points));
 
     KMeansVisitor<5, Point> km_visitor2(1000, point_distance);
 
@@ -3935,8 +3958,8 @@ static void test_affinity_propagation()  {
     const size_t            item_cnt = 50;
     MyDataFrame             df;
     RandGenParams<double>   p;
-    std::vector<double>     final_col;
-    std::vector<double>     col_data;
+    StlVecType<double>     final_col;
+    StlVecType<double>     col_data;
 
     p.seed = 3575984165U;
 
@@ -4002,18 +4025,18 @@ static void test_multi_col_sort()  {
 
     MyDataFrame df;
 
-    std::vector<unsigned long>  idxvec =
+    StlVecType<unsigned long>  idxvec =
         { 1UL, 2UL, 3UL, 10UL, 5UL, 7UL, 8UL, 12UL, 9UL, 12UL, 10UL, 13UL,
           10UL, 15UL, 14UL };
-    std::vector<double>         dblvec =
+    StlVecType<double>         dblvec =
         { 0.0, 15.0, 14.0, 2.0, 1.0, 12.0, 11.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0,
           9.0, 10.0 };
-    std::vector<double>         dblvec2 =
+    StlVecType<double>         dblvec2 =
         { 100.0, 101.0, 102.0, 103.0, 104.0, 105.0, 106.55, 107.34, 1.8, 111.0,
           112.0, 113.0, 114.0, 115.0, 116.0 };
-    std::vector<int>            intvec =
+    StlVecType<int>            intvec =
         { 1, 2, 3, 4, 5, 8, 6, 7, 11, 14, 9, 10, 15, 12, 13 };
-    std::vector<std::string>    strvec =
+    StlVecType<std::string>    strvec =
         { "zz", "bb", "cc", "ww", "ee", "ff", "gg", "hh", "ii", "jj", "kk",
           "ll", "mm", "nn", "oo" };
 
@@ -4068,15 +4091,15 @@ static void test_join_by_column()  {
 
     std::cout << "\nTesting join by column ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466 };
-    std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
-    std::vector<double> d2 =
+    StlVecType<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
+    StlVecType<double> d2 =
         { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23, 30, 31, 32, 1.89 };
-    std::vector<double> d3 =
+    StlVecType<double> d3 =
         { 15, 16, 15, 18, 19, 16, 21, 0.34, 1.56, 0.34, 2.3, 0.34, 19.0 };
-    std::vector<int>    i1 = { 22, 23, 24, 25, 99 };
+    StlVecType<int>    i1 = { 22, 23, 24, 25, 99 };
     MyDataFrame         df;
 
     df.load_data(std::move(idx),
@@ -4085,17 +4108,17 @@ static void test_join_by_column()  {
                  std::make_pair("col_3", d3),
                  std::make_pair("col_4", i1));
 
-    std::vector<unsigned long>  idx2 =
+    StlVecType<unsigned long>  idx2 =
         { 123452, 123453, 123455, 123458, 123466, 223450, 223451,
           223454, 223456, 223457, 223459, 223460, 223461, 223462 };
-    std::vector<double> d12 =
+    StlVecType<double> d12 =
         { 11, 12, 13, 14, 15, 16, 17, 18, 19, 110, 111, 112, 113, 114 };
-    std::vector<double> d22 =
+    StlVecType<double> d22 =
         { 8, 19, 110, 111, 9, 113, 114, 99, 122, 123, 130, 131, 20, 11.89 };
-    std::vector<double> d32 =
+    StlVecType<double> d32 =
         { 115, 116, 115, 118, 119, 116, 121, 10.34, 11.56, 10.34, 12.3, 10.34,
           119.0 };
-    std::vector<int>    i12 = { 122, 123, 124, 125, 199 };
+    StlVecType<int>    i12 = { 122, 123, 124, 125, 199 };
     MyDataFrame         df2;
 
     df2.load_data(std::move(idx2),
@@ -4171,11 +4194,11 @@ static void test_DoubleCrossOver()  {
 
     MyDataFrame::set_thread_level(10);
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
           21, 22, 23, 24, 25, 26, 27, 28, 29, 31, 31, 32, 33, 34, 35, 36, 37,
           38, 39, 40 };
-    std::vector<double> d1 =
+    StlVecType<double> d1 =
         { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
           19, 18, 17, 17, 16, 15, 14, 13, 14, 13, 12, 11, 12, 10, 9, 8, 7,
           6, 7, 5 };
@@ -4230,11 +4253,11 @@ static void test_BollingerBand()  {
 
     MyDataFrame::set_thread_level(10);
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
           21, 22, 23, 24, 25, 26, 27, 28, 29, 31, 31, 32, 33, 34, 35, 36, 37,
           38, 39, 40 };
-    std::vector<double> d1 =
+    StlVecType<double> d1 =
         { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
           19, 18, 17, 17, 16, 15, 14, 13, 14, 13, 12, 11, 12, 10, 9, 8, 7,
           6, 7, 5 };
@@ -4274,11 +4297,11 @@ static void test_MACDVisitor()  {
 
     std::cout << "\nTesting MACDVisitor{ } ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
           21, 22, 23, 24, 25, 26, 27, 28, 29, 31, 31, 32, 33, 34, 35, 36, 37,
           38, 39, 40 };
-    std::vector<double> d1 =
+    StlVecType<double> d1 =
         { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
           19, 18, 17, 17, 16, 15, 14, 13, 14, 13, 12, 11, 12, 10, 9, 8, 7,
           6, 7, 5 };
@@ -4328,11 +4351,11 @@ static void test_ExpandingRollAdopter()  {
 
     std::cout << "\nTesting ExpandingRollAdopter{ } ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
           21, 22, 23, 24, 25, 26, 27, 28, 29, 31, 31, 32, 33, 34, 35, 36, 37,
           38, 39, 40 };
-    std::vector<double> d1 =
+    StlVecType<double> d1 =
         { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
           21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37,
           38, 39, 40 };
@@ -4359,11 +4382,11 @@ static void test_MADVisitor()  {
 
     std::cout << "\nTesting MADVisitor{ } ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
           21, 22, 23, 24, 25, 26, 27, 28, 29, 31, 31, 32, 33, 34, 35, 36, 37,
           38, 39, 40 };
-    std::vector<double> d1 =
+    StlVecType<double> d1 =
         { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
           21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37,
           38, 39, 40 };
@@ -4402,11 +4425,11 @@ static void test_SEMVisitor()  {
 
     std::cout << "\nTesting SEMVisitor{ } ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
           21, 22, 23, 24, 25, 26, 27, 28, 29, 31, 31, 32, 33, 34, 35, 36, 37,
           38, 39, 40 };
-    std::vector<double> d1 =
+    StlVecType<double> d1 =
         { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
           21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37,
           38, 39, 40 };
@@ -4427,17 +4450,17 @@ static void test_fill_missing_mid_point()  {
 
     std::cout << "\nTesting fill_missing(mid_point) ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466 };
-    std::vector<double> d1 = { 1, 2, 3, 4,
+    StlVecType<double> d1 = { 1, 2, 3, 4,
                                std::numeric_limits<double>::quiet_NaN(),
                                6, 7,
                                std::numeric_limits<double>::quiet_NaN(),
                                std::numeric_limits<double>::quiet_NaN(),
                                std::numeric_limits<double>::quiet_NaN(),
                                11, 12, 13, 14 };
-    std::vector<double> d2 = { 8, 9,
+    StlVecType<double> d2 = { 8, 9,
                                std::numeric_limits<double>::quiet_NaN(),
                                11, 12,
                                std::numeric_limits<double>::quiet_NaN(),
@@ -4445,14 +4468,14 @@ static void test_fill_missing_mid_point()  {
                                20, 22, 23, 30, 31,
                                std::numeric_limits<double>::quiet_NaN(),
                                1.89 };
-    std::vector<double> d3 = { std::numeric_limits<double>::quiet_NaN(),
+    StlVecType<double> d3 = { std::numeric_limits<double>::quiet_NaN(),
                                16,
                                std::numeric_limits<double>::quiet_NaN(),
                                18, 19, 16,
                                std::numeric_limits<double>::quiet_NaN(),
                                0.34, 1.56, 0.34, 2.3, 0.34,
                                std::numeric_limits<double>::quiet_NaN() };
-    std::vector<int>    i1 = { 22,
+    StlVecType<int>    i1 = { 22,
                                std::numeric_limits<int>::quiet_NaN(),
                                std::numeric_limits<int>::quiet_NaN(),
                                25,
@@ -4465,10 +4488,12 @@ static void test_fill_missing_mid_point()  {
                  std::make_pair("col_3", d3),
                  std::make_pair("col_4", i1));
 
-    std::vector<std::string>    s1 =
+    StlVecType<std::string>    s1 =
         { "qqqq", "wwww", "eeee", "rrrr", "tttt", "yyyy", "iiii", "oooo" };
 
-    df.load_column("col_str", std::move(s1), nan_policy::dont_pad_with_nans);
+    df.load_column<std::string>("col_str",
+                                std::move(s1),
+                                nan_policy::dont_pad_with_nans);
 
     // std::cout << "Original DF:" << std::endl;
     // df.write<std::ostream, int, double, std::string>(std::cout);
@@ -4486,27 +4511,27 @@ static void test_fill_missing_df()  {
 
     std::cout << "\nTesting fill_missing(DataFrame) ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466 };
-    std::vector<unsigned long>  idx2 =
+    StlVecType<unsigned long>  idx2 =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           1234570, 123458, 123459, 123460, 123461, 123462, 123466 };
-    std::vector<double> d1 = { 1, 2, 3, 4,
+    StlVecType<double> d1 = { 1, 2, 3, 4,
                                std::numeric_limits<double>::quiet_NaN(),
                                6, 7,
                                std::numeric_limits<double>::quiet_NaN(),
                                std::numeric_limits<double>::quiet_NaN(),
                                std::numeric_limits<double>::quiet_NaN(),
                                11, 12, 13, 14 };
-    std::vector<double> d12 = { 1, 2, 3, 4,
+    StlVecType<double> d12 = { 1, 2, 3, 4,
                                 100,
                                 6, 7,
                                 101,
                                 102,
                                 std::numeric_limits<double>::quiet_NaN(),
                                 11, 12, 13, 14 };
-    std::vector<double> d2 = { 8, 9,
+    StlVecType<double> d2 = { 8, 9,
                                std::numeric_limits<double>::quiet_NaN(),
                                11, 12,
                                std::numeric_limits<double>::quiet_NaN(),
@@ -4514,7 +4539,7 @@ static void test_fill_missing_df()  {
                                20, 22, 23, 30, 31,
                                std::numeric_limits<double>::quiet_NaN(),
                                1.89 };
-    std::vector<double> d22 = { 8, 9,
+    StlVecType<double> d22 = { 8, 9,
                                 200,
                                 11, 12,
                                 201,
@@ -4522,30 +4547,30 @@ static void test_fill_missing_df()  {
                                 20, 22, 23, 30, 31,
                                 std::numeric_limits<double>::quiet_NaN(),
                                 1.89 };
-    std::vector<double> d3 = { std::numeric_limits<double>::quiet_NaN(),
+    StlVecType<double> d3 = { std::numeric_limits<double>::quiet_NaN(),
                                16,
                                std::numeric_limits<double>::quiet_NaN(),
                                18, 19, 16,
                                std::numeric_limits<double>::quiet_NaN(),
                                0.34, 1.56, 0.34, 2.3, 0.34,
                                std::numeric_limits<double>::quiet_NaN() };
-    std::vector<double> d32 = { 300,
+    StlVecType<double> d32 = { 300,
                                 16,
                                 301,
                                 18, 19, 16,
                                 303,
                                 0.34, 1.56, 0.34, 2.3, 0.34 };
-    std::vector<int>    i1 = { 22,
+    StlVecType<int>    i1 = { 22,
                                std::numeric_limits<int>::quiet_NaN(),
                                std::numeric_limits<int>::quiet_NaN(),
                                25,
                                std::numeric_limits<int>::quiet_NaN() };
-    std::vector<int>    xi1 = { 22,
+    StlVecType<int>    xi1 = { 22,
                                 std::numeric_limits<int>::quiet_NaN(),
                                 std::numeric_limits<int>::quiet_NaN(),
                                 25,
                                 std::numeric_limits<int>::quiet_NaN() };
-    std::vector<int>    i12 = { 22,
+    StlVecType<int>    i12 = { 22,
                                 400,
                                 401,
                                 25,
@@ -4565,14 +4590,18 @@ static void test_fill_missing_df()  {
                   std::make_pair("col_3", d32),
                   std::make_pair("col_4", i12));
 
-    std::vector<std::string>    s1 =
+    StlVecType<std::string>    s1 =
         { "qqqq", "wwww", "", "rrrr", "tttt", "", "iiii", "" };
-    std::vector<std::string>    s12 =
+    StlVecType<std::string>    s12 =
         { "qqqq", "wwww", "eeee", "rrrr", "tttt", "yyyy", "iiii",
           "aaaa", "bbbb", "cccc", "dddd", "gggg", "hhhh", "kkkk" };
 
-    df.load_column("col_str", std::move(s1), nan_policy::dont_pad_with_nans);
-    df2.load_column("col_str", std::move(s12), nan_policy::dont_pad_with_nans);
+    df.load_column<std::string>("col_str",
+                                std::move(s1),
+                                nan_policy::dont_pad_with_nans);
+    df2.load_column<std::string>("col_str",
+                                 std::move(s12),
+                                 nan_policy::dont_pad_with_nans);
 
     df.fill_missing<MyDataFrame, double, int, std::string>(df2);
 
@@ -4586,11 +4615,11 @@ static void test_quantile()  {
 
     std::cout << "\nTesting QuantileVisitor{ } ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
           21, 22, 23, 24, 25, 26, 27, 28, 29, 31, 31, 32, 33, 34, 35, 36, 37,
           38, 39, 40 };
-    std::vector<double> d1 =
+    StlVecType<double> d1 =
         { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
           21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37,
           38, 39, 40 };
@@ -4867,18 +4896,18 @@ static void test_self_concat()  {
 
     MyDataFrame df1;
 
-    std::vector<unsigned long>  idxvec =
+    StlVecType<unsigned long>  idxvec =
         { 1UL, 2UL, 3UL, 10UL, 5UL, 7UL, 8UL, 12UL, 9UL, 12UL, 10UL, 13UL,
           10UL, 15UL, 14UL };
-    std::vector<double>         dblvec =
+    StlVecType<double>         dblvec =
         { 0.0, 15.0, 14.0, 2.0, 1.0, 12.0, 11.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0,
           9.0, 10.0 };
-    std::vector<double>         dblvec2 =
+    StlVecType<double>         dblvec2 =
         { 100.0, 101.0, 102.0, 103.0, 104.0, 105.0, 106.55, 107.34, 1.8, 111.0,
           112.0, 113.0, 114.0, 115.0, 116.0 };
-    std::vector<int>            intvec =
+    StlVecType<int>            intvec =
         { 1, 2, 3, 4, 5, 8, 6, 7, 11, 14, 9, 10, 15, 12, 13 };
-    std::vector<std::string>    strvec =
+    StlVecType<std::string>    strvec =
         { "zz", "bb", "cc", "ww", "ee", "ff", "gg", "hh", "ii", "jj", "kk",
           "ll", "mm", "nn", "oo" };
 
@@ -4889,7 +4918,7 @@ static void test_self_concat()  {
 
     MyDataFrame df2 = df1;
 
-    df2.load_column("dbl_col_2", std::move(dblvec2));
+    df2.load_column<double>("dbl_col_2", std::move(dblvec2));
 
     df1.self_concat<decltype(df2), double, int, std::string>(df2, true);
     assert(df1.get_index().size() == 30);
@@ -4921,18 +4950,18 @@ static void test_concat()  {
 
     MyDataFrame df1;
 
-    std::vector<unsigned long>  idxvec =
+    StlVecType<unsigned long>  idxvec =
         { 1UL, 2UL, 3UL, 10UL, 5UL, 7UL, 8UL, 12UL, 9UL, 12UL, 10UL, 13UL,
           10UL, 15UL, 14UL };
-    std::vector<double>         dblvec =
+    StlVecType<double>         dblvec =
         { 0.0, 15.0, 14.0, 2.0, 1.0, 12.0, 11.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0,
           9.0, 10.0 };
-    std::vector<double>         dblvec2 =
+    StlVecType<double>         dblvec2 =
         { 100.0, 101.0, 102.0, 103.0, 104.0, 105.0, 106.55, 107.34, 1.8, 111.0,
           112.0, 113.0, 114.0, 115.0, 116.0 };
-    std::vector<int>            intvec =
+    StlVecType<int>            intvec =
         { 1, 2, 3, 4, 5, 8, 6, 7, 11, 14, 9, 10, 15, 12, 13 };
-    std::vector<std::string>    strvec =
+    StlVecType<std::string>    strvec =
         { "zz", "bb", "cc", "ww", "ee", "ff", "gg", "hh", "ii", "jj", "kk",
           "ll", "mm", "nn", "oo" };
 
@@ -4943,7 +4972,7 @@ static void test_concat()  {
 
     MyDataFrame df2 = df1;
 
-    df2.load_column("dbl_col_2", std::move(dblvec2));
+    df2.load_column<double>("dbl_col_2", std::move(dblvec2));
 
     auto    result1 = df1.concat<decltype(df2), double, int, std::string>(df2);
 

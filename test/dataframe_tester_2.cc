@@ -42,6 +42,9 @@ using namespace hmdf;
 //
 using MyDataFrame = StdDataFrame<unsigned long>;
 
+template<typename T>
+using StlVecType = typename MyDataFrame::template StlVecType<T>;
+
 // -----------------------------------------------------------------------------
 
 static void test_get_reindexed()  {
@@ -50,17 +53,17 @@ static void test_get_reindexed()  {
 
     MyDataFrame df;
 
-    std::vector<unsigned long>  idxvec =
+    StlVecType<unsigned long>  idxvec =
         { 1UL, 2UL, 3UL, 10UL, 5UL, 7UL, 8UL, 12UL, 9UL, 12UL, 10UL, 13UL,
           10UL, 15UL, 14UL };
-    std::vector<double>         dblvec =
+    StlVecType<double>         dblvec =
         { 0.0, 15.0, 14.0, 2.0, 1.0, 12.0, 11.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0,
           9.0, 10.0 };
-    std::vector<double>         dblvec2 =
+    StlVecType<double>         dblvec2 =
         { 100.0, 101.0, 102.0, 103.0, 104.0, 105.0, 106.55, 107.34, 1.8, 111.0,
           112.0, 113.0, 114.0, 115.0, 116.0 };
-    std::vector<int>            intvec = { 1, 2, 3, 4, 5, 8, 6, 7, 11, 14, 9 };
-    std::vector<std::string>    strvec =
+    StlVecType<int>            intvec = { 1, 2, 3, 4, 5, 8, 6, 7, 11, 14, 9 };
+    StlVecType<std::string>    strvec =
        { "zz", "bb", "cc", "ww", "ee", "ff", "gg", "hh", "ii", "jj", "kk",
          "ll", "mm", "nn", "oo" };
 
@@ -111,17 +114,17 @@ static void test_get_reindexed_view()  {
 
     MyDataFrame df;
 
-    std::vector<unsigned long>  idxvec =
+    StlVecType<unsigned long>  idxvec =
         { 1UL, 2UL, 3UL, 10UL, 5UL, 7UL, 8UL, 12UL, 9UL, 12UL, 10UL, 13UL,
           10UL, 15UL, 14UL };
-    std::vector<double>         dblvec =
+    StlVecType<double>         dblvec =
         { 0.0, 15.0, 14.0, 2.0, 1.0, 12.0, 11.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0,
           9.0, 10.0 };
-    std::vector<double>         dblvec2 =
+    StlVecType<double>         dblvec2 =
         { 100.0, 101.0, 102.0, 103.0, 104.0, 105.0, 106.55, 107.34, 1.8, 111.0,
           112.0, 113.0, 114.0, 115.0, 116.0 };
-    std::vector<int>            intvec = { 1, 2, 3, 4, 5, 8, 6, 7, 11, 14, 9 };
-    std::vector<std::string>    strvec =
+    StlVecType<int>            intvec = { 1, 2, 3, 4, 5, 8, 6, 7, 11, 14, 9 };
+    StlVecType<std::string>    strvec =
         { "zz", "bb", "cc", "ww", "ee", "ff", "gg", "hh", "ii", "jj", "kk",
           "ll", "mm", "nn", "oo" };
 
@@ -206,12 +209,12 @@ static void test_retype_column()  {
 
     std::cout << "\nTesting retype_column( ) ..." << std::endl;
 
-    std::vector<unsigned long>  idxvec =
+    StlVecType<unsigned long>  idxvec =
         { 1UL, 2UL, 3UL, 10UL, 5UL, 7UL, 8UL, 12UL, 9UL, 12UL,
           10UL, 13UL, 10UL, 15UL, 14UL };
-    std::vector<int>            intvec =
+    StlVecType<int>            intvec =
         { -1, 2, 3, 4, 5, 8, -6, 7, 11, 14, -9, 12, 13, 14, 15 };
-    std::vector<std::string>    strvec =
+    StlVecType<std::string>    strvec =
         { "11", "22", "33", "44", "55", "66", "-77", "88", "99", "100",
           "101", "102", "103", "104", "-105" };
 
@@ -250,12 +253,12 @@ static void test_load_align_column()  {
 
     std::cout << "\nTesting load_align_column( ) ..." << std::endl;
 
-    std::vector<unsigned long>  idxvec =
+    StlVecType<unsigned long>  idxvec =
         { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
           16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28 };
-    std::vector<int>            intvec =
+    StlVecType<int>            intvec =
         { -1, 2, 3, 4, 5, 8, -6, 7, 11, 14, -9, 12, 13, 14, 15 };
-    std::vector<double>         summary_vec = { 100, 200, 300, 400, 500 };
+    StlVecType<double>         summary_vec = { 100, 200, 300, 400, 500 };
 
     MyDataFrame df;
 
@@ -266,7 +269,7 @@ static void test_load_align_column()  {
                          true,
                          std::sqrt(-1));
 
-    std::vector<double> summary_vec_2 = { 102, 202, 302, 402, 502 };
+    StlVecType<double> summary_vec_2 = { 102, 202, 302, 402, 502 };
 
     df.load_align_column("summary_col_2",
                          std::move(summary_vec_2),
@@ -297,17 +300,17 @@ static void test_get_columns_info()  {
 
     MyDataFrame df;
 
-    std::vector<unsigned long>  idxvec =
+    StlVecType<unsigned long>  idxvec =
         { 1UL, 2UL, 3UL, 10UL, 5UL, 7UL, 8UL, 12UL, 9UL, 12UL, 10UL, 13UL,
           10UL, 15UL, 14UL };
-    std::vector<double>         dblvec =
+    StlVecType<double>         dblvec =
         { 0.0, 15.0, 14.0, 2.0, 1.0, 12.0, 11.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0,
           9.0, 10.0 };
-    std::vector<double>         dblvec2 =
+    StlVecType<double>         dblvec2 =
         { 100.0, 101.0, 102.0, 103.0, 104.0, 105.0, 106.55, 107.34, 1.8, 111.0,
           112.0, 113.0, 114.0, 115.0, 116.0 };
-    std::vector<int>            intvec = { 1, 2, 3, 4, 5, 8, 6, 7, 11, 14, 9 };
-    std::vector<std::string>    strvec =
+    StlVecType<int>            intvec = { 1, 2, 3, 4, 5, 8, 6, 7, 11, 14, 9 };
+    StlVecType<std::string>    strvec =
         { "zz", "bb", "cc", "ww", "ee", "ff", "gg", "hh", "ii", "jj", "kk",
           "ll", "mm", "nn", "oo" };
 
@@ -361,14 +364,14 @@ static void test_CategoryVisitor()  {
 
     MyDataFrame df;
 
-    std::vector<unsigned long>  idxvec =
+    StlVecType<unsigned long>  idxvec =
         { 1UL, 2UL, 3UL, 10UL, 5UL, 7UL, 8UL, 12UL, 9UL, 12UL, 10UL, 13UL,
           10UL, 15UL, 14UL };
-    std::vector<double>         dblvec =
+    StlVecType<double>         dblvec =
         { 0.0, 15.0, 14.0, 15.0, 1.0, 12.0, 11.0, 8.0, 15.0, 6.0, sqrt(-1),
           4.0, 14.0, 14.0, 20.0 };
-    std::vector<int>            intvec = { 1, 2, 3, 4, 5, 8, 6, 7, 11, 14, 9 };
-    std::vector<std::string>    strvec =
+    StlVecType<int>            intvec = { 1, 2, 3, 4, 5, 8, 6, 7, 11, 14, 9 };
+    StlVecType<std::string>    strvec =
         { "zz", "bb", "zz", "ww", "ee", "ff", "gg", "zz", "ii", "jj", "kk",
           "ll", "mm", "ee", "" };
 
@@ -414,17 +417,17 @@ static void test_FactorizeVisitor()  {
 
     MyDataFrame df;
 
-    std::vector<unsigned long>  idxvec =
+    StlVecType<unsigned long>  idxvec =
         { 1UL, 2UL, 3UL, 10UL, 5UL, 7UL, 8UL, 12UL, 9UL, 12UL, 10UL, 13UL,
           10UL, 15UL, 14UL };
-    std::vector<double>         dblvec =
+    StlVecType<double>         dblvec =
         { 0.0, 15.0, 14.0, 2.0, 1.0, 12.0, 11.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0,
           9.0, 10.0 };
-    std::vector<double>         dblvec2 =
+    StlVecType<double>         dblvec2 =
         { 100.0, 101.0, 102.0, 103.0, 104.0, 105.0, 106.55, 107.34, 1.8, 111.0,
           112.0, 113.0, 114.0, 115.0, 116.0 };
-    std::vector<int>            intvec = { 1, 2, 3, 4, 5, 8, 6, 7, 11, 14, 9 };
-    std::vector<std::string>    strvec =
+    StlVecType<int>            intvec = { 1, 2, 3, 4, 5, 8, 6, 7, 11, 14, 9 };
+    StlVecType<std::string>    strvec =
         { "zz", "bb", "cc", "ww", "ee", "ff", "gg", "hh", "ii", "jj", "kk",
           "ll", "mm", "nn", "oo" };
 
@@ -561,14 +564,14 @@ static void test_ClipVisitor()  {
 
     MyDataFrame df;
 
-    std::vector<unsigned long>  idxvec =
+    StlVecType<unsigned long>  idxvec =
         { 1UL, 2UL, 3UL, 10UL, 5UL, 7UL, 8UL, 12UL, 9UL, 12UL, 10UL, 13UL,
           10UL, 15UL, 14UL };
-    std::vector<double>         dblvec =
+    StlVecType<double>         dblvec =
         { 0.0, 15.0, 14.0, 15.0, 1.0, 12.0, 11.0, 8.0, 15.0, 6.0, sqrt(-1),
           4.0, 14.0, 14.0, 20.0 };
-    std::vector<int>            intvec = { 1, 2, 3, 4, 5, 8, 6, 7, 11, 14, 9 };
-    std::vector<std::string>    strvec =
+    StlVecType<int>            intvec = { 1, 2, 3, 4, 5, 8, 6, 7, 11, 14, 9 };
+    StlVecType<std::string>    strvec =
         { "zz", "bb", "zz", "ww", "ee", "ff", "gg", "zz", "ii", "jj", "kk",
           "ll", "mm", "ee", "" };
 
@@ -598,17 +601,17 @@ static void test_SharpeRatioVisitor()  {
 
     std::cout << "\nTesting SharpeRatioVisitor{  } ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466,
           123467, 123468, 123469, 123470, 123471, 123472, 123473 };
-    std::vector<double>         d1 =
+    StlVecType<double>         d1 =
         { 2.5, 2.45, -0.65, -0.1, -1.1, 1.87, 0.98, 0.34, 1.56, -0.34, 2.3,
           -0.34, -1.9, 0.387, 0.123, 1.06, -0.65, 2.03, 0.4, -1.0, 0.59 };
-    std::vector<double>         d2 =
+    StlVecType<double>         d2 =
         { 0.2, 0.58, -0.60, -0.08, 0.05, 0.87, 0.2, 0.4, 0.5, 0.06, 0.3, -0.34,
           -0.9, 0.8, -0.4, 0.86, 0.01, 1.02, -0.02, -1.5, 0.2 };
-    std::vector<int>            i1 = { 22, 23, 24, 25, 99 };
+    StlVecType<int>            i1 = { 22, 23, 24, 25, 99 };
     MyDataFrame                 df;
 
     df.load_data(std::move(idx),
@@ -630,17 +633,17 @@ static void test_RankVisitor()  {
 
     std::cout << "\nTesting RankVisitor{  } ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466,
           123467, 123468, 123469, 123470, 123471, 123472, 123473 };
-    std::vector<double>         d1 =
+    StlVecType<double>         d1 =
         { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
           20, 21 };
-    std::vector<double>         d2 =
+    StlVecType<double>         d2 =
         { 10, 2, 3, 4, 5, 13, 7, 8, 9, 10, 1, 12, 13, 10, 15, 16, 17, 18, 19,
           20, 13 };
-    std::vector<int>            i1 = { 22, 23, 24, 25, 99 };
+    StlVecType<int>            i1 = { 22, 23, 24, 25, 99 };
     MyDataFrame                 df;
 
     df.load_data(std::move(idx),
@@ -676,17 +679,17 @@ static void test_RankVisitor()  {
     const auto  last_result2 =
         df.single_act_visit<double>("d2_col", last_rank_v).get_result();
 
-    std::vector<double> ar_equal { 8, 1, 2, 3, 4, 12, 5, 6, 7, 9, 0, 11, 13,
+    StlVecType<double> ar_equal { 8, 1, 2, 3, 4, 12, 5, 6, 7, 9, 0, 11, 13,
                                    10, 15, 16, 17, 18, 19, 20, 14 };
 
     assert(actual_result2 == ar_equal);
-    ar_equal = std::vector<double> { 9, 1, 2, 3, 4, 13, 5, 6, 7, 9, 0, 11, 13,
+    ar_equal = StlVecType<double> { 9, 1, 2, 3, 4, 13, 5, 6, 7, 9, 0, 11, 13,
                                      9, 15, 16, 17, 18, 19, 20, 13 };
     assert(avg_result2 == ar_equal);
-    ar_equal = std::vector<double> { 8, 1, 2, 3, 4, 12, 5, 6, 7, 8, 0, 11, 12,
+    ar_equal = StlVecType<double> { 8, 1, 2, 3, 4, 12, 5, 6, 7, 8, 0, 11, 12,
                                      8, 15, 16, 17, 18, 19, 20, 12 };
     assert(first_result2 == ar_equal);
-    ar_equal = std::vector<double> { 10, 1, 2, 3, 4, 14, 5, 6, 7, 10, 0, 11, 14,
+    ar_equal = StlVecType<double> { 10, 1, 2, 3, 4, 14, 5, 6, 7, 10, 0, 11, 14,
                                      10, 15, 16, 17, 18, 19, 20, 14 };
     assert(last_result2 == ar_equal);
 }
@@ -697,17 +700,17 @@ static void test_SigmoidVisitor()  {
 
     std::cout << "\nTesting SigmoidVisitor{  } ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466,
           123467, 123468, 123469, 123470, 123471, 123472, 123473 };
-    std::vector<double>         d1 =
+    StlVecType<double>         d1 =
         { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
           20, 21 };
-    std::vector<double>         d2 =
+    StlVecType<double>         d2 =
         { 0.23, 0.25, 0.256, 0.26, 0.268, 0.271, 0.279, 0.285, 0.29, 0.3, 0.5,
           -0.2, 1, 0, 2, 0, -0.1, 0.55, 0.58, 0.6, 0.7 };
-    std::vector<int>            i1 = { 22, 23, 24, 25, 99 };
+    StlVecType<int>            i1 = { 22, 23, 24, 25, 99 };
     MyDataFrame                 df;
 
     df.load_data(std::move(idx),
@@ -737,7 +740,7 @@ static void test_SigmoidVisitor()  {
     const auto              smo_result =
         df.single_act_visit<double>("d2_col", sig_smo).get_result();
 
-    std::vector<double> result {
+    StlVecType<double> result {
         0.731059, 0.880797, 0.952574, 0.982014, 0.993307, 0.997527, 0.999089,
         0.999665, 0.999877, 0.999955, 0.999983, 0.999994, 0.999998, 0.999999,
         1, 1, 1, 1, 1, 1, 1 };
@@ -745,7 +748,7 @@ static void test_SigmoidVisitor()  {
     for (size_t i = 0; i < result.size(); ++i)
         assert(fabs(result[i] - log_result[i]) < 0.00001);
 
-    result = std::vector<double> {
+    result = StlVecType<double> {
         0.707107, 0.447214, 0.316228, 0.242536, 0.196116, 0.164399, 0.141421,
         0.124035, 0.110432, 0.0995037, 0.0905357, 0.0830455, 0.0766965,
         0.071247, 0.066519, 0.0623783, 0.058722, 0.05547, 0.0525588,
@@ -753,33 +756,33 @@ static void test_SigmoidVisitor()  {
     for (size_t i = 0; i < result.size(); ++i)
         assert(fabs(result[i] - alg_result[i]) < 0.00001);
 
-    result = std::vector<double> {
+    result = StlVecType<double> {
         0.761594, 0.964028, 0.995055, 0.999329, 0.999909, 0.999988, 0.999998,
         1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
     for (size_t i = 0; i < result.size(); ++i)
         assert(fabs(result[i] - tan_result[i]) < 0.00001);
 
-    result = std::vector<double> {
+    result = StlVecType<double> {
         0.785398, 1.10715, 1.24905, 1.32582, 1.3734, 1.40565, 1.4289, 1.44644,
         1.46014, 1.47113, 1.48014, 1.48766, 1.49402, 1.49949, 1.50423, 1.50838,
         1.51204, 1.5153, 1.51821, 1.52084, 1.52321 };
     for (size_t i = 0; i < result.size(); ++i)
         assert(fabs(result[i] - atan_result[i]) < 0.00001);
 
-    result = std::vector<double> {
+    result = StlVecType<double> {
         0.842701, 0.995322, 0.999978, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
         1, 1, 1, 1 };
     for (size_t i = 0; i < result.size(); ++i)
        assert(fabs(result[i] - err_result[i]) < 0.00001);
 
-    result = std::vector<double> {
+    result = StlVecType<double> {
         0.865769, 1.30176, 1.4713, 1.53417, 1.55732, 1.56584, 1.56897, 1.57013,
         1.57055, 1.57071, 1.57076, 1.57078, 1.57079, 1.57079, 1.5708, 1.5708,
         1.5708, 1.5708, 1.5708, 1.5708, 1.5708 };
     for (size_t i = 0; i < result.size(); ++i)
        assert(fabs(result[i] - gud_result[i]) < 0.00001);
 
-    result = std::vector<double> {
+    result = StlVecType<double> {
         0.134366, 0.15625, 0.163054, 0.167648, 0.176974, 0.180518, 0.190088,
         0.197377, 0.203522, 0.216, 0.5, 0, 1, 0, 1, 0, 0, 0.57475, 0.618976,
         0.648, 0.784 };
@@ -798,32 +801,32 @@ static void test_combine()  {
 
     std::cout << "\nTesting combine( ) ..." << std::endl;
 
-    std::vector<unsigned long>  idx1 =
+    StlVecType<unsigned long>  idx1 =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466,
           123467, 123468, 123469, 123470, 123471, 123472, 123473 };
-    std::vector<unsigned long>  idx2 =
+    StlVecType<unsigned long>  idx2 =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466,
           123467, 123468, 123469, 123470, 123471, 123472, 123473 };
-    std::vector<unsigned long>  idx3 =
+    StlVecType<unsigned long>  idx3 =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466,
           123467, 123468, 123469, 123470, 123471, 123472, 123473 };
-    std::vector<unsigned long>  idx4 =
+    StlVecType<unsigned long>  idx4 =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466,
           123467, 123468, 123469, 123470, 123471, 123472, 123473 };
-    std::vector<double>         d1 =
+    StlVecType<double>         d1 =
         { 1, 2, 100, 4, 5, 6, 7, 8, 9, 10, 11, 300, 13, 14, 15, 16, 17, 18, 19,
           20, 200 };
-    std::vector<double>         d2 =
+    StlVecType<double>         d2 =
         { 1, 2, 1000, 4, 5, 6, 7, 8, 9, 10, 11, 3000, 13, 14, 15, 16, 17, 18,
           19, 20, 2000 };
-    std::vector<double>         d3 =
+    StlVecType<double>         d3 =
         { 1, 2, 5000, 4, 5, 6, 7, 8, 9, 10, 11, 7000, 13, 14, 15, 16, 17, 18,
           19, 20, 8000 };
-    std::vector<double>         d4 =
+    StlVecType<double>         d4 =
         { 1, 2, 10000, 4, 5, 6, 7, 8, 9, 10, 11, 20000, 13, 14, 15, 16, 17,
           18, 19, 20, 30000 };
     MyDataFrame                 df1;
@@ -838,7 +841,7 @@ static void test_combine()  {
 
     df1.load_column("d2_col", df1.combine<double>("d1_col", df2, df3, my_max));
 
-    std::vector<double> result {
+    StlVecType<double> result {
         1, 2, 5000, 4, 5, 6, 7, 8, 9, 10, 11, 7000, 13, 14, 15, 16, 17, 18,
         19, 20, 8000 };
 
@@ -885,17 +888,17 @@ static void test_remove_duplicates()  {
 
     MyDataFrame df;
 
-    std::vector<unsigned long>  idxvec =
+    StlVecType<unsigned long>  idxvec =
         { 1UL, 2UL, 3UL, 10UL, 5UL, 7UL, 8UL, 12UL, 9UL, 12UL,
           10UL, 13UL, 10UL, 15UL, 14UL };
-    std::vector<double>         dblvec =
+    StlVecType<double>         dblvec =
         { 0.0, 15.0, 14.0, 2.0, 15.0, 12.0, 11.0, 8.0, 7.0, 6.0,
           5.0, 4.0, 3.0, 9.0, 10.0 };
-    std::vector<double>         dblvec2 =
+    StlVecType<double>         dblvec2 =
         { 100.0, 101.0, 102.0, 103.0, 101.0, 105.0, 106.55, 107.34, 1.8, 111.0,
           112.0, 113.0, 114.0, 115.0, 116.0 };
-    std::vector<int>            intvec = { 1, 2, 3, 4, 2, 8, 6, 7, 11, 14, 9 };
-    std::vector<std::string>    strvec =
+    StlVecType<int>            intvec = { 1, 2, 3, 4, 2, 8, 6, 7, 11, 14, 9 };
+    StlVecType<std::string>    strvec =
         { "zz", "bb", "cc", "ww", "bb", "ff", "gg", "hh", "ii", "jj",
           "kk", "ll", "mm", "nn", "oo" };
 
@@ -916,10 +919,10 @@ static void test_remove_duplicates()  {
         ("dbl_col", "dbl_col_2", "int_col", "str_col",
          false, remove_dup_spec::keep_first);
 
-    std::vector<double>         actual_d {
+    StlVecType<double>         actual_d {
         100, 101, 102, 103, 105, 106.55, 107.34, 1.8, 111, 112, 113,
         114, 115, 116 };
-    std::vector<std::string>    actual_s {
+    StlVecType<std::string>    actual_s {
         "zz", "bb", "cc", "ww", "ff", "gg", "hh",  "ii", "jj", "kk",
         "ll", "mm", "nn", "oo" };
 
@@ -933,10 +936,10 @@ static void test_remove_duplicates()  {
         ("dbl_col", "dbl_col_2", "int_col", "str_col",
          false, remove_dup_spec::keep_last);
 
-    actual_d = std::vector<double> {
+    actual_d = StlVecType<double> {
         100, 102, 103, 101, 105, 106.55, 107.34, 1.8, 111, 112, 113,
         114, 115, 116 };
-    actual_s = std::vector<std::string> {
+    actual_s = StlVecType<std::string> {
         "zz", "cc", "ww", "bb", "ff", "gg", "hh",  "ii", "jj", "kk",
         "ll", "mm", "nn", "oo" };
     assert(result3.get_index().size() == 14);
@@ -949,10 +952,10 @@ static void test_remove_duplicates()  {
         ("dbl_col", "dbl_col_2", "int_col", "str_col",
          false, remove_dup_spec::keep_none);
 
-    actual_d = std::vector<double> {
+    actual_d = StlVecType<double> {
         100, 102, 103, 105, 106.55, 107.34, 1.8, 111, 112, 113,
         114, 115, 116 };
-    actual_s = std::vector<std::string> {
+    actual_s = StlVecType<std::string> {
         "zz", "cc", "ww", "ff", "gg", "hh",  "ii", "jj", "kk",
         "ll", "mm", "nn", "oo" };
     assert(result4.get_index().size() == 13);
@@ -965,10 +968,10 @@ static void test_remove_duplicates()  {
         ("dbl_col", "dbl_col_2", "int_col", "str_col",
          true, remove_dup_spec::keep_none);
 
-    actual_d = std::vector<double> {
+    actual_d = StlVecType<double> {
         100, 101, 102, 103, 101, 105, 106.55, 107.34, 1.8, 111, 112, 113,
         114, 115, 116 };
-    actual_s = std::vector<std::string> {
+    actual_s = StlVecType<std::string> {
         "zz", "bb", "cc", "ww", "bb", "ff", "gg", "hh",  "ii", "jj", "kk",
         "ll", "mm", "nn", "oo" };
     assert(result5.get_index().size() == 15);
@@ -979,10 +982,10 @@ static void test_remove_duplicates()  {
         df.remove_duplicates<double, double, std::string, int>
         ("dbl_col", false, remove_dup_spec::keep_first);
 
-    actual_d = std::vector<double>
+    actual_d = StlVecType<double>
         { 100, 101, 102, 103, 105, 106.55, 107.34, 1.8, 111, 112, 113, 114,
           115, 116 };
-    actual_s = std::vector<std::string>
+    actual_s = StlVecType<std::string>
         { "zz", "bb", "cc", "ww", "ff", "gg", "hh", "ii", "jj", "kk", "ll",
           "mm", "nn", "oo"
         };
@@ -1051,24 +1054,24 @@ static void test_groupby()  {
 
     std::cout << "\nTesting groupby( ) ..." << std::endl;
 
-    std::vector<unsigned long>  ulgvec2 =
+    StlVecType<unsigned long>  ulgvec2 =
         { 123450, 123451, 123452, 123450, 123455, 123450, 123449,
           123450, 123451, 123450, 123452, 123450, 123455, 123450,
           123454, 123450, 123450, 123457, 123458, 123459, 123450,
           123441, 123442, 123432, 123450, 123450, 123435, 123450 };
-    std::vector<unsigned long>  xulgvec2 = ulgvec2;
-    std::vector<int>            intvec2 =
+    StlVecType<unsigned long>  xulgvec2 = ulgvec2;
+    StlVecType<int>            intvec2 =
         { 1, 2, 3, 4, 5, 3, 7, 3, 9, 10, 3, 2, 3, 14,
           2, 2, 2, 3, 2, 3, 3, 3, 3, 3, 36, 2, 45, 2 };
-    std::vector<double>         xdblvec2 =
+    StlVecType<double>         xdblvec2 =
         { 10, 20, 11, 11, 30, 40, 50, 40, 60, 70, 80, 90, 50, 100, 11, 25, 20,
           30, 1, 3, 4, 12, 6, 2, 3, 10, 4, 5 };
-    std::vector<double>         dblvec22 =
+    StlVecType<double>         dblvec22 =
         { 0.998, 1.545, 0.056, 0.15678, 1.545, 0.923, 0.06743,
           0.1, -1.545, 0.07865, -0.9999, 1.545, 0.1002, -0.8888,
           0.14, 0.0456, -1.545, -0.8999, 0.01119, 0.8002, -1.545,
           0.2, 0.1056, 0.87865, -0.6999, 1.545, 0.1902, -1.545 };
-    std::vector<std::string>    strvec2 =
+    StlVecType<std::string>    strvec2 =
         { "A", "B", "C", "D", "X", "Y", "W", "P", "Z", "S", "M", "B",
           "A", "H", "X", "Q", "V", "P", "W", "K", "I", "L", "J", "N",
           "Y", "G", "T", "U" };
@@ -1133,24 +1136,24 @@ static void test_groupby_2()  {
 
     std::cout << "\nTesting groupby_2( ) ..." << std::endl;
 
-    std::vector<unsigned long>  ulgvec2 =
+    StlVecType<unsigned long>  ulgvec2 =
         { 123450, 123451, 123452, 123450, 123455, 123450, 123449,
           123450, 123451, 123450, 123452, 123450, 123455, 123450,
           123454, 123450, 123450, 123457, 123458, 123459, 123450,
           123441, 123442, 123432, 123450, 123450, 123435, 123450 };
-    std::vector<unsigned long>  xulgvec2 = ulgvec2;
-    std::vector<int>            intvec2 =
+    StlVecType<unsigned long>  xulgvec2 = ulgvec2;
+    StlVecType<int>            intvec2 =
         { 1, 2, 3, 4, 5, 3, 7, 3, 9, 10, 3, 2, 3, 14,
           2, 2, 2, 3, 2, 3, 3, 3, 3, 3, 36, 2, 45, 2 };
-    std::vector<double>         xdblvec2 =
+    StlVecType<double>         xdblvec2 =
         { 10, 20, 11, 11, 30, 40, 50, 40, 60, 70, 80, 90, 50, 100, 11, 25, 20,
           30, 1, 3, 4, 12, 6, 2, 3, 10, 4, 5 };
-    std::vector<double>         dblvec22 =
+    StlVecType<double>         dblvec22 =
         { 0.998, 1.545, 0.056, 0.15678, 1.545, 0.923, 0.06743,
           0.1, -1.545, 0.07865, -0.9999, 1.545, 0.1002, -0.8888,
           0.14, 0.0456, -1.545, -0.8999, 0.01119, 0.8002, -1.545,
           0.2, 0.1056, 0.87865, -0.6999, 1.545, 0.1902, -1.545 };
-    std::vector<std::string>    strvec2 =
+    StlVecType<std::string>    strvec2 =
         { "A", "B", "C", "D", "X", "Y", "W", "P", "Z", "S", "M", "B",
           "A", "H", "X", "Q", "V", "P", "W", "K", "I", "L", "J", "N",
           "Y", "G", "T", "U" };
@@ -1248,22 +1251,22 @@ static void test_groupby_3()  {
 
     std::cout << "\nTesting groupby_3( ) ..." << std::endl;
 
-    std::vector<unsigned long>  ulgvec2 =
+    StlVecType<unsigned long>  ulgvec2 =
         { 1, 2, 2, 2, 3, 4, 5, 5, 6, 6, 6, 7, 8, 9, 10, 10, 10, 11, 11, 11, 12,
           13, 13, 14, 15, 16, 17, 17 };
-    std::vector<unsigned long>  xulgvec2 = ulgvec2;
-    std::vector<int>            intvec2 =
+    StlVecType<unsigned long>  xulgvec2 = ulgvec2;
+    StlVecType<int>            intvec2 =
         { 1, 2, 3, 4, 5, 3, 7, 3, 9, 10, 3, 2, 3, 14,
           2, 2, 2, 3, 2, 3, 3, 3, 3, 3, 36, 2, 45, 2 };
-    std::vector<double>         xdblvec2 =
+    StlVecType<double>         xdblvec2 =
         { 10, 20, 20, 11, 30, 40, 50, 50, 50, 50, 80, 90, 50, 11, 11, 25, 20,
           30, 1, 2, 2, 2, 6, 2, 3, 10, 4, 5 };
-    std::vector<double>         dblvec22 =
+    StlVecType<double>         dblvec22 =
         { 0.998, 1.545, 0.056, 0.15678, 1.545, 0.923, 0.06743,
           0.1, -1.545, 0.07865, -0.9999, 1.545, 0.1002, -0.8888,
           0.14, 0.0456, -1.545, -0.8999, 0.01119, 0.8002, -1.545,
           0.2, 0.1056, 0.87865, -0.6999, 1.545, 0.1902, -1.545 };
-    std::vector<std::string>    strvec2 =
+    StlVecType<std::string>    strvec2 =
         { "A", "A", "A", "B", "C", "C", "C", "C", "Z", "S", "M", "B",
           "A", "H", "X", "B", "Y", "Y", "W", "K", "K", "K", "J", "N",
           "Y", "G", "K", "B" };
@@ -1301,26 +1304,26 @@ static void test_io_format_csv2()  {
 
     std::cout << "\nTesting io_format_csv2( ) ..." << std::endl;
 
-    std::vector<unsigned long>  ulgvec2 =
+    StlVecType<unsigned long>  ulgvec2 =
         { 123450, 123451, 123452, 123450, 123455, 123450, 123449,
           123450, 123451, 123450, 123452, 123450, 123455, 123450,
           123454, 123450, 123450, 123457, 123458, 123459, 123450,
           123441, 123442, 123432, 123450, 123450, 123435, 123450 };
-    std::vector<unsigned long>  xulgvec2 = ulgvec2;
-    std::vector<int>            intvec2 =
+    StlVecType<unsigned long>  xulgvec2 = ulgvec2;
+    StlVecType<int>            intvec2 =
         { 1, 2, 3, 4, 5, 3, 7, 3, 9, 10, 3, 2, 3, 14,
           2, 2, 2, 3, 2, 3, 3, 3, 3, 3, 36, 2, 45, 2 };
-    std::vector<double>         xdblvec2 =
+    StlVecType<double>         xdblvec2 =
         { 1.2345, 2.2345, 3.2345, 4.2345, 5.2345, 3.0, 0.9999,
           10.0, 4.25, 0.009, 8.0, 2.2222, 3.3333,
           11.0, 5.25, 1.009, 2.111, 9.0, 3.2222, 4.3333,
           12.0, 6.25, 2.009, 3.111, 10.0, 4.2222, 5.3333 };
-    std::vector<double>         dblvec22 =
+    StlVecType<double>         dblvec22 =
         { 0.998, 0.3456, 0.056, 0.15678, 0.00345, 0.923, 0.06743,
           0.1, 0.0056, 0.07865, 0.0111, 0.1002, -0.8888,
           0.14, 0.0456, 0.078654, -0.8999, 0.8002, -0.9888,
           0.2, 0.1056, 0.87865, -0.6999, 0.4111, 0.1902, -0.4888 };
-    std::vector<std::string>    strvec2 =
+    StlVecType<std::string>    strvec2 =
         { "4% of something", "Description 4/5", "This is bad",
           "3.4% of GDP", "Market drops", "Market pulls back",
           "$15 increase", "Running fast", "C++14 development",
@@ -1328,7 +1331,7 @@ static void test_io_format_csv2()  {
           "Almost done", "XXXX04",
           "XXXX2", "XXXX3", "XXXX4", "XXXX4", "XXXX5", "XXXX6",
           "XXXX7", "XXXX10", "XXXX11", "XXXX02", "XXXX03" };
-    std::vector<bool>           boolvec =
+    StlVecType<bool>           boolvec =
         { true, true, true, false, false, true };
 
     MyDataFrame df;
@@ -1430,12 +1433,12 @@ static void test_NormalizeVisitor()  {
 
     std::cout << "\nTesting NormalizeVisitor{ } ..." << std::endl;
 
-    std::vector<unsigned long>  ulgvec2 =
+    StlVecType<unsigned long>  ulgvec2 =
         { 123450, 123451, 123452, 123450, 123455, 123450, 123449,
           123450, 123451, 123450, 123452, 123450, 123455, 123450,
           123454, 123450, 123450, 123457, 123458, 123459, 123450,
           123441, 123442, 123432, 123450, 123450, 123435, 123450 };
-    std::vector<double>         dblvec =
+    StlVecType<double>         dblvec =
         { 1.2345, 2.2345, 3.2345, 4.2345, 5.2345, 3.0, 0.9999,
           10.0, 4.25, 0.009, 8.0, 2.2222, 3.3333, 15.6,
           11.0, 5.25, 1.009, 2.111, 9.0, 3.2222, 4.3333,
@@ -1449,13 +1452,13 @@ static void test_NormalizeVisitor()  {
     StandardizeVisitor<double>  stand_v;
     auto                        result =
         df.single_act_visit<double>("dbl_col", norm_v).get_result();
-    std::vector<double>         norm_result = {
+    StlVecType<double>         norm_result = {
         0.078603, 0.142743, 0.206882, 0.271022, 0.335161, 0.191841, 0.0635559,
         0.640818, 0.272016, 0, 0.512539, 0.141954, 0.213219, 1, 0.704958,
         0.336155, 0.0641396, 0.134821, 0.576679, 0.206093, 0.277359, 0.769098,
         0.400295, 0.128279, 0.198961, 0.640818, 0.270233, 0.341498,
     };
-    std::vector<double>         stand_result = {
+    StlVecType<double>         stand_result = {
         -1.00542, -0.744444, -0.48347, -0.222497, 0.0384758, -0.544669,
         -1.06664, 1.28214, -0.218452, -1.32524, 0.760197, -0.747654, -0.457686,
         2.74359, 1.54312, 0.0425209, -1.06427, -0.776674, 1.02117, -0.48668,
@@ -1476,14 +1479,14 @@ static void test_HampelFilterVisitor()  {
 
     std::cout << "\nTesting HampelFilterVisitor{  } ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466,
           123467, 123468, 123469, 123470, 123471, 123472, 123473,
           123467, 123468, 123469, 123470, 123471, 123472, 123473,
           123467, 123468, 123469, 123470, 123471, 123472, 123473,
         };
-    std::vector<double>         d1 =
+    StlVecType<double>         d1 =
         { 2.5, 2.45, -1.65, -0.1, -1.1, 1.87, 0.98,
           0.34, 1.56, -12.34, 2.3, -0.34, -1.9, 0.387,
           0.123, 1.06, -0.65, 2.03, 0.4, -1.0, 0.59,
@@ -1497,7 +1500,7 @@ static void test_HampelFilterVisitor()  {
     HampelFilterVisitor<double> hf_v(7, hampel_type::mean, 2);
     auto                        result =
         df.single_act_visit<double>("dbl_col", hf_v).get_result();
-    std::vector<double>         hampel_result = {
+    StlVecType<double>         hampel_result = {
         2.5, 2.45, -1.65, -0.1, -1.1, 1.87, 0.98, 0.34, 1.56,
         std::numeric_limits<double>::quiet_NaN(), 2.3, -0.34, -1.9, 0.387,
         0.123, 1.06, -0.65, 2.03, 0.4, -1, 0.59, 0.125, 1.9, -0.68, 2.0045,
@@ -1523,7 +1526,7 @@ static void test_PolyFitVisitor()  {
 
     std::cout << "\nTesting PolyFitVisitor{  } ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466,
           123467, 123468, 123469, 123470, 123471, 123472, 123473,
@@ -1558,11 +1561,11 @@ static void test_PolyFitVisitor()  {
         df.single_act_visit<double, double>("X1", "Y1", poly_v1).get_result();
     auto                    result12 =
         df.single_act_visit<double, double>("X1", "Y1", poly_v12).get_result();
-    auto                    actual1 = std::vector<double> { 0.8, 5.6, -1 };
+    auto                    actual1 = StlVecType<double> { 0.8, 5.6, -1 };
     auto                    actual1_y =
-        std::vector<double> { 5.4, 8, 8.6, 7.2, 3.8 };
+        StlVecType<double> { 5.4, 8, 8.6, 7.2, 3.8 };
     auto                    actual12 =
-        std::vector<double> { -1.97994, 6.99713, -1.14327 };
+        StlVecType<double> { -1.97994, 6.99713, -1.14327 };
 
     assert(std::fabs(poly_v1.get_residual() - 5.6) < 0.00001);
     for (size_t i = 0; i < result1.size(); ++i)
@@ -1578,7 +1581,7 @@ static void test_PolyFitVisitor()  {
     auto                    result2 =
         df.single_act_visit<double, double>("X2", "Y2", poly_v2).get_result();
     auto                    actual2 =
-        std::vector<double> { -0.0396825, 1.69312, -0.813492, 0.087037 };
+        StlVecType<double> { -0.0396825, 1.69312, -0.813492, 0.087037 };
 
     for (size_t i = 0; i < result2.size(); ++i)
        assert(fabs(result2[i] - actual2[i]) < 0.00001);
@@ -1596,10 +1599,10 @@ static void test_HurstExponentVisitor()  {
     p.min_value = 0;
     p.max_value = 30;
 
-    std::vector<double> d1 = gen_uniform_real_dist<double>(1024, p);
-    std::vector<double> d2 =
+    StlVecType<double> d1 = gen_uniform_real_dist<double>(1024, p);
+    StlVecType<double> d2 =
         { 0.04, 0.02, 0.05, 0.08, 0.02, -0.17, 0.05, 0.0 };
-    std::vector<double> d3 =
+    StlVecType<double> d3 =
         { 0.04, 0.05, 0.055, 0.06, 0.061, 0.072, 0.073, 0.8 };
 
     MyDataFrame df;
@@ -1634,7 +1637,7 @@ static void test_LogFitVisitor()  {
 
     std::cout << "\nTesting LogFitVisitor{  } ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466,
           123467, 123468, 123469, 123470, 123471, 123472, 123473,
@@ -1661,9 +1664,9 @@ static void test_LogFitVisitor()  {
     auto                    result1 =
         df.single_act_visit<double, double>("X1", "Y1", log_v1).get_result();
     auto                    actual1 =
-        std::vector<double> { 6.98618, -0.403317 };
+        StlVecType<double> { 6.98618, -0.403317 };
     auto                    actual1_y =
-        std::vector<double> { 6.98618, 6.70662, 6.54309, 6.42706, 6.33706 };
+        StlVecType<double> { 6.98618, 6.70662, 6.54309, 6.42706, 6.33706 };
 
     assert(std::fabs(log_v1.get_residual() - 20.9372) < 0.0001);
     for (size_t i = 0; i < result1.size(); ++i)
@@ -1674,7 +1677,7 @@ static void test_LogFitVisitor()  {
     LogFitVisitor<double>   log_v2;
     auto                    result2 =
         df.single_act_visit<double, double>("X2", "Y2", log_v2).get_result();
-    auto                    actual2 = std::vector<double> { 1.11199, 2.25859 };
+    auto                    actual2 = StlVecType<double> { 1.11199, 2.25859 };
 
     assert(std::fabs(log_v2.get_residual() - 0.237476) < 0.00001);
     for (size_t i = 0; i < result2.size(); ++i)
@@ -1687,7 +1690,7 @@ static void test_ExponentialFitVisitor()  {
 
     std::cout << "\nTesting ExponentialFitVisitor{  } ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466,
           123467, 123468, 123469, 123470, 123471, 123472, 123473,
@@ -1714,7 +1717,7 @@ static void test_ExponentialFitVisitor()  {
     auto                            result1 =
         df.single_act_visit<double, double>("X1", "Y1", exp_v1).get_result();
     auto                            actual1 =
-        std::vector<double> { 7.7647, 6.9316, 6.1879, 5.5239, 4.93126 };
+        StlVecType<double> { 7.7647, 6.9316, 6.1879, 5.5239, 4.93126 };
 
     assert(std::fabs(exp_v1.get_residual() - 22.2154) < 0.0001);
     for (size_t i = 0; i < result1.size(); ++i)
@@ -1724,7 +1727,7 @@ static void test_ExponentialFitVisitor()  {
     auto            result2 =
         df.single_act_visit<double, double>("X2", "Y2", exp_v2).get_result();
     auto            actual2 =
-        std::vector<double> { 1.63751, 2.02776, 3.10952, 4.76833, 7.31206 };
+        StlVecType<double> { 1.63751, 2.02776, 3.10952, 4.76833, 7.31206 };
 
     assert(std::fabs(exp_v2.get_residual() - 3.919765) < 0.00001);
     for (size_t i = 0; i < result2.size(); ++i)
@@ -1737,7 +1740,7 @@ static void test_LinearFitVisitor()  {
 
     std::cout << "\nTesting LinearFitVisitor{  } ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466,
           123467, 123468, 123469, 123470, 123471, 123472, 123473,
@@ -1764,7 +1767,7 @@ static void test_LinearFitVisitor()  {
     auto                        result1 =
         df.single_act_visit<double, double>("X1", "Y1", lin_v1).get_result();
     auto                        actual1 =
-        std::vector<double> { 7.4, 7, 6.6, 6.2, 5.8 };
+        StlVecType<double> { 7.4, 7, 6.6, 6.2, 5.8 };
 
     assert(std::fabs(lin_v1.get_residual() - 19.6) < 0.01);
     for (size_t i = 0; i < result1.size(); ++i)
@@ -1774,7 +1777,7 @@ static void test_LinearFitVisitor()  {
     auto                result2 =
         df.single_act_visit<double, double>("X2", "Y2", lin_v2).get_result();
     auto                actual2 =
-        std::vector<double> { 1.73171, 2.37805, 3.67073, 4.96341, 6.2561 };
+        StlVecType<double> { 1.73171, 2.37805, 3.67073, 4.96341, 6.2561 };
 
     assert(std::fabs(lin_v2.get_residual() - 1.097561) < 0.00001);
     for (size_t i = 0; i < result2.size(); ++i)
@@ -1787,21 +1790,21 @@ static void test_ExpoSmootherVisitor()  {
 
     std::cout << "\nTesting ExpoSmootherVisitor{  } ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466,
           123467, 123468, 123469, 123470, 123471, 123472, 123473,
           123467, 123468, 123469, 123470, 123471, 123472, 123473,
           123467, 123468, 123469, 123470, 123471, 123472, 123473,
         };
-    std::vector<double>         d1 =
+    StlVecType<double>         d1 =
         { 2.5, 2.45, -1.65, -0.1, -1.1, 1.87, 0.98,
           0.34, 1.56, -12.34, 2.3, -0.34, -1.9, 0.387,
           0.123, 1.06, -0.65, 2.03, 0.4, -1.0, 0.59,
           0.125, 1.9, -0.68, 2.0045, 50.8, -1.0, 0.78,
           0.48, 1.99, -0.97, 1.03, 8.678, -1.4, 1.59,
         };
-    std::vector<double>         d1_copy = d1;
+    StlVecType<double>         d1_copy = d1;
     MyDataFrame                 df;
 
     df.load_data(std::move(idx), std::make_pair("dbl_col", d1));
@@ -1821,7 +1824,7 @@ static void test_ExpoSmootherVisitor()  {
 
     df.single_act_visit<double>("dbl_col", es_v2);
 
-    auto    actual2 = std::vector<double> {
+    auto    actual2 = StlVecType<double> {
         2.5, 2.485, 1.22, -1.185, -0.4, -0.209, 1.603,
         0.788, 0.706, -2.61, -7.948, 1.508, -0.808, -1.2139,
         0.3078, 0.4041, 0.547, 0.154, 1.541, -0.02, -0.523,
@@ -1838,7 +1841,7 @@ static void test_ExpoSmootherVisitor()  {
 
     df.single_act_visit<double>("dbl_col", es_v3);
 
-    auto    actual3 = std::vector<double> {
+    auto    actual3 = StlVecType<double> {
         2.5, 2.46, -0.83, -0.41, -0.9, 1.276, 1.158,
         0.468, 1.316, -9.56, -0.628, 0.188, -1.588, -0.0704,
         0.1758, 0.8726, -0.308, 1.494, 0.726, -0.72, 0.272,
@@ -1854,7 +1857,7 @@ static void test_ExpoSmootherVisitor()  {
 
     df2.single_act_visit<double>("dbl_col", es_v3_4);
 
-    auto    actual4 = std::vector<double> {
+    auto    actual4 = StlVecType<double> {
         2.5, 2.47952, 0.77968, -0.27248, -0.67824, 0.261712, 0.9932, 0.799584,
         0.97488, -4.33518, -3.8625, -1.05213, -0.877632, -0.632813, -0.087968,
         0.494816, 0.193696, 0.731832, 0.922821, 0.051104, -0.055568, 0.152752,
@@ -1872,21 +1875,21 @@ static void test_HWExpoSmootherVisitor()  {
 
     std::cout << "\nTesting HWExpoSmootherVisitor{  } ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466,
           123467, 123468, 123469, 123470, 123471, 123472, 123473,
           123467, 123468, 123469, 123470, 123471, 123472, 123473,
           123467, 123468, 123469, 123470, 123471, 123472, 123473,
         };
-    std::vector<double>         d1 =
+    StlVecType<double>         d1 =
         { 2.5, 2.45, -1.65, -0.1, -1.1, 1.87, 0.98,
           0.34, 1.56, -12.34, 2.3, -0.34, -1.9, 0.387,
           0.123, 1.06, -0.65, 2.03, 0.4, -1.0, 0.59,
           0.125, 1.9, -0.68, 2.0045, 50.8, -1.0, 0.78,
           0.48, 1.99, -0.97, 1.03, 8.678, -1.4, 1.59,
         };
-    std::vector<double>         d1_copy = d1;
+    StlVecType<double>         d1_copy = d1;
     MyDataFrame                 df;
 
     df.load_data(std::move(idx), std::make_pair("dbl_col", d1));
@@ -1904,7 +1907,7 @@ static void test_HWExpoSmootherVisitor()  {
 
     df.single_act_visit<double>("dbl_col", es_v2);
 
-    auto    actual2 = std::vector<double> {
+    auto    actual2 = StlVecType<double> {
         2.5, 2.45, 1.185, -2.354, -0.6674, -0.64944, 2.17034,
         0.879202, 0.581521, -2.34309, -11.6799, 3.36809, -0.431147, -1.42459,
         0.821747, 0.638548, 0.950029, -0.0829826, 2.14921, -0.111474, -0.969884,
@@ -1921,7 +1924,7 @@ static void test_HWExpoSmootherVisitor()  {
 
     df.single_act_visit<double>("dbl_col", es_v3);
 
-    auto    actual3 = std::vector<double> {
+    auto    actual3 = StlVecType<double> {
         2.5, 2.45, -0.84, -1.068, -0.7836, 1.13928, 1.60586,
         0.415171, 1.20303, -9.38739, -2.81748, 2.0925, -1.6295, -0.3283,
         0.49014, 0.893228, -0.153954, 1.25121, 1.10624, -0.904752, 0.0110497,
@@ -1935,21 +1938,21 @@ static void test_HWExpoSmootherVisitor()  {
 
 // -----------------------------------------------------------------------------
 
-static std::vector<std::string>
+static StlVecType<std::string>
 add_columns(MyDataFrame::IndexVecType::const_iterator /*idx_begin*/,
             MyDataFrame::IndexVecType::const_iterator /*idx_end*/,
-            std::vector<double>::const_iterator b_citer1,
-            std::vector<double>::const_iterator e_citer1,
-            std::vector<double>::const_iterator b_citer2,
-            std::vector<double>::const_iterator e_citer2,
-            std::vector<std::string>::const_iterator b_citer3,
-            std::vector<std::string>::const_iterator e_citer3)  {
+            StlVecType<double>::const_iterator b_citer1,
+            StlVecType<double>::const_iterator e_citer1,
+            StlVecType<double>::const_iterator b_citer2,
+            StlVecType<double>::const_iterator e_citer2,
+            StlVecType<std::string>::const_iterator b_citer3,
+            StlVecType<std::string>::const_iterator e_citer3)  {
 
     const std::size_t           col_s =
         std::min ({ std::distance(b_citer1, e_citer1),
                     std::distance(b_citer2, e_citer2),
                     std::distance(b_citer3, e_citer3) });
-    std::vector<std::string>    result (col_s);
+    StlVecType<std::string>    result (col_s);
 
     for (std::size_t i = 0; i < col_s; ++i)
         result[i] =
@@ -1965,20 +1968,20 @@ static void test_consolidate()  {
 
     MyDataFrame df;
 
-    std::vector<unsigned long>  idxvec = {
+    StlVecType<unsigned long>  idxvec = {
         1UL, 2UL, 3UL, 10UL, 5UL, 7UL, 8UL, 12UL, 9UL, 12UL,
         10UL, 13UL, 10UL, 15UL, 14UL
     };
-    std::vector<double>         dblvec = {
+    StlVecType<double>         dblvec = {
         0.0, 15.0, 14.0, 2.0, 1.0, 12.0, 11.0, 8.0, 7.0, 6.0,
         5.0, 4.0, 3.0, 9.0, 10.0
     };
-    std::vector<double>         dblvec2 = {
+    StlVecType<double>         dblvec2 = {
         100.0, 101.0, 102.0, 103.0, 104.0, 105.0, 106.55, 107.34, 1.8, 111.0,
         112.0, 113.0, 114.0, 115.0, 116.0
     };
-    std::vector<int>            intvec = { 1, 2, 3, 4, 5, 8, 6, 7, 11, 14, 9 };
-    std::vector<std::string>    strvec = {
+    StlVecType<int>            intvec = { 1, 2, 3, 4, 5, 8, 6, 7, 11, 14, 9 };
+    StlVecType<std::string>    strvec = {
         "zz", "bb", "cc", "ww", "ee", "ff", "gg", "hh", "ii", "jj",
         "kk", "ll", "mm", "nn", "oo"
     };
@@ -1999,7 +2002,7 @@ static void test_consolidate()  {
 
     const auto                     &new_str_col =
         df.get_column<std::string>("new_str_col");
-    const std::vector<const char *> actual = {
+    const StlVecType<const char *> actual = {
         "zz100.000000", "bb116.000000", "cc116.000000", "ww105.000000",
         "ee105.000000", "ff117.000000", "gg117.550000", "hh115.340000",
         "ii8.800000", "jj117.000000", "kk117.000000", "ll117.000000",
@@ -2016,7 +2019,7 @@ static void test_ExtremumSubArrayVisitor()  {
 
     std::cout << "\nTesting ExtremumSubArrayVisitor{  } ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466,
           123467, 123468, 123469, 123470, 123471, 123472, 123473,
@@ -2052,7 +2055,7 @@ static void test_NExtremumSubArrayVisitor()  {
 
     std::cout << "\nTesting NExtremumSubArrayVisitor{  } ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466,
           123467, 123468, 123469, 123470, 123471, 123472, 123473,
@@ -2126,18 +2129,18 @@ static void test_LowessVisitor()  {
 
     std::cout << "\nTesting LowessVisitor{  } ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466,
           123467, 123468, 123469, 123470, 123471, 123472, 123473,
         };
-    std::vector<double>         x_vec = {
+    StlVecType<double>         x_vec = {
         0.5578196, 2.0217271, 2.5773252, 3.4140288, 4.3014084, 4.7448394,
         5.1073781, 6.5411662, 6.7216176, 7.2600583, 8.1335874, 9.1224379,
         1.9296663, 2.3797674, 3.2728619, 4.2767453, 5.3731026, 5.6476637,
         8.5605355, 8.5866354, 8.7572812,
     };
-    std::vector<double>         y_vec = {
+    StlVecType<double>         y_vec = {
         18.63654, 103.49646, 150.35391, 190.51031, 208.70115, 213.71135,
         228.49353, 233.55387, 234.55054, 223.89225, 227.68339, 223.91982,
         168.01999, 164.95750, 152.61107, 160.78742, 168.55567, 152.42658,
@@ -2153,7 +2156,7 @@ static void test_LowessVisitor()  {
 
     df.single_act_visit<double, double>("dep_var", "indep_var", l_v);
 
-    auto    actual_yfit = std::vector<double> {
+    auto    actual_yfit = StlVecType<double> {
         68.1432, 119.432, 122.75, 135.633, 142.724, 165.905, 169.447, 185.617,
         186.017, 191.865, 198.03, 202.234, 206.178, 215.053, 216.586, 220.408,
         226.671, 229.052, 229.185, 230.023, 231.657,
@@ -2162,7 +2165,7 @@ static void test_LowessVisitor()  {
     for (size_t idx = 0; idx < actual_yfit.size(); ++idx)
         assert(fabs(l_v.get_result()[idx] - actual_yfit[idx]) < 0.001);
 
-    auto    actual_weights = std::vector<double> {
+    auto    actual_weights = StlVecType<double> {
         0.641773, 0.653544, 0.940738, 0.865302, 0.990575, 0.971522, 0.92929,
         0.902444, 0.918228, 0.924041, 0.855054, 0.824388, 0.586045, 0.945216,
         0.94831, 0.998031, 0.999834, 0.991263, 0.993165, 0.972067, 0.990308,
@@ -2179,12 +2182,12 @@ static void test_StepRollAdopter()  {
 
     std::cout << "\nTesting StepRollAdopter{ } ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123463,
           123464, 123458, 123459, 123460, 123461, 123462
         };
-    std::vector<double> d1 =
+    StlVecType<double> d1 =
         { 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5 };
     MyDataFrame         df;
 
@@ -2210,7 +2213,7 @@ static void test_DecomposeVisitor()  {
 
     std::cout << "\nTesting DecomposeVisitor{  } ..." << std::endl;
 
-    std::vector<double>         y_vec =
+    StlVecType<double>         y_vec =
         { 131.157, 131.367, 132.215, 132.725, 132.648, 130.585, 130.701,
           129.631, 129.168, 129.554, 129.467, 129.670, 128.397, 129.014,
           129.496, 131.067, 130.219, 128.947, 129.602, 128.118, 127.356,
@@ -2234,7 +2237,7 @@ static void test_DecomposeVisitor()  {
 
     df.single_act_visit<double>("IBM_closes", d_v);
 
-    auto    actual_trends = std::vector<double>
+    auto    actual_trends = StlVecType<double>
         { 130.613, 130.55, 130.489, 130.43, 130.372, 130.317, 130.263, 130.211,
           130.161, 130.111, 130.064, 130.017, 129.972, 129.928, 129.885,
           129.842, 129.801, 129.76, 129.72, 129.681, 129.642, 129.603, 129.564,
@@ -2253,7 +2256,7 @@ static void test_DecomposeVisitor()  {
     for (size_t idx = 0; idx < actual_trends.size(); ++idx)
         assert(fabs(d_v.get_trend()[idx] - actual_trends[idx]) < 0.001);
 
-    auto    actual_seasonals = std::vector<double>
+    auto    actual_seasonals = StlVecType<double>
         { 0.499135, -0.362488, -0.0226401, -0.138991, -0.774313, -0.152695,
           0.951993, 0.499135, -0.362488, -0.0226401, -0.138991, -0.774313,
           -0.152695, 0.951993, 0.499135, -0.362488, -0.0226401, -0.138991,
@@ -2274,7 +2277,7 @@ static void test_DecomposeVisitor()  {
     for (size_t idx = 0; idx < actual_seasonals.size(); ++idx)
         assert(fabs(d_v.get_seasonal()[idx] - actual_seasonals[idx]) < 0.00001);
 
-    auto    actual_residuals = std::vector<double>
+    auto    actual_residuals = StlVecType<double>
         { 0.0450645, 1.17948, 1.74866, 2.43421, 3.04989, 0.420796, -0.514129,
           -1.07918, -0.630027, -0.534809, -0.457752, 0.427013, -1.42233,
           -1.86582, -0.887751, 1.58716, 0.440736, -0.674248, 0.656095,
@@ -2326,24 +2329,24 @@ static void test_TTestVisitor()  {
 
     std::cout << "\nTesting TTestVisitor{  } ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466,
           123467, 123468, 123469, 123470, 123471, 123472, 123473,
         };
-    std::vector<double>         x_vec = {
+    StlVecType<double>         x_vec = {
         0.5578196, 2.0217271, 2.5773252, 3.4140288, 4.3014084, 4.7448394,
         5.1073781, 6.5411662, 6.7216176, 7.2600583, 8.1335874, 9.1224379,
         1.9296663, 2.3797674, 3.2728619, 4.2767453, 5.3731026, 5.6476637,
         8.5605355, 8.5866354, 8.7572812,
     };
-    std::vector<double>         y_vec = {
+    StlVecType<double>         y_vec = {
         18.63654, 103.49646, 150.35391, 190.51031, 208.70115, 213.71135,
         228.49353, 233.55387, 234.55054, 223.89225, 227.68339, 223.91982,
         168.01999, 164.95750, 152.61107, 160.78742, 168.55567, 152.42658,
         221.70702, 222.69040, 243.18828,
     };
-    std::vector<double>         z_vec = {
+    StlVecType<double>         z_vec = {
         0.5578296, 2.0217275, 2.5773252, 3.4140288, 4.3084084, 4.7448394,
         5.1079781, 6.5411662, 6.1216176, 7.1600583, 8.1335174, 9.1223379,
         1.9296663, 2.3727674, 3.2728619, 4.2767953, 5.3731056, 5.6426637,
@@ -2383,17 +2386,17 @@ static void test_MassIndexVisitor()  {
 
     std::cout << "\nTesting MassIndexVisitor{  } ..." << std::endl;
 
-    std::vector<unsigned long>  idx = {
+    StlVecType<unsigned long>  idx = {
         123450, 123451, 123452, 123453, 123454, 123455, 123456, 123457,
         123458, 123459, 123460, 123461, 123462, 123466, 123467, 123468,
         123469, 123470, 123471, 123472, 123473,
     };
-    std::vector<double>         high = {
+    StlVecType<double>         high = {
         121.75, 122.75, 124.83, 124.39, 135.5, 132, 128.25, 127.15, 126.94,
         125.22, 126.43, 127.35, 120.15, 117.69, 116.06, 116.62, 114.9, 112.22,
         109.73, 109.64, 111.8,
     };
-    std::vector<double>         low = {
+    StlVecType<double>         low = {
         118.82, 121.05, 121.59, 122.32, 129.77, 127.6, 126.44, 124.46, 125.13,
         123.85, 124.66, 125.08, 116.84, 117.69, 112.98, 115.53, 111.84, 110.03,
         105.92, 106.55, 107.75,
@@ -2426,14 +2429,14 @@ static void test_HullRollingMeanVisitor()  {
 
     std::cout << "\nTesting HullRollingMeanVisitor{ } ..." << std::endl;
 
-    std::vector<unsigned long>  ulgvec2 =
+    StlVecType<unsigned long>  ulgvec2 =
         { 123450, 123451, 123452, 123450, 123455, 123450, 123449,
           123450, 123451, 123450, 123452, 123450, 123455, 123450,
           123454, 123450, 123450, 123457, 123458, 123459, 123450,
           123441, 123442, 123432, 123450, 123450, 123435, 123450,
           123441, 123442, 123432, 123450, 123450, 123435, 123450,
           123441, 123442, 123432, 123450, 123450, 123435, 123450 };
-    std::vector<double>         dbl_vec =
+    StlVecType<double>         dbl_vec =
         { 1, 2, 3, 4, 5, 3, 7, 3, 9, 10, 3, 2, 3, 14,
           2, 2, 2, 3, 2, 3, 3, 3, 3, 3, 36, 2, 45, 2,
           2, 3, 5, 6, 7, 7, 8, 1, 10, 11, 9, 8, 7, 6 };
@@ -2465,17 +2468,17 @@ static void test_RollingMidValueVisitor()  {
 
     std::cout << "\nTesting RollingMidValueVisitor{  } ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456, 123457,
           123458, 123459, 123460, 123461, 123462, 123466, 123467, 123468,
           123469, 123470, 123471, 123472, 123473,
         };
-    std::vector<double>         high = {
+    StlVecType<double>         high = {
         121, 122, 124, 124.5, 135.5, 132, 128, 127, 126,
         125, 126.5, 127, 120, 117, 116, 116.5, 114, 112,
         109, 109.5, 111,
     };
-    std::vector<double>         low = {
+    StlVecType<double>         low = {
         118, 121, 121.5, 122, 129, 127, 126, 124, 125,
         123, 124, 125, 116, 114, 112, 115, 111, 110,
         105, 106, 107,
@@ -2507,12 +2510,12 @@ static void test_DrawdownVisitor()  {
 
     std::cout << "\nTesting DrawdownVisitor{  } ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456, 123457,
           123458, 123459, 123460, 123461, 123462, 123466, 123467, 123468,
           123469, 123470, 123471, 123472, 123473,
         };
-    std::vector<double>         close = {
+    StlVecType<double>         close = {
         121, 122, 124, 124.5, 135.5, 132, 128, 127, 126,
         125, 126.5, 127, 120, 135.6, 116, 116.5, 114, 112,
         109, 136, 111,
@@ -2658,12 +2661,12 @@ static void test_EntropyVisitor()  {
 
     std::cout << "\nTesting EntropyVisitor{  } ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456, 123457,
           123458, 123459, 123460, 123461, 123462, 123466, 123467, 123468,
           123469, 123470, 123471, 123472, 123473, 22, 23, 24, 25, 26, 27, 28
         };
-    std::vector<double>         close =
+    StlVecType<double>         close =
         { 1.80, 2.80, 1.90, 14.00, 1.10, 6.00, 13.00, 8.00, 9.00, 2.80, 1.90,
           4.30, 20.00, 1.85, 3.00, 34.00, 67.00, 23.00, 87.00, 9.00, 45.00,
           1.00, 11.00, 456.00, 34.00, 7.00, 7778.00, 5.00
@@ -2755,26 +2758,26 @@ static void test_no_index_writes()  {
 
     std::cout << "\nTesting no_index_writes ..." << std::endl;
 
-    std::vector<unsigned long>  ulgvec2 =
+    StlVecType<unsigned long>  ulgvec2 =
         { 123450, 123451, 123452, 123450, 123455, 123450, 123449,
           123450, 123451, 123450, 123452, 123450, 123455, 123450,
           123454, 123450, 123450, 123457, 123458, 123459, 123450,
           123441, 123442, 123432, 123450, 123450, 123435, 123450 };
-    std::vector<unsigned long>  xulgvec2 = ulgvec2;
-    std::vector<int>            intvec2 =
+    StlVecType<unsigned long>  xulgvec2 = ulgvec2;
+    StlVecType<int>            intvec2 =
         { 1, 2, 3, 4, 5, 3, 7, 3, 9, 10, 3, 2, 3, 14,
           2, 2, 2, 3, 2, 3, 3, 3, 3, 3, 36, 2, 45, 2 };
-    std::vector<double>         xdblvec2 =
+    StlVecType<double>         xdblvec2 =
         { 1.2345, 2.2345, 3.2345, 4.2345, 5.2345, 3.0, 0.9999,
           10.0, 4.25, 0.009, 8.0, 2.2222, 3.3333,
           11.0, 5.25, 1.009, 2.111, 9.0, 3.2222, 4.3333,
           12.0, 6.25, 2.009, 3.111, 10.0, 4.2222, 5.3333 };
-    std::vector<double>         dblvec22 =
+    StlVecType<double>         dblvec22 =
         { 0.998, 0.3456, 0.056, 0.15678, 0.00345, 0.923, 0.06743,
           0.1, 0.0056, 0.07865, 0.0111, 0.1002, -0.8888,
           0.14, 0.0456, 0.078654, -0.8999, 0.8002, -0.9888,
           0.2, 0.1056, 0.87865, -0.6999, 0.4111, 0.1902, -0.4888 };
-    std::vector<std::string>    strvec2 =
+    StlVecType<std::string>    strvec2 =
         { "4% of something", "Description 4/5", "This is bad",
           "3.4% of GDP", "Market drops", "Market pulls back",
           "$15 increase", "Running fast", "C++14 development",
@@ -2782,7 +2785,7 @@ static void test_no_index_writes()  {
           "Almost done", "XXXX04",
           "XXXX2", "XXXX3", "XXXX4", "XXXX4", "XXXX5", "XXXX6",
           "XXXX7", "XXXX10", "XXXX11", "XXXX02", "XXXX03" };
-    std::vector<bool>           boolvec =
+    StlVecType<bool>           boolvec =
         { true, true, true, false, false, true };
 
     MyDataFrame df;
@@ -3062,10 +3065,10 @@ static void test_shifting_column()  {
 
     std::cout << "\nTesting shifting columns ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466 };
-    std::vector<double>         d1 =
+    StlVecType<double>         d1 =
         { 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28 };
     MyDataFrame                 df;
 
@@ -3387,15 +3390,15 @@ static void test_AbsVisitor()  {
 
     MyDataFrame df;
 
-    std::vector<unsigned long>  idxvec =
+    StlVecType<unsigned long>  idxvec =
         { 1UL, 2UL, 3UL, 10UL, 5UL, 7UL, 8UL, 12UL, 9UL, 12UL, 10UL, 13UL,
           10UL, 15UL, 14UL };
-    std::vector<double>         dblvec =
+    StlVecType<double>         dblvec =
         { 0.0, -15.0, 14.0, 15.0, -1.0, 12.0, 11.0, -8.0, 15.0, 6.0, -1,
           4.0, 14.0, 14.0, -20.0 };
-    std::vector<int>            intvec =
+    StlVecType<int>            intvec =
         { -1, 2, 3, 4, 5, 8, -6, 7, 11, -14, 9, -3, -5, -4, 9 };
-    std::vector<std::string>    strvec =
+    StlVecType<std::string>    strvec =
         { "zz", "bb", "zz", "ww", "ee", "ff", "gg", "zz", "ii", "jj", "kk",
           "ll", "mm", "ee", "" };
 
@@ -3414,10 +3417,10 @@ static void test_AbsVisitor()  {
     assert(result == 5);
     assert(result_int == 6);
 
-    std::vector<double> abs_dblvec =
+    StlVecType<double> abs_dblvec =
         { 0.0, 15.0, 14.0, 15.0, 1.0, 12.0, 11.0, 8.0, 15.0, 6.0, 1,
           4.0, 14.0, 14.0, 20.0 };
-    std::vector<int>    abs_intvec =
+    StlVecType<int>    abs_intvec =
         { 1, 2, 3, 4, 5, 8, 6, 7, 11, 14, 9, 3, 5, 4, 9 };
 
     assert((df.get_column<double>("dbl_col") == abs_dblvec));
@@ -3668,12 +3671,12 @@ static void test_FastFourierTransVisitor()  {
 
     using cx = std::complex<double>;
 
-    std::vector<unsigned long>  idxvec =
+    StlVecType<unsigned long>  idxvec =
         { 1UL, 2UL, 3UL, 10UL, 5UL, 7UL, 8UL, 12UL };
-    std::vector<double>         dblvec = { 1, 1, 1, 1, 0, 0, 0, 0 };
-    std::vector<std::string>    strvec =
+    StlVecType<double>         dblvec = { 1, 1, 1, 1, 0, 0, 0, 0 };
+    StlVecType<std::string>    strvec =
         { "11", "22", "33", "44", "55", "66", "-77", "88" };
-    std::vector<cx>             cplxvec =
+    StlVecType<cx>             cplxvec =
         { cx(0, 0), cx(1, 1), cx(3, 3), cx(4, 4),
           cx(4, 4), cx(3, 3), cx(1, 1) };
 
@@ -4142,13 +4145,13 @@ static void test_get_view_by_loc()  {
 
     std::cout << "\nTesting get_view_by_loc() ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123450, 123455, 123450, 123449 };
-    std::vector<double>         d1 = { 1, 2, 3, 4, 5, 6, 7 };
-    std::vector<double>         d2 = { 8, 9, 10, 11, 12, 13, 14 };
-    std::vector<double>         d3 = { 15, 16, 17, 18, 19, 20, 21 };
-    std::vector<double>         d4 = { 22, 23, 24, 25 };
-    std::vector<std::string>    s1 =
+    StlVecType<double>         d1 = { 1, 2, 3, 4, 5, 6, 7 };
+    StlVecType<double>         d2 = { 8, 9, 10, 11, 12, 13, 14 };
+    StlVecType<double>         d3 = { 15, 16, 17, 18, 19, 20, 21 };
+    StlVecType<double>         d4 = { 22, 23, 24, 25 };
+    StlVecType<std::string>    s1 =
         { "11", "22", "33", "xx", "yy", "gg", "string" };
     MyDataFrame                 df;
 
@@ -4163,9 +4166,8 @@ static void test_get_view_by_loc()  {
 
     std::cout << "DataFrame Memory Usage:\n" << memory_use1 << std::endl;
 
-    typedef StdDataFrame<unsigned long>::View MyDataFrameView;
-    typedef StdDataFrame<unsigned long>::ConstView MyDataFrameConstView;
-
+    typedef MyDataFrame::View MyDataFrameView;
+    typedef MyDataFrame::ConstView MyDataFrameConstView;
 
     const MyDataFrame   &const_df = df;
     MyDataFrameView         dfv =
@@ -4199,15 +4201,15 @@ static void test_get_view_by_idx_slicing()  {
 
     std::cout << "\nTesting get_view_by_idx()/slicing ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466 };
-    std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
-    std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23,
+    StlVecType<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
+    StlVecType<double> d2 = { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23,
                                30, 31, 32, 1.89 };
-    std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21,
+    StlVecType<double> d3 = { 15, 16, 17, 18, 19, 20, 21,
                                0.34, 1.56, 0.34, 2.3, 0.1, 0.89, 0.45 };
-    std::vector<int>    i1 = { 22, 23, 24, 25, 99, 100, 101, 3, 2 };
+    StlVecType<int>    i1 = { 22, 23, 24, 25, 99, 100, 101, 3, 2 };
     MyDataFrame         df;
 
     df.load_data(std::move(idx),
@@ -4216,8 +4218,8 @@ static void test_get_view_by_idx_slicing()  {
                  std::make_pair("col_3", d3),
                  std::make_pair("col_4", i1));
 
-    typedef StdDataFrame<unsigned long>::View MyDataFrameView;
-    typedef StdDataFrame<unsigned long>::ConstView MyDataFrameConstView;
+    typedef MyDataFrame::View MyDataFrameView;
+    typedef MyDataFrame::ConstView MyDataFrameConstView;
 
     const MyDataFrame   &const_df = df;
 
@@ -4252,15 +4254,15 @@ static void test_get_data()  {
 
     std::cout << "\nTesting get_[data|view]() ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466 };
-    std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
-    std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23,
+    StlVecType<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
+    StlVecType<double> d2 = { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23,
                                30, 31, 32, 1.89 };
-    std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21,
+    StlVecType<double> d3 = { 15, 16, 17, 18, 19, 20, 21,
                                0.34, 1.56, 0.34, 2.3, 0.1, 0.89, 0.45 };
-    std::vector<int>    i1 = { 22, 23, 24, 25, 99, 100, 101, 3, 2 };
+    StlVecType<int>    i1 = { 22, 23, 24, 25, 99, 100, 101, 3, 2 };
     MyDataFrame         df;
 
     df.load_data(std::move(idx),
@@ -4277,8 +4279,8 @@ static void test_get_data()  {
     assert((df2.get_column<int>("col_4")[8] == 2));
     assert((df2.get_index()[3] == 123453));
 
-    typedef StdDataFrame<unsigned long>::View MyDataFrameView;
-    typedef StdDataFrame<unsigned long>::ConstView MyDataFrameConstView;
+    typedef MyDataFrame::View MyDataFrameView;
+    typedef MyDataFrame::ConstView MyDataFrameConstView;
 
     const MyDataFrame       &const_df = df;
     MyDataFrameView         df3 =
@@ -4314,13 +4316,13 @@ static void test_get_data_by_sel()  {
 
     std::cout << "\nTesting get_data_by_sel() ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456 };
-    std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7 };
-    std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14 };
-    std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21 };
-    std::vector<double> d4 = { 22, 23, 24, 25 };
-    std::vector<std::string> s1 = { "11", "22", "33", "ee", "ff", "gg", "ll" };
+    StlVecType<double> d1 = { 1, 2, 3, 4, 5, 6, 7 };
+    StlVecType<double> d2 = { 8, 9, 10, 11, 12, 13, 14 };
+    StlVecType<double> d3 = { 15, 16, 17, 18, 19, 20, 21 };
+    StlVecType<double> d4 = { 22, 23, 24, 25 };
+    StlVecType<std::string> s1 = { "11", "22", "33", "ee", "ff", "gg", "ll" };
     MyDataFrame         df;
 
     df.load_data(std::move(idx),
@@ -4385,7 +4387,7 @@ static void test_get_data_by_sel()  {
     assert(result2.get_column<double>("col_1")[1] == 3);
     assert(result2.get_column<double>("col_1")[2] == 5);
 
-    std::vector<std::string> s2 = { "aa", "bb", "cc", "10", "11", "12", "14" };
+    StlVecType<std::string> s2 = { "aa", "bb", "cc", "10", "11", "12", "14" };
 
     df.load_column("col_str2", s2);
 
@@ -4453,13 +4455,13 @@ static void test_get_view_by_sel()  {
 
     std::cout << "\nTesting get_view_by_sel() ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456 };
-    std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7 };
-    std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14 };
-    std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21 };
-    std::vector<double> d4 = { 22, 23, 24, 25 };
-    std::vector<std::string> s1 = { "11", "22", "33", "ee", "ff", "gg", "ll" };
+    StlVecType<double> d1 = { 1, 2, 3, 4, 5, 6, 7 };
+    StlVecType<double> d2 = { 8, 9, 10, 11, 12, 13, 14 };
+    StlVecType<double> d3 = { 15, 16, 17, 18, 19, 20, 21 };
+    StlVecType<double> d4 = { 22, 23, 24, 25 };
+    StlVecType<std::string> s1 = { "11", "22", "33", "ee", "ff", "gg", "ll" };
     MyDataFrame         df;
 
     df.load_data(std::move(idx),
@@ -4599,14 +4601,14 @@ static void test_get_view_by_rand()  {
 
     std::cout << "\nTesting get_view_by_rand() ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460 };
-    std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
-    std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18 };
-    std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25 };
-    std::vector<double> d4 = { 22, 23, 24, 25, 26, 27 };
-    std::vector<std::string> s1 =
+    StlVecType<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
+    StlVecType<double> d2 = { 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18 };
+    StlVecType<double> d3 = { 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25 };
+    StlVecType<double> d4 = { 22, 23, 24, 25, 26, 27 };
+    StlVecType<std::string> s1 =
         { "11", "22", "33", "aa", "bb", "cc", "dd", "tt", "uu", "ii", "88" };
     MyDataFrame         df;
 
@@ -4655,12 +4657,12 @@ static void test_get_view_by_loc_location()  {
 
     std::cout << "\nTesting get_view_by_loc(locations) ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123450, 123455, 123450, 123449 };
-    std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7 };
-    std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14 };
-    std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21 };
-    std::vector<double> d4 = { 22, 23, 24, 25 };
+    StlVecType<double> d1 = { 1, 2, 3, 4, 5, 6, 7 };
+    StlVecType<double> d2 = { 8, 9, 10, 11, 12, 13, 14 };
+    StlVecType<double> d3 = { 15, 16, 17, 18, 19, 20, 21 };
+    StlVecType<double> d4 = { 22, 23, 24, 25 };
     MyDataFrame         df;
 
     df.load_data(std::move(idx),
@@ -4671,12 +4673,12 @@ static void test_get_view_by_loc_location()  {
 
     const MyDataFrame   &const_df = df;
 
-    auto    dfv1 = df.get_view_by_loc<double>(std::vector<long> { 3, 6 });
-    auto    dfv2 = df.get_view_by_loc<double>(std::vector<long> { -4, -1 , 5 });
+    auto    dfv1 = df.get_view_by_loc<double>(StlVecType<long> { 3, 6 });
+    auto    dfv2 = df.get_view_by_loc<double>(StlVecType<long> { -4, -1 , 5 });
     auto    const_dfv1 =
-        const_df.get_view_by_loc<double>(std::vector<long> { 3, 6 });
+        const_df.get_view_by_loc<double>(StlVecType<long> { 3, 6 });
     auto    const_dfv2 =
-        const_df.get_view_by_loc<double>(std::vector<long> { -4, -1 , 5 });
+        const_df.get_view_by_loc<double>(StlVecType<long> { -4, -1 , 5 });
 
     assert(dfv1.get_index().size() == 2);
     assert(dfv1.get_column<double>("col_3").size() == 2);
@@ -4738,12 +4740,12 @@ static void test_get_view_by_idx_values()  {
 
     std::cout << "\nTesting get_view_by_idx(values) ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123450, 123455, 123450, 123449 };
-    std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7 };
-    std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14 };
-    std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21 };
-    std::vector<double> d4 = { 22, 23, 24, 25 };
+    StlVecType<double> d1 = { 1, 2, 3, 4, 5, 6, 7 };
+    StlVecType<double> d2 = { 8, 9, 10, 11, 12, 13, 14 };
+    StlVecType<double> d3 = { 15, 16, 17, 18, 19, 20, 21 };
+    StlVecType<double> d4 = { 22, 23, 24, 25 };
     MyDataFrame         df;
 
     df.load_data(std::move(idx),
@@ -4756,16 +4758,16 @@ static void test_get_view_by_idx_values()  {
 
     auto    dfv1 =
         df.get_view_by_idx<double>(
-            std::vector<MyDataFrame::IndexType> { 123452, 123455 });
+            StlVecType<MyDataFrame::IndexType> { 123452, 123455 });
     auto    const_dfv1 =
         const_df.get_view_by_idx<double>(
-            std::vector<MyDataFrame::IndexType> { 123452, 123455 });
+            StlVecType<MyDataFrame::IndexType> { 123452, 123455 });
     auto    dfv2 =
         df.get_view_by_idx<double>(
-            std::vector<MyDataFrame::IndexType> { 123449, 123450 });
+            StlVecType<MyDataFrame::IndexType> { 123449, 123450 });
     auto    const_dfv2 =
         const_df.get_view_by_idx<double>(
-            std::vector<MyDataFrame::IndexType> { 123449, 123450 });
+            StlVecType<MyDataFrame::IndexType> { 123449, 123450 });
 
     assert(dfv1.get_index().size() == 2);
     assert(dfv1.get_column<double>("col_3").size() == 2);

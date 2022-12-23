@@ -640,6 +640,31 @@ inline static O _remove_copy_if_(I first, I last, O d_first, PRE predicate)  {
 
 // ----------------------------------------------------------------------------
 
+template<typename T, typename V>
+static inline void
+_sort_by_sorted_index_(T &to_be_sorted,
+                       V &sorting_idxs,
+                       size_t idx_s)  {
+
+    if (idx_s > 0)  {
+        idx_s -= 1;
+        for (size_t i = 0; i < idx_s; ++i)  {
+            // while the element i is not yet in place
+            //
+            while (sorting_idxs[i] != sorting_idxs[sorting_idxs[i]])  {
+                // swap it with the element at its final place
+                //
+                const size_t    j = sorting_idxs[i];
+
+                std::swap(to_be_sorted[j], to_be_sorted[sorting_idxs[j]]);
+                std::swap(sorting_idxs[i], sorting_idxs[j]);
+            }
+        }
+    }
+}
+
+// ----------------------------------------------------------------------------
+
 template<typename T>
 inline static std::string _to_string_(const T &value)  {
 

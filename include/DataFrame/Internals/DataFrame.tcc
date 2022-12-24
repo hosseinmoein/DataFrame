@@ -178,7 +178,7 @@ DataFrame<I, H>::shuffle(const StlVecType<const char *> &col_names,
 template<typename I, typename H>
 template<typename T>
 void DataFrame<I, H>::
-fill_missing_value_(StlVecType<T> &vec,
+fill_missing_value_(ColumnVecType<T> &vec,
                     const T &value,
                     int limit,
                     size_type col_num)  {
@@ -207,7 +207,7 @@ fill_missing_value_(StlVecType<T> &vec,
 template<typename I, typename H>
 template<typename T>
 void DataFrame<I, H>::
-fill_missing_ffill_(StlVecType<T> &vec, int limit, size_type col_num)  {
+fill_missing_ffill_(ColumnVecType<T> &vec, int limit, size_type col_num)  {
 
     const size_type vec_size = vec.size();
 
@@ -245,7 +245,7 @@ template<typename T,
          typename std::enable_if<! std::is_arithmetic<T>::value ||
                                  ! std::is_arithmetic<I>::value>::type*>
 void DataFrame<I, H>::
-fill_missing_midpoint_(StlVecType<T> &, int, size_type)  {
+fill_missing_midpoint_(ColumnVecType<T> &, int, size_type)  {
 
     throw NotFeasible("fill_missing_midpoint_(): ERROR: Mid-point filling is "
                       "not feasible on non-arithmetic types");
@@ -258,7 +258,7 @@ template<typename T,
          typename std::enable_if<std::is_arithmetic<T>::value &&
                                  std::is_arithmetic<I>::value>::type*>
 void DataFrame<I, H>::
-fill_missing_midpoint_(StlVecType<T> &vec, int limit, size_type)  {
+fill_missing_midpoint_(ColumnVecType<T> &vec, int limit, size_type)  {
 
     const size_type vec_size = vec.size();
 
@@ -291,7 +291,7 @@ fill_missing_midpoint_(StlVecType<T> &vec, int limit, size_type)  {
 template<typename I, typename H>
 template<typename T>
 void DataFrame<I, H>::
-fill_missing_bfill_(StlVecType<T> &vec, int limit)  {
+fill_missing_bfill_(ColumnVecType<T> &vec, int limit)  {
 
     const long  vec_size = static_cast<long>(vec.size());
 
@@ -318,7 +318,7 @@ template<typename T,
          typename std::enable_if<! std::is_arithmetic<T>::value ||
                                  ! std::is_arithmetic<I>::value>::type*>
 void DataFrame<I, H>::
-fill_missing_linter_(StlVecType<T> &, const IndexVecType &, int)  {
+fill_missing_linter_(ColumnVecType<T> &, const IndexVecType &, int)  {
 
     throw NotFeasible("fill_missing_linter_(): ERROR: Interpolation is "
                       "not feasible on non-arithmetic types");
@@ -331,7 +331,7 @@ template<typename T,
          typename std::enable_if<std::is_arithmetic<T>::value &&
                                  std::is_arithmetic<I>::value>::type*>
 void DataFrame<I, H>::
-fill_missing_linter_(StlVecType<T> &vec,
+fill_missing_linter_(ColumnVecType<T> &vec,
                      const IndexVecType &index,
                      int limit)  {
 

@@ -25,6 +25,8 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#pragma omp declare simd clauses
+
 #include <DataFrame/DataFrame.h>
 #include <DataFrame/DataFrameStatsVisitors.h>
 #include <DataFrame/RandGen.h>
@@ -33,9 +35,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 using namespace hmdf;
 
-constexpr std::size_t   ALIGNMENT = 64;
+constexpr std::size_t   ALIGNMENT = 256;
 
-typedef StdDataFrame64<time_t> MyDataFrame;
+typedef StdDataFrame256<time_t> MyDataFrame;
 
 // -----------------------------------------------------------------------------
 

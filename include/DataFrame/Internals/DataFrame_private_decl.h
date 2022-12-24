@@ -59,39 +59,39 @@ sort_common_(DataFrame<I, H> &df, CF &&comp_func);
 
 template<typename T>
 static void
-fill_missing_value_(StlVecType<T> &vec,
+fill_missing_value_(ColumnVecType<T> &vec,
                     const T &value,
                     int limit,
                     size_type col_num);
 
 template<typename T>
 static void
-fill_missing_ffill_(StlVecType<T> &vec, int limit, size_type col_num);
+fill_missing_ffill_(ColumnVecType<T> &vec, int limit, size_type col_num);
 
 template<typename T,
          typename std::enable_if<
              std::is_arithmetic<T>::value &&
              std::is_arithmetic<IndexType>::value>::type* = nullptr>
 static void
-fill_missing_midpoint_(StlVecType<T> &vec, int limit, size_type col_num);
+fill_missing_midpoint_(ColumnVecType<T> &vec, int limit, size_type col_num);
 
 template<typename T,
          typename std::enable_if<
              ! std::is_arithmetic<T>::value ||
              ! std::is_arithmetic<IndexType>::value>::type* = nullptr>
 static void
-fill_missing_midpoint_(StlVecType<T> &vec, int limit, size_type col_num);
+fill_missing_midpoint_(ColumnVecType<T> &vec, int limit, size_type col_num);
 
 template<typename T>
 static void
-fill_missing_bfill_(StlVecType<T> &vec, int limit);
+fill_missing_bfill_(ColumnVecType<T> &vec, int limit);
 
 template<typename T,
          typename std::enable_if<
              std::is_arithmetic<T>::value &&
              std::is_arithmetic<IndexType>::value>::type* = nullptr>
 static void
-fill_missing_linter_(StlVecType<T> &vec,
+fill_missing_linter_(ColumnVecType<T> &vec,
                      const IndexVecType &index,
                      int limit);
 
@@ -100,7 +100,7 @@ template<typename T,
              ! std::is_arithmetic<T>::value ||
              ! std::is_arithmetic<IndexType>::value>::type* = nullptr>
 static void
-fill_missing_linter_(StlVecType<T> &, const IndexVecType &, int);
+fill_missing_linter_(ColumnVecType<T> &, const IndexVecType &, int);
 
 // Maps row number -> number of missing column(s)
 using DropRowMap = std::map<size_type, size_type>;

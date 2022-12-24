@@ -747,12 +747,12 @@ sort(const char *name1, sort_spec dir1, const char *name2, sort_spec dir2)  {
     ColumnVecType<T2>   *vec2 { nullptr};
 
     if (! ::strcmp(name1, DF_INDEX_COL_NAME))
-        vec1 = reinterpret_cast<StlVecType<T1> *>(&indices_);
+        vec1 = reinterpret_cast<ColumnVecType<T1> *>(&indices_);
     else
         vec1 = &(get_column<T1>(name1));
 
     if (! ::strcmp(name2, DF_INDEX_COL_NAME))
-        vec2 = reinterpret_cast<StlVecType<T2> *>(&indices_);
+        vec2 = reinterpret_cast<ColumnVecType<T2> *>(&indices_);
     else
         vec2 = &(get_column<T2>(name2));
 
@@ -796,17 +796,17 @@ sort(const char *name1, sort_spec dir1,
     ColumnVecType<T3>   *vec3 { nullptr};
 
     if (! ::strcmp(name1, DF_INDEX_COL_NAME))
-        vec1 = reinterpret_cast<StlVecType<T1> *>(&indices_);
+        vec1 = reinterpret_cast<ColumnVecType<T1> *>(&indices_);
     else
         vec1 = &(get_column<T1>(name1));
 
     if (! ::strcmp(name2, DF_INDEX_COL_NAME))
-        vec2 = reinterpret_cast<StlVecType<T2> *>(&indices_);
+        vec2 = reinterpret_cast<ColumnVecType<T2> *>(&indices_);
     else
         vec2 = &(get_column<T2>(name2));
 
     if (! ::strcmp(name3, DF_INDEX_COL_NAME))
-        vec3 = reinterpret_cast<StlVecType<T3> *>(&indices_);
+        vec3 = reinterpret_cast<ColumnVecType<T3> *>(&indices_);
     else
         vec3 = &(get_column<T3>(name3));
 
@@ -865,22 +865,22 @@ sort(const char *name1, sort_spec dir1,
     ColumnVecType<T4>   *vec4 { nullptr};
 
     if (! ::strcmp(name1, DF_INDEX_COL_NAME))
-        vec1 = reinterpret_cast<StlVecType<T1> *>(&indices_);
+        vec1 = reinterpret_cast<ColumnVecType<T1> *>(&indices_);
     else
         vec1 = &(get_column<T1>(name1));
 
     if (! ::strcmp(name2, DF_INDEX_COL_NAME))
-        vec2 = reinterpret_cast<StlVecType<T2> *>(&indices_);
+        vec2 = reinterpret_cast<ColumnVecType<T2> *>(&indices_);
     else
         vec2 = &(get_column<T2>(name2));
 
     if (! ::strcmp(name3, DF_INDEX_COL_NAME))
-        vec3 = reinterpret_cast<StlVecType<T3> *>(&indices_);
+        vec3 = reinterpret_cast<ColumnVecType<T3> *>(&indices_);
     else
         vec3 = &(get_column<T3>(name3));
 
     if (! ::strcmp(name4, DF_INDEX_COL_NAME))
-        vec4 = reinterpret_cast<StlVecType<T4> *>(&indices_);
+        vec4 = reinterpret_cast<ColumnVecType<T4> *>(&indices_);
     else
         vec4 = &(get_column<T4>(name4));
 
@@ -954,27 +954,27 @@ sort(const char *name1, sort_spec dir1,
     ColumnVecType<T5>   *vec5 { nullptr};
 
     if (! ::strcmp(name1, DF_INDEX_COL_NAME))
-        vec1 = reinterpret_cast<StlVecType<T1> *>(&indices_);
+        vec1 = reinterpret_cast<ColumnVecType<T1> *>(&indices_);
     else
         vec1 = &(get_column<T1>(name1));
 
     if (! ::strcmp(name2, DF_INDEX_COL_NAME))
-        vec2 = reinterpret_cast<StlVecType<T2> *>(&indices_);
+        vec2 = reinterpret_cast<ColumnVecType<T2> *>(&indices_);
     else
         vec2 = &(get_column<T2>(name2));
 
     if (! ::strcmp(name3, DF_INDEX_COL_NAME))
-        vec3 = reinterpret_cast<StlVecType<T3> *>(&indices_);
+        vec3 = reinterpret_cast<ColumnVecType<T3> *>(&indices_);
     else
         vec3 = &(get_column<T3>(name3));
 
     if (! ::strcmp(name4, DF_INDEX_COL_NAME))
-        vec4 = reinterpret_cast<StlVecType<T4> *>(&indices_);
+        vec4 = reinterpret_cast<ColumnVecType<T4> *>(&indices_);
     else
         vec4 = &(get_column<T4>(name4));
 
     if (! ::strcmp(name4, DF_INDEX_COL_NAME))
-        vec5 = reinterpret_cast<StlVecType<T5> *>(&indices_);
+        vec5 = reinterpret_cast<ColumnVecType<T5> *>(&indices_);
     else
         vec5 = &(get_column<T5>(name5));
 
@@ -1142,7 +1142,7 @@ groupby1(const char *col_name, I_V &&idx_visitor, Ts&& ... args) const  {
     const StlVecType<T>  *gb_vec { nullptr };
 
     if (! ::strcmp(col_name, DF_INDEX_COL_NAME))
-        gb_vec = (const StlVecType<T> *) &(get_index());
+        gb_vec = (const ColumnVecType<T> *) &(get_index());
     else
         gb_vec = (const ColumnVecType<T> *) &(get_column<T>(col_name));
 

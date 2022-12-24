@@ -404,7 +404,7 @@ fill_missing(const StlVecType<const char *> &col_names,
     size_type                       thread_count = 0;
 
     for (size_type i = 0; i < count; ++i)  {
-        StlVecType<T>    &vec = get_column<T>(col_names[i]);
+        ColumnVecType<T>    &vec = get_column<T>(col_names[i]);
 
         if (fp == fill_policy::value)  {
             if (thread_count >= get_thread_level())
@@ -585,10 +585,10 @@ replace(const char *col_name,
         const StlVecType<T> &new_values,
         int limit)  {
 
-    StlVecType<T>    &vec = get_column<T>(col_name);
+    ColumnVecType<T>    &vec = get_column<T>(col_name);
     size_type           count = 0;
 
-    _replace_vector_vals_<StlVecType<T>, T>
+    _replace_vector_vals_<ColumnVecType<T>, T>
         (vec, old_values, new_values, count, limit);
 
     return (count);
@@ -617,7 +617,7 @@ template<typename T, typename F>
 void DataFrame<I, H>::
 replace(const char *col_name, F &functor)  {
 
-    StlVecType<T>    &vec = get_column<T>(col_name);
+    ColumnVecType<T>    &vec = get_column<T>(col_name);
     const size_type     vec_s = vec.size();
 
     for (size_type i = 0; i < vec_s; ++i)
@@ -716,7 +716,7 @@ void DataFrame<I, H>::sort(const char *name, sort_spec dir)  {
             sort_common_<decltype(d), Ts ...>(*this, std::move(d));
     }
     else  {
-        const StlVecType<T>  &idx_vec = get_column<T>(name);
+        const ColumnVecType<T>  &idx_vec = get_column<T>(name);
 
         auto    a = [&x = idx_vec](size_type i, size_type j) -> bool {
                         return (x[i] < x[j]);
@@ -743,8 +743,8 @@ sort(const char *name1, sort_spec dir1, const char *name2, sort_spec dir2)  {
 
     make_consistent<Ts ...>();
 
-    StlVecType<T1>   *vec1 { nullptr};
-    StlVecType<T2>   *vec2 { nullptr};
+    ColumnVecType<T1>   *vec1 { nullptr};
+    ColumnVecType<T2>   *vec2 { nullptr};
 
     if (! ::strcmp(name1, DF_INDEX_COL_NAME))
         vec1 = reinterpret_cast<StlVecType<T1> *>(&indices_);
@@ -791,9 +791,9 @@ sort(const char *name1, sort_spec dir1,
 
     make_consistent<Ts ...>();
 
-    StlVecType<T1>   *vec1 { nullptr};
-    StlVecType<T2>   *vec2 { nullptr};
-    StlVecType<T3>   *vec3 { nullptr};
+    ColumnVecType<T1>   *vec1 { nullptr};
+    ColumnVecType<T2>   *vec2 { nullptr};
+    ColumnVecType<T3>   *vec3 { nullptr};
 
     if (! ::strcmp(name1, DF_INDEX_COL_NAME))
         vec1 = reinterpret_cast<StlVecType<T1> *>(&indices_);
@@ -859,10 +859,10 @@ sort(const char *name1, sort_spec dir1,
 
     make_consistent<Ts ...>();
 
-    StlVecType<T1>   *vec1 { nullptr};
-    StlVecType<T2>   *vec2 { nullptr};
-    StlVecType<T3>   *vec3 { nullptr};
-    StlVecType<T4>   *vec4 { nullptr};
+    ColumnVecType<T1>   *vec1 { nullptr};
+    ColumnVecType<T2>   *vec2 { nullptr};
+    ColumnVecType<T3>   *vec3 { nullptr};
+    ColumnVecType<T4>   *vec4 { nullptr};
 
     if (! ::strcmp(name1, DF_INDEX_COL_NAME))
         vec1 = reinterpret_cast<StlVecType<T1> *>(&indices_);
@@ -947,11 +947,11 @@ sort(const char *name1, sort_spec dir1,
 
     make_consistent<Ts ...>();
 
-    StlVecType<T1>   *vec1 { nullptr};
-    StlVecType<T2>   *vec2 { nullptr};
-    StlVecType<T3>   *vec3 { nullptr};
-    StlVecType<T4>   *vec4 { nullptr};
-    StlVecType<T5>   *vec5 { nullptr};
+    ColumnVecType<T1>   *vec1 { nullptr};
+    ColumnVecType<T2>   *vec2 { nullptr};
+    ColumnVecType<T3>   *vec3 { nullptr};
+    ColumnVecType<T4>   *vec4 { nullptr};
+    ColumnVecType<T5>   *vec5 { nullptr};
 
     if (! ::strcmp(name1, DF_INDEX_COL_NAME))
         vec1 = reinterpret_cast<StlVecType<T1> *>(&indices_);
@@ -1144,7 +1144,7 @@ groupby1(const char *col_name, I_V &&idx_visitor, Ts&& ... args) const  {
     if (! ::strcmp(col_name, DF_INDEX_COL_NAME))
         gb_vec = (const StlVecType<T> *) &(get_index());
     else
-        gb_vec = (const StlVecType<T> *) &(get_column<T>(col_name));
+        gb_vec = (const ColumnVecType<T> *) &(get_column<T>(col_name));
 
     StlVecType<std::size_t>    sort_v (gb_vec->size(), 0);
 
@@ -1191,16 +1191,16 @@ groupby2(const char *col_name1,
     const StlVecType<T2> *gb_vec2 { nullptr };
 
     if (! ::strcmp(col_name1, DF_INDEX_COL_NAME))  {
-        gb_vec1 = (const StlVecType<T1> *) &(get_index());
-        gb_vec2 = (const StlVecType<T2> *) &(get_column<T2>(col_name2));
+        gb_vec1 = (const ColumnVecType<T1> *) &(get_index());
+        gb_vec2 = (const ColumnVecType<T2> *) &(get_column<T2>(col_name2));
     }
     else if (! ::strcmp(col_name2, DF_INDEX_COL_NAME))  {
-        gb_vec1 = (const StlVecType<T1> *) &(get_column<T1>(col_name1));
-        gb_vec2 = (const StlVecType<T2> *) &(get_index());
+        gb_vec1 = (const ColumnVecType<T1> *) &(get_column<T1>(col_name1));
+        gb_vec2 = (const ColumnVecType<T2> *) &(get_index());
     }
     else  {
-        gb_vec1 = (const StlVecType<T1> *) &(get_column<T1>(col_name1));
-        gb_vec2 = (const StlVecType<T2> *) &(get_column<T2>(col_name2));
+        gb_vec1 = (const ColumnVecType<T1> *) &(get_column<T1>(col_name1));
+        gb_vec2 = (const ColumnVecType<T2> *) &(get_column<T2>(col_name2));
     }
 
     StlVecType<std::size_t>    sort_v (std::min(gb_vec1->size(),
@@ -1260,24 +1260,24 @@ groupby3(const char *col_name1,
     const StlVecType<T3> *gb_vec3 { nullptr };
 
     if (! ::strcmp(col_name1, DF_INDEX_COL_NAME))  {
-        gb_vec1 = (const StlVecType<T1> *) &(get_index());
-        gb_vec2 = (const StlVecType<T2> *) &(get_column<T2>(col_name2));
-        gb_vec3 = (const StlVecType<T3> *) &(get_column<T3>(col_name3));
+        gb_vec1 = (const ColumnVecType<T1> *) &(get_index());
+        gb_vec2 = (const ColumnVecType<T2> *) &(get_column<T2>(col_name2));
+        gb_vec3 = (const ColumnVecType<T3> *) &(get_column<T3>(col_name3));
     }
     else if (! ::strcmp(col_name2, DF_INDEX_COL_NAME))  {
-        gb_vec1 = (const StlVecType<T1> *) &(get_column<T1>(col_name1));
-        gb_vec2 = (const StlVecType<T2> *) &(get_index());
-        gb_vec3 = (const StlVecType<T3> *) &(get_column<T3>(col_name3));
+        gb_vec1 = (const ColumnVecType<T1> *) &(get_column<T1>(col_name1));
+        gb_vec2 = (const ColumnVecType<T2> *) &(get_index());
+        gb_vec3 = (const ColumnVecType<T3> *) &(get_column<T3>(col_name3));
     }
     else if (! ::strcmp(col_name3, DF_INDEX_COL_NAME))  {
-        gb_vec1 = (const StlVecType<T1> *) &(get_column<T1>(col_name1));
-        gb_vec2 = (const StlVecType<T2> *) &(get_column<T2>(col_name2));
-        gb_vec3 = (const StlVecType<T3> *) &(get_index());
+        gb_vec1 = (const ColumnVecType<T1> *) &(get_column<T1>(col_name1));
+        gb_vec2 = (const ColumnVecType<T2> *) &(get_column<T2>(col_name2));
+        gb_vec3 = (const ColumnVecType<T3> *) &(get_index());
     }
     else  {
-        gb_vec1 = (const StlVecType<T1> *) &(get_column<T1>(col_name1));
-        gb_vec2 = (const StlVecType<T2> *) &(get_column<T2>(col_name2));
-        gb_vec3 = (const StlVecType<T3> *) &(get_column<T3>(col_name3));
+        gb_vec1 = (const ColumnVecType<T1> *) &(get_column<T1>(col_name1));
+        gb_vec2 = (const ColumnVecType<T2> *) &(get_column<T2>(col_name2));
+        gb_vec3 = (const ColumnVecType<T3> *) &(get_column<T3>(col_name3));
     }
 
     StlVecType<std::size_t>    sort_v(
@@ -1391,7 +1391,7 @@ template<typename T>
 DataFrame<T, HeteroVector<std::size_t(H::align_value)>>
 DataFrame<I, H>::value_counts (const char *col_name) const  {
 
-    const StlVecType<T>  &vec = get_column<T>(col_name);
+    const ColumnVecType<T>  &vec = get_column<T>(col_name);
     auto                    hash_func =
         [](std::reference_wrapper<const T> v) -> std::size_t  {
             return(std::hash<T>{}(v.get()));
@@ -1517,7 +1517,7 @@ transpose(IndexVecType &&indices, const V &new_col_names) const  {
                                 "Length of new_col_names is not equal "
                                 "to number of rows");
 
-    StlVecType<const StlVecType<T> *> current_cols;
+    StlVecType<const ColumnVecType<T> *> current_cols;
 
     current_cols.reserve(num_cols);
     for (const auto &citer : column_list_)

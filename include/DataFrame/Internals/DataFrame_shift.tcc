@@ -111,7 +111,7 @@ shift(const char *col_name, size_type periods, shift_policy sp) const  {
     static_assert(std::is_base_of<HeteroVector<align_value>, DataVec>::value,
                   "Only a StdDataFrame can call shift()");
 
-    StlVecType<T>              result = get_column<T>(col_name);
+    ColumnVecType<T>              result = get_column<T>(col_name);
     vertical_shift_functor_<T>  functor(periods, sp);
 
     functor (result);

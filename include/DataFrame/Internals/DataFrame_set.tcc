@@ -690,7 +690,7 @@ append_column (const char *name,
                Index2D<const ITR &> range,
                nan_policy padding)  {
 
-    StlVecType<T>  &vec = get_column<T>(name);
+    ColumnVecType<T>  &vec = get_column<T>(name);
     size_type       s = std::distance(range.begin, range.end) + vec.size ();
     const size_type idx_s = indices_.size();
 
@@ -731,7 +731,7 @@ typename DataFrame<I, H>::size_type
 DataFrame<I, H>::
 append_column (const char *name, const T &val, nan_policy padding)  {
 
-    StlVecType<T>  &vec = get_column<T>(name);
+    ColumnVecType<T>  &vec = get_column<T>(name);
     size_type       s = 1;
     const size_type idx_s = indices_.size();
 

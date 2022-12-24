@@ -1139,7 +1139,7 @@ template<typename T, typename I_V, typename ... Ts>
 DataFrame<I, H> DataFrame<I, H>::
 groupby1(const char *col_name, I_V &&idx_visitor, Ts&& ... args) const  {
 
-    const StlVecType<T>  *gb_vec { nullptr };
+    const ColumnVecType<T>  *gb_vec { nullptr };
 
     if (! ::strcmp(col_name, DF_INDEX_COL_NAME))
         gb_vec = (const ColumnVecType<T> *) &(get_index());
@@ -1187,8 +1187,8 @@ groupby2(const char *col_name1,
          I_V &&idx_visitor,
          Ts&& ... args) const  {
 
-    const StlVecType<T1> *gb_vec1 { nullptr };
-    const StlVecType<T2> *gb_vec2 { nullptr };
+    const ColumnVecType<T1> *gb_vec1 { nullptr };
+    const ColumnVecType<T2> *gb_vec2 { nullptr };
 
     if (! ::strcmp(col_name1, DF_INDEX_COL_NAME))  {
         gb_vec1 = (const ColumnVecType<T1> *) &(get_index());
@@ -1255,9 +1255,9 @@ groupby3(const char *col_name1,
          I_V &&idx_visitor,
          Ts&& ... args) const  {
 
-    const StlVecType<T1> *gb_vec1 { nullptr };
-    const StlVecType<T2> *gb_vec2 { nullptr };
-    const StlVecType<T3> *gb_vec3 { nullptr };
+    const ColumnVecType<T1> *gb_vec1 { nullptr };
+    const ColumnVecType<T2> *gb_vec2 { nullptr };
+    const ColumnVecType<T3> *gb_vec3 { nullptr };
 
     if (! ::strcmp(col_name1, DF_INDEX_COL_NAME))  {
         gb_vec1 = (const ColumnVecType<T1> *) &(get_index());

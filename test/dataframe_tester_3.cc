@@ -79,7 +79,7 @@ static void test_groupby_edge()  {
 
     FactorizeVisitor<double, unsigned long, 256>
         fact([] (const double &f) -> bool {
-            return (f > 11106.0 && f < 114.0);
+            return (f > 11106.0 && f < 30000.0);
         });
     df.load_column("bool_col",
                    df.single_act_visit<double>("dbl_col_2", fact).get_result());

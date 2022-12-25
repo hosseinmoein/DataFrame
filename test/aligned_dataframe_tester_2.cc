@@ -267,7 +267,7 @@ static void test_load_align_column()  {
                          std::move(summary_vec),
                          5,
                          true,
-                         std::sqrt(-1));
+                         std::numeric_limits<double>::quiet_NaN());
 
     StlVecType<double> summary_vec_2 = { 102, 202, 302, 402, 502 };
 
@@ -275,7 +275,7 @@ static void test_load_align_column()  {
                          std::move(summary_vec_2),
                          5,
                          false,
-                         std::sqrt(-1));
+                         std::numeric_limits<double>::quiet_NaN());
 
     assert(df.get_column<double>("summary_col").size() == 28);
     assert(df.get_column<double>("summary_col_2").size() == 28);
@@ -368,7 +368,8 @@ static void test_CategoryVisitor()  {
         { 1UL, 2UL, 3UL, 10UL, 5UL, 7UL, 8UL, 12UL, 9UL, 12UL, 10UL, 13UL,
           10UL, 15UL, 14UL };
     StlVecType<double>         dblvec =
-        { 0.0, 15.0, 14.0, 15.0, 1.0, 12.0, 11.0, 8.0, 15.0, 6.0, sqrt(-1),
+        { 0.0, 15.0, 14.0, 15.0, 1.0, 12.0, 11.0, 8.0, 15.0, 6.0,
+          std::numeric_limits<double>::quiet_NaN(),
           4.0, 14.0, 14.0, 20.0 };
     StlVecType<int>            intvec = { 1, 2, 3, 4, 5, 8, 6, 7, 11, 14, 9 };
     StlVecType<std::string>    strvec =
@@ -439,9 +440,10 @@ static void test_FactorizeVisitor()  {
                    std::move(intvec),
                    nan_policy::dont_pad_with_nans);
 
-    FactorizeVisitor<double, unsigned long, 64>    fact([] (const double &f) -> bool {
-                                         return (f > 106.0 && f < 114.0);
-                                     });
+    FactorizeVisitor<double, unsigned long, 64>
+        fact([] (const double &f) -> bool {
+            return (f > 106.0 && f < 114.0);
+        });
     df.load_column("bool_col",
                    df.single_act_visit<double>("dbl_col_2", fact).get_result());
     assert(df.get_column<bool>("bool_col").size() == 15);
@@ -472,12 +474,15 @@ static void test_pattern_match()  {
     p.max_value = 30;
 
     df.load_data(MyDataFrame::gen_sequence_index(0, item_cnt, 1),
-                 std::make_pair("lognormal",
-                                gen_lognormal_dist<double, 64>(item_cnt, p)),
-                 std::make_pair("normal",
-                                gen_normal_dist<double, 64>(item_cnt, p)),
-                 std::make_pair("uniform_real",
-                                gen_uniform_real_dist<double, 64>(item_cnt, p)));
+                 std::make_pair(
+                     "lognormal",
+                     gen_lognormal_dist<double, 64>(item_cnt, p)),
+                 std::make_pair(
+                     "normal",
+                     gen_normal_dist<double, 64>(item_cnt, p)),
+                 std::make_pair(
+                     "uniform_real",
+                     gen_uniform_real_dist<double, 64>(item_cnt, p)));
     p.mean = 0;
     p.std = 1.0;
     p.min_value = -30;
@@ -568,7 +573,8 @@ static void test_ClipVisitor()  {
         { 1UL, 2UL, 3UL, 10UL, 5UL, 7UL, 8UL, 12UL, 9UL, 12UL, 10UL, 13UL,
           10UL, 15UL, 14UL };
     StlVecType<double>         dblvec =
-        { 0.0, 15.0, 14.0, 15.0, 1.0, 12.0, 11.0, 8.0, 15.0, 6.0, sqrt(-1),
+        { 0.0, 15.0, 14.0, 15.0, 1.0, 12.0, 11.0, 8.0, 15.0, 6.0,
+          std::numeric_limits<double>::quiet_NaN(),
           4.0, 14.0, 14.0, 20.0 };
     StlVecType<int>            intvec = { 1, 2, 3, 4, 5, 8, 6, 7, 11, 14, 9 };
     StlVecType<std::string>    strvec =
@@ -720,11 +726,16 @@ static void test_SigmoidVisitor()  {
 
     SigmoidVisitor<double, unsigned long, 64>  sig_log(sigmoid_type::logistic);
     SigmoidVisitor<double, unsigned long, 64>  sig_alg(sigmoid_type::algebraic);
-    SigmoidVisitor<double, unsigned long, 64>  sig_tan(sigmoid_type::hyperbolic_tan);
-    SigmoidVisitor<double, unsigned long, 64>  sig_atan(sigmoid_type::arc_tan);
-    SigmoidVisitor<double, unsigned long, 64>  sig_err(sigmoid_type::error_function);
-    SigmoidVisitor<double, unsigned long, 64>  sig_gud(sigmoid_type::gudermannian);
-    SigmoidVisitor<double, unsigned long, 64>  sig_smo(sigmoid_type::smoothstep);
+    SigmoidVisitor<double, unsigned long, 64>  sig_tan(
+        sigmoid_type::hyperbolic_tan);
+    SigmoidVisitor<double, unsigned long, 64>  sig_atan(
+        sigmoid_type::arc_tan);
+    SigmoidVisitor<double, unsigned long, 64>  sig_err(
+        sigmoid_type::error_function);
+    SigmoidVisitor<double, unsigned long, 64>  sig_gud(
+        sigmoid_type::gudermannian);
+    SigmoidVisitor<double, unsigned long, 64>  sig_smo(
+        sigmoid_type::smoothstep);
     const auto              log_result =
         df.single_act_visit<double>("d1_col", sig_log).get_result();
     const auto              alg_result =
@@ -1397,19 +1408,28 @@ static void test_BoxCoxVisitor()  {
                                 gen_lognormal_dist<double, 64>(item_cnt, p)),
                  std::make_pair("normal",
                                 gen_normal_dist<double, 64>(item_cnt, p)),
-                 std::make_pair("uniform_real",
-                                gen_uniform_real_dist<double, 64>(item_cnt, p)));
+                 std::make_pair(
+                     "uniform_real",
+                     gen_uniform_real_dist<double, 64>(item_cnt, p)));
 
-    BoxCoxVisitor<double, unsigned long, 64>   bc_v1(box_cox_type::original, 1.5, true);
+    BoxCoxVisitor<double, unsigned long, 64>   bc_v1(box_cox_type::original,
+                                                     1.5,
+                                                     true);
     const auto              &result1 =
         df.single_act_visit<double>("lognormal", bc_v1).get_result();
-    BoxCoxVisitor<double, unsigned long, 64>   bc_v2(box_cox_type::original, 1.5, false);
+    BoxCoxVisitor<double, unsigned long, 64>   bc_v2(box_cox_type::original,
+                                                     1.5,
+                                                     false);
     const auto              &result2 =
         df.single_act_visit<double>("uniform_real", bc_v2).get_result();
-    BoxCoxVisitor<double, unsigned long, 64>   bc_v3(box_cox_type::modulus, -0.5, false);
+    BoxCoxVisitor<double, unsigned long, 64>   bc_v3(box_cox_type::modulus,
+                                                     -0.5,
+                                                     false);
     const auto              &result3 =
         df.single_act_visit<double>("uniform_real", bc_v3).get_result();
-    BoxCoxVisitor<double, unsigned long, 64>   bc_v4(box_cox_type::exponential, -0.5, false);
+    BoxCoxVisitor<double, unsigned long, 64>   bc_v4(box_cox_type::exponential,
+                                                     -0.5,
+                                                     false);
     const auto              &result4 =
         df.single_act_visit<double>("uniform_real", bc_v4).get_result();
 
@@ -1497,7 +1517,9 @@ static void test_HampelFilterVisitor()  {
 
     df.load_data(std::move(idx), std::make_pair("dbl_col", d1));
 
-    HampelFilterVisitor<double, unsigned long, 64> hf_v(7, hampel_type::mean, 2);
+    HampelFilterVisitor<double, unsigned long, 64> hf_v(7,
+                                                        hampel_type::mean,
+                                                        2);
     auto                        result =
         df.single_act_visit<double>("dbl_col", hf_v).get_result();
     StlVecType<double>         hampel_result = {
@@ -1618,7 +1640,8 @@ static void test_HurstExponentVisitor()  {
 
     assert(result1 - 0.865926 < 0.00001);
 
-    HurstExponentVisitor<double, unsigned long, 64>    he_v2 ({ 1, 2, 4, 5, 6, 7 });
+    HurstExponentVisitor<double, unsigned long, 64>    he_v2 (
+        { 1, 2, 4, 5, 6, 7 });
     auto                            result2 =
         df.single_act_visit<double>("d1_col", he_v2).get_result();
 
@@ -3318,8 +3341,12 @@ static void test_EhlerSuperSmootherVisitor()  {
     try  {
         df.read("data/SHORT_IBM.csv", io_format::csv2);
 
-        EhlerSuperSmootherVisitor<double, std::string, 256>  ssf_v2; // poles = 2
-        EhlerSuperSmootherVisitor<double, std::string, 256>  ssf_v3(3); // poles = 3
+        // poles = 2
+        //
+        EhlerSuperSmootherVisitor<double, std::string, 256>  ssf_v2;
+        // poles = 3
+        //
+        EhlerSuperSmootherVisitor<double, std::string, 256>  ssf_v3(3);
 
         df.single_act_visit<double>("IBM_Close", ssf_v2);
         df.single_act_visit<double>("IBM_Close", ssf_v3);

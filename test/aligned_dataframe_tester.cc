@@ -606,13 +606,13 @@ static void test_get_data_by_loc_slicing()  {
     df5.write<std::ostream, double>(std::cout);
 
     try  {
-        MyDataFrame df2 = df.get_data_by_loc<double>(Index2D<long> { 3, 8 });
+        MyDataFrame df6 = df.get_data_by_loc<double>(Index2D<long> { 3, 8 });
     }
     catch (const BadRange &ex)  {
         std::cout << "Caught: " << ex.what() << std::endl;
     }
     try  {
-        MyDataFrame df2 = df.get_data_by_loc<double>(Index2D<long> { -8, -1 });
+        MyDataFrame df7 = df.get_data_by_loc<double>(Index2D<long> { -8, -1 });
     }
     catch (const BadRange &ex)  {
         std::cout << "Caught: " << ex.what() << std::endl;
@@ -785,7 +785,8 @@ static void test_value_counts()  {
 
     std::cout << "\nTesting value_counts() ..." << std::endl;
 
-    const double                my_nan = sqrt(-1);
+    const double                my_nan =
+        std::numeric_limits<double>::quiet_NaN();
     StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466 };

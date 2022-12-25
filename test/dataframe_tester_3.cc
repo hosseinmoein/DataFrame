@@ -77,9 +77,10 @@ static void test_groupby_edge()  {
     df.load_column("int_col", std::move(intvec),
                    nan_policy::dont_pad_with_nans);
 
-    FactorizeVisitor<double, unsigned long, 256>    fact([] (const double &f) -> bool {
-                                         return (f > 11106.0 && f < 114.0);
-                                     });
+    FactorizeVisitor<double, unsigned long, 256>
+        fact([] (const double &f) -> bool {
+            return (f > 11106.0 && f < 114.0);
+        });
     df.load_column("bool_col",
                    df.single_act_visit<double>("dbl_col_2", fact).get_result());
 
@@ -256,9 +257,10 @@ static void test_multithreading(int j)  {
     std::cout << "PRINTING FIRST ..." << std::endl;
     df.write<std::ostream, std::string, double, int, bool>
         (std::cout, io_format::json);
-    FactorizeVisitor<double, unsigned long, 256>    fact([] (const double &f) -> bool {
-                                         return (f > 11106.0 && f < 114.0);
-                                     });
+    FactorizeVisitor<double, unsigned long, 256>
+        fact([] (const double &f) -> bool {
+            return (f > 11106.0 && f < 114.0);
+        });
     df.load_column("bool_col",
                    df.single_act_visit<double>("dbl_col_2", fact).get_result());
 

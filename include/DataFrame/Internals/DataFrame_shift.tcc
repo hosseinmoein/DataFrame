@@ -179,7 +179,7 @@ rotate(size_type periods, shift_policy sp) const  {
     static_assert(std::is_base_of<HeteroVector<align_value>, DataVec>::value,
                   "Only a StdDataFrame can call rotate()");
 
-    StdDataFrame<IndexType> slug = *this;
+    DataFrame<IndexType, H> slug = *this;
 
     slug.template self_rotate<Ts ...>(periods, sp);
     return (slug);

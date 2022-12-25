@@ -1037,7 +1037,7 @@ remove_dups_common_(const DataFrame &s_df,
         }
     }
 
-    StdDataFrame<I> new_df;
+    DataFrame<I, H> new_df;
     IndexVecType    new_index (index.size() - rows_to_del.size());
 
     _remove_copy_if_(index.begin(), index.end(), new_index.begin(),

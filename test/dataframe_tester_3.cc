@@ -39,7 +39,8 @@ using namespace hmdf;
 
 // A DataFrame with ulong index type
 //
-using MyDataFrame = StdDataFrame<unsigned long>;
+using MyDataFrame = StdDataFrame256<unsigned long>;
+using StrDataFrame = StdDataFrame256<std::string>;
 
 template<typename T>
 using StlVecType = typename MyDataFrame::template StlVecType<T>;
@@ -76,7 +77,7 @@ static void test_groupby_edge()  {
     df.load_column("int_col", std::move(intvec),
                    nan_policy::dont_pad_with_nans);
 
-    FactorizeVisitor<double>    fact([] (const double &f) -> bool {
+    FactorizeVisitor<double, unsigned long, 256>    fact([] (const double &f) -> bool {
                                          return (f > 11106.0 && f < 114.0);
                                      });
     df.load_column("bool_col",
@@ -255,7 +256,7 @@ static void test_multithreading(int j)  {
     std::cout << "PRINTING FIRST ..." << std::endl;
     df.write<std::ostream, std::string, double, int, bool>
         (std::cout, io_format::json);
-    FactorizeVisitor<double>    fact([] (const double &f) -> bool {
+    FactorizeVisitor<double, unsigned long, 256>    fact([] (const double &f) -> bool {
                                          return (f > 11106.0 && f < 114.0);
                                      });
     df.load_column("bool_col",
@@ -326,14 +327,12 @@ static void test_CoppockCurveVisitor()  {
 
     std::cout << "\nTesting CoppockCurveVisitor{  } ..." << std::endl;
 
-    typedef StdDataFrame<std::string> StrDataFrame;
-
     StrDataFrame    df;
 
     try  {
         df.read("data/SHORT_IBM.csv", io_format::csv2);
 
-        coppc_v<double, std::string>  copp;
+        coppc_v<double, std::string, 256>  copp;
 
         df.single_act_visit<double>("IBM_Close", copp);
 
@@ -357,8 +356,6 @@ static void test_BiasVisitor()  {
 
     std::cout << "\nTesting BiasVisitor{  } ..." << std::endl;
 
-    typedef StdDataFrame<std::string> StrDataFrame;
-
     StrDataFrame    df;
 
     try  {
@@ -367,7 +364,7 @@ static void test_BiasVisitor()  {
 
         using avg1 = MeanVisitor<double, std::string>;
         avg1                                avg1_v;
-        bias_v<avg1, double, std::string>   bias1 (avg1_v);
+        bias_v<avg1, double, std::string, 256>   bias1 (avg1_v);
 
         df.single_act_visit<double>("IBM_Close", bias1);
 
@@ -383,7 +380,7 @@ static void test_BiasVisitor()  {
 
         using s_avg1 = StableMeanVisitor<double, std::string>;
         s_avg1                              s_avg1_v;
-        bias_v<s_avg1, double, std::string> s_bias1 (s_avg1_v);
+        bias_v<s_avg1, double, std::string, 256> s_bias1 (s_avg1_v);
 
         df.single_act_visit<double>("IBM_Close", s_bias1);
 
@@ -399,7 +396,7 @@ static void test_BiasVisitor()  {
 
         using avg2 = WeightedMeanVisitor<double, std::string>;
         avg2                                avg2_v;
-        bias_v<avg2, double, std::string>   bias2 (avg2_v);
+        bias_v<avg2, double, std::string, 256>   bias2 (avg2_v);
 
         df.single_act_visit<double>("IBM_Close", bias2);
 
@@ -415,7 +412,7 @@ static void test_BiasVisitor()  {
 
         using avg3 = GeometricMeanVisitor<double, std::string>;
         avg3                                avg3_v;
-        bias_v<avg3, double, std::string>   bias3 (avg3_v);
+        bias_v<avg3, double, std::string, 256>   bias3 (avg3_v);
 
         df.single_act_visit<double>("IBM_Close", bias3);
 
@@ -431,7 +428,7 @@ static void test_BiasVisitor()  {
 
         using avg4 = HarmonicMeanVisitor<double, std::string>;
         avg4                                avg4_v;
-        bias_v<avg4, double, std::string>   bias4 (avg4_v);
+        bias_v<avg4, double, std::string, 256>   bias4 (avg4_v);
 
         df.single_act_visit<double>("IBM_Close", bias4);
 
@@ -456,14 +453,12 @@ static void test_BalanceOfPowerVisitor()  {
 
     std::cout << "\nTesting BalanceOfPowerVisitor{  } ..." << std::endl;
 
-    typedef StdDataFrame<std::string> StrDataFrame;
-
     StrDataFrame    df;
 
     try  {
         df.read("data/SHORT_IBM.csv", io_format::csv2);
 
-        bop_v<double, std::string>  bop;
+        bop_v<double, std::string, 256>  bop;
 
         df.single_act_visit<double, double, double, double>
             ("IBM_Low", "IBM_High", "IBM_Open", "IBM_Close", bop);
@@ -503,14 +498,12 @@ static void test_ChandeKrollStopVisitor()  {
 
     std::cout << "\nTesting ChandeKrollStopVisitor{  } ..." << std::endl;
 
-    typedef StdDataFrame<std::string> StrDataFrame;
-
     StrDataFrame    df;
 
     try  {
         df.read("data/SHORT_IBM.csv", io_format::csv2);
 
-        cksp_v<double, std::string>  cksp;
+        cksp_v<double, std::string, 256>  cksp;
 
         df.single_act_visit<double, double, double>
             ("IBM_Low", "IBM_High", "IBM_Close", cksp);
@@ -546,14 +539,12 @@ static void test_VortexVisitor()  {
 
     std::cout << "\nTesting VortexVisitor{  } ..." << std::endl;
 
-    typedef StdDataFrame<std::string> StrDataFrame;
-
     StrDataFrame    df;
 
     try  {
         df.read("data/SHORT_IBM.csv", io_format::csv2);
 
-        vtx_v<double, std::string>  vtx;
+        vtx_v<double, std::string, 256>  vtx;
 
         df.single_act_visit<double, double, double>
             ("IBM_Low", "IBM_High", "IBM_Close", vtx);
@@ -589,14 +580,12 @@ static void test_KeltnerChannelsVisitor()  {
 
     std::cout << "\nTesting KeltnerChannelsVisitor{  } ..." << std::endl;
 
-    typedef StdDataFrame<std::string> StrDataFrame;
-
     StrDataFrame    df;
 
     try  {
         df.read("data/SHORT_IBM.csv", io_format::csv2);
 
-        kch_v<double, std::string>  kch;
+        kch_v<double, std::string, 256>  kch;
 
         df.single_act_visit<double, double, double>
             ("IBM_Low", "IBM_High", "IBM_Close", kch);
@@ -632,14 +621,12 @@ static void test_TrixVisitor()  {
 
     std::cout << "\nTesting TrixVisitor{  } ..." << std::endl;
 
-    typedef StdDataFrame<std::string> StrDataFrame;
-
     StrDataFrame    df;
 
     try  {
         df.read("data/SHORT_IBM.csv", io_format::csv2);
 
-        trix_v<double, std::string> trix;
+        trix_v<double, std::string, 256> trix;
 
         df.single_act_visit<double>("IBM_Close", trix);
 
@@ -653,7 +640,7 @@ static void test_TrixVisitor()  {
         assert(std::abs(trix.get_result()[1712] - 0.0008) < 0.0001);
         assert(std::abs(trix.get_result()[1707] - 0.0003) < 0.0001);
 
-        trix_v<double, std::string> trix2 (14, true);
+        trix_v<double, std::string, 256> trix2 (14, true);
 
         df.single_act_visit<double>("IBM_Close", trix2);
 
@@ -679,14 +666,12 @@ static void test_PrettyGoodOsciVisitor()  {
 
     std::cout << "\nTesting PrettyGoodOsciVisitor{  } ..." << std::endl;
 
-    typedef StdDataFrame<std::string> StrDataFrame;
-
     StrDataFrame    df;
 
     try  {
         df.read("data/SHORT_IBM.csv", io_format::csv2);
 
-        pgo_v<double, std::string>  pgo;
+        pgo_v<double, std::string, 256>  pgo;
 
         df.single_act_visit<double, double, double>
             ("IBM_Low", "IBM_High", "IBM_Close", pgo);
@@ -768,14 +753,12 @@ static void test_ZeroLagMovingMeanVisitor()  {
 
     std::cout << "\nTesting ZeroLagMovingMeanVisitor{  } ..." << std::endl;
 
-    typedef StdDataFrame<std::string> StrDataFrame;
-
     StrDataFrame    df;
 
     try  {
         df.read("data/SHORT_IBM.csv", io_format::csv2);
 
-        zlmm_v<double, std::string>  zlmm(10);
+        zlmm_v<double, std::string, 256>  zlmm(10);
 
         df.single_act_visit<double>("IBM_Close", zlmm);
 
@@ -824,14 +807,12 @@ static void test_T3MovingMeanVisitor()  {
 
     std::cout << "\nTesting T3MovingMeanVisitor{  } ..." << std::endl;
 
-    typedef StdDataFrame<std::string> StrDataFrame;
-
     StrDataFrame    df;
 
     try  {
         df.read("data/IBM.csv", io_format::csv2);
 
-        t3_v<double, std::string>   t3;
+        t3_v<double, std::string, 256>   t3;
 
         df.single_act_visit<double> ("IBM_Close", t3);
 
@@ -902,8 +883,6 @@ static void test_load_result_as_column()  {
 
     std::cout << "\nTesting load_result_as_column( ) ..." << std::endl;
 
-    typedef StdDataFrame<std::string> StrDataFrame;
-
     StrDataFrame    df;
 
     try  {
@@ -911,7 +890,7 @@ static void test_load_result_as_column()  {
 
         // CoppockCurveVisitor
         //
-        coppc_v<double, std::string>  copp;
+        coppc_v<double, std::string, 256>  copp;
 
         df.single_act_visit<double>("IBM_Close", copp);
         df.load_result_as_column(copp, "IBM_close_curve");

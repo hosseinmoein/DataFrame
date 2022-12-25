@@ -515,6 +515,9 @@ using StdDataFrame256 = DataFrame<I, HeteroVector<256>>;
 template<typename I>
 using StdDataFrame512 = DataFrame<I, HeteroVector<512>>;
 
+template<typename I>
+using StdDataFrame1024 = DataFrame<I, HeteroVector<1024>>;
+
 // ----------------------------------------------------------------------------
 
 inline static const std::vector<std::string>   describe_index_col {

@@ -2152,7 +2152,7 @@ static void test_LowessVisitor()  {
 
     std::cout << "\nTesting LowessVisitor{  } ..." << std::endl;
 
-    StlVecType<unsigned long>  idx =
+    StlVecType<unsigned long>  indx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466,
           123467, 123468, 123469, 123470, 123471, 123472, 123473,
@@ -2169,9 +2169,9 @@ static void test_LowessVisitor()  {
         168.01999, 164.95750, 152.61107, 160.78742, 168.55567, 152.42658,
         221.70702, 222.69040, 243.18828,
     };
-    MyDataFrame                 df;
+    MyDataFrame                df;
 
-    df.load_data(std::move(idx),
+    df.load_data(std::move(indx),
                  std::make_pair("indep_var", x_vec),
                  std::make_pair("dep_var", y_vec));
 
@@ -3764,12 +3764,12 @@ static void test_FastFourierTransVisitor()  {
         df2.single_act_visit<double>("IBM_Close", fft2);
         df2.load_column("FFT Close", fft2.get_result());
 
-        fft_v<cx, std::string, 64>   i_fft2 (true);
+        fft_v<cx, std::string, 64>   i_fft2_2 (true);
 
-        df2.single_act_visit<cx>("FFT Close", i_fft2);
+        df2.single_act_visit<cx>("FFT Close", i_fft2_2);
 
         /*
-        for (auto citer : i_fft2.get_result())
+        for (auto citer : i_fft2_2.get_result())
             std::cout << citer << ", ";
         std::cout << std::endl;
         */

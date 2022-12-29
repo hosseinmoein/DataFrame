@@ -1029,10 +1029,13 @@ private:
     compare_type                                            cmp_ {  };
 };
 
-template<std::size_t N, typename T, typename I = unsigned long>
-using NMaxSubArrayVisitor = NExtremumSubArrayVisitor<N, T, I, std::less<T>>;
-template<std::size_t N, typename T, typename I = unsigned long>
-using NMinSubArrayVisitor = NExtremumSubArrayVisitor<N, T, I, std::greater<T>>;
+template<std::size_t N, typename T, typename I = unsigned long,
+         std::size_t A = 0>
+using NMaxSubArrayVisitor = NExtremumSubArrayVisitor<N, T, I, std::less<T>, A>;
+template<std::size_t N, typename T, typename I = unsigned long,
+         std::size_t A = 0>
+using NMinSubArrayVisitor =
+    NExtremumSubArrayVisitor<N, T, I, std::greater<T>, A>;
 
 // ----------------------------------------------------------------------------
 

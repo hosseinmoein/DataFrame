@@ -62,8 +62,11 @@ using hexpo_v = HurstExponentVisitor&lt;T, I&gt;;
 		</UL>
         <I>
         <PRE>
+    using RangeVec =
+        std::vector&lt;size_type, typename allocator_declare&lt;size_type, A&gt;::type&gt;;
+
     explicit
-    HurstExponentVisitor(std::vector&lt;size_t&gt; &amp;&amp;ranges)
+    HurstExponentVisitor(RangeVec&lt;size_t&gt; &amp;&amp;ranges);
 
     <B>ranges</B>: A vector of column length divisors.
             For example, {1, 2, 4 } means calculate Hurst exponent in 3 steps.

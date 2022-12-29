@@ -35,15 +35,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         <PRE><B>
 #include &lt;DataFrame/DataFrameStatsVisitors.h&gt;
 
-template&lt;typename T, typename I = unsigned long, typename Cmp = std::less&lt;T&gt;&gt;
+template&lt;typename T, typename I = unsigned long, typename Cmp = std::less&lt;T&gt;,
+         std::size_t A = 0&gt;
 struct CumExtremumVisitor;
 
 // -------------------------------------
 
-template&lt;typename T, typename I = unsigned long&gt;
-using <U>CumMaxVisitor</U> = CumExtremumVisitor&lt;T, I, std::less&lt;T&gt;&gt;;
-template&lt;typename T, typename I = unsigned long&gt;
-using <U>CumMinVisitor</U> = CumExtremumVisitor&lt;T, I, std::greater&lt;T&gt;&gt;;
+template&lt;typename T, typename I = unsigned long,
+         std::size_t A = 0&gt;
+using <U>CumMaxVisitor</U> = CumExtremumVisitor&lt;T, I, std::less&lt;T&gt;, A&gt;;
+template&lt;typename T, typename I = unsigned long,
+         std::size_t A = 0&gt;
+using <U>CumMinVisitor</U> = CumExtremumVisitor&lt;T, I, std::greater&lt;T&gt;, A&gt;;
         </B></PRE></font>
       </td>
       <td>
@@ -53,7 +56,8 @@ using <U>CumMinVisitor</U> = CumExtremumVisitor&lt;T, I, std::greater&lt;T&gt;&g
       </td>
       <td width="12%">
         <B>T</B>: Column data type.<BR>
-        <B>I</B>: Index type.
+        <B>I</B>: Index type.<BR>
+        <B>A</B>: Memory alignment boundary for vectors. Default is system default alignment<BR>
       </td>
     </tr>
 

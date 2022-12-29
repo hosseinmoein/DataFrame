@@ -60,13 +60,15 @@ enum class mad_type : unsigned char  {
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>#include &lt;DataFrame/DataFrameStatsVisitors.h&gt;
 
-template&lt;typename T, typename I = unsigned long&gt;
+template&lt;typename T, typename I = unsigned long,
+         std::size_t A = 0&gt;
 struct MADVisitor;
 
 // -------------------------------------
 
-template&lt;typename T, typename I = unsigned long&gt;
-using mad_v = MADVisitor&lt;T, I&gt;;
+template&lt;typename T, typename I = unsigned long,
+         std::size_t A = 0&gt;
+using mad_v = MADVisitor&lt;T, I, A&gt;;
         </B></PRE></font>
       </td>
       <td>
@@ -81,7 +83,8 @@ using mad_v = MADVisitor&lt;T, I&gt;;
       </td>
       <td width="12%">
         <B>T</B>: Column data type<BR>
-        <B>I</B>: Index type
+        <B>I</B>: Index type<BR>
+        <B>A</B>: Memory alignment boundary for vectors. Default is system default alignment<BR>
       </td>
     </tr>
 

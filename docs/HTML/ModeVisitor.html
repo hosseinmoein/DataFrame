@@ -34,13 +34,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>#include &lt;DataFrame/DataFrameStatsVisitors.h&gt;
 
-template&lt;typename T, typename I = unsigned long&gt;
+template&lt;std::size_t N, typename T, typename I = unsigned long,&gt;
+         std::size_t A = 0&gt;
 struct ModeVisitor;
 
 // -------------------------------------
 
-template&lt;typename T, typename I = unsigned long&gt;
-using mode_v = ModeVisitor&lt;T, I&gt;;
+template&lt;std::size_t N, typename T, typename I = unsigned long,&gt;
+         std::size_t A = 0&gt;
+using mode_v = ModeVisitor&lt;N, T, I, A&gt;;
         </B></PRE></font>
       </td>
       <td>
@@ -49,15 +51,18 @@ using mode_v = ModeVisitor&lt;T, I&gt;;
         The result is an array of N items each of this type:<BR>
         <I>
         <PRE>
+    template&lt;typename U&gt;
+    using vec_type = std::vector&lt;U, typename allocator_declare&lt;U, A&gt;::type&gt;;
+			  
     struct  DataItem  {
-        T                         value;    // Value of the column item
-        std::vector&lt;I&gt;            indices;  // List of indices where value occurred
+        T                               value;    // Value of the column item
+        VectorConstPtrView&lt;I, A&gt;  indices;  // List of indices where value occurred
 
         // Number of times value occurred
         inline std::size_t repeat_count() const  { return (indices.size()); }
 
         // List of column indices where value occurred
-        std::vector&lt;std::size_t&gt;  value_indices_in_col;
+        vec_type&lt;std::size_t&gt;  value_indices_in_col;
     };
         </PRE>
         </I>
@@ -65,7 +70,8 @@ using mode_v = ModeVisitor&lt;T, I&gt;;
       <td width = "12%">
         <B>N</B>: Number of modes to find<BR>
         <B>T</B>: Column data type<BR>
-        <B>I</B>: Index type
+        <B>I</B>: Index type<BR>
+        <B>A</B>: Memory alignment boundary for vectors. Default is system default alignment<BR>
       </td>
     </tr>
 

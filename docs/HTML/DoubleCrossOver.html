@@ -34,13 +34,21 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>#include &lt;DataFrame/DataFrameFinancialVisitors.h&gt;
 
-template&lt;typename T, typename I = unsigned long&gt;
+template&lt;typename S_RT,  // Short duration rolling adopter
+         typename L_RT,  // Longer duration rolling adopter
+         typename T,
+         typename I = unsigned long,
+         std::size_t A = 0&gt;
 struct DoubleCrossOver;
 
 // -------------------------------------
 
-template&lt;typename T, typename I = unsigned long&gt;
-using dco_v = DoubleCrossOver&lt;T, I&gt;;
+template&lt;typename S_RT,  // Short duration rolling adopter
+         typename L_RT,  // Longer duration rolling adopter
+         typename T,
+         typename I = unsigned long,
+         std::size_t A = 0&gt;
+using dco_v = DoubleCrossOver&lt;S_RT, L_RT, T, I, A&gt;;
         </B></PRE></font>
       </td>
       <td>
@@ -64,6 +72,7 @@ using dco_v = DoubleCrossOver&lt;T, I&gt;;
         <B>L_RT</B>: A longer term moving average adopter. For example, an exponential moving adopter using a simple mean<BR>
         <B>T</B>: Column data type<BR>
         <B>I</B>: Index type<BR>
+        <B>A</B>: Memory alignment boundary for vectors. Default is system default alignment<BR>
       </td>
     </tr>
 

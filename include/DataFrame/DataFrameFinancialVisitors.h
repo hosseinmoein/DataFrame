@@ -1632,14 +1632,14 @@ struct  WilliamPrcRVisitor  {
         assert((col_s == size_type(std::distance(low_begin, low_end))));
         assert((col_s == size_type(std::distance(high_begin, high_end))));
 
-        SimpleRollAdopter<MinVisitor<T, I>, T, I, A>   min_v (MinVisitor<T, I>(),
+        SimpleRollAdopter<MinVisitor<T, I>, T, I, A>   min_v(MinVisitor<T, I>(),
                                                            roll_count_);
 
         min_v.pre();
         min_v (idx_begin, idx_end, low_begin, low_end);
         min_v.post();
 
-        SimpleRollAdopter<MaxVisitor<T, I>, T, I, A>   max_v (MaxVisitor<T, I>(),
+        SimpleRollAdopter<MaxVisitor<T, I>, T, I, A>   max_v(MaxVisitor<T, I>(),
                                                            roll_count_);
 
         max_v.pre();
@@ -1727,7 +1727,7 @@ private:
     template <typename K>
     inline void calculate_(const K &idx_begin, const K &idx_end)  {
 
-        SimpleRollAdopter<SumVisitor<T, I>, T, I, A>   sum_r (SumVisitor<T, I>(),
+        SimpleRollAdopter<SumVisitor<T, I>, T, I, A>   sum_r(SumVisitor<T, I>(),
                                                            roll_count_);
 
         sum_r.pre();
@@ -2072,9 +2072,9 @@ struct FisherTransVisitor {
         for (size_type i = 0; i < col_s; ++i)
             mid_hl.push_back((*(low_begin + i) + *(high_begin + i)) * T(0.5));
 
-        SimpleRollAdopter<MaxVisitor<T, I>, T, I, A>   max_v (MaxVisitor<T, I>(),
+        SimpleRollAdopter<MaxVisitor<T, I>, T, I, A>   max_v(MaxVisitor<T, I>(),
                                                            roll_count_);
-        SimpleRollAdopter<MinVisitor<T, I>, T, I, A>   min_v (MinVisitor<T, I>(),
+        SimpleRollAdopter<MinVisitor<T, I>, T, I, A>   min_v(MinVisitor<T, I>(),
                                                            roll_count_);
 
         max_v.pre();

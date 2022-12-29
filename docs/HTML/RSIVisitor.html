@@ -35,13 +35,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>#include &lt;DataFrame/DataFrameStatsVisitors.h&gt;
 
-template&lt;typename T, typename I = unsigned long&gt;
+template&lt;typename T, typename I = unsigned long,
+         std::size_t A = 0&gt;
 struct RSIVisitor;
 
 // -------------------------------------
 
-template&lt;typename T, typename I = unsigned long&gt;
-using rsi_v = RSIVisitor<&lt;T, I&gt;;
+template&lt;typename T, typename I = unsigned long,
+         std::size_t A = 0&gt;
+using rsi_v = RSIVisitor<&lt;T, I, A&gt;;
         </B></PRE></font>
       </td>
       <td>
@@ -61,7 +63,8 @@ using rsi_v = RSIVisitor<&lt;T, I&gt;;
       </td>
       <td width="12%">
         <B>T</B>: Column data type.<BR>
-        <B>I</B>: Index type.
+        <B>I</B>: Index type.<BR>
+        <B>A</B>: Memory alignment boundary for vectors. Default is system default alignment<BR>
       </td>
     </tr>
 
@@ -69,13 +72,15 @@ using rsi_v = RSIVisitor<&lt;T, I&gt;;
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>#include &lt;DataFrame/DataFrameStatsVisitors.h&gt;
 
-template&lt;typename T, typename I = unsigned long&gt;
+template&lt;typename T, typename I = unsigned long,
+         std::size_t A = 0&gt;
 struct RSXVisitor;
 
 // -------------------------------------
 
-template&lt;typename T, typename I = unsigned long&gt;
-using rsx_v = RSXVisitor&lt;T, I&gt;;
+template&lt;typename T, typename I = unsigned long,
+         std::size_t A = 0&gt;
+using rsx_v = RSXVisitor&lt;T, I, A&gt;;
         </B></PRE></font>
       </td>
       <td>
@@ -90,7 +95,8 @@ using rsx_v = RSXVisitor&lt;T, I&gt;;
       </td>
       <td width="12%">
         <B>T</B>: Column data type.<BR>
-        <B>I</B>: Index type.
+        <B>I</B>: Index type.<BR>
+        <B>A</B>: Memory alignment boundary for vectors. Default is system default alignment<BR>
       </td>
     </tr>
 

@@ -34,7 +34,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>#include &lt;DataFrame/DataFrameMLVisitors.h&gt;
 
-template&lt;size_t K, typename T, typename I = unsigned long&gt;
+template&lt;size_t K, typename T, typename I = unsigned long,
+         std::size_t A = 0&gt;
 struct KMeansVisitor;
         </B></PRE></font>
       </td>
@@ -62,7 +63,8 @@ KMeansVisitor(std::size_t num_of_iter,
       <td width="12%">
         <B>K</B>: Number of means to find<BR>
         <B>T</B>: Column data type<BR>
-        <B>I</B>: Index type
+        <B>I</B>: Index type<BR>
+        <B>A</B>: Memory alignment boundary for vectors. Default is system default alignment<BR>
       </td>
     </tr>
 

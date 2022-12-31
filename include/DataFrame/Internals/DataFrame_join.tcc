@@ -683,7 +683,7 @@ DataFrame<I, H>::self_concat(const RHS_T &rhs, bool add_new_columns)  {
 
 template<typename I, typename H>
 template<typename RHS_T, typename ... Ts>
-DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
+DataFrame<I, H>
 DataFrame<I, H>::concat(const RHS_T &rhs, concat_policy cp) const  {
 
     static_assert(

@@ -63,7 +63,7 @@ enum class random_policy : unsigned char  {
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>
 template&lt;typename ... Ts&gt;
-DataFrame&lt;I&gt;
+DataFrame&lt;I, H&gt;
 get_data_by_rand(random_policy spec,
                  double n,
                  std::size_t seed = 0) const;
@@ -86,14 +86,14 @@ get_data_by_rand(random_policy spec,
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>
 template&lt;typename ... Ts&gt;
-DataFramePtrView&lt;I&gt;
+PtrView
 get_view_by_rand(random_policy spec,
                  double n,
                  std::size_t seed = 0);
         </B></PRE></font>
       </td>
       <td>
-        It behaves like get_data_by_rand(), but it returns a DataFrameView. A view is a DataFrame that is a reference to the original DataFrame. So if you modify anything in the view the original DataFrame will also be modified.<BR>
+        It behaves like get_data_by_rand(), but it returns a View. A view is a DataFrame that is a reference to the original DataFrame. So if you modify anything in the view the original DataFrame will also be modified.<BR>
         <B>NOTE</B>: There are certain operations that you cannot do with a view. For example, you cannot add/delete columns, etc.<BR>
         <B>NOTE</B>: The columns in the result are not padded with NaN.<BR>
         <B>NOTE</B>: Views could not be const, becuase you can change original data through views.<BR>
@@ -110,7 +110,7 @@ get_view_by_rand(random_policy spec,
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>
 template&lt;typename ... Ts&gt;
-DataFrameConstPtrView&lt;I&gt;
+ConstPtrView
 get_view_by_rand(random_policy spec,
                  double n,
                  std::size_t seed = 0) const;

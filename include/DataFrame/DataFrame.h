@@ -1375,7 +1375,7 @@ public:  // Data manipulation
     //                           concatenated
     //
     template<typename RHS_T, typename ... Ts>
-    [[nodiscard]] DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
+    [[nodiscard]] DataFrame<I, H>
     concat(const RHS_T &rhs,
            concat_policy cp = concat_policy::all_columns) const;
 
@@ -2415,7 +2415,7 @@ public: // Read/access and slicing interfaces
     //   the result as a column.
     //
     template<typename T, typename ... Ts>
-    [[nodiscard]] DataFrame<T, HeteroVector<std::size_t(H::align_value)>>
+    [[nodiscard]] DataFrame<T, H>
     get_reindexed(const char *col_to_be_index,
                   const char *old_index_name = nullptr) const;
 

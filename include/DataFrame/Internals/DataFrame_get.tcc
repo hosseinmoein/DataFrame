@@ -2155,7 +2155,7 @@ get_view(const StlVecType<const char *> &col_names) const  {
 
 template<typename I, typename H>
 template<typename T, typename ... Ts>
-DataFrame<T, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
+DataFrame<T, H> DataFrame<I, H>::
 get_reindexed(const char *col_to_be_index, const char *old_index_name) const  {
 
     DataFrame<T, HeteroVector<align_value>> result;

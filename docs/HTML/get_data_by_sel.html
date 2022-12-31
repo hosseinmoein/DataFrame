@@ -62,7 +62,7 @@ The signature of sel_fucntor:<BR>
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>
 template&lt;typename T, typename F, typename ... Ts&gt;
-DataFramePtrView&lt;I&gt;
+PtrView
 get_view_by_sel(const char *name,
                 F &amp;sel_functor);
         </B></PRE></font>
@@ -90,7 +90,7 @@ get_view_by_sel(const char *name,
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>
 template&lt;typename T, typename F, typename ... Ts&gt;
-DataFrameConstPtrView&lt;I&gt;
+ConstPtrView
 get_view_by_sel(const char *name,
                 F &amp;sel_functor) const;
         </B></PRE></font>
@@ -141,7 +141,7 @@ get_data_by_sel(const char *name1,
         <PRE><B>
 template&lt;typename T1, typename T2, typename F,
           typename ... Ts&gt;
-DataFramePtrView&lt;I&gt;
+PtrView
 get_view_by_sel(const char *name1,
                 const char *name2,
                 F &amp;sel_functor);
@@ -172,7 +172,7 @@ get_view_by_sel(const char *name1,
         <PRE><B>
 template&lt;typename T1, typename T2, typename F,
           typename ... Ts&gt;
-DataFrameConstPtrView&lt;I&gt;
+ConstPtrView
 get_view_by_sel(const char *name1,
                 const char *name2,
                 F &amp;sel_functor) const;
@@ -229,7 +229,7 @@ get_data_by_sel(const char *name1,
         <PRE><B>
 template&lt;typename T1, typename T2, typename T3,
          typename F, typename ... Ts&gt;
-DataFramePtrView&lt;I&gt;
+PtrView
 get_view_by_sel(const char *name1,
                 const char *name2,
                 const char *name3,
@@ -263,7 +263,7 @@ get_view_by_sel(const char *name1,
         <PRE><B>
 template&lt;typename T1, typename T2, typename T3,
          typename F, typename ... Ts&gt;
-DataFrameConstPtrView&lt;I&gt;
+ConstPtrView
 get_view_by_sel(const char *name1,
                 const char *name2,
                 const char *name3,
@@ -328,7 +328,7 @@ get_data_by_sel(const char *name1,
 template&lt;typename T1, typename T2,
          typename T3, typename T4,
          typename F, typename ... Ts&gt;
-DataFramePtrView&lt;I&gt;
+PtrView
 get_view_by_sel(const char *name1,
                 const char *name2,
                 const char *name3,
@@ -366,7 +366,7 @@ get_view_by_sel(const char *name1,
 template&lt;typename T1, typename T2,
          typename T3, typename T4,
          typename F, typename ... Ts&gt;
-DataFrameConstPtrView&lt;I&gt;
+ConstPtrView
 get_view_by_sel(const char *name1,
                 const char *name2,
                 const char *name3,
@@ -440,7 +440,7 @@ template&lt;typename T1, typename T2,
          typename T3, typename T4,
          typename T5,
          typename F, typename ... Ts&gt;
-DataFramePtrView&lt;I&gt;
+PtrView
 get_view_by_sel(const char *name1,
                 const char *name2,
                 const char *name3,
@@ -482,7 +482,7 @@ template&lt;typename T1, typename T2,
          typename T3, typename T4,
          typename T5,
          typename F, typename ... Ts&gt;
-DataFrameConstPtrView&lt;I&gt;
+ConstPtrView
 get_view_by_sel(const char *name1,
                 const char *name2,
                 const char *name3,

@@ -34,7 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>
 template&lt;typename T, typename ... Ts&gt;
-StdDataFrame&lt;T&gt;
+DataFrame&lt;T, H&gt;
 get_reindexed(const char *col_to_be_index,
               const char *old_index_name = nullptr) const;
         </B></PRE></font>
@@ -56,7 +56,7 @@ get_reindexed(const char *col_to_be_index,
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>
 template&lt;typename T, typename ... Ts&gt;
-DataFrameView&lt;T&gt;
+typename DataFrame&lt;T, H&gt;::View
 get_reindexed_view(const char *col_to_be_index,
                    const char *old_index_name = nullptr);
         </B></PRE></font>
@@ -78,7 +78,7 @@ get_reindexed_view(const char *col_to_be_index,
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>
 template&lt;typename T, typename ... Ts&gt;
-DataFrameConstView&lt;T&gt;
+typename DataFrame&lt;T, H&gt;::ConstView
 get_reindexed_view(const char *col_to_be_index,
                    const char *old_index_name = nullptr) const;
         </B></PRE></font>

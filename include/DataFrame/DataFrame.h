@@ -1614,7 +1614,7 @@ public: // Read/access and slicing interfaces
     //   in the returned vector
     //
     template<typename ... Ts>
-    [[nodiscard]] HeteroVector<align_value>
+    [[nodiscard]] HeteroVector<std::size_t(H::align_value)>
     get_row(size_type row_num,
             const StlVecType<const char *> &col_names) const;
 
@@ -1630,7 +1630,7 @@ public: // Read/access and slicing interfaces
     //   The row number
     //
     template<typename ... Ts>
-    [[nodiscard]] HeteroVector<align_value>
+    [[nodiscard]] HeteroVector<std::size_t(H::align_value)>
     get_row(size_type row_num) const;
 
     // It returns a vector of unique values in the named column in the same

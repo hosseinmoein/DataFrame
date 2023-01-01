@@ -38,7 +38,7 @@ namespace hmdf
 
 template<typename I, typename H>
 template<typename RHS_T, typename ... Ts>
-DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
+DataFrame<I, H>
 DataFrame<I, H>::
 join_by_index (const RHS_T &rhs, join_policy mp) const  {
 
@@ -97,7 +97,7 @@ join_by_index (const RHS_T &rhs, join_policy mp) const  {
 
 template<typename I, typename H>
 template<typename RHS_T, typename T, typename ... Ts>
-DataFrame<unsigned int, HeteroVector<std::size_t(H::align_value)>>
+DataFrame<unsigned int, H>
 DataFrame<I, H>::
 join_by_column (const RHS_T &rhs, const char *name, join_policy mp) const  {
 

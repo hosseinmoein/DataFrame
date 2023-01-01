@@ -1388,7 +1388,7 @@ groupby3_async(const char *col_name1,
 
 template<typename I, typename H>
 template<typename T>
-DataFrame<T, HeteroVector<std::size_t(H::align_value)>>
+DataFrame<T, H>
 DataFrame<I, H>::value_counts (const char *col_name) const  {
 
     const ColumnVecType<T>  &vec = get_column<T>(col_name);
@@ -1449,7 +1449,7 @@ DataFrame<I, H>::value_counts (const char *col_name) const  {
 
 template<typename I, typename H>
 template<typename T>
-DataFrame<T, HeteroVector<std::size_t(H::align_value)>>
+DataFrame<T, H>
 DataFrame<I, H>::value_counts(size_type index) const  {
 
     return (value_counts<T>(column_list_[index].first.c_str()));

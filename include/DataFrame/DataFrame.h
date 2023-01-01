@@ -1218,11 +1218,11 @@ public:  // Data manipulation
     //   Name of the column
     //
     template<typename T>
-    [[nodiscard]] DataFrame<T, HeteroVector<std::size_t(H::align_value)>>
+    [[nodiscard]] DataFrame<T, H>
     value_counts(const char *col_name) const;
 
     template<typename T>
-    [[nodiscard]] DataFrame<T, HeteroVector<std::size_t(H::align_value)>>
+    [[nodiscard]] DataFrame<T, H>
     value_counts(size_type index) const;
 
     // It bucketizes the data and index into intervals, based on index values
@@ -1317,7 +1317,7 @@ public:  // Data manipulation
     //   (See join_policy definition)
     //
     template<typename RHS_T, typename ... Ts>
-    [[nodiscard]] DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
+    [[nodiscard]] DataFrame<I, H>
     join_by_index(const RHS_T &rhs, join_policy jp) const;
 
     // It joins the data between self (lhs) and rhs and returns the joined data
@@ -1350,8 +1350,7 @@ public:  // Data manipulation
     //   (See join_policy definition)
     //
     template<typename RHS_T, typename T, typename ... Ts>
-    [[nodiscard]] DataFrame<unsigned int,
-                            HeteroVector<std::size_t(H::align_value)>>
+    [[nodiscard]] DataFrame<unsigned int, H>
     join_by_column(const RHS_T &rhs, const char *name, join_policy jp) const;
 
     // It concatenates rhs to the end of self and returns the result as
@@ -1615,7 +1614,7 @@ public: // Read/access and slicing interfaces
     //   in the returned vector
     //
     template<typename ... Ts>
-    [[nodiscard]] HeteroVector<std::size_t(H::align_value)>
+    [[nodiscard]] HeteroVector<align_value>
     get_row(size_type row_num,
             const StlVecType<const char *> &col_names) const;
 
@@ -1631,7 +1630,7 @@ public: // Read/access and slicing interfaces
     //   The row number
     //
     template<typename ... Ts>
-    [[nodiscard]] HeteroVector<std::size_t(H::align_value)>
+    [[nodiscard]] HeteroVector<align_value>
     get_row(size_type row_num) const;
 
     // It returns a vector of unique values in the named column in the same
@@ -2468,8 +2467,7 @@ public: // Read/access and slicing interfaces
     //   the list only once.
     //
     template<typename ... Ts>
-    [[nodiscard]] DataFrame<std::string,
-                            HeteroVector<std::size_t(H::align_value)>>
+    [[nodiscard]] DataFrame<std::string, H>
     describe() const;
 
     // This method combines the content of column col_name between self and

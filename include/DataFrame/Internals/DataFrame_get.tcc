@@ -215,7 +215,7 @@ DataFrame<I, H>::get_index()  { return (indices_); }
 
 template<typename I, typename H>
 template<typename ... Ts>
-HeteroVector<std::size_t(H::align_value)> DataFrame<I, H>::
+HeteroVector<DataFrame<I, H>::align_value> DataFrame<I, H>::
 get_row(size_type row_num, const StlVecType<const char *> &col_names) const {
 
     if (row_num >= indices_.size())  {
@@ -262,7 +262,7 @@ get_row(size_type row_num, const StlVecType<const char *> &col_names) const {
 
 template<typename I, typename H>
 template<typename ... Ts>
-HeteroVector<std::size_t(H::align_value)> DataFrame<I, H>::
+HeteroVector<DataFrame<I, H>::align_value> DataFrame<I, H>::
 get_row(size_type row_num) const {
 
     if (row_num >= indices_.size())  {
@@ -2312,7 +2312,7 @@ DataFrame<I, H>::get_columns_info () const  {
 
 template<typename I, typename H>
 template<typename ... Ts>
-DataFrame<std::string, HeteroVector<std::size_t(H::align_value)>>
+DataFrame<std::string, H>
 DataFrame<I, H>::describe() const  {
 
     DataFrame<std::string, HeteroVector<align_value>>   result;

@@ -35,13 +35,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>#include &lt;DataFrame/DataFrameFinancialVisitors.h&gt;
 
-template&lt;typename T, typename I = unsigned long&gt;
+template&lt;typename T, typename I = unsigned long,
+         std::size_t A = 0&gt;
 struct HurstExponentVisitor;
 
 // -------------------------------------
 
-template&lt;typename T, typename I = unsigned long&gt;
-using hexpo_v = HurstExponentVisitor&lt;T, I&gt;;
+template&lt;typename T, typename I = unsigned long,
+         std::size_t A = 0&gt;
+using hexpo_v = HurstExponentVisitor&lt;T, I, A&gt;;
         </B></PRE></font>
       </td>
       <td>
@@ -62,8 +64,11 @@ using hexpo_v = HurstExponentVisitor&lt;T, I&gt;;
 		</UL>
         <I>
         <PRE>
+    using RangeVec =
+        std::vector&lt;size_type, typename allocator_declare&lt;size_type, A&gt;::type&gt;;
+
     explicit
-    HurstExponentVisitor(std::vector&lt;size_t&gt; &amp;&amp;ranges)
+    HurstExponentVisitor(RangeVec&lt;size_t&gt; &amp;&amp;ranges);
 
     <B>ranges</B>: A vector of column length divisors.
             For example, {1, 2, 4 } means calculate Hurst exponent in 3 steps.
@@ -73,7 +78,8 @@ using hexpo_v = HurstExponentVisitor&lt;T, I&gt;;
       </td>
       <td width="12%">
         <B>T</B>: Column data type.<BR>
-        <B>I</B>: Index type.
+        <B>I</B>: Index type.<BR>
+        <B>A</B>: Memory alignment boundary for vectors. Default is system default alignment<BR>
       </td>
     </tr>
 

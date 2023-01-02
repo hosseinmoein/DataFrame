@@ -37,8 +37,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace hmdf
 {
 
+template<std::size_t A>
 template<typename T>
-std::vector<T> &HeteroVector::get_vector()  {
+std::vector<T, typename allocator_declare<T, A>::type> &HeteroVector<A>::
+get_vector()  {
 
     auto    iter = vectors_<T>.find (this);
 
@@ -59,7 +61,11 @@ std::vector<T> &HeteroVector::get_vector()  {
                 vectors_<T>[&to] = std::move(vectors_<T>[&from]);
             });
 
-        iter = vectors_<T>.emplace (this, std::vector<T>()).first;
+        iter = vectors_<T>.emplace (
+                   this,
+                   std::vector<
+                       T,
+                       typename allocator_declare<T, A>::type>()).first;
     }
 
     return (iter->second);
@@ -67,84 +73,100 @@ std::vector<T> &HeteroVector::get_vector()  {
 
 // ----------------------------------------------------------------------------
 
+template<std::size_t A>
 template<typename T>
-HeteroView HeteroVector::get_view(size_type begin, size_type end)  {
+HeteroView<A> HeteroVector<A>::get_view(size_type begin, size_type end)  {
 
-    std::vector<T>  &vec = get_vector<T>();
+    std::vector<T, typename allocator_declare<T, A>::type>  &vec =
+        get_vector<T>();
 
-    return (HeteroView(
+    return (HeteroView<A>(
         &(vec[begin]), end == size_t(-1) ? &(vec.back()) : &(vec[end])));
 }
 
 // ----------------------------------------------------------------------------
 
+template<std::size_t A>
 template<typename T>
-HeteroConstView HeteroVector::get_view(size_type begin, size_type end) const  {
+HeteroConstView<A> HeteroVector<A>::
+get_view(size_type begin, size_type end) const  {
 
-    const std::vector<T>    &vec = get_vector<T>();
+    const std::vector<T, typename allocator_declare<T, A>::type> &vec =
+        get_vector<T>();
 
-    return (HeteroConstView(
+    return (HeteroConstView<A>(
         &(vec[begin]), end == size_t(-1) ? &(vec.back()) : &(vec[end])));
 }
 
 // ----------------------------------------------------------------------------
 
+template<std::size_t A>
 template<typename T>
-HeteroPtrView HeteroVector::get_ptr_view(size_type begin, size_type end)  {
+HeteroPtrView<A> HeteroVector<A>::
+get_ptr_view(size_type begin, size_type end)  {
 
-    std::vector<T>  &vec = get_vector<T>();
+    std::vector<T, typename allocator_declare<T, A>::type>  &vec =
+        get_vector<T>();
 
-    return (HeteroPtrView(
+    return (HeteroPtrView<A>(
         &(*(vec.begin() + begin)),
         end == size_type(-1) ? &(vec.back()) + 1 : &(*(vec.begin() + end))));
 }
 
 // ----------------------------------------------------------------------------
 
+template<std::size_t A>
 template<typename T>
-HeteroConstPtrView HeteroVector::
+HeteroConstPtrView<A> HeteroVector<A>::
 get_ptr_view(size_type begin, size_type end) const  {
 
-    const std::vector<T>    &vec = get_vector<T>();
+    const std::vector<T, typename allocator_declare<T, A>::type> &vec =
+        get_vector<T>();
 
-    return (HeteroConstPtrView(
+    return (HeteroConstPtrView<A>(
         &(*(vec.begin() + begin)),
         end == size_type(-1) ? &(vec.back()) + 1 : &(*(vec.begin() + end))));
 }
 
 // ----------------------------------------------------------------------------
 
+template<std::size_t A>
 template<typename T>
-const std::vector<T> &HeteroVector::get_vector() const  {
+const std::vector<T, typename allocator_declare<T, A>::type> &
+HeteroVector<A>::get_vector() const  {
 
     return (const_cast<HeteroVector *>(this)->get_vector<T>());
 }
 
 // ----------------------------------------------------------------------------
 
+template<std::size_t A>
 template<typename T>
-void HeteroVector::push_back(const T &v)  { get_vector<T>().push_back (v); }
+void HeteroVector<A>::push_back(const T &v)  { get_vector<T>().push_back (v); }
 
 // ----------------------------------------------------------------------------
 
+template<std::size_t A>
 template<typename T, class... Args>
-void HeteroVector::emplace_back (Args &&... args)  {
+void HeteroVector<A>::emplace_back (Args &&... args)  {
 
     get_vector<T>().emplace_back (std::forward<Args>(args)...);
 }
 
 // ----------------------------------------------------------------------------
 
+template<std::size_t A>
 template<typename T, typename ITR, class... Args>
-void HeteroVector::emplace (ITR pos, Args &&... args)  {
+void HeteroVector<A>::emplace (ITR pos, Args &&... args)  {
 
     get_vector<T>().emplace (pos, std::forward<Args>(args)...);
 }
 
 // ----------------------------------------------------------------------------
 
+template<std::size_t A>
 template<typename T, typename U>
-void HeteroVector::visit_impl_help_ (T &visitor)  {
+void HeteroVector<A>::visit_impl_help_ (T &visitor)  {
 
     auto    iter = vectors_<U>.find (this);
 
@@ -155,8 +177,9 @@ void HeteroVector::visit_impl_help_ (T &visitor)  {
 
 // ----------------------------------------------------------------------------
 
+template<std::size_t A>
 template<typename T, typename U>
-void HeteroVector::visit_impl_help_ (T &visitor) const  {
+void HeteroVector<A>::visit_impl_help_ (T &visitor) const  {
 
     const auto  citer = vectors_<U>.find (this);
 
@@ -167,8 +190,9 @@ void HeteroVector::visit_impl_help_ (T &visitor) const  {
 
 // ----------------------------------------------------------------------------
 
+template<std::size_t A>
 template<typename T, typename U>
-void HeteroVector::sort_impl_help_ (T &functor)  {
+void HeteroVector<A>::sort_impl_help_ (T &functor)  {
 
     auto    iter = vectors_<U>.find (this);
 
@@ -178,8 +202,9 @@ void HeteroVector::sort_impl_help_ (T &functor)  {
 
 // ----------------------------------------------------------------------------
 
+template<std::size_t A>
 template<typename T, typename U>
-void HeteroVector::change_impl_help_ (T &functor)  {
+void HeteroVector<A>::change_impl_help_ (T &functor)  {
 
     auto    iter = vectors_<U>.find (this);
 
@@ -189,8 +214,9 @@ void HeteroVector::change_impl_help_ (T &functor)  {
 
 // ----------------------------------------------------------------------------
 
+template<std::size_t A>
 template<typename T, typename U>
-void HeteroVector::change_impl_help_ (T &functor) const  {
+void HeteroVector<A>::change_impl_help_ (T &functor) const  {
 
     const auto  citer = vectors_<U>.find (this);
 
@@ -200,8 +226,9 @@ void HeteroVector::change_impl_help_ (T &functor) const  {
 
 // ----------------------------------------------------------------------------
 
+template<std::size_t A>
 template<class T, template<class...> class TLIST, class... TYPES>
-void HeteroVector::visit_impl_ (T &&visitor, TLIST<TYPES...>)  {
+void HeteroVector<A>::visit_impl_ (T &&visitor, TLIST<TYPES...>)  {
 
     // (..., visit_impl_help_<std::decay_t<T>, TYPES>(visitor)); // C++17
     using expander = int[];
@@ -210,8 +237,9 @@ void HeteroVector::visit_impl_ (T &&visitor, TLIST<TYPES...>)  {
 
 // ----------------------------------------------------------------------------
 
+template<std::size_t A>
 template<class T, template<class...> class TLIST, class... TYPES>
-void HeteroVector::visit_impl_ (T &&visitor, TLIST<TYPES...>) const  {
+void HeteroVector<A>::visit_impl_ (T &&visitor, TLIST<TYPES...>) const  {
 
     // (..., visit_impl_help_<std::decay_t<T>, TYPES>(visitor)); // C++17
     using expander = int[];
@@ -220,8 +248,9 @@ void HeteroVector::visit_impl_ (T &&visitor, TLIST<TYPES...>) const  {
 
 // ----------------------------------------------------------------------------
 
+template<std::size_t A>
 template<class T, template<class...> class TLIST, class... TYPES>
-void HeteroVector::sort_impl_ (T &&functor, TLIST<TYPES...>)  {
+void HeteroVector<A>::sort_impl_ (T &&functor, TLIST<TYPES...>)  {
 
     using expander = int[];
     (void) expander { 0, (sort_impl_help_<T, TYPES>(functor), 0) ... };
@@ -229,8 +258,9 @@ void HeteroVector::sort_impl_ (T &&functor, TLIST<TYPES...>)  {
 
 // ----------------------------------------------------------------------------
 
+template<std::size_t A>
 template<class T, template<class...> class TLIST, class... TYPES>
-void HeteroVector::change_impl_ (T &&functor, TLIST<TYPES...>)  {
+void HeteroVector<A>::change_impl_ (T &&functor, TLIST<TYPES...>)  {
 
     using expander = int[];
     (void) expander { 0, (change_impl_help_<T, TYPES>(functor), 0) ... };
@@ -238,8 +268,9 @@ void HeteroVector::change_impl_ (T &&functor, TLIST<TYPES...>)  {
 
 // ----------------------------------------------------------------------------
 
+template<std::size_t A>
 template<class T, template<class...> class TLIST, class... TYPES>
-void HeteroVector::change_impl_ (T &&functor, TLIST<TYPES...>) const  {
+void HeteroVector<A>::change_impl_ (T &&functor, TLIST<TYPES...>) const  {
 
     using expander = int[];
     (void) expander { 0, (change_impl_help_<T, TYPES>(functor), 0) ... };
@@ -247,8 +278,9 @@ void HeteroVector::change_impl_ (T &&functor, TLIST<TYPES...>) const  {
 
 // ----------------------------------------------------------------------------
 
+template<std::size_t A>
 template<typename T>
-void HeteroVector::erase(size_type pos)  {
+void HeteroVector<A>::erase(size_type pos)  {
 
     auto    &vec = get_vector<T>();
 
@@ -257,68 +289,141 @@ void HeteroVector::erase(size_type pos)  {
 
 // ----------------------------------------------------------------------------
 
+template<std::size_t A>
 template<typename T>
-void HeteroVector::resize(size_type count)  {
+void HeteroVector<A>::resize(size_type count)  {
 
     get_vector<T>().resize (count);
 }
 
 // ----------------------------------------------------------------------------
 
+template<std::size_t A>
 template<typename T>
-void HeteroVector::resize(size_type count, const T &v)  {
+void HeteroVector<A>::resize(size_type count, const T &v)  {
 
     get_vector<T>().resize (count, v);
 }
 
 // ----------------------------------------------------------------------------
 
+template<std::size_t A>
 template<typename T>
-void HeteroVector::pop_back()  { get_vector<T>().pop_back (); }
+void HeteroVector<A>::pop_back()  { get_vector<T>().pop_back (); }
 
 // ----------------------------------------------------------------------------
 
+template<std::size_t A>
 template<typename T>
-bool HeteroVector::empty() const noexcept  {
+bool HeteroVector<A>::empty() const noexcept  {
 
     return (get_vector<T>().empty ());
 }
 
 // ----------------------------------------------------------------------------
 
+template<std::size_t A>
 template<typename T>
-T &HeteroVector::at(size_type idx)  {
+T &HeteroVector<A>::at(size_type idx)  {
 
     return (get_vector<T>().at (idx));
 }
 
 // ----------------------------------------------------------------------------
 
+template<std::size_t A>
 template<typename T>
-const T &HeteroVector::at(size_type idx) const  {
+const T &HeteroVector<A>::at(size_type idx) const  {
 
     return (get_vector<T>().at (idx));
 }
 
 // ----------------------------------------------------------------------------
 
+template<std::size_t A>
 template<typename T>
-T &HeteroVector::back()  { return (get_vector<T>().back ()); }
+T &HeteroVector<A>::back()  { return (get_vector<T>().back ()); }
 
 // ----------------------------------------------------------------------------
 
+template<std::size_t A>
 template<typename T>
-const T &HeteroVector::back() const  { return (get_vector<T>().back ()); }
+const T &HeteroVector<A>::back() const  { return (get_vector<T>().back ()); }
 
 // ----------------------------------------------------------------------------
 
+template<std::size_t A>
 template<typename T>
-T &HeteroVector::front()  { return (get_vector<T>().front ()); }
+T &HeteroVector<A>::front()  { return (get_vector<T>().front ()); }
 
 // ----------------------------------------------------------------------------
 
+template<std::size_t A>
 template<typename T>
-const T &HeteroVector::front() const  { return (get_vector<T>().front ()); }
+const T &HeteroVector<A>::front() const  { return (get_vector<T>().front ()); }
+
+
+// ----------------------------------------------------------------------------
+
+template<std::size_t A>
+HeteroVector<A>::HeteroVector ()  {
+
+    clear_functions_.reserve(2);
+    copy_functions_.reserve(2);
+    move_functions_.reserve(2);
+}
+
+// ----------------------------------------------------------------------------
+
+template<std::size_t A>
+HeteroVector<A>::HeteroVector (const HeteroVector &that)  { *this = that; }
+template<std::size_t A>
+HeteroVector<A>::HeteroVector (HeteroVector &&that)  { *this = that; }
+
+// ----------------------------------------------------------------------------
+
+template<std::size_t A>
+HeteroVector<A> &HeteroVector<A>::operator= (const HeteroVector &rhs)  {
+
+    if (&rhs != this)  {
+        clear();
+        clear_functions_ = rhs.clear_functions_;
+        copy_functions_ = rhs.copy_functions_;
+        move_functions_ = rhs.move_functions_;
+
+        for (auto &&copy_function : copy_functions_)
+            copy_function(rhs, *this);
+    }
+
+    return (*this);
+}
+
+// ----------------------------------------------------------------------------
+
+template<std::size_t A>
+HeteroVector<A> &HeteroVector<A>::operator= (HeteroVector &&rhs)  {
+
+    if (&rhs != this)  {
+        clear();
+        clear_functions_ = std::move(rhs.clear_functions_);
+        copy_functions_ = std::move(rhs.copy_functions_);
+        move_functions_ = std::move(rhs.move_functions_);
+
+        for (auto &&move_function : move_functions_)
+            move_function(rhs, *this);
+    }
+
+    return (*this);
+}
+
+// ----------------------------------------------------------------------------
+
+template<std::size_t A>
+void HeteroVector<A>::clear()  {
+
+    for (auto &&clear_func : clear_functions_)
+        clear_func (*this);
+}
 
 } // namespace hmdf
 

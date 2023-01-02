@@ -72,17 +72,17 @@ using <U>MinSubArrayVisitor</U> =
         <PRE><B>#include &lt;DataFrame/DataFrameStatsVisitors.h&gt;
 
 template&lt;std::size_t N, typename T, typename I = unsigned long,
-         typename Cmp = std::less&lt;T&gt;&gt;
+         typename Cmp = std::less&lt;T&gt;, std::size_t A = 0&gt;
 struct NExtremumSubArrayVisitor;
 
 // -------------------------------------
 
-template&lt;std::size_t N, typename T, typename I&gt;
+template&lt;std::size_t N, typename T, typename I, std::size_t A = 0&gt;
 using <U>NMaxSubArrayVisitor</U> =
-    NExtremumSubArrayVisitor&lt;N, T, I, std::less&lt;T&gt;&gt;;
-template&lt;std::size_t N, typename T, typename I&gt;
+    NExtremumSubArrayVisitor&lt;N, T, I, std::less&lt;T&gt;, A&gt;;
+template&lt;std::size_t N, typename T, typename I, std::size_t A = 0&gt;
 using <U>NMinSubArrayVisitor</U> =
-    NExtremumSubArrayVisitor&lt;N, T, I, std::greater&lt;T&gt;&gt;;
+    NExtremumSubArrayVisitor&lt;N, T, I, std::greater&lt;T&gt;, A&gt;;
         </B></PRE></font>
       </td>
       <td>
@@ -105,7 +105,8 @@ using <U>NMinSubArrayVisitor</U> =
       </td>
       <td width="15%">
         <B>T</B>: Column data type. T must be an arithmetic-enabled type<BR>
-        <B>I</B>: Index type.
+        <B>I</B>: Index type<BR>
+        <B>A</B>: Memory alignment boundary for vectors. Default is system default alignment<BR>
       </td>
     </tr>
 

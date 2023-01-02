@@ -36,13 +36,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>#include &lt;DataFrame/DataFrameStatsVisitors.h&gt;
 
-template&lt;typename T, typename I = unsigned long&gt;
+template&lt;typename T, typename I = unsigned long,
+         std::size_t A = 0&gt;
 struct PolyFitVisitor;
 
 // -------------------------------------
 
-template&lt;typename T, typename I = unsigned long&gt;
-using pfit_v = PolyFitVisitor&lt;T, I&gt;;
+template&lt;typename T, typename I = unsigned long,
+         std::size_t A = 0&gt;
+using pfit_v = PolyFitVisitor&lt;T, I, A&gt;;
         </B></PRE></font>
       </td>
       <td>
@@ -66,7 +68,8 @@ using pfit_v = PolyFitVisitor&lt;T, I&gt;;
       </td>
       <td width="12%">
         <B>T</B>: Column data type.<BR>
-        <B>I</B>: Index type.
+        <B>I</B>: Index type.<BR>
+        <B>A</B>: Memory alignment boundary for vectors. Default is system default alignment<BR>
       </td>
     </tr>
 
@@ -74,13 +77,15 @@ using pfit_v = PolyFitVisitor&lt;T, I&gt;;
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>#include &lt;DataFrame/DataFrameStatsVisitors.h&gt;
 
-template&lt;typename T, typename I = unsigned long&gt;
+template&lt;typename T, typename I = unsigned long,
+         std::size_t A = 0&gt;
 struct LogFitVisitor;
 
 // -------------------------------------
 
-template&lt;typename T, typename I = unsigned long&gt;
-using lfit_v = LogFitVisitor&lt;T, I&gt;;
+template&lt;typename T, typename I = unsigned long,
+         std::size_t A = 0&gt;
+using lfit_v = LogFitVisitor&lt;T, I, A&gt;;
         </B></PRE></font>
       </td>
       <td>
@@ -102,7 +107,8 @@ using lfit_v = LogFitVisitor&lt;T, I&gt;;
       </td>
       <td width="12%">
         <B>T</B>: Column data type.<BR>
-        <B>I</B>: Index type.
+        <B>I</B>: Index type.<BR>
+        <B>A</B>: Memory alignment boundary for vectors. Default is system default alignment<BR>
       </td>
     </tr>
 
@@ -110,13 +116,15 @@ using lfit_v = LogFitVisitor&lt;T, I&gt;;
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>#include &lt;DataFrame/DataFrameStatsVisitors.h&gt;
 
-template&lt;typename T, typename I = unsigned long&gt;
+template&lt;typename T, typename I = unsigned long,
+         std::size_t A = 0&gt;
 struct ExponentialFitVisitor;
 
 // -------------------------------------
 
-template&lt;typename T, typename I = unsigned long&gt;
-using efit_v = ExponentialFitVisitor&lt;T, I&gt;;
+template&lt;typename T, typename I = unsigned long,
+         std::size_t A = 0&gt;
+using efit_v = ExponentialFitVisitor&lt;T, I, A&gt;;
         </B></PRE></font>
       </td>
       <td>
@@ -134,25 +142,24 @@ using efit_v = ExponentialFitVisitor&lt;T, I&gt;;
       </td>
       <td width="12%">
         <B>T</B>: Column data type.<BR>
-        <B>I</B>: Index type.
+        <B>I</B>: Index type.<BR>
+        <B>A</B>: Memory alignment boundary for vectors. Default is system default alignment<BR>
       </td>
     </tr>
-
-
-
-
 
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>#include &lt;DataFrame/DataFrameStatsVisitors.h&gt;
 
-template&lt;typename T, typename I = unsigned long&gt;
+template&lt;typename T, typename I = unsigned long,
+         std::size_t A = 0&gt;
 struct LinearFitVisitor;
 
 // -------------------------------------
 
-template&lt;typename T, typename I = unsigned long&gt;
-using linfit_v = LinearFitVisitor&lt;T, I&gt;;
+template&lt;typename T, typename I = unsigned long,
+         std::size_t A = 0&gt;
+using linfit_v = LinearFitVisitor&lt;T, I, A&gt;;
         </B></PRE></font>
       </td>
       <td>
@@ -170,7 +177,8 @@ using linfit_v = LinearFitVisitor&lt;T, I&gt;;
       </td>
       <td width="12%">
         <B>T</B>: Column data type.<BR>
-        <B>I</B>: Index type.
+        <B>I</B>: Index type.<BR>
+        <B>A</B>: Memory alignment boundary for vectors. Default is system default alignment<BR>
       </td>
     </tr>
 

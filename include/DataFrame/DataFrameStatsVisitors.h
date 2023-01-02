@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <DataFrame/DataFrameTypes.h>
 #include <DataFrame/Internals/DataFrame_standalone.tcc>
+#include <DataFrame/Utils/AlignedAllocator.h>
 #include <DataFrame/Utils/FixedSizePriorityQueue.h>
 #include <DataFrame/Utils/ThreadGranularity.h>
 #include <DataFrame/Utils/Utils.h>
@@ -72,7 +73,7 @@ namespace hmdf
 
 #define DEFINE_VISIT_BASIC_TYPES_3 \
     DEFINE_VISIT_BASIC_TYPES \
-    using result_type = std::vector<T>;
+    using result_type = std::vector<T, typename allocator_declare<T, A>::type>;
 
 #define DEFINE_PRE_POST \
     inline void pre ()  { result_.clear(); } \
@@ -956,8 +957,10 @@ using MinSubArrayVisitor = ExtremumSubArrayVisitor<T, I, std::greater<T>>;
 
 // ----------------------------------------------------------------------------
 
-template<std::size_t N, typename T, typename I = unsigned long,
-         typename Cmp = std::less<T>>
+template<std::size_t N, typename T,
+         typename I = unsigned long,
+         typename Cmp = std::less<T>,
+         std::size_t A = 0>
 struct NExtremumSubArrayVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES
@@ -980,7 +983,9 @@ struct NExtremumSubArrayVisitor  {
         }
     };
 
-    using result_type = std::vector<SubArrayInfo>;
+    using result_type =
+        std::vector<SubArrayInfo,
+                    typename allocator_declare<SubArrayInfo, A>::type>;
     using compare_type = Cmp;
 
     inline void operator() (const index_type &idx, const value_type &val)  {
@@ -1024,16 +1029,19 @@ private:
     compare_type                                            cmp_ {  };
 };
 
-template<std::size_t N, typename T, typename I = unsigned long>
-using NMaxSubArrayVisitor = NExtremumSubArrayVisitor<N, T, I, std::less<T>>;
-template<std::size_t N, typename T, typename I = unsigned long>
-using NMinSubArrayVisitor = NExtremumSubArrayVisitor<N, T, I, std::greater<T>>;
+template<std::size_t N, typename T, typename I = unsigned long,
+         std::size_t A = 0>
+using NMaxSubArrayVisitor = NExtremumSubArrayVisitor<N, T, I, std::less<T>, A>;
+template<std::size_t N, typename T, typename I = unsigned long,
+         std::size_t A = 0>
+using NMinSubArrayVisitor =
+    NExtremumSubArrayVisitor<N, T, I, std::greater<T>, A>;
 
 // ----------------------------------------------------------------------------
 
 // Simple rolling adoptor for visitors
 //
-template<typename F, typename T, typename I = unsigned long>
+template<typename F, typename T, typename I = unsigned long, std::size_t A = 0>
 struct  SimpleRollAdopter  {
 
 private:
@@ -1044,7 +1052,9 @@ private:
 public:
 
     DEFINE_VISIT_BASIC_TYPES
-    using result_type = std::vector<f_result_type>;
+    using result_type =
+        std::vector<f_result_type,
+                    typename allocator_declare<f_result_type, A>::type>;
 
     template <typename K, typename H>
     inline void
@@ -1080,9 +1090,9 @@ public:
 
 private:
 
-    visitor_type                visitor_ { };
-    const size_type             roll_count_ { 0 };
-    std::vector<f_result_type>  result_ { };
+    visitor_type    visitor_ { };
+    const size_type roll_count_ { 0 };
+    result_type     result_ { };
 };
 
 // ----------------------------------------------------------------------------
@@ -1131,7 +1141,7 @@ public:
 
 // Expanding rolling adoptor for visitors
 //
-template<typename F, typename T, typename I = unsigned long>
+template<typename F, typename T, typename I = unsigned long, std::size_t A = 0>
 struct  ExpandingRollAdopter  {
 
 private:
@@ -1139,15 +1149,16 @@ private:
     using visitor_type = F;
     using f_result_type = typename visitor_type::result_type;
 
-    visitor_type                visitor_ { };
-    const std::size_t           init_roll_count_ { 0 };
-    const std::size_t           increment_count_ { 0 };
-    std::vector<f_result_type>  result_ { };
+    visitor_type        visitor_ { };
+    const std::size_t   init_roll_count_ { 0 };
+    const std::size_t   increment_count_ { 0 };
 
 public:
 
     DEFINE_VISIT_BASIC_TYPES
-    using result_type = std::vector<f_result_type>;
+    using result_type =
+        std::vector<f_result_type,
+                    typename allocator_declare<f_result_type, A>::type>;
 
     template <typename K, typename H>
     inline void
@@ -1187,6 +1198,10 @@ public:
         : visitor_(std::move(functor)),
           init_roll_count_(r_count),
           increment_count_(i_count)  {   }
+
+private:
+
+    result_type result_ { };
 };
 
 // ----------------------------------------------------------------------------
@@ -1194,7 +1209,7 @@ public:
 // Exponential rolling adoptor for visitors
 // (decay * Xt) + ((1 − decay) * AVGt-1)
 //
-template<typename F, typename T, typename I = unsigned long>
+template<typename F, typename T, typename I = unsigned long, std::size_t A = 0>
 struct  ExponentialRollAdopter  {
 
 private:
@@ -1202,18 +1217,18 @@ private:
     using visitor_type = F;
     using f_result_type = typename visitor_type::result_type;
 
-    std::vector<f_result_type>  result_ { };
-    visitor_type                visitor_ { };
-    const std::size_t           roll_count_;
-    const std::size_t           repeat_count_;
-    const T                     decay_;
-    const bool                  skip_nan_;
+    visitor_type        visitor_ { };
+    const std::size_t   roll_count_;
+    const std::size_t   repeat_count_;
+    const T             decay_;
+    const bool          skip_nan_;
 
 public:
 
     DEFINE_VISIT_BASIC_TYPES
-
-    using result_type = std::vector<f_result_type>;
+    using result_type =
+        std::vector<f_result_type,
+                    typename allocator_declare<f_result_type, A>::type>;
 
     template <typename K, typename H>
     inline void
@@ -1273,6 +1288,8 @@ private:
 
         return (decay_ * i_value + (T(1) - decay_) * i_1_value);
     }
+
+    result_type result_ { };
 };
 
 // ----------------------------------------------------------------------------
@@ -1435,10 +1452,7 @@ private:
 // Single Action Visitors
 //
 
-template<typename T,
-         typename I = unsigned long,
-         typename =
-             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct CumSumVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -1480,10 +1494,7 @@ private:
 
 // ----------------------------------------------------------------------------
 
-template<typename T,
-         typename I = unsigned long,
-         typename =
-             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct CumProdVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -1519,13 +1530,14 @@ struct CumProdVisitor {
 
 private:
 
-    std::vector<value_type> result_ {  };
-    const bool              skip_nan_;
+    result_type result_ {  };
+    const bool  skip_nan_;
 };
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long, typename Cmp = std::less<T>>
+template<typename T, typename I = unsigned long,
+         typename Cmp = std::less<T>, std::size_t A = 0>
 struct CumExtremumVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -1571,17 +1583,17 @@ private:
     const bool      skip_nan_;
 };
 
-template<typename T, typename I = unsigned long>
-using CumMaxVisitor = CumExtremumVisitor<T, I, std::less<T>>;
-template<typename T, typename I = unsigned long>
-using CumMinVisitor = CumExtremumVisitor<T, I, std::greater<T>>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using CumMaxVisitor = CumExtremumVisitor<T, I, std::less<T>, A>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using CumMinVisitor = CumExtremumVisitor<T, I, std::greater<T>, A>;
 
 // ----------------------------------------------------------------------------
 
 // This categorizes the values in the column with integer values starting
 // from 0
 //
-template<typename T, typename I = unsigned long>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct CategoryVisitor  {
 
 private:
@@ -1594,7 +1606,8 @@ private:
 public:
 
     DEFINE_VISIT_BASIC_TYPES
-    using result_type = std::vector<size_type>;
+    using result_type =
+        std::vector<size_type, typename allocator_declare<size_type, A>::type>;
 
     template <typename K, typename H>
     inline void
@@ -1652,13 +1665,14 @@ private:
 
 // This ranks the values in the column based on rank policy starting from 0.
 //
-template<typename T, typename I = unsigned long>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct RankVisitor  {
 
 public:
 
     DEFINE_VISIT_BASIC_TYPES
-    using result_type = std::vector<double>;
+    using result_type =
+        std::vector<double, typename allocator_declare<double, A>::type>;
 
     template <typename K, typename H>
     inline void
@@ -1666,7 +1680,8 @@ public:
                 const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
-        std::vector<size_type>  rank_vec(col_s);
+        std::vector<size_type, typename allocator_declare<size_type, A>::type>
+            rank_vec(col_s);
 
         std::iota(rank_vec.begin(), rank_vec.end(), 0);
         std::stable_sort(
@@ -1741,11 +1756,12 @@ private:
 // It factorizes the given column into a vector of Booleans based on the
 // result of the given function.
 //
-template<typename T, typename I = unsigned long>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct FactorizeVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES
-    using result_type = std::vector<bool>;
+    using result_type =
+        std::vector<bool, typename allocator_declare<bool, A>::type>;
     using factor_func = std::function<bool(const value_type &val)>;
 
     template <typename K, typename H>
@@ -1775,11 +1791,11 @@ private:
 
 // ----------------------------------------------------------------------------
 
-template<typename T,
-         typename I = unsigned long,
-         typename =
-             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct AutoCorrVisitor  {
+
+    template<typename U>
+    using vec_type = std::vector<U, typename allocator_declare<U, A>::type>;
 
 public:
 
@@ -1793,12 +1809,12 @@ public:
 
         if (col_s <= 4)  return;
 
-        std::vector<value_type>               tmp_result(col_s - 4);
-        size_type                             lag = 1;
-        const size_type                       thread_level =
+        vec_type<value_type>                tmp_result(col_s - 4);
+        size_type                           lag = 1;
+        const size_type                     thread_level =
             ThreadGranularity::get_sensible_thread_level();
-        std::vector<std::future<CorrResult>>  futures(thread_level);
-        size_type                             thread_count = 0;
+        vec_type<std::future<CorrResult>>   futures(thread_level);
+        size_type                           thread_count = 0;
 
         tmp_result[0] = 1.0;
         while (lag < col_s - 4)  {
@@ -1866,7 +1882,7 @@ private:
 // ------------------------------------------------------------------------
 //          1 + (1 - decay) + (1 - decay)^2 + ... + (1 - decay)^t
 //
-template<typename T, typename I = unsigned long>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  ExponentiallyWeightedMeanVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -1941,12 +1957,12 @@ private:
     result_type         result_ {  };
 };
 
-template<typename T, typename I = unsigned long>
-using ewm_v = ExponentiallyWeightedMeanVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using ewm_v = ExponentiallyWeightedMeanVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  ZeroLagMovingMeanVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -1967,7 +1983,7 @@ struct  ZeroLagMovingMeanVisitor  {
             result_[i] =
                 T(2) * *(column_begin + i) - *(column_begin + (i - lag));
 
-        ewm_v<T, I> ewm(exponential_decay_spec::span, roll_period_, true);
+        ewm_v<T, I, A> ewm(exponential_decay_spec::span, roll_period_, true);
 
         ewm.pre();
         ewm (idx_begin, idx_end, result_.begin() + lag, result_.end());
@@ -1990,22 +2006,25 @@ private:
     result_type     result_ {  };
 };
 
-template<typename T, typename I = unsigned long>
-using zlmm_v = ZeroLagMovingMeanVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using zlmm_v = ZeroLagMovingMeanVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct KthValueVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_2
+
+    template<typename U>
+    using vec_type = std::vector<U, typename allocator_declare<U, A>::type>;
 
     template <typename K, typename H>
     inline void
     operator() (const K &, const K &,
                 const H &values_begin, const H &values_end)  {
 
-        std::vector<value_type> aux (values_begin, values_end);
+        vec_type<value_type>    aux (values_begin, values_end);
 
         result_ = find_kth_element_(aux, 0, aux.size() - 1, kth_element_);
     }
@@ -2063,12 +2082,12 @@ private:
     }
 };
 
-template<typename T, typename I = unsigned long>
-using kthv_v = KthValueVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using kthv_v = KthValueVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct MedianVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_2
@@ -2079,7 +2098,7 @@ struct MedianVisitor  {
                 const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
-        KthValueVisitor<value_type, index_type> kv_visitor (col_s >> 1);
+        KthValueVisitor<value_type, index_type, A> kv_visitor (col_s >> 1);
 
 
         kv_visitor.pre();
@@ -2087,7 +2106,7 @@ struct MedianVisitor  {
         kv_visitor.post();
         result_ = kv_visitor.get_result();
         if (! (col_s & 0x0001))  { // even
-            KthValueVisitor<value_type, I>   kv_visitor2 ((col_s >> 1) + 1);
+            KthValueVisitor<value_type, I, A>   kv_visitor2 ((col_s >> 1) + 1);
 
             kv_visitor2.pre();
             kv_visitor2(idx_begin, idx_end, column_begin, column_end);
@@ -2107,12 +2126,12 @@ private:
     result_type result_ {  };
 };
 
-template<typename T, typename I = unsigned long>
-using med_v = MedianVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using med_v = MedianVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct QuantileVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_2
@@ -2145,7 +2164,7 @@ struct QuantileVisitor  {
             ! (col_s & 0x01) || double(int_idx) < vec_len_frac;
 
         if (qt_ == 0.0 || qt_ == 1.0)  {
-            KthValueVisitor<T, I>   kth_value((qt_ == 0.0) ? 1 : col_s);
+            KthValueVisitor<T, I, A>   kth_value((qt_ == 0.0) ? 1 : col_s);
 
             kth_value.pre();
             kth_value(idx_begin, idx_end, column_begin, column_end);
@@ -2154,14 +2173,14 @@ struct QuantileVisitor  {
         }
         else if (policy_ == quantile_policy::mid_point ||
                  policy_ == quantile_policy::linear)  {
-            KthValueVisitor<T, I>   kth_value1(int_idx);
+            KthValueVisitor<T, I, A>   kth_value1(int_idx);
 
             kth_value1.pre();
             kth_value1(idx_begin, idx_end, column_begin, column_end);
             kth_value1.post();
             result_ = kth_value1.get_result();
             if (need_two && int_idx + 1 < col_s)  {
-                KthValueVisitor<T, I>   kth_value2(int_idx + 1);
+                KthValueVisitor<T, I, A>   kth_value2(int_idx + 1);
 
                 kth_value2.pre();
                 kth_value2(idx_begin, idx_end, column_begin, column_end);
@@ -2175,7 +2194,7 @@ struct QuantileVisitor  {
         }
         else if (policy_ == quantile_policy::lower_value ||
                  policy_ == quantile_policy::higher_value)  {
-            KthValueVisitor<T, I>   kth_value(
+            KthValueVisitor<T, I, A>   kth_value(
                 policy_ == quantile_policy::lower_value ? int_idx
                 : (int_idx + 1 < col_s && need_two ? int_idx + 1 : int_idx));
 
@@ -2202,8 +2221,8 @@ private:
     const quantile_policy   policy_;
 };
 
-template<typename T, typename I = unsigned long>
-using qt_v = QuantileVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using qt_v = QuantileVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
@@ -2213,10 +2232,14 @@ using qt_v = QuantileVisitor<T, I>;
 // The T type must be hashable
 // Because of the information this has to return, it is not a cheap operation
 //
-template<std::size_t N, typename T, typename I = unsigned long>
+template<std::size_t N,
+         typename T, typename I = unsigned long, std::size_t A = 0>
 struct  ModeVisitor {
 
     DEFINE_VISIT_BASIC_TYPES
+
+    template<typename U>
+    using vec_type = std::vector<U, typename allocator_declare<U, A>::type>;
 
     struct  DataItem  {
         // Value of the column item
@@ -2224,7 +2247,7 @@ struct  ModeVisitor {
         const value_type                *value { nullptr };
         // List of indices where value occurred
         //
-        VectorConstPtrView<index_type>  indices { };
+        VectorConstPtrView<index_type, A>  indices { };
 
         // Number of times value occurred
         //
@@ -2232,7 +2255,7 @@ struct  ModeVisitor {
 
         // List of column indices where value occurred
         //
-        std::vector<size_type>  value_indices_in_col {  };
+        vec_type<size_type> value_indices_in_col {  };
 
         DataItem() = default;
         inline DataItem(const value_type &v) : value(&v)  {
@@ -2305,7 +2328,7 @@ public:
             }
         }
 
-        std::vector<DataItem> val_vec;
+        vec_type<DataItem>  val_vec;
 
         val_vec.reserve(val_map.size() + 1);
         if (nan_item.value != nullptr)
@@ -2349,18 +2372,16 @@ private:
     result_type result_ { };
 };
 
-template<std::size_t N, typename T, typename I = unsigned long>
-using mode_v = ModeVisitor<N, T, I>;
+template<std::size_t N,
+         typename T, typename I = unsigned long, std::size_t A = 0>
+using mode_v = ModeVisitor<N, T, I, A>;
 
 // ----------------------------------------------------------------------------
 
 // This calculates 4 different form of Mean Absolute Deviation based on the
 // requested type input. Please the mad_type enum type
 //
-template<typename T,
-         typename I = unsigned long,
-         typename =
-             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct MADVisitor  {
 
 private:
@@ -2406,7 +2427,7 @@ private:
                                      const H &column_begin,
                                      const H &column_end)  {
 
-        MedianVisitor<T, I> median_visitor;
+        MedianVisitor<T, I, A> median_visitor;
 
         median_visitor.pre();
         median_visitor(idx_begin, idx_end, column_begin, column_end);
@@ -2445,8 +2466,8 @@ private:
             mean_visitor(idx_value, *(column_begin + i));
         mean_visitor.post();
 
-        MedianVisitor<T, I> median_mean_visitor;
-        std::vector<T>      mean_dists;
+        MedianVisitor<T, I, A>                            median_mean_visitor;
+        std::vector<T, typename allocator_declare<T, A>::type>  mean_dists;
 
         mean_dists.reserve(col_s);
         for (std::size_t i = 0; i < col_s; ++i)
@@ -2467,15 +2488,15 @@ private:
                                        const H &column_begin,
                                        const H &column_end)  {
 
-        MedianVisitor<T, I> median_visitor;
+        MedianVisitor<T, I, A> median_visitor;
 
         median_visitor.pre();
         median_visitor(idx_begin, idx_end, column_begin, column_end);
         median_visitor.post();
 
         GET_COL_SIZE
-        MedianVisitor<T, I> median_median_visitor;
-        std::vector<T>      median_dists;
+        MedianVisitor<T, I, A> median_median_visitor;
+        std::vector<T, typename allocator_declare<T, A>::type>  median_dists;
 
         median_dists.reserve(col_s);
         for (std::size_t i = 0; i < col_s; ++i)
@@ -2531,15 +2552,12 @@ private:
     result_type result_ {  };
 };
 
-template<typename T, typename I = unsigned long>
-using mad_v = MADVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using mad_v = MADVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T,
-         typename I = unsigned long,
-         typename =
-             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct DiffVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -2631,15 +2649,12 @@ private:
     const bool  non_zero_;
 };
 
-template<typename T, typename I = unsigned long>
-using diff_v = DiffVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using diff_v = DiffVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T,
-         typename I = unsigned long,
-         typename =
-             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct ZScoreVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -2692,8 +2707,8 @@ private:
     const bool  skip_nan_;
 };
 
-template<typename T, typename I = unsigned long>
-using zs_v = ZScoreVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using zs_v = ZScoreVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
@@ -2768,10 +2783,7 @@ using szs_v = SampleZScoreVisitor<T, I>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T,
-         typename I = unsigned long,
-         typename =
-             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct SigmoidVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -2862,15 +2874,12 @@ private:
     const sigmoid_type  sigmoid_type_;
 };
 
-template<typename T, typename I = unsigned long>
-using sigm_v = SigmoidVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using sigm_v = SigmoidVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T,
-         typename I = unsigned long,
-         typename =
-             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct BoxCoxVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -3027,15 +3036,12 @@ private:
     static constexpr value_type one_ { 1 };
 };
 
-template<typename T, typename I = unsigned long>
-using bcox_v = BoxCoxVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using bcox_v = BoxCoxVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T,
-         typename I = unsigned long,
-         typename =
-             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct NormalizeVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -3074,15 +3080,12 @@ private:
     result_type result_ {  };  // Normalized
 };
 
-template<typename T, typename I = unsigned long>
-using norm_v = NormalizeVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using norm_v = NormalizeVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T,
-         typename I = unsigned long,
-         typename =
-             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct StandardizeVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -3120,15 +3123,12 @@ private:
     result_type result_ {  }; // Standardized
 };
 
-template<typename T, typename I = unsigned long>
-using stand_v = StandardizeVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using stand_v = StandardizeVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T,
-         typename I = unsigned long,
-         typename =
-             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct PolyFitVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -3164,7 +3164,7 @@ public:
         // Array that will store the values of
         // sigma(xi), sigma(xi^2), sigma(xi^3) ... sigma(xi^2n)
         //
-        std::vector<value_type> sigma_x (2 * nrows, 0);
+        result_type sigma_x (2 * nrows, 0);
 
         for (size_type i = 0; i < sigma_x.size(); ++i) {
             // consecutive positions of the array will store
@@ -3180,7 +3180,7 @@ public:
         // eq_mat is the Normal matrix (augmented) that will store the
         // equations. The extra column is the y column.
         //
-        std::vector<value_type> eq_mat (nrows * (deg + 2), 0);
+        result_type eq_mat (nrows * (deg + 2), 0);
 
         for (size_type i = 0; i <= deg; ++i)  {
             // Build the Normal matrix by storing the corresponding
@@ -3194,7 +3194,7 @@ public:
         // Array to store the values of
         // sigma(yi), sigma(xi * yi), sigma(xi^2 * yi) ... sigma(xi^n * yi)
         //
-        std::vector<value_type> sigma_y (nrows, 0);
+        result_type sigma_y (nrows, 0);
 
         for (size_type i = 0; i < sigma_y.size(); ++i) {
             // consecutive positions will store
@@ -3314,15 +3314,12 @@ private:
     weight_func     weights_;
 };
 
-template<typename T, typename I = unsigned long>
-using pfit_v = PolyFitVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using pfit_v = PolyFitVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T,
-         typename I = unsigned long,
-         typename =
-             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct LogFitVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -3336,7 +3333,7 @@ struct LogFitVisitor {
                 const H &x_begin, const H &x_end,
                 const H &y_begin, const H &y_end)  {
 
-        std::vector<value_type> logx (x_begin, x_end);
+        result_type logx (x_begin, x_end);
 
         std::transform(logx.begin(), logx.end(), logx.begin(),
                        (value_type(*)(value_type)) std::log);
@@ -3377,20 +3374,17 @@ struct LogFitVisitor {
 private:
 
     result_type             y_fits_ {  };
-    PolyFitVisitor<T, I>    poly_fit_ {  };
+    PolyFitVisitor<T, I, A> poly_fit_ {  };
     weight_func             weights_;
     value_type              residual_ { 0 };
 };
 
-template<typename T, typename I = unsigned long>
-using lfit_v = LogFitVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using lfit_v = LogFitVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T,
-         typename I = unsigned long,
-         typename =
-             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct ExponentialFitVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -3470,15 +3464,12 @@ private:
     value_type  intercept_ { 0 };
 };
 
-template<typename T, typename I = unsigned long>
-using efit_v = ExponentialFitVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using efit_v = ExponentialFitVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T,
-         typename I = unsigned long,
-         typename =
-             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct LinearFitVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -3556,8 +3547,8 @@ private:
     value_type  intercept_ { 0 };
 };
 
-template<typename T, typename I = unsigned long>
-using linfit_v = LinearFitVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using linfit_v = LinearFitVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
@@ -3593,10 +3584,7 @@ using linfit_v = LinearFitVisitor<T, I>;
 // and Smoothing Scatterplots". Journal of the American Statistical
 // Association 74 (368): 829-836.
 //
-template<typename T,
-         typename I = unsigned long,
-         typename =
-             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct LowessVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -3643,7 +3631,7 @@ private:
             resid_weights_[i] =
                 std::fabs(*(y_begin + i) - *(y_fits_begin + i));
 
-        MedianVisitor<T, I> median_v;
+        MedianVisitor<T, I, A> median_v;
 
         median_v.pre();
         median_v(idx_begin, idx_end,
@@ -4030,10 +4018,10 @@ public:
         if (sorted_)
             lowess_(idx_begin, idx_end, y_begin, y_end, x_begin, x_end);
         else  {  // Sort x and y in ascending order of x
-            const size_type         col_s = std::distance(x_begin, x_end);
-            std::vector<value_type> xvals (x_begin, x_end);
-            std::vector<value_type> yvals (y_begin, y_end);
-            std::vector<size_type>  sorting_idxs (col_s);
+            const size_type col_s = std::distance(x_begin, x_end);
+            result_type     xvals (x_begin, x_end);
+            result_type     yvals (y_begin, y_end);
+            result_type     sorting_idxs (col_s);
 
             std::iota(sorting_idxs.begin(), sorting_idxs.end(), 0);
             std::sort(sorting_idxs.begin(), sorting_idxs.end(),
@@ -4106,15 +4094,12 @@ private:
     static constexpr value_type six_ { 6 };
 };
 
-template<typename T, typename I = unsigned long>
-using lowess_v = LowessVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using lowess_v = LowessVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T,
-         typename I = unsigned long,
-         typename =
-             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct DecomposeVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -4126,11 +4111,11 @@ private:
     do_trend_(const K &idx_begin, const K &idx_end,
               const H &y_begin, const H &y_end,
               size_type col_s,
-              std::vector<value_type> &xvals)  {
+              result_type &xvals)  {
 
         std::iota(xvals.begin(), xvals.end(), 0);
 
-        LowessVisitor<T, I> l_v (3, frac_, delta_ * value_type(col_s), true);
+        LowessVisitor<T, I, A> l_v (3, frac_, delta_ * value_type(col_s), true);
 
         // Calculate trend
         //
@@ -4143,7 +4128,7 @@ private:
     template<typename MEAN, typename K>
     inline void
     do_seasonal_(size_type col_s, const K &idx_begin, const K &idx_end,
-                 const std::vector<value_type> &detrended)  {
+                 const result_type &detrended)  {
 
         StepRollAdopter<MEAN, value_type, I>    sr_mean (MEAN(), s_period_);
 
@@ -4185,7 +4170,7 @@ private:
     }
 
     inline void
-    do_residual_(const std::vector<value_type> &detrended, size_type col_s)  {
+    do_residual_(const result_type &detrended, size_type col_s)  {
 
         // What is left is residual
         //
@@ -4213,14 +4198,14 @@ public:
 
         assert(s_period_ <= col_s / 2);
 
-        std::vector<value_type> xvals (col_s);
+        result_type xvals (col_s);
 
         do_trend_(idx_begin, idx_end, y_begin, y_end, col_s, xvals);
 
         // We want to reuse the vector, so just rename it.
         // This way nobody gets confused
         //
-        std::vector<value_type> &detrended = xvals;
+        result_type &detrended = xvals;
 
         // Remove trend from observations in y
         //
@@ -4288,12 +4273,12 @@ private:
     result_type             residual_ {  };
 };
 
-template<typename T, typename I = unsigned long>
-using decom_v = DecomposeVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using decom_v = DecomposeVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  EntropyVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -4307,7 +4292,7 @@ struct  EntropyVisitor  {
 
         GET_COL_SIZE
 
-        SimpleRollAdopter<SumVisitor<T, I>, T, I>   sum_v(SumVisitor<T, I>(),
+        SimpleRollAdopter<SumVisitor<T, I>, T, I, A>   sum_v(SumVisitor<T, I>(),
                                                           roll_count_);
 
         sum_v.pre();
@@ -4349,8 +4334,8 @@ private:
     result_type         result_ { };
 };
 
-template<typename T, typename I = unsigned long>
-using ent_v = EntropyVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using ent_v = EntropyVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
@@ -4469,11 +4454,11 @@ is_lognormal(const V &column, double epsl)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename A, typename T, typename I = unsigned long>
+template<typename AV, typename T, typename I = unsigned long, std::size_t A = 0>
 struct  BiasVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
-    using avg_type = A;
+    using avg_type = AV;
 
     template <typename K, typename H>
     inline void
@@ -4484,7 +4469,7 @@ struct  BiasVisitor  {
 
         if (roll_period_ == 0 || roll_period_ >= col_s)  return;
 
-        SimpleRollAdopter<avg_type, T, I>   avger(std::move(avg_v_),
+        SimpleRollAdopter<avg_type, T, I, A>   avger(std::move(avg_v_),
                                                   roll_period_);
 
         avger.pre();
@@ -4513,12 +4498,12 @@ private:
     result_type     result_ { };
 };
 
-template<typename A, typename T, typename I = unsigned long>
-using bias_v = BiasVisitor<A, T, I>;
+template<typename AV, typename T, typename I = unsigned long, std::size_t A = 0>
+using bias_v = BiasVisitor<AV, T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  NonZeroRangeVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -4564,8 +4549,8 @@ private:
     result_type result_ {  };
 };
 
-template<typename T, typename I = unsigned long>
-using nzr_v = NonZeroRangeVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using nzr_v = NonZeroRangeVisitor<T, I, A>;
 
 } // namespace hmdf
 

@@ -48,10 +48,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace hmdf
 {
 
-template<typename T,
-         typename I = unsigned long,
-         typename =
-             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct ReturnVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -113,8 +110,7 @@ template<typename S_RT,  // Short duration rolling adopter
          typename L_RT,  // Longer duration rolling adopter
          typename T,
          typename I = unsigned long,
-         typename =
-             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+         std::size_t A = 0>
 struct  DoubleCrossOver {
 
 private:
@@ -249,23 +245,24 @@ private:
     result_type short_term_to_long_term_;
 };
 
-template<typename S_RT, typename L_RT, typename T, typename I = unsigned long>
-using dco_v = DoubleCrossOver<S_RT, L_RT, T, I>;
+template<typename S_RT,
+         typename L_RT,
+         typename T,
+         typename I = unsigned long,
+         std::size_t A = 0>
+using dco_v = DoubleCrossOver<S_RT, L_RT, T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T,
-         typename I = unsigned long,
-         typename =
-             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct BollingerBand {
 
 private:
 
     const double                                upper_band_multiplier_;
     const double                                lower_band_multiplier_;
-    SimpleRollAdopter<MeanVisitor<T, I>, T, I>  mean_roller_;
-    SimpleRollAdopter<StdVisitor<T, I>, T, I>   std_roller_;
+    SimpleRollAdopter<MeanVisitor<T, I>, T, I, A>  mean_roller_;
+    SimpleRollAdopter<StdVisitor<T, I>, T, I, A>   std_roller_;
 
     template <typename K, typename H>
     inline void
@@ -385,10 +382,7 @@ private:
 
 // Moving Average Convergence/Divergence
 //
-template<typename T,
-         typename I = unsigned long,
-         typename =
-             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct MACDVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -464,7 +458,7 @@ struct MACDVisitor {
 
 private:
 
-    using macd_roller_t = ewm_v<T, I>;
+    using macd_roller_t = ewm_v<T, I, A>;
 
     const size_type short_mean_period_;
     const size_type long_mean_period_;
@@ -473,17 +467,14 @@ private:
     result_type     macd_histogram_ { };  // MACD Line - Signal Line
 };
 
-template<typename T, typename I = unsigned long>
-using macd_v = MACDVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using macd_v = MACDVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
 // Volume Weighted Average Price
 //
-template<typename T,
-         typename I = unsigned long,
-         typename =
-             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  VWAPVisitor {
 
     DEFINE_VISIT_BASIC_TYPES
@@ -504,7 +495,8 @@ struct  VWAPVisitor {
             { std::numeric_limits<value_type>::max() };
     };
 
-    using result_type = std::vector<VWAP>;
+    using result_type =
+        std::vector<VWAP, typename allocator_declare<VWAP, A>::type>;
     using distance_func =
         std::function<double(const index_type &, const index_type &)>;
 
@@ -653,17 +645,14 @@ private:
     const double    total_volume_limit_;
 };
 
-template<typename T, typename I = unsigned long>
-using vwap_v = VWAPVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using vwap_v = VWAPVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
 // Volume Weighted Bid-Ask Spread
 //
-template<typename T,
-         typename I = unsigned long,
-         typename =
-             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  VWBASVisitor {
 
     DEFINE_VISIT_BASIC_TYPES
@@ -693,7 +682,8 @@ struct  VWBASVisitor {
             { std::numeric_limits<value_type>::max() };
     };
 
-    using result_type = std::vector<VWBAS>;
+    using result_type =
+        std::vector<VWBAS, typename allocator_declare<VWBAS, A>::type>;
     using distance_func =
         std::function<double(const index_type &, const index_type &)>;
 
@@ -920,8 +910,8 @@ private:
     const double    max_volume_;
 };
 
-template<typename T, typename I = unsigned long>
-using vwbas_v = VWBASVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using vwbas_v = VWBASVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
@@ -1010,10 +1000,7 @@ using sharper_v = SharpeRatioVisitor<T, I>;
 //
 // The input (column) to this visitor is assumed to be instrument prices.
 //
-template<typename T,
-         typename I = unsigned long,
-         typename =
-             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct RSIVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -1029,7 +1016,7 @@ struct RSIVisitor {
         //
         if (avg_period_ >= T(col_s - 3))  return;
 
-        ReturnVisitor<T, I> return_v (rp_);
+        ReturnVisitor<T, I, A> return_v (rp_);
 
         return_v.pre();
         return_v (idx_begin, idx_end, prices_begin, prices_end);
@@ -1084,17 +1071,14 @@ private:
     result_type         result_ { };
 };
 
-template<typename T, typename I = unsigned long>
-using rsi_v = RSIVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using rsi_v = RSIVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
 // RSX is a "noise free" version of RSI, with no added lag.
 //
-template<typename T,
-         typename I = unsigned long,
-         typename =
-             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct RSXVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -1202,20 +1186,18 @@ private:
     result_type         result_ { };
 };
 
-template<typename T, typename I = unsigned long>
-using rsx_v = RSXVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using rsx_v = RSXVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T,
-         typename I = unsigned long,
-         typename =
-             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct HurstExponentVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_2
 
-    using RangeVec = std::vector<size_type>;
+    using RangeVec =
+        std::vector<size_type, typename allocator_declare<size_type, A>::type>;
 
 private:
 
@@ -1238,9 +1220,10 @@ public:
 
         GET_COL_SIZE
 
-        std::vector<range_data> buckets;
-        MeanVisitor<T, I>       mv;
-        StdVisitor<T, I>        sv;
+        std::vector<range_data,
+                    typename allocator_declare<range_data, A>::type> buckets;
+        MeanVisitor<T, I>                                           mv;
+        StdVisitor<T, I>                                            sv;
 
         // Calculate each range basic stats
         //
@@ -1291,8 +1274,12 @@ public:
         size_type               prev_size { 0 };
         value_type              count { 0 };
         value_type              total_rescaled_range  { 0 };
-        std::vector<value_type> log_rescaled_mean;
-        std::vector<value_type> log_size;
+        std::vector<
+            value_type,
+            typename allocator_declare<value_type, A>::type> log_rescaled_mean;
+        std::vector<
+            value_type,
+            typename allocator_declare<value_type, A>::type> log_size;
 
         log_rescaled_mean.reserve(ranges_.size());
         log_size.reserve(ranges_.size());
@@ -1315,7 +1302,7 @@ public:
                 std::log(total_rescaled_range / count));
         }
 
-        PolyFitVisitor<T, I>    pfv (1);  // First degree
+        PolyFitVisitor<T, I, A>    pfv (1);  // First degree
 
         pfv.pre();
         pfv (idx_begin, idx_end,
@@ -1339,15 +1326,12 @@ private:
     result_type     exponent_ { -1 };
 };
 
-template<typename T, typename I = unsigned long>
-using hexpo_v = HurstExponentVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using hexpo_v = HurstExponentVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T,
-         typename I = unsigned long,
-         typename =
-             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct MassIndexVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -1363,7 +1347,7 @@ struct MassIndexVisitor {
         assert((col_s == size_type(std::distance(low_begin, low_end))));
         assert(fast_ < slow_);
 
-        nzr_v<T, I> non_z_range;
+        nzr_v<T, I, A> non_z_range;
 
         non_z_range.pre();
         non_z_range(idx_begin, idx_end,
@@ -1427,20 +1411,20 @@ struct MassIndexVisitor {
 
 private:
 
-    using erm_t = ewm_v<T, I>;
-    using srs_t = SimpleRollAdopter<SumVisitor<T, I>, T, I>;
+    using erm_t = ewm_v<T, I, A>;
+    using srs_t = SimpleRollAdopter<SumVisitor<T, I>, T, I, A>;
 
     result_type     result_ {  };
     const size_type slow_;
     const size_type fast_;
 };
 
-template<typename T, typename I = unsigned long>
-using mass_idx_v = MassIndexVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using mass_idx_v = MassIndexVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  HullRollingMeanVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -1452,7 +1436,7 @@ struct  HullRollingMeanVisitor  {
 
         if (roll_count_ <= 1)  return;
 
-        using wma_t = SimpleRollAdopter<WeightedMeanVisitor<T, I>, T, I>;
+        using wma_t = SimpleRollAdopter<WeightedMeanVisitor<T, I>, T, I, A>;
 
         GET_COL_SIZE
 
@@ -1497,12 +1481,12 @@ private:
     result_type     result_ { };
 };
 
-template<typename T, typename I = unsigned long>
-using hull_mean_v = HullRollingMeanVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using hull_mean_v = HullRollingMeanVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  RollingMidValueVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -1563,12 +1547,12 @@ private:
     result_type     result_ { };
 };
 
-template<typename T, typename I = unsigned long>
-using mid_val_v = RollingMidValueVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using mid_val_v = RollingMidValueVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  DrawdownVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -1580,7 +1564,7 @@ struct  DrawdownVisitor  {
 
         GET_COL_SIZE
 
-        CumMaxVisitor<T, I> cm_v;
+        CumMaxVisitor<T, I, A> cm_v;
 
         cm_v.pre();
         cm_v (idx_begin, idx_end, column_begin, column_end);
@@ -1629,7 +1613,7 @@ private:
 
 // Also called Stochastic Oscillator
 //
-template<typename T, typename I = unsigned long>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  WilliamPrcRVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -1648,14 +1632,14 @@ struct  WilliamPrcRVisitor  {
         assert((col_s == size_type(std::distance(low_begin, low_end))));
         assert((col_s == size_type(std::distance(high_begin, high_end))));
 
-        SimpleRollAdopter<MinVisitor<T, I>, T, I>   min_v (MinVisitor<T, I>(),
+        SimpleRollAdopter<MinVisitor<T, I>, T, I, A>   min_v(MinVisitor<T, I>(),
                                                            roll_count_);
 
         min_v.pre();
         min_v (idx_begin, idx_end, low_begin, low_end);
         min_v.post();
 
-        SimpleRollAdopter<MaxVisitor<T, I>, T, I>   max_v (MaxVisitor<T, I>(),
+        SimpleRollAdopter<MaxVisitor<T, I>, T, I, A>   max_v(MaxVisitor<T, I>(),
                                                            roll_count_);
 
         max_v.pre();
@@ -1688,14 +1672,14 @@ private:
     result_type     result_ { };
 };
 
-template<typename T, typename I = unsigned long>
-using willp_v = WilliamPrcRVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using willp_v = WilliamPrcRVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
 // Psychological Line (PSL) is an oscillator-type indicator
 //
-template<typename T, typename I = unsigned long>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  PSLVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -1743,7 +1727,7 @@ private:
     template <typename K>
     inline void calculate_(const K &idx_begin, const K &idx_end)  {
 
-        SimpleRollAdopter<SumVisitor<T, I>, T, I>   sum_r (SumVisitor<T, I>(),
+        SimpleRollAdopter<SumVisitor<T, I>, T, I, A>   sum_r(SumVisitor<T, I>(),
                                                            roll_count_);
 
         sum_r.pre();
@@ -1764,7 +1748,7 @@ private:
 
 // Commodity Channel Index (CCI)
 //
-template<typename T, typename I = unsigned long>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  CCIVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -1791,14 +1775,14 @@ struct  CCIVisitor  {
                 (*(low_begin + i) + *(high_begin + i) + *(close_begin + i)) /
                 T(3));
 
-        SimpleRollAdopter<MeanVisitor<T, I>, T, I>  avg_v (
+        SimpleRollAdopter<MeanVisitor<T, I>, T, I, A>  avg_v (
             MeanVisitor<T, I>(), roll_count_);
 
         avg_v.pre();
         avg_v (idx_begin, idx_end, result.begin(), result.end());
         avg_v.post();
 
-        SimpleRollAdopter<MADVisitor<T, I>, T, I>   mad_v (
+        SimpleRollAdopter<MADVisitor<T, I>, T, I, A>   mad_v (
             MADVisitor<T, I>(mad_type::mean_abs_dev_around_mean), roll_count_);
 
         mad_v.pre();
@@ -1830,10 +1814,7 @@ private:
 
 // ----------------------------------------------------------------------------
 
-template<typename T,
-         typename I = unsigned long,
-         typename =
-             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct GarmanKlassVolVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -1897,15 +1878,12 @@ private:
     const size_type trading_periods_;
 };
 
-template<typename T, typename I = unsigned long>
-using gk_vol_v = GarmanKlassVolVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using gk_vol_v = GarmanKlassVolVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T,
-         typename I = unsigned long,
-         typename =
-             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct YangZhangVolVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -1989,14 +1967,14 @@ private:
     const size_type trading_periods_;
 };
 
-template<typename T, typename I = unsigned long>
-using yz_vol_v = YangZhangVolVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using yz_vol_v = YangZhangVolVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
 // Kaufman's Adaptive Moving Average
 //
-template<typename T, typename I = unsigned long>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  KamaVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -2023,7 +2001,7 @@ struct  KamaVisitor  {
             peer_diff[i] =
                 std::fabs(*(column_begin + (i - 1)) - *(column_begin + i));
 
-        SimpleRollAdopter<SumVisitor<T, I>, T, I>   vol (
+        SimpleRollAdopter<SumVisitor<T, I>, T, I, A>   vol (
             SumVisitor<T, I>(), roll_count_);
 
         vol.pre();
@@ -2072,10 +2050,7 @@ private:
 
 // Fisher Transform Indicator
 //
-template<typename T,
-         typename I = unsigned long,
-         typename =
-             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct FisherTransVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -2091,15 +2066,15 @@ struct FisherTransVisitor {
         assert((col_s == size_type(std::distance(high_begin, high_end))));
         assert((roll_count_ < (col_s - 1)));
 
-        std::vector<value_type> mid_hl;
+        result_type mid_hl;
 
         mid_hl.reserve(col_s);
         for (size_type i = 0; i < col_s; ++i)
             mid_hl.push_back((*(low_begin + i) + *(high_begin + i)) * T(0.5));
 
-        SimpleRollAdopter<MaxVisitor<T, I>, T, I>   max_v (MaxVisitor<T, I>(),
+        SimpleRollAdopter<MaxVisitor<T, I>, T, I, A>   max_v(MaxVisitor<T, I>(),
                                                            roll_count_);
-        SimpleRollAdopter<MinVisitor<T, I>, T, I>   min_v (MinVisitor<T, I>(),
+        SimpleRollAdopter<MinVisitor<T, I>, T, I, A>   min_v(MinVisitor<T, I>(),
                                                            roll_count_);
 
         max_v.pre();
@@ -2152,17 +2127,14 @@ private:
     const size_type roll_count_;
 };
 
-template<typename T, typename I = unsigned long>
-using ftrans_v = FisherTransVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using ftrans_v = FisherTransVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
 // Percentage Price Oscillator (PPO)
 //
-template<typename T,
-         typename I = unsigned long,
-         typename =
-             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct PercentPriceOSCIVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -2228,8 +2200,8 @@ struct PercentPriceOSCIVisitor {
 
 private:
 
-    using erm_t = ewm_v<T, I>;
-    using srs_t = SimpleRollAdopter<MeanVisitor<T, I>, T, I>;
+    using erm_t = ewm_v<T, I, A>;
+    using srs_t = SimpleRollAdopter<MeanVisitor<T, I>, T, I, A>;
 
     result_type     result_ {  };
     result_type     histogram_ {  };
@@ -2238,12 +2210,12 @@ private:
     const size_type signal_;
 };
 
-template<typename T, typename I = unsigned long>
-using pp_osc_v = PercentPriceOSCIVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using pp_osc_v = PercentPriceOSCIVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  SlopeVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -2259,7 +2231,7 @@ struct  SlopeVisitor  {
 
         GET_COL_SIZE
 
-        DiffVisitor<T, I>   diff (periods_, false);
+        DiffVisitor<T, I, A>   diff (periods_, false);
 
         diff.pre();
         diff (idx_begin, idx_end, column_begin, column_end);
@@ -2302,7 +2274,7 @@ private:
 
 // Ultimate Oscillator indicator
 //
-template<typename T, typename I = unsigned long>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  UltimateOSCIVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -2319,7 +2291,7 @@ struct  UltimateOSCIVisitor  {
         assert((col_s == size_type(std::distance(low_begin, low_end))));
         assert((col_s == size_type(std::distance(high_begin, high_end))));
 
-        std::vector<value_type> max_high;
+        result_type max_high;
 
         max_high.reserve(col_s);
         max_high.push_back(std::numeric_limits<T>::quiet_NaN());
@@ -2327,7 +2299,7 @@ struct  UltimateOSCIVisitor  {
             max_high.push_back(std::max(*(high_begin + i),
                                         *(close_begin + (i - 1))));
 
-        std::vector<value_type> min_low;
+        result_type min_low;
 
         min_low.reserve(col_s);
         min_low.push_back(std::numeric_limits<T>::quiet_NaN());
@@ -2335,13 +2307,13 @@ struct  UltimateOSCIVisitor  {
             min_low.push_back(std::min(*(low_begin + i),
                                        *(close_begin + (i - 1))));
 
-        std::vector<value_type> buying_pressure;
+        result_type buying_pressure;
 
         buying_pressure.reserve(col_s);
         for (size_type i = 0; i < col_s; ++i)
             buying_pressure.push_back(*(close_begin + i) - min_low[i]);
 
-        std::vector<value_type> true_range;
+        result_type true_range;
 
         true_range.reserve(col_s);
         for (size_type i = 0; i < col_s; ++i)
@@ -2418,7 +2390,7 @@ struct  UltimateOSCIVisitor  {
 
 private:
 
-    using ssr_t = SimpleRollAdopter<SumVisitor<T, I>, T, I>;
+    using ssr_t = SimpleRollAdopter<SumVisitor<T, I>, T, I, A>;
 
     const size_type     slow_;
     const size_type     fast_;
@@ -2429,12 +2401,12 @@ private:
     result_type         result_ { };
 };
 
-template<typename T, typename I = unsigned long>
-using u_osc_v = UltimateOSCIVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using u_osc_v = UltimateOSCIVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  UlcerIndexVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -2448,7 +2420,7 @@ struct  UlcerIndexVisitor  {
 
         GET_COL_SIZE
 
-        SimpleRollAdopter<MaxVisitor<T, I>, T, I>   high (MaxVisitor<T, I>(),
+        SimpleRollAdopter<MaxVisitor<T, I>, T, I, A>   high (MaxVisitor<T, I>(),
                                                           periods_);
 
         high.pre();
@@ -2464,9 +2436,9 @@ struct  UlcerIndexVisitor  {
             result[i] = val * val;
         }
 
-        SimpleRollAdopter<SumVisitor<T, I>, T, I>   sum (SumVisitor<T, I>(),
+        SimpleRollAdopter<SumVisitor<T, I>, T, I, A>   sum (SumVisitor<T, I>(),
                                                          periods_);
-        SimpleRollAdopter<MeanVisitor<T, I>, T, I>  avg (MeanVisitor<T, I>(),
+        SimpleRollAdopter<MeanVisitor<T, I>, T, I, A>  avg (MeanVisitor<T, I>(),
                                                          periods_);
 
         if (use_sum_)  {
@@ -2503,19 +2475,20 @@ private:
     result_type     result_ { };
 };
 
-template<typename T, typename I = unsigned long>
-using u_idx_v = UlcerIndexVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using u_idx_v = UlcerIndexVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
 // Trade To Market trend indicator
 //
-template<typename T, typename I = unsigned long>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  TTMTrendVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES
 
-    using result_type = std::vector<bool>;
+    using result_type =
+        std::vector<bool, typename allocator_declare<bool, A>::type>;
 
     template <typename K, typename H>
     inline void
@@ -2532,7 +2505,7 @@ struct  TTMTrendVisitor  {
         assert((col_s == size_type(std::distance(high_begin, high_end))));
         assert(((bar_periods_ + 1) < col_s));
 
-        std::vector<T>  trend_avg;
+        std::vector<T, typename allocator_declare<T, A>::type>  trend_avg;
 
         trend_avg.reserve(col_s);
         for (size_type i = 0; i < bar_periods_; ++i)
@@ -2568,19 +2541,20 @@ private:
     result_type     result_ { };
 };
 
-template<typename T, typename I = unsigned long>
-using ttmt_v = TTMTrendVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using ttmt_v = TTMTrendVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
 // Parabolic Stop And Reverse (PSAR)
 //
-template<typename T, typename I = unsigned long>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  ParabolicSARVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES
 
-    using result_type = std::vector<bool>;
+    using result_type =
+        std::vector<bool, typename allocator_declare<bool, A>::type>;
 
     template <typename K, typename H>
     inline void
@@ -2598,13 +2572,22 @@ struct  ParabolicSARVisitor  {
         bool                    bullish { true };
         value_type              high_point { *high_begin };
         value_type              low_point { *low_begin };
-        std::vector<value_type> sar { close_begin, close_end };
+        std::vector<value_type,
+                    typename allocator_declare<value_type, A>::type>
+                        sar { close_begin, close_end };
         value_type              current_af { af_ };
-        std::vector<value_type> long_vec(
-            col_s, std::numeric_limits<T>::quiet_NaN());
-        std::vector<value_type> short_vec { long_vec };
-        std::vector<value_type> accel_fact { long_vec };
-        std::vector<bool>       reversal(col_s, false);
+        std::vector<value_type,
+                    typename allocator_declare<value_type, A>::type>
+                        long_vec(col_s, std::numeric_limits<T>::quiet_NaN());
+        std::vector<value_type,
+                    typename allocator_declare<value_type, A>::type>
+                        short_vec { long_vec };
+        std::vector<value_type,
+                    typename allocator_declare<value_type, A>::type>
+                        accel_fact { long_vec };
+        std::vector<bool,
+                    typename allocator_declare<bool, A>::type>
+                        reversal(col_s, false);
 
         accel_fact[0] = accel_fact[1] = current_af;
         for (size_type i = 2; i < col_s; ++i)  {
@@ -2681,17 +2664,31 @@ struct  ParabolicSARVisitor  {
     inline void post ()  {  }
     DEFINE_RESULT
 
-    inline const std::vector<value_type> &
+    inline
+    const std::vector<value_type,
+                      typename allocator_declare<value_type, A>::type> &
     get_longs () const  { return (long_); }
-    inline std::vector<value_type> &get_longs ()  { return (long_); }
+    inline
+    std::vector<value_type,
+                typename allocator_declare<value_type, A>::type> &
+    get_longs ()  { return (long_); }
 
-    inline const std::vector<value_type> &
+    inline
+    const std::vector<value_type,
+                      typename allocator_declare<value_type, A>::type> &
     get_shorts () const  { return (short_); }
-    inline std::vector<value_type> &get_shorts ()  { return (short_); }
+    inline
+    std::vector<value_type,
+                typename allocator_declare<value_type, A>::type> &
+    get_shorts ()  { return (short_); }
 
-    inline const std::vector<value_type> &
+    inline
+    const std::vector<value_type, 
+                      typename allocator_declare<value_type, A>::type> &
     get_acceleration_factors () const  { return (accel_fact_); }
-    inline std::vector<value_type> &
+    inline
+    std::vector<value_type,
+                typename allocator_declare<value_type, A>::type> &
     get_acceleration_factors ()  { return (accel_fact_); }
 
     explicit
@@ -2705,19 +2702,23 @@ private:
     const value_type        af_;
     const value_type        max_af_;
     result_type             result_ { };
-    std::vector<value_type> long_ { };
-    std::vector<value_type> short_ { };
-    std::vector<value_type> accel_fact_ { };
+
+    std::vector<value_type,
+                typename allocator_declare<value_type, A>::type> long_ { };
+    std::vector<value_type,
+                typename allocator_declare<value_type, A>::type> short_ { };
+    std::vector<value_type,
+                typename allocator_declare<value_type, A>::type> accel_fact_ { };
 };
 
-template<typename T, typename I = unsigned long>
-using psar_v = ParabolicSARVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using psar_v = ParabolicSARVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
 // Even Better Sine Wave (EBSW) indicator
 //
-template<typename T, typename I = unsigned long>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  EBSineWaveVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -2732,7 +2733,7 @@ struct  EBSineWaveVisitor  {
         assert(hp_period_ > 38 && bar_period_ < col_s);
         assert(bar_period_ > 0 && hp_period_ < col_s);
 
-        std::vector<T>      result(col_s, std::numeric_limits<T>::quiet_NaN());
+        result_type         result(col_s, std::numeric_limits<T>::quiet_NaN());
         value_type          last_close = *close_begin;
         value_type          last_high_pass { 0 };
         value_type          filter_hist[2] = { 0, 0 };
@@ -2799,14 +2800,14 @@ private:
     result_type     result_ { };
 };
 
-template<typename T, typename I = unsigned long>
-using ebsw_v = EBSineWaveVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using ebsw_v = EBSineWaveVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
 // Ehler's Super Smoother Filter (SSF) indicator
 //
-template<typename T, typename I = unsigned long>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  EhlerSuperSmootherVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -2871,14 +2872,14 @@ private:
     result_type     result_ { };
 };
 
-template<typename T, typename I = unsigned long>
-using ess_v = EhlerSuperSmootherVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using ess_v = EhlerSuperSmootherVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
 // Variable Index Dynamic Average (VIDYA) indicator
 //
-template<typename T, typename I = unsigned long>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  VarIdxDynAvgVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -2892,7 +2893,7 @@ struct  VarIdxDynAvgVisitor  {
 
         assert(roll_period_ > 1 && roll_period_ < col_s);
 
-        DiffVisitor<T, I>   diff(1, false);
+        DiffVisitor<T, I, A>   diff(1, false);
 
         diff.pre();
         diff (idx_begin, idx_end, column_begin, column_end);
@@ -2910,7 +2911,7 @@ struct  VarIdxDynAvgVisitor  {
             else  negative[i] = std::fabs(negative[i]);
         }
 
-        SimpleRollAdopter<SumVisitor<T, I>, T, I>   sum (SumVisitor<T, I>(),
+        SimpleRollAdopter<SumVisitor<T, I>, T, I, A>   sum (SumVisitor<T, I>(),
                                                          roll_period_);
 
         sum.pre();
@@ -2953,14 +2954,14 @@ private:
     result_type     result_ { };
 };
 
-template<typename T, typename I = unsigned long>
-using vidya_v = VarIdxDynAvgVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using vidya_v = VarIdxDynAvgVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
 // Pivot Points, Supports and Resistances indicators
 //
-template<typename T, typename I = unsigned long>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  PivotPointSRVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -3056,14 +3057,14 @@ private:
     result_type support_3_ { };
 };
 
-template<typename T, typename I = unsigned long>
-using ppsr_v = PivotPointSRVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using ppsr_v = PivotPointSRVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
 // Average Directional Movement Index (ADX)
 //
-template<typename T, typename I = unsigned long>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  AvgDirMovIdxVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -3100,7 +3101,8 @@ struct  AvgDirMovIdxVisitor  {
             true_range[i] = std::max(nxt_h, close) - std::min(nxt_l, close);
         }
 
-        ewm_v<double>   ewm(exponential_decay_spec::span, dir_smoother_, true);
+        ewm_v<double, I, A>   ewm(exponential_decay_spec::span,
+                                  dir_smoother_, true);
 
         ewm.pre();
         ewm (idx_begin, idx_end, true_range.begin(), true_range.end());
@@ -3130,7 +3132,8 @@ struct  AvgDirMovIdxVisitor  {
             dx[i] = prev_val;
         }
 
-        ewm_v<double>   ewm2(exponential_decay_spec::span, adx_smoother_, true);
+        ewm_v<double, I, A>   ewm2(exponential_decay_spec::span,
+                                   adx_smoother_, true);
 
         ewm2.pre();
         ewm2 (idx_begin, idx_end, dx.begin(), dx.end());
@@ -3151,14 +3154,14 @@ private:
     result_type         result_ { };
 };
 
-template<typename T, typename I = unsigned long>
-using adx_v = AvgDirMovIdxVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using adx_v = AvgDirMovIdxVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
 // Holt-Winter Channel (HWC) indicator
 //
-template<typename T, typename I = unsigned long>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  HoltWinterChannelVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -3254,15 +3257,12 @@ private:
     result_type         pct_diff_ { };
 };
 
-template<typename T, typename I = unsigned long>
-using hwc_v = HoltWinterChannelVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using hwc_v = HoltWinterChannelVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T,
-         typename I = unsigned long,
-         typename =
-             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  HeikinAshiCndlVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -3334,14 +3334,14 @@ private:
     result_type low_ {  };
 };
 
-template<typename T, typename I = unsigned long>
-using ha_cdl_v = HeikinAshiCndlVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using ha_cdl_v = HeikinAshiCndlVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
 // Also called Stochastic Oscillator
 //
-template<typename T, typename I = unsigned long>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  CenterOfGravityVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -3367,7 +3367,7 @@ struct  CenterOfGravityVisitor  {
             result[i] = dot_prd;
         }
 
-        SimpleRollAdopter<SumVisitor<T, I>, T, I>   sum_v
+        SimpleRollAdopter<SumVisitor<T, I>, T, I, A>   sum_v
             { SumVisitor<T, I>(), roll_count_ };
 
         sum_v.pre();
@@ -3391,14 +3391,14 @@ private:
     result_type     result_ { };
 };
 
-template<typename T, typename I = unsigned long>
-using cog_v = CenterOfGravityVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using cog_v = CenterOfGravityVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
 // Arnaud Legoux Moving Average
 //
-template<typename T, typename I = unsigned long>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  ArnaudLegouxMAVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -3450,20 +3450,20 @@ struct  ArnaudLegouxMAVisitor  {
 
 private:
 
-    const size_type         roll_count_;
-    const value_type        m_;
-    const value_type        s_;
-    value_type              cum_sum_ { 0 };
-    std::vector<value_type> wtd_;
-    result_type             result_ { };
+    const size_type     roll_count_;
+    const value_type    m_;
+    const value_type    s_;
+    value_type          cum_sum_ { 0 };
+    result_type         wtd_;
+    result_type         result_ { };
 };
 
-template<typename T, typename I = unsigned long>
-using alma_v = ArnaudLegouxMAVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using alma_v = ArnaudLegouxMAVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  RateOfChangeVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -3476,7 +3476,7 @@ struct  RateOfChangeVisitor  {
         GET_COL_SIZE
         assert (period_ > 0);
 
-        DiffVisitor<T, I>   diff(period_, false);
+        DiffVisitor<T, I, A>   diff(period_, false);
 
         diff.pre();
         diff (idx_begin, idx_end, column_begin, column_end);
@@ -3501,14 +3501,14 @@ private:
     result_type     result_ { };
 };
 
-template<typename T, typename I = unsigned long>
-using roc_v = RateOfChangeVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using roc_v = RateOfChangeVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
 // Accumulation/Distribution (AD) indicator
 //
-template<typename T, typename I = unsigned long>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  AccumDistVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -3538,7 +3538,7 @@ struct  AccumDistVisitor {
             result[i] = co * T(*(volume_begin + i)) / hl;
         }
 
-        CumSumVisitor<T, I> cumsum;
+        CumSumVisitor<T, I, A> cumsum;
 
         cumsum.pre();
         cumsum (idx_begin, idx_end, result.begin(), result.end());
@@ -3556,14 +3556,14 @@ private:
     result_type result_ {  };
 };
 
-template<typename T, typename I = unsigned long>
-using ad_v = AccumDistVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using ad_v = AccumDistVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
 // Chaikin Money Flow (CMF) indicator
 //
-template<typename T, typename I = unsigned long>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  ChaikinMoneyFlowVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -3594,7 +3594,7 @@ struct  ChaikinMoneyFlowVisitor {
             result[i] = co * T(*(volume_begin + i)) / hl;
         }
 
-        SimpleRollAdopter<SumVisitor<T, I>, T, I>   sum
+        SimpleRollAdopter<SumVisitor<T, I>, T, I, A>   sum
             { SumVisitor<T, I>(), period_ };
 
         sum.pre();
@@ -3625,14 +3625,14 @@ private:
     result_type     result_ {  };
 };
 
-template<typename T, typename I = unsigned long>
-using cmf_v = ChaikinMoneyFlowVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using cmf_v = ChaikinMoneyFlowVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
 // Vertical Horizontal Filter (VHF) indicator
 //
-template<typename T, typename I = unsigned long>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  VertHorizFilterVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -3645,21 +3645,21 @@ struct  VertHorizFilterVisitor  {
         GET_COL_SIZE
         assert (period_ > 0 && period_ < col_s);
 
-        SimpleRollAdopter<MaxVisitor<T, I>, T, I>   mx
+        SimpleRollAdopter<MaxVisitor<T, I>, T, I, A>   mx
             { MaxVisitor<T, I>(), period_ };
 
         mx.pre();
         mx (idx_begin, idx_end, column_begin, column_end);
         mx.post();
 
-        SimpleRollAdopter<MinVisitor<T, I>, T, I>   mn
+        SimpleRollAdopter<MinVisitor<T, I>, T, I, A>   mn
             { MinVisitor<T, I>(), period_ };
 
         mn.pre();
         mn (idx_begin, idx_end, column_begin, column_end);
         mn.post();
 
-        DiffVisitor<T, I>   diff(1, false);
+        DiffVisitor<T, I, A>   diff(1, false);
 
         diff.pre();
         diff (idx_begin, idx_end, column_begin, column_end);
@@ -3667,7 +3667,7 @@ struct  VertHorizFilterVisitor  {
         for (size_type i = 0; i < col_s; ++i)
             diff.get_result()[i] = std::fabs(diff.get_result()[i]);
 
-        SimpleRollAdopter<SumVisitor<T, I>, T, I>   diff_sum
+        SimpleRollAdopter<SumVisitor<T, I>, T, I, A>   diff_sum
             { SumVisitor<T, I>(), period_ };
 
         diff_sum.pre();
@@ -3697,14 +3697,14 @@ private:
     result_type     result_ { };
 };
 
-template<typename T, typename I = unsigned long>
-using vhf_v = VertHorizFilterVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using vhf_v = VertHorizFilterVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
 // On Balance Volume (OBV) indicator
 //
-template<typename T, typename I = unsigned long>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  OnBalanceVolumeVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -3719,7 +3719,7 @@ struct  OnBalanceVolumeVisitor {
 
         assert((col_s == size_type(std::distance(volume_begin, volume_end))));
 
-        ReturnVisitor<T, I> ret (return_policy::trinary);
+        ReturnVisitor<T, I, A> ret (return_policy::trinary);
 
         ret.pre();
         ret (idx_begin, idx_end, close_begin, close_end);
@@ -3731,7 +3731,7 @@ struct  OnBalanceVolumeVisitor {
         for (size_type i = 0; i < col_s; ++i)
             result[i] *= T(*(volume_begin + i));
 
-        CumSumVisitor<T, I> cumsum;
+        CumSumVisitor<T, I, A> cumsum;
 
         cumsum.pre();
         cumsum (idx_begin, idx_end, result.begin(), result.end());
@@ -3747,12 +3747,12 @@ private:
     result_type result_ {  };
 };
 
-template<typename T, typename I = unsigned long>
-using obv_v = OnBalanceVolumeVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using obv_v = OnBalanceVolumeVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  TrueRangeVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -3779,7 +3779,7 @@ struct  TrueRangeVisitor {
         }
 
         if (rolling_avg_)  {
-            ewm_v<T, I> avg(exponential_decay_spec::span,
+            ewm_v<T, I, A> avg(exponential_decay_spec::span,
                             rolling_period_,
                             true);
 
@@ -3819,7 +3819,7 @@ private:
 
 // Decay indicator
 //
-template<typename T, typename I = unsigned long>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  DecayVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -3862,10 +3862,7 @@ private:
 
 // ----------------------------------------------------------------------------
 
-template<typename T,
-         typename I = unsigned long,
-         typename =
-             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct HodgesTompkinsVolVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -3878,13 +3875,13 @@ struct HodgesTompkinsVolVisitor {
         GET_COL_SIZE
         assert (roll_count_ > 0 && roll_count_ < col_s);
 
-        ReturnVisitor<T, I> ret (return_policy::log);
+        ReturnVisitor<T, I, A> ret (return_policy::log);
 
         ret.pre();
         ret (idx_begin, idx_end, column_begin, column_end);
         ret.post();
 
-        SimpleRollAdopter<StdVisitor<T, I>, T, I>   stdev
+        SimpleRollAdopter<StdVisitor<T, I>, T, I, A>   stdev
             { StdVisitor<T, I>(), roll_count_ };
 
         stdev.pre();
@@ -3922,15 +3919,12 @@ private:
     const size_type trading_periods_;
 };
 
-template<typename T, typename I = unsigned long>
-using ht_vol_v = HodgesTompkinsVolVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using ht_vol_v = HodgesTompkinsVolVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T,
-         typename I = unsigned long,
-         typename =
-             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct ParkinsonVolVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -3956,7 +3950,7 @@ struct ParkinsonVolVisitor {
             result[i] = factor * val * val;
         }
 
-        SimpleRollAdopter<MeanVisitor<T, I>, T, I>  avg
+        SimpleRollAdopter<MeanVisitor<T, I>, T, I, A>  avg
             { MeanVisitor<T, I>(), roll_count_ } ;
 
         avg.pre();
@@ -3985,12 +3979,12 @@ private:
     const size_type trading_periods_;
 };
 
-template<typename T, typename I = unsigned long>
-using p_vol_v = ParkinsonVolVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using p_vol_v = ParkinsonVolVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  CoppockCurveVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -4002,13 +3996,13 @@ struct  CoppockCurveVisitor  {
 
         GET_COL_SIZE
 
-        roc_v<T, I> roc_l (roc_long_);
+        roc_v<T, I, A> roc_l (roc_long_);
 
         roc_l.pre();
         roc_l (idx_begin, idx_end, column_begin, column_end);
         roc_l.post();
 
-        roc_v<T, I> roc_s (roc_short_);
+        roc_v<T, I, A> roc_s (roc_short_);
 
         roc_s.pre();
         roc_s (idx_begin, idx_end, column_begin, column_end);
@@ -4019,7 +4013,7 @@ struct  CoppockCurveVisitor  {
         for (size_type i = 0; i < col_s; ++i)
             result[i] += roc_s.get_result()[i];
 
-        using wma_t = SimpleRollAdopter<WeightedMeanVisitor<T, I>, T, I>;
+        using wma_t = SimpleRollAdopter<WeightedMeanVisitor<T, I>, T, I, A>;
 
         wma_t   wma (WeightedMeanVisitor<T, I>(), wma_period_);
 
@@ -4049,12 +4043,12 @@ private:
     result_type     result_ { };
 };
 
-template<typename T, typename I = unsigned long>
-using coppc_v = CoppockCurveVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using coppc_v = CoppockCurveVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  BalanceOfPowerVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -4073,7 +4067,7 @@ struct  BalanceOfPowerVisitor {
         assert((col_s == size_type(std::distance(open_begin, open_end))));
         assert((col_s == size_type(std::distance(high_begin, high_end))));
 
-        nzr_v<T, I> non_z_range;
+        nzr_v<T, I, A> non_z_range;
 
         non_z_range.pre();
         non_z_range(idx_begin, idx_end,
@@ -4091,7 +4085,7 @@ struct  BalanceOfPowerVisitor {
             result[i] /= non_z_range.get_result()[i];
 
         if (rolling_avg_)  {
-            SimpleRollAdopter<MeanVisitor<T, I>, T, I>  avg
+            SimpleRollAdopter<MeanVisitor<T, I>, T, I, A>  avg
                 { MeanVisitor<T, I>(), rolling_period_ } ;
 
             avg.pre();
@@ -4119,12 +4113,12 @@ private:
     const size_type rolling_period_;
 };
 
-template<typename T, typename I = unsigned long>
-using bop_v = BalanceOfPowerVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using bop_v = BalanceOfPowerVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  ChandeKrollStopVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -4141,7 +4135,7 @@ struct  ChandeKrollStopVisitor {
         assert((col_s == size_type(std::distance(low_begin, low_end))));
         assert((col_s == size_type(std::distance(high_begin, high_end))));
 
-        TrueRangeVisitor<T, I>  atr(true, p_period_);
+        TrueRangeVisitor<T, I, A>  atr(true, p_period_);
 
         atr.pre();
         atr(idx_begin, idx_end,
@@ -4150,7 +4144,7 @@ struct  ChandeKrollStopVisitor {
             close_begin, close_end);
         atr.post();
 
-        SimpleRollAdopter<MaxVisitor<T, I>, T, I>   max1
+        SimpleRollAdopter<MaxVisitor<T, I>, T, I, A>   max1
             { MaxVisitor<T, I>(), p_period_ };
 
         max1.pre();
@@ -4162,7 +4156,7 @@ struct  ChandeKrollStopVisitor {
         for (size_type i = 0; i < col_s; ++i)
             long_stop[i] -= multiplier_ * atr.get_result()[i];
 
-        SimpleRollAdopter<MaxVisitor<T, I>, T, I>   max2
+        SimpleRollAdopter<MaxVisitor<T, I>, T, I, A>   max2
             { MaxVisitor<T, I>(), q_period_ };
 
         max2.pre();
@@ -4170,7 +4164,7 @@ struct  ChandeKrollStopVisitor {
         max2.post();
         long_stop = std::move(max2.get_result());
 
-        SimpleRollAdopter<MinVisitor<T, I>, T, I>   min1
+        SimpleRollAdopter<MinVisitor<T, I>, T, I, A>   min1
             { MinVisitor<T, I>(), p_period_ };
 
         min1.pre();
@@ -4182,7 +4176,7 @@ struct  ChandeKrollStopVisitor {
         for (size_type i = 0; i < col_s; ++i)
             short_stop[i] += multiplier_ * atr.get_result()[i];
 
-        SimpleRollAdopter<MaxVisitor<T, I>, T, I>   min2
+        SimpleRollAdopter<MaxVisitor<T, I>, T, I, A>   min2
             { MaxVisitor<T, I>(), q_period_ };
 
         min2.pre();
@@ -4225,12 +4219,12 @@ private:
     const value_type    multiplier_; // X
 };
 
-template<typename T, typename I = unsigned long>
-using cksp_v = ChandeKrollStopVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using cksp_v = ChandeKrollStopVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  VortexVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -4248,7 +4242,7 @@ struct  VortexVisitor {
         assert((col_s == size_type(std::distance(high_begin, high_end))));
         assert((roll_period_ < (col_s - 1)));
 
-        TrueRangeVisitor<T, I>  tr (false);
+        TrueRangeVisitor<T, I, A>  tr (false);
 
         tr.pre();
         tr(idx_begin, idx_end,
@@ -4257,7 +4251,7 @@ struct  VortexVisitor {
            close_begin, close_end);
         tr.post();
 
-        SimpleRollAdopter<SumVisitor<T, I>, T, I>   tr_sum
+        SimpleRollAdopter<SumVisitor<T, I>, T, I, A>   tr_sum
             { SumVisitor<T, I>(), roll_period_ };
 
         tr_sum.pre();
@@ -4275,7 +4269,7 @@ struct  VortexVisitor {
                 std::fabs(*(low_begin + i) - *(high_begin + (i - 1)));
         }
 
-        SimpleRollAdopter<SumVisitor<T, I>, T, I>   vtx_sum
+        SimpleRollAdopter<SumVisitor<T, I>, T, I, A>   vtx_sum
             { SumVisitor<T, I>(), roll_period_ };
 
         vtx_sum.pre();
@@ -4326,15 +4320,12 @@ private:
     const size_type roll_period_;
 };
 
-template<typename T, typename I = unsigned long>
-using vtx_v = VortexVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using vtx_v = VortexVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T,
-         typename I = unsigned long,
-         typename =
-             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  KeltnerChannelsVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -4352,7 +4343,7 @@ struct  KeltnerChannelsVisitor  {
         assert((col_s == size_type(std::distance(high_begin, high_end))));
         assert((roll_period_ < (col_s - 1)));
 
-        TrueRangeVisitor<T, I>  tr (false);
+        TrueRangeVisitor<T, I, A>  tr (false);
 
         tr.pre();
         tr(idx_begin, idx_end,
@@ -4361,13 +4352,13 @@ struct  KeltnerChannelsVisitor  {
            close_begin, close_end);
         tr.post();
 
-        ewm_v<T, I> basis(exponential_decay_spec::span, roll_period_, true);
+        ewm_v<T, I, A> basis(exponential_decay_spec::span, roll_period_, true);
 
         basis.pre();
         basis (idx_begin, idx_end, close_begin, close_end);
         basis.post();
 
-        ewm_v<T, I> band(exponential_decay_spec::span, roll_period_, true);
+        ewm_v<T, I, A> band(exponential_decay_spec::span, roll_period_, true);
 
         band.pre();
         band (idx_begin, idx_end,
@@ -4415,15 +4406,12 @@ private:
     const value_type    b_mult_;
 };
 
-template<typename T, typename I = unsigned long>
-using kch_v = KeltnerChannelsVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using kch_v = KeltnerChannelsVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T,
-         typename I = unsigned long,
-         typename =
-             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct TrixVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -4437,13 +4425,13 @@ struct TrixVisitor  {
 
         assert(col_s > 3);
 
-        ewm_v<T, I> ewm13(exponential_decay_spec::span, roll_period_, true);
+        ewm_v<T, I, A> ewm13(exponential_decay_spec::span, roll_period_, true);
 
         ewm13.pre();
         ewm13 (idx_begin, idx_end, column_begin, column_end);
         ewm13.post();
 
-        ewm_v<T, I> ewm2(exponential_decay_spec::span, roll_period_, true);
+        ewm_v<T, I, A> ewm2(exponential_decay_spec::span, roll_period_, true);
 
         ewm2.pre();
         ewm2 (idx_begin, idx_end,
@@ -4455,7 +4443,7 @@ struct TrixVisitor  {
                ewm2.get_result().begin(), ewm2.get_result().end());
         ewm13.post();
 
-        ReturnVisitor<T, I> ret(return_policy::percentage);
+        ReturnVisitor<T, I, A> ret(return_policy::percentage);
 
         ret.get_result().swap(ewm2.get_result());
         ret.pre();
@@ -4466,7 +4454,7 @@ struct TrixVisitor  {
         result_type result = std::move(ret.get_result());
 
         if (avg_signal_)  {
-            SimpleRollAdopter<MeanVisitor<T, I>, T, I>  avg
+            SimpleRollAdopter<MeanVisitor<T, I>, T, I, A>  avg
                 { MeanVisitor<T, I>(), sroll_period_ } ;
 
             avg.get_result().swap(ewm13.get_result());
@@ -4498,15 +4486,12 @@ private:
     const bool      avg_signal_;
 };
 
-template<typename T, typename I = unsigned long>
-using trix_v = TrixVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using trix_v = TrixVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T,
-         typename I = unsigned long,
-         typename =
-             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct PrettyGoodOsciVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -4524,14 +4509,14 @@ struct PrettyGoodOsciVisitor  {
         assert((col_s == size_type(std::distance(high_begin, high_end))));
         assert((roll_period_ < (col_s - 1)));
 
-        SimpleRollAdopter<MeanVisitor<T, I>, T, I>  savg
+        SimpleRollAdopter<MeanVisitor<T, I>, T, I, A>  savg
             { MeanVisitor<T, I>(), roll_period_ } ;
 
         savg.pre();
         savg (idx_begin, idx_end, close_begin, close_end);
         savg.post();
 
-        TrueRangeVisitor<T, I>  atr(true, roll_period_);
+        TrueRangeVisitor<T, I, A>  atr(true, roll_period_);
 
         atr.pre();
         atr(idx_begin, idx_end,
@@ -4545,7 +4530,7 @@ struct PrettyGoodOsciVisitor  {
         for (size_type i = 0; i < col_s; ++i)
             result[i] = *(close_begin + i) - result[i];
 
-        ewm_v<T, I> ewm(exponential_decay_spec::span, roll_period_, true);
+        ewm_v<T, I, A> ewm(exponential_decay_spec::span, roll_period_, true);
 
         ewm.pre();
         ewm (idx_begin, idx_end,
@@ -4571,15 +4556,12 @@ private:
     const size_type roll_period_;
 };
 
-template<typename T, typename I = unsigned long>
-using pgo_v = PrettyGoodOsciVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using pgo_v = PrettyGoodOsciVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T,
-         typename I = unsigned long,
-         typename =
-             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct T3MovingMeanVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -4657,15 +4639,15 @@ struct T3MovingMeanVisitor {
 
 private:
 
-    using erm_t = ewm_v<T, I>;
+    using erm_t = ewm_v<T, I, A>;
 
     result_type     result_ {  };
     const size_type rolling_period_;
     const double    v_factor_;
 };
 
-template<typename T, typename I = unsigned long>
-using t3_v = T3MovingMeanVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using t3_v = T3MovingMeanVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 

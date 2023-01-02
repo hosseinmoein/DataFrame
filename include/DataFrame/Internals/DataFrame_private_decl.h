@@ -117,7 +117,7 @@ template<typename T, typename ITR>
 void
 setup_view_column_(const char *name, Index2D<ITR> range);
 
-using IndexIdxVector = std::vector<std::tuple<size_type, size_type>>;
+using IndexIdxVector = StlVecType<std::tuple<size_type, size_type>>;
 template<typename T>
 using JoinSortingPair = std::pair<const T *, size_type>;
 
@@ -126,17 +126,19 @@ static void
 join_helper_common_(const LHS_T &lhs,
                     const RHS_T &rhs,
                     const IndexIdxVector &joined_index_idx,
-                    StdDataFrame<IDX_T> &result,
+                    DataFrame<
+                        IDX_T,
+                        HeteroVector<std::size_t(H::align_value)>> &result,
                     const char *skip_col_name = nullptr);
 
 template<typename LHS_T, typename RHS_T, typename ... Ts>
-static StdDataFrame<IndexType>
+static DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
 index_join_helper_(const LHS_T &lhs,
                    const RHS_T &rhs,
                    const IndexIdxVector &joined_index_idx);
 
 template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
-static StdDataFrame<unsigned int>
+static DataFrame<unsigned int, HeteroVector<std::size_t(H::align_value)>>
 column_join_helper_(const LHS_T &lhs,
                     const RHS_T &rhs,
                     const char *col_name,
@@ -145,68 +147,68 @@ column_join_helper_(const LHS_T &lhs,
 template<typename T>
 static IndexIdxVector
 get_inner_index_idx_vector_(
-    const std::vector<JoinSortingPair<T>> &col_vec_lhs,
-    const std::vector<JoinSortingPair<T>> &col_vec_rhs);
+    const StlVecType<JoinSortingPair<T>> &col_vec_lhs,
+    const StlVecType<JoinSortingPair<T>> &col_vec_rhs);
 
 template<typename LHS_T, typename RHS_T, typename ... Ts>
-static StdDataFrame<IndexType>
+static DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
 index_inner_join_(
     const LHS_T &lhs, const RHS_T &rhs,
-    const std::vector<JoinSortingPair<IndexType>> &col_vec_lhs,
-    const std::vector<JoinSortingPair<IndexType>> &col_vec_rhs);
+    const StlVecType<JoinSortingPair<IndexType>> &col_vec_lhs,
+    const StlVecType<JoinSortingPair<IndexType>> &col_vec_rhs);
 
 template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
-static StdDataFrame<unsigned int>
+static DataFrame<unsigned int, HeteroVector<std::size_t(H::align_value)>>
 column_inner_join_(const LHS_T &lhs,
                    const RHS_T &rhs,
                    const char *col_name,
-                   const std::vector<JoinSortingPair<T>> &col_vec_lhs,
-                   const std::vector<JoinSortingPair<T>> &col_vec_rhs);
+                   const StlVecType<JoinSortingPair<T>> &col_vec_lhs,
+                   const StlVecType<JoinSortingPair<T>> &col_vec_rhs);
 
 template<typename T>
 static IndexIdxVector
 get_left_index_idx_vector_(
-    const std::vector<JoinSortingPair<T>> &col_vec_lhs,
-    const std::vector<JoinSortingPair<T>> &col_vec_rhs);
+    const StlVecType<JoinSortingPair<T>> &col_vec_lhs,
+    const StlVecType<JoinSortingPair<T>> &col_vec_rhs);
 
 template<typename LHS_T, typename RHS_T, typename ... Ts>
-static StdDataFrame<IndexType>
+static DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
 index_left_join_(
     const LHS_T &lhs, const RHS_T &rhs,
-    const std::vector<JoinSortingPair<IndexType>> &col_vec_lhs,
-    const std::vector<JoinSortingPair<IndexType>> &col_vec_rhs);
+    const StlVecType<JoinSortingPair<IndexType>> &col_vec_lhs,
+    const StlVecType<JoinSortingPair<IndexType>> &col_vec_rhs);
 
 template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
-static StdDataFrame<unsigned int>
+static DataFrame<unsigned int, HeteroVector<std::size_t(H::align_value)>>
 column_left_join_(const LHS_T &lhs,
                   const RHS_T &rhs,
                   const char *col_name,
-                  const std::vector<JoinSortingPair<T>> &col_vec_lhs,
-                  const std::vector<JoinSortingPair<T>> &col_vec_rhs);
+                  const StlVecType<JoinSortingPair<T>> &col_vec_lhs,
+                  const StlVecType<JoinSortingPair<T>> &col_vec_rhs);
 
 template<typename T>
 static IndexIdxVector
 get_right_index_idx_vector_(
-    const std::vector<JoinSortingPair<T>> &col_vec_lhs,
-    const std::vector<JoinSortingPair<T>> &col_vec_rhs);
+    const StlVecType<JoinSortingPair<T>> &col_vec_lhs,
+    const StlVecType<JoinSortingPair<T>> &col_vec_rhs);
 
 template<typename LHS_T, typename RHS_T, typename ... Ts>
-static StdDataFrame<IndexType>
+static DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
 index_right_join_(
     const LHS_T &lhs, const RHS_T &rhs,
-    const std::vector<JoinSortingPair<IndexType>> &col_vec_lhs,
-    const std::vector<JoinSortingPair<IndexType>> &col_vec_rhs);
+    const StlVecType<JoinSortingPair<IndexType>> &col_vec_lhs,
+    const StlVecType<JoinSortingPair<IndexType>> &col_vec_rhs);
 
 template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
-static StdDataFrame<unsigned int>
+static DataFrame<unsigned int, HeteroVector<std::size_t(H::align_value)>>
 column_right_join_(const LHS_T &lhs,
                    const RHS_T &rhs,
                    const char *col_name,
-                   const std::vector<JoinSortingPair<T>> &col_vec_lhs,
-                   const std::vector<JoinSortingPair<T>> &col_vec_rhs);
+                   const StlVecType<JoinSortingPair<T>> &col_vec_lhs,
+                   const StlVecType<JoinSortingPair<T>> &col_vec_rhs);
 
 template<typename MAP, typename ... Ts>
-static StdDataFrame<IndexType>
+static DataFrame
 remove_dups_common_(const DataFrame &s_df,
                     remove_dup_spec rds,
                     const MAP &row_table,
@@ -219,24 +221,494 @@ concat_helper_(LHS_T &lhs, const RHS_T &rhs, bool add_new_columns);
 template<typename T>
 static IndexIdxVector
 get_left_right_index_idx_vector_(
-    const std::vector<JoinSortingPair<T>> &col_vec_lhs,
-    const std::vector<JoinSortingPair<T>> &col_vec_rhs);
+    const StlVecType<JoinSortingPair<T>> &col_vec_lhs,
+    const StlVecType<JoinSortingPair<T>> &col_vec_rhs);
 
 template<typename LHS_T, typename RHS_T, typename ... Ts>
-static StdDataFrame<IndexType>
+static DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
 index_left_right_join_(
     const LHS_T &lhs, const RHS_T &rhs,
-    const std::vector<JoinSortingPair<IndexType>> &col_vec_lhs,
-    const std::vector<JoinSortingPair<IndexType>> &col_vec_rhs);
+    const StlVecType<JoinSortingPair<IndexType>> &col_vec_lhs,
+    const StlVecType<JoinSortingPair<IndexType>> &col_vec_rhs);
 
 template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
-static StdDataFrame<unsigned int>
+static DataFrame<unsigned int, HeteroVector<std::size_t(H::align_value)>>
 column_left_right_join_(
     const LHS_T &lhs,
     const RHS_T &rhs,
     const char *col_name,
-    const std::vector<JoinSortingPair<T>> &col_vec_lhs,
-    const std::vector<JoinSortingPair<T>> &col_vec_rhs);
+    const StlVecType<JoinSortingPair<T>> &col_vec_lhs,
+    const StlVecType<JoinSortingPair<T>> &col_vec_rhs);
+
+// ----------------------------------------------------------------------------
+
+template<typename V, typename T>
+inline static void
+_replace_vector_vals_(V &data_vec,
+                      const StlVecType<T> &old_values,
+                      const StlVecType<T> &new_values,
+                      std::size_t &count,
+                      int limit)  {
+
+    const std::size_t   vcnt = old_values.size();
+
+    assert(vcnt == new_values.size());
+
+    const std::size_t   vec_s = data_vec.size();
+
+    for (std::size_t i = 0; i < vcnt; ++i)  {
+        for (std::size_t j = 0; j < vec_s; ++j)  {
+            if (limit >= 0 && count >= static_cast<std::size_t>(limit))
+                return;
+            if (old_values[i] == data_vec[j])  {
+                data_vec[j] = new_values[i];
+                count += 1;
+            }
+        }
+    }
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename V>
+inline static void
+_col_vector_push_back_(V &vec,
+                       std::istream &file,
+                       T (*converter)(const char *, char **, int),
+                       io_format file_type = io_format::csv)  {
+
+    char    value[8192];
+    char    c = 0;
+
+    while (file.get(c)) {
+        if (file_type == io_format::csv && c == '\n')  break;
+        else if (file_type == io_format::json && c == ']')  break;
+        file.unget();
+        _get_token_from_file_(file, ',', value,
+                              file_type == io_format::json ? ']' : '\0');
+        vec.push_back(static_cast<T>(converter(value, nullptr, 0)));
+    }
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename V>
+inline static void
+_col_vector_push_back_(V &vec,
+                       std::istream &file,
+                       T (*converter)(const char *, char **),
+                       io_format file_type = io_format::csv)  {
+
+    char    value[8192];
+    char    c = 0;
+
+    while (file.get(c)) {
+        if (file_type == io_format::csv && c == '\n')  break;
+        else if (file_type == io_format::json && c == ']')  break;
+        file.unget();
+        _get_token_from_file_(file, ',', value,
+                              file_type == io_format::json ? ']' : '\0');
+        vec.push_back(static_cast<T>(converter(value, nullptr)));
+    }
+}
+
+// ----------------------------------------------------------------------------
+
+template<>
+inline static void
+_col_vector_push_back_<const char *, StlVecType<std::string>>(
+    StlVecType<std::string> &vec,
+    std::istream &file,
+    const char * (*)(const char *, char **),
+    io_format file_type)  {
+
+    char    value[8192];
+    char    c = 0;
+
+    while (file.get(c)) {
+        if (file_type == io_format::csv && c == '\n')  break;
+        else if (file_type == io_format::json && c == ']')  break;
+        file.unget();
+        _get_token_from_file_(file, ',', value,
+                              file_type == io_format::json ? ']' : '\0');
+        vec.push_back(value);
+    }
+}
+
+// ----------------------------------------------------------------------------
+
+template<>
+inline static void
+_col_vector_push_back_<DateTime, StlVecType<DateTime>>(
+    StlVecType<DateTime> &vec,
+    std::istream &file,
+    DateTime (*)(const char *, char **),
+    io_format file_type)  {
+
+    char    value[1024];
+    char    c = 0;
+
+    while (file.get(c)) {
+        if (file_type == io_format::csv && c == '\n')  break;
+        else if (file_type == io_format::json && c == ']')  break;
+        file.unget();
+        _get_token_from_file_(file, ',', value,
+                              file_type == io_format::json ? ']' : '\0');
+
+        time_t      t;
+        int         n;
+        DateTime    dt;
+
+#ifdef _MSC_VER
+        ::sscanf(value, "%lld.%d", &t, &n);
+#else
+        ::sscanf(value, "%ld.%d", &t, &n);
+#endif // _MSC_VER
+        dt.set_time(t, n);
+        vec.emplace_back(std::move(dt));
+    }
+}
+
+// ----------------------------------------------------------------------------
+
+inline static void
+_json_str_col_vector_push_back_(StlVecType<std::string> &vec,
+                                std::istream &file)  {
+
+    char    value[1024];
+    char    c = 0;
+
+    while (file.get(c))
+        if (c != ' ' && c != '\n' && c != '\t')  {
+            file.unget();
+            break;
+        }
+
+    while (file.get(c)) {
+        if (c == ']')  break;
+        file.unget();
+
+        std::size_t count = 0;
+
+        while (file.get(c))
+            if (c != ' ' && c != '\n' && c != '\t')  break;
+        if (c != '"')
+            throw DataFrameError(
+                "_json_str_col_vector_push_back_(): ERROR: Expected '\"' (0)");
+
+        while (file.get(c))
+            if (c == '"')
+                break;
+            else
+                value[count++] = c;
+        if (c != '"')
+            throw DataFrameError(
+                "DataFrame::read_json_(): ERROR: Expected '\"' (1)");
+
+        value[count] = 0;
+        vec.push_back(value);
+
+        while (file.get(c))
+            if (c != ' ' && c != '\n' && c != '\t')  break;
+        if (c == ']')  break;
+        else if (c != ',')
+            throw DataFrameError(
+                "_json_str_col_vector_push_back_(): ERROR: Expected ',' (2)");
+    }
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
+struct  _IdxParserFunctor_  {
+
+    void operator()(StlVecType<T> &, std::istream &, io_format)  {   }
+};
+
+// ----------------------------------------------------------------------------
+
+template<>
+struct  _IdxParserFunctor_<float>  {
+
+    inline void operator()(StlVecType<float> &vec,
+                           std::istream &file,
+                           io_format file_type = io_format::csv)  {
+
+        _col_vector_push_back_(vec, file, &::strtof, file_type);
+    }
+};
+
+// ----------------------------------------------------------------------------
+
+template<>
+struct  _IdxParserFunctor_<double>  {
+
+    inline void operator()(StlVecType<double> &vec,
+                           std::istream &file,
+                           io_format file_type = io_format::csv)  {
+
+        _col_vector_push_back_(vec, file, &::strtod, file_type);
+    }
+};
+
+// ----------------------------------------------------------------------------
+
+template<>
+struct  _IdxParserFunctor_<long double>  {
+
+    inline void operator()(StlVecType<long double> &vec,
+                           std::istream &file,
+                           io_format file_type = io_format::csv)  {
+
+        _col_vector_push_back_(vec, file, &::strtold, file_type);
+    }
+};
+
+// ----------------------------------------------------------------------------
+
+template<>
+struct  _IdxParserFunctor_<int>  {
+
+    inline void operator()(StlVecType<int> &vec,
+                           std::istream &file,
+                           io_format file_type = io_format::csv)  {
+
+        _col_vector_push_back_(vec, file, &::strtol, file_type);
+    }
+};
+
+// ----------------------------------------------------------------------------
+
+template<>
+struct  _IdxParserFunctor_<long>  {
+
+    inline void operator()(StlVecType<long> &vec,
+                           std::istream &file,
+                           io_format file_type = io_format::csv)  {
+
+        _col_vector_push_back_(vec, file, &::strtol, file_type);
+    }
+};
+
+// ----------------------------------------------------------------------------
+
+template<>
+struct  _IdxParserFunctor_<long long>  {
+
+    inline void operator()(StlVecType<long long> &vec,
+                           std::istream &file,
+                           io_format file_type = io_format::csv)  {
+
+        _col_vector_push_back_(vec, file, &::strtoll, file_type);
+    }
+};
+
+// ----------------------------------------------------------------------------
+
+template<>
+struct  _IdxParserFunctor_<unsigned int>  {
+
+    inline void operator()(StlVecType<unsigned int> &vec,
+                           std::istream &file,
+                           io_format file_type = io_format::csv)  {
+
+        _col_vector_push_back_(vec, file, &::strtoul, file_type);
+    }
+};
+
+// ----------------------------------------------------------------------------
+
+template<>
+struct  _IdxParserFunctor_<unsigned long>  {
+
+    inline void operator()(StlVecType<unsigned long> &vec,
+                           std::istream &file,
+                           io_format file_type = io_format::csv)  {
+
+        _col_vector_push_back_(vec, file, &::strtoul, file_type);
+    }
+};
+
+// ----------------------------------------------------------------------------
+
+template<>
+struct  _IdxParserFunctor_<unsigned long long>  {
+
+    inline void operator()(StlVecType<unsigned long long> &vec,
+                           std::istream &file,
+                           io_format file_type = io_format::csv)  {
+
+        _col_vector_push_back_(vec, file, &::strtoull, file_type);
+    }
+};
+
+// ----------------------------------------------------------------------------
+
+template<>
+struct  _IdxParserFunctor_<std::string>  {
+
+    inline void operator()(StlVecType<std::string> &vec,
+                           std::istream &file,
+                           io_format file_type = io_format::csv)  {
+
+        auto    converter =
+            [](const char *s, char **)-> const char * { return s; };
+
+        _col_vector_push_back_<const char *, StlVecType<std::string>>
+            (vec, file, converter, file_type);
+    }
+};
+
+// ----------------------------------------------------------------------------
+
+template<>
+struct  _IdxParserFunctor_<DateTime>  {
+
+    inline void operator()(StlVecType<DateTime> &vec,
+                           std::istream &file,
+                           io_format file_type = io_format::csv)  {
+
+        auto    converter =
+            [](const char *, char **)-> DateTime  { return DateTime(); };
+
+        _col_vector_push_back_<DateTime, StlVecType<DateTime>>
+            (vec, file, converter, file_type);
+    }
+};
+
+// ----------------------------------------------------------------------------
+
+template<>
+struct  _IdxParserFunctor_<bool>  {
+
+    inline void operator()(StlVecType<bool> &vec,
+                           std::istream &file,
+                           io_format file_type = io_format::csv)  {
+
+        _col_vector_push_back_(vec, file, &::strtol, file_type);
+    }
+};
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
+inline static void
+_generate_ts_index_(StlVecType<T> &index_vec,
+                    DateTime &start_di,
+                    time_frequency t_freq,
+                    long increment)  {
+
+    switch(t_freq)  {
+    case time_frequency::annual:
+        index_vec.push_back(static_cast<T>(start_di.date()));
+        start_di.add_years(increment);
+        break;
+    case time_frequency::monthly:
+        index_vec.push_back(static_cast<T>(start_di.date()));
+        start_di.add_months(increment);
+        break;
+    case time_frequency::weekly:
+        index_vec.push_back(static_cast<T>(start_di.date()));
+        start_di.add_days(increment * 7);
+        break;
+    case time_frequency::daily:
+        index_vec.push_back(static_cast<T>(start_di.date()));
+        start_di.add_days(increment);
+        break;
+    case time_frequency::hourly:
+        index_vec.push_back(static_cast<T>(start_di.time()));
+        start_di.add_seconds(increment * 60 * 60);
+        break;
+    case time_frequency::minutely:
+        index_vec.push_back(static_cast<T>(start_di.time()));
+        start_di.add_seconds(increment * 60);
+        break;
+    case time_frequency::secondly:
+        index_vec.push_back(static_cast<T>(start_di.time()));
+        start_di.add_seconds(increment);
+        break;
+    case time_frequency::millisecondly:
+        index_vec.push_back(static_cast<T>(start_di.long_time()));
+        start_di.add_nanoseconds(increment * 1000000);
+        break;
+    default:
+        break;
+    }
+}
+
+// ----------------------------------------------------------------------------
+
+template<>
+inline static void
+_generate_ts_index_<DateTime>(StlVecType<DateTime> &index_vec,
+                              DateTime &start_di,
+                              time_frequency t_freq,
+                              long increment)  {
+
+    index_vec.push_back(start_di);
+    switch(t_freq)  {
+    case time_frequency::annual:
+        start_di.add_years(increment);
+        break;
+    case time_frequency::monthly:
+        start_di.add_months(increment);
+        break;
+    case time_frequency::weekly:
+        start_di.add_days(increment * 7);
+        break;
+    case time_frequency::daily:
+        start_di.add_days(increment);
+        break;
+    case time_frequency::hourly:
+        start_di.add_seconds(increment * 60 * 60);
+        break;
+    case time_frequency::minutely:
+        start_di.add_seconds(increment * 60);
+        break;
+    case time_frequency::secondly:
+        start_di.add_seconds(increment);
+        break;
+    case time_frequency::millisecondly:
+        start_di.add_nanoseconds(increment * 1000000);
+        break;
+    default:
+        break;
+    }
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
+inline static void _get_mem_numbers_(const VectorView<T, align_value> &,
+                                     size_t &used_mem,
+                                     size_t &capacity_mem) {
+
+    used_mem = sizeof(T *) * 2;
+    capacity_mem = sizeof(T *) * 2;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
+inline static void
+_get_mem_numbers_(const VectorPtrView<T, align_value> &container,
+                  size_t &used_mem,
+                  size_t &capacity_mem) {
+
+    used_mem = container.size() * sizeof(T *);
+    capacity_mem = container.capacity() * sizeof(T *);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
+inline static void _get_mem_numbers_(const StlVecType<T> &container,
+                                     size_t &used_mem,
+                                     size_t &capacity_mem) {
+
+    used_mem = container.size() * sizeof(T);
+    capacity_mem = container.capacity() * sizeof(T);
+}
 
 // ----------------------------------------------------------------------------
 

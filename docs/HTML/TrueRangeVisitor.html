@@ -34,7 +34,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>#include &lt;DataFrame/DataFrameFinancialVisitors.h&gt;
 
-template&lt;typename T, typename I = unsigned long&gt;
+template&lt;typename T, typename I = unsigned long,
+         std::size_t A = 0&gt;
 struct TrueRangeVisitor;
         </B></PRE></font>
       </td>
@@ -58,7 +59,8 @@ struct TrueRangeVisitor;
       </td>
       <td width="12%">
         <B>T</B>: Column data type<BR>
-        <B>I</B>: Index type
+        <B>I</B>: Index type<BR>
+        <B>A</B>: Memory alignment boundary for vectors. Default is system default alignment<BR>
       </td>
     </tr>
 

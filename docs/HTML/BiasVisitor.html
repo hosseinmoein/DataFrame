@@ -35,14 +35,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         <PRE><B>#include &lt;DataFrame/DataFrameStatsVisitors.h&gt;
 
 template&lt;typename A, typename T,
-         typename I = unsigned long&gt;
+         typename I = unsigned long,
+         std::size_t A = 0&gt;
 struct BiasVisitor;
 
 // -------------------------------------
 
 template&lt;typename A, typename T,
-         typename I = unsigned long&gt;
-using bias_v = BiasVisitor&lt;A, T, I&gt;;
+         typename I = unsigned long,
+         std::size_t A = 0&gt;
+using bias_v = BiasVisitor&lt;A, T, I, A&gt;;
         </B></PRE></font>
       </td>
       <td>
@@ -58,7 +60,8 @@ using bias_v = BiasVisitor&lt;A, T, I&gt;;
       <td width="12%">
         <B>A</B>: Mean visitor type.<BR>
         <B>T</B>: Column data type.<BR>
-        <B>I</B>: Index type.
+        <B>I</B>: Index type.<BR>
+        <B>A</B>: Memory alignment boundary for vectors. Default is system default alignment<BR>
       </td>
     </tr>
 

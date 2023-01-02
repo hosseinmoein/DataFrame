@@ -125,7 +125,10 @@ private:
 
 // ----------------------------------------------------------------------------
 
-template<size_t K, typename T, typename I = unsigned long>
+template<std::size_t K,
+         typename T,
+         typename I = unsigned long,
+         std::size_t A = 0>
 struct  KMeansVisitor  {
 
 public:
@@ -133,7 +136,7 @@ public:
     DEFINE_VISIT_BASIC_TYPES
 
     using result_type = std::array<value_type, K>;
-    using cluster_type = std::array<VectorPtrView<value_type>, K>;
+    using cluster_type = std::array<VectorPtrView<value_type, A>, K>;
     using distance_func =
         std::function<double(const value_type &x, const value_type &y)>;
 
@@ -154,7 +157,9 @@ private:
         for (auto &k_mean : result_)
             k_mean = *(column_begin + rd_gen(gen));
 
-        std::vector<size_type>  assignments(col_size, 0);
+        std::vector<size_type,
+                    typename allocator_declare<size_type, A>::type>
+                        assignments(col_size, 0);
 
         for (size_type iter = 0; iter < iter_num_; ++iter) {
             result_type             new_means { value_type() };
@@ -271,15 +276,18 @@ public:
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  AffinityPropVisitor  {
 
 public:
 
     DEFINE_VISIT_BASIC_TYPES
 
-    using result_type = VectorPtrView<value_type>;
-    using cluster_type = std::vector<VectorPtrView<value_type>>;
+    template<typename U>
+    using vec_t = std::vector<U, typename allocator_declare<U, A>::type>;
+
+    using result_type = VectorPtrView<value_type, A>;
+    using cluster_type = vec_t<VectorPtrView<value_type, A>>;
     using distance_func =
         std::function<double(const value_type &x, const value_type &y)>;
 
@@ -291,11 +299,11 @@ private:
     result_type     result_ { };  // Centers
 
     template<typename H>
-    inline std::vector<double>
+    inline vec_t<double>
     get_similarity_(const H &column_begin, size_type csize)  {
 
-        std::vector<double> simil((csize * (csize + 1)) / 2, 0.0);
-        double              min_dist = std::numeric_limits<double>::max();
+        vec_t<double>   simil((csize * (csize + 1)) / 2, 0.0);
+        double          min_dist = std::numeric_limits<double>::max();
 
         // Compute similarity between distinct data points i and j
         for (size_type i = 0; i < csize - 1; ++i)  {
@@ -317,10 +325,10 @@ private:
     }
 
     inline void
-    get_avail_and_respon(const std::vector<double> &simil,
+    get_avail_and_respon(const vec_t<double> &simil,
                          size_type csize,
-                         std::vector<double> &avail,
-                         std::vector<double> &respon)  {
+                         vec_t<double> &avail,
+                         vec_t<double> &respon)  {
 
         avail.resize(csize * csize, 0.0);
         respon.resize(csize * csize, 0.0);
@@ -398,10 +406,10 @@ public:
                 const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
-        const std::vector<double>   simil =
+        const vec_t<double> simil =
             std::move(get_similarity_(column_begin, col_s));
-        std::vector<double>         avail;
-        std::vector<double>         respon;
+        vec_t<double>       avail;
+        vec_t<double>       respon;
 
         get_avail_and_respon(simil, col_s, avail, respon);
 
@@ -468,17 +476,19 @@ public:
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct FastFourierTransVisitor {
 
 public:
 
     DEFINE_VISIT_BASIC_TYPES
 
+    template<typename U>
+    using vec_t = std::vector<U, typename allocator_declare<U, A>::type>;
     using result_type =
         typename std::conditional<is_complex<T>::value,
-                                  std::vector<T>,
-                                  std::vector<std::complex<T>>>::type;
+                                  vec_t<T>,
+                                  vec_t<std::complex<T>>>::type;
     using real_t = typename result_type::value_type::value_type;
 
 private:
@@ -694,13 +704,13 @@ public:
     inline void post ()  {  }
 
     DEFINE_RESULT
-    inline const std::vector<real_t> &
+    inline const vec_t<real_t> &
     get_magnitude() const  {
 
         return (const_cast<FastFourierTransVisitor<T, I> *>
                     (this)->get_magnitude());
     }
-    inline std::vector<real_t> &
+    inline vec_t<real_t> &
     get_magnitude()  {
 
         if (magnitude_.empty())  {
@@ -710,13 +720,13 @@ public:
         }
         return (magnitude_);
     }
-    inline const std::vector<real_t> &
+    inline const vec_t<real_t> &
     get_angle() const  {
 
         return (const_cast<FastFourierTransVisitor<T, I> *>
                     (this)->get_angle());
     }
-    inline std::vector<real_t> &
+    inline vec_t<real_t> &
     get_angle()  {
 
         if (angle_.empty())  {
@@ -732,14 +742,14 @@ public:
 
 private:
 
-    const bool          inverse_;
-    result_type         result_ {  };
-    std::vector<real_t> magnitude_ {  };
-    std::vector<real_t> angle_ {  };
+    const bool      inverse_;
+    result_type     result_ {  };
+    vec_t<real_t>   magnitude_ {  };
+    vec_t<real_t>   angle_ {  };
 };
 
-template<typename T, typename I = unsigned long>
-using fft_v = FastFourierTransVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using fft_v = FastFourierTransVisitor<T, I, A>;
 
 } // namespace hmdf
 

@@ -39,7 +39,11 @@ using namespace hmdf;
 
 // A DataFrame with ulong index type
 //
-using MyDataFrame = StdDataFrame<unsigned long>;
+using MyDataFrame = StdDataFrame256<unsigned long>;
+using StrDataFrame = StdDataFrame256<std::string>;
+
+template<typename T>
+using StlVecType = typename MyDataFrame::template StlVecType<T>;
 
 // -----------------------------------------------------------------------------
 
@@ -48,17 +52,17 @@ static void test_groupby_edge()  {
     std::cout << "\nTesting groupby( ) ..." << std::endl;
 
     MyDataFrame                df;
-    std::vector<unsigned long>  idxvec =
+    StlVecType<unsigned long>  idxvec =
         { 1UL, 2UL, 3UL, 10UL, 5UL, 7UL, 8UL, 12UL, 9UL, 12UL, 10UL, 13UL,
           10UL, 15UL, 14UL };
-    std::vector<double>         dblvec =
+    StlVecType<double>         dblvec =
         { 0.0, 15.0, -14.0, 2.0, 1.0, 12.0, 11.0, 8.0, 7.0, 6.0, 5.0, 4.0,
           3.0, 9.0, 10.0};
-    std::vector<double>         dblvec2 =
+    StlVecType<double>         dblvec2 =
         { 100.0, 101.0, 102.0, 103.0, 104.0, 105.0, 106.55, 107.34, 1.8,
           111.0, 112.0, 113.0, 114.0, 115.0, 116.0};
-    std::vector<int>            intvec = { 1, 2, 3, 4, 5, 8, 6, 7, 11, 14, 9 };
-    std::vector<std::string>    strvec =
+    StlVecType<int>            intvec = { 1, 2, 3, 4, 5, 8, 6, 7, 11, 14, 9 };
+    StlVecType<std::string>    strvec =
         { "zz", "bb", "cc", "ww", "ee", "ff", "gg", "hh", "ii", "jj", "kk",
           "ll", "mm", "nn", "oo" };
     dblvec2.resize(1);
@@ -73,9 +77,10 @@ static void test_groupby_edge()  {
     df.load_column("int_col", std::move(intvec),
                    nan_policy::dont_pad_with_nans);
 
-    FactorizeVisitor<double>    fact([] (const double &f) -> bool {
-                                         return (f > 11106.0 && f < 114.0);
-                                     });
+    FactorizeVisitor<double, unsigned long, 256>
+        fact([] (const double &f) -> bool {
+            return (f > 11106.0 && f < 30000.0);
+        });
     df.load_column("bool_col",
                    df.single_act_visit<double>("dbl_col_2", fact).get_result());
 
@@ -99,18 +104,18 @@ static void test_concat_view()  {
 
     MyDataFrame df1;
 
-    std::vector<unsigned long>  idxvec =
+    StlVecType<unsigned long>  idxvec =
         { 1UL, 2UL, 3UL, 10UL, 5UL, 7UL, 8UL, 12UL, 9UL, 12UL, 10UL, 13UL,
           10UL, 15UL, 14UL };
-    std::vector<double>         dblvec =
+    StlVecType<double>         dblvec =
         { 0.0, 15.0, 14.0, 2.0, 1.0, 12.0, 11.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0,
           9.0, 10.0 };
-    std::vector<double>         dblvec2 =
+    StlVecType<double>         dblvec2 =
         { 100.0, 101.0, 102.0, 103.0, 104.0, 105.0, 106.55, 107.34, 1.8, 111.0,
           112.0, 113.0, 114.0, 115.0, 116.0 };
-    std::vector<int>            intvec =
+    StlVecType<int>            intvec =
         { 1, 2, 3, 4, 5, 8, 6, 7, 11, 14, 9, 10, 15, 12, 13 };
-    std::vector<std::string>    strvec =
+    StlVecType<std::string>    strvec =
         { "zz", "bb", "cc", "ww", "ee", "ff", "gg", "hh", "ii", "jj", "kk",
           "ll", "mm", "nn", "oo" };
 
@@ -229,17 +234,17 @@ static void test_multithreading(int j)  {
     std::cout << "\nTesting test ..." << std::endl;
 
     MyDataFrame                df;
-    std::vector<unsigned long>  idxvec =
+    StlVecType<unsigned long>  idxvec =
         { 1UL, 2UL, 3UL, 10UL, 5UL, 7UL, 8UL, 12UL, 9UL, 12UL, 10UL, 13UL,
           10UL, 15UL, 14UL };
-    std::vector<double>         dblvec =
+    StlVecType<double>         dblvec =
         { 0.0, 15.0, -14.0, 2.0, 1.0, 12.0, 11.0, 8.0, 7.0, 6.0, 5.0, 4.0,
           3.0, 9.0, 10.0};
-    std::vector<double>         dblvec2 =
+    StlVecType<double>         dblvec2 =
         { 100.0, 101.0, 102.0, 103.0, 104.0, 105.0, 106.55, 107.34, 1.8,
           111.0, 112.0, 113.0, 114.0, 115.0, 116.0};
-    std::vector<int>            intvec = { 1, 2, 3, 4, 5, 8, 6, 7, 11, 14, 9 };
-    std::vector<std::string>    strvec =
+    StlVecType<int>            intvec = { 1, 2, 3, 4, 5, 8, 6, 7, 11, 14, 9 };
+    StlVecType<std::string>    strvec =
         { "zz", "bb", "cc", "ww", "ee", "ff", "gg", "hh", "ii", "jj", "kk",
           "ll", "mm", "nn", "oo" };
 
@@ -252,9 +257,10 @@ static void test_multithreading(int j)  {
     std::cout << "PRINTING FIRST ..." << std::endl;
     df.write<std::ostream, std::string, double, int, bool>
         (std::cout, io_format::json);
-    FactorizeVisitor<double>    fact([] (const double &f) -> bool {
-                                         return (f > 11106.0 && f < 114.0);
-                                     });
+    FactorizeVisitor<double, unsigned long, 256>
+        fact([] (const double &f) -> bool {
+            return (f > 11106.0 && f < 114.0);
+        });
     df.load_column("bool_col",
                    df.single_act_visit<double>("dbl_col_2", fact).get_result());
 
@@ -282,16 +288,16 @@ static void test_to_from_string()  {
 
     std::cout << "\nTesting to_from_string() ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466 };
-    std::vector<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
-    std::vector<double> d2 = { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23,
+    StlVecType<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
+    StlVecType<double> d2 = { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23,
                                30, 31, 32, 1.89 };
-    std::vector<double> d3 = { 15, 16, 17, 18, 19, 20, 21,
+    StlVecType<double> d3 = { 15, 16, 17, 18, 19, 20, 21,
                                0.34, 1.56, 0.34, 2.3, 0.1, 0.89, 0.45 };
-    std::vector<int>    i1 = { 22, 23, 24, 25, 99, 100, 101, 3, 2 };
-    std::vector<std::string>    strvec =
+    StlVecType<int>    i1 = { 22, 23, 24, 25, 99, 100, 101, 3, 2 };
+    StlVecType<std::string>    strvec =
         { "zz", "bb", "cc", "ww", "ee", "ff", "gg", "hh", "ii", "jj", "kk",
           "ll", "mm", "nn" };
     MyDataFrame         df;
@@ -323,14 +329,12 @@ static void test_CoppockCurveVisitor()  {
 
     std::cout << "\nTesting CoppockCurveVisitor{  } ..." << std::endl;
 
-    typedef StdDataFrame<std::string> StrDataFrame;
-
     StrDataFrame    df;
 
     try  {
         df.read("data/SHORT_IBM.csv", io_format::csv2);
 
-        coppc_v<double, std::string>  copp;
+        coppc_v<double, std::string, 256>  copp;
 
         df.single_act_visit<double>("IBM_Close", copp);
 
@@ -354,8 +358,6 @@ static void test_BiasVisitor()  {
 
     std::cout << "\nTesting BiasVisitor{  } ..." << std::endl;
 
-    typedef StdDataFrame<std::string> StrDataFrame;
-
     StrDataFrame    df;
 
     try  {
@@ -364,7 +366,7 @@ static void test_BiasVisitor()  {
 
         using avg1 = MeanVisitor<double, std::string>;
         avg1                                avg1_v;
-        bias_v<avg1, double, std::string>   bias1 (avg1_v);
+        bias_v<avg1, double, std::string, 256>   bias1 (avg1_v);
 
         df.single_act_visit<double>("IBM_Close", bias1);
 
@@ -380,7 +382,7 @@ static void test_BiasVisitor()  {
 
         using s_avg1 = StableMeanVisitor<double, std::string>;
         s_avg1                              s_avg1_v;
-        bias_v<s_avg1, double, std::string> s_bias1 (s_avg1_v);
+        bias_v<s_avg1, double, std::string, 256> s_bias1 (s_avg1_v);
 
         df.single_act_visit<double>("IBM_Close", s_bias1);
 
@@ -396,7 +398,7 @@ static void test_BiasVisitor()  {
 
         using avg2 = WeightedMeanVisitor<double, std::string>;
         avg2                                avg2_v;
-        bias_v<avg2, double, std::string>   bias2 (avg2_v);
+        bias_v<avg2, double, std::string, 256>   bias2 (avg2_v);
 
         df.single_act_visit<double>("IBM_Close", bias2);
 
@@ -412,7 +414,7 @@ static void test_BiasVisitor()  {
 
         using avg3 = GeometricMeanVisitor<double, std::string>;
         avg3                                avg3_v;
-        bias_v<avg3, double, std::string>   bias3 (avg3_v);
+        bias_v<avg3, double, std::string, 256>   bias3 (avg3_v);
 
         df.single_act_visit<double>("IBM_Close", bias3);
 
@@ -428,7 +430,7 @@ static void test_BiasVisitor()  {
 
         using avg4 = HarmonicMeanVisitor<double, std::string>;
         avg4                                avg4_v;
-        bias_v<avg4, double, std::string>   bias4 (avg4_v);
+        bias_v<avg4, double, std::string, 256>   bias4 (avg4_v);
 
         df.single_act_visit<double>("IBM_Close", bias4);
 
@@ -453,14 +455,12 @@ static void test_BalanceOfPowerVisitor()  {
 
     std::cout << "\nTesting BalanceOfPowerVisitor{  } ..." << std::endl;
 
-    typedef StdDataFrame<std::string> StrDataFrame;
-
     StrDataFrame    df;
 
     try  {
         df.read("data/SHORT_IBM.csv", io_format::csv2);
 
-        bop_v<double, std::string>  bop;
+        bop_v<double, std::string, 256>  bop;
 
         df.single_act_visit<double, double, double, double>
             ("IBM_Low", "IBM_High", "IBM_Open", "IBM_Close", bop);
@@ -500,14 +500,12 @@ static void test_ChandeKrollStopVisitor()  {
 
     std::cout << "\nTesting ChandeKrollStopVisitor{  } ..." << std::endl;
 
-    typedef StdDataFrame<std::string> StrDataFrame;
-
     StrDataFrame    df;
 
     try  {
         df.read("data/SHORT_IBM.csv", io_format::csv2);
 
-        cksp_v<double, std::string>  cksp;
+        cksp_v<double, std::string, 256>  cksp;
 
         df.single_act_visit<double, double, double>
             ("IBM_Low", "IBM_High", "IBM_Close", cksp);
@@ -543,14 +541,12 @@ static void test_VortexVisitor()  {
 
     std::cout << "\nTesting VortexVisitor{  } ..." << std::endl;
 
-    typedef StdDataFrame<std::string> StrDataFrame;
-
     StrDataFrame    df;
 
     try  {
         df.read("data/SHORT_IBM.csv", io_format::csv2);
 
-        vtx_v<double, std::string>  vtx;
+        vtx_v<double, std::string, 256>  vtx;
 
         df.single_act_visit<double, double, double>
             ("IBM_Low", "IBM_High", "IBM_Close", vtx);
@@ -586,14 +582,12 @@ static void test_KeltnerChannelsVisitor()  {
 
     std::cout << "\nTesting KeltnerChannelsVisitor{  } ..." << std::endl;
 
-    typedef StdDataFrame<std::string> StrDataFrame;
-
     StrDataFrame    df;
 
     try  {
         df.read("data/SHORT_IBM.csv", io_format::csv2);
 
-        kch_v<double, std::string>  kch;
+        kch_v<double, std::string, 256>  kch;
 
         df.single_act_visit<double, double, double>
             ("IBM_Low", "IBM_High", "IBM_Close", kch);
@@ -629,14 +623,12 @@ static void test_TrixVisitor()  {
 
     std::cout << "\nTesting TrixVisitor{  } ..." << std::endl;
 
-    typedef StdDataFrame<std::string> StrDataFrame;
-
     StrDataFrame    df;
 
     try  {
         df.read("data/SHORT_IBM.csv", io_format::csv2);
 
-        trix_v<double, std::string> trix;
+        trix_v<double, std::string, 256> trix;
 
         df.single_act_visit<double>("IBM_Close", trix);
 
@@ -650,7 +642,7 @@ static void test_TrixVisitor()  {
         assert(std::abs(trix.get_result()[1712] - 0.0008) < 0.0001);
         assert(std::abs(trix.get_result()[1707] - 0.0003) < 0.0001);
 
-        trix_v<double, std::string> trix2 (14, true);
+        trix_v<double, std::string, 256> trix2 (14, true);
 
         df.single_act_visit<double>("IBM_Close", trix2);
 
@@ -676,14 +668,12 @@ static void test_PrettyGoodOsciVisitor()  {
 
     std::cout << "\nTesting PrettyGoodOsciVisitor{  } ..." << std::endl;
 
-    typedef StdDataFrame<std::string> StrDataFrame;
-
     StrDataFrame    df;
 
     try  {
         df.read("data/SHORT_IBM.csv", io_format::csv2);
 
-        pgo_v<double, std::string>  pgo;
+        pgo_v<double, std::string, 256>  pgo;
 
         df.single_act_visit<double, double, double>
             ("IBM_Low", "IBM_High", "IBM_Close", pgo);
@@ -713,18 +703,18 @@ static void test_col_name_to_idx()  {
 
     MyDataFrame df;
 
-    std::vector<unsigned long>  idxvec =
+    StlVecType<unsigned long>  idxvec =
         { 1UL, 2UL, 3UL, 10UL, 5UL, 7UL, 8UL, 12UL, 9UL, 12UL, 10UL, 13UL,
           10UL, 15UL, 14UL };
-    std::vector<double>         dblvec =
+    StlVecType<double>         dblvec =
         { 0.0, 15.0, 14.0, 2.0, 1.0, 12.0, 11.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0,
           9.0, 10.0 };
-    std::vector<double>         dblvec2 =
+    StlVecType<double>         dblvec2 =
         { 100.0, 101.0, 102.0, 103.0, 104.0, 105.0, 106.55, 107.34, 1.8, 111.0,
           112.0, 113.0, 114.0, 115.0, 116.0 };
-    std::vector<int>            intvec =
+    StlVecType<int>            intvec =
         { 1, 2, 3, 4, 5, 8, 6, 7, 11, 14, 9, 10, 15, 12, 13 };
-    std::vector<std::string>    strvec =
+    StlVecType<std::string>    strvec =
         { "zz", "bb", "cc", "ww", "ee", "ff", "gg", "hh", "ii", "jj", "kk",
           "ll", "mm", "nn", "oo" };
 
@@ -765,14 +755,12 @@ static void test_ZeroLagMovingMeanVisitor()  {
 
     std::cout << "\nTesting ZeroLagMovingMeanVisitor{  } ..." << std::endl;
 
-    typedef StdDataFrame<std::string> StrDataFrame;
-
     StrDataFrame    df;
 
     try  {
         df.read("data/SHORT_IBM.csv", io_format::csv2);
 
-        zlmm_v<double, std::string>  zlmm(10);
+        zlmm_v<double, std::string, 256>  zlmm(10);
 
         df.single_act_visit<double>("IBM_Close", zlmm);
 
@@ -821,14 +809,12 @@ static void test_T3MovingMeanVisitor()  {
 
     std::cout << "\nTesting T3MovingMeanVisitor{  } ..." << std::endl;
 
-    typedef StdDataFrame<std::string> StrDataFrame;
-
     StrDataFrame    df;
 
     try  {
         df.read("data/IBM.csv", io_format::csv2);
 
-        t3_v<double, std::string>   t3;
+        t3_v<double, std::string, 256>   t3;
 
         df.single_act_visit<double> ("IBM_Close", t3);
 
@@ -852,17 +838,17 @@ static void test_append_row()  {
     std::cout << "\nTesting append_row( ) ..." << std::endl;
 
     MyDataFrame                 df;
-    std::vector<unsigned long>  idxvec =
+    StlVecType<unsigned long>  idxvec =
         { 1UL, 2UL, 3UL, 10UL, 5UL, 7UL, 8UL, 12UL, 9UL, 12UL, 10UL, 13UL,
           10UL, 15UL, 14UL };
-    std::vector<double>         dblvec =
+    StlVecType<double>         dblvec =
         { 0.0, 15.0, -14.0, 2.0, 1.0, 12.0, 11.0, 8.0, 7.0, 6.0, 5.0, 4.0,
           3.0, 9.0, 10.0};
-    std::vector<double>         dblvec2 =
+    StlVecType<double>         dblvec2 =
         { 100.0, 101.0, 102.0, 103.0, 104.0, 105.0, 106.55, 107.34, 1.8,
           111.0, 112.0, 113.0, 114.0, 115.0, 116.0};
-    std::vector<int>            intvec = { 1, 2, 3, 4, 5, 8, 6, 7, 11, 14, 9 };
-    std::vector<std::string>    strvec =
+    StlVecType<int>            intvec = { 1, 2, 3, 4, 5, 8, 6, 7, 11, 14, 9 };
+    StlVecType<std::string>    strvec =
         { "zz", "bb", "cc", "ww", "ee", "ff", "gg", "hh", "ii", "jj", "kk",
           "ll", "mm", "nn", "oo" };
     df.load_data(std::move(idxvec),
@@ -899,8 +885,6 @@ static void test_load_result_as_column()  {
 
     std::cout << "\nTesting load_result_as_column( ) ..." << std::endl;
 
-    typedef StdDataFrame<std::string> StrDataFrame;
-
     StrDataFrame    df;
 
     try  {
@@ -908,7 +892,7 @@ static void test_load_result_as_column()  {
 
         // CoppockCurveVisitor
         //
-        coppc_v<double, std::string>  copp;
+        coppc_v<double, std::string, 256>  copp;
 
         df.single_act_visit<double>("IBM_Close", copp);
         df.load_result_as_column(copp, "IBM_close_curve");
@@ -937,17 +921,17 @@ static void test_load_indicators()  {
     std::cout << "\nTesting load_indicators( ) ..." << std::endl;
 
     MyDataFrame                 df;
-    std::vector<unsigned long>  idxvec =
+    StlVecType<unsigned long>  idxvec =
         { 1UL, 2UL, 3UL, 10UL, 5UL, 7UL, 8UL, 12UL, 9UL, 12UL, 10UL, 13UL,
           10UL, 15UL, 14UL };
-    std::vector<double>         dblvec =
+    StlVecType<double>         dblvec =
         { 0.0, 15.0, 14.0, 0.0, 1.0, 14.0, 11.5, 11.5, 7.25, 7.25, 7.25, 14.0,
           7.25, 15.0, 0.0};
-    std::vector<double>         dblvec2 =
+    StlVecType<double>         dblvec2 =
         { 100.0, 101.0, 102.0, 103.0, 104.0, 105.0, 106.55, 107.34, 1.8,
           111.0, 112.0, 113.0, 114.0, 115.0, 116.0};
-    std::vector<int>            intvec = { 1, 2, 3, 4, 5, 8, 6, 7, 11, 14, 9 };
-    std::vector<std::string>    strvec =
+    StlVecType<int>            intvec = { 1, 2, 3, 4, 5, 8, 6, 7, 11, 14, 9 };
+    StlVecType<std::string>    strvec =
         { "blue", "blue", "red", "green", "black", "green", "white", "black",
           "black", "white", "red", "yellow", "green", "green", "green" };
     df.load_data(std::move(idxvec),
@@ -984,17 +968,17 @@ static void test_from_indicators()  {
     std::cout << "\nTesting from_indicators( ) ..." << std::endl;
 
     MyDataFrame                 df;
-    std::vector<unsigned long>  idxvec =
+    StlVecType<unsigned long>  idxvec =
         { 1UL, 2UL, 3UL, 10UL, 5UL, 7UL, 8UL, 12UL, 9UL, 12UL, 10UL, 13UL,
           10UL, 15UL, 14UL };
-    std::vector<double>         dblvec =
+    StlVecType<double>         dblvec =
         { 0.0, 15.0, 14.0, 0.0, 1.0, 14.0, 11.5, 11.5, 7.25, 7.25, 7.25, 14.0,
           7.25, 15.0, 0.0};
-    std::vector<double>         dblvec2 =
+    StlVecType<double>         dblvec2 =
         { 100.0, 101.0, 102.0, 103.0, 104.0, 105.0, 106.55, 107.34, 1.8,
           111.0, 112.0, 113.0, 114.0, 115.0, 116.0};
-    std::vector<int>            intvec = { 1, 2, 3, 4, 5, 8, 6, 7, 11, 14, 9 };
-    std::vector<std::string>    strvec =
+    StlVecType<int>            intvec = { 1, 2, 3, 4, 5, 8, 6, 7, 11, 14, 9 };
+    StlVecType<std::string>    strvec =
         { "blue", "blue", "red", "green", "black", "green", "white", "black",
           "black", "white", "red", "yellow", "green", "green", "green" };
     df.load_data(std::move(idxvec),
@@ -1034,17 +1018,17 @@ static void test_TreynorRatioVisitor()  {
 
     std::cout << "\nTesting TreynorRatioVisitor{  } ..." << std::endl;
 
-    std::vector<unsigned long>  idx =
+    StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466,
           123467, 123468, 123469, 123470, 123471, 123472, 123473 };
-    std::vector<double>         d1 =
+    StlVecType<double>         d1 =
         { 2.5, 2.45, -0.65, -0.1, -1.1, 1.87, 0.98, 0.34, 1.56, -0.34, 2.3,
           -0.34, -1.9, 0.387, 0.123, 1.06, -0.65, 2.03, 0.4, -1.0, 0.59 };
-    std::vector<double>         d2 =
+    StlVecType<double>         d2 =
         { 0.2, 0.58, -0.60, -0.08, 0.05, 0.87, 0.2, 0.4, 0.5, 0.06, 0.3, -0.34,
           -0.9, 0.8, -0.4, 0.86, 0.01, 1.02, -0.02, -1.5, 0.2 };
-    std::vector<int>            i1 = { 22, 23, 24, 25, 99 };
+    StlVecType<int>            i1 = { 22, 23, 24, 25, 99 };
     MyDataFrame                 df;
 
     df.load_data(std::move(idx),

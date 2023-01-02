@@ -43,7 +43,7 @@ using namespace hmdf;
 
 // A DataFrame with ulong index type
 //
-using MyDataFrame = StdDataFrame<unsigned long>;
+using MyDataFrame = StdDataFrame128<unsigned long>;
 
 template<typename T>
 using StlVecType = typename MyDataFrame::template StlVecType<T>;
@@ -606,13 +606,13 @@ static void test_get_data_by_loc_slicing()  {
     df5.write<std::ostream, double>(std::cout);
 
     try  {
-        MyDataFrame df2 = df.get_data_by_loc<double>(Index2D<long> { 3, 8 });
+        MyDataFrame df6 = df.get_data_by_loc<double>(Index2D<long> { 3, 8 });
     }
     catch (const BadRange &ex)  {
         std::cout << "Caught: " << ex.what() << std::endl;
     }
     try  {
-        MyDataFrame df2 = df.get_data_by_loc<double>(Index2D<long> { -8, -1 });
+        MyDataFrame df7 = df.get_data_by_loc<double>(Index2D<long> { -8, -1 });
     }
     catch (const BadRange &ex)  {
         std::cout << "Caught: " << ex.what() << std::endl;
@@ -765,7 +765,7 @@ static void test_remove_data_by_loc()  {
     StlVecType<double> d3 =
         { 15, 16, 17, 18, 19, 20, 21, 0.34, 1.56, 0.34, 2.3, 0.1, 0.89, 0.45 };
     StlVecType<int>    i1 = { 22, 23, 24, 25, 99 };
-    MyDataFrame         df;
+    MyDataFrame        df;
 
     df.load_data(std::move(idx),
                  std::make_pair("col_1", d1),
@@ -785,7 +785,8 @@ static void test_value_counts()  {
 
     std::cout << "\nTesting value_counts() ..." << std::endl;
 
-    const double                my_nan = sqrt(-1);
+    const double                my_nan =
+        std::numeric_limits<double>::quiet_NaN();
     StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466 };
@@ -1218,7 +1219,7 @@ static void test_dataframe_with_datetime()  {
         s1.emplace_back("Test str");
     }
 
-    StdDataFrame<DateTime>  df;
+    StdDataFrame128<DateTime>  df;
 
     df.load_data(std::move(idx),
                  std::make_pair("dbl_col", d1),
@@ -2247,7 +2248,7 @@ static void test_beta()  {
                  std::make_pair("dblcol_4", d4),
                  std::make_pair("dblcol_5", d5));
 
-    ReturnVisitor<double>   return_visit(return_policy::log);
+    ReturnVisitor<double, unsigned long, 128>   return_visit(return_policy::log);
 
     df.load_column<double>(
         "dblcol_1_return",
@@ -2399,7 +2400,7 @@ static void test_gen_datetime_index()  {
     assert(idx_vec1[73203] == 1514819401500000000);
 
     StlVecType<DateTime>   idx_vec2 =
-        StdDataFrame<DateTime>::gen_datetime_index(
+        StdDataFrame128<DateTime>::gen_datetime_index(
             "01/01/2018",
             "12/31/2022",
             time_frequency::hourly,
@@ -2615,7 +2616,7 @@ static void test_some_visitors()  {
     assert(sum_result == 210);
     assert(prod_result == 464486400);
 
-    CumSumVisitor<double>       cum_sum_visit;
+    CumSumVisitor<double, unsigned long, 128>       cum_sum_visit;
     const StlVecType<double>   &cum_sum_result =
         df.single_act_visit<double>("dblcol_3", cum_sum_visit).get_result();
 
@@ -2627,7 +2628,7 @@ static void test_some_visitors()  {
     assert(std::isnan(cum_sum_result[2]));
     assert(std::isnan(cum_sum_result[8]));
 
-    CumMaxVisitor<double>       cum_max_visit;
+    CumMaxVisitor<double, unsigned long, 128>       cum_max_visit;
     const StlVecType<double>   &cum_max_result =
         df.single_act_visit<double>("dblcol_3", cum_max_visit).get_result();
 
@@ -2858,9 +2859,11 @@ static void test_SimpleRollAdopter()  {
                            std::move(d4),
                            nan_policy::dont_pad_with_nans);
 
-    SimpleRollAdopter<MinVisitor<double>, double>   min_roller(
-        MinVisitor<double>(), 3);
-    const auto                                      &result =
+    SimpleRollAdopter<MinVisitor<double>,
+                      double,
+                      unsigned long,
+                      128>   min_roller(MinVisitor<double>(), 3);
+    const auto               &result =
         df.single_act_visit<double>("col_1", min_roller).get_result();
 
     assert(result.size() == 11);
@@ -2870,9 +2873,11 @@ static void test_SimpleRollAdopter()  {
     assert(result[5] == 4.0);
     assert(result[8] == 7.0);
 
-    SimpleRollAdopter<MeanVisitor<double>, double>  mean_roller(
-        MeanVisitor<double>(), 3);
-    const auto                                      &result2 =
+    SimpleRollAdopter<MeanVisitor<double>,
+                      double,
+                      unsigned long,
+                      128>  mean_roller(MeanVisitor<double>(), 3);
+    const auto              &result2 =
         df.single_act_visit<double>("col_3", mean_roller).get_result();
 
     assert(result2.size() == 11);
@@ -2882,9 +2887,11 @@ static void test_SimpleRollAdopter()  {
     assert(result2[5] == 19.0);
     assert(result2[8] == 22.0);
 
-    SimpleRollAdopter<MaxVisitor<double>, double>   max_roller(
-        MaxVisitor<double>(), 3);
-    const auto                                      &result3 =
+    SimpleRollAdopter<MaxVisitor<double>,
+                      double,
+                      unsigned long,
+                      128>   max_roller(MaxVisitor<double>(), 3);
+    const auto               &result3 =
         df.single_act_visit<double>("col_4", max_roller).get_result();
 
     assert(result3.size() == 6);
@@ -2894,9 +2901,11 @@ static void test_SimpleRollAdopter()  {
     assert(result3[4] == 26.0);
     assert(result3[5] == 27.0);
 
-    SimpleRollAdopter<MaxVisitor<double>, double>   max2_roller(
-        MaxVisitor<double>(false), 3);
-    const auto                                      &result4 =
+    SimpleRollAdopter<MaxVisitor<double>,
+                      double,
+                      unsigned long,
+                      128>   max2_roller(MaxVisitor<double>(false), 3);
+    const auto               &result4 =
         df.single_act_visit<double>("col_2", max2_roller).get_result();
 
     assert(result4.size() == 11);
@@ -2940,9 +2949,12 @@ static void test_ExponentialRollAdopter()  {
                            std::move(d4),
                            nan_policy::dont_pad_with_nans);
 
-    ExponentialRollAdopter<MeanVisitor<double>, double> hl_expo_mean_roller(
+    ExponentialRollAdopter<MeanVisitor<double>,
+                           double,
+                           unsigned long,
+                           128> hl_expo_mean_roller(
         MeanVisitor<double>(), 3, exponential_decay_spec::halflife, 0.5);
-    const auto                                          &hl_expo_result =
+    const auto                  &hl_expo_result =
         df.single_act_visit<double>("col_3", hl_expo_mean_roller).get_result();
 
     assert(hl_expo_result.size() == 11);
@@ -2952,10 +2964,15 @@ static void test_ExponentialRollAdopter()  {
     assert(fabs(hl_expo_result[5] - 19.6562) < 0.0001);
     assert(fabs(hl_expo_result[8] - 22.6665) < 0.0001);
 
-    ExponentialRollAdopter<MeanVisitor<double>, double> cg_expo_mean_roller(
-        MeanVisitor<double>(), 3, exponential_decay_spec::center_of_gravity,
-        0.5);
-    const auto                                          &cg_expo_result =
+    ExponentialRollAdopter<MeanVisitor<double>,
+                           double,
+                           unsigned long,
+                           128> cg_expo_mean_roller(
+                                    MeanVisitor<double>(),
+                                    3,
+                                    exponential_decay_spec::center_of_gravity,
+                                    0.5);
+    const auto                  &cg_expo_result =
         df.single_act_visit<double>("col_3", cg_expo_mean_roller).get_result();
 
     assert(cg_expo_result.size() == 11);
@@ -2965,9 +2982,12 @@ static void test_ExponentialRollAdopter()  {
     assert(fabs(cg_expo_result[5] - 19.4815) < 0.0001);
     assert(fabs(cg_expo_result[8] - 22.4993) < 0.0001);
 
-    ExponentialRollAdopter<MeanVisitor<double>, double> s_expo_mean_roller(
+    ExponentialRollAdopter<MeanVisitor<double>,
+                           double,
+                           unsigned long,
+                           128> s_expo_mean_roller(
         MeanVisitor<double>(), 3, exponential_decay_spec::span, 1.5);
-    const auto                                          &s_expo_result =
+    const auto                   &s_expo_result =
         df.single_act_visit<double>("col_3", s_expo_mean_roller).get_result();
 
     assert(s_expo_result.size() == 11);
@@ -2977,9 +2997,12 @@ static void test_ExponentialRollAdopter()  {
     assert(s_expo_result[5] == 19.744);
     assert(fabs(s_expo_result[8] - 22.75) < 0.0001);
 
-    ExponentialRollAdopter<MeanVisitor<double>, double> f_expo_mean_roller(
+    ExponentialRollAdopter<MeanVisitor<double>,
+                           double,
+                           unsigned long,
+                           128> f_expo_mean_roller(
         MeanVisitor<double>(), 3, exponential_decay_spec::fixed, 0.5);
-    const auto                                          &f_expo_result =
+    const auto                  &f_expo_result =
         df.single_act_visit<double>("col_3", f_expo_mean_roller).get_result();
 
     assert(f_expo_result.size() == 11);
@@ -2989,9 +3012,12 @@ static void test_ExponentialRollAdopter()  {
     assert(f_expo_result[5] == 19.0);
     assert(f_expo_result[8] == 22.0);
 
-    ExponentialRollAdopter<MeanVisitor<double>, double> expo_mean_roller_3(
+    ExponentialRollAdopter<MeanVisitor<double>,
+                           double,
+                           unsigned long,
+                           128> expo_mean_roller_3(
         MeanVisitor<double>(), 3, exponential_decay_spec::span, 3, 3);
-    const auto                                          &expo_result_3 =
+    const auto                  &expo_result_3 =
         df.single_act_visit<double>("col_3", expo_mean_roller_3).get_result();
 
     assert(expo_result_3.size() == 11);
@@ -3266,7 +3292,7 @@ static void test_diff()  {
                  std::make_pair("col_2", d2),
                  std::make_pair("col_3", i1));
 
-    DiffVisitor<double>   diff_visit(1, false);
+    DiffVisitor<double, unsigned long, 128>   diff_visit(1, false);
     const auto            &result =
         df.single_act_visit<double>("col_1", diff_visit).get_result();
 
@@ -3281,7 +3307,7 @@ static void test_diff()  {
     assert(result[19] == 0.6);
     assert(std::isnan(result[20]));
 
-    DiffVisitor<double>   diff_visit2(-1, false);
+    DiffVisitor<double, unsigned long, 128>   diff_visit2(-1, false);
     const auto            &result2 =
         df.single_act_visit<double>("col_1", diff_visit2).get_result();
 
@@ -3296,7 +3322,7 @@ static void test_diff()  {
     assert(std::isnan(result2[19]));
     assert(std::isnan(result2[20]));
 
-    DiffVisitor<double>   diff_visit3(3, false);
+    DiffVisitor<double, unsigned long, 128>   diff_visit3(3, false);
     const auto            &result3 =
         df.single_act_visit<double>("col_1", diff_visit3).get_result();
 
@@ -3314,7 +3340,7 @@ static void test_diff()  {
     assert(std::isnan(result3[19]));
     assert(std::isnan(result3[20]));
 
-    DiffVisitor<double>   diff_visit4(-3, false);
+    DiffVisitor<double, unsigned long, 128>   diff_visit4(-3, false);
     const auto              &result4 =
         df.single_act_visit<double>("col_1", diff_visit4).get_result();
 
@@ -3333,7 +3359,7 @@ static void test_diff()  {
     assert(std::isnan(result4[19]));
     assert(std::isnan(result4[20]));
 
-    DiffVisitor<double>   diff_visit5(3, true);
+    DiffVisitor<double, unsigned long, 128>   diff_visit5(3, true);
     const auto            &result5 =
         df.single_act_visit<double>("col_1", diff_visit5).get_result();
 
@@ -3345,7 +3371,7 @@ static void test_diff()  {
     assert(fabs(result5[8] - 1.907) < epsilon);
     assert(result5[9] == -0.66);
 
-    DiffVisitor<double>   diff_visit6(-3, true);
+    DiffVisitor<double, unsigned long, 128>   diff_visit6(-3, true);
     const auto            &result6 =
         df.single_act_visit<double>("col_1", diff_visit6).get_result();
 
@@ -3643,7 +3669,7 @@ static void test_view_visitors()  {
                  std::make_pair("dbl_col5", dblvec5),
                  std::make_pair("dbl_col6", dblvec6));
 
-    typedef StdDataFrame<unsigned long>::View MyDataFrameView;
+    typedef StdDataFrame128<unsigned long>::View MyDataFrameView;
 
     MyDataFrameView dfv =
         df.get_view_by_idx<double>(Index2D<unsigned long> { 2, 4 });
@@ -3656,7 +3682,7 @@ static void test_view_visitors()  {
     assert(fabs(dfv.visit<double, double>("dbl_col1", "dbl_col2",
                                  dp_visitor).get_result() - 45.98) < 0.00001);
 
-    SimpleRollAdopter<MeanVisitor<double>, double>
+    SimpleRollAdopter<MeanVisitor<double>, double, unsigned long, 128>
         mean_roller1(MeanVisitor<double>(), 3);
     const auto &res_sra =
         dfv.single_act_visit<double>("dbl_col1",
@@ -3665,7 +3691,7 @@ static void test_view_visitors()  {
 
     assert(fabs(res_sra[2] - 3.3) < 0.00001);
 
-    SimpleRollAdopter<GeometricMeanVisitor<double>, double>
+    SimpleRollAdopter<GeometricMeanVisitor<double>, double, unsigned long, 128>
         geo_mean_roller(GeometricMeanVisitor<double>(), 3);
     const auto  &res_srga =
         df.single_act_visit<double>("dbl_col4", geo_mean_roller).get_result();
@@ -3673,7 +3699,7 @@ static void test_view_visitors()  {
     assert(fabs(res_srga[2] - 2.96098) < 0.00001);
     assert(fabs(res_srga[6] - 5.25368) < 0.00001);
 
-    SimpleRollAdopter<HarmonicMeanVisitor<double>, double>
+    SimpleRollAdopter<HarmonicMeanVisitor<double>, double, unsigned long, 128>
         har_mean_roller(HarmonicMeanVisitor<double>(), 3);
     const auto  &res_srha =
         df.single_act_visit<double>("dbl_col4", har_mean_roller).get_result();
@@ -3681,28 +3707,28 @@ static void test_view_visitors()  {
     assert(fabs(res_srha[2] - 2.14782) < 0.00001);
     assert(fabs(res_srha[6] - 5.0785) < 0.00001);
 
-    CumSumVisitor<double> cs_visitor;
+    CumSumVisitor<double, unsigned long, 128> cs_visitor;
     const auto &res_cs =
         dfv.single_act_visit<double>("dbl_col1", cs_visitor).get_result();
     assert(fabs(res_cs[0] - 2.2) < 0.00001);
     assert(fabs(res_cs[1] - 5.5) < 0.00001);
     assert(fabs(res_cs[2] - 9.9) < 0.00001);
 
-    CumProdVisitor<double> cp_visitor;
+    CumProdVisitor<double, unsigned long, 128> cp_visitor;
     const auto &res_cp =
         dfv.single_act_visit<double>("dbl_col1", cp_visitor).get_result();
     assert(fabs(res_cp[0] - 2.2) < 0.00001);
     assert(fabs(res_cp[1] - 7.26) < 0.00001);
     assert(fabs(res_cp[2] - 31.944) < 0.00001);
 
-    CumMinVisitor<double> cmin_visitor;
+    CumMinVisitor<double, unsigned long, 128> cmin_visitor;
     const auto &res_cmin =
         dfv.single_act_visit<double>("dbl_col1", cmin_visitor).get_result();
     assert(fabs(res_cmin[0] - 2.2) < 0.00001);
     assert(fabs(res_cmin[1] - 2.2) < 0.00001);
     assert(fabs(res_cmin[2] - 2.2) < 0.00001);
 
-    CumMaxVisitor<double> cmax_visitor;
+    CumMaxVisitor<double, unsigned long, 128> cmax_visitor;
     const auto &res_cmax =
         dfv.single_act_visit<double>("dbl_col1", cmax_visitor).get_result();
     assert(fabs(res_cmax[0] - 2.2) < 0.00001);
@@ -3718,14 +3744,16 @@ static void test_view_visitors()  {
     assert(fabs(res_ac[1] - -0.36855) < 0.00001);
     // assert(fabs(res_ac[5] - 0.67957) < 0.0001);
 
-    ReturnVisitor<double> ret_visitor(return_policy::monetary);
+    ReturnVisitor<double,
+                  unsigned long,
+                  128> ret_visitor(return_policy::monetary);
     const auto &res_ret =
         df.single_act_visit<double>("dbl_col4", ret_visitor).get_result();
     assert(std::isnan(res_ret[0]));
     assert(fabs(res_ret[1] - -1.5) < 0.00001);
     assert(fabs(res_ret[7] - 0.3) < 0.00001);
 
-    MedianVisitor<double> med_visitor;
+    MedianVisitor<double, unsigned long, 128> med_visitor;
     const auto &res_med =
         dfv2.single_act_visit<double>("dbl_col3", med_visitor).get_result();
     assert(fabs(res_med - 4.95) < 0.00001);
@@ -3735,7 +3763,7 @@ static void test_view_visitors()  {
         dfv2.single_act_visit<double>("dbl_col6", mode_visitor).get_result();
     assert(fabs(res_mode[1].get_value() - 3.3) < 0.00001);
 
-    DiffVisitor<double> diff_visitor(1);
+    DiffVisitor<double, unsigned long, 128> diff_visitor(1);
     const auto &res_diff =
         dfv.single_act_visit<double>("dbl_col1", diff_visitor).get_result();
     assert(res_diff.size() == 2);
@@ -3797,9 +3825,9 @@ static void test_k_means()  {
 
     df.load_data(MyDataFrame::gen_sequence_index(0, item_cnt, 1),
                  std::make_pair("col1",
-                                gen_lognormal_dist<double>(item_cnt, p)));
+                                gen_lognormal_dist<double, 128>(item_cnt, p)));
 
-    KMeansVisitor<5, double>    km_visitor(1000);
+    KMeansVisitor<5, double, unsigned long, 128>    km_visitor(1000);
 
     df.single_act_visit<double>("col1", km_visitor);
 
@@ -3860,11 +3888,11 @@ static void test_k_means()  {
     //
     p.seed = 200;
 
-    auto    x_vec = gen_lognormal_dist<double>(item_cnt, p);
+    auto    x_vec = gen_lognormal_dist<double, 128>(item_cnt, p);
 
     p.seed = 4356;
 
-    auto                y_vec = gen_lognormal_dist<double>(item_cnt, p);
+    auto                y_vec = gen_lognormal_dist<double, 128>(item_cnt, p);
     StlVecType<Point>  points;
 
     points.reserve(item_cnt);
@@ -3872,7 +3900,10 @@ static void test_k_means()  {
         points.push_back(Point(x_vec[i], y_vec[i]));
     df.load_column<Point>("point_col", std::move(points));
 
-    KMeansVisitor<5, Point> km_visitor2(1000, point_distance);
+    KMeansVisitor<5,
+                  Point,
+                  unsigned long,
+                  128> km_visitor2(1000, point_distance);
 
     df.single_act_visit<Point>("point_col", km_visitor2);
 
@@ -3965,35 +3996,35 @@ static void test_affinity_propagation()  {
 
     p.min_value = 0;
     p.max_value = 10;
-    col_data = gen_uniform_real_dist<double>(item_cnt, p);
+    col_data = gen_uniform_real_dist<double, 128>(item_cnt, p);
     final_col.insert(final_col.end(), col_data.begin(), col_data.end());
 
     p.min_value = 20;
     p.max_value = 30;
-    col_data = gen_uniform_real_dist<double>(item_cnt, p);
+    col_data = gen_uniform_real_dist<double, 128>(item_cnt, p);
     final_col.insert(final_col.end(), col_data.begin(), col_data.end());
 
     p.min_value = 40;
     p.max_value = 50;
-    col_data = gen_uniform_real_dist<double>(item_cnt, p);
+    col_data = gen_uniform_real_dist<double, 128>(item_cnt, p);
     final_col.insert(final_col.end(), col_data.begin(), col_data.end());
 
     p.min_value = 60;
     p.max_value = 70;
-    col_data = gen_uniform_real_dist<double>(item_cnt, p);
+    col_data = gen_uniform_real_dist<double, 128>(item_cnt, p);
     final_col.insert(final_col.end(), col_data.begin(), col_data.end());
 
     p.min_value = 80;
     p.max_value = 90;
-    col_data = gen_uniform_real_dist<double>(item_cnt, p);
+    col_data = gen_uniform_real_dist<double, 128>(item_cnt, p);
     final_col.insert(final_col.end(), col_data.begin(), col_data.end());
 
     df.load_data(MyDataFrame::gen_sequence_index(0, item_cnt * 5, 1),
                  std::make_pair("col1", final_col));
     df.shuffle<double>({"col1"}, false);
 
-    KMeansVisitor<5, double>    km_visitor(1000);
-    AffinityPropVisitor<double> ap_visitor(50);
+    KMeansVisitor<5, double, unsigned long, 128>    km_visitor(1000);
+    AffinityPropVisitor<double, unsigned long, 128> ap_visitor(50);
 
     df.single_act_visit<double>("col1", km_visitor);
     df.single_act_visit<double>("col1", ap_visitor);
@@ -4127,7 +4158,7 @@ static void test_join_by_column()  {
                   std::make_pair("xcol_3", d32),
                   std::make_pair("col_4", i12));
 
-    StdDataFrame<unsigned int>  inner_result =
+    StdDataFrame128<unsigned int>  inner_result =
         df.join_by_column<decltype(df2), double, double, int>
            (df2, "col_2", join_policy::inner_join);
 
@@ -4141,7 +4172,7 @@ static void test_join_by_column()  {
     assert(inner_result.get_column<unsigned long>("rhs.INDEX")[1] == 123466);
     assert(inner_result.get_column<unsigned long>("lhs.INDEX")[2] == 123457);
 
-    StdDataFrame<unsigned int>  left_result =
+    StdDataFrame128<unsigned int>  left_result =
         df.join_by_column<decltype(df2), double, double, int>
            (df2, "col_2", join_policy::left_join);
 
@@ -4155,7 +4186,7 @@ static void test_join_by_column()  {
     assert(left_result.get_column<unsigned long>("rhs.INDEX")[3] == 0);
     assert(left_result.get_column<unsigned long>("lhs.INDEX")[11] == 123460);
 
-    StdDataFrame<unsigned int>  right_result =
+    StdDataFrame128<unsigned int>  right_result =
         df.join_by_column<decltype(df2), double, double, int>
            (df2, "col_2", join_policy::right_join);
 
@@ -4169,7 +4200,7 @@ static void test_join_by_column()  {
     assert(right_result.get_column<unsigned long>("rhs.INDEX")[3] == 123453);
     assert(right_result.get_column<unsigned long>("lhs.INDEX")[11] == 0);
 
-    StdDataFrame<unsigned int>  left_right_result =
+    StdDataFrame128<unsigned int>  left_right_result =
         df.join_by_column<decltype(df2), double, double, int>
            (df2, "col_2", join_policy::left_right_join);
 
@@ -4309,7 +4340,7 @@ static void test_MACDVisitor()  {
 
     df.load_data(std::move(idx), std::make_pair("col_1", d1));
 
-    using macd_t = MACDVisitor<double>;
+    using macd_t = MACDVisitor<double, unsigned long, 128>;
 
     macd_t  visitor(2, 5, 6);
 
@@ -4363,7 +4394,7 @@ static void test_ExpandingRollAdopter()  {
 
     df.load_data(std::move(idx), std::make_pair("col_1", d1));
 
-    ExpandingRollAdopter<MeanVisitor<double>, double>
+    ExpandingRollAdopter<MeanVisitor<double>, double, unsigned long, 128>
         expand_roller(MeanVisitor<double>(), 2);
     const auto  &result =
         df.single_act_visit<double>("col_1", expand_roller).get_result();
@@ -4394,26 +4425,34 @@ static void test_MADVisitor()  {
 
     df.load_data(std::move(idx), std::make_pair("col_1", d1));
 
-    MADVisitor<double>  mad_visitor1(mad_type::mean_abs_dev_around_mean);
-    const auto          result1 =
+    MADVisitor<double,
+               unsigned long,
+               128>  mad_visitor1(mad_type::mean_abs_dev_around_mean);
+    const auto       result1 =
         df.single_act_visit<double>("col_1", mad_visitor1).get_result();
 
     assert(result1 == 10.0);
 
-    MADVisitor<double>  mad_visitor2(mad_type::mean_abs_dev_around_median);
-    const auto          result2 =
+    MADVisitor<double,
+               unsigned long,
+               128>  mad_visitor2(mad_type::mean_abs_dev_around_median);
+    const auto       result2 =
         df.single_act_visit<double>("col_1", mad_visitor2).get_result();
 
     assert(result2 == 10.0);
 
-    MADVisitor<double>  mad_visitor3(mad_type::median_abs_dev_around_mean);
-    const auto          result3 =
+    MADVisitor<double,
+               unsigned long,
+               128>  mad_visitor3(mad_type::median_abs_dev_around_mean);
+    const auto       result3 =
         df.single_act_visit<double>("col_1", mad_visitor3).get_result();
 
     assert(result3 == 10.0);
 
-    MADVisitor<double>  mad_visitor4(mad_type::median_abs_dev_around_median);
-    const auto          result4 =
+    MADVisitor<double,
+               unsigned long,
+               128>  mad_visitor4(mad_type::median_abs_dev_around_median);
+    const auto       result4 =
         df.single_act_visit<double>("col_1", mad_visitor4).get_result();
 
     assert(result4 == 10.0);
@@ -4628,53 +4667,73 @@ static void test_quantile()  {
     df.load_data(std::move(idx), std::make_pair("col_1", d1));
     df.shuffle<double>({"col_1"}, false);
 
-    QuantileVisitor<double> v1(1, quantile_policy::mid_point);
+    QuantileVisitor<double,
+                    unsigned long,
+                    128> v1(1, quantile_policy::mid_point);
     auto                    result =
         df.single_act_visit<double>("col_1", v1).get_result();
 
     assert(result == 40.0);
 
-    QuantileVisitor<double> v2(0.5, quantile_policy::mid_point);
+    QuantileVisitor<double,
+                    unsigned long,
+                    128> v2(0.5, quantile_policy::mid_point);
 
     result = df.single_act_visit<double>("col_1", v2).get_result();
     assert(result == 20.5);
 
-    QuantileVisitor<double> v3(0.5, quantile_policy::linear);
+    QuantileVisitor<double,
+                    unsigned long,
+                    128> v3(0.5, quantile_policy::linear);
 
     result = df.single_act_visit<double>("col_1", v3).get_result();
     assert(result == 20.5);
 
-    QuantileVisitor<double> v4(0.5, quantile_policy::higher_value);
+    QuantileVisitor<double,
+                    unsigned long,
+                    128> v4(0.5, quantile_policy::higher_value);
 
     result = df.single_act_visit<double>("col_1", v4).get_result();
     assert(result == 21.0);
 
-    QuantileVisitor<double> v5(0.5, quantile_policy::lower_value);
+    QuantileVisitor<double,
+                    unsigned long,
+                    128> v5(0.5, quantile_policy::lower_value);
 
     result = df.single_act_visit<double>("col_1", v5).get_result();
     assert(result == 20.0);
 
-    QuantileVisitor<double> v6(0.55, quantile_policy::mid_point);
+    QuantileVisitor<double,
+                    unsigned long,
+                    128> v6(0.55, quantile_policy::mid_point);
 
     result = df.single_act_visit<double>("col_1", v6).get_result();
     assert(result == 22.5);
 
-    QuantileVisitor<double> v7(0.55, quantile_policy::linear);
+    QuantileVisitor<double,
+                    unsigned long,
+                    128> v7(0.55, quantile_policy::linear);
 
     result = df.single_act_visit<double>("col_1", v7).get_result();
     assert(result == 22.45);
 
-    QuantileVisitor<double> v8(0.75, quantile_policy::mid_point);
+    QuantileVisitor<double,
+                    unsigned long,
+                    128> v8(0.75, quantile_policy::mid_point);
 
     result = df.single_act_visit<double>("col_1", v8).get_result();
     assert(result == 30.5);
 
-    QuantileVisitor<double> v9(0.75, quantile_policy::linear);
+    QuantileVisitor<double,
+                    unsigned long,
+                    128> v9(0.75, quantile_policy::linear);
 
     result = df.single_act_visit<double>("col_1", v9).get_result();
     assert(result == 30.25);
 
-    QuantileVisitor<double> v10(0, quantile_policy::linear);
+    QuantileVisitor<double,
+                    unsigned long,
+                    128> v10(0, quantile_policy::linear);
 
     result = df.single_act_visit<double>("col_1", v10).get_result();
     assert(result == 1.0);
@@ -4682,67 +4741,93 @@ static void test_quantile()  {
     df.get_index().push_back(41);
     df.get_column<double>("col_1").push_back(41);
 
-    QuantileVisitor<double> v11(0.75, quantile_policy::mid_point);
+    QuantileVisitor<double,
+                    unsigned long,
+                    128> v11(0.75, quantile_policy::mid_point);
 
     result = df.single_act_visit<double>("col_1", v11).get_result();
     assert(result == 31.0);
 
-    QuantileVisitor<double> v12(0.75, quantile_policy::linear);
+    QuantileVisitor<double,
+                    unsigned long,
+                    128> v12(0.75, quantile_policy::linear);
 
     result = df.single_act_visit<double>("col_1", v12).get_result();
     assert(result == 31.0);
 
-    QuantileVisitor<double> v13(0.75, quantile_policy::lower_value);
+    QuantileVisitor<double,
+                    unsigned long,
+                    128> v13(0.75, quantile_policy::lower_value);
 
     result = df.single_act_visit<double>("col_1", v13).get_result();
     assert(result == 31.0);
 
-    QuantileVisitor<double> v14(0.75, quantile_policy::higher_value);
+    QuantileVisitor<double,
+                    unsigned long,
+                    128> v14(0.75, quantile_policy::higher_value);
 
     result = df.single_act_visit<double>("col_1", v14).get_result();
     assert(result == 31.0);
 
-    QuantileVisitor<double> v15(0.71, quantile_policy::mid_point);
+    QuantileVisitor<double,
+                    unsigned long,
+                    128> v15(0.71, quantile_policy::mid_point);
 
     result = df.single_act_visit<double>("col_1", v15).get_result();
     assert(result == 29.5);
 
-    QuantileVisitor<double> v16(0.71, quantile_policy::linear);
+    QuantileVisitor<double,
+                    unsigned long,
+                    128> v16(0.71, quantile_policy::linear);
 
     result = df.single_act_visit<double>("col_1", v16).get_result();
     assert(result == 29.29);
 
-    QuantileVisitor<double> v17(0.23, quantile_policy::mid_point);
+    QuantileVisitor<double,
+                    unsigned long,
+                    128> v17(0.23, quantile_policy::mid_point);
 
     result = df.single_act_visit<double>("col_1", v17).get_result();
     assert(result == 9.5);
 
-    QuantileVisitor<double> v18(0.2, quantile_policy::mid_point);
+    QuantileVisitor<double,
+                    unsigned long,
+                    128> v18(0.2, quantile_policy::mid_point);
 
     result = df.single_act_visit<double>("col_1", v18).get_result();
     assert(result == 8.5);
 
-    QuantileVisitor<double> v19(0.23, quantile_policy::linear);
+    QuantileVisitor<double,
+                    unsigned long,
+                    128> v19(0.23, quantile_policy::linear);
 
     result = df.single_act_visit<double>("col_1", v19).get_result();
     assert(result == 9.77);
 
-    QuantileVisitor<double> v20(0.23, quantile_policy::lower_value);
+    QuantileVisitor<double,
+                    unsigned long,
+                    128> v20(0.23, quantile_policy::lower_value);
 
     result = df.single_act_visit<double>("col_1", v20).get_result();
     assert(result == 9.0);
 
-    QuantileVisitor<double> v21(0.23, quantile_policy::higher_value);
+    QuantileVisitor<double,
+                    unsigned long,
+                    128> v21(0.23, quantile_policy::higher_value);
 
     result = df.single_act_visit<double>("col_1", v21).get_result();
     assert(result == 10.0);
 
-    QuantileVisitor<double> v22(1, quantile_policy::linear);
+    QuantileVisitor<double,
+                    unsigned long,
+                    128> v22(1, quantile_policy::linear);
 
     result = df.single_act_visit<double>("col_1", v22).get_result();
     assert(result == 41.0);
 
-    QuantileVisitor<double> v23(0, quantile_policy::mid_point);
+    QuantileVisitor<double,
+                    unsigned long,
+                    128> v23(0, quantile_policy::mid_point);
 
     result = df.single_act_visit<double>("col_1", v23).get_result();
     assert(result == 1.0);
@@ -4772,10 +4857,12 @@ static void test_VWAP()  {
 
     df.load_data(
         MyDataFrame::gen_sequence_index(100, 1124, 1),
-        std::make_pair("price", gen_uniform_real_dist<double>(1024, price_p)),
-        std::make_pair("size", gen_uniform_real_dist<double>(1024, size_p)));
+        std::make_pair("price",
+                       gen_uniform_real_dist<double, 128>(1024, price_p)),
+        std::make_pair("size",
+                       gen_uniform_real_dist<double, 128>(1024, size_p)));
 
-    VWAPVisitor<double> v1(100);
+    VWAPVisitor<double, unsigned long, 128> v1(100);
     auto                result =
         df.visit<double, double>("price", "size", v1).get_result();
 
@@ -4837,15 +4924,15 @@ static void test_VWBAS()  {
     df.load_data(
         MyDataFrame::gen_sequence_index(100, 1124, 1),
         std::make_pair("bid_price",
-                       gen_uniform_real_dist<double>(1024, bprice_p)),
+                       gen_uniform_real_dist<double, 128>(1024, bprice_p)),
         std::make_pair("ask_price",
-                       gen_uniform_real_dist<double>(1024, aprice_p)),
+                       gen_uniform_real_dist<double, 128>(1024, aprice_p)),
         std::make_pair("bid_size",
-                       gen_uniform_real_dist<double>(1024, bsize_p)),
+                       gen_uniform_real_dist<double, 128>(1024, bsize_p)),
         std::make_pair("ask_size",
-                       gen_uniform_real_dist<double>(1024, asize_p)));
+                       gen_uniform_real_dist<double, 128>(1024, asize_p)));
 
-    VWBASVisitor<double>    v1(100);
+    VWBASVisitor<double, unsigned long, 128>    v1(100);
     const MyDataFrame       const_df = df;
     auto                    fut =
         const_df.visit_async<double, double, double, double>

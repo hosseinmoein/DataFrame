@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 
 #include <DataFrame/DataFrameTypes.h>
+#include <DataFrame/Utils/AlignedAllocator.h>
 
 #include <vector>
 
@@ -52,8 +53,8 @@ namespace hmdf
 // n: Number of numerics to generate
 // params: List of all applicable parameters, see DataFrameTypes.h
 //
-template<typename T>
-std::vector<T>
+template<typename T, std::size_t A = 0>
+std::vector<T, typename allocator_declare<T, A>::type>
 gen_uniform_int_dist(std::size_t n, const RandGenParams<T> &params = { });
 
 // ----------------------------------------------------------------------------
@@ -71,8 +72,8 @@ gen_uniform_int_dist(std::size_t n, const RandGenParams<T> &params = { });
 // n: Number of numerics to generate
 // params: List of all applicable parameters, see DataFrameTypes.h
 //
-template<typename T>
-std::vector<T>
+template<typename T, std::size_t A = 0>
+std::vector<T, typename allocator_declare<T, A>::type>
 gen_uniform_real_dist(std::size_t n, const RandGenParams<T> &params = { });
 
 // ----------------------------------------------------------------------------
@@ -90,7 +91,8 @@ gen_uniform_real_dist(std::size_t n, const RandGenParams<T> &params = { });
 // n: Number of numerics to generate
 // params: List of all applicable parameters, see DataFrameTypes.h
 //
-std::vector<bool>
+template<std::size_t A = 0>
+std::vector<bool, typename allocator_declare<bool, A>::type>
 gen_bernoulli_dist(std::size_t n, const RandGenParams<bool> &params = { });
 
 // ----------------------------------------------------------------------------
@@ -109,8 +111,8 @@ gen_bernoulli_dist(std::size_t n, const RandGenParams<bool> &params = { });
 // n: Number of numerics to generate
 // params: List of all applicable parameters, see DataFrameTypes.h
 //
-template<typename T>
-std::vector<T>
+template<typename T, std::size_t A = 0>
+std::vector<T, typename allocator_declare<T, A>::type>
 gen_binomial_dist(std::size_t n, const RandGenParams<T> &params = { });
 
 // ----------------------------------------------------------------------------
@@ -129,8 +131,8 @@ gen_binomial_dist(std::size_t n, const RandGenParams<T> &params = { });
 // n: Number of numerics to generate
 // params: List of all applicable parameters, see DataFrameTypes.h
 //
-template<typename T>
-std::vector<T>
+template<typename T, std::size_t A = 0>
+std::vector<T, typename allocator_declare<T, A>::type>
 gen_negative_binomial_dist(std::size_t n, const RandGenParams<T> &params = {});
 
 // ----------------------------------------------------------------------------
@@ -149,8 +151,8 @@ gen_negative_binomial_dist(std::size_t n, const RandGenParams<T> &params = {});
 // n: Number of numerics to generate
 // params: List of all applicable parameters, see DataFrameTypes.h
 //
-template<typename T>
-std::vector<T>
+template<typename T, std::size_t A = 0>
+std::vector<T, typename allocator_declare<T, A>::type>
 gen_geometric_dist(std::size_t n, const RandGenParams<T> &params = { });
 
 // ----------------------------------------------------------------------------
@@ -171,8 +173,8 @@ gen_geometric_dist(std::size_t n, const RandGenParams<T> &params = { });
 // n: Number of numerics to generate
 // params: List of all applicable parameters, see DataFrameTypes.h
 //
-template<typename T>
-std::vector<T>
+template<typename T, std::size_t A = 0>
+std::vector<T, typename allocator_declare<T, A>::type>
 gen_poisson_dist(std::size_t n, const RandGenParams<T> &params = { });
 
 // ----------------------------------------------------------------------------
@@ -189,8 +191,8 @@ gen_poisson_dist(std::size_t n, const RandGenParams<T> &params = { });
 // n: Number of numerics to generate
 // params: List of all applicable parameters, see DataFrameTypes.h
 //
-template<typename T>
-std::vector<T>
+template<typename T, std::size_t A = 0>
+std::vector<T, typename allocator_declare<T, A>::type>
 gen_exponential_dist(std::size_t n, const RandGenParams<T> &params = { });
 
 // ----------------------------------------------------------------------------
@@ -207,8 +209,8 @@ gen_exponential_dist(std::size_t n, const RandGenParams<T> &params = { });
 // n: Number of numerics to generate
 // params: List of all applicable parameters, see DataFrameTypes.h
 //
-template<typename T>
-std::vector<T>
+template<typename T, std::size_t A = 0>
+std::vector<T, typename allocator_declare<T, A>::type>
 gen_gamma_dist(std::size_t n, const RandGenParams<T> &params = { });
 
 // ----------------------------------------------------------------------------
@@ -225,8 +227,8 @@ gen_gamma_dist(std::size_t n, const RandGenParams<T> &params = { });
 // n: Number of numerics to generate
 // params: List of all applicable parameters, see DataFrameTypes.h
 //
-template<typename T>
-std::vector<T>
+template<typename T, std::size_t A = 0>
+std::vector<T, typename allocator_declare<T, A>::type>
 gen_weibull_dist(std::size_t n, const RandGenParams<T> &params = { });
 
 // ----------------------------------------------------------------------------
@@ -243,8 +245,8 @@ gen_weibull_dist(std::size_t n, const RandGenParams<T> &params = { });
 // n: Number of numerics to generate
 // params: List of all applicable parameters, see DataFrameTypes.h
 //
-template<typename T>
-std::vector<T>
+template<typename T, std::size_t A = 0>
+std::vector<T, typename allocator_declare<T, A>::type>
 gen_extreme_value_dist(std::size_t n, const RandGenParams<T> &params = { });
 
 // ----------------------------------------------------------------------------
@@ -261,8 +263,8 @@ gen_extreme_value_dist(std::size_t n, const RandGenParams<T> &params = { });
 // n: Number of numerics to generate
 // params: List of all applicable parameters, see DataFrameTypes.h
 //
-template<typename T>
-std::vector<T>
+template<typename T, std::size_t A = 0>
+std::vector<T, typename allocator_declare<T, A>::type>
 gen_normal_dist(std::size_t n, const RandGenParams<T> &params = { });
 
 // ----------------------------------------------------------------------------
@@ -279,8 +281,8 @@ gen_normal_dist(std::size_t n, const RandGenParams<T> &params = { });
 // n: Number of numerics to generate
 // params: List of all applicable parameters, see DataFrameTypes.h
 //
-template<typename T>
-std::vector<T>
+template<typename T, std::size_t A = 0>
+std::vector<T, typename allocator_declare<T, A>::type>
 gen_lognormal_dist(std::size_t n, const RandGenParams<T> &params = { });
 
 // ----------------------------------------------------------------------------
@@ -297,8 +299,8 @@ gen_lognormal_dist(std::size_t n, const RandGenParams<T> &params = { });
 // n: Number of numerics to generate
 // params: List of all applicable parameters, see DataFrameTypes.h
 //
-template<typename T>
-std::vector<T>
+template<typename T, std::size_t A = 0>
+std::vector<T, typename allocator_declare<T, A>::type>
 gen_chi_squared_dist(std::size_t n, const RandGenParams<T> &params = { });
 
 // ----------------------------------------------------------------------------
@@ -315,8 +317,8 @@ gen_chi_squared_dist(std::size_t n, const RandGenParams<T> &params = { });
 // n: Number of numerics to generate
 // params: List of all applicable parameters, see DataFrameTypes.h
 //
-template<typename T>
-std::vector<T>
+template<typename T, std::size_t A = 0>
+std::vector<T, typename allocator_declare<T, A>::type>
 gen_cauchy_dist(std::size_t n, const RandGenParams<T> &params = { });
 
 // ----------------------------------------------------------------------------
@@ -332,8 +334,8 @@ gen_cauchy_dist(std::size_t n, const RandGenParams<T> &params = { });
 // n: Number of numerics to generate
 // params: List of all applicable parameters, see DataFrameTypes.h
 //
-template<typename T>
-std::vector<T>
+template<typename T, std::size_t A = 0>
+std::vector<T, typename allocator_declare<T, A>::type>
 gen_fisher_f_dist(std::size_t n, const RandGenParams<T> &params = { });
 
 // ----------------------------------------------------------------------------
@@ -350,8 +352,8 @@ gen_fisher_f_dist(std::size_t n, const RandGenParams<T> &params = { });
 // n: Number of numerics to generate
 // params: List of all applicable parameters, see DataFrameTypes.h
 //
-template<typename T>
-std::vector<T>
+template<typename T, std::size_t A = 0>
+std::vector<T, typename allocator_declare<T, A>::type>
 gen_student_t_dist(std::size_t n, const RandGenParams<T> &params = { });
 
 // ----------------------------------------------------------------------------
@@ -359,8 +361,8 @@ gen_student_t_dist(std::size_t n, const RandGenParams<T> &params = { });
 // This function generates n logarithmically spaced numbers between the given
 // base raised to the power of first to last.
 //
-template<typename T>
-std::vector<T>
+template<typename T, std::size_t A = 0>
+std::vector<T, typename allocator_declare<T, A>::type>
 gen_log_space_nums(std::size_t n, T first, T last, T base);
 
 // ----------------------------------------------------------------------------
@@ -369,8 +371,8 @@ gen_log_space_nums(std::size_t n, T first, T last, T base);
 // last parameters.
 // The result vector always starts with first and ends shy of last
 //
-template<typename T>
-std::vector<T>
+template<typename T, std::size_t A = 0>
+std::vector<T, typename allocator_declare<T, A>::type>
 gen_even_space_nums(std::size_t n, T first, T last);
 
 // ----------------------------------------------------------------------------
@@ -386,8 +388,8 @@ gen_even_space_nums(std::size_t n, T first, T last);
 // The result vector always starts with a value >= than first and ends with
 // a value <= than last.
 //
-template<typename T>
-std::vector<T>
+template<typename T, std::size_t A = 0>
+std::vector<T, typename allocator_declare<T, A>::type>
 gen_triangular_nums(T last, T first = T(1));
 
 // ----------------------------------------------------------------------------
@@ -402,8 +404,8 @@ gen_triangular_nums(T last, T first = T(1));
 //       1         1
 // If normalize is true, the numbers are normalized by the sum of all numbers
 //
-template<typename T>
-std::vector<T>
+template<typename T, std::size_t A = 0>
+std::vector<T, typename allocator_declare<T, A>::type>
 gen_sym_triangle(std::size_t n, const T &start_val, bool normalize = false);
 
 } // namespace hmdf

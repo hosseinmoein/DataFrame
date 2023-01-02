@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 
 #include <iterator>
+#include <new>
 #include <utility>
 #include <vector>
 
@@ -42,10 +43,12 @@ namespace hmdf
 // continuous memory look like an STL vector.
 // It also gives you STL conformant iterators.
 //
-template <typename T>
+template<typename T, std::size_t A = 0>
 class VectorView {
 
 public:
+
+    static constexpr std::align_val_t   align_value { A };
 
     using value_type = T;
     using size_type = unsigned long long int;
@@ -404,10 +407,12 @@ private:
 
 // ----------------------------------------------------------------------------
 
-template <typename T>
+template<typename T, std::size_t A = 0>
 class VectorConstView {
 
 public:
+
+    static constexpr std::align_val_t   align_value { A };
 
     using value_type = T;
     using size_type = unsigned long long int;

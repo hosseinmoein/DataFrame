@@ -34,7 +34,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>#include &lt;DataFrame/DataFrameStatsVisitors.h&gt;
 
-template&lt;typename F, typename T, typename I = unsigned long&gt;
+template&lt;typename F, typename T, typename I = unsigned long,
+         std::size_t A = 0&gt;
 struct ExpandingRollAdopter;
         </B></PRE></font>
       </td>
@@ -53,7 +54,8 @@ struct ExpandingRollAdopter;
       <td width="12%">
         <B>F</B>: Functor type<BR>
         <B>T</B>: Column data type<BR>
-        <B>I</B>: Index type
+        <B>I</B>: Index type<BR>
+        <B>A</B>: Memory alignment boundary for vectors. Default is system default alignment<BR>
       </td>
     </tr>
 

@@ -41,13 +41,13 @@ template<typename I, typename H>
 template<typename ... Ts>
 void DataFrame<I, H>::self_shift(size_type periods, shift_policy sp)  {
 
-    static_assert(std::is_base_of<HeteroVector, DataVec>::value,
+    static_assert(std::is_base_of<HeteroVector<align_value>, DataVec>::value,
                   "Only a StdDataFrame can call self_shift()");
 
     if (periods > 0)  {
         if (sp == shift_policy::down || sp == shift_policy::up)  {
             vertical_shift_functor_<Ts ...> functor(periods, sp);
-            std::vector<std::future<void>>  futures(get_thread_level());
+            StlVecType<std::future<void>>  futures(get_thread_level());
             size_type                       thread_count = 0;
             const size_type                 data_size = data_.size();
 
@@ -89,13 +89,13 @@ void DataFrame<I, H>::self_shift(size_type periods, shift_policy sp)  {
 
 template<typename I, typename H>
 template<typename ... Ts>
-StdDataFrame<I> DataFrame<I, H>::
+DataFrame<I, H> DataFrame<I, H>::
 shift(size_type periods, shift_policy sp) const  {
 
-    static_assert(std::is_base_of<HeteroVector, DataVec>::value,
+    static_assert(std::is_base_of<HeteroVector<align_value>, DataVec>::value,
                   "Only a StdDataFrame can call shift()");
 
-    StdDataFrame<IndexType> slug = *this;
+    DataFrame   slug = *this;
 
     slug.template self_shift<Ts ...>(periods, sp);
     return (slug);
@@ -105,13 +105,13 @@ shift(size_type periods, shift_policy sp) const  {
 
 template<typename I, typename H>
 template<typename T>
-std::vector<T> DataFrame<I, H>::
+typename DataFrame<I, H>::template StlVecType<T> DataFrame<I, H>::
 shift(const char *col_name, size_type periods, shift_policy sp) const  {
 
-    static_assert(std::is_base_of<HeteroVector, DataVec>::value,
+    static_assert(std::is_base_of<HeteroVector<align_value>, DataVec>::value,
                   "Only a StdDataFrame can call shift()");
 
-    std::vector<T>              result = get_column<T>(col_name);
+    ColumnVecType<T>              result = get_column<T>(col_name);
     vertical_shift_functor_<T>  functor(periods, sp);
 
     functor (result);
@@ -124,13 +124,13 @@ template<typename I, typename H>
 template<typename ... Ts>
 void DataFrame<I, H>::self_rotate(size_type periods, shift_policy sp)  {
 
-    static_assert(std::is_base_of<HeteroVector, DataVec>::value,
+    static_assert(std::is_base_of<HeteroVector<align_value>, DataVec>::value,
                   "Only a StdDataFrame can call self_rotate()");
 
     if (periods > 0)  {
         if (sp == shift_policy::down || sp == shift_policy::up)  {
             rotate_functor_<Ts ...>         functor(periods, sp);
-            std::vector<std::future<void>>  futures(get_thread_level());
+            StlVecType<std::future<void>>  futures(get_thread_level());
             size_type                       thread_count = 0;
             const size_type                 data_size = data_.size();
 
@@ -173,13 +173,13 @@ void DataFrame<I, H>::self_rotate(size_type periods, shift_policy sp)  {
 
 template<typename I, typename H>
 template<typename ... Ts>
-StdDataFrame<I> DataFrame<I, H>::
+DataFrame<I, H> DataFrame<I, H>::
 rotate(size_type periods, shift_policy sp) const  {
 
-    static_assert(std::is_base_of<HeteroVector, DataVec>::value,
+    static_assert(std::is_base_of<HeteroVector<align_value>, DataVec>::value,
                   "Only a StdDataFrame can call rotate()");
 
-    StdDataFrame<IndexType> slug = *this;
+    DataFrame<IndexType, H> slug = *this;
 
     slug.template self_rotate<Ts ...>(periods, sp);
     return (slug);

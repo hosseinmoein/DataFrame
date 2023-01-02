@@ -33,6 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <complex>
 #include <limits>
+#include <memory>
 #include <stdexcept>
 #include <tuple>
 #include <vector>
@@ -453,24 +454,30 @@ struct template_switch<A, C<B>> { using type = C<A>; };
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename U>
+template<class T, typename U, std::size_t A>
 struct type_declare;
 
-template<typename U>
-struct type_declare<HeteroVector, U>  { using type = std::vector<U>; };
+template<typename U, std::size_t A>
+struct type_declare<HeteroVector<A>, U, A>  {
+    using type = std::vector<U, typename allocator_declare<U, A>::type>;
+};
 
-template<typename U>
-struct type_declare<HeteroView, U>  { using type = VectorView<U>; };
+template<typename U, std::size_t A>
+struct type_declare<HeteroView<A>, U, A>  { using type = VectorView<U, A>; };
 
-template<typename U>
-struct type_declare<HeteroConstView, U>  { using type = VectorConstView<U>; };
+template<typename U, std::size_t A>
+struct type_declare<HeteroConstView<A>, U, A>  {
+    using type = VectorConstView<U, A>;
+};
 
-template<typename U>
-struct type_declare<HeteroPtrView, U>  { using type = VectorPtrView<U>; };
+template<typename U, std::size_t A>
+struct type_declare<HeteroPtrView<A>, U, A>  {
+    using type = VectorPtrView<U, A>;
+};
 
-template<typename U>
-struct type_declare<HeteroConstPtrView, U>  {
-    using type = VectorConstPtrView<U>;
+template<typename U, std::size_t A>
+struct type_declare<HeteroConstPtrView<A>, U, A>  {
+    using type = VectorConstPtrView<U, A>;
 };
 
 // ----------------------------------------------------------------------------
@@ -484,25 +491,32 @@ template<typename T> struct is_complex<std::complex<T>>  {
 
 // ----------------------------------------------------------------------------
 
-// H stands for a heterogeneous vector
+// I stands for Index type
+// H stands for Heterogeneous vector
+// A stands for memory Alignment
 //
-template<typename I, typename H>
+template<typename I, class H>
 class DataFrame;
 
 template<typename I>
-using StdDataFrame = DataFrame<I, HeteroVector>;
+using StdDataFrame = DataFrame<I, HeteroVector<0>>;
+
+// Convenient typedefs to facilitate SIMD operations
+//
+template<typename I>
+using StdDataFrame64 = DataFrame<I, HeteroVector<64>>;
 
 template<typename I>
-using DataFrameView = DataFrame<I, HeteroView>;
+using StdDataFrame128 = DataFrame<I, HeteroVector<128>>;
 
 template<typename I>
-using DataFrameConstView = DataFrame<I, HeteroConstView>;
+using StdDataFrame256 = DataFrame<I, HeteroVector<256>>;
 
 template<typename I>
-using DataFramePtrView = DataFrame<I, HeteroPtrView>;
+using StdDataFrame512 = DataFrame<I, HeteroVector<512>>;
 
 template<typename I>
-using DataFrameConstPtrView = DataFrame<I, HeteroConstPtrView>;
+using StdDataFrame1024 = DataFrame<I, HeteroVector<1024>>;
 
 // ----------------------------------------------------------------------------
 

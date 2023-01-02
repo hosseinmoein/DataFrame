@@ -123,7 +123,7 @@ template<typename CF, typename ... Ts>
 void DataFrame<I, H>::sort_common_(DataFrame<I, H> &df, CF &&comp_func)  {
 
     const size_type         idx_s = df.indices_.size();
-    std::vector<size_type>  sorting_idxs(idx_s, 0);
+    StlVecType<size_type>  sorting_idxs(idx_s, 0);
 
     std::iota(sorting_idxs.begin(), sorting_idxs.end(), 0);
     std::sort(sorting_idxs.begin(), sorting_idxs.end(), comp_func);
@@ -143,7 +143,7 @@ void DataFrame<I, H>::sort_common_(DataFrame<I, H> &df, CF &&comp_func)  {
 template<typename I, typename H>
 template<typename ... Ts>
 void
-DataFrame<I, H>::shuffle(const std::vector<const char *> &col_names,
+DataFrame<I, H>::shuffle(const StlVecType<const char *> &col_names,
                          bool also_shuffle_index)  {
 
     if (also_shuffle_index)  {
@@ -394,13 +394,13 @@ fill_missing_linter_(ColumnVecType<T> &vec,
 template<typename I, typename H>
 template<typename T>
 void DataFrame<I, H>::
-fill_missing(const std::vector<const char *> &col_names,
+fill_missing(const StlVecType<const char *> &col_names,
              fill_policy fp,
-             const std::vector<T> &values,
+             const StlVecType<T> &values,
              int limit)  {
 
     const size_type                 count = col_names.size();
-    std::vector<std::future<void>>  futures(get_thread_level());
+    StlVecType<std::future<void>>  futures(get_thread_level());
     size_type                       thread_count = 0;
 
     for (size_type i = 0; i < count; ++i)  {
@@ -581,8 +581,8 @@ template<typename I, typename H>
 template<typename T>
 typename DataFrame<I, H>::size_type DataFrame<I, H>::
 replace(const char *col_name,
-        const std::vector<T> &old_values,
-        const std::vector<T> &new_values,
+        const StlVecType<T> &old_values,
+        const StlVecType<T> &new_values,
         int limit)  {
 
     ColumnVecType<T>    &vec = get_column<T>(col_name);
@@ -598,8 +598,8 @@ replace(const char *col_name,
 
 template<typename I, typename H>
 typename DataFrame<I, H>::size_type DataFrame<I, H>::
-replace_index(const std::vector<IndexType> &old_values,
-              const std::vector<IndexType> &new_values,
+replace_index(const StlVecType<IndexType> &old_values,
+              const StlVecType<IndexType> &new_values,
               int limit)  {
 
     size_type   count = 0;
@@ -632,16 +632,16 @@ template<typename I, typename H>
 template<typename T>
 std::future<typename DataFrame<I, H>::size_type> DataFrame<I, H>::
 replace_async(const char *col_name,
-              const std::vector<T> &old_values,
-              const std::vector<T> &new_values,
+              const StlVecType<T> &old_values,
+              const StlVecType<T> &new_values,
               int limit)  {
 
     return (std::async(std::launch::async,
                        &DataFrame::replace<T>,
                            this,
                            col_name,
-                           std::forward<const std::vector<T>>(old_values),
-                           std::forward<const std::vector<T>>(new_values),
+                           std::forward<const StlVecType<T>>(old_values),
+                           std::forward<const StlVecType<T>>(new_values),
                            limit));
 }
 
@@ -665,7 +665,7 @@ template<typename I, typename H>
 template<typename ...Ts>
 void DataFrame<I, H>::make_consistent ()  {
 
-    static_assert(std::is_base_of<HeteroVector, H>::value,
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
                   "Only a StdDataFrame can call make_consistent()");
 
     const size_type             idx_s = indices_.size();
@@ -1146,7 +1146,7 @@ groupby1(const char *col_name, I_V &&idx_visitor, Ts&& ... args) const  {
     else
         gb_vec = (const ColumnVecType<T> *) &(get_column<T>(col_name));
 
-    std::vector<std::size_t>    sort_v (gb_vec->size(), 0);
+    StlVecType<std::size_t>    sort_v (gb_vec->size(), 0);
 
     std::iota(sort_v.begin(), sort_v.end(), 0);
     std::sort(sort_v.begin(), sort_v.end(),
@@ -1203,7 +1203,7 @@ groupby2(const char *col_name1,
         gb_vec2 = (const ColumnVecType<T2> *) &(get_column<T2>(col_name2));
     }
 
-    std::vector<std::size_t>    sort_v (std::min(gb_vec1->size(),
+    StlVecType<std::size_t>    sort_v (std::min(gb_vec1->size(),
                                                  gb_vec2->size()),
                                         0);
 
@@ -1280,7 +1280,7 @@ groupby3(const char *col_name1,
         gb_vec3 = (const ColumnVecType<T3> *) &(get_column<T3>(col_name3));
     }
 
-    std::vector<std::size_t>    sort_v(
+    StlVecType<std::size_t>    sort_v(
         std::min({ gb_vec1->size(), gb_vec2->size(), gb_vec3->size() }), 0);
 
     std::iota(sort_v.begin(), sort_v.end(), 0);
@@ -1388,7 +1388,7 @@ groupby3_async(const char *col_name1,
 
 template<typename I, typename H>
 template<typename T>
-StdDataFrame<T>
+DataFrame<T, H>
 DataFrame<I, H>::value_counts (const char *col_name) const  {
 
     const ColumnVecType<T>  &vec = get_column<T>(col_name);
@@ -1422,8 +1422,8 @@ DataFrame<I, H>::value_counts (const char *col_name) const  {
             insert_result.first->second += 1;
     }
 
-    std::vector<T>          res_indices;
-    std::vector<size_type>  counts;
+    StlVecType<T>          res_indices;
+    StlVecType<size_type>  counts;
 
     counts.reserve(values_map.size());
     res_indices.reserve(values_map.size());
@@ -1437,10 +1437,10 @@ DataFrame<I, H>::value_counts (const char *col_name) const  {
         counts.emplace_back(nan_count);
     }
 
-    StdDataFrame<T> result_df;
+    DataFrame<T, HeteroVector<align_value>> result_df;
 
     result_df.load_index(std::move(res_indices));
-    result_df.load_column("counts", std::move(counts));
+    result_df.template load_column<size_type>("counts", std::move(counts));
 
     return(result_df);
 }
@@ -1449,7 +1449,8 @@ DataFrame<I, H>::value_counts (const char *col_name) const  {
 
 template<typename I, typename H>
 template<typename T>
-StdDataFrame<T> DataFrame<I, H>::value_counts(size_type index) const  {
+DataFrame<T, H>
+DataFrame<I, H>::value_counts(size_type index) const  {
 
     return (value_counts<T>(column_list_[index].first.c_str()));
 }
@@ -1516,13 +1517,13 @@ transpose(IndexVecType &&indices, const V &new_col_names) const  {
                                 "Length of new_col_names is not equal "
                                 "to number of rows");
 
-    std::vector<const std::vector<T> *> current_cols;
+    StlVecType<const ColumnVecType<T> *> current_cols;
 
     current_cols.reserve(num_cols);
     for (const auto &citer : column_list_)
         current_cols.push_back(&(get_column<T>(citer.first.c_str())));
 
-    std::vector<std::vector<T>> trans_cols(indices_.size());
+    StlVecType<StlVecType<T>> trans_cols(indices_.size());
     DataFrame                   df;
 
     for (size_type i = 0; i < indices_.size(); ++i)  {
@@ -1537,7 +1538,8 @@ transpose(IndexVecType &&indices, const V &new_col_names) const  {
 
     df.load_index(std::move(indices));
     for (size_type i = 0; i < new_col_names.size(); ++i)
-        df.load_column(&(new_col_names[i][0]), std::move(trans_cols[i]));
+        df.template load_column<T>(&(new_col_names[i][0]),
+                                   std::move(trans_cols[i]));
 
     return (df);
 }

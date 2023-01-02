@@ -35,9 +35,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace hmdf
 {
-
+template<std::size_t A>
 template<typename T>
-HeteroConstPtrView::HeteroConstPtrView(const T *begin_ptr, const T *end_ptr)
+HeteroConstPtrView<A>::HeteroConstPtrView(const T *begin_ptr, const T *end_ptr)
     : clear_function_([](HeteroConstPtrView &hv) { views_<T>.erase(&hv); }),
       copy_function_([](const HeteroConstPtrView &from,
                         HeteroConstPtrView &to)  {
@@ -45,13 +45,14 @@ HeteroConstPtrView::HeteroConstPtrView(const T *begin_ptr, const T *end_ptr)
       move_function_([](HeteroConstPtrView &from, HeteroConstPtrView &to)  {
               views_<T>[&to] = std::move(views_<T>[&from]); })  {
 
-    views_<T>.emplace(this, VectorConstPtrView<T>(begin_ptr, end_ptr));
+    views_<T>.emplace(this, VectorConstPtrView<T, A>(begin_ptr, end_ptr));
 }
 
 // ----------------------------------------------------------------------------
 
+template<std::size_t A>
 template<typename T>
-void HeteroConstPtrView::set_begin_end_special(const T *bp, const T *ep_1)  {
+void HeteroConstPtrView<A>::set_begin_end_special(const T *bp, const T *ep_1)  {
 
     clear_function_ = [](HeteroConstPtrView &hv) { views_<T>.erase(&hv); };
     copy_function_  = [](const HeteroConstPtrView &from,
@@ -62,7 +63,7 @@ void HeteroConstPtrView::set_begin_end_special(const T *bp, const T *ep_1)  {
                          views_<T>[&to] = std::move(views_<T>[&from]);
                      };
 
-    VectorConstPtrView<T>   vv;
+    VectorConstPtrView<T, A>    vv;
 
     vv.set_begin_end_special(bp, ep_1);
     views_<T>.emplace(this, vv);
@@ -70,8 +71,9 @@ void HeteroConstPtrView::set_begin_end_special(const T *bp, const T *ep_1)  {
 
 // ----------------------------------------------------------------------------
 
+template<std::size_t A>
 template<typename T>
-HeteroConstPtrView::HeteroConstPtrView(VectorConstPtrView<T> &vec)
+HeteroConstPtrView<A>::HeteroConstPtrView(VectorConstPtrView<T, A> &vec)
     : clear_function_([](HeteroConstPtrView &hv) { views_<T>.erase(&hv); }),
       copy_function_([](const HeteroConstPtrView &from,
                         HeteroConstPtrView &to)  {
@@ -84,8 +86,9 @@ HeteroConstPtrView::HeteroConstPtrView(VectorConstPtrView<T> &vec)
 
 // ----------------------------------------------------------------------------
 
+template<std::size_t A>
 template<typename T>
-HeteroConstPtrView::HeteroConstPtrView(VectorConstPtrView<T> &&vec)
+HeteroConstPtrView<A>::HeteroConstPtrView(VectorConstPtrView<T, A> &&vec)
     : clear_function_([](HeteroConstPtrView &hv) { views_<T>.erase(&hv); }),
       copy_function_([](const HeteroConstPtrView &from,
                         HeteroConstPtrView &to)  {
@@ -98,8 +101,9 @@ HeteroConstPtrView::HeteroConstPtrView(VectorConstPtrView<T> &&vec)
 
 // ----------------------------------------------------------------------------
 
+template<std::size_t A>
 template<typename T>
-VectorConstPtrView<T> &HeteroConstPtrView::get_vector()  {
+VectorConstPtrView<T, A> &HeteroConstPtrView<A>::get_vector()  {
 
     auto    iter = views_<T>.find (this);
 
@@ -112,8 +116,9 @@ VectorConstPtrView<T> &HeteroConstPtrView::get_vector()  {
 
 // ----------------------------------------------------------------------------
 
+template<std::size_t A>
 template<typename T>
-const VectorConstPtrView<T> &HeteroConstPtrView::get_vector() const  {
+const VectorConstPtrView<T, A> &HeteroConstPtrView<A>::get_vector() const  {
 
     const auto  iter = views_<T>.find (this);
 
@@ -126,8 +131,9 @@ const VectorConstPtrView<T> &HeteroConstPtrView::get_vector() const  {
 
 // ----------------------------------------------------------------------------
 
+template<std::size_t A>
 template<typename T, typename U>
-void HeteroConstPtrView::visit_impl_help_ (T &visitor) const  {
+void HeteroConstPtrView<A>::visit_impl_help_ (T &visitor) const  {
 
     const auto  citer = views_<U>.find (this);
 
@@ -146,8 +152,9 @@ void HeteroConstPtrView::visit_impl_help_ (T &visitor) const  {
 
 // ----------------------------------------------------------------------------
 
+template<std::size_t A>
 template<typename T, typename U>
-void HeteroConstPtrView::change_impl_help_ (T &functor) const  {
+void HeteroConstPtrView<A>::change_impl_help_ (T &functor) const  {
 
     const auto  citer = views_<U>.find (this);
 
@@ -157,8 +164,9 @@ void HeteroConstPtrView::change_impl_help_ (T &functor) const  {
 
 // ----------------------------------------------------------------------------
 
+template<std::size_t A>
 template<class T, template<class...> class TLIST, class... TYPES>
-void HeteroConstPtrView::visit_impl_ (T &&visitor, TLIST<TYPES...>) const  {
+void HeteroConstPtrView<A>::visit_impl_ (T &&visitor, TLIST<TYPES...>) const  {
 
     // (..., visit_impl_help_<std::decay_t<T>, TYPES>(visitor)); // C++17
     using expander = int[];
@@ -167,8 +175,9 @@ void HeteroConstPtrView::visit_impl_ (T &&visitor, TLIST<TYPES...>) const  {
 
 // ----------------------------------------------------------------------------
 
+template<std::size_t A>
 template<class T, template<class...> class TLIST, class... TYPES>
-void HeteroConstPtrView::change_impl_ (T &&functor, TLIST<TYPES...>) const  {
+void HeteroConstPtrView<A>::change_impl_ (T &&functor, TLIST<TYPES...>) const  {
 
     using expander = int[];
     (void) expander { 0, (change_impl_help_<T, TYPES>(functor), 0) ... };
@@ -176,31 +185,95 @@ void HeteroConstPtrView::change_impl_ (T &&functor, TLIST<TYPES...>) const  {
 
 // ----------------------------------------------------------------------------
 
+template<std::size_t A>
 template<typename T>
-bool HeteroConstPtrView::empty() const noexcept  {
+bool HeteroConstPtrView<A>::empty() const noexcept  {
 
     return (get_vector<T>().empty ());
 }
 
 // ----------------------------------------------------------------------------
 
+template<std::size_t A>
 template<typename T>
-const T &HeteroConstPtrView::at(size_type idx) const  {
+const T &HeteroConstPtrView<A>::at(size_type idx) const  {
 
     return (get_vector<T>()[idx]);
 }
 
 // ----------------------------------------------------------------------------
 
+template<std::size_t A>
 template<typename T>
-const T &HeteroConstPtrView::back() const { return (get_vector<T>().back ()); }
+const T &HeteroConstPtrView<A>::
+back() const { return (get_vector<T>().back ()); }
 
 // ----------------------------------------------------------------------------
 
+template<std::size_t A>
 template<typename T>
-const T &HeteroConstPtrView::front() const  {
+const T &HeteroConstPtrView<A>::front() const  {
 
     return (get_vector<T>().front ());
+}
+
+// ----------------------------------------------------------------------------
+
+template<std::size_t A>
+HeteroConstPtrView<A>::HeteroConstPtrView() = default;
+
+template<std::size_t A>
+HeteroConstPtrView<A>::HeteroConstPtrView (const HeteroConstPtrView &that)  {
+
+    *this = that;
+}
+template<std::size_t A>
+HeteroConstPtrView<A>::HeteroConstPtrView (HeteroConstPtrView &&that)  {
+    *this = that;
+}
+
+// ----------------------------------------------------------------------------
+
+template<std::size_t A>
+HeteroConstPtrView<A> &HeteroConstPtrView<A>::
+operator= (const HeteroConstPtrView &rhs)  {
+
+    if (&rhs != this)  {
+        clear();
+        clear_function_ = rhs.clear_function_;
+        copy_function_ = rhs.copy_function_;
+        move_function_ = rhs.move_function_;
+
+        copy_function_(rhs, *this);
+    }
+
+    return (*this);
+}
+
+// ----------------------------------------------------------------------------
+
+template<std::size_t A>
+HeteroConstPtrView<A> &HeteroConstPtrView<A>::
+operator= (HeteroConstPtrView &&rhs)  {
+
+    if (&rhs != this)  {
+        clear();
+        clear_function_ = std::move(rhs.clear_function_);
+        copy_function_ = std::move(rhs.copy_function_);
+        move_function_ = std::move(rhs.move_function_);
+
+        move_function_(rhs, *this);
+    }
+
+    return (*this);
+}
+
+// ----------------------------------------------------------------------------
+
+template<std::size_t A>
+void HeteroConstPtrView<A>::clear()  {
+
+    clear_function_(*this);
 }
 
 } // namespace hmdf

@@ -33,6 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/DataFrameExports.h>
 
 #include <functional>
+#include <new>
 #include <type_traits>
 #include <unordered_map>
 
@@ -41,7 +42,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace hmdf
 {
 
+template<std::size_t A = 0>
 struct HeteroView  {
+
+    static constexpr std::align_val_t   align_value { A };
 
     using size_type = size_t;
 
@@ -70,12 +74,12 @@ struct HeteroView  {
     HMDF_API HeteroView &operator= (HeteroView &&rhs);
 
     template<typename T>
-    VectorView<T> &get_vector();
+    VectorView<T, A> &get_vector();
     template<typename T>
-    const VectorView<T> &get_vector() const;
+    const VectorView<T, A> &get_vector() const;
 
     template<typename T>
-    typename VectorView<T>::
+    typename VectorView<T, A>::
     size_type size () const { return (get_vector<T>().size()); }
 
     HMDF_API void clear();
@@ -99,14 +103,14 @@ struct HeteroView  {
     const T &front() const;
 
     template<typename T>
-    using iterator = typename VectorView<T>::iterator;
+    using iterator = typename VectorView<T, A>::iterator;
     template<typename T>
-    using const_iterator = typename VectorView<T>::const_iterator;
+    using const_iterator = typename VectorView<T, A>::const_iterator;
     template<typename T>
-    using reverse_iterator = typename VectorView<T>::reverse_iterator;
+    using reverse_iterator = typename VectorView<T, A>::reverse_iterator;
     template<typename T>
     using const_reverse_iterator =
-        typename VectorView<T>::const_reverse_iterator;
+        typename VectorView<T, A>::const_reverse_iterator;
 
     template<typename T>
     iterator<T> begin();
@@ -164,7 +168,7 @@ private:
 
     template<typename T>
     inline static
-    std::unordered_map<const HeteroView *, VectorView<T>>   views_ {  };
+    std::unordered_map<const HeteroView *, VectorView<T, A>>   views_ {  };
 
     std::function<void(HeteroView &)>   clear_function_ {
         [](HeteroView &) { return; }

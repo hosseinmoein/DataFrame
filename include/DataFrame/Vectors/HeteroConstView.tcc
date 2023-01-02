@@ -38,21 +38,23 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace hmdf
 {
 
+template<std::size_t A>
 template<typename T>
-HeteroConstView::HeteroConstView(const T *begin_ptr, const T *end_ptr)
+HeteroConstView<A>::HeteroConstView(const T *begin_ptr, const T *end_ptr)
     : clear_function_([](HeteroConstView &hv) { views_<T>.erase(&hv); }),
       copy_function_([](const HeteroConstView &from, HeteroConstView &to)  {
               views_<T>[&to] = views_<T>[&from]; }),
       move_function_([](HeteroConstView &from, HeteroConstView &to)  {
               views_<T>[&to] = std::move(views_<T>[&from]); })  {
 
-    views_<T>.emplace(this, VectorConstView<T>(begin_ptr, end_ptr));
+    views_<T>.emplace(this, VectorConstView<T, A>(begin_ptr, end_ptr));
 }
 
 // ----------------------------------------------------------------------------
 
+template<std::size_t A>
 template<typename T>
-void HeteroConstView::set_begin_end_special(const T *bp, const T *ep_1)  {
+void HeteroConstView<A>::set_begin_end_special(const T *bp, const T *ep_1)  {
 
     clear_function_ = [](HeteroConstView &hv) { views_<T>.erase(&hv); };
     copy_function_  = [](const HeteroConstView &from, HeteroConstView &to)  {
@@ -62,7 +64,7 @@ void HeteroConstView::set_begin_end_special(const T *bp, const T *ep_1)  {
                          views_<T>[&to] = std::move(views_<T>[&from]);
                      };
 
-    VectorConstView<T>  vcv;
+    VectorConstView<T, A>   vcv;
 
     vcv.set_begin_end_special(bp, ep_1);
     views_<T>.emplace(this, vcv);
@@ -70,8 +72,9 @@ void HeteroConstView::set_begin_end_special(const T *bp, const T *ep_1)  {
 
 // ----------------------------------------------------------------------------
 
+template<std::size_t A>
 template<typename T>
-VectorConstView<T> &HeteroConstView::get_vector()  {
+VectorConstView<T, A> &HeteroConstView<A>::get_vector()  {
 
     auto    iter = views_<T>.find (this);
 
@@ -84,8 +87,9 @@ VectorConstView<T> &HeteroConstView::get_vector()  {
 
 // ----------------------------------------------------------------------------
 
+template<std::size_t A>
 template<typename T>
-const VectorConstView<T> &HeteroConstView::get_vector() const  {
+const VectorConstView<T, A> &HeteroConstView<A>::get_vector() const  {
 
     const auto  citer = views_<T>.find (this);
 
@@ -98,8 +102,9 @@ const VectorConstView<T> &HeteroConstView::get_vector() const  {
 
 // ----------------------------------------------------------------------------
 
+template<std::size_t A>
 template<typename T, typename U>
-void HeteroConstView::visit_impl_help_ (T &visitor) const  {
+void HeteroConstView<A>::visit_impl_help_ (T &visitor) const  {
 
     const auto  citer = views_<U>.find (this);
 
@@ -110,8 +115,9 @@ void HeteroConstView::visit_impl_help_ (T &visitor) const  {
 
 // ----------------------------------------------------------------------------
 
+template<std::size_t A>
 template<typename T, typename U>
-void HeteroConstView::change_impl_help_ (T &functor) const  {
+void HeteroConstView<A>::change_impl_help_ (T &functor) const  {
 
     const auto  citer = views_<U>.find (this);
 
@@ -121,8 +127,9 @@ void HeteroConstView::change_impl_help_ (T &functor) const  {
 
 // ----------------------------------------------------------------------------
 
+template<std::size_t A>
 template<class T, template<class...> class TLIST, class... TYPES>
-void HeteroConstView::visit_impl_ (T &&visitor, TLIST<TYPES...>) const  {
+void HeteroConstView<A>::visit_impl_ (T &&visitor, TLIST<TYPES...>) const  {
 
     // (..., visit_impl_help_<std::decay_t<T>, TYPES>(visitor)); // C++17
     using expander = int[];
@@ -131,8 +138,9 @@ void HeteroConstView::visit_impl_ (T &&visitor, TLIST<TYPES...>) const  {
 
 // ----------------------------------------------------------------------------
 
+template<std::size_t A>
 template<class T, template<class...> class TLIST, class... TYPES>
-void HeteroConstView::change_impl_ (T &&functor, TLIST<TYPES...>) const  {
+void HeteroConstView<A>::change_impl_ (T &&functor, TLIST<TYPES...>) const  {
 
     using expander = int[];
     (void) expander { 0, (change_impl_help_<T, TYPES>(functor), 0) ... };
@@ -140,54 +148,117 @@ void HeteroConstView::change_impl_ (T &&functor, TLIST<TYPES...>) const  {
 
 // ----------------------------------------------------------------------------
 
+template<std::size_t A>
 template<typename T>
-bool HeteroConstView::empty() const noexcept  {
+bool HeteroConstView<A>::empty() const noexcept  {
 
     return (get_vector<T>().empty ());
 }
 
 // ----------------------------------------------------------------------------
 
+template<std::size_t A>
 template<typename T>
-const T &HeteroConstView::at(size_type idx) const  {
+const T &HeteroConstView<A>::at(size_type idx) const  {
 
     return (get_vector<T>()[idx]);
 }
 
 // ----------------------------------------------------------------------------
 
+template<std::size_t A>
 template<typename T>
-const T &HeteroConstView::back() const  { return (get_vector<T>().back ()); }
+const T &HeteroConstView<A>::back() const  { return (get_vector<T>().back ()); }
 
 // ----------------------------------------------------------------------------
 
+template<std::size_t A>
 template<typename T>
-const T &HeteroConstView::front() const  { return (get_vector<T>().front ()); }
+const T &HeteroConstView<A>::
+front() const  { return (get_vector<T>().front ()); }
 
 // ----------------------------------------------------------------------------
 
+template<std::size_t A>
 template<typename T>
-HeteroConstView::const_iterator<T>
-HeteroConstView::begin() const  { return (get_vector<T>().begin ()); }
+typename HeteroConstView<A>::template const_iterator<T>
+HeteroConstView<A>::begin() const  { return (get_vector<T>().begin ()); }
 
 // ----------------------------------------------------------------------------
 
+template<std::size_t A>
 template<typename T>
-HeteroConstView::const_iterator<T>
-HeteroConstView::end() const  { return (get_vector<T>().end ()); }
+typename HeteroConstView<A>::template const_iterator<T>
+HeteroConstView<A>::end() const  { return (get_vector<T>().end ()); }
 
 
 // ----------------------------------------------------------------------------
 
+template<std::size_t A>
 template<typename T>
-HeteroConstView::const_reverse_iterator<T>
-HeteroConstView::rbegin() const  { return (get_vector<T>().rbegin ()); }
+typename HeteroConstView<A>::template const_reverse_iterator<T>
+HeteroConstView<A>::rbegin() const  { return (get_vector<T>().rbegin ()); }
 
 // ----------------------------------------------------------------------------
 
+template<std::size_t A>
 template<typename T>
-HeteroConstView::const_reverse_iterator<T>
-HeteroConstView::rend() const  { return (get_vector<T>().rend ()); }
+typename HeteroConstView<A>::template const_reverse_iterator<T>
+HeteroConstView<A>::rend() const  { return (get_vector<T>().rend ()); }
+
+// ----------------------------------------------------------------------------
+
+template<std::size_t A>
+HeteroConstView<A>::HeteroConstView() = default;
+
+template<std::size_t A>
+HeteroConstView<A>::
+HeteroConstView(const HeteroConstView &that) { *this = that; }
+template<std::size_t A>
+HeteroConstView<A>::HeteroConstView(HeteroConstView &&that)  { *this = that; }
+
+// ----------------------------------------------------------------------------
+
+template<std::size_t A>
+HeteroConstView<A> &HeteroConstView<A>::
+operator= (const HeteroConstView &rhs)  {
+
+    if (&rhs != this)  {
+        clear();
+        clear_function_ = rhs.clear_function_;
+        copy_function_ = rhs.copy_function_;
+        move_function_ = rhs.move_function_;
+
+        copy_function_(rhs, *this);
+    }
+
+    return (*this);
+}
+
+// ----------------------------------------------------------------------------
+
+template<std::size_t A>
+HeteroConstView<A> &HeteroConstView<A>::operator= (HeteroConstView &&rhs)  {
+
+    if (&rhs != this)  {
+        clear();
+        clear_function_ = std::move(rhs.clear_function_);
+        copy_function_ = std::move(rhs.copy_function_);
+        move_function_ = std::move(rhs.move_function_);
+
+        move_function_(rhs, *this);
+    }
+
+    return (*this);
+}
+
+// ----------------------------------------------------------------------------
+
+template<std::size_t A>
+void HeteroConstView<A>::clear()  {
+
+    clear_function_(*this);
+}
 
 } // namespace hmdf
 

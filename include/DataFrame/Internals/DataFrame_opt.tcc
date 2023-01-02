@@ -36,7 +36,7 @@ namespace hmdf
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H>
 template<typename ... Ts>
 bool DataFrame<I, H>::is_equal (const DataFrame &rhs) const  {
 
@@ -63,7 +63,7 @@ bool DataFrame<I, H>::is_equal (const DataFrame &rhs) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H>
 template<typename ... Ts>
 DataFrame<I, H> &DataFrame<I, H>::
 modify_by_idx (DataFrame &rhs, sort_state already_sorted)  {

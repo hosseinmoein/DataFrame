@@ -12,6 +12,21 @@ hmdf_target_data_files(dataframe_tester
 )
 add_test(NAME dataframe_tester COMMAND dataframe_tester)
 
+add_executable(aligned_dataframe_tester aligned_dataframe_tester.cc)
+target_link_libraries(aligned_dataframe_tester PRIVATE DataFrame Threads::Threads)
+target_compile_options(aligned_dataframe_tester
+    PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/bigobj>
+)
+hmdf_target_data_files(aligned_dataframe_tester
+    DATA_FILES
+        ${PROJECT_SOURCE_DIR}/data/sample_data_dt_index.csv
+        ${PROJECT_SOURCE_DIR}/data/sample_data_string_index.csv
+        ${PROJECT_SOURCE_DIR}/data/sample_data.csv
+        ${PROJECT_SOURCE_DIR}/data/sample_data.json
+)
+add_test(NAME aligned_dataframe_tester COMMAND aligned_dataframe_tester)
+
+
 add_executable(dataframe_tester_2 dataframe_tester_2.cc)
 target_link_libraries(dataframe_tester_2 PRIVATE DataFrame)
 target_compile_options(dataframe_tester_2
@@ -39,6 +54,34 @@ if(MSVC)
     set_tests_properties(dataframe_tester_2 PROPERTIES DISABLED TRUE)
 endif()
 
+add_executable(aligned_dataframe_tester_2 aligned_dataframe_tester_2.cc)
+target_link_libraries(aligned_dataframe_tester_2 PRIVATE DataFrame)
+target_compile_options(aligned_dataframe_tester_2
+    PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/bigobj>
+)
+hmdf_target_data_files(aligned_dataframe_tester_2
+    DATA_FILES
+        ${PROJECT_SOURCE_DIR}/data/csv2_format_data_2.csv
+        ${PROJECT_SOURCE_DIR}/data/csv2_format_data_no_index.csv
+        ${PROJECT_SOURCE_DIR}/data/csv2_format_data.csv
+        ${PROJECT_SOURCE_DIR}/data/DT_IBM.csv
+        ${PROJECT_SOURCE_DIR}/data/FORD.csv
+        ${PROJECT_SOURCE_DIR}/data/IBM.csv
+        ${PROJECT_SOURCE_DIR}/data/sample_data_2.csv
+        ${PROJECT_SOURCE_DIR}/data/sample_data_2.json
+        ${PROJECT_SOURCE_DIR}/data/sample_data_no_index.csv
+        ${PROJECT_SOURCE_DIR}/data/sample_data_no_index.json
+        ${PROJECT_SOURCE_DIR}/data/sample_data.csv
+        ${PROJECT_SOURCE_DIR}/data/sample_data.json
+        ${PROJECT_SOURCE_DIR}/data/SHORT_IBM.csv
+)
+add_test(NAME aligned_dataframe_tester_2 COMMAND aligned_dataframe_tester_2)
+if(MSVC)
+    # For some unknown reason to me, this test sigfaults in AppVeyor
+    set_tests_properties(aligned_dataframe_tester_2 PROPERTIES DISABLED TRUE)
+endif()
+
+
 add_executable(dataframe_tester_3 dataframe_tester_3.cc)
 target_link_libraries(dataframe_tester_3 PRIVATE DataFrame)
 add_test(NAME dataframe_tester_3 COMMAND dataframe_tester_3)
@@ -54,6 +97,10 @@ if(MSVC)
     # For some unknown reason to me, this test sigfaults in AppVeyor
     set_tests_properties(vectors_tester PROPERTIES DISABLED TRUE)
 endif()
+
+add_executable(allocator_tester allocator_tester.cc)
+target_link_libraries(allocator_tester PRIVATE DataFrame)
+add_test(NAME allocator_tester COMMAND allocator_tester)
 
 add_executable(vector_ptr_view_tester vector_ptr_view_tester.cc)
 target_link_libraries(vector_ptr_view_tester PRIVATE DataFrame)

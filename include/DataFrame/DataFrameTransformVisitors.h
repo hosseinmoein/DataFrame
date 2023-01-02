@@ -116,7 +116,7 @@ private:
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long>
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  HampelFilterVisitor {
 
 public:
@@ -125,16 +125,16 @@ public:
 
 private:
 
-    template<typename K, typename H, typename A>
+    template<typename K, typename H, typename AR>
     inline void
-    hampel_(K idx_begin, K idx_end, H column_begin, H column_end, A &&aggr)  {
+    hampel_(K idx_begin, K idx_end, H column_begin, H column_end, AR &&aggr)  {
 
         aggr.pre();
         aggr(idx_begin, idx_end, column_begin, column_end);
         aggr.post();
 
         GET_COL_SIZE
-        std::vector<T>  diff;
+        std::vector<T, typename allocator_declare<T, A>::type>  diff;
 
         diff.reserve(col_s);
         std::transform(aggr.get_result().begin(), aggr.get_result().end(),
@@ -169,7 +169,7 @@ public:
     inline void
     operator() (K idx_begin, K idx_end, H column_begin, H column_end)  {
 
-        SimpleRollAdopter<MeanVisitor<T, I>, T, I>    med_v(
+        SimpleRollAdopter<MeanVisitor<T, I>, T, I, A>    med_v(
             MeanVisitor<T, I>(), window_size_);
 
         if (type_ == hampel_type::median)
@@ -201,8 +201,8 @@ private:
     result_type                 count_ { 0 };
 };
 
-template<typename T, typename I = unsigned long>
-using hamf_v = HampelFilterVisitor<T, I>;
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using hamf_v = HampelFilterVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 

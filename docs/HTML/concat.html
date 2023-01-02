@@ -67,7 +67,7 @@ enum class concat_policy : unsigned char  {
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>
 template&lt;typename RHS_T, typename ... Ts&gt;
-StdDataFrame&lt;I&gt;
+DataFrame&lt;I, H&gt;
 concat(const RHS_T &amp;rhs,
        concat_policy cp = concat_policy::all_columns) const;
         </B></PRE></font>
@@ -88,7 +88,7 @@ concat(const RHS_T &amp;rhs,
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>
 template&lt;typename RHS_T, typename ... Ts&gt;
-DataFramePtrView&lt;I&gt;
+PtrView
 concat_view(
     RHS_T &amp;rhs,
     concat_policy cp = concat_policy::common_columns);
@@ -111,7 +111,7 @@ concat_view(
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>
 template&lt;typename RHS_T, typename ... Ts&gt;
-DataFramePtrView&lt;I&gt;
+ConstPtrView
 concat_view(
     RHS_T &amp;rhs,
     concat_policy cp = concat_policy::common_columns) const;

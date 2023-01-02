@@ -40,7 +40,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace hmdf
 {
 
-template<typename I, typename  H>
+template<typename I, typename H>
 std::pair<typename DataFrame<I, H>::size_type,
           typename DataFrame<I, H>::size_type>
 DataFrame<I, H>::shape() const  {
@@ -50,7 +50,7 @@ DataFrame<I, H>::shape() const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H>
 template<typename T>
 MemUsage DataFrame<I, H>::get_memory_usage(const char *col_name) const  {
 
@@ -68,7 +68,7 @@ MemUsage DataFrame<I, H>::get_memory_usage(const char *col_name) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H>
 typename DataFrame<I, H>::size_type
 DataFrame<I, H>::col_name_to_idx (const char *col_name) const  {
 
@@ -79,14 +79,14 @@ DataFrame<I, H>::col_name_to_idx (const char *col_name) const  {
     char buffer [512];
 
     snprintf (buffer, sizeof(buffer) - 1,
-             "DataFrame::col_name_to_idx(): ERROR: Cannot find column '%s'",
-             col_name);
+              "DataFrame::col_name_to_idx(): ERROR: Cannot find column '%s'",
+              col_name);
     throw ColNotFound (buffer);
 }
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H>
 const char *
 DataFrame<I, H>::col_idx_to_name (size_type col_idx) const  {
 
@@ -103,13 +103,13 @@ DataFrame<I, H>::col_idx_to_name (size_type col_idx) const  {
 #else
               "Cannot find column index %lu",
 #endif // _MSC_VER
-             col_idx);
+              col_idx);
     throw ColNotFound (buffer);
 }
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H>
 template<typename T>
 typename DataFrame<I, H>::template ColumnVecType<T> &
 DataFrame<I, H>::get_column (const char *name)  {
@@ -121,7 +121,7 @@ DataFrame<I, H>::get_column (const char *name)  {
 
         snprintf (buffer, sizeof(buffer) - 1,
                   "DataFrame::get_column(): ERROR: Cannot find column '%s'",
-                 name);
+                  name);
         throw ColNotFound (buffer);
     }
 
@@ -134,7 +134,7 @@ DataFrame<I, H>::get_column (const char *name)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H>
 template<typename T>
 typename DataFrame<I, H>::template ColumnVecType<typename T::type> &
 DataFrame<I, H>::get_column ()  {
@@ -144,7 +144,7 @@ DataFrame<I, H>::get_column ()  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H>
 template<typename T>
 typename DataFrame<I, H>::template ColumnVecType<T> &
 DataFrame<I, H>::get_column(size_type index)  {
@@ -154,7 +154,7 @@ DataFrame<I, H>::get_column(size_type index)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H>
 bool DataFrame<I, H>::has_column (const char *name) const  {
 
     auto    iter = column_tb_.find (name);
@@ -164,13 +164,13 @@ bool DataFrame<I, H>::has_column (const char *name) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H>
 bool DataFrame<I, H>::
 has_column(size_type index) const { return (index < column_list_.size()); }
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H>
 template<typename T>
 const typename DataFrame<I, H>::template ColumnVecType<T> &
 DataFrame<I, H>::get_column (const char *name) const  {
@@ -180,7 +180,7 @@ DataFrame<I, H>::get_column (const char *name) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H>
 template<typename T>
 const typename DataFrame<I, H>::template ColumnVecType<typename T::type> &
 DataFrame<I, H>::get_column () const  {
@@ -191,7 +191,7 @@ DataFrame<I, H>::get_column () const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H>
 template<typename T>
 const typename DataFrame<I, H>::template ColumnVecType<T> &
 DataFrame<I, H>::get_column(size_type index) const  {
@@ -201,22 +201,22 @@ DataFrame<I, H>::get_column(size_type index) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H>
 const typename DataFrame<I, H>::IndexVecType &
 DataFrame<I, H>::get_index() const  { return (indices_); }
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H>
 typename DataFrame<I, H>::IndexVecType &
 DataFrame<I, H>::get_index()  { return (indices_); }
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H>
 template<typename ... Ts>
-HeteroVector DataFrame<I, H>::
-get_row(size_type row_num, const std::vector<const char *> &col_names) const {
+HeteroVector<std::size_t(H::align_value)> DataFrame<I, H>::
+get_row(size_type row_num, const StlVecType<const char *> &col_names) const {
 
     if (row_num >= indices_.size())  {
         char buffer [512];
@@ -228,13 +228,13 @@ get_row(size_type row_num, const std::vector<const char *> &col_names) const {
         snprintf(buffer, sizeof(buffer) - 1,
                  "DataFrame::get_row(): ERROR: There aren't %lu rows",
 #endif // _MSC_VER
-                row_num);
+                 row_num);
         throw BadRange(buffer);
     }
 
-    HeteroVector ret_vec;
+    HeteroVector<align_value>   ret_vec;
 
-    ret_vec.reserve<IndexType>(1);
+    ret_vec.template reserve<IndexType>(1);
     ret_vec.push_back(indices_[row_num]);
 
     get_row_functor_<Ts ...>    functor(ret_vec, row_num);
@@ -247,8 +247,8 @@ get_row(size_type row_num, const std::vector<const char *> &col_names) const {
             char buffer [512];
 
             snprintf(buffer, sizeof(buffer) - 1,
-                    "DataFrame::get_row(): ERROR: Cannot find column '%s'",
-                    name_citer);
+                     "DataFrame::get_row(): ERROR: Cannot find column '%s'",
+                     name_citer);
             throw ColNotFound(buffer);
         }
 
@@ -260,9 +260,9 @@ get_row(size_type row_num, const std::vector<const char *> &col_names) const {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H>
 template<typename ... Ts>
-HeteroVector DataFrame<I, H>::
+HeteroVector<std::size_t(H::align_value)> DataFrame<I, H>::
 get_row(size_type row_num) const {
 
     if (row_num >= indices_.size())  {
@@ -275,13 +275,13 @@ get_row(size_type row_num) const {
         snprintf(buffer, sizeof(buffer) - 1,
                  "DataFrame::get_row(): ERROR: There aren't %lu rows",
 #endif // _MSC_VER
-                row_num);
+                 row_num);
         throw BadRange(buffer);
     }
 
-    HeteroVector ret_vec;
+    HeteroVector<align_value>   ret_vec;
 
-    ret_vec.reserve<IndexType>(1);
+    ret_vec.template reserve<IndexType>(1);
     ret_vec.push_back(indices_[row_num]);
 
     get_row_functor_<Ts ...>    functor(ret_vec, row_num);
@@ -295,9 +295,9 @@ get_row(size_type row_num) const {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H>
 template<typename T>
-std::vector<T> DataFrame<I, H>::
+typename DataFrame<I, H>::template ColumnVecType<T> DataFrame<I, H>::
 get_col_unique_values(const char *name) const  {
 
     const ColumnVecType<T>  &vec = get_column<T>(name);
@@ -316,7 +316,7 @@ get_col_unique_values(const char *name) const  {
         decltype(hash_func),
         decltype(equal_func)>   table(vec.size(), hash_func, equal_func);
     bool                        counted_nan = false;
-    std::vector<T>              result;
+    ColumnVecType<T>              result;
 
     result.reserve(vec.size());
     for (const auto &citer : vec)  {
@@ -337,7 +337,7 @@ get_col_unique_values(const char *name) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H>
 template<typename ... Ts>
 DataFrame<I, H>
 DataFrame<I, H>::get_data_by_idx (Index2D<IndexType> range) const  {
@@ -373,14 +373,14 @@ DataFrame<I, H>::get_data_by_idx (Index2D<IndexType> range) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H>
 template<typename ... Ts>
-DataFrame<I, H>
-DataFrame<I, H>::get_data_by_idx(const std::vector<IndexType> &values) const  {
+DataFrame<I, H> DataFrame<I, H>::
+get_data_by_idx(const StlVecType<IndexType> &values) const  {
 
     const std::unordered_set<IndexType> val_table(values.begin(), values.end());
     IndexVecType                        new_index;
-    std::vector<size_type>              locations;
+    StlVecType<size_type>              locations;
     const size_type                     values_s = values.size();
     const size_type                     idx_s = indices_.size();
 
@@ -411,19 +411,19 @@ DataFrame<I, H>::get_data_by_idx(const std::vector<IndexType> &values) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H>
 template<typename ... Ts>
-DataFrameView<I>
+typename DataFrame<I, H>::View
 DataFrame<I, H>::get_view_by_idx (Index2D<IndexType> range)  {
 
-    static_assert(std::is_base_of<HeteroVector, H>::value,
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
                   "Only a StdDataFrame can call get_view_by_idx()");
 
-    auto                        lower =
+    auto    lower =
         std::lower_bound (indices_.begin(), indices_.end(), range.begin);
-    auto                        upper =
+    auto    upper =
         std::upper_bound (indices_.begin(), indices_.end(), range.end);
-    DataFrameView<IndexType>    dfv;
+    View    dfv;
 
     if (lower != indices_.end() &&
         (upper != indices_.end() || indices_.back() == range.end))  {
@@ -435,18 +435,15 @@ DataFrame<I, H>::get_view_by_idx (Index2D<IndexType> range)  {
             upper_address = &*upper;
         else
             upper_address = &(indices_.front()) + e_dist;
-        dfv.indices_ =
-            typename DataFrameView<IndexType>::IndexVecType(&*lower,
-                                                            upper_address);
+        dfv.indices_ = typename View::IndexVecType(&*lower, upper_address);
 
         const SpinGuard guard(lock_);
 
         for (const auto &iter : column_list_)  {
-            view_setup_functor_<DataFrameView<IndexType>, Ts ...>   functor (
-                iter.first.c_str(),
-                b_dist,
-                e_dist,
-                dfv);
+            view_setup_functor_<View, Ts ...>   functor (iter.first.c_str(),
+                                                         b_dist,
+                                                         e_dist,
+                                                         dfv);
 
             data_[iter.second].change(functor);
         }
@@ -457,19 +454,19 @@ DataFrame<I, H>::get_view_by_idx (Index2D<IndexType> range)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H>
 template<typename ... Ts>
-DataFrameConstView<I>
+typename DataFrame<I, H>::ConstView
 DataFrame<I, H>::get_view_by_idx (Index2D<IndexType> range) const  {
 
-    static_assert(std::is_base_of<HeteroVector, H>::value,
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
                   "Only a StdDataFrame can call get_view_by_idx()");
 
-    auto                            lower =
+    auto        lower =
         std::lower_bound (indices_.begin(), indices_.end(), range.begin);
-    auto                            upper =
+    auto        upper =
         std::upper_bound (indices_.begin(), indices_.end(), range.end);
-    DataFrameConstView<IndexType>   dfcv;
+    ConstView   dfcv;
 
     if (lower != indices_.end() &&
         (upper != indices_.end() || indices_.back() == range.end))  {
@@ -482,18 +479,15 @@ DataFrame<I, H>::get_view_by_idx (Index2D<IndexType> range) const  {
         else
             upper_address = &(indices_.front()) + e_dist;
         dfcv.indices_ =
-            typename DataFrameConstView<IndexType>::IndexVecType(
-                &*lower,
-                upper_address);
+            typename ConstView::IndexVecType(&*lower, upper_address);
 
         const SpinGuard guard(lock_);
 
         for (const auto &iter : column_list_)  {
-            view_setup_functor_<DataFrameConstView<IndexType>, Ts ...>
-                functor (iter.first.c_str(),
-                         b_dist,
-                         e_dist,
-                         dfcv);
+            view_setup_functor_<ConstView, Ts ...>  functor (iter.first.c_str(),
+                                                             b_dist,
+                                                             e_dist,
+                                                             dfcv);
 
             data_[iter.second].change(functor);
         }
@@ -504,20 +498,20 @@ DataFrame<I, H>::get_view_by_idx (Index2D<IndexType> range) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H>
 template<typename ... Ts>
-DataFramePtrView<I> DataFrame<I, H>::
-get_view_by_idx(const std::vector<IndexType> &values)  {
+typename DataFrame<I, H>::PtrView DataFrame<I, H>::
+get_view_by_idx(const StlVecType<IndexType> &values)  {
 
-    static_assert(std::is_base_of<HeteroVector, H>::value,
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
                   "Only a StdDataFrame can call get_view_by_idx()");
 
-    using TheView = DataFramePtrView<IndexType>;
+    using TheView = PtrView;
 
     const std::unordered_set<IndexType> val_table(values.begin(),
                                                   values.end());
     typename TheView::IndexVecType      new_index;
-    std::vector<size_type>              locations;
+    StlVecType<size_type>              locations;
     const size_type                     values_s = values.size();
     const size_type                     idx_s = indices_.size();
 
@@ -551,20 +545,21 @@ get_view_by_idx(const std::vector<IndexType> &values)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H>
 template<typename ... Ts>
-DataFrameConstPtrView<I> DataFrame<I, H>::
-get_view_by_idx(const std::vector<IndexType> &values) const  {
+typename DataFrame<I, H>::ConstPtrView
+DataFrame<I, H>::
+get_view_by_idx(const StlVecType<IndexType> &values) const  {
 
-    static_assert(std::is_base_of<HeteroVector, H>::value,
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
                   "Only a StdDataFrame can call get_view_by_idx()");
 
-    using TheView = DataFrameConstPtrView<IndexType>;
+    using TheView = ConstPtrView;
 
     const std::unordered_set<IndexType> val_table(values.begin(),
                                                   values.end());
     typename TheView::IndexVecType      new_index;
-    std::vector<size_type>              locations;
+    StlVecType<size_type>              locations;
     const size_type                     values_s = values.size();
     const size_type                     idx_s = indices_.size();
 
@@ -598,7 +593,7 @@ get_view_by_idx(const std::vector<IndexType> &values) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H>
 template<typename ... Ts>
 DataFrame<I, H>
 DataFrame<I, H>::get_data_by_loc (Index2D<long> range) const  {
@@ -640,10 +635,10 @@ DataFrame<I, H>::get_data_by_loc (Index2D<long> range) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H>
 template<typename ... Ts>
-DataFrame<I, H>
-DataFrame<I, H>::get_data_by_loc (const std::vector<long> &locations) const  {
+DataFrame<I, H> DataFrame<I, H>::
+get_data_by_loc (const StlVecType<long> &locations) const  {
 
     const size_type idx_s = indices_.size();
     DataFrame       df;
@@ -674,12 +669,12 @@ DataFrame<I, H>::get_data_by_loc (const std::vector<long> &locations) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H>
 template<typename ... Ts>
-DataFrameView<I>
+typename DataFrame<I, H>::View
 DataFrame<I, H>::get_view_by_loc (Index2D<long> range)  {
 
-    static_assert(std::is_base_of<HeteroVector, H>::value,
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
                   "Only a StdDataFrame can call get_view_by_loc()");
 
     const long  idx_s = static_cast<long>(indices_.size());
@@ -690,19 +685,20 @@ DataFrame<I, H>::get_view_by_loc (Index2D<long> range)  {
         range.end = idx_s + range.end + 1;
 
     if (range.end <= idx_s && range.begin <= range.end && range.begin >= 0)  {
-        DataFrameView<IndexType>    dfv;
+        View    dfv;
 
         dfv.indices_ =
-            typename DataFrameView<IndexType>::IndexVecType(
-                &(indices_[0]) + range.begin,
-                &(indices_[0]) + range.end);
+            typename View::IndexVecType(&(indices_[0]) + range.begin,
+                                        &(indices_[0]) + range.end);
+
+        const SpinGuard guard(lock_);
+
         for (const auto &iter : column_list_)  {
-            view_setup_functor_<DataFrameView<IndexType>, Ts ...>   functor (
+            view_setup_functor_<View, Ts ...>   functor (
                 iter.first.c_str(),
                 static_cast<size_type>(range.begin),
                 static_cast<size_type>(range.end),
                 dfv);
-            const SpinGuard guard(lock_);
 
             data_[iter.second].change(functor);
         }
@@ -721,12 +717,12 @@ DataFrame<I, H>::get_view_by_loc (Index2D<long> range)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H>
 template<typename ... Ts>
-DataFrameConstView<I>
+typename DataFrame<I, H>::ConstView
 DataFrame<I, H>::get_view_by_loc (Index2D<long> range) const  {
 
-    static_assert(std::is_base_of<HeteroVector, H>::value,
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
                   "Only a StdDataFrame can call get_view_by_loc()");
 
     const long  idx_s = static_cast<long>(indices_.size());
@@ -737,19 +733,20 @@ DataFrame<I, H>::get_view_by_loc (Index2D<long> range) const  {
         range.end = idx_s + range.end + 1;
 
     if (range.end <= idx_s && range.begin <= range.end && range.begin >= 0)  {
-        DataFrameConstView<IndexType>   dfcv;
+        ConstView   dfcv;
 
         dfcv.indices_ =
-            typename DataFrameConstView<IndexType>::IndexVecType(
-                &(indices_[0]) + range.begin,
-                &(indices_[0]) + range.end);
+            typename ConstView::IndexVecType(&(indices_[0]) + range.begin,
+                                             &(indices_[0]) + range.end);
+
+        const SpinGuard guard(lock_);
+
         for (const auto &iter : column_list_)  {
-            view_setup_functor_<DataFrameConstView<IndexType>, Ts ...>
-                functor (iter.first.c_str(),
-                         static_cast<size_type>(range.begin),
-                         static_cast<size_type>(range.end),
-                         dfcv);
-            const SpinGuard guard(lock_);
+            view_setup_functor_<ConstView, Ts ...>  functor(
+                iter.first.c_str(),
+                static_cast<size_type>(range.begin),
+                static_cast<size_type>(range.end),
+                dfcv);
 
             data_[iter.second].change(functor);
         }
@@ -768,15 +765,15 @@ DataFrame<I, H>::get_view_by_loc (Index2D<long> range) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H>
 template<typename ... Ts>
-DataFramePtrView<I>
-DataFrame<I, H>::get_view_by_loc (const std::vector<long> &locations)  {
+typename DataFrame<I, H>::PtrView
+DataFrame<I, H>::get_view_by_loc (const StlVecType<long> &locations)  {
 
-    static_assert(std::is_base_of<HeteroVector, H>::value,
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
                   "Only a StdDataFrame can call get_view_by_loc()");
 
-    using TheView = DataFramePtrView<IndexType>;
+    using TheView = PtrView;
 
     TheView         dfv;
     const size_type idx_s = indices_.size();
@@ -808,15 +805,16 @@ DataFrame<I, H>::get_view_by_loc (const std::vector<long> &locations)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H>
 template<typename ... Ts>
-DataFrameConstPtrView<I>
-DataFrame<I, H>::get_view_by_loc (const std::vector<long> &locations) const  {
+typename DataFrame<I, H>::ConstPtrView
+DataFrame<I, H>::
+get_view_by_loc (const StlVecType<long> &locations) const  {
 
-    static_assert(std::is_base_of<HeteroVector, H>::value,
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
                   "Only a StdDataFrame can call get_view_by_loc()");
 
-    using TheView = DataFrameConstPtrView<IndexType>;
+    using TheView = ConstPtrView;
 
     TheView         dfv;
     const size_type idx_s = indices_.size();
@@ -848,7 +846,7 @@ DataFrame<I, H>::get_view_by_loc (const std::vector<long> &locations) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H>
 template<typename T, typename F, typename ... Ts>
 DataFrame<I, H> DataFrame<I, H>::
 get_data_by_sel (const char *name, F &sel_functor) const  {
@@ -856,7 +854,7 @@ get_data_by_sel (const char *name, F &sel_functor) const  {
     const ColumnVecType<T>  &vec = get_column<T>(name);
     const size_type         idx_s = indices_.size();
     const size_type         col_s = vec.size();
-    std::vector<size_type>  col_indices;
+    StlVecType<size_type>  col_indices;
 
     col_indices.reserve(idx_s / 2);
     for (size_type i = 0; i < col_s; ++i)
@@ -887,25 +885,25 @@ get_data_by_sel (const char *name, F &sel_functor) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H>
 template<typename T, typename F, typename ... Ts>
-DataFramePtrView<I> DataFrame<I, H>::
+typename DataFrame<I, H>::PtrView DataFrame<I, H>::
 get_view_by_sel (const char *name, F &sel_functor)  {
 
-    static_assert(std::is_base_of<HeteroVector, H>::value,
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
                   "Only a StdDataFrame can call get_view_by_sel()");
 
     const ColumnVecType<T>  &vec = get_column<T>(name);
     const size_type         idx_s = indices_.size();
     const size_type         col_s = vec.size();
-    std::vector<size_type>  col_indices;
+    StlVecType<size_type>  col_indices;
 
     col_indices.reserve(idx_s / 2);
     for (size_type i = 0; i < col_s; ++i)
         if (sel_functor (indices_[i], vec[i]))
             col_indices.push_back(i);
 
-    using TheView = DataFramePtrView<IndexType>;
+    using TheView = PtrView;
 
     TheView                         dfv;
     typename TheView::IndexVecType  new_index;
@@ -931,25 +929,26 @@ get_view_by_sel (const char *name, F &sel_functor)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H>
 template<typename T, typename F, typename ... Ts>
-DataFrameConstPtrView<I> DataFrame<I, H>::
+typename DataFrame<I, H>::ConstPtrView
+DataFrame<I, H>::
 get_view_by_sel (const char *name, F &sel_functor) const  {
 
-    static_assert(std::is_base_of<HeteroVector, H>::value,
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
                   "Only a StdDataFrame can call get_view_by_sel()");
 
     const ColumnVecType<T>  &vec = get_column<T>(name);
     const size_type         idx_s = indices_.size();
     const size_type         col_s = vec.size();
-    std::vector<size_type>  col_indices;
+    StlVecType<size_type>  col_indices;
 
     col_indices.reserve(idx_s / 2);
     for (size_type i = 0; i < col_s; ++i)
         if (sel_functor (indices_[i], vec[i]))
             col_indices.push_back(i);
 
-    using TheView = DataFrameConstPtrView<IndexType>;
+    using TheView = ConstPtrView;
 
     TheView                         dfv;
     typename TheView::IndexVecType  new_index;
@@ -975,7 +974,7 @@ get_view_by_sel (const char *name, F &sel_functor) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H>
 template<typename T1, typename T2, typename F, typename ... Ts>
 DataFrame<I, H> DataFrame<I, H>::
 get_data_by_sel (const char *name1, const char *name2, F &sel_functor) const  {
@@ -986,7 +985,7 @@ get_data_by_sel (const char *name1, const char *name2, F &sel_functor) const  {
     const size_type         col_s1 = vec1.size();
     const size_type         col_s2 = vec2.size();
     const size_type         min_col_s = std::min(col_s1, col_s2);
-    std::vector<size_type>  col_indices;
+    StlVecType<size_type>  col_indices;
 
     col_indices.reserve(idx_s / 2);
     for (size_type i = 0; i < min_col_s; ++i)
@@ -1022,12 +1021,12 @@ get_data_by_sel (const char *name1, const char *name2, F &sel_functor) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H>
 template<typename T1, typename T2, typename F, typename ... Ts>
-DataFramePtrView<I> DataFrame<I, H>::
+typename DataFrame<I, H>::PtrView DataFrame<I, H>::
 get_view_by_sel (const char *name1, const char *name2, F &sel_functor)  {
 
-    static_assert(std::is_base_of<HeteroVector, H>::value,
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
                   "Only a StdDataFrame can call get_view_by_sel()");
 
     const ColumnVecType<T1> &vec1 = get_column<T1>(name1);
@@ -1036,7 +1035,7 @@ get_view_by_sel (const char *name1, const char *name2, F &sel_functor)  {
     const size_type         col_s1 = vec1.size();
     const size_type         col_s2 = vec2.size();
     const size_type         min_col_s = std::min(col_s1, col_s2);
-    std::vector<size_type>  col_indices;
+    StlVecType<size_type>  col_indices;
 
     col_indices.reserve(idx_s / 2);
     for (size_type i = 0; i < min_col_s; ++i)
@@ -1048,7 +1047,7 @@ get_view_by_sel (const char *name1, const char *name2, F &sel_functor)  {
                          i < col_s2 ? vec2[i] : get_nan<T2>()))
             col_indices.push_back(i);
 
-    using TheView = DataFramePtrView<IndexType>;
+    using TheView = PtrView;
 
     TheView                         dfv;
     typename TheView::IndexVecType  new_index;
@@ -1074,12 +1073,13 @@ get_view_by_sel (const char *name1, const char *name2, F &sel_functor)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H>
 template<typename T1, typename T2, typename F, typename ... Ts>
-DataFrameConstPtrView<I> DataFrame<I, H>::
+typename DataFrame<I, H>::ConstPtrView
+DataFrame<I, H>::
 get_view_by_sel (const char *name1, const char *name2, F &sel_functor) const  {
 
-    static_assert(std::is_base_of<HeteroVector, H>::value,
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
                   "Only a StdDataFrame can call get_view_by_sel()");
 
     const ColumnVecType<T1> &vec1 = get_column<T1>(name1);
@@ -1088,7 +1088,7 @@ get_view_by_sel (const char *name1, const char *name2, F &sel_functor) const  {
     const size_type         col_s1 = vec1.size();
     const size_type         col_s2 = vec2.size();
     const size_type         min_col_s = std::min(col_s1, col_s2);
-    std::vector<size_type>  col_indices;
+    StlVecType<size_type>  col_indices;
 
     col_indices.reserve(idx_s / 2);
     for (size_type i = 0; i < min_col_s; ++i)
@@ -1100,7 +1100,7 @@ get_view_by_sel (const char *name1, const char *name2, F &sel_functor) const  {
                          i < col_s2 ? vec2[i] : get_nan<T2>()))
             col_indices.push_back(i);
 
-    using TheView = DataFrameConstPtrView<IndexType>;
+    using TheView = ConstPtrView;
 
     TheView                         dfv;
     typename TheView::IndexVecType  new_index;
@@ -1126,7 +1126,7 @@ get_view_by_sel (const char *name1, const char *name2, F &sel_functor) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H>
 template<typename T1, typename T2, typename T3, typename F, typename ... Ts>
 DataFrame<I, H> DataFrame<I, H>::
 get_data_by_sel (const char *name1,
@@ -1142,7 +1142,7 @@ get_data_by_sel (const char *name1,
     const size_type         col_s2 = vec2.size();
     const size_type         col_s3 = vec3.size();
     const size_type         min_col_s = std::min({ col_s1, col_s2, col_s3 });
-    std::vector<size_type>  col_indices;
+    StlVecType<size_type>  col_indices;
 
     col_indices.reserve(idx_s / 2);
     for (size_type i = 0; i < min_col_s; ++i)
@@ -1179,7 +1179,7 @@ get_data_by_sel (const char *name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H>
 template<typename Tuple, typename F, typename... FilterCols>
 DataFrame<I, H> DataFrame<I, H>::
 get_data_by_sel (F &sel_functor) const  {
@@ -1201,7 +1201,7 @@ get_data_by_sel (F &sel_functor) const  {
         cols_for_filter);
 
     // Get the index of all records that meet the filters
-    std::vector<size_type>  col_indices;
+    StlVecType<size_type>  col_indices;
 
     col_indices.reserve(idx_s / 2);
     for (size_type i = 0; i < col_s; ++i)  {
@@ -1244,7 +1244,7 @@ get_data_by_sel (F &sel_functor) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H>
 template<typename Tuple, typename F, typename... FilterCols>
 DataFrame<I, H> DataFrame<I, H>::
 get_data_by_sel (F &sel_functor, FilterCols && ... filter_cols) const  {
@@ -1266,7 +1266,7 @@ get_data_by_sel (F &sel_functor, FilterCols && ... filter_cols) const  {
         cols_for_filter);
 
     // Get the index of all records that meet the filters
-    std::vector<size_type>  col_indices;
+    StlVecType<size_type>  col_indices;
 
     col_indices.reserve(idx_s / 2);
     for (size_type i = 0; i < col_s; ++i)  {
@@ -1307,15 +1307,15 @@ get_data_by_sel (F &sel_functor, FilterCols && ... filter_cols) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H>
 template<typename T1, typename T2, typename T3, typename F, typename ... Ts>
-DataFramePtrView<I> DataFrame<I, H>::
+typename DataFrame<I, H>::PtrView DataFrame<I, H>::
 get_view_by_sel (const char *name1,
                  const char *name2,
                  const char *name3,
                  F &sel_functor)  {
 
-    static_assert(std::is_base_of<HeteroVector, H>::value,
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
                   "Only a StdDataFrame can call get_view_by_sel()");
 
     const ColumnVecType<T1> &vec1 = get_column<T1>(name1);
@@ -1326,7 +1326,7 @@ get_view_by_sel (const char *name1,
     const size_type         col_s2 = vec2.size();
     const size_type         col_s3 = vec3.size();
     const size_type         min_col_s = std::min({ col_s1, col_s2, col_s3 });
-    std::vector<size_type>  col_indices;
+    StlVecType<size_type>  col_indices;
 
     col_indices.reserve(idx_s / 2);
     for (size_type i = 0; i < min_col_s; ++i)
@@ -1339,7 +1339,7 @@ get_view_by_sel (const char *name1,
                          i < col_s3 ? vec3[i] : get_nan<T3>()))
             col_indices.push_back(i);
 
-    using TheView = DataFramePtrView<IndexType>;
+    using TheView = PtrView;
 
     TheView                         dfv;
     typename TheView::IndexVecType  new_index;
@@ -1365,15 +1365,16 @@ get_view_by_sel (const char *name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H>
 template<typename T1, typename T2, typename T3, typename F, typename ... Ts>
-DataFrameConstPtrView<I> DataFrame<I, H>::
+typename DataFrame<I, H>::ConstPtrView
+DataFrame<I, H>::
 get_view_by_sel (const char *name1,
                  const char *name2,
                  const char *name3,
                  F &sel_functor) const  {
 
-    static_assert(std::is_base_of<HeteroVector, H>::value,
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
                   "Only a StdDataFrame can call get_view_by_sel()");
 
     const ColumnVecType<T1> &vec1 = get_column<T1>(name1);
@@ -1384,7 +1385,7 @@ get_view_by_sel (const char *name1,
     const size_type         col_s2 = vec2.size();
     const size_type         col_s3 = vec3.size();
     const size_type         min_col_s = std::min({ col_s1, col_s2, col_s3 });
-    std::vector<size_type>  col_indices;
+    StlVecType<size_type>  col_indices;
 
     col_indices.reserve(idx_s / 2);
     for (size_type i = 0; i < min_col_s; ++i)
@@ -1397,7 +1398,7 @@ get_view_by_sel (const char *name1,
                          i < col_s3 ? vec3[i] : get_nan<T3>()))
             col_indices.push_back(i);
 
-    using TheView = DataFrameConstPtrView<IndexType>;
+    using TheView = ConstPtrView;
 
     TheView                         dfv;
     typename TheView::IndexVecType  new_index;
@@ -1423,7 +1424,7 @@ get_view_by_sel (const char *name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H>
 template<typename T1, typename T2, typename T3, typename T4,
          typename F, typename ... Ts>
 DataFrame<I, H> DataFrame<I, H>::
@@ -1444,7 +1445,7 @@ get_data_by_sel(const char *name1,
     const size_type         col_s4 = vec4.size();
     const size_type         min_col_s =
         std::min({ col_s1, col_s2, col_s3, col_s4 });
-    std::vector<size_type>  col_indices;
+    StlVecType<size_type>  col_indices;
 
     col_indices.reserve(idx_s / 2);
     for (size_type i = 0; i < min_col_s; ++i)
@@ -1482,17 +1483,17 @@ get_data_by_sel(const char *name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H>
 template<typename T1, typename T2, typename T3, typename T4,
          typename F, typename ... Ts>
-DataFramePtrView<I> DataFrame<I, H>::
+typename DataFrame<I, H>::PtrView DataFrame<I, H>::
 get_view_by_sel(const char *name1,
                 const char *name2,
                 const char *name3,
                 const char *name4,
                 F &sel_functor)  {
 
-    static_assert(std::is_base_of<HeteroVector, H>::value,
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
                   "Only a StdDataFrame can call get_view_by_sel()");
 
     const ColumnVecType<T1> &vec1 = get_column<T1>(name1);
@@ -1506,7 +1507,7 @@ get_view_by_sel(const char *name1,
     const size_type         col_s4 = vec4.size();
     const size_type         min_col_s =
         std::min({ col_s1, col_s2, col_s3, col_s4 });
-    std::vector<size_type>  col_indices;
+    StlVecType<size_type>  col_indices;
 
     col_indices.reserve(idx_s / 2);
     for (size_type i = 0; i < min_col_s; ++i)
@@ -1520,7 +1521,7 @@ get_view_by_sel(const char *name1,
                         i < col_s4 ? vec4[i] : get_nan<T4>()))
             col_indices.push_back(i);
 
-    using TheView = DataFramePtrView<IndexType>;
+    using TheView = PtrView;
 
     TheView                         dfv;
     typename TheView::IndexVecType  new_index;
@@ -1546,17 +1547,18 @@ get_view_by_sel(const char *name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H>
 template<typename T1, typename T2, typename T3, typename T4,
          typename F, typename ... Ts>
-DataFrameConstPtrView<I> DataFrame<I, H>::
+typename DataFrame<I, H>::ConstPtrView
+DataFrame<I, H>::
 get_view_by_sel(const char *name1,
                 const char *name2,
                 const char *name3,
                 const char *name4,
                 F &sel_functor) const  {
 
-    static_assert(std::is_base_of<HeteroVector, H>::value,
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
                   "Only a StdDataFrame can call get_view_by_sel()");
 
     const ColumnVecType<T1> &vec1 = get_column<T1>(name1);
@@ -1570,7 +1572,7 @@ get_view_by_sel(const char *name1,
     const size_type         col_s4 = vec4.size();
     const size_type         min_col_s =
         std::min({ col_s1, col_s2, col_s3, col_s4 });
-    std::vector<size_type>  col_indices;
+    StlVecType<size_type>  col_indices;
 
     col_indices.reserve(idx_s / 2);
     for (size_type i = 0; i < min_col_s; ++i)
@@ -1584,7 +1586,7 @@ get_view_by_sel(const char *name1,
                         i < col_s4 ? vec4[i] : get_nan<T4>()))
             col_indices.push_back(i);
 
-    using TheView = DataFrameConstPtrView<IndexType>;
+    using TheView = ConstPtrView;
 
     TheView                         dfv;
     typename TheView::IndexVecType  new_index;
@@ -1610,7 +1612,7 @@ get_view_by_sel(const char *name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H>
 template<typename T1, typename T2, typename T3, typename T4, typename T5,
          typename F, typename ... Ts>
 DataFrame<I, H> DataFrame<I, H>::
@@ -1634,7 +1636,7 @@ get_data_by_sel(const char *name1,
     const size_type         col_s5 = vec5.size();
     const size_type         min_col_s =
         std::min({ col_s1, col_s2, col_s3, col_s4, col_s5 });
-    std::vector<size_type>  col_indices;
+    StlVecType<size_type>  col_indices;
 
     col_indices.reserve(idx_s / 2);
     for (size_type i = 0; i < min_col_s; ++i)
@@ -1674,10 +1676,10 @@ get_data_by_sel(const char *name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H>
 template<typename T1, typename T2, typename T3, typename T4, typename T5,
          typename F, typename ... Ts>
-DataFramePtrView<I> DataFrame<I, H>::
+typename DataFrame<I, H>::PtrView DataFrame<I, H>::
 get_view_by_sel(const char *name1,
                 const char *name2,
                 const char *name3,
@@ -1685,7 +1687,7 @@ get_view_by_sel(const char *name1,
                 const char *name5,
                 F &sel_functor)  {
 
-    static_assert(std::is_base_of<HeteroVector, H>::value,
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
                   "Only a StdDataFrame can call get_view_by_sel()");
 
     const ColumnVecType<T1> &vec1 = get_column<T1>(name1);
@@ -1701,7 +1703,7 @@ get_view_by_sel(const char *name1,
     const size_type         col_s5 = vec5.size();
     const size_type         min_col_s =
         std::min({ col_s1, col_s2, col_s3, col_s4, col_s5 });
-    std::vector<size_type>  col_indices;
+    StlVecType<size_type>  col_indices;
 
     col_indices.reserve(idx_s / 2);
     for (size_type i = 0; i < min_col_s; ++i)
@@ -1717,7 +1719,7 @@ get_view_by_sel(const char *name1,
                         i < col_s5 ? vec5[i] : get_nan<T5>()))
             col_indices.push_back(i);
 
-    using TheView = DataFramePtrView<IndexType>;
+    using TheView = PtrView;
 
     TheView                         dfv;
     typename TheView::IndexVecType  new_index;
@@ -1743,10 +1745,11 @@ get_view_by_sel(const char *name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H>
 template<typename T1, typename T2, typename T3, typename T4, typename T5,
          typename F, typename ... Ts>
-DataFrameConstPtrView<I> DataFrame<I, H>::
+typename DataFrame<I, H>::ConstPtrView
+DataFrame<I, H>::
 get_view_by_sel(const char *name1,
                 const char *name2,
                 const char *name3,
@@ -1754,7 +1757,7 @@ get_view_by_sel(const char *name1,
                 const char *name5,
                 F &sel_functor) const  {
 
-    static_assert(std::is_base_of<HeteroVector, H>::value,
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
                   "Only a StdDataFrame can call get_view_by_sel()");
 
     const ColumnVecType<T1> &vec1 = get_column<T1>(name1);
@@ -1770,7 +1773,7 @@ get_view_by_sel(const char *name1,
     const size_type         col_s5 = vec5.size();
     const size_type         min_col_s =
         std::min({ col_s1, col_s2, col_s3, col_s4, col_s5 });
-    std::vector<size_type>  col_indices;
+    StlVecType<size_type>  col_indices;
 
     col_indices.reserve(idx_s / 2);
     for (size_type i = 0; i < min_col_s; ++i)
@@ -1786,7 +1789,7 @@ get_view_by_sel(const char *name1,
                         i < col_s5 ? vec5[i] : get_nan<T5>()))
             col_indices.push_back(i);
 
-    using TheView = DataFrameConstPtrView<IndexType>;
+    using TheView = ConstPtrView;
 
     TheView                         dfv;
     typename TheView::IndexVecType  new_index;
@@ -1812,7 +1815,7 @@ get_view_by_sel(const char *name1,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H>
 template<typename ... Ts>
 DataFrame<I, H> DataFrame<I, H>::
 get_data_by_rand(random_policy spec, double n, size_type seed) const  {
@@ -1839,7 +1842,7 @@ get_data_by_rand(random_policy spec, double n, size_type seed) const  {
         if (use_seed)  gen.seed(static_cast<unsigned int>(seed));
 
         std::uniform_int_distribution<size_type>    dis(0, index_s - 1);
-        std::vector<size_type>                      rand_indices(n_rows);
+        StlVecType<size_type>                      rand_indices(n_rows);
 
         for (size_type i = 0; i < n_rows; ++i)
             rand_indices[i] = dis(gen);
@@ -1880,15 +1883,15 @@ get_data_by_rand(random_policy spec, double n, size_type seed) const  {
 #else
               "Number of rows requested %lu is more than available rows %lu",
 #endif // _MSC_VER
-             n_rows, index_s);
+              n_rows, index_s);
     throw BadRange (buffer);
 }
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H>
 template<typename ... Ts>
-DataFramePtrView<I> DataFrame<I, H>::
+typename DataFrame<I, H>::PtrView DataFrame<I, H>::
 get_view_by_rand (random_policy spec, double n, size_type seed)  {
 
     bool            use_seed = false;
@@ -1913,13 +1916,13 @@ get_view_by_rand (random_policy spec, double n, size_type seed)  {
         if (use_seed)  gen.seed(static_cast<unsigned int>(seed));
 
         std::uniform_int_distribution<size_type>    dis(0, index_s - 1);
-        std::vector<size_type>                      rand_indices(n_rows);
+        StlVecType<size_type>                      rand_indices(n_rows);
 
         for (size_type i = 0; i < n_rows; ++i)
             rand_indices[i] = dis(gen);
         std::sort(rand_indices.begin(), rand_indices.end());
 
-        using TheView = DataFramePtrView<IndexType>;
+        using TheView = PtrView;
 
         typename TheView::IndexVecType  new_index;
         size_type                       prev_value;
@@ -1954,15 +1957,16 @@ get_view_by_rand (random_policy spec, double n, size_type seed)  {
 #else
               "Number of rows requested %lu is more than available rows %lu",
 #endif // _MSC_VER
-             n_rows, index_s);
+              n_rows, index_s);
     throw BadRange (buffer);
 }
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H>
 template<typename ... Ts>
-DataFrameConstPtrView<I> DataFrame<I, H>::
+typename DataFrame<I, H>::ConstPtrView
+DataFrame<I, H>::
 get_view_by_rand (random_policy spec, double n, size_type seed) const  {
 
     bool            use_seed = false;
@@ -1987,13 +1991,13 @@ get_view_by_rand (random_policy spec, double n, size_type seed) const  {
         if (use_seed)  gen.seed(static_cast<unsigned int>(seed));
 
         std::uniform_int_distribution<size_type>    dis(0, index_s - 1);
-        std::vector<size_type>                      rand_indices(n_rows);
+        StlVecType<size_type>                      rand_indices(n_rows);
 
         for (size_type i = 0; i < n_rows; ++i)
             rand_indices[i] = dis(gen);
         std::sort(rand_indices.begin(), rand_indices.end());
 
-        using TheView = DataFrameConstPtrView<IndexType>;
+        using TheView = ConstPtrView;
 
         typename TheView::IndexVecType  new_index;
         size_type                       prev_value;
@@ -2029,7 +2033,7 @@ get_view_by_rand (random_policy spec, double n, size_type seed) const  {
 #else
               "Number of rows requested %lu is more than available rows %lu",
 #endif // _MSC_VER
-             n_rows, index_s);
+              n_rows, index_s);
     throw BadRange (buffer);
 }
 
@@ -2038,7 +2042,7 @@ get_view_by_rand (random_policy spec, double n, size_type seed) const  {
 template<typename I, typename H>
 template<typename ... Ts>
 DataFrame<I, H> DataFrame<I, H>::
-get_data(const std::vector<const char *> &col_names) const  {
+get_data(const StlVecType<const char *> &col_names) const  {
 
     DataFrame   df;
 
@@ -2069,18 +2073,17 @@ get_data(const std::vector<const char *> &col_names) const  {
 
 template<typename I, typename H>
 template<typename ... Ts>
-DataFrameView<I> DataFrame<I, H>::
-get_view(const std::vector<const char *> &col_names)  {
+typename DataFrame<I, H>::View DataFrame<I, H>::
+get_view(const StlVecType<const char *> &col_names)  {
 
-    static_assert(std::is_base_of<HeteroVector, H>::value,
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
                   "Only a StdDataFrame can call get_view()");
 
-    DataFrameView<I>    dfv;
-    const size_type     idx_size = indices_.size();
+    View            dfv;
+    const size_type idx_size = indices_.size();
 
     dfv.indices_ =
-        typename DataFrameView<I>::IndexVecType(&(indices_[0]),
-                                                &(indices_[0]) + idx_size);
+        typename View::IndexVecType(&(indices_[0]), &(indices_[0]) + idx_size);
 
     for (const auto &name_citer : col_names)  {
         const auto  citer = column_tb_.find (name_citer);
@@ -2094,12 +2097,11 @@ get_view(const std::vector<const char *> &col_names)  {
             throw ColNotFound(buffer);
         }
 
-        view_setup_functor_<DataFrameView<I>, Ts ...>   functor (
-            citer->first.c_str(),
-            0,
-            idx_size,
-            dfv);
-        const SpinGuard                                 guard(lock_);
+        view_setup_functor_<View, Ts ...>   functor (citer->first.c_str(),
+                                                     0,
+                                                     idx_size,
+                                                     dfv);
+        const SpinGuard                     guard(lock_);
 
         data_[citer->second].change(functor);
     }
@@ -2111,19 +2113,19 @@ get_view(const std::vector<const char *> &col_names)  {
 
 template<typename I, typename H>
 template<typename ... Ts>
-DataFrameConstView<I> DataFrame<I, H>::
-get_view(const std::vector<const char *> &col_names) const  {
+typename DataFrame<I, H>::ConstView
+DataFrame<I, H>::
+get_view(const StlVecType<const char *> &col_names) const  {
 
-    static_assert(std::is_base_of<HeteroVector, H>::value,
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
                   "Only a StdDataFrame can call get_view()");
 
-    DataFrameConstView<I>   dfcv;
-    const size_type         idx_size = indices_.size();
+    ConstView       dfcv;
+    const size_type idx_size = indices_.size();
 
     dfcv.indices_ =
-        typename DataFrameConstView<I>::IndexVecType(
-            &(indices_[0]),
-            &(indices_[0]) + idx_size);
+        typename ConstView::IndexVecType(&(indices_[0]),
+                                         &(indices_[0]) + idx_size);
 
     for (const auto &name_citer : col_names)  {
         const auto  citer = column_tb_.find (name_citer);
@@ -2137,12 +2139,11 @@ get_view(const std::vector<const char *> &col_names) const  {
             throw ColNotFound(buffer);
         }
 
-        view_setup_functor_<DataFrameConstView<I>, Ts ...>  functor (
-            citer->first.c_str(),
-            0,
-            idx_size,
-            dfcv);
-        const SpinGuard                                 guard(lock_);
+        view_setup_functor_<ConstView, Ts ...>  functor (citer->first.c_str(),
+                                                         0,
+                                                         idx_size,
+                                                         dfcv);
+        const SpinGuard                         guard(lock_);
 
         data_[citer->second].change(functor);
     }
@@ -2152,14 +2153,15 @@ get_view(const std::vector<const char *> &col_names) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H>
 template<typename T, typename ... Ts>
-StdDataFrame<T> DataFrame<I, H>::
+DataFrame<T, H> DataFrame<I, H>::
 get_reindexed(const char *col_to_be_index, const char *old_index_name) const  {
 
-    StdDataFrame<T> result;
-    const auto      &new_idx = get_column<T>(col_to_be_index);
-    const size_type new_idx_s =
+    DataFrame<T, HeteroVector<align_value>> result;
+    const auto                              &new_idx =
+        get_column<T>(col_to_be_index);
+    const size_type                         new_idx_s =
         result.load_index(new_idx.begin(), new_idx.end());
 
     if (old_index_name)  {
@@ -2174,12 +2176,12 @@ get_reindexed(const char *col_to_be_index, const char *old_index_name) const  {
     for (const auto &citer : column_list_)  {
         if (citer.first == col_to_be_index)  continue;
 
-        load_functor_<StdDataFrame<T>, Ts ...>  functor (
-            citer.first.c_str(),
-            0,
-            new_idx_s,
-            result,
-            nan_policy::dont_pad_with_nans);
+        load_functor_<DataFrame<T, HeteroVector<align_value>>, Ts ...>
+            functor (citer.first.c_str(),
+                     0,
+                     new_idx_s,
+                     result,
+                     nan_policy::dont_pad_with_nans);
         const SpinGuard                         guard(lock_);
 
         data_[citer.second].change(functor);
@@ -2190,19 +2192,21 @@ get_reindexed(const char *col_to_be_index, const char *old_index_name) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H>
 template<typename T, typename ... Ts>
-DataFrameView<T> DataFrame<I, H>::
+typename DataFrame<T, H>::View DataFrame<I, H>::
 get_reindexed_view(const char *col_to_be_index, const char *old_index_name)  {
 
-    static_assert(std::is_base_of<HeteroVector, H>::value,
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
                   "Only a StdDataFrame can call get_reindexed_view()");
 
-    DataFrameView<T>    result;
-    auto                &new_idx = get_column<T>(col_to_be_index);
-    const size_type     new_idx_s = new_idx.size();
+    using TheView = typename DataFrame<T, H>::View;
 
-    result.indices_ = typename DataFrameView<T>::IndexVecType();
+    TheView         result;
+    auto            &new_idx = get_column<T>(col_to_be_index);
+    const size_type new_idx_s = new_idx.size();
+
+    result.indices_ = typename TheView::IndexVecType();
     result.indices_.set_begin_end_special(&(new_idx.front()),
                                           &(new_idx.back()));
     if (old_index_name)  {
@@ -2218,12 +2222,12 @@ get_reindexed_view(const char *col_to_be_index, const char *old_index_name)  {
     for (const auto &citer : column_list_)  {
         if (citer.first == col_to_be_index)  continue;
 
-        view_setup_functor_<DataFrameView<T>, Ts ...>   functor (
+        view_setup_functor_<TheView, Ts ...>    functor (
             citer.first.c_str(),
             0,
             new_idx_s,
             result);
-        const SpinGuard                                 guard(lock_);
+        const SpinGuard                         guard(lock_);
 
         data_[citer.second].change(functor);
     }
@@ -2233,20 +2237,23 @@ get_reindexed_view(const char *col_to_be_index, const char *old_index_name)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H>
 template<typename T, typename ... Ts>
-DataFrameConstView<T> DataFrame<I, H>::
+typename DataFrame<T, H>::ConstView
+DataFrame<I, H>::
 get_reindexed_view(const char *col_to_be_index,
                    const char *old_index_name) const  {
 
-    static_assert(std::is_base_of<HeteroVector, H>::value,
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
                   "Only a StdDataFrame can call get_reindexed_view()");
 
-    DataFrameConstView<T>   result;
-    const auto              &new_idx = get_column<T>(col_to_be_index);
-    const size_type         new_idx_s = new_idx.size();
+    using TheView = typename DataFrame<T, H>::ConstView;
 
-    result.indices_ = typename DataFrameConstView<T>::IndexVecType();
+    TheView         result;
+    const auto      &new_idx = get_column<T>(col_to_be_index);
+    const size_type new_idx_s = new_idx.size();
+
+    result.indices_ = typename TheView::IndexVecType();
     result.indices_.set_begin_end_special(&(new_idx.front()),
                                           &(new_idx.back()));
     if (old_index_name)  {
@@ -2263,12 +2270,12 @@ get_reindexed_view(const char *col_to_be_index,
     for (const auto &citer : column_list_)  {
         if (citer.first == col_to_be_index)  continue;
 
-        view_setup_functor_<DataFrameConstView<T>, Ts ...>   functor (
+        view_setup_functor_<TheView, Ts ...>    functor (
             citer.first.c_str(),
             0,
             new_idx_s,
             result);
-        const SpinGuard guard(lock_);
+        const SpinGuard                         guard(lock_);
 
         data_[citer.second].change(functor);
     }
@@ -2278,14 +2285,15 @@ get_reindexed_view(const char *col_to_be_index,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H>
 template<typename ... Ts>
-std::vector<std::tuple<typename DataFrame<I, H>::ColNameType,
-                       typename DataFrame<I, H>::size_type,
-                       std::type_index>>
+typename DataFrame<I, H>::template StlVecType<
+    std::tuple<typename DataFrame<I, H>::ColNameType,
+               typename DataFrame<I, H>::size_type,
+               std::type_index>>
 DataFrame<I, H>::get_columns_info () const  {
 
-    std::vector<std::tuple<ColNameType, size_type, std::type_index>> result;
+    StlVecType<std::tuple<ColNameType, size_type, std::type_index>> result;
 
     result.reserve(column_list_.size());
 
@@ -2302,12 +2310,12 @@ DataFrame<I, H>::get_columns_info () const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H>
 template<typename ... Ts>
-StdDataFrame<std::string>
+DataFrame<std::string, H>
 DataFrame<I, H>::describe() const  {
 
-    StdDataFrame<std::string>   result;
+    DataFrame<std::string, HeteroVector<align_value>>   result;
 
     result.load_index(describe_index_col.begin(), describe_index_col.end());
 
@@ -2323,7 +2331,7 @@ DataFrame<I, H>::describe() const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H>
 template<typename T>
 bool DataFrame<I, H>::
 pattern_match(const char *col_name,
@@ -2355,15 +2363,15 @@ pattern_match(const char *col_name,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H>
 template<typename T, typename DF, typename F>
-std::vector<T> DataFrame<I, H>::
+typename DataFrame<I, H>::template StlVecType<T> DataFrame<I, H>::
 combine(const char *col_name, const DF &rhs, F &functor) const  {
 
     const auto      &lhs_col = get_column<T>(col_name);
     const auto      &rhs_col = rhs.template get_column<T>(col_name);
     const size_type col_s = std::min(lhs_col.size(), rhs_col.size());
-    std::vector<T>  result;
+    StlVecType<T>  result;
 
     result.reserve(col_s);
     for (size_type i = 0; i < col_s; ++i)
@@ -2374,9 +2382,9 @@ combine(const char *col_name, const DF &rhs, F &functor) const  {
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H>
 template<typename T, typename DF1, typename DF2, typename F>
-std::vector<T> DataFrame<I, H>::
+typename DataFrame<I, H>::template StlVecType<T> DataFrame<I, H>::
 combine(const char *col_name,
         const DF1 &df1,
         const DF2 &df2,
@@ -2387,7 +2395,7 @@ combine(const char *col_name,
     const auto      &df2_col = df2.template get_column<T>(col_name);
     const size_type col_s =
         std::min<size_type>({ lhs_col.size(), df1_col.size(), df2_col.size() });
-    std::vector<T>  result;
+    StlVecType<T>  result;
 
     result.reserve(col_s);
     for (size_type i = 0; i < col_s; ++i)
@@ -2399,9 +2407,9 @@ combine(const char *col_name,
 
 // ----------------------------------------------------------------------------
 
-template<typename I, typename  H>
+template<typename I, typename H>
 template<typename T, typename DF1, typename DF2, typename DF3, typename F>
-std::vector<T> DataFrame<I, H>::
+typename DataFrame<I, H>::template StlVecType<T> DataFrame<I, H>::
 combine(const char *col_name,
         const DF1 &df1,
         const DF2 &df2,
@@ -2414,7 +2422,7 @@ combine(const char *col_name,
     const auto      &df3_col = df3.template get_column<T>(col_name);
     const size_type col_s = std::min<size_type>(
         { lhs_col.size(), df1_col.size(), df2_col.size(), df3_col.size() });
-    std::vector<T>  result;
+    StlVecType<T>  result;
 
     result.reserve(col_s);
     for (size_type i = 0; i < col_s; ++i)

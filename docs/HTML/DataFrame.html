@@ -31,7 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 }
 
 body {
-  background-image: linear-gradient(AntiqueWhite, HoneyDew, BlanchedAlmond);
+  background-image: linear-gradient(LemonChiffon, Beige, Khaki, BlanchedAlmond, FloralWhite);
 }
 
 .row {
@@ -65,23 +65,33 @@ table {
 <body>
 
   <center>
-	<img src="https://github.com/hosseinmoein/DataFrame/blob/master/docs/LionLookingUp.jpg?raw=true" alt="C++ DataFrame" width="200" height="150"/>
+	<img src="https://github.com/hosseinmoein/DataFrame/blob/master/docs/LionLookingUp.jpg?raw=true" alt="C++ DataFrame" width="30" height="30"/>
+	<img src="https://github.com/hosseinmoein/DataFrame/blob/master/docs/LionLookingUp.jpg?raw=true" alt="C++ DataFrame" width="60" height="60"/>
+	<img src="https://github.com/hosseinmoein/DataFrame/blob/master/docs/LionLookingUp.jpg?raw=true" alt="C++ DataFrame" width="90" height="90"/>
+	<img src="https://github.com/hosseinmoein/DataFrame/blob/master/docs/LionLookingUp.jpg?raw=true" alt="C++ DataFrame" width="120" height="120"/>
+	<img src="https://github.com/hosseinmoein/DataFrame/blob/master/docs/LionLookingUp.jpg?raw=true" alt="C++ DataFrame" width="150" height="150"/>
+	<img src="https://github.com/hosseinmoein/DataFrame/blob/master/docs/LionLookingUp.jpg?raw=true" alt="C++ DataFrame" width="180" height="180"/>
+	<img src="https://github.com/hosseinmoein/DataFrame/blob/master/docs/LionLookingUp.jpg?raw=true" alt="C++ DataFrame" width="150" height="150"/>
+	<img src="https://github.com/hosseinmoein/DataFrame/blob/master/docs/LionLookingUp.jpg?raw=true" alt="C++ DataFrame" width="120" height="120"/>
+	<img src="https://github.com/hosseinmoein/DataFrame/blob/master/docs/LionLookingUp.jpg?raw=true" alt="C++ DataFrame" width="90" height="90"/>
+	<img src="https://github.com/hosseinmoein/DataFrame/blob/master/docs/LionLookingUp.jpg?raw=true" alt="C++ DataFrame" width="60" height="60"/>
+	<img src="https://github.com/hosseinmoein/DataFrame/blob/master/docs/LionLookingUp.jpg?raw=true" alt="C++ DataFrame" width="30" height="30"/>
   </center>
 
 <P>
-  This is a templatized and heterogeneous C++ container with data-analysis functionality and interface.
+  <font size="+1">DataFrame is a templatized and heterogeneous C++ container designed for data analysis for statistical, machine-learning, or financial applications.</font>
   <UL>
     <LI>A DataFrame can have one index column and many data columns of any built-in or user-defined types</LI>
     <LI>Each column in DataFrame could be at most as long as the index columun</LI>
     <LI>Columns in the DataFrame are in order of creation and they could be accessed by name or index. If you rotate the columns, their order changes</LI>
     <LI>To access a column for any operation, you must know its <B>name</B> (or index) and its <B>type</B> at compile time</LI>
     <LI>To start off on basic operations, see <a href="https://github.com/hosseinmoein/DataFrame/blob/master/examples/hello_world.cc">Hello World</a></LI>
+    <LI>Also, see <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrameTypes.html">DataFrame Library Types</a></LI>
     <LI>DataFrame has both sync and async interfaces, latter returning C++ std::futures</LI>
-    <LI>DataFrame is <I>almost</I> a header-only library. More than 95% of the code is in header files, so if you don’t use a feature you don’t pay for it in binary size</LI>
-    <LI><font size="+1"><I>Read <B>views</B>, <B>visitors</B>, and <B>multithreading</B> sections below, before getting serious about this library</I></font></LI>
+    <LI><I>Read <B>views</B>, <B>visitors</B>, <B>multithreading</B>, and <B> memory alignment</B> sections below, before getting serious about this library</I></LI>
   </UL>
 
-<HR>
+<BR><HR COLOR="Orange" SIZE="5"><BR>
 
 DataFrame class is defined as:
 <pre><span style='color:#800000; font-weight:bold; '>template</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>typename</span> I<span style='color:#808030; '>,</span> <span style='color:#800000; font-weight:bold; '>typename</span> H<span style='color:#800080; '>></span>
@@ -92,43 +102,27 @@ DataFrame class is defined as:
   <B>I</B> specifies the index column type<BR>
   <B>H</B> specifies a heterogenous vector type to contain DataFrame columns. <I>H</I> can only be:<BR>
   <UL>
-    <LI><I>HeteroVector</I>: This is an actual heterogenous vector that would contain data. This will result in a "standard" data frame</LI>
-    <LI><I>HeteroPtrView</I>: This is a heterogenous vector view. It will result in a data frame view into a <I>disjoined</I> slice of another data frame.</LI>
-    <LI><I>HeteroConstPtrView</I>: The const version of HeteroPtrView.</LI>
-    <LI><I>HeteroView</I>: This is a heterogenous vector view. It will result in a data frame view into a <I>contiguous</I> slice of another data frame. This view is slightly more efficient than <I>HeteroPtrView</I></LI>
-    <LI><I>HeteroConstView</I>: The const version of HeteroView.</LI>
+    <LI><I>HeteroVector&lt;std::size_t A = 0&gt;</I>: This is an actual heterogenous vector that would contain data. This will result in a "standard" data frame</LI>
+    <LI><I>HeteroPtrView&lt;std::size_t A = 0&gt;</I>: This is a heterogenous vector view. It will result in a data frame view into a <I>disjoined</I> slice of another data frame.</LI>
+    <LI><I>HeteroConstPtrView&lt;std::size_t A = 0&gt;</I>: The const version of HeteroPtrView.</LI>
+    <LI><I>HeteroView&lt;std::size_t A = 0&gt;</I>: This is a heterogenous vector view. It will result in a data frame view into a <I>contiguous</I> slice of another data frame. This view is slightly more efficient than <I>HeteroPtrView</I></LI>
+    <LI><I>HeteroConstView&lt;std::size_t A = 0&gt;</I>: The const version of HeteroView.</LI>
   </UL>
+  Template parameter <I>A</I> referrers to byte boundary alignment to be used in memory allocations. The default is system default boundaries for each type. See <I>Memory Alignment</I> section below<BR><BR>
   Some of the methods in DataFrame return another DataFrame or one of the above views depending on what you asked for. DataFrame and view instances should be indistinguishable from the user's point of view.<BR>
-  There are a few convenient typedef’s that are handy:<BR>
-<pre><span style='color:#800000; font-weight:bold; '>template</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>typename</span> I<span style='color:#800080; '>></span>
-<span style='color:#800000; font-weight:bold; '>using</span> StdDataFrame <span style='color:#808030; '>=</span> DataFrame<span style='color:#800080; '>&lt;</span>I<span style='color:#808030; '>,</span> HeteroVector<span style='color:#800080; '>></span><span style='color:#800080; '>;</span>
+  See <I>Views</I> section below. Also, see <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrameTypes.html">DataFrame Library Types</a> for convenient typedef's<BR>
 
-<span style='color:#800000; font-weight:bold; '>template</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>typename</span> I<span style='color:#800080; '>></span>
-<span style='color:#800000; font-weight:bold; '>using</span> DataFrameView <span style='color:#808030; '>=</span> DataFrame<span style='color:#800080; '>&lt;</span>I<span style='color:#808030; '>,</span> HeteroView<span style='color:#800080; '>></span><span style='color:#800080; '>;</span>
-
-<span style='color:#800000; font-weight:bold; '>template</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>typename</span> I<span style='color:#800080; '>></span>
-<span style='color:#800000; font-weight:bold; '>using</span> DataFrameConstView <span style='color:#808030; '>=</span> DataFrame<span style='color:#800080; '>&lt;</span>I<span style='color:#808030; '>,</span> HeteroConstView<span style='color:#800080; '>></span><span style='color:#800080; '>;</span>
-
-<span style='color:#800000; font-weight:bold; '>template</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>typename</span> I<span style='color:#800080; '>></span>
-<span style='color:#800000; font-weight:bold; '>using</span> DataFramePtrView <span style='color:#808030; '>=</span> DataFrame<span style='color:#800080; '>&lt;</span>I<span style='color:#808030; '>,</span> HeteroPtrView<span style='color:#800080; '>></span><span style='color:#800080; '>;</span>
-
-<span style='color:#800000; font-weight:bold; '>template</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>typename</span> I<span style='color:#800080; '>></span>
-<span style='color:#800000; font-weight:bold; '>using</span> DataFrameConstPtrView <span style='color:#808030; '>=</span> DataFrame<span style='color:#800080; '>&lt;</span>I<span style='color:#808030; '>,</span> HeteroConstPtrView<span style='color:#800080; '>></span><span style='color:#800080; '>;</span>
-</pre>
-<!--Created using ToHtml.com on 2020-06-10 15:24:27 UTC -->
-
-<HR>
+<BR><HR COLOR="Orange" SIZE="5"><BR>
 
   DataFrame library interface is separated into two main categories:
   <OL>
-    <LI>Accessing, adding, slicing &amp; dicing, joining, &amp;  groupby'ing ...  (The first column in the table below)</LI>
-    <LI>Analytical algorithms being statistical, machine-learning, financial analysis …  (The second and third columns in the table below)</LI>
+    <LI>Accessing, adding, slicing &amp; dicing, joining, &amp;  groupby'ing ...  <B>(The first column in the table below)</B></LI>
+    <LI>Analytical algorithms being statistical, machine-learning, financial analysis …  <B>(The second and third columns in the table below)</B></LI>
   </OL>
   I employ regular parameterized methods (i.e. member functions) to implement item (1). For item (2), I chose the visitor pattern.<BR>
   Please see the table below for a comprehensive list of methods, visitors, and types along with documentation and sample code for each feature
 </P>
-
-<HR>
+<BR>
 
 <!-- CSS goes in the document HEAD or added to your external stylesheet -->
 <style type="text/css">
@@ -159,14 +153,14 @@ table.hovertable td {
 </style>
 
 
-  <H2><font color="blue">Table of Features (with Code Samples)</font></H2>
+  <H2><font color="blue">Table of Functionalities &#8212; with Code Samples</font></H2>
 
 <div class="row">
   <div class="column">
   <table id="hmdf_table" align="center" class="hovertable">
 
     <tr>
-      <th><font color="white">DataFrame Member Methods</font></th>
+      <th><font color="white">DataFrame<BR>Member Functions</font></th>
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
@@ -550,7 +544,7 @@ table.hovertable td {
   <div class="column">
   <table id="hmdf_table" align="center" class="hovertable">
     <tr>
-      <th><font color="white">DataFrame Built-in Visitors</font></th>
+      <th><font color="white">DataFrame<BR>Built-in Visitors</font></th>
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
@@ -826,7 +820,7 @@ table.hovertable td {
   <div class="column">
   <table id="hmdf_table" align="center" class="hovertable">
     <tr>
-      <th><font color="white">DataFrame Built-in Financial Visitors</font></th>
+      <th><font color="white">DataFrame<BR>Built-in Financial Visitors</font></th>
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
@@ -1055,7 +1049,7 @@ table.hovertable td {
   <div class="column">
   <table id="hmdf_table" align="center" class="hovertable">
     <tr>
-      <th><font color="white">DataFrame Types</font></th>
+      <th><font color="white">DataFrame<BR>Types</font></th>
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
@@ -1207,7 +1201,7 @@ table.hovertable td {
   <div class="column">
   <table id="hmdf_table" align="center" class="hovertable">
     <tr>
-      <th><font color="white">Stand-alone Numeric Generators</font></th>
+      <th><font color="white">Stand-alone<BR>Numeric Generators</font></th>
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
@@ -1298,7 +1292,7 @@ table.hovertable td {
 
 </div>
 
-<HR>
+<BR><HR COLOR="Orange" SIZE="5"><BR>
 
   <H2><font color="blue">Multithreading</font></H2>
     <OL>
@@ -1311,7 +1305,7 @@ table.hovertable td {
       </OL>
     </OL>
 
-<HR>
+<BR><HR COLOR="Orange" SIZE="5"><BR>
 
   <H2><font color="blue">Views</font></H2>
   <P>
@@ -1333,7 +1327,7 @@ table.hovertable td {
     For more understanding, look at this document further and/or the test files.
   </P>
 
-<HR>
+<BR><HR COLOR="Orange" SIZE="5"><BR>
 
   <H2><font color="blue">Visitors</font></H2>
   <P>
@@ -1361,7 +1355,16 @@ table.hovertable td {
     <LI>Because algorithms are self-contained, they can be passed to other algorithms to be used</LI>
   </UL>
 
-<HR>
+<BR><HR COLOR="Orange" SIZE="5"><BR>
+
+  <H2><font color="blue">Memory Alignment</font></H2>
+  <P>
+    DataFrame gives you ability to allocate memory on custom alignment boundaries.<BR>
+    You can use this feature to take advantage of <I>SIMD</I> instructions in modern CPU’s. Since DataFrame algorithms are all done on vectors of data &#8212; columns, this can come handy in conjunction with compiler optimizations.<BR>
+There are convenient typedef’s that define DataFrame’s that allocate memory, for example, on 64, 128, 256, … bytes boundaries. See <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrameTypes.html">DataFrame Library Types</a>
+  </P>
+
+<BR><HR COLOR="Orange" SIZE="5"><BR>
 
   <H2><font color="blue">Numeric Generators</font></H2>
   <P>
@@ -1370,7 +1373,7 @@ table.hovertable td {
     For the definition and defaults of <I>RandGenParams</I>, see this document and file <I>DataFrameTypes.h</I>
   </P>
 
-<HR>
+<BR><HR COLOR="Orange" SIZE="5"><BR>
 
   <H2><font color="blue">Code Structure</font></H2>
   <P>
@@ -1385,7 +1388,7 @@ table.hovertable td {
     <font size="+1"><I>test</I></font> directory contains all the test source files, mocked data files, and test output files. The main test source files are <I>dataframe_tester.cc</I> and <I>dataframe_tester_2.cc</I>. It contains test cases for all functionalities of DataFrame. It is not in a very organized structure. I plan to make the test cases more organized.
   </P>
 
-<HR>
+<BR><HR COLOR="Orange" SIZE="5"><BR>
 
   <H2><font color="blue">Build Instructions</font></H2>
   <P>
@@ -1394,7 +1397,8 @@ table.hovertable td {
     <font size="+1"><I>Using cmake:</I></font><BR>
     Please see README file. Thanks to @justinjk007, you should be able to build this in Linux, Windows, Mac, and more
   </P>
-<HR>
+
+<BR><HR COLOR="Orange" SIZE="5"><BR>
 
   <H2><font color="blue">Motivation</font></H2>
   <P>
@@ -1402,9 +1406,7 @@ table.hovertable td {
     <I>I welcome all contributions from people with expertise, interest, and time to do it. I will add more functionalities from time to time, but currently my spare time is limited.</I>
   </P>
 
-<HR>
-
-  <BR><BR>
+  <BR>
 
 </body></html>
 

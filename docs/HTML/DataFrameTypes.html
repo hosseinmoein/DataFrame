@@ -34,6 +34,58 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>
+View
+        </font>
+        </B></PRE>
+      </td>
+      <td>
+        A DataFrame view. This is a view on a <I>contiguous</I> slice of another DataFrane of the same type.<BR>
+        You can read and change data in this view.<BR>
+      </td>
+    </tr>
+
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        <PRE><B>
+ConstView
+        </font>
+        </B></PRE>
+      </td>
+      <td>
+        A <I>const</I> DataFrame view. This is a view on a <I>contiguous</I> slice of another DataFrane of the same type.<BR>
+        This is a read-only view.<BR>
+      </td>
+    </tr>
+
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        <PRE><B>
+PtrView
+        </font>
+        </B></PRE>
+      </td>
+      <td>
+        A DataFrame view. This is a view on a <I>disjoined</I> slice of another DataFrane of the same type.<BR>
+        You can read and change data in this view.<BR>
+      </td>
+    </tr>
+
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        <PRE><B>
+ConstPtrView
+        </font>
+        </B></PRE>
+      </td>
+      <td>
+        A <I>const</I> DataFrame view. This is a view on a <I>disjoined</I> slice of another DataFrane of the same type.<BR>
+        This is a read-only view.<BR>
+      </td>
+    </tr>
+
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        <PRE><B>
 align_value
         </font>
         </B></PRE>
@@ -91,58 +143,6 @@ IndexVecType
       <td>
         Type of vector used for the index column. It is either a std::vector or one of the vector views depending on whether this is a DataFrame or a DataFrame <I>view</I>.<BR>
         Also, the allocator depends on the <I>align_value</I>.<BR>
-      </td>
-    </tr>
-
-    <tr bgcolor="lightgrey">
-      <td bgcolor="maroon"> <font color="white">
-        <PRE><B>
-View
-        </font>
-        </B></PRE>
-      </td>
-      <td>
-        A DataFrame view. This is a view on a <I>contiguous</I> slice of another DataFrane of the same type.<BR>
-        You can read and change data in this view.<BR>
-      </td>
-    </tr>
-
-    <tr bgcolor="lightgrey">
-      <td bgcolor="maroon"> <font color="white">
-        <PRE><B>
-ConstView
-        </font>
-        </B></PRE>
-      </td>
-      <td>
-        A <I>const</I> DataFrame view. This is a view on a <I>contiguous</I> slice of another DataFrane of the same type.<BR>
-        This is a read-only view.<BR>
-      </td>
-    </tr>
-
-    <tr bgcolor="lightgrey">
-      <td bgcolor="maroon"> <font color="white">
-        <PRE><B>
-PtrView
-        </font>
-        </B></PRE>
-      </td>
-      <td>
-        A DataFrame view. This is a view on a <I>disjoined</I> slice of another DataFrane of the same type.<BR>
-        You can read and change data in this view.<BR>
-      </td>
-    </tr>
-
-    <tr bgcolor="lightgrey">
-      <td bgcolor="maroon"> <font color="white">
-        <PRE><B>
-ConstPtrView
-        </font>
-        </B></PRE>
-      </td>
-      <td>
-        A <I>const</I> DataFrame view. This is a view on a <I>disjoined</I> slice of another DataFrane of the same type.<BR>
-        This is a read-only view.<BR>
       </td>
     </tr>
 

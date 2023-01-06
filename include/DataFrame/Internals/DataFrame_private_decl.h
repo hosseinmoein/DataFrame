@@ -272,10 +272,10 @@ _replace_vector_vals_(V &data_vec,
 
 template<typename T, typename V>
 inline static void
-_col_vector_push_back_(V &vec,
-                       std::istream &file,
-                       T (*converter)(const char *, char **, int),
-                       io_format file_type = io_format::csv)  {
+_col_vector_push_back_func_(V &vec,
+                            std::istream &file,
+                            T (*converter)(const char *, char **, int),
+                            io_format file_type = io_format::csv)  {
 
     char    value[8192];
     char    c = 0;
@@ -292,82 +292,89 @@ _col_vector_push_back_(V &vec,
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename V>
-inline static void
-_col_vector_push_back_(V &vec,
-                       std::istream &file,
-                       T (*converter)(const char *, char **),
-                       io_format file_type = io_format::csv)  {
+template<typename T, typename V, typename Dummy = void>
+struct  _col_vector_push_back_  {
 
-    char    value[8192];
-    char    c = 0;
+    inline void
+    operator ()(V &vec,
+                std::istream &file,
+                T (*converter)(const char *, char **),
+                io_format file_type = io_format::csv) const  {
 
-    while (file.get(c)) {
-        if (file_type == io_format::csv && c == '\n')  break;
-        else if (file_type == io_format::json && c == ']')  break;
-        file.unget();
-        _get_token_from_file_(file, ',', value,
-                              file_type == io_format::json ? ']' : '\0');
-        vec.push_back(static_cast<T>(converter(value, nullptr)));
+        char    value[8192];
+        char    c = 0;
+
+        while (file.get(c)) {
+            if (file_type == io_format::csv && c == '\n')  break;
+            else if (file_type == io_format::json && c == ']')  break;
+            file.unget();
+            _get_token_from_file_(file, ',', value,
+                                  file_type == io_format::json ? ']' : '\0');
+            vec.push_back(static_cast<T>(converter(value, nullptr)));
+        }
     }
-}
+};
 
 // ----------------------------------------------------------------------------
 
-template<>
-inline static void
-_col_vector_push_back_<const char *, StlVecType<std::string>>(
-    StlVecType<std::string> &vec,
-    std::istream &file,
-    const char * (*)(const char *, char **),
-    io_format file_type)  {
+template<typename Dummy>
+struct  _col_vector_push_back_<const char *, StlVecType<std::string>, Dummy>  {
 
-    char    value[8192];
-    char    c = 0;
+    inline void
+    operator ()(StlVecType<std::string> &vec,
+                std::istream &file,
+                const char * (*)(const char *, char **),
+                io_format file_type = io_format::csv) const  {
 
-    while (file.get(c)) {
-        if (file_type == io_format::csv && c == '\n')  break;
-        else if (file_type == io_format::json && c == ']')  break;
-        file.unget();
-        _get_token_from_file_(file, ',', value,
-                              file_type == io_format::json ? ']' : '\0');
-        vec.push_back(value);
+        char    value[8192];
+        char    c = 0;
+
+        while (file.get(c)) {
+            if (file_type == io_format::csv && c == '\n')  break;
+            else if (file_type == io_format::json && c == ']')  break;
+            file.unget();
+            _get_token_from_file_(file, ',', value,
+                                  file_type == io_format::json ? ']' : '\0');
+            vec.push_back(value);
+        }
     }
-}
+};
 
 // ----------------------------------------------------------------------------
 
-template<>
-inline static void
-_col_vector_push_back_<DateTime, StlVecType<DateTime>>(
-    StlVecType<DateTime> &vec,
-    std::istream &file,
-    DateTime (*)(const char *, char **),
-    io_format file_type)  {
+template<typename Dummy>
+struct  _col_vector_push_back_<DateTime, StlVecType<DateTime>, Dummy>  {
 
-    char    value[1024];
-    char    c = 0;
+    inline void
+    operator ()(StlVecType<DateTime> &vec,
+             std::istream &file,
+             DateTime (*)(const char *, char **),
+             io_format file_type = io_format::csv) const  {
 
-    while (file.get(c)) {
-        if (file_type == io_format::csv && c == '\n')  break;
-        else if (file_type == io_format::json && c == ']')  break;
-        file.unget();
-        _get_token_from_file_(file, ',', value,
-                              file_type == io_format::json ? ']' : '\0');
+        char    value[1024];
+        char    c = 0;
 
-        time_t      t;
-        int         n;
-        DateTime    dt;
+        while (file.get(c)) {
+            if (file_type == io_format::csv && c == '\n')  break;
+            else if (file_type == io_format::json && c == ']')  break;
+            file.unget();
+            _get_token_from_file_(file, ',', value,
+                                  file_type == io_format::json ? ']' : '\0');
+
+            time_t      t;
+            int         n;
+            DateTime    dt;
 
 #ifdef _MSC_VER
-        ::sscanf(value, "%lld.%d", &t, &n);
+            ::sscanf(value, "%lld.%d", &t, &n);
 #else
-        ::sscanf(value, "%ld.%d", &t, &n);
+            ::sscanf(value, "%ld.%d", &t, &n);
 #endif // _MSC_VER
-        dt.set_time(t, n);
-        vec.emplace_back(std::move(dt));
+            dt.set_time(t, n);
+            vec.emplace_back(std::move(dt));
+        }
     }
-}
+};
 
 // ----------------------------------------------------------------------------
 
@@ -419,7 +426,7 @@ _json_str_col_vector_push_back_(StlVecType<std::string> &vec,
 
 // ----------------------------------------------------------------------------
 
-template<typename T>
+template<typename T, typename Dummy = void>
 struct  _IdxParserFunctor_  {
 
     void operator()(StlVecType<T> &, std::istream &, io_format)  {   }
@@ -427,254 +434,268 @@ struct  _IdxParserFunctor_  {
 
 // ----------------------------------------------------------------------------
 
-template<>
-struct  _IdxParserFunctor_<float>  {
+template<typename Dummy>
+struct  _IdxParserFunctor_<float, Dummy>  {
 
     inline void operator()(StlVecType<float> &vec,
                            std::istream &file,
-                           io_format file_type = io_format::csv)  {
+                           io_format file_type = io_format::csv) const  {
 
-        _col_vector_push_back_(vec, file, &::strtof, file_type);
+        const _col_vector_push_back_<float, StlVecType<float>>  slug;
+
+        slug()(vec, file, &::strtof, file_type);
     }
 };
 
 // ----------------------------------------------------------------------------
 
-template<>
-struct  _IdxParserFunctor_<double>  {
+template<typename Dummy>
+struct  _IdxParserFunctor_<double, Dummy>  {
 
     inline void operator()(StlVecType<double> &vec,
                            std::istream &file,
-                           io_format file_type = io_format::csv)  {
+                           io_format file_type = io_format::csv) const  {
 
-        _col_vector_push_back_(vec, file, &::strtod, file_type);
+        const _col_vector_push_back_<double, StlVecType<double>>  slug;
+
+        slug(vec, file, &::strtod, file_type);
     }
 };
 
 // ----------------------------------------------------------------------------
 
-template<>
-struct  _IdxParserFunctor_<long double>  {
+template<typename Dummy>
+struct  _IdxParserFunctor_<long double, Dummy>  {
 
     inline void operator()(StlVecType<long double> &vec,
                            std::istream &file,
-                           io_format file_type = io_format::csv)  {
+                           io_format file_type = io_format::csv) const  {
 
-        _col_vector_push_back_(vec, file, &::strtold, file_type);
+        const _col_vector_push_back_
+            <long double, StlVecType<long double>>  slug;
+
+        slug(vec, file, &::strtold, file_type);
     }
 };
 
 // ----------------------------------------------------------------------------
 
-template<>
-struct  _IdxParserFunctor_<int>  {
+template<typename Dummy>
+struct  _IdxParserFunctor_<int, Dummy>  {
 
     inline void operator()(StlVecType<int> &vec,
                            std::istream &file,
-                           io_format file_type = io_format::csv)  {
+                           io_format file_type = io_format::csv) const  {
 
-        _col_vector_push_back_(vec, file, &::strtol, file_type);
+        _col_vector_push_back_func_(vec, file, &::strtol, file_type);
     }
 };
 
 // ----------------------------------------------------------------------------
 
-template<>
-struct  _IdxParserFunctor_<long>  {
+template<typename Dummy>
+struct  _IdxParserFunctor_<long, Dummy>  {
 
     inline void operator()(StlVecType<long> &vec,
                            std::istream &file,
-                           io_format file_type = io_format::csv)  {
+                           io_format file_type = io_format::csv) const  {
 
-        _col_vector_push_back_(vec, file, &::strtol, file_type);
+        _col_vector_push_back_func_(vec, file, &::strtol, file_type);
     }
 };
 
 // ----------------------------------------------------------------------------
 
-template<>
-struct  _IdxParserFunctor_<long long>  {
+template<typename Dummy>
+struct  _IdxParserFunctor_<long long, Dummy>  {
 
     inline void operator()(StlVecType<long long> &vec,
                            std::istream &file,
-                           io_format file_type = io_format::csv)  {
+                           io_format file_type = io_format::csv) const  {
 
-        _col_vector_push_back_(vec, file, &::strtoll, file_type);
+        _col_vector_push_back_func_(vec, file, &::strtoll, file_type);
     }
 };
 
 // ----------------------------------------------------------------------------
 
-template<>
-struct  _IdxParserFunctor_<unsigned int>  {
+template<typename Dummy>
+struct  _IdxParserFunctor_<unsigned int, Dummy>  {
 
     inline void operator()(StlVecType<unsigned int> &vec,
                            std::istream &file,
-                           io_format file_type = io_format::csv)  {
+                           io_format file_type = io_format::csv) const  {
 
-        _col_vector_push_back_(vec, file, &::strtoul, file_type);
+        _col_vector_push_back_func_(vec, file, &::strtoul, file_type);
     }
 };
 
 // ----------------------------------------------------------------------------
 
-template<>
-struct  _IdxParserFunctor_<unsigned long>  {
+template<typename Dummy>
+struct  _IdxParserFunctor_<unsigned long, Dummy>  {
 
     inline void operator()(StlVecType<unsigned long> &vec,
                            std::istream &file,
-                           io_format file_type = io_format::csv)  {
+                           io_format file_type = io_format::csv) const  {
 
-        _col_vector_push_back_(vec, file, &::strtoul, file_type);
+        _col_vector_push_back_func_(vec, file, &::strtoul, file_type);
     }
 };
 
 // ----------------------------------------------------------------------------
 
-template<>
-struct  _IdxParserFunctor_<unsigned long long>  {
+template<typename Dummy>
+struct  _IdxParserFunctor_<unsigned long long, Dummy>  {
 
     inline void operator()(StlVecType<unsigned long long> &vec,
                            std::istream &file,
-                           io_format file_type = io_format::csv)  {
+                           io_format file_type = io_format::csv) const  {
 
-        _col_vector_push_back_(vec, file, &::strtoull, file_type);
+        _col_vector_push_back_func_(vec, file, &::strtoull, file_type);
     }
 };
 
 // ----------------------------------------------------------------------------
 
-template<>
-struct  _IdxParserFunctor_<std::string>  {
+template<typename Dummy>
+struct  _IdxParserFunctor_<std::string, Dummy>  {
 
     inline void operator()(StlVecType<std::string> &vec,
                            std::istream &file,
-                           io_format file_type = io_format::csv)  {
+                           io_format file_type = io_format::csv) const  {
 
-        auto    converter =
+        auto                   converter =
             [](const char *s, char **)-> const char * { return s; };
+        const _col_vector_push_back_
+            <const char *, StlVecType<std::string>>  slug;
 
-        _col_vector_push_back_<const char *, StlVecType<std::string>>
-            (vec, file, converter, file_type);
+        slug(vec, file, converter, file_type);
     }
 };
 
 // ----------------------------------------------------------------------------
 
-template<>
-struct  _IdxParserFunctor_<DateTime>  {
+template<typename Dummy>
+struct  _IdxParserFunctor_<DateTime, Dummy>  {
 
     inline void operator()(StlVecType<DateTime> &vec,
                            std::istream &file,
-                           io_format file_type = io_format::csv)  {
+                           io_format file_type = io_format::csv) const  {
 
-        auto    converter =
+        auto                    converter =
             [](const char *, char **)-> DateTime  { return DateTime(); };
+        const _col_vector_push_back_<DateTime, StlVecType<DateTime>>  slug;
 
-        _col_vector_push_back_<DateTime, StlVecType<DateTime>>
-            (vec, file, converter, file_type);
+        slug(vec, file, converter, file_type);
     }
 };
 
 // ----------------------------------------------------------------------------
 
-template<>
-struct  _IdxParserFunctor_<bool>  {
+template<typename Dummy>
+struct  _IdxParserFunctor_<bool, Dummy>  {
 
     inline void operator()(StlVecType<bool> &vec,
                            std::istream &file,
-                           io_format file_type = io_format::csv)  {
+                           io_format file_type = io_format::csv) const  {
 
-        _col_vector_push_back_(vec, file, &::strtol, file_type);
+        _col_vector_push_back_func_(vec, file, &::strtol, file_type);
     }
 };
 
 // ----------------------------------------------------------------------------
 
-template<typename T>
-inline static void
-_generate_ts_index_(StlVecType<T> &index_vec,
-                    DateTime &start_di,
-                    time_frequency t_freq,
-                    long increment)  {
+template<typename T, typename Dummy = void>
+struct  _generate_ts_index_  {
 
-    switch(t_freq)  {
-    case time_frequency::annual:
-        index_vec.push_back(static_cast<T>(start_di.date()));
-        start_di.add_years(increment);
-        break;
-    case time_frequency::monthly:
-        index_vec.push_back(static_cast<T>(start_di.date()));
-        start_di.add_months(increment);
-        break;
-    case time_frequency::weekly:
-        index_vec.push_back(static_cast<T>(start_di.date()));
-        start_di.add_days(increment * 7);
-        break;
-    case time_frequency::daily:
-        index_vec.push_back(static_cast<T>(start_di.date()));
-        start_di.add_days(increment);
-        break;
-    case time_frequency::hourly:
-        index_vec.push_back(static_cast<T>(start_di.time()));
-        start_di.add_seconds(increment * 60 * 60);
-        break;
-    case time_frequency::minutely:
-        index_vec.push_back(static_cast<T>(start_di.time()));
-        start_di.add_seconds(increment * 60);
-        break;
-    case time_frequency::secondly:
-        index_vec.push_back(static_cast<T>(start_di.time()));
-        start_di.add_seconds(increment);
-        break;
-    case time_frequency::millisecondly:
-        index_vec.push_back(static_cast<T>(start_di.long_time()));
-        start_di.add_nanoseconds(increment * 1000000);
-        break;
-    default:
-        break;
+    inline void
+    operator ()(StlVecType<T> &index_vec,
+                DateTime &start_di,
+                time_frequency t_freq,
+                long increment) const  {
+
+        switch(t_freq)  {
+        case time_frequency::annual:
+            index_vec.push_back(static_cast<T>(start_di.date()));
+            start_di.add_years(increment);
+            break;
+        case time_frequency::monthly:
+            index_vec.push_back(static_cast<T>(start_di.date()));
+            start_di.add_months(increment);
+            break;
+        case time_frequency::weekly:
+            index_vec.push_back(static_cast<T>(start_di.date()));
+            start_di.add_days(increment * 7);
+            break;
+        case time_frequency::daily:
+            index_vec.push_back(static_cast<T>(start_di.date()));
+            start_di.add_days(increment);
+            break;
+        case time_frequency::hourly:
+            index_vec.push_back(static_cast<T>(start_di.time()));
+            start_di.add_seconds(increment * 60 * 60);
+            break;
+        case time_frequency::minutely:
+            index_vec.push_back(static_cast<T>(start_di.time()));
+            start_di.add_seconds(increment * 60);
+            break;
+        case time_frequency::secondly:
+            index_vec.push_back(static_cast<T>(start_di.time()));
+            start_di.add_seconds(increment);
+            break;
+        case time_frequency::millisecondly:
+            index_vec.push_back(static_cast<T>(start_di.long_time()));
+            start_di.add_nanoseconds(increment * 1000000);
+            break;
+        default:
+            break;
+        }
     }
-}
+};
 
 // ----------------------------------------------------------------------------
 
-template<>
-inline static void
-_generate_ts_index_<DateTime>(StlVecType<DateTime> &index_vec,
-                              DateTime &start_di,
-                              time_frequency t_freq,
-                              long increment)  {
+template<typename Dummy>
+struct  _generate_ts_index_<DateTime, Dummy>  {
 
-    index_vec.push_back(start_di);
-    switch(t_freq)  {
-    case time_frequency::annual:
-        start_di.add_years(increment);
-        break;
-    case time_frequency::monthly:
-        start_di.add_months(increment);
-        break;
-    case time_frequency::weekly:
-        start_di.add_days(increment * 7);
-        break;
-    case time_frequency::daily:
-        start_di.add_days(increment);
-        break;
-    case time_frequency::hourly:
-        start_di.add_seconds(increment * 60 * 60);
-        break;
-    case time_frequency::minutely:
-        start_di.add_seconds(increment * 60);
-        break;
-    case time_frequency::secondly:
-        start_di.add_seconds(increment);
-        break;
-    case time_frequency::millisecondly:
-        start_di.add_nanoseconds(increment * 1000000);
-        break;
-    default:
-        break;
+    inline void
+    operator ()(StlVecType<DateTime> &index_vec,
+                DateTime &start_di,
+                time_frequency t_freq,
+                long increment) const  {
+
+        index_vec.push_back(start_di);
+        switch(t_freq)  {
+        case time_frequency::annual:
+            start_di.add_years(increment);
+            break;
+        case time_frequency::monthly:
+            start_di.add_months(increment);
+            break;
+        case time_frequency::weekly:
+            start_di.add_days(increment * 7);
+            break;
+        case time_frequency::daily:
+            start_di.add_days(increment);
+            break;
+        case time_frequency::hourly:
+            start_di.add_seconds(increment * 60 * 60);
+            break;
+        case time_frequency::minutely:
+            start_di.add_seconds(increment * 60);
+            break;
+        case time_frequency::secondly:
+            start_di.add_seconds(increment);
+            break;
+        case time_frequency::millisecondly:
+            start_di.add_nanoseconds(increment * 1000000);
+            break;
+        default:
+            break;
+        }
     }
-}
+};
 
 // ----------------------------------------------------------------------------
 

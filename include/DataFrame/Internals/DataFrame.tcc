@@ -668,8 +668,7 @@ void DataFrame<I, H>::make_consistent ()  {
     static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
                   "Only a StdDataFrame can call make_consistent()");
 
-    const size_type             idx_s = indices_.size();
-    consistent_functor_<Ts ...> functor (idx_s);
+    consistent_functor_<Ts ...> functor (indices_.size());
     const SpinGuard             guard(lock_);
 
     for (const auto &iter : data_)

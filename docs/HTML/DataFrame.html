@@ -99,16 +99,16 @@ DataFrame class is defined as:
 </pre>
 <!--Created using ToHtml.com on 2020-06-09 14:51:05 UTC -->
 
-  <B>I</B> specifies the index column type<BR>
-  <B>H</B> specifies a heterogenous vector type to contain DataFrame columns. <I>H</I> can only be:<BR>
+  <B>I</B> specifies the <I>index</I> column type<BR>
+  <B>H</B> specifies a heterogenous vector type to contain DataFrame columns. <B>H</B> can only be:<BR>
   <UL>
-    <LI><I>HeteroVector&lt;std::size_t A = 0&gt;</I>: This is an actual heterogenous vector that would contain data. This will result in a "standard" data frame</LI>
-    <LI><I>HeteroPtrView&lt;std::size_t A = 0&gt;</I>: This is a heterogenous vector view. It will result in a data frame view into a <I>disjoined</I> slice of another data frame.</LI>
-    <LI><I>HeteroConstPtrView&lt;std::size_t A = 0&gt;</I>: The const version of HeteroPtrView.</LI>
-    <LI><I>HeteroView&lt;std::size_t A = 0&gt;</I>: This is a heterogenous vector view. It will result in a data frame view into a <I>contiguous</I> slice of another data frame. This view is slightly more efficient than <I>HeteroPtrView</I></LI>
-    <LI><I>HeteroConstView&lt;std::size_t A = 0&gt;</I>: The const version of HeteroView.</LI>
+    <LI><B><style='color:#000000;background:#ffffff;'>HeteroVector<span style='color:#808030; '>&lt;</span><span style='color:#666616;'>std</span><span style='color:#800080;'>::</span><span style='color:#603000;'>size_t</span> A <span style='color:#808030;'>=</span> <span style='color:#008c00;'>0</span><span style='color:#808030;'>></span></B>: This is an actual heterogenous vector that would contain data. This will result in a "standard" data frame</LI>
+    <LI><B><style='color:#000000;background:#ffffff;'>HeteroPtrView<span style='color:#808030; '>&lt;</span><span style='color:#666616;'>std</span><span style='color:#800080;'>::</span><span style='color:#603000;'>size_t</span> A <span style='color:#808030;'>=</span> <span style='color:#008c00;'>0</span><span style='color:#808030;'>></span></B>: This is a heterogenous vector view. It will result in a data frame view into a <I>disjoined</I> slice of another data frame.</LI>
+    <LI><B><style='color:#000000;background:#ffffff;'>HeteroConstPtrView<span style='color:#808030; '>&lt;</span><span style='color:#666616;'>std</span><span style='color:#800080;'>::</span><span style='color:#603000;'>size_t</span> A <span style='color:#808030;'>=</span> <span style='color:#008c00;'>0</span><span style='color:#808030;'>></span></B>: The const version of HeteroPtrView.</LI>
+    <LI><B><style='color:#000000;background:#ffffff;'>HeteroView<span style='color:#808030; '>&lt;</span><span style='color:#666616;'>std</span><span style='color:#800080;'>::</span><span style='color:#603000;'>size_t</span> A <span style='color:#808030;'>=</span> <span style='color:#008c00;'>0</span><span style='color:#808030;'>></span></B>: This is a heterogenous vector view. It will result in a data frame view into a <I>contiguous</I> slice of another data frame. This view is slightly more efficient than <I>HeteroPtrView</I></LI>
+    <LI><B><style='color:#000000;background:#ffffff;'>HeteroConstView<span style='color:#808030; '>&lt;</span><span style='color:#666616;'>std</span><span style='color:#800080;'>::</span><span style='color:#603000;'>size_t</span> A <span style='color:#808030;'>=</span> <span style='color:#008c00;'>0</span><span style='color:#808030;'>></span></B>: The const version of HeteroView.</LI>
   </UL>
-  Template parameter <I>A</I> referrers to byte boundary alignment to be used in memory allocations. The default is system default boundaries for each type. See <I>Memory Alignment</I> section below<BR><BR>
+  Template parameter <B>A</B> referrers to byte boundary alignment to be used in memory allocations. The default is system default boundaries for each type. See <I>Memory Alignment</I> section below<BR><BR>
   Some of the methods in DataFrame return another DataFrame or one of the above views depending on what you asked for. DataFrame and view instances should be indistinguishable from the user's point of view.<BR>
   See <I>Views</I> section below. Also, see <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrameTypes.html">DataFrame Library Types</a> for convenient typedef's<BR>
 

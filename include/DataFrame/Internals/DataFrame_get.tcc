@@ -58,11 +58,11 @@ MemUsage DataFrame<I, H>::get_memory_usage(const char *col_name) const  {
 
     result.index_type_size = sizeof(IndexType);
     result.column_type_size = sizeof(T);
-    _get_mem_numbers_(get_index(),
-                      result.index_used_memory, result.index_capacity_memory);
-    _get_mem_numbers_(get_column<T>(col_name),
-                      result.column_used_memory,
-                      result.column_capacity_memory);
+    get_mem_numbers_(get_index(),
+                     result.index_used_memory, result.index_capacity_memory);
+    get_mem_numbers_(get_column<T>(col_name),
+                     result.column_used_memory,
+                     result.column_capacity_memory);
     return (result);
 }
 

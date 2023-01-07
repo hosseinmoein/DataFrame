@@ -284,7 +284,7 @@ gen_datetime_index(const char *start_datetime,
         throw NotFeasible ("ERROR: gen_datetime_index()");
     }
 
-    const _generate_ts_index_<IndexType>  slug;
+    const GenerateTSIndex_<IndexType>   slug;
 
     while (start_di < end_di)
         slug(index_vec, start_di, t_freq, increment);

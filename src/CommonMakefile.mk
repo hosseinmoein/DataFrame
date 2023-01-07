@@ -11,9 +11,7 @@ PROJECT_INCLUDE_DIR = ../../include
 # -----------------------------------------------------------------------------
 
 SRCS = ../test/dataframe_tester.cc \
-       ../test/aligned_dataframe_tester.cc \
        ../test/dataframe_tester_2.cc \
-       ../test/aligned_dataframe_tester_2.cc \
        ../test/dataframe_tester_3.cc \
        ../examples/hello_world.cc \
        ../test/dataframe_thread_safety.cc \
@@ -71,9 +69,7 @@ TARGET_LIB = $(LOCAL_LIB_DIR)/lib$(LIB_NAME).a
 
 TARGETS += $(TARGET_LIB) \
            $(LOCAL_BIN_DIR)/dataframe_tester \
-           $(LOCAL_BIN_DIR)/aligned_dataframe_tester \
            $(LOCAL_BIN_DIR)/dataframe_tester_2 \
-           $(LOCAL_BIN_DIR)/aligned_dataframe_tester_2 \
            $(LOCAL_BIN_DIR)/dataframe_tester_3 \
            $(LOCAL_BIN_DIR)/hello_world \
            $(LOCAL_BIN_DIR)/dataframe_thread_safety \
@@ -141,17 +137,9 @@ DATAFRAME_TESTER_OBJ = $(LOCAL_OBJ_DIR)/dataframe_tester.o
 $(LOCAL_BIN_DIR)/dataframe_tester: $(TARGET_LIB) $(DATAFRAME_TESTER_OBJ)
 	$(CXX) -o $@ $(DATAFRAME_TESTER_OBJ) $(LIBS)
 
-ALIGNED_DATAFRAME_TESTER_OBJ = $(LOCAL_OBJ_DIR)/aligned_dataframe_tester.o
-$(LOCAL_BIN_DIR)/aligned_dataframe_tester: $(TARGET_LIB) $(ALIGNED_DATAFRAME_TESTER_OBJ)
-	$(CXX) -o $@ $(ALIGNED_DATAFRAME_TESTER_OBJ) $(LIBS)
-
 DATAFRAME_TESTER_OBJ_2 = $(LOCAL_OBJ_DIR)/dataframe_tester_2.o
 $(LOCAL_BIN_DIR)/dataframe_tester_2: $(TARGET_LIB) $(DATAFRAME_TESTER_OBJ_2)
 	$(CXX) -o $@ $(DATAFRAME_TESTER_OBJ_2) $(LIBS)
-
-ALIGNED_DATAFRAME_TESTER_OBJ_2 = $(LOCAL_OBJ_DIR)/aligned_dataframe_tester_2.o
-$(LOCAL_BIN_DIR)/aligned_dataframe_tester_2: $(TARGET_LIB) $(ALIGNED_DATAFRAME_TESTER_OBJ_2)
-	$(CXX) -o $@ $(ALIGNED_DATAFRAME_TESTER_OBJ_2) $(LIBS)
 
 DATAFRAME_TESTER_OBJ_3 = $(LOCAL_OBJ_DIR)/dataframe_tester_3.o
 $(LOCAL_BIN_DIR)/dataframe_tester_3: $(TARGET_LIB) $(DATAFRAME_TESTER_OBJ_3)
@@ -209,8 +197,7 @@ clean:
           $(DATAFRAME_PERFORMANCE_OBJ) $(DATAFRAME_TESTER_OBJ_2) \
           $(DATAFRAME_TESTER_OBJ_3) $(HELLO_WORLD_OBJ) \
           $(DATAFRAME_PERFORMANCE_2_OBJ) $(DATAFRAME_THREAD_SAFTY_OBJ) \
-          $(DATAFRAME_TESTER_SCHEMA_OBJ) $(ALLOCATOR_TESTER_OBJ) \
-          $(ALIGNED_DATAFRAME_TESTER_OBJ) $(ALIGNED_DATAFRAME_TESTER_OBJ_2)
+          $(DATAFRAME_TESTER_SCHEMA_OBJ) $(ALLOCATOR_TESTER_OBJ)
 
 clobber:
 	rm -f $(LIB_OBJS) $(TARGETS) $(DATAFRAME_TESTER_OBJ) $(VECTORS_TESTER_OBJ) \
@@ -219,8 +206,7 @@ clobber:
           $(DATAFRAME_TESTER_OBJ_2) $(DATAFRAME_THREAD_SAFTY_OBJ) \
           $(DATAFRAME_TESTER_OBJ_3) $(HELLO_WORLD_OBJ) \
           $(DATAFRAME_TESTER_SCHEMA_OBJ) $(ALLOCATOR_TESTER_OBJ) \
-          $(DATAFRAME_PERFORMANCE_OBJ) $(DATAFRAME_PERFORMANCE_2_OBJ) \
-          $(ALIGNED_DATAFRAME_TESTER_OBJ) $(ALIGNED_DATAFRAME_TESTER_OBJ_2)
+          $(DATAFRAME_PERFORMANCE_OBJ) $(DATAFRAME_PERFORMANCE_2_OBJ)
 
 install_lib:
 	cp -pf $(TARGET_LIB) $(PROJECT_LIB_DIR)/.

@@ -588,7 +588,7 @@ replace(const char *col_name,
     ColumnVecType<T>    &vec = get_column<T>(col_name);
     size_type           count = 0;
 
-    _replace_vector_vals_<ColumnVecType<T>, T>
+    replace_vector_vals_<ColumnVecType<T>, T>
         (vec, old_values, new_values, count, limit);
 
     return (count);
@@ -604,7 +604,7 @@ replace_index(const StlVecType<IndexType> &old_values,
 
     size_type   count = 0;
 
-    _replace_vector_vals_<IndexVecType, IndexType>
+    replace_vector_vals_<IndexVecType, IndexType>
         (indices_, old_values, new_values, count, limit);
 
     return (count);

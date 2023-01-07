@@ -40,7 +40,7 @@ using namespace hmdf;
 
 // A DataFrame with ulong index type
 //
-using MyDataFrame = StdDataFrame<unsigned long>;
+using MyDataFrame = StdDataFrame64<unsigned long>;
 
 template<typename T>
 using StlVecType = typename MyDataFrame::template StlVecType<T>;
@@ -267,7 +267,7 @@ static void test_load_align_column()  {
                          std::move(summary_vec),
                          5,
                          true,
-                         std::sqrt(-1));
+                         std::numeric_limits<double>::quiet_NaN());
 
     StlVecType<double> summary_vec_2 = { 102, 202, 302, 402, 502 };
 
@@ -275,7 +275,7 @@ static void test_load_align_column()  {
                          std::move(summary_vec_2),
                          5,
                          false,
-                         std::sqrt(-1));
+                         std::numeric_limits<double>::quiet_NaN());
 
     assert(df.get_column<double>("summary_col").size() == 28);
     assert(df.get_column<double>("summary_col_2").size() == 28);
@@ -368,7 +368,8 @@ static void test_CategoryVisitor()  {
         { 1UL, 2UL, 3UL, 10UL, 5UL, 7UL, 8UL, 12UL, 9UL, 12UL, 10UL, 13UL,
           10UL, 15UL, 14UL };
     StlVecType<double>         dblvec =
-        { 0.0, 15.0, 14.0, 15.0, 1.0, 12.0, 11.0, 8.0, 15.0, 6.0, sqrt(-1),
+        { 0.0, 15.0, 14.0, 15.0, 1.0, 12.0, 11.0, 8.0, 15.0, 6.0,
+          std::numeric_limits<double>::quiet_NaN(),
           4.0, 14.0, 14.0, 20.0 };
     StlVecType<int>            intvec = { 1, 2, 3, 4, 5, 8, 6, 7, 11, 14, 9 };
     StlVecType<std::string>    strvec =
@@ -382,7 +383,7 @@ static void test_CategoryVisitor()  {
                    std::move(intvec),
                    nan_policy::dont_pad_with_nans);
 
-    CategoryVisitor<double> cat;
+    CategoryVisitor<double, unsigned long, 64> cat;
     auto                    result =
         df.single_act_visit<double>("dbl_col", cat).get_result();
 
@@ -398,7 +399,7 @@ static void test_CategoryVisitor()  {
     assert(result[11] == 8);
     assert(result[10] == static_cast<unsigned long>(-1));
 
-    CategoryVisitor<std::string>    cat2;
+    CategoryVisitor<std::string, unsigned long, 64>    cat2;
     auto                            result2 =
         df.single_act_visit<std::string>("str_col", cat2).get_result();
 
@@ -439,9 +440,10 @@ static void test_FactorizeVisitor()  {
                    std::move(intvec),
                    nan_policy::dont_pad_with_nans);
 
-    FactorizeVisitor<double>    fact([] (const double &f) -> bool {
-                                         return (f > 106.0 && f < 114.0);
-                                     });
+    FactorizeVisitor<double, unsigned long, 64>
+        fact([] (const double &f) -> bool {
+            return (f > 106.0 && f < 114.0);
+        });
     df.load_column("bool_col",
                    df.single_act_visit<double>("dbl_col_2", fact).get_result());
     assert(df.get_column<bool>("bool_col").size() == 15);
@@ -472,17 +474,20 @@ static void test_pattern_match()  {
     p.max_value = 30;
 
     df.load_data(MyDataFrame::gen_sequence_index(0, item_cnt, 1),
-                 std::make_pair("lognormal",
-                                gen_lognormal_dist<double>(item_cnt, p)),
-                 std::make_pair("normal",
-                                gen_normal_dist<double>(item_cnt, p)),
-                 std::make_pair("uniform_real",
-                                gen_uniform_real_dist<double>(item_cnt, p)));
+                 std::make_pair(
+                     "lognormal",
+                     gen_lognormal_dist<double, 64>(item_cnt, p)),
+                 std::make_pair(
+                     "normal",
+                     gen_normal_dist<double, 64>(item_cnt, p)),
+                 std::make_pair(
+                     "uniform_real",
+                     gen_uniform_real_dist<double, 64>(item_cnt, p)));
     p.mean = 0;
     p.std = 1.0;
     p.min_value = -30;
     p.max_value = 30;
-    df.load_column("std_normal", gen_normal_dist<double>(item_cnt, p));
+    df.load_column("std_normal", gen_normal_dist<double, 64>(item_cnt, p));
     df.load_column<unsigned long>(
         "increasing",
         MyDataFrame::gen_sequence_index(0, item_cnt, 1));
@@ -568,7 +573,8 @@ static void test_ClipVisitor()  {
         { 1UL, 2UL, 3UL, 10UL, 5UL, 7UL, 8UL, 12UL, 9UL, 12UL, 10UL, 13UL,
           10UL, 15UL, 14UL };
     StlVecType<double>         dblvec =
-        { 0.0, 15.0, 14.0, 15.0, 1.0, 12.0, 11.0, 8.0, 15.0, 6.0, sqrt(-1),
+        { 0.0, 15.0, 14.0, 15.0, 1.0, 12.0, 11.0, 8.0, 15.0, 6.0,
+          std::numeric_limits<double>::quiet_NaN(),
           4.0, 14.0, 14.0, 20.0 };
     StlVecType<int>            intvec = { 1, 2, 3, 4, 5, 8, 6, 7, 11, 14, 9 };
     StlVecType<std::string>    strvec =
@@ -651,10 +657,10 @@ static void test_RankVisitor()  {
                  std::make_pair("d2_col", d2),
                  std::make_pair("col_3", i1));
 
-    RankVisitor<double> avg_rank_v(rank_policy::average);
-    RankVisitor<double> first_rank_v(rank_policy::first);
-    RankVisitor<double> last_rank_v(rank_policy::last);
-    RankVisitor<double> actual_rank_v(rank_policy::actual);
+    RankVisitor<double, unsigned long, 64> avg_rank_v(rank_policy::average);
+    RankVisitor<double, unsigned long, 64> first_rank_v(rank_policy::first);
+    RankVisitor<double, unsigned long, 64> last_rank_v(rank_policy::last);
+    RankVisitor<double, unsigned long, 64> actual_rank_v(rank_policy::actual);
     const auto          actual_result =
         df.single_act_visit<double>("d1_col", actual_rank_v).get_result();
     const auto          avg_result =
@@ -718,13 +724,18 @@ static void test_SigmoidVisitor()  {
                  std::make_pair("d2_col", d2),
                  std::make_pair("col_3", i1));
 
-    SigmoidVisitor<double>  sig_log(sigmoid_type::logistic);
-    SigmoidVisitor<double>  sig_alg(sigmoid_type::algebraic);
-    SigmoidVisitor<double>  sig_tan(sigmoid_type::hyperbolic_tan);
-    SigmoidVisitor<double>  sig_atan(sigmoid_type::arc_tan);
-    SigmoidVisitor<double>  sig_err(sigmoid_type::error_function);
-    SigmoidVisitor<double>  sig_gud(sigmoid_type::gudermannian);
-    SigmoidVisitor<double>  sig_smo(sigmoid_type::smoothstep);
+    SigmoidVisitor<double, unsigned long, 64>  sig_log(sigmoid_type::logistic);
+    SigmoidVisitor<double, unsigned long, 64>  sig_alg(sigmoid_type::algebraic);
+    SigmoidVisitor<double, unsigned long, 64>  sig_tan(
+        sigmoid_type::hyperbolic_tan);
+    SigmoidVisitor<double, unsigned long, 64>  sig_atan(
+        sigmoid_type::arc_tan);
+    SigmoidVisitor<double, unsigned long, 64>  sig_err(
+        sigmoid_type::error_function);
+    SigmoidVisitor<double, unsigned long, 64>  sig_gud(
+        sigmoid_type::gudermannian);
+    SigmoidVisitor<double, unsigned long, 64>  sig_smo(
+        sigmoid_type::smoothstep);
     const auto              log_result =
         df.single_act_visit<double>("d1_col", sig_log).get_result();
     const auto              alg_result =
@@ -854,14 +865,14 @@ static void test_RSIVisitor()  {
 
     std::cout << "\nTesting RSIVisitor{  } ..." << std::endl;
 
-    typedef StdDataFrame<std::string> StrDataFrame;
+    typedef StdDataFrame64<std::string> StrDataFrame;
 
     StrDataFrame    df;
 
     try  {
         df.read("data/SHORT_IBM.csv", io_format::csv2);
 
-        RSIVisitor<double, std::string> rsi(return_policy::percentage);
+        RSIVisitor<double, std::string, 64> rsi(return_policy::percentage);
 
         df.single_act_visit<double>("IBM_Close", rsi);
 
@@ -1394,22 +1405,31 @@ static void test_BoxCoxVisitor()  {
 
     df.load_data(MyDataFrame::gen_sequence_index(0, item_cnt, 1),
                  std::make_pair("lognormal",
-                                gen_lognormal_dist<double>(item_cnt, p)),
+                                gen_lognormal_dist<double, 64>(item_cnt, p)),
                  std::make_pair("normal",
-                                gen_normal_dist<double>(item_cnt, p)),
-                 std::make_pair("uniform_real",
-                                gen_uniform_real_dist<double>(item_cnt, p)));
+                                gen_normal_dist<double, 64>(item_cnt, p)),
+                 std::make_pair(
+                     "uniform_real",
+                     gen_uniform_real_dist<double, 64>(item_cnt, p)));
 
-    BoxCoxVisitor<double>   bc_v1(box_cox_type::original, 1.5, true);
+    BoxCoxVisitor<double, unsigned long, 64>   bc_v1(box_cox_type::original,
+                                                     1.5,
+                                                     true);
     const auto              &result1 =
         df.single_act_visit<double>("lognormal", bc_v1).get_result();
-    BoxCoxVisitor<double>   bc_v2(box_cox_type::original, 1.5, false);
+    BoxCoxVisitor<double, unsigned long, 64>   bc_v2(box_cox_type::original,
+                                                     1.5,
+                                                     false);
     const auto              &result2 =
         df.single_act_visit<double>("uniform_real", bc_v2).get_result();
-    BoxCoxVisitor<double>   bc_v3(box_cox_type::modulus, -0.5, false);
+    BoxCoxVisitor<double, unsigned long, 64>   bc_v3(box_cox_type::modulus,
+                                                     -0.5,
+                                                     false);
     const auto              &result3 =
         df.single_act_visit<double>("uniform_real", bc_v3).get_result();
-    BoxCoxVisitor<double>   bc_v4(box_cox_type::exponential, -0.5, false);
+    BoxCoxVisitor<double, unsigned long, 64>   bc_v4(box_cox_type::exponential,
+                                                     -0.5,
+                                                     false);
     const auto              &result4 =
         df.single_act_visit<double>("uniform_real", bc_v4).get_result();
 
@@ -1448,8 +1468,8 @@ static void test_NormalizeVisitor()  {
 
     df.load_data(std::move(ulgvec2), std::make_pair("dbl_col", dblvec));
 
-    NormalizeVisitor<double>    norm_v;
-    StandardizeVisitor<double>  stand_v;
+    NormalizeVisitor<double, unsigned long, 64>    norm_v;
+    StandardizeVisitor<double, unsigned long, 64>  stand_v;
     auto                        result =
         df.single_act_visit<double>("dbl_col", norm_v).get_result();
     StlVecType<double>         norm_result = {
@@ -1497,7 +1517,9 @@ static void test_HampelFilterVisitor()  {
 
     df.load_data(std::move(idx), std::make_pair("dbl_col", d1));
 
-    HampelFilterVisitor<double> hf_v(7, hampel_type::mean, 2);
+    HampelFilterVisitor<double, unsigned long, 64> hf_v(7,
+                                                        hampel_type::mean,
+                                                        2);
     auto                        result =
         df.single_act_visit<double>("dbl_col", hf_v).get_result();
     StlVecType<double>         hampel_result = {
@@ -1549,8 +1571,8 @@ static void test_PolyFitVisitor()  {
                            { 0.0, 0.8, 0.9, 0.1, -0.8, -1.0 },
                            nan_policy::dont_pad_with_nans);
 
-    PolyFitVisitor<double>  poly_v1 (2);
-    PolyFitVisitor<double>  poly_v12 (
+    PolyFitVisitor<double, unsigned long, 64>  poly_v1 (2);
+    PolyFitVisitor<double, unsigned long, 64>  poly_v12 (
         2,
         [](const unsigned int &, std::size_t i) -> double {
             const std::array<double, 5> weights = { 0.1, 0.8, 0.3, 0.5, 0.2 };
@@ -1577,7 +1599,7 @@ static void test_PolyFitVisitor()  {
     for (size_t i = 0; i < result12.size(); ++i)
        assert(fabs(result12[i] - actual12[i]) < 0.00001);
 
-    PolyFitVisitor<double>  poly_v2 (3);
+    PolyFitVisitor<double, unsigned long, 64>  poly_v2 (3);
     auto                    result2 =
         df.single_act_visit<double, double>("X2", "Y2", poly_v2).get_result();
     auto                    actual2 =
@@ -1599,7 +1621,7 @@ static void test_HurstExponentVisitor()  {
     p.min_value = 0;
     p.max_value = 30;
 
-    StlVecType<double> d1 = gen_uniform_real_dist<double>(1024, p);
+    StlVecType<double> d1 = gen_uniform_real_dist<double, 64>(1024, p);
     StlVecType<double> d2 =
         { 0.04, 0.02, 0.05, 0.08, 0.02, -0.17, 0.05, 0.0 };
     StlVecType<double> d3 =
@@ -1612,19 +1634,20 @@ static void test_HurstExponentVisitor()  {
     df.load_column("d2_col", std::move(d2), nan_policy::dont_pad_with_nans);
     df.load_column("d3_col", std::move(d3), nan_policy::dont_pad_with_nans);
 
-    HurstExponentVisitor<double>    he_v1 ({ 1, 2, 4 });
+    HurstExponentVisitor<double, unsigned long, 64>    he_v1 ({ 1, 2, 4 });
     auto                            result1 =
         df.single_act_visit<double>("d2_col", he_v1).get_result();
 
     assert(result1 - 0.865926 < 0.00001);
 
-    HurstExponentVisitor<double>    he_v2 ({ 1, 2, 4, 5, 6, 7 });
+    HurstExponentVisitor<double, unsigned long, 64>    he_v2 (
+        { 1, 2, 4, 5, 6, 7 });
     auto                            result2 =
         df.single_act_visit<double>("d1_col", he_v2).get_result();
 
     assert(result2 - 0.487977 < 0.00001);
 
-    HurstExponentVisitor<double>    he_v3 ({ 1, 2, 4 });
+    HurstExponentVisitor<double, unsigned long, 64>    he_v3 ({ 1, 2, 4 });
     auto                            result3 =
         df.single_act_visit<double>("d3_col", he_v3, true).get_result();
 
@@ -1660,7 +1683,7 @@ static void test_LogFitVisitor()  {
                            { 1, 3, 4, 5, 6 },
                            nan_policy::dont_pad_with_nans);
 
-    LogFitVisitor<double>   log_v1;
+    LogFitVisitor<double, unsigned long, 64>   log_v1;
     auto                    result1 =
         df.single_act_visit<double, double>("X1", "Y1", log_v1).get_result();
     auto                    actual1 =
@@ -1674,7 +1697,7 @@ static void test_LogFitVisitor()  {
     for (size_t i = 0; i < log_v1.get_y_fits().size(); ++i)
        assert(fabs(log_v1.get_y_fits()[i] - actual1_y[i]) < 0.01);
 
-    LogFitVisitor<double>   log_v2;
+    LogFitVisitor<double, unsigned long, 64>   log_v2;
     auto                    result2 =
         df.single_act_visit<double, double>("X2", "Y2", log_v2).get_result();
     auto                    actual2 = StlVecType<double> { 1.11199, 2.25859 };
@@ -1713,7 +1736,7 @@ static void test_ExponentialFitVisitor()  {
                            { 1, 3, 4, 5, 6 },
                            nan_policy::dont_pad_with_nans);
 
-    ExponentialFitVisitor<double>   exp_v1;
+    ExponentialFitVisitor<double, unsigned long, 64>   exp_v1;
     auto                            result1 =
         df.single_act_visit<double, double>("X1", "Y1", exp_v1).get_result();
     auto                            actual1 =
@@ -1723,7 +1746,7 @@ static void test_ExponentialFitVisitor()  {
     for (size_t i = 0; i < result1.size(); ++i)
         assert(fabs(result1[i] - actual1[i]) < 0.0001);
 
-    efit_v<double>  exp_v2;
+    efit_v<double, unsigned long, 64>  exp_v2;
     auto            result2 =
         df.single_act_visit<double, double>("X2", "Y2", exp_v2).get_result();
     auto            actual2 =
@@ -1763,7 +1786,7 @@ static void test_LinearFitVisitor()  {
                            { 1, 3, 4, 5, 6 },
                            nan_policy::dont_pad_with_nans);
 
-    LinearFitVisitor<double>    lin_v1;
+    LinearFitVisitor<double, unsigned long, 64>    lin_v1;
     auto                        result1 =
         df.single_act_visit<double, double>("X1", "Y1", lin_v1).get_result();
     auto                        actual1 =
@@ -1773,7 +1796,7 @@ static void test_LinearFitVisitor()  {
     for (size_t i = 0; i < result1.size(); ++i)
         assert(fabs(result1[i] - actual1[i]) < 0.0001);
 
-    linfit_v<double>    lin_v2;
+    linfit_v<double, unsigned long, 64>    lin_v2;
     auto                result2 =
         df.single_act_visit<double, double>("X2", "Y2", lin_v2).get_result();
     auto                actual2 =
@@ -2107,7 +2130,7 @@ static void test_NExtremumSubArrayVisitor()  {
     assert((msa_v2.get_result()[3].begin_index == 3));
     assert((msa_v2.get_result()[3].end_index == 7));
 
-    NMinSubArrayVisitor<5, double, unsigned long>   msa_v3;
+    NMinSubArrayVisitor<5, double>   msa_v3;
 
     df.visit<double>("dbl_col1", msa_v3);
     assert((msa_v3.get_result()[0].sum == 1));
@@ -2129,7 +2152,7 @@ static void test_LowessVisitor()  {
 
     std::cout << "\nTesting LowessVisitor{  } ..." << std::endl;
 
-    StlVecType<unsigned long>  idx =
+    StlVecType<unsigned long>  indx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466,
           123467, 123468, 123469, 123470, 123471, 123472, 123473,
@@ -2146,13 +2169,13 @@ static void test_LowessVisitor()  {
         168.01999, 164.95750, 152.61107, 160.78742, 168.55567, 152.42658,
         221.70702, 222.69040, 243.18828,
     };
-    MyDataFrame                 df;
+    MyDataFrame                df;
 
-    df.load_data(std::move(idx),
+    df.load_data(std::move(indx),
                  std::make_pair("indep_var", x_vec),
                  std::make_pair("dep_var", y_vec));
 
-    LowessVisitor<double>   l_v;
+    LowessVisitor<double, unsigned long, 64>   l_v;
 
     df.single_act_visit<double, double>("dep_var", "indep_var", l_v);
 
@@ -2233,7 +2256,7 @@ static void test_DecomposeVisitor()  {
     df.load_data(MyDataFrame::gen_sequence_index(0, y_vec.size(), 1),
                  std::make_pair("IBM_closes", y_vec));
 
-    DecomposeVisitor<double>    d_v (7, 0.6, 0.01);
+    DecomposeVisitor<double, unsigned long, 64>    d_v (7, 0.6, 0.01);
 
     df.single_act_visit<double>("IBM_closes", d_v);
 
@@ -2407,7 +2430,7 @@ static void test_MassIndexVisitor()  {
                  std::make_pair("high", high),
                  std::make_pair("low", low));
 
-    MassIndexVisitor<double>    mi_v (3, 5);
+    MassIndexVisitor<double, unsigned long, 64>    mi_v (3, 5);
 
     // The values here are nonsensical, because the time-series and periods
     // are too short
@@ -2444,7 +2467,7 @@ static void test_HullRollingMeanVisitor()  {
 
     df.load_data(std::move(ulgvec2), std::make_pair("col_1", dbl_vec));
 
-    HullRollingMeanVisitor<double>  hull_roller(6);
+    HullRollingMeanVisitor<double, unsigned long, 64>  hull_roller(6);
     const auto                      &result =
         df.single_act_visit<double>("col_1", hull_roller).get_result();
 
@@ -2489,7 +2512,7 @@ static void test_RollingMidValueVisitor()  {
                  std::make_pair("high", high),
                  std::make_pair("low", low));
 
-    RollingMidValueVisitor<double>  rmv_v (5);
+    RollingMidValueVisitor<double, unsigned long, 64>  rmv_v (5);
 
     df.single_act_visit<double, double>("low", "high", rmv_v);
     assert(rmv_v.get_result().size() == 21);
@@ -2524,7 +2547,7 @@ static void test_DrawdownVisitor()  {
 
     df.load_data(std::move(idx), std::make_pair("close", close));
 
-    DrawdownVisitor<double> dd_v;
+    DrawdownVisitor<double, unsigned long, 64> dd_v;
 
     df.single_act_visit<double>("close", dd_v);
     assert(dd_v.get_result().size() == 21);
@@ -2559,14 +2582,14 @@ static void test_WilliamPrcRVisitor()  {
 
     std::cout << "\nTesting WilliamPrcRVisitor{  } ..." << std::endl;
 
-    typedef StdDataFrame<std::string> StrDataFrame;
+    typedef StdDataFrame64<std::string> StrDataFrame;
 
     StrDataFrame    df;
 
     try  {
         df.read("data/IBM.csv", io_format::csv2);
 
-        WilliamPrcRVisitor<double, std::string> wpr_v;
+        WilliamPrcRVisitor<double, std::string, 64> wpr_v;
 
         df.single_act_visit<double, double, double>
             ("IBM_Low", "IBM_High", "IBM_Close", wpr_v);
@@ -2590,14 +2613,14 @@ static void test_PSLVisitor()  {
 
     std::cout << "\nTesting PSLVisitor{  } ..." << std::endl;
 
-    typedef StdDataFrame<std::string> StrDataFrame;
+    typedef StdDataFrame64<std::string> StrDataFrame;
 
     StrDataFrame    df;
 
     try  {
         df.read("data/IBM.csv", io_format::csv2);
 
-        PSLVisitor<double, std::string> psl_v;
+        PSLVisitor<double, std::string, 64> psl_v;
 
         df.single_act_visit<double, double>("IBM_Close", "IBM_Open", psl_v);
         assert(psl_v.get_result().size() == 5031);
@@ -2630,14 +2653,14 @@ static void test_CCIVisitor()  {
 
     std::cout << "\nTesting CCIVisitor{  } ..." << std::endl;
 
-    typedef StdDataFrame<std::string> StrDataFrame;
+    typedef StdDataFrame64<std::string> StrDataFrame;
 
     StrDataFrame    df;
 
     try  {
         df.read("data/IBM.csv", io_format::csv2);
 
-        CCIVisitor<double, std::string> cci_v;
+        CCIVisitor<double, std::string, 64> cci_v;
 
         df.single_act_visit<double, double, double>
             ("IBM_Low", "IBM_High", "IBM_Close", cci_v);
@@ -2675,7 +2698,7 @@ static void test_EntropyVisitor()  {
 
     df.load_data(std::move(idx), std::make_pair("close", close));
 
-    EntropyVisitor<double>  e_v (5);
+    EntropyVisitor<double, unsigned long, 64>  e_v (5);
 
     df.single_act_visit<double>("close", e_v);
 
@@ -2696,14 +2719,14 @@ static void test_GarmanKlassVolVisitor()  {
 
     std::cout << "\nTesting GarmanKlassVolVisitor{  } ..." << std::endl;
 
-    typedef StdDataFrame<std::string> StrDataFrame;
+    typedef StdDataFrame512<std::string> StrDataFrame;
 
     StrDataFrame    df;
 
     try  {
         df.read("data/IBM.csv", io_format::csv2);
 
-        GarmanKlassVolVisitor<double, std::string>  gkv_v;
+        GarmanKlassVolVisitor<double, std::string, 512>  gkv_v;
 
         df.single_act_visit<double, double, double, double>
             ("IBM_Low", "IBM_High", "IBM_Open", "IBM_Close", gkv_v);
@@ -2733,7 +2756,7 @@ static void test_YangZhangVolVisitor()  {
     try  {
         df.read("data/FORD.csv", io_format::csv2);
 
-        YangZhangVolVisitor<double> yz_v;
+        YangZhangVolVisitor<double, unsigned long, 64> yz_v;
 
         df.single_act_visit<double, double, double, double>
             ("FORD_Low", "FORD_High", "FORD_Open", "FORD_Close", yz_v);
@@ -2906,14 +2929,14 @@ static void test_KamaVisitor()  {
 
     std::cout << "\nTesting KamaVisitor{  } ..." << std::endl;
 
-    typedef StdDataFrame<std::string> StrDataFrame;
+    typedef StdDataFrame512<std::string> StrDataFrame;
 
     StrDataFrame    df;
 
     try  {
         df.read("data/IBM.csv", io_format::csv2);
 
-        KamaVisitor<double, std::string>    k_v;
+        KamaVisitor<double, std::string, 512>    k_v;
 
         df.single_act_visit<double>("IBM_Close", k_v);
 
@@ -2938,14 +2961,14 @@ static void test_FisherTransVisitor()  {
 
     std::cout << "\nTesting FisherTransVisitor{  } ..." << std::endl;
 
-    typedef StdDataFrame<std::string> StrDataFrame;
+    typedef StdDataFrame256<std::string> StrDataFrame;
 
     StrDataFrame    df;
 
     try  {
         df.read("data/IBM.csv", io_format::csv2);
 
-        FisherTransVisitor<double, std::string> ft_v;
+        FisherTransVisitor<double, std::string, 256> ft_v;
 
         df.single_act_visit<double, double>("IBM_Low", "IBM_High", ft_v);
 
@@ -2970,14 +2993,14 @@ static void test_PercentPriceOSCIVisitor()  {
 
     std::cout << "\nTesting PercentPriceOSCIVisitor{  } ..." << std::endl;
 
-    typedef StdDataFrame<std::string> StrDataFrame;
+    typedef StdDataFrame512<std::string> StrDataFrame;
 
     StrDataFrame    df;
 
     try  {
         df.read("data/IBM.csv", io_format::csv2);
 
-        PercentPriceOSCIVisitor<double, std::string>    ppo_v;
+        PercentPriceOSCIVisitor<double, std::string, 512>    ppo_v;
 
         df.single_act_visit<double>("IBM_Close", ppo_v);
 
@@ -3002,14 +3025,14 @@ static void test_SlopeVisitor()  {
 
     std::cout << "\nTesting SlopeVisitor{  } ..." << std::endl;
 
-    typedef StdDataFrame<std::string> StrDataFrame;
+    typedef StdDataFrame512<std::string> StrDataFrame;
 
     StrDataFrame    df;
 
     try  {
         df.read("data/IBM.csv", io_format::csv2);
 
-        SlopeVisitor<double, std::string>   s_v (10, true, true);
+        SlopeVisitor<double, std::string, 512>   s_v (10, true, true);
 
         df.single_act_visit<double>("IBM_Close", s_v);
 
@@ -3034,14 +3057,14 @@ static void test_UltimateOSCIVisitor()  {
 
     std::cout << "\nTesting UltimateOSCIVisitor{  } ..." << std::endl;
 
-    typedef StdDataFrame<std::string> StrDataFrame;
+    typedef StdDataFrame512<std::string> StrDataFrame;
 
     StrDataFrame    df;
 
     try  {
         df.read("data/IBM.csv", io_format::csv2);
 
-        UltimateOSCIVisitor<double, std::string> uo_v;
+        UltimateOSCIVisitor<double, std::string, 512> uo_v;
 
         df.single_act_visit<double, double, double>
             ("IBM_Low", "IBM_High", "IBM_Close", uo_v);
@@ -3113,14 +3136,14 @@ static void test_UlcerIndexVisitor()  {
 
     std::cout << "\nTesting UlcerIndexVisitor{  } ..." << std::endl;
 
-    typedef StdDataFrame<std::string> StrDataFrame;
+    typedef StdDataFrame1024<std::string> StrDataFrame;
 
     StrDataFrame    df;
 
     try  {
         df.read("data/IBM.csv", io_format::csv2);
 
-        UlcerIndexVisitor<double, std::string>  ui_v;
+        UlcerIndexVisitor<double, std::string, 1024>  ui_v;
 
         df.single_act_visit<double>("IBM_Close", ui_v);
 
@@ -3133,7 +3156,7 @@ static void test_UlcerIndexVisitor()  {
         assert(std::abs(ui_v.get_result()[5030] - 11.1348) < 0.0001);
         assert(std::abs(ui_v.get_result()[5026] - 7.98096) < 0.00001);
 
-        UlcerIndexVisitor<double, std::string>  ui_v2 (14, false);
+        UlcerIndexVisitor<double, std::string, 1024>  ui_v2 (14, false);
 
         df.single_act_visit<double>("IBM_Close", ui_v2);
 
@@ -3157,14 +3180,14 @@ static void test_RSXVisitor()  {
 
     std::cout << "\nTesting RSXVisitor{  } ..." << std::endl;
 
-    typedef StdDataFrame<std::string> StrDataFrame;
+    typedef StdDataFrame1024<std::string> StrDataFrame;
 
     StrDataFrame    df;
 
     try  {
         df.read("data/IBM.csv", io_format::csv2);
 
-        RSXVisitor<double, std::string> rsx_v;
+        RSXVisitor<double, std::string, 1024> rsx_v;
 
         df.single_act_visit<double>("IBM_Close", rsx_v);
 
@@ -3190,14 +3213,14 @@ static void test_TTMTrendVisitor()  {
 
     std::cout << "\nTesting TTMTrendVisitor{  } ..." << std::endl;
 
-    typedef StdDataFrame<std::string> StrDataFrame;
+    typedef StdDataFrame512<std::string> StrDataFrame;
 
     StrDataFrame    df;
 
     try  {
         df.read("data/IBM.csv", io_format::csv2);
 
-        TTMTrendVisitor<double, std::string>    ttmt_v;
+        TTMTrendVisitor<double, std::string, 512>    ttmt_v;
 
         df.single_act_visit<double, double, double>
             ("IBM_Low", "IBM_High", "IBM_Close", ttmt_v);
@@ -3223,14 +3246,14 @@ static void test_ParabolicSARVisitor()  {
 
     std::cout << "\nTesting ParabolicSARVisitor{  } ..." << std::endl;
 
-    typedef StdDataFrame<std::string> StrDataFrame;
+    typedef StdDataFrame256<std::string> StrDataFrame;
 
     StrDataFrame    df;
 
     try  {
         df.read("data/SHORT_IBM.csv", io_format::csv2);
 
-        ParabolicSARVisitor<double, std::string>    psar_v;
+        ParabolicSARVisitor<double, std::string, 256>    psar_v;
 
         df.single_act_visit<double, double, double>
             ("IBM_Low", "IBM_High", "IBM_Close", psar_v);
@@ -3280,14 +3303,14 @@ static void test_EBSineWaveVisitor()  {
 
     std::cout << "\nTesting EBSineWaveVisitor{  } ..." << std::endl;
 
-    typedef StdDataFrame<std::string> StrDataFrame;
+    typedef StdDataFrame256<std::string> StrDataFrame;
 
     StrDataFrame    df;
 
     try  {
         df.read("data/SHORT_IBM.csv", io_format::csv2);
 
-        EBSineWaveVisitor<double, std::string>  ebsw_v;
+        EBSineWaveVisitor<double, std::string, 256>  ebsw_v;
 
         df.single_act_visit<double>("IBM_Close", ebsw_v);
 
@@ -3311,15 +3334,19 @@ static void test_EhlerSuperSmootherVisitor()  {
 
     std::cout << "\nTesting EhlerSuperSmootherVisitor{  } ..." << std::endl;
 
-    typedef StdDataFrame<std::string> StrDataFrame;
+    typedef StdDataFrame256<std::string> StrDataFrame;
 
     StrDataFrame    df;
 
     try  {
         df.read("data/SHORT_IBM.csv", io_format::csv2);
 
-        EhlerSuperSmootherVisitor<double, std::string>  ssf_v2; // poles = 2
-        EhlerSuperSmootherVisitor<double, std::string>  ssf_v3(3); // poles = 3
+        // poles = 2
+        //
+        EhlerSuperSmootherVisitor<double, std::string, 256>  ssf_v2;
+        // poles = 3
+        //
+        EhlerSuperSmootherVisitor<double, std::string, 256>  ssf_v3(3);
 
         df.single_act_visit<double>("IBM_Close", ssf_v2);
         df.single_act_visit<double>("IBM_Close", ssf_v3);
@@ -3354,14 +3381,14 @@ static void test_VarIdxDynAvgVisitor()  {
 
     std::cout << "\nTesting VarIdxDynAvgVisitor{  } ..." << std::endl;
 
-    typedef StdDataFrame<std::string> StrDataFrame;
+    typedef StdDataFrame256<std::string> StrDataFrame;
 
     StrDataFrame    df;
 
     try  {
         df.read("data/SHORT_IBM.csv", io_format::csv2);
 
-        VarIdxDynAvgVisitor<double, std::string>    vidya_v;
+        VarIdxDynAvgVisitor<double, std::string, 256>    vidya_v;
 
         df.single_act_visit<double>("IBM_Close", vidya_v);
 
@@ -3433,14 +3460,14 @@ static void test_PivotPointSRVisitor()  {
 
     std::cout << "\nTesting PivotPointSRVisitor{  } ..." << std::endl;
 
-    typedef StdDataFrame<std::string> StrDataFrame;
+    typedef StdDataFrame256<std::string> StrDataFrame;
 
     StrDataFrame    df;
 
     try  {
         df.read("data/SHORT_IBM.csv", io_format::csv2);
 
-        PivotPointSRVisitor<double, std::string>    ppsr_v;
+        PivotPointSRVisitor<double, std::string, 256>    ppsr_v;
 
         df.single_act_visit<double, double, double>
             ("IBM_Low", "IBM_High", "IBM_Close", ppsr_v);
@@ -3519,14 +3546,14 @@ static void test_AvgDirMovIdxVisitor()  {
 
     std::cout << "\nTesting AvgDirMovIdxVisitor{  } ..." << std::endl;
 
-    typedef StdDataFrame<std::string> StrDataFrame;
+    typedef StdDataFrame256<std::string> StrDataFrame;
 
     StrDataFrame    df;
 
     try  {
         df.read("data/SHORT_IBM.csv", io_format::csv2);
 
-        adx_v<double, std::string>  adx_v (3, 4);
+        adx_v<double, std::string, 256>  adx_v (3, 4);
 
         df.single_act_visit<double, double, double>
             ("IBM_Low", "IBM_High", "IBM_Close", adx_v);
@@ -3551,14 +3578,14 @@ static void test_HoltWinterChannelVisitor()  {
 
     std::cout << "\nTesting HoltWinterChannelVisitor{  } ..." << std::endl;
 
-    typedef StdDataFrame<std::string> StrDataFrame;
+    typedef StdDataFrame256<std::string> StrDataFrame;
 
     StrDataFrame    df;
 
     try  {
         df.read("data/SHORT_IBM.csv", io_format::csv2);
 
-        hwc_v<double, std::string>  hwc;
+        hwc_v<double, std::string, 256>  hwc;
 
         df.single_act_visit<double>("IBM_Close", hwc);
 
@@ -3610,14 +3637,14 @@ static void test_HeikinAshiCndlVisitor()  {
 
     std::cout << "\nTesting HeikinAshiCndlVisitor{  } ..." << std::endl;
 
-    typedef StdDataFrame<std::string> StrDataFrame;
+    typedef StdDataFrame64<std::string> StrDataFrame;
 
     StrDataFrame    df;
 
     try  {
         df.read("data/SHORT_IBM.csv", io_format::csv2);
 
-        ha_cdl_v<double, std::string>  ha;
+        ha_cdl_v<double, std::string, 64>  ha;
 
         df.single_act_visit<double, double, double, double>
             ("IBM_Low", "IBM_High", "IBM_Open", "IBM_Close", ha);
@@ -3687,7 +3714,7 @@ static void test_FastFourierTransVisitor()  {
                  std::make_pair("dbl_col", dblvec));
     df.load_column("cplx_col", cplxvec, nan_policy::dont_pad_with_nans);
 
-    fft_v<double>   fft;
+    fft_v<double, unsigned long, 64>   fft;
 
     df.single_act_visit<double>("dbl_col", fft);
 
@@ -3697,7 +3724,7 @@ static void test_FastFourierTransVisitor()  {
     df.load_column("FFT int col", fft.get_result(),
                    nan_policy::dont_pad_with_nans);
 
-    fft_v<std::complex<double>> i_fft (true);
+    fft_v<std::complex<double>, unsigned long, 64> i_fft (true);
 
     df.single_act_visit<std::complex<double>>("FFT int col", i_fft);
 
@@ -3707,7 +3734,7 @@ static void test_FastFourierTransVisitor()  {
 
     // The case of size is not a power of 2
     //
-    fft_v<cx>   fft_cx;
+    fft_v<cx, unsigned long, 64>   fft_cx;
 
     df.single_act_visit<cx>("cplx_col", fft_cx);
 
@@ -3717,7 +3744,7 @@ static void test_FastFourierTransVisitor()  {
     df.load_column("FFT int col 2", fft_cx.get_result(),
                    nan_policy::dont_pad_with_nans);
 
-    fft_v<cx>   i_fft2 (true);
+    fft_v<cx, unsigned long, 64>   i_fft2 (true);
 
     df.single_act_visit<std::complex<double>>("FFT int col 2", i_fft2);
 
@@ -3726,23 +3753,23 @@ static void test_FastFourierTransVisitor()  {
     std::cout << std::endl;
 
     try  {
-        typedef StdDataFrame<std::string> StrDataFrame;
+        typedef StdDataFrame64<std::string> StrDataFrame;
 
         StrDataFrame    df2;
 
         df2.read("data/SHORT_IBM.csv", io_format::csv2);
 
-        fft_v<double, std::string>  fft2;
+        fft_v<double, std::string, 64>  fft2;
 
         df2.single_act_visit<double>("IBM_Close", fft2);
         df2.load_column("FFT Close", fft2.get_result());
 
-        fft_v<cx>   i_fft2 (true);
+        fft_v<cx, std::string, 64>   i_fft2_2 (true);
 
-        df2.single_act_visit<cx>("FFT Close", i_fft2);
+        df2.single_act_visit<cx>("FFT Close", i_fft2_2);
 
         /*
-        for (auto citer : i_fft2.get_result())
+        for (auto citer : i_fft2_2.get_result())
             std::cout << citer << ", ";
         std::cout << std::endl;
         */
@@ -3758,14 +3785,14 @@ static void test_CenterOfGravityVisitor()  {
 
     std::cout << "\nTesting CenterOfGravityVisitor{  } ..." << std::endl;
 
-    typedef StdDataFrame<std::string> StrDataFrame;
+    typedef StdDataFrame64<std::string> StrDataFrame;
 
     StrDataFrame    df;
 
     try  {
         df.read("data/SHORT_IBM.csv", io_format::csv2);
 
-        cog_v<double, std::string>  cog;
+        cog_v<double, std::string, 64>  cog;
 
         df.single_act_visit<double>("IBM_Close", cog);
 
@@ -3790,14 +3817,14 @@ static void test_ArnaudLegouxMAVisitor()  {
 
     std::cout << "\nTesting ArnaudLegouxMAVisitor{  } ..." << std::endl;
 
-    typedef StdDataFrame<std::string> StrDataFrame;
+    typedef StdDataFrame64<std::string> StrDataFrame;
 
     StrDataFrame    df;
 
     try  {
         df.read("data/SHORT_IBM.csv", io_format::csv2);
 
-        alma_v<double, std::string> alma;
+        alma_v<double, std::string, 64> alma;
 
         df.single_act_visit<double>("IBM_Close", alma);
 
@@ -3822,14 +3849,14 @@ static void test_RateOfChangeVisitor()  {
 
     std::cout << "\nTesting RateOfChangeVisitor{  } ..." << std::endl;
 
-    typedef StdDataFrame<std::string> StrDataFrame;
+    typedef StdDataFrame64<std::string> StrDataFrame;
 
     StrDataFrame    df;
 
     try  {
         df.read("data/SHORT_IBM.csv", io_format::csv2);
 
-        roc_v<double, std::string>  roc (10); // 10 period rate of change
+        roc_v<double, std::string, 64>  roc (10); // 10 period rate of change
 
         df.single_act_visit<double>("IBM_Close", roc);
 
@@ -3854,16 +3881,16 @@ static void test_AccumDistVisitor()  {
 
     std::cout << "\nTesting AccumDistVisitor{  } ..." << std::endl;
 
-    typedef StdDataFrame<std::string> StrDataFrame;
+    typedef StdDataFrame64<std::string> StrDataFrame;
 
     StrDataFrame    df;
 
     try  {
         df.read("data/SHORT_IBM.csv", io_format::csv2);
 
-        ad_v<double, std::string>   ad;
+        ad_v<double, std::string, 64>   ad;
 
-        std::future<ad_v<double, std::string> &>   fut =
+        std::future<ad_v<double, std::string, 64> &>   fut =
             df.single_act_visit_async<double, double, double, double, long>
             ("IBM_Low", "IBM_High", "IBM_Open", "IBM_Close", "IBM_Volume", ad);
 
@@ -3888,16 +3915,16 @@ static void test_ChaikinMoneyFlowVisitor()  {
 
     std::cout << "\nTesting ChaikinMoneyFlowVisitor{  } ..." << std::endl;
 
-    typedef StdDataFrame<std::string> StrDataFrame;
+    typedef StdDataFrame64<std::string> StrDataFrame;
 
     StrDataFrame    df;
 
     try  {
         df.read("data/SHORT_IBM.csv", io_format::csv2);
 
-        cmf_v<double, std::string>  cmf;
+        cmf_v<double, std::string, 64>  cmf;
 
-        std::future<cmf_v<double, std::string> &>   fut =
+        std::future<cmf_v<double, std::string, 64> &>   fut =
             df.single_act_visit_async<double, double, double, double, long>
             ("IBM_Low", "IBM_High", "IBM_Open", "IBM_Close", "IBM_Volume", cmf);
 
@@ -3923,14 +3950,14 @@ static void test_VertHorizFilterVisitor()  {
 
     std::cout << "\nTesting VertHorizFilterVisitor{  } ..." << std::endl;
 
-    typedef StdDataFrame<std::string> StrDataFrame;
+    typedef StdDataFrame64<std::string> StrDataFrame;
 
     StrDataFrame    df;
 
     try  {
         df.read("data/SHORT_IBM.csv", io_format::csv2);
 
-        vhf_v<double, std::string>  vhf;
+        vhf_v<double, std::string, 64>  vhf;
 
         df.single_act_visit<double>("IBM_Close", vhf);
 
@@ -3955,16 +3982,16 @@ static void test_OnBalanceVolumeVisitor()  {
 
     std::cout << "\nTesting OnBalanceVolumeVisitor{  } ..." << std::endl;
 
-    typedef StdDataFrame<std::string> StrDataFrame;
+    typedef StdDataFrame64<std::string> StrDataFrame;
 
     StrDataFrame    df;
 
     try  {
         df.read("data/SHORT_IBM.csv", io_format::csv2);
 
-        obv_v<double, std::string>  obv;
+        obv_v<double, std::string, 64>  obv;
 
-        std::future<obv_v<double, std::string> &>   fut =
+        std::future<obv_v<double, std::string, 64> &>   fut =
             df.single_act_visit_async<double, long>
             ("IBM_Close", "IBM_Volume", obv);
 
@@ -3991,16 +4018,16 @@ static void test_TrueRangeVisitor()  {
 
     std::cout << "\nTesting TrueRangeVisitor{  } ..." << std::endl;
 
-    typedef StdDataFrame<std::string> StrDataFrame;
+    typedef StdDataFrame64<std::string> StrDataFrame;
 
     StrDataFrame    df;
 
     try  {
         df.read("data/SHORT_IBM.csv", io_format::csv2);
 
-        TrueRangeVisitor<double, std::string>   tr;
+        TrueRangeVisitor<double, std::string, 64>   tr;
 
-        std::future<TrueRangeVisitor<double, std::string> &>    fut =
+        std::future<TrueRangeVisitor<double, std::string, 64> &>    fut =
             df.single_act_visit_async<double, double, double>
             ("IBM_Low", "IBM_High", "IBM_Close", tr);
 
@@ -4017,9 +4044,9 @@ static void test_TrueRangeVisitor()  {
         assert(std::abs(tr.get_result()[1712] - 3.6414) < 0.0001);
         assert(std::abs(tr.get_result()[1707] - 3.5273) < 0.0001);
 
-        TrueRangeVisitor<double, std::string>   tr2 (true, 14, true);
+        TrueRangeVisitor<double, std::string, 64>   tr2 (true, 14, true);
 
-        std::future<TrueRangeVisitor<double, std::string> &>    fut2 =
+        std::future<TrueRangeVisitor<double, std::string, 64> &>    fut2 =
             df.single_act_visit_async<double, double, double>
             ("IBM_Low", "IBM_High", "IBM_Close", tr2);
 
@@ -4047,14 +4074,14 @@ static void test_DecayVisitor()  {
 
     std::cout << "\nTesting DecayVisitor{  } ..." << std::endl;
 
-    typedef StdDataFrame<std::string> StrDataFrame;
+    typedef StdDataFrame64<std::string> StrDataFrame;
 
     StrDataFrame    df;
 
     try  {
         df.read("data/SHORT_IBM.csv", io_format::csv2);
 
-        DecayVisitor<double, std::string>  decay(5, true);
+        DecayVisitor<double, std::string, 64>  decay(5, true);
 
         df.single_act_visit<double>("IBM_Close", decay);
 
@@ -4079,14 +4106,14 @@ static void test_HodgesTompkinsVolVisitor()  {
 
     std::cout << "\nTesting HodgesTompkinsVolVisitor{  } ..." << std::endl;
 
-    typedef StdDataFrame<std::string> StrDataFrame;
+    typedef StdDataFrame64<std::string> StrDataFrame;
 
     StrDataFrame    df;
 
     try  {
         df.read("data/SHORT_IBM.csv", io_format::csv2);
 
-        ht_vol_v<double, std::string>   ht;
+        ht_vol_v<double, std::string, 64>   ht;
 
         df.single_act_visit<double>("IBM_Close", ht);
 
@@ -4112,14 +4139,14 @@ static void test_ParkinsonVolVisitor()  {
 
     std::cout << "\nTesting ParkinsonVolVisitor{  } ..." << std::endl;
 
-    typedef StdDataFrame<std::string> StrDataFrame;
+    typedef StdDataFrame64<std::string> StrDataFrame;
 
     StrDataFrame    df;
 
     try  {
         df.read("data/SHORT_IBM.csv", io_format::csv2);
 
-        p_vol_v<double, std::string>    pv;
+        p_vol_v<double, std::string, 64>    pv;
 
         df.single_act_visit<double, double>("IBM_Low", "IBM_High", pv);
 

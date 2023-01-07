@@ -244,11 +244,11 @@ column_left_right_join_(
 
 template<typename V, typename T>
 inline static void
-_replace_vector_vals_(V &data_vec,
-                      const StlVecType<T> &old_values,
-                      const StlVecType<T> &new_values,
-                      std::size_t &count,
-                      int limit)  {
+replace_vector_vals_(V &data_vec,
+                     const StlVecType<T> &old_values,
+                     const StlVecType<T> &new_values,
+                     std::size_t &count,
+                     int limit)  {
 
     const std::size_t   vcnt = old_values.size();
 
@@ -272,10 +272,10 @@ _replace_vector_vals_(V &data_vec,
 
 template<typename T, typename V>
 inline static void
-_col_vector_push_back_func_(V &vec,
-                            std::istream &file,
-                            T (*converter)(const char *, char **, int),
-                            io_format file_type = io_format::csv)  {
+col_vector_push_back_func_(V &vec,
+                           std::istream &file,
+                           T (*converter)(const char *, char **, int),
+                           io_format file_type = io_format::csv)  {
 
     char    value[8192];
     char    c = 0;
@@ -293,7 +293,7 @@ _col_vector_push_back_func_(V &vec,
 // ----------------------------------------------------------------------------
 
 template<typename T, typename V, typename Dummy = void>
-struct  _col_vector_push_back_  {
+struct  ColVectorPushBack_  {
 
     inline void
     operator ()(V &vec,
@@ -318,7 +318,7 @@ struct  _col_vector_push_back_  {
 // ----------------------------------------------------------------------------
 
 template<typename Dummy>
-struct  _col_vector_push_back_<const char *, StlVecType<std::string>, Dummy>  {
+struct  ColVectorPushBack_<const char *, StlVecType<std::string>, Dummy>  {
 
     inline void
     operator ()(StlVecType<std::string> &vec,
@@ -343,7 +343,7 @@ struct  _col_vector_push_back_<const char *, StlVecType<std::string>, Dummy>  {
 // ----------------------------------------------------------------------------
 
 template<typename Dummy>
-struct  _col_vector_push_back_<DateTime, StlVecType<DateTime>, Dummy>  {
+struct  ColVectorPushBack_<DateTime, StlVecType<DateTime>, Dummy>  {
 
     inline void
     operator ()(StlVecType<DateTime> &vec,
@@ -379,8 +379,8 @@ struct  _col_vector_push_back_<DateTime, StlVecType<DateTime>, Dummy>  {
 // ----------------------------------------------------------------------------
 
 inline static void
-_json_str_col_vector_push_back_(StlVecType<std::string> &vec,
-                                std::istream &file)  {
+json_str_col_vector_push_back_(StlVecType<std::string> &vec,
+                               std::istream &file)  {
 
     char    value[1024];
     char    c = 0;
@@ -401,7 +401,7 @@ _json_str_col_vector_push_back_(StlVecType<std::string> &vec,
             if (c != ' ' && c != '\n' && c != '\t')  break;
         if (c != '"')
             throw DataFrameError(
-                "_json_str_col_vector_push_back_(): ERROR: Expected '\"' (0)");
+                "json_str_col_vector_push_back_(): ERROR: Expected '\"' (0)");
 
         while (file.get(c))
             if (c == '"')
@@ -420,14 +420,14 @@ _json_str_col_vector_push_back_(StlVecType<std::string> &vec,
         if (c == ']')  break;
         else if (c != ',')
             throw DataFrameError(
-                "_json_str_col_vector_push_back_(): ERROR: Expected ',' (2)");
+                "json_str_col_vector_push_back_(): ERROR: Expected ',' (2)");
     }
 }
 
 // ----------------------------------------------------------------------------
 
 template<typename T, typename Dummy = void>
-struct  _IdxParserFunctor_  {
+struct  IdxParserFunctor_  {
 
     void operator()(StlVecType<T> &, std::istream &, io_format)  {   }
 };
@@ -435,13 +435,13 @@ struct  _IdxParserFunctor_  {
 // ----------------------------------------------------------------------------
 
 template<typename Dummy>
-struct  _IdxParserFunctor_<float, Dummy>  {
+struct  IdxParserFunctor_<float, Dummy>  {
 
     inline void operator()(StlVecType<float> &vec,
                            std::istream &file,
                            io_format file_type = io_format::csv) const  {
 
-        const _col_vector_push_back_<float, StlVecType<float>>  slug;
+        const ColVectorPushBack_<float, StlVecType<float>>  slug;
 
         slug()(vec, file, &::strtof, file_type);
     }
@@ -450,13 +450,13 @@ struct  _IdxParserFunctor_<float, Dummy>  {
 // ----------------------------------------------------------------------------
 
 template<typename Dummy>
-struct  _IdxParserFunctor_<double, Dummy>  {
+struct  IdxParserFunctor_<double, Dummy>  {
 
     inline void operator()(StlVecType<double> &vec,
                            std::istream &file,
                            io_format file_type = io_format::csv) const  {
 
-        const _col_vector_push_back_<double, StlVecType<double>>  slug;
+        const ColVectorPushBack_<double, StlVecType<double>>  slug;
 
         slug(vec, file, &::strtod, file_type);
     }
@@ -465,14 +465,13 @@ struct  _IdxParserFunctor_<double, Dummy>  {
 // ----------------------------------------------------------------------------
 
 template<typename Dummy>
-struct  _IdxParserFunctor_<long double, Dummy>  {
+struct  IdxParserFunctor_<long double, Dummy>  {
 
     inline void operator()(StlVecType<long double> &vec,
                            std::istream &file,
                            io_format file_type = io_format::csv) const  {
 
-        const _col_vector_push_back_
-            <long double, StlVecType<long double>>  slug;
+        const ColVectorPushBack_<long double, StlVecType<long double>>  slug;
 
         slug(vec, file, &::strtold, file_type);
     }
@@ -481,85 +480,85 @@ struct  _IdxParserFunctor_<long double, Dummy>  {
 // ----------------------------------------------------------------------------
 
 template<typename Dummy>
-struct  _IdxParserFunctor_<int, Dummy>  {
+struct  IdxParserFunctor_<int, Dummy>  {
 
     inline void operator()(StlVecType<int> &vec,
                            std::istream &file,
                            io_format file_type = io_format::csv) const  {
 
-        _col_vector_push_back_func_(vec, file, &::strtol, file_type);
+        col_vector_push_back_func_(vec, file, &::strtol, file_type);
     }
 };
 
 // ----------------------------------------------------------------------------
 
 template<typename Dummy>
-struct  _IdxParserFunctor_<long, Dummy>  {
+struct  IdxParserFunctor_<long, Dummy>  {
 
     inline void operator()(StlVecType<long> &vec,
                            std::istream &file,
                            io_format file_type = io_format::csv) const  {
 
-        _col_vector_push_back_func_(vec, file, &::strtol, file_type);
+        col_vector_push_back_func_(vec, file, &::strtol, file_type);
     }
 };
 
 // ----------------------------------------------------------------------------
 
 template<typename Dummy>
-struct  _IdxParserFunctor_<long long, Dummy>  {
+struct  IdxParserFunctor_<long long, Dummy>  {
 
     inline void operator()(StlVecType<long long> &vec,
                            std::istream &file,
                            io_format file_type = io_format::csv) const  {
 
-        _col_vector_push_back_func_(vec, file, &::strtoll, file_type);
+        col_vector_push_back_func_(vec, file, &::strtoll, file_type);
     }
 };
 
 // ----------------------------------------------------------------------------
 
 template<typename Dummy>
-struct  _IdxParserFunctor_<unsigned int, Dummy>  {
+struct  IdxParserFunctor_<unsigned int, Dummy>  {
 
     inline void operator()(StlVecType<unsigned int> &vec,
                            std::istream &file,
                            io_format file_type = io_format::csv) const  {
 
-        _col_vector_push_back_func_(vec, file, &::strtoul, file_type);
+        col_vector_push_back_func_(vec, file, &::strtoul, file_type);
     }
 };
 
 // ----------------------------------------------------------------------------
 
 template<typename Dummy>
-struct  _IdxParserFunctor_<unsigned long, Dummy>  {
+struct  IdxParserFunctor_<unsigned long, Dummy>  {
 
     inline void operator()(StlVecType<unsigned long> &vec,
                            std::istream &file,
                            io_format file_type = io_format::csv) const  {
 
-        _col_vector_push_back_func_(vec, file, &::strtoul, file_type);
+        col_vector_push_back_func_(vec, file, &::strtoul, file_type);
     }
 };
 
 // ----------------------------------------------------------------------------
 
 template<typename Dummy>
-struct  _IdxParserFunctor_<unsigned long long, Dummy>  {
+struct  IdxParserFunctor_<unsigned long long, Dummy>  {
 
     inline void operator()(StlVecType<unsigned long long> &vec,
                            std::istream &file,
                            io_format file_type = io_format::csv) const  {
 
-        _col_vector_push_back_func_(vec, file, &::strtoull, file_type);
+        col_vector_push_back_func_(vec, file, &::strtoull, file_type);
     }
 };
 
 // ----------------------------------------------------------------------------
 
 template<typename Dummy>
-struct  _IdxParserFunctor_<std::string, Dummy>  {
+struct  IdxParserFunctor_<std::string, Dummy>  {
 
     inline void operator()(StlVecType<std::string> &vec,
                            std::istream &file,
@@ -567,8 +566,7 @@ struct  _IdxParserFunctor_<std::string, Dummy>  {
 
         auto                   converter =
             [](const char *s, char **)-> const char * { return s; };
-        const _col_vector_push_back_
-            <const char *, StlVecType<std::string>>  slug;
+        const ColVectorPushBack_<const char *, StlVecType<std::string>>  slug;
 
         slug(vec, file, converter, file_type);
     }
@@ -577,7 +575,7 @@ struct  _IdxParserFunctor_<std::string, Dummy>  {
 // ----------------------------------------------------------------------------
 
 template<typename Dummy>
-struct  _IdxParserFunctor_<DateTime, Dummy>  {
+struct  IdxParserFunctor_<DateTime, Dummy>  {
 
     inline void operator()(StlVecType<DateTime> &vec,
                            std::istream &file,
@@ -585,7 +583,7 @@ struct  _IdxParserFunctor_<DateTime, Dummy>  {
 
         auto                    converter =
             [](const char *, char **)-> DateTime  { return DateTime(); };
-        const _col_vector_push_back_<DateTime, StlVecType<DateTime>>  slug;
+        const ColVectorPushBack_<DateTime, StlVecType<DateTime>>  slug;
 
         slug(vec, file, converter, file_type);
     }
@@ -594,20 +592,20 @@ struct  _IdxParserFunctor_<DateTime, Dummy>  {
 // ----------------------------------------------------------------------------
 
 template<typename Dummy>
-struct  _IdxParserFunctor_<bool, Dummy>  {
+struct  IdxParserFunctor_<bool, Dummy>  {
 
     inline void operator()(StlVecType<bool> &vec,
                            std::istream &file,
                            io_format file_type = io_format::csv) const  {
 
-        _col_vector_push_back_func_(vec, file, &::strtol, file_type);
+        col_vector_push_back_func_(vec, file, &::strtol, file_type);
     }
 };
 
 // ----------------------------------------------------------------------------
 
 template<typename T, typename Dummy = void>
-struct  _generate_ts_index_  {
+struct  GenerateTSIndex_  {
 
     inline void
     operator ()(StlVecType<T> &index_vec,
@@ -657,7 +655,7 @@ struct  _generate_ts_index_  {
 // ----------------------------------------------------------------------------
 
 template<typename Dummy>
-struct  _generate_ts_index_<DateTime, Dummy>  {
+struct  GenerateTSIndex_<DateTime, Dummy>  {
 
     inline void
     operator ()(StlVecType<DateTime> &index_vec,
@@ -700,9 +698,10 @@ struct  _generate_ts_index_<DateTime, Dummy>  {
 // ----------------------------------------------------------------------------
 
 template<typename T>
-inline static void _get_mem_numbers_(const VectorView<T, align_value> &,
-                                     size_t &used_mem,
-                                     size_t &capacity_mem) {
+inline static void
+get_mem_numbers_(const VectorView<T, align_value> &,
+                 size_t &used_mem,
+                 size_t &capacity_mem) {
 
     used_mem = sizeof(T *) * 2;
     capacity_mem = sizeof(T *) * 2;
@@ -712,9 +711,9 @@ inline static void _get_mem_numbers_(const VectorView<T, align_value> &,
 
 template<typename T>
 inline static void
-_get_mem_numbers_(const VectorPtrView<T, align_value> &container,
-                  size_t &used_mem,
-                  size_t &capacity_mem) {
+get_mem_numbers_(const VectorPtrView<T, align_value> &container,
+                 size_t &used_mem,
+                 size_t &capacity_mem) {
 
     used_mem = container.size() * sizeof(T *);
     capacity_mem = container.capacity() * sizeof(T *);
@@ -723,9 +722,10 @@ _get_mem_numbers_(const VectorPtrView<T, align_value> &container,
 // ----------------------------------------------------------------------------
 
 template<typename T>
-inline static void _get_mem_numbers_(const StlVecType<T> &container,
-                                     size_t &used_mem,
-                                     size_t &capacity_mem) {
+inline static void
+get_mem_numbers_(const StlVecType<T> &container,
+                 size_t &used_mem,
+                 size_t &capacity_mem) {
 
     used_mem = container.size() * sizeof(T);
     capacity_mem = container.capacity() * sizeof(T);

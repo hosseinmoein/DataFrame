@@ -168,7 +168,7 @@ retype_column (const char *name,
                               "Data column name cannot be 'INDEX'");
 
     const ColumnVecType<FROM_T> &old_vec = get_column<FROM_T>(name);
-    StlVecType<TO_T>           new_vec;
+    StlVecType<TO_T>            new_vec;
 
     new_vec.reserve(old_vec.size());
     for (const auto &citer : old_vec)
@@ -193,10 +193,9 @@ DataFrame<I, H>::load_data (IndexVecType &&indices, Ts&& ... args)  {
         std::move(std::tuple<Ts ...>(std::forward<Ts>(args) ...));
     // const size_type tuple_size =
     //     std::tuple_size<decltype(args_tuple)>::value;
-    auto        fc =
-        [this, &cnt](auto &pa) mutable -> void {
-            cnt += this->load_pair_(pa);
-        };
+    auto        fc = [this, &cnt](auto &pa) mutable -> void {
+                         cnt += this->load_pair_(pa);
+                     };
 
     for_each_in_tuple (args_tuple, fc);
 
@@ -246,7 +245,7 @@ gen_datetime_index(const char *start_datetime,
                                      DT_DATE_STYLE::AME_STYLE, tz);
     const DateTime          end_di(end_datetime, DT_DATE_STYLE::AME_STYLE, tz);
     const double            diff = end_di.diff_seconds(start_di);
-    StlVecType<IndexType>  index_vec;
+    StlVecType<IndexType>   index_vec;
 
     switch(t_freq)  {
     case time_frequency::annual:
@@ -301,7 +300,7 @@ gen_sequence_index (const IndexType &start_value,
                     const IndexType &end_value,
                     long increment)  {
 
-    StlVecType<IndexType>  index_vec;
+    StlVecType<IndexType>   index_vec;
     IndexType               sv = start_value;
 
     while (sv < end_value)  {
@@ -368,7 +367,7 @@ load_column (const char *name,
     }
 
     const auto      iter = column_tb_.find (name);
-    StlVecType<T>  *vec_ptr = nullptr;
+    StlVecType<T>   *vec_ptr = nullptr;
 
     if (iter == column_tb_.end())
         vec_ptr = &(create_column<T>(name));
@@ -432,7 +431,7 @@ load_result_as_column(V &visitor, const char *name, nan_policy padding)  {
         }
 
     const auto              iter = column_tb_.find (name);
-    StlVecType<new_type>   *vec_ptr = nullptr;
+    StlVecType<new_type>    *vec_ptr = nullptr;
 
     if (iter == column_tb_.end())
         vec_ptr = &(create_column<new_type>(name));
@@ -496,7 +495,7 @@ from_indicators(const StlVecType<const char *> &ind_col_names,
                 const char *numeric_cols_prefixg)  {
 
     const size_type                     ind_col_s = ind_col_names.size();
-    StlVecType<const StlVecType<T> *> ind_cols(ind_col_s, nullptr);
+    StlVecType<const StlVecType<T> *>   ind_cols(ind_col_s, nullptr);
 
     for (size_type i = 0; i < ind_col_s; ++i)
         ind_cols[i] = &(get_column<T>(ind_col_names[i]));
@@ -583,7 +582,7 @@ load_column (const char *name,
     }
 
     const auto      iter = column_tb_.find (name);
-    StlVecType<T>  *vec_ptr = nullptr;
+    StlVecType<T>   *vec_ptr = nullptr;
 
     if (iter == column_tb_.end())
         vec_ptr = &(create_column<T>(name));
@@ -631,7 +630,7 @@ load_align_column(
         throw InconsistentData (buffer);
     }
 
-    StlVecType<T>  new_col(idx_s, null_value);
+    StlVecType<T>   new_col(idx_s, null_value);
     size_type       idx_idx { 0 };
 
     if (start_from_beginning)  {
@@ -692,9 +691,9 @@ append_column (const char *name,
                Index2D<const ITR &> range,
                nan_policy padding)  {
 
-    ColumnVecType<T>  &vec = get_column<T>(name);
-    size_type       s = std::distance(range.begin, range.end) + vec.size ();
-    const size_type idx_s = indices_.size();
+    ColumnVecType<T>    &vec = get_column<T>(name);
+    size_type           s = std::distance(range.begin, range.end) + vec.size();
+    const size_type     idx_s = indices_.size();
 
     if (s > idx_s)  {
         char buffer [512];
@@ -733,9 +732,9 @@ typename DataFrame<I, H>::size_type
 DataFrame<I, H>::
 append_column (const char *name, const T &val, nan_policy padding)  {
 
-    ColumnVecType<T>  &vec = get_column<T>(name);
-    size_type       s = 1;
-    const size_type idx_s = indices_.size();
+    ColumnVecType<T>    &vec = get_column<T>(name);
+    size_type           s = 1;
+    const size_type     idx_s = indices_.size();
 
     if (s > idx_s)  {
         char buffer [512];
@@ -794,10 +793,9 @@ DataFrame<I, H>::append_row (IndexType *idx_val, Ts&& ... args)  {
     size_type   cnt = 1;
     auto        args_tuple =
         std::move(std::tuple<Ts ...>(std::forward<Ts>(args) ...));
-    auto        fc =
-        [this, &cnt](auto &pa) mutable -> void {
-            cnt += this->append_row_(pa);
-        };
+    auto        fc = [this, &cnt](auto &pa) mutable -> void {
+                         cnt += this->append_row_(pa);
+                     };
 
     for_each_in_tuple (args_tuple, fc);
 
@@ -888,7 +886,7 @@ void DataFrame<I, H>::remove_data_by_sel (const char *name, F &sel_functor)  {
 
     const ColumnVecType<T>  &vec = get_column<T>(name);
     const size_type         col_s = vec.size();
-    StlVecType<size_type>  col_indices;
+    StlVecType<size_type>   col_indices;
 
     col_indices.reserve(indices_.size() / 2);
     for (size_type i = 0; i < col_s; ++i)
@@ -924,7 +922,7 @@ remove_data_by_sel (const char *name1, const char *name2, F &sel_functor)  {
     const size_type         col_s1 = vec1.size();
     const size_type         col_s2 = vec2.size();
     const size_type         min_col_s = std::min(col_s1, col_s2);
-    StlVecType<size_type>  col_indices;
+    StlVecType<size_type>   col_indices;
 
     col_indices.reserve(idx_s / 2);
     for (size_type i = 0; i < min_col_s; ++i)
@@ -970,7 +968,7 @@ remove_data_by_sel (const char *name1,
     const size_type         col_s2 = vec2.size();
     const size_type         col_s3 = vec3.size();
     const size_type         min_col_s = std::min({ col_s1, col_s2, col_s3 });
-    StlVecType<size_type>  col_indices;
+    StlVecType<size_type>   col_indices;
 
     col_indices.reserve(idx_s / 2);
     for (size_type i = 0; i < min_col_s; ++i)

@@ -123,7 +123,7 @@ template<typename CF, typename ... Ts>
 void DataFrame<I, H>::sort_common_(DataFrame<I, H> &df, CF &&comp_func)  {
 
     const size_type         idx_s = df.indices_.size();
-    StlVecType<size_type>  sorting_idxs(idx_s, 0);
+    StlVecType<size_type>   sorting_idxs(idx_s, 0);
 
     std::iota(sorting_idxs.begin(), sorting_idxs.end(), 0);
     std::sort(sorting_idxs.begin(), sorting_idxs.end(), comp_func);
@@ -154,6 +154,7 @@ DataFrame<I, H>::shuffle(const StlVecType<const char *> &col_names,
     }
 
     shuffle_functor_<Ts ...>    functor;
+    const SpinGuard             guard(lock_);
 
     for (auto name_citer : col_names)  {
         const auto  citer = column_tb_.find (name_citer);
@@ -166,8 +167,6 @@ DataFrame<I, H>::shuffle(const StlVecType<const char *> &col_names,
                      name_citer);
             throw ColNotFound(buffer);
         }
-
-        const SpinGuard guard(lock_);
 
         data_[citer->second].change(functor);
     }
@@ -493,13 +492,13 @@ template<typename I, typename H>
 template<typename DF, typename ... Ts>
 void DataFrame<I, H>::fill_missing (const DF &rhs)  {
 
-    const auto  &self_idx = get_index();
-    const auto  &rhs_idx = rhs.get_index();
+    const auto      &self_idx = get_index();
+    const auto      &rhs_idx = rhs.get_index();
+    const SpinGuard guard(lock_);
 
     for (const auto &col_citer : column_list_)  {
         fill_missing_functor_<DF, Ts ...>   functor (
             self_idx, rhs_idx, rhs, col_citer.first.c_str());
-        const SpinGuard                     guard(lock_);
 
         data_[col_citer.second].change(functor);
     }
@@ -684,12 +683,11 @@ void DataFrame<I, H>::shrink_to_fit ()  {
     indices_.shrink_to_fit();
 
     shrink_to_fit_functor_<Ts ...>  functor;
+    const SpinGuard                 guard(lock_);
 
-    for (const auto &iter : data_)  {
-        const SpinGuard guard(lock_);
 
+    for (const auto &iter : data_)
         iter.change(functor);
-    }
 }
 
 // ----------------------------------------------------------------------------
@@ -1145,7 +1143,7 @@ groupby1(const char *col_name, I_V &&idx_visitor, Ts&& ... args) const  {
     else
         gb_vec = (const ColumnVecType<T> *) &(get_column<T>(col_name));
 
-    StlVecType<std::size_t>    sort_v (gb_vec->size(), 0);
+    StlVecType<std::size_t> sort_v (gb_vec->size(), 0);
 
     std::iota(sort_v.begin(), sort_v.end(), 0);
     std::sort(sort_v.begin(), sort_v.end(),
@@ -1202,9 +1200,8 @@ groupby2(const char *col_name1,
         gb_vec2 = (const ColumnVecType<T2> *) &(get_column<T2>(col_name2));
     }
 
-    StlVecType<std::size_t>    sort_v (std::min(gb_vec1->size(),
-                                                 gb_vec2->size()),
-                                        0);
+    StlVecType<std::size_t> sort_v(
+        std::min(gb_vec1->size(), gb_vec2->size()), 0);
 
     std::iota(sort_v.begin(), sort_v.end(), 0);
     std::sort(sort_v.begin(), sort_v.end(),
@@ -1279,7 +1276,7 @@ groupby3(const char *col_name1,
         gb_vec3 = (const ColumnVecType<T3> *) &(get_column<T3>(col_name3));
     }
 
-    StlVecType<std::size_t>    sort_v(
+    StlVecType<std::size_t> sort_v(
         std::min({ gb_vec1->size(), gb_vec2->size(), gb_vec3->size() }), 0);
 
     std::iota(sort_v.begin(), sort_v.end(), 0);
@@ -1421,8 +1418,8 @@ DataFrame<I, H>::value_counts (const char *col_name) const  {
             insert_result.first->second += 1;
     }
 
-    StlVecType<T>          res_indices;
-    StlVecType<size_type>  counts;
+    StlVecType<T>           res_indices;
+    StlVecType<size_type>   counts;
 
     counts.reserve(values_map.size());
     res_indices.reserve(values_map.size());
@@ -1516,13 +1513,13 @@ transpose(IndexVecType &&indices, const V &new_col_names) const  {
                                 "Length of new_col_names is not equal "
                                 "to number of rows");
 
-    StlVecType<const ColumnVecType<T> *> current_cols;
+    StlVecType<const ColumnVecType<T> *>    current_cols;
 
     current_cols.reserve(num_cols);
     for (const auto &citer : column_list_)
         current_cols.push_back(&(get_column<T>(citer.first.c_str())));
 
-    StlVecType<StlVecType<T>> trans_cols(indices_.size());
+    StlVecType<StlVecType<T>>   trans_cols(indices_.size());
     DataFrame                   df;
 
     for (size_type i = 0; i < indices_.size(); ++i)  {

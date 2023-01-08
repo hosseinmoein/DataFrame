@@ -47,28 +47,30 @@ void DataFrame<I, H>::self_shift(size_type periods, shift_policy sp)  {
     if (periods > 0)  {
         if (sp == shift_policy::down || sp == shift_policy::up)  {
             vertical_shift_functor_<Ts ...> functor(periods, sp);
-            StlVecType<std::future<void>>  futures(get_thread_level());
+            StlVecType<std::future<void>>   futures(get_thread_level());
             size_type                       thread_count = 0;
             const size_type                 data_size = data_.size();
 
-            for (size_type idx = 0; idx < data_size; ++idx)  {
+            {
                 const SpinGuard guard(lock_);
 
-                if (thread_count >= get_thread_level())
-                    data_[idx].change(functor);
-                else  {
-                    auto    to_be_called =
-                        static_cast
-                        <void(DataVec::*)(vertical_shift_functor_<Ts ...> &&)>
-                            (&DataVec::template
-                                 change<vertical_shift_functor_<Ts ...>>);
+                for (size_type idx = 0; idx < data_size; ++idx)  {
+                    if (thread_count >= get_thread_level())
+                        data_[idx].change(functor);
+                    else  {
+                        auto    to_be_called =
+                            static_cast
+                          <void(DataVec::*)(vertical_shift_functor_<Ts ...> &&)>
+                                (&DataVec::template
+                                     change<vertical_shift_functor_<Ts ...>>);
 
-                    futures[thread_count] =
-                        std::async(std::launch::async,
-                                   to_be_called,
-                                   &(data_[idx]),
-                                   std::move(functor));
-                    thread_count += 1;
+                        futures[thread_count] =
+                            std::async(std::launch::async,
+                                       to_be_called,
+                                       &(data_[idx]),
+                                       std::move(functor));
+                        thread_count += 1;
+                    }
                 }
             }
             for (size_type idx = 0; idx < thread_count; ++idx)
@@ -111,7 +113,7 @@ shift(const char *col_name, size_type periods, shift_policy sp) const  {
     static_assert(std::is_base_of<HeteroVector<align_value>, DataVec>::value,
                   "Only a StdDataFrame can call shift()");
 
-    ColumnVecType<T>              result = get_column<T>(col_name);
+    ColumnVecType<T>            result = get_column<T>(col_name);
     vertical_shift_functor_<T>  functor(periods, sp);
 
     functor (result);
@@ -130,27 +132,29 @@ void DataFrame<I, H>::self_rotate(size_type periods, shift_policy sp)  {
     if (periods > 0)  {
         if (sp == shift_policy::down || sp == shift_policy::up)  {
             rotate_functor_<Ts ...>         functor(periods, sp);
-            StlVecType<std::future<void>>  futures(get_thread_level());
+            StlVecType<std::future<void>>   futures(get_thread_level());
             size_type                       thread_count = 0;
             const size_type                 data_size = data_.size();
 
-            for (size_type idx = 0; idx < data_size; ++idx)  {
+            {
                 const SpinGuard guard(lock_);
 
-                if (thread_count >= get_thread_level())
-                    data_[idx].change(functor);
-                else  {
-                    auto    to_be_called =
-                        static_cast
-                            <void(H::*)(rotate_functor_<Ts ...> &&)>
-                                (&H::template change<rotate_functor_<Ts ...>>);
+                for (size_type idx = 0; idx < data_size; ++idx)  {
+                    if (thread_count >= get_thread_level())
+                        data_[idx].change(functor);
+                    else  {
+                        auto    to_be_called =
+                            static_cast
+                                <void(H::*)(rotate_functor_<Ts ...> &&)>
+                                 (&H::template change<rotate_functor_<Ts ...>>);
 
-                    futures[thread_count] =
-                        std::async(std::launch::async,
-                                   to_be_called,
-                                   &(data_[idx]),
-                                   std::move(functor));
-                    thread_count += 1;
+                        futures[thread_count] =
+                            std::async(std::launch::async,
+                                       to_be_called,
+                                       &(data_[idx]),
+                                       std::move(functor));
+                        thread_count += 1;
+                    }
                 }
             }
             for (size_type idx = 0; idx < thread_count; ++idx)

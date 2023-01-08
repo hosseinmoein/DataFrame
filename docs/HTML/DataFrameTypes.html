@@ -180,22 +180,6 @@ StlVecType
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>
-template&lt;typename T&gt;
-struct Index2D  {
-    T   begin {};
-    T   end {};
-};
-        </font>
-        </B></PRE>
-      </td>
-      <td>
-        It represents a range with begin and end within a continuous memory space<BR>
-      </td>
-    </tr>
-
-    <tr bgcolor="lightgrey">
-      <td bgcolor="maroon"> <font color="white">
-        <PRE><B>
 template&lt;typename I&gt;
 StdDataFrame
         </font>
@@ -268,6 +252,22 @@ StdDataFrame1024
       </td>
       <td>
         A DataFrame with index type <I>I</I> that uses 1024 bytes boundary for memory allocations.<BR>
+      </td>
+    </tr>
+
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        <PRE><B>
+template&lt;typename T&gt;
+struct Index2D  {
+    T   begin {};
+    T   end {};
+};
+        </font>
+        </B></PRE>
+      </td>
+      <td>
+        It represents a range with begin and end within a continuous memory space<BR>
       </td>
     </tr>
 

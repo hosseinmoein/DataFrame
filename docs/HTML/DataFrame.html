@@ -93,14 +93,12 @@ table {
 
 <BR><HR COLOR="Orange" SIZE="5"><BR>
 
-DataFrame class is defined as:
-<pre><span style='color:#800000; font-weight:bold; '>template</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>typename</span> I<span style='color:#808030; '>,</span> <span style='color:#800000; font-weight:bold; '>typename</span> H<span style='color:#800080; '>></span>
-<span style='color:#800000; font-weight:bold; '>class</span> DataFrame;
-</pre>
-<!--Created using ToHtml.com on 2020-06-09 14:51:05 UTC -->
+DataFrame class is defined as:<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<B><span style='color:#800000; font-weight:bold; '>template</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>typename</span> I<span style='color:#808030; '>,</span> <span style='color:#800000; font-weight:bold; '>typename</span> H<span style='color:#800080; '>></span><BR>
+&nbsp;&nbsp;&nbsp;&nbsp;<span style='color:#800000; font-weight:bold; '>class</span> DataFrame;</B><BR><BR>
 
   <B>I</B> specifies the <I>index</I> column type<BR>
-  <B>H</B> specifies a heterogenous vector type to contain DataFrame columns. <B>H</B> can only be:<BR>
+  <B>H</B> specifies a heterogenous vector type to contain DataFrame columns &#8212; don't get hang up on this too much. <B>H</B> can only be:<BR>
   <UL>
     <LI><B><style='color:#000000;background:#ffffff;'>HeteroVector<span style='color:#808030; '>&lt;</span><span style='color:#666616;'>std</span><span style='color:#800080;'>::</span><span style='color:#603000;'>size_t</span> A <span style='color:#808030;'>=</span> <span style='color:#008c00;'>0</span><span style='color:#808030;'>></span></B>: This is an actual heterogenous vector that would contain data. This will result in a "standard" data frame</LI>
     <LI><B><style='color:#000000;background:#ffffff;'>HeteroPtrView<span style='color:#808030; '>&lt;</span><span style='color:#666616;'>std</span><span style='color:#800080;'>::</span><span style='color:#603000;'>size_t</span> A <span style='color:#808030;'>=</span> <span style='color:#008c00;'>0</span><span style='color:#808030;'>></span></B>: This is a heterogenous vector view. It will result in a data frame view into a <I>disjoined</I> slice of another data frame.</LI>
@@ -108,7 +106,7 @@ DataFrame class is defined as:
     <LI><B><style='color:#000000;background:#ffffff;'>HeteroView<span style='color:#808030; '>&lt;</span><span style='color:#666616;'>std</span><span style='color:#800080;'>::</span><span style='color:#603000;'>size_t</span> A <span style='color:#808030;'>=</span> <span style='color:#008c00;'>0</span><span style='color:#808030;'>></span></B>: This is a heterogenous vector view. It will result in a data frame view into a <I>contiguous</I> slice of another data frame. This view is slightly more efficient than <I>HeteroPtrView</I></LI>
     <LI><B><style='color:#000000;background:#ffffff;'>HeteroConstView<span style='color:#808030; '>&lt;</span><span style='color:#666616;'>std</span><span style='color:#800080;'>::</span><span style='color:#603000;'>size_t</span> A <span style='color:#808030;'>=</span> <span style='color:#008c00;'>0</span><span style='color:#808030;'>></span></B>: The const version of HeteroView.</LI>
   </UL>
-  Template parameter <B>A</B> referrers to byte boundary alignment to be used in memory allocations. The default is system default boundaries for each type. See <I>Memory Alignment</I> section below<BR><BR>
+  Template parameter <B>A</B> referrers to byte boundary alignment to be used in memory allocations. The default is system default boundaries for each type. See <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrameTypes.html">DataFrame Library Types</a> for convenient typedef's, especially under <I> Library-wide Types</I> section. Also, see <I>Memory Alignment</I> section below<BR><BR>
   Some of the methods in DataFrame return another DataFrame or one of the above views depending on what you asked for. DataFrame and view instances should be indistinguishable from the user's point of view.<BR>
   See <I>Views</I> section below. Also, see <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrameTypes.html">DataFrame Library Types</a> for convenient typedef's<BR>
 
@@ -117,7 +115,7 @@ DataFrame class is defined as:
   DataFrame library interface is separated into two main categories:
   <OL>
     <LI>Accessing, adding, slicing &amp; dicing, joining, &amp;  groupby'ing ...  <B>(The first column in the table below)</B></LI>
-    <LI>Analytical algorithms being statistical, machine-learning, financial analysis …  <B>(The second and third columns in the table below)</B></LI>
+    <LI>Analytical algorithms being statistical, machine-learning, financial analysis ...  <B>(The second and third columns in the table below)</B></LI>
   </OL>
   I employ regular parameterized methods (i.e. member functions) to implement item (1). For item (2), I chose the visitor pattern.<BR>
   Please see the table below for a comprehensive list of methods, visitors, and types along with documentation and sample code for each feature
@@ -1169,19 +1167,19 @@ table.hovertable td {
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
-      <td title="An exception type">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML//exceptions.html">BadRange</a>{  }</td>
+      <td title="An exception type">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML//DataFrameTypes.html">BadRange</a>{  }</td>
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
-      <td title="An exception type">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML//exceptions.html">ColNotFound</a>{  }</td>
+      <td title="An exception type">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML//DataFrameTypes.html">ColNotFound</a>{  }</td>
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
-      <td title="An exception type">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML//exceptions.html">DataFrameError</a>{  }</td>
+      <td title="An exception type">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML//DataFrameTypes.html">DataFrameError</a>{  }</td>
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
-      <td title="An exception type">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML//exceptions.html">InconsistentData</a>{  }</td>
+      <td title="An exception type">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML//DataFrameTypes.html">InconsistentData</a>{  }</td>
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
@@ -1189,11 +1187,11 @@ table.hovertable td {
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
-      <td title="An exception type">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML//exceptions.html">NotFeasible</a>{  }</td>
+      <td title="An exception type">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML//DataFrameTypes.html">NotFeasible</a>{  }</td>
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
-      <td title="An exception type">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML//exceptions.html">NotImplemented</a>{  }</td>
+      <td title="An exception type">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML//DataFrameTypes.html">NotImplemented</a>{  }</td>
     </tr>
   </table>
   </div>
@@ -1360,8 +1358,9 @@ table.hovertable td {
   <H2><font color="blue">Memory Alignment</font></H2>
   <P>
     DataFrame gives you ability to allocate memory on custom alignment boundaries.<BR>
-    You can use this feature to take advantage of <I>SIMD</I> instructions in modern CPU’s. Since DataFrame algorithms are all done on vectors of data &#8212; columns, this can come handy in conjunction with compiler optimizations.<BR>
-There are convenient typedef’s that define DataFrame’s that allocate memory, for example, on 64, 128, 256, … bytes boundaries. See <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrameTypes.html">DataFrame Library Types</a>
+    You can use this feature to take advantage of <I>SIMD</I> instructions in modern CPU's. Since DataFrame algorithms are all done on vectors of data &#8212; columns, this can come handy in conjunction with compiler optimizations.<BR>
+	There are convenient typedef's that define DataFrames that allocate memory, for example, on 64, 128, 256, ... bytes boundaries. See <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrameTypes.html">DataFrame Library Types</a>.<BR>
+    When you get access to <I>columns</I> in a DataFrame, you will get a reference to a <I>StlVecType</I>. <I>StlVecType</I> is just a <I>stl::vector</I> with custom allocator for the requested alignment.<BR>
   </P>
 
 <BR><HR COLOR="Orange" SIZE="5"><BR>

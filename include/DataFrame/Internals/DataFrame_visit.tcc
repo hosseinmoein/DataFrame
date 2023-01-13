@@ -151,8 +151,12 @@ template<typename T1, typename T2, typename V>
 V &DataFrame<I, H>::
 visit (const char *name1, const char *name2, V &visitor, bool in_reverse)  {
 
-    auto            &vec1 = get_column<T1>(name1);
-    auto            &vec2 = get_column<T2>(name2);
+    SpinGuard   guard (lock_);
+    auto        &vec1 = get_column<T1>(name1, false);
+    auto        &vec2 = get_column<T2>(name2, false);
+
+    guard.release();
+
     const size_type idx_s = indices_.size();
     const size_type data_s1 = vec1.size();
     const size_type data_s2 = vec2.size();
@@ -258,9 +262,13 @@ visit (const char *name1,
        V &visitor,
        bool in_reverse)  {
 
-    auto            &vec1 = get_column<T1>(name1);
-    auto            &vec2 = get_column<T2>(name2);
-    auto            &vec3 = get_column<T3>(name3);
+    SpinGuard   guard (lock_);
+    auto        &vec1 = get_column<T1>(name1, false);
+    auto        &vec2 = get_column<T2>(name2, false);
+    auto        &vec3 = get_column<T3>(name3, false);
+
+    guard.release();
+
     const size_type idx_s = indices_.size();
     const size_type data_s1 = vec1.size();
     const size_type data_s2 = vec2.size();
@@ -383,10 +391,14 @@ visit (const char *name1,
        V &visitor,
        bool in_reverse)  {
 
-    auto            &vec1 = get_column<T1>(name1);
-    auto            &vec2 = get_column<T2>(name2);
-    auto            &vec3 = get_column<T3>(name3);
-    auto            &vec4 = get_column<T4>(name4);
+    SpinGuard   guard (lock_);
+    auto        &vec1 = get_column<T1>(name1, false);
+    auto        &vec2 = get_column<T2>(name2, false);
+    auto        &vec3 = get_column<T3>(name3, false);
+    auto        &vec4 = get_column<T4>(name4, false);
+
+    guard.release();
+
     const size_type idx_s = indices_.size();
     const size_type data_s1 = vec1.size();
     const size_type data_s2 = vec2.size();
@@ -523,11 +535,15 @@ visit (const char *name1,
        V &visitor,
        bool in_reverse)  {
 
-    auto            &vec1 = get_column<T1>(name1);
-    auto            &vec2 = get_column<T2>(name2);
-    auto            &vec3 = get_column<T3>(name3);
-    auto            &vec4 = get_column<T4>(name4);
-    auto            &vec5 = get_column<T5>(name5);
+    SpinGuard   guard (lock_);
+    auto        &vec1 = get_column<T1>(name1, false);
+    auto        &vec2 = get_column<T2>(name2, false);
+    auto        &vec3 = get_column<T3>(name3, false);
+    auto        &vec4 = get_column<T4>(name4, false);
+    auto        &vec5 = get_column<T5>(name5, false);
+
+    guard.release();
+
     const size_type idx_s = indices_.size();
     const size_type data_s1 = vec1.size();
     const size_type data_s2 = vec2.size();
@@ -740,9 +756,11 @@ single_act_visit (const char *name1,
                   V &visitor,
                   bool in_reverse)  {
 
-    const ColumnVecType<T1> &vec1 = get_column<T1>(name1);
-    const ColumnVecType<T2> &vec2 = get_column<T2>(name2);
+    SpinGuard               guard (lock_);
+    const ColumnVecType<T1> &vec1 = get_column<T1>(name1, false);
+    const ColumnVecType<T2> &vec2 = get_column<T2>(name2, false);
 
+    guard.release();
     visitor.pre();
     if (! in_reverse)
         visitor (indices_.begin(), indices_.end(),
@@ -827,10 +845,12 @@ single_act_visit (const char *name1,
                   V &visitor,
                   bool in_reverse)  {
 
-    const ColumnVecType<T1> &vec1 = get_column<T1>(name1);
-    const ColumnVecType<T2> &vec2 = get_column<T2>(name2);
-    const ColumnVecType<T3> &vec3 = get_column<T3>(name3);
+    SpinGuard               guard (lock_);
+    const ColumnVecType<T1> &vec1 = get_column<T1>(name1, false);
+    const ColumnVecType<T2> &vec2 = get_column<T2>(name2, false);
+    const ColumnVecType<T3> &vec3 = get_column<T3>(name3, false);
 
+    guard.release();
     visitor.pre();
     if (! in_reverse)
         visitor (indices_.begin(), indices_.end(),
@@ -928,11 +948,13 @@ single_act_visit (const char *name1,
                   V &visitor,
                   bool in_reverse)  {
 
-    const ColumnVecType<T1> &vec1 = get_column<T1>(name1);
-    const ColumnVecType<T2> &vec2 = get_column<T2>(name2);
-    const ColumnVecType<T3> &vec3 = get_column<T3>(name3);
-    const ColumnVecType<T4> &vec4 = get_column<T4>(name4);
+    SpinGuard               guard (lock_);
+    const ColumnVecType<T1> &vec1 = get_column<T1>(name1, false);
+    const ColumnVecType<T2> &vec2 = get_column<T2>(name2, false);
+    const ColumnVecType<T3> &vec3 = get_column<T3>(name3, false);
+    const ColumnVecType<T4> &vec4 = get_column<T4>(name4, false);
 
+    guard.release();
     visitor.pre();
     if (! in_reverse)
         visitor (indices_.begin(), indices_.end(),
@@ -1041,12 +1063,14 @@ single_act_visit (const char *name1,
                   V &visitor,
                   bool in_reverse)  {
 
-    const ColumnVecType<T1> &vec1 = get_column<T1>(name1);
-    const ColumnVecType<T2> &vec2 = get_column<T2>(name2);
-    const ColumnVecType<T3> &vec3 = get_column<T3>(name3);
-    const ColumnVecType<T4> &vec4 = get_column<T4>(name4);
-    const ColumnVecType<T5> &vec5 = get_column<T5>(name5);
+    SpinGuard               guard (lock_);
+    const ColumnVecType<T1> &vec1 = get_column<T1>(name1, false);
+    const ColumnVecType<T2> &vec2 = get_column<T2>(name2, false);
+    const ColumnVecType<T3> &vec3 = get_column<T3>(name3, false);
+    const ColumnVecType<T4> &vec4 = get_column<T4>(name4, false);
+    const ColumnVecType<T5> &vec5 = get_column<T5>(name5, false);
 
+    guard.release();
     visitor.pre();
     if (! in_reverse)
         visitor (indices_.begin(), indices_.end(),

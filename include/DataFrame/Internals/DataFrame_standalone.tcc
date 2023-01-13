@@ -49,7 +49,7 @@ _create_column_from_triple_(DF &df, T &triple) {
 
     using ValueType = typename std::tuple_element<2, T>::type::result_type;
 
-    return (df.template create_column<ValueType>(std::get<1>(triple)));
+    return (df.template create_column<ValueType>(std::get<1>(triple), false));
 }
 
 // ----------------------------------------------------------------------------

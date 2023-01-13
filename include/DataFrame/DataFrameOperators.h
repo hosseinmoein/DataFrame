@@ -30,7 +30,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 
 #include <algorithm>
-// #include <execution>
 #include <functional>
 #include <iterator>
 #include <utility>

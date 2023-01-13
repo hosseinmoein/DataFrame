@@ -35,7 +35,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         <PRE><B>
 template&lt;typename T&gt;
 [[nodiscard]] ColumnVecType&lt;T&gt; &amp;
-get_column (const char *name);
+get_column (const char *name,
+            bool do_lock = true);
         </B></PRE></font>
       </td>
       <td>
@@ -44,6 +45,7 @@ get_column (const char *name);
       <td>
         <b>T</b>: Type of the named data column<BR>
         <b>name</b>: Name of the column<BR>
+        <B>do_lock</B>: This is used to optimize DataFrame internal library code. DataFrame users should always use the defualt.<BR>
       </td>
     </tr>
 
@@ -52,7 +54,8 @@ get_column (const char *name);
         <PRE><B>
 template&lt;typename T&gt;
 [[nodiscard]] const ColumnVecType&lt;T&gt; &amp;
-get_column (const char *name) const;
+get_column (const char *name,
+            bool do_lock = true) const;
         </B></PRE></font>
       </td>
       <td>
@@ -61,6 +64,7 @@ get_column (const char *name) const;
       <td>
         <B>T</B>: Type of the named data column<BR>
         <b>name</b>: Name of the column<BR>
+        <B>do_lock</B>: This is used to optimize DataFrame internal library code. DataFrame users should always use the defualt.<BR>
       </td>
     </tr>
 
@@ -70,7 +74,8 @@ get_column (const char *name) const;
         <PRE><B>
 template&lt;typename T&gt;
 [[nodiscard]] ColumnVecType&lt;T&gt; &amp;
-get_column (std::size_t index);
+get_column (std::size_t index,
+            bool do_lock = true);
         </B></PRE></font>
       </td>
       <td>
@@ -79,6 +84,7 @@ get_column (std::size_t index);
       <td>
         <b>T</b>: Type of the named data column<BR>
         <b>index</b>: Index of the column<BR>
+        <B>do_lock</B>: This is used to optimize DataFrame internal library code. DataFrame users should always use the defualt.<BR>
       </td>
     </tr>
 
@@ -87,7 +93,8 @@ get_column (std::size_t index);
         <PRE><B>
 template&lt;typename T&gt;
 [[nodiscard]] const ColumnVecType&lt;T&gt; &amp;
-get_column (std::size_t index) const;
+get_column (std::size_t index,
+            bool do_lock = true) const;
         </B></PRE></font>
       </td>
       <td>
@@ -96,6 +103,7 @@ get_column (std::size_t index) const;
       <td>
         <B>T</B>: Type of the named data column<BR>
         <b>index</b>: Index of the column<BR>
+        <B>do_lock</B>: This is used to optimize DataFrame internal library code. DataFrame users should always use the defualt.<BR>
       </td>
     </tr>
 

@@ -112,7 +112,7 @@ DataFrame<I, H>::col_idx_to_name (size_type col_idx) const  {
 template<typename I, typename H>
 template<typename T>
 typename DataFrame<I, H>::template ColumnVecType<T> &
-DataFrame<I, H>::get_column (const char *name)  {
+DataFrame<I, H>::get_column (const char *name, bool do_lock)  {
 
     auto    iter = column_tb_.find (name);
 
@@ -125,7 +125,7 @@ DataFrame<I, H>::get_column (const char *name)  {
         throw ColNotFound (buffer);
     }
 
-    const SpinGuard guard(lock_);
+    const SpinGuard guard (do_lock ? lock_ : nullptr);
     DataVec         &hv = data_[iter->second];
     auto            &data_vec = hv.template get_vector<T>();
 
@@ -147,9 +147,9 @@ DataFrame<I, H>::get_column ()  {
 template<typename I, typename H>
 template<typename T>
 typename DataFrame<I, H>::template ColumnVecType<T> &
-DataFrame<I, H>::get_column(size_type index)  {
+DataFrame<I, H>::get_column(size_type index, bool do_lock)  {
 
-    return (get_column<T>(column_list_[index].first.c_str()));
+    return (get_column<T>(column_list_[index].first.c_str(), do_lock));
 }
 
 // ----------------------------------------------------------------------------
@@ -173,9 +173,9 @@ has_column(size_type index) const { return (index < column_list_.size()); }
 template<typename I, typename H>
 template<typename T>
 const typename DataFrame<I, H>::template ColumnVecType<T> &
-DataFrame<I, H>::get_column (const char *name) const  {
+DataFrame<I, H>::get_column (const char *name, bool do_lock) const  {
 
-    return (const_cast<DataFrame *>(this)->get_column<T>(name));
+    return (const_cast<DataFrame *>(this)->get_column<T>(name, do_lock));
 }
 
 // ----------------------------------------------------------------------------
@@ -194,9 +194,9 @@ DataFrame<I, H>::get_column () const  {
 template<typename I, typename H>
 template<typename T>
 const typename DataFrame<I, H>::template ColumnVecType<T> &
-DataFrame<I, H>::get_column(size_type index) const  {
+DataFrame<I, H>::get_column(size_type index, bool do_lock) const  {
 
-    return (get_column<T>(column_list_[index].first.c_str()));
+    return (get_column<T>(column_list_[index].first.c_str(), do_lock));
 }
 
 // ----------------------------------------------------------------------------
@@ -990,8 +990,9 @@ DataFrame<I, H> DataFrame<I, H>::
 get_data_by_sel (const char *name1, const char *name2, F &sel_functor) const  {
 
     const size_type         idx_s = indices_.size();
-    const ColumnVecType<T1> &vec1 = get_column<T1>(name1);
-    const ColumnVecType<T2> &vec2 = get_column<T2>(name2);
+    const SpinGuard         guard (lock_);
+    const ColumnVecType<T1> &vec1 = get_column<T1>(name1, false);
+    const ColumnVecType<T2> &vec2 = get_column<T2>(name2, false);
     const size_type         col_s1 = vec1.size();
     const size_type         col_s2 = vec2.size();
     const size_type         min_col_s = std::min(col_s1, col_s2);
@@ -1014,8 +1015,6 @@ get_data_by_sel (const char *name1, const char *name2, F &sel_functor) const  {
     for (auto citer: col_indices)
         new_index.push_back(indices_[citer]);
     df.load_index(std::move(new_index));
-
-    const SpinGuard guard(lock_);
 
     for (const auto &col_citer : column_list_)  {
         sel_load_functor_<size_type, Ts ...>    functor (
@@ -1040,8 +1039,9 @@ get_view_by_sel (const char *name1, const char *name2, F &sel_functor)  {
     static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
                   "Only a StdDataFrame can call get_view_by_sel()");
 
-    const ColumnVecType<T1> &vec1 = get_column<T1>(name1);
-    const ColumnVecType<T2> &vec2 = get_column<T2>(name2);
+    const SpinGuard         guard (lock_);
+    const ColumnVecType<T1> &vec1 = get_column<T1>(name1, false);
+    const ColumnVecType<T2> &vec2 = get_column<T2>(name2, false);
     const size_type         idx_s = indices_.size();
     const size_type         col_s1 = vec1.size();
     const size_type         col_s2 = vec2.size();
@@ -1068,8 +1068,6 @@ get_view_by_sel (const char *name1, const char *name2, F &sel_functor)  {
         new_index.push_back(&(indices_[citer]));
     dfv.indices_ = std::move(new_index);
 
-    const SpinGuard guard(lock_);
-
     for (const auto &col_citer : column_list_)  {
         sel_load_view_functor_<size_type, TheView, Ts ...>   functor (
             col_citer.first.c_str(),
@@ -1094,8 +1092,9 @@ get_view_by_sel (const char *name1, const char *name2, F &sel_functor) const  {
     static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
                   "Only a StdDataFrame can call get_view_by_sel()");
 
-    const ColumnVecType<T1> &vec1 = get_column<T1>(name1);
-    const ColumnVecType<T2> &vec2 = get_column<T2>(name2);
+    const SpinGuard         guard (lock_);
+    const ColumnVecType<T1> &vec1 = get_column<T1>(name1, false);
+    const ColumnVecType<T2> &vec2 = get_column<T2>(name2, false);
     const size_type         idx_s = indices_.size();
     const size_type         col_s1 = vec1.size();
     const size_type         col_s2 = vec2.size();
@@ -1122,8 +1121,6 @@ get_view_by_sel (const char *name1, const char *name2, F &sel_functor) const  {
         new_index.push_back(&(indices_[citer]));
     dfv.indices_ = std::move(new_index);
 
-    const SpinGuard guard(lock_);
-
     for (const auto &col_citer : column_list_)  {
         sel_load_view_functor_<size_type, TheView, Ts ...>   functor (
             col_citer.first.c_str(),
@@ -1148,9 +1145,10 @@ get_data_by_sel (const char *name1,
                  F &sel_functor) const  {
 
     const size_type         idx_s = indices_.size();
-    const ColumnVecType<T1> &vec1 = get_column<T1>(name1);
-    const ColumnVecType<T2> &vec2 = get_column<T2>(name2);
-    const ColumnVecType<T3> &vec3 = get_column<T3>(name3);
+    const SpinGuard         guard (lock_);
+    const ColumnVecType<T1> &vec1 = get_column<T1>(name1, false);
+    const ColumnVecType<T2> &vec2 = get_column<T2>(name2, false);
+    const ColumnVecType<T3> &vec3 = get_column<T3>(name3, false);
     const size_type         col_s1 = vec1.size();
     const size_type         col_s2 = vec2.size();
     const size_type         col_s3 = vec3.size();
@@ -1175,8 +1173,6 @@ get_data_by_sel (const char *name1,
     for (auto citer: col_indices)
         new_index.push_back(indices_[citer]);
     df.load_index(std::move(new_index));
-
-    const SpinGuard guard(lock_);
 
     for (const auto &col_citer : column_list_)  {
         sel_load_functor_<size_type, Ts ...>    functor (
@@ -1332,9 +1328,10 @@ get_view_by_sel (const char *name1,
     static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
                   "Only a StdDataFrame can call get_view_by_sel()");
 
-    const ColumnVecType<T1> &vec1 = get_column<T1>(name1);
-    const ColumnVecType<T2> &vec2 = get_column<T2>(name2);
-    const ColumnVecType<T3> &vec3 = get_column<T3>(name3);
+    const SpinGuard         guard (lock_);
+    const ColumnVecType<T1> &vec1 = get_column<T1>(name1, false);
+    const ColumnVecType<T2> &vec2 = get_column<T2>(name2, false);
+    const ColumnVecType<T3> &vec3 = get_column<T3>(name3, false);
     const size_type         idx_s = indices_.size();
     const size_type         col_s1 = vec1.size();
     const size_type         col_s2 = vec2.size();
@@ -1362,8 +1359,6 @@ get_view_by_sel (const char *name1,
     for (auto citer: col_indices)
         new_index.push_back(&(indices_[citer]));
     dfv.indices_ = std::move(new_index);
-
-    const SpinGuard guard(lock_);
 
     for (const auto &col_citer : column_list_)  {
         sel_load_view_functor_<size_type, TheView, Ts ...>   functor (
@@ -1392,9 +1387,10 @@ get_view_by_sel (const char *name1,
     static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
                   "Only a StdDataFrame can call get_view_by_sel()");
 
-    const ColumnVecType<T1> &vec1 = get_column<T1>(name1);
-    const ColumnVecType<T2> &vec2 = get_column<T2>(name2);
-    const ColumnVecType<T3> &vec3 = get_column<T3>(name3);
+    const SpinGuard         guard (lock_);
+    const ColumnVecType<T1> &vec1 = get_column<T1>(name1, false);
+    const ColumnVecType<T2> &vec2 = get_column<T2>(name2, false);
+    const ColumnVecType<T3> &vec3 = get_column<T3>(name3, false);
     const size_type         idx_s = indices_.size();
     const size_type         col_s1 = vec1.size();
     const size_type         col_s2 = vec2.size();
@@ -1423,8 +1419,6 @@ get_view_by_sel (const char *name1,
         new_index.push_back(&(indices_[citer]));
     dfv.indices_ = std::move(new_index);
 
-    const SpinGuard guard(lock_);
-
     for (const auto &col_citer : column_list_)  {
         sel_load_view_functor_<size_type, TheView, Ts ...>   functor (
             col_citer.first.c_str(),
@@ -1450,10 +1444,11 @@ get_data_by_sel(const char *name1,
                 const char *name4,
                 F &sel_functor) const  {
 
-    const ColumnVecType<T1> &vec1 = get_column<T1>(name1);
-    const ColumnVecType<T2> &vec2 = get_column<T2>(name2);
-    const ColumnVecType<T3> &vec3 = get_column<T3>(name3);
-    const ColumnVecType<T4> &vec4 = get_column<T4>(name4);
+    const SpinGuard         guard (lock_);
+    const ColumnVecType<T1> &vec1 = get_column<T1>(name1, false);
+    const ColumnVecType<T2> &vec2 = get_column<T2>(name2, false);
+    const ColumnVecType<T3> &vec3 = get_column<T3>(name3, false);
+    const ColumnVecType<T4> &vec4 = get_column<T4>(name4, false);
     const size_type         idx_s = indices_.size();
     const size_type         col_s1 = vec1.size();
     const size_type         col_s2 = vec2.size();
@@ -1483,8 +1478,6 @@ get_data_by_sel(const char *name1,
         new_index.push_back(indices_[citer]);
     df.load_index(std::move(new_index));
 
-    const SpinGuard guard(lock_);
-
     for (const auto &col_citer : column_list_)  {
         sel_load_functor_<size_type, Ts ...>    functor (
             col_citer.first.c_str(),
@@ -1513,10 +1506,11 @@ get_view_by_sel(const char *name1,
     static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
                   "Only a StdDataFrame can call get_view_by_sel()");
 
-    const ColumnVecType<T1> &vec1 = get_column<T1>(name1);
-    const ColumnVecType<T2> &vec2 = get_column<T2>(name2);
-    const ColumnVecType<T3> &vec3 = get_column<T3>(name3);
-    const ColumnVecType<T4> &vec4 = get_column<T4>(name4);
+    const SpinGuard         guard (lock_);
+    const ColumnVecType<T1> &vec1 = get_column<T1>(name1, false);
+    const ColumnVecType<T2> &vec2 = get_column<T2>(name2, false);
+    const ColumnVecType<T3> &vec3 = get_column<T3>(name3, false);
+    const ColumnVecType<T4> &vec4 = get_column<T4>(name4, false);
     const size_type         idx_s = indices_.size();
     const size_type         col_s1 = vec1.size();
     const size_type         col_s2 = vec2.size();
@@ -1548,8 +1542,6 @@ get_view_by_sel(const char *name1,
         new_index.push_back(&(indices_[citer]));
     dfv.indices_ = std::move(new_index);
 
-    const SpinGuard guard(lock_);
-
     for (const auto &col_citer : column_list_)  {
         sel_load_view_functor_<size_type, TheView, Ts ...>   functor (
             col_citer.first.c_str(),
@@ -1579,10 +1571,11 @@ get_view_by_sel(const char *name1,
     static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
                   "Only a StdDataFrame can call get_view_by_sel()");
 
-    const ColumnVecType<T1> &vec1 = get_column<T1>(name1);
-    const ColumnVecType<T2> &vec2 = get_column<T2>(name2);
-    const ColumnVecType<T3> &vec3 = get_column<T3>(name3);
-    const ColumnVecType<T4> &vec4 = get_column<T4>(name4);
+    const SpinGuard         guard (lock_);
+    const ColumnVecType<T1> &vec1 = get_column<T1>(name1, false);
+    const ColumnVecType<T2> &vec2 = get_column<T2>(name2, false);
+    const ColumnVecType<T3> &vec3 = get_column<T3>(name3, false);
+    const ColumnVecType<T4> &vec4 = get_column<T4>(name4, false);
     const size_type         idx_s = indices_.size();
     const size_type         col_s1 = vec1.size();
     const size_type         col_s2 = vec2.size();
@@ -1614,8 +1607,6 @@ get_view_by_sel(const char *name1,
         new_index.push_back(&(indices_[citer]));
     dfv.indices_ = std::move(new_index);
 
-    const SpinGuard guard(lock_);
-
     for (const auto &col_citer : column_list_)  {
         sel_load_view_functor_<size_type, TheView, Ts ...>   functor (
             col_citer.first.c_str(),
@@ -1642,11 +1633,12 @@ get_data_by_sel(const char *name1,
                 const char *name5,
                 F &sel_functor) const  {
 
-    const ColumnVecType<T1> &vec1 = get_column<T1>(name1);
-    const ColumnVecType<T2> &vec2 = get_column<T2>(name2);
-    const ColumnVecType<T3> &vec3 = get_column<T3>(name3);
-    const ColumnVecType<T4> &vec4 = get_column<T4>(name4);
-    const ColumnVecType<T5> &vec5 = get_column<T5>(name5);
+    const SpinGuard         guard (lock_);
+    const ColumnVecType<T1> &vec1 = get_column<T1>(name1, false);
+    const ColumnVecType<T2> &vec2 = get_column<T2>(name2, false);
+    const ColumnVecType<T3> &vec3 = get_column<T3>(name3, false);
+    const ColumnVecType<T4> &vec4 = get_column<T4>(name4, false);
+    const ColumnVecType<T5> &vec5 = get_column<T5>(name5, false);
     const size_type         idx_s = indices_.size();
     const size_type         col_s1 = vec1.size();
     const size_type         col_s2 = vec2.size();
@@ -1679,8 +1671,6 @@ get_data_by_sel(const char *name1,
         new_index.push_back(indices_[citer]);
     df.load_index(std::move(new_index));
 
-    const SpinGuard guard(lock_);
-
     for (const auto &col_citer : column_list_)  {
         sel_load_functor_<size_type, Ts ...>    functor (
             col_citer.first.c_str(),
@@ -1710,11 +1700,12 @@ get_view_by_sel(const char *name1,
     static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
                   "Only a StdDataFrame can call get_view_by_sel()");
 
-    const ColumnVecType<T1> &vec1 = get_column<T1>(name1);
-    const ColumnVecType<T2> &vec2 = get_column<T2>(name2);
-    const ColumnVecType<T3> &vec3 = get_column<T3>(name3);
-    const ColumnVecType<T4> &vec4 = get_column<T4>(name4);
-    const ColumnVecType<T5> &vec5 = get_column<T5>(name5);
+    const SpinGuard         guard (lock_);
+    const ColumnVecType<T1> &vec1 = get_column<T1>(name1, false);
+    const ColumnVecType<T2> &vec2 = get_column<T2>(name2, false);
+    const ColumnVecType<T3> &vec3 = get_column<T3>(name3, false);
+    const ColumnVecType<T4> &vec4 = get_column<T4>(name4, false);
+    const ColumnVecType<T5> &vec5 = get_column<T5>(name5, false);
     const size_type         idx_s = indices_.size();
     const size_type         col_s1 = vec1.size();
     const size_type         col_s2 = vec2.size();
@@ -1749,8 +1740,6 @@ get_view_by_sel(const char *name1,
         new_index.push_back(&(indices_[citer]));
     dfv.indices_ = std::move(new_index);
 
-    const SpinGuard guard(lock_);
-
     for (const auto &col_citer : column_list_)  {
         sel_load_view_functor_<size_type, TheView, Ts ...>   functor (
             col_citer.first.c_str(),
@@ -1781,11 +1770,12 @@ get_view_by_sel(const char *name1,
     static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
                   "Only a StdDataFrame can call get_view_by_sel()");
 
-    const ColumnVecType<T1> &vec1 = get_column<T1>(name1);
-    const ColumnVecType<T2> &vec2 = get_column<T2>(name2);
-    const ColumnVecType<T3> &vec3 = get_column<T3>(name3);
-    const ColumnVecType<T4> &vec4 = get_column<T4>(name4);
-    const ColumnVecType<T5> &vec5 = get_column<T5>(name5);
+    const SpinGuard         guard (lock_);
+    const ColumnVecType<T1> &vec1 = get_column<T1>(name1, false);
+    const ColumnVecType<T2> &vec2 = get_column<T2>(name2, false);
+    const ColumnVecType<T3> &vec3 = get_column<T3>(name3, false);
+    const ColumnVecType<T4> &vec4 = get_column<T4>(name4, false);
+    const ColumnVecType<T5> &vec5 = get_column<T5>(name5, false);
     const size_type         idx_s = indices_.size();
     const size_type         col_s1 = vec1.size();
     const size_type         col_s2 = vec2.size();
@@ -1819,8 +1809,6 @@ get_view_by_sel(const char *name1,
     for (auto citer: col_indices)
         new_index.push_back(&(indices_[citer]));
     dfv.indices_ = std::move(new_index);
-
-    const SpinGuard guard(lock_);
 
     for (const auto &col_citer : column_list_)  {
         sel_load_view_functor_<size_type, TheView, Ts ...>   functor (
@@ -2402,8 +2390,12 @@ template<typename T, typename DF, typename F>
 typename DataFrame<I, H>::template StlVecType<T> DataFrame<I, H>::
 combine(const char *col_name, const DF &rhs, F &functor) const  {
 
-    const auto      &lhs_col = get_column<T>(col_name);
-    const auto      &rhs_col = rhs.template get_column<T>(col_name);
+    SpinGuard   guard (lock_);
+    const auto  &lhs_col = get_column<T>(col_name, false);
+    const auto  &rhs_col = rhs.template get_column<T>(col_name, false);
+
+    guard.release();
+
     const size_type col_s = std::min(lhs_col.size(), rhs_col.size());
     StlVecType<T>   result;
 
@@ -2424,9 +2416,13 @@ combine(const char *col_name,
         const DF2 &df2,
         F &functor) const  {
 
-    const auto      &lhs_col = get_column<T>(col_name);
-    const auto      &df1_col = df1.template get_column<T>(col_name);
-    const auto      &df2_col = df2.template get_column<T>(col_name);
+    SpinGuard   guard (lock_);
+    const auto  &lhs_col = get_column<T>(col_name, false);
+    const auto  &df1_col = df1.template get_column<T>(col_name, false);
+    const auto  &df2_col = df2.template get_column<T>(col_name, false);
+
+    guard.release();
+
     const size_type col_s =
         std::min<size_type>({ lhs_col.size(), df1_col.size(), df2_col.size() });
     StlVecType<T>   result;
@@ -2450,10 +2446,14 @@ combine(const char *col_name,
         const DF3 &df3,
         F &functor) const  {
 
-    const auto      &lhs_col = get_column<T>(col_name);
-    const auto      &df1_col = df1.template get_column<T>(col_name);
-    const auto      &df2_col = df2.template get_column<T>(col_name);
-    const auto      &df3_col = df3.template get_column<T>(col_name);
+    SpinGuard   guard (lock_);
+    const auto  &lhs_col = get_column<T>(col_name, false);
+    const auto  &df1_col = df1.template get_column<T>(col_name, false);
+    const auto  &df2_col = df2.template get_column<T>(col_name, false);
+    const auto  &df3_col = df3.template get_column<T>(col_name, false);
+
+    guard.release();
+
     const size_type col_s = std::min<size_type>(
         { lhs_col.size(), df1_col.size(), df2_col.size(), df3_col.size() });
     StlVecType<T>   result;

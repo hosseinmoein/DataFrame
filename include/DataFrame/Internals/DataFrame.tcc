@@ -128,13 +128,10 @@ void DataFrame<I, H>::sort_common_(DataFrame<I, H> &df, CF &&comp_func)  {
     std::iota(sorting_idxs.begin(), sorting_idxs.end(), 0);
     std::sort(sorting_idxs.begin(), sorting_idxs.end(), comp_func);
 
-    {
-        sort_functor_<Ts ...>   functor (sorting_idxs, idx_s);
-        const SpinGuard         guard(lock_);
+    sort_functor_<Ts ...>   functor (sorting_idxs, idx_s);
 
-        for (const auto &iter : df.data_)
-            iter.change(functor);
-    }
+    for (const auto &iter : df.data_)
+        iter.change(functor);
     _sort_by_sorted_index_(df.indices_, sorting_idxs, idx_s);
 }
 
@@ -553,20 +550,17 @@ drop_missing(drop_policy policy, size_type threshold)  {
     DropRowMap      missing_row_map;
     const size_type data_size = data_.size();
 
-    {
-        map_missing_rows_functor_<Ts ...>   functor (
-            indices_.size(), missing_row_map);
-        const SpinGuard                     guard(lock_);
+    map_missing_rows_functor_<Ts ...>   functor (
+        indices_.size(), missing_row_map);
+    const SpinGuard                     guard(lock_);
 
-        for (size_type idx = 0; idx < data_size; ++idx)
-            data_[idx].change(functor);
-    }
+    for (size_type idx = 0; idx < data_size; ++idx)
+        data_[idx].change(functor);
 
     drop_missing_rows_(indices_, missing_row_map, policy, threshold, data_size);
 
     drop_missing_rows_functor_<Ts ...>  functor2 (
         missing_row_map, policy, threshold, data_.size());
-    const SpinGuard                     guard(lock_);
 
     for (size_type idx = 0; idx < data_size; ++idx)
         data_[idx].change(functor2);
@@ -685,7 +679,6 @@ void DataFrame<I, H>::shrink_to_fit ()  {
     shrink_to_fit_functor_<Ts ...>  functor;
     const SpinGuard                 guard(lock_);
 
-
     for (const auto &iter : data_)
         iter.change(functor);
 }
@@ -697,6 +690,8 @@ template<typename T, typename ...Ts>
 void DataFrame<I, H>::sort(const char *name, sort_spec dir)  {
 
     make_consistent<Ts ...>();
+
+    const SpinGuard guard (lock_);
 
     if (! ::strcmp(name, DF_INDEX_COL_NAME))  {
         auto    a = [this](size_type i, size_type j) -> bool  {
@@ -742,16 +737,17 @@ sort(const char *name1, sort_spec dir1, const char *name2, sort_spec dir2)  {
 
     ColumnVecType<T1>   *vec1 { nullptr};
     ColumnVecType<T2>   *vec2 { nullptr};
+    const SpinGuard     guard (lock_);
 
     if (! ::strcmp(name1, DF_INDEX_COL_NAME))
         vec1 = reinterpret_cast<ColumnVecType<T1> *>(&indices_);
     else
-        vec1 = &(get_column<T1>(name1));
+        vec1 = &(get_column<T1>(name1, false));
 
     if (! ::strcmp(name2, DF_INDEX_COL_NAME))
         vec2 = reinterpret_cast<ColumnVecType<T2> *>(&indices_);
     else
-        vec2 = &(get_column<T2>(name2));
+        vec2 = &(get_column<T2>(name2, false));
 
     auto    cf =
         [vec1, vec2, dir1, dir2](size_type i, size_type j) -> bool {
@@ -791,21 +787,22 @@ sort(const char *name1, sort_spec dir1,
     ColumnVecType<T1>   *vec1 { nullptr};
     ColumnVecType<T2>   *vec2 { nullptr};
     ColumnVecType<T3>   *vec3 { nullptr};
+    const SpinGuard     guard (lock_);
 
     if (! ::strcmp(name1, DF_INDEX_COL_NAME))
         vec1 = reinterpret_cast<ColumnVecType<T1> *>(&indices_);
     else
-        vec1 = &(get_column<T1>(name1));
+        vec1 = &(get_column<T1>(name1, false));
 
     if (! ::strcmp(name2, DF_INDEX_COL_NAME))
         vec2 = reinterpret_cast<ColumnVecType<T2> *>(&indices_);
     else
-        vec2 = &(get_column<T2>(name2));
+        vec2 = &(get_column<T2>(name2, false));
 
     if (! ::strcmp(name3, DF_INDEX_COL_NAME))
         vec3 = reinterpret_cast<ColumnVecType<T3> *>(&indices_);
     else
-        vec3 = &(get_column<T3>(name3));
+        vec3 = &(get_column<T3>(name3, false));
 
     auto    cf =
         [vec1, vec2, vec3, dir1, dir2, dir3]
@@ -860,26 +857,27 @@ sort(const char *name1, sort_spec dir1,
     ColumnVecType<T2>   *vec2 { nullptr};
     ColumnVecType<T3>   *vec3 { nullptr};
     ColumnVecType<T4>   *vec4 { nullptr};
+    const SpinGuard     guard (lock_);
 
     if (! ::strcmp(name1, DF_INDEX_COL_NAME))
         vec1 = reinterpret_cast<ColumnVecType<T1> *>(&indices_);
     else
-        vec1 = &(get_column<T1>(name1));
+        vec1 = &(get_column<T1>(name1, false));
 
     if (! ::strcmp(name2, DF_INDEX_COL_NAME))
         vec2 = reinterpret_cast<ColumnVecType<T2> *>(&indices_);
     else
-        vec2 = &(get_column<T2>(name2));
+        vec2 = &(get_column<T2>(name2, false));
 
     if (! ::strcmp(name3, DF_INDEX_COL_NAME))
         vec3 = reinterpret_cast<ColumnVecType<T3> *>(&indices_);
     else
-        vec3 = &(get_column<T3>(name3));
+        vec3 = &(get_column<T3>(name3, false));
 
     if (! ::strcmp(name4, DF_INDEX_COL_NAME))
         vec4 = reinterpret_cast<ColumnVecType<T4> *>(&indices_);
     else
-        vec4 = &(get_column<T4>(name4));
+        vec4 = &(get_column<T4>(name4, false));
 
     auto    cf =
         [vec1, vec2, vec3, vec4, dir1, dir2, dir3, dir4]
@@ -949,31 +947,32 @@ sort(const char *name1, sort_spec dir1,
     ColumnVecType<T3>   *vec3 { nullptr};
     ColumnVecType<T4>   *vec4 { nullptr};
     ColumnVecType<T5>   *vec5 { nullptr};
+    const SpinGuard     guard (lock_);
 
     if (! ::strcmp(name1, DF_INDEX_COL_NAME))
         vec1 = reinterpret_cast<ColumnVecType<T1> *>(&indices_);
     else
-        vec1 = &(get_column<T1>(name1));
+        vec1 = &(get_column<T1>(name1, false));
 
     if (! ::strcmp(name2, DF_INDEX_COL_NAME))
         vec2 = reinterpret_cast<ColumnVecType<T2> *>(&indices_);
     else
-        vec2 = &(get_column<T2>(name2));
+        vec2 = &(get_column<T2>(name2, false));
 
     if (! ::strcmp(name3, DF_INDEX_COL_NAME))
         vec3 = reinterpret_cast<ColumnVecType<T3> *>(&indices_);
     else
-        vec3 = &(get_column<T3>(name3));
+        vec3 = &(get_column<T3>(name3, false));
 
     if (! ::strcmp(name4, DF_INDEX_COL_NAME))
         vec4 = reinterpret_cast<ColumnVecType<T4> *>(&indices_);
     else
-        vec4 = &(get_column<T4>(name4));
+        vec4 = &(get_column<T4>(name4, false));
 
     if (! ::strcmp(name4, DF_INDEX_COL_NAME))
         vec5 = reinterpret_cast<ColumnVecType<T5> *>(&indices_);
     else
-        vec5 = &(get_column<T5>(name5));
+        vec5 = &(get_column<T5>(name5, false));
 
     auto    cf =
         [vec1, vec2, vec3, vec4, vec5, dir1, dir2, dir3, dir4, dir5]
@@ -1169,8 +1168,9 @@ groupby1(const char *col_name, I_V &&idx_visitor, Ts&& ... args) const  {
                                   col_name);
         };
 
-    for_each_in_tuple (args_tuple, func);
+    const SpinGuard guard(lock_);
 
+    for_each_in_tuple (args_tuple, func);
     return (res);
 }
 
@@ -1186,18 +1186,23 @@ groupby2(const char *col_name1,
 
     const ColumnVecType<T1> *gb_vec1 { nullptr };
     const ColumnVecType<T2> *gb_vec2 { nullptr };
+    const SpinGuard         guard (lock_);
 
     if (! ::strcmp(col_name1, DF_INDEX_COL_NAME))  {
         gb_vec1 = (const ColumnVecType<T1> *) &(get_index());
-        gb_vec2 = (const ColumnVecType<T2> *) &(get_column<T2>(col_name2));
+        gb_vec2 =
+            (const ColumnVecType<T2> *) &(get_column<T2>(col_name2, false));
     }
     else if (! ::strcmp(col_name2, DF_INDEX_COL_NAME))  {
-        gb_vec1 = (const ColumnVecType<T1> *) &(get_column<T1>(col_name1));
+        gb_vec1 = 
+            (const ColumnVecType<T1> *) &(get_column<T1>(col_name1, false));
         gb_vec2 = (const ColumnVecType<T2> *) &(get_index());
     }
     else  {
-        gb_vec1 = (const ColumnVecType<T1> *) &(get_column<T1>(col_name1));
-        gb_vec2 = (const ColumnVecType<T2> *) &(get_column<T2>(col_name2));
+        gb_vec1 =
+            (const ColumnVecType<T1> *) &(get_column<T1>(col_name1, false));
+        gb_vec2 =
+            (const ColumnVecType<T2> *) &(get_column<T2>(col_name2, false));
     }
 
     StlVecType<std::size_t> sort_v(
@@ -1236,7 +1241,6 @@ groupby2(const char *col_name1,
         };
 
     for_each_in_tuple (args_tuple, func);
-
     return (res);
 }
 
@@ -1254,26 +1258,37 @@ groupby3(const char *col_name1,
     const ColumnVecType<T1> *gb_vec1 { nullptr };
     const ColumnVecType<T2> *gb_vec2 { nullptr };
     const ColumnVecType<T3> *gb_vec3 { nullptr };
+    const SpinGuard         guard (lock_);
 
     if (! ::strcmp(col_name1, DF_INDEX_COL_NAME))  {
         gb_vec1 = (const ColumnVecType<T1> *) &(get_index());
-        gb_vec2 = (const ColumnVecType<T2> *) &(get_column<T2>(col_name2));
-        gb_vec3 = (const ColumnVecType<T3> *) &(get_column<T3>(col_name3));
+        gb_vec2 =
+            (const ColumnVecType<T2> *) &(get_column<T2>(col_name2, false));
+        gb_vec3 =
+            (const ColumnVecType<T3> *) &(get_column<T3>(col_name3, false));
     }
     else if (! ::strcmp(col_name2, DF_INDEX_COL_NAME))  {
-        gb_vec1 = (const ColumnVecType<T1> *) &(get_column<T1>(col_name1));
-        gb_vec2 = (const ColumnVecType<T2> *) &(get_index());
-        gb_vec3 = (const ColumnVecType<T3> *) &(get_column<T3>(col_name3));
+        gb_vec1 =
+            (const ColumnVecType<T1> *) &(get_column<T1>(col_name1, false));
+        gb_vec2 =
+            (const ColumnVecType<T2> *) &(get_index());
+        gb_vec3 =
+            (const ColumnVecType<T3> *) &(get_column<T3>(col_name3, false));
     }
     else if (! ::strcmp(col_name3, DF_INDEX_COL_NAME))  {
-        gb_vec1 = (const ColumnVecType<T1> *) &(get_column<T1>(col_name1));
-        gb_vec2 = (const ColumnVecType<T2> *) &(get_column<T2>(col_name2));
+        gb_vec1 =
+            (const ColumnVecType<T1> *) &(get_column<T1>(col_name1, false));
+        gb_vec2 =
+            (const ColumnVecType<T2> *) &(get_column<T2>(col_name2, false));
         gb_vec3 = (const ColumnVecType<T3> *) &(get_index());
     }
     else  {
-        gb_vec1 = (const ColumnVecType<T1> *) &(get_column<T1>(col_name1));
-        gb_vec2 = (const ColumnVecType<T2> *) &(get_column<T2>(col_name2));
-        gb_vec3 = (const ColumnVecType<T3> *) &(get_column<T3>(col_name3));
+        gb_vec1 =
+            (const ColumnVecType<T1> *) &(get_column<T1>(col_name1, false));
+        gb_vec2 =
+            (const ColumnVecType<T2> *) &(get_column<T2>(col_name2, false));
+        gb_vec3 =
+            (const ColumnVecType<T3> *) &(get_column<T3>(col_name3, false));
     }
 
     StlVecType<std::size_t> sort_v(
@@ -1321,7 +1336,6 @@ groupby3(const char *col_name1,
         };
 
     for_each_in_tuple (args_tuple, func);
-
     return (res);
 }
 
@@ -1474,8 +1488,9 @@ bucketize(bucket_type bt,
             _load_bucket_data_(*this, result, value, bt, triple);
         };
 
-    for_each_in_tuple (args_tuple, func);
+    const SpinGuard guard(lock_);
 
+    for_each_in_tuple (args_tuple, func);
     return (result);
 }
 

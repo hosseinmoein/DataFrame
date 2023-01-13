@@ -1344,20 +1344,20 @@ table.hovertable td {
   </P>
 
   I have been asked many times, why I chose the visitor pattern for algorithms as opposed to having member functions.<BR>
-  I had a few reasons:<BR>
+  Because I wanted algorithms to be independent objects. To be more precise as to why:<BR>
   <UL>
-    <LI>If I had implemented them as member functions, I would have had 100's of member function in DataFrame -- I already have too many. It wouldn't be a good design</LI>
+    <LI>If I had implemented them as member functions, I would have had 100's of member function in DataFrame</LI>
     <LI>I wanted users to be able to incorporate their custom algorithms without touching the DataFrame codebase. If you follow a simple interface, you can write your custom visitor and use it in DataFrame, easily</LI>
     <LI>Algorithms sometime have complex results. Sometimes the result is a single number. But sometimes the result of an algorithms could be a single or multiple vectors. That's not efficient to implement as a member function</LI>
-    <LI>I wanted the algorithms to be self-contained. That means a single <I>object</I> should contain the algorithm, input(s), parameter(s), and result(s)</LI>
-    <LI>Because algorithms are self-contained, they can be passed to other algorithms to be used</LI>
+    <LI>I wanted the algorithms to be self-contained like an object. That means a single <I>object</I> should contain the algorithm, input(s), parameter(s), and result(s)</LI>
+    <LI>Because algorithms are self-contained objects, they can be passed to other algorithms</LI>
   </UL>
 
 <BR><HR COLOR="Orange" SIZE="5"><BR>
 
   <H2><font color="blue">Memory Alignment</font></H2>
   <P>
-    DataFrame gives you ability to allocate memory on custom alignment boundaries.<BR>
+    DataFrame gives you the ability to allocate memory on custom alignment boundaries.<BR>
     You can use this feature to take advantage of <I>SIMD</I> instructions in modern CPU's. Since DataFrame algorithms are all done on vectors of data &#8212; columns, this can come handy in conjunction with compiler optimizations.<BR>
 	There are convenient typedef's that define DataFrames that allocate memory, for example, on 64, 128, 256, ... bytes boundaries. See <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrameTypes.html">DataFrame Library Types</a>.<BR>
     When you get access to <I>columns</I> in a DataFrame, you will get a reference to a <I>StlVecType</I>. <I>StlVecType</I> is just a <I>stl::vector</I> with custom allocator for the requested alignment.<BR>

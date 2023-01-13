@@ -98,7 +98,8 @@ DataFrame<I, H>::load_functor_<LHS, Ts ...>::operator() (const T &vec)  {
     df.template load_column<ValueType>(
         name,
         { vec.begin() + begin, vec.begin() + col_s },
-        nan_p);
+        nan_p,
+        false);
 }
 
 // ----------------------------------------------------------------------------
@@ -113,7 +114,8 @@ DataFrame<I, H>::load_all_functor_<Ts ...>::operator() (const T &vec)  {
     using ValueType = typename VecType::value_type;
 
     df.template load_column<ValueType>(name, { vec.begin(), vec.end() },
-                              nan_policy::pad_with_nans);
+                                       nan_policy::pad_with_nans,
+                                       false);
     return;
 }
 
@@ -160,7 +162,7 @@ DataFrame<I, H>::add_col_functor_<Ts ...>::operator() (const T &)  {
     using VecType = typename std::remove_reference<T>::type;
     using ValueType = typename VecType::value_type;
 
-    df.create_column<ValueType>(name);
+    df.create_column<ValueType>(name, false);
     return;
 }
 
@@ -354,7 +356,7 @@ mod_by_idx_functor_<Ts ...>::operator() (T &lhs_vec) const  {
 
     if (iter != rhs_df.column_tb_.end())  {
         const ColumnVecType<ValueType>  &rhs_vec =
-            rhs_df.get_column<ValueType>(name);
+            rhs_df.get_column<ValueType>(name, false);
 
         lhs_vec[lhs_idx] = rhs_vec[rhs_idx];
     }
@@ -395,8 +397,14 @@ index_join_functor_common_<RES_T, Ts ...>::operator()(const T &lhs_vec)  {
 
     ::snprintf(lhs_str, sizeof(lhs_str) - 1, "lhs.%s", name);
     ::snprintf(rhs_str, sizeof(rhs_str) - 1, "rhs.%s", name);
-    result.template load_column<ValueType>(lhs_str, std::move(lhs_result_col));
-    result.template load_column<ValueType>(rhs_str, std::move(rhs_result_col));
+    result.template load_column<ValueType>(lhs_str,
+                                           std::move(lhs_result_col),
+                                           nan_policy::pad_with_nans,
+                                           false);
+    result.template load_column<ValueType>(rhs_str,
+                                           std::move(rhs_result_col),
+                                           nan_policy::pad_with_nans,
+                                           false);
 }
 
 // ----------------------------------------------------------------------------
@@ -421,7 +429,10 @@ operator()(const T &vec)  {
                 ? vec[i] : get_nan<ValueType>());
     }
 
-    result.template load_column<ValueType>(name, std::move(result_col));
+    result.template load_column<ValueType>(name,
+                                           std::move(result_col),
+                                           nan_policy::pad_with_nans,
+                                           false);
 }
 
 // ----------------------------------------------------------------------------
@@ -440,7 +451,10 @@ operator()(const T &vec)  {
                                         get_nan<ValueType>());
 
         std::copy(vec.begin(), vec.end(), res_vec.begin() + original_index_s);
-        result.template load_column<ValueType>(name, res_vec);
+        result.template load_column<ValueType>(name,
+                                               res_vec,
+                                               nan_policy::pad_with_nans,
+                                               false);
     }
     else  {
         ColumnVecType<ValueType>    &res_vec =
@@ -497,12 +511,9 @@ operator()(const T &lhs_vec)  {
 
     if (rhs_citer == rhs_df.column_tb_.end())  return;
 
-    const DataVec   &rhs_hv = rhs_df.data_[rhs_citer->second];
-    SpinGuard       guard(lock_);
-    const auto      &rhs_vec = rhs_hv.template get_vector<ValueType>();
-
-    guard.release();
-
+    const DataVec           &rhs_hv = rhs_df.data_[rhs_citer->second];
+    const SpinGuard         guard(lock_);
+    const auto              &rhs_vec = rhs_hv.template get_vector<ValueType>();
     const size_type         new_col_size =
         std::min(std::min(lhs_vec.size(), rhs_vec.size()), new_idx.size());
     StlVecType<ValueType>   new_col;
@@ -528,7 +539,10 @@ operator()(const T &lhs_vec)  {
     }
 
     if (! new_col.empty())
-        result_df.template load_column<ValueType>(col_name, std::move(new_col));
+        result_df.template load_column<ValueType>(col_name,
+                                                  std::move(new_col),
+                                                  nan_policy::pad_with_nans,
+                                                  false);
     return;
 }
 
@@ -616,7 +630,8 @@ operator() (const T &vec)  {
 
     df.template load_column<ValueType>(name,
                                        std::move(new_col),
-                                       nan_policy::dont_pad_with_nans);
+                                       nan_policy::dont_pad_with_nans,
+                                       false);
     return;
 }
 
@@ -763,7 +778,8 @@ random_load_data_functor_<Ts ...>::operator() (const T &vec)  {
 
     df.template load_column<ValueType>(name,
                               std::move(new_vec),
-                              nan_policy::dont_pad_with_nans);
+                              nan_policy::dont_pad_with_nans,
+                              false);
     return;
 }
 
@@ -839,7 +855,8 @@ DataFrame<I, H>::copy_remove_functor_<Ts ...>::operator() (const T &vec)  {
                      });
     df.template load_column<ValueType>(name,
                                        std::move(new_vec),
-                                       nan_policy::dont_pad_with_nans);
+                                       nan_policy::dont_pad_with_nans,
+                                       false);
 }
 
 // ----------------------------------------------------------------------------
@@ -854,7 +871,8 @@ DataFrame<I, H>::fill_missing_functor_<DF, Ts ...>::operator() (T &vec)  {
     using ValueType = typename VecType::value_type;
 
     try  {
-        const auto      &rhs_vec = rhs.template get_column<ValueType>(col_name);
+        const auto      &rhs_vec =
+            rhs.template get_column<ValueType>(col_name, false);
         const size_type col_s = std::min(
             { vec.size(), rhs_vec.size(), self_idx.size(), rhs_idx.size() });
 
@@ -934,7 +952,10 @@ DataFrame<I, H>::describe_functor_<Ts ...>::operator() (const T &vec)  {
     qt75.post();
     col_to_load.push_back(double(qt75.get_result()));
 
-    result.template load_column<double>(name, std::move(col_to_load));
+    result.template load_column<double>(name,
+                                        std::move(col_to_load),
+                                        nan_policy::pad_with_nans,
+                                        false);
 }
 
 } // namespace hmdf

@@ -43,7 +43,7 @@ binary_operation(const DF &lhs, const DF &rhs);
 
 template<typename T1, typename T2>
 size_type
-load_pair_(std::pair<T1, T2> &col_name_data);
+load_pair_(std::pair<T1, T2> &col_name_data, bool do_lock = true);
 
 template<typename T>
 size_type

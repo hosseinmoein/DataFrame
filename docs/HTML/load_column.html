@@ -38,7 +38,8 @@ template&lt;typename T, typename ITR&gt;
 std::size_t
 load_column(const char *name,
             Index2D&lt;const ITR &amp;&gt; range,
-            nan_policy padding = nan_policy::pad_with_nans);
+            nan_policy padding = nan_policy::pad_with_nans,
+            bool do_lock = true);
         </B></PRE></font>
       </td>
       <td>
@@ -51,6 +52,7 @@ load_column(const char *name,
         <B>name</B>: Name of the column<BR>
         <B>range</B>: The begin and end iterators for data<BR>
         <B>padding</B>: If true, it pads the data column with nan if it is shorter than the index column.<BR>
+        <B>do_lock</B>: This is used to optimize DataFrame internal library code. DataFrame users should always use the default.<BR>
       </td>
     </tr>
 
@@ -61,7 +63,8 @@ template&lt;typename T&gt;
 std::size_t
 load_column(const char *name,
             std::vector&lt;T&gt; &amp;&amp;data,
-            nan_policy padding = nan_policy::pad_with_nans);
+            nan_policy padding = nan_policy::pad_with_nans,
+            bool do_lock = true);
         </B></PRE></font>
       </td>
       <td>
@@ -75,6 +78,7 @@ load_column(const char *name,
         <B>data</B>: Data vector<BR>
         <B>range</B>: The begin and end iterators for data<BR>
         <B>padding</B>: If true, it pads the data column with nan if it is shorter than the index column.<BR>
+        <B>do_lock</B>: This is used to optimize DataFrame internal library code. DataFrame users should always use the default.<BR>
       </td>
     </tr>
 
@@ -85,7 +89,8 @@ template&lt;typename T&gt;
 std::size_t
 load_column(const char *name,
             const std::vector&lt;T&gt; &amp;data,
-            nan_policy padding = nan_policy::pad_with_nans);
+            nan_policy padding = nan_policy::pad_with_nans,
+            bool do_lock = true);
         </B></PRE></font>
       </td>
       <td>
@@ -99,6 +104,7 @@ load_column(const char *name,
         <B>data</B>: Data vector<BR>
         <B>range</B>: The begin and end iterators for data<BR>
         <B>padding</B>: If true, it pads the data column with nan if it is shorter than the index column.<BR>
+        <B>do_lock</B>: This is used to optimize DataFrame internal library code. DataFrame users should always use the default.<BR>
       </td>
     </tr>
 

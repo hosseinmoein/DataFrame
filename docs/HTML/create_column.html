@@ -35,7 +35,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         <PRE><B>
 template&lt;typename T&gt;
 std::vector&lt;typename T&gt; &amp;
-create_column(const char *name);
+create_column(const char *name,
+              bool do_lock = true);
         </B></PRE></font>
       </td>
       <td>
@@ -43,7 +44,9 @@ create_column(const char *name);
         Returns a reference to the vector for that column. If a column with the same name and type already exists, it retunrs a reference to it.
       </td>
       <td>
-        <B>T</B>: Type of the column
+        <B>T</B>: Type of the column<BR>
+        <B>name</B>: Name of the column<BR>
+        <B>do_lock</B>: This is used to optimize DataFrame internal library code. DataFrame users should always use the default.<BR>
       </td>
     </tr>
 

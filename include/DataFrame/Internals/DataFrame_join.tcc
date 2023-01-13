@@ -54,8 +54,8 @@ join_by_index (const RHS_T &rhs, join_policy mp) const  {
     const auto                              &rhs_idx = rhs.get_index();
     const size_type                         lhs_idx_s = lhs_idx.size();
     const size_type                         rhs_idx_s = rhs_idx.size();
-    StlVecType<JoinSortingPair<IndexType>> idx_vec_lhs;
-    StlVecType<JoinSortingPair<IndexType>> idx_vec_rhs;
+    StlVecType<JoinSortingPair<IndexType>>  idx_vec_lhs;
+    StlVecType<JoinSortingPair<IndexType>>  idx_vec_rhs;
 
     idx_vec_lhs.reserve(lhs_idx_s);
     for (size_type i = 0; i < lhs_idx_s; ++i)
@@ -116,8 +116,8 @@ join_by_column (const RHS_T &rhs, const char *name, join_policy mp) const  {
     const size_type lhs_vec_s = lhs_vec.size();
     const size_type rhs_vec_s = rhs_vec.size();
 
-    StlVecType<JoinSortingPair<T>> col_vec_lhs;
-    StlVecType<JoinSortingPair<T>> col_vec_rhs;
+    StlVecType<JoinSortingPair<T>>  col_vec_lhs;
+    StlVecType<JoinSortingPair<T>>  col_vec_rhs;
 
     col_vec_lhs.reserve(lhs_vec_s);
     for (size_type i = 0; i < lhs_vec_s; ++i)
@@ -166,6 +166,8 @@ join_helper_common_(
     const IndexIdxVector &joined_index_idx,
     DataFrame<IDX_T, HeteroVector<std::size_t(H::align_value)>> &result,
     const char *skip_col_name)  {
+
+    const SpinGuard guard(lock_);
 
     // Load the common and lhs columns
     for (const auto &iter : lhs.column_list_)  {
@@ -222,7 +224,7 @@ index_join_helper_(const LHS_T &lhs,
                    const IndexIdxVector &joined_index_idx)  {
 
     DataFrame<IndexType, HeteroVector<align_value>> result;
-    StlVecType<IndexType>                          result_index;
+    StlVecType<IndexType>                           result_index;
 
     // Load the index
     result_index.reserve(joined_index_idx.size());
@@ -260,18 +262,17 @@ column_join_helper_(const LHS_T &lhs,
 
     // Load the new result index
     result.load_index(
-        DataFrame<unsigned int,
-                  HeteroVector<align_value>>::gen_sequence_index(
+        DataFrame<unsigned int, HeteroVector<align_value>>::gen_sequence_index(
             0, static_cast<unsigned int>(jii_s), 1));
 
     // Load the lhs and rhs indices into two columns in the result
     // Also load the unified named column
-    StlVecType<left_idx_t>     lhs_index;
-    StlVecType<right_idx_t>    rhs_index;
-    StlVecType<T>              named_col_vec;
-    const ColumnVecType<T>      &lhs_named_col_vec =
+    StlVecType<left_idx_t>  lhs_index;
+    StlVecType<right_idx_t> rhs_index;
+    StlVecType<T>           named_col_vec;
+    const ColumnVecType<T>  &lhs_named_col_vec =
         lhs.template get_column<T>(col_name);
-    const ColumnVecType<T>      &rhs_named_col_vec =
+    const ColumnVecType<T>  &rhs_named_col_vec =
         rhs.template get_column<T>(col_name);
 
     lhs_index.reserve(jii_s);
@@ -295,13 +296,25 @@ column_join_helper_(const LHS_T &lhs,
             rhs_index.push_back(get_nan<right_idx_t>());
     }
 
-    char    buffer[64];
+    {
+        char            buffer[64];
+        const SpinGuard guard(lock_);
 
-    ::snprintf(buffer, sizeof(buffer) - 1, "lhs.%s", DF_INDEX_COL_NAME);
-    result.template load_column<left_idx_t>(buffer, std::move(lhs_index));
-    ::snprintf(buffer, sizeof(buffer) - 1, "rhs.%s", DF_INDEX_COL_NAME);
-    result.template load_column<right_idx_t>(buffer, std::move(rhs_index));
-    result.template load_column<T>(col_name, std::move(named_col_vec));
+        ::snprintf(buffer, sizeof(buffer) - 1, "lhs.%s", DF_INDEX_COL_NAME);
+        result.template load_column<left_idx_t>(buffer,
+                                                std::move(lhs_index),
+                                                nan_policy::pad_with_nans,
+                                                false);
+        ::snprintf(buffer, sizeof(buffer) - 1, "rhs.%s", DF_INDEX_COL_NAME);
+        result.template load_column<right_idx_t>(buffer,
+                                                 std::move(rhs_index),
+                                                 nan_policy::pad_with_nans,
+                                                 false);
+        result.template load_column<T>(col_name,
+                                       std::move(named_col_vec),
+                                       nan_policy::pad_with_nans,
+                                       false);
+    }
 
     join_helper_common_<LHS_T, RHS_T, unsigned int, Ts ...>
         (lhs, rhs, joined_index_idx, result, col_name);
@@ -321,7 +334,6 @@ DataFrame<I, H>::get_inner_index_idx_vector_(
     const size_type lhs_end = col_vec_lhs.size();
     size_type       rhs_current = 0;
     const size_type rhs_end = col_vec_rhs.size();
-
     IndexIdxVector  joined_index_idx;
 
     joined_index_idx.reserve(std::min(lhs_end, rhs_end));
@@ -346,10 +358,10 @@ DataFrame<I, H>::get_inner_index_idx_vector_(
 template<typename I, typename H>
 template<typename LHS_T, typename RHS_T, typename ... Ts>
 DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
-index_inner_join_(
-    const LHS_T &lhs, const RHS_T &rhs,
-    const StlVecType<JoinSortingPair<IndexType>> &col_vec_lhs,
-    const StlVecType<JoinSortingPair<IndexType>> &col_vec_rhs) {
+index_inner_join_(const LHS_T &lhs,
+                  const RHS_T &rhs,
+                  const StlVecType<JoinSortingPair<IndexType>> &col_vec_lhs,
+                  const StlVecType<JoinSortingPair<IndexType>> &col_vec_rhs) {
 
     return (index_join_helper_<LHS_T, RHS_T, Ts ...>
         (lhs, rhs,
@@ -386,7 +398,6 @@ DataFrame<I, H>::get_left_index_idx_vector_(
     const size_type lhs_end = col_vec_lhs.size();
     size_type       rhs_current = 0;
     const size_type rhs_end = col_vec_rhs.size();
-
     IndexIdxVector  joined_index_idx;
 
     joined_index_idx.reserve(lhs_end);
@@ -459,7 +470,6 @@ DataFrame<I, H>::get_right_index_idx_vector_(
     const size_type lhs_end = col_vec_lhs.size();
     size_type       rhs_current = 0;
     const size_type rhs_end = col_vec_rhs.size();
-
     IndexIdxVector  joined_index_idx;
 
     joined_index_idx.reserve(rhs_end);
@@ -496,10 +506,9 @@ DataFrame<I, H>::get_right_index_idx_vector_(
 template<typename I, typename H>
 template<typename LHS_T, typename RHS_T, typename ... Ts>
 DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
-index_right_join_(
-    const LHS_T &lhs, const RHS_T &rhs,
-    const StlVecType<JoinSortingPair<IndexType>> &col_vec_lhs,
-    const StlVecType<JoinSortingPair<IndexType>> &col_vec_rhs) {
+index_right_join_(const LHS_T &lhs, const RHS_T &rhs,
+                  const StlVecType<JoinSortingPair<IndexType>> &col_vec_lhs,
+                  const StlVecType<JoinSortingPair<IndexType>> &col_vec_rhs) {
 
     return (index_join_helper_<LHS_T, RHS_T, Ts ...>
                 (lhs, rhs,
@@ -537,7 +546,6 @@ DataFrame<I, H>::get_left_right_index_idx_vector_(
     const size_type lhs_end = col_vec_lhs.size();
     size_type       rhs_current = 0;
     const size_type rhs_end = col_vec_rhs.size();
-
     IndexIdxVector  joined_index_idx;
 
     joined_index_idx.reserve(std::max(lhs_end, rhs_end));
@@ -676,6 +684,8 @@ DataFrame<I, H>::self_concat(const RHS_T &rhs, bool add_new_columns)  {
         "StdDataFrame<IndexType> or DataFrame[Ptr]View<IndexType>. "
         "Self must be StdDataFrame<IndexType>");
 
+    const SpinGuard guard(lock_);
+
     concat_helper_<decltype(*this), RHS_T, Ts ...>(*this, rhs, add_new_columns);
 }
 
@@ -694,13 +704,14 @@ DataFrame<I, H>::concat(const RHS_T &rhs, concat_policy cp) const  {
          std::is_base_of<View, RHS_T>::value ||
          std::is_base_of<PtrView, RHS_T>::value) &&
         ! std::is_base_of<DataFrame<I,
-		                            HeteroVector<std::size_t(H::align_value)>>,
+                                    HeteroVector<std::size_t(H::align_value)>>,
                           decltype(*this)>::value,
         "The rhs argument to concat() can only be "
         "StdDataFrame<IndexType> or DataFrame[Ptr]View<IndexType>. "
         "Self must be StdDataFrame<IndexType>");
 
     DataFrame<I, HeteroVector<align_value>> result;
+    const SpinGuard                         guard(lock_);
 
     if (cp == concat_policy::all_columns ||
         cp == concat_policy::lhs_and_common_columns)  {
@@ -710,6 +721,7 @@ DataFrame<I, H>::concat(const RHS_T &rhs, concat_policy cp) const  {
     }
     else if (cp == concat_policy::common_columns)  {
         result.load_index(this->get_index().begin(), this->get_index().end());
+
         for (const auto &lhs_citer : column_list_)  {
             auto    rhs_citer = rhs.column_tb_.find(lhs_citer.first);
 
@@ -790,7 +802,7 @@ DataFrame<I, H>::concat_view(RHS_T &rhs, concat_policy cp)  {
         for (const auto &lhs_citer : column_list_)  {
             concat_load_view_functor_<PtrView, Ts ...> functor(
                 lhs_citer.first.c_str(), result);
-            auto                                                   rhs_citer =
+            auto                                       rhs_citer =
                 rhs.column_tb_.find(lhs_citer.first);
 
             if (rhs_citer != rhs.column_tb_.end())  {

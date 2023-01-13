@@ -41,7 +41,7 @@ namespace hmdf
 template<typename I, typename H>
 template<typename T>
 typename DataFrame<I, H>::template ColumnVecType<T> &
-DataFrame<I, H>::create_column (const char *name)  {
+DataFrame<I, H>::create_column (const char *name, bool do_lock)  {
 
     static_assert(std::is_base_of<HeteroVector<align_value>, DataVec>::value,
                   "Only a StdDataFrame can call create_column()");
@@ -52,7 +52,7 @@ DataFrame<I, H>::create_column (const char *name)  {
     if (column_tb_.find(name) != column_tb_.end())
        return (get_column<T>(name));
 
-    const SpinGuard guard(lock_);
+    const SpinGuard guard(do_lock ? lock_ : nullptr);
 
     if (column_list_.empty())  {
         column_list_.reserve(32);
@@ -194,8 +194,10 @@ DataFrame<I, H>::load_data (IndexVecType &&indices, Ts&& ... args)  {
     // const size_type tuple_size =
     //     std::tuple_size<decltype(args_tuple)>::value;
     auto        fc = [this, &cnt](auto &pa) mutable -> void {
-                         cnt += this->load_pair_(pa);
+		                 cnt += this->load_pair_(pa, false);
                      };
+
+    const SpinGuard guard(lock_);
 
     for_each_in_tuple (args_tuple, fc);
 
@@ -347,7 +349,8 @@ typename DataFrame<I, H>::size_type
 DataFrame<I, H>::
 load_column (const char *name,
              Index2D<const ITR &> range,
-             nan_policy padding)  {
+             nan_policy padding,
+             bool do_lock)  {
 
     size_type       s = std::distance(range.begin, range.end);
     const size_type idx_s = indices_.size();
@@ -368,15 +371,16 @@ load_column (const char *name,
 
     const auto      iter = column_tb_.find (name);
     StlVecType<T>   *vec_ptr = nullptr;
+    SpinGuard       guard(do_lock ? lock_ : nullptr);
 
     if (iter == column_tb_.end())
-        vec_ptr = &(create_column<T>(name));
+        vec_ptr = &(create_column<T>(name, false));
     else  {
-        const SpinGuard guard(lock_);
-        DataVec         &hv = data_[iter->second];
+        DataVec &hv = data_[iter->second];
 
         vec_ptr = &(hv.template get_vector<T>());
     }
+    guard.release();
 
     vec_ptr->clear();
     vec_ptr->insert (vec_ptr->end(), range.begin, range.end);
@@ -432,15 +436,16 @@ load_result_as_column(V &visitor, const char *name, nan_policy padding)  {
 
     const auto              iter = column_tb_.find (name);
     StlVecType<new_type>    *vec_ptr = nullptr;
+    SpinGuard               guard(lock_);
 
     if (iter == column_tb_.end())
-        vec_ptr = &(create_column<new_type>(name));
+        vec_ptr = &(create_column<new_type>(name, false));
     else  {
-        const SpinGuard guard(lock_);
-        DataVec         &hv = data_[iter->second];
+        DataVec &hv = data_[iter->second];
 
         vec_ptr = &(hv.template get_vector<new_type>());
     }
+    guard.release();
 
     *vec_ptr = std::move(new_col);
     return (ret_cnt);
@@ -456,10 +461,11 @@ load_indicators(const char *cat_col_name, const char *numeric_cols_prefix)  {
 
     using map_t = std::unordered_map<T, StlVecType<IT> *>;
 
-    const auto  &cat_col = get_column<T>(cat_col_name);
-    const auto  col_s = cat_col.size();
-    map_t       val_map;
-    size_type   ret_cnt = 0;
+    const SpinGuard guard(lock_);
+    const auto      &cat_col = get_column<T>(cat_col_name, false);
+    const auto      col_s = cat_col.size();
+    map_t           val_map;
+    size_type       ret_cnt = 0;
 
     val_map.reserve(col_s / 2);
     for (size_type i = 0; i < col_s; ++i)  {
@@ -473,7 +479,7 @@ load_indicators(const char *cat_col_name, const char *numeric_cols_prefix)  {
                 new_name = numeric_cols_prefix;
             new_name += _to_string_(val).c_str();
 
-            auto    *new_col = &(create_column<IT>(new_name.c_str()));
+            auto    *new_col = &(create_column<IT>(new_name.c_str(), false));
 
             new_col->resize(col_s, IT(0));
             in_ret.first->second = new_col;
@@ -496,15 +502,17 @@ from_indicators(const StlVecType<const char *> &ind_col_names,
 
     const size_type                     ind_col_s = ind_col_names.size();
     StlVecType<const StlVecType<T> *>   ind_cols(ind_col_s, nullptr);
+    SpinGuard                           guard (lock_);
 
     for (size_type i = 0; i < ind_col_s; ++i)
-        ind_cols[i] = &(get_column<T>(ind_col_names[i]));
+        ind_cols[i] = &(get_column<T>(ind_col_names[i], false));
 
     const size_type col_s = ind_cols[0]->size();
-    auto            &new_col = create_column<CT>(cat_col_name);
+    auto            &new_col = create_column<CT>(cat_col_name, false);
     const size_type pre_offset =
         numeric_cols_prefixg == nullptr ? 0 : strlen(numeric_cols_prefixg);
 
+    guard.release();
     new_col.reserve(col_s);
     for (size_type i = 0; i < col_s; ++i)
         for (size_type j = 0; j < ind_col_s; ++j)
@@ -553,7 +561,8 @@ typename DataFrame<I, H>::size_type
 DataFrame<I, H>::
 load_column (const char *name,
              StlVecType<T> &&column,
-             nan_policy padding)  {
+             nan_policy padding,
+             bool do_lock)  {
 
     const size_type idx_s = indices_.size();
     const size_type data_s = column.size();
@@ -583,12 +592,12 @@ load_column (const char *name,
 
     const auto      iter = column_tb_.find (name);
     StlVecType<T>   *vec_ptr = nullptr;
+    const SpinGuard guard (do_lock ? lock_ : nullptr);
 
     if (iter == column_tb_.end())
-        vec_ptr = &(create_column<T>(name));
+        vec_ptr = &(create_column<T>(name, false));
     else  {
-        const SpinGuard guard(lock_);
-        DataVec         &hv = data_[iter->second];
+        DataVec &hv = data_[iter->second];
 
         vec_ptr = &(hv.template get_vector<T>());
     }
@@ -663,9 +672,10 @@ typename DataFrame<I, H>::size_type
 DataFrame<I, H>::
 load_column (const char *name,
              const StlVecType<T> &data,
-             nan_policy padding)  {
+             nan_policy padding,
+             bool do_lock)  {
 
-    return (load_column<T>(name, { data.begin(), data.end() }, padding));
+    return(load_column<T>(name, {data.begin(), data.end()}, padding, do_lock));
 }
 
 // ----------------------------------------------------------------------------
@@ -673,12 +683,14 @@ load_column (const char *name,
 template<typename I, typename H>
 template<typename T1, typename T2>
 typename DataFrame<I, H>::size_type
-DataFrame<I, H>::load_pair_(std::pair<T1, T2> &col_name_data)  {
+DataFrame<I, H>::
+load_pair_(std::pair<T1, T2> &col_name_data, bool do_lock)  {
 
     return (load_column<typename decltype(col_name_data.second)::value_type>(
                 col_name_data.first, // column name
                 std::forward<T2>(col_name_data.second),
-                nan_policy::pad_with_nans));
+                nan_policy::pad_with_nans,
+                do_lock));
 }
 
 // ----------------------------------------------------------------------------
@@ -916,8 +928,9 @@ template<typename T1, typename T2, typename F, typename ... Ts>
 void DataFrame<I, H>::
 remove_data_by_sel (const char *name1, const char *name2, F &sel_functor)  {
 
-    const ColumnVecType<T1> &vec1 = get_column<T1>(name1);
-    const ColumnVecType<T2> &vec2 = get_column<T2>(name2);
+    SpinGuard               guard (lock_);
+    const ColumnVecType<T1> &vec1 = get_column<T1>(name1, false);
+    const ColumnVecType<T2> &vec2 = get_column<T2>(name2, false);
     const size_type         idx_s = indices_.size();
     const size_type         col_s1 = vec1.size();
     const size_type         col_s2 = vec2.size();
@@ -935,7 +948,6 @@ remove_data_by_sel (const char *name1, const char *name2, F &sel_functor)  {
             col_indices.push_back(i);
 
     const sel_remove_functor_<Ts ...>   functor (col_indices);
-    SpinGuard                           guard(lock_);
 
     for (const auto &col_citer : column_list_)
         data_[col_citer.second].change(functor);
@@ -960,9 +972,10 @@ remove_data_by_sel (const char *name1,
                     const char *name3,
                     F &sel_functor)  {
 
-    const ColumnVecType<T1> &vec1 = get_column<T1>(name1);
-    const ColumnVecType<T2> &vec2 = get_column<T2>(name2);
-    const ColumnVecType<T3> &vec3 = get_column<T3>(name3);
+    SpinGuard               guard (lock_);
+    const ColumnVecType<T1> &vec1 = get_column<T1>(name1, false);
+    const ColumnVecType<T2> &vec2 = get_column<T2>(name2, false);
+    const ColumnVecType<T3> &vec3 = get_column<T3>(name3, false);
     const size_type         idx_s = indices_.size();
     const size_type         col_s1 = vec1.size();
     const size_type         col_s2 = vec2.size();
@@ -982,7 +995,6 @@ remove_data_by_sel (const char *name1,
             col_indices.push_back(i);
 
     const sel_remove_functor_<Ts ...>   functor (col_indices);
-    SpinGuard                           guard(lock_);
 
     for (const auto &col_citer : column_list_)
         data_[col_citer.second].change(functor);
@@ -1109,8 +1121,12 @@ remove_duplicates (const char *name1,
     using count_vec = StlVecType<size_type>;
     using data_map = std::unordered_map<data_tuple, count_vec, TupleHash>;
 
-    const ColumnVecType<T1> &vec1 = get_column<T1>(name1);
-    const ColumnVecType<T2> &vec2 = get_column<T2>(name2);
+    SpinGuard               guard (lock_);
+    const ColumnVecType<T1> &vec1 = get_column<T1>(name1, false);
+    const ColumnVecType<T2> &vec2 = get_column<T2>(name2, false);
+
+    guard.release();
+
     const auto              &index = get_index();
     const size_type         col_s =
         std::min<size_type>({ vec1.size(), vec2.size(), index.size() });
@@ -1149,11 +1165,15 @@ remove_duplicates (const char *name1,
     using count_vec = StlVecType<size_type>;
     using data_map = std::unordered_map<data_tuple, count_vec, TupleHash>;
 
-    const ColumnVecType<T1> &vec1 = get_column<T1>(name1);
-    const ColumnVecType<T2> &vec2 = get_column<T2>(name2);
-    const ColumnVecType<T3> &vec3 = get_column<T3>(name3);
-    const auto              &index = get_index();
-    const size_type         col_s =
+    SpinGuard               guard (lock_);
+    const ColumnVecType<T1> &vec1 = get_column<T1>(name1, false);
+    const ColumnVecType<T2> &vec2 = get_column<T2>(name2, false);
+    const ColumnVecType<T3> &vec3 = get_column<T3>(name3, false);
+
+    guard.release();
+
+    const auto      &index = get_index();
+    const size_type col_s =
         std::min<size_type>(
             { vec1.size(), vec2.size(), vec3.size(), index.size() });
     data_map                row_table;
@@ -1193,12 +1213,16 @@ remove_duplicates (const char *name1,
     using count_vec = StlVecType<size_type>;
     using data_map = std::unordered_map<data_tuple, count_vec, TupleHash>;
 
-    const ColumnVecType<T1> &vec1 = get_column<T1>(name1);
-    const ColumnVecType<T2> &vec2 = get_column<T2>(name2);
-    const ColumnVecType<T3> &vec3 = get_column<T3>(name3);
-    const ColumnVecType<T4> &vec4 = get_column<T4>(name4);
-    const auto              &index = get_index();
-    const size_type         col_s =
+    SpinGuard               guard (lock_);
+    const ColumnVecType<T1> &vec1 = get_column<T1>(name1, false);
+    const ColumnVecType<T2> &vec2 = get_column<T2>(name2, false);
+    const ColumnVecType<T3> &vec3 = get_column<T3>(name3, false);
+    const ColumnVecType<T4> &vec4 = get_column<T4>(name4, false);
+
+    guard.release();
+
+    const auto      &index = get_index();
+    const size_type col_s =
         std::min<size_type>(
             { vec1.size(), vec2.size(), vec3.size(), vec4.size(),
               index.size() });
@@ -1241,13 +1265,17 @@ remove_duplicates (const char *name1,
     using count_vec = StlVecType<size_type>;
     using data_map = std::unordered_map<data_tuple, count_vec, TupleHash>;
 
-    const ColumnVecType<T1> &vec1 = get_column<T1>(name1);
-    const ColumnVecType<T2> &vec2 = get_column<T2>(name2);
-    const ColumnVecType<T3> &vec3 = get_column<T3>(name3);
-    const ColumnVecType<T4> &vec4 = get_column<T4>(name4);
-    const ColumnVecType<T5> &vec5 = get_column<T5>(name5);
-    const auto              &index = get_index();
-    const size_type         col_s =
+    SpinGuard               guard (lock_);
+    const ColumnVecType<T1> &vec1 = get_column<T1>(name1, false);
+    const ColumnVecType<T2> &vec2 = get_column<T2>(name2, false);
+    const ColumnVecType<T3> &vec3 = get_column<T3>(name3, false);
+    const ColumnVecType<T4> &vec4 = get_column<T4>(name4, false);
+    const ColumnVecType<T5> &vec5 = get_column<T5>(name5, false);
+
+    guard.release();
+
+    const auto      &index = get_index();
+    const size_type col_s =
         std::min<size_type>(
             { vec1.size(), vec2.size(), vec3.size(), vec4.size(), vec5.size(),
               index.size() });
@@ -1294,14 +1322,18 @@ remove_duplicates (const char *name1,
     using count_vec = StlVecType<size_type>;
     using data_map = std::unordered_map<data_tuple, count_vec, TupleHash>;
 
-    const ColumnVecType<T1> &vec1 = get_column<T1>(name1);
-    const ColumnVecType<T2> &vec2 = get_column<T2>(name2);
-    const ColumnVecType<T3> &vec3 = get_column<T3>(name3);
-    const ColumnVecType<T4> &vec4 = get_column<T4>(name4);
-    const ColumnVecType<T5> &vec5 = get_column<T5>(name5);
-    const ColumnVecType<T6> &vec6 = get_column<T6>(name6);
-    const auto              &index = get_index();
-    const size_type         col_s =
+    SpinGuard               guard (lock_);
+    const ColumnVecType<T1> &vec1 = get_column<T1>(name1, false);
+    const ColumnVecType<T2> &vec2 = get_column<T2>(name2, false);
+    const ColumnVecType<T3> &vec3 = get_column<T3>(name3, false);
+    const ColumnVecType<T4> &vec4 = get_column<T4>(name4, false);
+    const ColumnVecType<T5> &vec5 = get_column<T5>(name5, false);
+    const ColumnVecType<T6> &vec6 = get_column<T6>(name6, false);
+
+    guard.release();
+
+    const auto      &index = get_index();
+    const size_type col_s =
         std::min<size_type>(
             { vec1.size(), vec2.size(), vec3.size(), vec4.size(),
               vec5.size(), vec6.size(),
@@ -1340,14 +1372,19 @@ consolidate(const char *old_col_name1,
     static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
                   "Only a StdDataFrame can call consolidate()");
 
-    const ColumnVecType<OLD_T1> &vec1 = get_column<OLD_T1>(old_col_name1);
-    const ColumnVecType<OLD_T2> &vec2 = get_column<OLD_T2>(old_col_name2);
+    SpinGuard                   guard (lock_);
+    const ColumnVecType<OLD_T1> &vec1 =
+        get_column<OLD_T1>(old_col_name1, false);
+    const ColumnVecType<OLD_T2> &vec2 =
+        get_column<OLD_T2>(old_col_name2, false);
 
     load_column<NEW_T>(new_col_name,
                        std::move(functor(indices_.begin(), indices_.end(),
                                          vec1.begin(), vec1.end(),
                                          vec2.begin(), vec2.end())),
-                       nan_policy::dont_pad_with_nans);
+                       nan_policy::dont_pad_with_nans,
+                       false);
+    guard.release();
     if (delete_old_cols)  {
         remove_column(old_col_name1);
         remove_column(old_col_name2);
@@ -1371,16 +1408,22 @@ consolidate(const char *old_col_name1,
     static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
                   "Only a StdDataFrame can call consolidate()");
 
-    const ColumnVecType<OLD_T1> &vec1 = get_column<OLD_T1>(old_col_name1);
-    const ColumnVecType<OLD_T2> &vec2 = get_column<OLD_T2>(old_col_name2);
-    const ColumnVecType<OLD_T3> &vec3 = get_column<OLD_T3>(old_col_name3);
+    SpinGuard                   guard (lock_);
+    const ColumnVecType<OLD_T1> &vec1 =
+        get_column<OLD_T1>(old_col_name1, false);
+    const ColumnVecType<OLD_T2> &vec2 =
+        get_column<OLD_T2>(old_col_name2, false);
+    const ColumnVecType<OLD_T3> &vec3 =
+        get_column<OLD_T3>(old_col_name3, false);
 
     load_column<NEW_T>(new_col_name,
                        std::move(functor(indices_.begin(), indices_.end(),
                                          vec1.begin(), vec1.end(),
                                          vec2.begin(), vec2.end(),
                                          vec3.begin(), vec3.end())),
-                       nan_policy::dont_pad_with_nans);
+                       nan_policy::dont_pad_with_nans,
+                       false);
+    guard.release();
     if (delete_old_cols)  {
         remove_column(old_col_name1);
         remove_column(old_col_name2);
@@ -1406,10 +1449,15 @@ consolidate(const char *old_col_name1,
     static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
                   "Only a StdDataFrame can call consolidate()");
 
-    const ColumnVecType<OLD_T1> &vec1 = get_column<OLD_T1>(old_col_name1);
-    const ColumnVecType<OLD_T2> &vec2 = get_column<OLD_T2>(old_col_name2);
-    const ColumnVecType<OLD_T3> &vec3 = get_column<OLD_T3>(old_col_name3);
-    const ColumnVecType<OLD_T4> &vec4 = get_column<OLD_T4>(old_col_name4);
+    SpinGuard                   guard (lock_);
+    const ColumnVecType<OLD_T1> &vec1 =
+        get_column<OLD_T1>(old_col_name1, false);
+    const ColumnVecType<OLD_T2> &vec2 =
+        get_column<OLD_T2>(old_col_name2, false);
+    const ColumnVecType<OLD_T3> &vec3 =
+        get_column<OLD_T3>(old_col_name3, false);
+    const ColumnVecType<OLD_T4> &vec4 =
+        get_column<OLD_T4>(old_col_name4, false);
 
     load_column<NEW_T>(new_col_name,
                        std::move(functor(indices_.begin(), indices_.end(),
@@ -1417,7 +1465,9 @@ consolidate(const char *old_col_name1,
                                          vec2.begin(), vec2.end(),
                                          vec3.begin(), vec3.end(),
                                          vec4.begin(), vec4.end())),
-                       nan_policy::dont_pad_with_nans);
+                       nan_policy::dont_pad_with_nans,
+                       false);
+    guard.release();
     if (delete_old_cols)  {
         remove_column(old_col_name1);
         remove_column(old_col_name2);
@@ -1446,11 +1496,17 @@ consolidate(const char *old_col_name1,
     static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
                   "Only a StdDataFrame can call consolidate()");
 
-    const ColumnVecType<OLD_T1> &vec1 = get_column<OLD_T1>(old_col_name1);
-    const ColumnVecType<OLD_T2> &vec2 = get_column<OLD_T2>(old_col_name2);
-    const ColumnVecType<OLD_T3> &vec3 = get_column<OLD_T3>(old_col_name3);
-    const ColumnVecType<OLD_T4> &vec4 = get_column<OLD_T4>(old_col_name4);
-    const ColumnVecType<OLD_T5> &vec5 = get_column<OLD_T5>(old_col_name5);
+    SpinGuard                   guard (lock_);
+    const ColumnVecType<OLD_T1> &vec1 =
+        get_column<OLD_T1>(old_col_name1, false);
+    const ColumnVecType<OLD_T2> &vec2 =
+        get_column<OLD_T2>(old_col_name2, false);
+    const ColumnVecType<OLD_T3> &vec3 =
+        get_column<OLD_T3>(old_col_name3, false);
+    const ColumnVecType<OLD_T4> &vec4 =
+        get_column<OLD_T4>(old_col_name4, false);
+    const ColumnVecType<OLD_T5> &vec5 =
+        get_column<OLD_T5>(old_col_name5, false);
 
     load_column<NEW_T>(new_col_name,
                        std::move(functor(indices_.begin(), indices_.end(),
@@ -1459,7 +1515,9 @@ consolidate(const char *old_col_name1,
                                          vec3.begin(), vec3.end(),
                                          vec4.begin(), vec4.end(),
                                          vec5.begin(), vec5.end())),
-                       nan_policy::dont_pad_with_nans);
+                       nan_policy::dont_pad_with_nans,
+                       false);
+    guard.release();
     if (delete_old_cols)  {
         remove_column(old_col_name1);
         remove_column(old_col_name2);

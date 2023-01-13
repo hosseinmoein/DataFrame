@@ -150,7 +150,7 @@ public:  // Load/append/remove interfaces
     //
     template<typename T>
     ColumnVecType<T> &
-    create_column(const char *name);
+    create_column(const char *name, bool do_lock = true);
 
     // It removes a column named name.
     // The actual data vector is not deleted, but the column is dropped from
@@ -241,7 +241,8 @@ public:  // Load/append/remove interfaces
     size_type
     load_column(const char *name,
                 Index2D<const ITR &> range,
-                nan_policy padding = nan_policy::pad_with_nans);
+                nan_policy padding = nan_policy::pad_with_nans,
+                bool do_lock = true);
 
     // It moves the data to the named column in DataFrame.
     // If column does not exist, it will be created. If the column exists,
@@ -261,13 +262,15 @@ public:  // Load/append/remove interfaces
     size_type
     load_column(const char *name,
                 StlVecType<T> &&data,
-                nan_policy padding = nan_policy::pad_with_nans);
+                nan_policy padding = nan_policy::pad_with_nans,
+                bool do_lock = true);
 
     template<typename T>
     size_type
     load_column(const char *name,
                 const StlVecType<T> &data,
-                nan_policy padding = nan_policy::pad_with_nans);
+                nan_policy padding = nan_policy::pad_with_nans,
+                bool do_lock = true);
 
     // This method creates a column similar to above, but assumes data is
     // bucket or bar values. That means the data vector contains statistical
@@ -1534,7 +1537,7 @@ public: // Read/access and slicing interfaces
     //
     template<typename T>
     [[nodiscard]] ColumnVecType<T> &
-    get_column(const char *name);
+    get_column(const char *name, bool do_lock = true);
 
     template<typename T>
     [[nodiscard]] ColumnVecType<typename T::type> &
@@ -1542,7 +1545,7 @@ public: // Read/access and slicing interfaces
 
     template<typename T>
     [[nodiscard]] ColumnVecType<T> &
-    get_column(size_type index);
+    get_column(size_type index, bool do_lock = true);
 
     // It returns a const reference to the container of named data column
     // The return type depends on if we are in standard or view mode
@@ -1554,7 +1557,7 @@ public: // Read/access and slicing interfaces
     //
     template<typename T>
     [[nodiscard]] const ColumnVecType<T> &
-    get_column(const char *name) const;
+    get_column(const char *name, bool do_lock = true) const;
 
     template<typename T>
     [[nodiscard]] const ColumnVecType<typename T::type> &
@@ -1562,7 +1565,7 @@ public: // Read/access and slicing interfaces
 
     template<typename T>
     [[nodiscard]] const ColumnVecType<T> &
-    get_column(size_type index) const;
+    get_column(size_type index, bool do_lock = true) const;
 
     // Returns true if self has the named column, otherwise false
     // NOTE: Even if the column exists, it may not be of the type you expect.

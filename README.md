@@ -41,7 +41,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <img src="docs/LionLookingUp.jpg" alt="DataFrame Lion" width="400" longdesc="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html"/>
 
 ## [*DataFrame Documentation / Code Samples*](https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html)
-This is a C++ analytical library that provides interface and functionality similar to packages/libraries in Python and R. For example, you could compare this to Pandas or R data.frame.<BR>
+This is a C++ analytical library designed for data analysis similar to libraries in Python and R. For example, you could compare this to Pandas or R data.frame.<BR>
 You could slice the data in many different ways. You could join, merge, group-by the data. You could run various statistical, summarization, financial, and ML algorithms on the data. You could add your custom algorithms easily. You could multi-column sort, custom pick and delete the data. And more …<BR>
 DataFrame also includes a large collection of analytical algorithms in form of visitors. These are from basic stats such as <I>Mean</I>, <I>Std Deviation</I>, <I>Return</I>, … to more involved analysis such as <I>Affinity Propagation</I>, <I>Polynomial Fit</I>, <I>Fast Fourier transform of arbitrary length</I> … including a good collection of trading indicators. You could also easily add your own algorithms.<BR>
 For basic operations to start you off, see [Hello World](examples/hello_world.cc). For a complete list of features with code samples, see [documentation](https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html).

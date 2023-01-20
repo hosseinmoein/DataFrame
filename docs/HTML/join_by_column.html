@@ -70,7 +70,7 @@ join_by_column(const RHS_T &amp;rhs,
       <td WIDTH="33.3%">
         It joins the data between self (lhs) and rhs and returns the joined data in a StdDataFrame, based on specification in join_policy.<BR>
         The returned DataFrame is indexed by a sequence of unsigned integers from 0 to N. The returned DataFrame will at least have two columns names lhs.INDEX and rhs.INDEX containing the lhs and rhs indices based on join policy.<BR>
-        The following conditions must be meet for this method<BR>
+        The following conditions must be met for this method<BR>
         to compile and work properly:<BR>
         <OL>
           <LI>Ordering (< > != ==) must be well defined for the type of the named column.</LI>
@@ -99,7 +99,7 @@ join_by_index(const RHS_T &amp;rhs, join_policy jp) const;
       <td WIDTH="33.3%">
         It joins the data between self (lhs) and rhs and returns the joined data<BR>
         in a StdDataFrame, based on specification in join_policy.<BR>
-        The following conditions must be meet for this method<BR>
+        The following conditions must be met for this method<BR>
         to compile and work properly:<BR>
         <OL>
           <LI>I type must be the same between lhs and rhs.</LI>

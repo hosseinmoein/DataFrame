@@ -642,9 +642,7 @@ inline static O _remove_copy_if_(I first, I last, O d_first, PRE predicate)  {
 
 template<typename T, typename V>
 static inline void
-_sort_by_sorted_index_(T &to_be_sorted,
-                       V &sorting_idxs,
-                       size_t idx_s)  {
+_sort_by_sorted_index_(T &to_be_sorted, V &sorting_idxs, size_t idx_s)  {
 
     if (idx_s > 0)  {
         idx_s -= 1;

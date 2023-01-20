@@ -102,6 +102,8 @@ read(const char *file_name,
           DateTimeEUR -- DateTime string printed in European style (YYYY/MM/DD HH:MM:SS.mmm)
           DateTimeISO -- DateTime string printed in ISO style (YYYY-MM-DD HH:MM:SS.mmm)
         </PRE>
+
+        <B>NOTE:</B>: This version of read() can be substantially faster, especially for larger files, than if you open the file yourself and use the read() version below.
       </td>
       <td>
         <PRE>

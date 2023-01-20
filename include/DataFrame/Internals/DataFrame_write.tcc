@@ -28,6 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include <DataFrame/DataFrame.h>
+#include <DataFrame/Utils/Utils.h>
 
 #include <sstream>
 
@@ -45,9 +46,9 @@ write(const char *file_name,
       bool columns_only,
       long max_recs) const  {
 
-    std::ofstream   stream;
+    std::ofstream       stream;
+    const IOStreamOpti  io_opti(stream, file_name);
 
-    stream.open(file_name, std::ios::out);  // Open for writing
     if (stream.fail())  {
         String1K    err;
 
@@ -55,10 +56,8 @@ write(const char *file_name,
         throw DataFrameError(err.c_str());
     }
     write<std::ostream, Ts ...>(stream, iof, precision, columns_only, max_recs);
-    stream.close();
     return (true);
 }
-// cout.setf(ios::fixed, ios::floatfield);
 
 // ----------------------------------------------------------------------------
 

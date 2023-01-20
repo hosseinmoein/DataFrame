@@ -64,7 +64,6 @@ get_reindexed_view(const char *col_to_be_index,
       <td>
         This is similar to get_reindexed(), but it returns a view. Please read above for specs.<BR>
         <B>NOTE</B>: There are certain operations that you cannot do with a view. For example, you cannot add/delete columns, etc.<BR>
-        <B>NOTE</B>: Views could not be const, becuase you can change original data through views.<BR>
       </td>
       <td>
         <B>T</B>: Type of the "new index" column<BR>
@@ -84,9 +83,8 @@ get_reindexed_view(const char *col_to_be_index,
         </B></PRE></font>
       </td>
       <td>
-        This is similar to get_reindexed(), but it returns a view. Please read above for specs.<BR>
+        This is similar to get_reindexed(), but it returns a <I>const</I> view. Please read above for specs.<BR>
         <B>NOTE</B>: There are certain operations that you cannot do with a view. For example, you cannot add/delete columns, etc.<BR>
-        <B>NOTE</B>: Views could not be const, becuase you can change original data through views.<BR>
       </td>
       <td>
         <B>T</B>: Type of the "new index" column<BR>

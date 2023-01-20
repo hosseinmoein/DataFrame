@@ -59,7 +59,6 @@ get_view(const std::vector&lt;const char *&gt; col_names);
       <td>
         It behaves like get_data(), but it returns a View. A view is a DataFrame that is a reference to the original DataFrame. So if you modify anything in the view the original DataFrame will also be modified.<BR>
         <B>NOTE</B>: There are certain operations that you cannot do with a view. For example, you cannot add/delete columns, etc.<BR>
-        <B>NOTE</B>: Views could not be const, becuase you can change original data through views.<BR>
       </td>
       <td>
         <B>Ts</b>: List types of col_names<BR>

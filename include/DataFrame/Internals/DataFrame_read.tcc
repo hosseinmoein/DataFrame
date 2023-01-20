@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <DataFrame/DataFrame.h>
 #include <DataFrame/Utils/FixedSizeString.h>
+#include <DataFrame/Utils/Utils.h>
 
 #include <any>
 #include <cstdlib>
@@ -771,9 +772,9 @@ template<typename I, typename H>
 bool DataFrame<I, H>::
 read (const char *file_name, io_format iof, bool columns_only)  {
 
-    std::ifstream   stream;
+    std::ifstream       stream;
+    const IOStreamOpti  io_opti(stream, file_name);
 
-    stream.open(file_name, std::ios::in);  // Open for reading
     if (stream.fail())  {
         String1K    err;
 
@@ -782,7 +783,6 @@ read (const char *file_name, io_format iof, bool columns_only)  {
     }
 
     read<std::istream>(stream, iof, columns_only);
-    stream.close();
     return (true);
 }
 

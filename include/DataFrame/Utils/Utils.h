@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 
 #include <cmath>
+#include <iostream>
 #include <iterator>
 #include <limits>
 #include <tuple>
@@ -297,6 +298,40 @@ shift_left(V &vec, std::size_t n)  {
             *iter = std::move(get_nan<value_type>());
     }
 }
+
+// ----------------------------------------------------------------------------
+
+template<typename S>
+struct  IOStreamOpti  {
+
+    IOStreamOpti (S &stream, const char *file_name)
+        : stream_(stream),
+          tie_(std::cin.tie(nullptr)),
+          sync_(std::ios_base::sync_with_stdio(false))  {
+
+        stream_.rdbuf()->pubsetbuf(buffer_, sizeof(buffer_));
+        if (file_name && ! stream_.is_open())
+            stream_.open(file_name);
+    }
+
+    ~IOStreamOpti ()  {
+
+        stream_.close();
+        std::ios_base::sync_with_stdio(sync_);
+        std::cin.tie(tie_);
+    }
+
+    IOStreamOpti () = delete;
+    IOStreamOpti (const IOStreamOpti &) = delete;
+    IOStreamOpti &operator = (const IOStreamOpti &) = delete;
+
+private:
+
+    char            buffer_[64 * 1024];
+    S               &stream_;
+    std::ostream    *tie_;
+    const bool      sync_;
+};
 
 } // namespace hmdf
 

@@ -517,8 +517,8 @@ from_indicators(const StlVecType<const char *> &ind_col_names,
     for (size_type i = 0; i < col_s; ++i)
         for (size_type j = 0; j < ind_col_s; ++j)
             if (ind_cols[j]->at(i))  {
-                new_col.push_back(_string_to_<CT>(
-                    ind_col_names[j] + pre_offset));
+                new_col.push_back(
+                    _string_to_<CT>(ind_col_names[j] + pre_offset));
                 break;
             }
 

@@ -82,7 +82,7 @@ table {
   <font size="+1">DataFrame is a templatized and heterogeneous C++ container designed for data analysis for statistical, machine-learning, or financial applications.</font>
   <UL>
     <LI>A DataFrame can have one index column and many data columns of any built-in or user-defined types</LI>
-    <LI>Each column in DataFrame could be at most as long as the index columun</LI>
+    <LI>Each column in DataFrame could be at most as long as the index column</LI>
     <LI>Columns in the DataFrame are in order of creation and they could be accessed by name or index. If you rotate the columns, their order changes</LI>
     <LI>To access a column for any operation, you must know its <B>name</B> (or index) and its <B>type</B> at compile time</LI>
     <LI>To start off on basic operations, see <a href="https://github.com/hosseinmoein/DataFrame/blob/master/examples/hello_world.cc">Hello World</a></LI>
@@ -98,7 +98,8 @@ DataFrame class is defined as:<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;<span style='color:#800000; font-weight:bold; '>class</span> DataFrame;</B><BR><BR>
 
   <B>I</B> specifies the <I>index</I> column type<BR>
-  <B>H</B> specifies a heterogenous vector type to contain DataFrame columns &#8212; don't get hang up on this too much. <B>H</B> can only be:<BR>
+  <B>H</B> specifies a heterogenous vector type to contain DataFrame columns &#8212; don't get hang up on this too much, instead use the convenient typedef's in <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrameTypes.html">DataFrame Library Types</a>.<BR>
+  <B>H</B> can only be:<BR>
   <UL>
     <LI><B><style='color:#000000;background:#ffffff;'>HeteroVector<span style='color:#808030; '>&lt;</span><span style='color:#666616;'>std</span><span style='color:#800080;'>::</span><span style='color:#603000;'>size_t</span> A <span style='color:#808030;'>=</span> <span style='color:#008c00;'>0</span><span style='color:#808030;'>></span></B>: This is an actual heterogenous vector that would contain data. This will result in a "standard" data frame</LI>
     <LI><B><style='color:#000000;background:#ffffff;'>HeteroPtrView<span style='color:#808030; '>&lt;</span><span style='color:#666616;'>std</span><span style='color:#800080;'>::</span><span style='color:#603000;'>size_t</span> A <span style='color:#808030;'>=</span> <span style='color:#008c00;'>0</span><span style='color:#808030;'>></span></B>: This is a heterogenous vector view. It will result in a data frame view into a <I>disjoined</I> slice of another data frame.</LI>

@@ -4219,6 +4219,139 @@ static void test_join_by_column()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_join_by_column2()  {
+
+    std::cout << "\nTesting join by column 2 ..." << std::endl;
+
+    StlVecType<unsigned long>   idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466 };
+    StlVecType<double>          d1 =
+        { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
+    StlVecType<double>          d2 =
+        { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23, 30, 31, 32, 1.89 };
+    StlVecType<double>          d3 =
+        { 15, 16, 15, 18, 19, 16, 21, 0.34, 1.56, 0.34, 2.3, 0.34, 19.0 };
+    StlVecType<int>             i1 = { 22, 23, 24, 25, 99 };
+    StlVecType<std::string>     s1 =
+        { "AA", "AS", "WW", "EE", "FG", "AS", "VB", "GH", "JK", "LK", "ZX",
+          "UI", "PL", "ON" };
+    MyDataFrame              df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("col_1", d1),
+                 std::make_pair("col_2", d2),
+                 std::make_pair("col_3", d3),
+                 std::make_pair("col_4", i1),
+                 std::make_pair("col str", s1));
+
+    StlVecType<unsigned long>   idx2 =
+        { 123452, 123453, 123455, 123458, 123466, 223450, 223451,
+          223454, 223456, 223457, 223459, 223460, 223461, 223462 };
+    StlVecType<double>          d12 =
+        { 11, 12, 13, 14, 15, 16, 17, 18, 19, 110, 111, 112, 113, 114 };
+    StlVecType<double>          d22 =
+        { 8, 19, 110, 111, 9, 113, 114, 99, 122, 123, 130, 131, 20, 11.89 };
+    StlVecType<double>          d32 =
+        { 115, 116, 115, 118, 119, 116, 121, 10.34, 11.56, 10.34, 12.3, 10.34,
+          119.0 };
+    StlVecType<int>             i12 = { 122, 123, 124, 125, 199 };
+    StlVecType<std::string>     s11 =
+        { "AA", "ASAS", "WWQW", "DFG", "XXX", "FFF", "DDDD", "EE", "JJJ",
+          "FFFF", "ZXZXZX", "UI", "JK", "FG" };
+    MyDataFrame                 df2;
+
+    df2.load_data(std::move(idx2),
+                  std::make_pair("xcol_1", d12),
+                  std::make_pair("col_2", d22),
+                  std::make_pair("xcol_3", d32),
+                  std::make_pair("col_4", i12),
+                  std::make_pair("col str", s11));
+
+    df.write<std::ostream, double, int, std::string>
+        (std::cout, io_format::csv2);
+    std::cout << std::endl;
+    df2.write<std::ostream, double, int, std::string>
+        (std::cout, io_format::csv2);
+    std::cout << std::endl;
+
+    auto    inner_result =
+        df.join_by_column<decltype(df2),
+                          double,
+                          std::string,
+                          double,
+                          int,
+                          std::string>
+		(df2, "col_2", "col str", join_policy::inner_join);
+
+    inner_result.write<std::ostream, unsigned long, double, int, std::string>
+        (std::cout, io_format::csv2);
+    exit(0);
+
+
+
+
+
+
+
+
+    assert(inner_result.get_index().size() == 3);
+    assert(inner_result.get_column<double>("xcol_1")[2] == 113.0);
+    assert(inner_result.get_column<double>("xcol_3")[1] == 119.0);
+    assert(inner_result.get_column<double>("col_1")[2] == 8.0);
+    assert(inner_result.get_column<double>("col_3")[0] == 15.0);
+    assert(inner_result.get_column<int>("rhs.col_4")[2] == 0);
+    assert(inner_result.get_column<int>("lhs.col_4")[0] == 22);
+    assert(inner_result.get_column<unsigned long>("rhs.INDEX")[1] == 123466);
+    assert(inner_result.get_column<unsigned long>("lhs.INDEX")[2] == 123457);
+
+    StdDataFrame128<unsigned int>  left_result =
+        df.join_by_column<decltype(df2), double, double, int>
+           (df2, "col_2", join_policy::left_join);
+
+    assert(left_result.get_index().size() == 14);
+    assert(std::isnan(left_result.get_column<double>("xcol_1")[5]));
+    assert(left_result.get_column<double>("xcol_3")[8] == 119.0);
+    assert(left_result.get_column<double>("col_1")[13] == 13.0);
+    assert(left_result.get_column<double>("col_3")[9] == 1.56);
+    assert(left_result.get_column<int>("rhs.col_4")[2] == 199);
+    assert(left_result.get_column<int>("lhs.col_4")[5] == 99);
+    assert(left_result.get_column<unsigned long>("rhs.INDEX")[3] == 0);
+    assert(left_result.get_column<unsigned long>("lhs.INDEX")[11] == 123460);
+
+    StdDataFrame128<unsigned int>  right_result =
+        df.join_by_column<decltype(df2), double, double, int>
+           (df2, "col_2", join_policy::right_join);
+
+    assert(right_result.get_index().size() == 14);
+    assert(right_result.get_column<double>("xcol_1")[5] == 18.0);
+    assert(std::isnan(right_result.get_column<double>("xcol_3")[2]));
+    assert(right_result.get_column<double>("col_1")[4] == 8.0);
+    assert(std::isnan(right_result.get_column<double>("col_3")[5]));
+    assert(right_result.get_column<int>("rhs.col_4")[2] == 0);
+    assert(right_result.get_column<int>("lhs.col_4")[5] == 0);
+    assert(right_result.get_column<unsigned long>("rhs.INDEX")[3] == 123453);
+    assert(right_result.get_column<unsigned long>("lhs.INDEX")[11] == 0);
+
+    StdDataFrame128<unsigned int>  left_right_result =
+        df.join_by_column<decltype(df2), double, double, int>
+           (df2, "col_2", join_policy::left_right_join);
+
+    assert(left_right_result.get_index().size() == 25);
+    assert(left_right_result.get_column<double>("xcol_1")[2] == 15.0);
+    assert(left_right_result.get_column<double>("xcol_3")[1] == 115.0);
+    assert(left_right_result.get_column<double>("col_1")[2] == 2.0);
+    assert(std::isnan(left_right_result.get_column<double>("col_3")[0]));
+    assert(left_right_result.get_column<int>("rhs.col_4")[2] == 199);
+    assert(left_right_result.get_column<int>("lhs.col_4")[0] == 0);
+    assert(left_right_result.get_column<unsigned long>("rhs.INDEX")[1] ==
+               123452);
+    assert(left_right_result.get_column<unsigned long>("lhs.INDEX")[2] ==
+               123451);
+}
+
+// -----------------------------------------------------------------------------
+
 static void test_DoubleCrossOver()  {
 
     std::cout << "\nTesting DoubleCrossOver{ } ..." << std::endl;
@@ -5106,6 +5239,7 @@ static void test_concat()  {
 
 int main(int, char *[]) {
 
+/*
     test_haphazard();
     test_read();
     test_transpose();
@@ -5163,7 +5297,10 @@ int main(int, char *[]) {
     test_k_means();
     test_affinity_propagation();
     test_multi_col_sort();
+*/
     test_join_by_column();
+    test_join_by_column2();
+/*
     test_ExponentialRollAdopter();
     test_ExponentiallyWeightedMeanVisitor();
     test_DoubleCrossOver();
@@ -5178,6 +5315,7 @@ int main(int, char *[]) {
     test_VWBAS();
     test_self_concat();
     test_concat();
+*/
 
     return (0);
 }

@@ -374,7 +374,8 @@ index_join_functor_common_<RES_T, Ts ...>::operator()(const T &lhs_vec)  {
     using VecType = typename std::remove_reference<T>::type;
     using ValueType = typename VecType::value_type;
 
-    const ColumnVecType<ValueType>  &rhs_vec = rhs.get_column<ValueType>(name);
+    const ColumnVecType<ValueType>  &rhs_vec =
+        rhs.get_column<ValueType>(name, false);
     StlVecType<ValueType>           lhs_result_col;
     StlVecType<ValueType>           rhs_result_col;
 
@@ -390,6 +391,56 @@ index_join_functor_common_<RES_T, Ts ...>::operator()(const T &lhs_vec)  {
         rhs_result_col.push_back(
             right_i != std::numeric_limits<size_type>::max()
                 ? rhs_vec[right_i] : get_nan<ValueType>());
+    }
+
+    char    lhs_str[256];
+    char    rhs_str[256];
+
+    ::snprintf(lhs_str, sizeof(lhs_str) - 1, "lhs.%s", name);
+    ::snprintf(rhs_str, sizeof(rhs_str) - 1, "rhs.%s", name);
+    result.template load_column<ValueType>(lhs_str,
+                                           std::move(lhs_result_col),
+                                           nan_policy::pad_with_nans,
+                                           false);
+    result.template load_column<ValueType>(rhs_str,
+                                           std::move(rhs_result_col),
+                                           nan_policy::pad_with_nans,
+                                           false);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename RES_T, typename ... Ts>
+template<typename T>
+void
+DataFrame<I, H>::
+index_join_functor_common2_<RES_T, Ts ...>::operator()(const T &lhs_vec)  {
+
+    using VecType = typename std::remove_reference<T>::type;
+    using ValueType = typename VecType::value_type;
+
+    const ColumnVecType<ValueType>  &rhs_vec =
+        rhs.get_column<ValueType>(name, false);
+    StlVecType<ValueType>           lhs_result_col;
+    StlVecType<ValueType>           rhs_result_col;
+
+    lhs_result_col.reserve(size_type(joined_index_idx.size() * 1.5));
+    rhs_result_col.reserve(size_type(joined_index_idx.size() * 1.5));
+    for (const auto &citer : joined_index_idx)  {
+        const size_type left1_i = std::get<0>(citer);
+        const size_type left2_i = std::get<1>(citer);
+        const size_type right1_i = std::get<2>(citer);
+        const size_type right2_i = std::get<3>(citer);
+
+        if (left1_i != std::numeric_limits<size_type>::max())
+            lhs_result_col.push_back(lhs_vec[left1_i]);
+        if (left2_i != std::numeric_limits<size_type>::max())
+            lhs_result_col.push_back(lhs_vec[left2_i]);
+        if (right1_i != std::numeric_limits<size_type>::max())
+            rhs_result_col.push_back(rhs_vec[right1_i]);
+        if (right2_i != std::numeric_limits<size_type>::max())
+            rhs_result_col.push_back(rhs_vec[right2_i]);
     }
 
     char    lhs_str[256];
@@ -427,6 +478,36 @@ operator()(const T &vec)  {
         result_col.push_back(
             i != std::numeric_limits<size_type>::max()
                 ? vec[i] : get_nan<ValueType>());
+    }
+
+    result.template load_column<ValueType>(name,
+                                           std::move(result_col),
+                                           nan_policy::pad_with_nans,
+                                           false);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<int SIDE, typename RES_T, typename ... Ts>
+template<typename T>
+void DataFrame<I, H>::index_join_functor_oneside2_<SIDE, RES_T, Ts ...>::
+operator()(const T &vec)  {
+
+    using VecType = typename std::remove_reference<T>::type;
+    using ValueType = typename VecType::value_type;
+
+    StlVecType<ValueType>   result_col;
+
+    result_col.reserve(size_type(joined_index_idx.size() * 1.5));
+    for (const auto &citer : joined_index_idx)  {
+        const size_type i1 = std::get<SIDE>(citer);
+        const size_type i2 = std::get<SIDE + 1>(citer);
+
+        if (i1 != std::numeric_limits<size_type>::max())
+            result_col.push_back(vec[i1]);
+        if (i2 != std::numeric_limits<size_type>::max())
+            result_col.push_back(vec[i2]);
     }
 
     result.template load_column<ValueType>(name,

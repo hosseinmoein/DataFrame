@@ -43,8 +43,7 @@ DataFrame<I, H>::
 join_by_index (const RHS_T &rhs, join_policy mp) const  {
 
     static_assert(
-        std::is_base_of<DataFrame<I, HeteroVector<std::size_t(H::align_value)>>,
-                        RHS_T>::value ||
+        std::is_base_of<DataFrame<I, H>, RHS_T>::value ||
         std::is_base_of<View, RHS_T>::value ||
         std::is_base_of<PtrView, RHS_T>::value,
         "The rhs argument to join_by_index() can only be "
@@ -71,6 +70,8 @@ join_by_index (const RHS_T &rhs, join_policy mp) const  {
 
     std::sort(idx_vec_lhs.begin(), idx_vec_lhs.end(), cf);
     std::sort(idx_vec_rhs.begin(), idx_vec_rhs.end(), cf);
+
+    const SpinGuard guard(lock_);
 
     switch(mp)  {
         case join_policy::inner_join:
@@ -99,20 +100,18 @@ template<typename I, typename H>
 template<typename RHS_T, typename T, typename ... Ts>
 DataFrame<unsigned int, H>
 DataFrame<I, H>::
-join_by_column (const RHS_T &rhs, const char *name, join_policy mp) const  {
+join_by_column(const RHS_T &rhs, const char *col_name, join_policy mp) const {
 
     static_assert(
-        std::is_base_of<
-            DataFrame<I,
-                      HeteroVector<std::size_t(H::align_value)>>,
-                      RHS_T>::value ||
+        std::is_base_of<DataFrame<I, H>, RHS_T>::value ||
         std::is_base_of<View, RHS_T>::value ||
         std::is_base_of<PtrView, RHS_T>::value,
         "The rhs argument to join_by_column() can only be "
         "StdDataFrame<IndexType> or DataFrame[Ptr]View<IndexType>");
 
-    const auto      &lhs_vec = get_column<T>(name);
-    const auto      &rhs_vec = rhs.template get_column<T>(name);
+    const SpinGuard guard(lock_);
+    const auto      &lhs_vec = get_column<T>(col_name, false);
+    const auto      &rhs_vec = rhs.template get_column<T>(col_name, false);
     const size_type lhs_vec_s = lhs_vec.size();
     const size_type rhs_vec_s = rhs_vec.size();
 
@@ -138,20 +137,124 @@ join_by_column (const RHS_T &rhs, const char *name, join_policy mp) const  {
         case join_policy::inner_join:
             return (column_inner_join_
                         <decltype(*this), RHS_T, T, Ts ...>
-                            (*this, rhs, name, col_vec_lhs, col_vec_rhs));
+                            (*this, rhs, col_name, col_vec_lhs, col_vec_rhs));
         case join_policy::left_join:
             return (column_left_join_
                         <decltype(*this), RHS_T, T, Ts ...>
-                            (*this, rhs, name, col_vec_lhs, col_vec_rhs));
+                            (*this, rhs, col_name, col_vec_lhs, col_vec_rhs));
         case join_policy::right_join:
             return (column_right_join_
                         <decltype(*this), RHS_T, T, Ts ...>
-                            (*this, rhs, name, col_vec_lhs, col_vec_rhs));
+                            (*this, rhs, col_name, col_vec_lhs, col_vec_rhs));
         case join_policy::left_right_join:
         default:
             return (column_left_right_join_
                         <decltype(*this), RHS_T, T, Ts ...>
-                            (*this, rhs, name, col_vec_lhs, col_vec_rhs));
+                            (*this, rhs, col_name, col_vec_lhs, col_vec_rhs));
+    }
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename RHS_T, typename T1, typename T2, typename ... Ts>
+DataFrame<unsigned int, H>
+DataFrame<I, H>::
+join_by_column(const RHS_T &rhs,
+               const char *col_name1,
+               const char *col_name2,
+               join_policy mp) const {
+
+    static_assert(
+        std::is_base_of<DataFrame<I, H>, RHS_T>::value ||
+        std::is_base_of<View, RHS_T>::value ||
+        std::is_base_of<PtrView, RHS_T>::value,
+        "The rhs argument to join_by_column() can only be "
+        "StdDataFrame<IndexType> or DataFrame[Ptr]View<IndexType>");
+
+    const SpinGuard guard(lock_);
+    const auto      &lhs_vec1 = get_column<T1>(col_name1, false);
+    const auto      &lhs_vec2 = get_column<T2>(col_name2, false);
+    const auto      &rhs_vec1 = rhs.template get_column<T1>(col_name1, false);
+    const auto      &rhs_vec2 = rhs.template get_column<T2>(col_name2, false);
+    const size_type lhs_vec_s1 = lhs_vec1.size();
+    const size_type lhs_vec_s2 = lhs_vec2.size();
+    const size_type rhs_vec_s1 = rhs_vec1.size();
+    const size_type rhs_vec_s2 = rhs_vec2.size();
+
+    StlVecType<JoinSortingPair<T1>>  col_vec_lhs1;
+    StlVecType<JoinSortingPair<T2>>  col_vec_lhs2;
+    StlVecType<JoinSortingPair<T1>>  col_vec_rhs1;
+    StlVecType<JoinSortingPair<T2>>  col_vec_rhs2;
+
+    col_vec_lhs1.reserve(lhs_vec_s1);
+    for (size_type i = 0; i < lhs_vec_s1; ++i)
+        col_vec_lhs1.push_back(std::make_pair(&(lhs_vec1[i]), i));
+    col_vec_lhs2.reserve(lhs_vec_s2);
+    for (size_type i = 0; i < lhs_vec_s2; ++i)
+        col_vec_lhs2.push_back(std::make_pair(&(lhs_vec2[i]), i));
+    col_vec_rhs1.reserve(rhs_vec_s1);
+    for (size_type i = 0; i < rhs_vec_s1; ++i)
+        col_vec_rhs1.push_back(std::make_pair(&(rhs_vec1[i]), i));
+    col_vec_rhs2.reserve(rhs_vec_s2);
+    for (size_type i = 0; i < rhs_vec_s2; ++i)
+        col_vec_rhs2.push_back(std::make_pair(&(rhs_vec2[i]), i));
+
+    auto    cf = [] (const auto &l, const auto &r) -> bool  {
+                     return (*(l.first) < *(r.first));
+                 };
+
+    std::sort(col_vec_lhs1.begin(), col_vec_lhs1.end(), cf);
+    std::sort(col_vec_lhs2.begin(), col_vec_lhs2.end(), cf);
+    std::sort(col_vec_rhs1.begin(), col_vec_rhs1.end(), cf);
+    std::sort(col_vec_rhs2.begin(), col_vec_rhs2.end(), cf);
+
+    switch(mp)  {
+        case join_policy::inner_join:
+            return (column_inner_join_
+                    <decltype(*this), RHS_T, T1, T2, Ts ...>
+                            (*this,
+                             rhs,
+                             col_name1,
+                             col_name2,
+                             col_vec_lhs1,
+                             col_vec_lhs2,
+                             col_vec_rhs1,
+                             col_vec_rhs2));
+        case join_policy::left_join:
+            return (column_left_join_
+                    <decltype(*this), RHS_T, T1, T2, Ts ...>
+                            (*this,
+                             rhs,
+                             col_name1,
+                             col_name2,
+                             col_vec_lhs1,
+                             col_vec_lhs2,
+                             col_vec_rhs1,
+                             col_vec_rhs2));
+        case join_policy::right_join:
+            return (column_right_join_
+                        <decltype(*this), RHS_T, T1, T2, Ts ...>
+                            (*this,
+                             rhs,
+                             col_name1,
+                             col_name2,
+                             col_vec_lhs1,
+                             col_vec_lhs2,
+                             col_vec_rhs1,
+                             col_vec_rhs2));
+        case join_policy::left_right_join:
+        default:
+            return (column_left_right_join_
+                        <decltype(*this), RHS_T, T1, T2, Ts ...>
+                            (*this,
+                             rhs,
+                             col_name1,
+                             col_name2,
+                             col_vec_lhs1,
+                             col_vec_lhs2,
+                             col_vec_rhs1,
+                             col_vec_rhs2));
     }
 }
 
@@ -160,20 +263,17 @@ join_by_column (const RHS_T &rhs, const char *name, join_policy mp) const  {
 template<typename I, typename H>
 template<typename LHS_T, typename RHS_T, typename IDX_T, typename ... Ts>
 void DataFrame<I, H>::
-join_helper_common_(
-    const LHS_T &lhs,
-    const RHS_T &rhs,
-    const IndexIdxVector &joined_index_idx,
-    DataFrame<IDX_T, HeteroVector<std::size_t(H::align_value)>> &result,
-    const char *skip_col_name)  {
-
-    const SpinGuard guard(lock_);
+join_helper_common_(const LHS_T &lhs,
+                    const RHS_T &rhs,
+                    const IndexIdxVector &joined_index_idx,
+                    DataFrame<IDX_T, H> &result,
+                    const char *skip_col_name)  {
 
     // Load the common and lhs columns
     for (const auto &iter : lhs.column_list_)  {
-        auto    rhs_citer = rhs.column_tb_.find(iter.first);
-
         if (skip_col_name && iter.first == skip_col_name)  continue;
+
+        auto    rhs_citer = rhs.column_tb_.find(iter.first);
 
         // Common column between two frames
         if (rhs_citer != rhs.column_tb_.end())  {
@@ -217,14 +317,73 @@ join_helper_common_(
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
+template<typename LHS_T, typename RHS_T, typename IDX_T, typename ... Ts>
+void DataFrame<I, H>::
+join_helper_common_(const LHS_T &lhs,
+                    const RHS_T &rhs,
+                    const IndexIdxVector2 &joined_index_idx,
+                    DataFrame<IDX_T, H> &result,
+                    const char *skip_col_name1,
+                    const char *skip_col_name2)  {
+
+    // Load the common and lhs columns
+    for (const auto &iter : lhs.column_list_)  {
+        if ((skip_col_name1 && iter.first == skip_col_name1) ||
+            (skip_col_name2 && iter.first == skip_col_name2))  continue;
+
+        auto    rhs_citer = rhs.column_tb_.find(iter.first);
+
+        // Common column between two frames
+        if (rhs_citer != rhs.column_tb_.end())  {
+            index_join_functor_common2_<decltype(result), Ts ...> functor(
+                iter.first.c_str(),
+                rhs,
+                joined_index_idx,
+                result);
+
+            lhs.data_[iter.second].change(functor);
+        }
+        else  {  // lhs only column
+            // 0 = Left
+            index_join_functor_oneside2_<0, decltype(result), Ts ...> functor (
+                iter.first.c_str(),
+                joined_index_idx,
+                result);
+
+            lhs.data_[iter.second].change(functor);
+        }
+    }
+
+    // Load the rhs columns
+    for (const auto &iter : rhs.column_list_)  {
+        auto    lhs_citer = lhs.column_tb_.find(iter.first);
+
+        if ((skip_col_name1 && iter.first == skip_col_name1) ||
+            (skip_col_name2 && iter.first == skip_col_name2))  continue;
+
+        if (lhs_citer == lhs.column_tb_.end())  {  // rhs only column
+            // 1 = Right
+            index_join_functor_oneside2_<1, decltype(result), Ts ...> functor (
+                iter.first.c_str(),
+                joined_index_idx,
+                result);
+
+            rhs.data_[iter.second].change(functor);
+        }
+    }
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
 template<typename LHS_T, typename RHS_T, typename ... Ts>
-DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
+DataFrame<I, H> DataFrame<I, H>::
 index_join_helper_(const LHS_T &lhs,
                    const RHS_T &rhs,
                    const IndexIdxVector &joined_index_idx)  {
 
-    DataFrame<IndexType, HeteroVector<align_value>> result;
-    StlVecType<IndexType>                           result_index;
+    DataFrame<IndexType, H> result;
+    StlVecType<IndexType>   result_index;
 
     // Load the index
     result_index.reserve(joined_index_idx.size());
@@ -238,7 +397,7 @@ index_join_helper_(const LHS_T &lhs,
     result.load_index(std::move(result_index));
 
     join_helper_common_<LHS_T, RHS_T, IndexType, Ts ...>
-        (lhs, rhs, joined_index_idx, result);
+        (lhs, rhs, joined_index_idx, result, nullptr);
     return(result);
 }
 
@@ -246,7 +405,7 @@ index_join_helper_(const LHS_T &lhs,
 
 template<typename I, typename H>
 template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
-DataFrame<unsigned int, HeteroVector<std::size_t(H::align_value)>>
+DataFrame<unsigned int, H>
 DataFrame<I, H>::
 column_join_helper_(const LHS_T &lhs,
                     const RHS_T &rhs,
@@ -256,13 +415,12 @@ column_join_helper_(const LHS_T &lhs,
     using left_idx_t = typename std::remove_reference<LHS_T>::type::IndexType;
     using right_idx_t = typename std::remove_reference<RHS_T>::type::IndexType;
 
-    const size_type                                     jii_s =
-        joined_index_idx.size();
-    DataFrame<unsigned int, HeteroVector<align_value>>  result;
+    const size_type             jii_s = joined_index_idx.size();
+    DataFrame<unsigned int, H>  result;
 
     // Load the new result index
     result.load_index(
-        DataFrame<unsigned int, HeteroVector<align_value>>::gen_sequence_index(
+        DataFrame<unsigned int, H>::gen_sequence_index(
             0, static_cast<unsigned int>(jii_s), 1));
 
     // Load the lhs and rhs indices into two columns in the result
@@ -271,9 +429,9 @@ column_join_helper_(const LHS_T &lhs,
     StlVecType<right_idx_t> rhs_index;
     StlVecType<T>           named_col_vec;
     const ColumnVecType<T>  &lhs_named_col_vec =
-        lhs.template get_column<T>(col_name);
+        lhs.template get_column<T>(col_name, false);
     const ColumnVecType<T>  &rhs_named_col_vec =
-        rhs.template get_column<T>(col_name);
+        rhs.template get_column<T>(col_name, false);
 
     lhs_index.reserve(jii_s);
     rhs_index.reserve(jii_s);
@@ -296,28 +454,128 @@ column_join_helper_(const LHS_T &lhs,
             rhs_index.push_back(get_nan<right_idx_t>());
     }
 
-    {
-        char            buffer[64];
-        const SpinGuard guard(lock_);
+    char    buffer[64];
 
-        ::snprintf(buffer, sizeof(buffer) - 1, "lhs.%s", DF_INDEX_COL_NAME);
-        result.template load_column<left_idx_t>(buffer,
-                                                std::move(lhs_index),
-                                                nan_policy::pad_with_nans,
-                                                false);
-        ::snprintf(buffer, sizeof(buffer) - 1, "rhs.%s", DF_INDEX_COL_NAME);
-        result.template load_column<right_idx_t>(buffer,
-                                                 std::move(rhs_index),
-                                                 nan_policy::pad_with_nans,
-                                                 false);
-        result.template load_column<T>(col_name,
-                                       std::move(named_col_vec),
-                                       nan_policy::pad_with_nans,
-                                       false);
-    }
+    ::snprintf(buffer, sizeof(buffer) - 1, "lhs.%s", DF_INDEX_COL_NAME);
+    result.template load_column<left_idx_t>(buffer,
+                                            std::move(lhs_index),
+                                            nan_policy::pad_with_nans,
+                                            false);
+    ::snprintf(buffer, sizeof(buffer) - 1, "rhs.%s", DF_INDEX_COL_NAME);
+    result.template load_column<right_idx_t>(buffer,
+                                             std::move(rhs_index),
+                                             nan_policy::pad_with_nans,
+                                             false);
+    result.template load_column<T>(col_name,
+                                   std::move(named_col_vec),
+                                   nan_policy::pad_with_nans,
+                                   false);
 
     join_helper_common_<LHS_T, RHS_T, unsigned int, Ts ...>
         (lhs, rhs, joined_index_idx, result, col_name);
+    return(result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename LHS_T,
+         typename RHS_T,
+         typename T1,
+         typename T2,
+         typename ... Ts>
+DataFrame<unsigned int, H>
+DataFrame<I, H>::
+column_join_helper_(const LHS_T &lhs,
+                    const RHS_T &rhs,
+                    const char *col_name1,
+                    const char *col_name2,
+                    const IndexIdxVector2 &joined_index_idx)  {
+
+    using left_idx_t = typename std::remove_reference<LHS_T>::type::IndexType;
+    using right_idx_t = typename std::remove_reference<RHS_T>::type::IndexType;
+
+    const size_type             jii_s = joined_index_idx.size();
+    DataFrame<unsigned int, H>  result;
+
+    // Load the new result index
+    result.load_index(
+        DataFrame<unsigned int, H>::gen_sequence_index(
+            // 0, static_cast<unsigned int>(jii_s), 1));
+            0, 10, 1));
+
+    // Load the lhs and rhs indices into two columns in the result
+    // Also load the unified named column
+    StlVecType<left_idx_t>  lhs_index;
+    StlVecType<right_idx_t> rhs_index;
+    StlVecType<T1>          named_col_vec1;
+    StlVecType<T2>          named_col_vec2;
+    const ColumnVecType<T1> &lhs_named_col_vec1 =
+        lhs.template get_column<T1>(col_name1, false);
+    const ColumnVecType<T2> &lhs_named_col_vec2 =
+        lhs.template get_column<T2>(col_name2, false);
+    const ColumnVecType<T1> &rhs_named_col_vec1 =
+        rhs.template get_column<T1>(col_name1, false);
+    const ColumnVecType<T2> &rhs_named_col_vec2 =
+        rhs.template get_column<T2>(col_name2, false);
+
+    lhs_index.reserve(jii_s);
+    rhs_index.reserve(jii_s);
+    named_col_vec1.reserve(jii_s);
+    named_col_vec2.reserve(jii_s);
+    for (auto citer : joined_index_idx)  {
+        const size_type left1_i = std::get<0>(citer);
+        const size_type left2_i = std::get<1>(citer);
+        const size_type right1_i = std::get<2>(citer);
+        const size_type right2_i = std::get<3>(citer);
+
+        if (left1_i != std::numeric_limits<size_type>::max() ||
+                left2_i != std::numeric_limits<size_type>::max())  {
+            if (left1_i != std::numeric_limits<size_type>::max())
+                lhs_index.push_back(lhs.indices_[left1_i]);
+            else
+                lhs_index.push_back(lhs.indices_[left2_i]);
+            if (left1_i != std::numeric_limits<size_type>::max())
+                named_col_vec1.push_back(lhs_named_col_vec1[left1_i]);
+            if (left2_i != std::numeric_limits<size_type>::max())
+                named_col_vec2.push_back(lhs_named_col_vec2[left2_i]);
+        }
+        else  {
+            named_col_vec1.push_back(rhs_named_col_vec1[right1_i]);
+            named_col_vec2.push_back(rhs_named_col_vec2[right2_i]);
+            lhs_index.push_back(get_nan<left_idx_t>());
+        }
+        if (right1_i != std::numeric_limits<size_type>::max())
+            rhs_index.push_back(rhs.indices_[right1_i]);
+        else if (right2_i != std::numeric_limits<size_type>::max())
+            rhs_index.push_back(rhs.indices_[right2_i]);
+        else
+            rhs_index.push_back(get_nan<right_idx_t>());
+    }
+
+    char    buffer[64];
+
+    ::snprintf(buffer, sizeof(buffer) - 1, "lhs.%s", DF_INDEX_COL_NAME);
+    result.template load_column<left_idx_t>(buffer,
+                                            std::move(lhs_index),
+                                            nan_policy::pad_with_nans,
+                                            false);
+    ::snprintf(buffer, sizeof(buffer) - 1, "rhs.%s", DF_INDEX_COL_NAME);
+    result.template load_column<right_idx_t>(buffer,
+                                             std::move(rhs_index),
+                                             nan_policy::pad_with_nans,
+                                             false);
+    result.template load_column<T1>(col_name1,
+                                    std::move(named_col_vec1),
+                                    nan_policy::pad_with_nans,
+                                    false);
+    result.template load_column<T2>(col_name2,
+                                    std::move(named_col_vec2),
+                                    nan_policy::pad_with_nans,
+                                    false);
+
+    join_helper_common_<LHS_T, RHS_T, unsigned int, Ts ...>
+        (lhs, rhs, joined_index_idx, result, col_name1, col_name2);
     return(result);
 }
 
@@ -356,8 +614,63 @@ DataFrame<I, H>::get_inner_index_idx_vector_(
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
+template<typename T1, typename T2>
+typename DataFrame<I, H>::IndexIdxVector2
+DataFrame<I, H>::get_inner_index_idx_vector_(
+    const StlVecType<JoinSortingPair<T1>> &col_vec_lhs1,
+    const StlVecType<JoinSortingPair<T2>> &col_vec_lhs2,
+    const StlVecType<JoinSortingPair<T1>> &col_vec_rhs1,
+    const StlVecType<JoinSortingPair<T2>> &col_vec_rhs2)  {
+
+    size_type       lhs1_current = 0;
+    size_type       lhs2_current = 0;
+    size_type       rhs1_current = 0;
+    size_type       rhs2_current = 0;
+    IndexIdxVector2 joined_index_idx;
+    const size_type min_size = std::min({ col_vec_lhs1.size(),
+                                          col_vec_lhs2.size(),
+                                          col_vec_rhs1.size(),
+                                          col_vec_rhs2.size() });
+    size_type       count = 0;
+
+    joined_index_idx.reserve(min_size);
+    while (count++ < min_size)  {
+        const bool  adv_lhs1_curr =
+            *(col_vec_lhs1[lhs1_current].first) <
+                *(col_vec_rhs1[rhs1_current].first);
+        const bool  adv_lhs2_curr =
+            *(col_vec_lhs2[lhs2_current].first) <
+                *(col_vec_rhs2[rhs2_current].first);
+
+        if (adv_lhs1_curr || adv_lhs2_curr)  {
+            if (adv_lhs1_curr)
+                lhs1_current += 1;
+            else
+                lhs2_current += 1;
+        }
+        else  {
+            if (*(col_vec_lhs1[lhs1_current].first) ==
+                    *(col_vec_rhs1[rhs1_current].first) &&
+                *(col_vec_lhs2[lhs2_current].first) ==
+                    *(col_vec_rhs2[rhs2_current].first))  {
+                joined_index_idx.emplace_back(
+                    col_vec_lhs1[lhs1_current++].second,
+                    col_vec_lhs2[lhs2_current++].second,
+                    col_vec_rhs1[rhs1_current].second,
+                    col_vec_rhs2[rhs2_current].second);
+            }
+            rhs1_current += 1;
+            rhs2_current += 1;
+        }
+    }
+    return (joined_index_idx);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
 template<typename LHS_T, typename RHS_T, typename ... Ts>
-DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
+DataFrame<I, H> DataFrame<I, H>::
 index_inner_join_(const LHS_T &lhs,
                   const RHS_T &rhs,
                   const StlVecType<JoinSortingPair<IndexType>> &col_vec_lhs,
@@ -372,7 +685,7 @@ index_inner_join_(const LHS_T &lhs,
 
 template<typename I, typename H>
 template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
-DataFrame<unsigned int, HeteroVector<std::size_t(H::align_value)>>
+DataFrame<unsigned int, H>
 DataFrame<I, H>::
 column_inner_join_(const LHS_T &lhs,
                    const RHS_T &rhs,
@@ -383,6 +696,33 @@ column_inner_join_(const LHS_T &lhs,
     return (column_join_helper_<LHS_T, RHS_T, T, Ts ...>
                 (lhs, rhs, col_name,
                  get_inner_index_idx_vector_<T>(col_vec_lhs, col_vec_rhs)));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename LHS_T,
+         typename RHS_T,
+         typename T1,
+         typename T2,
+         typename ... Ts>
+DataFrame<unsigned int, H>
+DataFrame<I, H>::
+column_inner_join_(const LHS_T &lhs,
+                   const RHS_T &rhs,
+                   const char *col_name1,
+                   const char *col_name2,
+                   const StlVecType<JoinSortingPair<T1>> &col_vec_lhs1,
+                   const StlVecType<JoinSortingPair<T2>> &col_vec_lhs2,
+                   const StlVecType<JoinSortingPair<T1>> &col_vec_rhs1,
+                   const StlVecType<JoinSortingPair<T2>> &col_vec_rhs2)  {
+
+    return (column_join_helper_<LHS_T, RHS_T, T1, T2, Ts ...>
+                (lhs, rhs, col_name1, col_name2,
+                 get_inner_index_idx_vector_<T1, T2>(col_vec_lhs1,
+                                                     col_vec_lhs2,
+                                                     col_vec_rhs1,
+                                                     col_vec_rhs2)));
 }
 
 // ----------------------------------------------------------------------------
@@ -418,9 +758,87 @@ DataFrame<I, H>::get_left_index_idx_vector_(
         else  {
             if (*(col_vec_lhs[lhs_current].first) ==
                     *(col_vec_rhs[rhs_current].first))
-                joined_index_idx.emplace_back(col_vec_lhs[lhs_current++].second,
-                                              col_vec_rhs[rhs_current].second);
+                joined_index_idx.emplace_back(
+                    col_vec_lhs[lhs_current++].second,
+                    col_vec_rhs[rhs_current].second);
             rhs_current += 1;
+        }
+    }
+    return (joined_index_idx);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename T1, typename T2>
+typename DataFrame<I, H>::IndexIdxVector2
+DataFrame<I, H>::get_left_index_idx_vector_(
+    const StlVecType<JoinSortingPair<T1>> &col_vec_lhs1,
+    const StlVecType<JoinSortingPair<T2>> &col_vec_lhs2,
+    const StlVecType<JoinSortingPair<T1>> &col_vec_rhs1,
+    const StlVecType<JoinSortingPair<T2>> &col_vec_rhs2)  {
+
+    size_type       lhs_current1 = 0;
+    size_type       lhs_current2 = 0;
+    size_type       rhs_current1 = 0;
+    size_type       rhs_current2 = 0;
+    const size_type rhs_end1 = col_vec_rhs1.size();
+    const size_type rhs_end2 = col_vec_rhs2.size();
+    IndexIdxVector2 joined_index_idx;
+    const size_type min_size =
+        std::min({ col_vec_lhs1.size(), col_vec_lhs2.size() });
+    size_type       count = 0;
+
+    joined_index_idx.reserve(min_size);
+    while (count++ < min_size)  {
+        if (rhs_current1 >= rhs_end1 || rhs_current2 >= rhs_end2)  {
+            joined_index_idx.emplace_back(
+                col_vec_lhs1[lhs_current1++].second,
+                col_vec_lhs2[lhs_current2++].second,
+                std::numeric_limits<size_type>::max(),
+                std::numeric_limits<size_type>::max());
+        }
+        else  {
+            const bool  lhs1_smaller =
+                *(col_vec_lhs1[lhs_current1].first) <
+                    *(col_vec_rhs1[rhs_current1].first);
+            const bool  lhs2_smaller =
+                *(col_vec_lhs2[lhs_current2].first) <
+                    *(col_vec_rhs2[rhs_current2].first);
+
+            if (lhs1_smaller || lhs2_smaller)  {
+                if (lhs1_smaller && ! lhs2_smaller)
+                    joined_index_idx.emplace_back(
+                        col_vec_lhs1[lhs_current1++].second,
+                        std::numeric_limits<size_type>::max(),
+                        std::numeric_limits<size_type>::max(),
+                        std::numeric_limits<size_type>::max());
+                else if (! lhs1_smaller && lhs2_smaller)
+                    joined_index_idx.emplace_back(
+                        std::numeric_limits<size_type>::max(),
+                        col_vec_lhs2[lhs_current2++].second,
+                        std::numeric_limits<size_type>::max(),
+                        std::numeric_limits<size_type>::max());
+                else
+                    joined_index_idx.emplace_back(
+                        col_vec_lhs1[lhs_current1++].second,
+                        col_vec_lhs2[lhs_current2++].second,
+                        std::numeric_limits<size_type>::max(),
+                        std::numeric_limits<size_type>::max());
+            }
+            else  {
+                if (*(col_vec_lhs1[lhs_current1].first) ==
+                        *(col_vec_rhs1[rhs_current1].first) &&
+                    *(col_vec_lhs2[lhs_current2].first) ==
+                        *(col_vec_rhs2[rhs_current2].first))
+                    joined_index_idx.emplace_back(
+                        col_vec_lhs1[lhs_current1++].second,
+                        col_vec_lhs2[lhs_current2++].second,
+                        col_vec_rhs1[rhs_current1].second,
+                        col_vec_rhs2[rhs_current2].second);
+                rhs_current1 += 1;
+                rhs_current2 += 1;
+            }
         }
     }
     return (joined_index_idx);
@@ -429,7 +847,7 @@ DataFrame<I, H>::get_left_index_idx_vector_(
 
 template<typename I, typename H>
 template<typename LHS_T, typename RHS_T, typename ... Ts>
-DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
+DataFrame<I, H> DataFrame<I, H>::
 index_left_join_(const LHS_T &lhs, const RHS_T &rhs,
                  const StlVecType<JoinSortingPair<IndexType>> &col_vec_lhs,
                  const StlVecType<JoinSortingPair<IndexType>> &col_vec_rhs) {
@@ -444,7 +862,7 @@ index_left_join_(const LHS_T &lhs, const RHS_T &rhs,
 
 template<typename I, typename H>
 template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
-DataFrame<unsigned int, HeteroVector<std::size_t(H::align_value)>>
+DataFrame<unsigned int, H>
 DataFrame<I, H>::
 column_left_join_(const LHS_T &lhs,
                   const RHS_T &rhs,
@@ -455,6 +873,33 @@ column_left_join_(const LHS_T &lhs,
     return (column_join_helper_<LHS_T, RHS_T, T, Ts ...>
                 (lhs, rhs, col_name,
                  get_left_index_idx_vector_<T>(col_vec_lhs, col_vec_rhs)));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename LHS_T,
+         typename RHS_T,
+         typename T1,
+         typename T2,
+         typename ... Ts>
+DataFrame<unsigned int, H>
+DataFrame<I, H>::
+column_left_join_(const LHS_T &lhs,
+                  const RHS_T &rhs,
+                  const char *col_name1,
+                  const char *col_name2,
+                  const StlVecType<JoinSortingPair<T1>> &col_vec_lhs1,
+                  const StlVecType<JoinSortingPair<T2>> &col_vec_lhs2,
+                  const StlVecType<JoinSortingPair<T1>> &col_vec_rhs1,
+                  const StlVecType<JoinSortingPair<T2>> &col_vec_rhs2)  {
+
+    return (column_join_helper_<LHS_T, RHS_T, T1, T2, Ts ...>
+            (lhs, rhs, col_name1, col_name2,
+             get_left_index_idx_vector_<T1, T2>(col_vec_lhs1,
+                                                col_vec_lhs2,
+                                                col_vec_rhs1,
+                                                col_vec_rhs2)));
 }
 
 // ----------------------------------------------------------------------------
@@ -482,20 +927,95 @@ DataFrame<I, H>::get_right_index_idx_vector_(
             continue;
         }
 
-        if (*(col_vec_lhs[lhs_current].first) <
-                *(col_vec_rhs[rhs_current].first))
-            lhs_current += 1;
+        if (*(col_vec_rhs[rhs_current].first) <
+                *(col_vec_lhs[lhs_current].first))
+            joined_index_idx.emplace_back(
+                std::numeric_limits<size_type>::max(),
+                col_vec_rhs[rhs_current++].second);
         else  {
             if (*(col_vec_lhs[lhs_current].first) ==
                     *(col_vec_rhs[rhs_current].first))
                 joined_index_idx.emplace_back(
-                    col_vec_lhs[lhs_current++].second,
-                    col_vec_rhs[rhs_current].second);
-            else
-                joined_index_idx.emplace_back(
-                    std::numeric_limits<size_type>::max(),
-                    col_vec_rhs[rhs_current].second);
-            rhs_current += 1;
+                    col_vec_lhs[lhs_current].second,
+                    col_vec_rhs[rhs_current++].second);
+            lhs_current += 1;
+        }
+    }
+    return (joined_index_idx);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename T1, typename T2>
+typename DataFrame<I, H>::IndexIdxVector2
+DataFrame<I, H>::get_right_index_idx_vector_(
+    const StlVecType<JoinSortingPair<T1>> &col_vec_lhs1,
+    const StlVecType<JoinSortingPair<T2>> &col_vec_lhs2,
+    const StlVecType<JoinSortingPair<T1>> &col_vec_rhs1,
+    const StlVecType<JoinSortingPair<T2>> &col_vec_rhs2)  {
+
+    size_type       lhs_current1 = 0;
+    size_type       lhs_current2 = 0;
+    size_type       rhs_current1 = 0;
+    size_type       rhs_current2 = 0;
+    const size_type lhs_end1 = col_vec_lhs1.size();
+    const size_type lhs_end2 = col_vec_lhs2.size();
+    IndexIdxVector2 joined_index_idx;
+    const size_type min_size =
+        std::min({ col_vec_rhs1.size(), col_vec_rhs2.size() });
+    size_type       count = 0;
+
+    joined_index_idx.reserve(min_size);
+    while (count++ < min_size)  {
+        if (lhs_current1 >= lhs_end1 || lhs_current2 >= lhs_end2)  {
+            joined_index_idx.emplace_back(
+                std::numeric_limits<size_type>::max(),
+                std::numeric_limits<size_type>::max(),
+                col_vec_rhs1[rhs_current1++].second,
+                col_vec_rhs2[rhs_current2++].second);
+        }
+        else  {
+            const bool  rhs1_smaller =
+                *(col_vec_rhs1[rhs_current1].first) <
+                    *(col_vec_lhs1[lhs_current1].first);
+            const bool  rhs2_smaller =
+                *(col_vec_rhs2[rhs_current2].first) <
+                    *(col_vec_lhs2[lhs_current2].first);
+
+            if (rhs1_smaller || rhs2_smaller)  {
+                if (rhs1_smaller && ! rhs2_smaller)
+                    joined_index_idx.emplace_back(
+                        std::numeric_limits<size_type>::max(),
+                        std::numeric_limits<size_type>::max(),
+                        col_vec_rhs1[rhs_current1++].second,
+                        std::numeric_limits<size_type>::max());
+                else if (! rhs1_smaller && rhs2_smaller)
+                    joined_index_idx.emplace_back(
+                        std::numeric_limits<size_type>::max(),
+                        std::numeric_limits<size_type>::max(),
+                        std::numeric_limits<size_type>::max(),
+                        col_vec_rhs2[rhs_current2++].second);
+                else
+                    joined_index_idx.emplace_back(
+                        std::numeric_limits<size_type>::max(),
+                        std::numeric_limits<size_type>::max(),
+                        col_vec_rhs1[rhs_current1++].second,
+                        col_vec_rhs2[rhs_current2++].second);
+            }
+            else  {
+                if (*(col_vec_lhs1[lhs_current1].first) ==
+                        *(col_vec_rhs1[rhs_current1].first) &&
+                    *(col_vec_lhs2[lhs_current2].first) ==
+                        *(col_vec_rhs2[rhs_current2].first))
+                    joined_index_idx.emplace_back(
+                        col_vec_lhs1[lhs_current1].second,
+                        col_vec_lhs2[lhs_current2].second,
+                        col_vec_rhs1[rhs_current1++].second,
+                        col_vec_rhs2[rhs_current2++].second);
+                lhs_current1 += 1;
+                lhs_current2 += 1;
+            }
         }
     }
     return (joined_index_idx);
@@ -505,7 +1025,7 @@ DataFrame<I, H>::get_right_index_idx_vector_(
 
 template<typename I, typename H>
 template<typename LHS_T, typename RHS_T, typename ... Ts>
-DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
+DataFrame<I, H> DataFrame<I, H>::
 index_right_join_(const LHS_T &lhs, const RHS_T &rhs,
                   const StlVecType<JoinSortingPair<IndexType>> &col_vec_lhs,
                   const StlVecType<JoinSortingPair<IndexType>> &col_vec_rhs) {
@@ -520,7 +1040,7 @@ index_right_join_(const LHS_T &lhs, const RHS_T &rhs,
 
 template<typename I, typename H>
 template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
-DataFrame<unsigned int, HeteroVector<std::size_t(H::align_value)>>
+DataFrame<unsigned int, H>
 DataFrame<I, H>::
 column_right_join_(const LHS_T &lhs,
                    const RHS_T &rhs,
@@ -531,6 +1051,33 @@ column_right_join_(const LHS_T &lhs,
     return (column_join_helper_<LHS_T, RHS_T, T, Ts ...>
                 (lhs, rhs, col_name,
                  get_right_index_idx_vector_<T>(col_vec_lhs, col_vec_rhs)));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename LHS_T,
+         typename RHS_T,
+         typename T1,
+         typename T2,
+         typename ... Ts>
+DataFrame<unsigned int, H>
+DataFrame<I, H>::
+column_right_join_(const LHS_T &lhs,
+                   const RHS_T &rhs,
+                   const char *col_name1,
+                   const char *col_name2,
+                   const StlVecType<JoinSortingPair<T1>> &col_vec_lhs1,
+                   const StlVecType<JoinSortingPair<T2>> &col_vec_lhs2,
+                   const StlVecType<JoinSortingPair<T1>> &col_vec_rhs1,
+                   const StlVecType<JoinSortingPair<T2>> &col_vec_rhs2)  {
+
+    return (column_join_helper_<LHS_T, RHS_T, T1, T2, Ts ...>
+                (lhs, rhs, col_name1, col_name2,
+                 get_right_index_idx_vector_<T1, T2>(col_vec_lhs1,
+                                                     col_vec_lhs2,
+                                                     col_vec_rhs1,
+                                                     col_vec_rhs2)));
 }
 
 // ----------------------------------------------------------------------------
@@ -587,8 +1134,166 @@ DataFrame<I, H>::get_left_right_index_idx_vector_(
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
+template<typename T1, typename T2>
+typename DataFrame<I, H>::IndexIdxVector2
+DataFrame<I, H>::get_left_right_index_idx_vector_(
+    const StlVecType<JoinSortingPair<T1>> &col_vec_lhs1,
+    const StlVecType<JoinSortingPair<T2>> &col_vec_lhs2,
+    const StlVecType<JoinSortingPair<T1>> &col_vec_rhs1,
+    const StlVecType<JoinSortingPair<T2>> &col_vec_rhs2)  {
+
+    size_type       lhs_current1 = 0;
+    size_type       lhs_current2 = 0;
+    const size_type lhs_end1 = col_vec_lhs1.size();
+    const size_type lhs_end2 = col_vec_lhs2.size();
+    size_type       rhs_current1 = 0;
+    size_type       rhs_current2 = 0;
+    const size_type rhs_end1 = col_vec_rhs1.size();
+    const size_type rhs_end2 = col_vec_rhs2.size();
+    IndexIdxVector2 joined_index_idx;
+    const size_type max_size =
+        std::max({ lhs_end1, lhs_end2, rhs_end1, rhs_end2 });
+    size_type       count = 0;
+
+
+    joined_index_idx.reserve(max_size);
+    while (count++ < max_size)  {
+        const bool  lhs1_ended = lhs_current1 >= lhs_end1;
+        const bool  lhs2_ended = lhs_current2 >= lhs_end2;
+        const bool  rhs1_ended = rhs_current1 >= rhs_end1;
+        const bool  rhs2_ended = rhs_current2 >= rhs_end2;
+
+        if (lhs1_ended || lhs2_ended || rhs1_ended || rhs2_ended)  {
+            if (lhs1_ended && ! lhs2_ended && ! rhs1_ended && ! rhs2_ended)  {
+                joined_index_idx.emplace_back(
+                    std::numeric_limits<size_type>::max(),
+                    col_vec_lhs2[lhs_current2++].second,
+                    col_vec_rhs1[rhs_current1++].second,
+                    col_vec_rhs2[rhs_current2++].second);
+            }
+            else if (lhs1_ended &&
+                     lhs2_ended &&
+                     ! rhs1_ended &&
+                     ! rhs2_ended)  {
+                joined_index_idx.emplace_back(
+                    std::numeric_limits<size_type>::max(),
+                    std::numeric_limits<size_type>::max(),
+                    col_vec_rhs1[rhs_current1++].second,
+                    col_vec_rhs2[rhs_current2++].second);
+            }
+            else if (lhs1_ended && lhs2_ended && rhs1_ended && ! rhs2_ended)  {
+                joined_index_idx.emplace_back(
+                    std::numeric_limits<size_type>::max(),
+                    std::numeric_limits<size_type>::max(),
+                    std::numeric_limits<size_type>::max(),
+                    col_vec_rhs2[rhs_current2++].second);
+            }
+            else if (! lhs1_ended && lhs2_ended && rhs1_ended && rhs2_ended)  {
+                joined_index_idx.emplace_back(
+                    col_vec_lhs1[lhs_current1++].second,
+                    std::numeric_limits<size_type>::max(),
+                    std::numeric_limits<size_type>::max(),
+                    std::numeric_limits<size_type>::max());
+            }
+            else if (! lhs1_ended &&
+                     ! lhs2_ended &&
+                     rhs1_ended &&
+                     rhs2_ended)  {
+                joined_index_idx.emplace_back(
+                    col_vec_lhs1[lhs_current1++].second,
+                    col_vec_lhs2[lhs_current2++].second,
+                    std::numeric_limits<size_type>::max(),
+                    std::numeric_limits<size_type>::max());
+            }
+            else if (! lhs1_ended &&
+                     ! lhs2_ended &&
+                     ! rhs1_ended &&
+                     rhs2_ended)  {
+                joined_index_idx.emplace_back(
+                    col_vec_lhs1[lhs_current1++].second,
+                    col_vec_lhs2[lhs_current2++].second,
+                    col_vec_rhs1[rhs_current1++].second,
+                    std::numeric_limits<size_type>::max());
+            }
+        }
+        else  {
+            const bool  lhs1_smaller =
+                *(col_vec_lhs1[lhs_current1].first) <
+                    *(col_vec_rhs1[rhs_current1].first);
+            const bool  lhs2_smaller =
+                *(col_vec_lhs2[lhs_current2].first) <
+                    *(col_vec_rhs2[rhs_current2].first);
+            const bool  equal_1 =
+                *(col_vec_lhs1[lhs_current1].first) ==
+                    *(col_vec_rhs1[rhs_current1].first);
+            const bool  equal_2 =
+                *(col_vec_lhs2[lhs_current2].first) ==
+                    *(col_vec_rhs2[rhs_current2].first);
+
+            if (equal_1 && equal_2)
+                joined_index_idx.emplace_back(
+                    col_vec_lhs1[lhs_current1++].second,
+                    col_vec_lhs2[lhs_current2++].second,
+                    col_vec_rhs1[rhs_current1++].second,
+                    col_vec_rhs2[rhs_current2++].second);
+            else if (equal_1 && lhs2_smaller)
+                joined_index_idx.emplace_back(
+                    col_vec_lhs1[lhs_current1++].second,
+                    col_vec_lhs2[lhs_current2++].second,
+                    col_vec_rhs1[rhs_current1++].second,
+                    std::numeric_limits<size_type>::max());
+            else if (lhs1_smaller && equal_2)
+                joined_index_idx.emplace_back(
+                    col_vec_lhs1[lhs_current1++].second,
+                    col_vec_lhs2[lhs_current2++].second,
+                    std::numeric_limits<size_type>::max(),
+                    col_vec_rhs2[rhs_current2++].second);
+            else if (equal_1 && ! lhs2_smaller)
+                joined_index_idx.emplace_back(
+                    col_vec_lhs1[lhs_current1++].second,
+                    std::numeric_limits<size_type>::max(),
+                    col_vec_rhs1[rhs_current1++].second,
+                    col_vec_rhs2[rhs_current2++].second);
+            else if (! lhs1_smaller && equal_2)
+                joined_index_idx.emplace_back(
+                    std::numeric_limits<size_type>::max(),
+                    col_vec_lhs2[lhs_current2++].second,
+                    col_vec_rhs1[rhs_current1++].second,
+                    col_vec_rhs2[rhs_current2++].second);
+            else if (lhs1_smaller && lhs2_smaller)
+                joined_index_idx.emplace_back(
+                    col_vec_lhs1[lhs_current1++].second,
+                    col_vec_lhs2[lhs_current2++].second,
+                    std::numeric_limits<size_type>::max(),
+                    std::numeric_limits<size_type>::max());
+            else if (! lhs1_smaller && lhs2_smaller)
+                joined_index_idx.emplace_back(
+                    std::numeric_limits<size_type>::max(),
+                    col_vec_lhs2[lhs_current2++].second,
+                    col_vec_rhs1[rhs_current1++].second,
+                    std::numeric_limits<size_type>::max());
+            else if (lhs1_smaller && ! lhs2_smaller)
+                joined_index_idx.emplace_back(
+                    col_vec_lhs1[lhs_current1++].second,
+                    std::numeric_limits<size_type>::max(),
+                    std::numeric_limits<size_type>::max(),
+                    col_vec_rhs2[rhs_current2++].second);
+            else if (! lhs1_smaller && ! lhs2_smaller)
+                joined_index_idx.emplace_back(
+                    std::numeric_limits<size_type>::max(),
+                    std::numeric_limits<size_type>::max(),
+                    col_vec_rhs1[rhs_current1++].second,
+                    col_vec_rhs2[rhs_current2++].second);
+        }
+    }
+    return (joined_index_idx);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
 template<typename LHS_T, typename RHS_T, typename ... Ts>
-DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
+DataFrame<I, H> DataFrame<I, H>::
 index_left_right_join_(
     const LHS_T &lhs,
     const RHS_T &rhs,
@@ -605,7 +1310,7 @@ index_left_right_join_(
 
 template<typename I, typename H>
 template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
-DataFrame<unsigned int, HeteroVector<std::size_t(H::align_value)>>
+DataFrame<unsigned int, H>
 DataFrame<I, H>::
 column_left_right_join_(const LHS_T &lhs,
                         const RHS_T &rhs,
@@ -617,6 +1322,33 @@ column_left_right_join_(const LHS_T &lhs,
                 (lhs, rhs, col_name,
                  get_left_right_index_idx_vector_<T>(col_vec_lhs,
                                                      col_vec_rhs)));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename LHS_T,
+         typename RHS_T,
+         typename T1,
+         typename T2,
+         typename ... Ts>
+DataFrame<unsigned int, H>
+DataFrame<I, H>::
+column_left_right_join_(const LHS_T &lhs,
+                        const RHS_T &rhs,
+                        const char *col_name1,
+                        const char *col_name2,
+                        const StlVecType<JoinSortingPair<T1>> &col_vec_lhs1,
+                        const StlVecType<JoinSortingPair<T2>> &col_vec_lhs2,
+                        const StlVecType<JoinSortingPair<T1>> &col_vec_rhs1,
+                        const StlVecType<JoinSortingPair<T2>> &col_vec_rhs2)  {
+
+    return (column_join_helper_<LHS_T, RHS_T, T1, T2, Ts ...>
+                (lhs, rhs, col_name1, col_name2,
+                 get_left_right_index_idx_vector_<T1, T2>(col_vec_lhs1,
+                                                          col_vec_lhs2,
+                                                          col_vec_rhs1,
+                                                          col_vec_rhs2)));
 }
 
 // ----------------------------------------------------------------------------
@@ -671,15 +1403,10 @@ void
 DataFrame<I, H>::self_concat(const RHS_T &rhs, bool add_new_columns)  {
 
     static_assert(
-        (std::is_base_of<
-             DataFrame<I,
-                       HeteroVector<std::size_t(H::align_value)>>,
-                       RHS_T>::value ||
+        (std::is_base_of<DataFrame<I, H>, RHS_T>::value ||
          std::is_base_of<View, RHS_T>::value ||
          std::is_base_of<PtrView, RHS_T>::value) &&
-        ! std::is_base_of<DataFrame<I,
-                                    HeteroVector<std::size_t(H::align_value)>>,
-                          decltype(*this)>::value,
+        ! std::is_base_of<DataFrame<I, H>, decltype(*this)>::value,
         "The rhs argument to self_concat() can only be "
         "StdDataFrame<IndexType> or DataFrame[Ptr]View<IndexType>. "
         "Self must be StdDataFrame<IndexType>");
@@ -697,21 +1424,16 @@ DataFrame<I, H>
 DataFrame<I, H>::concat(const RHS_T &rhs, concat_policy cp) const  {
 
     static_assert(
-        (std::is_base_of<
-             DataFrame<I,
-                       HeteroVector<std::size_t(H::align_value)>>,
-                       RHS_T>::value ||
+        (std::is_base_of<DataFrame<I, H>, RHS_T>::value ||
          std::is_base_of<View, RHS_T>::value ||
          std::is_base_of<PtrView, RHS_T>::value) &&
-        ! std::is_base_of<DataFrame<I,
-                                    HeteroVector<std::size_t(H::align_value)>>,
-                          decltype(*this)>::value,
+        ! std::is_base_of<DataFrame<I, H>, decltype(*this)>::value,
         "The rhs argument to concat() can only be "
         "StdDataFrame<IndexType> or DataFrame[Ptr]View<IndexType>. "
         "Self must be StdDataFrame<IndexType>");
 
-    DataFrame<I, HeteroVector<align_value>> result;
-    const SpinGuard                         guard(lock_);
+    DataFrame<I, H> result;
+    const SpinGuard guard(lock_);
 
     if (cp == concat_policy::all_columns ||
         cp == concat_policy::lhs_and_common_columns)  {
@@ -746,13 +1468,8 @@ typename DataFrame<I, H>::PtrView
 DataFrame<I, H>::concat_view(RHS_T &rhs, concat_policy cp)  {
 
     static_assert(
-        ! std::is_base_of<
-              DataFrame<I,
-                        HeteroVector<std::size_t(H::align_value)>>,
-                        RHS_T>::value ||
-        ! std::is_base_of<DataFrame<I,
-                                    HeteroVector<std::size_t(H::align_value)>>,
-                          decltype(*this)>::value,
+        ! std::is_base_of<DataFrame<I, H>, RHS_T>::value ||
+        ! std::is_base_of<DataFrame<I, H>, decltype(*this)>::value,
         "Currently, arguments to concat_view() can only be "
         "StdDataFrame<IndexType>.");
 
@@ -824,13 +1541,8 @@ typename DataFrame<I, H>::ConstPtrView
 DataFrame<I, H>::concat_view(RHS_T &rhs, concat_policy cp) const  {
 
     static_assert(
-        ! std::is_base_of<
-              DataFrame<I,
-                        HeteroVector<std::size_t(H::align_value)>>,
-                        RHS_T>::value ||
-        ! std::is_base_of<DataFrame<I,
-                                    HeteroVector<std::size_t(H::align_value)>>,
-                          decltype(*this)>::value,
+        ! std::is_base_of<DataFrame<I, H>, RHS_T>::value ||
+        ! std::is_base_of<DataFrame<I, H>, decltype(*this)>::value,
         "Currently, arguments to concat_view() can only be "
         "StdDataFrame<IndexType>.");
 

@@ -78,12 +78,11 @@ class DataFrame : public ThreadGranularity {
 
 public:  // Construction
 
-    
     static constexpr std::size_t    align_value { std::size_t(H::align_value) };
 
     template<typename T>
     using AllocatorType = typename allocator_declare<T, align_value>::type;
-	
+
     using size_type = std::size_t;
     using IndexType = I;
     using IndexVecType =
@@ -1346,7 +1345,7 @@ public:  // Data manipulation
     //   the list only once.
     // rhs:
     //   The rhs DataFrame
-    // name:
+    // col_name:
     //   Name of the column which the join will be based on
     // join_policy:
     //   Specifies how to join. For example inner join, or left join, etc.
@@ -1354,7 +1353,37 @@ public:  // Data manipulation
     //
     template<typename RHS_T, typename T, typename ... Ts>
     [[nodiscard]] DataFrame<unsigned int, H>
-    join_by_column(const RHS_T &rhs, const char *name, join_policy jp) const;
+    join_by_column(const RHS_T &rhs,
+                   const char *col_name,
+                   join_policy jp) const;
+
+    // Same as join_by_column() above but it is based on two columns.
+    //
+    // RHS_T:
+    //   Type of DataFrame rhs
+    // T1:
+    //   Type of the first named column
+    // T2:
+    //   Type of the second named column
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // rhs:
+    //   The rhs DataFrame
+    // col_name1:
+    //   Name of the first column which the join will be based on
+    // col_name2:
+    //   Name of the second column which the join will be based on
+    // join_policy:
+    //   Specifies how to join. For example inner join, or left join, etc.
+    //   (See join_policy definition)
+    //
+    template<typename RHS_T, typename T1, typename T2, typename ... Ts>
+    [[nodiscard]] DataFrame<unsigned int, H>
+    join_by_column(const RHS_T &rhs,
+                   const char *col_name1,
+                   const char *col_name2,
+                   join_policy jp) const;
 
     // It concatenates rhs to the end of self and returns the result as
     // another DataFrame.

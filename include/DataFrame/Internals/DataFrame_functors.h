@@ -296,6 +296,27 @@ struct  index_join_functor_common_ : DataVec::template visitor_base<Ts ...>  {
 
 // ----------------------------------------------------------------------------
 
+template<typename RES_T, typename ... Ts>
+struct  index_join_functor_common2_ : DataVec::template visitor_base<Ts ...>  {
+
+    inline index_join_functor_common2_ (
+        const char *n,
+        const DataFrame &r,
+        const IndexIdxVector2 &mii,
+        RES_T &res)
+        : name(n), rhs(r), joined_index_idx(mii), result(res)  {  }
+
+    const char              *name;
+    const DataFrame         &rhs;
+    const IndexIdxVector2   &joined_index_idx;
+    RES_T                   &result;
+
+    template<typename T>
+    void operator() (const T &lhs_vec);
+};
+
+// ----------------------------------------------------------------------------
+
 // SIDE:  0 = Left, 1 = Right
 template<int SIDE, typename RES_T, typename ... Ts>
 struct  index_join_functor_oneside_
@@ -309,6 +330,27 @@ struct  index_join_functor_oneside_
 
     const char              *name;
     const IndexIdxVector    &joined_index_idx;
+    RES_T                   &result;
+
+    template<typename T>
+    void operator() (const T &vec);
+};
+
+// ----------------------------------------------------------------------------
+
+// SIDE:  0 = Left, 1 = Right
+template<int SIDE, typename RES_T, typename ... Ts>
+struct  index_join_functor_oneside2_
+    : DataVec::template visitor_base<Ts ...>  {
+
+    inline index_join_functor_oneside2_ (
+        const char *n,
+        const IndexIdxVector2 &mii,
+        RES_T &res)
+        : name(n), joined_index_idx(mii), result(res)  {  }
+
+    const char              *name;
+    const IndexIdxVector2   &joined_index_idx;
     RES_T                   &result;
 
     template<typename T>

@@ -83,7 +83,7 @@ public:  // Construction
 
     template<typename T>
     using AllocatorType = typename allocator_declare<T, align_value>::type;
-	
+
     using size_type = std::size_t;
     using IndexType = I;
     using IndexVecType =
@@ -2195,6 +2195,65 @@ public: // Read/access and slicing interfaces
                     const char *name3,
                     const char *name4,
                     const char *name5,
+                    F &sel_functor) const;
+
+    // Data by select for larger number of columns
+    //
+    template<typename T1, typename T2, typename T3, typename T4, typename T5,
+             typename T6, typename T7, typename T8, typename T9, typename T10,
+             typename T11,
+             typename F, typename ... Ts>
+    [[nodiscard]] DataFrame
+    get_data_by_sel(const char *name1,
+                    const char *name2,
+                    const char *name3,
+                    const char *name4,
+                    const char *name5,
+                    const char *name6,
+                    const char *name7,
+                    const char *name8,
+                    const char *name9,
+                    const char *name10,
+                    const char *name11,
+                    F &sel_functor) const;
+
+    template<typename T1, typename T2, typename T3, typename T4, typename T5,
+             typename T6, typename T7, typename T8, typename T9, typename T10,
+             typename T11, typename T12,
+             typename F, typename ... Ts>
+    [[nodiscard]] DataFrame
+    get_data_by_sel(const char *name1,
+                    const char *name2,
+                    const char *name3,
+                    const char *name4,
+                    const char *name5,
+                    const char *name6,
+                    const char *name7,
+                    const char *name8,
+                    const char *name9,
+                    const char *name10,
+                    const char *name11,
+                    const char *name12,
+                    F &sel_functor) const;
+
+    template<typename T1, typename T2, typename T3, typename T4, typename T5,
+             typename T6, typename T7, typename T8, typename T9, typename T10,
+             typename T11, typename T12, typename T13,
+             typename F, typename ... Ts>
+    [[nodiscard]] DataFrame
+    get_data_by_sel(const char *name1,
+                    const char *name2,
+                    const char *name3,
+                    const char *name4,
+                    const char *name5,
+                    const char *name6,
+                    const char *name7,
+                    const char *name8,
+                    const char *name9,
+                    const char *name10,
+                    const char *name11,
+                    const char *name12,
+                    const char *name13,
                     F &sel_functor) const;
 
     // This method does boolean filtering selection via the sel_functor

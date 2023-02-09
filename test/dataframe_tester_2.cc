@@ -4478,6 +4478,92 @@ static void test_get_data_by_sel()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_get_data_by_sel13()  {
+
+    std::cout << "\nTesting get_data_by_sel13() ..." << std::endl;
+
+    StlVecType<unsigned long>  idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456 };
+    StlVecType<double> d1 = { 1, 2, 3, 4, 5, 6, 7 };
+    StlVecType<double> d2 = { 8, 9, 10, 11, 12, 13, 14 };
+    StlVecType<double> d3 = { 15, 16, 17, 18, 19, 20, 21 };
+    StlVecType<double> d4 = { 22, 23, 24, 25 };
+    StlVecType<double> d5 = { 15, 16, 17, 18, 19, 20, 21 };
+    StlVecType<double> d6 = { 15, 16, 17, 18, 19, 20, 21 };
+    StlVecType<double> d7 = { 15, 16, 17, 18, 19, 20, 21 };
+    StlVecType<std::string> s1 = { "11", "22", "33", "ee", "ff", "gg", "ll" };
+    StlVecType<std::string> s2 = { "11", "22", "33", "ee", "ff", "gg", "ll" };
+    StlVecType<std::string> s3 = { "11", "22", "33", "ee", "ff", "gg", "ll" };
+    StlVecType<std::string> s4 = { "11", "22", "33", "ee", "ff", "gg", "ll" };
+    StlVecType<std::string> s5 = { "11", "22", "33", "ee", "ff", "gg", "ll" };
+    StlVecType<int>         i1 = { 15, 16, 17, 18, 19, 20, 21 };
+    StlVecType<int>         i2 = { 15, 16, 17, 18, 19, 20, 21 };
+    StlVecType<int>         i3 = { 15, 16, 17, 18, 19, 20, 21 };
+    StlVecType<int>         i4 = { 15, 16, 17, 18, 19, 20, 21 };
+    MyDataFrame             df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("col_1", d1),
+                 std::make_pair("col_2", d2),
+                 std::make_pair("col_3", d3),
+                 std::make_pair("col_4", d4),
+                 std::make_pair("col_5", d5),
+                 std::make_pair("col_6", d6),
+                 std::make_pair("col_7", d7),
+                 std::make_pair("col_str1", s1),
+                 std::make_pair("col_str2", s2),
+                 std::make_pair("col_str3", s3),
+                 std::make_pair("col_str4", s4),
+                 std::make_pair("col_str5", s5),
+                 std::make_pair("col_int1", i1),
+                 std::make_pair("col_int2", i2),
+                 std::make_pair("col_int3", i3),
+                 std::make_pair("col_int4", i4));
+
+
+    auto    functor =
+        [](const unsigned long &,
+           const double &val1,
+           const double &,
+           const double &val3,
+           const std::string &,
+           const std::string &str_val1,
+           const int &,
+           const int &,
+           const int &,
+           const int &,
+           const double &,
+           const double &,
+           const double &,
+           const std::string &)-> bool {
+            return (val1 >= 5 || val3 == 15 || str_val1 == "cc");
+        };
+    auto    result =
+        df.get_data_by_sel<double,
+                           double,
+                           double,
+                           std::string,
+                           std::string,
+                           int,
+                           int,
+                           int,
+                           int,
+                           double,
+                           double,
+                           double,
+                           std::string,
+                           decltype(functor),
+                           double, int, std::string>
+        ("col_1", "col_2", "col_3", "col_str1", "col_str2",
+         "col_int1", "col_int2", "col_int3", "col_int4",
+         "col_4", "col_5", "col_6", "col_str5",
+         functor);
+
+    result.write<std::ostream, double, int, std::string>(std::cout);
+}
+
+// -----------------------------------------------------------------------------
+
 static void test_get_view_by_sel()  {
 
     std::cout << "\nTesting get_view_by_sel() ..." << std::endl;
@@ -4937,6 +5023,7 @@ int main(int, char *[]) {
     test_get_view_by_idx_slicing();
     test_get_data();
     test_get_data_by_sel();
+    test_get_data_by_sel13();
     test_get_view_by_sel();
     test_get_view_by_rand();
     test_get_view_by_loc_location();

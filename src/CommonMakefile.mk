@@ -84,7 +84,7 @@ TARGETS += $(TARGET_LIB) \
 
 # -----------------------------------------------------------------------------
 
-LFLAGS += -maltivec -Bstatic -L$(LOCAL_LIB_DIR) -L$(PROJECT_LIB_DIR)
+LFLAGS += -Bstatic -L$(LOCAL_LIB_DIR) -L$(PROJECT_LIB_DIR)
 
 LIBS = $(LFLAGS) -l$(LIB_NAME) $(PLATFORM_LIBS)
 INCLUDES += -I. -I$(LOCAL_INCLUDE_DIR) -I$(PROJECT_INCLUDE_DIR)
@@ -131,7 +131,7 @@ PRE_BUILD:
 	mkdir -p $(PROJECT_INCLUDE_DIR)/DataFrame
 
 $(TARGET_LIB): $(LIB_OBJS)
-	ar -clrs $(TARGET_LIB) $(LIB_OBJS)
+	ar -rcs $(TARGET_LIB) $(LIB_OBJS)
 
 DATAFRAME_TESTER_OBJ = $(LOCAL_OBJ_DIR)/dataframe_tester.o
 $(LOCAL_BIN_DIR)/dataframe_tester: $(TARGET_LIB) $(DATAFRAME_TESTER_OBJ)

@@ -369,16 +369,18 @@ load_column (const char *name,
         throw InconsistentData (buffer);
     }
 
-    const auto      iter = column_tb_.find (name);
-    StlVecType<T>   *vec_ptr = nullptr;
-    SpinGuard       guard(do_lock ? lock_ : nullptr);
+    using value_t = decltype(ITR::begin);
+
+    const auto          iter = column_tb_.find (name);
+    StlVecType<value_t> *vec_ptr = nullptr;
+    SpinGuard           guard(do_lock ? lock_ : nullptr);
 
     if (iter == column_tb_.end())
-        vec_ptr = &(create_column<T>(name, false));
+        vec_ptr = &(create_column<value_t>(name, false));
     else  {
         DataVec &hv = data_[iter->second];
 
-        vec_ptr = &(hv.template get_vector<T>());
+        vec_ptr = &(hv.template get_vector<value_t>());
     }
     guard.release();
 
@@ -390,7 +392,7 @@ load_column (const char *name,
     s = vec_ptr->size();
     if (padding == nan_policy::pad_with_nans && s < idx_s)  {
         for (size_type i = 0; i < idx_s - s; ++i)  {
-            vec_ptr->push_back (std::move(get_nan<T>()));
+            vec_ptr->push_back (std::move(get_nan<value_t>()));
             ret_cnt += 1;
         }
     }
@@ -581,25 +583,27 @@ load_column (const char *name,
         throw InconsistentData (buffer);
     }
 
+    using value_t = typename StlVecType<T>::value_type;
+
     size_type   ret_cnt = data_s;
 
     if (padding == nan_policy::pad_with_nans && data_s < idx_s)  {
         for (size_type i = 0; i < idx_s - data_s; ++i)  {
-            column.push_back (std::move(get_nan<T>()));
+            column.push_back (std::move(get_nan<value_t>()));
             ret_cnt += 1;
         }
     }
 
-    const auto      iter = column_tb_.find (name);
-    StlVecType<T>   *vec_ptr = nullptr;
-    const SpinGuard guard (do_lock ? lock_ : nullptr);
+    const auto          iter = column_tb_.find (name);
+    StlVecType<value_t> *vec_ptr = nullptr;
+    const SpinGuard     guard (do_lock ? lock_ : nullptr);
 
     if (iter == column_tb_.end())
-        vec_ptr = &(create_column<T>(name, false));
+        vec_ptr = &(create_column<value_t>(name, false));
     else  {
         DataVec &hv = data_[iter->second];
 
-        vec_ptr = &(hv.template get_vector<T>());
+        vec_ptr = &(hv.template get_vector<value_t>());
     }
 
     *vec_ptr = std::move(column);
@@ -639,8 +643,10 @@ load_align_column(
         throw InconsistentData (buffer);
     }
 
-    StlVecType<T>   new_col(idx_s, null_value);
-    size_type       idx_idx { 0 };
+    using value_t = typename StlVecType<T>::value_type;
+
+    StlVecType<value_t> new_col(idx_s, null_value);
+    size_type           idx_idx { 0 };
 
     if (start_from_beginning)  {
         new_col[0] = std::move(column[0]);
@@ -661,7 +667,7 @@ load_align_column(
         data_idx += 1;
     }
 
-    return (load_column<T>(name, std::move(new_col)));
+    return (load_column<value_t>(name, std::move(new_col)));
 }
 
 // ----------------------------------------------------------------------------
@@ -675,7 +681,12 @@ load_column (const char *name,
              nan_policy padding,
              bool do_lock)  {
 
-    return(load_column<T>(name, {data.begin(), data.end()}, padding, do_lock));
+    using value_t = typename StlVecType<T>::value_type;
+
+    return(load_column<value_t>(name,
+                                { data.begin(), data.end() },
+                                padding,
+                                do_lock));
 }
 
 // ----------------------------------------------------------------------------
@@ -696,16 +707,19 @@ load_pair_(std::pair<T1, T2> &col_name_data, bool do_lock)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename T, typename ITR>
+template<typename ITR>
 typename DataFrame<I, H>::size_type
 DataFrame<I, H>::
 append_column (const char *name,
                Index2D<const ITR &> range,
                nan_policy padding)  {
 
-    ColumnVecType<T>    &vec = get_column<T>(name);
-    size_type           s = std::distance(range.begin, range.end) + vec.size();
-    const size_type     idx_s = indices_.size();
+    using value_t = decltype(ITR::begin);
+
+    ColumnVecType<value_t> &vec = get_column<value_t>(name);
+    size_type              s =
+        std::distance(range.begin, range.end) + vec.size();
+    const size_type        idx_s = indices_.size();
 
     if (s > idx_s)  {
         char buffer [512];
@@ -728,7 +742,7 @@ append_column (const char *name,
     s = vec.size();
     if (padding == nan_policy::pad_with_nans && s < idx_s)  {
         for (size_type i = 0; i < idx_s - s; ++i)  {
-            vec.push_back (std::move(get_nan<T>()));
+            vec.push_back (std::move(get_nan<value_t>()));
             ret_cnt += 1;
         }
     }

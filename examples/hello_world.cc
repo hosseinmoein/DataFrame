@@ -84,9 +84,9 @@ int main(int, char *[]) {
     // There are other ways of loading data without the move
     //
     ul_df1.load_index(std::move(idx_col1));
-    ul_df1.load_column<double>("dbl_col", std::move(dbl_col1));
-    ul_df1.load_column<MyData>("my_data_col", std::move(mydata_col));
-    ul_df1.load_column<int>("integers", std::move(int_col1));
+    ul_df1.load_column("dbl_col", std::move(dbl_col1));
+    ul_df1.load_column("my_data_col", std::move(mydata_col));
+    ul_df1.load_column("integers", std::move(int_col1));
 
     std::vector<unsigned long>  idx_col2 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
     std::vector<std::string>    str_col1 = { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J" };

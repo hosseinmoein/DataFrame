@@ -439,7 +439,7 @@ public:  // Load/append/remove interfaces
     //   If true, it pads the data column with nan, if it is shorter than the
     //   index column.
     //
-    template<typename T, typename ITR>
+    template<typename ITR>
     size_type
     append_column(const char *name,
                   Index2D<const ITR &> range,

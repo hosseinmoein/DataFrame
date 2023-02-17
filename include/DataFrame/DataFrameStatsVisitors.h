@@ -3552,6 +3552,90 @@ using linfit_v = LinearFitVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
+// https://en.wikipedia.org/w/index.php?title=Spline_%28mathematics%29&oldid=288288033#Algorithm_for_computing_natural_cubic_splines
+//
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+struct CubicSplineFitVisitor {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    // Yi(X) = Ai + Bi(X - Xi) + Ci(X - Xi)^2 + Di(X - Xi)^3
+    // A is just Y input
+    //
+    template<typename K, typename H>
+    inline void
+    operator() (const K &, const K &,
+                const H &x_begin, const H &x_end,
+                const H &y_begin, const H &y_end)  {
+
+        const size_type col_s = std::distance(x_begin, x_end);
+
+        assert(col_s > 3);
+        assert((col_s == size_type(std::distance(y_begin, y_end))));
+
+        result_type h;
+
+        h.reserve(col_s - 1);
+        for(size_type i = 0; i < col_s - 1; ++i)
+            h.push_back (*(x_begin + (i + 1)) - *(x_begin + i));
+
+        result_type             mu (col_s, 0);
+        result_type             z (col_s, 0);
+        constexpr value_type    two = 2;
+        constexpr value_type    three = 3;
+
+        for(size_type i = 1; i < col_s - 1; ++i)  {
+            const value_type    yi = *(y_begin + i);
+            const value_type    alpha =
+                three * (*(y_begin + (i + 1)) - yi) / h[i] -
+                three * (yi - *(y_begin + (i - 1))) / h[i - 1];
+            const value_type    l =
+                two * (*(x_begin + (i + 1)) - *(x_begin + (i - 1))) -
+                h[i - 1] * mu[i - 1];
+
+            mu[i] = h[i] / l;
+            z[i] = (alpha - h[i - 1] * z[i - 1]) / l;
+        }
+
+        result_type b (col_s - 1, 0);
+        result_type c (col_s, 0);
+        result_type d (col_s - 1, 0);
+
+        for(long i = col_s - 2; i >= 0; --i)  {
+            c[i] = z[i] - mu[i] * c[i + 1];
+            b[i] = (*(y_begin + (i + 1)) - *(y_begin + i)) / h[i] -
+                   h[i] * (c[i + 1] + two * c[i]) / three;
+            d[i] = (c[i + 1] - c[i]) / (three * h[i]);
+        }
+
+        b_vec_.swap(b);
+        c_vec_.swap(c);
+        d_vec_.swap(d);
+    }
+
+    inline void pre ()  {  }
+    inline void post ()  {  }
+    inline const result_type &get_result () const  { return (b_vec_); }
+    inline result_type &get_result ()  { return (b_vec_); }
+    inline const result_type &get_c_vec () const  { return (c_vec_); }
+    inline result_type &get_c_vec ()  { return (c_vec_); }
+    inline const result_type &get_d_vec () const  { return (d_vec_); }
+    inline result_type &get_d_vec ()  { return (d_vec_); }
+
+    CubicSplineFitVisitor()  {   }
+
+private:
+
+    result_type b_vec_ {  };
+    result_type c_vec_ {  };
+    result_type d_vec_ {  };
+};
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using csfit_v = CubicSplineFitVisitor<T, I, A>;
+
+// ----------------------------------------------------------------------------
+
 // LOcally WEighted Scatterplot Smoothing
 // A LOWESS function outputs smoothed estimates of dependent var (y) at the
 // given independent var (x) values.

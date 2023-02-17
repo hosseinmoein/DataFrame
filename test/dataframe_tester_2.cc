@@ -1809,6 +1809,54 @@ static void test_LinearFitVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_CubicSplineFitVisitor()  {
+
+    std::cout << "\nTesting CubicSplineFitVisitor{  } ..." << std::endl;
+
+    StlVecType<unsigned long>  idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466,
+          123467, 123468, 123469, 123470, 123471, 123472, 123473,
+          123467, 123468, 123469, 123470, 123471, 123472, 123473,
+          123467, 123468, 123469, 123470, 123471, 123472, 123473,
+        };
+    MyDataFrame                 df;
+
+    df.load_index(std::move(idx));
+    df.load_column<double>("X1",
+                           { 1, 2, 3, 4, 5 },
+                           nan_policy::dont_pad_with_nans);
+    df.load_column<double>("Y1",
+                           { 6, 7, 8, 9, 3 },
+                           nan_policy::dont_pad_with_nans);
+    df.load_column<double>("X2",
+                           { 1, 2, 4, 6, 8 },
+                           nan_policy::dont_pad_with_nans);
+    df.load_column<double>("Y2",
+                           { 1, 3, 4, 5, 6 },
+                           nan_policy::dont_pad_with_nans);
+
+    CubicSplineFitVisitor<double, unsigned long, 64>    csp_v1;
+
+    df.single_act_visit<double, double>("X1", "Y1", csp_v1);
+
+    const auto  &result1 = csp_v1.get_result();
+    const auto  &c_vec = csp_v1.get_c_vec();
+    const auto  &d_vec = csp_v1.get_d_vec();
+
+    for (size_t i = 0; i < result1.size(); ++i)
+		std::cout << result1[i] << ", ";
+	std::cout << std::endl;
+    for (size_t i = 0; i < c_vec.size(); ++i)
+		std::cout << c_vec[i] << ", ";
+	std::cout << std::endl;
+    for (size_t i = 0; i < d_vec.size(); ++i)
+		std::cout << d_vec[i] << ", ";
+	std::cout << std::endl;
+}
+
+// -----------------------------------------------------------------------------
+
 static void test_ExpoSmootherVisitor()  {
 
     std::cout << "\nTesting ExpoSmootherVisitor{  } ..." << std::endl;
@@ -4966,6 +5014,7 @@ int main(int, char *[]) {
     test_LogFitVisitor();
     test_ExponentialFitVisitor();
     test_LinearFitVisitor();
+    test_CubicSplineFitVisitor();
     test_ExpoSmootherVisitor();
     test_HWExpoSmootherVisitor();
     test_consolidate();

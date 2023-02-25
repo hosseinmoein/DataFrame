@@ -25,6 +25,38 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <!DOCTYPE html>
 <html>
 <body>
+
+    <table align="center" border="1">
+
+    <tr bgcolor="lightblue">
+      <th>Signature</th> <th>Description</th>
+    </tr>
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        <PRE><B>
+enum class impurity_type : unsigned char  {
+    // Measure how often a randomly chosen element from the set would be
+    // incorrectly labeled
+    // Gini = 1 - &#8721;P<sub>i</sub><sup>2</sup>
+    //
+    gini_index = 1,
+    // Average level of "information", "surprise", or "uncertainty" inherent
+    // to the variable's possible outcomes.
+    // Entropy = -&#8721;P<sub>i</sub> log<sub>2</sub>(P<sub>i</sub>)
+    //
+    info_entropy = 2,
+};
+      </B></PRE> </font>
+      </td>
+      <td>
+        Impurity type
+      </td>
+    </tr>
+
+    </table>
+
+    <BR>
+
   <table align="center" border="1">
 
     <tr bgcolor="lightblue">
@@ -32,7 +64,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        <PRE><B>#include &lt;DataFrame/DataFrameStatsVisitors.h&gt;
+        <PRE><B>#include &lt;DataFrame/DataFrameMLVisitors.h&gt;
 
 template&lt;typename T, typename I = unsigned long,
          std::size_t A = 0&gt;
@@ -50,10 +82,45 @@ using ent_v = EntropyVisitor&lt;T, I, A&gt;;
         This visitor calculates the rolling values of information entropy<BR>
         In information theory, the entropy of a random variable is the average level of "information", "surprise", or "uncertainty" inherent in the variable's possible outcomes. The concept of information entropy was introduced by Claude Shannon in his 1948 paper.<BR>
         A die has higher entropy (p=1/6) versus a coin (p=1/2).<BR>
+        This method is an approximation and not as computationally intensive as the method below.<BR>
         <I>
         <PRE>
     explicit
     EntropyVisitor(std::size_t roll_count, T log_base = 2);
+        </PRE>
+        </I>
+      </td>
+      <td width="12%">
+        <B>T</B>: Column data type.<BR>
+        <B>I</B>: Index type.<BR>
+        <B>A</B>: Memory alignment boundary for vectors. Default is system default alignment<BR>
+      </td>
+    </tr>
+
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        <PRE><B>#include &lt;DataFrame/DataFrameMLVisitors.h&gt;
+
+template&lt;typename T, typename I = unsigned long,
+         std::size_t A = 0&gt;
+struct ImpurityVisitor;
+
+// -------------------------------------
+
+template&lt;typename T, typename I = unsigned long,
+         std::size_t A = 0&gt;
+using impu_v = ImpurityVisitor&lt;T, I, A&gt;;
+        </B></PRE></font>
+      </td>
+      <td>
+        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
+        This visitor calculates the rolling impurity of the data column.<BR>
+        Decision trees recursively split features with regard to their target variable’s purity. The algorithm is designed to find the optimal point of the most predictive feature in order to split 1 dataset into 2. These 2 new datasets’ target variable will be more pure than the original dataset’s.<BR>
+“Pure” is the key word here, however. What does that word mean, exactly? In a general sense “purity” can be thought of as how homogenized a group is. But homogeneity can mean different things depending on which mathematical backbone your decision tree runs on. The 2 most popular backbones for decision tree’s decisions are Gini Index and Information Entropy.<BR><BR>
+        This method is computationally intensive. It dynamically finds the probability of each feature during each rolling period and applies the formula for the selected method.<BR>
+        <I>
+        <PRE>
+    ImpurityVisitor(size_type roll_count, impurity_type it);
         </PRE>
         </I>
       </td>
@@ -98,6 +165,84 @@ using ent_v = EntropyVisitor&lt;T, I, A&gt;;
 <span style='color:#800080; '>}</span>
 </pre>
 <!--Created using ToHtml.com on 2021-01-07 19:33:30 UTC -->
+
+<!-- HTML generated using hilite.me --><div style="background: #ffffff; overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #888888">// -----------------------------------------------------------------------------</span>
+
+<span style="color: #008800; font-weight: bold">static</span> <span style="color: #333399; font-weight: bold">void</span> <span style="color: #0066BB; font-weight: bold">test_ImpurityVisitor</span>()  {
+
+    std<span style="color: #333333">::</span>cout <span style="color: #333333">&lt;&lt;</span> <span style="background-color: #fff0f0">&quot;</span><span style="color: #666666; font-weight: bold; background-color: #fff0f0">\n</span><span style="background-color: #fff0f0">Testing ImpurityVisitor{  } ...&quot;</span> <span style="color: #333333">&lt;&lt;</span> std<span style="color: #333333">::</span>endl;
+
+    StlVecType<span style="color: #333333">&lt;</span><span style="color: #333399; font-weight: bold">unsigned</span> <span style="color: #333399; font-weight: bold">long</span><span style="color: #333333">&gt;</span>   idx <span style="color: #333333">=</span>
+        { <span style="color: #0000DD; font-weight: bold">123450</span>, <span style="color: #0000DD; font-weight: bold">123451</span>, <span style="color: #0000DD; font-weight: bold">123452</span>, <span style="color: #0000DD; font-weight: bold">123453</span>, <span style="color: #0000DD; font-weight: bold">123454</span>, <span style="color: #0000DD; font-weight: bold">123455</span>, <span style="color: #0000DD; font-weight: bold">123456</span>, <span style="color: #0000DD; font-weight: bold">123457</span>, <span style="color: #0000DD; font-weight: bold">123458</span>, <span style="color: #0000DD; font-weight: bold">123459</span>, <span style="color: #0000DD; font-weight: bold">123460</span>, <span style="color: #0000DD; font-weight: bold">123461</span>, <span style="color: #0000DD; font-weight: bold">123462</span>, <span style="color: #0000DD; font-weight: bold">123466</span>,
+          <span style="color: #0000DD; font-weight: bold">123467</span>, <span style="color: #0000DD; font-weight: bold">123468</span>, <span style="color: #0000DD; font-weight: bold">123469</span>, <span style="color: #0000DD; font-weight: bold">123470</span>, <span style="color: #0000DD; font-weight: bold">123471</span>, <span style="color: #0000DD; font-weight: bold">123472</span>, <span style="color: #0000DD; font-weight: bold">123473</span> };
+    StlVecType<span style="color: #333333">&lt;</span>std<span style="color: #333333">::</span>string<span style="color: #333333">&gt;</span>     metal <span style="color: #333333">=</span> { <span style="background-color: #fff0f0">&quot;Gold&quot;</span>, <span style="background-color: #fff0f0">&quot;Gold&quot;</span>, <span style="background-color: #fff0f0">&quot;Gold&quot;</span>, <span style="background-color: #fff0f0">&quot;Gold&quot;</span> };
+    StlVecType<span style="color: #333333">&lt;</span>std<span style="color: #333333">::</span>string<span style="color: #333333">&gt;</span>     metal2 <span style="color: #333333">=</span> { <span style="background-color: #fff0f0">&quot;Gold&quot;</span>, <span style="background-color: #fff0f0">&quot;Silver&quot;</span>, <span style="background-color: #fff0f0">&quot;Silver&quot;</span>, <span style="background-color: #fff0f0">&quot;Gold&quot;</span> };
+    StlVecType<span style="color: #333333">&lt;</span><span style="color: #333399; font-weight: bold">double</span><span style="color: #333333">&gt;</span>          numbers <span style="color: #333333">=</span>
+        { <span style="color: #6600EE; font-weight: bold">2.5</span>, <span style="color: #6600EE; font-weight: bold">2.5</span>, <span style="color: #6600EE; font-weight: bold">2.5</span>, <span style="color: #333333">-</span><span style="color: #6600EE; font-weight: bold">0.1</span>, <span style="color: #333333">-</span><span style="color: #6600EE; font-weight: bold">1.1</span>, <span style="color: #333333">-</span><span style="color: #6600EE; font-weight: bold">0.1</span>, <span style="color: #333333">-</span><span style="color: #6600EE; font-weight: bold">1.1</span>, <span style="color: #333333">-</span><span style="color: #6600EE; font-weight: bold">1.1</span>, <span style="color: #333333">-</span><span style="color: #6600EE; font-weight: bold">0.1</span>, <span style="color: #6600EE; font-weight: bold">34.5</span>, <span style="color: #333333">-</span><span style="color: #6600EE; font-weight: bold">1.1</span>,
+          <span style="color: #6600EE; font-weight: bold">34.5</span>, <span style="color: #6600EE; font-weight: bold">34.5</span>, <span style="color: #6600EE; font-weight: bold">34.5</span>, <span style="color: #6600EE; font-weight: bold">0.123</span>, <span style="color: #6600EE; font-weight: bold">0.123</span>, <span style="color: #6600EE; font-weight: bold">0.123</span>, <span style="color: #6600EE; font-weight: bold">0.5</span>, <span style="color: #6600EE; font-weight: bold">0.4</span>, <span style="color: #6600EE; font-weight: bold">2.5</span>, <span style="color: #6600EE; font-weight: bold">0.5</span> };
+    MyDataFrame                 df;
+
+    df.load_data(std<span style="color: #333333">::</span>move(idx), std<span style="color: #333333">::</span>make_pair(<span style="background-color: #fff0f0">&quot;Numbers&quot;</span>, numbers));
+    df.load_column(<span style="background-color: #fff0f0">&quot;Metals&quot;</span>, std<span style="color: #333333">::</span>move(metal), nan_policy<span style="color: #333333">::</span>dont_pad_with_nans);
+    df.load_column(<span style="background-color: #fff0f0">&quot;Metals2&quot;</span>, std<span style="color: #333333">::</span>move(metal2), nan_policy<span style="color: #333333">::</span>dont_pad_with_nans);
+
+    impu_v<span style="color: #333333">&lt;</span>std<span style="color: #333333">::</span>string<span style="color: #333333">&gt;</span> impu (<span style="color: #0000DD; font-weight: bold">4</span>, impurity_type<span style="color: #333333">::</span>gini_index);
+    <span style="color: #008800; font-weight: bold">const</span> <span style="color: #008800; font-weight: bold">auto</span>          result <span style="color: #333333">=</span> df.single_act_visit<span style="color: #333333">&lt;</span>std<span style="color: #333333">::</span>string<span style="color: #333333">&gt;</span>(<span style="background-color: #fff0f0">&quot;Metals&quot;</span>, impu).get_result();
+
+    assert(result.size() <span style="color: #333333">==</span> <span style="color: #0000DD; font-weight: bold">1</span>);
+    assert(result[<span style="color: #0000DD; font-weight: bold">0</span>] <span style="color: #333333">==</span> <span style="color: #0000DD; font-weight: bold">0</span>);
+
+    impu_v<span style="color: #333333">&lt;</span>std<span style="color: #333333">::</span>string<span style="color: #333333">&gt;</span> impu2 (<span style="color: #0000DD; font-weight: bold">4</span>, impurity_type<span style="color: #333333">::</span>info_entropy);
+    <span style="color: #008800; font-weight: bold">const</span> <span style="color: #008800; font-weight: bold">auto</span>          result2 <span style="color: #333333">=</span> df.single_act_visit<span style="color: #333333">&lt;</span>std<span style="color: #333333">::</span>string<span style="color: #333333">&gt;</span>(<span style="background-color: #fff0f0">&quot;Metals&quot;</span>, impu2).get_result();
+
+    assert(result2.size() <span style="color: #333333">==</span> <span style="color: #0000DD; font-weight: bold">1</span>);
+    assert(result2[<span style="color: #0000DD; font-weight: bold">0</span>] <span style="color: #333333">==</span> <span style="color: #0000DD; font-weight: bold">0</span>);
+
+    impu_v<span style="color: #333333">&lt;</span>std<span style="color: #333333">::</span>string<span style="color: #333333">&gt;</span> impu3 (<span style="color: #0000DD; font-weight: bold">4</span>, impurity_type<span style="color: #333333">::</span>gini_index);
+    <span style="color: #008800; font-weight: bold">const</span> <span style="color: #008800; font-weight: bold">auto</span>          result3 <span style="color: #333333">=</span> df.single_act_visit<span style="color: #333333">&lt;</span>std<span style="color: #333333">::</span>string<span style="color: #333333">&gt;</span>(<span style="background-color: #fff0f0">&quot;Metals2&quot;</span>, impu3).get_result();
+
+    assert(result3.size() <span style="color: #333333">==</span> <span style="color: #0000DD; font-weight: bold">1</span>);
+    assert(result3[<span style="color: #0000DD; font-weight: bold">0</span>] <span style="color: #333333">==</span> <span style="color: #6600EE; font-weight: bold">0.5</span>);
+
+    impu_v<span style="color: #333333">&lt;</span>std<span style="color: #333333">::</span>string<span style="color: #333333">&gt;</span> impu4 (<span style="color: #0000DD; font-weight: bold">4</span>, impurity_type<span style="color: #333333">::</span>info_entropy);
+    <span style="color: #008800; font-weight: bold">const</span> <span style="color: #008800; font-weight: bold">auto</span>          result4 <span style="color: #333333">=</span> df.single_act_visit<span style="color: #333333">&lt;</span>std<span style="color: #333333">::</span>string<span style="color: #333333">&gt;</span>(<span style="background-color: #fff0f0">&quot;Metals2&quot;</span>, impu4).get_result();
+
+    assert(result4.size() <span style="color: #333333">==</span> <span style="color: #0000DD; font-weight: bold">1</span>);
+    assert(result4[<span style="color: #0000DD; font-weight: bold">0</span>] <span style="color: #333333">==</span> <span style="color: #6600EE; font-weight: bold">1.0</span>);
+
+    impu_v<span style="color: #333333">&lt;</span><span style="color: #333399; font-weight: bold">double</span><span style="color: #333333">&gt;</span>  impu5 (<span style="color: #0000DD; font-weight: bold">3</span>, impurity_type<span style="color: #333333">::</span>gini_index);
+    <span style="color: #008800; font-weight: bold">const</span> <span style="color: #008800; font-weight: bold">auto</span>      result5 <span style="color: #333333">=</span> df.single_act_visit<span style="color: #333333">&lt;</span><span style="color: #333399; font-weight: bold">double</span><span style="color: #333333">&gt;</span>(<span style="background-color: #fff0f0">&quot;Numbers&quot;</span>, impu5).get_result();
+
+    assert(result5.size() <span style="color: #333333">==</span> <span style="color: #0000DD; font-weight: bold">19</span>);
+    assert(result5[<span style="color: #0000DD; font-weight: bold">0</span>] <span style="color: #333333">==</span> <span style="color: #0000DD; font-weight: bold">0</span>);
+    assert(fabs(result5[<span style="color: #0000DD; font-weight: bold">1</span>] <span style="color: #333333">-</span> <span style="color: #6600EE; font-weight: bold">0.4444</span>) <span style="color: #333333">&lt;</span> <span style="color: #6600EE; font-weight: bold">0.0001</span>);
+    assert(fabs(result5[<span style="color: #0000DD; font-weight: bold">2</span>] <span style="color: #333333">-</span> <span style="color: #6600EE; font-weight: bold">0.6667</span>) <span style="color: #333333">&lt;</span> <span style="color: #6600EE; font-weight: bold">0.0001</span>);
+    assert(fabs(result5[<span style="color: #0000DD; font-weight: bold">3</span>] <span style="color: #333333">-</span> <span style="color: #6600EE; font-weight: bold">0.4444</span>) <span style="color: #333333">&lt;</span> <span style="color: #6600EE; font-weight: bold">0.0001</span>);
+    assert(fabs(result5[<span style="color: #0000DD; font-weight: bold">4</span>] <span style="color: #333333">-</span> <span style="color: #6600EE; font-weight: bold">0.4444</span>) <span style="color: #333333">&lt;</span> <span style="color: #6600EE; font-weight: bold">0.0001</span>);
+    assert(fabs(result5[<span style="color: #0000DD; font-weight: bold">18</span>] <span style="color: #333333">-</span> <span style="color: #6600EE; font-weight: bold">0.6667</span>) <span style="color: #333333">&lt;</span> <span style="color: #6600EE; font-weight: bold">0.0001</span>);
+    assert(fabs(result5[<span style="color: #0000DD; font-weight: bold">17</span>] <span style="color: #333333">-</span> <span style="color: #6600EE; font-weight: bold">0.6667</span>) <span style="color: #333333">&lt;</span> <span style="color: #6600EE; font-weight: bold">0.0001</span>);
+    assert(fabs(result5[<span style="color: #0000DD; font-weight: bold">16</span>] <span style="color: #333333">-</span> <span style="color: #6600EE; font-weight: bold">0.6667</span>) <span style="color: #333333">&lt;</span> <span style="color: #6600EE; font-weight: bold">0.0001</span>);
+    assert(fabs(result5[<span style="color: #0000DD; font-weight: bold">15</span>] <span style="color: #333333">-</span> <span style="color: #6600EE; font-weight: bold">0.4444</span>) <span style="color: #333333">&lt;</span> <span style="color: #6600EE; font-weight: bold">0.0001</span>);
+    assert(result5[<span style="color: #0000DD; font-weight: bold">14</span>] <span style="color: #333333">==</span> <span style="color: #0000DD; font-weight: bold">0</span>);
+    assert(fabs(result5[<span style="color: #0000DD; font-weight: bold">13</span>] <span style="color: #333333">-</span> <span style="color: #6600EE; font-weight: bold">0.4444</span>) <span style="color: #333333">&lt;</span> <span style="color: #6600EE; font-weight: bold">0.0001</span>);
+
+    impu_v<span style="color: #333333">&lt;</span><span style="color: #333399; font-weight: bold">double</span><span style="color: #333333">&gt;</span>  impu6 (<span style="color: #0000DD; font-weight: bold">3</span>, impurity_type<span style="color: #333333">::</span>info_entropy);
+    <span style="color: #008800; font-weight: bold">const</span> <span style="color: #008800; font-weight: bold">auto</span>      result6 <span style="color: #333333">=</span> df.single_act_visit<span style="color: #333333">&lt;</span><span style="color: #333399; font-weight: bold">double</span><span style="color: #333333">&gt;</span>(<span style="background-color: #fff0f0">&quot;Numbers&quot;</span>, impu6).get_result();
+
+    assert(result6.size() <span style="color: #333333">==</span> <span style="color: #0000DD; font-weight: bold">19</span>);
+    assert(result6[<span style="color: #0000DD; font-weight: bold">0</span>] <span style="color: #333333">==</span> <span style="color: #0000DD; font-weight: bold">0</span>);
+    assert(fabs(result6[<span style="color: #0000DD; font-weight: bold">1</span>] <span style="color: #333333">-</span> <span style="color: #6600EE; font-weight: bold">0.9183</span>) <span style="color: #333333">&lt;</span> <span style="color: #6600EE; font-weight: bold">0.0001</span>);
+    assert(fabs(result6[<span style="color: #0000DD; font-weight: bold">2</span>] <span style="color: #333333">-</span> <span style="color: #6600EE; font-weight: bold">1.585</span>) <span style="color: #333333">&lt;</span> <span style="color: #6600EE; font-weight: bold">0.0001</span>);
+    assert(fabs(result6[<span style="color: #0000DD; font-weight: bold">3</span>] <span style="color: #333333">-</span> <span style="color: #6600EE; font-weight: bold">0.9183</span>) <span style="color: #333333">&lt;</span> <span style="color: #6600EE; font-weight: bold">0.0001</span>);
+    assert(fabs(result6[<span style="color: #0000DD; font-weight: bold">4</span>] <span style="color: #333333">-</span> <span style="color: #6600EE; font-weight: bold">0.9183</span>) <span style="color: #333333">&lt;</span> <span style="color: #6600EE; font-weight: bold">0.0001</span>);
+    assert(fabs(result6[<span style="color: #0000DD; font-weight: bold">18</span>] <span style="color: #333333">-</span> <span style="color: #6600EE; font-weight: bold">1.585</span>) <span style="color: #333333">&lt;</span> <span style="color: #6600EE; font-weight: bold">0.0001</span>);
+    assert(fabs(result6[<span style="color: #0000DD; font-weight: bold">17</span>] <span style="color: #333333">-</span> <span style="color: #6600EE; font-weight: bold">1.585</span>) <span style="color: #333333">&lt;</span> <span style="color: #6600EE; font-weight: bold">0.0001</span>);
+    assert(fabs(result6[<span style="color: #0000DD; font-weight: bold">16</span>] <span style="color: #333333">-</span> <span style="color: #6600EE; font-weight: bold">1.585</span>) <span style="color: #333333">&lt;</span> <span style="color: #6600EE; font-weight: bold">0.0001</span>);
+    assert(fabs(result6[<span style="color: #0000DD; font-weight: bold">15</span>] <span style="color: #333333">-</span> <span style="color: #6600EE; font-weight: bold">0.9183</span>) <span style="color: #333333">&lt;</span> <span style="color: #6600EE; font-weight: bold">0.0001</span>);
+    assert(result6[<span style="color: #0000DD; font-weight: bold">14</span>] <span style="color: #333333">==</span> <span style="color: #0000DD; font-weight: bold">0</span>);
+    assert(fabs(result6[<span style="color: #0000DD; font-weight: bold">13</span>] <span style="color: #333333">-</span> <span style="color: #6600EE; font-weight: bold">0.9183</span>) <span style="color: #333333">&lt;</span> <span style="color: #6600EE; font-weight: bold">0.0001</span>);
+}
+</pre></div>
 
   <img src="https://github.com/hosseinmoein/DataFrame/blob/master/docs/LionLookingUp.jpg?raw=true" alt="C++ DataFrame"
        width="200" height="150" style="float:right"/>

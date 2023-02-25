@@ -387,6 +387,19 @@ enum class bucket_type : unsigned char  {
 
 // ----------------------------------------------------------------------------
 
+enum class impurity_type : unsigned char  {
+    // Measure how often a randomly chosen element from the set would be
+    // incorrectly labeled
+    //
+    gini_index = 1,
+    // Average level of "information", "surprise", or "uncertainty" inherent
+    // to the variable's possible outcomes.
+    //
+    info_entropy = 2,
+};
+
+// ----------------------------------------------------------------------------
+
 template<typename T>
 struct  RandGenParams  {
     T   min_value { std::numeric_limits<T>::min() };

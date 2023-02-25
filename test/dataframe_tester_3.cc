@@ -1046,6 +1046,93 @@ static void test_TreynorRatioVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_ImpurityVisitor()  {
+
+    std::cout << "\nTesting ImpurityVisitor{  } ..." << std::endl;
+
+    StlVecType<unsigned long>   idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466,
+          123467, 123468, 123469, 123470, 123471, 123472, 123473 };
+    StlVecType<std::string>     metal = { "Gold", "Gold", "Gold", "Gold" };
+    StlVecType<std::string>     metal2 = { "Gold", "Silver", "Silver", "Gold" };
+    StlVecType<double>          numbers =
+        { 2.5, 2.5, 2.5, -0.1, -1.1, -0.1, -1.1, -1.1, -0.1, 34.5, -1.1,
+          34.5, 34.5, 34.5, 0.123, 0.123, 0.123, 0.5, 0.4, 2.5, 0.5 };
+    MyDataFrame                 df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("Numbers", numbers));
+    df.load_column("Metals", std::move(metal),
+                   nan_policy::dont_pad_with_nans);
+    df.load_column("Metals2", std::move(metal2),
+                   nan_policy::dont_pad_with_nans);
+
+    impu_v<std::string> impu (4, impurity_type::gini_index);
+    const auto          result =
+        df.single_act_visit<std::string>("Metals", impu).get_result();
+
+    assert(result.size() == 1);
+    assert(result[0] == 0);
+
+    impu_v<std::string> impu2 (4, impurity_type::info_entropy);
+    const auto          result2 =
+        df.single_act_visit<std::string>("Metals", impu2).get_result();
+
+    assert(result2.size() == 1);
+    assert(result2[0] == 0);
+
+    impu_v<std::string> impu3 (4, impurity_type::gini_index);
+    const auto          result3 =
+        df.single_act_visit<std::string>("Metals2", impu3).get_result();
+
+    assert(result3.size() == 1);
+    assert(result3[0] == 0.5);
+
+    impu_v<std::string> impu4 (4, impurity_type::info_entropy);
+    const auto          result4 =
+        df.single_act_visit<std::string>("Metals2", impu4).get_result();
+
+    assert(result4.size() == 1);
+    assert(result4[0] == 1.0);
+
+    impu_v<double>  impu5 (3, impurity_type::gini_index);
+    const auto      result5 =
+        df.single_act_visit<double>("Numbers", impu5).get_result();
+
+    assert(result5.size() == 19);
+    assert(result5[0] == 0);
+    assert(fabs(result5[1] - 0.4444) < 0.0001);
+    assert(fabs(result5[2] - 0.6667) < 0.0001);
+    assert(fabs(result5[3] - 0.4444) < 0.0001);
+    assert(fabs(result5[4] - 0.4444) < 0.0001);
+    assert(fabs(result5[18] - 0.6667) < 0.0001);
+    assert(fabs(result5[17] - 0.6667) < 0.0001);
+    assert(fabs(result5[16] - 0.6667) < 0.0001);
+    assert(fabs(result5[15] - 0.4444) < 0.0001);
+    assert(result5[14] == 0);
+    assert(fabs(result5[13] - 0.4444) < 0.0001);
+
+    impu_v<double>  impu6 (3, impurity_type::info_entropy);
+    const auto      result6 =
+        df.single_act_visit<double>("Numbers", impu6).get_result();
+
+    assert(result6.size() == 19);
+    assert(result6[0] == 0);
+    assert(fabs(result6[1] - 0.9183) < 0.0001);
+    assert(fabs(result6[2] - 1.585) < 0.0001);
+    assert(fabs(result6[3] - 0.9183) < 0.0001);
+    assert(fabs(result6[4] - 0.9183) < 0.0001);
+    assert(fabs(result6[18] - 1.585) < 0.0001);
+    assert(fabs(result6[17] - 1.585) < 0.0001);
+    assert(fabs(result6[16] - 1.585) < 0.0001);
+    assert(fabs(result6[15] - 0.9183) < 0.0001);
+    assert(result6[14] == 0);
+    assert(fabs(result6[13] - 0.9183) < 0.0001);
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     test_groupby_edge();
@@ -1068,6 +1155,7 @@ int main(int, char *[]) {
     test_load_indicators();
     test_from_indicators();
     test_TreynorRatioVisitor();
+    test_ImpurityVisitor();
 
     /*
     hmdf::SpinLock      locker;

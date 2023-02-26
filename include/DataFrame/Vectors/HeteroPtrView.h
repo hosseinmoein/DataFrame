@@ -146,7 +146,14 @@ struct HeteroPtrView {
 private:
 
     template<typename T>
-    inline static std::unordered_map<const HeteroPtrView *, VectorPtrView<T, A>>
+    inline static
+    std::unordered_map<
+        const HeteroPtrView *, VectorPtrView<T, A>,
+        std::hash<const HeteroPtrView *>,
+        std::equal_to<const HeteroPtrView *>,
+        typename allocator_declare<
+            std::pair<const HeteroPtrView *const,
+                      VectorPtrView<T, A>>, A>::type>
         views_ {  };
 
     std::function<void(HeteroPtrView &)>

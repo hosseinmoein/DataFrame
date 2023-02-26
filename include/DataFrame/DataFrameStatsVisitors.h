@@ -1654,7 +1654,11 @@ public:
 
 private:
 
-    using map_type = std::map<const T *, size_type, t_less_>;
+    using map_type = std::map<
+        const T *, size_type,
+        t_less_,
+        typename allocator_declare<
+            std::pair<const T *const, size_type>, A>::type>;
 
     map_type        cat_map_ { };
     result_type     result_ { };
@@ -2291,10 +2295,13 @@ private:
         }
     };
 
-    using map_type = std::unordered_map<const value_type *,
-                                        DataItem,
-                                        my_hash_,
-                                        my_equal_to_>;
+    using map_type = std::unordered_map<
+        const T *,
+        DataItem,
+        my_hash_,
+        my_equal_to_,
+        typename allocator_declare<
+            std::pair<const T *const, DataItem>, A>::type>;
 
 public:
 

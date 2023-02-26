@@ -132,7 +132,13 @@ private:
 
     template<typename T>
     inline static
-    std::unordered_map<const HeteroConstView *, VectorConstView<T, A>>
+    std::unordered_map<
+        const HeteroConstView *, VectorConstView<T, A>,
+        std::hash<const HeteroConstView *>,
+        std::equal_to<const HeteroConstView *>,
+        typename allocator_declare<
+            std::pair<const HeteroConstView *const,
+                      VectorConstView<T, A>>, A>::type>
 	    views_ {  };
 
     std::function<void(HeteroConstView &)>

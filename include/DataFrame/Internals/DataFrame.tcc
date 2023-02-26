@@ -1412,12 +1412,17 @@ DataFrame<I, H>::value_counts (const char *col_name) const  {
             return(lhs.get() == rhs.get());
     };
 
-    std::unordered_map<
+    using map_t = std::unordered_map<
         typename std::reference_wrapper<const T>::type,
         size_type,
         decltype(hash_func),
-        decltype(equal_func)>   values_map(vec.size(), hash_func, equal_func);
-    size_type                   nan_count = 0;
+        decltype(equal_func),
+        typename allocator_declare<
+            std::pair<const typename std::reference_wrapper<const T>::type,
+                      size_type>, align_value>::type>;
+
+    map_t       values_map(vec.size(), hash_func, equal_func);
+    size_type   nan_count = 0;
 
     // take care of nans
     for (const auto &citer : vec)  {

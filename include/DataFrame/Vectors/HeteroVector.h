@@ -230,10 +230,16 @@ struct HeteroVector  {
 private:
 
     template<typename T>
-    inline static std::unordered_map<
-                      const HeteroVector *,
-                      std::vector<T,
-                                  typename allocator_declare<T, A>::type>>
+    using vec_t = std::vector<T, typename allocator_declare<T, A>::type>;
+
+    template<typename T>
+    inline static
+    std::unordered_map<
+        const HeteroVector *, vec_t<T>,
+        std::hash<const HeteroVector *>,
+        std::equal_to<const HeteroVector *>,
+        typename allocator_declare<
+            std::pair<const HeteroVector *const, vec_t<T>>, A>::type>
         vectors_ {  };
 
     std::vector<std::function<void(HeteroVector &)>>    clear_functions_;

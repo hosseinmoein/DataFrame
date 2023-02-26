@@ -3844,7 +3844,14 @@ private:
     friend class DataFrame;
 
     using ColNameDict =
-        std::unordered_map<ColNameType, size_type, std::hash<VirtualString>>;
+        std::unordered_map<
+            ColNameType,
+            size_type,
+            std::hash<VirtualString>,
+            std::equal_to<ColNameType>,
+            typename allocator_declare<
+                std::pair<const ColNameType, size_type>, align_value>::type>;
+
     using ColNameList = StlVecType<std::pair<ColNameType, size_type>>;
 
     // Data fields

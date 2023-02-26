@@ -461,7 +461,12 @@ typename DataFrame<I, H>::size_type
 DataFrame<I, H>::
 load_indicators(const char *cat_col_name, const char *numeric_cols_prefix)  {
 
-    using map_t = std::unordered_map<T, StlVecType<IT> *>;
+    using map_t = std::unordered_map<
+        T, StlVecType<IT> *,
+        std::hash<T>,
+        std::equal_to<T>,
+        typename allocator_declare<
+            std::pair<const T, StlVecType<IT> *>, align_value>::type>;
 
     const SpinGuard guard(lock_);
     const auto      &cat_col = get_column<T>(cat_col_name, false);
@@ -1097,12 +1102,17 @@ remove_duplicates (const char *name,
 
     using data_tuple = std::tuple<const T &, const IndexType &>;
     using count_vec = StlVecType<size_type>;
-    using data_map = std::unordered_map<data_tuple, count_vec, TupleHash>;
+    using map_t = std::unordered_map<
+        data_tuple, count_vec,
+        TupleHash,
+        std::equal_to<data_tuple>,
+        typename allocator_declare<
+            std::pair<const data_tuple, count_vec>, align_value>::type>;
 
     const ColumnVecType<T>  &vec = get_column<T>(name);
     const auto              &index = get_index();
     const size_type         col_s = std::min(vec.size(), index.size());
-    data_map                row_table;
+    map_t                   row_table;
     count_vec               dummy_vec;
     const IndexType         dummy_idx { };
 
@@ -1118,7 +1128,7 @@ remove_duplicates (const char *name,
         insert_res.first->second.push_back(i);
     }
 
-    return(remove_dups_common_<data_map, Ts ...>(*this, rds, row_table, index));
+    return(remove_dups_common_<map_t, Ts ...>(*this, rds, row_table, index));
 }
 
 // ----------------------------------------------------------------------------
@@ -1133,7 +1143,12 @@ remove_duplicates (const char *name1,
 
     using data_tuple = std::tuple<const T1 &, const T2 &, const IndexType &>;
     using count_vec = StlVecType<size_type>;
-    using data_map = std::unordered_map<data_tuple, count_vec, TupleHash>;
+    using map_t = std::unordered_map<
+        data_tuple, count_vec,
+        TupleHash,
+        std::equal_to<data_tuple>,
+        typename allocator_declare<
+            std::pair<const data_tuple, count_vec>, align_value>::type>;
 
     SpinGuard               guard (lock_);
     const ColumnVecType<T1> &vec1 = get_column<T1>(name1, false);
@@ -1144,7 +1159,7 @@ remove_duplicates (const char *name1,
     const auto              &index = get_index();
     const size_type         col_s =
         std::min<size_type>({ vec1.size(), vec2.size(), index.size() });
-    data_map                row_table;
+    map_t                   row_table;
     count_vec               dummy_vec;
     const IndexType         dummy_idx { };
 
@@ -1160,7 +1175,7 @@ remove_duplicates (const char *name1,
         insert_res.first->second.push_back(i);
     }
 
-    return(remove_dups_common_<data_map, Ts ...>(*this, rds, row_table, index));
+    return(remove_dups_common_<map_t, Ts ...>(*this, rds, row_table, index));
 }
 
 // ----------------------------------------------------------------------------
@@ -1177,7 +1192,13 @@ remove_duplicates (const char *name1,
     using data_tuple = std::tuple<const T1 &, const T2 &, const T3 &,
                                   const IndexType &>;
     using count_vec = StlVecType<size_type>;
-    using data_map = std::unordered_map<data_tuple, count_vec, TupleHash>;
+    using map_t = std::unordered_map<
+        data_tuple, count_vec,
+        TupleHash,
+        std::equal_to<data_tuple>,
+        typename allocator_declare<
+            std::pair<const data_tuple, count_vec>, align_value>::type>;
+
 
     SpinGuard               guard (lock_);
     const ColumnVecType<T1> &vec1 = get_column<T1>(name1, false);
@@ -1190,7 +1211,7 @@ remove_duplicates (const char *name1,
     const size_type col_s =
         std::min<size_type>(
             { vec1.size(), vec2.size(), vec3.size(), index.size() });
-    data_map                row_table;
+    map_t                   row_table;
     count_vec               dummy_vec;
     const IndexType         dummy_idx { };
 
@@ -1206,7 +1227,7 @@ remove_duplicates (const char *name1,
         insert_res.first->second.push_back(i);
     }
 
-    return(remove_dups_common_<data_map, Ts ...>(*this, rds, row_table, index));
+    return(remove_dups_common_<map_t, Ts ...>(*this, rds, row_table, index));
 }
 
 // ----------------------------------------------------------------------------
@@ -1225,7 +1246,13 @@ remove_duplicates (const char *name1,
                                   const T3 &, const T4 &,
                                   const IndexType &>;
     using count_vec = StlVecType<size_type>;
-    using data_map = std::unordered_map<data_tuple, count_vec, TupleHash>;
+    using map_t = std::unordered_map<
+        data_tuple, count_vec,
+        TupleHash,
+        std::equal_to<data_tuple>,
+        typename allocator_declare<
+            std::pair<const data_tuple, count_vec>, align_value>::type>;
+
 
     SpinGuard               guard (lock_);
     const ColumnVecType<T1> &vec1 = get_column<T1>(name1, false);
@@ -1240,7 +1267,7 @@ remove_duplicates (const char *name1,
         std::min<size_type>(
             { vec1.size(), vec2.size(), vec3.size(), vec4.size(),
               index.size() });
-    data_map                row_table;
+    map_t                   row_table;
     count_vec               dummy_vec;
     const IndexType         dummy_idx { };
 
@@ -1256,7 +1283,7 @@ remove_duplicates (const char *name1,
         insert_res.first->second.push_back(i);
     }
 
-    return(remove_dups_common_<data_map, Ts ...>(*this, rds, row_table, index));
+    return(remove_dups_common_<map_t, Ts ...>(*this, rds, row_table, index));
 }
 
 // ----------------------------------------------------------------------------
@@ -1277,7 +1304,13 @@ remove_duplicates (const char *name1,
                                   const T3 &, const T4 &, const T5 &,
                                   const IndexType &>;
     using count_vec = StlVecType<size_type>;
-    using data_map = std::unordered_map<data_tuple, count_vec, TupleHash>;
+    using map_t = std::unordered_map<
+        data_tuple, count_vec,
+        TupleHash,
+        std::equal_to<data_tuple>,
+        typename allocator_declare<
+            std::pair<const data_tuple, count_vec>, align_value>::type>;
+
 
     SpinGuard               guard (lock_);
     const ColumnVecType<T1> &vec1 = get_column<T1>(name1, false);
@@ -1293,7 +1326,7 @@ remove_duplicates (const char *name1,
         std::min<size_type>(
             { vec1.size(), vec2.size(), vec3.size(), vec4.size(), vec5.size(),
               index.size() });
-    data_map                row_table;
+    map_t                   row_table;
     count_vec               dummy_vec;
     const IndexType         dummy_idx { };
 
@@ -1310,7 +1343,7 @@ remove_duplicates (const char *name1,
         insert_res.first->second.push_back(i);
     }
 
-    return(remove_dups_common_<data_map, Ts ...>(*this, rds, row_table, index));
+    return(remove_dups_common_<map_t, Ts ...>(*this, rds, row_table, index));
 }
 
 // ----------------------------------------------------------------------------
@@ -1334,7 +1367,13 @@ remove_duplicates (const char *name1,
                                   const T5 &, const T6 &,
                                   const IndexType &>;
     using count_vec = StlVecType<size_type>;
-    using data_map = std::unordered_map<data_tuple, count_vec, TupleHash>;
+    using map_t = std::unordered_map<
+        data_tuple, count_vec,
+        TupleHash,
+        std::equal_to<data_tuple>,
+        typename allocator_declare<
+            std::pair<const data_tuple, count_vec>, align_value>::type>;
+
 
     SpinGuard               guard (lock_);
     const ColumnVecType<T1> &vec1 = get_column<T1>(name1, false);
@@ -1352,7 +1391,7 @@ remove_duplicates (const char *name1,
             { vec1.size(), vec2.size(), vec3.size(), vec4.size(),
               vec5.size(), vec6.size(),
               index.size() });
-    data_map                row_table;
+    map_t                   row_table;
     count_vec               dummy_vec;
     const IndexType         dummy_idx { };
 
@@ -1369,7 +1408,7 @@ remove_duplicates (const char *name1,
         insert_res.first->second.push_back(i);
     }
 
-    return(remove_dups_common_<data_map, Ts ...>(*this, rds, row_table, index));
+    return(remove_dups_common_<map_t, Ts ...>(*this, rds, row_table, index));
 }
 
 // ----------------------------------------------------------------------------

@@ -103,7 +103,12 @@ static void
 fill_missing_linter_(ColumnVecType<T> &, const IndexVecType &, int);
 
 // Maps row number -> number of missing column(s)
-using DropRowMap = std::map<size_type, size_type>;
+using DropRowMap = std::map<
+    size_type, size_type,
+    std::less<size_type>,
+    typename allocator_declare<
+		std::pair<const size_type, size_type>, align_value>::type>;
+
 
 template<typename T>
 static void

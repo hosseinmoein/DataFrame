@@ -831,40 +831,52 @@ struct  ImpurityVisitor  {
 
         if (roll_count_ == 0 || roll_count_ > col_s)  return;
 
-        map_t       table (roll_count_ / 2);
+        map_t   table (roll_count_ / 2 + 1);
+
+        for (size_type i = 0; i < roll_count_; ++i)  {
+            auto    ret = table.insert(std::pair(*(column_begin + i), 0));
+
+            ret.first->second += 1.0;
+        }
+
         result_type result;
 
         result.reserve(col_s);
-        for (size_type i = 0; i < col_s; ++i)  {
-            const size_type roll_end = i + roll_count_;
-
-            if (roll_end > col_s)  break;
-            table.clear();
-            for (size_type j = i; j < roll_end; ++j)  {
-                auto    ret = table.insert(std::pair(*(column_begin + j), 0));
-
-                ret.first->second += 1.0;
-            }
-
+        for (size_type i = 1; i < col_s; ++i)  {
             double  sum = 0;
 
             if (imt_ == impurity_type::gini_index)  {
                 for (const auto &citer : table)  {
-                    const auto  val = citer.second / roll_count_;
+                    const auto  prob = citer.second / double(roll_count_);
 
-                    sum += val * val;
+                    sum += prob * prob;
                 }
                 sum = 1.0 - sum;
             }
             else  {  // impurity_type::info_entropy
                 for (const auto &citer : table)  {
-                    const auto  val = citer.second / roll_count_;
+                    const auto  prob = citer.second / double(roll_count_);
 
-                    sum += val * std::log2(val);
+                    sum += prob * std::log2(prob);
                 }
                 sum = -sum;
             }
             result.push_back(sum);
+
+            const size_type roll_end = i + roll_count_;
+
+            if (roll_end > col_s)  break;
+
+            auto    find_ret = table.find(*(column_begin + (i - 1)));
+
+            find_ret->second -= 1.0;  // It must find it -- no need to check
+            if (find_ret->second == 0)
+                table.erase(find_ret);
+
+            auto    insert_ret =
+                table.insert(std::pair(*(column_begin + (roll_end - 1)), 0));
+
+            insert_ret.first->second += 1.0;
         }
 
         result_.swap(result);

@@ -982,7 +982,7 @@ public:  // Data manipulation
     //
     template<typename T, typename ... Ts>
     void
-    sort(const char *name, sort_spec dir);
+    sort(const char *name, sort_spec dir, bool ignore_index = false);
 
     // This sort function sorts DataFrame based on two columns, also
     // specified by the two directions.
@@ -1016,7 +1016,8 @@ public:  // Data manipulation
     template<typename T1, typename T2, typename ... Ts>
     void
     sort(const char *name1, sort_spec dir1,
-         const char *name2, sort_spec dir2);
+         const char *name2, sort_spec dir2,
+         bool ignore_index = false);
 
     // This sort function is similar to above, but it uses 3 columns
     //
@@ -1024,7 +1025,8 @@ public:  // Data manipulation
     void
     sort(const char *name1, sort_spec dir1,
          const char *name2, sort_spec dir2,
-         const char *name3, sort_spec dir3);
+         const char *name3, sort_spec dir3,
+         bool ignore_index = false);
 
     // This sort function is similar to above, but it uses 4 columns
     //
@@ -1034,7 +1036,8 @@ public:  // Data manipulation
     sort(const char *name1, sort_spec dir1,
          const char *name2, sort_spec dir2,
          const char *name3, sort_spec dir3,
-         const char *name4, sort_spec dir4);
+         const char *name4, sort_spec dir4,
+         bool ignore_index = false);
 
     // This sort function is similar to above, but it uses 5 columns
     //
@@ -1045,24 +1048,28 @@ public:  // Data manipulation
          const char *name2, sort_spec dir2,
          const char *name3, sort_spec dir3,
          const char *name4, sort_spec dir4,
-         const char *name5, sort_spec dir5);
+         const char *name5, sort_spec dir5,
+         bool ignore_index = false);
 
     // Same as sort() above, but executed asynchronously
     //
     template<typename T, typename ... Ts>
     [[nodiscard]] std::future<void>
-    sort_async(const char *name, sort_spec dir);
+    sort_async(const char *name, sort_spec dir,
+               bool ignore_index = false);
 
     template<typename T1, typename T2, typename ... Ts>
     [[nodiscard]] std::future<void>
     sort_async(const char *name1, sort_spec dir1,
-               const char *name2, sort_spec dir2);
+               const char *name2, sort_spec dir2,
+               bool ignore_index = false);
 
     template<typename T1, typename T2, typename T3, typename ... Ts>
     [[nodiscard]] std::future<void>
     sort_async(const char *name1, sort_spec dir1,
                const char *name2, sort_spec dir2,
-               const char *name3, sort_spec dir3);
+               const char *name3, sort_spec dir3,
+               bool ignore_index = false);
 
     template<typename T1, typename T2, typename T3, typename T4,
              typename ... Ts>
@@ -1070,7 +1077,8 @@ public:  // Data manipulation
     sort_async(const char *name1, sort_spec dir1,
                const char *name2, sort_spec dir2,
                const char *name3, sort_spec dir3,
-               const char *name4, sort_spec dir4);
+               const char *name4, sort_spec dir4,
+               bool ignore_index = false);
 
     template<typename T1, typename T2, typename T3, typename T4, typename T5,
              typename ... Ts>
@@ -1079,7 +1087,8 @@ public:  // Data manipulation
                const char *name2, sort_spec dir2,
                const char *name3, sort_spec dir3,
                const char *name4, sort_spec dir4,
-               const char *name5, sort_spec dir5);
+               const char *name5, sort_spec dir5,
+               bool ignore_index = false);
 
     // This method groups the DataFrame by the named column of type T.
     // The group-by’ing is done by equality.

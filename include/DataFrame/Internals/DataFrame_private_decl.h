@@ -55,7 +55,7 @@ void read_csv2_(std::istream &file, bool columns_only);
 
 template<typename CF, typename ... Ts>
 static void
-sort_common_(DataFrame<I, H> &df, CF &&comp_func);
+sort_common_(DataFrame<I, H> &df, CF &&comp_func, bool ignore_index);
 
 template<typename T>
 static void

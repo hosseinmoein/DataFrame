@@ -120,7 +120,8 @@ void DataFrame<I, H>::remove_lock ()  { lock_ = nullptr; }
 
 template<typename I, typename H>
 template<typename CF, typename ... Ts>
-void DataFrame<I, H>::sort_common_(DataFrame<I, H> &df, CF &&comp_func)  {
+void DataFrame<I, H>::
+sort_common_(DataFrame<I, H> &df, CF &&comp_func, bool ignore_index)  {
 
     const size_type         idx_s = df.indices_.size();
     StlVecType<size_type>   sorting_idxs(idx_s, 0);
@@ -132,7 +133,8 @@ void DataFrame<I, H>::sort_common_(DataFrame<I, H> &df, CF &&comp_func)  {
 
     for (const auto &iter : df.data_)
         iter.change(functor);
-    _sort_by_sorted_index_(df.indices_, sorting_idxs, idx_s);
+    if (! ignore_index)
+        _sort_by_sorted_index_(df.indices_, sorting_idxs, idx_s);
 }
 
 // ----------------------------------------------------------------------------
@@ -687,7 +689,8 @@ void DataFrame<I, H>::shrink_to_fit ()  {
 
 template<typename I, typename H>
 template<typename T, typename ...Ts>
-void DataFrame<I, H>::sort(const char *name, sort_spec dir)  {
+void DataFrame<I, H>::
+sort(const char *name, sort_spec dir, bool ignore_index)  {
 
     make_consistent<Ts ...>();
 
@@ -703,9 +706,13 @@ void DataFrame<I, H>::sort(const char *name, sort_spec dir)  {
 
 
         if (dir == sort_spec::ascen)
-            sort_common_<decltype(a), Ts ...>(*this, std::move(a));
+            sort_common_<decltype(a), Ts ...>(*this,
+                                              std::move(a),
+                                              ignore_index);
         else
-            sort_common_<decltype(d), Ts ...>(*this, std::move(d));
+            sort_common_<decltype(d), Ts ...>(*this,
+                                              std::move(d),
+                                              ignore_index);
     }
     else  {
         const ColumnVecType<T>  &idx_vec = get_column<T>(name);
@@ -718,9 +725,13 @@ void DataFrame<I, H>::sort(const char *name, sort_spec dir)  {
                     };
 
         if (dir == sort_spec::ascen)
-            sort_common_<decltype(a), Ts ...>(*this, std::move(a));
+            sort_common_<decltype(a), Ts ...>(*this,
+                                              std::move(a),
+                                              ignore_index);
         else
-            sort_common_<decltype(d), Ts ...>(*this, std::move(d));
+            sort_common_<decltype(d), Ts ...>(*this,
+                                              std::move(d),
+                                              ignore_index);
     }
 
     return;
@@ -731,7 +742,8 @@ void DataFrame<I, H>::sort(const char *name, sort_spec dir)  {
 template<typename I, typename H>
 template<typename T1, typename T2, typename ... Ts>
 void DataFrame<I, H>::
-sort(const char *name1, sort_spec dir1, const char *name2, sort_spec dir2)  {
+sort(const char *name1, sort_spec dir1, const char *name2, sort_spec dir2,
+     bool ignore_index)  {
 
     make_consistent<Ts ...>();
 
@@ -769,7 +781,7 @@ sort(const char *name1, sort_spec dir1, const char *name2, sort_spec dir2)  {
                 return (vec2->at(i) > vec2->at(j));
         };
 
-    sort_common_<decltype(cf), Ts ...>(*this, std::move(cf));
+    sort_common_<decltype(cf), Ts ...>(*this, std::move(cf), ignore_index);
     return;
 }
 
@@ -780,7 +792,8 @@ template<typename T1, typename T2, typename T3, typename ... Ts>
 void DataFrame<I, H>::
 sort(const char *name1, sort_spec dir1,
      const char *name2, sort_spec dir2,
-     const char *name3, sort_spec dir3)  {
+     const char *name3, sort_spec dir3,
+     bool ignore_index)  {
 
     make_consistent<Ts ...>();
 
@@ -837,7 +850,7 @@ sort(const char *name1, sort_spec dir1,
                 return (vec3->at(i) > vec3->at(j));
         };
 
-    sort_common_<decltype(cf), Ts ...>(*this, std::move(cf));
+    sort_common_<decltype(cf), Ts ...>(*this, std::move(cf), ignore_index);
     return;
 }
 
@@ -849,7 +862,8 @@ void DataFrame<I, H>::
 sort(const char *name1, sort_spec dir1,
      const char *name2, sort_spec dir2,
      const char *name3, sort_spec dir3,
-     const char *name4, sort_spec dir4)  {
+     const char *name4, sort_spec dir4,
+     bool ignore_index)  {
 
     make_consistent<Ts ...>();
 
@@ -924,7 +938,7 @@ sort(const char *name1, sort_spec dir1,
                 return (vec4->at(i) > vec4->at(j));
         };
 
-    sort_common_<decltype(cf), Ts ...>(*this, std::move(cf));
+    sort_common_<decltype(cf), Ts ...>(*this, std::move(cf), ignore_index);
     return;
 }
 
@@ -938,7 +952,8 @@ sort(const char *name1, sort_spec dir1,
      const char *name2, sort_spec dir2,
      const char *name3, sort_spec dir3,
      const char *name4, sort_spec dir4,
-     const char *name5, sort_spec dir5)  {
+     const char *name5, sort_spec dir5,
+     bool ignore_index)  {
 
     make_consistent<Ts ...>();
 
@@ -1031,7 +1046,7 @@ sort(const char *name1, sort_spec dir1,
                 return (vec5->at(i) > vec5->at(j));
         };
 
-    sort_common_<decltype(cf), Ts ...>(*this, std::move(cf));
+    sort_common_<decltype(cf), Ts ...>(*this, std::move(cf), ignore_index);
     return;
 }
 
@@ -1040,11 +1055,13 @@ sort(const char *name1, sort_spec dir1,
 template<typename I, typename H>
 template<typename T, typename ...Ts>
 std::future<void>
-DataFrame<I, H>::sort_async(const char *name, sort_spec dir)  {
+DataFrame<I, H>::
+sort_async(const char *name, sort_spec dir,
+           bool ignore_index)  {
 
     return (std::async(std::launch::async,
-                       [name, dir, this] () -> void {
-                           this->sort<T, Ts ...>(name, dir);
+                       [name, dir, ignore_index, this] () -> void {
+                           this->sort<T, Ts ...>(name, dir, ignore_index);
                        }));
 }
 
@@ -1055,12 +1072,15 @@ template<typename T1, typename T2, typename ... Ts>
 std::future<void>
 DataFrame<I, H>::
 sort_async(const char *name1, sort_spec dir1,
-           const char *name2, sort_spec dir2)  {
+           const char *name2, sort_spec dir2,
+           bool ignore_index)  {
 
     return (std::async(std::launch::async,
-                       [name1, dir1, name2, dir2, this] () -> void {
+                       [name1, dir1, name2, dir2,
+                        ignore_index, this] () -> void {
                            this->sort<T1, T2, Ts ...>(name1, dir1,
-                                                      name2, dir2);
+                                                      name2, dir2,
+                                                      ignore_index);
                        }));
 }
 
@@ -1072,14 +1092,16 @@ std::future<void>
 DataFrame<I, H>::
 sort_async(const char *name1, sort_spec dir1,
            const char *name2, sort_spec dir2,
-           const char *name3, sort_spec dir3)  {
+           const char *name3, sort_spec dir3,
+           bool ignore_index)  {
 
     return (std::async(std::launch::async,
                        [name1, dir1, name2, dir2, name3, dir3,
-                        this] () -> void {
+                        ignore_index, this] () -> void {
                            this->sort<T1, T2, T3, Ts ...>(name1, dir1,
                                                           name2, dir2,
-                                                          name3, dir3);
+                                                          name3, dir3,
+                                                          ignore_index);
                        }));
 }
 
@@ -1092,15 +1114,17 @@ DataFrame<I, H>::
 sort_async(const char *name1, sort_spec dir1,
            const char *name2, sort_spec dir2,
            const char *name3, sort_spec dir3,
-           const char *name4, sort_spec dir4)  {
+           const char *name4, sort_spec dir4,
+           bool ignore_index)  {
 
     return (std::async(std::launch::async,
                        [name1, dir1, name2, dir2, name3, dir3, name4, dir4,
-                        this] () -> void {
+                        ignore_index, this] () -> void {
                            this->sort<T1, T2, T3, T4, Ts ...>(name1, dir1,
                                                               name2, dir2,
                                                               name3, dir3,
-                                                              name4, dir4);
+                                                              name4, dir4,
+                                                              ignore_index);
                        }));
 }
 
@@ -1115,16 +1139,18 @@ sort_async(const char *name1, sort_spec dir1,
            const char *name2, sort_spec dir2,
            const char *name3, sort_spec dir3,
            const char *name4, sort_spec dir4,
-           const char *name5, sort_spec dir5)  {
+           const char *name5, sort_spec dir5,
+           bool ignore_index)  {
 
     return (std::async(std::launch::async,
                        [name1, dir1, name2, dir2, name3, dir3, name4, dir4,
-                        name5, dir5, this] () -> void {
+                        name5, dir5, ignore_index, this] () -> void {
                            this->sort<T1, T2, T3, T4, T5, Ts ...>(name1, dir1,
                                                                   name2, dir2,
                                                                   name3, dir3,
                                                                   name4, dir4,
-                                                                  name5, dir5);
+                                                                  name5, dir5,
+                                                                  ignore_index);
                        }));
 }
 

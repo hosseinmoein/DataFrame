@@ -1206,94 +1206,6 @@ private:
 
 // ----------------------------------------------------------------------------
 
-// Exponential rolling adoptor for visitors
-// (decay * Xt) + ((1 − decay) * AVGt-1)
-//
-template<typename F, typename T, typename I = unsigned long, std::size_t A = 0>
-struct  ExponentialRollAdopter  {
-
-private:
-
-    using visitor_type = F;
-    using f_result_type = typename visitor_type::result_type;
-
-    visitor_type        visitor_ { };
-    const std::size_t   roll_count_;
-    const std::size_t   repeat_count_;
-    const T             decay_;
-    const bool          skip_nan_;
-
-public:
-
-    DEFINE_VISIT_BASIC_TYPES
-    using result_type =
-        std::vector<f_result_type,
-                    typename allocator_declare<f_result_type, A>::type>;
-
-    template <typename K, typename H>
-    inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &column_begin, const H &column_end)  {
-
-        GET_COL_SIZE
-
-        assert(roll_count_ != 0 && roll_count_ < col_s);
-
-        result_.resize(col_s, std::numeric_limits<f_result_type>::quiet_NaN());
-
-        std::size_t i = 0;
-
-        visitor_.pre();
-        for (; i < roll_count_; ++i)
-            visitor_(*(idx_begin + i), *(column_begin + i));
-        visitor_.post();
-        result_[i - 1] = visitor_.get_result();
-
-        for (; i < col_s; ++i)  {
-            if (skip_nan_ && is_nan__(*(column_begin + i)))  continue;
-            result_[i] = calc_value_(*(column_begin + i), result_[i - 1]);
-        }
-        for (i = 1; i < repeat_count_; ++i)
-            for (std::size_t j = roll_count_; j < col_s; ++j)  {
-                if (skip_nan_ && is_nan__(result_[i]))  continue;
-                result_[j] = calc_value_(result_[j], result_[j - 1]);
-            }
-    }
-
-    inline void pre ()  { visitor_.pre(); result_.clear(); }
-    inline void post ()  { visitor_.post(); }
-    DEFINE_RESULT
-
-    ExponentialRollAdopter(F &&functor,
-                           std::size_t r_count,
-                           exponential_decay_spec eds,
-                           double value,
-                           std::size_t repeat_count = 1,
-                           bool skip_nan = true)
-        : visitor_(std::move(functor)),
-          roll_count_(r_count),
-          repeat_count_(repeat_count),
-          decay_(eds == exponential_decay_spec::center_of_gravity
-                     ? 1.0 / (1.0 + value)
-                     : eds == exponential_decay_spec::span
-                         ? 2.0 / (1.0 + value)
-                         : eds == exponential_decay_spec::halflife
-                             ? 1.0 - std::exp(std::log(0.5) / value)
-                             : value),
-          skip_nan_(skip_nan)  {   }
-
-private:
-
-    inline value_type calc_value_(value_type i_value, value_type i_1_value)  {
-
-        return (decay_ * i_value + (T(1) - decay_) * i_1_value);
-    }
-
-    result_type result_ { };
-};
-
-// ----------------------------------------------------------------------------
-
 // One-pass stats calculation.
 //
 template<typename T,
@@ -1963,6 +1875,97 @@ private:
 
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 using ewm_v = ExponentiallyWeightedMeanVisitor<T, I, A>;
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+struct  ExponentiallyWeightedVarVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
+
+        GET_COL_SIZE
+        assert(col_s > 3);
+
+        result_type         ewmvar;
+        result_type         ewmstd;
+        const value_type    decay_comp = T(1) - decay_;
+
+        ewmvar.reserve(col_s);
+        ewmvar.push_back(std::numeric_limits<T>::quiet_NaN());
+        ewmstd.reserve(col_s);
+        ewmstd.push_back(std::numeric_limits<T>::quiet_NaN());
+        for (size_type i = 1; i < col_s; ++i)  {
+            value_type  sum_weights = 0;
+            value_type  sum_sq_weights = 0;
+            value_type  sum_weighted_input = 0;
+
+            for (long j = long(i); j >= 0; --j)  {
+                const value_type    weight = ::pow(decay_comp, j);
+                const value_type    input = *(column_begin + (i - j));
+
+                sum_weights += weight;
+                sum_weighted_input += weight * input;
+                sum_sq_weights += weight * weight;
+            }
+
+            // Calculate exponential moving average
+            const value_type    ewma = sum_weighted_input / sum_weights;
+            value_type          factor_sum = 0;
+
+            for (long j = long(i); j >= 0; --j)  {
+                const value_type    weight = ::pow(decay_comp, j);
+                const value_type    input = *(column_begin + (i - j));
+
+                factor_sum += weight * (input - ewma) * (input - ewma);
+            }
+
+            // Calculate exponential moving variance and standard deviation
+            // with bias
+            const value_type    sum_weights_sq = sum_weights * sum_weights;
+            const value_type    bias =
+                    sum_weights_sq / (sum_weights_sq - sum_sq_weights);
+            const value_type    val = bias * factor_sum / sum_weights;
+
+            ewmvar.push_back(val);
+            ewmstd.push_back(std::sqrt(val));
+        }
+
+        ewmvar_.swap(ewmvar);
+        ewmstd_.swap(ewmstd);
+    }
+
+    inline const result_type &get_result () const  { return (ewmvar_); }
+    inline result_type &get_result ()  { return (ewmvar_); }
+    inline const result_type &get_std () const  { return (ewmstd_); }
+    inline result_type &get_std ()  { return (ewmstd_); }
+
+    inline void pre ()  { ewmvar_.clear(); ewmstd_.clear(); }
+    inline void post ()  {  }
+
+    ExponentiallyWeightedVarVisitor(exponential_decay_spec eds,
+                                    value_type value)
+        : decay_(eds == exponential_decay_spec::center_of_gravity
+                 ? T(1) / (T(1) + value)
+                     : eds == exponential_decay_spec::span
+                         ? T(2) / (T(1) + value)
+                         : eds == exponential_decay_spec::halflife
+                             ? T(1) - std::exp(std::log(T(0.5)) / value)
+                             : value)  {   }
+
+private:
+
+    const value_type    decay_;
+    result_type         ewmvar_ {  };
+    result_type         ewmstd_ {  };
+};
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using ewm_var_v = ExponentiallyWeightedVarVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 

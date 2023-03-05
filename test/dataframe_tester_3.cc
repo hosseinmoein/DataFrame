@@ -1133,6 +1133,46 @@ static void test_ImpurityVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_ExponentiallyWeightedVarVisitor()  {
+
+    std::cout << "\nTesting ExponentiallyWeightedVarVisitor{  } ..."
+              << std::endl;
+
+    StlVecType<unsigned long>  idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466,
+          123467, 123468 };
+    StlVecType<double>         d1 =
+        { 1.0, 1.5, 1.0, 1.2, 1.7, 1.5, 1.2, 1.7, 1.7, 1.3, 1.4, 1.5, 1.2,
+          1.1, 1.15, 1.0 };
+    StlVecType<double>         d2 =
+        { 0.2, 0.58, -0.60, -0.08, 0.05, 0.87, 0.2, 0.4, 0.5, 0.06, 0.3, -0.34,
+          -0.9, 0.8, -0.4, 0.86 };
+    StlVecType<int>            i1 = { 22, 23, 24, 25, 99 };
+    MyDataFrame                 df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("values", d1),
+                 std::make_pair("benchmark", d2),
+                 std::make_pair("col_3", i1));
+
+    ewm_var_v<double>   ewmvar(exponential_decay_spec::span, 3);
+    const auto          result =
+        df.single_act_visit<double>("values", ewmvar).get_result();
+
+    assert(result.size() == 16);
+    assert(std::isnan(result[0]));
+    assert(fabs(result[1] - 0.125) < 0.001);
+    assert(fabs(result[2] - 0.0893) < 0.0001);
+    assert(fabs(result[3] - 0.0396) < 0.0001);
+    assert(fabs(result[4] - 0.1258) < 0.0001);
+    assert(fabs(result[15] - 0.0228) < 0.0001);
+    assert(fabs(result[14] - 0.0205) < 0.0001);
+    assert(fabs(result[13] - 0.0377) < 0.0001);
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     test_groupby_edge();
@@ -1156,6 +1196,7 @@ int main(int, char *[]) {
     test_from_indicators();
     test_TreynorRatioVisitor();
     test_ImpurityVisitor();
+    test_ExponentiallyWeightedVarVisitor();
 
     /*
     hmdf::SpinLock      locker;

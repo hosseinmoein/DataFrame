@@ -1970,6 +1970,97 @@ using ewm_var_v = ExponentiallyWeightedVarVisitor<T, I, A>;
 // ----------------------------------------------------------------------------
 
 template<typename T, typename I = unsigned long, std::size_t A = 0>
+struct  ExponentiallyWeightedCovVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &, const K &,
+                const H &x_begin, const H &x_end,
+                const H &y_begin, const H &y_end)  {
+
+        const size_type col_s = std::distance(x_begin, x_end);
+
+        assert((col_s == size_type(std::distance(y_begin, y_end))));
+        assert(col_s > 3);
+
+        result_type         ewmcov;
+        const value_type    decay_comp = T(1) - decay_;
+
+        ewmcov.reserve(col_s);
+        ewmcov.push_back(std::numeric_limits<T>::quiet_NaN());
+        for (size_type i = 1; i < col_s; ++i)  {
+            value_type  sum_weights = 0;
+            value_type  sum_sq_weights = 0;
+            value_type  sum_weighted_inputx = 0;
+            value_type  sum_weighted_inputy = 0;
+
+            for (long j = long(i); j >= 0; --j)  {
+                const value_type    weight = ::pow(decay_comp, j);
+                const value_type    inputx = *(x_begin + (i - j));
+                const value_type    inputy = *(y_begin + (i - j));
+
+                sum_weights += weight;
+                sum_weighted_inputx += weight * inputx;
+                sum_weighted_inputy += weight * inputy;
+                sum_sq_weights += weight * weight;
+            }
+
+            // Calculate exponential moving average
+            const value_type    ewmax = sum_weighted_inputx / sum_weights;
+            const value_type    ewmay = sum_weighted_inputy / sum_weights;
+            value_type          factor_sum = 0;
+
+            for (long j = long(i); j >= 0; --j)  {
+                const value_type    weight = ::pow(decay_comp, j);
+                const value_type    inputx = *(x_begin + (i - j));
+                const value_type    inputy = *(y_begin + (i - j));
+
+                factor_sum += weight * (inputx - ewmax) * (inputy - ewmay);
+            }
+
+            // Calculate exponential moving variance and standard deviation
+            // with bias
+            const value_type    sum_weights_sq = sum_weights * sum_weights;
+            const value_type    bias =
+                    sum_weights_sq / (sum_weights_sq - sum_sq_weights);
+            const value_type    val = bias * factor_sum / sum_weights;
+
+            ewmcov.push_back(val);
+        }
+
+        ewmcov_.swap(ewmcov);
+    }
+
+    inline const result_type &get_result () const  { return (ewmcov_); }
+    inline result_type &get_result ()  { return (ewmcov_); }
+
+    inline void pre ()  { ewmcov_.clear(); }
+    inline void post ()  {  }
+
+    ExponentiallyWeightedCovVisitor(exponential_decay_spec eds,
+                                    value_type value)
+        : decay_(eds == exponential_decay_spec::center_of_gravity
+                 ? T(1) / (T(1) + value)
+                     : eds == exponential_decay_spec::span
+                         ? T(2) / (T(1) + value)
+                         : eds == exponential_decay_spec::halflife
+                             ? T(1) - std::exp(std::log(T(0.5)) / value)
+                             : value)  {   }
+
+private:
+
+    const value_type    decay_;
+    result_type         ewmcov_ {  };
+};
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using ewm_cov_v = ExponentiallyWeightedCovVisitor<T, I, A>;
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct  ZeroLagMovingMeanVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3

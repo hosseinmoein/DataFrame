@@ -128,7 +128,7 @@ using ewm_var_v = ExponentiallyWeightedVarVisitor&lt;T, I, A&gt;;
       <td>
         This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
 
-        This visitor calculates exponentially weighted variance and standard deviation. It gives more weight to recent data by using a decay factor. get_result() returns the vector of EWM variance. There is also a get_std() that returns the vector of EWM standard deviation.<BR><BR>
+        This visitor calculates exponentially weighted variance and standard deviation. It gives more weight to recent data by using a decay factor. get_result() returns the vector of EWM variances. There is also a get_std() that returns the vector of EWM standard deviations.<BR><BR>
         Constructor:<BR>
         <I>
         <PRE>
@@ -172,11 +172,55 @@ using ewm_cov_v = ExponentiallyWeightedCovVisitor&lt;T, I, A&gt;;
       <td>
         This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
 
-        This visitor calculates exponentially weighted covariance. It gives more weight to recent data by using a decay factor. get_result() returns the vector of EWM covariance.
+        This visitor calculates exponentially weighted covariance. It gives more weight to recent data by using a decay factor. get_result() returns the vector of EWM covariances.
         Constructor:<BR>
         <I>
         <PRE>
     ExponentiallyWeightedCovVisitor(
+        exponential_decay_spec eds,  // See exponential_decay_spec type
+        double value);               // Value to be decayed
+        </PRE>
+        </I>
+      </td>
+      <td>
+        <B>T</B>: Column data type<BR>
+        <B>I</B>: Index type<BR>
+        <B>A</B>: Memory alignment boundary for vectors. Default is system default alignment<BR>
+      </td>
+    </tr>
+
+  </table>
+
+  <BR>
+
+  <table align="center" border="1">
+
+    <tr bgcolor="lightblue">
+      <th>Signature</th> <th>Description</th> <th>Parameters</th>
+    </tr>
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        <PRE><B>#include &lt;DataFrame/DataFrameStatsVisitors.h&gt;
+
+template&lt;typename T, typename I = unsigned long,
+         std::size_t A = 0&gt;
+struct ExponentiallyWeightedCorrVisitor;
+
+// -------------------------------------
+
+template&lt;typename T, typename I = unsigned long,
+         std::size_t A = 0&gt;
+using ewm_corr_v = ExponentiallyWeightedCorrVisitor&lt;T, I, A&gt;;
+        </B></PRE></font>
+      </td>
+      <td>
+        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
+
+        This visitor calculates exponentially weighted correlation. It gives more weight to recent data by using a decay factor. get_result() returns the vector of EWM correlations.
+        Constructor:<BR>
+        <I>
+        <PRE>
+    ExponentiallyWeightedCorrVisitor(
         exponential_decay_spec eds,  // See exponential_decay_spec type
         double value);               // Value to be decayed
         </PRE>
@@ -353,6 +397,44 @@ using ewm_cov_v = ExponentiallyWeightedCovVisitor&lt;T, I, A&gt;;
 <span class="line_wrapper">    assert<span style="color:#808030; ">(</span><span style="color:#603000; ">fabs</span><span style="color:#808030; ">(</span>result<span style="color:#808030; ">[</span><span style="color:#008c00; ">15</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">0.0263</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.0001</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper">    assert<span style="color:#808030; ">(</span><span style="color:#603000; ">fabs</span><span style="color:#808030; ">(</span>result<span style="color:#808030; ">[</span><span style="color:#008c00; ">14</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">0.0121</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.0001</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper">    assert<span style="color:#808030; ">(</span><span style="color:#603000; ">fabs</span><span style="color:#808030; ">(</span>result<span style="color:#808030; ">[</span><span style="color:#008c00; ">13</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">0.0197</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.0001</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"><span style="color:#800080; ">}</span></span>
+<span class="line_wrapper"></span></pre>
+
+<pre class="code_syntax" style="color:#000000;background:#ffffff;"><span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#696969; ">// -----------------------------------------------------------------------------</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">static</span> <span style="color:#800000; font-weight:bold; ">void</span> test_ExponentiallyWeightedCorrVisitor<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">cout</span> <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> <span style="color:#800000; ">"</span><span style="color:#0f69ff; ">\n</span><span style="color:#0000e6; ">Testing ExponentiallyWeightedCorrVisitor{  } ...</span><span style="color:#800000; ">"</span></span>
+<span class="line_wrapper">              <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">endl</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    StlVecType<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#800080; ">&gt;</span>  idx <span style="color:#808030; ">=</span></span>
+<span class="line_wrapper">        <span style="color:#800080; ">{</span> <span style="color:#008c00; ">123450</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">123451</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">123452</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">123453</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">123454</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">123455</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">123456</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">          <span style="color:#008c00; ">123457</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">123458</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">123459</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">123460</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">123461</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">123462</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">123466</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">123467</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">123468</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    StlVecType<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span>         d1 <span style="color:#808030; ">=</span></span>
+<span class="line_wrapper">        <span style="color:#800080; ">{</span> <span style="color:#008000; ">1.0</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">1.5</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">1.0</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">1.2</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">1.7</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">1.5</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">1.2</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">1.7</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">1.7</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">1.3</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">1.4</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">1.5</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">1.2</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">1.1</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">1.15</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">1.0</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    StlVecType<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span>         d2 <span style="color:#808030; ">=</span></span>
+<span class="line_wrapper">        <span style="color:#800080; ">{</span> <span style="color:#008000; ">1.5</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">1.0</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">1.1</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">1.3</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">1.35</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">1.2</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">1.2</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">1.6</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">1.6</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">1.8</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">1.4</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">1.5</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">1.25</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">1.3</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">1.25</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">1.0</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    StlVecType<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">int</span><span style="color:#800080; ">&gt;</span>            i1 <span style="color:#808030; ">=</span> <span style="color:#800080; ">{</span> <span style="color:#008c00; ">22</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">23</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">24</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">25</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">99</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    MyDataFrame                df<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    df<span style="color:#808030; ">.</span>load_data<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">move</span><span style="color:#808030; ">(</span>idx<span style="color:#808030; ">)</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                 <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>make_pair<span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">X Column</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> d1<span style="color:#808030; ">)</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                 <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>make_pair<span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">Y Column</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> d2<span style="color:#808030; ">)</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                 <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>make_pair<span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">col_3</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> i1<span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    ewm_corr_v<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span>  ewmcorr<span style="color:#808030; ">(</span>exponential_decay_spec<span style="color:#800080; ">::</span>span<span style="color:#808030; ">,</span> <span style="color:#008c00; ">3</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">auto</span>          <span style="color:#808030; ">&amp;</span>result <span style="color:#808030; ">=</span> df<span style="color:#808030; ">.</span>single_act_visit<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">X Column</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">Y Column</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> ewmcorr<span style="color:#808030; ">)</span><span style="color:#808030; ">.</span>get_result<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span>result<span style="color:#808030; ">.</span>size<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008c00; ">16</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>isnan<span style="color:#808030; ">(</span>result<span style="color:#808030; ">[</span><span style="color:#008c00; ">0</span><span style="color:#808030; ">]</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span><span style="color:#603000; ">fabs</span><span style="color:#808030; ">(</span>result<span style="color:#808030; ">[</span><span style="color:#008c00; ">1</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">-</span> <span style="color:#808030; ">-</span><span style="color:#008000; ">1.0</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.001</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span><span style="color:#603000; ">fabs</span><span style="color:#808030; ">(</span>result<span style="color:#808030; ">[</span><span style="color:#008c00; ">2</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">-</span> <span style="color:#808030; ">-</span><span style="color:#008000; ">0.5153</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.0001</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span><span style="color:#603000; ">fabs</span><span style="color:#808030; ">(</span>result<span style="color:#808030; ">[</span><span style="color:#008c00; ">3</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">-</span> <span style="color:#808030; ">-</span><span style="color:#008000; ">0.2841</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.0001</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span><span style="color:#603000; ">fabs</span><span style="color:#808030; ">(</span>result<span style="color:#808030; ">[</span><span style="color:#008c00; ">4</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">0.4287</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.0001</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span><span style="color:#603000; ">fabs</span><span style="color:#808030; ">(</span>result<span style="color:#808030; ">[</span><span style="color:#008c00; ">15</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">0.8746</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.0001</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span><span style="color:#603000; ">fabs</span><span style="color:#808030; ">(</span>result<span style="color:#808030; ">[</span><span style="color:#008c00; ">14</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">0.714</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.0001</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span><span style="color:#603000; ">fabs</span><span style="color:#808030; ">(</span>result<span style="color:#808030; ">[</span><span style="color:#008c00; ">13</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">0.6865</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.0001</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper"><span style="color:#800080; ">}</span></span>
 <span class="line_wrapper"></span></pre>
 

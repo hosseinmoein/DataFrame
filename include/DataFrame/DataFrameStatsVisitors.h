@@ -1822,30 +1822,15 @@ struct  ExponentiallyWeightedMeanVisitor  {
         }
         else  {  // Adjust for the fact that this is not an infinite data set
             value_type  denominator = 1;
-            value_type  dc_p = 1;
+            value_type  decay_comp_prod = 1;
             value_type  numerator = result[0];
 
             for (size_type i = 1; i < col_s; ++i)  {
-                dc_p *= decay_comp;
-                denominator += dc_p;
+                decay_comp_prod *= decay_comp;
+                denominator += decay_comp_prod;
                 numerator = numerator * decay_comp + *(column_begin + i);
                 result[i] = numerator / denominator;
             }
-
-            /*
-            for (size_type i = 1; i < col_s; ++i)  {
-                value_type  denominator = 0;
-                value_type  dc_p = 1;
-                value_type  numerator = 0;
-
-                for (long j = static_cast<long>(i); j >= 0; --j)  {
-                    numerator += dc_p * *(column_begin + j);
-                    denominator += dc_p;
-                    dc_p *= decay_comp;
-                }
-                result[i] = numerator / denominator;
-            }
-            */
         }
 
         result_.swap(result);
@@ -1929,10 +1914,10 @@ struct  ExponentiallyWeightedVarVisitor  {
             const value_type    sum_weights_sq = sum_weights * sum_weights;
             const value_type    bias =
                     sum_weights_sq / (sum_weights_sq - sum_sq_weights);
-            const value_type    val = bias * factor_sum / sum_weights;
+            const value_type    var = bias * factor_sum / sum_weights;
 
-            ewmvar.push_back(val);
-            ewmstd.push_back(std::sqrt(val));
+            ewmvar.push_back(var);
+            ewmstd.push_back(std::sqrt(var));
         }
 
         ewmvar_.swap(ewmvar);
@@ -2020,14 +2005,13 @@ struct  ExponentiallyWeightedCovVisitor  {
                 factor_sum += weight * (inputx - ewmax) * (inputy - ewmay);
             }
 
-            // Calculate exponential moving variance and standard deviation
-            // with bias
+            // Calculate exponential moving covariance with bias
             const value_type    sum_weights_sq = sum_weights * sum_weights;
             const value_type    bias =
                     sum_weights_sq / (sum_weights_sq - sum_sq_weights);
-            const value_type    val = bias * factor_sum / sum_weights;
+            const value_type    cov = bias * factor_sum / sum_weights;
 
-            ewmcov.push_back(val);
+            ewmcov.push_back(cov);
         }
 
         ewmcov_.swap(ewmcov);
@@ -2057,6 +2041,102 @@ private:
 
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 using ewm_cov_v = ExponentiallyWeightedCovVisitor<T, I, A>;
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+struct  ExponentiallyWeightedCorrVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &, const K &,
+                const H &x_begin, const H &x_end,
+                const H &y_begin, const H &y_end)  {
+
+        const size_type col_s = std::distance(x_begin, x_end);
+
+        assert((col_s == size_type(std::distance(y_begin, y_end))));
+        assert(col_s > 3);
+
+        result_type         ewmcorr;
+        const value_type    decay_comp = T(1) - decay_;
+
+        ewmcorr.reserve(col_s);
+        ewmcorr.push_back(std::numeric_limits<T>::quiet_NaN());
+        for (size_type i = 1; i < col_s; ++i)  {
+            value_type  sum_weights = 0;
+            value_type  sum_sq_weights = 0;
+            value_type  sum_weighted_inputx = 0;
+            value_type  sum_weighted_inputy = 0;
+
+            for (long j = long(i); j >= 0; --j)  {
+                const value_type    weight = ::pow(decay_comp, j);
+                const value_type    inputx = *(x_begin + (i - j));
+                const value_type    inputy = *(y_begin + (i - j));
+
+                sum_weights += weight;
+                sum_weighted_inputx += weight * inputx;
+                sum_weighted_inputy += weight * inputy;
+                sum_sq_weights += weight * weight;
+            }
+
+            // Calculate exponential moving average
+            const value_type    ewmax = sum_weighted_inputx / sum_weights;
+            const value_type    ewmay = sum_weighted_inputy / sum_weights;
+            value_type          factor_sum = 0;
+            value_type          factor_sumx = 0;
+            value_type          factor_sumy = 0;
+
+            for (long j = long(i); j >= 0; --j)  {
+                const value_type    weight = ::pow(decay_comp, j);
+                const value_type    inputx = *(x_begin + (i - j));
+                const value_type    inputy = *(y_begin + (i - j));
+
+                factor_sum += weight * (inputx - ewmax) * (inputy - ewmay);
+                factor_sumx += weight * (inputx - ewmax) * (inputx - ewmax);
+                factor_sumy += weight * (inputy - ewmay) * (inputy - ewmay);
+            }
+
+            // Calculate exponential moving correlation with bias
+            const value_type    sum_weights_sq = sum_weights * sum_weights;
+            const value_type    bias =
+                    sum_weights_sq / (sum_weights_sq - sum_sq_weights);
+            const value_type    cov = bias * factor_sum / sum_weights;
+            const value_type    varx = bias * factor_sumx / sum_weights;
+            const value_type    vary = bias * factor_sumy / sum_weights;
+
+            ewmcorr.push_back(cov / std::sqrt(varx * vary));
+        }
+
+        ewmcorr_.swap(ewmcorr);
+    }
+
+    inline const result_type &get_result () const  { return (ewmcorr_); }
+    inline result_type &get_result ()  { return (ewmcorr_); }
+
+    inline void pre ()  { ewmcorr_.clear(); }
+    inline void post ()  {  }
+
+    ExponentiallyWeightedCorrVisitor(exponential_decay_spec eds,
+                                     value_type value)
+        : decay_(eds == exponential_decay_spec::center_of_gravity
+                 ? T(1) / (T(1) + value)
+                     : eds == exponential_decay_spec::span
+                         ? T(2) / (T(1) + value)
+                         : eds == exponential_decay_spec::halflife
+                             ? T(1) - std::exp(std::log(T(0.5)) / value)
+                             : value)  {   }
+
+private:
+
+    const value_type    decay_;
+    result_type         ewmcorr_ {  };
+};
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using ewm_corr_v = ExponentiallyWeightedCorrVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 

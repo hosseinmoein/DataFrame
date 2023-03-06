@@ -1214,6 +1214,47 @@ static void test_ExponentiallyWeightedCovVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_ExponentiallyWeightedCorrVisitor()  {
+
+    std::cout << "\nTesting ExponentiallyWeightedCorrVisitor{  } ..."
+              << std::endl;
+
+    StlVecType<unsigned long>  idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466,
+          123467, 123468 };
+    StlVecType<double>         d1 =
+        { 1.0, 1.5, 1.0, 1.2, 1.7, 1.5, 1.2, 1.7, 1.7, 1.3, 1.4, 1.5, 1.2,
+          1.1, 1.15, 1.0 };
+    StlVecType<double>         d2 =
+        { 1.5, 1.0, 1.1, 1.3, 1.35, 1.2, 1.2, 1.6, 1.6, 1.8, 1.4, 1.5, 1.25,
+          1.3, 1.25, 1.0 };
+    StlVecType<int>            i1 = { 22, 23, 24, 25, 99 };
+    MyDataFrame                df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("X Column", d1),
+                 std::make_pair("Y Column", d2),
+                 std::make_pair("col_3", i1));
+
+    ewm_corr_v<double>  ewmcorr(exponential_decay_spec::span, 3);
+    const auto          &result =
+        df.single_act_visit<double, double>
+            ("X Column", "Y Column", ewmcorr).get_result();
+
+    assert(result.size() == 16);
+    assert(std::isnan(result[0]));
+    assert(fabs(result[1] - -1.0) < 0.001);
+    assert(fabs(result[2] - -0.5153) < 0.0001);
+    assert(fabs(result[3] - -0.2841) < 0.0001);
+    assert(fabs(result[4] - 0.4287) < 0.0001);
+    assert(fabs(result[15] - 0.8746) < 0.0001);
+    assert(fabs(result[14] - 0.714) < 0.0001);
+    assert(fabs(result[13] - 0.6865) < 0.0001);
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     test_groupby_edge();
@@ -1239,6 +1280,7 @@ int main(int, char *[]) {
     test_ImpurityVisitor();
     test_ExponentiallyWeightedVarVisitor();
     test_ExponentiallyWeightedCovVisitor();
+    test_ExponentiallyWeightedCorrVisitor();
 
     /*
     hmdf::SpinLock      locker;

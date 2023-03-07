@@ -468,23 +468,30 @@ struct _col_data_spec_  {
 // --------------------------------------
 
 template<typename I, typename H>
-void DataFrame<I, H>::read_csv2_(std::istream &stream, bool columns_only)  {
+void DataFrame<I, H>::
+read_csv2_(std::istream &stream,
+           bool columns_only,
+           size_type starting_row,
+           size_type num_rows)  {
 
-    char                            value[8192];
-    char                            c;
-    StlVecType<_col_data_spec_>  spec_vec;
-    bool                            header_read = false;
-    size_type                       col_index = 0;
+    char                        value[8192];
+    char                        c;
+    StlVecType<_col_data_spec_> spec_vec;
+    bool                        header_read = false;
+    size_type                   col_index = 0;
+    size_type                   data_rows_read = 0;
 
     spec_vec.reserve(32);
     while (stream.get(c)) {
-        if (c == '#' || c == '\n' || c == '\r' || c == '\0') {
+        if (c == '#' || c == '\r' || c == '\n' || c == '\0')  {
             if (c == '#')  {
                 while (stream.get(c))
                     if (c == '\n') break;
             }
-            else if (c == '\n')
+            else if (c == '\n')  {
                 col_index = 0;
+                if (header_read && ++data_rows_read >= num_rows)  break;
+            }
 
             continue;
         }
@@ -499,73 +506,87 @@ void DataFrame<I, H>::read_csv2_(std::istream &stream, bool columns_only)  {
             _get_token_from_file_(stream, ':', value); // Get the size
             stream.get(c);
             if (c != '<')
-                throw DataFrameError("DataFrame::read_csv2_(): ERROR: Expected "
-                                     "'<' char to specify column type");
+                throw DataFrameError(
+                    "DataFrame::read_csv2_(): ERROR: Expected "
+                    "'<' char to specify column type");
             _get_token_from_file_(stream, '>', type_str);
             stream.get(c);
-            if (c == '\n' || c == '\r')  header_read = true;
+            if (c == '\n' || c == '\r')  {
+                header_read = true;
+
+                size_type   row_cnt = 0;
+
+                // Jump to the starting row
+                while (row_cnt < starting_row && stream.get(c))
+                    if (c == '\r' || c == '\n')
+                        row_cnt += 1;
+            }
+
+            const size_type nrows =
+                num_rows == std::numeric_limits<size_type>::max()
+                    ? size_type(atoi(value)) : num_rows;
 
             if (! ::strcmp(type_str, "float"))
                 spec_vec.emplace_back(StlVecType<float>(),
                                       type_str,
                                       col_name,
-                                      ::atoi(value));
+                                      nrows);
             else if (! ::strcmp(type_str, "double"))
                 spec_vec.emplace_back(StlVecType<double>(),
                                       type_str,
                                       col_name,
-                                      ::atoi(value));
+                                      nrows);
             else if (! ::strcmp(type_str, "longdouble"))
                 spec_vec.emplace_back(StlVecType<long double>(),
                                       type_str,
                                       col_name,
-                                      ::atoi(value));
+                                      nrows);
             else if (! ::strcmp(type_str, "int"))
                 spec_vec.emplace_back(StlVecType<int>(),
                                       type_str,
                                       col_name,
-                                      ::atoi(value));
+                                      nrows);
             else if (! ::strcmp(type_str, "uint"))
                 spec_vec.emplace_back(StlVecType<unsigned int>(),
                                       type_str,
                                       col_name,
-                                      ::atoi(value));
+                                      nrows);
             else if (! ::strcmp(type_str, "long"))
                 spec_vec.emplace_back(StlVecType<long>(),
                                       type_str,
                                       col_name,
-                                      ::atoi(value));
+                                      nrows);
             else if (! ::strcmp(type_str, "longlong"))
                 spec_vec.emplace_back(StlVecType<long long>(),
                                       type_str,
                                       col_name,
-                                      ::atoi(value));
+                                      nrows);
             else if (! ::strcmp(type_str, "ulong"))
                 spec_vec.emplace_back(StlVecType<unsigned long>(),
                                       type_str,
                                       col_name,
-                                      ::atoi(value));
+                                      nrows);
             else if (! ::strcmp(type_str, "ulonglong"))
                 spec_vec.emplace_back(StlVecType<unsigned long long>(),
                                       type_str,
                                       col_name,
-                                      ::atoi(value));
+                                      nrows);
             else if (! ::strcmp(type_str, "string"))
                 spec_vec.emplace_back(StlVecType<std::string>(),
                                       type_str,
                                       col_name,
-                                      ::atoi(value));
+                                      nrows);
             // This includes DateTime, DateTimeAME, DateTimeEUR, DateTimeISO
             else if (! ::strncmp(type_str, "DateTime", 8))
                 spec_vec.emplace_back(StlVecType<DateTime>(),
                                       type_str,
                                       col_name,
-                                      ::atoi(value));
+                                      nrows);
             else if (! ::strcmp(type_str, "bool"))
                 spec_vec.emplace_back(StlVecType<bool>(),
                                       type_str,
                                       col_name,
-                                      ::atoi(value));
+                                      nrows);
             else
                 throw DataFrameError("DataFrame::read_csv2_(): ERROR: "
                                      "Unknown column type");
@@ -770,7 +791,11 @@ void DataFrame<I, H>::read_csv2_(std::istream &stream, bool columns_only)  {
 
 template<typename I, typename H>
 bool DataFrame<I, H>::
-read (const char *file_name, io_format iof, bool columns_only)  {
+read (const char *file_name,
+      io_format iof,
+      bool columns_only,
+      size_type starting_row,
+      size_type num_rows)  {
 
     std::ifstream       stream;
     const IOStreamOpti  io_opti(stream, file_name);
@@ -778,11 +803,11 @@ read (const char *file_name, io_format iof, bool columns_only)  {
     if (stream.fail())  {
         String1K    err;
 
-        err.printf("read(): ERROR: Unable to open stream '%s'", file_name);
+        err.printf("read(): ERROR: Unable to open file '%s'", file_name);
         throw DataFrameError(err.c_str());
     }
 
-    read<std::istream>(stream, iof, columns_only);
+    read<std::istream>(stream, iof, columns_only, starting_row, num_rows);
     return (true);
 }
 
@@ -790,17 +815,35 @@ read (const char *file_name, io_format iof, bool columns_only)  {
 
 template<typename I, typename H>
 template<typename S>
-bool DataFrame<I, H>::read (S &in_s, io_format iof, bool columns_only)  {
+bool DataFrame<I, H>::
+read (S &in_s,
+      io_format iof,
+      bool columns_only,
+      size_type starting_row,
+      size_type num_rows)  {
 
     static_assert(std::is_base_of<HeteroVector<align_value>, DataVec>::value,
                   "Only a StdDataFrame can call read()");
 
-    if (iof == io_format::csv)
+    if (iof == io_format::csv)  {
+        if (starting_row != 0 ||
+            num_rows != std::numeric_limits<size_type>::max())
+            throw NotImplemented("read(): Reading files in chunks is currently"
+                                 " only impelemented for io_format::csv2");
+
         read_csv_ (in_s, columns_only);
-    else if (iof == io_format::csv2)
-        read_csv2_ (in_s, columns_only);
-    else if (iof == io_format::json)
+    }
+    else if (iof == io_format::csv2)  {
+        read_csv2_ (in_s, columns_only, starting_row, num_rows);
+    }
+    else if (iof == io_format::json)  {
+        if (starting_row != 0 ||
+            num_rows != std::numeric_limits<size_type>::max())
+            throw NotImplemented("read(): Reading files in chunks is currently"
+                                 " only impelemented for io_format::csv2");
+
         read_json_ (in_s, columns_only);
+    }
     else
         throw NotImplemented("read(): This io_format is not implemented");
 
@@ -823,11 +866,24 @@ DataFrame<I, H>::from_string (const char *data_frame)  {
 
 template<typename I, typename H>
 std::future<bool> DataFrame<I, H>::
-read_async(const char *file_name, io_format iof, bool columns_only) {
+read_async(const char *file_name,
+           io_format iof,
+           bool columns_only,
+           size_type starting_row,
+           size_type num_rows) {
 
     return (std::async(std::launch::async,
-                       [file_name, iof, columns_only, this] () -> bool  {
-                           return (this->read(file_name, iof, columns_only));
+                       [file_name,
+                        iof,
+                        columns_only,
+                        starting_row,
+                        num_rows,
+                        this] () -> bool  {
+                           return (this->read(file_name,
+                                              iof,
+                                              columns_only,
+                                              starting_row,
+                                              num_rows));
                        }));
 }
 
@@ -836,11 +892,24 @@ read_async(const char *file_name, io_format iof, bool columns_only) {
 template<typename I, typename H>
 template<typename S>
 std::future<bool> DataFrame<I, H>::
-read_async(S &in_s, io_format iof, bool columns_only) {
+read_async(S &in_s,
+           io_format iof,
+           bool columns_only,
+           size_type starting_row,
+           size_type num_rows) {
 
     return (std::async(std::launch::async,
-                       [&in_s, iof, columns_only, this] () -> bool  {
-                           return (this->read<S>(in_s, iof, columns_only));
+                       [&in_s,
+                        iof,
+                        columns_only,
+                        starting_row,
+                        num_rows,
+                        this] () -> bool  {
+                           return (this->read<S>(in_s,
+                                                 iof,
+                                                 columns_only,
+                                                 starting_row,
+                                                 num_rows));
                        }));
 }
 

@@ -1255,6 +1255,48 @@ static void test_ExponentiallyWeightedCorrVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_reading_in_chunks()  {
+
+    std::cout << "\nTesting reading_in_chunks(  ) ..." << std::endl;
+
+    try  {
+        StrDataFrame    df1;
+
+        df1.read("data/SHORT_IBM.csv", io_format::csv2, false, 0, 10);
+        assert(df1.get_index().size() == 10);
+        assert(df1.get_column<double>("IBM_Close").size() == 10);
+        assert(df1.get_index()[0] == "2014-01-02");
+        assert(df1.get_index()[9] == "2014-01-15");
+        assert(fabs(df1.get_column<double>("IBM_Close")[0] - 185.53) < 0.0001);
+        assert(fabs(df1.get_column<double>("IBM_Close")[9] - 187.74) < 0.0001);
+
+        StrDataFrame    df2;
+
+        df2.read("data/SHORT_IBM.csv", io_format::csv2, false, 800, 10);
+        assert(df2.get_index().size() == 10);
+        assert(df2.get_column<double>("IBM_Close").size() == 10);
+        assert(df2.get_index()[0] == "2017-03-08");
+        assert(df2.get_index()[9] == "2017-03-21");
+        assert(fabs(df2.get_column<double>("IBM_Close")[0] - 179.45) < 0.0001);
+        assert(fabs(df2.get_column<double>("IBM_Close")[9] - 173.88) < 0.0001);
+
+        StrDataFrame    df3;
+
+        df3.read("data/SHORT_IBM.csv", io_format::csv2, false, 1716, 10);
+        assert(df3.get_index().size() == 5);
+        assert(df3.get_column<double>("IBM_Close").size() == 5);
+        assert(df3.get_index()[0] == "2020-10-26");
+        assert(df3.get_index()[4] == "2020-10-30");
+        assert(fabs(df3.get_column<double>("IBM_Close")[0] - 112.22) < 0.0001);
+        assert(fabs(df3.get_column<double>("IBM_Close")[4] - 111.66) < 0.0001);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     test_groupby_edge();
@@ -1281,6 +1323,7 @@ int main(int, char *[]) {
     test_ExponentiallyWeightedVarVisitor();
     test_ExponentiallyWeightedCovVisitor();
     test_ExponentiallyWeightedCorrVisitor();
+    test_reading_in_chunks();
 
     /*
     hmdf::SpinLock      locker;

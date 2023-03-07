@@ -51,7 +51,10 @@ append_row_(std::pair<const char *, T> &row_name_data);
 
 void read_json_(std::istream &file, bool columns_only);
 void read_csv_(std::istream &file, bool columns_only);
-void read_csv2_(std::istream &file, bool columns_only);
+void read_csv2_(std::istream &file,
+                bool columns_only,
+                size_type starting_row,
+                size_type num_rows);
 
 template<typename CF, typename ... Ts>
 static void

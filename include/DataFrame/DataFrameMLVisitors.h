@@ -51,10 +51,9 @@ namespace hmdf
 
 // One pass simple linear regression
 //
-template<typename T,
-         typename I = unsigned long,
+template<typename T, typename I = unsigned long,
          typename =
-             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
 struct SLRegressionVisitor  {
 
 public:
@@ -126,9 +125,7 @@ private:
 // ----------------------------------------------------------------------------
 
 template<std::size_t K,
-         typename T,
-         typename I = unsigned long,
-         std::size_t A = 0>
+         typename T, typename I = unsigned long, std::size_t A = 0>
 struct  KMeansVisitor  {
 
 public:
@@ -489,7 +486,9 @@ public:
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long, std::size_t A = 0>
+template<typename T, typename I = unsigned long, std::size_t A = 0,
+         typename =
+             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
 struct FastFourierTransVisitor {
 
 public:
@@ -766,7 +765,9 @@ using fft_v = FastFourierTransVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long, std::size_t A = 0>
+template<typename T, typename I = unsigned long, std::size_t A = 0,
+         typename =
+             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
 struct  EntropyVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3

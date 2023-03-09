@@ -228,7 +228,9 @@ private:
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long>
+template<typename T, typename I = unsigned long,
+         typename =
+             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
 struct MeanBase {
 
     DEFINE_VISIT_BASIC_TYPES_2
@@ -277,7 +279,9 @@ struct MeanVisitor : public MeanBase<T, I>  {
 
 // Welford's algorithm for the running mean
 //
-template<typename T, typename I = unsigned long>
+template<typename T, typename I = unsigned long,
+         typename =
+             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
 struct StableMeanVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_2
@@ -417,7 +421,9 @@ struct QuadraticMeanVisitor : public MeanBase<T, I>  {
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long>
+template<typename T, typename I = unsigned long,
+         typename =
+             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
 struct ProdVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_2
@@ -580,10 +586,9 @@ using NSmallestVisitor = NExtremumVisitor<N, T, I, std::greater<T>>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T,
-         typename I = unsigned long,
+template<typename T, typename I = unsigned long,
          typename =
-             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
 struct CovVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_2
@@ -644,10 +649,9 @@ private:
 
 // ----------------------------------------------------------------------------
 
-template<typename T,
-         typename I = unsigned long,
+template<typename T, typename I = unsigned long,
          typename =
-             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
 struct VarVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_2
@@ -672,10 +676,9 @@ private:
 
 // ----------------------------------------------------------------------------
 
-template<typename T,
-         typename I = unsigned long,
+template<typename T, typename I = unsigned long,
          typename =
-             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
 struct BetaVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_2
@@ -711,10 +714,9 @@ private:
 
 // ----------------------------------------------------------------------------
 
-template<typename T,
-         typename I = unsigned long,
+template<typename T, typename I = unsigned long,
          typename =
-             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
 struct StdVisitor   {
 
     DEFINE_VISIT_BASIC_TYPES_2
@@ -742,10 +744,9 @@ private:
 
 // Standard Error of the Mean
 //
-template<typename T,
-         typename I = unsigned long,
+template<typename T, typename I = unsigned long,
          typename =
-             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
 struct SEMVisitor   {
 
     DEFINE_VISIT_BASIC_TYPES_2
@@ -778,10 +779,9 @@ using sem_v = SEMVisitor<T, I>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T,
-         typename I = unsigned long,
+template<typename T, typename I = unsigned long,
          typename =
-             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
 struct TrackingErrorVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_2
@@ -809,10 +809,9 @@ using te_v = TrackingErrorVisitor<T, I>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T,
-         typename I = unsigned long,
+template<typename T, typename I = unsigned long,
          typename =
-             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
 struct CorrVisitor  {
 
 public:
@@ -845,10 +844,9 @@ private:
 
 // ----------------------------------------------------------------------------
 
-template<typename T,
-         typename I = unsigned long,
+template<typename T, typename I = unsigned long,
          typename =
-             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
 struct DotProdVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_2
@@ -1208,10 +1206,9 @@ private:
 
 // One-pass stats calculation.
 //
-template<typename T,
-         typename I = unsigned long,
+template<typename T, typename I = unsigned long,
          typename =
-             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
 struct StatsVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_2
@@ -1279,10 +1276,9 @@ private:
 
 // ----------------------------------------------------------------------------
 
-template<typename T,
-         typename I = unsigned long,
+template<typename T, typename I = unsigned long,
          typename =
-             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
 struct TTestVisitor  {
 
 public:
@@ -1707,7 +1703,9 @@ private:
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long, std::size_t A = 0>
+template<typename T, typename I = unsigned long, std::size_t A = 0,
+         typename =
+             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
 struct AutoCorrVisitor  {
 
     template<typename U>
@@ -1798,7 +1796,9 @@ private:
 // ------------------------------------------------------------------------
 //          1 + (1 - decay) + (1 - decay)^2 + ... + (1 - decay)^t
 //
-template<typename T, typename I = unsigned long, std::size_t A = 0>
+template<typename T, typename I = unsigned long, std::size_t A = 0,
+         typename =
+             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
 struct  ExponentiallyWeightedMeanVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -1863,7 +1863,9 @@ using ewm_v = ExponentiallyWeightedMeanVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long, std::size_t A = 0>
+template<typename T, typename I = unsigned long, std::size_t A = 0,
+         typename =
+             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
 struct  ExponentiallyWeightedVarVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -1954,7 +1956,9 @@ using ewm_var_v = ExponentiallyWeightedVarVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long, std::size_t A = 0>
+template<typename T, typename I = unsigned long, std::size_t A = 0,
+         typename =
+             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
 struct  ExponentiallyWeightedCovVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -2044,7 +2048,9 @@ using ewm_cov_v = ExponentiallyWeightedCovVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long, std::size_t A = 0>
+template<typename T, typename I = unsigned long, std::size_t A = 0,
+         typename =
+             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
 struct  ExponentiallyWeightedCorrVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -2140,7 +2146,9 @@ using ewm_corr_v = ExponentiallyWeightedCorrVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long, std::size_t A = 0>
+template<typename T, typename I = unsigned long, std::size_t A = 0,
+         typename =
+             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
 struct  ZeroLagMovingMeanVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -2562,7 +2570,9 @@ using mode_v = ModeVisitor<N, T, I, A>;
 // This calculates 4 different form of Mean Absolute Deviation based on the
 // requested type input. Please the mad_type enum type
 //
-template<typename T, typename I = unsigned long, std::size_t A = 0>
+template<typename T, typename I = unsigned long, std::size_t A = 0,
+         typename =
+             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
 struct MADVisitor  {
 
 private:
@@ -2738,7 +2748,9 @@ using mad_v = MADVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long, std::size_t A = 0>
+template<typename T, typename I = unsigned long, std::size_t A = 0,
+         typename =
+             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
 struct DiffVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -2835,7 +2847,9 @@ using diff_v = DiffVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long, std::size_t A = 0>
+template<typename T, typename I = unsigned long, std::size_t A = 0,
+         typename =
+             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
 struct ZScoreVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -2893,10 +2907,9 @@ using zs_v = ZScoreVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T,
-         typename I = unsigned long,
+template<typename T, typename I = unsigned long,
          typename =
-             typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
+             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
 struct SampleZScoreVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_2
@@ -2964,7 +2977,9 @@ using szs_v = SampleZScoreVisitor<T, I>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long, std::size_t A = 0>
+template<typename T, typename I = unsigned long, std::size_t A = 0,
+         typename =
+             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
 struct SigmoidVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -3060,7 +3075,9 @@ using sigm_v = SigmoidVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long, std::size_t A = 0>
+template<typename T, typename I = unsigned long, std::size_t A = 0,
+         typename =
+             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
 struct BoxCoxVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -3222,7 +3239,9 @@ using bcox_v = BoxCoxVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long, std::size_t A = 0>
+template<typename T, typename I = unsigned long, std::size_t A = 0,
+         typename =
+             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
 struct NormalizeVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -3266,7 +3285,9 @@ using norm_v = NormalizeVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long, std::size_t A = 0>
+template<typename T, typename I = unsigned long, std::size_t A = 0,
+         typename =
+             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
 struct StandardizeVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -3309,7 +3330,9 @@ using stand_v = StandardizeVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long, std::size_t A = 0>
+template<typename T, typename I = unsigned long, std::size_t A = 0,
+         typename =
+             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
 struct PolyFitVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -3500,7 +3523,9 @@ using pfit_v = PolyFitVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long, std::size_t A = 0>
+template<typename T, typename I = unsigned long, std::size_t A = 0,
+         typename =
+             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
 struct LogFitVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -3565,7 +3590,9 @@ using lfit_v = LogFitVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long, std::size_t A = 0>
+template<typename T, typename I = unsigned long, std::size_t A = 0,
+         typename =
+             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
 struct ExponentialFitVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -3650,7 +3677,9 @@ using efit_v = ExponentialFitVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long, std::size_t A = 0>
+template<typename T, typename I = unsigned long, std::size_t A = 0,
+         typename =
+             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
 struct LinearFitVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -3735,7 +3764,9 @@ using linfit_v = LinearFitVisitor<T, I, A>;
 
 // https://en.wikipedia.org/w/index.php?title=Spline_%28mathematics%29&oldid=288288033#Algorithm_for_computing_natural_cubic_splines
 //
-template<typename T, typename I = unsigned long, std::size_t A = 0>
+template<typename T, typename I = unsigned long, std::size_t A = 0,
+         typename =
+             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
 struct CubicSplineFitVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -3849,7 +3880,9 @@ using csfit_v = CubicSplineFitVisitor<T, I, A>;
 // and Smoothing Scatterplots". Journal of the American Statistical
 // Association 74 (368): 829-836.
 //
-template<typename T, typename I = unsigned long, std::size_t A = 0>
+template<typename T, typename I = unsigned long, std::size_t A = 0,
+         typename =
+             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
 struct LowessVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -4364,7 +4397,9 @@ using lowess_v = LowessVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long, std::size_t A = 0>
+template<typename T, typename I = unsigned long, std::size_t A = 0,
+         typename =
+             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
 struct DecomposeVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -4658,7 +4693,9 @@ is_lognormal(const V &column, double epsl)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename AV, typename T, typename I = unsigned long, std::size_t A = 0>
+template<typename AV, typename T, typename I = unsigned long, std::size_t A = 0,
+         typename =
+             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
 struct  BiasVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -4707,7 +4744,9 @@ using bias_v = BiasVisitor<AV, T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long, std::size_t A = 0>
+template<typename T, typename I = unsigned long, std::size_t A = 0,
+         typename =
+             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
 struct  NonZeroRangeVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_3

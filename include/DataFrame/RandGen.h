@@ -408,6 +408,18 @@ template<typename T, std::size_t A = 0>
 std::vector<T, typename allocator_declare<T, A>::type>
 gen_sym_triangle(std::size_t n, const T &start_val, bool normalize = false);
 
+// ----------------------------------------------------------------------------
+
+// This generates the Discrete Fourier Transform sample frequencies.
+// The returned vector contains the frequency bin centers in cycles per unit
+// of the sample spacing (with zero at the start).
+// For instance, if the sample spacing is in seconds, then the frequency unit
+// is cycles/second.
+//
+template<typename T, std::size_t A = 0>
+std::vector<T, typename allocator_declare<T, A>::type>
+gen_dft_samp_freq(std::size_t n, T spacing = 1.0);
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

@@ -461,7 +461,7 @@ gen_sym_triangle(std::size_t n, const T &start_val, bool normalize)  {
 
     std::vector<T, typename allocator_declare<T, A>::type>   result;
     const bool                                      is_even =
-        ! (n & std::size_t(0x01)); 
+        ! (n & std::size_t(0x01));
     const std::size_t                               max_loop {
         n / 2 + (is_even ? 0 : 1) };
     T                                               sum { 0 };
@@ -485,6 +485,21 @@ gen_sym_triangle(std::size_t n, const T &start_val, bool normalize)  {
                                  sum));
 
     return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, std::size_t A = 0>
+std::vector<T, typename allocator_declare<T, A>::type>
+gen_dft_samp_freq(std::size_t n, T spacing)  {
+
+    std::vector<T, typename allocator_declare<T, A>::type>  result;
+    const T             multiplier = T(1) / (T(n) * T(1));
+    const std::size_t   vec_size = n / 2 + 1;
+
+    result.reserve(vec_size);
+    for (std::size_t i = 0; i < vec_size; ++i)
+        result.push_back(multiplier * T(i));
 }
 
 } // namespace hmdf

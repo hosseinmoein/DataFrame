@@ -292,6 +292,11 @@ int main(int, char *[])  {
     }
     */
 
+    // Now let’s do another interesting thing. Let’s take the IBM returns curve and split it into
+    // 3 different curves; Trend, Seasonal, and Idiocentric or Residual.
+    // For the sake of this exercise, we assume IBM business goes through 170-day seasonal cycles.
+    //
+
     return (0);
 }
 

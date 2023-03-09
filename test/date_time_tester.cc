@@ -930,6 +930,18 @@ int main (int, char *[])  {
         assert(dt3 == dt4);
     }
 
+    {
+        std::cout << "Testing arithmetic operators ..." << std::endl;
+
+        DateTime    dt("2015/01/05 09:40:30", hmdf::DT_DATE_STYLE::EUR_STYLE);
+        DateTime    now;
+
+        std::cout << "+ operator: " << dt + now << std::endl;
+        std::cout << "- operator: " << dt - now << std::endl;
+        std::cout << "* operator: " << dt * now << std::endl;
+        std::cout << "/ operator: " << dt / now << std::endl;
+    }
+
     test_priority_queue();
     return (EXIT_SUCCESS);
 }

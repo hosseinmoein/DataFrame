@@ -3721,13 +3721,15 @@ static void test_k_means()  {
     KMeansVisitor<5, double, unsigned long, 128>    km_visitor(1000);
 
     df.single_act_visit<double>("col1", km_visitor);
+    std::cout << "Means of clusters are: ";
+    for (const auto citer : km_visitor.get_result())
+        std::cout << citer << ", ";
+    std::cout << std::endl;
 
-    const auto  &col1 = df.get_column<double>("col1");
-    // Using the calculated means, separate the given column into clusters
-    const auto  clusters =
-        km_visitor.get_clusters(df.get_index().begin(), df.get_index().end(),
-                                col1.begin(), col1.end());
+
 /*
+    // Using the calculated means, separate the given column into clusters
+    const auto  &clusters = km_visitor.get_clusters();
     bool        found = false;
 
     for (auto iter : clusters)  {
@@ -3784,7 +3786,7 @@ static void test_k_means()  {
     p.seed = 4356;
 
     auto                y_vec = gen_lognormal_dist<double, 128>(item_cnt, p);
-    StlVecType<Point>  points;
+    StlVecType<Point>   points;
 
     points.reserve(item_cnt);
     for (size_t i = 0; i < item_cnt; ++i)
@@ -3794,15 +3796,12 @@ static void test_k_means()  {
     KMeansVisitor<5,
                   Point,
                   unsigned long,
-                  128> km_visitor2(1000, point_distance);
+                  128> km_visitor2(1000, true, point_distance);
 
     df.single_act_visit<Point>("point_col", km_visitor2);
 
     // Using the calculated means, separate the given column into clusters
-    const auto  &point_col = df.get_column<Point>("point_col");
-    const auto  clusters2 =
-        km_visitor2.get_clusters(df.get_index().begin(), df.get_index().end(),
-                                 point_col.begin(), point_col.end());
+    const auto  &clusters2 = km_visitor2.get_clusters();
 
     for (auto iter : clusters2)  {
         for (auto iter2 : iter)  {

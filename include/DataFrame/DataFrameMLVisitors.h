@@ -143,34 +143,42 @@ public:
 private:
 
     const size_type iter_num_;
+    const bool      cc_;
     distance_func   dfunc_;
-    result_type     result_ { };  // K-Means
+    result_type     result_ { };    // K Means
+    cluster_type    clusters_ { };  // K Clusters
 
     template<typename H>
-    inline void calc_k_means_(const H &column_begin, size_type col_size)  {
+    inline void calc_k_means_(const H &column_begin, size_type col_s)  {
 
         std::random_device                          rd;
         std::mt19937                                gen(rd());
-        std::uniform_int_distribution<size_type>    rd_gen(0, col_size - 1);
+        std::uniform_int_distribution<size_type>    rd_gen(0, col_s - 1);
 
         // Pick centroids as random points from the col.
-        for (auto &k_mean : result_)
-            k_mean = *(column_begin + rd_gen(gen));
+        for (auto &k_mean : result_)  {
+            const value_type    &value = *(column_begin + rd_gen(gen));
+
+            if (is_nan__(value))  continue;
+            k_mean = value;
+        }
 
         std::vector<size_type,
                     typename allocator_declare<size_type, A>::type>
-                        assignments(col_size, 0);
+                        assignments(col_s, 0);
 
         for (size_type iter = 0; iter < iter_num_; ++iter) {
             result_type             new_means { value_type() };
             std::array<double, K>   counts { 0.0 };
 
             // Find assignments.
-            for (size_type point = 0; point < col_size; ++point) {
-                double              best_distance =
-                    std::numeric_limits<double>::max();
-                size_type           best_cluster = 0;
+            for (size_type point = 0; point < col_s; ++point) {
                 const value_type    &value = *(column_begin + point);
+
+                if (is_nan__(value))  continue;
+
+                double      best_distance = std::numeric_limits<double>::max();
+                size_type   best_cluster = 0;
 
                 for (size_type cluster = 0; cluster < K; ++cluster) {
                     const double    distance = dfunc_(value, result_[cluster]);
@@ -211,28 +219,12 @@ private:
         }
     }
 
-public:
-
-    template<typename IV, typename H>
-    inline void
-    operator() (const IV &idx_begin, const IV &idx_end,
-                const H &column_begin, const H &column_end)  {
-
-        GET_COL_SIZE
-
-        calc_k_means_(column_begin, col_s);
-    }
-
     // Using the calculated means, separate the given column into clusters
     //
-    template<typename IV, typename H>
-    inline cluster_type
-    get_clusters(const IV &idx_begin,
-                 const IV &idx_end,
-                 const H &column_begin,
-                 const H &column_end)  {
+    template<typename H>
+    inline void
+    calc_clusters_(const H &column_begin, size_type col_s)  {
 
-        GET_COL_SIZE
         cluster_type    clusters;
 
         for (size_type i = 0; i < K; ++i)  {
@@ -241,9 +233,12 @@ public:
         }
 
         for (size_type j = 0; j < col_s; ++j)  {
-            double              min_dist = std::numeric_limits<double>::max();
-            size_type           min_idx;
             const value_type    &value = *(column_begin + j);
+
+            if (is_nan__(value))  continue;
+
+            double      min_dist = std::numeric_limits<double>::max();
+            size_type   min_idx;
 
             for (size_type i = 0; i < K; ++i)  {
                 const double    dist = dfunc_(value, result_[i]);
@@ -256,22 +251,40 @@ public:
             clusters[min_idx].push_back(const_cast<value_type *>(&value));
         }
 
-        return (clusters);
+        clusters_.swap(clusters);
+        return;
     }
 
-    inline void pre ()  {  }
+public:
+
+    template<typename IV, typename H>
+    inline void
+    operator() (const IV &idx_begin, const IV &idx_end,
+                const H &column_begin, const H &column_end)  {
+
+        GET_COL_SIZE
+
+        calc_k_means_(column_begin, col_s);
+        if (cc_)
+            calc_clusters_(column_begin, col_s);
+    }
+
+    inline void pre ()  { for (auto &iter : clusters_) iter.clear();  }
     inline void post ()  {  }
     inline const result_type &get_result () const  { return (result_); }
     inline result_type &get_result ()  { return (result_); }
+    inline const cluster_type &get_clusters () const  { return (clusters_); }
+    inline cluster_type &get_clusters ()  { return (clusters_); }
 
     explicit
     KMeansVisitor(
         size_type num_of_iter,
+        bool calc_clusters = true,
         distance_func f =
-            [](const value_type &x, const value_type &y) -> double {
+            [](const value_type &x, const value_type &y) -> double  {
                 return ((x - y) * (x - y));
             })
-        : iter_num_(num_of_iter), dfunc_(f)  {   }
+        : iter_num_(num_of_iter), cc_(calc_clusters), dfunc_(f)  {   }
 };
 
 // ----------------------------------------------------------------------------

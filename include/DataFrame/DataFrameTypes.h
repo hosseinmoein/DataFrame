@@ -47,14 +47,14 @@ namespace hmdf
 
 // Generic DataFrame error
 //
-struct DataFrameError : public std::runtime_error  {
+struct  DataFrameError : public std::runtime_error  {
 
     DataFrameError (const char *desc) : std::runtime_error (desc)  {   }
 };
 
 // Column does not exist error
 //
-struct ColNotFound : public DataFrameError  {
+struct  ColNotFound : public DataFrameError  {
 
     ColNotFound (const char *desc) : DataFrameError (desc)  {   }
 };
@@ -62,14 +62,14 @@ struct ColNotFound : public DataFrameError  {
 // Something in DataFrame/operation is not proper error. For example, trying
 // to load a column with more data than there is in index
 //
-struct InconsistentData : public DataFrameError  {
+struct  InconsistentData : public DataFrameError  {
 
     InconsistentData (const char *desc) : DataFrameError (desc)  {   }
 };
 
 // Bad data range specification error
 //
-struct BadRange : public DataFrameError  {
+struct  BadRange : public DataFrameError  {
 
     BadRange (const char *desc) : DataFrameError (desc)  {   }
 };
@@ -77,14 +77,14 @@ struct BadRange : public DataFrameError  {
 // The operation is not feasible error. For example, trying to do interpolation
 // on non-arithmetic types
 //
-struct NotFeasible : public DataFrameError  {
+struct  NotFeasible : public DataFrameError  {
 
     NotFeasible (const char *desc) : DataFrameError (desc)  {   }
 };
 
 // The functionality is not implemented error
 //
-struct NotImplemented : public DataFrameError  {
+struct  NotImplemented : public DataFrameError  {
 
     NotImplemented (const char *desc) : DataFrameError (desc)  {   }
 };
@@ -409,37 +409,37 @@ struct  RandGenParams  {
 
     // The p distribution parameter (probability of generating true)
     //
-    double      prob_true { 0.5 };
+    double          prob_true { 0.5 };
     // The t or k distribution parameter (number of trials)
     //
-    std::size_t t_dist { 1 };
+    std::size_t     t_dist { 1 };
     // The μ distribution parameter (the mean of the distribution)
     //
-    double      mean { 1.0 };
+    double          mean { 1.0 };
     // the σ distribution parameter (standard deviation)
     //
-    double      std { 0 };
+    double          std { 0 };
     // The λ distribution parameter (the rate parameter)
     //
-    double      lambda { 1.0 };
+    double          lambda { 1.0 };
     // The α distribution parameter (shape, location)
     //
-    double      alpha { 1.0 };
+    double          alpha { 1.0 };
     // The β distribution parameter (scale)
     //
-    double      beta { 1.0 };
+    double          beta { 1.0 };
     // The m distribution parameter (log-scale)
     //
-    double      m { 0 };
+    double          m { 0 };
     // The s distribution parameter (shape)
     //
-    double      s { 1.0 };
+    double          s { 1.0 };
     // The n distribution parameter (degrees of freedom)
     //
-    double      n { 1.0 };
-    // degrees of freedom for fisher_f_distribution
+    double          n { 1.0 };
+    // Degrees of freedom for fisher_f_distribution
     //
-    double      n2 { 1.0 };
+    double          n2 { 1.0 };
 };
 
 // ----------------------------------------------------------------------------
@@ -447,7 +447,7 @@ struct  RandGenParams  {
 // It represents a range with begin and end within a continuous memory space
 //
 template<typename T>
-struct Index2D  {
+struct  Index2D  {
     T   begin {};
     T   end {};
 };
@@ -460,47 +460,72 @@ using GroupBySpec = std::tuple<const char *, const char *, V>;
 // ----------------------------------------------------------------------------
 
 template<typename, typename>
-struct template_switch {  };
+struct  template_switch  {   };
 
 template<typename A, template<typename> typename C, typename B>
-struct template_switch<A, C<B>> { using type = C<A>; };
+struct  template_switch<A, C<B>>  { using type = C<A>; };
 
 // ----------------------------------------------------------------------------
 
 template<class T, typename U, std::size_t A>
-struct type_declare;
+struct  type_declare;
 
 template<typename U, std::size_t A>
-struct type_declare<HeteroVector<A>, U, A>  {
+struct  type_declare<HeteroVector<A>, U, A>  {
     using type = std::vector<U, typename allocator_declare<U, A>::type>;
 };
 
 template<typename U, std::size_t A>
-struct type_declare<HeteroView<A>, U, A>  { using type = VectorView<U, A>; };
+struct  type_declare<HeteroView<A>, U, A>  { using type = VectorView<U, A>; };
 
 template<typename U, std::size_t A>
-struct type_declare<HeteroConstView<A>, U, A>  {
+struct  type_declare<HeteroConstView<A>, U, A>  {
     using type = VectorConstView<U, A>;
 };
 
 template<typename U, std::size_t A>
-struct type_declare<HeteroPtrView<A>, U, A>  {
+struct  type_declare<HeteroPtrView<A>, U, A>  {
     using type = VectorPtrView<U, A>;
 };
 
 template<typename U, std::size_t A>
-struct type_declare<HeteroConstPtrView<A>, U, A>  {
+struct  type_declare<HeteroConstPtrView<A>, U, A>  {
     using type = VectorConstPtrView<U, A>;
 };
 
 // ----------------------------------------------------------------------------
 
-template<typename T> struct is_complex  {
+template<typename T>
+struct  is_complex  {
     inline static const bool    value = false;
 };
-template<typename T> struct is_complex<std::complex<T>>  {
+template<typename T>
+struct  is_complex<std::complex<T>>  {
     inline static const bool    value = true;
 };
+
+// ----------------------------------------------------------------------------
+
+// Since std::is_arithmetic cannot be overloaded, we need a way to determine
+// if a user-defined type supports arithmetic
+//
+template<typename ...>
+struct  make_void  { using type = void; };
+
+template<typename ... Ts>
+using void_t = typename make_void<Ts ...>::type;
+
+template<typename T, typename = void>
+struct  supports_arithmetic : std::false_type  {  };
+
+template<typename T>
+struct  supports_arithmetic<
+    T,
+    void_t<decltype(std::declval<T>() + std::declval<T>()),
+           decltype(std::declval<T>() - std::declval<T>()),
+           decltype(std::declval<T>() * std::declval<T>()),
+           decltype(std::declval<T>() / std::declval<T>())>>
+    : std::true_type  {  };
 
 // ----------------------------------------------------------------------------
 
@@ -508,8 +533,8 @@ template<typename T> struct is_complex<std::complex<T>>  {
 // H stands for Heterogeneous vector
 // A stands for memory Alignment
 //
-template<typename I, class H>
-class DataFrame;
+template<typename I, typename H>
+class   DataFrame;
 
 template<typename I>
 using StdDataFrame = DataFrame<I, HeteroVector<0>>;
@@ -533,8 +558,37 @@ using StdDataFrame1024 = DataFrame<I, HeteroVector<1024>>;
 
 // ----------------------------------------------------------------------------
 
-inline static const std::vector<std::string>   describe_index_col {
+inline static const std::vector<std::string>   describe_index_col  {
     "COUNT", "MISSING", "MEAN", "STD", "MIN", "MAX", "25%", "50%", "75%"
+};
+
+// ----------------------------------------------------------------------------
+
+// Evertyhting is in bytes. The numbers are estimates, since memory allocated
+// is really unknown to the objects such as vectors.
+// If type has dynamically allocated memory, it is not counted here
+//
+struct  MemUsage  {
+
+    size_t  column_used_memory { 0 };
+    size_t  column_capacity_memory { 0 };
+    size_t  column_type_size { 0 };
+    size_t  index_used_memory { 0 };
+    size_t  index_capacity_memory { 0 };
+    size_t  index_type_size { 0 };
+
+    template<typename S>
+    friend S &operator << (S &stream, const MemUsage &mu)  {
+
+        stream << "Column Used Memory: " << mu.column_used_memory << '\n'
+               << "Column Capacity Memory: "
+               << mu.column_capacity_memory << '\n'
+               << "Column Type Size: " << mu.column_type_size << '\n'
+               << "Index Used Memory: " << mu.index_used_memory << '\n'
+               << "Index Capacity Memory: " << mu.index_capacity_memory << '\n'
+               << "Index Type Size: " << mu.index_type_size << '\n';
+        return (stream);
+    }
 };
 
 // ----------------------------------------------------------------------------
@@ -572,35 +626,6 @@ struct  CommonColumn  {
     const char *col_name() const  { return (name_.c_str()); }
 
     std::string name_;
-};
-
-// ----------------------------------------------------------------------------
-
-// Evertyhting is in bytes. The numbers are estimates, since memory allocated
-// is really unknown to the objects such as vectors.
-// If type has dynamically allocated memory, it is not counted here
-//
-struct  MemUsage  {
-
-    size_t  column_used_memory { 0 };
-    size_t  column_capacity_memory { 0 };
-    size_t  column_type_size { 0 };
-    size_t  index_used_memory { 0 };
-    size_t  index_capacity_memory { 0 };
-    size_t  index_type_size { 0 };
-
-    template<typename S>
-    friend S &operator << (S &stream, const MemUsage &mu)  {
-
-        stream << "Column Used Memory: " << mu.column_used_memory << '\n'
-               << "Column Capacity Memory: "
-               << mu.column_capacity_memory << '\n'
-               << "Column Type Size: " << mu.column_type_size << '\n'
-               << "Index Used Memory: " << mu.index_used_memory << '\n'
-               << "Index Capacity Memory: " << mu.index_capacity_memory << '\n'
-               << "Index Type Size: " << mu.index_type_size << '\n';
-        return (stream);
-    }
 };
 
 } // namespace hmdf

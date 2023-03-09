@@ -240,8 +240,8 @@ fill_missing_ffill_(ColumnVecType<T> &vec, int limit, size_type col_num)  {
 
 template<typename I, typename H>
 template<typename T,
-         typename std::enable_if<! std::is_arithmetic<T>::value ||
-                                 ! std::is_arithmetic<I>::value>::type*>
+         typename std::enable_if<! supports_arithmetic<T>::value ||
+                                 ! supports_arithmetic<I>::value>::type*>
 void DataFrame<I, H>::
 fill_missing_midpoint_(ColumnVecType<T> &, int, size_type)  {
 
@@ -253,8 +253,8 @@ fill_missing_midpoint_(ColumnVecType<T> &, int, size_type)  {
 
 template<typename I, typename H>
 template<typename T,
-         typename std::enable_if<std::is_arithmetic<T>::value &&
-                                 std::is_arithmetic<I>::value>::type*>
+         typename std::enable_if<supports_arithmetic<T>::value &&
+                                 supports_arithmetic<I>::value>::type*>
 void DataFrame<I, H>::
 fill_missing_midpoint_(ColumnVecType<T> &vec, int limit, size_type)  {
 
@@ -313,8 +313,8 @@ fill_missing_bfill_(ColumnVecType<T> &vec, int limit)  {
 
 template<typename I, typename H>
 template<typename T,
-         typename std::enable_if<! std::is_arithmetic<T>::value ||
-                                 ! std::is_arithmetic<I>::value>::type*>
+         typename std::enable_if<! supports_arithmetic<T>::value ||
+                                 ! supports_arithmetic<I>::value>::type*>
 void DataFrame<I, H>::
 fill_missing_linter_(ColumnVecType<T> &, const IndexVecType &, int)  {
 
@@ -326,8 +326,8 @@ fill_missing_linter_(ColumnVecType<T> &, const IndexVecType &, int)  {
 
 template<typename I, typename H>
 template<typename T,
-         typename std::enable_if<std::is_arithmetic<T>::value &&
-                                 std::is_arithmetic<I>::value>::type*>
+         typename std::enable_if<supports_arithmetic<T>::value &&
+                                 supports_arithmetic<I>::value>::type*>
 void DataFrame<I, H>::
 fill_missing_linter_(ColumnVecType<T> &vec,
                      const IndexVecType &index,

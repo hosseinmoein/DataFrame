@@ -73,15 +73,15 @@ fill_missing_ffill_(ColumnVecType<T> &vec, int limit, size_type col_num);
 
 template<typename T,
          typename std::enable_if<
-             std::is_arithmetic<T>::value &&
-             std::is_arithmetic<IndexType>::value>::type* = nullptr>
+             supports_arithmetic<T>::value &&
+             supports_arithmetic<IndexType>::value>::type* = nullptr>
 static void
 fill_missing_midpoint_(ColumnVecType<T> &vec, int limit, size_type col_num);
 
 template<typename T,
          typename std::enable_if<
-             ! std::is_arithmetic<T>::value ||
-             ! std::is_arithmetic<IndexType>::value>::type* = nullptr>
+             ! supports_arithmetic<T>::value ||
+             ! supports_arithmetic<IndexType>::value>::type* = nullptr>
 static void
 fill_missing_midpoint_(ColumnVecType<T> &vec, int limit, size_type col_num);
 
@@ -91,8 +91,8 @@ fill_missing_bfill_(ColumnVecType<T> &vec, int limit);
 
 template<typename T,
          typename std::enable_if<
-             std::is_arithmetic<T>::value &&
-             std::is_arithmetic<IndexType>::value>::type* = nullptr>
+             supports_arithmetic<T>::value &&
+             supports_arithmetic<IndexType>::value>::type* = nullptr>
 static void
 fill_missing_linter_(ColumnVecType<T> &vec,
                      const IndexVecType &index,
@@ -100,8 +100,8 @@ fill_missing_linter_(ColumnVecType<T> &vec,
 
 template<typename T,
          typename std::enable_if<
-             ! std::is_arithmetic<T>::value ||
-             ! std::is_arithmetic<IndexType>::value>::type* = nullptr>
+             ! supports_arithmetic<T>::value ||
+             ! supports_arithmetic<IndexType>::value>::type* = nullptr>
 static void
 fill_missing_linter_(ColumnVecType<T> &, const IndexVecType &, int);
 

@@ -209,8 +209,7 @@ public:
     // and want to change the date/time quickly
     //
     HMDF_API void
-    set_time (EpochType the_time,
-              NanosecondType nanosec = 0) noexcept;
+    set_time (EpochType the_time, NanosecondType nanosec = 0) noexcept;
 
     // NOTE: This method is not multithread-safe. This method
     //       modifies the TZ environment variable which changes the
@@ -281,8 +280,7 @@ public:
     // Formats date/time into a string based on format parameter
     //
     template<typename T>
-    void date_to_str (DT_FORMAT format,
-                      T &result) const;
+    void date_to_str (DT_FORMAT format, T &result) const;
     HMDF_API std::string string_format (DT_FORMAT format) const;
 
 private:
@@ -290,7 +288,7 @@ private:
     template<typename T>
     using INVALID_VALUE_ = typename std::numeric_limits<T>;
 
-    inline static const char    *TIMEZONES_[] {
+    inline static const char    *TIMEZONES_[]  {
 #ifdef _MSC_VER
         "\"TZ=GMT\"",
         "\"TZ=Argentina Standard Time\"",        // "America/Buenos_Aires",
@@ -357,19 +355,19 @@ private:
         "Europe/Budapest"
 #endif // _MSC_VER
     };
-    inline static const EpochType   INVALID_TIME_T_ {
+    inline static const EpochType   INVALID_TIME_T_  {
         INVALID_VALUE_<EpochType>::max()
     };
-    inline static const DateType    INVALID_DATE_ {
+    inline static const DateType    INVALID_DATE_  {
         INVALID_VALUE_<DateType>::max()
     };
-    inline static const HourType    INVALID_HOUR_ {
+    inline static const HourType    INVALID_HOUR_  {
         INVALID_VALUE_<HourType>::max()
     };
-    inline static const MinuteType  INVALID_MINUTE_ {
+    inline static const MinuteType  INVALID_MINUTE_  {
         INVALID_VALUE_<MinuteType>::max()
     };
-    inline static const SecondType  INVALID_SECOND_ {
+    inline static const SecondType  INVALID_SECOND_  {
         INVALID_VALUE_<SecondType>::max()
     };
 
@@ -386,7 +384,7 @@ private:
         }
     };
 
-    inline static const DT_initializer  dt_init_ {  };
+    inline static const DT_initializer  dt_init_  {   };
 
     DateType        date_ { INVALID_DATE_ };  // Like 20190518
     HourType        hour_ { INVALID_HOUR_ };
@@ -401,23 +399,21 @@ private:
     inline static void reset_env_timezone_(DT_TIME_ZONE time_zone);
 
     static DatePartType
-    days_in_month_ (DT_MONTH month,
-                    DatePartType year) noexcept;
+    days_in_month_(DT_MONTH month, DatePartType year) noexcept;
 
     // NOTE: This method is not multithread-safe. This method
     //       modifies the TZ environment variable which changes the
     //       time zone for the entire program.
     //
-    EpochType maketime_ (struct tm &ltime) const noexcept;
+    EpochType maketime_(struct tm &ltime) const noexcept;
 
     // NOTE: This method is not multithread-safe. This method
     //       modifies the TZ environment variable which changes the
     //       time zone for the entire program.
     //
-    void breaktime_ (EpochType the_time,
-                     NanosecondType nanosec) noexcept;
+    void breaktime_(EpochType the_time, NanosecondType nanosec) noexcept;
 
-    inline static const char *const MONTH_[] {
+    inline static const char *const MONTH_[]  {
         "January",
         "February",
         "March",
@@ -431,7 +427,7 @@ private:
         "November",
         "December"
     };
-    inline static const char *const MONTH_BR_[] {
+    inline static const char *const MONTH_BR_[]  {
         "Jan",
         "Feb",
         "Mar",
@@ -445,7 +441,7 @@ private:
         "Nov",
         "Dec"
     };
-    inline static const char *const WDAY_[] {
+    inline static const char *const WDAY_[]  {
         "Sunday",
         "Monday",
         "Tuesday",
@@ -454,7 +450,7 @@ private:
         "Friday",
         "Saturday"
     };
-    inline static const char *const WDAY_BR_[] {
+    inline static const char *const WDAY_BR_[]  {
         "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
     };
 };
@@ -469,130 +465,130 @@ void DateTime::date_to_str (DT_FORMAT format, T &result) const  {
     switch (format)  {
         case DT_FORMAT::AMR_DT:
         {
-            buffer.printf ("%002d/%002d/%002d",
-                           static_cast<int>(month ()),
-                           static_cast<int>(dmonth ()),
-                           static_cast<int>(year ()) % 100);
+            buffer.printf("%002d/%002d/%002d",
+                          static_cast<int>(month()),
+                          static_cast<int>(dmonth()),
+                          static_cast<int>(year()) % 100);
         } break;
 
         case DT_FORMAT::AMR_DT_CTY:
         {
-            buffer.printf ("%002d/%002d/%d",
-                           static_cast<int>(month ()),
-                           static_cast<int>(dmonth ()),
-                           static_cast<int>(year ()));
+            buffer.printf("%002d/%002d/%d",
+                          static_cast<int>(month()),
+                          static_cast<int>(dmonth()),
+                          static_cast<int>(year()));
         } break;
 
         case DT_FORMAT::EUR_DT:
         {
-            buffer.printf ("%002d/%002d/%002d",
-                           static_cast<int>(dmonth ()),
-                           static_cast<int>(month ()),
-                           static_cast<int>(year ()) % 100);
+            buffer.printf("%002d/%002d/%002d",
+                          static_cast<int>(dmonth()),
+                          static_cast<int>(month()),
+                          static_cast<int>(year()) % 100);
         } break;
 
         case DT_FORMAT::EUR_DT_CTY:
         {
-            buffer.printf ("%002d/%002d/%d",
-                           static_cast<int>(dmonth ()),
-                           static_cast<int>(month ()),
-                           static_cast<int>(year ()));
+            buffer.printf("%002d/%002d/%d",
+                          static_cast<int>(dmonth()),
+                          static_cast<int>(month()),
+                          static_cast<int>(year()));
         } break;
 
         case DT_FORMAT::DT_TM:
         {
-            buffer.printf ("%002d/%002d/%d %002d:%002d:%002d",
-                           static_cast<int>(month ()),
-                           static_cast<int>(dmonth ()),
-                           static_cast<int>(year ()),
-                           static_cast<int>(hour ()),
-                           static_cast<int>(minute ()),
-                           static_cast<int>(sec ()));
+            buffer.printf("%002d/%002d/%d %002d:%002d:%002d",
+                          static_cast<int>(month()),
+                          static_cast<int>(dmonth()),
+                          static_cast<int>(year()),
+                          static_cast<int>(hour()),
+                          static_cast<int>(minute()),
+                          static_cast<int>(sec()));
         } break;
 
         case DT_FORMAT::DT_TM2:
         {
-            buffer.printf ("%002d/%002d/%d %002d:%002d:%002d.%0003d",
-                           static_cast<int>(month ()),
-                           static_cast<int>(dmonth ()),
-                           static_cast<int>(year ()),
-                           static_cast<int>(hour ()),
-                           static_cast<int>(minute ()),
-                           static_cast<int>(sec ()),
-                           static_cast<int>(msec ()));
+            buffer.printf("%002d/%002d/%d %002d:%002d:%002d.%0003d",
+                          static_cast<int>(month()),
+                          static_cast<int>(dmonth()),
+                          static_cast<int>(year()),
+                          static_cast<int>(hour()),
+                          static_cast<int>(minute()),
+                          static_cast<int>(sec()),
+                          static_cast<int>(msec()));
         } break;
 
         case DT_FORMAT::ISO_DT_TM:
         {
-            buffer.printf ("%d-%002d-%002d %002d:%002d:%002d.%0000006d",
-                           static_cast<int>(year ()),
-                           static_cast<int>(month ()),
-                           static_cast<int>(dmonth ()),
-                           static_cast<int>(hour ()),
-                           static_cast<int>(minute ()),
-                           static_cast<int>(sec ()),
-                           static_cast<int>(microsec ()));
+            buffer.printf("%d-%002d-%002d %002d:%002d:%002d.%0000006d",
+                          static_cast<int>(year()),
+                          static_cast<int>(month()),
+                          static_cast<int>(dmonth()),
+                          static_cast<int>(hour()),
+                          static_cast<int>(minute()),
+                          static_cast<int>(sec()),
+                          static_cast<int>(microsec()));
         } break;
 
         case DT_FORMAT::ISO_DT:
         {
-            buffer.printf ("%d-%002d-%002d",
-                           static_cast<int>(year ()),
-                           static_cast<int>(month ()),
-                           static_cast<int>(dmonth ()));
+            buffer.printf("%d-%002d-%002d",
+                          static_cast<int>(year()),
+                          static_cast<int>(month()),
+                          static_cast<int>(dmonth()));
         } break;
 
         case DT_FORMAT::DT_DATETIME:
         {
-            buffer.printf ("%d%002d%002d  %002d:%002d:%002d.%0003d",
-                           static_cast<int>(year ()),
-                           static_cast<int>(month ()),
-                           static_cast<int>(dmonth ()),
-                           static_cast<int>(hour ()),
-                           static_cast<int>(minute ()),
-                           static_cast<int>(sec ()),
-                           static_cast<int>(msec ()));
+            buffer.printf("%d%002d%002d  %002d:%002d:%002d.%0003d",
+                          static_cast<int>(year()),
+                          static_cast<int>(month()),
+                          static_cast<int>(dmonth()),
+                          static_cast<int>(hour()),
+                          static_cast<int>(minute()),
+                          static_cast<int>(sec()),
+                          static_cast<int>(msec()));
         } break;
 
         case DT_FORMAT::SCT_DT:
         {
-            buffer.printf ("%s %002d, %d",
-                           MONTH_BR_ [static_cast<int>(month ()) - 1],
-                           static_cast<int>(dmonth ()),
-                           static_cast<int>(year ()));
+            buffer.printf("%s %002d, %d",
+                          MONTH_BR_[static_cast<int>(month()) - 1],
+                          static_cast<int>(dmonth()),
+                          static_cast<int>(year()));
         } break;
 
         case DT_FORMAT::DT_MMDDYYYY:
         {
-            buffer.printf ("%002d%002d%d",
-                           static_cast<int>(month ()),
-                           static_cast<int>(dmonth ()),
-                           static_cast<int>(year ()));
+            buffer.printf("%002d%002d%d",
+                          static_cast<int>(month()),
+                          static_cast<int>(dmonth()),
+                          static_cast<int>(year()));
         } break;
 
         case DT_FORMAT::DT_YYYYMMDD:
         {
-            buffer.printf ("%002d%002d%002d",
-                           static_cast<int>(year ()),
-                           static_cast<int>(month ()),
-                           static_cast<int>(dmonth ()));
+            buffer.printf("%002d%002d%002d",
+                          static_cast<int>(year()),
+                          static_cast<int>(month()),
+                          static_cast<int>(dmonth()));
         } break;
 
         case DT_FORMAT::DT_PRECISE:  // e.g. Epoch.Nanoseconds
         {
-            buffer.printf ("%ld.%d", this->time(), nanosec());
+            buffer.printf("%ld.%d", this->time(), nanosec());
         } break;
 
         default:
         {
-            buffer.printf ("ERROR: DateTime::date_to_str(): "
-                           "Unknown format: '%u'",
-                           format);
-            throw std::runtime_error (buffer.c_str ());
+            buffer.printf("ERROR: DateTime::date_to_str(): "
+                          "Unknown format: '%u'",
+                          format);
+            throw std::runtime_error (buffer.c_str());
         }
     }
 
-    result = buffer.c_str ();
+    result = buffer.c_str();
     return;
 }
 
@@ -600,42 +596,70 @@ void DateTime::date_to_str (DT_FORMAT format, T &result) const  {
 
 inline bool operator == (const DateTime &lhs, const DateTime &rhs) noexcept  {
 
-    return (lhs.compare (rhs) == 0);
+    return (lhs.compare(rhs) == 0);
 }
 
 // ----------------------------------------------------------------------------
 
 inline bool operator != (const DateTime &lhs, const DateTime &rhs) noexcept  {
 
-    return (lhs.compare (rhs) != 0);
+    return (lhs.compare(rhs) != 0);
 }
 
 // ----------------------------------------------------------------------------
 
 inline bool operator < (const DateTime &lhs, const DateTime &rhs) noexcept  {
 
-    return (lhs.compare (rhs) < 0);
+    return (lhs.compare(rhs) < 0);
 }
 
 // ----------------------------------------------------------------------------
 
 inline bool operator <= (const DateTime &lhs, const DateTime &rhs) noexcept  {
 
-    return (lhs.compare (rhs) <= 0);
+    return (lhs.compare(rhs) <= 0);
 }
 
 // ----------------------------------------------------------------------------
 
 inline bool operator > (const DateTime &lhs, const DateTime &rhs) noexcept  {
 
-    return (lhs.compare (rhs) > 0);
+    return (lhs.compare(rhs) > 0);
 }
 
 // ----------------------------------------------------------------------------
 
 inline bool operator >= (const DateTime &lhs, const DateTime &rhs) noexcept  {
 
-    return (lhs.compare (rhs) >= 0);
+    return (lhs.compare(rhs) >= 0);
+}
+
+// ----------------------------------------------------------------------------
+
+inline double operator + (const DateTime &lhs, const DateTime &rhs) noexcept  {
+
+    return (double(lhs) + double(rhs));
+}
+
+// ----------------------------------------------------------------------------
+
+inline double operator - (const DateTime &lhs, const DateTime &rhs) noexcept  {
+
+    return (double(lhs) - double(rhs));
+}
+
+// ----------------------------------------------------------------------------
+
+inline double operator * (const DateTime &lhs, const DateTime &rhs) noexcept  {
+
+    return (double(lhs) * double(rhs));
+}
+
+// ----------------------------------------------------------------------------
+
+inline double operator / (const DateTime &lhs, const DateTime &rhs) noexcept  {
+
+    return (double(lhs) / double(rhs));
 }
 
 // ----------------------------------------------------------------------------
@@ -655,7 +679,7 @@ template<>
 struct  hash<typename hmdf::DateTime>  {
 
     inline size_t
-    operator()(const typename hmdf::DateTime &key) const noexcept {
+    operator()(const typename hmdf::DateTime &key) const noexcept  {
 
         return (hash<double>()(double(key)));
     }

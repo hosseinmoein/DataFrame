@@ -489,17 +489,19 @@ gen_sym_triangle(std::size_t n, const T &start_val, bool normalize)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename T, std::size_t A = 0>
+template<typename T, std::size_t A>
 std::vector<T, typename allocator_declare<T, A>::type>
-gen_dft_samp_freq(std::size_t n, T spacing)  {
+gen_dft_sample_freq(std::size_t n, T spacing)  {
 
     std::vector<T, typename allocator_declare<T, A>::type>  result;
-    const T             multiplier = T(1) / (T(n) * T(1));
+    const T             multiplier = T(1) / (T(n) * spacing);
     const std::size_t   vec_size = n / 2 + 1;
 
     result.reserve(vec_size);
     for (std::size_t i = 0; i < vec_size; ++i)
         result.push_back(multiplier * T(i));
+
+    return (result);
 }
 
 } // namespace hmdf

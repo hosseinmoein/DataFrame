@@ -227,6 +227,27 @@ int main(int, char *[]) {
         for (auto citer : r3)
             std::cout << citer << ", ";
         std::cout << std::endl;
+
+        auto    r4 = gen_dft_sample_freq<double>(15, 1);
+
+        std::cout << '\n' << std::endl;
+        for (auto citer : r4)
+            std::cout << citer << ", ";
+        std::cout << std::endl;
+
+        auto    r5 = gen_dft_sample_freq<double>(15, 2);
+
+        std::cout << '\n' << std::endl;
+        for (auto citer : r5)
+            std::cout << citer << ", ";
+        std::cout << std::endl;
+
+        auto    r6 = gen_dft_sample_freq<double>(20);
+
+        std::cout << '\n' << std::endl;
+        for (auto citer : r6)
+            std::cout << citer << ", ";
+        std::cout << std::endl;
     }
 
     return (0);

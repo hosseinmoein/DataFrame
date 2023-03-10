@@ -418,7 +418,7 @@ gen_sym_triangle(std::size_t n, const T &start_val, bool normalize = false);
 //
 template<typename T, std::size_t A = 0>
 std::vector<T, typename allocator_declare<T, A>::type>
-gen_dft_samp_freq(std::size_t n, T spacing = 1.0);
+gen_dft_sample_freq(std::size_t n, T spacing = 1.0);
 
 } // namespace hmdf
 

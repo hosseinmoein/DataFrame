@@ -228,6 +228,8 @@ int main(int, char *[]) {
             std::cout << citer << ", ";
         std::cout << std::endl;
 
+        std::cout << "\nTesting gen_dft_sample_freq() ..." << std::endl;
+
         auto    r4 = gen_dft_sample_freq<double>(15, 1);
 
         std::cout << '\n' << std::endl;

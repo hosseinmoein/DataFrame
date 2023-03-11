@@ -25,11 +25,11 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <DataFrame/DataFrame.h>  // Main DataFrame header
+#include <DataFrame/DataFrame.h>                   // Main DataFrame header
 #include <DataFrame/DataFrameFinancialVisitors.h>  // Financial algorithms
-#include <DataFrame/DataFrameMLVisitors.h>  // Machine-learning algorithms
-#include <DataFrame/DataFrameStatsVisitors.h>  // Statistical algorithms
-#include <DataFrame/Utils/DateTime.h>  // Cool and handy date-time object
+#include <DataFrame/DataFrameMLVisitors.h>         // Machine-learning algorithms
+#include <DataFrame/DataFrameStatsVisitors.h>      // Statistical algorithms
+#include <DataFrame/Utils/DateTime.h>              // Cool and handy date-time object
 
 #include <iostream>
 
@@ -258,8 +258,16 @@ int main(int, char *[])  {
     //
     auto    random_view = aapl_dt_df.get_view_by_rand<double, long>(random_policy::frac_rows_no_seed, 0.35);
 
-    // Now let’s do something a little more involved (multi steps). Let’s calculate IBM daily returns and
-    // then try to find clusters of similar patterns in those returns.
+    //
+    // Now let’s do some stuff that are a little more involved (multi steps).
+    // There are a lot of theories, math, and procedures that I am skipping to explain here.
+    // See docs for more details.
+    //
+    // NOTE: I am applying the following analysis to financial data but it equally applies to
+    //       other scientific fields.
+    //
+
+    // Let’s calculate IBM daily returns and then try to find clusters of similar patterns in those returns.
     // We will use k-means clustering to do that.
     //
     ReturnVisitor<double>   return_v (return_policy::log);
@@ -268,6 +276,7 @@ int main(int, char *[])  {
     //
     ibm_dt_df.single_act_visit<double>("IBM_Close", return_v);
     ibm_dt_df.load_result_as_column(return_v, "IBM_Return");
+    ibm_dt_df.get_column<double>("IBM_Return")[0] = 0;  // Remove the NaN
 
     // Let's try to find 4 clusters.
     //
@@ -293,9 +302,55 @@ int main(int, char *[])  {
     */
 
     // Now let’s do another interesting thing. Let’s take the IBM returns curve and split it into
-    // 3 different curves; Trend, Seasonal, and Idiocentric or Residual.
+    // 3 different curves; Trend, Seasonal, and Idiocentric or Residual or Random.
     // For the sake of this exercise, we assume IBM business goes through 170-day seasonal cycles.
     //
+    DecomposeVisitor<double, DateTime>  decom (170, 0.6, 0.01);
+
+    // After this call, the 3 curves will be in decom visitor instance. See docs how to get them
+    // and analyze them.
+    //
+    ibm_dt_df.single_act_visit<double>("IBM_Return", decom);
+
+    // But what of you don’t know the seasonality of IBM returns which would be most of the time.
+    // No worries, Mr Joseph Fourier comes to the rescue.
+    //
+    FastFourierTransVisitor<double, DateTime>   fft;
+
+    ibm_dt_df.single_act_visit<double>("IBM_Return", fft);
+
+    const auto  &magnitudes = fft.get_magnitude();
+    double      max_val = 0;
+
+    // The following analysis and conclusion are way over simplified and naive and can be optimized to
+    // be more sound. But that's the basic idea.
+    //
+    for (std::size_t i = 1; i < magnitudes.size(); ++i)  {
+        const double    val = 1.0 / magnitudes[i];
+
+        if (val > max_val)
+            max_val = val;
+    }
+    std::cout << "The seasonality of IBM returns is " << std::size_t(max_val) << " days.\n"
+              << "So use this instead of 170 days in decomposition analysis"
+              << std::endl;
+
+    // Use lagged auto-correlation to verify your finding.
+    //
+    FixedAutoCorrVisitor<double, DateTime>  facorr { 170 };
+    FixedAutoCorrVisitor<double, DateTime>  facorr2 { std::size_t(max_val) };
+
+    ibm_dt_df.single_act_visit<double>("IBM_Return", facorr);
+    ibm_dt_df.single_act_visit<double>("IBM_Return", facorr2);
+
+    std::cout << "Auto correlations of 170 days lag: ";
+    for (std::size_t i = facorr.get_result().size() - 1; i > facorr.get_result().size() - 10; --i)
+        std::cout << facorr.get_result()[i] << ", ";
+    std::cout << "\n" << std::endl;
+    std::cout << "Auto correlations of " << std::size_t(max_val) << " days lag: ";
+    for (std::size_t i = facorr2.get_result().size() - 1; i > facorr2.get_result().size() - 10; --i)
+        std::cout << facorr2.get_result()[i] << ", ";
+    std::cout << std::endl;
 
     return (0);
 }

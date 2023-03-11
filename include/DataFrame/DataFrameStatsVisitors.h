@@ -1789,6 +1789,55 @@ private:
 
 // ----------------------------------------------------------------------------
 
+template<typename T, typename I = unsigned long, std::size_t A = 0,
+         typename =
+             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+struct FixedAutoCorrVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
+
+        GET_COL_SIZE
+
+        assert(col_s > lag_);
+
+        const size_type                     calc_size { col_s / lag_ };
+        CorrVisitor<value_type, index_type> corr {  };
+        result_type                         result;
+
+        result.reserve(calc_size);
+        for (size_type i = 0; i < calc_size; ++i)  {
+            corr.pre();
+            corr (idx_begin, idx_end,  // This doesn't matter
+                  column_begin + (i * lag_),
+                  column_begin + (i * lag_ + lag_),
+                  column_begin + (i * lag_ + lag_),
+                  column_begin + (i * lag_ + 2 * lag_));
+            corr.post();
+
+            result.push_back(corr.get_result());
+        }
+        result_.swap(result);
+    }
+
+    DEFINE_PRE_POST
+    DEFINE_RESULT
+
+    explicit
+    FixedAutoCorrVisitor (size_type lag_period) : lag_(lag_period)  {   }
+
+private:
+
+    const size_type lag_;
+    result_type     result_ {  };
+};
+
+// ----------------------------------------------------------------------------
+
 // Exponential rolling adoptor for visitors
 // decay * Xt + (1 − decay) * Xt-1
 // or

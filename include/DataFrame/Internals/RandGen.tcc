@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/RandGen.h>
 
 #include <cmath>
+#include <iostream>
 #include <functional>
 #include <random>
 #include <type_traits>
@@ -494,12 +495,16 @@ std::vector<T, typename allocator_declare<T, A>::type>
 gen_dft_sample_freq(std::size_t n, T spacing)  {
 
     std::vector<T, typename allocator_declare<T, A>::type>  result;
-    const T             multiplier = T(1) / (T(n) * spacing);
-    const std::size_t   vec_size = n / 2 + 1;
+    const T     multiplier = T(1) / (T(n) * spacing);
+    const long  mid_size = long((n - 1) / 2 + 1);
 
-    result.reserve(vec_size);
-    for (std::size_t i = 0; i < vec_size; ++i)
-        result.push_back(multiplier * T(i));
+    result.reserve(n);
+    for (long i = 0; i < mid_size; ++i)
+        result.push_back(i);
+    for (long i = 0; i < mid_size - 1; ++i)
+        result.push_back(-mid_size + i + 1);
+    for (std::size_t i = 0; i < n; ++i)
+        result[i] *= multiplier;
 
     return (result);
 }

@@ -259,7 +259,7 @@ int main(int, char *[])  {
     auto    random_view = aapl_dt_df.get_view_by_rand<double, long>(random_policy::frac_rows_no_seed, 0.35);
 
     //
-    // Now let’s do some stuff that are a little more involved (multi steps).
+    // Now let’s do some stuffs that are a little more involved (multi steps).
     // There are a lot of theories, math, and procedures that I am skipping to explain here.
     // See docs for more details.
     //
@@ -337,8 +337,8 @@ int main(int, char *[])  {
 
     // Use lagged auto-correlation to verify your finding.
     //
-    FixedAutoCorrVisitor<double, DateTime>  facorr { 170 };
-    FixedAutoCorrVisitor<double, DateTime>  facorr2 { std::size_t(max_val) };
+    FixedAutoCorrVisitor<double, DateTime>  facorr { 170, roll_policy::blocks };
+    FixedAutoCorrVisitor<double, DateTime>  facorr2 { std::size_t(max_val), roll_policy::blocks };
 
     ibm_dt_df.single_act_visit<double>("IBM_Return", facorr);
     ibm_dt_df.single_act_visit<double>("IBM_Return", facorr2);

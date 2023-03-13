@@ -1297,6 +1297,49 @@ static void test_reading_in_chunks()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_FixedAutoCorrVisitor()  {
+
+    std::cout << "\nTesting FixedAutoCorrVisitor{  } ..." << std::endl;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("data/IBM.csv", io_format::csv2);
+
+        FixedAutoCorrVisitor<double,
+                             std::string>   fac { 31, roll_policy::blocks };
+
+        df.single_act_visit<double> ("IBM_Close", fac);
+
+        assert(fac.get_result().size() == 162);
+        assert(std::abs(fac.get_result()[0] - -0.5436) < 0.0001);
+        assert(std::abs(fac.get_result()[12] - 0.1328) < 0.001);
+        assert(std::abs(fac.get_result()[14] - -0.594) < 0.0001);
+        assert(std::abs(fac.get_result()[161] - -0.1109) < 0.0001);
+        assert(std::abs(fac.get_result()[160] - -0.231) < 0.0001);
+        assert(std::abs(fac.get_result()[159] - 0.075) < 0.0001);
+
+        FixedAutoCorrVisitor<double,
+                             std::string>   fac2 { 31, roll_policy::continuous };
+
+        df.single_act_visit<double> ("IBM_Close", fac2);
+
+        assert(fac2.get_result().size() == 5000);
+        assert(std::abs(fac2.get_result()[0] - -0.5436) < 0.0001);
+        assert(std::abs(fac2.get_result()[12] - -0.7213) < 0.001);
+        assert(std::abs(fac2.get_result()[14] - -0.6657) < 0.0001);
+        assert(std::abs(fac2.get_result()[4999] - 0.1446) < 0.0001);
+        assert(std::abs(fac2.get_result()[4998] - 0.1809) < 0.0001);
+        assert(std::abs(fac2.get_result()[4997] - 0.1732) < 0.0001);
+
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     test_groupby_edge();
@@ -1324,22 +1367,7 @@ int main(int, char *[]) {
     test_ExponentiallyWeightedCovVisitor();
     test_ExponentiallyWeightedCorrVisitor();
     test_reading_in_chunks();
-
-    /*
-    hmdf::SpinLock      locker;
-    static const int    thread_count = 10;
-
-    MyDataFrame::set_lock(&locker);
-    for (int i = 0; i < 100; ++i)  {
-        std::thread threads[thread_count];
-
-        for (size_t j = 0; j < thread_count; ++j)
-            threads[j] = std::thread(test_multithreading, j);
-        for (size_t j = 0; j < thread_count; ++j)
-            threads[j].join();
-    }
-    MyDataFrame::remove_lock();
-    */
+    test_FixedAutoCorrVisitor();
 
     return (0);
 }

@@ -1805,21 +1805,41 @@ struct FixedAutoCorrVisitor  {
 
         assert(col_s > lag_);
 
-        const size_type                     calc_size { col_s / lag_ };
         CorrVisitor<value_type, index_type> corr {  };
         result_type                         result;
 
-        result.reserve(calc_size);
-        for (size_type i = 0; i < calc_size; ++i)  {
-            corr.pre();
-            corr (idx_begin, idx_end,  // This doesn't matter
-                  column_begin + (i * lag_),
-                  column_begin + (i * lag_ + lag_),
-                  column_begin + (i * lag_ + lag_),
-                  column_begin + (i * lag_ + 2 * lag_));
-            corr.post();
+        if (policy_ == roll_policy::blocks)  {
+            const size_type calc_size { col_s / lag_ };
 
-            result.push_back(corr.get_result());
+            result.reserve(calc_size);
+            for (size_type i = 0; i < calc_size; ++i)  {
+                corr.pre();
+                corr (idx_begin, idx_end,  // This doesn't matter
+                      column_begin + (i * lag_),
+                      column_begin + (i * lag_ + lag_),
+                      column_begin + (i * lag_ + lag_),
+                      column_begin + (i * lag_ + 2 * lag_));
+                corr.post();
+
+                result.push_back(corr.get_result());
+            }
+        }
+        else  {  // roll_policy::continuous
+            const size_type calc_size { col_s - lag_ };
+
+            result.reserve(calc_size);
+            for (size_type i = 0; i < calc_size; ++i)  {
+                corr.pre();
+                corr (idx_begin, idx_end,  // This doesn't matter
+                      column_begin + i,
+                      column_begin + (i + lag_),
+                      column_begin + (i + lag_),
+                      column_begin + (i + 2 * lag_));
+                corr.post();
+
+                result.push_back(corr.get_result());
+            }
+
         }
         result_.swap(result);
     }
@@ -1827,13 +1847,14 @@ struct FixedAutoCorrVisitor  {
     DEFINE_PRE_POST
     DEFINE_RESULT
 
-    explicit
-    FixedAutoCorrVisitor (size_type lag_period) : lag_(lag_period)  {   }
+    FixedAutoCorrVisitor (size_type lag_period, roll_policy rp)
+        : lag_(lag_period), policy_(rp)  {   }
 
 private:
 
-    const size_type lag_;
-    result_type     result_ {  };
+    const size_type     lag_;
+    const roll_policy   policy_;
+    result_type         result_ {  };
 };
 
 // ----------------------------------------------------------------------------

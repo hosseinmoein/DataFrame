@@ -231,7 +231,7 @@ int main(int, char *[])  {
     // between IBM and Apple close prices. Since this is a rolling -- moving -- analysis the result is a
     // vector of exponentially weighted correlations for each date in the data stream.
     //
-    ewm_corr_v<double>  ewmcorr (exponential_decay_spec::span, 3);
+    ewm_corr_v<double>  ewmcorr { exponential_decay_spec::span, 3 };
     const auto          &ewmcorr_result =
         aapl_ibm.single_act_visit<double, double>("AAPL_Close", "IBM_Close", ewmcorr).get_result();
 
@@ -258,6 +258,7 @@ int main(int, char *[])  {
     //
     auto    random_view = aapl_dt_df.get_view_by_rand<double, long>(random_policy::frac_rows_no_seed, 0.35);
 
+    // ---------------------------------------------------
     //
     // Now let’s do some stuffs that are a little more involved (multi steps).
     // There are a lot of theories, math, and procedures that I am skipping to explain here.
@@ -266,11 +267,12 @@ int main(int, char *[])  {
     // NOTE: I am applying the following analysis to financial data but it equally applies to
     //       other scientific fields.
     //
+    // ---------------------------------------------------
 
     // Let’s calculate IBM daily returns and then try to find clusters of similar patterns in those returns.
     // We will use k-means clustering to do that.
     //
-    ReturnVisitor<double>   return_v (return_policy::log);
+    ReturnVisitor<double>   return_v { return_policy::log };
 
     // Calculate the returns and load them as a column.
     //
@@ -280,7 +282,7 @@ int main(int, char *[])  {
 
     // Let's try to find 4 clusters.
     //
-    KMeansVisitor<4, double, DateTime>  kmeans_v (1000);  // Iterate at most 1000 times.
+    KMeansVisitor<4, double, DateTime>  kmeans_v { 1000 };  // Iterate at most 1000 times.
 
     ibm_dt_df.single_act_visit<double>("IBM_Return", kmeans_v);
 
@@ -301,11 +303,24 @@ int main(int, char *[])  {
     }
     */
 
+    // We want to find a few quantiles of IBM returns
+    //
+    QuantileVisitor<double, DateTime>   qt50 { 0.5, quantile_policy::mid_point };   // 50%
+    QuantileVisitor<double, DateTime>   qt75 { 0.75, quantile_policy::mid_point };  // 75%
+    QuantileVisitor<double, DateTime>   qt95 { 0.95, quantile_policy::mid_point };  // 95%
+
+    ibm_dt_df.single_act_visit<double>("IBM_Return", qt50);
+    ibm_dt_df.single_act_visit<double>("IBM_Return", qt75);
+    ibm_dt_df.single_act_visit<double>("IBM_Return", qt95);
+    std::cout << "IBM returns 50% quantile: " << qt50.get_result() << ", "
+              << "75% quantile: " << qt75.get_result() << ", "
+              << "95% quantile: " << qt95.get_result() << std::endl;
+
     // Now let’s do another interesting thing. Let’s take the IBM returns curve and split it into
     // 3 different curves; Trend, Seasonal, and Idiocentric or Residual or Random.
     // For the sake of this exercise, we assume IBM business goes through 170-day seasonal cycles.
     //
-    DecomposeVisitor<double, DateTime>  decom (170, 0.6, 0.01);
+    DecomposeVisitor<double, DateTime>  decom { 170, 0.6, 0.01 };
 
     // After this call, the 3 curves will be in decom visitor instance. See docs how to get them
     // and analyze them.
@@ -346,7 +361,7 @@ int main(int, char *[])  {
     std::cout << "Auto correlations of 170 days lag: ";
     for (std::size_t i = facorr.get_result().size() - 1; i > facorr.get_result().size() - 10; --i)
         std::cout << facorr.get_result()[i] << ", ";
-    std::cout << "\n" << std::endl;
+    std::cout << std::endl;
     std::cout << "Auto correlations of " << std::size_t(max_val) << " days lag: ";
     for (std::size_t i = facorr2.get_result().size() - 1; i > facorr2.get_result().size() - 10; --i)
         std::cout << facorr2.get_result()[i] << ", ";

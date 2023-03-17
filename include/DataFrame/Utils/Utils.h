@@ -213,7 +213,7 @@ template<typename V>
 inline bool
 is_monotonic_increasing(const V &column)  {
 
-    const std::size_t   col_s = column.size();
+    const std::size_t   col_s { column.size() };
 
     for (std::size_t i = 1; i < col_s; ++i)
         if (column[i] < column[i - 1])
@@ -227,7 +227,7 @@ template<typename V>
 inline bool
 is_strictly_monotonic_increasing(const V &column)  {
 
-    const std::size_t   col_s = column.size();
+    const std::size_t   col_s { column.size() };
 
     for (std::size_t i = 1; i < col_s; ++i)
         if (column[i] <= column[i - 1])
@@ -241,7 +241,7 @@ template<typename V>
 inline bool
 is_monotonic_decreasing(const V &column)  {
 
-    const std::size_t   col_s = column.size();
+    const std::size_t   col_s { column.size() };
 
     for (std::size_t i = 1; i < col_s; ++i)
         if (column[i] > column[i - 1])
@@ -255,7 +255,7 @@ template<typename V>
 inline bool
 is_strictly_monotonic_decreasing(const V &column)  {
 
-    const std::size_t   col_s = column.size();
+    const std::size_t   col_s { column.size() };
 
     for (std::size_t i = 1; i < col_s; ++i)
         if (column[i] >= column[i - 1])
@@ -271,7 +271,7 @@ shift_right(V &vec, std::size_t n)  {
 
     using value_type = typename V::value_type;
 
-    const auto  vec_rend = vec.rend();
+    const auto  vec_rend { vec.rend() };
 
     for (auto riter = vec.rbegin(); riter != vec_rend; ++riter)  {
         if (std::size_t(std::distance(riter, vec_rend)) > n)
@@ -289,7 +289,7 @@ shift_left(V &vec, std::size_t n)  {
 
     using value_type = typename V::value_type;
 
-    const auto  vec_end = vec.end();
+    const auto  vec_end  { vec.end() };
 
     for (auto iter = vec.begin(); iter != vec_end; ++iter)  {
         if (std::size_t(std::distance(iter, vec_end)) > n)

@@ -511,11 +511,11 @@ struct  type_declare<HeteroConstPtrView<A>, U, A>  {
 
 template<typename T>
 struct  is_complex  {
-    inline static const bool    value = false;
+    inline static constexpr bool    value = false;
 };
 template<typename T>
 struct  is_complex<std::complex<T>>  {
-    inline static const bool    value = true;
+    inline static constexpr bool    value = true;
 };
 
 // ----------------------------------------------------------------------------

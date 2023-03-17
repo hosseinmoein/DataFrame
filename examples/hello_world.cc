@@ -337,8 +337,8 @@ int main(int, char *[])  {
     const auto  &magnitudes = fft.get_magnitude();
     double      max_val = 0;
 
-    // The following analysis and conclusion are way over simplified and naive and can be optimized to
-    // be more sound. But that's the basic idea.
+    // The following analysis and conclusion are over simplified and naive. It is more involved
+    // which is behind the scope of Hello World. But this is the basic idea.
     //
     for (std::size_t i = 1; i < magnitudes.size(); ++i)  {
         const double    val = 1.0 / magnitudes[i];

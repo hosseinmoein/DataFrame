@@ -137,7 +137,7 @@ private:
                   result.size() });
 
         col_to_short_term_.reserve(col_s);
-        for (size_type i = 0; i < col_s; ++i)
+        for (size_type i { 0 }; i < col_s; ++i)
             col_to_short_term_.push_back(*(prices_begin + i) - result[i]);
         return (col_s);
     }
@@ -158,7 +158,7 @@ private:
                   result.size() });
 
         col_to_long_term_.reserve(col_s);
-        for (size_type i = 0; i < col_s; ++i)
+        for (size_type i { 0 }; i < col_s; ++i)
             col_to_long_term_.push_back(*(prices_begin + i) - result[i]);
         return (col_s);
     }
@@ -208,7 +208,7 @@ public:
         const size_type col_s = std::min<size_type>(re_count1, re_count2);
 
         short_term_to_long_term_.reserve(col_s);
-        for (size_type i = 0; i < col_s; ++i)
+        for (size_type i { 0 }; i < col_s; ++i)
             short_term_to_long_term_.push_back(
                 short_roller_.get_result()[i] - long_roller_.get_result()[i]);
     }
@@ -263,10 +263,10 @@ struct BollingerBand {
 
 private:
 
-    const double                                upper_band_multiplier_;
-    const double                                lower_band_multiplier_;
-    SimpleRollAdopter<MeanVisitor<T, I>, T, I, A>  mean_roller_;
-    SimpleRollAdopter<StdVisitor<T, I>, T, I, A>   std_roller_;
+    const double                                    upper_band_multiplier_;
+    const double                                    lower_band_multiplier_;
+    SimpleRollAdopter<MeanVisitor<T, I>, T, I, A>   mean_roller_;
+    SimpleRollAdopter<StdVisitor<T, I>, T, I, A>    std_roller_;
 
     template <typename K, typename H>
     inline void
@@ -341,7 +341,7 @@ public:
 
         upper_band_to_raw_.reserve(col_s);
         raw_to_lower_band_.reserve(col_s);
-        for (size_type i = 0; i < col_s; ++i)  {
+        for (size_type i { 0 }; i < col_s; ++i)  {
             const value_type    p = *(prices_begin + i);
             const value_type    mr = mean_result[i];
             const value_type    sr = std_result[i];
@@ -398,15 +398,15 @@ struct MACDVisitor {
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
 
-        macd_roller_t   short_roller(exponential_decay_spec::span,
-                                     short_mean_period_);
+        macd_roller_t   short_roller (exponential_decay_spec::span,
+                                      short_mean_period_);
 
         short_roller.pre();
         short_roller(idx_begin, idx_end, column_begin, column_end);
         short_roller.post();
 
-        macd_roller_t   long_roller(exponential_decay_spec::span,
-                                    long_mean_period_);
+        macd_roller_t   long_roller (exponential_decay_spec::span,
+                                     long_mean_period_);
 
         long_roller.pre();
         long_roller(idx_begin, idx_end, column_begin, column_end);
@@ -422,7 +422,7 @@ struct MACDVisitor {
                   long_result.size() });
 
         macd_line_.reserve(col_s);
-        for (size_type i = 0; i < col_s; ++i)
+        for (size_type i { 0 }; i < col_s; ++i)
             macd_line_.push_back(short_result[i] - long_result[i]);
 
         signal_line_roller_.pre();
@@ -430,10 +430,10 @@ struct MACDVisitor {
                             macd_line_.begin(), macd_line_.end());
         signal_line_roller_.post();
 
-        const auto  &signal_line_result = signal_line_roller_.get_result();
+        const auto  &signal_line_result { signal_line_roller_.get_result() };
 
         macd_histogram_.reserve(col_s);
-        for (size_type i = 0; i < col_s; ++i)
+        for (size_type i { 0 }; i < col_s; ++i)
             macd_histogram_.push_back(macd_line_[i] - signal_line_result[i]);
     }
 
@@ -769,17 +769,17 @@ struct  VWBASVisitor {
 
         if (event_count_ > 0)  {
             if (bid_volume_accumulator_ > 0 && ask_volume_accumulator_ > 0)  {
-                const value_type    vwa =
-                    vw_ask_price_accumulator_ / ask_volume_accumulator_;
-                const value_type    vwb =
-                    vw_bid_price_accumulator_ / bid_volume_accumulator_;
-                const value_type    vwbas = vwa - vwb;
-                const value_type    per_vwbas = (vwbas / vwb) * 100.0;
-                const value_type    spread =
+                const value_type    vwa {
+                    vw_ask_price_accumulator_ / ask_volume_accumulator_ };
+                const value_type    vwb {
+                    vw_bid_price_accumulator_ / bid_volume_accumulator_ };
+                const value_type    vwbas { vwa - vwb };
+                const value_type    per_vwbas { (vwbas / vwb) * 100.0 };
+                const value_type    spread {
                     (ask_price_accumulator_ / event_count_) -
-                    (bid_price_accumulator_ / event_count_);
-                const value_type    per_spread =
-                    (spread / (bid_price_accumulator_ / event_count_)) * 100.0;
+                    (bid_price_accumulator_ / event_count_) };
+                const value_type    per_spread {
+                    (spread / (bid_price_accumulator_ / event_count_)) * 100.0 };
 
                 result_.push_back (
                     { spread,
@@ -960,19 +960,38 @@ struct SharpeRatioVisitor {
             throw NotFeasible (err);
         }
 
-        value_type          cum_return { 0.0 };
-        StdVisitor<T, I>    std_vis(biased_);
-        auto                a_citer = asset_ret_begin;
-        const index_type    &index_val = *idx_begin; // Ignored
+        value_type  cum_ret { 0.0 };
+        auto        a_citer { asset_ret_begin };
 
-        std_vis.pre();
-        for (auto b_citer = benchmark_ret_begin;
-             b_citer != benchmark_ret_end; ++a_citer, ++b_citer)  {
-            std_vis (index_val, *a_citer - *b_citer);
-            cum_return += *a_citer - *b_citer;
+        if (! ds_only_)  {  // Sharpe Ratio
+            StdVisitor<T, I>    std_vis { biased_ };
+            const index_type    &index_val { *idx_begin }; // Ignored
+
+            std_vis.pre();
+            for (auto b_citer { benchmark_ret_begin };
+                 b_citer != benchmark_ret_end; ++a_citer, ++b_citer)  {
+                const value_type    val { *a_citer - *b_citer };
+
+                std_vis (index_val, val);
+                cum_ret += val;
+            }
+            std_vis.post();
+            result_ = (cum_ret / T(vec_s)) / std_vis.get_result();
         }
-        std_vis.post();
-        result_ = (cum_return / T(vec_s)) / std_vis.get_result();
+        else  {  // Sortino Ratio
+            value_type  ret_prod { 0 };
+
+            for (auto b_citer { benchmark_ret_begin };
+                 b_citer != benchmark_ret_end; ++a_citer, ++b_citer)  {
+                const value_type    val { *a_citer - *b_citer };
+                const value_type    min_val { val - min_rt_ };
+
+                if (min_val < 0)
+                    ret_prod += min_val * min_val;
+                cum_ret += val;
+            }
+            result_ = (cum_ret / T(vec_s)) / std::sqrt(ret_prod / T(vec_s));
+        }
     }
 
     inline void pre ()  { result_ = 0; }
@@ -980,12 +999,17 @@ struct SharpeRatioVisitor {
     inline result_type get_result () const  { return (result_); }
 
     explicit
-    SharpeRatioVisitor(bool biased = false) : biased_ (biased) {  }
+    SharpeRatioVisitor(bool biased = false,
+                       bool downside_only = false,
+                       value_type min_return = 0)
+        : min_rt_(min_return), biased_(biased), ds_only_(downside_only)  {  }
 
 private:
 
-    const bool  biased_;
-    result_type result_ { 0 };
+    result_type         result_ { 0 };
+    const value_type    min_rt_;
+    const bool          biased_;
+    const bool          ds_only_;
 };
 
 template<typename T, typename I = unsigned long>
@@ -1027,18 +1051,18 @@ struct RSIVisitor {
         //
         if (avg_period_ >= T(col_s - 3))  return;
 
-        ReturnVisitor<T, I, A> return_v (rp_);
+        ReturnVisitor<T, I, A>  return_v { rp_ };
 
         return_v.pre();
         return_v (idx_begin, idx_end, prices_begin, prices_end);
         return_v.post();
 
         static constexpr value_type one { 1 };
-        value_type                  avg_up = 0;
-        value_type                  avg_down = 0;
-        const value_type            avg_period_1 = avg_period_ - one;
+        value_type                  avg_up { 0 };
+        value_type                  avg_down { 0 };
+        const value_type            avg_period_1 { avg_period_ - one };
 
-        for (size_type i = 1; i < avg_period_; ++i)  {
+        for (size_type i { 1 }; i < avg_period_; ++i)  {
             const value_type    value = return_v.get_result()[i];
 
             if (value > 0)
@@ -1055,10 +1079,10 @@ struct RSIVisitor {
 
         result.push_back(h - (h / (one + avg_up / avg_down)));
 
-        const size_type ret_s = return_v.get_result().size();
+        const size_type ret_s { return_v.get_result().size() };
 
-        for (size_type i = size_type(avg_period_); i < ret_s; ++i)  {
-            const value_type    value = return_v.get_result()[i];
+        for (size_type i { size_type(avg_period_) }; i < ret_s; ++i)  {
+            const value_type    value { return_v.get_result()[i] };
 
             if (value > 0)
                 avg_up = (avg_up * avg_period_1 + value) / avg_period_;
@@ -1114,7 +1138,7 @@ struct RSXVisitor {
                     f78 { 0 }, f80 { 0 }, f88 { 0 }, f90 { 0 };
 
         constexpr value_type    zero { 0 };
-        constexpr value_type    epsilon = std::numeric_limits<T>::epsilon();
+        constexpr value_type    epsilon { std::numeric_limits<T>::epsilon() };
         constexpr value_type    half { 0.5 };
         constexpr value_type    one_half { 1.5 };
         constexpr value_type    one { 1 };
@@ -1127,7 +1151,7 @@ struct RSXVisitor {
         result_type result(col_s, std::numeric_limits<T>::quiet_NaN());
 
         result[avg_period_ - 1] = 0;
-        for (size_type i = size_type(avg_period_); i < col_s; ++i)  {
+        for (size_type i { size_type(avg_period_) }; i < col_s; ++i)  {
             if (f90 == zero)  {
                 f90 = one;
                 f0 = zero;
@@ -1236,17 +1260,17 @@ public:
         GET_COL_SIZE
 
         std::vector<range_data,
-                    typename allocator_declare<range_data, A>::type> buckets;
-        MeanVisitor<T, I>                                           mv;
-        StdVisitor<T, I>                                            sv;
+                    typename allocator_declare<range_data, A>::type>    buckets;
+        MeanVisitor<T, I>                                               mv;
+        StdVisitor<T, I>                                                sv;
 
         // Calculate each range basic stats
         //
         buckets.reserve(std::accumulate(ranges_.begin(), ranges_.end(), 0));
         for (auto range : ranges_)  {
-            const size_type ch_size = col_s / range;
+            const size_type ch_size { col_s / range };
 
-            for (size_type i = 0; i < range; ++i)  {
+            for (size_type i { 0 }; i < range; ++i)  {
                 range_data  rd;
 
                 rd.id = range;
@@ -1275,7 +1299,7 @@ public:
             value_type  max_dev { std::numeric_limits<T>::min() };
             value_type  min_dev { std::numeric_limits<T>::max() };
 
-            for (size_type i = iter.begin; i < iter.end; ++i)  {
+            for (size_type i { iter.begin }; i < iter.end; ++i)  {
                 total += *(column_begin + i) - iter.mean;
                 if (total > max_dev)  max_dev = total;
                 if (total < min_dev)  min_dev = total;
@@ -1285,10 +1309,10 @@ public:
 
         // Caluculate Hurst exponent
         //
-        size_type               prev_id { 0 };
-        size_type               prev_size { 0 };
-        value_type              count { 0 };
-        value_type              total_rescaled_range  { 0 };
+        size_type   prev_id { 0 };
+        size_type   prev_size { 0 };
+        value_type  count { 0 };
+        value_type  total_rescaled_range  { 0 };
         std::vector<
             value_type,
             typename allocator_declare<value_type, A>::type> log_rescaled_mean;
@@ -1317,7 +1341,7 @@ public:
                 std::log(total_rescaled_range / count));
         }
 
-        PolyFitVisitor<T, I, A>    pfv (1);  // First degree
+        PolyFitVisitor<T, I, A> pfv { 1 };  // First degree
 
         pfv.pre();
         pfv (idx_begin, idx_end,
@@ -1364,16 +1388,15 @@ struct MassIndexVisitor {
         assert((col_s == size_type(std::distance(low_begin, low_end))));
         assert(fast_ < slow_);
 
-        nzr_v<T, I, A> non_z_range;
+        nzr_v<T, I, A>  non_z_range;
 
         non_z_range.pre();
         non_z_range(idx_begin, idx_end,
                     high_begin, high_end, low_begin, low_end);
         non_z_range.post();
 
-        result_type result = std::move(non_z_range.get_result());
-
-        erm_t   fast_roller(exponential_decay_spec::span, fast_);
+        result_type result { std::move(non_z_range.get_result()) };
+        erm_t       fast_roller (exponential_decay_spec::span, fast_);
 
         fast_roller.pre();
         fast_roller(idx_begin, idx_end, result.begin(), result.end());
@@ -1381,9 +1404,9 @@ struct MassIndexVisitor {
 
         // Backfill the result with simple averges
         //
-        value_type  sum = 0;
+        value_type  sum { 0 };
 
-        for (size_type i = 0; i < col_s; ++i)  {
+        for (size_type i { 0 }; i < col_s; ++i)  {
             if (is_nan__(fast_roller.get_result()[i]))  {
                 sum += result[i];
                 fast_roller.get_result()[i] = sum / T(i + 1);
@@ -1398,7 +1421,7 @@ struct MassIndexVisitor {
         // Backfill the result with simple averges
         //
         sum = 0;
-        for (size_type i = 0; i < col_s; ++i)  {
+        for (size_type i { 0 }; i < col_s; ++i)  {
             if (is_nan__(fast_roller.get_result()[i]))  {
                 sum += result[i];
                 fast_roller.get_result()[i] = sum / T(i + 1);
@@ -1406,10 +1429,10 @@ struct MassIndexVisitor {
             else  break;
         }
 
-        for (size_type i = 0; i < col_s; ++i)
+        for (size_type i { 0 }; i < col_s; ++i)
             result[i] /= fast_roller.get_result()[i];
 
-        srs_t   slow_roller(std::move(SumVisitor<T, I>()), slow_);
+        srs_t   slow_roller { std::move(SumVisitor<T, I>()), slow_ };
 
         slow_roller.pre();
         slow_roller(idx_begin, idx_end, result.begin(), result.end());
@@ -1459,26 +1482,27 @@ struct  HullRollingMeanVisitor  {
 
         GET_COL_SIZE
 
-        wma_t   wma_half (WeightedMeanVisitor<T, I>(), roll_count_ / 2);
+        wma_t   wma_half { WeightedMeanVisitor<T, I>(), roll_count_ / 2 };
 
         wma_half.pre();
         wma_half (idx_begin, idx_end, column_begin, column_end);
         wma_half.post();
 
-        wma_t   wma_full (WeightedMeanVisitor<T, I>(), roll_count_);
+        wma_t   wma_full { WeightedMeanVisitor<T, I>(), roll_count_ };
 
         wma_full.pre();
         wma_full (idx_begin, idx_end, column_begin, column_end);
         wma_full.post();
 
         static constexpr value_type two { 2 };
-        result_type      result = std::move(wma_half.get_result());
 
-        for (size_type i = 0; i < col_s - 1 && i < col_s; ++i)
+        result_type result { std::move(wma_half.get_result()) };
+
+        for (size_type i { 0 }; i < col_s - 1 && i < col_s; ++i)
             result[i] = two * result[i] - wma_full.get_result()[i];
 
-        wma_t   wma_sqrt (WeightedMeanVisitor<T, I>(),
-                          size_type(std::sqrt(roll_count_)));
+        wma_t   wma_sqrt { WeightedMeanVisitor<T, I>(),
+                           size_type(std::sqrt(roll_count_)) };
 
         wma_sqrt.pre();
         wma_sqrt (idx_begin, idx_end, result.begin(), result.end());
@@ -1527,20 +1551,20 @@ struct  RollingMidValueVisitor  {
         result_type result;
 
         result.reserve(col_s);
-        for (size_type i = 0; i < roll_count_ - 1 && i < col_s; ++i)
+        for (size_type i { 0 }; i < roll_count_ - 1 && i < col_s; ++i)
             result.push_back(std::numeric_limits<T>::quiet_NaN());
 
-        value_type                  min_v = *low_begin;
-        value_type                  max_v = *high_begin;
+        value_type                  min_v { *low_begin };
+        value_type                  max_v { *high_begin };
         static constexpr value_type p5 { 0.5 };
 
-        for (size_type i = 0; i < col_s; ++i)  {
-            const size_type limit = i + roll_count_;
+        for (size_type i { 0 }; i < col_s; ++i)  {
+            const size_type limit { i + roll_count_ };
 
             if (limit <= col_s)  {
-                for (size_type j = i; j < limit; ++j)  {
-                    const value_type    low = *(low_begin + j);
-                    const value_type    high = *(high_begin + j);
+                for (size_type j { i }; j < limit; ++j)  {
+                    const value_type    low { *(low_begin + j) };
+                    const value_type    high { *(high_begin + j) };
 
                     if (low < min_v)  min_v = low;
                     if (high > max_v)  max_v = high;
@@ -1587,21 +1611,21 @@ struct  DrawdownVisitor  {
 
         GET_COL_SIZE
 
-        CumMaxVisitor<T, I, A> cm_v;
+        CumMaxVisitor<T, I, A>  cm_v;
 
         cm_v.pre();
         cm_v (idx_begin, idx_end, column_begin, column_end);
         cm_v.post();
 
-        const auto                  &cm_result = cm_v.get_result();
+        const auto                  &cm_result { cm_v.get_result() };
         static constexpr value_type one { 1 };
 
         drawdown_.reserve(col_s);
         pct_drawdown_.reserve(col_s);
         log_drawdown_.reserve(col_s);
-        for (size_type i = 0; i < col_s; ++i)  {
-            const value_type    col_val = *(column_begin + i);
-            const value_type    cm_val = cm_result[i];
+        for (size_type i { 0 }; i < col_s; ++i)  {
+            const value_type    col_val { *(column_begin + i) };
+            const value_type    cm_val { cm_result[i] };
 
             drawdown_.push_back(cm_val - col_val);
             pct_drawdown_.push_back(one - col_val / cm_val);
@@ -1657,27 +1681,27 @@ struct  WilliamPrcRVisitor  {
         assert((col_s == size_type(std::distance(low_begin, low_end))));
         assert((col_s == size_type(std::distance(high_begin, high_end))));
 
-        SimpleRollAdopter<MinVisitor<T, I>, T, I, A>   min_v(MinVisitor<T, I>(),
-                                                           roll_count_);
+        SimpleRollAdopter<MinVisitor<T, I>, T, I, A>   min_v {
+            MinVisitor<T, I>(), roll_count_ };
 
         min_v.pre();
         min_v (idx_begin, idx_end, low_begin, low_end);
         min_v.post();
 
-        SimpleRollAdopter<MaxVisitor<T, I>, T, I, A>   max_v(MaxVisitor<T, I>(),
-                                                           roll_count_);
+        SimpleRollAdopter<MaxVisitor<T, I>, T, I, A>   max_v {
+            MaxVisitor<T, I>(), roll_count_ };
 
         max_v.pre();
         max_v (idx_begin, idx_end, high_begin, high_end);
         max_v.post();
 
-        result_type result = std::move(max_v.get_result());
+        result_type result { std::move(max_v.get_result()) };
 
         static constexpr value_type h { 100 };
         static constexpr value_type one { 1 };
 
-        for (size_type i = 0; i < col_s; ++i)  {
-            const value_type    low = min_v.get_result()[i];
+        for (size_type i { 0 }; i < col_s; ++i)  {
+            const value_type    low { min_v.get_result()[i] };
 
             result[i] =
                 h * ((*(close_begin + i) - low) / (result[i] - low) - one);
@@ -1720,7 +1744,7 @@ struct  PSLVisitor  {
 
         result_.reserve(col_s);
         result_.push_back(0);
-        for (size_type i = 1; i < col_s; ++i)
+        for (size_type i { 1 }; i < col_s; ++i)
             result_.push_back(
                 (*(close_begin + i) - *(close_begin + (i - 1)) > 0) ? 1 : 0);
         calculate_(idx_begin, idx_end);
@@ -1737,7 +1761,7 @@ struct  PSLVisitor  {
         assert((col_s == size_type(std::distance(open_begin, open_end))));
 
         result_.reserve(col_s);
-        for (size_type i = 0; i < col_s; ++i)
+        for (size_type i { 0 }; i < col_s; ++i)
             result_.push_back(
                 (*(close_begin + i) - *(open_begin + i) > 0) ? 1 : 0);
         calculate_(idx_begin, idx_end);
@@ -1754,16 +1778,16 @@ private:
     template <typename K>
     inline void calculate_(const K &idx_begin, const K &idx_end)  {
 
-        SimpleRollAdopter<SumVisitor<T, I>, T, I, A>   sum_r(SumVisitor<T, I>(),
-                                                           roll_count_);
+        SimpleRollAdopter<SumVisitor<T, I>, T, I, A>   sum_r {
+            SumVisitor<T, I>(), roll_count_ };
 
         sum_r.pre();
         sum_r(idx_begin, idx_end, result_.begin(), result_.end());
         sum_r.post();
 
-        const size_type col_s = result_.size();
+        const size_type col_s { result_.size() };
 
-        for (size_type i = 0; i < col_s; ++i)
+        for (size_type i { 0 }; i < col_s; ++i)
             result_[i] = sum_r.get_result()[i] * T(100) / T(roll_count_);
     }
 
@@ -1799,26 +1823,26 @@ struct  CCIVisitor  {
         result_type result;
 
         result.reserve(col_s);
-        for (size_type i = 0; i < col_s; ++i)
+        for (size_type i { 0 }; i < col_s; ++i)
             result.push_back(
                 (*(low_begin + i) + *(high_begin + i) + *(close_begin + i)) /
                 T(3));
 
-        SimpleRollAdopter<MeanVisitor<T, I>, T, I, A>  avg_v (
-            MeanVisitor<T, I>(), roll_count_);
+        SimpleRollAdopter<MeanVisitor<T, I>, T, I, A>   avg_v {
+            MeanVisitor<T, I>(), roll_count_ };
 
         avg_v.pre();
         avg_v (idx_begin, idx_end, result.begin(), result.end());
         avg_v.post();
 
-        SimpleRollAdopter<MADVisitor<T, I>, T, I, A>   mad_v (
-            MADVisitor<T, I>(mad_type::mean_abs_dev_around_mean), roll_count_);
+        SimpleRollAdopter<MADVisitor<T, I>, T, I, A>    mad_v {
+            MADVisitor<T, I>(mad_type::mean_abs_dev_around_mean), roll_count_ };
 
         mad_v.pre();
         mad_v (idx_begin, idx_end, result.begin(), result.end());
         mad_v.post();
 
-        for (size_type i = 0; i < col_s; ++i)
+        for (size_type i { 0 }; i < col_s; ++i)
             result[i] =
                 (result[i] - avg_v.get_result()[i]) /
                 (lambert_const_ * mad_v.get_result()[i]);
@@ -1866,19 +1890,19 @@ struct GarmanKlassVolVisitor {
         assert((roll_count_ < (col_s - 1)));
 
         // 2 * log(2) - 1
-        constexpr value_type    cf = T(2) * T(0.69314718056) - T(1);
-        constexpr value_type    hlf = 0.5;
+        constexpr value_type    cf { T(2) * T(0.69314718056) - T(1) };
+        constexpr value_type    hlf { 0.5 };
         result_type             result;
 
         result.reserve(col_s);
-        for (size_type i = 0; i < roll_count_ - 1; ++i)
+        for (size_type i { 0 }; i < roll_count_ - 1; ++i)
             result.push_back(std::numeric_limits<T>::quiet_NaN());
-        for (size_type i = 0; i < col_s; ++i)  {
+        for (size_type i { 0 }; i < col_s; ++i)  {
             if (i + roll_count_ <= col_s)  {
                 value_type  sum { 0 };
                 size_type   cnt { 0 };
 
-                for (size_type j = i; j < (i + roll_count_); ++j)  {
+                for (size_type j { i }; j < (i + roll_count_); ++j)  {
                     const value_type    hl_rt =
                         std::log(*(high_begin + j) / *(low_begin + j));
                     const value_type    co_rt =
@@ -1938,39 +1962,39 @@ struct YangZhangVolVisitor {
         assert((col_s == size_type(std::distance(high_begin, high_end))));
         assert((roll_count_ < (col_s - 1)));
 
-        const value_type    k =
-            T(0.34) / (T(1) + T(roll_count_ + 1) / T(roll_count_ - 1));
-        const value_type    one_k = T(1) - k;
-        const value_type    norm = T(1) / T(roll_count_ - 1);
+        const value_type    k {
+            T(0.34) / (T(1) + T(roll_count_ + 1) / T(roll_count_ - 1)) };
+        const value_type    one_k { T(1) - k };
+        const value_type    norm { T(1) / T(roll_count_ - 1) };
         result_type         result;
 
         result.reserve(col_s);
-        for (size_type i = 0; i < roll_count_ - 1; ++i)
+        for (size_type i { 0 }; i < roll_count_ - 1; ++i)
             result.push_back(std::numeric_limits<T>::quiet_NaN());
 
-        for (size_type i = 0; i < col_s; ++i)  {
+        for (size_type i { 0 }; i < col_s; ++i)  {
             if (i + roll_count_ <= col_s)  {
                 value_type  c_vol_sum { 0 };
                 value_type  o_vol_sum { 0 };
                 value_type  rs_vol_sum { 0 };
 
-                for (size_type j = i; j < (i + roll_count_); ++j)  {
-                    const value_type    open = *(open_begin + j);
-                    const value_type    close = *(close_begin + j);
-                    const value_type    ho_rt =
-                        std::log(*(high_begin + j) / open);
-                    const value_type    lo_rt =
-                        std::log(*(low_begin + j) / open);
-                    const value_type    co_rt = std::log(close/ open);
-                    const value_type    oc_rt = j > 0
+                for (size_type j { i }; j < (i + roll_count_); ++j)  {
+                    const value_type    open { *(open_begin + j) };
+                    const value_type    close { *(close_begin + j) };
+                    const value_type    ho_rt {
+                        std::log(*(high_begin + j) / open) };
+                    const value_type    lo_rt {
+                        std::log(*(low_begin + j) / open) };
+                    const value_type    co_rt { std::log(close/ open) };
+                    const value_type    oc_rt { j > 0
                         ? std::log(open / *(close_begin + (j - 1)))
-                        : std::numeric_limits<T>::quiet_NaN();
-                    const value_type    cc_rt = j > 0
+                        : std::numeric_limits<T>::quiet_NaN() };
+                    const value_type    cc_rt { j > 0
                         ? std::log(close / *(close_begin + (j - 1)))
-                        : std::numeric_limits<T>::quiet_NaN();
+                        : std::numeric_limits<T>::quiet_NaN() };
                     // Rogers-Satchell volatility
-                    const value_type    rs_vol =
-                        ho_rt * (ho_rt - co_rt) + lo_rt * (lo_rt - co_rt);
+                    const value_type    rs_vol {
+                        ho_rt * (ho_rt - co_rt) + lo_rt * (lo_rt - co_rt) };
 
                     c_vol_sum += cc_rt * cc_rt * norm;
                     o_vol_sum += oc_rt * oc_rt * norm;
@@ -2025,19 +2049,19 @@ struct  KamaVisitor  {
 
         result_type change_diff (col_s, std::numeric_limits<T>::quiet_NaN());
 
-        for (size_type i = roll_count_; i < col_s; ++i)
+        for (size_type i { roll_count_ }; i < col_s; ++i)
             change_diff[i] =
                 std::fabs(*(column_begin + (i - roll_count_)) -
                           *(column_begin + i));
 
         result_type peer_diff (col_s, std::numeric_limits<T>::quiet_NaN());
 
-        for (size_type i = 1; i < col_s; ++i)
+        for (size_type i { 1 }; i < col_s; ++i)
             peer_diff[i] =
                 std::fabs(*(column_begin + (i - 1)) - *(column_begin + i));
 
-        SimpleRollAdopter<SumVisitor<T, I>, T, I, A>   vol (
-            SumVisitor<T, I>(), roll_count_);
+        SimpleRollAdopter<SumVisitor<T, I>, T, I, A>    vol {
+            SumVisitor<T, I>(), roll_count_ };
 
         vol.pre();
         vol(idx_begin, idx_end, peer_diff.begin(), peer_diff.end());
@@ -2046,14 +2070,14 @@ struct  KamaVisitor  {
         result_type result;
 
         result.reserve(col_s);
-        for (size_type i = 0; i < roll_count_ - 1; ++i)
+        for (size_type i { 0 }; i < roll_count_ - 1; ++i)
             result.push_back(std::numeric_limits<T>::quiet_NaN());
         result.push_back(0);
-        for (size_type i = roll_count_; i < col_s; ++i)  {
-            const value_type    exp_ratio =
-                change_diff[i] / vol.get_result()[i];
-            value_type          smoothing_const =
-                exp_ratio * (fast_sc_ - slow_sc_) + slow_sc_;
+        for (size_type i { roll_count_ }; i < col_s; ++i)  {
+            const value_type    exp_ratio {
+                change_diff[i] / vol.get_result()[i] };
+            value_type          smoothing_const {
+                exp_ratio * (fast_sc_ - slow_sc_) + slow_sc_ };
 
             smoothing_const *= smoothing_const;
             result.push_back(smoothing_const * *(column_begin + i) +
@@ -2106,13 +2130,13 @@ struct FisherTransVisitor {
         result_type mid_hl;
 
         mid_hl.reserve(col_s);
-        for (size_type i = 0; i < col_s; ++i)
+        for (size_type i { 0 }; i < col_s; ++i)
             mid_hl.push_back((*(low_begin + i) + *(high_begin + i)) * T(0.5));
 
-        SimpleRollAdopter<MaxVisitor<T, I>, T, I, A>   max_v(MaxVisitor<T, I>(),
-                                                           roll_count_);
-        SimpleRollAdopter<MinVisitor<T, I>, T, I, A>   min_v(MinVisitor<T, I>(),
-                                                           roll_count_);
+        SimpleRollAdopter<MaxVisitor<T, I>, T, I, A>   max_v {
+            MaxVisitor<T, I>(), roll_count_ };
+        SimpleRollAdopter<MinVisitor<T, I>, T, I, A>   min_v {
+            MinVisitor<T, I>(), roll_count_ };
 
         max_v.pre();
         max_v (idx_begin, idx_end, mid_hl.begin(), mid_hl.end());
@@ -2124,9 +2148,9 @@ struct FisherTransVisitor {
         result_type result;
 
         result.reserve(col_s);
-        for (size_type i = 0; i < col_s; ++i)  {
-            const value_type    v =
-                max_v.get_result()[i] - min_v.get_result()[i];
+        for (size_type i { 0 }; i < col_s; ++i)  {
+            const value_type    v {
+                max_v.get_result()[i] - min_v.get_result()[i] };
 
             result.push_back(((mid_hl[i] - min_v.get_result()[i]) /
                               (v >= T(0.001) ? v : T(0.001))) - T(0.5));
@@ -2187,22 +2211,22 @@ struct PercentPriceOSCIVisitor {
 
         assert(fast_ < slow_);
 
-        srs_t   fast_roller(std::move(MeanVisitor<T, I>()), fast_);
+        srs_t   fast_roller { std::move(MeanVisitor<T, I>()), fast_ };
 
         fast_roller.pre();
         fast_roller(idx_begin, idx_end, close_begin, close_end);
         fast_roller.post();
 
-        srs_t   slow_roller (std::move(MeanVisitor<T, I>()), slow_);
+        srs_t   slow_roller { std::move(MeanVisitor<T, I>()), slow_ };
 
         slow_roller.pre();
         slow_roller(idx_begin, idx_end, close_begin, close_end);
         slow_roller.post();
 
-        result_type result = std::move(slow_roller.get_result());
+        result_type result { std::move(slow_roller.get_result()) };
 
-        for (size_type i = 0; i < col_s; ++i)  {
-            const value_type    r = result[i];
+        for (size_type i { 0 }; i < col_s; ++i)  {
+            const value_type    r { result[i] };
 
             result[i] = (T(100) * (fast_roller.get_result()[i] - r)) / r;
         }
@@ -2215,13 +2239,13 @@ struct PercentPriceOSCIVisitor {
         signal_roller.post();
 
         histogram_.reserve(col_s);
-        for (size_type i = 0; i < slow_; ++i)
+        for (size_type i { 0 }; i < slow_; ++i)
             histogram_.push_back(std::numeric_limits<T>::quiet_NaN());
 
-        const size_type new_col_s =
-            std::min(col_s, signal_roller.get_result().size());
+        const size_type new_col_s {
+            std::min(col_s, signal_roller.get_result().size()) };
 
-        for (size_type i = slow_; i < new_col_s; ++i)
+        for (size_type i { slow_ }; i < new_col_s; ++i)
             histogram_.push_back(result[i] - signal_roller.get_result()[i]);
 
         result_.swap(result);
@@ -2272,16 +2296,16 @@ struct  SlopeVisitor  {
 
         GET_COL_SIZE
 
-        DiffVisitor<T, I, A>   diff (periods_, false);
+        DiffVisitor<T, I, A>    diff (periods_, false);
 
         diff.pre();
         diff (idx_begin, idx_end, column_begin, column_end);
         diff.post();
 
-        result_type             result = std::move(diff.get_result());
-        constexpr value_type    pi_180 = T(180) / T(M_PI);
+        result_type             result { std::move(diff.get_result()) };
+        constexpr value_type    pi_180 { T(180) / T(M_PI) };
 
-        for (size_type i = 0; i < col_s; ++i)  {
+        for (size_type i { 0 }; i < col_s; ++i)  {
             value_type  &r = result[i];
 
             r /= T(periods_);
@@ -2338,7 +2362,7 @@ struct  UltimateOSCIVisitor  {
 
         max_high.reserve(col_s);
         max_high.push_back(std::numeric_limits<T>::quiet_NaN());
-        for (size_type i = 1; i < col_s; ++i)
+        for (size_type i { 1 }; i < col_s; ++i)
             max_high.push_back(std::max(*(high_begin + i),
                                         *(close_begin + (i - 1))));
 
@@ -2346,24 +2370,24 @@ struct  UltimateOSCIVisitor  {
 
         min_low.reserve(col_s);
         min_low.push_back(std::numeric_limits<T>::quiet_NaN());
-        for (size_type i = 1; i < col_s; ++i)
+        for (size_type i { 1 }; i < col_s; ++i)
             min_low.push_back(std::min(*(low_begin + i),
                                        *(close_begin + (i - 1))));
 
         result_type buying_pressure;
 
         buying_pressure.reserve(col_s);
-        for (size_type i = 0; i < col_s; ++i)
+        for (size_type i { 0 }; i < col_s; ++i)
             buying_pressure.push_back(*(close_begin + i) - min_low[i]);
 
         result_type true_range;
 
         true_range.reserve(col_s);
-        for (size_type i = 0; i < col_s; ++i)
+        for (size_type i { 0 }; i < col_s; ++i)
             true_range.push_back(max_high[i] - min_low[i]);
 
-        ssr_t   fast_bp_sum (SumVisitor<T, I>(), fast_);
-        ssr_t   fast_tr_sum (SumVisitor<T, I>(), fast_);
+        ssr_t   fast_bp_sum { SumVisitor<T, I>(), fast_ };
+        ssr_t   fast_tr_sum { SumVisitor<T, I>(), fast_ };
 
         fast_bp_sum.pre();
         fast_tr_sum.pre();
@@ -2373,8 +2397,8 @@ struct  UltimateOSCIVisitor  {
         fast_bp_sum.post();
         fast_tr_sum.post();
 
-        ssr_t   med_bp_sum (SumVisitor<T, I>(), medium_);
-        ssr_t   med_tr_sum (SumVisitor<T, I>(), medium_);
+        ssr_t   med_bp_sum { SumVisitor<T, I>(), medium_ };
+        ssr_t   med_tr_sum { SumVisitor<T, I>(), medium_ };
 
         med_bp_sum.pre();
         med_tr_sum.pre();
@@ -2384,8 +2408,8 @@ struct  UltimateOSCIVisitor  {
         med_bp_sum.post();
         med_tr_sum.post();
 
-        ssr_t   slow_bp_sum (SumVisitor<T, I>(), slow_);
-        ssr_t   slow_tr_sum (SumVisitor<T, I>(), slow_);
+        ssr_t   slow_bp_sum { SumVisitor<T, I>(), slow_ };
+        ssr_t   slow_tr_sum { SumVisitor<T, I>(), slow_ };
 
         slow_bp_sum.pre();
         slow_tr_sum.pre();
@@ -2395,19 +2419,19 @@ struct  UltimateOSCIVisitor  {
         slow_bp_sum.post();
         slow_tr_sum.post();
 
-        const value_type    total_weights = slow_w_ + fast_w_ + medium_w_;
+        const value_type    total_weights { slow_w_ + fast_w_ + medium_w_ };
         result_type         result;
 
         result.reserve(col_s);
-        for (size_type i = 0; i < col_s; ++i)  {
-            const value_type    weights =
+        for (size_type i { 0 }; i < col_s; ++i)  {
+            const value_type    weights {
                 (fast_w_ *
                  (fast_bp_sum.get_result()[i] / fast_tr_sum.get_result()[i]) +
                  medium_w_ *
                  (med_bp_sum.get_result()[i] / med_tr_sum.get_result()[i]) +
                  slow_w_ *
                  (slow_bp_sum.get_result()[i] / slow_tr_sum.get_result()[i])) *
-                T(100);
+                T(100) };
 
             result.push_back(weights / total_weights);
         }
@@ -2465,26 +2489,26 @@ struct  UlcerIndexVisitor  {
 
         GET_COL_SIZE
 
-        SimpleRollAdopter<MaxVisitor<T, I>, T, I, A>   high (MaxVisitor<T, I>(),
-                                                          periods_);
+        SimpleRollAdopter<MaxVisitor<T, I>, T, I, A>    high {
+            MaxVisitor<T, I>(), periods_ };
 
         high.pre();
         high (idx_begin, idx_end, column_begin, column_end);
         high.post();
 
-        result_type result = std::move(high.get_result());
+        result_type result { std::move(high.get_result()) };
 
-        for (size_type i = 0; i < col_s; ++i)  {
-            const value_type    val =
-                (T(100) * (*(column_begin + i) - result[i])) / result[i];
+        for (size_type i { 0 }; i < col_s; ++i)  {
+            const value_type    val {
+                (T(100) * (*(column_begin + i) - result[i])) / result[i] };
 
             result[i] = val * val;
         }
 
-        SimpleRollAdopter<SumVisitor<T, I>, T, I, A>   sum (SumVisitor<T, I>(),
-                                                         periods_);
-        SimpleRollAdopter<MeanVisitor<T, I>, T, I, A>  avg (MeanVisitor<T, I>(),
-                                                         periods_);
+        SimpleRollAdopter<SumVisitor<T, I>, T, I, A>    sum {
+            SumVisitor<T, I>(), periods_ };
+        SimpleRollAdopter<MeanVisitor<T, I>, T, I, A>   avg {
+            MeanVisitor<T, I>(), periods_ };
 
         if (use_sum_)  {
             sum.pre();
@@ -2497,10 +2521,10 @@ struct  UlcerIndexVisitor  {
             avg.post();
         }
 
-        const result_type   &vec =
-            use_sum_ ? sum.get_result() : avg.get_result();
+        const result_type   &vec {
+            use_sum_ ? sum.get_result() : avg.get_result() };
 
-        for (size_type i = 0; i < col_s; ++i)
+        for (size_type i { 0 }; i < col_s; ++i)
             result[i] = std::sqrt(vec[i] / T(periods_));
 
         result_.swap(result);
@@ -2555,12 +2579,12 @@ struct  TTMTrendVisitor  {
         std::vector<T, typename allocator_declare<T, A>::type>  trend_avg;
 
         trend_avg.reserve(col_s);
-        for (size_type i = 0; i < bar_periods_; ++i)
+        for (size_type i { 0 }; i < bar_periods_; ++i)
             trend_avg.push_back(std::numeric_limits<T>::quiet_NaN());
-        for (size_type i = bar_periods_; i < col_s; ++i)
+        for (size_type i { bar_periods_ }; i < col_s; ++i)
             trend_avg.push_back((*(high_begin + i) + *(low_begin + i)) / T(2));
-        for (size_type i = 1; i <= bar_periods_; ++i)
-            for (size_type j = i; j < col_s; ++j)
+        for (size_type i { 1 }; i <= bar_periods_; ++i)
+            for (size_type j { i }; j < col_s; ++j)
                 trend_avg[j] +=
                     (*(high_begin + (j - i)) + *(low_begin + (j - i))) / T(2);
         std::transform(trend_avg.begin(), trend_avg.end(), trend_avg.begin(),
@@ -2570,7 +2594,7 @@ struct  TTMTrendVisitor  {
         result_type result;
 
         result.reserve(col_s);
-        for (size_type i = 0; i < col_s; ++i)
+        for (size_type i { 0 }; i < col_s; ++i)
             result.push_back(*(close_begin + i) > trend_avg[i]);
 
         result_.swap(result);
@@ -2639,7 +2663,7 @@ struct  ParabolicSARVisitor  {
                         reversal(col_s, false);
 
         accel_fact[0] = accel_fact[1] = current_af;
-        for (size_type i = 2; i < col_s; ++i)  {
+        for (size_type i { 2 }; i < col_s; ++i)  {
             bool                reverse { false };
             const value_type    low { *(low_begin + i) };
             const value_type    high { *(high_begin + i) };
@@ -2732,7 +2756,7 @@ struct  ParabolicSARVisitor  {
     get_shorts ()  { return (short_); }
 
     inline
-    const std::vector<value_type, 
+    const std::vector<value_type,
                       typename allocator_declare<value_type, A>::type> &
     get_acceleration_factors () const  { return (accel_fact_); }
     inline
@@ -2785,45 +2809,45 @@ struct  EBSineWaveVisitor  {
         assert(bar_period_ > 0 && hp_period_ < col_s);
 
         result_type         result(col_s, std::numeric_limits<T>::quiet_NaN());
-        value_type          last_close = *close_begin;
+        value_type          last_close { *close_begin };
         value_type          last_high_pass { 0 };
         value_type          filter_hist[2] = { 0, 0 };
-        const value_type    sin_hp = std::sin(T(360) / T(hp_period_));
-        const value_type    cos_hp = std::cos(T(360) / T(hp_period_));
-        const value_type    cos_bar =
-            std::cos(std::sqrt(T(2)) * T(180) / T(bar_period_));
-        const value_type    alpha1 = (T(1) - sin_hp) / cos_hp;
-        const value_type    alpha1_effect = T(0.5) * (T(1) + alpha1);
+        const value_type    sin_hp { std::sin(T(360) / T(hp_period_)) };
+        const value_type    cos_hp { std::cos(T(360) / T(hp_period_)) };
+        const value_type    cos_bar {
+            std::cos(std::sqrt(T(2)) * T(180) / T(bar_period_)) };
+        const value_type    alpha1 { (T(1) - sin_hp) / cos_hp };
+        const value_type    alpha1_effect { T(0.5) * (T(1) + alpha1) };
 
         // Smooth with a Super Smoother Filter from equation 3-3
         //
-        const value_type    alpha2 =
-            std::exp(-std::sqrt(T(2)) * T(M_PI) / T(bar_period_));
-        const value_type    c2 = T(2) * alpha2 * cos_bar;
-        const value_type    c3 = T(-1) * alpha2 * alpha2;
-        const value_type    c1 = T(1) - c2 - c3;
+        const value_type    alpha2 {
+            std::exp(-std::sqrt(T(2)) * T(M_PI) / T(bar_period_)) };
+        const value_type    c2 { T(2) * alpha2 * cos_bar };
+        const value_type    c3 { T(-1) * alpha2 * alpha2 };
+        const value_type    c1 { T(1) - c2 - c3 };
 
-        for (size_type i = 1; i < col_s; ++i)  {
-            const value_type    this_close = *(close_begin + i);
+        for (size_type i { 1 }; i < col_s; ++i)  {
+            const value_type    this_close { *(close_begin + i) };
 
             // High pass filter cyclic components whose periods are shorter
             // than duration input
             //
-            const value_type    high_pass =
+            const value_type    high_pass {
                 alpha1_effect * (this_close - last_close) +
-                alpha1 * last_high_pass;
-            const value_type    filter =
+                alpha1 * last_high_pass };
+            const value_type    filter {
                 c1 * (high_pass + last_high_pass) / T(2) +
-                c2 * filter_hist[1] + c3 * filter_hist[0];
+                c2 * filter_hist[1] + c3 * filter_hist[0] };
 
             // 3 bar average of wave amplitude and power
             //
-            const value_type    wave =
-                (filter + filter_hist[1] + filter_hist[0]) / T(3);
-            const value_type    power =
+            const value_type    wave {
+                (filter + filter_hist[1] + filter_hist[0]) / T(3) };
+            const value_type    power {
                 (filter * filter +
                  filter_hist[1] * filter_hist[1] +
-                 filter_hist[0] * filter_hist[0]) / T(3);
+                 filter_hist[0] * filter_hist[0]) / T(3) };
 
             // Normalize the average wave to square root of the average power
             //
@@ -2878,29 +2902,29 @@ struct  EhlerSuperSmootherVisitor  {
         result_type result(column_begin, column_end);
 
         if (poles_ == 2)  {
-            const value_type    x = T(M_PI) * std::sqrt(T(2)) / T(bar_period_);
-            const value_type    a0 = std::exp(-x);
-            const value_type    a1 = -a0 * a0;
-            const value_type    c0 = T(2) * a0 * std::cos(x);
-            const value_type    c1 = T(1) - a1 - c0;
+            const value_type    x { T(M_PI) * std::sqrt(T(2)) / T(bar_period_) };
+            const value_type    a0 { std::exp(-x) };
+            const value_type    a1 { -a0 * a0 };
+            const value_type    c0 { T(2) * a0 * std::cos(x) };
+            const value_type    c1 { T(1) - a1 - c0 };
 
-            for (size_type i = poles_; i < col_s; ++i)
+            for (size_type i { poles_ }; i < col_s; ++i)
                 result[i] =
                     c1 * *(column_begin + i) +
                     c0 * result[i - 1] +
                     a1 * result[i - 2];
         }
         else if (poles_ == 3)  {
-            const value_type    x = T(M_PI) / T(bar_period_);
-            const value_type    a0 = std::exp(-x);
-            const value_type    b0 = T(2) * a0 * std::cos(std::sqrt(T(3)) * x);
-            const value_type    a1 = a0 * a0;
-            const value_type    a2 = a1 * a1;
-            const value_type    c2 = -a1 * (T(1) + b0);
-            const value_type    c0 = a1 + b0;
-            const value_type    c1 = T(1) - c0 - c2 - a2;
+            const value_type    x { T(M_PI) / T(bar_period_) };
+            const value_type    a0 { std::exp(-x) };
+            const value_type    b0 { T(2) * a0 * std::cos(std::sqrt(T(3)) * x) };
+            const value_type    a1 { a0 * a0 };
+            const value_type    a2 { a1 * a1 };
+            const value_type    c2 { -a1 * (T(1) + b0) };
+            const value_type    c0 { a1 + b0 };
+            const value_type    c1 { T(1) - c0 - c2 - a2 };
 
-            for (size_type i = poles_; i < col_s; ++i)
+            for (size_type i { poles_ }; i < col_s; ++i)
                 result[i] =
                     c1 * *(column_begin + i) +
                     c0 * result[i - 1] +
@@ -2948,26 +2972,26 @@ struct  VarIdxDynAvgVisitor  {
 
         assert(roll_period_ > 1 && roll_period_ < col_s);
 
-        DiffVisitor<T, I, A>   diff(1, false);
+        DiffVisitor<T, I, A>    diff { 1, false };
 
         diff.pre();
         diff (idx_begin, idx_end, column_begin, column_end);
         diff.post();
 
-        result_type positive = std::move(diff.get_result());
+        result_type positive { std::move(diff.get_result()) };
 
         positive[0] = 0;
 
         result_type negative = positive;
 
-        for (size_type i = 0; i < col_s; ++i)  {
+        for (size_type i { 0 }; i < col_s; ++i)  {
             if (positive[i] < 0)  positive[i] = 0;
             if (negative[i] > 0)  negative[i] = 0;
             else  negative[i] = std::fabs(negative[i]);
         }
 
-        SimpleRollAdopter<SumVisitor<T, I>, T, I, A>   sum (SumVisitor<T, I>(),
-                                                         roll_period_);
+        SimpleRollAdopter<SumVisitor<T, I>, T, I, A>    sum {
+            SumVisitor<T, I>(), roll_period_ };
 
         sum.pre();
         sum (idx_begin, idx_end, positive.begin(), positive.end());
@@ -2980,15 +3004,15 @@ struct  VarIdxDynAvgVisitor  {
 
         result_type result(col_s, std::numeric_limits<T>::quiet_NaN());
 
-        for (size_type i = roll_period_; i < col_s; ++i)
+        for (size_type i { roll_period_ }; i < col_s; ++i)
             result[i] =
                 std::fabs((positive[i] - negative[i]) /
                           (positive[i] + negative[i]));
 
-        const value_type    alpha = T(2) / (T(roll_period_) + T(1));
+        const value_type    alpha { T(2) / (T(roll_period_) + T(1)) };
 
         result[roll_period_ - 1] = 0;
-        for (size_type i = roll_period_; i < col_s; ++i)
+        for (size_type i { roll_period_ }; i < col_s; ++i)
             result[i] =
                 alpha * result[i] * *(column_begin + i) +
                 result[i - 1] * (T(1) - alpha * result[i]);
@@ -3046,10 +3070,10 @@ struct  PivotPointSRVisitor  {
         result_type support_2(col_s, std::numeric_limits<T>::quiet_NaN());
         result_type support_3(col_s, std::numeric_limits<T>::quiet_NaN());
 
-        for (size_type i = 0; i < col_s; ++i)  {
-            const value_type    low = *(low_begin + i);
-            const value_type    high = *(high_begin + i);
-            const value_type    pp = (low + high + *(close_begin + i)) / T(3);
+        for (size_type i { 0 }; i < col_s; ++i)  {
+            const value_type    low { *(low_begin + i) };
+            const value_type    high { *(high_begin + i) };
+            const value_type    pp { (low + high + *(close_begin + i)) / T(3) };
 
             pivot_point[i] = pp;
             resist_1[i] = two * pp - low;
@@ -3146,22 +3170,22 @@ struct  AvgDirMovIdxVisitor  {
         result_type true_range(col_s);
         result_type result(col_s);
 
-        for (size_type i = 0; i < col_s - 1; ++i)  {
-            const value_type    nxt_h = *(high_begin + (i + 1));
-            const value_type    nxt_l = *(low_begin + (i + 1));
-            const value_type    pos_move = nxt_h - *(high_begin + i);
-            const value_type    neg_move = *(low_begin + i) - nxt_l;
+        for (size_type i { 0 }; i < col_s - 1; ++i)  {
+            const value_type    nxt_h { *(high_begin + (i + 1)) };
+            const value_type    nxt_l { *(low_begin + (i + 1)) };
+            const value_type    pos_move { nxt_h - *(high_begin + i) };
+            const value_type    neg_move { *(low_begin + i) - nxt_l };
 
             pos_di[i] = (pos_move > neg_move && pos_move > 0) ? pos_move : 0;
             neg_di[i] = (neg_move > pos_move && neg_move > 0) ? neg_move : 0;
 
-            const value_type    close = *(close_begin + i);
+            const value_type    close { *(close_begin + i) };
 
             true_range[i] = std::max(nxt_h, close) - std::min(nxt_l, close);
         }
 
-        ewm_v<double, I, A>   ewm(exponential_decay_spec::span,
-                                  dir_smoother_, true);
+        ewm_v<double, I, A> ewm(exponential_decay_spec::span,
+                                dir_smoother_, true);
 
         ewm.pre();
         ewm (idx_begin, idx_end, true_range.begin(), true_range.end());
@@ -3179,20 +3203,20 @@ struct  AvgDirMovIdxVisitor  {
         neg_di.swap(ewm.get_result());
 
         result_type dx(col_s);
-        value_type  prev_val = 0;
+        value_type  prev_val { 0 };
 
-        for (size_type i = 0; i < col_s - 1; ++i)  {
-            const value_type    pos_val = pos_di[i] / true_range[i];
-            const value_type    neg_val = neg_di[i] / true_range[i];
-            const value_type    val =
-                std::fabs(pos_val - neg_val) / (pos_val + neg_val);
+        for (size_type i { 0 }; i < col_s - 1; ++i)  {
+            const value_type    pos_val { pos_di[i] / true_range[i] };
+            const value_type    neg_val { neg_di[i] / true_range[i] };
+            const value_type    val {
+                std::fabs(pos_val - neg_val) / (pos_val + neg_val) };
 
             if (! is_nan__(val))  prev_val = val;
             dx[i] = prev_val;
         }
 
-        ewm_v<double, I, A>   ewm2(exponential_decay_spec::span,
-                                   adx_smoother_, true);
+        ewm_v<double, I, A> ewm2(exponential_decay_spec::span,
+                                 adx_smoother_, true);
 
         ewm2.pre();
         ewm2 (idx_begin, idx_end, dx.begin(), dx.end());
@@ -3240,31 +3264,31 @@ struct  HoltWinterChannelVisitor  {
         result_type upper (col_s, std::numeric_limits<T>::quiet_NaN());
         result_type lower (col_s, std::numeric_limits<T>::quiet_NaN());
         result_type pct_diff (col_s, std::numeric_limits<T>::quiet_NaN());
-        value_type  last_a = 0;
-        value_type  last_v = 0;
-        value_type  last_var = 0;
-        value_type  last_f = *close_begin;
-        value_type  last_price = last_f;
-        value_type  last_result = last_f;
+        value_type  last_a { 0 };
+        value_type  last_v { 0 };
+        value_type  last_var { 0 };
+        value_type  last_f { *close_begin };
+        value_type  last_price { last_f };
+        value_type  last_result { last_f };
 
-        for (size_type i = 0; i < col_s; ++i)  {
-            const value_type    val = *(close_begin + i);
-            const value_type    f =
-                (T(1) - na_) * (last_f + last_v + T(0.5) * last_a) + na_ * val;
-            const value_type    v =
-                (T(1) - nb_) * (last_v + last_a) + nb_ * (f - last_f);
-            const value_type    a =
-                (T(1) - nc_) * last_a + nc_ * (v - last_v);
-            const value_type    var =
+        for (size_type i { 0 }; i < col_s; ++i)  {
+            const value_type    val { *(close_begin + i) };
+            const value_type    f {
+                (T(1) - na_) * (last_f + last_v + T(0.5) * last_a) + na_ * val };
+            const value_type    v {
+                (T(1) - nb_) * (last_v + last_a) + nb_ * (f - last_f) };
+            const value_type    a {
+                (T(1) - nc_) * last_a + nc_ * (v - last_v) };
+            const value_type    var {
                 (T(1) - nd_) * last_var +
-                nd_ * (last_price - last_result) * (last_price - last_result);
-            const value_type    stddev = std::sqrt(last_var);
+                nd_ * (last_price - last_result) * (last_price - last_result) };
+            const value_type    stddev { std::sqrt(last_var) };
 
             last_result = result[i] = f + v + T(0.5) * a;
             upper[i] = result[i] + stddev;
             lower[i] = result[i] - stddev;
 
-            const value_type    diff = upper[i] - lower[i];
+            const value_type    diff { upper[i] - lower[i] };
 
             if (diff > 0)
                 pct_diff[i] = (val - lower[i]) / diff;
@@ -3354,9 +3378,9 @@ struct  HeikinAshiCndlVisitor {
         high[0] = *high_begin;
         low[0] = *low_begin;
         open[0] = T(0.5) * (*open_begin + *close_begin);
-        for (size_type i = 1; i < col_s; ++i)  {
-            const value_type    hval = *(high_begin + i);
-            const value_type    lval = *(low_begin + i);
+        for (size_type i { 1 }; i < col_s; ++i)  {
+            const value_type    hval { *(high_begin + i) };
+            const value_type    lval { *(low_begin + i) };
 
             result[i] =
                 T(0.25) *
@@ -3423,23 +3447,23 @@ struct  CenterOfGravityVisitor  {
 
         result_type result (col_s, std::numeric_limits<T>::quiet_NaN());
 
-        for (size_type i = roll_count_ - 1; i < col_s; ++i)  {
+        for (size_type i { roll_count_ - 1 }; i < col_s; ++i)  {
             size_type   count { 0 };
             value_type  dot_prd { 0 };
 
-            for (size_type j = (i + 1) - roll_count_; j <= i; ++j, ++count)
+            for (size_type j { (i + 1) - roll_count_ }; j <= i; ++j, ++count)
                 dot_prd += *(column_begin + j) * (roll_count_ - count);
             result[i] = dot_prd;
         }
 
-        SimpleRollAdopter<SumVisitor<T, I>, T, I, A>   sum_v
+        SimpleRollAdopter<SumVisitor<T, I>, T, I, A>    sum_v
             { SumVisitor<T, I>(), roll_count_ };
 
         sum_v.pre();
         sum_v (idx_begin, idx_end, column_begin, column_end);
         sum_v.post();
 
-        for (size_type i = 0; i < col_s; ++i)
+        for (size_type i { 0 }; i < col_s; ++i)
             result[i] /= -sum_v.get_result()[i];
         result_.swap(result);
     }
@@ -3483,10 +3507,10 @@ struct  ArnaudLegouxMAVisitor  {
 
         result_type result (col_s, std::numeric_limits<T>::quiet_NaN());
 
-        for (size_type i = roll_count_; i < col_s; ++i)  {
+        for (size_type i { roll_count_ }; i < col_s; ++i)  {
             value_type  win_sum { 0 };
 
-            for (size_type j = 0; j < roll_count_; ++j)
+            for (size_type j { 0 }; j < roll_count_; ++j)
                 win_sum += wtd_[j] * *(column_begin + (i - j));
 
             result[i] = win_sum / cum_sum_;
@@ -3507,7 +3531,7 @@ struct  ArnaudLegouxMAVisitor  {
           s_(T(r_count) / sigma),
           wtd_(r_count)  {
 
-        for (size_type i = 0; i < roll_count_; ++i)  {
+        for (size_type i { 0 }; i < roll_count_; ++i)  {
             wtd_[i] =
                 std::exp(T(-1) *
                          ((T(i) - m_) * (T(i) - m_)) / ((T(2) * s_ * s_)));
@@ -3545,15 +3569,15 @@ struct  RateOfChangeVisitor  {
         GET_COL_SIZE
         assert (period_ > 0);
 
-        DiffVisitor<T, I, A>   diff(period_, false);
+        DiffVisitor<T, I, A>    diff (period_, false);
 
         diff.pre();
         diff (idx_begin, idx_end, column_begin, column_end);
         diff.post();
 
-        result_type result = std::move(diff.get_result());
+        result_type result { std::move(diff.get_result()) };
 
-        for (size_type i = period_; i < col_s; ++i)
+        for (size_type i { period_ }; i < col_s; ++i)
             result[i] /= *(column_begin + (i - period_));
         result_.swap(result);
     }
@@ -3602,14 +3626,14 @@ struct  AccumDistVisitor {
 
         result_type result (col_s, std::numeric_limits<T>::quiet_NaN());
 
-        for (size_type i = 0; i < col_s; ++i)  {
-            const value_type    co = *(close_begin + i) - *(open_begin + i);
-            const value_type    hl = *(high_begin + i) - *(low_begin + i);
+        for (size_type i { 0 }; i < col_s; ++i)  {
+            const value_type    co { *(close_begin + i) - *(open_begin + i) };
+            const value_type    hl { *(high_begin + i) - *(low_begin + i) };
 
             result[i] = co * T(*(volume_begin + i)) / hl;
         }
 
-        CumSumVisitor<T, I, A> cumsum;
+        CumSumVisitor<T, I, A>  cumsum;
 
         cumsum.pre();
         cumsum (idx_begin, idx_end, result.begin(), result.end());
@@ -3660,14 +3684,14 @@ struct  ChaikinMoneyFlowVisitor {
 
         result_type result (col_s, std::numeric_limits<T>::quiet_NaN());
 
-        for (size_type i = 0; i < col_s; ++i)  {
-            const value_type    co = *(close_begin + i) - *(open_begin + i);
-            const value_type    hl = *(high_begin + i) - *(low_begin + i);
+        for (size_type i { 0 }; i < col_s; ++i)  {
+            const value_type    co { *(close_begin + i) - *(open_begin + i) };
+            const value_type    hl { *(high_begin + i) - *(low_begin + i) };
 
             result[i] = co * T(*(volume_begin + i)) / hl;
         }
 
-        SimpleRollAdopter<SumVisitor<T, I>, T, I, A>   sum
+        SimpleRollAdopter<SumVisitor<T, I>, T, I, A>    sum
             { SumVisitor<T, I>(), period_ };
 
         sum.pre();
@@ -3720,29 +3744,29 @@ struct  VertHorizFilterVisitor  {
         GET_COL_SIZE
         assert (period_ > 0 && period_ < col_s);
 
-        SimpleRollAdopter<MaxVisitor<T, I>, T, I, A>   mx
+        SimpleRollAdopter<MaxVisitor<T, I>, T, I, A>    mx
             { MaxVisitor<T, I>(), period_ };
 
         mx.pre();
         mx (idx_begin, idx_end, column_begin, column_end);
         mx.post();
 
-        SimpleRollAdopter<MinVisitor<T, I>, T, I, A>   mn
+        SimpleRollAdopter<MinVisitor<T, I>, T, I, A>    mn
             { MinVisitor<T, I>(), period_ };
 
         mn.pre();
         mn (idx_begin, idx_end, column_begin, column_end);
         mn.post();
 
-        DiffVisitor<T, I, A>   diff(1, false);
+        DiffVisitor<T, I, A>    diff { 1, false };
 
         diff.pre();
         diff (idx_begin, idx_end, column_begin, column_end);
         diff.post();
-        for (size_type i = 0; i < col_s; ++i)
+        for (size_type i { 0 }; i < col_s; ++i)
             diff.get_result()[i] = std::fabs(diff.get_result()[i]);
 
-        SimpleRollAdopter<SumVisitor<T, I>, T, I, A>   diff_sum
+        SimpleRollAdopter<SumVisitor<T, I>, T, I, A>    diff_sum
             { SumVisitor<T, I>(), period_ };
 
         diff_sum.pre();
@@ -3752,7 +3776,7 @@ struct  VertHorizFilterVisitor  {
 
         result_type result (col_s, std::numeric_limits<T>::quiet_NaN());
 
-        for (size_type i = period_; i < col_s; ++i)
+        for (size_type i { period_ }; i < col_s; ++i)
             result[i] =
                 std::fabs(mx.get_result()[i] - mn.get_result()[i]) /
                 diff_sum.get_result()[i];
@@ -3796,19 +3820,19 @@ struct  OnBalanceVolumeVisitor {
 
         assert((col_s == size_type(std::distance(volume_begin, volume_end))));
 
-        ReturnVisitor<T, I, A> ret (return_policy::trinary);
+        ReturnVisitor<T, I, A>  ret { return_policy::trinary };
 
         ret.pre();
         ret (idx_begin, idx_end, close_begin, close_end);
         ret.post();
 
-        result_type result = std::move(ret.get_result());
+        result_type result { std::move(ret.get_result()) };
 
         result[0] = T(1);
-        for (size_type i = 0; i < col_s; ++i)
+        for (size_type i { 0 }; i < col_s; ++i)
             result[i] *= T(*(volume_begin + i));
 
-        CumSumVisitor<T, I, A> cumsum;
+        CumSumVisitor<T, I, A>  cumsum;
 
         cumsum.pre();
         cumsum (idx_begin, idx_end, result.begin(), result.end());
@@ -3847,10 +3871,10 @@ struct  TrueRangeVisitor {
         result_type     result (col_s);
 
         result[0] = *high_begin - *low_begin;
-        for (size_type i = 1; i < col_s; ++i)  {
-            const value_type    high = *(high_begin + i);
-            const value_type    low = *(low_begin + i);
-            const value_type    prev_c = *(close_begin + (i - 1));
+        for (size_type i { 1 }; i < col_s; ++i)  {
+            const value_type    high { *(high_begin + i) };
+            const value_type    low { *(low_begin + i) };
+            const value_type    prev_c { *(close_begin + (i - 1)) };
 
             result[i] = std::max({ std::fabs(high - low),
                                    std::fabs(high - prev_c),
@@ -3858,9 +3882,9 @@ struct  TrueRangeVisitor {
         }
 
         if (rolling_avg_)  {
-            ewm_v<T, I, A> avg(exponential_decay_spec::span,
-                            rolling_period_,
-                            true);
+            ewm_v<T, I, A>  avg (exponential_decay_spec::span,
+                                 rolling_period_,
+                                 true);
 
             avg.pre();
             avg (idx_begin, idx_end, result.begin(), result.end());
@@ -3868,7 +3892,7 @@ struct  TrueRangeVisitor {
             result = std::move(avg.get_result());
 
             if (normalize_)
-                for (size_type i = 0; i < col_s; ++i)
+                for (size_type i { 0 }; i < col_s; ++i)
                     result[i] *= T(100) / *(close_begin + i);
         }
 
@@ -3914,11 +3938,11 @@ struct  DecayVisitor  {
         assert (period_ > 0 && period_ < col_s);
 
         result_type         result (col_s);
-        const value_type    decay =
-            expo_ ? std::exp(-T(period_)) : (T(1) / T(period_));
+        const value_type    decay {
+            expo_ ? std::exp(-T(period_)) : (T(1) / T(period_)) };
 
         result[0] = *column_begin;
-        for (size_type i = 1; i < col_s; ++i)
+        for (size_type i { 1 }; i < col_s; ++i)
             result[i] =
                 std::max({ *(column_begin + i),
                            *(column_begin + (i - 1)) - decay,
@@ -3958,13 +3982,13 @@ struct HodgesTompkinsVolVisitor {
         GET_COL_SIZE
         assert (roll_count_ > 0 && roll_count_ < col_s);
 
-        ReturnVisitor<T, I, A> ret (return_policy::log);
+        ReturnVisitor<T, I, A>  ret { return_policy::log };
 
         ret.pre();
         ret (idx_begin, idx_end, column_begin, column_end);
         ret.post();
 
-        SimpleRollAdopter<StdVisitor<T, I>, T, I, A>   stdev
+        SimpleRollAdopter<StdVisitor<T, I>, T, I, A>    stdev
             { StdVisitor<T, I>(), roll_count_ };
 
         stdev.pre();
@@ -3972,13 +3996,13 @@ struct HodgesTompkinsVolVisitor {
                ret.get_result().begin(), ret.get_result().end());
         stdev.post();
 
-        result_type         result = std::move(stdev.get_result());
-        const value_type    annual = std::sqrt(trading_periods_);
-        const value_type    n = T(col_s - roll_count_ + 1);
-        const value_type    adj_factor =
+        result_type         result { std::move(stdev.get_result()) };
+        const value_type    annual { std::sqrt(trading_periods_) };
+        const value_type    n { T(col_s - roll_count_ + 1) };
+        const value_type    adj_factor {
             T(1) / (T(1) -
                     (T(roll_count_) / n) +
-                    ((T(roll_count_ * roll_count_) - T(1)) / (T(3) * n * n)));
+                    ((T(roll_count_ * roll_count_) - T(1)) / (T(3) * n * n))) };
 
         std::transform(result.begin(), result.end(), result.begin(),
                        std::bind(std::multiplies<T>(), std::placeholders::_1,
@@ -4026,16 +4050,16 @@ struct ParkinsonVolVisitor {
         assert (roll_count_ > 0 && roll_count_ < col_s);
 
         result_type         result (col_s);
-        const value_type    factor = T(1) / (T(4) * std::log(T(2)));
+        const value_type    factor { T(1) / (T(4) * std::log(T(2))) };
 
-        for (size_type i = 0; i < col_s; ++i)  {
-            const value_type    val =
-                std::log(*(high_begin + i) / *(low_begin + i));
+        for (size_type i { 0 }; i < col_s; ++i)  {
+            const value_type    val {
+                std::log(*(high_begin + i) / *(low_begin + i)) };
 
             result[i] = factor * val * val;
         }
 
-        SimpleRollAdopter<MeanVisitor<T, I>, T, I, A>  avg
+        SimpleRollAdopter<MeanVisitor<T, I>, T, I, A>   avg
             { MeanVisitor<T, I>(), roll_count_ } ;
 
         avg.pre();
@@ -4043,7 +4067,7 @@ struct ParkinsonVolVisitor {
         avg.post();
         result = std::move(avg.get_result());
 
-        for (size_type i = roll_count_ - 1; i < col_s; ++i)
+        for (size_type i { roll_count_ - 1 }; i < col_s; ++i)
             result[i] = std::sqrt(result[i] * T(trading_periods_));
 
         result_.swap(result);
@@ -4083,26 +4107,26 @@ struct  CoppockCurveVisitor  {
 
         GET_COL_SIZE
 
-        roc_v<T, I, A> roc_l (roc_long_);
+        roc_v<T, I, A>  roc_l (roc_long_);
 
         roc_l.pre();
         roc_l (idx_begin, idx_end, column_begin, column_end);
         roc_l.post();
 
-        roc_v<T, I, A> roc_s (roc_short_);
+        roc_v<T, I, A>  roc_s (roc_short_);
 
         roc_s.pre();
         roc_s (idx_begin, idx_end, column_begin, column_end);
         roc_s.post();
 
-        result_type result = std::move(roc_l.get_result());
+        result_type result { std::move(roc_l.get_result()) };
 
-        for (size_type i = 0; i < col_s; ++i)
+        for (size_type i { 0 }; i < col_s; ++i)
             result[i] += roc_s.get_result()[i];
 
         using wma_t = SimpleRollAdopter<WeightedMeanVisitor<T, I>, T, I, A>;
 
-        wma_t   wma (WeightedMeanVisitor<T, I>(), wma_period_);
+        wma_t   wma { WeightedMeanVisitor<T, I>(), wma_period_ };
 
         wma.pre();
         wma (idx_begin, idx_end, result.begin(), result.end());
@@ -4156,25 +4180,25 @@ struct  BalanceOfPowerVisitor {
         assert((col_s == size_type(std::distance(open_begin, open_end))));
         assert((col_s == size_type(std::distance(high_begin, high_end))));
 
-        nzr_v<T, I, A> non_z_range;
+        nzr_v<T, I, A>  non_z_range;
 
         non_z_range.pre();
         non_z_range(idx_begin, idx_end,
                     close_begin, close_end, open_begin, open_end);
         non_z_range.post();
 
-        result_type result = std::move(non_z_range.get_result());
+        result_type result { std::move(non_z_range.get_result()) };
 
         non_z_range.pre();
         non_z_range(idx_begin, idx_end,
                     high_begin, high_end, low_begin, low_end);
         non_z_range.post();
 
-        for (size_type i = 0; i < col_s; ++i)
+        for (size_type i { 0 }; i < col_s; ++i)
             result[i] /= non_z_range.get_result()[i];
 
         if (rolling_avg_)  {
-            SimpleRollAdopter<MeanVisitor<T, I>, T, I, A>  avg
+            SimpleRollAdopter<MeanVisitor<T, I>, T, I, A>   avg
                 { MeanVisitor<T, I>(), rolling_period_ } ;
 
             avg.pre();
@@ -4226,7 +4250,7 @@ struct  ChandeKrollStopVisitor {
         assert((col_s == size_type(std::distance(low_begin, low_end))));
         assert((col_s == size_type(std::distance(high_begin, high_end))));
 
-        TrueRangeVisitor<T, I, A>  atr(true, p_period_);
+        TrueRangeVisitor<T, I, A>   atr { true, p_period_ };
 
         atr.pre();
         atr(idx_begin, idx_end,
@@ -4235,19 +4259,19 @@ struct  ChandeKrollStopVisitor {
             close_begin, close_end);
         atr.post();
 
-        SimpleRollAdopter<MaxVisitor<T, I>, T, I, A>   max1
+        SimpleRollAdopter<MaxVisitor<T, I>, T, I, A>    max1
             { MaxVisitor<T, I>(), p_period_ };
 
         max1.pre();
         max1 (idx_begin, idx_end, high_begin, high_end);
         max1.post();
 
-        result_type long_stop = std::move(max1.get_result());
+        result_type long_stop { std::move(max1.get_result()) };
 
-        for (size_type i = 0; i < col_s; ++i)
+        for (size_type i { 0 }; i < col_s; ++i)
             long_stop[i] -= multiplier_ * atr.get_result()[i];
 
-        SimpleRollAdopter<MaxVisitor<T, I>, T, I, A>   max2
+        SimpleRollAdopter<MaxVisitor<T, I>, T, I, A>    max2
             { MaxVisitor<T, I>(), q_period_ };
 
         max2.pre();
@@ -4255,19 +4279,19 @@ struct  ChandeKrollStopVisitor {
         max2.post();
         long_stop = std::move(max2.get_result());
 
-        SimpleRollAdopter<MinVisitor<T, I>, T, I, A>   min1
+        SimpleRollAdopter<MinVisitor<T, I>, T, I, A>    min1
             { MinVisitor<T, I>(), p_period_ };
 
         min1.pre();
         min1 (idx_begin, idx_end, low_begin, low_end);
         min1.post();
 
-        result_type short_stop = std::move(min1.get_result());
+        result_type short_stop { std::move(min1.get_result()) };
 
-        for (size_type i = 0; i < col_s; ++i)
+        for (size_type i { 0 }; i < col_s; ++i)
             short_stop[i] += multiplier_ * atr.get_result()[i];
 
-        SimpleRollAdopter<MaxVisitor<T, I>, T, I, A>   min2
+        SimpleRollAdopter<MaxVisitor<T, I>, T, I, A>    min2
             { MaxVisitor<T, I>(), q_period_ };
 
         min2.pre();
@@ -4335,7 +4359,7 @@ struct  VortexVisitor {
         assert((col_s == size_type(std::distance(high_begin, high_end))));
         assert((roll_period_ < (col_s - 1)));
 
-        TrueRangeVisitor<T, I, A>  tr (false);
+        TrueRangeVisitor<T, I, A>   tr { false };
 
         tr.pre();
         tr(idx_begin, idx_end,
@@ -4344,7 +4368,7 @@ struct  VortexVisitor {
            close_begin, close_end);
         tr.post();
 
-        SimpleRollAdopter<SumVisitor<T, I>, T, I, A>   tr_sum
+        SimpleRollAdopter<SumVisitor<T, I>, T, I, A>    tr_sum
             { SumVisitor<T, I>(), roll_period_ };
 
         tr_sum.pre();
@@ -4355,14 +4379,14 @@ struct  VortexVisitor {
         result_type plus_indicator(col_s, std::numeric_limits<T>::quiet_NaN());
         result_type minus_indicator(col_s, std::numeric_limits<T>::quiet_NaN());
 
-        for (size_type i = 1; i < col_s; ++i)  {
+        for (size_type i { 1 }; i < col_s; ++i)  {
             plus_indicator[i] =
                 std::fabs(*(high_begin + i) - *(low_begin + (i - 1)));
             minus_indicator[i] =
                 std::fabs(*(low_begin + i) - *(high_begin + (i - 1)));
         }
 
-        SimpleRollAdopter<SumVisitor<T, I>, T, I, A>   vtx_sum
+        SimpleRollAdopter<SumVisitor<T, I>, T, I, A>    vtx_sum
             { SumVisitor<T, I>(), roll_period_ };
 
         vtx_sum.pre();
@@ -4377,8 +4401,8 @@ struct  VortexVisitor {
         vtx_sum.post();
         minus_indicator = std::move(vtx_sum.get_result());
 
-        for (size_type i = 0; i < col_s; ++i)  {
-            const value_type    val = tr_sum.get_result()[i];
+        for (size_type i { 0 }; i < col_s; ++i)  {
+            const value_type    val { tr_sum.get_result()[i] };
 
             plus_indicator[i] /= val;
             minus_indicator[i] /= val;
@@ -4438,7 +4462,7 @@ struct  KeltnerChannelsVisitor  {
         assert((col_s == size_type(std::distance(high_begin, high_end))));
         assert((roll_period_ < (col_s - 1)));
 
-        TrueRangeVisitor<T, I, A>  tr (false);
+        TrueRangeVisitor<T, I, A>   tr { false };
 
         tr.pre();
         tr(idx_begin, idx_end,
@@ -4447,28 +4471,28 @@ struct  KeltnerChannelsVisitor  {
            close_begin, close_end);
         tr.post();
 
-        ewm_v<T, I, A> basis(exponential_decay_spec::span, roll_period_, true);
+        ewm_v<T, I, A>  basis(exponential_decay_spec::span, roll_period_, true);
 
         basis.pre();
         basis (idx_begin, idx_end, close_begin, close_end);
         basis.post();
 
-        ewm_v<T, I, A> band(exponential_decay_spec::span, roll_period_, true);
+        ewm_v<T, I, A>  band(exponential_decay_spec::span, roll_period_, true);
 
         band.pre();
         band (idx_begin, idx_end,
               tr.get_result().begin(), tr.get_result().end());
         band.post();
 
-        result_type lower_band = std::move(tr.get_result());
+        result_type lower_band { std::move(tr.get_result()) };
 
-        for (size_type i = 0; i < col_s; ++i)
+        for (size_type i { 0 }; i < col_s; ++i)
             lower_band[i] =
                 basis.get_result()[i] - b_mult_ * band.get_result()[i];
 
-        result_type upper_band = std::move(basis.get_result());
+        result_type upper_band { std::move(basis.get_result()) };
 
-        for (size_type i = 0; i < col_s; ++i)
+        for (size_type i { 0 }; i < col_s; ++i)
             upper_band[i] += b_mult_ * band.get_result()[i];
 
         upper_band_ = std::move(upper_band);
@@ -4522,13 +4546,13 @@ struct TrixVisitor  {
 
         assert(col_s > 3);
 
-        ewm_v<T, I, A> ewm13(exponential_decay_spec::span, roll_period_, true);
+        ewm_v<T, I, A>  ewm13(exponential_decay_spec::span, roll_period_, true);
 
         ewm13.pre();
         ewm13 (idx_begin, idx_end, column_begin, column_end);
         ewm13.post();
 
-        ewm_v<T, I, A> ewm2(exponential_decay_spec::span, roll_period_, true);
+        ewm_v<T, I, A>  ewm2(exponential_decay_spec::span, roll_period_, true);
 
         ewm2.pre();
         ewm2 (idx_begin, idx_end,
@@ -4540,7 +4564,7 @@ struct TrixVisitor  {
                ewm2.get_result().begin(), ewm2.get_result().end());
         ewm13.post();
 
-        ReturnVisitor<T, I, A> ret(return_policy::percentage);
+        ReturnVisitor<T, I, A>  ret { return_policy::percentage };
 
         ret.get_result().swap(ewm2.get_result());
         ret.pre();
@@ -4548,10 +4572,10 @@ struct TrixVisitor  {
              ewm13.get_result().begin(), ewm13.get_result().end());
         ret.post();
 
-        result_type result = std::move(ret.get_result());
+        result_type result { std::move(ret.get_result()) };
 
         if (avg_signal_)  {
-            SimpleRollAdopter<MeanVisitor<T, I>, T, I, A>  avg
+            SimpleRollAdopter<MeanVisitor<T, I>, T, I, A>   avg
                 { MeanVisitor<T, I>(), sroll_period_ } ;
 
             avg.get_result().swap(ewm13.get_result());
@@ -4608,14 +4632,14 @@ struct PrettyGoodOsciVisitor  {
         assert((col_s == size_type(std::distance(high_begin, high_end))));
         assert((roll_period_ < (col_s - 1)));
 
-        SimpleRollAdopter<MeanVisitor<T, I>, T, I, A>  savg
+        SimpleRollAdopter<MeanVisitor<T, I>, T, I, A>   savg
             { MeanVisitor<T, I>(), roll_period_ } ;
 
         savg.pre();
         savg (idx_begin, idx_end, close_begin, close_end);
         savg.post();
 
-        TrueRangeVisitor<T, I, A>  atr(true, roll_period_);
+        TrueRangeVisitor<T, I, A>   atr { true, roll_period_ };
 
         atr.pre();
         atr(idx_begin, idx_end,
@@ -4624,19 +4648,19 @@ struct PrettyGoodOsciVisitor  {
             close_begin, close_end);
         atr.post();
 
-        result_type result = std::move(savg.get_result());
+        result_type result { std::move(savg.get_result()) };
 
-        for (size_type i = 0; i < col_s; ++i)
+        for (size_type i { 0 }; i < col_s; ++i)
             result[i] = *(close_begin + i) - result[i];
 
-        ewm_v<T, I, A> ewm(exponential_decay_spec::span, roll_period_, true);
+        ewm_v<T, I, A>  ewm(exponential_decay_spec::span, roll_period_, true);
 
         ewm.pre();
         ewm (idx_begin, idx_end,
              atr.get_result().begin(), atr.get_result().end());
         ewm.post();
 
-        for (size_type i = 0; i < col_s; ++i)
+        for (size_type i { 0 }; i < col_s; ++i)
             result[i] /= ewm.get_result()[i];
 
         result_ = std::move(result);
@@ -4709,19 +4733,19 @@ struct T3MovingMeanVisitor {
         e6.post();
 
         const size_type col_s = std::distance(column_begin, column_end);
-        const double    c1 = -v_factor_ * v_factor_ * v_factor_;
-        const double    c2 = 3.0 * v_factor_ * v_factor_ +
-                             3.0 * v_factor_ * v_factor_ * v_factor_;
-        const double    c3 = -6.0 * v_factor_ * v_factor_ -
+        const double    c1 { -v_factor_ * v_factor_ * v_factor_ };
+        const double    c2 { 3.0 * v_factor_ * v_factor_ +
+                             3.0 * v_factor_ * v_factor_ * v_factor_ };
+        const double    c3 { -6.0 * v_factor_ * v_factor_ -
                              3.0 * v_factor_ -
-                             3.0 * v_factor_ * v_factor_ * v_factor_;
-        const double    c4 = v_factor_ * v_factor_ * v_factor_ +
+                             3.0 * v_factor_ * v_factor_ * v_factor_ };
+        const double    c4 { v_factor_ * v_factor_ * v_factor_ +
                              3.0 * v_factor_ * v_factor_ +
                              3.0 * v_factor_ +
-                             1.0;
-        result_type     result = std::move(e6.get_result());
+                             1.0 };
+        result_type     result { std::move(e6.get_result()) };
 
-        for (size_type i = 0; i < col_s; ++i)
+        for (size_type i { 0 }; i < col_s; ++i)
             result[i] = c1 * result[i] +
                         c2 * e5.get_result()[i] +
                         c3 * e4.get_result()[i] +
@@ -4788,12 +4812,12 @@ struct TreynorRatioVisitor {
         }
 
         value_type          cum_return { 0.0 };
-        BetaVisitor<T, I>   beta_vis(biased_);
-        auto                a_citer = asset_ret_begin;
-        const index_type    &index_val = *idx_begin; // Ignored
+        BetaVisitor<T, I>   beta_vis { biased_ };
+        auto                a_citer { asset_ret_begin };
+        const index_type    &index_val { *idx_begin }; // Ignored
 
         beta_vis.pre();
-        for (auto b_citer = benchmark_ret_begin;
+        for (auto b_citer { benchmark_ret_begin };
              b_citer != benchmark_ret_end; ++a_citer, ++b_citer)  {
             beta_vis (index_val, *a_citer, *b_citer);
             cum_return += *a_citer - *b_citer;

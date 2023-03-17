@@ -625,12 +625,19 @@ static void test_SharpeRatioVisitor()  {
                  std::make_pair("benchmark", d2),
                  std::make_pair("col_3", i1));
 
-    SharpeRatioVisitor<double>  sh_ratio;
+    SharpeRatioVisitor<double>  sharpe_ratio;
     const auto                  result =
         df.single_act_visit<double, double>("asset", "benchmark",
-                                            sh_ratio, true).get_result();
+                                            sharpe_ratio, true).get_result();
 
     assert(fabs(result - 0.425631) < 0.00001);
+
+    SharpeRatioVisitor<double>  sortino_ratio { false, true };
+    const auto                  result2 =
+        df.single_act_visit<double, double>("asset", "benchmark",
+                                            sortino_ratio, true).get_result();
+
+    assert(fabs(result2 - 1.0295) < 0.0001);
 }
 
 // -----------------------------------------------------------------------------

@@ -44,8 +44,9 @@ get_col_unique_values(const char *name) const;
         <OL>
           <LI>Type T must be hash-able. If this is a user defined type, you must enable and specialize std::hash.</LI>
           <LI>The equality operator (==) must be well defined for type T.</LI>
-          <LI>Type T must match the actual type of the named column. Of course, if you never call this method in your application, you need not be worried about these conditions.</LI>
+          <LI>Type T must match the actual type of the named column.</LI>
         </OL>
+          Of course, if you never call this method in your application, you need not be worried about these conditions.<BR>
       </td>
       <td>
         <B>T</B>: Data type of the named column<BR>

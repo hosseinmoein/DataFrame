@@ -1340,6 +1340,42 @@ static void test_FixedAutoCorrVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_RVIVisitor()  {
+
+    std::cout << "\nTesting RVIVisitor{  } ..." << std::endl;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("data/SHORT_IBM.csv", io_format::csv2);
+
+        RVIVisitor<double, std::string> rvi;
+
+        // Here we use exponentially weighted mean and also adjust for
+        // finite series
+        //
+        df.single_act_visit<double, double, double>
+            ("IBM_Close", "IBM_High", "IBM_Low", rvi);
+
+        assert(rvi.get_result().size() == 1721);
+        assert(std::isnan(rvi.get_result()[0]));
+        assert(std::isnan(rvi.get_result()[12]));
+        assert(rvi.get_result()[13] == 0);
+        assert(std::abs(rvi.get_result()[14] - 100.0) < 0.0001);
+        assert(std::abs(rvi.get_result()[15] - 41.8105) < 0.0001);
+        assert(std::abs(rvi.get_result()[18] - 20.4976) < 0.0001);
+        assert(std::abs(rvi.get_result()[25] - 42.6008) < 0.0001);
+        assert(std::abs(rvi.get_result()[1720] - 43.5703) < 0.0001);
+        assert(std::abs(rvi.get_result()[1712] - 38.7802) < 0.0001);
+        assert(std::abs(rvi.get_result()[1707] - 32.3759) < 0.0001);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     test_groupby_edge();
@@ -1368,6 +1404,7 @@ int main(int, char *[]) {
     test_ExponentiallyWeightedCorrVisitor();
     test_reading_in_chunks();
     test_FixedAutoCorrVisitor();
+    test_RVIVisitor();
 
     return (0);
 }

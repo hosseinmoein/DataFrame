@@ -1228,6 +1228,122 @@ using rsx_v = RSXVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
+// Relative Volatility Index (RVI). Instead of adding up price changes
+// like RSI based on price direction, the RVI adds up standard deviations
+// based on price direction.
+//
+template<typename T, typename I = unsigned long, std::size_t A = 0,
+         typename =
+             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+struct RVIVisitor {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &close_begin, const H &close_end,
+                const H &high_begin, const H &high_end,
+                const H &low_begin, const H &low_end)  {
+
+        const size_type col_s = std::distance(close_begin, close_end);
+
+        assert((col_s == size_type(std::distance(high_begin, high_end))));
+        assert((col_s == size_type(std::distance(low_begin, low_end))));
+        assert(roll_period_ < col_s);
+
+        rvi_(idx_begin, idx_end, close_begin, close_end, result_);
+
+        result_type result;
+
+        rvi_(idx_begin, idx_end, high_begin, high_end, result);
+        for (size_type i = 0; i < col_s; ++i)
+            result_[i] += result[i];
+        rvi_(idx_begin, idx_end, low_begin, low_end, result);
+        for (size_type i = 0; i < col_s; ++i)
+            result_[i] = (result_[i] + result[i]) / T(3);
+    }
+
+    DEFINE_PRE_POST
+    DEFINE_RESULT
+
+    explicit
+    RVIVisitor(size_type roll_period = 14) : roll_period_(roll_period)  {   }
+
+private:
+
+    template <typename K, typename H>
+    inline void
+    rvi_(const K &idx_begin, const K &idx_end,
+         const H &ts_begin, const H &ts_end,
+         result_type &result)  {
+
+        stdev_.pre();
+        stdev_ (idx_begin, idx_end, ts_begin, ts_end);
+        stdev_.post();
+
+        ret_v_.pre();
+        ret_v_ (idx_begin, idx_end, ts_begin, ts_end);
+        ret_v_.post();
+
+        const size_type col_s = ret_v_.get_result().size();
+
+        neg_.resize(col_s);
+        std::copy(ret_v_.get_result().begin(), ret_v_.get_result().end(),
+                  neg_.begin());
+
+        for (size_type i = 0; i < col_s; ++i)  {
+            value_type  &pos = ret_v_.get_result()[i];
+            value_type  &neg = neg_[i];
+
+            if (pos < 0)  pos = 0;
+            if (neg > 0)  neg = 0;
+            else if (neg < 0)  neg = 1;
+
+            const value_type    stdev = stdev_.get_result()[i];
+
+            pos *= stdev;
+            neg *= stdev;
+        }
+
+        ewm_pos_.pre();
+        ewm_pos_ (idx_begin, idx_end,
+                  ret_v_.get_result().begin(), ret_v_.get_result().end());
+        ewm_pos_.post();
+
+        ewm_neg_.pre();
+        ewm_neg_ (idx_begin, idx_end, neg_.begin(), neg_.end());
+        ewm_neg_.post();
+
+        result.clear();
+        result.reserve(col_s);
+        for (size_type i = 0; i < col_s; ++i)
+            result.push_back(
+                (T(100) * ewm_pos_.get_result()[i]) /
+                (ewm_pos_.get_result()[i] + ewm_neg_.get_result()[i]));
+    }
+
+    const size_type roll_period_;
+    result_type     result_ { };
+    result_type     neg_ {  };
+
+    SimpleRollAdopter<StdVisitor<T, I>, T, I, A>    stdev_
+        { StdVisitor<T, I>(), roll_period_  };
+    ReturnVisitor<T, I, A>                          ret_v_
+        { return_policy::trinary };
+    // Adjusting for finite series in both cases
+    //
+    ewm_v<T, I, A>                                  ewm_pos_
+        { exponential_decay_spec::span, T(roll_period_), true };
+    ewm_v<T, I, A>                                  ewm_neg_
+        { exponential_decay_spec::span, T(roll_period_), true };
+};
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using rvi_v = RVIVisitor<T, I, A>;
+
+// ----------------------------------------------------------------------------
+
 template<typename T, typename I = unsigned long, std::size_t A = 0,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>

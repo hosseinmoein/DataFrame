@@ -1881,25 +1881,43 @@ struct  ExponentiallyWeightedMeanVisitor  {
         GET_COL_SIZE
         assert(col_s > 3);
 
-        result_type         result (col_s);
+        result_type         result (col_s, 0);
         const value_type    decay_comp = T(1) - decay_;
+        size_type           starting = 0;
 
-        result[0] = *column_begin;
+        for (; starting < col_s; ++starting)  {
+            const value_type    val = *(column_begin + starting);
+
+            if (! is_nan__(val))  {
+                result[starting] = val;
+                break;
+            }
+            else
+                result[starting] = 0;
+        }
+
         if (! finite_adjust_)  {
-            for (size_type i = 1; i < col_s; ++i)
-                result[i] =
-                    decay_ * *(column_begin + i) + decay_comp * result[i - 1];
+            for (size_type i = starting + 1; i < col_s; ++i)  {
+                const value_type    val = *(column_begin + i);
+
+                if (! is_nan__(val))
+                    result[i] = decay_ * val + decay_comp * result[i - 1];
+            }
         }
         else  {  // Adjust for the fact that this is not an infinite data set
             value_type  denominator = 1;
             value_type  decay_comp_prod = 1;
             value_type  numerator = result[0];
 
-            for (size_type i = 1; i < col_s; ++i)  {
-                decay_comp_prod *= decay_comp;
-                denominator += decay_comp_prod;
-                numerator = numerator * decay_comp + *(column_begin + i);
-                result[i] = numerator / denominator;
+            for (size_type i = starting + 1; i < col_s; ++i)  {
+                const value_type    val = *(column_begin + i);
+
+                if (! is_nan__(val))  {
+                    decay_comp_prod *= decay_comp;
+                    denominator += decay_comp_prod;
+                    numerator = numerator * decay_comp + val;
+                    result[i] = numerator / denominator;
+                }
             }
         }
 

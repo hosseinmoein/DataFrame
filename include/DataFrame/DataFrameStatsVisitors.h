@@ -1892,8 +1892,6 @@ struct  ExponentiallyWeightedMeanVisitor  {
                 result[starting] = val;
                 break;
             }
-            else
-                result[starting] = 0;
         }
 
         if (! finite_adjust_)  {
@@ -1969,12 +1967,21 @@ struct  ExponentiallyWeightedVarVisitor  {
         result_type         ewmvar;
         result_type         ewmstd;
         const value_type    decay_comp = T(1) - decay_;
+        size_type           starting = 0;
 
         ewmvar.reserve(col_s);
-        ewmvar.push_back(std::numeric_limits<T>::quiet_NaN());
         ewmstd.reserve(col_s);
+        for (; starting < col_s; ++starting)  {
+            if (is_nan__(*(column_begin + starting)))  {
+                ewmvar.push_back(std::numeric_limits<T>::quiet_NaN());
+                ewmstd.push_back(std::numeric_limits<T>::quiet_NaN());
+            }
+            else  break;
+        }
+
+        ewmvar.push_back(std::numeric_limits<T>::quiet_NaN());
         ewmstd.push_back(std::numeric_limits<T>::quiet_NaN());
-        for (size_type i = 1; i < col_s; ++i)  {
+        for (size_type i = starting + 1; i < col_s; ++i)  {
             value_type  sum_weights = 0;
             value_type  sum_sq_weights = 0;
             value_type  sum_weighted_input = 0;
@@ -2064,10 +2071,17 @@ struct  ExponentiallyWeightedCovVisitor  {
 
         result_type         ewmcov;
         const value_type    decay_comp = T(1) - decay_;
+        size_type           starting = 0;
 
         ewmcov.reserve(col_s);
+        for (; starting < col_s; ++starting)
+            if (is_nan__(*(x_begin + starting)) ||
+                is_nan__(*(y_begin + starting)))
+                ewmcov.push_back(std::numeric_limits<T>::quiet_NaN());
+            else  break;
+
         ewmcov.push_back(std::numeric_limits<T>::quiet_NaN());
-        for (size_type i = 1; i < col_s; ++i)  {
+        for (size_type i = starting + 1; i < col_s; ++i)  {
             value_type  sum_weights = 0;
             value_type  sum_sq_weights = 0;
             value_type  sum_weighted_inputx = 0;
@@ -2156,10 +2170,17 @@ struct  ExponentiallyWeightedCorrVisitor  {
 
         result_type         ewmcorr;
         const value_type    decay_comp = T(1) - decay_;
+        size_type           starting = 0;
 
         ewmcorr.reserve(col_s);
+        for (; starting < col_s; ++starting)
+            if (is_nan__(*(x_begin + starting)) ||
+                is_nan__(*(y_begin + starting)))
+                ewmcorr.push_back(std::numeric_limits<T>::quiet_NaN());
+            else  break;
+
         ewmcorr.push_back(std::numeric_limits<T>::quiet_NaN());
-        for (size_type i = 1; i < col_s; ++i)  {
+        for (size_type i = starting + 1; i < col_s; ++i)  {
             value_type  sum_weights = 0;
             value_type  sum_sq_weights = 0;
             value_type  sum_weighted_inputx = 0;
@@ -2250,21 +2271,29 @@ struct  ZeroLagMovingMeanVisitor  {
         assert(col_s > 3);
         assert(roll_period_ < col_s - 1);
 
+        result_.resize (col_s, std::numeric_limits<T>::quiet_NaN());
+
+        size_type   starting = 0;
+
+        for (; starting < col_s; ++starting)
+            if (! is_nan__(*(column_begin + starting)))
+                break;
+
         const size_type lag = size_type (0.5 * double(roll_period_ - 1));
 
-        result_.resize (col_s, std::numeric_limits<T>::quiet_NaN());
-        for (size_type i = lag; i < col_s; ++i)
+        for (size_type i = starting + lag; i < col_s; ++i)
             result_[i] =
                 T(2) * *(column_begin + i) - *(column_begin + (i - lag));
 
         ewm_v<T, I, A> ewm(exponential_decay_spec::span, roll_period_, true);
 
         ewm.pre();
-        ewm (idx_begin, idx_end, result_.begin() + lag, result_.end());
+        ewm (idx_begin, idx_end,
+             result_.begin() + (starting + lag), result_.end());
         ewm.post();
 
         std::copy(ewm.get_result().begin(), ewm.get_result().end(),
-                  result_.begin() + lag);
+                  result_.begin() + (starting + lag));
     }
 
     DEFINE_PRE_POST

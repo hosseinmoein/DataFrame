@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 
 #include <cmath>
+#include <cstdlib>
 #include <iostream>
 #include <iterator>
 #include <limits>
@@ -206,6 +207,44 @@ is_nan(const T &val)  {
         return (is_nan__(val));
     return (get_nan<T>() == val);
 }
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
+inline auto
+abs__(const T &val)  { return (val); }
+
+template<>
+inline auto
+abs__<char>(const char &val)  { return (char(std::abs(int(val)))); }
+
+template<>
+inline auto
+abs__<short>(const short &val)  { return (short(std::abs(int(val)))); }
+
+template<>
+inline auto
+abs__<int>(const int &val)  { return (std::abs(val)); }
+
+template<>
+inline auto
+abs__<long>(const long &val)  { return (std::labs(val)); }
+
+template<>
+inline auto
+abs__<long long>(const long long &val)  { return (std::llabs(val)); }
+
+template<>
+inline auto
+abs__<float>(const float &val)  { return (std::fabsf(val)); }
+
+template<>
+inline auto
+abs__<double>(const double &val)  { return (std::fabs(val)); }
+
+template<>
+inline auto
+abs__<long double>(const long double &val)  { return (std::fabsl(val)); }
 
 // ----------------------------------------------------------------------------
 

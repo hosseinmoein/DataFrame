@@ -32,10 +32,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </tr>
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
-        enum class sort_spec : unsigned char  {<BR>
-            &emsp;ascen = 1,<BR>
-            &emsp;desce = 2,<BR>
-        }; </font>
+        <PRE><B>
+enum class sort_spec : unsigned char  {
+    ascen = 1,     // Sort in ascending order of values
+    desce = 2,     // Sort in descending order of values
+    abs_ascen = 3, // Sort in ascending order of absolute values
+    abs_desce = 4, // Sort in descending order of absolute values
+}; </font>
+        </B></PRE>
       </td>
       <td>
         Enumerated type to specify the direction of sort; ascending vs. descending.

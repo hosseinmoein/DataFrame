@@ -697,41 +697,76 @@ sort(const char *name, sort_spec dir, bool ignore_index)  {
     const SpinGuard guard (lock_);
 
     if (! ::strcmp(name, DF_INDEX_COL_NAME))  {
-        auto    a = [this](size_type i, size_type j) -> bool  {
-                        return (this->indices_[i] < this->indices_[j]);
-                    };
-        auto    d = [this](size_type i, size_type j) -> bool  {
-                        return (this->indices_[i] > this->indices_[j]);
-                    };
-
+        const auto  &idx_vec = get_index();
+        auto        a =
+            [&idx_vec](size_type i, size_type j) -> bool  {
+                return (idx_vec[i] < idx_vec[j]);
+            };
+        auto        d =
+            [&idx_vec](size_type i, size_type j) -> bool  {
+                return (idx_vec[i] > idx_vec[j]);
+            };
+        auto        aa =
+            [&idx_vec](size_type i, size_type j) -> bool  {
+                return (abs__(idx_vec[i]) < abs__(idx_vec[j]));
+            };
+        auto        ad =
+            [&idx_vec](size_type i, size_type j) -> bool  {
+                return (abs__(idx_vec[i]) > abs__(idx_vec[j]));
+            };
 
         if (dir == sort_spec::ascen)
             sort_common_<decltype(a), Ts ...>(*this,
                                               std::move(a),
                                               ignore_index);
-        else
+        else if (dir == sort_spec::desce)
             sort_common_<decltype(d), Ts ...>(*this,
                                               std::move(d),
                                               ignore_index);
+        else if (dir == sort_spec::abs_ascen)
+            sort_common_<decltype(aa), Ts ...>(*this,
+                                               std::move(aa),
+                                               ignore_index);
+        else if (dir == sort_spec::abs_desce)
+            sort_common_<decltype(ad), Ts ...>(*this,
+                                               std::move(ad),
+                                               ignore_index);
     }
     else  {
-        const ColumnVecType<T>  &idx_vec = get_column<T>(name);
-
-        auto    a = [&x = idx_vec](size_type i, size_type j) -> bool {
-                        return (x[i] < x[j]);
-                    };
-        auto    d = [&x = idx_vec](size_type i, size_type j) -> bool {
-                        return (x[i] > x[j]);
-                    };
+        const auto  &col_vec = get_column<T>(name);
+        auto        a =
+            [&col_vec](size_type i, size_type j) -> bool {
+                return (col_vec[i] < col_vec[j]);
+            };
+        auto        d =
+            [&col_vec](size_type i, size_type j) -> bool {
+                return (col_vec[i] > col_vec[j]);
+            };
+        auto        aa =
+            [&col_vec](size_type i, size_type j) -> bool {
+                return (abs__(col_vec[i]) < abs__(col_vec[j]));
+            };
+        auto        ad =
+            [&col_vec](size_type i, size_type j) -> bool {
+                return (abs__(col_vec[i]) > abs__(col_vec[j]));
+            };
 
         if (dir == sort_spec::ascen)
             sort_common_<decltype(a), Ts ...>(*this,
                                               std::move(a),
                                               ignore_index);
-        else
+        else if (dir == sort_spec::desce)
             sort_common_<decltype(d), Ts ...>(*this,
                                               std::move(d),
                                               ignore_index);
+        else if (dir == sort_spec::abs_ascen)
+            sort_common_<decltype(aa), Ts ...>(*this,
+                                               std::move(aa),
+                                               ignore_index);
+        else if (dir == sort_spec::abs_desce)
+            sort_common_<decltype(ad), Ts ...>(*this,
+                                               std::move(ad),
+                                               ignore_index);
     }
 
     return;
@@ -761,27 +796,200 @@ sort(const char *name1, sort_spec dir1, const char *name2, sort_spec dir2,
     else
         vec2 = &(get_column<T2>(name2, false));
 
-    auto    cf =
-        [vec1, vec2, dir1, dir2](size_type i, size_type j) -> bool {
-            if (dir1 == sort_spec::ascen)  {
-                if (vec1->at(i) < vec1->at(j))
-                    return (true);
-                else if (vec1->at(i) > vec1->at(j))
-                    return (false);
-            }
-            else  {
-                if (vec1->at(i) > vec1->at(j))
-                    return (true);
-                else if (vec1->at(i) < vec1->at(j))
-                    return (false);
-            }
-            if (dir2 == sort_spec::ascen)
-                return (vec2->at(i) < vec2->at(j));
-            else
-                return (vec2->at(i) > vec2->at(j));
+    auto    a_a =
+        [vec1, vec2](size_type i, size_type j) -> bool {
+            if (vec1->at(i) < vec1->at(j))
+                return (true);
+            else if (vec1->at(i) > vec1->at(j))
+                return (false);
+            return (vec2->at(i) < vec2->at(j));
+        };
+    auto    d_d =
+        [vec1, vec2](size_type i, size_type j) -> bool {
+            if (vec1->at(i) > vec1->at(j))
+                return (true);
+            else if (vec1->at(i) < vec1->at(j))
+                return (false);
+            return (vec2->at(i) > vec2->at(j));
+        };
+    auto    a_d =
+        [vec1, vec2](size_type i, size_type j) -> bool {
+            if (vec1->at(i) < vec1->at(j))
+                return (true);
+            else if (vec1->at(i) > vec1->at(j))
+                return (false);
+            return (vec2->at(i) > vec2->at(j));
+        };
+    auto    d_a =
+        [vec1, vec2](size_type i, size_type j) -> bool {
+            if (vec1->at(i) > vec1->at(j))
+                return (true);
+            else if (vec1->at(i) < vec1->at(j))
+                return (false);
+            return (vec2->at(i) < vec2->at(j));
+        };
+    auto    aa_aa =
+        [vec1, vec2](size_type i, size_type j) -> bool {
+            if (abs__(vec1->at(i)) < abs__(vec1->at(j)))
+                return (true);
+            else if (abs__(vec1->at(i)) > abs__(vec1->at(j)))
+                return (false);
+            return (abs__(vec2->at(i)) < abs__(vec2->at(j)));
+        };
+    auto    ad_ad =
+        [vec1, vec2](size_type i, size_type j) -> bool {
+            if (abs__(vec1->at(i)) > abs__(vec1->at(j)))
+                return (true);
+            else if (abs__(vec1->at(i)) < abs__(vec1->at(j)))
+                return (false);
+            return (abs__(vec2->at(i)) > abs__(vec2->at(j)));
+        };
+    auto    aa_ad =
+        [vec1, vec2](size_type i, size_type j) -> bool {
+            if (abs__(vec1->at(i)) < abs__(vec1->at(j)))
+                return (true);
+            else if (abs__(vec1->at(i)) > abs__(vec1->at(j)))
+                return (false);
+            return (abs__(vec2->at(i)) > abs__(vec2->at(j)));
+        };
+    auto    ad_aa =
+        [vec1, vec2](size_type i, size_type j) -> bool {
+            if (abs__(vec1->at(i)) > abs__(vec1->at(j)))
+                return (true);
+            else if (abs__(vec1->at(i)) < abs__(vec1->at(j)))
+                return (false);
+            return (abs__(vec2->at(i)) < abs__(vec2->at(j)));
+        };
+    auto    a_aa =
+        [vec1, vec2](size_type i, size_type j) -> bool {
+            if (vec1->at(i) < vec1->at(j))
+                return (true);
+            else if (vec1->at(i) > vec1->at(j))
+                return (false);
+            return (abs__(vec2->at(i)) < abs__(vec2->at(j)));
+        };
+    auto    a_ad =
+        [vec1, vec2](size_type i, size_type j) -> bool {
+            if (vec1->at(i) < vec1->at(j))
+                return (true);
+            else if (vec1->at(i) > vec1->at(j))
+                return (false);
+            return (abs__(vec2->at(i)) > abs__(vec2->at(j)));
+        };
+    auto    d_aa =
+        [vec1, vec2](size_type i, size_type j) -> bool {
+            if (vec1->at(i) > vec1->at(j))
+                return (true);
+            else if (vec1->at(i) < vec1->at(j))
+                return (false);
+            return (abs__(vec2->at(i)) < abs__(vec2->at(j)));
+        };
+    auto    d_ad =
+        [vec1, vec2](size_type i, size_type j) -> bool {
+            if (vec1->at(i) > vec1->at(j))
+                return (true);
+            else if (vec1->at(i) < vec1->at(j))
+                return (false);
+            return (abs__(vec2->at(i)) > abs__(vec2->at(j)));
+        };
+    auto    aa_a =
+        [vec1, vec2](size_type i, size_type j) -> bool {
+            if (abs__(vec1->at(i)) < abs__(vec1->at(j)))
+                return (true);
+            else if (abs__(vec1->at(i)) > abs__(vec1->at(j)))
+                return (false);
+            return (vec2->at(i) < vec2->at(j));
+        };
+    auto    ad_a =
+        [vec1, vec2](size_type i, size_type j) -> bool {
+            if (abs__(vec1->at(i)) > abs__(vec1->at(j)))
+                return (true);
+            else if (abs__(vec1->at(i)) < abs__(vec1->at(j)))
+                return (false);
+            return (vec2->at(i) < vec2->at(j));
+        };
+    auto    aa_d =
+        [vec1, vec2](size_type i, size_type j) -> bool {
+            if (abs__(vec1->at(i)) < abs__(vec1->at(j)))
+                return (true);
+            else if (abs__(vec1->at(i)) > abs__(vec1->at(j)))
+                return (false);
+            return (vec2->at(i) > vec2->at(j));
+        };
+    auto    ad_d =
+        [vec1, vec2](size_type i, size_type j) -> bool {
+            if (abs__(vec1->at(i)) > abs__(vec1->at(j)))
+                return (true);
+            else if (abs__(vec1->at(i)) < abs__(vec1->at(j)))
+                return (false);
+            return (vec2->at(i) > vec2->at(j));
         };
 
-    sort_common_<decltype(cf), Ts ...>(*this, std::move(cf), ignore_index);
+
+    if (dir1 == sort_spec::ascen && dir2 == sort_spec::ascen)
+        sort_common_<decltype(a_a), Ts ...>(*this,
+                                            std::move(a_a),
+                                            ignore_index);
+    else if (dir1 == sort_spec::desce && dir2 == sort_spec::desce)
+        sort_common_<decltype(d_d), Ts ...>(*this,
+                                            std::move(d_d),
+                                            ignore_index);
+    else if (dir1 == sort_spec::ascen && dir2 == sort_spec::desce)
+        sort_common_<decltype(a_d), Ts ...>(*this,
+                                            std::move(a_d),
+                                            ignore_index);
+    else if (dir1 == sort_spec::desce && dir2 == sort_spec::ascen)
+        sort_common_<decltype(d_a), Ts ...>(*this,
+                                            std::move(d_a),
+                                            ignore_index);
+    else if (dir1 == sort_spec::abs_ascen && dir2 == sort_spec::abs_ascen)
+        sort_common_<decltype(aa_aa), Ts ...>(*this,
+                                              std::move(aa_aa),
+                                              ignore_index);
+    else if (dir1 == sort_spec::abs_desce && dir2 == sort_spec::abs_desce)
+        sort_common_<decltype(ad_ad), Ts ...>(*this,
+                                              std::move(ad_ad),
+                                              ignore_index);
+    else if (dir1 == sort_spec::abs_ascen && dir2 == sort_spec::abs_desce)
+        sort_common_<decltype(aa_ad), Ts ...>(*this,
+                                              std::move(aa_ad),
+                                              ignore_index);
+    else if (dir1 == sort_spec::abs_desce && dir2 == sort_spec::abs_ascen)
+        sort_common_<decltype(ad_aa), Ts ...>(*this,
+                                              std::move(ad_aa),
+                                              ignore_index);
+    else if (dir1 == sort_spec::ascen && dir2 == sort_spec::abs_ascen)
+        sort_common_<decltype(a_aa), Ts ...>(*this,
+                                             std::move(a_aa),
+                                             ignore_index);
+    else if (dir1 == sort_spec::ascen && dir2 == sort_spec::abs_desce)
+        sort_common_<decltype(a_ad), Ts ...>(*this,
+                                             std::move(a_ad),
+                                             ignore_index);
+    else if (dir1 == sort_spec::desce && dir2 == sort_spec::abs_ascen)
+        sort_common_<decltype(d_aa), Ts ...>(*this,
+                                             std::move(d_aa),
+                                             ignore_index);
+    else if (dir1 == sort_spec::desce && dir2 == sort_spec::abs_desce)
+        sort_common_<decltype(d_ad), Ts ...>(*this,
+                                             std::move(d_ad),
+                                             ignore_index);
+    else if (dir1 == sort_spec::abs_ascen && dir2 == sort_spec::ascen)
+        sort_common_<decltype(aa_a), Ts ...>(*this,
+                                             std::move(aa_a),
+                                             ignore_index);
+    else if (dir1 == sort_spec::abs_desce && dir2 == sort_spec::ascen)
+        sort_common_<decltype(ad_a), Ts ...>(*this,
+                                             std::move(ad_a),
+                                             ignore_index);
+    else if (dir1 == sort_spec::abs_ascen && dir2 == sort_spec::desce)
+        sort_common_<decltype(aa_d), Ts ...>(*this,
+                                             std::move(aa_d),
+                                             ignore_index);
+    else  // dir1 == sort_spec::abs_desce && dir2 == sort_spec::desce
+        sort_common_<decltype(ad_d), Ts ...>(*this,
+                                             std::move(ad_d),
+                                             ignore_index);
     return;
 }
 
@@ -826,28 +1034,58 @@ sort(const char *name1, sort_spec dir1,
                 else if (vec1->at(i) > vec1->at(j))
                     return (false);
             }
-            else  {
+            else if (dir1 == sort_spec::desce)  {
                 if (vec1->at(i) > vec1->at(j))
                     return (true);
                 else if (vec1->at(i) < vec1->at(j))
                     return (false);
             }
+            else if (dir1 == sort_spec::abs_ascen)  {
+                if (abs__(vec1->at(i)) < abs__(vec1->at(j)))
+                    return (true);
+                else if (abs__(vec1->at(i)) > abs__(vec1->at(j)))
+                    return (false);
+            }
+            else  {   // sort_spec::abs_desce
+                if (abs__(vec1->at(i)) > abs__(vec1->at(j)))
+                    return (true);
+                else if (abs__(vec1->at(i)) < abs__(vec1->at(j)))
+                    return (false);
+            }
+
             if (dir2 == sort_spec::ascen)  {
                 if (vec2->at(i) < vec2->at(j))
                     return (true);
                 else if (vec2->at(i) > vec2->at(j))
                     return (false);
             }
-            else  {
+            else if (dir2 == sort_spec::desce)  {
                 if (vec2->at(i) > vec2->at(j))
                     return (true);
                 else if (vec2->at(i) < vec2->at(j))
                     return (false);
             }
+            else if (dir2 == sort_spec::abs_ascen)  {
+                if (abs__(vec2->at(i)) < abs__(vec2->at(j)))
+                    return (true);
+                else if (abs__(vec2->at(i)) > abs__(vec2->at(j)))
+                    return (false);
+            }
+            else  {   // sort_spec::abs_desce
+                if (abs__(vec2->at(i)) > abs__(vec2->at(j)))
+                    return (true);
+                else if (abs__(vec2->at(i)) < abs__(vec2->at(j)))
+                    return (false);
+            }
+
             if (dir3 == sort_spec::ascen)
                 return (vec3->at(i) < vec3->at(j));
-            else
+            else if (dir3 == sort_spec::desce)
                 return (vec3->at(i) > vec3->at(j));
+            else if (dir3 == sort_spec::abs_ascen)
+                return (abs__(vec3->at(i)) < abs__(vec3->at(j)));
+            else  // sort_spec::abs_desce
+                return (abs__(vec3->at(i)) > abs__(vec3->at(j)));
         };
 
     sort_common_<decltype(cf), Ts ...>(*this, std::move(cf), ignore_index);
@@ -902,40 +1140,83 @@ sort(const char *name1, sort_spec dir1,
                 else if (vec1->at(i) > vec1->at(j))
                     return (false);
             }
-            else  {
+            else if (dir1 == sort_spec::desce)  {
                 if (vec1->at(i) > vec1->at(j))
                     return (true);
                 else if (vec1->at(i) < vec1->at(j))
                     return (false);
             }
+            else if (dir1 == sort_spec::abs_ascen)  {
+                if (abs__(vec1->at(i)) < abs__(vec1->at(j)))
+                    return (true);
+                else if (abs__(vec1->at(i)) > abs__(vec1->at(j)))
+                    return (false);
+            }
+            else  {   // sort_spec::abs_desce
+                if (abs__(vec1->at(i)) > abs__(vec1->at(j)))
+                    return (true);
+                else if (abs__(vec1->at(i)) < abs__(vec1->at(j)))
+                    return (false);
+            }
+
             if (dir2 == sort_spec::ascen)  {
                 if (vec2->at(i) < vec2->at(j))
                     return (true);
                 else if (vec2->at(i) > vec2->at(j))
                     return (false);
             }
-            else  {
+            else if (dir2 == sort_spec::desce)  {
                 if (vec2->at(i) > vec2->at(j))
                     return (true);
                 else if (vec2->at(i) < vec2->at(j))
                     return (false);
             }
+            else if (dir2 == sort_spec::abs_ascen)  {
+                if (abs__(vec2->at(i)) < abs__(vec2->at(j)))
+                    return (true);
+                else if (abs__(vec2->at(i)) > abs__(vec2->at(j)))
+                    return (false);
+            }
+            else  {   // sort_spec::abs_desce
+                if (abs__(vec2->at(i)) > abs__(vec2->at(j)))
+                    return (true);
+                else if (abs__(vec2->at(i)) < abs__(vec2->at(j)))
+                    return (false);
+            }
+
             if (dir3 == sort_spec::ascen)  {
                 if (vec3->at(i) < vec3->at(j))
                     return (true);
                 else if (vec3->at(i) > vec3->at(j))
                     return (false);
             }
-            else  {
+            else if (dir3 == sort_spec::desce)  {
                 if (vec3->at(i) > vec3->at(j))
                     return (true);
                 else if (vec3->at(i) < vec3->at(j))
                     return (false);
             }
+            else if (dir3 == sort_spec::abs_ascen)  {
+                if (abs__(vec3->at(i)) < abs__(vec3->at(j)))
+                    return (true);
+                else if (abs__(vec3->at(i)) > abs__(vec3->at(j)))
+                    return (false);
+            }
+            else  {   // sort_spec::abs_desce
+                if (abs__(vec3->at(i)) > abs__(vec3->at(j)))
+                    return (true);
+                else if (abs__(vec3->at(i)) < abs__(vec3->at(j)))
+                    return (false);
+            }
+
             if (dir4 == sort_spec::ascen)
                 return (vec4->at(i) < vec4->at(j));
-            else
+            else if (dir4 == sort_spec::desce)
                 return (vec4->at(i) > vec4->at(j));
+            else if (dir4 == sort_spec::abs_ascen)
+                return (abs__(vec4->at(i)) < abs__(vec4->at(j)));
+            else  // sort_spec::abs_desce
+                return (abs__(vec4->at(i)) > abs__(vec4->at(j)));
         };
 
     sort_common_<decltype(cf), Ts ...>(*this, std::move(cf), ignore_index);
@@ -998,52 +1279,108 @@ sort(const char *name1, sort_spec dir1,
                 else if (vec1->at(i) > vec1->at(j))
                     return (false);
             }
-            else  {
+            else if (dir1 == sort_spec::desce)  {
                 if (vec1->at(i) > vec1->at(j))
                     return (true);
                 else if (vec1->at(i) < vec1->at(j))
                     return (false);
             }
+            else if (dir1 == sort_spec::abs_ascen)  {
+                if (abs__(vec1->at(i)) < abs__(vec1->at(j)))
+                    return (true);
+                else if (abs__(vec1->at(i)) > abs__(vec1->at(j)))
+                    return (false);
+            }
+            else  {   // sort_spec::abs_desce
+                if (abs__(vec1->at(i)) > abs__(vec1->at(j)))
+                    return (true);
+                else if (abs__(vec1->at(i)) < abs__(vec1->at(j)))
+                    return (false);
+            }
+
             if (dir2 == sort_spec::ascen)  {
                 if (vec2->at(i) < vec2->at(j))
                     return (true);
                 else if (vec2->at(i) > vec2->at(j))
                     return (false);
             }
-            else  {
+            else if (dir2 == sort_spec::desce)  {
                 if (vec2->at(i) > vec2->at(j))
                     return (true);
                 else if (vec2->at(i) < vec2->at(j))
                     return (false);
             }
+            else if (dir2 == sort_spec::abs_ascen)  {
+                if (abs__(vec2->at(i)) < abs__(vec2->at(j)))
+                    return (true);
+                else if (abs__(vec2->at(i)) > abs__(vec2->at(j)))
+                    return (false);
+            }
+            else  {   // sort_spec::abs_desce
+                if (abs__(vec2->at(i)) > abs__(vec2->at(j)))
+                    return (true);
+                else if (abs__(vec2->at(i)) < abs__(vec2->at(j)))
+                    return (false);
+            }
+
             if (dir3 == sort_spec::ascen)  {
                 if (vec3->at(i) < vec3->at(j))
                     return (true);
                 else if (vec3->at(i) > vec3->at(j))
                     return (false);
             }
-            else  {
+            else if (dir3 == sort_spec::desce)  {
                 if (vec3->at(i) > vec3->at(j))
                     return (true);
                 else if (vec3->at(i) < vec3->at(j))
                     return (false);
             }
+            else if (dir3 == sort_spec::abs_ascen)  {
+                if (abs__(vec3->at(i)) < abs__(vec3->at(j)))
+                    return (true);
+                else if (abs__(vec3->at(i)) > abs__(vec3->at(j)))
+                    return (false);
+            }
+            else  {   // sort_spec::abs_desce
+                if (abs__(vec3->at(i)) > abs__(vec3->at(j)))
+                    return (true);
+                else if (abs__(vec3->at(i)) < abs__(vec3->at(j)))
+                    return (false);
+            }
+
             if (dir4 == sort_spec::ascen)  {
                 if (vec4->at(i) < vec4->at(j))
                     return (true);
                 else if (vec4->at(i) > vec4->at(j))
                     return (false);
             }
-            else  {
+            else if (dir4 == sort_spec::desce)  {
                 if (vec4->at(i) > vec4->at(j))
                     return (true);
                 else if (vec4->at(i) < vec4->at(j))
                     return (false);
             }
+            else if (dir4 == sort_spec::abs_ascen)  {
+                if (abs__(vec4->at(i)) < abs__(vec4->at(j)))
+                    return (true);
+                else if (abs__(vec4->at(i)) > abs__(vec4->at(j)))
+                    return (false);
+            }
+            else  {   // sort_spec::abs_desce
+                if (abs__(vec4->at(i)) > abs__(vec4->at(j)))
+                    return (true);
+                else if (abs__(vec4->at(i)) < abs__(vec4->at(j)))
+                    return (false);
+            }
+
             if (dir5 == sort_spec::ascen)
                 return (vec5->at(i) < vec5->at(j));
-            else
+            else if (dir5 == sort_spec::desce)
                 return (vec5->at(i) > vec5->at(j));
+            else if (dir5 == sort_spec::abs_ascen)
+                return (abs__(vec5->at(i)) < abs__(vec5->at(j)));
+            else  // sort_spec::abs_desce
+                return (abs__(vec5->at(i)) > abs__(vec5->at(j)));
         };
 
     sort_common_<decltype(cf), Ts ...>(*this, std::move(cf), ignore_index);
@@ -1220,7 +1557,7 @@ groupby2(const char *col_name1,
             (const ColumnVecType<T2> *) &(get_column<T2>(col_name2, false));
     }
     else if (! ::strcmp(col_name2, DF_INDEX_COL_NAME))  {
-        gb_vec1 = 
+        gb_vec1 =
             (const ColumnVecType<T1> *) &(get_column<T1>(col_name1, false));
         gb_vec2 = (const ColumnVecType<T2> *) &(get_index());
     }

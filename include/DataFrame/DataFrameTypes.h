@@ -112,6 +112,8 @@ enum class  sort_state : bool  {
 enum class  sort_spec : unsigned char  {
     ascen = 1,
     desce = 2,
+    abs_ascen = 3,
+    abs_desce = 4,
 };
 
 // ----------------------------------------------------------------------------

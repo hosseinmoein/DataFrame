@@ -219,7 +219,8 @@ static void test_haphazard()  {
 
     std::cout << "\nTesting sort 2 ..." << std::endl;
 
-    df.sort<double, int, double, std::string>("dbl_col_2", sort_spec::desce);
+    df.sort<double, int, double, std::string>("dbl_col_2",
+                                              sort_spec::abs_desce);
     dvec = df.get_column<double> ("dbl_col");
     dvec2 = df.get_column<double> ("dbl_col_2");
 
@@ -252,7 +253,7 @@ static void test_haphazard()  {
     std::cout << "\nTesting get_data_by_idx() ..." << std::endl;
 
     df.sort<MyDataFrame::IndexType, int, double, std::string>
-        (DF_INDEX_COL_NAME, sort_spec::ascen);
+        (DF_INDEX_COL_NAME, sort_spec::abs_ascen);
 
     MyDataFrame df2 =
         df.get_data_by_idx<int, double, std::string>(
@@ -396,7 +397,7 @@ static void test_haphazard()  {
     auto    sf = dfx.sort_async<MyDataFrame::IndexType, std::string,
                                 int, double, std::string, unsigned int>
                      (DF_INDEX_COL_NAME, sort_spec::ascen,
-                      "str_col", sort_spec::desce);
+                      "str_col", sort_spec::abs_desce);
 
     sf.get();
 

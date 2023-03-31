@@ -2314,6 +2314,97 @@ using zlmm_v = ZeroLagMovingMeanVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
+// Linear Regression moving mean
+//
+template<typename T, typename I = unsigned long, std::size_t A = 0,
+         typename =
+             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+struct  LinregMovingMeanVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
+
+        GET_COL_SIZE
+        assert(col_s > 3);
+        assert(roll_period_ < col_s - 1);
+
+        const value_type    sum_x = 0.5 * T(roll_period_) * T(roll_period_ + 1);
+        const value_type    sum_x2 =
+            sum_x * (2.0 * T(roll_period_) + 1.0) / 3.0;
+        const value_type    divisor = T(roll_period_) * sum_x2 - sum_x * sum_x;
+        result_type         result (col_s, std::numeric_limits<T>::quiet_NaN());
+
+        for (size_type i = roll_period_; i < col_s; ++i)
+            result[i] = linreg_(column_begin + (i - roll_period_),
+                                column_begin + i,
+                                sum_x, sum_x2, divisor);
+        result_.swap(result);
+    }
+
+    DEFINE_PRE_POST
+    DEFINE_RESULT
+
+    explicit
+    LinregMovingMeanVisitor(size_type roll_period = 14,
+                            linreg_moving_mean_type ltype =
+                                linreg_moving_mean_type::linreg)
+        : roll_period_(roll_period), type_(ltype)  {   }
+
+private:
+
+    template <typename H>
+    inline value_type
+    linreg_(const H &column_begin, const H &column_end,
+            value_type sum_x, value_type sum_x2, value_type divisor)  {
+
+        const size_type col_s = std::distance(column_begin, column_end);
+        value_type      sum_y { 0 };
+        value_type      sum_xy { 0 };
+
+        for (size_type i = 0; i < col_s; ++i)  {
+            const value_type    val = *(column_begin + i);
+
+            sum_y += val;
+            sum_xy += val * T(i + 1);
+        }
+
+        const value_type    slope =
+            (T(roll_period_) * sum_xy - sum_x * sum_y) / divisor;
+
+        if (type_ == linreg_moving_mean_type::slope)  return (slope);
+
+        if (type_ == linreg_moving_mean_type::theta ||
+            type_ == linreg_moving_mean_type::degree)  {
+            const value_type    theta = std::atan(slope);
+
+            return (type_ == linreg_moving_mean_type::theta
+                        ? theta : theta * (180.0 / M_PI));
+        }
+
+        const value_type    intercept =
+            (sum_y * sum_x2 - sum_x * sum_xy) / divisor;
+
+        if (type_ == linreg_moving_mean_type::intercept)  return (intercept);
+
+        return (type_ == linreg_moving_mean_type::forecast
+                    ? slope * T(roll_period_) + intercept
+                    : slope * T(roll_period_ - 1) + intercept);
+    }
+
+    const size_type                 roll_period_;
+    const linreg_moving_mean_type   type_;
+    result_type                     result_ {  };
+};
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using linregmm_v = LinregMovingMeanVisitor<T, I, A>;
+
+// ----------------------------------------------------------------------------
+
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 struct KthValueVisitor  {
 
@@ -3826,15 +3917,15 @@ struct LinearFitVisitor {
             sum_x2 += x * x;
         }
 
+        const value_type    divisor = sum_x2 * col_s - sum_x * sum_x;
+
         // The slope (the the power of exp) of best fit line
         //
-        slope_ = (col_s * sum_xy - sum_x * sum_y) /
-                 (sum_x2 * col_s - sum_x * sum_x);
+        slope_ = (col_s * sum_xy - sum_x * sum_y) / divisor;
 
         // The intercept of best fit line
         //
-        intercept_ = (sum_x2 * sum_y - sum_x * sum_xy) /
-                     (sum_x2 * col_s - sum_x * sum_x);
+        intercept_ = (sum_x2 * sum_y - sum_x * sum_xy) / divisor;
 
         y_fits_.reserve(col_s);
         for (size_type i = 0; i < col_s; ++i)  {

@@ -349,6 +349,17 @@ enum class  sigmoid_type : unsigned char  {
 
 // ----------------------------------------------------------------------------
 
+enum class  linreg_moving_mean_type : unsigned char  {
+    linreg = 1,
+    forecast = 2,
+    slope = 3,
+    intercept = 4,
+    theta = 5,   // arc-tan of slope
+    degree = 6,  // degree of slope
+};
+
+// ----------------------------------------------------------------------------
+
 // The additive decomposition is the most appropriate if the magnitude of the
 // seasonal fluctuations, or the variation around the trend-cycle, does not
 // vary with the level of the time series. When the variation in the seasonal

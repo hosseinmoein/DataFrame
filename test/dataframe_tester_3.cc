@@ -1376,6 +1376,38 @@ static void test_RVIVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_LinregMovingMeanVisitor()  {
+
+    std::cout << "\nTesting LinregMovingMeanVisitor{  } ..." << std::endl;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("data/SHORT_IBM.csv", io_format::csv2);
+
+        linregmm_v<double, std::string> linreg;
+
+        df.single_act_visit<double>("IBM_Close", linreg);
+
+        assert(linreg.get_result().size() == 1721);
+        assert(std::isnan(linreg.get_result()[0]));
+        assert(std::isnan(linreg.get_result()[13]));
+        assert(std::abs(linreg.get_result()[14] - 186.9714) < 0.0001);
+        assert(std::abs(linreg.get_result()[15] - 185.8377) < 0.0001);
+        assert(std::abs(linreg.get_result()[16] - 184.1874) < 0.0001);
+        assert(std::abs(linreg.get_result()[18] - 180.6528) < 0.0001);
+        assert(std::abs(linreg.get_result()[25] - 172.4149) < 0.0001);
+        assert(std::abs(linreg.get_result()[1720] - 109.3095) < 0.0001);
+        assert(std::abs(linreg.get_result()[1712] - 126.9701) < 0.0001);
+        assert(std::abs(linreg.get_result()[1707] - 126.8379) < 0.0001);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     test_groupby_edge();
@@ -1405,6 +1437,7 @@ int main(int, char *[]) {
     test_reading_in_chunks();
     test_FixedAutoCorrVisitor();
     test_RVIVisitor();
+    test_LinregMovingMeanVisitor();
 
     return (0);
 }

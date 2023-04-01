@@ -51,7 +51,7 @@ namespace hmdf
 template<typename T, typename I = unsigned long, std::size_t A = 0,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct ReturnVisitor  {
+struct  ReturnVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
@@ -259,7 +259,7 @@ using dco_v = DoubleCrossOver<S_RT, L_RT, T, I, A>;
 template<typename T, typename I = unsigned long, std::size_t A = 0,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct BollingerBand {
+struct  BollingerBand {
 
 private:
 
@@ -389,7 +389,7 @@ private:
 template<typename T, typename I = unsigned long, std::size_t A = 0,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct MACDVisitor {
+struct  MACDVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
@@ -483,7 +483,7 @@ using macd_v = MACDVisitor<T, I, A>;
 template<typename T, typename I = unsigned long, std::size_t A = 0,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct  VWAPVisitor {
+struct  VWAPVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES
 
@@ -663,7 +663,7 @@ using vwap_v = VWAPVisitor<T, I, A>;
 template<typename T, typename I = unsigned long, std::size_t A = 0,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct  VWBASVisitor {
+struct  VWBASVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES
 
@@ -931,7 +931,7 @@ using vwbas_v = VWBASVisitor<T, I, A>;
 template<typename T, typename I = unsigned long,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct SharpeRatioVisitor {
+struct  SharpeRatioVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_2
 
@@ -1036,7 +1036,7 @@ using sharper_v = SharpeRatioVisitor<T, I>;
 template<typename T, typename I = unsigned long, std::size_t A = 0,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct RSIVisitor {
+struct  RSIVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
@@ -1116,7 +1116,7 @@ using rsi_v = RSIVisitor<T, I, A>;
 template<typename T, typename I = unsigned long, std::size_t A = 0,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct RSXVisitor {
+struct  RSXVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
@@ -1235,7 +1235,7 @@ using rsx_v = RSXVisitor<T, I, A>;
 template<typename T, typename I = unsigned long, std::size_t A = 0,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct RVIVisitor {
+struct  RVIVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
@@ -1286,13 +1286,13 @@ private:
         ret_v_ (idx_begin, idx_end, ts_begin, ts_end);
         ret_v_.post();
 
-        const size_type col_s = ret_v_.get_result().size();
+        const size_type col_s { ret_v_.get_result().size() };
 
         neg_.resize(col_s);
         std::copy(ret_v_.get_result().begin(), ret_v_.get_result().end(),
                   neg_.begin());
 
-        for (size_type i = 0; i < col_s; ++i)  {
+        for (size_type i { 0 }; i < col_s; ++i)  {
             value_type  &pos = ret_v_.get_result()[i];
             value_type  &neg = neg_[i];
 
@@ -1300,7 +1300,7 @@ private:
             if (neg > 0)  neg = 0;
             else if (neg < 0)  neg = 1;
 
-            const value_type    stdev = stdev_.get_result()[i];
+            const value_type    stdev { stdev_.get_result()[i] };
 
             pos *= stdev;
             neg *= stdev;
@@ -1317,7 +1317,7 @@ private:
 
         result.clear();
         result.reserve(col_s);
-        for (size_type i = 0; i < col_s; ++i)
+        for (size_type i { 0 }; i < col_s; ++i)
             result.push_back(
                 (T(100) * ewm_pos_.get_result()[i]) /
                 (ewm_pos_.get_result()[i] + ewm_neg_.get_result()[i]));
@@ -1347,7 +1347,7 @@ using rvi_v = RVIVisitor<T, I, A>;
 template<typename T, typename I = unsigned long, std::size_t A = 0,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct HurstExponentVisitor {
+struct  HurstExponentVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_2
 
@@ -1489,7 +1489,7 @@ using hexpo_v = HurstExponentVisitor<T, I, A>;
 template<typename T, typename I = unsigned long, std::size_t A = 0,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct MassIndexVisitor {
+struct  MassIndexVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
@@ -1986,7 +1986,7 @@ private:
 template<typename T, typename I = unsigned long, std::size_t A = 0,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct GarmanKlassVolVisitor {
+struct  GarmanKlassVolVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
@@ -2057,7 +2057,7 @@ using gk_vol_v = GarmanKlassVolVisitor<T, I, A>;
 template<typename T, typename I = unsigned long, std::size_t A = 0,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct YangZhangVolVisitor {
+struct  YangZhangVolVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
@@ -2228,7 +2228,7 @@ private:
 template<typename T, typename I = unsigned long, std::size_t A = 0,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct FisherTransVisitor {
+struct  FisherTransVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
@@ -2314,7 +2314,7 @@ using ftrans_v = FisherTransVisitor<T, I, A>;
 template<typename T, typename I = unsigned long, std::size_t A = 0,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct PercentPriceOSCIVisitor {
+struct  PercentPriceOSCIVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
@@ -3466,7 +3466,7 @@ using hwc_v = HoltWinterChannelVisitor<T, I, A>;
 template<typename T, typename I = unsigned long, std::size_t A = 0,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct  HeikinAshiCndlVisitor {
+struct  HeikinAshiCndlVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
@@ -3720,7 +3720,7 @@ using roc_v = RateOfChangeVisitor<T, I, A>;
 template<typename T, typename I = unsigned long, std::size_t A = 0,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct  AccumDistVisitor {
+struct  AccumDistVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
@@ -3777,7 +3777,7 @@ using ad_v = AccumDistVisitor<T, I, A>;
 template<typename T, typename I = unsigned long, std::size_t A = 0,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct  ChaikinMoneyFlowVisitor {
+struct  ChaikinMoneyFlowVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
@@ -3922,7 +3922,7 @@ using vhf_v = VertHorizFilterVisitor<T, I, A>;
 template<typename T, typename I = unsigned long, std::size_t A = 0,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct  OnBalanceVolumeVisitor {
+struct  OnBalanceVolumeVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
@@ -3972,7 +3972,7 @@ using obv_v = OnBalanceVolumeVisitor<T, I, A>;
 template<typename T, typename I = unsigned long, std::size_t A = 0,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct  TrueRangeVisitor {
+struct  TrueRangeVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
@@ -4086,7 +4086,7 @@ private:
 template<typename T, typename I = unsigned long, std::size_t A = 0,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct HodgesTompkinsVolVisitor {
+struct  HodgesTompkinsVolVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
@@ -4150,7 +4150,7 @@ using ht_vol_v = HodgesTompkinsVolVisitor<T, I, A>;
 template<typename T, typename I = unsigned long, std::size_t A = 0,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct ParkinsonVolVisitor {
+struct  ParkinsonVolVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
@@ -4278,7 +4278,7 @@ using coppc_v = CoppockCurveVisitor<T, I, A>;
 template<typename T, typename I = unsigned long, std::size_t A = 0,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct  BalanceOfPowerVisitor {
+struct  BalanceOfPowerVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
@@ -4350,7 +4350,7 @@ using bop_v = BalanceOfPowerVisitor<T, I, A>;
 template<typename T, typename I = unsigned long, std::size_t A = 0,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct  ChandeKrollStopVisitor {
+struct  ChandeKrollStopVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
@@ -4458,7 +4458,7 @@ using cksp_v = ChandeKrollStopVisitor<T, I, A>;
 template<typename T, typename I = unsigned long, std::size_t A = 0,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct  VortexVisitor {
+struct  VortexVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
@@ -4649,7 +4649,7 @@ using kch_v = KeltnerChannelsVisitor<T, I, A>;
 template<typename T, typename I = unsigned long, std::size_t A = 0,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct TrixVisitor  {
+struct  TrixVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
@@ -4731,7 +4731,7 @@ using trix_v = TrixVisitor<T, I, A>;
 template<typename T, typename I = unsigned long, std::size_t A = 0,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct PrettyGoodOsciVisitor  {
+struct  PrettyGoodOsciVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
@@ -4803,7 +4803,7 @@ using pgo_v = PrettyGoodOsciVisitor<T, I, A>;
 template<typename T, typename I = unsigned long, std::size_t A = 0,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct T3MovingMeanVisitor {
+struct  T3MovingMeanVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
@@ -4898,7 +4898,7 @@ using t3_v = T3MovingMeanVisitor<T, I, A>;
 template<typename T, typename I = unsigned long,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct TreynorRatioVisitor {
+struct  TreynorRatioVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_2
 
@@ -4958,6 +4958,64 @@ private:
 template<typename T, typename I = unsigned long>
 using treynorr_v = TreynorRatioVisitor<T, I>;
 
+// ----------------------------------------------------------------------------
+
+template<typename T, typename I = unsigned long, std::size_t A = 0,
+         typename =
+             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+struct  InertiaVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &close_begin, const H &close_end,
+                const H &high_begin, const H &high_end,
+                const H &low_begin, const H &low_end)  {
+
+        const size_type col_s = std::distance(close_begin, close_end);
+
+        assert((col_s == size_type(std::distance(high_begin, high_end))));
+        assert((col_s == size_type(std::distance(low_begin, low_end))));
+        assert(roll_period_ < col_s);
+        assert(roll_period_ > rvi_rp_);
+
+        rvi_v<T, I> rvi { rvi_rp_ };
+
+        rvi.pre();
+        rvi(idx_begin, idx_end,
+            close_begin, close_end,
+            high_begin, high_end,
+            low_begin, low_end);
+        rvi.post();
+
+        linregmm_v<T, I>    linreg { roll_period_ };
+
+        linreg.pre();
+        linreg(idx_begin, idx_end,
+               rvi.get_result().begin(), rvi.get_result().end());
+        linreg.post();
+
+        result_ = std::move(linreg.get_result());
+    }
+
+    DEFINE_PRE_POST
+    DEFINE_RESULT
+
+    explicit
+    InertiaVisitor(size_type roll_period = 20, size_type rvi_roll_period = 14)
+        : roll_period_(roll_period), rvi_rp_(rvi_roll_period)  {   }
+
+private:
+
+    const size_type roll_period_;
+    const size_type rvi_rp_;
+    result_type     result_ { };
+};
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using iner_v = InertiaVisitor<T, I, A>;
 
 } // namespace hmdf
 

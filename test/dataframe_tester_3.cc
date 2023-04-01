@@ -1349,7 +1349,7 @@ static void test_RVIVisitor()  {
     try  {
         df.read("data/SHORT_IBM.csv", io_format::csv2);
 
-        RVIVisitor<double, std::string> rvi;
+        rvi_v<double, std::string>  rvi;
 
         // Here we use exponentially weighted mean and also adjust for
         // finite series
@@ -1408,6 +1408,39 @@ static void test_LinregMovingMeanVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_InertiaVisitor()  {
+
+    std::cout << "\nTesting InertiaVisitor{  } ..." << std::endl;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("data/SHORT_IBM.csv", io_format::csv2);
+
+        iner_v<double, std::string> inertia;
+
+        df.single_act_visit<double, double, double>
+            ("IBM_Close", "IBM_High", "IBM_Low", inertia);
+
+        assert(inertia.get_result().size() == 1721);
+        assert(std::isnan(inertia.get_result()[0]));
+        assert(std::isnan(inertia.get_result()[32]));
+        assert(std::abs(inertia.get_result()[33] - 52.3049) < 0.0001);
+        assert(std::abs(inertia.get_result()[40] - 67.6324) < 0.0001);
+        assert(std::abs(inertia.get_result()[42] - 66.2179) < 0.0001);
+        assert(std::abs(inertia.get_result()[48] - 63.4547) < 0.0001);
+        assert(std::abs(inertia.get_result()[50] - 59.4562) < 0.0001);
+        assert(std::abs(inertia.get_result()[1720] - 29.7343) < 0.0001);
+        assert(std::abs(inertia.get_result()[1712] - 42.2897) < 0.0001);
+        assert(std::abs(inertia.get_result()[1707] - 50.3479) < 0.0001);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     test_groupby_edge();
@@ -1438,6 +1471,7 @@ int main(int, char *[]) {
     test_FixedAutoCorrVisitor();
     test_RVIVisitor();
     test_LinregMovingMeanVisitor();
+    test_InertiaVisitor();
 
     return (0);
 }

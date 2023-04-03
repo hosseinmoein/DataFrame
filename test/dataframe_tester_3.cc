@@ -1441,6 +1441,38 @@ static void test_InertiaVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_SymmTriangleMovingMeanVisitor()  {
+
+    std::cout << "\nTesting SymmTriangleMovingMeanVisitor{  } ..." << std::endl;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("data/SHORT_IBM.csv", io_format::csv2);
+
+        symtmm_v<double, std::string>   symm { 14 };
+
+        df.single_act_visit<double>("IBM_Close", symm);
+
+        assert(symm.get_result().size() == 1721);
+        assert(std::isnan(symm.get_result()[0]));
+        assert(std::isnan(symm.get_result()[13]));
+        assert(std::abs(symm.get_result()[14] - 187.1136) < 0.0001);
+        assert(std::abs(symm.get_result()[15] - 187.032) < 0.0001);
+        assert(std::abs(symm.get_result()[16] - 186.8627) < 0.0001);
+        assert(std::abs(symm.get_result()[18] - 185.9546) < 0.0001);
+        assert(std::abs(symm.get_result()[25] - 177.925) < 0.0001);
+        assert(std::abs(symm.get_result()[1720] - 118.6054) < 0.0001);
+        assert(std::abs(symm.get_result()[1712] - 125.4893) < 0.0001);
+        assert(std::abs(symm.get_result()[1707] - 122.153) < 0.0001);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     test_groupby_edge();
@@ -1472,6 +1504,7 @@ int main(int, char *[]) {
     test_RVIVisitor();
     test_LinregMovingMeanVisitor();
     test_InertiaVisitor();
+    test_SymmTriangleMovingMeanVisitor();
 
     return (0);
 }

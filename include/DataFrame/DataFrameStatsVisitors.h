@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <DataFrame/DataFrameTypes.h>
 #include <DataFrame/Internals/DataFrame_standalone.tcc>
+#include <DataFrame/RandGen.h>
 #include <DataFrame/Utils/AlignedAllocator.h>
 #include <DataFrame/Utils/FixedSizePriorityQueue.h>
 #include <DataFrame/Utils/ThreadGranularity.h>
@@ -1059,9 +1060,8 @@ public:
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
 
-        assert(roll_count_ != 0);
-
         GET_COL_SIZE
+        assert(roll_count_ > 0 and roll_count_ < col_s);
 
         result_.reserve(col_s);
         for (size_type i = 0; i < roll_count_ - 1 && i < col_s; ++i)
@@ -1117,9 +1117,8 @@ public:
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
 
-        if (period_ == 0)  return;
-
         GET_COL_SIZE
+        assert(period_ > 0 and period_ < col_s);
 
         for (size_type i = 0; i < col_s; i += period_)
             visitor_(idx_begin[i], column_begin[i]);
@@ -1163,9 +1162,8 @@ public:
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
 
-        assert(init_roll_count_ != 0);
-
         GET_COL_SIZE
+        assert(init_roll_count_ > 0 and init_roll_count_ < col_s);
 
         result_.reserve(col_s);
 
@@ -2402,6 +2400,61 @@ private:
 
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 using linregmm_v = LinregMovingMeanVisitor<T, I, A>;
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename I = unsigned long, std::size_t A = 0,
+         typename =
+             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+struct  SymmTriangleMovingMeanVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
+
+        GET_COL_SIZE
+        assert(roll_period_ > 0 && roll_period_ < col_s);
+
+        size_type   starting { 0 };
+
+        for (; starting < col_s; ++starting)
+            if (! is_nan__(*(column_begin + starting)))
+                break;
+
+        const auto  triangle =
+            std::move(gen_sym_triangle<value_type>(roll_period_, 1, true));
+        result_type result (col_s, std::numeric_limits<T>::quiet_NaN());
+
+        for (size_type i { starting + roll_period_ }; i < col_s; ++i)  {
+            value_type  sum { 0 };
+            size_type   tri_idx { 0 };
+
+            for (size_type j = { i - (starting + roll_period_) }; j < i;
+                 ++j, ++tri_idx)
+                sum += *(column_begin + j) * triangle[tri_idx];
+            result[i] = sum;
+        }
+        result_.swap(result);
+    }
+
+    DEFINE_PRE_POST
+    DEFINE_RESULT
+
+    explicit
+    SymmTriangleMovingMeanVisitor(size_type roll_period)
+        : roll_period_(roll_period)  {   }
+
+private:
+
+    const size_type roll_period_;
+    result_type     result_ {  };
+};
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using symtmm_v = SymmTriangleMovingMeanVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 

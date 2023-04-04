@@ -5017,6 +5017,113 @@ private:
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 using iner_v = InertiaVisitor<T, I, A>;
 
+// ----------------------------------------------------------------------------
+
+template<typename T, typename I = unsigned long, std::size_t A = 0,
+         typename =
+             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+struct  RelativeVigorIndexVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &low_begin, const H &low_end,
+                const H &high_begin, const H &high_end,
+                const H &open_begin, const H &open_end,
+                const H &close_begin, const H &close_end)  {
+
+        const size_type col_s = std::distance(close_begin, close_end);
+
+        assert((col_s == size_type(std::distance(low_begin, low_end))));
+        assert((col_s == size_type(std::distance(open_begin, open_end))));
+        assert((col_s == size_type(std::distance(high_begin, high_end))));
+        assert((roll_period_ < (col_s - 1)));
+        assert(swma_period_ < roll_period_);
+
+        nzr_v<T, I, A>  non_z_range;
+
+        non_z_range.pre();
+        non_z_range(idx_begin, idx_end,
+                    high_begin, high_end, low_begin, low_end);
+        non_z_range.post();
+
+        result_type high_low_range = std::move(non_z_range.get_result());
+
+        non_z_range.pre();
+        non_z_range(idx_begin, idx_end,
+                    close_begin, close_end, open_begin, open_end);
+        non_z_range.post();
+
+        result_type         close_open_range =
+            std::move(non_z_range.get_result());
+        symtmm_v<T, I, A>   symm { swma_period_ };
+
+        symm.pre();
+        symm(idx_begin, idx_end,
+             close_open_range.begin(), close_open_range.end());
+        symm.post();
+        close_open_range.swap(symm.get_result());  // numerator
+
+        symm.pre();
+        symm(idx_begin, idx_end, high_low_range.begin(), high_low_range.end());
+        symm.post();
+        high_low_range.swap(symm.get_result());  // denominator
+
+        SimpleRollAdopter<SumVisitor<T, I>, T, I, A>    sum
+            { SumVisitor<T, I>(), roll_period_ };
+
+        sum.pre();
+        sum(idx_begin, idx_end,
+             close_open_range.begin(), close_open_range.end());
+        sum.post();
+        close_open_range.swap(sum.get_result());  // numerator
+
+        sum.pre();
+        sum(idx_begin, idx_end, high_low_range.begin(), high_low_range.end());
+        sum.post();
+        high_low_range.swap(sum.get_result());  // denominator
+
+        // rvgi
+        result_type result;
+
+        result.reserve(col_s);
+        for (size_type i { 0 }; i < col_s; ++i)
+            result.push_back(close_open_range[i] / high_low_range[i]);
+
+        symm.pre();
+        symm(idx_begin, idx_end, result.begin(), result.end());
+        symm.post();
+
+        result_.swap(result);
+        signal_.swap(symm.get_result());
+    }
+
+    inline void pre ()  { result_.clear(); signal_.clear(); }
+    inline void post ()  {  }
+
+    const result_type &get_result() const  { return (result_); }
+    result_type &get_result()  { return (result_); }
+    const result_type &get_signal() const  { return (signal_); }
+    result_type &get_signal()  { return (signal_); }
+
+    explicit
+    RelativeVigorIndexVisitor(size_type roll_period = 14,
+                              size_type swma_period = 4)
+        : roll_period_(roll_period), swma_period_(swma_period)  {  }
+
+private:
+
+    result_type     result_ {  };
+    result_type     signal_ {  };
+    const size_type roll_period_;
+    const size_type swma_period_;
+};
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using rvgi_v = RelativeVigorIndexVisitor<T, I, A>;
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

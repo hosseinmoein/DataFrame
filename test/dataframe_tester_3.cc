@@ -1473,6 +1473,48 @@ static void test_SymmTriangleMovingMeanVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_RelativeVigorIndexVisitor()  {
+
+    std::cout << "\nTesting RelativeVigorIndexVisitor{  } ..." << std::endl;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("data/SHORT_IBM.csv", io_format::csv2);
+
+        rvgi_v<double, std::string, 256>    rvgi;
+
+        df.single_act_visit<double, double, double, double>
+            ("IBM_Low", "IBM_High", "IBM_Open", "IBM_Close", rvgi);
+
+        assert(rvgi.get_result().size() == 1721);
+        assert(std::isnan(rvgi.get_result()[0]));
+        assert(std::isnan(rvgi.get_result()[12]));
+        assert(std::abs(rvgi.get_result()[13] - 0.0319) < 0.0001);
+        assert(std::abs(rvgi.get_result()[14] - 0.0434) < 0.0001);
+        assert(std::abs(rvgi.get_result()[18] - 0.0077) < 0.0001);
+        assert(std::abs(rvgi.get_result()[25] - -0.0333) < 0.0001);
+        assert(std::abs(rvgi.get_result()[1720] - -0.3375) < 0.0001);
+        assert(std::abs(rvgi.get_result()[1712] - -0.0634) < 0.0001);
+        assert(std::abs(rvgi.get_result()[1707] - -0.0097) < 0.0001);
+
+        assert(rvgi.get_signal().size() == 1721);
+        assert(std::isnan(rvgi.get_signal()[0]));
+        assert(std::isnan(rvgi.get_signal()[29]));
+        assert(std::abs(rvgi.get_signal()[30] - 0.0435) < 0.0001);
+        assert(std::abs(rvgi.get_signal()[31] - 0.0454) < 0.0001);
+        assert(std::abs(rvgi.get_signal()[35] - -0.0359) < 0.0001);
+        assert(std::abs(rvgi.get_signal()[1720] - 0.0405) < 0.0001);
+        assert(std::abs(rvgi.get_signal()[1712] - -0.1096) < 0.0001);
+        assert(std::abs(rvgi.get_signal()[1707] - -0.0946) < 0.0001);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     test_groupby_edge();
@@ -1505,6 +1547,7 @@ int main(int, char *[]) {
     test_LinregMovingMeanVisitor();
     test_InertiaVisitor();
     test_SymmTriangleMovingMeanVisitor();
+    test_RelativeVigorIndexVisitor();
 
     return (0);
 }

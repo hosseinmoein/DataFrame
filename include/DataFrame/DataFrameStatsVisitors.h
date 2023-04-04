@@ -5019,7 +5019,7 @@ struct  NonZeroRangeVisitor {
                 const H &column2_begin, const H &column2_end)  {
 
         const std::size_t   col_s =
-            std::min(std::distance(idx_begin, idx_end), \
+            std::min(std::distance(idx_begin, idx_end),
                      std::distance(column1_begin, column1_end));
 
         assert((col_s == size_type(std::distance(column2_begin, column2_end))));
@@ -5036,7 +5036,7 @@ struct  NonZeroRangeVisitor {
         }
         if (there_is_zero)
             std::for_each(result.begin(), result.end(),
-                          [](value_type &v)  {
+                          [](value_type &v) -> void  {
                               v += std::numeric_limits<value_type>::epsilon();
                           });
 

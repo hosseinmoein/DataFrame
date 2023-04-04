@@ -236,7 +236,8 @@ abs__<long long>(const long long &val)  { return (std::llabs(val)); }
 
 template<>
 inline auto
-abs__<float>(const float &val)  { return (std::fabsf(val)); }
+// abs__<float>(const float &val)  { return (std::fabsf(val)); }
+abs__<float>(const float &val)  { return (std::fabs(val)); }
 
 template<>
 inline auto
@@ -244,7 +245,8 @@ abs__<double>(const double &val)  { return (std::fabs(val)); }
 
 template<>
 inline auto
-abs__<long double>(const long double &val)  { return (std::fabsl(val)); }
+// abs__<long double>(const long double &val)  { return (std::fabsl(val)); }
+abs__<long double>(const long double &val)  { return (std::fabs(val)); }
 
 // ----------------------------------------------------------------------------
 

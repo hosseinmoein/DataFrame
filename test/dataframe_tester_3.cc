@@ -1515,6 +1515,47 @@ static void test_RelativeVigorIndexVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_ElderRayIndexVisitor()  {
+
+    std::cout << "\nTesting ElderRayIndexVisitor{  } ..." << std::endl;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("data/SHORT_IBM.csv", io_format::csv2);
+
+        eri_v<double, std::string>  eri;
+
+        df.single_act_visit<double, double, double>
+            ("IBM_Close", "IBM_High", "IBM_Low", eri);
+
+        assert(eri.get_result().size() == 1721);
+        assert(std::abs(eri.get_result()[0] - 1.87) < 0.0001);
+        assert(std::abs(eri.get_result()[12] - 2.627) < 0.0001);
+        assert(std::abs(eri.get_result()[20] - -2.7599) < 0.0001);
+        assert(std::abs(eri.get_result()[25] - 0.1827) < 0.0001);
+        assert(std::abs(eri.get_result()[30] - 5.0969) < 0.0001);
+        assert(std::abs(eri.get_result()[1720] - -3.1783) < 0.0001);
+        assert(std::abs(eri.get_result()[1712] - -3.7028) < 0.0001);
+        assert(std::abs(eri.get_result()[1707] - 2.7576) < 0.0001);
+
+        assert(eri.get_bears().size() == 1721);
+        assert(std::abs(eri.get_bears()[0] - -0.33) < 0.0001);
+        assert(std::abs(eri.get_bears()[12] - -0.973) < 0.0001);
+        assert(std::abs(eri.get_bears()[20] - -5.2599) < 0.0001);
+        assert(std::abs(eri.get_bears()[25] - -2.3073) < 0.0001);
+        assert(std::abs(eri.get_bears()[30] - 1.6569) < 0.0001);
+        assert(std::abs(eri.get_bears()[1720] - -7.2283) < 0.0001);
+        assert(std::abs(eri.get_bears()[1712] - -7.0128) < 0.0001);
+        assert(std::abs(eri.get_bears()[1707] - 0.0676) < 0.0001);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     test_groupby_edge();
@@ -1548,6 +1589,7 @@ int main(int, char *[]) {
     test_InertiaVisitor();
     test_SymmTriangleMovingMeanVisitor();
     test_RelativeVigorIndexVisitor();
+    test_ElderRayIndexVisitor();
 
     return (0);
 }

@@ -5124,6 +5124,71 @@ private:
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 using rvgi_v = RelativeVigorIndexVisitor<T, I, A>;
 
+// ----------------------------------------------------------------------------
+
+template<typename T, typename I = unsigned long, std::size_t A = 0,
+         typename =
+             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+struct  ElderRayIndexVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &close_begin, const H &close_end,
+                const H &high_begin, const H &high_end,
+                const H &low_begin, const H &low_end)  {
+
+        const size_type col_s = std::distance(close_begin, close_end);
+
+        assert((col_s == size_type(std::distance(low_begin, low_end))));
+        assert((col_s == size_type(std::distance(high_begin, high_end))));
+        assert((roll_period_ < (col_s - 1)));
+
+        ewm_v<T, I, A>  ewm(exponential_decay_spec::span, roll_period_, true);
+
+        ewm.pre();
+        ewm (idx_begin, idx_end, close_begin, close_end);
+        ewm.post();
+
+        result_type bulls = ewm.get_result();
+        result_type bears = std::move(ewm.get_result());
+
+        for (size_type i { 0 }; i < col_s; ++i)  {
+            value_type  &bull = bulls[i];
+            value_type  &bear = bears[i];
+
+            bull = *(high_begin + i) - bull;
+            bear = *(low_begin + i) - bear;
+        }
+
+        result_.swap(bulls);
+        bear_vec_.swap(bears);
+    }
+
+    inline void pre ()  { result_.clear(); bear_vec_.clear(); }
+    inline void post ()  {  }
+
+    const result_type &get_result() const  { return (result_); }
+    result_type &get_result()  { return (result_); }
+    const result_type &get_bears() const  { return (bear_vec_); }
+    result_type &get_bears()  { return (bear_vec_); }
+
+    explicit
+    ElderRayIndexVisitor (size_type roll_period = 13)
+        : roll_period_(roll_period)  {   }
+
+private:
+
+    result_type     result_ {  };    // Bull vector
+    result_type     bear_vec_ {  };  // Bear vector
+    const size_type roll_period_;
+};
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using eri_v = ElderRayIndexVisitor<T, I, A>;
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

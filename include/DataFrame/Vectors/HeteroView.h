@@ -30,7 +30,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 
 #include <DataFrame/Vectors/VectorView.h>
-#include <DataFrame/DataFrameExports.h>
 
 #include <functional>
 #include <new>
@@ -49,7 +48,7 @@ struct HeteroView  {
 
     using size_type = size_t;
 
-    HMDF_API HeteroView();
+    HeteroView();
     template<typename T>
     HeteroView(T *begin_ptr, T *end_ptr);
 
@@ -65,13 +64,13 @@ struct HeteroView  {
     template<typename T>
     void set_begin_end_special(T *bp, T *ep_1);
 
-    HMDF_API HeteroView(const HeteroView &that);
-    HMDF_API HeteroView(HeteroView &&that);
+    HeteroView(const HeteroView &that);
+    HeteroView(HeteroView &&that);
 
     ~HeteroView() { clear(); }
 
-    HMDF_API HeteroView &operator= (const HeteroView &rhs);
-    HMDF_API HeteroView &operator= (HeteroView &&rhs);
+    HeteroView &operator= (const HeteroView &rhs);
+    HeteroView &operator= (HeteroView &&rhs);
 
     template<typename T>
     VectorView<T, A> &get_vector();
@@ -82,7 +81,7 @@ struct HeteroView  {
     typename VectorView<T, A>::
     size_type size () const { return (get_vector<T>().size()); }
 
-    HMDF_API void clear();
+    void clear();
 
     template<typename T>
     bool empty() const noexcept;

@@ -30,7 +30,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 
 #include <DataFrame/Vectors/VectorPtrView.h>
-#include <DataFrame/DataFrameExports.h>
 
 #include <functional>
 #include <new>
@@ -49,7 +48,7 @@ struct HeteroPtrView {
 
     using size_type = size_t;
 
-    HMDF_API HeteroPtrView();
+    HeteroPtrView();
     template<typename T>
     HeteroPtrView(T *begin_ptr, T *end_ptr);
 
@@ -69,13 +68,13 @@ struct HeteroPtrView {
     HeteroPtrView(VectorPtrView<T, A> &vec);
     template<typename T>
     HeteroPtrView(VectorPtrView<T, A> &&vec);
-    HMDF_API HeteroPtrView(const HeteroPtrView &that);
-    HMDF_API HeteroPtrView(HeteroPtrView &&that);
+    HeteroPtrView(const HeteroPtrView &that);
+    HeteroPtrView(HeteroPtrView &&that);
 
     ~HeteroPtrView() { clear(); }
 
-    HMDF_API HeteroPtrView &operator= (const HeteroPtrView &rhs);
-    HMDF_API HeteroPtrView &operator= (HeteroPtrView &&rhs);
+    HeteroPtrView &operator= (const HeteroPtrView &rhs);
+    HeteroPtrView &operator= (HeteroPtrView &&rhs);
 
     template<typename T>
     VectorPtrView<T, A> &get_vector();
@@ -91,7 +90,7 @@ struct HeteroPtrView {
     typename VectorPtrView<T, A>::
     size_type size () const { return (get_vector<T>().size()); }
 
-    HMDF_API void clear();
+    void clear();
 
     template<typename T>
     bool empty() const noexcept;

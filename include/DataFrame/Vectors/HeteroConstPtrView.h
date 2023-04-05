@@ -30,7 +30,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 
 #include <DataFrame/Vectors/VectorPtrView.h>
-#include <DataFrame/DataFrameExports.h>
 
 #include <functional>
 #include <new>
@@ -49,7 +48,7 @@ struct  HeteroConstPtrView {
 
     using size_type = size_t;
 
-    HMDF_API HeteroConstPtrView();
+    HeteroConstPtrView();
     template<typename T>
     HeteroConstPtrView(const T *begin_ptr, const T *end_ptr);
 
@@ -69,13 +68,13 @@ struct  HeteroConstPtrView {
     HeteroConstPtrView(VectorConstPtrView<T, A> &vec);
     template<typename T>
     HeteroConstPtrView(VectorConstPtrView<T, A> &&vec);
-    HMDF_API HeteroConstPtrView(const HeteroConstPtrView &that);
-    HMDF_API HeteroConstPtrView(HeteroConstPtrView &&that);
+    HeteroConstPtrView(const HeteroConstPtrView &that);
+    HeteroConstPtrView(HeteroConstPtrView &&that);
 
     ~HeteroConstPtrView() { clear(); }
 
-    HMDF_API HeteroConstPtrView &operator= (const HeteroConstPtrView &rhs);
-    HMDF_API HeteroConstPtrView &operator= (HeteroConstPtrView &&rhs);
+    HeteroConstPtrView &operator= (const HeteroConstPtrView &rhs);
+    HeteroConstPtrView &operator= (HeteroConstPtrView &&rhs);
 
     template<typename T>
     VectorConstPtrView<T, A> &get_vector();
@@ -86,7 +85,7 @@ struct  HeteroConstPtrView {
     typename VectorConstPtrView<T, A>::size_type
     size () const { return (get_vector<T>().size()); }
 
-    HMDF_API void clear();
+    void clear();
 
     template<typename T>
     bool empty() const noexcept;

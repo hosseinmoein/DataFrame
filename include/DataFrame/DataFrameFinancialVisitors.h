@@ -5189,6 +5189,102 @@ private:
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 using eri_v = ElderRayIndexVisitor<T, I, A>;
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename I = unsigned long, std::size_t A = 0,
+         typename =
+             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+struct  ChopIndexVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &close_begin, const H &close_end,
+                const H &high_begin, const H &high_end,
+                const H &low_begin, const H &low_end)  {
+
+        const size_type col_s = std::distance(close_begin, close_end);
+
+        assert((col_s == size_type(std::distance(high_begin, high_end))));
+        assert((col_s == size_type(std::distance(low_begin, low_end))));
+        assert(roll_period_ < col_s);
+        assert(roll_period_ > rvi_rp_);
+
+
+
+
+
+
+
+
+
+
+
+        rvi_v<T, I> rvi { rvi_rp_ };
+
+        rvi.pre();
+        rvi(idx_begin, idx_end,
+            close_begin, close_end,
+            high_begin, high_end,
+            low_begin, low_end);
+        rvi.post();
+
+        linregmm_v<T, I>    linreg { roll_period_ };
+
+        linreg.pre();
+        linreg(idx_begin, idx_end,
+               rvi.get_result().begin(), rvi.get_result().end());
+        linreg.post();
+
+        result_ = std::move(linreg.get_result());
+    }
+
+    DEFINE_PRE_POST
+    DEFINE_RESULT
+
+    explicit
+    ChopIndexVisitor(size_type roll_period = 14)
+        : roll_period_(roll_period)  {   }
+
+private:
+
+    result_type     result_ { };
+    const size_type roll_period_;
+};
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using chop_v = ChopIndexVisitor<T, I, A>;
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

@@ -29,7 +29,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
 
-#include <DataFrame/DataFrameExports.h>
 #include <DataFrame/Utils/AlignedAllocator.h>
 #include <DataFrame/Vectors/HeteroConstPtrView.h>
 #include <DataFrame/Vectors/HeteroConstView.h>
@@ -58,14 +57,14 @@ struct HeteroVector  {
 
     using size_type = size_t;
 
-    HMDF_API HeteroVector();
-    HMDF_API HeteroVector(const HeteroVector &that);
-    HMDF_API HeteroVector(HeteroVector &&that);
+    HeteroVector();
+    HeteroVector(const HeteroVector &that);
+    HeteroVector(HeteroVector &&that);
 
     ~HeteroVector() { clear(); }
 
-    HMDF_API HeteroVector &operator= (const HeteroVector &rhs);
-    HMDF_API HeteroVector &operator= (HeteroVector &&rhs);
+    HeteroVector &operator= (const HeteroVector &rhs);
+    HeteroVector &operator= (HeteroVector &&rhs);
 
     template<typename T>
     std::vector<T, typename allocator_declare<T, A>::type> &get_vector();
@@ -104,7 +103,7 @@ struct HeteroVector  {
     template<typename T>
     size_type size () const { return (get_vector<T>().size()); }
 
-    HMDF_API void clear();
+    void clear();
 
     template<typename T>
     void erase(size_type pos);

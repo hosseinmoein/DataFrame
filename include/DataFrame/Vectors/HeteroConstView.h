@@ -30,7 +30,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 
 #include <DataFrame/Vectors/VectorView.h>
-#include <DataFrame/DataFrameExports.h>
 
 #include <functional>
 #include <type_traits>
@@ -48,7 +47,7 @@ struct HeteroConstView  {
 
     using size_type = size_t;
 
-    HMDF_API HeteroConstView();
+    HeteroConstView();
     template<typename T>
     HeteroConstView(const T *begin_ptr, const T *end_ptr);
 
@@ -65,13 +64,13 @@ struct HeteroConstView  {
     template<typename T>
     void set_begin_end_special(const T *bp, const T *ep_1);
 
-    HMDF_API HeteroConstView(const HeteroConstView &that);
-    HMDF_API HeteroConstView(HeteroConstView &&that);
+    HeteroConstView(const HeteroConstView &that);
+    HeteroConstView(HeteroConstView &&that);
 
     ~HeteroConstView() { clear(); }
 
-    HMDF_API HeteroConstView &operator= (const HeteroConstView &rhs);
-    HMDF_API HeteroConstView &operator= (HeteroConstView &&rhs);
+    HeteroConstView &operator= (const HeteroConstView &rhs);
+    HeteroConstView &operator= (HeteroConstView &&rhs);
 
     template<typename T>
     VectorConstView<T, A> &get_vector();
@@ -82,7 +81,7 @@ struct HeteroConstView  {
     typename VectorConstView<T, A>::size_type
     size () const { return (get_vector<T>().size()); }
 
-    HMDF_API void clear();
+    void clear();
 
     template<typename T>
     bool empty() const noexcept;

@@ -523,12 +523,12 @@ static void test_ChandeKrollStopVisitor()  {
         assert(cksp.get_short_stop().size() == 1721);
         assert(std::isnan(cksp.get_short_stop()[0]));
         assert(std::isnan(cksp.get_short_stop()[18]));
-        assert(std::abs(cksp.get_short_stop()[20] - 192.6438) < 0.0001);
-        assert(std::abs(cksp.get_short_stop()[25] - 192.6438) < 0.0001);
-        assert(std::abs(cksp.get_short_stop()[35] - 187.8592) < 0.0001);
-        assert(std::abs(cksp.get_short_stop()[1720] - 131.7065) < 0.0001);
-        assert(std::abs(cksp.get_short_stop()[1712] - 131.7065) < 0.0001);
-        assert(std::abs(cksp.get_short_stop()[1707] - 131.7065) < 0.0001);
+        assert(std::abs(cksp.get_short_stop()[20] - 183.5624) < 0.0001);
+        assert(std::abs(cksp.get_short_stop()[25] - 179.3772) < 0.0001);
+        assert(std::abs(cksp.get_short_stop()[35] - 179.0532) < 0.0001);
+        assert(std::abs(cksp.get_short_stop()[1720] - 115.8925) < 0.0001);
+        assert(std::abs(cksp.get_short_stop()[1712] - 124.3597) < 0.0001);
+        assert(std::abs(cksp.get_short_stop()[1707] - 124.3597) < 0.0001);
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;

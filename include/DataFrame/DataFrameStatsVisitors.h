@@ -1061,7 +1061,7 @@ public:
                 const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
-        assert(roll_count_ > 0 and roll_count_ < col_s);
+        assert(roll_count_ > 0 and roll_count_ <= col_s);
 
         result_.reserve(col_s);
         for (size_type i = 0; i < roll_count_ - 1 && i < col_s; ++i)

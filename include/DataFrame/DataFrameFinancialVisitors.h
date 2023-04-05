@@ -4407,8 +4407,8 @@ struct  ChandeKrollStopVisitor  {
         for (size_type i { 0 }; i < col_s; ++i)
             short_stop[i] += multiplier_ * atr.get_result()[i];
 
-        SimpleRollAdopter<MaxVisitor<T, I>, T, I, A>    min2
-            { MaxVisitor<T, I>(), q_period_ };
+        SimpleRollAdopter<MinVisitor<T, I>, T, I, A>    min2
+            { MinVisitor<T, I>(), q_period_ };
 
         min2.pre();
         min2 (idx_begin, idx_end, short_stop.begin(), short_stop.end());
@@ -5238,7 +5238,6 @@ struct  ChopIndexVisitor  {
         assert((col_s == size_type(std::distance(high_begin, high_end))));
         assert((col_s == size_type(std::distance(low_begin, low_end))));
         assert(roll_period_ < col_s);
-        assert(roll_period_ > rvi_rp_);
 
 
 
@@ -5250,23 +5249,6 @@ struct  ChopIndexVisitor  {
 
 
 
-        rvi_v<T, I> rvi { rvi_rp_ };
-
-        rvi.pre();
-        rvi(idx_begin, idx_end,
-            close_begin, close_end,
-            high_begin, high_end,
-            low_begin, low_end);
-        rvi.post();
-
-        linregmm_v<T, I>    linreg { roll_period_ };
-
-        linreg.pre();
-        linreg(idx_begin, idx_end,
-               rvi.get_result().begin(), rvi.get_result().end());
-        linreg.post();
-
-        result_ = std::move(linreg.get_result());
     }
 
     DEFINE_PRE_POST

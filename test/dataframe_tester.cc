@@ -3539,7 +3539,7 @@ static void test_view_visitors()  {
 
     std::cout << "\nTesting View visitors ..." << std::endl;
 
-    MyDataFrame         df;
+    MyDataFrame df;
 
     StlVecType<unsigned long>  idxvec =
         { 1UL, 2UL, 3UL, 4UL, 5UL, 6UL, 7UL, 8UL, 9UL, 10UL };

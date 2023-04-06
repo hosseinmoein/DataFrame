@@ -120,7 +120,7 @@ DataFrame is available on _Conan_ platform. Add `dataframe/x.y.z@` to your requi
 
 ```text
 [requires]
-dataframe/1.22.0@
+dataframe/2.0.0@
 
 [generators]
 cmake

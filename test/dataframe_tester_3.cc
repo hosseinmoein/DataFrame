@@ -1556,6 +1556,37 @@ static void test_ElderRayIndexVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_ChopIndexVisitor()  {
+
+    std::cout << "\nTesting ChopIndexVisitor{  } ..." << std::endl;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("data/SHORT_IBM.csv", io_format::csv2);
+
+        chop_v<double, std::string> chop;
+
+        df.single_act_visit<double, double, double>
+            ("IBM_Close", "IBM_High", "IBM_Low", chop);
+
+        assert(chop.get_result().size() == 1721);
+        assert(std::isnan(chop.get_result()[0]));
+        assert(std::isnan(chop.get_result()[12]));
+        assert(std::abs(chop.get_result()[20] - 39.3577) < 0.0001);
+        assert(std::abs(chop.get_result()[25] - 31.2701) < 0.0001);
+        assert(std::abs(chop.get_result()[30] - 40.8049) < 0.0001);
+        assert(std::abs(chop.get_result()[1720] - 27.7729) < 0.0001);
+        assert(std::abs(chop.get_result()[1712] - 37.9124) < 0.0001);
+        assert(std::abs(chop.get_result()[1707] - 34.344) < 0.0001);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     test_groupby_edge();
@@ -1590,6 +1621,7 @@ int main(int, char *[]) {
     test_SymmTriangleMovingMeanVisitor();
     test_RelativeVigorIndexVisitor();
     test_ElderRayIndexVisitor();
+    test_ChopIndexVisitor();
 
     return (0);
 }

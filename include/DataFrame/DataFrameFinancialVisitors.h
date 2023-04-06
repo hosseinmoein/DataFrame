@@ -5189,34 +5189,6 @@ private:
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 using eri_v = ElderRayIndexVisitor<T, I, A>;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // ----------------------------------------------------------------------------
 
 template<typename T, typename I = unsigned long, std::size_t A = 0,
@@ -5239,29 +5211,64 @@ struct  ChopIndexVisitor  {
         assert((col_s == size_type(std::distance(low_begin, low_end))));
         assert(roll_period_ < col_s);
 
+        SimpleRollAdopter<MaxVisitor<T, I>, T, I, A>    maxv
+            { MaxVisitor<T, I>(), roll_period_ };
 
+        maxv.pre();
+        maxv (idx_begin, idx_end, high_begin, high_end);
+        maxv.post();
 
+        result_type                                     diff =
+            std::move(maxv.get_result());
+        SimpleRollAdopter<MinVisitor<T, I>, T, I, A>    minv
+            { MinVisitor<T, I>(), roll_period_ };
 
+        minv.pre();
+        minv (idx_begin, idx_end, low_begin, low_end);
+        minv.post();
 
+        for (size_type i { 0 }; i < col_s; ++i)
+            diff[i] -= minv.get_result()[i];
 
+        TrueRangeVisitor<T, I, A>   atr { true, atr_period_ };
 
+        atr.pre();
+        atr(idx_begin, idx_end,
+            low_begin, low_end, high_begin, high_end, close_begin, close_end);
+        atr.post();
 
+        SimpleRollAdopter<SumVisitor<T, I>, T, I, A>    atr_sum
+            { SumVisitor<T, I>(), roll_period_ };
 
+        atr_sum.get_result().swap(minv.get_result());  // Reuse the space
+        atr_sum.pre();
+        atr_sum (idx_begin, idx_end,
+                 atr.get_result().begin(), atr.get_result().end());
+        atr_sum.post();
 
+        for (size_type i { 0 }; i < col_s; ++i)  {
+            value_type  &val = diff[i];
 
+            val = T(100) *
+                  (std::log10(atr_sum.get_result()[i]) - std::log10(val)) /
+                  std::log10(T(roll_period_));
+        }
+
+        result_.swap(diff);
     }
 
     DEFINE_PRE_POST
     DEFINE_RESULT
 
     explicit
-    ChopIndexVisitor(size_type roll_period = 14)
-        : roll_period_(roll_period)  {   }
+    ChopIndexVisitor(size_type roll_period = 14, size_type atr_period = 1)
+        : roll_period_(roll_period), atr_period_(atr_period)  {   }
 
 private:
 
     result_type     result_ { };
     const size_type roll_period_;
+    const size_type atr_period_;
 };
 
 template<typename T, typename I = unsigned long, std::size_t A = 0>

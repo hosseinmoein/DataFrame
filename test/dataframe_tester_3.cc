@@ -1618,6 +1618,39 @@ static void test_DetrendPriceOsciVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_RectifiedLinearUnitVisitor()  {
+
+    std::cout << "\nTesting RectifiedLinearUnitVisitor{  } ..." << std::endl;
+
+    MyDataFrame                df;
+    StlVecType<unsigned long>  idxvec =
+        { 1UL, 2UL, 3UL, 10UL, 5UL, 7UL, 8UL, 12UL, 9UL, 12UL, 10UL, 13UL,
+          10UL, 15UL, 14UL };
+    StlVecType<double>         dblvec =
+        { 0.0, 15.0, -14.0, 2.0, 1.0, -12.0, 11.0, 8.0, 7.0, 0.0, 5.0, 4.0,
+          3.0, 9.0, -10.0};
+    StlVecType<double>         dblvec2 =
+        { 100.0, 101.0, 102.0, 103.0, 104.0, 105.0, 106.55, 107.34, 1.8,
+          111.0, 112.0, 113.0, 114.0, 115.0, 116.0};
+    StlVecType<std::string>    strvec =
+        { "zz", "bb", "cc", "ww", "ee", "ff", "gg", "hh", "ii", "jj", "kk",
+          "ll", "mm", "nn", "oo" };
+
+    df.load_data(std::move(idxvec),
+                 std::make_pair("dbl_col", dblvec),
+                 std::make_pair("dbl_col_2", dblvec2),
+                 std::make_pair("str_col", strvec));
+
+    relu_v<double, unsigned long, 256>  relu;
+
+    df.single_act_visit<double>("dbl_col", relu);
+    for (const auto val : relu.get_result())
+        std::cout << val << ", ";
+    std::cout << std::endl;
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     test_groupby_edge();
@@ -1654,6 +1687,7 @@ int main(int, char *[]) {
     test_ElderRayIndexVisitor();
     test_ChopIndexVisitor();
     test_DetrendPriceOsciVisitor();
+    test_RectifiedLinearUnitVisitor();
 
     return (0);
 }

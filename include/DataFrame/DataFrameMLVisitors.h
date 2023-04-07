@@ -1015,6 +1015,42 @@ private:
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 using sigm_v = SigmoidVisitor<T, I, A>;
 
+// ----------------------------------------------------------------------------
+
+template<typename T, typename I = unsigned long, std::size_t A = 0,
+         typename =
+             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+struct RectifiedLinearUnitVisitor {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+public:
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
+
+        GET_COL_SIZE
+
+        result_.reserve(col_s);
+        for (size_type i = 0; i < col_s; ++i)
+            result_.push_back(std::max(T(0), *(column_begin + i)));
+    }
+
+    DEFINE_PRE_POST
+    DEFINE_RESULT
+
+    RectifiedLinearUnitVisitor() = default;
+
+private:
+
+    result_type result_ {  };
+};
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using relu_v = RectifiedLinearUnitVisitor<T, I, A>;
+
 } // namespace hmdf
 
 // -----------------------------------------------------------------------------

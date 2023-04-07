@@ -30,7 +30,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 
 #include <DataFrame/DataFrameStatsVisitors.h>
-#include <DataFrame/DataFrameTypes.h>
 #include <DataFrame/Vectors/VectorPtrView.h>
 
 #include <algorithm>
@@ -917,6 +916,104 @@ private:
 
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 using impu_v = ImpurityVisitor<T, I, A>;
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename I = unsigned long, std::size_t A = 0,
+         typename =
+             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+struct SigmoidVisitor {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+private:
+
+    template <typename H>
+    inline void logistic_(const H &column_begin, const H &column_end)  {
+
+        for (auto citer = column_begin; citer < column_end; ++citer)
+            result_.push_back(1.0 / (1.0 + std::exp(-(*citer))));
+    }
+    template <typename H>
+    inline void algebraic_(const H &column_begin, const H &column_end)  {
+
+        for (auto citer = column_begin; citer < column_end; ++citer)
+            result_.push_back(1.0 / std::sqrt(1.0 + std::pow(*citer, 2.0)));
+    }
+    template <typename H>
+    inline void hyperbolic_tan_(const H &column_begin, const H &column_end)  {
+
+        for (auto citer = column_begin; citer < column_end; ++citer)
+            result_.push_back(std::tanh(*citer));
+    }
+    template <typename H>
+    inline void arc_tan_(const H &column_begin, const H &column_end)  {
+
+        for (auto citer = column_begin; citer < column_end; ++citer)
+            result_.push_back(std::atan(*citer));
+    }
+    template <typename H>
+    inline void error_function_(const H &column_begin, const H &column_end)  {
+
+        for (auto citer = column_begin; citer < column_end; ++citer)
+            result_.push_back(std::erf(*citer));
+    }
+    template <typename H>
+    inline void gudermannian_(const H &column_begin, const H &column_end)  {
+
+        for (auto citer = column_begin; citer < column_end; ++citer)
+            result_.push_back(std::atan(std::sinh(*citer)));
+    }
+    template <typename H>
+    inline void smoothstep_(const H &column_begin, const H &column_end)  {
+
+        for (auto citer = column_begin; citer < column_end; ++citer)  {
+            if (*citer <= 0.0)
+                result_.push_back(0.0);
+            else if (*citer >= 1.0)
+                result_.push_back(1.0);
+            else
+                result_.push_back(*citer * *citer * (3.0 - 2.0 * *citer));
+        }
+    }
+
+public:
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &, const K &,
+                const H &column_begin, const H &column_end)  {
+
+        result_.reserve(std::distance(column_begin, column_end));
+        if (sigmoid_type_ == sigmoid_type::logistic)
+            logistic_(column_begin, column_end);
+        else if (sigmoid_type_ == sigmoid_type::algebraic)
+            algebraic_(column_begin, column_end);
+        else if (sigmoid_type_ == sigmoid_type::hyperbolic_tan)
+            hyperbolic_tan_(column_begin, column_end);
+        else if (sigmoid_type_ == sigmoid_type::arc_tan)
+            arc_tan_(column_begin, column_end);
+        else if (sigmoid_type_ == sigmoid_type::error_function)
+            error_function_(column_begin, column_end);
+        else if (sigmoid_type_ == sigmoid_type::gudermannian)
+            gudermannian_(column_begin, column_end);
+        else if (sigmoid_type_ == sigmoid_type::smoothstep)
+            smoothstep_(column_begin, column_end);
+    }
+
+    DEFINE_PRE_POST
+    DEFINE_RESULT
+
+    explicit SigmoidVisitor(sigmoid_type st) : sigmoid_type_(st)  {   }
+
+private:
+
+    result_type         result_ {  }; // Sigmoids
+    const sigmoid_type  sigmoid_type_;
+};
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using sigm_v = SigmoidVisitor<T, I, A>;
 
 } // namespace hmdf
 

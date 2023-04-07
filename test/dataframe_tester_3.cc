@@ -1587,6 +1587,37 @@ static void test_ChopIndexVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_DetrendPriceOsciVisitor()  {
+
+    std::cout << "\nTesting DetrendPriceOsciVisitor{  } ..." << std::endl;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("data/SHORT_IBM.csv", io_format::csv2);
+
+        dpo_v<double, std::string>  dpo;
+
+        df.single_act_visit<double>("IBM_Close", dpo);
+
+        assert(dpo.get_result().size() == 1721);
+        assert(std::isnan(dpo.get_result()[0]));
+        assert(std::isnan(dpo.get_result()[29]));
+        assert(std::abs(dpo.get_result()[30] - -0.746) < 0.0001);
+        assert(std::abs(dpo.get_result()[35] - 2.24) < 0.0001);
+        assert(std::abs(dpo.get_result()[38] - 5.2955) < 0.0001);
+        assert(std::abs(dpo.get_result()[45] - 7.763546) < 0.0001);
+        assert(std::abs(dpo.get_result()[1720] - -11.133) < 0.0001);
+        assert(std::abs(dpo.get_result()[1712] - -3.958) < 0.0001);
+        assert(std::abs(dpo.get_result()[1707] - 3.004) < 0.0001);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     test_groupby_edge();
@@ -1622,6 +1653,7 @@ int main(int, char *[]) {
     test_RelativeVigorIndexVisitor();
     test_ElderRayIndexVisitor();
     test_ChopIndexVisitor();
+    test_DetrendPriceOsciVisitor();
 
     return (0);
 }

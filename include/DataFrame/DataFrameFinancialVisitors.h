@@ -382,6 +382,9 @@ private:
     result_type raw_to_lower_band_;
 };
 
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using bband_v = BollingerBand<T, I, A>;
+
 // ----------------------------------------------------------------------------
 
 // Moving Average Convergence/Divergence
@@ -5304,7 +5307,7 @@ struct  DetrendPriceOsciVisitor  {
         result_type     result(col_s, std::numeric_limits<T>::quiet_NaN());
 
         for (size_type i { shift }; i < col_s; ++i)
-            result[i] = *(column_begin  + i) - savg.get_result()[i - shift]; 
+            result[i] = *(column_begin  + i) - savg.get_result()[i - shift];
 
         result_.swap(result);
     }
@@ -5324,6 +5327,103 @@ private:
 
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 using dpo_v = DetrendPriceOsciVisitor<T, I, A>;
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename I = unsigned long, std::size_t A = 0,
+         typename =
+             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+struct  AccelerationBandsVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &close_begin, const H &close_end,
+                const H &high_begin, const H &high_end,
+                const H &low_begin, const H &low_end)  {
+
+        const size_type col_s = std::distance(close_begin, close_end);
+
+        assert((col_s == size_type(std::distance(low_begin, low_end))));
+        assert((col_s == size_type(std::distance(high_begin, high_end))));
+        assert(roll_period_ > 0 && roll_period_ < col_s);
+
+        NonZeroRangeVisitor<T, I, A>    nzr;
+
+        nzr.pre();
+        nzr(idx_begin, idx_end, high_begin, high_end, low_begin, low_end);
+        nzr.post();
+
+        result_type             lower_band;
+        result_type             upper_band;
+        constexpr value_type    one = 1;
+
+        lower_band.reserve(col_s);
+        upper_band.reserve(col_s);
+        for (size_type i { 0 }; i < col_s; ++i)  {
+            const value_type    low = *(low_begin + i);
+            const value_type    high = *(high_begin + i);
+            const value_type    hl_ratio =
+                (nzr.get_result()[i] / (high + low)) * mlp_;
+
+            lower_band.push_back(low * (one - hl_ratio));
+            upper_band.push_back(high * (one + hl_ratio));
+        }
+
+        SimpleRollAdopter<MeanVisitor<T, I>, T, I, A>   savg
+            { MeanVisitor<T, I>(), roll_period_ } ;
+
+        savg.get_result().swap(nzr.get_result());  // Reuse the space
+        savg.pre();
+        savg (idx_begin, idx_end, lower_band.begin(), lower_band.end());
+        savg.post();
+        lower_band_ = std::move(savg.get_result());
+
+        savg.get_result().swap(lower_band);  // Reuse the space
+        savg.pre();
+        savg (idx_begin, idx_end, close_begin, close_end);
+        savg.post();
+        result_ = std::move(savg.get_result());
+
+        savg.pre();
+        savg (idx_begin, idx_end, upper_band.begin(), upper_band.end());
+        savg.post();
+        upper_band_ = std::move(savg.get_result());
+    }
+
+    inline void pre ()  {
+
+        result_.clear();
+        lower_band_.clear();
+        upper_band_.clear();
+    }
+    inline void post ()  {  }
+    const result_type &get_result() const  { return (result_); }
+    result_type &get_result()  { return (result_); }
+    const result_type &get_lower_band() const  { return (lower_band_); }
+    result_type &get_lower_band()  { return (lower_band_); }
+    const result_type &get_upper_band() const  { return (upper_band_); }
+    result_type &get_upper_band()  { return (upper_band_); }
+
+
+    explicit
+    AccelerationBandsVisitor(size_type roll_period = 20,
+                             value_type multiplier = 4)
+        : roll_period_(roll_period), mlp_(multiplier)  {   }
+
+private:
+
+    const size_type roll_period_;
+    const size_type mlp_;
+    result_type     result_ { };  // Mid-band
+    result_type     lower_band_ { };
+    result_type     upper_band_ { };
+};
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using aband_v = AccelerationBandsVisitor<T, I, A>;
 
 } // namespace hmdf
 

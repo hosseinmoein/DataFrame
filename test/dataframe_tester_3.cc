@@ -1651,6 +1651,66 @@ static void test_RectifiedLinearUnitVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_AccelerationBandsVisitor()  {
+
+    std::cout << "\nTesting AccelerationBandsVisitor{  } ..." << std::endl;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("data/SHORT_IBM.csv", io_format::csv2);
+
+        aband_v<double, std::string>    aband;
+
+        df.single_act_visit<double, double, double>
+            ("IBM_Close", "IBM_High", "IBM_Low", aband);
+
+        // Upper-band
+        //
+        assert(aband.get_upper_band().size() == 1721);
+        assert(std::isnan(aband.get_upper_band()[0]));
+        assert(std::isnan(aband.get_upper_band()[18]));
+        assert(std::abs(aband.get_upper_band()[19] - 191.2407) < 0.0001);
+        assert(std::abs(aband.get_upper_band()[25] - 187.2326) < 0.0001);
+        assert(std::abs(aband.get_upper_band()[30] - 185.7256) < 0.0001);
+        assert(std::abs(aband.get_upper_band()[35] - 185.0129) < 0.0001);
+        assert(std::abs(aband.get_upper_band()[1720] - 127.0993) < 0.0001);
+        assert(std::abs(aband.get_upper_band()[1712] - 130.0339) < 0.0001);
+        assert(std::abs(aband.get_upper_band()[1707] - 129.903) < 0.0001);
+
+        // Mid-band
+        //
+        assert(aband.get_result().size() == 1721);
+        assert(std::isnan(aband.get_result()[0]));
+        assert(std::isnan(aband.get_result()[18]));
+        assert(std::abs(aband.get_result()[19] - 184.436) < 0.0001);
+        assert(std::abs(aband.get_result()[25] - 180.7035) < 0.0001);
+        assert(std::abs(aband.get_result()[30] - 179.142) < 0.0001);
+        assert(std::abs(aband.get_result()[35] - 178.817) < 0.0001);
+        assert(std::abs(aband.get_result()[1720] - 119.8055) < 0.0001);
+        assert(std::abs(aband.get_result()[1712] - 123.058) < 0.0001);
+        assert(std::abs(aband.get_result()[1707] - 122.7085) < 0.0001);
+
+        // Lower-band
+        //
+        assert(aband.get_lower_band().size() == 1721);
+        assert(std::isnan(aband.get_lower_band()[0]));
+        assert(std::isnan(aband.get_lower_band()[18]));
+        assert(std::abs(aband.get_lower_band()[19] - 177.8282) < 0.0001);
+        assert(std::abs(aband.get_lower_band()[25] - 174.2877) < 0.0001);
+        assert(std::abs(aband.get_lower_band()[30] - 172.3706) < 0.0001);
+        assert(std::abs(aband.get_lower_band()[35] - 172.6929) < 0.0001);
+        assert(std::abs(aband.get_lower_band()[1720] - 113.2393) < 0.0001);
+        assert(std::abs(aband.get_lower_band()[1712] - 116.8539) < 0.0001);
+        assert(std::abs(aband.get_lower_band()[1707] - 116.1055) < 0.0001);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     test_groupby_edge();
@@ -1688,6 +1748,7 @@ int main(int, char *[]) {
     test_ChopIndexVisitor();
     test_DetrendPriceOsciVisitor();
     test_RectifiedLinearUnitVisitor();
+    test_AccelerationBandsVisitor();
 
     return (0);
 }

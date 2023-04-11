@@ -1711,6 +1711,37 @@ static void test_AccelerationBandsVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_PriceDistanceVisitor()  {
+
+    std::cout << "\nTesting PriceDistanceVisitor{  } ..." << std::endl;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("data/SHORT_IBM.csv", io_format::csv2);
+
+        pdist_v<double, std::string>    pdist;
+
+        df.single_act_visit<double, double, double, double>
+            ("IBM_Low", "IBM_High", "IBM_Open", "IBM_Close", pdist);
+
+        assert(pdist.get_result().size() == 1721);
+        assert(std::isnan(pdist.get_result()[0]));
+        assert(std::abs(pdist.get_result()[13] - 13.84) < 0.0001);
+        assert(std::abs(pdist.get_result()[14] - 5.54) < 0.0001);
+        assert(std::abs(pdist.get_result()[18] - 5.73) < 0.0001);
+        assert(std::abs(pdist.get_result()[25] - 4.34) < 0.0001);
+        assert(std::abs(pdist.get_result()[1720] - 5.35) < 0.0001);
+        assert(std::abs(pdist.get_result()[1712] - 9.91) < 0.0001);
+        assert(std::abs(pdist.get_result()[1707] - 4.55) < 0.0001);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     test_groupby_edge();
@@ -1749,6 +1780,7 @@ int main(int, char *[]) {
     test_DetrendPriceOsciVisitor();
     test_RectifiedLinearUnitVisitor();
     test_AccelerationBandsVisitor();
+    test_PriceDistanceVisitor();
 
     return (0);
 }

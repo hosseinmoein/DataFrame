@@ -4914,17 +4914,16 @@ struct  NonZeroRangeVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template <typename K, typename H1, typename H2>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
-                const H &column1_begin, const H &column1_end,
-                const H &column2_begin, const H &column2_end)  {
+                const H1 &column1_begin, const H1 &column1_end,
+                const H2 &column2_begin, const H2 &column2_end)  {
 
         const std::size_t   col_s =
-            std::min(std::distance(idx_begin, idx_end),
-                     std::distance(column1_begin, column1_end));
-
-        assert((col_s == size_type(std::distance(column2_begin, column2_end))));
+            std::min({ std::distance(idx_begin, idx_end),
+                       std::distance(column1_begin, column1_end),
+                       std::distance(column2_begin, column2_end) });
 
         bool        there_is_zero = false;
         result_type result;

@@ -5425,6 +5425,73 @@ private:
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 using aband_v = AccelerationBandsVisitor<T, I, A>;
 
+// ----------------------------------------------------------------------------
+
+template<typename T, typename I = unsigned long, std::size_t A = 0,
+         typename =
+             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+struct  PriceDistanceVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &low_begin, const H &low_end,
+                const H &high_begin, const H &high_end,
+                const H &open_begin, const H &open_end,
+                const H &close_begin, const H &close_end)  {
+
+        const size_type col_s = std::distance(close_begin, close_end);
+
+        assert((col_s == size_type(std::distance(low_begin, low_end))));
+        assert((col_s == size_type(std::distance(open_begin, open_end))));
+        assert((col_s == size_type(std::distance(high_begin, high_end))));
+
+        nzr_v<T, I, A>  nzr;
+
+        nzr.pre();
+        nzr(idx_begin, idx_end, high_begin, high_end, low_begin, low_end);
+        nzr.post();
+
+        result_type             result;
+        constexpr value_type    two = 2;
+
+        result.reserve(col_s);
+        for (size_type i { 0 }; i < col_s; ++i)
+            result.push_back(two * nzr.get_result()[i]);
+
+        nzr.pre();
+        nzr(idx_begin, idx_end,
+            // FIXME: "close_begin - 1" is not good
+            open_begin, open_end, close_begin - 1, close_end);
+        nzr.post();
+        result[0] = std::numeric_limits<T>::quiet_NaN();
+        for (size_type i { 1 }; i < col_s; ++i)
+            result[i] += abs__(nzr.get_result()[i]);
+
+        nzr.pre();
+        nzr(idx_begin, idx_end, close_begin, close_end, open_begin, open_end);
+        nzr.post();
+        for (size_type i { 0 }; i < col_s; ++i)
+            result[i] -= abs__(nzr.get_result()[i]);
+
+        result_.swap(result);
+    }
+
+    DEFINE_PRE_POST
+    DEFINE_RESULT
+
+    PriceDistanceVisitor() = default;
+
+private:
+
+    result_type result_ {  };
+};
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using pdist_v = PriceDistanceVisitor<T, I, A>;
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

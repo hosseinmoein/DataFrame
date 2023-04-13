@@ -5500,7 +5500,7 @@ struct  EldersThermometerVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    using bool_vec = std::vector<bool, typename allocator_declare<T, A>::type>;
+    using bool_vec = std::vector<bool, typename allocator_declare<bool, A>::type>;
 
     template <typename K, typename H>
     inline void

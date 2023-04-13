@@ -1742,6 +1742,64 @@ static void test_PriceDistanceVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_EldersThermometerVisitor()  {
+
+    std::cout << "\nTesting EldersThermometerVisitor{  } ..." << std::endl;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("data/SHORT_IBM.csv", io_format::csv2);
+
+        ether_v<double, std::string>    ether;
+
+        df.single_act_visit<double, double>("IBM_Low", "IBM_High", ether);
+
+        assert(ether.get_result().size() == 1721);
+        assert(std::isnan(ether.get_result()[0]));
+        assert(std::abs(ether.get_result()[13] - 7.12) < 0.0001);
+        assert(std::abs(ether.get_result()[14] - 1.04) < 0.0001);
+        assert(std::abs(ether.get_result()[18] - 0.27) < 0.0001);
+        assert(std::abs(ether.get_result()[25] - 2.71) < 0.0001);
+        assert(std::abs(ether.get_result()[1720] - 2.16) < 0.0001);
+        assert(std::abs(ether.get_result()[1712] - 8.24) < 0.0001);
+        assert(std::abs(ether.get_result()[1707] - 1.98) < 0.0001);
+
+        assert(ether.get_result_ma().size() == 1721);
+        assert(ether.get_result_ma()[0] == 0);
+        assert(std::abs(ether.get_result_ma()[13] - 2.0858) < 0.0001);
+        assert(std::abs(ether.get_result_ma()[14] - 1.9537) < 0.0001);
+        assert(std::abs(ether.get_result_ma()[18] - 1.7528) < 0.0001);
+        assert(std::abs(ether.get_result_ma()[25] - 1.7848) < 0.0001);
+        assert(std::abs(ether.get_result_ma()[1720] - 2.558) < 0.0001);
+        assert(std::abs(ether.get_result_ma()[1712] - 2.6612) < 0.0001);
+        assert(std::abs(ether.get_result_ma()[1707] - 2.538) < 0.0001);
+
+        assert(! ether.get_buy_signal()[0]);
+        assert(! ether.get_buy_signal()[13]);
+        assert(ether.get_buy_signal()[14]);
+        assert(ether.get_buy_signal()[18]);
+        assert(ether.get_buy_signal()[25]);
+        assert(ether.get_buy_signal()[1720]);
+        assert(! ether.get_buy_signal()[1712]);
+        assert(ether.get_buy_signal()[1707]);
+
+        assert(! ether.get_sell_signal()[0]);
+        assert(ether.get_sell_signal()[13]);
+        assert(ether.get_sell_signal()[14]);
+        assert(! ether.get_sell_signal()[18]);
+        assert(ether.get_sell_signal()[25]);
+        assert(ether.get_sell_signal()[1720]);
+        assert(ether.get_sell_signal()[1712]);
+        assert(ether.get_sell_signal()[1707]);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     test_groupby_edge();
@@ -1781,6 +1839,7 @@ int main(int, char *[]) {
     test_RectifiedLinearUnitVisitor();
     test_AccelerationBandsVisitor();
     test_PriceDistanceVisitor();
+    test_EldersThermometerVisitor();
 
     return (0);
 }

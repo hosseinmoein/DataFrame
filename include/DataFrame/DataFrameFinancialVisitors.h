@@ -5407,7 +5407,6 @@ struct  AccelerationBandsVisitor  {
     const result_type &get_upper_band() const  { return (upper_band_); }
     result_type &get_upper_band()  { return (upper_band_); }
 
-
     explicit
     AccelerationBandsVisitor(size_type roll_period = 20,
                              value_type multiplier = 4)
@@ -5491,6 +5490,105 @@ private:
 
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 using pdist_v = PriceDistanceVisitor<T, I, A>;
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename I = unsigned long, std::size_t A = 0,
+         typename =
+             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+struct  EldersThermometerVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    using bool_vec = std::vector<bool, typename allocator_declare<T, A>::type>;
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &low_begin, const H &low_end,
+                const H &high_begin, const H &high_end)  {
+
+        const size_type col_s = std::distance(low_begin, low_end);
+
+        assert((col_s == size_type(std::distance(high_begin, high_end))));
+
+        result_type result;
+
+        result.reserve(col_s);
+        result.push_back(std::numeric_limits<T>::quiet_NaN());
+        for (size_type i { 1 }; i < col_s; ++i)  {
+            const value_type    low =
+                abs__(*(low_begin + (i - 1)) - *(low_begin + i));
+            const value_type    high =
+                abs__(*(high_begin + i) - *(high_begin + (i - 1)));
+
+            result.push_back(high < low ? low : high);
+        }
+
+        ewm_v<T, I, A>  ewm(exponential_decay_spec::span, roll_period_, true);
+
+        ewm.pre();
+        ewm (idx_begin, idx_end, result.begin(), result.end());
+        ewm.post();
+
+        bool_vec    t_long;
+        bool_vec    t_short;
+
+        t_long.reserve(col_s);
+        t_short.reserve(col_s);
+        for (size_type i { 0 }; i < col_s; ++i)  {
+            const value_type    thermo = result[i];
+            const value_type    thermo_ma = ewm.get_result()[i];
+
+            t_long.push_back(thermo < (thermo_ma * buy_f_));
+            t_short.push_back(thermo > (thermo_ma * sell_f_));
+        }
+
+        result_.swap(result);
+        result_ma_.swap(ewm.get_result());
+        buy_signal_.swap(t_long);
+        sell_signal_.swap(t_short);
+    }
+
+    inline void pre ()  {
+
+        result_.clear();
+        result_ma_.clear();
+        buy_signal_.clear();
+        sell_signal_.clear();
+    }
+    inline void post ()  {  }
+    const result_type &get_result() const  { return (result_); }
+    result_type &get_result()  { return (result_); }
+    const result_type &get_result_ma() const  { return (result_ma_); }
+    result_type &get_result_ma()  { return (result_ma_); }
+    const bool_vec &get_buy_signal() const  { return (buy_signal_); }
+    bool_vec &get_buy_signal()  { return (buy_signal_); }
+    const bool_vec &get_sell_signal() const  { return (sell_signal_); }
+    bool_vec &get_sell_signal()  { return (sell_signal_); }
+
+    explicit
+    EldersThermometerVisitor(size_type roll_period = 20,
+                             value_type buy_factor = 2,
+                             value_type sell_factor = 0.5)
+        : roll_period_(roll_period),
+          buy_f_(buy_factor),
+          sell_f_(sell_factor)  {   }
+
+
+private:
+
+    const size_type     roll_period_;
+    const value_type    buy_f_;
+    const value_type    sell_f_;
+    result_type         result_ {  };
+    result_type         result_ma_ {  };
+    bool_vec            buy_signal_ {  };
+    bool_vec            sell_signal_ {  };
+};
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using ether_v = EldersThermometerVisitor<T, I, A>;
 
 } // namespace hmdf
 

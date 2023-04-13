@@ -327,7 +327,7 @@ int main(int, char *[])  {
     //
     ibm_dt_df.single_act_visit<double>("IBM_Return", decom);
 
-    // But what of you don’t know the seasonality of IBM returns which would be most of the time.
+    // But what if you don’t know the seasonality of IBM returns which would be most of the time.
     // No worries, Mr Joseph Fourier comes to the rescue.
     //
     FastFourierTransVisitor<double, DateTime>   fft;

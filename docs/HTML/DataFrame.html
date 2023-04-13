@@ -935,6 +935,10 @@ table.hovertable td {
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
+      <td title="Calculates Elder's Thermometer indicator">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/EldersThermometerVisitor.html">EldersThermometerVisitor</a>{  }</td>
+    </tr>
+
+    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
       <td title="Calculates Fisher transform">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/FisherTransVisitor.html">FisherTransVisitor</a>{  }</td>
     </tr>
 
@@ -1427,11 +1431,10 @@ table.hovertable td {
   I have been asked many times, why I chose the visitor pattern for algorithms as opposed to having member functions.<BR>
   Because I wanted algorithms to be independent objects. To be more precise as to why:<BR>
   <UL>
-    <LI>If I had implemented them as member functions, I would have had 100's of member function in DataFrame</LI>
-    <LI>I wanted users to be able to incorporate their custom algorithms without touching the DataFrame codebase. If you follow a simple interface, you can write your custom visitor and use it in DataFrame, easily</LI>
+    <LI>I wanted users to be able to incorporate their custom algorithms without touching the DataFrame codebase. If you follow a simple interface, you can write your custom visitor and use it in DataFrame</LI>
+    <LI>I wanted the algorithms to be self-contained like an object. That means a single <I>object</I> should contain the algorithm, input(s), parameter(s), and result(s). Because algorithms are self-contained objects, they can be passed to other algorithms</LI>
     <LI>Algorithms sometime have complex results. Sometimes the result is a single number. But sometimes the result of an algorithms could be a single or multiple vectors. That's not efficient to implement as a member function</LI>
-    <LI>I wanted the algorithms to be self-contained like an object. That means a single <I>object</I> should contain the algorithm, input(s), parameter(s), and result(s)</LI>
-    <LI>Because algorithms are self-contained objects, they can be passed to other algorithms</LI>
+    <LI>If I had implemented them as member functions, I would have had 100's of member functions in DataFrame</LI>
   </UL>
 
 <BR><HR COLOR="Orange" SIZE="5"><BR>
@@ -1457,13 +1460,13 @@ table.hovertable td {
 
   <H2><font color="blue">Code Structure</font></H2>
   <P>
-    The DataFrame library is <I>almost</I> a header-only library with a few boilerplate source file exceptions, <I>HeteroVector.cc</I> and <I>HeteroView.cc</I> and a few others. Also, there is <I>DateTime.cc.</I><BR>
+    The DataFrame library is <I>almost</I> a header-only library. Currently the only library source file is <I>DateTime.cc.</I><BR>
     <BR>
     Starting from the root directory:<BR>
     <BR>
-    <font size="+1"><I>include</I></font> directory contains most of the code. It includes <I>.h</I> and <I>.tcc</I> files. The latter are C++ template code files (they are mostly located in the <I>Internals</I> subdirectory). The main header file is <I>DataFrame.h.</I> It contains the DataFrame class and its public interface. There are comprehensive comments for each public interface call in that file. The rest of the files will show you how the sausage is made. <I>Include</I> directory also contains subdirectories that contain mostly internal DataFrame implementation. One exception, the <I>DateTime.h</I> is located in the Utils subdirectory<BR>
+    <font size="+1"><I>include</I></font> directory contains almost all of the code. It includes <I>.h</I> and <I>.tcc</I> files. The latter are C++ template code files (they are mostly located in the <I>Internals</I> subdirectory). The main header file is <I>DataFrame.h.</I> It contains the DataFrame class and its public interface. There are comprehensive comments for each public interface call in that file. The rest of the files will show you how the sausage is made. <I>Include</I> directory also contains subdirectories that contain mostly internal DataFrame implementation. One exception is the <I>Utils</I> subdirectory<BR>
     <BR>
-    <font size="+1"><I>src</I></font> directory contains Linux-only make files and a few subdirectories that contain various source codes.<BR>
+    <font size="+1"><I>src</I></font> directory contains Linux-only make files and <I>Utils</I> subdirectory.<BR>
     <BR>
     <font size="+1"><I>test</I></font> directory contains all the test source files, mocked data files, and test output files. The main test source files are <I>dataframe_tester.cc</I> and <I>dataframe_tester_2.cc</I>. It contains test cases for all functionalities of DataFrame. It is not in a very organized structure. I plan to make the test cases more organized.
   </P>
@@ -1472,18 +1475,12 @@ table.hovertable td {
 
   <H2><font color="blue">Build Instructions</font></H2>
   <P>
-    <font size="+1"><I>Using plain make and make-files:</I></font><BR>
-    Go to the root of the repository, where license file is, and execute build_all.sh. This will build the library and test executables for Linux/Unix flavors only<BR>
-    <font size="+1"><I>Using cmake:</I></font><BR>
-    Please see README file. Thanks to @justinjk007, you should be able to build this in Linux, Windows, Mac, and more
-  </P>
-
-<BR><HR COLOR="Orange" SIZE="5"><BR>
-
-  <H2><font color="blue">Motivation</font></H2>
-  <P>
-    Although Pandas has a spot-on interface and it is full of useful functionalities, it lacks performance and scalability. For example, it is hard to decipher high-frequency intraday data such as Options data or S&amp;P500 constituents tick-by-tick data using Pandas. Another issue I have encountered often is the research is done using Python, because it has such tools as Pandas, but the execution in production is in C++ for its efficiency, reliability and scalability. Therefore, there is this translation, or sometimes a bridge, between research and executions. Also, in this day and age, C++ needs a heterogeneous data container. Mainly because of these factors, I implemented the C++ DataFrame.<BR>
-    <I>I welcome all contributions from people with expertise, interest, and time to do it. I will add more functionalities from time to time, but currently my spare time is limited.</I>
+    <font size="+1"><B>Using plain make and make-files:</B></font><BR>
+    Go to the root of the repository, where license file is, and execute build_all.sh. This will build the library and test executables for <I>Linux/Unix flavors only</I><BR>
+    <font size="+1"><B>Using CMake:</B></font><BR>
+	You would be able to build this in Linux, Windows, MacOS, and more &#8212; see README<BR>
+    <font size="+1"><B>Using Package Managers:</B></font><BR>
+	You can also use <I>Conan</I> or <I>VCPKG</I> &#8212; see README
   </P>
 
   <BR>

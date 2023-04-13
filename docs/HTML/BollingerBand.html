@@ -77,10 +77,6 @@ using bband_v = BollingerBand&lt;T, I, A&gt;;
       </td>
     </tr>
 
-
-
-
-
     <tr bgcolor="lightgrey">
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>#include &lt;DataFrame/DataFrameFinancialVisitors.h&gt;
@@ -104,7 +100,7 @@ using aband_v = AccelerationBandsVisitor&lt;T, I, A&gt;;
         <I>
         <PRE>
     explicit
-    AccelerationBandsVisitor(double roll_period = 20, double multiplier = 4);
+    AccelerationBandsVisitor(size_t roll_period = 20, double multiplier = 4);
 
     <B>roll_period</B> The averaging period
     <B>multiplier</B> Applied to high/low ratio

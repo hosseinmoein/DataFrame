@@ -594,81 +594,45 @@ void DateTime::date_to_str (DT_FORMAT format, T &result) const  {
 
 // ----------------------------------------------------------------------------
 
-inline bool operator == (const DateTime &lhs, const DateTime &rhs) noexcept  {
-
-    return (lhs.compare(rhs) == 0);
-}
-
-// ----------------------------------------------------------------------------
-
-inline bool operator != (const DateTime &lhs, const DateTime &rhs) noexcept  {
-
-    return (lhs.compare(rhs) != 0);
-}
-
-// ----------------------------------------------------------------------------
-
-inline bool operator < (const DateTime &lhs, const DateTime &rhs) noexcept  {
-
-    return (lhs.compare(rhs) < 0);
-}
-
-// ----------------------------------------------------------------------------
-
-inline bool operator <= (const DateTime &lhs, const DateTime &rhs) noexcept  {
-
-    return (lhs.compare(rhs) <= 0);
-}
-
-// ----------------------------------------------------------------------------
-
-inline bool operator > (const DateTime &lhs, const DateTime &rhs) noexcept  {
-
-    return (lhs.compare(rhs) > 0);
-}
-
-// ----------------------------------------------------------------------------
-
-inline bool operator >= (const DateTime &lhs, const DateTime &rhs) noexcept  {
-
-    return (lhs.compare(rhs) >= 0);
-}
-
-// ----------------------------------------------------------------------------
-
-inline double operator + (const DateTime &lhs, const DateTime &rhs) noexcept  {
-
-    return (double(lhs) + double(rhs));
-}
-
-// ----------------------------------------------------------------------------
-
-inline double operator - (const DateTime &lhs, const DateTime &rhs) noexcept  {
-
-    return (double(lhs) - double(rhs));
-}
-
-// ----------------------------------------------------------------------------
-
-inline double operator * (const DateTime &lhs, const DateTime &rhs) noexcept  {
-
-    return (double(lhs) * double(rhs));
-}
-
-// ----------------------------------------------------------------------------
-
-inline double operator / (const DateTime &lhs, const DateTime &rhs) noexcept  {
-
-    return (double(lhs) / double(rhs));
-}
-
-// ----------------------------------------------------------------------------
-
 template<typename S>
 inline S &operator << (S &o, const DateTime &rhs)  {
 
     return (o << rhs.string_format (DT_FORMAT::DT_TM2));
 }
+
+// ----------------------------------------------------------------------------
+
+HMDF_API bool operator == (const DateTime &lhs, const DateTime &rhs) noexcept;
+HMDF_API bool operator != (const DateTime &lhs, const DateTime &rhs) noexcept;
+HMDF_API bool operator < (const DateTime &lhs, const DateTime &rhs) noexcept;
+HMDF_API bool operator <= (const DateTime &lhs, const DateTime &rhs) noexcept;
+HMDF_API bool operator > (const DateTime &lhs, const DateTime &rhs) noexcept;
+HMDF_API bool operator >= (const DateTime &lhs, const DateTime &rhs) noexcept;
+
+HMDF_API double operator + (const DateTime &lhs, const DateTime &rhs) noexcept;
+HMDF_API double operator - (const DateTime &lhs, const DateTime &rhs) noexcept;
+HMDF_API double operator * (const DateTime &lhs, const DateTime &rhs) noexcept;
+HMDF_API double operator / (const DateTime &lhs, const DateTime &rhs) noexcept;
+
+HMDF_API double operator + (const DateTime &lhs, double rhs) noexcept;
+HMDF_API double operator - (const DateTime &lhs, double rhs) noexcept;
+HMDF_API double operator * (const DateTime &lhs, double rhs) noexcept;
+HMDF_API double operator / (const DateTime &lhs, double rhs) noexcept;
+
+HMDF_API double operator + (double lhs, const DateTime &rhs) noexcept;
+HMDF_API double operator - (double lhs, const DateTime &rhs) noexcept;
+HMDF_API double operator * (double lhs, const DateTime &rhs) noexcept;
+HMDF_API double operator / (double lhs, const DateTime &rhs) noexcept;
+
+HMDF_API DateTime &operator += (DateTime &lhs, double rhs) noexcept;
+HMDF_API DateTime &operator -= (DateTime &lhs, double rhs) noexcept;
+HMDF_API DateTime &operator *= (DateTime &lhs, double rhs) noexcept;
+HMDF_API DateTime &operator /= (DateTime &lhs, double rhs) noexcept;
+
+HMDF_API double &operator += (double &lhs, const DateTime &rhs) noexcept;
+HMDF_API double &operator -= (double &lhs, const DateTime &rhs) noexcept;
+HMDF_API double &operator *= (double &lhs, const DateTime &rhs) noexcept;
+HMDF_API double &operator /= (double &lhs, const DateTime &rhs) noexcept;
 
 } // namespace hmdf
 

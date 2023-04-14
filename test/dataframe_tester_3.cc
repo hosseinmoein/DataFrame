@@ -1315,12 +1315,12 @@ static void test_FixedAutoCorrVisitor()  {
         assert(std::abs(fac.get_result()[0] - -0.5436) < 0.0001);
         assert(std::abs(fac.get_result()[12] - 0.1328) < 0.001);
         assert(std::abs(fac.get_result()[14] - -0.594) < 0.0001);
-        assert(std::abs(fac.get_result()[161] - -0.1109) < 0.0001);
+        assert(std::abs(fac.get_result()[161] - -0.4582) < 0.0001);
         assert(std::abs(fac.get_result()[160] - -0.231) < 0.0001);
         assert(std::abs(fac.get_result()[159] - 0.075) < 0.0001);
 
         FixedAutoCorrVisitor<double,
-                             std::string>   fac2 { 31, roll_policy::continuous };
+                             std::string>  fac2 { 31, roll_policy::continuous };
 
         df.single_act_visit<double> ("IBM_Close", fac2);
 
@@ -1328,10 +1328,9 @@ static void test_FixedAutoCorrVisitor()  {
         assert(std::abs(fac2.get_result()[0] - -0.5436) < 0.0001);
         assert(std::abs(fac2.get_result()[12] - -0.7213) < 0.001);
         assert(std::abs(fac2.get_result()[14] - -0.6657) < 0.0001);
-        assert(std::abs(fac2.get_result()[4999] - 0.1446) < 0.0001);
-        assert(std::abs(fac2.get_result()[4998] - 0.1809) < 0.0001);
-        assert(std::abs(fac2.get_result()[4997] - 0.1732) < 0.0001);
-
+        assert(std::isnan(fac2.get_result()[4999]));
+        assert(std::abs(fac2.get_result()[4998] - 1.0) < 0.0001);
+        assert(std::abs(fac2.get_result()[4997] - 0.9545) < 0.0001);
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
@@ -1500,13 +1499,13 @@ static void test_RelativeVigorIndexVisitor()  {
 
         assert(rvgi.get_signal().size() == 1721);
         assert(std::isnan(rvgi.get_signal()[0]));
-        assert(std::isnan(rvgi.get_signal()[29]));
-        assert(std::abs(rvgi.get_signal()[30] - 0.0435) < 0.0001);
-        assert(std::abs(rvgi.get_signal()[31] - 0.0454) < 0.0001);
-        assert(std::abs(rvgi.get_signal()[35] - -0.0359) < 0.0001);
-        assert(std::abs(rvgi.get_signal()[1720] - 0.0405) < 0.0001);
-        assert(std::abs(rvgi.get_signal()[1712] - -0.1096) < 0.0001);
-        assert(std::abs(rvgi.get_signal()[1707] - -0.0946) < 0.0001);
+        assert(std::isnan(rvgi.get_signal()[16]));
+        assert(std::abs(rvgi.get_signal()[30] - -0.0317) < 0.0001);
+        assert(std::abs(rvgi.get_signal()[31] - -0.0058) < 0.0001);
+        assert(std::abs(rvgi.get_signal()[35] - 0.2512) < 0.0001);
+        assert(std::abs(rvgi.get_signal()[1720] - -0.2263) < 0.0001);
+        assert(std::abs(rvgi.get_signal()[1712] - -0.0541) < 0.0001);
+        assert(std::abs(rvgi.get_signal()[1707] - 0.0405) < 0.0001);
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;

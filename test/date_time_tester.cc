@@ -935,13 +935,13 @@ int main (int, char *[])  {
 
         const DateTime  dt("2015/01/05 09:40:30",
                            hmdf::DT_DATE_STYLE::EUR_STYLE);
-        const DateTime  now;
+        const DateTime  now3;
         
 
-        std::cout << "+ operator: " << dt + now << std::endl;
-        std::cout << "- operator: " << dt - now << std::endl;
-        std::cout << "* operator: " << dt * now << std::endl;
-        std::cout << "/ operator: " << dt / now << std::endl;
+        std::cout << "+ operator: " << dt + now3 << std::endl;
+        std::cout << "- operator: " << dt - now3 << std::endl;
+        std::cout << "* operator: " << dt * now3 << std::endl;
+        std::cout << "/ operator: " << dt / now3 << std::endl;
 
         std::cout << "DateTime vs. double +:" << std::endl;
         std::cout << "Original DateTime: " << double(dt) << std::endl;

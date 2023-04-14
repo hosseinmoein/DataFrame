@@ -1811,12 +1811,16 @@ struct FixedAutoCorrVisitor  {
 
             result.reserve(calc_size);
             for (size_type i = 0; i < calc_size; ++i)  {
+                auto    far_end = i * lag_ + 2 * lag_;
+
+                if (far_end > col_s)
+                    far_end -= far_end % col_s;
                 corr.pre();
                 corr (idx_begin, idx_end,  // This doesn't matter
                       column_begin + (i * lag_),
                       column_begin + (i * lag_ + lag_),
                       column_begin + (i * lag_ + lag_),
-                      column_begin + (i * lag_ + 2 * lag_));
+                      column_begin + far_end);
                 corr.post();
 
                 result.push_back(corr.get_result());
@@ -1827,12 +1831,16 @@ struct FixedAutoCorrVisitor  {
 
             result.reserve(calc_size);
             for (size_type i = 0; i < calc_size; ++i)  {
+                auto    far_end = i + 2 * lag_;
+
+                if (far_end > col_s)
+                    far_end -= far_end % col_s;
                 corr.pre();
                 corr (idx_begin, idx_end,  // This doesn't matter
                       column_begin + i,
                       column_begin + (i + lag_),
                       column_begin + (i + lag_),
-                      column_begin + (i + 2 * lag_));
+                      column_begin + far_end);
                 corr.post();
 
                 result.push_back(corr.get_result());
@@ -2432,7 +2440,7 @@ struct  SymmTriangleMovingMeanVisitor  {
             value_type  sum { 0 };
             size_type   tri_idx { 0 };
 
-            for (size_type j = { i - (starting + roll_period_) }; j < i;
+            for (size_type j = { i - roll_period_ }; j < i;
                  ++j, ++tri_idx)
                 sum += *(column_begin + j) * triangle[tri_idx];
             result[i] = sum;
@@ -4204,7 +4212,7 @@ private:
         const value_type    last_fit_yval = *(y_fits_begin + last_fit_idx);
         const value_type    curr_idx_yval = *(y_fits_begin + curr_idx);
 
-        for (long i = last_fit_idx + 1; i < curr_idx; ++i)  {
+        for (long i = last_fit_idx + 1; i < long(auxiliary_vec_.size()); ++i)  {
             const value_type    avalue = auxiliary_vec_[i];
 
             *(y_fits_begin + i) =

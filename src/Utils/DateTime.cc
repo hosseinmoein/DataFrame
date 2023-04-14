@@ -1009,6 +1009,212 @@ DateTime::breaktime_ (EpochType the_time, NanosecondType nanosec) noexcept  {
     return;
 }
 
+// ----------------------------------------------------------------------------
+
+bool operator == (const DateTime &lhs, const DateTime &rhs) noexcept  {
+
+    return (lhs.compare(rhs) == 0);
+}
+
+// ----------------------------------------------------------------------------
+
+bool operator != (const DateTime &lhs, const DateTime &rhs) noexcept  {
+
+    return (lhs.compare(rhs) != 0);
+}
+
+// ----------------------------------------------------------------------------
+
+bool operator < (const DateTime &lhs, const DateTime &rhs) noexcept  {
+
+    return (lhs.compare(rhs) < 0);
+}
+
+// ----------------------------------------------------------------------------
+
+bool operator <= (const DateTime &lhs, const DateTime &rhs) noexcept  {
+
+    return (lhs.compare(rhs) <= 0);
+}
+
+// ----------------------------------------------------------------------------
+
+bool operator > (const DateTime &lhs, const DateTime &rhs) noexcept  {
+
+    return (lhs.compare(rhs) > 0);
+}
+
+// ----------------------------------------------------------------------------
+
+bool operator >= (const DateTime &lhs, const DateTime &rhs) noexcept  {
+
+    return (lhs.compare(rhs) >= 0);
+}
+
+// ----------------------------------------------------------------------------
+
+double operator + (const DateTime &lhs, const DateTime &rhs) noexcept  {
+
+    return (static_cast<double>(lhs) + static_cast<double>(rhs));
+}
+
+// ----------------------------------------------------------------------------
+
+double operator - (const DateTime &lhs, const DateTime &rhs) noexcept  {
+
+    return (static_cast<double>(lhs) - static_cast<double>(rhs));
+}
+
+// ----------------------------------------------------------------------------
+
+double operator * (const DateTime &lhs, const DateTime &rhs) noexcept  {
+
+    return (static_cast<double>(lhs) * static_cast<double>(rhs));
+}
+
+// ----------------------------------------------------------------------------
+
+double operator / (const DateTime &lhs, const DateTime &rhs) noexcept  {
+
+    return (static_cast<double>(lhs) / static_cast<double>(rhs));
+}
+
+// ----------------------------------------------------------------------------
+
+double operator + (const DateTime &lhs, double rhs) noexcept  {
+
+    return (static_cast<double>(lhs) + rhs);
+}
+
+// ----------------------------------------------------------------------------
+
+double operator - (const DateTime &lhs, double rhs) noexcept  {
+
+    return (static_cast<double>(lhs) - rhs);
+}
+
+// ----------------------------------------------------------------------------
+
+double operator * (const DateTime &lhs, double rhs) noexcept  {
+
+    return (static_cast<double>(lhs) * rhs);
+}
+
+// ----------------------------------------------------------------------------
+
+double operator / (const DateTime &lhs, double rhs) noexcept  {
+
+    return (static_cast<double>(lhs) / rhs);
+}
+
+// ----------------------------------------------------------------------------
+
+double operator + (double lhs, const DateTime &rhs) noexcept  {
+
+    return (lhs + static_cast<double>(rhs));
+}
+
+// ----------------------------------------------------------------------------
+
+double operator - (double lhs, const DateTime &rhs) noexcept  {
+
+    return (lhs - static_cast<double>(rhs));
+}
+
+// ----------------------------------------------------------------------------
+
+double operator * (double lhs, const DateTime &rhs) noexcept  {
+
+    return (lhs * static_cast<double>(rhs));
+}
+
+// ----------------------------------------------------------------------------
+
+double operator / (double lhs, const DateTime &rhs) noexcept  {
+
+    return (lhs / static_cast<double>(rhs));
+}
+
+// ----------------------------------------------------------------------------
+
+DateTime &operator += (DateTime &lhs, double rhs) noexcept  {
+
+    const double    new_time = static_cast<double>(lhs) + rhs;
+    const int       nano =
+        (new_time - static_cast<time_t>(new_time)) * 1000000000;
+
+    lhs.set_time(static_cast<time_t>(new_time), nano);
+    return (lhs);
+}
+
+// ----------------------------------------------------------------------------
+
+DateTime &operator -= (DateTime &lhs, double rhs) noexcept  {
+
+    const double    new_time = static_cast<double>(lhs) - rhs;
+    const int       nano =
+        (new_time - static_cast<time_t>(new_time)) * 1000000000;
+
+    lhs.set_time(static_cast<time_t>(new_time), nano);
+    return (lhs);
+}
+
+// ----------------------------------------------------------------------------
+
+DateTime &operator *= (DateTime &lhs, double rhs) noexcept  {
+
+    const double    new_time = static_cast<double>(lhs) * rhs;
+    const int       nano =
+        (new_time - static_cast<time_t>(new_time)) * 1000000000;
+
+    lhs.set_time(static_cast<time_t>(new_time), nano);
+    return (lhs);
+}
+
+// ----------------------------------------------------------------------------
+
+DateTime &operator /= (DateTime &lhs, double rhs) noexcept  {
+
+    const double    new_time = static_cast<double>(lhs) / rhs;
+    const int       nano =
+        (new_time - static_cast<time_t>(new_time)) * 1000000000;
+
+    lhs.set_time(static_cast<time_t>(new_time), nano);
+    return (lhs);
+}
+
+// ----------------------------------------------------------------------------
+
+double &operator += (double &lhs, const DateTime &rhs) noexcept  {
+
+    lhs += static_cast<double>(rhs);
+    return (lhs);
+}
+
+// ----------------------------------------------------------------------------
+
+double &operator -= (double &lhs, const DateTime &rhs) noexcept  {
+
+    lhs -= static_cast<double>(rhs);
+    return (lhs);
+}
+
+// ----------------------------------------------------------------------------
+
+double &operator *= (double &lhs, const DateTime &rhs) noexcept  {
+
+    lhs *= static_cast<double>(rhs);
+    return (lhs);
+}
+
+// ----------------------------------------------------------------------------
+
+double &operator /= (double &lhs, const DateTime &rhs) noexcept  {
+
+    lhs /= static_cast<double>(rhs);
+    return (lhs);
+}
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

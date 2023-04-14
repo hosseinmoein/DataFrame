@@ -933,13 +933,42 @@ int main (int, char *[])  {
     {
         std::cout << "Testing arithmetic operators ..." << std::endl;
 
-        DateTime    dt("2015/01/05 09:40:30", hmdf::DT_DATE_STYLE::EUR_STYLE);
-        DateTime    now;
+        const DateTime  dt("2015/01/05 09:40:30",
+                           hmdf::DT_DATE_STYLE::EUR_STYLE);
+        const DateTime  now3;
+        
 
-        std::cout << "+ operator: " << dt + now << std::endl;
-        std::cout << "- operator: " << dt - now << std::endl;
-        std::cout << "* operator: " << dt * now << std::endl;
-        std::cout << "/ operator: " << dt / now << std::endl;
+        std::cout << "+ operator: " << dt + now3 << std::endl;
+        std::cout << "- operator: " << dt - now3 << std::endl;
+        std::cout << "* operator: " << dt * now3 << std::endl;
+        std::cout << "/ operator: " << dt / now3 << std::endl;
+
+        std::cout << "DateTime vs. double +:" << std::endl;
+        std::cout << "Original DateTime: " << double(dt) << std::endl;
+        std::cout << "+ operator: " << dt + 0.0001 << std::endl;
+        std::cout << "- operator: " << dt - 1.0 << std::endl;
+        std::cout << "* operator: " << dt * 1.0 << std::endl;
+        std::cout << "/ operator: " << dt / 2.0 << std::endl;
+
+        std::cout << "double vs. DateTime +:" << std::endl;
+        std::cout << "Original DateTime: " << double(dt) << std::endl;
+        std::cout << "+ operator: " << 0.0001 + dt << std::endl;
+        std::cout << "- operator: " << 1.0 - dt << std::endl;
+        std::cout << "* operator: " << 1.0 * dt << std::endl;
+        std::cout << "/ operator: " << 1400000009.0 / dt << std::endl;
+
+        DateTime    dt2("2015/01/05 09:40:30", hmdf::DT_DATE_STYLE::EUR_STYLE);
+
+        std::cout << "DateTime vs. double +=:" << std::endl;
+        std::cout << "Original DateTime: " << double(dt2) << std::endl;
+        dt2 += 0.0001;
+        std::cout << "+= operator: " << double(dt2) << std::endl;
+        dt2 -= 1.0001;
+        std::cout << "-= operator: " << double(dt2) << std::endl;
+        dt2 *= 2.0;
+        std::cout << "*= operator: " << double(dt2) << std::endl;
+        dt2 /= 2.0;
+        std::cout << "/= operator: " << double(dt2) << std::endl;
     }
 
     test_priority_queue();

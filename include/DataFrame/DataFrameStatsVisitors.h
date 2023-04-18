@@ -3413,6 +3413,93 @@ using bcox_v = BoxCoxVisitor<T, I, A>;
 template<typename T, typename I = unsigned long, std::size_t A = 0,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+struct ProbabilityDistVisitor {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template<typename K, typename H>
+    inline void
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
+
+        GET_COL_SIZE
+
+        result_type result;
+        value_type  sum { 0 };
+
+        result.reserve(col_s);
+        if (pdtype_ == prob_dist_type::arithmetic)  {
+            std::for_each(column_begin, column_end,
+                          [&sum](const auto &v) -> void { sum += v; });
+            std::for_each(column_begin, column_end,
+                          [&sum, &result](const auto &v) -> void {
+                              result.push_back(v / sum);
+                          });
+        }
+        else if (pdtype_ == prob_dist_type::log)  {
+            std::for_each(column_begin, column_end,
+                          [&sum](const auto &v) -> void {
+                              sum += std::log(v);
+                          });
+            std::for_each(column_begin, column_end,
+                          [&sum, &result](const auto &v) -> void {
+                              result.push_back(std::log(v) / sum);
+                          });
+        }
+        else if (pdtype_ == prob_dist_type::softmax)  {
+            std::for_each(column_begin, column_end,
+                          [&sum](const auto &v) -> void {
+                              sum += std::exp(v);
+                          });
+            std::for_each(column_begin, column_end,
+                          [&sum, &result](const auto &v) -> void {
+                              result.push_back(std::exp(v) / sum);
+                          });
+        }
+        else if (pdtype_ == prob_dist_type::pow2)  {
+            std::for_each(column_begin, column_end,
+                          [&sum](const auto &v) -> void {
+                              sum += std::pow(T(2), v);
+                          });
+            std::for_each(column_begin, column_end,
+                          [&sum, &result](const auto &v) -> void {
+                              result.push_back(std::pow(T(2), v) / sum);
+                          });
+        }
+        else if (pdtype_ == prob_dist_type::pow10)  {
+            std::for_each(column_begin, column_end,
+                          [&sum](const auto &v) -> void {
+                              sum += std::pow(T(10), v);
+                          });
+            std::for_each(column_begin, column_end,
+                          [&sum, &result](const auto &v) -> void {
+                              result.push_back(std::pow(T(10), v) / sum);
+                          });
+        }
+
+        result_.swap(result);
+    }
+
+    DEFINE_PRE_POST
+    DEFINE_RESULT
+
+    explicit
+    ProbabilityDistVisitor(prob_dist_type pdtype) : pdtype_(pdtype)  {   }
+
+private:
+
+    result_type             result_ {  };
+    const prob_dist_type    pdtype_;
+};
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using pd_v = ProbabilityDistVisitor<T, I, A>;
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename I = unsigned long, std::size_t A = 0,
+         typename =
+             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
 struct NormalizeVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_3

@@ -427,6 +427,32 @@ enum class  impurity_type : unsigned char  {
 
 // ----------------------------------------------------------------------------
 
+enum class  prob_dist_type : unsigned char  {
+    // No negative values
+    // yi = xi / sum(X)
+    //
+    arithmetic = 1,
+
+    // All values must be >= 1
+    // yi = loge(xi) / sum(loge(X))
+    //
+    log = 2,
+
+    // yi = e^xi / sum(e^X)
+    //
+    softmax = 3,
+
+    // yi = 2^xi / sum(2^X)
+    //
+    pow2 = 4,
+
+    // yi = 10^xi / sum(10^X)
+    //
+    pow10 = 5,
+};
+
+// ----------------------------------------------------------------------------
+
 template<typename T>
 struct  RandGenParams  {
     T   min_value { std::numeric_limits<T>::min() };

@@ -1799,6 +1799,83 @@ static void test_EldersThermometerVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_ProbabilityDistVisitor()  {
+
+    std::cout << "\nTesting ProbabilityDistVisitor{  } ..." << std::endl;
+
+    MyDataFrame                df;
+    StlVecType<unsigned long>  idxvec =
+        { 1, 2, 3, 10, 5, 7, 8, 12, 9, 12, 10, 13, 10, 15, 14 };
+    StlVecType<double>         dblvec =
+        { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14};
+    StlVecType<double>         dblvec2 =
+        { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+    StlVecType<double>         dblvec3 =
+        { 0, 1, -2, 3, 4, 5, 6, 7, -8, 9, 10, -11, 12, -13, 14};
+
+    df.load_data(std::move(idxvec),
+                 std::make_pair("dbl_col", dblvec),
+                 std::make_pair("dbl_col_2", dblvec2),
+                 std::make_pair("dbl_col_3", dblvec3));
+
+    pd_v<double, unsigned long, 256>    pd { prob_dist_type::arithmetic };
+    double                              sum { 0 };
+
+    df.single_act_visit<double>("dbl_col", pd);
+    assert(pd.get_result().size() == 15);
+    for (const auto val : pd.get_result())  {
+        assert(val >= 0 && val <= 1.0);
+        sum += val;
+    }
+    assert(std::abs(sum - 1.0) < 0.0001);
+
+    pd_v<double, unsigned long, 256>    pd2 { prob_dist_type::log };
+
+    df.single_act_visit<double>("dbl_col_2", pd2);
+    assert(pd2.get_result().size() == 15);
+    sum = 0;
+    for (const auto val : pd2.get_result())  {
+        assert(val >= 0 && val <= 1.0);
+        sum += val;
+    }
+    assert(std::abs(sum - 1.0) < 0.0001);
+
+    pd_v<double, unsigned long, 256>    pd3 { prob_dist_type::softmax };
+
+    df.single_act_visit<double>("dbl_col_3", pd3);
+    assert(pd3.get_result().size() == 15);
+    sum = 0;
+    for (const auto val : pd3.get_result())  {
+        assert(val >= 0 && val <= 1.0);
+        sum += val;
+    }
+    assert(std::abs(sum - 1.0) < 0.0001);
+
+    pd_v<double, unsigned long, 256>    pd4 { prob_dist_type::pow2 };
+
+    df.single_act_visit<double>("dbl_col_3", pd4);
+    assert(pd4.get_result().size() == 15);
+    sum = 0;
+    for (const auto val : pd4.get_result())  {
+        assert(val >= 0 && val <= 1.0);
+        sum += val;
+    }
+    assert(std::abs(sum - 1.0) < 0.0001);
+
+    pd_v<double, unsigned long, 256>    pd5 { prob_dist_type::pow10 };
+
+    df.single_act_visit<double>("dbl_col_3", pd5);
+    assert(pd5.get_result().size() == 15);
+    sum = 0;
+    for (const auto val : pd5.get_result())  {
+        assert(val >= 0 && val <= 1.0);
+        sum += val;
+    }
+    assert(std::abs(sum - 1.0) < 0.0001);
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     test_groupby_edge();
@@ -1839,6 +1916,7 @@ int main(int, char *[]) {
     test_AccelerationBandsVisitor();
     test_PriceDistanceVisitor();
     test_EldersThermometerVisitor();
+    test_ProbabilityDistVisitor();
 
     return (0);
 }

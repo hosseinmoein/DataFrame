@@ -349,6 +349,19 @@ enum class  sigmoid_type : unsigned char  {
 
 // ----------------------------------------------------------------------------
 
+enum class  rectify_type : unsigned char  {
+    ReLU = 1,           // f(x) = x if x > 0 else 0
+    param_ReLU = 2,     // f(x) = x if x > 0 else a * x,          a <= 1
+    GeLU = 3,           // f(x) = x * SND(x),       SND = Standard Normal Dist
+    SiLU = 4,           // f(x) = x * Sigmoid(x)
+    softplus = 5,       // f(x) = log(1 + e^(a * x)) / a,         a != 0
+    elu = 6,            // f(x) = x if x > 0 else a * (e^x - 1),  a >= 0
+    mish = 7,           // f(x) = x * tanh(softplus(x))
+    metallic_mean = 8,  // f(x) = (x + sqrt(x^2 + 4)) / 2
+};
+
+// ----------------------------------------------------------------------------
+
 enum class  linreg_moving_mean_type : unsigned char  {
     linreg = 1,
     forecast = 2,

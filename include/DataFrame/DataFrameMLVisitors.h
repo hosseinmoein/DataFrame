@@ -1004,7 +1004,8 @@ public:
     DEFINE_PRE_POST
     DEFINE_RESULT
 
-    explicit SigmoidVisitor(sigmoid_type st) : sigmoid_type_(st)  {   }
+    explicit
+    SigmoidVisitor(sigmoid_type st) : sigmoid_type_(st)  {   }
 
 private:
 
@@ -1020,7 +1021,7 @@ using sigm_v = SigmoidVisitor<T, I, A>;
 template<typename T, typename I = unsigned long, std::size_t A = 0,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct RectifiedLinearUnitVisitor {
+struct RectifyVisitor {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
@@ -1034,22 +1035,98 @@ public:
         GET_COL_SIZE
 
         result_.reserve(col_s);
-        for (size_type i = 0; i < col_s; ++i)
-            result_.push_back(std::max(T(0), *(column_begin + i)));
+        if (rtype_ == rectify_type::ReLU)  {
+            std::for_each(column_begin, column_end,
+                          [this](const value_type &v) -> void  {
+                              this->result_.push_back(std::max(T(0), v));
+                          });
+        }
+        else if (rtype_ == rectify_type::param_ReLU)  {
+            std::for_each(column_begin, column_end,
+                          [this](const value_type &v) -> void  {
+                              this->result_.push_back(
+                                  std::max(v * this->param_, v));
+                          });
+        }
+        else if (rtype_ == rectify_type::GeLU)  {
+            std::for_each(column_begin, column_end,
+                          [this](const value_type &v) -> void  {
+                              this->result_.push_back(
+                                  v * this->standard_normal_dist_(v));
+                          });
+        }
+        else if (rtype_ == rectify_type::SiLU)  {
+            sigm_v<T, I, A> sigm(sigmoid_type::logistic);
+
+            sigm.pre();
+            sigm(idx_begin, idx_end, column_begin, column_end);
+            sigm.post();
+
+            for (size_type i = 0; i < col_s; ++i)
+                result_.push_back(*(column_begin + i) * sigm.get_result()[i]);
+        }
+        else if (rtype_ == rectify_type::softplus)  {
+            std::for_each(column_begin, column_end,
+                          [this](const value_type &v) -> void  {
+                              this->result_.push_back(softp_(v, this->param_));
+                          });
+        }
+        else if (rtype_ == rectify_type::elu)  {
+            std::for_each(column_begin, column_end,
+                          [this](const value_type &v) -> void   {
+                              if (v > 0)
+                                  this->result_.push_back(v);
+                              else
+                                  this->result_.push_back(
+                                      this->param_ * (std::exp(v) - T(1)));
+                          });
+        }
+        else if (rtype_ == rectify_type::mish)  {
+            std::for_each(column_begin, column_end,
+                          [this](const value_type &v) -> void  {
+                              this->result_.push_back(
+                                  v * std::tanh(softp_(v, this->param_)));
+                          });
+        }
+        else if (rtype_ == rectify_type::metallic_mean)  {
+            std::for_each(column_begin, column_end,
+                          [this](const value_type &v) -> void  {
+                              this->result_.push_back(
+                                  (v + std::sqrt(v * v + T(4))) / T(2));
+                          });
+        }
     }
 
     DEFINE_PRE_POST
     DEFINE_RESULT
 
-    RectifiedLinearUnitVisitor() = default;
+    explicit
+    RectifyVisitor(rectify_type r_type, value_type param = 1)
+        : param_(param), rtype_(r_type)  {   }
 
 private:
 
-    result_type result_ {  };
+    inline static value_type
+    softp_(const value_type &v, const value_type &p)  {
+
+        return(std::log(T(1) + std::exp(p * v)) / p);
+    }
+    inline static value_type
+    standard_normal_dist_(const value_type &v)  {
+
+        static constexpr value_type two = 2;
+        static const     value_type sqrt_dbl_pi = std::sqrt(two * M_PI);
+
+        return (std::exp(-(v * v) / two) / sqrt_dbl_pi);
+    }
+
+    result_type         result_ {  };
+    const value_type    param_;
+    const rectify_type  rtype_;
 };
 
 template<typename T, typename I = unsigned long, std::size_t A = 0>
-using relu_v = RectifiedLinearUnitVisitor<T, I, A>;
+using recf_v = RectifyVisitor<T, I, A>;
 
 } // namespace hmdf
 

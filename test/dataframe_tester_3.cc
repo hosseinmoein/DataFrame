@@ -1617,9 +1617,9 @@ static void test_DetrendPriceOsciVisitor()  {
 
 // -----------------------------------------------------------------------------
 
-static void test_RectifiedLinearUnitVisitor()  {
+static void test_RectifyVisitor()  {
 
-    std::cout << "\nTesting RectifiedLinearUnitVisitor{  } ..." << std::endl;
+    std::cout << "\nTesting RectifyVisitor{  } ..." << std::endl;
 
     MyDataFrame                df;
     StlVecType<unsigned long>  idxvec =
@@ -1629,8 +1629,8 @@ static void test_RectifiedLinearUnitVisitor()  {
         { 0.0, 15.0, -14.0, 2.0, 1.0, -12.0, 11.0, 8.0, 7.0, 0.0, 5.0, 4.0,
           3.0, 9.0, -10.0};
     StlVecType<double>         dblvec2 =
-        { 100.0, 101.0, 102.0, 103.0, 104.0, 105.0, 106.55, 107.34, 1.8,
-          111.0, 112.0, 113.0, 114.0, 115.0, 116.0};
+        { 1.0, 0.05, 0.28, 0.31, 0.01, 0.68, 0.12, 1, 0.98,
+          0.9, 0.81, 0.82, 0.777, 0.34, 0.25};
     StlVecType<std::string>    strvec =
         { "zz", "bb", "cc", "ww", "ee", "ff", "gg", "hh", "ii", "jj", "kk",
           "ll", "mm", "nn", "oo" };
@@ -1640,12 +1640,69 @@ static void test_RectifiedLinearUnitVisitor()  {
                  std::make_pair("dbl_col_2", dblvec2),
                  std::make_pair("str_col", strvec));
 
-    relu_v<double, unsigned long, 256>  relu;
+    recf_v<double, unsigned long>   relu(rectify_type::ReLU);
 
     df.single_act_visit<double>("dbl_col", relu);
-    for (const auto val : relu.get_result())
-        std::cout << val << ", ";
-    std::cout << std::endl;
+    assert(relu.get_result().size() == 15);
+    assert(std::abs(relu.get_result()[0] - 0) < 0.0001);
+    assert(std::abs(relu.get_result()[7] - 8) < 0.0001);
+    assert(std::abs(relu.get_result()[14] - 0) < 0.0001);
+
+    recf_v<double, unsigned long>   prelu(rectify_type::param_ReLU, 0.001);
+
+    df.single_act_visit<double>("dbl_col", prelu);
+    assert(prelu.get_result().size() == 15);
+    assert(std::abs(prelu.get_result()[0] - 0) < 0.0001);
+    assert(std::abs(prelu.get_result()[5] - -0.012) < 0.0001);
+    assert(std::abs(prelu.get_result()[14] - -0.01) < 0.0001);
+
+    recf_v<double, unsigned long>   gelu(rectify_type::GeLU);
+
+    df.single_act_visit<double>("dbl_col_2", gelu);
+    assert(gelu.get_result().size() == 15);
+    assert(std::abs(gelu.get_result()[0] - 0.242) < 0.0001);
+    assert(std::abs(gelu.get_result()[5] - 0.2153) < 0.0001);
+    assert(std::abs(gelu.get_result()[14] - 0.0967) < 0.0001);
+
+    recf_v<double, unsigned long>   silu(rectify_type::SiLU);
+
+    df.single_act_visit<double>("dbl_col", silu);
+    assert(silu.get_result().size() == 15);
+    assert(std::abs(silu.get_result()[0] - 0) < 0.0001);
+    assert(std::abs(silu.get_result()[6] - 10.9998) < 0.0001);
+    assert(std::abs(silu.get_result()[14] - -0.0005) < 0.0001);
+
+    recf_v<double, unsigned long>   softplus(rectify_type::softplus);
+
+    df.single_act_visit<double>("dbl_col", softplus);
+    assert(softplus.get_result().size() == 15);
+    assert(std::abs(softplus.get_result()[0] - 0.6931) < 0.0001);
+    assert(std::abs(softplus.get_result()[6] - 11) < 0.0001);
+    assert(std::abs(softplus.get_result()[14] - 0) < 0.0001);
+
+    recf_v<double, unsigned long>   elu(rectify_type::elu, 0.5);
+
+    df.single_act_visit<double>("dbl_col", elu);
+    assert(elu.get_result().size() == 15);
+    assert(std::abs(elu.get_result()[0] - 0) < 0.0001);
+    assert(std::abs(elu.get_result()[5] - -0.5) < 0.0001);
+    assert(std::abs(elu.get_result()[14] - -0.5) < 0.0001);
+
+    recf_v<double, unsigned long>   mish(rectify_type::mish);
+
+    df.single_act_visit<double>("dbl_col", mish);
+    assert(mish.get_result().size() == 15);
+    assert(std::abs(mish.get_result()[0] - 0) < 0.0001);
+    assert(std::abs(mish.get_result()[6] - 11) < 0.0001);
+    assert(std::abs(mish.get_result()[14] - -0.0005) < 0.0001);
+
+    recf_v<double, unsigned long>   mm(rectify_type::metallic_mean);
+
+    df.single_act_visit<double>("dbl_col", mm);
+    assert(mm.get_result().size() == 15);
+    assert(std::abs(mm.get_result()[0] - 1) < 0.0001);
+    assert(std::abs(mm.get_result()[6] - 11.0902) < 0.0001);
+    assert(std::abs(mm.get_result()[14] - 0.099) < 0.0001);
 }
 
 // -----------------------------------------------------------------------------
@@ -1912,7 +1969,7 @@ int main(int, char *[]) {
     test_ElderRayIndexVisitor();
     test_ChopIndexVisitor();
     test_DetrendPriceOsciVisitor();
-    test_RectifiedLinearUnitVisitor();
+    test_RectifyVisitor();
     test_AccelerationBandsVisitor();
     test_PriceDistanceVisitor();
     test_EldersThermometerVisitor();

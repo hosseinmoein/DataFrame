@@ -41,7 +41,7 @@ body {
   
 .column {
   float: left;
-  width: 20%;
+  width: 16.6667%;
   padding: 2px;
 }
 
@@ -116,7 +116,7 @@ DataFrame class is defined as:<BR>
   DataFrame library interface is separated into two main categories:
   <OL>
     <LI>Accessing, adding, slicing &amp; dicing, joining, &amp;  groupby'ing ...  <B>(The first column in the table below)</B></LI>
-    <LI>Analytical algorithms being statistical, machine-learning, financial analysis ...  <B>(The second and third columns in the table below)</B></LI>
+    <LI>Analytical algorithms being statistical, machine-learning, financial analysis ...  <B>(The second, third, and fourth columns in the table below)</B></LI>
   </OL>
   I employ regular parameterized methods (i.e. member functions) to implement item (1). For item (2), I chose the visitor pattern.<BR>
   Please see the table below for a comprehensive list of methods, visitors, and types along with documentation and sample code for each feature
@@ -159,7 +159,7 @@ table.hovertable td {
   <table id="hmdf_table" align="center" class="hovertable">
 
     <tr>
-      <th><font color="white">DataFrame<BR>Member Functions</font></th>
+      <th><font color="white">Member Functions</font></th>
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
@@ -538,20 +538,16 @@ table.hovertable td {
       <td title="Writes DataFrame to stream -- Async"><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/write.html">write_async</a>( )</td>
     </tr>
   </table>
-    </div>
+  </div>
 
   <div class="column">
   <table id="hmdf_table" align="center" class="hovertable">
     <tr>
-      <th><font color="white">DataFrame<BR>Built-in Visitors</font></th>
+      <th><font color="white">Statistical<BR>Visitors</font></th>
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
       <td title="Converts numeric values to their absolute values">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/AbsVisitor.html">AbsVisitor</a>{  }</td>
-    </tr>
-
-    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
-      <td title="Calculates affinity propagation">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/AffinityPropVisitor.html">AffinityPropVisitor</a>{  }</td>
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
@@ -560,10 +556,6 @@ table.hovertable td {
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
       <td title="Calculates beta">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/BetaVisitor.html">BetaVisitor</a>{  }</td>
-    </tr>
-
-    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
-      <td title="Calculates rolling rate of change between the source and a moving average">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/BiasVisitor.html">BiasVisitor</a>{  }</td>
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
@@ -587,10 +579,6 @@ table.hovertable td {
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
-      <td title="Fits cubic spline function through x-y coordinates">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/PolyFitVisitor.html">CubicSplineFitVisitor</a>{  }</td>
-    </tr>
-
-    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
       <td title="Calculates cumulative maxes">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/CumMaxVisitor.html">CumMaxVisitor</a>{  }</td>
     </tr>
 
@@ -607,10 +595,6 @@ table.hovertable td {
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
-      <td title="Decomposes time-series into trend, seasonal, residual">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DecomposeVisitor.html">DecomposeVisitor</a>{  }</td>
-    </tr>
-
-    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
       <td title="Calculates dot product">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DotProdVisitor.html">DotProdVisitor</a>{  }</td>
     </tr>
 
@@ -620,10 +604,6 @@ table.hovertable td {
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
       <td title="Applies calculations in a expanding rolling window">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/ExpandingRollAdopter.html">ExpandingRollAdopter</a>{  }</td>
-    </tr>
-
-    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
-      <td title="Fits exponential function through x-y coordinates">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/PolyFitVisitor.html">ExponentialFitVisitor</a>{  }</td>
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
@@ -651,10 +631,6 @@ table.hovertable td {
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
-      <td title="Calculate Fast Fourier Transform">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/FastFourierTransVisitor.html">FastFourierTransVisitor</a>{  }</td>
-    </tr>
-
-    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
       <td title="Calculates auto correlation based on fixed lag period">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/AutoCorrVisitor.html">FixedAutoCorrVisitor</a>{  }</td>
     </tr>
 
@@ -675,31 +651,11 @@ table.hovertable td {
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
-      <td title="Calculates purity of the data column">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/EntropyVisitor.html">ImpurityVisitor</a>{  }</td>
-    </tr>
-
-    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
-      <td title="Performs k-means clustring">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/KMeansVisitor.html">KMeansVisitor</a>{  }</td>
-    </tr>
-
-    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
       <td title="Calculates kth value">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/KthValueVisitor.html">KthValueVisitor</a>{  }</td>
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
-      <td title="Fits linear function through x-y coordinates">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/PolyFitVisitor.html">LinearFitVisitor</a>{  }</td>
-    </tr>
-
-    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
       <td title="Calculates rolling mean using linear regression">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/LinregMovingMeanVisitor.html">LinregMovingMeanVisitor</a>{  }</td>
-    </tr>
-
-    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
-      <td title="Fits y = b0 + b1 * log(x) through x-y coordinates">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/PolyFitVisitor.html">LogFitVisitor</a>{  }</td>
-    </tr>
-
-    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
-      <td title="Locally Weighted Scatterplot Smoothing">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/LowessVisitor.html">LowessVisitor</a>{  }</td>
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
@@ -751,19 +707,7 @@ table.hovertable td {
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
-      <td title="Normalizes column data">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/NormalizeVisitor.html">NormalizeVisitor</a>{  }</td>
-    </tr>
-
-    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
       <td title="Finds N smallest values">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/NLargestVisitor.html">NSmallestVisitor</a>{  }</td>
-    </tr>
-
-    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
-      <td title="Fits a n-degree polynomial through x-y coordinates">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/PolyFitVisitor.html">PolyFitVisitor</a>{  }</td>
-    </tr>
-
-    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
-      <td title="Converts a column to a probability distribution">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/NormalizeVisitor.html">ProbabilityDistVisitor</a>{  }</td>
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
@@ -783,10 +727,6 @@ table.hovertable td {
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
-      <td title="Calculates Rectifing functions">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/SigmoidVisitor.html">RectifyVisitor</a>{  }</td>
-    </tr>
-
-    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
       <td title="Calculates sample z-score">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/SampleZScoreVisitor.html">SampleZScoreVisitor</a>{  }</td>
     </tr>
 
@@ -795,23 +735,11 @@ table.hovertable td {
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
-      <td title="Calculates Sigmoid functions">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/SigmoidVisitor.html">SigmoidVisitor</a>{  }</td>
-    </tr>
-
-    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
       <td title="Visitor adopter for rolling">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/SimpleRollAdopter.html">SimpleRollAdopter</a>{  }</td>
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
-      <td title="Calculates simple linear regression">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/SLRegressionVisitor.html">SLRegressionVisitor</a>{  }</td>
-    </tr>
-
-    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
       <td title="Calculates Welford's algorithm mean">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/MeanVisitor.html">StableMeanVisitor</a>{  }</td>
-    </tr>
-
-    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
-      <td title="Standardizes column data">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/NormalizeVisitor.html">StandardizeVisitor</a>{  }</td>
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
@@ -859,7 +787,92 @@ table.hovertable td {
   <div class="column">
   <table id="hmdf_table" align="center" class="hovertable">
     <tr>
-      <th><font color="white">DataFrame<BR>Built-in Financial Visitors</font></th>
+      <th><font color="white">Machine-Learning<BR>Visitors</font></th>
+    </tr>
+
+    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
+      <td title="Calculates affinity propagation">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/AffinityPropVisitor.html">AffinityPropVisitor</a>{  }</td>
+    </tr>
+
+    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
+      <td title="Calculates rolling rate of change between the source and a moving average">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/BiasVisitor.html">BiasVisitor</a>{  }</td>
+    </tr>
+
+    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
+      <td title="Fits cubic spline function through x-y coordinates">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/PolyFitVisitor.html">CubicSplineFitVisitor</a>{  }</td>
+    </tr>
+
+    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
+      <td title="Decomposes time-series into trend, seasonal, residual">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DecomposeVisitor.html">DecomposeVisitor</a>{  }</td>
+    </tr>
+
+    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
+      <td title="Calculates information Entropy">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/EntropyVisitor.html">EntropyVisitor</a>{  }</td>
+    </tr>
+
+    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
+      <td title="Fits exponential function through x-y coordinates">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/PolyFitVisitor.html">ExponentialFitVisitor</a>{  }</td>
+    </tr>
+
+    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
+      <td title="Calculate Fast Fourier Transform">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/FastFourierTransVisitor.html">FastFourierTransVisitor</a>{  }</td>
+    </tr>
+
+    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
+      <td title="Calculates purity of the data column">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/EntropyVisitor.html">ImpurityVisitor</a>{  }</td>
+    </tr>
+
+    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
+      <td title="Performs k-means clustring">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/KMeansVisitor.html">KMeansVisitor</a>{  }</td>
+    </tr>
+
+    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
+      <td title="Fits linear function through x-y coordinates">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/PolyFitVisitor.html">LinearFitVisitor</a>{  }</td>
+    </tr>
+
+    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
+      <td title="Fits y = b0 + b1 * log(x) through x-y coordinates">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/PolyFitVisitor.html">LogFitVisitor</a>{  }</td>
+    </tr>
+
+    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
+      <td title="Locally Weighted Scatterplot Smoothing">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/LowessVisitor.html">LowessVisitor</a>{  }</td>
+    </tr>
+
+    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
+      <td title="Normalizes column data">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/NormalizeVisitor.html">NormalizeVisitor</a>{  }</td>
+    </tr>
+
+    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
+      <td title="Fits a n-degree polynomial through x-y coordinates">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/PolyFitVisitor.html">PolyFitVisitor</a>{  }</td>
+    </tr>
+
+    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
+      <td title="Converts a column to a probability distribution">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/NormalizeVisitor.html">ProbabilityDistVisitor</a>{  }</td>
+    </tr>
+
+    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
+      <td title="Calculates Rectifing functions">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/SigmoidVisitor.html">RectifyVisitor</a>{  }</td>
+    </tr>
+
+    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
+      <td title="Calculates Sigmoid functions">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/SigmoidVisitor.html">SigmoidVisitor</a>{  }</td>
+    </tr>
+
+    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
+      <td title="Calculates simple linear regression">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/SLRegressionVisitor.html">SLRegressionVisitor</a>{  }</td>
+    </tr>
+
+    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
+      <td title="Standardizes column data">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/NormalizeVisitor.html">StandardizeVisitor</a>{  }</td>
+    </tr>
+
+  </table>
+  </div>
+
+  <div class="column">
+  <table id="hmdf_table" align="center" class="hovertable">
+    <tr>
+      <th><font color="white">Financial<BR>Visitors</font></th>
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
@@ -1120,7 +1133,7 @@ table.hovertable td {
   <div class="column">
   <table id="hmdf_table" align="center" class="hovertable">
     <tr>
-      <th><font color="white">DataFrame<BR>Types</font></th>
+      <th><font color="white">Types</font></th>
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
@@ -1316,7 +1329,7 @@ table.hovertable td {
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
-      <td title="Generates logarithmically spaced numbers"><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/gen_log_space_nums.html">gen_even_space_nums</a>( )</td>
+      <td title="Generates n evenly spaced numbers"><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/gen_log_space_nums.html">gen_even_space_nums</a>( )</td>
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
@@ -1364,7 +1377,7 @@ table.hovertable td {
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
-      <td title="Generates student-t random numbers"><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/gen_log_space_nums.html">gen_sym_triangle</a>( )</td>
+      <td title="Generates a set of numbers that represent the upper portion of a symmetric triangle"><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/gen_log_space_nums.html">gen_sym_triangle</a>( )</td>
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
@@ -1456,7 +1469,7 @@ table.hovertable td {
     DataFrame gives you the ability to allocate memory on custom alignment boundaries.<BR>
     You can use this feature to take advantage of <I>SIMD</I> instructions in modern CPU's. Since DataFrame algorithms are all done on vectors of data &#8212; columns, this can come handy in conjunction with compiler optimizations.<BR>
 	There are convenient typedef's that define DataFrames that allocate memory, for example, on 64, 128, 256, ... bytes boundaries. See <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrameTypes.html">DataFrame Library Types</a>.<BR>
-    When you get access to <I>columns</I> in a DataFrame, you will get a reference to a <I>StlVecType</I>. <I>StlVecType</I> is just a <I>stl::vector</I> with custom allocator for the requested alignment.<BR>
+    When you get access to <I>columns</I> in a DataFrame, you will get a reference to a <I>StlVecType</I>. <I>StlVecType</I> is just a <I>std::vector</I> with custom allocator for the requested alignment.<BR>
   </P>
 
 <BR><HR COLOR="Orange" SIZE="5"><BR>

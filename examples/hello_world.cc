@@ -260,7 +260,7 @@ int main(int, char *[])  {
 
     // ---------------------------------------------------
     //
-    // Now let’s do some stuffs that are a little more involved (multi steps).
+    // Now let’s do some stuff that are a little more involved (multi steps).
     // There are a lot of theories, math, and procedures that I am skipping to explain here.
     // See docs for more details.
     //

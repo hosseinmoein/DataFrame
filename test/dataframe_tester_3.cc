@@ -1933,6 +1933,36 @@ static void test_ProbabilityDistVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_PolicyLearningLossVisitor()  {
+
+    std::cout << "\nTesting PolicyLearningLossVisitor{  } ..." << std::endl;
+
+    MyDataFrame                df;
+    StlVecType<unsigned long>  idxvec =
+        { 1, 2, 3, 10, 5, 7, 8, 12, 9, 12, 10, 13, 10, 15, 14 };
+    StlVecType<double>         dblvec =
+        { 0.01, 0.5, 0.35, 0.1, 0.11, 0.05, 0.06, 0.03, 0.01, 0.01, 0.01, 0.01,
+          0.01, 0.01, 0.08};
+    StlVecType<double>         dblvec2 =
+        { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+    StlVecType<double>         dblvec3 =
+        { 0, 1, -2, 3, 4, 5, 6, 7, -8, 9, 10, -11, 12, -13, 14};
+
+    df.load_data(std::move(idxvec),
+                 std::make_pair("action_prob", dblvec),
+                 std::make_pair("reward", dblvec2),
+                 std::make_pair("dbl_col_3", dblvec3));
+
+    plloss_v<double, unsigned long, 256>    pll;
+
+    df.single_act_visit<double, double>("action_prob", "reward", pll);
+    assert(std::abs(pll.get_result()[0] - 4.6052) < 0.0001);
+    assert(std::abs(pll.get_result()[6] - 19.6939) < 0.0001);
+    assert(std::abs(pll.get_result()[14] - 37.8859) < 0.0001);
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     test_groupby_edge();
@@ -1974,6 +2004,7 @@ int main(int, char *[]) {
     test_PriceDistanceVisitor();
     test_EldersThermometerVisitor();
     test_ProbabilityDistVisitor();
+    test_PolicyLearningLossVisitor();
 
     return (0);
 }

@@ -1128,6 +1128,50 @@ private:
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 using recf_v = RectifyVisitor<T, I, A>;
 
+// ----------------------------------------------------------------------------
+
+template<typename T, typename I = unsigned long, std::size_t A = 0,
+         typename =
+             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+struct  PolicyLearningLossVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K & /*idx_begin*/, const K & /*idx_end*/,
+                const H &action_prob_begin, const H &action_prob_end,
+                const H &reward_begin, const H &reward_end)  {
+
+        const size_type col_s =
+            std::distance(action_prob_begin, action_prob_end);
+
+        assert((col_s == size_type(std::distance(reward_begin, reward_end))));
+
+        // Negative Log Likelihood
+        //
+        result_.reserve(col_s);
+        std::transform(action_prob_begin, action_prob_end,
+                       reward_begin,
+                       std::back_inserter(result_),
+                       [](const T &ap, const T &r) -> T  {
+                           return (-std::log(ap) * r);
+                       });
+    }
+
+    DEFINE_PRE_POST
+    DEFINE_RESULT
+
+    PolicyLearningLossVisitor() = default;
+
+private:
+
+    result_type result_ {  };
+};
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using plloss_v = PolicyLearningLossVisitor<T, I, A>;
+
 } // namespace hmdf
 
 // -----------------------------------------------------------------------------

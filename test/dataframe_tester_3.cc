@@ -897,7 +897,7 @@ static void test_load_result_as_column()  {
         df.single_act_visit<double>("IBM_Close", copp);
         df.load_result_as_column(copp, "IBM_close_curve");
 
-        const auto curve_col = df.get_column<double>("IBM_close_curve");
+        const auto &curve_col = df.get_column<double>("IBM_close_curve");
 
         assert(curve_col.size() == 1721);
         assert(std::isnan(curve_col[0]));
@@ -908,6 +908,58 @@ static void test_load_result_as_column()  {
         assert(std::abs(curve_col[1712] - 0.0630742594051) < 0.0000001);
         assert(std::abs(curve_col[1707] - 0.0766481878384) < 0.0000001);
         assert(copp.get_result().size() == 0); // Data was moved
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_load_result_as_column2()  {
+
+    std::cout << "\nTesting load_result_as_column2( ) ..." << std::endl;
+
+    using chop_t = chop_v<double, std::string, 256>;
+    using coppc_t = coppc_v<double, std::string, 256>;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("data/SHORT_IBM.csv", io_format::csv2);
+
+        // Choppiness Index indicator
+        //
+        df.load_result_as_column<double, double, double>
+            ("IBM_Close", "IBM_High", "IBM_Low", chop_t(), "IBM_choppy");
+
+        // CoppockCurveVisitor
+        //
+        df.load_result_as_column<double>
+            ("IBM_Close", coppc_t(), "IBM_close_curve");
+
+        const auto &choppy_col = df.get_column<double>("IBM_choppy");
+
+        assert(choppy_col.size() == 1721);
+        assert(std::isnan(choppy_col[0]));
+        assert(std::isnan(choppy_col[12]));
+        assert(std::abs(choppy_col[20] - 39.3577) < 0.0001);
+        assert(std::abs(choppy_col[25] - 31.2701) < 0.0001);
+        assert(std::abs(choppy_col[30] - 40.8049) < 0.0001);
+        assert(std::abs(choppy_col[1720] - 27.7729) < 0.0001);
+        assert(std::abs(choppy_col[1712] - 37.9124) < 0.0001);
+        assert(std::abs(choppy_col[1707] - 34.344) < 0.0001);
+
+        const auto &curve_col = df.get_column<double>("IBM_close_curve");
+
+        assert(curve_col.size() == 1721);
+        assert(std::isnan(curve_col[0]));
+        assert(std::abs(curve_col[14] - -0.051884971603) < 0.0000001);
+        assert(std::abs(curve_col[18] - -0.100660882748) < 0.0000001);
+        assert(std::abs(curve_col[25] - -0.124090378548) < 0.0000001);
+        assert(std::abs(curve_col[1720] - -0.219247796696) < 0.0000001);
+        assert(std::abs(curve_col[1712] - 0.0630742594051) < 0.0000001);
+        assert(std::abs(curve_col[1707] - 0.0766481878384) < 0.0000001);
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
@@ -1982,6 +2034,7 @@ int main(int, char *[]) {
     test_T3MovingMeanVisitor();
     test_append_row();
     test_load_result_as_column();
+    test_load_result_as_column2();
     test_load_indicators();
     test_from_indicators();
     test_TreynorRatioVisitor();

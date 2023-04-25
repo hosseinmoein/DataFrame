@@ -326,6 +326,8 @@ public:  // Load/append/remove interfaces
     //     1. The visitor must have a result() method
     //     2. The result must be a vector
     //     3. The visitor must define result_type type
+    //     4. Caller must to run the visitor before this call,
+    //        so the result is already populated
     //
     // NOTE: This call moves the result vector to the DataFrame. After the
     //       call the the visitor's result vector will be empty
@@ -334,8 +336,8 @@ public:  // Load/append/remove interfaces
     //   Visitor type
     // visitor:
     //   A reference to a visitor instance
-    // name:
-    //   Name of the column
+    // new_col_name:
+    //   Name of the new column to be added
     // padding:
     //   If true, it pads the data column with nan, if it is shorter than the
     //   index column.
@@ -343,7 +345,135 @@ public:  // Load/append/remove interfaces
     template<typename V>
     size_type
     load_result_as_column(V &visitor,
-                          const char *name,
+                          const char *new_col_name,
+                          nan_policy padding = nan_policy::pad_with_nans);
+
+    // This is a shortcut to running an algorithm and loading its vectored
+    // result as a column in one shot. It runs and loads the result() of a
+    // visitor to the named column.
+    // For this method to work:
+    //     1. The visitor must have a result() method
+    //     2. The result must be a vector
+    //     3. The visitor must define result_type type
+    //
+    // T:
+    //   Column type to be passed to the visitor
+    // V:
+    //   Visitor type
+    // col_name:
+    //   Name of the column to be passed to the visitor
+    // visitor:
+    //   A reference to a visitor instance
+    // new_col_name:
+    //   Name of the new column to be added
+    // padding:
+    //   If true, it pads the data column with nan, if it is shorter than the
+    //   index column.
+    //
+    template<typename T, typename V>
+    size_type
+    load_result_as_column(const char *col_name,
+                          V &&visitor,
+                          const char *new_col_name,
+                          nan_policy padding = nan_policy::pad_with_nans);
+
+    // Same as above but supporting two columns.
+    //
+    // T1:
+    //   First column type to be passed to the visitor
+    // T2:
+    //   Second column type to be passed to the visitor
+    // V:
+    //   Visitor type
+    // col_name1:
+    //   Name of the first column to be passed to the visitor
+    // col_name2:
+    //   Name of the second column to be passed to the visitor
+    // visitor:
+    //   A reference to a visitor instance
+    // new_col_name:
+    //   Name of the new column to be added
+    // padding:
+    //   If true, it pads the data column with nan, if it is shorter than the
+    //   index column.
+    //
+    template<typename T1, typename T2, typename V>
+    size_type
+    load_result_as_column(const char *col_name1,
+                          const char *col_name2,
+                          V &&visitor,
+                          const char *new_col_name,
+                          nan_policy padding = nan_policy::pad_with_nans);
+
+    // Same as above but supporting three columns.
+    //
+    // T1:
+    //   First column type to be passed to the visitor
+    // T2:
+    //   Second column type to be passed to the visitor
+    // T3:
+    //   Third column type to be passed to the visitor
+    // V:
+    //   Visitor type
+    // col_name1:
+    //   Name of the first column to be passed to the visitor
+    // col_name2:
+    //   Name of the second column to be passed to the visitor
+    // col_name3:
+    //   Name of the third column to be passed to the visitor
+    // visitor:
+    //   A reference to a visitor instance
+    // new_col_name:
+    //   Name of the new column to be added
+    // padding:
+    //   If true, it pads the data column with nan, if it is shorter than the
+    //   index column.
+    //
+    template<typename T1, typename T2, typename T3, typename V>
+    size_type
+    load_result_as_column(const char *col_name1,
+                          const char *col_name2,
+                          const char *col_name3,
+                          V &&visitor,
+                          const char *new_col_name,
+                          nan_policy padding = nan_policy::pad_with_nans);
+
+    // Same as above but supporting four columns.
+    //
+    // T1:
+    //   First column type to be passed to the visitor
+    // T2:
+    //   Second column type to be passed to the visitor
+    // T3:
+    //   Third column type to be passed to the visitor
+    // T4:
+    //   Fourth column type to be passed to the visitor
+    // V:
+    //   Visitor type
+    // col_name1:
+    //   Name of the first column to be passed to the visitor
+    // col_name2:
+    //   Name of the second column to be passed to the visitor
+    // col_name3:
+    //   Name of the third column to be passed to the visitor
+    // col_name4:
+    //   Name of the fourth column to be passed to the visitor
+    // visitor:
+    //   A reference to a visitor instance
+    // new_col_name:
+    //   Name of the new column to be added
+    // padding:
+    //   If true, it pads the data column with nan, if it is shorter than the
+    //   index column.
+    //
+    template<typename T1, typename T2, typename T3, typename T4, typename V>
+    size_type
+    load_result_as_column(const char *col_name1,
+                          const char *col_name2,
+                          const char *col_name3,
+                          const char *col_name4,
+                          V &&visitor,
+                          const char *new_col_name,
                           nan_policy padding = nan_policy::pad_with_nans);
 
     // Given a categorical (nominal) column, it generates a series of numerical

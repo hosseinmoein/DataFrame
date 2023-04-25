@@ -1,0 +1,281 @@
+<!--
+Copyright (c) 2019-2026, Hossein Moein
+All rights reserved.
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+* Redistributions of source code must retain the above copyright
+  notice, this list of conditions and the following disclaimer.
+* Redistributions in binary form must reproduce the above copyright
+  notice, this list of conditions and the following disclaimer in the
+  documentation and/or other materials provided with the distribution.
+* Neither the name of Hossein Moein and/or the DataFrame nor the
+  names of its contributors may be used to endorse or promote products
+  derived from this software without specific prior written permission.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL Hossein Moein BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+<!DOCTYPE html>
+<html>
+<body>
+  <table align="center" border="1">
+
+    <tr bgcolor="lightblue">
+        <th>Signature</th> <th>Description</th> <th>Parameters</th>
+    </tr>
+
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        <PRE><B>
+template&lt;typename V&gt;
+std::size_t
+load_result_as_column(V &amp;visitor,
+                      const char *new_col_name,
+                      nan_policy padding = nan_policy::pad_with_nans);
+        </B></PRE></font>
+      </td>
+      <td>
+        This is a convenient method to load the result of a visitor (i.e. algorithm) as a column in DataFrame<BR>
+		For this method to work:
+		<OL>
+          <LI>The visitor must have a <I>result()</I> method</LI>
+          <LI>The result must be a vector</LI>
+          <LI>The visitor must define <I>result_type</I> type</LI>
+          <LI>Caller must to run the visitor before this call, so the result is already populated</LI>
+		</OL>
+        <B>NOTE:</B> This call moves the result vector to the DataFrame. After the call the the visitor's result vector will be empty
+      </td>
+      <td>
+        <B>V</B>: Visitor type<BR>
+        <B>visitor</B>: A reference to a visitor instance<BR>
+        <B>new_col_name</B>: Name of the new column to be added<BR>
+        <B>padding</B>: If true, it pads the data column with nan if it is shorter than the index column.<BR>
+      </td>
+    </tr>
+
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        <PRE><B>
+template&lt;typename T, typename V&gt;
+std::size_t
+load_result_as_column(const char *col_name,
+                      V &amp;&amp;visitor,
+                      const char *new_col_name,
+                      nan_policy padding = nan_policy::pad_with_nans);
+        </B></PRE></font>
+      </td>
+      <td>
+        This is a shortcut to running an algorithm and loading its vectored result as a column in one shot. It runs and loads the result() of a visitor into the named column.<BR>
+		For this method to work:
+		<OL>
+          <LI>The visitor must have a <I>result()</I> method</LI>
+          <LI>The result must be a vector</LI>
+          <LI>The visitor must define <I>result_type</I> type</LI>
+		</OL>
+      </td>
+      <td>
+        <B>T</B>: Column type to be passed to the visitor<BR>
+        <B>V</B>: Visitor type<BR>
+        <B>col_name</B>: Name of the column to be passed to the visitor<BR>
+        <B>visitor</B>: A reference to a visitor instance<BR>
+        <B>new_col_name</B>: Name of the new column to be added<BR>
+        <B>padding</B>: If true, it pads the data column with nan if it is shorter than the index column.<BR>
+      </td>
+    </tr>
+
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        <PRE><B>
+template&lt;typename T1, typename T2, typename V&gt;
+std::size_t
+load_result_as_column(const char *col_name1,
+                      const char *col_name2,
+                      V &amp;&amp;visitor,
+                      const char *new_col_name,
+                      nan_policy padding = nan_policy::pad_with_nans);
+        </B></PRE></font>
+      </td>
+      <td>
+        Same as above but supporting two columns.
+      </td>
+      <td>
+        <B>T1</B>: First column type to be passed to the visitor<BR>
+        <B>T2</B>: Second column type to be passed to the visitor<BR>
+        <B>V</B>: Visitor type<BR>
+        <B>col_name1</B>: Name of the first column to be passed to the visitor<BR>
+        <B>col_name2</B>: Name of the second column to be passed to the visitor<BR>
+        <B>visitor</B>: A reference to a visitor instance<BR>
+        <B>new_col_name</B>: Name of the new column to be added<BR>
+        <B>padding</B>: If true, it pads the data column with nan if it is shorter than the index column.<BR>
+      </td>
+    </tr>
+
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        <PRE><B>
+template&lt;typename T1, typename T2, typename T3, typename V&gt;
+std::size_t
+load_result_as_column(const char *col_name1,
+                      const char *col_name2,
+                      const char *col_name3,
+                      V &amp;&amp;visitor,
+                      const char *new_col_name,
+                      nan_policy padding = nan_policy::pad_with_nans);
+        </B></PRE></font>
+      </td>
+      <td>
+        Same as above but supporting three columns.
+      </td>
+      <td>
+        <B>T1</B>: First column type to be passed to the visitor<BR>
+        <B>T2</B>: Second column type to be passed to the visitor<BR>
+        <B>T3</B>: Third column type to be passed to the visitor<BR>
+        <B>V</B>: Visitor type<BR>
+        <B>col_name1</B>: Name of the first column to be passed to the visitor<BR>
+        <B>col_name2</B>: Name of the second column to be passed to the visitor<BR>
+        <B>col_name3</B>: Name of the third column to be passed to the visitor<BR>
+        <B>visitor</B>: A reference to a visitor instance<BR>
+        <B>new_col_name</B>: Name of the new column to be added<BR>
+        <B>padding</B>: If true, it pads the data column with nan if it is shorter than the index column.<BR>
+      </td>
+    </tr>
+
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        <PRE><B>
+template&lt;typename T1, typename T2, typename T3, typename T4, typename V&gt;
+std::size_t
+load_result_as_column(const char *col_name1,
+                      const char *col_name2,
+                      const char *col_name3,
+                      const char *col_name4,
+                      V &amp;&amp;visitor,
+                      const char *new_col_name,
+                      nan_policy padding = nan_policy::pad_with_nans);
+        </B></PRE></font>
+      </td>
+      <td>
+        Same as above but supporting four columns.
+      </td>
+      <td>
+        <B>T1</B>: First column type to be passed to the visitor<BR>
+        <B>T2</B>: Second column type to be passed to the visitor<BR>
+        <B>T3</B>: Third column type to be passed to the visitor<BR>
+        <B>T4</B>: Fourth column type to be passed to the visitor<BR>
+        <B>V</B>: Visitor type<BR>
+        <B>col_name1</B>: Name of the first column to be passed to the visitor<BR>
+        <B>col_name2</B>: Name of the second column to be passed to the visitor<BR>
+        <B>col_name3</B>: Name of the third column to be passed to the visitor<BR>
+        <B>col_name4</B>: Name of the fourth column to be passed to the visitor<BR>
+        <B>visitor</B>: A reference to a visitor instance<BR>
+        <B>new_col_name</B>: Name of the new column to be added<BR>
+        <B>padding</B>: If true, it pads the data column with nan if it is shorter than the index column.<BR>
+      </td>
+    </tr>
+
+  </table>
+
+<pre class="code_syntax" style="color:#000000;background:#ffffff;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">static</span> <span style="color:#800000; font-weight:bold; ">void</span> test_load_result_as_column<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">cout</span> <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> <span style="color:#800000; ">"</span><span style="color:#0f69ff; ">\n</span><span style="color:#0000e6; ">Testing load_result_as_column( ) ...</span><span style="color:#800000; ">"</span> <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">endl</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    StrDataFrame    df<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">try</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">        df<span style="color:#808030; ">.</span>read<span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">data/SHORT_IBM.csv</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> io_format<span style="color:#800080; ">::</span>csv2<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        <span style="color:#696969; ">// CoppockCurveVisitor</span></span>
+<span class="line_wrapper">        <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">        coppc_v<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#808030; ">,</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">string</span><span style="color:#800080; ">&gt;</span>  copp<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        df<span style="color:#808030; ">.</span>single_act_visit<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">IBM_Close</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> copp<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        df<span style="color:#808030; ">.</span>load_result_as_column<span style="color:#808030; ">(</span>copp<span style="color:#808030; ">,</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">IBM_close_curve</span><span style="color:#800000; ">"</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">auto</span> <span style="color:#808030; ">&amp;</span>curve_col <span style="color:#808030; ">=</span> df<span style="color:#808030; ">.</span>get_column<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">IBM_close_curve</span><span style="color:#800000; ">"</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span>curve_col<span style="color:#808030; ">.</span>size<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008c00; ">1721</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>isnan<span style="color:#808030; ">(</span>curve_col<span style="color:#808030; ">[</span><span style="color:#008c00; ">0</span><span style="color:#808030; ">]</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">abs</span><span style="color:#808030; ">(</span>curve_col<span style="color:#808030; ">[</span><span style="color:#008c00; ">14</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">-</span> <span style="color:#808030; ">-</span><span style="color:#008000; ">0.051884971603</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.0000001</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">abs</span><span style="color:#808030; ">(</span>curve_col<span style="color:#808030; ">[</span><span style="color:#008c00; ">18</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">-</span> <span style="color:#808030; ">-</span><span style="color:#008000; ">0.100660882748</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.0000001</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">abs</span><span style="color:#808030; ">(</span>curve_col<span style="color:#808030; ">[</span><span style="color:#008c00; ">25</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">-</span> <span style="color:#808030; ">-</span><span style="color:#008000; ">0.124090378548</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.0000001</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">abs</span><span style="color:#808030; ">(</span>curve_col<span style="color:#808030; ">[</span><span style="color:#008c00; ">1720</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">-</span> <span style="color:#808030; ">-</span><span style="color:#008000; ">0.219247796696</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.0000001</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">abs</span><span style="color:#808030; ">(</span>curve_col<span style="color:#808030; ">[</span><span style="color:#008c00; ">1712</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">0.0630742594051</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.0000001</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">abs</span><span style="color:#808030; ">(</span>curve_col<span style="color:#808030; ">[</span><span style="color:#008c00; ">1707</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">0.0766481878384</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.0000001</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span>copp<span style="color:#808030; ">.</span>get_result<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">.</span>size<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008c00; ">0</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span> <span style="color:#696969; ">// Data was moved</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">}</span></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">catch</span> <span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> DataFrameError <span style="color:#808030; ">&amp;</span>ex<span style="color:#808030; ">)</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">        <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">cout</span> <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> ex<span style="color:#808030; ">.</span>what<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">endl</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">}</span></span>
+<span class="line_wrapper"><span style="color:#800080; ">}</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#696969; ">// -----------------------------------------------------------------------------</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">static</span> <span style="color:#800000; font-weight:bold; ">void</span> test_load_result_as_column2<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">cout</span> <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> <span style="color:#800000; ">"</span><span style="color:#0f69ff; ">\n</span><span style="color:#0000e6; ">Testing load_result_as_column2( ) ...</span><span style="color:#800000; ">"</span> <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">endl</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">using</span> chop_t <span style="color:#808030; ">=</span> chop_v<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#808030; ">,</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">string</span><span style="color:#800080; ">&gt;</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">using</span> coppc_t <span style="color:#808030; ">=</span> coppc_v<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#808030; ">,</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">string</span><span style="color:#800080; ">&gt;</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    StrDataFrame    df<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">try</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">        df<span style="color:#808030; ">.</span>read<span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">data/SHORT_IBM.csv</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> io_format<span style="color:#800080; ">::</span>csv2<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        <span style="color:#696969; ">// Choppiness Index indicator</span></span>
+<span class="line_wrapper">        <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">        df<span style="color:#808030; ">.</span>load_result_as_column<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">double</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">IBM_Close</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">IBM_High</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">IBM_Low</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> chop_t<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">,</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">IBM_choppy</span><span style="color:#800000; ">"</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        <span style="color:#696969; ">// CoppockCurveVisitor</span></span>
+<span class="line_wrapper">        <span style="color:#696969; ">//</span></span>
+<span class="line_wrapper">        df<span style="color:#808030; ">.</span>load_result_as_column<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">IBM_Close</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> coppc_t<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">,</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">IBM_close_curve</span><span style="color:#800000; ">"</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">auto</span> <span style="color:#808030; ">&amp;</span>choppy_col <span style="color:#808030; ">=</span> df<span style="color:#808030; ">.</span>get_column<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">IBM_choppy</span><span style="color:#800000; ">"</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span>choppy_col<span style="color:#808030; ">.</span>size<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008c00; ">1721</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>isnan<span style="color:#808030; ">(</span>choppy_col<span style="color:#808030; ">[</span><span style="color:#008c00; ">0</span><span style="color:#808030; ">]</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>isnan<span style="color:#808030; ">(</span>choppy_col<span style="color:#808030; ">[</span><span style="color:#008c00; ">12</span><span style="color:#808030; ">]</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">abs</span><span style="color:#808030; ">(</span>choppy_col<span style="color:#808030; ">[</span><span style="color:#008c00; ">20</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">39.3577</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.0001</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">abs</span><span style="color:#808030; ">(</span>choppy_col<span style="color:#808030; ">[</span><span style="color:#008c00; ">25</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">31.2701</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.0001</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">abs</span><span style="color:#808030; ">(</span>choppy_col<span style="color:#808030; ">[</span><span style="color:#008c00; ">30</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">40.8049</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.0001</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">abs</span><span style="color:#808030; ">(</span>choppy_col<span style="color:#808030; ">[</span><span style="color:#008c00; ">1720</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">27.7729</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.0001</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">abs</span><span style="color:#808030; ">(</span>choppy_col<span style="color:#808030; ">[</span><span style="color:#008c00; ">1712</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">37.9124</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.0001</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">abs</span><span style="color:#808030; ">(</span>choppy_col<span style="color:#808030; ">[</span><span style="color:#008c00; ">1707</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">34.344</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.0001</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">auto</span> <span style="color:#808030; ">&amp;</span>curve_col <span style="color:#808030; ">=</span> df<span style="color:#808030; ">.</span>get_column<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">IBM_close_curve</span><span style="color:#800000; ">"</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span>curve_col<span style="color:#808030; ">.</span>size<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">=</span><span style="color:#808030; ">=</span> <span style="color:#008c00; ">1721</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>isnan<span style="color:#808030; ">(</span>curve_col<span style="color:#808030; ">[</span><span style="color:#008c00; ">0</span><span style="color:#808030; ">]</span><span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">abs</span><span style="color:#808030; ">(</span>curve_col<span style="color:#808030; ">[</span><span style="color:#008c00; ">14</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">-</span> <span style="color:#808030; ">-</span><span style="color:#008000; ">0.051884971603</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.0000001</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">abs</span><span style="color:#808030; ">(</span>curve_col<span style="color:#808030; ">[</span><span style="color:#008c00; ">18</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">-</span> <span style="color:#808030; ">-</span><span style="color:#008000; ">0.100660882748</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.0000001</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">abs</span><span style="color:#808030; ">(</span>curve_col<span style="color:#808030; ">[</span><span style="color:#008c00; ">25</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">-</span> <span style="color:#808030; ">-</span><span style="color:#008000; ">0.124090378548</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.0000001</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">abs</span><span style="color:#808030; ">(</span>curve_col<span style="color:#808030; ">[</span><span style="color:#008c00; ">1720</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">-</span> <span style="color:#808030; ">-</span><span style="color:#008000; ">0.219247796696</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.0000001</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">abs</span><span style="color:#808030; ">(</span>curve_col<span style="color:#808030; ">[</span><span style="color:#008c00; ">1712</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">0.0630742594051</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.0000001</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">        assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">abs</span><span style="color:#808030; ">(</span>curve_col<span style="color:#808030; ">[</span><span style="color:#008c00; ">1707</span><span style="color:#808030; ">]</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">0.0766481878384</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.0000001</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">}</span></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">catch</span> <span style="color:#808030; ">(</span><span style="color:#800000; font-weight:bold; ">const</span> DataFrameError <span style="color:#808030; ">&amp;</span>ex<span style="color:#808030; ">)</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper">        <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">cout</span> <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> ex<span style="color:#808030; ">.</span>what<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">endl</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#800080; ">}</span></span>
+<span class="line_wrapper"><span style="color:#800080; ">}</span></span>
+<span class="line_wrapper"></span></pre>
+
+  <img src="https://github.com/hosseinmoein/DataFrame/blob/master/docs/LionLookingUp.jpg?raw=true" alt="C++ DataFrame"
+       width="200" height="150" style="float:right"/>
+
+</body>
+</html>
+
+<!--
+Local Variables:
+mode:HTML
+tab-width:4
+c-basic-offset:4
+End:
+-->

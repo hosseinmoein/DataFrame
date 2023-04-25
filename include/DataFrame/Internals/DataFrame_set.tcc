@@ -194,7 +194,7 @@ DataFrame<I, H>::load_data (IndexVecType &&indices, Ts&& ... args)  {
     // const size_type tuple_size =
     //     std::tuple_size<decltype(args_tuple)>::value;
     auto        fc = [this, &cnt](auto &pa) mutable -> void {
-		                 cnt += this->load_pair_(pa, false);
+                         cnt += this->load_pair_(pa, false);
                      };
 
     const SpinGuard guard(lock_);
@@ -406,7 +406,9 @@ template<typename I, typename H>
 template<typename V>
 typename DataFrame<I, H>::size_type
 DataFrame<I, H>::
-load_result_as_column(V &visitor, const char *name, nan_policy padding)  {
+load_result_as_column(V &visitor,
+                      const char *new_col_name,
+                      nan_policy padding)  {
 
     const size_type idx_s = indices_.size();
     auto            &new_col = visitor.get_result();
@@ -436,12 +438,12 @@ load_result_as_column(V &visitor, const char *name, nan_policy padding)  {
             ret_cnt += 1;
         }
 
-    const auto              iter = column_tb_.find (name);
+    const auto              iter = column_tb_.find (new_col_name);
     StlVecType<new_type>    *vec_ptr = nullptr;
     SpinGuard               guard(lock_);
 
     if (iter == column_tb_.end())
-        vec_ptr = &(create_column<new_type>(name, false));
+        vec_ptr = &(create_column<new_type>(new_col_name, false));
     else  {
         DataVec &hv = data_[iter->second];
 
@@ -451,6 +453,84 @@ load_result_as_column(V &visitor, const char *name, nan_policy padding)  {
 
     *vec_ptr = std::move(new_col);
     return (ret_cnt);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename T, typename V>
+typename DataFrame<I, H>::size_type
+DataFrame<I, H>::
+load_result_as_column(const char *col_name,
+                      V &&visitor,
+                      const char *new_col_name,
+                      nan_policy padding)  {
+
+    V   vis = std::move(visitor);
+
+    single_act_visit<T, V>(col_name, vis);
+    return (load_result_as_column<V>(vis, new_col_name, padding));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename T1, typename T2, typename V>
+typename DataFrame<I, H>::size_type
+DataFrame<I, H>::
+load_result_as_column(const char *col_name1,
+                      const char *col_name2,
+                      V &&visitor,
+                      const char *new_col_name,
+                      nan_policy padding)  {
+
+    V   vis = std::move(visitor);
+
+    single_act_visit<T1, T2, V>(col_name1, col_name2, vis);
+    return (load_result_as_column<V>(vis, new_col_name, padding));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename T1, typename T2, typename T3, typename V>
+typename DataFrame<I, H>::size_type
+DataFrame<I, H>::
+load_result_as_column(const char *col_name1,
+                      const char *col_name2,
+                      const char *col_name3,
+                      V &&visitor,
+                      const char *new_col_name,
+                      nan_policy padding)  {
+
+    V   vis = std::move(visitor);
+
+    single_act_visit<T1, T2, T3, V>(col_name1, col_name2, col_name3, vis);
+    return (load_result_as_column<V>(vis, new_col_name, padding));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename T1, typename T2, typename T3, typename T4, typename V>
+typename DataFrame<I, H>::size_type
+DataFrame<I, H>::
+load_result_as_column(const char *col_name1,
+                      const char *col_name2,
+                      const char *col_name3,
+                      const char *col_name4,
+                      V &&visitor,
+                      const char *new_col_name,
+                      nan_policy padding)  {
+
+    V   vis = std::move(visitor);
+
+    single_act_visit<T1, T2, T3, T4, V>(col_name1,
+                                        col_name2,
+                                        col_name3,
+                                        col_name4,
+                                        vis);
+    return (load_result_as_column<V>(vis, new_col_name, padding));
 }
 
 // ----------------------------------------------------------------------------

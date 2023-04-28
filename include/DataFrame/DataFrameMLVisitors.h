@@ -38,6 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <complex>
 #include <functional>
 #include <limits>
+#include <numeric>
 #include <random>
 #include <type_traits>
 #include <utility>
@@ -1171,6 +1172,156 @@ private:
 
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 using plloss_v = PolicyLearningLossVisitor<T, I, A>;
+
+// -----------------------------------------------------------------------------
+
+template<typename T, typename I = unsigned long,
+         typename =
+             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+struct LossFunctionVisitor  {
+
+public:
+
+    DEFINE_VISIT_BASIC_TYPES_2
+
+    template <typename K, typename H>
+    inline void
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &actual_begin, const H &actual_end,
+                const H &model_begin, const H &model_end)  {
+
+        const size_type col_s = std::distance(actual_begin, actual_end);
+
+        assert((col_s == size_type(std::distance(model_begin, model_end))));
+
+        if (lft_ == loss_function_type::kullback_leibler)  {
+            result_ =
+                std::transform_reduce(actual_begin, actual_end,
+                                      model_begin, T(0), std::plus { },
+                                      [](const T &a, const T &m) -> T  {
+                                          return (a * std::log(a / m));
+                                      });
+        }
+        else if (lft_ == loss_function_type::mean_abs_error)  {
+            result_ =
+                std::transform_reduce(actual_begin, actual_end,
+                                      model_begin, T(0), std::plus { },
+                                      [](const T &a, const T &m) -> T  {
+                                          return (std::fabs(a - m));
+                                      });
+            result_ /= col_s;
+        }
+        else if (lft_ == loss_function_type::mean_sqr_error)  {
+            result_ =
+                std::transform_reduce(actual_begin, actual_end,
+                                      model_begin, T(0), std::plus { },
+                                      [](const T &a, const T &m) -> T  {
+                                          const T   val = a - m;
+
+                                          return (val * val);
+                                      });
+            result_ /= col_s;
+        }
+        else if (lft_ == loss_function_type::mean_sqr_log_error)  {
+            result_ =
+                std::transform_reduce(actual_begin, actual_end,
+                                      model_begin, T(0), std::plus { },
+                                      [](const T &a, const T &m) -> T  {
+                                          const T   val = std::log(T(1) + a) -
+                                                          std::log(T(1) + m);
+
+                                          return (val * val);
+                                      });
+            result_ /= col_s;
+        }
+        else if (lft_ == loss_function_type::cross_entropy)  {
+            result_ =
+                std::transform_reduce(actual_begin, actual_end,
+                                      model_begin, T(0), std::plus { },
+                                      [](const T &a, const T &m) -> T  {
+                                          return (a * std::log(m));
+                                      });
+            result_ = -(result_ / col_s);
+        }
+        else if (lft_ == loss_function_type::binary_cross_entropy)  {
+            result_ =
+                std::transform_reduce(actual_begin, actual_end,
+                                      model_begin, T(0), std::plus { },
+                                      [](const T &a, const T &m) -> T  {
+                                          return (-(a * std::log(m)) +
+                                                  (1 - a) * std::log(1 - m));
+                                      });
+            result_ /= col_s;
+        }
+        else if (lft_ == loss_function_type::categorical_hinge)  {
+            const result_type   neg =
+                std::transform_reduce(actual_begin, actual_end,
+                                      model_begin, T(0), std::plus { },
+                                      [](const T &a, const T &m) -> T  {
+                                          return ((T(1) - a) * m);
+                                      });
+            const result_type   pos =
+                std::transform_reduce(actual_begin, actual_end,
+                                      model_begin, T(0), std::plus { },
+                                      [](const T &a, const T &m) -> T  {
+                                          return (a * m);
+                                      });
+
+            result_ = std::max(neg - pos + T(1), T(0));;
+        }
+        else if (lft_ == loss_function_type::cosine_similarity)  {
+            DotProdVisitor<T, I>    dot_v;
+
+            dot_v.pre();
+            dot_v (idx_begin, idx_end,
+                   actual_begin, actual_end, model_begin, model_end);
+            dot_v.post();
+
+            const result_type   dot_prod = dot_v.get_result();
+
+            dot_v.pre();
+            dot_v (idx_begin, idx_end,
+                   actual_begin, actual_end, actual_begin, actual_end);
+            dot_v.post();
+
+            const result_type   a_mag = std::sqrt(dot_v.get_result());
+
+            dot_v.pre();
+            dot_v (idx_begin, idx_end,
+                   model_begin, model_end, model_begin, model_end);
+            dot_v.post();
+
+            const result_type   m_mag = std::sqrt(dot_v.get_result());
+
+            result_ = dot_prod / (a_mag * m_mag);
+        }
+        else if (lft_ == loss_function_type::log_cosh)  {
+            result_ =
+                std::transform_reduce(actual_begin, actual_end,
+                                      model_begin, T(0), std::plus { },
+                                      [](const T &a, const T &m) -> T  {
+                                          return (std::log(std::cosh(m - a)));
+                                      });
+            result_ /= col_s;
+        }
+    }
+
+    inline void pre ()  { result_ = 0; }
+    inline void post ()  {  }
+
+    inline result_type get_result() const  { return (result_); }
+
+    explicit
+    LossFunctionVisitor(loss_function_type lft) : lft_(lft)  {   }
+
+private:
+
+    result_type                 result_ { 0 };
+    const loss_function_type    lft_;
+};
+
+template<typename T, typename I = unsigned long>
+using loss_v = LossFunctionVisitor<T, I>;
 
 } // namespace hmdf
 

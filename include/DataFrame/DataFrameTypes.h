@@ -466,6 +466,52 @@ enum class  prob_dist_type : unsigned char  {
 
 // ----------------------------------------------------------------------------
 
+enum class  loss_function_type : unsigned char  {
+    // L = sum(P(x) * log(P(x) / Q(x)))  --  P = Actual, Q = Model
+    //
+    kullback_leibler = 1,
+
+    // L = sum(|Yi - YHati|) / N  --  Y = Actual, YHat = Model
+    //
+    mean_abs_error = 2,
+
+    // L = sum((Yi - YHati)^2) / N  --  Y = Actual, YHat = Model
+    //
+    mean_sqr_error = 3,
+
+    // L = sum(log(1 + Yi) - log(1 + YHati)^2) / N
+    //     Y = Actual, YHat = Model
+    //
+    mean_sqr_log_error = 4,
+
+    // L = -sum(Yi * log(P(Yi))) / N
+    //     Y = Actual, P(Yi) = Model probability prediction
+    //
+    cross_entropy = 5,
+
+    // L = sum(-(Yi * log(P(Yi))) + (1 - Yi) * log(1 - P(Yi))) / N
+    //     Y = Actual binary (0/1), P(Yi) = Model probability prediction
+    //
+    binary_cross_entropy = 6,
+
+    // L = max(sum((1 - Y) * YHat) - sum(Yi * YHati) + 1, 0)
+    //     Y = Actual, YHat = Model
+    //
+    categorical_hinge = 7,
+
+    // L = (Y . YHat) / (||Y|| * ||YHat||)
+    //     Y = Actual, YHat = Model
+    //
+    cosine_similarity = 8,
+
+    // L = sum(log(cosh(YHati - Yi))) / N
+    //     Y = Actual, YHat = Model
+    //
+    log_cosh = 9,
+};
+
+// ----------------------------------------------------------------------------
+
 template<typename T>
 struct  RandGenParams  {
     T   min_value { std::numeric_limits<T>::min() };

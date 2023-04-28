@@ -835,6 +835,10 @@ table.hovertable td {
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
+      <td title="Calculates different loss functions">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/LossFunctionVisitor.html">LossFunctionVisitor</a>{  }</td>
+    </tr>
+
+    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
       <td title="Locally Weighted Scatterplot Smoothing">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/LowessVisitor.html">LowessVisitor</a>{  }</td>
     </tr>
 
@@ -1193,6 +1197,10 @@ table.hovertable td {
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
+      <td title="Sepecifies different loss function types">enum class <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/LossFunctionVisitor.html">loss_function_type</a>{  }</td>
+    </tr>
+
+    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
       <td title="Average around average types">enum class <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/MADVisitor.html">mad_type</a>{  }</td>
     </tr>
 
@@ -1462,6 +1470,7 @@ table.hovertable td {
   <UL>
     <LI>I wanted users to be able to incorporate their custom algorithms without touching or understanding the DataFrame codebase. If you follow a simple interface, you can write your custom visitor and use it in DataFrame</LI>
     <LI>I wanted the algorithms to be self-contained like an object. That means a single <I>object</I> should contain the algorithm, input(s), parameter(s), and result(s). Because algorithms are self-contained objects, they can be passed to other algorithms</LI>
+    <LI>Life cycle of an algorithm and its result(s) should be independent of the life cycle of a DataFrame instance</LI>
     <LI>Algorithms sometime have complex results. Sometimes the result is a single number. But sometimes the result of an algorithms could be a single or multiple vectors. That's not efficient to implement as a member function</LI>
     <LI>If I had implemented them as member functions, I would have had 100's of member functions in DataFrame</LI>
   </UL>

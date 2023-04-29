@@ -32,10 +32,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/hosseinmoein/DataFrame/master)
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://GitHub.com/hosseinmoein/DataFrame/graphs/commit-activity)
 
-<!--
-[![HitCount](http://hits.dwyl.io/hosseinmoein/DataFrame.svg)](http://hits.dwyl.io/hosseinmoein/DataFrame)
--->
-
 <img src="docs/LionLookingUp.jpg" alt="DataFrame Lion" width="400" longdesc="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html"/>
 
 ## [*DataFrame Documentation / Code Samples*](https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html)
@@ -47,12 +43,12 @@ For basic operations to start you off, see [Hello World](examples/hello_world.cc
 I have followed a few <B>principles in this library</B>:<BR>
 
 1.  Support any type either built-in or user defined without needing new code
-2.  Never chase pointers ala `linked lists`, `std::any`, `pointer to base`, ..., including `virtual functions`
-3.  Have all column data in contiguous memory space. Also, be mindful of cache-line aliasing misses between multiple columns
-4.  Never use more space than you need ala `unions`, `std::variant`, ...
-5.  Avoid copying data as much as possible
-6.  Use multi-threading but only when it makes sense
-7.  Do not attempt to protect the user against `garbage in`, `garbage out`
+2.  [Never chase pointers ala _linked lists_, _std::any_, _pointer to base_, ...](docs/HTML/pointers.html)
+3.  [Have all column data in contiguous memory space](docs/HTML/contiguous_memory.html)
+4.  [Never use more space than you need ala _unions_, _std::variant_, ...](docs/HTML/std_variant.html)
+5.  [Avoid copying data as much as possible](docs/HTML/copying_data.html)
+6.  [Use multi-threading but only when it makes sense](docs/HTML/multithreading.html)
+7.  [Do not attempt to protect the user against _garbage in_, _garbage out_](docs/HTML/garbage_in_garbage_out.html)
 
 [DateTime](docs/DateTimeDoc.pdf)<BR>
 DateTime class included in this library is a very cool and handy object to manipulate date/time with nanosecond precision and multi timezone capability.<BR>
@@ -93,7 +89,7 @@ sys     0m25.983s
 1.  Pandas script, I believe, is entirely implemented in Numpy which is in C.
 2.  In case of Pandas, allocating memory + random number generation takes almost the same amount of time as calculating means.
 3.  In case of DataFrame ~90% of the time is spent in allocating memory + random number generation.
-4.  You load data once, but calculate statistics many times. So DataFrame, in general, is about ~11x faster than parts of Pandas that are implemented in Numpy. I leave parts of Pandas that are purely in Python to imagination.
+4.  You load data once, but calculate statistics many times. So DataFrame, in general, is about ~11x faster than parts of Pandas that are implemented in Numpy (i.e. C). I leave parts of Pandas that are purely in Python to imagination.
 5.  Pandas process image at its peak is ~105GB. C++ DataFrame process image at its peak is ~56GB.
 
 ---

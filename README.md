@@ -43,12 +43,12 @@ For basic operations to start you off, see [Hello World](examples/hello_world.cc
 I have followed a few <B>principles in this library</B>:<BR>
 
 1.  Support any type either built-in or user defined without needing new code
-2.  [Never chase pointers ala _linked lists_, _std::any_, _pointer to base_, ...](docs/HTML/pointers.html)
-3.  [Have all column data in contiguous memory space](docs/HTML/contiguous_memory.html)
-4.  [Never use more space than you need ala _unions_, _std::variant_, ...](docs/HTML/std_variant.html)
-5.  [Avoid copying data as much as possible](docs/HTML/copying_data.html)
-6.  [Use multi-threading but only when it makes sense](docs/HTML/multithreading.html)
-7.  [Do not attempt to protect the user against _garbage in_, _garbage out_](docs/HTML/garbage_in_garbage_out.html)
+2.  [Never chase pointers ala _linked lists_, _std::any_, _pointer to base_, ...](https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/pointers.html)
+3.  [Have all column data in contiguous memory space](https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/contiguous_memory.html)
+4.  [Never use more space than you need ala _unions_, _std::variant_, ...](https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/std_variant.html)
+5.  [Avoid copying data as much as possible](https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/copying_data.html)
+6.  [Use multi-threading but only when it makes sense](https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/multithreading.html)
+7.  [Do not attempt to protect the user against _garbage in_, _garbage out_](https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/garbage_in_garbage_out.html)
 
 [DateTime](docs/DateTimeDoc.pdf)<BR>
 DateTime class included in this library is a very cool and handy object to manipulate date/time with nanosecond precision and multi timezone capability.<BR>

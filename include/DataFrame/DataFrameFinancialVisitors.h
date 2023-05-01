@@ -5500,7 +5500,8 @@ struct  EldersThermometerVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    using bool_vec = std::vector<bool, typename allocator_declare<bool, A>::type>;
+    using bool_vec =
+        std::vector<bool, typename allocator_declare<bool, A>::type>;
 
     template <typename K, typename H>
     inline void
@@ -5589,6 +5590,62 @@ private:
 
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 using ether_v = EldersThermometerVisitor<T, I, A>;
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename I = unsigned long, std::size_t A = 0,
+         typename =
+             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+struct  EldersForceIndexVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H, typename V>
+    inline void
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &close_begin, const H &close_end,
+                const V &volume_begin, const V &volume_end)  {
+
+        const size_type col_s = std::distance(close_begin, close_end);
+
+        assert((col_s == size_type(std::distance(volume_begin, volume_end))));
+        assert(roll_period_ < col_s);
+
+        DiffVisitor<T, I, A>    diff { 1, false };
+
+        diff.pre();
+        diff (idx_begin, idx_end, close_begin, close_end);
+        diff.post();
+
+        result_type result = std::move(diff.get_result());;
+
+        for (size_type i { 0 }; i < col_s; ++i)
+            result[i] *= *(volume_begin + i);
+
+        ewm_v<T, I, A>  ewm(exponential_decay_spec::span, roll_period_, true);
+
+        ewm.pre();
+        ewm (idx_begin, idx_end, result.begin(), result.end());
+        ewm.post();
+
+        result_ = std::move(ewm.get_result());
+    }
+
+    DEFINE_PRE_POST
+    DEFINE_RESULT
+
+    explicit
+    EldersForceIndexVisitor(size_type roll_period = 13)
+        : roll_period_(roll_period)  {   }
+
+private:
+
+    result_type     result_ {  };
+    const size_type roll_period_;
+};
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using efi_v = EldersForceIndexVisitor<T, I, A>;
 
 } // namespace hmdf
 

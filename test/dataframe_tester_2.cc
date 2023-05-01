@@ -4066,7 +4066,6 @@ static void test_OnBalanceVolumeVisitor()  {
     }
 }
 
-
 // -----------------------------------------------------------------------------
 
 static void test_TrueRangeVisitor()  {

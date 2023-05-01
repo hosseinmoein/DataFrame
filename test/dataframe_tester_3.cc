@@ -2095,6 +2095,39 @@ static void test_LossFunctionVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_EldersForceIndexVisitor()  {
+
+    std::cout << "\nTesting EldersForceIndexVisitor{  } ..." << std::endl;
+
+    typedef StdDataFrame64<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("data/SHORT_IBM.csv", io_format::csv2);
+
+        efi_v<double, std::string, 64>  efi;
+
+        df.single_act_visit<double, long>("IBM_Close", "IBM_Volume", efi);
+
+        assert(efi.get_result().size() == 1721);
+        assert(efi.get_result()[0] == 0.0);
+        assert(std::abs(efi.get_result()[3] - 7630650.068) < 0.001);
+        assert(std::abs(efi.get_result()[19] - -7822999.003) < 0.001);
+        assert(std::abs(efi.get_result()[20] - -7180495.225) < 0.001);
+        assert(std::abs(efi.get_result()[24] - -5227380.416) < 0.001);
+        assert(std::abs(efi.get_result()[25] - -2697304.674) < 0.001);
+        assert(std::abs(efi.get_result()[1720] - -8226876.372) < 0.001);
+        assert(std::abs(efi.get_result()[1712] - -19336452.513) < 0.001);
+        assert(std::abs(efi.get_result()[1707] - 12182529.448) < 0.001);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     test_groupby_edge();
@@ -2139,6 +2172,7 @@ int main(int, char *[]) {
     test_ProbabilityDistVisitor();
     test_PolicyLearningLossVisitor();
     test_LossFunctionVisitor();
+    test_EldersForceIndexVisitor();
 
     return (0);
 }

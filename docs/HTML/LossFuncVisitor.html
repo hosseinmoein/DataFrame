@@ -48,7 +48,7 @@ enum class loss_function_type : unsigned char  {
     mean_sqr_log_error = 4,    // L = &sum;[(log(1 + y<sub>i</sub>) - log(1 + y&#770;<sub>i</sub>))<sup>2</sup>] / N
 
     // y = Actual, P(y<sub>i</sub>) = Model probability prediction
-    cross_entropy = 5,  // L = -&sum;[y<ub>i</sub> * log(P(y<sub>i</sub>))] / N
+    cross_entropy = 5,         // L = -&sum;[y<ub>i</sub> * log(P(y<sub>i</sub>))] / N
 
     // y = Actual binary (0/1), P(y<sub>i</sub>) = Model probability prediction
     binary_cross_entropy = 6,  // L = &sum;[-(y<ub>i</sub> * log(P(y<sub>i</sub>))) + (1 - y<sub>i</sub>) * log(1 - P(y<sub>i</sub>))] / N

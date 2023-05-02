@@ -2128,6 +2128,39 @@ static void test_EldersForceIndexVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_EaseOfMovementVisitor()  {
+
+    std::cout << "\nTesting EaseOfMovementVisitor{  } ..." << std::endl;
+
+    typedef StdDataFrame64<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("data/SHORT_IBM.csv", io_format::csv2);
+
+        eom_v<double, std::string>  eom;
+
+        df.single_act_visit<double, double, double, long>
+            ("IBM_Low", "IBM_High", "IBM_Close", "IBM_Volume", eom);
+
+        assert(eom.get_result().size() == 1721);
+        assert(std::isnan(eom.get_result()[0]));
+        assert(std::isnan(eom.get_result()[12]));
+        assert(std::abs(eom.get_result()[14] - -0.9462) < 0.0001);
+        assert(std::abs(eom.get_result()[16] - -11.3211) < 0.0001);
+        assert(std::abs(eom.get_result()[25] - -29.6584) < 0.0001);
+        assert(std::abs(eom.get_result()[1720] - -36.4666) < 0.0001);
+        assert(std::abs(eom.get_result()[1712] - -12.0302) < 0.0001);
+        assert(std::abs(eom.get_result()[1707] - -1.0561) < 0.0001);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     test_groupby_edge();
@@ -2173,6 +2206,7 @@ int main(int, char *[]) {
     test_PolicyLearningLossVisitor();
     test_LossFunctionVisitor();
     test_EldersForceIndexVisitor();
+    test_EaseOfMovementVisitor();
 
     return (0);
 }

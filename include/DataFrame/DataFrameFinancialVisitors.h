@@ -5647,6 +5647,76 @@ private:
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 using efi_v = EldersForceIndexVisitor<T, I, A>;
 
+// ----------------------------------------------------------------------------
+
+template<typename T, typename I = unsigned long, std::size_t A = 0,
+         typename =
+             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+struct  EaseOfMovementVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <typename K, typename H, typename V>
+    inline void
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &low_begin, const H &low_end,
+                const H &high_begin, const H &high_end,
+                const H &close_begin, const H &close_end,
+                const V &volume_begin, const V &volume_end)  {
+
+        const size_type col_s = std::distance(close_begin, close_end);
+
+        assert((col_s == size_type(std::distance(low_begin, low_end))));
+        assert((col_s == size_type(std::distance(high_begin, high_end))));
+        assert((col_s == size_type(std::distance(volume_begin, volume_end))));
+        assert(roll_period_ < col_s);
+
+        result_type             result;
+        constexpr value_type    two = 2;
+
+        result.reserve(col_s);
+        result.push_back(std::numeric_limits<T>::quiet_NaN());
+        for (size_type i { 1 }; i < col_s; ++i)  {
+            const value_type    low = *(low_begin + i);
+            const value_type    high = *(high_begin + i);
+            const value_type    hl_range = high - low;
+            const value_type    distance =
+                ((high + low) / two) -
+                ((*(high_begin + (i - 1)) + *(low_begin + (i - 1))) / two);
+            const value_type    box_ratio =
+                (*(volume_begin + i) / vol_div_) / hl_range;
+
+            result.push_back(distance / box_ratio);
+        }
+
+        SimpleRollAdopter<MeanVisitor<T, I>, T, I, A>   savg
+            { MeanVisitor<T, I>(), roll_period_ } ;
+
+        savg.pre();
+        savg (idx_begin, idx_end, result.begin(), result.end());
+        savg.post();
+
+        result_ = std::move(savg.get_result());
+    }
+
+    DEFINE_PRE_POST
+    DEFINE_RESULT
+
+    explicit
+    EaseOfMovementVisitor(size_type roll_period = 14,
+                          value_type vol_divisor = 100000000)
+        : roll_period_(roll_period), vol_div_(vol_divisor)  {   }
+
+private:
+
+    result_type         result_ {  };
+    const size_type     roll_period_;
+    const value_type    vol_div_;
+};
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using eom_v = EaseOfMovementVisitor<T, I, A>;
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

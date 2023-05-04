@@ -347,6 +347,7 @@ DataFrame<I, H>::get_inner_index_idx_vector_(
                 joined_index_idx.emplace_back(
                     col_vec_lhs[lhs_current++].second,
                     col_vec_rhs[rhs_current].second);
+           else  //add this row to fix
             rhs_current += 1;
         }
     }
@@ -420,7 +421,8 @@ DataFrame<I, H>::get_left_index_idx_vector_(
                     *(col_vec_rhs[rhs_current].first))
                 joined_index_idx.emplace_back(col_vec_lhs[lhs_current++].second,
                                               col_vec_rhs[rhs_current].second);
-            rhs_current += 1;
+           else // add this row fix 
+             rhs_current += 1;
         }
     }
     return (joined_index_idx);
@@ -491,11 +493,12 @@ DataFrame<I, H>::get_right_index_idx_vector_(
                 joined_index_idx.emplace_back(
                     col_vec_lhs[lhs_current++].second,
                     col_vec_rhs[rhs_current].second);
-            else
+            else{
                 joined_index_idx.emplace_back(
                     std::numeric_limits<size_type>::max(),
                     col_vec_rhs[rhs_current].second);
             rhs_current += 1;
+            }
         }
     }
     return (joined_index_idx);
@@ -575,10 +578,12 @@ DataFrame<I, H>::get_left_right_index_idx_vector_(
                 joined_index_idx.emplace_back(col_vec_lhs[lhs_current++].second,
                                               col_vec_rhs[rhs_current].second);
             else
+            {  //add this row to fix
                 joined_index_idx.emplace_back(
                     std::numeric_limits<size_type>::max(),
                     col_vec_rhs[rhs_current].second);
-            rhs_current += 1;
+             rhs_current += 1;
+            }  //add this row to fix
         }
     }
     return (joined_index_idx);

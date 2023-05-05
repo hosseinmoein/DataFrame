@@ -42,7 +42,7 @@ For basic operations to start you off, see [Hello World](examples/hello_world.cc
 
 I have followed a few <B>principles in this library</B>:<BR>
 
-1.  Support any type either built-in or user defined without needing new code
+1.  [Support any type either built-in or user defined without needing new code](https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/any_type.html)
 2.  [Never chase pointers ala _linked lists_, _std::any_, _pointer to base_, ...](https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/pointers.html)
 3.  [Have all column data in contiguous memory space](https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/contiguous_memory.html)
 4.  [Never use more space than you need ala _unions_, _std::variant_, ...](https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/std_variant.html)

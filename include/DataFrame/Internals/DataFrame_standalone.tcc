@@ -114,7 +114,7 @@ _load_groupby_data_1_(
 
     dst_vec.reserve(max_count / 2 + 1);
     marker = 0;
-    for (std::size_t i = 0; i < max_count; ++i)  {
+    for (std::size_t i = 0; i < max_count; ++i) [[likely]]  {
         if (input_v[sort_v[i]] != input_v[sort_v[marker]])  {
             visitor.pre();
             for (std::size_t j = marker; j < i; ++j)
@@ -209,7 +209,7 @@ _load_groupby_data_2_(
 
     dst_vec.reserve(max_count / 2 + 1);
     marker = 0;
-    for (std::size_t i = 0; i < max_count; ++i)  {
+    for (std::size_t i = 0; i < max_count; ++i) [[likely]]  {
         if (input_v1[sort_v[i]] != input_v1[sort_v[marker]] ||
             input_v2[sort_v[i]] != input_v2[sort_v[marker]])  {
             visitor.pre();
@@ -318,7 +318,7 @@ _load_groupby_data_3_(
 
     dst_vec.reserve(max_count / 2 + 1);
     marker = 0;
-    for (std::size_t i = 0; i < max_count; ++i)  {
+    for (std::size_t i = 0; i < max_count; ++i) [[likely]]  {
         if (input_v1[sort_v[i]] != input_v1[sort_v[marker]] ||
             input_v2[sort_v[i]] != input_v2[sort_v[marker]] ||
             input_v3[sort_v[i]] != input_v3[sort_v[marker]])  {
@@ -361,7 +361,7 @@ _bucketize_core_(DV &dst_vec,
         std::size_t marker { 0 };
 
         visitor.pre();
-        for (std::size_t i = 0; i < src_s; ++i)  {
+        for (std::size_t i = 0; i < src_s; ++i) [[likely]]  {
             if (src_idx[i] - src_idx[marker] >= src_type(value))  {
                 visitor.post();
                 dst_vec.push_back(visitor.get_result());
@@ -374,7 +374,7 @@ _bucketize_core_(DV &dst_vec,
     else if (bt == bucket_type::by_count)  {
         if (src_s < src_type(value))  return;
 
-        for (std::size_t i = 0; (i + value) < src_s; i += value)  {
+        for (std::size_t i = 0; (i + value) < src_s; i += value) [[likely]]  {
             visitor.pre();
             for (std::size_t j = 0; j < std::size_t(value); ++j)
                 visitor(src_idx[i + j], src_vec[i + j]);
@@ -441,7 +441,7 @@ _get_token_from_file_ (std::istream &file,
     char    c;
     int     count = 0;
 
-    while (file.get (c))
+    while (file.get (c)) [[likely]]
         if (c == delim)  {
             break;
         }
@@ -466,7 +466,7 @@ _write_csv_df_header_base_(S &o, const char *col_name, std::size_t col_size)  {
 
     if (typeid(T) == typeid(float))
         o << "<float>";
-    else if (typeid(T) == typeid(double))
+    else if (typeid(T) == typeid(double)) [[likely]]
         o << "<double>";
     else if (typeid(T) == typeid(long double))
         o << "<longdouble>";
@@ -529,7 +529,7 @@ _write_json_df_header_(S &o, const char *col_name, std::size_t col_size)  {
 
     if (typeid(T) == typeid(float))
         o << "\"T\":\"float\",";
-    else if (typeid(T) == typeid(double))
+    else if (typeid(T) == typeid(double)) [[likely]]
         o << "\"T\":\"double\",";
     else if (typeid(T) == typeid(long double))
         o << "\"T\":\"longdouble\",";
@@ -631,7 +631,7 @@ struct  TupleHash  {
 template<typename I, typename O, typename PRE>
 inline static O _remove_copy_if_(I first, I last, O d_first, PRE predicate)  {
 
-    for (I i = first; i != last; ++i)
+    for (I i = first; i != last; ++i) [[likely]]
         if (! predicate (std::distance(first, i)))
             *d_first++ = *i;
 
@@ -646,7 +646,7 @@ _sort_by_sorted_index_(T &to_be_sorted, V &sorting_idxs, size_t idx_s)  {
 
     if (idx_s > 0)  {
         idx_s -= 1;
-        for (size_t i = 0; i < idx_s; ++i)  {
+        for (size_t i = 0; i < idx_s; ++i) [[likely]]  {
             // while the element i is not yet in place
             //
             while (sorting_idxs[i] != sorting_idxs[sorting_idxs[i]])  {

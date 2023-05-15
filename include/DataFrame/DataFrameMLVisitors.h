@@ -54,7 +54,7 @@ namespace hmdf
 template<typename T, typename I = unsigned long,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct SLRegressionVisitor  {
+struct  SLRegressionVisitor  {
 
 public:
 
@@ -63,7 +63,7 @@ public:
     inline void operator() (const index_type &idx,
                             const value_type &x, const value_type &y)  {
 
-        if (skip_nan_ && (is_nan__(x) || is_nan__(y)))  return;
+        if (skip_nan_ && (is_nan__(x) || is_nan__(y))) [[unlikely]]  return;
 
         s_xy_ += (x_stats_.get_mean() - x) *
                  (y_stats_.get_mean() - y) *
@@ -84,7 +84,7 @@ public:
     }
     inline void post ()  {  }
 
-    inline size_type get_count () const { return (n_); }
+    inline size_type get_count () const  { return (n_); }
     inline result_type get_slope () const  {
 
         // Sum of the squares of the difference between each x and
@@ -153,7 +153,7 @@ private:
         std::uniform_int_distribution<size_type>    rd_gen(0, col_s - 1);
 
         // Pick centroids as random points from the col.
-        for (auto &k_mean : result_)  {
+        for (auto &k_mean : result_) [[likely]]  {
             const value_type    &value = *(column_begin + rd_gen(gen));
 
             if (is_nan__(value))  continue;
@@ -164,12 +164,12 @@ private:
                     typename allocator_declare<size_type, A>::type>
                         assignments(col_s, 0);
 
-        for (size_type iter = 0; iter < iter_num_; ++iter) {
+        for (size_type iter = 0; iter < iter_num_; ++iter) [[likely]]  {
             result_type             new_means { value_type() };
             std::array<double, K>   counts { 0.0 };
 
             // Find assignments.
-            for (size_type point = 0; point < col_s; ++point) {
+            for (size_type point = 0; point < col_s; ++point) [[likely]]  {
                 const value_type    &value = *(column_begin + point);
 
                 if (is_nan__(value))  continue;
@@ -177,10 +177,11 @@ private:
                 double      best_distance = std::numeric_limits<double>::max();
                 size_type   best_cluster = 0;
 
-                for (size_type cluster = 0; cluster < K; ++cluster) {
+                for (size_type cluster = 0; cluster < K;
+                     ++cluster) [[likely]]  {
                     const double    distance = dfunc_(value, result_[cluster]);
 
-                    if (distance < best_distance) {
+                    if (distance < best_distance)  {
                         best_distance = distance;
                         best_cluster = cluster;
                     }
@@ -199,7 +200,7 @@ private:
 
             // Divide sums by counts to get new centroids.
             //
-            for (size_type cluster = 0; cluster < K; ++cluster) {
+            for (size_type cluster = 0; cluster < K; ++cluster) [[likely]]  {
                 // Turn 0/0 into 0/1 to avoid zero division.
                 const double        count =
                     std::max<double>(1.0, counts[cluster]);
@@ -224,12 +225,12 @@ private:
 
         cluster_type    clusters;
 
-        for (size_type i = 0; i < K; ++i)  {
+        for (size_type i = 0; i < K; ++i) [[likely]]  {
             clusters[i].reserve(col_s / K + 2);
             clusters[i].push_back(const_cast<value_type *>(&(result_[i])));
         }
 
-        for (size_type j = 0; j < col_s; ++j)  {
+        for (size_type j = 0; j < col_s; ++j) [[likely]]  {
             const value_type    &value = *(column_begin + j);
 
             if (is_nan__(value))  continue;
@@ -316,10 +317,10 @@ private:
         double          min_dist = std::numeric_limits<double>::max();
 
         // Compute similarity between distinct data points i and j
-        for (size_type i = 0; i < csize - 1; ++i)  {
+        for (size_type i = 0; i < csize - 1; ++i) [[likely]]  {
             const value_type    &i_val = *(column_begin + i);
 
-            for (size_type j = i + 1; j < csize; ++j)  {
+            for (size_type j = i + 1; j < csize; ++j)  [[likely]] {
                 const double    dist = -dfunc_(i_val, *(column_begin + j));
 
                 simil[(i * csize) + j - ((i * (i + 1)) >> 1)] = dist;
@@ -343,14 +344,14 @@ private:
         avail.resize(csize * csize, 0.0);
         respon.resize(csize * csize, 0.0);
 
-        for (size_type m = 0; m < iter_num_; ++m)  {
+        for (size_type m = 0; m < iter_num_; ++m) [[likely]]  {
             // Update responsibility
-            for (size_type i = 0; i < csize; ++i)  {
-                for (size_type j = 0; j < csize; ++j)  {
+            for (size_type i = 0; i < csize; ++i) [[likely]]  {
+                for (size_type j = 0; j < csize; ++j) [[likely]]  {
                     double  max_diff = -std::numeric_limits<double>::max();
 
                     for (size_type jj = 0; jj < csize; ++jj)  {
-                        if (jj ^ j)   {
+                        if (jj ^ j) [[likely]]   {
                             const double    value =
                                 simil[(i * csize) + jj - ((i * (i + 1)) >> 1)] +
                                 avail[jj * csize + i];
@@ -370,20 +371,20 @@ private:
 
             // Update availability
             // Do diagonals first
-            for (size_type i = 0; i < csize; ++i)  {
+            for (size_type i = 0; i < csize; ++i) [[likely]]  {
                 const size_type s1 = i * csize;
                 double          sum = 0.0;
 
-                for (size_type ii = 0; ii < csize; ++ii)
+                for (size_type ii = 0; ii < csize; ++ii) [[likely]]
                     if (ii ^ i)
                         sum += std::max(0.0, respon[s1 + ii]);
 
                 avail[s1 + i] =
                     (1.0 - dfactor_) * sum + dfactor_ * avail[s1 + i];
             }
-            for (size_type i = 0; i < csize; ++i)  {
-                for (size_type j = 0; j < csize; ++j)  {
-                    if (i ^ j)  {  // Not equal
+            for (size_type i = 0; i < csize; ++i) [[likely]]  {
+                for (size_type j = 0; j < csize; ++j)  [[likely]] {
+                    if (i ^ j) [[likely]]  {  // Not equal
                         const size_type s1 = j * csize;
                         double          sum = 0.0;
                         const size_type max_i_j = std::max(i, j);
@@ -424,7 +425,7 @@ public:
         get_avail_and_respon(simil, col_s, avail, respon);
 
         result_.reserve(std::min(col_s / 100, size_type(16)));
-        for (size_type i = 0; i < col_s; ++i)  {
+        for (size_type i = 0; i < col_s; ++i) [[likely]]  {
             if (respon[i * col_s + i] + avail[i * col_s + i] > 0.0)
                 result_.push_back(
                     const_cast<value_type *>(&*(column_begin + i)));
@@ -449,7 +450,7 @@ public:
             for (size_type i = 0; i < centers_size; ++i)
                 clusters[i].reserve(col_s / centers_size);
 
-            for (size_type j = 0; j < col_s; ++j)  {
+            for (size_type j = 0; j < col_s; ++j) [[likely]]  {
                 double              min_dist =
                     std::numeric_limits<double>::max();
                 size_type           min_idx;
@@ -477,7 +478,7 @@ public:
     AffinityPropVisitor(
         size_type num_of_iter,
         distance_func f =
-            [](const value_type &x, const value_type &y) -> double {
+            [](const value_type &x, const value_type &y) -> double  {
                 return ((x - y) * (x - y));
             },
         double damping_factor = 0.9)
@@ -489,7 +490,7 @@ public:
 template<typename T, typename I = unsigned long, std::size_t A = 0,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct FastFourierTransVisitor {
+struct  FastFourierTransVisitor  {
 
 public:
 
@@ -522,27 +523,27 @@ private:
 
         std::transform(xvec.begin(), xvec.end(),
                        xvec.begin(),
-                       [col_s] (const cplx_t &v) -> cplx_t {
+                       [col_s] (const cplx_t &v) -> cplx_t  {
                            return (v / col_s);
                        });
         return (xvec);
     }
 
-    static inline size_type reverse_bits_(size_type val, size_type width) {
+    static inline size_type reverse_bits_(size_type val, size_type width)  {
 
         size_type   result { 0 };
 
-        for (size_type i = 0; i < width; i++, val >>= 1)
+        for (size_type i = 0; i < width; i++, val >>= 1) [[likely]]
             result = (result << 1) | (val & 1U);
         return (result);
     }
 
-    static inline void fft_radix2_(result_type &column, bool reverse) {
+    static inline void fft_radix2_(result_type &column, bool reverse)  {
 
         const size_type col_s { column.size() };
         size_type       levels { 0 };  // Compute levels = floor(log2(col_s))
 
-        for (size_type i = col_s; i > 1; i >>= 1)
+        for (size_type i = col_s; i > 1; i >>= 1) [[likely]]
             levels += 1;
 
         // Trigonometric table
@@ -552,13 +553,13 @@ private:
             { (reverse ? real_t(2) : -real_t(2)) * real_t(M_PI) };
         result_type     exp_table (half_col_s);
 
-        for (size_type i = 0; i < half_col_s; i++)
+        for (size_type i = 0; i < half_col_s; i++) [[likely]]
             exp_table[i] =
                 std::polar(real_t(1), two_pi * real_t(i) / real_t(col_s));
 
         // Bit-reversed addressing permutation
         //
-        for (size_type i = 0; i < col_s; i++) {
+        for (size_type i = 0; i < col_s; i++) [[likely]]  {
             const size_type rb { reverse_bits_(i, levels) };
 
             if (rb > i)  std::swap(column[i], column[rb]);
@@ -566,13 +567,13 @@ private:
 
         // Cooley-Tukey decimation-in-time radix-2 FFT
         //
-        for (size_type s = 2; s <= col_s; s *= 2) {
+        for (size_type s = 2; s <= col_s; s *= 2) [[likely]]  {
             const size_type half_size { s / 2 };
             const size_type table_step { col_s / s };
 
-            for (size_type i = 0; i < col_s; i += s) {
+            for (size_type i = 0; i < col_s; i += s) [[likely]]  {
                 for (size_type j = i, k = 0; j < i + half_size;
-                     j++, k += table_step) {
+                     j++, k += table_step) [[likely]]  {
                     const cplx_t    temp
                         { column[j + half_size] * exp_table[k] };
 
@@ -583,7 +584,7 @@ private:
         }
     }
 
-    static inline void fft_bluestein_(result_type &column, bool reverse) {
+    static inline void fft_bluestein_(result_type &column, bool reverse)  {
 
         const size_type col_s { column.size() };
 
@@ -593,7 +594,7 @@ private:
         const size_type col_s_2 { col_s * 2 };
         const real_t    pi { reverse ? real_t(M_PI) : -real_t(M_PI) };
 
-        for (size_type i = 0; i < col_s; i++) {
+        for (size_type i = 0; i < col_s; i++) [[likely]]  {
             const real_t    sq = real_t((i * i) % col_s_2);
 
             exp_table[i] = std::polar(real_t(1), pi * sq / real_t(col_s));
@@ -609,13 +610,13 @@ private:
         //
         result_type xvec (m, cplx_t(0, 0));
 
-        for (size_type i = 0; i < col_s; i++)
+        for (size_type i = 0; i < col_s; i++) [[likely]]
             xvec[i] = column[i] * exp_table[i];
 
         result_type yvec(m, cplx_t(0, 0));
 
         yvec[0] = exp_table[0];
-        for (size_type i = 1; i < col_s; i++)
+        for (size_type i = 1; i < col_s; i++) [[likely]]
             yvec[i] = yvec[m - i] = std::conj(exp_table[i]);
 
         // Convolution
@@ -629,7 +630,7 @@ private:
                        std::multiplies<cplx_t>());
     }
 
-    static inline void transform_(result_type &column, bool reverse) {
+    static inline void transform_(result_type &column, bool reverse)  {
 
         const size_type col_s { column.size() };
 
@@ -647,7 +648,7 @@ private:
         //
         std::transform(column.begin(), column.end(),
                        column.begin(),
-                       [] (const cplx_t &v) -> cplx_t {
+                       [] (const cplx_t &v) -> cplx_t  {
                            return (std::conj(v));
                        });
 
@@ -664,7 +665,7 @@ private:
         //
         std::transform(column.begin(), column.end(),
                        column.begin(),
-                       [] (const cplx_t &v) -> cplx_t {
+                       [] (const cplx_t &v) -> cplx_t  {
                            return (std::conj(v));
                        });
 
@@ -672,7 +673,7 @@ private:
         //
         std::transform(column.begin(), column.end(),
                        column.begin(),
-                       [col_s] (const cplx_t &v) -> cplx_t {
+                       [col_s] (const cplx_t &v) -> cplx_t  {
                            return (v / real_t(col_s));
                        });
     }
@@ -690,12 +691,12 @@ public:
         if constexpr (is_complex<T>::value)  {
             std::transform(column_begin, column_end,
                            result.begin(),
-                           [] (T v) -> cplx_t { return (v); });
+                           [] (T v) -> cplx_t  { return (v); });
         }
         else  {
             std::transform(column_begin, column_end,
                            result.begin(),
-                           [] (T v) -> cplx_t {
+                           [] (T v) -> cplx_t  {
                                return (std::complex<T>(v, 0));
                            });
         }
@@ -727,7 +728,7 @@ public:
 
         if (magnitude_.empty())  {
             magnitude_.reserve(result_.size());
-            for (const auto &citer : result_)
+            for (const auto &citer : result_) [[likely]]
                 magnitude_.push_back(std::sqrt(std::norm(citer)));
         }
         return (magnitude_);
@@ -743,7 +744,7 @@ public:
 
         if (angle_.empty())  {
             angle_.reserve(result_.size());
-            for (const auto &citer : result_)
+            for (const auto &citer : result_) [[likely]]
                 angle_.push_back(std::arg(citer));
         }
         return (angle_);
@@ -790,7 +791,7 @@ struct  EntropyVisitor  {
 
         result_type result = std::move(sum_v.get_result());
 
-        for (size_type i = 0; i < col_s; ++i)  {
+        for (size_type i = 0; i < col_s; ++i) [[likely]]  {
             const value_type    val = *(column_begin + i) / result[i];
 
             result[i] = -val * std::log(val) / std::log(log_base_);
@@ -801,9 +802,9 @@ struct  EntropyVisitor  {
                result.begin() + (roll_count_ - 1), result.end());
         sum_v.post();
 
-        for (size_type i = 0; i < roll_count_ - 1; ++i)
+        for (size_type i = 0; i < roll_count_ - 1; ++i) [[likely]]
             result[i] = get_nan<value_type>();
-        for (size_type i = 0; i < sum_v.get_result().size(); ++i)
+        for (size_type i = 0; i < sum_v.get_result().size(); ++i) [[likely]]
             result[i + roll_count_ - 1] = sum_v.get_result()[i];
 
         result_.swap(result);
@@ -847,7 +848,7 @@ struct  ImpurityVisitor  {
 
         map_t   table (roll_count_ / 2 + 1);
 
-        for (size_type i = 0; i < roll_count_; ++i)  {
+        for (size_type i = 0; i < roll_count_; ++i) [[likely]]  {
             auto    ret = table.insert(std::pair(*(column_begin + i), 0));
 
             ret.first->second += 1.0;
@@ -856,7 +857,7 @@ struct  ImpurityVisitor  {
         result_type result;
 
         result.reserve(col_s);
-        for (size_type i = 1; i < col_s; ++i)  {
+        for (size_type i = 1; i < col_s; ++i) [[likely]]  {
             double  sum = 0;
 
             if (imt_ == impurity_type::gini_index)  {
@@ -923,7 +924,7 @@ using impu_v = ImpurityVisitor<T, I, A>;
 template<typename T, typename I = unsigned long, std::size_t A = 0,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct SigmoidVisitor {
+struct  SigmoidVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
@@ -1022,7 +1023,7 @@ using sigm_v = SigmoidVisitor<T, I, A>;
 template<typename T, typename I = unsigned long, std::size_t A = 0,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct RectifyVisitor {
+struct  RectifyVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
@@ -1178,7 +1179,7 @@ using plloss_v = PolicyLearningLossVisitor<T, I, A>;
 template<typename T, typename I = unsigned long,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct LossFunctionVisitor  {
+struct  LossFunctionVisitor  {
 
 public:
 

@@ -264,8 +264,8 @@ replace_vector_vals_(V &data_vec,
 
     const std::size_t   vec_s = data_vec.size();
 
-    for (std::size_t i = 0; i < vcnt; ++i)  {
-        for (std::size_t j = 0; j < vec_s; ++j)  {
+    for (std::size_t i = 0; i < vcnt; ++i) [[likely]]  {
+        for (std::size_t j = 0; j < vec_s; ++j) [[likely]]  {
             if (limit >= 0 && count >= static_cast<std::size_t>(limit))
                 return;
             if (old_values[i] == data_vec[j])  {
@@ -288,7 +288,7 @@ col_vector_push_back_func_(V &vec,
     char    value[8192];
     char    c = 0;
 
-    while (file.get(c)) {
+    while (file.get(c)) [[likely]] {
         if (file_type == io_format::csv && c == '\n')  break;
         else if (file_type == io_format::json && c == ']')  break;
         file.unget();
@@ -312,7 +312,7 @@ struct  ColVectorPushBack_  {
         char    value[8192];
         char    c = 0;
 
-        while (file.get(c)) {
+        while (file.get(c)) [[likely]] {
             if (file_type == io_format::csv && c == '\n')  break;
             else if (file_type == io_format::json && c == ']')  break;
             file.unget();
@@ -337,7 +337,7 @@ struct  ColVectorPushBack_<const char *, StlVecType<std::string>, Dummy>  {
         char    value[8192];
         char    c = 0;
 
-        while (file.get(c)) {
+        while (file.get(c)) [[likely]] {
             if (file_type == io_format::csv && c == '\n')  break;
             else if (file_type == io_format::json && c == ']')  break;
             file.unget();
@@ -362,7 +362,7 @@ struct  ColVectorPushBack_<DateTime, StlVecType<DateTime>, Dummy>  {
         char    value[1024];
         char    c = 0;
 
-        while (file.get(c)) {
+        while (file.get(c)) [[likely]] {
             if (file_type == io_format::csv && c == '\n')  break;
             else if (file_type == io_format::json && c == ']')  break;
             file.unget();
@@ -399,7 +399,7 @@ json_str_col_vector_push_back_(StlVecType<std::string> &vec,
             break;
         }
 
-    while (file.get(c)) {
+    while (file.get(c)) [[likely]] {
         if (c == ']')  break;
         file.unget();
 

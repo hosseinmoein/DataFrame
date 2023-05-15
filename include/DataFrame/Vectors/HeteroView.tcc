@@ -78,7 +78,7 @@ VectorView<T, A> &HeteroView<A>::get_vector()  {
 
     auto    iter = views_<T>.find (this);
 
-    if (iter == views_<T>.end())
+    if (iter == views_<T>.end()) [[unlikely]]
         throw std::runtime_error("HeteroView::get_vector(): ERROR: "
                                  "Cannot find view");
 
@@ -102,7 +102,7 @@ void HeteroView<A>::visit_impl_help_ (T &visitor)  {
 
     auto    iter = views_<U>.find (this);
 
-    if (iter != views_<U>.end())
+    if (iter != views_<U>.end()) [[likely]]
         for (auto &&element : iter->second)
             visitor(element);
 }
@@ -115,7 +115,7 @@ void HeteroView<A>::visit_impl_help_ (T &visitor) const  {
 
     const auto  citer = views_<U>.find (this);
 
-    if (citer != views_<U>.end())
+    if (citer != views_<U>.end()) [[likely]]
         for (auto &&element : citer->second)
             visitor(element);
 }
@@ -128,7 +128,7 @@ void HeteroView<A>::sort_impl_help_ (T &functor)  {
 
     auto    iter = views_<U>.find (this);
 
-    if (iter != views_<U>.end())
+    if (iter != views_<U>.end()) [[likely]]
         std::sort (iter->second.begin(), iter->second.end(), functor);
 }
 
@@ -140,7 +140,7 @@ void HeteroView<A>::change_impl_help_ (T &functor)  {
 
     auto    iter = views_<U>.find (this);
 
-    if (iter != views_<U>.end())
+    if (iter != views_<U>.end()) [[likely]]
         functor(iter->second);
 }
 
@@ -152,7 +152,7 @@ void HeteroView<A>::change_impl_help_ (T &functor) const  {
 
     const auto  citer = views_<U>.find (this);
 
-    if (citer != views_<U>.end())
+    if (citer != views_<U>.end()) [[likely]]
         functor(citer->second);
 }
 
@@ -331,7 +331,7 @@ HeteroView<A>::HeteroView (HeteroView &&that)  { *this = that; }
 template<std::size_t A>
 HeteroView<A> &HeteroView<A>::operator= (const HeteroView &rhs)  {
 
-    if (&rhs != this)  {
+    if (&rhs != this) [[likely]]  {
         clear();
         clear_function_ = rhs.clear_function_;
         copy_function_ = rhs.copy_function_;
@@ -348,7 +348,7 @@ HeteroView<A> &HeteroView<A>::operator= (const HeteroView &rhs)  {
 template<std::size_t A>
 HeteroView<A> &HeteroView<A>::operator= (HeteroView &&rhs)  {
 
-    if (&rhs != this)  {
+    if (&rhs != this) [[likely]]  {
         clear();
         clear_function_ = std::move(rhs.clear_function_);
         copy_function_ = std::move(rhs.copy_function_);

@@ -119,14 +119,14 @@ namespace hmdf
 // ----------------------------------------------------------------------------
 
 template<typename T, typename I = unsigned long>
-struct LastVisitor {
+struct  LastVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_2
 
     inline void
     operator() (const index_type &, const value_type &val)  {
 
-        if (! skip_nan_ || ! is_nan__(val))  result_ = val;
+        if (! skip_nan_ || ! is_nan__(val)) [[likely]]  result_ = val;
     }
     PASS_DATA_ONE_BY_ONE
 
@@ -145,7 +145,7 @@ private:
 // ----------------------------------------------------------------------------
 
 template<typename T, typename I = unsigned long>
-struct FirstVisitor {
+struct  FirstVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_2
 
@@ -177,14 +177,14 @@ private:
 // ----------------------------------------------------------------------------
 
 template<typename T, typename I = unsigned long>
-struct CountVisitor {
+struct  CountVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES
     using result_type = std::size_t;
 
     inline void operator() (const index_type &, const value_type &val)  {
 
-        if (! skip_nan_ || ! is_nan__(val))  result_ += 1;
+        if (! skip_nan_ || ! is_nan__(val)) [[likely]]  result_ += 1;
     }
     PASS_DATA_ONE_BY_ONE
 
@@ -203,7 +203,7 @@ private:
 // ----------------------------------------------------------------------------
 
 template<typename T, typename I = unsigned long>
-struct SumVisitor {
+struct  SumVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_2
 
@@ -232,7 +232,7 @@ private:
 template<typename T, typename I = unsigned long,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct MeanBase {
+struct  MeanBase  {
 
     DEFINE_VISIT_BASIC_TYPES_2
 
@@ -254,7 +254,7 @@ protected:
 // ----------------------------------------------------------------------------
 
 template<typename T, typename I = unsigned long>
-struct MeanVisitor : public MeanBase<T, I>  {
+struct  MeanVisitor : public MeanBase<T, I>  {
 
     using BaseClass = MeanBase<T, I>;
 
@@ -283,7 +283,7 @@ struct MeanVisitor : public MeanBase<T, I>  {
 template<typename T, typename I = unsigned long,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct StableMeanVisitor  {
+struct  StableMeanVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_2
 
@@ -314,7 +314,7 @@ private:
 // ----------------------------------------------------------------------------
 
 template<typename T, typename I = unsigned long>
-struct WeightedMeanVisitor : public MeanBase<T, I>  {
+struct  WeightedMeanVisitor : public MeanBase<T, I>  {
 
     using BaseClass = MeanBase<T, I>;
 
@@ -328,7 +328,7 @@ struct WeightedMeanVisitor : public MeanBase<T, I>  {
     PASS_DATA_ONE_BY_ONE
 
     inline void
-    post() {
+    post()  {
 
         BaseClass::sum_.post();
         BaseClass::mean_ =
@@ -368,7 +368,7 @@ struct GeometricMeanVisitor : public MeanBase<T, I>  {
 // ----------------------------------------------------------------------------
 
 template<typename T, typename I = unsigned long>
-struct HarmonicMeanVisitor : public MeanBase<T, I>  {
+struct  HarmonicMeanVisitor : public MeanBase<T, I>  {
 
     using BaseClass = MeanBase<T, I>;
 
@@ -397,7 +397,7 @@ private:
 // ----------------------------------------------------------------------------
 
 template<typename T, typename I = unsigned long>
-struct QuadraticMeanVisitor : public MeanBase<T, I>  {
+struct  QuadraticMeanVisitor : public MeanBase<T, I>  {
 
     using BaseClass = MeanBase<T, I>;
 
@@ -410,7 +410,7 @@ struct QuadraticMeanVisitor : public MeanBase<T, I>  {
     }
     PASS_DATA_ONE_BY_ONE
 
-    inline void post() {
+    inline void post()  {
 
         BaseClass::sum_.post();
         BaseClass::mean_ =
@@ -425,7 +425,7 @@ struct QuadraticMeanVisitor : public MeanBase<T, I>  {
 template<typename T, typename I = unsigned long,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct ProdVisitor {
+struct  ProdVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_2
 
@@ -452,7 +452,7 @@ private:
 // ----------------------------------------------------------------------------
 
 template<typename T, typename I = unsigned long, typename Cmp = std::less<T>>
-struct ExtremumVisitor {
+struct  ExtremumVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_2
 
@@ -461,7 +461,7 @@ struct ExtremumVisitor {
     inline void operator() (const index_type &idx, const value_type &val)  {
 
         counter_ += 1;
-        if (is_nan__(val))  {
+        if (is_nan__(val)) [[unlikely]]  {
             if (skip_nan_)  return;
             else  {
                 extremum_ = std::numeric_limits<value_type>::quiet_NaN();
@@ -469,7 +469,7 @@ struct ExtremumVisitor {
             }
         }
 
-        if (cmp_(extremum_, val) || is_first) {
+        if (cmp_(extremum_, val) || is_first)  {
             extremum_ = val;
             index_ = idx;
             pos_ = counter_;
@@ -515,7 +515,7 @@ using MinVisitor = ExtremumVisitor<T, I, std::greater<T>>;
 //
 template<std::size_t N, typename T, typename I = unsigned long,
          typename Cmp = std::less<T>>
-struct  NExtremumVisitor {
+struct  NExtremumVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES
 
@@ -590,14 +590,15 @@ using NSmallestVisitor = NExtremumVisitor<N, T, I, std::greater<T>>;
 template<typename T, typename I = unsigned long,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct CovVisitor {
+struct  CovVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_2
 
     inline void operator() (const index_type &,
                             const value_type &val1, const value_type &val2)  {
 
-        if (skip_nan_ && (is_nan__(val1) || is_nan__(val2)))  return;
+        if (skip_nan_ && (is_nan__(val1) || is_nan__(val2))) [[unlikely]]
+            return;
 
         total1_ += val1;
         total2_ += val2;
@@ -633,7 +634,7 @@ struct CovVisitor {
     inline size_type get_count() const  { return (cnt_); }
 
     explicit CovVisitor (bool biased = false, bool skipnan = true)
-        : b_ (biased ? 0 : 1), skip_nan_(skipnan) {  }
+        : b_ (biased ? 0 : 1), skip_nan_(skipnan)  {  }
 
 private:
 
@@ -653,7 +654,7 @@ private:
 template<typename T, typename I = unsigned long,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct VarVisitor  {
+struct  VarVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_2
 
@@ -680,7 +681,7 @@ private:
 template<typename T, typename I = unsigned long,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct BetaVisitor  {
+struct  BetaVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_2
 
@@ -718,7 +719,7 @@ private:
 template<typename T, typename I = unsigned long,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct StdVisitor   {
+struct  StdVisitor   {
 
     DEFINE_VISIT_BASIC_TYPES_2
 
@@ -748,7 +749,7 @@ private:
 template<typename T, typename I = unsigned long,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct SEMVisitor   {
+struct  SEMVisitor   {
 
     DEFINE_VISIT_BASIC_TYPES_2
 
@@ -783,7 +784,7 @@ using sem_v = SEMVisitor<T, I>;
 template<typename T, typename I = unsigned long,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct TrackingErrorVisitor {
+struct  TrackingErrorVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_2
 
@@ -798,7 +799,7 @@ struct TrackingErrorVisitor {
     inline void post ()  { std_.post();  }
     inline result_type get_result () const  { return (std_.get_result()); }
 
-    explicit TrackingErrorVisitor (bool biased = false) : std_ (biased) {  }
+    explicit TrackingErrorVisitor (bool biased = false) : std_ (biased)  {  }
 
 private:
 
@@ -813,7 +814,7 @@ using te_v = TrackingErrorVisitor<T, I>;
 template<typename T, typename I = unsigned long,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct CorrVisitor  {
+struct  CorrVisitor  {
 
 public:
 
@@ -848,7 +849,7 @@ private:
 template<typename T, typename I = unsigned long,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct DotProdVisitor  {
+struct  DotProdVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_2
 
@@ -871,7 +872,7 @@ private:
 // ----------------------------------------------------------------------------
 
 template<typename T, typename I = unsigned long, typename Cmp = std::less<T>>
-struct ExtremumSubArrayVisitor  {
+struct  ExtremumSubArrayVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_2
 
@@ -960,7 +961,7 @@ template<std::size_t N, typename T,
          typename I = unsigned long,
          typename Cmp = std::less<T>,
          std::size_t A = 0>
-struct NExtremumSubArrayVisitor  {
+struct  NExtremumSubArrayVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES
 
@@ -1064,9 +1065,9 @@ public:
         assert(roll_count_ > 0 and roll_count_ <= col_s);
 
         result_.reserve(col_s);
-        for (size_type i = 0; i < roll_count_ - 1 && i < col_s; ++i)
+        for (size_type i = 0; i < roll_count_ - 1 && i < col_s; ++i) [[likely]]
             result_.push_back(std::numeric_limits<f_result_type>::quiet_NaN());
-        for (size_type i = 0; i < col_s; ++i)  {
+        for (size_type i = 0; i < col_s; ++i) [[likely]]  {
             if (i + roll_count_ <= col_s)  {
                 visitor_.pre();
                 visitor_(idx_begin + i, idx_begin + (i + roll_count_),
@@ -1120,7 +1121,7 @@ public:
         GET_COL_SIZE
         assert(period_ > 0 and period_ < col_s);
 
-        for (size_type i = 0; i < col_s; i += period_)
+        for (size_type i = 0; i < col_s; i += period_) [[likely]]
             visitor_(idx_begin[i], column_begin[i]);
     }
 
@@ -1169,13 +1170,14 @@ public:
 
         std::size_t rc = init_roll_count_;
 
-        for (std::size_t i = 0; i < rc - 1 && i < col_s; ++i)
+        for (std::size_t i = 0; i < rc - 1 && i < col_s; ++i) [[likely]]
             result_.push_back(std::numeric_limits<f_result_type>::quiet_NaN());
-        for (std::size_t i = 0; i < col_s; ++i, rc += increment_count_)  {
+        for (std::size_t i = 0; i < col_s;
+             ++i, rc += increment_count_) [[likely]]  {
             std::size_t r = 0;
 
             visitor_.pre();
-            for (std::size_t j = i; r < rc && j < col_s; ++j, ++r)
+            for (std::size_t j = i; r < rc && j < col_s; ++j, ++r) [[likely]]
                 visitor_(*(idx_begin + j), *(column_begin + j));
             visitor_.post();
             if (r == rc)
@@ -1207,7 +1209,7 @@ private:
 template<typename T, typename I = unsigned long,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct StatsVisitor  {
+struct  StatsVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_2
 
@@ -1240,7 +1242,7 @@ struct StatsVisitor  {
     }
     inline void post ()  {  }
 
-    inline size_type get_count () const { return (n_); }
+    inline size_type get_count () const  { return (n_); }
     inline result_type get_mean () const  { return (m1_); }
     inline result_type get_variance () const  {
 
@@ -1277,7 +1279,7 @@ private:
 template<typename T, typename I = unsigned long,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct TTestVisitor  {
+struct  TTestVisitor  {
 
 public:
 
@@ -1359,7 +1361,7 @@ private:
 //
 
 template<typename T, typename I = unsigned long, std::size_t A = 0>
-struct CumSumVisitor {
+struct  CumSumVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
@@ -1374,10 +1376,10 @@ struct CumSumVisitor {
         result_type result;
 
         result.reserve(col_s);
-        for (size_type i = 0; i < col_s; ++i)  {
+        for (size_type i = 0; i < col_s; ++i) [[likely]]  {
             const value_type    &value = *(column_begin + i);
 
-            if (! skip_nan_ || ! is_nan__(value))  {
+            if (! skip_nan_ || ! is_nan__(value)) [[likely]]  {
                 running_sum += value;
                 result.push_back(running_sum);
             }
@@ -1401,7 +1403,7 @@ private:
 // ----------------------------------------------------------------------------
 
 template<typename T, typename I = unsigned long, std::size_t A = 0>
-struct CumProdVisitor {
+struct  CumProdVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
@@ -1416,10 +1418,10 @@ struct CumProdVisitor {
         result_type result;
 
         result.reserve(col_s);
-        for (size_type i = 0; i < col_s; ++i)  {
+        for (size_type i = 0; i < col_s; ++i) [[likely]]  {
             const value_type    &value = *(column_begin + i);
 
-            if (! skip_nan_ || ! is_nan__(value))  {
+            if (! skip_nan_ || ! is_nan__(value)) [[likely]]  {
                 running_prod *= value;
                 result.push_back(running_prod);
             }
@@ -1444,7 +1446,7 @@ private:
 
 template<typename T, typename I = unsigned long,
          typename Cmp = std::less<T>, std::size_t A = 0>
-struct CumExtremumVisitor {
+struct  CumExtremumVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
@@ -1463,11 +1465,11 @@ struct CumExtremumVisitor {
         result_type result;
 
         result.reserve(col_s);
-        for (size_type i = 0; i < col_s; ++i)  {
+        for (size_type i = 0; i < col_s; ++i) [[likely]]  {
             const value_type    &value = *(column_begin + i);
 
-            if (! skip_nan_ || ! is_nan__(value))  {
-                if (cmp_(running_extremum, value))
+            if (! skip_nan_ || ! is_nan__(value)) [[likely]]  {
+                if (cmp_(running_extremum, value)) [[unlikely]]
                     running_extremum = value;
                 result.push_back(running_extremum);
             }
@@ -1500,13 +1502,13 @@ using CumMinVisitor = CumExtremumVisitor<T, I, std::greater<T>, A>;
 // from 0
 //
 template<typename T, typename I = unsigned long, std::size_t A = 0>
-struct CategoryVisitor  {
+struct  CategoryVisitor  {
 
 private:
 
     struct t_less_  {
         inline bool
-        operator() (const T *lhs, const T *rhs) const { return (*lhs < *rhs); }
+        operator() (const T *lhs, const T *rhs) const  { return (*lhs < *rhs); }
     };
 
 public:
@@ -1528,7 +1530,7 @@ public:
 
         size_type   cat = nan_ != 0 ? 0 : 1;
 
-        for (size_type i = 0; i < col_s; ++i)  {
+        for (size_type i = 0; i < col_s; ++i) [[likely]]  {
             const value_type    &value = *(column_begin + i);
 
             if (is_nan__(value))  {
@@ -1576,7 +1578,7 @@ private:
 // This ranks the values in the column based on rank policy starting from 0.
 //
 template<typename T, typename I = unsigned long, std::size_t A = 0>
-struct RankVisitor  {
+struct  RankVisitor  {
 
 public:
 
@@ -1596,14 +1598,14 @@ public:
         std::iota(rank_vec.begin(), rank_vec.end(), 0);
         std::stable_sort(
             rank_vec.begin(), rank_vec.end(),
-            [&column_begin](size_type lhs, size_type rhs) -> bool {
+            [&column_begin](size_type lhs, size_type rhs) -> bool  {
                 return *(column_begin + lhs) < *(column_begin + rhs);
             });
 
         result_type         result(col_s);
         const value_type    *prev_value = &*(column_begin + rank_vec[0]);
 
-        for (size_type i = 0; i < col_s; ++i)  {
+        for (size_type i = 0; i < col_s; ++i) [[likely]]  {
             double      avg_val = static_cast<double>(i);
             double      first_val = static_cast<double>(i);
             double      last_val = static_cast<double>(i);
@@ -1667,7 +1669,7 @@ private:
 // result of the given function.
 //
 template<typename T, typename I = unsigned long, std::size_t A = 0>
-struct FactorizeVisitor  {
+struct  FactorizeVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES
     using result_type =
@@ -1682,7 +1684,7 @@ struct FactorizeVisitor  {
         result_type result;
 
         result.reserve(std::distance(column_begin, column_end));
-        for (auto citer = column_begin; citer < column_end; ++citer)
+        for (auto citer = column_begin; citer < column_end; ++citer) [[likely]]
             result.push_back(ffunc_(*citer));
 
         result_.swap(result);
@@ -1704,7 +1706,7 @@ private:
 template<typename T, typename I = unsigned long, std::size_t A = 0,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct AutoCorrVisitor  {
+struct  AutoCorrVisitor  {
 
     template<typename U>
     using vec_type = std::vector<U, typename allocator_declare<U, A>::type>;
@@ -1790,7 +1792,7 @@ private:
 template<typename T, typename I = unsigned long, std::size_t A = 0,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct FixedAutoCorrVisitor  {
+struct  FixedAutoCorrVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
@@ -1901,10 +1903,10 @@ struct  ExponentiallyWeightedMeanVisitor  {
         }
 
         if (! finite_adjust_)  {
-            for (size_type i = starting + 1; i < col_s; ++i)  {
+            for (size_type i = starting + 1; i < col_s; ++i) [[likely]]  {
                 const value_type    val = *(column_begin + i);
 
-                if (! is_nan__(val))
+                if (! is_nan__(val)) [[likely]]
                     result[i] = decay_ * val + decay_comp * result[i - 1];
             }
         }
@@ -1913,10 +1915,10 @@ struct  ExponentiallyWeightedMeanVisitor  {
             value_type  decay_comp_prod = 1;
             value_type  numerator = result[0];
 
-            for (size_type i = starting + 1; i < col_s; ++i)  {
+            for (size_type i = starting + 1; i < col_s; ++i) [[likely]]  {
                 const value_type    val = *(column_begin + i);
 
-                if (! is_nan__(val))  {
+                if (! is_nan__(val)) [[likely]]  {
                     decay_comp_prod *= decay_comp;
                     denominator += decay_comp_prod;
                     numerator = numerator * decay_comp + val;
@@ -1987,12 +1989,12 @@ struct  ExponentiallyWeightedVarVisitor  {
 
         ewmvar.push_back(std::numeric_limits<T>::quiet_NaN());
         ewmstd.push_back(std::numeric_limits<T>::quiet_NaN());
-        for (size_type i = starting + 1; i < col_s; ++i)  {
+        for (size_type i = starting + 1; i < col_s; ++i) [[likely]]  {
             value_type  sum_weights = 0;
             value_type  sum_sq_weights = 0;
             value_type  sum_weighted_input = 0;
 
-            for (long j = long(i); j >= 0; --j)  {
+            for (long j = long(i); j >= 0; --j) [[likely]]  {
                 const value_type    weight = ::pow(decay_comp, j);
                 const value_type    input = *(column_begin + (i - j));
 
@@ -2005,7 +2007,7 @@ struct  ExponentiallyWeightedVarVisitor  {
             const value_type    ewma = sum_weighted_input / sum_weights;
             value_type          factor_sum = 0;
 
-            for (long j = long(i); j >= 0; --j)  {
+            for (long j = long(i); j >= 0; --j) [[likely]]  {
                 const value_type    weight = ::pow(decay_comp, j);
                 const value_type    input = *(column_begin + (i - j));
 
@@ -2087,13 +2089,13 @@ struct  ExponentiallyWeightedCovVisitor  {
             else  break;
 
         ewmcov.push_back(std::numeric_limits<T>::quiet_NaN());
-        for (size_type i = starting + 1; i < col_s; ++i)  {
+        for (size_type i = starting + 1; i < col_s; ++i) [[likely]]  {
             value_type  sum_weights = 0;
             value_type  sum_sq_weights = 0;
             value_type  sum_weighted_inputx = 0;
             value_type  sum_weighted_inputy = 0;
 
-            for (long j = long(i); j >= 0; --j)  {
+            for (long j = long(i); j >= 0; --j) [[likely]]  {
                 const value_type    weight = ::pow(decay_comp, j);
                 const value_type    inputx = *(x_begin + (i - j));
                 const value_type    inputy = *(y_begin + (i - j));
@@ -2109,7 +2111,7 @@ struct  ExponentiallyWeightedCovVisitor  {
             const value_type    ewmay = sum_weighted_inputy / sum_weights;
             value_type          factor_sum = 0;
 
-            for (long j = long(i); j >= 0; --j)  {
+            for (long j = long(i); j >= 0; --j) [[likely]]  {
                 const value_type    weight = ::pow(decay_comp, j);
                 const value_type    inputx = *(x_begin + (i - j));
                 const value_type    inputy = *(y_begin + (i - j));
@@ -2186,13 +2188,13 @@ struct  ExponentiallyWeightedCorrVisitor  {
             else  break;
 
         ewmcorr.push_back(std::numeric_limits<T>::quiet_NaN());
-        for (size_type i = starting + 1; i < col_s; ++i)  {
+        for (size_type i = starting + 1; i < col_s; ++i) [[likely]]  {
             value_type  sum_weights = 0;
             value_type  sum_sq_weights = 0;
             value_type  sum_weighted_inputx = 0;
             value_type  sum_weighted_inputy = 0;
 
-            for (long j = long(i); j >= 0; --j)  {
+            for (long j = long(i); j >= 0; --j) [[likely]]  {
                 const value_type    weight = ::pow(decay_comp, j);
                 const value_type    inputx = *(x_begin + (i - j));
                 const value_type    inputy = *(y_begin + (i - j));
@@ -2210,7 +2212,7 @@ struct  ExponentiallyWeightedCorrVisitor  {
             value_type          factor_sumx = 0;
             value_type          factor_sumy = 0;
 
-            for (long j = long(i); j >= 0; --j)  {
+            for (long j = long(i); j >= 0; --j) [[likely]]  {
                 const value_type    weight = ::pow(decay_comp, j);
                 const value_type    inputx = *(x_begin + (i - j));
                 const value_type    inputy = *(y_begin + (i - j));
@@ -2287,7 +2289,7 @@ struct  ZeroLagMovingMeanVisitor  {
 
         const size_type lag = size_type (0.5 * double(roll_period_ - 1));
 
-        for (size_type i = starting + lag; i < col_s; ++i)
+        for (size_type i = starting + lag; i < col_s; ++i) [[likely]]
             result_[i] =
                 T(2) * *(column_begin + i) - *(column_begin + (i - lag));
 
@@ -2344,7 +2346,7 @@ struct  LinregMovingMeanVisitor  {
         const value_type    divisor = T(roll_period_) * sum_x2 - sum_x * sum_x;
         result_type         result (col_s, std::numeric_limits<T>::quiet_NaN());
 
-        for (size_type i = roll_period_; i < col_s; ++i)
+        for (size_type i = roll_period_; i < col_s; ++i) [[likely]]
             result[i] = linreg_(column_begin + (i - roll_period_),
                                 column_begin + i,
                                 sum_x, sum_x2, divisor);
@@ -2371,7 +2373,7 @@ private:
         value_type      sum_y { 0 };
         value_type      sum_xy { 0 };
 
-        for (size_type i = 0; i < col_s; ++i)  {
+        for (size_type i = 0; i < col_s; ++i) [[likely]]  {
             const value_type    val = *(column_begin + i);
 
             sum_y += val;
@@ -2436,7 +2438,8 @@ struct  SymmTriangleMovingMeanVisitor  {
             std::move(gen_sym_triangle<value_type>(roll_period_, 1, true));
         result_type result (col_s, std::numeric_limits<T>::quiet_NaN());
 
-        for (size_type i { starting + roll_period_ }; i < col_s; ++i)  {
+        for (size_type i { starting + roll_period_ };
+             i < col_s; ++i) [[likely]]  {
             value_type  sum { 0 };
             size_type   tri_idx { 0 };
 
@@ -2467,7 +2470,7 @@ using symtmm_v = SymmTriangleMovingMeanVisitor<T, I, A>;
 // ----------------------------------------------------------------------------
 
 template<typename T, typename I = unsigned long, std::size_t A = 0>
-struct KthValueVisitor  {
+struct  KthValueVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_2
 
@@ -2504,8 +2507,8 @@ private:
         const value_type x = vec[end];
         size_type        i = begin;
 
-        for (size_type j = begin; j < end; ++j) {
-            if (vec[j] <= x) {
+        for (size_type j = begin; j < end; ++j) [[likely]]  {
+            if (vec[j] <= x)  {
                 std::swap(vec[i], vec[j]);
                 i += 1;
             }
@@ -2543,7 +2546,7 @@ using kthv_v = KthValueVisitor<T, I, A>;
 // ----------------------------------------------------------------------------
 
 template<typename T, typename I = unsigned long, std::size_t A = 0>
-struct MedianVisitor  {
+struct  MedianVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_2
 
@@ -2587,7 +2590,7 @@ using med_v = MedianVisitor<T, I, A>;
 // ----------------------------------------------------------------------------
 
 template<typename T, typename I = unsigned long, std::size_t A = 0>
-struct QuantileVisitor  {
+struct  QuantileVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_2
 
@@ -2598,7 +2601,7 @@ struct QuantileVisitor  {
 
         GET_COL_SIZE
 
-        if (qt_ < 0.0 || qt_ > 1.0 || col_s == 0)  {
+        if (qt_ < 0.0 || qt_ > 1.0 || col_s == 0) [[unlikely]]  {
             char buffer [512];
 
             snprintf (buffer, sizeof(buffer) - 1,
@@ -2689,7 +2692,7 @@ using qt_v = QuantileVisitor<T, I, A>;
 //
 template<std::size_t N,
          typename T, typename I = unsigned long, std::size_t A = 0>
-struct  ModeVisitor {
+struct  ModeVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES
 
@@ -2740,7 +2743,7 @@ private:
 
         inline result_type
         operator() (const first_argument_type &f,
-                    const second_argument_type &s) const noexcept {
+                    const second_argument_type &s) const noexcept  {
 
             return (std::equal_to<value_type>()(*f, *s));
         }
@@ -2768,13 +2771,13 @@ public:
         map_type        val_map;
 
         val_map.reserve(col_s);
-        for (size_type i = 0; i < col_s; ++i)  {
+        for (size_type i = 0; i < col_s; ++i) [[likely]]  {
             if (is_nan__(*(column_begin + i)))  {
                 nan_item.value = &*(column_begin + i);
                 nan_item.indices.push_back(&*(idx_begin + i));
                 nan_item.value_indices_in_col.push_back(i);
             }
-            else  {
+            else [[likely]]  {
                 auto    ret =
                     val_map.emplace(
                         std::pair<const value_type *, DataItem>(
@@ -2793,7 +2796,7 @@ public:
             val_vec.push_back(nan_item);
         std::for_each(val_map.begin(),
                       val_map.end(),
-                      [&val_vec](const auto &map_pair) -> void {
+                      [&val_vec](const auto &map_pair) -> void  {
                           val_vec.push_back(map_pair.second);
                       });
 
@@ -2842,7 +2845,7 @@ using mode_v = ModeVisitor<N, T, I, A>;
 template<typename T, typename I = unsigned long, std::size_t A = 0,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct MADVisitor  {
+struct  MADVisitor  {
 
 private:
 
@@ -2861,17 +2864,17 @@ private:
         index_type          &idx_value = *idx_begin;
 
         mean_visitor.pre();
-        for (std::size_t i = 0; i < col_s; ++i)
+        for (std::size_t i = 0; i < col_s; ++i) [[likely]]
             mean_visitor(idx_value, *(column_begin + i));
         mean_visitor.post();
 
         MeanVisitor<T, I>   mean_mean_visitor(skip_nan_);
 
         mean_mean_visitor.pre();
-        for (std::size_t i = 0; i < col_s; ++i)  {
+        for (std::size_t i = 0; i < col_s; ++i) [[likely]]  {
             const value_type    value = *(column_begin + i);
 
-            if (skip_nan_ && is_nan__(value))  continue;
+            if (skip_nan_ && is_nan__(value)) [[unlikely]]  continue;
             mean_mean_visitor(idx_value,
                               std::fabs(value - mean_visitor.get_result()));
         }
@@ -2898,10 +2901,10 @@ private:
         index_type          &idx_value = *idx_begin;
 
         mean_median_visitor.pre();
-        for (std::size_t i = 0; i < col_s; ++i)  {
+        for (std::size_t i = 0; i < col_s; ++i) [[likely]]  {
             const value_type    value = *(column_begin + i);
 
-            if (skip_nan_ && is_nan__(value))  continue;
+            if (skip_nan_ && is_nan__(value)) [[unlikely]]  continue;
             mean_median_visitor(idx_value,
                                 std::fabs(value - median_visitor.get_result()));
         }
@@ -2922,7 +2925,7 @@ private:
         GET_COL_SIZE
 
         mean_visitor.pre();
-        for (std::size_t i = 0; i < col_s; ++i)
+        for (std::size_t i = 0; i < col_s; ++i) [[likely]]
             mean_visitor(idx_value, *(column_begin + i));
         mean_visitor.post();
 
@@ -2930,7 +2933,7 @@ private:
         std::vector<T, typename allocator_declare<T, A>::type>  mean_dists;
 
         mean_dists.reserve(col_s);
-        for (std::size_t i = 0; i < col_s; ++i)
+        for (std::size_t i = 0; i < col_s; ++i) [[likely]]
             mean_dists.push_back(
                 std::fabs(*(column_begin + i) - mean_visitor.get_result()));
         median_mean_visitor.pre();
@@ -2959,7 +2962,7 @@ private:
         std::vector<T, typename allocator_declare<T, A>::type>  median_dists;
 
         median_dists.reserve(col_s);
-        for (std::size_t i = 0; i < col_s; ++i)
+        for (std::size_t i = 0; i < col_s; ++i) [[likely]]
             median_dists.push_back(
                 std::fabs(*(column_begin + i) - median_visitor.get_result()));
         median_median_visitor.pre();
@@ -3020,7 +3023,7 @@ using mad_v = MADVisitor<T, I, A>;
 template<typename T, typename I = unsigned long, std::size_t A = 0,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct DiffVisitor  {
+struct  DiffVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
@@ -3037,17 +3040,18 @@ struct DiffVisitor  {
         result_type result;
 
         result.reserve(col_s);
-        if (periods_ >= 0)  {
+        if (periods_ >= 0) [[likely]]  {
             if (! skip_nan_)  {
                 for (long i = 0;
-                     i < periods_ && static_cast<size_type>(i) < col_s; ++i)
+                     i < periods_ && static_cast<size_type>(i) < col_s;
+                     ++i) [[likely]]
                     result.push_back(
                         std::numeric_limits<value_type>::quiet_NaN());
             }
 
             auto    i = column_begin + periods_;
 
-            for (auto j = column_begin; i < column_end; ++i, ++j) {
+            for (auto j = column_begin; i < column_end; ++i, ++j) [[likely]]  {
                 if (skip_nan_ && (is_nan__(*i) || is_nan__(*j)))  continue;
 
                 const value_type    val = *i - *j;
@@ -3056,11 +3060,11 @@ struct DiffVisitor  {
                 there_is_zero = val == 0;
             }
         }
-        else {
+        else  {
             H   i = column_end - (1 + std::abs(periods_));
             H   j = column_end - 1;
 
-            for ( ; i > column_begin; --i, --j) {
+            for ( ; i > column_begin; --i, --j)  {
                 if (skip_nan_ && (is_nan__(*i) || is_nan__(*j)))  continue;
 
                 const value_type    val = *i - *j;
@@ -3089,7 +3093,7 @@ struct DiffVisitor  {
 
         if (non_zero_ && there_is_zero)
             std::for_each(result.begin(), result.end(),
-                          [](value_type &v) {
+                          [](value_type &v)  {
                               v += std::numeric_limits<value_type>::epsilon();
                           });
 
@@ -3101,7 +3105,7 @@ struct DiffVisitor  {
 
     explicit
     DiffVisitor(long periods = 1, bool skipnan = true, bool non_zero = false)
-        : periods_(periods), skip_nan_(skipnan), non_zero_(non_zero) {  }
+        : periods_(periods), skip_nan_(skipnan), non_zero_(non_zero)  {  }
 
 private:
 
@@ -3119,7 +3123,7 @@ using diff_v = DiffVisitor<T, I, A>;
 template<typename T, typename I = unsigned long, std::size_t A = 0,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct ZScoreVisitor {
+struct  ZScoreVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
@@ -3138,10 +3142,10 @@ struct ZScoreVisitor {
 
         mvisit.pre();
         svisit.pre();
-        for (size_type i = 0; i < col_s; ++i)  {
+        for (size_type i = 0; i < col_s; ++i) [[likely]]  {
             const value_type    value = *(column_begin + i);
 
-            if (! skip_nan_ || ! is_nan__(value))  {
+            if (! skip_nan_ || ! is_nan__(value)) [[likely]]  {
                 mvisit(idx_value, value);
                 svisit(idx_value, value);
             }
@@ -3154,7 +3158,7 @@ struct ZScoreVisitor {
         result_type         result;
 
         result.reserve(col_s);
-        for (auto citer = column_begin; citer < column_end; ++citer)
+        for (auto citer = column_begin; citer < column_end; ++citer) [[likely]]
             result.push_back((*citer - m) / s);
 
         result_.swap(result);
@@ -3179,7 +3183,7 @@ using zs_v = ZScoreVisitor<T, I, A>;
 template<typename T, typename I = unsigned long,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct SampleZScoreVisitor {
+struct  SampleZScoreVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_2
 
@@ -3204,11 +3208,11 @@ struct SampleZScoreVisitor {
         p_mvisit.pre();
         p_svisit.pre();
         s_mvisit.pre();
-        for (size_type i = 0; i < max_s; ++i)  {
+        for (size_type i = 0; i < max_s; ++i)  [[likely]]  {
             if (i < p_col_s)  {
                 const value_type    value = *(population_begin + i);
 
-                if (! skip_nan_ || ! is_nan__(value))  {
+                if (! skip_nan_ || ! is_nan__(value)) [[likely]]  {
                     p_mvisit(idx_value, value);
                     p_svisit(idx_value, value);
                 }
@@ -3249,7 +3253,7 @@ using szs_v = SampleZScoreVisitor<T, I>;
 template<typename T, typename I = unsigned long, std::size_t A = 0,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct BoxCoxVisitor {
+struct  BoxCoxVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
@@ -3261,7 +3265,7 @@ private:
         H   citer = column_begin;
 
         if (lambda_ != 0)  {
-            while (citer < column_end)  {
+            while (citer < column_end) [[likely]]  {
                 const value_type    sign = std::signbit(*citer) ? -1 : 1;
                 const value_type    v =
                     (std::pow(std::fabs(*citer++) + one_, lambda_) - one_) /
@@ -3271,7 +3275,7 @@ private:
             }
         }
         else  {
-            while (citer < column_end)  {
+            while (citer < column_end) [[likely]]  {
                 const value_type    sign = std::signbit(*citer) ? -1 : 1;
 
                 result_.push_back(sign * std::log(std::fabs(*citer++) + one_));
@@ -3285,12 +3289,12 @@ private:
         H   citer = column_begin;
 
         if (lambda_ != 0)  {
-            while (citer < column_end)
+            while (citer < column_end) [[likely]]
                 result_.push_back(
                     (std::exp(lambda_ * *citer++) - one_) / lambda_);
         }
         else  {
-            while (citer < column_end)
+            while (citer < column_end) [[likely]]
                 result_.push_back(*citer++);
         }
     }
@@ -3303,12 +3307,12 @@ private:
         H   citer = column_begin;
 
         if (lambda_ != 0)  {
-            while (citer < column_end)
+            while (citer < column_end) [[likely]]
                 result_.push_back(
                     (std::pow(*citer++ + shift, lambda_) -  one_) / lambda_);
         }
         else  {
-            while (citer < column_end)
+            while (citer < column_end) [[likely]]
                 result_.push_back(std::log(*citer++ + shift));
         }
     }
@@ -3325,12 +3329,12 @@ private:
             GeometricMeanVisitor<T, I>  reg_gm;
 
             reg_gm.pre();
-            while (citer < column_end)
+            while (citer < column_end) [[likely]]
                 reg_gm(dummy, *citer++ + shift);
             reg_gm.post();
 
             citer = column_begin;
-            while (citer < column_end)  {
+            while (citer < column_end) [[likely]]  {
                 const value_type    raw_v = *citer++ + shift;
                 const value_type    v =
                     (std::pow(raw_v, lambda_) -  one_) /
@@ -3343,12 +3347,12 @@ private:
             GeometricMeanVisitor<T, I>  log_gm;
 
             log_gm.pre();
-            while (citer < column_end)
+            while (citer < column_end) [[likely]]
                 log_gm(dummy, std::log(*citer++ + shift));
             log_gm.post();
 
             citer = column_begin;
-            while (citer < column_end)  {
+            while (citer < column_end) [[likely]]  {
                 const value_type    raw_v = *citer++ + shift;
 
                 result_.push_back(raw_v * log_gm.get_result());
@@ -3413,7 +3417,7 @@ using bcox_v = BoxCoxVisitor<T, I, A>;
 template<typename T, typename I = unsigned long, std::size_t A = 0,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct ProbabilityDistVisitor {
+struct  ProbabilityDistVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
@@ -3430,49 +3434,49 @@ struct ProbabilityDistVisitor {
         result.reserve(col_s);
         if (pdtype_ == prob_dist_type::arithmetic)  {
             std::for_each(column_begin, column_end,
-                          [&sum](const auto &v) -> void { sum += v; });
+                          [&sum](const auto &v) -> void  { sum += v; });
             std::for_each(column_begin, column_end,
-                          [&sum, &result](const auto &v) -> void {
+                          [&sum, &result](const auto &v) -> void  {
                               result.push_back(v / sum);
                           });
         }
         else if (pdtype_ == prob_dist_type::log)  {
             std::for_each(column_begin, column_end,
-                          [&sum](const auto &v) -> void {
+                          [&sum](const auto &v) -> void  {
                               sum += std::log(v);
                           });
             std::for_each(column_begin, column_end,
-                          [&sum, &result](const auto &v) -> void {
+                          [&sum, &result](const auto &v) -> void  {
                               result.push_back(std::log(v) / sum);
                           });
         }
         else if (pdtype_ == prob_dist_type::softmax)  {
             std::for_each(column_begin, column_end,
-                          [&sum](const auto &v) -> void {
+                          [&sum](const auto &v) -> void  {
                               sum += std::exp(v);
                           });
             std::for_each(column_begin, column_end,
-                          [&sum, &result](const auto &v) -> void {
+                          [&sum, &result](const auto &v) -> void  {
                               result.push_back(std::exp(v) / sum);
                           });
         }
         else if (pdtype_ == prob_dist_type::pow2)  {
             std::for_each(column_begin, column_end,
-                          [&sum](const auto &v) -> void {
+                          [&sum](const auto &v) -> void  {
                               sum += std::pow(T(2), v);
                           });
             std::for_each(column_begin, column_end,
-                          [&sum, &result](const auto &v) -> void {
+                          [&sum, &result](const auto &v) -> void  {
                               result.push_back(std::pow(T(2), v) / sum);
                           });
         }
         else if (pdtype_ == prob_dist_type::pow10)  {
             std::for_each(column_begin, column_end,
-                          [&sum](const auto &v) -> void {
+                          [&sum](const auto &v) -> void  {
                               sum += std::pow(T(10), v);
                           });
             std::for_each(column_begin, column_end,
-                          [&sum, &result](const auto &v) -> void {
+                          [&sum, &result](const auto &v) -> void  {
                               result.push_back(std::pow(T(10), v) / sum);
                           });
         }
@@ -3500,7 +3504,7 @@ using pd_v = ProbabilityDistVisitor<T, I, A>;
 template<typename T, typename I = unsigned long, std::size_t A = 0,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct NormalizeVisitor {
+struct  NormalizeVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
@@ -3546,7 +3550,7 @@ using norm_v = NormalizeVisitor<T, I, A>;
 template<typename T, typename I = unsigned long, std::size_t A = 0,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct StandardizeVisitor {
+struct  StandardizeVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
@@ -3591,7 +3595,7 @@ using stand_v = StandardizeVisitor<T, I, A>;
 template<typename T, typename I = unsigned long, std::size_t A = 0,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct PolyFitVisitor {
+struct  PolyFitVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
@@ -3628,7 +3632,7 @@ public:
         //
         result_type sigma_x (2 * nrows, 0);
 
-        for (size_type i = 0; i < sigma_x.size(); ++i) {
+        for (size_type i = 0; i < sigma_x.size(); ++i) [[likely]]  {
             // consecutive positions of the array will store
             // col_s, sigma(xi), sigma(xi^2), sigma(xi^3) ... sigma(xi^2n)
             //
@@ -3644,7 +3648,7 @@ public:
         //
         result_type eq_mat (nrows * (deg + 2), 0);
 
-        for (size_type i = 0; i <= deg; ++i)  {
+        for (size_type i = 0; i <= deg; ++i) [[likely]]  {
             // Build the Normal matrix by storing the corresponding
             // coefficients at the right positions except the last column
             // of the matrix
@@ -3658,7 +3662,7 @@ public:
         //
         result_type sigma_y (nrows, 0);
 
-        for (size_type i = 0; i < sigma_y.size(); ++i) {
+        for (size_type i = 0; i < sigma_y.size(); ++i) [[likely]]  {
             // consecutive positions will store
             // sigma(yi), sigma(xi * yi), sigma(xi^2 * yi) ... sigma(xi^n * yi)
             //
@@ -3672,7 +3676,7 @@ public:
         // load the values of sigma_y as the last column of eq_mat
         // (Normal Matrix but augmented)
         //
-        for (size_type i = 0; i <= deg; ++i)
+        for (size_type i = 0; i <= deg; ++i) [[likely]]
             eq_mat[index_(i, nrows, nrows)] = sigma_y[i];
 
         // deg is made deg + 1 because the Gaussian elimination part
@@ -3684,25 +3688,25 @@ public:
         // From now Gaussian elimination starts (can be ignored) to solve the
         // set of linear equations (Pivotisation)
         //
-        for (size_type i = 0; i < deg; ++i)  {
-            for (size_type k = i + 1; k < deg; ++k)
+        for (size_type i = 0; i < deg; ++i) [[likely]]  {
+            for (size_type k = i + 1; k < deg; ++k) [[likely]]
                 if (eq_mat[index_(i, i, nrows)] < eq_mat[index_(k, i, nrows)])
-                    for (size_type j = 0; j <= deg; ++j)
+                    for (size_type j = 0; j <= deg; ++j) [[likely]]
                         std::swap(eq_mat[index_(i, j, nrows)],
                                   eq_mat[index_(k, j, nrows)]);
         }
 
         // loop to perform the Gauss elimination
         //
-        for (size_type i = 0; i < deg - 1; ++i)  {
-            for (size_type k = i + 1; k < deg; ++k) {
+        for (size_type i = 0; i < deg - 1; ++i) [[likely]]  {
+            for (size_type k = i + 1; k < deg; ++k) [[likely]]  {
                 const value_type    t =
                     eq_mat[index_(k, i, nrows)] / eq_mat[index_(i, i, nrows)];
 
                 // make the elements below the pivot elements equal to zero
                 // or elimnate the variables
                 //
-                for (size_type j = 0; j <= deg; ++j)
+                for (size_type j = 0; j <= deg; ++j) [[likely]]
                     eq_mat[index_(k, j, nrows)] =
                         eq_mat[index_(k, j, nrows)] -
                         eq_mat[index_(i, j, nrows)] * t;
@@ -3715,12 +3719,12 @@ public:
         // coeffs_ is a vector whose values correspond to the values
         // of x, y, z ...
         //
-        for (int i = int(deg) - 1; i >= 0; --i) {
+        for (int i = int(deg) - 1; i >= 0; --i) [[likely]]  {
             // make the variable to be calculated equal to the rhs of the last
             // equation
             //
             coeffs_[i] = eq_mat[index_(i, deg, nrows)];
-            for (int j = 0; j < int(deg); ++j)  {
+            for (int j = 0; j < int(deg); ++j) [[likely]]  {
                 // then subtract all the lhs values except the coefficient of
                 // the variable whose value is being calculated
                 //
@@ -3736,7 +3740,7 @@ public:
         }
 
         y_fits_.reserve(col_s);
-        for (size_type i = 0; i < col_s; ++i)  {
+        for (size_type i = 0; i < col_s; ++i) [[likely]]  {
             value_type  pred = 0;
 
             for (size_type j = 0; j < deg; ++j)
@@ -3784,7 +3788,7 @@ using pfit_v = PolyFitVisitor<T, I, A>;
 template<typename T, typename I = unsigned long, std::size_t A = 0,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct LogFitVisitor {
+struct  LogFitVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
@@ -3806,7 +3810,7 @@ struct LogFitVisitor {
         const size_type col_s = std::distance(x_begin, x_end);
 
         y_fits_.reserve(col_s);
-        for (size_type i = 0; i < col_s; ++i)  {
+        for (size_type i = 0; i < col_s; ++i) [[likely]]  {
             const value_type    pred =
                 poly_fit_.get_result()[0] +
                 poly_fit_.get_result()[1] * std::log(*(x_begin + i));
@@ -3851,7 +3855,7 @@ using lfit_v = LogFitVisitor<T, I, A>;
 template<typename T, typename I = unsigned long, std::size_t A = 0,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct ExponentialFitVisitor {
+struct  ExponentialFitVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
@@ -3870,7 +3874,7 @@ struct ExponentialFitVisitor {
         value_type  sum_x2 = 0;  // Sum of all observed x squared
         value_type  sum_xy = 0;  // Sum of all x times sum of all observed y
 
-        for (size_type i = 0; i < col_s; ++i)  {
+        for (size_type i = 0; i < col_s; ++i) [[likely]]  {
             const value_type    x = *(x_begin + i);
             const value_type    log_y = std::log(*(y_begin + i));
 
@@ -3892,7 +3896,7 @@ struct ExponentialFitVisitor {
         const value_type    prefactor = std::exp(intercept_);
 
         y_fits_.reserve(col_s);
-        for (size_type i = 0; i < col_s; ++i)  {
+        for (size_type i = 0; i < col_s; ++i) [[likely]]  {
             const value_type    x = *(x_begin + i);
             const value_type    pred = prefactor * std::exp(x * slope_);
 
@@ -3938,7 +3942,7 @@ using efit_v = ExponentialFitVisitor<T, I, A>;
 template<typename T, typename I = unsigned long, std::size_t A = 0,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct LinearFitVisitor {
+struct  LinearFitVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
@@ -3978,7 +3982,7 @@ struct LinearFitVisitor {
         intercept_ = (sum_x2 * sum_y - sum_x * sum_xy) / divisor;
 
         y_fits_.reserve(col_s);
-        for (size_type i = 0; i < col_s; ++i)  {
+        for (size_type i = 0; i < col_s; ++i) [[likely]]  {
             const value_type    pred = slope_ * *(x_begin + i) + intercept_;
 
             // y fits at given x points
@@ -4025,7 +4029,7 @@ using linfit_v = LinearFitVisitor<T, I, A>;
 template<typename T, typename I = unsigned long, std::size_t A = 0,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct CubicSplineFitVisitor {
+struct  CubicSplineFitVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
@@ -4046,7 +4050,7 @@ struct CubicSplineFitVisitor {
         result_type h;
 
         h.reserve(col_s - 1);
-        for(size_type i = 0; i < col_s - 1; ++i)
+        for(size_type i = 0; i < col_s - 1; ++i) [[likely]]
             h.push_back (*(x_begin + (i + 1)) - *(x_begin + i));
 
         result_type             mu (col_s, 0);
@@ -4054,7 +4058,7 @@ struct CubicSplineFitVisitor {
         constexpr value_type    two = 2;
         constexpr value_type    three = 3;
 
-        for(size_type i = 1; i < col_s - 1; ++i)  {
+        for(size_type i = 1; i < col_s - 1; ++i) [[likely]]  {
             const value_type    yi = *(y_begin + i);
             const value_type    alpha =
                 three * (*(y_begin + (i + 1)) - yi) / h[i] -
@@ -4071,7 +4075,7 @@ struct CubicSplineFitVisitor {
         result_type c (col_s, 0);
         result_type d (col_s - 1, 0);
 
-        for(long i = col_s - 2; i >= 0; --i)  {
+        for(long i = col_s - 2; i >= 0; --i) [[likely]]  {
             c[i] = z[i] - mu[i] * c[i + 1];
             b[i] = (*(y_begin + (i + 1)) - *(y_begin + i)) / h[i] -
                    h[i] * (c[i + 1] + two * c[i]) / three;
@@ -4141,7 +4145,7 @@ using csfit_v = CubicSplineFitVisitor<T, I, A>;
 template<typename T, typename I = unsigned long, std::size_t A = 0,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct LowessVisitor {
+struct  LowessVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
@@ -4154,7 +4158,7 @@ private:
     template<typename X>
     inline static void bi_square_(X x_begin, X x_end)  {
 
-        while (x_begin != x_end)  {
+        while (x_begin != x_end) [[likely]]  {
             const value_type    val = one_ - *x_begin * *x_begin;
 
             *x_begin++ = val * val;
@@ -4167,7 +4171,7 @@ private:
     template<typename X>
     inline static void tri_cube_(X x_begin, X x_end)  {
 
-        while (x_begin != x_end)  {
+        while (x_begin != x_end) [[likely]]  {
             const value_type    val = one_ - *x_begin * *x_begin * *x_begin;
 
             *x_begin++ = val * val * val;
@@ -4183,7 +4187,7 @@ private:
                            const K &y_fits_begin, const K & /*y_fits_end*/,
                            size_type col_s)  {
 
-        for (size_type i = 0; i < col_s; ++i)
+        for (size_type i = 0; i < col_s; ++i) [[likely]]
             resid_weights_[i] =
                 std::fabs(*(y_begin + i) - *(y_fits_begin + i));
 
@@ -4205,7 +4209,7 @@ private:
 
             std::transform(resid_weights_.begin(), resid_weights_.end(),
                            resid_weights_.begin(),
-                           [val](auto c) -> value_type { return (c / val); });
+                           [val](auto c) -> value_type  { return (c / val); });
         }
 
         // Some trimming of outlier residuals.
@@ -4250,7 +4254,7 @@ private:
         long                k = last_fit_idx + 1;
         bool                looped = false;
 
-        for ( ; size_type(k) < col_s; ++k)  {
+        for ( ; size_type(k) < col_s; ++k) [[likely]]  {
             looped = true;
 
             const value_type    xvalue = *(x_begin + k);
@@ -4293,13 +4297,14 @@ private:
 
         const value_type    x_diff = *(x_begin + curr_idx) - last_fit_xval;
 
-        for (auto iter : auxiliary_vec_)
+        for (auto iter : auxiliary_vec_) [[likely]]
             iter /= x_diff;
 
         const value_type    last_fit_yval = *(y_fits_begin + last_fit_idx);
         const value_type    curr_idx_yval = *(y_fits_begin + curr_idx);
 
-        for (long i = last_fit_idx + 1; i < long(auxiliary_vec_.size()); ++i)  {
+        for (long i = last_fit_idx + 1; i < long(auxiliary_vec_.size());
+             ++i) [[likely]]  {
             const value_type    avalue = auxiliary_vec_[i];
 
             *(y_fits_begin + i) =
@@ -4339,18 +4344,18 @@ private:
         else  {
             value_type  sum_weighted_x = 0;
 
-            for (size_type j = left_end; j < right_end; ++j)
+            for (size_type j = left_end; j < right_end; ++j) [[likely]]
                 sum_weighted_x += *(w_begin + j) * *(x_begin + j);
 
             value_type  weighted_sqdev_x = 0;
 
-            for (size_type j = left_end; j < right_end; ++j)  {
+            for (size_type j = left_end; j < right_end; ++j) [[likely]]  {
                 const value_type    val = *(x_begin + j) - sum_weighted_x;
 
                 weighted_sqdev_x += *(w_begin + j) * val * val;
             }
 
-            for (size_type j = left_end; j < right_end; ++j)  {
+            for (size_type j = left_end; j < right_end; ++j) [[likely]]  {
                 const value_type    p_idx_j =
                     *(w_begin + j) *
                     (one_ + (xval - sum_weighted_x) *
@@ -4385,7 +4390,7 @@ private:
         x_j_.reserve(right_end - left_end);
         dist_i_j_.reserve(right_end - left_end);
 
-        for (size_type j = left_end; j < right_end; ++j)  {
+        for (size_type j = left_end; j < right_end; ++j) [[likely]]  {
             x_j_.push_back(*(x_begin + j));
             dist_i_j_.push_back(std::fabs(*(x_begin + j) - xval) / radius);
 
@@ -4396,13 +4401,13 @@ private:
         }
 
         tri_cube_(w_begin + left_end, w_begin + right_end);
-        for (size_type j = left_end; j < right_end; ++j)
+        for (size_type j = left_end; j < right_end; ++j) [[likely]]
             *(w_begin + j) *= resid_weights_[j];
 
         value_type    sum_weights = 0;
         size_type     non_zero_cnt = 0;
 
-        for (size_type j = left_end; j < right_end; ++j)  {
+        for (size_type j = left_end; j < right_end; ++j) [[likely]]  {
             const value_type    val = *(w_begin + j);
 
             if (val != 0)  {
@@ -4486,7 +4491,7 @@ private:
 
         y_fits_.resize(col_s, 0);
         resid_weights_.resize(col_s, one_);
-        for (size_type l = 0; l < loop_n_; ++l)  {
+        for (size_type l = 0; l < loop_n_; ++l) [[likely]]  {
             long        curr_idx = 0;
             long        last_fit_idx = -1;
             size_type   left_end = 0;
@@ -4658,7 +4663,7 @@ using lowess_v = LowessVisitor<T, I, A>;
 template<typename T, typename I = unsigned long, std::size_t A = 0,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct DecomposeVisitor {
+struct  DecomposeVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
@@ -4693,7 +4698,7 @@ private:
         // Calculate one-period seasonality
         //
         seasonal_.resize(col_s, 0);
-        for (size_type i = 0; i < s_period_; ++i)  {
+        for (size_type i = 0; i < s_period_; ++i) [[likely]]  {
             sr_mean.pre();
             sr_mean (idx_begin + i, idx_end,
                      detrended.begin() + i, detrended.end());
@@ -4862,7 +4867,7 @@ is_normal(const V &column, double epsl, bool check_for_standard)  {
     const value_type    low_band_3 = static_cast<value_type>(mean - std * 3.0);
     double              count_3 = 0.0;
 
-    for (auto citer : column)  {
+    for (auto citer : column) [[likely]]  {
         if (citer >= low_band_1 && citer < high_band_1)  {
             count_3 += 1;
             count_2 += 1;
@@ -4903,7 +4908,7 @@ is_lognormal(const V &column, double epsl)  {
     StatsVisitor<value_type, int>   log_visit;
 
     svisit.pre();
-    for (auto citer : column)  {
+    for (auto citer : column) [[likely]]  {
         svisit(dummy_idx, static_cast<value_type>(std::log(citer)));
         log_visit(dummy_idx, citer);
     }
@@ -4921,7 +4926,7 @@ is_lognormal(const V &column, double epsl)  {
     const value_type    low_band_3 = static_cast<value_type>(mean - std * 3.0);
     double              count_3 = 0.0;
 
-    for (auto citer : column)  {
+    for (auto citer : column) [[likely]]  {
         const auto  log_val = std::log(citer);
 
         if (log_val >= low_band_1 && log_val < high_band_1)  {
@@ -4966,7 +4971,7 @@ struct  BiasVisitor  {
 
         GET_COL_SIZE
 
-        if (roll_period_ == 0 || roll_period_ >= col_s)  return;
+        if (roll_period_ == 0 || roll_period_ >= col_s) [[unlikely]]  return;
 
         SimpleRollAdopter<avg_type, T, I, A>   avger(std::move(avg_v_),
                                                   roll_period_);
@@ -4977,7 +4982,7 @@ struct  BiasVisitor  {
 
         result_type result = std::move(avger.get_result());
 
-        for (size_type i = roll_period_ - 1; i < col_s; ++i)
+        for (size_type i = roll_period_ - 1; i < col_s; ++i) [[likely]]
             result[i] = (*(column_begin + i) / result[i]) - T(1);
 
         result_.swap(result);
@@ -5005,7 +5010,7 @@ using bias_v = BiasVisitor<AV, T, I, A>;
 template<typename T, typename I = unsigned long, std::size_t A = 0,
          typename =
              typename std::enable_if<supports_arithmetic<T>::value, T>::type>
-struct  NonZeroRangeVisitor {
+struct  NonZeroRangeVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
@@ -5024,7 +5029,7 @@ struct  NonZeroRangeVisitor {
         result_type result;
 
         result.reserve(col_s);
-        for (size_type i = 0; i < col_s; ++i)  {
+        for (size_type i = 0; i < col_s; ++i) [[likely]]  {
             const value_type    v = *(column1_begin + i) - *(column2_begin + i);
 
             result.push_back(v);

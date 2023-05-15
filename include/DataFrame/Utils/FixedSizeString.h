@@ -125,7 +125,7 @@ public:
         size_type   counter = 0;
 
         for (const_pointer itr = &(string_ [pos]); *itr; ++itr, ++counter)
-            if (string_ [pos + counter] == token)
+            if (string_ [pos + counter] == token) [[unlikely]]
                 return (pos + counter);
 
         return (npos);
@@ -136,7 +136,7 @@ public:
         const size_type token_len = ::strlen (token);
         const size_type self_len = size ();
 
-        if ((token_len + pos) > self_len)
+        if ((token_len + pos) > self_len) [[unlikely]]
             return (npos);
 
         size_type   counter = 0;

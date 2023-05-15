@@ -224,7 +224,7 @@ struct  ExpoSmootherVisitor {
 
             // Y0 = X0
             // Yt = aXt + (1 - a)Yt-1
-            for (size_type i = 1; i < count_; ++i)  {
+            for (size_type i = 1; i < count_; ++i) [[likely]]  {
                 const value_type    curr_v = *(column_begin + i);
 
                 *(column_begin + i) = prev_v + alfa_ * (curr_v - prev_v);
@@ -269,7 +269,7 @@ struct  HWExpoSmootherVisitor {
         value_type  prev_v = *column_begin;
         value_type  tf = *(column_begin + 1) - prev_v;
 
-        for (size_type i = 1; i < count_; ++i)  {
+        for (size_type i = 1; i < count_; ++i) [[likely]]  {
             const value_type    curr_v = *(column_begin + i);
 
             *(column_begin + i) =

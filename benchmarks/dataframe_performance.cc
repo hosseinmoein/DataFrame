@@ -45,7 +45,7 @@ int main(int, char *[]) {
 
     const auto  first = time(nullptr);
     auto        index_vec =
-        MyDataFrame::gen_datetime_index("01/01/2010", "08/15/2019",
+        MyDataFrame::gen_datetime_index("01/01/1970", "08/15/2019",
                                         time_frequency::secondly, 1);
     const auto  index_sz = index_vec.size();
     MyDataFrame df;

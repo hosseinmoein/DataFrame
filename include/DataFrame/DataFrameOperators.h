@@ -62,7 +62,7 @@ DF binary_operation (const DF &lhs, const DF &rhs)  {
 
     const typename DF::IndexVecType &new_idx = result.get_index();
 
-    for (const auto &lhs_citer : lhs.column_list_)  {
+    for (const auto &lhs_citer : lhs.column_list_) [[likely]]  {
         const auto  rhs_citer = rhs.column_tb_.find(lhs_citer.first.c_str());
 
         if (rhs_citer == rhs.column_tb_.end())  continue;

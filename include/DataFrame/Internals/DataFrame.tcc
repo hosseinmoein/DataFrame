@@ -131,7 +131,7 @@ sort_common_(DataFrame<I, H> &df, CF &&comp_func, bool ignore_index)  {
 
     sort_functor_<Ts ...>   functor (sorting_idxs, idx_s);
 
-    for (const auto &iter : df.data_)
+    for (const auto &iter : df.data_) [[likely]]
         iter.change(functor);
     if (! ignore_index)
         _sort_by_sorted_index_(df.indices_, sorting_idxs, idx_s);
@@ -155,10 +155,10 @@ DataFrame<I, H>::shuffle(const StlVecType<const char *> &col_names,
     shuffle_functor_<Ts ...>    functor;
     const SpinGuard             guard(lock_);
 
-    for (auto name_citer : col_names)  {
+    for (auto name_citer : col_names) [[likely]]  {
         const auto  citer = column_tb_.find (name_citer);
 
-        if (citer == column_tb_.end())  {
+        if (citer == column_tb_.end()) [[unlikely]]  {
             char buffer [512];
 
             snprintf(buffer, sizeof(buffer) - 1,
@@ -260,7 +260,7 @@ fill_missing_midpoint_(ColumnVecType<T> &vec, int limit, size_type)  {
 
     const size_type vec_size = vec.size();
 
-    if (vec_size < 3)  return;
+    if (vec_size < 3) [[unlikely]]  return;
 
     int count = 0;
     T   last_value = vec[0];
@@ -495,7 +495,7 @@ void DataFrame<I, H>::fill_missing (const DF &rhs)  {
     const auto      &rhs_idx = rhs.get_index();
     const SpinGuard guard(lock_);
 
-    for (const auto &col_citer : column_list_)  {
+    for (const auto &col_citer : column_list_) [[likely]]  {
         fill_missing_functor_<DF, Ts ...>   functor (
             self_idx, rhs_idx, rhs, col_citer.first.c_str());
 
@@ -517,26 +517,23 @@ drop_missing_rows_(T &vec,
                    size_type col_num)  {
 
     size_type   erase_count = 0;
+    auto        dropper =
+        [&vec, &erase_count](const auto &iter) -> void  {
+            vec.erase(vec.begin() + (iter.first - erase_count));
+            erase_count += 1;
+        };
 
-    for (const auto &iter : missing_row_map)  {
-        if (policy == drop_policy::all)  {
-            if (iter.second == col_num)  {
-                vec.erase(vec.begin() + (iter.first - erase_count));
-                erase_count += 1;
-            }
-        }
-        else if (policy == drop_policy::any)  {
-            if (iter.second > 0)  {
-                vec.erase(vec.begin() + (iter.first - erase_count));
-                erase_count += 1;
-            }
-        }
-        else if (policy == drop_policy::threshold)  {
-            if (iter.second > threshold)  {
-                vec.erase(vec.begin() + (iter.first - erase_count));
-                erase_count += 1;
-            }
-        }
+    if (policy == drop_policy::all)  {
+        for (const auto &iter : missing_row_map)
+            if (iter.second == col_num)  dropper(iter);
+    }
+    else if (policy == drop_policy::any)  {
+        for (const auto &iter : missing_row_map)
+            if (iter.second > 0)  dropper(iter);
+    }
+    else if (policy == drop_policy::threshold)  {
+        for (const auto &iter : missing_row_map)
+            if (iter.second > threshold)  dropper(iter);
     }
 
     return;
@@ -615,7 +612,7 @@ replace(const char *col_name, F &functor)  {
     ColumnVecType<T>    &vec = get_column<T>(col_name);
     const size_type     vec_s = vec.size();
 
-    for (size_type i = 0; i < vec_s; ++i)
+    for (size_type i = 0; i < vec_s; ++i) [[likely]]
         if (! functor(indices_[i], vec[i]))  break;
 
     return;
@@ -666,7 +663,7 @@ void DataFrame<I, H>::make_consistent ()  {
     consistent_functor_<Ts ...> functor (indices_.size());
     const SpinGuard             guard(lock_);
 
-    for (const auto &iter : data_)
+    for (const auto &iter : data_) [[likely]]
         iter.change(functor);
 }
 
@@ -681,7 +678,7 @@ void DataFrame<I, H>::shrink_to_fit ()  {
     shrink_to_fit_functor_<Ts ...>  functor;
     const SpinGuard                 guard(lock_);
 
-    for (const auto &iter : data_)
+    for (const auto &iter : data_) [[likely]]
         iter.change(functor);
 }
 
@@ -751,7 +748,7 @@ sort(const char *name, sort_spec dir, bool ignore_index)  {
                 return (abs__(col_vec[i]) > abs__(col_vec[j]));
             };
 
-        if (dir == sort_spec::ascen)
+        if (dir == sort_spec::ascen) [[likely]]
             sort_common_<decltype(a), Ts ...>(*this,
                                               std::move(a),
                                               ignore_index);
@@ -1788,8 +1785,8 @@ DataFrame<I, H>::value_counts (const char *col_name) const  {
     size_type   nan_count = 0;
 
     // take care of nans
-    for (const auto &citer : vec)  {
-        if (is_nan<T>(citer))  {
+    for (const auto &citer : vec) [[likely]]  {
+        if (is_nan<T>(citer)) [[unlikely]]  {
             ++nan_count;
             continue;
         }
@@ -1806,7 +1803,7 @@ DataFrame<I, H>::value_counts (const char *col_name) const  {
     counts.reserve(values_map.size());
     res_indices.reserve(values_map.size());
 
-    for (const auto &citer : values_map)  {
+    for (const auto &citer : values_map) [[likely]]  {
         res_indices.push_back(citer.first);
         counts.emplace_back(citer.second);
     }

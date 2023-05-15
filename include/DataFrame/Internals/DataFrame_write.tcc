@@ -49,7 +49,7 @@ write(const char *file_name,
     std::ofstream       stream;
     const IOStreamOpti  io_opti(stream, file_name);
 
-    if (stream.fail())  {
+    if (stream.fail()) [[unlikely]]  {
         String1K    err;
 
         err.printf("write(): ERROR: Unable to open file '%s'", file_name);

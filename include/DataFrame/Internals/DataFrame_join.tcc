@@ -58,10 +58,10 @@ join_by_index (const RHS_T &rhs, join_policy mp) const  {
     StlVecType<JoinSortingPair<IndexType>>  idx_vec_rhs;
 
     idx_vec_lhs.reserve(lhs_idx_s);
-    for (size_type i = 0; i < lhs_idx_s; ++i)
+    for (size_type i = 0; i < lhs_idx_s; ++i) [[likely]]
         idx_vec_lhs.push_back(std::make_pair(&(lhs_idx[i]), i));
     idx_vec_rhs.reserve(rhs_idx_s);
-    for (size_type i = 0; i < rhs_idx_s; ++i)
+    for (size_type i = 0; i < rhs_idx_s; ++i) [[likely]]
         idx_vec_rhs.push_back(std::make_pair(&(rhs_idx[i]), i));
 
     auto    cf = [] (const JoinSortingPair<IndexType> &l,
@@ -120,10 +120,10 @@ join_by_column (const RHS_T &rhs, const char *name, join_policy mp) const  {
     StlVecType<JoinSortingPair<T>>  col_vec_rhs;
 
     col_vec_lhs.reserve(lhs_vec_s);
-    for (size_type i = 0; i < lhs_vec_s; ++i)
+    for (size_type i = 0; i < lhs_vec_s; ++i) [[likely]]
         col_vec_lhs.push_back(std::make_pair(&(lhs_vec[i]), i));
     col_vec_rhs.reserve(rhs_vec_s);
-    for (size_type i = 0; i < rhs_vec_s; ++i)
+    for (size_type i = 0; i < rhs_vec_s; ++i) [[likely]]
         col_vec_rhs.push_back(std::make_pair(&(rhs_vec[i]), i));
 
     auto    cf = [] (const JoinSortingPair<T> &l,
@@ -170,7 +170,7 @@ join_helper_common_(
     const SpinGuard guard(lock_);
 
     // Load the common and lhs columns
-    for (const auto &iter : lhs.column_list_)  {
+    for (const auto &iter : lhs.column_list_) [[likely]]  {
         auto    rhs_citer = rhs.column_tb_.find(iter.first);
 
         if (skip_col_name && iter.first == skip_col_name)  continue;
@@ -197,7 +197,7 @@ join_helper_common_(
     }
 
     // Load the rhs columns
-    for (const auto &iter : rhs.column_list_)  {
+    for (const auto &iter : rhs.column_list_) [[likely]]  {
         auto    lhs_citer = lhs.column_tb_.find(iter.first);
 
         if (skip_col_name && iter.first == skip_col_name)  continue;
@@ -228,7 +228,7 @@ index_join_helper_(const LHS_T &lhs,
 
     // Load the index
     result_index.reserve(joined_index_idx.size());
-    for (auto citer : joined_index_idx)  {
+    for (auto citer : joined_index_idx) [[likely]]  {
         const size_type left_i = std::get<0>(citer);
 
         result_index.push_back(
@@ -278,11 +278,11 @@ column_join_helper_(const LHS_T &lhs,
     lhs_index.reserve(jii_s);
     rhs_index.reserve(jii_s);
     named_col_vec.reserve(jii_s);
-    for (auto citer : joined_index_idx)  {
+    for (auto citer : joined_index_idx) [[likely]]  {
         const size_type left_i = std::get<0>(citer);
         const size_type right_i = std::get<1>(citer);
 
-        if (left_i != std::numeric_limits<size_type>::max())  {
+        if (left_i != std::numeric_limits<size_type>::max()) [[likely]]  {
             lhs_index.push_back(lhs.indices_[left_i]);
             named_col_vec.push_back(lhs_named_col_vec[left_i]);
         }
@@ -290,7 +290,7 @@ column_join_helper_(const LHS_T &lhs,
             named_col_vec.push_back(rhs_named_col_vec[right_i]);
             lhs_index.push_back(get_nan<left_idx_t>());
         }
-        if (right_i != std::numeric_limits<size_type>::max())
+        if (right_i != std::numeric_limits<size_type>::max()) [[likely]]
             rhs_index.push_back(rhs.indices_[right_i]);
         else
             rhs_index.push_back(get_nan<right_idx_t>());
@@ -337,7 +337,7 @@ DataFrame<I, H>::get_inner_index_idx_vector_(
     IndexIdxVector  joined_index_idx;
 
     joined_index_idx.reserve(std::min(lhs_end, rhs_end));
-    while (lhs_current != lhs_end && rhs_current != rhs_end) {
+    while (lhs_current != lhs_end && rhs_current != rhs_end) [[likely]] {
         if (*(col_vec_lhs[lhs_current].first) <
                 *(col_vec_rhs[rhs_current].first))
             lhs_current += 1;
@@ -401,8 +401,8 @@ DataFrame<I, H>::get_left_index_idx_vector_(
     IndexIdxVector  joined_index_idx;
 
     joined_index_idx.reserve(lhs_end);
-    while (lhs_current != lhs_end || rhs_current != rhs_end) {
-        if (lhs_current >= lhs_end)  break;
+    while (lhs_current != lhs_end || rhs_current != rhs_end) [[likely]] {
+        if (lhs_current >= lhs_end) [[unlikely]]  break;
         if (rhs_current >= rhs_end)  {
             joined_index_idx.emplace_back(
                 col_vec_lhs[lhs_current++].second,
@@ -473,7 +473,7 @@ DataFrame<I, H>::get_right_index_idx_vector_(
     IndexIdxVector  joined_index_idx;
 
     joined_index_idx.reserve(rhs_end);
-    while (lhs_current != lhs_end || rhs_current != rhs_end) {
+    while (lhs_current != lhs_end || rhs_current != rhs_end) [[likely]] {
         if (rhs_current >= rhs_end)  break;
         if (lhs_current >= lhs_end)  {
             joined_index_idx.emplace_back(
@@ -549,14 +549,14 @@ DataFrame<I, H>::get_left_right_index_idx_vector_(
     IndexIdxVector  joined_index_idx;
 
     joined_index_idx.reserve(std::max(lhs_end, rhs_end));
-    while (lhs_current != lhs_end || rhs_current != rhs_end) {
-        if (lhs_current >= lhs_end && rhs_current < rhs_end)  {
+    while (lhs_current != lhs_end || rhs_current != rhs_end) [[likely]] {
+        if (lhs_current >= lhs_end && rhs_current < rhs_end) [[unlikely]]  {
             joined_index_idx.emplace_back(
                 std::numeric_limits<size_type>::max(),
                 col_vec_rhs[rhs_current++].second);
             continue;
         }
-        if (rhs_current >= rhs_end && lhs_current < lhs_end)  {
+        if (rhs_current >= rhs_end && lhs_current < lhs_end) [[unlikely]]  {
             joined_index_idx.emplace_back(
                 col_vec_lhs[lhs_current++].second,
                 std::numeric_limits<size_type>::max());
@@ -632,10 +632,10 @@ concat_helper_(LHS_T &lhs, const RHS_T &rhs, bool add_new_columns)  {
                            rhs.get_index().begin(), rhs.get_index().end());
 
     // Load common columns
-    for (const auto &lhs_iter : lhs.column_list_)  {
+    for (const auto &lhs_iter : lhs.column_list_) [[likely]]  {
         auto    rhs_citer = rhs.column_tb_.find(lhs_iter.first);
 
-        if (rhs_citer != rhs.column_tb_.end())  {
+        if (rhs_citer != rhs.column_tb_.end()) [[likely]]  {
             concat_functor_<LHS_T, Ts ...>  functor(lhs_iter.first.c_str(),
                                                     lhs,
                                                     false,
@@ -647,7 +647,7 @@ concat_helper_(LHS_T &lhs, const RHS_T &rhs, bool add_new_columns)  {
 
     // Load columns from rhs that do not exist in lhs
     if (add_new_columns)  {
-        for (const auto &rhs_citer : rhs.column_list_)  {
+        for (const auto &rhs_citer : rhs.column_list_) [[likely]]  {
             auto    lhs_iter = lhs.column_tb_.find(rhs_citer.first);
 
             if (lhs_iter == lhs.column_tb_.end())  {
@@ -765,9 +765,9 @@ DataFrame<I, H>::concat_view(RHS_T &rhs, concat_policy cp)  {
     idxvec_t        result_idx;
 
     result_idx.reserve(idx_s + rhs_idx_s);
-    for (size_type i = 0; i < idx_s; ++i)
+    for (size_type i = 0; i < idx_s; ++i) [[likely]]
         result_idx.push_back(&(get_index()[i]));
-    for (size_type i = 0; i < rhs_idx_s; ++i)
+    for (size_type i = 0; i < rhs_idx_s; ++i) [[likely]]
         result_idx.push_back(&(rhs.get_index()[i]));
     result.indices_ = std::move(result_idx);
 
@@ -843,9 +843,9 @@ DataFrame<I, H>::concat_view(RHS_T &rhs, concat_policy cp) const  {
     idxvec_t        result_idx;
 
     result_idx.reserve(idx_s + rhs_idx_s);
-    for (size_type i = 0; i < idx_s; ++i)
+    for (size_type i = 0; i < idx_s; ++i) [[likely]]
         result_idx.push_back(&(get_index()[i]));
-    for (size_type i = 0; i < rhs_idx_s; ++i)
+    for (size_type i = 0; i < rhs_idx_s; ++i) [[likely]]
         result_idx.push_back(&(rhs.get_index()[i]));
     result.indices_ = std::move(result_idx);
 

@@ -40,7 +40,7 @@ target_sources(DataFrame
         src/Utils/DateTime.cc
 )
 
-target_compile_features(DataFrame PUBLIC cxx_std_17)
+target_compile_features(DataFrame PUBLIC cxx_std_20)
 target_compile_definitions(DataFrame
     PRIVATE
         $<$<BOOL:${HMDF_HAVE_CLOCK_GETTIME}>:HMDF_HAVE_CLOCK_GETTIME>

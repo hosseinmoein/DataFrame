@@ -42,11 +42,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace hmdf
 {
 
-#define gcc_likely(x)    __builtin_expect(!!(x), 1)
-#define gcc_unlikely(x)  __builtin_expect(!!(x), 0)
-
-// ----------------------------------------------------------------------------
-
 template<typename I, typename H>
 void DataFrame<I, H>::read_json_(std::istream &stream, bool columns_only)  {
 
@@ -58,16 +53,17 @@ void DataFrame<I, H>::read_json_(std::istream &stream, bool columns_only)  {
 
     while (stream.get(c))
         if (c != ' ' && c != '\n' && c != '\t' && c != '\r')  break;
-    if (c != '{')
+    if (c != '{') [[unlikely]]
         throw DataFrameError(
             "DataFrame::read_json_(): ERROR: Expected '{' (0)");
 
     bool    first_col = true;
     bool    has_index = true;
 
-    while (stream.get(c)) {
-        if (c == ' ' || c == '\n' || c == '\t' || c == '\r')  continue;
-        if (c != '"')
+    while (stream.get(c)) [[likely]] {
+        if (c == ' ' || c == '\n' || c == '\t' || c == '\r') [[unlikely]]
+            continue;
+        if (c != '"') [[unlikely]]
             throw DataFrameError(
                 "DataFrame::read_json_(): ERROR: Expected '\"' (1)");
         _get_token_from_file_(stream, '"', col_name);
@@ -76,8 +72,8 @@ void DataFrame<I, H>::read_json_(std::istream &stream, bool columns_only)  {
                 throw DataFrameError("DataFrame::read_json_(): ERROR: "
                                      "Expected column name 'INDEX'");
         }
-        else if (! first_col)  {
-            if (! strcmp(col_name, DF_INDEX_COL_NAME))
+        else if (! first_col) [[likely]]  {
+            if (! strcmp(col_name, DF_INDEX_COL_NAME)) [[unlikely]]
                 throw DataFrameError("DataFrame::read_json_(): ERROR: "
                                      "column name 'INDEX' is not allowed");
         }
@@ -91,23 +87,23 @@ void DataFrame<I, H>::read_json_(std::istream &stream, bool columns_only)  {
                 "DataFrame::read_json_(): ERROR: Expected ':' (2)");
         while (stream.get(c))
             if (c != ' ' && c != '\n' && c != '\t' && c != '\r')  break;
-        if (c != '{')
+        if (c != '{') [[unlikely]]
             throw DataFrameError(
                 "DataFrame::read_json_(): ERROR: Expected '{' (3)");
 
         while (stream.get(c))
             if (c != ' ' && c != '\n' && c != '\t' && c != '\r')  break;
-        if (c != '"')
+        if (c != '"') [[unlikely]]
             throw DataFrameError(
                 "DataFrame::read_json_(): ERROR: Expected '\"' (4)");
 
         _get_token_from_file_(stream, '"', token);
-        if (strcmp(token, "N"))
+        if (strcmp(token, "N")) [[unlikely]]
             throw DataFrameError(
                  "DataFrame::read_json_(): ERROR: Expected 'N' (5)");
         while (stream.get(c))
             if (c != ' ' && c != '\n' && c != '\t' && c != '\r')  break;
-        if (c != ':')
+        if (c != ':') [[unlikely]]
             throw DataFrameError(
                 "DataFrame::read_json_(): ERROR: Expected ':' (6)");
         while (stream.get(c))
@@ -118,52 +114,52 @@ void DataFrame<I, H>::read_json_(std::istream &stream, bool columns_only)  {
 
         while (stream.get(c))
             if (c != ' ' && c != '\n' && c != '\t' && c != '\r')  break;
-        if (c != '"')
+        if (c != '"') [[unlikely]]
             throw DataFrameError(
                 "DataFrame::read_json_(): ERROR: Expected '\"' (7)");
         _get_token_from_file_(stream, '"', token);
-        if (strcmp(token, "T"))
+        if (strcmp(token, "T")) [[unlikely]]
             throw DataFrameError(
                  "DataFrame::read_json_(): ERROR: Expected 'T' (8)");
         while (stream.get(c))
             if (c != ' ' && c != '\n' && c != '\t' && c != '\r')  break;
-        if (c != ':')
+        if (c != ':') [[unlikely]]
             throw DataFrameError(
                 "DataFrame::read_json_(): ERROR: Expected ':' (9)");
         while (stream.get(c))
             if (c != ' ' && c != '\n' && c != '\t' && c != '\r')  break;
-        if (c != '"')
+        if (c != '"') [[unlikely]]
             throw DataFrameError(
                 "DataFrame::read_json_(): ERROR: Expected '\"' (10)");
         _get_token_from_file_(stream, '"', col_type);
 
         while (stream.get(c))
             if (c != ' ' && c != '\n' && c != '\t' && c != '\r')  break;
-        if (c != ',')
+        if (c != ',') [[unlikely]]
             throw DataFrameError(
                 "DataFrame::read_json_(): ERROR: Expected ',' (11)");
         while (stream.get(c))
             if (c != ' ' && c != '\n' && c != '\t' && c != '\r')  break;
-        if (c != '"')
+        if (c != '"') [[unlikely]]
             throw DataFrameError(
                 "DataFrame::read_json_(): ERROR: Expected '\"' (12)");
         _get_token_from_file_(stream, '"', token);
-        if (strcmp(token, "D"))
+        if (strcmp(token, "D")) [[unlikely]]
             throw DataFrameError(
                  "DataFrame::read_json_(): ERROR: Expected 'D' (13)");
         while (stream.get(c))
             if (c != ' ' && c != '\n' && c != '\t' && c != '\r')  break;
-        if (c != ':')
+        if (c != ':') [[unlikely]]
             throw DataFrameError(
                 "DataFrame::read_json_(): ERROR: Expected ':' (14)");
         while (stream.get(c))
             if (c != ' ' && c != '\n' && c != '\t' && c != '\r')  break;
-        if (c != '[')
+        if (c != '[') [[unlikely]]
             throw DataFrameError(
                 "DataFrame::read_json_(): ERROR: Expected ']' (15)");
 
         // Is this the index column, and should we load it?
-        if (first_col && has_index)  {
+        if (first_col && has_index) [[unlikely]]  {
             IndexVecType    vec;
 
             vec.reserve(col_size);
@@ -179,7 +175,7 @@ void DataFrame<I, H>::read_json_(std::istream &stream, bool columns_only)  {
                 vec.reserve(col_size);
                 slug(vec, stream, &::strtof, io_format::json);
             }
-            else if (! ::strcmp(col_type, "double"))  {
+            else if (! ::strcmp(col_type, "double")) [[likely]]  {
                 StlVecType<double> &vec =
                     create_column<double>(col_name, false);
                 const ColVectorPushBack_<double, StlVecType<double>>  slug;
@@ -286,7 +282,7 @@ void DataFrame<I, H>::read_json_(std::istream &stream, bool columns_only)  {
         }
         while (stream.get(c))
             if (c != ' ' && c != '\n' && c != '\t' && c != '\r')  break;
-        if (c != '}')
+        if (c != '}') [[unlikely]]
             throw DataFrameError(
                 "DataFrame::read_json_(): ERROR: Expected '}' (16)");
         while (stream.get(c))
@@ -300,7 +296,7 @@ void DataFrame<I, H>::read_json_(std::istream &stream, bool columns_only)  {
     }
     while (stream.get(c))
         if (c != ' ' && c != '\n' && c != '\t' && c != '\r')  break;
-    if (c != '}')
+    if (c != '}') [[unlikely]]
         throw DataFrameError(
             "DataFrame::read_json_(): ERROR: Expected '}' (17)");
     return;
@@ -330,12 +326,12 @@ void DataFrame<I, H>::read_csv_(std::istream &stream, bool columns_only)  {
         _get_token_from_file_(stream, ':', col_name);
         _get_token_from_file_(stream, ':', value); // Get the size
         stream.get(c);
-        if (c != '<')
+        if (c != '<') [[unlikely]]
             throw DataFrameError("DataFrame::read_csv_(): ERROR: Expected "
                                  "'<' char to specify column type");
         _get_token_from_file_(stream, '>', type_str);
         stream.get(c);
-        if (c != ':')
+        if (c != ':') [[unlikely]]
             throw DataFrameError("DataFrame::read_csv_(): ERROR: Expected "
                                  "':' char to start column values");
 
@@ -347,7 +343,7 @@ void DataFrame<I, H>::read_csv_(std::istream &stream, bool columns_only)  {
             if (! columns_only)
                 load_index(std::forward<IndexVecType &&>(vec));
         }
-        else  {
+        else [[likely]]  {
             if (! ::strcmp(type_str, "float"))  {
                 StlVecType<float>  &vec = create_column<float>(col_name, false);
                 const ColVectorPushBack_<float, StlVecType<float>>  slug;
@@ -355,7 +351,7 @@ void DataFrame<I, H>::read_csv_(std::istream &stream, bool columns_only)  {
                 vec.reserve(::atoi(value));
                 slug(vec, stream, &::strtof);
             }
-            else if (! ::strcmp(type_str, "double"))  {
+            else if (! ::strcmp(type_str, "double")) [[likely]]  {
                 StlVecType<double> &vec =
                     create_column<double>(col_name, false);
                 const ColVectorPushBack_<double, StlVecType<double>>  slug;
@@ -439,7 +435,7 @@ void DataFrame<I, H>::read_csv_(std::istream &stream, bool columns_only)  {
                 vec.reserve(::atoi(value));
                 col_vector_push_back_func_(vec, stream, &::strtol);
             }
-            else
+            else [[unlikely]]
                 throw DataFrameError("DataFrame::read_csv_(): ERROR: Unknown "
                                      "column type");
         }
@@ -498,14 +494,14 @@ read_csv2_(std::istream &stream,
         stream.unget();
 
         // First get the header which is column names, sizes and types
-        if (! header_read)  {
+        if (! header_read) [[unlikely]]  {
              char   col_name[256];
              char   type_str[64];
 
             _get_token_from_file_(stream, ':', col_name);
             _get_token_from_file_(stream, ':', value); // Get the size
             stream.get(c);
-            if (c != '<')
+            if (c != '<') [[unlikely]]
                 throw DataFrameError(
                     "DataFrame::read_csv2_(): ERROR: Expected "
                     "'<' char to specify column type");
@@ -531,7 +527,7 @@ read_csv2_(std::istream &stream,
                                       type_str,
                                       col_name,
                                       nrows);
-            else if (! ::strcmp(type_str, "double"))
+            else if (! ::strcmp(type_str, "double")) [[likely]]
                 spec_vec.emplace_back(StlVecType<double>(),
                                       type_str,
                                       col_name,
@@ -601,7 +597,7 @@ read_csv2_(std::istream &stream,
                     std::any_cast<StlVecType<float> &>
                         (col_spec.col_vec).push_back(strtof(value, nullptr));
             }
-            else if (col_spec.type_spec == "double")  {
+            else if (col_spec.type_spec == "double") [[likely]]  {
                 if (value[0] != '\0')
                     std::any_cast<StlVecType<double> &>
                         (col_spec.col_vec).push_back(strtod(value, nullptr));
@@ -704,17 +700,18 @@ read_csv2_(std::istream &stream,
     const size_type spec_s = spec_vec.size();
 
     if (spec_s > 0)  {
-        if (spec_vec[0].col_name != DF_INDEX_COL_NAME && ! columns_only)
+        if (spec_vec[0].col_name != DF_INDEX_COL_NAME &&
+            ! columns_only) [[unlikely]]
             throw DataFrameError("DataFrame::read_csv2_(): ERROR: "
                                  "Index column is not the first column");
-        if (! columns_only)
+        if (! columns_only) [[likely]]
             load_index(std::move(
                 std::any_cast<IndexVecType &>(spec_vec[0].col_vec)));
 
         const size_type begin =
             spec_vec[0].col_name == DF_INDEX_COL_NAME ? 1 : 0;
 
-        for (size_type i = begin; i < spec_s; ++i)  {
+        for (size_type i = begin; i < spec_s; ++i) [[likely]]  {
             _col_data_spec_ col_spec = spec_vec[i];
 
             if (col_spec.type_spec == "float")
@@ -722,7 +719,7 @@ read_csv2_(std::istream &stream,
                             std::move(std::any_cast<StlVecType<float> &>
                                       (col_spec.col_vec)),
                             nan_policy::dont_pad_with_nans);
-            else if (col_spec.type_spec == "double")
+            else if (col_spec.type_spec == "double") [[likely]]
                 load_column<double>(col_spec.col_name.c_str(),
                             std::move(std::any_cast<StlVecType<double> &>
                                           (col_spec.col_vec)),
@@ -800,7 +797,7 @@ read (const char *file_name,
     std::ifstream       stream;
     const IOStreamOpti  io_opti(stream, file_name);
 
-    if (stream.fail())  {
+    if (stream.fail()) [[unlikely]]  {
         String1K    err;
 
         err.printf("read(): ERROR: Unable to open file '%s'", file_name);
@@ -825,9 +822,9 @@ read (S &in_s,
     static_assert(std::is_base_of<HeteroVector<align_value>, DataVec>::value,
                   "Only a StdDataFrame can call read()");
 
-    if (iof == io_format::csv)  {
+    if (iof == io_format::csv) [[likely]]  {
         if (starting_row != 0 ||
-            num_rows != std::numeric_limits<size_type>::max())
+            num_rows != std::numeric_limits<size_type>::max()) [[unlikely]]
             throw NotImplemented("read(): Reading files in chunks is currently"
                                  " only impelemented for io_format::csv2");
 
@@ -838,7 +835,7 @@ read (S &in_s,
     }
     else if (iof == io_format::json)  {
         if (starting_row != 0 ||
-            num_rows != std::numeric_limits<size_type>::max())
+            num_rows != std::numeric_limits<size_type>::max()) [[unlikely]]
             throw NotImplemented("read(): Reading files in chunks is currently"
                                  " only impelemented for io_format::csv2");
 

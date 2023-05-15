@@ -104,7 +104,7 @@ VectorPtrView<T, A> &HeteroPtrView<A>::get_vector()  {
 
     auto    iter = views_<T>.find (this);
 
-    if (iter == views_<T>.end())
+    if (iter == views_<T>.end()) [[unlikely]]
         throw std::runtime_error("HeteroPtrView::get_vector(): ERROR: "
                                  "Cannot find view");
 
@@ -128,7 +128,7 @@ void HeteroPtrView<A>::visit_impl_help_ (T &visitor)  {
 
     auto    iter = views_<U>.find (this);
 
-    if (iter != views_<U>.end())  {
+    if (iter != views_<U>.end()) [[likely]]  {
 #ifndef _MSC_VER
         for (auto &&element : iter->second)
             visitor(element);
@@ -149,7 +149,7 @@ void HeteroPtrView<A>::visit_impl_help_ (T &visitor) const  {
 
     const auto  citer = views_<U>.find (this);
 
-    if (citer != views_<U>.end())  {
+    if (citer != views_<U>.end()) [[likely]]  {
 #ifndef _MSC_VER
         for (auto &&element : citer->second)
             visitor(element);
@@ -170,7 +170,7 @@ void HeteroPtrView<A>::sort_impl_help_ (T &functor)  {
 
     auto    iter = views_<U>.find (this);
 
-    if (iter != views_<U>.end())
+    if (iter != views_<U>.end()) [[likely]]
         std::sort (iter->second.begin(), iter->second.end(), functor);
 }
 
@@ -182,7 +182,7 @@ void HeteroPtrView<A>::change_impl_help_ (T &functor)  {
 
     auto    iter = views_<U>.find (this);
 
-    if (iter != views_<U>.end())
+    if (iter != views_<U>.end()) [[likely]]
         functor(iter->second);
 }
 
@@ -194,7 +194,7 @@ void HeteroPtrView<A>::change_impl_help_ (T &functor) const  {
 
     const auto  citer = views_<U>.find (this);
 
-    if (citer != views_<U>.end())
+    if (citer != views_<U>.end()) [[likely]]
         functor(citer->second);
 }
 
@@ -316,7 +316,7 @@ HeteroPtrView<A>::HeteroPtrView (HeteroPtrView &&that)  { *this = that; }
 template<std::size_t A>
 HeteroPtrView<A> &HeteroPtrView<A>::operator= (const HeteroPtrView &rhs)  {
 
-    if (&rhs != this)  {
+    if (&rhs != this) [[likely]]  {
         clear();
         clear_function_ = rhs.clear_function_;
         copy_function_ = rhs.copy_function_;
@@ -333,7 +333,7 @@ HeteroPtrView<A> &HeteroPtrView<A>::operator= (const HeteroPtrView &rhs)  {
 template<std::size_t A>
 HeteroPtrView<A> &HeteroPtrView<A>::operator= (HeteroPtrView &&rhs)  {
 
-    if (&rhs != this)  {
+    if (&rhs != this) [[likely]]  {
         clear();
         clear_function_ = std::move(rhs.clear_function_);
         copy_function_ = std::move(rhs.copy_function_);

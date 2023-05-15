@@ -45,7 +45,7 @@ get_vector()  {
     auto    iter = vectors_<T>.find (this);
 
     // don't have it yet, so create functions for copying and destroying
-    if (iter == vectors_<T>.end())  {
+    if (iter == vectors_<T>.end()) [[likely]]  {
         clear_functions_.emplace_back (
             [](HeteroVector &hv) { vectors_<T>.erase(&hv); });
 
@@ -170,7 +170,7 @@ void HeteroVector<A>::visit_impl_help_ (T &visitor)  {
 
     auto    iter = vectors_<U>.find (this);
 
-    if (iter != vectors_<U>.end())
+    if (iter != vectors_<U>.end()) [[likely]]
         for (auto &&element : iter->second)
             visitor(element);
 }
@@ -183,7 +183,7 @@ void HeteroVector<A>::visit_impl_help_ (T &visitor) const  {
 
     const auto  citer = vectors_<U>.find (this);
 
-    if (citer != vectors_<U>.end())
+    if (citer != vectors_<U>.end()) [[likely]]
         for (auto &&element : citer->second)
             visitor(element);
 }
@@ -196,7 +196,7 @@ void HeteroVector<A>::sort_impl_help_ (T &functor)  {
 
     auto    iter = vectors_<U>.find (this);
 
-    if (iter != vectors_<U>.end())
+    if (iter != vectors_<U>.end()) [[likely]]
         std::sort (iter->second.begin(), iter->second.end(), functor);
 }
 
@@ -220,7 +220,7 @@ void HeteroVector<A>::change_impl_help_ (T &functor) const  {
 
     const auto  citer = vectors_<U>.find (this);
 
-    if (citer != vectors_<U>.end())
+    if (citer != vectors_<U>.end()) [[likely]]
         functor(citer->second);
 }
 
@@ -385,7 +385,7 @@ HeteroVector<A>::HeteroVector (HeteroVector &&that)  { *this = that; }
 template<std::size_t A>
 HeteroVector<A> &HeteroVector<A>::operator= (const HeteroVector &rhs)  {
 
-    if (&rhs != this)  {
+    if (&rhs != this) [[likely]]  {
         clear();
         clear_functions_ = rhs.clear_functions_;
         copy_functions_ = rhs.copy_functions_;
@@ -403,7 +403,7 @@ HeteroVector<A> &HeteroVector<A>::operator= (const HeteroVector &rhs)  {
 template<std::size_t A>
 HeteroVector<A> &HeteroVector<A>::operator= (HeteroVector &&rhs)  {
 
-    if (&rhs != this)  {
+    if (&rhs != this) [[likely]]  {
         clear();
         clear_functions_ = std::move(rhs.clear_functions_);
         copy_functions_ = std::move(rhs.copy_functions_);

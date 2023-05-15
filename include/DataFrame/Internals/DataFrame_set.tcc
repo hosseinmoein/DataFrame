@@ -46,15 +46,15 @@ DataFrame<I, H>::create_column (const char *name, bool do_lock)  {
     static_assert(std::is_base_of<HeteroVector<align_value>, DataVec>::value,
                   "Only a StdDataFrame can call create_column()");
 
-    if (! ::strcmp(name, DF_INDEX_COL_NAME))
+    if (! ::strcmp(name, DF_INDEX_COL_NAME)) [[unlikely]]
         throw DataFrameError ("DataFrame::create_column(): ERROR: "
                               "Data column name cannot be 'INDEX'");
-    if (column_tb_.find(name) != column_tb_.end())
+    if (column_tb_.find(name) != column_tb_.end()) [[unlikely]]
        return (get_column<T>(name));
 
     const SpinGuard guard(do_lock ? lock_ : nullptr);
 
-    if (column_list_.empty())  {
+    if (column_list_.empty()) [[unlikely]]  {
         column_list_.reserve(32);
         data_.reserve(32);
     }
@@ -355,7 +355,7 @@ load_column (const char *name,
     size_type       s = std::distance(range.begin, range.end);
     const size_type idx_s = indices_.size();
 
-    if (s > idx_s)  {
+    if (s > idx_s) [[unlikely]]  {
         char buffer [512];
 
         snprintf (buffer, sizeof(buffer) - 1,
@@ -375,7 +375,7 @@ load_column (const char *name,
     StlVecType<value_t> *vec_ptr = nullptr;
     SpinGuard           guard(do_lock ? lock_ : nullptr);
 
-    if (iter == column_tb_.end())
+    if (iter == column_tb_.end()) [[likely]]
         vec_ptr = &(create_column<value_t>(name, false));
     else  {
         DataVec &hv = data_[iter->second];
@@ -414,7 +414,7 @@ load_result_as_column(V &visitor,
     auto            &new_col = visitor.get_result();
     const size_type data_s = new_col.size();
 
-    if (data_s > idx_s)  {
+    if (data_s > idx_s) [[unlikely]]  {
         char buffer [512];
 
         snprintf (buffer, sizeof(buffer) - 1,
@@ -555,7 +555,7 @@ load_indicators(const char *cat_col_name, const char *numeric_cols_prefix)  {
     size_type       ret_cnt = 0;
 
     val_map.reserve(col_s / 2);
-    for (size_type i = 0; i < col_s; ++i)  {
+    for (size_type i = 0; i < col_s; ++i) [[likely]]  {
         const auto  val = cat_col[i];
         auto        in_ret = val_map.emplace(std::make_pair(val, nullptr));
 
@@ -591,7 +591,7 @@ from_indicators(const StlVecType<const char *> &ind_col_names,
     StlVecType<const StlVecType<T> *>   ind_cols(ind_col_s, nullptr);
     SpinGuard                           guard (lock_);
 
-    for (size_type i = 0; i < ind_col_s; ++i)
+    for (size_type i = 0; i < ind_col_s; ++i) [[likely]]
         ind_cols[i] = &(get_column<T>(ind_col_names[i], false));
 
     const size_type col_s = ind_cols[0]->size();
@@ -601,8 +601,8 @@ from_indicators(const StlVecType<const char *> &ind_col_names,
 
     guard.release();
     new_col.reserve(col_s);
-    for (size_type i = 0; i < col_s; ++i)
-        for (size_type j = 0; j < ind_col_s; ++j)
+    for (size_type i = 0; i < col_s; ++i) [[likely]]
+        for (size_type j = 0; j < ind_col_s; ++j) [[likely]]
             if (ind_cols[j]->at(i))  {
                 new_col.push_back(
                     _string_to_<CT>(ind_col_names[j] + pre_offset));
@@ -654,7 +654,7 @@ load_column (const char *name,
     const size_type idx_s = indices_.size();
     const size_type data_s = column.size();
 
-    if (data_s > idx_s)  {
+    if (data_s > idx_s) [[unlikely]]  {
         char buffer [512];
 
         snprintf (buffer, sizeof(buffer) - 1,
@@ -683,7 +683,7 @@ load_column (const char *name,
     StlVecType<value_t> *vec_ptr = nullptr;
     const SpinGuard     guard (do_lock ? lock_ : nullptr);
 
-    if (iter == column_tb_.end())
+    if (iter == column_tb_.end()) [[likely]]
         vec_ptr = &(create_column<value_t>(name, false));
     else  {
         DataVec &hv = data_[iter->second];
@@ -806,7 +806,7 @@ append_column (const char *name,
         std::distance(range.begin, range.end) + vec.size();
     const size_type        idx_s = indices_.size();
 
-    if (s > idx_s)  {
+    if (s > idx_s) [[unlikely]]  {
         char buffer [512];
 
         snprintf(buffer, sizeof(buffer) - 1,
@@ -847,7 +847,7 @@ append_column (const char *name, const T &val, nan_policy padding)  {
     size_type           s = 1;
     const size_type     idx_s = indices_.size();
 
-    if (s > idx_s)  {
+    if (s > idx_s) [[unlikely]]  {
         char buffer [512];
 
         snprintf(buffer, sizeof(buffer) - 1,
@@ -927,7 +927,7 @@ void DataFrame<I, H>::remove_data_by_idx (Index2D<IndexType> range)  {
     const auto  &upper =
         std::upper_bound (indices_.begin(), indices_.end(), range.end);
 
-    if (lower != indices_.end())  {
+    if (lower != indices_.end()) [[likely]]  {
         const size_type b_dist = std::distance(indices_.begin(), lower);
         const size_type e_dist = std::distance(indices_.begin(),
                                                upper < indices_.end()
@@ -961,7 +961,7 @@ void DataFrame<I, H>::remove_data_by_loc (Index2D<long> range)  {
         range.end = static_cast<long>(indices_.size()) + range.end;
 
     if (range.end <= static_cast<long>(indices_.size()) &&
-        range.begin <= range.end && range.begin >= 0)  {
+        range.begin <= range.end && range.begin >= 0) [[likely]]  {
         make_consistent<Ts ...>();
         indices_.erase(indices_.begin() + range.begin,
                        indices_.begin() + range.end);
@@ -971,7 +971,7 @@ void DataFrame<I, H>::remove_data_by_loc (Index2D<long> range)  {
             static_cast<size_type>(range.end));
         const SpinGuard         guard(lock_);
 
-        for (const auto &iter : column_list_)
+        for (const auto &iter : column_list_) [[likely]]
             data_[iter.second].change(functor);
 
         return;
@@ -1000,7 +1000,7 @@ void DataFrame<I, H>::remove_data_by_sel (const char *name, F &sel_functor)  {
     StlVecType<size_type>   col_indices;
 
     col_indices.reserve(indices_.size() / 2);
-    for (size_type i = 0; i < col_s; ++i)
+    for (size_type i = 0; i < col_s; ++i) [[likely]]
         if (sel_functor (indices_[i], vec[i]))
             col_indices.push_back(i);
 
@@ -1014,7 +1014,7 @@ void DataFrame<I, H>::remove_data_by_sel (const char *name, F &sel_functor)  {
     const size_type col_indices_s = col_indices.size();
     size_type       del_count = 0;
 
-    for (size_type i = 0; i < col_indices_s; ++i)
+    for (size_type i = 0; i < col_indices_s; ++i) [[likely]]
         indices_.erase(indices_.begin() + (col_indices[i] - del_count++));
 
     return;
@@ -1037,7 +1037,7 @@ remove_data_by_sel (const char *name1, const char *name2, F &sel_functor)  {
     StlVecType<size_type>   col_indices;
 
     col_indices.reserve(idx_s / 2);
-    for (size_type i = 0; i < min_col_s; ++i)
+    for (size_type i = 0; i < min_col_s; ++i) [[likely]]
         if (sel_functor (indices_[i], vec1[i], vec2[i]))
             col_indices.push_back(i);
     for (size_type i = min_col_s; i < idx_s; ++i)
@@ -1083,7 +1083,7 @@ remove_data_by_sel (const char *name1,
     StlVecType<size_type>   col_indices;
 
     col_indices.reserve(idx_s / 2);
-    for (size_type i = 0; i < min_col_s; ++i)
+    for (size_type i = 0; i < min_col_s; ++i) [[likely]]
         if (sel_functor (indices_[i], vec1[i], vec2[i], vec3[i]))
             col_indices.push_back(i);
     for (size_type i = min_col_s; i < idx_s; ++i)
@@ -1196,7 +1196,7 @@ remove_duplicates (const char *name,
     count_vec               dummy_vec;
     const IndexType         dummy_idx { };
 
-    for (size_type i = 0; i < col_s; ++i)  {
+    for (size_type i = 0; i < col_s; ++i) [[likely]]  {
         auto    insert_res =
             row_table.emplace(
                 std::forward_as_tuple(vec[i],
@@ -1243,7 +1243,7 @@ remove_duplicates (const char *name1,
     count_vec               dummy_vec;
     const IndexType         dummy_idx { };
 
-    for (size_type i = 0; i < col_s; ++i)  {
+    for (size_type i = 0; i < col_s; ++i) [[likely]]  {
         auto    insert_res =
             row_table.emplace(
                 std::forward_as_tuple(vec1[i], vec2[i],
@@ -1295,7 +1295,7 @@ remove_duplicates (const char *name1,
     count_vec               dummy_vec;
     const IndexType         dummy_idx { };
 
-    for (size_type i = 0; i < col_s; ++i)  {
+    for (size_type i = 0; i < col_s; ++i) [[likely]]  {
         auto    insert_res =
             row_table.emplace(
                 std::forward_as_tuple(vec1[i], vec2[i], vec3[i],
@@ -1351,7 +1351,7 @@ remove_duplicates (const char *name1,
     count_vec               dummy_vec;
     const IndexType         dummy_idx { };
 
-    for (size_type i = 0; i < col_s; ++i)  {
+    for (size_type i = 0; i < col_s; ++i) [[likely]]  {
         auto    insert_res =
             row_table.emplace(
                 std::forward_as_tuple(vec1[i], vec2[i], vec3[i], vec4[i],
@@ -1410,7 +1410,7 @@ remove_duplicates (const char *name1,
     count_vec               dummy_vec;
     const IndexType         dummy_idx { };
 
-    for (size_type i = 0; i < col_s; ++i)  {
+    for (size_type i = 0; i < col_s; ++i) [[likely]]  {
         auto    insert_res =
             row_table.emplace(
                 std::forward_as_tuple(vec1[i], vec2[i], vec3[i],
@@ -1475,7 +1475,7 @@ remove_duplicates (const char *name1,
     count_vec               dummy_vec;
     const IndexType         dummy_idx { };
 
-    for (size_type i = 0; i < col_s; ++i)  {
+    for (size_type i = 0; i < col_s; ++i) [[likely]]  {
         auto    insert_res =
             row_table.emplace(
                 std::forward_as_tuple(vec1[i], vec2[i], vec3[i],

@@ -72,7 +72,7 @@ template<typename I, typename H>
 typename DataFrame<I, H>::size_type
 DataFrame<I, H>::col_name_to_idx (const char *col_name) const  {
 
-    for (const auto &citer : column_list_)
+    for (const auto &citer : column_list_) [[likely]]
         if (citer.first == col_name)
             return (citer.second);
 
@@ -90,7 +90,7 @@ template<typename I, typename H>
 const char *
 DataFrame<I, H>::col_idx_to_name (size_type col_idx) const  {
 
-    for (const auto &citer : column_list_)
+    for (const auto &citer : column_list_) [[likely]]
         if (citer.second == col_idx)
             return (citer.first.c_str());
 
@@ -116,7 +116,7 @@ DataFrame<I, H>::get_column (const char *name, bool do_lock)  {
 
     auto    iter = column_tb_.find (name);
 
-    if (iter == column_tb_.end())  {
+    if (iter == column_tb_.end()) [[unlikely]]  {
         char buffer [512];
 
         snprintf (buffer, sizeof(buffer) - 1,
@@ -218,7 +218,7 @@ template<typename ... Ts>
 HeteroVector<std::size_t(H::align_value)> DataFrame<I, H>::
 get_row(size_type row_num, const StlVecType<const char *> &col_names) const {
 
-    if (row_num >= indices_.size())  {
+    if (row_num >= indices_.size()) [[unlikely]]  {
         char buffer [512];
 
 #ifdef _MSC_VER
@@ -240,7 +240,7 @@ get_row(size_type row_num, const StlVecType<const char *> &col_names) const {
     get_row_functor_<Ts ...>    functor(ret_vec, row_num);
     const SpinGuard             guard(lock_);
 
-    for (const auto &name_citer : col_names)  {
+    for (const auto &name_citer : col_names) [[likely]]  {
         const auto  &citer = column_tb_.find (name_citer);
 
         if (citer == column_tb_.end())  {
@@ -287,7 +287,7 @@ get_row(size_type row_num) const {
     get_row_functor_<Ts ...>    functor(ret_vec, row_num);
     const SpinGuard             guard(lock_);
 
-    for (const auto &citer : column_list_)
+    for (const auto &citer : column_list_) [[likely]]
         data_[citer.second].change(functor);
 
     return (ret_vec);
@@ -319,7 +319,7 @@ get_col_unique_values(const char *name) const  {
     ColumnVecType<T>            result;
 
     result.reserve(vec.size());
-    for (const auto &citer : vec)  {
+    for (const auto &citer : vec) [[likely]]  {
         if (is_nan<T>(citer) && ! counted_nan)  {
             counted_nan = true;
             result.push_back(get_nan<T>());
@@ -359,7 +359,7 @@ DataFrame<I, H>::get_data_by_idx (Index2D<IndexType> range) const  {
 
         const SpinGuard guard(lock_);
 
-        for (const auto &citer : column_list_)  {
+        for (const auto &citer : column_list_) [[likely]]  {
             load_functor_<DataFrame, Ts ...>    functor (citer.first.c_str(),
                                                          b_dist,
                                                          e_dist,
@@ -399,7 +399,7 @@ get_data_by_idx(const StlVecType<IndexType> &values) const  {
 
     const SpinGuard guard(lock_);
 
-    for (const auto &col_citer : column_list_)  {
+    for (const auto &col_citer : column_list_) [[likely]]  {
         sel_load_functor_<size_type, Ts ...>    functor (
             col_citer.first.c_str(),
             locations,
@@ -429,7 +429,7 @@ DataFrame<I, H>::get_view_by_idx (Index2D<IndexType> range)  {
     View    dfv;
 
     if (lower != indices_.end() &&
-        (upper != indices_.end() || indices_.back() == range.end))  {
+        (upper != indices_.end() || indices_.back() == range.end)) [[likely]] {
         IndexType       *upper_address = nullptr;
         const size_type b_dist = std::distance(indices_.begin(), lower);
         const size_type e_dist = std::distance(indices_.begin(), upper);
@@ -442,7 +442,7 @@ DataFrame<I, H>::get_view_by_idx (Index2D<IndexType> range)  {
 
         const SpinGuard guard(lock_);
 
-        for (const auto &iter : column_list_)  {
+        for (const auto &iter : column_list_) [[likely]]  {
             view_setup_functor_<View, Ts ...>   functor (iter.first.c_str(),
                                                          b_dist,
                                                          e_dist,
@@ -472,7 +472,7 @@ DataFrame<I, H>::get_view_by_idx (Index2D<IndexType> range) const  {
     ConstView   dfcv;
 
     if (lower != indices_.end() &&
-        (upper != indices_.end() || indices_.back() == range.end))  {
+        (upper != indices_.end() || indices_.back() == range.end)) [[likely]] {
         const IndexType *upper_address = nullptr;
         const size_type b_dist = std::distance(indices_.begin(), lower);
         const size_type e_dist = std::distance(indices_.begin(), upper);
@@ -486,7 +486,7 @@ DataFrame<I, H>::get_view_by_idx (Index2D<IndexType> range) const  {
 
         const SpinGuard guard(lock_);
 
-        for (const auto &iter : column_list_)  {
+        for (const auto &iter : column_list_) [[likely]]  {
             view_setup_functor_<ConstView, Ts ...>  functor (iter.first.c_str(),
                                                              b_dist,
                                                              e_dist,
@@ -521,8 +521,8 @@ get_view_by_idx(const StlVecType<IndexType> &values)  {
     new_index.reserve(values_s);
     locations.reserve(values_s);
 
-    for (size_type i = 0; i < idx_s; ++i)
-        if (val_table.find(indices_[i]) != val_table.end())  {
+    for (size_type i = 0; i < idx_s; ++i) [[likely]]
+        if (val_table.find(indices_[i]) != val_table.end()) [[likely]]  {
             new_index.push_back(&(indices_[i]));
             locations.push_back(i);
         }
@@ -533,7 +533,7 @@ get_view_by_idx(const StlVecType<IndexType> &values)  {
 
     const SpinGuard guard(lock_);
 
-    for (const auto &col_citer : column_list_)  {
+    for (const auto &col_citer : column_list_) [[likely]]  {
         sel_load_view_functor_<size_type, TheView, Ts ...>   functor (
             col_citer.first.c_str(),
             locations,
@@ -569,8 +569,8 @@ get_view_by_idx(const StlVecType<IndexType> &values) const  {
     new_index.reserve(values_s);
     locations.reserve(values_s);
 
-    for (size_type i = 0; i < idx_s; ++i)
-        if (val_table.find(indices_[i]) != val_table.end())  {
+    for (size_type i = 0; i < idx_s; ++i) [[likely]]
+        if (val_table.find(indices_[i]) != val_table.end()) [[likely]]  {
             new_index.push_back(&(indices_[i]));
             locations.push_back(i);
         }
@@ -581,7 +581,7 @@ get_view_by_idx(const StlVecType<IndexType> &values) const  {
 
     const SpinGuard guard(lock_);
 
-    for (const auto &col_citer : column_list_)  {
+    for (const auto &col_citer : column_list_) [[likely]]  {
         sel_load_view_functor_<size_type, TheView, Ts ...>
             functor (col_citer.first.c_str(),
                      locations,
@@ -607,7 +607,7 @@ DataFrame<I, H>::get_data_by_loc (Index2D<long> range) const  {
         range.end = static_cast<long>(indices_.size()) + range.end + 1;
 
     if (range.end <= static_cast<long>(indices_.size()) &&
-        range.begin <= range.end && range.begin >= 0)  {
+        range.begin <= range.end && range.begin >= 0) [[likely]]  {
         DataFrame   df;
 
         df.load_index(indices_.begin() + static_cast<size_type>(range.begin),
@@ -615,7 +615,7 @@ DataFrame<I, H>::get_data_by_loc (Index2D<long> range) const  {
 
         const SpinGuard guard(lock_);
 
-        for (const auto &iter : column_list_)  {
+        for (const auto &iter : column_list_) [[likely]]  {
             load_functor_<DataFrame, Ts ...>    functor (
                 iter.first.c_str(),
                 static_cast<size_type>(range.begin),
@@ -649,7 +649,7 @@ get_data_by_loc (const StlVecType<long> &locations) const  {
     IndexVecType    new_index;
 
     new_index.reserve(locations.size());
-    for (auto citer : locations)  {
+    for (auto citer : locations) [[likely]]  {
         const size_type index =
             citer >= 0 ? (citer) : (citer) + static_cast<long>(idx_s);
 
@@ -659,7 +659,7 @@ get_data_by_loc (const StlVecType<long> &locations) const  {
 
     const SpinGuard guard(lock_);
 
-    for (const auto &col_citer : column_list_)  {
+    for (const auto &col_citer : column_list_) [[likely]]  {
         sel_load_functor_<long, Ts ...>  functor (
             col_citer.first.c_str(),
             locations,
@@ -689,7 +689,8 @@ DataFrame<I, H>::get_view_by_loc (Index2D<long> range)  {
     if (range.end < 0)
         range.end = idx_s + range.end + 1;
 
-    if (range.end <= idx_s && range.begin <= range.end && range.begin >= 0)  {
+    if (range.end <= idx_s && range.begin <= range.end &&
+        range.begin >= 0) [[likely]]  {
         View    dfv;
 
         dfv.indices_ =
@@ -698,7 +699,7 @@ DataFrame<I, H>::get_view_by_loc (Index2D<long> range)  {
 
         const SpinGuard guard(lock_);
 
-        for (const auto &iter : column_list_)  {
+        for (const auto &iter : column_list_) [[likely]]  {
             view_setup_functor_<View, Ts ...>   functor (
                 iter.first.c_str(),
                 static_cast<size_type>(range.begin),
@@ -737,7 +738,8 @@ DataFrame<I, H>::get_view_by_loc (Index2D<long> range) const  {
     if (range.end < 0)
         range.end = idx_s + range.end + 1;
 
-    if (range.end <= idx_s && range.begin <= range.end && range.begin >= 0)  {
+    if (range.end <= idx_s && range.begin <= range.end &&
+        range.begin >= 0) [[likely]]  {
         ConstView   dfcv;
 
         dfcv.indices_ =
@@ -746,7 +748,7 @@ DataFrame<I, H>::get_view_by_loc (Index2D<long> range) const  {
 
         const SpinGuard guard(lock_);
 
-        for (const auto &iter : column_list_)  {
+        for (const auto &iter : column_list_) [[likely]]  {
             view_setup_functor_<ConstView, Ts ...>  functor(
                 iter.first.c_str(),
                 static_cast<size_type>(range.begin),
@@ -786,7 +788,7 @@ DataFrame<I, H>::get_view_by_loc (const StlVecType<long> &locations)  {
     typename TheView::IndexVecType  new_index;
 
     new_index.reserve(locations.size());
-    for (auto citer: locations)  {
+    for (auto citer: locations) [[likely]]  {
         const size_type index =
             citer >= 0 ? (citer) : (citer) + static_cast<long>(idx_s);
 
@@ -796,7 +798,7 @@ DataFrame<I, H>::get_view_by_loc (const StlVecType<long> &locations)  {
 
     const SpinGuard guard(lock_);
 
-    for (const auto &col_citer : column_list_)  {
+    for (const auto &col_citer : column_list_) [[likely]]  {
         sel_load_view_functor_<long, TheView, Ts ...>   functor (
             col_citer.first.c_str(),
             locations,
@@ -828,7 +830,7 @@ get_view_by_loc (const StlVecType<long> &locations) const  {
     typename TheView::IndexVecType  new_index;
 
     new_index.reserve(locations.size());
-    for (auto citer: locations)  {
+    for (auto citer: locations) [[likely]]  {
         const size_type index =
             citer >= 0 ? (citer) : (citer) + static_cast<long>(idx_s);
 
@@ -838,7 +840,7 @@ get_view_by_loc (const StlVecType<long> &locations) const  {
 
     const SpinGuard guard(lock_);
 
-    for (const auto &col_citer : column_list_)  {
+    for (const auto &col_citer : column_list_) [[likely]]  {
         sel_load_view_functor_<long, TheView, Ts ...>   functor (
             col_citer.first.c_str(),
             locations,
@@ -872,13 +874,13 @@ get_data_by_sel (const char *name, F &sel_functor) const  {
     IndexVecType    new_index;
 
     new_index.reserve(col_indices.size());
-    for (auto citer: col_indices)
+    for (auto citer: col_indices) [[likely]]
         new_index.push_back(indices_[citer]);
     df.load_index(std::move(new_index));
 
     const SpinGuard guard(lock_);
 
-    for (const auto &col_citer : column_list_)  {
+    for (const auto &col_citer : column_list_) [[likely]]  {
         sel_load_functor_<size_type, Ts ...>    functor (
             col_citer.first.c_str(),
             col_indices,
@@ -907,8 +909,8 @@ get_view_by_sel (const char *name, F &sel_functor)  {
     StlVecType<size_type>  col_indices;
 
     col_indices.reserve(idx_s / 2);
-    for (size_type i = 0; i < col_s; ++i)
-        if (sel_functor (indices_[i], vec[i]))
+    for (size_type i = 0; i < col_s; ++i) [[likely]]
+        if (sel_functor (indices_[i], vec[i])) [[unlikely]]
             col_indices.push_back(i);
 
     using TheView = PtrView;
@@ -917,13 +919,13 @@ get_view_by_sel (const char *name, F &sel_functor)  {
     typename TheView::IndexVecType  new_index;
 
     new_index.reserve(col_indices.size());
-    for (auto citer: col_indices)
+    for (auto citer: col_indices) [[likely]]
         new_index.push_back(&(indices_[citer]));
     dfv.indices_ = std::move(new_index);
 
     const SpinGuard guard(lock_);
 
-    for (const auto &col_citer : column_list_)  {
+    for (const auto &col_citer : column_list_) [[likely]]  {
         sel_load_view_functor_<size_type, TheView, Ts ...>   functor (
             col_citer.first.c_str(),
             col_indices,
@@ -953,8 +955,8 @@ get_view_by_sel (const char *name, F &sel_functor) const  {
     StlVecType<size_type>   col_indices;
 
     col_indices.reserve(idx_s / 2);
-    for (size_type i = 0; i < col_s; ++i)
-        if (sel_functor (indices_[i], vec[i]))
+    for (size_type i = 0; i < col_s; ++i) [[likely]]
+        if (sel_functor (indices_[i], vec[i])) [[unlikely]]
             col_indices.push_back(i);
 
     using TheView = ConstPtrView;
@@ -963,13 +965,13 @@ get_view_by_sel (const char *name, F &sel_functor) const  {
     typename TheView::IndexVecType  new_index;
 
     new_index.reserve(col_indices.size());
-    for (auto citer: col_indices)
+    for (auto citer: col_indices) [[likely]]
         new_index.push_back(&(indices_[citer]));
     dfv.indices_ = std::move(new_index);
 
     const SpinGuard guard(lock_);
 
-    for (const auto &col_citer : column_list_)  {
+    for (const auto &col_citer : column_list_) [[likely]]  {
         sel_load_view_functor_<size_type, TheView, Ts ...>   functor (
             col_citer.first.c_str(),
             col_indices,
@@ -999,10 +1001,10 @@ get_data_by_sel (const char *name1, const char *name2, F &sel_functor) const  {
     StlVecType<size_type>   col_indices;
 
     col_indices.reserve(idx_s / 2);
-    for (size_type i = 0; i < min_col_s; ++i)
-        if (sel_functor(indices_[i], vec1[i], vec2[i]))
+    for (size_type i = 0; i < min_col_s; ++i) [[likely]]
+        if (sel_functor(indices_[i], vec1[i], vec2[i])) [[unlikely]]
             col_indices.push_back(i);
-    for (size_type i = min_col_s; i < idx_s; ++i)
+    for (size_type i = min_col_s; i < idx_s; ++i) [[likely]]
         if (sel_functor (indices_[i],
                          i < col_s1 ? vec1[i] : get_nan<T1>(),
                          i < col_s2 ? vec2[i] : get_nan<T2>()))
@@ -1016,7 +1018,7 @@ get_data_by_sel (const char *name1, const char *name2, F &sel_functor) const  {
         new_index.push_back(indices_[citer]);
     df.load_index(std::move(new_index));
 
-    for (const auto &col_citer : column_list_)  {
+    for (const auto &col_citer : column_list_) [[likely]]  {
         sel_load_functor_<size_type, Ts ...>    functor (
             col_citer.first.c_str(),
             col_indices,
@@ -1049,10 +1051,10 @@ get_view_by_sel (const char *name1, const char *name2, F &sel_functor)  {
     StlVecType<size_type>   col_indices;
 
     col_indices.reserve(idx_s / 2);
-    for (size_type i = 0; i < min_col_s; ++i)
-        if (sel_functor(indices_[i], vec1[i], vec2[i]))
+    for (size_type i = 0; i < min_col_s; ++i) [[likely]]
+        if (sel_functor(indices_[i], vec1[i], vec2[i])) [[unlikely]]
             col_indices.push_back(i);
-    for (size_type i = min_col_s; i < idx_s; ++i)
+    for (size_type i = min_col_s; i < idx_s; ++i) [[likely]]
         if (sel_functor (indices_[i],
                          i < col_s1 ? vec1[i] : get_nan<T1>(),
                          i < col_s2 ? vec2[i] : get_nan<T2>()))
@@ -1068,7 +1070,7 @@ get_view_by_sel (const char *name1, const char *name2, F &sel_functor)  {
         new_index.push_back(&(indices_[citer]));
     dfv.indices_ = std::move(new_index);
 
-    for (const auto &col_citer : column_list_)  {
+    for (const auto &col_citer : column_list_) [[likely]]  {
         sel_load_view_functor_<size_type, TheView, Ts ...>   functor (
             col_citer.first.c_str(),
             col_indices,
@@ -1102,10 +1104,10 @@ get_view_by_sel (const char *name1, const char *name2, F &sel_functor) const  {
     StlVecType<size_type>   col_indices;
 
     col_indices.reserve(idx_s / 2);
-    for (size_type i = 0; i < min_col_s; ++i)
-        if (sel_functor(indices_[i], vec1[i], vec2[i]))
+    for (size_type i = 0; i < min_col_s; ++i) [[likely]]
+        if (sel_functor(indices_[i], vec1[i], vec2[i])) [[unlikely]]
             col_indices.push_back(i);
-    for (size_type i = min_col_s; i < idx_s; ++i)
+    for (size_type i = min_col_s; i < idx_s; ++i) [[likely]]
         if (sel_functor (indices_[i],
                          i < col_s1 ? vec1[i] : get_nan<T1>(),
                          i < col_s2 ? vec2[i] : get_nan<T2>()))
@@ -1117,11 +1119,11 @@ get_view_by_sel (const char *name1, const char *name2, F &sel_functor) const  {
     typename TheView::IndexVecType  new_index;
 
     new_index.reserve(col_indices.size());
-    for (auto citer: col_indices)
+    for (auto citer: col_indices) [[likely]]
         new_index.push_back(&(indices_[citer]));
     dfv.indices_ = std::move(new_index);
 
-    for (const auto &col_citer : column_list_)  {
+    for (const auto &col_citer : column_list_) [[likely]]  {
         sel_load_view_functor_<size_type, TheView, Ts ...>   functor (
             col_citer.first.c_str(),
             col_indices,
@@ -1156,10 +1158,10 @@ get_data_by_sel (const char *name1,
     StlVecType<size_type>   col_indices;
 
     col_indices.reserve(idx_s / 2);
-    for (size_type i = 0; i < min_col_s; ++i)
-        if (sel_functor(indices_[i], vec1[i], vec2[i], vec3[i]))
+    for (size_type i = 0; i < min_col_s; ++i) [[likely]]
+        if (sel_functor(indices_[i], vec1[i], vec2[i], vec3[i])) [[unlikely]]
             col_indices.push_back(i);
-    for (size_type i = min_col_s; i < idx_s; ++i)
+    for (size_type i = min_col_s; i < idx_s; ++i) [[likely]]
         if (sel_functor (indices_[i],
                          i < col_s1 ? vec1[i] : get_nan<T1>(),
                          i < col_s2 ? vec2[i] : get_nan<T2>(),
@@ -1170,11 +1172,11 @@ get_data_by_sel (const char *name1,
     IndexVecType    new_index;
 
     new_index.reserve(col_indices.size());
-    for (auto citer: col_indices)
+    for (auto citer: col_indices) [[likely]]
         new_index.push_back(indices_[citer]);
     df.load_index(std::move(new_index));
 
-    for (const auto &col_citer : column_list_)  {
+    for (const auto &col_citer : column_list_) [[likely]]  {
         sel_load_functor_<size_type, Ts ...>    functor (
             col_citer.first.c_str(),
             col_indices,
@@ -1340,10 +1342,10 @@ get_view_by_sel (const char *name1,
     StlVecType<size_type>   col_indices;
 
     col_indices.reserve(idx_s / 2);
-    for (size_type i = 0; i < min_col_s; ++i)
-        if (sel_functor(indices_[i], vec1[i], vec2[i], vec3[i]))
+    for (size_type i = 0; i < min_col_s; ++i) [[likely]]
+        if (sel_functor(indices_[i], vec1[i], vec2[i], vec3[i])) [[unlikely]]
             col_indices.push_back(i);
-    for (size_type i = min_col_s; i < idx_s; ++i)
+    for (size_type i = min_col_s; i < idx_s; ++i) [[likely]]
         if (sel_functor (indices_[i],
                          i < col_s1 ? vec1[i] : get_nan<T1>(),
                          i < col_s2 ? vec2[i] : get_nan<T2>(),
@@ -1356,11 +1358,11 @@ get_view_by_sel (const char *name1,
     typename TheView::IndexVecType  new_index;
 
     new_index.reserve(col_indices.size());
-    for (auto citer: col_indices)
+    for (auto citer: col_indices) [[likely]]
         new_index.push_back(&(indices_[citer]));
     dfv.indices_ = std::move(new_index);
 
-    for (const auto &col_citer : column_list_)  {
+    for (const auto &col_citer : column_list_) [[likely]]  {
         sel_load_view_functor_<size_type, TheView, Ts ...>   functor (
             col_citer.first.c_str(),
             col_indices,
@@ -1399,10 +1401,10 @@ get_view_by_sel (const char *name1,
     StlVecType<size_type>   col_indices;
 
     col_indices.reserve(idx_s / 2);
-    for (size_type i = 0; i < min_col_s; ++i)
-        if (sel_functor(indices_[i], vec1[i], vec2[i], vec3[i]))
+    for (size_type i = 0; i < min_col_s; ++i) [[likely]]
+        if (sel_functor(indices_[i], vec1[i], vec2[i], vec3[i])) [[unlikely]]
             col_indices.push_back(i);
-    for (size_type i = min_col_s; i < idx_s; ++i)
+    for (size_type i = min_col_s; i < idx_s; ++i) [[likely]]
         if (sel_functor (indices_[i],
                          i < col_s1 ? vec1[i] : get_nan<T1>(),
                          i < col_s2 ? vec2[i] : get_nan<T2>(),
@@ -1415,11 +1417,11 @@ get_view_by_sel (const char *name1,
     typename TheView::IndexVecType  new_index;
 
     new_index.reserve(col_indices.size());
-    for (auto citer: col_indices)
+    for (auto citer: col_indices) [[likely]]
         new_index.push_back(&(indices_[citer]));
     dfv.indices_ = std::move(new_index);
 
-    for (const auto &col_citer : column_list_)  {
+    for (const auto &col_citer : column_list_) [[likely]]  {
         sel_load_view_functor_<size_type, TheView, Ts ...>   functor (
             col_citer.first.c_str(),
             col_indices,
@@ -1459,10 +1461,11 @@ get_data_by_sel(const char *name1,
     StlVecType<size_type>   col_indices;
 
     col_indices.reserve(idx_s / 2);
-    for (size_type i = 0; i < min_col_s; ++i)
-        if (sel_functor(indices_[i], vec1[i], vec2[i], vec3[i], vec4[i]))
+    for (size_type i = 0; i < min_col_s; ++i) [[likely]]
+        if (sel_functor(indices_[i],
+                        vec1[i], vec2[i], vec3[i], vec4[i])) [[unlikely]]
             col_indices.push_back(i);
-    for (size_type i = min_col_s; i < idx_s; ++i)
+    for (size_type i = min_col_s; i < idx_s; ++i) [[likely]]
         if (sel_functor(indices_[i],
                         i < col_s1 ? vec1[i] : get_nan<T1>(),
                         i < col_s2 ? vec2[i] : get_nan<T2>(),
@@ -1474,11 +1477,11 @@ get_data_by_sel(const char *name1,
     IndexVecType    new_index;
 
     new_index.reserve(col_indices.size());
-    for (auto citer: col_indices)
+    for (auto citer: col_indices) [[likely]]
         new_index.push_back(indices_[citer]);
     df.load_index(std::move(new_index));
 
-    for (const auto &col_citer : column_list_)  {
+    for (const auto &col_citer : column_list_) [[likely]]  {
         sel_load_functor_<size_type, Ts ...>    functor (
             col_citer.first.c_str(),
             col_indices,
@@ -1521,10 +1524,11 @@ get_view_by_sel(const char *name1,
     StlVecType<size_type>   col_indices;
 
     col_indices.reserve(idx_s / 2);
-    for (size_type i = 0; i < min_col_s; ++i)
-        if (sel_functor(indices_[i], vec1[i], vec2[i], vec3[i], vec4[i]))
+    for (size_type i = 0; i < min_col_s; ++i) [[likely]]
+        if (sel_functor(indices_[i],
+                        vec1[i], vec2[i], vec3[i], vec4[i])) [[unlikely]]
             col_indices.push_back(i);
-    for (size_type i = min_col_s; i < idx_s; ++i)
+    for (size_type i = min_col_s; i < idx_s; ++i) [[likely]]
         if (sel_functor(indices_[i],
                         i < col_s1 ? vec1[i] : get_nan<T1>(),
                         i < col_s2 ? vec2[i] : get_nan<T2>(),
@@ -1538,11 +1542,11 @@ get_view_by_sel(const char *name1,
     typename TheView::IndexVecType  new_index;
 
     new_index.reserve(col_indices.size());
-    for (auto citer: col_indices)
+    for (auto citer: col_indices) [[likely]]
         new_index.push_back(&(indices_[citer]));
     dfv.indices_ = std::move(new_index);
 
-    for (const auto &col_citer : column_list_)  {
+    for (const auto &col_citer : column_list_) [[likely]]  {
         sel_load_view_functor_<size_type, TheView, Ts ...>   functor (
             col_citer.first.c_str(),
             col_indices,
@@ -1586,10 +1590,11 @@ get_view_by_sel(const char *name1,
     StlVecType<size_type>   col_indices;
 
     col_indices.reserve(idx_s / 2);
-    for (size_type i = 0; i < min_col_s; ++i)
-        if (sel_functor(indices_[i], vec1[i], vec2[i], vec3[i], vec4[i]))
+    for (size_type i = 0; i < min_col_s; ++i) [[likely]]
+        if (sel_functor(indices_[i],
+                        vec1[i], vec2[i], vec3[i], vec4[i])) [[unlikely]]
             col_indices.push_back(i);
-    for (size_type i = min_col_s; i < idx_s; ++i)
+    for (size_type i = min_col_s; i < idx_s; ++i) [[likely]]
         if (sel_functor(indices_[i],
                         i < col_s1 ? vec1[i] : get_nan<T1>(),
                         i < col_s2 ? vec2[i] : get_nan<T2>(),
@@ -1603,11 +1608,11 @@ get_view_by_sel(const char *name1,
     typename TheView::IndexVecType  new_index;
 
     new_index.reserve(col_indices.size());
-    for (auto citer: col_indices)
+    for (auto citer: col_indices) [[likely]]
         new_index.push_back(&(indices_[citer]));
     dfv.indices_ = std::move(new_index);
 
-    for (const auto &col_citer : column_list_)  {
+    for (const auto &col_citer : column_list_) [[likely]]  {
         sel_load_view_functor_<size_type, TheView, Ts ...>   functor (
             col_citer.first.c_str(),
             col_indices,
@@ -1650,11 +1655,12 @@ get_data_by_sel(const char *name1,
     StlVecType<size_type>   col_indices;
 
     col_indices.reserve(idx_s / 2);
-    for (size_type i = 0; i < min_col_s; ++i)
+    for (size_type i = 0; i < min_col_s; ++i) [[likely]]
         if (sel_functor(indices_[i],
-                        vec1[i], vec2[i], vec3[i], vec4[i], vec5[i]))
+                        vec1[i], vec2[i], vec3[i],
+                        vec4[i], vec5[i])) [[unlikely]]
             col_indices.push_back(i);
-    for (size_type i = min_col_s; i < idx_s; ++i)
+    for (size_type i = min_col_s; i < idx_s; ++i) [[likely]]
         if (sel_functor(indices_[i],
                         i < col_s1 ? vec1[i] : get_nan<T1>(),
                         i < col_s2 ? vec2[i] : get_nan<T2>(),
@@ -1667,11 +1673,11 @@ get_data_by_sel(const char *name1,
     IndexVecType    new_index;
 
     new_index.reserve(col_indices.size());
-    for (auto citer: col_indices)
+    for (auto citer: col_indices) [[likely]]
         new_index.push_back(indices_[citer]);
     df.load_index(std::move(new_index));
 
-    for (const auto &col_citer : column_list_)  {
+    for (const auto &col_citer : column_list_) [[likely]]  {
         sel_load_functor_<size_type, Ts ...>    functor (
             col_citer.first.c_str(),
             col_indices,
@@ -1736,13 +1742,13 @@ get_data_by_sel(const char *name1,
     StlVecType<size_type>   col_indices;
 
     col_indices.reserve(idx_s / 2);
-    for (size_type i = 0; i < min_col_s; ++i)
+    for (size_type i = 0; i < min_col_s; ++i) [[likely]]
         if (sel_functor(indices_[i],
                         vec1[i], vec2[i], vec3[i], vec4[i], vec5[i],
                         vec6[i], vec7[i], vec8[i], vec9[i], vec10[i],
-                        vec11[i]))
+                        vec11[i])) [[unlikely]]
             col_indices.push_back(i);
-    for (size_type i = min_col_s; i < idx_s; ++i)
+    for (size_type i = min_col_s; i < idx_s; ++i) [[likely]]
         if (sel_functor(indices_[i],
                         i < col_s1 ? vec1[i] : get_nan<T1>(),
                         i < col_s2 ? vec2[i] : get_nan<T2>(),
@@ -1761,11 +1767,11 @@ get_data_by_sel(const char *name1,
     IndexVecType    new_index;
 
     new_index.reserve(col_indices.size());
-    for (auto citer: col_indices)
+    for (auto citer: col_indices) [[likely]]
         new_index.push_back(indices_[citer]);
     df.load_index(std::move(new_index));
 
-    for (const auto &col_citer : column_list_)  {
+    for (const auto &col_citer : column_list_) [[likely]]  {
         sel_load_functor_<size_type, Ts ...>    functor (
             col_citer.first.c_str(),
             col_indices,
@@ -2139,7 +2145,7 @@ get_data_by_rand(random_policy spec, double n, size_type seed) const  {
         n_rows = static_cast<size_type>(n * double(index_s));
     }
 
-    if (index_s > 0 && n_rows <= index_s)  {
+    if (index_s > 0 && n_rows <= index_s) [[likely]]  {
         std::random_device  rd;
         std::mt19937        gen(rd());
 
@@ -2215,7 +2221,7 @@ get_view_by_rand (random_policy spec, double n, size_type seed)  {
         n_rows = static_cast<size_type>(n * double(index_s));
     }
 
-    if (index_s > 0 && n_rows <= index_s)  {
+    if (index_s > 0 && n_rows <= index_s) [[likely]]  {
         std::random_device  rd;
         std::mt19937        gen(rd());
 
@@ -2224,7 +2230,7 @@ get_view_by_rand (random_policy spec, double n, size_type seed)  {
         std::uniform_int_distribution<size_type>    dis(0, index_s - 1);
         StlVecType<size_type>                       rand_indices(n_rows);
 
-        for (size_type i = 0; i < n_rows; ++i)
+        for (size_type i = 0; i < n_rows; ++i) [[likely]]
             rand_indices[i] = dis(gen);
         std::sort(rand_indices.begin(), rand_indices.end());
 
@@ -2234,7 +2240,7 @@ get_view_by_rand (random_policy spec, double n, size_type seed)  {
         size_type                       prev_value;
 
         new_index.reserve(n_rows);
-        for (size_type i = 0; i < n_rows; ++i)  {
+        for (size_type i = 0; i < n_rows; ++i) [[likely]]  {
             if (i == 0 || rand_indices[i] != prev_value)
                 new_index.push_back(&(indices_[rand_indices[i]]));
             prev_value = rand_indices[i];
@@ -2246,7 +2252,7 @@ get_view_by_rand (random_policy spec, double n, size_type seed)  {
 
         const SpinGuard guard(lock_);
 
-        for (const auto &iter : column_list_)  {
+        for (const auto &iter : column_list_) [[likely]]  {
             random_load_view_functor_<TheView, Ts ...>
                 functor (iter.first.c_str(), rand_indices, dfv);
 
@@ -2292,7 +2298,7 @@ get_view_by_rand (random_policy spec, double n, size_type seed) const  {
         n_rows = static_cast<size_type>(n * double(index_s));
     }
 
-    if (index_s > 0 && n_rows <= index_s)  {
+    if (index_s > 0 && n_rows <= index_s) [[likely]]  {
         std::random_device  rd;
         std::mt19937        gen(rd());
 
@@ -2301,7 +2307,7 @@ get_view_by_rand (random_policy spec, double n, size_type seed) const  {
         std::uniform_int_distribution<size_type>    dis(0, index_s - 1);
         StlVecType<size_type>                       rand_indices(n_rows);
 
-        for (size_type i = 0; i < n_rows; ++i)
+        for (size_type i = 0; i < n_rows; ++i) [[likely]]
             rand_indices[i] = dis(gen);
         std::sort(rand_indices.begin(), rand_indices.end());
 
@@ -2311,7 +2317,7 @@ get_view_by_rand (random_policy spec, double n, size_type seed) const  {
         size_type                       prev_value;
 
         new_index.reserve(n_rows);
-        for (size_type i = 0; i < n_rows; ++i)  {
+        for (size_type i = 0; i < n_rows; ++i) [[likely]]  {
             if (i == 0 || rand_indices[i] != prev_value)
                 new_index.push_back(&(indices_[rand_indices[i]]));
             prev_value = rand_indices[i];
@@ -2323,7 +2329,7 @@ get_view_by_rand (random_policy spec, double n, size_type seed) const  {
 
         const SpinGuard guard(lock_);
 
-        for (const auto &iter : column_list_)  {
+        for (const auto &iter : column_list_) [[likely]]  {
             random_load_view_functor_<TheView, Ts ...>
                 functor (iter.first.c_str(), rand_indices, dfv);
 
@@ -2359,7 +2365,7 @@ get_data(const StlVecType<const char *> &col_names) const  {
 
     const SpinGuard guard(lock_);
 
-    for (const auto &name_citer : col_names)  {
+    for (const auto &name_citer : col_names) [[likely]]  {
         const auto  citer = column_tb_.find (name_citer);
 
         if (citer == column_tb_.end())  {
@@ -2397,7 +2403,7 @@ get_view(const StlVecType<const char *> &col_names)  {
 
     const SpinGuard guard(lock_);
 
-    for (const auto &name_citer : col_names)  {
+    for (const auto &name_citer : col_names) [[likely]]  {
         const auto  citer = column_tb_.find (name_citer);
 
         if (citer == column_tb_.end())  {
@@ -2440,7 +2446,7 @@ get_view(const StlVecType<const char *> &col_names) const  {
 
     const SpinGuard guard(lock_);
 
-    for (const auto &name_citer : col_names)  {
+    for (const auto &name_citer : col_names) [[likely]]  {
         const auto  citer = column_tb_.find (name_citer);
 
         if (citer == column_tb_.end())  {
@@ -2487,7 +2493,7 @@ get_reindexed(const char *col_to_be_index, const char *old_index_name) const  {
 
     const SpinGuard guard(lock_);
 
-    for (const auto &citer : column_list_)  {
+    for (const auto &citer : column_list_) [[likely]]  {
         if (citer.first == col_to_be_index)  continue;
 
         load_functor_<DataFrame<T, HeteroVector<align_value>>, Ts ...>
@@ -2534,7 +2540,7 @@ get_reindexed_view(const char *col_to_be_index, const char *old_index_name)  {
 
     const SpinGuard guard(lock_);
 
-    for (const auto &citer : column_list_)  {
+    for (const auto &citer : column_list_) [[likely]]  {
         if (citer.first == col_to_be_index)  continue;
 
         view_setup_functor_<TheView, Ts ...>    functor (
@@ -2583,7 +2589,7 @@ get_reindexed_view(const char *col_to_be_index,
 
     const SpinGuard guard(lock_);
 
-    for (const auto &citer : column_list_)  {
+    for (const auto &citer : column_list_) [[likely]]  {
         if (citer.first == col_to_be_index)  continue;
 
         view_setup_functor_<TheView, Ts ...>    functor (
@@ -2694,7 +2700,7 @@ combine(const char *col_name, const DF &rhs, F &functor) const  {
     StlVecType<T>   result;
 
     result.reserve(col_s);
-    for (size_type i = 0; i < col_s; ++i)
+    for (size_type i = 0; i < col_s; ++i) [[likely]]
         result.push_back(std::move(functor(lhs_col[i], rhs_col[i])));
 
     return (result);
@@ -2722,7 +2728,7 @@ combine(const char *col_name,
     StlVecType<T>   result;
 
     result.reserve(col_s);
-    for (size_type i = 0; i < col_s; ++i)
+    for (size_type i = 0; i < col_s; ++i) [[likely]]
         result.push_back(
             std::move(functor(lhs_col[i], df1_col[i], df2_col[i])));
 
@@ -2753,7 +2759,7 @@ combine(const char *col_name,
     StlVecType<T>   result;
 
     result.reserve(col_s);
-    for (size_type i = 0; i < col_s; ++i)
+    for (size_type i = 0; i < col_s; ++i) [[likely]]
         result.push_back(
             std::move(functor(lhs_col[i], df1_col[i], df2_col[i], df3_col[i])));
 

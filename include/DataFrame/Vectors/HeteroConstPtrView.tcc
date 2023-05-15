@@ -107,7 +107,7 @@ VectorConstPtrView<T, A> &HeteroConstPtrView<A>::get_vector()  {
 
     auto    iter = views_<T>.find (this);
 
-    if (iter == views_<T>.end())
+    if (iter == views_<T>.end()) [[unlikely]]
         throw std::runtime_error("HeteroConstPtrView::get_vector(): ERROR: "
                                  "Cannot find view");
 
@@ -122,7 +122,7 @@ const VectorConstPtrView<T, A> &HeteroConstPtrView<A>::get_vector() const  {
 
     const auto  iter = views_<T>.find (this);
 
-    if (iter == views_<T>.end())
+    if (iter == views_<T>.end()) [[unlikely]]
         throw std::runtime_error("HeteroConstPtrView::get_vector(): ERROR: "
                                  "Cannot find view");
 
@@ -137,7 +137,7 @@ void HeteroConstPtrView<A>::visit_impl_help_ (T &visitor) const  {
 
     const auto  citer = views_<U>.find (this);
 
-    if (citer != views_<U>.end())  {
+    if (citer != views_<U>.end()) [[likely]]  {
 #ifndef _MSC_VER
         for (auto &&element : citer->second)
             visitor(element);
@@ -158,7 +158,7 @@ void HeteroConstPtrView<A>::change_impl_help_ (T &functor) const  {
 
     const auto  citer = views_<U>.find (this);
 
-    if (citer != views_<U>.end())
+    if (citer != views_<U>.end()) [[likely]]
         functor(citer->second);
 }
 
@@ -238,7 +238,7 @@ template<std::size_t A>
 HeteroConstPtrView<A> &HeteroConstPtrView<A>::
 operator= (const HeteroConstPtrView &rhs)  {
 
-    if (&rhs != this)  {
+    if (&rhs != this) [[likely]]  {
         clear();
         clear_function_ = rhs.clear_function_;
         copy_function_ = rhs.copy_function_;
@@ -256,7 +256,7 @@ template<std::size_t A>
 HeteroConstPtrView<A> &HeteroConstPtrView<A>::
 operator= (HeteroConstPtrView &&rhs)  {
 
-    if (&rhs != this)  {
+    if (&rhs != this) [[likely]]  {
         clear();
         clear_function_ = std::move(rhs.clear_function_);
         copy_function_ = std::move(rhs.copy_function_);

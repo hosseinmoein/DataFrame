@@ -182,13 +182,13 @@ DataFrame<I, H>::print_csv_functor_<Ts ...>::operator() (const T &vec)  {
     os << name << ':' << vec.size() << ':';
     if (typeid(ValueType) == typeid(float))
         os << "<float>:";
-    else if (typeid(ValueType) == typeid(double))
+    else if (typeid(ValueType) == typeid(double)) [[likely]]
         os << "<double>:";
     else if (typeid(ValueType) == typeid(short int))
         os << "<short>:";
     else if (typeid(ValueType) == typeid(unsigned short int))
         os << "<ushort>:";
-    else if (typeid(ValueType) == typeid(int))
+    else if (typeid(ValueType) == typeid(int)) [[likely]]
         os << "<int>:";
     else if (typeid(ValueType) == typeid(unsigned int))
         os << "<uint>:";
@@ -241,13 +241,13 @@ DataFrame<I, H>::print_json_functor_<Ts ...>::operator() (const T &vec)  {
     os << '"' << name << "\":{\"N\":" << vec.size() << ',';
     if (typeid(ValueType) == typeid(float))
         os << "\"T\":\"float\",";
-    else if (typeid(ValueType) == typeid(double))
+    else if (typeid(ValueType) == typeid(double)) [[likely]]
         os << "\"T\":\"double\",";
     else if (typeid(ValueType) == typeid(short int))
         os << "\"T\":\"short\",";
     else if (typeid(ValueType) == typeid(unsigned short int))
         os << "\"T\":\"ushort\",";
-    else if (typeid(ValueType) == typeid(int))
+    else if (typeid(ValueType) == typeid(int)) [[likely]]
         os << "\"T\":\"int\",";
     else if (typeid(ValueType) == typeid(unsigned int))
         os << "\"T\":\"uint\",";
@@ -328,7 +328,7 @@ equal_functor_<Ts ...>::operator() (const T &lhs_vec)  {
 
     const auto  &iter = df.column_tb_.find(name);
 
-    if (iter == df.column_tb_.end())  {
+    if (iter == df.column_tb_.end()) [[unlikely]]  {
         result = false;
         return;
     }
@@ -618,7 +618,7 @@ operator() (const T &vec)  {
     const size_type         vec_size = vec.size();
 
     new_col.reserve(std::min(sel_indices.size(), vec_size));
-    for (auto citer : sel_indices)  {
+    for (auto citer : sel_indices) [[likely]]  {
         const size_type index =
             citer >= 0 ? citer : static_cast<IT>(indices_size) + citer;
 
@@ -653,7 +653,7 @@ operator() (T &vec)  {
     const size_type vec_size = vec.size();
 
     new_col.reserve(std::min(sel_indices.size(), vec_size));
-    for (auto citer : sel_indices)  {
+    for (auto citer : sel_indices) [[likely]]  {
         const size_type index =
             citer >= 0 ? citer : static_cast<IT>(indices_size) + citer;
 
@@ -766,7 +766,7 @@ random_load_data_functor_<Ts ...>::operator() (const T &vec)  {
     size_type       prev_value { 0 };
 
     new_vec.reserve(n_rows);
-    for (size_type i = 0; i < n_rows; ++i)  {
+    for (size_type i = 0; i < n_rows; ++i) [[likely]]  {
         if (rand_indices[i] < vec_s)  {
             if (i == 0 || rand_indices[i] != prev_value)
                 new_vec.push_back(vec[rand_indices[i]]);
@@ -801,7 +801,7 @@ random_load_view_functor_<DF, Ts ...>::operator() (const T &vec) {
     size_type       prev_value { 0 };
 
     new_vec.reserve(n_rows);
-    for (size_type i = 0; i < n_rows; ++i)  {
+    for (size_type i = 0; i < n_rows; ++i) [[likely]]  {
         if (rand_indices[i] < vec_s)  {
             if (i == 0 || rand_indices[i] != prev_value)
                 new_vec.push_back(

@@ -103,13 +103,14 @@ struct tuple_filter;
 template <class ... Out, class InFirst, class ... InRest>
 struct tuple_filter<std::tuple<Out...>, std::tuple<InFirst, InRest...>>  {
 
-    using type = typename std::conditional<
-        tuple_contain<std::tuple<Out...>, InFirst>::value,
+    using type =
+        typename std::conditional<
+            tuple_contain<std::tuple<Out...>, InFirst>::value,
             typename tuple_filter<std::tuple<Out...>,
                                   std::tuple<InRest...>>::type,
             typename tuple_filter<std::tuple<Out..., InFirst>,
                                   std::tuple<InRest...>>::type
-    >::type;
+        >::type;
 };
 
 template <class Out>
@@ -123,11 +124,11 @@ template <typename Out, typename Tuple>
 struct append_inner_type;
 
 template <class... Out, class InFirst, class... InRest>
-struct append_inner_type<std::tuple<Out...>, std::tuple<InFirst, InRest...>>  {
+struct append_inner_type<std::tuple<Out...>, std::tuple<InFirst, InRest...>> {
 
-    using type = typename append_inner_type<
-        std::tuple<typename InFirst::type, Out...>,
-        std::tuple<InRest...>>::type;
+    using type =
+        typename append_inner_type<std::tuple<typename InFirst::type, Out...>,
+                                   std::tuple<InRest...>>::type;
 };
 
 template <typename Out>

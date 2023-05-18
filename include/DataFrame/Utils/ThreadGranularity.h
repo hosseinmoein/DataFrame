@@ -29,7 +29,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
 
-#include <algorithm>
 #include <atomic>
 #include <cassert>
 #include <thread>
@@ -134,7 +133,7 @@ private:
 
 struct  SpinGuard  {
 
-    inline
+    inline explicit
     SpinGuard(SpinLock *l) noexcept : lock_(l)  { if (lock_)  lock_->lock(); }
     inline ~SpinGuard() noexcept  { if (lock_)  lock_->unlock(); }
 
@@ -153,6 +152,66 @@ struct  SpinGuard  {
 private:
 
     SpinLock    *lock_;
+};
+
+// ----------------------------------------------------------------------------
+
+// This is a lock-free and wait-free synchronization that allows consistent
+// reads and writes from multiple threads.
+// Single producer, multiple consumers.
+//
+template<typename T>
+struct  SeqLock  {
+
+    using value_type = T;
+    using size_type = std::size_t;
+
+    SeqLock() = default;
+    inline explicit SeqLock (const value_type &value) : value_(value)  {   }
+
+    // There can be only a single producer at a time
+    //
+    void store(const value_type &value) noexcept  {
+
+        const size_type seq_0 = seq_.load (std::memory_order_relaxed);
+
+        seq_.store (seq_0 + 1, std::memory_order_relaxed);
+        std::atomic_thread_fence (std::memory_order_release);
+
+        value_ = value;
+
+        std::atomic_thread_fence (std::memory_order_release);
+        seq_.store (seq_0 + 2, std::memory_order_relaxed);
+    }
+
+    // There can be multiple consumers concurrently
+    //
+    value_type load() const noexcept  {
+
+        while (true)  {
+            const size_type seq_1 = seq_.load (std::memory_order_relaxed);
+
+            if (! (seq_1 & 0x01)) [[likely]]  {
+                std::atomic_thread_fence (std::memory_order_acquire);
+
+                const value_type    copy = value_;
+
+                std::atomic_thread_fence (std::memory_order_acquire);
+                if (seq_1 == seq_.load (std::memory_order_relaxed)) [[likely]]
+                    return (copy);
+            }
+        }
+    }
+
+    SeqLock (const SeqLock &) = delete;
+    SeqLock &operator = (const SeqLock &) = delete;
+    SeqLock (SeqLock &&) = delete;
+    SeqLock &operator = (SeqLock &&) = delete;
+
+private:
+
+    value_type          value_ { };
+    std::atomic_size_t  seq_ { 0 };
 };
 
 } // namespace hmdf

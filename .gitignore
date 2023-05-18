@@ -4,3 +4,5 @@
 
 \build
 \install
+\Release
+\Debug

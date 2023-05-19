@@ -46,6 +46,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #  define M_PI 3.14159265358979323846264338327950288
 #endif
 
+#include <algorithm>
 #include <cstddef>
 #include <functional>
 #include <future>
@@ -1684,9 +1685,10 @@ struct  FactorizeVisitor  {
         result_type result;
 
         result.reserve(std::distance(column_begin, column_end));
-        for (auto citer = column_begin; citer < column_end; ++citer) [[likely]]
-            result.push_back(ffunc_(*citer));
-
+        std::for_each(column_begin, column_end,
+                      [&result, this](const auto &val) -> void  {
+                          result.push_back(this->ffunc_(val));
+                      });
         result_.swap(result);
     }
 
@@ -1915,16 +1917,20 @@ struct  ExponentiallyWeightedMeanVisitor  {
             value_type  decay_comp_prod = 1;
             value_type  numerator = result[0];
 
-            for (size_type i = starting + 1; i < col_s; ++i) [[likely]]  {
-                const value_type    val = *(column_begin + i);
-
-                if (! is_nan__(val)) [[likely]]  {
-                    decay_comp_prod *= decay_comp;
-                    denominator += decay_comp_prod;
-                    numerator = numerator * decay_comp + val;
-                    result[i] = numerator / denominator;
-                }
-            }
+            std::transform(column_begin + (starting + 1), column_end,
+                           result.begin() + (starting + 1),
+                           [&decay_comp_prod,
+                            &decay_comp,
+                            &denominator,
+                            &numerator](const auto &val) -> value_type  {
+                                if (! is_nan__(val)) [[likely]]  {
+                                    decay_comp_prod *= decay_comp;
+                                    denominator += decay_comp_prod;
+                                    numerator = numerator * decay_comp + val;
+                                    return (numerator / denominator);
+                                }
+                                return (0);
+                           });
         }
 
         result_.swap(result);
@@ -2526,7 +2532,7 @@ private:
                        size_type k) const  {
 
         // If k is smaller than number of elements in array
-        if (k > 0 && k <= end - begin + 1)  {
+        if (k > 0 && k <= end - begin + 1) [[likely]]  {
             const size_type pos = parttition_(vec, begin, end);
 
             if (pos - begin == k - 1)
@@ -2563,7 +2569,7 @@ struct  MedianVisitor  {
         kv_visitor(idx_begin, idx_end, column_begin, column_end);
         kv_visitor.post();
         result_ = kv_visitor.get_result();
-        if (! (col_s & 0x0001))  { // even
+        if (! (col_s & 0x01))  { // Even
             KthValueVisitor<value_type, I, A>   kv_visitor2 ((col_s >> 1) + 1);
 
             kv_visitor2.pre();
@@ -2702,7 +2708,7 @@ struct  ModeVisitor  {
     struct  DataItem  {
         // Value of the column item
         //
-        const value_type                *value { nullptr };
+        const value_type                   *value { nullptr };
         // List of indices where value occurred
         //
         VectorConstPtrView<index_type, A>  indices { };
@@ -2766,9 +2772,10 @@ public:
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
 
-        DataItem        nan_item;
         GET_COL_SIZE
-        map_type        val_map;
+
+        DataItem    nan_item;
+        map_type    val_map;
 
         val_map.reserve(col_s);
         for (size_type i = 0; i < col_s; ++i) [[likely]]  {
@@ -2874,9 +2881,9 @@ private:
         for (std::size_t i = 0; i < col_s; ++i) [[likely]]  {
             const value_type    value = *(column_begin + i);
 
-            if (skip_nan_ && is_nan__(value)) [[unlikely]]  continue;
-            mean_mean_visitor(idx_value,
-                              std::fabs(value - mean_visitor.get_result()));
+            if (! is_nan__(value) || ! skip_nan_) [[likely]]
+                mean_mean_visitor(idx_value,
+                                  std::fabs(value - mean_visitor.get_result()));
         }
         mean_mean_visitor.post();
 
@@ -3038,6 +3045,20 @@ struct  DiffVisitor  {
 
         bool        there_is_zero = false;
         result_type result;
+        auto        diff_func =
+            [](bool skip_nan_,
+               bool &there_is_zero,
+               const auto &i,
+               const auto &j,
+               auto &result) -> void  {
+                if (skip_nan_ && (is_nan__(*i) || is_nan__(*j))) [[unlikely]]
+                    return;
+
+                const value_type    val = *i - *j;
+
+                result.push_back(val);
+                there_is_zero = val == 0;
+            };
 
         result.reserve(col_s);
         if (periods_ >= 0) [[likely]]  {
@@ -3051,27 +3072,16 @@ struct  DiffVisitor  {
 
             auto    i = column_begin + periods_;
 
-            for (auto j = column_begin; i < column_end; ++i, ++j) [[likely]]  {
-                if (skip_nan_ && (is_nan__(*i) || is_nan__(*j)))  continue;
-
-                const value_type    val = *i - *j;
-
-                result.push_back(val);
-                there_is_zero = val == 0;
-            }
+            for (auto j = column_begin; i < column_end; ++i, ++j) [[likely]]
+                diff_func(skip_nan_, there_is_zero, i, j, result);
         }
         else  {
             H   i = column_end - (1 + std::abs(periods_));
             H   j = column_end - 1;
 
-            for ( ; i > column_begin; --i, --j)  {
-                if (skip_nan_ && (is_nan__(*i) || is_nan__(*j)))  continue;
+            for ( ; i > column_begin; --i, --j)
+                diff_func(skip_nan_, there_is_zero, i, j, result);
 
-                const value_type    val = *i - *j;
-
-                result.push_back(val);
-                there_is_zero = val == 0;
-            }
             if (i == column_begin)  {
                 if (! (skip_nan_ && (is_nan__(*i) || is_nan__(*j))))  {
                     const value_type    val = *i - *j;
@@ -3158,8 +3168,11 @@ struct  ZScoreVisitor  {
         result_type         result;
 
         result.reserve(col_s);
-        for (auto citer = column_begin; citer < column_end; ++citer) [[likely]]
-            result.push_back((*citer - m) / s);
+        std::transform(column_begin, column_end,
+                       std::back_inserter(result),
+                       [m, s](const auto &val) -> value_type  {
+                           return ((val - m) / s);
+                       });
 
         result_.swap(result);
     }
@@ -3262,40 +3275,49 @@ private:
     template<typename H>
     inline void modulus_(const H &column_begin, const H &column_end)  {
 
-        H   citer = column_begin;
-
         if (lambda_ != 0)  {
-            while (citer < column_end) [[likely]]  {
-                const value_type    sign = std::signbit(*citer) ? -1 : 1;
-                const value_type    v =
-                    (std::pow(std::fabs(*citer++) + one_, lambda_) - one_) /
-                    lambda_;
+            std::transform(
+                column_begin, column_end,
+                std::back_inserter(result_),
+                [this](const auto &val) -> value_type  {
+                    const value_type    sign = std::signbit(val) ? -1 : 1;
+                    const value_type    v =
+                        (std::pow(std::fabs(val) + this->one_, this->lambda_) -
+                         this->one_) / lambda_;
 
-                result_.push_back(sign * v);
-            }
+                    return (sign * v);
+                });
         }
         else  {
-            while (citer < column_end) [[likely]]  {
-                const value_type    sign = std::signbit(*citer) ? -1 : 1;
+            std::transform(
+                column_begin, column_end,
+                std::back_inserter(result_),
+                [this](const auto &val) -> value_type  {
+                    const value_type    sign = std::signbit(val) ? -1 : 1;
 
-                result_.push_back(sign * std::log(std::fabs(*citer++) + one_));
-            }
+                    return (sign * std::log(std::fabs(val) + this->one_));
+                });
         }
     }
 
     template<typename H>
     inline void exponential_(const H &column_begin, const H &column_end)  {
 
-        H   citer = column_begin;
-
         if (lambda_ != 0)  {
-            while (citer < column_end) [[likely]]
-                result_.push_back(
-                    (std::exp(lambda_ * *citer++) - one_) / lambda_);
+            std::transform(
+                column_begin, column_end,
+                std::back_inserter(result_),
+                [this](const auto &val) -> value_type  {
+                    return ((std::exp(this->lambda_ * val) - this->one_) /
+                            this->lambda_);
+                });
         }
         else  {
-            while (citer < column_end) [[likely]]
-                result_.push_back(*citer++);
+            std::transform(column_begin, column_end,
+                           std::back_inserter(result_),
+                           [](const auto &val) -> value_type  {
+                               return (val);
+                           });
         }
     }
 
@@ -3304,16 +3326,21 @@ private:
                           const H &column_end,
                           value_type shift)  {
 
-        H   citer = column_begin;
-
         if (lambda_ != 0)  {
-            while (citer < column_end) [[likely]]
-                result_.push_back(
-                    (std::pow(*citer++ + shift, lambda_) -  one_) / lambda_);
+            std::transform(
+                column_begin, column_end,
+                std::back_inserter(result_),
+                [this, shift](const auto &val) -> value_type  {
+                    return ((std::pow(val + shift, this->lambda_) -
+                             this->one_) / this->lambda_);
+                });
         }
         else  {
-            while (citer < column_end) [[likely]]
-                result_.push_back(std::log(*citer++ + shift));
+            std::transform(column_begin, column_end,
+                           std::back_inserter(result_),
+                           [shift](const auto &val) -> value_type  {
+                               return (std::log(val + shift));
+                           });
         }
     }
 
@@ -3323,40 +3350,38 @@ private:
                                 const H &column_end,
                                 value_type shift)  {
 
-        H   citer = column_begin;
+        H                           citer = column_begin;
+        GeometricMeanVisitor<T, I>  gm;
 
+        gm.pre();
         if (lambda_ != 0)  {
-            GeometricMeanVisitor<T, I>  reg_gm;
-
-            reg_gm.pre();
             while (citer < column_end) [[likely]]
-                reg_gm(dummy, *citer++ + shift);
-            reg_gm.post();
+                gm(dummy, *citer++ + shift);
+            gm.post();
 
-            citer = column_begin;
-            while (citer < column_end) [[likely]]  {
-                const value_type    raw_v = *citer++ + shift;
-                const value_type    v =
-                    (std::pow(raw_v, lambda_) -  one_) /
-                    (lambda_ * std::pow(reg_gm.get_result(), lambda_ - one_));
+            std::transform(
+                column_begin, column_end,
+                std::back_inserter(result_),
+                [this, shift, gm = gm.get_result()]
+                (const auto &val) -> value_type  {
+                    const value_type    raw_v = val + shift;
 
-                result_.push_back(v);
-            }
+                    return ((std::pow(raw_v, this->lambda_) -  this->one_) /
+                            (this->lambda_ *
+                             std::pow(gm, this->lambda_ - this->one_)));
+                });
         }
         else  {
-            GeometricMeanVisitor<T, I>  log_gm;
-
-            log_gm.pre();
             while (citer < column_end) [[likely]]
-                log_gm(dummy, std::log(*citer++ + shift));
-            log_gm.post();
+                gm(dummy, std::log(*citer++ + shift));
+            gm.post();
 
-            citer = column_begin;
-            while (citer < column_end) [[likely]]  {
-                const value_type    raw_v = *citer++ + shift;
-
-                result_.push_back(raw_v * log_gm.get_result());
-            }
+            std::transform(column_begin, column_end,
+                           std::back_inserter(result_),
+                           [shift, gm = gm.get_result()]
+                           (const auto &val) -> value_type  {
+                               return ((val + shift) * gm);
+                           });
         }
     }
 
@@ -3524,14 +3549,14 @@ struct  NormalizeVisitor  {
         maxv.post();
 
         const value_type    diff = maxv.get_result() - minv.get_result();
-        H                   citer = column_begin;
-        result_type         result;
 
-        result.reserve(std::distance(column_begin, column_end));
-        while (citer < column_end)
-            result.push_back((*citer++ - minv.get_result()) / diff);
-
-        result_.swap(result);
+        result_.reserve(std::distance(column_begin, column_end));
+        std::transform(column_begin, column_end,
+                       std::back_inserter(result_),
+                       [minv = minv.get_result(), diff]
+                       (const auto &val) -> value_type  {
+                           return ((val - minv) / diff);
+                       });
     }
 
     DEFINE_PRE_POST
@@ -3569,14 +3594,13 @@ struct  StandardizeVisitor  {
         mv.post();
         sv.post();
 
-        H           citer = column_begin;
-        result_type result;
-
-        result.reserve(std::distance(column_begin, column_end));
-        while (citer < column_end)
-            result.push_back((*citer++ - mv.get_result()) / sv.get_result());
-
-        result_.swap(result);
+        result_.reserve(std::distance(column_begin, column_end));
+        std::transform(column_begin, column_end,
+                       std::back_inserter(result_),
+                       [mv = mv.get_result(), sv = sv.get_result()]
+                       (const auto &val) -> value_type  {
+                           return ((val - mv) / sv);
+                       });
     }
 
     DEFINE_PRE_POST
@@ -3636,7 +3660,7 @@ public:
             // consecutive positions of the array will store
             // col_s, sigma(xi), sigma(xi^2), sigma(xi^3) ... sigma(xi^2n)
             //
-            for (size_type j = 0; j < col_s; ++j)  {
+            for (size_type j = 0; j < col_s; ++j) [[likely]]  {
                 const value_type    w = weights_(*(idx_begin + j), j);
 
                 sigma_x[i] += std::pow(*(x_begin + j), i) * w;
@@ -3982,17 +4006,17 @@ struct  LinearFitVisitor  {
         intercept_ = (sum_x2 * sum_y - sum_x * sum_xy) / divisor;
 
         y_fits_.reserve(col_s);
-        for (size_type i = 0; i < col_s; ++i) [[likely]]  {
-            const value_type    pred = slope_ * *(x_begin + i) + intercept_;
+        std::transform(x_begin, x_end,
+                       y_begin,
+                       std::back_inserter(y_fits_),
+                       [this](const auto &x, const auto &y) -> value_type  {
+                           const value_type    pred =
+                               this->slope_ * x + this->intercept_;
+                           const value_type    r = y - pred;
 
-            // y fits at given x points
-            //
-            y_fits_.push_back(pred);
-
-            const value_type    r = *(y_begin + i) - pred;
-
-            residual_ += r * r;
-        }
+                           this->residual_ += r * r;
+                           return (pred);  // y fits at given x points
+                       });
     }
 
     inline void pre ()  {
@@ -4158,11 +4182,12 @@ private:
     template<typename X>
     inline static void bi_square_(X x_begin, X x_end)  {
 
-        while (x_begin != x_end) [[likely]]  {
-            const value_type    val = one_ - *x_begin * *x_begin;
+        std::for_each(x_begin, x_end,
+                      [](auto &x) -> void  {
+                          const value_type    val = T(1) - x * x;
 
-            *x_begin++ = val * val;
-        }
+                          x = val * val;
+                      });
     }
 
     // The tri-cubic function (1 - x^3)^3. Used to weight neighboring points
@@ -4171,11 +4196,12 @@ private:
     template<typename X>
     inline static void tri_cube_(X x_begin, X x_end)  {
 
-        while (x_begin != x_end) [[likely]]  {
-            const value_type    val = one_ - *x_begin * *x_begin * *x_begin;
+        std::for_each(x_begin, x_end,
+                      [](auto &x) -> void  {
+                          const value_type    val = T(1) - x * x * x;
 
-            *x_begin++ = val * val * val;
-        }
+                          x = val * val * val;
+                      });
     }
 
     // Calculate residual weights for the next robustifying iteration.
@@ -4183,13 +4209,15 @@ private:
     template<typename IDX, typename Y, typename K>
     inline void
     calc_residual_weights_(const IDX &idx_begin, const IDX &idx_end,
-                           const Y &y_begin, const Y & /*y_end*/,
-                           const K &y_fits_begin, const K & /*y_fits_end*/,
-                           size_type col_s)  {
+                           const Y &y_begin, const Y &y_end,
+                           const K &y_fits_begin, const K & /*y_fits_end*/)  {
 
-        for (size_type i = 0; i < col_s; ++i) [[likely]]
-            resid_weights_[i] =
-                std::fabs(*(y_begin + i) - *(y_fits_begin + i));
+        std::transform(y_begin, y_end,
+                       y_fits_begin,
+                       resid_weights_.begin(),
+                       [](auto y, auto y_fit) -> value_type  {
+                           return (std::fabs(y - y_fit));
+                       });
 
         MedianVisitor<T, I, A> median_v;
 
@@ -4292,13 +4320,15 @@ private:
 
         const value_type    last_fit_xval = *(x_begin + last_fit_idx);
 
-        for (long i = last_fit_idx + 1; i < curr_idx; ++i)
-            auxiliary_vec_.push_back(*(x_begin + i) - last_fit_xval);
+        std::transform(x_begin + (last_fit_idx + 1), x_begin + curr_idx,
+                       std::back_inserter(auxiliary_vec_),
+                       [last_fit_xval](const auto &x) -> value_type  {
+                           return (x - last_fit_xval);
+                       });
 
         const value_type    x_diff = *(x_begin + curr_idx) - last_fit_xval;
 
-        for (auto iter : auxiliary_vec_) [[likely]]
-            iter /= x_diff;
+        for (auto val : auxiliary_vec_) [[likely]]  val /= x_diff;
 
         const value_type    last_fit_yval = *(y_fits_begin + last_fit_idx);
         const value_type    curr_idx_yval = *(y_fits_begin + curr_idx);
@@ -4407,14 +4437,13 @@ private:
         value_type    sum_weights = 0;
         size_type     non_zero_cnt = 0;
 
-        for (size_type j = left_end; j < right_end; ++j) [[likely]]  {
-            const value_type    val = *(w_begin + j);
-
-            if (val != 0)  {
-                sum_weights += val;
-                non_zero_cnt += 1;
-            }
-        }
+        std::for_each(w_begin + left_end, w_begin + right_end,
+                      [&sum_weights, &non_zero_cnt](auto w) -> void  {
+                          if (w != 0)  {
+                              sum_weights += w;
+                              non_zero_cnt += 1;
+                          }
+                      });
 
         bool    reg_ok = true;
 
@@ -4560,8 +4589,7 @@ private:
 
             calc_residual_weights_(idx_begin, idx_end,
                                    y_begin, y_end,
-                                   y_fits_.begin(), y_fits_.end(),
-                                   col_s);
+                                   y_fits_.begin(), y_fits_.end());
         }
     }
 
@@ -4971,21 +4999,22 @@ struct  BiasVisitor  {
 
         GET_COL_SIZE
 
-        if (roll_period_ == 0 || roll_period_ >= col_s) [[unlikely]]  return;
+        assert (roll_period_ != 0 && roll_period_ < col_s);
 
         SimpleRollAdopter<avg_type, T, I, A>   avger(std::move(avg_v_),
-                                                  roll_period_);
+                                                     roll_period_);
 
         avger.pre();
         avger (idx_begin, idx_end, column_begin, column_end);
         avger.post();
 
-        result_type result = std::move(avger.get_result());
-
-        for (size_type i = roll_period_ - 1; i < col_s; ++i) [[likely]]
-            result[i] = (*(column_begin + i) / result[i]) - T(1);
-
-        result_.swap(result);
+        result_ = std::move(avger.get_result());
+        std::transform(column_begin + (roll_period_ - 1), column_end,
+                       result_.begin() + (roll_period_ - 1),
+                       result_.begin() + (roll_period_ - 1),
+                       [](auto val, auto result) -> value_type  {
+                           return (val / result - T(1));
+                       });
     }
 
     DEFINE_PRE_POST

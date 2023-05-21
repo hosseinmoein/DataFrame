@@ -133,7 +133,7 @@ public:
     DEFINE_VISIT_BASIC_TYPES
 
     using result_type = std::array<value_type, K>;
-    using cluster_type = std::array<VectorPtrView<value_type, A>, K>;
+    using cluster_type = std::array<VectorConstPtrView<value_type, A>, K>;
     using distance_func =
         std::function<double(const value_type &x, const value_type &y)>;
 
@@ -156,13 +156,12 @@ private:
         for (auto &k_mean : result_) [[likely]]  {
             const value_type    &value = *(column_begin + rd_gen(gen));
 
-            if (is_nan__(value))  continue;
-            k_mean = value;
+            if (! is_nan__(value)) [[likely]]
+                k_mean = value;
         }
 
-        std::vector<size_type,
-                    typename allocator_declare<size_type, A>::type>
-                        assignments(col_s, 0);
+        std::vector<size_type, typename allocator_declare<size_type, A>::type>
+            assignments(col_s, 0);
 
         for (size_type iter = 0; iter < iter_num_; ++iter) [[likely]]  {
             result_type             new_means { value_type() };
@@ -172,28 +171,30 @@ private:
             for (size_type point = 0; point < col_s; ++point) [[likely]]  {
                 const value_type    &value = *(column_begin + point);
 
-                if (is_nan__(value))  continue;
+                if (! is_nan__(value)) [[likely]]  {
+                    double      best_distance =
+                        std::numeric_limits<double>::max();
+                    size_type   best_cluster = 0;
 
-                double      best_distance = std::numeric_limits<double>::max();
-                size_type   best_cluster = 0;
+                    for (size_type cluster = 0; cluster < K;
+                         ++cluster) [[likely]]  {
+                        const double    distance =
+                            dfunc_(value, result_[cluster]);
 
-                for (size_type cluster = 0; cluster < K;
-                     ++cluster) [[likely]]  {
-                    const double    distance = dfunc_(value, result_[cluster]);
-
-                    if (distance < best_distance)  {
-                        best_distance = distance;
-                        best_cluster = cluster;
+                        if (distance < best_distance)  {
+                            best_distance = distance;
+                            best_cluster = cluster;
+                        }
                     }
+                    assignments[point] = best_cluster;
+
+                    // Sum up and count points for each cluster.
+                    //
+                    const size_type cluster = assignments[point];
+
+                    new_means[cluster] = new_means[cluster] + value;
+                    counts[cluster] += 1.0;
                 }
-                assignments[point] = best_cluster;
-
-                // Sum up and count points for each cluster.
-                //
-                const size_type cluster = assignments[point];
-
-                new_means[cluster] = new_means[cluster] + value;
-                counts[cluster] += 1.0;
             }
 
             bool    done = true;
@@ -227,26 +228,26 @@ private:
 
         for (size_type i = 0; i < K; ++i) [[likely]]  {
             clusters[i].reserve(col_s / K + 2);
-            clusters[i].push_back(const_cast<value_type *>(&(result_[i])));
+            clusters[i].push_back(&(result_[i]));
         }
 
         for (size_type j = 0; j < col_s; ++j) [[likely]]  {
             const value_type    &value = *(column_begin + j);
 
-            if (is_nan__(value))  continue;
+            if (! is_nan__(value)) [[likely]]  {
+                double      min_dist = std::numeric_limits<double>::max();
+                size_type   min_idx;
 
-            double      min_dist = std::numeric_limits<double>::max();
-            size_type   min_idx;
+                for (size_type i = 0; i < K; ++i)  {
+                    const double    dist = dfunc_(value, result_[i]);
 
-            for (size_type i = 0; i < K; ++i)  {
-                const double    dist = dfunc_(value, result_[i]);
-
-                if (dist < min_dist)  {
-                    min_dist = dist;
-                    min_idx = i;
+                    if (dist < min_dist)  {
+                        min_dist = dist;
+                        min_idx = i;
+                    }
                 }
+                clusters[min_idx].push_back(&value);
             }
-            clusters[min_idx].push_back(const_cast<value_type *>(&value));
         }
 
         clusters_.swap(clusters);
@@ -297,8 +298,8 @@ public:
     template<typename U>
     using vec_t = std::vector<U, typename allocator_declare<U, A>::type>;
 
-    using result_type = VectorPtrView<value_type, A>;
-    using cluster_type = vec_t<VectorPtrView<value_type, A>>;
+    using result_type = VectorConstPtrView<value_type, A>;
+    using cluster_type = vec_t<VectorConstPtrView<value_type, A>>;
     using distance_func =
         std::function<double(const value_type &x, const value_type &y)>;
 
@@ -320,7 +321,7 @@ private:
         for (size_type i = 0; i < csize - 1; ++i) [[likely]]  {
             const value_type    &i_val = *(column_begin + i);
 
-            for (size_type j = i + 1; j < csize; ++j)  [[likely]] {
+            for (size_type j = i + 1; j < csize; ++j)  [[likely]]  {
                 const double    dist = -dfunc_(i_val, *(column_begin + j));
 
                 simil[(i * csize) + j - ((i * (i + 1)) >> 1)] = dist;
@@ -427,8 +428,7 @@ public:
         result_.reserve(std::min(col_s / 100, size_type(16)));
         for (size_type i = 0; i < col_s; ++i) [[likely]]  {
             if (respon[i * col_s + i] + avail[i * col_s + i] > 0.0)
-                result_.push_back(
-                    const_cast<value_type *>(&*(column_begin + i)));
+                result_.push_back(&*(column_begin + i));
         }
     }
 
@@ -464,7 +464,7 @@ public:
                         min_idx = i;
                     }
                 }
-                clusters[min_idx].push_back(const_cast<value_type *>(&j_val));
+                clusters[min_idx].push_back(&j_val);
             }
         }
 
@@ -514,7 +514,8 @@ private:
         transform_(yvec, false);
 
         std::transform(xvec.begin(), xvec.end(),
-                       yvec.begin(), xvec.begin(),
+                       yvec.begin(),
+                       xvec.begin(),
                        std::multiplies<cplx_t>());
 
         transform_(xvec, true);
@@ -634,7 +635,7 @@ private:
 
         const size_type col_s { column.size() };
 
-        if (col_s == 0)
+        if (col_s == 0) [[unlikely]]
             return;
         if ((col_s & (col_s - 1)) == 0)  // Is power of 2
             fft_radix2_(column, reverse);
@@ -780,8 +781,6 @@ struct  EntropyVisitor  {
 
         if (roll_count_ == 0)  return;
 
-        GET_COL_SIZE
-
         SimpleRollAdopter<SumVisitor<T, I>, T, I, A>  sum_v(SumVisitor<T, I>(),
                                                             roll_count_);
 
@@ -791,11 +790,15 @@ struct  EntropyVisitor  {
 
         result_type result = std::move(sum_v.get_result());
 
-        for (size_type i = 0; i < col_s; ++i) [[likely]]  {
-            const value_type    val = *(column_begin + i) / result[i];
+        std::transform(column_begin, column_end,
+                       result.begin(),
+                       result.begin(),
+                       [this](auto c, auto r) -> value_type  {
+                           const value_type    val = c / r;
 
-            result[i] = -val * std::log(val) / std::log(log_base_);
-        }
+                           return (-val * std::log(val) /
+                                   std::log(this->log_base_));
+                       });
 
         sum_v.pre();
         sum_v (idx_begin + (roll_count_ - 1), idx_end,
@@ -855,45 +858,56 @@ struct  ImpurityVisitor  {
         }
 
         result_type result;
+        auto        func =
+            [this, col_s, &table, &result, &column_begin]
+            (auto i, auto sum) -> bool  {
+                result.push_back(sum);
+
+                const size_type roll_end = i + this->roll_count_;
+
+                if (roll_end > col_s)  return (false);
+
+                auto    find_ret = table.find(*(column_begin + (i - 1)));
+
+                find_ret->second -= 1.0; // It must find it -- no need to check
+                if (find_ret->second == 0)
+                    table.erase(find_ret);
+
+                auto    insert_ret =
+                    table.insert(std::pair(*(column_begin + (roll_end - 1)),
+                                           0));
+
+                insert_ret.first->second += 1.0;
+                return (true);
+            };
 
         result.reserve(col_s);
-        for (size_type i = 1; i < col_s; ++i) [[likely]]  {
-            double  sum = 0;
+        if (imt_ == impurity_type::gini_index)  {
+            for (size_type i = 1; i < col_s; ++i) [[likely]]  {
+                double  sum = 0;
 
-            if (imt_ == impurity_type::gini_index)  {
                 for (const auto &citer : table)  {
                     const auto  prob = citer.second / double(roll_count_);
 
                     sum += prob * prob;
                 }
                 sum = 1.0 - sum;
+                if (! func(i, sum))  break;
             }
-            else  {  // impurity_type::info_entropy
+        }
+        else  {  // impurity_type::info_entropy
+            for (size_type i = 1; i < col_s; ++i) [[likely]]  {
+                double  sum = 0;
+
                 for (const auto &citer : table)  {
                     const auto  prob = citer.second / double(roll_count_);
 
                     sum += prob * std::log2(prob);
                 }
                 sum = -sum;
+                if (! func(i, sum))  break;
             }
-            result.push_back(sum);
-
-            const size_type roll_end = i + roll_count_;
-
-            if (roll_end > col_s)  break;
-
-            auto    find_ret = table.find(*(column_begin + (i - 1)));
-
-            find_ret->second -= 1.0;  // It must find it -- no need to check
-            if (find_ret->second == 0)
-                table.erase(find_ret);
-
-            auto    insert_ret =
-                table.insert(std::pair(*(column_begin + (roll_end - 1)), 0));
-
-            insert_ret.first->second += 1.0;
         }
-
         result_.swap(result);
     }
 
@@ -933,50 +947,70 @@ private:
     template <typename H>
     inline void logistic_(const H &column_begin, const H &column_end)  {
 
-        for (auto citer = column_begin; citer < column_end; ++citer)
-            result_.push_back(1.0 / (1.0 + std::exp(-(*citer))));
+        std::transform(column_begin, column_end,
+                       std::back_inserter(result_),
+                       [](auto val) -> value_type  {
+                           return (1.0 / (1.0 + std::exp(-val)));
+                       });
     }
     template <typename H>
     inline void algebraic_(const H &column_begin, const H &column_end)  {
 
-        for (auto citer = column_begin; citer < column_end; ++citer)
-            result_.push_back(1.0 / std::sqrt(1.0 + std::pow(*citer, 2.0)));
+        std::transform(column_begin, column_end,
+                       std::back_inserter(result_),
+                       [](auto val) -> value_type  {
+                           return (1.0 / std::sqrt(1.0 + std::pow(val, 2.0)));
+                       });
     }
     template <typename H>
     inline void hyperbolic_tan_(const H &column_begin, const H &column_end)  {
 
-        for (auto citer = column_begin; citer < column_end; ++citer)
-            result_.push_back(std::tanh(*citer));
+        std::transform(column_begin, column_end,
+                       std::back_inserter(result_),
+                       [](auto val) -> value_type  {
+                           return (std::tanh(val));
+                       });
     }
     template <typename H>
     inline void arc_tan_(const H &column_begin, const H &column_end)  {
 
-        for (auto citer = column_begin; citer < column_end; ++citer)
-            result_.push_back(std::atan(*citer));
+        std::transform(column_begin, column_end,
+                       std::back_inserter(result_),
+                       [](auto val) -> value_type  {
+                           return (std::atan(val));
+                       });
     }
     template <typename H>
     inline void error_function_(const H &column_begin, const H &column_end)  {
 
-        for (auto citer = column_begin; citer < column_end; ++citer)
-            result_.push_back(std::erf(*citer));
+        std::transform(column_begin, column_end,
+                       std::back_inserter(result_),
+                       [](auto val) -> value_type  {
+                           return (std::erf(val));
+                       });
     }
     template <typename H>
     inline void gudermannian_(const H &column_begin, const H &column_end)  {
 
-        for (auto citer = column_begin; citer < column_end; ++citer)
-            result_.push_back(std::atan(std::sinh(*citer)));
+        std::transform(column_begin, column_end,
+                       std::back_inserter(result_),
+                       [](auto val) -> value_type  {
+                           return (std::atan(std::sinh(val)));
+                       });
     }
     template <typename H>
     inline void smoothstep_(const H &column_begin, const H &column_end)  {
 
-        for (auto citer = column_begin; citer < column_end; ++citer)  {
-            if (*citer <= 0.0)
-                result_.push_back(0.0);
-            else if (*citer >= 1.0)
-                result_.push_back(1.0);
-            else
-                result_.push_back(*citer * *citer * (3.0 - 2.0 * *citer));
-        }
+        std::transform(column_begin, column_end,
+                       std::back_inserter(result_),
+                       [](auto val) -> value_type  {
+                           if (val <= 0.0)
+                               return (0.0);
+                           else if (val >= 1.0)
+                               return (1.0);
+                           else
+                               return (val * val * (3.0 - 2.0 * val));
+                       });
     }
 
 public:
@@ -1064,8 +1098,12 @@ public:
             sigm(idx_begin, idx_end, column_begin, column_end);
             sigm.post();
 
-            for (size_type i = 0; i < col_s; ++i)
-                result_.push_back(*(column_begin + i) * sigm.get_result()[i]);
+            std::transform(column_begin, column_end,
+                           sigm.get_result().begin(),
+                           std::back_inserter(result_),
+                           [](auto col, auto sig) -> value_type  {
+                               return (col * sig);
+                           });
         }
         else if (rtype_ == rectify_type::softplus)  {
             std::for_each(column_begin, column_end,

@@ -1488,7 +1488,7 @@ table.hovertable td {
   <H2><font color="blue">Memory Alignment</font></H2>
   <P>
     DataFrame gives you the ability to allocate memory on custom alignment boundaries.<BR>
-    You can use this feature to take advantage of <I>SIMD</I> instructions in modern CPU's. Since DataFrame algorithms are all done on vectors of data &#8212; columns, this can come handy in conjunction with compiler optimizations.<BR>
+    You can use this feature to take advantage of <I>SIMD</I> instructions in modern CPU's. Since DataFrame algorithms are all done on vectors of data &#8212; columns, this can come handy in conjunction with compiler optimizations. Also, you can use alignment to prevent false cache-line sharing between multiple columns.<BR>
 	There are convenient typedef's that define DataFrames that allocate memory, for example, on 64, 128, 256, ... bytes boundaries. See <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrameTypes.html">DataFrame Library Types</a>.<BR>
     When you get access to <I>columns</I> in a DataFrame, you will get a reference to a <I>StlVecType</I>. <I>StlVecType</I> is just a <I>std::vector</I> with custom allocator for the requested alignment.<BR>
   </P>

@@ -26,8 +26,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <html>
 <body>
 
-  Multithreading is used for two main reasons; one is to increase throughput and performance and other is to make the code more succinct and structured.<BR>
-  Using multithreading to increase throughput and performance is very tricky and often it is counterproductive. Unfortunately, it is very hard to have a <I>generic</I> multithreading solution for all problems. It is heavily dependent on the nature of the problem and the hardware/software platform. That is why the multithreading solution in DataFrame is very tunable and requires careful user adjustments. I suggest to always start with a single thread and later when the system is working correctly experiment with multithreading.<BR>
+  Multithreading is used for two main reasons; one is to increase throughput, decrease latency, and increase scalability and other is to make the code more succinct, structured, and separation of concerns.<BR>
+  Using multithreading to increase throughput and decrease latency is very tricky. It is often counterproductive because it is not implemented right. Unfortunately, it is very hard to have a <I>generic</I> multithreading solution for all problems. It is heavily dependent on the nature of the problem and the hardware/software platform. That is why the multithreading solution in DataFrame is very tunable and requires careful user adjustments. I suggest to always start with a single thread and later when the system is working correctly experiment with multithreading.<BR>
   Also, watch this video: <a href="https://www.youtube.com/watch?v=WDIkqP4JbkE">Scott Meyers: Cpu Caches and Why You Care</a>
   <BR>
   <BR>

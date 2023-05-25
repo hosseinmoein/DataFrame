@@ -378,7 +378,7 @@ struct  HarmonicMeanVisitor : public MeanBase<T, I>  {
         SKIP_NAN_BASE
 
         BaseClass::cnt_ += 1;
-        BaseClass::sum_(idx, one_ / val);
+        BaseClass::sum_(idx, T(1) / val);
     }
     PASS_DATA_ONE_BY_ONE
 
@@ -389,10 +389,6 @@ struct  HarmonicMeanVisitor : public MeanBase<T, I>  {
     }
 
     HarmonicMeanVisitor(bool skipnan = true) : BaseClass(skipnan)  {   }
-
-private:
-
-    static constexpr T  one_ { 1 };
 };
 
 // ----------------------------------------------------------------------------
@@ -2532,17 +2528,16 @@ private:
                        size_type k) const  {
 
         // If k is smaller than number of elements in array
-        if (k > 0 && k <= end - begin + 1) [[likely]]  {
-            const size_type pos = parttition_(vec, begin, end);
+        //
+        assert ((k > 0 && k <= end - begin + 1));
 
-            if (pos - begin == k - 1)
-                return (vec[pos]);
-            if (pos - begin > k - 1)
-                return (find_kth_element_(vec, begin, pos - 1, k));
-            return (find_kth_element_(vec, pos + 1, end, k - pos + begin - 1));
-        }
+        const size_type pos = parttition_(vec, begin, end);
 
-        throw NotFeasible ("find_kth_element_(): Cannot find Kth element");
+        if (pos - begin == k - 1)
+            return (vec[pos]);
+        if (pos - begin > k - 1)
+            return (find_kth_element_(vec, begin, pos - 1, k));
+        return (find_kth_element_(vec, pos + 1, end, k - pos + begin - 1));
     }
 };
 
@@ -2607,19 +2602,7 @@ struct  QuantileVisitor  {
 
         GET_COL_SIZE
 
-        if (qt_ < 0.0 || qt_ > 1.0 || col_s == 0) [[unlikely]]  {
-            char buffer [512];
-
-            snprintf (buffer, sizeof(buffer) - 1,
-                      "QuantileVisitor{}: unable to do quantile: "
-#ifdef _MSC_VER
-                      "qt: %f, Column Len: %zu",
-#else
-                      "qt: %f, Column Len: %lu",
-#endif // _MSC_VER
-                     qt_, col_s);
-            throw NotFeasible(buffer);
-        }
+        assert (qt_ >= 0.0 && qt_ <= 1.0 && col_s > 0);
 
         const double    vec_len_frac = qt_ * col_s;
         const size_type int_idx =
@@ -3282,8 +3265,8 @@ private:
                 [this](const auto &val) -> value_type  {
                     const value_type    sign = std::signbit(val) ? -1 : 1;
                     const value_type    v =
-                        (std::pow(std::fabs(val) + this->one_, this->lambda_) -
-                         this->one_) / lambda_;
+                        (std::pow(std::fabs(val) + (1), this->lambda_) -
+                         T(1)) / lambda_;
 
                     return (sign * v);
                 });
@@ -3292,10 +3275,10 @@ private:
             std::transform(
                 column_begin, column_end,
                 std::back_inserter(result_),
-                [this](const auto &val) -> value_type  {
+                [](const auto &val) -> value_type  {
                     const value_type    sign = std::signbit(val) ? -1 : 1;
 
-                    return (sign * std::log(std::fabs(val) + this->one_));
+                    return (sign * std::log(std::fabs(val) + T(1)));
                 });
         }
     }
@@ -3308,7 +3291,7 @@ private:
                 column_begin, column_end,
                 std::back_inserter(result_),
                 [this](const auto &val) -> value_type  {
-                    return ((std::exp(this->lambda_ * val) - this->one_) /
+                    return ((std::exp(this->lambda_ * val) - T(1)) /
                             this->lambda_);
                 });
         }
@@ -3332,7 +3315,7 @@ private:
                 std::back_inserter(result_),
                 [this, shift](const auto &val) -> value_type  {
                     return ((std::pow(val + shift, this->lambda_) -
-                             this->one_) / this->lambda_);
+                             T(1)) / this->lambda_);
                 });
         }
         else  {
@@ -3366,9 +3349,9 @@ private:
                 (const auto &val) -> value_type  {
                     const value_type    raw_v = val + shift;
 
-                    return ((std::pow(raw_v, this->lambda_) -  this->one_) /
+                    return ((std::pow(raw_v, this->lambda_) -  T(1)) /
                             (this->lambda_ *
-                             std::pow(gm, this->lambda_ - this->one_)));
+                             std::pow(gm, this->lambda_ - T(1))));
                 });
         }
         else  {
@@ -3427,11 +3410,10 @@ public:
 
 private:
 
-    result_type                 result_ {  }; // Transformed
-    const box_cox_type          box_cox_type_;
-    const value_type            lambda_;
-    const bool                  is_all_positive_;
-    static constexpr value_type one_ { 1 };
+    result_type         result_ {  }; // Transformed
+    const box_cox_type  box_cox_type_;
+    const value_type    lambda_;
+    const bool          is_all_positive_;
 };
 
 template<typename T, typename I = unsigned long, std::size_t A = 0>
@@ -4229,11 +4211,11 @@ private:
         if (median_v.get_result() == 0)  {
             std::replace_if(resid_weights_.begin(), resid_weights_.end(),
                             std::bind(std::greater<value_type>(),
-                                      std::placeholders::_1, z_),
-                            one_);
+                                      std::placeholders::_1, 0),
+                            T(1));
         }
         else  {
-            const value_type    val = six_ * median_v.get_result();
+            const value_type    val = T(6) * median_v.get_result();
 
             std::transform(resid_weights_.begin(), resid_weights_.end(),
                            resid_weights_.begin(),
@@ -4244,17 +4226,17 @@ private:
         //
         std::replace_if(resid_weights_.begin(), resid_weights_.end(),
                         std::bind(std::greater<value_type>(),
-                                  std::placeholders::_1, one_),
-                        one_);
+                                  std::placeholders::_1, T(1)),
+                        T(1));
 
         // std::replace_if(resid_weights_.begin(), resid_weights_.end(),
         //                 std::bind(std::greater_equal<value_type>(),
         //                           std::placeholders::_1, value_type(0.999)),
-        //                 one_);
+        //                 T(1));
         // std::replace_if(resid_weights_.begin(), resid_weights_.end(),
         //                 std::bind(std::less_equal<value_type>(),
         //                           std::placeholders::_1, value_type(0.001)),
-        //                 z_);
+        //                 0);
 
         bi_square_(resid_weights_.begin(), resid_weights_.end());
     }
@@ -4338,7 +4320,7 @@ private:
             const value_type    avalue = auxiliary_vec_[i];
 
             *(y_fits_begin + i) =
-                avalue * curr_idx_yval + (one_ - avalue) * last_fit_yval;
+                avalue * curr_idx_yval + (T(1) - avalue) * last_fit_yval;
         }
     }
 
@@ -4388,7 +4370,7 @@ private:
             for (size_type j = left_end; j < right_end; ++j) [[likely]]  {
                 const value_type    p_idx_j =
                     *(w_begin + j) *
-                    (one_ + (xval - sum_weighted_x) *
+                    (T(1) + (xval - sum_weighted_x) *
                      (*(x_begin + j) - sum_weighted_x) / weighted_sqdev_x);
 
                 *(y_fits_begin + curr_idx) += p_idx_j * *(y_begin + j);
@@ -4483,7 +4465,7 @@ private:
         while (true)  {
             if (right_end < curr_idx)  {
                 if (xval > ((*(x_begin + left_end) +
-                             *(x_begin + right_end)) / two_))  {
+                             *(x_begin + right_end)) / T(2)))  {
                     left_end += 1;
                     right_end += 1;
                 }
@@ -4519,7 +4501,7 @@ private:
         result_type weights (col_s, 0);
 
         y_fits_.resize(col_s, 0);
-        resid_weights_.resize(col_s, one_);
+        resid_weights_.resize(col_s, T(1));
         for (size_type l = 0; l < loop_n_; ++l) [[likely]]  {
             long        curr_idx = 0;
             long        last_fit_idx = -1;
@@ -4645,7 +4627,7 @@ public:
 
     explicit
     LowessVisitor (size_type loop_n = 3,
-                   value_type frac = two_ / three_,
+                   value_type frac = T(2) / T(3),
                    value_type delta = 0,
                    bool sorted = false)
         : frac_(frac),
@@ -4658,29 +4640,24 @@ private:
     // Between 0 and 1. The fraction of the data used when estimating
     // each y-value.
     //
-    const value_type            frac_;
+    const value_type    frac_;
     // The number of residual-based reweightings to perform.
     //
-    const size_type             loop_n_;
+    const size_type     loop_n_;
     // Distance within which to use linear-interpolation instead of weighted
     // regression.
     //
-    const value_type            delta_;
+    const value_type    delta_;
     // Are x and y vectors sorted in the ascending order of values in x vector
     //
-    const bool                  sorted_;
+    const bool          sorted_;
 
-    result_type                 y_fits_ {  };
-    result_type                 resid_weights_ {  };
+    result_type         y_fits_ {  };
+    result_type         resid_weights_ {  };
 
-    result_type                 auxiliary_vec_ {  };
-    result_type                 x_j_ {  };
-    result_type                 dist_i_j_ {  };
-    static constexpr value_type z_ { 0 };
-    static constexpr value_type one_ { 1 };
-    static constexpr value_type two_ { 2 };
-    static constexpr value_type three_ { 3 };
-    static constexpr value_type six_ { 6 };
+    result_type         auxiliary_vec_ {  };
+    result_type         x_j_ {  };
+    result_type         dist_i_j_ {  };
 };
 
 template<typename T, typename I = unsigned long, std::size_t A = 0>

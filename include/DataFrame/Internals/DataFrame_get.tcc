@@ -33,7 +33,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cmath>
 #include <functional>
 #include <random>
-#include <unordered_set>
 
 // ----------------------------------------------------------------------------
 
@@ -311,12 +310,13 @@ get_col_unique_values(const char *name) const  {
             return(lhs.get() == rhs.get());
     };
 
-    std::unordered_set<
-        typename std::reference_wrapper<T>::type,
-        decltype(hash_func),
-        decltype(equal_func)>   table(vec.size(), hash_func, equal_func);
-    bool                        counted_nan = false;
-    ColumnVecType<T>            result;
+    using unset_t = DFUnorderedSet<typename std::reference_wrapper<T>::type,
+                                   decltype(hash_func),
+                                   decltype(equal_func)>;
+
+    unset_t             table (vec.size(), hash_func, equal_func);
+    bool                counted_nan = false;
+    ColumnVecType<T>    result;
 
     result.reserve(vec.size());
     for (const auto &citer : vec) [[likely]]  {
@@ -379,11 +379,11 @@ template<typename ... Ts>
 DataFrame<I, H> DataFrame<I, H>::
 get_data_by_idx(const StlVecType<IndexType> &values) const  {
 
-    const std::unordered_set<IndexType> val_table(values.begin(), values.end());
-    IndexVecType                        new_index;
-    StlVecType<size_type>              locations;
-    const size_type                     values_s = values.size();
-    const size_type                     idx_s = indices_.size();
+    const DFUnorderedSet<IndexType> val_table (values.begin(), values.end());
+    IndexVecType                    new_index;
+    StlVecType<size_type>           locations;
+    const size_type                 values_s = values.size();
+    const size_type                 idx_s = indices_.size();
 
     new_index.reserve(values_s);
     locations.reserve(values_s);
@@ -511,8 +511,7 @@ get_view_by_idx(const StlVecType<IndexType> &values)  {
 
     using TheView = PtrView;
 
-    const std::unordered_set<IndexType> val_table(values.begin(),
-                                                  values.end());
+    const DFUnorderedSet<IndexType> val_table (values.begin(), values.end());
     typename TheView::IndexVecType  new_index;
     StlVecType<size_type>           locations;
     const size_type                 values_s = values.size();
@@ -559,8 +558,7 @@ get_view_by_idx(const StlVecType<IndexType> &values) const  {
 
     using TheView = ConstPtrView;
 
-    const std::unordered_set<IndexType> val_table(values.begin(),
-                                                  values.end());
+    const DFUnorderedSet<IndexType> val_table (values.begin(), values.end());
     typename TheView::IndexVecType  new_index;
     StlVecType<size_type>           locations;
     const size_type                 values_s = values.size();

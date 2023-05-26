@@ -31,7 +31,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <cstring>
 #include <string>
-#include <unordered_map>
 
 // ----------------------------------------------------------------------------
 
@@ -541,12 +540,7 @@ typename DataFrame<I, H>::size_type
 DataFrame<I, H>::
 load_indicators(const char *cat_col_name, const char *numeric_cols_prefix)  {
 
-    using map_t = std::unordered_map<
-        T, StlVecType<IT> *,
-        std::hash<T>,
-        std::equal_to<T>,
-        typename allocator_declare<
-            std::pair<const T, StlVecType<IT> *>, align_value>::type>;
+    using map_t = DFUnorderedMap<T, StlVecType<IT> *>;
 
     const SpinGuard guard(lock_);
     const auto      &cat_col = get_column<T>(cat_col_name, false);
@@ -1182,12 +1176,7 @@ remove_duplicates (const char *name,
 
     using data_tuple = std::tuple<const T &, const IndexType &>;
     using count_vec = StlVecType<size_type>;
-    using map_t = std::unordered_map<
-        data_tuple, count_vec,
-        TupleHash,
-        std::equal_to<data_tuple>,
-        typename allocator_declare<
-            std::pair<const data_tuple, count_vec>, align_value>::type>;
+    using map_t = DFUnorderedMap<data_tuple, count_vec, TupleHash>;
 
     const ColumnVecType<T>  &vec = get_column<T>(name);
     const auto              &index = get_index();
@@ -1223,12 +1212,7 @@ remove_duplicates (const char *name1,
 
     using data_tuple = std::tuple<const T1 &, const T2 &, const IndexType &>;
     using count_vec = StlVecType<size_type>;
-    using map_t = std::unordered_map<
-        data_tuple, count_vec,
-        TupleHash,
-        std::equal_to<data_tuple>,
-        typename allocator_declare<
-            std::pair<const data_tuple, count_vec>, align_value>::type>;
+    using map_t = DFUnorderedMap<data_tuple, count_vec, TupleHash>;
 
     SpinGuard               guard (lock_);
     const ColumnVecType<T1> &vec1 = get_column<T1>(name1, false);
@@ -1269,16 +1253,10 @@ remove_duplicates (const char *name1,
                    bool include_index,
                    remove_dup_spec rds) const  {
 
-    using data_tuple = std::tuple<const T1 &, const T2 &, const T3 &,
-                                  const IndexType &>;
+    using data_tuple =
+        std::tuple<const T1 &, const T2 &, const T3 &, const IndexType &>;
     using count_vec = StlVecType<size_type>;
-    using map_t = std::unordered_map<
-        data_tuple, count_vec,
-        TupleHash,
-        std::equal_to<data_tuple>,
-        typename allocator_declare<
-            std::pair<const data_tuple, count_vec>, align_value>::type>;
-
+    using map_t = DFUnorderedMap<data_tuple, count_vec, TupleHash>;
 
     SpinGuard               guard (lock_);
     const ColumnVecType<T1> &vec1 = get_column<T1>(name1, false);
@@ -1326,13 +1304,7 @@ remove_duplicates (const char *name1,
                                   const T3 &, const T4 &,
                                   const IndexType &>;
     using count_vec = StlVecType<size_type>;
-    using map_t = std::unordered_map<
-        data_tuple, count_vec,
-        TupleHash,
-        std::equal_to<data_tuple>,
-        typename allocator_declare<
-            std::pair<const data_tuple, count_vec>, align_value>::type>;
-
+    using map_t = DFUnorderedMap<data_tuple, count_vec, TupleHash>;
 
     SpinGuard               guard (lock_);
     const ColumnVecType<T1> &vec1 = get_column<T1>(name1, false);
@@ -1384,13 +1356,7 @@ remove_duplicates (const char *name1,
                                   const T3 &, const T4 &, const T5 &,
                                   const IndexType &>;
     using count_vec = StlVecType<size_type>;
-    using map_t = std::unordered_map<
-        data_tuple, count_vec,
-        TupleHash,
-        std::equal_to<data_tuple>,
-        typename allocator_declare<
-            std::pair<const data_tuple, count_vec>, align_value>::type>;
-
+    using map_t = DFUnorderedMap<data_tuple, count_vec, TupleHash>;
 
     SpinGuard               guard (lock_);
     const ColumnVecType<T1> &vec1 = get_column<T1>(name1, false);
@@ -1447,13 +1413,7 @@ remove_duplicates (const char *name1,
                                   const T5 &, const T6 &,
                                   const IndexType &>;
     using count_vec = StlVecType<size_type>;
-    using map_t = std::unordered_map<
-        data_tuple, count_vec,
-        TupleHash,
-        std::equal_to<data_tuple>,
-        typename allocator_declare<
-            std::pair<const data_tuple, count_vec>, align_value>::type>;
-
+    using map_t = DFUnorderedMap<data_tuple, count_vec, TupleHash>;
 
     SpinGuard               guard (lock_);
     const ColumnVecType<T1> &vec1 = get_column<T1>(name1, false);

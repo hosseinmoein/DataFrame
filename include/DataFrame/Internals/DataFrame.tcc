@@ -1772,14 +1772,11 @@ DataFrame<I, H>::value_counts (const char *col_name) const  {
             return(lhs.get() == rhs.get());
     };
 
-    using map_t = std::unordered_map<
-        typename std::reference_wrapper<const T>::type,
-        size_type,
-        decltype(hash_func),
-        decltype(equal_func),
-        typename allocator_declare<
-            std::pair<const typename std::reference_wrapper<const T>::type,
-                      size_type>, align_value>::type>;
+    using map_t =
+        DFUnorderedMap<typename std::reference_wrapper<const T>::type,
+                       size_type,
+                       decltype(hash_func),
+                       decltype(equal_func)>;
 
     map_t       values_map(vec.size(), hash_func, equal_func);
     size_type   nan_count = 0;

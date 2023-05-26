@@ -41,11 +41,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <future>
 #include <ios>
 #include <limits>
+#include <map>
+#include <set>
 #include <string>
 #include <tuple>
 #include <type_traits>
 #include <typeindex>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -67,14 +70,9 @@ namespace hmdf
 // or user-defined types
 //
 template<typename I, class H>
-class DataFrame : public ThreadGranularity {
+class   DataFrame : public ThreadGranularity {
 
     using DataVec = H;
-    using DataVecVec =
-        std::vector<DataVec,
-                    typename allocator_declare<
-                        DataVec,
-                        std::size_t(H::align_value)>::type>;
 
 public:  // Construction
 
@@ -114,10 +112,7 @@ public:  // Construction
     using ColumnVecType = typename type_declare<DataVec, T, align_value>::type;
 
     template<typename T>
-    using StlVecType =
-        std::vector<T, typename allocator_declare<
-                           T,
-                           std::size_t(H::align_value)>::type>;
+    using StlVecType = std::vector<T, AllocatorType<T>>;
 
     DataFrame() = default;
 
@@ -3993,19 +3988,44 @@ public:  // Reading and writing
 
 private:
 
+    // Internally used containers aligned with DataFrame alignment
+    //
+    template<typename K,
+             typename HA = std::hash<K>,
+             typename E = std::equal_to<K>>
+    using DFUnorderedSet = std::unordered_set<K, HA, E, AllocatorType<K>>;
+
+    template<typename K,
+             typename T,
+             typename HA = std::hash<K>,
+             typename E = std::equal_to<K>>
+    using DFUnorderedMap =
+        std::unordered_map<K, T, HA, E, AllocatorType<std::pair<const K, T>>>;
+
+    template<typename K, typename C = std::less<K>>
+    using DFSet = std::set<K, C, AllocatorType<K>>;
+
+    template<typename K, typename T, typename C = std::less<K>>
+    using DFMap = std::map<K, T, C, AllocatorType<std::pair<const K, T>>>;
+
+    // All DataFrames types should be able to access private data of other
+    // DataFrame types
+    //
     template<typename ALT_I, typename ALT_H>
     friend class DataFrame;
 
+    // Maps column names to their vector index
+    //
     using ColNameDict =
-        std::unordered_map<
-            ColNameType,
-            size_type,
-            std::hash<VirtualString>,
-            std::equal_to<ColNameType>,
-            typename allocator_declare<
-                std::pair<const ColNameType, size_type>, align_value>::type>;
+        DFUnorderedMap<ColNameType, size_type, std::hash<VirtualString>>;
 
+    // List of column names and indices
+    //
     using ColNameList = StlVecType<std::pair<ColNameType, size_type>>;
+
+    // Vector of Heterogeneous vectors
+    //
+    using DataVecVec = std::vector<DataVec, AllocatorType<DataVec>>;
 
     // Data fields
     //

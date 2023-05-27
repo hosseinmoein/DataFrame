@@ -132,7 +132,7 @@ struct QuadraticMeanVisitor;
         </B></PRE></font>
       </td>
       <td>
-        This functor class calculates weighted mean of a given column. It favors more recent data.<BR>
+        This functor class calculates quadratic mean or root mean square. It gives a greater weight to larger items and is always equal to or greater than the “regular” arithmetic mean<BR>
         The mean is calculated as &radic;<span style="text-decoration:overline;">(X0<sup>2</sup> + X1<sup>2</sup> + ... + Xn-1<sup>2</sup>) / n</span><BR>
         The constructor takes a single optional Boolean argument to whether skip NaN values. The default is True. <BR>
       </td>

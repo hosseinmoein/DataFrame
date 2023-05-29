@@ -36,7 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         <PRE><B>
 template&lt;typename ... Ts&gt;
 std::size_t
-load_row(IndexType *idx_val, Ts ... args);
+append_row(IndexType *idx_val, Ts ... args);
         </B></PRE></font>
       </td>
       <td>
@@ -46,7 +46,7 @@ load_row(IndexType *idx_val, Ts ... args);
       </td>
       <td width = "33.3%">
         <B>Ts</B>: The list of types for columns in args<BR>
-        <B>index_val</B>: A pointer to an index value. If this pointer is not null, the index will alos be appended.<BR>
+        <B>index_val</B>: A pointer to an index value. If this pointer is not null, the index will also be appended.<BR>
         <B>args</B>: A variable list of arguments consisting of<BR>
         <I>std::pair(const char *name, &amp;&amp;data).</I><BR>
         Each pair, represents a a pair of column name and a single column value

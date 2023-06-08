@@ -276,8 +276,7 @@ int main(int, char *[])  {
 
     // Calculate the returns and load them as a column.
     //
-    ibm_dt_df.single_act_visit<double>("IBM_Close", return_v);
-    ibm_dt_df.load_result_as_column(return_v, "IBM_Return");
+    ibm_dt_df.load_result_as_column<double>("IBM_Close", std::move(return_v), "IBM_Return");
     ibm_dt_df.get_column<double>("IBM_Return")[0] = 0;  // Remove the NaN
 
     // Let's try to find 4 clusters.

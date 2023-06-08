@@ -124,8 +124,8 @@ int main(int, char *[])  {
 
     std::cout << cool_col_ref[1] << cool_col_ref[2] << cool_col_ref[3] << std::endl;
     std::cout << "Str Column = ";
-    for (auto citer : str_col_ref)
-        std::cout << citer << ", ";
+    for (const auto &str : str_col_ref)
+        std::cout << str << ", ";
     std::cout << std::endl;
 
     std::cout << "There are " << ibm_df.get_column<double>("IBM_Close").size()
@@ -289,16 +289,16 @@ int main(int, char *[])  {
     const auto  &cluster_means = kmeans_v.get_result();
 
     std::cout << "Means of clusters are: ";
-    for (const auto citer : cluster_means)
-        std::cout << citer << ", ";
+    for (const auto &mean : cluster_means)
+        std::cout << mean << ", ";
     std::cout << std::endl;
     /*
     // This produces a very large output.
     //
     std::cout << "\nClusters are: ";
-    for (const auto &citer1 : kmeans_v.get_clusters())  {
-        for (const auto &citer2 : citer1)
-            std::cout << citer2 << ", ";
+    for (const auto &mean1 : kmeans_v.get_clusters())  {
+        for (const auto &mean2 : mean1)
+            std::cout << mean2 << ", ";
         std::cout << '\n' << std::endl;
     }
     */

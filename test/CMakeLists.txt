@@ -63,6 +63,10 @@ add_executable(vector_ptr_view_tester vector_ptr_view_tester.cc)
 target_link_libraries(vector_ptr_view_tester PRIVATE DataFrame)
 add_test(NAME vector_ptr_view_tester COMMAND vector_ptr_view_tester)
 
+add_executable(meta_prog_tester meta_prog_tester.cc)
+target_link_libraries(meta_prog_tester PRIVATE DataFrame)
+add_test(NAME meta_prog_tester COMMAND meta_prog_tester)
+
 add_executable(date_time_tester date_time_tester.cc)
 target_link_libraries(date_time_tester PRIVATE DataFrame)
 add_test(NAME date_time_tester COMMAND date_time_tester)

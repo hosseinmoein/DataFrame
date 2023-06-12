@@ -20,6 +20,7 @@ SRCS = ../test/dataframe_tester.cc \
        ../benchmarks/dataframe_performance_2.cc \
        ../test/vectors_tester.cc \
        ../test/vector_ptr_view_tester.cc \
+       ../test/meta_prog_tester.cc \
        ../test/date_time_tester.cc \
        ../test/gen_rand_tester.cc \
        Utils/DateTime.cc
@@ -61,6 +62,7 @@ HEADERS = $(LOCAL_INCLUDE_DIR)/DataFrame/Vectors/HeteroVector.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/ThreadGranularity.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/DateTime.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/Utils.h \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/MetaProg.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/FixedSizeString.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/FixedSizePriorityQueue.h
 
@@ -79,6 +81,7 @@ TARGETS += $(TARGET_LIB) \
            $(LOCAL_BIN_DIR)/vectors_tester \
            $(LOCAL_BIN_DIR)/allocator_tester \
            $(LOCAL_BIN_DIR)/vector_ptr_view_tester \
+           $(LOCAL_BIN_DIR)/meta_prog_tester \
            $(LOCAL_BIN_DIR)/date_time_tester \
            $(LOCAL_BIN_DIR)/gen_rand_tester
 
@@ -177,6 +180,10 @@ VECTOR_PTR_VIEW_TESTER_OBJ = $(LOCAL_OBJ_DIR)/vector_ptr_view_tester.o
 $(LOCAL_BIN_DIR)/vector_ptr_view_tester: $(TARGET_LIB) $(VECTOR_PTR_VIEW_TESTER_OBJ)
 	$(CXX) -o $@ $(VECTOR_PTR_VIEW_TESTER_OBJ) $(LIBS)
 
+META_PROG_OBJ = $(LOCAL_OBJ_DIR)/meta_prog_tester.o
+$(LOCAL_BIN_DIR)/meta_prog_tester: $(TARGET_LIB) $(META_PROG_OBJ)
+	$(CXX) -o $@ $(META_PROG_OBJ) $(LIBS)
+
 DATE_TIME_TESTER_OBJ = $(LOCAL_OBJ_DIR)/date_time_tester.o
 $(LOCAL_BIN_DIR)/date_time_tester: $(TARGET_LIB) $(DATE_TIME_TESTER_OBJ)
 	$(CXX) -o $@ $(DATE_TIME_TESTER_OBJ) $(LIBS)
@@ -193,7 +200,7 @@ depend:
 clean:
 	rm -f $(LIB_OBJS) $(TARGETS) $(DATAFRAME_TESTER_OBJ) $(VECTORS_TESTER_OBJ) \
           $(DATE_TIME_TESTER_OBJ) $(VECTOR_PTR_VIEW_TESTER_OBJ) \
-          $(GEN_RAND_TESTER_OBJ) \
+          $(GEN_RAND_TESTER_OBJ) $(META_PROG_OBJ) \
           $(DATAFRAME_PERFORMANCE_OBJ) $(DATAFRAME_TESTER_OBJ_2) \
           $(DATAFRAME_TESTER_OBJ_3) $(HELLO_WORLD_OBJ) \
           $(DATAFRAME_PERFORMANCE_2_OBJ) $(DATAFRAME_THREAD_SAFTY_OBJ) \
@@ -206,7 +213,8 @@ clobber:
           $(DATAFRAME_TESTER_OBJ_2) $(DATAFRAME_THREAD_SAFTY_OBJ) \
           $(DATAFRAME_TESTER_OBJ_3) $(HELLO_WORLD_OBJ) \
           $(DATAFRAME_TESTER_SCHEMA_OBJ) $(ALLOCATOR_TESTER_OBJ) \
-          $(DATAFRAME_PERFORMANCE_OBJ) $(DATAFRAME_PERFORMANCE_2_OBJ)
+          $(DATAFRAME_PERFORMANCE_OBJ) $(DATAFRAME_PERFORMANCE_2_OBJ) \
+          $(META_PROG_OBJ)
 
 install_lib:
 	cp -pf $(TARGET_LIB) $(PROJECT_LIB_DIR)/.

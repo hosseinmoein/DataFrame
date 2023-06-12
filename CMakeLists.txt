@@ -4,10 +4,7 @@ if(POLICY CMP0090)
     cmake_policy(SET CMP0090 NEW)
 endif()
 
-project(DataFrame
-    VERSION 1.22.0
-    LANGUAGES CXX
-)
+project(DataFrame VERSION 1.22.0 LANGUAGES CXX)
 
 option(HMDF_TESTING "Enable testing" OFF)
 option(HMDF_EXAMPLES "Build Examples" OFF)
@@ -35,53 +32,47 @@ find_package(Threads REQUIRED)
 add_library(DataFrame)
 add_library(DataFrame::DataFrame ALIAS DataFrame)
 
-target_sources(DataFrame
-    PRIVATE
-        src/Utils/DateTime.cc
-)
+target_sources(DataFrame PRIVATE src/Utils/DateTime.cc)
 
 target_compile_features(DataFrame PUBLIC cxx_std_20)
-target_compile_definitions(DataFrame
-    PRIVATE
-        $<$<BOOL:${HMDF_HAVE_CLOCK_GETTIME}>:HMDF_HAVE_CLOCK_GETTIME>
-    PUBLIC
-        $<$<CXX_COMPILER_ID:MSVC>:_USE_MATH_DEFINES>
+target_compile_definitions(
+    DataFrame
+    PRIVATE $<$<BOOL:${HMDF_HAVE_CLOCK_GETTIME}>:HMDF_HAVE_CLOCK_GETTIME>
+    PUBLIC $<$<CXX_COMPILER_ID:MSVC>:_USE_MATH_DEFINES>
 )
-target_compile_options(DataFrame
-    PRIVATE
-        $<$<CXX_COMPILER_ID:MSVC>:/bigobj>
-        $<$<CXX_COMPILER_ID:MSVC>:/wd4251>
-    PUBLIC
-        # TODO: fix these warnings
-        $<$<CXX_COMPILER_ID:MSVC>:/wd4244>
-        $<$<CXX_COMPILER_ID:MSVC>:/wd4267>
-        $<$<CXX_COMPILER_ID:MSVC>:/wd4996>
+target_compile_options(
+    DataFrame
+    PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/bigobj>
+            $<$<CXX_COMPILER_ID:MSVC>:/wd4251>
+    # TODO: fix these warnings
+    PUBLIC $<$<CXX_COMPILER_ID:MSVC>:/wd4244>
+           $<$<CXX_COMPILER_ID:MSVC>:/wd4267>
+           $<$<CXX_COMPILER_ID:MSVC>:/wd4996>
 )
-set_target_properties(DataFrame
-    PROPERTIES
-        VERSION ${PROJECT_VERSION}
-        SOVERSION ${PROJECT_VERSION_MAJOR}
+set_target_properties(
+    DataFrame
+    PROPERTIES VERSION ${PROJECT_VERSION} SOVERSION ${PROJECT_VERSION_MAJOR}
 )
 
 if(BUILD_SHARED_LIBS)
-    set_target_properties(DataFrame
-        PROPERTIES
-            CXX_VISIBILITY_PRESET hidden
-            VISIBILITY_INLINES_HIDDEN ON
+    set_target_properties(
+        DataFrame
+        PROPERTIES CXX_VISIBILITY_PRESET
+        hidden VISIBILITY_INLINES_HIDDEN ON
     )
     target_compile_definitions(DataFrame PUBLIC HMDF_SHARED)
 endif()
 
-target_link_libraries(DataFrame
-    INTERFACE
-        Threads::Threads
-        $<$<AND:$<BOOL:${UNIX}>,$<NOT:$<BOOL:${APPLE}>>>:rt>
+target_link_libraries(
+    DataFrame
+    INTERFACE Threads::Threads
+              $<$<AND:$<BOOL:${UNIX}>,$<NOT:$<BOOL:${APPLE}>>>:rt>
 )
 
-target_include_directories(DataFrame
-    PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_INCLUDEDIR}>
+target_include_directories(
+    DataFrame
+    PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+           $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
 # Installation
@@ -144,9 +135,8 @@ install(
 )
 
 install(
-    FILES
-        ${CMAKE_CURRENT_BINARY_DIR}/DataFrameConfig.cmake
-        ${CMAKE_CURRENT_BINARY_DIR}/DataFrameConfigVersion.cmake
+    FILES ${CMAKE_CURRENT_BINARY_DIR}/DataFrameConfig.cmake
+          ${CMAKE_CURRENT_BINARY_DIR}/DataFrameConfigVersion.cmake
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/DataFrame
 )
 

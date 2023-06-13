@@ -51,9 +51,7 @@ namespace hmdf
 
 // One pass simple linear regression
 //
-template<typename T, typename I = unsigned long,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  SLRegressionVisitor  {
 
 public:
@@ -487,9 +485,7 @@ public:
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  FastFourierTransVisitor  {
 
 public:
@@ -767,9 +763,7 @@ using fft_v = FastFourierTransVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  EntropyVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -935,9 +929,7 @@ using impu_v = ImpurityVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  SigmoidVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -1054,9 +1046,7 @@ using sigm_v = SigmoidVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  RectifyVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -1170,9 +1160,7 @@ using recf_v = RectifyVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  PolicyLearningLossVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -1214,9 +1202,7 @@ using plloss_v = PolicyLearningLossVisitor<T, I, A>;
 
 // -----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long>
 struct  LossFunctionVisitor  {
 
 public:

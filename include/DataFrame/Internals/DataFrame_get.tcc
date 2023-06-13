@@ -295,7 +295,7 @@ get_row(size_type row_num) const {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename T>
+template<hashable_equal T>
 typename DataFrame<I, H>::template ColumnVecType<T> DataFrame<I, H>::
 get_col_unique_values(const char *name) const  {
 
@@ -378,6 +378,8 @@ template<typename I, typename H>
 template<typename ... Ts>
 DataFrame<I, H> DataFrame<I, H>::
 get_data_by_idx(const StlVecType<IndexType> &values) const  {
+
+    static_assert(hashable<I>, "Index type must be hash-able");
 
     const DFUnorderedSet<IndexType> val_table (values.begin(), values.end());
     IndexVecType                    new_index;

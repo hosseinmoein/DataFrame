@@ -605,7 +605,7 @@ replace_index(const StlVecType<IndexType> &old_values,
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename T, typename F>
+template<typename T, replace_callable<I, T> F>
 void DataFrame<I, H>::
 replace(const char *col_name, F &functor)  {
 
@@ -640,7 +640,7 @@ replace_async(const char *col_name,
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename T, typename F>
+template<typename T, replace_callable<I, T> F>
 std::future<void> DataFrame<I, H>::
 replace_async(const char *col_name, F &functor)  {
 
@@ -1491,7 +1491,7 @@ sort_async(const char *name1, sort_spec dir1,
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename T, typename I_V, typename ... Ts>
+template<comparable T, typename I_V, typename ... Ts>
 DataFrame<I, H> DataFrame<I, H>::
 groupby1(const char *col_name, I_V &&idx_visitor, Ts&& ... args) const  {
 
@@ -1537,7 +1537,7 @@ groupby1(const char *col_name, I_V &&idx_visitor, Ts&& ... args) const  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename T1, typename T2, typename I_V, typename ... Ts>
+template<comparable T1, comparable T2, typename I_V, typename ... Ts>
 DataFrame<I, H> DataFrame<I, H>::
 groupby2(const char *col_name1,
          const char *col_name2,
@@ -1607,7 +1607,8 @@ groupby2(const char *col_name1,
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename T1, typename T2, typename T3, typename I_V, typename ... Ts>
+template<comparable T1, comparable T2, comparable T3,
+         typename I_V, typename ... Ts>
 DataFrame<I, H> DataFrame<I, H>::
 groupby3(const char *col_name1,
          const char *col_name2,
@@ -1702,7 +1703,7 @@ groupby3(const char *col_name1,
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename T, typename I_V, typename ... Ts>
+template<comparable T, typename I_V, typename ... Ts>
 std::future<DataFrame<I, H>> DataFrame<I, H>::
 groupby1_async(const char *col_name, I_V &&idx_visitor, Ts&& ... args) const {
 
@@ -1717,7 +1718,7 @@ groupby1_async(const char *col_name, I_V &&idx_visitor, Ts&& ... args) const {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename T1, typename T2, typename I_V, typename ... Ts>
+template<comparable T1, comparable T2, typename I_V, typename ... Ts>
 std::future<DataFrame<I, H>> DataFrame<I, H>::
 groupby2_async(const char *col_name1,
                const char *col_name2,
@@ -1736,7 +1737,8 @@ groupby2_async(const char *col_name1,
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename T1, typename T2, typename T3, typename I_V, typename ... Ts>
+template<comparable T1, comparable T2, comparable T3,
+         typename I_V, typename ... Ts>
 std::future<DataFrame<I, H>> DataFrame<I, H>::
 groupby3_async(const char *col_name1,
                const char *col_name2,
@@ -1757,7 +1759,7 @@ groupby3_async(const char *col_name1,
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename T>
+template<hashable_equal T>
 DataFrame<T, H>
 DataFrame<I, H>::value_counts (const char *col_name) const  {
 
@@ -1820,7 +1822,7 @@ DataFrame<I, H>::value_counts (const char *col_name) const  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename T>
+template<hashable_equal T>
 DataFrame<T, H>
 DataFrame<I, H>::value_counts(size_type index) const  {
 

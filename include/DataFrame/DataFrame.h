@@ -31,8 +31,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <DataFrame/DataFrameStatsVisitors.h>
 #include <DataFrame/DataFrameTypes.h>
-#include <DataFrame/Utils/DateTime.h>
 #include <DataFrame/Utils/AlignedAllocator.h>
+#include <DataFrame/Utils/Concepts.h>
+#include <DataFrame/Utils/DateTime.h>
 #include <DataFrame/Utils/FixedSizeString.h>
 #include <DataFrame/Utils/ThreadGranularity.h>
 #include <DataFrame/Utils/Utils.h>
@@ -318,7 +319,7 @@ public:  // Load/append/remove interfaces
 
     // This method loads the result() of a visitor to the named column.
     // For this method to work:
-    //     1. The visitor must have a result() method
+    //     1. The visitor must have a get_result() method
     //     2. The result must be a vector
     //     3. The visitor must define result_type type
     //     4. Caller must to run the visitor before this call,
@@ -337,7 +338,7 @@ public:  // Load/append/remove interfaces
     //   If true, it pads the data column with nan, if it is shorter than the
     //   index column.
     //
-    template<typename V>
+    template<has_result V>
     size_type
     load_result_as_column(V &visitor,
                           const char *new_col_name,
@@ -365,7 +366,7 @@ public:  // Load/append/remove interfaces
     //   If true, it pads the data column with nan, if it is shorter than the
     //   index column.
     //
-    template<typename T, typename V>
+    template<typename T, has_result V>
     size_type
     load_result_as_column(const char *col_name,
                           V &&visitor,
@@ -392,7 +393,7 @@ public:  // Load/append/remove interfaces
     //   If true, it pads the data column with nan, if it is shorter than the
     //   index column.
     //
-    template<typename T1, typename T2, typename V>
+    template<typename T1, typename T2, has_result V>
     size_type
     load_result_as_column(const char *col_name1,
                           const char *col_name2,
@@ -424,7 +425,7 @@ public:  // Load/append/remove interfaces
     //   If true, it pads the data column with nan, if it is shorter than the
     //   index column.
     //
-    template<typename T1, typename T2, typename T3, typename V>
+    template<typename T1, typename T2, typename T3, has_result V>
     size_type
     load_result_as_column(const char *col_name1,
                           const char *col_name2,
@@ -461,7 +462,7 @@ public:  // Load/append/remove interfaces
     //   If true, it pads the data column with nan, if it is shorter than the
     //   index column.
     //
-    template<typename T1, typename T2, typename T3, typename T4, typename V>
+    template<typename T1, typename T2, typename T3, typename T4, has_result V>
     size_type
     load_result_as_column(const char *col_name1,
                           const char *col_name2,
@@ -490,7 +491,7 @@ public:  // Load/append/remove interfaces
     // numeric_cols_prefix:
     //   Optional prefix for generated column names
     //
-    template<typename T, typename IT = int>
+    template<hashable_stringable T, typename IT = int>
     size_type
     load_indicators(const char *cat_col_name,
                     const char *numeric_cols_prefix = nullptr);
@@ -730,7 +731,7 @@ public:  // Load/append/remove interfaces
     // rds:
     //   Determined which of the duplicated columns to keep
     //
-    template<typename T, typename ... Ts>
+    template<hashable_equal T, typename ... Ts>
     [[nodiscard]] DataFrame
     remove_duplicates(const char *name,
                       bool include_index,
@@ -759,7 +760,7 @@ public:  // Load/append/remove interfaces
     // rds:
     //   Determined which of the duplicated columns to keep
     //
-    template<typename T1, typename T2, typename ... Ts>
+    template<hashable_equal T1, hashable_equal T2, typename ... Ts>
     [[nodiscard]] DataFrame
     remove_duplicates(const char *name1,
                       const char *name2,
@@ -788,7 +789,8 @@ public:  // Load/append/remove interfaces
     // rds:
     //   Determined which of the duplicated columns to keep
     //
-    template<typename T1, typename T2, typename T3, typename ... Ts>
+    template<hashable_equal T1, hashable_equal T2, hashable_equal T3,
+             typename ... Ts>
     [[nodiscard]] DataFrame
     remove_duplicates(const char *name1,
                       const char *name2,
@@ -822,7 +824,8 @@ public:  // Load/append/remove interfaces
     // rds:
     //   Determined which of the duplicated columns to keep
     //
-    template<typename T1, typename T2, typename T3, typename T4,
+    template<hashable_equal T1, hashable_equal T2,
+             hashable_equal T3, hashable_equal T4,
              typename ... Ts>
     [[nodiscard]] DataFrame
     remove_duplicates(const char *name1,
@@ -862,7 +865,8 @@ public:  // Load/append/remove interfaces
     // rds:
     //   Determined which of the duplicated columns to keep
     //
-    template<typename T1, typename T2, typename T3, typename T4, typename T5,
+    template<hashable_equal T1, hashable_equal T2, hashable_equal T3,
+             hashable_equal T4, hashable_equal T5,
              typename ... Ts>
     [[nodiscard]] DataFrame
     remove_duplicates(const char *name1,
@@ -907,8 +911,9 @@ public:  // Load/append/remove interfaces
     // rds:
     //   Determined which of the duplicated columns to keep
     //
-    template<typename T1, typename T2, typename T3, typename T4, typename T5,
-             typename T6, typename ... Ts>
+    template<hashable_equal T1, hashable_equal T2, hashable_equal T3,
+             hashable_equal T4, hashable_equal T5, hashable_equal T6,
+             typename ... Ts>
     [[nodiscard]] DataFrame
     remove_duplicates(const char *name1,
                       const char *name2,
@@ -1006,9 +1011,6 @@ public:  // Data manipulation
     // limit. If limit is omitted, all values will be replaced.
     // It returns number of items replaced.
     //
-    // Ts:
-    //   List all the types of all data columns. A type should be specified in
-    //   the list only once.
     // N:
     //   Size of old_values and new_values vectors
     // col_name:
@@ -1059,7 +1061,7 @@ public:  // Data manipulation
     // functor:
     //   An instance of the functor
     //
-    template<typename T, typename F>
+    template<typename T, replace_callable<I, T> F>
     void
     replace(const char *col_name, F &functor);
 
@@ -1068,7 +1070,7 @@ public:  // Data manipulation
     // NOTE: multiple instances of replace_async() maybe executed for
     //       different columns at the same time with no problem.
     //
-    template<typename T, typename F>
+    template<typename T, replace_callable<I, T> F>
     [[nodiscard]] std::future<void>
     replace_async(const char *col_name, F &functor);
 
@@ -1244,7 +1246,7 @@ public:  // Data manipulation
     // args:
     //   List of triples to specify the column summarization
     //
-    template<typename T, typename I_V, typename ... Ts>
+    template<comparable T, typename I_V, typename ... Ts>
     [[nodiscard]] DataFrame
     groupby1(const char *col_name, I_V &&idx_visitor, Ts&& ... args) const;
 
@@ -1267,7 +1269,7 @@ public:  // Data manipulation
     // args:
     //   List of triples to specify the column summarization
     //
-    template<typename T1, typename T2, typename I_V, typename ... Ts>
+    template<comparable T1, comparable T2, typename I_V, typename ... Ts>
     [[nodiscard]] DataFrame
     groupby2(const char *col_name1,
              const char *col_name2,
@@ -1297,7 +1299,7 @@ public:  // Data manipulation
     // args:
     //   List of triples to specify the column summarization
     //
-    template<typename T1, typename T2, typename T3,
+    template<comparable T1, comparable T2, comparable T3,
              typename I_V, typename ... Ts>
     [[nodiscard]] DataFrame
     groupby3(const char *col_name1,
@@ -1308,7 +1310,7 @@ public:  // Data manipulation
 
     // Same as groupby1() above, but executed asynchronously
     //
-    template<typename T, typename I_V, typename ... Ts>
+    template<comparable T, typename I_V, typename ... Ts>
     [[nodiscard]] std::future<DataFrame>
     groupby1_async(const char *col_name,
                    I_V &&idx_visitor,
@@ -1316,7 +1318,7 @@ public:  // Data manipulation
 
     // Same as groupby2() above, but executed asynchronously
     //
-    template<typename T1, typename T2, typename I_V, typename ... Ts>
+    template<comparable T1, comparable T2, typename I_V, typename ... Ts>
     [[nodiscard]] std::future<DataFrame>
     groupby2_async(const char *col_name1,
                    const char *col_name2,
@@ -1325,7 +1327,7 @@ public:  // Data manipulation
 
     // Same as groupby3() above, but executed asynchronously
     //
-    template<typename T1, typename T2, typename T3,
+    template<comparable T1, comparable T2, comparable T3,
              typename I_V, typename ... Ts>
     [[nodiscard]] std::future<DataFrame>
     groupby3_async(const char *col_name1,
@@ -1353,11 +1355,11 @@ public:  // Data manipulation
     // col_name:
     //   Name of the column
     //
-    template<typename T>
+    template<hashable_equal T>
     [[nodiscard]] DataFrame<T, H>
     value_counts(const char *col_name) const;
 
-    template<typename T>
+    template<hashable_equal T>
     [[nodiscard]] DataFrame<T, H>
     value_counts(size_type index) const;
 
@@ -1485,7 +1487,7 @@ public:  // Data manipulation
     //   Specifies how to join. For example inner join, or left join, etc.
     //   (See join_policy definition)
     //
-    template<typename RHS_T, typename T, typename ... Ts>
+    template<typename RHS_T, comparable T, typename ... Ts>
     [[nodiscard]] DataFrame<unsigned int, H>
     join_by_column(const RHS_T &rhs, const char *name, join_policy jp) const;
 
@@ -1782,7 +1784,7 @@ public: // Read/access and slicing interfaces
     // T:
     //   Data type of the named column
     //
-    template<typename T>
+    template<hashable_equal T>
     [[nodiscard]] ColumnVecType<T>
     get_col_unique_values(const char *name) const;
 
@@ -2992,9 +2994,9 @@ public:  // Visitors
     // args:
     //   A variable list of arguments consisting of
     //       std::pair(<const char *name,
-    //                  &std::function<bool (const IndexType &,
-    //                                       const char *,
-    //                                       [const] T &)>)
+    //                  &std::function<bool(const IndexType &,
+    //                                      const char *,
+    //                                      [const] T &)>)
     //   Each pair represents a column name and the functor to run on it.
     //
     // NOTE: The second member of pair is a _pointer_ to the function or

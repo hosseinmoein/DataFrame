@@ -48,9 +48,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace hmdf
 {
 
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  ReturnVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -110,9 +108,8 @@ private:
 
 template<typename S_RT,  // Short duration rolling adopter
          typename L_RT,  // Longer duration rolling adopter
-         typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+         arithmetic T,
+         typename I = unsigned long, std::size_t A = 0>
 struct  DoubleCrossOver  {
 
 private:
@@ -268,9 +265,7 @@ using dco_v = DoubleCrossOver<S_RT, L_RT, T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  BollingerBand {
 
 private:
@@ -401,9 +396,7 @@ using bband_v = BollingerBand<T, I, A>;
 
 // Moving Average Convergence/Divergence
 //
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  MACDVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -502,9 +495,7 @@ using macd_v = MACDVisitor<T, I, A>;
 
 // Volume Weighted Average Price
 //
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  VWAPVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES
@@ -682,9 +673,7 @@ using vwap_v = VWAPVisitor<T, I, A>;
 
 // Volume Weighted Bid-Ask Spread
 //
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  VWBASVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES
@@ -950,9 +939,7 @@ using vwbas_v = VWBASVisitor<T, I, A>;
 // This is meaningfull, only if the return series is close to normal
 // distribution
 //
-template<typename T, typename I = unsigned long,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  SharpeRatioVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_2
@@ -1044,9 +1031,7 @@ using sharper_v = SharpeRatioVisitor<T, I>;
 //
 // The input (column) to this visitor is assumed to be instrument prices.
 //
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  RSIVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -1124,9 +1109,7 @@ using rsi_v = RSIVisitor<T, I, A>;
 
 // RSX is a "noise free" version of RSI, with no added lag.
 //
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  RSXVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -1244,9 +1227,7 @@ using rsx_v = RSXVisitor<T, I, A>;
 // like RSI based on price direction, the RVI adds up standard deviations
 // based on price direction.
 //
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  RVIVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -1356,9 +1337,7 @@ using rvi_v = RVIVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  HurstExponentVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_2
@@ -1498,9 +1477,7 @@ using hexpo_v = HurstExponentVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  MassIndexVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -1601,9 +1578,7 @@ using mass_idx_v = MassIndexVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  HullRollingMeanVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -1669,9 +1644,7 @@ using hull_mean_v = HullRollingMeanVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  RollingMidValueVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -1737,9 +1710,7 @@ using mid_val_v = RollingMidValueVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  DrawdownVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -1800,9 +1771,7 @@ private:
 
 // Also called Stochastic Oscillator
 //
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  WilliamPrcRVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -1868,9 +1837,7 @@ using willp_v = WilliamPrcRVisitor<T, I, A>;
 
 // Psychological Line (PSL) is an oscillator-type indicator
 //
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  PSLVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -1946,9 +1913,7 @@ private:
 
 // Commodity Channel Index (CCI)
 //
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  CCIVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -2014,9 +1979,7 @@ private:
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  GarmanKlassVolVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -2085,9 +2048,7 @@ using gk_vol_v = GarmanKlassVolVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  YangZhangVolVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -2176,9 +2137,7 @@ using yz_vol_v = YangZhangVolVisitor<T, I, A>;
 
 // Kaufman's Adaptive Moving Average
 //
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  KamaVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -2254,9 +2213,7 @@ private:
 
 // Fisher Transform Indicator
 //
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  FisherTransVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -2340,9 +2297,7 @@ using ftrans_v = FisherTransVisitor<T, I, A>;
 
 // Percentage Price Oscillator (PPO)
 //
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  PercentPriceOSCIVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -2426,9 +2381,7 @@ using pp_osc_v = PercentPriceOSCIVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  SlopeVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -2487,9 +2440,7 @@ private:
 
 // Ultimate Oscillator indicator
 //
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  UltimateOSCIVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -2632,9 +2583,7 @@ using u_osc_v = UltimateOSCIVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  UlcerIndexVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -2714,9 +2663,7 @@ using u_idx_v = UlcerIndexVisitor<T, I, A>;
 
 // Trade To Market trend indicator
 //
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  TTMTrendVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES
@@ -2788,9 +2735,7 @@ using ttmt_v = TTMTrendVisitor<T, I, A>;
 
 // Parabolic Stop And Reverse (PSAR)
 //
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  ParabolicSARVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES
@@ -2950,9 +2895,7 @@ using psar_v = ParabolicSARVisitor<T, I, A>;
 
 // Even Better Sine Wave (EBSW) indicator
 //
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  EBSineWaveVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -3042,9 +2985,7 @@ using ebsw_v = EBSineWaveVisitor<T, I, A>;
 
 // Ehler's Super Smoother Filter (SSF) indicator
 //
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  EhlerSuperSmootherVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -3116,9 +3057,7 @@ using ess_v = EhlerSuperSmootherVisitor<T, I, A>;
 
 // Variable Index Dynamic Average (VIDYA) indicator
 //
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  VarIdxDynAvgVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -3205,9 +3144,7 @@ using vidya_v = VarIdxDynAvgVisitor<T, I, A>;
 
 // Pivot Points, Supports and Resistances indicators
 //
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  PivotPointSRVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -3310,9 +3247,7 @@ using ppsr_v = PivotPointSRVisitor<T, I, A>;
 
 // Average Directional Movement Index (ADX)
 //
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  AvgDirMovIdxVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -3409,9 +3344,7 @@ using adx_v = AvgDirMovIdxVisitor<T, I, A>;
 
 // Holt-Winter Channel (HWC) indicator
 //
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  HoltWinterChannelVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -3513,9 +3446,7 @@ using hwc_v = HoltWinterChannelVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  HeikinAshiCndlVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -3595,9 +3526,7 @@ using ha_cdl_v = HeikinAshiCndlVisitor<T, I, A>;
 
 // Also called Stochastic Oscillator
 //
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  CenterOfGravityVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -3659,9 +3588,7 @@ using cog_v = CenterOfGravityVisitor<T, I, A>;
 
 // Arnaud Legoux Moving Average
 //
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  ArnaudLegouxMAVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -3724,9 +3651,7 @@ using alma_v = ArnaudLegouxMAVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  RateOfChangeVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -3771,9 +3696,7 @@ using roc_v = RateOfChangeVisitor<T, I, A>;
 
 // Accumulation/Distribution (AD) indicator
 //
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  AccumDistVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -3828,9 +3751,7 @@ using ad_v = AccumDistVisitor<T, I, A>;
 
 // Chaikin Money Flow (CMF) indicator
 //
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  ChaikinMoneyFlowVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -3899,9 +3820,7 @@ using cmf_v = ChaikinMoneyFlowVisitor<T, I, A>;
 
 // Vertical Horizontal Filter (VHF) indicator
 //
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  VertHorizFilterVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -3973,9 +3892,7 @@ using vhf_v = VertHorizFilterVisitor<T, I, A>;
 
 // On Balance Volume (OBV) indicator
 //
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  OnBalanceVolumeVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -4027,9 +3944,7 @@ using obv_v = OnBalanceVolumeVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  TrueRangeVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -4100,9 +4015,7 @@ private:
 
 // Decay indicator
 //
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  DecayVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -4144,9 +4057,7 @@ private:
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  HodgesTompkinsVolVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -4208,9 +4119,7 @@ using ht_vol_v = HodgesTompkinsVolVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  ParkinsonVolVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -4275,9 +4184,7 @@ using p_vol_v = ParkinsonVolVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  CoppockCurveVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -4346,9 +4253,7 @@ using coppc_v = CoppockCurveVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  BalanceOfPowerVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -4423,9 +4328,7 @@ using bop_v = BalanceOfPowerVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  ChandeKrollStopVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -4531,9 +4434,7 @@ using cksp_v = ChandeKrollStopVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  VortexVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -4635,9 +4536,7 @@ using vtx_v = VortexVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  KeltnerChannelsVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -4730,9 +4629,7 @@ using kch_v = KeltnerChannelsVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  TrixVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -4812,9 +4709,7 @@ using trix_v = TrixVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  PrettyGoodOsciVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -4892,9 +4787,7 @@ using pgo_v = PrettyGoodOsciVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  T3MovingMeanVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -4990,9 +4883,7 @@ using t3_v = T3MovingMeanVisitor<T, I, A>;
 // This is meaningfull, only if the return series is close to normal
 // distribution
 //
-template<typename T, typename I = unsigned long,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  TreynorRatioVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_2
@@ -5042,9 +4933,7 @@ using treynorr_v = TreynorRatioVisitor<T, I>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  InertiaVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -5101,9 +4990,7 @@ using iner_v = InertiaVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  RelativeVigorIndexVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -5213,9 +5100,7 @@ using rvgi_v = RelativeVigorIndexVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  ElderRayIndexVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -5278,9 +5163,7 @@ using eri_v = ElderRayIndexVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  ChopIndexVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -5369,9 +5252,7 @@ using chop_v = ChopIndexVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  DetrendPriceOsciVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -5423,9 +5304,7 @@ using dpo_v = DetrendPriceOsciVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  AccelerationBandsVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -5518,9 +5397,7 @@ using aband_v = AccelerationBandsVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  PriceDistanceVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -5597,9 +5474,7 @@ using pdist_v = PriceDistanceVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  EldersThermometerVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -5697,9 +5572,7 @@ using ether_v = EldersThermometerVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  EldersForceIndexVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
@@ -5753,9 +5626,7 @@ using efi_v = EldersForceIndexVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long, std::size_t A = 0,
-         typename =
-             typename std::enable_if<supports_arithmetic<T>::value, T>::type>
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  EaseOfMovementVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3

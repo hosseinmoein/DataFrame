@@ -42,13 +42,7 @@ DataFrame<I, H>
 DataFrame<I, H>::
 join_by_index (const RHS_T &rhs, join_policy mp) const  {
 
-    static_assert(
-        std::is_base_of<DataFrame<I, HeteroVector<std::size_t(H::align_value)>>,
-                        RHS_T>::value ||
-        std::is_base_of<View, RHS_T>::value ||
-        std::is_base_of<PtrView, RHS_T>::value,
-        "The rhs argument to join_by_index() can only be "
-        "StdDataFrame<IndexType> or DataFrame[Ptr]View<IndexType>");
+    static_assert(comparable<I>, "Index type must have comparison operators");
 
     const auto                              &lhs_idx = get_index();
     const auto                              &rhs_idx = rhs.get_index();
@@ -96,20 +90,10 @@ join_by_index (const RHS_T &rhs, join_policy mp) const  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename RHS_T, typename T, typename ... Ts>
+template<typename RHS_T, comparable T, typename ... Ts>
 DataFrame<unsigned int, H>
 DataFrame<I, H>::
 join_by_column (const RHS_T &rhs, const char *name, join_policy mp) const  {
-
-    static_assert(
-        std::is_base_of<
-            DataFrame<I,
-                      HeteroVector<std::size_t(H::align_value)>>,
-                      RHS_T>::value ||
-        std::is_base_of<View, RHS_T>::value ||
-        std::is_base_of<PtrView, RHS_T>::value,
-        "The rhs argument to join_by_column() can only be "
-        "StdDataFrame<IndexType> or DataFrame[Ptr]View<IndexType>");
 
     const auto      &lhs_vec = get_column<T>(name);
     const auto      &rhs_vec = rhs.template get_column<T>(name);

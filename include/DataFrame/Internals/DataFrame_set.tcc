@@ -402,7 +402,7 @@ load_column (const char *name,
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename V>
+template<has_result V>
 typename DataFrame<I, H>::size_type
 DataFrame<I, H>::
 load_result_as_column(V &visitor,
@@ -457,7 +457,7 @@ load_result_as_column(V &visitor,
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename T, typename V>
+template<typename T, has_result V>
 typename DataFrame<I, H>::size_type
 DataFrame<I, H>::
 load_result_as_column(const char *col_name,
@@ -474,7 +474,7 @@ load_result_as_column(const char *col_name,
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename T1, typename T2, typename V>
+template<typename T1, typename T2, has_result V>
 typename DataFrame<I, H>::size_type
 DataFrame<I, H>::
 load_result_as_column(const char *col_name1,
@@ -492,7 +492,7 @@ load_result_as_column(const char *col_name1,
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename T1, typename T2, typename T3, typename V>
+template<typename T1, typename T2, typename T3, has_result V>
 typename DataFrame<I, H>::size_type
 DataFrame<I, H>::
 load_result_as_column(const char *col_name1,
@@ -511,7 +511,7 @@ load_result_as_column(const char *col_name1,
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename T1, typename T2, typename T3, typename T4, typename V>
+template<typename T1, typename T2, typename T3, typename T4, has_result V>
 typename DataFrame<I, H>::size_type
 DataFrame<I, H>::
 load_result_as_column(const char *col_name1,
@@ -535,7 +535,7 @@ load_result_as_column(const char *col_name1,
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename T, typename IT>
+template<hashable_stringable T, typename IT>
 typename DataFrame<I, H>::size_type
 DataFrame<I, H>::
 load_indicators(const char *cat_col_name, const char *numeric_cols_prefix)  {
@@ -1168,7 +1168,7 @@ remove_dups_common_(const DataFrame &s_df,
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename T, typename ... Ts>
+template<hashable_equal T, typename ... Ts>
 DataFrame<I, H> DataFrame<I, H>::
 remove_duplicates (const char *name,
                    bool include_index,
@@ -1203,7 +1203,7 @@ remove_duplicates (const char *name,
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename T1, typename T2, typename ... Ts>
+template<hashable_equal T1, hashable_equal T2, typename ... Ts>
 DataFrame<I, H> DataFrame<I, H>::
 remove_duplicates (const char *name1,
                    const char *name2,
@@ -1245,7 +1245,8 @@ remove_duplicates (const char *name1,
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename T1, typename T2, typename T3, typename ... Ts>
+template<hashable_equal T1, hashable_equal T2, hashable_equal T3,
+         typename ... Ts>
 DataFrame<I, H> DataFrame<I, H>::
 remove_duplicates (const char *name1,
                    const char *name2,
@@ -1291,7 +1292,9 @@ remove_duplicates (const char *name1,
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename T1, typename T2, typename T3, typename T4, typename ... Ts>
+template<hashable_equal T1, hashable_equal T2, hashable_equal T3,
+         hashable_equal T4,
+         typename ... Ts>
 DataFrame<I, H> DataFrame<I, H>::
 remove_duplicates (const char *name1,
                    const char *name2,
@@ -1341,7 +1344,8 @@ remove_duplicates (const char *name1,
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename T1, typename T2, typename T3, typename T4, typename T5,
+template<hashable_equal T1, hashable_equal T2, hashable_equal T3,
+         hashable_equal T4, hashable_equal T5,
          typename ... Ts>
 DataFrame<I, H> DataFrame<I, H>::
 remove_duplicates (const char *name1,
@@ -1395,8 +1399,8 @@ remove_duplicates (const char *name1,
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename T1, typename T2, typename T3, typename T4,
-         typename T5, typename T6,
+template<hashable_equal T1, hashable_equal T2, hashable_equal T3,
+         hashable_equal T4, hashable_equal T5, hashable_equal T6,
          typename ... Ts>
 DataFrame<I, H> DataFrame<I, H>::
 remove_duplicates (const char *name1,

@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
 
+#include <DataFrame/Utils/Concepts.h>
 
 #include <algorithm>
 #include <iterator>
@@ -290,10 +291,10 @@ every_other_split(const TU &tup) noexcept  {
 //
 template<typename F, typename TR, std::size_t ... Is>
 constexpr void
-_for_each_list_impl_(F &&func,
-                     TR &begins,
-                     TR &ends,
-                     std::index_sequence<Is ...>) noexcept {
+_for_each_chain_impl_(F &&func,
+                      TR &begins,
+                      TR &ends,
+                      std::index_sequence<Is ...>) noexcept {
 
     (std::for_each(std::get<Is>(begins),
                    std::get<Is>(ends),
@@ -303,9 +304,9 @@ _for_each_list_impl_(F &&func,
 
 // ITs is for Iterators
 //
-template <typename F, typename ... ITs>
+template<typename F, typename ... ITs>
 constexpr void
-for_each_list(F &&func, ITs ... its) noexcept  {
+for_each_chain(F &&func, ITs ... its) noexcept  {
 
     static_assert(sizeof ...(ITs) % 2 == 0,
                   "Expected even number of iterators");
@@ -322,10 +323,103 @@ for_each_list(F &&func, ITs ... its) noexcept  {
 
     auto    [begins, ends] {every_other_split(std::tuple<ITs & ...>(its ...))};
 
-    _for_each_list_impl_(std::forward<F>(func),
-                         begins,
-                         ends,
-                         std::make_index_sequence<sizeof ...(ITs) / 2> {});
+    _for_each_chain_impl_(std::forward<F>(func),
+                          begins,
+                          ends,
+                          std::make_index_sequence<sizeof ...(ITs) / 2> {});
+}
+
+// ----------------------------------------------------------------------------
+
+// A for_each algorithm version to iterate over multiple containers
+// horizontally. It only iterates over the minimum length container
+//
+template<std::input_iterator IT1, std::input_iterator IT2,
+         iter_invokale2<IT1, IT2> F>
+constexpr std::size_t
+for_each_list2(IT1 begin1, IT1 end1, IT2 begin2, IT2 end2, F &&func)  {
+
+    const std::size_t   min_s = std::min(std::distance(begin1, end1),
+                                         std::distance(begin2, end2));
+    F                   loc_f = std::move(func);
+
+
+    for (std::size_t i = 0; i < min_s; ++i)
+        loc_f(*begin1++, *begin2++);
+    return (min_s);
+}
+
+// -------------------------------------
+
+template<std::input_iterator IT1, std::input_iterator IT2,
+         std::input_iterator IT3,
+         iter_invokale3<IT1, IT2, IT3> F>
+constexpr std::size_t
+for_each_list3(IT1 begin1, IT1 end1,
+               IT2 begin2, IT2 end2,
+               IT3 begin3, IT3 end3,
+               F &&func)  {
+
+    const std::size_t   min_s = std::min({ std::distance(begin1, end1),
+                                           std::distance(begin2, end2),
+                                           std::distance(begin3, end3) });
+    F                   loc_f = std::move(func);
+
+
+    for (std::size_t i = 0; i < min_s; ++i)
+        loc_f(*begin1++, *begin2++, *begin3++);
+    return (min_s);
+}
+
+// -------------------------------------
+
+template<std::input_iterator IT1, std::input_iterator IT2,
+         std::input_iterator IT3, std::input_iterator IT4,
+         iter_invokale4<IT1, IT2, IT3, IT4> F>
+constexpr std::size_t
+for_each_list4(IT1 begin1, IT1 end1,
+               IT2 begin2, IT2 end2,
+               IT3 begin3, IT3 end3,
+               IT4 begin4, IT4 end4,
+               F &&func)  {
+
+    const std::size_t   min_s = std::min({ std::distance(begin1, end1),
+                                           std::distance(begin2, end2),
+                                           std::distance(begin3, end3),
+                                           std::distance(begin4, end4) });
+    F                   loc_f = std::move(func);
+
+
+    for (std::size_t i = 0; i < min_s; ++i)
+        loc_f(*begin1++, *begin2++, *begin3++, *begin4++);
+    return (min_s);
+}
+
+// -------------------------------------
+
+template<std::input_iterator IT1, std::input_iterator IT2,
+         std::input_iterator IT3, std::input_iterator IT4,
+         std::input_iterator IT5,
+         iter_invokale5<IT1, IT2, IT3, IT4, IT5> F>
+constexpr std::size_t
+for_each_list5(IT1 begin1, IT1 end1,
+               IT2 begin2, IT2 end2,
+               IT3 begin3, IT3 end3,
+               IT4 begin4, IT4 end4,
+               IT5 begin5, IT5 end5,
+               F &&func)  {
+
+    const std::size_t   min_s = std::min({ std::distance(begin1, end1),
+                                           std::distance(begin2, end2),
+                                           std::distance(begin3, end3),
+                                           std::distance(begin4, end4),
+                                           std::distance(begin5, end5) });
+    F                   loc_f = std::move(func);
+
+
+    for (std::size_t i = 0; i < min_s; ++i)
+        loc_f(*begin1++, *begin2++, *begin3++, *begin4++, *begin5++);
+    return (min_s);
 }
 
 // ----------------------------------------------------------------------------

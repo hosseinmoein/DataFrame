@@ -1555,7 +1555,8 @@ public:
 
     DEFINE_VISIT_BASIC_TYPES
     using result_type =
-        std::vector<double, typename allocator_declare<double, A>::type>;
+        std::vector<value_type,
+                    typename allocator_declare<value_type, A>::type>;
 
     template <typename K, typename H>
     inline void
@@ -1577,17 +1578,17 @@ public:
         const value_type    *prev_value = &*(column_begin + rank_vec[0]);
 
         for (size_type i = 0; i < col_s; ++i) [[likely]]  {
-            double      avg_val = static_cast<double>(i);
-            double      first_val = static_cast<double>(i);
-            double      last_val = static_cast<double>(i);
+            value_type      avg_val = static_cast<value_type>(i);
+            value_type      first_val = static_cast<value_type>(i);
+            value_type      last_val = static_cast<value_type>(i);
             size_type   j = i + 1;
 
             for ( ; j < col_s && *prev_value == *(column_begin + rank_vec[j]);
                  ++j)  {
-                last_val = static_cast<double>(j);
-                avg_val += static_cast<double>(j);
+                last_val = static_cast<value_type>(j);
+                avg_val += static_cast<value_type>(j);
             }
-            avg_val /= double(j - i);
+            avg_val /= value_type(j - i);
 
             switch(policy_)  {
                 case rank_policy::average:
@@ -1611,7 +1612,7 @@ public:
                 case rank_policy::actual:
                 {
                     for (; i < col_s && i < j; ++i)
-                        result[rank_vec[i]] = static_cast<double>(i);
+                        result[rank_vec[i]] = static_cast<value_type>(i);
                     break;
                 }
             }

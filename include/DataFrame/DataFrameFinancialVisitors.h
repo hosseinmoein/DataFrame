@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <DataFrame/DataFrameStatsVisitors.h>
 #include <DataFrame/DataFrameTypes.h>
+#include <DataFrame/Utils/MetaProg.h>
 
 #include <algorithm>
 #include <cmath>
@@ -348,16 +349,17 @@ public:
 
         upper_band_to_raw_.reserve(col_s);
         raw_to_lower_band_.reserve(col_s);
-        for (size_type i { 0 }; i < col_s; ++i) [[likely]]  {
-            const value_type    p = *(prices_begin + i);
-            const value_type    mr = mean_result[i];
-            const value_type    sr = std_result[i];
 
-            upper_band_to_raw_.push_back(
-                (mr + sr * upper_band_multiplier_) - p);
-            raw_to_lower_band_.push_back(
-                p - (mr - sr * lower_band_multiplier_));
-        }
+        for_each_list3(
+            prices_begin, prices_end,
+            mean_result.begin(), mean_result.end(),
+            std_result.begin(), std_result.end(),
+            [this](const auto &p, const auto &mr, const auto &sr) -> void  {
+                this->upper_band_to_raw_.push_back(
+                    (mr + sr * this->upper_band_multiplier_) - p);
+                this->raw_to_lower_band_.push_back(
+                    p - (mr - sr * this->lower_band_multiplier_));
+            });
     }
 
     inline void pre ()  {
@@ -1247,14 +1249,14 @@ struct  RVIVisitor  {
 
         rvi_(idx_begin, idx_end, close_begin, close_end, result_);
 
-        result_type result;
+        result_type loc_result;
 
-        rvi_(idx_begin, idx_end, high_begin, high_end, result);
+        rvi_(idx_begin, idx_end, high_begin, high_end, loc_result);
         for (size_type i = 0; i < col_s; ++i) [[likely]]
-            result_[i] += result[i];
-        rvi_(idx_begin, idx_end, low_begin, low_end, result);
+            result_[i] += loc_result[i];
+        rvi_(idx_begin, idx_end, low_begin, low_end, loc_result);
         for (size_type i = 0; i < col_s; ++i) [[likely]]
-            result_[i] = (result_[i] + result[i]) / T(3);
+            result_[i] = (result_[i] + loc_result[i]) / T(3);
     }
 
     DEFINE_PRE_POST
@@ -1285,19 +1287,17 @@ private:
         std::copy(ret_v_.get_result().begin(), ret_v_.get_result().end(),
                   neg_.begin());
 
-        for (size_type i { 0 }; i < col_s; ++i) [[likely]]  {
-            value_type  &pos = ret_v_.get_result()[i];
-            value_type  &neg = neg_[i];
+        for_each_list3(ret_v_.get_result().begin(), ret_v_.get_result().end(),
+                       neg_.begin(), neg_.end(),
+                       stdev_.get_result().begin(), stdev_.get_result().end(),
+                       [](auto &pos, auto &neg, const auto &stdev) -> void  {
+                           if (pos < 0)  pos = 0;
+                           if (neg > 0)  neg = 0;
+                           else if (neg < 0)  neg = 1;
 
-            if (pos < 0)  pos = 0;
-            if (neg > 0)  neg = 0;
-            else if (neg < 0)  neg = 1;
-
-            const value_type    stdev { stdev_.get_result()[i] };
-
-            pos *= stdev;
-            neg *= stdev;
-        }
+                           pos *= stdev;
+                           neg *= stdev;
+                       });
 
         ewm_pos_.pre();
         ewm_pos_ (idx_begin, idx_end,
@@ -1357,6 +1357,10 @@ private:
         value_type  rescaled_range { 0 };
     };
 
+    using RangeDataVec =
+        std::vector<range_data,
+                    typename allocator_declare<range_data, A>::type>;
+
 public:
 
     template <typename K, typename H>
@@ -1366,10 +1370,9 @@ public:
 
         GET_COL_SIZE
 
-        std::vector<range_data,
-                    typename allocator_declare<range_data, A>::type>    buckets;
-        MeanVisitor<T, I>                                               mv;
-        StdVisitor<T, I>                                                sv;
+        RangeDataVec        buckets;
+        MeanVisitor<T, I>   mv;
+        StdVisitor<T, I>    sv;
 
         // Calculate each range basic stats
         //
@@ -1514,7 +1517,7 @@ struct  MassIndexVisitor  {
         for (size_type i { 0 }; i < col_s; ++i) [[likely]]  {
             auto    &fr_value = fast_roller.get_result()[i];
 
-            if (is_nan__(fr_value))  {
+            if (is_nan__(fr_value)) [[unlikely]]  {
                 sum += result[i];
                 fr_value = sum / T(i + 1);
             }
@@ -1806,15 +1809,15 @@ struct  WilliamPrcRVisitor  {
 
         result_type result { std::move(max_v.get_result()) };
 
-        constexpr value_type    h { 100 };
-        constexpr value_type    one { 1 };
+        for_each_list3(min_v.get_result().begin(), min_v.get_result().end(),
+                       result.begin(), result.end(),
+                       close_begin, close_end,
+                       [](const auto &low,
+                          auto &res,
+                          const auto &close) -> void  {
+                           res = T(100) * ((close - low) / (res - low) - T(1));
+                       });
 
-        for (size_type i { 0 }; i < col_s; ++i) [[likely]]  {
-            const value_type    low { min_v.get_result()[i] };
-            value_type          &res { result[i] };
-
-            res = h * ((*(close_begin + i) - low) / (res - low) - one);
-        }
         result_.swap(result);
     }
 

@@ -74,7 +74,7 @@ concept hashable_equal = hashable<T> && std::equality_comparable<T>;
 
 template<typename T>
 concept hashable_stringable = requires(const std::remove_reference_t<T> &a,
-									   std::stringstream &ss)  {
+                                       std::stringstream &ss)  {
     hashable<T>;
     { ss << a };
 };
@@ -92,6 +92,51 @@ concept has_result = requires (const std::remove_reference_t<T> &a)  {
 template<typename F, typename U, typename V>
 concept replace_callable = requires (F &&f, const U &u, V &v)  {
     std::invoke(std::forward<F>(f), u, v);
+};
+
+// ----------------------------------------------------------------------------
+
+// This is to be used in for_each_list algorithm
+// IT1 is for Iterator 1
+// IT2 is for Iterator 2
+//
+template<typename F, typename IT1, typename IT2>
+concept iter_invokale2 =
+    requires (F &&f,
+              std::remove_reference_t<IT1> &it1,
+              std::remove_reference_t<IT2> &it2)  {
+    std::invoke(std::forward<F>(f), it1, it2);
+};
+
+template<typename F, typename IT1, typename IT2, typename IT3>
+concept iter_invokale3 =
+    requires (F &&f,
+              std::remove_reference_t<IT1> &it1,
+              std::remove_reference_t<IT2> &it2,
+              std::remove_reference_t<IT3> &it3)  {
+    std::invoke(std::forward<F>(f), it1, it2, it3);
+};
+
+template<typename F, typename IT1, typename IT2, typename IT3, typename IT4>
+concept iter_invokale4 =
+    requires (F &&f,
+              std::remove_reference_t<IT1> &it1,
+              std::remove_reference_t<IT2> &it2,
+              std::remove_reference_t<IT3> &it3,
+              std::remove_reference_t<IT4> &it4)  {
+    std::invoke(std::forward<F>(f), it1, it2, it3, it4);
+};
+
+template<typename F,
+         typename IT1, typename IT2, typename IT3, typename IT4, typename IT5>
+concept iter_invokale5 =
+    requires (F &&f,
+              std::remove_reference_t<IT1> &it1,
+              std::remove_reference_t<IT2> &it2,
+              std::remove_reference_t<IT3> &it3,
+              std::remove_reference_t<IT4> &it4,
+              std::remove_reference_t<IT5> &it5)  {
+    std::invoke(std::forward<F>(f), it1, it2, it3, it4, it5);
 };
 
 } // namespace hmdf

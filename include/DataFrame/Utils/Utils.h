@@ -252,7 +252,7 @@ abs__<long double>(const long double &val)  { return (std::fabs(val)); }
 // ----------------------------------------------------------------------------
 
 template<typename V>
-inline bool
+[[nodiscard]] inline bool
 is_monotonic_increasing(const V &column)  {
 
     const std::size_t   col_s { column.size() };
@@ -266,7 +266,7 @@ is_monotonic_increasing(const V &column)  {
 // ----------------------------------------------------------------------------
 
 template<typename V>
-inline bool
+[[nodiscard]] inline bool
 is_strictly_monotonic_increasing(const V &column)  {
 
     const std::size_t   col_s { column.size() };
@@ -280,7 +280,7 @@ is_strictly_monotonic_increasing(const V &column)  {
 // ----------------------------------------------------------------------------
 
 template<typename V>
-inline bool
+[[nodiscard]] inline bool
 is_monotonic_decreasing(const V &column)  {
 
     const std::size_t   col_s { column.size() };
@@ -294,7 +294,7 @@ is_monotonic_decreasing(const V &column)  {
 // ----------------------------------------------------------------------------
 
 template<typename V>
-inline bool
+[[nodiscard]] inline bool
 is_strictly_monotonic_decreasing(const V &column)  {
 
     const std::size_t   col_s { column.size() };

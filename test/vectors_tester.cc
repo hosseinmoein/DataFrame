@@ -173,10 +173,20 @@ int main(int, char *[]) {
 
     hv.resize(100, 5);
     hv.pop_back<int>();
-    hv.empty<int>();
-    hv.at<int>(5);
-    hv.back<int>();
-    hv.front<int>();
+
+    const bool  em = hv.empty<int>();
+
+    std::cout << "Empty result: " << em << std::endl;
+
+    const auto  a1 = hv.at<int>(5);
+
+    std::cout << "hv.at<int>(5) result: " << a1 << std::endl;
+
+    const auto  a2 = hv.back<int>();
+    const auto  a3 = hv.front<int>();
+
+    std::cout << "hv.back<int>() result: " << a2 << std::endl;
+    std::cout << "hv.front<int>() result: " << a3 << std::endl;
 
     {
         // Tesing VectorView

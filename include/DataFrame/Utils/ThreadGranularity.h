@@ -91,7 +91,7 @@ struct  SpinLock  {
 
         count_ += 1;
     }
-    inline bool try_lock() noexcept {
+    [[nodiscard]] inline bool try_lock() noexcept {
 
         const std::thread::id   thr_id = std::this_thread::get_id();
 
@@ -186,7 +186,7 @@ struct  SeqLock  {
 
     // There can be multiple consumers concurrently
     //
-    value_type load() const noexcept  {
+    [[nodiscard]] value_type load() const noexcept  {
 
         while (true)  {
             const size_type seq_1 = seq_.load (std::memory_order_relaxed);

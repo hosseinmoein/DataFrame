@@ -46,14 +46,14 @@ namespace hmdf
 // G is for Gettable
 //
 template<std::size_t I, typename G>
-constexpr auto
+[[nodiscard]] constexpr auto
 adl_get(G &&tup) noexcept -> decltype(auto)  {
 
     return (std::get<I>(std::forward<G>(tup)));
 }
 
 template<typename T, typename G>
-constexpr auto
+[[nodiscard]] constexpr auto
 adl_get(G &&tup) noexcept -> decltype(auto)  {
 
     return (std::get<T>(std::forward<G>(tup)));

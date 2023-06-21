@@ -77,9 +77,9 @@ struct HeteroPtrView {
     HeteroPtrView &operator= (HeteroPtrView &&rhs);
 
     template<typename T>
-    VectorPtrView<T, A> &get_vector();
+    [[nodiscard]] VectorPtrView<T, A> &get_vector();
     template<typename T>
-    const VectorPtrView<T, A> &get_vector() const;
+    [[nodiscard]] const VectorPtrView<T, A> &get_vector() const;
 
     template<typename T>
     void reserve (size_type r)  { get_vector<T>().reserve (r); }
@@ -87,28 +87,27 @@ struct HeteroPtrView {
     void shrink_to_fit () { get_vector<T>().shrink_to_fit (); }
 
     template<typename T>
-    typename VectorPtrView<T, A>::
-    size_type size () const { return (get_vector<T>().size()); }
+    [[nodiscard]] size_type size () const { return (get_vector<T>().size()); }
 
     void clear();
 
     template<typename T>
-    bool empty() const noexcept;
+    [[nodiscard]] bool empty() const noexcept;
 
     template<typename T>
     T &at(size_type idx);
     template<typename T>
-    const T &at(size_type idx) const;
+    [[nodiscard]] const T &at(size_type idx) const;
 
     template<typename T>
-    T &back();
+    [[nodiscard]] T &back();
     template<typename T>
-    const T &back() const;
+    [[nodiscard]] const T &back() const;
 
     template<typename T>
-    T &front();
+    [[nodiscard]] T &front();
     template<typename T>
-    const T &front() const;
+    [[nodiscard]] const T &front() const;
 
     template<typename... Ts>
     struct type_list  {   };

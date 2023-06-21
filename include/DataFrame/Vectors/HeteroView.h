@@ -73,33 +73,32 @@ struct HeteroView  {
     HeteroView &operator= (HeteroView &&rhs);
 
     template<typename T>
-    VectorView<T, A> &get_vector();
+    [[nodiscard]] VectorView<T, A> &get_vector();
     template<typename T>
-    const VectorView<T, A> &get_vector() const;
+    [[nodiscard]] const VectorView<T, A> &get_vector() const;
 
     template<typename T>
-    typename VectorView<T, A>::
-    size_type size () const { return (get_vector<T>().size()); }
+    [[nodiscard]] size_type size () const { return (get_vector<T>().size()); }
 
     void clear();
 
     template<typename T>
-    bool empty() const noexcept;
+    [[nodiscard]] bool empty() const noexcept;
 
     template<typename T>
-    T &at(size_type idx);
+    [[nodiscard]] T &at(size_type idx);
     template<typename T>
-    const T &at(size_type idx) const;
+    [[nodiscard]] const T &at(size_type idx) const;
 
     template<typename T>
-    T &back();
+    [[nodiscard]] T &back();
     template<typename T>
-    const T &back() const;
+    [[nodiscard]] const T &back() const;
 
     template<typename T>
-    T &front();
+    [[nodiscard]] T &front();
     template<typename T>
-    const T &front() const;
+    [[nodiscard]] const T &front() const;
 
     template<typename T>
     using iterator = typename VectorView<T, A>::iterator;
@@ -112,24 +111,24 @@ struct HeteroView  {
         typename VectorView<T, A>::const_reverse_iterator;
 
     template<typename T>
-    iterator<T> begin();
+    [[nodiscard]] iterator<T> begin();
     template<typename T>
-    const_iterator<T> begin() const;
+    [[nodiscard]] const_iterator<T> begin() const;
 
     template<typename T>
-    iterator<T> end();
+    [[nodiscard]] iterator<T> end();
     template<typename T>
-    const_iterator<T> end() const;
+    [[nodiscard]] const_iterator<T> end() const;
 
     template<typename T>
-    reverse_iterator<T> rbegin();
+    [[nodiscard]] reverse_iterator<T> rbegin();
     template<typename T>
-    const_reverse_iterator<T> rbegin() const;
+    [[nodiscard]] const_reverse_iterator<T> rbegin() const;
 
     template<typename T>
-    reverse_iterator<T> rend();
+    [[nodiscard]] reverse_iterator<T> rend();
     template<typename T>
-    const_reverse_iterator<T> rend() const;
+    [[nodiscard]] const_reverse_iterator<T> rend() const;
 
     template<typename... Ts>
     struct type_list  {   };

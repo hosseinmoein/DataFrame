@@ -67,9 +67,10 @@ struct HeteroVector  {
     HeteroVector &operator= (HeteroVector &&rhs);
 
     template<typename T>
-    std::vector<T, typename allocator_declare<T, A>::type> &get_vector();
+    [[nodiscard]] std::vector<T, typename allocator_declare<T, A>::type> &
+    get_vector();
     template<typename T>
-    const std::vector<T, typename allocator_declare<T, A>::type> &
+    [[nodiscard]] const std::vector<T, typename allocator_declare<T, A>::type> &
     get_vector() const;
 
     // It returns a view of the underlying vector.
@@ -78,14 +79,17 @@ struct HeteroVector  {
     // There is no const version of this method
     //
     template<typename T>
-    HeteroView<A> get_view(size_type begin = 0, size_type end = -1);
+    [[nodiscard]] HeteroView<A>
+    get_view(size_type begin = 0, size_type end = -1);
     template<typename T>
-    HeteroConstView<A> get_view(size_type begin = 0, size_type end = -1) const;
+    [[nodiscard]] HeteroConstView<A>
+    get_view(size_type begin = 0, size_type end = -1) const;
 
     template<typename T>
-    HeteroPtrView<A> get_ptr_view(size_type begin = 0, size_type end = -1);
+    [[nodiscard]] HeteroPtrView<A>
+    get_ptr_view(size_type begin = 0, size_type end = -1);
     template<typename T>
-    HeteroConstPtrView<A>
+    [[nodiscard]] HeteroConstPtrView<A>
     get_ptr_view(size_type begin = 0, size_type end = -1) const;
 
     template<typename T>
@@ -101,7 +105,7 @@ struct HeteroVector  {
     void shrink_to_fit () { get_vector<T>().shrink_to_fit (); }
 
     template<typename T>
-    size_type size () const { return (get_vector<T>().size()); }
+    [[nodiscard]] size_type size () const { return (get_vector<T>().size()); }
 
     void clear();
 
@@ -117,22 +121,22 @@ struct HeteroVector  {
     void pop_back();
 
     template<typename T>
-    bool empty() const noexcept;
+    [[nodiscard]] bool empty() const noexcept;
 
     template<typename T>
-    T &at(size_type idx);
+    [[nodiscard]] T &at(size_type idx);
     template<typename T>
-    const T &at(size_type idx) const;
+    [[nodiscard]] const T &at(size_type idx) const;
 
     template<typename T>
-    T &back();
+    [[nodiscard]] T &back();
     template<typename T>
-    const T &back() const;
+    [[nodiscard]] const T &back() const;
 
     template<typename T>
-    T &front();
+    [[nodiscard]] T &front();
     template<typename T>
-    const T &front() const;
+    [[nodiscard]] const T &front() const;
 
     template<typename T>
     using iterator =

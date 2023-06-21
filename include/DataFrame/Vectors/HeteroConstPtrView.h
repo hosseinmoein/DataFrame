@@ -77,27 +77,26 @@ struct  HeteroConstPtrView {
     HeteroConstPtrView &operator= (HeteroConstPtrView &&rhs);
 
     template<typename T>
-    VectorConstPtrView<T, A> &get_vector();
+    [[nodiscard]] VectorConstPtrView<T, A> &get_vector();
     template<typename T>
-    const VectorConstPtrView<T, A> &get_vector() const;
+    [[nodiscard]] const VectorConstPtrView<T, A> &get_vector() const;
 
     template<typename T>
-    typename VectorConstPtrView<T, A>::size_type
-    size () const { return (get_vector<T>().size()); }
+    [[nodiscard]] size_type size () const { return (get_vector<T>().size()); }
 
     void clear();
 
     template<typename T>
-    bool empty() const noexcept;
+    [[nodiscard]] bool empty() const noexcept;
 
     template<typename T>
-    const T &at(size_type idx) const;
+    [[nodiscard]] const T &at(size_type idx) const;
 
     template<typename T>
-    const T &back() const;
+    [[nodiscard]] const T &back() const;
 
     template<typename T>
-    const T &front() const;
+    [[nodiscard]] const T &front() const;
 
     template<typename... Ts>
     struct type_list  {   };

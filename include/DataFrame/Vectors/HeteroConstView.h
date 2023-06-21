@@ -73,27 +73,26 @@ struct HeteroConstView  {
     HeteroConstView &operator= (HeteroConstView &&rhs);
 
     template<typename T>
-    VectorConstView<T, A> &get_vector();
+    [[nodiscard]] VectorConstView<T, A> &get_vector();
     template<typename T>
-    const VectorConstView<T, A> &get_vector() const;
+    [[nodiscard]] const VectorConstView<T, A> &get_vector() const;
 
     template<typename T>
-    typename VectorConstView<T, A>::size_type
-    size () const { return (get_vector<T>().size()); }
+    [[nodiscard]] size_type size () const { return (get_vector<T>().size()); }
 
     void clear();
 
     template<typename T>
-    bool empty() const noexcept;
+    [[nodiscard]] bool empty() const noexcept;
 
     template<typename T>
-    const T &at(size_type idx) const;
+    [[nodiscard]] const T &at(size_type idx) const;
 
     template<typename T>
-    const T &back() const;
+    [[nodiscard]] const T &back() const;
 
     template<typename T>
-    const T &front() const;
+    [[nodiscard]] const T &front() const;
 
     template<typename T>
     using const_iterator = typename VectorConstView<T, A>::const_iterator;
@@ -102,13 +101,13 @@ struct HeteroConstView  {
         typename VectorConstView<T, A>::const_reverse_iterator;
 
     template<typename T>
-    const_iterator<T> begin() const;
+    [[nodiscard]] const_iterator<T> begin() const;
     template<typename T>
-    const_iterator<T> end() const;
+    [[nodiscard]] const_iterator<T> end() const;
     template<typename T>
-    const_reverse_iterator<T> rbegin() const;
+    [[nodiscard]] const_reverse_iterator<T> rbegin() const;
     template<typename T>
-    const_reverse_iterator<T> rend() const;
+    [[nodiscard]] const_reverse_iterator<T> rend() const;
 
     template<typename... Ts>
     struct type_list  {   };

@@ -62,26 +62,34 @@ public:
 
     static const size_type  value_size = sizeof(T);
 
-    inline size_type size() const noexcept { return (vector_.size ()); }
-    inline size_type max_size() const noexcept { return (vector_.max_size()); }
-    inline size_type capacity() const noexcept { return (vector_.capacity()); }
+    [[nodiscard]] inline size_type
+    size() const noexcept { return (vector_.size ()); }
+    [[nodiscard]] inline size_type
+    max_size() const noexcept { return (vector_.max_size()); }
+    [[nodiscard]] inline size_type
+    capacity() const noexcept { return (vector_.capacity()); }
 
-    inline bool empty() const noexcept { return (vector_.empty()); }
+    [[nodiscard]] inline bool
+    empty() const noexcept { return (vector_.empty()); }
     inline void shrink_to_fit()  { vector_.shrink_to_fit(); }
 
-    inline reference at(size_type n)  { return (*(vector_[n])); }
-    inline pointer &ptr_at(size_type n)  { return (vector_[n]); }
-    inline const_reference at(size_type n) const { return (*(vector_[n])); }
-    inline reference operator[](size_type n)  { return (at(n)); }
-    inline const_reference operator[](size_type n) const { return (at(n)); }
+    [[nodiscard]] inline reference at(size_type n)  { return (*(vector_[n])); }
+    [[nodiscard]] inline pointer &ptr_at(size_type n)  { return (vector_[n]); }
+    [[nodiscard]] inline const_reference
+    at(size_type n) const { return (*(vector_[n])); }
+    [[nodiscard]] inline reference operator[](size_type n)  { return (at(n)); }
+    [[nodiscard]] inline const_reference
+    operator[](size_type n) const { return (at(n)); }
 
     inline void reserve (size_type n) noexcept { vector_.reserve (n); }
 
-    inline reference front () noexcept  { return (*(vector_.front ())); }
-    inline const_reference
+    [[nodiscard]] inline reference
+    front () noexcept  { return (*(vector_.front ())); }
+    [[nodiscard]] inline const_reference
     front() const noexcept { return (*(vector_.front())); }
-    inline reference back () noexcept { return (*(vector_.back ())); }
-    inline const_reference
+    [[nodiscard]] inline reference
+    back () noexcept { return (*(vector_.back ())); }
+    [[nodiscard]] inline const_reference
     back () const noexcept { return (*(vector_.back ())); }
 
     inline void push_back(value_type *v)  { vector_.push_back(v); }
@@ -91,17 +99,17 @@ public:
     inline void
     swap (VectorPtrView &rhs) noexcept  { vector_.swap (rhs.vector_); }
 
-    inline friend bool
+    [[nodiscard]] inline friend bool
     operator == (const VectorPtrView &lhs, const VectorPtrView &rhs) {
 
         return (lhs.vector_ == rhs.vector_);
     }
-    inline friend bool
+    [[nodiscard]] inline friend bool
     operator != (const VectorPtrView &lhs, const VectorPtrView &rhs) {
 
         return (lhs.vector_ != rhs.vector_);
     }
-    inline friend bool
+    [[nodiscard]] inline friend bool
     operator < (const VectorPtrView &lhs, const VectorPtrView &rhs) {
 
         return (lhs.vector_ < rhs.vector_);
@@ -483,20 +491,22 @@ public:
         iter_type   node_ {  };
     };
 
-    inline iterator begin () noexcept  { return (iterator(vector_.begin())); }
-    inline iterator end () noexcept { return (iterator(vector_.end())); }
-    inline const_iterator
+    [[nodiscard]] inline iterator
+    begin () noexcept  { return (iterator(vector_.begin())); }
+    [[nodiscard]] inline iterator
+    end () noexcept { return (iterator(vector_.end())); }
+    [[nodiscard]] inline const_iterator
     begin() const noexcept { return (const_iterator(vector_.begin())); }
-    inline const_iterator
+    [[nodiscard]] inline const_iterator
     end () const noexcept  { return (const_iterator(vector_.end())); }
 
-    inline std::reverse_iterator<iterator>
+    [[nodiscard]] inline std::reverse_iterator<iterator>
     rbegin() noexcept { return (std::make_reverse_iterator(end())); }
-    inline std::reverse_iterator<iterator>
+    [[nodiscard]] inline std::reverse_iterator<iterator>
     rend() noexcept { return (std::make_reverse_iterator(begin())); }
-    inline std::reverse_iterator<const_iterator>
+    [[nodiscard]] inline std::reverse_iterator<const_iterator>
     rbegin() const noexcept { return (std::make_reverse_iterator(end())); }
-    inline std::reverse_iterator<const_iterator>
+    [[nodiscard]] inline std::reverse_iterator<const_iterator>
     rend() const noexcept { return (std::make_reverse_iterator(begin())); }
 
 private:
@@ -527,22 +537,29 @@ public:
 
     static const size_type  value_size = sizeof(T);
 
-    inline size_type size() const noexcept { return (vector_.size ()); }
-    inline size_type max_size() const noexcept { return (vector_.max_size()); }
-    inline size_type capacity() const noexcept { return (vector_.capacity()); }
+    [[nodiscard]] inline size_type
+    size() const noexcept { return (vector_.size ()); }
+    [[nodiscard]] inline size_type
+    max_size() const noexcept { return (vector_.max_size()); }
+    [[nodiscard]] inline size_type
+        capacity() const noexcept { return (vector_.capacity()); }
 
-    inline bool empty() const noexcept { return (vector_.empty()); }
+    [[nodiscard]] inline bool
+    empty() const noexcept { return (vector_.empty()); }
     inline void shrink_to_fit()  { vector_.shrink_to_fit(); }
 
-    inline const_pointer &ptr_at(size_type n) const  { return (vector_[n]); }
-    inline const_reference at(size_type n) const { return (*(vector_[n])); }
-    inline const_reference operator[](size_type n) const { return (at(n)); }
+    [[nodiscard]] inline const_pointer
+    &ptr_at(size_type n) const  { return (vector_[n]); }
+    [[nodiscard]] inline const_reference
+    at(size_type n) const { return (*(vector_[n])); }
+    [[nodiscard]] inline const_reference
+    operator[](size_type n) const { return (at(n)); }
 
     inline void reserve (size_type n) noexcept { vector_.reserve (n); }
 
-    inline const_reference
+    [[nodiscard]] inline const_reference
     front() const noexcept { return(*(vector_.front())); }
-    inline const_reference
+    [[nodiscard]] inline const_reference
     back () const noexcept { return (*(vector_.back ())); }
 
     inline void push_back(const value_type *v)  { vector_.push_back(v); }
@@ -552,12 +569,12 @@ public:
     inline void
     swap (VectorConstPtrView &rhs) noexcept  { vector_.swap (rhs.vector_); }
 
-    inline friend bool
+    [[nodiscard]] inline friend bool
     operator == (const VectorConstPtrView &lhs, const VectorConstPtrView &rhs) {
 
         return (lhs.vector_ == rhs.vector_);
     }
-    inline friend bool
+    [[nodiscard]] inline friend bool
     operator < (const VectorConstPtrView &lhs, const VectorConstPtrView &rhs) {
 
         return (lhs.vector_ < rhs.vector_);
@@ -809,14 +826,14 @@ public:
         iter_type   node_ {  };
     };
 
-    inline const_iterator
+    [[nodiscard]] inline const_iterator
     begin() const noexcept { return (const_iterator(vector_.begin())); }
-    inline const_iterator
+    [[nodiscard]] inline const_iterator
     end () const noexcept  { return (const_iterator(vector_.end())); }
 
-    inline std::reverse_iterator<const_iterator>
+    [[nodiscard]] inline std::reverse_iterator<const_iterator>
     rbegin() const noexcept { return (std::make_reverse_iterator(end())); }
-    inline std::reverse_iterator<const_iterator>
+    [[nodiscard]] inline std::reverse_iterator<const_iterator>
     rend() const noexcept { return (std::make_reverse_iterator(begin())); }
 
 private:

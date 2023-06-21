@@ -4,7 +4,7 @@ if(POLICY CMP0090)
     cmake_policy(SET CMP0090 NEW)
 endif()
 
-project(DataFrame VERSION 1.22.0 LANGUAGES CXX)
+project(DataFrame VERSION 2.1.0 LANGUAGES CXX)
 
 option(HMDF_TESTING "Enable testing" OFF)
 option(HMDF_EXAMPLES "Build Examples" OFF)

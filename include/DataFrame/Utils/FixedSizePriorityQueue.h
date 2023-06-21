@@ -70,23 +70,24 @@ public:
         }
     }
 
-    inline const value_type &top() const noexcept  { return (array_.front()); }
+    [[nodiscard]] inline const value_type
+    &top() const noexcept  { return (array_.front()); }
     inline void pop()  {
 
         if (! empty())
             std::pop_heap(array_.begin(), data_end_--, cmp_);
     }
 
-    inline size_type size() const noexcept {
+    [[nodiscard]] inline size_type size() const noexcept {
 
         return (std::distance(array_.begin(),
                               static_cast<const_iterator>(data_end_)));
     }
-    inline bool empty() const noexcept  { return (size() == 0); }
+    [[nodiscard]] inline bool empty() const noexcept  { return (size() == 0); }
 
     inline void clear()  { data_end_ = array_.begin(); }
 
-    inline std::vector<value_type> data() const  {
+    [[nodiscard]] inline std::vector<value_type> data() const  {
 
         std::vector<value_type> result;
 

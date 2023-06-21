@@ -117,13 +117,12 @@ int main (int, char *[])  {
     now = "20100207 12:32:12";
 
     try  {
-        now.diff_seconds (gmnow);
+        const auto  diff = now.diff_seconds (gmnow);
 
-        assert(false);
+        std::cout << "The diff is: " << diff << std::endl; 
     }
-    catch (const std::runtime_error &)  {
-        // cout << ex.what();
-        ; // Time diff between different timezones is not implemented
+    catch (const std::runtime_error &ex)  {
+        cout << ex.what();
     }
 
     {

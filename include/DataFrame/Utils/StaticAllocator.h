@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <algorithm>
 #include <cstring>
+#include <functional>
 #include <iterator>
 #include <new>
 
@@ -56,10 +57,10 @@ struct  StaticAllocStorage : public AllocatorFlags  {
 
         // This is guaranteed to execute only once even in multithreading
         //
-        [[maybe_unused]] static auto    slug = []() -> int  {
+        [[maybe_unused]] static auto    slug = std::invoke([]() -> int  {
             std::memset(in_use_, Base::FREE_, MAX_SIZE);
             return (0);
-        }();
+        });
     }
     StaticAllocStorage(const StaticAllocStorage &) = default;
     StaticAllocStorage(StaticAllocStorage &&) = delete;

@@ -424,24 +424,83 @@ for_each_list5(IT1 begin1, IT1 end1,
 
 // ----------------------------------------------------------------------------
 
+// This is how to unpack a type pack
+//
 template<typename ... Ts>
-struct  overload : Ts ...  { using Ts::operator() ...; };
+struct  type_sequence  {   };
+
+// --------------------------------------------
+
+template<typename ... Ts>
+struct  head;
+
+template<typename T, typename ... Ts>
+struct  head<type_sequence<T, Ts ...>>  {
+    using type = T;
+};
+
+template<typename T>
+using head_t = typename head<T>::type;
+
+// --------------------------------------------
+
+template<typename ... Ts>
+struct  tail;
+
+template<typename T, typename ... Ts>
+struct  tail<type_sequence<T, Ts ...>>  {
+    using type = type_sequence<Ts ...>;
+};
+
+template<typename T>
+using tail_t = typename tail<T>::type;
+
+// --------------------------------------------
+
+// This is like lisp cons -- union of two packs
+//
+template<typename T, typename LIST>
+struct  cons;
+
+template<typename T, typename ... Ts>
+struct  cons<T, type_sequence<Ts ...>>  {
+    using type = type_sequence<T, Ts ...>;
+};
+
+template<typename T, typename LIST>
+using cons_t = typename cons<T, LIST>::type;
+
+// ----------------------------------------------------------------------------
+
+template<typename ... Ts>
+struct  overload : Ts ...  {
+    using Ts::operator() ...;
+    overload (Ts && ... args) : Ts (std::forward<Ts>(args)) ... {   } // Maybe
+};
+
+// Explicit deduction guide (not needed as of C++20)
+//
+template<typename ... Ts>
+overload(Ts ...) -> overload<Ts ...>;
 
 /*
-Now you can do somthing like this
+// Now you can do somthing like this
 int main()  {
 
-    overload    f = {
-        [](int i)   { std::cout << "int thingy\n"; },
-        [](float f)   { std::cout << "float thingy\n"; },
-    };
+    overload<
+        decltype([](int i)   { std::cout << "Printing int\n"; }),
+        decltype([](float f)   { std::cout << "Pritning float\n"; }),
+        decltype([](std::string s)   {
+            std::cout << "Do something completely different\n";
+        })> f;
 
-    f(2);     // Prints int thingy
-    f(2.0f);  // Prints float thingy
+    f(2);     // Printing int
+    f(2.0f);  // Printing float
+    f("Foo"); // Doing something different
 
-    std::vairant<int, float>    v = 2.0f;
+    std::vairant<int, float, std::string>   v = "My string";
 
-    std::visit(f, v);  // Prints float thingy
+    std::visit(f, v);  // Doing something completely different
 }
 */
 
@@ -525,7 +584,7 @@ auto f = [](auto &&self, int i)  {
     if (i == 0)
         return (1);
     return (i * self(self, i - 1));
-}
+};
 
 std::cout << f(f, 5) << std::endl;
 */

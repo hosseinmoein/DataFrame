@@ -83,7 +83,7 @@ public:
     // argument for the alignment that will make the default
     // std::allocator_traits implementation fail during compilation.
     //
-    template<class U>
+    template<typename U>
     struct  rebind  { using other = AlignedAllocator<U, AS>; };
 
     [[nodiscard]] inline constexpr pointer

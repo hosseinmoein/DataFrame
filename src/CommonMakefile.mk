@@ -23,6 +23,7 @@ SRCS = ../test/dataframe_tester.cc \
        ../test/meta_prog_tester.cc \
        ../test/date_time_tester.cc \
        ../test/gen_rand_tester.cc \
+       ../test/allocator_tester.cc \
        Utils/DateTime.cc
 
 HEADERS = $(LOCAL_INCLUDE_DIR)/DataFrame/Vectors/HeteroVector.h \
@@ -65,7 +66,9 @@ HEADERS = $(LOCAL_INCLUDE_DIR)/DataFrame/Vectors/HeteroVector.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/MetaProg.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/Concepts.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/FixedSizeString.h \
-          $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/FixedSizePriorityQueue.h
+          $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/FixedSizePriorityQueue.h \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/AlignedAllocator.h \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/StaticAllocator.h
 
 LIB_NAME = DataFrame
 TARGET_LIB = $(LOCAL_LIB_DIR)/lib$(LIB_NAME).a

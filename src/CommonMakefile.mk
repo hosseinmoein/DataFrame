@@ -68,7 +68,7 @@ HEADERS = $(LOCAL_INCLUDE_DIR)/DataFrame/Vectors/HeteroVector.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/FixedSizeString.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/FixedSizePriorityQueue.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/AlignedAllocator.h \
-          $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/StaticAllocator.h
+          $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/FixedSizeAllocator.h
 
 LIB_NAME = DataFrame
 TARGET_LIB = $(LOCAL_LIB_DIR)/lib$(LIB_NAME).a

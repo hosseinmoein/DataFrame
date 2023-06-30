@@ -124,7 +124,7 @@ struct  StackAllocStorage : public AllocatorFlags  {
 
 template<typename T, std::size_t MAX_SIZE,
          template<typename, std::size_t> typename STORE>
-class   FixedAllocator : private STORE<T, MAX_SIZE>  {
+class   FixedSizeAllocator : private STORE<T, MAX_SIZE>  {
 
     using Base = STORE<T, MAX_SIZE>;
 
@@ -151,7 +151,7 @@ public:
     // std::allocator_traits implementation fail during compilation.
     //
     template<typename U>
-    struct  rebind  { using other = FixedAllocator<U, MAX_SIZE, STORE>; };
+    struct  rebind  { using other = FixedSizeAllocator<U, MAX_SIZE, STORE>; };
 
     [[nodiscard]] pointer
     address(reference r) const  { return (std::addressof(r)); }
@@ -162,23 +162,23 @@ public:
 
 public:
 
-    FixedAllocator() : Base()  {   }
-    FixedAllocator(const FixedAllocator &that) : Base(that)  {   }
-    FixedAllocator(FixedAllocator &&) = delete;
-    ~FixedAllocator() = default;
+    FixedSizeAllocator() : Base()  {   }
+    FixedSizeAllocator(const FixedSizeAllocator &that) : Base(that)  {   }
+    FixedSizeAllocator(FixedSizeAllocator &&) = delete;
+    ~FixedSizeAllocator() = default;
 
-    FixedAllocator &operator =(FixedAllocator &&) = delete;
-    FixedAllocator &operator =(const FixedAllocator &) = delete;
+    FixedSizeAllocator &operator =(FixedSizeAllocator &&) = delete;
+    FixedSizeAllocator &operator =(const FixedSizeAllocator &) = delete;
 
     template<typename U>
-    FixedAllocator(const FixedAllocator<U, MAX_SIZE, STORE> &)  {   }
+    FixedSizeAllocator(const FixedSizeAllocator<U, MAX_SIZE, STORE> &)  {   }
 
     // Always return true for stateless allocators.
     //
     [[nodiscard]] inline bool
-    operator == (const FixedAllocator &) const  { return (true); }
+    operator == (const FixedSizeAllocator &) const  { return (true); }
     [[nodiscard]] inline bool
-    operator != (const FixedAllocator &) const  { return (false); }
+    operator != (const FixedSizeAllocator &) const  { return (false); }
 
 public:
 
@@ -269,10 +269,10 @@ public:
 // ----------------------------------------------------------------------------
 
 template<typename T, std::size_t MAX_SIZE>
-using StaticAllocator = FixedAllocator<T, MAX_SIZE, StaticAllocStorage>;
+using StaticAllocator = FixedSizeAllocator<T, MAX_SIZE, StaticAllocStorage>;
 
 template<typename T, std::size_t MAX_SIZE>
-using StackAllocator = FixedAllocator<T, MAX_SIZE, StackAllocStorage>;
+using StackAllocator = FixedSizeAllocator<T, MAX_SIZE, StackAllocStorage>;
 
 } // namespace std
 

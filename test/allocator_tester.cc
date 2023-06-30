@@ -26,10 +26,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include <DataFrame/Utils/AlignedAllocator.h>
-#include <DataFrame/Utils/StaticAllocator.h>
+#include <DataFrame/Utils/FixedSizeAllocator.h>
 
 #include <cassert>
 #include <iostream>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -229,6 +230,16 @@ static void test_static_allocator()  {
         vec5.push_back(double(i));
     for (std::size_t i = 0; i < 2; ++i)
         assert(vec5[i] == double(i));
+
+    using map_t = std::map<int, int, std::less<int>,
+                           StaticAllocator<std::pair<const int, int>, 1000>>;
+
+    map_t   my_map;
+
+    for (int i = 0; i < 1000; ++i)
+        my_map.insert({ i, i * 10 });
+    for (int i = 0; i < 1000; ++i)
+        assert((my_map.find(i)->second == i * 10));
 }
 
 // -----------------------------------------------------------------------------
@@ -300,6 +311,16 @@ static void test_stack_allocator()  {
         vec5.push_back(double(i));
     for (std::size_t i = 0; i < 2; ++i)
         assert(vec5[i] == double(i));
+
+    using map_t = std::map<int, int, std::less<int>,
+                           StackAllocator<std::pair<const int, int>, 1000>>;
+
+    map_t   my_map;
+
+    for (int i = 0; i < 1000; ++i)
+        my_map.insert({ i, i * 10 });
+    for (int i = 0; i < 1000; ++i)
+        assert((my_map.find(i)->second == i * 10));
 }
 
 // -----------------------------------------------------------------------------

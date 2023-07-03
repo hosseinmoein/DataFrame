@@ -155,7 +155,7 @@ DataFrame<I, H>::shuffle(const StlVecType<const char *> &col_names,
     shuffle_functor_<Ts ...>    functor;
     const SpinGuard             guard(lock_);
 
-    for (auto name_citer : col_names) [[likely]]  {
+    for (const auto &name_citer : col_names) [[likely]]  {
         const auto  citer = column_tb_.find (name_citer);
 
         if (citer == column_tb_.end()) [[unlikely]]  {
@@ -338,8 +338,8 @@ fill_missing_linter_(ColumnVecType<T> &vec,
     if (vec_size < 3)  return;
 
     int             count = 0;
-    T               *y1 = &(vec[0]);
-    T               *y2 = &(vec[2]);
+    const T         *y1 = &(vec[0]);
+    const T         *y2 = &(vec[2]);
     const IndexType *x = &(index[1]);
     const IndexType *x1 = &(index[0]);
     const IndexType *x2 = &(index[2]);
@@ -398,7 +398,7 @@ fill_missing(const StlVecType<const char *> &col_names,
              int limit)  {
 
     const size_type                 count = col_names.size();
-    StlVecType<std::future<void>>  futures(get_thread_level());
+    StlVecType<std::future<void>>   futures(get_thread_level());
     size_type                       thread_count = 0;
 
     for (size_type i = 0; i < count; ++i)  {
@@ -779,9 +779,9 @@ sort(const char *name1, sort_spec dir1, const char *name2, sort_spec dir2,
 
     make_consistent<Ts ...>();
 
-    ColumnVecType<T1>   *vec1 { nullptr};
-    ColumnVecType<T2>   *vec2 { nullptr};
-    const SpinGuard     guard (lock_);
+    const ColumnVecType<T1> *vec1 { nullptr};
+    const ColumnVecType<T2> *vec2 { nullptr};
+    const SpinGuard         guard (lock_);
 
     if (! ::strcmp(name1, DF_INDEX_COL_NAME))
         vec1 = reinterpret_cast<ColumnVecType<T1> *>(&indices_);
@@ -1002,10 +1002,10 @@ sort(const char *name1, sort_spec dir1,
 
     make_consistent<Ts ...>();
 
-    ColumnVecType<T1>   *vec1 { nullptr};
-    ColumnVecType<T2>   *vec2 { nullptr};
-    ColumnVecType<T3>   *vec3 { nullptr};
-    const SpinGuard     guard (lock_);
+    const ColumnVecType<T1> *vec1 { nullptr};
+    const ColumnVecType<T2> *vec2 { nullptr};
+    const ColumnVecType<T3> *vec3 { nullptr};
+    const SpinGuard         guard (lock_);
 
     if (! ::strcmp(name1, DF_INDEX_COL_NAME))
         vec1 = reinterpret_cast<ColumnVecType<T1> *>(&indices_);
@@ -1102,11 +1102,11 @@ sort(const char *name1, sort_spec dir1,
 
     make_consistent<Ts ...>();
 
-    ColumnVecType<T1>   *vec1 { nullptr};
-    ColumnVecType<T2>   *vec2 { nullptr};
-    ColumnVecType<T3>   *vec3 { nullptr};
-    ColumnVecType<T4>   *vec4 { nullptr};
-    const SpinGuard     guard (lock_);
+    const ColumnVecType<T1> *vec1 { nullptr};
+    const ColumnVecType<T2> *vec2 { nullptr};
+    const ColumnVecType<T3> *vec3 { nullptr};
+    const ColumnVecType<T4> *vec4 { nullptr};
+    const SpinGuard         guard (lock_);
 
     if (! ::strcmp(name1, DF_INDEX_COL_NAME))
         vec1 = reinterpret_cast<ColumnVecType<T1> *>(&indices_);
@@ -1235,12 +1235,12 @@ sort(const char *name1, sort_spec dir1,
 
     make_consistent<Ts ...>();
 
-    ColumnVecType<T1>   *vec1 { nullptr};
-    ColumnVecType<T2>   *vec2 { nullptr};
-    ColumnVecType<T3>   *vec3 { nullptr};
-    ColumnVecType<T4>   *vec4 { nullptr};
-    ColumnVecType<T5>   *vec5 { nullptr};
-    const SpinGuard     guard (lock_);
+    const ColumnVecType<T1> *vec1 { nullptr};
+    const ColumnVecType<T2> *vec2 { nullptr};
+    const ColumnVecType<T3> *vec3 { nullptr};
+    const ColumnVecType<T4> *vec4 { nullptr};
+    const ColumnVecType<T5> *vec5 { nullptr};
+    const SpinGuard         guard (lock_);
 
     if (! ::strcmp(name1, DF_INDEX_COL_NAME))
         vec1 = reinterpret_cast<ColumnVecType<T1> *>(&indices_);

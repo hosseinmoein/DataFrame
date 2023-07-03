@@ -1186,7 +1186,7 @@ remove_duplicates (const char *name,
     const IndexType         dummy_idx { };
 
     for (size_type i = 0; i < col_s; ++i) [[likely]]  {
-        auto    insert_res =
+        const auto  insert_res =
             row_table.emplace(
                 std::forward_as_tuple(vec[i],
                                       include_index ? index[i] : dummy_idx),
@@ -1228,7 +1228,7 @@ remove_duplicates (const char *name1,
     const IndexType         dummy_idx { };
 
     for (size_type i = 0; i < col_s; ++i) [[likely]]  {
-        auto    insert_res =
+        const auto  insert_res =
             row_table.emplace(
                 std::forward_as_tuple(vec1[i], vec2[i],
                                       include_index ? index[i] : dummy_idx),
@@ -1275,7 +1275,7 @@ remove_duplicates (const char *name1,
     const IndexType         dummy_idx { };
 
     for (size_type i = 0; i < col_s; ++i) [[likely]]  {
-        auto    insert_res =
+        const auto  insert_res =
             row_table.emplace(
                 std::forward_as_tuple(vec1[i], vec2[i], vec3[i],
                                       include_index ? index[i] : dummy_idx),
@@ -1327,7 +1327,7 @@ remove_duplicates (const char *name1,
     const IndexType         dummy_idx { };
 
     for (size_type i = 0; i < col_s; ++i) [[likely]]  {
-        auto    insert_res =
+        const auto  insert_res =
             row_table.emplace(
                 std::forward_as_tuple(vec1[i], vec2[i], vec3[i], vec4[i],
                                       include_index ? index[i] : dummy_idx),
@@ -1381,7 +1381,7 @@ remove_duplicates (const char *name1,
     const IndexType         dummy_idx { };
 
     for (size_type i = 0; i < col_s; ++i) [[likely]]  {
-        auto    insert_res =
+        const auto  insert_res =
             row_table.emplace(
                 std::forward_as_tuple(vec1[i], vec2[i], vec3[i],
                                       vec4[i], vec5[i],
@@ -1440,7 +1440,7 @@ remove_duplicates (const char *name1,
     const IndexType         dummy_idx { };
 
     for (size_type i = 0; i < col_s; ++i) [[likely]]  {
-        auto    insert_res =
+        const auto  insert_res =
             row_table.emplace(
                 std::forward_as_tuple(vec1[i], vec2[i], vec3[i],
                                       vec4[i], vec5[i], vec6[i],

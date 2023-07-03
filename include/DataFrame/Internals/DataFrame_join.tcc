@@ -155,7 +155,7 @@ join_helper_common_(
 
     // Load the common and lhs columns
     for (const auto &iter : lhs.column_list_) [[likely]]  {
-        auto    rhs_citer = rhs.column_tb_.find(iter.first);
+        const auto  rhs_citer = rhs.column_tb_.find(iter.first);
 
         if (skip_col_name && iter.first == skip_col_name)  continue;
 
@@ -182,7 +182,7 @@ join_helper_common_(
 
     // Load the rhs columns
     for (const auto &iter : rhs.column_list_) [[likely]]  {
-        auto    lhs_citer = lhs.column_tb_.find(iter.first);
+        const auto  lhs_citer = lhs.column_tb_.find(iter.first);
 
         if (skip_col_name && iter.first == skip_col_name)  continue;
 
@@ -617,7 +617,7 @@ concat_helper_(LHS_T &lhs, const RHS_T &rhs, bool add_new_columns)  {
 
     // Load common columns
     for (const auto &lhs_iter : lhs.column_list_) [[likely]]  {
-        auto    rhs_citer = rhs.column_tb_.find(lhs_iter.first);
+        const auto  rhs_citer = rhs.column_tb_.find(lhs_iter.first);
 
         if (rhs_citer != rhs.column_tb_.end()) [[likely]]  {
             concat_functor_<LHS_T, Ts ...>  functor(lhs_iter.first.c_str(),
@@ -632,7 +632,7 @@ concat_helper_(LHS_T &lhs, const RHS_T &rhs, bool add_new_columns)  {
     // Load columns from rhs that do not exist in lhs
     if (add_new_columns)  {
         for (const auto &rhs_citer : rhs.column_list_) [[likely]]  {
-            auto    lhs_iter = lhs.column_tb_.find(rhs_citer.first);
+            const auto  lhs_iter = lhs.column_tb_.find(rhs_citer.first);
 
             if (lhs_iter == lhs.column_tb_.end())  {
                 concat_functor_<LHS_T, Ts ...>  functor(rhs_citer.first.c_str(),
@@ -707,7 +707,7 @@ DataFrame<I, H>::concat(const RHS_T &rhs, concat_policy cp) const  {
         result.load_index(this->get_index().begin(), this->get_index().end());
 
         for (const auto &lhs_citer : column_list_)  {
-            auto    rhs_citer = rhs.column_tb_.find(lhs_citer.first);
+            const auto  rhs_citer = rhs.column_tb_.find(lhs_citer.first);
 
             if (rhs_citer != rhs.column_tb_.end())  {
                 load_all_functor_<Ts ...>   functor(lhs_citer.first.c_str(),
@@ -776,7 +776,7 @@ DataFrame<I, H>::concat_view(RHS_T &rhs, concat_policy cp)  {
 
             data_[lhs_citer.second].change(functor);
 
-            auto    rhs_citer = rhs.column_tb_.find(lhs_citer.first);
+            const auto  rhs_citer = rhs.column_tb_.find(lhs_citer.first);
 
             if (rhs_citer != rhs.column_tb_.end())
                 rhs.data_[rhs_citer->second].change(functor);
@@ -786,7 +786,7 @@ DataFrame<I, H>::concat_view(RHS_T &rhs, concat_policy cp)  {
         for (const auto &lhs_citer : column_list_)  {
             concat_load_view_functor_<PtrView, Ts ...> functor(
                 lhs_citer.first.c_str(), result);
-            auto                                       rhs_citer =
+            const auto                                 rhs_citer =
                 rhs.column_tb_.find(lhs_citer.first);
 
             if (rhs_citer != rhs.column_tb_.end())  {
@@ -854,7 +854,7 @@ DataFrame<I, H>::concat_view(RHS_T &rhs, concat_policy cp) const  {
 
             data_[lhs_citer.second].change(functor);
 
-            auto    rhs_citer = rhs.column_tb_.find(lhs_citer.first);
+            const auto  rhs_citer = rhs.column_tb_.find(lhs_citer.first);
 
             if (rhs_citer != rhs.column_tb_.end())
                 rhs.data_[rhs_citer->second].change(functor);
@@ -864,7 +864,7 @@ DataFrame<I, H>::concat_view(RHS_T &rhs, concat_policy cp) const  {
         for (const auto &lhs_citer : column_list_)  {
             concat_load_view_functor_<ConstPtrView, Ts ...> functor(
                 lhs_citer.first.c_str(), result);
-            auto                                                   rhs_citer =
+            const auto                                      rhs_citer =
                 rhs.column_tb_.find(lhs_citer.first);
 
             if (rhs_citer != rhs.column_tb_.end())  {

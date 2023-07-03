@@ -48,7 +48,7 @@ bool DataFrame<I, H>::is_equal (const DataFrame &rhs) const  {
     const SpinGuard guard(lock_);
 
     for (const auto &iter : column_list_) [[likely]]  {
-        auto    rhs_citer = rhs.column_tb_.find(iter.first);
+        const auto  rhs_citer = rhs.column_tb_.find(iter.first);
 
         if (rhs_citer == rhs.column_tb_.end())  return (false);
 

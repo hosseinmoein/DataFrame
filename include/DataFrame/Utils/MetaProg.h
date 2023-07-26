@@ -474,35 +474,58 @@ using cons_t = typename cons<T, LIST>::type;
 
 template<typename ... Ts>
 struct  overload : Ts ...  {
+
     using Ts::operator() ...;
-    overload (Ts && ... args) : Ts (std::forward<Ts>(args)) ... {   } // Maybe
+
+    overload (Ts && ... args) : Ts (std::forward<Ts>(args)) ... {   }
 };
 
-// Explicit deduction guide (not needed as of C++20)
-//
-template<typename ... Ts>
-overload(Ts ...) -> overload<Ts ...>;
-
 /*
-// Now you can do somthing like this
-int main()  {
+int main(int, char *[]) {
 
-    overload<
-        decltype([](int i)   { std::cout << "Printing int\n"; }),
-        decltype([](float f)   { std::cout << "Pritning float\n"; }),
-        decltype([](std::string s)   {
-            std::cout << "Do something completely different\n";
-        })> f;
+    overload    f ([](int i)   { std::cout << i / 4 << "\n"; },
+                   [](float f)   { std::cout << f / 4.0f << "\n"; },
+                   [](std::string s)   {
+                       std::cout << s.starts_with("Fo") << "\n";
+                   });
 
-    f(2);     // Printing int
-    f(2.0f);  // Printing float
-    f("Foo"); // Doing something different
+    f(10);
+    f(10.0f);
+    f("Foo");
 
     std::vairant<int, float, std::string>   v = "My string";
 
-    std::visit(f, v);  // Doing something completely different
+    std::visit(f, v);
+    return (0);
+}
+
+int main(int, char *[])  {
+
+    const auto  func = []<typename T>(T &&value)  {
+        if constexpr (std::same_as<T, int>)
+            std::cout << value / 4 << "\n";
+        else if constexpr (std::same_as<T, float>)
+            std::cout << value / 4.0f << "\n";
+        else if constexpr (std::same_as<T, std::string>)
+            std::cout << value.starts_with("Fo") << "\n";
+        else
+            std::cout << "unhandled type\n";
+    };
+
+    func(10);
+    func(10.0f);
+    func(std::string("Foo"));
+}
+
+template<std::invocable F>
+std::invoke_result_t<F> run_locked (F &&f)  {
+
+	std::lock_guard guard { some_mutex };
+
+	return (f());
 }
 */
+
 
 // --------------------------------------------
 

@@ -32,6 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <concepts>
 #include <functional>
+#include <iterator>
 #include <sstream>
 #include <string>
 
@@ -52,6 +53,15 @@ concept arithmetic = requires (const std::remove_reference_t<T> &a,
 // ----------------------------------------------------------------------------
 
 template<typename T>
+concept addable = requires (const std::remove_reference_t<T> &a,
+                            const std::remove_reference_t<T> &b)  {
+    { a + b };
+    { a - b };
+};
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
 concept comparable = requires (const std::remove_reference_t<T> &a,
                                const std::remove_reference_t<T> &b)  {
     { a > b } -> std::convertible_to<bool>;
@@ -61,6 +71,47 @@ concept comparable = requires (const std::remove_reference_t<T> &a,
     { a == b } -> std::convertible_to<bool>;
     { a != b } -> std::convertible_to<bool>;
 };
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
+concept container = requires(T t)  {
+    typename T::value_type;
+    typename T::size_type;
+    typename T::iterator;
+    typename T::const_iterator;
+    t.size();
+    t.begin();
+    t.end();
+    t.cbegin();
+    t.cend();
+};
+
+// ----------------------------------------------------------------------------
+
+template<class T>
+concept forward_iterator =
+    std::input_iterator<T> &&
+    std::constructible_from<T> &&
+    std::is_reference_v<std::iter_reference_t<T>> &&
+    std::same_as<std::remove_cvref_t<std::iter_reference_t<T>>,
+                 typename std::indirectly_readable_traits<T>::value_type> &&
+    requires(T it)  {
+        { ++it } -> std::same_as<T &>;
+        { it++ } -> std::convertible_to<const T &>;
+        { *it++ } -> std::same_as<std::iter_reference_t<T>>;
+    };
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
+concept bidirectional_iterator =
+    forward_iterator<T> &&
+    requires(T it)  {
+        { --it } -> std::same_as<T &>;
+        { it-- } -> std::convertible_to<const T &>;
+        { *it-- } -> std::same_as<std::iter_reference_t<T>>;
+    };
 
 // ----------------------------------------------------------------------------
 

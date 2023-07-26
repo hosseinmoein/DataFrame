@@ -70,7 +70,7 @@ namespace hmdf
 // A DataFrame may contain one index and any number of columns of any built-in
 // or user-defined types
 //
-template<typename I, class H>
+template<typename I, typename H>
 class   DataFrame : public ThreadGranularity {
 
     using DataVec = H;

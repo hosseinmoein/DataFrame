@@ -95,7 +95,7 @@ namespace hmdf
     }
 
 #define PASS_DATA_ONE_BY_ONE_2 \
-    template <typename K, typename H> \
+    template <forward_iterator K, forward_iterator H> \
     inline void \
     operator() (K idx_begin, K /*idx_end*/, \
                 H column_begin1, H column_end1, \
@@ -1336,7 +1336,7 @@ struct  CumSumVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template <forward_iterator K, forward_iterator H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
@@ -1378,7 +1378,7 @@ struct  CumProdVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template <forward_iterator K, forward_iterator H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
@@ -1423,7 +1423,7 @@ struct  CumExtremumVisitor  {
 
     using compare_type = Cmp;
 
-    template <typename K, typename H>
+    template <forward_iterator K, forward_iterator H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
@@ -1488,7 +1488,7 @@ public:
     using result_type =
         std::vector<size_type, typename allocator_declare<size_type, A>::type>;
 
-    template <typename K, typename H>
+    template <forward_iterator K, forward_iterator H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
@@ -1558,7 +1558,7 @@ public:
         std::vector<value_type,
                     typename allocator_declare<value_type, A>::type>;
 
-    template <typename K, typename H>
+    template <forward_iterator K, forward_iterator H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
@@ -1648,7 +1648,7 @@ struct  FactorizeVisitor  {
         std::vector<bool, typename allocator_declare<bool, A>::type>;
     using factor_func = std::function<bool(const value_type &val)>;
 
-    template <typename K, typename H>
+    template <forward_iterator K, forward_iterator H>
     inline void
     operator() (const K &, const K &,
                 const H &column_begin, const H &column_end)  {
@@ -1685,7 +1685,7 @@ struct  AutoCorrVisitor  {
 public:
 
     DEFINE_VISIT_BASIC_TYPES_3
-    template <typename K, typename H>
+    template <forward_iterator K, forward_iterator H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
@@ -1765,7 +1765,7 @@ struct  FixedAutoCorrVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template <forward_iterator K, forward_iterator H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
@@ -1848,7 +1848,7 @@ struct  ExponentiallyWeightedMeanVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template <forward_iterator K, forward_iterator H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
@@ -1933,7 +1933,7 @@ struct  ExponentiallyWeightedVarVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template <forward_iterator K, forward_iterator H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
@@ -2033,7 +2033,7 @@ struct  ExponentiallyWeightedCovVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template <forward_iterator K, forward_iterator H>
     inline void
     operator() (const K &, const K &,
                 const H &x_begin, const H &x_end,
@@ -2130,7 +2130,7 @@ struct  ExponentiallyWeightedCorrVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template <bidirectional_iterator K, bidirectional_iterator H>
     inline void
     operator() (const K &, const K &,
                 const H &x_begin, const H &x_end,
@@ -2233,7 +2233,7 @@ struct  ZeroLagMovingMeanVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template <forward_iterator K, forward_iterator H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
@@ -2292,7 +2292,7 @@ struct  LinregMovingMeanVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template <forward_iterator K, forward_iterator H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
@@ -2379,7 +2379,7 @@ struct  SymmTriangleMovingMeanVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template <forward_iterator K, forward_iterator H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
@@ -2436,7 +2436,7 @@ struct  KthValueVisitor  {
     template<typename U>
     using vec_type = std::vector<U, typename allocator_declare<U, A>::type>;
 
-    template <typename K, typename H>
+    template <forward_iterator K, forward_iterator H>
     inline void
     operator() (const K &, const K &,
                 const H &values_begin, const H &values_end)  {
@@ -2508,7 +2508,7 @@ struct  MedianVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_2
 
-    template <typename K, typename H>
+    template <forward_iterator K, forward_iterator H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
@@ -2552,7 +2552,7 @@ struct  QuantileVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_2
 
-    template <typename K, typename H>
+    template <forward_iterator K, forward_iterator H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
@@ -2707,7 +2707,7 @@ public:
 
     using result_type = std::array<DataItem, N>;
 
-    template <typename K, typename H>
+    template <forward_iterator K, forward_iterator H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
@@ -2797,7 +2797,7 @@ private:
     const mad_type  mad_type_;
     const bool      skip_nan_;
 
-    template <typename K, typename H>
+    template <forward_iterator K, forward_iterator H>
     inline void
     calc_mean_abs_dev_around_mean_(const K &idx_begin,
                                    const K &idx_end,
@@ -2828,7 +2828,7 @@ private:
         result_ = mean_mean_visitor.get_result();
     }
 
-    template <typename K, typename H>
+    template <forward_iterator K, forward_iterator H>
     inline void
     calc_mean_abs_dev_around_median_(const K &idx_begin,
                                      const K &idx_end,
@@ -2858,7 +2858,7 @@ private:
         result_ = mean_median_visitor.get_result();
     }
 
-    template <typename K, typename H>
+    template <forward_iterator K, forward_iterator H>
     inline void
     calc_median_abs_dev_around_mean_(const K &idx_begin,
                                      const K &idx_end,
@@ -2889,7 +2889,7 @@ private:
         result_ = median_mean_visitor.get_result();
     }
 
-    template <typename K, typename H>
+    template <forward_iterator K, forward_iterator H>
     inline void
     calc_median_abs_dev_around_median_(const K &idx_begin,
                                        const K &idx_end,
@@ -2924,7 +2924,7 @@ public:
 
     MADVisitor (mad_type mt, bool skip_nan = true)
         : mad_type_(mt), skip_nan_(skip_nan)  {   }
-    template <typename K, typename H>
+    template <forward_iterator K, forward_iterator H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
@@ -2970,7 +2970,7 @@ struct  DiffVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template <bidirectional_iterator K, bidirectional_iterator H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
@@ -3071,7 +3071,7 @@ struct  ZScoreVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template <forward_iterator K, forward_iterator H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
@@ -3132,7 +3132,7 @@ struct  SampleZScoreVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_2
 
-    template <typename K, typename H>
+    template <forward_iterator K, forward_iterator H>
     inline void
     operator() (const K &idx_begin, const K &,
                 const H &population_begin, const H &population_end,
@@ -3202,7 +3202,7 @@ struct  BoxCoxVisitor  {
 
 private:
 
-    template<typename H>
+    template<forward_iterator H>
     inline void modulus_(const H &column_begin, const H &column_end)  {
 
         if (lambda_ != 0)  {
@@ -3230,7 +3230,7 @@ private:
         }
     }
 
-    template<typename H>
+    template<forward_iterator H>
     inline void exponential_(const H &column_begin, const H &column_end)  {
 
         if (lambda_ != 0)  {
@@ -3251,7 +3251,7 @@ private:
         }
     }
 
-    template<typename H>
+    template<forward_iterator H>
     inline void original_(const H &column_begin,
                           const H &column_end,
                           value_type shift)  {
@@ -3274,7 +3274,7 @@ private:
         }
     }
 
-    template<typename K, typename H>
+    template<typename K, forward_iterator H>
     inline void geometric_mean_(const K &dummy,
                                 const H &column_begin,
                                 const H &column_end,
@@ -3317,7 +3317,7 @@ private:
 
 public:
 
-    template<typename K, typename H>
+    template<forward_iterator K, forward_iterator H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
@@ -3373,7 +3373,7 @@ struct  ProbabilityDistVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template<typename K, typename H>
+    template<forward_iterator K, forward_iterator H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
@@ -3458,7 +3458,7 @@ struct  NormalizeVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template<typename K, typename H>
+    template<forward_iterator K, forward_iterator H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
@@ -3502,7 +3502,7 @@ struct  StandardizeVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template<typename K, typename H>
+    template<forward_iterator K, forward_iterator H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
@@ -3557,7 +3557,7 @@ public:
     using weight_func =
         std::function<value_type(const index_type &idx, size_type val_index)>;
 
-    template<typename K, typename Hx, typename Hy>
+    template<forward_iterator K, forward_iterator Hx, forward_iterator Hy>
     inline void
     operator() (const K &idx_begin, const K &,
                 const Hx &x_begin, const Hx &x_end,
@@ -3738,7 +3738,7 @@ struct  LogFitVisitor  {
     using weight_func =
         std::function<value_type(const index_type &idx, size_type val_index)>;
 
-    template<typename K, typename H>
+    template<forward_iterator K, forward_iterator H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &x_begin, const H &x_end,
@@ -3800,7 +3800,7 @@ struct  ExponentialFitVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template<typename K, typename H>
+    template<forward_iterator K, forward_iterator H>
     inline void
     operator() (const K &, const K &,
                 const H &x_begin, const H &x_end,
@@ -3885,7 +3885,7 @@ struct  LinearFitVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template<typename K, typename H>
+    template<forward_iterator K, forward_iterator H>
     inline void
     operator() (const K &, const K &,
                 const H &x_begin, const H &x_end,
@@ -3973,7 +3973,7 @@ struct  CubicSplineFitVisitor  {
     // Yi(X) = Ai + Bi(X - Xi) + Ci(X - Xi)^2 + Di(X - Xi)^3
     // A is just Y input
     //
-    template<typename K, typename H>
+    template<forward_iterator K, forward_iterator H>
     inline void
     operator() (const K &, const K &,
                 const H &x_begin, const H &x_end,
@@ -4090,7 +4090,7 @@ private:
     // robustifying iterations. Called by the calculate_residual_weights
     // function.
     //
-    template<typename X>
+    template<forward_iterator X>
     inline static void bi_square_(X x_begin, X x_end)  {
 
         std::for_each(x_begin, x_end,
@@ -4104,7 +4104,7 @@ private:
     // The tri-cubic function (1 - x^3)^3. Used to weight neighboring points
     // along the x-axis based on their distance to the current point.
     //
-    template<typename X>
+    template<forward_iterator X>
     inline static void tri_cube_(X x_begin, X x_end)  {
 
         std::for_each(x_begin, x_end,
@@ -4117,7 +4117,7 @@ private:
 
     // Calculate residual weights for the next robustifying iteration.
     //
-    template<typename IDX, typename Y, typename K>
+    template<forward_iterator IDX, forward_iterator Y, forward_iterator K>
     inline void
     calc_residual_weights_(const IDX &idx_begin, const IDX &idx_end,
                            const Y &y_begin, const Y &y_end,
@@ -4176,7 +4176,7 @@ private:
     // points). Instead, we'll jump to the last point within delta, fit the
     // weighted regression at that point, and linearly interpolate in between.
     //
-    template<typename X, typename K>
+    template<forward_iterator X, forward_iterator K>
     inline static void
     update_indices_(const X &x_begin, const X & /*x_end*/,
                     const K &y_fits_begin, const K & /*y_fits_end*/,
@@ -4220,7 +4220,7 @@ private:
     // and previous y fitted by weighted regression.
     // Called only if delta > 0.
     //
-    template<typename X, typename K>
+    template<forward_iterator X, forward_iterator K>
     inline void
     interpolate_skipped_fits_(const X x_begin, const X /*x_end*/,
                               K y_fits_begin, K /*y_fits_end*/,
@@ -4260,7 +4260,8 @@ private:
     // for j s.t. x[j] is in the neighborhood of xval. p_idx_j is a function of
     // the weights, xval, and its neighbors.
     //
-    template<typename X, typename K, typename Y, typename W>
+    template<forward_iterator X, forward_iterator K,
+             forward_iterator Y, forward_iterator W>
     inline static void
     calculate_y_fits_(const X x_begin, const X /*x_end*/,
                       const K y_begin, const K /*y_end*/,
@@ -4311,7 +4312,7 @@ private:
     // regression will be run. If False, the regression is skipped and
     // y_fit[i] is set to equal y[i].
     //
-    template<typename X, typename K>
+    template<forward_iterator X, forward_iterator K>
     inline bool
     calculate_weights_(const X &x_begin, const X &/*x_end*/,
                        // Regression weights
@@ -4374,7 +4375,7 @@ private:
     // It returns the radius of the current neighborhood. The larger of
     // distances between xval and its left-most or right-most neighbor.
     //
-    template<typename X>
+    template<forward_iterator X>
     inline static value_type
     update_neighborhood_(const X &x_begin, const X &/*x_end*/,
                          value_type xval,
@@ -4407,7 +4408,7 @@ private:
                          *(x_begin + (right_end - 1)) - xval));
     }
 
-    template<typename K, typename Y, typename X>
+    template<forward_iterator K, forward_iterator Y, forward_iterator X>
     inline void
     lowess_(const K &idx_begin, const K &idx_end,
             const Y &y_begin, const Y &y_end,  // dependent variable
@@ -4506,7 +4507,7 @@ private:
 
 public:
 
-    template<typename K, typename Y, typename X>
+    template<forward_iterator K, forward_iterator Y, forward_iterator X>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const Y &y_begin, const Y &y_end,  // dependent variable
@@ -4601,7 +4602,7 @@ struct  DecomposeVisitor  {
 
 private:
 
-    template<typename K, typename H>
+    template<forward_iterator K, forward_iterator H>
     inline void
     do_trend_(const K &idx_begin, const K &idx_end,
               const H &y_begin, const H &y_end,
@@ -4620,7 +4621,7 @@ private:
         trend_ = std::move(l_v.get_result());
     }
 
-    template<typename MEAN, typename K>
+    template<typename MEAN, forward_iterator K>
     inline void
     do_seasonal_(size_type col_s, const K &idx_begin, const K &idx_end,
                  const result_type &detrended)  {
@@ -4684,7 +4685,7 @@ private:
 
 public:
 
-    template<typename K, typename H>
+    template<forward_iterator K, forward_iterator H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &y_begin, const H &y_end)  {
@@ -4773,7 +4774,7 @@ using decom_v = DecomposeVisitor<T, I, A>;
 
 // ----------------------------------------------------------------------------
 
-template<typename V>
+template<container V>
 inline bool
 is_normal(const V &column, double epsl, bool check_for_standard)  {
 
@@ -4829,7 +4830,7 @@ is_normal(const V &column, double epsl, bool check_for_standard)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename V>
+template<container V>
 inline bool
 is_lognormal(const V &column, double epsl)  {
 
@@ -4895,7 +4896,7 @@ struct  BiasVisitor  {
     DEFINE_VISIT_BASIC_TYPES_3
     using avg_type = AV;
 
-    template <typename K, typename H>
+    template <forward_iterator K, forward_iterator H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
@@ -4944,7 +4945,7 @@ struct  NonZeroRangeVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H1, typename H2>
+    template <forward_iterator K, forward_iterator H1, forward_iterator H2>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H1 &column1_begin, const H1 &column1_end,

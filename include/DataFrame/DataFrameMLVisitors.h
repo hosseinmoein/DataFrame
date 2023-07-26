@@ -143,7 +143,7 @@ private:
     result_type     result_ { };    // K Means
     cluster_type    clusters_ { };  // K Clusters
 
-    template<typename H>
+    template<forward_iterator H>
     inline void calc_k_means_(const H &column_begin, size_type col_s)  {
 
         std::random_device                          rd;
@@ -218,7 +218,7 @@ private:
 
     // Using the calculated means, separate the given column into clusters
     //
-    template<typename H>
+    template<forward_iterator H>
     inline void
     calc_clusters_(const H &column_begin, size_type col_s)  {
 
@@ -308,7 +308,7 @@ private:
     const double    dfactor_;
     result_type     result_ { };  // Centers
 
-    template<typename H>
+    template<forward_iterator H>
     inline vec_t<double>
     get_similarity_(const H &column_begin, size_type csize)  {
 
@@ -410,7 +410,7 @@ private:
 
 public:
 
-    template<typename IV, typename H>
+    template<forward_iterator IV, forward_iterator H>
     inline void
     operator() (const IV &idx_begin, const IV &idx_end,
                 const H &column_begin, const H &column_end)  {
@@ -432,7 +432,7 @@ public:
 
     // Using the calculated means, separate the given column into clusters
     //
-    template<typename IV, typename H>
+    template<forward_iterator IV, forward_iterator H>
     inline cluster_type
     get_clusters(const IV &idx_begin,
                  const IV &idx_end,
@@ -677,7 +677,7 @@ private:
 
 public:
 
-    template <typename K, typename H>
+    template <forward_iterator K, forward_iterator H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
@@ -768,7 +768,7 @@ struct  EntropyVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template <forward_iterator K, forward_iterator H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
@@ -834,7 +834,7 @@ struct  ImpurityVisitor  {
     using result_type =
         std::vector<double, typename allocator_declare<double, A>::type>;
 
-    template <typename K, typename H>
+    template <forward_iterator K, forward_iterator H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
@@ -936,7 +936,7 @@ struct  SigmoidVisitor  {
 
 private:
 
-    template <typename H>
+    template <forward_iterator H>
     inline void logistic_(const H &column_begin, const H &column_end)  {
 
         std::transform(column_begin, column_end,
@@ -945,7 +945,7 @@ private:
                            return (1.0 / (1.0 + std::exp(-val)));
                        });
     }
-    template <typename H>
+    template <forward_iterator H>
     inline void algebraic_(const H &column_begin, const H &column_end)  {
 
         std::transform(column_begin, column_end,
@@ -954,7 +954,7 @@ private:
                            return (1.0 / std::sqrt(1.0 + std::pow(val, 2.0)));
                        });
     }
-    template <typename H>
+    template <forward_iterator H>
     inline void hyperbolic_tan_(const H &column_begin, const H &column_end)  {
 
         std::transform(column_begin, column_end,
@@ -963,7 +963,7 @@ private:
                            return (std::tanh(val));
                        });
     }
-    template <typename H>
+    template <forward_iterator H>
     inline void arc_tan_(const H &column_begin, const H &column_end)  {
 
         std::transform(column_begin, column_end,
@@ -972,7 +972,7 @@ private:
                            return (std::atan(val));
                        });
     }
-    template <typename H>
+    template <forward_iterator H>
     inline void error_function_(const H &column_begin, const H &column_end)  {
 
         std::transform(column_begin, column_end,
@@ -981,7 +981,7 @@ private:
                            return (std::erf(val));
                        });
     }
-    template <typename H>
+    template <forward_iterator H>
     inline void gudermannian_(const H &column_begin, const H &column_end)  {
 
         std::transform(column_begin, column_end,
@@ -990,7 +990,7 @@ private:
                            return (std::atan(std::sinh(val)));
                        });
     }
-    template <typename H>
+    template <forward_iterator H>
     inline void smoothstep_(const H &column_begin, const H &column_end)  {
 
         std::transform(column_begin, column_end,
@@ -1007,7 +1007,7 @@ private:
 
 public:
 
-    template <typename K, typename H>
+    template <forward_iterator K, forward_iterator H>
     inline void
     operator() (const K &, const K &,
                 const H &column_begin, const H &column_end)  {
@@ -1053,7 +1053,7 @@ struct  RectifyVisitor  {
 
 public:
 
-    template <typename K, typename H>
+    template <forward_iterator K, forward_iterator H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
@@ -1165,7 +1165,7 @@ struct  PolicyLearningLossVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_3
 
-    template <typename K, typename H>
+    template <forward_iterator K, forward_iterator H>
     inline void
     operator() (const K & /*idx_begin*/, const K & /*idx_end*/,
                 const H &action_prob_begin, const H &action_prob_end,
@@ -1209,7 +1209,7 @@ public:
 
     DEFINE_VISIT_BASIC_TYPES_2
 
-    template <typename K, typename H>
+    template <forward_iterator K, forward_iterator H>
     inline void
     operator() (const K &idx_begin, const K &idx_end,
                 const H &actual_begin, const H &actual_end,

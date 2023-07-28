@@ -1,0 +1,78 @@
+<!--
+Copyright (c) 2019-2026, Hossein Moein
+All rights reserved.
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+* Redistributions of source code must retain the above copyright
+  notice, this list of conditions and the following disclaimer.
+* Redistributions in binary form must reproduce the above copyright
+  notice, this list of conditions and the following disclaimer in the
+  documentation and/or other materials provided with the distribution.
+* Neither the name of Hossein Moein and/or the DataFrame nor the
+  names of its contributors may be used to endorse or promote products
+  derived from this software without specific prior written permission.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL Hossein Moein BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background-image: linear-gradient(LemonChiffon, Beige);
+}
+
+</style>
+</head>
+
+<body>
+
+<font size="+2">How to implement your own visitor (Implementation of your proprietary algorithm) that can easily run inside DataFrame</font><BR><BR>
+DataFrame visitors have a very simple interface that you can follow. To see examples of built-in visitors, look at the file <I>DataFrameStatsVisitors.h</I>.<BR>
+These are the interfaces you must have:
+  <UL>
+    <LI>It is helpful if you include file <I>DataFrameStatsVisitors.h</I> in your new visitor source file. It includes some macros you can use.</LI>
+    <LI>A visitor at its heart is a functor:</LI>
+      <UL>
+        <LI>You must declare a struct or class with an appropriate name for your visitor. If your visitor needs parameters, take them in the functor constructor.</LI>
+        <LI>Your functor must publicly declare the <I>operator()()</I>. The number of parameters to the <I>()</I> operator depends on your algorithm and what you are implementing. The first pair of parameters to <I>()</I> operator is always the begin and end iterators of the index vector. After that you have pairs of begin/end iterators to the data vectors. DataFrame supports visitors that operate on 1 to 5 data columns. DataFrame calls this operator to pass the data. Your algorithm should be here.</LI>
+        <LI>Your functor must publicly typedef the following types:</LI>
+          <UL>
+            <LI><I>index_type</I>: This defines the index column type</LI>
+            <LI><I>value_type</I>: This defines the data column(s) type. If you have multiple data columns of different types, define it for the first one</LI>
+            <LI><I>result_type</I>: This defines the type of your algorithm result. The result could be an item or a container of items or … If you have multiple result types, define it for the first/main one.</LI>
+          </UL>
+        <LI>Your functor must publicly define the following member functions:</LI>
+          <UL>
+            <LI><I>void pre()</I>: This is called by DataFrame before passing data to your visitor. You can initialize the process here. And/or reset the process here for repeated use of the same visitor instance.</LI>
+            <LI><I>void post()</I>: This is called by DataFrame after it finishes with passing data to your visitor. You can finalize the process here.</LI>
+            <LI><I>result_type &amp;get_result() const</I>: This returns the result of your algorithm. If you have multiple results, define this for the first/main result.</LI>
+          </UL>
+      </UL>
+    <LI>Your visitor will be used by DataFrame's <I>visit()</I> or <I>signle_act_visit()</I> methods.</LI>
+  </UL>
+
+  <img src="https://github.com/hosseinmoein/DataFrame/blob/master/docs/LionLookingUp.jpg?raw=true" alt="C++ DataFrame"
+       width="200" height="200" style="float:right"/>
+
+</body></html>
+
+<!--
+Local Variables:
+mode:HTML
+tab-width:4
+c-basic-offset:4
+End:
+-->

@@ -58,7 +58,8 @@ These are the interfaces you must have:
           <UL>
             <LI><I>void pre()</I>: This is called by DataFrame before passing data to your visitor. You can initialize the process here. And/or reset the process here for repeated use of the same visitor instance.</LI>
             <LI><I>void post()</I>: This is called by DataFrame after it finishes with passing data to your visitor. You can finalize the process here.</LI>
-            <LI><I>result_type &amp;get_result() const</I>: This returns the result of your algorithm. If you have multiple results, define this for the first/main result.</LI>
+            <LI><I>const result_type &amp;get_result() const</I>: This returns the result of your algorithm. If you have multiple results, define this for the first/main result.</LI>
+            <LI><I>result_type &amp;get_result()</I>: non-const version of above, if applicable.</LI>
           </UL>
       </UL>
     <LI>Your visitor will be used by DataFrame's <I>visit()</I> or <I>signle_act_visit()</I> methods.</LI>

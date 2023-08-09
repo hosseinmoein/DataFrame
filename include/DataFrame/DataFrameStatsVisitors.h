@@ -605,20 +605,29 @@ struct  CovVisitor  {
     }
     inline void post ()  {
 
-        result_ = (dot_prod_ - (total1_ * total2_) / value_type(cnt_)) /
-                  (value_type(cnt_) - b_);
+        const value_type    d = value_type(cnt_) - b_;
+
+        if (d != 0) [[likely]]
+            result_ = (dot_prod_ - (total1_ * total2_) / value_type(cnt_)) / d;
+        else  result_ = std::numeric_limits<value_type>::quiet_NaN();
     }
 
     inline result_type get_result () const  { return (result_); }
     inline value_type get_var1 () const  {
 
-        return ((dot_prod1_ - (total1_ * total1_) / value_type(cnt_)) /
-                (value_type(cnt_) - b_));
+        const value_type    d = value_type(cnt_) - b_;
+
+        if (d != 0) [[likely]]
+            return ((dot_prod1_ - (total1_ * total1_) / value_type(cnt_)) / d);
+        else  return (std::numeric_limits<value_type>::quiet_NaN());
     }
     inline value_type get_var2 () const  {
 
-        return ((dot_prod2_ - (total2_ * total2_) / value_type(cnt_)) /
-                (value_type(cnt_) - b_));
+        const value_type    d = value_type(cnt_) - b_;
+
+        if (d != 0) [[likely]]
+            return ((dot_prod2_ - (total2_ * total2_) / value_type(cnt_)) / d);
+        else  return (std::numeric_limits<value_type>::quiet_NaN());
     }
     inline size_type get_count() const  { return (cnt_); }
 

@@ -32,7 +32,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/hosseinmoein/DataFrame/master)
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://GitHub.com/hosseinmoein/DataFrame/graphs/commit-activity)
 ![GitHub tag (latest by date)](https://img.shields.io/github/tag-date/hosseinmoein/DataFrame.svg?color=blue&label=Official%20Release&style=popout)
+<BR>
 ![Conan Center](https://img.shields.io/conan/v/dataframe)
+[![VCPKG package](https://repology.org/badge/version-for-repo/vcpkg/dataframe.svg)](https://repology.org/project/dataframe/versions)
 
 <img src="docs/LionLookingUp.jpg" alt="DataFrame Lion" width="400" longdesc="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html"/>
 

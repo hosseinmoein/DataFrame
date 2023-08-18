@@ -137,10 +137,10 @@ private:
         typename allocator_declare<
             std::pair<const HeteroConstView *const,
                       VectorConstView<T, A>>, A>::type>
-	    views_ {  };
+        views_ {  };
 
     std::function<void(HeteroConstView &)>
-	    clear_function_ {
+        clear_function_ {
             [](HeteroConstView &) { return; }
         };
     std::function<void(const HeteroConstView &, HeteroConstView &)>

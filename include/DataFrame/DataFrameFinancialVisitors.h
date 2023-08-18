@@ -56,10 +56,10 @@ struct  ReturnVisitor  {
 
     template <forward_iterator K, forward_iterator H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
+    operator() (const K &, const K &,
                 const H &column_begin, const H &column_end)  {
 
-        GET_COL_SIZE
+        GET_COL_SIZE2
 
         if (col_s < 3)  return;
 
@@ -94,12 +94,21 @@ struct  ReturnVisitor  {
         result.swap(result_);
     }
 
-    DEFINE_PRE_POST
+    OBO_PORT_OPT
+
+    inline void pre ()  {
+
+        OBO_PORT_PRE
+        result_.clear();
+    }
+    inline void post ()  { OBO_PORT_POST }
     DEFINE_RESULT
 
     explicit ReturnVisitor (return_policy rp) : ret_p_(rp)  {   }
 
 private:
+
+    OBO_PORT_DECL
 
     result_type         result_ {  };
     const return_policy ret_p_;
@@ -949,7 +958,7 @@ struct  SharpeRatioVisitor  {
 
     template <forward_iterator K, forward_iterator H>
     inline void
-    operator() (const K &idx_begin, const K &,
+    operator() (const K &, const K &,
                 const H &asset_ret_begin, const H &asset_ret_end,
                 const H &benchmark_ret_begin, const H &benchmark_ret_end)  {
 
@@ -964,7 +973,7 @@ struct  SharpeRatioVisitor  {
 
         if (! ds_only_)  {  // Sharpe Ratio
             StdVisitor<T, I>    std_vis { biased_ };
-            const index_type    &index_val { *idx_begin }; // Ignored
+            const index_type    index_val { }; // Ignored
 
             std_vis.pre();
             for (auto b_citer { benchmark_ret_begin };

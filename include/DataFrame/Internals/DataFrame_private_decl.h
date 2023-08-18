@@ -281,16 +281,18 @@ col_vector_push_back_func_(V &vec,
                            T (*converter)(const char *, char **, int),
                            io_format file_type = io_format::csv)  {
 
-    char    value[8192];
-    char    c = 0;
+    std::string value;
+    char        c = 0;
 
+    value.reserve(1024);
     while (file.get(c)) [[likely]] {
+        value.clear();
         if (file_type == io_format::csv && c == '\n')  break;
         else if (file_type == io_format::json && c == ']')  break;
         file.unget();
         _get_token_from_file_(file, ',', value,
                               file_type == io_format::json ? ']' : '\0');
-        vec.push_back(static_cast<T>(converter(value, nullptr, 0)));
+        vec.push_back(static_cast<T>(converter(value.c_str(), nullptr, 0)));
     }
 }
 
@@ -305,16 +307,18 @@ struct  ColVectorPushBack_  {
                 T (*converter)(const char *, char **),
                 io_format file_type = io_format::csv) const  {
 
-        char    value[8192];
-        char    c = 0;
+        std::string value;
+        char        c = 0;
 
+        value.reserve(1024);
         while (file.get(c)) [[likely]] {
+            value.clear();
             if (file_type == io_format::csv && c == '\n')  break;
             else if (file_type == io_format::json && c == ']')  break;
             file.unget();
             _get_token_from_file_(file, ',', value,
                                   file_type == io_format::json ? ']' : '\0');
-            vec.push_back(static_cast<T>(converter(value, nullptr)));
+            vec.push_back(static_cast<T>(converter(value.c_str(), nullptr)));
         }
     }
 };
@@ -330,10 +334,12 @@ struct  ColVectorPushBack_<const char *, StlVecType<std::string>, Dummy>  {
                 const char * (*)(const char *, char **),
                 io_format file_type = io_format::csv) const  {
 
-        char    value[8192];
-        char    c = 0;
+        std::string value;
+        char        c = 0;
 
+        value.reserve(1024);
         while (file.get(c)) [[likely]] {
+            value.clear();
             if (file_type == io_format::csv && c == '\n')  break;
             else if (file_type == io_format::json && c == ']')  break;
             file.unget();
@@ -355,10 +361,12 @@ struct  ColVectorPushBack_<DateTime, StlVecType<DateTime>, Dummy>  {
              DateTime (*)(const char *, char **),
              io_format file_type = io_format::csv) const  {
 
-        char    value[1024];
-        char    c = 0;
+        std::string value;
+        char        c = 0;
 
+        value.reserve(1024);
         while (file.get(c)) [[likely]] {
+            value.clear();
             if (file_type == io_format::csv && c == '\n')  break;
             else if (file_type == io_format::json && c == ']')  break;
             file.unget();
@@ -370,9 +378,9 @@ struct  ColVectorPushBack_<DateTime, StlVecType<DateTime>, Dummy>  {
             DateTime    dt;
 
 #ifdef _MSC_VER
-            ::sscanf(value, "%lld.%d", &t, &n);
+            ::sscanf(value.c_str(), "%lld.%d", &t, &n);
 #else
-            ::sscanf(value, "%ld.%d", &t, &n);
+            ::sscanf(value.c_str(), "%ld.%d", &t, &n);
 #endif // _MSC_VER
             dt.set_time(t, n);
             vec.emplace_back(std::move(dt));

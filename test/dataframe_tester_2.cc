@@ -1852,14 +1852,14 @@ static void test_CubicSplineFitVisitor()  {
     const auto  &d_vec = csp_v1.get_d_vec();
 
     for (size_t i = 0; i < result1.size(); ++i)
-		std::cout << result1[i] << ", ";
-	std::cout << std::endl;
+        std::cout << result1[i] << ", ";
+    std::cout << std::endl;
     for (size_t i = 0; i < c_vec.size(); ++i)
-		std::cout << c_vec[i] << ", ";
-	std::cout << std::endl;
+        std::cout << c_vec[i] << ", ";
+    std::cout << std::endl;
     for (size_t i = 0; i < d_vec.size(); ++i)
-		std::cout << d_vec[i] << ", ";
-	std::cout << std::endl;
+        std::cout << d_vec[i] << ", ";
+    std::cout << std::endl;
 }
 
 // -----------------------------------------------------------------------------

@@ -144,7 +144,7 @@ struct HeteroVector  {
             std::vector<T, typename allocator_declare<T, A>::type>::iterator;
     template<typename T>
     using const_iterator =
-	    typename
+        typename
             std::vector<
                 T,
                 typename allocator_declare<T, A>::type>::const_iterator;

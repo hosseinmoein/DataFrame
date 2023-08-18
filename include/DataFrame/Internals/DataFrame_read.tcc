@@ -46,9 +46,6 @@ template<typename I, typename H>
 void DataFrame<I, H>::read_json_(std::istream &stream, bool columns_only)  {
 
     char            c { '\0' };
-    char            col_name[256];
-    char            col_type[256];
-    char            token[256];
     const SpinGuard guard(lock_);
 
     while (stream.get(c))
@@ -57,10 +54,19 @@ void DataFrame<I, H>::read_json_(std::istream &stream, bool columns_only)  {
         throw DataFrameError(
             "DataFrame::read_json_(): ERROR: Expected '{' (0)");
 
-    bool    first_col = true;
-    bool    has_index = true;
+    bool        first_col = true;
+    bool        has_index = true;
+    std::string col_name;
+    std::string col_type;
+    std::string token;
 
+    col_name.reserve(256);
+    col_type.reserve(256);
+    token.reserve(128);
     while (stream.get(c)) [[likely]] {
+        col_name.clear();
+        col_type.clear();
+        token.clear();
         if (c == ' ' || c == '\n' || c == '\t' || c == '\r') [[unlikely]]
             continue;
         if (c != '"') [[unlikely]]
@@ -68,16 +74,16 @@ void DataFrame<I, H>::read_json_(std::istream &stream, bool columns_only)  {
                 "DataFrame::read_json_(): ERROR: Expected '\"' (1)");
         _get_token_from_file_(stream, '"', col_name);
         if (first_col && ! columns_only)  {
-            if (strcmp(col_name, DF_INDEX_COL_NAME))
+            if (col_name == DF_INDEX_COL_NAME)
                 throw DataFrameError("DataFrame::read_json_(): ERROR: "
                                      "Expected column name 'INDEX'");
         }
         else if (! first_col) [[likely]]  {
-            if (! strcmp(col_name, DF_INDEX_COL_NAME)) [[unlikely]]
+            if (col_name == DF_INDEX_COL_NAME) [[unlikely]]
                 throw DataFrameError("DataFrame::read_json_(): ERROR: "
                                      "column name 'INDEX' is not allowed");
         }
-        if (first_col && strcmp(col_name, DF_INDEX_COL_NAME))
+        if (first_col && col_name != DF_INDEX_COL_NAME)
             has_index = false;
 
         while (stream.get(c))
@@ -98,7 +104,7 @@ void DataFrame<I, H>::read_json_(std::istream &stream, bool columns_only)  {
                 "DataFrame::read_json_(): ERROR: Expected '\"' (4)");
 
         _get_token_from_file_(stream, '"', token);
-        if (strcmp(token, "N")) [[unlikely]]
+        if (token != "N") [[unlikely]]
             throw DataFrameError(
                  "DataFrame::read_json_(): ERROR: Expected 'N' (5)");
         while (stream.get(c))
@@ -110,7 +116,7 @@ void DataFrame<I, H>::read_json_(std::istream &stream, bool columns_only)  {
             if (c != ' ' && c != '\n' && c != '\t' && c != '\r')  break;
         _get_token_from_file_(stream, ',', token);
 
-        const size_type col_size = ::atoi(token);
+        const size_type col_size = ::atoi(token.c_str());
 
         while (stream.get(c))
             if (c != ' ' && c != '\n' && c != '\t' && c != '\r')  break;
@@ -118,7 +124,7 @@ void DataFrame<I, H>::read_json_(std::istream &stream, bool columns_only)  {
             throw DataFrameError(
                 "DataFrame::read_json_(): ERROR: Expected '\"' (7)");
         _get_token_from_file_(stream, '"', token);
-        if (strcmp(token, "T")) [[unlikely]]
+        if (token != "T") [[unlikely]]
             throw DataFrameError(
                  "DataFrame::read_json_(): ERROR: Expected 'T' (8)");
         while (stream.get(c))
@@ -144,7 +150,7 @@ void DataFrame<I, H>::read_json_(std::istream &stream, bool columns_only)  {
             throw DataFrameError(
                 "DataFrame::read_json_(): ERROR: Expected '\"' (12)");
         _get_token_from_file_(stream, '"', token);
-        if (strcmp(token, "D")) [[unlikely]]
+        if (token != "D") [[unlikely]]
             throw DataFrameError(
                  "DataFrame::read_json_(): ERROR: Expected 'D' (13)");
         while (stream.get(c))
@@ -168,32 +174,34 @@ void DataFrame<I, H>::read_json_(std::istream &stream, bool columns_only)  {
                 load_index(std::forward<IndexVecType &&>(vec));
         }
         else  {
-            if (! ::strcmp(col_type, "float"))  {
-                StlVecType<float>  &vec = create_column<float>(col_name, false);
+            if (col_type == "float")  {
+                StlVecType<float>  &vec =
+                    create_column<float>(col_name.c_str(), false);
                 const ColVectorPushBack_<float, StlVecType<float>>  slug;
 
                 vec.reserve(col_size);
                 slug(vec, stream, &::strtof, io_format::json);
             }
-            else if (! ::strcmp(col_type, "double")) [[likely]]  {
+            else if (col_type == "double") [[likely]]  {
                 StlVecType<double> &vec =
-                    create_column<double>(col_name, false);
+                    create_column<double>(col_name.c_str(), false);
                 const ColVectorPushBack_<double, StlVecType<double>>  slug;
 
                 vec.reserve(col_size);
                 slug(vec, stream, &::strtod, io_format::json);
             }
-            else if (! ::strcmp(col_type, "longdouble"))  {
+            else if (col_type == "longdouble")  {
                 StlVecType<long double>    &vec =
-                    create_column<long double>(col_name, false);
+                    create_column<long double>(col_name.c_str(), false);
                 const ColVectorPushBack_
                     <long double, StlVecType<long double>> slug;
 
                 vec.reserve(col_size);
                 slug(vec, stream, &::strtold, io_format::json);
             }
-            else if (! ::strcmp(col_type, "int"))  {
-                StlVecType<int> &vec = create_column<int>(col_name, false);
+            else if (col_type == "int")  {
+                StlVecType<int> &vec =
+                    create_column<int>(col_name.c_str(), false);
 
                 vec.reserve(col_size);
                 col_vector_push_back_func_(vec,
@@ -201,9 +209,9 @@ void DataFrame<I, H>::read_json_(std::istream &stream, bool columns_only)  {
                                            &::strtol,
                                            io_format::json);
             }
-            else if (! ::strcmp(col_type, "uint"))  {
+            else if (col_type == "uint")  {
                 StlVecType<unsigned int>   &vec =
-                    create_column<unsigned int>(col_name, false);
+                    create_column<unsigned int>(col_name.c_str(), false);
 
                 vec.reserve(col_size);
                 col_vector_push_back_func_(vec,
@@ -211,8 +219,9 @@ void DataFrame<I, H>::read_json_(std::istream &stream, bool columns_only)  {
                                             &::strtoul,
                                             io_format::json);
             }
-            else if (! ::strcmp(col_type, "long"))  {
-                StlVecType<long>   &vec = create_column<long>(col_name, false);
+            else if (col_type == "long")  {
+                StlVecType<long>   &vec =
+                    create_column<long>(col_name.c_str(), false);
 
                 vec.reserve(col_size);
                 col_vector_push_back_func_(vec,
@@ -220,9 +229,9 @@ void DataFrame<I, H>::read_json_(std::istream &stream, bool columns_only)  {
                                            &::strtol,
                                            io_format::json);
             }
-            else if (! ::strcmp(col_type, "longlong"))  {
+            else if (col_type == "longlong")  {
                 StlVecType<long long>  &vec =
-                    create_column<long long>(col_name, false);
+                    create_column<long long>(col_name.c_str(), false);
 
                 vec.reserve(col_size);
                 col_vector_push_back_func_(vec,
@@ -230,9 +239,9 @@ void DataFrame<I, H>::read_json_(std::istream &stream, bool columns_only)  {
                                            &::strtoll,
                                            io_format::json);
             }
-            else if (! ::strcmp(col_type, "ulong"))  {
+            else if (col_type == "ulong")  {
                 StlVecType<unsigned long>  &vec =
-                    create_column<unsigned long>(col_name, false);
+                    create_column<unsigned long>(col_name.c_str(), false);
 
                 vec.reserve(col_size);
                 col_vector_push_back_func_(vec,
@@ -240,9 +249,9 @@ void DataFrame<I, H>::read_json_(std::istream &stream, bool columns_only)  {
                                            &::strtoul,
                                            io_format::json);
             }
-            else if (! ::strcmp(col_type, "ulonglong"))  {
+            else if (col_type == "ulonglong")  {
                 StlVecType<unsigned long long> &vec =
-                    create_column<unsigned long long>(col_name, false);
+                    create_column<unsigned long long>(col_name.c_str(), false);
 
                 vec.reserve(col_size);
                 col_vector_push_back_func_(vec,
@@ -250,16 +259,16 @@ void DataFrame<I, H>::read_json_(std::istream &stream, bool columns_only)  {
                                            &::strtoull,
                                            io_format::json);
             }
-            else if (! ::strcmp(col_type, "string"))  {
+            else if (col_type == "string")  {
                 StlVecType<std::string>    &vec =
-                    create_column<std::string>(col_name, false);
+                    create_column<std::string>(col_name.c_str(), false);
 
                 vec.reserve(col_size);
                 json_str_col_vector_push_back_(vec, stream);
             }
-            else if (! ::strcmp(col_type, "DateTime"))  {
+            else if (col_type == "DateTime")  {
                 StlVecType<DateTime>   &vec =
-                    create_column<DateTime>(col_name, false);
+                    create_column<DateTime>(col_name.c_str(), false);
                 auto                    converter =
                     [](const char *, char **)-> DateTime { return DateTime(); };
                 const ColVectorPushBack_<DateTime, StlVecType<DateTime>>  slug;
@@ -267,8 +276,9 @@ void DataFrame<I, H>::read_json_(std::istream &stream, bool columns_only)  {
                 vec.reserve(col_size);
                 slug(vec, stream, converter, io_format::json);
             }
-            else if (! ::strcmp(col_type, "bool"))  {
-                StlVecType<bool>   &vec = create_column<bool>(col_name, false);
+            else if (col_type == "bool")  {
+                StlVecType<bool>   &vec =
+                    create_column<bool>(col_name.c_str(), false);
 
                 vec.reserve(col_size);
                 col_vector_push_back_func_(vec,
@@ -307,13 +317,19 @@ void DataFrame<I, H>::read_json_(std::istream &stream, bool columns_only)  {
 template<typename I, typename H>
 void DataFrame<I, H>::read_csv_(std::istream &stream, bool columns_only)  {
 
-    char            col_name[256];
-    char            value[32];
-    char            type_str[64];
+    std::string     col_name;
+    std::string     value;
+    std::string     type_str;
     char            c;
     const SpinGuard guard(lock_);
 
+    col_name.reserve(128);
+    value.reserve(1024);
+    type_str.reserve(16);
     while (stream.get(c)) {
+        col_name.clear();
+        value.clear();
+        type_str.clear();
         if (c == '#' || c == '\n' || c == '\0' || c == '\r') {
             if (c == '#')
                 while (stream.get(c))
@@ -335,104 +351,108 @@ void DataFrame<I, H>::read_csv_(std::istream &stream, bool columns_only)  {
             throw DataFrameError("DataFrame::read_csv_(): ERROR: Expected "
                                  "':' char to start column values");
 
-        if (! ::strcmp(col_name, DF_INDEX_COL_NAME))  {
+        if (col_name == DF_INDEX_COL_NAME)  {
             IndexVecType    vec;
 
-            vec.reserve(::atoi(value));
+            vec.reserve(::atoi(value.c_str()));
             IdxParserFunctor_<IndexType>()(vec, stream);
             if (! columns_only)
                 load_index(std::forward<IndexVecType &&>(vec));
         }
         else [[likely]]  {
-            if (! ::strcmp(type_str, "float"))  {
-                StlVecType<float>  &vec = create_column<float>(col_name, false);
+            if (type_str == "float")  {
+                StlVecType<float>  &vec =
+                    create_column<float>(col_name.c_str(), false);
                 const ColVectorPushBack_<float, StlVecType<float>>  slug;
 
-                vec.reserve(::atoi(value));
+                vec.reserve(::atoi(value.c_str()));
                 slug(vec, stream, &::strtof);
             }
-            else if (! ::strcmp(type_str, "double")) [[likely]]  {
+            else if (type_str == "double") [[likely]]  {
                 StlVecType<double> &vec =
-                    create_column<double>(col_name, false);
+                    create_column<double>(col_name.c_str(), false);
                 const ColVectorPushBack_<double, StlVecType<double>>  slug;
 
-                vec.reserve(::atoi(value));
+                vec.reserve(::atoi(value.c_str()));
                 slug(vec, stream, &::strtod);
             }
-            else if (! ::strcmp(type_str, "longdouble"))  {
+            else if (type_str == "longdouble")  {
                 StlVecType<long double>    &vec =
-                    create_column<long double>(col_name, false);
+                    create_column<long double>(col_name.c_str(), false);
                 const ColVectorPushBack_
                     <long double, StlVecType<long double>>  slug;
 
-                vec.reserve(::atoi(value));
+                vec.reserve(::atoi(value.c_str()));
                 slug(vec, stream, &::strtold);
             }
-            else if (! ::strcmp(type_str, "int"))  {
-                StlVecType<int> &vec = create_column<int>(col_name, false);
+            else if (type_str == "int")  {
+                StlVecType<int> &vec =
+                    create_column<int>(col_name.c_str(), false);
 
-                vec.reserve(::atoi(value));
+                vec.reserve(::atoi(value.c_str()));
                 col_vector_push_back_func_(vec, stream, &::strtol);
             }
-            else if (! ::strcmp(type_str, "uint"))  {
+            else if (type_str == "uint")  {
                 StlVecType<unsigned int>   &vec =
-                    create_column<unsigned int>(col_name, false);
+                    create_column<unsigned int>(col_name.c_str(), false);
 
-                vec.reserve(::atoi(value));
+                vec.reserve(::atoi(value.c_str()));
                 col_vector_push_back_func_(vec, stream, &::strtoul);
             }
-            else if (! ::strcmp(type_str, "long"))  {
-                StlVecType<long>   &vec = create_column<long>(col_name, false);
+            else if (type_str == "long")  {
+                StlVecType<long>   &vec =
+                    create_column<long>(col_name.c_str(), false);
 
-                vec.reserve(::atoi(value));
+                vec.reserve(::atoi(value.c_str()));
                 col_vector_push_back_func_(vec, stream, &::strtol);
             }
-            else if (! ::strcmp(type_str, "longlong"))  {
+            else if (type_str == "longlong")  {
                 StlVecType<long long>  &vec =
-                    create_column<long long>(col_name, false);
+                    create_column<long long>(col_name.c_str(), false);
 
-                vec.reserve(::atoi(value));
+                vec.reserve(::atoi(value.c_str()));
                 col_vector_push_back_func_(vec, stream, &::strtoll);
             }
-            else if (! ::strcmp(type_str, "ulong"))  {
+            else if (type_str == "ulong")  {
                 StlVecType<unsigned long>  &vec =
-                    create_column<unsigned long>(col_name, false);
+                    create_column<unsigned long>(col_name.c_str(), false);
 
-                vec.reserve(::atoi(value));
+                vec.reserve(::atoi(value.c_str()));
                 col_vector_push_back_func_(vec, stream, &::strtoul);
             }
-            else if (! ::strcmp(type_str, "ulonglong"))  {
+            else if (type_str == "ulonglong")  {
                 StlVecType<unsigned long long> &vec =
-                    create_column<unsigned long long>(col_name, false);
+                    create_column<unsigned long long>(col_name.c_str(), false);
 
-                vec.reserve(::atoi(value));
+                vec.reserve(::atoi(value.c_str()));
                 col_vector_push_back_func_(vec, stream, &::strtoull);
             }
-            else if (! ::strcmp(type_str, "string"))  {
+            else if (type_str == "string")  {
                 StlVecType<std::string>    &vec =
-                    create_column<std::string>(col_name, false);
+                    create_column<std::string>(col_name.c_str(), false);
                 auto                        converter =
                     [](const char *s, char **)-> const char * { return s; };
                 const ColVectorPushBack_
                     <const char *, StlVecType<std::string>>  slug;
 
-                vec.reserve(::atoi(value));
+                vec.reserve(::atoi(value.c_str()));
                 slug(vec, stream, converter);
             }
-            else if (! ::strcmp(type_str, "DateTime"))  {
+            else if (type_str == "DateTime")  {
                 StlVecType<DateTime>   &vec =
-                    create_column<DateTime>(col_name, false);
+                    create_column<DateTime>(col_name.c_str(), false);
                 auto                    converter =
                     [](const char *, char **)-> DateTime { return DateTime(); };
                 const ColVectorPushBack_<DateTime, StlVecType<DateTime>>  slug;
 
-                vec.reserve(::atoi(value));
+                vec.reserve(::atoi(value.c_str()));
                 slug (vec, stream, converter);
             }
-            else if (! ::strcmp(type_str, "bool"))  {
-                StlVecType<bool>   &vec = create_column<bool>(col_name, false);
+            else if (type_str == "bool")  {
+                StlVecType<bool>   &vec =
+                    create_column<bool>(col_name.c_str(), false);
 
-                vec.reserve(::atoi(value));
+                vec.reserve(::atoi(value.c_str()));
                 col_vector_push_back_func_(vec, stream, &::strtol);
             }
             else [[unlikely]]
@@ -451,10 +471,7 @@ struct _col_data_spec_  {
     String64    col_name { };
 
     template<typename V>
-    inline _col_data_spec_(V cv,
-                           const char *ts,
-                           const char *cn,
-                           std::size_t rs)
+    _col_data_spec_(V cv, const char *ts, const char *cn, std::size_t rs)
         : col_vec(cv), type_spec(ts), col_name(cn)  {
 
         std::any_cast<V &>(col_vec).reserve(rs);
@@ -470,7 +487,9 @@ read_csv2_(std::istream &stream,
            size_type starting_row,
            size_type num_rows)  {
 
-    char                        value[8192];
+    std::string                 value;
+    std::string                 col_name;
+    std::string                 type_str;
     char                        c;
     StlVecType<_col_data_spec_> spec_vec;
     bool                        header_read = false;
@@ -478,7 +497,11 @@ read_csv2_(std::istream &stream,
     size_type                   data_rows_read = 0;
 
     spec_vec.reserve(32);
+    value.reserve(1024);
+    col_name.reserve(128);
+    type_str.reserve(16);
     while (stream.get(c)) {
+        value.clear();
         if (c == '#' || c == '\r' || c == '\n' || c == '\0')  {
             if (c == '#')  {
                 while (stream.get(c))
@@ -495,9 +518,8 @@ read_csv2_(std::istream &stream,
 
         // First get the header which is column names, sizes and types
         if (! header_read) [[unlikely]]  {
-             char   col_name[256];
-             char   type_str[64];
-
+            col_name.clear();
+            type_str.clear();
             _get_token_from_file_(stream, ':', col_name);
             _get_token_from_file_(stream, ':', value); // Get the size
             stream.get(c);
@@ -520,68 +542,73 @@ read_csv2_(std::istream &stream,
 
             const size_type nrows =
                 num_rows == std::numeric_limits<size_type>::max()
-                    ? size_type(atoi(value)) : num_rows;
+                    ? size_type(atoi(value.c_str())) : num_rows;
 
-            if (! ::strcmp(type_str, "float"))
+            if (type_str == "float")
                 spec_vec.emplace_back(StlVecType<float>(),
-                                      type_str,
-                                      col_name,
+                                      type_str.c_str(),
+                                      col_name.c_str(),
                                       nrows);
-            else if (! ::strcmp(type_str, "double")) [[likely]]
+            else if (type_str == "double") [[likely]]
                 spec_vec.emplace_back(StlVecType<double>(),
-                                      type_str,
-                                      col_name,
+                                      type_str.c_str(),
+                                      col_name.c_str(),
                                       nrows);
-            else if (! ::strcmp(type_str, "longdouble"))
+            else if (type_str == "longdouble")
                 spec_vec.emplace_back(StlVecType<long double>(),
-                                      type_str,
-                                      col_name,
+                                      type_str.c_str(),
+                                      col_name.c_str(),
                                       nrows);
-            else if (! ::strcmp(type_str, "int"))
+            else if (type_str == "int")
                 spec_vec.emplace_back(StlVecType<int>(),
-                                      type_str,
-                                      col_name,
+                                      type_str.c_str(),
+                                      col_name.c_str(),
                                       nrows);
-            else if (! ::strcmp(type_str, "uint"))
+            else if (type_str == "uint")
                 spec_vec.emplace_back(StlVecType<unsigned int>(),
-                                      type_str,
-                                      col_name,
+                                      type_str.c_str(),
+                                      col_name.c_str(),
                                       nrows);
-            else if (! ::strcmp(type_str, "long"))
+            else if (type_str == "long")
                 spec_vec.emplace_back(StlVecType<long>(),
-                                      type_str,
-                                      col_name,
+                                      type_str.c_str(),
+                                      col_name.c_str(),
                                       nrows);
-            else if (! ::strcmp(type_str, "longlong"))
+            else if (type_str == "longlong")
                 spec_vec.emplace_back(StlVecType<long long>(),
-                                      type_str,
-                                      col_name,
+                                      type_str.c_str(),
+                                      col_name.c_str(),
                                       nrows);
-            else if (! ::strcmp(type_str, "ulong"))
+            else if (type_str == "ulong")
                 spec_vec.emplace_back(StlVecType<unsigned long>(),
-                                      type_str,
-                                      col_name,
+                                      type_str.c_str(),
+                                      col_name.c_str(),
                                       nrows);
-            else if (! ::strcmp(type_str, "ulonglong"))
+            else if (type_str == "ulonglong")
                 spec_vec.emplace_back(StlVecType<unsigned long long>(),
-                                      type_str,
-                                      col_name,
+                                      type_str.c_str(),
+                                      col_name.c_str(),
                                       nrows);
-            else if (! ::strcmp(type_str, "string"))
+            else if (type_str == "string")
                 spec_vec.emplace_back(StlVecType<std::string>(),
-                                      type_str,
-                                      col_name,
+                                      type_str.c_str(),
+                                      col_name.c_str(),
                                       nrows);
             // This includes DateTime, DateTimeAME, DateTimeEUR, DateTimeISO
-            else if (! ::strncmp(type_str, "DateTime", 8))
+            else if (! ::strncmp(type_str.c_str(), "DateTime", 8))
                 spec_vec.emplace_back(StlVecType<DateTime>(),
-                                      type_str,
-                                      col_name,
+                                      type_str.c_str(),
+                                      col_name.c_str(),
                                       nrows);
-            else if (! ::strcmp(type_str, "bool"))
+            else if (type_str == "bool")
                 spec_vec.emplace_back(StlVecType<bool>(),
-                                      type_str,
-                                      col_name,
+                                      type_str.c_str(),
+                                      col_name.c_str(),
+                                      nrows);
+            else if (type_str == "dbl_vec")
+                spec_vec.emplace_back(StlVecType<StlVecType<double>>(),
+                                      type_str.c_str(),
+                                      col_name.c_str(),
                                       nrows);
             else
                 throw DataFrameError("DataFrame::read_csv2_(): ERROR: "
@@ -593,47 +620,51 @@ read_csv2_(std::istream &stream,
             _col_data_spec_ &col_spec = spec_vec[col_index];
 
             if (col_spec.type_spec == "float")  {
-                if (value[0] != '\0')
+                if (! value.empty())
                     std::any_cast<StlVecType<float> &>
-                        (col_spec.col_vec).push_back(strtof(value, nullptr));
+                        (col_spec.col_vec).push_back(
+                            strtof(value.c_str(), nullptr));
             }
             else if (col_spec.type_spec == "double") [[likely]]  {
-                if (value[0] != '\0')
+                if (! value.empty())
                     std::any_cast<StlVecType<double> &>
-                        (col_spec.col_vec).push_back(strtod(value, nullptr));
+                        (col_spec.col_vec).push_back(
+                            strtod(value.c_str(), nullptr));
             }
             else if (col_spec.type_spec == "longdouble")  {
-                if (value[0] != '\0')
+                if (! value.empty())
                     std::any_cast<StlVecType<long double> &>
-                        (col_spec.col_vec).push_back(strtold(value, nullptr));
+                        (col_spec.col_vec).push_back(
+                            strtold(value.c_str(), nullptr));
             }
             else if (col_spec.type_spec == "int")  {
-                if (value[0] != '\0')
+                if (! value.empty())
                     std::any_cast<StlVecType<int> &>
                         (col_spec.col_vec).push_back(
-                            (int) strtol(value, nullptr, 0));
+                            (int) strtol(value.c_str(), nullptr, 0));
             }
             else if (col_spec.type_spec == "uint")  {
-                if (value[0] != '\0')
+                if (! value.empty())
                     std::any_cast<StlVecType<unsigned int> &>
                         (col_spec.col_vec).push_back(
-                            (unsigned int) strtoul(value, nullptr, 0));
+                            (unsigned int) strtoul(value.c_str(), nullptr, 0));
             }
             else if (col_spec.type_spec == "long")  {
-                if (value[0] != '\0')
+                if (! value.empty())
                     std::any_cast<StlVecType<long> &>
                         (col_spec.col_vec).push_back(
-                            strtol(value, nullptr, 0));
+                            strtol(value.c_str(), nullptr, 0));
             }
             else if (col_spec.type_spec == "longlong")  {
-                if (value[0] != '\0')
+                if (! value.empty())
                     std::any_cast<StlVecType<long long> &>
                         (col_spec.col_vec).push_back(
-                            strtoll(value, nullptr, 0));
+                            strtoll(value.c_str(), nullptr, 0));
             }
             else if (col_spec.type_spec == "ulong")  {
-                if (value[0] != '\0')  {
-                    const unsigned long         v = strtoul(value, nullptr, 0);
+                if (! value.empty())  {
+                    const unsigned long         v =
+                        strtoul(value.c_str(), nullptr, 0);
                     StlVecType<unsigned long>  &vec =
                         std::any_cast<StlVecType<unsigned long> &>
                             (col_spec.col_vec);
@@ -642,55 +673,65 @@ read_csv2_(std::istream &stream,
                 }
             }
             else if (col_spec.type_spec == "ulonglong")  {
-                if (value[0] != '\0')
+                if (! value.empty())
                     std::any_cast<StlVecType<unsigned long long> &>
                         (col_spec.col_vec).push_back(
-                            strtoull(value, nullptr, 0));
+                            strtoull(value.c_str(), nullptr, 0));
             }
             else if (col_spec.type_spec == "string")  {
                 std::any_cast<StlVecType<std::string> &>
                     (col_spec.col_vec).emplace_back(value);
             }
             else if (col_spec.type_spec == "DateTime")  {
-                if (value[0] != '\0')  {
+                if (! value.empty())  {
                     time_t      t;
                     int         n;
                     DateTime    dt;
 
 #ifdef _MSC_VER
-                    ::sscanf(value, "%lld.%d", &t, &n);
+                    ::sscanf(value.c_str(), "%lld.%d", &t, &n);
 #else
-                    ::sscanf(value, "%ld.%d", &t, &n);
+                    ::sscanf(value.c_str(), "%ld.%d", &t, &n);
 #endif // _MSC_VER
                     dt.set_time(t, n);
                     std::any_cast<StlVecType<DateTime> &>
-                        (col_spec.col_vec).emplace_back(
-                            std::move(dt));
+                        (col_spec.col_vec).emplace_back(std::move(dt));
                 }
             }
             else if (col_spec.type_spec == "DateTimeAME")  {
                 std::any_cast<StlVecType<DateTime> &>
                     (col_spec.col_vec).emplace_back(
-                        value, DT_DATE_STYLE::AME_STYLE);
+                        value.c_str(), DT_DATE_STYLE::AME_STYLE);
             }
             else if (col_spec.type_spec == "DateTimeEUR")  {
                 std::any_cast<StlVecType<DateTime> &>
                     (col_spec.col_vec).emplace_back(
-                        value, DT_DATE_STYLE::EUR_STYLE);
+                        value.c_str(), DT_DATE_STYLE::EUR_STYLE);
             }
             else if (col_spec.type_spec == "DateTimeISO")  {
                 std::any_cast<StlVecType<DateTime> &>
                     (col_spec.col_vec).emplace_back(
-                        value, DT_DATE_STYLE::ISO_STYLE);
+                        value.c_str(), DT_DATE_STYLE::ISO_STYLE);
             }
             else if (col_spec.type_spec == "bool")  {
-                if (value[0] != '\0')  {
+                if (! value.empty())  {
                     const bool          v =
-                        static_cast<bool>(strtoul(value, nullptr, 0));
+                        static_cast<bool>(strtoul(value.c_str(), nullptr, 0));
                     StlVecType<bool>   &vec =
                         std::any_cast<StlVecType<bool> &>(col_spec.col_vec);
 
                     vec.push_back(v);
+                }
+            }
+            else if (col_spec.type_spec == "dbl_vec")  {
+                if (! value.empty())  {
+                    StlVecType<StlVecType<double>>  &vec =
+                        std::any_cast<StlVecType<StlVecType<double>> &>
+                            (col_spec.col_vec);
+
+                    vec.push_back(
+                        std::move(_get_dbl_vec_from_value_<DataFrame<I, H>>(
+                                      value.c_str())));
                 }
             }
             col_index += 1;
@@ -716,70 +757,69 @@ read_csv2_(std::istream &stream,
 
             if (col_spec.type_spec == "float")
                 load_column<float>(col_spec.col_name.c_str(),
-                            std::move(std::any_cast<StlVecType<float> &>
-                                      (col_spec.col_vec)),
-                            nan_policy::dont_pad_with_nans);
+                    std::move(std::any_cast<StlVecType<float> &>
+                        (col_spec.col_vec)),
+                    nan_policy::dont_pad_with_nans);
             else if (col_spec.type_spec == "double") [[likely]]
                 load_column<double>(col_spec.col_name.c_str(),
-                            std::move(std::any_cast<StlVecType<double> &>
-                                          (col_spec.col_vec)),
-                            nan_policy::dont_pad_with_nans);
+                    std::move(std::any_cast<StlVecType<double> &>
+                        (col_spec.col_vec)),
+                    nan_policy::dont_pad_with_nans);
             else if (col_spec.type_spec == "longdouble")
                 load_column<long double>(col_spec.col_name.c_str(),
-                            std::move(std::any_cast<
-                                    StlVecType<long double> &>
-                                    (col_spec.col_vec)),
-                            nan_policy::dont_pad_with_nans);
+                    std::move(std::any_cast<StlVecType<long double> &>
+                        (col_spec.col_vec)),
+                    nan_policy::dont_pad_with_nans);
             else if (col_spec.type_spec == "int")
                 load_column<int>(col_spec.col_name.c_str(),
-                            std::move(std::any_cast<StlVecType<int> &>
-                                          (col_spec.col_vec)),
-                            nan_policy::dont_pad_with_nans);
+                    std::move(std::any_cast<StlVecType<int> &>
+                        (col_spec.col_vec)),
+                    nan_policy::dont_pad_with_nans);
             else if (col_spec.type_spec == "uint")
                 load_column<unsigned int>(col_spec.col_name.c_str(),
-                            std::move(std::any_cast<
-                                    StlVecType<unsigned int> &>
-                                    (col_spec.col_vec)),
-                            nan_policy::dont_pad_with_nans);
+                    std::move(std::any_cast<StlVecType<unsigned int> &>
+                        (col_spec.col_vec)),
+                    nan_policy::dont_pad_with_nans);
             else if (col_spec.type_spec == "long")
                 load_column<long>(col_spec.col_name.c_str(),
-                            std::move(std::any_cast<StlVecType<long> &>
-                                          (col_spec.col_vec)),
-                            nan_policy::dont_pad_with_nans);
+                    std::move(std::any_cast<StlVecType<long> &>
+                        (col_spec.col_vec)),
+                    nan_policy::dont_pad_with_nans);
             else if (col_spec.type_spec == "longlong")
                 load_column<long long>(col_spec.col_name.c_str(),
-                            std::move(std::any_cast<StlVecType<long long> &>
-                                          (col_spec.col_vec)),
-                            nan_policy::dont_pad_with_nans);
+                    std::move(std::any_cast<StlVecType<long long> &>
+                        (col_spec.col_vec)),
+                    nan_policy::dont_pad_with_nans);
             else if (col_spec.type_spec == "ulong")
                 load_column<unsigned long>(col_spec.col_name.c_str(),
-                            std::move(std::any_cast<
-                                    StlVecType<unsigned long>&>
-                                    (col_spec.col_vec)),
-                            nan_policy::dont_pad_with_nans);
+                    std::move(std::any_cast<StlVecType<unsigned long>&>
+                        (col_spec.col_vec)),
+                    nan_policy::dont_pad_with_nans);
             else if (col_spec.type_spec == "ulonglong")
                 load_column<unsigned long long>(col_spec.col_name.c_str(),
-                            std::move(
-                                std::any_cast<
-                                    StlVecType<unsigned long long> &>
-                                    (col_spec.col_vec)),
-                            nan_policy::dont_pad_with_nans);
+                    std::move(std::any_cast<StlVecType<unsigned long long> &>
+                        (col_spec.col_vec)),
+                    nan_policy::dont_pad_with_nans);
             else if (col_spec.type_spec == "string")
                 load_column<std::string>(col_spec.col_name.c_str(),
-                            std::move(std::any_cast<
-                                          StlVecType<std::string> &>
-                                          (col_spec.col_vec)),
-                            nan_policy::dont_pad_with_nans);
+                    std::move(std::any_cast<StlVecType<std::string> &>
+                        (col_spec.col_vec)),
+                    nan_policy::dont_pad_with_nans);
             else if (! ::strncmp(col_spec.type_spec.c_str(), "DateTime", 8))
                 load_column<DateTime>(col_spec.col_name.c_str(),
-                            std::move(std::any_cast<StlVecType<DateTime> &>
-                                          (col_spec.col_vec)),
-                            nan_policy::dont_pad_with_nans);
+                    std::move(std::any_cast<StlVecType<DateTime> &>
+                        (col_spec.col_vec)),
+                    nan_policy::dont_pad_with_nans);
             else if (col_spec.type_spec == "bool")
                 load_column<bool>(col_spec.col_name.c_str(),
-                            std::move(std::any_cast<StlVecType<bool> &>
-                                          (col_spec.col_vec)),
-                            nan_policy::dont_pad_with_nans);
+                    std::move(std::any_cast<StlVecType<bool> &>
+                        (col_spec.col_vec)),
+                    nan_policy::dont_pad_with_nans);
+            else if (col_spec.type_spec == "dbl_vec")
+                load_column<StlVecType<double>>(col_spec.col_name.c_str(),
+                    std::move(std::any_cast<StlVecType<StlVecType<double>> &>
+                        (col_spec.col_vec)),
+                    nan_policy::dont_pad_with_nans);
         }
     }
 }

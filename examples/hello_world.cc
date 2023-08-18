@@ -100,9 +100,9 @@ int main(int, char *[])  {
     // In this case again the data is moved to the DataFrame.
     //
     ul_df2.load_data(std::move(idx_col2),
-                     std::make_pair("string col", str_col),
+                     std::make_pair("string col",  str_col),
                      std::make_pair("Cool Column", cool_col),
-                     std::make_pair("numbers", dbl_col2));
+                     std::make_pair("numbers",     dbl_col2));
 
     StrDataFrame    ibm_df;
 
@@ -183,7 +183,7 @@ int main(int, char *[])  {
     auto    gb_df =
         ul_df1.groupby1<double>("dbl_col",
                                 LastVisitor<ul_idx_t, ul_idx_t>(),
-                                std::make_tuple("integers", "sum_int", SumVisitor<int>()),
+                                std::make_tuple("integers",    "sum_int",      SumVisitor<int>()),
                                 std::make_tuple("my_data_col", "last_my_data", LastVisitor<MyData>()));
 
     // You can run statistical, financial, ML, … algorithms on one or multiple columns by using visitors.
@@ -240,19 +240,30 @@ int main(int, char *[])  {
 
     using dt_idx_t = DTDataFrame::IndexType;  // This is just DateTime.
 
-    // Appel data are daily. Let’s create 10-day OHLC (plus mean, std, total volume) for close prices.
+    // Appel data are daily. Let’s create 10-day OHLC (plus a bunch of other stats) for close prices.
     //
     DTDataFrame aapl_ohlc =
-        aapl_dt_df.bucketize(bucket_type::by_count,
-                             10,
-                             LastVisitor<dt_idx_t, dt_idx_t>(),
-                             std::make_tuple("AAPL_Close", "Open", FirstVisitor<double, dt_idx_t>()),
-                             std::make_tuple("AAPL_Close", "High", MaxVisitor<double, dt_idx_t>()),
-                             std::make_tuple("AAPL_Close", "Low", MinVisitor<double, dt_idx_t>()),
-                             std::make_tuple("AAPL_Close", "Close", LastVisitor<double, dt_idx_t>()),
-                             std::make_tuple("AAPL_Close", "Mean", MeanVisitor<double, dt_idx_t>()),
-                             std::make_tuple("AAPL_Close", "Std", StdVisitor<double, dt_idx_t>()),
-                             std::make_tuple("AAPL_Volume", "Volume", SumVisitor<long, dt_idx_t>()));
+        aapl_dt_df.bucketize(
+            bucket_type::by_count,
+            10,
+            LastVisitor<dt_idx_t, dt_idx_t>(),
+            std::make_tuple("AAPL_Close",  "Open",          FirstVisitor<double, dt_idx_t>()),
+            std::make_tuple("AAPL_Close",  "High",          MaxVisitor<double, dt_idx_t>()),
+            std::make_tuple("AAPL_Close",  "Low",           MinVisitor<double, dt_idx_t>()),
+            std::make_tuple("AAPL_Close",  "Close",         LastVisitor<double, dt_idx_t>()),
+            std::make_tuple("AAPL_Close",  "Mean",          MeanVisitor<double, dt_idx_t>()),
+            std::make_tuple("AAPL_Close",  "Median",        MedianVisitor<double, dt_idx_t>()),
+            std::make_tuple("AAPL_Close",  "25% Quantile",  QuantileVisitor<double, dt_idx_t>(0.25)),
+            std::make_tuple("AAPL_Close",  "Std",           StdVisitor<double, dt_idx_t>()),
+            // "Mode" column is a column of std::array<ModeVisitor::DataItem, 2>'s -- It cannot be printed by default
+            std::make_tuple("AAPL_Close",  "Mode",          ModeVisitor<2, double, dt_idx_t>()),
+            std::make_tuple("AAPL_Close",  "MAD",           MADVisitor<double, dt_idx_t>(mad_type::mean_abs_dev_around_mean)),
+            // "Z Score" column is a column of std::vector<double>'s
+            std::make_tuple("AAPL_Close",  "Z Score",       ZScoreVisitor<double, dt_idx_t>()),
+            // "Return Vector" column is a column of std::vector<double>'s
+            std::make_tuple("AAPL_Close",  "Return Vector", ReturnVisitor<double, dt_idx_t>(return_policy::log)),
+            std::make_tuple("AAPL_Volume", "Volume",        SumVisitor<long, dt_idx_t>()));
+    aapl_ohlc.write<std::ostream, double, long, std::vector<double>>(std::cout, io_format::csv2);
 
     // Now let's get a view of a random sample of appel data. We randomly sample 35% of the data.
     //

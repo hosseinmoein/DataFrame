@@ -2161,6 +2161,35 @@ static void test_EaseOfMovementVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_read_csv_with_vector()  {
+
+    std::cout << "\nTesting test_read_csv_with_vector ..." << std::endl;
+
+    typedef StdDataFrame<DateTime>  DT_DataFrame;
+
+    DT_DataFrame    df;
+
+    try  {
+        df.read("data/AAPL_10dBucketWithVector.csv", io_format::csv2);
+
+        assert(df.get_index().size() == 564);
+        assert((std::fabs(
+            df.get_column<double>("Close")[4] - 1.0201) < 0.0001));
+        assert((df.get_column<long>("Volume")[4] == 3724291200));
+        assert((std::fabs(
+            df.get_column<std::vector<double>>
+                ("Z Score")[4][1] - -0.329) < 0.0001));
+        assert((std::fabs(
+            df.get_column<std::vector<double>>
+                ("Return Vector")[4][3] - -0.0182) < 0.0001));
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     test_groupby_edge();
@@ -2207,6 +2236,7 @@ int main(int, char *[]) {
     test_LossFunctionVisitor();
     test_EldersForceIndexVisitor();
     test_EaseOfMovementVisitor();
+    test_read_csv_with_vector();
 
     return (0);
 }

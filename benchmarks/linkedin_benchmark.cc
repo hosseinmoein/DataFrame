@@ -78,9 +78,9 @@ int main(int, char *[]) {
     auto                    index_vec = MyDataFrame::gen_sequence_index(0, DATA_SIZE, 1);
     MyDataFrame             df;
     RandGenParams<int64_t>  param;
-	
+
     param.min_value = -10000000;
-	param.max_value = 10000000;
+    param.max_value = 10000000;
     df.load_data(std::move(index_vec),
                  std::make_pair("uniform", gen_uniform_int_dist<int64_t>(DATA_SIZE, param)));
 

@@ -117,6 +117,41 @@ namespace hmdf
         std::min(std::distance(idx_begin, idx_end), \
                  std::distance(column_begin, column_end));
 
+#define GET_COL_SIZE2 \
+    const std::size_t   col_s = std::distance(column_begin, column_end);
+
+#define OBO_PORT_DECL \
+    using val_vec = std::vector<T, typename allocator_declare<T, A>::type>; \
+    using idx_vec = std::vector<I, typename allocator_declare<I, A>::type>; \
+    val_vec     aux_val_vec_ {  }; \
+    idx_vec     aux_idx_vec_ {  }; \
+    bool        obo_data_ { false };  // one-by-one data passing
+
+#define OBO_PORT_OPT \
+    inline void \
+    operator() (const index_type &, const value_type &val)  { \
+        obo_data_ = true; \
+        aux_val_vec_.push_back(val); \
+    }
+
+#define OBO_PORT_OPT2 \
+    inline void \
+    operator() (const index_type &idx, const value_type &val)  { \
+        obo_data_ = true; \
+        aux_val_vec_.push_back(val); \
+        aux_idx_vec_.push_back(idx); \
+    }
+
+#define OBO_PORT_PRE \
+    aux_val_vec_.clear(); \
+    aux_idx_vec_.clear(); \
+    obo_data_ = false;
+
+#define OBO_PORT_POST \
+    if (obo_data_) \
+        (*this)(aux_idx_vec_.begin(), aux_idx_vec_.end(), \
+                aux_val_vec_.begin(), aux_val_vec_.end());
+
 // ----------------------------------------------------------------------------
 
 template<typename T, typename I = unsigned long>
@@ -2522,7 +2557,8 @@ struct  MedianVisitor  {
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
 
-        GET_COL_SIZE
+        GET_COL_SIZE2
+
         KthValueVisitor<value_type, index_type, A> kv_visitor (col_s >> 1);
 
 
@@ -2540,13 +2576,21 @@ struct  MedianVisitor  {
         }
     }
 
-    inline void pre ()  { result_ = value_type(); }
-    inline void post ()  {   }
+    OBO_PORT_OPT
+
+    inline void pre ()  {
+
+        OBO_PORT_PRE
+        result_ = value_type();
+    }
+    inline void post ()  { OBO_PORT_POST }
     inline result_type get_result () const  { return (result_); }
 
     MedianVisitor () = default;
 
 private:
+
+    OBO_PORT_DECL
 
     result_type result_ {  };
 };
@@ -2566,7 +2610,7 @@ struct  QuantileVisitor  {
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
 
-        GET_COL_SIZE
+        GET_COL_SIZE2
 
         assert (qt_ >= 0.0 && qt_ <= 1.0 && col_s > 0);
 
@@ -2618,8 +2662,14 @@ struct  QuantileVisitor  {
         }
     }
 
-    inline void pre ()  { result_ = value_type(); }
-    inline void post ()  {   }
+    OBO_PORT_OPT
+
+    inline void pre ()  {
+
+        OBO_PORT_PRE
+        result_ = value_type();
+    }
+    inline void post ()  { OBO_PORT_POST }
     inline result_type get_result () const  { return (result_); }
 
     explicit
@@ -2628,6 +2678,8 @@ struct  QuantileVisitor  {
         : qt_(quantile), policy_(q_policy)  {   }
 
 private:
+
+    OBO_PORT_DECL
 
     result_type             result_ {  };
     const double            qt_;
@@ -2718,10 +2770,10 @@ public:
 
     template <forward_iterator K, forward_iterator H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
+    operator() (const K &idx_begin, const K &,
                 const H &column_begin, const H &column_end)  {
 
-        GET_COL_SIZE
+        GET_COL_SIZE2
 
         DataItem    nan_item;
         map_type    val_map;
@@ -2764,8 +2816,16 @@ public:
             result_[i] = val_vec[i];
     }
 
-    inline void pre ()  { result_type x; result_.swap (x); }
-    inline void post ()  {  }
+    OBO_PORT_OPT2
+
+    inline void pre ()  {
+
+        result_type x;
+
+        result_.swap (x);
+        OBO_PORT_PRE
+    }
+    inline void post ()  { OBO_PORT_POST }
     inline const result_type &get_result () const  { return (result_); }
     inline result_type &get_result ()  { return (result_); }
 
@@ -2785,6 +2845,8 @@ public:
     }
 
 private:
+
+    OBO_PORT_DECL
 
     result_type result_ { };
 };
@@ -2808,14 +2870,15 @@ private:
 
     template <forward_iterator K, forward_iterator H>
     inline void
-    calc_mean_abs_dev_around_mean_(const K &idx_begin,
-                                   const K &idx_end,
+    calc_mean_abs_dev_around_mean_(const K &,
+                                   const K &,
                                    const H &column_begin,
                                    const H &column_end)  {
 
-        GET_COL_SIZE
+        GET_COL_SIZE2
+
         MeanVisitor<T, I>   mean_visitor(skip_nan_);
-        index_type          &idx_value = *idx_begin;
+        const index_type    idx_value { };
 
         mean_visitor.pre();
         for (std::size_t i = 0; i < col_s; ++i) [[likely]]
@@ -2850,9 +2913,10 @@ private:
         median_visitor(idx_begin, idx_end, column_begin, column_end);
         median_visitor.post();
 
-        GET_COL_SIZE
+        GET_COL_SIZE2
+
         MeanVisitor<T, I>   mean_median_visitor(skip_nan_);
-        index_type          &idx_value = *idx_begin;
+        const index_type    idx_value { };
 
         mean_median_visitor.pre();
         for (std::size_t i = 0; i < col_s; ++i) [[likely]]  {
@@ -2874,9 +2938,10 @@ private:
                                      const H &column_begin,
                                      const H &column_end)  {
 
+        GET_COL_SIZE2
+
         MeanVisitor<T, I>   mean_visitor(skip_nan_);
-        index_type          &idx_value = *idx_begin;
-        GET_COL_SIZE
+        const index_type    idx_value { };
 
         mean_visitor.pre();
         for (std::size_t i = 0; i < col_s; ++i) [[likely]]
@@ -2911,7 +2976,8 @@ private:
         median_visitor(idx_begin, idx_end, column_begin, column_end);
         median_visitor.post();
 
-        GET_COL_SIZE
+        GET_COL_SIZE2
+
         MedianVisitor<T, I, A> median_median_visitor;
         std::vector<T, typename allocator_declare<T, A>::type>  median_dists;
 
@@ -2960,11 +3026,19 @@ public:
         }
     }
 
-    inline void pre ()  { result_ = value_type(); }
-    inline void post ()  {   }
+    OBO_PORT_OPT
+
+    inline void pre ()  {
+
+        OBO_PORT_PRE
+        result_ = value_type();
+    }
+    inline void post ()  { OBO_PORT_POST }
     inline result_type get_result () const  { return (result_); }
 
 private:
+
+    OBO_PORT_DECL
 
     result_type result_ {  };
 };
@@ -3082,16 +3156,17 @@ struct  ZScoreVisitor  {
 
     template <forward_iterator K, forward_iterator H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
+    operator() (const K &, const K &,
                 const H &column_begin, const H &column_end)  {
+
+        GET_COL_SIZE2
 
         MeanVisitor<T, I>   mvisit;
         StdVisitor<T, I>    svisit;
-        GET_COL_SIZE
 
         // None of these visitors look at the index value
         //
-        index_type  &idx_value = *idx_begin;
+        const index_type    idx_value { };
 
         mvisit.pre();
         svisit.pre();
@@ -3120,12 +3195,21 @@ struct  ZScoreVisitor  {
         result_.swap(result);
     }
 
-    DEFINE_PRE_POST
+    OBO_PORT_OPT
+
+    inline void pre ()  {
+
+        OBO_PORT_PRE
+        result_.clear();
+    }
+    inline void post ()  { OBO_PORT_POST }
     DEFINE_RESULT
 
     DECL_CTOR(ZScoreVisitor)
 
 private:
+
+    OBO_PORT_DECL
 
     result_type result_ {  };  // Z Score
     const bool  skip_nan_;
@@ -3143,7 +3227,7 @@ struct  SampleZScoreVisitor  {
 
     template <forward_iterator K, forward_iterator H>
     inline void
-    operator() (const K &idx_begin, const K &,
+    operator() (const K &, const K &,
                 const H &population_begin, const H &population_end,
                 const H &sample_begin, const H &sample_end)  {
 
@@ -3157,7 +3241,7 @@ struct  SampleZScoreVisitor  {
 
         // None of these visitors look at the index value
         //
-        index_type  &idx_value = *idx_begin;
+        const index_type    idx_value { };
 
         p_mvisit.pre();
         p_svisit.pre();

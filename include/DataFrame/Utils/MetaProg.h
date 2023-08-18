@@ -520,9 +520,9 @@ int main(int, char *[])  {
 template<std::invocable F>
 std::invoke_result_t<F> run_locked (F &&f)  {
 
-	std::lock_guard guard { some_mutex };
+    std::lock_guard guard { some_mutex };
 
-	return (f());
+    return (f());
 }
 */
 

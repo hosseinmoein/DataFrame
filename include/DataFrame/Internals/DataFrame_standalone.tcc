@@ -31,9 +31,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <DataFrame/Utils/DateTime.h>
 
-#include <cassert>
+#include <cstdlib>
 #include <cstring>
 #include <iostream>
+#include <map>
 #include <sstream>
 #include <tuple>
 #include <utility>
@@ -42,6 +43,49 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace hmdf
 {
+
+template<typename S, typename T>
+static S &operator << (S &stream, const std::vector<T> &data)  {
+
+    if (! data.empty())  {
+        stream << data.size() << '[' << data[0];
+        for (std::size_t i = 1; i < data.size(); ++i)
+            stream << '|' << data[i];
+        stream << ']';
+    }
+    return (stream);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename S, typename T, std::size_t N>
+static S &operator << (S &stream, const std::array<T, N> &data)  {
+
+    if (! data.empty())  {
+        stream << data.size() << '[' << data[0];
+        for (std::size_t i = 1; i < data.size(); ++i)
+            stream << '|' << data[i];
+        stream << ']';
+    }
+    return (stream);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename S, typename K, typename V>
+static S &operator << (S &stream, const std::map<K, V> &data)  {
+
+    if (! data.empty())  {
+        stream << data.size() << '{'
+               << data.cbegin()->first << ':' << data.cbegin()->second;
+        for (auto citer = data.cbegin() + 1; citer < data.cend(); ++citer)
+            stream << '|' << citer->first << ':' << citer->second;
+        stream << '}';
+    }
+    return (stream);
+}
+
+// ----------------------------------------------------------------------------
 
 template<typename DF, typename T>
 static inline auto &
@@ -63,7 +107,7 @@ _load_groupby_data_1_(
     I_V &&idx_visitor,
     const V &input_v,
     const typename DF::template StlVecType<std::size_t> &sort_v,
-    const char *col_name) {
+    const char *col_name)  {
 
     std::size_t         marker = 0;
     auto                &dst_idx = dest.get_index();
@@ -435,13 +479,12 @@ inline static S &_write_json_df_index_(S &o, const std::string &value)  {
 inline static void
 _get_token_from_file_ (std::istream &file,
                        char delim,
-                       char *value,
+                       std::string &value,
                        char alt_delim = '\0') {
 
     char    c;
-    int     count = 0;
 
-    while (file.get (c)) [[likely]]
+    while (file.get(c)) [[likely]]
         if (c == delim)  {
             break;
         }
@@ -450,10 +493,39 @@ _get_token_from_file_ (std::istream &file,
             break;
         }
         else  {
-            value[count++] = c;
+            value += c;
         }
+}
 
-    value[count] = 0;
+// ----------------------------------------------------------------------------
+
+template<typename DF>
+inline static typename DF::template StlVecType<double>
+_get_dbl_vec_from_value_(const char *value)  {
+
+    using vec_t = typename DF::template StlVecType<double>;
+
+	std::size_t vcnt = 0;
+    char        buffer[128];
+
+    while (value[vcnt] != '[')
+        buffer[vcnt] = value[vcnt++];
+    buffer[vcnt] = '\0';
+
+    vec_t       data;
+	std::size_t bcnt;
+
+    data.reserve(std::strtol(buffer, nullptr, 10));
+    vcnt += 1;  // skip [
+    while (value[vcnt] && value[vcnt] != ']')  {
+        bcnt = 0;
+        while (value[vcnt] != '|' && value[vcnt] != ']')
+            buffer[bcnt++] = value[vcnt++];
+        buffer[bcnt] = '\0';
+        data.push_back(std::strtod(buffer, nullptr));
+        vcnt += 1;  // skip separator
+    }
+    return (data);
 }
 
 // ----------------------------------------------------------------------------
@@ -516,6 +588,8 @@ _write_csv2_df_header_(S &o, const char *col_name, std::size_t col_size)  {
 
     if (typeid(T) == typeid(DateTime))
         o << "<DateTimeAME>";
+    else if (typeid(T) == typeid(std::vector<double>))
+        o << "<dbl_vec>";
     return (o);
 }
 

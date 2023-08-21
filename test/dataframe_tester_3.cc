@@ -2165,7 +2165,7 @@ static void test_read_csv_with_vector()  {
 
     std::cout << "\nTesting test_read_csv_with_vector ..." << std::endl;
 
-    typedef StdDataFrame<DateTime>  DT_DataFrame;
+    using DT_DataFrame = StdDataFrame<DateTime>;
 
     DT_DataFrame    df;
 
@@ -2182,6 +2182,8 @@ static void test_read_csv_with_vector()  {
         assert((std::fabs(
             df.get_column<std::vector<double>>
                 ("Return Vector")[4][3] - -0.0182) < 0.0001));
+        assert((std::isnan(
+            df.get_column<std::vector<double>>("Return Vector")[10][0])));
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;

@@ -25,13 +25,13 @@ hmdf_target_data_files(dataframe_tester_2
         ${PROJECT_SOURCE_DIR}/data/DT_IBM.csv
         ${PROJECT_SOURCE_DIR}/data/FORD.csv
         ${PROJECT_SOURCE_DIR}/data/IBM.csv
+        ${PROJECT_SOURCE_DIR}/data/SHORT_IBM.csv
         ${PROJECT_SOURCE_DIR}/data/sample_data_2.csv
         ${PROJECT_SOURCE_DIR}/data/sample_data_2.json
         ${PROJECT_SOURCE_DIR}/data/sample_data_no_index.csv
         ${PROJECT_SOURCE_DIR}/data/sample_data_no_index.json
         ${PROJECT_SOURCE_DIR}/data/sample_data.csv
         ${PROJECT_SOURCE_DIR}/data/sample_data.json
-        ${PROJECT_SOURCE_DIR}/data/SHORT_IBM.csv
 )
 add_test(NAME dataframe_tester_2 COMMAND dataframe_tester_2)
 if(MSVC)
@@ -42,6 +42,12 @@ endif()
 add_executable(dataframe_tester_3 dataframe_tester_3.cc)
 target_link_libraries(dataframe_tester_3 PRIVATE DataFrame)
 add_test(NAME dataframe_tester_3 COMMAND dataframe_tester_3)
+hmdf_target_data_files(dataframe_tester_3
+    DATA_FILES
+        ${PROJECT_SOURCE_DIR}/data/IBM.csv
+        ${PROJECT_SOURCE_DIR}/data/SHORT_IBM.csv
+        ${PROJECT_SOURCE_DIR}/data/AAPL_10dBucketWithVector.csv
+)
 
 add_executable(dataframe_tester_schema dataframe_tester_schema.cc)
 target_link_libraries(dataframe_tester_schema PRIVATE DataFrame)

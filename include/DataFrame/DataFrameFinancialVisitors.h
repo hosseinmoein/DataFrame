@@ -1128,10 +1128,10 @@ struct  RSXVisitor  {
 
     template <forward_iterator K, forward_iterator H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
+    operator() (const K &, const K &,
                 const H &column_begin, const H &column_end)  {
 
-        GET_COL_SIZE
+        GET_COL_SIZE2
 
         assert(avg_period_ < col_s);
 
@@ -1218,13 +1218,22 @@ struct  RSXVisitor  {
         result_.swap(result);
     }
 
-    DEFINE_PRE_POST
+    OBO_PORT_OPT
+
+    inline void pre ()  {
+
+        OBO_PORT_PRE
+        result_.clear();
+    }
+    inline void post ()  { OBO_PORT_POST }
     DEFINE_RESULT
 
     explicit RSXVisitor(size_type avg_period = 14)
         : avg_period_(T(avg_period))  {   }
 
 private:
+
+    OBO_PORT_DECL
 
     const value_type    avg_period_;
     result_type         result_ { };
@@ -1640,13 +1649,22 @@ struct  HullRollingMeanVisitor  {
         result_.swap(result);
     }
 
-    DEFINE_PRE_POST
+    OBO_PORT_OPT
+
+    inline void pre ()  {
+
+        OBO_PORT_PRE
+        result_.clear();
+    }
+    inline void post ()  { OBO_PORT_POST }
     DEFINE_RESULT
 
     explicit
     HullRollingMeanVisitor(size_type r_count = 10) : roll_count_(r_count)  {   }
 
 private:
+
+    OBO_PORT_DECL
 
     const size_type roll_count_;
     result_type     result_ { };
@@ -2162,7 +2180,7 @@ struct  KamaVisitor  {
 
         if (roll_count_ < 2)  return;
 
-        GET_COL_SIZE
+        GET_COL_SIZE2
 
         result_type change_diff (col_s, std::numeric_limits<T>::quiet_NaN());
 
@@ -2203,7 +2221,14 @@ struct  KamaVisitor  {
         result_.swap(result);
     }
 
-    DEFINE_PRE_POST
+    OBO_PORT_OPT
+
+    inline void pre ()  {
+
+        OBO_PORT_PRE
+        result_.clear();
+    }
+    inline void post ()  { OBO_PORT_POST }
     DEFINE_RESULT
 
     explicit
@@ -2215,6 +2240,8 @@ struct  KamaVisitor  {
           slow_sc_(T(2) / T(slow_smoothing_const + 1))  {   }
 
 private:
+
+    OBO_PORT_DECL
 
     const size_type     roll_count_;
     const value_type    fast_sc_;
@@ -2408,7 +2435,7 @@ struct  SlopeVisitor  {
 
         assert(! ((! as_angle_) && in_degrees_));
 
-        GET_COL_SIZE
+        GET_COL_SIZE2
 
         DiffVisitor<T, I, A>    diff (periods_, false);
 
@@ -2432,7 +2459,14 @@ struct  SlopeVisitor  {
         result_.swap(result);
     }
 
-    DEFINE_PRE_POST
+    OBO_PORT_OPT
+
+    inline void pre ()  {
+
+        OBO_PORT_PRE
+        result_.clear();
+    }
+    inline void post ()  { OBO_PORT_POST }
     DEFINE_RESULT
 
     explicit
@@ -2442,6 +2476,8 @@ struct  SlopeVisitor  {
         : periods_(periods), as_angle_(as_angle), in_degrees_(in_degrees)  {  }
 
 private:
+
+    OBO_PORT_DECL
 
     const size_type periods_;
     const bool      as_angle_;
@@ -2608,7 +2644,7 @@ struct  UlcerIndexVisitor  {
 
         if (periods_ < 2)  return;
 
-        GET_COL_SIZE
+        GET_COL_SIZE2
 
         SimpleRollAdopter<MaxVisitor<T, I>, T, I, A>    high {
             MaxVisitor<T, I>(), periods_ };
@@ -2655,7 +2691,14 @@ struct  UlcerIndexVisitor  {
         result_.swap(result);
     }
 
-    DEFINE_PRE_POST
+    OBO_PORT_OPT
+
+    inline void pre ()  {
+
+        OBO_PORT_PRE
+        result_.clear();
+    }
+    inline void post ()  { OBO_PORT_POST }
     DEFINE_RESULT
 
     explicit
@@ -2663,6 +2706,8 @@ struct  UlcerIndexVisitor  {
         : periods_(periods), use_sum_(use_sum)  {   }
 
 private:
+
+    OBO_PORT_DECL
 
     const size_type periods_;
     const bool      use_sum_;
@@ -2976,7 +3021,14 @@ struct  EBSineWaveVisitor  {
         result_.swap(result);
     }
 
-    DEFINE_PRE_POST
+    OBO_PORT_OPT
+
+    inline void pre ()  {
+
+        OBO_PORT_PRE
+        result_.clear();
+    }
+    inline void post ()  { OBO_PORT_POST }
     DEFINE_RESULT
 
     explicit
@@ -2985,6 +3037,8 @@ struct  EBSineWaveVisitor  {
         : hp_period_(high_pass_period), bar_period_(bar_period)  {  }
 
 private:
+
+    OBO_PORT_DECL
 
     const size_type hp_period_;
     const size_type bar_period_;
@@ -3005,10 +3059,10 @@ struct  EhlerSuperSmootherVisitor  {
 
     template <forward_iterator K, forward_iterator H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
+    operator() (const K &, const K &,
                 const H &column_begin, const H &column_end)  {
 
-        GET_COL_SIZE
+        GET_COL_SIZE2
 
         assert(poles_ == 2 || poles_ == 3);
         assert(bar_period_ > 0 && bar_period_ < col_s);
@@ -3049,7 +3103,14 @@ struct  EhlerSuperSmootherVisitor  {
         result_.swap(result);
     }
 
-    DEFINE_PRE_POST
+    OBO_PORT_OPT
+
+    inline void pre ()  {
+
+        OBO_PORT_PRE
+        result_.clear();
+    }
+    inline void post ()  { OBO_PORT_POST }
     DEFINE_RESULT
 
     explicit
@@ -3057,6 +3118,8 @@ struct  EhlerSuperSmootherVisitor  {
         : poles_(poles), bar_period_(bar_period)  {  }
 
 private:
+
+    OBO_PORT_DECL
 
     const size_type poles_;
     const size_type bar_period_;
@@ -3080,7 +3143,7 @@ struct  VarIdxDynAvgVisitor  {
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
 
-        GET_COL_SIZE
+        GET_COL_SIZE2
 
         assert(roll_period_ > 1 && roll_period_ < col_s);
 
@@ -3137,7 +3200,14 @@ struct  VarIdxDynAvgVisitor  {
         result_.swap(result);
     }
 
-    DEFINE_PRE_POST
+    OBO_PORT_OPT
+
+    inline void pre ()  {
+
+        OBO_PORT_PRE
+        result_.clear();
+    }
+    inline void post ()  { OBO_PORT_POST }
     DEFINE_RESULT
 
     explicit
@@ -3145,6 +3215,8 @@ struct  VarIdxDynAvgVisitor  {
         : roll_period_(roll_period)  {  }
 
 private:
+
+    OBO_PORT_DECL
 
     const size_type roll_period_;
     result_type     result_ { };
@@ -3551,7 +3623,7 @@ struct  CenterOfGravityVisitor  {
 
         if (roll_count_ == 0)  return;
 
-        GET_COL_SIZE
+        GET_COL_SIZE2
         assert (col_s > roll_count_);
 
         result_type result (col_s, std::numeric_limits<T>::quiet_NaN());
@@ -3582,13 +3654,22 @@ struct  CenterOfGravityVisitor  {
         result_.swap(result);
     }
 
-    DEFINE_PRE_POST
+    OBO_PORT_OPT
+
+    inline void pre ()  {
+
+        OBO_PORT_PRE
+        result_.clear();
+    }
+    inline void post ()  { OBO_PORT_POST }
     DEFINE_RESULT
 
     explicit
     CenterOfGravityVisitor(size_type r_count = 10) : roll_count_(r_count)  {   }
 
 private:
+
+    OBO_PORT_DECL
 
     const size_type roll_count_;
     result_type     result_ { };
@@ -3608,10 +3689,10 @@ struct  ArnaudLegouxMAVisitor  {
 
     template <forward_iterator K, forward_iterator H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
+    operator() (const K &, const K &,
                 const H &column_begin, const H &column_end)  {
 
-        GET_COL_SIZE
+        GET_COL_SIZE2
         assert (roll_count_ > 1);
         assert (col_s > roll_count_);
 
@@ -3629,7 +3710,14 @@ struct  ArnaudLegouxMAVisitor  {
         result_.swap(result);
     }
 
-    DEFINE_PRE_POST
+    OBO_PORT_OPT
+
+    inline void pre ()  {
+
+        OBO_PORT_PRE
+        result_.clear();
+    }
+    inline void post ()  { OBO_PORT_POST }
     DEFINE_RESULT
 
     explicit
@@ -3650,6 +3738,8 @@ struct  ArnaudLegouxMAVisitor  {
     }
 
 private:
+
+    OBO_PORT_DECL
 
     const size_type     roll_count_;
     const value_type    m_;
@@ -3674,7 +3764,7 @@ struct  RateOfChangeVisitor  {
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
 
-        GET_COL_SIZE
+        GET_COL_SIZE2
         assert (period_ > 0);
 
         DiffVisitor<T, I, A>    diff (period_, false);
@@ -3690,13 +3780,22 @@ struct  RateOfChangeVisitor  {
         result_.swap(result);
     }
 
-    DEFINE_PRE_POST
+    OBO_PORT_OPT
+
+    inline void pre ()  {
+
+        OBO_PORT_PRE
+        result_.clear();
+    }
+    inline void post ()  { OBO_PORT_POST }
     DEFINE_RESULT
 
     explicit
     RateOfChangeVisitor(size_type period) : period_(period)  {   }
 
 private:
+
+    OBO_PORT_DECL
 
     const size_type period_;
     result_type     result_ { };
@@ -3843,7 +3942,7 @@ struct  VertHorizFilterVisitor  {
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
 
-        GET_COL_SIZE
+        GET_COL_SIZE2
         assert (period_ > 0 && period_ < col_s);
 
         SimpleRollAdopter<MaxVisitor<T, I>, T, I, A>    mx
@@ -3886,13 +3985,22 @@ struct  VertHorizFilterVisitor  {
         result_.swap(result);
     }
 
-    DEFINE_PRE_POST
+    OBO_PORT_OPT
+
+    inline void pre ()  {
+
+        OBO_PORT_PRE
+        result_.clear();
+    }
+    inline void post ()  { OBO_PORT_POST }
     DEFINE_RESULT
 
     explicit
     VertHorizFilterVisitor(size_type period = 28) : period_(period)  {   }
 
 private:
+
+    OBO_PORT_DECL
 
     const size_type period_;
     result_type     result_ { };
@@ -4035,10 +4143,10 @@ struct  DecayVisitor  {
 
     template <forward_iterator K, forward_iterator H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
+    operator() (const K &, const K &,
                 const H &column_begin, const H &column_end)  {
 
-        GET_COL_SIZE
+        GET_COL_SIZE2
         assert (period_ > 0 && period_ < col_s);
 
         result_type         result (col_s);
@@ -4054,7 +4162,14 @@ struct  DecayVisitor  {
         result_.swap(result);
     }
 
-    DEFINE_PRE_POST
+    OBO_PORT_OPT
+
+    inline void pre ()  {
+
+        OBO_PORT_PRE
+        result_.clear();
+    }
+    inline void post ()  { OBO_PORT_POST }
     DEFINE_RESULT
 
     explicit
@@ -4062,6 +4177,8 @@ struct  DecayVisitor  {
         : period_(period), expo_(exponential)  {   }
 
 private:
+
+    OBO_PORT_DECL
 
     const size_type period_;
     const bool      expo_;
@@ -4080,7 +4197,7 @@ struct  HodgesTompkinsVolVisitor  {
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
 
-        GET_COL_SIZE
+        GET_COL_SIZE2
         assert (roll_count_ > 0 && roll_count_ < col_s);
 
         ReturnVisitor<T, I, A>  ret { return_policy::log };
@@ -4112,7 +4229,14 @@ struct  HodgesTompkinsVolVisitor  {
         result_.swap(result);
     }
 
-    DEFINE_PRE_POST
+    OBO_PORT_OPT
+
+    inline void pre ()  {
+
+        OBO_PORT_PRE
+        result_.clear();
+    }
+    inline void post ()  { OBO_PORT_POST }
     DEFINE_RESULT
 
     explicit
@@ -4121,6 +4245,8 @@ struct  HodgesTompkinsVolVisitor  {
         : roll_count_(roll_count), trading_periods_(trading_periods)  {  }
 
 private:
+
+    OBO_PORT_DECL
 
     result_type     result_ {  };
     const size_type roll_count_;
@@ -4207,7 +4333,7 @@ struct  CoppockCurveVisitor  {
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
 
-        GET_COL_SIZE
+        GET_COL_SIZE2
 
         roc_v<T, I, A>  roc_l (roc_long_);
 
@@ -4242,7 +4368,14 @@ struct  CoppockCurveVisitor  {
         result_.swap(wma.get_result());
     }
 
-    DEFINE_PRE_POST
+    OBO_PORT_OPT
+
+    inline void pre ()  {
+
+        OBO_PORT_PRE
+        result_.clear();
+    }
+    inline void post ()  { OBO_PORT_POST }
     DEFINE_RESULT
 
     explicit
@@ -4254,6 +4387,8 @@ struct  CoppockCurveVisitor  {
           wma_period_(wma_period)  {   }
 
 private:
+
+    OBO_PORT_DECL
 
     const size_type roc_long_;
     const size_type roc_short_;
@@ -4652,7 +4787,7 @@ struct  TrixVisitor  {
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
 
-        GET_COL_SIZE
+        GET_COL_SIZE2
 
         assert(col_s > 3);
 
@@ -4698,7 +4833,14 @@ struct  TrixVisitor  {
         result_ = std::move(result);
     }
 
-    DEFINE_PRE_POST
+    OBO_PORT_OPT
+
+    inline void pre ()  {
+
+        OBO_PORT_PRE
+        result_.clear();
+    }
+    inline void post ()  { OBO_PORT_POST }
     DEFINE_RESULT
 
     explicit
@@ -4710,6 +4852,8 @@ struct  TrixVisitor  {
           avg_signal_(avg_signal)  {   }
 
 private:
+
+    OBO_PORT_DECL
 
     result_type     result_ {  };
     const size_type roll_period_;
@@ -4846,7 +4990,8 @@ struct  T3MovingMeanVisitor  {
         e6(idx_begin, idx_end, e5.get_result().begin(), e5.get_result().end());
         e6.post();
 
-        const size_type col_s = std::distance(column_begin, column_end);
+        GET_COL_SIZE2
+
         const double    c1 { -v_factor_ * v_factor_ * v_factor_ };
         const double    c2 { 3.0 * v_factor_ * v_factor_ +
                              3.0 * v_factor_ * v_factor_ * v_factor_ };
@@ -4871,7 +5016,14 @@ struct  T3MovingMeanVisitor  {
         result_.swap(result);
     }
 
-    DEFINE_PRE_POST
+    OBO_PORT_OPT
+
+    inline void pre ()  {
+
+        OBO_PORT_PRE
+        result_.clear();
+    }
+    inline void post ()  { OBO_PORT_POST }
     DEFINE_RESULT
 
     explicit
@@ -4882,6 +5034,8 @@ struct  T3MovingMeanVisitor  {
 private:
 
     using erm_t = ewm_v<T, I, A>;
+
+    OBO_PORT_DECL
 
     result_type     result_ {  };
     const size_type rolling_period_;
@@ -5275,7 +5429,7 @@ struct  DetrendPriceOsciVisitor  {
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
 
-        GET_COL_SIZE
+        GET_COL_SIZE2
 
         assert(col_s > 3);
         assert(col_s > roll_period_);
@@ -5299,7 +5453,14 @@ struct  DetrendPriceOsciVisitor  {
         result_.swap(result);
     }
 
-    DEFINE_PRE_POST
+    OBO_PORT_OPT
+
+    inline void pre ()  {
+
+        OBO_PORT_PRE
+        result_.clear();
+    }
+    inline void post ()  { OBO_PORT_POST }
     DEFINE_RESULT
 
     explicit
@@ -5307,6 +5468,8 @@ struct  DetrendPriceOsciVisitor  {
         : roll_period_(roll_period)  {  }
 
 private:
+
+    OBO_PORT_DECL
 
     result_type     result_ {  };
     const size_type roll_period_;

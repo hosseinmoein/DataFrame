@@ -795,7 +795,7 @@ struct  EntropyVisitor  {
                        });
 
         sum_v.pre();
-        sum_v (idx_begin + (roll_count_ - 1), idx_end,
+        sum_v (idx_begin, idx_end,  // the idx iterators are unused
                result.begin() + (roll_count_ - 1), result.end());
         sum_v.post();
 
@@ -807,7 +807,14 @@ struct  EntropyVisitor  {
         result_.swap(result);
     }
 
-    DEFINE_PRE_POST
+    OBO_PORT_OPT
+
+    inline void pre ()  {
+
+        OBO_PORT_PRE
+        result_.clear();
+    }
+    inline void post ()  { OBO_PORT_POST }
     DEFINE_RESULT
 
     explicit
@@ -815,6 +822,8 @@ struct  EntropyVisitor  {
         : roll_count_(roll_count), log_base_(log_base)  {   }
 
 private:
+
+    OBO_PORT_DECL
 
     const size_type     roll_count_;
     const value_type    log_base_;
@@ -836,10 +845,10 @@ struct  ImpurityVisitor  {
 
     template <forward_iterator K, forward_iterator H>
     inline void
-    operator() (const K &idx_begin, const K &idx_end,
+    operator() (const K &, const K &,
                 const H &column_begin, const H &column_end)  {
 
-        GET_COL_SIZE
+        GET_COL_SIZE2
 
         if (roll_count_ == 0 || roll_count_ > col_s)  return;
 
@@ -905,7 +914,14 @@ struct  ImpurityVisitor  {
         result_.swap(result);
     }
 
-    DEFINE_PRE_POST
+    OBO_PORT_OPT
+
+    inline void pre ()  {
+
+        OBO_PORT_PRE
+        result_.clear();
+    }
+    inline void post ()  { OBO_PORT_POST }
     DEFINE_RESULT
 
     ImpurityVisitor(size_type roll_count, impurity_type it)
@@ -918,6 +934,8 @@ private:
         std::hash<T>,
         std::equal_to<T>,
         typename allocator_declare<std::pair<const T, double>, A>::type>;
+
+    OBO_PORT_DECL
 
     result_type         result_ { };
     const size_type     roll_count_;
@@ -1029,13 +1047,22 @@ public:
             smoothstep_(column_begin, column_end);
     }
 
-    DEFINE_PRE_POST
+    OBO_PORT_OPT
+
+    inline void pre ()  {
+
+        OBO_PORT_PRE
+        result_.clear();
+    }
+    inline void post ()  { OBO_PORT_POST }
     DEFINE_RESULT
 
     explicit
     SigmoidVisitor(sigmoid_type st) : sigmoid_type_(st)  {   }
 
 private:
+
+    OBO_PORT_DECL
 
     result_type         result_ {  }; // Sigmoids
     const sigmoid_type  sigmoid_type_;
@@ -1058,7 +1085,7 @@ public:
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
 
-        GET_COL_SIZE
+        GET_COL_SIZE2
 
         result_.reserve(col_s);
         if (rtype_ == rectify_type::ReLU)  {
@@ -1127,7 +1154,14 @@ public:
         }
     }
 
-    DEFINE_PRE_POST
+    OBO_PORT_OPT
+
+    inline void pre ()  {
+
+        OBO_PORT_PRE
+        result_.clear();
+    }
+    inline void post ()  { OBO_PORT_POST }
     DEFINE_RESULT
 
     explicit
@@ -1149,6 +1183,8 @@ private:
 
         return (std::exp(-(v * v) / two) / sqrt_dbl_pi);
     }
+
+    OBO_PORT_DECL
 
     result_type         result_ {  };
     const value_type    param_;

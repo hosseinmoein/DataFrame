@@ -2192,6 +2192,43 @@ static void test_read_csv_with_vector()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_read_csv_with_maps()  {
+
+    std::cout << "\nTesting test_read_csv_with_maps ..." << std::endl;
+
+    using DT_DataFrame = StdDataFrame<DateTime>;
+    using map_t = std::map<std::string, double>;
+    using unomap_t = std::unordered_map<std::string, double>;
+
+    DT_DataFrame    df;
+
+    try  {
+        df.read("data/AAPL_10dBucketWithMaps.csv", io_format::csv2);
+
+        // df.write<std::ostream, double, long, map_t, unomap_t>
+        //     (std::cout, io_format::csv2);
+        assert(df.get_index().size() == 4);
+        assert((std::fabs(df.get_column<double>("Close")[3] - 1.0234) < 0.0001));
+        assert((df.get_column<long>("Volume")[3] == 3605190400));
+
+        assert((std::fabs(
+            df.get_column<map_t>("Map 1")[3]["label four 2"] - -782.5) < 0.001));
+        assert((std::fabs(
+            df.get_column<map_t>("Map 1")[0]["label one 1"] - 123.0) < 0.001));
+        assert((std::fabs(
+            df.get_column<unomap_t>
+			("Unordered Map")[3]["Key four 3"] - 444.44) < 0.001));
+        assert((std::fabs(
+            df.get_column<unomap_t>
+                ("Unordered Map")[0]["Key one 2"] - -782.5) < 0.001));
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     test_groupby_edge();
@@ -2239,6 +2276,7 @@ int main(int, char *[]) {
     test_EldersForceIndexVisitor();
     test_EaseOfMovementVisitor();
     test_read_csv_with_vector();
+    test_read_csv_with_maps();
 
     return (0);
 }

@@ -606,10 +606,22 @@ read_csv2_(std::istream &stream,
                                       col_name.c_str(),
                                       nrows);
             else if (type_str == "dbl_vec")
-                spec_vec.emplace_back(StlVecType<StlVecType<double>>(),
+                spec_vec.emplace_back(StlVecType<StlVecType<double>>{ },
                                       type_str.c_str(),
                                       col_name.c_str(),
                                       nrows);
+            else if (type_str == "str_dbl_map")
+                spec_vec.emplace_back(
+                    StlVecType<std::map<std::string, double>>{ },
+                    type_str.c_str(),
+                    col_name.c_str(),
+                    nrows);
+            else if (type_str == "str_dbl_unomap")
+                spec_vec.emplace_back(
+                    StlVecType<std::unordered_map<std::string, double>>{ },
+                    type_str.c_str(),
+                    col_name.c_str(),
+                    nrows);
             else
                 throw DataFrameError("DataFrame::read_csv2_(): ERROR: "
                                      "Unknown column type");
@@ -734,6 +746,28 @@ read_csv2_(std::istream &stream,
                                       value.c_str())));
                 }
             }
+            else if (col_spec.type_spec == "str_dbl_map")  {
+                using map_t = std::map<std::string, double>;
+
+                if (! value.empty())  {
+                    StlVecType<map_t>   &vec =
+                        std::any_cast<StlVecType<map_t> &>(col_spec.col_vec);
+
+                    vec.push_back(std::move(_get_str_dbl_map_from_value_<map_t>(
+                                      value.c_str())));
+                }
+            }
+            else if (col_spec.type_spec == "str_dbl_unomap")  {
+                using map_t = std::unordered_map<std::string, double>;
+
+                if (! value.empty())  {
+                    StlVecType<map_t>   &vec =
+                        std::any_cast<StlVecType<map_t> &> (col_spec.col_vec);
+
+                    vec.push_back(std::move(_get_str_dbl_map_from_value_<map_t>(
+                                      value.c_str())));
+                }
+            }
             col_index += 1;
         }
     }
@@ -756,70 +790,101 @@ read_csv2_(std::istream &stream,
             _col_data_spec_ col_spec = spec_vec[i];
 
             if (col_spec.type_spec == "float")
-                load_column<float>(col_spec.col_name.c_str(),
+                load_column<float>(
+                    col_spec.col_name.c_str(),
                     std::move(std::any_cast<StlVecType<float> &>
                         (col_spec.col_vec)),
                     nan_policy::dont_pad_with_nans);
             else if (col_spec.type_spec == "double") [[likely]]
-                load_column<double>(col_spec.col_name.c_str(),
+                load_column<double>(
+                    col_spec.col_name.c_str(),
                     std::move(std::any_cast<StlVecType<double> &>
                         (col_spec.col_vec)),
                     nan_policy::dont_pad_with_nans);
             else if (col_spec.type_spec == "longdouble")
-                load_column<long double>(col_spec.col_name.c_str(),
+                load_column<long double>(
+                    col_spec.col_name.c_str(),
                     std::move(std::any_cast<StlVecType<long double> &>
                         (col_spec.col_vec)),
                     nan_policy::dont_pad_with_nans);
             else if (col_spec.type_spec == "int")
-                load_column<int>(col_spec.col_name.c_str(),
+                load_column<int>(
+                    col_spec.col_name.c_str(),
                     std::move(std::any_cast<StlVecType<int> &>
                         (col_spec.col_vec)),
                     nan_policy::dont_pad_with_nans);
             else if (col_spec.type_spec == "uint")
-                load_column<unsigned int>(col_spec.col_name.c_str(),
+                load_column<unsigned int>(
+                    col_spec.col_name.c_str(),
                     std::move(std::any_cast<StlVecType<unsigned int> &>
                         (col_spec.col_vec)),
                     nan_policy::dont_pad_with_nans);
             else if (col_spec.type_spec == "long")
-                load_column<long>(col_spec.col_name.c_str(),
+                load_column<long>(
+                    col_spec.col_name.c_str(),
                     std::move(std::any_cast<StlVecType<long> &>
                         (col_spec.col_vec)),
                     nan_policy::dont_pad_with_nans);
             else if (col_spec.type_spec == "longlong")
-                load_column<long long>(col_spec.col_name.c_str(),
+                load_column<long long>(
+                    col_spec.col_name.c_str(),
                     std::move(std::any_cast<StlVecType<long long> &>
                         (col_spec.col_vec)),
                     nan_policy::dont_pad_with_nans);
             else if (col_spec.type_spec == "ulong")
-                load_column<unsigned long>(col_spec.col_name.c_str(),
+                load_column<unsigned long>(
+                    col_spec.col_name.c_str(),
                     std::move(std::any_cast<StlVecType<unsigned long>&>
                         (col_spec.col_vec)),
                     nan_policy::dont_pad_with_nans);
             else if (col_spec.type_spec == "ulonglong")
-                load_column<unsigned long long>(col_spec.col_name.c_str(),
+                load_column<unsigned long long>(
+                    col_spec.col_name.c_str(),
                     std::move(std::any_cast<StlVecType<unsigned long long> &>
                         (col_spec.col_vec)),
                     nan_policy::dont_pad_with_nans);
             else if (col_spec.type_spec == "string")
-                load_column<std::string>(col_spec.col_name.c_str(),
+                load_column<std::string>(
+                    col_spec.col_name.c_str(),
                     std::move(std::any_cast<StlVecType<std::string> &>
                         (col_spec.col_vec)),
                     nan_policy::dont_pad_with_nans);
             else if (! ::strncmp(col_spec.type_spec.c_str(), "DateTime", 8))
-                load_column<DateTime>(col_spec.col_name.c_str(),
+                load_column<DateTime>(
+                    col_spec.col_name.c_str(),
                     std::move(std::any_cast<StlVecType<DateTime> &>
                         (col_spec.col_vec)),
                     nan_policy::dont_pad_with_nans);
             else if (col_spec.type_spec == "bool")
-                load_column<bool>(col_spec.col_name.c_str(),
+                load_column<bool>(
+                    col_spec.col_name.c_str(),
                     std::move(std::any_cast<StlVecType<bool> &>
                         (col_spec.col_vec)),
                     nan_policy::dont_pad_with_nans);
             else if (col_spec.type_spec == "dbl_vec")
-                load_column<StlVecType<double>>(col_spec.col_name.c_str(),
+                load_column<StlVecType<double>>(
+                    col_spec.col_name.c_str(),
                     std::move(std::any_cast<StlVecType<StlVecType<double>> &>
                         (col_spec.col_vec)),
                     nan_policy::dont_pad_with_nans);
+            else if (col_spec.type_spec == "str_dbl_map")  {
+                using map_t = std::map<std::string, double>;
+
+                load_column<map_t>(
+                    col_spec.col_name.c_str(),
+                    std::move(std::any_cast<StlVecType<map_t> &>
+                        (col_spec.col_vec)),
+                    nan_policy::dont_pad_with_nans);
+            }
+            else if (col_spec.type_spec == "str_dbl_unomap")  {
+                using map_t = std::unordered_map<std::string, double>;
+
+                load_column<map_t>(
+                    col_spec.col_name.c_str(),
+                    std::move(std::any_cast<StlVecType<map_t> &>
+                        (col_spec.col_vec)),
+                    nan_policy::dont_pad_with_nans);
+            }
         }
     }
 }

@@ -101,11 +101,15 @@ write(S &amp;o,
         </PRE>
         In case of io_format::csv2 the following additional types are also supported:
         <PRE>
-          DateTimeAME -- DateTime string printed in American style (MM/DD/YYYY HH:MM:SS.mmm)
-          DateTimeEUR -- DateTime string printed in European style (YYYY/MM/DD HH:MM:SS.mmm)
-          DateTimeISO -- DateTime string printed in ISO style (YYYY-MM-DD HH:MM:SS.mmm)
-          dbl_vector -- A vector of double precision values, The vector is printed as "s[d1|d2|...]"
-                        where s is the size of the vector and d's are the double values.
+          DateTimeAME    -- DateTime string printed in American style (MM/DD/YYYY HH:MM:SS.mmm)
+          DateTimeEUR    -- DateTime string printed in European style (YYYY/MM/DD HH:MM:SS.mmm)
+          DateTimeISO    -- DateTime string printed in ISO style (YYYY-MM-DD HH:MM:SS.mmm)
+          dbl_vector     -- A vector of double precision values, The vector is printed as "s[d1|d2|...]"
+                            where s is the size of the vector and d's are the double values.
+          str_dbl_map    -- A map of string keys to double precision values, The map is printed as "s[k1:v1|k2:v2|...]"
+                            where s is the size of the map and k's and v's are keys and values.
+          str_dbl_unomap -- An unordered map of string keys to double precision values, The map is printed as "s[k1:v1|k2:v2|...]"
+                            where s is the size of the map and k's and v's are keys and values.
         </PRE>
       </td>
       <td>

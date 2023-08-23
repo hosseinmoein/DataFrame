@@ -37,6 +37,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <map>
 #include <sstream>
 #include <tuple>
+#include <unordered_map>
 #include <utility>
 
 // ----------------------------------------------------------------------------
@@ -78,7 +79,22 @@ static S &operator << (S &stream, const std::map<K, V> &data)  {
     if (! data.empty())  {
         stream << data.size() << '{'
                << data.cbegin()->first << ':' << data.cbegin()->second;
-        for (auto citer = data.cbegin() + 1; citer < data.cend(); ++citer)
+        for (auto citer = ++(data.cbegin()); citer != data.cend(); ++citer)
+            stream << '|' << citer->first << ':' << citer->second;
+        stream << '}';
+    }
+    return (stream);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename S, typename K, typename V>
+static S &operator << (S &stream, const std::unordered_map<K, V> &data)  {
+
+    if (! data.empty())  {
+        stream << data.size() << '{'
+               << data.cbegin()->first << ':' << data.cbegin()->second;
+        for (auto citer = ++(data.cbegin()); citer != data.cend(); ++citer)
             stream << '|' << citer->first << ':' << citer->second;
         stream << '}';
     }
@@ -505,7 +521,7 @@ _get_dbl_vec_from_value_(const char *value)  {
 
     using vec_t = typename DF::template StlVecType<double>;
 
-	std::size_t vcnt = 0;
+    std::size_t vcnt = 0;
     char        buffer[128];
 
     while (value[vcnt] != '[')
@@ -513,7 +529,7 @@ _get_dbl_vec_from_value_(const char *value)  {
     buffer[vcnt] = '\0';
 
     vec_t       data;
-	std::size_t bcnt;
+    std::size_t bcnt;
 
     data.reserve(std::strtol(buffer, nullptr, 10));
     vcnt += 1;  // skip [
@@ -523,6 +539,50 @@ _get_dbl_vec_from_value_(const char *value)  {
             buffer[bcnt++] = value[vcnt++];
         buffer[bcnt] = '\0';
         data.push_back(std::strtod(buffer, nullptr));
+        vcnt += 1;  // skip separator
+    }
+    return (data);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename MAP>
+inline static MAP
+_get_str_dbl_map_from_value_(const char *value)  {
+
+    using map_t = MAP;
+    using unomap_t = std::unordered_map<std::string, double>;;
+
+    std::size_t vcnt = 0;
+    char        buffer[256];
+
+    while (value[vcnt] != '{')
+        buffer[vcnt] = value[vcnt++];
+    buffer[vcnt] = '\0';
+
+    map_t       data;
+    std::size_t bcnt;
+
+    if constexpr (std::is_base_of_v<unomap_t, map_t>)
+        data.reserve(std::strtol(buffer, nullptr, 10));
+    vcnt += 1;  // skip {
+    while (value[vcnt] && value[vcnt] != '}')  {
+        bcnt = 0;
+        while (value[vcnt] != ':')
+            buffer[bcnt++] = value[vcnt++];
+        buffer[bcnt] = '\0';
+        vcnt += 1;  // skip :
+
+        std::string key = buffer;
+
+        bcnt = 0;
+        while (value[vcnt] != '|' && value[vcnt] != '}')
+            buffer[bcnt++] = value[vcnt++];
+        buffer[bcnt] = '\0';
+
+        const double    value = std::strtod(buffer, nullptr);
+
+        data.emplace(std::make_pair(std::move(key), value));
         vcnt += 1;  // skip separator
     }
     return (data);
@@ -590,6 +650,10 @@ _write_csv2_df_header_(S &o, const char *col_name, std::size_t col_size)  {
         o << "<DateTimeAME>";
     else if (typeid(T) == typeid(std::vector<double>))
         o << "<dbl_vec>";
+    else if (typeid(T) == typeid(std::map<std::string, double>))
+        o << "<str_dbl_map>";
+    else if (typeid(T) == typeid(std::unordered_map<std::string, double>))
+        o << "<str_dbl_unomap>";
     return (o);
 }
 

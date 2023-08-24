@@ -524,8 +524,10 @@ _get_dbl_vec_from_value_(const char *value)  {
     std::size_t vcnt = 0;
     char        buffer[128];
 
-    while (value[vcnt] != '[')
-        buffer[vcnt] = value[vcnt++];
+    while (value[vcnt] != '[')  {
+        buffer[vcnt] = value[vcnt];
+        vcnt += 1;
+    }
     buffer[vcnt] = '\0';
 
     vec_t       data;
@@ -556,8 +558,10 @@ _get_str_dbl_map_from_value_(const char *value)  {
     std::size_t vcnt = 0;
     char        buffer[256];
 
-    while (value[vcnt] != '{')
-        buffer[vcnt] = value[vcnt++];
+    while (value[vcnt] != '{')  {
+        buffer[vcnt] = value[vcnt];
+        vcnt += 1;
+    }
     buffer[vcnt] = '\0';
 
     map_t       data;

@@ -1006,6 +1006,14 @@ int main (int, char *[])  {
 
         std::cout << "2018-12-21 13:07:35+00 == "
                   << dt7.string_format (DT_FORMAT::ISO_DT_TM) << std::endl;
+
+        const DateTime  dt8("2018-12-21 13:07:35.123456789+00",
+                            DT_DATE_STYLE::ISO_STYLE);
+		std::string     result;
+
+        dt8.date_to_str (DT_FORMAT::ISO_DT_NANO, result);
+        std::cout << "2018-12-21 13:07:35.123456789+00 == " << result
+                  << std::endl;
     }
 
     test_priority_queue();

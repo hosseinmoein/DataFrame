@@ -59,6 +59,7 @@ enum class DT_FORMAT : unsigned short int  {
     DT_PRECISE = 11,   // e.g. 1516179600.874123908 = Epoch.Nanoseconds
     ISO_DT_TM = 12,    // e.g. 2015-05-05 13:51:04.000234
     ISO_DT = 13,       // e.g. 2015-05-05
+    ISO_DT_NANO = 14,  // e.g. 2015-05-05 13:51:04.123456789
 };
 
 // DO NOT change the values of these enums. They are offsets to an
@@ -178,21 +179,27 @@ public:
     //  (3)  MM/DD/YYYY HH
     //  (4)  MM/DD/YYYY HH:MM
     //  (5)  MM/DD/YYYY HH:MM:SS
-    //  (6)  MM/DD/YYYY HH:MM:SS.MMM
+    //  (6)  MM/DD/YYYY HH:MM:SS.MMM  // Milliseconds
+    //  (7)  MM/DD/YYYY HH:MM:SS.IIIIII  // Microseconds
+    //  (8)  MM/DD/YYYY HH:MM:SS.NNNNNNNNN  // Nanoseconds
     //
     // EUR_STYLE:
-    //  (7)  YYYY/MM/DD
-    //  (8)  YYYY/MM/DD HH
-    //  (9)  YYYY/MM/DD HH:MM
-    //  (10) YYYY/MM/DD HH:MM:SS
-    //  (11) YYYY/MM/DD HH:MM:SS.MMM
+    //  (9)  YYYY/MM/DD
+    //  (10) YYYY/MM/DD HH
+    //  (11) YYYY/MM/DD HH:MM
+    //  (12) YYYY/MM/DD HH:MM:SS
+    //  (13) YYYY/MM/DD HH:MM:SS.MMM  // Milliseconds
+    //  (14) YYYY/MM/DD HH:MM:SS.IIIIII  // Microseconds
+    //  (15) YYYY/MM/DD HH:MM:SS.NNNNNNNNN  // Nanoseconds
     //
     // ISO_STYLE:
-    //  (12) YYYY-MM-DD
-    //  (13) YYYY-MM-DD HH
-    //  (14) YYYY-MM-DD HH:MM
-    //  (15) YYYY-MM-DD HH:MM:SS
-    //  (16) YYYY-MM-DD HH:MM:SS.MMM
+    //  (16) YYYY-MM-DD
+    //  (17) YYYY-MM-DD HH
+    //  (18) YYYY-MM-DD HH:MM
+    //  (19) YYYY-MM-DD HH:MM:SS
+    //  (20) YYYY-MM-DD HH:MM:SS.MMM  // Milliseconds
+    //  (21) YYYY-MM-DD HH:MM:SS.IIIIII  // Microseconds
+    //  (22) YYYY-MM-DD HH:MM:SS.NNNNNNNNN  // Nanoseconds
     //
     HMDF_API explicit DateTime (const char *s,
                                 DT_DATE_STYLE ds = DT_DATE_STYLE::YYYYMMDD,
@@ -551,6 +558,18 @@ void DateTime::date_to_str (DT_FORMAT format, T &result) const  {
                           static_cast<int>(year()),
                           static_cast<int>(month()),
                           static_cast<int>(dmonth()));
+        } break;
+
+        case DT_FORMAT::ISO_DT_NANO:
+        {
+            buffer.printf("%d-%002d-%002d %002d:%002d:%002d.%0000000009d",
+                          static_cast<int>(year()),
+                          static_cast<int>(month()),
+                          static_cast<int>(dmonth()),
+                          static_cast<int>(hour()),
+                          static_cast<int>(minute()),
+                          static_cast<int>(sec()),
+                          static_cast<int>(nanosec()));
         } break;
 
         case DT_FORMAT::DT_DATETIME:

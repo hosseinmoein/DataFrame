@@ -266,6 +266,59 @@ private:
 
 // ----------------------------------------------------------------------------
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+template<typename S>
+struct  FirstFitAlgo : public S  {
+
+    using Base = S;
+    using size_type = Base::size_type;
+    using pointer = unsigned char *;
+
+    FirstFitAlgo() : Base()  {
+
+    }
+    ~FirstFitAlgo() = default;
+
+    // Like malloc
+    //
+    pointer get_space (size_type requested_size)  {
+
+        throw std::bad_alloc();
+    }
+
+    // Like free
+    //
+    void put_space (pointer to_be_freed, size_type n)  {
+
+        throw std::invalid_argument("FirstFitAlgo::put_space()");
+    }
+
+private:
+
+};
+
+// ----------------------------------------------------------------------------
+
+
+
+
+
+
+
+
 template<typename T, std::size_t MAX_SIZE,
          template<typename, std::size_t> typename STORAGE,
          template<typename> typename ALGO>

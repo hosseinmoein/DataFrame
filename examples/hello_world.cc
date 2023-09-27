@@ -263,7 +263,10 @@ int main(int, char *[])  {
             // "Return Vector" column is a column of std::vector<double>'s
             std::make_tuple("AAPL_Close",  "Return Vector", ReturnVisitor<double, dt_idx_t>(return_policy::log)),
             std::make_tuple("AAPL_Volume", "Volume",        SumVisitor<long, dt_idx_t>()));
-    aapl_ohlc.write<std::ostream, double, long, std::vector<double>>(std::cout, io_format::csv2);
+
+    // Big output
+    //
+    // aapl_ohlc.write<std::ostream, double, long, std::vector<double>>(std::cout, io_format::csv2);
 
     // Now let's get a view of a random sample of appel data. We randomly sample 35% of the data.
     //

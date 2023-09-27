@@ -2217,7 +2217,7 @@ static void test_read_csv_with_maps()  {
             df.get_column<map_t>("Map 1")[0]["label one 1"] - 123.0) < 0.001));
         assert((std::fabs(
             df.get_column<unomap_t>
-			("Unordered Map")[3]["Key four 3"] - 444.44) < 0.001));
+            ("Unordered Map")[3]["Key four 3"] - 444.44) < 0.001));
         assert((std::fabs(
             df.get_column<unomap_t>
                 ("Unordered Map")[0]["Key one 2"] - -782.5) < 0.001));
@@ -2225,6 +2225,83 @@ static void test_read_csv_with_maps()  {
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
     }
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_user_join_test()  {
+
+    std::cout << "\nTesting user_join_test ..." << std::endl;
+
+    using UIDF = StdDataFrame<unsigned int>;
+    using namespace std;
+
+    vector<unsigned int>    personIndex = { 0, 1 };
+    const vector<int>       personKey   = { 0, 1 };
+    const vector<string>    personName = { "Bob ", "Mary" };
+
+    vector<unsigned int>    carIndex = { 0, 1, 2 };
+    const vector<int>       carOwnerKey = { 0, 1, 1 };
+    const vector<string>    carName = { "Pinto", "Tesla", "Jeep " };
+
+    UIDF    People;
+    UIDF    Cars;
+
+    People.load_index(std::move(personIndex));
+    People.load_column("personName", personName);
+    People.load_column("key", personKey);
+
+    Cars.load_index(std::move(carIndex));
+    Cars.load_column("carName", carName);
+    Cars.load_column("key", carOwnerKey);
+
+    cout << "People ...\n";
+    People.write<ostream, string, int, unsigned int>(cout, io_format::csv2);
+
+    cout << "Cars ...\n";
+    Cars.write<ostream, string, int, unsigned int>(cout, io_format::csv2);
+
+    // This is what I would like to do ... but it does not return "Jeep"
+    //
+    cout << "Left Join ...\n";
+    People.join_by_column<decltype(Cars), int, string, int>(
+        Cars,
+        "key",
+        join_policy::left_join).write<ostream,
+                                      string,
+                                      int,
+                                      unsigned int>(cout, io_format::csv2);
+
+    // Returns "Jeep", but unmatched
+    //
+    std::cout << "Right Join ...\n";
+    People.join_by_column<decltype(Cars), int, string, int>(
+        Cars,
+        "key",
+        join_policy::right_join).write<ostream,
+                                       string,
+                                       int,
+                                       unsigned int>(cout, io_format::csv2);
+
+    // Returns "Jeep" but unmatched
+    //
+    std::cout << "Left Right Join ...\n";
+    People.join_by_column<decltype(Cars), int, string, int>(
+        Cars,
+        "key",
+        join_policy::left_right_join).write<ostream,
+                                            string,
+                                            int,
+                                            unsigned int>(cout, io_format::csv2);
+
+    std::cout << "Inner Join ...\n";
+    People.join_by_column<decltype(Cars), int, string, int>(
+        Cars,
+        "key",
+        join_policy::inner_join).write<ostream,
+                                       string,
+                                       int,
+                                       unsigned int>(cout, io_format::csv2);
 }
 
 // -----------------------------------------------------------------------------
@@ -2277,6 +2354,7 @@ int main(int, char *[]) {
     test_EaseOfMovementVisitor();
     test_read_csv_with_vector();
     test_read_csv_with_maps();
+    test_user_join_test();
 
     return (0);
 }

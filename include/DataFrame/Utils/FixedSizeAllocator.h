@@ -206,7 +206,7 @@ struct  BestFitAlgo : public S  {
             // Try to find a free block that ends where to_be_freed block starts.
             // If there is such a free block,  join it with to_be_freed block
             //
-            const auto  end_iter = free_blocks_end_.find(to_be_freed - 1);
+            const auto  end_iter = free_blocks_end_.find(to_be_freed);
             bool        found_head = false;
 
             if (end_iter != free_blocks_end_.end())  {
@@ -255,7 +255,7 @@ struct  BestFitAlgo : public S  {
 
 private:
 
-    using blk_set = std::set<MemoryBlock>;
+    using blk_set = std::multiset<MemoryBlock>;
     using blk_uoset = std::unordered_set<MemoryBlock, MemoryBlock>;
     using blk_uomap = std::unordered_map<pointer, std::size_t>;
 

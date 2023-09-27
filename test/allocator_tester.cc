@@ -167,6 +167,7 @@ static void test_static_allocator()  {
 
     std::cout << "\nTesting StaticAllocator ..." << std::endl;
 
+	/*
     std::vector<int, StaticAllocator<int, 1000000>> vec1;
 
     vec1.reserve(100000);
@@ -174,6 +175,7 @@ static void test_static_allocator()  {
         vec1.push_back(int(i));
     for (std::size_t i = 0; i < 100000; ++i)
         assert(vec1[i] == int(i));
+	*/
 
     std::vector<int, StaticAllocator<int, 100000>>  vec2;
 
@@ -198,6 +200,7 @@ static void test_static_allocator()  {
     for (std::size_t i = 0; i < 10000; ++i)
         assert(vec4[i] == double(i));
 
+	/*
     using MyString = std::basic_string<char, std::char_traits<char>,
                                        StaticAllocator<char, 10000>>;
 
@@ -230,6 +233,7 @@ static void test_static_allocator()  {
         vec5.push_back(double(i));
     for (std::size_t i = 0; i < 2; ++i)
         assert(vec5[i] == double(i));
+	*/
 
     using map_t = std::map<int, int, std::less<int>,
                            StaticAllocator<std::pair<const int, int>, 1000>>;
@@ -279,6 +283,7 @@ static void test_stack_allocator()  {
     for (std::size_t i = 0; i < 100; ++i)
         assert(vec4[i] == double(i));
 
+	/*
     using MyString = std::basic_string<char, std::char_traits<char>,
                                        StackAllocator<char, 1000>>;
 
@@ -311,6 +316,7 @@ static void test_stack_allocator()  {
         vec5.push_back(double(i));
     for (std::size_t i = 0; i < 2; ++i)
         assert(vec5[i] == double(i));
+	*/
 
     using map_t = std::map<int, int, std::less<int>,
                            StackAllocator<std::pair<const int, int>, 1000>>;

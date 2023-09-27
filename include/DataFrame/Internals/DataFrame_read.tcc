@@ -74,7 +74,7 @@ void DataFrame<I, H>::read_json_(std::istream &stream, bool columns_only)  {
                 "DataFrame::read_json_(): ERROR: Expected '\"' (1)");
         _get_token_from_file_(stream, '"', col_name);
         if (first_col && ! columns_only)  {
-            if (col_name == DF_INDEX_COL_NAME)
+            if (col_name != DF_INDEX_COL_NAME)
                 throw DataFrameError("DataFrame::read_json_(): ERROR: "
                                      "Expected column name 'INDEX'");
         }

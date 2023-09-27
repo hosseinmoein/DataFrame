@@ -323,15 +323,30 @@ DataFrame<I, H>::get_inner_index_idx_vector_(
     joined_index_idx.reserve(std::min(lhs_end, rhs_end));
     while (lhs_current != lhs_end && rhs_current != rhs_end) [[likely]] {
         if (*(col_vec_lhs[lhs_current].first) <
-                *(col_vec_rhs[rhs_current].first))
+            *(col_vec_rhs[rhs_current].first))  {
             lhs_current += 1;
+        }
         else  {
             if (*(col_vec_lhs[lhs_current].first) ==
-                    *(col_vec_rhs[rhs_current].first))
-                joined_index_idx.emplace_back(
-                    col_vec_lhs[lhs_current++].second,
-                    col_vec_rhs[rhs_current].second);
-            rhs_current += 1;
+                *(col_vec_rhs[rhs_current].first))  {
+                const auto  &prev_value = *(col_vec_lhs[lhs_current].first);
+
+                while (rhs_current < rhs_end &&
+                       *(col_vec_lhs[lhs_current].first) ==
+                       *(col_vec_rhs[rhs_current].first))  {
+                    joined_index_idx.emplace_back(
+                        col_vec_lhs[lhs_current].second,
+                        col_vec_rhs[rhs_current++].second);
+                }
+                lhs_current += 1;
+                while (lhs_current < lhs_end &&
+                       *(col_vec_lhs[lhs_current].first) == prev_value)  {
+                    joined_index_idx.emplace_back(
+                        col_vec_lhs[lhs_current++].second,
+                        col_vec_rhs[rhs_current - 1].second);
+                }
+            }
+            else  rhs_current += 1;
         }
     }
     return (joined_index_idx);
@@ -401,10 +416,25 @@ DataFrame<I, H>::get_left_index_idx_vector_(
                 std::numeric_limits<size_type>::max());
         else  {
             if (*(col_vec_lhs[lhs_current].first) ==
-                    *(col_vec_rhs[rhs_current].first))
-                joined_index_idx.emplace_back(col_vec_lhs[lhs_current++].second,
-                                              col_vec_rhs[rhs_current].second);
-            rhs_current += 1;
+                *(col_vec_rhs[rhs_current].first))  {
+                const auto  &prev_value = *(col_vec_lhs[lhs_current].first);
+
+                while (rhs_current < rhs_end &&
+                       *(col_vec_lhs[lhs_current].first) ==
+                       *(col_vec_rhs[rhs_current].first))  {
+                    joined_index_idx.emplace_back(
+                        col_vec_lhs[lhs_current].second,
+                        col_vec_rhs[rhs_current++].second);
+                }
+                lhs_current += 1;
+                while (lhs_current < lhs_end &&
+                       *(col_vec_lhs[lhs_current].first) == prev_value)  {
+                    joined_index_idx.emplace_back(
+                        col_vec_lhs[lhs_current++].second,
+                        col_vec_rhs[rhs_current - 1].second);
+                }
+            }
+            else  rhs_current += 1;
         }
     }
     return (joined_index_idx);
@@ -467,19 +497,34 @@ DataFrame<I, H>::get_right_index_idx_vector_(
         }
 
         if (*(col_vec_lhs[lhs_current].first) <
-                *(col_vec_rhs[rhs_current].first))
+            *(col_vec_rhs[rhs_current].first))  {
             lhs_current += 1;
+        }
         else  {
-            if (*(col_vec_lhs[lhs_current].first) ==
-                    *(col_vec_rhs[rhs_current].first))
-                joined_index_idx.emplace_back(
-                    col_vec_lhs[lhs_current++].second,
-                    col_vec_rhs[rhs_current].second);
-            else
+            if (*(col_vec_rhs[rhs_current].first) ==
+                *(col_vec_lhs[lhs_current].first))  {
+                const auto  &prev_value = *(col_vec_rhs[rhs_current].first);
+
+                while (lhs_current < lhs_end &&
+                       *(col_vec_rhs[rhs_current].first) ==
+                       *(col_vec_lhs[lhs_current].first))  {
+                    joined_index_idx.emplace_back(
+                        col_vec_lhs[lhs_current++].second,
+                        col_vec_rhs[rhs_current].second);
+                }
+                rhs_current += 1;
+                while (rhs_current < rhs_end &&
+                       *(col_vec_rhs[rhs_current].first) == prev_value)  {
+                    joined_index_idx.emplace_back(
+                        col_vec_lhs[lhs_current - 1].second,
+                        col_vec_rhs[rhs_current++].second);
+                }
+            }
+            else  {
                 joined_index_idx.emplace_back(
                     std::numeric_limits<size_type>::max(),
-                    col_vec_rhs[rhs_current].second);
-            rhs_current += 1;
+                    col_vec_rhs[rhs_current++].second);
+            }
         }
     }
     return (joined_index_idx);
@@ -534,35 +579,47 @@ DataFrame<I, H>::get_left_right_index_idx_vector_(
 
     joined_index_idx.reserve(std::max(lhs_end, rhs_end));
     while (lhs_current != lhs_end || rhs_current != rhs_end) [[likely]] {
-        if (lhs_current >= lhs_end && rhs_current < rhs_end) [[unlikely]]  {
+        if (lhs_current >= lhs_end && rhs_current < rhs_end)  {
             joined_index_idx.emplace_back(
                 std::numeric_limits<size_type>::max(),
                 col_vec_rhs[rhs_current++].second);
-            continue;
         }
-        if (rhs_current >= rhs_end && lhs_current < lhs_end) [[unlikely]]  {
+        else if (rhs_current >= rhs_end && lhs_current < lhs_end)  {
             joined_index_idx.emplace_back(
                 col_vec_lhs[lhs_current++].second,
                 std::numeric_limits<size_type>::max());
             continue;
         }
-
-        if (*(col_vec_lhs[lhs_current].first) <
-                *(col_vec_rhs[rhs_current].first))  {
+        else if (*(col_vec_lhs[lhs_current].first) <
+                 *(col_vec_rhs[rhs_current].first))  {
             joined_index_idx.emplace_back(
                 col_vec_lhs[lhs_current++].second,
                 std::numeric_limits<size_type>::max());
         }
         else  {
             if (*(col_vec_lhs[lhs_current].first) ==
-                    *(col_vec_rhs[rhs_current].first))
-                joined_index_idx.emplace_back(col_vec_lhs[lhs_current++].second,
-                                              col_vec_rhs[rhs_current].second);
+                *(col_vec_rhs[rhs_current].first))  {
+                const auto  &prev_value = *(col_vec_lhs[lhs_current].first);
+
+                while (rhs_current < rhs_end &&
+                       *(col_vec_lhs[lhs_current].first) ==
+                       *(col_vec_rhs[rhs_current].first))  {
+                    joined_index_idx.emplace_back(
+                        col_vec_lhs[lhs_current].second,
+                        col_vec_rhs[rhs_current++].second);
+                }
+                lhs_current += 1;
+                while (lhs_current < lhs_end &&
+                       *(col_vec_lhs[lhs_current].first) == prev_value)  {
+                    joined_index_idx.emplace_back(
+                        col_vec_lhs[lhs_current++].second,
+                        col_vec_rhs[rhs_current - 1].second);
+                }
+            }
             else
                 joined_index_idx.emplace_back(
                     std::numeric_limits<size_type>::max(),
-                    col_vec_rhs[rhs_current].second);
-            rhs_current += 1;
+                    col_vec_rhs[rhs_current++].second);
         }
     }
     return (joined_index_idx);

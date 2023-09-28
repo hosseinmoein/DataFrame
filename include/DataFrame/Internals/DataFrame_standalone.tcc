@@ -500,6 +500,7 @@ _get_token_from_file_ (std::istream &file,
 
     char    c;
 
+    value.clear();
     while (file.get(c)) [[likely]]
         if (c == delim)  {
             break;

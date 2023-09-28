@@ -60,9 +60,6 @@ void DataFrame<I, H>::read_json_(std::istream &stream, bool columns_only)  {
     std::string col_type;
     std::string token;
 
-    col_name.reserve(256);
-    col_type.reserve(256);
-    token.reserve(128);
     while (stream.get(c)) [[likely]] {
         col_name.clear();
         col_type.clear();

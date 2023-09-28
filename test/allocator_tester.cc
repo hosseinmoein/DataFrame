@@ -163,21 +163,19 @@ static void test_aligned_allocator()  {
 
 // -----------------------------------------------------------------------------
 
-static void test_static_allocator()  {
+static void test_first_fit_static_allocator()  {
 
-    std::cout << "\nTesting StaticAllocator ..." << std::endl;
+    std::cout << "\nTesting StaticFirstFitAllocator ..." << std::endl;
 
-	/*
-    std::vector<int, StaticAllocator<int, 1000000>> vec1;
+    std::vector<int, StaticFirstFitAllocator<int, 1000000>> vec1;
 
     vec1.reserve(100000);
     for (std::size_t i = 0; i < 100000; ++i)
         vec1.push_back(int(i));
     for (std::size_t i = 0; i < 100000; ++i)
         assert(vec1[i] == int(i));
-	*/
 
-    std::vector<int, StaticAllocator<int, 100000>>  vec2;
+    std::vector<int, StaticFirstFitAllocator<int, 100000>>  vec2;
 
     for (std::size_t i = 0; i < 10000; ++i)
         vec2.push_back(int(i));
@@ -185,7 +183,7 @@ static void test_static_allocator()  {
         assert(vec2[i] == int(i));
 
     {
-        std::vector<double, StaticAllocator<double, 1000000>>   vec3;
+        std::vector<double, StaticFirstFitAllocator<double, 1000000>>   vec3;
 
         for (std::size_t i = 0; i < 10000; ++i)
             vec3.push_back(double(i));
@@ -193,16 +191,15 @@ static void test_static_allocator()  {
             assert(vec3[i] == double(i));
     }
 
-    std::vector<double, StaticAllocator<double, 1000000>>   vec4;
+    std::vector<double, StaticFirstFitAllocator<double, 1000000>>   vec4;
 
     for (std::size_t i = 0; i < 10000; ++i)
         vec4.push_back(double(i));
     for (std::size_t i = 0; i < 10000; ++i)
         assert(vec4[i] == double(i));
 
-	/*
     using MyString = std::basic_string<char, std::char_traits<char>,
-                                       StaticAllocator<char, 10000>>;
+                                       StaticFirstFitAllocator<char, 10000>>;
 
     {
         MyString    str1 =
@@ -226,17 +223,17 @@ static void test_static_allocator()  {
     str3 += ". Adding more stuff";
     std::cout << str3 << std::endl;
 
-    std::vector<double, StaticAllocator<double, 1000000>>   vec5;
+    std::vector<double, StaticFirstFitAllocator<double, 1000000>>   vec5;
 
     vec5.reserve(1);
     for (std::size_t i = 0; i < 2; ++i)
         vec5.push_back(double(i));
     for (std::size_t i = 0; i < 2; ++i)
         assert(vec5[i] == double(i));
-	*/
 
-    using map_t = std::map<int, int, std::less<int>,
-                           StaticAllocator<std::pair<const int, int>, 1000>>;
+    using map_t =
+        std::map<int, int, std::less<int>,
+                 StaticFirstFitAllocator<std::pair<const int, int>, 1000>>;
 
     map_t   my_map;
 
@@ -248,11 +245,11 @@ static void test_static_allocator()  {
 
 // -----------------------------------------------------------------------------
 
-static void test_stack_allocator()  {
+static void test_first_fit_stack_allocator()  {
 
-    std::cout << "\nTesting StackAllocator ..." << std::endl;
+    std::cout << "\nTesting StackFirstFitAllocator ..." << std::endl;
 
-    std::vector<int, StackAllocator<int, 10000>>    vec1;
+    std::vector<int, StackFirstFitAllocator<int, 10000>>    vec1;
 
     vec1.reserve(1000);
     for (std::size_t i = 0; i < 1000; ++i)
@@ -260,7 +257,7 @@ static void test_stack_allocator()  {
     for (std::size_t i = 0; i < 1000; ++i)
         assert(vec1[i] == int(i));
 
-    std::vector<int, StackAllocator<int, 1000>> vec2;
+    std::vector<int, StackFirstFitAllocator<int, 1000>> vec2;
 
     for (std::size_t i = 0; i < 100; ++i)
         vec2.push_back(int(i));
@@ -268,7 +265,7 @@ static void test_stack_allocator()  {
         assert(vec2[i] == int(i));
 
     {
-        std::vector<double, StackAllocator<double, 10000>>  vec3;
+        std::vector<double, StackFirstFitAllocator<double, 10000>>  vec3;
 
         for (std::size_t i = 0; i < 100; ++i)
             vec3.push_back(double(i));
@@ -276,16 +273,15 @@ static void test_stack_allocator()  {
             assert(vec3[i] == double(i));
     }
 
-    std::vector<double, StackAllocator<double, 10000>>  vec4;
+    std::vector<double, StackFirstFitAllocator<double, 10000>>  vec4;
 
     for (std::size_t i = 0; i < 100; ++i)
         vec4.push_back(double(i));
     for (std::size_t i = 0; i < 100; ++i)
         assert(vec4[i] == double(i));
 
-	/*
     using MyString = std::basic_string<char, std::char_traits<char>,
-                                       StackAllocator<char, 1000>>;
+                                       StackFirstFitAllocator<char, 1000>>;
 
     {
         MyString    str1 =
@@ -309,17 +305,215 @@ static void test_stack_allocator()  {
     str3 += ". Adding more stuff";
     std::cout << str3 << std::endl;
 
-    std::vector<double, StackAllocator<double, 10000>>  vec5;
+    std::vector<double, StackFirstFitAllocator<double, 10000>>  vec5;
 
     vec5.reserve(1);
     for (std::size_t i = 0; i < 2; ++i)
         vec5.push_back(double(i));
     for (std::size_t i = 0; i < 2; ++i)
         assert(vec5[i] == double(i));
-	*/
 
-    using map_t = std::map<int, int, std::less<int>,
-                           StackAllocator<std::pair<const int, int>, 1000>>;
+    using map_t =
+        std::map<int, int, std::less<int>,
+                 StackFirstFitAllocator<std::pair<const int, int>, 1000>>;
+
+    map_t   my_map;
+
+    for (int i = 0; i < 1000; ++i)
+        my_map.insert({ i, i * 10 });
+    for (int i = 0; i < 1000; ++i)
+        assert((my_map.find(i)->second == i * 10));
+}
+
+// -----------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+static void test_best_fit_static_allocator()  {
+
+    std::cout << "\nTesting StaticBestFitAllocator ..." << std::endl;
+
+    std::vector<int, StaticBestFitAllocator<int, 1000000>> vec1;
+
+    vec1.reserve(100000);
+    for (std::size_t i = 0; i < 100000; ++i)
+        vec1.push_back(int(i));
+    for (std::size_t i = 0; i < 100000; ++i)
+        assert(vec1[i] == int(i));
+
+    std::vector<int, StaticBestFitAllocator<int, 100000>>  vec2;
+
+    for (std::size_t i = 0; i < 10000; ++i)
+        vec2.push_back(int(i));
+    for (std::size_t i = 0; i < 10000; ++i)
+        assert(vec2[i] == int(i));
+
+    {
+        std::vector<double, StaticBestFitAllocator<double, 1000000>>   vec3;
+
+        for (std::size_t i = 0; i < 10000; ++i)
+            vec3.push_back(double(i));
+        for (std::size_t i = 0; i < 10000; ++i)
+            assert(vec3[i] == double(i));
+    }
+
+    std::vector<double, StaticBestFitAllocator<double, 1000000>>   vec4;
+
+    for (std::size_t i = 0; i < 10000; ++i)
+        vec4.push_back(double(i));
+    for (std::size_t i = 0; i < 10000; ++i)
+        assert(vec4[i] == double(i));
+
+    using MyString = std::basic_string<char, std::char_traits<char>,
+                                       StaticBestFitAllocator<char, 10000>>;
+
+    {
+        MyString    str1 =
+            "This is the first strig xo xo xo xo xo xo xo xo xo xo xo xo xo xo";
+
+        str1 += ". Adding more stuff xo xo xo xo xo xo xo xo xo xo";
+
+        {
+            MyString    str2 =
+                "This is the second strig";
+
+            str2 += ". Again, adding more stuff wd wd wd wd wd wd wd wd wd wd";
+
+            std::cout << str2 << std::endl;
+        }
+        std::cout << str1 << std::endl;
+    }
+
+    MyString    str3 = "This is the third strig";
+
+    str3 += ". Adding more stuff";
+    std::cout << str3 << std::endl;
+
+    std::vector<double, StaticBestFitAllocator<double, 1000000>>   vec5;
+
+    vec5.reserve(1);
+    for (std::size_t i = 0; i < 2; ++i)
+        vec5.push_back(double(i));
+    for (std::size_t i = 0; i < 2; ++i)
+        assert(vec5[i] == double(i));
+
+    using map_t =
+        std::map<int, int, std::less<int>,
+                 StaticBestFitAllocator<std::pair<const int, int>, 1000>>;
+
+    map_t   my_map;
+
+    for (int i = 0; i < 1000; ++i)
+        my_map.insert({ i, i * 10 });
+    for (int i = 0; i < 1000; ++i)
+        assert((my_map.find(i)->second == i * 10));
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_best_fit_stack_allocator()  {
+
+    std::cout << "\nTesting StackBestFitAllocator ..." << std::endl;
+
+    std::vector<int, StackBestFitAllocator<int, 10000>>    vec1;
+
+    vec1.reserve(1000);
+    for (std::size_t i = 0; i < 1000; ++i)
+        vec1.push_back(int(i));
+    for (std::size_t i = 0; i < 1000; ++i)
+        assert(vec1[i] == int(i));
+
+    std::vector<int, StackBestFitAllocator<int, 1000>> vec2;
+
+    for (std::size_t i = 0; i < 100; ++i)
+        vec2.push_back(int(i));
+    for (std::size_t i = 0; i < 100; ++i)
+        assert(vec2[i] == int(i));
+
+    {
+        std::vector<double, StackBestFitAllocator<double, 10000>>  vec3;
+
+        for (std::size_t i = 0; i < 100; ++i)
+            vec3.push_back(double(i));
+        for (std::size_t i = 0; i < 100; ++i)
+            assert(vec3[i] == double(i));
+    }
+
+    std::vector<double, StackBestFitAllocator<double, 10000>>  vec4;
+
+    for (std::size_t i = 0; i < 100; ++i)
+        vec4.push_back(double(i));
+    for (std::size_t i = 0; i < 100; ++i)
+        assert(vec4[i] == double(i));
+
+    using MyString = std::basic_string<char, std::char_traits<char>,
+                                       StackBestFitAllocator<char, 1000>>;
+
+    {
+        MyString    str1 =
+            "This is the first strig xo xo xo xo xo xo xo xo xo xo xo xo xo xo";
+
+        str1 += ". Adding more stuff xo xo xo xo xo xo xo xo xo xo";
+
+        {
+            MyString    str2 =
+                "This is the second strig";
+
+            str2 += ". Again, adding more stuff wd wd wd wd wd wd wd wd wd wd";
+
+            std::cout << str2 << std::endl;
+        }
+        std::cout << str1 << std::endl;
+    }
+
+    MyString    str3 = "This is the third strig";
+
+    str3 += ". Adding more stuff";
+    std::cout << str3 << std::endl;
+
+    std::vector<double, StackBestFitAllocator<double, 10000>>  vec5;
+
+    vec5.reserve(1);
+    for (std::size_t i = 0; i < 2; ++i)
+        vec5.push_back(double(i));
+    for (std::size_t i = 0; i < 2; ++i)
+        assert(vec5[i] == double(i));
+
+    using map_t =
+        std::map<int, int, std::less<int>,
+                 StackBestFitAllocator<std::pair<const int, int>, 1000>>;
 
     map_t   my_map;
 
@@ -334,8 +528,10 @@ static void test_stack_allocator()  {
 int main(int, char *[]) {
 
     test_aligned_allocator();
-    test_static_allocator();
-    test_stack_allocator();
+    test_first_fit_static_allocator();
+    test_first_fit_stack_allocator();
+    test_best_fit_static_allocator();
+    test_best_fit_stack_allocator();
 
     return (0);
 }

@@ -36,6 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iterator>
 #include <new>
 #include <set>
+#include <type_traits>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -51,6 +52,7 @@ struct  StaticStorage  {
     using size_type = std::size_t;
 
     inline static constexpr size_type   max_size = MAX_SIZE;
+    inline static constexpr bool        is_static = true;
 
     StaticStorage() = default;
     StaticStorage(const StaticStorage &) = delete;
@@ -75,6 +77,7 @@ struct  StackStorage  {
     using size_type = std::size_t;
 
     inline static constexpr size_type   max_size = MAX_SIZE;
+    inline static constexpr bool        is_static = false;
 
     StackStorage() = default;
     StackStorage(const StackStorage &) = delete;
@@ -92,7 +95,7 @@ struct  StackStorage  {
 
 // ----------------------------------------------------------------------------
 
-struct  MemoryBlock  {
+struct  BestFitMemoryBlock  {
 
     using value_type = unsigned char *;
     using size_type = std::size_t;
@@ -105,23 +108,23 @@ struct  MemoryBlock  {
 
     // Hash function
     //
-    size_type operator() (const MemoryBlock &mb) const  {
+    size_type operator() (const BestFitMemoryBlock &mb) const  {
 
         return (std::hash<value_type>{ }(mb.address));
     }
 
     inline friend bool
-    operator < (const MemoryBlock &lhs, const MemoryBlock &rhs)  {
+    operator < (const BestFitMemoryBlock &lhs, const BestFitMemoryBlock &rhs)  {
 
         return (lhs.size < rhs.size);
     }
     inline friend bool
-    operator > (const MemoryBlock &lhs, const MemoryBlock &rhs)  {
+    operator > (const BestFitMemoryBlock &lhs, const BestFitMemoryBlock &rhs)  {
 
         return (lhs.size > rhs.size);
     }
     inline friend bool
-    operator == (const MemoryBlock &lhs, const MemoryBlock &rhs)  {
+    operator == (const BestFitMemoryBlock &lhs, const BestFitMemoryBlock &rhs)  {
 
         return (lhs.address == rhs.address);
     }
@@ -193,7 +196,7 @@ struct  BestFitAlgo : public S  {
                 if (tail_block->address == tail_ptr)  {
                     const size_type     new_len =
                         used_iter->size + tail_block->size;
-                    const MemoryBlock   to_insert { to_be_freed, new_len };
+                    const BestFitMemoryBlock to_insert { to_be_freed, new_len };
 
                     free_blocks_start_.erase(tail_block);
                     free_blocks_start_.insert(to_insert);
@@ -255,8 +258,8 @@ struct  BestFitAlgo : public S  {
 
 private:
 
-    using blk_set = std::multiset<MemoryBlock>;
-    using blk_uoset = std::unordered_set<MemoryBlock, MemoryBlock>;
+    using blk_set = std::multiset<BestFitMemoryBlock>;
+    using blk_uoset = std::unordered_set<BestFitMemoryBlock, BestFitMemoryBlock>;
     using blk_uomap = std::unordered_map<pointer, std::size_t>;
 
     blk_set     free_blocks_start_ { };  // Pointres to free block beginnings.
@@ -266,58 +269,138 @@ private:
 
 // ----------------------------------------------------------------------------
 
+template<typename T, std::size_t MAX_SIZE>
+struct  FirstFitStaticBase : public StaticStorage<T, MAX_SIZE>  {
 
+    using Base = StaticStorage<T, MAX_SIZE>;
+    using value_type = Base::value_type;
+    using size_type = Base::size_type;
 
+    inline static constexpr unsigned char   FREE_ { 0 };
+    inline static constexpr unsigned char   USED_ { 1 };
+    inline static constexpr std::size_t     max_size = MAX_SIZE;
 
+    // The bitmap to indicate which slots are in use.
+    //
+    alignas(64)
+    inline static unsigned char in_use_[MAX_SIZE];
 
+    // Pointer to the first free slot.
+    //
+    alignas(value_type *)
+    inline static unsigned char *first_free_ptr_ { in_use_ };
 
+    FirstFitStaticBase() : Base()  {
 
+        // This is guaranteed to execute only once even in multithreading
+        //
+        [[maybe_unused]] static auto    slug = std::invoke([]() -> int  {
+            std::memset(in_use_, FREE_, MAX_SIZE);
+            return (0);
+        });
+    }
+};
 
+// ----------------------------------------------------------------------------
 
+template<typename T, std::size_t MAX_SIZE>
+struct  FirstFitStackBase : public StackStorage<T, MAX_SIZE>  {
 
+    using Base = StackStorage<T, MAX_SIZE>;
+    using value_type = Base::value_type;
+    using size_type = Base::size_type;
 
+    inline static constexpr unsigned char   FREE_ { 0 };
+    inline static constexpr unsigned char   USED_ { 1 };
+    inline static constexpr std::size_t     max_size = MAX_SIZE;
 
+    // The bitmap to indicate which slots are in use.
+    //
+    alignas(64)
+    unsigned char in_use_[MAX_SIZE];
 
+    // Pointer to the first free slot.
+    //
+    alignas(value_type *)
+    unsigned char *first_free_ptr_ { in_use_ };
 
+    FirstFitStackBase() : Base()  { std::memset(in_use_, FREE_, MAX_SIZE); }
+};
+
+// ----------------------------------------------------------------------------
 
 template<typename S>
 struct  FirstFitAlgo : public S  {
 
     using Base = S;
+    using value_type = Base::value_type;
     using size_type = Base::size_type;
     using pointer = unsigned char *;
 
-    FirstFitAlgo() : Base()  {
-
-    }
+    FirstFitAlgo() : Base()  {  }
     ~FirstFitAlgo() = default;
 
     // Like malloc
     //
     pointer get_space (size_type requested_size)  {
 
-        throw std::bad_alloc();
+        // Pointers to the "in use" bitmap.
+        //
+        unsigned char           *first_ptr = Base::first_free_ptr_;
+        unsigned char *const    end_ptr = &(Base::in_use_[Base::max_size]);
+        const size_type         n_items = requested_size / sizeof(value_type);
+
+        // Find first fit allocation algorithm, starting from the first
+        // free slot.
+        // Search for a big enough range of free slots.
+        //
+        first_ptr = std::search_n(first_ptr, end_ptr, n_items, Base::FREE_);
+
+        // Not enough space found?
+        //
+        if (first_ptr == end_ptr)
+            throw std::bad_alloc();
+
+        // Mark the range as used
+        //
+        std::memset(first_ptr, Base::USED_, n_items);
+
+        // Update the "first free" pointer if necessary.
+        //
+        if (first_ptr == Base::first_free_ptr_) // Find the next free slot
+            Base::first_free_ptr_ =
+                std::find(first_ptr + n_items, end_ptr, Base::FREE_);
+
+        // Return the memory allocation.
+        //
+        const size_type offset =
+            std::distance(Base::in_use_, first_ptr) * sizeof(value_type);
+
+        return (&(Base::buffer_[offset]));
     }
 
     // Like free
     //
-    void put_space (pointer to_be_freed, size_type n)  {
+    void put_space (pointer to_be_freed, size_type space_size)  {
 
-        throw std::invalid_argument("FirstFitAlgo::put_space()");
+        // Find the start of the range.
+        //
+        const size_type index =  // Find the start of the range.
+            std::distance(Base::buffer_, to_be_freed) / sizeof(value_type);
+        unsigned char   *first_ptr = &(Base::in_use_[index]);
+
+        // Mark the range as free.
+        //
+        std::memset(first_ptr, Base::FREE_, space_size / sizeof(value_type));
+
+        // Update the "first free" pointer if necessary.
+        //
+        if (first_ptr < Base::first_free_ptr_)
+            Base::first_free_ptr_ = first_ptr;
     }
-
-private:
-
 };
 
 // ----------------------------------------------------------------------------
-
-
-
-
-
-
-
 
 template<typename T, std::size_t MAX_SIZE,
          template<typename, std::size_t> typename STORAGE,
@@ -430,12 +513,20 @@ public:
 // ----------------------------------------------------------------------------
 
 template<typename T, std::size_t MAX_SIZE>
-using StaticAllocator =
+using StaticBestFitAllocator =
     FixedSizeAllocator<T, MAX_SIZE, StaticStorage, BestFitAlgo>;
 
 template<typename T, std::size_t MAX_SIZE>
-using StackAllocator =
+using StackBestFitAllocator =
     FixedSizeAllocator<T, MAX_SIZE, StackStorage, BestFitAlgo>;
+
+template<typename T, std::size_t MAX_SIZE>
+using StaticFirstFitAllocator =
+    FixedSizeAllocator<T, MAX_SIZE, FirstFitStaticBase, FirstFitAlgo>;
+
+template<typename T, std::size_t MAX_SIZE>
+using StackFirstFitAllocator =
+    FixedSizeAllocator<T, MAX_SIZE, FirstFitStackBase, FirstFitAlgo>;
 
 } // namespace std
 

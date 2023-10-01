@@ -51,7 +51,7 @@ struct  StaticStorage  {
     using value_type = T;
     using size_type = std::size_t;
 
-    inline static constexpr size_type   max_size = MAX_SIZE;
+    inline static constexpr size_type   max_size = MAX_SIZE * sizeof(value_type);
     inline static constexpr bool        is_static = true;
 
     StaticStorage() = default;
@@ -65,7 +65,7 @@ struct  StaticStorage  {
     // Main allocation space
     //
     alignas(value_type[])
-    inline static unsigned char buffer_[MAX_SIZE * sizeof(value_type)];
+    inline static unsigned char buffer_[max_size];
 };
 
 // ----------------------------------------------------------------------------
@@ -76,7 +76,7 @@ struct  StackStorage  {
     using value_type = T;
     using size_type = std::size_t;
 
-    inline static constexpr size_type   max_size = MAX_SIZE;
+    inline static constexpr size_type   max_size = MAX_SIZE * sizeof(value_type);
     inline static constexpr bool        is_static = false;
 
     StackStorage() = default;
@@ -90,7 +90,7 @@ struct  StackStorage  {
     // Main allocation space
     //
     alignas(value_type[])
-    unsigned char buffer_[MAX_SIZE * sizeof(value_type)];
+    unsigned char buffer_[max_size];
 };
 
 // ----------------------------------------------------------------------------
@@ -149,7 +149,8 @@ struct  BestFitAlgo : public S  {
 
     // Like malloc
     //
-    pointer get_space (size_type requested_size)  {
+    [[nodiscard]] pointer
+    get_space (size_type requested_size)  {
 
         for (auto iter = free_blocks_start_.begin();
              iter != free_blocks_start_.end();
@@ -179,7 +180,8 @@ struct  BestFitAlgo : public S  {
 
     // Like free
     //
-    void put_space (pointer to_be_freed, size_type)  {
+    void
+    put_space (pointer to_be_freed, size_type)  {
 
         auto    used_iter = used_blocks_.find({ to_be_freed, 0 });
 
@@ -237,7 +239,7 @@ struct  BestFitAlgo : public S  {
             }
 
             // If we could not join with any other adjacent free blocks,
-            // process it as stand alone
+            // process it as a stand alone
             //
             if (! (found_tail || found_head))  {
                 const pointer   end_address =
@@ -252,19 +254,21 @@ struct  BestFitAlgo : public S  {
             //
             used_blocks_.erase(used_iter);
         }
-        else  // This is undefined behavior in delete operator
-            throw std::invalid_argument("BestFitAlgo::put_space()");
+        // else  // This is undefined behavior in delete operator
+        //     throw std::invalid_argument("BestFitAlgo::put_space()");
     }
 
 private:
 
+    // It is based on size, so it must be multi-set
+    //
     using blk_set = std::multiset<BestFitMemoryBlock>;
     using blk_uoset = std::unordered_set<BestFitMemoryBlock, BestFitMemoryBlock>;
     using blk_uomap = std::unordered_map<pointer, std::size_t>;
 
     blk_set     free_blocks_start_ { };  // Pointres to free block beginnings.
     blk_uomap   free_blocks_end_ { };    // Pointres to free block ends.
-    blk_uoset   used_blocks_ { };        // Used blocks
+    blk_uoset   used_blocks_ { };        // Set of used blocks
 };
 
 // ----------------------------------------------------------------------------
@@ -282,7 +286,7 @@ struct  FirstFitStaticBase : public StaticStorage<T, MAX_SIZE>  {
 
     // The bitmap to indicate which slots are in use.
     //
-    alignas(64)
+    alignas(value_type[])
     inline static unsigned char in_use_[MAX_SIZE];
 
     // Pointer to the first free slot.
@@ -316,7 +320,7 @@ struct  FirstFitStackBase : public StackStorage<T, MAX_SIZE>  {
 
     // The bitmap to indicate which slots are in use.
     //
-    alignas(64)
+    alignas(value_type[])
     unsigned char in_use_[MAX_SIZE];
 
     // Pointer to the first free slot.
@@ -342,7 +346,8 @@ struct  FirstFitAlgo : public S  {
 
     // Like malloc
     //
-    pointer get_space (size_type requested_size)  {
+    [[nodiscard]] pointer
+    get_space (size_type requested_size)  {
 
         // Pointers to the "in use" bitmap.
         //
@@ -381,7 +386,8 @@ struct  FirstFitAlgo : public S  {
 
     // Like free
     //
-    void put_space (pointer to_be_freed, size_type space_size)  {
+    void
+    put_space (pointer to_be_freed, size_type space_size)  {
 
         // Find the start of the range.
         //
@@ -512,18 +518,26 @@ public:
 
 // ----------------------------------------------------------------------------
 
+// This is slower than first-fit, but it causes a lot less fragmentations.
+//
 template<typename T, std::size_t MAX_SIZE>
 using StaticBestFitAllocator =
     FixedSizeAllocator<T, MAX_SIZE, StaticStorage, BestFitAlgo>;
 
+// This is slower than first-fit, but it causes a lot less fragmentations.
+//
 template<typename T, std::size_t MAX_SIZE>
 using StackBestFitAllocator =
     FixedSizeAllocator<T, MAX_SIZE, StackStorage, BestFitAlgo>;
 
+// This is faster than best-fit, but it causes more fragmentations.
+//
 template<typename T, std::size_t MAX_SIZE>
 using StaticFirstFitAllocator =
     FixedSizeAllocator<T, MAX_SIZE, FirstFitStaticBase, FirstFitAlgo>;
 
+// This is faster than best-fit, but it causes more fragmentations.
+//
 template<typename T, std::size_t MAX_SIZE>
 using StackFirstFitAllocator =
     FixedSizeAllocator<T, MAX_SIZE, FirstFitStackBase, FirstFitAlgo>;

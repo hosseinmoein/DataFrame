@@ -28,9 +28,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/Utils/AlignedAllocator.h>
 #include <DataFrame/Utils/FixedSizeAllocator.h>
 
+#include <algorithm>
 #include <cassert>
+#include <cstdlib>
 #include <iostream>
 #include <map>
+#include <random>
 #include <string>
 #include <vector>
 
@@ -241,6 +244,35 @@ static void test_first_fit_static_allocator()  {
         my_map.insert({ i, i * 10 });
     for (int i = 0; i < 1000; ++i)
         assert((my_map.find(i)->second == i * 10));
+
+    FirstFitAlgo<FirstFitStaticBase<int, 10000>>            allocator;
+    std::vector<std::pair<unsigned char *, std::size_t>>    ptr_vec;
+    std::mt19937                                            gen { 98 };
+
+    std::srand(98);
+    for (std::size_t i = 0; i < 1000; ++i)  {
+        for (std::size_t j = 0; j < 10; ++j)  {
+            const std::size_t   size = (std::rand() % 100) * sizeof(int);
+            const auto          ptr = allocator.get_space(size);
+
+            ptr_vec.push_back(std::make_pair(ptr, size));
+        }
+
+        std::shuffle(ptr_vec.begin(), ptr_vec.end(), gen);
+
+        if ((i % 10) == 0)  {
+            for (std::size_t w = 0; w < (ptr_vec.size() / 3); ++w)
+               allocator.put_space(ptr_vec[w].first, ptr_vec[w].second);
+            ptr_vec.erase(ptr_vec.begin(),
+                          ptr_vec.begin() + (ptr_vec.size() / 3));
+        }
+        else  {
+            for (std::size_t w = 0; w < (ptr_vec.size() / 2); ++w)
+               allocator.put_space(ptr_vec[w].first, ptr_vec[w].second);
+            ptr_vec.erase(ptr_vec.begin(),
+                          ptr_vec.begin() + (ptr_vec.size() / 2));
+        }
+    }
 }
 
 // -----------------------------------------------------------------------------
@@ -327,40 +359,6 @@ static void test_first_fit_stack_allocator()  {
 
 // -----------------------------------------------------------------------------
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 static void test_best_fit_static_allocator()  {
 
     std::cout << "\nTesting StaticBestFitAllocator ..." << std::endl;
@@ -439,6 +437,35 @@ static void test_best_fit_static_allocator()  {
         my_map.insert({ i, i * 10 });
     for (int i = 0; i < 1000; ++i)
         assert((my_map.find(i)->second == i * 10));
+
+    BestFitAlgo<StaticStorage<int, 10000>>                  allocator;
+    std::vector<std::pair<unsigned char *, std::size_t>>    ptr_vec;
+    std::mt19937                                            gen { 98 };
+
+    std::srand(98);
+    for (std::size_t i = 0; i < 10000; ++i)  {
+        for (std::size_t j = 0; j < 100; ++j)  {
+            const std::size_t   size = (std::rand() % 100) * sizeof(int);
+            const auto          ptr = allocator.get_space(size);
+
+            ptr_vec.push_back(std::make_pair(ptr, size));
+        }
+
+        std::shuffle(ptr_vec.begin(), ptr_vec.end(), gen);
+
+        if ((i % 10) == 0)  {
+            for (std::size_t w = 0; w < (ptr_vec.size() / 3); ++w)
+               allocator.put_space(ptr_vec[w].first, ptr_vec[w].second);
+            ptr_vec.erase(ptr_vec.begin(),
+                          ptr_vec.begin() + (ptr_vec.size() / 3));
+        }
+        else  {
+            for (std::size_t w = 0; w < (ptr_vec.size() / 2); ++w)
+               allocator.put_space(ptr_vec[w].first, ptr_vec[w].second);
+            ptr_vec.erase(ptr_vec.begin(),
+                          ptr_vec.begin() + (ptr_vec.size() / 2));
+        }
+    }
 }
 
 // -----------------------------------------------------------------------------

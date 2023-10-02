@@ -245,6 +245,8 @@ static void test_first_fit_static_allocator()  {
     for (int i = 0; i < 1000; ++i)
         assert((my_map.find(i)->second == i * 10));
 
+    // Test how badly it fragments the memory
+    //
     FirstFitAlgo<FirstFitStaticBase<int, 10000>>            allocator;
     std::vector<std::pair<unsigned char *, std::size_t>>    ptr_vec;
     std::mt19937                                            gen { 98 };
@@ -438,6 +440,8 @@ static void test_best_fit_static_allocator()  {
     for (int i = 0; i < 1000; ++i)
         assert((my_map.find(i)->second == i * 10));
 
+    // Test how badly it fragments the memory
+    //
     BestFitAlgo<StaticStorage<int, 10000>>                  allocator;
     std::vector<std::pair<unsigned char *, std::size_t>>    ptr_vec;
     std::mt19937                                            gen { 98 };

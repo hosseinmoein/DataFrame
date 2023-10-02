@@ -29,7 +29,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
 
-#include <iostream>
 #include <algorithm>
 #include <cstring>
 #include <functional>
@@ -51,7 +50,8 @@ struct  StaticStorage  {
     using value_type = T;
     using size_type = std::size_t;
 
-    inline static constexpr size_type   max_size = MAX_SIZE * sizeof(value_type);
+    inline static constexpr size_type   max_size =
+        MAX_SIZE * sizeof(value_type);
     inline static constexpr bool        is_static = true;
 
     StaticStorage() = default;
@@ -76,7 +76,8 @@ struct  StackStorage  {
     using value_type = T;
     using size_type = std::size_t;
 
-    inline static constexpr size_type   max_size = MAX_SIZE * sizeof(value_type);
+    inline static constexpr size_type   max_size =
+        MAX_SIZE * sizeof(value_type);
     inline static constexpr bool        is_static = false;
 
     StackStorage() = default;
@@ -103,28 +104,34 @@ struct  BestFitMemoryBlock  {
     value_type  address { nullptr };
     size_type   size { 0 };
 
-    value_type get_end() const  { return (address + size); }
-    value_type get_start() const  { return (address - size); }
+    inline value_type
+    get_end() const  { return (address + size); }
+    inline value_type
+    get_start() const  { return (address - size); }
 
     // Hash function
     //
-    size_type operator() (const BestFitMemoryBlock &mb) const  {
+    inline size_type
+    operator() (const BestFitMemoryBlock &mb) const  {
 
         return (std::hash<value_type>{ }(mb.address));
     }
 
     inline friend bool
-    operator < (const BestFitMemoryBlock &lhs, const BestFitMemoryBlock &rhs)  {
+    operator < (const BestFitMemoryBlock &lhs,
+                const BestFitMemoryBlock &rhs)  {
 
         return (lhs.size < rhs.size);
     }
     inline friend bool
-    operator > (const BestFitMemoryBlock &lhs, const BestFitMemoryBlock &rhs)  {
+    operator > (const BestFitMemoryBlock &lhs,
+                const BestFitMemoryBlock &rhs)  {
 
         return (lhs.size > rhs.size);
     }
     inline friend bool
-    operator == (const BestFitMemoryBlock &lhs, const BestFitMemoryBlock &rhs)  {
+    operator == (const BestFitMemoryBlock &lhs,
+                 const BestFitMemoryBlock &rhs)  {
 
         return (lhs.address == rhs.address);
     }
@@ -132,7 +139,7 @@ struct  BestFitMemoryBlock  {
 
 // ----------------------------------------------------------------------------
 
-template<typename S>
+template<typename S>  // Storage class
 struct  BestFitAlgo : public S  {
 
     using Base = S;
@@ -142,6 +149,8 @@ struct  BestFitAlgo : public S  {
     BestFitAlgo() : Base()  {
 
         free_blocks_start_.insert({ Base::buffer_, Base::max_size });
+        free_blocks_assist_.insert(
+            std::make_pair(Base::buffer_, free_blocks_start_.begin()));
         free_blocks_end_.insert(std::make_pair(Base::buffer_ + Base::max_size,
                                                Base::max_size));
     }
@@ -152,28 +161,31 @@ struct  BestFitAlgo : public S  {
     [[nodiscard]] pointer
     get_space (size_type requested_size)  {
 
-        for (auto iter = free_blocks_start_.begin();
-             iter != free_blocks_start_.end();
-             ++iter)  {
-            if (iter->size >= requested_size)  {
-                auto    found_end = iter->get_end();
+        auto    free_iter =
+            free_blocks_start_.lower_bound({ nullptr, requested_size });
 
-                if (iter->size > requested_size)  {
-                    auto    remaining = iter->size - requested_size;
-                    auto    new_address = iter->address + requested_size;
+        if (free_iter != free_blocks_start_.end())  {
+            auto    found_end = free_iter->get_end();
 
+            if (free_iter->size > requested_size)  {
+                auto        remaining = free_iter->size - requested_size;
+                auto        new_address = free_iter->address + requested_size;
+                const auto  insert_ret =
                     free_blocks_start_.insert({ new_address, remaining });
-                    free_blocks_end_[found_end] = remaining;
-                }
-                else  // Exact size match
-                    free_blocks_end_.erase(found_end);
 
-                auto    ret = iter->address;
-
-                free_blocks_start_.erase(iter);
-                used_blocks_.insert({ ret, requested_size });
-                return (ret);
+                free_blocks_assist_.insert(
+                    std::make_pair(new_address, insert_ret));
+                free_blocks_end_[found_end] = remaining;
             }
+            else  // Exact size match
+                free_blocks_end_.erase(found_end);
+
+            auto    ret = free_iter->address;
+
+            free_blocks_assist_.erase(free_iter->address);
+            free_blocks_start_.erase(free_iter);
+            used_blocks_.insert({ ret, requested_size });
+            return (ret);
         }
         throw std::bad_alloc();
     }
@@ -188,53 +200,58 @@ struct  BestFitAlgo : public S  {
         if (used_iter != used_blocks_.end())  {
             const pointer   tail_ptr = to_be_freed + used_iter->size;
             bool            found_tail = false;
+            const auto      tail_block = free_blocks_assist_.find(tail_ptr);
 
-            // Try to find a free block that starts where to_be_freed block ends.
-            // If there is such a free block,  join it with to_be_freed block
+            // Try to find a free block that starts where to_be_freed block
+            // ends. If there is such a free block,  join it with to_be_freed
+            // block
             //
-            for (auto tail_block = free_blocks_start_.begin();
-                 tail_block != free_blocks_start_.end();
-                 ++tail_block)  {
-                if (tail_block->address == tail_ptr)  {
-                    const size_type     new_len =
-                        used_iter->size + tail_block->size;
-                    const BestFitMemoryBlock to_insert { to_be_freed, new_len };
+            if (tail_block != free_blocks_assist_.end())  {
+                const size_type     new_len =
+                    used_iter->size + tail_block->second->size;
+                const BestFitMemoryBlock to_insert { to_be_freed, new_len };
 
-                    free_blocks_start_.erase(tail_block);
-                    free_blocks_start_.insert(to_insert);
-                    free_blocks_end_[to_insert.get_end()] = new_len;
-                    found_tail = true;
-                    break;
-                }
+                free_blocks_start_.erase(tail_block->second);
+                free_blocks_assist_.erase(tail_block);
+
+                const auto  insert_ret = free_blocks_start_.insert(to_insert);
+
+                free_blocks_assist_.insert(
+                    std::make_pair(to_be_freed, insert_ret));
+                free_blocks_end_[to_insert.get_end()] = new_len;
+                found_tail = true;
             }
 
-            // Try to find a free block that ends where to_be_freed block starts.
-            // If there is such a free block,  join it with to_be_freed block
+            // Try to find a free block that ends where to_be_freed block
+            // starts. If there is such a free block,  join it with to_be_freed
+            // block
             //
             const auto  end_iter = free_blocks_end_.find(to_be_freed);
             bool        found_head = false;
 
             if (end_iter != free_blocks_end_.end())  {
-                const pointer   head_address =
+                const pointer   head_ptr =
                     end_iter->first - end_iter->second;
+                const auto      head_block = free_blocks_assist_.find(head_ptr);
 
-                for (auto head_block = free_blocks_start_.begin();
-                     head_block != free_blocks_start_.end();
-                     ++head_block)  {
-                    if (head_block->address == head_address)  {
-                        const size_type new_len =
-                            used_iter->size + head_block->size;
-                        const auto      new_head = head_block->address;
-                        const auto      new_end =
-                            end_iter->first + used_iter->size;
+                if (head_block != free_blocks_assist_.end())  {
+                    const size_type new_len =
+                        used_iter->size + head_block->second->size;
+                    const auto      new_head = head_block->second->address;
+                    const auto      new_end =
+                        end_iter->first + used_iter->size;
 
-                        free_blocks_start_.erase(head_block);
+                    free_blocks_start_.erase(head_block->second);
+                    free_blocks_assist_.erase(head_block);
+
+                    const auto  insert_ret =
                         free_blocks_start_.insert({ new_head, new_len });
-                        free_blocks_end_.erase(end_iter);
-                        free_blocks_end_[new_end] = new_len;
-                        found_head = true;
-                        break;
-                    }
+
+                    free_blocks_assist_.insert(
+                        std::make_pair(new_head, insert_ret));
+                    free_blocks_end_.erase(end_iter);
+                    free_blocks_end_[new_end] = new_len;
+                    found_head = true;
                 }
             }
 
@@ -244,9 +261,12 @@ struct  BestFitAlgo : public S  {
             if (! (found_tail || found_head))  {
                 const pointer   end_address =
                     used_iter->address + used_iter->size;
+                const auto      insert_ret =
+                    free_blocks_start_.insert(
+                        { used_iter->address, used_iter->size });
 
-                free_blocks_start_.insert(
-                    { used_iter->address, used_iter->size });
+                free_blocks_assist_.insert(
+                    std::make_pair(used_iter->address, insert_ret));
                 free_blocks_end_[end_address] = used_iter->size;
             }
 
@@ -263,12 +283,29 @@ private:
     // It is based on size, so it must be multi-set
     //
     using blk_set = std::multiset<BestFitMemoryBlock>;
-    using blk_uoset = std::unordered_set<BestFitMemoryBlock, BestFitMemoryBlock>;
+    using blk_uoset =
+        std::unordered_set<BestFitMemoryBlock, BestFitMemoryBlock>;
     using blk_uomap = std::unordered_map<pointer, std::size_t>;
+    using blk_assist = std::unordered_map<pointer, blk_set::const_iterator>;
 
-    blk_set     free_blocks_start_ { };  // Pointres to free block beginnings.
-    blk_uomap   free_blocks_end_ { };    // Pointres to free block ends.
-    blk_uoset   used_blocks_ { };        // Set of used blocks
+    // Set of free blocks, keyed by size of the block. There could be multiple
+    // blocks with the same size.
+    //
+    blk_set     free_blocks_start_ { };
+
+    // Map of free blocks to size, keyed by the pointer to the end of the block.
+    //
+    blk_uomap   free_blocks_end_ { };
+
+    // Hash set of used blocks, keyed by the pointer to the beginning of
+    // the block.
+    //
+    blk_uoset   used_blocks_ { };
+
+    // Map of free blocks to iterators of free_blocks_start_, keyed pointers
+    // to the beginning of free blocks
+    //
+    blk_assist  free_blocks_assist_ { };
 };
 
 // ----------------------------------------------------------------------------
@@ -333,7 +370,7 @@ struct  FirstFitStackBase : public StackStorage<T, MAX_SIZE>  {
 
 // ----------------------------------------------------------------------------
 
-template<typename S>
+template<typename S>  // Storage class
 struct  FirstFitAlgo : public S  {
 
     using Base = S;

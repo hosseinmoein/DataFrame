@@ -179,35 +179,7 @@ DataFrame<I, H>::print_csv_functor_<Ts ...>::operator() (const T &vec)  {
     using VecType = typename std::remove_reference<T>::type;
     using ValueType = typename VecType::value_type;
 
-    os << name << ':' << vec.size() << ':';
-    if (typeid(ValueType) == typeid(float))
-        os << "<float>:";
-    else if (typeid(ValueType) == typeid(double)) [[likely]]
-        os << "<double>:";
-    else if (typeid(ValueType) == typeid(short int))
-        os << "<short>:";
-    else if (typeid(ValueType) == typeid(unsigned short int))
-        os << "<ushort>:";
-    else if (typeid(ValueType) == typeid(int)) [[likely]]
-        os << "<int>:";
-    else if (typeid(ValueType) == typeid(unsigned int))
-        os << "<uint>:";
-    else if (typeid(ValueType) == typeid(long int))
-        os << "<long>:";
-    else if (typeid(ValueType) == typeid(long long int))
-        os << "<longlong>:";
-    else if (typeid(ValueType) == typeid(unsigned long int))
-        os << "<ulong>:";
-    else if (typeid(ValueType) == typeid(unsigned long long int))
-        os << "<ulonglong>:";
-    else if (typeid(ValueType) == typeid(std::string))
-        os << "<string>:";
-    else if (typeid(ValueType) == typeid(bool))
-        os << "<bool>:";
-    else if (typeid(ValueType) == typeid(DateTime))
-        os << "<DateTime>:";
-    else
-        os << "<N/A>:";
+    _write_csv_df_header_<std::ostream, ValueType>(os, name, vec.size()) << ':';
 
     const long  vec_size = vec.size();
     const long  sr = std::min(start_row, vec_size);
@@ -238,35 +210,7 @@ DataFrame<I, H>::print_json_functor_<Ts ...>::operator() (const T &vec)  {
     if (need_pre_comma)
         os << ",\n";
 
-    os << '"' << name << "\":{\"N\":" << vec.size() << ',';
-    if (typeid(ValueType) == typeid(float))
-        os << "\"T\":\"float\",";
-    else if (typeid(ValueType) == typeid(double)) [[likely]]
-        os << "\"T\":\"double\",";
-    else if (typeid(ValueType) == typeid(short int))
-        os << "\"T\":\"short\",";
-    else if (typeid(ValueType) == typeid(unsigned short int))
-        os << "\"T\":\"ushort\",";
-    else if (typeid(ValueType) == typeid(int)) [[likely]]
-        os << "\"T\":\"int\",";
-    else if (typeid(ValueType) == typeid(unsigned int))
-        os << "\"T\":\"uint\",";
-    else if (typeid(ValueType) == typeid(long int))
-        os << "\"T\":\"long\",";
-    else if (typeid(ValueType) == typeid(long long int))
-        os << "\"T\":\"longlong\",";
-    else if (typeid(ValueType) == typeid(unsigned long int))
-        os << "\"T\":\"ulong\",";
-    else if (typeid(ValueType) == typeid(unsigned long long int))
-        os << "\"T\":\"ulonglong\",";
-    else if (typeid(ValueType) == typeid(std::string))
-        os << "\"T\":\"string\",";
-    else if (typeid(ValueType) == typeid(bool))
-        os << "\"T\":\"bool\",";
-    else if (typeid(ValueType) == typeid(DateTime))
-        os << "\"T\":\"DateTime\",";
-    else
-        os << "\"T\":\"N/A\",";
+    _write_json_df_header_<std::ostream, ValueType>(os, name, vec.size());
 
     const long  vec_size = vec.size();
     const long  sr = std::min(start_row, vec_size);
@@ -296,9 +240,8 @@ print_csv2_header_functor_<S, Ts ...>::operator() (const T &vec)  {
     using VecType = typename std::remove_reference<T>::type;
     using ValueType = typename VecType::value_type;
 
-    _write_csv2_df_header_<S, ValueType>(os,
-                                         name,
-                                         std::min(col_size, long(vec.size())));
+    _write_csv_df_header_<S, ValueType>(
+        os, name, std::min(col_size, long(vec.size())));
     return;
 }
 

@@ -134,7 +134,7 @@ write(S &o,
         if (! columns_only)  {
             _write_csv_df_header_<S, IndexType>(o,
                                                 DF_INDEX_COL_NAME,
-                                                end_row - start_row);
+                                                end_row - start_row) << ':';
 
             for (long i = start_row; i < end_row; ++i)
                 _write_csv_df_index_(o, indices_[i]) << ',';
@@ -154,9 +154,9 @@ write(S &o,
     }
     else if (iof == io_format::csv2)  {
         if (! columns_only)  {
-            _write_csv2_df_header_<S, IndexType>(o,
-                                                 DF_INDEX_COL_NAME,
-                                                 end_row - start_row);
+            _write_csv_df_header_<S, IndexType>(o,
+                                                DF_INDEX_COL_NAME,
+                                                end_row - start_row);
             need_pre_comma = true;
         }
 

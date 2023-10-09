@@ -66,7 +66,7 @@ template&lt;typename ... Ts&gt;
 DataFrame&lt;I, H&gt;
 get_data_by_rand(random_policy spec,
                  double n,
-                 std::size_t seed = 0) const;
+                 seed_t seed = 0) const;
         </B></PRE></font>
       </td>
       <td>
@@ -78,7 +78,7 @@ get_data_by_rand(random_policy spec,
         <B>Ts</b>: The list of types for all columns. A type should be specified only once.<BR>
         <B>random_policy</b>: Please see random_policy in DataFrameTypes.h. It specifies how this function should proceed.<BR>
         <B>n</b>: Depending on the random policy, it is either the number of rows to sample or a fraction of rows to sample. In case of fraction, for example 0.4 means 40% of rows.<BR>
-        <B>seed</b>: Depending on the random policy, user could specify a seed. The same seed should always produce the same random selection.<BR>
+        <B>seed</b>: (unsigned int) Depending on the random policy, user could specify a seed. The same seed should always produce the same random selection.<BR>
       </td>
     </tr>
 
@@ -89,7 +89,7 @@ template&lt;typename ... Ts&gt;
 PtrView
 get_view_by_rand(random_policy spec,
                  double n,
-                 std::size_t seed = 0);
+                 seed_t seed = 0);
         </B></PRE></font>
       </td>
       <td>
@@ -101,7 +101,7 @@ get_view_by_rand(random_policy spec,
         <B>Ts</b>: The list of types for all columns. A type should be specified only once.<BR>
         <B>random_policy</b>: Please see random_policy in DataFrameTypes.h. It specifies how this function should proceed.<BR>
         <B>n</b>: Depending on the random policy, it is either the number of rows to sample or a fraction of rows to sample. In case of fraction, for example 0.4 means 40% of rows.<BR>
-        <B>seed</b>: Depending on the random policy, user could specify a seed. The same seed should always produce the same random selection.<BR>
+        <B>seed</b>: (unsigned int) Depending on the random policy, user could specify a seed. The same seed should always produce the same random selection.<BR>
       </td>
     </tr>
 
@@ -112,7 +112,7 @@ template&lt;typename ... Ts&gt;
 ConstPtrView
 get_view_by_rand(random_policy spec,
                  double n,
-                 std::size_t seed = 0) const;
+                 seed_t seed = 0) const;
         </B></PRE></font>
       </td>
       <td>
@@ -122,7 +122,7 @@ get_view_by_rand(random_policy spec,
         <B>Ts</b>: The list of types for all columns. A type should be specified only once.<BR>
         <B>random_policy</b>: Please see random_policy in DataFrameTypes.h. It specifies how this function should proceed.<BR>
         <B>n</b>: Depending on the random policy, it is either the number of rows to sample or a fraction of rows to sample. In case of fraction, for example 0.4 means 40% of rows.<BR>
-        <B>seed</b>: Depending on the random policy, user could specify a seed. The same seed should always produce the same random selection.<BR>
+        <B>seed</b>: (unsigned int) Depending on the random policy, user could specify a seed. The same seed should always produce the same random selection.<BR>
       </td>
     </tr>
 

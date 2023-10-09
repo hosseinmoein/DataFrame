@@ -684,10 +684,7 @@ DataFrame<I, H>::
 shuffle_functor_<Ts ...>::
 operator() (T &vec) const  {
 
-    std::random_device  rd;
-    std::mt19937        g(rd());
-
-    std::shuffle(vec.begin(), vec.end(), g);
+    std::shuffle(vec.begin(), vec.end(), g_);
     return;
 }
 

@@ -115,6 +115,8 @@ public:  // Construction
     template<typename T>
     using StlVecType = std::vector<T, AllocatorType<T>>;
 
+    using seed_t = std::random_device::result_type;
+
     DataFrame() = default;
 
     // Because of thread safety, these need tender loving care
@@ -937,7 +939,8 @@ public:  // Data manipulation
     template<typename ... Ts>
     void
     shuffle(const StlVecType<const char *> &col_names,
-            bool also_shuffle_index);
+            bool also_shuffle_index,
+            seed_t seed = seed_t(-1));
 
     // It fills all the "missing values" with the given values, and/or using
     // the given method.
@@ -2492,7 +2495,7 @@ public: // Read/access and slicing interfaces
     //
     template<typename ... Ts>
     [[nodiscard]] DataFrame
-    get_data_by_rand(random_policy spec, double n, size_type seed = 0) const;
+    get_data_by_rand(random_policy spec, double n, seed_t seed = 0) const;
 
     // It behaves like get_data_by_rand(), but it returns a PtrView.
     // A view is a DataFrame that is a reference to the original DataFrame.
@@ -2521,11 +2524,11 @@ public: // Read/access and slicing interfaces
     //
     template<typename ... Ts>
     [[nodiscard]] PtrView
-    get_view_by_rand(random_policy spec, double n, size_type seed = 0);
+    get_view_by_rand(random_policy spec, double n, seed_t seed = 0);
 
     template<typename ... Ts>
     [[nodiscard]] ConstPtrView
-    get_view_by_rand(random_policy spec, double n, size_type seed = 0) const;
+    get_view_by_rand(random_policy spec, double n, seed_t seed = 0) const;
 
     // This returns a DataFrame with index and col_names copied from the
     // original DataFrame

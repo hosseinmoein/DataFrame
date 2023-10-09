@@ -143,17 +143,17 @@ template<typename I, typename H>
 template<typename ... Ts>
 void
 DataFrame<I, H>::shuffle(const StlVecType<const char *> &col_names,
-                         bool also_shuffle_index)  {
+                         bool also_shuffle_index,
+                         seed_t seed)  {
 
-    if (also_shuffle_index)  {
-        std::random_device  rd;
-        std::mt19937        g(rd());
+    std::random_device  rd;
+    std::mt19937        g ((seed != seed_t(-1)) ? seed : rd());
 
+    if (also_shuffle_index)
         std::shuffle(indices_.begin(), indices_.end(), g);
-    }
 
-    shuffle_functor_<Ts ...>    functor;
-    const SpinGuard             guard(lock_);
+    shuffle_functor_<Ts ...>    functor (g);
+    const SpinGuard             guard (lock_);
 
     for (const auto &name_citer : col_names) [[likely]]  {
         const auto  citer = column_tb_.find (name_citer);

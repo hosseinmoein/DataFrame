@@ -2128,7 +2128,7 @@ get_view_by_sel(const char *name1,
 template<typename I, typename H>
 template<typename ... Ts>
 DataFrame<I, H> DataFrame<I, H>::
-get_data_by_rand(random_policy spec, double n, size_type seed) const  {
+get_data_by_rand(random_policy spec, double n, seed_t seed) const  {
 
     bool            use_seed = false;
     size_type       n_rows = static_cast<size_type>(n);
@@ -2146,13 +2146,10 @@ get_data_by_rand(random_policy spec, double n, size_type seed) const  {
     }
 
     if (index_s > 0 && n_rows <= index_s) [[likely]]  {
-        std::random_device  rd;
-        std::mt19937        gen(rd());
-
-        if (use_seed)  gen.seed(static_cast<unsigned int>(seed));
-
-        std::uniform_int_distribution<size_type>    dis(0, index_s - 1);
-        StlVecType<size_type>                       rand_indices(n_rows);
+        std::random_device                        rd;
+        std::mt19937                              gen(use_seed ? seed : rd());
+        std::uniform_int_distribution<size_type>  dis(0, index_s - 1);
+        StlVecType<size_type>                     rand_indices(n_rows);
 
         for (size_type i = 0; i < n_rows; ++i)
             rand_indices[i] = dis(gen);
@@ -2204,7 +2201,7 @@ get_data_by_rand(random_policy spec, double n, size_type seed) const  {
 template<typename I, typename H>
 template<typename ... Ts>
 typename DataFrame<I, H>::PtrView DataFrame<I, H>::
-get_view_by_rand (random_policy spec, double n, size_type seed)  {
+get_view_by_rand (random_policy spec, double n, seed_t seed)  {
 
     bool            use_seed = false;
     size_type       n_rows = static_cast<size_type>(n);
@@ -2222,13 +2219,10 @@ get_view_by_rand (random_policy spec, double n, size_type seed)  {
     }
 
     if (index_s > 0 && n_rows <= index_s) [[likely]]  {
-        std::random_device  rd;
-        std::mt19937        gen(rd());
-
-        if (use_seed)  gen.seed(static_cast<unsigned int>(seed));
-
-        std::uniform_int_distribution<size_type>    dis(0, index_s - 1);
-        StlVecType<size_type>                       rand_indices(n_rows);
+        std::random_device                        rd;
+        std::mt19937                              gen(use_seed ? seed : rd());
+        std::uniform_int_distribution<size_type>  dis(0, index_s - 1);
+        StlVecType<size_type>                     rand_indices(n_rows);
 
         for (size_type i = 0; i < n_rows; ++i) [[likely]]
             rand_indices[i] = dis(gen);
@@ -2281,7 +2275,7 @@ template<typename I, typename H>
 template<typename ... Ts>
 typename DataFrame<I, H>::ConstPtrView
 DataFrame<I, H>::
-get_view_by_rand (random_policy spec, double n, size_type seed) const  {
+get_view_by_rand (random_policy spec, double n, seed_t seed) const  {
 
     bool            use_seed = false;
     size_type       n_rows = static_cast<size_type>(n);
@@ -2299,13 +2293,10 @@ get_view_by_rand (random_policy spec, double n, size_type seed) const  {
     }
 
     if (index_s > 0 && n_rows <= index_s) [[likely]]  {
-        std::random_device  rd;
-        std::mt19937        gen(rd());
-
-        if (use_seed)  gen.seed(static_cast<unsigned int>(seed));
-
-        std::uniform_int_distribution<size_type>    dis(0, index_s - 1);
-        StlVecType<size_type>                       rand_indices(n_rows);
+        std::random_device                        rd;
+        std::mt19937                              gen(use_seed ? seed : rd());
+        std::uniform_int_distribution<size_type>  dis(0, index_s - 1);
+        StlVecType<size_type>                     rand_indices(n_rows);
 
         for (size_type i = 0; i < n_rows; ++i) [[likely]]
             rand_indices[i] = dis(gen);

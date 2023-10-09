@@ -51,7 +51,7 @@ using StrDataFrame = StdDataFrame<std::string>;
 //
 using DTDataFrame = StdDataFrame<DateTime>;
 
-// This is just some arbitrary type to show how any type could be in DataFrame
+// This is just some arbitrary type to show how any type, including the DataFrame itself, could be in DataFrame
 //
 struct  MyData  {
     int         i { 10 };

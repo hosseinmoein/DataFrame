@@ -514,6 +514,7 @@ read_csv2_(std::istream &stream,
         stream.unget();
 
         // First get the header which is column names, sizes and types
+        //
         if (! header_read) [[unlikely]]  {
             col_name.clear();
             type_str.clear();
@@ -532,6 +533,7 @@ read_csv2_(std::istream &stream,
                 size_type   row_cnt = 0;
 
                 // Jump to the starting row
+                //
                 while (row_cnt < starting_row && stream.get(c))
                     if (c == '\r' || c == '\n')
                         row_cnt += 1;
@@ -592,6 +594,7 @@ read_csv2_(std::istream &stream,
                                       col_name.c_str(),
                                       nrows);
             // This includes DateTime, DateTimeAME, DateTimeEUR, DateTimeISO
+            //
             else if (! ::strncmp(type_str.c_str(), "DateTime", 8))
                 spec_vec.emplace_back(StlVecType<DateTime>(),
                                       type_str.c_str(),
@@ -604,6 +607,21 @@ read_csv2_(std::istream &stream,
                                       nrows);
             else if (type_str == "dbl_vec")
                 spec_vec.emplace_back(StlVecType<StlVecType<double>>{ },
+                                      type_str.c_str(),
+                                      col_name.c_str(),
+                                      nrows);
+            else if (type_str == "str_vec")
+                spec_vec.emplace_back(StlVecType<StlVecType<std::string>>{ },
+                                      type_str.c_str(),
+                                      col_name.c_str(),
+                                      nrows);
+            else if (type_str == "dbl_set")
+                spec_vec.emplace_back(StlVecType<std::set<double>>{ },
+                                      type_str.c_str(),
+                                      col_name.c_str(),
+                                      nrows);
+            else if (type_str == "str_set")
+                spec_vec.emplace_back(StlVecType<std::set<std::string>>{ },
                                       type_str.c_str(),
                                       col_name.c_str(),
                                       nrows);
@@ -743,6 +761,39 @@ read_csv2_(std::istream &stream,
                                       value.c_str())));
                 }
             }
+            else if (col_spec.type_spec == "str_vec")  {
+                if (! value.empty())  {
+                    StlVecType<StlVecType<std::string>> &vec =
+                        std::any_cast<StlVecType<StlVecType<std::string>> &>
+                            (col_spec.col_vec);
+
+                    vec.push_back(
+                        std::move(_get_str_vec_from_value_<DataFrame<I, H>>(
+                                      value.c_str())));
+                }
+            }
+            else if (col_spec.type_spec == "dbl_set")  {
+                using set_t = std::set<double>;
+
+                if (! value.empty())  {
+                    StlVecType<set_t>   &vec =
+                        std::any_cast<StlVecType<set_t> &>(col_spec.col_vec);
+
+                    vec.push_back(std::move(_get_dbl_set_from_value_(
+                                      value.c_str())));
+                }
+            }
+            else if (col_spec.type_spec == "str_set")  {
+                using set_t = std::set<std::string>;
+
+                if (! value.empty())  {
+                    StlVecType<set_t>   &vec =
+                        std::any_cast<StlVecType<set_t> &>(col_spec.col_vec);
+
+                    vec.push_back(std::move(_get_str_set_from_value_(
+                                      value.c_str())));
+                }
+            }
             else if (col_spec.type_spec == "str_dbl_map")  {
                 using map_t = std::map<std::string, double>;
 
@@ -864,6 +915,31 @@ read_csv2_(std::istream &stream,
                     std::move(std::any_cast<StlVecType<StlVecType<double>> &>
                         (col_spec.col_vec)),
                     nan_policy::dont_pad_with_nans);
+            else if (col_spec.type_spec == "str_vec")
+                load_column<StlVecType<std::string>>(
+                    col_spec.col_name.c_str(),
+                    std::move(
+                        std::any_cast<StlVecType<StlVecType<std::string>> &>
+                        (col_spec.col_vec)),
+                    nan_policy::dont_pad_with_nans);
+            else if (col_spec.type_spec == "dbl_set")  {
+                using set_t = std::set<double>;
+
+                load_column<set_t>(
+                    col_spec.col_name.c_str(),
+                    std::move(std::any_cast<StlVecType<set_t> &>
+                        (col_spec.col_vec)),
+                    nan_policy::dont_pad_with_nans);
+            }
+            else if (col_spec.type_spec == "str_set")  {
+                using set_t = std::set<std::string>;
+
+                load_column<set_t>(
+                    col_spec.col_name.c_str(),
+                    std::move(std::any_cast<StlVecType<set_t> &>
+                        (col_spec.col_vec)),
+                    nan_policy::dont_pad_with_nans);
+            }
             else if (col_spec.type_spec == "str_dbl_map")  {
                 using map_t = std::map<std::string, double>;
 

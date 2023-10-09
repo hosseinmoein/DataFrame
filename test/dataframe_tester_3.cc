@@ -2199,6 +2199,9 @@ static void test_read_csv_with_maps()  {
     using DT_DataFrame = StdDataFrame<DateTime>;
     using map_t = std::map<std::string, double>;
     using unomap_t = std::unordered_map<std::string, double>;
+    using str_vec_t = std::vector<std::string>;
+    using str_set_t = std::set<std::string>;
+    using dbl_set_t = std::set<double>;
 
     DT_DataFrame    df;
 
@@ -2221,6 +2224,23 @@ static void test_read_csv_with_maps()  {
         assert((std::fabs(
             df.get_column<unomap_t>
                 ("Unordered Map")[0]["Key one 2"] - -782.5) < 0.001));
+
+        assert((df.get_column<str_vec_t>("Str Vec").size() == 4));
+        assert((df.get_column<str_vec_t>("Str Vec")[1].size() == 4));
+        assert((df.get_column<str_vec_t>("Str Vec")[3].size() == 3));
+        assert((df.get_column<str_vec_t>("Str Vec")[2][2] == "345"));
+
+        assert((df.get_column<dbl_set_t>("Double Set").size() == 4));
+        assert((df.get_column<dbl_set_t>("Double Set")[1].size() == 3));
+        assert((df.get_column<dbl_set_t>("Double Set")[3].size() == 4));
+        assert((*(df.get_column<dbl_set_t>("Double Set")[2].find(444.44)) ==
+                   444.44));
+
+        assert((df.get_column<str_set_t>("Str Set").size() == 4));
+        assert((df.get_column<str_set_t>("Str Set")[1].size() == 3));
+        assert((df.get_column<str_set_t>("Str Set")[3].size() == 4));
+        assert((*(df.get_column<str_set_t>("Str Set")[0].find("123.0")) ==
+                   "123.0"));
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;

@@ -106,6 +106,20 @@ static S &operator << (S &stream, const std::vector<T> &data)  {
 
 // ----------------------------------------------------------------------------
 
+template<typename S, typename T>
+static S &operator << (S &stream, const std::set<T> &data)  {
+
+    if (! data.empty())  {
+        stream << data.size() << '[' << *(data.cbegin());
+        for (auto citer = ++(data.cbegin()); citer != data.cend(); ++citer)
+            stream << '|' << *citer;
+        stream << ']';
+    }
+    return (stream);
+}
+
+// ----------------------------------------------------------------------------
+
 template<typename S, typename T, std::size_t N>
 static S &operator << (S &stream, const std::array<T, N> &data)  {
 
@@ -589,6 +603,101 @@ _get_dbl_vec_from_value_(const char *value)  {
             buffer[bcnt++] = value[vcnt++];
         buffer[bcnt] = '\0';
         data.push_back(std::strtod(buffer, nullptr));
+        vcnt += 1;  // skip separator
+    }
+    return (data);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename DF>
+inline static typename DF::template StlVecType<std::string>
+_get_str_vec_from_value_(const char *value)  {
+
+    using vec_t = typename DF::template StlVecType<std::string>;
+
+    std::size_t vcnt { 0 };
+    char        buffer[2048];
+
+    while (value[vcnt] != '[')  {
+        buffer[vcnt] = value[vcnt];
+        vcnt += 1;
+    }
+    buffer[vcnt] = '\0';
+
+    vec_t       data;
+    std::size_t bcnt;
+
+    data.reserve(std::strtol(buffer, nullptr, 10));
+    vcnt += 1;  // skip [
+    while (value[vcnt] && value[vcnt] != ']')  {
+        bcnt = 0;
+        while (value[vcnt] != '|' && value[vcnt] != ']')
+            buffer[bcnt++] = value[vcnt++];
+        buffer[bcnt] = '\0';
+        data.push_back(buffer);
+        vcnt += 1;  // skip separator
+    }
+    return (data);
+}
+
+// ----------------------------------------------------------------------------
+
+inline static std::set<double>
+_get_dbl_set_from_value_(const char *value)  {
+
+    using set_t = typename std::set<double>;
+
+    std::size_t vcnt = 0;
+    char        buffer[128];
+
+    while (value[vcnt] != '[')  {
+        buffer[vcnt] = value[vcnt];
+        vcnt += 1;
+    }
+    buffer[vcnt] = '\0';  // That is the count which is useless for sets
+
+    set_t       data;
+    std::size_t bcnt;
+
+    vcnt += 1;  // skip [
+    while (value[vcnt] && value[vcnt] != ']')  {
+        bcnt = 0;
+        while (value[vcnt] != '|' && value[vcnt] != ']')
+            buffer[bcnt++] = value[vcnt++];
+        buffer[bcnt] = '\0';
+        data.insert(std::strtod(buffer, nullptr));
+        vcnt += 1;  // skip separator
+    }
+    return (data);
+}
+
+// ----------------------------------------------------------------------------
+
+inline static std::set<std::string>
+_get_str_set_from_value_(const char *value)  {
+
+    using set_t = typename std::set<std::string>;
+
+    std::size_t vcnt = 0;
+    char        buffer[2048];
+
+    while (value[vcnt] != '[')  {
+        buffer[vcnt] = value[vcnt];
+        vcnt += 1;
+    }
+    buffer[vcnt] = '\0';  // That is the count which is useless for sets
+
+    set_t       data;
+    std::size_t bcnt;
+
+    vcnt += 1;  // skip [
+    while (value[vcnt] && value[vcnt] != ']')  {
+        bcnt = 0;
+        while (value[vcnt] != '|' && value[vcnt] != ']')
+            buffer[bcnt++] = value[vcnt++];
+        buffer[bcnt] = '\0';
+        data.insert(buffer);
         vcnt += 1;  // skip separator
     }
     return (data);

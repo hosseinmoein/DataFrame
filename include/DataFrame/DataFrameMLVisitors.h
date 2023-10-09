@@ -134,11 +134,13 @@ public:
     using cluster_type = std::array<VectorConstPtrView<value_type, A>, K>;
     using distance_func =
         std::function<double(const value_type &x, const value_type &y)>;
+    using seed_t = std::random_device::result_type;
 
 private:
 
     const size_type iter_num_;
     const bool      cc_;
+    const seed_t    seed_;
     distance_func   dfunc_;
     result_type     result_ { };    // K Means
     cluster_type    clusters_ { };  // K Clusters
@@ -147,10 +149,12 @@ private:
     inline void calc_k_means_(const H &column_begin, size_type col_s)  {
 
         std::random_device                          rd;
-        std::mt19937                                gen(rd());
+        std::mt19937                                gen(
+            (seed_ != seed_t(-1)) ? seed_ : rd());
         std::uniform_int_distribution<size_type>    rd_gen(0, col_s - 1);
 
         // Pick centroids as random points from the col.
+        //
         for (auto &k_mean : result_) [[likely]]  {
             const value_type    &value = *(column_begin + rd_gen(gen));
 
@@ -280,8 +284,9 @@ public:
         distance_func f =
             [](const value_type &x, const value_type &y) -> double  {
                 return ((x - y) * (x - y));
-            })
-        : iter_num_(num_of_iter), cc_(calc_clusters), dfunc_(f)  {   }
+            },
+        seed_t seed = seed_t(-1))
+        : iter_num_(num_of_iter), cc_(calc_clusters), seed_(seed), dfunc_(f) {  }
 };
 
 // ----------------------------------------------------------------------------
@@ -316,6 +321,7 @@ private:
         double          min_dist = std::numeric_limits<double>::max();
 
         // Compute similarity between distinct data points i and j
+        //
         for (size_type i = 0; i < csize - 1; ++i) [[likely]]  {
             const value_type    &i_val = *(column_begin + i);
 
@@ -328,6 +334,7 @@ private:
         }
 
         // Assign min to diagonals
+        //
         for (size_type i = 0; i < csize; ++i)
             simil[(i * csize) + i - ((i * (i + 1)) >> 1)] = min_dist;
 
@@ -345,6 +352,7 @@ private:
 
         for (size_type m = 0; m < iter_num_; ++m) [[likely]]  {
             // Update responsibility
+            //
             for (size_type i = 0; i < csize; ++i) [[likely]]  {
                 for (size_type j = 0; j < csize; ++j) [[likely]]  {
                     double  max_diff = -std::numeric_limits<double>::max();
@@ -370,6 +378,7 @@ private:
 
             // Update availability
             // Do diagonals first
+            //
             for (size_type i = 0; i < csize; ++i) [[likely]]  {
                 const size_type s1 = i * csize;
                 double          sum = 0.0;

@@ -526,7 +526,9 @@ struct sel_remove_functor_ : DataVec::template visitor_base<Ts ...>  {
 template<typename ... Ts>
 struct shuffle_functor_ : DataVec::template visitor_base<Ts ...>  {
 
-    inline shuffle_functor_ ()  {  }
+    inline shuffle_functor_ (std::mt19937 &g) : g_(g)  {  }
+
+    std::mt19937    &g_;
 
     template<typename T>
     void operator() (T &vec) const;

@@ -3719,7 +3719,14 @@ static void test_k_means()  {
                  std::make_pair("col1",
                                 gen_lognormal_dist<double, 128>(item_cnt, p)));
 
-    KMeansVisitor<5, double, unsigned long, 128>    km_visitor(1000);
+    KMeansVisitor<5,
+                  double,
+                  unsigned long,
+                  128>  km_visitor(1000, true,
+                                   [](const double &x, const double &y)  {
+                                       return ((x - y) * (x - y));
+                                   },
+                                   10);
 
     df.single_act_visit<double>("col1", km_visitor);
     std::cout << "Means of clusters are: ";
@@ -3797,7 +3804,7 @@ static void test_k_means()  {
     KMeansVisitor<5,
                   Point,
                   unsigned long,
-                  128> km_visitor2(1000, true, point_distance);
+                  128> km_visitor2(1000, true, point_distance, 10);
 
     df.single_act_visit<Point>("point_col", km_visitor2);
 
@@ -3883,7 +3890,7 @@ static void test_affinity_propagation()  {
     StlVecType<double>     final_col;
     StlVecType<double>     col_data;
 
-    p.seed = 3575984165U;
+    p.seed = 10U;
 
     p.min_value = 0;
     p.max_value = 10;
@@ -3912,9 +3919,16 @@ static void test_affinity_propagation()  {
 
     df.load_data(MyDataFrame::gen_sequence_index(0, item_cnt * 5, 1),
                  std::make_pair("col1", final_col));
-    df.shuffle<double>({"col1"}, false);
+    df.shuffle<double>({"col1"}, false, 10);
 
-    KMeansVisitor<5, double, unsigned long, 128>    km_visitor(1000);
+    KMeansVisitor<5,
+                  double,
+                  unsigned long,
+                  128>  km_visitor(1000, true,
+                                   [](const double &x, const double &y)  {
+                                       return ((x - y) * (x - y));
+                                   },
+                                   10);
     AffinityPropVisitor<double, unsigned long, 128> ap_visitor(50);
 
     df.single_act_visit<double>("col1", km_visitor);

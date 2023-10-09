@@ -35,6 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cstring>
 #include <iostream>
 #include <map>
+#include <set>
 #include <sstream>
 #include <tuple>
 #include <unordered_map>
@@ -45,6 +46,52 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace hmdf
 {
 
+using _TypeInfoRef_ = std::reference_wrapper<const std::type_info>;
+
+struct  _TypeinfoHasher_  {
+
+    std::size_t
+    operator()(_TypeInfoRef_ item) const  { return (item.get().hash_code()); }
+};
+
+struct  _TypeinfoEqualTo_  {
+
+    bool
+    operator()(_TypeInfoRef_ lhs, _TypeInfoRef_ rhs) const {
+
+        return (lhs.get() == rhs.get());
+    }
+};
+
+static const
+std::unordered_map<_TypeInfoRef_,
+                   const char *const,
+                   _TypeinfoHasher_,
+                   _TypeinfoEqualTo_>   _typeinfo_name_ {
+    { typeid(float), "float" },
+    { typeid(double), "double" },
+    { typeid(long double), "longdouble" },
+    { typeid(short int), "short" },
+    { typeid(unsigned short int), "ushort" },
+    { typeid(int), "int" },
+    { typeid(unsigned int), "uint" },
+    { typeid(long int), "long" },
+    { typeid(unsigned long int), "ulong" },
+    { typeid(long long int), "longlong" },
+    { typeid(unsigned long long int), "ulonglong" },
+    { typeid(std::string), "string" },
+    { typeid(bool), "bool" },
+    { typeid(DateTime), "DateTime" },
+    { typeid(std::vector<double>), "dbl_vec" },
+    { typeid(std::vector<std::string>), "str_vec" },
+    { typeid(std::set<double>), "dbl_set" },
+    { typeid(std::set<std::string>), "str_set" },
+    { typeid(std::map<std::string, double>), "str_dbl_map" },
+    { typeid(std::unordered_map<std::string, double>), "str_dbl_unomap" },
+};
+
+// ----------------------------------------------------------------------------
+
 template<typename S, typename T>
 static S &operator << (S &stream, const std::vector<T> &data)  {
 
@@ -52,6 +99,20 @@ static S &operator << (S &stream, const std::vector<T> &data)  {
         stream << data.size() << '[' << data[0];
         for (std::size_t i = 1; i < data.size(); ++i)
             stream << '|' << data[i];
+        stream << ']';
+    }
+    return (stream);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename S, typename T>
+static S &operator << (S &stream, const std::set<T> &data)  {
+
+    if (! data.empty())  {
+        stream << data.size() << '[' << *(data.cbegin());
+        for (auto citer = ++(data.cbegin()); citer != data.cend(); ++citer)
+            stream << '|' << *citer;
         stream << ']';
     }
     return (stream);
@@ -549,6 +610,101 @@ _get_dbl_vec_from_value_(const char *value)  {
 
 // ----------------------------------------------------------------------------
 
+template<typename DF>
+inline static typename DF::template StlVecType<std::string>
+_get_str_vec_from_value_(const char *value)  {
+
+    using vec_t = typename DF::template StlVecType<std::string>;
+
+    std::size_t vcnt { 0 };
+    char        buffer[2048];
+
+    while (value[vcnt] != '[')  {
+        buffer[vcnt] = value[vcnt];
+        vcnt += 1;
+    }
+    buffer[vcnt] = '\0';
+
+    vec_t       data;
+    std::size_t bcnt;
+
+    data.reserve(std::strtol(buffer, nullptr, 10));
+    vcnt += 1;  // skip [
+    while (value[vcnt] && value[vcnt] != ']')  {
+        bcnt = 0;
+        while (value[vcnt] != '|' && value[vcnt] != ']')
+            buffer[bcnt++] = value[vcnt++];
+        buffer[bcnt] = '\0';
+        data.push_back(buffer);
+        vcnt += 1;  // skip separator
+    }
+    return (data);
+}
+
+// ----------------------------------------------------------------------------
+
+inline static std::set<double>
+_get_dbl_set_from_value_(const char *value)  {
+
+    using set_t = typename std::set<double>;
+
+    std::size_t vcnt = 0;
+    char        buffer[128];
+
+    while (value[vcnt] != '[')  {
+        buffer[vcnt] = value[vcnt];
+        vcnt += 1;
+    }
+    buffer[vcnt] = '\0';  // That is the count which is useless for sets
+
+    set_t       data;
+    std::size_t bcnt;
+
+    vcnt += 1;  // skip [
+    while (value[vcnt] && value[vcnt] != ']')  {
+        bcnt = 0;
+        while (value[vcnt] != '|' && value[vcnt] != ']')
+            buffer[bcnt++] = value[vcnt++];
+        buffer[bcnt] = '\0';
+        data.insert(std::strtod(buffer, nullptr));
+        vcnt += 1;  // skip separator
+    }
+    return (data);
+}
+
+// ----------------------------------------------------------------------------
+
+inline static std::set<std::string>
+_get_str_set_from_value_(const char *value)  {
+
+    using set_t = typename std::set<std::string>;
+
+    std::size_t vcnt = 0;
+    char        buffer[2048];
+
+    while (value[vcnt] != '[')  {
+        buffer[vcnt] = value[vcnt];
+        vcnt += 1;
+    }
+    buffer[vcnt] = '\0';  // That is the count which is useless for sets
+
+    set_t       data;
+    std::size_t bcnt;
+
+    vcnt += 1;  // skip [
+    while (value[vcnt] && value[vcnt] != ']')  {
+        bcnt = 0;
+        while (value[vcnt] != '|' && value[vcnt] != ']')
+            buffer[bcnt++] = value[vcnt++];
+        buffer[bcnt] = '\0';
+        data.insert(buffer);
+        vcnt += 1;  // skip separator
+    }
+    return (data);
+}
+
+// ----------------------------------------------------------------------------
+
 template<typename MAP>
 inline static MAP
 _get_str_dbl_map_from_value_(const char *value)  {
@@ -597,68 +753,16 @@ _get_str_dbl_map_from_value_(const char *value)  {
 
 template<typename S, typename T>
 inline static S &
-_write_csv_df_header_base_(S &o, const char *col_name, std::size_t col_size)  {
+_write_csv_df_header_(S &o, const char *col_name, std::size_t col_size)  {
 
     o << col_name << ':' << col_size << ':';
 
-    if (typeid(T) == typeid(float))
-        o << "<float>";
-    else if (typeid(T) == typeid(double)) [[likely]]
-        o << "<double>";
-    else if (typeid(T) == typeid(long double))
-        o << "<longdouble>";
-    else if (typeid(T) == typeid(short int))
-        o << "<short>";
-    else if (typeid(T) == typeid(unsigned short int))
-        o << "<ushort>";
-    else if (typeid(T) == typeid(int))
-        o << "<int>";
-    else if (typeid(T) == typeid(unsigned int))
-        o << "<uint>";
-    else if (typeid(T) == typeid(long int))
-        o << "<long>";
-    else if (typeid(T) == typeid(long long int))
-        o << "<longlong>";
-    else if (typeid(T) == typeid(unsigned long int))
-        o << "<ulong>";
-    else if (typeid(T) == typeid(unsigned long long int))
-        o << "<ulonglong>";
-    else if (typeid(T) == typeid(std::string))
-        o << "<string>";
-    else if (typeid(T) == typeid(bool))
-        o << "<bool>";
-    return (o);
-}
+    const auto  &citer = _typeinfo_name_.find(typeid(T));
 
-// ----------------------------------------------------------------------------
-
-template<typename S, typename T>
-inline static S &
-_write_csv_df_header_(S &o, const char *col_name, std::size_t col_size)  {
-
-    _write_csv_df_header_base_<S, T>(o, col_name, col_size);
-
-    if (typeid(T) == typeid(DateTime))
-        o << "<DateTime>";
-    return (o << ':');
-}
-
-// ----------------------------------------------------------------------------
-
-template<typename S, typename T>
-inline static S &
-_write_csv2_df_header_(S &o, const char *col_name, std::size_t col_size)  {
-
-    _write_csv_df_header_base_<S, T>(o, col_name, col_size);
-
-    if (typeid(T) == typeid(DateTime))
-        o << "<DateTimeAME>";
-    else if (typeid(T) == typeid(std::vector<double>))
-        o << "<dbl_vec>";
-    else if (typeid(T) == typeid(std::map<std::string, double>))
-        o << "<str_dbl_map>";
-    else if (typeid(T) == typeid(std::unordered_map<std::string, double>))
-        o << "<str_dbl_unomap>";
+    if (citer != _typeinfo_name_.end()) [[likely]]
+        o << '<' << citer->second << '>';
+    else
+        o << "<N/A>";
     return (o);
 }
 
@@ -670,34 +774,10 @@ _write_json_df_header_(S &o, const char *col_name, std::size_t col_size)  {
 
     o << '"' << col_name << "\":{\"N\":" << col_size << ',';
 
-    if (typeid(T) == typeid(float))
-        o << "\"T\":\"float\",";
-    else if (typeid(T) == typeid(double)) [[likely]]
-        o << "\"T\":\"double\",";
-    else if (typeid(T) == typeid(long double))
-        o << "\"T\":\"longdouble\",";
-    else if (typeid(T) == typeid(short int))
-        o << "\"T\":\"short\",";
-    else if (typeid(T) == typeid(unsigned short int))
-        o << "\"T\":\"ushort\",";
-    else if (typeid(T) == typeid(int))
-        o << "\"T\":\"int\",";
-    else if (typeid(T) == typeid(unsigned int))
-        o << "\"T\":\"uint\",";
-    else if (typeid(T) == typeid(long int))
-        o << "\"T\":\"long\",";
-    else if (typeid(T) == typeid(long long int))
-        o << "\"T\":\"longlong\",";
-    else if (typeid(T) == typeid(unsigned long int))
-        o << "\"T\":\"ulong\",";
-    else if (typeid(T) == typeid(unsigned long long int))
-        o << "\"T\":\"ulonglong\",";
-    else if (typeid(T) == typeid(std::string))
-        o << "\"T\":\"string\",";
-    else if (typeid(T) == typeid(bool))
-        o << "\"T\":\"bool\",";
-    else if (typeid(T) == typeid(DateTime))
-        o << "\"T\":\"DateTime\",";
+    const auto  &citer = _typeinfo_name_.find(typeid(T));
+
+    if (citer != _typeinfo_name_.end()) [[likely]]
+        o << "\"T\":\"" << citer->second << "\",";
     else
         o << "\"T\":\"N/A\",";
     return (o);

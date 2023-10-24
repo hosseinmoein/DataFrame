@@ -2326,6 +2326,42 @@ static void test_user_join_test()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_PriceVolumeTrendVisitor()  {
+
+    std::cout << "\nTesting PriceVolumeTrendVisitor{  } ..." << std::endl;
+
+    typedef StdDataFrame64<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("data/SHORT_IBM.csv", io_format::csv2);
+
+        pvt_v<double, std::string, 64>  pvt;
+
+        std::future<pvt_v<double, std::string, 64> &>   fut =
+            df.single_act_visit_async<double, long>
+            ("IBM_Close", "IBM_Volume", pvt);
+
+        fut.get();
+        assert(pvt.get_result().size() == 1721);
+        assert(std::isnan(pvt.get_result()[0]));
+        assert(std::abs(pvt.get_result()[1] - 24309.5565) < 0.0001);
+        assert(std::abs(pvt.get_result()[19] - -569881.1828) < 0.0001);
+        assert(std::abs(pvt.get_result()[20] - -589792.9641) < 0.0001);
+        assert(std::abs(pvt.get_result()[24] - -696299.0035) < 0.0001);
+        assert(std::abs(pvt.get_result()[25] - -626981.4818) < 0.0001);
+        assert(std::abs(pvt.get_result()[1720] - -10166998.9349) < 0.0001);
+        assert(std::abs(pvt.get_result()[1712] - -9718199.4026) < 0.0001);
+        assert(std::abs(pvt.get_result()[1707] - -8333834.231) < 0.0001);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     test_groupby_edge();
@@ -2375,6 +2411,7 @@ int main(int, char *[]) {
     test_read_csv_with_vector();
     test_read_csv_with_maps();
     test_user_join_test();
+    test_PriceVolumeTrendVisitor();
 
     return (0);
 }

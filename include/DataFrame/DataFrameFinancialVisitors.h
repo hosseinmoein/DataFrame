@@ -5866,6 +5866,55 @@ private:
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 using eom_v = EaseOfMovementVisitor<T, I, A>;
 
+// ----------------------------------------------------------------------------
+
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
+struct  PriceVolumeTrendVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <forward_iterator K, forward_iterator H, forward_iterator V>
+    inline void
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &close_begin, const H &close_end,
+                const V &volume_begin, const V &volume_end)  {
+
+        const size_type col_s = std::distance(close_begin, close_end);
+
+        assert((col_s == size_type(std::distance(volume_begin, volume_end))));
+
+        ReturnVisitor<T, I, A>  ret { return_policy::percentage };
+
+        ret.pre();
+        ret (idx_begin, idx_end, close_begin, close_end);
+        ret.post();
+
+        result_type result { std::move(ret.get_result()) };
+
+        std::transform(result.begin(), result.end(),
+                       volume_begin,
+                       result.begin(),
+                       std::multiplies<T>{ });
+
+        CumSumVisitor<T, I, A>  cumsum;
+
+        cumsum.pre();
+        cumsum (idx_begin, idx_end, result.begin(), result.end());
+        cumsum.post();
+        result_.swap(cumsum.get_result());
+    }
+
+    DEFINE_PRE_POST
+    DEFINE_RESULT
+
+private:
+
+    result_type result_ {  };
+};
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using pvt_v = PriceVolumeTrendVisitor<T, I, A>;
+
 } // namespace hmdf
 
 // ----------------------------------------------------------------------------

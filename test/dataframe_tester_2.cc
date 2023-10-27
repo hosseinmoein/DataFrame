@@ -883,15 +883,17 @@ static void test_RSIVisitor()  {
 
         df.single_act_visit<double>("IBM_Close", rsi);
 
-        assert(rsi.get_result().size() == 1708);
-        assert(std::abs(rsi.get_result()[1] - 41.0826) < 0.0001);
-        assert(std::abs(rsi.get_result()[9] - 35.7869) < 0.0001);
-        assert(std::abs(rsi.get_result()[11] - 37.3135) < 0.0001);
-        assert(std::abs(rsi.get_result()[15] - 46.4432) < 0.0001);
-        assert(std::abs(rsi.get_result()[26] - 53.6717) < 0.0001);
-        assert(std::abs(rsi.get_result()[1707] - 43.3186) < 0.0001);
-        assert(std::abs(rsi.get_result()[1699] - 47.0717) < 0.0001);
-        assert(std::abs(rsi.get_result()[1694] - 54.2938) < 0.0001);
+        assert(rsi.get_result().size() == 1721);
+        assert(std::isnan(rsi.get_result()[0]));
+        assert(std::isnan(rsi.get_result()[12]));
+        assert(std::abs(rsi.get_result()[13] - 41.4627) < 0.0001);
+        assert(std::abs(rsi.get_result()[22] - 35.7869) < 0.0001);
+        assert(std::abs(rsi.get_result()[24] - 37.3135) < 0.0001);
+        assert(std::abs(rsi.get_result()[28] - 46.4432) < 0.0001);
+        assert(std::abs(rsi.get_result()[33] - 52.1746) < 0.0001);
+        assert(std::abs(rsi.get_result()[1720] - 43.3186) < 0.0001);
+        assert(std::abs(rsi.get_result()[1712] - 47.0717) < 0.0001);
+        assert(std::abs(rsi.get_result()[1707] - 54.2938) < 0.0001);
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;

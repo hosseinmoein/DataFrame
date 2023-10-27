@@ -1069,7 +1069,7 @@ struct  RSIVisitor  {
         value_type          avg_down { 0 };
         const value_type    avg_period_1 { avg_period_ - T(1) };
 
-        for (size_type i { 1 }; i < avg_period_; ++i) [[likely]]  {
+        for (size_type i { 1 }; i < size_type(avg_period_); ++i) [[likely]]  {
             const value_type    value = return_v.get_result()[i];
 
             if (value > 0)
@@ -1078,25 +1078,20 @@ struct  RSIVisitor  {
                 avg_down = (avg_down * avg_period_1 - value) / avg_period_;
         }
 
-        result_type result;
-
-        result.reserve(col_s - static_cast<size_type>(avg_period_));
+        result_type result(col_s, std::numeric_limits<T>::quiet_NaN());
 
         constexpr value_type    h { 100 };
 
-        result.push_back(h - (h / (T(1) + avg_up / avg_down)));
-
-        const size_type ret_s { return_v.get_result().size() };
-
-        for (size_type i { size_type(avg_period_) };
-             i < ret_s; ++i) [[likely]]  {
+        result[size_type(avg_period_ - 1)] =
+            h - (h / (T(1) + avg_up / avg_down));
+        for (size_type i { size_type(avg_period_) }; i < col_s; ++i)  {
             const value_type    value { return_v.get_result()[i] };
 
             if (value > 0)
                 avg_up = (avg_up * avg_period_1 + value) / avg_period_;
             else if (value < 0)
                 avg_down = (avg_down * avg_period_1 - value) / avg_period_;
-            result.push_back(h - (h / (T(1) + avg_up / avg_down)));
+            result[i] = h - (h / (T(1) + avg_up / avg_down));
         }
         result_.swap(result);
     }
@@ -5914,6 +5909,165 @@ private:
 
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 using pvt_v = PriceVolumeTrendVisitor<T, I, A>;
+
+// ----------------------------------------------------------------------------
+
+// Quantitative Qualitative Estimation (QQE)
+//
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
+struct  QuantQualEstimationVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <forward_iterator K, forward_iterator H>
+    inline void
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &price_begin, const H &price_end)  {
+
+        RSIVisitor<T, I, A> rsi { return_policy::monetary, avg_period_ };
+
+        rsi.pre();
+        rsi(idx_begin, idx_end, price_begin, price_end);
+        rsi.post();
+
+        ewm_v<double, I, A> rsi_ewm(exponential_decay_spec::span,
+                                    smooth_period_, true);
+
+        rsi_ewm.pre();
+        rsi_ewm(idx_begin, idx_end,
+            rsi.get_result().begin(), rsi.get_result().end());
+        rsi_ewm.post();
+
+        DiffVisitor<T, I, A>    diff { 1, false, false, true };  // abs value
+
+        rsi_ewm_ = std::move(rsi_ewm.get_result());
+        diff.pre();
+        diff(idx_begin, idx_end, rsi_ewm_.begin(), rsi_ewm_.end());
+        diff.post();
+
+        ewm_v<double, I, A> ewm2(exponential_decay_spec::span,
+                                 wilders_period_, true);
+
+        ewm2.pre();
+        ewm2(idx_begin, idx_end,
+             diff.get_result().begin(), diff.get_result().end());
+        ewm2.post();
+
+        ewm_v<double, I, A> ewm3(exponential_decay_spec::span,
+                                 wilders_period_, true);
+
+        ewm3.get_result() = std::move(diff.get_result()); // Reuse the space
+        ewm3.pre();
+        ewm3(idx_begin, idx_end,
+             ewm2.get_result().begin(), ewm2.get_result().end());
+        ewm3.post();
+
+        std::transform(ewm3.get_result().begin(), ewm3.get_result().end(),
+                       ewm3.get_result().begin(),
+                       std::bind(std::multiplies<T>(), std::placeholders::_1,
+                                 width_factor_));
+
+        const size_type col_s = std::distance(price_begin, price_end);
+
+        result_type upperband;
+        result_type lowerband;
+
+        upperband.reserve(col_s);
+        lowerband.reserve(col_s);
+        for (size_type i = 0; i < col_s; ++i)  {
+            const auto  rsi = rsi_ewm_[i];
+            const auto  dar = ewm3.get_result()[i];
+
+            upperband.push_back(rsi + dar);
+            lowerband.push_back(rsi - dar);
+        }
+
+        result_type         long_line (col_s, 0);
+        result_type         short_line (col_s, 0);
+        std::vector<bool>   going_up (col_s, true);
+        result_type         qqe (col_s, rsi_ewm_[0]);
+
+        for (size_type i = 2; i < col_s; ++i)  {
+            const auto  c_rsi = rsi_ewm_[i];          // Current RSI
+            const auto  p_rsi = rsi_ewm_[i - 1];      // Prior RSI
+            const auto  c_long = long_line[i - 1];    // Current long line
+            const auto  p_long = long_line[i - 2];    // Prior long line
+            const auto  c_short = short_line[i - 1];  // Current short line
+            const auto  p_short = short_line[i - 2];  // Prior short line
+
+            if (p_rsi > c_long && c_rsi > c_long)
+                long_line[i] = std::max(c_long, lowerband[i]);
+            else
+                long_line[i] = lowerband[i];
+            if (p_rsi < c_short && c_rsi < c_short)
+                short_line[i] = std::min(c_short, upperband[i]);
+            else
+                short_line[i] = upperband[i];
+
+            // Trend & QQE Calculation
+            // Long: Current rsi_ewm value crosses the prior short line value
+            // Short: Current rsi_ewm crosses the prior long line value
+            //
+            if ((c_rsi > c_short && p_rsi < p_short) ||
+                (c_rsi <= c_short && p_rsi >= p_short))  {
+                going_up[i] = true;
+                qqe[i] = long_line[i];
+            }
+            else if ((c_rsi > c_long && p_rsi < p_long) ||
+                     (c_rsi <= c_long && p_rsi >= p_long))  {
+                going_up[i] = false;
+                qqe[i] = short_line[i];
+            }
+            else  {
+                going_up[i] = going_up[i - 1];
+                qqe[i] = going_up[i] ? long_line[i] : short_line[i];
+            }
+        }
+
+        result_ = std::move(qqe);
+        long_line_ = std::move(long_line);
+        short_line_ = std::move(short_line);
+    }
+
+    inline void pre ()  {
+
+        result_.clear();
+        rsi_ewm_.clear();
+        long_line_.clear();
+        short_line_.clear();
+    }
+    inline void post ()  {  }
+    const result_type &get_result() const  { return (result_); }
+    result_type &get_result()  { return (result_); }
+    const result_type &get_rsi_ma() const  { return (rsi_ewm_); }
+    result_type &get_rsi_ma()  { return (rsi_ewm_); }
+    const result_type &get_long_line() const  { return (long_line_); }
+    result_type &get_long_line()  { return (long_line_); }
+    const result_type &get_short_line() const  { return (short_line_); }
+    result_type &get_short_line()  { return (short_line_); }
+
+    explicit
+    QuantQualEstimationVisitor(size_type avg_period = 14,
+                               size_type smooth_period = 5,
+                               value_type width_factor = 4.236)
+        : avg_period_(avg_period),
+          smooth_period_(smooth_period),
+          width_factor_(width_factor)  {  }
+
+private:
+
+    result_type         result_ { };  // qqe
+    result_type         rsi_ewm_ { };
+    result_type         long_line_ { };
+    result_type         short_line_ { };
+    const size_type     avg_period_;
+    const size_type     smooth_period_;
+    const size_type     wilders_period_ { 2 * avg_period_ - 1 };
+    const value_type    width_factor_;
+};
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using qqe_v = QuantQualEstimationVisitor<T, I, A>;
 
 } // namespace hmdf
 

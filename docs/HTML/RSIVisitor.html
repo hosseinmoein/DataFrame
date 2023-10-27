@@ -53,7 +53,7 @@ using rsi_v = RSIVisitor<&lt;T, I, A&gt;;
         The RSI is most typically used on a 14-day (a parameter in this visitor) time frame, measured on a scale from 0 to 100.<BR>
         Traditional interpretation and usage of the RSI are that values of 70 or above indicate that a security is becoming overbought or overvalued and may be primed for a trend reversal or corrective pullback in price. An RSI reading of 30 or below indicates an oversold or undervalued condition.<BR><BR>
         <B>NOTE:</B> The input (column) to this visitor is assumed to be instrument prices.<BR>
-        <B>NOTE:</B> The length of the result vector is <I>length of column - avg_period</I>.<BR>
+        <B>NOTE:</B> The length of the result vector is the same as input vector. The first <I>avg_period - 1</I> values are NaN.<BR>
 		<I>
         <PRE>
     explicit

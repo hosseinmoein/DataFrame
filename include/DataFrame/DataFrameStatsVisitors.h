@@ -3062,18 +3062,21 @@ struct  DiffVisitor  {
 
         assert(col_s > 0 && size_type(std::abs(periods_)) < (col_s - 1));
 
-        bool        there_is_zero = false;
-        result_type result;
-        auto        diff_func =
-            [](bool skip_nan_,
-               bool &there_is_zero,
-               const auto &i,
-               const auto &j,
-               auto &result) -> void  {
+        bool                        there_is_zero = false;
+        result_type                 result;
+        std::function<T(const T &)> cond =
+            abs_val_ ? [](const T &x) -> T { return (std::fabs(x)); }
+                     : [](const T &x) -> T { return (x); };
+        auto                        diff_func =
+            [&cond](bool skip_nan_,
+                    bool &there_is_zero,
+                    const auto &i,
+                    const auto &j,
+                    auto &result) -> void  {
                 if (skip_nan_ && (is_nan__(*i) || is_nan__(*j))) [[unlikely]]
                     return;
 
-                const value_type    val = *i - *j;
+                const value_type    val = cond(*i - *j);
 
                 result.push_back(val);
                 there_is_zero = val == 0;
@@ -3133,8 +3136,14 @@ struct  DiffVisitor  {
     DEFINE_RESULT
 
     explicit
-    DiffVisitor(long periods = 1, bool skipnan = true, bool non_zero = false)
-        : periods_(periods), skip_nan_(skipnan), non_zero_(non_zero)  {  }
+    DiffVisitor(long periods = 1,
+                bool skipnan = true,
+                bool non_zero = false,
+                bool abs_val = false)
+        : periods_(periods),
+          skip_nan_(skipnan),
+          non_zero_(non_zero),
+          abs_val_(abs_val)  {  }
 
 private:
 
@@ -3142,6 +3151,7 @@ private:
     const long  periods_;
     const bool  skip_nan_;
     const bool  non_zero_;
+    const bool  abs_val_;
 };
 
 template<typename T, typename I = unsigned long, std::size_t A = 0>

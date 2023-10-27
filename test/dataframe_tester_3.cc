@@ -2310,9 +2310,9 @@ static void test_user_join_test()  {
         Cars,
         "key",
         join_policy::left_right_join).write<ostream,
-                                            string,
-                                            int,
-                                            unsigned int>(cout, io_format::csv2);
+                                           string,
+                                           int,
+                                           unsigned int>(cout, io_format::csv2);
 
     std::cout << "Inner Join ...\n";
     People.join_by_column<decltype(Cars), int, string, int>(
@@ -2354,6 +2354,76 @@ static void test_PriceVolumeTrendVisitor()  {
         assert(std::abs(pvt.get_result()[1720] - -10166998.9349) < 0.0001);
         assert(std::abs(pvt.get_result()[1712] - -9718199.4026) < 0.0001);
         assert(std::abs(pvt.get_result()[1707] - -8333834.231) < 0.0001);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_QuantQualEstimationVisitor()  {
+
+    std::cout << "\nTesting QuantQualEstimationVisitor{  } ..." << std::endl;
+
+    typedef StdDataFrame64<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("data/SHORT_IBM.csv", io_format::csv2);
+
+        qqe_v<double, std::string, 64>  qqe;
+
+        df.single_act_visit<double>("IBM_Close", qqe);
+
+        assert(qqe.get_result().size() == 1721);
+        assert(std::abs(qqe.get_result()[0] - 0) < 0.0001);
+        assert(std::abs(qqe.get_result()[12] - 0) < 0.0001);
+        assert(std::abs(qqe.get_result()[14] - 19.73) < 0.0001);
+        assert(std::abs(qqe.get_result()[19] - 24.3886) < 0.0001);
+        assert(std::abs(qqe.get_result()[20] - 24.7022) < 0.0001);
+        assert(std::abs(qqe.get_result()[24] - 24.7022) < 0.0001);
+        assert(std::abs(qqe.get_result()[25] - 25.7014) < 0.0001);
+        assert(std::abs(qqe.get_result()[1720] - 45.3732) < 0.0001);
+        assert(std::abs(qqe.get_result()[1712] - 50.833) < 0.0001);
+        assert(std::abs(qqe.get_result()[1707] - 50.5242) < 0.0001);
+
+        assert(qqe.get_rsi_ma().size() == 1721);
+        assert(std::abs(qqe.get_rsi_ma()[0] - 0) < 0.0001);
+        assert(std::abs(qqe.get_rsi_ma()[12] - 0) < 0.0001);
+        assert(std::abs(qqe.get_rsi_ma()[14] - 24.4634) < 0.0001);
+        assert(std::abs(qqe.get_rsi_ma()[19] - 36.0438) < 0.0001);
+        assert(std::abs(qqe.get_rsi_ma()[20] - 36.8887) < 0.0001);
+        assert(std::abs(qqe.get_rsi_ma()[24] - 36.867) < 0.0001);
+        assert(std::abs(qqe.get_rsi_ma()[25] - 38.4642) < 0.0001);
+        assert(std::abs(qqe.get_rsi_ma()[1720] - 42.5588) < 0.0001);
+        assert(std::abs(qqe.get_rsi_ma()[1712] - 50.95) < 0.0001);
+        assert(std::abs(qqe.get_rsi_ma()[1707] - 52.7244) < 0.0001);
+
+        assert(qqe.get_long_line().size() == 1721);
+        assert(std::abs(qqe.get_long_line()[0] - 0) < 0.0001);
+        assert(std::abs(qqe.get_long_line()[12] - 0) < 0.0001);
+        assert(std::abs(qqe.get_long_line()[14] - 19.73) < 0.0001);
+        assert(std::abs(qqe.get_long_line()[19] - 24.3886) < 0.0001);
+        assert(std::abs(qqe.get_long_line()[20] - 24.7022) < 0.0001);
+        assert(std::abs(qqe.get_long_line()[24] - 24.7022) < 0.0001);
+        assert(std::abs(qqe.get_long_line()[25] - 25.7014) < 0.0001);
+        assert(std::abs(qqe.get_long_line()[1720] - 39.9557) < 0.0001);
+        assert(std::abs(qqe.get_long_line()[1712] - 50.833) < 0.0001);
+        assert(std::abs(qqe.get_long_line()[1707] - 50.5242) < 0.0001);
+
+        assert(qqe.get_short_line().size() == 1721);
+        assert(std::abs(qqe.get_short_line()[0] - 0) < 0.0001);
+        assert(std::abs(qqe.get_short_line()[12] - 0) < 0.0001);
+        assert(std::abs(qqe.get_short_line()[14] - 29.1968) < 0.0001);
+        assert(std::abs(qqe.get_short_line()[19] - 37.2629) < 0.0001);
+        assert(std::abs(qqe.get_short_line()[20] - 37.2629) < 0.0001);
+        assert(std::abs(qqe.get_short_line()[24] - 37.2629) < 0.0001);
+        assert(std::abs(qqe.get_short_line()[25] - 51.2269) < 0.0001);
+        assert(std::abs(qqe.get_short_line()[1720] - 45.3732) < 0.0001);
+        assert(std::abs(qqe.get_short_line()[1712] - 53.3534) < 0.0001);
+        assert(std::abs(qqe.get_short_line()[1707] - 54.3629) < 0.0001);
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
@@ -2412,6 +2482,7 @@ int main(int, char *[]) {
     test_read_csv_with_maps();
     test_user_join_test();
     test_PriceVolumeTrendVisitor();
+    test_QuantQualEstimationVisitor();
 
     return (0);
 }

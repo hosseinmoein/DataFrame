@@ -30,6 +30,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 
 
+#include <DataFrame/Utils/FixedSizeString.h>
+
 #include <concepts>
 #include <functional>
 #include <iterator>
@@ -189,6 +191,15 @@ concept iter_invokale5 =
               std::remove_reference_t<IT5> &it5)  {
     std::invoke(std::forward<F>(f), it1, it2, it3, it4, it5);
 };
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
+concept StringOnly =
+    std::is_same_v<T, std::string> ||
+    std::is_same_v<T, VirtualString> ||
+    std::is_same_v<T, char *> ||
+    std::is_same_v<T, const char *>;
 
 } // namespace hmdf
 

@@ -36,6 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <memory>
 #include <stdexcept>
 #include <tuple>
+#include <utility>
 #include <vector>
 
 // ----------------------------------------------------------------------------
@@ -701,6 +702,27 @@ struct  MemUsage  {
                << "Index Type Size: " << mu.index_type_size << '\n';
         return (stream);
     }
+};
+
+// ----------------------------------------------------------------------------
+
+struct  StringStats  {
+
+    double  avg_size { 0 };
+    double  avg_alphabets { 0 };
+    double  avg_digits { 0 };
+    double  avg_spaces { 0 };
+    double  avg_arithmetic { 0 };  // + - / *
+    double  avg_line_feed { 0 };  // \n
+
+    // Capital alphabets
+    //
+    double  avg_caps { 0 };
+
+    // Punctuations. Anything that's not an alphabet, digit, space, line feed,
+    // or arithmetic operators.
+    //
+    double  avg_puncts { 0 };
 };
 
 // ----------------------------------------------------------------------------

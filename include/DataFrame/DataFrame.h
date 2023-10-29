@@ -2649,6 +2649,22 @@ public: // Read/access and slicing interfaces
     get_reindexed_view(const char *col_to_be_index,
                        const char *old_index_name = nullptr) const;
 
+    // This takes a string column as input and returns a set of statistics
+    // about the strings in that column.  You could use these statistics to
+    // figure out the characteristics of the strings in the column. Or you
+    // could use the statistics to determine if a new string is acceptable
+    // for this column.
+    //
+    // T:
+    //   Type of the input column. Based on the concept, it can only be either
+    //   of these types: std::string, VirtualString, const char *, char *
+    // col_name:
+    //   Name of the input column
+    //
+    template<StringOnly T>
+    [[nodiscard]] StringStats
+    get_str_col_stats(const char *col_name) const;
+
     // This function returns a DataFrame indexed by std::string that provides
     // a few statistics about the columns of the calling DataFrame.
     // The statistics are:

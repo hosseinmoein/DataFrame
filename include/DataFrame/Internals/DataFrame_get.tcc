@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/DataFrame.h>
 #include <DataFrame/DataFrameStatsVisitors.h>
 
+#include <cctype>
 #include <cmath>
 #include <functional>
 #include <random>
@@ -2754,6 +2755,66 @@ combine(const char *col_name,
         result.push_back(
             std::move(functor(lhs_col[i], df1_col[i], df2_col[i], df3_col[i])));
 
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<StringOnly T>
+StringStats
+DataFrame<I, H>::get_str_col_stats(const char *col_name) const  {
+
+    const auto  &col = get_column<T>(col_name);
+    size_type   total_chars { 0 };
+    size_type   total_digits { 0 };
+    size_type   total_alphabets { 0 };
+    size_type   total_spaces { 0 };
+    size_type   total_arithmetic { 0 };
+    size_type   total_puncts { 0 };
+    size_type   total_caps { 0 };
+    size_type   total_line_feed { 0 };
+
+    for (const auto &str : col)  {
+        const char  *my_str { nullptr };
+
+        if constexpr (std::is_same_v<T, std::string> ||
+                      std::is_same_v<T, VirtualString>)
+            my_str = str.c_str();
+        else
+            my_str = str;
+
+        for (auto c = my_str; c; ++c)  {
+            total_chars += 1;
+
+            if (std::isdigit(int(*c)))
+                total_digits += 1;
+            else if (std::isalpha(int(*c)))  {
+                total_alphabets += 1;
+                if (std::isupper(int(*c)))
+                    total_caps += 1;
+            }
+            else if (*c == '\n')
+                total_line_feed += 1;
+            else if (std::isspace(int(*c)))
+                total_spaces += 1;
+            else if (*c == '+' || *c == '-' || *c == '/' || *c == '*')
+                total_arithmetic += 1;
+            else
+                total_puncts += 1;
+        }
+    }
+
+    StringStats result;
+
+    result.avg_size = double(total_chars) / double(col.size());
+    result.avg_alphabets = double(total_alphabets) / double(total_chars);
+    result.avg_digits = double(total_digits) / double(total_chars);
+    result.avg_caps = double(total_caps) / double(total_chars);
+    result.avg_puncts = double(total_puncts) / double(total_chars);
+    result.avg_spaces = double(total_spaces) / double(total_chars);
+    result.avg_arithmetic = double(total_arithmetic) / double(total_chars);
+    result.avg_line_feed = double(total_line_feed) / double(total_chars);
     return (result);
 }
 

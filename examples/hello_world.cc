@@ -246,7 +246,7 @@ int main(int, char *[])  {
         aapl_dt_df.bucketize(
             bucket_type::by_count,
             10,
-            LastVisitor<dt_idx_t, dt_idx_t>(),
+            LastVisitor<dt_idx_t, dt_idx_t>(),  // How to bucketize the index column
             std::make_tuple("AAPL_Close",  "Open",          FirstVisitor<double, dt_idx_t>()),
             std::make_tuple("AAPL_Close",  "High",          MaxVisitor<double, dt_idx_t>()),
             std::make_tuple("AAPL_Close",  "Low",           MinVisitor<double, dt_idx_t>()),

@@ -2774,7 +2774,7 @@ DataFrame<I, H>::get_str_col_stats(const char *col_name) const  {
     size_type               total_puncts { 0 };
     size_type               total_caps { 0 };
     size_type               total_line_feed { 0 };
-    constexpr I             def_index { };
+    const I                 def_index { };
     StdVisitor<double, I>   std_size { };
 
     std_size.pre();

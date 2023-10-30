@@ -2432,6 +2432,53 @@ static void test_QuantQualEstimationVisitor()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_get_str_col_stats()  {
+
+    std::cout << "\nTesting get_str_col_stats(  ) ..." << std::endl;
+
+    typedef StdDataFrame64<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("data/SHORT_IBM.csv", io_format::csv2);
+
+        auto    str_col = df.get_index();
+
+        // IBM data has no string columns except for its index. Load the
+        // index column as a regular column, so we have something to test
+        // A sample string in this column is "2020-10-21"
+        //
+        df.load_column("ISO Dates", std::move(str_col));
+
+        const StringStats   result =
+            df.get_str_col_stats<std::string>("ISO Dates");
+
+        // Average size of each string is 10 chars
+        //
+        assert(result.avg_size == 10.0);
+        assert(result.std_size == 0);  // Every string is the same size
+        assert(result.avg_alphabets == 0);  // No alphabets
+        assert(result.avg_caps == 0);  // No Capital alphabets
+
+        // 80% of all chars in the entire column are digits
+        //
+        assert(result.avg_digits == 0.8);
+        assert(result.avg_spaces == 0);  // No spaces
+
+        // 20% of all chars in the entire column are arithmetic operators
+        //
+        assert(result.avg_arithmetic == 0.2);
+        assert(result.avg_line_feed == 0);  // No new lines
+        assert(result.avg_puncts == 0);  // No punctuations
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     test_groupby_edge();
@@ -2483,6 +2530,7 @@ int main(int, char *[]) {
     test_user_join_test();
     test_PriceVolumeTrendVisitor();
     test_QuantQualEstimationVisitor();
+    test_get_str_col_stats();
 
     return (0);
 }

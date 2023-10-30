@@ -710,12 +710,12 @@ struct  StringStats  {
 
     double  avg_size { 0 };        // Average of sizes
     double  std_size { 0 };        // Standard deviation of sizes
-    double  avg_alphabets { 0 };   // a - z, A - Z
-    double  avg_caps { 0 };        // A - Z
-    double  avg_digits { 0 };      // 0 - 9
-    double  avg_spaces { 0 };      // ' '
-    double  avg_arithmetic { 0 };  // + - / *
-    double  avg_line_feed { 0 };   // \n
+    double  avg_alphabets { 0 };   // Average number of a - z, A - Z
+    double  avg_caps { 0 };        // Average number of A - Z
+    double  avg_digits { 0 };      // Average number of 0 - 9
+    double  avg_spaces { 0 };      // Average number of ' '
+    double  avg_arithmetic { 0 };  // Average number of + - / *
+    double  avg_line_feed { 0 };   // Average number of \n
 
     // Punctuations. Anything that's not an alphabet, digit, space, line feed,
     // or arithmetic operators.

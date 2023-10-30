@@ -2649,7 +2649,7 @@ public: // Read/access and slicing interfaces
     get_reindexed_view(const char *col_to_be_index,
                        const char *old_index_name = nullptr) const;
 
-    // This takes a string column as input and returns a set of statistics
+    // This call takes a string column as input and returns a set of statistics
     // about the strings in that column.  You could use these statistics to
     // figure out the characteristics of the strings in the column. Or you
     // could use the statistics to determine if a new string is acceptable

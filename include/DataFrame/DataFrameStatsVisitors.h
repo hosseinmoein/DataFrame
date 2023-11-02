@@ -441,11 +441,18 @@ struct  QuadraticMeanVisitor : public MeanBase<T, I>  {
     inline void post()  {
 
         BaseClass::sum_.post();
-        BaseClass::mean_ =
-            std::sqrt(BaseClass::sum_.get_result() / T(BaseClass::cnt_));
+        euclidean_norm_ = std::sqrt(BaseClass::sum_.get_result());
+        BaseClass::mean_ = euclidean_norm_ / std::sqrt(T(BaseClass::cnt_));
     }
 
+    BaseClass::value_type
+    get_euclidean_norm() const  { return (euclidean_norm_); }
+
     QuadraticMeanVisitor(bool skipnan = true) : BaseClass(skipnan)  {   }
+
+private:
+
+    BaseClass::value_type   euclidean_norm_ { 0 };
 };
 
 // ----------------------------------------------------------------------------

@@ -134,7 +134,8 @@ struct QuadraticMeanVisitor;
       <td>
         This functor class calculates quadratic mean or root mean square. It gives a greater weight to larger items and is always equal to or greater than the “regular” arithmetic mean<BR>
         The mean is calculated as &radic;<span style="text-decoration:overline;">(X0<sup>2</sup> + X1<sup>2</sup> + ... + Xn-1<sup>2</sup>) / n</span><BR>
-        The constructor takes a single optional Boolean argument to whether skip NaN values. The default is True. <BR>
+        The constructor takes a single optional Boolean argument to whether skip NaN values. The default is True.<BR><BR>
+        In addition to <I>get_result()</I>, this visitor also has <I>get_euclidean_norm()</I> that returns &radic;<span style="text-decoration:overline;">X0<sup>2</sup> + X1<sup>2</sup> + ... + Xn-1<sup>2</sup></span><BR>
       </td>
       <td width="12%">
         <B>T</B>: Column data type<BR>

@@ -744,19 +744,19 @@ col_3:1:<double>:15,
 col_str:1:<string>:11,
 col_4:1:<double>:22,
 
+INDEX:1:<ulong>:123450,
+col_1:1:<double>:1,
+col_2:1:<double>:8,
+col_3:1:<double>:15,
+col_str:1:<string>:11,
+col_4:1:<double>:22,
+
 INDEX:1:<ulong>:123451,
 col_1:1:<double>:2,
 col_2:1:<double>:9,
 col_3:1:<double>:16,
 col_str:1:<string>:22,
 col_4:1:<double>:23,
-
-INDEX:1:<ulong>:123452,
-col_1:1:<double>:3,
-col_2:1:<double>:10,
-col_3:1:<double>:17,
-col_str:1:<string>:33,
-col_4:1:<double>:24,
 
 
 Testing write(json) ...
@@ -1993,3 +1993,9 @@ INDEX:3:<uint>,lhs.INDEX:3:<uint>,rhs.INDEX:3:<uint>,key:3:<int>,personName:3:<s
 1,1,1,1,Mary,Tesla
 2,1,2,1,Mary,Jeep 
 
+
+Testing PriceVolumeTrendVisitor{  } ...
+
+Testing QuantQualEstimationVisitor{  } ...
+
+Testing get_str_col_stats(  ) ...

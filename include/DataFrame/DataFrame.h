@@ -2650,7 +2650,7 @@ public: // Read/access and slicing interfaces
                        const char *old_index_name = nullptr) const;
 
     // This call takes a string column as input and returns a set of statistics
-    // about the strings in that column.  You could use these statistics to
+    // about the strings in that column. You could use these statistics to
     // figure out the characteristics of the strings in the column. Or you
     // could use the statistics to determine if a new string is acceptable
     // for this column.

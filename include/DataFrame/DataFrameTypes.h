@@ -36,6 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <memory>
 #include <stdexcept>
 #include <tuple>
+#include <utility>
 #include <vector>
 
 // ----------------------------------------------------------------------------
@@ -682,12 +683,12 @@ inline static const std::vector<std::string>   describe_index_col  {
 //
 struct  MemUsage  {
 
-    size_t  column_used_memory { 0 };
-    size_t  column_capacity_memory { 0 };
-    size_t  column_type_size { 0 };
-    size_t  index_used_memory { 0 };
-    size_t  index_capacity_memory { 0 };
-    size_t  index_type_size { 0 };
+    std::size_t column_used_memory { 0 };
+    std::size_t column_capacity_memory { 0 };
+    std::size_t column_type_size { 0 };
+    std::size_t index_used_memory { 0 };
+    std::size_t index_capacity_memory { 0 };
+    std::size_t index_type_size { 0 };
 
     template<typename S>
     friend S &operator << (S &stream, const MemUsage &mu)  {
@@ -701,6 +702,25 @@ struct  MemUsage  {
                << "Index Type Size: " << mu.index_type_size << '\n';
         return (stream);
     }
+};
+
+// ----------------------------------------------------------------------------
+
+struct  StringStats  {
+
+    double  avg_size { 0 };        // Average of sizes
+    double  std_size { 0 };        // Standard deviation of sizes
+    double  avg_alphabets { 0 };   // Average number of a - z, A - Z
+    double  avg_caps { 0 };        // Average number of A - Z
+    double  avg_digits { 0 };      // Average number of 0 - 9
+    double  avg_spaces { 0 };      // Average number of ' '
+    double  avg_arithmetic { 0 };  // Average number of + - / *
+    double  avg_line_feed { 0 };   // Average number of \n
+
+    // Punctuations. Anything that's not an alphabet, digit, space, line feed,
+    // or arithmetic operators.
+    //
+    double  avg_puncts { 0 };
 };
 
 // ----------------------------------------------------------------------------

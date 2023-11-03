@@ -467,6 +467,18 @@ enum class  prob_dist_type : unsigned char  {
 
 // ----------------------------------------------------------------------------
 
+enum class  normalization_type : unsigned char  {
+    simple = 1,           // V / sum(xi)
+    euclidean = 2,        // V / sqrt(sum(xi^2))
+    maxi = 3,             // V / max(xi)
+    min_max = 4,          // (V - μ(V)) / σ(V)
+    decimal_scaling = 5,  // V / 10^max(xi) order
+    log_transform = 6,    // ln(xi)
+    root_transform = 7,   // sqrt(xi)
+};
+
+// ----------------------------------------------------------------------------
+
 enum class  loss_function_type : unsigned char  {
     // L = sum(P(x) * log(P(x) / Q(x)))  --  P = Actual, Q = Model
     //

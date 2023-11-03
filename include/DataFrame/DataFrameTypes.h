@@ -471,10 +471,11 @@ enum class  normalization_type : unsigned char  {
     simple = 1,           // V / sum(xi)
     euclidean = 2,        // V / sqrt(sum(xi^2))
     maxi = 3,             // V / max(xi)
-    min_max = 4,          // (V - μ(V)) / σ(V)
-    decimal_scaling = 5,  // V / 10^max(xi) order
-    log_transform = 6,    // ln(xi)
-    root_transform = 7,   // sqrt(xi)
+    z_score = 4,          // (V - μ(V)) / σ(V)
+    min_max = 5,          // (V - min(V)) / (max(V) - min(V))
+    decimal_scaling = 6,  // V / 10^max(xi) order
+    log_transform = 7,    // ln(xi)
+    root_transform = 8,   // sqrt(xi)
 };
 
 // ----------------------------------------------------------------------------

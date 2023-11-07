@@ -441,11 +441,18 @@ struct  QuadraticMeanVisitor : public MeanBase<T, I>  {
     inline void post()  {
 
         BaseClass::sum_.post();
-        BaseClass::mean_ =
-            std::sqrt(BaseClass::sum_.get_result() / T(BaseClass::cnt_));
+        euclidean_norm_ = std::sqrt(BaseClass::sum_.get_result());
+        BaseClass::mean_ = euclidean_norm_ / std::sqrt(T(BaseClass::cnt_));
     }
 
+    BaseClass::value_type
+    get_euclidean_norm() const  { return (euclidean_norm_); }
+
     QuadraticMeanVisitor(bool skipnan = true) : BaseClass(skipnan)  {   }
+
+private:
+
+    BaseClass::value_type   euclidean_norm_ { 0 };
 };
 
 // ----------------------------------------------------------------------------
@@ -3566,6 +3573,38 @@ struct  NormalizeVisitor  {
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
 
+        if (type_ == normalization_type::min_max)
+            min_max_(idx_begin, idx_end, column_begin, column_end);
+        else if (type_ == normalization_type::simple)
+            simple_(idx_begin, idx_end, column_begin, column_end);
+        else if (type_ == normalization_type::euclidean)
+            euclidean_(idx_begin, idx_end, column_begin, column_end);
+        else if (type_ == normalization_type::maxi)
+            maxi_(idx_begin, idx_end, column_begin, column_end);
+        else if (type_ == normalization_type::z_score)
+            z_score_(idx_begin, idx_end, column_begin, column_end);
+        else if (type_ == normalization_type::decimal_scaling)
+            decimal_scaling_(idx_begin, idx_end, column_begin, column_end);
+        else if (type_ == normalization_type::log_transform)
+            log_transform_(column_begin, column_end);
+        else if (type_ == normalization_type::root_transform)
+            root_transform_(column_begin, column_end);
+    }
+
+    DEFINE_PRE_POST
+    DEFINE_RESULT
+
+    explicit
+    NormalizeVisitor(normalization_type t = normalization_type::min_max)
+        : type_(t)  {   }
+
+private:
+
+    template<forward_iterator K, forward_iterator H>
+    inline void
+    min_max_(const K &idx_begin, const K &idx_end,
+             const H &column_begin, const H &column_end)  {
+
         MinVisitor<T, I>    minv;
         MaxVisitor<T, I>    maxv;
 
@@ -3586,13 +3625,134 @@ struct  NormalizeVisitor  {
                            return ((val - minv) / diff);
                        });
     }
+    template<forward_iterator K, forward_iterator H>
+    inline void
+    simple_(const K &idx_begin, const K &idx_end,
+            const H &column_begin, const H &column_end)  {
 
-    DEFINE_PRE_POST
-    DEFINE_RESULT
+        SumVisitor<T, I>    sumv;
 
-private:
+        sumv.pre();
+        sumv(idx_begin, idx_end, column_begin, column_end);
+        sumv.post();
 
-    result_type result_ {  };  // Normalized
+        result_.reserve(std::distance(column_begin, column_end));
+        std::transform(column_begin, column_end,
+                       std::back_inserter(result_),
+                       [sumv = sumv.get_result()]
+                       (const auto &val) -> value_type  {
+                           return (val / sumv);
+                       });
+    }
+    template<forward_iterator K, forward_iterator H>
+    inline void
+    euclidean_(const K &idx_begin, const K &idx_end,
+               const H &column_begin, const H &column_end)  {
+
+        QuadraticMeanVisitor<T, I>  eucliv;
+
+        eucliv.pre();
+        eucliv(idx_begin, idx_end, column_begin, column_end);
+        eucliv.post();
+
+        result_.reserve(std::distance(column_begin, column_end));
+        std::transform(column_begin, column_end,
+                       std::back_inserter(result_),
+                       [eucli = eucliv.get_euclidean_norm()]
+                       (const auto &val) -> value_type  {
+                           return (val / eucli);
+                       });
+    }
+    template<forward_iterator K, forward_iterator H>
+    inline void
+    maxi_(const K &idx_begin, const K &idx_end,
+          const H &column_begin, const H &column_end)  {
+
+        MaxVisitor<T, I>    maxv;
+
+        maxv.pre();
+        maxv(idx_begin, idx_end, column_begin, column_end);
+        maxv.post();
+
+        result_.reserve(std::distance(column_begin, column_end));
+        std::transform(column_begin, column_end,
+                       std::back_inserter(result_),
+                       [maxv = maxv.get_result()]
+                       (const auto &val) -> value_type  {
+                           return (val / maxv);
+                       });
+    }
+    template<forward_iterator K, forward_iterator H>
+    inline void
+    z_score_(const K &idx_begin, const K &idx_end,
+             const H &column_begin, const H &column_end)  {
+
+        MeanVisitor<T, I>   meanv;
+        StdVisitor<T, I>    stdv;
+
+        meanv.pre();
+        stdv.pre();
+        meanv(idx_begin, idx_end, column_begin, column_end);
+        stdv(idx_begin, idx_end, column_begin, column_end);
+        meanv.post();
+        stdv.post();
+
+        result_.reserve(std::distance(column_begin, column_end));
+        std::transform(column_begin, column_end,
+                       std::back_inserter(result_),
+                       [meanv = meanv.get_result(), stdv = stdv.get_result()]
+                       (const auto &val) -> value_type  {
+                           return ((val - meanv) / stdv);
+                       });
+    }
+    template<forward_iterator K, forward_iterator H>
+    inline void
+    decimal_scaling_(const K &idx_begin, const K &idx_end,
+                     const H &column_begin, const H &column_end)  {
+
+        MaxVisitor<T, I>    maxv;
+
+        maxv.pre();
+        maxv(idx_begin, idx_end, column_begin, column_end);
+        maxv.post();
+
+        // Raise 10 to the number of digits in max value
+        //
+        const value_type    scale =
+            std::pow(10, std::log10(maxv.get_result()) + 1);
+
+        result_.reserve(std::distance(column_begin, column_end));
+        std::transform(column_begin, column_end,
+                       std::back_inserter(result_),
+                       [scale](const auto &val) -> value_type  {
+                           return (val / scale);
+                       });
+    }
+    template<forward_iterator H>
+    inline void
+    log_transform_(const H &column_begin, const H &column_end)  {
+
+        result_.reserve(std::distance(column_begin, column_end));
+        std::transform(column_begin, column_end,
+                       std::back_inserter(result_),
+                       [](const auto &val) -> value_type  {
+                           return (std::log(val));
+                       });
+    }
+    template<forward_iterator H>
+    inline void
+    root_transform_(const H &column_begin, const H &column_end)  {
+
+        result_.reserve(std::distance(column_begin, column_end));
+        std::transform(column_begin, column_end,
+                       std::back_inserter(result_),
+                       [](const auto &val) -> value_type  {
+                           return (std::sqrt(val));
+                       });
+    }
+
+    result_type                 result_ {  };  // Normalized
+    const normalization_type    type_;
 };
 
 template<typename T, typename I = unsigned long, std::size_t A = 0>

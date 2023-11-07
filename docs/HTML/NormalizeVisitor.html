@@ -85,7 +85,7 @@ enum class  normalization_type : unsigned char  {
     simple = 1,           // <div class="frac"> <span>V</span> <span class="symbol">/</span> <span class="bottom">&sum; x<sub>i</sub></span> </div>
     euclidean = 2,        // <div class="frac"> <span>V</span> <span class="symbol">/</span> <span class="bottom"><span>&radic;<span style="text-decoration:overline;">&sum; x<sub>i</sub><sup>2</sup></span></span> </div>
     maxi = 3,             // <div class="frac"> <span>V</span> <span class="symbol">/</span> <span class="bottom">MAX(x<sub>i</sub>)</span> </div>
-    z_score = 4,          // <div class="frac"> <span>V - μ(V)</span> <span class="symbol">/</span> <span class="bottom">σ(V)</span> </div>
+    z_score = 4,          // <div class="frac"> <span>V - &mu;(V)</span> <span class="symbol">/</span> <span class="bottom">&sigma;(V)</span> </div>
     min_max = 5,          // <div class="frac"> <span>V - MIN(V)</span> <span class="symbol">/</span> <span class="bottom">MAX(V) - MIN(V)</span> </div>
     decimal_scaling = 6,  // <div class="frac"> <span>V</span> <span class="symbol">/</span> <span class="bottom">10<sup>MAX(x<sub>i</sub>)</sup></span> </div>
     log_transform = 7,    // Ln(V)

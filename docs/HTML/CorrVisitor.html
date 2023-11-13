@@ -24,7 +24,53 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
 <!DOCTYPE html>
 <html>
+
+<style>
+.frac {
+    display: inline-block;
+    position: relative;
+    vertical-align: middle;
+    letter-spacing: 0.001em;
+    text-align: center;
+}
+.frac > span {
+    display: block;
+    padding-top: 0.01em;
+    padding-bottom: 0.01em;
+}
+.frac span.bottom {
+    border-top: thin solid white;
+    padding-top: 0.4em;
+    padding-bottom: 0.3em;
+}
+.frac span.symbol { display: none; }
+</style>
+
 <body>
+
+  <table align="center" border="1">
+
+    <tr bgcolor="lightblue">
+      <th>Signature</th> <th>Description</th>
+    </tr>
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        <PRE><B>
+enum class  correlation_type : unsigned char  {
+
+    pearson = 1,   // &Rho; = <div class="frac"> <span>COV(X, Y)</span> <span class="symbol">/</span> <span class="bottom">&sigma;(X) * &sigma;(Y)</span> </div>
+    // d<sub>i</sub> is the difference in rank of X member vs. Y member
+    //
+    spearman = 2,  // &Rho; = 1 - <div class="frac"> <span>6 * &sum;d<sub>i</sub><sup>2</sup></span> <span class="symbol">/</span> <span class="bottom">n * (n<sup>2</sup> - 1)</span> </div>
+}; </font></B></PRE>
+      </td>
+      <td>
+        This specifies different correlation types.<BR>
+      </td>
+    </tr>
+
+  </table>
+  <BR>
   <table align="center" border="1">
 
     <tr bgcolor="lightblue">
@@ -42,7 +88,8 @@ struct CorrVisitor;
         This functor class calculates the correlation of two given columns.<BR>
         <I>
         <PRE>
-    explicit CorrVisitor (bool bias = true);
+  explicit CorrVisitor(correlation_type t = correlation_type::pearson,
+                       bool bias = true);
         </PRE>
         </I>
       </td>
@@ -54,15 +101,20 @@ struct CorrVisitor;
 
   </table>
 
-  <pre style='color:#000000;background:#ffffff;'>    <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>cout</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#800000; '>"</span><span style='color:#0f69ff; '>\n</span><span style='color:#0000e6; '>Testing Correlation Visitor ...</span><span style='color:#800000; '>"</span> <span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span> <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span><span style='color:#603000; '>endl</span><span style='color:#800080; '>;</span>
-
-    CorrVisitor<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span> corr_visitor<span style='color:#800080; '>;</span>
-    <span style='color:#800000; font-weight:bold; '>auto</span>                fut10 <span style='color:#808030; '>=</span> df<span style='color:#808030; '>.</span>visit_async<span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>double</span><span style='color:#808030; '>,</span> <span style='color:#800000; font-weight:bold; '>double</span><span style='color:#800080; '>></span><span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>dbl_col</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> <span style='color:#800000; '>"</span><span style='color:#0000e6; '>dbl_col_2</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> corr_visitor<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
-    <span style='color:#800000; font-weight:bold; '>const</span> <span style='color:#800000; font-weight:bold; '>double</span>        corr <span style='color:#808030; '>=</span> fut10<span style='color:#808030; '>.</span>get<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#808030; '>.</span>get_result<span style='color:#808030; '>(</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
-
-    assert<span style='color:#808030; '>(</span><span style='color:#603000; '>fabs</span><span style='color:#808030; '>(</span>corr <span style='color:#808030; '>-</span> <span style='color:#808030; '>-</span><span style='color:#008000; '>0.358381</span><span style='color:#808030; '>)</span> <span style='color:#808030; '>&lt;</span> <span style='color:#008000; '>0.000001</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
-</pre>
-  <!--Created using ToHtml.com on 2020-05-07 15:50:30 UTC -->
+<pre class="code_syntax" style="color:#000000;background:#ffffff;"><span class="line_wrapper">    <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">cout</span> <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> <span style="color:#800000; ">"</span><span style="color:#0f69ff; ">\n</span><span style="color:#0000e6; ">Testing Correlation Visitor ...</span><span style="color:#800000; ">"</span> <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">endl</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    CorrVisitor<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span> p_corr_visitor<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    CorrVisitor<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span> s_corr_visitor<span style="color:#808030; ">(</span>correlation_type<span style="color:#800080; ">::</span>spearman<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    </span>
+<span class="line_wrapper">    df<span style="color:#808030; ">.</span>single_act_visit<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">dbl_col</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">dbl_col_2</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> s_corr_visitor<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">auto</span>            fut10 <span style="color:#808030; ">=</span> df<span style="color:#808030; ">.</span>visit_async<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">dbl_col</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">dbl_col_2</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> p_corr_visitor<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">auto</span>            rev_fut10 <span style="color:#808030; ">=</span> df<span style="color:#808030; ">.</span>visit_async<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">dbl_col</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">dbl_col_2</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> rev_p_corr_visitor<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">true</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    <span style="color:#800000; font-weight:bold; ">const</span> <span style="color:#800000; font-weight:bold; ">double</span>    corr <span style="color:#808030; ">=</span> fut10<span style="color:#808030; ">.</span>get<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#808030; ">.</span>get_result<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span><span style="color:#603000; ">fabs</span><span style="color:#808030; ">(</span>corr <span style="color:#808030; ">-</span> <span style="color:#808030; ">-</span><span style="color:#008000; ">0.358381</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.000001</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span><span style="color:#603000; ">fabs</span><span style="color:#808030; ">(</span>s_corr_visitor<span style="color:#808030; ">.</span>get_result<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span> <span style="color:#808030; ">-</span><span style="color:#008000; ">0.380952</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.000001</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span></pre>
 
   <img src="https://github.com/hosseinmoein/DataFrame/blob/master/docs/LionLookingUp.jpg?raw=true" alt="C++ DataFrame"
        width="200" height="150" style="float:right"/>

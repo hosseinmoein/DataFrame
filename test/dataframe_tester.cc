@@ -300,17 +300,22 @@ static void test_haphazard()  {
 
     std::cout << "\nTesting Correlation Visitor ..." << std::endl;
 
-    CorrVisitor<double> corr_visitor;
-    CorrVisitor<double> rev_corr_visitor;
-    auto                fut10 =
-        df.visit_async<double, double>("dbl_col", "dbl_col_2", corr_visitor);
-    auto                rev_fut10 =
+    CorrVisitor<double> p_corr_visitor;
+    CorrVisitor<double> s_corr_visitor(correlation_type::spearman);
+    CorrVisitor<double> rev_p_corr_visitor;
+    
+    df.single_act_visit<double, double>("dbl_col", "dbl_col_2", s_corr_visitor);
+
+    auto            fut10 =
+        df.visit_async<double, double>("dbl_col", "dbl_col_2", p_corr_visitor);
+    auto            rev_fut10 =
         df.visit_async<double, double>("dbl_col", "dbl_col_2",
-                                       rev_corr_visitor, true);
-    const double        corr = fut10.get().get_result();
-    const double        rev_corr = rev_fut10.get().get_result();
+                                       rev_p_corr_visitor, true);
+    const double    corr = fut10.get().get_result();
+    const double    rev_corr = rev_fut10.get().get_result();
 
     assert(fabs(corr - -0.358381) < 0.000001);
+    assert(fabs(s_corr_visitor.get_result() - -0.380952) < 0.000001);
     assert(fabs(rev_corr - -0.358381) < 0.000001);
 
     std::cout << "\nTesting Stats Visitor ..." << std::endl;
@@ -334,7 +339,7 @@ static void test_haphazard()  {
     assert(fabs(slr_visitor.get_intercept() - 0.602674) < 0.00001);
     assert(fabs(slr_visitor.get_corr() - -0.358381) < 0.00001);
     assert(fabs(df.visit<double, double>("dbl_col", "dbl_col_2",
-                                         corr_visitor).get_result() -
+                                         p_corr_visitor).get_result() -
                -0.358381) < 0.00001);
 
     std::cout << "\nTesting GROUPBY ..." << std::endl;

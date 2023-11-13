@@ -841,6 +841,97 @@ using te_v = TrackingErrorVisitor<T, I>;
 
 // ----------------------------------------------------------------------------
 
+// This ranks the values in the column based on rank policy starting from 0.
+//
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+struct  RankVisitor  {
+
+public:
+
+    DEFINE_VISIT_BASIC_TYPES
+    using result_type =
+        std::vector<value_type,
+                    typename allocator_declare<value_type, A>::type>;
+
+    template <forward_iterator K, forward_iterator H>
+    inline void
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end)  {
+
+        GET_COL_SIZE
+        std::vector<size_type, typename allocator_declare<size_type, A>::type>
+            rank_vec(col_s);
+
+        std::iota(rank_vec.begin(), rank_vec.end(), 0);
+        std::stable_sort(
+            rank_vec.begin(), rank_vec.end(),
+            [&column_begin](size_type lhs, size_type rhs) -> bool  {
+                return *(column_begin + lhs) < *(column_begin + rhs);
+            });
+
+        result_type         result(col_s);
+        const value_type    *prev_value = &*(column_begin + rank_vec[0]);
+
+        for (size_type i = 0; i < col_s; ++i) [[likely]]  {
+            value_type  avg_val = static_cast<value_type>(i);
+            value_type  first_val = static_cast<value_type>(i);
+            value_type  last_val = static_cast<value_type>(i);
+            size_type   j = i + 1;
+
+            for ( ; j < col_s && *prev_value == *(column_begin + rank_vec[j]);
+                 ++j)  {
+                last_val = static_cast<value_type>(j);
+                avg_val += static_cast<value_type>(j);
+            }
+            avg_val /= value_type(j - i);
+
+            switch(policy_)  {
+                case rank_policy::average:
+                {
+                    for (; i < col_s && i < j; ++i)
+                        result[rank_vec[i]] = avg_val;
+                    break;
+                }
+                case rank_policy::first:
+                {
+                    for (; i < col_s && i < j; ++i)
+                        result[rank_vec[i]] = first_val;
+                    break;
+                }
+                case rank_policy::last:
+                {
+                    for (; i < col_s && i < j; ++i)
+                        result[rank_vec[i]] = last_val;
+                    break;
+                }
+                case rank_policy::actual:
+                {
+                    for (; i < col_s && i < j; ++i)
+                        result[rank_vec[i]] = static_cast<value_type>(i);
+                    break;
+                }
+            }
+            if (i < col_s)
+                prev_value = &*(column_begin + rank_vec[i]);
+            i -= 1;  // Because the outer loop does ++i
+        }
+        result_.swap(result);
+    }
+
+    DEFINE_PRE_POST
+    DEFINE_RESULT
+
+    explicit
+    RankVisitor(rank_policy p = rank_policy::actual) : policy_(p)  {   }
+
+private:
+
+    const rank_policy   policy_;
+    result_type         result_ { };
+};
+
+// ----------------------------------------------------------------------------
+
 template<arithmetic T, typename I = unsigned long>
 struct  CorrVisitor  {
 
@@ -853,23 +944,71 @@ public:
 
         cov_ (idx, val1, val2);
     }
-    PASS_DATA_ONE_BY_ONE_2
+
+    template <forward_iterator K, forward_iterator H>
+    inline void
+    operator() (K idx_begin, K idx_end,
+                H column_begin1, H column_end1,
+                H column_begin2, H column_end2)  {
+
+        const auto      &idx = *idx_begin;
+        const size_type col_s =
+            std::min(std::distance(idx_begin, idx_end),
+                     std::distance(column_begin1, column_end1));
+
+        assert((col_s == size_type(std::distance(column_begin2, column_end2))));
+
+        if (type_ == correlation_type::pearson)  {
+            while (column_begin1 < column_end1 && column_begin2 < column_end2)
+                (*this)(idx, *column_begin1++, *column_begin2++);
+        }
+        else  {  // correlation_type::spearman
+            RankVisitor<T, I>   rank;
+
+            rank.pre();
+            rank(idx_begin, idx_end, column_begin1, column_end1);
+            rank.post();
+
+            const auto  rank1 = rank.get_result();
+
+            rank.pre();
+            rank(idx_begin, idx_end, column_begin2, column_end2);
+            rank.post();
+
+            const auto  rank2 = std::move(rank.get_result());
+            value_type  diff_sum { 0 };
+
+            for (size_type i = 0; i < col_s; ++i)  {
+                const value_type diff = rank1[i] - rank2[i];
+
+                diff_sum += diff * diff;
+            }
+
+            result_ = value_type(1) -
+                      ((value_type(6) * diff_sum) /
+                       (value_type(col_s * (col_s * col_s - 1))));
+        }
+    }
 
     inline void pre ()  { cov_.pre(); result_ = 0; }
     inline void post ()  {
 
-        cov_.post();
-        result_ = cov_.get_result() /
-                  (::sqrt(cov_.get_var1()) * ::sqrt(cov_.get_var2()));
+        if (type_ == correlation_type::pearson)  {
+            cov_.post();
+            result_ = cov_.get_result() /
+                      (::sqrt(cov_.get_var1()) * ::sqrt(cov_.get_var2()));
+        }
     }
     inline result_type get_result () const  { return (result_); }
 
-    explicit CorrVisitor (bool biased = false) : cov_ (biased)  {   }
+    explicit CorrVisitor (correlation_type t = correlation_type::pearson,
+                          bool biased = false) : cov_ (biased), type_(t)  {  }
 
 private:
 
     CovVisitor<value_type, index_type>  cov_;
     result_type                         result_ { 0 };
+    const correlation_type              type_;
 };
 
 // ----------------------------------------------------------------------------
@@ -1593,97 +1732,6 @@ private:
     map_type        cat_map_ { };
     result_type     result_ { };
     const size_type nan_;
-};
-
-// ----------------------------------------------------------------------------
-
-// This ranks the values in the column based on rank policy starting from 0.
-//
-template<typename T, typename I = unsigned long, std::size_t A = 0>
-struct  RankVisitor  {
-
-public:
-
-    DEFINE_VISIT_BASIC_TYPES
-    using result_type =
-        std::vector<value_type,
-                    typename allocator_declare<value_type, A>::type>;
-
-    template <forward_iterator K, forward_iterator H>
-    inline void
-    operator() (const K &idx_begin, const K &idx_end,
-                const H &column_begin, const H &column_end)  {
-
-        GET_COL_SIZE
-        std::vector<size_type, typename allocator_declare<size_type, A>::type>
-            rank_vec(col_s);
-
-        std::iota(rank_vec.begin(), rank_vec.end(), 0);
-        std::stable_sort(
-            rank_vec.begin(), rank_vec.end(),
-            [&column_begin](size_type lhs, size_type rhs) -> bool  {
-                return *(column_begin + lhs) < *(column_begin + rhs);
-            });
-
-        result_type         result(col_s);
-        const value_type    *prev_value = &*(column_begin + rank_vec[0]);
-
-        for (size_type i = 0; i < col_s; ++i) [[likely]]  {
-            value_type      avg_val = static_cast<value_type>(i);
-            value_type      first_val = static_cast<value_type>(i);
-            value_type      last_val = static_cast<value_type>(i);
-            size_type   j = i + 1;
-
-            for ( ; j < col_s && *prev_value == *(column_begin + rank_vec[j]);
-                 ++j)  {
-                last_val = static_cast<value_type>(j);
-                avg_val += static_cast<value_type>(j);
-            }
-            avg_val /= value_type(j - i);
-
-            switch(policy_)  {
-                case rank_policy::average:
-                {
-                    for (; i < col_s && i < j; ++i)
-                        result[rank_vec[i]] = avg_val;
-                    break;
-                }
-                case rank_policy::first:
-                {
-                    for (; i < col_s && i < j; ++i)
-                        result[rank_vec[i]] = first_val;
-                    break;
-                }
-                case rank_policy::last:
-                {
-                    for (; i < col_s && i < j; ++i)
-                        result[rank_vec[i]] = last_val;
-                    break;
-                }
-                case rank_policy::actual:
-                {
-                    for (; i < col_s && i < j; ++i)
-                        result[rank_vec[i]] = static_cast<value_type>(i);
-                    break;
-                }
-            }
-            if (i < col_s)
-                prev_value = &*(column_begin + rank_vec[i]);
-            i -= 1;  // Because the outer loop does ++i
-        }
-        result_.swap(result);
-    }
-
-    DEFINE_PRE_POST
-    DEFINE_RESULT
-
-    explicit
-    RankVisitor(rank_policy p = rank_policy::actual) : policy_(p)  {   }
-
-private:
-
-    const rank_policy   policy_;
-    result_type         result_ { };
 };
 
 // ----------------------------------------------------------------------------

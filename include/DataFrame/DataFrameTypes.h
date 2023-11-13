@@ -97,6 +97,7 @@ inline constexpr const char *DF_INDEX_COL_NAME = "INDEX";
 // ----------------------------------------------------------------------------
 
 enum class  nan_policy : bool  {
+
     pad_with_nans = true,
     dont_pad_with_nans = false,
 };
@@ -104,6 +105,7 @@ enum class  nan_policy : bool  {
 // ----------------------------------------------------------------------------
 
 enum class  sort_state : bool  {
+
     sorted = true,
     not_sorted = false,
 };
@@ -111,6 +113,7 @@ enum class  sort_state : bool  {
 // ----------------------------------------------------------------------------
 
 enum class  sort_spec : unsigned char  {
+
     ascen = 1,
     desce = 2,
     abs_ascen = 3,
@@ -120,6 +123,7 @@ enum class  sort_spec : unsigned char  {
 // ----------------------------------------------------------------------------
 
 enum class  join_policy : unsigned char  {
+
     inner_join = 1,
     left_join = 2,
     right_join = 3,
@@ -129,6 +133,7 @@ enum class  join_policy : unsigned char  {
 // ----------------------------------------------------------------------------
 
 enum class  concat_policy : unsigned char  {
+
     common_columns = 1,
     all_columns = 2,
     lhs_and_common_columns = 3,
@@ -139,6 +144,7 @@ enum class  concat_policy : unsigned char  {
 // This policy is relative to a tabular data structure
 //
 enum class  shift_policy : unsigned char  {
+
     // Shift/rotate the content of all columns down, keep index unchanged
     //
     down = 1,
@@ -184,6 +190,7 @@ enum class  fill_policy : unsigned char  {
 // ----------------------------------------------------------------------------
 
 enum class  roll_policy : unsigned char  {
+
     // Roll one block of data at a time
     // The length of result will be "input length / rolling period"
     //
@@ -198,6 +205,7 @@ enum class  roll_policy : unsigned char  {
 // ----------------------------------------------------------------------------
 
 enum class  quantile_policy : unsigned char  {
+
     lower_value = 1,   // Take the higher index
     higher_value = 2,  // Take the lower index
     mid_point = 3,     // Average the two quantiles
@@ -207,6 +215,7 @@ enum class  quantile_policy : unsigned char  {
 // ----------------------------------------------------------------------------
 
 enum class  drop_policy : unsigned char  {
+
     all = 1,       // Remove row if all columns are nan
     any = 2,       // Remove row if any column is nan
     threshold = 3, // Remove row if threshold number of columns are nan
@@ -225,7 +234,16 @@ enum class  mean_type : unsigned char  {
 
 // ----------------------------------------------------------------------------
 
+enum class  correlation_type : unsigned char  {
+
+    pearson = 1,   // ρ =  COV(X, Y) / (σ(X) * σ(Y))
+    spearman = 2,  // ρ = 1 - ((6 * SUM(di^2)) / n * (n^2 - 1))
+};
+
+// ----------------------------------------------------------------------------
+
 enum class  hampel_type : unsigned char  {
+
     mean = 1,   // Use mean absolute deviation
     median = 2, // Use median absolute deviation
 };
@@ -233,6 +251,7 @@ enum class  hampel_type : unsigned char  {
 // ----------------------------------------------------------------------------
 
 enum class  remove_dup_spec : unsigned char  {
+
     keep_first = 1,  // Keep the first duplicated row
     keep_last = 2,   // Keep the last duplicated row
     keep_none = 3,   // Discard all duplicated rows
@@ -241,6 +260,7 @@ enum class  remove_dup_spec : unsigned char  {
 // ----------------------------------------------------------------------------
 
 enum class  exponential_decay_spec : unsigned char  {
+
     center_of_gravity = 1, // decay = 1 / (1 + value), for value >= 0
     span = 2,              // decay = 2 / (1 + value), for value >= 1
     halflife = 3,          // decay = 1 − exp(log(0.5) / value), for value > 0
@@ -253,6 +273,7 @@ enum class  exponential_decay_spec : unsigned char  {
 // in other words different types of Mean Absolute Deviation.
 //
 enum class  mad_type : unsigned char  {
+
     mean_abs_dev_around_mean = 1,
     mean_abs_dev_around_median = 2,
     median_abs_dev_around_mean = 3,
@@ -262,6 +283,7 @@ enum class  mad_type : unsigned char  {
 // ----------------------------------------------------------------------------
 
 enum class  io_format : unsigned char  {
+
     csv = 1,   // DataFrame specific csv format
     csv2 = 2,  // Regular csv format (similar to Pandas)
     json = 3,
@@ -272,6 +294,7 @@ enum class  io_format : unsigned char  {
 // ----------------------------------------------------------------------------
 
 enum class  time_frequency : unsigned char  {
+
     annual = 1,
     monthly = 2,
     weekly = 3,
@@ -287,6 +310,7 @@ enum class  time_frequency : unsigned char  {
 // ----------------------------------------------------------------------------
 
 enum class  return_policy : unsigned char  {
+
     log = 1,         // log(t1 / t0)
     percentage = 2,  // (t1 - t0) / t0
     monetary = 3,    // t1 - t0
@@ -302,6 +326,7 @@ enum class  return_policy : unsigned char  {
 // specifying a fraction of rows to select
 //
 enum class  random_policy : unsigned char  {
+
     num_rows_with_seed = 1,  // Number of rows with specifying a seed
     num_rows_no_seed = 2,    // Number of rows with no seed specification
     frac_rows_with_seed = 3, // Fraction of rows with specifying a seed
@@ -311,6 +336,7 @@ enum class  random_policy : unsigned char  {
 // ----------------------------------------------------------------------------
 
 enum class  pattern_spec : unsigned char  {
+
     monotonic_increasing = 1,           // i >= j
     strictly_monotonic_increasing = 2,  // i > j
     monotonic_decreasing = 3,           // i <= j
@@ -326,6 +352,7 @@ enum class  pattern_spec : unsigned char  {
 // This specifies how to assign ranks to members of a column
 //
 enum class  rank_policy : unsigned char  {
+
     average = 1,  // Average of ranks, if an item is repeated
     first = 2,    // First rank, if an item is repeated
     last = 3,     // Last rank, if an item is repeated
@@ -337,6 +364,7 @@ enum class  rank_policy : unsigned char  {
 // Different types of Sigmoid functions. For now, there is no integration
 //
 enum class  sigmoid_type : unsigned char  {
+
     logistic = 1,        // f(x) = 1 / (1 + exp(-x))
     algebraic = 2,       // f(x) = 1 / sqrt(1 + pow(x, 2.0))
     // f(x) = [(exp(x) - exp(-x)) / (exp(x) + exp(-x))] = tanh(x)
@@ -351,6 +379,7 @@ enum class  sigmoid_type : unsigned char  {
 // ----------------------------------------------------------------------------
 
 enum class  rectify_type : unsigned char  {
+
     ReLU = 1,           // f(x) = x if x > 0 else 0
     param_ReLU = 2,     // f(x) = x if x > 0 else a * x,          a <= 1
     GeLU = 3,           // f(x) = x * SND(x),       SND = Standard Normal Dist
@@ -364,6 +393,7 @@ enum class  rectify_type : unsigned char  {
 // ----------------------------------------------------------------------------
 
 enum class  linreg_moving_mean_type : unsigned char  {
+
     linreg = 1,
     forecast = 2,
     slope = 3,
@@ -390,6 +420,7 @@ enum class  linreg_moving_mean_type : unsigned char  {
 //    Y[t] = T * S * R is equivalent to log(Y[t]) = log(T) + logt(S) + log(R)
 //
 enum class  decompose_type : unsigned char  {
+
     additive = 1,        // Y(t) = Trend + Seasonal + Residual
     multiplicative = 2,  // Y(t) = Trend * Seasonal * Residual
 };
@@ -397,6 +428,7 @@ enum class  decompose_type : unsigned char  {
 // ----------------------------------------------------------------------------
 
 enum class  box_cox_type : unsigned char  {
+
     // y(λ) = (y^λ - 1) / λ,  if λ != 0
     // y(λ) = log(y),         if λ == 0
     //
@@ -418,6 +450,7 @@ enum class  box_cox_type : unsigned char  {
 // ----------------------------------------------------------------------------
 
 enum class  bucket_type : unsigned char  {
+
     // Bucketize by distance between two index values (i.g. X2 - X1 = N)
     //
     by_distance = 1,
@@ -429,6 +462,7 @@ enum class  bucket_type : unsigned char  {
 // ----------------------------------------------------------------------------
 
 enum class  impurity_type : unsigned char  {
+
     // Measure how often a randomly chosen element from the set would be
     // incorrectly labeled
     //
@@ -442,6 +476,7 @@ enum class  impurity_type : unsigned char  {
 // ----------------------------------------------------------------------------
 
 enum class  prob_dist_type : unsigned char  {
+
     // No negative values
     // yi = xi / sum(X)
     //
@@ -468,6 +503,7 @@ enum class  prob_dist_type : unsigned char  {
 // ----------------------------------------------------------------------------
 
 enum class  normalization_type : unsigned char  {
+
     simple = 1,           // V / sum(xi)
     euclidean = 2,        // V / sqrt(sum(xi^2))
     maxi = 3,             // V / max(xi)
@@ -481,6 +517,7 @@ enum class  normalization_type : unsigned char  {
 // ----------------------------------------------------------------------------
 
 enum class  loss_function_type : unsigned char  {
+
     // L = sum(P(x) * log(P(x) / Q(x)))  --  P = Actual, Q = Model
     //
     kullback_leibler = 1,
@@ -528,6 +565,7 @@ enum class  loss_function_type : unsigned char  {
 
 template<typename T>
 struct  RandGenParams  {
+
     T   min_value { std::numeric_limits<T>::min() };
     T   max_value { std::numeric_limits<T>::max() };
 
@@ -574,6 +612,7 @@ struct  RandGenParams  {
 //
 template<typename T>
 struct  Index2D  {
+
     T   begin {};
     T   end {};
 };

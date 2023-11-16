@@ -953,10 +953,9 @@ public:
 
         const auto      &idx = *idx_begin;
         const size_type col_s =
-            std::min(std::distance(idx_begin, idx_end),
-                     std::distance(column_begin1, column_end1));
-
-        assert((col_s == size_type(std::distance(column_begin2, column_end2))));
+            std::min ({ std::distance(idx_begin, idx_end),
+                        std::distance(column_begin1, column_end1),
+                        std::distance(column_begin2, column_end2) });
 
         if (type_ == correlation_type::pearson)  {
             while (column_begin1 < column_end1 && column_begin2 < column_end2)
@@ -2532,22 +2531,36 @@ struct  KthValueVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_2
 
-    template<typename U>
-    using vec_type = std::vector<U, typename allocator_declare<U, A>::type>;
+    using vec_type = std::vector<T, typename allocator_declare<T, A>::type>;
 
     template <forward_iterator K, forward_iterator H>
     inline void
     operator() (const K &, const K &,
                 const H &values_begin, const H &values_end)  {
 
-        vec_type<value_type>    aux (values_begin, values_end);
+        vec_type        aux;
+        const size_type col_s = std::distance(values_begin, values_end);
 
-        result_ = find_kth_element_(aux, 0, aux.size() - 1, kth_element_);
+        if (skip_nan_)  {
+            aux.reserve(col_s);
+            std::copy_if(values_begin, values_end,
+                         std::back_inserter(aux),
+                         [](T x) -> bool { return (! is_nan__(x)); });
+        }
+        else
+            aux.insert(aux.begin(), values_begin, values_end);
+        compute_size_ = aux.size();
+
+        const size_type kth =
+            std::round(double(kth_element_ * compute_size_) / double(col_s));
+
+        result_ = find_kth_element_(aux, 0, compute_size_ - 1, kth);
     }
 
     inline void pre ()  { result_ = value_type(); }
     inline void post ()  {   }
     inline result_type get_result () const  { return (result_); }
+    inline size_type get_compute_size() const  { return (compute_size_); }
 
     explicit KthValueVisitor (size_type ke, bool skipnan = true)
         : kth_element_(ke), skip_nan_(skipnan)  {   }
@@ -2555,6 +2568,7 @@ struct  KthValueVisitor  {
 private:
 
     result_type     result_ {  };
+    size_type       compute_size_ { 0 };
     const size_type kth_element_;
     const bool      skip_nan_;
 
@@ -2612,17 +2626,21 @@ struct  MedianVisitor  {
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
 
-        GET_COL_SIZE2
-
-        KthValueVisitor<value_type, index_type, A> kv_visitor (col_s >> 1);
-
+        const std::size_t                           col_s =
+            std::distance(column_begin, column_end);
+        const std::size_t                           half = col_s >> 1;
+        KthValueVisitor<value_type, index_type, A>  kv_visitor (half + 1);
 
         kv_visitor.pre();
         kv_visitor(idx_begin, idx_end, column_begin, column_end);
         kv_visitor.post();
         result_ = kv_visitor.get_result();
-        if (! (col_s & 0x01))  { // Even
-            KthValueVisitor<value_type, I, A>   kv_visitor2 ((col_s >> 1) + 1);
+
+        const size_type cs = kv_visitor.get_compute_size();
+
+        if (! (cs & 0x01))  { // Even
+            KthValueVisitor<value_type, I, A>   kv_visitor2 (
+                 cs < col_s ? half + 2 : half);
 
             kv_visitor2.pre();
             kv_visitor2(idx_begin, idx_end, column_begin, column_end);

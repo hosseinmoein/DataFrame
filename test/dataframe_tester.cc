@@ -2131,7 +2131,7 @@ static void test_median()  {
     double                  result =
         df.single_act_visit<double>("dblcol_1", med_visit, true).get_result();
 
-    assert(result == 10.0);
+    assert(result == 11.0);
 
     result = df.single_act_visit<double>("dblcol_2", med_visit).get_result();
     assert(result == 10.50);
@@ -2140,10 +2140,30 @@ static void test_median()  {
     int                 result2 =
         df.single_act_visit<int>("intcol_1", med_visit2).get_result();
 
-    assert(result2 == 10);
+    assert(result2 == 11);
 
     result2 = df.single_act_visit<int>("intcol_2", med_visit2).get_result();
     assert(result2 == 10);
+
+    using TestDF = StdDataFrame<std::string>;
+
+    std::vector<std::string> syms = { "AAPL", "IBM", "TSLA", "MSFT", "CSCO" };
+    std::vector<double>      c1 = { 1.0, 2.0, 3.0, 4.0 };
+    std::vector<double>      c2 = { 0.01, 0.02, 0.03 };
+    std::vector<double>      c3 =
+        { 0.0, std::numeric_limits<double>::quiet_NaN(), 0.1 };
+    TestDF                   testDF ;
+
+    testDF.load_data(std::move(syms),
+                     std::make_pair("c1",  c1),
+                     std::make_pair("c2",  c2),
+                     std::make_pair("c3",  c3));
+
+    MedianVisitor<double, std::string>  md;
+
+    assert((testDF.single_act_visit<double>("c1", md).get_result() == 2.5));
+    assert((testDF.single_act_visit<double>("c2", md).get_result() == 0.02));
+    assert((testDF.single_act_visit<double>("c3", md).get_result() == 0.05));
 }
 
 // -----------------------------------------------------------------------------

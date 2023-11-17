@@ -35,7 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 using namespace hmdf;
 
 constexpr std::size_t   ALIGNMENT = 64;
-constexpr std::size_t   SIZE = 100000000;
+constexpr std::size_t   SIZE = 200000000;
 
 typedef StdDataFrame64<time_t> MyDataFrame;
 
@@ -56,7 +56,7 @@ int main(int, char *[]) {
 
     const auto  second = high_resolution_clock::now();
 
-    std::cout << "All data loadings are done. Calculating means ... "
+    std::cout << "Data generation/load time: "
               << double(duration_cast<microseconds>(second - first).count()) / 1000000.0
               << std::endl;
 
@@ -64,18 +64,20 @@ int main(int, char *[]) {
     VarVisitor<double, time_t>  ln_vv;
     CorrVisitor<double, time_t> e_ln_cv;
 
-    auto    fut1 = df.visit_async<double>("normal", n_mv);
-    auto    fut2 = df.visit_async<double>("log_normal", ln_vv);
-    auto    fut3 = df.visit_async<double, double>("exponential", "log_normal", e_ln_cv);
+    auto    mean = df.visit_async<double>("normal", n_mv);
+    auto    var = df.visit_async<double>("log_normal", ln_vv);
+    auto    corr = df.visit_async<double, double>("exponential", "log_normal", e_ln_cv);
 
-    std::cout << fut1.get().get_result() << ", "
-              << fut2.get().get_result() << ", "
-              << fut3.get().get_result() << std::endl;
+    std::cout << mean.get().get_result() << ", "
+              << var.get().get_result() << ", "
+              << corr.get().get_result() << std::endl;
 
     const auto  third = high_resolution_clock::now();
 
-    std::cout << double(duration_cast<microseconds>(third - second).count()) / 1000000.0
-              << ", "
+    std::cout << "Calculation time: "
+              << double(duration_cast<microseconds>(third - second).count()) / 1000000.0
+              << "\n"
+              << "Overall time: "
               << double(duration_cast<microseconds>(third - first).count()) / 1000000.0
               << " All done" << std::endl;
     return (0);

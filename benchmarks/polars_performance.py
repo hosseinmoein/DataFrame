@@ -4,7 +4,7 @@ import polars as pl
 
 # ------------------------------------------------------------------------------
 
-SIZE: int = 100000000
+SIZE: int = 200000000
 
 first = datetime.datetime.now()
 df = pl.DataFrame({"normal": np.random.normal(size=SIZE),
@@ -12,25 +12,24 @@ df = pl.DataFrame({"normal": np.random.normal(size=SIZE),
                    "exponential": np.random.exponential(size=SIZE),
                    })
 second = datetime.datetime.now()
-print(f"All data loadings are done. Calculating means ... "
+print(f"Data generation/load time: "
       f"{(second - first).seconds}.{(second - first).microseconds}")
 
 df = df.select(
-   m1 = pl.col("normal").mean(),
-   m2 = pl.col("log_normal").var(),
-   m3 = pl.corr("exponential", "log_normal")
+   mean = pl.col("normal").mean(),
+   var = pl.col("log_normal").var(),
+   corr = pl.corr("exponential", "log_normal")
 )
 
-m1: float = df["m1"]
-m2: float = df["m2"]
-m3: float = df["m3"]
+mean: float = df["mean"]
+var: float = df["var"]
+corr: float = df["corr"]
 
-print(f"{m1}, {m2}, {m3}")
+print(f"{mean[0]}, {var[0]}, {corr[0]}")
 third = datetime.datetime.now()
 
-
-print(f"{(third - second).seconds}.{(third - second).microseconds}, "
-      f"{(third - first).seconds}.{(third - first).microseconds} All done");
+print(f"Calculation time: {(third - second).seconds}.{(third - second).microseconds}")
+print(f"Overall time: {(third - first).seconds}.{(third - first).microseconds} All done");
 
 # ------------------------------------------------------------------------------
 

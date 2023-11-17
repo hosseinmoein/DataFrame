@@ -35,7 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 using namespace hmdf;
 
 constexpr std::size_t   ALIGNMENT = 64;
-constexpr std::size_t   SIZE = 200000000;
+constexpr std::size_t   SIZE = 300000000;
 
 typedef StdDataFrame64<time_t> MyDataFrame;
 
@@ -73,13 +73,24 @@ int main(int, char *[]) {
               << corr.get().get_result() << std::endl;
 
     const auto  third = high_resolution_clock::now();
+    auto        functor = [](const auto &, const double &val)-> bool { return (val > 8); };
+    const auto  df2 =
+        df.get_view_by_sel<double, decltype(functor), double>("log_normal", functor);
+
+    std::cout << "Number of rows after select: "
+              << df2.get_column<double>("normal").size() << std::endl;
+
+    const auto  fourth = high_resolution_clock::now();
 
     std::cout << "Calculation time: "
               << double(duration_cast<microseconds>(third - second).count()) / 1000000.0
               << "\n"
+              << "Selection time: "
+              << double(duration_cast<microseconds>(fourth - third).count()) / 1000000.0
+              << "\n"
               << "Overall time: "
-              << double(duration_cast<microseconds>(third - first).count()) / 1000000.0
-              << " All done" << std::endl;
+              << double(duration_cast<microseconds>(fourth - first).count()) / 1000000.0
+              << std::endl;
     return (0);
 }
 

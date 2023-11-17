@@ -24,6 +24,28 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
 <!DOCTYPE html>
 <html>
+
+<style>
+.frac {
+    display: inline-block;
+    position: relative;
+    vertical-align: middle;
+    letter-spacing: 0.001em;
+    text-align: center;
+}
+.frac > span {
+    display: block;
+    padding-top: 0.01em;
+    padding-bottom: 0.01em;
+}
+.frac span.bottom {
+    border-top: thin solid white;
+    padding-top: 0.4em;
+    padding-bottom: 0.3em;
+}
+.frac span.symbol { display: none; }
+</style>
+
 <body>
 
   <table align="center" border="1">
@@ -35,8 +57,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>
 enum class return_policy : unsigned char  {
-    log = 1,         // log(X<sub>t</sub> / X<sub>t-1</sub>)
-    percentage = 2,  // (X<sub>t</sub> - X<sub>t-1</sub>) / X<sub>t-1</sub>
+    log = 1,         // log <div class="frac"> <span>X<sub>t</sub></span> <span class="symbol">/</span> <span class="bottom">X<sub>t-1</sub></span> </div>
+    percentage = 2,  // <div class="frac"> <span>X<sub>t</sub> - X<sub>t-1</sub></span> <span class="symbol">/</span> <span class="bottom">X<sub>t-1</sub></span> </div>
     monetary = 3,    // X<sub>t</sub> - X<sub>t-1</sub>
     trinary = 4,     // 1 if X<sub>t</sub> - X<sub>t-1</sub> > 0, -1 if X<sub>t</sub> - X<sub>t-1</sub> < 0, else 0
 };

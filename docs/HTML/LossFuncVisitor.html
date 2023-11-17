@@ -24,8 +24,29 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
 <!DOCTYPE html>
 <html>
-<body>
 
+<style>
+.frac {
+    display: inline-block;
+    position: relative;
+    vertical-align: middle;
+    letter-spacing: 0.001em;
+    text-align: center;
+}
+.frac > span {
+    display: block;
+    padding-top: 0.01em;
+    padding-bottom: 0.01em;
+}
+.frac span.bottom {
+    border-top: thin solid white;
+    padding-top: 0.4em;
+    padding-bottom: 0.3em;
+}
+.frac span.symbol { display: none; }
+</style>
+
+<body>
 
   <table align="center" border="1">
     <tr bgcolor="lightblue">
@@ -36,31 +57,31 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         <PRE><B>
 enum class loss_function_type : unsigned char  {
     // P = Probability(Actual), Q = Probability(Model)
-    kullback_leibler = 1,      // L = &sum;[P(x) * log(P(x) / Q(x))]
+    kullback_leibler = 1,      // L = &sum;[P(x) * log <div class="frac"> <span>P(x)</span> <span class="symbol">/</span> <span class="bottom">Q(x)</span></div>]
 
     // y = Actual, y&#770; = Model
-    mean_abs_error = 2,        // L = &sum;[|y<sub>i</sub> - y&#770;<sub>i</sub>|] / N
+    mean_abs_error = 2,        // L = <div class="frac"> <span>&sum;|y<sub>i</sub> - y&#770;<sub>i</sub>|</span> <span class="symbol">/</span> <span class="bottom">N</span> </div>
 
     // y = Actual, y&#770; = Model
-    mean_sqr_error = 3,        // L = &sum;[(y<sub>i</sub> - y&#770;<sub>i</sub>)<sup>2</sup>] / N
+    mean_sqr_error = 3,        // L = <div class="frac"> <span>&sum;(y<sub>i</sub> - y&#770;<sub>i</sub>)<sup>2</sup></span> <span class="symbol">/</span> <span class="bottom">N</span> </div>
 
     // y = Actual, y&#770; = Model
-    mean_sqr_log_error = 4,    // L = &sum;[(log(1 + y<sub>i</sub>) - log(1 + y&#770;<sub>i</sub>))<sup>2</sup>] / N
+    mean_sqr_log_error = 4,    // L = <div class="frac"> <span>&sum;[(log(1 + y<sub>i</sub>) - log(1 + y&#770;<sub>i</sub>))<sup>2</sup>]</span> <span class="symbol">/</span> <span class="bottom">N</span> </div>
 
     // y = Actual, P(y<sub>i</sub>) = Model probability prediction
-    cross_entropy = 5,         // L = -&sum;[y<ub>i</sub> * log(P(y<sub>i</sub>))] / N
+    cross_entropy = 5,         // L = <div class="frac"> <span>-&sum;[y<ub>i</sub> * log(P(y<sub>i</sub>))]</span> <span class="symbol">/</span> <span class="bottom">N</span> </div>
 
     // y = Actual binary (0/1), P(y<sub>i</sub>) = Model probability prediction
-    binary_cross_entropy = 6,  // L = &sum;[-(y<ub>i</sub> * log(P(y<sub>i</sub>))) + (1 - y<sub>i</sub>) * log(1 - P(y<sub>i</sub>))] / N
+    binary_cross_entropy = 6,  // L = <div class="frac"> <span>&sum;[-(y<ub>i</sub> * log(P(y<sub>i</sub>))) + (1 - y<sub>i</sub>) * log(1 - P(y<sub>i</sub>))]</span> <span class="symbol">/</span> <span class="bottom">N</span> </div>
 
     // y = Actual, y&#770; = Model
     categorical_hinge = 7,     // L = max[&sum;[(1 - y<sub>i</sub>) * y&#770;<sub>i</sub>] - &sum;[y<sub>i</sub> * y&#770;<sub>i</sub>] + 1, 0]
 
     // Y = Actual, Y&#770; = Model
-    cosine_similarity = 8,     // L = (Y . Y&#770;) / (||Y|| * ||Y&#770;||)
+    cosine_similarity = 8,     // L = <div class="frac"> <span>Y . Y&#770;</span> <span class="symbol">/</span> <span class="bottom">||Y|| * ||Y&#770;||</span> </div>
 
     // y = Actual, y&#770; = Model
-    log_cosh = 9,              // L = &sum;[log(cosh(y&#770;<sub>i</sub> - y<sub>i</sub>))] / N
+    log_cosh = 9,              // L = <div class="frac"> <span>&sum;log(cosh(y&#770;<sub>i</sub> - y<sub>i</sub>))</span> <span class="symbol">/</span> <span class="bottom">N</span> </div>
 };</B></PRE> </font>
       </td>
       <td>

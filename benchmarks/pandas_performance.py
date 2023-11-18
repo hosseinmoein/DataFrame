@@ -1,31 +1,34 @@
-import time
+import datetime
 import numpy as np
 import pandas as pd
 
 # ------------------------------------------------------------------------------
 
-print("Starting ...");
+SIZE: int = 300000000
 
-first = time.time()
-timestamps = pd.date_range("1970-01-01", "2019-08-15", freq='S')
-df = pd.DataFrame({"timestamp": timestamps,
-                   "normal": np.random.normal(size=len(timestamps)),
-                   "log_normal": np.random.lognormal(size=len(timestamps)),
-                   "exponential": np.random.exponential(size=len(timestamps)),
+first = datetime.datetime.now()
+df = pd.DataFrame({"normal": np.random.normal(size=SIZE),
+                   "log_normal": np.random.lognormal(size=SIZE),
+                   "exponential": np.random.exponential(size=SIZE),
                    })
-df.set_index("timestamp")
+second = datetime.datetime.now()
+print(f"Data generation/load time: "
+      f"{(second - first).seconds}.{(second - first).microseconds}")
 
-second = time.time()
-print(f"All data loadings are done. Calculating means ... {int(second - first)}")
+mean: float = df["normal"].mean()
+var: float = df["log_normal"].var()
+corr: float = df["exponential"].corr(df["log_normal"])
 
-m1: float = df["normal"].mean()
-m2: float = df["log_normal"].mean()
-m3: float = df["exponential"].mean()
-print(f"{m1}, {m2}, {m3}")
+print(f"{mean}, {var}, {corr}")
+third = datetime.datetime.now()
 
-third = time.time()
+df2 = df[df["log_normal"] > 8]
+print(f"Number of rows after select: {len(df2)}")
+fourth = datetime.datetime.now()
 
-print(f"{int(third - second)}, {int(third - first)} All done");
+print(f"Calculation time: {(third - second).seconds}.{(third - second).microseconds}")
+print(f"Selection time: {(fourth - third).seconds}.{(third - second).microseconds}")
+print(f"Overall time: {(fourth - first).seconds}.{(fourth - first).microseconds}")
 
 # ------------------------------------------------------------------------------
 

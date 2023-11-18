@@ -34,7 +34,7 @@ fourth = datetime.datetime.now()
 
 print(f"Calculation time: {(third - second).seconds}.{(third - second).microseconds}")
 print(f"Selection time: {(fourth - third).seconds}.{(third - second).microseconds}")
-print(f"Overall time: {(fourth - first).seconds}.{(fourth - first).microseconds}");
+print(f"Overall time: {(fourth - first).seconds}.{(fourth - first).microseconds}")
 
 # ------------------------------------------------------------------------------
 

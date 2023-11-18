@@ -33,6 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iostream>
 
 using namespace hmdf;
+using namespace std::chrono;
 
 constexpr std::size_t   ALIGNMENT = 64;
 constexpr std::size_t   SIZE = 300000000;
@@ -40,8 +41,6 @@ constexpr std::size_t   SIZE = 300000000;
 typedef StdDataFrame64<time_t> MyDataFrame;
 
 // -----------------------------------------------------------------------------
-
-using namespace std::chrono;
 
 int main(int, char *[]) {
 
@@ -84,10 +83,10 @@ int main(int, char *[]) {
 
     std::cout << "Calculation time: "
               << double(duration_cast<microseconds>(third - second).count()) / 1000000.0
-              << "\n"
+              << '\n'
               << "Selection time: "
               << double(duration_cast<microseconds>(fourth - third).count()) / 1000000.0
-              << "\n"
+              << '\n'
               << "Overall time: "
               << double(duration_cast<microseconds>(fourth - first).count()) / 1000000.0
               << std::endl;

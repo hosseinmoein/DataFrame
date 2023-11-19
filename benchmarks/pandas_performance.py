@@ -27,7 +27,7 @@ print(f"Number of rows after select: {len(df2)}")
 fourth = datetime.datetime.now()
 
 print(f"Calculation time: {(third - second).seconds}.{(third - second).microseconds}")
-print(f"Selection time: {(fourth - third).seconds}.{(third - second).microseconds}")
+print(f"Selection time: {(fourth - third).seconds}.{(fourth - third).microseconds}")
 print(f"Overall time: {(fourth - first).seconds}.{(fourth - first).microseconds}")
 
 # ------------------------------------------------------------------------------

@@ -60,41 +60,38 @@ DateTime class included in this library is a very cool and handy object to manip
 ---
 
 ### Performance
-There is a test program [_dataframe_performance_](benchmarks/dataframe_performance.cc) that should give you a sense of how this library performs. As a comparison, there is also a Pandas [_pandas_performance_](benchmarks/pandas_performance.py) script that does exactly the same thing.<BR>
-<I>dataframe_performance.cc</I> uses DataFrame <B>async interface</B> and is compiled with gcc (10.3.0) compiler with -O3 flag. <I>pandas_performance.py</I> is ran with Pandas 1.3.2, Numpy 1.21.2 and Python 3.7 on Xeon E5-2667 v2. What the test program roughly does:<BR>
+You have probably heard of Polars DataFrame. It is implemented in Rust and ported with zero-overhead to Python (as long as you don’t have a loop). I have been asked by many people to write a comparison for [C++ DataFrame](https://github.com/hosseinmoein/DataFrame) vs. [Polars](https://www.pola.rs). So, I finally found some time to learn a bit about Polars and write a very simple benchmark.<BR>
+I wrote the following identical programs for both Polars and C++ DataFrame. I used Polars version 0.19.14. And I used C++20 clang compiler with -O3 option. I ran both on my, somewhat outdated, MacBook Pro.<BR>
+In both cases, I created a dataframe with 3 random columns. The C++ DataFrame also required an additional index column of the same size. Polars doesn’t believe in index columns (that has its own pros and cons. I am not going through it here).
+Each program has three identical parts. First it generates and populates 3 columns with 300m random numbers each (in case of C++ DataFrame, it must also generate a sequential index column of the same size). This is the part I am _not_ interested in. In the second part, it calculates the mean of the first column, the variance of the second column, and the Pearson correlation of the second and third columns. In the third part, it does a select (or filter as Polars calls it) on one of the columns.
 
-1.  Generate ~1.6 billion timestamps (second resolution) and load them into the DataFrame/Pandas as index.<BR>
-2.  Generate ~1.6 billion random numbers for 3 columns with normal, log normal, and exponential distributions and load them into the DataFrame/Pandas.<BR>
-3.  Calculate the mean of each of the 3 columns.<BR>
+**Results**:<BR>
+The maximum dataset I could load into Polars was 300m rows per column. Any bigger dataset blew up the memory and caused OS to kill it. I ran C++ DataFrame with 10b rows per column and I am sure it would have run with bigger datasets too. So, I was forced to run both with 300m rows to compare.
+I ran each test 4 times and took the best time. Polars numbers varied a lot from one run to another, especially calculation and selection times. C++ DataFrame numbers were significantly more consistent.
 
-Result:
-```bash
-$ python3 benckmarks/pandas_performance.py
-Starting ... 1629817655
-All memory allocations are done. Calculating means ... 1629817883
-6.166675403767268e-05, 1.6487168460770107, 0.9999539627671375
-1629817894 ... Done
+```text
+Polars:
+    Data generation/load time: 28.468640 secs
+    Calculation time:           4.876561 secs
+    Selection time:             3.876561 secs
+    Overall time:              36.876345 secs
 
-real    5m51.598s
-user    3m3.485s
-sys     1m26.292s
+C++ DataFrame:
+    Data generation/load time: 28.8234 secs
+    Calculation time:           2.30939 secs
+    Selection time:             0.762463 secs
+    Overall time:              31.8952 secs
 
-$ Release/bin/dataframe_performance
-Starting ... 1629818332
-All memory allocations are done. Calculating means ... 1629818535
-1, 1.64873, 1
-1629818536 ... Done
-  
-real    3m34.241s                                                                                                                      
-user    3m14.250s
-sys     0m25.983s
+For comparison, Pandas numbers running the same test:
+    Data generation/load time: 36.678976 secs
+    Calculation time:          40.326350 secs
+    Selection time:             8.326350 secs
+    Overall time:              85.845114 secs
 ```
-<B>The Interesting Part:</B><BR>
-1.  Pandas script, I believe, is entirely implemented in Numpy which is in C.
-2.  In case of Pandas, allocating memory + random number generation takes almost the same amount of time as calculating means.
-3.  In case of DataFrame ~90% of the time is spent in allocating memory + random number generation.
-4.  You load data once, but calculate statistics many times. So DataFrame, in general, is about ~11x faster than parts of Pandas that are implemented in Numpy (i.e. C). I leave parts of Pandas that are purely in Python to imagination.
-5.  Pandas process image at its peak is ~105GB. C++ DataFrame process image at its peak is ~56GB.
+
+[Polars source file](https://github.com/hosseinmoein/DataFrame/blob/master/benchmarks/polars_performance.py) <BR>
+[C++ DataFrame source file](https://github.com/hosseinmoein/DataFrame/blob/master/benchmarks/dataframe_performance.cc) <BR>
+[Pandas source file](https://github.com/hosseinmoein/DataFrame/blob/master/benchmarks/pandas_performance.py)
 
 ---
 
@@ -120,7 +117,7 @@ DataFrame is available on _Conan_ platform. Add `dataframe/x.y.z@` to your requi
 
 ```text
 [requires]
-dataframe/2.1.0@
+dataframe/2.2.0@
 
 [generators]
 cmake

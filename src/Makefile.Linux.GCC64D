@@ -11,8 +11,8 @@ CXX = /usr/bin/g++
 INCLUDES = -I/usr/include/c++/7 -I/usr/inc17lude
 
 LFLAGS =
-CXXFLAGS = -g $(INCLUDES) $(DEFINES) -D_GLIBCXX_DEBUG -pedantic -Wall -Wextra -std=c++20
-# CXXFLAGS = -g $(INCLUDES) $(DEFINES) -std=c++20
+CXXFLAGS = -g $(INCLUDES) $(DEFINES) -D_GLIBCXX_DEBUG -pedantic -Wall -Wextra -std=c++2b
+# CXXFLAGS = -g $(INCLUDES) $(DEFINES) -std=c++2b
 
 PLATFORM_LIBS = -lpthread -ldl -lm -lstdc++ -fsanitize-address-use-after-scope -fsanitize=address
 

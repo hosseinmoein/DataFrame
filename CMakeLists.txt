@@ -34,7 +34,7 @@ add_library(DataFrame::DataFrame ALIAS DataFrame)
 
 target_sources(DataFrame PRIVATE src/Utils/DateTime.cc)
 
-target_compile_features(DataFrame PUBLIC cxx_std_20)
+target_compile_features(DataFrame PUBLIC cxx_std_23)
 target_compile_definitions(
     DataFrame
     PRIVATE $<$<BOOL:${HMDF_HAVE_CLOCK_GETTIME}>:HMDF_HAVE_CLOCK_GETTIME>

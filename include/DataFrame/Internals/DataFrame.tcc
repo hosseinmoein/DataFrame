@@ -34,6 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <functional>
 #include <future>
 #include <random>
+#include <ranges>
 
 // ----------------------------------------------------------------------------
 
@@ -124,7 +125,7 @@ void DataFrame<I, H>::
 sort_common_(DataFrame<I, H> &df, CF &&comp_func, bool ignore_index)  {
 
     const size_type         idx_s = df.indices_.size();
-    StlVecType<size_type>   sorting_idxs(idx_s, 0);
+    StlVecType<size_type>   sorting_idxs(idx_s);
 
     std::iota(sorting_idxs.begin(), sorting_idxs.end(), 0);
     std::sort(sorting_idxs.begin(), sorting_idxs.end(), comp_func);
@@ -691,81 +692,67 @@ sort(const char *name, sort_spec dir, bool ignore_index)  {
 
     make_consistent<Ts ...>();
 
-    const SpinGuard guard (lock_);
+    ColumnVecType<T>    *vec { nullptr};
+    const SpinGuard     guard (lock_);
 
     if (! ::strcmp(name, DF_INDEX_COL_NAME))  {
-        const auto  &idx_vec = get_index();
-        auto        a =
-            [&idx_vec](size_type i, size_type j) -> bool  {
-                return (idx_vec[i] < idx_vec[j]);
-            };
-        auto        d =
-            [&idx_vec](size_type i, size_type j) -> bool  {
-                return (idx_vec[i] > idx_vec[j]);
-            };
-        auto        aa =
-            [&idx_vec](size_type i, size_type j) -> bool  {
-                return (abs__(idx_vec[i]) < abs__(idx_vec[j]));
-            };
-        auto        ad =
-            [&idx_vec](size_type i, size_type j) -> bool  {
-                return (abs__(idx_vec[i]) > abs__(idx_vec[j]));
-            };
-
-        if (dir == sort_spec::ascen)
-            sort_common_<decltype(a), Ts ...>(*this,
-                                              std::move(a),
-                                              ignore_index);
-        else if (dir == sort_spec::desce)
-            sort_common_<decltype(d), Ts ...>(*this,
-                                              std::move(d),
-                                              ignore_index);
-        else if (dir == sort_spec::abs_ascen)
-            sort_common_<decltype(aa), Ts ...>(*this,
-                                               std::move(aa),
-                                               ignore_index);
-        else if (dir == sort_spec::abs_desce)
-            sort_common_<decltype(ad), Ts ...>(*this,
-                                               std::move(ad),
-                                               ignore_index);
+        vec = reinterpret_cast<ColumnVecType<T> *>(&indices_);
+        ignore_index = true;
     }
-    else  {
-        const auto  &col_vec = get_column<T>(name);
-        auto        a =
-            [&col_vec](size_type i, size_type j) -> bool {
-                return (col_vec[i] < col_vec[j]);
-            };
-        auto        d =
-            [&col_vec](size_type i, size_type j) -> bool {
-                return (col_vec[i] > col_vec[j]);
-            };
-        auto        aa =
-            [&col_vec](size_type i, size_type j) -> bool {
-                return (abs__(col_vec[i]) < abs__(col_vec[j]));
-            };
-        auto        ad =
-            [&col_vec](size_type i, size_type j) -> bool {
-                return (abs__(col_vec[i]) > abs__(col_vec[j]));
-            };
+    else
+        vec = &(get_column<T>(name, false));
 
-        if (dir == sort_spec::ascen) [[likely]]
-            sort_common_<decltype(a), Ts ...>(*this,
-                                              std::move(a),
-                                              ignore_index);
-        else if (dir == sort_spec::desce)
-            sort_common_<decltype(d), Ts ...>(*this,
-                                              std::move(d),
-                                              ignore_index);
-        else if (dir == sort_spec::abs_ascen)
-            sort_common_<decltype(aa), Ts ...>(*this,
-                                               std::move(aa),
-                                               ignore_index);
-        else if (dir == sort_spec::abs_desce)
-            sort_common_<decltype(ad), Ts ...>(*this,
-                                               std::move(ad),
-                                               ignore_index);
+    auto    a = [](const auto &lhs, const auto &rhs) -> bool {
+                    return (std::get<0>(lhs) < std::get<0>(rhs));
+                };
+    auto    d = [](const auto &lhs, const auto &rhs) -> bool {
+                    return (std::get<0>(lhs) > std::get<0>(rhs));
+                };
+    auto    aa = [](const auto &lhs, const auto &rhs) -> bool {
+                    return (abs__(std::get<0>(lhs)) < abs__(std::get<0>(rhs)));
+                 };
+    auto    ad = [](const auto &lhs, const auto &rhs) -> bool {
+                    return (abs__(std::get<0>(lhs)) > abs__(std::get<0>(rhs)));
+                 };
+
+    const size_type         idx_s = indices_.size();
+    StlVecType<size_type>   sorting_idxs(idx_s);
+
+    std::iota(sorting_idxs.begin(), sorting_idxs.end(), 0);
+
+    auto    zip = std::ranges::views::zip(*vec, sorting_idxs);
+    auto    zip_idx = std::ranges::views::zip(*vec, indices_, sorting_idxs);
+
+	if (dir == sort_spec::ascen)  {
+        if (! ignore_index)
+            std::ranges::sort(zip_idx, a);
+        else
+            std::ranges::sort(zip, a);
+    }
+    else if (dir == sort_spec::desce)  {
+        if (! ignore_index)
+            std::ranges::sort(zip_idx, d);
+        else
+            std::ranges::sort(zip, d);
+    }
+    else if (dir == sort_spec::abs_ascen)  {
+        if (! ignore_index)
+            std::ranges::sort(zip_idx, aa);
+        else
+            std::ranges::sort(zip, aa);
+    }
+    else if (dir == sort_spec::abs_desce)  {
+        if (! ignore_index)
+            std::ranges::sort(zip_idx, ad);
+        else
+            std::ranges::sort(zip, ad);
     }
 
+    sort_functor_<Ts ...>   functor (sorting_idxs, idx_s);
+
+    for (const auto &citer : column_list_) [[likely]]
+        if (citer.first != name)
+            data_[citer.second].change(functor);
     return;
 }
 
@@ -774,219 +761,270 @@ sort(const char *name, sort_spec dir, bool ignore_index)  {
 template<typename I, typename H>
 template<typename T1, typename T2, typename ... Ts>
 void DataFrame<I, H>::
-sort(const char *name1, sort_spec dir1, const char *name2, sort_spec dir2,
+sort(const char *name1, sort_spec dir1,
+     const char *name2, sort_spec dir2,
      bool ignore_index)  {
 
     make_consistent<Ts ...>();
 
-    const ColumnVecType<T1> *vec1 { nullptr};
-    const ColumnVecType<T2> *vec2 { nullptr};
-    const SpinGuard         guard (lock_);
+    ColumnVecType<T1>   *vec1 { nullptr};
+    ColumnVecType<T2>   *vec2 { nullptr};
+    const SpinGuard     guard (lock_);
 
-    if (! ::strcmp(name1, DF_INDEX_COL_NAME))
+    if (! ::strcmp(name1, DF_INDEX_COL_NAME))  {
         vec1 = reinterpret_cast<ColumnVecType<T1> *>(&indices_);
+        ignore_index = true;
+    }
     else
         vec1 = &(get_column<T1>(name1, false));
 
-    if (! ::strcmp(name2, DF_INDEX_COL_NAME))
+    if (! ::strcmp(name2, DF_INDEX_COL_NAME))  {
         vec2 = reinterpret_cast<ColumnVecType<T2> *>(&indices_);
+        ignore_index = true;
+    }
     else
         vec2 = &(get_column<T2>(name2, false));
 
     auto    a_a =
-        [vec1, vec2](size_type i, size_type j) -> bool {
-            if (vec1->at(i) < vec1->at(j))
+        [](const auto &lhs, const auto &rhs) -> bool {
+            if (std::get<0>(lhs) < std::get<0>(rhs))
                 return (true);
-            else if (vec1->at(i) > vec1->at(j))
+            else if (std::get<0>(lhs) > std::get<0>(rhs))
                 return (false);
-            return (vec2->at(i) < vec2->at(j));
+            return (std::get<1>(lhs) < std::get<1>(rhs));
         };
     auto    d_d =
-        [vec1, vec2](size_type i, size_type j) -> bool {
-            if (vec1->at(i) > vec1->at(j))
+        [](const auto &lhs, const auto &rhs) -> bool {
+            if (std::get<0>(lhs) > std::get<0>(rhs))
                 return (true);
-            else if (vec1->at(i) < vec1->at(j))
+            else if (std::get<0>(lhs) < std::get<0>(rhs))
                 return (false);
-            return (vec2->at(i) > vec2->at(j));
+            return (std::get<1>(lhs) > std::get<1>(rhs));
         };
     auto    a_d =
-        [vec1, vec2](size_type i, size_type j) -> bool {
-            if (vec1->at(i) < vec1->at(j))
+        [](const auto &lhs, const auto &rhs) -> bool {
+            if (std::get<0>(lhs) < std::get<0>(rhs))
                 return (true);
-            else if (vec1->at(i) > vec1->at(j))
+            else if (std::get<0>(lhs) > std::get<0>(rhs))
                 return (false);
-            return (vec2->at(i) > vec2->at(j));
+            return (std::get<1>(lhs) > std::get<1>(rhs));
         };
     auto    d_a =
-        [vec1, vec2](size_type i, size_type j) -> bool {
-            if (vec1->at(i) > vec1->at(j))
+        [](const auto &lhs, const auto &rhs) -> bool {
+            if (std::get<0>(lhs) > std::get<0>(rhs))
                 return (true);
-            else if (vec1->at(i) < vec1->at(j))
+            else if (std::get<0>(lhs) < std::get<0>(rhs))
                 return (false);
-            return (vec2->at(i) < vec2->at(j));
+            return (std::get<1>(lhs) < std::get<1>(rhs));
         };
     auto    aa_aa =
-        [vec1, vec2](size_type i, size_type j) -> bool {
-            if (abs__(vec1->at(i)) < abs__(vec1->at(j)))
+        [](const auto &lhs, const auto &rhs) -> bool {
+            if (abs__(std::get<0>(lhs)) < abs__(std::get<0>(rhs)))
                 return (true);
-            else if (abs__(vec1->at(i)) > abs__(vec1->at(j)))
+            else if (abs__(std::get<0>(lhs)) > abs__(std::get<0>(rhs)))
                 return (false);
-            return (abs__(vec2->at(i)) < abs__(vec2->at(j)));
+            return (abs__(std::get<1>(lhs)) < abs__(std::get<1>(rhs)));
         };
     auto    ad_ad =
-        [vec1, vec2](size_type i, size_type j) -> bool {
-            if (abs__(vec1->at(i)) > abs__(vec1->at(j)))
+        [](const auto &lhs, const auto &rhs) -> bool {
+            if (abs__(std::get<0>(lhs)) > abs__(std::get<0>(rhs)))
                 return (true);
-            else if (abs__(vec1->at(i)) < abs__(vec1->at(j)))
+            else if (abs__(std::get<0>(lhs)) < abs__(std::get<0>(rhs)))
                 return (false);
-            return (abs__(vec2->at(i)) > abs__(vec2->at(j)));
+            return (abs__(std::get<1>(lhs)) > abs__(std::get<1>(rhs)));
         };
     auto    aa_ad =
-        [vec1, vec2](size_type i, size_type j) -> bool {
-            if (abs__(vec1->at(i)) < abs__(vec1->at(j)))
+        [](const auto &lhs, const auto &rhs) -> bool {
+            if (abs__(std::get<0>(lhs)) < abs__(std::get<0>(rhs)))
                 return (true);
-            else if (abs__(vec1->at(i)) > abs__(vec1->at(j)))
+            else if (abs__(std::get<0>(lhs)) > abs__(std::get<0>(rhs)))
                 return (false);
-            return (abs__(vec2->at(i)) > abs__(vec2->at(j)));
+            return (abs__(std::get<1>(lhs)) > abs__(std::get<1>(rhs)));
         };
     auto    ad_aa =
-        [vec1, vec2](size_type i, size_type j) -> bool {
-            if (abs__(vec1->at(i)) > abs__(vec1->at(j)))
+        [](const auto &lhs, const auto &rhs) -> bool {
+            if (abs__(std::get<0>(lhs)) > abs__(std::get<0>(rhs)))
                 return (true);
-            else if (abs__(vec1->at(i)) < abs__(vec1->at(j)))
+            else if (abs__(std::get<0>(lhs)) < abs__(std::get<0>(rhs)))
                 return (false);
-            return (abs__(vec2->at(i)) < abs__(vec2->at(j)));
+            return (abs__(std::get<1>(lhs)) < abs__(std::get<1>(rhs)));
         };
     auto    a_aa =
-        [vec1, vec2](size_type i, size_type j) -> bool {
-            if (vec1->at(i) < vec1->at(j))
+        [](const auto &lhs, const auto &rhs) -> bool {
+            if (std::get<0>(lhs) < std::get<0>(rhs))
                 return (true);
-            else if (vec1->at(i) > vec1->at(j))
+            else if (std::get<0>(lhs) > std::get<0>(rhs))
                 return (false);
-            return (abs__(vec2->at(i)) < abs__(vec2->at(j)));
+            return (abs__(std::get<1>(lhs)) < abs__(std::get<1>(rhs)));
         };
     auto    a_ad =
-        [vec1, vec2](size_type i, size_type j) -> bool {
-            if (vec1->at(i) < vec1->at(j))
+        [](const auto &lhs, const auto &rhs) -> bool {
+            if (std::get<0>(lhs) < std::get<0>(rhs))
                 return (true);
-            else if (vec1->at(i) > vec1->at(j))
+            else if (std::get<0>(lhs) > std::get<0>(rhs))
                 return (false);
-            return (abs__(vec2->at(i)) > abs__(vec2->at(j)));
+            return (abs__(std::get<1>(lhs)) > abs__(std::get<1>(rhs)));
         };
     auto    d_aa =
-        [vec1, vec2](size_type i, size_type j) -> bool {
-            if (vec1->at(i) > vec1->at(j))
+        [](const auto &lhs, const auto &rhs) -> bool {
+            if (std::get<0>(lhs) > std::get<0>(rhs))
                 return (true);
-            else if (vec1->at(i) < vec1->at(j))
+            else if (std::get<0>(lhs) < std::get<0>(rhs))
                 return (false);
-            return (abs__(vec2->at(i)) < abs__(vec2->at(j)));
+            return (abs__(std::get<1>(lhs)) < abs__(std::get<1>(rhs)));
         };
     auto    d_ad =
-        [vec1, vec2](size_type i, size_type j) -> bool {
-            if (vec1->at(i) > vec1->at(j))
+        [](const auto &lhs, const auto &rhs) -> bool {
+            if (std::get<0>(lhs) > std::get<0>(rhs))
                 return (true);
-            else if (vec1->at(i) < vec1->at(j))
+            else if (std::get<0>(lhs) < std::get<0>(rhs))
                 return (false);
-            return (abs__(vec2->at(i)) > abs__(vec2->at(j)));
+            return (abs__(std::get<1>(lhs)) > abs__(std::get<1>(rhs)));
         };
     auto    aa_a =
-        [vec1, vec2](size_type i, size_type j) -> bool {
-            if (abs__(vec1->at(i)) < abs__(vec1->at(j)))
+        [](const auto &lhs, const auto &rhs) -> bool {
+            if (abs__(std::get<0>(lhs)) < abs__(std::get<0>(rhs)))
                 return (true);
-            else if (abs__(vec1->at(i)) > abs__(vec1->at(j)))
+            else if (abs__(std::get<0>(lhs)) > abs__(std::get<0>(rhs)))
                 return (false);
-            return (vec2->at(i) < vec2->at(j));
+            return (std::get<1>(lhs) < std::get<1>(rhs));
         };
     auto    ad_a =
-        [vec1, vec2](size_type i, size_type j) -> bool {
-            if (abs__(vec1->at(i)) > abs__(vec1->at(j)))
+        [](const auto &lhs, const auto &rhs) -> bool {
+            if (abs__(std::get<0>(lhs)) > abs__(std::get<0>(rhs)))
                 return (true);
-            else if (abs__(vec1->at(i)) < abs__(vec1->at(j)))
+            else if (abs__(std::get<0>(lhs)) < abs__(std::get<0>(rhs)))
                 return (false);
-            return (vec2->at(i) < vec2->at(j));
+            return (std::get<1>(lhs) < std::get<1>(rhs));
         };
     auto    aa_d =
-        [vec1, vec2](size_type i, size_type j) -> bool {
-            if (abs__(vec1->at(i)) < abs__(vec1->at(j)))
+        [](const auto &lhs, const auto &rhs) -> bool {
+            if (abs__(std::get<0>(lhs)) < abs__(std::get<0>(rhs)))
                 return (true);
-            else if (abs__(vec1->at(i)) > abs__(vec1->at(j)))
+            else if (abs__(std::get<0>(lhs)) > abs__(std::get<0>(rhs)))
                 return (false);
-            return (vec2->at(i) > vec2->at(j));
+            return (std::get<1>(lhs) > std::get<1>(rhs));
         };
     auto    ad_d =
-        [vec1, vec2](size_type i, size_type j) -> bool {
-            if (abs__(vec1->at(i)) > abs__(vec1->at(j)))
+        [](const auto &lhs, const auto &rhs) -> bool {
+            if (abs__(std::get<0>(lhs)) > abs__(std::get<0>(rhs)))
                 return (true);
-            else if (abs__(vec1->at(i)) < abs__(vec1->at(j)))
+            else if (abs__(std::get<0>(lhs)) < abs__(std::get<0>(rhs)))
                 return (false);
-            return (vec2->at(i) > vec2->at(j));
+            return (std::get<1>(lhs) > std::get<1>(rhs));
         };
 
+    const size_type         idx_s = indices_.size();
+    StlVecType<size_type>   sorting_idxs(idx_s);
 
-    if (dir1 == sort_spec::ascen && dir2 == sort_spec::ascen)
-        sort_common_<decltype(a_a), Ts ...>(*this,
-                                            std::move(a_a),
-                                            ignore_index);
-    else if (dir1 == sort_spec::desce && dir2 == sort_spec::desce)
-        sort_common_<decltype(d_d), Ts ...>(*this,
-                                            std::move(d_d),
-                                            ignore_index);
-    else if (dir1 == sort_spec::ascen && dir2 == sort_spec::desce)
-        sort_common_<decltype(a_d), Ts ...>(*this,
-                                            std::move(a_d),
-                                            ignore_index);
-    else if (dir1 == sort_spec::desce && dir2 == sort_spec::ascen)
-        sort_common_<decltype(d_a), Ts ...>(*this,
-                                            std::move(d_a),
-                                            ignore_index);
-    else if (dir1 == sort_spec::abs_ascen && dir2 == sort_spec::abs_ascen)
-        sort_common_<decltype(aa_aa), Ts ...>(*this,
-                                              std::move(aa_aa),
-                                              ignore_index);
-    else if (dir1 == sort_spec::abs_desce && dir2 == sort_spec::abs_desce)
-        sort_common_<decltype(ad_ad), Ts ...>(*this,
-                                              std::move(ad_ad),
-                                              ignore_index);
-    else if (dir1 == sort_spec::abs_ascen && dir2 == sort_spec::abs_desce)
-        sort_common_<decltype(aa_ad), Ts ...>(*this,
-                                              std::move(aa_ad),
-                                              ignore_index);
-    else if (dir1 == sort_spec::abs_desce && dir2 == sort_spec::abs_ascen)
-        sort_common_<decltype(ad_aa), Ts ...>(*this,
-                                              std::move(ad_aa),
-                                              ignore_index);
-    else if (dir1 == sort_spec::ascen && dir2 == sort_spec::abs_ascen)
-        sort_common_<decltype(a_aa), Ts ...>(*this,
-                                             std::move(a_aa),
-                                             ignore_index);
-    else if (dir1 == sort_spec::ascen && dir2 == sort_spec::abs_desce)
-        sort_common_<decltype(a_ad), Ts ...>(*this,
-                                             std::move(a_ad),
-                                             ignore_index);
-    else if (dir1 == sort_spec::desce && dir2 == sort_spec::abs_ascen)
-        sort_common_<decltype(d_aa), Ts ...>(*this,
-                                             std::move(d_aa),
-                                             ignore_index);
-    else if (dir1 == sort_spec::desce && dir2 == sort_spec::abs_desce)
-        sort_common_<decltype(d_ad), Ts ...>(*this,
-                                             std::move(d_ad),
-                                             ignore_index);
-    else if (dir1 == sort_spec::abs_ascen && dir2 == sort_spec::ascen)
-        sort_common_<decltype(aa_a), Ts ...>(*this,
-                                             std::move(aa_a),
-                                             ignore_index);
-    else if (dir1 == sort_spec::abs_desce && dir2 == sort_spec::ascen)
-        sort_common_<decltype(ad_a), Ts ...>(*this,
-                                             std::move(ad_a),
-                                             ignore_index);
-    else if (dir1 == sort_spec::abs_ascen && dir2 == sort_spec::desce)
-        sort_common_<decltype(aa_d), Ts ...>(*this,
-                                             std::move(aa_d),
-                                             ignore_index);
-    else  // dir1 == sort_spec::abs_desce && dir2 == sort_spec::desce
-        sort_common_<decltype(ad_d), Ts ...>(*this,
-                                             std::move(ad_d),
-                                             ignore_index);
+    std::iota(sorting_idxs.begin(), sorting_idxs.end(), 0);
+
+    auto    zip = std::ranges::views::zip(*vec1, *vec2, sorting_idxs);
+    auto    zip_idx =
+        std::ranges::views::zip(*vec1, *vec2, indices_, sorting_idxs);
+
+    if (dir1 == sort_spec::ascen && dir2 == sort_spec::ascen)  {
+        if (! ignore_index)
+            std::ranges::sort(zip_idx, a_a);
+        else
+            std::ranges::sort(zip, a_a);
+    }
+    else if (dir1 == sort_spec::desce && dir2 == sort_spec::desce)  {
+        if (! ignore_index)
+            std::ranges::sort(zip_idx, d_d);
+        else
+            std::ranges::sort(zip, d_d);
+    }
+    else if (dir1 == sort_spec::ascen && dir2 == sort_spec::desce)  {
+        if (! ignore_index)
+            std::ranges::sort(zip_idx, a_d);
+        else
+            std::ranges::sort(zip, a_d);
+    }
+    else if (dir1 == sort_spec::desce && dir2 == sort_spec::ascen)  {
+        if (! ignore_index)
+            std::ranges::sort(zip_idx, d_a);
+        else
+            std::ranges::sort(zip, d_a);
+    }
+    else if (dir1 == sort_spec::abs_ascen && dir2 == sort_spec::abs_ascen)  {
+        if (! ignore_index)
+            std::ranges::sort(zip_idx, aa_aa);
+        else
+            std::ranges::sort(zip, aa_aa);
+    }
+    else if (dir1 == sort_spec::abs_desce && dir2 == sort_spec::abs_desce)  {
+        if (! ignore_index)
+            std::ranges::sort(zip_idx, ad_ad);
+        else
+            std::ranges::sort(zip, ad_ad);
+    }
+    else if (dir1 == sort_spec::abs_ascen && dir2 == sort_spec::abs_desce)  {
+        if (! ignore_index)
+            std::ranges::sort(zip_idx, aa_ad);
+        else
+            std::ranges::sort(zip, aa_ad);
+    }
+    else if (dir1 == sort_spec::abs_desce && dir2 == sort_spec::abs_ascen)  {
+        if (! ignore_index)
+            std::ranges::sort(zip_idx, ad_aa);
+        else
+            std::ranges::sort(zip, ad_aa);
+    }
+    else if (dir1 == sort_spec::ascen && dir2 == sort_spec::abs_ascen)  {
+        if (! ignore_index)
+            std::ranges::sort(zip_idx, a_aa);
+        else
+            std::ranges::sort(zip, a_aa);
+    }
+    else if (dir1 == sort_spec::ascen && dir2 == sort_spec::abs_desce)  {
+        if (! ignore_index)
+            std::ranges::sort(zip_idx, a_ad);
+        else
+            std::ranges::sort(zip, a_ad);
+    }
+    else if (dir1 == sort_spec::desce && dir2 == sort_spec::abs_ascen)  {
+        if (! ignore_index)
+            std::ranges::sort(zip_idx, d_aa);
+        else
+            std::ranges::sort(zip, d_aa);
+    }
+    else if (dir1 == sort_spec::desce && dir2 == sort_spec::abs_desce)  {
+        if (! ignore_index)
+            std::ranges::sort(zip_idx, d_ad);
+        else
+            std::ranges::sort(zip, d_ad);
+    }
+    else if (dir1 == sort_spec::abs_ascen && dir2 == sort_spec::ascen)  {
+        if (! ignore_index)
+            std::ranges::sort(zip_idx, aa_a);
+        else
+            std::ranges::sort(zip, aa_a);
+    }
+    else if (dir1 == sort_spec::abs_desce && dir2 == sort_spec::ascen)  {
+        if (! ignore_index)
+            std::ranges::sort(zip_idx, ad_a);
+        else
+            std::ranges::sort(zip, ad_a);
+    }
+    else if (dir1 == sort_spec::abs_ascen && dir2 == sort_spec::desce)  {
+        if (! ignore_index)
+            std::ranges::sort(zip_idx, aa_d);
+        else
+            std::ranges::sort(zip, aa_d);
+    }
+    else  {   // dir1 == sort_spec::abs_desce && dir2 == sort_spec::desce
+        if (! ignore_index)
+            std::ranges::sort(zip_idx, ad_d);
+        else
+            std::ranges::sort(zip, ad_d);
+    }
+
+    sort_functor_<Ts ...>   functor (sorting_idxs, idx_s);
+
+    for (const auto &citer : column_list_) [[likely]]
+        if (citer.first != name1 && citer.first != name2)
+            data_[citer.second].change(functor);
     return;
 }
 
@@ -1002,90 +1040,113 @@ sort(const char *name1, sort_spec dir1,
 
     make_consistent<Ts ...>();
 
-    const ColumnVecType<T1> *vec1 { nullptr};
-    const ColumnVecType<T2> *vec2 { nullptr};
-    const ColumnVecType<T3> *vec3 { nullptr};
-    const SpinGuard         guard (lock_);
+    ColumnVecType<T1>   *vec1 { nullptr};
+    ColumnVecType<T2>   *vec2 { nullptr};
+    ColumnVecType<T3>   *vec3 { nullptr};
+    const SpinGuard     guard (lock_);
 
-    if (! ::strcmp(name1, DF_INDEX_COL_NAME))
+    if (! ::strcmp(name1, DF_INDEX_COL_NAME))  {
         vec1 = reinterpret_cast<ColumnVecType<T1> *>(&indices_);
+        ignore_index = true;
+    }
     else
         vec1 = &(get_column<T1>(name1, false));
 
-    if (! ::strcmp(name2, DF_INDEX_COL_NAME))
+    if (! ::strcmp(name2, DF_INDEX_COL_NAME))  {
         vec2 = reinterpret_cast<ColumnVecType<T2> *>(&indices_);
+        ignore_index = true;
+    }
     else
         vec2 = &(get_column<T2>(name2, false));
 
-    if (! ::strcmp(name3, DF_INDEX_COL_NAME))
+    if (! ::strcmp(name3, DF_INDEX_COL_NAME))  {
         vec3 = reinterpret_cast<ColumnVecType<T3> *>(&indices_);
+        ignore_index = true;
+    }
     else
         vec3 = &(get_column<T3>(name3, false));
 
     auto    cf =
-        [vec1, vec2, vec3, dir1, dir2, dir3]
-        (size_type i, size_type j) -> bool {
+        [dir1, dir2, dir3](const auto &lhs, const auto &rhs) -> bool {
             if (dir1 == sort_spec::ascen)  {
-                if (vec1->at(i) < vec1->at(j))
+                if (std::get<0>(lhs) < std::get<0>(rhs))
                     return (true);
-                else if (vec1->at(i) > vec1->at(j))
+                else if (std::get<0>(lhs) > std::get<0>(rhs))
                     return (false);
             }
             else if (dir1 == sort_spec::desce)  {
-                if (vec1->at(i) > vec1->at(j))
+                if (std::get<0>(lhs) > std::get<0>(rhs))
                     return (true);
-                else if (vec1->at(i) < vec1->at(j))
+                else if (std::get<0>(lhs) < std::get<0>(rhs))
                     return (false);
             }
             else if (dir1 == sort_spec::abs_ascen)  {
-                if (abs__(vec1->at(i)) < abs__(vec1->at(j)))
+                if (abs__(std::get<0>(lhs)) < abs__(std::get<0>(rhs)))
                     return (true);
-                else if (abs__(vec1->at(i)) > abs__(vec1->at(j)))
+                else if (abs__(std::get<0>(lhs)) > abs__(std::get<0>(rhs)))
                     return (false);
             }
             else  {   // sort_spec::abs_desce
-                if (abs__(vec1->at(i)) > abs__(vec1->at(j)))
+                if (abs__(std::get<0>(lhs)) > abs__(std::get<0>(rhs)))
                     return (true);
-                else if (abs__(vec1->at(i)) < abs__(vec1->at(j)))
+                else if (abs__(std::get<0>(lhs)) < abs__(std::get<0>(rhs)))
                     return (false);
             }
 
             if (dir2 == sort_spec::ascen)  {
-                if (vec2->at(i) < vec2->at(j))
+                if (std::get<1>(lhs) < std::get<1>(rhs))
                     return (true);
-                else if (vec2->at(i) > vec2->at(j))
+                else if (std::get<1>(lhs) > std::get<1>(rhs))
                     return (false);
             }
             else if (dir2 == sort_spec::desce)  {
-                if (vec2->at(i) > vec2->at(j))
+                if (std::get<1>(lhs) > std::get<1>(rhs))
                     return (true);
-                else if (vec2->at(i) < vec2->at(j))
+                else if (std::get<1>(lhs) < std::get<1>(rhs))
                     return (false);
             }
             else if (dir2 == sort_spec::abs_ascen)  {
-                if (abs__(vec2->at(i)) < abs__(vec2->at(j)))
+                if (abs__(std::get<1>(lhs)) < abs__(std::get<1>(rhs)))
                     return (true);
-                else if (abs__(vec2->at(i)) > abs__(vec2->at(j)))
+                else if (abs__(std::get<1>(lhs)) > abs__(std::get<1>(rhs)))
                     return (false);
             }
             else  {   // sort_spec::abs_desce
-                if (abs__(vec2->at(i)) > abs__(vec2->at(j)))
+                if (abs__(std::get<1>(lhs)) > abs__(std::get<1>(rhs)))
                     return (true);
-                else if (abs__(vec2->at(i)) < abs__(vec2->at(j)))
+                else if (abs__(std::get<1>(lhs)) < abs__(std::get<1>(rhs)))
                     return (false);
             }
 
             if (dir3 == sort_spec::ascen)
-                return (vec3->at(i) < vec3->at(j));
+                return (std::get<2>(lhs) < std::get<2>(rhs));
             else if (dir3 == sort_spec::desce)
-                return (vec3->at(i) > vec3->at(j));
+                return (std::get<2>(lhs) > std::get<2>(rhs));
             else if (dir3 == sort_spec::abs_ascen)
-                return (abs__(vec3->at(i)) < abs__(vec3->at(j)));
+                return (abs__(std::get<2>(lhs)) < abs__(std::get<2>(rhs)));
             else  // sort_spec::abs_desce
-                return (abs__(vec3->at(i)) > abs__(vec3->at(j)));
+                return (abs__(std::get<2>(lhs)) > abs__(std::get<2>(rhs)));
         };
 
-    sort_common_<decltype(cf), Ts ...>(*this, std::move(cf), ignore_index);
+    const size_type         idx_s = indices_.size();
+    StlVecType<size_type>   sorting_idxs(idx_s);
+
+    std::iota(sorting_idxs.begin(), sorting_idxs.end(), 0);
+
+    auto    zip = std::ranges::views::zip(*vec1, *vec2, *vec3, sorting_idxs);
+    auto    zip_idx =
+        std::ranges::views::zip(*vec1, *vec2, *vec3, indices_, sorting_idxs);
+
+    if (! ignore_index)
+        std::ranges::sort(zip_idx, cf);
+    else
+        std::ranges::sort(zip, cf);
+
+    sort_functor_<Ts ...>   functor (sorting_idxs, idx_s);
+
+    for (const auto &citer : column_list_) [[likely]]
+        if (citer.first != name1 && citer.first != name2 && citer.first != name3)
+            data_[citer.second].change(functor);
     return;
 }
 

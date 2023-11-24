@@ -4842,6 +4842,9 @@ public:
                 const Y &y_begin, const Y &y_end,  // dependent variable
                 const X &x_begin, const X &x_end)  {  // independent variable
 
+        using bool_vec_t =
+            std::vector<bool, typename allocator_declare<bool, A>::type>;
+
         assert(frac_ >= 0 && frac_ <= 1);
         assert(loop_n_ > 2);
 
@@ -4862,7 +4865,10 @@ public:
                       [] (auto lhs, auto rhs) -> bool  {
                           return (lhs < rhs);
                       });
-            _sort_by_sorted_index_(yvals, sorting_idxs, col_s);
+
+            bool_vec_t  done_vec (col_s);
+
+            _sort_by_sorted_index_(yvals, sorting_idxs, done_vec, col_s);
             lowess_(idx_begin, idx_end,
                     yvals.begin(), yvals.end(),
                     xvals.begin(), xvals.end());

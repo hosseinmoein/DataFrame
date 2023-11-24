@@ -64,10 +64,11 @@ template<typename ... Ts>
 struct sort_functor_ : DataVec::template visitor_base<Ts ...>  {
 
     inline sort_functor_ (const StlVecType<size_t> &si, size_t is)
-        : sorted_idxs(si), idx_s(is)  {   }
+        : sorted_idxs(si), idx_s(is), done_vec(idx_s)  {   }
 
     const StlVecType<size_t>   &sorted_idxs;
     const size_t               idx_s;
+    StlVecType<bool>           done_vec;
 
     template<typename T2>
     void operator() (T2 &vec);

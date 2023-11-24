@@ -77,7 +77,7 @@ template<typename T2>
 void
 DataFrame<I, H>::sort_functor_<Ts ...>::operator() (T2 &vec)  {
 
-    _sort_by_sorted_index_(vec, sorted_idxs, idx_s);
+    _sort_by_sorted_index_(vec, sorted_idxs, done_vec, idx_s);
     return;
 }
 

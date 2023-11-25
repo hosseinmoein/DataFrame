@@ -8,7 +8,8 @@ BUILD_DEFINE = Linux_GCC64
 
 CXX = /usr/bin/g++
 
-INCLUDES = -I/usr/include/c++/7 -I/usr/inc17lude
+# INCLUDES = -I/usr/include/c++/7 -I/usr/include
+INCLUDES =
 
 LFLAGS =
 CXXFLAGS = -g $(INCLUDES) $(DEFINES) -D_GLIBCXX_DEBUG -pedantic -Wall -Wextra -std=c++2b

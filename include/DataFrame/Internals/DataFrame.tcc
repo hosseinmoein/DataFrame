@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <algorithm>
 #include <cmath>
+#include <execution>
 #include <functional>
 #include <future>
 #include <random>
@@ -902,6 +903,11 @@ sort(const char *name1, sort_spec dir1,
         std::ranges::views::zip(*vec1, *vec2, indices_, sorting_idxs);
 
     if (dir1 == sort_spec::ascen && dir2 == sort_spec::ascen)  {
+        // if (! ignore_index)
+        //     std::sort(std::execution::par_unseq,
+        //               zip_idx.begin(), zip_idx.end(), a_a);
+        // else
+        //     std::sort(std::execution::par_unseq, zip.begin(), zip.end(), a_a);
         if (! ignore_index)
             std::ranges::sort(zip_idx, a_a);
         else

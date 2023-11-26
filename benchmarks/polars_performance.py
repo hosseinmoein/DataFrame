@@ -33,14 +33,13 @@ df3 = df.filter(pl.col("log_normal") > 8)
 print(f"Number of rows after select: {df3.select(pl.count()).item()}")
 fourth = datetime.datetime.now()
 
-df4 = df.sort(["log_normal", "exponential"]);
-# df4 = df.sort("log_normal");
-print(f"Number of rows after sort: {df4.select(pl.count()).item()}")
+# df4 = df.sort(["log_normal", "exponential"]);
+# print(f"1001th value in normal column: {df4['normal'][1001]}")
 fifth = datetime.datetime.now()
 
 print(f"Calculation time: {(third - second).seconds}.{(third - second).microseconds} secs")
 print(f"Selection time: {(fourth - third).seconds}.{(fourth - third).microseconds} secs")
-print(f"Sorting time: {(fifth - fourth).seconds}.{(fifth - fourth).microseconds} secs")
+# print(f"Sorting time: {(fifth - fourth).seconds}.{(fifth - fourth).microseconds} secs")
 print(f"Overall time: {(fifth - first).seconds}.{(fifth - first).microseconds} secs")
 
 # ------------------------------------------------------------------------------

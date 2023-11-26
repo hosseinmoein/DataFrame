@@ -82,11 +82,10 @@ int main(int, char *[]) {
 
     const auto  fourth = high_resolution_clock::now();
 
-    df.sort<double, double, double>("log_normal", sort_spec::ascen,
-                                    "exponential", sort_spec::ascen);
-    // df.sort<double, double>("log_normal", sort_spec::ascen);
-    std::cout << "Number of rows after sort: "
-              << df.get_column<double>("normal").size() << std::endl;
+    // df.sort<double, double, double>("log_normal", sort_spec::ascen,
+    //                                 "exponential", sort_spec::ascen);
+    // std::cout << "1001th value in normal column: "
+    //           << df.get_column<double>("normal")[1001] << std::endl;
 
     const auto  fifth = high_resolution_clock::now();
 
@@ -96,9 +95,9 @@ int main(int, char *[]) {
               << "Selection time: "
               << double(duration_cast<microseconds>(fourth - third).count()) / 1000000.0
               << " secs\n"
-              << "Sorting time: "
-              << double(duration_cast<microseconds>(fifth - fourth).count()) / 1000000.0
-              << " secs\n"
+              // << "Sorting time: "
+              // << double(duration_cast<microseconds>(fifth - fourth).count()) / 1000000.0
+              // << " secs\n"
               << "Overall time: "
               << double(duration_cast<microseconds>(fifth - first).count()) / 1000000.0
               << " secs"

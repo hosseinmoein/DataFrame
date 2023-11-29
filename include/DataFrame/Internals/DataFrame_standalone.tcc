@@ -863,25 +863,28 @@ inline static O _remove_copy_if_(I first, I last, O d_first, PRE predicate)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename V>
+template<typename T, typename V, typename BV>
 static inline void
-_sort_by_sorted_index_(T &to_be_sorted, V &sorting_idxs, size_t idx_s)  {
+_sort_by_sorted_index_(T &to_be_sorted,
+                       const V &sorting_idxs,
+                       BV &done_vec,
+                       size_t idx_s) {
 
-    if (idx_s > 0)  {
-        idx_s -= 1;
-        for (size_t i = 0; i < idx_s; ++i) [[likely]]  {
-            // while the element i is not yet in place
-            //
-            while (sorting_idxs[i] != sorting_idxs[sorting_idxs[i]])  {
-                // swap it with the element at its final place
-                //
-                const size_t    j = sorting_idxs[i];
+    std::fill(done_vec.begin(), done_vec.end(), false);
+    for (std::size_t i = 0; i < idx_s; ++i) [[likely]]
+        if (! done_vec[i])  {
+            done_vec[i] = true;
 
-                std::swap(to_be_sorted[j], to_be_sorted[sorting_idxs[j]]);
-                std::swap(sorting_idxs[i], sorting_idxs[j]);
+            std::size_t prev_j = i;
+            std::size_t j = sorting_idxs[i];
+
+            while (i != j)  {
+                std::swap(to_be_sorted[prev_j], to_be_sorted[j]);
+                done_vec[j] = true;
+                prev_j = j;
+                j = sorting_idxs[j];
             }
         }
-    }
 }
 
 // ----------------------------------------------------------------------------

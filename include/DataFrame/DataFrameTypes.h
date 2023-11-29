@@ -579,10 +579,10 @@ struct  RandGenParams  {
     std::size_t     t_dist { 1 };
     // The μ distribution parameter (the mean of the distribution)
     //
-    double          mean { 1.0 };
+    double          mean { 0 };
     // the σ distribution parameter (standard deviation)
     //
-    double          std { 0 };
+    double          std { 1 };
     // The λ distribution parameter (the rate parameter)
     //
     double          lambda { 1.0 };

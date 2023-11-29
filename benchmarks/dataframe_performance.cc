@@ -36,7 +36,8 @@ using namespace hmdf;
 using namespace std::chrono;
 
 constexpr std::size_t   ALIGNMENT = 64;
-constexpr std::size_t   SIZE = 300000000;
+// constexpr std::size_t   SIZE = 300000000;
+constexpr std::size_t   SIZE = 10000000;
 
 typedef StdDataFrame64<time_t> MyDataFrame;
 
@@ -57,7 +58,7 @@ int main(int, char *[]) {
 
     std::cout << "Data generation/load time: "
               << double(duration_cast<microseconds>(second - first).count()) / 1000000.0
-              << std::endl;
+              << " secs" << std::endl;
 
     MeanVisitor<double, time_t> n_mv;
     VarVisitor<double, time_t>  ln_vv;
@@ -81,14 +82,25 @@ int main(int, char *[]) {
 
     const auto  fourth = high_resolution_clock::now();
 
+    // df.sort<double, double, double>("log_normal", sort_spec::ascen,
+    //                                 "exponential", sort_spec::ascen);
+    // std::cout << "1001th value in normal column: "
+    //           << df.get_column<double>("normal")[1001] << std::endl;
+
+    const auto  fifth = high_resolution_clock::now();
+
     std::cout << "Calculation time: "
               << double(duration_cast<microseconds>(third - second).count()) / 1000000.0
-              << '\n'
+              << " secs\n"
               << "Selection time: "
               << double(duration_cast<microseconds>(fourth - third).count()) / 1000000.0
-              << '\n'
+              << " secs\n"
+              // << "Sorting time: "
+              // << double(duration_cast<microseconds>(fifth - fourth).count()) / 1000000.0
+              // << " secs\n"
               << "Overall time: "
-              << double(duration_cast<microseconds>(fourth - first).count()) / 1000000.0
+              << double(duration_cast<microseconds>(fifth - first).count()) / 1000000.0
+              << " secs"
               << std::endl;
     return (0);
 }

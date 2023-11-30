@@ -35,7 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/Utils/AlignedAllocator.h>
 #include <DataFrame/Utils/Concepts.h>
 #include <DataFrame/Utils/FixedSizePriorityQueue.h>
-#include <DataFrame/Utils/ThreadGranularity.h>
+#include <DataFrame/Utils/Threads/ThreadGranularity.h>
 #include <DataFrame/Utils/Utils.h>
 
 #include <algorithm>

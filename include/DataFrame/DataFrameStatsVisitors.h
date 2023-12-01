@@ -1795,7 +1795,7 @@ public:
         vec_type<value_type>                tmp_result(col_s - 4);
         size_type                           lag = 1;
         const size_type                     thread_level =
-            ThreadGranularity::get_sensible_thread_level();
+            ThreadGranularity::get_thread_level();
         vec_type<std::future<CorrResult>>   futures(thread_level);
         size_type                           thread_count = 0;
 

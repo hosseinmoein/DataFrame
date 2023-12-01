@@ -92,7 +92,7 @@ private:
 // ----------------------------------------------------------------------------
 
 #ifndef HMDF_DO_NOT_INCLUDE_TCC_FILES
-#  include <DataFrame/Threads/SharedQueue.tcc>
+#  include <DataFrame/Utils/Threads/SharedQueue.tcc>
 #endif // HMDF_DO_NOT_INCLUDE_TCC_FILES
 
 // ----------------------------------------------------------------------------

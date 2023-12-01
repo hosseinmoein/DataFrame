@@ -27,7 +27,7 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <DataFrame/Threads/ThreadPool.h>
+#include <DataFrame/Utils/Threads/ThreadPool.h>
 
 #include <chrono>
 #include <cstdlib>
@@ -185,9 +185,9 @@ ThreadPool::parallel_loop(I begin, I end, F &&routine, As && ... args)  {
 
 // ----------------------------------------------------------------------------
 
-template<std::random_access_iterator I, std::size_t TH>
+template<std::random_access_iterator I, long TH>
 void
-ThreadPool::parallel_sort(I begin, I end)  {
+ThreadPool::parallel_sort(const I begin, const I end)  {
 
     using value_type = typename std::iterator_traits<I>::value_type;
 
@@ -198,20 +198,20 @@ ThreadPool::parallel_sort(I begin, I end)  {
 
 // ----------------------------------------------------------------------------
 
-template<std::random_access_iterator I, typename P, std::size_t TH>
+template<std::random_access_iterator I, typename P, long TH>
 void
-ThreadPool::parallel_sort(I begin, I end, P compare)  {
+ThreadPool::parallel_sort(const I begin, const I end, P compare)  {
 
     using value_type = typename std::iterator_traits<I>::value_type;
     using fut_type = std::future<void>;
 
     if (begin >= end) return;
 
-    const std::size_t   data_size = std::distance(begin, end);
+    const size_type data_size = std::distance(begin, end);
 
     if (data_size > 0)  {
         auto                left_iter = begin;
-        auto                right_iter = end;
+        auto                right_iter = end - 1;
         bool                is_swapped_left = false;
         bool                is_swapped_right = false;
         const value_type    pivot = *begin;
@@ -246,7 +246,7 @@ ThreadPool::parallel_sort(I begin, I end, P compare)  {
                                     &ThreadPool::parallel_sort<I, P, TH>,
                                     this,
                                     begin,
-                                    left_iter - 1,
+                                    left_iter,
                                     compare);
             if (do_right)
                 right_fut = dispatch(false,
@@ -267,7 +267,7 @@ ThreadPool::parallel_sort(I begin, I end, P compare)  {
         }
         else  {
             if (do_left)
-                parallel_sort<I, P, TH>(begin, left_iter - 1, compare);
+                parallel_sort<I, P, TH>(begin, left_iter, compare);
 
             if (do_right)
                 parallel_sort<I, P, TH>(right_iter + 1, end, compare);

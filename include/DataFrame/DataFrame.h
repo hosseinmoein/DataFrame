@@ -4059,7 +4059,7 @@ private:
     //
     ColNameList     column_list_ { };  // Vector of column names and indices
 
-    inline static SpinLock *lock_ { nullptr };  // No lock safety by default
+    inline static SpinLock  *lock_ { nullptr };  // No lock safety by default
 
     // Private methods
     //

@@ -188,7 +188,7 @@ public:
                 const H &prices_begin, const H &prices_end)  {
 
         const size_type thread_level =
-            ThreadGranularity::get_sensible_thread_level();
+            ThreadGranularity::get_thread_level();
         size_type       re_count1 = 0;
         size_type       re_count2 = 0;
 
@@ -319,7 +319,7 @@ public:
                 const H &prices_begin, const H &prices_end)  {
 
         const size_type thread_level =
-            ThreadGranularity::get_sensible_thread_level();
+            ThreadGranularity::get_thread_level();
 
         if (thread_level >= 2)  {
             std::future<void>   fut1 =

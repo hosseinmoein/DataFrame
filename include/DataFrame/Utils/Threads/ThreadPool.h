@@ -29,7 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
 
-#include <DataFrame/Threads/SharedQueue.h>
+#include <DataFrame/Utils/Threads/SharedQueue.h>
 
 #include <atomic>
 #include <concepts>
@@ -80,6 +80,8 @@ public:
     using time_type = time_t;
     using thread_type = std::thread;
 
+    inline static constexpr size_type   MUL_THR_THHOLD = 250'000L;
+
     ThreadPool(const ThreadPool &) = delete;
     ThreadPool &operator = (const ThreadPool &) = delete;
 
@@ -122,11 +124,11 @@ public:
     loop_res_t<F, I, As ...>
     parallel_loop(I begin, I end, F &&routine, As && ... args);
 
-    template<std::random_access_iterator I, std::size_t TH = 500'000>
-    void parallel_sort(I begin, I end);
+    template<std::random_access_iterator I, long TH = MUL_THR_THHOLD>
+    void parallel_sort(const I begin, const I end);
     template<std::random_access_iterator I, typename P,
-             std::size_t TH = 500'000>
-    void parallel_sort(I begin, I end, P compare);
+             long TH = MUL_THR_THHOLD>
+    void parallel_sort(const I begin, const I end, P compare);
 
 
     // It attaches the current thread to the pool so that it may be used for
@@ -212,7 +214,7 @@ private:
 // ----------------------------------------------------------------------------
 
 #ifndef HMDF_DO_NOT_INCLUDE_TCC_FILES
-#  include <DataFrame/Threads/ThreadPool.tcc>
+#  include <DataFrame/Utils/Threads/ThreadPool.tcc>
 #endif // HMDF_DO_NOT_INCLUDE_TCC_FILES
 
 // ----------------------------------------------------------------------------

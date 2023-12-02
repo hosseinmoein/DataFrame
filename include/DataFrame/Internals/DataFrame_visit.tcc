@@ -117,7 +117,8 @@ template<typename T, typename V>
 std::future<V &> DataFrame<I, H>::
 visit_async(const char *name, V &visitor, bool in_reverse)  {
 
-    return (std::async(std::launch::async,
+    return (thr_pool_.dispatch(
+                       true,
                        static_cast<V &(DataFrame::*)(const char *, V &, bool)>
                           (&DataFrame::visit<T, V>),
                        this,
@@ -133,7 +134,8 @@ template<typename T, typename V>
 std::future<V &> DataFrame<I, H>::
 visit_async(const char *name, V &visitor, bool in_reverse) const  {
 
-    return (std::async(std::launch::async,
+    return (thr_pool_.dispatch(
+                       true,
                        static_cast<V &(DataFrame::*)(const char *,
                                                      V &,
                                                      bool) const>
@@ -216,8 +218,8 @@ visit_async(const char *name1,
             V &visitor,
             bool in_reverse)  {
 
-    return (std::async(
-        std::launch::async,
+    return (thr_pool_.dispatch(
+        true,
         static_cast<V &(DataFrame::*)(const char *, const char *, V &, bool)>
             (&DataFrame::visit<T1, T2, V>),
         this,
@@ -237,8 +239,8 @@ visit_async(const char *name1,
             V &visitor,
             bool in_reverse) const  {
 
-    return (std::async(
-        std::launch::async,
+    return (thr_pool_.dispatch(
+        true,
         static_cast<V &(DataFrame::*)(const char *,
                                       const char *,
                                       V &,
@@ -336,8 +338,8 @@ visit_async(const char *name1,
             V &visitor,
             bool in_reverse)  {
 
-    return (std::async(
-        std::launch::async,
+    return (thr_pool_.dispatch(
+        true,
         static_cast<V &(DataFrame::*)(const char *,
                                       const char *,
                                       const char *,
@@ -363,8 +365,8 @@ visit_async(const char *name1,
             V &visitor,
             bool in_reverse) const  {
 
-    return (std::async(
-        std::launch::async,
+    return (thr_pool_.dispatch(
+        true,
         static_cast<V &(DataFrame::*)(const char *,
                                       const char *,
                                       const char *,
@@ -473,8 +475,8 @@ visit_async(const char *name1,
             V &visitor,
             bool in_reverse)  {
 
-    return (std::async(
-        std::launch::async,
+    return (thr_pool_.dispatch(
+        true,
         static_cast<V &(DataFrame::*)(const char *,
                                       const char *,
                                       const char *,
@@ -503,8 +505,8 @@ visit_async(const char *name1,
             V &visitor,
             bool in_reverse) const  {
 
-    return (std::async(
-        std::launch::async,
+    return (thr_pool_.dispatch(
+        true,
         static_cast<V &(DataFrame::*)(const char *,
                                       const char *,
                                       const char *,
@@ -628,8 +630,8 @@ visit_async(const char *name1,
             V &visitor,
             bool in_reverse)  {
 
-    return (std::async(
-        std::launch::async,
+    return (thr_pool_.dispatch(
+        true,
         static_cast<V &(DataFrame::*)(const char *,
                                       const char *,
                                       const char *,
@@ -662,8 +664,8 @@ visit_async(const char *name1,
             V &visitor,
             bool in_reverse) const  {
 
-    return (std::async(
-        std::launch::async,
+    return (thr_pool_.dispatch(
+        true,
         static_cast<V &(DataFrame::*)(const char *,
                                       const char *,
                                       const char *,
@@ -719,8 +721,8 @@ template<typename T, typename V>
 std::future<V &> DataFrame<I, H>::
 single_act_visit_async(const char *name, V &visitor, bool in_reverse)  {
 
-    return (std::async(
-        std::launch::async,
+    return (thr_pool_.dispatch(
+        true,
         static_cast<V &(DataFrame::*)(const char *, V &, bool)>
            (&DataFrame::single_act_visit<T, V>),
         this,
@@ -736,8 +738,8 @@ template<typename T, typename V>
 std::future<V &> DataFrame<I, H>::
 single_act_visit_async(const char *name, V &visitor, bool in_reverse) const  {
 
-    return (std::async(
-        std::launch::async,
+    return (thr_pool_.dispatch(
+        true,
         static_cast<V &(DataFrame::*)(const char *, V &, bool) const>
            (&DataFrame::single_act_visit<T, V>),
         this,
@@ -785,8 +787,8 @@ single_act_visit_async(const char *name1,
                        V &visitor,
                        bool in_reverse)  {
 
-    return (std::async(
-        std::launch::async,
+    return (thr_pool_.dispatch(
+        true,
         static_cast<V &(DataFrame::*)(const char *, const char *, V &, bool)>
             (&DataFrame::single_act_visit<T1, T2, V>),
         this,
@@ -820,8 +822,8 @@ single_act_visit_async(const char *name1,
                        V &visitor,
                        bool in_reverse) const  {
 
-    return (std::async(
-        std::launch::async,
+    return (thr_pool_.dispatch(
+        true,
         static_cast<V &(DataFrame::*)(const char *,
                                       const char *,
                                       V &,
@@ -893,8 +895,8 @@ single_act_visit_async(const char *name1,
                        V &visitor,
                        bool in_reverse)  {
 
-    return (std::async(
-        std::launch::async,
+    return (thr_pool_.dispatch(
+        true,
         static_cast<V &(DataFrame::*)(const char *,
                                       const char *,
                                       const char *,
@@ -920,8 +922,8 @@ single_act_visit_async(const char *name1,
                        V &visitor,
                        bool in_reverse) const  {
 
-    return (std::async(
-        std::launch::async,
+    return (thr_pool_.dispatch(
+        true,
         static_cast<V &(DataFrame::*)(const char *,
                                       const char *,
                                       const char *,
@@ -1001,8 +1003,8 @@ single_act_visit_async(const char *name1,
                        V &visitor,
                        bool in_reverse)  {
 
-    return (std::async(
-        std::launch::async,
+    return (thr_pool_.dispatch(
+        true,
         static_cast<V &(DataFrame::*)(const char *,
                                       const char *,
                                       const char *,
@@ -1031,8 +1033,8 @@ single_act_visit_async(const char *name1,
                        V &visitor,
                        bool in_reverse) const  {
 
-    return (std::async(
-        std::launch::async,
+    return (thr_pool_.dispatch(
+        true,
         static_cast<V &(DataFrame::*)(const char *,
                                       const char *,
                                       const char *,
@@ -1124,8 +1126,8 @@ single_act_visit_async(const char *name1,
                        V &visitor,
                        bool in_reverse)  {
 
-    return (std::async(
-        std::launch::async,
+    return (thr_pool_.dispatch(
+        true,
         static_cast<V &(DataFrame::*)(const char *,
                                       const char *,
                                       const char *,
@@ -1158,8 +1160,8 @@ single_act_visit_async(const char *name1,
                        V &visitor,
                        bool in_reverse) const  {
 
-    return (std::async(
-        std::launch::async,
+    return (thr_pool_.dispatch(
+        true,
         static_cast<V &(DataFrame::*)(const char *,
                                       const char *,
                                       const char *,

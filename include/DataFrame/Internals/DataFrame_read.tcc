@@ -1047,19 +1047,20 @@ read_async(const char *file_name,
            size_type starting_row,
            size_type num_rows) {
 
-    return (std::async(std::launch::async,
-                       [file_name,
-                        iof,
-                        columns_only,
-                        starting_row,
-                        num_rows,
-                        this] () -> bool  {
-                           return (this->read(file_name,
-                                              iof,
-                                              columns_only,
-                                              starting_row,
-                                              num_rows));
-                       }));
+    return (thr_pool_.dispatch(
+                true,
+                [file_name,
+                 iof,
+                 columns_only,
+                 starting_row,
+                 num_rows,
+                 this] () -> bool  {
+                    return (this->read(file_name,
+                                       iof,
+                                       columns_only,
+                                       starting_row,
+                                       num_rows));
+                }));
 }
 
 // ----------------------------------------------------------------------------
@@ -1073,19 +1074,20 @@ read_async(S &in_s,
            size_type starting_row,
            size_type num_rows) {
 
-    return (std::async(std::launch::async,
-                       [&in_s,
-                        iof,
-                        columns_only,
-                        starting_row,
-                        num_rows,
-                        this] () -> bool  {
-                           return (this->read<S>(in_s,
-                                                 iof,
-                                                 columns_only,
-                                                 starting_row,
-                                                 num_rows));
-                       }));
+    return (thr_pool_.dispatch(
+                true,
+                [&in_s,
+                 iof,
+                 columns_only,
+                 starting_row,
+                 num_rows,
+                 this] () -> bool  {
+                    return (this->read<S>(in_s,
+                                          iof,
+                                          columns_only,
+                                          starting_row,
+                                          num_rows));
+                }));
 }
 
 // ----------------------------------------------------------------------------
@@ -1094,8 +1096,10 @@ template<typename I, typename H>
 std::future<bool>
 DataFrame<I, H>::from_string_async(const char *data_frame)  {
 
-    return (std::async(std::launch::async,
-                       &DataFrame::from_string, this, data_frame));
+    return (thr_pool_.dispatch(true,
+                               &DataFrame::from_string,
+                                   this,
+                                   data_frame));
 }
 
 } // namespace hmdf

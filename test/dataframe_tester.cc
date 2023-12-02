@@ -33,6 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/RandGen.h>
 
 #include <cassert>
+#include <chrono>
 #include <cmath>
 #include <iostream>
 #include <limits>
@@ -487,8 +488,10 @@ static void test_haphazard()  {
               std::string>(std::cout);
 
     MyDataFrame::set_thread_level(5);
+    std::this_thread::sleep_for(std::chrono::seconds(1)); // Give it a chance
     assert(MyDataFrame::get_thread_level() == 5);
     MyDataFrame::set_thread_level(0);
+    std::this_thread::sleep_for(std::chrono::seconds(1)); // Give it a chance
     assert(MyDataFrame::get_thread_level() == 0);
     MyDataFrame::set_thread_level(10);
 }

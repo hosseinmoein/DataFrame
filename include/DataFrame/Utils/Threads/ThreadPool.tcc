@@ -32,6 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <chrono>
 #include <cstdlib>
 #include <ctime>
+#include <functional>
 #include <memory>
 #include <stdexcept>
 #include <type_traits>

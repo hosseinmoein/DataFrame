@@ -48,7 +48,7 @@ void DataFrame<I, H>::self_shift(size_type periods, shift_policy sp)  {
         if (sp == shift_policy::down || sp == shift_policy::up) [[likely]]  {
             vertical_shift_functor_<Ts ...> functor(periods, sp);
             StlVecType<std::future<void>>   futures(get_thread_level());
-            size_type                       thread_count = 0;
+	        ThreadGranularity::size_type    thread_count = 0;
             const size_type                 data_size = data_.size();
 
             {
@@ -73,7 +73,8 @@ void DataFrame<I, H>::self_shift(size_type periods, shift_policy sp)  {
                     }
                 }
             }
-            for (size_type idx = 0; idx < thread_count; ++idx)
+            for (ThreadGranularity::size_type idx = 0;
+                 idx < thread_count; ++idx)
                 futures[idx].get();
         }
         else if (sp == shift_policy::left)  {
@@ -133,7 +134,7 @@ void DataFrame<I, H>::self_rotate(size_type periods, shift_policy sp)  {
         if (sp == shift_policy::down || sp == shift_policy::up) [[likely]]  {
             rotate_functor_<Ts ...>         functor(periods, sp);
             StlVecType<std::future<void>>   futures(get_thread_level());
-            size_type                       thread_count = 0;
+	        ThreadGranularity::size_type    thread_count = 0;
             const size_type                 data_size = data_.size();
 
             {
@@ -157,7 +158,8 @@ void DataFrame<I, H>::self_rotate(size_type periods, shift_policy sp)  {
                     }
                 }
             }
-            for (size_type idx = 0; idx < thread_count; ++idx)
+            for (ThreadGranularity::size_type idx = 0;
+                 idx < thread_count; ++idx)
                 futures[idx].get();
         }
         else if (sp == shift_policy::left)  {

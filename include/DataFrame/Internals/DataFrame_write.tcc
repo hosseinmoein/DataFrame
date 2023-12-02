@@ -213,19 +213,20 @@ write_async (const char *file_name,
              bool columns_only,
              long max_recs) const  {
 
-    return (std::async(std::launch::async,
-                       [file_name,
-                        iof,
-                        precision,
-                        columns_only,
-                        max_recs,
-                        this] () -> bool  {
-                           return (this->write<Ts ...>(file_name,
-                                                       iof,
-                                                       precision,
-                                                       columns_only,
-                                                       max_recs));
-                       }));
+    return (thr_pool_.dispatch(
+                true,
+                [file_name,
+                 iof,
+                 precision,
+                 columns_only,
+                 max_recs,
+                 this] () -> bool  {
+                    return (this->write<Ts ...>(file_name,
+                                                iof,
+                                                precision,
+                                                columns_only,
+                                                max_recs));
+                }));
 }
 
 // ----------------------------------------------------------------------------
@@ -239,19 +240,20 @@ write_async (S &o,
              bool columns_only,
              long max_recs) const  {
 
-    return (std::async(std::launch::async,
-                       [&o,
-                        iof,
-                        precision,
-                        columns_only,
-                        max_recs,
-                        this] () -> bool  {
-                           return (this->write<S, Ts ...>(o,
-                                                          iof,
-                                                          precision,
-                                                          columns_only,
-                                                          max_recs));
-                       }));
+    return (thr_pool_.dispatch(
+                true,
+                [&o,
+                 iof,
+                 precision,
+                 columns_only,
+                 max_recs,
+                 this] () -> bool  {
+                    return (this->write<S, Ts ...>(o,
+                                                   iof,
+                                                   precision,
+                                                   columns_only,
+                                                   max_recs));
+                }));
 }
 
 // ----------------------------------------------------------------------------
@@ -261,8 +263,10 @@ template<typename ... Ts>
 std::future<std::string> DataFrame<I, H>::
 to_string_async (std::streamsize precision) const  {
 
-    return (std::async(std::launch::async,
-                       &DataFrame::to_string<Ts ...>, this, precision));
+    return (thr_pool_.dispatch(true,
+                               &DataFrame::to_string<Ts ...>,
+                                   this,
+                                   precision));
 }
 
 } // namespace hmdf

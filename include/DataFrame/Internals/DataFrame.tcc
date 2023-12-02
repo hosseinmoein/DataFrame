@@ -379,7 +379,7 @@ fill_missing(const StlVecType<const char *> &col_names,
 
     const size_type                 count = col_names.size();
     StlVecType<std::future<void>>   futures(get_thread_level());
-    size_type                       thread_count = 0;
+    ThreadGranularity::size_type    thread_count = 0;
 
     for (size_type i = 0; i < count; ++i)  {
         ColumnVecType<T>    &vec = get_column<T>(col_names[i]);
@@ -460,7 +460,7 @@ fill_missing(const StlVecType<const char *> &col_names,
         }
     }
 
-    for (size_type idx = 0; idx < thread_count; ++idx)
+    for (ThreadGranularity::size_type idx = 0; idx < thread_count; ++idx)
         futures[idx].get();
     return;
 }
@@ -608,7 +608,8 @@ replace_async(const char *col_name,
               const StlVecType<T> &new_values,
               int limit)  {
 
-    return (std::async(std::launch::async,
+    return (thr_pool_.dispatch(
+                       true,
                        &DataFrame::replace<T>,
                            this,
                            col_name,
@@ -624,11 +625,11 @@ template<typename T, replace_callable<I, T> F>
 std::future<void> DataFrame<I, H>::
 replace_async(const char *col_name, F &functor)  {
 
-    return (std::async(std::launch::async,
-                       &DataFrame::replace<T, F>,
-                           this,
-                           col_name,
-                           std::ref(functor)));
+    return (thr_pool_.dispatch(true,
+                               &DataFrame::replace<T, F>,
+                                   this,
+                                   col_name,
+                                   std::ref(functor)));
 }
 
 // ----------------------------------------------------------------------------
@@ -1508,7 +1509,8 @@ DataFrame<I, H>::
 sort_async(const char *name, sort_spec dir,
            bool ignore_index)  {
 
-    return (std::async(std::launch::async,
+    return (thr_pool_.dispatch(
+                       true,
                        [name, dir, ignore_index, this] () -> void {
                            this->sort<T, Ts ...>(name, dir, ignore_index);
                        }));
@@ -1524,7 +1526,8 @@ sort_async(const char *name1, sort_spec dir1,
            const char *name2, sort_spec dir2,
            bool ignore_index)  {
 
-    return (std::async(std::launch::async,
+    return (thr_pool_.dispatch(
+                       true,
                        [name1, dir1, name2, dir2,
                         ignore_index, this] () -> void {
                            this->sort<T1, T2, Ts ...>(name1, dir1,
@@ -1544,7 +1547,8 @@ sort_async(const char *name1, sort_spec dir1,
            const char *name3, sort_spec dir3,
            bool ignore_index)  {
 
-    return (std::async(std::launch::async,
+    return (thr_pool_.dispatch(
+                       true,
                        [name1, dir1, name2, dir2, name3, dir3,
                         ignore_index, this] () -> void {
                            this->sort<T1, T2, T3, Ts ...>(name1, dir1,
@@ -1566,7 +1570,8 @@ sort_async(const char *name1, sort_spec dir1,
            const char *name4, sort_spec dir4,
            bool ignore_index)  {
 
-    return (std::async(std::launch::async,
+    return (thr_pool_.dispatch(
+                       true,
                        [name1, dir1, name2, dir2, name3, dir3, name4, dir4,
                         ignore_index, this] () -> void {
                            this->sort<T1, T2, T3, T4, Ts ...>(name1, dir1,
@@ -1591,7 +1596,8 @@ sort_async(const char *name1, sort_spec dir1,
            const char *name5, sort_spec dir5,
            bool ignore_index)  {
 
-    return (std::async(std::launch::async,
+    return (thr_pool_.dispatch(
+                       true,
                        [name1, dir1, name2, dir2, name3, dir3, name4, dir4,
                         name5, dir5, ignore_index, this] () -> void {
                            this->sort<T1, T2, T3, T4, T5, Ts ...>(name1, dir1,
@@ -1822,12 +1828,15 @@ template<comparable T, typename I_V, typename ... Ts>
 std::future<DataFrame<I, H>> DataFrame<I, H>::
 groupby1_async(const char *col_name, I_V &&idx_visitor, Ts&& ... args) const {
 
-    return (std::async(std::launch::async,
-                       &DataFrame::groupby1<T, I_V, Ts ...>,
-                           this,
-                           col_name,
-                           std::forward<I_V>(idx_visitor),
-                           std::forward<Ts>(args) ...));
+    return (thr_pool_.dispatch(
+        true,
+        [col_name, idx_visitor = std::forward<I_V>(idx_visitor),
+         ... args = std::forward<Ts>(args), this]() mutable -> DataFrame  {
+            return (this->groupby1<T, I_V, Ts ...>(
+                        col_name,
+                        std::forward<I_V>(idx_visitor),
+                        std::forward<Ts>(args) ...));
+        }));
 }
 
 // ----------------------------------------------------------------------------
@@ -1840,13 +1849,18 @@ groupby2_async(const char *col_name1,
                I_V &&idx_visitor,
                Ts&& ... args) const  {
 
-    return (std::async(std::launch::async,
-                       &DataFrame::groupby2<T1, T2, I_V, Ts ...>,
-                           this,
-                           col_name1,
-                           col_name2,
-                           std::forward<I_V>(idx_visitor),
-                           std::forward<Ts>(args) ...));
+    return (thr_pool_.dispatch(
+        true,
+        [col_name1, col_name2,
+         idx_visitor = std::forward<I_V>(idx_visitor),
+         ... args = std::forward<Ts>(args),
+         this]() mutable -> DataFrame  {
+            return (this->groupby2<T1, T2, I_V, Ts ...>(
+                        col_name1,
+                        col_name2,
+                        std::forward<I_V>(idx_visitor),
+                        std::forward<Ts>(args) ...));
+        }));
 }
 
 // ----------------------------------------------------------------------------
@@ -1861,14 +1875,19 @@ groupby3_async(const char *col_name1,
                I_V &&idx_visitor,
                Ts&& ... args) const  {
 
-    return (std::async(std::launch::async,
-                       &DataFrame::groupby3<T1, T2, T3, I_V, Ts ...>,
-                           this,
-                           col_name1,
-                           col_name2,
-                           col_name3,
-                           std::forward<I_V>(idx_visitor),
-                           std::forward<Ts>(args) ...));
+    return (thr_pool_.dispatch(
+        true,
+        [col_name1, col_name2, col_name3,
+         idx_visitor = std::forward<I_V>(idx_visitor),
+         ... args = std::forward<Ts>(args),
+         this]() mutable -> DataFrame  {
+            return (this->groupby3<T1, T2, T3, I_V, Ts ...>(
+                        col_name1,
+                        col_name2,
+                        col_name3,
+                        std::forward<I_V>(idx_visitor),
+                        std::forward<Ts>(args) ...));
+        }));
 }
 
 // ----------------------------------------------------------------------------
@@ -1984,13 +2003,18 @@ bucketize_async(bucket_type bt,
                 I_V &&idx_visitor,
                 Ts&& ... args) const  {
 
-    return (std::async(std::launch::async,
-                       &DataFrame::bucketize<V, I_V, Ts ...>,
-                           this,
-                           bt,
-                           std::cref(value),
-                           std::forward<I_V>(idx_visitor),
-                           std::forward<Ts>(args) ...));
+    return (thr_pool_.dispatch(
+        true,
+        [bt, &value,
+         idx_visitor = std::forward<I_V>(idx_visitor),
+         ... args = std::forward<Ts>(args),
+         this]() mutable -> DataFrame  {
+            return (this->bucketize<V, I_V, Ts ...>(
+                        bt,
+                        std::cref(value),
+                        std::forward<I_V>(idx_visitor),
+                        std::forward<Ts>(args) ...));
+        }));
 }
 
 // ----------------------------------------------------------------------------

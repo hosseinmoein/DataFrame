@@ -377,91 +377,76 @@ fill_missing(const StlVecType<const char *> &col_names,
              const StlVecType<T> &values,
              int limit)  {
 
-    const size_type                 count = col_names.size();
-    StlVecType<std::future<void>>   futures(get_thread_level());
-    ThreadGranularity::size_type    thread_count = 0;
+    if (fp == fill_policy::linear_extrapolate)  {
+        char buffer [512];
 
+        snprintf(buffer, sizeof(buffer) - 1,
+                 "DataFrame::fill_missing(): fill_policy %d not implemented",
+                 static_cast<int>(fp));
+        throw NotImplemented(buffer);
+    }
+
+    const size_type                     count = col_names.size();
+    const ThreadGranularity::size_type  thread_count = get_thread_level();
+    StlVecType<std::future<void>>       futures;
+
+    if (thread_count > 0)
+        futures.reserve(count);
     for (size_type i = 0; i < count; ++i)  {
         ColumnVecType<T>    &vec = get_column<T>(col_names[i]);
 
-        if (fp == fill_policy::value)  {
-            if (thread_count >= get_thread_level())
+        if (thread_count == 0)  {
+            if (fp == fill_policy::value)
                 fill_missing_value_(vec, values[i], limit, indices_.size());
-            else  {
-                futures[thread_count] =
-                    std::async(std::launch::async,
-                               &DataFrame::fill_missing_value_<T>,
-                               std::ref(vec),
-                               std::cref(values[i]),
-                               limit,
-                               indices_.size());
-                thread_count += 1;
-            }
-        }
-        else if (fp == fill_policy::fill_forward)  {
-            if (thread_count >= get_thread_level())
+            else if (fp == fill_policy::fill_forward)
                 fill_missing_ffill_<T>(vec, limit, indices_.size());
-            else  {
-                futures[thread_count] =
-                    std::async(std::launch::async,
-                               &DataFrame::fill_missing_ffill_<T>,
-                               std::ref(vec),
-                               limit,
-                               indices_.size());
-                thread_count += 1;
-            }
-        }
-        else if (fp == fill_policy::fill_backward)  {
-            if (thread_count >= get_thread_level())
+            else if (fp == fill_policy::fill_backward)
                 fill_missing_bfill_<T>(vec, limit);
-            else  {
-                futures[thread_count] =
-                    std::async(std::launch::async,
-                               &DataFrame::fill_missing_bfill_<T>,
-                               std::ref(vec),
-                               limit);
-                thread_count += 1;
-            }
-        }
-        else if (fp == fill_policy::linear_interpolate)  {
-            if (thread_count >= get_thread_level())
+            else if (fp == fill_policy::linear_interpolate)
                 fill_missing_linter_<T>(vec, indices_, limit);
-            else  {
-                futures[thread_count] =
-                    std::async(std::launch::async,
-                               &DataFrame::fill_missing_linter_<T>,
-                               std::ref(vec),
-                               std::cref(indices_),
-                               limit);
-                thread_count += 1;
-            }
-        }
-        else if (fp == fill_policy::mid_point)  {
-            if (thread_count >= get_thread_level())
+            else if (fp == fill_policy::mid_point)
                 fill_missing_midpoint_<T>(vec, limit, indices_.size());
-            else  {
-                futures[thread_count] =
-                    std::async(std::launch::async,
-                               &DataFrame::fill_missing_midpoint_<T>,
-                               std::ref(vec),
-                               limit,
-                               indices_.size());
-                thread_count += 1;
-            }
         }
-        else if (fp == fill_policy::linear_extrapolate)  {
-            char buffer [512];
-
-            snprintf (
-                buffer, sizeof(buffer) - 1,
-                "DataFrame::fill_missing(): fill_policy %d is not implemented",
-                static_cast<int>(fp));
-            throw NotImplemented(buffer);
+        else  {
+            if (fp == fill_policy::value)
+                futures.emplace_back(
+                    thr_pool_.dispatch(false,
+                                       &DataFrame::fill_missing_value_<T>,
+                                           std::ref(vec),
+                                           std::cref(values[i]),
+                                           limit,
+                                           indices_.size()));
+            else if (fp == fill_policy::fill_forward)
+                futures.emplace_back(
+                    thr_pool_.dispatch(false,
+                                       &DataFrame::fill_missing_ffill_<T>,
+                                           std::ref(vec),
+                                           limit,
+                                           indices_.size()));
+            else if (fp == fill_policy::fill_backward)
+                futures.emplace_back(
+                    thr_pool_.dispatch(false,
+                                       &DataFrame::fill_missing_bfill_<T>,
+                                           std::ref(vec),
+                                           limit));
+            else if (fp == fill_policy::linear_interpolate)
+                futures.emplace_back(
+                    thr_pool_.dispatch(false,
+                                       &DataFrame::fill_missing_linter_<T>,
+                                           std::ref(vec),
+                                           std::cref(indices_),
+                                           limit));
+            else if (fp == fill_policy::mid_point)
+                futures.emplace_back(
+                    thr_pool_.dispatch(false,
+                                       &DataFrame::fill_missing_midpoint_<T>,
+                                           std::ref(vec),
+                                           limit,
+                                           indices_.size()));
         }
     }
+    for (auto &fut : futures)  fut.get();
 
-    for (ThreadGranularity::size_type idx = 0; idx < thread_count; ++idx)
-        futures[idx].get();
     return;
 }
 

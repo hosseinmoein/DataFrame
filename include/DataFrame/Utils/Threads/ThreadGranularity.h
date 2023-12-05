@@ -57,13 +57,13 @@ struct  ThreadGranularity  {
         return (thr_pool_.capacity_threads());
     }
 
-protected:
-
-    ThreadGranularity() = default;
-
     // By defaut, there are no threads
     //
     inline static ThreadPool    thr_pool_ { 0 };
+
+protected:
+
+    ThreadGranularity() = default;
 };
 
 // ----------------------------------------------------------------------------

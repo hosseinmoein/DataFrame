@@ -121,7 +121,8 @@ ThreadPool::dispatch(bool immediately, F &&routine, As && ... args)  {
 
     auto            callable  {
         std::make_shared<std::packaged_task<task_return_t()>>
-            (std::bind(std::forward<F>(routine), std::forward<As>(args) ...))
+            (std::bind<task_return_t>(std::forward<F>(routine),
+                                      std::forward<As>(args) ...))
     };
     future_t        return_fut { callable->get_future() };
     const WorkUnit  work_unit {
@@ -402,13 +403,13 @@ ThreadPool::get_one_local_task_() noexcept  {
     WorkUnit            work_unit;
     const guard_type    guard { state_ };
 
-    if (local_queue_ && local_queue_->empty() == false)  {
+    if (local_queue_ && (! local_queue_->empty()))  {
         work_unit = local_queue_->front();
         local_queue_->pop();
     }
     else  {  // Try to steal tasks from other queues
         for (auto &q : local_queues_)
-            if (&q != local_queue_ && q.empty() == false)  {
+            if (! q.empty())  {
                 work_unit = q.front();
                 q.pop();
                 break;

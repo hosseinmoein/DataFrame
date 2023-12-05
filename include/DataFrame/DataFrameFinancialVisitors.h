@@ -187,28 +187,29 @@ public:
     operator() (const K &idx_begin, const K &idx_end,
                 const H &prices_begin, const H &prices_end)  {
 
-        const size_type thread_level =
-            ThreadGranularity::get_thread_level();
-        size_type       re_count1 = 0;
-        size_type       re_count2 = 0;
+        const auto  thread_level = ThreadGranularity::get_thread_level();
+        size_type   re_count1 = 0;
+        size_type   re_count2 = 0;
 
-        if (thread_level >= 2)  {
+        if (thread_level > 0)  {
             std::future<size_type>  fut1 =
-                std::async(std::launch::async,
-                           &DoubleCrossOver::run_short_roller_<K, H>,
-                           this,
-                           std::cref(idx_begin),
-                           std::cref(idx_end),
-                           std::cref(prices_begin),
-                           std::cref(prices_end));
+                ThreadGranularity::thr_pool_.dispatch(
+                    false,
+                    &DoubleCrossOver::run_short_roller_<K, H>,
+                        this,
+                        std::cref(idx_begin),
+                        std::cref(idx_end),
+                        std::cref(prices_begin),
+                        std::cref(prices_end));
             std::future<size_type>  fut2 =
-                std::async(std::launch::async,
-                           &DoubleCrossOver::run_long_roller_<K, H>,
-                           this,
-                           std::cref(idx_begin),
-                           std::cref(idx_end),
-                           std::cref(prices_begin),
-                           std::cref(prices_end));
+                ThreadGranularity::thr_pool_.dispatch(
+                    false,
+                    &DoubleCrossOver::run_long_roller_<K, H>,
+                        this,
+                        std::cref(idx_begin),
+                        std::cref(idx_end),
+                        std::cref(prices_begin),
+                        std::cref(prices_end));
 
             re_count1 = fut1.get();
             re_count2 = fut2.get();
@@ -318,26 +319,27 @@ public:
     operator() (const K &idx_begin, const K &idx_end,
                 const H &prices_begin, const H &prices_end)  {
 
-        const size_type thread_level =
-            ThreadGranularity::get_thread_level();
+        const auto  thread_level = ThreadGranularity::get_thread_level();
 
-        if (thread_level >= 2)  {
+        if (thread_level > 0)  {
             std::future<void>   fut1 =
-                std::async(std::launch::async,
-                           &BollingerBand::run_mean_roller_<K, H>,
-                           this,
-                           std::cref(idx_begin),
-                           std::cref(idx_end),
-                           std::cref(prices_begin),
-                           std::cref(prices_end));
+                ThreadGranularity::thr_pool_.dispatch(
+                    false,
+                    &BollingerBand::run_mean_roller_<K, H>,
+                        this,
+                        std::cref(idx_begin),
+                        std::cref(idx_end),
+                        std::cref(prices_begin),
+                        std::cref(prices_end));
             std::future<void>   fut2 =
-                std::async(std::launch::async,
-                           &BollingerBand::run_std_roller_<K, H>,
-                           this,
-                           std::cref(idx_begin),
-                           std::cref(idx_end),
-                           std::cref(prices_begin),
-                           std::cref(prices_end));
+                ThreadGranularity::thr_pool_.dispatch(
+                    false,
+                    &BollingerBand::run_std_roller_<K, H>,
+                        this,
+                        std::cref(idx_begin),
+                        std::cref(idx_end),
+                        std::cref(prices_begin),
+                        std::cref(prices_end));
 
             fut1.get();
             fut2.get();

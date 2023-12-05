@@ -47,35 +47,14 @@ void DataFrame<I, H>::self_shift(size_type periods, shift_policy sp)  {
     if (periods > 0) [[likely]] {
         if (sp == shift_policy::down || sp == shift_policy::up) [[likely]]  {
             vertical_shift_functor_<Ts ...> functor(periods, sp);
-            StlVecType<std::future<void>>   futures(get_thread_level());
-	        ThreadGranularity::size_type    thread_count = 0;
-            const size_type                 data_size = data_.size();
+            const size_type                 num_cols = data_.size();
 
             {
                 const SpinGuard guard(lock_);
 
-                for (size_type idx = 0; idx < data_size; ++idx) [[likely]]  {
-                    if (thread_count >= get_thread_level())
-                        data_[idx].change(functor);
-                    else  {
-                        auto    to_be_called =
-                            static_cast
-                          <void(DataVec::*)(vertical_shift_functor_<Ts ...> &&)>
-                                (&DataVec::template
-                                     change<vertical_shift_functor_<Ts ...>>);
-
-                        futures[thread_count] =
-                            std::async(std::launch::async,
-                                       to_be_called,
-                                       &(data_[idx]),
-                                       std::move(functor));
-                        thread_count += 1;
-                    }
-                }
+                for (size_type idx = 0; idx < num_cols; ++idx) [[likely]]
+                    data_[idx].change(functor);
             }
-            for (ThreadGranularity::size_type idx = 0;
-                 idx < thread_count; ++idx)
-                futures[idx].get();
         }
         else if (sp == shift_policy::left)  {
             while (periods-- > 0)
@@ -132,35 +111,15 @@ void DataFrame<I, H>::self_rotate(size_type periods, shift_policy sp)  {
 
     if (periods > 0)  {
         if (sp == shift_policy::down || sp == shift_policy::up) [[likely]]  {
-            rotate_functor_<Ts ...>         functor(periods, sp);
-            StlVecType<std::future<void>>   futures(get_thread_level());
-	        ThreadGranularity::size_type    thread_count = 0;
-            const size_type                 data_size = data_.size();
+            rotate_functor_<Ts ...> functor(periods, sp);
+            const size_type         num_cols = data_.size();
 
             {
                 const SpinGuard guard(lock_);
 
-                for (size_type idx = 0; idx < data_size; ++idx) [[likely]]  {
-                    if (thread_count >= get_thread_level())
-                        data_[idx].change(functor);
-                    else  {
-                        auto    to_be_called =
-                            static_cast
-                                <void(H::*)(rotate_functor_<Ts ...> &&)>
-                                 (&H::template change<rotate_functor_<Ts ...>>);
-
-                        futures[thread_count] =
-                            std::async(std::launch::async,
-                                       to_be_called,
-                                       &(data_[idx]),
-                                       std::move(functor));
-                        thread_count += 1;
-                    }
-                }
+                for (size_type idx = 0; idx < num_cols; ++idx) [[likely]]
+                    data_[idx].change(functor);
             }
-            for (ThreadGranularity::size_type idx = 0;
-                 idx < thread_count; ++idx)
-                futures[idx].get();
         }
         else if (sp == shift_policy::left)  {
             std::rotate(column_list_.begin(),

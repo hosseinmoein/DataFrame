@@ -29,6 +29,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <DataFrame/Utils/Threads/SharedQueue.h>
 
+#include <chrono>
+
+using namespace std::chrono_literals;
+
 // ----------------------------------------------------------------------------
 
 namespace hmdf
@@ -73,7 +77,7 @@ SharedQueue<T>::pop_front(bool wait_on_front) noexcept  {
     std::unique_lock<std::mutex>    ul { mutex_ };
 
     if (queue_.empty() && wait_on_front)  {
-        while (queue_.empty())  cvx_.wait(ul);
+        while (queue_.empty())  cvx_.wait_for(ul, 2s);
     }
 
     if (! queue_.empty())  {

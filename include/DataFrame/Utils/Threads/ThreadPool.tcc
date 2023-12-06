@@ -107,6 +107,49 @@ ThreadPool::queue_timed_outs_() noexcept  {
 
 // ----------------------------------------------------------------------------
 
+bool
+ThreadPool::add_thread(size_type thr_num)  {
+
+    if (is_shutdown())
+        throw std::runtime_error("ThreadPool::add_thread(): "
+                                 "Thread pool is shutdown.");
+
+    if (thr_num < 0)  {
+        const size_type shutys { ::abs(thr_num) };
+
+        if (shutys > capacity_threads())  {
+            char    err[1024];
+
+            ::snprintf(err, 1023,
+                       "ThreadPool::add_thread(): Cannot subtract "
+                       "'%ld' threads from the pool with capacity '%ld'",
+                       shutys, capacity_threads());
+            throw std::runtime_error(err);
+        }
+
+        for (size_type i = 0; i < shutys; ++i)  {
+            const WorkUnit  work_unit { WORK_TYPE::_terminate_ };
+
+            global_queue_.push(work_unit);
+        }
+    }
+    else if (thr_num > 0)  {
+        const guard_type    guard { state_ };
+        const size_type     local_size { size_type(threads_.size()) };
+
+        for (size_type i = 0; i < thr_num; ++i)  {
+            local_queues_.push_back(LocalQueueType { });
+            threads_.emplace_back(&ThreadPool::thread_routine_,
+                                  this, local_size + i);
+        }
+    }
+
+    std::this_thread::yield();  // Give +/- threads a chance
+    return (true);
+}
+
+// ----------------------------------------------------------------------------
+
 template<typename F, typename ... As>
 ThreadPool::dispatch_res_t<F, As ...>
 ThreadPool::dispatch(bool immediately, F &&routine, As && ... args)  {
@@ -166,20 +209,31 @@ ThreadPool::parallel_loop(I begin, I end, F &&routine, As && ... args)  {
         n = std::distance(begin, end);
 
     const size_type         cap_thrs { capacity_threads() };
-    const size_type         block_size { n / cap_thrs };
+    const size_type         block_size { (n > cap_thrs) ? n / cap_thrs : n };
     std::vector<future_t>   ret;
 
-    ret.reserve(cap_thrs + 1);
-    for (size_type i = 0; i < n; i += block_size)  {
-        const size_type block_end {
-            ((i + block_size) > n) ? n : i + block_size
-        };
+    if (block_size == n)  {
+        ret.reserve(n);
+        for (size_type i = 0; i < n; ++i)
+            ret.emplace_back(dispatch(false,
+                                      routine,
+                                          begin + i,
+                                          begin + (i + 1),
+                                          std::forward<As>(args) ...));
+    }
+    else  {
+        ret.reserve(cap_thrs + 1);
+        for (size_type i = 0; i < n; i += block_size)  {
+            const size_type block_end {
+                ((i + block_size) > n) ? n : i + block_size
+            };
 
-        ret.push_back(dispatch(false,
-                               routine,
-                               begin + i,
-                               begin + block_end,
-                               std::forward<As>(args) ...));
+            ret.emplace_back(dispatch(false,
+                                      routine,
+                                          begin + i,
+                                          begin + block_end,
+                                          std::forward<As>(args) ...));
+        }
     }
 
     return (ret);
@@ -275,49 +329,6 @@ ThreadPool::parallel_sort(const I begin, const I end, P compare)  {
                 parallel_sort<I, P, TH>(right_iter + 1, end, compare);
         }
     }
-}
-
-// ----------------------------------------------------------------------------
-
-bool
-ThreadPool::add_thread(size_type thr_num)  {
-
-    if (is_shutdown())
-        throw std::runtime_error("ThreadPool::add_thread(): "
-                                 "Thread pool is shutdown.");
-
-    if (thr_num < 0)  {
-        const size_type shutys { ::abs(thr_num) };
-
-        if (shutys > capacity_threads())  {
-            char    err[1024];
-
-            ::snprintf(err, 1023,
-                       "ThreadPool::add_thread(): Cannot subtract "
-                       "'%ld' threads from the pool with capacity '%ld'",
-                       shutys, capacity_threads());
-            throw std::runtime_error(err);
-        }
-
-        for (size_type i = 0; i < shutys; ++i)  {
-            const WorkUnit  work_unit { WORK_TYPE::_terminate_ };
-
-            global_queue_.push(work_unit);
-        }
-    }
-    else if (thr_num > 0)  {
-        const guard_type    guard { state_ };
-        const size_type     local_size { size_type(threads_.size()) };
-
-        for (size_type i = 0; i < thr_num; ++i)  {
-            local_queues_.push_back(LocalQueueType { });
-            threads_.emplace_back(&ThreadPool::thread_routine_,
-                                  this, local_size + i);
-        }
-    }
-
-    std::this_thread::yield();  // Give +/- threads a chance
-    return (true);
 }
 
 // ----------------------------------------------------------------------------
@@ -459,14 +470,15 @@ ThreadPool::thread_routine_(size_type local_q_idx) noexcept  {
     while (true)  {
         ++available_threads_;
 
-        WorkUnit    work_unit = get_one_local_task_();
+        size_type   counter { 0 };
 
-        if (work_unit.work_type == WORK_TYPE::_undefined_)  {
-            const auto  opt_ret = global_queue_.pop_front(true); // Wait
+        while (++counter < 20)  run_task();
 
-            if (opt_ret.has_value())
-                work_unit = opt_ret.value();
-        }
+        WorkUnit    work_unit { };
+        const auto  opt_ret = global_queue_.pop_front(true); // Wait
+
+        if (opt_ret.has_value())
+            work_unit = opt_ret.value();
 
         --available_threads_;
 

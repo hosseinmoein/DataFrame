@@ -579,7 +579,7 @@ typename DataFrame<I, H>::size_type
 DataFrame<I, H>::
 from_indicators(const StlVecType<const char *> &ind_col_names,
                 const char *cat_col_name,
-                const char *numeric_cols_prefixg)  {
+                const char *numeric_cols_prefix)  {
 
     const size_type                     ind_col_s = ind_col_names.size();
     StlVecType<const StlVecType<T> *>   ind_cols(ind_col_s, nullptr);
@@ -591,7 +591,7 @@ from_indicators(const StlVecType<const char *> &ind_col_names,
     const size_type col_s = ind_cols[0]->size();
     auto            &new_col = create_column<CT>(cat_col_name, false);
     const size_type pre_offset =
-        numeric_cols_prefixg == nullptr ? 0 : strlen(numeric_cols_prefixg);
+        numeric_cols_prefix == nullptr ? 0 : strlen(numeric_cols_prefix);
 
     guard.release();
     new_col.reserve(col_s);

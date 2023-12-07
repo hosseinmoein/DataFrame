@@ -87,6 +87,20 @@ template<typename I, typename H>
 template<typename LHS, typename ... Ts>
 template<typename T>
 void
+DataFrame<I, H>::create_col_functor_<LHS, Ts ...>::operator() (const T &)  {
+
+    using VecType = typename std::remove_reference<T>::type;
+    using ValueType = typename VecType::value_type;
+
+    df.template create_column<ValueType>(name, false);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename LHS, typename ... Ts>
+template<typename T>
+void
 DataFrame<I, H>::load_functor_<LHS, Ts ...>::operator() (const T &vec)  {
 
     using VecType = typename std::remove_reference<T>::type;
@@ -394,7 +408,7 @@ operator()(const T &vec)  {
 
         std::copy(vec.begin(), vec.end(), res_vec.begin() + original_index_s);
         result.template load_column<ValueType>(name,
-                                               res_vec,
+                                               std::move(res_vec),
                                                nan_policy::pad_with_nans,
                                                false);
     }
@@ -521,7 +535,17 @@ DataFrame<I, H>::
 drop_missing_rows_functor_<Ts ...>::
 operator()(T &vec)  {
 
-    drop_missing_rows_(vec, missing_row_map, policy, threshold, col_num);
+    if (get_thread_level()  > 0)
+        futures.emplace_back(
+            thr_pool_.dispatch(false,
+                               &DataFrame::drop_missing_rows_<T>,
+                               std::ref(vec),
+                               std::cref(missing_row_map),
+                               policy,
+                               threshold,
+                               col_num));
+    else
+        drop_missing_rows_(vec, missing_row_map, policy, threshold, col_num);
     return;
 }
 
@@ -716,9 +740,9 @@ random_load_data_functor_<Ts ...>::operator() (const T &vec)  {
     }
 
     df.template load_column<ValueType>(name,
-                              std::move(new_vec),
-                              nan_policy::dont_pad_with_nans,
-                              false);
+                                       std::move(new_vec),
+                                       nan_policy::dont_pad_with_nans,
+                                       false);
     return;
 }
 

@@ -476,7 +476,7 @@ template<typename I, typename H>
 template<typename T>
 void DataFrame<I, H>::
 drop_missing_rows_(T &vec,
-                   const DropRowMap missing_row_map,
+                   const DropRowMap &missing_row_map,
                    drop_policy policy,
                    size_type threshold,
                    size_type col_num)  {
@@ -511,24 +511,44 @@ template<typename ... Ts>
 void DataFrame<I, H>::
 drop_missing(drop_policy policy, size_type threshold)  {
 
-    DropRowMap      missing_row_map;
-    const size_type data_size = data_.size();
+    DropRowMap                      missing_row_map;
+    const size_type                 num_cols = data_.size();
+    const size_type                 thread_level = get_thread_level();
+    std::vector<std::future<void>>  futures;
+
+    if (thread_level > 0)  futures.reserve(num_cols + 1);
 
     map_missing_rows_functor_<Ts ...>   functor (
         indices_.size(), missing_row_map);
     const SpinGuard                     guard(lock_);
 
-    for (size_type idx = 0; idx < data_size; ++idx)
+    for (size_type idx = 0; idx < num_cols; ++idx)
         data_[idx].change(functor);
 
-    drop_missing_rows_(indices_, missing_row_map, policy, threshold, data_size);
+    if (thread_level > 0)
+        futures.emplace_back(
+            thr_pool_.dispatch(
+                false,
+                &DataFrame::drop_missing_rows_<decltype(indices_)>,
+                     std::ref(indices_),
+                     std::cref(missing_row_map),
+                     policy,
+                     threshold,
+                     num_cols));
+    else
+        drop_missing_rows_(indices_,
+                           missing_row_map,
+                           policy,
+                           threshold,
+                           num_cols);
 
     drop_missing_rows_functor_<Ts ...>  functor2 (
-        missing_row_map, policy, threshold, data_.size());
+        missing_row_map, policy, threshold, data_.size(), futures);
 
-    for (size_type idx = 0; idx < data_size; ++idx)
+    for (size_type idx = 0; idx < num_cols; ++idx)
         data_[idx].change(functor2);
 
+    for (auto &fut : futures)  fut.get();
     return;
 }
 
@@ -2236,15 +2256,21 @@ bucketize(bucket_type bt,
 
     _bucketize_core_(dst_idx, src_idx, src_idx, value, idx_visitor, idx_s, bt);
 
+    std::vector<std::future<void>>  futures;
+
+    if (get_thread_level() > 0)  futures.reserve(column_list_.size());
+
     auto    args_tuple = std::tuple<Ts ...>(args ...);
     auto    func =
-        [this, &result, &value, bt](auto &triple) mutable -> void {
-            _load_bucket_data_(*this, result, value, bt, triple);
+        [this, &result, &value, &futures, bt]
+        (auto &triple) mutable -> void {
+            _load_bucket_data_(*this, result, value, bt, triple, futures);
         };
 
     const SpinGuard guard(lock_);
 
     for_each_in_tuple (args_tuple, func);
+    for (auto &fut : futures)  fut.get();
     return (result);
 }
 

@@ -108,7 +108,7 @@ using DropRowMap = DFMap<size_type, size_type>;
 template<typename T>
 static void
 drop_missing_rows_(T &vec,
-                   const DropRowMap missing_row_map,
+                   const DropRowMap &missing_row_map,
                    drop_policy policy,
                    size_type threshold,
                    size_type col_num);

@@ -30,14 +30,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 
 #include <DataFrame/Utils/DateTime.h>
+#include <DataFrame/Utils/Threads/ThreadGranularity.h>
 
 #include <cstdlib>
 #include <cstring>
+#include <future>
 #include <iostream>
 #include <map>
 #include <set>
 #include <sstream>
 #include <tuple>
+#include <type_traits>
 #include <unordered_map>
 #include <utility>
 
@@ -513,7 +516,8 @@ _load_bucket_data_(const DF &source,
                    DF &dest,
                    const I &value,
                    bucket_type bt,
-                   T &triple) {
+                   T &triple,
+                   std::vector<std::future<void>> &futures) {
 
     using ValueType = typename std::tuple_element<2, T>::type::value_type;
 
@@ -524,7 +528,23 @@ _load_bucket_data_(const DF &source,
     const std::size_t   src_s = std::min(src_vec.size(), src_idx.size());
     auto                &visitor = std::get<2>(triple);
 
-    _bucketize_core_(dst_vec, src_idx, src_vec, value, visitor, src_s, bt);
+    if (ThreadGranularity::get_thread_level() > 0)
+        futures.emplace_back(
+            ThreadGranularity::thr_pool_.dispatch(false,
+                _bucketize_core_<std::decay_t<decltype(dst_vec)>,
+                                 std::decay_t<decltype(src_idx)>,
+                                 std::decay_t<decltype(src_vec)>,
+                                 I,
+                                 std::decay_t<decltype(visitor)>>,
+                    std::ref(dst_vec),
+                    std::cref(src_idx),
+                    std::cref(src_vec),
+                    std::cref(value),
+                    std::ref(visitor),
+                    src_s,
+                    bt));
+    else
+        _bucketize_core_(dst_vec, src_idx, src_vec, value, visitor, src_s, bt);
 }
 
 // ----------------------------------------------------------------------------

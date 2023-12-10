@@ -766,7 +766,9 @@ sort(const char *name, sort_spec dir, bool ignore_index)  {
     }
 
     if (get_thread_level() > 0 && ((column_list_.size() - 1) > 1))  {
-        auto    lbd = [name, &sorting_idxs, idx_s, this]
+        auto    lbd = [name,
+                       &sorting_idxs = std::as_const(sorting_idxs),
+                       idx_s, this]
                       (const auto &begin, const auto &end) -> void  {
             sort_functor_<Ts ...>   functor (sorting_idxs, idx_s);
 
@@ -774,11 +776,11 @@ sort(const char *name, sort_spec dir, bool ignore_index)  {
                 if (citer->first != name)
                     this->data_[citer->second].change(functor);
         };
-        auto    futuers =
+        auto    futures =
             thr_pool_.parallel_loop(column_list_.begin(), column_list_.end(),
                                     std::move(lbd));
 
-        for (auto &fut : futuers)  fut.get();
+        for (auto &fut : futures)  fut.get();
     }
     else  {
         sort_functor_<Ts ...>   functor (sorting_idxs, idx_s);
@@ -1183,7 +1185,9 @@ sort(const char *name1, sort_spec dir1,
     }
 
     if (get_thread_level() > 0 && ((column_list_.size() - 2) > 1))  {
-        auto    lbd = [name1, name2, &sorting_idxs, idx_s, this]
+        auto    lbd = [name1, name2,
+                       &sorting_idxs = std::as_const(sorting_idxs),
+                       idx_s, this]
                       (const auto &begin, const auto &end) -> void  {
             sort_functor_<Ts ...>   functor (sorting_idxs, idx_s);
 
@@ -1191,11 +1195,11 @@ sort(const char *name1, sort_spec dir1,
                 if (citer->first != name1 && citer->first != name2)
                     this->data_[citer->second].change(functor);
         };
-        auto    futuers =
+        auto    futures =
             thr_pool_.parallel_loop(column_list_.begin(), column_list_.end(),
                                     std::move(lbd));
 
-        for (auto &fut : futuers)  fut.get();
+        for (auto &fut : futures)  fut.get();
     }
     else  {
         sort_functor_<Ts ...>   functor (sorting_idxs, idx_s);
@@ -1330,7 +1334,9 @@ sort(const char *name1, sort_spec dir1,
     }
 
     if (get_thread_level() > 0 && ((column_list_.size() - 3) > 1))  {
-        auto    lbd = [name1, name2, name3, &sorting_idxs, idx_s, this]
+        auto    lbd = [name1, name2, name3,
+                       &sorting_idxs = std::as_const(sorting_idxs),
+                       idx_s, this]
                       (const auto &begin, const auto &end) -> void  {
             sort_functor_<Ts ...>   functor (sorting_idxs, idx_s);
 
@@ -1340,11 +1346,11 @@ sort(const char *name1, sort_spec dir1,
                     citer->first != name3)
                     this->data_[citer->second].change(functor);
         };
-        auto    futuers =
+        auto    futures =
             thr_pool_.parallel_loop(column_list_.begin(), column_list_.end(),
                                     std::move(lbd));
 
-        for (auto &fut : futuers)  fut.get();
+        for (auto &fut : futures)  fut.get();
     }
     else  {
         sort_functor_<Ts ...>   functor (sorting_idxs, idx_s);
@@ -1517,7 +1523,9 @@ sort(const char *name1, sort_spec dir1,
     }
 
     if (get_thread_level() > 0 && ((column_list_.size() - 4) > 1))  {
-        auto    lbd = [name1, name2, name3, name4, &sorting_idxs, idx_s, this]
+        auto    lbd = [name1, name2, name3, name4,
+                       &sorting_idxs = std::as_const(sorting_idxs),
+                       idx_s, this]
                       (const auto &begin, const auto &end) -> void  {
             sort_functor_<Ts ...>   functor (sorting_idxs, idx_s);
 
@@ -1528,11 +1536,11 @@ sort(const char *name1, sort_spec dir1,
                     citer->first != name4)
                     this->data_[citer->second].change(functor);
         };
-        auto    futuers =
+        auto    futures =
             thr_pool_.parallel_loop(column_list_.begin(), column_list_.end(),
                                     std::move(lbd));
 
-        for (auto &fut : futuers)  fut.get();
+        for (auto &fut : futures)  fut.get();
     }
     else  {
         sort_functor_<Ts ...>   functor (sorting_idxs, idx_s);
@@ -1744,7 +1752,8 @@ sort(const char *name1, sort_spec dir1,
 
     if (get_thread_level() > 0 && ((column_list_.size() - 5) > 1))  {
         auto    lbd = [name1, name2, name3, name4, name5,
-                       &sorting_idxs, idx_s, this]
+                       &sorting_idxs = std::as_const(sorting_idxs),
+                       idx_s, this]
                       (const auto &begin, const auto &end) -> void  {
             sort_functor_<Ts ...>   functor (sorting_idxs, idx_s);
 
@@ -1756,11 +1765,11 @@ sort(const char *name1, sort_spec dir1,
                     citer->first != name5)
                     this->data_[citer->second].change(functor);
         };
-        auto    futuers =
+        auto    futures =
             thr_pool_.parallel_loop(column_list_.begin(), column_list_.end(),
                                     std::move(lbd));
 
-        for (auto &fut : futuers)  fut.get();
+        for (auto &fut : futures)  fut.get();
     }
     else  {
         sort_functor_<Ts ...>   functor (sorting_idxs, idx_s);
@@ -1913,7 +1922,7 @@ groupby1(const char *col_name, I_V &&idx_visitor, Ts&& ... args) const  {
         [this,
          &res,
          gb_vec,
-         &sort_v,
+         &sort_v = std::as_const(sort_v),
          idx_visitor = std::forward<I_V>(idx_visitor),
          col_name](auto &triple) mutable -> void {
             _load_groupby_data_1_(*this,
@@ -1982,7 +1991,7 @@ groupby2(const char *col_name1,
          &res,
          gb_vec1,
          gb_vec2,
-         &sort_v,
+         &sort_v = std::as_const(sort_v),
          idx_visitor = std::forward<I_V>(idx_visitor),
          col_name1,
          col_name2](auto &triple) mutable -> void {
@@ -2075,7 +2084,7 @@ groupby3(const char *col_name1,
          gb_vec1,
          gb_vec2,
          gb_vec3,
-         &sort_v,
+         &sort_v = std::as_const(sort_v),
          idx_visitor = std::forward<I_V>(idx_visitor),
          col_name1,
          col_name2,
@@ -2262,7 +2271,7 @@ bucketize(bucket_type bt,
 
     auto    args_tuple = std::tuple<Ts ...>(args ...);
     auto    func =
-        [this, &result, &value, &futures, bt]
+        [this, &result, &value = std::as_const(value), &futures, bt]
         (auto &triple) mutable -> void {
             _load_bucket_data_(*this, result, value, bt, triple, futures);
         };

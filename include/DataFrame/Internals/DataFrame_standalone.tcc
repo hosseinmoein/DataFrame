@@ -185,13 +185,13 @@ _load_groupby_data_1_(
     DF &dest,
     T &triple,
     I_V &&idx_visitor,
-    const V &input_v,
+    const V &input_col,
     const typename DF::template StlVecType<std::size_t> &sort_v,
     const char *col_name)  {
 
     std::size_t         marker = 0;
     auto                &dst_idx = dest.get_index();
-    const std::size_t   vec_size = input_v.size();
+    const std::size_t   vec_size = input_col.size();
     const auto          &src_idx = source.get_index();
 
     if (dst_idx.empty())  {
@@ -205,13 +205,13 @@ _load_groupby_data_1_(
         dst_idx.reserve(vec_size / 2 + 1);
         if (col_vec)  col_vec->reserve(vec_size / 2 + 1);
         for (std::size_t i = 0; i < vec_size; ++i)  {
-            if (input_v[sort_v[i]] != input_v[sort_v[marker]])  {
+            if (input_col[sort_v[i]] != input_col[sort_v[marker]])  {
                 idx_visitor.pre();
                 for (std::size_t j = marker; j < i; ++j)
                     idx_visitor(src_idx[sort_v[j]], src_idx[sort_v[j]]);
                 idx_visitor.post();
                 dst_idx.push_back(idx_visitor.get_result());
-                if (col_vec)  col_vec->push_back(input_v[sort_v[i - 1]]);
+                if (col_vec)  col_vec->push_back(input_col[sort_v[i - 1]]);
                 marker = i;
             }
         }
@@ -224,7 +224,7 @@ _load_groupby_data_1_(
                     idx_visitor(src_idx[sort_v[j]], src_idx[sort_v[j]]);
             idx_visitor.post();
             dst_idx.push_back(idx_visitor.get_result());
-            if (col_vec)  col_vec->push_back(input_v[sort_v[vec_size - 1]]);
+            if (col_vec)  col_vec->push_back(input_col[sort_v[vec_size - 1]]);
         }
     }
 
@@ -239,7 +239,7 @@ _load_groupby_data_1_(
     dst_vec.reserve(max_count / 2 + 1);
     marker = 0;
     for (std::size_t i = 0; i < max_count; ++i) [[likely]]  {
-        if (input_v[sort_v[i]] != input_v[sort_v[marker]])  {
+        if (input_col[sort_v[i]] != input_col[sort_v[marker]])  {
             visitor.pre();
             for (std::size_t j = marker; j < i; ++j)
                 visitor(src_idx[sort_v[j]], src_vec[sort_v[j]]);
@@ -269,15 +269,15 @@ _load_groupby_data_2_(
     DF &dest,
     T &triple,
     I_V &&idx_visitor,
-    const V1 &input_v1,
-    const V2 &input_v2,
+    const V1 &input_col1,
+    const V2 &input_col2,
     const typename DF::template StlVecType<std::size_t> &sort_v,
     const char *col_name1,
     const char *col_name2) {
 
     std::size_t         marker = 0;
     auto                &dst_idx = dest.get_index();
-    const std::size_t   vec_size = std::min(input_v1.size(), input_v2.size());
+    const std::size_t   vec_size = std::min(input_col1.size(), input_col2.size());
     const auto          &src_idx = source.get_index();
 
     if (dst_idx.empty())  {
@@ -297,15 +297,15 @@ _load_groupby_data_2_(
         if (col_vec1) col_vec1->reserve(vec_size / 2 + 1);
         if (col_vec2) col_vec2->reserve(vec_size / 2 + 1);
         for (std::size_t i = 0; i < vec_size; ++i)  {
-            if (input_v1[sort_v[i]] != input_v1[sort_v[marker]] ||
-                input_v2[sort_v[i]] != input_v2[sort_v[marker]])  {
+            if (input_col1[sort_v[i]] != input_col1[sort_v[marker]] ||
+                input_col2[sort_v[i]] != input_col2[sort_v[marker]])  {
                 idx_visitor.pre();
                 for (std::size_t j = marker; j < i; ++j)
                     idx_visitor(src_idx[sort_v[j]], src_idx[sort_v[j]]);
                 idx_visitor.post();
                 dst_idx.push_back(idx_visitor.get_result());
-                if (col_vec1) col_vec1->push_back(input_v1[sort_v[i - 1]]);
-                if (col_vec2) col_vec2->push_back(input_v2[sort_v[i - 1]]);
+                if (col_vec1) col_vec1->push_back(input_col1[sort_v[i - 1]]);
+                if (col_vec2) col_vec2->push_back(input_col2[sort_v[i - 1]]);
                 marker = i;
             }
         }
@@ -318,8 +318,8 @@ _load_groupby_data_2_(
                     idx_visitor(src_idx[sort_v[j]], src_idx[sort_v[j]]);
             idx_visitor.post();
             dst_idx.push_back(idx_visitor.get_result());
-            if (col_vec1) col_vec1->push_back(input_v1[sort_v[vec_size - 1]]);
-            if (col_vec2) col_vec2->push_back(input_v2[sort_v[vec_size - 1]]);
+            if (col_vec1) col_vec1->push_back(input_col1[sort_v[vec_size - 1]]);
+            if (col_vec2) col_vec2->push_back(input_col2[sort_v[vec_size - 1]]);
         }
     }
 
@@ -334,8 +334,8 @@ _load_groupby_data_2_(
     dst_vec.reserve(max_count / 2 + 1);
     marker = 0;
     for (std::size_t i = 0; i < max_count; ++i) [[likely]]  {
-        if (input_v1[sort_v[i]] != input_v1[sort_v[marker]] ||
-            input_v2[sort_v[i]] != input_v2[sort_v[marker]])  {
+        if (input_col1[sort_v[i]] != input_col1[sort_v[marker]] ||
+            input_col2[sort_v[i]] != input_col2[sort_v[marker]])  {
             visitor.pre();
             for (std::size_t j = marker; j < i; ++j)
                 visitor(src_idx[sort_v[j]], src_vec[sort_v[j]]);
@@ -366,9 +366,9 @@ _load_groupby_data_3_(
     DF &dest,
     T &triple,
     I_V &&idx_visitor,
-    const V1 &input_v1,
-    const V2 &input_v2,
-    const V3 &input_v3,
+    const V1 &input_col1,
+    const V2 &input_col2,
+    const V3 &input_col3,
     const typename DF::template StlVecType<std::size_t> &sort_v,
     const char *col_name1,
     const char *col_name2,
@@ -377,7 +377,7 @@ _load_groupby_data_3_(
     std::size_t         marker = 0;
     auto                &dst_idx = dest.get_index();
     const std::size_t   vec_size =
-        std::min({ input_v1.size(), input_v2.size(), input_v3.size() });
+        std::min({ input_col1.size(), input_col2.size(), input_col3.size() });
     const auto          &src_idx = source.get_index();
 
     if (dst_idx.empty())  {
@@ -403,17 +403,17 @@ _load_groupby_data_3_(
         if (col_vec2) col_vec2->reserve(vec_size / 2 + 1);
         if (col_vec3) col_vec3->reserve(vec_size / 2 + 1);
         for (std::size_t i = 0; i < vec_size; ++i)  {
-            if (input_v1[sort_v[i]] != input_v1[sort_v[marker]] ||
-                input_v2[sort_v[i]] != input_v2[sort_v[marker]] ||
-                input_v3[sort_v[i]] != input_v3[sort_v[marker]])  {
+            if (input_col1[sort_v[i]] != input_col1[sort_v[marker]] ||
+                input_col2[sort_v[i]] != input_col2[sort_v[marker]] ||
+                input_col3[sort_v[i]] != input_col3[sort_v[marker]])  {
                 idx_visitor.pre();
                 for (std::size_t j = marker; j < i; ++j)
                     idx_visitor(src_idx[sort_v[j]], src_idx[sort_v[j]]);
                 idx_visitor.post();
                 dst_idx.push_back(idx_visitor.get_result());
-                if (col_vec1) col_vec1->push_back(input_v1[sort_v[i - 1]]);
-                if (col_vec2) col_vec2->push_back(input_v2[sort_v[i - 1]]);
-                if (col_vec3) col_vec3->push_back(input_v3[sort_v[i - 1]]);
+                if (col_vec1) col_vec1->push_back(input_col1[sort_v[i - 1]]);
+                if (col_vec2) col_vec2->push_back(input_col2[sort_v[i - 1]]);
+                if (col_vec3) col_vec3->push_back(input_col3[sort_v[i - 1]]);
                 marker = i;
             }
         }
@@ -426,9 +426,9 @@ _load_groupby_data_3_(
                     idx_visitor(src_idx[sort_v[j]], src_idx[sort_v[j]]);
             idx_visitor.post();
             dst_idx.push_back(idx_visitor.get_result());
-            if (col_vec1) col_vec1->push_back(input_v1[sort_v[vec_size - 1]]);
-            if (col_vec2) col_vec2->push_back(input_v2[sort_v[vec_size - 1]]);
-            if (col_vec3) col_vec3->push_back(input_v3[sort_v[vec_size - 1]]);
+            if (col_vec1) col_vec1->push_back(input_col1[sort_v[vec_size - 1]]);
+            if (col_vec2) col_vec2->push_back(input_col2[sort_v[vec_size - 1]]);
+            if (col_vec3) col_vec3->push_back(input_col3[sort_v[vec_size - 1]]);
         }
     }
 
@@ -443,9 +443,9 @@ _load_groupby_data_3_(
     dst_vec.reserve(max_count / 2 + 1);
     marker = 0;
     for (std::size_t i = 0; i < max_count; ++i) [[likely]]  {
-        if (input_v1[sort_v[i]] != input_v1[sort_v[marker]] ||
-            input_v2[sort_v[i]] != input_v2[sort_v[marker]] ||
-            input_v3[sort_v[i]] != input_v3[sort_v[marker]])  {
+        if (input_col1[sort_v[i]] != input_col1[sort_v[marker]] ||
+            input_col2[sort_v[i]] != input_col2[sort_v[marker]] ||
+            input_col3[sort_v[i]] != input_col3[sort_v[marker]])  {
             visitor.pre();
             for (std::size_t j = marker; j < i; ++j)
                 visitor(src_idx[sort_v[j]], src_vec[sort_v[j]]);
@@ -528,9 +528,10 @@ _load_bucket_data_(const DF &source,
     const std::size_t   src_s = std::min(src_vec.size(), src_idx.size());
     auto                &visitor = std::get<2>(triple);
 
-    if (ThreadGranularity::get_thread_level() > 0)
+    if (ThreadGranularity::get_thread_level() > 3)
         futures.emplace_back(
-            ThreadGranularity::thr_pool_.dispatch(false,
+            ThreadGranularity::thr_pool_.dispatch(
+                false,
                 _bucketize_core_<std::decay_t<decltype(dst_vec)>,
                                  std::decay_t<decltype(src_idx)>,
                                  std::decay_t<decltype(src_vec)>,

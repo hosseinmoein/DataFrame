@@ -369,7 +369,7 @@ DataFrame<I, H>::get_data_by_idx (Index2D<IndexType> range) const  {
 
         if (get_thread_level() > 0)  {
             auto    lbd =
-                [&b_dist, &e_dist, &df, this]
+                [b_dist, e_dist, &df, this]
                 (const auto &begin, const auto &end) -> void  {
                     for (auto citer = begin; citer < end; ++citer)  {
                         load_functor_<DataFrame, Ts ...>    functor (
@@ -436,7 +436,7 @@ get_data_by_idx(const StlVecType<IndexType> &values) const  {
 
     if (get_thread_level() > 0)  {
         auto    lbd =
-            [&locations, idx_s, &df, this]
+            [&locations = std::as_const(locations), idx_s, &df, this]
             (const auto &begin, const auto &end) -> void  {
                 for (auto citer = begin; citer < end; ++citer)  {
                     sel_load_functor_<size_type, Ts ...>    functor (
@@ -681,7 +681,7 @@ DataFrame<I, H>::get_data_by_loc (Index2D<long> range) const  {
 
         if (get_thread_level() > 0)  {
             auto    lbd =
-                [&range, &df, this]
+                [&range = std::as_const(range), &df, this]
                 (const auto &begin, const auto &end) -> void  {
                     for (auto citer = begin; citer < end; ++citer)  {
                         load_functor_<DataFrame, Ts ...>    functor (
@@ -755,7 +755,7 @@ get_data_by_loc (const StlVecType<long> &locations) const  {
 
     if (get_thread_level() > 0)  {
         auto    lbd =
-            [&locations, idx_s, &df, this]
+            [&locations = std::as_const(locations), idx_s, &df, this]
             (const auto &begin, const auto &end) -> void  {
                 for (auto citer = begin; citer < end; ++citer)  {
                     sel_load_functor_<long, Ts ...>  functor (
@@ -1006,7 +1006,7 @@ get_data_by_sel (const char *name, F &sel_functor) const  {
 
     if (get_thread_level() > 0)  {
         auto    lbd =
-            [&col_indices, idx_s, &df, this]
+            [&col_indices = std::as_const(col_indices), idx_s, &df, this]
             (const auto &begin, const auto &end) -> void  {
                 for (auto citer = begin; citer < end; ++citer)  {
                     sel_load_functor_<size_type, Ts ...>    functor (
@@ -1174,7 +1174,7 @@ get_data_by_sel (const char *name1, const char *name2, F &sel_functor) const  {
 
     if (get_thread_level() > 0)  {
         auto    lbd =
-            [&col_indices, idx_s, &df, this]
+            [&col_indices = std::as_const(col_indices), idx_s, &df, this]
             (const auto &begin, const auto &end) -> void  {
                 for (auto citer = begin; citer < end; ++citer)  {
                     sel_load_functor_<size_type, Ts ...>    functor (
@@ -1362,7 +1362,7 @@ get_data_by_sel (const char *name1,
 
     if (get_thread_level() > 0)  {
         auto    lbd =
-            [&col_indices, idx_s, &df, this]
+            [&col_indices = std::as_const(col_indices), idx_s, &df, this]
             (const auto &begin, const auto &end) -> void  {
                 for (auto citer = begin; citer < end; ++citer)  {
                     sel_load_functor_<size_type, Ts ...>    functor (
@@ -1455,7 +1455,7 @@ get_data_by_sel (F &sel_functor) const  {
 
     if (get_thread_level() > 0)  {
         auto    lbd =
-            [&col_indices, idx_s, &df, this]
+            [&col_indices = std::as_const(col_indices), idx_s, &df, this]
             (const auto &begin, const auto &end) -> void  {
                 for (auto citer = begin; citer < end; ++citer)  {
                     sel_load_functor_<size_type, Tuple> functor (
@@ -1548,7 +1548,7 @@ get_data_by_sel (F &sel_functor, FilterCols && ... filter_cols) const  {
 
     if (get_thread_level() > 0)  {
         auto    lbd =
-            [&col_indices, idx_s, &df, this]
+            [&col_indices = std::as_const(col_indices), idx_s, &df, this]
             (const auto &begin, const auto &end) -> void  {
                 for (auto citer = begin; citer < end; ++citer)  {
                     sel_load_functor_<size_type, Tuple> functor (
@@ -1755,7 +1755,7 @@ get_data_by_sel(const char *name1,
 
     if (get_thread_level() > 0)  {
         auto    lbd =
-            [&col_indices, idx_s, &df, this]
+            [&col_indices = std::as_const(col_indices), idx_s, &df, this]
             (const auto &begin, const auto &end) -> void  {
                 for (auto citer = begin; citer < end; ++citer)  {
                     sel_load_functor_<size_type, Ts ...>    functor (
@@ -1981,7 +1981,7 @@ get_data_by_sel(const char *name1,
 
     if (get_thread_level() > 0)  {
         auto    lbd =
-            [&col_indices, idx_s, &df, this]
+            [&col_indices = std::as_const(col_indices), idx_s, &df, this]
             (const auto &begin, const auto &end) -> void  {
                 for (auto citer = begin; citer < end; ++citer)  {
                     sel_load_functor_<size_type, Ts ...>    functor (
@@ -2105,7 +2105,7 @@ get_data_by_sel(const char *name1,
 
     if (get_thread_level() > 0)  {
         auto    lbd =
-            [&col_indices, idx_s, &df, this]
+            [&col_indices = std::as_const(col_indices), idx_s, &df, this]
             (const auto &begin, const auto &end) -> void  {
                 for (auto citer = begin; citer < end; ++citer)  {
                     sel_load_functor_<size_type, Ts ...>    functor (
@@ -2233,7 +2233,7 @@ get_data_by_sel(const char *name1,
 
     if (get_thread_level() > 0)  {
         auto    lbd =
-            [&col_indices, idx_s, &df, this]
+            [&col_indices = std::as_const(col_indices), idx_s, &df, this]
             (const auto &begin, const auto &end) -> void  {
                 for (auto citer = begin; citer < end; ++citer)  {
                     sel_load_functor_<size_type, Ts ...>    functor (
@@ -2365,7 +2365,7 @@ get_data_by_sel(const char *name1,
 
     if (get_thread_level() > 0)  {
         auto    lbd =
-            [&col_indices, idx_s, &df, this]
+            [&col_indices = std::as_const(col_indices), idx_s, &df, this]
             (const auto &begin, const auto &end) -> void  {
                 for (auto citer = begin; citer < end; ++citer)  {
                     sel_load_functor_<size_type, Ts ...>    functor (
@@ -2596,7 +2596,7 @@ get_data_by_rand(random_policy spec, double n, seed_t seed) const  {
 
         if (get_thread_level() > 0)  {
             auto    lbd =
-                [&rand_indices, &df, this]
+                [&rand_indices = std::as_const(rand_indices), &df, this]
                 (const auto &begin, const auto &end) -> void  {
                     for (auto citer = begin; citer < end; ++citer)  {
                         random_load_data_functor_<Ts ...>   functor (
@@ -2940,7 +2940,8 @@ get_reindexed(const char *col_to_be_index, const char *old_index_name) const  {
 
     if (get_thread_level() > 0)  {
         auto    lbd =
-            [col_to_be_index, new_idx_s, &df, this]
+            [col_to_be_index = std::as_const(col_to_be_index),
+             new_idx_s, &df, this]
             (const auto &begin, const auto &end) -> void  {
                 for (auto citer = begin; citer < end; ++citer)  {
                     if (citer->first == col_to_be_index)  continue;

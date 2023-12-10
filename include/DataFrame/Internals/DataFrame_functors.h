@@ -91,6 +91,22 @@ struct create_col_functor_ : DataVec::template visitor_base<Ts ...>  {
 // ----------------------------------------------------------------------------
 
 template<typename LHS, typename ... Ts>
+struct create_join_common_col_functor_
+    : DataVec::template visitor_base<Ts ...>  {
+
+    inline create_join_common_col_functor_ (const char *n, LHS &d)
+        : name (n), df(d)  {  }
+
+    const char  *name;
+    LHS         &df;
+
+    template<typename T>
+    void operator() (const T &);
+};
+
+// ----------------------------------------------------------------------------
+
+template<typename LHS, typename ... Ts>
 struct load_functor_ : DataVec::template visitor_base<Ts ...>  {
 
     inline load_functor_ (const char *n,

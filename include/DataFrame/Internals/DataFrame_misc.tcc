@@ -321,6 +321,27 @@ mod_by_idx_functor_<Ts ...>::operator() (T &lhs_vec) const  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
+template<typename LHS, typename ... Ts>
+template<typename T>
+void
+DataFrame<I, H>::
+create_join_common_col_functor_<LHS, Ts ...>::operator() (const T &)  {
+
+    using VecType = typename std::remove_reference<T>::type;
+    using ValueType = typename VecType::value_type;
+
+    char    lhs_str[256];
+    char    rhs_str[256];
+
+    ::snprintf(lhs_str, sizeof(lhs_str) - 1, "lhs.%s", name);
+    ::snprintf(rhs_str, sizeof(rhs_str) - 1, "rhs.%s", name);
+    df.template create_column<ValueType>(lhs_str, false);
+    df.template create_column<ValueType>(rhs_str, false);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
 template<typename RES_T, typename ... Ts>
 template<typename T>
 void

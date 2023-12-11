@@ -873,13 +873,14 @@ struct  TupleHash  {
 //
 
 template<typename I, typename O, typename PRE>
-inline static O _remove_copy_if_(I first, I last, O d_first, PRE predicate)  {
+inline static void
+_remove_copy_if_(I first, I last, O d_first, PRE predicate)  {
 
     for (I i = first; i != last; ++i) [[likely]]
         if (! predicate (std::distance(first, i)))
             *d_first++ = *i;
 
-    return d_first;
+    return;
 }
 
 // ----------------------------------------------------------------------------

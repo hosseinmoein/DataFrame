@@ -930,11 +930,30 @@ void DataFrame<I, H>::remove_data_by_idx (Index2D<IndexType> range)  {
         make_consistent<Ts ...>();
         indices_.erase(lower, upper);
 
-        remove_functor_<Ts ...> functor (b_dist, e_dist);
-        const SpinGuard         guard(lock_);
+        const SpinGuard guard(lock_);
 
-        for (const auto &iter : column_list_)
-            data_[iter.second].change(functor);
+        if (get_thread_level() > 2)  {
+            auto    lbd =
+                [b_dist, e_dist, this]
+                (const auto &begin, const auto &end) -> void  {
+                    remove_functor_<Ts ...> functor (b_dist, e_dist);
+
+                    for (auto citer = begin; citer < end; ++citer)
+                        this->data_[citer->second].change(functor);
+                };
+            auto    futures =
+                thr_pool_.parallel_loop(column_list_.begin(),
+                                        column_list_.end(),
+                                        std::move(lbd));
+
+            for (auto &fut : futures)  fut.get();
+        }
+        else  {
+            remove_functor_<Ts ...> functor (b_dist, e_dist);
+
+            for (const auto &citer : column_list_)
+                data_[citer.second].change(functor);
+        }
     }
 
     return;
@@ -960,13 +979,32 @@ void DataFrame<I, H>::remove_data_by_loc (Index2D<long> range)  {
         indices_.erase(indices_.begin() + range.begin,
                        indices_.begin() + range.end);
 
-        remove_functor_<Ts ...> functor (
-            static_cast<size_type>(range.begin),
-            static_cast<size_type>(range.end));
-        const SpinGuard         guard(lock_);
+        const SpinGuard guard(lock_);
 
-        for (const auto &iter : column_list_) [[likely]]
-            data_[iter.second].change(functor);
+        if (get_thread_level() > 2)  {
+            auto    lbd =
+                [&range = std::as_const(range), this]
+                (const auto &begin, const auto &end) -> void  {
+                    remove_functor_<Ts ...> functor (size_type(range.begin),
+                                                     size_type(range.end));
+
+                    for (auto citer = begin; citer < end; ++citer)
+                        this->data_[citer->second].change(functor);
+                };
+            auto    futures =
+                thr_pool_.parallel_loop(column_list_.begin(),
+                                        column_list_.end(),
+                                        std::move(lbd));
+
+            for (auto &fut : futures)  fut.get();
+        }
+        else  {
+            remove_functor_<Ts ...> functor (size_type(range.begin),
+                                             size_type(range.end));
+
+            for (const auto &citer : column_list_) [[likely]]
+                data_[citer.second].change(functor);
+        }
 
         return;
     }
@@ -978,6 +1016,59 @@ void DataFrame<I, H>::remove_data_by_loc (Index2D<long> range)  {
              "Bad begin, end range: %ld, %ld",
              range.begin, range.end);
     throw BadRange (buffer);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename ... Ts>
+void DataFrame<I, H>::
+remove_data_by_sel_common_(const StlVecType<size_type> &col_indices)  {
+
+    SpinGuard   guard (lock_);
+
+    if (get_thread_level() > 2)  {
+        auto    lbd =
+            [&col_indices = std::as_const(col_indices), this]
+            (const auto &begin, const auto &end) -> void  {
+                const sel_remove_functor_<Ts ...>   functor (col_indices);
+
+                for (auto citer = begin; citer < end; ++citer)
+                    this->data_[citer->second].change(functor);
+            };
+        auto    lbd_idx =
+            [&col_indices = std::as_const(col_indices), this] () -> void  {
+                const size_type col_indices_s = col_indices.size();
+                size_type       del_count = 0;
+
+                for (size_type i = 0; i < col_indices_s; ++i) [[likely]]
+                    this->indices_.erase(this->indices_.begin() +
+                                         (col_indices[i] - del_count++));
+            };
+            auto    future_idx = thr_pool_.dispatch(false, lbd_idx);
+            auto    futures =
+                thr_pool_.parallel_loop(column_list_.begin(),
+                                        column_list_.end(),
+                                        std::move(lbd));
+
+            future_idx.get();
+            for (auto &fut : futures)  fut.get();
+    }
+    else  {
+        const sel_remove_functor_<Ts ...>   functor (col_indices);
+
+        for (const auto &citer : column_list_)
+            data_[citer.second].change(functor);
+        guard.release();
+
+        const size_type col_indices_s = col_indices.size();
+        size_type       del_count = 0;
+
+        for (size_type i = 0; i < col_indices_s; ++i) [[likely]]
+            indices_.erase(indices_.begin() + (col_indices[i] - del_count++));
+    }
+
+    return;
 }
 
 // ----------------------------------------------------------------------------
@@ -998,19 +1089,7 @@ void DataFrame<I, H>::remove_data_by_sel (const char *name, F &sel_functor)  {
         if (sel_functor (indices_[i], vec[i]))
             col_indices.push_back(i);
 
-    const sel_remove_functor_<Ts ...>   functor (col_indices);
-    SpinGuard                           guard (lock_);
-
-    for (const auto &col_citer : column_list_)
-        data_[col_citer.second].change(functor);
-    guard.release();
-
-    const size_type col_indices_s = col_indices.size();
-    size_type       del_count = 0;
-
-    for (size_type i = 0; i < col_indices_s; ++i) [[likely]]
-        indices_.erase(indices_.begin() + (col_indices[i] - del_count++));
-
+    remove_data_by_sel_common_<Ts ...>(col_indices);
     return;
 }
 
@@ -1040,18 +1119,7 @@ remove_data_by_sel (const char *name1, const char *name2, F &sel_functor)  {
                          i < col_s2 ? vec2[i] : get_nan<T2>()))
             col_indices.push_back(i);
 
-    const sel_remove_functor_<Ts ...>   functor (col_indices);
-
-    for (const auto &col_citer : column_list_)
-        data_[col_citer.second].change(functor);
-    guard.release();
-
-    const size_type col_indices_s = col_indices.size();
-    size_type       del_count = 0;
-
-    for (size_type i = 0; i < col_indices_s; ++i)
-        indices_.erase(indices_.begin() + (col_indices[i] - del_count++));
-
+    remove_data_by_sel_common_<Ts ...>(col_indices);
     return;
 }
 
@@ -1087,18 +1155,7 @@ remove_data_by_sel (const char *name1,
                          i < col_s3 ? vec3[i] : get_nan<T3>()))
             col_indices.push_back(i);
 
-    const sel_remove_functor_<Ts ...>   functor (col_indices);
-
-    for (const auto &col_citer : column_list_)
-        data_[col_citer.second].change(functor);
-    guard.release();
-
-    const size_type col_indices_s = col_indices.size();
-    size_type       del_count = 0;
-
-    for (size_type i = 0; i < col_indices_s; ++i)
-        indices_.erase(indices_.begin() + (col_indices[i] - del_count++));
-
+    remove_data_by_sel_common_<Ts ...>(col_indices);
     return;
 }
 
@@ -1144,23 +1201,57 @@ remove_dups_common_(const DataFrame &s_df,
 
     DataFrame<I, H> new_df;
     IndexVecType    new_index (index.size() - rows_to_del.size());
+    const SpinGuard guard(lock_);
 
+    // Load the index
+    //
     _remove_copy_if_(index.begin(), index.end(), new_index.begin(),
-                     [&rows_to_del] (std::size_t n) -> bool  {
+                     [&rows_to_del = std::as_const(rows_to_del)]
+                     (std::size_t n) -> bool  {
                          return (std::find(rows_to_del.begin(),
                                            rows_to_del.end(),
                                            n) != rows_to_del.end());
                      });
     new_df.load_index(std::move(new_index));
 
-    const SpinGuard guard(lock_);
-
+    // Create the columns, so loading can proceed in parallel
+    //
     for (const auto &citer : s_df.column_list_)  {
-        copy_remove_functor_<Ts ...>    functor (citer.first.c_str(),
-                                                 rows_to_del,
-                                                 new_df);
+        create_col_functor_<DataFrame, Ts ...> functor(
+            citer.first.c_str(), new_df);
 
         s_df.data_[citer.second].change(functor);
+    }
+
+    if (get_thread_level() > 2)  {
+        auto    lbd =
+            [&rows_to_del = std::as_const(rows_to_del),
+             &s_df = std::as_const(s_df),
+             &new_df]
+            (const auto &begin, const auto &end) -> void  {
+                for (auto citer = begin; citer < end; ++citer)  {
+                    copy_remove_functor_<Ts ...> functor (citer->first.c_str(),
+                                                          rows_to_del,
+                                                          new_df);
+
+                    s_df.data_[citer->second].change(functor);
+                }
+            };
+        auto    futures =
+            thr_pool_.parallel_loop(s_df.column_list_.begin(),
+                                    s_df.column_list_.end(),
+                                    std::move(lbd));
+
+        for (auto &fut : futures)  fut.get();
+    }
+    else  {
+        for (const auto &citer : s_df.column_list_)  {
+            copy_remove_functor_<Ts ...>    functor (citer.first.c_str(),
+                                                     rows_to_del,
+                                                     new_df);
+
+            s_df.data_[citer.second].change(functor);
+        }
     }
     return (new_df);
 }

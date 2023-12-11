@@ -370,8 +370,8 @@ struct vertical_shift_functor_ : DataVec::template visitor_base<Ts ...>  {
     inline vertical_shift_functor_ (size_type periods, shift_policy sh_po)
         : n(periods), sp(sh_po)  {   }
 
-    const DataFrame::size_type  n;
-    const shift_policy          sp;
+    const size_type     n;
+    const shift_policy  sp;
 
     template<typename T>
     void operator() (T &vec) const;

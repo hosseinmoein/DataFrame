@@ -56,6 +56,9 @@ void read_csv2_(std::istream &file,
                 size_type starting_row,
                 size_type num_rows);
 
+template<typename ... Ts>
+void remove_data_by_sel_common_(const StlVecType<size_type> &col_indices);
+
 template<typename T>
 static void
 fill_missing_value_(ColumnVecType<T> &vec,

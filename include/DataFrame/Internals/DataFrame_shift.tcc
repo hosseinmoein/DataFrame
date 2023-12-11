@@ -48,10 +48,21 @@ void DataFrame<I, H>::self_shift(size_type periods, shift_policy sp)  {
         if (sp == shift_policy::down || sp == shift_policy::up) [[likely]]  {
             vertical_shift_functor_<Ts ...> functor(periods, sp);
             const size_type                 num_cols = data_.size();
+            const                           SpinGuard guard(lock_);
 
-            {
-                const SpinGuard guard(lock_);
+            if (get_thread_level() > 2)  {
+                auto    lbd =
+                    [&functor, this](auto begin, auto end) -> void  {
+                        for (size_type idx = begin; idx < end; ++idx)
+                            this->data_[idx].change(functor);
+                    };
+                auto    futuers =
+                    thr_pool_.parallel_loop(size_type(0), num_cols,
+                                            std::move(lbd));
 
+                for (auto &fut : futuers)  fut.get();
+            }
+            else {
                 for (size_type idx = 0; idx < num_cols; ++idx) [[likely]]
                     data_[idx].change(functor);
             }

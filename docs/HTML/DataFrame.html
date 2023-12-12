@@ -38,7 +38,7 @@ body {
   margin-left:-5px;
   margin-right:-5px;
 }
-  
+
 .column {
   float: left;
   width: 16.6667%;
@@ -102,11 +102,11 @@ DataFrame class is defined as:<BR>
   <B>H</B> specifies a heterogenous vector type to contain DataFrame columns &#8212; don't get hang up on this too much, instead use the convenient typedef's in <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrameTypes.html">DataFrame Library Types</a>.<BR>
   <B>H</B> can only be:<BR>
   <UL>
-    <LI><B><style='color:#000000;background:#ffffff;'>HeteroVector<span style='color:#808030; '>&lt;</span><span style='color:#666616;'>std</span><span style='color:#800080;'>::</span><span style='color:#603000;'>size_t</span> A <span style='color:#808030;'>=</span> <span style='color:#008c00;'>0</span><span style='color:#808030;'>></span></B>: This is an actual heterogenous vector that would contain data. This will result in a "standard" data frame</LI>
-    <LI><B><style='color:#000000;background:#ffffff;'>HeteroPtrView<span style='color:#808030; '>&lt;</span><span style='color:#666616;'>std</span><span style='color:#800080;'>::</span><span style='color:#603000;'>size_t</span> A <span style='color:#808030;'>=</span> <span style='color:#008c00;'>0</span><span style='color:#808030;'>></span></B>: This is a heterogenous vector view. It will result in a data frame view into a <I>disjoined</I> slice of another data frame.</LI>
-    <LI><B><style='color:#000000;background:#ffffff;'>HeteroConstPtrView<span style='color:#808030; '>&lt;</span><span style='color:#666616;'>std</span><span style='color:#800080;'>::</span><span style='color:#603000;'>size_t</span> A <span style='color:#808030;'>=</span> <span style='color:#008c00;'>0</span><span style='color:#808030;'>></span></B>: The const version of HeteroPtrView.</LI>
-    <LI><B><style='color:#000000;background:#ffffff;'>HeteroView<span style='color:#808030; '>&lt;</span><span style='color:#666616;'>std</span><span style='color:#800080;'>::</span><span style='color:#603000;'>size_t</span> A <span style='color:#808030;'>=</span> <span style='color:#008c00;'>0</span><span style='color:#808030;'>></span></B>: This is a heterogenous vector view. It will result in a data frame view into a <I>contiguous</I> slice of another data frame. This view is slightly more efficient than <I>HeteroPtrView</I></LI>
-    <LI><B><style='color:#000000;background:#ffffff;'>HeteroConstView<span style='color:#808030; '>&lt;</span><span style='color:#666616;'>std</span><span style='color:#800080;'>::</span><span style='color:#603000;'>size_t</span> A <span style='color:#808030;'>=</span> <span style='color:#008c00;'>0</span><span style='color:#808030;'>></span></B>: The const version of HeteroView.</LI>
+    <LI><B>HeteroVector<span style='color:#808030; '>&lt;</span><span style='color:#666616;'>std</span><span style='color:#800080;'>::</span><span style='color:#603000;'>size_t</span> A <span style='color:#808030;'>=</span> <span style='color:#008c00;'>0</span><span style='color:#808030;'>></span></B>: This is an actual heterogenous vector that would contain data. This will result in a "standard" data frame</LI>
+    <LI><B>HeteroPtrView<span style='color:#808030; '>&lt;</span><span style='color:#666616;'>std</span><span style='color:#800080;'>::</span><span style='color:#603000;'>size_t</span> A <span style='color:#808030;'>=</span> <span style='color:#008c00;'>0</span><span style='color:#808030;'>></span></B>: This is a heterogenous vector view. It will result in a data frame view into a <I>disjoined</I> slice of another data frame.</LI>
+    <LI><B>HeteroConstPtrView<span style='color:#808030; '>&lt;</span><span style='color:#666616;'>std</span><span style='color:#800080;'>::</span><span style='color:#603000;'>size_t</span> A <span style='color:#808030;'>=</span> <span style='color:#008c00;'>0</span><span style='color:#808030;'>></span></B>: The const version of HeteroPtrView.</LI>
+    <LI><B>HeteroView<span style='color:#808030; '>&lt;</span><span style='color:#666616;'>std</span><span style='color:#800080;'>::</span><span style='color:#603000;'>size_t</span> A <span style='color:#808030;'>=</span> <span style='color:#008c00;'>0</span><span style='color:#808030;'>></span></B>: This is a heterogenous vector view. It will result in a data frame view into a <I>contiguous</I> slice of another data frame. This view is slightly more efficient than <I>HeteroPtrView</I></LI>
+    <LI><B>HeteroConstView<span style='color:#808030; '>&lt;</span><span style='color:#666616;'>std</span><span style='color:#800080;'>::</span><span style='color:#603000;'>size_t</span> A <span style='color:#808030;'>=</span> <span style='color:#008c00;'>0</span><span style='color:#808030;'>></span></B>: The const version of HeteroView.</LI>
   </UL>
   Template parameter <B>A</B> referrers to byte boundary alignment to be used in memory allocations. The default is system default boundaries for each type. See <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrameTypes.html">DataFrame Library Types</a> for convenient typedef's, especially under <I> Library-wide Types</I> section. Also, see <I>Memory Alignment</I> section below<BR><BR>
   Some of the methods in DataFrame return another DataFrame or one of the above views depending on what you asked for. DataFrame and view instances should be indistinguishable from the user's point of view.<BR>
@@ -872,7 +872,6 @@ table.hovertable td {
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
       <td title="Standardizes column data">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/NormalizeVisitor.html">StandardizeVisitor</a>{  }</td>
     </tr>
-
   </table>
   </div>
 
@@ -1149,7 +1148,6 @@ table.hovertable td {
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
       <td title="Calculates rolling Yang Zhang volatility">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/YangZhangVolVisitor.html">YangZhangVolVisitor</a>{  }</td>
     </tr>
-
   </table>
   </div>
 
@@ -1442,15 +1440,21 @@ table.hovertable td {
 <BR><HR COLOR="Orange" SIZE="5">
 
   <H2><font color="blue">Multithreading</font></H2>
-    <OL>
-      <LI>DataFrame uses static containers to achieve type heterogeneity. By default, these static containers are unprotected. This is done by design. So by default, there is no locking overhead. If you use DataFrame in a multithreaded program you must provide a <I>SpinLock</I> defined in <I>ThreadGranularity.h</I> file. DataFrame will use your <I>SpinLock</I> to protect the containers.<BR>Please see above, <I>set_lock()</I>, <I>remove_lock()</I>, and <I>dataframe_tester.cc#3767</I> for code example.</LI>
+    In general, multithreading could be very tricky. A lot of times you think by using multithreading you enhance the performance of your program. But in fact, you are hindering it. It requires measuring and careful adjustments. It is recommended to start with a single-threaded version and when that is <I>working correctly</I>, take measurements and adjust to move to multithreading version.<BR>
+DataFrame uses multithreading extensively and provides granular tools to adjust your program. Let’s divide the multithreading subject in DataFrame into two categories:<BR>
+
+  <H4>1. User Utilizing Multithreading</H4>
+    <UL>
+      <LI>DataFrame uses static containers to achieve type heterogeneity. By default, these static containers are unprotected. This is done by design. So, by default there is no locking overhead. If you use DataFrame in a multithreaded program, you must provide a <I>SpinLock</I> defined in <I>ThreadGranularity.h</I> file. DataFrame will use your <I>SpinLock</I> to protect the containers.<BR>Please see above, <I>set_lock()</I>, <I>remove_lock()</I>, and <I>dataframe_tester.cc#3767</I> for code example.</LI>
       <LI>In addition, instances of DataFrame are not multithreaded safe either. In other words, a single instance of DataFrame must not be used in multiple threads without protection, unless it is used as read-only.</LI>
-      <LI>In the meantime, DataFrame utilizes multithreading in two different ways internally:</LI>
-      <OL type="i">
-        <LI><B><font size="+1">Async Interface:</font></B> There are asynchronous versions of some methods. For example, you have <I>sort()/sort_async()</I>, <I>visit()/visit_async()</I>, ... more. The latter versions return a <I>std::future</I> that could execute in parallel.</LI>
-        <LI>DataFrame uses multiple threads, internally and unbeknown to the user, in some of its algorithms when appropriate. User can control (or turn off) the multithreading by calling <I>set_thread_level()</I> which sets the max number of threads to be used. The default is 0. The optimal number of threads is a function of users hardware/software environment and usually obtained by trail and error. <I>set_thread_level()</I> and threading level in general is a static property and once set, it applies to all instances.</LI>
-      </OL>
-    </OL>
+    </UL>
+    So, In general if you as the user of DataFrame utilize multithreading, you must protect the DataFrame with a synchronization tool (i.e. SpinLock)
+  <H4>2. DataFrame Internal Multithreading</H4>
+  Whether or not you, as the user, use multithreading, DataFrame utilizes a versatile thread-pool to employ parallel computing extensively in almost all its functionalities, when appropriate. DataFrame also gives you the interface to control and tweak that. You do not need to worry about synchronization for DataFrame internal multithreading.<BR>
+  <UL>
+    <LI> There are asynchronous versions of some methods. For example, you have sort()/sort_async(), visit()/visit_async(), ... The latter versions return a std::future and would execute in parallel.<BR>If you chose to use DataFrame async interfaces, it is highly recommended to call <I>ThreadGranularity::set_optimum_thread_level()</I>, So your thread-pool is populated with optimal number of threads. Otherwise, if thread-pool is empty, async interfaces will add one thread to it. Having only one thread in thread-pool could be suboptimal and hinder performance.</LI>
+    <LI>As mentioned above, DataFrame uses parallel computing extensively. But by default, DataFrame is single threaded, because by default its thread-pool is empty. If you want to fully take advantage of DataFrame parallel computing, it is recommended to call <I>ThreadGranularity::set_optimum_thread_level()</I> at the beginning of your program. Alternatively you could call <I>ThreadGranularity:: set_thread_level(n)</I> to add a custom number of threads to the thread-pool. But you better have a good reason for that.<BR>Thread-pool and thread level are static properties of DataFrame. Once the thread level is set, it applies to all DataFrame instances.</LI>
+  </UL>
 
 <BR><HR COLOR="Orange" SIZE="5">
 

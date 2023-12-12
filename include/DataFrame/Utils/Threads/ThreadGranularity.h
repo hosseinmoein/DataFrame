@@ -29,6 +29,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
 
+#include <DataFrame/Utils/Threads/ThreadPool.h>
+
 #include <atomic>
 #include <cassert>
 #include <thread>
@@ -40,30 +42,28 @@ namespace hmdf
 
 struct  ThreadGranularity  {
 
-    static inline void
-    set_thread_level(unsigned int n)  { num_of_threads_ = n; }
-    static inline unsigned int
-    get_thread_level()  { return (num_of_threads_); }
-    static inline unsigned int
-    get_supported_thread()  { return (supported_threads_); }
+    using size_type = ThreadPool::size_type;
 
-    static inline unsigned int
-    get_sensible_thread_level()  {
+    static inline void set_thread_level(size_type n)  {
 
-        return (supported_threads_ != 0
-                    ? std::min(supported_threads_, num_of_threads_)
-                    : num_of_threads_);
+        thr_pool_.add_thread(n - thr_pool_.capacity_threads());
     }
+    static inline void set_optimum_thread_level()  {
+
+        set_thread_level(std::thread::hardware_concurrency());
+    }
+    static inline size_type get_thread_level()  {
+
+        return (thr_pool_.capacity_threads());
+    }
+
+    // By defaut, there are no threads
+    //
+    inline static ThreadPool    thr_pool_ { 0 };
 
 protected:
 
     ThreadGranularity() = default;
-
-private:
-
-    inline static unsigned int          num_of_threads_ { 0 };
-    inline static const unsigned int    supported_threads_ {
-        std::thread::hardware_concurrency() };
 };
 
 // ----------------------------------------------------------------------------

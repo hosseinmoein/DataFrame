@@ -2481,6 +2481,8 @@ static void test_get_str_col_stats()  {
 
 int main(int, char *[]) {
 
+    MyDataFrame::set_optimum_thread_level();
+
     test_groupby_edge();
     test_concat_view();
     test_to_from_string();

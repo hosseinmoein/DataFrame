@@ -61,7 +61,11 @@ HEADERS = $(LOCAL_INCLUDE_DIR)/DataFrame/Vectors/HeteroVector.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/DataFrameOperators.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Vectors/VectorView.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Vectors/VectorPtrView.h \
-          $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/ThreadGranularity.h \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/Threads/ThreadGranularity.h \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/Threads/SharedQueue.h \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/Threads/SharedQueue.tcc \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/Threads/ThreadPool.h \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/Threads/ThreadPool.tcc \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/DateTime.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/Utils.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Utils/MetaProg.h \

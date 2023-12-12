@@ -5146,6 +5146,8 @@ static void test_get_view_by_idx_values()  {
 
 int main(int, char *[]) {
 
+    MyDataFrame::set_optimum_thread_level();
+
     test_get_reindexed();
     test_get_reindexed_view();
     test_retype_column();

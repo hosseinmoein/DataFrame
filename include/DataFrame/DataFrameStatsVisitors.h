@@ -35,7 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/Utils/AlignedAllocator.h>
 #include <DataFrame/Utils/Concepts.h>
 #include <DataFrame/Utils/FixedSizePriorityQueue.h>
-#include <DataFrame/Utils/ThreadGranularity.h>
+#include <DataFrame/Utils/Threads/ThreadGranularity.h>
 #include <DataFrame/Utils/Utils.h>
 
 #include <algorithm>
@@ -1792,39 +1792,42 @@ public:
 
         if (col_s <= 4)  return;
 
-        vec_type<value_type>                tmp_result(col_s - 4);
-        size_type                           lag = 1;
-        const size_type                     thread_level =
-            ThreadGranularity::get_sensible_thread_level();
-        vec_type<std::future<CorrResult>>   futures(thread_level);
-        size_type                           thread_count = 0;
+        vec_type<value_type>    tmp_result(col_s - 4);
+        size_type               lag = 1;
+        const size_type         thread_level =
+            ThreadGranularity::get_thread_level();
 
         tmp_result[0] = 1.0;
-        while (lag < col_s - 4)  {
-            if (thread_count >= thread_level)  {
-                const auto  result = get_auto_corr_(col_s, lag, column_begin);
+        if (thread_level > 0)  {
+            vec_type<std::future<CorrResult>>   futures;
+
+            futures.reserve((col_s - 4) - lag);
+            while (lag < col_s - 4)  {
+                futures.emplace_back(
+                    ThreadGranularity::thr_pool_.dispatch(
+                        false,
+                        &AutoCorrVisitor::get_auto_corr_<H>,
+                        col_s,
+                        lag,
+                        std::cref(column_begin)));
+                lag += 1;
+            }
+            for (auto &fut : futures)  {
+                const auto  &result = fut.get();
 
                 tmp_result[result.first] = result.second;
             }
-            else  {
-                futures[thread_count] =
-                    std::async(std::launch::async,
-                               &AutoCorrVisitor::get_auto_corr_<H>,
-                               this,
-                               col_s,
-                               lag,
-                               std::cref(column_begin));
-                thread_count += 1;
+        }
+        else  {
+            while (lag < col_s - 4)  {
+                const auto  result = get_auto_corr_(col_s, lag, column_begin);
+
+                tmp_result[result.first] = result.second;
+                lag += 1;
             }
-            lag += 1;
         }
 
-        for (size_type i = 0; i < thread_count; ++i)  {
-            const auto  &result = futures[i].get();
-
-            tmp_result[result.first] = result.second;
-        }
-        tmp_result.swap(result_);
+        result_.swap(tmp_result);
     }
 
     DEFINE_PRE_POST
@@ -1839,10 +1842,8 @@ private:
     using CorrResult = std::pair<size_type, value_type>;
 
     template<typename H>
-    inline CorrResult
-    get_auto_corr_(size_type col_s,
-                   size_type lag,
-                   const H &column_begin) const  {
+    inline static CorrResult
+    get_auto_corr_(size_type col_s, size_type lag, const H &column_begin)  {
 
         CorrVisitor<value_type, index_type> corr {  };
         constexpr I                         dummy = I();

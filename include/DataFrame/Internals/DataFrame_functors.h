@@ -77,6 +77,36 @@ struct sort_functor_ : DataVec::template visitor_base<Ts ...>  {
 // ----------------------------------------------------------------------------
 
 template<typename LHS, typename ... Ts>
+struct create_col_functor_ : DataVec::template visitor_base<Ts ...>  {
+
+    inline create_col_functor_ (const char *n, LHS &d) : name (n), df(d)  {  }
+
+    const char  *name;
+    LHS         &df;
+
+    template<typename T>
+    void operator() (const T &);
+};
+
+// ----------------------------------------------------------------------------
+
+template<typename LHS, typename ... Ts>
+struct create_join_common_col_functor_
+    : DataVec::template visitor_base<Ts ...>  {
+
+    inline create_join_common_col_functor_ (const char *n, LHS &d)
+        : name (n), df(d)  {  }
+
+    const char  *name;
+    LHS         &df;
+
+    template<typename T>
+    void operator() (const T &);
+};
+
+// ----------------------------------------------------------------------------
+
+template<typename LHS, typename ... Ts>
 struct load_functor_ : DataVec::template visitor_base<Ts ...>  {
 
     inline load_functor_ (const char *n,
@@ -340,8 +370,8 @@ struct vertical_shift_functor_ : DataVec::template visitor_base<Ts ...>  {
     inline vertical_shift_functor_ (size_type periods, shift_policy sh_po)
         : n(periods), sp(sh_po)  {   }
 
-    const DataFrame::size_type  n;
-    const shift_policy          sp;
+    const size_type     n;
+    const shift_policy  sp;
 
     template<typename T>
     void operator() (T &vec) const;
@@ -422,16 +452,19 @@ struct drop_missing_rows_functor_ :
     inline drop_missing_rows_functor_ (const DropRowMap &mrm,
                                        drop_policy p,
                                        size_type th,
-                                       size_type cn)
+                                       size_type cn,
+                                       std::vector<std::future<void>> &futs)
         : missing_row_map(mrm),
           policy(p),
           threshold(th),
-          col_num(cn)  {   }
+          col_num(cn),
+          futures(futs)  {   }
 
-    const DropRowMap    &missing_row_map;
-    const drop_policy   policy;
-    const size_type     threshold;
-    const size_type     col_num;
+    const DropRowMap                &missing_row_map;
+    const drop_policy               policy;
+    const size_type                 threshold;
+    const size_type                 col_num;
+    std::vector<std::future<void>>  &futures;
 
     template<typename T>
     void operator() (T &vec);
@@ -464,7 +497,7 @@ struct sel_load_functor_ : DataVec::template visitor_base<Ts ...>  {
         : name (n), sel_indices (si), indices_size(is), df(d)  {   }
 
     const char              *name;
-    const StlVecType<IT>   &sel_indices;
+    const StlVecType<IT>    &sel_indices;
     const size_type         indices_size;
     DataFrame               &df;
 
@@ -546,7 +579,7 @@ struct random_load_data_functor_ : DataVec::template visitor_base<Ts ...>  {
         : name (n), rand_indices (ri), df(d)  {   }
 
     const char                      *name;
-    const StlVecType<std::size_t>  &rand_indices;
+    const StlVecType<std::size_t>   &rand_indices;
     DataFrame                       &df;
 
     template<typename T>

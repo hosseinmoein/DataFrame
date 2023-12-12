@@ -361,12 +361,38 @@ DataFrame<I, H>::get_data_by_idx (Index2D<IndexType> range) const  {
         const SpinGuard guard(lock_);
 
         for (const auto &citer : column_list_) [[likely]]  {
-            load_functor_<DataFrame, Ts ...>    functor (citer.first.c_str(),
-                                                         b_dist,
-                                                         e_dist,
-                                                         df);
+            create_col_functor_<DataFrame, Ts ...> functor(
+                citer.first.c_str(), df);
 
             data_[citer.second].change(functor);
+        }
+
+        if (get_thread_level() > 1)  {
+            auto    lbd =
+                [b_dist, e_dist, &df, this]
+                (const auto &begin, const auto &end) -> void  {
+                    for (auto citer = begin; citer < end; ++citer)  {
+                        load_functor_<DataFrame, Ts ...>    functor (
+                             citer->first.c_str(), b_dist, e_dist, df);
+
+                        this->data_[citer->second].change(functor);
+                    }
+                };
+
+            auto    futuers =
+                thr_pool_.parallel_loop(column_list_.begin(),
+                                        column_list_.end(),
+                                        std::move(lbd));
+
+            for (auto &fut : futuers)  fut.get();
+        }
+        else  {
+            for (const auto &citer : column_list_) [[likely]]  {
+                load_functor_<DataFrame, Ts ...>    functor (
+                     citer.first.c_str(), b_dist, e_dist, df);
+
+                data_[citer.second].change(functor);
+            }
         }
     }
 
@@ -402,14 +428,44 @@ get_data_by_idx(const StlVecType<IndexType> &values) const  {
 
     const SpinGuard guard(lock_);
 
-    for (const auto &col_citer : column_list_) [[likely]]  {
-        sel_load_functor_<size_type, Ts ...>    functor (
-            col_citer.first.c_str(),
-            locations,
-            idx_s,
-            df);
+    for (const auto &citer : column_list_) [[likely]]  {
+        create_col_functor_<DataFrame, Ts ...> functor(citer.first.c_str(), df);
 
-        data_[col_citer.second].change(functor);
+        data_[citer.second].change(functor);
+    }
+
+    if (get_thread_level() > 1)  {
+        auto    lbd =
+            [&locations = std::as_const(locations), idx_s, &df, this]
+            (const auto &begin, const auto &end) -> void  {
+                for (auto citer = begin; citer < end; ++citer)  {
+                    sel_load_functor_<size_type, Ts ...>    functor (
+                        citer->first.c_str(),
+                        locations,
+                        idx_s,
+                        df);
+
+                    this->data_[citer->second].change(functor);
+                }
+            };
+
+        auto    futuers =
+            thr_pool_.parallel_loop(column_list_.begin(),
+                                    column_list_.end(),
+                                    std::move(lbd));
+
+        for (auto &fut : futuers)  fut.get();
+    }
+    else  {
+        for (const auto &citer : column_list_) [[likely]]  {
+            sel_load_functor_<size_type, Ts ...>    functor (
+                citer.first.c_str(),
+                locations,
+                idx_s,
+                df);
+
+            data_[citer.second].change(functor);
+        }
     }
 
     return (df);
@@ -616,14 +672,45 @@ DataFrame<I, H>::get_data_by_loc (Index2D<long> range) const  {
 
         const SpinGuard guard(lock_);
 
-        for (const auto &iter : column_list_) [[likely]]  {
-            load_functor_<DataFrame, Ts ...>    functor (
-                iter.first.c_str(),
-                static_cast<size_type>(range.begin),
-                static_cast<size_type>(range.end),
-                df);
+        for (const auto &citer : column_list_) [[likely]]  {
+            create_col_functor_<DataFrame, Ts ...> functor(
+                citer.first.c_str(), df);
 
-            data_[iter.second].change(functor);
+            data_[citer.second].change(functor);
+        }
+
+        if (get_thread_level() > 1)  {
+            auto    lbd =
+                [&range = std::as_const(range), &df, this]
+                (const auto &begin, const auto &end) -> void  {
+                    for (auto citer = begin; citer < end; ++citer)  {
+                        load_functor_<DataFrame, Ts ...>    functor (
+                            citer->first.c_str(),
+                            static_cast<size_type>(range.begin),
+                            static_cast<size_type>(range.end),
+                            df);
+
+                        this->data_[citer->second].change(functor);
+                    }
+                };
+
+            auto    futuers =
+                thr_pool_.parallel_loop(column_list_.begin(),
+                                        column_list_.end(),
+                                        std::move(lbd));
+
+            for (auto &fut : futuers)  fut.get();
+        }
+        else  {
+            for (const auto &citer : column_list_) [[likely]]  {
+                load_functor_<DataFrame, Ts ...>    functor (
+                    citer.first.c_str(),
+                    static_cast<size_type>(range.begin),
+                    static_cast<size_type>(range.end),
+                    df);
+
+                data_[citer.second].change(functor);
+            }
         }
 
         return (df);
@@ -660,14 +747,44 @@ get_data_by_loc (const StlVecType<long> &locations) const  {
 
     const SpinGuard guard(lock_);
 
-    for (const auto &col_citer : column_list_) [[likely]]  {
-        sel_load_functor_<long, Ts ...>  functor (
-            col_citer.first.c_str(),
-            locations,
-            idx_s,
-            df);
+    for (const auto &citer : column_list_) [[likely]]  {
+        create_col_functor_<DataFrame, Ts ...> functor(citer.first.c_str(), df);
 
-        data_[col_citer.second].change(functor);
+        data_[citer.second].change(functor);
+    }
+
+    if (get_thread_level() > 1)  {
+        auto    lbd =
+            [&locations = std::as_const(locations), idx_s, &df, this]
+            (const auto &begin, const auto &end) -> void  {
+                for (auto citer = begin; citer < end; ++citer)  {
+                    sel_load_functor_<long, Ts ...>  functor (
+                        citer->first.c_str(),
+                        locations,
+                        idx_s,
+                        df);
+
+                    this->data_[citer->second].change(functor);
+                }
+            };
+
+        auto    futuers =
+            thr_pool_.parallel_loop(column_list_.begin(),
+                                    column_list_.end(),
+                                    std::move(lbd));
+
+        for (auto &fut : futuers)  fut.get();
+    }
+    else  {
+        for (const auto &citer : column_list_) [[likely]]  {
+            sel_load_functor_<long, Ts ...>  functor (
+                citer.first.c_str(),
+                locations,
+                idx_s,
+                df);
+
+            data_[citer.second].change(functor);
+        }
     }
 
     return (df);
@@ -881,14 +998,44 @@ get_data_by_sel (const char *name, F &sel_functor) const  {
 
     const SpinGuard guard(lock_);
 
-    for (const auto &col_citer : column_list_) [[likely]]  {
-        sel_load_functor_<size_type, Ts ...>    functor (
-            col_citer.first.c_str(),
-            col_indices,
-            idx_s,
-            df);
+    for (const auto &citer : column_list_) [[likely]]  {
+        create_col_functor_<DataFrame, Ts ...> functor(citer.first.c_str(), df);
 
-        data_[col_citer.second].change(functor);
+        data_[citer.second].change(functor);
+    }
+
+    if (get_thread_level() > 1)  {
+        auto    lbd =
+            [&col_indices = std::as_const(col_indices), idx_s, &df, this]
+            (const auto &begin, const auto &end) -> void  {
+                for (auto citer = begin; citer < end; ++citer)  {
+                    sel_load_functor_<size_type, Ts ...>    functor (
+                        citer->first.c_str(),
+                        col_indices,
+                        idx_s,
+                        df);
+
+                    this->data_[citer->second].change(functor);
+                }
+            };
+
+        auto    futuers =
+            thr_pool_.parallel_loop(column_list_.begin(),
+                                    column_list_.end(),
+                                    std::move(lbd));
+
+        for (auto &fut : futuers)  fut.get();
+    }
+    else  {
+        for (const auto &citer : column_list_) [[likely]]  {
+            sel_load_functor_<size_type, Ts ...>    functor (
+                citer.first.c_str(),
+                col_indices,
+                idx_s,
+                df);
+
+            data_[citer.second].change(functor);
+        }
     }
 
     return (df);
@@ -1019,14 +1166,44 @@ get_data_by_sel (const char *name1, const char *name2, F &sel_functor) const  {
         new_index.push_back(indices_[citer]);
     df.load_index(std::move(new_index));
 
-    for (const auto &col_citer : column_list_) [[likely]]  {
-        sel_load_functor_<size_type, Ts ...>    functor (
-            col_citer.first.c_str(),
-            col_indices,
-            idx_s,
-            df);
+    for (const auto &citer : column_list_) [[likely]]  {
+        create_col_functor_<DataFrame, Ts ...> functor(citer.first.c_str(), df);
 
-        data_[col_citer.second].change(functor);
+        data_[citer.second].change(functor);
+    }
+
+    if (get_thread_level() > 1)  {
+        auto    lbd =
+            [&col_indices = std::as_const(col_indices), idx_s, &df, this]
+            (const auto &begin, const auto &end) -> void  {
+                for (auto citer = begin; citer < end; ++citer)  {
+                    sel_load_functor_<size_type, Ts ...>    functor (
+                        citer->first.c_str(),
+                        col_indices,
+                        idx_s,
+                        df);
+
+                    this->data_[citer->second].change(functor);
+                }
+            };
+
+        auto    futuers =
+            thr_pool_.parallel_loop(column_list_.begin(),
+                                    column_list_.end(),
+                                    std::move(lbd));
+
+        for (auto &fut : futuers)  fut.get();
+    }
+    else  {
+        for (const auto &citer : column_list_) [[likely]]  {
+            sel_load_functor_<size_type, Ts ...>    functor (
+                citer.first.c_str(),
+                col_indices,
+                idx_s,
+                df);
+
+            data_[citer.second].change(functor);
+        }
     }
 
     return (df);
@@ -1177,14 +1354,44 @@ get_data_by_sel (const char *name1,
         new_index.push_back(indices_[citer]);
     df.load_index(std::move(new_index));
 
-    for (const auto &col_citer : column_list_) [[likely]]  {
-        sel_load_functor_<size_type, Ts ...>    functor (
-            col_citer.first.c_str(),
-            col_indices,
-            idx_s,
-            df);
+    for (const auto &citer : column_list_) [[likely]]  {
+        create_col_functor_<DataFrame, Ts ...> functor(citer.first.c_str(), df);
 
-        data_[col_citer.second].change(functor);
+        data_[citer.second].change(functor);
+    }
+
+    if (get_thread_level() > 1)  {
+        auto    lbd =
+            [&col_indices = std::as_const(col_indices), idx_s, &df, this]
+            (const auto &begin, const auto &end) -> void  {
+                for (auto citer = begin; citer < end; ++citer)  {
+                    sel_load_functor_<size_type, Ts ...>    functor (
+                        citer->first.c_str(),
+                        col_indices,
+                        idx_s,
+                        df);
+
+                    this->data_[citer->second].change(functor);
+                }
+            };
+
+        auto    futuers =
+            thr_pool_.parallel_loop(column_list_.begin(),
+                                    column_list_.end(),
+                                    std::move(lbd));
+
+        for (auto &fut : futuers)  fut.get();
+    }
+    else  {
+        for (const auto &citer : column_list_) [[likely]]  {
+            sel_load_functor_<size_type, Ts ...>    functor (
+                citer.first.c_str(),
+                col_indices,
+                idx_s,
+                df);
+
+            data_[citer.second].change(functor);
+        }
     }
 
     return (df);
@@ -1200,7 +1407,7 @@ get_data_by_sel (F &sel_functor) const  {
     const size_type idx_s = indices_.size();
     // Get columns to std::tuple
     std::tuple      cols_for_filter(
-        get_column<typename FilterCols::type>(FilterCols::name)...);
+        get_column<typename FilterCols::type>(FilterCols::name) ...);
     // Calculate the max size in all columns
     size_type       col_s = 0;
 
@@ -1219,14 +1426,12 @@ get_data_by_sel (F &sel_functor) const  {
     for (size_type i = 0; i < col_s; ++i)  {
         std::apply(
             [&](auto && ... col)  {
-                if (sel_functor(indices_[i],
-                                (i < col.size() ?
-                                 col[i] :
-                                 // Get default value based on vec::value_type
-                                 get_nan<typename std::decay<decltype(col)>
-                                 ::type::value_type>())...))  {
-                    col_indices.push_back(i);
-                }
+                if (sel_functor(
+            indices_[i],
+            (i < col.size()
+                ? col[i]
+                : get_nan<typename std::decay<decltype(col)>::
+                      type::value_type>())...))  { col_indices.push_back(i); }
             },
             cols_for_filter);
     }
@@ -1242,14 +1447,44 @@ get_data_by_sel (F &sel_functor) const  {
 
     const SpinGuard guard(lock_);
 
-    for (const auto &col_citer : column_list_)  {
-        sel_load_functor_<size_type, Tuple>    functor (
-            col_citer.first.c_str(),
-            col_indices,
-            idx_s,
-            df);
+    for (const auto &citer : column_list_) [[likely]]  {
+        create_col_functor_<DataFrame, Tuple> functor(citer.first.c_str(), df);
 
-        data_[col_citer.second].change(functor);
+        data_[citer.second].change(functor);
+    }
+
+    if (get_thread_level() > 1)  {
+        auto    lbd =
+            [&col_indices = std::as_const(col_indices), idx_s, &df, this]
+            (const auto &begin, const auto &end) -> void  {
+                for (auto citer = begin; citer < end; ++citer)  {
+                    sel_load_functor_<size_type, Tuple> functor (
+                        citer->first.c_str(),
+                        col_indices,
+                        idx_s,
+                        df);
+
+                    this->data_[citer->second].change(functor);
+                }
+            };
+
+        auto    futuers =
+            thr_pool_.parallel_loop(column_list_.begin(),
+                                    column_list_.end(),
+                                    std::move(lbd));
+
+        for (auto &fut : futuers)  fut.get();
+    }
+    else  {
+        for (const auto &citer : column_list_) [[likely]]  {
+            sel_load_functor_<size_type, Tuple> functor (
+                citer.first.c_str(),
+                col_indices,
+                idx_s,
+                df);
+
+            data_[citer.second].change(functor);
+        }
     }
 
     return (df);
@@ -1305,14 +1540,44 @@ get_data_by_sel (F &sel_functor, FilterCols && ... filter_cols) const  {
 
     const SpinGuard guard(lock_);
 
-    for (const auto &col_citer : column_list_)  {
-        sel_load_functor_<size_type, Tuple>    functor (
-            col_citer.first.c_str(),
-            col_indices,
-            idx_s,
-            df);
+    for (const auto &citer : column_list_) [[likely]]  {
+        create_col_functor_<DataFrame, Tuple> functor(citer.first.c_str(), df);
 
-        data_[col_citer.second].change(functor);
+        data_[citer.second].change(functor);
+    }
+
+    if (get_thread_level() > 1)  {
+        auto    lbd =
+            [&col_indices = std::as_const(col_indices), idx_s, &df, this]
+            (const auto &begin, const auto &end) -> void  {
+                for (auto citer = begin; citer < end; ++citer)  {
+                    sel_load_functor_<size_type, Tuple> functor (
+                        citer->first.c_str(),
+                        col_indices,
+                        idx_s,
+                        df);
+
+                    this->data_[citer->second].change(functor);
+                }
+            };
+
+        auto    futuers =
+            thr_pool_.parallel_loop(column_list_.begin(),
+                                    column_list_.end(),
+                                    std::move(lbd));
+
+        for (auto &fut : futuers)  fut.get();
+    }
+    else  {
+        for (const auto &citer : column_list_) [[likely]]  {
+            sel_load_functor_<size_type, Tuple> functor (
+                citer.first.c_str(),
+                col_indices,
+                idx_s,
+                df);
+
+            data_[citer.second].change(functor);
+        }
     }
 
     return (df);
@@ -1482,14 +1747,44 @@ get_data_by_sel(const char *name1,
         new_index.push_back(indices_[citer]);
     df.load_index(std::move(new_index));
 
-    for (const auto &col_citer : column_list_) [[likely]]  {
-        sel_load_functor_<size_type, Ts ...>    functor (
-            col_citer.first.c_str(),
-            col_indices,
-            idx_s,
-            df);
+    for (const auto &citer : column_list_) [[likely]]  {
+        create_col_functor_<DataFrame, Ts ...> functor(citer.first.c_str(), df);
 
-        data_[col_citer.second].change(functor);
+        data_[citer.second].change(functor);
+    }
+
+    if (get_thread_level() > 1)  {
+        auto    lbd =
+            [&col_indices = std::as_const(col_indices), idx_s, &df, this]
+            (const auto &begin, const auto &end) -> void  {
+                for (auto citer = begin; citer < end; ++citer)  {
+                    sel_load_functor_<size_type, Ts ...>    functor (
+                        citer->first.c_str(),
+                        col_indices,
+                        idx_s,
+                        df);
+
+                    this->data_[citer->second].change(functor);
+                }
+            };
+
+        auto    futuers =
+            thr_pool_.parallel_loop(column_list_.begin(),
+                                    column_list_.end(),
+                                    std::move(lbd));
+
+        for (auto &fut : futuers)  fut.get();
+    }
+    else  {
+        for (const auto &citer : column_list_) [[likely]]  {
+            sel_load_functor_<size_type, Ts ...>    functor (
+                citer.first.c_str(),
+                col_indices,
+                idx_s,
+                df);
+
+            data_[citer.second].change(functor);
+        }
     }
 
     return (df);
@@ -1678,14 +1973,44 @@ get_data_by_sel(const char *name1,
         new_index.push_back(indices_[citer]);
     df.load_index(std::move(new_index));
 
-    for (const auto &col_citer : column_list_) [[likely]]  {
-        sel_load_functor_<size_type, Ts ...>    functor (
-            col_citer.first.c_str(),
-            col_indices,
-            idx_s,
-            df);
+    for (const auto &citer : column_list_) [[likely]]  {
+        create_col_functor_<DataFrame, Ts ...> functor(citer.first.c_str(), df);
 
-        data_[col_citer.second].change(functor);
+        data_[citer.second].change(functor);
+    }
+
+    if (get_thread_level() > 1)  {
+        auto    lbd =
+            [&col_indices = std::as_const(col_indices), idx_s, &df, this]
+            (const auto &begin, const auto &end) -> void  {
+                for (auto citer = begin; citer < end; ++citer)  {
+                    sel_load_functor_<size_type, Ts ...>    functor (
+                        citer->first.c_str(),
+                        col_indices,
+                        idx_s,
+                        df);
+
+                    this->data_[citer->second].change(functor);
+                }
+            };
+
+        auto    futuers =
+            thr_pool_.parallel_loop(column_list_.begin(),
+                                    column_list_.end(),
+                                    std::move(lbd));
+
+        for (auto &fut : futuers)  fut.get();
+    }
+    else  {
+        for (const auto &citer : column_list_) [[likely]]  {
+            sel_load_functor_<size_type, Ts ...>    functor (
+                citer.first.c_str(),
+                col_indices,
+                idx_s,
+                df);
+
+            data_[citer.second].change(functor);
+        }
     }
 
     return (df);
@@ -1772,14 +2097,44 @@ get_data_by_sel(const char *name1,
         new_index.push_back(indices_[citer]);
     df.load_index(std::move(new_index));
 
-    for (const auto &col_citer : column_list_) [[likely]]  {
-        sel_load_functor_<size_type, Ts ...>    functor (
-            col_citer.first.c_str(),
-            col_indices,
-            idx_s,
-            df);
+    for (const auto &citer : column_list_) [[likely]]  {
+        create_col_functor_<DataFrame, Ts ...> functor(citer.first.c_str(), df);
 
-        data_[col_citer.second].change(functor);
+        data_[citer.second].change(functor);
+    }
+
+    if (get_thread_level() > 1)  {
+        auto    lbd =
+            [&col_indices = std::as_const(col_indices), idx_s, &df, this]
+            (const auto &begin, const auto &end) -> void  {
+                for (auto citer = begin; citer < end; ++citer)  {
+                    sel_load_functor_<size_type, Ts ...>    functor (
+                        citer->first.c_str(),
+                        col_indices,
+                        idx_s,
+                        df);
+
+                    this->data_[citer->second].change(functor);
+                }
+            };
+
+        auto    futuers =
+            thr_pool_.parallel_loop(column_list_.begin(),
+                                    column_list_.end(),
+                                    std::move(lbd));
+
+        for (auto &fut : futuers)  fut.get();
+    }
+    else  {
+        for (const auto &citer : column_list_) [[likely]]  {
+            sel_load_functor_<size_type, Ts ...>    functor (
+                citer.first.c_str(),
+                col_indices,
+                idx_s,
+                df);
+
+            data_[citer.second].change(functor);
+        }
     }
 
     return (df);
@@ -1870,14 +2225,44 @@ get_data_by_sel(const char *name1,
         new_index.push_back(indices_[citer]);
     df.load_index(std::move(new_index));
 
-    for (const auto &col_citer : column_list_)  {
-        sel_load_functor_<size_type, Ts ...>    functor (
-            col_citer.first.c_str(),
-            col_indices,
-            idx_s,
-            df);
+    for (const auto &citer : column_list_) [[likely]]  {
+        create_col_functor_<DataFrame, Ts ...> functor(citer.first.c_str(), df);
 
-        data_[col_citer.second].change(functor);
+        data_[citer.second].change(functor);
+    }
+
+    if (get_thread_level() > 1)  {
+        auto    lbd =
+            [&col_indices = std::as_const(col_indices), idx_s, &df, this]
+            (const auto &begin, const auto &end) -> void  {
+                for (auto citer = begin; citer < end; ++citer)  {
+                    sel_load_functor_<size_type, Ts ...>    functor (
+                        citer->first.c_str(),
+                        col_indices,
+                        idx_s,
+                        df);
+
+                    this->data_[citer->second].change(functor);
+                }
+            };
+
+        auto    futuers =
+            thr_pool_.parallel_loop(column_list_.begin(),
+                                    column_list_.end(),
+                                    std::move(lbd));
+
+        for (auto &fut : futuers)  fut.get();
+    }
+    else  {
+        for (const auto &citer : column_list_) [[likely]]  {
+            sel_load_functor_<size_type, Ts ...>    functor (
+                citer.first.c_str(),
+                col_indices,
+                idx_s,
+                df);
+
+            data_[citer.second].change(functor);
+        }
     }
 
     return (df);
@@ -1972,14 +2357,44 @@ get_data_by_sel(const char *name1,
         new_index.push_back(indices_[citer]);
     df.load_index(std::move(new_index));
 
-    for (const auto &col_citer : column_list_)  {
-        sel_load_functor_<size_type, Ts ...>    functor (
-            col_citer.first.c_str(),
-            col_indices,
-            idx_s,
-            df);
+    for (const auto &citer : column_list_) [[likely]]  {
+        create_col_functor_<DataFrame, Ts ...> functor(citer.first.c_str(), df);
 
-        data_[col_citer.second].change(functor);
+        data_[citer.second].change(functor);
+    }
+
+    if (get_thread_level() > 1)  {
+        auto    lbd =
+            [&col_indices = std::as_const(col_indices), idx_s, &df, this]
+            (const auto &begin, const auto &end) -> void  {
+                for (auto citer = begin; citer < end; ++citer)  {
+                    sel_load_functor_<size_type, Ts ...>    functor (
+                        citer->first.c_str(),
+                        col_indices,
+                        idx_s,
+                        df);
+
+                    this->data_[citer->second].change(functor);
+                }
+            };
+
+        auto    futuers =
+            thr_pool_.parallel_loop(column_list_.begin(),
+                                    column_list_.end(),
+                                    std::move(lbd));
+
+        for (auto &fut : futuers)  fut.get();
+    }
+    else  {
+        for (const auto &citer : column_list_) [[likely]]  {
+            sel_load_functor_<size_type, Ts ...>    functor (
+                citer.first.c_str(),
+                col_indices,
+                idx_s,
+                df);
+
+            data_[citer.second].change(functor);
+        }
     }
 
     return (df);
@@ -2172,13 +2587,43 @@ get_data_by_rand(random_policy spec, double n, seed_t seed) const  {
 
         const SpinGuard guard(lock_);
 
-        for (const auto &iter : column_list_)  {
-            random_load_data_functor_<Ts ...>   functor (
-                iter.first.c_str(),
-                rand_indices,
-                df);
+        for (const auto &citer : column_list_) [[likely]]  {
+            create_col_functor_<DataFrame, Ts ...>  functor(
+                citer.first.c_str(), df);
 
-            data_[iter.second].change(functor);
+            data_[citer.second].change(functor);
+        }
+
+        if (get_thread_level() > 1)  {
+            auto    lbd =
+                [&rand_indices = std::as_const(rand_indices), &df, this]
+                (const auto &begin, const auto &end) -> void  {
+                    for (auto citer = begin; citer < end; ++citer)  {
+                        random_load_data_functor_<Ts ...>   functor (
+                            citer->first.c_str(),
+                            rand_indices,
+                            df);
+
+                        this->data_[citer->second].change(functor);
+                    }
+                };
+
+            auto    futuers =
+                thr_pool_.parallel_loop(column_list_.begin(),
+                                        column_list_.end(),
+                                        std::move(lbd));
+
+            for (auto &fut : futuers)  fut.get();
+        }
+        else  {
+            for (const auto &citer : column_list_) [[likely]]  {
+                random_load_data_functor_<Ts ...>   functor (
+                    citer.first.c_str(),
+                    rand_indices,
+                    df);
+
+                data_[citer.second].change(functor);
+            }
         }
 
         return (df);
@@ -2468,18 +2913,18 @@ template<typename T, typename ... Ts>
 DataFrame<T, H> DataFrame<I, H>::
 get_reindexed(const char *col_to_be_index, const char *old_index_name) const  {
 
-    DataFrame<T, HeteroVector<align_value>> result;
-    const auto                              &new_idx =
-        get_column<T>(col_to_be_index);
-    const size_type                         new_idx_s =
-        result.load_index(new_idx.begin(), new_idx.end());
+    using result_t = DataFrame<T, HeteroVector<align_value>>;
+
+    result_t        df;
+    const auto      &new_idx = get_column<T>(col_to_be_index);
+    const size_type new_idx_s = df.load_index(new_idx.begin(), new_idx.end());
 
     if (old_index_name)  {
         const auto      &curr_idx = get_index();
         const size_type col_s =
             curr_idx.size() >= new_idx_s ? new_idx_s : curr_idx.size();
 
-        result.template load_column<IndexType>(
+        df.template load_column<IndexType>(
             old_index_name, { curr_idx.begin(), curr_idx.begin() + col_s });
     }
 
@@ -2488,17 +2933,53 @@ get_reindexed(const char *col_to_be_index, const char *old_index_name) const  {
     for (const auto &citer : column_list_) [[likely]]  {
         if (citer.first == col_to_be_index)  continue;
 
-        load_functor_<DataFrame<T, HeteroVector<align_value>>, Ts ...>
-            functor (citer.first.c_str(),
-                     0,
-                     new_idx_s,
-                     result,
-                     nan_policy::dont_pad_with_nans);
+        create_col_functor_<result_t, Ts ...> functor(citer.first.c_str(), df);
 
         data_[citer.second].change(functor);
     }
 
-    return (result);
+    if (get_thread_level() > 1)  {
+        auto    lbd =
+            [col_to_be_index = std::as_const(col_to_be_index),
+             new_idx_s, &df, this]
+            (const auto &begin, const auto &end) -> void  {
+                for (auto citer = begin; citer < end; ++citer)  {
+                    if (citer->first == col_to_be_index)  continue;
+
+                    load_functor_<result_t, Ts ...> functor(
+                        citer->first.c_str(),
+                        0,
+                        new_idx_s,
+                        df,
+                        nan_policy::dont_pad_with_nans);
+
+                    this->data_[citer->second].change(functor);
+                }
+            };
+
+        auto    futuers =
+            thr_pool_.parallel_loop(column_list_.begin(),
+                                    column_list_.end(),
+                                    std::move(lbd));
+
+        for (auto &fut : futuers)  fut.get();
+    }
+    else  {
+        for (const auto &citer : column_list_) [[likely]]  {
+            if (citer.first == col_to_be_index)  continue;
+
+            load_functor_<result_t, Ts ...> functor(
+                citer.first.c_str(),
+                0,
+                new_idx_s,
+                df,
+                nan_policy::dont_pad_with_nans);
+
+            data_[citer.second].change(functor);
+        }
+    }
+
+    return (df);
 }
 
 // ----------------------------------------------------------------------------
@@ -2511,13 +2992,13 @@ get_reindexed_view(const char *col_to_be_index, const char *old_index_name)  {
     static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
                   "Only a StdDataFrame can call get_reindexed_view()");
 
-    using TheView = typename DataFrame<T, H>::View;
+    using result_t = typename DataFrame<T, H>::View;
 
-    TheView         result;
+    result_t        result;
     auto            &new_idx = get_column<T>(col_to_be_index);
     const size_type new_idx_s = new_idx.size();
 
-    result.indices_ = typename TheView::IndexVecType();
+    result.indices_ = typename result_t::IndexVecType();
     result.indices_.set_begin_end_special(&(new_idx.front()),
                                           &(new_idx.back()));
     if (old_index_name)  {
@@ -2535,7 +3016,7 @@ get_reindexed_view(const char *col_to_be_index, const char *old_index_name)  {
     for (const auto &citer : column_list_) [[likely]]  {
         if (citer.first == col_to_be_index)  continue;
 
-        view_setup_functor_<TheView, Ts ...>    functor (
+        view_setup_functor_<result_t, Ts ...>    functor (
             citer.first.c_str(),
             0,
             new_idx_s,
@@ -2559,13 +3040,13 @@ get_reindexed_view(const char *col_to_be_index,
     static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
                   "Only a StdDataFrame can call get_reindexed_view()");
 
-    using TheView = typename DataFrame<T, H>::ConstView;
+    using result_t = typename DataFrame<T, H>::ConstView;
 
-    TheView         result;
+    result_t        result;
     const auto      &new_idx = get_column<T>(col_to_be_index);
     const size_type new_idx_s = new_idx.size();
 
-    result.indices_ = typename TheView::IndexVecType();
+    result.indices_ = typename result_t::IndexVecType();
     result.indices_.set_begin_end_special(&(new_idx.front()),
                                           &(new_idx.back()));
     if (old_index_name)  {
@@ -2584,7 +3065,7 @@ get_reindexed_view(const char *col_to_be_index,
     for (const auto &citer : column_list_) [[likely]]  {
         if (citer.first == col_to_be_index)  continue;
 
-        view_setup_functor_<TheView, Ts ...>    functor (
+        view_setup_functor_<result_t, Ts ...>    functor (
             citer.first.c_str(),
             0,
             new_idx_s,

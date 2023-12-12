@@ -56,6 +56,9 @@ void read_csv2_(std::istream &file,
                 size_type starting_row,
                 size_type num_rows);
 
+template<typename ... Ts>
+void remove_data_by_sel_common_(const StlVecType<size_type> &col_indices);
+
 template<typename T>
 static void
 fill_missing_value_(ColumnVecType<T> &vec,
@@ -108,7 +111,7 @@ using DropRowMap = DFMap<size_type, size_type>;
 template<typename T>
 static void
 drop_missing_rows_(T &vec,
-                   const DropRowMap missing_row_map,
+                   const DropRowMap &missing_row_map,
                    drop_policy policy,
                    size_type threshold,
                    size_type col_num);

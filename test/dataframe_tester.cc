@@ -33,6 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/RandGen.h>
 
 #include <cassert>
+#include <chrono>
 #include <cmath>
 #include <iostream>
 #include <limits>
@@ -487,8 +488,10 @@ static void test_haphazard()  {
               std::string>(std::cout);
 
     MyDataFrame::set_thread_level(5);
+    std::this_thread::sleep_for(std::chrono::seconds(1)); // Give it a chance
     assert(MyDataFrame::get_thread_level() == 5);
     MyDataFrame::set_thread_level(0);
+    std::this_thread::sleep_for(std::chrono::seconds(1)); // Give it a chance
     assert(MyDataFrame::get_thread_level() == 0);
     MyDataFrame::set_thread_level(10);
 }
@@ -4153,8 +4156,6 @@ static void test_DoubleCrossOver()  {
 
     std::cout << "\nTesting DoubleCrossOver{ } ..." << std::endl;
 
-    MyDataFrame::set_thread_level(10);
-
     StlVecType<unsigned long>  idx =
         { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
           21, 22, 23, 24, 25, 26, 27, 28, 29, 31, 31, 32, 33, 34, 35, 36, 37,
@@ -4202,8 +4203,6 @@ static void test_DoubleCrossOver()  {
     assert(fabs(short_to_long[12] - -0.777842) < 0.00001);
     assert(fabs(short_to_long[39] - 0.573914) < 0.00001);
     assert(fabs(short_to_long[38] - -0.200639) < 0.00001);
-
-    MyDataFrame::set_thread_level(0);
 }
 
 // -----------------------------------------------------------------------------
@@ -4211,8 +4210,6 @@ static void test_DoubleCrossOver()  {
 static void test_BollingerBand()  {
 
     std::cout << "\nTesting BollingerBand{ } ..." << std::endl;
-
-    MyDataFrame::set_thread_level(10);
 
     StlVecType<unsigned long>  idx =
         { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
@@ -4248,8 +4245,6 @@ static void test_BollingerBand()  {
     assert(fabs(raw_to_lower[12] - 5.16228) < 0.00001);
     assert(fabs(raw_to_lower[38] - 1.88035) < 0.00001);
     assert(fabs(raw_to_lower[39] - 0.680351) < 0.00001);
-
-    MyDataFrame::set_thread_level(0);
 }
 
 // -----------------------------------------------------------------------------
@@ -5037,6 +5032,9 @@ static void test_concat()  {
 int main(int, char *[]) {
 
     test_haphazard();
+
+    MyDataFrame::set_optimum_thread_level();
+
     test_read();
     test_transpose();
     test_get_data_by_loc_slicing();

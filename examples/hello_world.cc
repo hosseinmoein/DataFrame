@@ -69,6 +69,14 @@ struct  MyData  {
 //
 int main(int, char *[])  {
 
+    // If you want to fully take advantage of DataFrame parallel computing logic,
+    // it is recommended to call the following at the beginning of your program.
+    //
+    // NOTE: make sure you read and understand the Multithreading section
+    //       in the documentations.
+    //
+    ThreadGranularity::set_optimum_thread_level();
+
     std::vector<unsigned long>  idx_col1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
     std::vector<MyData>         mydata_col (10);
     std::vector<int>            int_col1 = { 1, 2, -3, -4, 5, 6, 7, 8, 9, -10 };

@@ -2942,8 +2942,8 @@ static void test_SimpleRollAdopter()  {
     assert(std::isnan(result4[1]));
     assert(result4[2] == 10.0);
     assert(result4[3] == 11.0);
-    assert(std::isnan(result4[4]));
-    assert(std::isnan(result4[8]));
+    assert(result4[4] == 11.0);
+    assert(result4[8] == 16.0);
     assert(std::isnan(result4[9]));
     assert(result4[10] == 18.0);
 }

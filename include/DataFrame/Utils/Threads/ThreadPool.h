@@ -80,7 +80,7 @@ public:
     using time_type = time_t;
     using thread_type = std::thread;
 
-    inline static constexpr size_type   MUL_THR_THHOLD = 250'000L;
+    inline static constexpr size_type   MUL_THR_THHOLD = 150'000L;
 
     ThreadPool(const ThreadPool &) = delete;
     ThreadPool &operator = (const ThreadPool &) = delete;

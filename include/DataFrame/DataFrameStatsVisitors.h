@@ -164,7 +164,16 @@ struct  LastVisitor  {
 
         if (! skip_nan_ || ! is_nan__(val)) [[likely]]  result_ = val;
     }
-    PASS_DATA_ONE_BY_ONE
+    template <forward_iterator K, forward_iterator H>
+    inline void
+    operator() (K /*idx_begin*/, K /*idx_end*/, H column_begin, H column_end) {
+
+        for (auto citer = --column_end; citer >= column_begin; --citer)
+            if (! skip_nan_ || ! is_nan__(*citer)) [[likely]]  {
+                result_ = *citer;
+                break;
+            }
+    }
 
     inline void pre ()  { result_ = result_type { }; }
     inline void post ()  {  }
@@ -195,7 +204,16 @@ struct  FirstVisitor  {
             }
         }
     }
-    PASS_DATA_ONE_BY_ONE
+    template <forward_iterator K, forward_iterator H>
+    inline void
+    operator() (K /*idx_begin*/, K /*idx_end*/, H column_begin, H column_end) {
+
+        for (auto citer = column_begin; citer < column_end; ++citer)
+            if (! skip_nan_ || ! is_nan__(*citer)) [[likely]]  {
+                result_ = *citer;
+                break;
+            }
+    }
 
     inline void pre ()  { result_ = result_type { }; started_ = false; }
     inline void post ()  {  }
@@ -222,7 +240,12 @@ struct  CountVisitor  {
 
         if (! skip_nan_ || ! is_nan__(val)) [[likely]]  result_ += 1;
     }
-    PASS_DATA_ONE_BY_ONE
+    template <forward_iterator K, forward_iterator H>
+    inline void
+    operator() (K /*idx_begin*/, K /*idx_end*/, H column_begin, H column_end) {
+
+        result_ = result_type(std::distance(column_begin, column_end));
+    }
 
     inline void pre ()  { result_ = 0; }
     inline void post ()  {  }
@@ -249,7 +272,34 @@ struct  SumVisitor  {
 
         result_ += val;
     }
-    PASS_DATA_ONE_BY_ONE
+    template <forward_iterator K, forward_iterator H>
+    inline void
+    operator() (K /*idx_begin*/, K /*idx_end*/, H column_begin, H column_end) {
+
+        if (ThreadGranularity::get_thread_level() > 2 &&
+            std::distance(column_begin, column_end) >=
+                ThreadPool::MUL_THR_THHOLD)  {
+            auto    lbd =
+                [this] (const auto &begin, const auto &end) -> value_type  {
+                    value_type  sum { };
+
+                    for (auto citer = begin; citer < end; ++citer)
+                        if (! this->skip_nan_ || ! is_nan__(*citer))
+                            sum += *citer;
+                    return(sum);
+                };
+            auto    futures =
+                ThreadGranularity::thr_pool_.parallel_loop(column_begin,
+                                                           column_end,
+                                                           std::move(lbd));
+
+            for (auto &fut : futures)  result_ += fut.get();
+        }
+        else
+            for (auto citer = column_begin; citer < column_end; ++citer)
+                if (! skip_nan_ || ! is_nan__(*citer))
+                    result_ += *citer;
+    }
 
     inline void pre ()  { result_ = value_type { }; }
     inline void post ()  {  }
@@ -299,7 +349,15 @@ struct  MeanVisitor : public MeanBase<T, I>  {
         BaseClass::cnt_ += 1;
         BaseClass::sum_(idx, val);
     }
-    PASS_DATA_ONE_BY_ONE
+    template <forward_iterator K, forward_iterator H>
+    inline void
+    operator() (K idx_begin, K idx_end, H column_begin, H column_end) {
+
+        BaseClass::sum_(idx_begin, idx_end, column_begin, column_end);
+        for (auto citer = column_begin; citer < column_end; ++citer)
+            if (! BaseClass::skip_nan_ || ! is_nan__(*citer))
+                BaseClass::cnt_ += 1;
+    }
 
     inline void post ()  {
 
@@ -468,7 +526,34 @@ struct  ProdVisitor  {
 
         result_ *= val;
     }
-    PASS_DATA_ONE_BY_ONE
+    template <forward_iterator K, forward_iterator H>
+    inline void
+    operator() (K /*idx_begin*/, K /*idx_end*/, H column_begin, H column_end) {
+
+        if (ThreadGranularity::get_thread_level() > 2 &&
+            std::distance(column_begin, column_end) >=
+                ThreadPool::MUL_THR_THHOLD)  {
+            auto    lbd =
+                [this] (const auto &begin, const auto &end) -> value_type  {
+                    value_type  prod { 1 };
+
+                    for (auto citer = begin; citer < end; ++citer)
+                        if (! this->skip_nan_ || ! is_nan__(*citer))
+                            prod *= *citer;
+                    return(prod);
+                };
+            auto    futures =
+                ThreadGranularity::thr_pool_.parallel_loop(column_begin,
+                                                           column_end,
+                                                           std::move(lbd));
+
+            for (auto &fut : futures)  result_ *= fut.get();
+        }
+        else
+            for (auto citer = column_begin; citer < column_end; ++citer)
+                if (! skip_nan_ || ! is_nan__(*citer))
+                    result_ *= *citer;
+    }
 
     inline void pre ()  { result_ = 1; }
     inline void post ()  {  }
@@ -509,9 +594,76 @@ struct  ExtremumVisitor  {
             is_first = false;
         }
     }
-    PASS_DATA_ONE_BY_ONE
+    template <forward_iterator K, forward_iterator H>
+    inline void
+    operator() (K idx_begin, K idx_end, H column_begin, H column_end) {
 
-    inline void pre ()  { is_first = true; pos_ = 0; counter_ = 0; }
+        assert((std::distance(idx_begin, idx_end) >=
+                    std::distance(column_begin, column_end)));
+
+        auto    citer { column_begin };
+
+        for (; citer < column_end; ++citer, ++idx_begin, ++counter_)  {
+            if (! skip_nan_ || ! is_nan__(*citer)) [[likely]]  {
+                pos_ = counter_;
+                index_ = *idx_begin;
+                extremum_ = *citer;
+                ++citer;
+                ++idx_begin;
+                break;
+            }
+        }
+
+        // NOTE: Currently in multi-threading mode, pos_ and index_ are not
+        //       updated.
+        if (ThreadGranularity::get_thread_level() > 2 &&
+            std::distance(column_begin, column_end) >=
+                ThreadPool::MUL_THR_THHOLD)  {
+            auto    lbd =
+                [this] (const auto &begin, const auto &end) -> value_type  {
+                    value_type  extremum { *begin };
+
+                    for (auto citer = begin + 1; citer < end; ++citer)  {
+                        if (! this->skip_nan_ || ! is_nan__(*citer)) [[likely]]
+                            if (this->cmp_(extremum, *citer))
+                                extremum = *citer;
+                    }
+                    return (extremum);
+                };
+            auto    futures =
+                ThreadGranularity::thr_pool_.parallel_loop(citer,
+                                                           column_end,
+                                                           std::move(lbd));
+
+            if (! futures.empty())  {
+                extremum_ = futures[0].get();
+                for (size_type i = 1; i < futures.size(); ++i)  {
+                    const auto  val = std::move(futures[i].get());
+
+                    if (cmp_(extremum_, val))
+                        extremum_ = val;
+                }
+            }
+        }
+        else  {
+            for (; citer < column_end; ++citer, ++idx_begin, ++counter_)  {
+                if (! skip_nan_ || ! is_nan__(*citer)) [[likely]]  {
+                    if (cmp_(extremum_, *citer))  {
+                        extremum_ = *citer;
+                        index_ = *idx_begin;
+                        pos_ = counter_;
+                    }
+                }
+            }
+        }
+    }
+
+    inline void pre ()  {
+        is_first = true;
+        pos_ = 0;
+        counter_ = 0;
+        extremum_ = value_type { };
+    }
     inline void post ()  {  }
     inline result_type get_result () const  { return (extremum_); }
     inline index_type get_index () const  { return (index_); }

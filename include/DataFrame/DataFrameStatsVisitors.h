@@ -1188,13 +1188,11 @@ public:
 
     explicit
     RankVisitor(rank_policy p = rank_policy::actual) : policy_(p)  {   }
-    RankVisitor(const RankVisitor &) = default;
-    RankVisitor &operator =(const RankVisitor &) = default;
 
 private:
 
-    const rank_policy   policy_;
-    result_type         result_ { };
+    rank_policy	policy_;
+    result_type result_ { };
 };
 
 // ----------------------------------------------------------------------------

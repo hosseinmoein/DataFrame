@@ -110,6 +110,14 @@ public:
                                                      std::decay_t<I>,
                                                      std::decay_t<I>,
                                                      std::decay_t<As> ...>>>;
+    template<typename F, typename I1, typename I2, typename ... As>
+    requires std::invocable<F, I1, I1, I2, As ...>
+    using loop2_res_t =
+        std::vector<std::future<std::invoke_result_t<std::decay_t<F>,
+                                                     std::decay_t<I1>,
+                                                     std::decay_t<I1>,
+                                                     std::decay_t<I2>,
+                                                     std::decay_t<As> ...>>>;
 
     // The return type of dispatch is std::future of return type of routine
     //
@@ -123,6 +131,13 @@ public:
     template<typename F, typename I, typename ... As>
     loop_res_t<F, I, As ...>
     parallel_loop(I begin, I end, F &&routine, As && ... args);
+
+    // Parallel loop operating with two ranges
+    //
+    template<typename F, typename I1, typename I2, typename ... As>
+    loop2_res_t<F, I1, I2, As ...>
+    parallel_loop2(I1 begin1, I1 end1, I2 begin2, I2 end2,
+                   F &&routine, As && ... args);
 
     template<std::random_access_iterator I, long TH = MUL_THR_THHOLD>
     void parallel_sort(const I begin, const I end);

@@ -241,6 +241,61 @@ ThreadPool::parallel_loop(I begin, I end, F &&routine, As && ... args)  {
 
 // ----------------------------------------------------------------------------
 
+template<typename F, typename I1, typename I2, typename ... As>
+ThreadPool::loop2_res_t<F, I1, I2, As ...>
+ThreadPool::parallel_loop2(I1 begin1, I1 end1, I2 begin2, I2 end2,
+                           F &&routine, As && ... args)  {
+
+    using task_return_t =
+        std::invoke_result_t<std::decay_t<F>,
+                             std::decay_t<I1>,
+                             std::decay_t<I1>,
+                             std::decay_t<I2>,
+                             std::decay_t<As> ...>;
+    using future_t = std::future<task_return_t>;
+
+    size_type   n { 0 };
+
+    if constexpr (std::is_integral<I1>::value)
+        n = std::min(end1 - begin1, end2 - begin2);
+    else
+        n = std::min(std::distance(begin1, end1), std::distance(begin2, end2));
+
+    const size_type         cap_thrs { capacity_threads() };
+    const size_type         block_size { (n > cap_thrs) ? n / cap_thrs : n };
+    std::vector<future_t>   ret;
+
+    if (block_size == n)  {
+        ret.reserve(n);
+        for (size_type i = 0; i < n; ++i)
+            ret.emplace_back(dispatch(false,
+                                      routine,
+                                          begin1 + i,
+                                          begin1 + (i + 1),
+                                          begin2 + i,
+                                          std::forward<As>(args) ...));
+    }
+    else  {
+        ret.reserve(cap_thrs + 1);
+        for (size_type i = 0; i < n; i += block_size)  {
+            const size_type block_end {
+                ((i + block_size) > n) ? n : i + block_size
+            };
+
+            ret.emplace_back(dispatch(false,
+                                      routine,
+                                          begin1 + i,
+                                          begin1 + block_end,
+                                          begin2 + i,
+                                          std::forward<As>(args) ...));
+        }
+    }
+
+    return (ret);
+}
+
+// ----------------------------------------------------------------------------
+
 template<std::random_access_iterator I, long TH>
 void
 ThreadPool::parallel_sort(const I begin, const I end)  {

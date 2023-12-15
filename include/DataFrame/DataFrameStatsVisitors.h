@@ -1191,7 +1191,11 @@ public:
 
 private:
 
-    rank_policy	policy_;
+    // I had to make policy_ non-const, because in Windows compiler the
+    // assignment operator is implicitly deleted. We need this visitor to be
+    // assignable for multithreading
+    //
+    rank_policy policy_;
     result_type result_ { };
 };
 
@@ -1216,17 +1220,16 @@ public:
                 H column_begin1, H column_end1,
                 H column_begin2, H column_end2)  {
 
-        const size_type col_s =
-            std::min ({ std::distance(idx_begin, idx_end),
-                        std::distance(column_begin1, column_end1),
-                        std::distance(column_begin2, column_end2) });
-
         if (type_ == correlation_type::pearson)  {
             cov_ (idx_begin, idx_end,
                   column_begin1, column_end1, column_begin2, column_end2);
         }
         else  {  // correlation_type::spearman
-            auto    calc_lbd =
+            const size_type col_s =
+                std::min ({ std::distance(idx_begin, idx_end),
+                            std::distance(column_begin1, column_end1),
+                            std::distance(column_begin2, column_end2) });
+            auto            calc_lbd =
                 [col_s, this](const auto &rank1, const auto &rank2) -> void  {
                 value_type  diff_sum { 0 };
 
@@ -1323,7 +1326,46 @@ struct  DotProdVisitor  {
 
         result_ += (val1 * val2);
     }
-    PASS_DATA_ONE_BY_ONE_2
+    template <forward_iterator K, forward_iterator H>
+    inline void
+    operator() (K /*idx_begin*/, K /*idx_end*/,
+                H column_begin1, H column_end1,
+                H column_begin2, H column_end2)  {
+
+        if (ThreadGranularity::get_thread_level() > 2 &&
+            std::distance(column_begin1, column_end1) >=
+                ThreadPool::MUL_THR_THHOLD)  {
+            auto    lbd =
+                []
+                (const auto &begin1, const auto &end1,
+                 const auto &begin2) -> value_type  {
+                    value_type  result { 0 };
+                    auto        iter2 = begin2;
+
+                    for (auto iter1 = begin1; iter1 < end1; ++iter1, ++iter2)
+                        result += *iter1 * *iter2;
+                    return (result);
+                };
+            auto    futures =
+                ThreadGranularity::thr_pool_.parallel_loop2(column_begin1,
+                                                            column_end1,
+                                                            column_begin2,
+                                                            column_end2,
+                                                            std::move(lbd));
+
+            for (auto &fut : futures)
+                result_ += fut.get();
+        }
+        else  {
+            const size_type col_s =
+                std::min(std::distance(column_begin1, column_end1),
+                         std::distance(column_begin2, column_end2));
+
+            for (size_type i = 0; i < col_s; ++i)
+                result_ += *(column_begin1 + i) * *(column_begin2 + i);
+        }
+
+    }
 
     inline void pre ()  { result_ = 0; }
     inline void post ()  {  }
@@ -1486,12 +1528,12 @@ struct  NExtremumSubArrayVisitor  {
 
 private:
 
-    ExtremumSubArrayVisitor<T, I, C>                        extremum_sub_array_;
+    ExtremumSubArrayVisitor<T, I, C>                       extremum_sub_array_;
     FixedSizePriorityQueue<
         SubArrayInfo, N,
-        typename template_switch<SubArrayInfo, C>::type>    q_ {  };
-    result_type                                             result_ {  };
-    compare_type                                            cmp_ {  };
+        typename template_switch<SubArrayInfo, C>::type>   q_ {  };
+    result_type                                            result_ {  };
+    compare_type                                           cmp_ {  };
 };
 
 template<std::size_t N, typename T, typename I = unsigned long,
@@ -1689,11 +1731,9 @@ struct  StatsVisitor  {
         delta_n2 = delta_n * delta_n;
         term1 = delta * delta_n * value_type(n1);
         m1_ += delta_n;
-        m4_ = m4_ + static_cast<value_type>
-                     (term1 * delta_n2 * value_type(n_ * n_ - 3 * n_ + 3) +
-                   6.0 * delta_n2 * m2_ - 4.0 * delta_n * m3_);
-        m3_ = m3_ + static_cast<value_type>
-            (term1 * delta_n * value_type(n_ - 2) - 3.0 * delta_n * m2_);
+        m4_ += (term1 * delta_n2 * value_type(n_ * n_ - 3 * n_ + 3) +
+                6.0 * delta_n2 * m2_ - 4.0 * delta_n * m3_);
+        m3_ += (term1 * delta_n * value_type(n_ - 2) - 3.0 * delta_n * m2_);
         m2_ += term1;
     }
     PASS_DATA_ONE_BY_ONE
@@ -1764,7 +1804,119 @@ public:
             deg_freedom_ += 1;
         }
     }
-    PASS_DATA_ONE_BY_ONE_2
+    template <forward_iterator K, forward_iterator H>
+    inline void
+    operator() (K idx_begin, K idx_end,
+                H x_begin, H x_end, H y_begin, H y_end)  {
+
+        const size_type col_s =
+            std::min ({ std::distance(idx_begin, idx_end),
+                        std::distance(x_begin, x_end),
+                        std::distance(y_begin, y_end) });
+
+        if (ThreadGranularity::get_thread_level() > 2 &&
+            col_s >= ThreadPool::MUL_THR_THHOLD)  {
+            std::vector<std::future<void>>  futures;
+
+            if (! related_ts_)  {
+                auto    lbd =
+                    [](auto &vis,
+                       const auto &begin, const auto &end,
+                       const auto &idx_begin) -> void  {
+
+                        vis(idx_begin, idx_begin, begin, end);
+                    };
+
+                futures.reserve(4);
+                futures.emplace_back(
+                    ThreadGranularity::thr_pool_.dispatch(
+                        false,
+                        lbd,
+                            std::ref(m_x_),
+                            std::cref(x_begin),
+                            std::cref(x_begin + col_s),
+                            std::cref(idx_begin)));
+                futures.emplace_back(
+                    ThreadGranularity::thr_pool_.dispatch(
+                        false,
+                        lbd,
+                            std::ref(m_y_),
+                            std::cref(y_begin),
+                            std::cref(y_begin + col_s),
+                            std::cref(idx_begin)));
+                futures.emplace_back(
+                    ThreadGranularity::thr_pool_.dispatch(
+                        false,
+                        lbd,
+                            std::ref(v_x_),
+                            std::cref(x_begin),
+                            std::cref(x_begin + col_s),
+                            std::cref(idx_begin)));
+                futures.emplace_back(
+                    ThreadGranularity::thr_pool_.dispatch(
+                        false,
+                        lbd,
+                            std::ref(v_y_),
+                            std::cref(y_begin),
+                            std::cref(y_begin + col_s),
+                            std::cref(idx_begin)));
+            }
+            else  {
+                auto    lbd =
+                    [col_s](auto &vis,
+                            const auto &x_begin, const auto &y_begin,
+                            const auto &idx_begin) -> void  {
+
+                        for (size_type i = 0; i < col_s; ++i)  {
+                            const value_type    val =
+                                *(x_begin + i) - *(y_begin + i);
+
+                            vis(*idx_begin, val);
+                        }
+                    };
+
+                futures.reserve(2);
+                futures.emplace_back(
+                    ThreadGranularity::thr_pool_.dispatch(
+                        false,
+                        lbd,
+                            std::ref(m_x_),
+                            std::cref(x_begin),
+                            std::cref(y_begin),
+                            std::cref(idx_begin)));
+                futures.emplace_back(
+                    ThreadGranularity::thr_pool_.dispatch(
+                        false,
+                        lbd,
+                            std::ref(v_x_),
+                            std::cref(x_begin),
+                            std::cref(y_begin),
+                            std::cref(idx_begin)));
+            }
+
+            for (auto &fut : futures)  fut.get();
+        }
+        else  {
+            if (! related_ts_)  {
+                m_x_(idx_begin, idx_end, x_begin, x_begin + col_s);
+                m_y_(idx_begin, idx_end, y_begin, y_begin + col_s);
+                v_x_(idx_begin, idx_end, x_begin, x_begin + col_s);
+                v_y_(idx_begin, idx_end, y_begin, y_begin + col_s);
+            }
+            else  {
+                for (size_type i = 0; i < col_s; ++i)  {
+                    const value_type    val = *(x_begin + i) - *(y_begin + i);
+
+                    m_x_(*idx_begin, val);
+                    v_x_(*idx_begin, val);
+                }
+            }
+        }
+        if (! related_ts_)
+            deg_freedom_ = col_s * 2;
+        else
+            deg_freedom_ = col_s;
+    }
 
     inline void pre ()  {
 
@@ -1969,7 +2121,7 @@ private:
 
     struct t_less_  {
         inline bool
-        operator() (const T *lhs, const T *rhs) const  { return (*lhs < *rhs); }
+        operator() (const T *lhs, const T *rhs) const { return (*lhs < *rhs); }
     };
 
 public:
@@ -2052,13 +2204,33 @@ struct  FactorizeVisitor  {
     operator() (const K &, const K &,
                 const H &column_begin, const H &column_end)  {
 
-        result_type result;
+        const size_type col_s = std::distance(column_begin, column_end);
+        result_type     result;
 
-        result.reserve(std::distance(column_begin, column_end));
-        std::for_each(column_begin, column_end,
-                      [&result, this](const auto &val) -> void  {
-                          result.push_back(this->ffunc_(val));
-                      });
+        if (ThreadGranularity::get_thread_level() > 2 &&
+            col_s >= ThreadPool::MUL_THR_THHOLD)  {
+            result.resize(col_s);
+
+            auto    lbd =
+                [&result, &column_begin, this]
+                (auto begin, auto end) mutable -> void  {
+                    for (; begin < end; ++begin)
+                        result[begin] = this->ffunc_(*(column_begin + begin));
+                };
+            auto    futures =
+                ThreadGranularity::thr_pool_.parallel_loop(size_type(0),
+                                                           col_s,
+                                                           std::move(lbd));
+
+            for (auto &fut : futures)  fut.get();
+        }
+        else  {
+            result.reserve(col_s);
+            std::for_each(column_begin, column_end,
+                          [&result, this](const auto &val) -> void  {
+                              result.push_back(this->ffunc_(val));
+                          });
+        }
         result_.swap(result);
     }
 
@@ -2095,11 +2267,10 @@ public:
 
         vec_type<value_type>    tmp_result(col_s - 4);
         size_type               lag = 1;
-        const size_type         thread_level =
-            ThreadGranularity::get_thread_level();
 
         tmp_result[0] = 1.0;
-        if (thread_level > 0)  {
+        if (ThreadGranularity::get_thread_level() > 2 &&
+            col_s >= ThreadPool::MUL_THR_THHOLD)  {
             vec_type<std::future<CorrResult>>   futures;
 
             futures.reserve((col_s - 4) - lag);
@@ -2108,9 +2279,9 @@ public:
                     ThreadGranularity::thr_pool_.dispatch(
                         false,
                         &AutoCorrVisitor::get_auto_corr_<H>,
-                        col_s,
-                        lag,
-                        std::cref(column_begin)));
+                            col_s,
+                            lag,
+                            std::cref(column_begin)));
                 lag += 1;
             }
             for (auto &fut : futures)  {
@@ -2284,10 +2455,10 @@ struct  ExponentiallyWeightedMeanVisitor  {
 
             std::transform(column_begin + (starting + 1), column_end,
                            result.begin() + (starting + 1),
-                           [&decay_comp_prod,
-                            &decay_comp,
-                            &denominator,
-                            &numerator](const auto &val) -> value_type  {
+                           [decay_comp_prod,
+                            decay_comp,
+                            denominator,
+                            numerator](const auto &val) mutable -> value_type  {
                                 if (! is_nan__(val)) [[likely]]  {
                                     decay_comp_prod *= decay_comp;
                                     denominator += decay_comp_prod;
@@ -2373,6 +2544,7 @@ struct  ExponentiallyWeightedVarVisitor  {
             }
 
             // Calculate exponential moving average
+            //
             const value_type    ewma = sum_weighted_input / sum_weights;
             value_type          factor_sum = 0;
 
@@ -2385,6 +2557,7 @@ struct  ExponentiallyWeightedVarVisitor  {
 
             // Calculate exponential moving variance and standard deviation
             // with bias
+            //
             const value_type    sum_weights_sq = sum_weights * sum_weights;
             const value_type    bias =
                     sum_weights_sq / (sum_weights_sq - sum_sq_weights);
@@ -2652,9 +2825,27 @@ struct  ZeroLagMovingMeanVisitor  {
 
         const size_type lag = size_type (0.5 * double(roll_period_ - 1));
 
-        for (size_type i = starting + lag; i < col_s; ++i) [[likely]]
-            result_[i] =
-                T(2) * *(column_begin + i) - *(column_begin + (i - lag));
+        if (ThreadGranularity::get_thread_level() > 2 &&
+            col_s >= ThreadPool::MUL_THR_THHOLD)  {
+            auto    lbd =
+                [lag, &column_begin, this]
+                (auto begin, auto end) mutable -> void  {
+                    for (size_type i = begin; i < end; ++i) [[likely]]
+                        this->result_[i] = T(2) * *(column_begin + i) -
+                                           *(column_begin + (i - lag));
+                };
+            auto    futures =
+                ThreadGranularity::thr_pool_.parallel_loop(starting + lag,
+                                                           col_s,
+                                                           std::move(lbd));
+
+            for (auto &fut : futures)  fut.get();
+        }
+        else  {
+            for (size_type i = starting + lag; i < col_s; ++i) [[likely]]
+                result_[i] =
+                    T(2) * *(column_begin + i) - *(column_begin + (i - lag));
+        }
 
         ewm_v<T, I, A> ewm(exponential_decay_spec::span, roll_period_, true);
 
@@ -2701,16 +2892,41 @@ struct  LinregMovingMeanVisitor  {
         assert(col_s > 3);
         assert(roll_period_ < col_s - 1);
 
-        const value_type    sum_x = 0.5 * T(roll_period_) * T(roll_period_ + 1);
+        const value_type    sum_x =
+            0.5 * T(roll_period_) * T(roll_period_ + 1);
         const value_type    sum_x2 =
             sum_x * (2.0 * T(roll_period_) + 1.0) / 3.0;
         const value_type    divisor = T(roll_period_) * sum_x2 - sum_x * sum_x;
-        result_type         result (col_s, std::numeric_limits<T>::quiet_NaN());
+        result_type         result (col_s,
+                                    std::numeric_limits<T>::quiet_NaN());
+        const auto          thread_level =
+            ThreadGranularity::get_thread_level();
 
-        for (size_type i = roll_period_; i < col_s; ++i) [[likely]]
-            result[i] = linreg_(column_begin + (i - roll_period_),
-                                column_begin + i,
-                                sum_x, sum_x2, divisor);
+        if (thread_level > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
+            auto    lbd =
+                [&column_begin, &result, sum_x, sum_x2, divisor, this]
+                (auto begin, auto end) mutable -> void  {
+                    for (size_type i = begin; i < end; ++i) [[likely]]
+                        result[i] =
+                            linreg_(column_begin + (i - this->roll_period_),
+                                    column_begin + i,
+                                    sum_x, sum_x2, divisor,
+                                    this->type_, this->roll_period_);
+                };
+            auto    futures =
+                ThreadGranularity::thr_pool_.parallel_loop(roll_period_,
+                                                           col_s,
+                                                           std::move(lbd));
+
+            for (auto &fut : futures)  fut.get();
+        }
+        else  {
+            for (size_type i = roll_period_; i < col_s; ++i) [[likely]]
+                result[i] = linreg_(column_begin + (i - roll_period_),
+                                    column_begin + i,
+                                    sum_x, sum_x2, divisor,
+                                    type_, roll_period_);
+        }
         result_.swap(result);
     }
 
@@ -2726,42 +2942,74 @@ struct  LinregMovingMeanVisitor  {
 private:
 
     template <typename H>
-    inline value_type
+    inline static value_type
     linreg_(const H &column_begin, const H &column_end,
-            value_type sum_x, value_type sum_x2, value_type divisor)  {
+            value_type sum_x, value_type sum_x2, value_type divisor,
+            linreg_moving_mean_type lmm_type, value_type roll_period)  {
 
         const size_type col_s = std::distance(column_begin, column_end);
         value_type      sum_y { 0 };
         value_type      sum_xy { 0 };
 
-        for (size_type i = 0; i < col_s; ++i) [[likely]]  {
-            const value_type    val = *(column_begin + i);
+        if (ThreadGranularity::get_thread_level() > 2 &&
+            col_s >= ThreadPool::MUL_THR_THHOLD)  {
+            auto    lbd =
+                [&column_begin]
+                (auto begin, auto end) mutable -> std::pair<T, T>  {
+                    value_type  sum_y { 0 };
+                    value_type  sum_xy { 0 };
 
-            sum_y += val;
-            sum_xy += val * T(i + 1);
+                    for (size_type i = begin; i < end; ++i) [[likely]]  {
+                        const value_type    val = *(column_begin + i);
+
+                        sum_y += val;
+                        sum_xy += val * T(i + 1);
+                    }
+                    return (std::make_pair(sum_y, sum_xy));
+                };
+            auto    futures =
+                ThreadGranularity::thr_pool_.parallel_loop(size_type(0),
+                                                           col_s,
+                                                           std::move(lbd));
+
+            for (auto &fut : futures)  {
+                const auto &val = fut.get();
+
+                sum_y += val.first;
+                sum_xy += val.second;
+            }
+        }
+        else  {
+            for (size_type i = 0; i < col_s; ++i) [[likely]]  {
+                const value_type    val = *(column_begin + i);
+
+                sum_y += val;
+                sum_xy += val * T(i + 1);
+            }
         }
 
         const value_type    slope =
-            (T(roll_period_) * sum_xy - sum_x * sum_y) / divisor;
+            (roll_period * sum_xy - sum_x * sum_y) / divisor;
 
-        if (type_ == linreg_moving_mean_type::slope)  return (slope);
+        if (lmm_type == linreg_moving_mean_type::slope)  return (slope);
 
-        if (type_ == linreg_moving_mean_type::theta ||
-            type_ == linreg_moving_mean_type::degree)  {
+        if (lmm_type == linreg_moving_mean_type::theta ||
+            lmm_type == linreg_moving_mean_type::degree)  {
             const value_type    theta = std::atan(slope);
 
-            return (type_ == linreg_moving_mean_type::theta
+            return (lmm_type == linreg_moving_mean_type::theta
                         ? theta : theta * (180.0 / M_PI));
         }
 
         const value_type    intercept =
             (sum_y * sum_x2 - sum_x * sum_xy) / divisor;
 
-        if (type_ == linreg_moving_mean_type::intercept)  return (intercept);
+        if (lmm_type == linreg_moving_mean_type::intercept)
+            return (intercept);
 
-        return (type_ == linreg_moving_mean_type::forecast
-                    ? slope * T(roll_period_) + intercept
-                    : slope * T(roll_period_ - 1) + intercept);
+        return (lmm_type == linreg_moving_mean_type::forecast
+                    ? slope * roll_period + intercept
+                : slope * (roll_period - T(1)) + intercept);
     }
 
     const size_type                 roll_period_;

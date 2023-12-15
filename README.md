@@ -75,10 +75,10 @@ Polars:
     Overall time:              36.876345 secs
 
 C++ DataFrame:
-    Data generation/load time: 28.8234 secs
-    Calculation time:           2.30939 secs
-    Selection time:             0.762463 secs
-    Overall time:              31.8952 secs
+    Data generation/load time: 26.9459   secs
+    Calculation time:           1.26015  secs
+    Selection time:             0.742493 secs
+    Overall time:              28.9486   secs
 
 For comparison, Pandas numbers running the same test:
     Data generation/load time: 36.678976 secs

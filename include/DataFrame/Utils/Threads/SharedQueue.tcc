@@ -52,24 +52,6 @@ SharedQueue<T>::push(const value_type &element) noexcept  {
 // ----------------------------------------------------------------------------
 
 template<typename T>
-inline const typename SharedQueue<T>::value_type &
-SharedQueue<T>::front(bool wait_on_front) const  { // throw (SQEmpty)
-
-    std::unique_lock<std::mutex>    ul { mutex_ };
-
-    if (queue_.empty())  {
-        if (wait_on_front)
-            while (queue_.empty())  cvx_.wait(ul);
-        else
-            throw SQEmpty { };
-    }
-
-    return (queue_.front());
-}
-
-// ----------------------------------------------------------------------------
-
-template<typename T>
 inline typename SharedQueue<T>::optional_ret
 SharedQueue<T>::pop_front(bool wait_on_front) noexcept  {
 
@@ -84,34 +66,6 @@ SharedQueue<T>::pop_front(bool wait_on_front) noexcept  {
         queue_.pop();
     }
     return (ret);
-}
-
-// ----------------------------------------------------------------------------
-
-template<typename T>
-inline typename SharedQueue<T>::value_type &
-SharedQueue<T>::front(bool wait_on_front)  { // throw (SQEmpty)
-
-    std::unique_lock<std::mutex>    ul { mutex_ };
-
-    if (queue_.empty())  {
-        if (wait_on_front)
-            while (queue_.empty())  cvx_.wait(ul);
-        else
-            throw SQEmpty { };
-    }
-
-    return (queue_.front());
-}
-
-// ----------------------------------------------------------------------------
-
-template<typename T>
-void SharedQueue<T>::pop() noexcept  {
-
-    const AutoLockable  lock { mutex_ };
-
-    queue_.pop();
 }
 
 // ----------------------------------------------------------------------------

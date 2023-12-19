@@ -1441,16 +1441,16 @@ table.hovertable td {
 
   <H2><font color="blue">Multithreading</font></H2>
     In general, multithreading could be very tricky. A lot of times you think by using multithreading you enhance the performance of your program. But in fact, you are hindering it. It requires measuring and careful adjustments. It is recommended to start with a single-threaded version and when that is <I>working correctly</I>, take measurements and adjust to move to multithreading version.<BR>
-DataFrame uses multithreading extensively and provides granular tools to adjust your program. Let’s divide the multithreading subject in DataFrame into two categories:<BR>
+DataFrame uses multithreading extensively and provides granular tools to adjust your environment. Let’s divide the multithreading subject in DataFrame into two categories:<BR>
 
-  <H4>1. User Utilizing Multithreading</H4>
+  <H4>1. User Multithreading</H4>
     <UL>
       <LI>DataFrame uses static containers to achieve type heterogeneity. By default, these static containers are unprotected. This is done by design. So, by default there is no locking overhead. If you use DataFrame in a multithreaded program, you must provide a <I>SpinLock</I> defined in <I>ThreadGranularity.h</I> file. DataFrame will use your <I>SpinLock</I> to protect the containers.<BR>Please see above, <I>set_lock()</I>, <I>remove_lock()</I>, and <I>dataframe_tester.cc#3767</I> for code example.</LI>
       <LI>In addition, instances of DataFrame are not multithreaded safe either. In other words, a single instance of DataFrame must not be used in multiple threads without protection, unless it is used as read-only.</LI>
     </UL>
     So, In general if you as the user of DataFrame utilize multithreading, you must protect the DataFrame with a synchronization tool (i.e. SpinLock)
   <H4>2. DataFrame Internal Multithreading</H4>
-  Whether or not you, as the user, use multithreading, DataFrame utilizes a versatile thread-pool to employ parallel computing extensively in almost all its functionalities, when appropriate. DataFrame also gives you the interface to control and tweak that. You do not need to worry about synchronization for DataFrame internal multithreading.<BR>
+  Whether or not you, as the user, use multithreading, DataFrame utilizes a versatile thread-pool to employ parallel computing extensively in almost all its functionalities, when appropriate -- currently, most parallel algorithms trigger when number of items exceeds 250k and number of threads exceeds 2. DataFrame also gives you the interface to control and tweak that. You do not need to worry about synchronization for DataFrame internal multithreading.<BR>
   <UL>
     <LI> There are asynchronous versions of some methods. For example, you have sort()/sort_async(), visit()/visit_async(), ... The latter versions return a std::future and would execute in parallel.<BR>If you chose to use DataFrame async interfaces, it is highly recommended to call <I>ThreadGranularity::set_optimum_thread_level()</I>, So your thread-pool is populated with optimal number of threads. Otherwise, if thread-pool is empty, async interfaces will add one thread to it. Having only one thread in thread-pool could be suboptimal and hinder performance.</LI>
     <LI>As mentioned above, DataFrame uses parallel computing extensively. But by default, DataFrame is single threaded, because by default its thread-pool is empty. If you want to fully take advantage of DataFrame parallel computing, it is recommended to call <I>ThreadGranularity::set_optimum_thread_level()</I> at the beginning of your program. Alternatively you could call <I>ThreadGranularity:: set_thread_level(n)</I> to add a custom number of threads to the thread-pool. But you better have a good reason for that.<BR>Thread-pool and thread level are static properties of DataFrame. Once the thread level is set, it applies to all DataFrame instances.</LI>

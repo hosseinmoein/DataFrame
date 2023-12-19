@@ -36,8 +36,8 @@ using namespace hmdf;
 using namespace std::chrono;
 
 constexpr std::size_t   ALIGNMENT = 64;
-// constexpr std::size_t   SIZE = 300000000;
-constexpr std::size_t   SIZE = 10000000;
+constexpr std::size_t   SIZE = 300000000;
+// constexpr std::size_t   SIZE = 10000000;
 
 typedef StdDataFrame64<time_t> MyDataFrame;
 
@@ -45,6 +45,8 @@ typedef StdDataFrame64<time_t> MyDataFrame;
 
 int main(int, char *[]) {
 
+    MyDataFrame::set_optimum_thread_level();
+	
     const auto  first = high_resolution_clock::now();
     MyDataFrame df;
 
@@ -64,9 +66,9 @@ int main(int, char *[]) {
     VarVisitor<double, time_t>  ln_vv;
     CorrVisitor<double, time_t> e_ln_cv;
 
-    auto    mean = df.visit_async<double>("normal", n_mv);
-    auto    var = df.visit_async<double>("log_normal", ln_vv);
-    auto    corr = df.visit_async<double, double>("exponential", "log_normal", e_ln_cv);
+    auto    mean = df.single_act_visit_async<double>("normal", n_mv);
+    auto    var = df.single_act_visit_async<double>("log_normal", ln_vv);
+    auto    corr = df.single_act_visit_async<double, double>("exponential", "log_normal", e_ln_cv);
 
     std::cout << mean.get().get_result() << ", "
               << var.get().get_result() << ", "

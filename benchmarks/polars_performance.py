@@ -4,8 +4,8 @@ import polars as pl
 
 # ------------------------------------------------------------------------------
 
-# SIZE: int = 300000000
-SIZE: int = 10000000
+SIZE: int = 300000000
+# SIZE: int = 10000000
 
 first = datetime.datetime.now()
 df = pl.DataFrame({"normal": np.random.normal(size=SIZE),

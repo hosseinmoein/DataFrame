@@ -31,7 +31,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <chrono>
 #include <cstdlib>
-#include <ctime>
 #include <functional>
 #include <memory>
 #include <stdexcept>
@@ -42,21 +41,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace hmdf
 {
 
-template<typename F, typename ... As>
-requires std::invocable<F, As ...>
-Conditioner::Conditioner(F &&routine, As && ... args)
-    : func_([&] () -> void { routine(std::forward<As>(args) ...); })  {   }
-
-// ----------------------------------------------------------------------------
-
-void Conditioner::execute()  { func_(); }
-
-// ----------------------------------------------------------------------------
-
-ThreadPool::ThreadPool(size_type thr_num,
-                       Conditioner pre_conditioner,
-                       Conditioner post_conditioner)
-    : pre_conditioner_(pre_conditioner), post_conditioner_(post_conditioner)  {
+ThreadPool::ThreadPool(size_type thr_num)  {
 
     threads_.reserve(thr_num * 2);
     for (size_type i = 0; i < thr_num; ++i)  {
@@ -78,31 +63,6 @@ ThreadPool::~ThreadPool()  {
     for (auto &routine : threads_)
         if (routine.joinable())
             routine.join();
-}
-
-// ----------------------------------------------------------------------------
-
-void
-ThreadPool::set_timeout(bool timeout_flag, time_type timeout_time)  {
-
-    timeout_flag_ = timeout_flag;
-    timeout_time_ = timeout_time;
-}
-
-// ----------------------------------------------------------------------------
-
-void
-ThreadPool::queue_timed_outs_() noexcept  {
-
-    const size_type timeys { capacity_threads() };
-
-    for (size_type i = 0; i < timeys; ++i)  {
-        const WorkUnit  work_unit { WORK_TYPE::_timeout_ };
-
-        global_queue_.push(work_unit);
-    }
-
-    return;
 }
 
 // ----------------------------------------------------------------------------
@@ -183,8 +143,6 @@ ThreadPool::dispatch(bool immediately, F &&routine, As && ... args)  {
     else
         global_queue_.push(work_unit);
 
-    if (timeout_flag_)
-        queue_timed_outs_();
     return (return_fut);
 }
 
@@ -232,6 +190,61 @@ ThreadPool::parallel_loop(I begin, I end, F &&routine, As && ... args)  {
                                       routine,
                                           begin + i,
                                           begin + block_end,
+                                          std::forward<As>(args) ...));
+        }
+    }
+
+    return (ret);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename F, typename I1, typename I2, typename ... As>
+ThreadPool::loop2_res_t<F, I1, I2, As ...>
+ThreadPool::parallel_loop2(I1 begin1, I1 end1, I2 begin2, I2 end2,
+                           F &&routine, As && ... args)  {
+
+    using task_return_t =
+        std::invoke_result_t<std::decay_t<F>,
+                             std::decay_t<I1>,
+                             std::decay_t<I1>,
+                             std::decay_t<I2>,
+                             std::decay_t<As> ...>;
+    using future_t = std::future<task_return_t>;
+
+    size_type   n { 0 };
+
+    if constexpr (std::is_integral<I1>::value)
+        n = std::min(end1 - begin1, end2 - begin2);
+    else
+        n = std::min(std::distance(begin1, end1), std::distance(begin2, end2));
+
+    const size_type         cap_thrs { capacity_threads() };
+    const size_type         block_size { (n > cap_thrs) ? n / cap_thrs : n };
+    std::vector<future_t>   ret;
+
+    if (block_size == n)  {
+        ret.reserve(n);
+        for (size_type i = 0; i < n; ++i)
+            ret.emplace_back(dispatch(false,
+                                      routine,
+                                          begin1 + i,
+                                          begin1 + (i + 1),
+                                          begin2 + i,
+                                          std::forward<As>(args) ...));
+    }
+    else  {
+        ret.reserve(cap_thrs + 1);
+        for (size_type i = 0; i < n; i += block_size)  {
+            const size_type block_end {
+                ((i + block_size) > n) ? n : i + block_size
+            };
+
+            ret.emplace_back(dispatch(false,
+                                      routine,
+                                          begin1 + i,
+                                          begin1 + block_end,
+                                          begin2 + i,
                                           std::forward<As>(args) ...));
         }
     }
@@ -329,27 +342,6 @@ ThreadPool::parallel_sort(const I begin, const I end, P compare)  {
                 parallel_sort<I, P, TH>(right_iter + 1, end, compare);
         }
     }
-}
-
-// ----------------------------------------------------------------------------
-
-void
-ThreadPool::attach(thread_type &&this_thr)  {
-
-    if (is_shutdown())
-        throw std::runtime_error("ThreadPool::attach(): "
-                                 "Thread pool is shutdown.");
-
-    size_type   local_size { 0 };
-
-    {
-        const guard_type    guard { state_ };
-
-        local_size = size_type(threads_.size());
-        local_queues_.push_back(LocalQueueType { });
-        threads_.push_back(std::move(this_thr));
-    }
-    thread_routine_(local_size);
 }
 
 // ----------------------------------------------------------------------------
@@ -459,10 +451,7 @@ ThreadPool::thread_routine_(size_type local_q_idx) noexcept  {
     if (is_shutdown())
         return (false);
 
-    pre_conditioner_.execute();
-
-    time_type   last_busy_time { timeout_flag_ ? ::time(nullptr) : 0 };
-    auto        iter = local_queues_.begin();
+    auto    iter = local_queues_.begin();
 
     std::advance(iter, local_q_idx);
     local_queue_ = &(*iter);
@@ -482,23 +471,13 @@ ThreadPool::thread_routine_(size_type local_q_idx) noexcept  {
 
         --available_threads_;
 
-        if (work_unit.work_type == WORK_TYPE::_terminate_)  {
-            break;
-        }
-        else if (work_unit.work_type == WORK_TYPE::_timeout_)  {
-            if (timeout_flag_ &&
-                ((::time(nullptr) - last_busy_time) >= timeout_time_))
-                break;
-        }
-        else if (work_unit.work_type == WORK_TYPE::_client_service_)  {
-            if (timeout_flag_)
-                last_busy_time = ::time(nullptr);
+        if (work_unit.work_type == WORK_TYPE::_client_service_)
             (work_unit.func)();  // Execute the callable
-        }
+        else if (work_unit.work_type == WORK_TYPE::_terminate_)
+            break;
     }
     --capacity_threads_;
     local_queue_ = nullptr;
-    post_conditioner_.execute();
 
     return (true);
 }

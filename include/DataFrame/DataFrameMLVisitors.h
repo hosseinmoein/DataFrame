@@ -1752,13 +1752,35 @@ struct  PolicyLearningLossVisitor  {
 
         // Negative Log Likelihood
         //
-        result_.reserve(col_s);
-        std::transform(action_prob_begin, action_prob_end,
-                       reward_begin,
-                       std::back_inserter(result_),
-                       [](const T &ap, const T &r) -> T  {
-                           return (-std::log(ap) * r);
-                       });
+        if (ThreadGranularity::get_thread_level() > 2 &&
+            col_s >= ThreadPool::MUL_THR_THHOLD)  {
+            result_.resize(col_s);
+
+            auto    futures =
+                ThreadGranularity::thr_pool_.parallel_loop(
+                    size_type(0),
+                    col_s,
+                    [&action_prob_begin, &reward_begin, this]
+                    (auto begin, auto end) -> void  {
+                        for (size_type i = begin; i < end; ++i)  {
+                            const value_type    ap = *(action_prob_begin + i);
+                            const value_type    r = *(reward_begin + i);
+
+                            this->result_[i] = -std::log(ap) * r;
+                        }
+                    });
+
+            for (auto &fut : futures)  fut.get();
+        }
+        else  {
+            result_.reserve(col_s);
+            std::transform(action_prob_begin, action_prob_end,
+                           reward_begin,
+                           std::back_inserter(result_),
+                           [](const T &ap, const T &r) -> T  {
+                               return (-std::log(ap) * r);
+                           });
+        }
     }
 
     DEFINE_PRE_POST
@@ -1774,7 +1796,7 @@ private:
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 using plloss_v = PolicyLearningLossVisitor<T, I, A>;
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 template<arithmetic T, typename I = unsigned long>
 struct  LossFunctionVisitor  {
@@ -1793,82 +1815,10 @@ public:
 
         assert((col_s == size_type(std::distance(model_begin, model_end))));
 
-        if (lft_ == loss_function_type::kullback_leibler)  {
-            result_ =
-                std::transform_reduce(actual_begin, actual_end,
-                                      model_begin, T(0), std::plus { },
-                                      [](const T &a, const T &m) -> T  {
-                                          return (a * std::log(a / m));
-                                      });
-        }
-        else if (lft_ == loss_function_type::mean_abs_error)  {
-            result_ =
-                std::transform_reduce(actual_begin, actual_end,
-                                      model_begin, T(0), std::plus { },
-                                      [](const T &a, const T &m) -> T  {
-                                          return (std::fabs(a - m));
-                                      });
-            result_ /= col_s;
-        }
-        else if (lft_ == loss_function_type::mean_sqr_error)  {
-            result_ =
-                std::transform_reduce(actual_begin, actual_end,
-                                      model_begin, T(0), std::plus { },
-                                      [](const T &a, const T &m) -> T  {
-                                          const T   val = a - m;
-
-                                          return (val * val);
-                                      });
-            result_ /= col_s;
-        }
-        else if (lft_ == loss_function_type::mean_sqr_log_error)  {
-            result_ =
-                std::transform_reduce(actual_begin, actual_end,
-                                      model_begin, T(0), std::plus { },
-                                      [](const T &a, const T &m) -> T  {
-                                          const T   val = std::log(T(1) + a) -
-                                                          std::log(T(1) + m);
-
-                                          return (val * val);
-                                      });
-            result_ /= col_s;
-        }
-        else if (lft_ == loss_function_type::cross_entropy)  {
-            result_ =
-                std::transform_reduce(actual_begin, actual_end,
-                                      model_begin, T(0), std::plus { },
-                                      [](const T &a, const T &m) -> T  {
-                                          return (a * std::log(m));
-                                      });
-            result_ = -(result_ / col_s);
-        }
-        else if (lft_ == loss_function_type::binary_cross_entropy)  {
-            result_ =
-                std::transform_reduce(actual_begin, actual_end,
-                                      model_begin, T(0), std::plus { },
-                                      [](const T &a, const T &m) -> T  {
-                                          return (-(a * std::log(m)) +
-                                                  (1 - a) * std::log(1 - m));
-                                      });
-            result_ /= col_s;
-        }
-        else if (lft_ == loss_function_type::categorical_hinge)  {
-            const result_type   neg =
-                std::transform_reduce(actual_begin, actual_end,
-                                      model_begin, T(0), std::plus { },
-                                      [](const T &a, const T &m) -> T  {
-                                          return ((T(1) - a) * m);
-                                      });
-            const result_type   pos =
-                std::transform_reduce(actual_begin, actual_end,
-                                      model_begin, T(0), std::plus { },
-                                      [](const T &a, const T &m) -> T  {
-                                          return (a * m);
-                                      });
-
-            result_ = std::max(neg - pos + T(1), T(0));;
-        }
-        else if (lft_ == loss_function_type::cosine_similarity)  {
+        // The linear and parallel versions on this type are the same.
+        // So, I am taking it out of the if-else chain
+        //
+        if (lft_ == loss_function_type::cosine_similarity)  {
             DotProdVisitor<T, I>    dot_v;
 
             dot_v.pre();
@@ -1893,15 +1843,291 @@ public:
             const result_type   m_mag = std::sqrt(dot_v.get_result());
 
             result_ = dot_prod / (a_mag * m_mag);
+            return;
         }
-        else if (lft_ == loss_function_type::log_cosh)  {
-            result_ =
-                std::transform_reduce(actual_begin, actual_end,
-                                      model_begin, T(0), std::plus { },
-                                      [](const T &a, const T &m) -> T  {
-                                          return (std::log(std::cosh(m - a)));
-                                      });
-            result_ /= col_s;
+
+        if (ThreadGranularity::get_thread_level() > 2 &&
+            col_s >= ThreadPool::MUL_THR_THHOLD)  {
+            std::vector<std::future<void>>  futures;
+            if (lft_ == loss_function_type::kullback_leibler)  {
+                auto    futures =
+                    ThreadGranularity::thr_pool_.parallel_loop(
+                        size_type(0),
+                        col_s,
+                        [&actual_begin, &model_begin]
+                        (auto begin, auto end) -> value_type  {
+                            value_type  sum { 0 };
+
+                            for (size_type i = begin; i < end; ++i)  {
+                                const value_type    a = *(actual_begin + i);
+                                const value_type    m = *(model_begin + i);
+
+                                sum += a * std::log(a / m);
+                            }
+                            return (sum);
+                        });
+
+                for (auto &fut : futures)  result_ += fut.get();
+            }
+            else if (lft_ == loss_function_type::mean_abs_error)  {
+                auto    futures =
+                    ThreadGranularity::thr_pool_.parallel_loop(
+                        size_type(0),
+                        col_s,
+                        [&actual_begin, &model_begin]
+                        (auto begin, auto end) -> value_type  {
+                            value_type  sum { 0 };
+
+                            for (size_type i = begin; i < end; ++i)  {
+                                const value_type    a = *(actual_begin + i);
+                                const value_type    m = *(model_begin + i);
+
+                                sum += std::fabs(a - m);
+                            }
+                            return (sum);
+                        });
+
+                for (auto &fut : futures)  result_ += fut.get();
+                result_ /= col_s;
+            }
+            else if (lft_ == loss_function_type::mean_sqr_error)  {
+                auto    futures =
+                    ThreadGranularity::thr_pool_.parallel_loop(
+                        size_type(0),
+                        col_s,
+                        [&actual_begin, &model_begin]
+                        (auto begin, auto end) -> value_type  {
+                            value_type  sum { 0 };
+
+                            for (size_type i = begin; i < end; ++i)  {
+                                const value_type    val =
+                                    *(actual_begin + i) - *(model_begin + i);
+
+                                sum += val * val;
+                            }
+                            return (sum);
+                        });
+
+                for (auto &fut : futures)  result_ += fut.get();
+                result_ /= col_s;
+            }
+            else if (lft_ == loss_function_type::mean_sqr_log_error)  {
+                auto    futures =
+                    ThreadGranularity::thr_pool_.parallel_loop(
+                        size_type(0),
+                        col_s,
+                        [&actual_begin, &model_begin]
+                        (auto begin, auto end) -> value_type  {
+                            value_type  sum { 0 };
+
+                            for (size_type i = begin; i < end; ++i)  {
+                                const value_type    val =
+                                    std::log(T(1) + *(actual_begin + i)) -
+                                    std::log(T(1) + *(model_begin + i));
+
+                                sum += val * val;
+                            }
+                            return (sum);
+                        });
+
+                for (auto &fut : futures)  result_ += fut.get();
+                result_ /= col_s;
+            }
+            else if (lft_ == loss_function_type::cross_entropy)  {
+                auto    futures =
+                    ThreadGranularity::thr_pool_.parallel_loop(
+                        size_type(0),
+                        col_s,
+                        [&actual_begin, &model_begin]
+                        (auto begin, auto end) -> value_type  {
+                            value_type  sum { 0 };
+
+                            for (size_type i = begin; i < end; ++i)  {
+                                const value_type    a = *(actual_begin + i);
+                                const value_type    m = *(model_begin + i);
+
+                                sum += a * std::log(m);
+                            }
+                            return (sum);
+                        });
+
+                for (auto &fut : futures)  result_ += fut.get();
+                result_ = -(result_ / col_s);
+            }
+            else if (lft_ == loss_function_type::binary_cross_entropy)  {
+                auto    futures =
+                    ThreadGranularity::thr_pool_.parallel_loop(
+                        size_type(0),
+                        col_s,
+                        [&actual_begin, &model_begin]
+                        (auto begin, auto end) -> value_type  {
+                            value_type  sum { 0 };
+
+                            for (size_type i = begin; i < end; ++i)  {
+                                const value_type    a = *(actual_begin + i);
+                                const value_type    m = *(model_begin + i);
+
+                                sum += -(a * std::log(m)) +
+                                       (1 - a) * std::log(1 - m);
+                            }
+                            return (sum);
+                        });
+
+                for (auto &fut : futures)  result_ += fut.get();
+                result_ /= col_s;
+            }
+            else if (lft_ == loss_function_type::categorical_hinge)  {
+                auto        futures =
+                    ThreadGranularity::thr_pool_.parallel_loop(
+                        size_type(0),
+                        col_s,
+                        [&actual_begin, &model_begin]
+                        (auto begin, auto end) -> value_type  {
+                            value_type  sum { 0 };
+
+                            for (size_type i = begin; i < end; ++i)  {
+                                const value_type    a = *(actual_begin + i);
+                                const value_type    m = *(model_begin + i);
+
+                                sum += (T(1) - a) * m;
+                            }
+                            return (sum);
+                        });
+                value_type  neg { 0 };
+
+                for (auto &fut : futures)  neg += fut.get();
+                futures =
+                    ThreadGranularity::thr_pool_.parallel_loop(
+                        size_type(0),
+                        col_s,
+                        [&actual_begin, &model_begin]
+                        (auto begin, auto end) -> value_type  {
+                            value_type  sum { 0 };
+
+                            for (size_type i = begin; i < end; ++i)  {
+                                const value_type    a = *(actual_begin + i);
+                                const value_type    m = *(model_begin + i);
+
+                                sum += a * m;
+                            }
+                            return (sum);
+                        });
+
+                value_type  pos { 0 };
+
+                for (auto &fut : futures)  pos += fut.get();
+                result_ = std::max(neg - pos + T(1), T(0));;
+            }
+            else if (lft_ == loss_function_type::log_cosh)  {
+                auto    futures =
+                    ThreadGranularity::thr_pool_.parallel_loop(
+                        size_type(0),
+                        col_s,
+                        [&actual_begin, &model_begin]
+                        (auto begin, auto end) -> value_type  {
+                            value_type  sum { 0 };
+
+                            for (size_type i = begin; i < end; ++i)  {
+                                const value_type    a = *(actual_begin + i);
+                                const value_type    m = *(model_begin + i);
+
+                                sum += std::log(std::cosh(m - a));
+                            }
+                            return (sum);
+                        });
+
+                for (auto &fut : futures)  result_ += fut.get();
+                result_ /= col_s;
+            }
+        }
+        else  {
+            if (lft_ == loss_function_type::kullback_leibler)  {
+                result_ =
+                    std::transform_reduce(actual_begin, actual_end,
+                                          model_begin, T(0), std::plus { },
+                                          [](const T &a, const T &m) -> T  {
+                                              return (a * std::log(a / m));
+                                          });
+            }
+            else if (lft_ == loss_function_type::mean_abs_error)  {
+                result_ =
+                    std::transform_reduce(actual_begin, actual_end,
+                                          model_begin, T(0), std::plus { },
+                                          [](const T &a, const T &m) -> T {
+                                              return (std::fabs(a - m));
+                                          });
+                result_ /= col_s;
+            }
+            else if (lft_ == loss_function_type::mean_sqr_error)  {
+                result_ =
+                    std::transform_reduce(actual_begin, actual_end,
+                                          model_begin, T(0), std::plus { },
+                                          [](const T &a, const T &m) -> T  {
+                                              const T   val = a - m;
+
+                                              return (val * val);
+                                          });
+                result_ /= col_s;
+            }
+            else if (lft_ == loss_function_type::mean_sqr_log_error)  {
+                result_ =
+                    std::transform_reduce(actual_begin, actual_end,
+                                          model_begin, T(0), std::plus { },
+                                          [](const T &a, const T &m) -> T  {
+                                              const T   val =
+                                                  std::log(T(1) + a) -
+                                                  std::log(T(1) + m);
+
+                                              return (val * val);
+                                          });
+                result_ /= col_s;
+            }
+            else if (lft_ == loss_function_type::cross_entropy)  {
+                result_ =
+                    std::transform_reduce(actual_begin, actual_end,
+                                          model_begin, T(0), std::plus { },
+                                          [](const T &a, const T &m) -> T  {
+                                              return (a * std::log(m));
+                                          });
+                result_ = -(result_ / col_s);
+            }
+            else if (lft_ == loss_function_type::binary_cross_entropy)  {
+                result_ =
+                    std::transform_reduce(actual_begin, actual_end,
+                                          model_begin, T(0), std::plus { },
+                                          [](const T &a, const T &m) -> T  {
+                                              return (
+                                                  -(a * std::log(m)) +
+                                                  (1 - a) * std::log(1 - m));
+                                          });
+                result_ /= col_s;
+            }
+            else if (lft_ == loss_function_type::categorical_hinge)  {
+                const result_type   neg =
+                    std::transform_reduce(actual_begin, actual_end,
+                                          model_begin, T(0), std::plus { },
+                                          [](const T &a, const T &m) -> T  {
+                                              return ((T(1) - a) * m);
+                                          });
+                const result_type   pos =
+                    std::transform_reduce(actual_begin, actual_end,
+                                          model_begin, T(0), std::plus { },
+                                          [](const T &a, const T &m) -> T  {
+                                              return (a * m);
+                                          });
+
+                result_ = std::max(neg - pos + T(1), T(0));;
+            }
+            else if (lft_ == loss_function_type::log_cosh)  {
+                result_ =
+                    std::transform_reduce(actual_begin, actual_end,
+                                          model_begin, T(0), std::plus { },
+                                          [](const T &a, const T &m) -> T  {
+                                              return (
+                                                  std::log(std::cosh(m - a)));
+                                          });
+                result_ /= col_s;
+            }
         }
     }
 
@@ -1924,7 +2150,7 @@ using loss_v = LossFunctionVisitor<T, I>;
 
 } // namespace hmdf
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 // Local Variables:
 // mode:C++

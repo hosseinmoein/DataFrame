@@ -43,6 +43,7 @@ add_executable(dataframe_tester_3 dataframe_tester_3.cc)
 target_link_libraries(dataframe_tester_3 PRIVATE DataFrame)
 target_compile_options(dataframe_tester_3
     PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/bigobj>
+)
 add_test(NAME dataframe_tester_3 COMMAND dataframe_tester_3)
 hmdf_target_data_files(dataframe_tester_3
     DATA_FILES
@@ -59,6 +60,7 @@ add_executable(vectors_tester vectors_tester.cc)
 target_link_libraries(vectors_tester PRIVATE DataFrame)
 target_compile_options(vectors_tester
     PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/bigobj>
+)
 add_test(NAME vectors_tester COMMAND vectors_tester)
 if(MSVC)
     # For some unknown reason to me, this test sigfaults in AppVeyor

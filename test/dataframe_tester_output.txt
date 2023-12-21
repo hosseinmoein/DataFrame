@@ -1999,3 +1999,28 @@ Testing PriceVolumeTrendVisitor{  } ...
 Testing QuantQualEstimationVisitor{  } ...
 
 Testing get_str_col_stats(  ) ...
+Hello World!
+Str Column = A, B, C, D, E, F, G, H, I, J, 
+There are 5031 IBM close prices
+There are 5031 IBM indices
+INDEX:10:<ulong>,string col:10:<string>,Cool Column:10:<string>,numbers:10:<double>
+1,A,Azadi,1.1
+2,B,Hello,1.2
+3,C, World,1.3
+4,D,!,1.4
+5,E,Hype,1.5
+6,F,cubic spline,1.6
+7,G,Shawshank,1.7
+8,H,Silverado,1.8
+9,I,Arash,1.9
+10,J,Pardis,2
+
+Standard deviation of IBM close prices: 38.3090214006
+Correlation between AAPL and IBM close prices: 0.390679511924
+The last exponentailly weighted correlation between AAPL and IBM close prices: -0.276248958749
+Means of clusters are: 0.00645233358656, 0.0320415768836, -0.038276529169, -0.0076532320847, 
+IBM returns 50% quantile: 0.000224447189179, 75% quantile: 0.00742387474272, 95% quantile: 0.0229862030163
+The seasonality of IBM returns is 59 days.
+So use this instead of 170 days in decomposition analysis
+Auto correlations of 170 days lag: 0.236070931014, -0.121015633837, 0.0464307990427, -0.0359793785314, 0.151526132376, -0.0345951524195, -0.148550119041, 0.0423553428149, -0.0462490105059, 
+Auto correlations of 59 days lag: 0.0144756496869, 0.120904938677, -0.040095547295, 0.0583500943114, -0.257693985614, -0.0399080542821, 0.0901183894223, -0.362114582068, -0.0784921093017, 

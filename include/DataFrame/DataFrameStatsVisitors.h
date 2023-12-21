@@ -2459,7 +2459,8 @@ struct  ExponentiallyWeightedMeanVisitor  {
                            [decay_comp_prod,
                             decay_comp,
                             denominator,
-                            numerator](const auto &val) mutable -> value_type  {
+                            numerator]
+                           (const auto &val) mutable -> value_type  {
                                 if (! is_nan__(val)) [[likely]]  {
                                     decay_comp_prod *= decay_comp;
                                     denominator += decay_comp_prod;

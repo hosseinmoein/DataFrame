@@ -2456,10 +2456,10 @@ struct  ExponentiallyWeightedMeanVisitor  {
 
             std::transform(column_begin + (starting + 1), column_end,
                            result.begin() + (starting + 1),
-                           [decay_comp_prod,
+                           [&decay_comp_prod,
                             decay_comp,
-                            denominator,
-                            numerator]
+                            &denominator,
+                            &numerator]
                            (const auto &val) mutable -> value_type  {
                                 if (! is_nan__(val)) [[likely]]  {
                                     decay_comp_prod *= decay_comp;

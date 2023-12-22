@@ -1808,13 +1808,30 @@ struct  MassIndexVisitor  {
             else [[likely]]  break;
         }
 
-        std::transform(fast_roller.get_result().begin(),
-                       fast_roller.get_result().begin() + col_s,
-                       result.begin(),
-                       result.begin(),
-                       [](const auto &fr, const auto &r) -> value_type  {
-                           return (r / fr);
-                       });
+        if (ThreadGranularity::get_thread_level() > 2 &&
+            col_s >= ThreadPool::MUL_THR_THHOLD)  {
+            auto    futures =
+                ThreadGranularity::thr_pool_.parallel_loop(
+                    size_type(0),
+                    col_s,
+                    [&fast_roller = std::as_const(fast_roller.get_result()),
+                     &result]
+                    (auto begin, auto end) mutable -> void  {
+                        for (size_type i = begin; i < end; ++i) [[likely]]
+                            result[i] /= fast_roller[i];
+                    });
+
+            for (auto &fut : futures)  fut.get();
+        }
+        else  {
+            std::transform(fast_roller.get_result().begin(),
+                           fast_roller.get_result().begin() + col_s,
+                           result.begin(),
+                           result.begin(),
+                           [](const auto &fr, const auto &r) -> value_type  {
+                               return (r / fr);
+                           });
+        }
 
         srs_t   slow_roller { std::move(SumVisitor<T, I>()), slow_ };
 
@@ -1864,27 +1881,69 @@ struct  HullRollingMeanVisitor  {
 
         GET_COL_SIZE
 
+        const auto  thread_level = ThreadGranularity::get_thread_level();
+
         wma_t   wma_half { WeightedMeanVisitor<T, I>(), roll_count_ / 2 };
-
-        wma_half.pre();
-        wma_half (idx_begin, idx_end, column_begin, column_end);
-        wma_half.post();
-
         wma_t   wma_full { WeightedMeanVisitor<T, I>(), roll_count_ };
 
+        wma_half.pre();
         wma_full.pre();
-        wma_full (idx_begin, idx_end, column_begin, column_end);
+        if (thread_level > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
+            auto    fut1 =
+                ThreadGranularity::thr_pool_.dispatch(
+                    false,
+                    [&wma_half,
+                     &idx_begin, &idx_end,
+                     &column_begin, &column_end]() -> void  {
+                        wma_half(idx_begin, idx_end, column_begin, column_end);
+                    });
+            auto    fut2 =
+                ThreadGranularity::thr_pool_.dispatch(
+                    false,
+                    [&wma_full,
+                     &idx_begin, &idx_end,
+                     &column_begin, &column_end]() -> void  {
+                        wma_full(idx_begin, idx_end, column_begin, column_end);
+                    });
+
+            fut1.get();
+            fut2.get();
+        }
+        else  {
+            wma_half (idx_begin, idx_end, column_begin, column_end);
+            wma_full (idx_begin, idx_end, column_begin, column_end);
+        }
         wma_full.post();
+        wma_half.post();
 
         result_type result { std::move(wma_half.get_result()) };
 
-        std::transform(wma_full.get_result().begin(),
-                       wma_full.get_result().begin() + (col_s - 1),
-                       result.begin(),
-                       result.begin(),
-                       [](const auto &wf, const auto &r) -> value_type  {
-                           return (T(2) * r - wf);
-                       });
+        if (thread_level > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
+            auto    futures =
+                ThreadGranularity::thr_pool_.parallel_loop(
+                    size_type(0),
+                    col_s - 1,
+                    [&wma_full = std::as_const(wma_full.get_result()),
+                     &result]
+                    (auto begin, auto end) mutable -> void  {
+                        for (size_type i = begin; i < end; ++i) [[likely]]  {
+                            value_type  &r = result[i];
+
+                            r = T(2) * r - wma_full[i];
+                        }
+                    });
+
+            for (auto &fut : futures)  fut.get();
+        }
+        else  {
+            std::transform(wma_full.get_result().begin(),
+                           wma_full.get_result().begin() + (col_s - 1),
+                           result.begin(),
+                           result.begin(),
+                           [](const auto &wf, const auto &r) -> value_type  {
+                               return (T(2) * r - wf);
+                           });
+        }
 
         wma_t   wma_sqrt { WeightedMeanVisitor<T, I>(),
                            size_type(std::sqrt(roll_count_)) };
@@ -2010,16 +2069,44 @@ struct  DrawdownVisitor  {
         const auto              &cm_result { cm_v.get_result() };
         constexpr value_type    one { 1 };
 
-        drawdown_.reserve(col_s);
-        pct_drawdown_.reserve(col_s);
-        log_drawdown_.reserve(col_s);
-        for (size_type i { 0 }; i < col_s; ++i) [[likely]]  {
-            const value_type    col_val { *(column_begin + i) };
-            const value_type    cm_val { cm_result[i] };
+        if (ThreadGranularity::get_thread_level() > 2 &&
+            col_s >= ThreadPool::MUL_THR_THHOLD)  {
+            drawdown_.resize(col_s);
+            pct_drawdown_.resize(col_s);
+            log_drawdown_.resize(col_s);
 
-            drawdown_.push_back(cm_val - col_val);
-            pct_drawdown_.push_back(one - col_val / cm_val);
-            log_drawdown_.push_back(std::log(cm_val / col_val));
+            auto    futures =
+                ThreadGranularity::thr_pool_.parallel_loop(
+                    size_type(0),
+                    col_s,
+                    [&column_begin,
+                     &cm_result = std::as_const(cm_result), this]
+                    (auto begin, auto end) mutable -> void  {
+                        for (size_type i = begin; i < end; ++i) [[likely]]  {
+                            const value_type   col_val { *(column_begin + i) };
+                            const value_type   cm_val { cm_result[i] };
+
+                            this->drawdown_[i] = cm_val - col_val;
+                            this->pct_drawdown_[i] = one - col_val / cm_val;
+                            this->log_drawdown_[i] =
+                                std::log(cm_val / col_val);
+                        }
+                    });
+
+            for (auto &fut : futures)  fut.get();
+        }
+        else  {
+            drawdown_.reserve(col_s);
+            pct_drawdown_.reserve(col_s);
+            log_drawdown_.reserve(col_s);
+            for (size_type i { 0 }; i < col_s; ++i) [[likely]]  {
+                const value_type    col_val { *(column_begin + i) };
+                const value_type    cm_val { cm_result[i] };
+
+                drawdown_.push_back(cm_val - col_val);
+                pct_drawdown_.push_back(one - col_val / cm_val);
+                log_drawdown_.push_back(std::log(cm_val / col_val));
+            }
         }
     }
 
@@ -2065,34 +2152,80 @@ struct  WilliamPrcRVisitor  {
         if (roll_count_ == 0)  return;
 
         const size_type col_s = std::distance(close_begin, close_end);
+        const auto      thread_level = ThreadGranularity::get_thread_level();
 
         assert((col_s == size_type(std::distance(low_begin, low_end))));
         assert((col_s == size_type(std::distance(high_begin, high_end))));
 
         SimpleRollAdopter<MinVisitor<T, I>, T, I, A>   min_v {
             MinVisitor<T, I>(), roll_count_ };
-
-        min_v.pre();
-        min_v (idx_begin, idx_end, low_begin, low_end);
-        min_v.post();
-
         SimpleRollAdopter<MaxVisitor<T, I>, T, I, A>   max_v {
             MaxVisitor<T, I>(), roll_count_ };
 
+        min_v.pre();
         max_v.pre();
-        max_v (idx_begin, idx_end, high_begin, high_end);
+        if (thread_level > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
+            auto    fut1 =
+                ThreadGranularity::thr_pool_.dispatch(
+                    false,
+                    [&min_v,
+                     &idx_begin, &idx_end,
+                     &low_begin, &low_end]() -> void  {
+                        min_v(idx_begin, idx_end, low_begin, low_end);
+                    });
+            auto    fut2 =
+                ThreadGranularity::thr_pool_.dispatch(
+                    false,
+                    [&max_v,
+                     &idx_begin, &idx_end,
+                     &high_begin, &high_end]() -> void  {
+                        max_v(idx_begin, idx_end, high_begin, high_end);
+                    });
+
+            fut1.get();
+            fut2.get();
+        }
+        else  {
+            min_v (idx_begin, idx_end, low_begin, low_end);
+            max_v (idx_begin, idx_end, high_begin, high_end);
+        }
+        min_v.post();
         max_v.post();
 
         result_type result { std::move(max_v.get_result()) };
 
-        for_each_list3(min_v.get_result().begin(), min_v.get_result().end(),
-                       result.begin(), result.end(),
-                       close_begin, close_end,
-                       [](const auto &low,
-                          auto &res,
-                          const auto &close) -> void  {
-                           res = T(100) * ((close - low) / (res - low) - T(1));
-                       });
+        if (thread_level > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
+            auto    futures =
+                ThreadGranularity::thr_pool_.parallel_loop(
+                    size_type(0),
+                    col_s,
+                    [&min_v = std::as_const(min_v.get_result()),
+                     &result, &close_begin]
+                    (auto begin, auto end) mutable -> void  {
+                        for (size_type i = begin; i < end; ++i) [[likely]]  {
+                            const value_type    low = min_v[i];
+                            value_type          &res = result[i];
+
+                            res = T(100) *
+                                  ((*(close_begin + i) - low) /
+                                   (res - low) - T(1));
+                        }
+                    });
+
+            for (auto &fut : futures)  fut.get();
+        }
+        else  {
+            for_each_list3(min_v.get_result().begin(),
+                           min_v.get_result().end(),
+                           result.begin(), result.end(),
+                           close_begin, close_end,
+                           [](const auto &low,
+                              auto &res,
+                              const auto &close) -> void  {
+                               res = T(100) *
+                                     ((close - low) / (res - low) - T(1));
+                           });
+        }
 
         result_.swap(result);
     }
@@ -2128,11 +2261,35 @@ struct  PSLVisitor  {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
-        result_.reserve(col_s);
-        result_.push_back(0);
-        for (size_type i { 1 }; i < col_s; ++i) [[likely]]
-            result_.push_back(
-                (*(close_begin + i) - *(close_begin + (i - 1)) > 0) ? 1 : 0);
+        if (thread_level_ > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
+            result_.resize(col_s);
+            result_[0] = 0;
+
+            auto    futures =
+                ThreadGranularity::thr_pool_.parallel_loop(
+                    size_type(1),
+                    col_s,
+                    [&close_begin, this]
+                    (auto begin, auto end) mutable -> void  {
+                        for (size_type i = begin; i < end; ++i) [[likely]]  {
+                            const value_type    ct = *(close_begin + i);
+                            const value_type    ct_1 =
+                                *(close_begin + (i - 1));
+
+                            this->result_[i] = ((ct - ct_1) > 0) ? 1 : 0;
+                        }
+                    });
+
+            for (auto &fut : futures)  fut.get();
+        }
+        else  {
+            result_.reserve(col_s);
+            result_.push_back(0);
+            for (size_type i { 1 }; i < col_s; ++i) [[likely]]
+                result_.push_back(
+                    (*(close_begin + i) - *(close_begin + (i - 1)) > 0)
+                    ? 1 : 0);
+        }
         calculate_(idx_begin, idx_end);
     }
 
@@ -2146,13 +2303,34 @@ struct  PSLVisitor  {
 
         assert((col_s == size_type(std::distance(open_begin, open_end))));
 
-        result_.reserve(col_s);
-        std::transform(close_begin, close_begin + col_s,
-                       open_begin,
-                       std::back_inserter(result_),
-                       [](const auto &c, const auto &o) -> value_type  {
-                           return (((c - o) > 0) ? 1 : 0);
-                       });
+        if (thread_level_ > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
+            result_.resize(col_s);
+
+            auto    futures =
+                ThreadGranularity::thr_pool_.parallel_loop(
+                    size_type(0),
+                    col_s,
+                    [&close_begin, &open_begin, this]
+                    (auto begin, auto end) mutable -> void  {
+                        for (size_type i = begin; i < end; ++i) [[likely]]  {
+                            const value_type    c = *(close_begin + i);
+                            const value_type    o = *(open_begin + i);
+
+                            this->result_[i] = ((c - o) > 0) ? 1 : 0;
+                        }
+                    });
+
+            for (auto &fut : futures)  fut.get();
+        }
+        else  {
+            result_.reserve(col_s);
+            std::transform(close_begin, close_begin + col_s,
+                           open_begin,
+                           std::back_inserter(result_),
+                           [](const auto &c, const auto &o) -> value_type  {
+                               return (((c - o) > 0) ? 1 : 0);
+                           });
+        }
         calculate_(idx_begin, idx_end);
     }
 
@@ -2160,7 +2338,9 @@ struct  PSLVisitor  {
     DEFINE_RESULT
 
     explicit
-    PSLVisitor(size_type r_count = 14) : roll_count_(r_count)  {   }
+    PSLVisitor(size_type r_count = 14)
+        : roll_count_(r_count),
+          thread_level_(ThreadGranularity::get_thread_level())  {   }
 
 private:
 
@@ -2176,15 +2356,32 @@ private:
 
         const size_type col_s { result_.size() };
 
-        std::transform(sum_r.get_result().begin(),
-                       sum_r.get_result().begin() + col_s,
-                       result_.begin(),
-                       [this](const auto &s) -> value_type  {
-                           return (s * T(100) / T(this->roll_count_));
-                       });
+        if (thread_level_ > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
+            auto    futures =
+                ThreadGranularity::thr_pool_.parallel_loop(
+                    size_type(0),
+                    col_s,
+                    [this, &sum_r = std::as_const(sum_r.get_result())]
+                    (auto begin, auto end) mutable -> void  {
+                        for (size_type i = begin; i < end; ++i) [[likely]]
+                            this->result_[i] =
+                               sum_r[i] * T(100) / T(this->roll_count_);
+                    });
+
+            for (auto &fut : futures)  fut.get();
+        }
+        else  {
+            std::transform(sum_r.get_result().begin(),
+                           sum_r.get_result().begin() + col_s,
+                           result_.begin(),
+                           [this](const auto &s) -> value_type  {
+                               return (s * T(100) / T(this->roll_count_));
+                           });
+        }
     }
 
     const size_type roll_count_;
+    const long      thread_level_;
     result_type     result_ { };
 };
 

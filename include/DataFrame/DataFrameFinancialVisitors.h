@@ -4032,6 +4032,7 @@ struct  VarIdxDynAvgVisitor  {
                         }
                     });
 
+            for (auto &fut : futures)  fut.get();
         }
         else  {
             std::transform(positive.begin() + roll_period_,
@@ -4103,6 +4104,9 @@ struct  PivotPointSRVisitor  {
         assert((col_s == size_type(std::distance(low_begin, low_end))));
         assert((col_s == size_type(std::distance(high_begin, high_end))));
 
+        const auto  thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
+            ? 0L : ThreadGranularity::get_thread_level();
+
         constexpr value_type two = 2;
 
         result_type pivot_point(col_s, std::numeric_limits<T>::quiet_NaN());
@@ -4113,19 +4117,49 @@ struct  PivotPointSRVisitor  {
         result_type support_2(col_s, std::numeric_limits<T>::quiet_NaN());
         result_type support_3(col_s, std::numeric_limits<T>::quiet_NaN());
 
-        for (size_type i { 0 }; i < col_s; ++i) [[likely]]  {
-            const value_type    low { *(low_begin + i) };
-            const value_type    high { *(high_begin + i) };
-            const value_type    pp {
-                (low + high + *(close_begin + i)) / T(3) };
+        if (thread_level > 2)  {
+            auto    futures =
+                ThreadGranularity::thr_pool_.parallel_loop(
+                    size_type(0),
+                    col_s,
+                    [&close_begin, &low_begin, &high_begin,
+                     &pivot_point,
+                     &resist_1, &resist_2, &resist_3,
+                     &support_1, &support_2, &support_3]
+                    (auto begin, auto end) -> void  {
+                        for (size_type i = begin; i < end; ++i) [[likely]]  {
+                            const value_type    low { *(low_begin + i) };
+                            const value_type    high { *(high_begin + i) };
+                            const value_type    pp {
+                                (low + high + *(close_begin + i)) / T(3) };
 
-            pivot_point[i] = pp;
-            resist_1[i] = two * pp - low;
-            support_1[i] = two * pp - high;
-            resist_2[i] = pp + high - low;
-            support_2[i] = pp - high + low;
-            resist_3[i] = high + two * (pp - low);
-            support_3[i] = low - two * (high - pp);
+                            pivot_point[i] = pp;
+                            resist_1[i] = two * pp - low;
+                            support_1[i] = two * pp - high;
+                            resist_2[i] = pp + high - low;
+                            support_2[i] = pp - high + low;
+                            resist_3[i] = high + two * (pp - low);
+                            support_3[i] = low - two * (high - pp);
+                        }
+                    });
+
+            for (auto &fut : futures)  fut.get();
+        }
+        else  {
+            for (size_type i { 0 }; i < col_s; ++i) [[likely]]  {
+                const value_type    low { *(low_begin + i) };
+                const value_type    high { *(high_begin + i) };
+                const value_type    pp {
+                    (low + high + *(close_begin + i)) / T(3) };
+
+                pivot_point[i] = pp;
+                resist_1[i] = two * pp - low;
+                support_1[i] = two * pp - high;
+                resist_2[i] = pp + high - low;
+                support_2[i] = pp - high + low;
+                resist_3[i] = high + two * (pp - low);
+                support_3[i] = low - two * (high - pp);
+            }
         }
 
         result_.swap(pivot_point);
@@ -4207,23 +4241,64 @@ struct  AvgDirMovIdxVisitor  {
         assert((col_s == size_type(std::distance(low_begin, low_end))));
         assert((col_s == size_type(std::distance(high_begin, high_end))));
 
+        const auto  thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
+            ? 0L : ThreadGranularity::get_thread_level();
         result_type pos_di(col_s);
         result_type neg_di(col_s);
         result_type true_range(col_s);
-        result_type result(col_s);
 
-        for (size_type i { 0 }; i < col_s - 1; ++i) [[likely]]  {
-            const value_type    nxt_h { *(high_begin + (i + 1)) };
-            const value_type    nxt_l { *(low_begin + (i + 1)) };
-            const value_type    pos_move { nxt_h - *(high_begin + i) };
-            const value_type    neg_move { *(low_begin + i) - nxt_l };
+        if (thread_level > 2)  {
+            auto    futures =
+                ThreadGranularity::thr_pool_.parallel_loop(
+                    size_type(0),
+                    col_s,
+                    [&close_begin, &low_begin, &high_begin,
+                     &pos_di, &neg_di, &true_range]
+                    (auto begin, auto end) -> void  {
+                        for (size_type i = begin; i < end; ++i) [[likely]]  {
+                            const value_type    nxt_h {
+                                *(high_begin + (i + 1)) };
+                            const value_type    nxt_l {
+                                *(low_begin + (i + 1)) };
+                            const value_type    pos_move {
+                                nxt_h - *(high_begin + i) };
+                            const value_type    neg_move {
+                                *(low_begin + i) - nxt_l };
 
-            pos_di[i] = (pos_move > neg_move && pos_move > 0) ? pos_move : 0;
-            neg_di[i] = (neg_move > pos_move && neg_move > 0) ? neg_move : 0;
+                            pos_di[i] =
+                                (pos_move > neg_move && pos_move > 0)
+                                    ? pos_move : 0;
+                            neg_di[i] =
+                                (neg_move > pos_move && neg_move > 0)
+                                    ? neg_move : 0;
 
-            const value_type    close { *(close_begin + i) };
+                            const value_type    close { *(close_begin + i) };
 
-            true_range[i] = std::max(nxt_h, close) - std::min(nxt_l, close);
+                            true_range[i] =
+                                std::max(nxt_h, close) -
+                                std::min(nxt_l, close);
+                        }
+                    });
+
+            for (auto &fut : futures)  fut.get();
+        }
+        else  {
+            for (size_type i { 0 }; i < col_s - 1; ++i) [[likely]]  {
+                const value_type    nxt_h { *(high_begin + (i + 1)) };
+                const value_type    nxt_l { *(low_begin + (i + 1)) };
+                const value_type    pos_move { nxt_h - *(high_begin + i) };
+                const value_type    neg_move { *(low_begin + i) - nxt_l };
+
+                pos_di[i] =
+                    (pos_move > neg_move && pos_move > 0) ? pos_move : 0;
+                neg_di[i] =
+                    (neg_move > pos_move && neg_move > 0) ? neg_move : 0;
+
+                const value_type    close { *(close_begin + i) };
+
+                true_range[i] =
+                    std::max(nxt_h, close) - std::min(nxt_l, close);
+            }
         }
 
         ewm_v<double, I, A> ewm(exponential_decay_spec::span,
@@ -4484,15 +4559,42 @@ struct  CenterOfGravityVisitor  {
         GET_COL_SIZE2
         assert (col_s > roll_count_);
 
+        const auto  thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
+            ? 0L : ThreadGranularity::get_thread_level();
         result_type result (col_s, std::numeric_limits<T>::quiet_NaN());
 
-        for (size_type i { roll_count_ - 1 }; i < col_s; ++i) [[likely]]  {
-            size_type   count { 0 };
-            value_type  dot_prd { 0 };
+        if (thread_level > 2)  {
+            auto    futures =
+                ThreadGranularity::thr_pool_.parallel_loop(
+                    roll_count_ - 1,
+                    col_s,
+                    [this, &column_begin, &result]
+                    (auto begin, auto end) -> void  {
+                        for (size_type i = begin; i < end; ++i) [[likely]]  {
+                            size_type   count { 0 };
+                            value_type  dot_prd { 0 };
 
-            for (size_type j { (i + 1) - roll_count_ }; j <= i; ++j, ++count)
-                dot_prd += *(column_begin + j) * (roll_count_ - count);
-            result[i] = dot_prd;
+                            for (size_type j { (i + 1) - this->roll_count_ };
+                                 j <= i;
+                                 ++j, ++count)
+                                dot_prd += *(column_begin + j) *
+                                           T(this->roll_count_ - count);
+                            result[i] = dot_prd;
+                        }
+                    });
+
+            for (auto &fut : futures)  fut.get();
+        }
+        else  {
+            for (size_type i { roll_count_ - 1 }; i < col_s; ++i) [[likely]]  {
+                size_type   count { 0 };
+                value_type  dot_prd { 0 };
+
+                for (size_type j { (i + 1) - roll_count_ }; j <= i;
+                     ++j, ++count)
+                    dot_prd += *(column_begin + j) * T(roll_count_ - count);
+                result[i] = dot_prd;
+            }
         }
 
         SimpleRollAdopter<SumVisitor<T, I>, T, I, A>    sum_v
@@ -4502,13 +4604,28 @@ struct  CenterOfGravityVisitor  {
         sum_v (idx_begin, idx_end, column_begin, column_end);
         sum_v.post();
 
-        std::transform(sum_v.get_result().begin(),
-                       sum_v.get_result().begin() + col_s,
-                       result.begin(),
-                       result.begin(),
-                       [](const auto &s, const auto &r) -> value_type  {
-                           return (r / -s);
-                       });
+        if (thread_level > 2)  {
+            auto    futures =
+                ThreadGranularity::thr_pool_.parallel_loop(
+                    size_type(0),
+                    col_s,
+                    [&sum_v = std::as_const(sum_v.get_result()), &result]
+                    (auto begin, auto end) -> void  {
+                        for (size_type i = begin; i < end; ++i) [[likely]]
+                            result[i] /= -sum_v[i];
+                    });
+
+            for (auto &fut : futures)  fut.get();
+        }
+        else  {
+            std::transform(sum_v.get_result().begin(),
+                           sum_v.get_result().begin() + col_s,
+                           result.begin(),
+                           result.begin(),
+                           [](const auto &s, const auto &r) -> value_type  {
+                               return (r / -s);
+                           });
+        }
         result_.swap(result);
     }
 
@@ -4556,13 +4673,36 @@ struct  ArnaudLegouxMAVisitor  {
 
         result_type result (col_s, std::numeric_limits<T>::quiet_NaN());
 
-        for (size_type i { roll_count_ }; i < col_s; ++i) [[likely]]  {
-            value_type  win_sum { 0 };
+        if (col_s >= ThreadPool::MUL_THR_THHOLD &&
+            ThreadGranularity::get_thread_level() > 2)  {
+            auto    futures =
+                ThreadGranularity::thr_pool_.parallel_loop(
+                    roll_count_,
+                    col_s,
+                    [this, &column_begin, &result]
+                    (auto begin, auto end) -> void  {
+                        for (size_type i = begin; i < end; ++i) [[likely]]  {
+                            value_type  win_sum { 0 };
 
-            for (size_type j { 0 }; j < roll_count_; ++j) [[likely]]
-                win_sum += wtd_[j] * *(column_begin + (i - j));
+                            for (size_type j { 0 }; j < this->roll_count_; ++j)
+                                win_sum +=
+                                    this->wtd_[j] * *(column_begin + (i - j));
 
-            result[i] = win_sum / cum_sum_;
+                            result[i] = win_sum / this->cum_sum_;
+                        }
+                    });
+
+            for (auto &fut : futures)  fut.get();
+        }
+        else {
+            for (size_type i { roll_count_ }; i < col_s; ++i) [[likely]]  {
+                value_type  win_sum { 0 };
+
+                for (size_type j { 0 }; j < roll_count_; ++j) [[likely]]
+                    win_sum += wtd_[j] * *(column_begin + (i - j));
+
+                result[i] = win_sum / cum_sum_;
+            }
         }
 
         result_.swap(result);
@@ -4633,8 +4773,24 @@ struct  RateOfChangeVisitor  {
 
         result_type result { std::move(diff.get_result()) };
 
-        for (size_type i { period_ }; i < col_s; ++i) [[likely]]
-            result[i] /= *(column_begin + (i - period_));
+        if (col_s >= ThreadPool::MUL_THR_THHOLD &&
+            ThreadGranularity::get_thread_level() > 2)  {
+            auto    futures =
+                ThreadGranularity::thr_pool_.parallel_loop(
+                    period_,
+                    col_s,
+                    [this, &column_begin, &result]
+                    (auto begin, auto end) -> void  {
+                        for (size_type i = begin; i < end; ++i) [[likely]]
+                            result[i] /= *(column_begin + (i - this->period_));
+                    });
+
+            for (auto &fut : futures)  fut.get();
+        }
+        else  {
+            for (size_type i { period_ }; i < col_s; ++i) [[likely]]
+                result[i] /= *(column_begin + (i - period_));
+        }
         result_.swap(result);
     }
 
@@ -4689,11 +4845,37 @@ struct  AccumDistVisitor  {
 
         result_type result (col_s, std::numeric_limits<T>::quiet_NaN());
 
-        for (size_type i { 0 }; i < col_s; ++i) [[likely]]  {
-            const value_type    co { *(close_begin + i) - *(open_begin + i) };
-            const value_type    hl { *(high_begin + i) - *(low_begin + i) };
+        if (col_s >= ThreadPool::MUL_THR_THHOLD &&
+            ThreadGranularity::get_thread_level() > 2)  {
+            auto    futures =
+                ThreadGranularity::thr_pool_.parallel_loop(
+                    size_type(0),
+                    col_s,
+                    [&result,
+                     &low_begin, &high_begin, &open_begin, &close_begin,
+                     &volume_begin]
+                    (auto begin, auto end) -> void  {
+                        for (size_type i = begin; i < end; ++i) [[likely]]  {
+                            const value_type    co
+                                { *(close_begin + i) - *(open_begin + i) };
+                            const value_type    hl
+                                { *(high_begin + i) - *(low_begin + i) };
 
-            result[i] = co * T(*(volume_begin + i)) / hl;
+                            result[i] = co * T(*(volume_begin + i)) / hl;
+                        }
+                    });
+
+            for (auto &fut : futures)  fut.get();
+        }
+        else  {
+            for (size_type i { 0 }; i < col_s; ++i) [[likely]]  {
+                const value_type    co
+                    { *(close_begin + i) - *(open_begin + i) };
+                const value_type    hl
+                    { *(high_begin + i) - *(low_begin + i) };
+
+                result[i] = co * T(*(volume_begin + i)) / hl;
+            }
         }
 
         CumSumVisitor<T, I, A>  cumsum;

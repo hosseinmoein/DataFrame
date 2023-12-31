@@ -7802,10 +7802,26 @@ struct  PriceVolumeTrendVisitor  {
 
         result_type result { std::move(ret.get_result()) };
 
-        std::transform(result.begin(), result.end(),
-                       volume_begin,
-                       result.begin(),
-                       std::multiplies<T>{ });
+        if (col_s >= ThreadPool::MUL_THR_THHOLD &&
+            ThreadGranularity::get_thread_level() > 2)  {
+            auto    futures =
+                ThreadGranularity::thr_pool_.parallel_loop(
+                    size_type(0),
+                    col_s,
+                    [&result, &volume_begin]
+                    (auto begin, auto end) mutable -> void  {
+                        for (size_type i = begin; i < end; ++i) [[likely]]
+                            result[i] *= *(volume_begin + i);
+                    });
+
+            for (auto &fut : futures)  fut.get();
+        }
+        else  {
+            std::transform(result.begin(), result.end(),
+                           volume_begin,
+                           result.begin(),
+                           std::multiplies<T>{ });
+        }
 
         CumSumVisitor<T, I, A>  cumsum;
 
@@ -7885,17 +7901,37 @@ struct  QuantQualEstimationVisitor  {
 
         const size_type col_s = std::distance(price_begin, price_end);
 
-        result_type upperband;
-        result_type lowerband;
+        result_type upperband(col_s);
+        result_type lowerband(col_s);
 
-        upperband.reserve(col_s);
-        lowerband.reserve(col_s);
-        for (size_type i = 0; i < col_s; ++i)  {
-            const auto  rsi = rsi_ewm_[i];
-            const auto  dar = ewm3.get_result()[i];
+        if (col_s >= ThreadPool::MUL_THR_THHOLD &&
+            ThreadGranularity::get_thread_level() > 2)  {
+            auto    futures =
+                ThreadGranularity::thr_pool_.parallel_loop(
+                    size_type(0),
+                    col_s,
+                    [&ewm3 = std::as_const(ewm3.get_result()),
+                     &upperband, &lowerband, this]
+                    (auto begin, auto end) mutable -> void  {
+                        for (size_type i = begin; i < end; ++i) [[likely]]  {
+                            const auto  rsi = this->rsi_ewm_[i];
+                            const auto  dar = ewm3[i];
 
-            upperband.push_back(rsi + dar);
-            lowerband.push_back(rsi - dar);
+                            upperband[i] = rsi + dar;
+                            lowerband[i] = rsi - dar;
+                        }
+                    });
+
+            for (auto &fut : futures)  fut.get();
+        }
+        else  {
+            for (size_type i = 0; i < col_s; ++i)  {
+                const auto  rsi = rsi_ewm_[i];
+                const auto  dar = ewm3.get_result()[i];
+
+                upperband[i] = rsi + dar;
+                lowerband[i] = rsi - dar;
+            }
         }
 
         result_type         long_line (col_s, 0);

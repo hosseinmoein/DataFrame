@@ -68,19 +68,19 @@ The maximum dataset I could load into Polars was 300m rows per column. Any bigge
 I ran each test 4 times and took the best time. Polars numbers varied a lot from one run to another, especially calculation and selection times. C++ DataFrame numbers were significantly more consistent.
 
 ```text
-Polars:
-    Data generation/load time: 28.468640 secs
-    Calculation time:           4.876561 secs
-    Selection time:             3.876561 secs
-    Overall time:              36.876345 secs
-
 C++ DataFrame:
     Data generation/load time: 26.9459   secs
     Calculation time:           1.26015  secs
     Selection time:             0.742493 secs
     Overall time:              28.9486   secs
 
-For comparison, Pandas numbers running the same test:
+Polars:
+    Data generation/load time: 28.468640 secs
+    Calculation time:           4.876561 secs
+    Selection time:             3.876561 secs
+    Overall time:              36.876345 secs
+
+Pandas, for comparison:
     Data generation/load time: 36.678976 secs
     Calculation time:          40.326350 secs
     Selection time:             8.326350 secs

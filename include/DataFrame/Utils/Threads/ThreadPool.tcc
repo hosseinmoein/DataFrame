@@ -461,7 +461,7 @@ ThreadPool::thread_routine_(size_type local_q_idx) noexcept  {
 
         size_type   counter { 0 };
 
-        while (++counter < 20)  run_task();
+        while (++counter < 80)  run_task();
 
         WorkUnit    work_unit { };
         const auto  opt_ret = global_queue_.pop_front(true); // Wait

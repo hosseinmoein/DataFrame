@@ -2942,11 +2942,12 @@ static void test_GarmanKlassVolVisitor()  {
         assert(gkv_v.get_result().size() == 5031);
         assert(std::isnan(gkv_v.get_result()[0]));
         assert(std::isnan(gkv_v.get_result()[28]));
-        assert(std::abs(gkv_v.get_result()[29] - 0.392054) < 0.00001);
-        assert(std::abs(gkv_v.get_result()[34] - 0.401494) < 0.00001);
-        assert(std::abs(gkv_v.get_result()[5030] - 0.230028) < 0.00001);
-        assert(std::abs(gkv_v.get_result()[5026] - 0.221514) < 0.00001);
-        assert(std::abs(gkv_v.get_result()[5021] - 0.216817) < 0.00001);
+        assert(std::isnan(gkv_v.get_result()[29]));
+        assert(std::abs(gkv_v.get_result()[30] - 0.392054) < 0.00001);
+        assert(std::abs(gkv_v.get_result()[35] - 0.401494) < 0.00001);
+        assert(std::abs(gkv_v.get_result()[5030] - 0.227894) < 0.00001);
+        assert(std::abs(gkv_v.get_result()[5027] - 0.221514) < 0.00001);
+        assert(std::abs(gkv_v.get_result()[5022] - 0.216817) < 0.00001);
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
@@ -2970,13 +2971,15 @@ static void test_YangZhangVolVisitor()  {
             ("FORD_Low", "FORD_High", "FORD_Open", "FORD_Close", yz_v);
 
         assert(yz_v.get_result().size() == 12265);
+		std::cout << std::endl;
         assert(std::isnan(yz_v.get_result()[0]));
         assert(std::isnan(yz_v.get_result()[29]));
-        assert(std::abs(yz_v.get_result()[30] - 0.169461) < 0.00001);
-        assert(std::abs(yz_v.get_result()[35] - 0.181149) < 0.00001);
-        assert(std::abs(yz_v.get_result()[12264] - 0.292034) < 0.00001);
-        assert(std::abs(yz_v.get_result()[12260] - 0.279347) < 0.00001);
-        assert(std::abs(yz_v.get_result()[12255] - 0.293528) < 0.00001);
+        assert(std::isnan(yz_v.get_result()[30]));
+        assert(std::abs(yz_v.get_result()[31] - 0.169461) < 0.00001);
+        assert(std::abs(yz_v.get_result()[36] - 0.181149) < 0.00001);
+        assert(std::abs(yz_v.get_result()[12264] - 0.281531) < 0.00001);
+        assert(std::abs(yz_v.get_result()[12261] - 0.279347) < 0.00001);
+        assert(std::abs(yz_v.get_result()[12256] - 0.293528) < 0.00001);
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;

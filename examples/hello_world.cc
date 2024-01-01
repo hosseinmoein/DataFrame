@@ -73,7 +73,7 @@ int main(int, char *[])  {
     // it is recommended to call the following at the beginning of your program.
     //
     // NOTE: make sure you read and understand the Multithreading section
-    //       in the documentations.
+    //       in the documentations (threads could potentially hinder performance).
     //
     ThreadGranularity::set_optimum_thread_level();
 

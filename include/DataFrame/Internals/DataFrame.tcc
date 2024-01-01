@@ -129,9 +129,12 @@ DataFrame<I, H>::shuffle(const StlVecType<const char *> &col_names,
     std::random_device  rd;
     std::mt19937        g ((seed != seed_t(-1)) ? seed : rd());
     std::future<void>   idx_future;
+    const auto          thread_level =
+        (indices_.size() < ThreadPool::MUL_THR_THHOLD)
+            ? 0L : get_thread_level();
 
     if (also_shuffle_index)  {
-        if (get_thread_level() > 2)  {
+        if (thread_level > 2)  {
             auto    lbd = [&g, this] () -> void  {
                 std::shuffle(this->indices_.begin(), this->indices_.end(), g);
             };
@@ -160,7 +163,7 @@ DataFrame<I, H>::shuffle(const StlVecType<const char *> &col_names,
         };
     const SpinGuard             guard (lock_);
 
-    if (get_thread_level() > 2)  {
+    if (thread_level > 2)  {
         std::vector<std::future<void>>  futures;
 
         futures.reserve(col_names.size());
@@ -412,16 +415,18 @@ fill_missing(const StlVecType<const char *> &col_names,
         throw NotImplemented(buffer);
     }
 
-    const size_type                     count = col_names.size();
-    const ThreadGranularity::size_type  thread_count = get_thread_level();
-    StlVecType<std::future<void>>       futures;
+    const size_type                 count = col_names.size();
+    const auto                      thread_level =
+        (indices_.size() < ThreadPool::MUL_THR_THHOLD)
+            ? 0L : get_thread_level();
+    StlVecType<std::future<void>>   futures;
 
-    if (thread_count > 1)
+    if (thread_level > 2)
         futures.reserve(count);
     for (size_type i = 0; i < count; ++i)  {
         ColumnVecType<T>    &vec = get_column<T>(col_names[i]);
 
-        if (thread_count == 0)  {
+        if (thread_level <= 2)  {
             if (fp == fill_policy::value)
                 fill_missing_value_(vec, values[i], limit, indices_.size());
             else if (fp == fill_policy::fill_forward)
@@ -539,10 +544,12 @@ drop_missing(drop_policy policy, size_type threshold)  {
 
     DropRowMap                      missing_row_map;
     const size_type                 num_cols = data_.size();
-    const size_type                 thread_level = get_thread_level();
+    const auto                      thread_level =
+        (indices_.size() < ThreadPool::MUL_THR_THHOLD)
+            ? 0L : get_thread_level();
     std::vector<std::future<void>>  futures;
 
-    if (thread_level > 1)  futures.reserve(num_cols + 1);
+    if (thread_level > 2)  futures.reserve(num_cols + 1);
 
     map_missing_rows_functor_<Ts ...>   functor (
         indices_.size(), missing_row_map);
@@ -551,7 +558,7 @@ drop_missing(drop_policy policy, size_type threshold)  {
     for (size_type idx = 0; idx < num_cols; ++idx)
         data_[idx].change(functor);
 
-    if (thread_level > 1)
+    if (thread_level > 2)
         futures.emplace_back(
             thr_pool_.dispatch(
                 false,
@@ -688,9 +695,12 @@ void DataFrame<I, H>::shrink_to_fit ()  {
     indices_.shrink_to_fit();
 
     shrink_to_fit_functor_<Ts ...>  functor;
+    const auto                      thread_level =
+        (indices_.size() < ThreadPool::MUL_THR_THHOLD)
+            ? 0L : get_thread_level();
     const SpinGuard                 guard(lock_);
 
-    if (get_thread_level() > 2)  {
+    if (thread_level > 2)  {
         auto    lbd =
             [&functor](const auto &begin, const auto &end) -> void  {
                 for (auto citer = begin; citer < end; ++citer)
@@ -745,11 +755,13 @@ sort(const char *name, sort_spec dir, bool ignore_index)  {
 
     std::iota(sorting_idxs.begin(), sorting_idxs.end(), 0);
 
-    auto    zip = std::ranges::views::zip(*vec, sorting_idxs);
-    auto    zip_idx = std::ranges::views::zip(*vec, indices_, sorting_idxs);
+    auto        zip = std::ranges::views::zip(*vec, sorting_idxs);
+    auto        zip_idx = std::ranges::views::zip(*vec, indices_, sorting_idxs);
+    const auto  thread_level =
+        (idx_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
 
     if (dir == sort_spec::ascen)  {
-        if (get_thread_level() > 1 && idx_s > ThreadPool::MUL_THR_THHOLD)  {
+        if (thread_level > 2)  {
             if (! ignore_index)
                 thr_pool_.parallel_sort(zip_idx.begin(), zip_idx.end(), a);
             else
@@ -763,7 +775,7 @@ sort(const char *name, sort_spec dir, bool ignore_index)  {
         }
     }
     else if (dir == sort_spec::desce)  {
-        if (get_thread_level() > 1 && idx_s > ThreadPool::MUL_THR_THHOLD)  {
+        if (thread_level > 2)  {
             if (! ignore_index)
                 thr_pool_.parallel_sort(zip_idx.begin(), zip_idx.end(), d);
             else
@@ -777,7 +789,7 @@ sort(const char *name, sort_spec dir, bool ignore_index)  {
         }
     }
     else if (dir == sort_spec::abs_ascen)  {
-        if (get_thread_level() > 1 && idx_s > ThreadPool::MUL_THR_THHOLD)  {
+        if (thread_level > 2)  {
             if (! ignore_index)
                 thr_pool_.parallel_sort(zip_idx.begin(), zip_idx.end(), aa);
             else
@@ -791,7 +803,7 @@ sort(const char *name, sort_spec dir, bool ignore_index)  {
         }
     }
     else if (dir == sort_spec::abs_desce)  {
-        if (get_thread_level() > 1 && idx_s > ThreadPool::MUL_THR_THHOLD)  {
+        if (thread_level > 2)  {
             if (! ignore_index)
                 thr_pool_.parallel_sort(zip_idx.begin(), zip_idx.end(), ad);
             else
@@ -805,7 +817,7 @@ sort(const char *name, sort_spec dir, bool ignore_index)  {
         }
     }
 
-    if (get_thread_level() > 1 && ((column_list_.size() - 1) > 1))  {
+    if (((column_list_.size() - 1) > 1) && get_thread_level() > 2)  {
         auto    lbd = [name,
                        &sorting_idxs = std::as_const(sorting_idxs),
                        idx_s, this]
@@ -995,12 +1007,14 @@ sort(const char *name1, sort_spec dir1,
 
     std::iota(sorting_idxs.begin(), sorting_idxs.end(), 0);
 
-    auto    zip = std::ranges::views::zip(*vec1, *vec2, sorting_idxs);
-    auto    zip_idx =
+    auto        zip = std::ranges::views::zip(*vec1, *vec2, sorting_idxs);
+    auto        zip_idx =
         std::ranges::views::zip(*vec1, *vec2, indices_, sorting_idxs);
+    const auto  thread_level =
+        (idx_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
 
     if (dir1 == sort_spec::ascen && dir2 == sort_spec::ascen)  {
-        if (get_thread_level() > 1 && idx_s > ThreadPool::MUL_THR_THHOLD)  {
+        if (thread_level > 2)  {
             if (! ignore_index)
                 thr_pool_.parallel_sort(zip_idx.begin(), zip_idx.end(), a_a);
             else
@@ -1014,7 +1028,7 @@ sort(const char *name1, sort_spec dir1,
         }
     }
     else if (dir1 == sort_spec::desce && dir2 == sort_spec::desce)  {
-        if (get_thread_level() > 1 && idx_s > ThreadPool::MUL_THR_THHOLD)  {
+        if (thread_level > 2)  {
             if (! ignore_index)
                 thr_pool_.parallel_sort(zip_idx.begin(), zip_idx.end(), d_d);
             else
@@ -1028,7 +1042,7 @@ sort(const char *name1, sort_spec dir1,
         }
     }
     else if (dir1 == sort_spec::ascen && dir2 == sort_spec::desce)  {
-        if (get_thread_level() > 1 && idx_s > ThreadPool::MUL_THR_THHOLD)  {
+        if (thread_level > 2)  {
             if (! ignore_index)
                 thr_pool_.parallel_sort(zip_idx.begin(), zip_idx.end(), a_d);
             else
@@ -1042,7 +1056,7 @@ sort(const char *name1, sort_spec dir1,
         }
     }
     else if (dir1 == sort_spec::desce && dir2 == sort_spec::ascen)  {
-        if (get_thread_level() > 1 && idx_s > ThreadPool::MUL_THR_THHOLD)  {
+        if (thread_level > 2)  {
             if (! ignore_index)
                 thr_pool_.parallel_sort(zip_idx.begin(), zip_idx.end(), d_a);
             else
@@ -1056,7 +1070,7 @@ sort(const char *name1, sort_spec dir1,
         }
     }
     else if (dir1 == sort_spec::abs_ascen && dir2 == sort_spec::abs_ascen)  {
-        if (get_thread_level() > 1 && idx_s > ThreadPool::MUL_THR_THHOLD)  {
+        if (thread_level > 2)  {
             if (! ignore_index)
                 thr_pool_.parallel_sort(zip_idx.begin(), zip_idx.end(), aa_aa);
             else
@@ -1070,7 +1084,7 @@ sort(const char *name1, sort_spec dir1,
         }
     }
     else if (dir1 == sort_spec::abs_desce && dir2 == sort_spec::abs_desce)  {
-        if (get_thread_level() > 1 && idx_s > ThreadPool::MUL_THR_THHOLD)  {
+        if (thread_level > 2)  {
             if (! ignore_index)
                 thr_pool_.parallel_sort(zip_idx.begin(), zip_idx.end(), ad_ad);
             else
@@ -1084,7 +1098,7 @@ sort(const char *name1, sort_spec dir1,
         }
     }
     else if (dir1 == sort_spec::abs_ascen && dir2 == sort_spec::abs_desce)  {
-        if (get_thread_level() > 1 && idx_s > ThreadPool::MUL_THR_THHOLD)  {
+        if (thread_level > 2)  {
             if (! ignore_index)
                 thr_pool_.parallel_sort(zip_idx.begin(), zip_idx.end(), aa_ad);
             else
@@ -1098,7 +1112,7 @@ sort(const char *name1, sort_spec dir1,
         }
     }
     else if (dir1 == sort_spec::abs_desce && dir2 == sort_spec::abs_ascen)  {
-        if (get_thread_level() > 1 && idx_s > ThreadPool::MUL_THR_THHOLD)  {
+        if (thread_level > 2)  {
             if (! ignore_index)
                 thr_pool_.parallel_sort(zip_idx.begin(), zip_idx.end(), ad_aa);
             else
@@ -1112,7 +1126,7 @@ sort(const char *name1, sort_spec dir1,
         }
     }
     else if (dir1 == sort_spec::ascen && dir2 == sort_spec::abs_ascen)  {
-        if (get_thread_level() > 1 && idx_s > ThreadPool::MUL_THR_THHOLD)  {
+        if (thread_level > 2)  {
             if (! ignore_index)
                 thr_pool_.parallel_sort(zip_idx.begin(), zip_idx.end(), a_aa);
             else
@@ -1126,7 +1140,7 @@ sort(const char *name1, sort_spec dir1,
         }
     }
     else if (dir1 == sort_spec::ascen && dir2 == sort_spec::abs_desce)  {
-        if (get_thread_level() > 1 && idx_s > ThreadPool::MUL_THR_THHOLD)  {
+        if (thread_level > 2)  {
             if (! ignore_index)
                 thr_pool_.parallel_sort(zip_idx.begin(), zip_idx.end(), a_ad);
             else
@@ -1140,7 +1154,7 @@ sort(const char *name1, sort_spec dir1,
         }
     }
     else if (dir1 == sort_spec::desce && dir2 == sort_spec::abs_ascen)  {
-        if (get_thread_level() > 1 && idx_s > ThreadPool::MUL_THR_THHOLD)  {
+        if (thread_level > 2)  {
             if (! ignore_index)
                 thr_pool_.parallel_sort(zip_idx.begin(), zip_idx.end(), d_aa);
             else
@@ -1154,7 +1168,7 @@ sort(const char *name1, sort_spec dir1,
         }
     }
     else if (dir1 == sort_spec::desce && dir2 == sort_spec::abs_desce)  {
-        if (get_thread_level() > 1 && idx_s > ThreadPool::MUL_THR_THHOLD)  {
+        if (thread_level > 2)  {
             if (! ignore_index)
                 thr_pool_.parallel_sort(zip_idx.begin(), zip_idx.end(), d_ad);
             else
@@ -1168,7 +1182,7 @@ sort(const char *name1, sort_spec dir1,
         }
     }
     else if (dir1 == sort_spec::abs_ascen && dir2 == sort_spec::ascen)  {
-        if (get_thread_level() > 1 && idx_s > ThreadPool::MUL_THR_THHOLD)  {
+        if (thread_level > 2)  {
             if (! ignore_index)
                 thr_pool_.parallel_sort(zip_idx.begin(), zip_idx.end(), aa_a);
             else
@@ -1182,7 +1196,7 @@ sort(const char *name1, sort_spec dir1,
         }
     }
     else if (dir1 == sort_spec::abs_desce && dir2 == sort_spec::ascen)  {
-        if (get_thread_level() > 1 && idx_s > ThreadPool::MUL_THR_THHOLD)  {
+        if (thread_level > 2)  {
             if (! ignore_index)
                 thr_pool_.parallel_sort(zip_idx.begin(), zip_idx.end(), ad_a);
             else
@@ -1196,7 +1210,7 @@ sort(const char *name1, sort_spec dir1,
         }
     }
     else if (dir1 == sort_spec::abs_ascen && dir2 == sort_spec::desce)  {
-        if (get_thread_level() > 1 && idx_s > ThreadPool::MUL_THR_THHOLD)  {
+        if (thread_level > 2)  {
             if (! ignore_index)
                 thr_pool_.parallel_sort(zip_idx.begin(), zip_idx.end(), aa_d);
             else
@@ -1210,7 +1224,7 @@ sort(const char *name1, sort_spec dir1,
         }
     }
     else  {   // dir1 == sort_spec::abs_desce && dir2 == sort_spec::desce
-        if (get_thread_level() > 1 && idx_s > ThreadPool::MUL_THR_THHOLD)  {
+        if (thread_level > 2)  {
             if (! ignore_index)
                 thr_pool_.parallel_sort(zip_idx.begin(), zip_idx.end(), ad_d);
             else
@@ -1224,7 +1238,7 @@ sort(const char *name1, sort_spec dir1,
         }
     }
 
-    if (get_thread_level() > 1 && ((column_list_.size() - 2) > 1))  {
+    if (((column_list_.size() - 2) > 1) && get_thread_level() > 2)  {
         auto    lbd = [name1, name2,
                        &sorting_idxs = std::as_const(sorting_idxs),
                        idx_s, this]
@@ -1356,11 +1370,14 @@ sort(const char *name1, sort_spec dir1,
 
     std::iota(sorting_idxs.begin(), sorting_idxs.end(), 0);
 
-    auto    zip = std::ranges::views::zip(*vec1, *vec2, *vec3, sorting_idxs);
-    auto    zip_idx =
+    auto        zip =
+        std::ranges::views::zip(*vec1, *vec2, *vec3, sorting_idxs);
+    auto        zip_idx =
         std::ranges::views::zip(*vec1, *vec2, *vec3, indices_, sorting_idxs);
+    const auto  thread_level =
+        (idx_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
 
-    if (get_thread_level() > 1 && idx_s > ThreadPool::MUL_THR_THHOLD)  {
+    if (thread_level > 2)  {
         if (! ignore_index)
             thr_pool_.parallel_sort(zip_idx.begin(), zip_idx.end(), cf);
         else
@@ -1373,7 +1390,7 @@ sort(const char *name1, sort_spec dir1,
             std::ranges::sort(zip, cf);
     }
 
-    if (get_thread_level() > 1 && ((column_list_.size() - 3) > 1))  {
+    if (((column_list_.size() - 3) > 1) && get_thread_level() > 2)  {
         auto    lbd = [name1, name2, name3,
                        &sorting_idxs = std::as_const(sorting_idxs),
                        idx_s, this]
@@ -1543,13 +1560,15 @@ sort(const char *name1, sort_spec dir1,
 
     std::iota(sorting_idxs.begin(), sorting_idxs.end(), 0);
 
-    auto    zip =
+    auto         zip =
         std::ranges::views::zip(*vec1, *vec2, *vec3, *vec4, sorting_idxs);
-    auto    zip_idx =
+    auto         zip_idx =
         std::ranges::views::zip(*vec1, *vec2, *vec3, *vec4,
                                 indices_, sorting_idxs);
+    const auto  thread_level =
+        (idx_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
 
-    if (get_thread_level() > 1 && idx_s > ThreadPool::MUL_THR_THHOLD)  {
+    if (thread_level > 2)  {
         if (! ignore_index)
             thr_pool_.parallel_sort(zip_idx.begin(), zip_idx.end(), cf);
         else
@@ -1562,7 +1581,7 @@ sort(const char *name1, sort_spec dir1,
             std::ranges::sort(zip, cf);
     }
 
-    if (get_thread_level() > 1 && ((column_list_.size() - 4) > 1))  {
+    if (((column_list_.size() - 4) > 1) && get_thread_level() > 2)  {
         auto    lbd = [name1, name2, name3, name4,
                        &sorting_idxs = std::as_const(sorting_idxs),
                        idx_s, this]
@@ -1770,14 +1789,16 @@ sort(const char *name1, sort_spec dir1,
 
     std::iota(sorting_idxs.begin(), sorting_idxs.end(), 0);
 
-    auto    zip =
+    auto        zip =
         std::ranges::views::zip(*vec1, *vec2, *vec3, *vec4, *vec5,
                                 sorting_idxs);
-    auto    zip_idx =
+    auto        zip_idx =
         std::ranges::views::zip(*vec1, *vec2, *vec3, *vec4, *vec5,
                                 indices_, sorting_idxs);
+    const auto  thread_level =
+        (idx_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
 
-    if (get_thread_level() > 1 && idx_s > ThreadPool::MUL_THR_THHOLD)  {
+    if (thread_level > 2)  {
         if (! ignore_index)
             thr_pool_.parallel_sort(zip_idx.begin(), zip_idx.end(), cf);
         else
@@ -1790,7 +1811,7 @@ sort(const char *name1, sort_spec dir1,
             std::ranges::sort(zip, cf);
     }
 
-    if (get_thread_level() > 1 && ((column_list_.size() - 5) > 1))  {
+    if (((column_list_.size() - 5) > 1) && get_thread_level() > 2)  {
         auto    lbd = [name1, name2, name3, name4, name5,
                        &sorting_idxs = std::as_const(sorting_idxs),
                        idx_s, this]
@@ -2306,8 +2327,11 @@ bucketize(bucket_type bt,
     _bucketize_core_(dst_idx, src_idx, src_idx, value, idx_visitor, idx_s, bt);
 
     std::vector<std::future<void>>  futures;
+    const auto                      thread_level =
+        (indices_.size() < ThreadPool::MUL_THR_THHOLD)
+            ? 0L : get_thread_level();
 
-    if (get_thread_level() > 1)  futures.reserve(column_list_.size());
+    if (thread_level > 2)  futures.reserve(column_list_.size());
 
     auto    args_tuple = std::tuple<Ts ...>(args ...);
     auto    func =

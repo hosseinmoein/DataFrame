@@ -367,7 +367,11 @@ DataFrame<I, H>::get_data_by_idx (Index2D<IndexType> range) const  {
             data_[citer.second].change(functor);
         }
 
-        if (get_thread_level() > 1)  {
+        const auto  thread_level =
+            (indices_.size() < ThreadPool::MUL_THR_THHOLD)
+                ? 0L : get_thread_level();
+
+        if (thread_level > 2)  {
             auto    lbd =
                 [b_dist, e_dist, &df, this]
                 (const auto &begin, const auto &end) -> void  {
@@ -434,7 +438,10 @@ get_data_by_idx(const StlVecType<IndexType> &values) const  {
         data_[citer.second].change(functor);
     }
 
-    if (get_thread_level() > 1)  {
+    const auto  thread_level =
+        (idx_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
+
+    if (thread_level > 2)  {
         auto    lbd =
             [&locations = std::as_const(locations), idx_s, &df, this]
             (const auto &begin, const auto &end) -> void  {
@@ -679,7 +686,11 @@ DataFrame<I, H>::get_data_by_loc (Index2D<long> range) const  {
             data_[citer.second].change(functor);
         }
 
-        if (get_thread_level() > 1)  {
+        const auto  thread_level =
+            (indices_.size() < ThreadPool::MUL_THR_THHOLD)
+            ? 0L : get_thread_level();
+
+        if (thread_level > 2)  {
             auto    lbd =
                 [&range = std::as_const(range), &df, this]
                 (const auto &begin, const auto &end) -> void  {
@@ -753,7 +764,10 @@ get_data_by_loc (const StlVecType<long> &locations) const  {
         data_[citer.second].change(functor);
     }
 
-    if (get_thread_level() > 1)  {
+    const auto  thread_level =
+        (idx_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
+
+    if (thread_level > 2)  {
         auto    lbd =
             [&locations = std::as_const(locations), idx_s, &df, this]
             (const auto &begin, const auto &end) -> void  {
@@ -1004,7 +1018,10 @@ get_data_by_sel (const char *name, F &sel_functor) const  {
         data_[citer.second].change(functor);
     }
 
-    if (get_thread_level() > 1)  {
+    const auto  thread_level =
+        (idx_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
+
+    if (thread_level > 2)  {
         auto    lbd =
             [&col_indices = std::as_const(col_indices), idx_s, &df, this]
             (const auto &begin, const auto &end) -> void  {
@@ -1172,7 +1189,10 @@ get_data_by_sel (const char *name1, const char *name2, F &sel_functor) const  {
         data_[citer.second].change(functor);
     }
 
-    if (get_thread_level() > 1)  {
+    const auto  thread_level =
+        (idx_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
+
+    if (thread_level > 2)  {
         auto    lbd =
             [&col_indices = std::as_const(col_indices), idx_s, &df, this]
             (const auto &begin, const auto &end) -> void  {
@@ -1360,7 +1380,10 @@ get_data_by_sel (const char *name1,
         data_[citer.second].change(functor);
     }
 
-    if (get_thread_level() > 1)  {
+    const auto  thread_level =
+        (idx_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
+
+    if (thread_level > 2)  {
         auto    lbd =
             [&col_indices = std::as_const(col_indices), idx_s, &df, this]
             (const auto &begin, const auto &end) -> void  {
@@ -1453,7 +1476,11 @@ get_data_by_sel (F &sel_functor) const  {
         data_[citer.second].change(functor);
     }
 
-    if (get_thread_level() > 1)  {
+    const auto  thread_level =
+        (indices_.size() < ThreadPool::MUL_THR_THHOLD)
+            ? 0L : get_thread_level();
+
+    if (thread_level > 2)  {
         auto    lbd =
             [&col_indices = std::as_const(col_indices), idx_s, &df, this]
             (const auto &begin, const auto &end) -> void  {
@@ -1546,7 +1573,11 @@ get_data_by_sel (F &sel_functor, FilterCols && ... filter_cols) const  {
         data_[citer.second].change(functor);
     }
 
-    if (get_thread_level() > 1)  {
+    const auto  thread_level =
+        (indices_.size() < ThreadPool::MUL_THR_THHOLD)
+            ? 0L : get_thread_level();
+
+    if (thread_level > 2)  {
         auto    lbd =
             [&col_indices = std::as_const(col_indices), idx_s, &df, this]
             (const auto &begin, const auto &end) -> void  {
@@ -1753,7 +1784,10 @@ get_data_by_sel(const char *name1,
         data_[citer.second].change(functor);
     }
 
-    if (get_thread_level() > 1)  {
+    const auto  thread_level =
+        (idx_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
+
+    if (thread_level > 2)  {
         auto    lbd =
             [&col_indices = std::as_const(col_indices), idx_s, &df, this]
             (const auto &begin, const auto &end) -> void  {
@@ -1979,7 +2013,10 @@ get_data_by_sel(const char *name1,
         data_[citer.second].change(functor);
     }
 
-    if (get_thread_level() > 1)  {
+    const auto  thread_level =
+        (idx_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
+
+    if (thread_level > 2)  {
         auto    lbd =
             [&col_indices = std::as_const(col_indices), idx_s, &df, this]
             (const auto &begin, const auto &end) -> void  {
@@ -2103,7 +2140,10 @@ get_data_by_sel(const char *name1,
         data_[citer.second].change(functor);
     }
 
-    if (get_thread_level() > 1)  {
+    const auto  thread_level =
+        (idx_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
+
+    if (thread_level > 2)  {
         auto    lbd =
             [&col_indices = std::as_const(col_indices), idx_s, &df, this]
             (const auto &begin, const auto &end) -> void  {
@@ -2231,7 +2271,10 @@ get_data_by_sel(const char *name1,
         data_[citer.second].change(functor);
     }
 
-    if (get_thread_level() > 1)  {
+    const auto  thread_level =
+        (idx_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
+
+    if (thread_level > 2)  {
         auto    lbd =
             [&col_indices = std::as_const(col_indices), idx_s, &df, this]
             (const auto &begin, const auto &end) -> void  {
@@ -2363,7 +2406,10 @@ get_data_by_sel(const char *name1,
         data_[citer.second].change(functor);
     }
 
-    if (get_thread_level() > 1)  {
+    const auto  thread_level =
+        (idx_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
+
+    if (thread_level > 2)  {
         auto    lbd =
             [&col_indices = std::as_const(col_indices), idx_s, &df, this]
             (const auto &begin, const auto &end) -> void  {
@@ -2594,7 +2640,11 @@ get_data_by_rand(random_policy spec, double n, seed_t seed) const  {
             data_[citer.second].change(functor);
         }
 
-        if (get_thread_level() > 1)  {
+        const auto  thread_level =
+            (indices_.size() < ThreadPool::MUL_THR_THHOLD)
+                ? 0L : get_thread_level();
+
+        if (thread_level > 2)  {
             auto    lbd =
                 [&rand_indices = std::as_const(rand_indices), &df, this]
                 (const auto &begin, const auto &end) -> void  {
@@ -2938,7 +2988,10 @@ get_reindexed(const char *col_to_be_index, const char *old_index_name) const  {
         data_[citer.second].change(functor);
     }
 
-    if (get_thread_level() > 1)  {
+    const auto  thread_level =
+        (new_idx_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
+
+    if (thread_level > 2)  {
         auto    lbd =
             [col_to_be_index = std::as_const(col_to_be_index),
              new_idx_s, &df, this]

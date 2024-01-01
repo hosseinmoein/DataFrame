@@ -556,7 +556,7 @@ DataFrame<I, H>::
 drop_missing_rows_functor_<Ts ...>::
 operator()(T &vec)  {
 
-    if (get_thread_level()  > 0)
+    if (thread_level  > 2)
         futures.emplace_back(
             thr_pool_.dispatch(false,
                                &DataFrame::drop_missing_rows_<T>,

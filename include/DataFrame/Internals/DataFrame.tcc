@@ -575,8 +575,12 @@ drop_missing(drop_policy policy, size_type threshold)  {
                            threshold,
                            num_cols);
 
-    drop_missing_rows_functor_<Ts ...>  functor2 (
-        missing_row_map, policy, threshold, data_.size(), futures);
+    drop_missing_rows_functor_<Ts ...>  functor2 (missing_row_map,
+                                                  policy,
+                                                  threshold,
+                                                  data_.size(),
+                                                  thread_level,
+                                                  futures);
 
     for (size_type idx = 0; idx < num_cols; ++idx)
         data_[idx].change(functor2);

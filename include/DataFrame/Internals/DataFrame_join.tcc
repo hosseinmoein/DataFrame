@@ -62,12 +62,14 @@ join_by_index (const RHS_T &rhs, join_policy mp) const  {
     for (size_type i = 0; i < rhs_idx_s; ++i) [[likely]]
         idx_vec_rhs.push_back(std::make_pair(&(rhs_idx[i]), i));
 
-    auto    cf = [] (const JoinSortingPair<IndexType> &l,
-                     const JoinSortingPair<IndexType> &r) -> bool  {
-                     return (*(l.first) < *(r.first));
-                 };
+    auto        cf = [] (const JoinSortingPair<IndexType> &l,
+                         const JoinSortingPair<IndexType> &r) -> bool  {
+                         return (*(l.first) < *(r.first));
+                     };
+    const auto  thread_level =
+        (lhs_idx_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
 
-    if (get_thread_level() > 3 && lhs_idx_s > ThreadPool::MUL_THR_THHOLD)  {
+    if (thread_level > 3)  {
         std::future<void>   futures[2];
 
         futures[0] = thr_pool_.dispatch(
@@ -84,22 +86,6 @@ join_by_index (const RHS_T &rhs, join_policy mp) const  {
                 idx_vec_rhs.begin(),
                 idx_vec_rhs.end(),
                 std::move(cf));
-        futures[0].get();
-        futures[1].get();
-    }
-    else if (get_thread_level() > 1)  {
-        std::future<void>   futures[2];
-
-        futures[0] = thr_pool_.dispatch(false,
-                                        &std::sort<pair_vec_iter, decltype(cf)>,
-                                            idx_vec_lhs.begin(),
-                                            idx_vec_lhs.end(),
-                                            std::move(cf));
-        futures[1] = thr_pool_.dispatch(false,
-                                        &std::sort<pair_vec_iter, decltype(cf)>,
-                                            idx_vec_rhs.begin(),
-                                            idx_vec_rhs.end(),
-                                            std::move(cf));
         futures[0].get();
         futures[1].get();
     }
@@ -154,12 +140,14 @@ join_by_column (const RHS_T &rhs, const char *name, join_policy mp) const  {
     for (size_type i = 0; i < rhs_vec_s; ++i) [[likely]]
         col_vec_rhs.push_back(std::make_pair(&(rhs_vec[i]), i));
 
-    auto    cf = [] (const JoinSortingPair<T> &l,
-                     const JoinSortingPair<T> &r) -> bool  {
-                     return (*(l.first) < *(r.first));
-                 };
+    auto        cf = [] (const JoinSortingPair<T> &l,
+                         const JoinSortingPair<T> &r) -> bool  {
+                         return (*(l.first) < *(r.first));
+                     };
+    const auto  thread_level =
+        (lhs_vec_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
 
-    if (get_thread_level() > 3 && lhs_vec_s > ThreadPool::MUL_THR_THHOLD)  {
+    if (thread_level > 3)  {
         std::future<void>   futures[2];
 
         futures[0] = thr_pool_.dispatch(
@@ -176,22 +164,6 @@ join_by_column (const RHS_T &rhs, const char *name, join_policy mp) const  {
                 col_vec_rhs.begin(),
                 col_vec_rhs.end(),
                 std::move(cf));
-        futures[0].get();
-        futures[1].get();
-    }
-    else if (get_thread_level() > 1)  {
-        std::future<void>   futures[2];
-
-        futures[0] = thr_pool_.dispatch(false,
-                                        &std::sort<pair_vec_iter, decltype(cf)>,
-                                            col_vec_lhs.begin(),
-                                            col_vec_lhs.end(),
-                                            std::move(cf));
-        futures[1] = thr_pool_.dispatch(false,
-                                        &std::sort<pair_vec_iter, decltype(cf)>,
-                                            col_vec_rhs.begin(),
-                                            col_vec_rhs.end(),
-                                            std::move(cf));
         futures[0].get();
         futures[1].get();
     }
@@ -236,10 +208,12 @@ join_helper_common_(
     using res_t = decltype(result);
 
     std::vector<std::future<void>>  futures;
-    const auto                      thread_level = get_thread_level();
+    const auto                      thread_level =
+        (lhs.indices_.size() < ThreadPool::MUL_THR_THHOLD)
+            ? 0L : get_thread_level();
 
 
-    if (thread_level > 1)
+    if (thread_level > 2)
         futures.reserve(lhs.column_list_.size() + rhs.column_list_.size());
 
     const SpinGuard guard(lock_);
@@ -287,7 +261,7 @@ join_helper_common_(
                     lhs.data_[citer.second].change(functor);
                 };
 
-            if (thread_level > 1)
+            if (thread_level > 2)
                 futures.emplace_back(thr_pool_.dispatch(false, jcomm_lbd));
             else
                 jcomm_lbd();
@@ -307,7 +281,7 @@ join_helper_common_(
                     lhs.data_[citer.second].change(functor);
                 };
 
-            if (thread_level > 1)
+            if (thread_level > 2)
                 futures.emplace_back(thr_pool_.dispatch(false, jlhs_lbd));
             else
                 jlhs_lbd();
@@ -343,7 +317,7 @@ join_helper_common_(
                     rhs.data_[citer.second].change(functor);
                 };
 
-            if (thread_level > 1)
+            if (thread_level > 2)
                 futures.emplace_back(thr_pool_.dispatch(false, jrhs_lbd));
             else
                 jrhs_lbd();
@@ -384,7 +358,7 @@ index_join_helper_(const LHS_T &lhs,
         };
 
     // Load the index
-    if (get_thread_level() > 0 && len >= ThreadPool::MUL_THR_THHOLD)  {
+    if (len >= ThreadPool::MUL_THR_THHOLD && get_thread_level() > 2)  {
         auto    futures =
             thr_pool_.parallel_loop(size_type(0), len, std::move(lbd));
 
@@ -459,7 +433,7 @@ column_join_helper_(const LHS_T &lhs,
             }
         };
 
-    if (get_thread_level() > 0 && len >= ThreadPool::MUL_THR_THHOLD)  {
+    if (len >= ThreadPool::MUL_THR_THHOLD && get_thread_level() > 2)  {
         auto    futures =
             thr_pool_.parallel_loop(size_type(0), len, std::move(lbd));
 

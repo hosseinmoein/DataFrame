@@ -527,8 +527,11 @@ _load_bucket_data_(const DF &source,
     auto                &dst_vec = _create_column_from_triple_(dest, triple);
     const std::size_t   src_s = std::min(src_vec.size(), src_idx.size());
     auto                &visitor = std::get<2>(triple);
+    const auto          thread_level =
+        (src_idx.size() < ThreadPool::MUL_THR_THHOLD)
+            ? 0L : ThreadGranularity::get_thread_level();
 
-    if (ThreadGranularity::get_thread_level() > 3)
+    if (thread_level > 3)
         futures.emplace_back(
             ThreadGranularity::thr_pool_.dispatch(
                 false,

@@ -40,6 +40,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 This is a C++ analytical library designed for data analysis similar to libraries in Python and R. For example, you would compare this to Pandas or R data.frame.<BR>
 You can slice the data in many different ways. You can join, merge, group-by the data. You can run various statistical, summarization, financial, and ML algorithms on the data. You can add your custom algorithms easily. You can multi-column sort, custom pick and delete the data. And more …<BR>
 DataFrame also includes a large collection of analytical algorithms in form of visitors. These are from basic stats such as <I>Mean</I>, <I>Std Deviation</I>, <I>Return</I>, … to more involved analysis such as <I>Affinity Propagation</I>, <I>Polynomial Fit</I>, <I>Fast Fourier transform of arbitrary length</I> … including a good collection of trading indicators. You can also easily add your own algorithms.<BR>
+DataFrame also employs extensive multithreading in almost all its API’s, for large datasets.<BR>
 For basic operations to start you off, see [Hello World](examples/hello_world.cc). For a complete list of features with code samples, see [documentation](https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html).
 
 I have followed a few <B>principles in this library</B>:<BR>

@@ -87,12 +87,10 @@ struct  ReturnVisitor  {
                        return ((diff > 0) ? 1 : ((diff < 0) ? -1 : 0));
                    };
 
-        result_type result;
+        result_type result(col_s);
 
-        if (ThreadGranularity::get_thread_level() > 2 &&
-            col_s >= ThreadPool::MUL_THR_THHOLD)  {
-            result.resize(col_s);
-
+        if (col_s >= ThreadPool::MUL_THR_THHOLD &&
+            ThreadGranularity::get_thread_level() > 2)  {
             auto    futures =
                 ThreadGranularity::thr_pool_.parallel_loop(
                     size_type(1),
@@ -107,9 +105,8 @@ struct  ReturnVisitor  {
             for (auto &fut : futures)  fut.get();
         }
         else  {
-            result.reserve(col_s);
             std::adjacent_difference (column_begin, column_end,
-                                      std::back_inserter (result),
+                                      result.begin(),
                                       func);
         }
         result[0] = std::numeric_limits<T>::quiet_NaN();
@@ -165,9 +162,8 @@ private:
                   size_t(std::distance(prices_begin, prices_end)),
                   result.size() });
 
+        col_to_short_term_.resize(col_s);
         if (thread_level_ > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
-            col_to_short_term_.resize(col_s);
-
             auto    futures =
                 ThreadGranularity::thr_pool_.parallel_loop(
                     size_type(0),
@@ -182,10 +178,9 @@ private:
             for (auto &fut : futures)  fut.get();
         }
         else  {
-            col_to_short_term_.reserve(col_s);
             std::transform(prices_begin, prices_begin + col_s,
                            result.begin(),
-                           std::back_inserter(col_to_short_term_),
+                           col_to_short_term_.begin(),
                            [](auto p, auto r) -> value_type  {
                                return (p - r);
                            });
@@ -208,9 +203,8 @@ private:
                   size_t(std::distance(prices_begin, prices_end)),
                   result.size() });
 
+        col_to_long_term_.resize(col_s);
         if (thread_level_ > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
-            col_to_long_term_.resize(col_s);
-
             auto    futures =
                 ThreadGranularity::thr_pool_.parallel_loop(
                     size_type(0),
@@ -225,10 +219,9 @@ private:
             for (auto &fut : futures)  fut.get();
         }
         else  {
-            col_to_long_term_.reserve(col_s);
             std::transform(prices_begin, prices_begin + col_s,
                            result.begin(),
-                           std::back_inserter(col_to_long_term_),
+                           col_to_long_term_.begin(),
                            [](auto p, auto r) -> value_type  {
                                return (p - r);
                            });
@@ -283,9 +276,8 @@ public:
 
         const size_type col_s = std::min<size_type>(re_count1, re_count2);
 
+        short_term_to_long_term_.resize(col_s);
         if (thread_level_ > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
-            short_term_to_long_term_.resize(col_s);
-
             auto    futures =
                 ThreadGranularity::thr_pool_.parallel_loop(
                     size_type(0),
@@ -301,11 +293,10 @@ public:
             for (auto &fut : futures)  fut.get();
         }
         else  {
-            short_term_to_long_term_.reserve(col_s);
             std::transform(short_roller_.get_result().begin(),
                            short_roller_.get_result().begin() + col_s,
                            long_roller_.get_result().begin(),
-                           std::back_inserter(short_term_to_long_term_),
+                           short_term_to_long_term_.begin(),
                            [](auto s, auto l) -> value_type  {
                                return (s - l);
                            });
@@ -402,11 +393,12 @@ public:
     operator() (const K &idx_begin, const K &idx_end,
                 const H &prices_begin, const H &prices_end)  {
 
-        const auto  thread_level = ThreadGranularity::get_thread_level();
+        const auto  thread_level =
+            (std::distance(prices_begin, prices_end) <
+                 ThreadPool::MUL_THR_THHOLD)
+                     ? 0L : ThreadGranularity::get_thread_level();
 
-        if (thread_level > 2 &&
-            std::distance(prices_begin, prices_end) >=
-                ThreadPool::MUL_THR_THHOLD)  {
+        if (thread_level > 2)  {
             std::future<void>   fut1 =
                 ThreadGranularity::thr_pool_.dispatch(
                     false,
@@ -443,7 +435,7 @@ public:
                   std_result.size(),
                   mean_result.size() });
 
-        if (thread_level > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
+        if (thread_level > 2)  {
             upper_band_to_raw_.resize(col_s);
             raw_to_lower_band_.resize(col_s);
 
@@ -533,11 +525,16 @@ struct  MACDVisitor  {
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
 
-        const auto      thread_level = ThreadGranularity::get_thread_level();
-        macd_roller_t   short_roller (exponential_decay_spec::span,
-                                      short_mean_period_);
-        macd_roller_t   long_roller (exponential_decay_spec::span,
-                                     long_mean_period_);
+        macd_roller_t   short_roller(exponential_decay_spec::span,
+                                     short_mean_period_);
+        macd_roller_t   long_roller(exponential_decay_spec::span,
+                                    long_mean_period_);
+        const size_type col_s =
+            std::min<size_type>(
+                { size_t(std::distance(idx_begin, idx_end)),
+                  size_t(std::distance(column_begin, column_end)) });
+        const auto      thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
+            ? 0L : ThreadGranularity::get_thread_level();
 
         short_roller.pre();
         long_roller.pre();
@@ -571,18 +568,11 @@ struct  MACDVisitor  {
         long_roller.post();
         short_roller.post();
 
-        const auto      &short_result = short_roller.get_result();
-        const auto      &long_result = long_roller.get_result();
-        const size_type col_s =
-            std::min<size_type>(
-                { size_t(std::distance(idx_begin, idx_end)),
-                  size_t(std::distance(column_begin, column_end)),
-                  short_result.size(),
-                  long_result.size() });
+        const auto  &short_result = short_roller.get_result();
+        const auto  &long_result = long_roller.get_result();
 
-        if (thread_level > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
-            macd_line_.resize(col_s);
-
+        macd_line_.resize(col_s);
+        if (thread_level > 2)  {
             auto    futures =
                 ThreadGranularity::thr_pool_.parallel_loop(
                     size_type(0),
@@ -599,10 +589,9 @@ struct  MACDVisitor  {
             for (auto &fut : futures)  fut.get();
         }
         else  {
-            macd_line_.reserve(col_s);
             std::transform(short_result.begin(), short_result.begin() + col_s,
                            long_result.begin(),
-                           std::back_inserter(macd_line_),
+                           macd_line_.begin(),
                            [](auto s, auto l) -> value_type  {
                                return (s - l);
                            });
@@ -615,9 +604,8 @@ struct  MACDVisitor  {
 
         const auto  &signal_line_result { signal_line_roller_.get_result() };
 
-        if (thread_level > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
-            macd_histogram_.resize(col_s);
-
+        macd_histogram_.resize(col_s);
+        if (thread_level > 2)  {
             auto    futures =
                 ThreadGranularity::thr_pool_.parallel_loop(
                     size_type(0),
@@ -633,10 +621,9 @@ struct  MACDVisitor  {
             for (auto &fut : futures)  fut.get();
         }
         else  {
-            macd_histogram_.reserve(col_s);
             std::transform(macd_line_.begin(), macd_line_.begin() + col_s,
                            signal_line_result.begin(),
-                           std::back_inserter(macd_histogram_),
+                           macd_histogram_.begin(),
                            [](const auto &ml, const auto &sl) -> value_type  {
                                return (ml - sl);
                            });
@@ -1466,11 +1453,12 @@ private:
          const H &ts_begin, const H &ts_end,
          result_type &result, size_type col_s)  {
 
-        const auto  thread_level = ThreadGranularity::get_thread_level();
+        const auto  thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
+            ? 0L : ThreadGranularity::get_thread_level();
 
         stdev_.pre();
         ret_v_.pre();
-        if (thread_level > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
+        if (thread_level > 2)  {
             auto    fut1 =
                 ThreadGranularity::thr_pool_.dispatch(
                     false,
@@ -1502,7 +1490,7 @@ private:
         std::copy(ret_v_.get_result().begin(), ret_v_.get_result().end(),
                   neg_.begin());
 
-        if (thread_level > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
+        if (thread_level > 2)  {
             auto    futures =
                 ThreadGranularity::thr_pool_.parallel_loop(
                     size_type(0),
@@ -1553,7 +1541,7 @@ private:
         ewm_neg_ (idx_begin, idx_end, neg_.begin(), neg_.end());
         ewm_neg_.post();
 
-        if (thread_level > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
+        if (thread_level > 2)  {
             result.resize(col_s);
             auto    futures =
                 ThreadGranularity::thr_pool_.parallel_loop(
@@ -1808,8 +1796,8 @@ struct  MassIndexVisitor  {
             else [[likely]]  break;
         }
 
-        if (ThreadGranularity::get_thread_level() > 2 &&
-            col_s >= ThreadPool::MUL_THR_THHOLD)  {
+        if (col_s >= ThreadPool::MUL_THR_THHOLD &&
+            ThreadGranularity::get_thread_level() > 2)  {
             auto    futures =
                 ThreadGranularity::thr_pool_.parallel_loop(
                     size_type(0),
@@ -1881,14 +1869,15 @@ struct  HullRollingMeanVisitor  {
 
         GET_COL_SIZE
 
-        const auto  thread_level = ThreadGranularity::get_thread_level();
+        const auto  thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
+            ? 0L : ThreadGranularity::get_thread_level();
 
         wma_t   wma_half { WeightedMeanVisitor<T, I>(), roll_count_ / 2 };
         wma_t   wma_full { WeightedMeanVisitor<T, I>(), roll_count_ };
 
         wma_half.pre();
         wma_full.pre();
-        if (thread_level > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
+        if (thread_level > 2)  {
             auto    fut1 =
                 ThreadGranularity::thr_pool_.dispatch(
                     false,
@@ -1918,7 +1907,7 @@ struct  HullRollingMeanVisitor  {
 
         result_type result { std::move(wma_half.get_result()) };
 
-        if (thread_level > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
+        if (thread_level > 2)  {
             auto    futures =
                 ThreadGranularity::thr_pool_.parallel_loop(
                     size_type(0),
@@ -2069,8 +2058,8 @@ struct  DrawdownVisitor  {
         const auto              &cm_result { cm_v.get_result() };
         constexpr value_type    one { 1 };
 
-        if (ThreadGranularity::get_thread_level() > 2 &&
-            col_s >= ThreadPool::MUL_THR_THHOLD)  {
+        if (col_s >= ThreadPool::MUL_THR_THHOLD &&
+            ThreadGranularity::get_thread_level() > 2)  {
             drawdown_.resize(col_s);
             pct_drawdown_.resize(col_s);
             log_drawdown_.resize(col_s);
@@ -2152,7 +2141,8 @@ struct  WilliamPrcRVisitor  {
         if (roll_count_ == 0)  return;
 
         const size_type col_s = std::distance(close_begin, close_end);
-        const auto      thread_level = ThreadGranularity::get_thread_level();
+        const auto      thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
+            ? 0L : ThreadGranularity::get_thread_level();
 
         assert((col_s == size_type(std::distance(low_begin, low_end))));
         assert((col_s == size_type(std::distance(high_begin, high_end))));
@@ -2164,7 +2154,7 @@ struct  WilliamPrcRVisitor  {
 
         min_v.pre();
         max_v.pre();
-        if (thread_level > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
+        if (thread_level > 2)  {
             auto    fut1 =
                 ThreadGranularity::thr_pool_.dispatch(
                     false,
@@ -2194,7 +2184,7 @@ struct  WilliamPrcRVisitor  {
 
         result_type result { std::move(max_v.get_result()) };
 
-        if (thread_level > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
+        if (thread_level > 2)  {
             auto    futures =
                 ThreadGranularity::thr_pool_.parallel_loop(
                     size_type(0),
@@ -2303,9 +2293,8 @@ struct  PSLVisitor  {
 
         assert((col_s == size_type(std::distance(open_begin, open_end))));
 
+        result_.resize(col_s);
         if (thread_level_ > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
-            result_.resize(col_s);
-
             auto    futures =
                 ThreadGranularity::thr_pool_.parallel_loop(
                     size_type(0),
@@ -2323,10 +2312,9 @@ struct  PSLVisitor  {
             for (auto &fut : futures)  fut.get();
         }
         else  {
-            result_.reserve(col_s);
             std::transform(close_begin, close_begin + col_s,
                            open_begin,
-                           std::back_inserter(result_),
+                           result_.begin(),
                            [](const auto &c, const auto &o) -> value_type  {
                                return (((c - o) > 0) ? 1 : 0);
                            });
@@ -2404,14 +2392,15 @@ struct  CCIVisitor  {
         if (roll_count_ == 0)  return;
 
         const size_type col_s = std::distance(close_begin, close_end);
-        const auto      thread_level = ThreadGranularity::get_thread_level();
+        const auto      thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
+            ? 0L : ThreadGranularity::get_thread_level();
 
         assert((col_s == size_type(std::distance(low_begin, low_end))));
         assert((col_s == size_type(std::distance(high_begin, high_end))));
 
         result_type result;
 
-        if (thread_level > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
+        if (thread_level > 2)  {
             result.resize(col_s);
 
             auto    futures =
@@ -2454,7 +2443,7 @@ struct  CCIVisitor  {
         mad_v (idx_begin, idx_end, result.begin(), result.end());
         mad_v.post();
 
-        if (thread_level > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
+        if (thread_level > 2)  {
             auto    futures =
                 ThreadGranularity::thr_pool_.parallel_loop(
                     size_type(0),
@@ -2527,8 +2516,8 @@ struct  GarmanKlassVolVisitor  {
         result_type             result(
             col_s, std::numeric_limits<T>::quiet_NaN());
 
-        if (ThreadGranularity::get_thread_level() > 2 &&
-            col_s >= ThreadPool::MUL_THR_THHOLD)  {
+        if (col_s >= ThreadPool::MUL_THR_THHOLD &&
+            ThreadGranularity::get_thread_level() > 2)  {
             auto    futures =
                 ThreadGranularity::thr_pool_.parallel_loop(
                     roll_count_,
@@ -2628,8 +2617,8 @@ struct  YangZhangVolVisitor  {
         const value_type    norm { T(1) / T(roll_count_ - 1) };
         result_type         result(col_s, std::numeric_limits<T>::quiet_NaN());
 
-        if (ThreadGranularity::get_thread_level() > 2 &&
-            col_s >= (ThreadPool::MUL_THR_THHOLD / 2))  {
+        if (col_s >= (ThreadPool::MUL_THR_THHOLD / 2) &&
+            ThreadGranularity::get_thread_level() > 2)  {
             auto    futures =
                 ThreadGranularity::thr_pool_.parallel_loop(
                     roll_count_,
@@ -2766,8 +2755,8 @@ struct  KamaVisitor  {
 
         result_type peer_diff (col_s, std::numeric_limits<T>::quiet_NaN());
 
-        if (ThreadGranularity::get_thread_level() > 2 &&
-            col_s >= ThreadPool::MUL_THR_THHOLD)  {
+        if (col_s >= ThreadPool::MUL_THR_THHOLD &&
+            ThreadGranularity::get_thread_level() > 2)  {
             auto    futures =
                 ThreadGranularity::thr_pool_.parallel_loop(
                     size_type(1),
@@ -2854,14 +2843,15 @@ struct  FisherTransVisitor  {
                 const H &high_begin, const H &high_end)  {
 
         const size_type col_s = std::distance(low_begin, low_end);
-        const auto      thread_level = ThreadGranularity::get_thread_level();
+        const auto      thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
+            ? 0L : ThreadGranularity::get_thread_level();
 
         assert((col_s == size_type(std::distance(high_begin, high_end))));
         assert((roll_count_ < (col_s - 1)));
 
         result_type mid_hl(col_s);
 
-        if (col_s >= ThreadPool::MUL_THR_THHOLD && thread_level > 2)  {
+        if (thread_level > 2)  {
             auto    futures =
                 ThreadGranularity::thr_pool_.parallel_loop(
                     size_type(0),
@@ -2894,7 +2884,7 @@ struct  FisherTransVisitor  {
 
         result_type result(col_s);
 
-        if (thread_level > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
+        if (thread_level > 2)  {
             auto    futures =
                 ThreadGranularity::thr_pool_.parallel_loop(
                     size_type(0),
@@ -3174,7 +3164,8 @@ struct  UltimateOSCIVisitor  {
                 const H &close_begin, const H &close_end)  {
 
         const size_type col_s = std::distance(close_begin, close_end);
-        const auto      thread_level = ThreadGranularity::get_thread_level();
+        const auto      thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
+            ? 0L : ThreadGranularity::get_thread_level();
 
         assert((col_s == size_type(std::distance(low_begin, low_end))));
         assert((col_s == size_type(std::distance(high_begin, high_end))));
@@ -3182,7 +3173,7 @@ struct  UltimateOSCIVisitor  {
         result_type max_high(col_s, std::numeric_limits<T>::quiet_NaN());
         result_type min_low(col_s, std::numeric_limits<T>::quiet_NaN());
 
-        if (col_s >= ThreadPool::MUL_THR_THHOLD && thread_level > 2)  {
+        if (thread_level > 2)  {
             auto    futures =
                 ThreadGranularity::thr_pool_.parallel_loop(
                     size_type(1),
@@ -3213,7 +3204,7 @@ struct  UltimateOSCIVisitor  {
         result_type buying_pressure(col_s);
         result_type true_range(col_s);
 
-        if (col_s >= ThreadPool::MUL_THR_THHOLD && thread_level > 2)  {
+        if (thread_level > 2)  {
             auto    futures =
                 ThreadGranularity::thr_pool_.parallel_loop(
                     size_type(0),
@@ -3276,7 +3267,7 @@ struct  UltimateOSCIVisitor  {
         const value_type    total_weights { slow_w_ + fast_w_ + medium_w_ };
         result_type         result(col_s);
 
-        if (col_s >= ThreadPool::MUL_THR_THHOLD && thread_level > 2)  {
+        if (thread_level > 2)  {
             auto    futures =
                 ThreadGranularity::thr_pool_.parallel_loop(
                     size_type(0),
@@ -3374,8 +3365,8 @@ struct  UlcerIndexVisitor  {
 
         GET_COL_SIZE2
 
-        const auto  thread_level = (col_s >= ThreadPool::MUL_THR_THHOLD)
-            ? ThreadGranularity::get_thread_level() : 0L;
+        const auto  thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
+            ? 0L : ThreadGranularity::get_thread_level();
 
         SimpleRollAdopter<MaxVisitor<T, I>, T, I, A>    high {
             MaxVisitor<T, I>(), periods_ };
@@ -3511,8 +3502,8 @@ struct  TTMTrendVisitor  {
         assert((col_s == size_type(std::distance(high_begin, high_end))));
         assert(((bar_periods_ + 1) < col_s));
 
-        const auto  thread_level = (col_s >= ThreadPool::MUL_THR_THHOLD)
-            ? ThreadGranularity::get_thread_level() : 0L;
+        const auto  thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
+            ? 0L : ThreadGranularity::get_thread_level();
         avg_vec_t   trend_avg(col_s, std::numeric_limits<T>::quiet_NaN());
 
         if (thread_level > 2)  {
@@ -3971,8 +3962,8 @@ struct  VarIdxDynAvgVisitor  {
         diff (idx_begin, idx_end, column_begin, column_end);
         diff.post();
 
-        const auto  thread_level = (col_s >= ThreadPool::MUL_THR_THHOLD)
-            ? ThreadGranularity::get_thread_level() : 0L;
+        const auto  thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
+            ? 0L : ThreadGranularity::get_thread_level();
         result_type positive { std::move(diff.get_result()) };
 
         positive[0] = 0;

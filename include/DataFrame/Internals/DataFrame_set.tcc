@@ -930,9 +930,12 @@ void DataFrame<I, H>::remove_data_by_idx (Index2D<IndexType> range)  {
         make_consistent<Ts ...>();
         indices_.erase(lower, upper);
 
+        const auto      thread_level =
+            (indices_.size() < ThreadPool::MUL_THR_THHOLD)
+                ? 0L : get_thread_level();
         const SpinGuard guard(lock_);
 
-        if (get_thread_level() > 2)  {
+        if (thread_level > 2)  {
             auto    lbd =
                 [b_dist, e_dist, this]
                 (const auto &begin, const auto &end) -> void  {
@@ -979,9 +982,12 @@ void DataFrame<I, H>::remove_data_by_loc (Index2D<long> range)  {
         indices_.erase(indices_.begin() + range.begin,
                        indices_.begin() + range.end);
 
+        const auto      thread_level =
+            (indices_.size() < ThreadPool::MUL_THR_THHOLD)
+                ? 0L : get_thread_level();
         const SpinGuard guard(lock_);
 
-        if (get_thread_level() > 2)  {
+        if (thread_level > 2)  {
             auto    lbd =
                 [&range = std::as_const(range), this]
                 (const auto &begin, const auto &end) -> void  {
@@ -1025,9 +1031,12 @@ template<typename ... Ts>
 void DataFrame<I, H>::
 remove_data_by_sel_common_(const StlVecType<size_type> &col_indices)  {
 
+    const auto  thread_level =
+        (indices_.size() < ThreadPool::MUL_THR_THHOLD)
+            ? 0L : get_thread_level();
     SpinGuard   guard (lock_);
 
-    if (get_thread_level() > 2)  {
+    if (thread_level > 2)  {
         auto    lbd =
             [&col_indices = std::as_const(col_indices), this]
             (const auto &begin, const auto &end) -> void  {
@@ -1223,7 +1232,11 @@ remove_dups_common_(const DataFrame &s_df,
         s_df.data_[citer.second].change(functor);
     }
 
-    if (get_thread_level() > 2)  {
+    const auto  thread_level =
+        (new_df.get_index().size() < ThreadPool::MUL_THR_THHOLD)
+            ? 0L : get_thread_level();
+
+    if (thread_level > 2)  {
         auto    lbd =
             [&rows_to_del = std::as_const(rows_to_del),
              &s_df = std::as_const(s_df),

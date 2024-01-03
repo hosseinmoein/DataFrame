@@ -1034,8 +1034,8 @@ struct  EntropyVisitor  {
 
         result_type result = std::move(sum_v.get_result());
 
-        if (ThreadGranularity::get_thread_level() > 2 &&
-            result.size() >= ThreadPool::MUL_THR_THHOLD)  {
+        if (result.size() >= ThreadPool::MUL_THR_THHOLD &&
+            ThreadGranularity::get_thread_level() > 2)  {
                 auto    futures =
                     ThreadGranularity::thr_pool_.parallel_loop(
                         size_type(0),
@@ -1230,7 +1230,7 @@ private:
     inline void logistic_(const H &column_begin, const H &column_end,
                           size_type col_s, long thread_level)  {
 
-        if (thread_level > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
+        if (thread_level > 2)  {
             auto    futures =
                 ThreadGranularity::thr_pool_.parallel_loop(
                     size_type(0),
@@ -1256,7 +1256,7 @@ private:
     inline void algebraic_(const H &column_begin, const H &column_end,
                            size_type col_s, long thread_level)  {
 
-        if (thread_level > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
+        if (thread_level > 2)  {
             auto    futures =
                 ThreadGranularity::thr_pool_.parallel_loop(
                     size_type(0),
@@ -1285,7 +1285,7 @@ private:
     inline void hyperbolic_tan_(const H &column_begin, const H &column_end,
                                 size_type col_s, long thread_level)  {
 
-        if (thread_level > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
+        if (thread_level > 2)  {
             auto    futures =
                 ThreadGranularity::thr_pool_.parallel_loop(
                     size_type(0),
@@ -1310,7 +1310,7 @@ private:
     inline void arc_tan_(const H &column_begin, const H &column_end,
                          size_type col_s, long thread_level)  {
 
-        if (thread_level > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
+        if (thread_level > 2)  {
             auto    futures =
                 ThreadGranularity::thr_pool_.parallel_loop(
                     size_type(0),
@@ -1335,7 +1335,7 @@ private:
     inline void error_function_(const H &column_begin, const H &column_end,
                                 size_type col_s, long thread_level)  {
 
-        if (thread_level > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
+        if (thread_level > 2)  {
             auto    futures =
                 ThreadGranularity::thr_pool_.parallel_loop(
                     size_type(0),
@@ -1360,7 +1360,7 @@ private:
     inline void gudermannian_(const H &column_begin, const H &column_end,
                               size_type col_s, long thread_level)  {
 
-        if (thread_level > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
+        if (thread_level > 2)  {
             auto    futures =
                 ThreadGranularity::thr_pool_.parallel_loop(
                     size_type(0),
@@ -1386,7 +1386,7 @@ private:
     inline void smoothstep_(const H &column_begin, const H &column_end,
                             size_type col_s, long thread_level)  {
 
-        if (thread_level > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
+        if (thread_level > 2)  {
             auto    futures =
                 ThreadGranularity::thr_pool_.parallel_loop(
                     size_type(0),
@@ -1431,7 +1431,8 @@ public:
 
         GET_COL_SIZE2
 
-        const auto  thread_level = ThreadGranularity::get_thread_level();
+        const auto  thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
+            ? 0L : ThreadGranularity::get_thread_level();
 
         result_.resize(std::distance(column_begin, column_end));
         if (sigmoid_type_ == sigmoid_type::logistic)
@@ -1490,8 +1491,8 @@ public:
 
         GET_COL_SIZE2
 
-        if (ThreadGranularity::get_thread_level() > 2 &&
-            col_s >= ThreadPool::MUL_THR_THHOLD)  {
+        if (col_s >= ThreadPool::MUL_THR_THHOLD &&
+            ThreadGranularity::get_thread_level() > 2)  {
             std::vector<std::future<void>>  futures;
 
             result_.resize(col_s);
@@ -1752,9 +1753,9 @@ struct  PolicyLearningLossVisitor  {
 
         // Negative Log Likelihood
         //
-        if (ThreadGranularity::get_thread_level() > 2 &&
-            col_s >= ThreadPool::MUL_THR_THHOLD)  {
-            result_.resize(col_s);
+        result_.resize(col_s);
+        if (col_s >= ThreadPool::MUL_THR_THHOLD &&
+            ThreadGranularity::get_thread_level() > 2)  {
 
             auto    futures =
                 ThreadGranularity::thr_pool_.parallel_loop(
@@ -1773,10 +1774,9 @@ struct  PolicyLearningLossVisitor  {
             for (auto &fut : futures)  fut.get();
         }
         else  {
-            result_.reserve(col_s);
             std::transform(action_prob_begin, action_prob_end,
                            reward_begin,
-                           std::back_inserter(result_),
+                           result_.begin(),
                            [](const T &ap, const T &r) -> T  {
                                return (-std::log(ap) * r);
                            });
@@ -1846,9 +1846,10 @@ public:
             return;
         }
 
-        if (ThreadGranularity::get_thread_level() > 2 &&
-            col_s >= ThreadPool::MUL_THR_THHOLD)  {
+        if (col_s >= ThreadPool::MUL_THR_THHOLD &&
+            ThreadGranularity::get_thread_level() > 2)  {
             std::vector<std::future<void>>  futures;
+
             if (lft_ == loss_function_type::kullback_leibler)  {
                 auto    futures =
                     ThreadGranularity::thr_pool_.parallel_loop(

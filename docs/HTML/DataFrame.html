@@ -1440,7 +1440,7 @@ table.hovertable td {
 <BR><HR COLOR="Orange" SIZE="5">
 
   <H2><font color="blue">Multithreading</font></H2>
-    In general, multithreading could be very tricky. A lot of times you think by using multithreading you enhance the performance of your program. But in fact, you are hindering it. It requires measuring and careful adjustments. It is recommended to start with a single-threaded version and when that is <I>working correctly</I>, take measurements and adjust to move to multithreading version.<BR>
+    In general, multithreading could be very unintuitive. Often you think by using multithreading you enhance the performance of your program. But in fact, you are hindering it. To do effective multithreading, you must do two things repeatedly; measure and adjust. It is recommended to start with a single-threaded version and when that is <I>working correctly</I>, take measurements and adjust to move to multithreading version.<BR>
 DataFrame uses multithreading extensively and provides granular tools to adjust your environment. Let’s divide the multithreading subject in DataFrame into two categories:<BR>
 
   <H4>1. User Multithreading</H4>
@@ -1450,7 +1450,8 @@ DataFrame uses multithreading extensively and provides granular tools to adjust 
       <LI>In addition, instances of DataFrame are not multithreaded safe either. In other words, a single instance of DataFrame must not be used in multiple threads without protection, unless it is used as read-only.</LI>
     </UL>
   <H4>2. DataFrame Internal Multithreading</H4>
-  Whether or not you, as the user, use multithreading, DataFrame utilizes a versatile thread-pool to employ parallel computing extensively in almost all its functionalities. By default, there is no multithreading. All algorithms execute their single-threaded version. To enable multithreading, call either <I>ThreadGranularity::set_optimum_thread_level()</I> (recommended) or <I>ThreadGranularity::set_thread_level(n)</I>. When Multithreading is enabled, most parallel algorithms trigger when number of data points exceeds 250k and number of threads exceeds 2.<BR>
+  Whether or not you, as the user, use multithreading, DataFrame utilizes a versatile thread-pool to employ parallel computing extensively in almost all its API's. By default, there is no multithreading. All algorithms execute their single-threaded version. To enable multithreading, call either <I>ThreadGranularity::set_optimum_thread_level()</I> (recommended) or <I>ThreadGranularity::set_thread_level(n)</I>.<BR>
+  When Multithreading is enabled, most parallel algorithms trigger when number of data points exceeds 250k and number of threads exceeds 2. Therefore, if your process deals with datasets smaller than this, it doesn't make sense to populate the thread-pool with threads as they will be waste of resources.<BR>
   You do not need to worry about synchronization for DataFrame internal multithreading. It is done behind the scenes and unbeknown to you.<BR>
   <UL>
     <LI> There are asynchronous versions of some methods. For example, you have sort()/sort_async(), visit()/visit_async(), ... The latter versions return a std::future and would execute in parallel.<BR>If you chose to use DataFrame async interfaces, it is highly recommended to call <I>ThreadGranularity::set_optimum_thread_level()</I>, So your thread-pool is populated with optimal number of threads. Otherwise, if thread-pool is empty, async interfaces will add one thread to it. Having only one thread in thread-pool could be suboptimal and hinder performance.</LI>

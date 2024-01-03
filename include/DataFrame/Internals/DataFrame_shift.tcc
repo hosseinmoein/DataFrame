@@ -48,9 +48,12 @@ void DataFrame<I, H>::self_shift(size_type periods, shift_policy sp)  {
         if (sp == shift_policy::down || sp == shift_policy::up) [[likely]]  {
             vertical_shift_functor_<Ts ...> functor(periods, sp);
             const size_type                 num_cols = data_.size();
-            const                           SpinGuard guard(lock_);
+            const auto                      thread_level =
+                (indices_.size() < ThreadPool::MUL_THR_THHOLD)
+                    ? 0L : get_thread_level();
+            const SpinGuard                 guard(lock_);
 
-            if (get_thread_level() > 2)  {
+            if (thread_level > 2)  {
                 auto    lbd =
                     [&functor, this](auto begin, auto end) -> void  {
                         for (size_type idx = begin; idx < end; ++idx)

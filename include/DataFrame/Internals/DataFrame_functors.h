@@ -453,17 +453,20 @@ struct drop_missing_rows_functor_ :
                                        drop_policy p,
                                        size_type th,
                                        size_type cn,
+                                       long tl,
                                        std::vector<std::future<void>> &futs)
         : missing_row_map(mrm),
           policy(p),
           threshold(th),
           col_num(cn),
+          thread_level(tl),
           futures(futs)  {   }
 
     const DropRowMap                &missing_row_map;
     const drop_policy               policy;
     const size_type                 threshold;
     const size_type                 col_num;
+    const long                      thread_level;
     std::vector<std::future<void>>  &futures;
 
     template<typename T>

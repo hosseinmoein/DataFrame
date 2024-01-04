@@ -433,7 +433,8 @@ get_data_by_idx(const StlVecType<IndexType> &values) const  {
     const SpinGuard guard(lock_);
 
     for (const auto &citer : column_list_) [[likely]]  {
-        create_col_functor_<DataFrame, Ts ...> functor(citer.first.c_str(), df);
+        create_col_functor_<DataFrame, Ts ...> functor(citer.first.c_str(),
+                                                       df);
 
         data_[citer.second].change(functor);
     }
@@ -553,10 +554,8 @@ DataFrame<I, H>::get_view_by_idx (Index2D<IndexType> range) const  {
         const SpinGuard guard(lock_);
 
         for (const auto &iter : column_list_) [[likely]]  {
-            view_setup_functor_<ConstView, Ts ...>  functor (iter.first.c_str(),
-                                                             b_dist,
-                                                             e_dist,
-                                                             dfcv);
+            view_setup_functor_<ConstView, Ts ...>  functor (
+                iter.first.c_str(), b_dist, e_dist, dfcv);
 
             data_[iter.second].change(functor);
         }
@@ -759,7 +758,8 @@ get_data_by_loc (const StlVecType<long> &locations) const  {
     const SpinGuard guard(lock_);
 
     for (const auto &citer : column_list_) [[likely]]  {
-        create_col_functor_<DataFrame, Ts ...> functor(citer.first.c_str(), df);
+        create_col_functor_<DataFrame, Ts ...> functor(citer.first.c_str(),
+                                                       df);
 
         data_[citer.second].change(functor);
     }
@@ -1013,7 +1013,8 @@ get_data_by_sel (const char *name, F &sel_functor) const  {
     const SpinGuard guard(lock_);
 
     for (const auto &citer : column_list_) [[likely]]  {
-        create_col_functor_<DataFrame, Ts ...> functor(citer.first.c_str(), df);
+        create_col_functor_<DataFrame, Ts ...> functor(citer.first.c_str(),
+                                                       df);
 
         data_[citer.second].change(functor);
     }
@@ -1184,7 +1185,8 @@ get_data_by_sel (const char *name1, const char *name2, F &sel_functor) const  {
     df.load_index(std::move(new_index));
 
     for (const auto &citer : column_list_) [[likely]]  {
-        create_col_functor_<DataFrame, Ts ...> functor(citer.first.c_str(), df);
+        create_col_functor_<DataFrame, Ts ...> functor(citer.first.c_str(),
+                                                       df);
 
         data_[citer.second].change(functor);
     }
@@ -1375,7 +1377,8 @@ get_data_by_sel (const char *name1,
     df.load_index(std::move(new_index));
 
     for (const auto &citer : column_list_) [[likely]]  {
-        create_col_functor_<DataFrame, Ts ...> functor(citer.first.c_str(), df);
+        create_col_functor_<DataFrame, Ts ...> functor(citer.first.c_str(),
+                                                       df);
 
         data_[citer.second].change(functor);
     }
@@ -1779,7 +1782,8 @@ get_data_by_sel(const char *name1,
     df.load_index(std::move(new_index));
 
     for (const auto &citer : column_list_) [[likely]]  {
-        create_col_functor_<DataFrame, Ts ...> functor(citer.first.c_str(), df);
+        create_col_functor_<DataFrame, Ts ...> functor(citer.first.c_str(),
+                                                       df);
 
         data_[citer.second].change(functor);
     }
@@ -2008,7 +2012,8 @@ get_data_by_sel(const char *name1,
     df.load_index(std::move(new_index));
 
     for (const auto &citer : column_list_) [[likely]]  {
-        create_col_functor_<DataFrame, Ts ...> functor(citer.first.c_str(), df);
+        create_col_functor_<DataFrame, Ts ...> functor(citer.first.c_str(),
+                                                       df);
 
         data_[citer.second].change(functor);
     }
@@ -2135,7 +2140,8 @@ get_data_by_sel(const char *name1,
     df.load_index(std::move(new_index));
 
     for (const auto &citer : column_list_) [[likely]]  {
-        create_col_functor_<DataFrame, Ts ...> functor(citer.first.c_str(), df);
+        create_col_functor_<DataFrame, Ts ...> functor(citer.first.c_str(),
+                                                       df);
 
         data_[citer.second].change(functor);
     }
@@ -2266,7 +2272,8 @@ get_data_by_sel(const char *name1,
     df.load_index(std::move(new_index));
 
     for (const auto &citer : column_list_) [[likely]]  {
-        create_col_functor_<DataFrame, Ts ...> functor(citer.first.c_str(), df);
+        create_col_functor_<DataFrame, Ts ...> functor(citer.first.c_str(),
+                                                       df);
 
         data_[citer.second].change(functor);
     }
@@ -2401,7 +2408,8 @@ get_data_by_sel(const char *name1,
     df.load_index(std::move(new_index));
 
     for (const auto &citer : column_list_) [[likely]]  {
-        create_col_functor_<DataFrame, Ts ...> functor(citer.first.c_str(), df);
+        create_col_functor_<DataFrame, Ts ...> functor(citer.first.c_str(),
+                                                       df);
 
         data_[citer.second].change(functor);
     }
@@ -3250,7 +3258,8 @@ combine(const char *col_name,
     guard.release();
 
     const size_type col_s =
-        std::min<size_type>({ lhs_col.size(), df1_col.size(), df2_col.size() });
+        std::min<size_type>({ lhs_col.size(), df1_col.size(),
+                              df2_col.size() });
     StlVecType<T>   result;
 
     result.reserve(col_s);
@@ -3287,7 +3296,8 @@ combine(const char *col_name,
     result.reserve(col_s);
     for (size_type i = 0; i < col_s; ++i) [[likely]]
         result.push_back(
-            std::move(functor(lhs_col[i], df1_col[i], df2_col[i], df3_col[i])));
+            std::move(functor(lhs_col[i], df1_col[i], df2_col[i],
+                              df3_col[i])));
 
     return (result);
 }
@@ -3358,6 +3368,23 @@ DataFrame<I, H>::get_str_col_stats(const char *col_name) const  {
     result.avg_arithmetic = double(total_arithmetic) / double(total_chars);
     result.avg_line_feed = double(total_line_feed) / double(total_chars);
     return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename T, typename C>
+typename DataFrame<I, H>::size_type
+DataFrame<I, H>::inversion_count(const char *col_name) const  {
+
+    const auto      &col = get_column<T>(col_name);
+    const auto      col_s = col.size();
+    StlVecType<T>   original = col;
+    StlVecType<T>   temp(col_s);
+    const auto      thread_level = get_thread_level();
+
+    return (_inv_merge_sort_(original, temp, 0, col_s - 1, C{ },
+                             thread_level));
 }
 
 } // namespace hmdf

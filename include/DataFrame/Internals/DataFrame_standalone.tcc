@@ -277,7 +277,8 @@ _load_groupby_data_2_(
 
     std::size_t         marker = 0;
     auto                &dst_idx = dest.get_index();
-    const std::size_t   vec_size = std::min(input_col1.size(), input_col2.size());
+    const std::size_t   vec_size =
+        std::min(input_col1.size(), input_col2.size());
     const auto          &src_idx = source.get_index();
 
     if (dst_idx.empty())  {
@@ -933,6 +934,123 @@ inline static T _string_to_(const char *value)  {
 
     ss >> ret;
     return (ret);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename Con, typename Comp>
+static std::size_t
+_inv_merge_(Con &original,
+            Con &temp,
+            std::size_t left,
+            std::size_t mid,
+            std::size_t right,
+            Comp &&comp)  {
+
+    std::size_t i { left };
+    std::size_t j { mid };
+    std::size_t k { left };
+    std::size_t inv_count { 0 };
+
+    while ((i <= mid - 1) && (j <= right)) {
+        if (comp (original[i], original[j])) {
+            temp[k++] = original[i++];
+        }
+        else {
+            temp[k++] = original[j++];
+            inv_count += mid - i;
+        }
+    }
+
+    // Copy the remaining elements of left sub-original (if there are any)
+    // to temp
+    //
+    while (i <= mid - 1)
+        temp[k++] = original[i++];
+
+    // Copy the remaining elements of right sub-original (if there are any)
+    // to temp
+    //
+    while (j <= right)
+        temp[k++] = original[j++];
+
+    // Copy back the merged elements to original original
+    //
+    for (i = left; i <= right; i++)
+        original[i] = temp[i];
+
+    return (inv_count);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename Con, typename Comp>
+static std::size_t
+_inv_merge_sort_(Con &original,
+               Con &temp,
+               std::size_t left,
+               std::size_t right,
+               Comp comp,
+               long thread_level)  {
+
+    using fut_type = std::future<std::size_t>;
+
+    std::size_t mid { 0 };
+    std::size_t inv_count { 0 };
+
+    if (right > left) {
+        const auto  thr_lvl =
+            ((right - left) < (ThreadPool::MUL_THR_THHOLD / 2))
+                ? 0L : thread_level;
+
+        // Divide the original into two parts and call _inv_merge_sort_()
+        // for each of the parts
+        //
+        mid = (right + left) / 2;
+
+        // Inversion count will be sum of inversions in left-part, right-part
+        // and number of inversions in merging
+        //
+        if (thr_lvl > 2)  {
+            fut_type    left_fut =
+                ThreadGranularity::thr_pool_.dispatch(
+                    false,
+                        _inv_merge_sort_<Con, Comp>,
+                    std::ref(original),
+                    std::ref(temp),
+                    left,
+                    mid,
+                    comp,
+                    thread_level);
+            fut_type    right_fut =
+                ThreadGranularity::thr_pool_.dispatch(
+                    false,
+                    _inv_merge_sort_<Con, Comp>,
+                    std::ref(original),
+                    std::ref(temp),
+                    mid + 1,
+                    right,
+                    comp,
+                    thread_level);
+
+            ThreadGranularity::thr_pool_.run_task();
+            ThreadGranularity::thr_pool_.run_task();
+            inv_count += left_fut.get() + right_fut.get();
+        }
+        else  {
+            inv_count +=
+                _inv_merge_sort_(original, temp, left, mid, comp, thread_level);
+            inv_count +=
+                _inv_merge_sort_(original, temp, mid + 1, right, comp,
+                                 thread_level);
+        }
+
+        // Merge the two parts
+        //
+        inv_count += _inv_merge_(original, temp, left, mid + 1, right, comp);
+    }
+
+    return (inv_count);
 }
 
 } // namespace hmdf

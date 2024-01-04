@@ -2665,6 +2665,21 @@ public: // Read/access and slicing interfaces
     [[nodiscard]] StringStats
     get_str_col_stats(const char *col_name) const;
 
+    // This retunrs the number of inversions in the named column. For example,
+    // in a column that is already sorted, the number of inversions is zero.
+    // In a column that is sorted in reverse, the number of inversions is
+    // n(n - 1) / 2.
+    //
+    // T:
+    //   Data type of the named column
+    // C:
+    //   Type of the comparison functor defaulted to std::less
+    // col_name:
+    //   Name of the column
+    //
+    template<typename T, typename C = std::less<T>>
+    size_type inversion_count(const char *col_name) const;
+
     // This function returns a DataFrame indexed by std::string that provides
     // a few statistics about the columns of the calling DataFrame.
     // The statistics are:

@@ -2211,11 +2211,13 @@ static void test_read_csv_with_maps()  {
         // df.write<std::ostream, double, long, map_t, unomap_t>
         //     (std::cout, io_format::csv2);
         assert(df.get_index().size() == 4);
-        assert((std::fabs(df.get_column<double>("Close")[3] - 1.0234) < 0.0001));
+        assert((std::fabs(df.get_column<double>("Close")[3] - 1.0234) <
+                              0.0001));
         assert((df.get_column<long>("Volume")[3] == 3605190400));
 
         assert((std::fabs(
-            df.get_column<map_t>("Map 1")[3]["label four 2"] - -782.5) < 0.001));
+            df.get_column<map_t>("Map 1")[3]["label four 2"] - -782.5) <
+                0.001));
         assert((std::fabs(
             df.get_column<map_t>("Map 1")[0]["label one 1"] - 123.0) < 0.001));
         assert((std::fabs(
@@ -2479,6 +2481,57 @@ static void test_get_str_col_stats()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_inversion_count()  {
+
+    std::cout << "\nTesting inversion_count(  ) ..." << std::endl;
+
+    using IntDataFrame = StdDataFrame<int>;
+
+    std::vector<int>    idx = { 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17 };
+    std::vector<int>    i1 = { 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17 };
+    std::vector<int>    i2 = { 17,16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,0 };
+    std::vector<int>    i3 = { 1,0,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17 };
+    std::vector<int>    i4 = { 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,17,16 };
+    std::vector<int>    i5 = { 1,0,2,3,4,5,6,7,8,9,10,11,12,13,14,15,17,16 };
+    std::vector<int>    i6 = { 17,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,0 };
+    std::vector<int>    i7 = { 0,1,2,3,4,5,6,10,8,9,7,11,12,13,14,15,16,17 };
+    std::vector<int>    i8 = { 0,1,2,15,4,5,6,7,8,9,10,11,12,13,14,3,16,17 };
+    std::vector<int>    i9 = { 2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2 };
+    std::vector<int>    i10 = { 2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,3 };
+    std::vector<int>    i11 = { 2,2,2,2,3,2,2,2,2,4,2,2,2,5,2,2,2,6 };
+    IntDataFrame        df;
+
+    df.load_data(std::move(idx),
+                 std::make_pair("i1", i1),
+                 std::make_pair("i2", i2),
+                 std::make_pair("i3", i3),
+                 std::make_pair("i4", i4),
+                 std::make_pair("i5", i5),
+                 std::make_pair("i6", i6),
+                 std::make_pair("i7", i7),
+                 std::make_pair("i8", i8),
+                 std::make_pair("i9", i9),
+                 std::make_pair("i10", i10),
+                 std::make_pair("i11", i11));
+
+    assert(df.inversion_count<int>("i1") == 0);
+    assert(df.inversion_count<int>("i2") == 153);
+    assert(df.inversion_count<int>("i3") == 1);
+    assert(df.inversion_count<int>("i4") == 1);
+    assert(df.inversion_count<int>("i5") == 2);
+    assert(df.inversion_count<int>("i6") == 33);
+    assert(df.inversion_count<int>("i7") == 5);
+    assert(df.inversion_count<int>("i8") == 23);
+    assert(df.inversion_count<int>("i9") == 153);
+    assert(df.inversion_count<int>("i10") == 136);
+    assert(df.inversion_count<int>("i11") == 110);
+
+    assert((df.inversion_count<int, std::greater<int>>("i1") == 153));
+    assert((df.inversion_count<int, std::greater<int>>("i2") == 0));
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
@@ -2533,6 +2586,7 @@ int main(int, char *[]) {
     test_PriceVolumeTrendVisitor();
     test_QuantQualEstimationVisitor();
     test_get_str_col_stats();
+    test_inversion_count();
 
     return (0);
 }

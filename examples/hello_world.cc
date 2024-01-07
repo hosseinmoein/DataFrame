@@ -75,7 +75,7 @@ int main(int, char *[])  {
     // NOTE: make sure you read and understand the Multithreading section
     //       in the documentations (threads could potentially hinder performance).
     //       This program (hello world) is a perfect example. Since I know this program doesn’t
-    //       deal with large datasets to trigger multithreaded algorithms, populated the thread-pool
+    //       deal with large datasets to trigger multithreaded algorithms, populating the thread-pool
     //       with threads (i.e. calling set_optimum_thread_level()) is a waste of resources.
     //
     ThreadGranularity::set_optimum_thread_level();

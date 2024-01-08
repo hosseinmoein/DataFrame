@@ -116,7 +116,7 @@ DataFrame is available on _Conan_ platform. Add `dataframe/x.y.z@` to your requi
 
 ```text
 [requires]
-dataframe/2.2.0@
+dataframe/x.x.x@
 
 [generators]
 cmake

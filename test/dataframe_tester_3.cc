@@ -2532,6 +2532,28 @@ static void test_inversion_count()  {
 
 // -----------------------------------------------------------------------------
 
+static void test__like_clause_compare_()  {
+
+    std::cout << "\nTesting _like_clause_compare_(  ) ..." << std::endl;
+
+    const std::string   str1("345&%$abcM");
+    const std::string   str2("!@#$0987^HGTtiff\"");
+    const std::string   str3("ABFDTiy");
+
+    assert(_like_clause_compare_("345*", str1.c_str()));
+    assert(_like_clause_compare_("345*M", str1.c_str()));
+    assert(_like_clause_compare_("345*m", str1.c_str()) == false);
+    assert(_like_clause_compare_("345*m", str1.c_str(), true));
+    assert(_like_clause_compare_("?*[0-9][0-9][0-9][0-9]?*", str2.c_str()));
+    assert((_like_clause_compare_("?*[0-9][0-9][0-9][0-9][0-9]?*",
+                                  str2.c_str()) == false));
+    assert(_like_clause_compare_("?*\"", str2.c_str()));
+    assert(_like_clause_compare_("?*[^ABFDTiy]?*", str3.c_str()) == false);
+    assert(_like_clause_compare_("*[^WdrhID]*", str3.c_str()));
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
@@ -2587,6 +2609,7 @@ int main(int, char *[]) {
     test_QuantQualEstimationVisitor();
     test_get_str_col_stats();
     test_inversion_count();
+    test__like_clause_compare_();
 
     return (0);
 }

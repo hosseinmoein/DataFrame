@@ -2596,6 +2596,466 @@ get_view_by_sel(const char *name1,
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
+template<StringOnly T, typename ... Ts>
+DataFrame<I, H> DataFrame<I, H>::
+get_data_by_like(const char *name,
+                 const char *pattern,
+                 bool case_insensitive,
+                 char esc_char) const  {
+
+    const ColumnVecType<T>  &vec = get_column<T>(name);
+    const size_type         col_s = vec.size();
+    StlVecType<size_type>   col_indices;
+
+    col_indices.reserve(col_s / 2);
+    for (size_type i = 0; i < col_s; ++i)  {
+        if constexpr (std::is_same_v<T, std::string> ||
+                      std::is_same_v<T, VirtualString>)  {
+            if (_like_clause_compare_(pattern,
+                                      vec[i].c_str(),
+                                      case_insensitive,
+                                      esc_char))
+                col_indices.push_back(i);
+        }
+        else  {
+            if (_like_clause_compare_(pattern,
+                                      vec[i],
+                                      case_insensitive,
+                                      esc_char))
+                col_indices.push_back(i);
+        }
+    }
+
+    DataFrame       df;
+    IndexVecType    new_index;
+
+    new_index.reserve(col_indices.size());
+    for (const auto &citer: col_indices) [[likely]]
+        new_index.push_back(indices_[citer]);
+    df.load_index(std::move(new_index));
+
+    const SpinGuard guard(lock_);
+
+    for (const auto &citer : column_list_) [[likely]]  {
+        create_col_functor_<DataFrame, Ts ...> functor(
+            citer.first.c_str(), df);
+
+        data_[citer.second].change(functor);
+    }
+
+    const size_type idx_s = indices_.size();
+    const auto      thread_level =
+        (idx_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
+
+    if (thread_level > 2)  {
+        auto    lbd =
+            [&col_indices = std::as_const(col_indices), idx_s, &df, this]
+            (const auto &begin, const auto &end) -> void  {
+                for (auto citer = begin; citer < end; ++citer)  {
+                    sel_load_functor_<size_type, Ts ...>    functor (
+                        citer->first.c_str(),
+                        col_indices,
+                        idx_s,
+                        df);
+
+                    this->data_[citer->second].change(functor);
+                }
+            };
+
+        auto    futuers =
+            thr_pool_.parallel_loop(column_list_.begin(),
+                                    column_list_.end(),
+                                    std::move(lbd));
+
+        for (auto &fut : futuers)  fut.get();
+    }
+    else  {
+        for (const auto &citer : column_list_) [[likely]]  {
+            sel_load_functor_<size_type, Ts ...>    functor (
+                citer.first.c_str(),
+                col_indices,
+                idx_s,
+                df);
+
+            data_[citer.second].change(functor);
+        }
+    }
+
+    return (df);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<StringOnly T, typename ... Ts>
+typename DataFrame<I, H>::PtrView DataFrame<I, H>::
+get_view_by_like(const char *name,
+                 const char *pattern,
+                 bool case_insensitive,
+                 char esc_char)  {
+
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
+                  "Only a StdDataFrame can call get_view_by_like()");
+
+    const ColumnVecType<T>  &vec = get_column<T>(name);
+    const size_type         col_s = vec.size();
+    StlVecType<size_type>   col_indices;
+
+    col_indices.reserve(col_s / 2);
+    for (size_type i = 0; i < col_s; ++i) [[likely]]  {
+        if constexpr (std::is_same_v<T, std::string> ||
+                      std::is_same_v<T, VirtualString>)  {
+            if (_like_clause_compare_(pattern,
+                                      vec[i].c_str(),
+                                      case_insensitive,
+                                      esc_char))
+                col_indices.push_back(i);
+        }
+        else  {
+            if (_like_clause_compare_(pattern,
+                                      vec[i],
+                                      case_insensitive,
+                                      esc_char))
+                col_indices.push_back(i);
+        }
+    }
+
+    using TheView = PtrView;
+
+    TheView                         dfv;
+    typename TheView::IndexVecType  new_index;
+
+    new_index.reserve(col_indices.size());
+    for (const auto &citer: col_indices) [[likely]]
+        new_index.push_back(&(indices_[citer]));
+    dfv.indices_ = std::move(new_index);
+
+    const size_type idx_s = indices_.size();
+    const SpinGuard guard(lock_);
+
+    for (const auto &col_citer : column_list_) [[likely]]  {
+        sel_load_view_functor_<size_type, TheView, Ts ...>   functor (
+            col_citer.first.c_str(),
+            col_indices,
+            idx_s,
+            dfv);
+
+        data_[col_citer.second].change(functor);
+    }
+
+    return (dfv);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<StringOnly T, typename ... Ts>
+typename DataFrame<I, H>::ConstPtrView DataFrame<I, H>::
+get_view_by_like(const char *name,
+                 const char *pattern,
+                 bool case_insensitive,
+                 char esc_char) const  {
+
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
+                  "Only a StdDataFrame can call get_view_by_like()");
+
+    const ColumnVecType<T>  &vec = get_column<T>(name);
+    const size_type         col_s = vec.size();
+    StlVecType<size_type>   col_indices;
+
+    col_indices.reserve(col_s / 2);
+    for (size_type i = 0; i < col_s; ++i) [[likely]]  {
+        if constexpr (std::is_same_v<T, std::string> ||
+                      std::is_same_v<T, VirtualString>)  {
+            if (_like_clause_compare_(pattern,
+                                      vec[i].c_str(),
+                                      case_insensitive,
+                                      esc_char))
+                col_indices.push_back(i);
+        }
+        else  {
+            if (_like_clause_compare_(pattern,
+                                      vec[i],
+                                      case_insensitive,
+                                      esc_char))
+                col_indices.push_back(i);
+        }
+    }
+
+    using TheView = ConstPtrView;
+
+    TheView                         dfv;
+    typename TheView::IndexVecType  new_index;
+
+    new_index.reserve(col_indices.size());
+    for (const auto &citer: col_indices) [[likely]]
+        new_index.push_back(&(indices_[citer]));
+    dfv.indices_ = std::move(new_index);
+
+    const size_type idx_s = indices_.size();
+    const SpinGuard guard(lock_);
+
+    for (const auto &col_citer : column_list_) [[likely]]  {
+        sel_load_view_functor_<size_type, TheView, Ts ...>   functor (
+            col_citer.first.c_str(),
+            col_indices,
+            idx_s,
+            dfv);
+
+        data_[col_citer.second].change(functor);
+    }
+
+    return (dfv);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<StringOnly T, typename ... Ts>
+DataFrame<I, H> DataFrame<I, H>::
+get_data_by_like(const char *name1,
+                 const char *name2,
+                 const char *pattern1,
+                 const char *pattern2,
+                 bool case_insensitive,
+                 char esc_char) const  {
+
+    const size_type         idx_s = indices_.size();
+    const SpinGuard         guard (lock_);
+    const ColumnVecType<T>  &vec1 = get_column<T>(name1, false);
+    const ColumnVecType<T>  &vec2 = get_column<T>(name2, false);
+    const size_type         min_col_s = std::min(vec1.size(), vec2.size());
+    StlVecType<size_type>   col_indices;
+
+    col_indices.reserve(idx_s / 2);
+    for (size_type i = 0; i < min_col_s; ++i) [[likely]]  {
+        if constexpr (std::is_same_v<T, std::string> ||
+                      std::is_same_v<T, VirtualString>)  {
+            if (_like_clause_compare_(pattern1,
+                                      vec1[i].c_str(),
+                                      case_insensitive,
+                                      esc_char) &&
+                _like_clause_compare_(pattern2,
+                                      vec2[i].c_str(),
+                                      case_insensitive,
+                                      esc_char))
+                col_indices.push_back(i);
+        }
+        else  {
+            if (_like_clause_compare_(pattern1,
+                                      vec1[i],
+                                      case_insensitive,
+                                      esc_char) &&
+                _like_clause_compare_(pattern2,
+                                      vec2[i],
+                                      case_insensitive,
+                                      esc_char))
+                col_indices.push_back(i);
+        }
+    }
+
+    DataFrame       df;
+    IndexVecType    new_index;
+
+    new_index.reserve(col_indices.size());
+    for (const auto &citer: col_indices)
+        new_index.push_back(indices_[citer]);
+    df.load_index(std::move(new_index));
+
+    for (const auto &citer : column_list_) [[likely]]  {
+        create_col_functor_<DataFrame, Ts ...> functor(
+            citer.first.c_str(), df);
+
+        data_[citer.second].change(functor);
+    }
+
+    const auto  thread_level =
+        (idx_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
+
+    if (thread_level > 2)  {
+        auto    lbd =
+            [&col_indices = std::as_const(col_indices), idx_s, &df, this]
+            (const auto &begin, const auto &end) -> void  {
+                for (auto citer = begin; citer < end; ++citer)  {
+                    sel_load_functor_<size_type, Ts ...>    functor (
+                        citer->first.c_str(),
+                        col_indices,
+                        idx_s,
+                        df);
+
+                    this->data_[citer->second].change(functor);
+                }
+            };
+
+        auto    futuers =
+            thr_pool_.parallel_loop(column_list_.begin(),
+                                    column_list_.end(),
+                                    std::move(lbd));
+
+        for (auto &fut : futuers)  fut.get();
+    }
+    else  {
+        for (const auto &citer : column_list_) [[likely]]  {
+            sel_load_functor_<size_type, Ts ...>    functor (
+                citer.first.c_str(),
+                col_indices,
+                idx_s,
+                df);
+
+            data_[citer.second].change(functor);
+        }
+    }
+
+    return (df);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<StringOnly T, typename ... Ts>
+typename DataFrame<I, H>::PtrView DataFrame<I, H>::
+get_view_by_like(const char *name1,
+                 const char *name2,
+                 const char *pattern1,
+                 const char *pattern2,
+                 bool case_insensitive,
+                 char esc_char)  {
+
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
+                  "Only a StdDataFrame can call get_view_by_like()");
+
+    const SpinGuard         guard (lock_);
+    const ColumnVecType<T>  &vec1 = get_column<T>(name1, false);
+    const ColumnVecType<T>  &vec2 = get_column<T>(name2, false);
+    const size_type         idx_s = indices_.size();
+    const size_type         min_col_s = std::min(vec1.size(), vec2.size());
+    StlVecType<size_type>   col_indices;
+
+    col_indices.reserve(idx_s / 2);
+    for (size_type i = 0; i < min_col_s; ++i) [[likely]]  {
+        if constexpr (std::is_same_v<T, std::string> ||
+                      std::is_same_v<T, VirtualString>)  {
+            if (_like_clause_compare_(pattern1,
+                                      vec1[i].c_str(),
+                                      case_insensitive,
+                                      esc_char) &&
+                _like_clause_compare_(pattern2,
+                                      vec2[i].c_str(),
+                                      case_insensitive,
+                                      esc_char))
+                col_indices.push_back(i);
+        }
+        else  {
+            if (_like_clause_compare_(pattern1,
+                                      vec1[i],
+                                      case_insensitive,
+                                      esc_char) &&
+                _like_clause_compare_(pattern2,
+                                      vec2[i],
+                                      case_insensitive,
+                                      esc_char))
+                col_indices.push_back(i);
+        }
+	}
+
+    using TheView = PtrView;
+
+    TheView                         dfv;
+    typename TheView::IndexVecType  new_index;
+
+    new_index.reserve(col_indices.size());
+    for (const auto &citer: col_indices)
+        new_index.push_back(&(indices_[citer]));
+    dfv.indices_ = std::move(new_index);
+
+    for (const auto &col_citer : column_list_) [[likely]]  {
+        sel_load_view_functor_<size_type, TheView, Ts ...>   functor (
+            col_citer.first.c_str(),
+            col_indices,
+            idx_s,
+            dfv);
+
+        data_[col_citer.second].change(functor);
+    }
+
+    return (dfv);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<StringOnly T, typename ... Ts>
+typename DataFrame<I, H>::ConstPtrView DataFrame<I, H>::
+get_view_by_like(const char *name1,
+                 const char *name2,
+                 const char *pattern1,
+                 const char *pattern2,
+                 bool case_insensitive,
+                 char esc_char) const  {
+
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
+                  "Only a StdDataFrame can call get_view_by_like()");
+
+    const SpinGuard         guard (lock_);
+    const ColumnVecType<T>  &vec1 = get_column<T>(name1, false);
+    const ColumnVecType<T>  &vec2 = get_column<T>(name2, false);
+    const size_type         idx_s = indices_.size();
+    const size_type         min_col_s = std::min(vec1.size(), vec2.size());
+    StlVecType<size_type>   col_indices;
+
+    col_indices.reserve(idx_s / 2);
+    for (size_type i = 0; i < min_col_s; ++i) [[likely]]  {
+        if constexpr (std::is_same_v<T, std::string> ||
+                      std::is_same_v<T, VirtualString>)  {
+            if (_like_clause_compare_(pattern1,
+                                      vec1[i].c_str(),
+                                      case_insensitive,
+                                      esc_char) &&
+                _like_clause_compare_(pattern2,
+                                      vec2[i].c_str(),
+                                      case_insensitive,
+                                      esc_char))
+                col_indices.push_back(i);
+        }
+        else  {
+            if (_like_clause_compare_(pattern1,
+                                      vec1[i],
+                                      case_insensitive,
+                                      esc_char) &&
+                _like_clause_compare_(pattern2,
+                                      vec2[i],
+                                      case_insensitive,
+                                      esc_char))
+                col_indices.push_back(i);
+        }
+	}
+
+    using TheView = ConstPtrView;
+
+    TheView                         dfv;
+    typename TheView::IndexVecType  new_index;
+
+    new_index.reserve(col_indices.size());
+    for (const auto &citer: col_indices)
+        new_index.push_back(&(indices_[citer]));
+    dfv.indices_ = std::move(new_index);
+
+    for (const auto &col_citer : column_list_) [[likely]]  {
+        sel_load_view_functor_<size_type, TheView, Ts ...>   functor (
+            col_citer.first.c_str(),
+            col_indices,
+            idx_s,
+            dfv);
+
+        data_[col_citer.second].change(functor);
+    }
+
+    return (dfv);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
 template<typename ... Ts>
 DataFrame<I, H> DataFrame<I, H>::
 get_data_by_rand(random_policy spec, double n, seed_t seed) const  {

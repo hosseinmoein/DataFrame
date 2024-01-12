@@ -1147,7 +1147,7 @@ struct _LikeClauseUtil_  {
 //       moderately sized strings. I have not tested this with huge/massive
 //       strings. 
 //
-static bool
+static inline bool
 _like_clause_compare_(const char *pattern,
                       const char *input_str,
                       bool case_insensitive = false,

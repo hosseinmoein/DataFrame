@@ -2554,6 +2554,99 @@ static void test__like_clause_compare_()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_get_data_by_like()  {
+
+    std::cout << "\nTesting get_data_by_like( ) ..." << std::endl;
+
+    StlVecType<unsigned long>  idxvec =
+        { 1UL, 2UL, 3UL, 10UL, 5UL, 7UL, 8UL, 12UL, 9UL, 12UL, 10UL, 13UL,
+          10UL, 15UL, 14UL };
+    StlVecType<std::string>    strvec1 =
+        { "345&%$abcM", "!@#$0987^HGTtiff\"", "ABFDTiy", "345&%$abcM",
+          "!@#$0987^HGTtiff\"", "!@#$0987^HGTtiff\"", "345&%$abcM",
+          "!@#$0987^HGTtiff\"", "ABFDTiy", "345&%$abcM", "!@#$0987^HGTtiff\"",
+          "ABFDTiy", "345&%$abcM", "ABFDTiy", "ABFDTiy" };
+    StlVecType<std::string>    strvec2 =
+        { "ABFDTiy", "!@#$0987^HGTtiff\"", "ABFDTiy", "345&%$abcM",
+          "!@#$0987^HGTtiff\"", "ABFDTiy", "!@#$0987^HGTtiff\"",
+          "!@#$0987^HGTtiff\"", "ABFDTiy", "345&%$abcM", "!@#$0987^HGTtiff\"",
+          "ABFDTiy", "345&%$abcM", "ABFDTiy", "ABFDTiy" };
+    StlVecType<int>            intvec =
+        { 1, 2, 3, 10, 5, 7, 8, 12, 9, 12, 10, 13, 10, 15, 14 };
+    MyDataFrame                df;
+
+    df.load_data(std::move(idxvec),
+                 std::make_pair("str column 1", strvec1),
+                 std::make_pair("str column 2", strvec2),
+                 std::make_pair("int column", intvec));
+
+    auto    df_like2 =
+        df.get_data_by_like<std::string, std::string, int>(
+            "str column 1",
+            "str column 2",
+            "?*[0-9][0-9][0-9][0-9]?*",
+            "?*[0-9][0-9][0-9][0-9]?*");
+
+    assert(df_like2.get_index().size() == 4);
+    assert(df_like2.get_index()[2] == 12);
+    assert(df_like2.get_column<int>("int column")[2] == 12);
+    assert(df_like2.get_column<std::string>("str column 1").size() == 4);
+    assert(df_like2.get_column<std::string>("str column 2").size() == 4);
+    assert((df_like2.get_column<std::string>("str column 1")[0] ==
+                "!@#$0987^HGTtiff\""));
+    assert((df_like2.get_column<std::string>("str column 1")[2] ==
+                "!@#$0987^HGTtiff\""));
+    assert((df_like2.get_column<std::string>("str column 2")[0] ==
+                "!@#$0987^HGTtiff\""));
+    assert((df_like2.get_column<std::string>("str column 2")[2] ==
+                "!@#$0987^HGTtiff\""));
+
+    auto    dfv_like2 =
+        df.get_view_by_like<std::string, std::string, int>(
+            "str column 1",
+            "str column 2",
+            "?*[0-9][0-9][0-9][0-9]?*",
+            "?*[0-9][0-9][0-9][0-9]?*");
+
+    assert(dfv_like2.get_index().size() == 4);
+    assert(dfv_like2.get_index()[2] == 12);
+    assert(dfv_like2.get_column<int>("int column")[2] == 12);
+    assert(dfv_like2.get_column<std::string>("str column 1").size() == 4);
+    assert(dfv_like2.get_column<std::string>("str column 2").size() == 4);
+    assert((dfv_like2.get_column<std::string>("str column 1")[0] ==
+                "!@#$0987^HGTtiff\""));
+    assert((dfv_like2.get_column<std::string>("str column 1")[2] ==
+                "!@#$0987^HGTtiff\""));
+    assert((dfv_like2.get_column<std::string>("str column 2")[0] ==
+                "!@#$0987^HGTtiff\""));
+    assert((dfv_like2.get_column<std::string>("str column 2")[2] ==
+                "!@#$0987^HGTtiff\""));
+
+    dfv_like2.get_column<std::string>("str column 2")[3] = "ABC";
+    assert(dfv_like2.get_column<std::string>("str column 2")[3] == "ABC");
+    assert(df.get_column<std::string>("str column 2")[10] == "ABC");
+
+    auto    df_like1 =
+        df.get_data_by_like<std::string, std::string, int>(
+            "str column 1",
+            "?*&%?*");
+
+    assert(df_like1.get_index().size() == 5);
+    assert(df_like1.get_index()[2] == 8);
+    assert(df_like1.get_column<int>("int column")[2] == 8);
+    assert(df_like1.get_column<std::string>("str column 1").size() == 5);
+    assert(df_like1.get_column<std::string>("str column 2").size() == 5);
+    assert((df_like1.get_column<std::string>("str column 1")[0] ==
+                "345&%$abcM"));
+    assert((df_like1.get_column<std::string>("str column 1")[2] ==
+                "345&%$abcM"));
+    assert((df_like1.get_column<std::string>("str column 2")[0] == "ABFDTiy"));
+    assert((df_like1.get_column<std::string>("str column 2")[2] ==
+                "!@#$0987^HGTtiff\""));
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
@@ -2610,6 +2703,7 @@ int main(int, char *[]) {
     test_get_str_col_stats();
     test_inversion_count();
     test__like_clause_compare_();
+    test_get_data_by_like();
 
     return (0);
 }

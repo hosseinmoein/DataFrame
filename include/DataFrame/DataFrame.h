@@ -2550,9 +2550,9 @@ public: // Read/access and slicing interfaces
     //   Name of the first data column
     // name2:
     //   Name of the second data column
-    // pattern1
+    // pattern1:
     //   Glob like pattern to use for matching strings for the first column
-    // pattern2
+    // pattern2:
     //   Glob like pattern to use for matching strings for the second column
     // case_insensitive:
     //   If true, matching logic ignores case

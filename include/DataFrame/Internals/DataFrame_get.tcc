@@ -1002,61 +1002,7 @@ get_data_by_sel (const char *name, F &sel_functor) const  {
         if (sel_functor (indices_[i], vec[i]))
             col_indices.push_back(i);
 
-    DataFrame       df;
-    IndexVecType    new_index;
-
-    new_index.reserve(col_indices.size());
-    for (const auto &citer: col_indices) [[likely]]
-        new_index.push_back(indices_[citer]);
-    df.load_index(std::move(new_index));
-
-    const SpinGuard guard(lock_);
-
-    for (const auto &citer : column_list_) [[likely]]  {
-        create_col_functor_<DataFrame, Ts ...> functor(citer.first.c_str(),
-                                                       df);
-
-        data_[citer.second].change(functor);
-    }
-
-    const auto  thread_level =
-        (idx_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
-
-    if (thread_level > 2)  {
-        auto    lbd =
-            [&col_indices = std::as_const(col_indices), idx_s, &df, this]
-            (const auto &begin, const auto &end) -> void  {
-                for (auto citer = begin; citer < end; ++citer)  {
-                    sel_load_functor_<size_type, Ts ...>    functor (
-                        citer->first.c_str(),
-                        col_indices,
-                        idx_s,
-                        df);
-
-                    this->data_[citer->second].change(functor);
-                }
-            };
-
-        auto    futuers =
-            thr_pool_.parallel_loop(column_list_.begin(),
-                                    column_list_.end(),
-                                    std::move(lbd));
-
-        for (auto &fut : futuers)  fut.get();
-    }
-    else  {
-        for (const auto &citer : column_list_) [[likely]]  {
-            sel_load_functor_<size_type, Ts ...>    functor (
-                citer.first.c_str(),
-                col_indices,
-                idx_s,
-                df);
-
-            data_[citer.second].change(functor);
-        }
-    }
-
-    return (df);
+    return (data_by_sel_common_<Ts ...>(col_indices, idx_s));
 }
 
 // ----------------------------------------------------------------------------
@@ -1079,37 +1025,14 @@ get_view_by_sel (const char *name, F &sel_functor)  {
         if (sel_functor (indices_[i], vec[i])) [[unlikely]]
             col_indices.push_back(i);
 
-    using TheView = PtrView;
-
-    TheView                         dfv;
-    typename TheView::IndexVecType  new_index;
-
-    new_index.reserve(col_indices.size());
-    for (const auto &citer: col_indices) [[likely]]
-        new_index.push_back(&(indices_[citer]));
-    dfv.indices_ = std::move(new_index);
-
-    const SpinGuard guard(lock_);
-
-    for (const auto &col_citer : column_list_) [[likely]]  {
-        sel_load_view_functor_<size_type, TheView, Ts ...>   functor (
-            col_citer.first.c_str(),
-            col_indices,
-            idx_s,
-            dfv);
-
-        data_[col_citer.second].change(functor);
-    }
-
-    return (dfv);
+    return (view_by_sel_common_<Ts ...>(col_indices, idx_s));
 }
 
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
 template<typename T, typename F, typename ... Ts>
-typename DataFrame<I, H>::ConstPtrView
-DataFrame<I, H>::
+typename DataFrame<I, H>::ConstPtrView DataFrame<I, H>::
 get_view_by_sel (const char *name, F &sel_functor) const  {
 
     static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
@@ -1125,29 +1048,7 @@ get_view_by_sel (const char *name, F &sel_functor) const  {
         if (sel_functor (indices_[i], vec[i])) [[unlikely]]
             col_indices.push_back(i);
 
-    using TheView = ConstPtrView;
-
-    TheView                         dfv;
-    typename TheView::IndexVecType  new_index;
-
-    new_index.reserve(col_indices.size());
-    for (const auto &citer: col_indices) [[likely]]
-        new_index.push_back(&(indices_[citer]));
-    dfv.indices_ = std::move(new_index);
-
-    const SpinGuard guard(lock_);
-
-    for (const auto &col_citer : column_list_) [[likely]]  {
-        sel_load_view_functor_<size_type, TheView, Ts ...>   functor (
-            col_citer.first.c_str(),
-            col_indices,
-            idx_s,
-            dfv);
-
-        data_[col_citer.second].change(functor);
-    }
-
-    return (dfv);
+    return (view_by_sel_common_<Ts ...>(col_indices, idx_s));
 }
 
 // ----------------------------------------------------------------------------
@@ -1176,59 +1077,7 @@ get_data_by_sel (const char *name1, const char *name2, F &sel_functor) const  {
                          i < col_s2 ? vec2[i] : get_nan<T2>()))
             col_indices.push_back(i);
 
-    DataFrame       df;
-    IndexVecType    new_index;
-
-    new_index.reserve(col_indices.size());
-    for (const auto &citer: col_indices)
-        new_index.push_back(indices_[citer]);
-    df.load_index(std::move(new_index));
-
-    for (const auto &citer : column_list_) [[likely]]  {
-        create_col_functor_<DataFrame, Ts ...> functor(citer.first.c_str(),
-                                                       df);
-
-        data_[citer.second].change(functor);
-    }
-
-    const auto  thread_level =
-        (idx_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
-
-    if (thread_level > 2)  {
-        auto    lbd =
-            [&col_indices = std::as_const(col_indices), idx_s, &df, this]
-            (const auto &begin, const auto &end) -> void  {
-                for (auto citer = begin; citer < end; ++citer)  {
-                    sel_load_functor_<size_type, Ts ...>    functor (
-                        citer->first.c_str(),
-                        col_indices,
-                        idx_s,
-                        df);
-
-                    this->data_[citer->second].change(functor);
-                }
-            };
-
-        auto    futuers =
-            thr_pool_.parallel_loop(column_list_.begin(),
-                                    column_list_.end(),
-                                    std::move(lbd));
-
-        for (auto &fut : futuers)  fut.get();
-    }
-    else  {
-        for (const auto &citer : column_list_) [[likely]]  {
-            sel_load_functor_<size_type, Ts ...>    functor (
-                citer.first.c_str(),
-                col_indices,
-                idx_s,
-                df);
-
-            data_[citer.second].change(functor);
-        }
-    }
-
-    return (df);
+    return (data_by_sel_common_<Ts ...>(col_indices, idx_s));
 }
 
 // ----------------------------------------------------------------------------
@@ -1260,27 +1109,7 @@ get_view_by_sel (const char *name1, const char *name2, F &sel_functor)  {
                          i < col_s2 ? vec2[i] : get_nan<T2>()))
             col_indices.push_back(i);
 
-    using TheView = PtrView;
-
-    TheView                         dfv;
-    typename TheView::IndexVecType  new_index;
-
-    new_index.reserve(col_indices.size());
-    for (const auto &citer: col_indices)
-        new_index.push_back(&(indices_[citer]));
-    dfv.indices_ = std::move(new_index);
-
-    for (const auto &col_citer : column_list_) [[likely]]  {
-        sel_load_view_functor_<size_type, TheView, Ts ...>   functor (
-            col_citer.first.c_str(),
-            col_indices,
-            idx_s,
-            dfv);
-
-        data_[col_citer.second].change(functor);
-    }
-
-    return (dfv);
+    return (view_by_sel_common_<Ts ...>(col_indices, idx_s));
 }
 
 // ----------------------------------------------------------------------------
@@ -1313,27 +1142,7 @@ get_view_by_sel (const char *name1, const char *name2, F &sel_functor) const  {
                          i < col_s2 ? vec2[i] : get_nan<T2>()))
             col_indices.push_back(i);
 
-    using TheView = ConstPtrView;
-
-    TheView                         dfv;
-    typename TheView::IndexVecType  new_index;
-
-    new_index.reserve(col_indices.size());
-    for (const auto &citer: col_indices) [[likely]]
-        new_index.push_back(&(indices_[citer]));
-    dfv.indices_ = std::move(new_index);
-
-    for (const auto &col_citer : column_list_) [[likely]]  {
-        sel_load_view_functor_<size_type, TheView, Ts ...>   functor (
-            col_citer.first.c_str(),
-            col_indices,
-            idx_s,
-            dfv);
-
-        data_[col_citer.second].change(functor);
-    }
-
-    return (dfv);
+    return (view_by_sel_common_<Ts ...>(col_indices, idx_s));
 }
 
 // ----------------------------------------------------------------------------
@@ -1368,59 +1177,7 @@ get_data_by_sel (const char *name1,
                          i < col_s3 ? vec3[i] : get_nan<T3>()))
             col_indices.push_back(i);
 
-    DataFrame       df;
-    IndexVecType    new_index;
-
-    new_index.reserve(col_indices.size());
-    for (const auto &citer: col_indices) [[likely]]
-        new_index.push_back(indices_[citer]);
-    df.load_index(std::move(new_index));
-
-    for (const auto &citer : column_list_) [[likely]]  {
-        create_col_functor_<DataFrame, Ts ...> functor(citer.first.c_str(),
-                                                       df);
-
-        data_[citer.second].change(functor);
-    }
-
-    const auto  thread_level =
-        (idx_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
-
-    if (thread_level > 2)  {
-        auto    lbd =
-            [&col_indices = std::as_const(col_indices), idx_s, &df, this]
-            (const auto &begin, const auto &end) -> void  {
-                for (auto citer = begin; citer < end; ++citer)  {
-                    sel_load_functor_<size_type, Ts ...>    functor (
-                        citer->first.c_str(),
-                        col_indices,
-                        idx_s,
-                        df);
-
-                    this->data_[citer->second].change(functor);
-                }
-            };
-
-        auto    futuers =
-            thr_pool_.parallel_loop(column_list_.begin(),
-                                    column_list_.end(),
-                                    std::move(lbd));
-
-        for (auto &fut : futuers)  fut.get();
-    }
-    else  {
-        for (const auto &citer : column_list_) [[likely]]  {
-            sel_load_functor_<size_type, Ts ...>    functor (
-                citer.first.c_str(),
-                col_indices,
-                idx_s,
-                df);
-
-            data_[citer.second].change(functor);
-        }
-    }
-
-    return (df);
+    return (data_by_sel_common_<Ts ...>(col_indices, idx_s));
 }
 
 // ----------------------------------------------------------------------------
@@ -1652,27 +1409,7 @@ get_view_by_sel (const char *name1,
                          i < col_s3 ? vec3[i] : get_nan<T3>()))
             col_indices.push_back(i);
 
-    using TheView = PtrView;
-
-    TheView                         dfv;
-    typename TheView::IndexVecType  new_index;
-
-    new_index.reserve(col_indices.size());
-    for (const auto &citer: col_indices) [[likely]]
-        new_index.push_back(&(indices_[citer]));
-    dfv.indices_ = std::move(new_index);
-
-    for (const auto &col_citer : column_list_) [[likely]]  {
-        sel_load_view_functor_<size_type, TheView, Ts ...>   functor (
-            col_citer.first.c_str(),
-            col_indices,
-            idx_s,
-            dfv);
-
-        data_[col_citer.second].change(functor);
-    }
-
-    return (dfv);
+    return (view_by_sel_common_<Ts ...>(col_indices, idx_s));
 }
 
 // ----------------------------------------------------------------------------
@@ -1711,27 +1448,7 @@ get_view_by_sel (const char *name1,
                          i < col_s3 ? vec3[i] : get_nan<T3>()))
             col_indices.push_back(i);
 
-    using TheView = ConstPtrView;
-
-    TheView                         dfv;
-    typename TheView::IndexVecType  new_index;
-
-    new_index.reserve(col_indices.size());
-    for (const auto &citer: col_indices) [[likely]]
-        new_index.push_back(&(indices_[citer]));
-    dfv.indices_ = std::move(new_index);
-
-    for (const auto &col_citer : column_list_) [[likely]]  {
-        sel_load_view_functor_<size_type, TheView, Ts ...>   functor (
-            col_citer.first.c_str(),
-            col_indices,
-            idx_s,
-            dfv);
-
-        data_[col_citer.second].change(functor);
-    }
-
-    return (dfv);
+    return (view_by_sel_common_<Ts ...>(col_indices, idx_s));
 }
 
 // ----------------------------------------------------------------------------
@@ -1773,59 +1490,7 @@ get_data_by_sel(const char *name1,
                         i < col_s4 ? vec4[i] : get_nan<T4>()))
             col_indices.push_back(i);
 
-    DataFrame       df;
-    IndexVecType    new_index;
-
-    new_index.reserve(col_indices.size());
-    for (const auto &citer: col_indices) [[likely]]
-        new_index.push_back(indices_[citer]);
-    df.load_index(std::move(new_index));
-
-    for (const auto &citer : column_list_) [[likely]]  {
-        create_col_functor_<DataFrame, Ts ...> functor(citer.first.c_str(),
-                                                       df);
-
-        data_[citer.second].change(functor);
-    }
-
-    const auto  thread_level =
-        (idx_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
-
-    if (thread_level > 2)  {
-        auto    lbd =
-            [&col_indices = std::as_const(col_indices), idx_s, &df, this]
-            (const auto &begin, const auto &end) -> void  {
-                for (auto citer = begin; citer < end; ++citer)  {
-                    sel_load_functor_<size_type, Ts ...>    functor (
-                        citer->first.c_str(),
-                        col_indices,
-                        idx_s,
-                        df);
-
-                    this->data_[citer->second].change(functor);
-                }
-            };
-
-        auto    futuers =
-            thr_pool_.parallel_loop(column_list_.begin(),
-                                    column_list_.end(),
-                                    std::move(lbd));
-
-        for (auto &fut : futuers)  fut.get();
-    }
-    else  {
-        for (const auto &citer : column_list_) [[likely]]  {
-            sel_load_functor_<size_type, Ts ...>    functor (
-                citer.first.c_str(),
-                col_indices,
-                idx_s,
-                df);
-
-            data_[citer.second].change(functor);
-        }
-    }
-
-    return (df);
+    return (data_by_sel_common_<Ts ...>(col_indices, idx_s));
 }
 
 // ----------------------------------------------------------------------------
@@ -1870,27 +1535,7 @@ get_view_by_sel(const char *name1,
                         i < col_s4 ? vec4[i] : get_nan<T4>()))
             col_indices.push_back(i);
 
-    using TheView = PtrView;
-
-    TheView                         dfv;
-    typename TheView::IndexVecType  new_index;
-
-    new_index.reserve(col_indices.size());
-    for (const auto &citer: col_indices) [[likely]]
-        new_index.push_back(&(indices_[citer]));
-    dfv.indices_ = std::move(new_index);
-
-    for (const auto &col_citer : column_list_) [[likely]]  {
-        sel_load_view_functor_<size_type, TheView, Ts ...>   functor (
-            col_citer.first.c_str(),
-            col_indices,
-            idx_s,
-            dfv);
-
-        data_[col_citer.second].change(functor);
-    }
-
-    return (dfv);
+    return (view_by_sel_common_<Ts ...>(col_indices, idx_s));
 }
 
 // ----------------------------------------------------------------------------
@@ -1936,27 +1581,7 @@ get_view_by_sel(const char *name1,
                         i < col_s4 ? vec4[i] : get_nan<T4>()))
             col_indices.push_back(i);
 
-    using TheView = ConstPtrView;
-
-    TheView                         dfv;
-    typename TheView::IndexVecType  new_index;
-
-    new_index.reserve(col_indices.size());
-    for (const auto &citer: col_indices) [[likely]]
-        new_index.push_back(&(indices_[citer]));
-    dfv.indices_ = std::move(new_index);
-
-    for (const auto &col_citer : column_list_) [[likely]]  {
-        sel_load_view_functor_<size_type, TheView, Ts ...>   functor (
-            col_citer.first.c_str(),
-            col_indices,
-            idx_s,
-            dfv);
-
-        data_[col_citer.second].change(functor);
-    }
-
-    return (dfv);
+    return (view_by_sel_common_<Ts ...>(col_indices, idx_s));
 }
 
 // ----------------------------------------------------------------------------
@@ -2003,59 +1628,7 @@ get_data_by_sel(const char *name1,
                         i < col_s5 ? vec5[i] : get_nan<T5>()))
             col_indices.push_back(i);
 
-    DataFrame       df;
-    IndexVecType    new_index;
-
-    new_index.reserve(col_indices.size());
-    for (const auto &citer: col_indices) [[likely]]
-        new_index.push_back(indices_[citer]);
-    df.load_index(std::move(new_index));
-
-    for (const auto &citer : column_list_) [[likely]]  {
-        create_col_functor_<DataFrame, Ts ...> functor(citer.first.c_str(),
-                                                       df);
-
-        data_[citer.second].change(functor);
-    }
-
-    const auto  thread_level =
-        (idx_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
-
-    if (thread_level > 2)  {
-        auto    lbd =
-            [&col_indices = std::as_const(col_indices), idx_s, &df, this]
-            (const auto &begin, const auto &end) -> void  {
-                for (auto citer = begin; citer < end; ++citer)  {
-                    sel_load_functor_<size_type, Ts ...>    functor (
-                        citer->first.c_str(),
-                        col_indices,
-                        idx_s,
-                        df);
-
-                    this->data_[citer->second].change(functor);
-                }
-            };
-
-        auto    futuers =
-            thr_pool_.parallel_loop(column_list_.begin(),
-                                    column_list_.end(),
-                                    std::move(lbd));
-
-        for (auto &fut : futuers)  fut.get();
-    }
-    else  {
-        for (const auto &citer : column_list_) [[likely]]  {
-            sel_load_functor_<size_type, Ts ...>    functor (
-                citer.first.c_str(),
-                col_indices,
-                idx_s,
-                df);
-
-            data_[citer.second].change(functor);
-        }
-    }
-
-    return (df);
+    return (data_by_sel_common_<Ts ...>(col_indices, idx_s));
 }
 
 // ----------------------------------------------------------------------------
@@ -2131,59 +1704,7 @@ get_data_by_sel(const char *name1,
                         i < col_s11 ? vec11[i] : get_nan<T11>()))
             col_indices.push_back(i);
 
-    DataFrame       df;
-    IndexVecType    new_index;
-
-    new_index.reserve(col_indices.size());
-    for (const auto &citer: col_indices) [[likely]]
-        new_index.push_back(indices_[citer]);
-    df.load_index(std::move(new_index));
-
-    for (const auto &citer : column_list_) [[likely]]  {
-        create_col_functor_<DataFrame, Ts ...> functor(citer.first.c_str(),
-                                                       df);
-
-        data_[citer.second].change(functor);
-    }
-
-    const auto  thread_level =
-        (idx_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
-
-    if (thread_level > 2)  {
-        auto    lbd =
-            [&col_indices = std::as_const(col_indices), idx_s, &df, this]
-            (const auto &begin, const auto &end) -> void  {
-                for (auto citer = begin; citer < end; ++citer)  {
-                    sel_load_functor_<size_type, Ts ...>    functor (
-                        citer->first.c_str(),
-                        col_indices,
-                        idx_s,
-                        df);
-
-                    this->data_[citer->second].change(functor);
-                }
-            };
-
-        auto    futuers =
-            thr_pool_.parallel_loop(column_list_.begin(),
-                                    column_list_.end(),
-                                    std::move(lbd));
-
-        for (auto &fut : futuers)  fut.get();
-    }
-    else  {
-        for (const auto &citer : column_list_) [[likely]]  {
-            sel_load_functor_<size_type, Ts ...>    functor (
-                citer.first.c_str(),
-                col_indices,
-                idx_s,
-                df);
-
-            data_[citer.second].change(functor);
-        }
-    }
-
-    return (df);
+    return (data_by_sel_common_<Ts ...>(col_indices, idx_s));
 }
 
 // ----------------------------------------------------------------------------
@@ -2263,59 +1784,7 @@ get_data_by_sel(const char *name1,
                         i < col_s12 ? vec12[i] : get_nan<T12>()))
             col_indices.push_back(i);
 
-    DataFrame       df;
-    IndexVecType    new_index;
-
-    new_index.reserve(col_indices.size());
-    for (const auto &citer: col_indices)
-        new_index.push_back(indices_[citer]);
-    df.load_index(std::move(new_index));
-
-    for (const auto &citer : column_list_) [[likely]]  {
-        create_col_functor_<DataFrame, Ts ...> functor(citer.first.c_str(),
-                                                       df);
-
-        data_[citer.second].change(functor);
-    }
-
-    const auto  thread_level =
-        (idx_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
-
-    if (thread_level > 2)  {
-        auto    lbd =
-            [&col_indices = std::as_const(col_indices), idx_s, &df, this]
-            (const auto &begin, const auto &end) -> void  {
-                for (auto citer = begin; citer < end; ++citer)  {
-                    sel_load_functor_<size_type, Ts ...>    functor (
-                        citer->first.c_str(),
-                        col_indices,
-                        idx_s,
-                        df);
-
-                    this->data_[citer->second].change(functor);
-                }
-            };
-
-        auto    futuers =
-            thr_pool_.parallel_loop(column_list_.begin(),
-                                    column_list_.end(),
-                                    std::move(lbd));
-
-        for (auto &fut : futuers)  fut.get();
-    }
-    else  {
-        for (const auto &citer : column_list_) [[likely]]  {
-            sel_load_functor_<size_type, Ts ...>    functor (
-                citer.first.c_str(),
-                col_indices,
-                idx_s,
-                df);
-
-            data_[citer.second].change(functor);
-        }
-    }
-
-    return (df);
+    return (data_by_sel_common_<Ts ...>(col_indices, idx_s));
 }
 
 // ----------------------------------------------------------------------------
@@ -2399,59 +1868,7 @@ get_data_by_sel(const char *name1,
                         i < col_s13 ? vec13[i] : get_nan<T13>()))
             col_indices.push_back(i);
 
-    DataFrame       df;
-    IndexVecType    new_index;
-
-    new_index.reserve(col_indices.size());
-    for (const auto &citer: col_indices)
-        new_index.push_back(indices_[citer]);
-    df.load_index(std::move(new_index));
-
-    for (const auto &citer : column_list_) [[likely]]  {
-        create_col_functor_<DataFrame, Ts ...> functor(citer.first.c_str(),
-                                                       df);
-
-        data_[citer.second].change(functor);
-    }
-
-    const auto  thread_level =
-        (idx_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
-
-    if (thread_level > 2)  {
-        auto    lbd =
-            [&col_indices = std::as_const(col_indices), idx_s, &df, this]
-            (const auto &begin, const auto &end) -> void  {
-                for (auto citer = begin; citer < end; ++citer)  {
-                    sel_load_functor_<size_type, Ts ...>    functor (
-                        citer->first.c_str(),
-                        col_indices,
-                        idx_s,
-                        df);
-
-                    this->data_[citer->second].change(functor);
-                }
-            };
-
-        auto    futuers =
-            thr_pool_.parallel_loop(column_list_.begin(),
-                                    column_list_.end(),
-                                    std::move(lbd));
-
-        for (auto &fut : futuers)  fut.get();
-    }
-    else  {
-        for (const auto &citer : column_list_) [[likely]]  {
-            sel_load_functor_<size_type, Ts ...>    functor (
-                citer.first.c_str(),
-                col_indices,
-                idx_s,
-                df);
-
-            data_[citer.second].change(functor);
-        }
-    }
-
-    return (df);
+    return (data_by_sel_common_<Ts ...>(col_indices, idx_s));
 }
 
 // ----------------------------------------------------------------------------
@@ -2500,27 +1917,7 @@ get_view_by_sel(const char *name1,
                         i < col_s5 ? vec5[i] : get_nan<T5>()))
             col_indices.push_back(i);
 
-    using TheView = PtrView;
-
-    TheView                         dfv;
-    typename TheView::IndexVecType  new_index;
-
-    new_index.reserve(col_indices.size());
-    for (const auto &citer: col_indices)
-        new_index.push_back(&(indices_[citer]));
-    dfv.indices_ = std::move(new_index);
-
-    for (const auto &col_citer : column_list_)  {
-        sel_load_view_functor_<size_type, TheView, Ts ...>   functor (
-            col_citer.first.c_str(),
-            col_indices,
-            idx_s,
-            dfv);
-
-        data_[col_citer.second].change(functor);
-    }
-
-    return (dfv);
+    return (view_by_sel_common_<Ts ...>(col_indices, idx_s));
 }
 
 // ----------------------------------------------------------------------------
@@ -2570,27 +1967,7 @@ get_view_by_sel(const char *name1,
                         i < col_s5 ? vec5[i] : get_nan<T5>()))
             col_indices.push_back(i);
 
-    using TheView = ConstPtrView;
-
-    TheView                         dfv;
-    typename TheView::IndexVecType  new_index;
-
-    new_index.reserve(col_indices.size());
-    for (const auto &citer: col_indices)
-        new_index.push_back(&(indices_[citer]));
-    dfv.indices_ = std::move(new_index);
-
-    for (const auto &col_citer : column_list_)  {
-        sel_load_view_functor_<size_type, TheView, Ts ...>   functor (
-            col_citer.first.c_str(),
-            col_indices,
-            idx_s,
-            dfv);
-
-        data_[col_citer.second].change(functor);
-    }
-
-    return (dfv);
+    return (view_by_sel_common_<Ts ...>(col_indices, idx_s));
 }
 
 // ----------------------------------------------------------------------------
@@ -2626,62 +2003,7 @@ get_data_by_like(const char *name,
         }
     }
 
-    DataFrame       df;
-    IndexVecType    new_index;
-
-    new_index.reserve(col_indices.size());
-    for (const auto &citer: col_indices) [[likely]]
-        new_index.push_back(indices_[citer]);
-    df.load_index(std::move(new_index));
-
-    const SpinGuard guard(lock_);
-
-    for (const auto &citer : column_list_) [[likely]]  {
-        create_col_functor_<DataFrame, Ts ...> functor(
-            citer.first.c_str(), df);
-
-        data_[citer.second].change(functor);
-    }
-
-    const size_type idx_s = indices_.size();
-    const auto      thread_level =
-        (idx_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
-
-    if (thread_level > 2)  {
-        auto    lbd =
-            [&col_indices = std::as_const(col_indices), idx_s, &df, this]
-            (const auto &begin, const auto &end) -> void  {
-                for (auto citer = begin; citer < end; ++citer)  {
-                    sel_load_functor_<size_type, Ts ...>    functor (
-                        citer->first.c_str(),
-                        col_indices,
-                        idx_s,
-                        df);
-
-                    this->data_[citer->second].change(functor);
-                }
-            };
-
-        auto    futuers =
-            thr_pool_.parallel_loop(column_list_.begin(),
-                                    column_list_.end(),
-                                    std::move(lbd));
-
-        for (auto &fut : futuers)  fut.get();
-    }
-    else  {
-        for (const auto &citer : column_list_) [[likely]]  {
-            sel_load_functor_<size_type, Ts ...>    functor (
-                citer.first.c_str(),
-                col_indices,
-                idx_s,
-                df);
-
-            data_[citer.second].change(functor);
-        }
-    }
-
-    return (df);
+    return (data_by_sel_common_<Ts ...>(col_indices, indices_.size()));
 }
 
 // ----------------------------------------------------------------------------
@@ -2720,30 +2042,7 @@ get_view_by_like(const char *name,
         }
     }
 
-    using TheView = PtrView;
-
-    TheView                         dfv;
-    typename TheView::IndexVecType  new_index;
-
-    new_index.reserve(col_indices.size());
-    for (const auto &citer: col_indices) [[likely]]
-        new_index.push_back(&(indices_[citer]));
-    dfv.indices_ = std::move(new_index);
-
-    const size_type idx_s = indices_.size();
-    const SpinGuard guard(lock_);
-
-    for (const auto &col_citer : column_list_) [[likely]]  {
-        sel_load_view_functor_<size_type, TheView, Ts ...>   functor (
-            col_citer.first.c_str(),
-            col_indices,
-            idx_s,
-            dfv);
-
-        data_[col_citer.second].change(functor);
-    }
-
-    return (dfv);
+    return (view_by_sel_common_<Ts ...>(col_indices, indices_.size()));
 }
 
 // ----------------------------------------------------------------------------
@@ -2782,30 +2081,7 @@ get_view_by_like(const char *name,
         }
     }
 
-    using TheView = ConstPtrView;
-
-    TheView                         dfv;
-    typename TheView::IndexVecType  new_index;
-
-    new_index.reserve(col_indices.size());
-    for (const auto &citer: col_indices) [[likely]]
-        new_index.push_back(&(indices_[citer]));
-    dfv.indices_ = std::move(new_index);
-
-    const size_type idx_s = indices_.size();
-    const SpinGuard guard(lock_);
-
-    for (const auto &col_citer : column_list_) [[likely]]  {
-        sel_load_view_functor_<size_type, TheView, Ts ...>   functor (
-            col_citer.first.c_str(),
-            col_indices,
-            idx_s,
-            dfv);
-
-        data_[col_citer.second].change(functor);
-    }
-
-    return (dfv);
+    return (view_by_sel_common_<Ts ...>(col_indices, indices_.size()));
 }
 
 // ----------------------------------------------------------------------------
@@ -2854,59 +2130,7 @@ get_data_by_like(const char *name1,
         }
     }
 
-    DataFrame       df;
-    IndexVecType    new_index;
-
-    new_index.reserve(col_indices.size());
-    for (const auto &citer: col_indices)
-        new_index.push_back(indices_[citer]);
-    df.load_index(std::move(new_index));
-
-    for (const auto &citer : column_list_) [[likely]]  {
-        create_col_functor_<DataFrame, Ts ...> functor(
-            citer.first.c_str(), df);
-
-        data_[citer.second].change(functor);
-    }
-
-    const auto  thread_level =
-        (idx_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
-
-    if (thread_level > 2)  {
-        auto    lbd =
-            [&col_indices = std::as_const(col_indices), idx_s, &df, this]
-            (const auto &begin, const auto &end) -> void  {
-                for (auto citer = begin; citer < end; ++citer)  {
-                    sel_load_functor_<size_type, Ts ...>    functor (
-                        citer->first.c_str(),
-                        col_indices,
-                        idx_s,
-                        df);
-
-                    this->data_[citer->second].change(functor);
-                }
-            };
-
-        auto    futuers =
-            thr_pool_.parallel_loop(column_list_.begin(),
-                                    column_list_.end(),
-                                    std::move(lbd));
-
-        for (auto &fut : futuers)  fut.get();
-    }
-    else  {
-        for (const auto &citer : column_list_) [[likely]]  {
-            sel_load_functor_<size_type, Ts ...>    functor (
-                citer.first.c_str(),
-                col_indices,
-                idx_s,
-                df);
-
-            data_[citer.second].change(functor);
-        }
-    }
-
-    return (df);
+    return (data_by_sel_common_<Ts ...>(col_indices, idx_s));
 }
 
 // ----------------------------------------------------------------------------
@@ -2956,29 +2180,9 @@ get_view_by_like(const char *name1,
                                       esc_char))
                 col_indices.push_back(i);
         }
-	}
-
-    using TheView = PtrView;
-
-    TheView                         dfv;
-    typename TheView::IndexVecType  new_index;
-
-    new_index.reserve(col_indices.size());
-    for (const auto &citer: col_indices)
-        new_index.push_back(&(indices_[citer]));
-    dfv.indices_ = std::move(new_index);
-
-    for (const auto &col_citer : column_list_) [[likely]]  {
-        sel_load_view_functor_<size_type, TheView, Ts ...>   functor (
-            col_citer.first.c_str(),
-            col_indices,
-            idx_s,
-            dfv);
-
-        data_[col_citer.second].change(functor);
     }
 
-    return (dfv);
+    return (view_by_sel_common_<Ts ...>(col_indices, idx_s));
 }
 
 // ----------------------------------------------------------------------------
@@ -3028,29 +2232,9 @@ get_view_by_like(const char *name1,
                                       esc_char))
                 col_indices.push_back(i);
         }
-	}
-
-    using TheView = ConstPtrView;
-
-    TheView                         dfv;
-    typename TheView::IndexVecType  new_index;
-
-    new_index.reserve(col_indices.size());
-    for (const auto &citer: col_indices)
-        new_index.push_back(&(indices_[citer]));
-    dfv.indices_ = std::move(new_index);
-
-    for (const auto &col_citer : column_list_) [[likely]]  {
-        sel_load_view_functor_<size_type, TheView, Ts ...>   functor (
-            col_citer.first.c_str(),
-            col_indices,
-            idx_s,
-            dfv);
-
-        data_[col_citer.second].change(functor);
     }
 
-    return (dfv);
+    return (view_by_sel_common_<Ts ...>(col_indices, idx_s));
 }
 
 // ----------------------------------------------------------------------------

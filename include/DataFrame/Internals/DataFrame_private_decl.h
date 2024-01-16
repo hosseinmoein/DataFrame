@@ -41,13 +41,17 @@ template<typename DF, template<typename> class OPT, typename ... Ts>
 friend DF
 binary_operation(const DF &lhs, const DF &rhs);
 
-template<typename T1, typename T2>
-size_type
-load_pair_(std::pair<T1, T2> &col_name_data, bool do_lock = true);
+// ----------------------------------------------------------------------------
+
+// Maps row number -> number of missing column(s)
+//
+using DropRowMap = DFMap<size_type, size_type>;
+using IndexIdxVector = StlVecType<std::tuple<size_type, size_type>>;
 
 template<typename T>
-size_type
-append_row_(std::pair<const char *, T> &row_name_data);
+using JoinSortingPair = std::pair<const T *, size_type>;
+
+// ----------------------------------------------------------------------------
 
 void read_json_(std::istream &file, bool columns_only);
 void read_csv_(std::istream &file, bool columns_only);
@@ -56,70 +60,9 @@ void read_csv2_(std::istream &file,
                 size_type starting_row,
                 size_type num_rows);
 
-template<typename T>
-static void
-fill_missing_value_(ColumnVecType<T> &vec,
-                    const T &value,
-                    int limit,
-                    size_type col_num);
-
-template<typename T>
-static void
-fill_missing_ffill_(ColumnVecType<T> &vec, int limit, size_type col_num);
-
-template<typename T,
-         typename std::enable_if<
-             supports_arithmetic<T>::value &&
-             supports_arithmetic<IndexType>::value>::type* = nullptr>
-static void
-fill_missing_midpoint_(ColumnVecType<T> &vec, int limit, size_type col_num);
-
-template<typename T,
-         typename std::enable_if<
-             ! supports_arithmetic<T>::value ||
-             ! supports_arithmetic<IndexType>::value>::type* = nullptr>
-static void
-fill_missing_midpoint_(ColumnVecType<T> &vec, int limit, size_type col_num);
-
-template<typename T>
-static void
-fill_missing_bfill_(ColumnVecType<T> &vec, int limit);
-
-template<typename T,
-         typename std::enable_if<
-             supports_arithmetic<T>::value &&
-             supports_arithmetic<IndexType>::value>::type* = nullptr>
-static void
-fill_missing_linter_(ColumnVecType<T> &vec,
-                     const IndexVecType &index,
-                     int limit);
-
-template<typename T,
-         typename std::enable_if<
-             ! supports_arithmetic<T>::value ||
-             ! supports_arithmetic<IndexType>::value>::type* = nullptr>
-static void
-fill_missing_linter_(ColumnVecType<T> &, const IndexVecType &, int);
-
-// Maps row number -> number of missing column(s)
-using DropRowMap = DFMap<size_type, size_type>;
-
-
-template<typename T>
-static void
-drop_missing_rows_(T &vec,
-                   const DropRowMap &missing_row_map,
-                   drop_policy policy,
-                   size_type threshold,
-                   size_type col_num);
-
 template<typename T, typename ITR>
 void
 setup_view_column_(const char *name, Index2D<ITR> range);
-
-using IndexIdxVector = StlVecType<std::tuple<size_type, size_type>>;
-template<typename T>
-using JoinSortingPair = std::pair<const T *, size_type>;
 
 template<typename LHS_T, typename RHS_T, typename ... Ts>
 static DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
@@ -136,16 +79,14 @@ column_join_helper_(const LHS_T &lhs,
 
 template<typename T>
 static IndexIdxVector
-get_inner_index_idx_vector_(
-    const StlVecType<JoinSortingPair<T>> &col_vec_lhs,
-    const StlVecType<JoinSortingPair<T>> &col_vec_rhs);
+get_inner_index_idx_vector_(const StlVecType<JoinSortingPair<T>> &col_vec_lhs,
+                            const StlVecType<JoinSortingPair<T>> &col_vec_rhs);
 
 template<typename LHS_T, typename RHS_T, typename ... Ts>
 static DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
-index_inner_join_(
-    const LHS_T &lhs, const RHS_T &rhs,
-    const StlVecType<JoinSortingPair<IndexType>> &col_vec_lhs,
-    const StlVecType<JoinSortingPair<IndexType>> &col_vec_rhs);
+index_inner_join_(const LHS_T &lhs, const RHS_T &rhs,
+                  const StlVecType<JoinSortingPair<IndexType>> &col_vec_lhs,
+                  const StlVecType<JoinSortingPair<IndexType>> &col_vec_rhs);
 
 template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
 static DataFrame<unsigned int, HeteroVector<std::size_t(H::align_value)>>
@@ -157,16 +98,14 @@ column_inner_join_(const LHS_T &lhs,
 
 template<typename T>
 static IndexIdxVector
-get_left_index_idx_vector_(
-    const StlVecType<JoinSortingPair<T>> &col_vec_lhs,
-    const StlVecType<JoinSortingPair<T>> &col_vec_rhs);
+get_left_index_idx_vector_(const StlVecType<JoinSortingPair<T>> &col_vec_lhs,
+                           const StlVecType<JoinSortingPair<T>> &col_vec_rhs);
 
 template<typename LHS_T, typename RHS_T, typename ... Ts>
 static DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
-index_left_join_(
-    const LHS_T &lhs, const RHS_T &rhs,
-    const StlVecType<JoinSortingPair<IndexType>> &col_vec_lhs,
-    const StlVecType<JoinSortingPair<IndexType>> &col_vec_rhs);
+index_left_join_(const LHS_T &lhs, const RHS_T &rhs,
+                 const StlVecType<JoinSortingPair<IndexType>> &col_vec_lhs,
+                 const StlVecType<JoinSortingPair<IndexType>> &col_vec_rhs);
 
 template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
 static DataFrame<unsigned int, HeteroVector<std::size_t(H::align_value)>>
@@ -178,16 +117,14 @@ column_left_join_(const LHS_T &lhs,
 
 template<typename T>
 static IndexIdxVector
-get_right_index_idx_vector_(
-    const StlVecType<JoinSortingPair<T>> &col_vec_lhs,
-    const StlVecType<JoinSortingPair<T>> &col_vec_rhs);
+get_right_index_idx_vector_(const StlVecType<JoinSortingPair<T>> &col_vec_lhs,
+                            const StlVecType<JoinSortingPair<T>> &col_vec_rhs);
 
 template<typename LHS_T, typename RHS_T, typename ... Ts>
 static DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
-index_right_join_(
-    const LHS_T &lhs, const RHS_T &rhs,
-    const StlVecType<JoinSortingPair<IndexType>> &col_vec_lhs,
-    const StlVecType<JoinSortingPair<IndexType>> &col_vec_rhs);
+index_right_join_(const LHS_T &lhs, const RHS_T &rhs,
+                  const StlVecType<JoinSortingPair<IndexType>> &col_vec_lhs,
+                  const StlVecType<JoinSortingPair<IndexType>> &col_vec_rhs);
 
 template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
 static DataFrame<unsigned int, HeteroVector<std::size_t(H::align_value)>>
@@ -216,12 +153,280 @@ index_left_right_join_(
 
 template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
 static DataFrame<unsigned int, HeteroVector<std::size_t(H::align_value)>>
-column_left_right_join_(
-    const LHS_T &lhs,
-    const RHS_T &rhs,
-    const char *col_name,
-    const StlVecType<JoinSortingPair<T>> &col_vec_lhs,
-    const StlVecType<JoinSortingPair<T>> &col_vec_rhs);
+column_left_right_join_(const LHS_T &lhs,
+                        const RHS_T &rhs,
+                        const char *col_name,
+                        const StlVecType<JoinSortingPair<T>> &col_vec_lhs,
+                        const StlVecType<JoinSortingPair<T>> &col_vec_rhs);
+
+// ----------------------------------------------------------------------------
+
+template<typename T1, typename T2>
+size_type
+load_pair_(std::pair<T1, T2> &col_name_data, bool do_lock = true)  {
+
+    return (load_column<typename decltype(col_name_data.second)::value_type>(
+                col_name_data.first, // column name
+                std::forward<T2>(col_name_data.second),
+                nan_policy::pad_with_nans,
+                do_lock));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
+size_type
+append_row_(std::pair<const char *, T> &row_name_data)  {
+
+    return (append_column<T>(row_name_data.first, // column name
+                             std::forward<T>(row_name_data.second),
+                             nan_policy::dont_pad_with_nans));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
+static void
+drop_missing_rows_(T &vec,
+                   const DropRowMap &missing_row_map,
+                   drop_policy policy,
+                   size_type threshold,
+                   size_type col_num)  {
+
+    size_type   erase_count = 0;
+    auto        dropper =
+        [&vec, &erase_count](const auto &iter) -> void  {
+            vec.erase(vec.begin() + (iter.first - erase_count));
+            erase_count += 1;
+        };
+
+    if (policy == drop_policy::all)  {
+        for (const auto &iter : missing_row_map)
+            if (iter.second == col_num)  dropper(iter);
+    }
+    else if (policy == drop_policy::any)  {
+        for (const auto &iter : missing_row_map)
+            if (iter.second > 0)  dropper(iter);
+    }
+    else if (policy == drop_policy::threshold)  {
+        for (const auto &iter : missing_row_map)
+            if (iter.second > threshold)  dropper(iter);
+    }
+
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
+static void
+fill_missing_value_(ColumnVecType<T> &vec,
+                    const T &value,
+                    int limit,
+                    size_type col_num)  {
+
+    const size_type vec_size = vec.size();
+    int             count = 0;
+
+    if (limit < 0)
+        vec.reserve(col_num);
+    for (size_type i = 0; i < col_num; ++i)  {
+        if (limit >= 0 && count >= limit)  break;
+        if (i >= vec_size)  {
+            vec.push_back(value);
+            count += 1;
+        }
+        else if (is_nan<T>(vec[i]))  {
+            vec[i] = value;
+            count += 1;
+        }
+    }
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
+static void
+fill_missing_ffill_(ColumnVecType<T> &vec, int limit, size_type col_num)  {
+
+    const size_type vec_size = vec.size();
+
+    if (vec_size == 0)  return;
+
+    int count = 0;
+    T   last_value = vec[0];
+
+    for (size_type i = 1; i < col_num; ++i)  {
+        if (limit >= 0 && count >= limit)  break;
+        if (i >= vec_size)  {
+            if (! is_nan(last_value))  {
+                vec.reserve(col_num);
+                vec.push_back(last_value);
+                count += 1;
+            }
+            else  break;
+        }
+        else  {
+            if (! is_nan<T>(vec[i]))
+                last_value = vec[i];
+            else if (! is_nan<T>(last_value))  {
+                vec[i] = last_value;
+                count += 1;
+            }
+        }
+    }
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T,
+         typename std::enable_if<
+             supports_arithmetic<T>::value &&
+             supports_arithmetic<IndexType>::value>::type* = nullptr>
+static void
+fill_missing_midpoint_(ColumnVecType<T> &vec, int limit, size_type)  {
+
+    const size_type vec_size = vec.size();
+
+    if (vec_size < 3) [[unlikely]]  return;
+
+    int count = 0;
+    T   last_value = vec[0];
+
+    for (size_type i = 1; i < vec_size - 1; ++i)  {
+        if (limit >= 0 && count >= limit)  break;
+
+        if (! is_nan<T>(vec[i]))
+            last_value = vec[i];
+        else if (! is_nan<T>(last_value))  {
+            for (size_type j = i + 1; j < vec_size; ++j)  {
+                if (! is_nan<T>(vec[j]))  {
+                    vec[i] = (last_value + vec[j]) / T(2);
+                    last_value = vec[i];
+                    count += 1;
+                    break;
+                }
+            }
+        }
+    }
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T,
+         typename std::enable_if<
+             ! supports_arithmetic<T>::value ||
+             ! supports_arithmetic<IndexType>::value>::type* = nullptr>
+static void
+fill_missing_midpoint_(ColumnVecType<T> &, int, size_type)  {
+
+    throw NotFeasible("fill_missing_midpoint_(): ERROR: Mid-point filling is "
+                      "not feasible on non-arithmetic types");
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
+static void
+fill_missing_bfill_(ColumnVecType<T> &vec, int limit)  {
+
+    const long  vec_size = static_cast<long>(vec.size());
+
+    if (vec_size == 0)  return;
+
+    int count = 0;
+    T   last_value = vec[vec_size - 1];
+
+    for (long i = vec_size - 1; i >= 0; --i)  {
+        if (limit >= 0 && count >= limit)  break;
+        if (! is_nan<T>(vec[i]))  last_value = vec[i];
+        if (is_nan<T>(vec[i]) && ! is_nan<T>(last_value))  {
+            vec[i] = last_value;
+            count += 1;
+        }
+    }
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T,
+         typename std::enable_if<
+             supports_arithmetic<T>::value &&
+             supports_arithmetic<IndexType>::value>::type* = nullptr>
+static void
+fill_missing_linter_(ColumnVecType<T> &vec,
+                     const IndexVecType &index,
+                     int limit)  {
+
+    const long  vec_size = static_cast<long>(vec.size());
+
+    if (vec_size < 3)  return;
+
+    int             count = 0;
+    const T         *y1 = &(vec[0]);
+    const T         *y2 = &(vec[2]);
+    const IndexType *x = &(index[1]);
+    const IndexType *x1 = &(index[0]);
+    const IndexType *x2 = &(index[2]);
+
+    for (long i = 1; i < vec_size - 1; ++i)  {
+        if (limit >= 0 && count >= limit)  break;
+        if (is_nan<T>(vec[i]))  {
+            if (is_nan<T>(*y2))  {
+                bool    found = false;
+
+                for (long j = i + 1; j < vec_size; ++j)  {
+                    if (! is_nan(vec[j]))  {
+                        y2 = &(vec[j]);
+                        x2 = &(index[j]);
+                        found = true;
+                        break;
+                    }
+                }
+                if (! found)  break;
+            }
+            if (is_nan<T>(*y1))  {
+                for (long j = i - 1; j >= 0; --j)  {
+                    if (! is_nan(vec[j]))  {
+                        y1 = &(vec[j]);
+                        x1 = &(index[j]);
+                        break;
+                    }
+                }
+            }
+            vec[i] =
+                *y1 +
+                (static_cast<T>(*x - *x1) / static_cast<T>(*x2 - *x1)) *
+                (*y2 - *y1);
+            count += 1;
+        }
+        if (i < (vec_size - 2))  {
+            y1 = &(vec[i]);
+            y2 = &(vec[i + 2]);
+            x = &(index[i + 1]);
+            x1 = &(index[i]);
+            x2 = &(index[i + 2]);
+        }
+    }
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T,
+         typename std::enable_if<
+             ! supports_arithmetic<T>::value ||
+             ! supports_arithmetic<IndexType>::value>::type* = nullptr>
+static void
+fill_missing_linter_(ColumnVecType<T> &, const IndexVecType &, int)  {
+
+    throw NotFeasible("fill_missing_linter_(): ERROR: Interpolation is "
+                      "not feasible on non-arithmetic types");
+}
 
 // ----------------------------------------------------------------------------
 

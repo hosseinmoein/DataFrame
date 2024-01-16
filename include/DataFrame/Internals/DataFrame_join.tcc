@@ -96,22 +96,18 @@ join_by_index (const RHS_T &rhs, join_policy mp) const  {
 
     switch(mp)  {
         case join_policy::inner_join:
-            return (index_inner_join_
-                        <decltype(*this), RHS_T, Ts ...>
-                    (*this, rhs, idx_vec_lhs, idx_vec_rhs));
+            return (index_inner_join_<DataFrame, RHS_T, Ts ...>
+                        (*this, rhs, idx_vec_lhs, idx_vec_rhs));
         case join_policy::left_join:
-            return (index_left_join_
-                        <decltype(*this), RHS_T, Ts ...>
-                    (*this, rhs, idx_vec_lhs, idx_vec_rhs));
+            return (index_left_join_<DataFrame, RHS_T, Ts ...>
+                        (*this, rhs, idx_vec_lhs, idx_vec_rhs));
         case join_policy::right_join:
-            return (index_right_join_
-                        <decltype(*this), RHS_T, Ts ...>
-                    (*this, rhs, idx_vec_lhs, idx_vec_rhs));
+            return (index_right_join_<DataFrame, RHS_T, Ts ...>
+                        (*this, rhs, idx_vec_lhs, idx_vec_rhs));
         case join_policy::left_right_join:
         default:
-            return (index_left_right_join_
-                        <decltype(*this), RHS_T, Ts ...>
-                    (*this, rhs, idx_vec_lhs, idx_vec_rhs));
+            return (index_left_right_join_<DataFrame, RHS_T, Ts ...>
+                        (*this, rhs, idx_vec_lhs, idx_vec_rhs));
     }
 }
 
@@ -174,22 +170,18 @@ join_by_column (const RHS_T &rhs, const char *name, join_policy mp) const  {
 
     switch(mp)  {
         case join_policy::inner_join:
-            return (column_inner_join_
-                        <decltype(*this), RHS_T, T, Ts ...>
-                            (*this, rhs, name, col_vec_lhs, col_vec_rhs));
+            return (column_inner_join_<DataFrame, RHS_T, T, Ts ...>
+                        (*this, rhs, name, col_vec_lhs, col_vec_rhs));
         case join_policy::left_join:
-            return (column_left_join_
-                        <decltype(*this), RHS_T, T, Ts ...>
-                            (*this, rhs, name, col_vec_lhs, col_vec_rhs));
+            return (column_left_join_<DataFrame, RHS_T, T, Ts ...>
+                        (*this, rhs, name, col_vec_lhs, col_vec_rhs));
         case join_policy::right_join:
-            return (column_right_join_
-                        <decltype(*this), RHS_T, T, Ts ...>
-                            (*this, rhs, name, col_vec_lhs, col_vec_rhs));
+            return (column_right_join_<DataFrame, RHS_T, T, Ts ...>
+                        (*this, rhs, name, col_vec_lhs, col_vec_rhs));
         case join_policy::left_right_join:
         default:
-            return (column_left_right_join_
-                        <decltype(*this), RHS_T, T, Ts ...>
-                            (*this, rhs, name, col_vec_lhs, col_vec_rhs));
+            return (column_left_right_join_<DataFrame, RHS_T, T, Ts ...>
+                        (*this, rhs, name, col_vec_lhs, col_vec_rhs));
     }
 }
 

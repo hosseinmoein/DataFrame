@@ -431,11 +431,12 @@ load_result_as_column(V &visitor,
 
     size_type   ret_cnt = data_s;
 
-    if (padding == nan_policy::pad_with_nans && data_s < idx_s)
+    if (padding == nan_policy::pad_with_nans && data_s < idx_s)  {
         for (size_type i = 0; i < idx_s - data_s; ++i)  {
             new_col.push_back (std::move(get_nan<new_type>()));
             ret_cnt += 1;
         }
+    }
 
     const auto              iter = column_tb_.find (new_col_name);
     StlVecType<new_type>    *vec_ptr = nullptr;
@@ -595,13 +596,15 @@ from_indicators(const StlVecType<const char *> &ind_col_names,
 
     guard.release();
     new_col.reserve(col_s);
-    for (size_type i = 0; i < col_s; ++i) [[likely]]
-        for (size_type j = 0; j < ind_col_s; ++j) [[likely]]
+    for (size_type i = 0; i < col_s; ++i) [[likely]]  {
+        for (size_type j = 0; j < ind_col_s; ++j) [[likely]]  {
             if (ind_cols[j]->at(i))  {
                 new_col.push_back(
                     _string_to_<CT>(ind_col_names[j] + pre_offset));
                 break;
             }
+        }
+    }
 
     return (col_s);
 }
@@ -771,21 +774,6 @@ load_column (const char *name,
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename T1, typename T2>
-typename DataFrame<I, H>::size_type
-DataFrame<I, H>::
-load_pair_(std::pair<T1, T2> &col_name_data, bool do_lock)  {
-
-    return (load_column<typename decltype(col_name_data.second)::value_type>(
-                col_name_data.first, // column name
-                std::forward<T2>(col_name_data.second),
-                nan_policy::pad_with_nans,
-                do_lock));
-}
-
-// ----------------------------------------------------------------------------
-
-template<typename I, typename H>
 template<typename ITR>
 typename DataFrame<I, H>::size_type
 DataFrame<I, H>::
@@ -868,18 +856,6 @@ append_column (const char *name, const T &val, nan_policy padding)  {
     }
 
     return (ret_cnt);
-}
-
-// ----------------------------------------------------------------------------
-
-template<typename I, typename H>
-template<typename T>
-typename DataFrame<I, H>::size_type
-DataFrame<I, H>::append_row_(std::pair<const char *, T> &row_name_data)  {
-
-    return (append_column<T>(row_name_data.first, // column name
-                             std::forward<T>(row_name_data.second),
-                             nan_policy::dont_pad_with_nans));
 }
 
 // ----------------------------------------------------------------------------
@@ -1167,12 +1143,12 @@ remove_duplicates (const char *name1,
 
     guard.release();
 
-    const auto              &index = get_index();
-    const size_type         col_s =
+    const auto      &index = get_index();
+    const size_type col_s =
         std::min<size_type>({ vec1.size(), vec2.size(), index.size() });
-    map_t                   row_table;
-    count_vec               dummy_vec;
-    const IndexType         dummy_idx { };
+    map_t           row_table;
+    count_vec       dummy_vec;
+    const IndexType dummy_idx { };
 
     for (size_type i = 0; i < col_s; ++i) [[likely]]  {
         const auto  insert_res =
@@ -1217,9 +1193,9 @@ remove_duplicates (const char *name1,
     const size_type col_s =
         std::min<size_type>(
             { vec1.size(), vec2.size(), vec3.size(), index.size() });
-    map_t                   row_table;
-    count_vec               dummy_vec;
-    const IndexType         dummy_idx { };
+    map_t           row_table;
+    count_vec       dummy_vec;
+    const IndexType dummy_idx { };
 
     for (size_type i = 0; i < col_s; ++i) [[likely]]  {
         const auto  insert_res =
@@ -1269,9 +1245,9 @@ remove_duplicates (const char *name1,
         std::min<size_type>(
             { vec1.size(), vec2.size(), vec3.size(), vec4.size(),
               index.size() });
-    map_t                   row_table;
-    count_vec               dummy_vec;
-    const IndexType         dummy_idx { };
+    map_t           row_table;
+    count_vec       dummy_vec;
+    const IndexType dummy_idx { };
 
     for (size_type i = 0; i < col_s; ++i) [[likely]]  {
         const auto  insert_res =
@@ -1323,9 +1299,9 @@ remove_duplicates (const char *name1,
         std::min<size_type>(
             { vec1.size(), vec2.size(), vec3.size(), vec4.size(), vec5.size(),
               index.size() });
-    map_t                   row_table;
-    count_vec               dummy_vec;
-    const IndexType         dummy_idx { };
+    map_t           row_table;
+    count_vec       dummy_vec;
+    const IndexType dummy_idx { };
 
     for (size_type i = 0; i < col_s; ++i) [[likely]]  {
         const auto  insert_res =
@@ -1382,9 +1358,9 @@ remove_duplicates (const char *name1,
             { vec1.size(), vec2.size(), vec3.size(), vec4.size(),
               vec5.size(), vec6.size(),
               index.size() });
-    map_t                   row_table;
-    count_vec               dummy_vec;
-    const IndexType         dummy_idx { };
+    map_t           row_table;
+    count_vec       dummy_vec;
+    const IndexType dummy_idx { };
 
     for (size_type i = 0; i < col_s; ++i) [[likely]]  {
         const auto  insert_res =

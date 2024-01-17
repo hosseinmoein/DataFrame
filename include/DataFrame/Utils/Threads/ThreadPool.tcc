@@ -41,7 +41,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace hmdf
 {
 
-ThreadPool::ThreadPool(size_type thr_num)  {
+inline ThreadPool::ThreadPool(size_type thr_num)  {
 
     threads_.reserve(thr_num * 2);
     for (size_type i = 0; i < thr_num; ++i)  {
@@ -57,7 +57,7 @@ ThreadPool::ThreadPool(size_type thr_num)  {
 
 // ----------------------------------------------------------------------------
 
-ThreadPool::~ThreadPool()  {
+inline ThreadPool::~ThreadPool()  {
 
     shutdown();
     for (auto &routine : threads_)
@@ -67,7 +67,7 @@ ThreadPool::~ThreadPool()  {
 
 // ----------------------------------------------------------------------------
 
-bool
+inline bool
 ThreadPool::add_thread(size_type thr_num)  {
 
     if (is_shutdown())
@@ -346,7 +346,7 @@ ThreadPool::parallel_sort(const I begin, const I end, P compare)  {
 
 // ----------------------------------------------------------------------------
 
-ThreadPool::size_type
+inline ThreadPool::size_type
 ThreadPool::available_threads() const noexcept  {
 
     return (available_threads_.load(std::memory_order_relaxed));
@@ -354,7 +354,7 @@ ThreadPool::available_threads() const noexcept  {
 
 // ----------------------------------------------------------------------------
 
-ThreadPool::size_type
+inline ThreadPool::size_type
 ThreadPool::capacity_threads() const noexcept  {
 
     return (capacity_threads_.load(std::memory_order_relaxed));
@@ -362,7 +362,7 @@ ThreadPool::capacity_threads() const noexcept  {
 
 // ----------------------------------------------------------------------------
 
-bool
+inline bool
 ThreadPool::is_shutdown() const noexcept  {
 
     return (shutdown_flag_.load(std::memory_order_relaxed));
@@ -370,7 +370,7 @@ ThreadPool::is_shutdown() const noexcept  {
 
 // ----------------------------------------------------------------------------
 
-ThreadPool::size_type
+inline ThreadPool::size_type
 ThreadPool::pending_tasks() const noexcept  {
 
     return (global_queue_.size());
@@ -378,7 +378,7 @@ ThreadPool::pending_tasks() const noexcept  {
 
 // ----------------------------------------------------------------------------
 
-bool
+inline bool
 ThreadPool::shutdown() noexcept  {
 
     bool    expected { false };
@@ -400,7 +400,7 @@ ThreadPool::shutdown() noexcept  {
 
 // ----------------------------------------------------------------------------
 
-ThreadPool::WorkUnit
+inline ThreadPool::WorkUnit
 ThreadPool::get_one_local_task_() noexcept  {
 
     WorkUnit            work_unit;
@@ -423,7 +423,7 @@ ThreadPool::get_one_local_task_() noexcept  {
 
 // ----------------------------------------------------------------------------
 
-bool
+inline bool
 ThreadPool::run_task() noexcept  {
 
     WorkUnit    work_unit = get_one_local_task_();
@@ -445,7 +445,7 @@ ThreadPool::run_task() noexcept  {
 
 // ----------------------------------------------------------------------------
 
-bool
+inline bool
 ThreadPool::thread_routine_(size_type local_q_idx) noexcept  {
 
     if (is_shutdown())

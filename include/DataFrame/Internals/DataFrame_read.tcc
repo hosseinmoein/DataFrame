@@ -212,9 +212,42 @@ void DataFrame<I, H>::read_json_(std::istream &stream, bool columns_only)  {
 
                 vec.reserve(col_size);
                 col_vector_push_back_func_(vec,
-                                            stream,
-                                            &::strtoul,
-                                            io_format::json);
+                                           stream,
+                                           &::strtoul,
+                                           io_format::json);
+            }
+            else if (col_type == "char")  {
+                StlVecType<char>    &vec =
+                    create_column<char>(col_name.c_str(), false);
+
+                vec.reserve(col_size);
+                col_vector_push_back_func_<char, StlVecType<char>>(
+                    vec,
+                    stream,
+                    [](const char *tok, char **, int) -> char  {
+                        if (tok[0] == '\0' || tok[1] == '\0')
+                            return (static_cast<char>(int(tok[0])));
+                        else
+                            return (static_cast<char>(atoi(tok)));
+                    },
+                    io_format::json);
+            }
+            else if (col_type == "uchar")  {
+                StlVecType<unsigned char>   &vec =
+                    create_column<unsigned char>(col_name.c_str(), false);
+
+                vec.reserve(col_size);
+                col_vector_push_back_func_<unsigned char,
+                                           StlVecType<unsigned char>>(
+                    vec,
+                    stream,
+                    [](const char *tok, char **, int) -> unsigned char  {
+                        if (tok[0] == '\0' || tok[1] == '\0')
+                            return (static_cast<unsigned char>(int(tok[0])));
+                        else
+                            return (static_cast<unsigned char>(atoi(tok)));
+                    },
+                    io_format::json);
             }
             else if (col_type == "long")  {
                 StlVecType<long>   &vec =
@@ -396,6 +429,39 @@ void DataFrame<I, H>::read_csv_(std::istream &stream, bool columns_only)  {
                 vec.reserve(::atoi(value.c_str()));
                 col_vector_push_back_func_(vec, stream, &::strtoul);
             }
+            else if (type_str == "char")  {
+                StlVecType<char>    &vec =
+                    create_column<char>(col_name.c_str(), false);
+
+                vec.reserve(::atoi(value.c_str()));
+                col_vector_push_back_func_(vec, stream, &::strtol);
+                col_vector_push_back_func_<char, StlVecType<char>>(
+                    vec,
+                    stream,
+                    [](const char *tok, char **, int) -> char  {
+                        if (tok[0] == '\0' || tok[1] == '\0')
+                            return (static_cast<char>(int(tok[0])));
+                        else
+                            return (static_cast<char>(atoi(tok)));
+                    });
+            }
+            else if (type_str == "uchar")  {
+                StlVecType<unsigned char>   &vec =
+                    create_column<unsigned char>(col_name.c_str(), false);
+
+                vec.reserve(::atoi(value.c_str()));
+                col_vector_push_back_func_(vec, stream, &::strtoul);
+                col_vector_push_back_func_<unsigned char,
+                                           StlVecType<unsigned char>>(
+                    vec,
+                    stream,
+                    [](const char *tok, char **, int) -> unsigned char  {
+                        if (tok[0] == '\0' || tok[1] == '\0')
+                            return (static_cast<unsigned char>(int(tok[0])));
+                        else
+                            return (static_cast<unsigned char>(atoi(tok)));
+                    });
+            }
             else if (type_str == "long")  {
                 StlVecType<long>   &vec =
                     create_column<long>(col_name.c_str(), false);
@@ -568,6 +634,16 @@ read_csv2_(std::istream &stream,
                                       type_str.c_str(),
                                       col_name.c_str(),
                                       nrows);
+            else if (type_str == "char")
+                spec_vec.emplace_back(StlVecType<char>(),
+                                      type_str.c_str(),
+                                      col_name.c_str(),
+                                      nrows);
+            else if (type_str == "uchar")
+                spec_vec.emplace_back(StlVecType<unsigned char>(),
+                                      type_str.c_str(),
+                                      col_name.c_str(),
+                                      nrows);
             else if (type_str == "long")
                 spec_vec.emplace_back(StlVecType<long>(),
                                       type_str.c_str(),
@@ -675,6 +751,25 @@ read_csv2_(std::istream &stream,
                     std::any_cast<StlVecType<unsigned int> &>
                         (col_spec.col_vec).push_back(
                             (unsigned int) strtoul(value.c_str(), nullptr, 0));
+            }
+            else if (col_spec.type_spec == "char")  {
+                if (value.size() > 1)
+                    std::any_cast<StlVecType<char> &>
+                        (col_spec.col_vec).push_back(
+                            static_cast<char>(atoi(value.c_str())));
+                else if (! value.empty())
+                    std::any_cast<StlVecType<char> &>
+                        (col_spec.col_vec).push_back(value[0]);
+            }
+            else if (col_spec.type_spec == "uchar")  {
+                if (value.size() > 1)
+                    std::any_cast<StlVecType<unsigned char> &>
+                        (col_spec.col_vec).push_back(
+                            static_cast<unsigned char>(atoi(value.c_str())));
+                else if (! value.empty())
+                    std::any_cast<StlVecType<unsigned char> &>
+                        (col_spec.col_vec).push_back(
+                            static_cast<unsigned char>(value[0]));
             }
             else if (col_spec.type_spec == "long")  {
                 if (! value.empty())
@@ -865,6 +960,18 @@ read_csv2_(std::istream &stream,
                 load_column<unsigned int>(
                     col_spec.col_name.c_str(),
                     std::move(std::any_cast<StlVecType<unsigned int> &>
+                        (col_spec.col_vec)),
+                    nan_policy::dont_pad_with_nans);
+            else if (col_spec.type_spec == "char")
+                load_column<char>(
+                    col_spec.col_name.c_str(),
+                    std::move(std::any_cast<StlVecType<char> &>
+                        (col_spec.col_vec)),
+                    nan_policy::dont_pad_with_nans);
+            else if (col_spec.type_spec == "uchar")
+                load_column<unsigned char>(
+                    col_spec.col_name.c_str(),
+                    std::move(std::any_cast<StlVecType<unsigned char> &>
                         (col_spec.col_vec)),
                     nan_policy::dont_pad_with_nans);
             else if (col_spec.type_spec == "long")

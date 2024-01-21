@@ -3105,6 +3105,8 @@ static void test_no_index_reads()  {
                  unsigned long,
                  double,
                  bool,
+                 char,
+                 unsigned char,
                  std::string>(std::cout, io_format::csv2);
 
         std::cout << '\n' << std::endl;
@@ -3116,6 +3118,8 @@ static void test_no_index_reads()  {
                   unsigned long,
                   double,
                   bool,
+                  char,
+                  unsigned char,
                   std::string>(std::cout, io_format::csv2);
 
         std::cout << '\n' << std::endl;
@@ -3127,6 +3131,8 @@ static void test_no_index_reads()  {
                   unsigned long,
                   double,
                   bool,
+                  char,
+                  unsigned char,
                   std::string>(std::cout, io_format::csv2);
     }
     catch (const DataFrameError &ex)  {

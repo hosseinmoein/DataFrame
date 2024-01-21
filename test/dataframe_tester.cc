@@ -517,6 +517,8 @@ static void test_read()  {
                   unsigned long,
                   double,
                   std::string,
+                  char,
+                  unsigned char,
                   bool>(std::cout);
 
     StdDataFrame<std::string>   df_read_str;
@@ -532,6 +534,8 @@ static void test_read()  {
                       unsigned long,
                       double,
                       std::string,
+                      char,
+                      unsigned char,
                       bool>(std::cout);
 
     StdDataFrame<DateTime>  df_read_dt;
@@ -547,6 +551,8 @@ static void test_read()  {
                      unsigned long,
                      double,
                      std::string,
+                     char,
+                     unsigned char,
                      bool>(std::cout);
 }
 
@@ -1262,6 +1268,8 @@ static void test_dataframe_friend_plus_operator()  {
                 int,
                 double,
                 std::string,
+                char,
+                unsigned char,
                 bool>(df1, df2);
 
     std::cout << "Original DF1:" << std::endl;
@@ -1270,6 +1278,8 @@ static void test_dataframe_friend_plus_operator()  {
               unsigned long,
               double,
               std::string,
+              char,
+              unsigned char,
               bool>(std::cout);
     std::cout << "Original DF2:" << std::endl;
     df2.write<std::ostream,
@@ -1277,6 +1287,8 @@ static void test_dataframe_friend_plus_operator()  {
               unsigned long,
               double,
               std::string,
+              char,
+              unsigned char,
               bool>(std::cout);
     std::cout << "Result DF:" << std::endl;
     result.write<std::ostream,
@@ -1284,6 +1296,8 @@ static void test_dataframe_friend_plus_operator()  {
                  unsigned long,
                  double,
                  std::string,
+                 char,
+                 unsigned char,
                  bool>(std::cout);
 }
 
@@ -1311,6 +1325,8 @@ static void test_dataframe_friend_minus_operator()  {
                  unsigned long,
                  int,
                  double,
+                 char,
+                 unsigned char,
                  bool>(df1, df2);
 
     std::cout << "Original DF1:" << std::endl;
@@ -1319,6 +1335,8 @@ static void test_dataframe_friend_minus_operator()  {
               unsigned long,
               double,
               std::string,
+              char,
+              unsigned char,
               bool>(std::cout);
     std::cout << "Original DF2:" << std::endl;
     df2.write<std::ostream,
@@ -1332,6 +1350,8 @@ static void test_dataframe_friend_minus_operator()  {
                  int,
                  unsigned long,
                  double,
+                 char,
+                 unsigned char,
                  bool>(std::cout);
 }
 
@@ -3333,6 +3353,13 @@ static void test_reading_writing_json()  {
         assert(df.get_column<double>("col_3").size() == 12);
         assert(df.get_column<double>("col_3")[3] == 18.0);
         assert(df.get_column<double>("col_3")[11] == 555.543);
+
+        assert(df.get_column<char>("col_char")[11] == 78);
+        assert(df.get_column<char>("col_char")[2] == 'F');
+        assert(df.get_column<char>("col_char")[8] == 'h');
+        assert(df.get_column<unsigned char>("col_uchar")[11] == 255);
+        assert(df.get_column<unsigned char>("col_uchar")[7] == 88);
+        assert(df.get_column<unsigned char>("col_uchar")[9] == '&');
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;

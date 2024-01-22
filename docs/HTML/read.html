@@ -85,17 +85,23 @@ read(const char *file_name,
         <BR>
         In all formats the following data types are supported:
         <PRE>
-          float
-          double
+          float       -- float
+          double      -- double
           longdouble  -- long double
-          int
+          short       -- short int
+          ushort      -- unsigned short int
+          int         -- int
           uint        -- unsigned int
-          long
+          long        -- long int
           longlong    -- long long int
-          ulong       -- unsigned long
+          ulong       -- unsigned long int
           ulonglong   -- unsigned long long int
-          string
-          bool
+          char        -- char
+          uchar       -- unsigned char
+          string      -- std::string
+          string      -- const char *
+          string      -- char *
+          bool        -- bool
           DateTime    -- DateTime data in format of &lt;Epoch seconds&gt;.&lt;nanoseconds&gt; (1516179600.874123908)
         </PRE>
         In case of io_format::csv2 the following additional types are also supported:

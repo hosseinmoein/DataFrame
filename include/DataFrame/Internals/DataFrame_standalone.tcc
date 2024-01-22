@@ -32,6 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/Utils/DateTime.h>
 #include <DataFrame/Utils/Threads/ThreadGranularity.h>
 
+#include <cctype>
 #include <cstdlib>
 #include <cstring>
 #include <future>
@@ -582,6 +583,28 @@ inline static S &_write_json_df_index_(S &o, const std::string &value)  {
 
 // ----------------------------------------------------------------------------
 
+template<typename S>
+inline static S &_write_json_df_index_(S &o, char value)  {
+
+    if (std::isprint(value))
+        return (o << value);
+    else
+        return (o << static_cast<int>(value));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename S>
+inline static S &_write_json_df_index_(S &o, unsigned char value)  {
+
+    if (std::isprint(value))
+        return (o << value);
+    else
+        return (o << static_cast<unsigned int>(value));
+}
+
+// ----------------------------------------------------------------------------
+
 inline static void
 _get_token_from_file_ (std::istream &file,
                        char delim,
@@ -826,6 +849,28 @@ template<typename S>
 inline static S &_write_csv_df_index_(S &o, const DateTime &value)  {
 
     return (o << value.time() << '.' << value.nanosec());
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename S>
+inline static S &_write_csv_df_index_(S &o, char value)  {
+
+    if (std::isprint(value))
+        return (o << value);
+    else
+        return (o << static_cast<int>(value));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename S>
+inline static S &_write_csv_df_index_(S &o, unsigned char value)  {
+
+    if (std::isprint(value))
+        return (o << value);
+    else
+        return (o << static_cast<unsigned int>(value));
 }
 
 // ----------------------------------------------------------------------------

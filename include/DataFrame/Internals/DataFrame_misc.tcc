@@ -200,7 +200,7 @@ DataFrame<I, H>::print_csv_functor_<Ts ...>::operator() (const T &vec)  {
 
     if (vec_size > 0)  {
         for (long i = sr; i < er; ++i)
-            os << vec[i] << ',';
+            _write_csv_df_index_(os, vec[i]) << ',';
     }
     os << '\n';
 
@@ -266,7 +266,7 @@ template<typename T>
 void DataFrame<I, H>::
 print_csv2_data_functor_<S, Ts ...>::operator() (const T &vec)  {
 
-    if (vec.size() > index)  os << vec[index];
+    if (vec.size() > index)  _write_csv_df_index_(os, vec[index]);
     return;
 }
 

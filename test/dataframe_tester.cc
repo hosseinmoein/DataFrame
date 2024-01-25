@@ -516,9 +516,13 @@ static void test_read()  {
                   int,
                   unsigned long,
                   double,
+                  std::map<std::string, double>,
+                  std::unordered_map<std::string, double>,
+                  std::vector<std::string>,
+                  std::set<double>,
+                  std::set<std::string>,
+                  std::vector<double>,
                   std::string,
-                  char,
-                  unsigned char,
                   bool>(std::cout);
 
     StdDataFrame<std::string>   df_read_str;
@@ -536,6 +540,12 @@ static void test_read()  {
                       std::string,
                       char,
                       unsigned char,
+                      std::map<std::string, double>,
+                      std::unordered_map<std::string, double>,
+                      std::vector<std::string>,
+                      std::set<double>,
+                      std::set<std::string>,
+                      std::vector<double>,
                       bool>(std::cout);
 
     StdDataFrame<DateTime>  df_read_dt;
@@ -551,8 +561,6 @@ static void test_read()  {
                      unsigned long,
                      double,
                      std::string,
-                     char,
-                     unsigned char,
                      bool>(std::cout);
 }
 

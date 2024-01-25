@@ -44,7 +44,7 @@ write(S &amp;o,
         </B></PRE>
       </td>
       <td>
-        It outputs the content of DataFrame into the stream o. Currently 3 formats (i.e. csv, csv2, json) are supported specified by the iof parameter.<BR>
+        It outputs the content of DataFrame into the stream o. Currently 3 formats (i.e. csv, csv2, json) are supported specified by the iof parameter.<BR><BR><BR>
         The <B>CSV</B> file format is written:<BR>
         <PRE>
   INDEX:&lt;Number of data points&gt;:&lt;Comma delimited list of values&gt;
@@ -86,30 +86,27 @@ write(S &amp;o,
         <BR>
         In all formats the following data types are supported:
         <PRE>
-          float       -- float
-          double      -- double
-          longdouble  -- long double
-          short       -- short int
-          ushort      -- unsigned short int
-          int         -- int
-          uint        -- unsigned int
-          long        -- long int
-          longlong    -- long long int
-          ulong       -- unsigned long int
-          ulonglong   -- unsigned long long int
-          char        -- char
-          uchar       -- unsigned char
-          string      -- std::string
-          string      -- const char *
-          string      -- char *
-          bool        -- bool
-          DateTime    -- DateTime data in format of &lt;Epoch seconds&gt;.&lt;nanoseconds&gt; (1516179600.874123908)
+          float      -- float
+          double     -- double
+          longdouble -- long double
+          short      -- short int
+          ushort     -- unsigned short int
+          int        -- int
+          uint       -- unsigned int
+          long       -- long int
+          longlong   -- long long int
+          ulong      -- unsigned long int
+          ulonglong  -- unsigned long long int
+          char       -- char
+          uchar      -- unsigned char
+          string     -- std::string
+          string     -- const char *
+          string     -- char *
+          bool       -- bool
+          DateTime   -- DateTime data in format of &lt;Epoch seconds&gt;.&lt;nanoseconds&gt; (1516179600.874123908)
         </PRE>
-        In case of io_format::csv2 the following additional types are also supported:
+        In case of io_format::csv2 and io_format::csv the following additional types are also supported:
         <PRE>
-          DateTimeAME    -- DateTime string printed in American style (MM/DD/YYYY HH:MM:SS.mmm)
-          DateTimeEUR    -- DateTime string printed in European style (YYYY/MM/DD HH:MM:SS.mmm)
-          DateTimeISO    -- DateTime string printed in ISO style (YYYY-MM-DD HH:MM:SS.mmm)
           dbl_vec        -- A vector of double precision values, The vector is printed as "s[d1|d2|...]"
                             where s is the size of the vector and d's are the double values.
           str_vec        -- A vector of std::string values, The vector is printed as "s[str1|str2|...]"
@@ -123,6 +120,14 @@ write(S &amp;o,
           str_dbl_unomap -- An unordered map of string keys to double precision values, The map is printed as "s{k1:v1|k2:v2|...}"
                             where s is the size of the map and k's and v's are keys and values.
         </PRE>
+
+        In case of io_format::csv2 the following additional types are also supported:
+        <PRE>
+          DateTimeAME -- DateTime string printed in American style (MM/DD/YYYY HH:MM:SS.mmm)
+          DateTimeEUR -- DateTime string printed in European style (YYYY/MM/DD HH:MM:SS.mmm)
+          DateTimeISO -- DateTime string printed in ISO style (YYYY-MM-DD HH:MM:SS.mmm)
+        </PRE>
+
       </td>
       <td>
         <PRE>

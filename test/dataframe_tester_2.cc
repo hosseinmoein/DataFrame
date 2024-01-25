@@ -3120,6 +3120,12 @@ static void test_no_index_reads()  {
                   bool,
                   char,
                   unsigned char,
+                  std::map<std::string, double>,
+                  std::unordered_map<std::string, double>,
+                  std::vector<std::string>,
+                  std::set<double>,
+                  std::set<std::string>,
+                  std::vector<double>,
                   std::string>(std::cout, io_format::csv2);
 
         std::cout << '\n' << std::endl;
@@ -3127,10 +3133,7 @@ static void test_no_index_reads()  {
         df3.read("data/sample_data_2.json", io_format::json, true);
         df3.read("data/sample_data_no_index.json", io_format::json, true);
         df3.write<std::ostream,
-                  int,
-                  unsigned long,
                   double,
-                  bool,
                   char,
                   unsigned char,
                   std::string>(std::cout, io_format::csv2);

@@ -897,6 +897,27 @@ col_vector_push_back_func_(V &vec,
 
 // ----------------------------------------------------------------------------
 
+template<typename T, typename V>
+inline static void
+col_vector_push_back_cont_func_(V &vec,
+                                std::istream &file,
+                                T (*converter)(const char *))  {
+
+    std::string value;
+    char        c = 0;
+
+    value.reserve(2048);
+    while (file.get(c)) [[likely]] {
+        value.clear();
+        if (c == '\n')  break;
+        file.unget();
+        _get_token_from_file_(file, ',', value, '\0');
+        vec.push_back(converter(value.c_str()));
+    }
+}
+
+// ----------------------------------------------------------------------------
+
 template<typename T, typename V, typename Dummy = void>
 struct  ColVectorPushBack_  {
 

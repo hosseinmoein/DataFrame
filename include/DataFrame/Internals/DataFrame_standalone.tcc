@@ -90,6 +90,9 @@ std::unordered_map<_TypeInfoRef_,
     { typeid(char *), "string" },
     { typeid(bool), "bool" },
     { typeid(DateTime), "DateTime" },
+
+    // Containers
+    //
     { typeid(std::vector<double>), "dbl_vec" },
     { typeid(std::vector<std::string>), "str_vec" },
     { typeid(std::set<double>), "dbl_set" },
@@ -629,11 +632,10 @@ _get_token_from_file_ (std::istream &file,
 
 // ----------------------------------------------------------------------------
 
-template<typename DF>
-inline static typename DF::template StlVecType<double>
+inline static std::vector<double>
 _get_dbl_vec_from_value_(const char *value)  {
 
-    using vec_t = typename DF::template StlVecType<double>;
+    using vec_t = std::vector<double>;
 
     std::size_t vcnt = 0;
     char        buffer[128];
@@ -662,11 +664,10 @@ _get_dbl_vec_from_value_(const char *value)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename DF>
-inline static typename DF::template StlVecType<std::string>
+inline static std::vector<std::string>
 _get_str_vec_from_value_(const char *value)  {
 
-    using vec_t = typename DF::template StlVecType<std::string>;
+    using vec_t = std::vector<std::string>;
 
     std::size_t vcnt { 0 };
     char        buffer[2048];

@@ -70,30 +70,22 @@ DataFrame<I, H>::create_column (const char *name, bool do_lock)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
+template<typename T>
 void DataFrame<I, H>::remove_column (const char *name)  {
 
     static_assert(std::is_base_of<HeteroVector<align_value>, DataVec>::value,
                   "Only a StdDataFrame can call remove_column()");
 
-    if (! ::strcmp(name, DF_INDEX_COL_NAME))
-        throw DataFrameError ("DataFrame::remove_column(): ERROR: "
-                              "Data column name cannot be 'INDEX'");
+    ColumnVecType<T>    &vec = get_column<T>(name);
 
-    const auto  iter = column_tb_.find (name);
-
-    if (iter == column_tb_.end())  {
-        char    buffer [512];
-
-        snprintf (buffer, sizeof(buffer) - 1,
-                  "DataFrame::remove_column(): ERROR: Cannot find column '%s'",
-                  name);
-        throw ColNotFound (buffer);
-    }
+    // Free the memory space
+    //
+    vec = std::move(ColumnVecType<T>{ });
 
     // I do not erase the column from the data_ vector, because it will mess up
     // indices in the hash table column_tb_
     /* data_.erase (data_.begin() + iter->second); */
-    column_tb_.erase (iter);
+    column_tb_.erase (name);
     for (size_type i = 0; i < column_list_.size(); ++i)  {
         if (column_list_[i].first == name)  {
             column_list_.erase(column_list_.begin() + i);
@@ -107,9 +99,10 @@ void DataFrame<I, H>::remove_column (const char *name)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
+template<typename T>
 void DataFrame<I, H>::remove_column(size_type index)  {
 
-    return (remove_column(column_list_[index].first.c_str()));
+    return (remove_column<T>(column_list_[index].first.c_str()));
 }
 
 // ----------------------------------------------------------------------------
@@ -147,7 +140,13 @@ void DataFrame<I, H>::rename_column (const char *from, const char *to)  {
 
     column_tb_.emplace (to, from_iter->second);
     column_list_.emplace_back (to, from_iter->second);
-    remove_column(from);
+    column_tb_.erase (from);
+    for (size_type i = 0; i < column_list_.size(); ++i)  {
+        if (column_list_[i].first == from)  {
+            column_list_.erase(column_list_.begin() + i);
+            break;
+        }
+    }
     return;
 }
 
@@ -172,7 +171,7 @@ retype_column (const char *name,
     new_vec.reserve(old_vec.size());
     for (const auto &citer : old_vec)
         new_vec.push_back(std::move(convert_func(citer)));
-    remove_column(name);
+    remove_column<FROM_T>(name);
     load_column<TO_T>(name, std::move(new_vec));
     return;
 }
@@ -1406,8 +1405,8 @@ consolidate(const char *old_col_name1,
                        false);
     guard.release();
     if (delete_old_cols)  {
-        remove_column(old_col_name1);
-        remove_column(old_col_name2);
+        remove_column<OLD_T1>(old_col_name1);
+        remove_column<OLD_T2>(old_col_name2);
     }
     return;
 }
@@ -1445,9 +1444,9 @@ consolidate(const char *old_col_name1,
                        false);
     guard.release();
     if (delete_old_cols)  {
-        remove_column(old_col_name1);
-        remove_column(old_col_name2);
-        remove_column(old_col_name3);
+        remove_column<OLD_T1>(old_col_name1);
+        remove_column<OLD_T2>(old_col_name2);
+        remove_column<OLD_T3>(old_col_name3);
     }
     return;
 }
@@ -1489,10 +1488,10 @@ consolidate(const char *old_col_name1,
                        false);
     guard.release();
     if (delete_old_cols)  {
-        remove_column(old_col_name1);
-        remove_column(old_col_name2);
-        remove_column(old_col_name3);
-        remove_column(old_col_name4);
+        remove_column<OLD_T1>(old_col_name1);
+        remove_column<OLD_T2>(old_col_name2);
+        remove_column<OLD_T3>(old_col_name3);
+        remove_column<OLD_T4>(old_col_name4);
     }
     return;
 }
@@ -1539,11 +1538,11 @@ consolidate(const char *old_col_name1,
                        false);
     guard.release();
     if (delete_old_cols)  {
-        remove_column(old_col_name1);
-        remove_column(old_col_name2);
-        remove_column(old_col_name3);
-        remove_column(old_col_name4);
-        remove_column(old_col_name5);
+        remove_column<OLD_T1>(old_col_name1);
+        remove_column<OLD_T2>(old_col_name2);
+        remove_column<OLD_T3>(old_col_name3);
+        remove_column<OLD_T4>(old_col_name4);
+        remove_column<OLD_T5>(old_col_name5);
     }
     return;
 }

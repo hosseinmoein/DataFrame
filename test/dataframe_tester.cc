@@ -656,7 +656,7 @@ static void test_remove_column()  {
     StlVecType<int>            i1 = { 22, 23, 24, 25 };
     StlVecType<std::string>    s1 =
         { "11", "22", "33", "xx", "yy", "gg", "string" };
-    MyDataFrame                 df;
+    MyDataFrame                df;
 
     df.load_data(std::move(idx),
                  std::make_pair("col_1", d1),
@@ -666,10 +666,10 @@ static void test_remove_column()  {
                  std::make_pair("col_str", s1));
 
     df.write<std::ostream, double, int, std::string>(std::cout);
-    df.remove_column("col_2");
+    df.remove_column<double>("col_2");
     std::cout << "After removing column `col_2`" << std::endl;
     df.write<std::ostream, double, int, std::string>(std::cout);
-    df.remove_column("col_str");
+    df.remove_column<std::string>("col_str");
     std::cout << "After removing column `col_str`" << std::endl;
     df.write<std::ostream, double, int, std::string>(std::cout);
 

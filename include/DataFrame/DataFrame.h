@@ -150,12 +150,22 @@ public:  // Load/append/remove interfaces
     create_column(const char *name, bool do_lock = true);
 
     // It removes a column named name.
-    // The actual data vector is not deleted, but the column is dropped from
-    // DataFrame
     //
+    // T:
+    //   Type of the named column
+    // name:
+    //   Name of the column
+    //
+    template<typename T>
     void
     remove_column(const char *name);
 
+    // T:
+    //   Type of the indexed column
+    // index:
+    //   Index of the column
+    //
+    template<typename T>
     void
     remove_column(size_type index);
 
@@ -1598,7 +1608,8 @@ public:  // Data manipulation
     [[nodiscard]] DataFrame
     shift(size_type periods, shift_policy sp) const;
 
-    // This copies the named column into another vector and shifts it up or down
+    // This copies the named column into another vector and shifts it up
+    // or down
     // and returns it.
     // It is handy to create columns of shifted data in the dataframe for
     // machine-learning analysis
@@ -2492,9 +2503,9 @@ public: // Read/access and slicing interfaces
     // Hints: to match '*' or '?', put them in "[]". Like this:
     //        abc[*]xyz matches "abc*xyz" only
     //
-    // NOTE: This could be, in some cases, n-squared. But it is pretty fast with
-    //       moderately sized strings. I have not tested this with huge/massive
-    //       strings. 
+    // NOTE: This could be, in some cases, n-squared. But it is pretty fast
+    //       with moderately sized strings. I have not tested this with
+    //       huge/massive strings.
     //
     // T:
     //   Type of the named column. Based on the concept, it can only be either

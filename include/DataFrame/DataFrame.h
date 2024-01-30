@@ -77,7 +77,7 @@ class   DataFrame : public ThreadGranularity {
 
 public:  // Construction
 
-    static constexpr std::size_t    align_value { std::size_t(H::align_value) };
+    static constexpr std::size_t   align_value { std::size_t(H::align_value) };
 
     template<typename T>
     using AllocatorType = typename allocator_declare<T, align_value>::type;
@@ -168,6 +168,14 @@ public:  // Load/append/remove interfaces
     template<typename T>
     void
     remove_column(size_type index);
+
+    // This removes all the index and data columns but doesn't necessarily
+    // free memeory space of underlying containers. After this call DataFrame
+    // will be empty.
+    // It is very similar to std::vector clear()
+    //
+    void
+    clear();
 
     // It renames column named from to to. If column from does not exist,
     // it throws an exception

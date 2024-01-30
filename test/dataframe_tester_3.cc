@@ -2647,6 +2647,67 @@ static void test_get_data_by_like()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_clear()  {
+
+    std::cout << "\nTesting clear( ) ..." << std::endl;
+
+    StlVecType<unsigned long>  idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466 };
+    StlVecType<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
+    StlVecType<double> d2 = { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23,
+                               30, 31, 32, 1.89 };
+    StlVecType<double> d3 = { 15, 16, 17, 18, 19, 20, 21,
+                               0.34, 1.56, 0.34, 2.3, 0.1, 0.89, 0.45 };
+    StlVecType<int>    i1 = { 22, 23, 24, 25, 99, 100, 101, 3, 2 };
+    StlVecType<std::string>    strvec =
+        { "zz", "bb", "cc", "ww", "ee", "ff", "gg", "hh", "ii", "jj", "kk",
+          "ll", "mm", "nn" };
+    MyDataFrame        df1;
+
+    df1.load_data(std::move(idx),
+                  std::make_pair("col_1", d1),
+                  std::make_pair("col_2", d2),
+                  std::make_pair("col_3", d3),
+                  std::make_pair("col_4", i1),
+                  std::make_pair("str_col", strvec));
+
+    StlVecType<unsigned long>  idx2 =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466 };
+    StlVecType<double> d12 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
+    StlVecType<double> d22 = { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23,
+                               30, 31, 32, 1.89 };
+    StlVecType<double> d32 = { 15, 16, 17, 18, 19, 20, 21,
+                               0.34, 1.56, 0.34, 2.3, 0.1, 0.89, 0.45 };
+    StlVecType<int>    i12 = { 22, 23, 24, 25, 99, 100, 101, 3, 2 };
+    StlVecType<std::string>    strvec2 =
+        { "zz", "bb", "cc", "ww", "ee", "ff", "gg", "hh", "ii", "jj", "kk",
+          "ll", "mm", "nn" };
+    MyDataFrame        df2;
+
+    df2.load_data(std::move(idx2),
+                  std::make_pair("col_1", d12),
+                  std::make_pair("col_2", d22),
+                  std::make_pair("col_3", d32),
+                  std::make_pair("col_4", i12),
+                  std::make_pair("str_col", strvec2));
+
+    df1.clear();
+    assert(df1.empty());
+    assert(df1.shapeless());
+    assert(df2.get_index()[4] == 123454);
+    assert(df2.get_column<int>("col_4")[7] == 3);
+    assert(df2.get_column<std::string>("str_col")[5] == "ff");
+
+    df1 = df2;
+    assert(df1.get_index()[4] == 123454);
+    assert(df1.get_column<int>("col_4")[7] == 3);
+    assert(df1.get_column<std::string>("str_col")[5] == "ff");
+}
+
+// -----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
@@ -2704,6 +2765,7 @@ int main(int, char *[]) {
     test_inversion_count();
     test__like_clause_compare_();
     test_get_data_by_like();
+    test_clear();
 
     return (0);
 }

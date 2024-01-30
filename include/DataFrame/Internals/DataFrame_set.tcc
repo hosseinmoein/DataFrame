@@ -108,6 +108,22 @@ void DataFrame<I, H>::remove_column(size_type index)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
+void DataFrame<I, H>::clear()  {
+
+    {
+        const SpinGuard guard(lock_);
+
+        data_.clear();
+    }
+    indices_.clear();
+    column_tb_.clear();
+    column_list_.clear();
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
 void DataFrame<I, H>::rename_column (const char *from, const char *to)  {
 
     static_assert(std::is_base_of<HeteroVector<align_value>, DataVec>::value,

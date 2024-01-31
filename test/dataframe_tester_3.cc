@@ -293,14 +293,14 @@ static void test_to_from_string()  {
           123457, 123458, 123459, 123460, 123461, 123462, 123466 };
     StlVecType<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
     StlVecType<double> d2 = { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23,
-                               30, 31, 32, 1.89 };
+                              30, 31, 32, 1.89 };
     StlVecType<double> d3 = { 15, 16, 17, 18, 19, 20, 21,
-                               0.34, 1.56, 0.34, 2.3, 0.1, 0.89, 0.45 };
+                              0.34, 1.56, 0.34, 2.3, 0.1, 0.89, 0.45 };
     StlVecType<int>    i1 = { 22, 23, 24, 25, 99, 100, 101, 3, 2 };
     StlVecType<std::string>    strvec =
         { "zz", "bb", "cc", "ww", "ee", "ff", "gg", "hh", "ii", "jj", "kk",
           "ll", "mm", "nn" };
-    MyDataFrame         df;
+    MyDataFrame        df;
 
     df.load_data(std::move(idx),
                  std::make_pair("col_1", d1),
@@ -365,7 +365,8 @@ static void test_BiasVisitor()  {
         df.remove_data_by_loc<double, long>({ 0, 1500 });
 
         using avg1 = MeanVisitor<double, std::string>;
-        avg1                                avg1_v;
+
+        avg1                                     avg1_v;
         bias_v<avg1, double, std::string, 256>   bias1 (avg1_v);
 
         df.single_act_visit<double>("IBM_Close", bias1);
@@ -381,7 +382,8 @@ static void test_BiasVisitor()  {
         assert(std::abs(bias1.get_result()[210] - 0.0242) < 0.0001);
 
         using s_avg1 = StableMeanVisitor<double, std::string>;
-        s_avg1                              s_avg1_v;
+
+        s_avg1                                   s_avg1_v;
         bias_v<s_avg1, double, std::string, 256> s_bias1 (s_avg1_v);
 
         df.single_act_visit<double>("IBM_Close", s_bias1);
@@ -397,7 +399,8 @@ static void test_BiasVisitor()  {
         assert(std::abs(s_bias1.get_result()[210] - 0.0242) < 0.0001);
 
         using avg2 = WeightedMeanVisitor<double, std::string>;
-        avg2                                avg2_v;
+
+        avg2                                     avg2_v;
         bias_v<avg2, double, std::string, 256>   bias2 (avg2_v);
 
         df.single_act_visit<double>("IBM_Close", bias2);
@@ -413,7 +416,8 @@ static void test_BiasVisitor()  {
         assert(std::abs(bias2.get_result()[210] - 0.0168) < 0.0001);
 
         using avg3 = GeometricMeanVisitor<double, std::string>;
-        avg3                                avg3_v;
+
+        avg3                                     avg3_v;
         bias_v<avg3, double, std::string, 256>   bias3 (avg3_v);
 
         df.single_act_visit<double>("IBM_Close", bias3);
@@ -429,7 +433,8 @@ static void test_BiasVisitor()  {
         assert(std::abs(bias3.get_result()[210] - 0.0245) < 0.0001);
 
         using avg4 = HarmonicMeanVisitor<double, std::string>;
-        avg4                                avg4_v;
+
+        avg4                                     avg4_v;
         bias_v<avg4, double, std::string, 256>   bias4 (avg4_v);
 
         df.single_act_visit<double>("IBM_Close", bias4);
@@ -1081,7 +1086,7 @@ static void test_TreynorRatioVisitor()  {
         { 0.2, 0.58, -0.60, -0.08, 0.05, 0.87, 0.2, 0.4, 0.5, 0.06, 0.3, -0.34,
           -0.9, 0.8, -0.4, 0.86, 0.01, 1.02, -0.02, -1.5, 0.2 };
     StlVecType<int>            i1 = { 22, 23, 24, 25, 99 };
-    MyDataFrame                 df;
+    MyDataFrame                df;
 
     df.load_data(std::move(idx),
                  std::make_pair("asset", d1),
@@ -2174,14 +2179,12 @@ static void test_read_csv_with_vector()  {
 
         assert(df.get_index().size() == 564);
         assert((std::fabs(
-            df.get_column<double>("Close")[4] - 1.0201) < 0.0001));
+                    df.get_column<double>("Close")[4] - 1.0201) < 0.0001));
         assert((df.get_column<long>("Volume")[4] == 3724291200));
-        assert((std::fabs(
-            df.get_column<std::vector<double>>
-                ("Z Score")[4][1] - -0.329) < 0.0001));
-        assert((std::fabs(
-            df.get_column<std::vector<double>>
-                ("Return Vector")[4][3] - -0.0182) < 0.0001));
+        assert((std::fabs(df.get_column<std::vector<double>>
+                              ("Z Score")[4][1] - -0.329) < 0.0001));
+        assert((std::fabs(df.get_column<std::vector<double>>
+                              ("Return Vector")[4][3] - -0.0182) < 0.0001));
         assert((std::isnan(
             df.get_column<std::vector<double>>("Return Vector")[10][0])));
     }
@@ -2487,18 +2490,30 @@ static void test_inversion_count()  {
 
     using IntDataFrame = StdDataFrame<int>;
 
-    std::vector<int>    idx = { 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17 };
-    std::vector<int>    i1 = { 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17 };
-    std::vector<int>    i2 = { 17,16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,0 };
-    std::vector<int>    i3 = { 1,0,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17 };
-    std::vector<int>    i4 = { 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,17,16 };
-    std::vector<int>    i5 = { 1,0,2,3,4,5,6,7,8,9,10,11,12,13,14,15,17,16 };
-    std::vector<int>    i6 = { 17,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,0 };
-    std::vector<int>    i7 = { 0,1,2,3,4,5,6,10,8,9,7,11,12,13,14,15,16,17 };
-    std::vector<int>    i8 = { 0,1,2,15,4,5,6,7,8,9,10,11,12,13,14,3,16,17 };
-    std::vector<int>    i9 = { 2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2 };
-    std::vector<int>    i10 = { 2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,3 };
-    std::vector<int>    i11 = { 2,2,2,2,3,2,2,2,2,4,2,2,2,5,2,2,2,6 };
+    std::vector<int>    idx =
+        { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17 };
+    std::vector<int>    i1 =
+        { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17 };
+    std::vector<int>    i2 =
+        { 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0 };
+    std::vector<int>    i3 =
+        { 1, 0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17 };
+    std::vector<int>    i4 =
+        { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17, 16 };
+    std::vector<int>    i5 =
+        { 1, 0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17, 16 };
+    std::vector<int>    i6 =
+        { 17, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 0 };
+    std::vector<int>    i7 = 
+        { 0, 1, 2, 3, 4, 5, 6, 10, 8, 9, 7, 11, 12, 13, 14, 15, 16, 17 };
+    std::vector<int>    i8 =
+        { 0, 1, 2, 15, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 3, 16, 17 };
+    std::vector<int>    i9 =
+        { 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2 };
+    std::vector<int>    i10 = 
+        { 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3 };
+    std::vector<int>    i11 =
+        { 2, 2, 2, 2, 3, 2, 2, 2, 2, 4, 2, 2, 2, 5, 2, 2, 2, 6 };
     IntDataFrame        df;
 
     df.load_data(std::move(idx),
@@ -2656,9 +2671,9 @@ static void test_clear()  {
           123457, 123458, 123459, 123460, 123461, 123462, 123466 };
     StlVecType<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
     StlVecType<double> d2 = { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23,
-                               30, 31, 32, 1.89 };
+                              30, 31, 32, 1.89 };
     StlVecType<double> d3 = { 15, 16, 17, 18, 19, 20, 21,
-                               0.34, 1.56, 0.34, 2.3, 0.1, 0.89, 0.45 };
+                              0.34, 1.56, 0.34, 2.3, 0.1, 0.89, 0.45 };
     StlVecType<int>    i1 = { 22, 23, 24, 25, 99, 100, 101, 3, 2 };
     StlVecType<std::string>    strvec =
         { "zz", "bb", "cc", "ww", "ee", "ff", "gg", "hh", "ii", "jj", "kk",
@@ -2704,6 +2719,48 @@ static void test_clear()  {
     assert(df1.get_index()[4] == 123454);
     assert(df1.get_column<int>("col_4")[7] == 3);
     assert(df1.get_column<std::string>("str_col")[5] == "ff");
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_swap()  {
+
+    std::cout << "\nTesting swap( ) ..." << std::endl;
+
+    StlVecType<unsigned long>  idx =
+        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
+          123457, 123458, 123459, 123460, 123461, 123462, 123466 };
+    StlVecType<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
+    StlVecType<double> d2 = { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23,
+                              30, 31, 32, 1.89 };
+    StlVecType<double> d3 = { 15, 16, 17, 18, 19, 20, 21,
+                              0.34, 1.56, 0.34, 2.3, 0.1, 0.89, 0.45 };
+    StlVecType<int>    i1 = { 22, 23, 24, 25, 99, 100, 101, 3, 2 };
+    StlVecType<std::string>    strvec =
+        { "zz", "bb", "cc", "ww", "ee", "ff", "gg", "hh", "ii", "jj", "kk",
+          "ll", "mm", "nn" };
+    MyDataFrame        df1;
+    MyDataFrame        df2;
+
+    df1.load_data(std::move(idx),
+                  std::make_pair("col_1", d1),
+                  std::make_pair("col_2", d2),
+                  std::make_pair("col_3", d3),
+                  std::make_pair("col_4", i1),
+                  std::make_pair("str_col", strvec));
+
+    assert(df2.empty());
+    assert(df2.shapeless());
+    assert(df1.get_index()[4] == 123454);
+    assert(df1.get_column<int>("col_4")[7] == 3);
+    assert(df1.get_column<std::string>("str_col")[5] == "ff");
+
+    df1.swap(df2);
+    assert(df1.empty());
+    assert(df1.shapeless());
+    assert(df2.get_index()[4] == 123454);
+    assert(df2.get_column<int>("col_4")[7] == 3);
+    assert(df2.get_column<std::string>("str_col")[5] == "ff");
 }
 
 // -----------------------------------------------------------------------------
@@ -2766,6 +2823,7 @@ int main(int, char *[]) {
     test__like_clause_compare_();
     test_get_data_by_like();
     test_clear();
+    test_swap();
 
     return (0);
 }

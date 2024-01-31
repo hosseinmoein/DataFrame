@@ -177,6 +177,15 @@ public:  // Load/append/remove interfaces
     void
     clear();
 
+    // This swaps all self's index and data columns with the ones in other
+    // It is very similar to std::vector swap()
+    //
+    // other:
+    //   Another DataFrme of the same type
+    //
+    void
+    swap(DataFrame &other);
+
     // It renames column named from to to. If column from does not exist,
     // it throws an exception
     //

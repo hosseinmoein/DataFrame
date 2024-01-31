@@ -124,6 +124,22 @@ void DataFrame<I, H>::clear()  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
+void DataFrame<I, H>::swap(DataFrame &other)  {
+
+    {
+        const SpinGuard guard(lock_);
+
+        data_.swap(other.data_);
+    }
+    indices_.swap(other.indices_);
+    column_tb_.swap(other.column_tb_);
+    column_list_.swap(other.column_list_);
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
 void DataFrame<I, H>::rename_column (const char *from, const char *to)  {
 
     static_assert(std::is_base_of<HeteroVector<align_value>, DataVec>::value,

@@ -41,13 +41,17 @@ template<typename DF, template<typename> class OPT, typename ... Ts>
 friend DF
 binary_operation(const DF &lhs, const DF &rhs);
 
-template<typename T1, typename T2>
-size_type
-load_pair_(std::pair<T1, T2> &col_name_data, bool do_lock = true);
+// ----------------------------------------------------------------------------
+
+// Maps row number -> number of missing column(s)
+//
+using DropRowMap = DFMap<size_type, size_type>;
+using IndexIdxVector = StlVecType<std::tuple<size_type, size_type>>;
 
 template<typename T>
-size_type
-append_row_(std::pair<const char *, T> &row_name_data);
+using JoinSortingPair = std::pair<const T *, size_type>;
+
+// ----------------------------------------------------------------------------
 
 void read_json_(std::istream &file, bool columns_only);
 void read_csv_(std::istream &file, bool columns_only);
@@ -56,83 +60,9 @@ void read_csv2_(std::istream &file,
                 size_type starting_row,
                 size_type num_rows);
 
-template<typename ... Ts>
-void remove_data_by_sel_common_(const StlVecType<size_type> &col_indices);
-
-template<typename T>
-static void
-fill_missing_value_(ColumnVecType<T> &vec,
-                    const T &value,
-                    int limit,
-                    size_type col_num);
-
-template<typename T>
-static void
-fill_missing_ffill_(ColumnVecType<T> &vec, int limit, size_type col_num);
-
-template<typename T,
-         typename std::enable_if<
-             supports_arithmetic<T>::value &&
-             supports_arithmetic<IndexType>::value>::type* = nullptr>
-static void
-fill_missing_midpoint_(ColumnVecType<T> &vec, int limit, size_type col_num);
-
-template<typename T,
-         typename std::enable_if<
-             ! supports_arithmetic<T>::value ||
-             ! supports_arithmetic<IndexType>::value>::type* = nullptr>
-static void
-fill_missing_midpoint_(ColumnVecType<T> &vec, int limit, size_type col_num);
-
-template<typename T>
-static void
-fill_missing_bfill_(ColumnVecType<T> &vec, int limit);
-
-template<typename T,
-         typename std::enable_if<
-             supports_arithmetic<T>::value &&
-             supports_arithmetic<IndexType>::value>::type* = nullptr>
-static void
-fill_missing_linter_(ColumnVecType<T> &vec,
-                     const IndexVecType &index,
-                     int limit);
-
-template<typename T,
-         typename std::enable_if<
-             ! supports_arithmetic<T>::value ||
-             ! supports_arithmetic<IndexType>::value>::type* = nullptr>
-static void
-fill_missing_linter_(ColumnVecType<T> &, const IndexVecType &, int);
-
-// Maps row number -> number of missing column(s)
-using DropRowMap = DFMap<size_type, size_type>;
-
-
-template<typename T>
-static void
-drop_missing_rows_(T &vec,
-                   const DropRowMap &missing_row_map,
-                   drop_policy policy,
-                   size_type threshold,
-                   size_type col_num);
-
 template<typename T, typename ITR>
 void
 setup_view_column_(const char *name, Index2D<ITR> range);
-
-using IndexIdxVector = StlVecType<std::tuple<size_type, size_type>>;
-template<typename T>
-using JoinSortingPair = std::pair<const T *, size_type>;
-
-template<typename LHS_T, typename RHS_T, typename IDX_T, typename ... Ts>
-static void
-join_helper_common_(const LHS_T &lhs,
-                    const RHS_T &rhs,
-                    const IndexIdxVector &joined_index_idx,
-                    DataFrame<
-                        IDX_T,
-                        HeteroVector<std::size_t(H::align_value)>> &result,
-                    const char *skip_col_name = nullptr);
 
 template<typename LHS_T, typename RHS_T, typename ... Ts>
 static DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
@@ -149,16 +79,14 @@ column_join_helper_(const LHS_T &lhs,
 
 template<typename T>
 static IndexIdxVector
-get_inner_index_idx_vector_(
-    const StlVecType<JoinSortingPair<T>> &col_vec_lhs,
-    const StlVecType<JoinSortingPair<T>> &col_vec_rhs);
+get_inner_index_idx_vector_(const StlVecType<JoinSortingPair<T>> &col_vec_lhs,
+                            const StlVecType<JoinSortingPair<T>> &col_vec_rhs);
 
 template<typename LHS_T, typename RHS_T, typename ... Ts>
 static DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
-index_inner_join_(
-    const LHS_T &lhs, const RHS_T &rhs,
-    const StlVecType<JoinSortingPair<IndexType>> &col_vec_lhs,
-    const StlVecType<JoinSortingPair<IndexType>> &col_vec_rhs);
+index_inner_join_(const LHS_T &lhs, const RHS_T &rhs,
+                  const StlVecType<JoinSortingPair<IndexType>> &col_vec_lhs,
+                  const StlVecType<JoinSortingPair<IndexType>> &col_vec_rhs);
 
 template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
 static DataFrame<unsigned int, HeteroVector<std::size_t(H::align_value)>>
@@ -170,16 +98,14 @@ column_inner_join_(const LHS_T &lhs,
 
 template<typename T>
 static IndexIdxVector
-get_left_index_idx_vector_(
-    const StlVecType<JoinSortingPair<T>> &col_vec_lhs,
-    const StlVecType<JoinSortingPair<T>> &col_vec_rhs);
+get_left_index_idx_vector_(const StlVecType<JoinSortingPair<T>> &col_vec_lhs,
+                           const StlVecType<JoinSortingPair<T>> &col_vec_rhs);
 
 template<typename LHS_T, typename RHS_T, typename ... Ts>
 static DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
-index_left_join_(
-    const LHS_T &lhs, const RHS_T &rhs,
-    const StlVecType<JoinSortingPair<IndexType>> &col_vec_lhs,
-    const StlVecType<JoinSortingPair<IndexType>> &col_vec_rhs);
+index_left_join_(const LHS_T &lhs, const RHS_T &rhs,
+                 const StlVecType<JoinSortingPair<IndexType>> &col_vec_lhs,
+                 const StlVecType<JoinSortingPair<IndexType>> &col_vec_rhs);
 
 template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
 static DataFrame<unsigned int, HeteroVector<std::size_t(H::align_value)>>
@@ -191,16 +117,14 @@ column_left_join_(const LHS_T &lhs,
 
 template<typename T>
 static IndexIdxVector
-get_right_index_idx_vector_(
-    const StlVecType<JoinSortingPair<T>> &col_vec_lhs,
-    const StlVecType<JoinSortingPair<T>> &col_vec_rhs);
+get_right_index_idx_vector_(const StlVecType<JoinSortingPair<T>> &col_vec_lhs,
+                            const StlVecType<JoinSortingPair<T>> &col_vec_rhs);
 
 template<typename LHS_T, typename RHS_T, typename ... Ts>
 static DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
-index_right_join_(
-    const LHS_T &lhs, const RHS_T &rhs,
-    const StlVecType<JoinSortingPair<IndexType>> &col_vec_lhs,
-    const StlVecType<JoinSortingPair<IndexType>> &col_vec_rhs);
+index_right_join_(const LHS_T &lhs, const RHS_T &rhs,
+                  const StlVecType<JoinSortingPair<IndexType>> &col_vec_lhs,
+                  const StlVecType<JoinSortingPair<IndexType>> &col_vec_rhs);
 
 template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
 static DataFrame<unsigned int, HeteroVector<std::size_t(H::align_value)>>
@@ -209,13 +133,6 @@ column_right_join_(const LHS_T &lhs,
                    const char *col_name,
                    const StlVecType<JoinSortingPair<T>> &col_vec_lhs,
                    const StlVecType<JoinSortingPair<T>> &col_vec_rhs);
-
-template<typename MAP, typename ... Ts>
-static DataFrame
-remove_dups_common_(const DataFrame &s_df,
-                    remove_dup_spec rds,
-                    const MAP &row_table,
-                    const IndexVecType &index);
 
 template<typename LHS_T, typename RHS_T, typename ... Ts>
 static void
@@ -236,12 +153,695 @@ index_left_right_join_(
 
 template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
 static DataFrame<unsigned int, HeteroVector<std::size_t(H::align_value)>>
-column_left_right_join_(
+column_left_right_join_(const LHS_T &lhs,
+                        const RHS_T &rhs,
+                        const char *col_name,
+                        const StlVecType<JoinSortingPair<T>> &col_vec_lhs,
+                        const StlVecType<JoinSortingPair<T>> &col_vec_rhs);
+
+// ----------------------------------------------------------------------------
+
+template<typename T1, typename T2>
+size_type
+load_pair_(std::pair<T1, T2> &col_name_data, bool do_lock = true)  {
+
+    return (load_column<typename decltype(col_name_data.second)::value_type>(
+                col_name_data.first, // column name
+                std::forward<T2>(col_name_data.second),
+                nan_policy::pad_with_nans,
+                do_lock));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
+size_type
+append_row_(std::pair<const char *, T> &row_name_data)  {
+
+    return (append_column<T>(row_name_data.first, // column name
+                             std::forward<T>(row_name_data.second),
+                             nan_policy::dont_pad_with_nans));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
+static void
+drop_missing_rows_(T &vec,
+                   const DropRowMap &missing_row_map,
+                   drop_policy policy,
+                   size_type threshold,
+                   size_type col_num)  {
+
+    size_type   erase_count = 0;
+    auto        dropper =
+        [&vec, &erase_count](const auto &iter) -> void  {
+            vec.erase(vec.begin() + (iter.first - erase_count));
+            erase_count += 1;
+        };
+
+    if (policy == drop_policy::all)  {
+        for (const auto &iter : missing_row_map)
+            if (iter.second == col_num)  dropper(iter);
+    }
+    else if (policy == drop_policy::any)  {
+        for (const auto &iter : missing_row_map)
+            if (iter.second > 0)  dropper(iter);
+    }
+    else if (policy == drop_policy::threshold)  {
+        for (const auto &iter : missing_row_map)
+            if (iter.second > threshold)  dropper(iter);
+    }
+
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
+static void
+fill_missing_value_(ColumnVecType<T> &vec,
+                    const T &value,
+                    int limit,
+                    size_type col_num)  {
+
+    const size_type vec_size = vec.size();
+    int             count = 0;
+
+    if (limit < 0)
+        vec.reserve(col_num);
+    for (size_type i = 0; i < col_num; ++i)  {
+        if (limit >= 0 && count >= limit)  break;
+        if (i >= vec_size)  {
+            vec.push_back(value);
+            count += 1;
+        }
+        else if (is_nan<T>(vec[i]))  {
+            vec[i] = value;
+            count += 1;
+        }
+    }
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
+static void
+fill_missing_ffill_(ColumnVecType<T> &vec, int limit, size_type col_num)  {
+
+    const size_type vec_size = vec.size();
+
+    if (vec_size == 0)  return;
+
+    int count = 0;
+    T   last_value = vec[0];
+
+    for (size_type i = 1; i < col_num; ++i)  {
+        if (limit >= 0 && count >= limit)  break;
+        if (i >= vec_size)  {
+            if (! is_nan(last_value))  {
+                vec.reserve(col_num);
+                vec.push_back(last_value);
+                count += 1;
+            }
+            else  break;
+        }
+        else  {
+            if (! is_nan<T>(vec[i]))
+                last_value = vec[i];
+            else if (! is_nan<T>(last_value))  {
+                vec[i] = last_value;
+                count += 1;
+            }
+        }
+    }
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T,
+         typename std::enable_if<
+             supports_arithmetic<T>::value &&
+             supports_arithmetic<IndexType>::value>::type* = nullptr>
+static void
+fill_missing_midpoint_(ColumnVecType<T> &vec, int limit, size_type)  {
+
+    const size_type vec_size = vec.size();
+
+    if (vec_size < 3) [[unlikely]]  return;
+
+    int count = 0;
+    T   last_value = vec[0];
+
+    for (size_type i = 1; i < vec_size - 1; ++i)  {
+        if (limit >= 0 && count >= limit)  break;
+
+        if (! is_nan<T>(vec[i]))
+            last_value = vec[i];
+        else if (! is_nan<T>(last_value))  {
+            for (size_type j = i + 1; j < vec_size; ++j)  {
+                if (! is_nan<T>(vec[j]))  {
+                    vec[i] = (last_value + vec[j]) / T(2);
+                    last_value = vec[i];
+                    count += 1;
+                    break;
+                }
+            }
+        }
+    }
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T,
+         typename std::enable_if<
+             ! supports_arithmetic<T>::value ||
+             ! supports_arithmetic<IndexType>::value>::type* = nullptr>
+static void
+fill_missing_midpoint_(ColumnVecType<T> &, int, size_type)  {
+
+    throw NotFeasible("fill_missing_midpoint_(): ERROR: Mid-point filling is "
+                      "not feasible on non-arithmetic types");
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T>
+static void
+fill_missing_bfill_(ColumnVecType<T> &vec, int limit)  {
+
+    const long  vec_size = static_cast<long>(vec.size());
+
+    if (vec_size == 0)  return;
+
+    int count = 0;
+    T   last_value = vec[vec_size - 1];
+
+    for (long i = vec_size - 1; i >= 0; --i)  {
+        if (limit >= 0 && count >= limit)  break;
+        if (! is_nan<T>(vec[i]))  last_value = vec[i];
+        if (is_nan<T>(vec[i]) && ! is_nan<T>(last_value))  {
+            vec[i] = last_value;
+            count += 1;
+        }
+    }
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T,
+         typename std::enable_if<
+             supports_arithmetic<T>::value &&
+             supports_arithmetic<IndexType>::value>::type* = nullptr>
+static void
+fill_missing_linter_(ColumnVecType<T> &vec,
+                     const IndexVecType &index,
+                     int limit)  {
+
+    const long  vec_size = static_cast<long>(vec.size());
+
+    if (vec_size < 3)  return;
+
+    int             count = 0;
+    const T         *y1 = &(vec[0]);
+    const T         *y2 = &(vec[2]);
+    const IndexType *x = &(index[1]);
+    const IndexType *x1 = &(index[0]);
+    const IndexType *x2 = &(index[2]);
+
+    for (long i = 1; i < vec_size - 1; ++i)  {
+        if (limit >= 0 && count >= limit)  break;
+        if (is_nan<T>(vec[i]))  {
+            if (is_nan<T>(*y2))  {
+                bool    found = false;
+
+                for (long j = i + 1; j < vec_size; ++j)  {
+                    if (! is_nan(vec[j]))  {
+                        y2 = &(vec[j]);
+                        x2 = &(index[j]);
+                        found = true;
+                        break;
+                    }
+                }
+                if (! found)  break;
+            }
+            if (is_nan<T>(*y1))  {
+                for (long j = i - 1; j >= 0; --j)  {
+                    if (! is_nan(vec[j]))  {
+                        y1 = &(vec[j]);
+                        x1 = &(index[j]);
+                        break;
+                    }
+                }
+            }
+            vec[i] =
+                *y1 +
+                (static_cast<T>(*x - *x1) / static_cast<T>(*x2 - *x1)) *
+                (*y2 - *y1);
+            count += 1;
+        }
+        if (i < (vec_size - 2))  {
+            y1 = &(vec[i]);
+            y2 = &(vec[i + 2]);
+            x = &(index[i + 1]);
+            x1 = &(index[i]);
+            x2 = &(index[i + 2]);
+        }
+    }
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T,
+         typename std::enable_if<
+             ! supports_arithmetic<T>::value ||
+             ! supports_arithmetic<IndexType>::value>::type* = nullptr>
+static void
+fill_missing_linter_(ColumnVecType<T> &, const IndexVecType &, int)  {
+
+    throw NotFeasible("fill_missing_linter_(): ERROR: Interpolation is "
+                      "not feasible on non-arithmetic types");
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename ... Ts>
+void remove_data_by_sel_common_(const StlVecType<size_type> &col_indices)  {
+
+    const auto  thread_level =
+        (indices_.size() < ThreadPool::MUL_THR_THHOLD)
+            ? 0L : get_thread_level();
+    SpinGuard   guard (lock_);
+
+    if (thread_level > 2)  {
+        auto    lbd =
+            [&col_indices = std::as_const(col_indices), this]
+            (const auto &begin, const auto &end) -> void  {
+                const sel_remove_functor_<Ts ...>   functor (col_indices);
+
+                for (auto citer = begin; citer < end; ++citer)
+                    this->data_[citer->second].change(functor);
+            };
+        auto    lbd_idx =
+            [&col_indices = std::as_const(col_indices), this] () -> void  {
+                const size_type col_indices_s = col_indices.size();
+                size_type       del_count = 0;
+
+                for (size_type i = 0; i < col_indices_s; ++i) [[likely]]
+                    this->indices_.erase(this->indices_.begin() +
+                                         (col_indices[i] - del_count++));
+            };
+            auto    future_idx = thr_pool_.dispatch(false, lbd_idx);
+            auto    futures =
+                thr_pool_.parallel_loop(column_list_.begin(),
+                                        column_list_.end(),
+                                        std::move(lbd));
+
+            future_idx.get();
+            for (auto &fut : futures)  fut.get();
+    }
+    else  {
+        const sel_remove_functor_<Ts ...>   functor (col_indices);
+
+        for (const auto &citer : column_list_)
+            data_[citer.second].change(functor);
+        guard.release();
+
+        const size_type col_indices_s = col_indices.size();
+        size_type       del_count = 0;
+
+        for (size_type i = 0; i < col_indices_s; ++i) [[likely]]
+            indices_.erase(indices_.begin() + (col_indices[i] - del_count++));
+    }
+
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename LHS_T, typename RHS_T, typename IDX_T, typename ... Ts>
+static void
+join_helper_common_(
     const LHS_T &lhs,
     const RHS_T &rhs,
-    const char *col_name,
-    const StlVecType<JoinSortingPair<T>> &col_vec_lhs,
-    const StlVecType<JoinSortingPair<T>> &col_vec_rhs);
+    const IndexIdxVector &joined_index_idx,
+    DataFrame<IDX_T, HeteroVector<std::size_t(H::align_value)>> &result,
+    const char *skip_col_name = nullptr)  {
+
+    using res_t = decltype(result);
+
+    std::vector<std::future<void>>  futures;
+    const auto                      thread_level =
+        (lhs.indices_.size() < ThreadPool::MUL_THR_THHOLD)
+            ? 0L : get_thread_level();
+
+
+    if (thread_level > 2)
+        futures.reserve(lhs.column_list_.size() + rhs.column_list_.size());
+
+    const SpinGuard guard(lock_);
+
+    // NOTE: I had to do this in two separate loops. Otherwise, it would
+    //       occasionally crash in multithreaded mode under MacOS.
+    //
+    for (const auto &citer : lhs.column_list_) [[likely]]  {
+        if (skip_col_name && citer.first == skip_col_name)  continue;
+
+        if (rhs.column_tb_.find(citer.first) != rhs.column_tb_.end())  {
+            create_join_common_col_functor_<res_t, Ts ...>   create_f(
+                citer.first.c_str(), result);
+
+            lhs.data_[citer.second].change(create_f);
+        }
+        else  {
+            create_col_functor_<res_t, Ts ...>  create_f(
+                citer.first.c_str(), result);
+
+            lhs.data_[citer.second].change(create_f);
+        }
+    }
+
+    // Load the common and lhs columns
+    //
+    for (const auto &citer : lhs.column_list_) [[likely]]  {
+        if (skip_col_name && citer.first == skip_col_name)  continue;
+
+        // Common column between two frames
+        //
+        if (rhs.column_tb_.find(citer.first) != rhs.column_tb_.end())  {
+            auto    jcomm_lbd =
+                [&citer = std::as_const(citer),
+                 &lhs = std::as_const(lhs),
+                 &rhs = std::as_const(rhs),
+                 &joined_index_idx = std::as_const(joined_index_idx),
+                 &result] () -> void  {
+                    index_join_functor_common_<res_t, Ts ...>   functor(
+                        citer.first.c_str(),
+                        rhs,
+                        joined_index_idx,
+                        result);
+
+                    lhs.data_[citer.second].change(functor);
+                };
+
+            if (thread_level > 2)
+                futures.emplace_back(thr_pool_.dispatch(false, jcomm_lbd));
+            else
+                jcomm_lbd();
+        }
+        else  {  // lhs only column
+            auto    jlhs_lbd =
+                [&citer = std::as_const(citer),
+                 &lhs = std::as_const(lhs),
+                 &joined_index_idx = std::as_const(joined_index_idx),
+                 &result] () -> void  {
+                    // 0 = Left
+                    index_join_functor_oneside_<0, res_t, Ts ...>   functor (
+                        citer.first.c_str(),
+                        joined_index_idx,
+                        result);
+
+                    lhs.data_[citer.second].change(functor);
+                };
+
+            if (thread_level > 2)
+                futures.emplace_back(thr_pool_.dispatch(false, jlhs_lbd));
+            else
+                jlhs_lbd();
+        }
+    }
+
+    // Load the rhs columns
+    //
+    for (const auto &citer : rhs.column_list_) [[likely]]  {
+        const auto  lhs_citer = lhs.column_tb_.find(citer.first);
+
+        if (skip_col_name && citer.first == skip_col_name)  continue;
+
+        if (lhs_citer == lhs.column_tb_.end())  {  // rhs only column
+            create_col_functor_<res_t, Ts ...>  create_f(
+                citer.first.c_str(), result);
+
+            rhs.data_[citer.second].change(create_f);
+        }
+
+        if (lhs_citer == lhs.column_tb_.end())  {  // rhs only column
+            auto    jrhs_lbd =
+                [&citer = std::as_const(citer),
+                 &rhs = std::as_const(rhs),
+                 &joined_index_idx = std::as_const(joined_index_idx),
+                 &result] () -> void  {
+                    // 1 = Right
+                    index_join_functor_oneside_<1, res_t, Ts ...>   functor (
+                        citer.first.c_str(),
+                        joined_index_idx,
+                        result);
+
+                    rhs.data_[citer.second].change(functor);
+                };
+
+            if (thread_level > 2)
+                futures.emplace_back(thr_pool_.dispatch(false, jrhs_lbd));
+            else
+                jrhs_lbd();
+        }
+    }
+
+    for (auto &fut : futures)  fut.get();
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename MAP, typename ... Ts>
+static DataFrame
+remove_dups_common_(const DataFrame &s_df,
+                    remove_dup_spec rds,
+                    const MAP &row_table,
+                    const IndexVecType &index)  {
+
+    using count_vec = StlVecType<size_type>;
+
+    count_vec   rows_to_del;
+
+    rows_to_del.reserve(8);
+    if (rds == remove_dup_spec::keep_first)  {
+        for (const auto &citer : row_table)  {
+            if (citer.second.size() > 1)  {
+                for (size_type i = 1; i < citer.second.size(); ++i)
+                    rows_to_del.push_back(citer.second[i]);
+            }
+        }
+    }
+    else if (rds == remove_dup_spec::keep_last)  {
+        for (const auto &citer : row_table)  {
+            if (citer.second.size() > 1)  {
+                for (size_type i = 0; i < citer.second.size() - 1; ++i)
+                    rows_to_del.push_back(citer.second[i]);
+            }
+        }
+    }
+    else  {  // remove_dup_spec::keep_none
+        for (const auto &citer : row_table)  {
+            if (citer.second.size() > 1)  {
+                for (size_type i = 0; i < citer.second.size(); ++i)
+                    rows_to_del.push_back(citer.second[i]);
+            }
+        }
+    }
+
+    DataFrame<I, H> new_df;
+    IndexVecType    new_index (index.size() - rows_to_del.size());
+    const SpinGuard guard(lock_);
+
+    // Load the index
+    //
+    _remove_copy_if_(index.begin(), index.end(), new_index.begin(),
+                     [&rows_to_del = std::as_const(rows_to_del)]
+                     (std::size_t n) -> bool  {
+                         return (std::find(rows_to_del.begin(),
+                                           rows_to_del.end(),
+                                           n) != rows_to_del.end());
+                     });
+    new_df.load_index(std::move(new_index));
+
+    // Create the columns, so loading can proceed in parallel
+    //
+    for (const auto &citer : s_df.column_list_)  {
+        create_col_functor_<DataFrame, Ts ...> functor(
+            citer.first.c_str(), new_df);
+
+        s_df.data_[citer.second].change(functor);
+    }
+
+    const auto  thread_level =
+        (new_df.get_index().size() < ThreadPool::MUL_THR_THHOLD)
+            ? 0L : get_thread_level();
+
+    if (thread_level > 2)  {
+        auto    lbd =
+            [&rows_to_del = std::as_const(rows_to_del),
+             &s_df = std::as_const(s_df),
+             &new_df]
+            (const auto &begin, const auto &end) -> void  {
+                for (auto citer = begin; citer < end; ++citer)  {
+                    copy_remove_functor_<Ts ...> functor (citer->first.c_str(),
+                                                          rows_to_del,
+                                                          new_df);
+
+                    s_df.data_[citer->second].change(functor);
+                }
+            };
+        auto    futures =
+            thr_pool_.parallel_loop(s_df.column_list_.begin(),
+                                    s_df.column_list_.end(),
+                                    std::move(lbd));
+
+        for (auto &fut : futures)  fut.get();
+    }
+    else  {
+        for (const auto &citer : s_df.column_list_)  {
+            copy_remove_functor_<Ts ...>    functor (citer.first.c_str(),
+                                                     rows_to_del,
+                                                     new_df);
+
+            s_df.data_[citer.second].change(functor);
+        }
+    }
+    return (new_df);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename ... Ts>
+DataFrame
+data_by_sel_common_(const StlVecType<size_type> &col_indices,
+                    size_type idx_s) const  {
+
+    DataFrame       ret_df;
+    IndexVecType    new_index;
+
+    new_index.reserve(col_indices.size());
+    for (const auto &citer: col_indices) [[likely]]
+        new_index.push_back(indices_[citer]);
+    ret_df.load_index(std::move(new_index));
+
+    const SpinGuard guard(lock_);
+
+    for (const auto &citer : column_list_) [[likely]]  {
+        create_col_functor_<DataFrame, Ts ...>  functor(citer.first.c_str(),
+                                                        ret_df);
+
+        data_[citer.second].change(functor);
+    }
+
+    const auto  thread_level =
+        (idx_s < ThreadPool::MUL_THR_THHOLD) ? 0L : get_thread_level();
+
+    if (thread_level > 2)  {
+        auto    lbd =
+            [&col_indices = std::as_const(col_indices), idx_s, &ret_df, this]
+            (const auto &begin, const auto &end) -> void  {
+                for (auto citer = begin; citer < end; ++citer)  {
+                    sel_load_functor_<size_type, Ts ...>    functor (
+                        citer->first.c_str(),
+                        col_indices,
+                        idx_s,
+                        ret_df);
+
+                    this->data_[citer->second].change(functor);
+                }
+            };
+
+        auto    futuers =
+            thr_pool_.parallel_loop(column_list_.begin(),
+                                    column_list_.end(),
+                                    std::move(lbd));
+
+        for (auto &fut : futuers)  fut.get();
+    }
+    else  {
+        for (const auto &citer : column_list_) [[likely]]  {
+            sel_load_functor_<size_type, Ts ...>    functor (
+                citer.first.c_str(),
+                col_indices,
+                idx_s,
+                ret_df);
+
+            data_[citer.second].change(functor);
+        }
+    }
+
+    return (ret_df);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename ... Ts>
+PtrView
+view_by_sel_common_(const StlVecType<size_type> &col_indices,
+                    size_type idx_s)  {
+
+    using TheView = PtrView;
+
+    TheView                         ret_dfv;
+    typename TheView::IndexVecType  new_index;
+
+    new_index.reserve(col_indices.size());
+    for (const auto &citer: col_indices) [[likely]]
+        new_index.push_back(&(indices_[citer]));
+    ret_dfv.indices_ = std::move(new_index);
+
+    const SpinGuard guard(lock_);
+
+    for (const auto &col_citer : column_list_) [[likely]]  {
+        sel_load_view_functor_<size_type, TheView, Ts ...>   functor (
+            col_citer.first.c_str(),
+            col_indices,
+            idx_s,
+            ret_dfv);
+
+        data_[col_citer.second].change(functor);
+    }
+
+    return (ret_dfv);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename ... Ts>
+ConstPtrView
+view_by_sel_common_(const StlVecType<size_type> &col_indices,
+                    size_type idx_s) const  {
+
+    using TheView = ConstPtrView;
+
+    TheView                         ret_dfv;
+    typename TheView::IndexVecType  new_index;
+
+    new_index.reserve(col_indices.size());
+    for (const auto &citer: col_indices) [[likely]]
+        new_index.push_back(&(indices_[citer]));
+    ret_dfv.indices_ = std::move(new_index);
+
+    const SpinGuard guard(lock_);
+
+    for (const auto &col_citer : column_list_) [[likely]]  {
+        sel_load_view_functor_<size_type, TheView, Ts ...>   functor (
+            col_citer.first.c_str(),
+            col_indices,
+            idx_s,
+            ret_dfv);
+
+        data_[col_citer.second].change(functor);
+    }
+
+    return (ret_dfv);
+}
 
 // ----------------------------------------------------------------------------
 
@@ -292,6 +892,27 @@ col_vector_push_back_func_(V &vec,
         _get_token_from_file_(file, ',', value,
                               file_type == io_format::json ? ']' : '\0');
         vec.push_back(static_cast<T>(converter(value.c_str(), nullptr, 0)));
+    }
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename V>
+inline static void
+col_vector_push_back_cont_func_(V &vec,
+                                std::istream &file,
+                                T (*converter)(const char *))  {
+
+    std::string value;
+    char        c = 0;
+
+    value.reserve(2048);
+    while (file.get(c)) [[likely]] {
+        value.clear();
+        if (c == '\n')  break;
+        file.unget();
+        _get_token_from_file_(file, ',', value, '\0');
+        vec.push_back(converter(value.c_str()));
     }
 }
 

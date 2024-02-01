@@ -65,18 +65,26 @@ void DataFrame<I, H>::self_shift(size_type periods, shift_policy sp)  {
 
                 for (auto &fut : futuers)  fut.get();
             }
-            else {
+            else  {
                 for (size_type idx = 0; idx < num_cols; ++idx) [[likely]]
                     data_[idx].change(functor);
             }
         }
-        else if (sp == shift_policy::left)  {
-            while (periods-- > 0)
-                remove_column(column_list_.front().first.c_str());
-        }
-        else if (sp == shift_policy::right)  {
-            while (periods-- > 0)
-                remove_column(column_list_.back().first.c_str());
+        else  {
+            while (periods-- > 0)  {
+                const char                      *col_name =
+                    (sp == shift_policy::left)
+                        ? column_list_.front().first.c_str()
+                        : column_list_.back().first.c_str();
+                remove_column_functor_<Ts ...>  functor (col_name, *this);
+
+                for (const auto &citer : column_list_)  {
+                    if (citer.first == col_name)  {
+                        data_[citer.second].change(functor);
+                        break;
+                    }
+                }
+            }
         }
     }
 }

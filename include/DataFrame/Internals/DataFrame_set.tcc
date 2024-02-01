@@ -70,30 +70,22 @@ DataFrame<I, H>::create_column (const char *name, bool do_lock)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
+template<typename T>
 void DataFrame<I, H>::remove_column (const char *name)  {
 
     static_assert(std::is_base_of<HeteroVector<align_value>, DataVec>::value,
                   "Only a StdDataFrame can call remove_column()");
 
-    if (! ::strcmp(name, DF_INDEX_COL_NAME))
-        throw DataFrameError ("DataFrame::remove_column(): ERROR: "
-                              "Data column name cannot be 'INDEX'");
+    ColumnVecType<T>    &vec = get_column<T>(name);
 
-    const auto  iter = column_tb_.find (name);
-
-    if (iter == column_tb_.end())  {
-        char    buffer [512];
-
-        snprintf (buffer, sizeof(buffer) - 1,
-                  "DataFrame::remove_column(): ERROR: Cannot find column '%s'",
-                  name);
-        throw ColNotFound (buffer);
-    }
+    // Free the memory space
+    //
+    vec = std::move(ColumnVecType<T>{ });
 
     // I do not erase the column from the data_ vector, because it will mess up
     // indices in the hash table column_tb_
     /* data_.erase (data_.begin() + iter->second); */
-    column_tb_.erase (iter);
+    column_tb_.erase (name);
     for (size_type i = 0; i < column_list_.size(); ++i)  {
         if (column_list_[i].first == name)  {
             column_list_.erase(column_list_.begin() + i);
@@ -107,9 +99,42 @@ void DataFrame<I, H>::remove_column (const char *name)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
+template<typename T>
 void DataFrame<I, H>::remove_column(size_type index)  {
 
-    return (remove_column(column_list_[index].first.c_str()));
+    return (remove_column<T>(column_list_[index].first.c_str()));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+void DataFrame<I, H>::clear()  {
+
+    {
+        const SpinGuard guard(lock_);
+
+        data_.clear();
+    }
+    indices_.clear();
+    column_tb_.clear();
+    column_list_.clear();
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+void DataFrame<I, H>::swap(DataFrame &other)  {
+
+    {
+        const SpinGuard guard(lock_);
+
+        data_.swap(other.data_);
+    }
+    indices_.swap(other.indices_);
+    column_tb_.swap(other.column_tb_);
+    column_list_.swap(other.column_list_);
+    return;
 }
 
 // ----------------------------------------------------------------------------
@@ -147,7 +172,13 @@ void DataFrame<I, H>::rename_column (const char *from, const char *to)  {
 
     column_tb_.emplace (to, from_iter->second);
     column_list_.emplace_back (to, from_iter->second);
-    remove_column(from);
+    column_tb_.erase (from);
+    for (size_type i = 0; i < column_list_.size(); ++i)  {
+        if (column_list_[i].first == from)  {
+            column_list_.erase(column_list_.begin() + i);
+            break;
+        }
+    }
     return;
 }
 
@@ -172,7 +203,7 @@ retype_column (const char *name,
     new_vec.reserve(old_vec.size());
     for (const auto &citer : old_vec)
         new_vec.push_back(std::move(convert_func(citer)));
-    remove_column(name);
+    remove_column<FROM_T>(name);
     load_column<TO_T>(name, std::move(new_vec));
     return;
 }
@@ -431,11 +462,12 @@ load_result_as_column(V &visitor,
 
     size_type   ret_cnt = data_s;
 
-    if (padding == nan_policy::pad_with_nans && data_s < idx_s)
+    if (padding == nan_policy::pad_with_nans && data_s < idx_s)  {
         for (size_type i = 0; i < idx_s - data_s; ++i)  {
             new_col.push_back (std::move(get_nan<new_type>()));
             ret_cnt += 1;
         }
+    }
 
     const auto              iter = column_tb_.find (new_col_name);
     StlVecType<new_type>    *vec_ptr = nullptr;
@@ -595,13 +627,15 @@ from_indicators(const StlVecType<const char *> &ind_col_names,
 
     guard.release();
     new_col.reserve(col_s);
-    for (size_type i = 0; i < col_s; ++i) [[likely]]
-        for (size_type j = 0; j < ind_col_s; ++j) [[likely]]
+    for (size_type i = 0; i < col_s; ++i) [[likely]]  {
+        for (size_type j = 0; j < ind_col_s; ++j) [[likely]]  {
             if (ind_cols[j]->at(i))  {
                 new_col.push_back(
                     _string_to_<CT>(ind_col_names[j] + pre_offset));
                 break;
             }
+        }
+    }
 
     return (col_s);
 }
@@ -771,21 +805,6 @@ load_column (const char *name,
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename T1, typename T2>
-typename DataFrame<I, H>::size_type
-DataFrame<I, H>::
-load_pair_(std::pair<T1, T2> &col_name_data, bool do_lock)  {
-
-    return (load_column<typename decltype(col_name_data.second)::value_type>(
-                col_name_data.first, // column name
-                std::forward<T2>(col_name_data.second),
-                nan_policy::pad_with_nans,
-                do_lock));
-}
-
-// ----------------------------------------------------------------------------
-
-template<typename I, typename H>
 template<typename ITR>
 typename DataFrame<I, H>::size_type
 DataFrame<I, H>::
@@ -868,18 +887,6 @@ append_column (const char *name, const T &val, nan_policy padding)  {
     }
 
     return (ret_cnt);
-}
-
-// ----------------------------------------------------------------------------
-
-template<typename I, typename H>
-template<typename T>
-typename DataFrame<I, H>::size_type
-DataFrame<I, H>::append_row_(std::pair<const char *, T> &row_name_data)  {
-
-    return (append_column<T>(row_name_data.first, // column name
-                             std::forward<T>(row_name_data.second),
-                             nan_policy::dont_pad_with_nans));
 }
 
 // ----------------------------------------------------------------------------
@@ -1027,62 +1034,6 @@ void DataFrame<I, H>::remove_data_by_loc (Index2D<long> range)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename ... Ts>
-void DataFrame<I, H>::
-remove_data_by_sel_common_(const StlVecType<size_type> &col_indices)  {
-
-    const auto  thread_level =
-        (indices_.size() < ThreadPool::MUL_THR_THHOLD)
-            ? 0L : get_thread_level();
-    SpinGuard   guard (lock_);
-
-    if (thread_level > 2)  {
-        auto    lbd =
-            [&col_indices = std::as_const(col_indices), this]
-            (const auto &begin, const auto &end) -> void  {
-                const sel_remove_functor_<Ts ...>   functor (col_indices);
-
-                for (auto citer = begin; citer < end; ++citer)
-                    this->data_[citer->second].change(functor);
-            };
-        auto    lbd_idx =
-            [&col_indices = std::as_const(col_indices), this] () -> void  {
-                const size_type col_indices_s = col_indices.size();
-                size_type       del_count = 0;
-
-                for (size_type i = 0; i < col_indices_s; ++i) [[likely]]
-                    this->indices_.erase(this->indices_.begin() +
-                                         (col_indices[i] - del_count++));
-            };
-            auto    future_idx = thr_pool_.dispatch(false, lbd_idx);
-            auto    futures =
-                thr_pool_.parallel_loop(column_list_.begin(),
-                                        column_list_.end(),
-                                        std::move(lbd));
-
-            future_idx.get();
-            for (auto &fut : futures)  fut.get();
-    }
-    else  {
-        const sel_remove_functor_<Ts ...>   functor (col_indices);
-
-        for (const auto &citer : column_list_)
-            data_[citer.second].change(functor);
-        guard.release();
-
-        const size_type col_indices_s = col_indices.size();
-        size_type       del_count = 0;
-
-        for (size_type i = 0; i < col_indices_s; ++i) [[likely]]
-            indices_.erase(indices_.begin() + (col_indices[i] - del_count++));
-    }
-
-    return;
-}
-
-// ----------------------------------------------------------------------------
-
-template<typename I, typename H>
 template<typename T, typename F, typename ... Ts>
 void DataFrame<I, H>::remove_data_by_sel (const char *name, F &sel_functor)  {
 
@@ -1171,107 +1122,6 @@ remove_data_by_sel (const char *name1,
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename MAP, typename ... Ts>
-DataFrame<I, H> DataFrame<I, H>::
-remove_dups_common_(const DataFrame &s_df,
-                    remove_dup_spec rds,
-                    const MAP &row_table,
-                    const IndexVecType &index)  {
-
-    using count_vec = StlVecType<size_type>;
-
-    count_vec   rows_to_del;
-
-    rows_to_del.reserve(8);
-    if (rds == remove_dup_spec::keep_first)  {
-        for (const auto &citer : row_table)  {
-            if (citer.second.size() > 1)  {
-                for (size_type i = 1; i < citer.second.size(); ++i)
-                    rows_to_del.push_back(citer.second[i]);
-            }
-        }
-    }
-    else if (rds == remove_dup_spec::keep_last)  {
-        for (const auto &citer : row_table)  {
-            if (citer.second.size() > 1)  {
-                for (size_type i = 0; i < citer.second.size() - 1; ++i)
-                    rows_to_del.push_back(citer.second[i]);
-            }
-        }
-    }
-    else  {  // remove_dup_spec::keep_none
-        for (const auto &citer : row_table)  {
-            if (citer.second.size() > 1)  {
-                for (size_type i = 0; i < citer.second.size(); ++i)
-                    rows_to_del.push_back(citer.second[i]);
-            }
-        }
-    }
-
-    DataFrame<I, H> new_df;
-    IndexVecType    new_index (index.size() - rows_to_del.size());
-    const SpinGuard guard(lock_);
-
-    // Load the index
-    //
-    _remove_copy_if_(index.begin(), index.end(), new_index.begin(),
-                     [&rows_to_del = std::as_const(rows_to_del)]
-                     (std::size_t n) -> bool  {
-                         return (std::find(rows_to_del.begin(),
-                                           rows_to_del.end(),
-                                           n) != rows_to_del.end());
-                     });
-    new_df.load_index(std::move(new_index));
-
-    // Create the columns, so loading can proceed in parallel
-    //
-    for (const auto &citer : s_df.column_list_)  {
-        create_col_functor_<DataFrame, Ts ...> functor(
-            citer.first.c_str(), new_df);
-
-        s_df.data_[citer.second].change(functor);
-    }
-
-    const auto  thread_level =
-        (new_df.get_index().size() < ThreadPool::MUL_THR_THHOLD)
-            ? 0L : get_thread_level();
-
-    if (thread_level > 2)  {
-        auto    lbd =
-            [&rows_to_del = std::as_const(rows_to_del),
-             &s_df = std::as_const(s_df),
-             &new_df]
-            (const auto &begin, const auto &end) -> void  {
-                for (auto citer = begin; citer < end; ++citer)  {
-                    copy_remove_functor_<Ts ...> functor (citer->first.c_str(),
-                                                          rows_to_del,
-                                                          new_df);
-
-                    s_df.data_[citer->second].change(functor);
-                }
-            };
-        auto    futures =
-            thr_pool_.parallel_loop(s_df.column_list_.begin(),
-                                    s_df.column_list_.end(),
-                                    std::move(lbd));
-
-        for (auto &fut : futures)  fut.get();
-    }
-    else  {
-        for (const auto &citer : s_df.column_list_)  {
-            copy_remove_functor_<Ts ...>    functor (citer.first.c_str(),
-                                                     rows_to_del,
-                                                     new_df);
-
-            s_df.data_[citer.second].change(functor);
-        }
-    }
-    return (new_df);
-}
-
-// ----------------------------------------------------------------------------
-
-template<typename I, typename H>
 template<hashable_equal T, typename ... Ts>
 DataFrame<I, H> DataFrame<I, H>::
 remove_duplicates (const char *name,
@@ -1324,12 +1174,12 @@ remove_duplicates (const char *name1,
 
     guard.release();
 
-    const auto              &index = get_index();
-    const size_type         col_s =
+    const auto      &index = get_index();
+    const size_type col_s =
         std::min<size_type>({ vec1.size(), vec2.size(), index.size() });
-    map_t                   row_table;
-    count_vec               dummy_vec;
-    const IndexType         dummy_idx { };
+    map_t           row_table;
+    count_vec       dummy_vec;
+    const IndexType dummy_idx { };
 
     for (size_type i = 0; i < col_s; ++i) [[likely]]  {
         const auto  insert_res =
@@ -1374,9 +1224,9 @@ remove_duplicates (const char *name1,
     const size_type col_s =
         std::min<size_type>(
             { vec1.size(), vec2.size(), vec3.size(), index.size() });
-    map_t                   row_table;
-    count_vec               dummy_vec;
-    const IndexType         dummy_idx { };
+    map_t           row_table;
+    count_vec       dummy_vec;
+    const IndexType dummy_idx { };
 
     for (size_type i = 0; i < col_s; ++i) [[likely]]  {
         const auto  insert_res =
@@ -1426,9 +1276,9 @@ remove_duplicates (const char *name1,
         std::min<size_type>(
             { vec1.size(), vec2.size(), vec3.size(), vec4.size(),
               index.size() });
-    map_t                   row_table;
-    count_vec               dummy_vec;
-    const IndexType         dummy_idx { };
+    map_t           row_table;
+    count_vec       dummy_vec;
+    const IndexType dummy_idx { };
 
     for (size_type i = 0; i < col_s; ++i) [[likely]]  {
         const auto  insert_res =
@@ -1480,9 +1330,9 @@ remove_duplicates (const char *name1,
         std::min<size_type>(
             { vec1.size(), vec2.size(), vec3.size(), vec4.size(), vec5.size(),
               index.size() });
-    map_t                   row_table;
-    count_vec               dummy_vec;
-    const IndexType         dummy_idx { };
+    map_t           row_table;
+    count_vec       dummy_vec;
+    const IndexType dummy_idx { };
 
     for (size_type i = 0; i < col_s; ++i) [[likely]]  {
         const auto  insert_res =
@@ -1539,9 +1389,9 @@ remove_duplicates (const char *name1,
             { vec1.size(), vec2.size(), vec3.size(), vec4.size(),
               vec5.size(), vec6.size(),
               index.size() });
-    map_t                   row_table;
-    count_vec               dummy_vec;
-    const IndexType         dummy_idx { };
+    map_t           row_table;
+    count_vec       dummy_vec;
+    const IndexType dummy_idx { };
 
     for (size_type i = 0; i < col_s; ++i) [[likely]]  {
         const auto  insert_res =
@@ -1587,8 +1437,8 @@ consolidate(const char *old_col_name1,
                        false);
     guard.release();
     if (delete_old_cols)  {
-        remove_column(old_col_name1);
-        remove_column(old_col_name2);
+        remove_column<OLD_T1>(old_col_name1);
+        remove_column<OLD_T2>(old_col_name2);
     }
     return;
 }
@@ -1626,9 +1476,9 @@ consolidate(const char *old_col_name1,
                        false);
     guard.release();
     if (delete_old_cols)  {
-        remove_column(old_col_name1);
-        remove_column(old_col_name2);
-        remove_column(old_col_name3);
+        remove_column<OLD_T1>(old_col_name1);
+        remove_column<OLD_T2>(old_col_name2);
+        remove_column<OLD_T3>(old_col_name3);
     }
     return;
 }
@@ -1670,10 +1520,10 @@ consolidate(const char *old_col_name1,
                        false);
     guard.release();
     if (delete_old_cols)  {
-        remove_column(old_col_name1);
-        remove_column(old_col_name2);
-        remove_column(old_col_name3);
-        remove_column(old_col_name4);
+        remove_column<OLD_T1>(old_col_name1);
+        remove_column<OLD_T2>(old_col_name2);
+        remove_column<OLD_T3>(old_col_name3);
+        remove_column<OLD_T4>(old_col_name4);
     }
     return;
 }
@@ -1720,11 +1570,11 @@ consolidate(const char *old_col_name1,
                        false);
     guard.release();
     if (delete_old_cols)  {
-        remove_column(old_col_name1);
-        remove_column(old_col_name2);
-        remove_column(old_col_name3);
-        remove_column(old_col_name4);
-        remove_column(old_col_name5);
+        remove_column<OLD_T1>(old_col_name1);
+        remove_column<OLD_T2>(old_col_name2);
+        remove_column<OLD_T3>(old_col_name3);
+        remove_column<OLD_T4>(old_col_name4);
+        remove_column<OLD_T5>(old_col_name5);
     }
     return;
 }

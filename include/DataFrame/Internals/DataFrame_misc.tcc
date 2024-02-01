@@ -73,6 +73,19 @@ DataFrame<I, H>::shrink_to_fit_functor_<Ts ...>::operator() (T &vec) const  {
 
 template<typename I, typename H>
 template<typename ... Ts>
+template<typename T>
+void
+DataFrame<I, H>::remove_column_functor_<Ts ...>::operator() (T &) const  {
+
+    using value_type = typename T::value_type;
+
+    df.remove_column<value_type>(col_name);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename ... Ts>
 template<typename T2>
 void
 DataFrame<I, H>::sort_functor_<Ts ...>::operator() (T2 &vec)  {
@@ -200,7 +213,7 @@ DataFrame<I, H>::print_csv_functor_<Ts ...>::operator() (const T &vec)  {
 
     if (vec_size > 0)  {
         for (long i = sr; i < er; ++i)
-            os << vec[i] << ',';
+            _write_csv_df_index_(os, vec[i]) << ',';
     }
     os << '\n';
 
@@ -266,7 +279,7 @@ template<typename T>
 void DataFrame<I, H>::
 print_csv2_data_functor_<S, Ts ...>::operator() (const T &vec)  {
 
-    if (vec.size() > index)  os << vec[index];
+    if (vec.size() > index)  _write_csv_df_index_(os, vec[index]);
     return;
 }
 

@@ -32,6 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/Utils/DateTime.h>
 #include <DataFrame/Utils/Threads/ThreadGranularity.h>
 
+#include <cctype>
 #include <cstdlib>
 #include <cstring>
 #include <future>
@@ -70,7 +71,7 @@ static const
 std::unordered_map<_TypeInfoRef_,
                    const char *const,
                    _TypeinfoHasher_,
-                   _TypeinfoEqualTo_>   _typeinfo_name_ {
+                   _TypeinfoEqualTo_>   _typeinfo_name_  {
     { typeid(float), "float" },
     { typeid(double), "double" },
     { typeid(long double), "longdouble" },
@@ -82,9 +83,16 @@ std::unordered_map<_TypeInfoRef_,
     { typeid(unsigned long int), "ulong" },
     { typeid(long long int), "longlong" },
     { typeid(unsigned long long int), "ulonglong" },
+    { typeid(char), "char" },
+    { typeid(unsigned char), "uchar" },
     { typeid(std::string), "string" },
+    { typeid(const char *), "string" },
+    { typeid(char *), "string" },
     { typeid(bool), "bool" },
     { typeid(DateTime), "DateTime" },
+
+    // Containers
+    //
     { typeid(std::vector<double>), "dbl_vec" },
     { typeid(std::vector<std::string>), "str_vec" },
     { typeid(std::set<double>), "dbl_set" },
@@ -277,7 +285,8 @@ _load_groupby_data_2_(
 
     std::size_t         marker = 0;
     auto                &dst_idx = dest.get_index();
-    const std::size_t   vec_size = std::min(input_col1.size(), input_col2.size());
+    const std::size_t   vec_size =
+        std::min(input_col1.size(), input_col2.size());
     const auto          &src_idx = source.get_index();
 
     if (dst_idx.empty())  {
@@ -577,6 +586,28 @@ inline static S &_write_json_df_index_(S &o, const std::string &value)  {
 
 // ----------------------------------------------------------------------------
 
+template<typename S>
+inline static S &_write_json_df_index_(S &o, char value)  {
+
+    if (std::isprint(value))
+        return (o << value);
+    else
+        return (o << static_cast<int>(value));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename S>
+inline static S &_write_json_df_index_(S &o, unsigned char value)  {
+
+    if (std::isprint(value))
+        return (o << value);
+    else
+        return (o << static_cast<unsigned int>(value));
+}
+
+// ----------------------------------------------------------------------------
+
 inline static void
 _get_token_from_file_ (std::istream &file,
                        char delim,
@@ -601,11 +632,10 @@ _get_token_from_file_ (std::istream &file,
 
 // ----------------------------------------------------------------------------
 
-template<typename DF>
-inline static typename DF::template StlVecType<double>
+inline static std::vector<double>
 _get_dbl_vec_from_value_(const char *value)  {
 
-    using vec_t = typename DF::template StlVecType<double>;
+    using vec_t = std::vector<double>;
 
     std::size_t vcnt = 0;
     char        buffer[128];
@@ -634,11 +664,10 @@ _get_dbl_vec_from_value_(const char *value)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename DF>
-inline static typename DF::template StlVecType<std::string>
+inline static std::vector<std::string>
 _get_str_vec_from_value_(const char *value)  {
 
-    using vec_t = typename DF::template StlVecType<std::string>;
+    using vec_t = std::vector<std::string>;
 
     std::size_t vcnt { 0 };
     char        buffer[2048];
@@ -825,6 +854,28 @@ inline static S &_write_csv_df_index_(S &o, const DateTime &value)  {
 
 // ----------------------------------------------------------------------------
 
+template<typename S>
+inline static S &_write_csv_df_index_(S &o, char value)  {
+
+    if (std::isprint(value))
+        return (o << value);
+    else
+        return (o << static_cast<int>(value));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename S>
+inline static S &_write_csv_df_index_(S &o, unsigned char value)  {
+
+    if (std::isprint(value))
+        return (o << value);
+    else
+        return (o << static_cast<unsigned int>(value));
+}
+
+// ----------------------------------------------------------------------------
+
 //
 // Specializing std::hash for tuples
 //
@@ -933,6 +984,348 @@ inline static T _string_to_(const char *value)  {
 
     ss >> ret;
     return (ret);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename Con, typename Comp>
+static std::size_t
+_inv_merge_(Con &original,
+            Con &temp,
+            std::size_t left,
+            std::size_t mid,
+            std::size_t right,
+            Comp &&comp)  {
+
+    std::size_t i { left };
+    std::size_t j { mid };
+    std::size_t k { left };
+    std::size_t inv_count { 0 };
+
+    while ((i <= mid - 1) && (j <= right)) {
+        if (comp (original[i], original[j])) {
+            temp[k++] = original[i++];
+        }
+        else {
+            temp[k++] = original[j++];
+            inv_count += mid - i;
+        }
+    }
+
+    // Copy the remaining elements of left sub-original (if there are any)
+    // to temp
+    //
+    while (i <= mid - 1)
+        temp[k++] = original[i++];
+
+    // Copy the remaining elements of right sub-original (if there are any)
+    // to temp
+    //
+    while (j <= right)
+        temp[k++] = original[j++];
+
+    // Copy back the merged elements to original original
+    //
+    for (i = left; i <= right; i++)
+        original[i] = temp[i];
+
+    return (inv_count);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename Con, typename Comp>
+static std::size_t
+_inv_merge_sort_(Con &original,
+               Con &temp,
+               std::size_t left,
+               std::size_t right,
+               Comp comp,
+               long thread_level)  {
+
+    using fut_type = std::future<std::size_t>;
+
+    std::size_t mid { 0 };
+    std::size_t inv_count { 0 };
+
+    if (right > left) {
+        const auto  thr_lvl =
+            ((right - left) < (ThreadPool::MUL_THR_THHOLD / 2))
+                ? 0L : thread_level;
+
+        // Divide the original into two parts and call _inv_merge_sort_()
+        // for each of the parts
+        //
+        mid = (right + left) / 2;
+
+        // Inversion count will be sum of inversions in left-part, right-part
+        // and number of inversions in merging
+        //
+        if (thr_lvl > 2)  {
+            fut_type    left_fut =
+                ThreadGranularity::thr_pool_.dispatch(
+                    false,
+                        _inv_merge_sort_<Con, Comp>,
+                    std::ref(original),
+                    std::ref(temp),
+                    left,
+                    mid,
+                    comp,
+                    thread_level);
+            fut_type    right_fut =
+                ThreadGranularity::thr_pool_.dispatch(
+                    false,
+                    _inv_merge_sort_<Con, Comp>,
+                    std::ref(original),
+                    std::ref(temp),
+                    mid + 1,
+                    right,
+                    comp,
+                    thread_level);
+
+            ThreadGranularity::thr_pool_.run_task();
+            ThreadGranularity::thr_pool_.run_task();
+            inv_count += left_fut.get() + right_fut.get();
+        }
+        else  {
+            inv_count +=
+                _inv_merge_sort_(original, temp, left, mid, comp, thread_level);
+            inv_count +=
+                _inv_merge_sort_(original, temp, mid + 1, right, comp,
+                                 thread_level);
+        }
+
+        // Merge the two parts
+        //
+        inv_count += _inv_merge_(original, temp, left, mid + 1, right, comp);
+    }
+
+    return (inv_count);
+}
+
+// ----------------------------------------------------------------------------
+
+struct _LikeClauseUtil_  {
+
+    // This lookup table is used to help decode the first byte of
+    // a multi-byte UTF8 character.
+    //
+    inline static const unsigned char   CHAR_TRANS1[] = {
+        0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b,
+        0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
+        0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f, 0x00, 0x01, 0x02, 0x03,
+        0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
+        0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x00, 0x01, 0x02, 0x03,
+        0x00, 0x01, 0x00, 0x00,
+    };
+
+    inline static const unsigned char   UPPER_TO_LOWER[] = {
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+        20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37,
+        38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55,
+        56, 57, 58, 59, 60, 61, 62, 63, 64, 97, 98, 99, 100, 101, 102, 103, 104,
+        105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118,
+        119, 120, 121, 122, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102,
+        103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116,
+        117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130,
+        131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144,
+        145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158,
+        159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172,
+        173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186,
+        187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200,
+        201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214,
+        215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228,
+        229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242,
+        243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255,
+    };
+
+    static unsigned int char_read(const unsigned char **str_ptr_ptr)  {
+
+        unsigned int    c = *((*str_ptr_ptr)++);
+
+        // For this routine, we assume the char string is always
+        // zero-terminated.
+        //
+        if (c >= 0xc0)  {
+            c = CHAR_TRANS1[c - 0xc0];
+            while ((*(*str_ptr_ptr) & 0xc0) == 0x80)
+                c = (c << 6) + (0x3f & *((*str_ptr_ptr)++));
+            if (c < 0x80 ||
+                (c & 0xFFFFF800) == 0xD800 || (c & 0xFFFFFFFE) == 0xFFFE)
+                c = 0xFFFD;
+        }
+
+        return (c);
+    }
+
+    static inline void upper_to_lower(unsigned int &val)  {
+
+        if (! (val & ~0x7f))
+            val = UPPER_TO_LOWER[val];
+    }
+};
+
+// ----------------------------------------------------------------------------
+
+// This compares two null-terminated strings for equality where the first
+// string can potentially be a "glob" expression (forget about regular
+// expressions).
+// It returns true if they are matched-equal and false if they are not
+// matched-equal.
+//
+// Globbing rules:
+//
+//      '*'       Matches any sequence of zero or more characters.
+//
+//      '?'       Matches exactly one character.
+//
+//     [...]      Matches one character from the enclosed list of
+//                characters.
+//
+//     [^...]     Matches one character not in the enclosed list.
+//
+// With the [...] and [^...] matching, a ']' character can be included
+// in the list by making it the first character after '[' or '^'.  A
+// range of characters can be specified using '-'.  Example:
+// "[a-z]" matches any single lower-case letter. To match a '-', make
+// it the last character in the list.
+//
+// Hints: to match '*' or '?', put them in "[]". Like this:
+//        abc[*]xyz matches "abc*xyz" only
+//
+// NOTE: This could be, in some cases, n-squared. But it is pretty fast with
+//       moderately sized strings. I have not tested this with huge/massive
+//       strings. 
+//
+static inline bool
+_like_clause_compare_(const char *pattern,
+                      const char *input_str,
+                      bool case_insensitive = false,
+                      unsigned int esc_char = '\\')  {
+
+    const unsigned char *upattern =
+        reinterpret_cast<const unsigned char *>(pattern);
+    const unsigned char *uinput_str =
+        reinterpret_cast<const unsigned char *>(input_str);
+    unsigned int        c, c2;
+    const unsigned char match_one { '?' };
+    const unsigned char match_all { '*' };
+    const unsigned char match_set { '[' };
+    // True if the previous character was escape
+    //
+    bool                prev_escape { false };
+
+    while ((c = _LikeClauseUtil_::char_read(&upattern)) != 0)  {
+        if (c == match_all && ! prev_escape)  {
+            while ((c = _LikeClauseUtil_::char_read(&upattern)) == match_all ||
+                   c == match_one)  {
+                if (c == match_one &&
+                    _LikeClauseUtil_::char_read(&uinput_str) == 0)
+                    return (false);
+            }
+            if (c == 0)  {
+                return (true);
+            }
+            else if (c == esc_char)  {
+                c = _LikeClauseUtil_::char_read(&upattern);
+                if (c == 0)
+                    return (false);
+            }
+            else if (c == match_set)  {
+                while (*uinput_str &&
+                       _like_clause_compare_(
+                           reinterpret_cast<const char *>(&upattern[-1]),
+                           reinterpret_cast<const char *>(uinput_str),
+                           case_insensitive,
+                           esc_char) == 0)  {
+                    if ((*(uinput_str++)) >= 0xc0)
+                        while ((*uinput_str & 0xc0) == 0x80)
+                            uinput_str++;
+                }
+                return (*uinput_str != 0);
+            }
+            while ((c2 = _LikeClauseUtil_::char_read(&uinput_str)) != 0)  {
+                if (case_insensitive)  {
+                    _LikeClauseUtil_::upper_to_lower(c2);
+                    _LikeClauseUtil_::upper_to_lower(c);
+                    while (c2 != 0 && c2 != c)  {
+                        c2 = _LikeClauseUtil_::char_read(&uinput_str);
+                        _LikeClauseUtil_::upper_to_lower(c2);
+                    }
+                }
+                else  {
+                    while (c2 != 0 && c2 != c)
+                        c2 = _LikeClauseUtil_::char_read(&uinput_str);
+                }
+                if (c2 == 0)
+                    return (false);
+                if (_like_clause_compare_(
+                        reinterpret_cast<const char *>(upattern),
+                        reinterpret_cast<const char *>(uinput_str),
+                        case_insensitive,
+                        esc_char))
+                    return (true);
+            }
+            return (false);
+        }
+        else if (c == match_one && ! prev_escape)  {
+            if (_LikeClauseUtil_::char_read(&uinput_str) == 0)
+                return (false);
+        }
+        else if (c == match_set)  {
+            unsigned int    prior_c { 0 };
+            int             seen { 0 };
+            int             invert { 0 };
+
+            c = _LikeClauseUtil_::char_read(&uinput_str);
+            if (c == 0)
+                return (false);
+            c2 = _LikeClauseUtil_::char_read(&upattern);
+            if (c2 == '^')  {
+                invert = 1;
+                c2 = _LikeClauseUtil_::char_read(&upattern);
+            }
+            if (c2 == ']')  {
+                if (c == ']')
+                    seen = 1;
+                c2 = _LikeClauseUtil_::char_read(&upattern);
+            }
+            while (c2 && c2 != ']')  {
+                if (c2 == '-' &&
+                    upattern[0] != ']' &&
+                    upattern[0] != 0 &&
+                    prior_c > 0)  {
+                    c2 = _LikeClauseUtil_::char_read(&upattern);
+                    if (c >= prior_c && c <= c2)
+                        seen = 1;
+                    prior_c = 0;
+                }
+                else  {
+                    if (c == c2)
+                        seen = 1;
+                    prior_c = c2;
+                }
+                c2 = _LikeClauseUtil_::char_read(&upattern);
+            }
+            if (c2 == 0 || (seen ^ invert) == 0)
+                return (false);
+        }
+        else if (esc_char == c && ! prev_escape)  {
+            prev_escape = true;
+        }
+        else  {
+            c2 = _LikeClauseUtil_::char_read(&uinput_str);
+            if (case_insensitive)  {
+                _LikeClauseUtil_::upper_to_lower(c);
+                _LikeClauseUtil_::upper_to_lower(c2);
+            }
+            if (c != c2)
+                return (false);
+            prev_escape = false;
+        }
+    }
+
+    return (*uinput_str == 0);
 }
 
 } // namespace hmdf

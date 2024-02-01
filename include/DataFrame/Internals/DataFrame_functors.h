@@ -52,7 +52,22 @@ struct consistent_functor_ : DataVec::template visitor_base<Ts ...>  {
 template<typename ... Ts>
 struct shrink_to_fit_functor_ : DataVec::template visitor_base<Ts ...>  {
 
-    inline shrink_to_fit_functor_ ()  {   }
+    inline shrink_to_fit_functor_()  {   }
+
+    template<typename T>
+    void operator() (T &vec) const;
+};
+
+// ----------------------------------------------------------------------------
+
+template<typename ... Ts>
+struct remove_column_functor_ : DataVec::template visitor_base<Ts ...>  {
+
+    inline remove_column_functor_ (const char *cn, DataFrame &d)
+        : col_name(cn), df(d)  {   }
+
+    const char  *col_name;
+    DataFrame   &df;
 
     template<typename T>
     void operator() (T &vec) const;

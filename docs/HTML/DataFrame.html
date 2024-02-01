@@ -88,7 +88,7 @@ table {
     <LI>To start off on basic operations, see <a href="https://github.com/hosseinmoein/DataFrame/blob/master/examples/hello_world.cc">Hello World</a></LI>
     <LI>Also, see <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrameTypes.html">DataFrame Library Types</a></LI>
     <LI>DataFrame has both sync and async interfaces, latter returning C++ std::futures</LI>
-    <LI><I>Read <B>views</B>, <B>visitors</B>, <B>multithreading</B>, and <B> memory alignment</B> sections below, before getting serious about this library</I></LI>
+    <LI><I>Read <B>multithreading</B>, <B>views</B>, <B>visitors</B>, and <B>memory alignment</B> sections below, before getting serious about this library</I></LI>
   </UL>
 
 <BR><HR COLOR="Orange" SIZE="5">
@@ -182,6 +182,10 @@ table.hovertable td {
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
+      <td title="Clears/Empties the DataFrame"><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/remove_column.html">clear</a>( )</td>
+    </tr>
+
+    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
       <td title="Get column index for the given column name"><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/col_name_to_idx.html">col_name_to_idx</a>( )</td>
     </tr>
 
@@ -266,6 +270,10 @@ table.hovertable td {
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
+      <td title="Gets data by applying Glob-like (SQL like clause) pattern matching"><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/get_data_by_like.html">get_data_by_like</a>( 2 )</td>
+    </tr>
+
+    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
       <td title="Gets data by location"><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/get_data_by_loc.html">get_data_by_loc</a>( 2 )</td>
     </tr>
 
@@ -310,6 +318,10 @@ table.hovertable td {
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
+      <td title="Gets view by applying Glob-like (SQL like clause) pattern matching"><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/get_data_by_like.html">get_view_by_like</a>( 2 )</td>
+    </tr>
+
+    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
       <td title="Gets view by location"><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/get_data_by_loc.html">get_view_by_loc</a>( 2 )</td>
     </tr>
 
@@ -347,6 +359,10 @@ table.hovertable td {
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
       <td title="Returns true if the column exists"><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/has_column.html">has_column</a>( 2 )</td>
+    </tr>
+
+    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
+      <td title="Returns number of inversions in the named column"><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/inversion_count.html">inversion_count</a>( )</td>
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
@@ -507,6 +523,10 @@ table.hovertable td {
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
       <td title="Sorts DataFrame -- Async"><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/sort.html">sort_async</a>( 5 )</td>
+    </tr>
+
+    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
+      <td title="Swaps data between two DataFrames"><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/remove_column.html">swap</a>( )</td>
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">

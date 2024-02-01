@@ -96,22 +96,18 @@ join_by_index (const RHS_T &rhs, join_policy mp) const  {
 
     switch(mp)  {
         case join_policy::inner_join:
-            return (index_inner_join_
-                        <decltype(*this), RHS_T, Ts ...>
-                    (*this, rhs, idx_vec_lhs, idx_vec_rhs));
+            return (index_inner_join_<DataFrame, RHS_T, Ts ...>
+                        (*this, rhs, idx_vec_lhs, idx_vec_rhs));
         case join_policy::left_join:
-            return (index_left_join_
-                        <decltype(*this), RHS_T, Ts ...>
-                    (*this, rhs, idx_vec_lhs, idx_vec_rhs));
+            return (index_left_join_<DataFrame, RHS_T, Ts ...>
+                        (*this, rhs, idx_vec_lhs, idx_vec_rhs));
         case join_policy::right_join:
-            return (index_right_join_
-                        <decltype(*this), RHS_T, Ts ...>
-                    (*this, rhs, idx_vec_lhs, idx_vec_rhs));
+            return (index_right_join_<DataFrame, RHS_T, Ts ...>
+                        (*this, rhs, idx_vec_lhs, idx_vec_rhs));
         case join_policy::left_right_join:
         default:
-            return (index_left_right_join_
-                        <decltype(*this), RHS_T, Ts ...>
-                    (*this, rhs, idx_vec_lhs, idx_vec_rhs));
+            return (index_left_right_join_<DataFrame, RHS_T, Ts ...>
+                        (*this, rhs, idx_vec_lhs, idx_vec_rhs));
     }
 }
 
@@ -174,157 +170,19 @@ join_by_column (const RHS_T &rhs, const char *name, join_policy mp) const  {
 
     switch(mp)  {
         case join_policy::inner_join:
-            return (column_inner_join_
-                        <decltype(*this), RHS_T, T, Ts ...>
-                            (*this, rhs, name, col_vec_lhs, col_vec_rhs));
+            return (column_inner_join_<DataFrame, RHS_T, T, Ts ...>
+                        (*this, rhs, name, col_vec_lhs, col_vec_rhs));
         case join_policy::left_join:
-            return (column_left_join_
-                        <decltype(*this), RHS_T, T, Ts ...>
-                            (*this, rhs, name, col_vec_lhs, col_vec_rhs));
+            return (column_left_join_<DataFrame, RHS_T, T, Ts ...>
+                        (*this, rhs, name, col_vec_lhs, col_vec_rhs));
         case join_policy::right_join:
-            return (column_right_join_
-                        <decltype(*this), RHS_T, T, Ts ...>
-                            (*this, rhs, name, col_vec_lhs, col_vec_rhs));
+            return (column_right_join_<DataFrame, RHS_T, T, Ts ...>
+                        (*this, rhs, name, col_vec_lhs, col_vec_rhs));
         case join_policy::left_right_join:
         default:
-            return (column_left_right_join_
-                        <decltype(*this), RHS_T, T, Ts ...>
-                            (*this, rhs, name, col_vec_lhs, col_vec_rhs));
+            return (column_left_right_join_<DataFrame, RHS_T, T, Ts ...>
+                        (*this, rhs, name, col_vec_lhs, col_vec_rhs));
     }
-}
-
-// ----------------------------------------------------------------------------
-
-template<typename I, typename H>
-template<typename LHS_T, typename RHS_T, typename IDX_T, typename ... Ts>
-void DataFrame<I, H>::
-join_helper_common_(
-    const LHS_T &lhs,
-    const RHS_T &rhs,
-    const IndexIdxVector &joined_index_idx,
-    DataFrame<IDX_T, HeteroVector<std::size_t(H::align_value)>> &result,
-    const char *skip_col_name)  {
-
-    using res_t = decltype(result);
-
-    std::vector<std::future<void>>  futures;
-    const auto                      thread_level =
-        (lhs.indices_.size() < ThreadPool::MUL_THR_THHOLD)
-            ? 0L : get_thread_level();
-
-
-    if (thread_level > 2)
-        futures.reserve(lhs.column_list_.size() + rhs.column_list_.size());
-
-    const SpinGuard guard(lock_);
-
-    // NOTE: I had to do this in two separate loops. Otherwise, it would
-    //       occasionally crash in multithreaded mode under MacOS.
-    //
-    for (const auto &citer : lhs.column_list_) [[likely]]  {
-        if (skip_col_name && citer.first == skip_col_name)  continue;
-
-        if (rhs.column_tb_.find(citer.first) != rhs.column_tb_.end())  {
-            create_join_common_col_functor_<res_t, Ts ...>   create_f(
-                citer.first.c_str(), result);
-
-            lhs.data_[citer.second].change(create_f);
-        }
-        else  {
-            create_col_functor_<res_t, Ts ...>  create_f(
-                citer.first.c_str(), result);
-
-            lhs.data_[citer.second].change(create_f);
-        }
-    }
-
-    // Load the common and lhs columns
-    //
-    for (const auto &citer : lhs.column_list_) [[likely]]  {
-        if (skip_col_name && citer.first == skip_col_name)  continue;
-
-        // Common column between two frames
-        //
-        if (rhs.column_tb_.find(citer.first) != rhs.column_tb_.end())  {
-            auto    jcomm_lbd =
-                [&citer = std::as_const(citer),
-                 &lhs = std::as_const(lhs),
-                 &rhs = std::as_const(rhs),
-                 &joined_index_idx = std::as_const(joined_index_idx),
-                 &result] () -> void  {
-                    index_join_functor_common_<res_t, Ts ...>   functor(
-                        citer.first.c_str(),
-                        rhs,
-                        joined_index_idx,
-                        result);
-
-                    lhs.data_[citer.second].change(functor);
-                };
-
-            if (thread_level > 2)
-                futures.emplace_back(thr_pool_.dispatch(false, jcomm_lbd));
-            else
-                jcomm_lbd();
-        }
-        else  {  // lhs only column
-            auto    jlhs_lbd =
-                [&citer = std::as_const(citer),
-                 &lhs = std::as_const(lhs),
-                 &joined_index_idx = std::as_const(joined_index_idx),
-                 &result] () -> void  {
-                    // 0 = Left
-                    index_join_functor_oneside_<0, res_t, Ts ...>   functor (
-                        citer.first.c_str(),
-                        joined_index_idx,
-                        result);
-
-                    lhs.data_[citer.second].change(functor);
-                };
-
-            if (thread_level > 2)
-                futures.emplace_back(thr_pool_.dispatch(false, jlhs_lbd));
-            else
-                jlhs_lbd();
-        }
-    }
-
-    // Load the rhs columns
-    //
-    for (const auto &citer : rhs.column_list_) [[likely]]  {
-        const auto  lhs_citer = lhs.column_tb_.find(citer.first);
-
-        if (skip_col_name && citer.first == skip_col_name)  continue;
-
-        if (lhs_citer == lhs.column_tb_.end())  {  // rhs only column
-            create_col_functor_<res_t, Ts ...>  create_f(
-                citer.first.c_str(), result);
-
-            rhs.data_[citer.second].change(create_f);
-        }
-
-        if (lhs_citer == lhs.column_tb_.end())  {  // rhs only column
-            auto    jrhs_lbd =
-                [&citer = std::as_const(citer),
-                 &rhs = std::as_const(rhs),
-                 &joined_index_idx = std::as_const(joined_index_idx),
-                 &result] () -> void  {
-                    // 1 = Right
-                    index_join_functor_oneside_<1, res_t, Ts ...>   functor (
-                        citer.first.c_str(),
-                        joined_index_idx,
-                        result);
-
-                    rhs.data_[citer.second].change(functor);
-                };
-
-            if (thread_level > 2)
-                futures.emplace_back(thr_pool_.dispatch(false, jrhs_lbd));
-            else
-                jrhs_lbd();
-        }
-    }
-
-    for (auto &fut : futures)  fut.get();
 }
 
 // ----------------------------------------------------------------------------

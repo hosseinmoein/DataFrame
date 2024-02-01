@@ -77,7 +77,7 @@ class   DataFrame : public ThreadGranularity {
 
 public:  // Construction
 
-    static constexpr std::size_t    align_value { std::size_t(H::align_value) };
+    static constexpr std::size_t   align_value { std::size_t(H::align_value) };
 
     template<typename T>
     using AllocatorType = typename allocator_declare<T, align_value>::type;
@@ -150,14 +150,41 @@ public:  // Load/append/remove interfaces
     create_column(const char *name, bool do_lock = true);
 
     // It removes a column named name.
-    // The actual data vector is not deleted, but the column is dropped from
-    // DataFrame
     //
+    // T:
+    //   Type of the named column
+    // name:
+    //   Name of the column
+    //
+    template<typename T>
     void
     remove_column(const char *name);
 
+    // T:
+    //   Type of the indexed column
+    // index:
+    //   Index of the column
+    //
+    template<typename T>
     void
     remove_column(size_type index);
+
+    // This removes all the index and data columns but doesn't necessarily
+    // free memeory space of underlying containers. After this call DataFrame
+    // will be empty.
+    // It is very similar to std::vector clear()
+    //
+    void
+    clear();
+
+    // This swaps all self's index and data columns with the ones in other
+    // It is very similar to std::vector swap()
+    //
+    // other:
+    //   Another DataFrme of the same type
+    //
+    void
+    swap(DataFrame &other);
 
     // It renames column named from to to. If column from does not exist,
     // it throws an exception
@@ -1598,7 +1625,8 @@ public:  // Data manipulation
     [[nodiscard]] DataFrame
     shift(size_type periods, shift_policy sp) const;
 
-    // This copies the named column into another vector and shifts it up or down
+    // This copies the named column into another vector and shifts it up
+    // or down
     // and returns it.
     // It is handy to create columns of shifted data in the dataframe for
     // machine-learning analysis
@@ -1986,9 +2014,6 @@ public: // Read/access and slicing interfaces
     //   1) The result is a view
     //   2) Since the result is a view, you cannot call make_consistent() on
     //      the result.
-    //
-    // NOTE: Although this is a const method, it returns a view. So, the data
-    //       could still be modified through the returned view
     //
     // T:
     //   Type of the named column
@@ -2470,6 +2495,130 @@ public: // Read/access and slicing interfaces
     [[nodiscard]] DataFrame
     get_data_by_sel(F &sel_functor, FilterCols&&... filter_cols) const;
 
+    // This method does a basic Glob-like pattern matching (also similar to
+    // SQL like clause) to filter data in the named column.
+    // It returns a new DataFrame. Each element of the named column is checked
+    // against a Glob-like matching logic
+    //
+    // Globbing rules:
+    //
+    //      '*'       Matches any sequence of zero or more characters.
+    //
+    //      '?'       Matches exactly one character.
+    //
+    //     [...]      Matches one character from the enclosed list of
+    //                characters.
+    //
+    //     [^...]     Matches one character not in the enclosed list.
+    //
+    // With the [...] and [^...] matching, a ']' character can be included
+    // in the list by making it the first character after '[' or '^'.  A
+    // range of characters can be specified using '-'.  Example:
+    // "[a-z]" matches any single lower-case letter. To match a '-', make
+    // it the last character in the list.
+    //
+    // Hints: to match '*' or '?', put them in "[]". Like this:
+    //        abc[*]xyz matches "abc*xyz" only
+    //
+    // NOTE: This could be, in some cases, n-squared. But it is pretty fast
+    //       with moderately sized strings. I have not tested this with
+    //       huge/massive strings.
+    //
+    // T:
+    //   Type of the named column. Based on the concept, it can only be either
+    //   of these types: std::string, VirtualString, const char *, char *
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // name:
+    //   Name of the data column
+    // pattern:
+    //   Glob like pattern to use for matching strings
+    // case_insensitive:
+    //   If true, matching logic ignores case
+    // esc_char:
+    //   Character used for escape
+    //
+    template<StringOnly T, typename ... Ts>
+    [[nodiscard]] DataFrame
+    get_data_by_like(const char *name,
+                     const char *pattern,
+                     bool case_insensitive = false,
+                     char esc_char = '\\') const;
+
+    // This is identical with above get_data_by_like(), but:
+    //   1) The result is a view
+    //   2) Since the result is a view, you cannot call make_consistent() on
+    //      the result.
+    //
+    template<StringOnly T, typename ... Ts>
+    [[nodiscard]] PtrView
+    get_view_by_like(const char *name,
+                     const char *pattern,
+                     bool case_insensitive = false,
+                     char esc_char = '\\');
+
+    template<StringOnly T, typename ... Ts>
+    [[nodiscard]] ConstPtrView
+    get_view_by_like(const char *name,
+                     const char *pattern,
+                     bool case_insensitive = false,
+                     char esc_char = '\\') const;
+
+    // This does the same function as above get_data_by_like() but operating
+    // on two columns.
+    //
+    // T:
+    //   Type of both named columns. Based on the concept, it can only be
+    //   either of these types: std::string, VirtualString, const char *, char *
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // name1:
+    //   Name of the first data column
+    // name2:
+    //   Name of the second data column
+    // pattern1:
+    //   Glob like pattern to use for matching strings for the first column
+    // pattern2:
+    //   Glob like pattern to use for matching strings for the second column
+    // case_insensitive:
+    //   If true, matching logic ignores case
+    // esc_char:
+    //   Character used for escape
+    //
+    template<StringOnly T, typename ... Ts>
+    [[nodiscard]] DataFrame
+    get_data_by_like(const char *name1,
+                     const char *name2,
+                     const char *pattern1,
+                     const char *pattern2,
+                     bool case_insensitive = false,
+                     char esc_char = '\\') const;
+
+    // This is identical with above get_data_by_like(), but:
+    //   1) The result is a view
+    //   2) Since the result is a view, you cannot call make_consistent() on
+    //      the result.
+    //
+    template<StringOnly T, typename ... Ts>
+    [[nodiscard]] PtrView
+    get_view_by_like(const char *name1,
+                     const char *name2,
+                     const char *pattern1,
+                     const char *pattern2,
+                     bool case_insensitive = false,
+                     char esc_char = '\\');
+
+    template<StringOnly T, typename ... Ts>
+    [[nodiscard]] ConstPtrView
+    get_view_by_like(const char *name1,
+                     const char *name2,
+                     const char *pattern1,
+                     const char *pattern2,
+                     bool case_insensitive = false,
+                     char esc_char = '\\') const;
+
     // It returns a DataFrame (including the index and data columns)
     // containing the data from uniform random selection.
     // random_policy determines the behavior of method.
@@ -2664,6 +2813,21 @@ public: // Read/access and slicing interfaces
     template<StringOnly T>
     [[nodiscard]] StringStats
     get_str_col_stats(const char *col_name) const;
+
+    // This retunrs the number of inversions in the named column. For example,
+    // in a column that is already sorted, the number of inversions is zero.
+    // In a column that is sorted in reverse, the number of inversions is
+    // n(n - 1) / 2.
+    //
+    // T:
+    //   Data type of the named column
+    // C:
+    //   Type of the comparison functor defaulted to std::less
+    // col_name:
+    //   Name of the column
+    //
+    template<typename T, typename C = std::less<T>>
+    size_type inversion_count(const char *col_name) const;
 
     // This function returns a DataFrame indexed by std::string that provides
     // a few statistics about the columns of the calling DataFrame.

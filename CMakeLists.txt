@@ -44,7 +44,6 @@ target_compile_options(
     DataFrame
     PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/bigobj>
             $<$<CXX_COMPILER_ID:MSVC>:/wd4251>
-            $<$<CXX_COMPILER_ID:MSVC>:/MTd>
     # TODO: fix these warnings
     PUBLIC $<$<CXX_COMPILER_ID:MSVC>:/wd4244>
            $<$<CXX_COMPILER_ID:MSVC>:/wd4267>

@@ -27,12 +27,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 [![C++23](https://img.shields.io/badge/C%2B%2B-23-blue.svg)](https://isocpp.org/std/the-standard )
 [![Build status](https://ci.appveyor.com/api/projects/status/hjw01qui3bvxs8yi?svg=true)](https://ci.appveyor.com/project/hosseinmoein/dataframe)
 <BR>
-![GitHub](https://img.shields.io/github/license/hosseinmoein/DataFrame.svg?color=red&style=popout)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/db646376a4014c3788c7224e670fe451)](https://app.codacy.com/manual/hosseinmoein/DataFrame?utm_source=github.com&utm_medium=referral&utm_content=hosseinmoein/DataFrame&utm_campaign=Badge_Grade_Dashboard)
+[![GitHub](https://img.shields.io/github/license/hosseinmoein/DataFrame.svg?color=red&style=popout)](https://github.com/hosseinmoein/DataFrame/blob/master/License)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/db646376a4014c3788c7224e670fe451)](https://app.codacy.com/organizations/gh/hosseinmoein/repositories)
 <BR>
-![GitHub tag (latest by date)](https://img.shields.io/github/tag-date/hosseinmoein/DataFrame.svg?color=blue&label=Official%20Release&style=popout)
-![Conan Center](https://img.shields.io/conan/v/dataframe)
-[![VCPKG package](https://repology.org/badge/version-for-repo/vcpkg/dataframe.svg)](https://repology.org/project/dataframe/versions)
+[![GitHub tag (latest by date)](https://img.shields.io/github/tag-date/hosseinmoein/DataFrame.svg?color=blue&label=Official%20Release&style=popout)](https://github.com/hosseinmoein/DataFrame/releases)
+[![Conan Center](https://img.shields.io/conan/v/dataframe)](https://conan.io/center/recipes/dataframe)
+[![VCPKG package](https://repology.org/badge/version-for-repo/vcpkg/dataframe.svg)](https://vcpkg.link/ports/dataframe)
 
 <img src="docs/LionLookingUp.jpg" alt="DataFrame Lion" width="400" longdesc="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html"/>
 
@@ -70,22 +70,22 @@ I ran each test 4 times and took the best time. Polars numbers varied a lot from
 
 ```text
 C++ DataFrame:
-    Data generation/load time: 26.9459   secs
-    Calculation time:           1.26015  secs
-    Selection time:             0.742493 secs
-    Overall time:              28.9486   secs
+    Data generation/load time:   26.945900 secs
+    Calculation time:             1.260150 secs
+    Selection time:               0.742493 secs
+    Overall time:                28.948600 secs
 
 Polars:
-    Data generation/load time: 28.468640 secs
-    Calculation time:           4.876561 secs
-    Selection time:             3.876561 secs
-    Overall time:              36.876345 secs
+    Data generation/load time:   28.468640 secs
+    Calculation time:             4.876561 secs
+    Selection time:               3.876561 secs
+    Overall time:                36.876345 secs
 
 Pandas, for comparison:
-    Data generation/load time: 36.678976 secs
-    Calculation time:          40.326350 secs
-    Selection time:             8.326350 secs
-    Overall time:              85.845114 secs
+    Data generation/load time:   36.678976 secs
+    Calculation time:            40.326350 secs
+    Selection time:               8.326350 secs
+    Overall time:                85.845114 secs
 ```
 
 [Polars source file](https://github.com/hosseinmoein/DataFrame/blob/master/benchmarks/polars_performance.py) <BR>
@@ -94,7 +94,11 @@ Pandas, for comparison:
 
 ---
 
-[Contributions](docs/CONTRIBUTING.md)<BR>
+[**Please consider sponsoring DataFrame, especially if you are using it in production capacity. It is the strongest form of appreciation**](https://github.com/sponsors/hosseinmoein)
+
+---
+
+[Code Contributions](docs/CONTRIBUTING.md) <BR>
 [License](License)
 
 ---

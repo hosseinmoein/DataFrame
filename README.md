@@ -98,11 +98,6 @@ Pandas, for comparison:
 
 ---
 
-[Code Contributions](docs/CONTRIBUTING.md) <BR>
-[License](License)
-
----
-
 ### Installing using CMake
 ```bash
 mkdir [Debug | Release]

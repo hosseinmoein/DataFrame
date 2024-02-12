@@ -741,6 +741,87 @@ public:  // Load/append/remove interfaces
                        const char *name3,
                        F &sel_functor);
 
+    // This reomves data rows by basic Glob-like pattern matching (also similar
+    // to SQL like clause) to filter data in the named column. Each element of
+    // the named column is checked against a Glob-like matching logic
+    //
+    // Globbing rules:
+    //
+    //      '*'       Matches any sequence of zero or more characters.
+    //
+    //      '?'       Matches exactly one character.
+    //
+    //     [...]      Matches one character from the enclosed list of
+    //                characters.
+    //
+    //     [^...]     Matches one character not in the enclosed list.
+    //
+    // With the [...] and [^...] matching, a ']' character can be included
+    // in the list by making it the first character after '[' or '^'.  A
+    // range of characters can be specified using '-'.  Example:
+    // "[a-z]" matches any single lower-case letter. To match a '-', make
+    // it the last character in the list.
+    //
+    // Hints: to match '*' or '?', put them in "[]". Like this:
+    //        abc[*]xyz matches "abc*xyz" only
+    //
+    // NOTE: This could be, in some cases, n-squared. But it is pretty fast
+    //       with moderately sized strings. I have not tested this with
+    //       huge/massive strings.
+    //
+    // T:
+    //   Type of the named column. Based on the concept, it can only be either
+    //   of these types: std::string, VirtualString, const char *, char *
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // name:
+    //   Name of the data column
+    // pattern:
+    //   Glob like pattern to use for matching strings
+    // case_insensitive:
+    //   If true, matching logic ignores case
+    // esc_char:
+    //   Character used for escape
+    //
+    template<StringOnly T, typename ... Ts>
+    void
+    remove_data_by_like(const char *name,
+                        const char *pattern,
+                        bool case_insensitive = false,
+                        char esc_char = '\\');
+
+    // This does the same function as above remove_data_by_like() but operating
+    // on two columns.
+    //
+    // T:
+    //   Type of the named columns. Based on the concept, it can only be either
+    //   of these types: std::string, VirtualString, const char *, char *
+    // Ts:
+    //   List all the types of all data columns. A type should be specified in
+    //   the list only once.
+    // name1:
+    //   Name of the first data column
+    // name2:
+    //   Name of the second data column
+    // pattern1:
+    //   Glob like pattern to use for matching strings in the first column
+    // pattern2:
+    //   Glob like pattern to use for matching strings in the second column
+    // case_insensitive:
+    //   If true, matching logic ignores case
+    // esc_char:
+    //   Character used for escape
+    //
+    template<StringOnly T, typename ... Ts>
+    void
+    remove_data_by_like(const char *name1,
+                        const char *name2,
+                        const char *pattern1,
+                        const char *pattern2,
+                        bool case_insensitive = false,
+                        char esc_char = '\\');
+
     // It removes duplicate rows and returns a new DataFrame. Duplication is
     // determined by the given column. remove_dup_spec determines which
     // of the duplicated rows to keep.

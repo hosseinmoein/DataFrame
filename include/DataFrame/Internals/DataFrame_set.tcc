@@ -1038,7 +1038,7 @@ template<typename T, typename F, typename ... Ts>
 void DataFrame<I, H>::remove_data_by_sel (const char *name, F &sel_functor)  {
 
     static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
-                  "Only a StdDataFrame can call remove_data_by_loc()");
+                  "Only a StdDataFrame can call remove_data_by_sel()");
 
     const ColumnVecType<T>  &vec = get_column<T>(name);
     const size_type         col_s = vec.size();
@@ -1059,6 +1059,9 @@ template<typename I, typename H>
 template<typename T1, typename T2, typename F, typename ... Ts>
 void DataFrame<I, H>::
 remove_data_by_sel (const char *name1, const char *name2, F &sel_functor)  {
+
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
+                  "Only a StdDataFrame can call remove_data_by_sel()");
 
     SpinGuard               guard (lock_);
     const ColumnVecType<T1> &vec1 = get_column<T1>(name1, false);
@@ -1093,6 +1096,9 @@ remove_data_by_sel (const char *name1,
                     const char *name3,
                     F &sel_functor)  {
 
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
+                  "Only a StdDataFrame can call remove_data_by_sel()");
+
     SpinGuard               guard (lock_);
     const ColumnVecType<T1> &vec1 = get_column<T1>(name1, false);
     const ColumnVecType<T2> &vec2 = get_column<T2>(name2, false);
@@ -1114,6 +1120,98 @@ remove_data_by_sel (const char *name1,
                          i < col_s2 ? vec2[i] : get_nan<T2>(),
                          i < col_s3 ? vec3[i] : get_nan<T3>()))
             col_indices.push_back(i);
+
+    remove_data_by_sel_common_<Ts ...>(col_indices);
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<StringOnly T, typename ... Ts>
+void DataFrame<I, H>::
+remove_data_by_like (const char *name,
+                     const char *pattern,
+                     bool case_insensitive,
+                     char esc_char)  {
+
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
+                  "Only a StdDataFrame can call remove_data_by_like()");
+
+    const ColumnVecType<T>  &vec = get_column<T>(name);
+    const size_type         col_s = vec.size();
+    StlVecType<size_type>   col_indices;
+
+    col_indices.reserve(indices_.size() / 2);
+    for (size_type i = 0; i < col_s; ++i) [[likely]]  {
+        if constexpr (std::is_same_v<T, std::string> ||
+                      std::is_same_v<T, VirtualString>)  {
+            if (_like_clause_compare_(pattern,
+                                      vec[i].c_str(),
+                                      case_insensitive,
+                                      esc_char))
+                col_indices.push_back(i);
+        }
+        else  {
+            if (_like_clause_compare_(pattern,
+                                      vec[i],
+                                      case_insensitive,
+                                      esc_char))
+                col_indices.push_back(i);
+        }
+    }
+
+    remove_data_by_sel_common_<Ts ...>(col_indices);
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<StringOnly T, typename ... Ts>
+void DataFrame<I, H>::
+remove_data_by_like(const char *name1,
+                    const char *name2,
+                    const char *pattern1,
+                    const char *pattern2,
+                    bool case_insensitive,
+                    char esc_char)  {
+
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
+                  "Only a StdDataFrame can call remove_data_by_like()");
+
+    SpinGuard               guard (lock_);
+    const ColumnVecType<T>  &vec1 = get_column<T>(name1, false);
+    const ColumnVecType<T>  &vec2 = get_column<T>(name2, false);
+    const size_type         min_col_s = std::min(vec1.size(), vec2.size());
+    StlVecType<size_type>   col_indices;
+
+    col_indices.reserve(min_col_s / 2);
+    for (size_type i = 0; i < min_col_s; ++i) [[likely]]  {
+        if constexpr (std::is_same_v<T, std::string> ||
+                      std::is_same_v<T, VirtualString>)  {
+            if (_like_clause_compare_(pattern1,
+                                      vec1[i].c_str(),
+                                      case_insensitive,
+                                      esc_char) &&
+                _like_clause_compare_(pattern2,
+                                      vec2[i].c_str(),
+                                      case_insensitive,
+                                      esc_char))
+                col_indices.push_back(i);
+        }
+        else  {
+            if (_like_clause_compare_(pattern1,
+                                      vec1[i],
+                                      case_insensitive,
+                                      esc_char) &&
+                _like_clause_compare_(pattern2,
+                                      vec2[i],
+                                      case_insensitive,
+                                      esc_char))
+                col_indices.push_back(i);
+        }
+    }
 
     remove_data_by_sel_common_<Ts ...>(col_indices);
     return;

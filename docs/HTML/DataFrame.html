@@ -78,8 +78,9 @@ table {
 	<img src="https://github.com/hosseinmoein/DataFrame/blob/master/docs/LionLookingUp.jpg?raw=true" alt="C++ DataFrame" width="30" height="30"/>
   </center>
 
+  <H2><font color="blue">Summary</font></H2>
 <P>
-  <font size="+1">DataFrame is a templatized and heterogeneous C++ container designed for data analysis for statistical, machine-learning, or financial applications. You can think of data-frame as a two-dimensional data structure of columns and rows just like an Excel spreadsheet, or a SQL table. But in case of C++ DataFrame, your data needn’t be two-dimensional necessarily. Columns in the C++ DataFrame could be vectors of any type, including DataFrame’s or other containers. So, a C++ DataFrame can be of any dimension.</font>
+  <font size="+1">DataFrame</font> is a templatized and heterogeneous C++ container designed for data analysis for statistical, machine-learning, or financial applications. You can think of data-frame as a two-dimensional data structure of columns and rows just like an Excel spreadsheet, or a SQL table. But in case of C++ DataFrame, your data needn’t be two-dimensional necessarily. Columns in the C++ DataFrame could be vectors of any type, including DataFrame’s or other containers. So, a C++ DataFrame can be of any dimension.
   <UL>
     <LI>A DataFrame can have one index column and many data columns of any built-in or user-defined types</LI>
     <LI>Each column in DataFrame could be at most as long as the index column</LI>
@@ -91,10 +92,8 @@ table {
     <LI><I>Read <B>multithreading</B>, <B>views</B>, <B>visitors</B>, and <B>memory alignment</B> sections below, before getting serious about this library</I></LI>
   </UL>
 
-<BR><HR COLOR="Orange" SIZE="5">
-
-  <H2><font color="blue">Summary</font></H2>
-DataFrame class is defined as:<BR>
+<BR>
+<font size="+1">DataFrame</font> class is defined as:<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;<B><span style='color:#800000; font-weight:bold; '>template</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>typename</span> I<span style='color:#808030; '>,</span> <span style='color:#800000; font-weight:bold; '>typename</span> H<span style='color:#800080; '>></span><BR>
 &nbsp;&nbsp;&nbsp;&nbsp;<span style='color:#800000; font-weight:bold; '>class</span> DataFrame;</B><BR><BR>
 
@@ -371,6 +370,10 @@ table.hovertable td {
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
       <td title="Removes column data by index"><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/remove_data_by_idx.html">remove_data_by_idx</a>( )</td>
+    </tr>
+
+    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
+      <td title="Removes column data by applying Glob-like (SQL like clause) pattern matching"><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/remove_data_by_like.html">remove_data_by_like</a>( 2 )</td>
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
@@ -1357,6 +1360,11 @@ table.hovertable td {
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
       <td title="Generates Weilbull random numbers"><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/gen_weibull_dist.html">gen_weibull_dist</a>( )</td>
     </tr>
+
+    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
+      <td style="text-align:center;background-color:SlateGrey;color:white">Multithreading<BR>Static Functions</td>
+    </tr>
+
   </table>
   </div>
 

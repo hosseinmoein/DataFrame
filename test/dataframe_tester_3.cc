@@ -45,7 +45,7 @@ using StrDataFrame = StdDataFrame256<std::string>;
 template<typename T>
 using StlVecType = typename MyDataFrame::template StlVecType<T>;
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_groupby_edge()  {
 
@@ -82,7 +82,8 @@ static void test_groupby_edge()  {
             return (f > 11106.0 && f < 30000.0);
         });
     df.load_column("bool_col",
-                   df.single_act_visit<double>("dbl_col_2", fact).get_result());
+                   df.single_act_visit<double>("dbl_col_2",
+                                               fact).get_result());
 
     df.write<std::ostream, std::string, double, int, bool>
         (std::cout, io_format::csv2);
@@ -96,7 +97,7 @@ static void test_groupby_edge()  {
         (std::cout, io_format::csv2);
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_concat_view()  {
 
@@ -226,63 +227,7 @@ static void test_concat_view()  {
     assert(const_result3.get_column<double>("dbl_col_2")[10] == 112.0);
 }
 
-// -----------------------------------------------------------------------------
-
-/*
-static void test_multithreading(int j)  {
-
-    std::cout << "\nTesting test ..." << std::endl;
-
-    MyDataFrame                df;
-    StlVecType<unsigned long>  idxvec =
-        { 1UL, 2UL, 3UL, 10UL, 5UL, 7UL, 8UL, 12UL, 9UL, 12UL, 10UL, 13UL,
-          10UL, 15UL, 14UL };
-    StlVecType<double>         dblvec =
-        { 0.0, 15.0, -14.0, 2.0, 1.0, 12.0, 11.0, 8.0, 7.0, 6.0, 5.0, 4.0,
-          3.0, 9.0, 10.0};
-    StlVecType<double>         dblvec2 =
-        { 100.0, 101.0, 102.0, 103.0, 104.0, 105.0, 106.55, 107.34, 1.8,
-          111.0, 112.0, 113.0, 114.0, 115.0, 116.0};
-    StlVecType<int>            intvec = { 1, 2, 3, 4, 5, 8, 6, 7, 11, 14, 9 };
-    StlVecType<std::string>    strvec =
-        { "zz", "bb", "cc", "ww", "ee", "ff", "gg", "hh", "ii", "jj", "kk",
-          "ll", "mm", "nn", "oo" };
-
-    df.load_data(std::move(idxvec),
-                 std::make_pair("dbl_col", dblvec),
-                 std::make_pair("dbl_col_2", dblvec2),
-                 std::make_pair("str_col", strvec));
-    df.load_column("int_col", std::move(intvec),
-                   nan_policy::dont_pad_with_nans);
-    std::cout << "PRINTING FIRST ..." << std::endl;
-    df.write<std::ostream, std::string, double, int, bool>
-        (std::cout, io_format::json);
-    FactorizeVisitor<double, unsigned long, 256>
-        fact([] (const double &f) -> bool {
-            return (f > 11106.0 && f < 114.0);
-        });
-    df.load_column("bool_col",
-                   df.single_act_visit<double>("dbl_col_2", fact).get_result());
-
-    auto& xvec = df.get_column<std::string>("str_col");
-    auto& yvec = df.get_column<double>("dbl_col_2");
-    auto m = df;
-    std::cout << "PRINTING AFTER FACTOR ..." << std::endl;
-    m.write<std::ostream, std::string, double, int, bool>
-        (std::cout, io_format::json);
-
-    auto bool_df = m.groupby1<bool>(
-        "bool_col",
-        LastVisitor<MyDataFrame::IndexType, MyDataFrame::IndexType>(),
-        std::make_tuple("dbl_col_2", "sum_dbl2", SumVisitor<double>()),
-        std::make_tuple("dbl_col_2", "cnt_dbl2", CountVisitor<double>()));
-    std::cout << "PRINTING AFTER GROUPBY ..." << std::endl;
-    bool_df.write<std::ostream, double, std::size_t, bool>
-        (std::cout, io_format::json);
-}
-*/
-
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_to_from_string()  {
 
@@ -323,7 +268,7 @@ static void test_to_from_string()  {
     assert((df.is_equal<double, int, std::string>(df2)));
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_CoppockCurveVisitor()  {
 
@@ -352,7 +297,7 @@ static void test_CoppockCurveVisitor()  {
     }
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_BiasVisitor()  {
 
@@ -454,7 +399,7 @@ static void test_BiasVisitor()  {
     }
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_BalanceOfPowerVisitor()  {
 
@@ -499,7 +444,7 @@ static void test_BalanceOfPowerVisitor()  {
     }
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_ChandeKrollStopVisitor()  {
 
@@ -540,7 +485,7 @@ static void test_ChandeKrollStopVisitor()  {
     }
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_VortexVisitor()  {
 
@@ -581,7 +526,7 @@ static void test_VortexVisitor()  {
     }
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_KeltnerChannelsVisitor()  {
 
@@ -622,7 +567,7 @@ static void test_KeltnerChannelsVisitor()  {
     }
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_TrixVisitor()  {
 
@@ -667,7 +612,7 @@ static void test_TrixVisitor()  {
     }
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_PrettyGoodOsciVisitor()  {
 
@@ -699,7 +644,7 @@ static void test_PrettyGoodOsciVisitor()  {
     }
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_col_name_to_idx()  {
 
@@ -754,7 +699,7 @@ static void test_col_name_to_idx()  {
     }
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_ZeroLagMovingMeanVisitor()  {
 
@@ -786,7 +731,7 @@ static void test_ZeroLagMovingMeanVisitor()  {
 }
 
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_describe()  {
 
@@ -808,7 +753,7 @@ static void test_describe()  {
     }
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_T3MovingMeanVisitor()  {
 
@@ -836,7 +781,7 @@ static void test_T3MovingMeanVisitor()  {
     }
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_append_row()  {
 
@@ -884,7 +829,7 @@ static void test_append_row()  {
         (std::cout, io_format::csv2);
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_load_result_as_column()  {
 
@@ -919,7 +864,7 @@ static void test_load_result_as_column()  {
     }
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_load_result_as_column2()  {
 
@@ -971,7 +916,7 @@ static void test_load_result_as_column2()  {
     }
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_load_indicators()  {
 
@@ -1018,7 +963,7 @@ static void test_load_indicators()  {
     std::cout << "Load count: " << count << std::endl;
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_from_indicators()  {
 
@@ -1069,7 +1014,7 @@ static void test_from_indicators()  {
             df.get_column<std::string>("levels_copy")));
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_TreynorRatioVisitor()  {
 
@@ -1101,7 +1046,7 @@ static void test_TreynorRatioVisitor()  {
     assert(fabs(result - 0.26761) < 0.00001);
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_ImpurityVisitor()  {
 
@@ -1188,7 +1133,7 @@ static void test_ImpurityVisitor()  {
     assert(fabs(result6[13] - 0.9183) < 0.0001);
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_ExponentiallyWeightedVarVisitor()  {
 
@@ -1228,7 +1173,7 @@ static void test_ExponentiallyWeightedVarVisitor()  {
     assert(fabs(result[13] - 0.0377) < 0.0001);
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_ExponentiallyWeightedCovVisitor()  {
 
@@ -1269,7 +1214,7 @@ static void test_ExponentiallyWeightedCovVisitor()  {
     assert(fabs(result[13] - 0.0197) < 0.0001);
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_ExponentiallyWeightedCorrVisitor()  {
 
@@ -1310,7 +1255,7 @@ static void test_ExponentiallyWeightedCorrVisitor()  {
     assert(fabs(result[13] - 0.6865) < 0.0001);
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_reading_in_chunks()  {
 
@@ -1352,7 +1297,7 @@ static void test_reading_in_chunks()  {
     }
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_FixedAutoCorrVisitor()  {
 
@@ -1394,7 +1339,7 @@ static void test_FixedAutoCorrVisitor()  {
     }
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_RVIVisitor()  {
 
@@ -1430,7 +1375,7 @@ static void test_RVIVisitor()  {
     }
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_LinregMovingMeanVisitor()  {
 
@@ -1462,7 +1407,7 @@ static void test_LinregMovingMeanVisitor()  {
     }
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_InertiaVisitor()  {
 
@@ -1495,7 +1440,7 @@ static void test_InertiaVisitor()  {
     }
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_SymmTriangleMovingMeanVisitor()  {
 
@@ -1527,7 +1472,7 @@ static void test_SymmTriangleMovingMeanVisitor()  {
     }
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_RelativeVigorIndexVisitor()  {
 
@@ -1569,7 +1514,7 @@ static void test_RelativeVigorIndexVisitor()  {
     }
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_ElderRayIndexVisitor()  {
 
@@ -1610,7 +1555,7 @@ static void test_ElderRayIndexVisitor()  {
     }
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_ChopIndexVisitor()  {
 
@@ -1641,7 +1586,7 @@ static void test_ChopIndexVisitor()  {
     }
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_DetrendPriceOsciVisitor()  {
 
@@ -1672,7 +1617,7 @@ static void test_DetrendPriceOsciVisitor()  {
     }
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_RectifyVisitor()  {
 
@@ -1762,7 +1707,7 @@ static void test_RectifyVisitor()  {
     assert(std::abs(mm.get_result()[14] - 0.099) < 0.0001);
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_AccelerationBandsVisitor()  {
 
@@ -1822,7 +1767,7 @@ static void test_AccelerationBandsVisitor()  {
     }
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_PriceDistanceVisitor()  {
 
@@ -1853,7 +1798,7 @@ static void test_PriceDistanceVisitor()  {
     }
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_EldersThermometerVisitor()  {
 
@@ -1911,7 +1856,7 @@ static void test_EldersThermometerVisitor()  {
     }
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_ProbabilityDistVisitor()  {
 
@@ -1988,7 +1933,7 @@ static void test_ProbabilityDistVisitor()  {
     assert(std::abs(sum - 1.0) < 0.0001);
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_PolicyLearningLossVisitor()  {
 
@@ -2018,7 +1963,7 @@ static void test_PolicyLearningLossVisitor()  {
     assert(std::abs(pll.get_result()[14] - 37.8859) < 0.0001);
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_LossFunctionVisitor()  {
 
@@ -2098,7 +2043,7 @@ static void test_LossFunctionVisitor()  {
     assert(std::abs(loss9.get_result() - 19.1365) < 0.0001);
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_EldersForceIndexVisitor()  {
 
@@ -2131,7 +2076,7 @@ static void test_EldersForceIndexVisitor()  {
     }
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_EaseOfMovementVisitor()  {
 
@@ -2164,7 +2109,7 @@ static void test_EaseOfMovementVisitor()  {
     }
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_read_csv_with_vector()  {
 
@@ -2193,7 +2138,7 @@ static void test_read_csv_with_vector()  {
     }
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_read_csv_with_maps()  {
 
@@ -2252,7 +2197,7 @@ static void test_read_csv_with_maps()  {
     }
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_user_join_test()  {
 
@@ -2329,7 +2274,7 @@ static void test_user_join_test()  {
                                        unsigned int>(cout, io_format::csv2);
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_PriceVolumeTrendVisitor()  {
 
@@ -2365,7 +2310,7 @@ static void test_PriceVolumeTrendVisitor()  {
     }
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_QuantQualEstimationVisitor()  {
 
@@ -2435,7 +2380,7 @@ static void test_QuantQualEstimationVisitor()  {
     }
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_get_str_col_stats()  {
 
@@ -2482,7 +2427,7 @@ static void test_get_str_col_stats()  {
     }
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_inversion_count()  {
 
@@ -2545,7 +2490,7 @@ static void test_inversion_count()  {
     assert((df.inversion_count<int, std::greater<int>>("i2") == 0));
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test__like_clause_compare_()  {
 
@@ -2567,7 +2512,7 @@ static void test__like_clause_compare_()  {
     assert(_like_clause_compare_("*[^WdrhID]*", str3.c_str()));
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_get_data_by_like()  {
 
@@ -2660,7 +2605,7 @@ static void test_get_data_by_like()  {
                 "!@#$0987^HGTtiff\""));
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_clear()  {
 
@@ -2721,7 +2666,7 @@ static void test_clear()  {
     assert(df1.get_column<std::string>("str_col")[5] == "ff");
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_swap()  {
 
@@ -2763,7 +2708,88 @@ static void test_swap()  {
     assert(df2.get_column<std::string>("str_col")[5] == "ff");
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+
+static void test_remove_data_by_like()  {
+
+    std::cout << "\nTesting remove_data_by_like( ) ..." << std::endl;
+
+    StlVecType<unsigned long>  idxvec =
+        { 1UL, 2UL, 3UL, 10UL, 5UL, 7UL, 8UL, 12UL, 9UL, 12UL, 10UL, 13UL,
+          10UL, 15UL, 14UL };
+    StlVecType<unsigned long>  idxvec2 =
+        { 1UL, 2UL, 3UL, 10UL, 5UL, 7UL, 8UL, 12UL, 9UL, 12UL, 10UL, 13UL,
+          10UL, 15UL, 14UL };
+    StlVecType<std::string>    strvec1 =
+        { "345&%$abcM", "!@#$0987^HGTtiff\"", "ABFDTiy", "345&%$abcM",
+          "!@#$0987^HGTtiff\"", "!@#$0987^HGTtiff\"", "345&%$abcM",
+          "!@#$0987^HGTtiff\"", "ABFDTiy", "345&%$abcM", "!@#$0987^HGTtiff\"",
+          "ABFDTiy", "345&%$abcM", "ABFDTiy", "ABFDTiy" };
+    StlVecType<std::string>    strvec2 =
+        { "ABFDTiy", "!@#$0987^HGTtiff\"", "ABFDTiy", "345&%$abcM",
+          "!@#$0987^HGTtiff\"", "ABFDTiy", "!@#$0987^HGTtiff\"",
+          "!@#$0987^HGTtiff\"", "ABFDTiy", "345&%$abcM", "!@#$0987^HGTtiff\"",
+          "ABFDTiy", "345&%$abcM", "ABFDTiy", "ABFDTiy" };
+    StlVecType<const char *>   strvec12 =
+        { "345&%$abcM", "!@#$0987^HGTtiff\"", "ABFDTiy", "345&%$abcM",
+          "!@#$0987^HGTtiff\"", "!@#$0987^HGTtiff\"", "345&%$abcM",
+          "!@#$0987^HGTtiff\"", "ABFDTiy", "345&%$abcM", "!@#$0987^HGTtiff\"",
+          "ABFDTiy", "345&%$abcM", "ABFDTiy", "ABFDTiy" };
+    StlVecType<const char *>   strvec22 =
+        { "ABFDTiy", "!@#$0987^HGTtiff\"", "ABFDTiy", "345&%$abcM",
+          "!@#$0987^HGTtiff\"", "ABFDTiy", "!@#$0987^HGTtiff\"",
+          "!@#$0987^HGTtiff\"", "ABFDTiy", "345&%$abcM", "!@#$0987^HGTtiff\"",
+          "ABFDTiy", "345&%$abcM", "ABFDTiy", "ABFDTiy" };
+    StlVecType<int>            intvec =
+        { 1, 2, 3, 10, 5, 7, 8, 12, 9, 12, 10, 13, 10, 15, 14 };
+    StlVecType<int>            intvec2 =
+        { 1, 2, 3, 10, 5, 7, 8, 12, 9, 12, 10, 13, 10, 15, 14 };
+    MyDataFrame                df1;
+    MyDataFrame                df2;
+
+    df1.load_data(std::move(idxvec),
+                  std::make_pair("str column 1", strvec1),
+                  std::make_pair("str column 2", strvec2),
+                  std::make_pair("int column", intvec));
+    df2.load_data(std::move(idxvec2),
+                  std::make_pair("str column 1", strvec12),
+                  std::make_pair("str column 2", strvec22),
+                  std::make_pair("int column", intvec2));
+
+    df1.remove_data_by_like<std::string, std::string, int>(
+            "str column 1",
+            "str column 2",
+            "?*[0-9][0-9][0-9][0-9]?*",
+            "?*[0-9][0-9][0-9][0-9]?*");
+    assert(df1.get_index().size() == 11);
+    assert(df1.get_index()[2] == 10);
+    assert(df1.get_column<int>("int column")[2] == 10);
+    assert(df1.get_column<std::string>("str column 1").size() == 11);
+    assert(df1.get_column<std::string>("str column 2").size() == 11);
+    assert((df1.get_column<std::string>("str column 1")[0] == "345&%$abcM"));
+    assert((df1.get_column<std::string>("str column 1")[2] == "345&%$abcM"));
+    assert((df1.get_column<std::string>("str column 2")[0] == "ABFDTiy"));
+    assert((df1.get_column<std::string>("str column 2")[2] == "345&%$abcM"));
+
+    df2.remove_data_by_like<const char *, const char *, int>(
+            "str column 1",
+            "?*&%?*");
+    assert(df2.get_index().size() == 10);
+    assert(df2.get_index()[2] == 5);
+    assert(df2.get_column<int>("int column")[2] == 5);
+    assert(df2.get_column<const char *>("str column 1").size() == 10);
+    assert(df2.get_column<const char *>("str column 2").size() == 10);
+    assert(! strcmp(df2.get_column<const char *>("str column 1")[0],
+                    "!@#$0987^HGTtiff\""));
+    assert(! strcmp(df2.get_column<const char *>("str column 1")[2],
+                    "!@#$0987^HGTtiff\""));
+    assert(! strcmp(df2.get_column<const char *>("str column 2")[0],
+                    "!@#$0987^HGTtiff\""));
+    assert(! strcmp(df2.get_column<const char *>("str column 2")[2],
+                    "!@#$0987^HGTtiff\""));
+}
+
+// ----------------------------------------------------------------------------
 
 int main(int, char *[]) {
 
@@ -2824,11 +2850,12 @@ int main(int, char *[]) {
     test_get_data_by_like();
     test_clear();
     test_swap();
+    test_remove_data_by_like();
 
     return (0);
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 // Local Variables:
 // mode:C++

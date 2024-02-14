@@ -75,7 +75,7 @@ ThreadPool::add_thread(size_type thr_num)  {
                                  "Thread pool is shutdown.");
 
     if (thr_num < 0)  {
-        const size_type shutys { ::abs(thr_num) };
+        const size_type shutys { ::labs(thr_num) };
 
         if (shutys > capacity_threads())  {
             char    err[1024];

@@ -39,7 +39,7 @@ ThreadGranularity::set_thread_level(long n);
         </B></PRE></font>
       </td>
       <td>
-        Adds n threads to the DataFrame static thread-pool. Is n is negative, it terminates n threads in the thread-pool<BR>
+        Adds n threads to the DataFrame static thread-pool. If n is negative, it terminates n threads in the thread-pool<BR>
       </td>
       <td>
         <B>n</B>: Number of threads<BR>
@@ -54,7 +54,7 @@ ThreadGranularity::set_optimum_thread_level();
         </B></PRE></font>
       </td>
       <td>
-        It finds the number of active cores in your systemsi, and adds that many threads to the DataFrame static thread-pool<BR>
+        It finds the number of active cores in your system, and adds that many threads to the DataFrame static thread-pool<BR>
       </td>
       <td>
       </td>

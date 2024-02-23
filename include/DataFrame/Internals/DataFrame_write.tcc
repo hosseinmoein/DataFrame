@@ -119,14 +119,14 @@ write(S &o,
 
         const SpinGuard guard(lock_);
 
-        for (const auto &iter : column_list_)  {
-            print_json_functor_<Ts ...> functor (iter.first.c_str(),
+        for (const auto &[name, idx] : column_list_) [[likely]]  {
+            print_json_functor_<Ts ...> functor (name.c_str(),
                                                  need_pre_comma,
                                                  o,
                                                  start_row,
                                                  end_row);
 
-            data_[iter.second].change(functor);
+            data_[idx].change(functor);
             need_pre_comma = true;
         }
     }
@@ -143,13 +143,13 @@ write(S &o,
 
         const SpinGuard guard(lock_);
 
-        for (const auto &iter : column_list_)  {
-            print_csv_functor_<Ts ...>  functor (iter.first.c_str(),
+        for (const auto &[name, idx] : column_list_) [[likely]]  {
+            print_csv_functor_<Ts ...>  functor (name.c_str(),
                                                  o,
                                                  start_row,
                                                  end_row);
 
-            data_[iter.second].change(functor);
+            data_[idx].change(functor);
         }
     }
     else if (iof == io_format::csv2)  {
@@ -162,13 +162,13 @@ write(S &o,
 
         const SpinGuard guard(lock_);
 
-        for (const auto &iter : column_list_)  {
+        for (const auto &[name, idx] : column_list_) [[likely]]  {
             if (need_pre_comma)  o << ',';
             else  need_pre_comma = true;
             print_csv2_header_functor_<S, Ts ...>   functor(
-                iter.first.c_str(), o, end_row - start_row);
+                name.c_str(), o, end_row - start_row);
 
-            data_[iter.second].change(functor);
+            data_[idx].change(functor);
         }
         o << '\n';
 

@@ -275,11 +275,13 @@ void DataFrame<I, H>::fill_missing (const DF &rhs)  {
     const auto      &rhs_idx = rhs.get_index();
     const SpinGuard guard(lock_);
 
-    for (const auto &col_citer : column_list_) [[likely]]  {
-        fill_missing_functor_<DF, Ts ...>   functor (
-            self_idx, rhs_idx, rhs, col_citer.first.c_str());
+    for (const auto &[name, idx] : column_list_) [[likely]]  {
+        fill_missing_functor_<DF, Ts ...>   functor (self_idx,
+                                                     rhs_idx,
+                                                     rhs,
+                                                     name.c_str());
 
-        data_[col_citer.second].change(functor);
+        data_[idx].change(functor);
     }
 
     return;
@@ -1726,10 +1728,10 @@ groupby1(const char *col_name, I_V &&idx_visitor, Ts&& ... args) const  {
     StlVecType<std::size_t> sort_v (gb_vec->size(), 0);
 
     std::iota(sort_v.begin(), sort_v.end(), 0);
-    std::sort(sort_v.begin(), sort_v.end(),
-              [gb_vec](std::size_t i, std::size_t j) -> bool  {
-                  return (gb_vec->at(i) < gb_vec->at(j));
-              });
+    std::ranges::sort(sort_v,
+                      [gb_vec](std::size_t i, std::size_t j) -> bool  {
+                          return (gb_vec->at(i) < gb_vec->at(j));
+                      });
 
     DataFrame   res;
     auto        args_tuple = std::tuple<Ts ...>(args ...);
@@ -1790,14 +1792,15 @@ groupby2(const char *col_name1,
         std::min(gb_vec1->size(), gb_vec2->size()), 0);
 
     std::iota(sort_v.begin(), sort_v.end(), 0);
-    std::sort(sort_v.begin(), sort_v.end(),
-              [gb_vec1, gb_vec2](std::size_t i, std::size_t j) -> bool  {
-                  if (gb_vec1->at(i) < gb_vec1->at(j))
-                      return (true);
-                  else if (gb_vec1->at(i) > gb_vec1->at(j))
-                      return (false);
-                  return (gb_vec2->at(i) < gb_vec2->at(j));
-              });
+    std::ranges::sort(sort_v,
+                      [gb_vec1, gb_vec2]
+                      (std::size_t i, std::size_t j) -> bool  {
+                          if (gb_vec1->at(i) < gb_vec1->at(j))
+                              return (true);
+                          else if (gb_vec1->at(i) > gb_vec1->at(j))
+                              return (false);
+                          return (gb_vec2->at(i) < gb_vec2->at(j));
+                      });
 
     DataFrame   res;
     auto        args_tuple = std::tuple<Ts ...>(args ...);
@@ -1877,19 +1880,19 @@ groupby3(const char *col_name1,
         std::min({ gb_vec1->size(), gb_vec2->size(), gb_vec3->size() }), 0);
 
     std::iota(sort_v.begin(), sort_v.end(), 0);
-    std::sort(sort_v.begin(), sort_v.end(),
-              [gb_vec1, gb_vec2, gb_vec3](std::size_t i,
-                                          std::size_t j) -> bool  {
-                  if (gb_vec1->at(i) < gb_vec1->at(j))
-                      return (true);
-                  else if (gb_vec1->at(i) > gb_vec1->at(j))
-                      return (false);
-                  else if (gb_vec2->at(i) < gb_vec2->at(j))
-                      return (true);
-                  else if (gb_vec2->at(i) > gb_vec2->at(j))
-                      return (false);
-                  return (gb_vec3->at(i) < gb_vec3->at(j));
-              });
+    std::ranges::sort(sort_v,
+                      [gb_vec1, gb_vec2, gb_vec3]
+                      (std::size_t i, std::size_t j) -> bool  {
+                          if (gb_vec1->at(i) < gb_vec1->at(j))
+                              return (true);
+                          else if (gb_vec1->at(i) > gb_vec1->at(j))
+                              return (false);
+                          else if (gb_vec2->at(i) < gb_vec2->at(j))
+                              return (true);
+                          else if (gb_vec2->at(i) > gb_vec2->at(j))
+                              return (false);
+                          return (gb_vec3->at(i) < gb_vec3->at(j));
+                      });
 
     DataFrame   res;
     auto        args_tuple = std::tuple<Ts ...>(args ...);

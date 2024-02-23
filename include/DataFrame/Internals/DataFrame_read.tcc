@@ -162,6 +162,7 @@ void DataFrame<I, H>::read_json_(std::istream &stream, bool columns_only)  {
                 "DataFrame::read_json_(): ERROR: Expected ']' (15)");
 
         // Is this the index column, and should we load it?
+        //
         if (first_col && has_index) [[unlikely]]  {
             IndexVecType    vec;
 
@@ -172,7 +173,7 @@ void DataFrame<I, H>::read_json_(std::istream &stream, bool columns_only)  {
         }
         else  {
             if (col_type == "float")  {
-                StlVecType<float>  &vec =
+                StlVecType<float>                                   &vec =
                     create_column<float>(col_name.c_str(), false);
                 const ColVectorPushBack_<float, StlVecType<float>>  slug;
 
@@ -180,7 +181,7 @@ void DataFrame<I, H>::read_json_(std::istream &stream, bool columns_only)  {
                 slug(vec, stream, &::strtof, io_format::json);
             }
             else if (col_type == "double") [[likely]]  {
-                StlVecType<double> &vec =
+                StlVecType<double>                                    &vec =
                     create_column<double>(col_name.c_str(), false);
                 const ColVectorPushBack_<double, StlVecType<double>>  slug;
 
@@ -188,10 +189,10 @@ void DataFrame<I, H>::read_json_(std::istream &stream, bool columns_only)  {
                 slug(vec, stream, &::strtod, io_format::json);
             }
             else if (col_type == "longdouble")  {
-                StlVecType<long double>    &vec =
+                StlVecType<long double>                     &vec =
                     create_column<long double>(col_name.c_str(), false);
                 const ColVectorPushBack_
-                    <long double, StlVecType<long double>> slug;
+                    <long double, StlVecType<long double>>  slug;
 
                 vec.reserve(col_size);
                 slug(vec, stream, &::strtold, io_format::json);
@@ -254,7 +255,7 @@ void DataFrame<I, H>::read_json_(std::istream &stream, bool columns_only)  {
                     io_format::json);
             }
             else if (col_type == "long")  {
-                StlVecType<long>   &vec =
+                StlVecType<long>    &vec =
                     create_column<long>(col_name.c_str(), false);
 
                 vec.reserve(col_size);
@@ -264,7 +265,7 @@ void DataFrame<I, H>::read_json_(std::istream &stream, bool columns_only)  {
                                            io_format::json);
             }
             else if (col_type == "longlong")  {
-                StlVecType<long long>  &vec =
+                StlVecType<long long>   &vec =
                     create_column<long long>(col_name.c_str(), false);
 
                 vec.reserve(col_size);
@@ -274,7 +275,7 @@ void DataFrame<I, H>::read_json_(std::istream &stream, bool columns_only)  {
                                            io_format::json);
             }
             else if (col_type == "ulong")  {
-                StlVecType<unsigned long>  &vec =
+                StlVecType<unsigned long>   &vec =
                     create_column<unsigned long>(col_name.c_str(), false);
 
                 vec.reserve(col_size);
@@ -284,7 +285,7 @@ void DataFrame<I, H>::read_json_(std::istream &stream, bool columns_only)  {
                                            io_format::json);
             }
             else if (col_type == "ulonglong")  {
-                StlVecType<unsigned long long> &vec =
+                StlVecType<unsigned long long>  &vec =
                     create_column<unsigned long long>(col_name.c_str(), false);
 
                 vec.reserve(col_size);
@@ -294,14 +295,14 @@ void DataFrame<I, H>::read_json_(std::istream &stream, bool columns_only)  {
                                            io_format::json);
             }
             else if (col_type == "string")  {
-                StlVecType<std::string>    &vec =
+                StlVecType<std::string> &vec =
                     create_column<std::string>(col_name.c_str(), false);
 
                 vec.reserve(col_size);
                 json_str_col_vector_push_back_(vec, stream);
             }
             else if (col_type == "DateTime")  {
-                StlVecType<DateTime>   &vec =
+                StlVecType<DateTime>    &vec =
                     create_column<DateTime>(col_name.c_str(), false);
                 auto                    converter =
                     [](const char *, char **) -> DateTime {
@@ -313,7 +314,7 @@ void DataFrame<I, H>::read_json_(std::istream &stream, bool columns_only)  {
                 slug(vec, stream, converter, io_format::json);
             }
             else if (col_type == "bool")  {
-                StlVecType<bool>   &vec =
+                StlVecType<bool>    &vec =
                     create_column<bool>(col_name.c_str(), false);
 
                 vec.reserve(col_size);
@@ -397,7 +398,7 @@ void DataFrame<I, H>::read_csv_(std::istream &stream, bool columns_only)  {
         }
         else [[likely]]  {
             if (type_str == "float")  {
-                StlVecType<float>  &vec =
+                StlVecType<float>                                   &vec =
                     create_column<float>(col_name.c_str(), false);
                 const ColVectorPushBack_<float, StlVecType<float>>  slug;
 
@@ -405,7 +406,7 @@ void DataFrame<I, H>::read_csv_(std::istream &stream, bool columns_only)  {
                 slug(vec, stream, &::strtof);
             }
             else if (type_str == "double") [[likely]]  {
-                StlVecType<double> &vec =
+                StlVecType<double>                                    &vec =
                     create_column<double>(col_name.c_str(), false);
                 const ColVectorPushBack_<double, StlVecType<double>>  slug;
 
@@ -413,7 +414,7 @@ void DataFrame<I, H>::read_csv_(std::istream &stream, bool columns_only)  {
                 slug(vec, stream, &::strtod);
             }
             else if (type_str == "longdouble")  {
-                StlVecType<long double>    &vec =
+                StlVecType<long double>                     &vec =
                     create_column<long double>(col_name.c_str(), false);
                 const ColVectorPushBack_
                     <long double, StlVecType<long double>>  slug;
@@ -471,46 +472,46 @@ void DataFrame<I, H>::read_csv_(std::istream &stream, bool columns_only)  {
                     });
             }
             else if (type_str == "long")  {
-                StlVecType<long>   &vec =
+                StlVecType<long>    &vec =
                     create_column<long>(col_name.c_str(), false);
 
                 vec.reserve(::atoi(value.c_str()));
                 col_vector_push_back_func_(vec, stream, &::strtol);
             }
             else if (type_str == "longlong")  {
-                StlVecType<long long>  &vec =
+                StlVecType<long long>   &vec =
                     create_column<long long>(col_name.c_str(), false);
 
                 vec.reserve(::atoi(value.c_str()));
                 col_vector_push_back_func_(vec, stream, &::strtoll);
             }
             else if (type_str == "ulong")  {
-                StlVecType<unsigned long>  &vec =
+                StlVecType<unsigned long>   &vec =
                     create_column<unsigned long>(col_name.c_str(), false);
 
                 vec.reserve(::atoi(value.c_str()));
                 col_vector_push_back_func_(vec, stream, &::strtoul);
             }
             else if (type_str == "ulonglong")  {
-                StlVecType<unsigned long long> &vec =
+                StlVecType<unsigned long long>  &vec =
                     create_column<unsigned long long>(col_name.c_str(), false);
 
                 vec.reserve(::atoi(value.c_str()));
                 col_vector_push_back_func_(vec, stream, &::strtoull);
             }
             else if (type_str == "string")  {
-                StlVecType<std::string>    &vec =
+                StlVecType<std::string>                     &vec =
                     create_column<std::string>(col_name.c_str(), false);
-                auto                        converter =
+                auto                                        converter =
                     [](const char *s, char **)-> const char * { return s; };
                 const ColVectorPushBack_
-                    <const char *, StlVecType<std::string>>  slug;
+                    <const char *, StlVecType<std::string>> slug;
 
                 vec.reserve(::atoi(value.c_str()));
                 slug(vec, stream, converter);
             }
             else if (type_str == "DateTime")  {
-                StlVecType<DateTime>   &vec =
+                StlVecType<DateTime>    &vec =
                     create_column<DateTime>(col_name.c_str(), false);
                 auto                    converter =
                     [](const char *, char **) -> DateTime {
@@ -522,7 +523,7 @@ void DataFrame<I, H>::read_csv_(std::istream &stream, bool columns_only)  {
                 slug (vec, stream, converter);
             }
             else if (type_str == "bool")  {
-                StlVecType<bool>   &vec =
+                StlVecType<bool>    &vec =
                     create_column<bool>(col_name.c_str(), false);
 
                 vec.reserve(::atoi(value.c_str()));
@@ -538,10 +539,9 @@ void DataFrame<I, H>::read_csv_(std::istream &stream, bool columns_only)  {
                     create_column<vec_t>(col_name.c_str(), false);
 
                 vec.reserve(::atoi(value.c_str()));
-                col_vector_push_back_cont_func_(
-                    vec,
-                    stream,
-                    &_get_dbl_vec_from_value_);
+                col_vector_push_back_cont_func_(vec,
+                                                stream,
+                                                &_get_dbl_vec_from_value_);
             }
             else if (type_str == "str_vec")  {
                 using vec_t = std::vector<std::string>;
@@ -550,10 +550,9 @@ void DataFrame<I, H>::read_csv_(std::istream &stream, bool columns_only)  {
                     create_column<vec_t>(col_name.c_str(), false);
 
                 vec.reserve(::atoi(value.c_str()));
-                col_vector_push_back_cont_func_(
-                    vec,
-                    stream,
-                    &_get_str_vec_from_value_);
+                col_vector_push_back_cont_func_(vec,
+                                                stream,
+                                                &_get_str_vec_from_value_);
             }
             else if (type_str == "dbl_set")  {
                 using set_t = std::set<double>;

@@ -317,8 +317,7 @@ gen_datetime_index(const char *start_datetime,
 
     const GenerateTSIndex_<IndexType>   slug;
 
-    while (start_di < end_di)
-        slug(index_vec, start_di, t_freq, increment);
+    slug(index_vec, start_di, end_di, t_freq, increment);
 
     return (index_vec);
 }
@@ -403,16 +402,18 @@ load_column (const char *name,
 
     const auto          iter = column_tb_.find (name);
     StlVecType<value_t> *vec_ptr = nullptr;
-    SpinGuard           guard(do_lock ? lock_ : nullptr);
 
-    if (iter == column_tb_.end()) [[likely]]
-        vec_ptr = &(create_column<value_t>(name, false));
-    else  {
-        DataVec &hv = data_[iter->second];
+    {
+        const SpinGuard guard (do_lock ? lock_ : nullptr);
 
-        vec_ptr = &(hv.template get_vector<value_t>());
+        if (iter == column_tb_.end()) [[likely]]
+            vec_ptr = &(create_column<value_t>(name, false));
+        else  {
+            DataVec &hv = data_[iter->second];
+
+            vec_ptr = &(hv.template get_vector<value_t>());
+        }
     }
-    guard.release();
 
     vec_ptr->clear();
     vec_ptr->insert (vec_ptr->end(), range.begin, range.end);
@@ -471,16 +472,18 @@ load_result_as_column(V &visitor,
 
     const auto              iter = column_tb_.find (new_col_name);
     StlVecType<new_type>    *vec_ptr = nullptr;
-    SpinGuard               guard(lock_);
 
-    if (iter == column_tb_.end())
-        vec_ptr = &(create_column<new_type>(new_col_name, false));
-    else  {
-        DataVec &hv = data_[iter->second];
+    {
+        const SpinGuard guard(lock_);
 
-        vec_ptr = &(hv.template get_vector<new_type>());
+        if (iter == column_tb_.end())
+            vec_ptr = &(create_column<new_type>(new_col_name, false));
+        else  {
+            DataVec &hv = data_[iter->second];
+
+            vec_ptr = &(hv.template get_vector<new_type>());
+        }
     }
-    guard.release();
 
     *vec_ptr = std::move(new_col);
     return (ret_cnt);
@@ -930,10 +933,10 @@ void DataFrame<I, H>::remove_data_by_idx (Index2D<IndexType> range)  {
 
     if (lower != indices_.end()) [[likely]]  {
         const size_type b_dist = std::distance(indices_.begin(), lower);
-        const size_type e_dist = std::distance(indices_.begin(),
-                                               upper < indices_.end()
-                                                   ? upper
-                                                   : indices_.end());
+        const size_type e_dist =
+            std::distance(indices_.begin(),
+                          upper < indices_.end() ? upper : indices_.end());
+
         make_consistent<Ts ...>();
         indices_.erase(lower, upper);
 

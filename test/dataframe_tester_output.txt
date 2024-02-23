@@ -765,12 +765,12 @@ col_3:1:<double>:15,
 col_str:1:<string>:11,
 col_4:1:<double>:22,
 
-INDEX:1:<ulong>:123452,
-col_1:1:<double>:3,
-col_2:1:<double>:10,
-col_3:1:<double>:17,
-col_str:1:<string>:33,
-col_4:1:<double>:24,
+INDEX:1:<ulong>:123451,
+col_1:1:<double>:2,
+col_2:1:<double>:9,
+col_3:1:<double>:16,
+col_str:1:<string>:22,
+col_4:1:<double>:23,
 
 
 Testing write(json) ...
@@ -2020,6 +2020,12 @@ Testing inversion_count(  ) ...
 Testing _like_clause_compare_(  ) ...
 
 Testing get_data_by_like( ) ...
+
+Testing clear( ) ...
+
+Testing swap( ) ...
+
+Testing remove_data_by_like( ) ...
 Hello World!
 Str Column = A, B, C, D, E, F, G, H, I, J, 
 There are 5031 IBM close prices
@@ -2039,7 +2045,7 @@ INDEX:10:<ulong>,string col:10:<string>,Cool Column:10:<string>,numbers:10:<doub
 Standard deviation of IBM close prices: 38.3090214006
 Correlation between AAPL and IBM close prices: 0.390679511924
 The last exponentailly weighted correlation between AAPL and IBM close prices: -0.276248958749
-Means of clusters are: 0.00650976593788, 0.0318316457815, -0.00752908972436, -0.0379451613753, 
+Means of clusters are: 0.00870905473535, 0.0373923431345, -0.0360056309281, -0.00618850749795, 
 IBM returns 50% quantile: 0.000224447189179, 75% quantile: 0.00742387474272, 95% quantile: 0.0229862030163
 The seasonality of IBM returns is 59 days.
 So use this instead of 170 days in decomposition analysis

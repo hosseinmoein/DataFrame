@@ -38,6 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <future>
 #include <iostream>
 #include <map>
+#include <ranges>
 #include <set>
 #include <sstream>
 #include <tuple>
@@ -763,7 +764,7 @@ inline static MAP
 _get_str_dbl_map_from_value_(const char *value)  {
 
     using map_t = MAP;
-    using unomap_t = std::unordered_map<std::string, double>;;
+    using unomap_t = std::unordered_map<std::string, double>;
 
     std::size_t vcnt = 0;
     char        buffer[256];
@@ -882,7 +883,7 @@ inline static S &_write_csv_df_index_(S &o, unsigned char value)  {
 
 // Code from boost
 // Reciprocal of the golden ratio helps spread entropy and handles duplicates.
-
+//
 template<typename T>
 inline void _hash_combine_(std::size_t &seed, T const &v)  {
 
@@ -890,6 +891,7 @@ inline void _hash_combine_(std::size_t &seed, T const &v)  {
 }
 
 // Recursive template code derived from Matthieu M.
+//
 template<typename Tuple, size_t I = std::tuple_size<Tuple>::value - 1>
 struct  _hash_value_impl_  {
 
@@ -946,8 +948,8 @@ _sort_by_sorted_index_(T &to_be_sorted,
                        BV &done_vec,
                        size_t idx_s) {
 
-    std::fill(done_vec.begin(), done_vec.end(), false);
-    for (std::size_t i = 0; i < idx_s; ++i) [[likely]]
+    std::ranges::fill(done_vec, false);
+    for (std::size_t i = 0; i < idx_s; ++i) [[likely]]  {
         if (! done_vec[i])  {
             done_vec[i] = true;
 
@@ -961,6 +963,7 @@ _sort_by_sorted_index_(T &to_be_sorted,
                 j = sorting_idxs[j];
             }
         }
+    }
 }
 
 // ----------------------------------------------------------------------------
@@ -1107,10 +1110,12 @@ _inv_merge_sort_(Con &original,
 
 struct _LikeClauseUtil_  {
 
+    using value_type = unsigned char;
+
     // This lookup table is used to help decode the first byte of
     // a multi-byte UTF8 character.
     //
-    inline static const unsigned char   CHAR_TRANS1[] = {
+    inline static const value_type  CHAR_TRANS1[] = {
         0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b,
         0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
         0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f, 0x00, 0x01, 0x02, 0x03,
@@ -1119,7 +1124,7 @@ struct _LikeClauseUtil_  {
         0x00, 0x01, 0x00, 0x00,
     };
 
-    inline static const unsigned char   UPPER_TO_LOWER[] = {
+    inline static const value_type  UPPER_TO_LOWER[] = {
         0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
         20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37,
         38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55,
@@ -1139,7 +1144,7 @@ struct _LikeClauseUtil_  {
         243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255,
     };
 
-    static unsigned int char_read(const unsigned char **str_ptr_ptr)  {
+    static unsigned int char_read(const value_type **str_ptr_ptr)  {
 
         unsigned int    c = *((*str_ptr_ptr)++);
 
@@ -1203,14 +1208,16 @@ _like_clause_compare_(const char *pattern,
                       bool case_insensitive = false,
                       unsigned int esc_char = '\\')  {
 
-    const unsigned char *upattern =
-        reinterpret_cast<const unsigned char *>(pattern);
-    const unsigned char *uinput_str =
-        reinterpret_cast<const unsigned char *>(input_str);
+    using value_type = _LikeClauseUtil_::value_type;
+
+    const value_type    *upattern =
+        reinterpret_cast<const value_type *>(pattern);
+    const value_type    *uinput_str =
+        reinterpret_cast<const value_type *>(input_str);
     unsigned int        c, c2;
-    const unsigned char match_one { '?' };
-    const unsigned char match_all { '*' };
-    const unsigned char match_set { '[' };
+    const value_type    match_one { '?' };
+    const value_type    match_all { '*' };
+    const value_type    match_set { '[' };
     // True if the previous character was escape
     //
     bool                prev_escape { false };

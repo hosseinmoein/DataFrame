@@ -343,15 +343,15 @@ shift_left(V &vec, std::size_t n)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename S>
+template<typename STR, std::size_t SIZ = 64 * 1024>
 struct  IOStreamOpti  {
 
-    IOStreamOpti (S &stream, const char *file_name)
+    IOStreamOpti (STR &stream, const char *file_name)
         : stream_(stream),
           tie_(std::cin.tie(nullptr)),
           sync_(std::ios_base::sync_with_stdio(false))  {
 
-        stream_.rdbuf()->pubsetbuf(buffer_, sizeof(buffer_));
+        stream_.rdbuf()->pubsetbuf(buffer_, SIZ);
         if (file_name && ! stream_.is_open())
             stream_.open(file_name);
     }
@@ -369,8 +369,8 @@ struct  IOStreamOpti  {
 
 private:
 
-    char            buffer_[64 * 1024];
-    S               &stream_;
+    char            buffer_[SIZ];
+    STR             &stream_;
     std::ostream    *tie_;
     const bool      sync_;
 };

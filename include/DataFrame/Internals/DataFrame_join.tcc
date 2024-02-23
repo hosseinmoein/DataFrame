@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/DataFrame.h>
 
 #include <cstdio>
+#include <ranges>
 
 // ----------------------------------------------------------------------------
 
@@ -90,8 +91,8 @@ join_by_index (const RHS_T &rhs, join_policy mp) const  {
         futures[1].get();
     }
     else  {
-        std::sort(idx_vec_lhs.begin(), idx_vec_lhs.end(), cf);
-        std::sort(idx_vec_rhs.begin(), idx_vec_rhs.end(), cf);
+        std::ranges::sort(idx_vec_lhs, cf);
+        std::ranges::sort(idx_vec_rhs, cf);
     }
 
     switch(mp)  {
@@ -164,8 +165,8 @@ join_by_column (const RHS_T &rhs, const char *name, join_policy mp) const  {
         futures[1].get();
     }
     else  {
-        std::sort(col_vec_lhs.begin(), col_vec_lhs.end(), cf);
-        std::sort(col_vec_rhs.begin(), col_vec_rhs.end(), cf);
+        std::ranges::sort(col_vec_lhs, cf);
+        std::ranges::sort(col_vec_rhs, cf);
     }
 
     switch(mp)  {
@@ -693,6 +694,7 @@ concat_helper_(LHS_T &lhs, const RHS_T &rhs, bool add_new_columns)  {
                            rhs.get_index().begin(), rhs.get_index().end());
 
     // Load common columns
+    //
     for (const auto &lhs_iter : lhs.column_list_) [[likely]]  {
         const auto  rhs_citer = rhs.column_tb_.find(lhs_iter.first);
 
@@ -707,17 +709,16 @@ concat_helper_(LHS_T &lhs, const RHS_T &rhs, bool add_new_columns)  {
     }
 
     // Load columns from rhs that do not exist in lhs
+    //
     if (add_new_columns)  {
-        for (const auto &rhs_citer : rhs.column_list_) [[likely]]  {
-            const auto  lhs_iter = lhs.column_tb_.find(rhs_citer.first);
-
-            if (lhs_iter == lhs.column_tb_.end())  {
-                concat_functor_<LHS_T, Ts ...>  functor(rhs_citer.first.c_str(),
+        for (const auto &[rhs_name, rhs_idx] : rhs.column_list_) [[likely]]  {
+            if (! lhs.column_tb_.contains(rhs_name))  {
+                concat_functor_<LHS_T, Ts ...>  functor(rhs_name.c_str(),
                                                         lhs,
                                                         true,
                                                         orig_index_s);
 
-                rhs.data_[rhs_citer.second].change(functor);
+                rhs.data_[rhs_idx].change(functor);
             }
         }
     }
@@ -783,14 +784,11 @@ DataFrame<I, H>::concat(const RHS_T &rhs, concat_policy cp) const  {
     else if (cp == concat_policy::common_columns)  {
         result.load_index(this->get_index().begin(), this->get_index().end());
 
-        for (const auto &lhs_citer : column_list_)  {
-            const auto  rhs_citer = rhs.column_tb_.find(lhs_citer.first);
+        for (const auto &[lhs_name, lhs_idx] : column_list_)  {
+            if (rhs.column_tb_.contains(lhs_name))  {
+                load_all_functor_<Ts ...>   functor(lhs_name.c_str(), result);
 
-            if (rhs_citer != rhs.column_tb_.end())  {
-                load_all_functor_<Ts ...>   functor(lhs_citer.first.c_str(),
-                                                    result);
-
-                data_[lhs_citer.second].change(functor);
+                data_[lhs_idx].change(functor);
             }
         }
         concat_helper_<decltype(result), RHS_T, Ts ...>(result, rhs, false);
@@ -833,45 +831,44 @@ DataFrame<I, H>::concat_view(RHS_T &rhs, concat_policy cp)  {
     result.indices_ = std::move(result_idx);
 
     if (cp == concat_policy::all_columns)  {
-        for (const auto &lhs_citer : column_list_)  {
-            concat_load_view_functor_<PtrView, Ts ...> functor(
-                lhs_citer.first.c_str(), result);
+        for (const auto &[lhs_name, lhs_idx] : column_list_)  {
+            concat_load_view_functor_<PtrView, Ts ...>  functor(
+                lhs_name.c_str(), result);
 
-            data_[lhs_citer.second].change(functor);
+            data_[lhs_idx].change(functor);
         }
-        for (const auto &rhs_citer : rhs.column_list_)  {
-            concat_load_view_functor_<PtrView, Ts ...> functor(
-                rhs_citer.first.c_str(), result);
+        for (const auto &[rhs_name, rhs_idx] : rhs.column_list_)  {
+            concat_load_view_functor_<PtrView, Ts ...>  functor(
+                rhs_name.c_str(), result);
 
-            rhs.data_[rhs_citer.second].change(functor);
+            rhs.data_[rhs_idx].change(functor);
         }
     }
     else if (cp == concat_policy::lhs_and_common_columns)  {
-        for (const auto &lhs_citer : column_list_)  {
-            concat_load_view_functor_<PtrView, Ts ...> functor(
-                lhs_citer.first.c_str(), result);
+        for (const auto &[lhs_name, lhs_idx] : column_list_)  {
+            concat_load_view_functor_<PtrView, Ts ...>  functor(
+                lhs_name.c_str(), result);
 
-            data_[lhs_citer.second].change(functor);
+            data_[lhs_idx].change(functor);
 
-            const auto  rhs_citer = rhs.column_tb_.find(lhs_citer.first);
+            const auto  rhs_citer = rhs.column_tb_.find(lhs_name);
 
             if (rhs_citer != rhs.column_tb_.end())
                 rhs.data_[rhs_citer->second].change(functor);
         }
     }
     else if (cp == concat_policy::common_columns)  {
-        for (const auto &lhs_citer : column_list_)  {
-            concat_load_view_functor_<PtrView, Ts ...> functor(
-                lhs_citer.first.c_str(), result);
-            const auto                                 rhs_citer =
-                rhs.column_tb_.find(lhs_citer.first);
+        for (const auto &[lhs_name, lhs_idx] : column_list_)  {
+            concat_load_view_functor_<PtrView, Ts ...>  functor(
+                lhs_name.c_str(), result);
+            const auto                                  rhs_citer =
+                rhs.column_tb_.find(lhs_name);
 
             if (rhs_citer != rhs.column_tb_.end())  {
-                data_[lhs_citer.second].change(functor);
+                data_[lhs_idx].change(functor);
                 rhs.data_[rhs_citer->second].change(functor);
             }
         }
-
     }
 
     return (result);
@@ -911,45 +908,44 @@ DataFrame<I, H>::concat_view(RHS_T &rhs, concat_policy cp) const  {
     result.indices_ = std::move(result_idx);
 
     if (cp == concat_policy::all_columns)  {
-        for (const auto &lhs_citer : column_list_)  {
+        for (const auto &[lhs_name, lhs_idx] : column_list_)  {
             concat_load_view_functor_<ConstPtrView, Ts ...> functor(
-                lhs_citer.first.c_str(), result);
+                lhs_name.c_str(), result);
 
-            data_[lhs_citer.second].change(functor);
+            data_[lhs_idx].change(functor);
         }
-        for (const auto &rhs_citer : rhs.column_list_)  {
+        for (const auto &[rhs_name, rhs_idx] : rhs.column_list_)  {
             concat_load_view_functor_<ConstPtrView, Ts ...> functor(
-                rhs_citer.first.c_str(), result);
+                rhs_name.c_str(), result);
 
-            rhs.data_[rhs_citer.second].change(functor);
+            rhs.data_[rhs_idx].change(functor);
         }
     }
     else if (cp == concat_policy::lhs_and_common_columns)  {
-        for (const auto &lhs_citer : column_list_)  {
+        for (const auto &[lhs_name, lhs_idx] : column_list_)  {
             concat_load_view_functor_<ConstPtrView, Ts ...> functor(
-                lhs_citer.first.c_str(), result);
+                lhs_name.c_str(), result);
 
-            data_[lhs_citer.second].change(functor);
+            data_[lhs_idx].change(functor);
 
-            const auto  rhs_citer = rhs.column_tb_.find(lhs_citer.first);
+            const auto  rhs_citer = rhs.column_tb_.find(lhs_name);
 
             if (rhs_citer != rhs.column_tb_.end())
                 rhs.data_[rhs_citer->second].change(functor);
         }
     }
     else if (cp == concat_policy::common_columns)  {
-        for (const auto &lhs_citer : column_list_)  {
+        for (const auto &[lhs_name, lhs_idx] : column_list_)  {
             concat_load_view_functor_<ConstPtrView, Ts ...> functor(
-                lhs_citer.first.c_str(), result);
+                lhs_name.c_str(), result);
             const auto                                      rhs_citer =
-                rhs.column_tb_.find(lhs_citer.first);
+                rhs.column_tb_.find(lhs_name);
 
             if (rhs_citer != rhs.column_tb_.end())  {
-                data_[lhs_citer.second].change(functor);
+                data_[lhs_idx].change(functor);
                 rhs.data_[rhs_citer->second].change(functor);
             }
         }
-
     }
 
     return (result);

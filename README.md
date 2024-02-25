@@ -36,8 +36,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 <img src="docs/LionLookingUp.jpg" alt="DataFrame Lion" width="400" longdesc="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html"/>
 
-## [*DataFrame Documentation / Code Samples*](https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html)
-This is a C++ analytical library designed for data analysis similar to libraries in Python and R. For example, you would compare this to Pandas or R data.frame.<BR>
+## [*DataFrame documentation with code samples*](https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html)
+This is a C++ analytical library designed for data analysis similar to libraries in Python and R. For example, you could compare this to [Pandas](https://pandas.pydata.org), [R data.frame](https://www.w3schools.com/r/r_data_frames.asp), or [Polars](https://www.pola.rs) <BR>
 You can slice the data in many different ways. You can join, merge, group-by the data. You can run various statistical, summarization, financial, and ML algorithms on the data. You can add your custom algorithms easily. You can multi-column sort, custom pick and delete the data. And more …<BR>
 DataFrame also includes a large collection of analytical algorithms in form of visitors. These are from basic stats such as <I>Mean</I>, <I>Std Deviation</I>, <I>Return</I>, … to more involved analysis such as <I>Affinity Propagation</I>, <I>Polynomial Fit</I>, <I>Fast Fourier transform of arbitrary length</I> … including a good collection of trading indicators. You can also easily add your own algorithms.<BR>
 DataFrame also employs extensive multithreading in almost all its API’s, for large datasets. That makes DataFrame especially suitable for analyzing large datasets.<BR>
@@ -59,7 +59,7 @@ DateTime class included in this library is a very cool and handy object to manip
 ---
 
 ### Performance
-You have probably heard of [Polars](https://www.pola.rs) DataFrame. It is implemented in Rust and ported with zero-overhead to Python (as long as you don’t have a loop). I have been asked by many people to write a comparison for <B>DataFrame vs. Polars</B>. So, I finally found some time to learn a bit about Polars and write a very simple benchmark.<BR>
+You have probably heard of Polars DataFrame. It is implemented in Rust and ported with zero-overhead to Python (as long as you don’t have a loop). I have been asked by many people to write a comparison for <B>DataFrame vs. Polars</B>. So, I finally found some time to learn a bit about Polars and write a very simple benchmark.<BR>
 I wrote the following identical programs for both Polars and C++ DataFrame. I used Polars version 0.19.14. And I used C++20 clang compiler with -O3 option. I ran both on my, somewhat outdated, MacBook Pro.<BR>
 In both cases, I created a dataframe with 3 random columns. The C++ DataFrame also required an additional index column of the same size. Polars doesn’t believe in index columns (that has its own pros and cons. I am not going through it here).
 Each program has three identical parts. First it generates and populates 3 columns with 300m random numbers each (in case of C++ DataFrame, it must also generate a sequential index column of the same size). This is the part I am _not_ interested in. In the second part, it calculates the mean of the first column, the variance of the second column, and the Pearson correlation of the second and third columns. In the third part, it does a select (or filter as Polars calls it) on one of the columns.
@@ -70,22 +70,22 @@ I ran each test 4 times and took the best time. Polars numbers varied a lot from
 
 ```text
 C++ DataFrame:
-    Data generation/load time:   26.945900 secs
-    Calculation time:             1.260150 secs
-    Selection time:               0.742493 secs
-    Overall time:                28.948600 secs
+    Data generation/load time:  26.945900 secs
+    Calculation time:            1.260150 secs
+    Selection time:              0.742493 secs
+    Overall time:               28.948600 secs
 
 Polars:
-    Data generation/load time:   28.468640 secs
-    Calculation time:             4.876561 secs
-    Selection time:               3.876561 secs
-    Overall time:                36.876345 secs
+    Data generation/load time:  28.468640 secs
+    Calculation time:            4.876561 secs
+    Selection time:              3.876561 secs
+    Overall time:               36.876345 secs
 
 Pandas, for comparison:
-    Data generation/load time:   36.678976 secs
-    Calculation time:            40.326350 secs
-    Selection time:               8.326350 secs
-    Overall time:                85.845114 secs
+    Data generation/load time:  36.678976 secs
+    Calculation time:           40.326350 secs
+    Selection time:              8.326350 secs
+    Overall time:               85.845114 secs
 ```
 
 [C++ DataFrame source file](https://github.com/hosseinmoein/DataFrame/blob/master/benchmarks/dataframe_performance.cc) <BR>
@@ -99,19 +99,19 @@ Pandas, for comparison:
 ---
 
 ### Installing using CMake
-```bash
-mkdir [Debug | Release]
-cd [Debug | Release]
-cmake -DCMAKE_BUILD_TYPE=[Debug | Release] -DHMDF_BENCHMARKS=1 -DHMDF_EXAMPLES=1 -DHMDF_TESTING=1 ..
+```sh
+mkdir [Debug|Release]
+cd [Debug|Release]
+cmake -DCMAKE_BUILD_TYPE=[Debug|Release] -DHMDF_BENCHMARKS=1 -DHMDF_EXAMPLES=1 -DHMDF_TESTING=1 ..
 make
 make install
 
-cd [Debug | Release]
+cd [Debug|Release]
 make uninstall
 ```
 
 ### Package managers
-DataFrame is available on _Conan_ platform. Add `dataframe/x.y.z@` to your requires, where `x.y.z` is the release version you want to use. _Conan_ will acquire DataFrame, build it from source in your computer, and provide CMake integration support for your projects. See the [_Conan_ docs](https://docs.conan.io/en/latest/) for more information.<BR> Sample `conanfile.txt`:
+DataFrame is available on [_Conan_](https://conan.io/center/recipes/dataframe) platform. Add `dataframe/x.y.z@` to your requirements, where `x.y.z` is the release version you want to use. _Conan_ will acquire DataFrame, build it from source in your computer, and provide CMake integration support for your projects. See the [_Conan_ docs](https://docs.conan.io/en/latest/) for more information.<BR> Sample `conanfile.txt`:
 
 ```text
 [requires]
@@ -120,8 +120,8 @@ dataframe/x.y.z@
 [generators]
 cmake
 ```
-DataFrame is also available on [_Microsoft VCPKG_](https://vcpkg.io/en/index.html) platform
-```bash
+DataFrame is also available on [_Microsoft VCPKG_](https://vcpkg.link/ports/dataframe) platform. See [_VCPKG docs_](https://learn.microsoft.com/en-us/vcpkg/) for more information
+```sh
 git clone https://github.com/Microsoft/vcpkg.git
 cd vcpkg
 bootstrap-vcpkg.[bat|sh]

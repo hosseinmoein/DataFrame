@@ -779,20 +779,6 @@ struct  CovVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES_2
 
-    struct  InterResults  {
-        value_type  total1 { 0 };
-        value_type  total2 { 0 };
-        value_type  dot_prod { 0 };
-        value_type  dot_prod1 { 0 };
-        value_type  dot_prod2 { 0 };
-        size_type   cnt { 0 };
-
-        inline void clear()  {
-            total1 = total2 = dot_prod = dot_prod1 = dot_prod2 = 0;
-            cnt = 0;
-        }
-    };
-
     inline void operator() (const index_type &,
                             const value_type &val1, const value_type &val2)  {
 
@@ -920,6 +906,20 @@ struct  CovVisitor  {
         : b_ (biased ? 0 : 1), skip_nan_(skipnan)  {  }
 
 private:
+
+    struct  InterResults  {
+        value_type  total1 { 0 };
+        value_type  total2 { 0 };
+        value_type  dot_prod { 0 };
+        value_type  dot_prod1 { 0 };
+        value_type  dot_prod2 { 0 };
+        size_type   cnt { 0 };
+
+        inline void clear()  {
+            total1 = total2 = dot_prod = dot_prod1 = dot_prod2 = 0;
+            cnt = 0;
+        }
+    };
 
     InterResults        inter_result_ { };
     result_type         result_ { 0 };

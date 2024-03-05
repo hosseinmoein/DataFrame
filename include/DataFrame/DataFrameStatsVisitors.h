@@ -108,7 +108,7 @@ namespace hmdf
 
 #define DECL_CTOR(name) \
     explicit \
-    name(bool skipnan = true) : skip_nan_(skipnan)  {   }
+    name(bool skipnan = false) : skip_nan_(skipnan)  {   }
 
 #define SKIP_NAN if (skip_nan_ && is_nan__(val))  { return; }
 #define SKIP_NAN_BASE if (BaseClass::skip_nan_ && is_nan__(val))  { return; }
@@ -284,10 +284,16 @@ struct  SumVisitor  {
                 [this] (const auto &begin, const auto &end) -> value_type  {
                     value_type  sum { };
 
-                    for (auto citer = begin; citer < end; ++citer)
-                        if (! this->skip_nan_ || ! is_nan__(*citer))
+                    if (! this->skip_nan_)  {
+                        for (auto citer = begin; citer < end; ++citer)
                             sum += *citer;
-                    return(sum);
+                    }
+                    else  {
+                        for (auto citer = begin; citer < end; ++citer)
+                            if (! is_nan__(*citer))  sum += *citer;
+                    }
+
+                    return (sum);
                 };
             auto    futures =
                 ThreadGranularity::thr_pool_.parallel_loop(column_begin,
@@ -296,10 +302,16 @@ struct  SumVisitor  {
 
             for (auto &fut : futures)  result_ += fut.get();
         }
-        else
-            for (auto citer = column_begin; citer < column_end; ++citer)
-                if (! skip_nan_ || ! is_nan__(*citer))
+        else  {
+            if (! skip_nan_)  {
+                for (auto citer = column_begin; citer < column_end; ++citer)
                     result_ += *citer;
+            }
+            else  {
+                for (auto citer = column_begin; citer < column_end; ++citer)
+                    if (! is_nan__(*citer))  result_ += *citer;
+            }
+        }
     }
 
     inline void pre ()  { result_ = value_type { }; }
@@ -350,14 +362,19 @@ struct  MeanVisitor : public MeanBase<T, I>  {
         BaseClass::cnt_ += 1;
         BaseClass::sum_(idx, val);
     }
-    template <forward_iterator K, forward_iterator H>
+    template<forward_iterator K, forward_iterator H>
     inline void
     operator() (K idx_begin, K idx_end, H column_begin, H column_end) {
 
         BaseClass::sum_(idx_begin, idx_end, column_begin, column_end);
-        for (auto citer = column_begin; citer < column_end; ++citer)
-            if (! BaseClass::skip_nan_ || ! is_nan__(*citer))
-                BaseClass::cnt_ += 1;
+        if (! BaseClass::skip_nan_)  {
+            BaseClass::cnt_ = std::distance(column_begin, column_end);
+        }
+        else  {
+            for (auto citer = column_begin; citer < column_end; ++citer)
+                if (! is_nan__(*citer))
+                    BaseClass::cnt_ += 1;
+        }
     }
 
     inline void post ()  {
@@ -366,7 +383,7 @@ struct  MeanVisitor : public MeanBase<T, I>  {
         BaseClass::mean_ = BaseClass::sum_.get_result() / T(BaseClass::cnt_);
     }
 
-    MeanVisitor(bool skipnan = true) : BaseClass(skipnan)  {   }
+    MeanVisitor(bool skipnan = false) : BaseClass(skipnan)  {   }
 };
 
 // ----------------------------------------------------------------------------
@@ -387,13 +404,12 @@ struct  StableMeanVisitor  {
     }
     PASS_DATA_ONE_BY_ONE
 
-
     inline void pre ()  { mean_ = 0; cnt_ = 0; }
     inline size_type get_count () const  { return (cnt_); }
     inline result_type get_result () const  { return (mean_); }
     inline void post ()  {  }
 
-    StableMeanVisitor(bool skipnan = true) : skip_nan_(skipnan)  {   }
+    StableMeanVisitor(bool skipnan = false) : skip_nan_(skipnan)  {   }
 
 private:
 
@@ -538,10 +554,17 @@ struct  ProdVisitor  {
                 [this] (const auto &begin, const auto &end) -> value_type  {
                     value_type  prod { 1 };
 
-                    for (auto citer = begin; citer < end; ++citer)
-                        if (! this->skip_nan_ || ! is_nan__(*citer))
+                    if (! this->skip_nan_)  {
+                        for (auto citer = begin; citer < end; ++citer)
                             prod *= *citer;
-                    return(prod);
+                    }
+                    else  {
+                        for (auto citer = begin; citer < end; ++citer)
+                            if (! is_nan__(*citer))
+                                prod *= *citer;
+                    }
+
+                    return (prod);
                 };
             auto    futures =
                 ThreadGranularity::thr_pool_.parallel_loop(column_begin,
@@ -550,10 +573,17 @@ struct  ProdVisitor  {
 
             for (auto &fut : futures)  result_ *= fut.get();
         }
-        else
-            for (auto citer = column_begin; citer < column_end; ++citer)
-                if (! skip_nan_ || ! is_nan__(*citer))
+        else  {
+            if (! skip_nan_)  {
+                for (auto citer = column_begin; citer < column_end; ++citer)
                     result_ *= *citer;
+            }
+            else  {
+                for (auto citer = column_begin; citer < column_end; ++citer)
+                    if (! is_nan__(*citer))
+                        result_ *= *citer;
+            }
+        }
     }
 
     inline void pre ()  { result_ = 1; }
@@ -624,11 +654,20 @@ struct  ExtremumVisitor  {
                 [this] (const auto &begin, const auto &end) -> value_type  {
                     value_type  extremum { *begin };
 
-                    for (auto citer = begin + 1; citer < end; ++citer)  {
-                        if (! this->skip_nan_ || ! is_nan__(*citer)) [[likely]]
+                    if (! this->skip_nan_)  {
+                        for (auto citer = begin + 1; citer < end; ++citer)  {
                             if (this->cmp_(extremum, *citer))
                                 extremum = *citer;
+                        }
                     }
+                    else  {
+                        for (auto citer = begin + 1; citer < end; ++citer)  {
+                            if (this->cmp_(extremum, *citer) &&
+                                ! is_nan__(*citer))
+                                extremum = *citer;
+                        }
+                    }
+
                     return (extremum);
                 };
             auto    futures =
@@ -647,9 +686,18 @@ struct  ExtremumVisitor  {
             }
         }
         else  {
-            for (; citer < column_end; ++citer, ++idx_begin, ++counter_)  {
-                if (! skip_nan_ || ! is_nan__(*citer)) [[likely]]  {
+            if (! skip_nan_)  {
+                for (; citer < column_end; ++citer, ++idx_begin, ++counter_)  {
                     if (cmp_(extremum_, *citer))  {
+                        extremum_ = *citer;
+                        index_ = *idx_begin;
+                        pos_ = counter_;
+                    }
+                }
+            }
+            else  {
+                for (; citer < column_end; ++citer, ++idx_begin, ++counter_)  {
+                    if (cmp_(extremum_, *citer) && ! is_nan__(*citer))  {
                         extremum_ = *citer;
                         index_ = *idx_begin;
                         pos_ = counter_;
@@ -808,12 +856,12 @@ struct  CovVisitor  {
                     InterResults    result { };
                     auto            iter2 = begin2;
 
-                    for (auto iter1 = begin1; iter1 < end1; ++iter1, ++iter2) {
-                        const value_type    &val1 = *iter1;
-                        const value_type    &val2 = *iter2;
+                    if (! this->skip_nan_)  {
+                        for (auto iter1 = begin1;
+                             iter1 < end1; ++iter1, ++iter2) {
+                            const value_type    &val1 = *iter1;
+                            const value_type    &val2 = *iter2;
 
-                        if (! this->skip_nan_ ||
-                            (! is_nan__(val1) && ! is_nan__(val2)))  {
                             result.total1 += val1;
                             result.total2 += val2;
                             result.dot_prod += (val1 * val2);
@@ -822,6 +870,23 @@ struct  CovVisitor  {
                             result.cnt += 1;
                         }
                     }
+                    else  {
+                        for (auto iter1 = begin1;
+                             iter1 < end1; ++iter1, ++iter2) {
+                            const value_type    &val1 = *iter1;
+                            const value_type    &val2 = *iter2;
+
+                            if (! is_nan__(val1) && ! is_nan__(val2))  {
+                                result.total1 += val1;
+                                result.total2 += val2;
+                                result.dot_prod += (val1 * val2);
+                                result.dot_prod1 += (val1 * val1);
+                                result.dot_prod2 += (val2 * val2);
+                                result.cnt += 1;
+                            }
+                        }
+                    }
+
                     return (result);
                 };
             auto    futures =
@@ -843,18 +908,36 @@ struct  CovVisitor  {
             }
         }
         else  {
-            for (; column_begin1 < column_end1 && column_begin2 < column_end2;
-                 ++column_begin1, ++column_begin2)  {
-                const value_type    &val1 = *column_begin1;
-                const value_type    &val2 = *column_begin2;
+            if (! skip_nan_)  {
+                for (; column_begin1 < column_end1 &&
+                       column_begin2 < column_end2;
+                     ++column_begin1, ++column_begin2)  {
+                    const value_type    &val1 = *column_begin1;
+                    const value_type    &val2 = *column_begin2;
 
-                if (! skip_nan_ || (! is_nan__(val1) && ! is_nan__(val2)))  {
                     inter_result_.total1 += val1;
                     inter_result_.total2 += val2;
                     inter_result_.dot_prod += (val1 * val2);
                     inter_result_.dot_prod1 += (val1 * val1);
                     inter_result_.dot_prod2 += (val2 * val2);
                     inter_result_.cnt += 1;
+                }
+            }
+            else  {
+                for (; column_begin1 < column_end1 &&
+                       column_begin2 < column_end2;
+                     ++column_begin1, ++column_begin2)  {
+                    const value_type    &val1 = *column_begin1;
+                    const value_type    &val2 = *column_begin2;
+
+                    if (! is_nan__(val1) && ! is_nan__(val2))  {
+                        inter_result_.total1 += val1;
+                        inter_result_.total2 += val2;
+                        inter_result_.dot_prod += (val1 * val2);
+                        inter_result_.dot_prod1 += (val1 * val1);
+                        inter_result_.dot_prod2 += (val2 * val2);
+                        inter_result_.cnt += 1;
+                    }
                 }
             }
         }
@@ -902,7 +985,7 @@ struct  CovVisitor  {
     }
     inline size_type get_count() const  { return (inter_result_.cnt); }
 
-    explicit CovVisitor (bool biased = false, bool skipnan = true)
+    explicit CovVisitor (bool biased = false, bool skipnan = false)
         : b_ (biased ? 0 : 1), skip_nan_(skipnan)  {  }
 
 private:
@@ -1247,7 +1330,7 @@ public:
 
             if (col_s >= ThreadPool::MUL_THR_THHOLD &&
                 ThreadGranularity::get_thread_level() > 2)  {
-                auto        lbd =
+                auto    lbd =
                     [](const K &ib, const K &ie,
                        const H &cb, const H &ce) -> RankVisitor<T, I>  {
                         RankVisitor<T, I>   rank;
@@ -1257,7 +1340,7 @@ public:
                         rank.post();
                         return (rank);
                     };
-                auto        fut1 =
+                auto    fut1 =
                     ThreadGranularity::thr_pool_.dispatch(
                           false,
                           lbd,
@@ -1265,7 +1348,7 @@ public:
                               std::cref(idx_end),
                               std::cref(column_begin1),
                               std::cref(column_end1));
-                auto        fut2 =
+                auto    fut2 =
                     ThreadGranularity::thr_pool_.dispatch(
                           false,
                           lbd,
@@ -1277,19 +1360,19 @@ public:
                 calc_lbd(fut1.get().get_result(), fut2.get().get_result());
             }
             else  {
-                RankVisitor<T, I>   rank;
+                RankVisitor<T, I>   rank1;
 
-                rank.pre();
-                rank(idx_begin, idx_end, column_begin1, column_end1);
-                rank.post();
+                rank1.pre();
+                rank1(idx_begin, idx_end, column_begin1, column_end1);
+                rank1.post();
 
-                const auto  rank1 = rank.get_result();
+                const auto  rank2 = rank1.get_result();
 
-                rank.pre();
-                rank(idx_begin, idx_end, column_begin2, column_end2);
-                rank.post();
+                rank1.pre();
+                rank1(idx_begin, idx_end, column_begin2, column_end2);
+                rank1.post();
 
-                calc_lbd(rank1, rank.get_result());
+                calc_lbd(rank2, rank1.get_result());
             }
         }
     }
@@ -2442,12 +2525,9 @@ struct  ExponentiallyWeightedMeanVisitor  {
         }
 
         if (! finite_adjust_)  {
-            for (size_type i = starting + 1; i < col_s; ++i) [[likely]]  {
-                const value_type    val = *(column_begin + i);
-
-                if (! is_nan__(val)) [[likely]]
-                    result[i] = decay_ * val + decay_comp * result[i - 1];
-            }
+            for (size_type i = starting + 1; i < col_s; ++i) [[likely]]
+                result[i] = decay_ * *(column_begin + i) +
+                            decay_comp * result[i - 1];
         }
         else  {  // Adjust for the fact that this is not an infinite data set
             value_type  denominator = 1;
@@ -2461,13 +2541,10 @@ struct  ExponentiallyWeightedMeanVisitor  {
                             &denominator,
                             &numerator]
                            (const auto &val) mutable -> value_type  {
-                                if (! is_nan__(val)) [[likely]]  {
-                                    decay_comp_prod *= decay_comp;
-                                    denominator += decay_comp_prod;
-                                    numerator = numerator * decay_comp + val;
-                                    return (numerator / denominator);
-                                }
-                                return (0);
+                                decay_comp_prod *= decay_comp;
+                                denominator += decay_comp_prod;
+                                numerator = numerator * decay_comp + val;
+                                return (numerator / denominator);
                            });
         }
 
@@ -2538,10 +2615,9 @@ struct  ExponentiallyWeightedVarVisitor  {
 
             for (long j = long(i); j >= 0; --j) [[likely]]  {
                 const value_type    weight = ::pow(decay_comp, j);
-                const value_type    input = *(column_begin + (i - j));
 
                 sum_weights += weight;
-                sum_weighted_input += weight * input;
+                sum_weighted_input += weight * *(column_begin + (i - j));
                 sum_sq_weights += weight * weight;
             }
 
@@ -2551,10 +2627,10 @@ struct  ExponentiallyWeightedVarVisitor  {
             value_type          factor_sum = 0;
 
             for (long j = long(i); j >= 0; --j) [[likely]]  {
-                const value_type    weight = ::pow(decay_comp, j);
                 const value_type    input = *(column_begin + (i - j));
 
-                factor_sum += weight * (input - ewma) * (input - ewma);
+                factor_sum +=
+                    ::pow(decay_comp, j) * (input - ewma) * (input - ewma);
             }
 
             // Calculate exponential moving variance and standard deviation
@@ -2581,15 +2657,14 @@ struct  ExponentiallyWeightedVarVisitor  {
     inline void pre ()  { ewmvar_.clear(); ewmstd_.clear(); }
     inline void post ()  {  }
 
-    ExponentiallyWeightedVarVisitor(exponential_decay_spec eds,
-                                    value_type value)
+    ExponentiallyWeightedVarVisitor(exponential_decay_spec eds, value_type val)
         : decay_(eds == exponential_decay_spec::center_of_gravity
-                 ? T(1) / (T(1) + value)
+                 ? T(1) / (T(1) + val)
                      : eds == exponential_decay_spec::span
-                         ? T(2) / (T(1) + value)
+                         ? T(2) / (T(1) + val)
                          : eds == exponential_decay_spec::halflife
-                             ? T(1) - std::exp(std::log(T(0.5)) / value)
-                             : value)  {   }
+                             ? T(1) - std::exp(std::log(T(0.5)) / val)
+                             : val)  {   }
 
 private:
 
@@ -2639,12 +2714,10 @@ struct  ExponentiallyWeightedCovVisitor  {
 
             for (long j = long(i); j >= 0; --j) [[likely]]  {
                 const value_type    weight = ::pow(decay_comp, j);
-                const value_type    inputx = *(x_begin + (i - j));
-                const value_type    inputy = *(y_begin + (i - j));
 
                 sum_weights += weight;
-                sum_weighted_inputx += weight * inputx;
-                sum_weighted_inputy += weight * inputy;
+                sum_weighted_inputx += weight * *(x_begin + (i - j));
+                sum_weighted_inputy += weight * *(y_begin + (i - j));
                 sum_sq_weights += weight * weight;
             }
 
@@ -2736,12 +2809,10 @@ struct  ExponentiallyWeightedCorrVisitor  {
 
             for (long j = long(i); j >= 0; --j) [[likely]]  {
                 const value_type    weight = ::pow(decay_comp, j);
-                const value_type    inputx = *(x_begin + (i - j));
-                const value_type    inputy = *(y_begin + (i - j));
 
                 sum_weights += weight;
-                sum_weighted_inputx += weight * inputx;
-                sum_weighted_inputy += weight * inputy;
+                sum_weighted_inputx += weight * *(x_begin + (i - j));
+                sum_weighted_inputy += weight * *(y_begin + (i - j));
                 sum_sq_weights += weight * weight;
             }
 

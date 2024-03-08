@@ -512,7 +512,6 @@ static void test_read()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
-        ::exit(-1);
     }
     df_read.write<std::ostream,
                   int,
@@ -534,7 +533,6 @@ static void test_read()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
-        ::exit(-1);
     }
     df_read_str.write<std::ostream,
                       int,
@@ -558,7 +556,6 @@ static void test_read()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
-        ::exit(-1);
     }
     df_read_dt.write<std::ostream,
                      int,
@@ -1272,7 +1269,6 @@ static void test_dataframe_friend_plus_operator()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
-        ::exit(-1);
     }
 
     MyDataFrame result =
@@ -1329,7 +1325,6 @@ static void test_dataframe_friend_minus_operator()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
-        ::exit(-1);
     }
 
     // Notice I am omitting std::string here, since minus is not defined for
@@ -1451,7 +1446,6 @@ static void test_dataframe_friend_scaler_operator()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
-        ::exit(-1);
     }
 
     const auto  col_size = df.get_index().size();
@@ -3448,7 +3442,6 @@ static void test_reading_writing_json()  {
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
-        ::exit(-1);
     }
 }
 

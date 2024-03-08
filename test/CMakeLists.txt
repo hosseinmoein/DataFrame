@@ -26,13 +26,10 @@ hmdf_target_data_files(dataframe_tester_2
         ${PROJECT_SOURCE_DIR}/data/DT_IBM.csv
         ${PROJECT_SOURCE_DIR}/data/FORD.csv
         ${PROJECT_SOURCE_DIR}/data/IBM.csv
-        ${PROJECT_SOURCE_DIR}/data/SHORT_IBM.csv
         ${PROJECT_SOURCE_DIR}/data/sample_data_2.csv
         ${PROJECT_SOURCE_DIR}/data/sample_data_2.json
         ${PROJECT_SOURCE_DIR}/data/sample_data_no_index.csv
         ${PROJECT_SOURCE_DIR}/data/sample_data_no_index.json
-        ${PROJECT_SOURCE_DIR}/data/sample_data.csv
-        ${PROJECT_SOURCE_DIR}/data/sample_data.json
 )
 add_test(NAME dataframe_tester_2 COMMAND dataframe_tester_2)
 if(MSVC)
@@ -48,8 +45,6 @@ target_compile_options(dataframe_tester_3
 add_test(NAME dataframe_tester_3 COMMAND dataframe_tester_3)
 hmdf_target_data_files(dataframe_tester_3
     DATA_FILES
-        ${PROJECT_SOURCE_DIR}/data/IBM.csv
-        ${PROJECT_SOURCE_DIR}/data/SHORT_IBM.csv
         ${PROJECT_SOURCE_DIR}/data/AAPL_10dBucketWithVector.csv
 )
 

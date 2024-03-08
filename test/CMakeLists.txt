@@ -7,6 +7,7 @@ hmdf_target_data_files(dataframe_tester
     DATA_FILES
         ${PROJECT_SOURCE_DIR}/data/sample_data_dt_index.csv
         ${PROJECT_SOURCE_DIR}/data/sample_data_string_index.csv
+        ${PROJECT_SOURCE_DIR}/data/SHORT_IBM.csv
         ${PROJECT_SOURCE_DIR}/data/sample_data.csv
         ${PROJECT_SOURCE_DIR}/data/sample_data.json
 )

@@ -1034,7 +1034,8 @@ struct  VarVisitor  {
     inline result_type get_result () const  { return (cov_.get_result()); }
     inline size_type get_count() const  { return (cov_.get_count()); }
 
-    explicit VarVisitor (bool biased = false) : cov_ (biased)  {   }
+    explicit VarVisitor (bool biased = false, bool skip_nan = false)
+        : cov_ (biased, skip_nan)  {   }
 
 private:
 
@@ -1077,7 +1078,7 @@ struct  BetaVisitor  {
     inline result_type get_result () const  { return (result_); }
     inline size_type get_count() const  { return (cov_.get_count()); }
 
-    explicit BetaVisitor (bool biased = false) : cov_ (biased)  {   }
+    explicit BetaVisitor (bool biased = false) : cov_ (biased, true)  {   }
 
 private:
 
@@ -1108,7 +1109,8 @@ struct  StdVisitor   {
     inline result_type get_result () const  { return (result_); }
     inline size_type get_count() const  { return (var_.get_count()); }
 
-    explicit StdVisitor (bool biased = false) : var_ (biased)  {   }
+    explicit StdVisitor (bool biased = false, bool skip_nan = false)
+        : var_ (biased, skip_nan)  {   }
 
 private:
 
@@ -2036,15 +2038,20 @@ public:
     inline result_type get_result () const  { return (result_); }
     inline size_type get_deg_freedom () const  { return (deg_freedom_); }
 
-    explicit TTestVisitor(bool is_related_ts, bool skipnan = true)
-        : related_ts_(is_related_ts), skip_nan_(skipnan)  {  }
+    explicit TTestVisitor(bool is_related_ts, bool skipnan = false)
+        : m_x_(skipnan),
+          m_y_(skipnan),
+          v_x_(false, skipnan),
+          v_y_(false, skipnan),
+          related_ts_(is_related_ts),
+          skip_nan_(skipnan)  {  }
 
 private:
 
-    MeanVisitor<T, I>   m_x_ {  };
-    MeanVisitor<T, I>   m_y_ {  };
-    VarVisitor<T, I>    v_x_ {  };
-    VarVisitor<T, I>    v_y_ {  };
+    MeanVisitor<T, I>   m_x_;
+    MeanVisitor<T, I>   m_y_;
+    VarVisitor<T, I>    v_x_;
+    VarVisitor<T, I>    v_y_;
     result_type         result_ { 0 };
     size_type           deg_freedom_ { 0 };
     const bool          related_ts_;
@@ -2073,15 +2080,23 @@ struct  CumSumVisitor  {
         result_type result;
 
         result.reserve(col_s);
-        for (size_type i = 0; i < col_s; ++i) [[likely]]  {
-            const value_type    &value = *(column_begin + i);
-
-            if (! skip_nan_ || ! is_nan__(value)) [[likely]]  {
-                running_sum += value;
+        if (! skip_nan_)  {
+            for (size_type i = 0; i < col_s; ++i) [[likely]]  {
+                running_sum += *(column_begin + i);
                 result.push_back(running_sum);
             }
-            else
-                result.push_back(value);
+        }
+        else  {
+            for (size_type i = 0; i < col_s; ++i) [[likely]]  {
+                const value_type    &value = *(column_begin + i);
+
+                if (! is_nan__(value)) [[likely]]  {
+                    running_sum += value;
+                    result.push_back(running_sum);
+                }
+                else
+                    result.push_back(value);
+            }
         }
         result_.swap(result);
     }
@@ -2115,15 +2130,23 @@ struct  CumProdVisitor  {
         result_type result;
 
         result.reserve(col_s);
-        for (size_type i = 0; i < col_s; ++i) [[likely]]  {
-            const value_type    &value = *(column_begin + i);
-
-            if (! skip_nan_ || ! is_nan__(value)) [[likely]]  {
-                running_prod *= value;
+        if (! skip_nan_)  {
+            for (size_type i = 0; i < col_s; ++i) [[likely]]  {
+                running_prod *= *(column_begin + i);
                 result.push_back(running_prod);
             }
-            else
-                result.push_back(value);
+        }
+        else  {
+            for (size_type i = 0; i < col_s; ++i) [[likely]]  {
+                const value_type    &value = *(column_begin + i);
+
+                if (! is_nan__(value)) [[likely]]  {
+                    running_prod *= value;
+                    result.push_back(running_prod);
+                }
+                else
+                    result.push_back(value);
+            }
         }
         result_.swap(result);
     }
@@ -2162,16 +2185,27 @@ struct  CumExtremumVisitor  {
         result_type result;
 
         result.reserve(col_s);
-        for (size_type i = 0; i < col_s; ++i) [[likely]]  {
-            const value_type    &value = *(column_begin + i);
+        if (! skip_nan_)  {
+            for (size_type i = 0; i < col_s; ++i) [[likely]]  {
+                const value_type    &value = *(column_begin + i);
 
-            if (! skip_nan_ || ! is_nan__(value)) [[likely]]  {
-                if (cmp_(running_extremum, value)) [[unlikely]]
+                if (cmp_(running_extremum, value))
                     running_extremum = value;
                 result.push_back(running_extremum);
             }
-            else
-                result.push_back(value);
+        }
+        else  {
+            for (size_type i = 0; i < col_s; ++i) [[likely]]  {
+                const value_type    &value = *(column_begin + i);
+
+                if (! is_nan__(value)) [[likely]]  {
+                    if (cmp_(running_extremum, value))
+                        running_extremum = value;
+                    result.push_back(running_extremum);
+                }
+                else
+                    result.push_back(value);
+            }
         }
         result_.swap(result);
     }
@@ -3185,7 +3219,7 @@ struct  KthValueVisitor  {
     inline result_type get_result () const  { return (result_); }
     inline size_type get_compute_size() const  { return (compute_size_); }
 
-    explicit KthValueVisitor (size_type ke, bool skipnan = true)
+    explicit KthValueVisitor (size_type ke, bool skipnan = false)
         : kth_element_(ke), skip_nan_(skipnan)  {   }
 
 private:
@@ -3249,7 +3283,8 @@ struct  MedianVisitor  {
         const std::size_t                           col_s =
             std::distance(column_begin, column_end);
         const std::size_t                           half = col_s >> 1;
-        KthValueVisitor<value_type, index_type, A>  kv_visitor (half + 1);
+        KthValueVisitor<value_type, index_type, A>  kv_visitor (half + 1,
+                                                                skip_nan_);
 
         kv_visitor.pre();
         kv_visitor(idx_begin, idx_end, column_begin, column_end);
@@ -3260,7 +3295,7 @@ struct  MedianVisitor  {
 
         if (! (cs & 0x01))  { // Even
             KthValueVisitor<value_type, I, A>   kv_visitor2 (
-                 cs < col_s ? half + 2 : half);
+                cs < col_s ? half + 2 : half, skip_nan_);
 
             kv_visitor2.pre();
             kv_visitor2(idx_begin, idx_end, column_begin, column_end);
@@ -3279,13 +3314,15 @@ struct  MedianVisitor  {
     inline void post ()  { OBO_PORT_POST }
     inline result_type get_result () const  { return (result_); }
 
-    MedianVisitor () = default;
+    explicit
+    MedianVisitor (bool skipnan = false) : skip_nan_(skipnan)  {  }
 
 private:
 
     OBO_PORT_DECL
 
     result_type result_ {  };
+    const bool  skip_nan_;
 };
 
 template<typename T, typename I = unsigned long, std::size_t A = 0>
@@ -3473,7 +3510,7 @@ public:
 
         val_map.reserve(col_s);
         for (size_type i = 0; i < col_s; ++i) [[likely]]  {
-            if (is_nan__(*(column_begin + i)))  {
+            if (is_nan__(*(column_begin + i))) [[unlikely]]  {
                 nan_item.value = &*(column_begin + i);
                 nan_item.indices.push_back(&*(idx_begin + i));
                 nan_item.value_indices_in_col.push_back(i);
@@ -3605,13 +3642,21 @@ private:
         MeanVisitor<T, I>   mean_mean_visitor(skip_nan_);
 
         mean_mean_visitor.pre();
-        for (std::size_t i = 0; i < col_s; ++i) [[likely]]  {
-            const value_type    value = *(column_begin + i);
-
-            if (! is_nan__(value) || ! skip_nan_) [[likely]]
+        if (! skip_nan_)  {
+            for (std::size_t i = 0; i < col_s; ++i) [[likely]]
                 mean_mean_visitor(
                     *idx_begin,
-                    std::fabs(value - mean_visitor.get_result()));
+                    std::fabs(*(column_begin + i) - mean_visitor.get_result()));
+        }
+        else  {
+            for (std::size_t i = 0; i < col_s; ++i) [[likely]]  {
+                const value_type    value = *(column_begin + i);
+
+                if (! is_nan__(value)) [[likely]]
+                    mean_mean_visitor(
+                        *idx_begin,
+                        std::fabs(value - mean_visitor.get_result()));
+            }
         }
         mean_mean_visitor.post();
 
@@ -3636,13 +3681,22 @@ private:
         MeanVisitor<T, I>   mean_median_visitor(skip_nan_);
 
         mean_median_visitor.pre();
-        for (std::size_t i = 0; i < col_s; ++i) [[likely]]  {
-            const value_type    value = *(column_begin + i);
+        if (! skip_nan_)  {
+            for (std::size_t i = 0; i < col_s; ++i) [[likely]]
+                mean_median_visitor(
+                    *idx_begin,
+                    std::fabs(*(column_begin + i) -
+                              median_visitor.get_result()));
+        }
+        else  {
+            for (std::size_t i = 0; i < col_s; ++i) [[likely]]  {
+                const value_type    value = *(column_begin + i);
 
-            if (skip_nan_ && is_nan__(value)) [[unlikely]]  continue;
-            mean_median_visitor(
-                *idx_begin,
-                std::fabs(value - median_visitor.get_result()));
+                if (! is_nan__(value)) [[likely]]
+                    mean_median_visitor(
+                        *idx_begin,
+                        std::fabs(value - median_visitor.get_result()));
+            }
         }
         mean_median_visitor.post();
 
@@ -3717,7 +3771,7 @@ public:
 
     DEFINE_VISIT_BASIC_TYPES_2
 
-    MADVisitor (mad_type mt, bool skip_nan = true)
+    MADVisitor (mad_type mt, bool skip_nan = false)
         : mad_type_(mt), skip_nan_(skip_nan)  {   }
     template <forward_iterator K, forward_iterator H>
     inline void

@@ -43,6 +43,11 @@ template<typename DF, template<typename> class OPT, typename ... Ts>
 friend DF
 binary_operation(const DF &lhs, const DF &rhs);
 
+template<typename DF, typename ST,
+         template<typename> class OPT, typename ... Ts>
+friend DF
+sc_binary_operation(const DF &lhs, const ST &rhs);
+
 // ----------------------------------------------------------------------------
 
 // Maps row number -> number of missing column(s)

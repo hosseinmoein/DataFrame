@@ -115,6 +115,11 @@ void DataFrame<I, H>::set_lock (SpinLock *sl)  { lock_ = sl; }
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
+SpinLock *DataFrame<I, H>::get_lock ()  { return (lock_); }
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
 void DataFrame<I, H>::remove_lock ()  { lock_ = nullptr; }
 
 // ----------------------------------------------------------------------------

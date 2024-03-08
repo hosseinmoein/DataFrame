@@ -3231,8 +3231,8 @@ struct  UltimateOSCIVisitor  {
             }
         }
 
-        ssr_t   fast_bp_sum { SumVisitor<T, I>(), fast_ };
-        ssr_t   fast_tr_sum { SumVisitor<T, I>(), fast_ };
+        ssr_t   fast_bp_sum { SumVisitor<T, I> { true }, fast_ };
+        ssr_t   fast_tr_sum { SumVisitor<T, I> { true }, fast_ };
 
         fast_bp_sum.pre();
         fast_tr_sum.pre();
@@ -3242,8 +3242,8 @@ struct  UltimateOSCIVisitor  {
         fast_bp_sum.post();
         fast_tr_sum.post();
 
-        ssr_t   med_bp_sum { SumVisitor<T, I>(), medium_ };
-        ssr_t   med_tr_sum { SumVisitor<T, I>(), medium_ };
+        ssr_t   med_bp_sum { SumVisitor<T, I> { true }, medium_ };
+        ssr_t   med_tr_sum { SumVisitor<T, I> { true }, medium_ };
 
         med_bp_sum.pre();
         med_tr_sum.pre();
@@ -3253,8 +3253,8 @@ struct  UltimateOSCIVisitor  {
         med_bp_sum.post();
         med_tr_sum.post();
 
-        ssr_t   slow_bp_sum { SumVisitor<T, I>(), slow_ };
-        ssr_t   slow_tr_sum { SumVisitor<T, I>(), slow_ };
+        ssr_t   slow_bp_sum { SumVisitor<T, I> { true }, slow_ };
+        ssr_t   slow_tr_sum { SumVisitor<T, I> { true }, slow_ };
 
         slow_bp_sum.pre();
         slow_tr_sum.pre();
@@ -3369,7 +3369,7 @@ struct  UlcerIndexVisitor  {
             ? 0L : ThreadGranularity::get_thread_level();
 
         SimpleRollAdopter<MaxVisitor<T, I>, T, I, A>    high {
-            MaxVisitor<T, I>(), periods_ };
+            MaxVisitor<T, I> { true }, periods_ };
 
         high.pre();
         high (idx_begin, idx_end, column_begin, column_end);
@@ -3408,9 +3408,9 @@ struct  UlcerIndexVisitor  {
         }
 
         SimpleRollAdopter<SumVisitor<T, I>, T, I, A>    sum {
-            SumVisitor<T, I>(), periods_ };
+            SumVisitor<T, I> { true }, periods_ };
         SimpleRollAdopter<MeanVisitor<T, I>, T, I, A>   avg {
-            MeanVisitor<T, I>(), periods_ };
+            MeanVisitor<T, I> { true }, periods_ };
 
         if (use_sum_)  {
             sum.pre();
@@ -5396,7 +5396,7 @@ struct  HodgesTompkinsVolVisitor  {
         ret.post();
 
         SimpleRollAdopter<StdVisitor<T, I>, T, I, A>    stdev
-            { StdVisitor<T, I>(), roll_count_ };
+            { StdVisitor<T, I> { false, true }, roll_count_ };
 
         stdev.pre();
         stdev (idx_begin, idx_end,
@@ -5802,7 +5802,7 @@ struct  ChandeKrollStopVisitor  {
         TrueRangeVisitor<T, I, A>                       atr
             { true, p_period_ };
         SimpleRollAdopter<MaxVisitor<T, I>, T, I, A>    max1
-            { MaxVisitor<T, I>(), p_period_ };
+            { MaxVisitor<T, I> { true }, p_period_ };
 
         atr.pre();
         max1.pre();
@@ -5864,9 +5864,9 @@ struct  ChandeKrollStopVisitor  {
         }
 
         SimpleRollAdopter<MaxVisitor<T, I>, T, I, A>    max2
-            { MaxVisitor<T, I>(), q_period_ };
+            { MaxVisitor<T, I> { true }, q_period_ };
         SimpleRollAdopter<MinVisitor<T, I>, T, I, A>    min1
-            { MinVisitor<T, I>(), p_period_ };
+            { MinVisitor<T, I> { true }, p_period_ };
 
         max2.pre();
         min1.pre();
@@ -5921,7 +5921,7 @@ struct  ChandeKrollStopVisitor  {
         }
 
         SimpleRollAdopter<MinVisitor<T, I>, T, I, A>    min2
-            { MinVisitor<T, I>(), q_period_ };
+            { MinVisitor<T, I> { true }, q_period_ };
 
         min2.pre();
         min2 (idx_begin, idx_end, short_stop.begin(), short_stop.end());
@@ -6318,7 +6318,7 @@ struct  TrixVisitor  {
 
         if (avg_signal_)  {
             SimpleRollAdopter<MeanVisitor<T, I>, T, I, A>   avg
-                { MeanVisitor<T, I>(), sroll_period_ } ;
+                { MeanVisitor<T, I> { true }, sroll_period_ } ;
 
             avg.get_result().swap(ewm13.get_result());
             avg.pre();
@@ -6826,7 +6826,7 @@ struct  RelativeVigorIndexVisitor  {
         high_low_range.swap(symm.get_result());  // denominator
 
         SimpleRollAdopter<SumVisitor<T, I>, T, I, A>    sum
-            { SumVisitor<T, I>(), roll_period_ };
+            { SumVisitor<T, I> { true }, roll_period_ };
 
         sum.pre();
         sum(idx_begin, idx_end,
@@ -7814,7 +7814,7 @@ struct  PriceVolumeTrendVisitor  {
                            std::multiplies<T>{ });
         }
 
-        CumSumVisitor<T, I, A>  cumsum;
+        CumSumVisitor<T, I, A>  cumsum { true };
 
         cumsum.pre();
         cumsum (idx_begin, idx_end, result.begin(), result.end());

@@ -78,9 +78,9 @@ void DataFrame<I, H>::self_shift(size_type periods, shift_policy sp)  {
                         : column_list_.back().first.c_str();
                 remove_column_functor_<Ts ...>  functor (col_name, *this);
 
-                for (const auto &citer : column_list_)  {
-                    if (citer.first == col_name)  {
-                        data_[citer.second].change(functor);
+                for (const auto &[name, idx] : column_list_) [[likely]]  {
+                    if (name == col_name)  {
+                        data_[idx].change(functor);
                         break;
                     }
                 }

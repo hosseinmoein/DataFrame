@@ -444,6 +444,24 @@ struct operator_functor_ : DataVec::template visitor_base<Ts ...>  {
 
 // ----------------------------------------------------------------------------
 
+template<typename ST, template<typename> class OPT, typename ... Ts>
+struct scaler_operator_functor_ : DataVec::template visitor_base<Ts ...>  {
+
+    inline scaler_operator_functor_ (const ST &val,
+                                     const char *colname,
+                                     DataFrame &resultdf)
+         : value(val), col_name(colname), result_df(resultdf)  {  }
+
+    const ST    &value;
+    const char  *col_name;
+    DataFrame   &result_df;
+
+    template<typename T>
+    void operator() (const T &lhs_vec);
+};
+
+// ----------------------------------------------------------------------------
+
 template<typename ... Ts>
 struct map_missing_rows_functor_ :
     DataVec::template visitor_base<Ts ...>  {

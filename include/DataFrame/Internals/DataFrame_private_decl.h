@@ -29,6 +29,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
 
+#include <ranges>
+
 // ----------------------------------------------------------------------------
 
 // This file was factored out so DataFrame.h doesn't become a huge file.
@@ -40,6 +42,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 template<typename DF, template<typename> class OPT, typename ... Ts>
 friend DF
 binary_operation(const DF &lhs, const DF &rhs);
+
+template<typename DF, typename ST,
+         template<typename> class OPT, typename ... Ts>
+friend DF
+sc_binary_operation(const DF &lhs, const ST &rhs);
 
 // ----------------------------------------------------------------------------
 
@@ -195,22 +202,21 @@ drop_missing_rows_(T &vec,
 
     size_type   erase_count = 0;
     auto        dropper =
-        [&vec, &erase_count](const auto &iter) -> void  {
-            vec.erase(vec.begin() + (iter.first - erase_count));
-            erase_count += 1;
+        [&vec, &erase_count](const auto &idx) -> void  {
+            vec.erase(vec.begin() + (idx - erase_count++));
         };
 
     if (policy == drop_policy::all)  {
-        for (const auto &iter : missing_row_map)
-            if (iter.second == col_num)  dropper(iter);
+        for (const auto &[idx, count] : missing_row_map)
+            if (count == col_num)  dropper(idx);
     }
     else if (policy == drop_policy::any)  {
-        for (const auto &iter : missing_row_map)
-            if (iter.second > 0)  dropper(iter);
+        for (const auto &[idx, count] : missing_row_map)
+            if (count > 0)  dropper(idx);
     }
     else if (policy == drop_policy::threshold)  {
-        for (const auto &iter : missing_row_map)
-            if (iter.second > threshold)  dropper(iter);
+        for (const auto &[idx, count] : missing_row_map)
+            if (count > threshold)  dropper(idx);
     }
 
     return;
@@ -509,44 +515,44 @@ join_helper_common_(
     // NOTE: I had to do this in two separate loops. Otherwise, it would
     //       occasionally crash in multithreaded mode under MacOS.
     //
-    for (const auto &citer : lhs.column_list_) [[likely]]  {
-        if (skip_col_name && citer.first == skip_col_name)  continue;
+    for (const auto &[name, idx] : lhs.column_list_) [[likely]]  {
+        if (skip_col_name && name == skip_col_name)  continue;
 
-        if (rhs.column_tb_.find(citer.first) != rhs.column_tb_.end())  {
+        if (rhs.column_tb_.find(name) != rhs.column_tb_.end())  {
             create_join_common_col_functor_<res_t, Ts ...>   create_f(
-                citer.first.c_str(), result);
+                name.c_str(), result);
 
-            lhs.data_[citer.second].change(create_f);
+            lhs.data_[idx].change(create_f);
         }
         else  {
-            create_col_functor_<res_t, Ts ...>  create_f(
-                citer.first.c_str(), result);
+            create_col_functor_<res_t, Ts ...>  create_f(name.c_str(), result);
 
-            lhs.data_[citer.second].change(create_f);
+            lhs.data_[idx].change(create_f);
         }
     }
 
     // Load the common and lhs columns
     //
-    for (const auto &citer : lhs.column_list_) [[likely]]  {
-        if (skip_col_name && citer.first == skip_col_name)  continue;
+    for (const auto &[name, idx] : lhs.column_list_) [[likely]]  {
+        if (skip_col_name && name == skip_col_name)  continue;
 
         // Common column between two frames
         //
-        if (rhs.column_tb_.find(citer.first) != rhs.column_tb_.end())  {
+        if (rhs.column_tb_.find(name) != rhs.column_tb_.end())  {
             auto    jcomm_lbd =
-                [&citer = std::as_const(citer),
+                [&name = std::as_const(name),
+                 idx,
                  &lhs = std::as_const(lhs),
                  &rhs = std::as_const(rhs),
                  &joined_index_idx = std::as_const(joined_index_idx),
                  &result] () -> void  {
                     index_join_functor_common_<res_t, Ts ...>   functor(
-                        citer.first.c_str(),
+                        name.c_str(),
                         rhs,
                         joined_index_idx,
                         result);
 
-                    lhs.data_[citer.second].change(functor);
+                    lhs.data_[idx].change(functor);
                 };
 
             if (thread_level > 2)
@@ -556,17 +562,18 @@ join_helper_common_(
         }
         else  {  // lhs only column
             auto    jlhs_lbd =
-                [&citer = std::as_const(citer),
+                [&name = std::as_const(name),
+                 idx,
                  &lhs = std::as_const(lhs),
                  &joined_index_idx = std::as_const(joined_index_idx),
                  &result] () -> void  {
                     // 0 = Left
                     index_join_functor_oneside_<0, res_t, Ts ...>   functor (
-                        citer.first.c_str(),
+                        name.c_str(),
                         joined_index_idx,
                         result);
 
-                    lhs.data_[citer.second].change(functor);
+                    lhs.data_[idx].change(functor);
                 };
 
             if (thread_level > 2)
@@ -578,31 +585,31 @@ join_helper_common_(
 
     // Load the rhs columns
     //
-    for (const auto &citer : rhs.column_list_) [[likely]]  {
-        const auto  lhs_citer = lhs.column_tb_.find(citer.first);
+    for (const auto &[name, idx] : rhs.column_list_) [[likely]]  {
+        const auto  lhs_citer = lhs.column_tb_.find(name);
 
-        if (skip_col_name && citer.first == skip_col_name)  continue;
+        if (skip_col_name && name == skip_col_name)  continue;
 
         if (lhs_citer == lhs.column_tb_.end())  {  // rhs only column
-            create_col_functor_<res_t, Ts ...>  create_f(
-                citer.first.c_str(), result);
+            create_col_functor_<res_t, Ts ...>  create_f(name.c_str(), result);
 
-            rhs.data_[citer.second].change(create_f);
+            rhs.data_[idx].change(create_f);
         }
 
         if (lhs_citer == lhs.column_tb_.end())  {  // rhs only column
             auto    jrhs_lbd =
-                [&citer = std::as_const(citer),
+                [&name = std::as_const(name),
+                 idx,
                  &rhs = std::as_const(rhs),
                  &joined_index_idx = std::as_const(joined_index_idx),
                  &result] () -> void  {
                     // 1 = Right
                     index_join_functor_oneside_<1, res_t, Ts ...>   functor (
-                        citer.first.c_str(),
+                        name.c_str(),
                         joined_index_idx,
                         result);
 
-                    rhs.data_[citer.second].change(functor);
+                    rhs.data_[idx].change(functor);
                 };
 
             if (thread_level > 2)
@@ -630,26 +637,26 @@ remove_dups_common_(const DataFrame &s_df,
 
     rows_to_del.reserve(8);
     if (rds == remove_dup_spec::keep_first)  {
-        for (const auto &citer : row_table)  {
-            if (citer.second.size() > 1)  {
-                for (size_type i = 1; i < citer.second.size(); ++i)
-                    rows_to_del.push_back(citer.second[i]);
+        for (const auto &[val_tuple, idx_vec] : row_table)  {
+            if (idx_vec.size() > 1)  {
+                for (size_type i = 1; i < idx_vec.size(); ++i)
+                    rows_to_del.push_back(idx_vec[i]);
             }
         }
     }
     else if (rds == remove_dup_spec::keep_last)  {
-        for (const auto &citer : row_table)  {
-            if (citer.second.size() > 1)  {
-                for (size_type i = 0; i < citer.second.size() - 1; ++i)
-                    rows_to_del.push_back(citer.second[i]);
+        for (const auto &[val_tuple, idx_vec] : row_table)  {
+            if (idx_vec.size() > 1)  {
+                for (size_type i = 0; i < idx_vec.size() - 1; ++i)
+                    rows_to_del.push_back(idx_vec[i]);
             }
         }
     }
     else  {  // remove_dup_spec::keep_none
-        for (const auto &citer : row_table)  {
-            if (citer.second.size() > 1)  {
-                for (size_type i = 0; i < citer.second.size(); ++i)
-                    rows_to_del.push_back(citer.second[i]);
+        for (const auto &[val_tuple, idx_vec] : row_table)  {
+            if (idx_vec.size() > 1)  {
+                for (size_type i = 0; i < idx_vec.size(); ++i)
+                    rows_to_del.push_back(idx_vec[i]);
             }
         }
     }
@@ -732,11 +739,10 @@ data_by_sel_common_(const StlVecType<size_type> &col_indices,
 
     const SpinGuard guard(lock_);
 
-    for (const auto &citer : column_list_) [[likely]]  {
-        create_col_functor_<DataFrame, Ts ...>  functor(citer.first.c_str(),
-                                                        ret_df);
+    for (const auto &[name, idx] : column_list_) [[likely]]  {
+        create_col_functor_<DataFrame, Ts ...>  functor(name.c_str(), ret_df);
 
-        data_[citer.second].change(functor);
+        data_[idx].change(functor);
     }
 
     const auto  thread_level =
@@ -765,14 +771,13 @@ data_by_sel_common_(const StlVecType<size_type> &col_indices,
         for (auto &fut : futuers)  fut.get();
     }
     else  {
-        for (const auto &citer : column_list_) [[likely]]  {
-            sel_load_functor_<size_type, Ts ...>    functor (
-                citer.first.c_str(),
-                col_indices,
-                idx_s,
-                ret_df);
+        for (const auto &[name, idx] : column_list_) [[likely]]  {
+            sel_load_functor_<size_type, Ts ...>    functor (name.c_str(),
+                                                             col_indices,
+                                                             idx_s,
+                                                             ret_df);
 
-            data_[citer.second].change(functor);
+            data_[idx].change(functor);
         }
     }
 
@@ -792,20 +797,20 @@ view_by_sel_common_(const StlVecType<size_type> &col_indices,
     typename TheView::IndexVecType  new_index;
 
     new_index.reserve(col_indices.size());
-    for (const auto &citer: col_indices) [[likely]]
+    for (const auto &citer : col_indices) [[likely]]
         new_index.push_back(&(indices_[citer]));
     ret_dfv.indices_ = std::move(new_index);
 
     const SpinGuard guard(lock_);
 
-    for (const auto &col_citer : column_list_) [[likely]]  {
+    for (const auto &[name, idx] : column_list_) [[likely]]  {
         sel_load_view_functor_<size_type, TheView, Ts ...>   functor (
-            col_citer.first.c_str(),
+            name.c_str(),
             col_indices,
             idx_s,
             ret_dfv);
 
-        data_[col_citer.second].change(functor);
+        data_[idx].change(functor);
     }
 
     return (ret_dfv);
@@ -830,14 +835,14 @@ view_by_sel_common_(const StlVecType<size_type> &col_indices,
 
     const SpinGuard guard(lock_);
 
-    for (const auto &col_citer : column_list_) [[likely]]  {
+    for (const auto &[name, idx] : column_list_) [[likely]]  {
         sel_load_view_functor_<size_type, TheView, Ts ...>   functor (
-            col_citer.first.c_str(),
+            name.c_str(),
             col_indices,
             idx_s,
             ret_dfv);
 
-        data_[col_citer.second].change(functor);
+        data_[idx].change(functor);
     }
 
     return (ret_dfv);
@@ -908,9 +913,9 @@ col_vector_push_back_cont_func_(V &vec,
 
     value.reserve(2048);
     while (file.get(c)) [[likely]] {
-        value.clear();
         if (c == '\n')  break;
         file.unget();
+        value.clear();
         _get_token_from_file_(file, ',', value, '\0');
         vec.push_back(converter(value.c_str()));
     }
@@ -932,10 +937,10 @@ struct  ColVectorPushBack_  {
 
         value.reserve(1024);
         while (file.get(c)) [[likely]] {
-            value.clear();
             if (file_type == io_format::csv && c == '\n')  break;
             else if (file_type == io_format::json && c == ']')  break;
             file.unget();
+            value.clear();
             _get_token_from_file_(file, ',', value,
                                   file_type == io_format::json ? ']' : '\0');
             vec.push_back(static_cast<T>(converter(value.c_str(), nullptr)));
@@ -959,10 +964,10 @@ struct  ColVectorPushBack_<const char *, StlVecType<std::string>, Dummy>  {
 
         value.reserve(1024);
         while (file.get(c)) [[likely]] {
-            value.clear();
             if (file_type == io_format::csv && c == '\n')  break;
             else if (file_type == io_format::json && c == ']')  break;
             file.unget();
+            value.clear();
             _get_token_from_file_(file, ',', value,
                                   file_type == io_format::json ? ']' : '\0');
             vec.push_back(value);
@@ -977,19 +982,19 @@ struct  ColVectorPushBack_<DateTime, StlVecType<DateTime>, Dummy>  {
 
     inline void
     operator ()(StlVecType<DateTime> &vec,
-             std::istream &file,
-             DateTime (*)(const char *, char **),
-             io_format file_type = io_format::csv) const  {
+                std::istream &file,
+                DateTime (*)(const char *, char **),
+                io_format file_type = io_format::csv) const  {
 
         std::string value;
         char        c = 0;
 
         value.reserve(1024);
         while (file.get(c)) [[likely]] {
-            value.clear();
             if (file_type == io_format::csv && c == '\n')  break;
             else if (file_type == io_format::json && c == ']')  break;
             file.unget();
+            value.clear();
             _get_token_from_file_(file, ',', value,
                                   file_type == io_format::json ? ']' : '\0');
 
@@ -1075,7 +1080,7 @@ struct  IdxParserFunctor_<float, Dummy>  {
 
         const ColVectorPushBack_<float, StlVecType<float>>  slug;
 
-        slug()(vec, file, &::strtof, file_type);
+        slug(vec, file, &::strtof, file_type);
     }
 };
 
@@ -1242,41 +1247,74 @@ struct  GenerateTSIndex_  {
     inline void
     operator ()(StlVecType<T> &index_vec,
                 DateTime &start_di,
+                const DateTime &end_di,
                 time_frequency t_freq,
                 long increment) const  {
 
         switch(t_freq)  {
         case time_frequency::annual:
-            index_vec.push_back(static_cast<T>(start_di.date()));
-            start_di.add_years(increment);
+            {
+                while (start_di < end_di)  {
+                    index_vec.push_back(static_cast<T>(start_di.date()));
+                    start_di.add_years(increment);
+                }
+            }
             break;
         case time_frequency::monthly:
-            index_vec.push_back(static_cast<T>(start_di.date()));
-            start_di.add_months(increment);
+            {
+                while (start_di < end_di)  {
+                    index_vec.push_back(static_cast<T>(start_di.date()));
+                    start_di.add_months(increment);
+                }
+            }
             break;
         case time_frequency::weekly:
-            index_vec.push_back(static_cast<T>(start_di.date()));
-            start_di.add_days(increment * 7);
+            {
+                while (start_di < end_di)  {
+                    index_vec.push_back(static_cast<T>(start_di.date()));
+                    start_di.add_days(increment * 7);
+                }
+            }
             break;
         case time_frequency::daily:
-            index_vec.push_back(static_cast<T>(start_di.date()));
-            start_di.add_days(increment);
+            {
+                while (start_di < end_di)  {
+                    index_vec.push_back(static_cast<T>(start_di.date()));
+                    start_di.add_days(increment);
+                }
+            }
             break;
         case time_frequency::hourly:
-            index_vec.push_back(static_cast<T>(start_di.time()));
-            start_di.add_seconds(increment * 60 * 60);
+            {
+                while (start_di < end_di)  {
+                    index_vec.push_back(static_cast<T>(start_di.time()));
+                    start_di.add_seconds(increment * 60 * 60);
+                }
+            }
             break;
         case time_frequency::minutely:
-            index_vec.push_back(static_cast<T>(start_di.time()));
-            start_di.add_seconds(increment * 60);
+            {
+                while (start_di < end_di)  {
+                    index_vec.push_back(static_cast<T>(start_di.time()));
+                    start_di.add_seconds(increment * 60);
+                }
+            }
             break;
         case time_frequency::secondly:
-            index_vec.push_back(static_cast<T>(start_di.time()));
-            start_di.add_seconds(increment);
+            {
+                while (start_di < end_di)  {
+                    index_vec.push_back(static_cast<T>(start_di.time()));
+                    start_di.add_seconds(increment);
+                }
+            }
             break;
         case time_frequency::millisecondly:
-            index_vec.push_back(static_cast<T>(start_di.long_time()));
-            start_di.add_nanoseconds(increment * 1000000);
+            {
+                while (start_di < end_di)  {
+                    index_vec.push_back(static_cast<T>(start_di.long_time()));
+                    start_di.add_nanoseconds(increment * 1000000);
+                }
+            }
             break;
         default:
             break;
@@ -1292,34 +1330,74 @@ struct  GenerateTSIndex_<DateTime, Dummy>  {
     inline void
     operator ()(StlVecType<DateTime> &index_vec,
                 DateTime &start_di,
+                const DateTime &end_di,
                 time_frequency t_freq,
                 long increment) const  {
 
-        index_vec.push_back(start_di);
         switch(t_freq)  {
         case time_frequency::annual:
-            start_di.add_years(increment);
+    	    {
+                while (start_di < end_di)  {
+                    index_vec.push_back(start_di);
+                    start_di.add_years(increment);
+                }
+            }
             break;
         case time_frequency::monthly:
-            start_di.add_months(increment);
+    	    {
+                while (start_di < end_di)  {
+                    index_vec.push_back(start_di);
+                    start_di.add_months(increment);
+                }
+            }
             break;
         case time_frequency::weekly:
-            start_di.add_days(increment * 7);
+    	    {
+                while (start_di < end_di)  {
+                    index_vec.push_back(start_di);
+                    start_di.add_days(increment * 7);
+                }
+            }
             break;
         case time_frequency::daily:
-            start_di.add_days(increment);
+    	    {
+                while (start_di < end_di)  {
+                    index_vec.push_back(start_di);
+                    start_di.add_days(increment);
+                }
+            }
             break;
         case time_frequency::hourly:
-            start_di.add_seconds(increment * 60 * 60);
+    	    {
+                while (start_di < end_di)  {
+                    index_vec.push_back(start_di);
+                    start_di.add_seconds(increment * 60 * 60);
+                }
+            }
             break;
         case time_frequency::minutely:
-            start_di.add_seconds(increment * 60);
+    	    {
+                while (start_di < end_di)  {
+                    index_vec.push_back(start_di);
+                    start_di.add_seconds(increment * 60);
+                }
+            }
             break;
         case time_frequency::secondly:
-            start_di.add_seconds(increment);
+    	    {
+                while (start_di < end_di)  {
+                    index_vec.push_back(start_di);
+                    start_di.add_seconds(increment);
+                }
+            }
             break;
         case time_frequency::millisecondly:
-            start_di.add_nanoseconds(increment * 1000000);
+    	    {
+                while (start_di < end_di)  {
+                    index_vec.push_back(start_di);
+                    start_di.add_nanoseconds(increment * 1000000);
+                }
+            }
             break;
         default:
             break;

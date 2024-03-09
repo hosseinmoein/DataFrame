@@ -46,7 +46,6 @@ template<typename DF, template<typename> class OPT, typename ... Ts>
 DF binary_operation (const DF &lhs, const DF &rhs)  {
 
     typename DF::IndexVecType       result_idx;
-
     const typename DF::IndexVecType &lhs_ts_vec = lhs.get_index();
     const typename DF::IndexVecType &rhs_ts_vec = rhs.get_index();
 
@@ -62,21 +61,55 @@ DF binary_operation (const DF &lhs, const DF &rhs)  {
 
     const typename DF::IndexVecType &new_idx = result.get_index();
 
-    for (const auto &lhs_citer : lhs.column_list_) [[likely]]  {
-        const auto  rhs_citer = rhs.column_tb_.find(lhs_citer.first.c_str());
+    {
+        const SpinGuard guard(DF::get_lock());
 
-        if (rhs_citer == rhs.column_tb_.end())  continue;
+        for (const auto &[name, idx] : lhs.column_list_) [[likely]]  {
+            const auto  rhs_citer = rhs.column_tb_.find(name.c_str());
 
-        typename DF::template operator_functor_
-            <typename DF::IndexType, OPT, Ts ...>   functor (
+            if (rhs_citer == rhs.column_tb_.end())  continue;
+
+            typename DF::template
+            operator_functor_<typename DF::IndexType, OPT, Ts ...>  functor(
                 lhs_ts_vec,
                 rhs_ts_vec,
                 new_idx,
                 rhs,
-                lhs_citer.first.c_str(),
+                name.c_str(),
                 result);
 
-        lhs.data_[lhs_citer.second].change(functor);
+            lhs.data_[idx].change(functor);
+        }
+    }
+
+    return (result);
+}
+
+// ----------------------------------------------------------------------------
+
+// This is the scaler version of the above binary operation.
+// There is no restriction on the index column
+//
+template<typename DF, typename ST,
+         template<typename> class OPT, typename ... Ts>
+DF sc_binary_operation (const DF &lhs, const ST &value)  {
+
+    const auto  &result_idx = lhs.get_index();
+    DF          result;
+
+    result.load_index(result_idx.cbegin(), result_idx.cend());
+
+    {
+        const SpinGuard guard(DF::get_lock());
+
+        for (const auto &[name, idx] : lhs.column_list_) [[likely]]  {
+            typename DF::template
+            scaler_operator_functor_<ST, OPT, Ts ...>   functor(value,
+                                                                name.c_str(),
+                                                                result);
+
+            lhs.data_[idx].change(functor);
+        }
     }
 
     return (result);
@@ -121,6 +154,44 @@ template<typename DF, typename ... Ts>
 inline DF df_divides (const DF &lhs, const DF &rhs)  {
 
     return (binary_operation<DF, std::divides, Ts ...>(lhs, rhs));
+}
+
+// ----------------------------------------------------------------------------
+
+//
+// These arithmetic operations apply the operator to each value of each column
+// in lhs and scaler.
+// They return a new DataFrame
+//
+
+template<typename DF, typename ST, typename ... Ts>
+inline DF scaler_df_plus (const DF &lhs, const ST &scaler)  {
+
+    return (sc_binary_operation<DF, ST, std::plus, Ts ...>(lhs, scaler));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename DF, typename ST, typename ... Ts>
+inline DF scaler_df_minus (const DF &lhs, const ST &scaler)  {
+
+    return (sc_binary_operation<DF, ST, std::minus, Ts ...>(lhs, scaler));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename DF, typename ST, typename ... Ts>
+inline DF scaler_df_multiplies (const DF &lhs, const ST &scaler)  {
+
+    return (sc_binary_operation<DF, ST, std::multiplies, Ts ...>(lhs, scaler));
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename DF, typename ST, typename ... Ts>
+inline DF scaler_df_divides (const DF &lhs, const ST &scaler)  {
+
+    return (sc_binary_operation<DF, ST, std::divides, Ts ...>(lhs, scaler));
 }
 
 } // namespace hmdf

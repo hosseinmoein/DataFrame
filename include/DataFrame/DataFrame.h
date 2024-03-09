@@ -137,6 +137,9 @@ public:  // Load/append/remove interfaces
     static void
     set_lock (SpinLock *sl);
 
+    static SpinLock *
+    get_lock ();
+
     static void
     remove_lock ();
 

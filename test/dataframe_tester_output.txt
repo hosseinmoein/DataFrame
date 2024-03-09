@@ -553,6 +553,8 @@ INDEX:9:<ulong>:1,2,3,4,5,8,9,25,40,
 dbl_col:9:<double>:1,1,1,1,1,1.33333333333,1.28571428571,1.11111111111,1.1,
 
 
+Testing DataFrame friend scaler operator ...
+
 Testing fill_missing(DataFrame) ...
 After fill missing with values DF:
 INDEX:14:<ulong>:123450,123451,123452,123453,123454,123455,123456,123457,123458,123459,123460,123461,123462,123466,
@@ -765,12 +767,12 @@ col_3:1:<double>:15,
 col_str:1:<string>:11,
 col_4:1:<double>:22,
 
-INDEX:1:<ulong>:123452,
-col_1:1:<double>:3,
-col_2:1:<double>:10,
-col_3:1:<double>:17,
-col_str:1:<string>:33,
-col_4:1:<double>:24,
+INDEX:1:<ulong>:123450,
+col_1:1:<double>:1,
+col_2:1:<double>:8,
+col_3:1:<double>:15,
+col_str:1:<string>:11,
+col_4:1:<double>:22,
 
 
 Testing write(json) ...
@@ -906,11 +908,11 @@ INDEX:13:<ulong>,sum_str:13:<string>,max_int:13:<int>,min_int:13:<int>,sum_dbl:1
 123441,L,3,3,12
 123442,J,3,3,6
 123449,W,7,7,50
-123450,ADYPSBHQVIYGU,36,1,428
-123451,BZ,9,2,80
-123452,CM,3,3,91
+123450,UYPSBHAQVIDYG,36,1,428
+123451,ZB,9,2,80
+123452,MC,3,3,91
 123454,X,2,2,11
-123455,XA,5,3,80
+123455,AX,5,3,80
 123457,P,3,3,30
 123458,W,2,2,1
 123459,K,3,3,3
@@ -921,17 +923,17 @@ INDEX:13:<ulong>,ul_col:13:<ulong>,sum_str:13:<string>,max_int:13:<int>,min_int:
 123441,123441,L,3,3,12
 123442,123442,J,3,3,6
 123449,123449,W,7,7,50
-123450,123450,ADYPSBHQVIYGU,36,1,428
-123451,123451,BZ,9,2,80
-123452,123452,CM,3,3,91
+123450,123450,UYPSBHAQVIDYG,36,1,428
+123451,123451,ZB,9,2,80
+123452,123452,MC,3,3,91
 123454,123454,X,2,2,11
-123455,123455,XA,5,3,80
+123455,123455,AX,5,3,80
 123457,123457,P,3,3,30
 123458,123458,W,2,2,1
 123459,123459,K,3,3,3
 
 INDEX:22:<ulong>,dbl_col_2:22:<double>,sum_str:22:<string>,max_int:22:<int>,min_int:22:<int>,sum_dbl:22:<double>
-123451,-1.545,ZVIU,9,2,89
+123451,-1.545,VIZU,9,2,89
 123452,-0.9999,M,3,3,80
 123457,-0.8999,P,3,3,30
 123450,-0.8888,H,14,14,100
@@ -962,7 +964,7 @@ INDEX:25:<ulong>,dbl_col_2:25:<double>,sum_str:25:<string>,max_int:25:<int>,min_
 123441,0.2,L,3,3,1,12
 123442,0.1056,J,3,3,1,6
 123449,0.06743,W,7,7,1,50
-123450,-1.545,VIU,3,2,3,29
+123450,-1.545,IVU,3,2,3,29
 123450,-0.8888,H,14,14,1,100
 123450,-0.6999,Y,36,36,1,3
 123450,0.0456,Q,2,2,1,25
@@ -1039,11 +1041,11 @@ INDEX:25:<ulong>,dbl_col_2:25:<double>,xint_col:25:<int>,sum_str:25:<string>,max
 
 INDEX:25:<ulong>,xint_col:25:<int>,dbl_col_2:25:<double>,sum_str:25:<string>,max_int:25:<int>,min_int:25:<int>,cnt_dbl:25:<ulong>,sum_dbl:25:<double>
 123450,1,0.998,A,1,1,1,10
-123450,2,-1.545,VU,2,2,2,25
+123450,2,-1.545,UV,2,2,2,25
 123458,2,0.01119,W,2,2,1,1
 123450,2,0.0456,Q,2,2,1,25
 123454,2,0.14,X,2,2,1,11
-123451,2,1.545,BBG,2,2,3,120
+123450,2,1.545,BBG,2,2,3,120
 123450,3,-1.545,I,3,3,1,4
 123452,3,-0.9999,M,3,3,1,80
 123457,3,-0.8999,P,3,3,1,30
@@ -2020,6 +2022,12 @@ Testing inversion_count(  ) ...
 Testing _like_clause_compare_(  ) ...
 
 Testing get_data_by_like( ) ...
+
+Testing clear( ) ...
+
+Testing swap( ) ...
+
+Testing remove_data_by_like( ) ...
 Hello World!
 Str Column = A, B, C, D, E, F, G, H, I, J, 
 There are 5031 IBM close prices
@@ -2039,7 +2047,7 @@ INDEX:10:<ulong>,string col:10:<string>,Cool Column:10:<string>,numbers:10:<doub
 Standard deviation of IBM close prices: 38.3090214006
 Correlation between AAPL and IBM close prices: 0.390679511924
 The last exponentailly weighted correlation between AAPL and IBM close prices: -0.276248958749
-Means of clusters are: 0.00650976593788, 0.0318316457815, -0.00752908972436, -0.0379451613753, 
+Means of clusters are: -0.0366326208408, 0.0373923431345, -0.00646089130604, 0.0086037635696, 
 IBM returns 50% quantile: 0.000224447189179, 75% quantile: 0.00742387474272, 95% quantile: 0.0229862030163
 The seasonality of IBM returns is 59 days.
 So use this instead of 170 days in decomposition analysis

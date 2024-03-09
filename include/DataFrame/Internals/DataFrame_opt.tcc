@@ -47,12 +47,12 @@ bool DataFrame<I, H>::is_equal (const DataFrame &rhs) const  {
 
     const SpinGuard guard(lock_);
 
-    for (const auto &iter : column_list_) [[likely]]  {
-        const auto  rhs_citer = rhs.column_tb_.find(iter.first);
+    for (const auto &[name, idx] : column_list_) [[likely]]  {
+        const auto  rhs_citer = rhs.column_tb_.find(name);
 
         if (rhs_citer == rhs.column_tb_.end())  return (false);
 
-        equal_functor_<Ts ...>   functor (iter.first.c_str(), *this);
+        equal_functor_<Ts ...>   functor (name.c_str(), *this);
 
         rhs.data_[rhs_citer->second].change(functor);
         if (! functor.result)
@@ -84,13 +84,13 @@ modify_by_idx (DataFrame &rhs, sort_state already_sorted)  {
             lhs_i += 1;
 
         if (indices_[lhs_i] == rhs.indices_[rhs_i])  {
-            for (const auto &iter : column_list_)  {
-                mod_by_idx_functor_<Ts ...>  functor (iter.first.c_str(),
+            for (const auto &[name, idx] : column_list_) [[likely]]  {
+                mod_by_idx_functor_<Ts ...>  functor (name.c_str(),
                                                       rhs,
                                                       lhs_i,
                                                       rhs_i);
 
-                data_[iter.second].change(functor);
+                data_[idx].change(functor);
             }
 
             lhs_i += 1;

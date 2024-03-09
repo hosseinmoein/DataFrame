@@ -34,6 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cmath>
 #include <functional>
 #include <random>
+#include <ranges>
 
 // ----------------------------------------------------------------------------
 
@@ -72,9 +73,9 @@ template<typename I, typename H>
 typename DataFrame<I, H>::size_type
 DataFrame<I, H>::col_name_to_idx (const char *col_name) const  {
 
-    for (const auto &citer : column_list_) [[likely]]
-        if (citer.first == col_name)
-            return (citer.second);
+    for (const auto &[name, idx] : column_list_) [[likely]]
+        if (name == col_name)
+            return (idx);
 
     char buffer [512];
 
@@ -90,9 +91,9 @@ template<typename I, typename H>
 const char *
 DataFrame<I, H>::col_idx_to_name (size_type col_idx) const  {
 
-    for (const auto &citer : column_list_) [[likely]]
-        if (citer.second == col_idx)
-            return (citer.first.c_str());
+    for (const auto &[name, idx] : column_list_) [[likely]]
+        if (idx == col_idx)
+            return (name.c_str());
 
     char buffer [512];
 
@@ -116,20 +117,20 @@ DataFrame<I, H>::get_column (const char *name, bool do_lock)  {
 
     const auto  iter = column_tb_.find (name);
 
-    if (iter == column_tb_.end()) [[unlikely]]  {
-        char buffer [512];
+    if (iter != column_tb_.end()) [[likely]]  {
+        const SpinGuard guard (do_lock ? lock_ : nullptr);
+        DataVec         &hv = data_[iter->second];
+        auto            &data_vec = hv.template get_vector<T>();
 
-        snprintf (buffer, sizeof(buffer) - 1,
-                  "DataFrame::get_column(): ERROR: Cannot find column '%s'",
-                  name);
-        throw ColNotFound (buffer);
+        return (data_vec);
     }
 
-    const SpinGuard guard (do_lock ? lock_ : nullptr);
-    DataVec         &hv = data_[iter->second];
-    auto            &data_vec = hv.template get_vector<T>();
+    char buffer [512];
 
-    return (data_vec);
+    snprintf (buffer, sizeof(buffer) - 1,
+              "DataFrame::get_column(): ERROR: Cannot find column '%s'",
+              name);
+    throw ColNotFound (buffer);
 }
 
 // ----------------------------------------------------------------------------
@@ -157,9 +158,7 @@ DataFrame<I, H>::get_column(size_type index, bool do_lock)  {
 template<typename I, typename H>
 bool DataFrame<I, H>::has_column (const char *name) const  {
 
-    const auto  iter = column_tb_.find (name);
-
-    return (iter != column_tb_.end());
+    return (column_tb_.contains(name));
 }
 
 // ----------------------------------------------------------------------------
@@ -218,44 +217,44 @@ template<typename ... Ts>
 HeteroVector<std::size_t(H::align_value)> DataFrame<I, H>::
 get_row(size_type row_num, const StlVecType<const char *> &col_names) const {
 
-    if (row_num >= indices_.size()) [[unlikely]]  {
-        char buffer [512];
+    if (row_num < indices_.size()) [[likely]]  {
+        HeteroVector<align_value>   ret_vec;
 
-#ifdef _MSC_VER
-        snprintf(buffer, sizeof(buffer) - 1,
-                 "DataFrame::get_row(): ERROR: There aren't %zu rows",
-#else
-        snprintf(buffer, sizeof(buffer) - 1,
-                 "DataFrame::get_row(): ERROR: There aren't %lu rows",
-#endif // _MSC_VER
-                 row_num);
-        throw BadRange(buffer);
-    }
+        ret_vec.template reserve<IndexType>(1);
+        ret_vec.push_back(indices_[row_num]);
 
-    HeteroVector<align_value>   ret_vec;
+        get_row_functor_<Ts ...>    functor(ret_vec, row_num);
+        const SpinGuard             guard(lock_);
 
-    ret_vec.template reserve<IndexType>(1);
-    ret_vec.push_back(indices_[row_num]);
+        for (const auto &name_citer : col_names) [[likely]]  {
+            const auto  &citer = column_tb_.find (name_citer);
 
-    get_row_functor_<Ts ...>    functor(ret_vec, row_num);
-    const SpinGuard             guard(lock_);
+            if (citer == column_tb_.end()) [[unlikely]]  {
+                char buffer [512];
 
-    for (const auto &name_citer : col_names) [[likely]]  {
-        const auto  &citer = column_tb_.find (name_citer);
+                snprintf(buffer, sizeof(buffer) - 1,
+                         "DataFrame::get_row(): ERROR: Cannot find column '%s'",
+                         name_citer);
+                throw ColNotFound(buffer);
+            }
 
-        if (citer == column_tb_.end())  {
-            char buffer [512];
-
-            snprintf(buffer, sizeof(buffer) - 1,
-                     "DataFrame::get_row(): ERROR: Cannot find column '%s'",
-                     name_citer);
-            throw ColNotFound(buffer);
+            data_[citer->second].change(functor);
         }
 
-        data_[citer->second].change(functor);
+        return (ret_vec);
     }
 
-    return (ret_vec);
+    char buffer [512];
+
+#ifdef _MSC_VER
+    snprintf(buffer, sizeof(buffer) - 1,
+             "DataFrame::get_row(): ERROR: There aren't %zu rows",
+#else
+    snprintf(buffer, sizeof(buffer) - 1,
+             "DataFrame::get_row(): ERROR: There aren't %lu rows",
+#endif // _MSC_VER
+             row_num);
+    throw BadRange(buffer);
 }
 
 // ----------------------------------------------------------------------------
@@ -265,32 +264,32 @@ template<typename ... Ts>
 HeteroVector<std::size_t(H::align_value)> DataFrame<I, H>::
 get_row(size_type row_num) const {
 
-    if (row_num >= indices_.size())  {
-        char buffer [512];
+    if (row_num < indices_.size()) [[likely]]  {
+        HeteroVector<align_value>   ret_vec;
 
-#ifdef _MSC_VER
-        snprintf(buffer, sizeof(buffer) - 1,
-                 "DataFrame::get_row(): ERROR: There aren't %zu rows",
-#else
-        snprintf(buffer, sizeof(buffer) - 1,
-                 "DataFrame::get_row(): ERROR: There aren't %lu rows",
-#endif // _MSC_VER
-                 row_num);
-        throw BadRange(buffer);
+        ret_vec.template reserve<IndexType>(1);
+        ret_vec.push_back(indices_[row_num]);
+
+        get_row_functor_<Ts ...>    functor(ret_vec, row_num);
+        const SpinGuard             guard(lock_);
+
+        for (const auto &citer : column_list_) [[likely]]
+            data_[citer.second].change(functor);
+
+        return (ret_vec);
     }
 
-    HeteroVector<align_value>   ret_vec;
+    char buffer [512];
 
-    ret_vec.template reserve<IndexType>(1);
-    ret_vec.push_back(indices_[row_num]);
-
-    get_row_functor_<Ts ...>    functor(ret_vec, row_num);
-    const SpinGuard             guard(lock_);
-
-    for (const auto &citer : column_list_) [[likely]]
-        data_[citer.second].change(functor);
-
-    return (ret_vec);
+#ifdef _MSC_VER
+    snprintf(buffer, sizeof(buffer) - 1,
+             "DataFrame::get_row(): ERROR: There aren't %zu rows",
+#else
+    snprintf(buffer, sizeof(buffer) - 1,
+             "DataFrame::get_row(): ERROR: There aren't %lu rows",
+#endif // _MSC_VER
+             row_num);
+    throw BadRange(buffer);
 }
 
 // ----------------------------------------------------------------------------
@@ -353,18 +352,15 @@ DataFrame<I, H>::get_data_by_idx (Index2D<IndexType> range) const  {
         df.load_index(lower, upper);
 
         const size_type b_dist = std::distance(indices_.begin(), lower);
-        const size_type e_dist = std::distance(indices_.begin(),
-                                               upper < indices_.end()
-                                                   ? upper
-                                                   : indices_.end());
-
+        const size_type e_dist =
+            std::distance(indices_.begin(),
+                          upper < indices_.end() ? upper : indices_.end());
         const SpinGuard guard(lock_);
 
-        for (const auto &citer : column_list_) [[likely]]  {
-            create_col_functor_<DataFrame, Ts ...> functor(
-                citer.first.c_str(), df);
+        for (const auto &[name, idx] : column_list_) [[likely]]  {
+            create_col_functor_<DataFrame, Ts ...> functor(name.c_str(), df);
 
-            data_[citer.second].change(functor);
+            data_[idx].change(functor);
         }
 
         const auto  thread_level =
@@ -391,11 +387,13 @@ DataFrame<I, H>::get_data_by_idx (Index2D<IndexType> range) const  {
             for (auto &fut : futuers)  fut.get();
         }
         else  {
-            for (const auto &citer : column_list_) [[likely]]  {
-                load_functor_<DataFrame, Ts ...>    functor (
-                     citer.first.c_str(), b_dist, e_dist, df);
+            for (const auto &[name, idx] : column_list_) [[likely]]  {
+                load_functor_<DataFrame, Ts ...>    functor (name.c_str(),
+                                                             b_dist,
+                                                             e_dist,
+                                                             df);
 
-                data_[citer.second].change(functor);
+                data_[idx].change(functor);
             }
         }
     }
@@ -432,11 +430,10 @@ get_data_by_idx(const StlVecType<IndexType> &values) const  {
 
     const SpinGuard guard(lock_);
 
-    for (const auto &citer : column_list_) [[likely]]  {
-        create_col_functor_<DataFrame, Ts ...> functor(citer.first.c_str(),
-                                                       df);
+    for (const auto &[name, idx] : column_list_) [[likely]]  {
+        create_col_functor_<DataFrame, Ts ...>  functor(name.c_str(), df);
 
-        data_[citer.second].change(functor);
+        data_[idx].change(functor);
     }
 
     const auto  thread_level =
@@ -465,14 +462,13 @@ get_data_by_idx(const StlVecType<IndexType> &values) const  {
         for (auto &fut : futuers)  fut.get();
     }
     else  {
-        for (const auto &citer : column_list_) [[likely]]  {
-            sel_load_functor_<size_type, Ts ...>    functor (
-                citer.first.c_str(),
-                locations,
-                idx_s,
-                df);
+        for (const auto &[name, idx] : column_list_) [[likely]]  {
+            sel_load_functor_<size_type, Ts ...>    functor (name.c_str(),
+                                                             locations,
+                                                             idx_s,
+                                                             df);
 
-            data_[citer.second].change(functor);
+            data_[idx].change(functor);
         }
     }
 
@@ -497,7 +493,7 @@ DataFrame<I, H>::get_view_by_idx (Index2D<IndexType> range)  {
 
     if (lower != indices_.end() &&
         (upper != indices_.end() || indices_.back() == range.end)) [[likely]] {
-        IndexType       *upper_address = nullptr;
+        IndexType       *upper_address { nullptr };
         const size_type b_dist = std::distance(indices_.begin(), lower);
         const size_type e_dist = std::distance(indices_.begin(), upper);
 
@@ -509,13 +505,13 @@ DataFrame<I, H>::get_view_by_idx (Index2D<IndexType> range)  {
 
         const SpinGuard guard(lock_);
 
-        for (const auto &iter : column_list_) [[likely]]  {
-            view_setup_functor_<View, Ts ...>   functor (iter.first.c_str(),
+        for (const auto &[name, idx] : column_list_) [[likely]]  {
+            view_setup_functor_<View, Ts ...>   functor (name.c_str(),
                                                          b_dist,
                                                          e_dist,
                                                          dfv);
 
-            data_[iter.second].change(functor);
+            data_[idx].change(functor);
         }
     }
 
@@ -553,11 +549,13 @@ DataFrame<I, H>::get_view_by_idx (Index2D<IndexType> range) const  {
 
         const SpinGuard guard(lock_);
 
-        for (const auto &iter : column_list_) [[likely]]  {
-            view_setup_functor_<ConstView, Ts ...>  functor (
-                iter.first.c_str(), b_dist, e_dist, dfcv);
+        for (const auto &[name, idx] : column_list_) [[likely]]  {
+            view_setup_functor_<ConstView, Ts ...>  functor (name.c_str(),
+                                                             b_dist,
+                                                             e_dist,
+                                                             dfcv);
 
-            data_[iter.second].change(functor);
+            data_[idx].change(functor);
         }
     }
 
@@ -597,14 +595,14 @@ get_view_by_idx(const StlVecType<IndexType> &values)  {
 
     const SpinGuard guard(lock_);
 
-    for (const auto &col_citer : column_list_) [[likely]]  {
+    for (const auto &[name, idx] : column_list_) [[likely]]  {
         sel_load_view_functor_<size_type, TheView, Ts ...>   functor (
-            col_citer.first.c_str(),
+            name.c_str(),
             locations,
             idx_s,
             dfv);
 
-        data_[col_citer.second].change(functor);
+        data_[idx].change(functor);
     }
 
     return (dfv);
@@ -644,14 +642,14 @@ get_view_by_idx(const StlVecType<IndexType> &values) const  {
 
     const SpinGuard guard(lock_);
 
-    for (const auto &col_citer : column_list_) [[likely]]  {
-        sel_load_view_functor_<size_type, TheView, Ts ...>
-            functor (col_citer.first.c_str(),
-                     locations,
-                     idx_s,
-                     dfv);
+    for (const auto &[name, idx] : column_list_) [[likely]]  {
+        sel_load_view_functor_<size_type, TheView, Ts ...>  functor (
+            name.c_str(),
+            locations,
+            idx_s,
+            dfv);
 
-        data_[col_citer.second].change(functor);
+        data_[idx].change(functor);
     }
 
     return (dfv);
@@ -678,16 +676,15 @@ DataFrame<I, H>::get_data_by_loc (Index2D<long> range) const  {
 
         const SpinGuard guard(lock_);
 
-        for (const auto &citer : column_list_) [[likely]]  {
-            create_col_functor_<DataFrame, Ts ...> functor(
-                citer.first.c_str(), df);
+        for (const auto &[name, idx] : column_list_) [[likely]]  {
+            create_col_functor_<DataFrame, Ts ...>  functor(name.c_str(), df);
 
-            data_[citer.second].change(functor);
+            data_[idx].change(functor);
         }
 
         const auto  thread_level =
             (indices_.size() < ThreadPool::MUL_THR_THHOLD)
-            ? 0L : get_thread_level();
+                ? 0L : get_thread_level();
 
         if (thread_level > 2)  {
             auto    lbd =
@@ -712,14 +709,14 @@ DataFrame<I, H>::get_data_by_loc (Index2D<long> range) const  {
             for (auto &fut : futuers)  fut.get();
         }
         else  {
-            for (const auto &citer : column_list_) [[likely]]  {
+            for (const auto &[name, idx] : column_list_) [[likely]]  {
                 load_functor_<DataFrame, Ts ...>    functor (
-                    citer.first.c_str(),
+                    name.c_str(),
                     static_cast<size_type>(range.begin),
                     static_cast<size_type>(range.end),
                     df);
 
-                data_[citer.second].change(functor);
+                data_[idx].change(functor);
             }
         }
 
@@ -757,11 +754,10 @@ get_data_by_loc (const StlVecType<long> &locations) const  {
 
     const SpinGuard guard(lock_);
 
-    for (const auto &citer : column_list_) [[likely]]  {
-        create_col_functor_<DataFrame, Ts ...> functor(citer.first.c_str(),
-                                                       df);
+    for (const auto &[name, idx] : column_list_) [[likely]]  {
+        create_col_functor_<DataFrame, Ts ...>  functor (name.c_str(), df);
 
-        data_[citer.second].change(functor);
+        data_[idx].change(functor);
     }
 
     const auto  thread_level =
@@ -790,14 +786,13 @@ get_data_by_loc (const StlVecType<long> &locations) const  {
         for (auto &fut : futuers)  fut.get();
     }
     else  {
-        for (const auto &citer : column_list_) [[likely]]  {
-            sel_load_functor_<long, Ts ...>  functor (
-                citer.first.c_str(),
-                locations,
-                idx_s,
-                df);
+        for (const auto &[name, idx] : column_list_) [[likely]]  {
+            sel_load_functor_<long, Ts ...> functor (name.c_str(),
+                                                     locations,
+                                                     idx_s,
+                                                     df);
 
-            data_[citer.second].change(functor);
+            data_[idx].change(functor);
         }
     }
 
@@ -831,14 +826,14 @@ DataFrame<I, H>::get_view_by_loc (Index2D<long> range)  {
 
         const SpinGuard guard(lock_);
 
-        for (const auto &iter : column_list_) [[likely]]  {
+        for (const auto &[name, idx] : column_list_) [[likely]]  {
             view_setup_functor_<View, Ts ...>   functor (
-                iter.first.c_str(),
+                name.c_str(),
                 static_cast<size_type>(range.begin),
                 static_cast<size_type>(range.end),
                 dfv);
 
-            data_[iter.second].change(functor);
+            data_[idx].change(functor);
         }
 
         return (dfv);
@@ -880,14 +875,14 @@ DataFrame<I, H>::get_view_by_loc (Index2D<long> range) const  {
 
         const SpinGuard guard(lock_);
 
-        for (const auto &iter : column_list_) [[likely]]  {
-            view_setup_functor_<ConstView, Ts ...>  functor(
-                iter.first.c_str(),
+        for (const auto &[name, idx] : column_list_) [[likely]]  {
+            view_setup_functor_<ConstView, Ts ...>  functor (
+                name.c_str(),
                 static_cast<size_type>(range.begin),
                 static_cast<size_type>(range.end),
                 dfcv);
 
-            data_[iter.second].change(functor);
+            data_[idx].change(functor);
         }
 
         return (dfcv);
@@ -930,14 +925,14 @@ DataFrame<I, H>::get_view_by_loc (const StlVecType<long> &locations)  {
 
     const SpinGuard guard(lock_);
 
-    for (const auto &col_citer : column_list_) [[likely]]  {
+    for (const auto &[name, idx] : column_list_) [[likely]]  {
         sel_load_view_functor_<long, TheView, Ts ...>   functor (
-            col_citer.first.c_str(),
+            name.c_str(),
             locations,
             indices_.size(),
             dfv);
 
-        data_[col_citer.second].change(functor);
+        data_[idx].change(functor);
     }
 
     return (dfv);
@@ -972,14 +967,14 @@ get_view_by_loc (const StlVecType<long> &locations) const  {
 
     const SpinGuard guard(lock_);
 
-    for (const auto &col_citer : column_list_) [[likely]]  {
+    for (const auto &[name, idx] : column_list_) [[likely]]  {
         sel_load_view_functor_<long, TheView, Ts ...>   functor (
-            col_citer.first.c_str(),
+            name.c_str(),
             locations,
             indices_.size(),
             dfv);
 
-        data_[col_citer.second].change(functor);
+        data_[idx].change(functor);
     }
 
     return (dfv);
@@ -2267,7 +2262,7 @@ get_data_by_rand(random_policy spec, double n, seed_t seed) const  {
 
         for (size_type i = 0; i < n_rows; ++i)
             rand_indices[i] = dis(gen);
-        std::sort(rand_indices.begin(), rand_indices.end());
+        std::ranges::sort(rand_indices);
 
         IndexVecType    new_index;
         size_type       prev_value;
@@ -2374,7 +2369,7 @@ get_view_by_rand (random_policy spec, double n, seed_t seed)  {
 
         for (size_type i = 0; i < n_rows; ++i) [[likely]]
             rand_indices[i] = dis(gen);
-        std::sort(rand_indices.begin(), rand_indices.end());
+        std::ranges::sort(rand_indices);
 
         using TheView = PtrView;
 
@@ -2448,7 +2443,7 @@ get_view_by_rand (random_policy spec, double n, seed_t seed) const  {
 
         for (size_type i = 0; i < n_rows; ++i) [[likely]]
             rand_indices[i] = dis(gen);
-        std::sort(rand_indices.begin(), rand_indices.end());
+        std::ranges::sort(rand_indices);
 
         using TheView = ConstPtrView;
 
@@ -2632,12 +2627,12 @@ get_reindexed(const char *col_to_be_index, const char *old_index_name) const  {
 
     const SpinGuard guard(lock_);
 
-    for (const auto &citer : column_list_) [[likely]]  {
-        if (citer.first == col_to_be_index)  continue;
+    for (const auto &[name, idx] : column_list_) [[likely]]  {
+        if (name == col_to_be_index)  continue;
 
-        create_col_functor_<result_t, Ts ...> functor(citer.first.c_str(), df);
+        create_col_functor_<result_t, Ts ...>   functor (name.c_str(), df);
 
-        data_[citer.second].change(functor);
+        data_[idx].change(functor);
     }
 
     const auto  thread_level =
@@ -2670,17 +2665,17 @@ get_reindexed(const char *col_to_be_index, const char *old_index_name) const  {
         for (auto &fut : futuers)  fut.get();
     }
     else  {
-        for (const auto &citer : column_list_) [[likely]]  {
-            if (citer.first == col_to_be_index)  continue;
+        for (const auto &[name, idx] : column_list_) [[likely]]  {
+            if (name == col_to_be_index)  continue;
 
-            load_functor_<result_t, Ts ...> functor(
-                citer.first.c_str(),
+            load_functor_<result_t, Ts ...> functor (
+                name.c_str(),
                 0,
                 new_idx_s,
                 df,
                 nan_policy::dont_pad_with_nans);
 
-            data_[citer.second].change(functor);
+            data_[idx].change(functor);
         }
     }
 
@@ -2718,16 +2713,15 @@ get_reindexed_view(const char *col_to_be_index, const char *old_index_name)  {
 
     const SpinGuard guard(lock_);
 
-    for (const auto &citer : column_list_) [[likely]]  {
-        if (citer.first == col_to_be_index)  continue;
+    for (const auto &[name, idx] : column_list_) [[likely]]  {
+        if (name == col_to_be_index)  continue;
 
-        view_setup_functor_<result_t, Ts ...>    functor (
-            citer.first.c_str(),
-            0,
-            new_idx_s,
-            result);
+        view_setup_functor_<result_t, Ts ...>   functor (name.c_str(),
+                                                         0,
+                                                         new_idx_s,
+                                                         result);
 
-        data_[citer.second].change(functor);
+        data_[idx].change(functor);
     }
 
     return (result);
@@ -2767,16 +2761,15 @@ get_reindexed_view(const char *col_to_be_index,
 
     const SpinGuard guard(lock_);
 
-    for (const auto &citer : column_list_) [[likely]]  {
-        if (citer.first == col_to_be_index)  continue;
+    for (const auto &[name, idx] : column_list_) [[likely]]  {
+        if (name == col_to_be_index)  continue;
 
-        view_setup_functor_<result_t, Ts ...>    functor (
-            citer.first.c_str(),
-            0,
-            new_idx_s,
-            result);
+        view_setup_functor_<result_t, Ts ...>   functor (name.c_str(),
+                                                         0,
+                                                         new_idx_s,
+                                                         result);
 
-        data_[citer.second].change(functor);
+        data_[idx].change(functor);
     }
 
     return (result);
@@ -2798,10 +2791,10 @@ DataFrame<I, H>::get_columns_info () const  {
 
     const SpinGuard guard(lock_);
 
-    for (const auto &citer : column_list_)  {
-        columns_info_functor_<Ts ...>   functor (result, citer.first.c_str());
+    for (const auto &[name, idx] : column_list_) [[likely]]  {
+        columns_info_functor_<Ts ...>   functor (result, name.c_str());
 
-        data_[citer.second].change(functor);
+        data_[idx].change(functor);
     }
 
     return (result);
@@ -2820,10 +2813,10 @@ DataFrame<I, H>::describe() const  {
 
     const SpinGuard guard(lock_);
 
-    for (const auto &citer : column_list_)  {
-        describe_functor_<Ts ...>   functor (citer.first.c_str(), result);
+    for (const auto &[name, idx] : column_list_) [[likely]]  {
+        describe_functor_<Ts ...>   functor (name.c_str(), result);
 
-        data_[citer.second].change(functor);
+        data_[idx].change(functor);
     }
 
     return (result);
@@ -3025,10 +3018,9 @@ DataFrame<I, H>::inversion_count(const char *col_name) const  {
     const auto      col_s = col.size();
     StlVecType<T>   original = col;
     StlVecType<T>   temp(col_s);
-    const auto      thread_level = get_thread_level();
 
-    return (_inv_merge_sort_(original, temp, 0, col_s - 1, C{ },
-                             thread_level));
+    return (_inv_merge_sort_(original, temp, 0, col_s - 1, C { },
+                             get_thread_level()));
 }
 
 } // namespace hmdf

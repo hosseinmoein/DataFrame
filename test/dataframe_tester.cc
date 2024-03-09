@@ -45,6 +45,7 @@ using namespace hmdf;
 // A DataFrame with ulong index type
 //
 using MyDataFrame = StdDataFrame128<unsigned long>;
+using StrDataFrame = StdDataFrame128<std::string>;
 
 template<typename T>
 using StlVecType = typename MyDataFrame::template StlVecType<T>;
@@ -134,7 +135,7 @@ static void test_haphazard()  {
     df = std::move(df_dup);
 
     MeanVisitor<int>                ivisitor;
-    MeanVisitor<double>             dvisitor;
+    MeanVisitor<double>             dvisitor(true);
     MeanVisitor<double>             rev_dvisitor;
     WeightedMeanVisitor<double>     wm_dvisitor;
     QuadraticMeanVisitor<double>    quad_dvisitor;
@@ -304,7 +305,7 @@ static void test_haphazard()  {
     CorrVisitor<double> p_corr_visitor;
     CorrVisitor<double> s_corr_visitor(correlation_type::spearman);
     CorrVisitor<double> rev_p_corr_visitor;
-    
+
     df.single_act_visit<double, double>("dbl_col", "dbl_col_2", s_corr_visitor);
 
     auto            fut10 =
@@ -1089,7 +1090,7 @@ static void test_largest_smallest_visitors()  {
     std::cout << "Original DF:" << std::endl;
     df.write<std::ostream, double, int>(std::cout);
 
-    NLargestVisitor<5, double> nl_visitor;
+    NLargestVisitor<5, double> nl_visitor { true };
 
     df.visit<double>("col_3", nl_visitor, true);
     std::cout << "N largest result for col_3:" << std::endl;
@@ -1107,7 +1108,7 @@ static void test_largest_smallest_visitors()  {
         std::cout << iter.index << '|' << iter.value << " ";
     std::cout << std::endl;
 
-    NSmallestVisitor<5, double> ns_visitor;
+    NSmallestVisitor<5, double> ns_visitor { true };
 
     df.visit<double>("col_3", ns_visitor);
     std::cout << "N smallest result for col_3:" << std::endl;
@@ -1430,6 +1431,76 @@ static void test_dataframe_friend_divides_operator()  {
     df2.write<std::ostream, int, double>(std::cout);
     std::cout << "Result DF:" << std::endl;
     result.write<std::ostream, int, double>(std::cout);
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_dataframe_friend_scaler_operator()  {
+
+    std::cout << "\nTesting DataFrame friend scaler operator ..." << std::endl;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("data/SHORT_IBM.csv", io_format::csv2);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+
+    const auto  col_size = df.get_index().size();
+    const auto  &df_idx = df.get_index();
+    const auto  &df_close = df.get_column<double>("IBM_Close");
+    const auto  &df_volume = df.get_column<long>("IBM_Volume");
+
+    StrDataFrame    plus_result =
+        scaler_df_plus<StrDataFrame, double, long, double>(df, 10.5);
+    const auto      &plus_idx = plus_result.get_index();
+    const auto      &plus_close = plus_result.get_column<double>("IBM_Close");
+    const auto      &plus_volume = plus_result.get_column<long>("IBM_Volume");
+
+    for (std::size_t i = 0; i < col_size; ++i)  {
+        assert(plus_idx[i] == df_idx[i]);
+        assert((plus_close[i] == (df_close[i] + 10.5)));
+        assert((plus_volume[i] == (df_volume[i] + 10L)));
+    }
+
+	const int       value = 10;
+    StrDataFrame    minus_result =
+        scaler_df_minus<StrDataFrame, int, long, double>(df, value);
+    const auto      &minus_idx = minus_result.get_index();
+    const auto      &minus_close = minus_result.get_column<double>("IBM_Close");
+    const auto      &minus_volume = minus_result.get_column<long>("IBM_Volume");
+
+    for (std::size_t i = 0; i < col_size; ++i)  {
+        assert(minus_idx[i] == df_idx[i]);
+        assert((minus_close[i] == (df_close[i] - value)));
+        assert((minus_volume[i] == (df_volume[i] - value)));
+    }
+
+    StrDataFrame    multi_result =
+        scaler_df_multiplies<StrDataFrame, double, long, double>(df, 5.0);
+    const auto      &multi_idx = multi_result.get_index();
+    const auto      &multi_close = multi_result.get_column<double>("IBM_Close");
+    const auto      &multi_volume = multi_result.get_column<long>("IBM_Volume");
+
+    for (std::size_t i = 0; i < col_size; ++i)  {
+        assert(multi_idx[i] == df_idx[i]);
+        assert((multi_close[i] == (df_close[i] * 5.0)));
+        assert((multi_volume[i] == (df_volume[i] * 5L)));
+    }
+
+    StrDataFrame    div_result =
+        scaler_df_divides<StrDataFrame, long, long, double>(df, 10L);
+    const auto      &div_idx = div_result.get_index();
+    const auto      &div_close = div_result.get_column<double>("IBM_Close");
+    const auto      &div_volume = div_result.get_column<long>("IBM_Volume");
+
+    for (std::size_t i = 0; i < col_size; ++i)  {
+        assert(div_idx[i] == df_idx[i]);
+        assert((div_close[i] == (df_close[i] / 10.0)));
+        assert((div_volume[i] == (df_volume[i] / 10L)));
+    }
 }
 
 // -----------------------------------------------------------------------------
@@ -2190,7 +2261,7 @@ static void test_median()  {
                      std::make_pair("c2",  c2),
                      std::make_pair("c3",  c3));
 
-    MedianVisitor<double, std::string>  md;
+    MedianVisitor<double, std::string>  md { true };  // skip nan
 
     assert((testDF.single_act_visit<double>("c1", md).get_result() == 2.5));
     assert((testDF.single_act_visit<double>("c2", md).get_result() == 0.02));
@@ -2673,7 +2744,7 @@ static void test_some_visitors()  {
     assert(sum_result == 210);
     assert(prod_result == 464486400);
 
-    CumSumVisitor<double, unsigned long, 128>       cum_sum_visit;
+    CumSumVisitor<double, unsigned long, 128>       cum_sum_visit(true);
     const StlVecType<double>   &cum_sum_result =
         df.single_act_visit<double>("dblcol_3", cum_sum_visit).get_result();
 
@@ -2685,7 +2756,7 @@ static void test_some_visitors()  {
     assert(std::isnan(cum_sum_result[2]));
     assert(std::isnan(cum_sum_result[8]));
 
-    CumMaxVisitor<double, unsigned long, 128>       cum_max_visit;
+    CumMaxVisitor<double, unsigned long, 128>       cum_max_visit(true);
     const StlVecType<double>   &cum_max_result =
         df.single_act_visit<double>("dblcol_3", cum_max_visit).get_result();
 
@@ -5091,6 +5162,7 @@ int main(int, char *[]) {
     test_dataframe_friend_minus_operator();
     test_dataframe_friend_multiplies_operator();
     test_dataframe_friend_divides_operator();
+    test_dataframe_friend_scaler_operator();
     test_fill_missing_df();
     test_fill_missing_values();
     test_fill_missing_fill_forward();

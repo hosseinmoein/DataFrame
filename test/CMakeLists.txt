@@ -7,10 +7,16 @@ hmdf_target_data_files(dataframe_tester
     DATA_FILES
         ${PROJECT_SOURCE_DIR}/data/sample_data_dt_index.csv
         ${PROJECT_SOURCE_DIR}/data/sample_data_string_index.csv
+        ${PROJECT_SOURCE_DIR}/data/SHORT_IBM.csv
         ${PROJECT_SOURCE_DIR}/data/sample_data.csv
         ${PROJECT_SOURCE_DIR}/data/sample_data.json
 )
 add_test(NAME dataframe_tester COMMAND dataframe_tester)
+if(MSVC)
+    # For some unknown reason to me, this test cannot open data files in
+    # AppVeyor
+    set_tests_properties(dataframe_tester PROPERTIES DISABLED TRUE)
+endif()
 
 add_executable(dataframe_tester_2 dataframe_tester_2.cc)
 target_link_libraries(dataframe_tester_2 PRIVATE DataFrame)
@@ -25,19 +31,16 @@ hmdf_target_data_files(dataframe_tester_2
         ${PROJECT_SOURCE_DIR}/data/DT_IBM.csv
         ${PROJECT_SOURCE_DIR}/data/FORD.csv
         ${PROJECT_SOURCE_DIR}/data/IBM.csv
-        ${PROJECT_SOURCE_DIR}/data/SHORT_IBM.csv
         ${PROJECT_SOURCE_DIR}/data/sample_data_2.csv
         ${PROJECT_SOURCE_DIR}/data/sample_data_2.json
         ${PROJECT_SOURCE_DIR}/data/sample_data_no_index.csv
         ${PROJECT_SOURCE_DIR}/data/sample_data_no_index.json
-        ${PROJECT_SOURCE_DIR}/data/sample_data.csv
-        ${PROJECT_SOURCE_DIR}/data/sample_data.json
 )
 add_test(NAME dataframe_tester_2 COMMAND dataframe_tester_2)
-if(MSVC)
-    # For some unknown reason to me, this test sigfaults in AppVeyor
-    set_tests_properties(dataframe_tester_2 PROPERTIES DISABLED TRUE)
-endif()
+# if(MSVC)
+#     # For some unknown reason to me, this test sigfaults in AppVeyor
+#     set_tests_properties(dataframe_tester_2 PROPERTIES DISABLED TRUE)
+# endif()
 
 add_executable(dataframe_tester_3 dataframe_tester_3.cc)
 target_link_libraries(dataframe_tester_3 PRIVATE DataFrame)
@@ -47,8 +50,6 @@ target_compile_options(dataframe_tester_3
 add_test(NAME dataframe_tester_3 COMMAND dataframe_tester_3)
 hmdf_target_data_files(dataframe_tester_3
     DATA_FILES
-        ${PROJECT_SOURCE_DIR}/data/IBM.csv
-        ${PROJECT_SOURCE_DIR}/data/SHORT_IBM.csv
         ${PROJECT_SOURCE_DIR}/data/AAPL_10dBucketWithVector.csv
 )
 

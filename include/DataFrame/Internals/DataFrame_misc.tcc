@@ -502,19 +502,18 @@ operator()(const T &lhs_vec)  {
     if (rhs_citer == rhs_df.column_tb_.end())  return;
 
     const DataVec           &rhs_hv = rhs_df.data_[rhs_citer->second];
-    const SpinGuard         guard(lock_);
     const auto              &rhs_vec = rhs_hv.template get_vector<ValueType>();
     const size_type         new_col_size =
         std::min(std::min(lhs_vec.size(), rhs_vec.size()), new_idx.size());
     StlVecType<ValueType>   new_col;
-    auto                    Operator = OPT<ValueType>();
+    auto                    opt = OPT<ValueType> { };
     size_type               lcounter = 0;
     size_type               rcounter = 0;
 
     new_col.reserve(new_col_size);
     for (size_type idx = 0; idx < new_col_size; )  {
         if (lhs_idx[lcounter] == rhs_idx[rcounter])  {
-            new_col.push_back(Operator(lhs_vec[lcounter], rhs_vec[rcounter]));
+            new_col.push_back(opt(lhs_vec[lcounter], rhs_vec[rcounter]));
             lcounter += 1;
             rcounter += 1;
             idx += 1;
@@ -527,6 +526,33 @@ operator()(const T &lhs_vec)  {
         }
 
     }
+
+    if (! new_col.empty())
+        result_df.template load_column<ValueType>(col_name,
+                                                  std::move(new_col),
+                                                  nan_policy::pad_with_nans,
+                                                  false);
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename ST, template<typename> class OPT, typename ... Ts>
+template<typename T>
+void
+DataFrame<I, H>::
+scaler_operator_functor_<ST, OPT, Ts ...>::
+operator()(const T &lhs_vec)  {
+
+    using VecType = typename std::remove_reference<T>::type;
+    using ValueType = typename VecType::value_type;
+
+    auto    new_col = lhs_vec;;
+    auto    opt = OPT<ValueType> { };
+
+    for (auto &item : new_col)
+        item = opt(item, static_cast<ValueType>(value));
 
     if (! new_col.empty())
         result_df.template load_column<ValueType>(col_name,

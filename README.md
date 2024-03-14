@@ -111,7 +111,6 @@ make uninstall
 ```
 
 ### Package managers
-DataFrame is available on [_Conan_](https://conan.io/center/recipes/dataframe) platform. See the [_Conan_ docs](https://docs.conan.io/en/latest/) for more information.<BR><BR>
-
+DataFrame is available on [_Conan_](https://conan.io/center/recipes/dataframe) platform. See the [_Conan_ docs](https://docs.conan.io/en/latest/) for more information.<BR>
 DataFrame is also available on [_Microsoft VCPKG_](https://vcpkg.link/ports/dataframe) platform. See [_VCPKG docs_](https://learn.microsoft.com/en-us/vcpkg/) for more information<BR>
 

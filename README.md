@@ -111,20 +111,7 @@ make uninstall
 ```
 
 ### Package managers
-DataFrame is available on [_Conan_](https://conan.io/center/recipes/dataframe) platform. Add `dataframe/x.y.z@` to your requirements, where `x.y.z` is the release version you want to use. _Conan_ will acquire DataFrame, build it from source in your computer, and provide CMake integration support for your projects. See the [_Conan_ docs](https://docs.conan.io/en/latest/) for more information.<BR> Sample `conanfile.txt`:
+DataFrame is available on [_Conan_](https://conan.io/center/recipes/dataframe) platform. Add `dataframe/x.y.z@` to your requirements, where `x.y.z` is the release version you want to use. _Conan_ will acquire DataFrame, build it from source in your computer, and provide CMake integration support for your projects. See the [_Conan_ docs](https://docs.conan.io/en/latest/) for more information.<BR><BR>
 
-```text
-[requires]
-dataframe/x.y.z@
+DataFrame is also available on [_Microsoft VCPKG_](https://vcpkg.link/ports/dataframe) platform. See [_VCPKG docs_](https://learn.microsoft.com/en-us/vcpkg/) for more information<BR>
 
-[generators]
-cmake
-```
-DataFrame is also available on [_Microsoft VCPKG_](https://vcpkg.link/ports/dataframe) platform. See [_VCPKG docs_](https://learn.microsoft.com/en-us/vcpkg/) for more information
-```sh
-git clone https://github.com/Microsoft/vcpkg.git
-cd vcpkg
-bootstrap-vcpkg.[bat|sh]
-vcpkg(.exe) integrate install
-vcpkg(.exe) install DataFrame
-```

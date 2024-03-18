@@ -3699,18 +3699,28 @@ static void test_view_visitors()  {
 
     MyDataFrameView dfv =
         df.get_view_by_idx<double>(Index2D<unsigned long> { 2, 4 });
-    assert(dfv.get_index().size() == 3);
-    MeanVisitor<double> mean_visitor;
-    assert(fabs(dfv.visit<double>("dbl_col1",
-                                 mean_visitor).get_result() - 3.3) < 0.00001);
 
-    DotProdVisitor<double> dp_visitor;
-    assert(fabs(dfv.visit<double, double>("dbl_col1", "dbl_col2",
-                                 dp_visitor).get_result() - 45.98) < 0.00001);
+    assert(dfv.get_index().size() == 3);
+
+    MeanVisitor<double> mean_visitor;
+
+    assert(fabs(dfv.visit<double>("dbl_col1",
+                                  mean_visitor).get_result() - 3.3) < 0.00001);
+
+    DotProdVisitor<double>  dp_visitor;
+
+    dfv.visit<double, double>("dbl_col1", "dbl_col2", dp_visitor);
+    assert(fabs(dp_visitor.get_result() - 45.98) < 0.00001);
+    assert(fabs(dp_visitor.get_magnitude1() - 5.92368) < 0.00001);
+    assert(fabs(dp_visitor.get_magnitude2() - 7.77817) < 0.00001);
+    dfv.single_act_visit<double, double>("dbl_col1", "dbl_col2", dp_visitor);
+    assert(fabs(dp_visitor.get_result() - 45.98) < 0.00001);
+    assert(fabs(dp_visitor.get_magnitude1() - 5.92368) < 0.00001);
+    assert(fabs(dp_visitor.get_magnitude2() - 7.77817) < 0.00001);
 
     SimpleRollAdopter<MeanVisitor<double>, double, unsigned long, 128>
         mean_roller1(MeanVisitor<double>(), 3);
-    const auto &res_sra =
+    const auto  &res_sra =
         dfv.single_act_visit<double>("dbl_col1",
                                      mean_roller1,
                                      true).get_result();
@@ -3733,9 +3743,10 @@ static void test_view_visitors()  {
     assert(fabs(res_srha[2] - 2.14782) < 0.00001);
     assert(fabs(res_srha[6] - 5.0785) < 0.00001);
 
-    CumSumVisitor<double, unsigned long, 128> cs_visitor;
-    const auto &res_cs =
+    CumSumVisitor<double, unsigned long, 128>   cs_visitor;
+    const auto                                  &res_cs =
         dfv.single_act_visit<double>("dbl_col1", cs_visitor).get_result();
+
     assert(fabs(res_cs[0] - 2.2) < 0.00001);
     assert(fabs(res_cs[1] - 5.5) < 0.00001);
     assert(fabs(res_cs[2] - 9.9) < 0.00001);

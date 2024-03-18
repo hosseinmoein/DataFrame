@@ -167,7 +167,8 @@ struct  LastVisitor  {
     }
     template <forward_iterator K, forward_iterator H>
     inline void
-    operator() (K /*idx_begin*/, K /*idx_end*/, H column_begin, H column_end) {
+    operator() (const K &/*idx_begin*/, const K &/*idx_end*/,
+                const H &column_begin, const H &column_end) {
 
         for (auto citer = --column_end; citer >= column_begin; --citer)
             if (! skip_nan_ || ! is_nan__(*citer)) [[likely]]  {
@@ -207,7 +208,8 @@ struct  FirstVisitor  {
     }
     template <forward_iterator K, forward_iterator H>
     inline void
-    operator() (K /*idx_begin*/, K /*idx_end*/, H column_begin, H column_end) {
+    operator() (const K &/*idx_begin*/, const K &/*idx_end*/,
+                const H &column_begin, const H &column_end) {
 
         for (auto citer = column_begin; citer < column_end; ++citer)
             if (! skip_nan_ || ! is_nan__(*citer)) [[likely]]  {
@@ -243,7 +245,8 @@ struct  CountVisitor  {
     }
     template <forward_iterator K, forward_iterator H>
     inline void
-    operator() (K /*idx_begin*/, K /*idx_end*/, H column_begin, H column_end) {
+    operator() (const K &/*idx_begin*/, const K &/*idx_end*/,
+                const H &column_begin, const H &column_end) {
 
         result_ = result_type(std::distance(column_begin, column_end));
     }
@@ -275,7 +278,8 @@ struct  SumVisitor  {
     }
     template <forward_iterator K, forward_iterator H>
     inline void
-    operator() (K /*idx_begin*/, K /*idx_end*/, H column_begin, H column_end) {
+    operator() (const K &/*idx_begin*/, const K &/*idx_end*/,
+                const H &column_begin, const H &column_end) {
 
         if (std::distance(column_begin, column_end) >=
                 ThreadPool::MUL_THR_THHOLD &&
@@ -364,7 +368,8 @@ struct  MeanVisitor : public MeanBase<T, I>  {
     }
     template<forward_iterator K, forward_iterator H>
     inline void
-    operator() (K idx_begin, K idx_end, H column_begin, H column_end) {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end) {
 
         BaseClass::sum_(idx_begin, idx_end, column_begin, column_end);
         if (! BaseClass::skip_nan_)  {
@@ -545,7 +550,8 @@ struct  ProdVisitor  {
     }
     template <forward_iterator K, forward_iterator H>
     inline void
-    operator() (K /*idx_begin*/, K /*idx_end*/, H column_begin, H column_end) {
+    operator() (const K &/*idx_begin*/, const K &/*idx_end*/,
+                const H &column_begin, const H &column_end) {
 
         if (std::distance(column_begin, column_end) >=
                 ThreadPool::MUL_THR_THHOLD &&
@@ -627,20 +633,24 @@ struct  ExtremumVisitor  {
     }
     template <forward_iterator K, forward_iterator H>
     inline void
-    operator() (K idx_begin, K idx_end, H column_begin, H column_end) {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end) {
 
         assert((std::distance(idx_begin, idx_end) >=
                     std::distance(column_begin, column_end)));
 
-        auto    citer { column_begin };
+        GET_COL_SIZE
 
-        for (; citer < column_end; ++citer, ++idx_begin, ++counter_)  {
-            if (! skip_nan_ || ! is_nan__(*citer)) [[likely]]  {
+        size_type    index { 0 };
+
+        for (; index < col_s; ++index, ++counter_)  {
+            const auto  &val = *(column_begin + index);
+
+            if (! skip_nan_ || ! is_nan__(val)) [[likely]]  {
                 pos_ = counter_;
-                index_ = *idx_begin;
-                extremum_ = *citer;
-                ++citer;
-                ++idx_begin;
+                index_ = *(idx_begin + index);
+                extremum_ = val;
+                index += 1;
                 break;
             }
         }
@@ -671,7 +681,7 @@ struct  ExtremumVisitor  {
                     return (extremum);
                 };
             auto    futures =
-                ThreadGranularity::thr_pool_.parallel_loop(citer,
+                ThreadGranularity::thr_pool_.parallel_loop(column_begin + index,
                                                            column_end,
                                                            std::move(lbd));
 
@@ -687,19 +697,23 @@ struct  ExtremumVisitor  {
         }
         else  {
             if (! skip_nan_)  {
-                for (; citer < column_end; ++citer, ++idx_begin, ++counter_)  {
-                    if (cmp_(extremum_, *citer))  {
-                        extremum_ = *citer;
-                        index_ = *idx_begin;
+                for (; index < col_s; ++index, ++counter_)  {
+                    const auto  &val = *(column_begin + index);
+
+                    if (cmp_(extremum_, val))  {
+                        extremum_ = val;
+                        index_ = *(idx_begin + index);
                         pos_ = counter_;
                     }
                 }
             }
             else  {
-                for (; citer < column_end; ++citer, ++idx_begin, ++counter_)  {
-                    if (cmp_(extremum_, *citer) && ! is_nan__(*citer))  {
-                        extremum_ = *citer;
-                        index_ = *idx_begin;
+                for (; index < col_s; ++index, ++counter_)  {
+                    const auto  &val = *(column_begin + index);
+
+                    if (cmp_(extremum_, val) && ! is_nan__(val))  {
+                        extremum_ = val;
+                        index_ = *(idx_begin + index);
                         pos_ = counter_;
                     }
                 }
@@ -842,9 +856,9 @@ struct  CovVisitor  {
     }
     template <forward_iterator K, forward_iterator H>
     inline void
-    operator() (K /*idx_begin*/, K /*idx_end*/,
-                H column_begin1, H column_end1,
-                H column_begin2, H column_end2)  {
+    operator() (const K &/*idx_begin*/, const K &/*idx_end*/,
+                const H &column_begin1, const H &column_end1,
+                const H &column_begin2, const H &column_end2)  {
 
         if (std::distance(column_begin1, column_end1) >=
                 ThreadPool::MUL_THR_THHOLD &&
@@ -908,12 +922,13 @@ struct  CovVisitor  {
             }
         }
         else  {
+            const size_type col_s1 = std::distance(column_begin1, column_end1);
+            const size_type col_s2 = std::distance(column_begin2, column_end2);
+
             if (! skip_nan_)  {
-                for (; column_begin1 < column_end1 &&
-                       column_begin2 < column_end2;
-                     ++column_begin1, ++column_begin2)  {
-                    const value_type    &val1 = *column_begin1;
-                    const value_type    &val2 = *column_begin2;
+                for (size_type i = 0; i < col_s1 && i < col_s2; ++i)  {
+                    const value_type    &val1 = *(column_begin1 + i);
+                    const value_type    &val2 = *(column_begin2 + i);
 
                     inter_result_.total1 += val1;
                     inter_result_.total2 += val2;
@@ -924,11 +939,9 @@ struct  CovVisitor  {
                 }
             }
             else  {
-                for (; column_begin1 < column_end1 &&
-                       column_begin2 < column_end2;
-                     ++column_begin1, ++column_begin2)  {
-                    const value_type    &val1 = *column_begin1;
-                    const value_type    &val2 = *column_begin2;
+                for (size_type i = 0; i < col_s1 && i < col_s2; ++i)  {
+                    const value_type    &val1 = *(column_begin1 + i);
+                    const value_type    &val2 = *(column_begin2 + i);
 
                     if (! is_nan__(val1) && ! is_nan__(val2))  {
                         inter_result_.total1 += val1;
@@ -1023,7 +1036,8 @@ struct  VarVisitor  {
     }
     template <forward_iterator K, forward_iterator H>
     inline void
-    operator() (K idx_begin, K idx_end, H column_begin, H column_end) {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end) {
 
         cov_ (idx_begin, idx_end,
               column_begin, column_end, column_begin, column_end);
@@ -1056,9 +1070,9 @@ struct  BetaVisitor  {
     }
     template <forward_iterator K, forward_iterator H>
     inline void
-    operator() (K idx_begin, K idx_end,
-                H data_begin, H data_end,
-                H benchmark_begin, H benchmark_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &data_begin, const H &data_end,
+                const H &benchmark_begin, const H &benchmark_end)  {
 
         cov_ (idx_begin, idx_end,
               data_begin, data_end, benchmark_begin, benchmark_end);
@@ -1099,7 +1113,8 @@ struct  StdVisitor   {
     }
     template <forward_iterator K, forward_iterator H>
     inline void
-    operator() (K idx_begin, K idx_end, H column_begin, H column_end) {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end) {
 
         var_ (idx_begin, idx_end, column_begin, column_end);
     }
@@ -1133,7 +1148,8 @@ struct  SEMVisitor   {
     }
     template <forward_iterator K, forward_iterator H>
     inline void
-    operator() (K idx_begin, K idx_end, H column_begin, H column_end) {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin, const H &column_end) {
 
         std_ (idx_begin, idx_end, column_begin, column_end);
     }
@@ -1302,9 +1318,9 @@ public:
 
     template <forward_iterator K, forward_iterator H>
     inline void
-    operator() (K idx_begin, K idx_end,
-                H column_begin1, H column_end1,
-                H column_begin2, H column_end2)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin1, const H &column_end1,
+                const H &column_begin2, const H &column_end2)  {
 
         if (type_ == correlation_type::pearson)  {
             cov_ (idx_begin, idx_end,
@@ -1411,12 +1427,14 @@ struct  DotProdVisitor  {
                             const value_type &val1, const value_type &val2)  {
 
         result_ += (val1 * val2);
+        mag1_ += val1 * val1;
+        mag2_ += val2 * val2;
     }
     template <forward_iterator K, forward_iterator H>
     inline void
-    operator() (K /*idx_begin*/, K /*idx_end*/,
-                H column_begin1, H column_end1,
-                H column_begin2, H column_end2)  {
+    operator() (const K &/*idx_begin*/, const K &/*idx_end*/,
+                const H &column_begin1, const H &column_end1,
+                const H &column_begin2, const H &column_end2)  {
 
         if (std::distance(column_begin1, column_end1) >=
                 ThreadPool::MUL_THR_THHOLD &&
@@ -1424,13 +1442,22 @@ struct  DotProdVisitor  {
             auto    lbd =
                 []
                 (const auto &begin1, const auto &end1,
-                 const auto &begin2) -> value_type  {
+                 const auto &begin2) ->
+                         std::tuple<result_type, result_type, result_type>  {
                     value_type  result { 0 };
+                    value_type  mag1 { 0 };
+                    value_type  mag2 { 0 };
                     auto        iter2 = begin2;
 
-                    for (auto iter1 = begin1; iter1 < end1; ++iter1, ++iter2)
-                        result += *iter1 * *iter2;
-                    return (result);
+                    for (auto iter1 = begin1; iter1 < end1; ++iter1, ++iter2) {
+                        const auto  val1 = *iter1;
+                        const auto  val2 = *iter2;
+
+                        result += val1 * val2;
+                        mag1 += val1 * val1;
+                        mag2 += val2 * val2;
+                    }
+                    return (std::make_tuple(result, mag1, mag2));
                 };
             auto    futures =
                 ThreadGranularity::thr_pool_.parallel_loop2(column_begin1,
@@ -1439,27 +1466,45 @@ struct  DotProdVisitor  {
                                                             column_end2,
                                                             std::move(lbd));
 
-            for (auto &fut : futures)
-                result_ += fut.get();
+            for (auto &fut : futures)  {
+                const auto  ret = fut.get();
+
+                result_ += std::get<0>(ret);
+                mag1_ += std::get<1>(ret);
+                mag2_ += std::get<2>(ret);
+            }
         }
         else  {
             const size_type col_s =
                 std::min(std::distance(column_begin1, column_end1),
                          std::distance(column_begin2, column_end2));
 
-            for (size_type i = 0; i < col_s; ++i)
-                result_ += *(column_begin1 + i) * *(column_begin2 + i);
-        }
+            for (size_type i = 0; i < col_s; ++i)  {
+                const auto  val1 = *(column_begin1 + i);
+                const auto  val2 = *(column_begin2 + i);
 
+                result_ += val1 * val2;
+                mag1_ += val1 * val1;
+                mag2_ += val2 * val2;
+            }
+        }
     }
 
-    inline void pre ()  { result_ = 0; }
-    inline void post ()  {  }
+    inline void pre ()  { result_ = mag1_ = mag2_ = 0; }
+    inline void post ()  {
+
+        mag1_ = std::sqrt(mag1_);
+        mag2_ = std::sqrt(mag2_);
+    }
     inline result_type get_result () const  { return (result_); }
+    inline result_type get_magnitude1 () const  { return (mag1_); }
+    inline result_type get_magnitude2 () const  { return (mag2_); }
 
 private:
 
     result_type result_ { 0 };  // Dot product
+    result_type mag1_ { 0 };    // Magnitude of first vector
+    result_type mag2_ { 0 };    // Magnitude of second vector
 };
 
 // ----------------------------------------------------------------------------
@@ -1892,8 +1937,9 @@ public:
     }
     template <forward_iterator K, forward_iterator H>
     inline void
-    operator() (K idx_begin, K idx_end,
-                H x_begin, H x_end, H y_begin, H y_end)  {
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &x_begin, const H &x_end,
+                const H &y_begin, const H &y_end)  {
 
         const size_type col_s =
             std::min ({ std::distance(idx_begin, idx_end),

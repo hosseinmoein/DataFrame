@@ -1429,6 +1429,7 @@ struct  DotProdVisitor  {
         result_ += (val1 * val2);
         mag1_ += val1 * val1;
         mag2_ += val2 * val2;
+        euc_dist_ += (val1 - val2) * (val1 - val2);
     }
     template <forward_iterator K, forward_iterator H>
     inline void
@@ -1442,11 +1443,14 @@ struct  DotProdVisitor  {
             auto    lbd =
                 []
                 (const auto &begin1, const auto &end1,
-                 const auto &begin2) ->
-                         std::tuple<result_type, result_type, result_type>  {
+                 const auto &begin2) -> std::tuple<result_type,
+                                                   result_type,
+                                                   result_type,
+                                                   result_type>  {
                     value_type  result { 0 };
                     value_type  mag1 { 0 };
                     value_type  mag2 { 0 };
+                    value_type  euc_dist { 0 };
                     auto        iter2 = begin2;
 
                     for (auto iter1 = begin1; iter1 < end1; ++iter1, ++iter2) {
@@ -1456,8 +1460,9 @@ struct  DotProdVisitor  {
                         result += val1 * val2;
                         mag1 += val1 * val1;
                         mag2 += val2 * val2;
+                        euc_dist += (val1 - val2) * (val1 - val2);
                     }
-                    return (std::make_tuple(result, mag1, mag2));
+                    return (std::make_tuple(result, mag1, mag2, euc_dist));
                 };
             auto    futures =
                 ThreadGranularity::thr_pool_.parallel_loop2(column_begin1,
@@ -1472,6 +1477,7 @@ struct  DotProdVisitor  {
                 result_ += std::get<0>(ret);
                 mag1_ += std::get<1>(ret);
                 mag2_ += std::get<2>(ret);
+                euc_dist_ += std::get<3>(ret);
             }
         }
         else  {
@@ -1486,25 +1492,29 @@ struct  DotProdVisitor  {
                 result_ += val1 * val2;
                 mag1_ += val1 * val1;
                 mag2_ += val2 * val2;
+                euc_dist_ += (val1 - val2) * (val1 - val2);
             }
         }
     }
 
-    inline void pre ()  { result_ = mag1_ = mag2_ = 0; }
+    inline void pre ()  { result_ = mag1_ = mag2_ = euc_dist_ = 0; }
     inline void post ()  {
 
         mag1_ = std::sqrt(mag1_);
         mag2_ = std::sqrt(mag2_);
+        euc_dist_ = std::sqrt(euc_dist_);
     }
     inline result_type get_result () const  { return (result_); }
     inline result_type get_magnitude1 () const  { return (mag1_); }
     inline result_type get_magnitude2 () const  { return (mag2_); }
+    inline result_type get_eculidean_dist () const  { return (euc_dist_); }
 
 private:
 
-    result_type result_ { 0 };  // Dot product
-    result_type mag1_ { 0 };    // Magnitude of first vector
-    result_type mag2_ { 0 };    // Magnitude of second vector
+    result_type result_ { 0 };   // Dot product of two vectors
+    result_type mag1_ { 0 };     // Magnitude of first vector
+    result_type mag2_ { 0 };     // Magnitude of second vector
+    result_type euc_dist_ { 0 }; // Euclidean distance of two vectors
 };
 
 // ----------------------------------------------------------------------------

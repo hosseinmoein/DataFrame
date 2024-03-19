@@ -50,6 +50,7 @@ read(const char *file_name,
         If the file has a data column with the same name but different type as a column in the DataFrame, the behavior is undefined.
         Obviously, if the DataFrame is empty none of these matters.
 </PRE><BR>
+ -----------------------------------------------<BR>
         <B>CSV</B> file format must be:<BR>
         <PRE>
   INDEX:&lt;Number of data points&gt;:&lt;Comma delimited list of values&gt;
@@ -61,6 +62,7 @@ read(const char *file_name,
         </PRE>
         All empty lines or lines starting with # will be skipped. For examples see files in test directory<BR><BR>
 
+ -----------------------------------------------<BR>
         <B>CSV2</B> file format must be (this is similar to Pandas csv format):<BR>
         <PRE>
   INDEX:&lt;Number of data points&gt;:&lt;Index type&gt;:,&lt;Column1 name&gt;:&lt;Number of data points&gt;:&lt;Column1 type&gt;,&lt;Column2 name&gt;:&lt;Number of data points&gt;:&lt;Column2 type&gt;, . . .
@@ -69,8 +71,10 @@ read(const char *file_name,
       .
       .
         </PRE>
-        All empty lines or lines starting with # will be skipped. For examples see IBM and FORD files in test directory<BR><BR>
+        All empty lines or lines starting with # will be skipped.<BR>
+        <B>NOTE:</B> Only in CSV2 format you can specify <I>starting_row</I> and <I>num_rows</I>. This way you can read very large files (that don’t fit into memory) in chunks and process them. In this case the reading starts at <I>starting_row</I> and continues until either <I>num_rows</I> rows is read or EOF is reached.<BR><BR>
 
+ -----------------------------------------------<BR>
         <B>JSON</B> file format looks like this:<BR>
         <PRE>
   {
@@ -88,7 +92,7 @@ read(const char *file_name,
           <LI>Fields in column dictionaries must be in N (name), T (type), D (data) order</LI>
         </OL>
         <BR>
-        <BR>
+ -----------------------------------------------<BR>
         In all formats the following data types are supported:
         <PRE>
           float      -- float

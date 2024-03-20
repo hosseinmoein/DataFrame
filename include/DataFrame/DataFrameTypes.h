@@ -563,6 +563,17 @@ enum class  loss_function_type : unsigned char  {
 
 // ----------------------------------------------------------------------------
 
+enum class  vector_sim_type : unsigned char  {
+
+    euclidean_dist = 1,
+    manhattan_dist = 2,
+    do_product = 3,
+    cos_similarity = 4,
+    jaccard_similarity = 5, // Expensive to calculate
+};
+
+// ----------------------------------------------------------------------------
+
 template<typename T>
 struct  RandGenParams  {
 

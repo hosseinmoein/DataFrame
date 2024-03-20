@@ -3714,12 +3714,14 @@ static void test_view_visitors()  {
     assert(fabs(dp_visitor.get_magnitude1() - 5.92368) < 0.00001);
     assert(fabs(dp_visitor.get_magnitude2() - 7.77817) < 0.00001);
     assert(fabs(dp_visitor.get_eculidean_dist() - 1.90526) < 0.00001);
+    assert(fabs(dp_visitor.get_manhattan_dist() - 3.3) < 0.00001);
 
     dfv.single_act_visit<double, double>("dbl_col1", "dbl_col2", dp_visitor);
     assert(fabs(dp_visitor.get_result() - 45.98) < 0.00001);
     assert(fabs(dp_visitor.get_magnitude1() - 5.92368) < 0.00001);
     assert(fabs(dp_visitor.get_magnitude2() - 7.77817) < 0.00001);
     assert(fabs(dp_visitor.get_eculidean_dist() - 1.90526) < 0.00001);
+    assert(fabs(dp_visitor.get_manhattan_dist() - 3.3) < 0.00001);
 
     SimpleRollAdopter<MeanVisitor<double>, double, unsigned long, 128>
         mean_roller1(MeanVisitor<double>(), 3);

@@ -1426,10 +1426,14 @@ struct  DotProdVisitor  {
     inline void operator() (const index_type &,
                             const value_type &val1, const value_type &val2)  {
 
-        result_ += (val1 * val2);
+        result_ += val1 * val2;
         mag1_ += val1 * val1;
         mag2_ += val2 * val2;
-        euc_dist_ += (val1 - val2) * (val1 - val2);
+
+        const value_type    diff = val1 - val2;
+
+        euc_dist_ += diff * diff;
+        man_dist_ += std::fabs(diff);
     }
     template <forward_iterator K, forward_iterator H>
     inline void
@@ -1446,11 +1450,13 @@ struct  DotProdVisitor  {
                  const auto &begin2) -> std::tuple<result_type,
                                                    result_type,
                                                    result_type,
+                                                   result_type,
                                                    result_type>  {
                     value_type  result { 0 };
                     value_type  mag1 { 0 };
                     value_type  mag2 { 0 };
                     value_type  euc_dist { 0 };
+                    value_type  man_dist { 0 };
                     auto        iter2 = begin2;
 
                     for (auto iter1 = begin1; iter1 < end1; ++iter1, ++iter2) {
@@ -1460,9 +1466,14 @@ struct  DotProdVisitor  {
                         result += val1 * val2;
                         mag1 += val1 * val1;
                         mag2 += val2 * val2;
-                        euc_dist += (val1 - val2) * (val1 - val2);
+
+                        const value_type    diff = val1 - val2;
+
+                        euc_dist += diff * diff;
+                        man_dist += std::fabs(diff);
                     }
-                    return (std::make_tuple(result, mag1, mag2, euc_dist));
+                    return (std::make_tuple(result, mag1, mag2,
+                                            euc_dist, man_dist));
                 };
             auto    futures =
                 ThreadGranularity::thr_pool_.parallel_loop2(column_begin1,
@@ -1478,6 +1489,7 @@ struct  DotProdVisitor  {
                 mag1_ += std::get<1>(ret);
                 mag2_ += std::get<2>(ret);
                 euc_dist_ += std::get<3>(ret);
+                man_dist_ += std::get<4>(ret);
             }
         }
         else  {
@@ -1492,12 +1504,16 @@ struct  DotProdVisitor  {
                 result_ += val1 * val2;
                 mag1_ += val1 * val1;
                 mag2_ += val2 * val2;
-                euc_dist_ += (val1 - val2) * (val1 - val2);
+
+                const value_type    diff = val1 - val2;
+
+                euc_dist_ += diff * diff;
+                man_dist_ += std::fabs(diff);
             }
         }
     }
 
-    inline void pre ()  { result_ = mag1_ = mag2_ = euc_dist_ = 0; }
+    inline void pre ()  { result_ = mag1_ = mag2_ = euc_dist_ = man_dist_ = 0; }
     inline void post ()  {
 
         mag1_ = std::sqrt(mag1_);
@@ -1508,6 +1524,7 @@ struct  DotProdVisitor  {
     inline result_type get_magnitude1 () const  { return (mag1_); }
     inline result_type get_magnitude2 () const  { return (mag2_); }
     inline result_type get_eculidean_dist () const  { return (euc_dist_); }
+    inline result_type get_manhattan_dist () const  { return (man_dist_); }
 
 private:
 
@@ -1515,6 +1532,7 @@ private:
     result_type mag1_ { 0 };     // Magnitude of first vector
     result_type mag2_ { 0 };     // Magnitude of second vector
     result_type euc_dist_ { 0 }; // Euclidean distance of two vectors
+    result_type man_dist_ { 0 }; // Manhattan distance of two vectors
 };
 
 // ----------------------------------------------------------------------------

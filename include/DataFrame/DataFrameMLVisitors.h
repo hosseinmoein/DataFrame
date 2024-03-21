@@ -1826,23 +1826,8 @@ public:
                    actual_begin, actual_end, model_begin, model_end);
             dot_v.post();
 
-            const result_type   dot_prod = dot_v.get_result();
-
-            dot_v.pre();
-            dot_v (idx_begin, idx_end,
-                   actual_begin, actual_end, actual_begin, actual_end);
-            dot_v.post();
-
-            const result_type   a_mag = std::sqrt(dot_v.get_result());
-
-            dot_v.pre();
-            dot_v (idx_begin, idx_end,
-                   model_begin, model_end, model_begin, model_end);
-            dot_v.post();
-
-            const result_type   m_mag = std::sqrt(dot_v.get_result());
-
-            result_ = dot_prod / (a_mag * m_mag);
+            result_ = dot_v.get_result() /
+                      (dot_v.get_magnitude1() * dot_v.get_magnitude2());
             return;
         }
 
@@ -2148,6 +2133,88 @@ private:
 
 template<typename T, typename I = unsigned long>
 using loss_v = LossFunctionVisitor<T, I>;
+
+// ----------------------------------------------------------------------------
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+struct  VectorSimilarityVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES
+
+    using result_type = double;
+
+    template <forward_iterator K, forward_iterator H>
+    inline void
+    operator() (const K &idx_begin, const K &idx_end,
+                const H &column_begin1, const H &column_end1,
+                const H &column_begin2, const H &column_end2)  {
+
+        const size_type col_s1 = std::distance(column_begin1, column_end1);
+        const size_type col_s2 = std::distance(column_begin2, column_end2);
+
+        if (type_ != vector_sim_type::jaccard_similarity)  {
+            DotProdVisitor<T, I>    dot_v;
+
+            dot_v.pre();
+            dot_v (idx_begin, idx_end,
+                   column_begin1, column_end1, column_begin2, column_end2);
+            dot_v.post();
+
+            if (type_ == vector_sim_type::euclidean_dist)
+                result_ = dot_v.get_euclidean_dist();
+            else if (type_ == vector_sim_type::manhattan_dist)
+                result_ = dot_v.get_manhattan_dist();
+            else if (type_ == vector_sim_type::dot_product)
+                result_ = dot_v.get_result();
+            else if (type_ == vector_sim_type::cosine_similarity)
+                result_ = dot_v.get_result() /
+                          (dot_v.get_magnitude1() * dot_v.get_magnitude2());
+            else if (type_ == vector_sim_type::simple_similarity)  {
+                assert(col_s1 == col_s2);
+                result_ = (T(1) - dot_v.get_result() * dot_v.get_result()) /
+                          T(col_s1);
+            }
+        }
+        else  {
+            map_t   tbl;
+
+            tbl.reserve(col_s1 + col_s2);
+            for (size_type i = 0; i < col_s1; ++i)
+                tbl.insert(std::make_pair(*(column_begin1 + i), size_type(1)));
+            for (size_type i = 0; i < col_s2; ++i)  {
+                const auto  res =
+                    tbl.insert(std::make_pair(*(column_begin2 + i),
+                                              size_type(0)));
+
+                if (! res.second && res.first->second == 1)
+                    res.first->second += 1;
+            }
+
+            size_type   intersection { 0 };
+
+            for (const auto &[key, val] : tbl)
+                if (val > 1)  intersection += 1;
+            result_ = T(intersection) / T(col_s1 + col_s2 - intersection);
+        }
+    }
+
+    inline void pre ()  { result_ = 0; }
+    inline void post ()  {  }
+    inline result_type get_result () const  { return (result_); }
+
+    explicit
+    VectorSimilarityVisitor(vector_sim_type vs_t) : type_(vs_t)  {   }
+
+private:
+
+    using map_t = std::unordered_map<T, size_type>;
+
+    result_type             result_ { 0 };
+    const vector_sim_type   type_;
+};
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using vs_v = VectorSimilarityVisitor<T, I, A>;
 
 } // namespace hmdf
 

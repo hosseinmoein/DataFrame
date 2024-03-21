@@ -1523,7 +1523,7 @@ struct  DotProdVisitor  {
     inline result_type get_result () const  { return (result_); }
     inline result_type get_magnitude1 () const  { return (mag1_); }
     inline result_type get_magnitude2 () const  { return (mag2_); }
-    inline result_type get_eculidean_dist () const  { return (euc_dist_); }
+    inline result_type get_euclidean_dist () const  { return (euc_dist_); }
     inline result_type get_manhattan_dist () const  { return (man_dist_); }
 
 private:

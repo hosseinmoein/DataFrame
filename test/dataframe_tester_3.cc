@@ -2791,6 +2791,66 @@ static void test_remove_data_by_like()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_VectorSimilarityVisitor()  {
+
+    std::cout << "\nTesting VectorSimilarityVisitor {  } ..." << std::endl;
+
+    MyDataFrame df;
+
+    StlVecType<unsigned long>  idxvec =
+        { 1UL, 2UL, 3UL, 4UL, 5UL, 6UL, 7UL, 8UL, 9UL, 10UL };
+    StlVecType<double>         dblvec1 =
+        { 1.1, 2.2, 3.3, 4.4, 5.5, 6.6, 7.7, 8.8, 9.9, -1.2 };
+    StlVecType<double>         dblvec2 = 
+        { 1.15, 2.18, 3.31, 4.39, 5.48, 6.5, 7.8, 8.81, 9.88, -1.4 };
+    StlVecType<double>         dblvec3 =
+        { 0.0, 1.1, 9.8, 3.3, 4.4, 5.5, 6.6, 7.7, 8.8, -1.5 };
+    StlVecType<double>         dblvec4 =
+        { 5.9, 4.4, 1.0, 9.8, 5.3, 5.5, 3.8, 4.1, -3.3, -1.5 };
+    StlVecType<double>         dblvec5 = { 0, 1, 1, 0, 0, 1, 1, 1, 0, 1 };
+    StlVecType<double>         dblvec6 = { 1, 0, 1, 0, 1, 1, 0, 1, 0, 1 };
+
+    df.load_data(std::move(idxvec),
+                 std::make_pair("dbl_col1", dblvec1),
+                 std::make_pair("dbl_col2", dblvec2),
+                 std::make_pair("dbl_col3", dblvec3),
+                 std::make_pair("dbl_col4", dblvec4),
+                 std::make_pair("dbl_col5", dblvec5),
+                 std::make_pair("dbl_col6", dblvec6));
+
+    VectorSimilarityVisitor<double> vs_1 (vector_sim_type::euclidean_dist);
+
+    df.single_act_visit<double, double>("dbl_col1", "dbl_col2", vs_1);
+    assert(std::abs(vs_1.get_result() - 0.253) < 0.0001);
+
+    VectorSimilarityVisitor<double> vs_2 (vector_sim_type::manhattan_dist);
+
+    df.single_act_visit<double, double>("dbl_col1", "dbl_col2", vs_2);
+    assert(std::abs(vs_2.get_result() - 0.54) < 0.0001);
+
+    VectorSimilarityVisitor<double> vs_3 (vector_sim_type::dot_product);
+
+    df.single_act_visit<double, double>("dbl_col1", "dbl_col2", vs_3);
+    assert(std::abs(vs_3.get_result() - 346.42) < 0.0001);
+
+    vs_v<double>    vs_4 (vector_sim_type::cosine_similarity);
+
+    df.single_act_visit<double, double>("dbl_col1", "dbl_col2", vs_4);
+    assert(std::abs(vs_4.get_result() - 0.9999) < 0.0001);
+
+    vs_v<double>    vs_5 (vector_sim_type::simple_similarity);
+
+    df.single_act_visit<double, double>("dbl_col5", "dbl_col6", vs_5);
+    assert(std::abs(vs_5.get_result() - -1.5) < 0.0001);
+
+    vs_v<double>    vs_6 (vector_sim_type::jaccard_similarity);
+
+    df.single_act_visit<double, double>("dbl_col3", "dbl_col4", vs_6);
+    assert(std::abs(vs_6.get_result() - 0.25) < 0.0001);
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
@@ -2851,6 +2911,7 @@ int main(int, char *[]) {
     test_clear();
     test_swap();
     test_remove_data_by_like();
+    test_VectorSimilarityVisitor();
 
     return (0);
 }

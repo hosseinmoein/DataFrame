@@ -2136,7 +2136,7 @@ using loss_v = LossFunctionVisitor<T, I>;
 
 // ----------------------------------------------------------------------------
 
-template<typename T, typename I = unsigned long, std::size_t A = 0>
+template<vector_sim_type TYP, typename T, typename I = unsigned long>
 struct  VectorSimilarityVisitor  {
 
     DEFINE_VISIT_BASIC_TYPES
@@ -2152,7 +2152,7 @@ struct  VectorSimilarityVisitor  {
         const size_type col_s1 = std::distance(column_begin1, column_end1);
         const size_type col_s2 = std::distance(column_begin2, column_end2);
 
-        if (type_ != vector_sim_type::jaccard_similarity)  {
+        if constexpr (TYP != vector_sim_type::jaccard_similarity)  {
             DotProdVisitor<T, I>    dot_v;
 
             dot_v.pre();
@@ -2160,41 +2160,44 @@ struct  VectorSimilarityVisitor  {
                    column_begin1, column_end1, column_begin2, column_end2);
             dot_v.post();
 
-            if (type_ == vector_sim_type::euclidean_dist)
+            if constexpr (TYP == vector_sim_type::euclidean_dist)
                 result_ = dot_v.get_euclidean_dist();
-            else if (type_ == vector_sim_type::manhattan_dist)
+            else if constexpr (TYP == vector_sim_type::manhattan_dist)
                 result_ = dot_v.get_manhattan_dist();
-            else if (type_ == vector_sim_type::dot_product)
+            else if constexpr (TYP == vector_sim_type::dot_product)
                 result_ = dot_v.get_result();
-            else if (type_ == vector_sim_type::cosine_similarity)
+            else if constexpr (TYP == vector_sim_type::cosine_similarity)
                 result_ = dot_v.get_result() /
                           (dot_v.get_magnitude1() * dot_v.get_magnitude2());
-            else if (type_ == vector_sim_type::simple_similarity)  {
+            else if constexpr (TYP == vector_sim_type::simple_similarity)  {
                 assert(col_s1 == col_s2);
                 result_ = (T(1) - dot_v.get_result() * dot_v.get_result()) /
                           T(col_s1);
             }
         }
         else  {
+            using map_t = std::unordered_map<T, size_type>;
+
             map_t   tbl;
 
             tbl.reserve(col_s1 + col_s2);
             for (size_type i = 0; i < col_s1; ++i)
                 tbl.insert(std::make_pair(*(column_begin1 + i), size_type(1)));
+
+            size_type   intersection { 0 };
+
             for (size_type i = 0; i < col_s2; ++i)  {
                 const auto  res =
                     tbl.insert(std::make_pair(*(column_begin2 + i),
                                               size_type(0)));
 
-                if (! res.second && res.first->second == 1)
+                if (! res.second && res.first->second == 1)  {
                     res.first->second += 1;
+                    intersection += 1;
+                }
             }
-
-            size_type   intersection { 0 };
-
-            for (const auto &[key, val] : tbl)
-                if (val > 1)  intersection += 1;
-            result_ = T(intersection) / T(col_s1 + col_s2 - intersection);
+            result_ = result_type(intersection) /
+                      result_type(col_s1 + col_s2 - intersection);
         }
     }
 
@@ -2202,19 +2205,15 @@ struct  VectorSimilarityVisitor  {
     inline void post ()  {  }
     inline result_type get_result () const  { return (result_); }
 
-    explicit
-    VectorSimilarityVisitor(vector_sim_type vs_t) : type_(vs_t)  {   }
+    VectorSimilarityVisitor() = default;
 
 private:
 
-    using map_t = std::unordered_map<T, size_type>;
-
-    result_type             result_ { 0 };
-    const vector_sim_type   type_;
+    result_type result_ { 0 };
 };
 
-template<typename T, typename I = unsigned long, std::size_t A = 0>
-using vs_v = VectorSimilarityVisitor<T, I, A>;
+template<vector_sim_type TYP, typename T, typename I = unsigned long>
+using vs_v = VectorSimilarityVisitor<TYP, T, I>;
 
 } // namespace hmdf
 

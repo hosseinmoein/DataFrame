@@ -102,15 +102,13 @@ enum class loss_function_type : unsigned char  {
       <td bgcolor="maroon"> <font color="white">
         <PRE><B>#include &lt;DataFrame/DataFrameMLVisitors.h&gt;
 
-template&lt;typename T, typename I = unsigned long,
-         std::size_t A = 0&gt;
+template&lt;typename T, typename I = unsigned long&gt;
 struct LossFunctionVisitor;
 
 // -------------------------------------
 
-template&lt;typename T, typename I = unsigned long,
-         std::size_t A = 0&gt;
-using loss_v = LossFunctionVisitor&lt;T, I, A&gt;;
+template&lt;typename T, typename I = unsigned long&gt;
+using loss_v = LossFunctionVisitor&lt;T, I&gt;;
         </B></PRE></font>
       </td>
       <td>
@@ -127,7 +125,6 @@ using loss_v = LossFunctionVisitor&lt;T, I, A&gt;;
       <td width="12%">
         <B>T</B>: Column data type.<BR>
         <B>I</B>: Index type.<BR>
-        <B>A</B>: Memory alignment boundary for vectors. Default is system default alignment<BR>
       </td>
     </tr>
 

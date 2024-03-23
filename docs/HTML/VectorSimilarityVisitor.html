@@ -1,0 +1,180 @@
+<!--
+Copyright (c) 2019-2026, Hossein Moein
+All rights reserved.
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+* Redistributions of source code must retain the above copyright
+  notice, this list of conditions and the following disclaimer.
+* Redistributions in binary form must reproduce the above copyright
+  notice, this list of conditions and the following disclaimer in the
+  documentation and/or other materials provided with the distribution.
+* Neither the name of Hossein Moein and/or the DataFrame nor the
+  names of its contributors may be used to endorse or promote products
+  derived from this software without specific prior written permission.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL Hossein Moein BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+<!DOCTYPE html>
+<html>
+
+<style>
+.frac {
+    display: inline-block;
+    position: relative;
+    vertical-align: middle;
+    letter-spacing: 0.001em;
+    text-align: center;
+}
+.frac > span {
+    display: block;
+    padding-top: 0.01em;
+    padding-bottom: 0.01em;
+}
+.frac span.bottom {
+    border-top: thin solid white;
+    padding-top: 0.4em;
+    padding-bottom: 0.3em;
+}
+.frac span.symbol { display: none; }
+</style>
+
+<body>
+
+  <table align="center" border="1">
+    <tr bgcolor="lightblue">
+      <th>Signature</th> <th>Description</th>
+    </tr>
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        <PRE><B>
+enum class vector_sim_type : unsigned char  {
+    euclidean_dist = 1,     // Euclidean distance
+    manhattan_dist = 2,     // Manhattan distance
+    dot_product = 3,
+    simple_similarity = 4,  // Both binary vectors must be of the same size
+    cosine_similarity = 5,
+    jaccard_similarity = 6, // Relatively expensive to calculate
+};</B></PRE> </font>
+      </td>
+      <td>
+        Different types of vector similarity measurementloss function <BR>
+      </td>
+    </tr>
+  </table>
+
+  <BR>
+
+  <table align="center" border="1">
+
+    <tr bgcolor="lightblue">
+      <th>Signature</th> <th>Description</th> <th>Parameters</th>
+    </tr>
+
+    <tr bgcolor="lightgrey">
+      <td bgcolor="maroon"> <font color="white">
+        <PRE><B>#include &lt;DataFrame/DataFrameMLVisitors.h&gt;
+
+template&lt;vector_sim_type TYP, typename T, typename I = unsigned long&gt;
+struct VectorSimilarityVisitor;
+
+// -------------------------------------
+
+template&lt;vector_sim_type TYP, typename T, typename I = unsigned long&gt;
+using vs_v = VectorSimilarityVisitor&lt;TYP, T, I&gt;;
+        </B></PRE></font>
+      </td>
+      <td>
+        Similarity measures play a crucial role in machine learning. These measures quantify the similarity between objects, data points, or vectors in a mathematical manner. Understanding the concept of similarity in the vector space and employing appropriate measures is fundamental in solving a wide range of real-world problems. There are several similarity measures that can be used to calculate how close two vectors are in the embedding space (See above <I>vector_sim_type</I>).<BR>
+      </td>
+      <td width="12%">
+        <B>T</B>: Column data type.<BR>
+        <B>I</B>: Index type.<BR>
+      </td>
+    </tr>
+
+  </table>
+
+<pre class="code_syntax" style="color:#000000;background:#ffffff;"><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">static</span> <span style="color:#800000; font-weight:bold; ">void</span> test_VectorSimilarityVisitor<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span>  <span style="color:#800080; ">{</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">cout</span> <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> <span style="color:#800000; ">"</span><span style="color:#0f69ff; ">\n</span><span style="color:#0000e6; ">Testing VectorSimilarityVisitor {  } ...</span><span style="color:#800000; ">"</span> <span style="color:#808030; ">&lt;</span><span style="color:#808030; ">&lt;</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">endl</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    MyDataFrame df<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    StlVecType<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">unsigned</span> <span style="color:#800000; font-weight:bold; ">long</span><span style="color:#800080; ">&gt;</span>  idxvec <span style="color:#808030; ">=</span> <span style="color:#800080; ">{</span> <span style="color:#008c00; ">1</span><span style="color:#006600; ">UL</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">2</span><span style="color:#006600; ">UL</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">3</span><span style="color:#006600; ">UL</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">4</span><span style="color:#006600; ">UL</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">5</span><span style="color:#006600; ">UL</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">6</span><span style="color:#006600; ">UL</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">7</span><span style="color:#006600; ">UL</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">8</span><span style="color:#006600; ">UL</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">9</span><span style="color:#006600; ">UL</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">10</span><span style="color:#006600; ">UL</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    StlVecType<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span>         dblvec1 <span style="color:#808030; ">=</span> <span style="color:#800080; ">{</span> <span style="color:#008000; ">1.1</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">2.2</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">3.3</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">4.4</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">5.5</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">6.6</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">7.7</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">8.8</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">9.9</span><span style="color:#808030; ">,</span> <span style="color:#808030; ">-</span><span style="color:#008000; ">1.2</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    StlVecType<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span>         dblvec2 <span style="color:#808030; ">=</span> <span style="color:#800080; ">{</span> <span style="color:#008000; ">1.15</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">2.18</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">3.31</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">4.39</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">5.48</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">6.5</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">7.8</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">8.81</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">9.88</span><span style="color:#808030; ">,</span> <span style="color:#808030; ">-</span><span style="color:#008000; ">1.4</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    StlVecType<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span>         dblvec3 <span style="color:#808030; ">=</span> <span style="color:#800080; ">{</span> <span style="color:#008000; ">0.0</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">1.1</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">9.8</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">3.3</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">4.4</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">5.5</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">6.6</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">7.7</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">8.8</span><span style="color:#808030; ">,</span> <span style="color:#808030; ">-</span><span style="color:#008000; ">1.5</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    StlVecType<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span>         dblvec4 <span style="color:#808030; ">=</span> <span style="color:#800080; ">{</span> <span style="color:#008000; ">5.9</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">4.4</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">1.0</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">9.8</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">5.3</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">5.5</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">3.8</span><span style="color:#808030; ">,</span> <span style="color:#008000; ">4.1</span><span style="color:#808030; ">,</span> <span style="color:#808030; ">-</span><span style="color:#008000; ">3.3</span><span style="color:#808030; ">,</span> <span style="color:#808030; ">-</span><span style="color:#008000; ">1.5</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    StlVecType<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span>         dblvec5 <span style="color:#808030; ">=</span> <span style="color:#800080; ">{</span> <span style="color:#008c00; ">0</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">1</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">1</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">0</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">0</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">1</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">1</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">1</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">0</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">1</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    StlVecType<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span>         dblvec6 <span style="color:#808030; ">=</span> <span style="color:#800080; ">{</span> <span style="color:#008c00; ">1</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">0</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">1</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">0</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">1</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">1</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">0</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">1</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">0</span><span style="color:#808030; ">,</span> <span style="color:#008c00; ">1</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    StlVecType<span style="color:#800080; ">&lt;</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">string</span><span style="color:#800080; ">&gt;</span>    strvec1 <span style="color:#808030; ">=</span> <span style="color:#800080; ">{</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">Today</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">I</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">need</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">to</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">learn</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">about</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">Jaccard</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">similarity</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">.</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">/</span><span style="color:#800000; ">"</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    StlVecType<span style="color:#800080; ">&lt;</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">string</span><span style="color:#800080; ">&gt;</span>    strvec2 <span style="color:#808030; ">=</span> <span style="color:#800080; ">{</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">Later</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">I</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">will</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">need</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">other</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">things</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">to</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">do</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; ">"</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; ">"</span><span style="color:#800000; ">"</span> <span style="color:#800080; ">}</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    df<span style="color:#808030; ">.</span>load_data<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">move</span><span style="color:#808030; ">(</span>idxvec<span style="color:#808030; ">)</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                 <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>make_pair<span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">dbl_col1</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> dblvec1<span style="color:#808030; ">)</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                 <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>make_pair<span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">dbl_col2</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> dblvec2<span style="color:#808030; ">)</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                 <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>make_pair<span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">dbl_col3</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> dblvec3<span style="color:#808030; ">)</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                 <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>make_pair<span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">dbl_col4</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> dblvec4<span style="color:#808030; ">)</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                 <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>make_pair<span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">dbl_col5</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> dblvec5<span style="color:#808030; ">)</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                 <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>make_pair<span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">dbl_col6</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> dblvec6<span style="color:#808030; ">)</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                 <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>make_pair<span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">str_col1</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> strvec1<span style="color:#808030; ">)</span><span style="color:#808030; ">,</span></span>
+<span class="line_wrapper">                 <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span>make_pair<span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">str_col2</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> strvec2<span style="color:#808030; ">)</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    VectorSimilarityVisitor<span style="color:#800080; ">&lt;</span>vector_sim_type<span style="color:#800080; ">::</span>euclidean_dist<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span>    vs_1<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    df<span style="color:#808030; ">.</span>single_act_visit<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">dbl_col1</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">dbl_col2</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> vs_1<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">abs</span><span style="color:#808030; ">(</span>vs_1<span style="color:#808030; ">.</span>get_result<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">0.253</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.0001</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    VectorSimilarityVisitor<span style="color:#800080; ">&lt;</span>vector_sim_type<span style="color:#800080; ">::</span>manhattan_dist<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span>    vs_2<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    df<span style="color:#808030; ">.</span>single_act_visit<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">dbl_col1</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">dbl_col2</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> vs_2<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">abs</span><span style="color:#808030; ">(</span>vs_2<span style="color:#808030; ">.</span>get_result<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">0.54</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.0001</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    VectorSimilarityVisitor<span style="color:#800080; ">&lt;</span>vector_sim_type<span style="color:#800080; ">::</span>dot_product<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span>   vs_3<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    df<span style="color:#808030; ">.</span>single_act_visit<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">dbl_col1</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">dbl_col2</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> vs_3<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">abs</span><span style="color:#808030; ">(</span>vs_3<span style="color:#808030; ">.</span>get_result<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">346.42</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.0001</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    vs_v<span style="color:#800080; ">&lt;</span>vector_sim_type<span style="color:#800080; ">::</span>cosine_similarity<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span>    vs_4<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    df<span style="color:#808030; ">.</span>single_act_visit<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">dbl_col1</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">dbl_col2</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> vs_4<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">abs</span><span style="color:#808030; ">(</span>vs_4<span style="color:#808030; ">.</span>get_result<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">0.9999</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.0001</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    vs_v<span style="color:#800080; ">&lt;</span>vector_sim_type<span style="color:#800080; ">::</span>simple_similarity<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span>    vs_5<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    df<span style="color:#808030; ">.</span>single_act_visit<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">dbl_col5</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">dbl_col6</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> vs_5<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">abs</span><span style="color:#808030; ">(</span>vs_5<span style="color:#808030; ">.</span>get_result<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span> <span style="color:#808030; ">-</span><span style="color:#008000; ">1.5</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.0001</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    vs_v<span style="color:#800080; ">&lt;</span>vector_sim_type<span style="color:#800080; ">::</span>jaccard_similarity<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span>   vs_6<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    df<span style="color:#808030; ">.</span>single_act_visit<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">dbl_col3</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">dbl_col4</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> vs_6<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">abs</span><span style="color:#808030; ">(</span>vs_6<span style="color:#808030; ">.</span>get_result<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">0.25</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.0001</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    VectorSimilarityVisitor<span style="color:#800080; ">&lt;</span>vector_sim_type<span style="color:#800080; ">::</span>jaccard_similarity<span style="color:#808030; ">,</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">string</span><span style="color:#800080; ">&gt;</span>  vs_7<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    df<span style="color:#808030; ">.</span>single_act_visit<span style="color:#800080; ">&lt;</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">string</span><span style="color:#808030; ">,</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">string</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">str_col1</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">str_col2</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> vs_7<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">abs</span><span style="color:#808030; ">(</span>vs_7<span style="color:#808030; ">.</span>get_result<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">0.1765</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.0001</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"><span style="color:#800080; ">}</span></span>
+<span class="line_wrapper"></span></pre>
+
+  <img src="https://github.com/hosseinmoein/DataFrame/blob/master/docs/LionLookingUp.jpg?raw=true" alt="C++ DataFrame"
+       width="200" height="150" style="float:right"/>
+
+</body>
+</html>
+
+<!--
+Local Variables:
+mode:HTML
+tab-width:4
+c-basic-offset:4
+End:
+-->

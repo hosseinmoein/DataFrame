@@ -568,9 +568,14 @@ enum class  vector_sim_type : unsigned char  {
     euclidean_dist = 1,     // Euclidean distance
     manhattan_dist = 2,     // Manhattan distance
     dot_product = 3,
-    simple_similarity = 4,  // Both binary vectors must be of the same size
+    simple_similarity = 4,  // Two binary vectors must be of equal length
     cosine_similarity = 5,
     jaccard_similarity = 6, // Relatively expensive to calculate
+
+    // Hamming distance is number of unequal memebrs
+    // Two vectors must be of equal length
+    //
+    hamming_dist = 7,
 };
 
 // ----------------------------------------------------------------------------

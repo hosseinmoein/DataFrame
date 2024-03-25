@@ -2152,7 +2152,8 @@ struct  VectorSimilarityVisitor  {
         const size_type col_s1 = std::distance(column_begin1, column_end1);
         const size_type col_s2 = std::distance(column_begin2, column_end2);
 
-        if constexpr (TYP != vector_sim_type::jaccard_similarity)  {
+        if constexpr (TYP != vector_sim_type::jaccard_similarity &&
+                      TYP != vector_sim_type::hamming_dist)  {
             DotProdVisitor<T, I>    dot_v;
 
             dot_v.pre();
@@ -2175,7 +2176,7 @@ struct  VectorSimilarityVisitor  {
                           T(col_s1);
             }
         }
-        else  {
+        else if constexpr (TYP == vector_sim_type::jaccard_similarity)   {
             using map_t = std::unordered_map<T, size_type>;
 
             map_t   tbl;
@@ -2198,6 +2199,12 @@ struct  VectorSimilarityVisitor  {
             }
             result_ = result_type(intersection) /
                       result_type(col_s1 + col_s2 - intersection);
+        }
+        else  {  // Hamming distance
+            assert(col_s1 == col_s2);
+            for (size_type i = 0; i < std::min(col_s1, col_s2); ++i)
+                if (*(column_begin1 + i) != *(column_begin2 + i))
+                    result_ += 1;
         }
     }
 

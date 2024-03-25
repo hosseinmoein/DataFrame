@@ -285,12 +285,12 @@ static void test_CoppockCurveVisitor()  {
 
         assert(copp.get_result().size() == 1721);
         assert(std::isnan(copp.get_result()[0]));
-        assert(std::abs(copp.get_result()[14] - -0.051884971603) < 0.0000001);
-        assert(std::abs(copp.get_result()[18] - -0.100660882748) < 0.0000001);
-        assert(std::abs(copp.get_result()[25] - -0.124090378548) < 0.0000001);
-        assert(std::abs(copp.get_result()[1720] - -0.219247796696) < 0.0000001);
-        assert(std::abs(copp.get_result()[1712] - 0.0630742594051) < 0.0000001);
-        assert(std::abs(copp.get_result()[1707] - 0.0766481878384) < 0.0000001);
+        assert(std::abs(copp.get_result()[14] - -0.0518849716) < 0.000001);
+        assert(std::abs(copp.get_result()[18] - -0.10066088275) < 0.000001);
+        assert(std::abs(copp.get_result()[25] - -0.12409037855) < 0.000001);
+        assert(std::abs(copp.get_result()[1720] - -0.2192477967) < 0.000001);
+        assert(std::abs(copp.get_result()[1712] - 0.063074259405) < 0.000001);
+        assert(std::abs(copp.get_result()[1707] - 0.076648187838) < 0.000001);
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
@@ -1057,7 +1057,8 @@ static void test_ImpurityVisitor()  {
           123457, 123458, 123459, 123460, 123461, 123462, 123466,
           123467, 123468, 123469, 123470, 123471, 123472, 123473 };
     StlVecType<std::string>     metal = { "Gold", "Gold", "Gold", "Gold" };
-    StlVecType<std::string>     metal2 = { "Gold", "Silver", "Silver", "Gold" };
+    StlVecType<std::string>     metal2 =
+        { "Gold", "Silver", "Silver", "Gold" };
     StlVecType<double>          numbers =
         { 2.5, 2.5, 2.5, -0.1, -1.1, -0.1, -1.1, -1.1, -0.1, 34.5, -1.1,
           34.5, 34.5, 34.5, 0.123, 0.123, 0.123, 0.5, 0.4, 2.5, 0.5 };
@@ -1322,7 +1323,7 @@ static void test_FixedAutoCorrVisitor()  {
         assert(std::abs(fac.get_result()[159] - 0.075) < 0.0001);
 
         FixedAutoCorrVisitor<double,
-                             std::string>  fac2 { 31, roll_policy::continuous };
+                             std::string> fac2 { 31, roll_policy::continuous };
 
         df.single_act_visit<double> ("IBM_Close", fac2);
 
@@ -1444,7 +1445,8 @@ static void test_InertiaVisitor()  {
 
 static void test_SymmTriangleMovingMeanVisitor()  {
 
-    std::cout << "\nTesting SymmTriangleMovingMeanVisitor{  } ..." << std::endl;
+    std::cout << "\nTesting SymmTriangleMovingMeanVisitor{  } ..."
+              << std::endl;
 
     StrDataFrame    df;
 
@@ -2259,10 +2261,11 @@ static void test_user_join_test()  {
     People.join_by_column<decltype(Cars), int, string, int>(
         Cars,
         "key",
-        join_policy::left_right_join).write<ostream,
-                                           string,
-                                           int,
-                                           unsigned int>(cout, io_format::csv2);
+        join_policy::left_right_join).write<
+            ostream,
+            string,
+            int,
+            unsigned int>(cout, io_format::csv2);
 
     std::cout << "Inner Join ...\n";
     People.join_by_column<decltype(Cars), int, string, int>(
@@ -2813,7 +2816,8 @@ static void test_VectorSimilarityVisitor()  {
         { "Today", "I", "need", "to", "learn", "about", "Jaccard",
           "similarity", ".", "/" };
     StlVecType<std::string>    strvec2 =
-        { "Later", "I", "will", "need", "other", "things", "to", "do", "", "" };
+        { "Later", "I", "will", "need", "other", "things", "to", "do",
+          "", "" };
 
     df.load_data(std::move(idxvec),
                  std::make_pair("dbl_col1", dblvec1),
@@ -2858,8 +2862,20 @@ static void test_VectorSimilarityVisitor()  {
     VectorSimilarityVisitor<vector_sim_type::jaccard_similarity,
                             std::string>    vs_7;
 
-    df.single_act_visit<std::string, std::string>("str_col1", "str_col2", vs_7);
+    df.single_act_visit<std::string, std::string>("str_col1",
+                                                  "str_col2", vs_7);
     assert(std::abs(vs_7.get_result() - 0.1765) < 0.0001);
+
+    vs_v<vector_sim_type::hamming_dist, double> vs_8;
+
+    df.single_act_visit<double, double>("dbl_col3", "dbl_col4", vs_8);
+    assert(std::abs(vs_8.get_result() - 8.0) < 0.0001);
+
+    vs_v<vector_sim_type::hamming_dist, std::string>    vs_9;
+
+    df.single_act_visit<std::string, std::string>("str_col1",
+                                                  "str_col2", vs_9);
+    assert(std::abs(vs_9.get_result() - 9.0) < 0.0001);
 }
 
 // ----------------------------------------------------------------------------

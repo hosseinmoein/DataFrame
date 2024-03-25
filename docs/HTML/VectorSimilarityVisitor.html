@@ -59,9 +59,14 @@ enum class vector_sim_type : unsigned char  {
     euclidean_dist = 1,     // Euclidean distance
     manhattan_dist = 2,     // Manhattan distance
     dot_product = 3,
-    simple_similarity = 4,  // Both binary vectors must be of the same size
+    simple_similarity = 4,  // Two binary vectors must be of equal length
     cosine_similarity = 5,
     jaccard_similarity = 6, // Relatively expensive to calculate
+
+    // Hamming distance is number of unequal memebrs
+    // Two vectors must be of equal length
+    //
+    hamming_dist = 7,
 };</B></PRE> </font>
       </td>
       <td>
@@ -94,7 +99,8 @@ using vs_v = VectorSimilarityVisitor&lt;TYP, T, I&gt;;
       <td>
         Similarity measures play a crucial role in machine learning. These measures quantify the similarity between objects, data points, or vectors in a mathematical manner. Understanding the concept of similarity in the vector space and employing appropriate measures is fundamental in solving a wide range of real-world problems. There are several similarity measures that can be used to calculate how close two vectors are in the embedding space (See above <I>vector_sim_type</I>).<BR>
       </td>
-      <td width="12%">
+      <td width="30%">
+        <B>TYP</B>: Type of similarity specified above. The reason for this being a template param is to take advantage of <I>constexpr</I> if clauses for incompatible types.<BR>
         <B>T</B>: Column data type.<BR>
         <B>I</B>: Index type.<BR>
       </td>
@@ -162,6 +168,16 @@ using vs_v = VectorSimilarityVisitor&lt;TYP, T, I&gt;;
 <span class="line_wrapper"></span>
 <span class="line_wrapper">    df<span style="color:#808030; ">.</span>single_act_visit<span style="color:#800080; ">&lt;</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">string</span><span style="color:#808030; ">,</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">string</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">str_col1</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">str_col2</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> vs_7<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper">    assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">abs</span><span style="color:#808030; ">(</span>vs_7<span style="color:#808030; ">.</span>get_result<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">0.1765</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.0001</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    vs_v<span style="color:#800080; ">&lt;</span>vector_sim_type<span style="color:#800080; ">::</span>hamming_dist<span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span> vs_8<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    df<span style="color:#808030; ">.</span>single_act_visit<span style="color:#800080; ">&lt;</span><span style="color:#800000; font-weight:bold; ">double</span><span style="color:#808030; ">,</span> <span style="color:#800000; font-weight:bold; ">double</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">dbl_col3</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">dbl_col4</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> vs_8<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">abs</span><span style="color:#808030; ">(</span>vs_8<span style="color:#808030; ">.</span>get_result<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">8.0</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.0001</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    vs_v<span style="color:#800080; ">&lt;</span>vector_sim_type<span style="color:#800080; ">::</span>hamming_dist<span style="color:#808030; ">,</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">string</span><span style="color:#800080; ">&gt;</span>    vs_9<span style="color:#800080; ">;</span></span>
+<span class="line_wrapper"></span>
+<span class="line_wrapper">    df<span style="color:#808030; ">.</span>single_act_visit<span style="color:#800080; ">&lt;</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">string</span><span style="color:#808030; ">,</span> <span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">string</span><span style="color:#800080; ">&gt;</span><span style="color:#808030; ">(</span><span style="color:#800000; ">"</span><span style="color:#0000e6; ">str_col1</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> <span style="color:#800000; ">"</span><span style="color:#0000e6; ">str_col2</span><span style="color:#800000; ">"</span><span style="color:#808030; ">,</span> vs_9<span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
+<span class="line_wrapper">    assert<span style="color:#808030; ">(</span><span style="color:#666616; ">std</span><span style="color:#800080; ">::</span><span style="color:#603000; ">abs</span><span style="color:#808030; ">(</span>vs_9<span style="color:#808030; ">.</span>get_result<span style="color:#808030; ">(</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">-</span> <span style="color:#008000; ">9.0</span><span style="color:#808030; ">)</span> <span style="color:#808030; ">&lt;</span> <span style="color:#008000; ">0.0001</span><span style="color:#808030; ">)</span><span style="color:#800080; ">;</span></span>
 <span class="line_wrapper"><span style="color:#800080; ">}</span></span>
 <span class="line_wrapper"></span></pre>
 

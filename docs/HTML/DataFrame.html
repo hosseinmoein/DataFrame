@@ -97,7 +97,7 @@ table {
 &nbsp;&nbsp;&nbsp;&nbsp;<B><span style='color:#800000; font-weight:bold; '>template</span><span style='color:#800080; '>&lt;</span><span style='color:#800000; font-weight:bold; '>typename</span> I<span style='color:#808030; '>,</span> <span style='color:#800000; font-weight:bold; '>typename</span> H<span style='color:#800080; '>></span><BR>
 &nbsp;&nbsp;&nbsp;&nbsp;<span style='color:#800000; font-weight:bold; '>class</span> DataFrame;</B><BR><BR>
 
-  <B>I</B> specifies the <I>index</I> column type<BR>
+  <B>I</B> specifies the <I>index</I> column type. Index column in a DataFrame is unlike an index in a SQL database. SQL database index makes access efficient. It doesn’t give you any more information. The index column in a DataFrame is metadata about the data in the DataFrame. Each entry in the index describes the given row. It could be time, frequency, …, or a set of descriptors in a struct (like temperature, altitude, …).<BR>
   <B>H</B> specifies a heterogenous vector type to contain DataFrame columns &#8212; don't get hang up on this too much, instead use the convenient typedef's in <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrameTypes.html">DataFrame Library Types</a>.<BR>
   <B>H</B> can only be:<BR>
   <UL>
@@ -229,7 +229,7 @@ table.hovertable td {
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
-      <td title="Generates DateTime index values"><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/gen_datetime_index.html">static<BR>gen_datetime_index</a>()</td>
+      <td title="Generates DateTime index values"><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/gen_datetime_index.html">static gen_datetime_index</a>()</td>
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
@@ -389,7 +389,7 @@ table.hovertable td {
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
-      <td title="Removes Spin Lock"><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/remove_lock.html">static<BR>remove_lock</a>()</td>
+      <td title="Removes Spin Lock"><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/remove_lock.html">static remove_lock</a>()</td>
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
@@ -417,7 +417,7 @@ table.hovertable td {
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
-      <td title="Sets the Spin Lock"><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/remove_lock.html">static<BR>set_lock</a>()</td>
+      <td title="Sets the Spin Lock"><a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/remove_lock.html">static set_lock</a>()</td>
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">

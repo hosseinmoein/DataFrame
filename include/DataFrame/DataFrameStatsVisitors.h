@@ -40,7 +40,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <algorithm>
 #include <array>
-#include <cassert>
 
 #include <cmath>
 #ifndef M_PI
@@ -636,8 +635,10 @@ struct  ExtremumVisitor  {
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end) {
 
-        assert((std::distance(idx_begin, idx_end) >=
-                    std::distance(column_begin, column_end)));
+        if (std::distance(idx_begin, idx_end) <
+                std::distance(column_begin, column_end))
+            throw DataFrameError("ExtremumVisitor: column size must be <= "
+                                 "index size");
 
         GET_COL_SIZE
 
@@ -1728,7 +1729,10 @@ public:
                 const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
-        assert(roll_count_ > 0 and roll_count_ <= col_s);
+
+        if (roll_count_ == 0 || roll_count_ > col_s)
+            throw DataFrameError("SimpleRollAdopter: roll count must be <= "
+                                 "column size");
 
         result_.reserve(col_s);
         for (size_type i = 0; i < roll_count_ - 1 && i < col_s; ++i) [[likely]]
@@ -1785,7 +1789,10 @@ public:
                 const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
-        assert(period_ > 0 and period_ < col_s);
+
+        if (period_ == 0 || period_ >= col_s)
+            throw DataFrameError("StepRollAdopter: period must be < "
+                                 "column size");
 
         for (size_type i = 0; i < col_s; i += period_) [[likely]]
             visitor_(idx_begin[i], column_begin[i]);
@@ -1830,7 +1837,10 @@ public:
                 const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
-        assert(init_roll_count_ > 0 and init_roll_count_ < col_s);
+
+        if (init_roll_count_ == 0 || init_roll_count_ >= col_s)
+            throw DataFrameError("ExpandingRollAdopter: roll count must be < "
+                                 "column size");
 
         result_.reserve(col_s);
 
@@ -2535,7 +2545,9 @@ struct  FixedAutoCorrVisitor  {
 
         GET_COL_SIZE
 
-        assert(col_s > lag_);
+        if (col_s <= lag_)
+            throw DataFrameError(
+                "FixedAutoCorrVisitor: column size must be > lag");
 
         CorrVisitor<value_type, index_type> corr {  };
         result_type                         result;
@@ -2617,7 +2629,10 @@ struct  ExponentiallyWeightedMeanVisitor  {
                 const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
-        assert(col_s > 3);
+
+        if (col_s <= 3)
+            throw DataFrameError("ExponentiallyWeightedMeanVisitor: "
+                                 "column size must be > 3");
 
         result_type         result (col_s, 0);
         const value_type    decay_comp = T(1) - decay_;
@@ -2697,7 +2712,11 @@ struct  ExponentiallyWeightedVarVisitor  {
                 const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
-        assert(col_s > 3);
+
+        if (col_s <= 3)
+            throw DataFrameError("ExponentiallyWeightedVarVisitor: "
+                                 "column size must be > 3");
+
 
         result_type         ewmvar;
         result_type         ewmstd;
@@ -2799,8 +2818,9 @@ struct  ExponentiallyWeightedCovVisitor  {
 
         const size_type col_s = std::distance(x_begin, x_end);
 
-        assert((col_s == size_type(std::distance(y_begin, y_end))));
-        assert(col_s > 3);
+        if (col_s != size_type(std::distance(y_begin, y_end)) || col_s <= 3)
+            throw DataFrameError("ExponentiallyWeightedCovVisitor: "
+                                 "column sizes must be equal and > 3");
 
         result_type         ewmcov;
         const value_type    decay_comp = T(1) - decay_;
@@ -2894,8 +2914,9 @@ struct  ExponentiallyWeightedCorrVisitor  {
 
         const size_type col_s = std::distance(x_begin, x_end);
 
-        assert((col_s == size_type(std::distance(y_begin, y_end))));
-        assert(col_s > 3);
+        if (col_s != size_type(std::distance(y_begin, y_end)) || col_s <= 3)
+            throw DataFrameError("ExponentiallyWeightedCorrVisitor: "
+                                 "column sizes must be equal and > 3");
 
         result_type         ewmcorr;
         const value_type    decay_comp = T(1) - decay_;
@@ -2993,8 +3014,10 @@ struct  ZeroLagMovingMeanVisitor  {
                 const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
-        assert(col_s > 3);
-        assert(roll_period_ < col_s - 1);
+
+        if (col_s <= 3 || roll_period_ >= (col_s - 1))
+            throw DataFrameError("ZeroLagMovingMeanVisitor: column > 3 and "
+                                 "roll period < column size - 1");
 
         result_.resize (col_s, std::numeric_limits<T>::quiet_NaN());
 
@@ -3070,8 +3093,10 @@ struct  LinregMovingMeanVisitor  {
                 const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
-        assert(col_s > 3);
-        assert(roll_period_ < col_s - 1);
+
+        if (col_s <= 3 || roll_period_ >= (col_s - 1))
+            throw DataFrameError("LinregMovingMeanVisitor: column > 3 and "
+                                 "roll period < column size - 1");
 
         const value_type    sum_x =
             0.5 * T(roll_period_) * T(roll_period_ + 1);
@@ -3214,7 +3239,10 @@ struct  SymmTriangleMovingMeanVisitor  {
                 const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE
-        assert(roll_period_ > 0 && roll_period_ < col_s);
+
+        if (roll_period_ == 0 || roll_period_ >= col_s)
+            throw DataFrameError("SymmTriangleMovingMeanVisitor: "
+                                 "roll period must be > 0 and < column size");
 
         size_type   starting { 0 };
 
@@ -3327,7 +3355,9 @@ private:
 
         // If k is smaller than number of elements in array
         //
-        assert ((k > 0 && k <= end - begin + 1));
+        if (k == 0 || k > (end - begin + 1))
+            throw DataFrameError("KthValueVisitor: k must be > 0 and "
+                                 "< data size");
 
         const size_type pos = parttition_(vec, begin, end);
 
@@ -3416,7 +3446,9 @@ struct  QuantileVisitor  {
 
         GET_COL_SIZE2
 
-        assert (qt_ >= 0.0 && qt_ <= 1.0 && col_s > 0);
+        if (qt_ < 0.0 || qt_ > 1.0 || col_s == 0)
+            throw DataFrameError("QuantileVisitor: qt must >= 0 and <= 1 and "
+                                 "column size > 0");
 
         const double    vec_len_frac = qt_ * col_s;
         const size_type int_idx =
@@ -3908,7 +3940,9 @@ struct  DiffVisitor  {
 
         GET_COL_SIZE
 
-        assert(col_s > 0 && size_type(std::abs(periods_)) < (col_s - 1));
+        if (col_s == 0 || size_type(std::abs(periods_)) >= (col_s - 1))
+            throw DataFrameError("DiffVisitor: column size must be >  0 and "
+                                 "periods < column size");
 
         bool                        there_is_zero = false;
         result_type                 result;
@@ -5199,7 +5233,9 @@ public:
         const auto      thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
             ? 0L : ThreadGranularity::get_thread_level();
 
-        assert((col_s == size_type(std::distance(y_begin, y_end))));
+        if (col_s != size_type(std::distance(y_begin, y_end)))
+            throw DataFrameError("PolyFitVisitor: two columns must be of "
+                                 "equal sizes");
 
         // degree needs to change to contain the slope (0-degree)
         //
@@ -5539,7 +5575,9 @@ struct  ExponentialFitVisitor  {
         const auto      thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
             ? 0L : ThreadGranularity::get_thread_level();
 
-        assert((col_s == size_type(std::distance(y_begin, y_end))));
+        if (col_s != size_type(std::distance(y_begin, y_end)))
+            throw DataFrameError("ExponentialFitVisitor: two columns must be "
+                                 "of equal sizes");
 
         value_type  sum_x { 0 };   // Sum of all observed x
         value_type  sum_y { 0 };   // Sum of all observed y
@@ -5693,7 +5731,9 @@ struct  LinearFitVisitor  {
         const auto      thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
             ? 0L : ThreadGranularity::get_thread_level();
 
-        assert((col_s == size_type(std::distance(y_begin, y_end))));
+        if (col_s != size_type(std::distance(y_begin, y_end)))
+            throw DataFrameError("LinearFitVisitor: two columns must be "
+                                 "of equal sizes");
 
         value_type  sum_x { 0 };   // Sum of all observed x
         value_type  sum_y { 0 };   // Sum of all observed y
@@ -5849,8 +5889,9 @@ struct  CubicSplineFitVisitor  {
         const auto      thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
             ? 0L : ThreadGranularity::get_thread_level();
 
-        assert(col_s > 3);
-        assert((col_s == size_type(std::distance(y_begin, y_end))));
+        if (col_s != size_type(std::distance(y_begin, y_end)) || col_s <= 3)
+            throw DataFrameError("CubicSplineFitVisitor: two columns must be "
+                                 "of equal sizes and > 3");
 
         result_type h;
 
@@ -6478,8 +6519,9 @@ public:
         using bool_vec_t =
             std::vector<bool, typename allocator_declare<bool, A>::type>;
 
-        assert(frac_ >= 0 && frac_ <= 1);
-        assert(loop_n_ > 2);
+        if (frac_ < 0 || frac_ > 1 || loop_n_ <= 2)
+            throw DataFrameError("LowessVisitor: 0 <= frac <= 1 and "
+                                 "loop num must be > 2");
 
         if (sorted_)
             lowess_(idx_begin, idx_end, y_begin, y_end, x_begin, x_end);
@@ -6701,7 +6743,9 @@ public:
 
         const size_type col_s = std::distance(y_begin, y_end);
 
-        assert(s_period_ <= col_s / 2);
+        if (s_period_ > col_s / 2)
+            throw DataFrameError("DecomposeVisitor: short period must be <= "
+                                 "half of column size");
 
         result_type xvals (col_s);
 
@@ -6954,7 +6998,9 @@ struct  BiasVisitor  {
 
         GET_COL_SIZE
 
-        assert (roll_period_ != 0 && roll_period_ < col_s);
+        if (roll_period_ == 0 || roll_period_ >= col_s)
+            throw DataFrameError("BiasVisitor: roll period must > 0 and "
+                                 "< column size");
 
         SimpleRollAdopter<avg_type, T, I, A>   avger(std::move(avg_v_),
                                                      roll_period_);

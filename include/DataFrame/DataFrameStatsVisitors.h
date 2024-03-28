@@ -635,10 +635,12 @@ struct  ExtremumVisitor  {
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end) {
 
+#ifdef HMDF_SANITY_EXCEPTIONS
         if (std::distance(idx_begin, idx_end) <
                 std::distance(column_begin, column_end))
             throw DataFrameError("ExtremumVisitor: column size must be <= "
                                  "index size");
+#endif // HMDF_SANITY_EXCEPTIONS
 
         GET_COL_SIZE
 

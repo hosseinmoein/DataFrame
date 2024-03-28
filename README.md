@@ -102,7 +102,10 @@ Pandas, for comparison:
 ```sh
 mkdir [Debug|Release]
 cd [Debug|Release]
-cmake -DCMAKE_BUILD_TYPE=[Debug|Release] -DHMDF_BENCHMARKS=1 -DHMDF_EXAMPLES=1 -DHMDF_TESTING=1 ..
+
+cmake -DCMAKE_BUILD_TYPE=Release -DHMDF_BENCHMARKS=1 -DHMDF_EXAMPLES=1 -DHMDF_TESTING=1 ..
+cmake -DCMAKE_BUILD_TYPE=Debug -DHMDF_SANITY_EXCEPTIONS=1 -DHMDF_BENCHMARKS=1 -DHMDF_EXAMPLES=1 -DHMDF_TESTING=1 ..
+
 make
 make install
 
@@ -113,4 +116,3 @@ make uninstall
 ### Package managers
 DataFrame is available on [_Conan_](https://conan.io/center/recipes/dataframe) platform. See the [_Conan_ docs](https://docs.conan.io/en/latest/) for more information.<BR>
 DataFrame is also available on [_Microsoft VCPKG_](https://vcpkg.link/ports/dataframe) platform. See [_VCPKG docs_](https://learn.microsoft.com/en-us/vcpkg/) for more information<BR>
-

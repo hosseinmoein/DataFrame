@@ -4700,8 +4700,10 @@ struct  ArnaudLegouxMAVisitor  {
                 const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE2
-        assert (roll_count_ > 1);
-        assert (col_s > roll_count_);
+
+        if (roll_count_ <= 1 || col_s <= roll_count_)
+            throw DataFrameError("ArnaudLegouxMAVisitor:  1 < roll count < "
+                                 "column size");
 
         result_type result (col_s, std::numeric_limits<T>::quiet_NaN());
 
@@ -4795,7 +4797,9 @@ struct  RateOfChangeVisitor  {
                 const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE2
-        assert (period_ > 0);
+
+        if (period_ == 0)
+            throw DataFrameError("RateOfChangeVisitor: period must be > 0");
 
         DiffVisitor<T, I, A>    diff (period_, false);
 
@@ -4870,10 +4874,12 @@ struct  AccumDistVisitor  {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
-        assert((col_s == size_type(std::distance(low_begin, low_end))));
-        assert((col_s == size_type(std::distance(open_begin, open_end))));
-        assert((col_s == size_type(std::distance(high_begin, high_end))));
-        assert((col_s == size_type(std::distance(volume_begin, volume_end))));
+        if (col_s != size_type(std::distance(low_begin, low_end)) ||
+            col_s != size_type(std::distance(open_begin, open_end)) ||
+            col_s != size_type(std::distance(high_begin, high_end)) ||
+            col_s != size_type(std::distance(volume_begin, volume_end)))
+            throw DataFrameError("AccumDistVisitor: All columns must be of "
+                                 "equal sizes");
 
         result_type result (col_s, std::numeric_limits<T>::quiet_NaN());
 
@@ -4951,11 +4957,14 @@ struct  ChaikinMoneyFlowVisitor  {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
-        assert((col_s == size_type(std::distance(low_begin, low_end))));
-        assert((col_s == size_type(std::distance(open_begin, open_end))));
-        assert((col_s == size_type(std::distance(high_begin, high_end))));
-        assert((col_s == size_type(std::distance(volume_begin, volume_end))));
-        assert (period_ > 0 && period_ < col_s);
+        if (col_s != size_type(std::distance(low_begin, low_end)) ||
+            col_s != size_type(std::distance(open_begin, open_end)) ||
+            col_s != size_type(std::distance(high_begin, high_end)) ||
+            col_s != size_type(std::distance(volume_begin, volume_end)) ||
+            period_ == 0 || period_ >= col_s)
+            throw DataFrameError("ChaikinMoneyFlowVisitor: All columns must "
+                                 "be of equal size and 0 < period < "
+                                 "column size");
 
         const auto  thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
             ? 0L : ThreadGranularity::get_thread_level();
@@ -5031,7 +5040,10 @@ struct  VertHorizFilterVisitor  {
                 const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE2
-        assert (period_ > 0 && period_ < col_s);
+
+        if (period_ == 0 || period_ >= col_s)
+            throw DataFrameError("VertHorizFilterVisitor: 0 < period < "
+                                 "column size");
 
         const auto  thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
             ? 0L : ThreadGranularity::get_thread_level();
@@ -5178,7 +5190,9 @@ struct  OnBalanceVolumeVisitor  {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
-        assert((col_s == size_type(std::distance(volume_begin, volume_end))));
+        if (col_s != size_type(std::distance(volume_begin, volume_end)))
+            throw DataFrameError("OnBalanceVolumeVisitor: All columns must "
+                                 "be of equal sizes");
 
         ReturnVisitor<T, I, A>  ret { return_policy::trinary };
 
@@ -5358,7 +5372,9 @@ struct  DecayVisitor  {
                 const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE2
-        assert (period_ > 0 && period_ < col_s);
+
+        if (period_ == 0 || period_ >= col_s)
+            throw DataFrameError("DecayVisitor: 0 < period < column size");
 
         result_type         result (col_s);
         const value_type    decay {
@@ -5428,7 +5444,10 @@ struct  HodgesTompkinsVolVisitor  {
                 const H &column_begin, const H &column_end)  {
 
         GET_COL_SIZE2
-        assert (roll_count_ > 0 && roll_count_ < col_s);
+
+        if (roll_count_ == 0 || roll_count_ >= col_s)
+            throw DataFrameError("HodgesTompkinsVolVisitor: 0 < roll count < "
+                                 "column size");
 
         ReturnVisitor<T, I, A>  ret { return_policy::log };
 
@@ -5519,8 +5538,10 @@ struct  ParkinsonVolVisitor  {
 
         const size_type col_s = std::distance(low_begin, low_end);
 
-        assert((col_s == size_type(std::distance(high_begin, high_end))));
-        assert (roll_count_ > 0 && roll_count_ < col_s);
+        if (col_s != size_type(std::distance(high_begin, high_end)) ||
+            roll_count_ == 0 || roll_count_ >= col_s)
+            throw DataFrameError("ParkinsonVolVisitor: All columns must be of "
+                                 "equal sizes and roll count < column size");
 
         const auto          thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
             ? 0L : ThreadGranularity::get_thread_level();
@@ -5744,9 +5765,11 @@ struct  BalanceOfPowerVisitor  {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
-        assert((col_s == size_type(std::distance(low_begin, low_end))));
-        assert((col_s == size_type(std::distance(open_begin, open_end))));
-        assert((col_s == size_type(std::distance(high_begin, high_end))));
+        if (col_s != size_type(std::distance(low_begin, low_end)) ||
+            col_s != size_type(std::distance(open_begin, open_end)) ||
+            col_s != size_type(std::distance(high_begin, high_end)))
+            throw DataFrameError("BalanceOfPowerVisitor: All columns must be "
+                                 "of equal sizes");
 
         nzr_v<T, I, A>  non_z_range;
 
@@ -5837,8 +5860,10 @@ struct  ChandeKrollStopVisitor  {
         const auto      thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
             ? 0L : ThreadGranularity::get_thread_level();
 
-        assert((col_s == size_type(std::distance(low_begin, low_end))));
-        assert((col_s == size_type(std::distance(high_begin, high_end))));
+        if (col_s != size_type(std::distance(low_begin, low_end)) ||
+            col_s != size_type(std::distance(high_begin, high_end)))
+            throw DataFrameError("ChandeKrollStopVisitor: All columns must "
+                                 "be of equal sizes");
 
         TrueRangeVisitor<T, I, A>                       atr
             { true, p_period_ };
@@ -6023,9 +6048,11 @@ struct  VortexVisitor  {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
-        assert((col_s == size_type(std::distance(low_begin, low_end))));
-        assert((col_s == size_type(std::distance(high_begin, high_end))));
-        assert((roll_period_ < (col_s - 1)));
+        if (col_s != size_type(std::distance(low_begin, low_end)) ||
+            col_s != size_type(std::distance(high_begin, high_end)) ||
+            roll_period_ >= (col_s - 1))
+            throw DataFrameError("VortexVisitor: All columns must be of "
+                                 "equal sizes and roll period < column size");
 
         TrueRangeVisitor<T, I, A>   tr { false };
 
@@ -6173,9 +6200,12 @@ struct  KeltnerChannelsVisitor  {
         const auto      thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
             ? 0L : ThreadGranularity::get_thread_level();
 
-        assert((col_s == size_type(std::distance(low_begin, low_end))));
-        assert((col_s == size_type(std::distance(high_begin, high_end))));
-        assert((roll_period_ < (col_s - 1)));
+        if (col_s != size_type(std::distance(low_begin, low_end)) ||
+            col_s != size_type(std::distance(high_begin, high_end)) ||
+            roll_period_ >= (col_s - 1))
+            throw DataFrameError("KeltnerChannelsVisitor: All columns must "
+                                 "be of equal sizes and roll period < "
+                                 "column size");
 
         TrueRangeVisitor<T, I, A>   tr { false };
         ewm_v<T, I, A>              basis(
@@ -6325,7 +6355,8 @@ struct  TrixVisitor  {
 
         GET_COL_SIZE2
 
-        assert(col_s > 3);
+        if (col_s < 3)
+            throw DataFrameError("TrixVisitor: column size must be > 3");
 
         ewm_v<T, I, A>  ewm13(exponential_decay_spec::span,
                               roll_period_,
@@ -6420,9 +6451,12 @@ struct  PrettyGoodOsciVisitor  {
         const auto      thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
             ? 0L : ThreadGranularity::get_thread_level();
 
-        assert((col_s == size_type(std::distance(low_begin, low_end))));
-        assert((col_s == size_type(std::distance(high_begin, high_end))));
-        assert((roll_period_ < (col_s - 1)));
+        if (col_s != size_type(std::distance(low_begin, low_end)) ||
+            col_s != size_type(std::distance(high_begin, high_end)) ||
+            roll_period_ >= (col_s - 1))
+            throw DataFrameError("PrettyGoodOsciVisitor: All columns must be "
+                                 "of equal sizes and roll period < "
+                                 "column size");
 
         SimpleRollAdopter<MeanVisitor<T, I>, T, I, A>   savg
             { MeanVisitor<T, I>(), roll_period_ } ;
@@ -6691,7 +6725,9 @@ struct  TreynorRatioVisitor  {
         const size_type b_s =
             std::distance(benchmark_ret_begin, benchmark_ret_end);
 
-        assert (col_s == b_s && col_s > 3);
+        if (col_s != b_s || col_s <= 3)
+            throw DataFrameError("TreynorRatioVisitor: All columns must be of "
+                                 "equal sizes and column size > 3");
 
         value_type          cum_return { 0.0 };
         BetaVisitor<T, I>   beta_vis { biased_ };
@@ -6773,10 +6809,13 @@ struct  InertiaVisitor  {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
-        assert((col_s == size_type(std::distance(high_begin, high_end))));
-        assert((col_s == size_type(std::distance(low_begin, low_end))));
-        assert(roll_period_ < col_s);
-        assert(roll_period_ > rvi_rp_);
+        if (col_s != size_type(std::distance(high_begin, high_end)) ||
+            col_s != size_type(std::distance(low_begin, low_end)) ||
+            roll_period_ >= col_s ||
+            roll_period_ <= rvi_rp_)
+            throw DataFrameError("InertiaVisitor: All columns must be of "
+                                 "equal sizes and roll period < column size "
+                                 "and roll period > RVI roll period");
 
         rvi_v<T, I> rvi { rvi_rp_ };
 
@@ -6831,11 +6870,14 @@ struct  RelativeVigorIndexVisitor  {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
-        assert((col_s == size_type(std::distance(low_begin, low_end))));
-        assert((col_s == size_type(std::distance(open_begin, open_end))));
-        assert((col_s == size_type(std::distance(high_begin, high_end))));
-        assert((roll_period_ < (col_s - 1)));
-        assert(swma_period_ < roll_period_);
+        if (col_s != size_type(std::distance(low_begin, low_end)) ||
+            col_s != size_type(std::distance(open_begin, open_end)) ||
+            col_s != size_type(std::distance(high_begin, high_end)) ||
+            roll_period_ >= (col_s - 1) ||
+            swma_period_ >= roll_period_)
+            throw DataFrameError("RelativeVigorIndexVisitor: All columns must "
+                                 "be of equal sizes and roll period < column "
+                                 "size and roll period < SWMA period");
 
         nzr_v<T, I, A>  non_z_range;
 
@@ -6957,9 +6999,12 @@ struct  ElderRayIndexVisitor  {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
-        assert((col_s == size_type(std::distance(low_begin, low_end))));
-        assert((col_s == size_type(std::distance(high_begin, high_end))));
-        assert((roll_period_ < (col_s - 1)));
+        if (col_s != size_type(std::distance(low_begin, low_end)) ||
+            col_s != size_type(std::distance(high_begin, high_end)) ||
+            roll_period_ >= (col_s - 1))
+            throw DataFrameError("ElderRayIndexVisitor: All columns must be "
+                                 "of equal sizes and roll period < "
+                                 "column size");
 
         ewm_v<T, I, A>  ewm(exponential_decay_spec::span, roll_period_, true);
 
@@ -7043,9 +7088,11 @@ struct  ChopIndexVisitor  {
         const auto      thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
             ? 0L : ThreadGranularity::get_thread_level();
 
-        assert((col_s == size_type(std::distance(high_begin, high_end))));
-        assert((col_s == size_type(std::distance(low_begin, low_end))));
-        assert(roll_period_ < col_s);
+        if (col_s != size_type(std::distance(high_begin, high_end)) ||
+            col_s != size_type(std::distance(low_begin, low_end)) ||
+            roll_period_ >= col_s)
+            throw DataFrameError("ChopIndexVisitor: All columns must be of "
+                                 "equal size and roll period < column size");
 
         SimpleRollAdopter<MaxVisitor<T, I>, T, I, A>    maxv
             { MaxVisitor<T, I>(), roll_period_ };
@@ -7203,8 +7250,9 @@ struct  DetrendPriceOsciVisitor  {
 
         GET_COL_SIZE2
 
-        assert(col_s > 3);
-        assert(col_s > roll_period_);
+        if (col_s <= 3 || col_s <= roll_period_)
+            throw DataFrameError("DetrendPriceOsciVisitor: column size must "
+                                 "be > 3 and roll period < column size");
 
         SimpleRollAdopter<MeanVisitor<T, I>, T, I, A>   savg
             { MeanVisitor<T, I>(), roll_period_ } ;
@@ -7283,9 +7331,12 @@ struct  AccelerationBandsVisitor  {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
-        assert((col_s == size_type(std::distance(low_begin, low_end))));
-        assert((col_s == size_type(std::distance(high_begin, high_end))));
-        assert(roll_period_ > 0 && roll_period_ < col_s);
+        if (col_s != size_type(std::distance(low_begin, low_end)) ||
+            col_s != size_type(std::distance(high_begin, high_end)) ||
+            roll_period_ == 0 || roll_period_ >= col_s)
+            throw DataFrameError("AccelerationBandsVisitor: All columns must "
+                                 "be of equal sizes and roll period < column "
+                                 "size roll period > 0");
 
         NonZeroRangeVisitor<T, I, A>    nzr;
 
@@ -7402,9 +7453,11 @@ struct  PriceDistanceVisitor  {
         const auto      thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
             ? 0L : ThreadGranularity::get_thread_level();
 
-        assert((col_s == size_type(std::distance(low_begin, low_end))));
-        assert((col_s == size_type(std::distance(open_begin, open_end))));
-        assert((col_s == size_type(std::distance(high_begin, high_end))));
+        if (col_s != size_type(std::distance(low_begin, low_end)) ||
+            col_s != size_type(std::distance(open_begin, open_end)) ||
+            col_s != size_type(std::distance(high_begin, high_end)))
+            throw DataFrameError("PriceDistanceVisitor: All columns must be "
+                                 "of equal sizes");
 
         nzr_v<T, I, A>  nzr;
 
@@ -7526,7 +7579,9 @@ struct  EldersThermometerVisitor  {
         const auto      thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
             ? 0L : ThreadGranularity::get_thread_level();
 
-        assert((col_s == size_type(std::distance(high_begin, high_end))));
+        if (col_s != size_type(std::distance(high_begin, high_end)))
+            throw DataFrameError("EldersThermometerVisitor: All columns must "
+                                 "be of equal sizes");
 
         result_type result(col_s, std::numeric_limits<T>::quiet_NaN());
 
@@ -7662,8 +7717,11 @@ struct  EldersForceIndexVisitor  {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
-        assert((col_s == size_type(std::distance(volume_begin, volume_end))));
-        assert(roll_period_ < col_s);
+        if (col_s != size_type(std::distance(volume_begin, volume_end)) ||
+            roll_period_ >= col_s)
+            throw DataFrameError("EldersForceIndexVisitor: All columns must "
+                                 "be of equal sizes and roll period < "
+                                 "column size");
 
         DiffVisitor<T, I, A>    diff { 1, false };
 
@@ -7734,10 +7792,13 @@ struct  EaseOfMovementVisitor  {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
-        assert((col_s == size_type(std::distance(low_begin, low_end))));
-        assert((col_s == size_type(std::distance(high_begin, high_end))));
-        assert((col_s == size_type(std::distance(volume_begin, volume_end))));
-        assert(roll_period_ < col_s);
+        if (col_s != size_type(std::distance(low_begin, low_end)) ||
+            col_s != size_type(std::distance(high_begin, high_end)) ||
+            col_s != size_type(std::distance(volume_begin, volume_end)) ||
+            roll_period_ >= col_s)
+            throw DataFrameError("EaseOfMovementVisitor: All columns must be "
+                                 "of equal sizes and roll period < "
+                                 "column size");
 
         result_type result(col_s, std::numeric_limits<T>::quiet_NaN());
 
@@ -7824,7 +7885,9 @@ struct  PriceVolumeTrendVisitor  {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
-        assert((col_s == size_type(std::distance(volume_begin, volume_end))));
+        if (col_s == size_type(std::distance(volume_begin, volume_end)))
+            throw DataFrameError("PriceVolumeTrendVisitor: All columns must "
+                                 "be of equal sizes");
 
         ReturnVisitor<T, I, A>  ret { return_policy::percentage };
 

@@ -12,7 +12,7 @@ CXX = /usr/bin/g++
 INCLUDES =
 
 LFLAGS =
-CXXFLAGS = -g $(INCLUDES) $(DEFINES) -D_GLIBCXX_DEBUG -pedantic -Wall -Wextra -std=c++2b
+CXXFLAGS = -g $(INCLUDES) $(DEFINES) -D_GLIBCXX_DEBUG -DHMDF_SANITY_EXCEPTIONS -pedantic -Wall -Wextra -std=c++2b
 # CXXFLAGS = -g $(INCLUDES) $(DEFINES) -std=c++2b
 
 PLATFORM_LIBS = -lpthread -ldl -lm -lstdc++ -fsanitize-address-use-after-scope -fsanitize=address

@@ -32,7 +32,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/DataFrameStatsVisitors.h>
 
 #include <algorithm>
-#include <cassert>
 #include <cmath>
 #include <iterator>
 #include <limits>
@@ -304,11 +303,11 @@ public:
         if (type_ == hampel_type::median)
             hampel_(idx_begin, idx_end, column_begin, column_end,
                     SimpleRollAdopter<MedianVisitor<T, I>, T, I>
-					(MedianVisitor<T, I> { }, window_size_));
+                        (MedianVisitor<T, I> { }, window_size_));
         else if (type_ == hampel_type::mean)
             hampel_(idx_begin, idx_end, column_begin, column_end,
                     SimpleRollAdopter<MeanVisitor<T, I>, T, I>
-					(MeanVisitor<T, I> { true }, window_size_));
+                        (MeanVisitor<T, I> { true }, window_size_));
     }
 
     DEFINE_PRE_POST_2
@@ -396,7 +395,10 @@ struct  HWExpoSmootherVisitor {
 
         count_ = std::distance(column_begin, column_end);
 
-        assert(count_ > 2);
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (count_ <= 2)
+            throw DataFrameError("HWExpoSmootherVisitor: count must be > 2");
+#endif // HMDF_SANITY_EXCEPTIONS
 
         value_type  prev_v = *column_begin;
         value_type  tf = *(column_begin + 1) - prev_v;

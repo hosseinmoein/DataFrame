@@ -180,7 +180,7 @@ enum class  fill_policy : unsigned char  {
     //           X2 - X1
     //
     linear_interpolate = 4,  // Using the index as X coordinate
-    linear_extrapolate = 5,  // Using the index as X coordinate
+    // linear_extrapolate = 5,  // Using the index as X coordinate
 
     // Fill missing values with mid-point of surrounding values
     //

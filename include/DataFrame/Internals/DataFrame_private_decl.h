@@ -860,7 +860,11 @@ replace_vector_vals_(V &data_vec,
 
     const std::size_t   vcnt = old_values.size();
 
-    assert(vcnt == new_values.size());
+#ifdef HMDF_SANITY_EXCEPTIONS
+    if (vcnt != new_values.size())
+        throw DataFrameError("replace_vector_vals_(): "
+                             "vector sizes don't match");
+#endif // HMDF_SANITY_EXCEPTIONS
 
     const std::size_t   vec_s = data_vec.size();
 
@@ -1336,7 +1340,7 @@ struct  GenerateTSIndex_<DateTime, Dummy>  {
 
         switch(t_freq)  {
         case time_frequency::annual:
-    	    {
+            {
                 while (start_di < end_di)  {
                     index_vec.push_back(start_di);
                     start_di.add_years(increment);
@@ -1344,7 +1348,7 @@ struct  GenerateTSIndex_<DateTime, Dummy>  {
             }
             break;
         case time_frequency::monthly:
-    	    {
+            {
                 while (start_di < end_di)  {
                     index_vec.push_back(start_di);
                     start_di.add_months(increment);
@@ -1352,7 +1356,7 @@ struct  GenerateTSIndex_<DateTime, Dummy>  {
             }
             break;
         case time_frequency::weekly:
-    	    {
+            {
                 while (start_di < end_di)  {
                     index_vec.push_back(start_di);
                     start_di.add_days(increment * 7);
@@ -1360,7 +1364,7 @@ struct  GenerateTSIndex_<DateTime, Dummy>  {
             }
             break;
         case time_frequency::daily:
-    	    {
+            {
                 while (start_di < end_di)  {
                     index_vec.push_back(start_di);
                     start_di.add_days(increment);
@@ -1368,7 +1372,7 @@ struct  GenerateTSIndex_<DateTime, Dummy>  {
             }
             break;
         case time_frequency::hourly:
-    	    {
+            {
                 while (start_di < end_di)  {
                     index_vec.push_back(start_di);
                     start_di.add_seconds(increment * 60 * 60);
@@ -1376,7 +1380,7 @@ struct  GenerateTSIndex_<DateTime, Dummy>  {
             }
             break;
         case time_frequency::minutely:
-    	    {
+            {
                 while (start_di < end_di)  {
                     index_vec.push_back(start_di);
                     start_di.add_seconds(increment * 60);
@@ -1384,7 +1388,7 @@ struct  GenerateTSIndex_<DateTime, Dummy>  {
             }
             break;
         case time_frequency::secondly:
-    	    {
+            {
                 while (start_di < end_di)  {
                     index_vec.push_back(start_di);
                     start_di.add_seconds(increment);
@@ -1392,7 +1396,7 @@ struct  GenerateTSIndex_<DateTime, Dummy>  {
             }
             break;
         case time_frequency::millisecondly:
-    	    {
+            {
                 while (start_di < end_di)  {
                     index_vec.push_back(start_di);
                     start_di.add_nanoseconds(increment * 1000000);

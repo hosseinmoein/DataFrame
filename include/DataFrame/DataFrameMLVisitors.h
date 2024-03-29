@@ -1749,9 +1749,11 @@ struct  PolicyLearningLossVisitor  {
         const size_type col_s =
             std::distance(action_prob_begin, action_prob_end);
 
+#ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s != size_type(std::distance(reward_begin, reward_end)))
             throw DataFrameError("PolicyLearningLossVisitor: All columns must "
                                  "be of equal sizes");
+#endif // HMDF_SANITY_EXCEPTIONS
 
         // Negative Log Likelihood
         //
@@ -1815,9 +1817,11 @@ public:
 
         const size_type col_s = std::distance(actual_begin, actual_end);
 
+#ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s != size_type(std::distance(model_begin, model_end)))
             throw DataFrameError("LossFunctionVisitor: All columns must be of "
                                  "equal sizes");
+#endif // HMDF_SANITY_EXCEPTIONS
 
         // The linear and parallel versions on this type are the same.
         // So, I am taking it out of the if-else chain
@@ -2175,9 +2179,11 @@ struct  VectorSimilarityVisitor  {
                 result_ = dot_v.get_result() /
                           (dot_v.get_magnitude1() * dot_v.get_magnitude2());
             else if constexpr (TYP == vector_sim_type::simple_similarity)  {
+#ifdef HMDF_SANITY_EXCEPTIONS
                 if (col_s1 != col_s2)
                     throw DataFrameError("VectorSimilarityVisitor: "
                                          "All columns must be of equal sizes");
+#endif // HMDF_SANITY_EXCEPTIONS
                 result_ = (T(1) - dot_v.get_result() * dot_v.get_result()) /
                           T(col_s1);
             }
@@ -2207,9 +2213,11 @@ struct  VectorSimilarityVisitor  {
                       result_type(col_s1 + col_s2 - intersection);
         }
         else  {  // Hamming distance
+#ifdef HMDF_SANITY_EXCEPTIONS
             if (col_s1 != col_s2)
                throw DataFrameError("VectorSimilarityVisitor: "
                                     "All columns must be of equal sizes");
+#endif // HMDF_SANITY_EXCEPTIONS
             for (size_type i = 0; i < col_s1; ++i)
                 if (*(column_begin1 + i) != *(column_begin2 + i))
                     result_ += 1;

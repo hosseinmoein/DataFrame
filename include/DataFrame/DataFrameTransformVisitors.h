@@ -395,8 +395,10 @@ struct  HWExpoSmootherVisitor {
 
         count_ = std::distance(column_begin, column_end);
 
+#ifdef HMDF_SANITY_EXCEPTIONS
         if (count_ <= 2)
             throw DataFrameError("HWExpoSmootherVisitor: count must be > 2");
+#endif // HMDF_SANITY_EXCEPTIONS
 
         value_type  prev_v = *column_begin;
         value_type  tf = *(column_begin + 1) - prev_v;

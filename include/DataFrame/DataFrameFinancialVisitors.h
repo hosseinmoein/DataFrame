@@ -1132,9 +1132,11 @@ struct  SharpeRatioVisitor  {
         const size_type b_s =
             std::distance(benchmark_ret_begin, benchmark_ret_end);
 
+#ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s != b_s || col_s <= 3)
             throw DataFrameError("SharpeRatioVisitor: column size must be > 3 "
                                  "and two column sizes must be equal");
+#endif // HMDF_SANITY_EXCEPTIONS
 
         value_type  cum_ret { 0.0 };
         auto        a_citer { asset_ret_begin };
@@ -1296,8 +1298,10 @@ struct  RSXVisitor  {
 
         GET_COL_SIZE2
 
+#ifdef HMDF_SANITY_EXCEPTIONS
         if (avg_period_ >= col_s)
             throw DataFrameError("RSXVisitor: period must be < column size");
+#endif // HMDF_SANITY_EXCEPTIONS
 
         value_type  vc { 0 }, v1c { 0 };
         value_type  v4 { 0 }, v8 { 0 }, v10 { 0 }, v14 { 0 }, v18 { 0 },
@@ -1426,11 +1430,13 @@ struct  RVIVisitor  {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
+#ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s != size_type(std::distance(high_begin, high_end)) ||
             col_s != size_type(std::distance(low_begin, low_end)) ||
             roll_period_ >= col_s)
             throw DataFrameError("RVIVisitor: all columns must be of the same "
                                  "size and roll period must be < column size");
+#endif // HMDF_SANITY_EXCEPTIONS
 
         rvi_(idx_begin, idx_end, close_begin, close_end, result_, col_s);
 
@@ -1753,10 +1759,12 @@ struct  MassIndexVisitor  {
 
         const size_type col_s = std::distance(high_begin, high_end);
 
+#ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s != size_type(std::distance(low_begin, low_end)) ||
             fast_ >= slow_)
             throw DataFrameError("MassIndexVisitor: column sizes must equal "
                                  "and fast < slow");
+#endif // HMDF_SANITY_EXCEPTIONS
 
         nzr_v<T, I, A>  non_z_range;
 
@@ -1991,10 +1999,12 @@ struct  RollingMidValueVisitor  {
 
         const size_type col_s = std::distance(high_begin, high_end);
 
+#ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s != size_type(std::distance(low_begin, low_end)) ||
             roll_count_ == 0)
             throw DataFrameError("RollingMidValueVisitor: column sizes must "
                                  "be equal and roll count > 0");
+#endif // HMDF_SANITY_EXCEPTIONS
 
         result_type result;
 
@@ -2150,11 +2160,13 @@ struct  WilliamPrcRVisitor  {
         const auto      thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
             ? 0L : ThreadGranularity::get_thread_level();
 
+#ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s != size_type(std::distance(low_begin, low_end)) ||
             col_s != size_type(std::distance(high_begin, high_end)) ||
             roll_count_ == 0)
             throw DataFrameError("WilliamPrcRVisitor: column sizes must be "
                                  "equal and roll count > 0");
+#endif // HMDF_SANITY_EXCEPTIONS
 
         SimpleRollAdopter<MinVisitor<T, I>, T, I, A>   min_v {
             MinVisitor<T, I>(), roll_count_ };
@@ -2300,8 +2312,10 @@ struct  PSLVisitor  {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
+#ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s == size_type(std::distance(open_begin, open_end)))
             throw DataFrameError("PSLVisitor: column sizes must be equal");
+#endif // HMDF_SANITY_EXCEPTIONS
 
         result_.resize(col_s);
         if (thread_level_ > 2 && col_s >= ThreadPool::MUL_THR_THHOLD)  {
@@ -2403,11 +2417,13 @@ struct  CCIVisitor  {
         const auto      thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
             ? 0L : ThreadGranularity::get_thread_level();
 
+#ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s != size_type(std::distance(low_begin, low_end)) ||
             col_s != size_type(std::distance(high_begin, high_end)) ||
             roll_count_ == 0)
             throw DataFrameError("CCIVisitor: All columns must be of equal "
                                  "size and roll count > 0");
+#endif // HMDF_SANITY_EXCEPTIONS
 
         result_type result;
 
@@ -2516,12 +2532,14 @@ struct  GarmanKlassVolVisitor  {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
+#ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s != size_type(std::distance(low_begin, low_end)) ||
             col_s != size_type(std::distance(open_begin, open_end)) ||
             col_s != size_type(std::distance(high_begin, high_end)) ||
             roll_count_ >= (col_s - 1))
             throw DataFrameError("GarmanKlassVolVisitor: All columns must be "
                                  "of equal size and roll count < column size");
+#endif // HMDF_SANITY_EXCEPTIONS
 
         // 2 * log(2) - 1
         //
@@ -2617,6 +2635,7 @@ struct  YangZhangVolVisitor  {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
+#ifdef HMDF_SANITY_EXCEPTIONS
         if (roll_count_ == 0 ||
             col_s != size_type(std::distance(low_begin, low_end)) ||
             col_s != size_type(std::distance(open_begin, open_end)) ||
@@ -2624,6 +2643,7 @@ struct  YangZhangVolVisitor  {
             roll_count_ >= (col_s - 1))
             throw DataFrameError("YangZhangVolVisitor: All columns must be of "
                                  "equal size and roll count > 0");
+#endif // HMDF_SANITY_EXCEPTIONS
 
         const value_type    k {
             T(0.34) / (T(1) + T(roll_count_ + 1) / T(roll_count_ - 1)) };
@@ -2860,10 +2880,12 @@ struct  FisherTransVisitor  {
         const auto      thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
             ? 0L : ThreadGranularity::get_thread_level();
 
+#ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s != size_type(std::distance(high_begin, high_end)) ||
             roll_count_ > (col_s - 1))
             throw DataFrameError("FisherTransVisitor: All columns must be of "
                                  "equal size and roll count < column size");
+#endif // HMDF_SANITY_EXCEPTIONS
 
         result_type mid_hl(col_s);
 
@@ -2983,9 +3005,11 @@ struct  PercentPriceOSCIVisitor  {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
+#ifdef HMDF_SANITY_EXCEPTIONS
         if (fast_ >= slow_)
             throw DataFrameError(
                 "PercentPriceOSCIVisitor: fast must be < slow");
+#endif // HMDF_SANITY_EXCEPTIONS
 
         srs_t   fast_roller { std::move(MeanVisitor<T, I>()), fast_ };
 
@@ -3089,10 +3113,12 @@ struct  SlopeVisitor  {
 
         GET_COL_SIZE2
 
+#ifdef HMDF_SANITY_EXCEPTIONS
         if ((as_angle_ && (! in_degrees_)) || periods_ < 2 ||
             periods_ >= col_s)
             throw DataFrameError("SlopeVisitor: as_angle must be in degrees "
                                  "and periods >= 2 and < column size");
+#endif // HMDF_SANITY_EXCEPTIONS
 
         DiffVisitor<T, I, A>    diff (periods_, false);
 
@@ -3186,10 +3212,12 @@ struct  UltimateOSCIVisitor  {
         const auto      thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
             ? 0L : ThreadGranularity::get_thread_level();
 
+#ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s != size_type(std::distance(low_begin, low_end)) ||
             col_s != size_type(std::distance(high_begin, high_end)))
             throw DataFrameError("UltimateOSCIVisitor: All columns must be of "
                                  "equal sizes");
+#endif // HMDF_SANITY_EXCEPTIONS
 
         result_type max_high(col_s, std::numeric_limits<T>::quiet_NaN());
         result_type min_low(col_s, std::numeric_limits<T>::quiet_NaN());
@@ -3517,12 +3545,14 @@ struct  TTMTrendVisitor  {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
+#ifdef HMDF_SANITY_EXCEPTIONS
         if (bar_periods_ == 0 ||
             bar_periods_ >= (col_s - 1) ||
             col_s != size_type(std::distance(low_begin, low_end)) ||
             col_s != size_type(std::distance(high_begin, high_end)))
             throw DataFrameError("TTMTrendVisitor: All columns must be of "
                                  "equal sizes and bar period < column size");
+#endif // HMDF_SANITY_EXCEPTIONS
 
         const auto  thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
             ? 0L : ThreadGranularity::get_thread_level();
@@ -3639,11 +3669,13 @@ struct  ParabolicSARVisitor  {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
+#ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s != size_type(std::distance(low_begin, low_end)) ||
             col_s != size_type(std::distance(high_begin, high_end)) ||
             col_s <= 2)
             throw DataFrameError("ParabolicSARVisitor: All columns must be of "
                                  "equal sizes and column size > 2");
+#endif // HMDF_SANITY_EXCEPTIONS
 
         bool        bullish { true };
         value_type  high_point { *high_begin };
@@ -3796,10 +3828,12 @@ struct  EBSineWaveVisitor  {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
+#ifdef HMDF_SANITY_EXCEPTIONS
         if (hp_period_ <= 38 || bar_period_ >= col_s ||
             bar_period_ == 0 || hp_period_ >= col_s)
             throw DataFrameError("EBSineWaveVisitor: 38 < high pass < column "
                                  "size and 0 < bar period < column size");
+#endif // HMDF_SANITY_EXCEPTIONS
 
         result_type         result(col_s, std::numeric_limits<T>::quiet_NaN());
         value_type          last_close { *close_begin };
@@ -3897,11 +3931,13 @@ struct  EhlerSuperSmootherVisitor  {
 
         GET_COL_SIZE2
 
+#ifdef HMDF_SANITY_EXCEPTIONS
         if ((poles_ != 2 && poles_ != 3) ||
             bar_period_ == 0 || bar_period_ >= col_s)
             throw DataFrameError("EhlerSuperSmootherVisitor: poles must be "
                                  "either 2 or 3 and 0 < bar period < "
                                  "column size");
+#endif // HMDF_SANITY_EXCEPTIONS
 
         result_type result(column_begin, column_end);
 
@@ -3983,9 +4019,11 @@ struct  VarIdxDynAvgVisitor  {
 
         GET_COL_SIZE2
 
+#ifdef HMDF_SANITY_EXCEPTIONS
         if (roll_period_ <= 1 && roll_period_ >= col_s)
             throw DataFrameError("VarIdxDynAvgVisitor: 1 < roll period < "
                                  "column size");
+#endif // HMDF_SANITY_EXCEPTIONS
 
         DiffVisitor<T, I, A>    diff { 1, false };
 
@@ -4122,11 +4160,13 @@ struct  PivotPointSRVisitor  {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
+#ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s <= 1 ||
             col_s != size_type(std::distance(low_begin, low_end)) ||
             col_s != size_type(std::distance(high_begin, high_end)))
             throw DataFrameError("PivotPointSRVisitor: All columns must be of "
                                  "equal sizes and column size > 1");
+#endif // HMDF_SANITY_EXCEPTIONS
 
         const auto  thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
             ? 0L : ThreadGranularity::get_thread_level();
@@ -4261,11 +4301,13 @@ struct  AvgDirMovIdxVisitor  {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
+#ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s <= 3 ||
             col_s != size_type(std::distance(low_begin, low_end)) ||
             col_s != size_type(std::distance(high_begin, high_end)))
             throw DataFrameError("AvgDirMovIdxVisitor: All columns must be of "
                                  "equal size and column size > 3");
+#endif // HMDF_SANITY_EXCEPTIONS
 
         const auto  thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
             ? 0L : ThreadGranularity::get_thread_level();
@@ -4399,9 +4441,11 @@ struct  HoltWinterChannelVisitor  {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
+#ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s <= 3)
             throw DataFrameError(
                 "HoltWinterChannelVisitor: column size must be > 3");
+#endif // HMDF_SANITY_EXCEPTIONS
 
         result_type result (col_s, std::numeric_limits<T>::quiet_NaN());
         result_type upper (col_s, std::numeric_limits<T>::quiet_NaN());
@@ -4507,11 +4551,13 @@ struct  HeikinAshiCndlVisitor  {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
+#ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s != size_type(std::distance(low_begin, low_end)) ||
             col_s != size_type(std::distance(open_begin, open_end)) ||
             col_s != size_type(std::distance(high_begin, high_end)))
             throw DataFrameError("HeikinAshiCndlVisitor: All columns must be "
                                  "of equal sizes");
+#endif // HMDF_SANITY_EXCEPTIONS
 
         result_type result (col_s, std::numeric_limits<T>::quiet_NaN());
         result_type open (col_s, std::numeric_limits<T>::quiet_NaN());
@@ -4587,9 +4633,11 @@ struct  CenterOfGravityVisitor  {
 
         GET_COL_SIZE2
 
+#ifdef HMDF_SANITY_EXCEPTIONS
         if (roll_count_ == 0 || col_s <= roll_count_)
             throw DataFrameError(
                 "CenterOfGravityVisitor: 0 < roll count < column size");
+#endif // HMDF_SANITY_EXCEPTIONS
 
         const auto  thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
             ? 0L : ThreadGranularity::get_thread_level();
@@ -4701,9 +4749,11 @@ struct  ArnaudLegouxMAVisitor  {
 
         GET_COL_SIZE2
 
+#ifdef HMDF_SANITY_EXCEPTIONS
         if (roll_count_ <= 1 || col_s <= roll_count_)
             throw DataFrameError("ArnaudLegouxMAVisitor:  1 < roll count < "
                                  "column size");
+#endif // HMDF_SANITY_EXCEPTIONS
 
         result_type result (col_s, std::numeric_limits<T>::quiet_NaN());
 
@@ -4798,8 +4848,10 @@ struct  RateOfChangeVisitor  {
 
         GET_COL_SIZE2
 
+#ifdef HMDF_SANITY_EXCEPTIONS
         if (period_ == 0)
             throw DataFrameError("RateOfChangeVisitor: period must be > 0");
+#endif // HMDF_SANITY_EXCEPTIONS
 
         DiffVisitor<T, I, A>    diff (period_, false);
 
@@ -4874,12 +4926,14 @@ struct  AccumDistVisitor  {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
+#ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s != size_type(std::distance(low_begin, low_end)) ||
             col_s != size_type(std::distance(open_begin, open_end)) ||
             col_s != size_type(std::distance(high_begin, high_end)) ||
             col_s != size_type(std::distance(volume_begin, volume_end)))
             throw DataFrameError("AccumDistVisitor: All columns must be of "
                                  "equal sizes");
+#endif // HMDF_SANITY_EXCEPTIONS
 
         result_type result (col_s, std::numeric_limits<T>::quiet_NaN());
 
@@ -4957,6 +5011,7 @@ struct  ChaikinMoneyFlowVisitor  {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
+#ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s != size_type(std::distance(low_begin, low_end)) ||
             col_s != size_type(std::distance(open_begin, open_end)) ||
             col_s != size_type(std::distance(high_begin, high_end)) ||
@@ -4965,6 +5020,7 @@ struct  ChaikinMoneyFlowVisitor  {
             throw DataFrameError("ChaikinMoneyFlowVisitor: All columns must "
                                  "be of equal size and 0 < period < "
                                  "column size");
+#endif // HMDF_SANITY_EXCEPTIONS
 
         const auto  thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
             ? 0L : ThreadGranularity::get_thread_level();
@@ -5041,9 +5097,11 @@ struct  VertHorizFilterVisitor  {
 
         GET_COL_SIZE2
 
+#ifdef HMDF_SANITY_EXCEPTIONS
         if (period_ == 0 || period_ >= col_s)
             throw DataFrameError("VertHorizFilterVisitor: 0 < period < "
                                  "column size");
+#endif // HMDF_SANITY_EXCEPTIONS
 
         const auto  thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
             ? 0L : ThreadGranularity::get_thread_level();
@@ -5190,9 +5248,11 @@ struct  OnBalanceVolumeVisitor  {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
+#ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s != size_type(std::distance(volume_begin, volume_end)))
             throw DataFrameError("OnBalanceVolumeVisitor: All columns must "
                                  "be of equal sizes");
+#endif // HMDF_SANITY_EXCEPTIONS
 
         ReturnVisitor<T, I, A>  ret { return_policy::trinary };
 
@@ -5373,8 +5433,10 @@ struct  DecayVisitor  {
 
         GET_COL_SIZE2
 
+#ifdef HMDF_SANITY_EXCEPTIONS
         if (period_ == 0 || period_ >= col_s)
             throw DataFrameError("DecayVisitor: 0 < period < column size");
+#endif // HMDF_SANITY_EXCEPTIONS
 
         result_type         result (col_s);
         const value_type    decay {
@@ -5445,9 +5507,11 @@ struct  HodgesTompkinsVolVisitor  {
 
         GET_COL_SIZE2
 
+#ifdef HMDF_SANITY_EXCEPTIONS
         if (roll_count_ == 0 || roll_count_ >= col_s)
             throw DataFrameError("HodgesTompkinsVolVisitor: 0 < roll count < "
                                  "column size");
+#endif // HMDF_SANITY_EXCEPTIONS
 
         ReturnVisitor<T, I, A>  ret { return_policy::log };
 
@@ -5538,10 +5602,12 @@ struct  ParkinsonVolVisitor  {
 
         const size_type col_s = std::distance(low_begin, low_end);
 
+#ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s != size_type(std::distance(high_begin, high_end)) ||
             roll_count_ == 0 || roll_count_ >= col_s)
             throw DataFrameError("ParkinsonVolVisitor: All columns must be of "
                                  "equal sizes and roll count < column size");
+#endif // HMDF_SANITY_EXCEPTIONS
 
         const auto          thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
             ? 0L : ThreadGranularity::get_thread_level();
@@ -5765,11 +5831,13 @@ struct  BalanceOfPowerVisitor  {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
+#ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s != size_type(std::distance(low_begin, low_end)) ||
             col_s != size_type(std::distance(open_begin, open_end)) ||
             col_s != size_type(std::distance(high_begin, high_end)))
             throw DataFrameError("BalanceOfPowerVisitor: All columns must be "
                                  "of equal sizes");
+#endif // HMDF_SANITY_EXCEPTIONS
 
         nzr_v<T, I, A>  non_z_range;
 
@@ -5860,10 +5928,12 @@ struct  ChandeKrollStopVisitor  {
         const auto      thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
             ? 0L : ThreadGranularity::get_thread_level();
 
+#ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s != size_type(std::distance(low_begin, low_end)) ||
             col_s != size_type(std::distance(high_begin, high_end)))
             throw DataFrameError("ChandeKrollStopVisitor: All columns must "
                                  "be of equal sizes");
+#endif // HMDF_SANITY_EXCEPTIONS
 
         TrueRangeVisitor<T, I, A>                       atr
             { true, p_period_ };
@@ -6048,11 +6118,13 @@ struct  VortexVisitor  {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
+#ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s != size_type(std::distance(low_begin, low_end)) ||
             col_s != size_type(std::distance(high_begin, high_end)) ||
             roll_period_ >= (col_s - 1))
             throw DataFrameError("VortexVisitor: All columns must be of "
                                  "equal sizes and roll period < column size");
+#endif // HMDF_SANITY_EXCEPTIONS
 
         TrueRangeVisitor<T, I, A>   tr { false };
 
@@ -6200,12 +6272,14 @@ struct  KeltnerChannelsVisitor  {
         const auto      thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
             ? 0L : ThreadGranularity::get_thread_level();
 
+#ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s != size_type(std::distance(low_begin, low_end)) ||
             col_s != size_type(std::distance(high_begin, high_end)) ||
             roll_period_ >= (col_s - 1))
             throw DataFrameError("KeltnerChannelsVisitor: All columns must "
                                  "be of equal sizes and roll period < "
                                  "column size");
+#endif // HMDF_SANITY_EXCEPTIONS
 
         TrueRangeVisitor<T, I, A>   tr { false };
         ewm_v<T, I, A>              basis(
@@ -6355,8 +6429,10 @@ struct  TrixVisitor  {
 
         GET_COL_SIZE2
 
+#ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s < 3)
             throw DataFrameError("TrixVisitor: column size must be > 3");
+#endif // HMDF_SANITY_EXCEPTIONS
 
         ewm_v<T, I, A>  ewm13(exponential_decay_spec::span,
                               roll_period_,
@@ -6451,12 +6527,14 @@ struct  PrettyGoodOsciVisitor  {
         const auto      thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
             ? 0L : ThreadGranularity::get_thread_level();
 
+#ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s != size_type(std::distance(low_begin, low_end)) ||
             col_s != size_type(std::distance(high_begin, high_end)) ||
             roll_period_ >= (col_s - 1))
             throw DataFrameError("PrettyGoodOsciVisitor: All columns must be "
                                  "of equal sizes and roll period < "
                                  "column size");
+#endif // HMDF_SANITY_EXCEPTIONS
 
         SimpleRollAdopter<MeanVisitor<T, I>, T, I, A>   savg
             { MeanVisitor<T, I>(), roll_period_ } ;
@@ -6725,9 +6803,11 @@ struct  TreynorRatioVisitor  {
         const size_type b_s =
             std::distance(benchmark_ret_begin, benchmark_ret_end);
 
+#ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s != b_s || col_s <= 3)
             throw DataFrameError("TreynorRatioVisitor: All columns must be of "
                                  "equal sizes and column size > 3");
+#endif // HMDF_SANITY_EXCEPTIONS
 
         value_type          cum_return { 0.0 };
         BetaVisitor<T, I>   beta_vis { biased_ };
@@ -6809,6 +6889,7 @@ struct  InertiaVisitor  {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
+#ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s != size_type(std::distance(high_begin, high_end)) ||
             col_s != size_type(std::distance(low_begin, low_end)) ||
             roll_period_ >= col_s ||
@@ -6816,6 +6897,7 @@ struct  InertiaVisitor  {
             throw DataFrameError("InertiaVisitor: All columns must be of "
                                  "equal sizes and roll period < column size "
                                  "and roll period > RVI roll period");
+#endif // HMDF_SANITY_EXCEPTIONS
 
         rvi_v<T, I> rvi { rvi_rp_ };
 
@@ -6870,6 +6952,7 @@ struct  RelativeVigorIndexVisitor  {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
+#ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s != size_type(std::distance(low_begin, low_end)) ||
             col_s != size_type(std::distance(open_begin, open_end)) ||
             col_s != size_type(std::distance(high_begin, high_end)) ||
@@ -6878,6 +6961,7 @@ struct  RelativeVigorIndexVisitor  {
             throw DataFrameError("RelativeVigorIndexVisitor: All columns must "
                                  "be of equal sizes and roll period < column "
                                  "size and roll period < SWMA period");
+#endif // HMDF_SANITY_EXCEPTIONS
 
         nzr_v<T, I, A>  non_z_range;
 
@@ -6999,12 +7083,14 @@ struct  ElderRayIndexVisitor  {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
+#ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s != size_type(std::distance(low_begin, low_end)) ||
             col_s != size_type(std::distance(high_begin, high_end)) ||
             roll_period_ >= (col_s - 1))
             throw DataFrameError("ElderRayIndexVisitor: All columns must be "
                                  "of equal sizes and roll period < "
                                  "column size");
+#endif // HMDF_SANITY_EXCEPTIONS
 
         ewm_v<T, I, A>  ewm(exponential_decay_spec::span, roll_period_, true);
 
@@ -7088,11 +7174,13 @@ struct  ChopIndexVisitor  {
         const auto      thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
             ? 0L : ThreadGranularity::get_thread_level();
 
+#ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s != size_type(std::distance(high_begin, high_end)) ||
             col_s != size_type(std::distance(low_begin, low_end)) ||
             roll_period_ >= col_s)
             throw DataFrameError("ChopIndexVisitor: All columns must be of "
                                  "equal size and roll period < column size");
+#endif // HMDF_SANITY_EXCEPTIONS
 
         SimpleRollAdopter<MaxVisitor<T, I>, T, I, A>    maxv
             { MaxVisitor<T, I>(), roll_period_ };
@@ -7250,9 +7338,11 @@ struct  DetrendPriceOsciVisitor  {
 
         GET_COL_SIZE2
 
+#ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s <= 3 || col_s <= roll_period_)
             throw DataFrameError("DetrendPriceOsciVisitor: column size must "
                                  "be > 3 and roll period < column size");
+#endif // HMDF_SANITY_EXCEPTIONS
 
         SimpleRollAdopter<MeanVisitor<T, I>, T, I, A>   savg
             { MeanVisitor<T, I>(), roll_period_ } ;
@@ -7331,12 +7421,14 @@ struct  AccelerationBandsVisitor  {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
+#ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s != size_type(std::distance(low_begin, low_end)) ||
             col_s != size_type(std::distance(high_begin, high_end)) ||
             roll_period_ == 0 || roll_period_ >= col_s)
             throw DataFrameError("AccelerationBandsVisitor: All columns must "
                                  "be of equal sizes and roll period < column "
                                  "size roll period > 0");
+#endif // HMDF_SANITY_EXCEPTIONS
 
         NonZeroRangeVisitor<T, I, A>    nzr;
 
@@ -7453,11 +7545,13 @@ struct  PriceDistanceVisitor  {
         const auto      thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
             ? 0L : ThreadGranularity::get_thread_level();
 
+#ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s != size_type(std::distance(low_begin, low_end)) ||
             col_s != size_type(std::distance(open_begin, open_end)) ||
             col_s != size_type(std::distance(high_begin, high_end)))
             throw DataFrameError("PriceDistanceVisitor: All columns must be "
                                  "of equal sizes");
+#endif // HMDF_SANITY_EXCEPTIONS
 
         nzr_v<T, I, A>  nzr;
 
@@ -7579,9 +7673,11 @@ struct  EldersThermometerVisitor  {
         const auto      thread_level = (col_s < ThreadPool::MUL_THR_THHOLD)
             ? 0L : ThreadGranularity::get_thread_level();
 
+#ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s != size_type(std::distance(high_begin, high_end)))
             throw DataFrameError("EldersThermometerVisitor: All columns must "
                                  "be of equal sizes");
+#endif // HMDF_SANITY_EXCEPTIONS
 
         result_type result(col_s, std::numeric_limits<T>::quiet_NaN());
 
@@ -7717,11 +7813,13 @@ struct  EldersForceIndexVisitor  {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
+#ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s != size_type(std::distance(volume_begin, volume_end)) ||
             roll_period_ >= col_s)
             throw DataFrameError("EldersForceIndexVisitor: All columns must "
                                  "be of equal sizes and roll period < "
                                  "column size");
+#endif // HMDF_SANITY_EXCEPTIONS
 
         DiffVisitor<T, I, A>    diff { 1, false };
 
@@ -7792,6 +7890,7 @@ struct  EaseOfMovementVisitor  {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
+#ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s != size_type(std::distance(low_begin, low_end)) ||
             col_s != size_type(std::distance(high_begin, high_end)) ||
             col_s != size_type(std::distance(volume_begin, volume_end)) ||
@@ -7799,6 +7898,7 @@ struct  EaseOfMovementVisitor  {
             throw DataFrameError("EaseOfMovementVisitor: All columns must be "
                                  "of equal sizes and roll period < "
                                  "column size");
+#endif // HMDF_SANITY_EXCEPTIONS
 
         result_type result(col_s, std::numeric_limits<T>::quiet_NaN());
 
@@ -7885,9 +7985,11 @@ struct  PriceVolumeTrendVisitor  {
 
         const size_type col_s = std::distance(close_begin, close_end);
 
+#ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s == size_type(std::distance(volume_begin, volume_end)))
             throw DataFrameError("PriceVolumeTrendVisitor: All columns must "
                                  "be of equal sizes");
+#endif // HMDF_SANITY_EXCEPTIONS
 
         ReturnVisitor<T, I, A>  ret { return_policy::percentage };
 

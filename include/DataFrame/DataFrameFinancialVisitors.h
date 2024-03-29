@@ -1129,10 +1129,11 @@ struct  SharpeRatioVisitor  {
                 const H &benchmark_ret_begin, const H &benchmark_ret_end)  {
 
         const size_type col_s = std::distance(asset_ret_begin, asset_ret_end);
+
+#ifdef HMDF_SANITY_EXCEPTIONS
         const size_type b_s =
             std::distance(benchmark_ret_begin, benchmark_ret_end);
 
-#ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s != b_s || col_s <= 3)
             throw DataFrameError("SharpeRatioVisitor: column size must be > 3 "
                                  "and two column sizes must be equal");
@@ -6427,10 +6428,8 @@ struct  TrixVisitor  {
     operator() (const K &idx_begin, const K &idx_end,
                 const H &column_begin, const H &column_end)  {
 
-        GET_COL_SIZE2
-
 #ifdef HMDF_SANITY_EXCEPTIONS
-        if (col_s < 3)
+        if (std::distance(column_begin, column_end) < 3)
             throw DataFrameError("TrixVisitor: column size must be > 3");
 #endif // HMDF_SANITY_EXCEPTIONS
 
@@ -6800,10 +6799,11 @@ struct  TreynorRatioVisitor  {
                 const H &benchmark_ret_begin, const H &benchmark_ret_end)  {
 
         const size_type col_s = std::distance(asset_ret_begin, asset_ret_end);
+
+#ifdef HMDF_SANITY_EXCEPTIONS
         const size_type b_s =
             std::distance(benchmark_ret_begin, benchmark_ret_end);
 
-#ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s != b_s || col_s <= 3)
             throw DataFrameError("TreynorRatioVisitor: All columns must be of "
                                  "equal sizes and column size > 3");
@@ -6887,9 +6887,9 @@ struct  InertiaVisitor  {
                 const H &high_begin, const H &high_end,
                 const H &low_begin, const H &low_end)  {
 
+#ifdef HMDF_SANITY_EXCEPTIONS
         const size_type col_s = std::distance(close_begin, close_end);
 
-#ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s != size_type(std::distance(high_begin, high_end)) ||
             col_s != size_type(std::distance(low_begin, low_end)) ||
             roll_period_ >= col_s ||

@@ -195,15 +195,6 @@ fill_missing(const StlVecType<const char *> &col_names,
              const StlVecType<T> &values,
              int limit)  {
 
-    if (fp == fill_policy::linear_extrapolate)  {
-        char buffer [512];
-
-        snprintf(buffer, sizeof(buffer) - 1,
-                 "DataFrame::fill_missing(): fill_policy %d not implemented",
-                 static_cast<int>(fp));
-        throw NotImplemented(buffer);
-    }
-
     const size_type                 count = col_names.size();
     const auto                      thread_level =
         (indices_.size() < ThreadPool::MUL_THR_THHOLD)

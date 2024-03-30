@@ -88,8 +88,8 @@ int main(int, char *[])  {
     ULDataFrame ul_df1;
 
     // One way to load data into the DataFrame is one column at a time.
-    // A DataFrame column could be at most as long as its index column. So, you must load the index
-    // first before loading any column.
+    // A DataFrame column could be at most as long as its index column. So, you must load the indexfirst before
+    // loading any column.
     //
     // Once you load a column or index, the data is moved to DataFrame. The original vectors are now empty.
     // There are other ways of loading data without the move.
@@ -107,8 +107,8 @@ int main(int, char *[])  {
 
     ULDataFrame ul_df2;
 
-    // Also, you can load data into a DataFrame all at once.
-    // In this case again the data is moved to the DataFrame.
+    // Also, you can load data into a DataFrame all at once. In this case again the data is moved to the
+    // DataFrame.
     //
     ul_df2.load_data(std::move(idx_col2),
                      std::make_pair("string col",  str_col),
@@ -143,9 +143,8 @@ int main(int, char *[])  {
               << " IBM close prices" << std::endl;
     std::cout << "There are " << ibm_df.get_index().size() << " IBM indices" << std::endl;
 
-    // You can write the data to a file or stdout in a few formats.
-    // You must specify all the column types, but only once.
-    // When writing to a file, the file name/path must be create-able.
+    // You can write the data to a file or stdout in a few formats. You must specify all the column types,
+    // but only once. When writing to a file, the file name/path must be create-able.
     //
     ul_df2.write<std::ostream, std::string, double>(std::cout, io_format::csv2);
     ibm_df.write<double, long>("/tmp/test.json", io_format::json);
@@ -212,9 +211,8 @@ int main(int, char *[])  {
     DTDataFrame ibm_dt_df;
     DTDataFrame aapl_dt_df;
 
-    // Let’s read the AAPL and IBM market data from their files.
-    // The data for these two stocks start and end at different dates.
-    // But there is overlapping data between them.
+    // Let’s read the AAPL and IBM market data from their files. The data for these two stocks start and end
+    // at different dates. But there is overlapping data between them.
     //
     ibm_dt_df.read("data/DT_IBM.csv", io_format::csv2);
     aapl_dt_df.read("data/DT_AAPL.csv", io_format::csv2);
@@ -266,7 +264,8 @@ int main(int, char *[])  {
             std::make_tuple("AAPL_Close",  "Median",        MedianVisitor<double, dt_idx_t>()),
             std::make_tuple("AAPL_Close",  "25% Quantile",  QuantileVisitor<double, dt_idx_t>(0.25)),
             std::make_tuple("AAPL_Close",  "Std",           StdVisitor<double, dt_idx_t>()),
-            // "Mode" column is a column of std::array<ModeVisitor::DataItem, 2>'s -- It cannot be printed by default
+            // "Mode" column is a column of std::array<ModeVisitor::DataItem, 2>'s -- It cannot be printed
+            // by default
             std::make_tuple("AAPL_Close",  "Mode",          ModeVisitor<2, double, dt_idx_t>()),
             std::make_tuple("AAPL_Close",  "MAD",           MADVisitor<double, dt_idx_t>(mad_type::mean_abs_dev_around_mean)),
             // "Z Score" column is a column of std::vector<double>'s
@@ -285,12 +284,12 @@ int main(int, char *[])  {
 
     // ---------------------------------------------------
     //
-    // Now let’s do some stuff that are a little more involved (multi steps).
-    // There are a lot of theories, math, and procedures that I am skipping to explain here.
+    // Now let’s do some stuff that are a little more involved (multi steps). There are a lot of theories,
+    // math, and procedures that I am skipping to explain here.
     // See docs for more details.
     //
-    // NOTE: I am applying the following analysis to financial data but it equally applies to
-    //       other scientific fields.
+    // NOTE: I am applying the following analysis to financial data but it equally applies to other
+    //       scientific fields.
     //
     // ---------------------------------------------------
 
@@ -393,8 +392,6 @@ int main(int, char *[])  {
 
     return (0);
 }
-
-// -----------------------------------------------------------------------------
 
 // Local Variables:
 // mode:C++

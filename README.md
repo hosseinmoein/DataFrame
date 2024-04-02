@@ -53,9 +53,6 @@ I have followed a few <B>principles in this library</B>:<BR>
 6.  [Use multi-threading but only when it makes sense](https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/multithreading.html)
 7.  [Do not attempt to protect the user against _garbage in_, _garbage out_](https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/garbage_in_garbage_out.html)
 
-[DateTime](docs/DateTimeDoc.pdf)<BR>
-DateTime class included in this library is a very cool and handy object to manipulate date/time with nanosecond precision and multi timezone capability.<BR>
-
 ---
 
 ### Performance

@@ -107,9 +107,13 @@ table {
     <LI><B>HeteroView<span style='color:#808030; '>&lt;</span><span style='color:#666616;'>std</span><span style='color:#800080;'>::</span><span style='color:#603000;'>size_t</span> A <span style='color:#808030;'>=</span> <span style='color:#008c00;'>0</span><span style='color:#808030;'>></span></B>: This is a heterogenous vector view. It will result in a data frame view into a <I>contiguous</I> slice of another data frame. This view is slightly more efficient than <I>HeteroPtrView</I></LI>
     <LI><B>HeteroConstView<span style='color:#808030; '>&lt;</span><span style='color:#666616;'>std</span><span style='color:#800080;'>::</span><span style='color:#603000;'>size_t</span> A <span style='color:#808030;'>=</span> <span style='color:#008c00;'>0</span><span style='color:#808030;'>></span></B>: The const version of HeteroView.</LI>
   </UL>
-  Template parameter <B>A</B> referrers to byte boundary alignment to be used in memory allocations. The default is system default boundaries for each type. See <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrameTypes.html">DataFrame Library Types</a> for convenient typedef's, especially under <I> Library-wide Types</I> section. Also, see <I>Memory Alignment</I> section below<BR><BR>
+  Template parameter <B>A</B> referrers to byte boundary alignment to be used in memory allocations. The default is system default boundaries for each type. See <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrameTypes.html">DataFrame Library Types</a> for convenient typedef's, especially under <I> Library-wide Types</I> section. Also, see <I>Memory Alignment</I> section below<BR>
   Some of the methods in DataFrame return another DataFrame or one of the above views depending on what you asked for. DataFrame and view instances should be indistinguishable from the user's point of view.<BR>
   See <I>Views</I> section below. Also, see <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrameTypes.html">DataFrame Library Types</a> for convenient typedef's<BR>
+
+<BR>
+
+  <B><font size="+1">DateTime</font></B> class included in this library is a cool and handy object to manipulate date/time with nanosecond precision and multi timezone capability. It has a very simple and intuitive interface that allows you to break time to its components, reassemble time from its components, advance or pullback time with different granularities, and more. Please see <a href="https://github.com/hosseinmoein/DataFrame/blob/master/docs/DateTimeDoc.pdf">DateTime documentation</a>.<BR>
 
 <BR><HR COLOR="Orange" SIZE="5">
 

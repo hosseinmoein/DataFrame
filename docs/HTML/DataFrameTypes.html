@@ -292,84 +292,10 @@ DF_INDEX_COL_NAME
       </td>
     </tr>
 
-    <tr bgcolor="lightblue">
-        <th>DataFrame<BR>Exceptions</th> <th>Description</th>
-    </tr>
-
-    <tr bgcolor="lightgrey">
-      <td bgcolor="maroon"> <font color="white">
-        <PRE><B>
-struct DataFrameError{ }
-        </B></PRE></font>
-      </td>
-      <td>
-        It is derived from <I>std::runtime_error</I>. It is the base of all DataFrame exceptions.<BR>
-        It might be also thrown in cases where other exceptions may not be applicable.
-      </td>
-    </tr>
-
-    <tr bgcolor="lightgrey">
-      <td bgcolor="maroon"> <font color="white">
-        <PRE><B>
-struct BadRange{ }
-        </B></PRE></font>
-      </td>
-      <td>
-        It is derived from <I>DataFrameError</I>. It might be thrown in cases where the query is asking for out-of-range data.<BR>
-        For example, when you try to access data or index column that is out of range.
-      </td>
-    </tr>
-
-    <tr bgcolor="lightgrey">
-      <td bgcolor="maroon"> <font color="white">
-        <PRE><B>
-struct ColNotFound{ }
-        </B></PRE></font>
-      </td>
-      <td>
-        It is derived from <I>DataFrameError</I>. It might be thrown in cases where the operation is asking for non-existent column.
-      </td>
-    </tr>
-
-    <tr bgcolor="lightgrey">
-      <td bgcolor="maroon"> <font color="white">
-        <PRE><B>
-struct InconsistentData{ }
-        </B></PRE></font>
-      </td>
-      <td>
-        It is derived from <I>DataFrameError</I>. It might be thrown in cases where data is inconsistent.<BR>
-        For example, when you are trying to populate a collumn with a data vector that is longer than the index column.
-      </td>
-    </tr>
-
-    <tr bgcolor="lightgrey">
-      <td bgcolor="maroon"> <font color="white">
-        <PRE><B>
-struct NotFeasible{ }
-        </B></PRE></font>
-      </td>
-      <td>
-        It is derived from <I>DataFrameError</I>. It might be thrown in cases where the operation is not feasible.<BR>
-        For example, asking to interpolate missing data in a string column.
-      </td>
-    </tr>
-
-    <tr bgcolor="lightgrey">
-      <td bgcolor="maroon"> <font color="white">
-        <PRE><B>
-struct NotImplemented{ }
-        </B></PRE></font>
-      </td>
-      <td>
-        It is derived from <I>DataFrameError</I>. It might be thrown in cases where the operation is not yet implemented.
-      </td>
-    </tr>
-
   </table>
 
   <img src="https://github.com/hosseinmoein/DataFrame/blob/master/docs/LionLookingUp.jpg?raw=true" alt="C++ DataFrame"
-       width="200" height="150" style="float:right"/>
+       width="200" height="200" style="float:right"/>
 
 </body>
 </html>

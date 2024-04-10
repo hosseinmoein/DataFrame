@@ -83,6 +83,14 @@ struct  NotFeasible : public DataFrameError  {
     NotFeasible (const char *desc) : DataFrameError (desc)  {   }
 };
 
+// An I/O operation could not be done. For example, trying to open a file
+// that doesn't exist.
+//
+struct  BadIO : public DataFrameError  {
+
+    BadIO (const char *desc) : DataFrameError (desc)  {   }
+};
+
 // The functionality is not implemented error
 //
 struct  NotImplemented : public DataFrameError  {

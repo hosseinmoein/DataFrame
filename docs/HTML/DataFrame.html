@@ -31,7 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 }
 
 body {
-  background-image: linear-gradient(LemonChiffon, Beige, Khaki, BlanchedAlmond, FloralWhite);
+  background-image: linear-gradient(Azure, AliceBlue, GhostWhite, WhiteSmoke, SeaShell);
 }
 
 .row {
@@ -62,7 +62,7 @@ table {
 </style>
 </head>
 
-<body>
+<body style="font-family: Georgia, serif">
 
   <center>
 	<img src="https://github.com/hosseinmoein/DataFrame/blob/master/docs/LionLookingUp.jpg?raw=true" alt="C++ DataFrame" width="30" height="30"/>
@@ -115,7 +115,7 @@ table {
 
   <font size="+1"><B><span class="line_wrapper"><span style="color:#800000; font-weight:bold; ">class</span> DateTime<span style="color:#800080; ">;</span></span></B></font> included in this library is a cool and handy object to manipulate date/time with nanosecond precision and multi timezone capability. It has a very simple and intuitive interface that allows you to break date/time to their components, reassemble date/time from their components, advance or pullback date/time with different granularities, and more. Please see <a href="https://github.com/hosseinmoein/DataFrame/blob/master/docs/DateTimeDoc.pdf">DateTime documentation</a>.<BR>
 
-<BR><HR COLOR="Orange" SIZE="5">
+<BR><HR COLOR="Gray" SIZE="5">
 
   <H2><font color="blue">API Reference with code samples</font></H2>
   DataFrame library interface is separated into two main categories:
@@ -131,7 +131,7 @@ table {
 <!-- CSS goes in the document HEAD or added to your external stylesheet -->
 <style type="text/css">
 table.hovertable {
-    font-family: verdana,arial,sans-serif,bold;
+    font-family: sans-serif,bold;
     font-size:14px;
     color:#333333;
     border-width: 3px;
@@ -146,7 +146,7 @@ table.hovertable th {
     border-color: SlateGrey;
 }
 table.hovertable tr {
-    background-color:Cornsilk;
+    background-color:Azure;
 }
 table.hovertable td {
     border-width: 1px;
@@ -1420,7 +1420,7 @@ table.hovertable td {
 
 </div>
 
-<BR><HR COLOR="Orange" SIZE="5">
+<BR><HR COLOR="Gray" SIZE="5">
 
   <H2><font color="blue">Multithreading</font></H2>
     In general, multithreading could be very unintuitive. Often you think by using multithreading you enhance the performance of your program. But in fact, you are hindering it. To do effective multithreading, you must do two things repeatedly; measure and adjust. It is recommended to start with a single-threaded version and when that is <I>working correctly</I>, establish a baseline, take measurements, and implement a multithreading solution.<BR>
@@ -1441,7 +1441,7 @@ DataFrame uses multithreading extensively and provides granular tools to adjust 
     <LI>As mentioned above, DataFrame uses parallel computing extensively. But by default, DataFrame is single threaded, because by default its thread-pool is empty. If you want to fully take advantage of DataFrame parallel computing, it is recommended to call <I>ThreadGranularity::set_optimum_thread_level()</I> at the beginning of your program. Alternatively you could call <I>ThreadGranularity:: set_thread_level(n)</I> to add a custom number of threads to the thread-pool. But you better have a good reason for that.<BR>Thread-pool and thread level are static properties of DataFrame. Once the thread level is set, it applies to all DataFrame instances.</LI>
   </UL>
 
-<BR><HR COLOR="Orange" SIZE="5">
+<BR><HR COLOR="Gray" SIZE="5">
 
   <H2><font color="blue">Views</font></H2>
   <P>
@@ -1463,7 +1463,7 @@ DataFrame uses multithreading extensively and provides granular tools to adjust 
     For more understanding, look at this document further and/or the test files.
   </P>
 
-<BR><HR COLOR="Orange" SIZE="5">
+<BR><HR COLOR="Gray" SIZE="5">
 
   <H2><font color="blue">Visitors</font></H2>
   <P>
@@ -1492,7 +1492,7 @@ DataFrame uses multithreading extensively and provides granular tools to adjust 
   </UL>
   <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/how_to_write_visitors.html">This is how you can implement your own visitor</a><BR>
 
-<BR><HR COLOR="Orange" SIZE="5">
+<BR><HR COLOR="Gray" SIZE="5">
 
   <H2><font color="blue">Memory Alignment</font></H2>
   <P>
@@ -1502,7 +1502,7 @@ DataFrame uses multithreading extensively and provides granular tools to adjust 
     When you get access to <I>columns</I> in a DataFrame, you will get a reference to a <I>StlVecType</I>. <I>StlVecType</I> is just a <I>std::vector</I> with custom allocator for the requested alignment.<BR>
   </P>
 
-<BR><HR COLOR="Orange" SIZE="5">
+<BR><HR COLOR="Gray" SIZE="5">
 
   <H2><font color="blue">Numeric Generators</font></H2>
   <P>
@@ -1511,7 +1511,7 @@ DataFrame uses multithreading extensively and provides granular tools to adjust 
     For the definition and defaults of <I>RandGenParams</I>, see this document and file <I>DataFrameTypes.h</I>
   </P>
 
-<BR><HR COLOR="Orange" SIZE="5">
+<BR><HR COLOR="Gray" SIZE="5">
 
   <H2><font color="blue">Code Structure</font></H2>
   <P>
@@ -1526,7 +1526,7 @@ DataFrame uses multithreading extensively and provides granular tools to adjust 
     <font size="+1"><I>test</I></font> directory contains all the test source files, mocked data files, and test output files. The main test source files are <I>dataframe_tester.cc</I> and <I>dataframe_tester_2.cc</I>. It contains test cases for all functionalities of DataFrame. It is not in a very organized structure. I plan to make the test cases more organized.
   </P>
 
-<BR><HR COLOR="Orange" SIZE="5">
+<BR><HR COLOR="Gray" SIZE="5">
 
   <H2><font color="blue">Build Instructions</font></H2>
   <P>

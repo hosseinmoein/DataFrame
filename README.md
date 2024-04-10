@@ -56,7 +56,6 @@ I have followed a few <B>principles in this library</B>:<BR>
 ---
 
 ### Performance
-<span style="font-family:Georgia, serif;">
 You have probably heard of Polars DataFrame. It is implemented in Rust and ported with zero-overhead to Python (as long as you don’t have a loop). I have been asked by many people to write a comparison for <B>DataFrame vs. Polars</B>. So, I finally found some time to learn a bit about Polars and write a very simple benchmark.<BR>
 I wrote the following identical programs for both Polars and C++ DataFrame. I used Polars version 0.19.14. And I used C++20 clang compiler with -O3 option. I ran both on my, somewhat outdated, MacBook Pro.<BR>
 In both cases, I created a dataframe with 3 random columns. The C++ DataFrame also required an additional index column of the same size. Polars doesn’t believe in index columns (that has its own pros and cons. I am not going through it here).
@@ -93,7 +92,6 @@ Pandas, for comparison:
 ---
 
 [**Please consider sponsoring DataFrame, especially if you are using it in production capacity. It is the strongest form of appreciation**](https://github.com/sponsors/hosseinmoein)
-</span>
 
 ---
 

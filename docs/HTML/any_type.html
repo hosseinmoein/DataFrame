@@ -37,7 +37,7 @@ body {
 </style>
 </head>
 
-<body>
+<body style="font-family: Georgia, serif">
 
   To have containers of multiple types in C++ is simply impossible because although C++ is not strongly typed it is statically typed. That means all types must be known at compile time. Please note that I am excluding tuples and pairs as containers.<BR>
   But there are ways to simulate or fake heterogeneous containers. One approach is to use polymorphism and have containers of pointers. There are several variations of this approach. They are all inefficient especially for larger datasets because they break cache locality. Another approach is to use containers of <I>std::variant</I>. In this case if you need to support a new type you must modify your code. Also, for large datasets <I>std::variant</I> could waste a lot of unnecessary memory space.<BR>

@@ -37,7 +37,7 @@ body {
 </style>
 </head>
 
-<body>
+<body style="font-family: Georgia, serif">
 
   Multithreading is used for two main reasons; one is to increase throughput and/or decrease latency, and also increase scalability and other is to make the code more succinct, structured, and the separation of concerns.<BR>
   Using multithreading to increase throughput and decrease latency is very tricky. It is often counterproductive because it is not implemented right. Unfortunately, it is very hard to have a <I>generic</I> multithreading solution for all problems. It is heavily dependent on the nature of the problem and the hardware/software platform. That is why the multithreading solution in DataFrame is very tunable and requires careful user adjustments. I suggest to always start with a single thread and later when the system is working correctly experiment with multithreading. DataFrame gives you the tools and plumbing to do that.<BR>

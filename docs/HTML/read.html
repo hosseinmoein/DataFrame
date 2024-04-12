@@ -23,7 +23,7 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
 <!DOCTYPE html>
-<html>
+<html style="margin:0; padding:0; height:100%;">
 
 <head>
 <style>
@@ -33,7 +33,7 @@ body {
 </style>
 </head>
 
-<body style="font-family: Georgia, serif">
+<body style="font-family: Georgia, serif; margin:0; padding:0; height:100%;">
   <table border="1">
 
     <tr bgcolor="lightblue">
@@ -53,47 +53,42 @@ read(const char *file_name,
       </td>
       <td>
         It inputs the contents of a text file/stream into itself (i.e. DataFrame). Currently 3 formats (i.e. csv, csv2, json) are supported. See io_format documentation page<BR>
-<PRE>
   <B>NOTE</B>: If the DataFrame that is reading the file already has existing data columns, the file data will be <I>added</I> to the existing DataFrame columns.
         If the file has a data column with the same name and type as a column in the DataFrame, the file data will <I>replace</I> the existing data column in the DataFrame.
         If the file has a data column with the same name but different type as a column in the DataFrame, the behavior is undefined.
         Obviously, if the DataFrame is empty none of these matters.
-</PRE><BR>
+<BR>
  -----------------------------------------------<BR>
         <B>CSV</B> file format must be:<BR>
-        <PRE>
-  INDEX:&lt;Number of data points&gt;:&lt;Comma delimited list of values&gt;
-  &lt;Column1 name&gt;:&lt;Number of data points&gt;:&lt;Column1 type&gt;:&lt;Comma delimited list of values&gt;
-  &lt;Column2 name&gt;:&lt;Number of data points&gt;:&lt;Column2 type&gt;:&lt;Comma delimited list of values&gt;
-      .
-      .
-      .
-        </PRE>
+  INDEX:&lt;Number of data points&gt;:&lt;Comma delimited list of values&gt;<BR>
+  &lt;Column1 name&gt;:&lt;Number of data points&gt;:&lt;Column1 type&gt;:&lt;Comma delimited list of values&gt;<BR>
+  &lt;Column2 name&gt;:&lt;Number of data points&gt;:&lt;Column2 type&gt;:&lt;Comma delimited list of values&gt;<BR>
+      .<BR>
+      .<BR>
+      .<BR>
         All empty lines or lines starting with # will be skipped. For examples see files in test directory<BR><BR>
 
  -----------------------------------------------<BR>
         <B>CSV2</B> file format must be (this is similar to Pandas csv format):<BR>
-        <PRE>
-  INDEX:&lt;Number of data points&gt;:&lt;Index type&gt;:,&lt;Column1 name&gt;:&lt;Number of data points&gt;:&lt;Column1 type&gt;,&lt;Column2 name&gt;:&lt;Number of data points&gt;:&lt;Column2 type&gt;, . . .
-  Comma delimited rows of values
-      .
-      .
-      .
-        </PRE>
+  INDEX:&lt;Number of data points&gt;:&lt;Index type&gt;:,&lt;Column1 name&gt;:&lt;Number of data points&gt;:&lt;Column1 type&gt;,&lt;Column2 name&gt;:&lt;Number of data points&gt;:&lt;Column2 type&gt;, . . .<BR>
+  Comma delimited rows of values<BR>
+      .<BR>
+      .<BR>
+      .<BR>
         All empty lines or lines starting with # will be skipped.<BR>
         <B>NOTE:</B> Only in CSV2 format you can specify <I>starting_row</I> and <I>num_rows</I>. This way you can read very large files (that don’t fit into memory) in chunks and process them. In this case the reading starts at <I>starting_row</I> and continues until either <I>num_rows</I> rows is read or EOF is reached.<BR><BR>
 
  -----------------------------------------------<BR>
         <B>JSON</B> file format looks like this:<BR>
         <PRE>
-  {
-    "INDEX":{"N":3,"T":"ulong","D":[123450,123451,123452]},
-    "col_3":{"N":3,"T":"double","D":[15.2,16.34,17.764]},
-    "col_4":{"N":3,"T":"int","D":[22,23,24]},
-    "col_str":{"N":3,"T":"string","D":["11","22","33"]},
-    "col_2":{"N":3,"T":"double","D":[8,9.001,10]},
-    "col_1":{"N":3,"T":"double","D":[1,2,3.456]}
-  }
+{
+  "INDEX":{"N":3,"T":"ulong","D":[123450,123451,123452]},
+  "col_3":{"N":3,"T":"double","D":[15.2,16.34,17.764]},
+  "col_4":{"N":3,"T":"int","D":[22,23,24]},
+  "col_str":{"N":3,"T":"string","D":["11","22","33"]},
+  "col_2":{"N":3,"T":"double","D":[8,9.001,10]},
+  "col_1":{"N":3,"T":"double","D":[1,2,3.456]}
+}
         </PRE>
         Please note DataFrame json does not follow json spec 100%. In json, there is no particular order in dictionary fields. But in DataFrame json:<BR>
         <OL>
@@ -104,62 +99,72 @@ read(const char *file_name,
  -----------------------------------------------<BR>
         In all formats the following data types are supported:
         <PRE>
-          float      -- float
-          double     -- double
-          longdouble -- long double
-          short      -- short int
-          ushort     -- unsigned short int
-          int        -- int
-          uint       -- unsigned int
-          long       -- long int
-          longlong   -- long long int
-          ulong      -- unsigned long int
-          ulonglong  -- unsigned long long int
-          char       -- char
-          uchar      -- unsigned char
-          string     -- std::string
-          string     -- const char *
-          string     -- char *
-          bool       -- bool
-          DateTime   -- DateTime data in format of &lt;Epoch seconds&gt;.&lt;nanoseconds&gt; (1516179600.874123908)
+float      -- float
+double     -- double
+longdouble -- long double
+short      -- short int
+ushort     -- unsigned short int
+int        -- int
+uint       -- unsigned int
+long       -- long int
+longlong   -- long long int
+ulong      -- unsigned long int
+ulonglong  -- unsigned long long int
+char       -- char
+uchar      -- unsigned char
+string     -- std::string
+string     -- const char *
+string     -- char *
+bool       -- bool
+DateTime   -- DateTime data in format of
+                        &lt;Epoch seconds&gt;.&lt;nanoseconds&gt;
+                        (1516179600.874123908)
         </PRE>
         In case of io_format::csv2 and io_format::csv the following additional types are also supported:
         <PRE>
-          dbl_vec        -- A vector of double precision values, The vector is printed as "s[d1|d2|...]"
-                            where s is the size of the vector and d's are the double values.
-          str_vec        -- A vector of std::string values, The vector is printed as "s[str1|str2|...]"
-                            where s is the size of the vector and str's are the strings.
-          dbl_set        -- A set of double precision values, The set is printed as "s[d1|d2|...]"
-                            where s is the size of the set and d's are the double values.
-          str_set        -- A set of std::string values, The set is printed as "s[str1|str2|...]"
-                            where s is the size of the set and str's are the strings.
-          str_dbl_map    -- A map of string keys to double precision values, The map is printed as "s{k1:v1|k2:v2|...}"
-                            where s is the size of the map and k's and v's are keys and values.
-          str_dbl_unomap -- An unordered map of string keys to double precision values, The map is printed as "s{k1:v1|k2:v2|...}"
-                            where s is the size of the map and k's and v's are keys and values.
+dbl_vec        -- A vector of double precision values,
+                  The vector is printed as "s[d1|d2|...]"
+                  where s is the size of the vector and
+                  d's are the double values.
+str_vec        -- A vector of std::string values,
+                  The vector is printed as "s[str1|str2|...]"
+                  where s is the size of the vector
+                  and str's are the strings.
+dbl_set        -- A set of double precision values,
+                  The set is printed as "s[d1|d2|...]"
+                  where s is the size of the set
+                  and d's are the double values.
+str_set        -- A set of std::string values,
+                  The set is printed as "s[str1|str2|...]"
+                  where s is the size of the set
+                  and str's are the strings.
+str_dbl_map    -- A map of string keys to double
+                  precision values, The map is printed
+                  as "s{k1:v1|k2:v2|...}"
+                  where s is the size of the map
+                  and k's and v's are keys and values.
+str_dbl_unomap -- An unordered map of string keys
+                  to double precision values,
+                  The map is printed as "s{k1:v1|k2:v2|...}"
+                  where s is the size of the map and k's
+                  and v's are keys and values.
         </PRE>
 
         In case of io_format::csv2 the following additional types are also supported:
         <PRE>
-          DateTimeAME -- DateTime string printed in American style (MM/DD/YYYY HH:MM:SS.mmm)
-          DateTimeEUR -- DateTime string printed in European style (YYYY/MM/DD HH:MM:SS.mmm)
-          DateTimeISO -- DateTime string printed in ISO style (YYYY-MM-DD HH:MM:SS.mmm)
+DateTimeAME -- American style (MM/DD/YYYY HH:MM:SS.mmm)
+DateTimeEUR -- European style (YYYY/MM/DD HH:MM:SS.mmm)
+DateTimeISO -- ISO style (YYYY-MM-DD HH:MM:SS.mmm)
         </PRE>
 
         <B>NOTE:</B>: This version of read() can be substantially faster, especially for larger files, than if you open the file yourself and use the read() version below.
       </td>
-      <td>
-        <PRE>
-<B>file_name</B>: Complete path to the file
-<B>iof</B>: Specifies the I/O format. The default is CSV
-<B>columns_only</B>: If true, the index column is not read.
-              You may want to do that to read multiple files into the same DataFrame.
-              If <I>columns_only</I> is false the index column must exist in the stream.
-              If <I>columns_only</I> is true the index column may or may not exist
-<B>starting_row</B>: Zero-based number of the row to start reading. starting_row and
-              num_rows can be used to read large files in chunks.
-<B>num_rows</B>: Number of rows to read starting at starting_row
-        </PRE>
+      <td width="30%">
+<B>file_name</B>: Complete path to the file<BR>
+<B>iof</B>: Specifies the I/O format. The default is CSV<BR>
+<B>columns_only</B>: If true, the index column is not read. You may want to do that to read multiple files into the same DataFrame. If <I>columns_only</I> is false the index column must exist in the stream. If <I>columns_only</I> is true the index column may or may not exist<BR>
+<B>starting_row</B>: Zero-based number of the row to start reading. starting_row and num_rows can be used to read large files in chunks.<BR>
+<B>num_rows</B>: Number of rows to read starting at starting_row<BR>
       </td>
     </tr>
 
@@ -176,7 +181,7 @@ read(S &amp;in_s,
       <td>
         Same as read() above, but takes a reference to a stream
       </td>
-      <td>
+      <td width="30%">
       </td>
     </tr>
 
@@ -192,7 +197,7 @@ read_async(const char *file_name,
       <td>
         Same as read() above, but executed asynchronously
       </td>
-      <td>
+      <td width="30%">
       </td>
     </tr>
 
@@ -209,7 +214,7 @@ read_async(S &amp;in_s,
       <td>
         Same as read_async() above, but takes a reference to a stream
       </td>
-      <td>
+      <td width="30%">
       </td>
     </tr>
 
@@ -232,7 +237,7 @@ from_string(const char *data_frame); </font>
         </OL>
 
       </td>
-      <td>
+      <td width="30%">
         <B>data_frame</B>: A null terminated string that was generated by calling to_string(). It must contain a complete DataFrame<BR>
       </td>
     </tr>
@@ -250,7 +255,7 @@ from_string_async(const char *data_frame); </font>
       <td>
       </td>
     </tr>
-	
+    
   </table>
 
 

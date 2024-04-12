@@ -54,7 +54,7 @@ using sharper_v = SharpeRatioVisitor&lt;T, I&gt;;
         </B></PRE></font>
       </td>
       <td>
-        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
+        This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
         This functor class calculates Sharpe ratio given two columns representing asset returns and benchmark returns (or risk-free rate). Note that Sharpe ratio makes sense only if asset returns are normally distributed.<BR>
         <I>
         <PRE>
@@ -66,7 +66,7 @@ using sharper_v = SharpeRatioVisitor&lt;T, I&gt;;
         </PRE>
         </I>
       </td>
-      <td width="12%">
+      <td width="15%">
         <B>T</B>: Column data type.<BR>
         <B>I</B>: Index type.
       </td>
@@ -86,7 +86,7 @@ using treynorr_v = TreynorRatioVisitor&lt;T, I&gt;;
         </B></PRE></font>
       </td>
       <td>
-        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
+        This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
         This functor class calculates Treynor ratio given two columns representing asset returns and benchmark returns<BR>
         The Treynor Ratio measures a portfolio’s excess return per unit of systematic risk, i.e. the market volatility of the portfolio.<BR>
         Often referred to as the “reward-to-volatility ratio”, the Treynor ratio attempts to gauge the risk attributable to a portfolio (and the expected returns) in the context of the total non-diversifiable risk inherent to the market.<BR>
@@ -97,7 +97,7 @@ using treynorr_v = TreynorRatioVisitor&lt;T, I&gt;;
         </PRE>
         </I>
       </td>
-      <td width="12%">
+      <td width="15%">
         <B>T</B>: Column data type.<BR>
         <B>I</B>: Index type.
       </td>

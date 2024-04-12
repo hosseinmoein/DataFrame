@@ -57,7 +57,7 @@ using pfit_v = PolyFitVisitor&lt;T, I, A&gt;;
         </B></PRE></font>
       </td>
       <td>
-        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
+        This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
         This functor fits a N-degree polynomial through the given x-y coordinates by the way of Least-Squares and Gaussian-Elimination<BR><BR>
 
         The result gives you the vector of coefficients.<BR>
@@ -76,7 +76,7 @@ using pfit_v = PolyFitVisitor&lt;T, I, A&gt;;
         <B>degree</B>: The polynomial degree<BR>
         <B>w_func</B>: A functor that provides weights to be applied to sigma values. w_func is passed two parameters: (1) The value of the index column corresponding to the given y value, (2) The corresponding index into the y vector. The default is no weights.
       </td>
-      <td width="12%">
+      <td width="30%">
         <B>T</B>: Column data type.<BR>
         <B>I</B>: Index type.<BR>
         <B>A</B>: Memory alignment boundary for vectors. Default is system default alignment<BR>
@@ -99,7 +99,7 @@ using lfit_v = LogFitVisitor&lt;T, I, A&gt;;
         </B></PRE></font>
       </td>
       <td>
-        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
+        This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
         This functor fits a <I>y = b<sub>0</sub> + b<sub>1</sub> * log(x)</I> through the given x-y coordinates by the way of calling PolyFit above on log(x).<BR><BR>
 
         The result gives you the vector of two coefficients.<BR>
@@ -116,7 +116,7 @@ using lfit_v = LogFitVisitor&lt;T, I, A&gt;;
         </I>
         <B>w_func</B>: A functor that provides weights to be applied to sigma values. w_func is passed two parameters: (1) The value of the index column corresponding to the given y value, (2) The corresponding index into the y vector. The default is no weights.
       </td>
-      <td width="12%">
+      <td width="30%">
         <B>T</B>: Column data type.<BR>
         <B>I</B>: Index type.<BR>
         <B>A</B>: Memory alignment boundary for vectors. Default is system default alignment<BR>
@@ -139,7 +139,7 @@ using efit_v = ExponentialFitVisitor&lt;T, I, A&gt;;
         </B></PRE></font>
       </td>
       <td>
-        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
+        This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
 
         The result gives you the vector of y fits for each given x.<BR>
         There is also a method <I>get_slope()</I> which returns the slope -- coefficient of the exponetial function.<BR>
@@ -151,7 +151,7 @@ using efit_v = ExponentialFitVisitor&lt;T, I, A&gt;;
 		</PRE>
         </I>
       </td>
-      <td width="12%">
+      <td width="30%">
         <B>T</B>: Column data type.<BR>
         <B>I</B>: Index type.<BR>
         <B>A</B>: Memory alignment boundary for vectors. Default is system default alignment<BR>
@@ -174,7 +174,7 @@ using linfit_v = LinearFitVisitor&lt;T, I, A&gt;;
         </B></PRE></font>
       </td>
       <td>
-        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
+        This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
 
         The result gives you the vector of y fits for each given x.<BR>
         There is also a method <I>get_slope()</I> which returns the slope -- coefficient of the exponetial function.<BR>
@@ -186,7 +186,7 @@ using linfit_v = LinearFitVisitor&lt;T, I, A&gt;;
 		</PRE>
         </I>
       </td>
-      <td width="12%">
+      <td width="30%">
         <B>T</B>: Column data type.<BR>
         <B>I</B>: Index type.<BR>
         <B>A</B>: Memory alignment boundary for vectors. Default is system default alignment<BR>
@@ -209,7 +209,7 @@ using csfit_v = CubicSplineFitVisitor&lt;T, I, A&gt;;
         </B></PRE></font>
       </td>
       <td>
-        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
+        This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
         This functor uses cubic spline method to fit y into x-y coordinates specified by input. It is best discribed <a href="https://en.wikipedia.org/w/index.php?title=Spline_%28mathematics%29&oldid=288288033#Algorithm_for_computing_natural_cubic_splines">here</a>.<BR>
         y<sub>i</sub>(x) = a<sub>i</sub> + b<sub>i</sub>(x - x<sub>i</sub>) + c<sub>i</sub>(x - x<sub>i</sub>)<sup>2</sup> + d<sub>i</sub>(x - x<sub>i</sub>)<sup>3</sup><BR>
         <b>a</b> is just the input <b>y</b> vector<BR><BR>
@@ -222,7 +222,7 @@ using csfit_v = CubicSplineFitVisitor&lt;T, I, A&gt;;
 		</PRE>
         </I>
       </td>
-      <td width="12%">
+      <td width="30%">
         <B>T</B>: Column data type.<BR>
         <B>I</B>: Index type.<BR>
         <B>A</B>: Memory alignment boundary for vectors. Default is system default alignment<BR>

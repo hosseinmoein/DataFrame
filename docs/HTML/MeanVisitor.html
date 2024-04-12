@@ -52,7 +52,7 @@ struct MeanVisitor;
         This functor class calculates the mean of a given column.<BR>
         The constructor takes a single optional Boolean argument to whether skip NaN values. The default is True. <BR>
       </td>
-      <td width="12%">
+      <td width="15%">
         <B>T</B>: Column data type<BR>
         <B>I</B>: Index type
       </td>
@@ -71,7 +71,7 @@ struct StableMeanVisitor;
         mean<sub>t</sub> += (X<sub>t</sub> - mean<sub>t-1</sub>) / count<BR>
         The constructor takes a single optional Boolean argument to whether skip NaN values. The default is True. <BR>
       </td>
-      <td width="12%">
+      <td width="15%">
         <B>T</B>: Column data type<BR>
         <B>I</B>: Index type
       </td>
@@ -90,7 +90,7 @@ struct WeightedMeanVisitor;
         The numerator is <I>V<sub>0</sub> * 1 + V<sub>1</sub> * 2 + ... + V<sub>n-1</sub> * n</I>. The denominator is <I>(n * (n + 1)) / 2</I>.<BR>
         The constructor takes a single optional Boolean argument to whether skip NaN values. The default is True. <BR>
       </td>
-      <td width="12%">
+      <td width="15%">
         <B>T</B>: Column data type<BR>
         <B>I</B>: Index type
       </td>
@@ -108,7 +108,7 @@ struct GeometricMeanVisitor;
         This functor class calculates the geometric mean of a given column.<BR>
         The constructor takes a single optional Boolean argument to whether skip NaN values. The default is True.<BR>
       </td>
-      <td width="12%">
+      <td width="15%">
         <B>T</B>: Column data type.<BR>
         <B>I</B>: Index type.
       </td>
@@ -126,7 +126,7 @@ struct HarmonicMeanVisitor;
         This functor class calculates the harmonic mean of a given column.<BR>
         The constructor takes a single optional Boolean argument to whether skip NaN values. The default is True.<BR>
       </td>
-      <td width="12%">
+      <td width="15%">
         <B>T</B>: Column data type.<BR>
         <B>I</B>: Index type.
       </td>
@@ -141,12 +141,12 @@ struct QuadraticMeanVisitor;
         </B></PRE></font>
       </td>
       <td>
-        This functor class calculates quadratic mean or root mean square. It gives a greater weight to larger items and is always equal to or greater than the “regular” arithmetic mean<BR>
+        This functor class calculates quadratic mean or root mean square. It gives a greater weight to larger items and is always equal to or greater than the "regular" arithmetic mean<BR>
         The mean is calculated as &radic;<span style="text-decoration:overline;">(X0<sup>2</sup> + X1<sup>2</sup> + ... + Xn-1<sup>2</sup>) / n</span><BR>
         The constructor takes a single optional Boolean argument to whether skip NaN values. The default is True.<BR><BR>
         In addition to <I>get_result()</I>, this visitor also has <I>get_euclidean_norm()</I> that returns &radic;<span style="text-decoration:overline;">X0<sup>2</sup> + X1<sup>2</sup> + ... + Xn-1<sup>2</sup></span><BR>
       </td>
-      <td width="12%">
+      <td width="15%">
         <B>T</B>: Column data type<BR>
         <B>I</B>: Index type
       </td>

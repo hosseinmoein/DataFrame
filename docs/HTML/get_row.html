@@ -54,7 +54,7 @@ get_row(std::size_t row_num,
         corresponding to the row_num<BR>
         It returns a HeteroVector which contains a different type for each column.<BR>
       </td>
-      <td>
+      <td width="30%">
         <B>Ts</B>: The list of types for all columns. A type should be specified only once.<BR>
         <B>row_num</B>: The row number<BR>
         <B>col_names</B>: Names of columns to get data from. It also specifies the order of data in the returned vector
@@ -72,7 +72,7 @@ get_row(std::size_t row_num) const;
       <td>
         This is same as <I>get_row()</I> above. But it always includes all the columns in the returned row. The order is the column creation order. If you have rotated the columns, the creation order has changed. You can always use <I>column_name_to_idx()</I> and <I>column_idx_to_name()</I> methods.
       </td>
-      <td>
+      <td width="30%">
         <B>Ts</B>: The list of types for all columns. A type should be specified only once.<BR>
         <B>row_num</B>: The row number<BR>
       </td>

@@ -53,7 +53,7 @@ enum class quantile_policy : unsigned char  {
       <td>
         This policy determines how to calculate quantiles when they fall between two values.<BR>
         Linear calculates as:<BR>
-        X<sub>1</sub> + (X<sub>2</sub> – X<sub>1</sub>) * (1.0 – QT)
+        X<sub>1</sub> + (X<sub>2</sub> - X<sub>1</sub>) * (1.0 - QT)
       </td>
     </tr>
 
@@ -82,7 +82,7 @@ using qt_v = QuantileVisitor&lt;T, I, A&gt;;
         </B></PRE></font>
       </td>
       <td>
-        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
+        This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
         This functor class finds the quantile specified by quantile and q_policy. Please see quantile_policy for more explanation.<BR>
         <I>
         <PRE>
@@ -91,7 +91,7 @@ using qt_v = QuantileVisitor&lt;T, I, A&gt;;
         </PRE>
         </I>
       </td>
-      <td width="12%">
+      <td width="30%">
         <B>T</B>: Column data type.<BR>
         <B>I</B>: Index type.<BR>
         <B>A</B>: Memory alignment boundary for vectors. Default is system default alignment<BR>

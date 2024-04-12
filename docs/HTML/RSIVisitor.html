@@ -56,7 +56,7 @@ using rsi_v = RSIVisitor<&lt;T, I, A&gt;;
         </B></PRE></font>
       </td>
       <td>
-        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
+        This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
         Relative Strength Index (RSI) is a technical indicator used in the analysis of financial markets. It is intended to chart the current and historical strength or weakness of a stock or market based on the closing prices of a recent trading period. The indicator should not be confused with relative strength.<BR>
         The RSI is classified as a momentum oscillator, measuring the velocity and magnitude of price movements.<BR>
         The RSI is most typically used on a 14-day (a parameter in this visitor) time frame, measured on a scale from 0 to 100.<BR>
@@ -70,7 +70,7 @@ using rsi_v = RSIVisitor<&lt;T, I, A&gt;;
         </PRE>
 		</I>
       </td>
-      <td width="12%">
+      <td width="30%">
         <B>T</B>: Column data type.<BR>
         <B>I</B>: Index type.<BR>
         <B>A</B>: Memory alignment boundary for vectors. Default is system default alignment<BR>
@@ -93,7 +93,7 @@ using rsx_v = RSXVisitor&lt;T, I, A&gt;;
         </B></PRE></font>
       </td>
       <td>
-        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
+        This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
         RSI is a popular indicator, yet it can be very noisy, inducing false signals and triggers. RSX is superior, providing an ultra smooth, low lag trend strength indicator. The code implemented is based on published code found at 'prorealcode.com'.<BR>
 		<I>
         <PRE>
@@ -102,7 +102,7 @@ using rsx_v = RSXVisitor&lt;T, I, A&gt;;
         </PRE>
 		</I>
       </td>
-      <td width="12%">
+      <td width="30%">
         <B>T</B>: Column data type.<BR>
         <B>I</B>: Index type.<BR>
         <B>A</B>: Memory alignment boundary for vectors. Default is system default alignment<BR>
@@ -125,7 +125,7 @@ using rvi_v = RVIVisitor&lt;T, I, A&gt;;
         </B></PRE></font>
       </td>
       <td>
-        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
+        This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
         The Relative Volatility Index is the Relative Strength Index (RSI) calculated with a standard deviation over several last bars used instead of price change. The RVI can be used as a confirming indicator since it uses a measurement other than price as a means to interpret market strength.<BR>
         The RVI measures the direction of volatility on a scale from 0 to 100. Readings greater than 50 indicate that the volatility is more to the upside. Readings lower than 50 indicate that the direction of volatility is to the downside.<BR>
         The input columns to this visitor are <I>close</I>, <I>high</I>, and <I>low</I>.<BR>
@@ -136,7 +136,7 @@ using rvi_v = RVIVisitor&lt;T, I, A&gt;;
         </PRE>
 		</I>
       </td>
-      <td width="12%">
+      <td width="30%">
         <B>T</B>: Column data type.<BR>
         <B>I</B>: Index type.<BR>
         <B>A</B>: Memory alignment boundary for vectors. Default is system default alignment<BR>

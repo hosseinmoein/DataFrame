@@ -48,7 +48,7 @@ struct StepRollAdopter;
         </B></PRE></font>
       </td>
       <td>
-        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
+        This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
         This functor applies functor F to the data in a rolling progression. It applies F to every Nth item, always starting from the first item. N is given in the constructor<BR>
         The result is the result of F (i.e. visitor) result. This is somewhat similar to numpy <I>array[N::M]</I><BR>
         <I>
@@ -57,7 +57,7 @@ struct StepRollAdopter;
         </PRE>
         </I>
       </td>
-      <td width="12%">
+      <td width="15%">
         <B>F</B>: Functor type<BR>
         <B>T</B>: Column data type<BR>
         <B>I</B>: Index type

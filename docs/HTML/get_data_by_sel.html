@@ -57,7 +57,7 @@ The signature of sel_fucntor:<BR>
         </PRE></I>
         <B>NOTE</B> If the selection logic results in empty column(s), the result empty columns will _not_ be padded with NaN's. You can always call make_consistent() on the original or result DataFrame to make all columns into consistent length<BR>
       </td>
-      <td width="32%">
+      <td width="30%">
         <B>T</B>: Type of the named column<BR>
         <B>F</B>: Type of the selecting functor<BR>
         <B>Ts</B>: The list of types for all columns. A type should be specified only once<BR>
@@ -84,7 +84,7 @@ get_view_by_sel(const char *name,
         </OL>
         <B>NOTE</B>: There are certain operations that you cannot do with a view. For example, you cannot add/delete columns, etc.<BR>
       </td>
-      <td>
+      <td width="30%">
         <B>T</B>: Type of the named column<BR>
         <B>F</B>: Type of the selecting functor<BR>
         <B>Ts</B>: The list of types for all columns. A type should be specified only once<BR>
@@ -106,7 +106,7 @@ get_view_by_sel(const char *name,
       <td>
           Same as above view, but it returns a <I>const</I> view. You can not change data in const views. But if the data is changed in the original DataFrame or through another view, it is refelcted in the const view.       
       </td>
-      <td>
+      <td width="30%">
         <B>T</B>: Type of the named column<BR>
         <B>F</B>: Type of the selecting functor<BR>
         <B>Ts</B>: The list of types for all columns. A type should be specified only once<BR>
@@ -133,7 +133,7 @@ get_data_by_sel(const char *name1,
     bool ()(const IndexType &, const T1 &, const T2 &)
         </PRE></I>
       </td>
-      <td>
+      <td width="30%">
         <B>T1</B>: Type of the first named column<BR>
         <B>T2</B>: Type of the second named column<BR>
         <B>F</B>: Type of the selecting functor<BR>
@@ -163,7 +163,7 @@ get_view_by_sel(const char *name1,
         </OL>
         <B>NOTE</B>: There are certain operations that you cannot do with a view. For example, you cannot add/delete columns, etc.<BR>
       </td>
-      <td>
+      <td width="30%">
         <B>T1</B>: Type of the first named column<BR>
         <B>T2</B>: Type of the second named column<BR>
         <B>F</B>: Type of the selecting functor<BR>
@@ -188,7 +188,7 @@ get_view_by_sel(const char *name1,
       <td>
           Same as above view, but it returns a <I>const</I> view. You can not change data in const views. But if the data is changed in the original DataFrame or through another view, it is refelcted in the const view.       
       </td>
-      <td>
+      <td width="30%">
         <B>T1</B>: Type of the first named column<BR>
         <B>T2</B>: Type of the second named column<BR>
         <B>F</B>: Type of the selecting functor<BR>
@@ -218,7 +218,7 @@ get_data_by_sel(const char *name1,
     bool ()(const IndexType &, const T1 &, const T2 &, const T3 &)
         </PRE></I>
       </td>
-      <td>
+      <td width="30%">
         <B>T1</B>: Type of the first named column<BR>
         <B>T2</B>: Type of the second named column<BR>
         <B>T3</B>: Type of the third named column<BR>
@@ -251,7 +251,7 @@ get_view_by_sel(const char *name1,
         </OL>
         <B>NOTE</B>: There are certain operations that you cannot do with a view. For example, you cannot add/delete columns, etc.<BR>
       </td>
-      <td>
+      <td width="30%">
         <B>T1</B>: Type of the first named column<BR>
         <B>T2</B>: Type of the second named column<BR>
         <B>T3</B>: Type of the third named column<BR>
@@ -279,7 +279,7 @@ get_view_by_sel(const char *name1,
       <td>
           Same as above view, but it returns a <I>const</I> view. You can not change data in const views. But if the data is changed in the original DataFrame or through another view, it is refelcted in the const view.       
       </td>
-      <td>
+      <td width="30%">
         <B>T1</B>: Type of the first named column<BR>
         <B>T2</B>: Type of the second named column<BR>
         <B>T3</B>: Type of the third named column<BR>
@@ -313,7 +313,7 @@ get_data_by_sel(const char *name1,
     bool ()(const IndexType &, const T1 &, const T2 &, const T3 &, const T4 &)
         </PRE></I>
       </td>
-      <td>
+      <td width="30%">
         <B>T1</B>: Type of the first named column<BR>
         <B>T2</B>: Type of the second named column<BR>
         <B>T3</B>: Type of the third named column<BR>
@@ -350,7 +350,7 @@ get_view_by_sel(const char *name1,
         </OL>
         <B>NOTE</B>: There are certain operations that you cannot do with a view. For example, you cannot add/delete columns, etc.<BR>
       </td>
-      <td>
+      <td width="30%">
         <B>T1</B>: Type of the first named column<BR>
         <B>T2</B>: Type of the second named column<BR>
         <B>T3</B>: Type of the third named column<BR>
@@ -382,7 +382,7 @@ get_view_by_sel(const char *name1,
       <td>
           Same as above view, but it returns a <I>const</I> view. You can not change data in const views. But if the data is changed in the original DataFrame or through another view, it is refelcted in the const view.       
       </td>
-      <td>
+      <td width="30%">
         <B>T1</B>: Type of the first named column<BR>
         <B>T2</B>: Type of the second named column<BR>
         <B>T3</B>: Type of the third named column<BR>
@@ -421,7 +421,7 @@ get_data_by_sel(const char *name1,
             const T1 &, const T2 &, const T3 &, const T4 &, const T5 &)
         </PRE></I>
       </td>
-      <td>
+      <td width="30%">
         <B>T1</B>: Type of the first named column<BR>
         <B>T2</B>: Type of the second named column<BR>
         <B>T3</B>: Type of the third named column<BR>
@@ -462,7 +462,7 @@ get_view_by_sel(const char *name1,
         </OL>
         <B>NOTE</B>: There are certain operations that you cannot do with a view. For example, you cannot add/delete columns, etc.<BR>
       </td>
-      <td>
+      <td width="30%">
         <B>T1</B>: Type of the first named column<BR>
         <B>T2</B>: Type of the second named column<BR>
         <B>T3</B>: Type of the third named column<BR>
@@ -498,7 +498,7 @@ get_view_by_sel(const char *name1,
       <td>
           Same as above view, but it returns a <I>const</I> view. You can not change data in const views. But if the data is changed in the original DataFrame or through another view, it is refelcted in the const view.       
       </td>
-      <td>
+      <td width="30%">
         <B>T1</B>: Type of the first named column<BR>
         <B>T2</B>: Type of the second named column<BR>
         <B>T3</B>: Type of the third named column<BR>

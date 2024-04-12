@@ -52,7 +52,7 @@ load_indicators(const char *cat_col_name,
         <B>NOTE:</B> The values of the categorical column must be converted to string to generate names for indicator columns<BR>
         <B>NOTE:</B> The values of the categorical column must be hashable<BR>
       </td>
-      <td>
+      <td width="30%">
         <B>T</B>: Type of the named categorical column<BR>
         <B>IT</B>: Type of the generated numerical indicator columns<BR>
         <B>cat_col_name</B>: Name of the categorical column<BR>
@@ -73,7 +73,7 @@ from_indicators(const std::vector<const char *> &amp;ind_col_names,
       <td>
         This does the opposite of the load_indicators(). Given a bunch of one-hot indicator columns, it reconstructs the category column.<BR>
       </td>
-      <td>
+      <td width="30%">
         <B>T</B>: Type of the indicator columns<BR>
         <B>CT</B>: Type of the new categorical column<BR>
         <B>ind_col_names</B>: Names of the indicator columns<BR>

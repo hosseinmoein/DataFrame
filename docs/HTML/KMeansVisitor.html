@@ -49,7 +49,7 @@ struct KMeansVisitor;
         </B></PRE></font>
       </td>
       <td>
-        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
+        This is a single action visitor, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
         This functor class finds the K means in the data. It could also cluster the data around the means.<BR>
         The constructor takes 3 parameters<BR>
         <OL>
@@ -71,7 +71,7 @@ KMeansVisitor(std::size_t num_of_iter,
         <I>get_results()</I> returns an array of K means.<BR>
         There is also a <I>get_clusters()</I> method that returns an array of K <I>VectorPtrView</I>’s which contain the data clustered around the K-Means. The first element in each <I>VectorPtrView</I> is the mean and the reset are the data points belonging to that cluster.<BR>
       </td>
-      <td width="12%">
+      <td width="30%">
         <B>K</B>: Number of means to find<BR>
         <B>T</B>: Column data type<BR>
         <B>I</B>: Index type<BR>

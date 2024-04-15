@@ -630,11 +630,11 @@ operator()(const T &vec)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename IT, typename ... Ts>
+template<typename DF, typename IT, typename ... Ts>
 template<typename T>
 void
 DataFrame<I, H>::
-sel_load_functor_<IT, Ts ...>::
+sel_load_functor_<DF, IT, Ts ...>::
 operator() (const T &vec)  {
 
     using VecType = typename std::remove_reference<T>::type;

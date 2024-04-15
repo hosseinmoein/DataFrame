@@ -2880,6 +2880,45 @@ static void test_VectorSimilarityVisitor()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_get_data_by_sel_from_view()  {
+
+    std::cout << "\nTesting get_data_by_sel_from_view(  ) ..." << std::endl;
+
+    typedef StdDataFrame64<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("data/SHORT_IBM.csv", io_format::csv2);
+
+        auto    vw =
+            df.get_view_by_loc<double, long>(Index2D<long>{ 1000L, 1700L });
+        auto    above_150_fun =
+            [](const std::string &, const double &close, const double &open) {
+                return (close > 150.0 && open > 152.0);
+            };
+        auto    data_150 =
+            vw.get_data_by_sel<double,
+                               double,
+                               decltype(above_150_fun),
+                               double,
+                               long>("IBM_Close", "IBM_Open", above_150_fun);
+
+        assert(data_150.get_index().size() == 79);;
+        assert((std::abs(data_150.get_column<double>("IBM_Close")[0] -
+                    152.95) < 0.0001));
+        assert((std::abs(data_150.get_column<double>("IBM_Open")[10] -
+                    162.66) < 0.0001));
+        assert((std::abs(data_150.get_column<double>("IBM_Close")[10] -
+                    163.47) < 0.0001));
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
@@ -2941,6 +2980,7 @@ int main(int, char *[]) {
     test_swap();
     test_remove_data_by_like();
     test_VectorSimilarityVisitor();
+    test_get_data_by_sel_from_view();
 
     return (0);
 }

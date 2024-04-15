@@ -2091,7 +2091,7 @@ public: // Read/access and slicing interfaces
     //   A reference to the selecting functor
     //
     template<typename T, typename F, typename ... Ts>
-    [[nodiscard]] DataFrame
+    [[nodiscard]] DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
     get_data_by_sel(const char *name, F &sel_functor) const;
 
     // This is identical with above get_data_by_sel(), but:
@@ -2141,7 +2141,7 @@ public: // Read/access and slicing interfaces
     //   A reference to the selecting functor
     //
     template<typename T1, typename T2, typename F, typename ... Ts>
-    [[nodiscard]] DataFrame
+    [[nodiscard]] DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
     get_data_by_sel(const char *name1,
                     const char *name2,
                     F &sel_functor) const;
@@ -2205,7 +2205,7 @@ public: // Read/access and slicing interfaces
     //
     template<typename T1, typename T2, typename T3, typename F,
              typename ... Ts>
-    [[nodiscard]] DataFrame
+    [[nodiscard]] DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
     get_data_by_sel(const char *name1,
                     const char *name2,
                     const char *name3,
@@ -2287,7 +2287,7 @@ public: // Read/access and slicing interfaces
     //
     template<typename T1, typename T2, typename T3, typename T4, typename F,
              typename ... Ts>
-    [[nodiscard]] DataFrame
+    [[nodiscard]] DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
     get_data_by_sel(const char *name1,
                     const char *name2,
                     const char *name3,
@@ -2380,7 +2380,7 @@ public: // Read/access and slicing interfaces
     //
     template<typename T1, typename T2, typename T3, typename T4, typename T5,
              typename F, typename ... Ts>
-    [[nodiscard]] DataFrame
+    [[nodiscard]] DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
     get_data_by_sel(const char *name1,
                     const char *name2,
                     const char *name3,
@@ -2450,7 +2450,7 @@ public: // Read/access and slicing interfaces
              typename T6, typename T7, typename T8, typename T9, typename T10,
              typename T11,
              typename F, typename ... Ts>
-    [[nodiscard]] DataFrame
+    [[nodiscard]] DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
     get_data_by_sel(const char *name1,
                     const char *name2,
                     const char *name3,
@@ -2468,7 +2468,7 @@ public: // Read/access and slicing interfaces
              typename T6, typename T7, typename T8, typename T9, typename T10,
              typename T11, typename T12,
              typename F, typename ... Ts>
-    [[nodiscard]] DataFrame
+    [[nodiscard]] DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
     get_data_by_sel(const char *name1,
                     const char *name2,
                     const char *name3,
@@ -2487,7 +2487,7 @@ public: // Read/access and slicing interfaces
              typename T6, typename T7, typename T8, typename T9, typename T10,
              typename T11, typename T12, typename T13,
              typename F, typename ... Ts>
-    [[nodiscard]] DataFrame
+    [[nodiscard]] DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
     get_data_by_sel(const char *name1,
                     const char *name2,
                     const char *name3,

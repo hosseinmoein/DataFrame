@@ -233,7 +233,7 @@ get_row(size_type row_num, const StlVecType<const char *> &col_names) const {
                 char buffer [512];
 
                 snprintf(buffer, sizeof(buffer) - 1,
-                         "DataFrame::get_row(): ERROR: Cannot find column '%s'",
+                        "DataFrame::get_row(): ERROR: Cannot find column '%s'",
                          name_citer);
                 throw ColNotFound(buffer);
             }
@@ -444,7 +444,7 @@ get_data_by_idx(const StlVecType<IndexType> &values) const  {
             [&locations = std::as_const(locations), idx_s, &df, this]
             (const auto &begin, const auto &end) -> void  {
                 for (auto citer = begin; citer < end; ++citer)  {
-                    sel_load_functor_<size_type, Ts ...>    functor (
+                    sel_load_functor_<DataFrame, size_type, Ts ...> functor (
                         citer->first.c_str(),
                         locations,
                         idx_s,
@@ -463,10 +463,11 @@ get_data_by_idx(const StlVecType<IndexType> &values) const  {
     }
     else  {
         for (const auto &[name, idx] : column_list_) [[likely]]  {
-            sel_load_functor_<size_type, Ts ...>    functor (name.c_str(),
-                                                             locations,
-                                                             idx_s,
-                                                             df);
+            sel_load_functor_<DataFrame, size_type, Ts ...> functor(
+                name.c_str(),
+                locations,
+                idx_s,
+                df);
 
             data_[idx].change(functor);
         }
@@ -768,7 +769,7 @@ get_data_by_loc (const StlVecType<long> &locations) const  {
             [&locations = std::as_const(locations), idx_s, &df, this]
             (const auto &begin, const auto &end) -> void  {
                 for (auto citer = begin; citer < end; ++citer)  {
-                    sel_load_functor_<long, Ts ...>  functor (
+                    sel_load_functor_<DataFrame, long, Ts ...>  functor(
                         citer->first.c_str(),
                         locations,
                         idx_s,
@@ -787,10 +788,10 @@ get_data_by_loc (const StlVecType<long> &locations) const  {
     }
     else  {
         for (const auto &[name, idx] : column_list_) [[likely]]  {
-            sel_load_functor_<long, Ts ...> functor (name.c_str(),
-                                                     locations,
-                                                     idx_s,
-                                                     df);
+            sel_load_functor_<DataFrame, long, Ts ...>  functor (name.c_str(),
+                                                                 locations,
+                                                                 idx_s,
+                                                                 df);
 
             data_[idx].change(functor);
         }
@@ -984,7 +985,7 @@ get_view_by_loc (const StlVecType<long> &locations) const  {
 
 template<typename I, typename H>
 template<typename T, typename F, typename ... Ts>
-DataFrame<I, H> DataFrame<I, H>::
+DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
 get_data_by_sel (const char *name, F &sel_functor) const  {
 
     const ColumnVecType<T>  &vec = get_column<T>(name);
@@ -1050,7 +1051,7 @@ get_view_by_sel (const char *name, F &sel_functor) const  {
 
 template<typename I, typename H>
 template<typename T1, typename T2, typename F, typename ... Ts>
-DataFrame<I, H> DataFrame<I, H>::
+DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
 get_data_by_sel (const char *name1, const char *name2, F &sel_functor) const  {
 
     const size_type         idx_s = indices_.size();
@@ -1144,7 +1145,7 @@ get_view_by_sel (const char *name1, const char *name2, F &sel_functor) const  {
 
 template<typename I, typename H>
 template<typename T1, typename T2, typename T3, typename F, typename ... Ts>
-DataFrame<I, H> DataFrame<I, H>::
+DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
 get_data_by_sel (const char *name1,
                  const char *name2,
                  const char *name3,
@@ -1240,7 +1241,7 @@ get_data_by_sel (F &sel_functor) const  {
             [&col_indices = std::as_const(col_indices), idx_s, &df, this]
             (const auto &begin, const auto &end) -> void  {
                 for (auto citer = begin; citer < end; ++citer)  {
-                    sel_load_functor_<size_type, Tuple> functor (
+                    sel_load_functor_<DataFrame, size_type, Tuple>  functor(
                         citer->first.c_str(),
                         col_indices,
                         idx_s,
@@ -1259,7 +1260,7 @@ get_data_by_sel (F &sel_functor) const  {
     }
     else  {
         for (const auto &citer : column_list_) [[likely]]  {
-            sel_load_functor_<size_type, Tuple> functor (
+            sel_load_functor_<DataFrame, size_type, Tuple>  functor(
                 citer.first.c_str(),
                 col_indices,
                 idx_s,
@@ -1337,7 +1338,7 @@ get_data_by_sel (F &sel_functor, FilterCols && ... filter_cols) const  {
             [&col_indices = std::as_const(col_indices), idx_s, &df, this]
             (const auto &begin, const auto &end) -> void  {
                 for (auto citer = begin; citer < end; ++citer)  {
-                    sel_load_functor_<size_type, Tuple> functor (
+                    sel_load_functor_<DataFrame, size_type, Tuple>  functor(
                         citer->first.c_str(),
                         col_indices,
                         idx_s,
@@ -1356,7 +1357,7 @@ get_data_by_sel (F &sel_functor, FilterCols && ... filter_cols) const  {
     }
     else  {
         for (const auto &citer : column_list_) [[likely]]  {
-            sel_load_functor_<size_type, Tuple> functor (
+            sel_load_functor_<DataFrame, size_type, Tuple>  functor(
                 citer.first.c_str(),
                 col_indices,
                 idx_s,
@@ -1451,7 +1452,7 @@ get_view_by_sel (const char *name1,
 template<typename I, typename H>
 template<typename T1, typename T2, typename T3, typename T4,
          typename F, typename ... Ts>
-DataFrame<I, H> DataFrame<I, H>::
+DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
 get_data_by_sel(const char *name1,
                 const char *name2,
                 const char *name3,
@@ -1584,7 +1585,7 @@ get_view_by_sel(const char *name1,
 template<typename I, typename H>
 template<typename T1, typename T2, typename T3, typename T4, typename T5,
          typename F, typename ... Ts>
-DataFrame<I, H> DataFrame<I, H>::
+DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
 get_data_by_sel(const char *name1,
                 const char *name2,
                 const char *name3,
@@ -1633,7 +1634,7 @@ template<typename T1, typename T2, typename T3, typename T4, typename T5,
          typename T6, typename T7, typename T8, typename T9, typename T10,
          typename T11,
          typename F, typename ... Ts>
-DataFrame<I, H> DataFrame<I, H>::
+DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
 get_data_by_sel(const char *name1,
                 const char *name2,
                 const char *name3,
@@ -1709,7 +1710,7 @@ template<typename T1, typename T2, typename T3, typename T4, typename T5,
          typename T6, typename T7, typename T8, typename T9, typename T10,
          typename T11, typename T12,
          typename F, typename ... Ts>
-DataFrame<I, H> DataFrame<I, H>::
+DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
 get_data_by_sel(const char *name1,
                 const char *name2,
                 const char *name3,
@@ -1789,7 +1790,7 @@ template<typename T1, typename T2, typename T3, typename T4, typename T5,
          typename T6, typename T7, typename T8, typename T9, typename T10,
          typename T11, typename T12, typename T13,
          typename F, typename ... Ts>
-DataFrame<I, H> DataFrame<I, H>::
+DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
 get_data_by_sel(const char *name1,
                 const char *name2,
                 const char *name3,

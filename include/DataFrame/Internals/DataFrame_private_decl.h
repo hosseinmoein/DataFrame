@@ -725,12 +725,15 @@ remove_dups_common_(const DataFrame &s_df,
 // ----------------------------------------------------------------------------
 
 template<typename ... Ts>
-DataFrame
+DataFrame<I, HeteroVector<align_value>>
 data_by_sel_common_(const StlVecType<size_type> &col_indices,
                     size_type idx_s) const  {
 
-    DataFrame       ret_df;
-    IndexVecType    new_index;
+    using res_t = DataFrame<I, HeteroVector<align_value>>;
+    using idx_vec_t = res_t::IndexVecType;
+	
+    res_t       ret_df;
+    idx_vec_t   new_index;
 
     new_index.reserve(col_indices.size());
     for (const auto &citer: col_indices) [[likely]]
@@ -740,7 +743,7 @@ data_by_sel_common_(const StlVecType<size_type> &col_indices,
     const SpinGuard guard(lock_);
 
     for (const auto &[name, idx] : column_list_) [[likely]]  {
-        create_col_functor_<DataFrame, Ts ...>  functor(name.c_str(), ret_df);
+        create_col_functor_<res_t, Ts ...>  functor(name.c_str(), ret_df);
 
         data_[idx].change(functor);
     }
@@ -753,7 +756,7 @@ data_by_sel_common_(const StlVecType<size_type> &col_indices,
             [&col_indices = std::as_const(col_indices), idx_s, &ret_df, this]
             (const auto &begin, const auto &end) -> void  {
                 for (auto citer = begin; citer < end; ++citer)  {
-                    sel_load_functor_<size_type, Ts ...>    functor (
+                    sel_load_functor_<res_t, size_type, Ts ...> functor(
                         citer->first.c_str(),
                         col_indices,
                         idx_s,
@@ -772,10 +775,10 @@ data_by_sel_common_(const StlVecType<size_type> &col_indices,
     }
     else  {
         for (const auto &[name, idx] : column_list_) [[likely]]  {
-            sel_load_functor_<size_type, Ts ...>    functor (name.c_str(),
-                                                             col_indices,
-                                                             idx_s,
-                                                             ret_df);
+            sel_load_functor_<res_t, size_type, Ts ...> functor(name.c_str(),
+                                                                col_indices,
+                                                                 idx_s,
+                                                                 ret_df);
 
             data_[idx].change(functor);
         }

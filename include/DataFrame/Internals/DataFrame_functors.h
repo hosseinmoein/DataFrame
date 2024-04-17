@@ -143,13 +143,13 @@ struct load_functor_ : DataVec::template visitor_base<Ts ...>  {
 
 // ----------------------------------------------------------------------------
 
-template<typename ... Ts>
+template<typename DF, typename ... Ts>
 struct load_all_functor_ : DataVec::template visitor_base<Ts ...>  {
 
-    inline load_all_functor_ (const char *n, DataFrame &d) : name(n), df(d) { }
+    inline load_all_functor_ (const char *n, DF &d) : name(n), df(d) { }
 
     const char  *name;
-    DataFrame   &df;
+    DF          &df;
 
     template<typename T>
     void operator() (const T &vec);
@@ -605,18 +605,18 @@ struct shuffle_functor_ : DataVec::template visitor_base<Ts ...>  {
 
 // ----------------------------------------------------------------------------
 
-template<typename ... Ts>
+template<typename DF, typename ... Ts>
 struct random_load_data_functor_ : DataVec::template visitor_base<Ts ...>  {
 
     inline random_load_data_functor_ (
         const char *n,
         const StlVecType<std::size_t>  &ri,
-        DataFrame &d)
+        DF &d)
         : name (n), rand_indices (ri), df(d)  {   }
 
     const char                      *name;
     const StlVecType<std::size_t>   &rand_indices;
-    DataFrame                       &df;
+    DF                              &df;
 
     template<typename T>
     void operator() (const T &vec);

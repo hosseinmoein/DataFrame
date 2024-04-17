@@ -300,36 +300,33 @@ public:
             return (*this);
         }
 
-        inline iterator operator + (int step) noexcept  {
+        template<typename I>
+        inline iterator operator + (I step) noexcept  {
 
             value_type   **ret_node = node_;
 
-            ret_node += step;
+            ret_node += static_cast<long>(step);
             return (iterator (ret_node));
         }
 
-        inline iterator operator - (int step) noexcept  {
+        template<typename I>
+        inline iterator operator - (I step) noexcept  {
 
             value_type   **ret_node = node_;
 
-            ret_node -= step;
+            ret_node -= static_cast<long>(step);
             return (iterator (ret_node));
         }
 
-        inline iterator operator + (long step) noexcept  {
+        friend difference_type operator - (iterator lhs, iterator rhs)  {
 
-            value_type   **ret_node = node_;
+            difference_type count { 0 };
 
-            ret_node += step;
-            return (iterator (ret_node));
-        }
-
-        inline iterator operator - (long step) noexcept  {
-
-            value_type   **ret_node = node_;
-
-            ret_node -= step;
-            return (iterator (ret_node));
+            while (lhs != rhs)  {
+                ++rhs;
+                ++count;
+            }
+            return (count);
         }
 
     private:
@@ -454,36 +451,34 @@ public:
             return (*this);
         }
 
-        inline const_iterator operator + (int step) noexcept  {
+        template<typename I>
+        inline const_iterator operator + (I step) noexcept  {
 
-            value_type const  **ret_node = node_;
+            value_type const    **ret_node = node_;
 
-            ret_node += step;
+            ret_node += static_cast<long>(step);
             return (const_iterator (ret_node));
         }
 
-        inline const_iterator operator - (int step) noexcept  {
+        template<typename I>
+        inline const_iterator operator - (I step) noexcept  {
 
-            value_type const  **ret_node = node_;
+            value_type const    **ret_node = node_;
 
-            ret_node -= step;
+            ret_node -= static_cast<long>(step);
             return (const_iterator (ret_node));
         }
 
-        inline const_iterator operator + (long step) noexcept  {
+        friend difference_type operator - (const_iterator lhs,
+                                           const_iterator rhs)  {
 
-            value_type const  **ret_node = node_;
+            difference_type count { 0 };
 
-            ret_node += step;
-            return (const_iterator (ret_node));
-        }
-
-        inline const_iterator operator - (long step) noexcept  {
-
-            value_type const  **ret_node = node_;
-
-            ret_node -= step;
-            return (const_iterator (ret_node));
+            while (lhs != rhs)  {
+                ++rhs;
+                ++count;
+            }
+            return (count);
         }
 
     private:

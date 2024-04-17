@@ -131,10 +131,10 @@ DataFrame<I, H>::load_functor_<LHS, Ts ...>::operator() (const T &vec)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename ... Ts>
+template<typename DF, typename ... Ts>
 template<typename T>
 void
-DataFrame<I, H>::load_all_functor_<Ts ...>::operator() (const T &vec)  {
+DataFrame<I, H>::load_all_functor_<DF, Ts ...>::operator() (const T &vec)  {
 
     using VecType = typename std::remove_reference<T>::type;
     using ValueType = typename VecType::value_type;
@@ -435,6 +435,9 @@ operator()(const T &vec)  {
 
     using VecType = typename std::remove_reference<T>::type;
     using ValueType = typename VecType::value_type;
+    using res_vec =
+        typename
+        std::remove_reference<RES_T>::type::template ColumnVecType<ValueType>;
 
     if (insert_col)  {
         StlVecType<ValueType>   res_vec(original_index_s + vec.size(),
@@ -447,8 +450,7 @@ operator()(const T &vec)  {
                                                false);
     }
     else  {
-        ColumnVecType<ValueType>    &res_vec =
-            result.template get_column<ValueType>(name);
+        res_vec &res_vec = result.template get_column<ValueType>(name);
 
         res_vec.insert(res_vec.end(), vec.begin(), vec.end());
     }
@@ -774,18 +776,18 @@ operator() (T &vec) const  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename ... Ts>
+template<typename DF, typename ... Ts>
 template<typename T>
 void
 DataFrame<I, H>::
-random_load_data_functor_<Ts ...>::operator() (const T &vec)  {
+random_load_data_functor_<DF, Ts ...>::operator() (const T &vec)  {
 
     using VecType = typename std::remove_reference<T>::type;
     using ValueType = typename VecType::value_type;
 
     const size_type vec_s = vec.size();
     const size_type n_rows = rand_indices.size();
-    VecType         new_vec;
+	typename DF::template ColumnVecType<ValueType>  new_vec;
     size_type       prev_value { 0 };
 
     new_vec.reserve(n_rows);

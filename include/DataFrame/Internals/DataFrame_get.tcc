@@ -339,14 +339,16 @@ get_col_unique_values(const char *name) const  {
 
 template<typename I, typename H>
 template<typename ... Ts>
-DataFrame<I, H>
+DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
 DataFrame<I, H>::get_data_by_idx (Index2D<IndexType> range) const  {
+
+    using res_t = DataFrame<I, HeteroVector<std::size_t(H::align_value)>>;
 
     const auto  &lower =
         std::lower_bound (indices_.begin(), indices_.end(), range.begin);
     const auto  &upper =
         std::upper_bound (indices_.begin(), indices_.end(), range.end);
-    DataFrame   df;
+    res_t       df;
 
     if (lower != indices_.end())  {
         df.load_index(lower, upper);
@@ -358,7 +360,7 @@ DataFrame<I, H>::get_data_by_idx (Index2D<IndexType> range) const  {
         const SpinGuard guard(lock_);
 
         for (const auto &[name, idx] : column_list_) [[likely]]  {
-            create_col_functor_<DataFrame, Ts ...> functor(name.c_str(), df);
+            create_col_functor_<res_t, Ts ...>  functor(name.c_str(), df);
 
             data_[idx].change(functor);
         }
@@ -372,7 +374,7 @@ DataFrame<I, H>::get_data_by_idx (Index2D<IndexType> range) const  {
                 [b_dist, e_dist, &df, this]
                 (const auto &begin, const auto &end) -> void  {
                     for (auto citer = begin; citer < end; ++citer)  {
-                        load_functor_<DataFrame, Ts ...>    functor (
+                        load_functor_<res_t  , Ts ...>  functor (
                              citer->first.c_str(), b_dist, e_dist, df);
 
                         this->data_[citer->second].change(functor);
@@ -388,10 +390,10 @@ DataFrame<I, H>::get_data_by_idx (Index2D<IndexType> range) const  {
         }
         else  {
             for (const auto &[name, idx] : column_list_) [[likely]]  {
-                load_functor_<DataFrame, Ts ...>    functor (name.c_str(),
-                                                             b_dist,
-                                                             e_dist,
-                                                             df);
+                load_functor_<res_t, Ts ...>    functor (name.c_str(),
+                                                         b_dist,
+                                                         e_dist,
+                                                         df);
 
                 data_[idx].change(functor);
             }
@@ -405,13 +407,15 @@ DataFrame<I, H>::get_data_by_idx (Index2D<IndexType> range) const  {
 
 template<typename I, typename H>
 template<typename ... Ts>
-DataFrame<I, H> DataFrame<I, H>::
+DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
 get_data_by_idx(const StlVecType<IndexType> &values) const  {
 
     static_assert(hashable<I>, "Index type must be hash-able");
 
+    using res_t = DataFrame<I, HeteroVector<std::size_t(H::align_value)>>;
+
     const DFUnorderedSet<IndexType> val_table (values.begin(), values.end());
-    IndexVecType                    new_index;
+    typename res_t::IndexVecType    new_index;
     StlVecType<size_type>           locations;
     const size_type                 values_s = values.size();
     const size_type                 idx_s = indices_.size();
@@ -424,14 +428,14 @@ get_data_by_idx(const StlVecType<IndexType> &values) const  {
             locations.push_back(i);
         }
 
-    DataFrame   df;
+    res_t   df;
 
     df.load_index(std::move(new_index));
 
     const SpinGuard guard(lock_);
 
     for (const auto &[name, idx] : column_list_) [[likely]]  {
-        create_col_functor_<DataFrame, Ts ...>  functor(name.c_str(), df);
+        create_col_functor_<res_t, Ts ...>  functor(name.c_str(), df);
 
         data_[idx].change(functor);
     }
@@ -444,7 +448,7 @@ get_data_by_idx(const StlVecType<IndexType> &values) const  {
             [&locations = std::as_const(locations), idx_s, &df, this]
             (const auto &begin, const auto &end) -> void  {
                 for (auto citer = begin; citer < end; ++citer)  {
-                    sel_load_functor_<DataFrame, size_type, Ts ...> functor (
+                    sel_load_functor_<res_t, size_type, Ts ...> functor(
                         citer->first.c_str(),
                         locations,
                         idx_s,
@@ -463,7 +467,7 @@ get_data_by_idx(const StlVecType<IndexType> &values) const  {
     }
     else  {
         for (const auto &[name, idx] : column_list_) [[likely]]  {
-            sel_load_functor_<DataFrame, size_type, Ts ...> functor(
+            sel_load_functor_<res_t, size_type, Ts ...> functor(
                 name.c_str(),
                 locations,
                 idx_s,
@@ -660,8 +664,10 @@ get_view_by_idx(const StlVecType<IndexType> &values) const  {
 
 template<typename I, typename H>
 template<typename ... Ts>
-DataFrame<I, H>
+DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
 DataFrame<I, H>::get_data_by_loc (Index2D<long> range) const  {
+
+    using res_t = DataFrame<I, HeteroVector<std::size_t(H::align_value)>>;
 
     if (range.begin < 0)
         range.begin = static_cast<long>(indices_.size()) + range.begin;
@@ -670,7 +676,7 @@ DataFrame<I, H>::get_data_by_loc (Index2D<long> range) const  {
 
     if (range.end <= static_cast<long>(indices_.size()) &&
         range.begin <= range.end && range.begin >= 0) [[likely]]  {
-        DataFrame   df;
+        res_t   df;
 
         df.load_index(indices_.begin() + static_cast<size_type>(range.begin),
                       indices_.begin() + static_cast<size_type>(range.end));
@@ -678,7 +684,7 @@ DataFrame<I, H>::get_data_by_loc (Index2D<long> range) const  {
         const SpinGuard guard(lock_);
 
         for (const auto &[name, idx] : column_list_) [[likely]]  {
-            create_col_functor_<DataFrame, Ts ...>  functor(name.c_str(), df);
+            create_col_functor_<res_t, Ts ...>  functor(name.c_str(), df);
 
             data_[idx].change(functor);
         }
@@ -692,7 +698,7 @@ DataFrame<I, H>::get_data_by_loc (Index2D<long> range) const  {
                 [&range = std::as_const(range), &df, this]
                 (const auto &begin, const auto &end) -> void  {
                     for (auto citer = begin; citer < end; ++citer)  {
-                        load_functor_<DataFrame, Ts ...>    functor (
+                        load_functor_<res_t, Ts ...>    functor(
                             citer->first.c_str(),
                             static_cast<size_type>(range.begin),
                             static_cast<size_type>(range.end),
@@ -711,7 +717,7 @@ DataFrame<I, H>::get_data_by_loc (Index2D<long> range) const  {
         }
         else  {
             for (const auto &[name, idx] : column_list_) [[likely]]  {
-                load_functor_<DataFrame, Ts ...>    functor (
+                load_functor_<res_t, Ts ...>    functor(
                     name.c_str(),
                     static_cast<size_type>(range.begin),
                     static_cast<size_type>(range.end),
@@ -737,12 +743,14 @@ DataFrame<I, H>::get_data_by_loc (Index2D<long> range) const  {
 
 template<typename I, typename H>
 template<typename ... Ts>
-DataFrame<I, H> DataFrame<I, H>::
+DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
 get_data_by_loc (const StlVecType<long> &locations) const  {
 
-    const size_type idx_s = indices_.size();
-    DataFrame       df;
-    IndexVecType    new_index;
+    using res_t = DataFrame<I, HeteroVector<std::size_t(H::align_value)>>;
+
+    const size_type                 idx_s = indices_.size();
+    res_t                           df;
+    typename res_t::IndexVecType    new_index;
 
     new_index.reserve(locations.size());
     for (auto citer : locations) [[likely]]  {
@@ -756,7 +764,7 @@ get_data_by_loc (const StlVecType<long> &locations) const  {
     const SpinGuard guard(lock_);
 
     for (const auto &[name, idx] : column_list_) [[likely]]  {
-        create_col_functor_<DataFrame, Ts ...>  functor (name.c_str(), df);
+        create_col_functor_<res_t, Ts ...>  functor (name.c_str(), df);
 
         data_[idx].change(functor);
     }
@@ -769,7 +777,7 @@ get_data_by_loc (const StlVecType<long> &locations) const  {
             [&locations = std::as_const(locations), idx_s, &df, this]
             (const auto &begin, const auto &end) -> void  {
                 for (auto citer = begin; citer < end; ++citer)  {
-                    sel_load_functor_<DataFrame, long, Ts ...>  functor(
+                    sel_load_functor_<res_t, long, Ts ...>  functor(
                         citer->first.c_str(),
                         locations,
                         idx_s,
@@ -788,10 +796,10 @@ get_data_by_loc (const StlVecType<long> &locations) const  {
     }
     else  {
         for (const auto &[name, idx] : column_list_) [[likely]]  {
-            sel_load_functor_<DataFrame, long, Ts ...>  functor (name.c_str(),
-                                                                 locations,
-                                                                 idx_s,
-                                                                 df);
+            sel_load_functor_<res_t, long, Ts ...>  functor(name.c_str(),
+                                                            locations,
+                                                            idx_s,
+                                                            df);
 
             data_[idx].change(functor);
         }
@@ -1970,7 +1978,7 @@ get_view_by_sel(const char *name1,
 
 template<typename I, typename H>
 template<StringOnly T, typename ... Ts>
-DataFrame<I, H> DataFrame<I, H>::
+DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
 get_data_by_like(const char *name,
                  const char *pattern,
                  bool case_insensitive,
@@ -2084,7 +2092,7 @@ get_view_by_like(const char *name,
 
 template<typename I, typename H>
 template<StringOnly T, typename ... Ts>
-DataFrame<I, H> DataFrame<I, H>::
+DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
 get_data_by_like(const char *name1,
                  const char *name2,
                  const char *pattern1,
@@ -2237,8 +2245,10 @@ get_view_by_like(const char *name1,
 
 template<typename I, typename H>
 template<typename ... Ts>
-DataFrame<I, H> DataFrame<I, H>::
+DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
 get_data_by_rand(random_policy spec, double n, seed_t seed) const  {
+
+    using res_t = DataFrame<I, HeteroVector<std::size_t(H::align_value)>>;
 
     bool            use_seed = false;
     size_type       n_rows = static_cast<size_type>(n);
@@ -2265,24 +2275,25 @@ get_data_by_rand(random_policy spec, double n, seed_t seed) const  {
             rand_indices[i] = dis(gen);
         std::ranges::sort(rand_indices);
 
-        IndexVecType    new_index;
-        size_type       prev_value;
+        typename res_t::IndexVecType    new_index;
+        size_type                       prev_value { size_type(-1) };
 
         new_index.reserve(n_rows);
-        for (size_type i = 0; i < n_rows; ++i)  {
-            if (i == 0 || rand_indices[i] != prev_value)
+        for (size_type i = 0; i < n_rows; ++i) [[likely]]  {
+            if (rand_indices[i] != prev_value) [[likely]]  {
                 new_index.push_back(indices_[rand_indices[i]]);
-            prev_value = rand_indices[i];
+                prev_value = rand_indices[i];
+            }
         }
 
-        DataFrame   df;
+        res_t   df;
 
         df.load_index(std::move(new_index));
 
         const SpinGuard guard(lock_);
 
         for (const auto &citer : column_list_) [[likely]]  {
-            create_col_functor_<DataFrame, Ts ...>  functor(
+            create_col_functor_<res_t, Ts ...>  functor(
                 citer.first.c_str(), df);
 
             data_[citer.second].change(functor);
@@ -2297,7 +2308,7 @@ get_data_by_rand(random_policy spec, double n, seed_t seed) const  {
                 [&rand_indices = std::as_const(rand_indices), &df, this]
                 (const auto &begin, const auto &end) -> void  {
                     for (auto citer = begin; citer < end; ++citer)  {
-                        random_load_data_functor_<Ts ...>   functor (
+                        random_load_data_functor_<res_t, Ts ...>    functor(
                             citer->first.c_str(),
                             rand_indices,
                             df);
@@ -2315,7 +2326,7 @@ get_data_by_rand(random_policy spec, double n, seed_t seed) const  {
         }
         else  {
             for (const auto &citer : column_list_) [[likely]]  {
-                random_load_data_functor_<Ts ...>   functor (
+                random_load_data_functor_<res_t, Ts ...>    functor(
                     citer.first.c_str(),
                     rand_indices,
                     df);
@@ -2375,13 +2386,14 @@ get_view_by_rand (random_policy spec, double n, seed_t seed)  {
         using TheView = PtrView;
 
         typename TheView::IndexVecType  new_index;
-        size_type                       prev_value;
+        size_type                       prev_value { size_type(-1) };
 
         new_index.reserve(n_rows);
         for (size_type i = 0; i < n_rows; ++i) [[likely]]  {
-            if (i == 0 || rand_indices[i] != prev_value)
+            if (rand_indices[i] != prev_value) [[likely]]  {
                 new_index.push_back(&(indices_[rand_indices[i]]));
-            prev_value = rand_indices[i];
+                prev_value = rand_indices[i];
+            }
         }
 
         TheView dfv;
@@ -2449,13 +2461,14 @@ get_view_by_rand (random_policy spec, double n, seed_t seed) const  {
         using TheView = ConstPtrView;
 
         typename TheView::IndexVecType  new_index;
-        size_type                       prev_value;
+        size_type                       prev_value { size_type(-1) };
 
         new_index.reserve(n_rows);
         for (size_type i = 0; i < n_rows; ++i) [[likely]]  {
-            if (i == 0 || rand_indices[i] != prev_value)
+            if (rand_indices[i] != prev_value) [[likely]]  {
                 new_index.push_back(&(indices_[rand_indices[i]]));
-            prev_value = rand_indices[i];
+                prev_value = rand_indices[i];
+            }
         }
 
         TheView dfv;
@@ -2491,10 +2504,12 @@ get_view_by_rand (random_policy spec, double n, seed_t seed) const  {
 
 template<typename I, typename H>
 template<typename ... Ts>
-DataFrame<I, H> DataFrame<I, H>::
+DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
 get_data(const StlVecType<const char *> &col_names) const  {
 
-    DataFrame   df;
+    using res_t = DataFrame<I, HeteroVector<std::size_t(H::align_value)>>;
+
+    res_t   df;
 
     df.load_index(indices_.begin(), indices_.end());
 
@@ -2512,7 +2527,7 @@ get_data(const StlVecType<const char *> &col_names) const  {
             throw ColNotFound(buffer);
         }
 
-        load_all_functor_<Ts ...>   functor (name_citer, df);
+        load_all_functor_<res_t, Ts ...>    functor (name_citer, df);
 
         data_[citer->second].change(functor);
     }
@@ -2550,10 +2565,10 @@ get_view(const StlVecType<const char *> &col_names)  {
             throw ColNotFound(buffer);
         }
 
-        view_setup_functor_<View, Ts ...>   functor (citer->first.c_str(),
-                                                     0,
-                                                     idx_size,
-                                                     dfv);
+        view_setup_functor_<View, Ts ...>   functor(citer->first.c_str(),
+                                                    0,
+                                                    idx_size,
+                                                    dfv);
 
         data_[citer->second].change(functor);
     }
@@ -2608,12 +2623,12 @@ get_view(const StlVecType<const char *> &col_names) const  {
 
 template<typename I, typename H>
 template<typename T, typename ... Ts>
-DataFrame<T, H> DataFrame<I, H>::
+DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
 get_reindexed(const char *col_to_be_index, const char *old_index_name) const  {
 
-    using result_t = DataFrame<T, HeteroVector<align_value>>;
+    using res_t = DataFrame<I, HeteroVector<std::size_t(H::align_value)>>;
 
-    result_t        df;
+    res_t           df;
     const auto      &new_idx = get_column<T>(col_to_be_index);
     const size_type new_idx_s = df.load_index(new_idx.begin(), new_idx.end());
 
@@ -2631,7 +2646,7 @@ get_reindexed(const char *col_to_be_index, const char *old_index_name) const  {
     for (const auto &[name, idx] : column_list_) [[likely]]  {
         if (name == col_to_be_index)  continue;
 
-        create_col_functor_<result_t, Ts ...>   functor (name.c_str(), df);
+        create_col_functor_<res_t, Ts ...>  functor (name.c_str(), df);
 
         data_[idx].change(functor);
     }
@@ -2647,7 +2662,7 @@ get_reindexed(const char *col_to_be_index, const char *old_index_name) const  {
                 for (auto citer = begin; citer < end; ++citer)  {
                     if (citer->first == col_to_be_index)  continue;
 
-                    load_functor_<result_t, Ts ...> functor(
+                    load_functor_<res_t, Ts ...>    functor(
                         citer->first.c_str(),
                         0,
                         new_idx_s,
@@ -2669,7 +2684,7 @@ get_reindexed(const char *col_to_be_index, const char *old_index_name) const  {
         for (const auto &[name, idx] : column_list_) [[likely]]  {
             if (name == col_to_be_index)  continue;
 
-            load_functor_<result_t, Ts ...> functor (
+            load_functor_<res_t, Ts ...>    functor(
                 name.c_str(),
                 0,
                 new_idx_s,

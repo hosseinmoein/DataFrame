@@ -2904,7 +2904,7 @@ static void test_get_data_by_sel_from_view()  {
                                double,
                                long>("IBM_Close", "IBM_Open", above_150_fun);
 
-        assert(data_150.get_index().size() == 79);;
+        assert(data_150.get_index().size() == 79);
         assert((std::abs(data_150.get_column<double>("IBM_Close")[0] -
                     152.95) < 0.0001));
         assert((std::abs(data_150.get_column<double>("IBM_Open")[10] -
@@ -2918,6 +2918,307 @@ static void test_get_data_by_sel_from_view()  {
 }
 
 // ----------------------------------------------------------------------------
+
+static void test_get_data_by_idx_loc_from_view()  {
+
+    std::cout << "\nTesting test_get_data_by_idx_loc_from_view(  ) ..."
+              << std::endl;
+
+    using StrDataFrame = StdDataFrame64<std::string>;
+    using vec_t = StrDataFrame::StlVecType<std::string>;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("data/SHORT_IBM.csv", io_format::csv2);
+
+        auto    vw =
+            df.get_view_by_loc<double, long>(Index2D<long>{ 1000L, 1700L });
+        auto    data_by_idx =
+            vw.get_data_by_idx<double,
+                               long>(vec_t { "2020-08-10", "2020-08-12",
+                                             "2020-08-17", "2020-08-20",
+                                             "2020-08-24", "2020-08-28",
+                                             "2020-09-01", "2020-09-09" });
+        auto    data_by_loc =
+            vw.get_data_by_loc<double, long>(Index2D<long>{ 5L, 50L });
+
+        assert(data_by_loc.get_index().size() == 45);
+        assert((std::abs(data_by_loc.get_column<double>("IBM_Close")[0] -
+                    154.04) < 0.0001));
+        assert((std::abs(data_by_loc.get_column<double>("IBM_Open")[10] -
+                    164.02) < 0.0001));
+        assert((std::abs(data_by_loc.get_column<double>("IBM_Close")[10] -
+                    163.14) < 0.0001));
+
+        assert(data_by_idx.get_index().size() == 8);
+        assert((std::abs(data_by_idx.get_column<double>("IBM_Close")[0] -
+                    127.11) < 0.0001));
+        assert((std::abs(data_by_idx.get_column<double>("IBM_Open")[7] -
+                    122.13) < 0.0001));
+        assert((std::abs(data_by_idx.get_column<double>("IBM_Close")[7] -
+                    122.26) < 0.0001));
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// ----------------------------------------------------------------------------
+
+static void test_get_data_by_rand_from_view()  {
+
+    std::cout << "\nTesting get_data_by_rand_from_view() ..." << std::endl;
+
+    using StrDataFrame = StdDataFrame64<std::string>;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("data/SHORT_IBM.csv", io_format::csv2);
+
+        auto    ptr_vw =
+            df.get_view_by_rand<double, long>
+                (random_policy::frac_rows_with_seed, 0.3, 23);
+        auto    vw =
+            df.get_view_by_loc<double, long>(Index2D<long>{ 1000L, 1700L });
+        auto    data_from_ptr_vw =
+            ptr_vw.get_data_by_rand<double, long>
+                (random_policy::frac_rows_with_seed, 0.5, 100);
+        auto    data_from_vw =
+            vw.get_data_by_rand<double, long>
+                (random_policy::frac_rows_with_seed, 0.5, 100);
+
+        assert(data_from_ptr_vw.get_index().size() == 188);
+        assert((std::abs(data_from_ptr_vw.get_column<double>("IBM_Close")[0] -
+                    187.97) < 0.0001));
+        assert((std::abs(data_from_ptr_vw.get_column<double>("IBM_Open")[10] -
+                    188.98) < 0.0001));
+        assert((std::abs(data_from_ptr_vw.get_column<double>("IBM_Close")[10] -
+                    190.08) < 0.0001));
+
+        assert(data_from_vw.get_index().size() == 275);
+        assert((std::abs(data_from_vw.get_column<double>("IBM_Close")[0] -
+                    152.95) < 0.0001));
+        assert((std::abs(data_from_vw.get_column<double>("IBM_Open")[10] -
+                    166.21) < 0.0001));
+        assert((std::abs(data_from_vw.get_column<double>("IBM_Close")[10] -
+                    163.62) < 0.0001));
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_get_data_by_like_from_view()  {
+
+    std::cout << "\nTesting get_data_by_like_from_view( ) ..." << std::endl;
+
+    StlVecType<unsigned long>  idxvec =
+        { 1UL, 2UL, 3UL, 10UL, 5UL, 7UL, 8UL, 12UL, 9UL, 12UL, 10UL, 13UL,
+          10UL, 15UL, 14UL };
+    StlVecType<std::string>    strvec1 =
+        { "345&%$abcM", "!@#$0987^HGTtiff\"", "ABFDTiy", "345&%$abcM",
+          "!@#$0987^HGTtiff\"", "!@#$0987^HGTtiff\"", "345&%$abcM",
+          "!@#$0987^HGTtiff\"", "ABFDTiy", "345&%$abcM", "!@#$0987^HGTtiff\"",
+          "ABFDTiy", "345&%$abcM", "ABFDTiy", "ABFDTiy" };
+    StlVecType<std::string>    strvec2 =
+        { "ABFDTiy", "!@#$0987^HGTtiff\"", "ABFDTiy", "345&%$abcM",
+          "!@#$0987^HGTtiff\"", "ABFDTiy", "!@#$0987^HGTtiff\"",
+          "!@#$0987^HGTtiff\"", "ABFDTiy", "345&%$abcM", "!@#$0987^HGTtiff\"",
+          "ABFDTiy", "345&%$abcM", "ABFDTiy", "ABFDTiy" };
+    StlVecType<int>            intvec =
+        { 1, 2, 3, 10, 5, 7, 8, 12, 9, 12, 10, 13, 10, 15, 14 };
+    MyDataFrame                df;
+
+    df.load_data(std::move(idxvec),
+                 std::make_pair("str column 1", strvec1),
+                 std::make_pair("str column 2", strvec2),
+                 std::make_pair("int column", intvec));
+
+    auto    vw =
+        df.get_view_by_loc<std::string, int>(Index2D<long>{ 0L, 15 });
+    auto    ptr_vw =
+        df.get_view_by_rand<std::string, int>
+            (random_policy::frac_rows_with_seed, 1.0, 23);
+    auto    from_vw =
+        vw.get_data_by_like<std::string, std::string, int>(
+            "str column 1",
+            "str column 2",
+            "?*[0-9][0-9][0-9][0-9]?*",
+            "?*[0-9][0-9][0-9][0-9]?*");
+    auto    from_ptr_vw =
+        ptr_vw.get_data_by_like<std::string, std::string, int>(
+            "str column 1",
+            "str column 2",
+            "?*[0-9][0-9][0-9][0-9]?*",
+            "?*[0-9][0-9][0-9][0-9]?*");
+
+    assert(from_vw.get_index().size() == 4);
+    assert(from_vw.get_index()[2] == 12);
+    assert(from_vw.get_column<int>("int column")[2] == 12);
+    assert(from_vw.get_column<std::string>("str column 1").size() == 4);
+    assert(from_vw.get_column<std::string>("str column 2").size() == 4);
+    assert((from_vw.get_column<std::string>("str column 1")[0] ==
+                "!@#$0987^HGTtiff\""));
+    assert((from_vw.get_column<std::string>("str column 1")[2] ==
+                "!@#$0987^HGTtiff\""));
+    assert((from_vw.get_column<std::string>("str column 2")[0] ==
+                "!@#$0987^HGTtiff\""));
+    assert((from_vw.get_column<std::string>("str column 2")[2] ==
+                "!@#$0987^HGTtiff\""));
+
+    assert(from_ptr_vw.get_index().size() == 2);
+    assert(from_ptr_vw.get_index()[1] == 10);
+    assert(from_ptr_vw.get_column<int>("int column")[1] == 10);
+    assert(from_ptr_vw.get_column<std::string>("str column 1").size() == 2);
+    assert(from_ptr_vw.get_column<std::string>("str column 2").size() == 2);
+}
+
+// ----------------------------------------------------------------------------
+
+static void test_get_data_from_view()  {
+
+    std::cout << "\nTesting get_data_from_view(  ) ..." << std::endl;
+
+    typedef StdDataFrame64<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("data/SHORT_IBM.csv", io_format::csv2);
+
+        auto    vw =
+            df.get_view<double, long>({ "IBM_Close", "IBM_Open",
+                                        "IBM_Volume", "IBM_High" });
+        auto    data =
+            vw.get_data<double, long>({ "IBM_Close", "IBM_Open",
+                                        "IBM_Volume", "IBM_High" });
+
+        assert(data.get_index().size() == 1721);
+        assert((std::abs(data.get_column<double>("IBM_Close")[0] -
+                    185.53) < 0.0001));
+        assert((std::abs(data.get_column<double>("IBM_Open")[1500] -
+                    134.28) < 0.0001));
+        assert((std::abs(data.get_column<double>("IBM_Close")[875] -
+                    154.11) < 0.0001));
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// ----------------------------------------------------------------------------
+
+static void test_get_reindexed_from_view()  {
+
+    std::cout << "\nTesting get_reindexed_from_view( ) ..." << std::endl;
+
+    MyDataFrame df;
+
+    StlVecType<unsigned long>  idxvec =
+        { 1UL, 2UL, 3UL, 10UL, 5UL, 7UL, 8UL, 12UL, 9UL, 12UL, 10UL, 13UL,
+          10UL, 15UL, 14UL };
+    StlVecType<double>         dblvec =
+        { 0.0, 15.0, 14.0, 2.0, 1.0, 12.0, 11.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0,
+          9.0, 10.0 };
+    StlVecType<double>         dblvec2 =
+        { 100.0, 101.0, 102.0, 103.0, 104.0, 105.0, 106.55, 107.34, 1.8, 111.0,
+          112.0, 113.0, 114.0, 115.0, 116.0 };
+    StlVecType<int>            intvec = { 1, 2, 3, 4, 5, 8, 6, 7, 11, 14, 9 };
+    StlVecType<std::string>    strvec =
+       { "zz", "bb", "cc", "ww", "ee", "ff", "gg", "hh", "ii", "jj", "kk",
+         "ll", "mm", "nn", "oo" };
+
+    df.load_data(std::move(idxvec),
+                 std::make_pair("dbl_col", dblvec),
+                 std::make_pair("dbl_col_2", dblvec2),
+                 std::make_pair("str_col", strvec));
+    df.load_column("int_col",
+                   std::move(intvec),
+                   nan_policy::dont_pad_with_nans);
+
+    auto    vw =
+        df.get_view<int, double, std::string>({ "dbl_col", "dbl_col_2",
+                                                "str_col", "int_col" });
+    auto    result =
+        vw.get_reindexed<double, int, double, std::string>
+            ("dbl_col", "OLD_IDX");
+
+    assert(result.get_index().size() == 15);
+    assert(result.get_column<double>("dbl_col_2").size() == 15);
+    assert(result.get_column<unsigned long>("OLD_IDX").size() == 15);
+    assert(result.get_column<std::string>("str_col").size() == 15);
+    assert(result.get_column<int>("int_col").size() == 11);
+    assert(result.get_index()[0] == 0);
+    assert(result.get_index()[14] == 10.0);
+    assert(result.get_column<int>("int_col")[3] == 4);
+    assert(result.get_column<int>("int_col")[9] == 14);
+    assert(result.get_column<std::string>("str_col")[5] == "ff");
+    assert(result.get_column<double>("dbl_col_2")[10] == 112.0);
+}
+
+// -----------------------------------------------------------------------------
+
+static void test_concat_from_view()  {
+
+    std::cout << "\nTesting concat_from_view( ) ..." << std::endl;
+
+    MyDataFrame df1;
+
+    StlVecType<unsigned long>  idxvec =
+        { 1UL, 2UL, 3UL, 10UL, 5UL, 7UL, 8UL, 12UL, 9UL, 12UL, 10UL, 13UL,
+          10UL, 15UL, 14UL };
+    StlVecType<double>         dblvec =
+        { 0.0, 15.0, 14.0, 2.0, 1.0, 12.0, 11.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0,
+          9.0, 10.0 };
+    StlVecType<double>         dblvec2 =
+        { 100.0, 101.0, 102.0, 103.0, 104.0, 105.0, 106.55, 107.34, 1.8, 111.0,
+          112.0, 113.0, 114.0, 115.0, 116.0 };
+    StlVecType<int>            intvec =
+        { 1, 2, 3, 4, 5, 8, 6, 7, 11, 14, 9, 10, 15, 12, 13 };
+    StlVecType<std::string>    strvec =
+        { "zz", "bb", "cc", "ww", "ee", "ff", "gg", "hh", "ii", "jj", "kk",
+          "ll", "mm", "nn", "oo" };
+
+    df1.load_data(std::move(idxvec),
+                  std::make_pair("dbl_col", dblvec),
+                  std::make_pair("int_col", intvec),
+                  std::make_pair("str_col", strvec));
+
+    MyDataFrame df2 = df1;
+
+    df2.load_column<double>("dbl_col_2", std::move(dblvec2));
+
+    auto    vw =
+        df1.get_view<int, double, std::string>({ "dbl_col", "str_col",
+                                                 "int_col" });
+    auto    result = vw.concat<decltype(df2), double, int, std::string>(df2);
+
+    assert(result.get_index().size() == 30);
+    assert(result.get_column<double>("dbl_col_2").size() == 30);
+    assert(result.get_column<double>("dbl_col").size() == 30);
+    assert(result.get_column<std::string>("str_col").size() == 30);
+    assert(result.get_column<int>("int_col").size() == 30);
+    assert(result.get_index()[0] == 1);
+    assert(result.get_index()[14] == 14);
+    assert(result.get_index()[15] == 1);
+    assert(result.get_index()[29] == 14);
+    assert(std::isnan(result.get_column<double>("dbl_col_2")[0]));
+    assert(std::isnan(result.get_column<double>("dbl_col_2")[14]));
+    assert(result.get_column<double>("dbl_col_2")[15] == 100.0);
+    assert(result.get_column<double>("dbl_col_2")[29] == 116.0);
+    assert(result.get_column<std::string>("str_col")[0] == "zz");
+    assert(result.get_column<std::string>("str_col")[14] == "oo");
+    assert(result.get_column<std::string>("str_col")[15] == "zz");
+    assert(result.get_column<int>("int_col")[0] == 1);
+    assert(result.get_column<int>("int_col")[14] == 13);
+    assert(result.get_column<int>("int_col")[15] == 1);
+}
+
+// -----------------------------------------------------------------------------
 
 int main(int, char *[]) {
 
@@ -2981,6 +3282,12 @@ int main(int, char *[]) {
     test_remove_data_by_like();
     test_VectorSimilarityVisitor();
     test_get_data_by_sel_from_view();
+    test_get_data_by_idx_loc_from_view();
+    test_get_data_by_rand_from_view();
+    test_get_data_by_like_from_view();
+    test_get_data_from_view();
+    test_get_reindexed_from_view();
+    test_concat_from_view();
 
     return (0);
 }

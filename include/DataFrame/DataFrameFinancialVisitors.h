@@ -1,4 +1,5 @@
 // Hossein Moein
+
 // January 08, 2020
 /*
 Copyright (c) 2019-2026, Hossein Moein
@@ -2314,7 +2315,7 @@ struct  PSLVisitor  {
         const size_type col_s = std::distance(close_begin, close_end);
 
 #ifdef HMDF_SANITY_EXCEPTIONS
-        if (col_s == size_type(std::distance(open_begin, open_end)))
+        if (col_s != size_type(std::distance(open_begin, open_end)))
             throw DataFrameError("PSLVisitor: column sizes must be equal");
 #endif // HMDF_SANITY_EXCEPTIONS
 
@@ -7986,7 +7987,7 @@ struct  PriceVolumeTrendVisitor  {
         const size_type col_s = std::distance(close_begin, close_end);
 
 #ifdef HMDF_SANITY_EXCEPTIONS
-        if (col_s == size_type(std::distance(volume_begin, volume_end)))
+        if (col_s != size_type(std::distance(volume_begin, volume_end)))
             throw DataFrameError("PriceVolumeTrendVisitor: All columns must "
                                  "be of equal sizes");
 #endif // HMDF_SANITY_EXCEPTIONS

@@ -127,6 +127,11 @@ public:  // Construction
     DataFrame &operator= (DataFrame &&that);
     ~DataFrame();
 
+    // Any version of DataFrame should be assignable to any other version
+    //
+    template<typename OTHER, typename ... Ts>
+	DataFrame &assign(const OTHER &rhs);
+
 public:  // Load/append/remove interfaces
 
     // DataFrame has unprotected static data. If you are using DataFrame in a
@@ -613,7 +618,8 @@ public:  // Load/append/remove interfaces
     // args:
     //   A variable list of arguments consisting of
     //     std::pair(<const char *name, &&data>).
-    //   Each pair, represents a a pair of column name and a single column value
+    //   Each pair, represents a a pair of column name and a single
+    //   column value
     //
     // NOTE: This is not the most efficient way of appending values to columns
     //       in a rapid way, for example in a real-time system.
@@ -1085,7 +1091,8 @@ public:  // Data manipulation
     // It fills the missing values in all columns in self by investigating the
     // rhs DataFrame. It attempts to find columns with the same name and type
     // in rhs. If there are such columns in rhs, it fills the missing values
-    // in the corresponding columns in self that also have the same index value.
+    // in the corresponding columns in self that also have the same index
+    // value.
     //
     // NOTE: This means that self and rhs must be aligned/ordered the same way
     //       for all common columns including index column. Otherwise, the
@@ -1487,7 +1494,8 @@ public:  // Data manipulation
     //    2. Column name for the new bucketized DataFrame
     //    3. A visitor to aggregate/bucketize current column to new column
     //
-    // The result of each bucket will be stored in a new DataFrame and returned.
+    // The result of each bucket will be stored in a new DataFrame and
+    // returned.
     // Some data at the end of source columns may not be included in the result
     // columns, because based on bucket_type they may not fit into the bucket.
     // The index of each bucket will be determined by idx_visitor.
@@ -1574,8 +1582,8 @@ public:  // Data manipulation
 
     // It joins the data between self (lhs) and rhs and returns the joined data
     // in a StdDataFrame, based on specification in join_policy.
-    // The returned DataFrame is indexed by a sequence of unsigned integers from
-    // 0 to N. The returned DataFrame will at least have two columns names
+    // The returned DataFrame is indexed by a sequence of unsigned integers
+    // from 0 to N. The returned DataFrame will at least have two columns names
     // lhs.INDEX and rhs.INDEX containing the lhs and rhs indices based on join
     // policy.
     // The following conditions must be meet for this method
@@ -1626,7 +1634,7 @@ public:  // Data manipulation
     //                           concatenated
     //
     template<typename RHS_T, typename ... Ts>
-    [[nodiscard]] DataFrame<I, H>
+    [[nodiscard]] DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
     concat(const RHS_T &rhs,
            concat_policy cp = concat_policy::all_columns) const;
 
@@ -1914,7 +1922,7 @@ public: // Read/access and slicing interfaces
     //   The begin and end iterators for index specified with index values
     //
     template<typename ... Ts>
-    [[nodiscard]] DataFrame
+    [[nodiscard]] DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
     get_data_by_idx(Index2D<IndexType> range) const;
 
     // It returns a DataFrame (including the index and data columns)
@@ -1932,7 +1940,7 @@ public: // Read/access and slicing interfaces
     //   List of indices to copy data from
     //
     template<typename ... Ts>
-    [[nodiscard]] DataFrame
+    [[nodiscard]] DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
     get_data_by_idx(const StlVecType<IndexType> &values) const;
 
     // It behaves like get_data_by_idx(range), but it returns a View.
@@ -1995,7 +2003,7 @@ public: // Read/access and slicing interfaces
     //   The begin and end iterators for data
     //
     template<typename ... Ts>
-    [[nodiscard]] DataFrame
+    [[nodiscard]] DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
     get_data_by_loc(Index2D<long> range) const;
 
     // It returns a DataFrame (including the index and data columns)
@@ -2013,7 +2021,7 @@ public: // Read/access and slicing interfaces
     // locations: List of indices into the index column to copy data
     //
     template<typename ... Ts>
-    [[nodiscard]] DataFrame
+    [[nodiscard]] DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
     get_data_by_loc(const StlVecType<long> &locations) const;
 
     // It behaves like get_data_by_loc(range), but it returns a View.
@@ -2573,7 +2581,7 @@ public: // Read/access and slicing interfaces
     //       using type = T;
     //       const char* Name() const { return xxx; }
     //   };
-    //   So you can just use `struct CommonColumn` defined in `DataFrameTypes.h`
+    //   So you can just use `struct CommonColumn defined in DataFrameTypes.h
     //
     template<typename Tuple, typename F, typename... FilterCols>
     [[nodiscard]] DataFrame
@@ -2624,7 +2632,7 @@ public: // Read/access and slicing interfaces
     //   Character used for escape
     //
     template<StringOnly T, typename ... Ts>
-    [[nodiscard]] DataFrame
+    [[nodiscard]] DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
     get_data_by_like(const char *name,
                      const char *pattern,
                      bool case_insensitive = false,
@@ -2654,7 +2662,8 @@ public: // Read/access and slicing interfaces
     //
     // T:
     //   Type of both named columns. Based on the concept, it can only be
-    //   either of these types: std::string, VirtualString, const char *, char *
+    //   either of these types: std::string, VirtualString, const char *,
+    //   char *
     // Ts:
     //   List all the types of all data columns. A type should be specified in
     //   the list only once.
@@ -2672,7 +2681,7 @@ public: // Read/access and slicing interfaces
     //   Character used for escape
     //
     template<StringOnly T, typename ... Ts>
-    [[nodiscard]] DataFrame
+    [[nodiscard]] DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
     get_data_by_like(const char *name1,
                      const char *name2,
                      const char *pattern1,
@@ -2727,7 +2736,7 @@ public: // Read/access and slicing interfaces
     //   seed should always produce the same random selection.
     //
     template<typename ... Ts>
-    [[nodiscard]] DataFrame
+    [[nodiscard]] DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
     get_data_by_rand(random_policy spec, double n, seed_t seed = 0) const;
 
     // It behaves like get_data_by_rand(), but it returns a PtrView.
@@ -2772,7 +2781,7 @@ public: // Read/access and slicing interfaces
     //   List of column names
     //
     template<typename ... Ts>
-    [[nodiscard]] DataFrame
+    [[nodiscard]] DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
     get_data(const StlVecType<const char *> &col_names) const;
 
     // It behaves like get_data(), but it returns a View.
@@ -2847,7 +2856,7 @@ public: // Read/access and slicing interfaces
     //   the result as a column.
     //
     template<typename T, typename ... Ts>
-    [[nodiscard]] DataFrame<T, H>
+    [[nodiscard]] DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
     get_reindexed(const char *col_to_be_index,
                   const char *old_index_name = nullptr) const;
 

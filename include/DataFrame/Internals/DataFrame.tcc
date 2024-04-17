@@ -71,6 +71,33 @@ DataFrame<I, H>::operator= (const DataFrame &that)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
+template<typename OTHER, typename ... Ts>
+DataFrame<I, H> &
+DataFrame<I, H>::assign(const OTHER &rhs)  {
+
+    indices_.clear();
+    indices_.reserve(rhs.indices_.size());
+    for (const auto &val : rhs.indices_)  indices_.push_back(val);
+
+    column_tb_.clear();
+    column_list_.clear();
+
+    const SpinGuard guard(lock_);
+
+    data_.clear();
+    for (const auto &[rhs_name, rhs_idx] : rhs.column_list_)  {
+        load_all_functor_<DataFrame, Ts ...>    functor (rhs_name.c_str(),
+                                                         *this);
+
+        rhs.data_[rhs_idx].change(functor);
+    }
+
+    return (*this);
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
 DataFrame<I, H> &
 DataFrame<I, H>::operator= (DataFrame &&that)  {
 
@@ -159,7 +186,7 @@ DataFrame<I, H>::shuffle(const StlVecType<const char *> &col_names,
                 char buffer [512];
 
                 snprintf(buffer, sizeof(buffer) - 1,
-                         "DataFrame::shuffle(): ERROR: Cannot find column '%s'",
+                        "DataFrame::shuffle(): ERROR: Cannot find column '%s'",
                          name_citer);
                 throw ColNotFound(buffer);
             }

@@ -55,7 +55,7 @@ using alma_v = ArnaudLegouxMAVisitor&lt;T, I, A&gt;;
         </B></PRE></font>
       </td>
       <td>
-        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
+        This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
         This visitor calculates the rolling values of Arnaud Legoux Moving Average. It requires 1 input column.<BR>
         The result is a vector of values with same number of items as the given column. The first roll_count items, in the result, will be NAN.<BR>
         The ALMA is a technical analysis tool that aims to give investors and traders a more reliable trading signal by reducing the noise that can interfere with traditional moving averages. It eliminates the small fluctuations in an asset price to make the trend clearer. The ALMA reduces price lag and creates a smoother line than other moving averages. Rather than a straightforward moving average for a certain period, it applies a moving average twice – from left to right as well as right to left.<BR>

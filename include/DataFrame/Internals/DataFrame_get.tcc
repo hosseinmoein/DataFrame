@@ -487,9 +487,6 @@ template<typename ... Ts>
 typename DataFrame<I, H>::View
 DataFrame<I, H>::get_view_by_idx (Index2D<IndexType> range)  {
 
-    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
-                  "Only a StdDataFrame can call get_view_by_idx()");
-
     const auto  lower =
         std::lower_bound (indices_.begin(), indices_.end(), range.begin);
     const auto  upper =
@@ -529,9 +526,6 @@ template<typename I, typename H>
 template<typename ... Ts>
 typename DataFrame<I, H>::ConstView
 DataFrame<I, H>::get_view_by_idx (Index2D<IndexType> range) const  {
-
-    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
-                  "Only a StdDataFrame can call get_view_by_idx()");
 
     const auto  lower =
         std::lower_bound (indices_.begin(), indices_.end(), range.begin);
@@ -573,9 +567,6 @@ template<typename I, typename H>
 template<typename ... Ts>
 typename DataFrame<I, H>::PtrView DataFrame<I, H>::
 get_view_by_idx(const StlVecType<IndexType> &values)  {
-
-    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
-                  "Only a StdDataFrame can call get_view_by_idx()");
 
     using TheView = PtrView;
 
@@ -620,9 +611,6 @@ template<typename ... Ts>
 typename DataFrame<I, H>::ConstPtrView
 DataFrame<I, H>::
 get_view_by_idx(const StlVecType<IndexType> &values) const  {
-
-    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
-                  "Only a StdDataFrame can call get_view_by_idx()");
 
     using TheView = ConstPtrView;
 
@@ -815,9 +803,6 @@ template<typename ... Ts>
 typename DataFrame<I, H>::View
 DataFrame<I, H>::get_view_by_loc (Index2D<long> range)  {
 
-    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
-                  "Only a StdDataFrame can call get_view_by_loc()");
-
     const long  idx_s = static_cast<long>(indices_.size());
 
     if (range.begin < 0)
@@ -863,9 +848,6 @@ template<typename I, typename H>
 template<typename ... Ts>
 typename DataFrame<I, H>::ConstView
 DataFrame<I, H>::get_view_by_loc (Index2D<long> range) const  {
-
-    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
-                  "Only a StdDataFrame can call get_view_by_loc()");
 
     const long  idx_s = static_cast<long>(indices_.size());
 
@@ -913,9 +895,6 @@ template<typename ... Ts>
 typename DataFrame<I, H>::PtrView
 DataFrame<I, H>::get_view_by_loc (const StlVecType<long> &locations)  {
 
-    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
-                  "Only a StdDataFrame can call get_view_by_loc()");
-
     using TheView = PtrView;
 
     TheView         dfv;
@@ -954,9 +933,6 @@ template<typename ... Ts>
 typename DataFrame<I, H>::ConstPtrView
 DataFrame<I, H>::
 get_view_by_loc (const StlVecType<long> &locations) const  {
-
-    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
-                  "Only a StdDataFrame can call get_view_by_loc()");
 
     using TheView = ConstPtrView;
 
@@ -1016,9 +992,6 @@ template<typename T, typename F, typename ... Ts>
 typename DataFrame<I, H>::PtrView DataFrame<I, H>::
 get_view_by_sel (const char *name, F &sel_functor)  {
 
-    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
-                  "Only a StdDataFrame can call get_view_by_sel()");
-
     const ColumnVecType<T>  &vec = get_column<T>(name);
     const size_type         idx_s = indices_.size();
     const size_type         col_s = vec.size();
@@ -1038,9 +1011,6 @@ template<typename I, typename H>
 template<typename T, typename F, typename ... Ts>
 typename DataFrame<I, H>::ConstPtrView DataFrame<I, H>::
 get_view_by_sel (const char *name, F &sel_functor) const  {
-
-    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
-                  "Only a StdDataFrame can call get_view_by_sel()");
 
     const ColumnVecType<T>  &vec = get_column<T>(name);
     const size_type         idx_s = indices_.size();
@@ -1091,9 +1061,6 @@ template<typename T1, typename T2, typename F, typename ... Ts>
 typename DataFrame<I, H>::PtrView DataFrame<I, H>::
 get_view_by_sel (const char *name1, const char *name2, F &sel_functor)  {
 
-    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
-                  "Only a StdDataFrame can call get_view_by_sel()");
-
     const SpinGuard         guard (lock_);
     const ColumnVecType<T1> &vec1 = get_column<T1>(name1, false);
     const ColumnVecType<T2> &vec2 = get_column<T2>(name2, false);
@@ -1123,9 +1090,6 @@ template<typename T1, typename T2, typename F, typename ... Ts>
 typename DataFrame<I, H>::ConstPtrView
 DataFrame<I, H>::
 get_view_by_sel (const char *name1, const char *name2, F &sel_functor) const  {
-
-    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
-                  "Only a StdDataFrame can call get_view_by_sel()");
 
     const SpinGuard         guard (lock_);
     const ColumnVecType<T1> &vec1 = get_column<T1>(name1, false);
@@ -1388,9 +1352,6 @@ get_view_by_sel (const char *name1,
                  const char *name3,
                  F &sel_functor)  {
 
-    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
-                  "Only a StdDataFrame can call get_view_by_sel()");
-
     const SpinGuard         guard (lock_);
     const ColumnVecType<T1> &vec1 = get_column<T1>(name1, false);
     const ColumnVecType<T2> &vec2 = get_column<T2>(name2, false);
@@ -1426,9 +1387,6 @@ get_view_by_sel (const char *name1,
                  const char *name2,
                  const char *name3,
                  F &sel_functor) const  {
-
-    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
-                  "Only a StdDataFrame can call get_view_by_sel()");
 
     const SpinGuard         guard (lock_);
     const ColumnVecType<T1> &vec1 = get_column<T1>(name1, false);
@@ -1509,9 +1467,6 @@ get_view_by_sel(const char *name1,
                 const char *name4,
                 F &sel_functor)  {
 
-    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
-                  "Only a StdDataFrame can call get_view_by_sel()");
-
     const SpinGuard         guard (lock_);
     const ColumnVecType<T1> &vec1 = get_column<T1>(name1, false);
     const ColumnVecType<T2> &vec2 = get_column<T2>(name2, false);
@@ -1554,9 +1509,6 @@ get_view_by_sel(const char *name1,
                 const char *name3,
                 const char *name4,
                 F &sel_functor) const  {
-
-    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
-                  "Only a StdDataFrame can call get_view_by_sel()");
 
     const SpinGuard         guard (lock_);
     const ColumnVecType<T1> &vec1 = get_column<T1>(name1, false);
@@ -1888,9 +1840,6 @@ get_view_by_sel(const char *name1,
                 const char *name5,
                 F &sel_functor)  {
 
-    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
-                  "Only a StdDataFrame can call get_view_by_sel()");
-
     const SpinGuard         guard (lock_);
     const ColumnVecType<T1> &vec1 = get_column<T1>(name1, false);
     const ColumnVecType<T2> &vec2 = get_column<T2>(name2, false);
@@ -1937,9 +1886,6 @@ get_view_by_sel(const char *name1,
                 const char *name4,
                 const char *name5,
                 F &sel_functor) const  {
-
-    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
-                  "Only a StdDataFrame can call get_view_by_sel()");
 
     const SpinGuard         guard (lock_);
     const ColumnVecType<T1> &vec1 = get_column<T1>(name1, false);
@@ -2149,9 +2095,6 @@ get_view_by_like(const char *name1,
                  bool case_insensitive,
                  char esc_char)  {
 
-    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
-                  "Only a StdDataFrame can call get_view_by_like()");
-
     const SpinGuard         guard (lock_);
     const ColumnVecType<T>  &vec1 = get_column<T>(name1, false);
     const ColumnVecType<T>  &vec2 = get_column<T>(name2, false);
@@ -2200,9 +2143,6 @@ get_view_by_like(const char *name1,
                  const char *pattern2,
                  bool case_insensitive,
                  char esc_char) const  {
-
-    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
-                  "Only a StdDataFrame can call get_view_by_like()");
 
     const SpinGuard         guard (lock_);
     const ColumnVecType<T>  &vec1 = get_column<T>(name1, false);
@@ -2542,9 +2482,6 @@ template<typename ... Ts>
 typename DataFrame<I, H>::View DataFrame<I, H>::
 get_view(const StlVecType<const char *> &col_names)  {
 
-    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
-                  "Only a StdDataFrame can call get_view()");
-
     View            dfv;
     const size_type idx_size = indices_.size();
 
@@ -2583,9 +2520,6 @@ template<typename ... Ts>
 typename DataFrame<I, H>::ConstView
 DataFrame<I, H>::
 get_view(const StlVecType<const char *> &col_names) const  {
-
-    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
-                  "Only a StdDataFrame can call get_view()");
 
     ConstView       dfcv;
     const size_type idx_size = indices_.size();
@@ -2705,9 +2639,6 @@ template<typename T, typename ... Ts>
 typename DataFrame<T, H>::View DataFrame<I, H>::
 get_reindexed_view(const char *col_to_be_index, const char *old_index_name)  {
 
-    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
-                  "Only a StdDataFrame can call get_reindexed_view()");
-
     using result_t = typename DataFrame<T, H>::View;
 
     result_t        result;
@@ -2751,9 +2682,6 @@ typename DataFrame<T, H>::ConstView
 DataFrame<I, H>::
 get_reindexed_view(const char *col_to_be_index,
                    const char *old_index_name) const  {
-
-    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
-                  "Only a StdDataFrame can call get_reindexed_view()");
 
     using result_t = typename DataFrame<T, H>::ConstView;
 

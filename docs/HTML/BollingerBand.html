@@ -55,7 +55,7 @@ using bband_v = BollingerBand&lt;T, I, A&gt;;
         </B></PRE></font>
       </td>
       <td>
-        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
+        This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
         This functor class calculates Bollinger bands. A Bollinger Band® is a technical analysis tool defined by a set of trendlines. They are plotted as two standard deviations, both positively and negatively, away from a simple moving average (SMA) of a security's price and can be adjusted to user preferences.<BR>
         Bollinger Bands® was developed by technical trader John Bollinger and designed to give investors a higher probability of identifying when an asset is oversold or overbought.<BR>
         The constructor takes:<BR>
@@ -63,7 +63,7 @@ using bband_v = BollingerBand&lt;T, I, A&gt;;
           <LI>Upper band multiplier to be multiplied by standard-deviation and added to the moving average</LI>
           <LI>Lower band multiplier to be multiplied by standard-deviation and subtracted from the moving average</LI>
           <LI>Number of periods for a simple moving mean and std.</LI>
-          <LI>Biased; whether the moving std is biased. The default is false meaning the denominator is “n – 1”.</LI>
+          <LI>Biased; whether the moving std is biased. The default is false meaning the denominator is "n – 1".</LI>
         </UL>
         <I>
         <PRE>
@@ -102,7 +102,7 @@ using aband_v = AccelerationBandsVisitor&lt;T, I, A&gt;;
         </B></PRE></font>
       </td>
       <td>
-        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
+        This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
         This visitor calculates the Acceleration Bands indicators. It requires 3 input columns in the order of <I>close, high, low</I>.<BR>
         The Acceleration Bands System was introduced in 2002 by Price Headley. The concept is based on the idea of getting into a trade just as the security is trending but before its price moves heavily in one direction or another.<BR>
         The Acceleration Bands measure volatility over a user-defined number of bars (default is often the past 20 bars). They are plotted using a simple moving average as the midpoint, with the upper and lower bands being of equal distance from the midpoint, similar to Bollinger Bands.<BR>

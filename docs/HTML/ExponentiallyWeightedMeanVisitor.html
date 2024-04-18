@@ -80,7 +80,7 @@ using ewm_v = ExponentiallyWeightedMeanVisitor&lt;T, I, A&gt;;
         </B></PRE></font>
       </td>
       <td>
-        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
+        This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
 
         This visitor calculates exponentially weighted mean (EWM). EWM gives more weight to recent data by using a decay factor.<BR>
         Formula if finite_adjust is false (default):<BR>
@@ -126,7 +126,7 @@ using ewm_var_v = ExponentiallyWeightedVarVisitor&lt;T, I, A&gt;;
         </B></PRE></font>
       </td>
       <td>
-        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
+        This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
 
         This visitor calculates exponentially weighted variance and standard deviation. It gives more weight to recent data by using a decay factor. get_result() returns the vector of EWM variances. There is also a get_std() that returns the vector of EWM standard deviations.<BR><BR>
         Constructor:<BR>
@@ -161,7 +161,7 @@ using ewm_cov_v = ExponentiallyWeightedCovVisitor&lt;T, I, A&gt;;
         </B></PRE></font>
       </td>
       <td>
-        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
+        This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
 
         This visitor calculates exponentially weighted covariance. It gives more weight to recent data by using a decay factor. get_result() returns the vector of EWM covariances.
         Constructor:<BR>
@@ -196,7 +196,7 @@ using ewm_corr_v = ExponentiallyWeightedCorrVisitor&lt;T, I, A&gt;;
         </B></PRE></font>
       </td>
       <td>
-        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
+        This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
 
         This visitor calculates exponentially weighted correlation. It gives more weight to recent data by using a decay factor. get_result() returns the vector of EWM correlations.
         Constructor:<BR>

@@ -40,7 +40,7 @@ body {
 <body style="font-family: Georgia, serif">
 
   <I>Garbage In, Garbage Out</I> is when a user inputs a dataset that is not suitable for a particular analysis, and (s)he gets nonsense as a result. For example, a data analysis algorithm may require that the input to be normally distributed. If user inputs a dataset that is far from being normal distribution, the result will be garbage.<BR>
-  One approach would be for the library to check the data first and warn the user that the data is not suitable. DataFrame doesn’t do that because this approach has many pitfalls:
+  One approach would be for the library to check the data first and warn the user that the data is not suitable. DataFrame doesn't do that because this approach has many pitfalls:
   <OL>
     <LI>It makes the code inefficient and slow</LI>
     <LI>It makes the code convoluted and hard to understand and maintain</LI>

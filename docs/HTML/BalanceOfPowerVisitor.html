@@ -55,7 +55,7 @@ using bop_v = BalanceOfPowerVisitor&lt;T, I, A&gt;;
         </B></PRE></font>
       </td>
       <td>
-        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
+        This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
         This visitor calculates the balance of power indicator. It requires 4 input columns in the order of <I>low, high, open, close</I>.<BR>
         The result is a vector of values with same number of items as the given columns. The first <I>roll_peiord - 1</I> items, in the result will be NAN, if <I>rolling_avg</I> is true.<BR><BR>
         Balance of Power (BOP) is a price-based indicator used by technical analysts to evaluate the overall strength of buyers and sellers in the market. BOP oscillates around zero line, where positive values indicate Bull market dominance and negative values indicate Bear market dominance. On its own, BOP is not a particularly smooth indicator, and is therefore best paired with an indicator that can counter this by providing essential smoothness. By pairing the BOP with the Simple Moving Average, for example, the result is a smooth, proper analysis for viewing.<BR>

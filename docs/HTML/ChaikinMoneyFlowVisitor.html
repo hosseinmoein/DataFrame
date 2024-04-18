@@ -55,7 +55,7 @@ using cmf_v = ChaikinMoneyFlowVisitor&lt;T, I, A&gt;;
         </B></PRE></font>
       </td>
       <td>
-        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
+        This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
         This visitor calculates the Chaikin Money Flow (CMF) indicator. It requires 5 input columns in order of <I>low</I>, <I>high</I>, <I>open</I>, <I>close</I>, <I>volume</I>.<BR>
         The result is a vector of values with same number of items as the given column.<BR>
         Chaikin Money Flow (CMF) developed by Marc Chaikin is a volume-weighted average of accumulation and distribution over a specified period. The standard CMF period is 21 days. The principle behind the Chaikin Money Flow is the nearer the closing price is to the high, the more accumulation has taken place. Conversely, the nearer the closing price is to the low, the more distribution has taken place. If the price action consistently closes above the bar's midpoint on increasing volume, the Chaikin Money Flow will be positive. Conversely, if the price action consistently closes below the bar's midpoint on increasing volume, the Chaikin Money Flow will be a negative value.<BR>

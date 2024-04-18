@@ -56,7 +56,7 @@ using lowess_v = LowessVisitor&lt;T, I, A&gt;;
         </B></PRE></font>
       </td>
       <td>
-        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
+        This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
         This functor performs LOcally WEighted Scatterplot Smoothing<BR>
         A LOWESS function outputs smoothed estimates of dependent var (y) at the given independent var (x) values.<BR>
         This lowess function implements the algorithm given in the reference below using local linear estimates. Suppose the input data has N points. The algorithm works by estimating the <I>smooth</i> y<sub>i</sub> by taking the frac * N closest points to (x<sub>i</sub>, y<sub>i</sub>) based on their x values and estimating y<sub>i</sub> using a weighted linear regression. The weight for (x<sub>j</sub>, y<sub>j</sub>) is tricube function applied to |x<sub>i</sub> - x<sub>j</sub>|. If n_loop > 1, then further weighted local linear regressions are performed, where the weights are the same as above times the <I>lowess_bisquare</i> function of the residuals. Each iteration takes approximately the same amount of time as the original fit, so these iterations are expensive. They are most useful when the noise has extremely heavy tails, such as Cauchy noise. Noise with less heavy-tails, such as t-distributions with df > 2, are less problematic. The weights downgrade the influence of points with large residuals. In the extreme case, points whose residuals are larger than 6 times the median absolute residual are given weight 0.<BR>

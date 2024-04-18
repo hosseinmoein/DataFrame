@@ -54,7 +54,7 @@ using exs_v = ExpoSmootherVisitor&lt;T, I&gt;;
         </B></PRE></font>
       </td>
       <td>
-        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
+        This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
         This is a transformer visitor. It means the column(s) passed to this visitor is not read-only and its values may change<BR><BR>
         This functor does exponential smoothing of the time-series by<BR>
         <I>Y<sub>0</sub> = X<sub>0</sub></I><BR>
@@ -89,7 +89,7 @@ using hwexp_v = HWExpoSmootherVisitor&lt;T, I&gt;;
         </B></PRE></font>
       </td>
       <td>
-        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
+        This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
         This is a transformer visitor. It means the column(s) passed to this visitor is not read-only and its values may change<BR><BR>
         This functor does double exponential smoothing by Holt-Winters method. The advantage for this over the above visitor is that HW takes care of trends in the data<BR>
         <I>

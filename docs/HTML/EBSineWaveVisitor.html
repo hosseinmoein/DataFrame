@@ -55,7 +55,7 @@ using ebsw_v = EBSineWaveVisitor&lt;T, I, A&gt;;
         </B></PRE></font>
       </td>
       <td>
-        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
+        This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
         This visitor calculates the rolling values of Even Better Sine Wave (EBSW) indicator.<BR>
         The result is a vector of values with same number of items as the given column. The first period, in the result, will be NAN.<BR><BR>
         The Even Better Sinewave Indicator was created by John Ehlers (Cycle Analytics For Traders pgs 161-162) and this indicator works well when the stock is in a trend mode. It will let you know how long to stay with a trade and it works best with a trend confirmation but it can also work on it's own fairly well. Buy when the indicator line is green and sell when it is red.<BR>

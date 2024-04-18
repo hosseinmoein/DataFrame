@@ -87,7 +87,7 @@ using ent_v = EntropyVisitor&lt;T, I, A&gt;;
         </B></PRE></font>
       </td>
       <td>
-        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
+        This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
         This visitor calculates the rolling values of information entropy<BR>
         In information theory, the entropy of a random variable is the average level of "information", "surprise", or "uncertainty" inherent in the variable's possible outcomes. The concept of information entropy was introduced by Claude Shannon in his 1948 paper.<BR>
         A die has higher entropy (p=1/6) versus a coin (p=1/2).<BR>
@@ -122,10 +122,10 @@ using impu_v = ImpurityVisitor&lt;T, I, A&gt;;
         </B></PRE></font>
       </td>
       <td>
-        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
+        This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
         This visitor calculates the rolling impurity of the data column.<BR>
-        Decision trees recursively split features with regard to their target variable’s purity. The algorithm is designed to find the optimal point of the most predictive feature in order to split 1 dataset into 2. These 2 new datasets’ target variable will be more pure than the original dataset’s.<BR>
-“Pure” is the key word here, however. What does that word mean, exactly? In a general sense “purity” can be thought of as how homogenized a group is. But homogeneity can mean different things depending on which mathematical backbone your decision tree runs on. The 2 most popular backbones for decision tree’s decisions are Gini Index and Information Entropy.<BR><BR>
+        Decision trees recursively split features with regard to their target variable's purity. The algorithm is designed to find the optimal point of the most predictive feature in order to split 1 dataset into 2. These 2 new datasets' target variable will be more pure than the original dataset's.<BR>
+"Pure" is the key word here, however. What does that word mean, exactly? In a general sense "purity" can be thought of as how homogenized a group is. But homogeneity can mean different things depending on which mathematical backbone your decision tree runs on. The 2 most popular backbones for decision tree's decisions are Gini Index and Information Entropy.<BR><BR>
         This method is computationally intensive. It dynamically finds the probability of each feature during each rolling period and applies the formula for the selected method.<BR>
         Type <I>T</I> must be hash-able<BR>
         <I>

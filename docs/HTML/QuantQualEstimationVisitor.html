@@ -58,7 +58,7 @@ using qqe_v = QuantQualEstimationVisitor&lt;T, I, A&gt;;
       <td>
         This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
 
-        The Quantitative Qualitative Estimation (QQE) indicator is an offspring from Wilder’s famous Relative Strength Index (RSI). The base plot is an RSI smoothed over 5 periods supplemented by a signal line. The signal line is composed of a moving Average True Range (ATR). By smoothing the QQE and signal lines, the QQE becomes less sensitive to short term changes in volatility.
+        The Quantitative Qualitative Estimation (QQE) indicator is an offspring from Wilder's famous Relative Strength Index (RSI). The base plot is an RSI smoothed over 5 periods supplemented by a signal line. The signal line is composed of a moving Average True Range (ATR). By smoothing the QQE and signal lines, the QQE becomes less sensitive to short term changes in volatility.
         <PRE>
     explicit
     QuantQualEstimationVisitor(size_t avg_period = 14, size_t smooth_period = 5, double width_factor = 4.236);

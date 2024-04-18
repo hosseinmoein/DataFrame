@@ -55,7 +55,7 @@ using cksp_v = ChandeKrollStopVisitor&lt;T, I, A&gt;;
         </B></PRE></font>
       </td>
       <td>
-        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
+        This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
         This visitor calculates the rolling values of Chande/Kroll trading indicator. It requires 3 input columns in the order of <I>low, high, close</I>.<BR>
         The result() method returns the long stop indicator. The first <I>q_period</I> elements of all results are NaN.<BR><BR>
         The Chande Kroll Stop indicator is a stop for either a short or long position. It presents itself as a red and green (sometimes blue) line that is overlaid on the price chart. The red line represents the stop level for a short position, whereas the green line represents the stop level for a long position. The Chande Kroll Stop is calculated on the true range and therefore is labeled as independent from the volatility of the instruments involved.<BR><BR>

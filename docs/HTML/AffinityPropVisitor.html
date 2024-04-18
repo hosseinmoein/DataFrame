@@ -49,7 +49,7 @@ struct AffinityPropVisitor;
         </B></PRE></font>
       </td>
       <td>
-        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
+        This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
         This functor class finds clusters in data using Affinity Propagation algorithm.<BR>
         The constructor takes three parameters<BR>
         1. Number of iterations<BR>
@@ -67,7 +67,7 @@ struct AffinityPropVisitor;
         </PRE>
         </I><BR>
         The result type is VectorPtrView of type T containing the centers of clusters.<BR>
-        There is also a get_clusters() method that returns an vector of VectorPtrView’s which contain the data clustered around the centers.
+        There is also a get_clusters() method that returns an vector of VectorPtrView's which contain the data clustered around the centers.
       </td>
       <td width="30%">
         <B>T</B>: Column data type<BR>

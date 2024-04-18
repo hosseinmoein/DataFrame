@@ -88,26 +88,10 @@ public:  // Construction
         typename type_declare<DataVec, IndexType, align_value>::type;
     using ColNameType = String64;
 
-    using View =
-        typename std::conditional<
-            std::is_base_of<HeteroVector<align_value>, H>::value,
-                            DataFrame<I, HeteroView<align_value>>,
-            void>::type;
-    using ConstView =
-        typename std::conditional<
-            std::is_base_of<HeteroVector<align_value>, H>::value,
-                            DataFrame<I, HeteroConstView<align_value>>,
-            void>::type;
-    using PtrView =
-        typename std::conditional<
-            std::is_base_of<HeteroVector<align_value>, H>::value,
-                            DataFrame<I, HeteroPtrView<align_value>>,
-            void>::type;
-    using ConstPtrView =
-        typename std::conditional<
-            std::is_base_of<HeteroVector<align_value>, H>::value,
-                            DataFrame<I, HeteroConstPtrView<align_value>>,
-            void>::type;
+    using View = DataFrame<I, HeteroView<align_value>>;
+    using ConstView = DataFrame<I, HeteroConstView<align_value>>;
+    using PtrView = DataFrame<I, HeteroPtrView<align_value>>;
+    using ConstPtrView = DataFrame<I, HeteroConstPtrView<align_value>>;
 
     template<typename T>
     using ColumnVecType = typename type_declare<DataVec, T, align_value>::type;

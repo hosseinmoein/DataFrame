@@ -60,7 +60,7 @@ using yz_vol_v = YangZhangVolVisitor&lt;T, I, A&gt;;
         The result is a vector of values with same number of items as the given columns. The first roll_count items, in the result, will be NAN. The values are annulaized by <I>trading_periods</I><BR>
         <BR><B>NOTE</B>: Roll count must be greater than 1<BR><BR>
         Yang Zhang is a historical volatility estimator that handles both opening jumps and the drift and has a minimum estimation error.<BR>
-        We can think of the Yang-Zhang volatility as the combination of the overnight (close-to-open volatility) and a weighted average of the Rogers-Satchell volatility and the day’s open-to-close volatility. It is considered to be 14 times more efficient than the close-to-close estimator.<BR>
+        We can think of the Yang-Zhang volatility as the combination of the overnight (close-to-open volatility) and a weighted average of the Rogers-Satchell volatility and the day's open-to-close volatility. It is considered to be 14 times more efficient than the close-to-close estimator.<BR>
         <I>
         <PRE>
     explicit

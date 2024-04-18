@@ -55,7 +55,7 @@ using ht_vol_v = HodgesTompkinsVolVisitor&lt;T, I, A&gt;;
         </B></PRE></font>
       </td>
       <td>
-        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
+        This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
         This visitor calculates the rolling values of Hodges-Tompkins volatility. It requires 1 input columns.<BR>
         The result is a vector of values with same number of items as the given columns. The first "roll_count - 1" items, in the result, will be NAN. The values are annulaized by <I>trading_periods</I><BR><BR>
         Hodges Tompkins volatility estimator is basically the close to close volatility adjusted for sampling bias.<BR>

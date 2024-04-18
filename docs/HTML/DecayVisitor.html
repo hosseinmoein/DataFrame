@@ -49,7 +49,7 @@ struct DecayVisitor;
         </B></PRE></font>
       </td>
       <td>
-        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
+        This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
         This visitor calculates technical analysis indicator -- decay. It requires 1 input column.<BR>
         The result is a vector of values with same number of items as the given column.<BR>
         Decay is a simple function used to propagate signals from the past into the future. It is useful in conjunction with algorithm trading and machine learning functions.<BR>

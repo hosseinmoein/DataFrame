@@ -55,7 +55,7 @@ using ftrans_v = FisherTransVisitor&lt;T, I, A&gt;;
         </B></PRE></font>
       </td>
       <td>
-        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
+        This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
 		
         This visitor calculates Fisher transform. The Fisher Transform is a technical indicator created by John F. Ehlers that converts prices into a Gaussian normal distribution.﻿ In this way, the indicator highlights when prices have moved to an extreme, based on recent prices. This may help in spotting turning points in the price of an asset. It also helps show the trend and isolate the price waves within a trend.<BR>
         The result is a vector of values with same number of items as the given column. The first roll_count items, in the result, will be NAN.<BR>

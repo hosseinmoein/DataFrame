@@ -760,19 +760,19 @@ col_3:1:<double>:15,
 col_str:1:<string>:11,
 col_4:1:<double>:22,
 
-INDEX:1:<ulong>:123451,
-col_1:1:<double>:2,
-col_2:1:<double>:9,
-col_3:1:<double>:16,
-col_str:1:<string>:22,
-col_4:1:<double>:23,
+INDEX:1:<ulong>:123450,
+col_1:1:<double>:1,
+col_2:1:<double>:8,
+col_3:1:<double>:15,
+col_str:1:<string>:11,
+col_4:1:<double>:22,
 
-INDEX:1:<ulong>:123451,
-col_1:1:<double>:2,
-col_2:1:<double>:9,
-col_3:1:<double>:16,
-col_str:1:<string>:22,
-col_4:1:<double>:23,
+INDEX:1:<ulong>:123450,
+col_1:1:<double>:1,
+col_2:1:<double>:8,
+col_3:1:<double>:15,
+col_str:1:<string>:11,
+col_4:1:<double>:22,
 
 
 Testing write(json) ...
@@ -2044,6 +2044,20 @@ Testing get_data_from_view(  ) ...
 Testing get_reindexed_from_view( ) ...
 
 Testing concat_from_view( ) ...
+
+Testing get_view_by_sel_from_view(  ) ...
+
+Testing test_get_view_by_idx_loc_from_view(  ) ...
+
+Testing get_view_by_rand_from_view() ...
+
+Testing get_view_by_like_from_view( ) ...
+
+Testing get_view_from_view(  ) ...
+
+Testing get_reindexed_view_from_view( ) ...
+
+Testing concat_view_from_view( ) ...
 Hello World!
 Str Column = A, B, C, D, E, F, G, H, I, J, 
 There are 5031 IBM close prices
@@ -2063,7 +2077,7 @@ INDEX:10:<ulong>,string col:10:<string>,Cool Column:10:<string>,numbers:10:<doub
 Standard deviation of IBM close prices: 38.3090214006
 Correlation between AAPL and IBM close prices: 0.390679511924
 The last exponentailly weighted correlation between AAPL and IBM close prices: -0.276248958749
-Means of clusters are: 0.0291277212792, -0.0395777091523, 0.00530294902691, -0.0086780172005, 
+Means of clusters are: -0.0421229854251, 0.00466334426616, 0.0281030287208, -0.0101235948477, 
 IBM returns 50% quantile: 0.000224447189179, 75% quantile: 0.00742387474272, 95% quantile: 0.0229862030163
 The seasonality of IBM returns is 59 days.
 So use this instead of 170 days in decomposition analysis

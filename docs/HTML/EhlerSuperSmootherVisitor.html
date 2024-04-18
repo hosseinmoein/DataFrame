@@ -55,7 +55,7 @@ using ess_v = EhlerSuperSmootherVisitor&lt;T, I, A&gt;;
         </B></PRE></font>
       </td>
       <td>
-        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
+        This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
         This visitor calculates the rolling values of Ehler's Super Smoother Filter (SSF) indicator.<BR>
         The result is a vector of values with same number of items as the given column.<BR><BR>
         The Ehlers' Super Smoother Filter is a smoothing technique developed by John F. Ehlers, based on aerospace analog filters. This filter aims at reducing noise in price data, which appears to be stronger as the high-to-low price swings increase especially when chart is plotted for greater time intervals. In theory, this filter eliminates the noise completely, as opposed to moving averages, e.g., exponential (EMA) which only offers a modest attenuation effect.<BR><BR>

@@ -55,7 +55,7 @@ using cog_v = CenterOfGravityVisitor&lt;T, I, A&gt;;
         </B></PRE></font>
       </td>
       <td>
-        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
+        This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
         This visitor calculates the rolling values of Ehlers' center of gravity indicator. It requires 1 input column.<BR>
         The result is a vector of values with same number of items as the given column. The first roll_count - 1 items, in the result, will be NAN.<BR>
         CG shows the position of the balance point of the Time Series values within the lookback window. For a constant time series (for example, sideways markets) the center of gravity is located around the middle point of the window, so CG generates values around -(Period/2+1). If time series rises within the window, the CG shifts from the middle point to the right in the window  (to lower negative values). If time series drops within the window, the CG shifts from the middle point to the left (to higher negative values). The sharper the rise (drop) of the time series, the stronger the CG shifts from its middle point. Trending markets can then be identified using CG. For example, given Period=10, a constant time series (sideway markets) will produce CG output equal to -5.5. Rising time series then produces CG values in the range [-5.5, 0], and dropping time series produces CG values in the range [-11, -5.5].<BR>

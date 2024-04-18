@@ -55,7 +55,7 @@ using ha_cdl_v = HeikinAshiCndlVisitor&lt;T, I, A&gt;;
         </B></PRE></font>
       </td>
       <td>
-        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
+        This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
         This visitor calculates values of Heikin Ashi candles for OHLC. It requires 4 input columns in the order of <I>low, high, open, close</I>.<BR>
         The result is a vector of values with same number of items as the given columns.<BR>
         <I>get_result()</I> returns the close candles<BR>

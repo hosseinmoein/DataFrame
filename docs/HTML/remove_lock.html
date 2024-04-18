@@ -76,9 +76,9 @@ static void remove_lock ();
             <span style='color:#666616; '>std</span><span style='color:#800080; '>::</span>make_pair<span style='color:#808030; '>(</span><span style='color:#800000; '>"</span><span style='color:#0000e6; '>col1</span><span style='color:#800000; '>"</span><span style='color:#808030; '>,</span> vec<span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
 
         <span style='color:#696969; '>// This is an extremely inefficient way of doing it, especially in</span>
-        <span style='color:#696969; '>// a multithreaded program. Each “get_column” is a hash table</span>
+        <span style='color:#696969; '>// a multithreaded program. Each "get_column" is a hash table</span>
         <span style='color:#696969; '>// look up and in multithreaded programs requires a lock.</span>
-        <span style='color:#696969; '>// It is much more efficient to call “get_column” outside the loop</span>
+        <span style='color:#696969; '>// It is much more efficient to call "get_column" outside the loop</span>
         <span style='color:#696969; '>// and loop over the referenced vector.</span>
         <span style='color:#696969; '>// Here I am doing it this way to make sure synchronization</span>
         <span style='color:#696969; '>// between threads are bulletproof.</span>

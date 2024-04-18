@@ -55,7 +55,7 @@ using eom_v = EaseOfMovementVisitor&lt;T, I, A&gt;;
         </B></PRE></font>
       </td>
       <td>
-        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
+        This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
         This visitor calculates the Ease Of Movement (EOM) indicator. It requires 4 input columns in order of <I>low price</I>, <I>high price</I>, <I>close price</I>, <I>volume</I>.<BR>
         Richard Arms' Ease of Movement indicator is a technical study that attempts to quantify a mix of momentum and volume information into one value. The intent is to use this value to discern whether prices are able to rise, or fall, with little resistance in the directional movement.<BR>
         When the indicator creates output values above zero and rising, this suggests that the price is increasing on low volume, while falling negative values suggest that the price is dropping on low volume.<BR>

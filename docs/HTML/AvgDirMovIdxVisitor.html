@@ -55,7 +55,7 @@ using adx_v = AvgDirMovIdxVisitor&lt;T, I, A&gt;;
         </B></PRE></font>
       </td>
       <td>
-        This is a “single action visitor”, meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
+        This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
         This visitor calculates Average Directional Movement Index (ADX) indicator. It requires 3 input columns in the order of <I>low, high, close</I>.<BR>
         The result is a vector with the same number of values as the given columns. The first value in result is 0.<BR><BR>
 Designed by Welles Wilder for commodity daily charts, the ADX is now used in several markets by technical traders to judge the strength of a trend. The ADX makes use of a positive (+DI) and negative (-DI) directional indicator in addition to the trendline. The trend has strength when ADX is above 25; the trend is weak or the price is trendless when ADX is below 20, according to Wilder. Non-trending doesn't mean the price isn't moving. It may not be, but the price could also be making a trend change or is too volatile for a clear direction to be present.<BR>

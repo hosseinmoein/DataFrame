@@ -58,7 +58,7 @@ using vtx_v = VortexVisitor&lt;T, I, A&gt;;
         This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
         This visitor calculates the rolling values of Vortex trading indicator. It requires 3 input columns in the order of <I>low, high, close</I>.<BR>
         The result() method returns the positive indicator. The first <I>roll_period</I> elements of all results are NaN.<BR><BR>
-        A vortex pattern may be observed in any market by connecting the lows of that market's price bars with the consecutive bars’ highs, and then price bar highs with consecutive lows. The greater the distance between the low of a price bar and the subsequent bar's high, the greater the upward or positive Vortex movement (VM+). Similarly, the greater the distance between a price bar's high and the subsequent bar's low, the greater the downward or negative Vortex movement (VM-).<BR>
+        A vortex pattern may be observed in any market by connecting the lows of that market's price bars with the consecutive bars' highs, and then price bar highs with consecutive lows. The greater the distance between the low of a price bar and the subsequent bar's high, the greater the upward or positive Vortex movement (VM+). Similarly, the greater the distance between a price bar's high and the subsequent bar's low, the greater the downward or negative Vortex movement (VM-).<BR>
         There are 3 other methods:
         <PRE>
     get_result()           // It returns the positive trend indicator

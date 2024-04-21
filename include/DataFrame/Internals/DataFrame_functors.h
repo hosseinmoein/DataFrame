@@ -320,18 +320,18 @@ struct mod_by_idx_functor_ : DataVec::template visitor_base<Ts ...>  {
 
 // ----------------------------------------------------------------------------
 
-template<typename RES_T, typename ... Ts>
+template<typename RES_T, typename RHS_T, typename ... Ts>
 struct  index_join_functor_common_ : DataVec::template visitor_base<Ts ...>  {
 
     inline index_join_functor_common_ (
         const char *n,
-        const DataFrame &r,
+        const RHS_T &r,
         const IndexIdxVector &mii,
         RES_T &res)
         : name(n), rhs(r), joined_index_idx(mii), result(res)  {  }
 
     const char              *name;
-    const DataFrame         &rhs;
+    const RHS_T             &rhs;
     const IndexIdxVector    &joined_index_idx;
     RES_T                   &result;
 

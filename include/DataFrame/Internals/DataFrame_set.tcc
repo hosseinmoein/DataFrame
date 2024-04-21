@@ -381,6 +381,9 @@ load_column (const char *name,
              nan_policy padding,
              bool do_lock)  {
 
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
+                  "Only a StdDataFrame can call load_column()");
+
     size_type       s = std::distance(range.begin, range.end);
     const size_type idx_s = indices_.size();
 
@@ -440,6 +443,9 @@ DataFrame<I, H>::
 load_result_as_column(V &visitor,
                       const char *new_col_name,
                       nan_policy padding)  {
+
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
+                  "Only a StdDataFrame can call load_result_as_column()");
 
     const size_type idx_s = indices_.size();
     auto            &new_col = visitor.get_result();
@@ -575,6 +581,9 @@ typename DataFrame<I, H>::size_type
 DataFrame<I, H>::
 load_indicators(const char *cat_col_name, const char *numeric_cols_prefix)  {
 
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
+                  "Only a StdDataFrame can call load_indicators()");
+
     using map_t = DFUnorderedMap<T, StlVecType<IT> *>;
 
     const SpinGuard guard(lock_);
@@ -615,6 +624,9 @@ DataFrame<I, H>::
 from_indicators(const StlVecType<const char *> &ind_col_names,
                 const char *cat_col_name,
                 const char *numeric_cols_prefix)  {
+
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
+                  "Only a StdDataFrame can call from_indicators()");
 
     const size_type                     ind_col_s = ind_col_names.size();
     StlVecType<const StlVecType<T> *>   ind_cols(ind_col_s, nullptr);
@@ -682,6 +694,9 @@ load_column (const char *name,
              nan_policy padding,
              bool do_lock)  {
 
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
+                  "Only a StdDataFrame can call load_column()");
+
     const size_type idx_s = indices_.size();
     const size_type data_s = column.size();
 
@@ -741,6 +756,9 @@ load_align_column(
     std::function<std::size_t(
                         const DataFrame::IndexType &,
                         const DataFrame::IndexType &)> diff_func)  {
+
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
+                  "Only a StdDataFrame can call load_align_column()");
 
     const size_type idx_s = indices_.size();
     const size_type data_s = column.size();

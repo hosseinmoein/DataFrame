@@ -1987,25 +1987,25 @@ INDEX:3:<uint>,carName:3:<string>,key:3:<int>
 2,Jeep ,1
 
 Left Join ...
-INDEX:3:<uint>,lhs.INDEX:3:<uint>,rhs.INDEX:3:<uint>,key:3:<int>,personName:3:<string>,carName:3:<string>
+INDEX:3:<ulong>,lhs.INDEX:3:<uint>,rhs.INDEX:3:<uint>,key:3:<int>,personName:3:<string>,carName:3:<string>
 0,0,0,0,Bob ,Pinto
 1,1,1,1,Mary,Tesla
 2,1,2,1,Mary,Jeep 
 
 Right Join ...
-INDEX:3:<uint>,lhs.INDEX:3:<uint>,rhs.INDEX:3:<uint>,key:3:<int>,personName:3:<string>,carName:3:<string>
+INDEX:3:<ulong>,lhs.INDEX:3:<uint>,rhs.INDEX:3:<uint>,key:3:<int>,personName:3:<string>,carName:3:<string>
 0,0,0,0,Bob ,Pinto
 1,1,1,1,Mary,Tesla
 2,1,2,1,Mary,Jeep 
 
 Left Right Join ...
-INDEX:3:<uint>,lhs.INDEX:3:<uint>,rhs.INDEX:3:<uint>,key:3:<int>,personName:3:<string>,carName:3:<string>
+INDEX:3:<ulong>,lhs.INDEX:3:<uint>,rhs.INDEX:3:<uint>,key:3:<int>,personName:3:<string>,carName:3:<string>
 0,0,0,0,Bob ,Pinto
 1,1,1,1,Mary,Tesla
 2,1,2,1,Mary,Jeep 
 
 Inner Join ...
-INDEX:3:<uint>,lhs.INDEX:3:<uint>,rhs.INDEX:3:<uint>,key:3:<int>,personName:3:<string>,carName:3:<string>
+INDEX:3:<ulong>,lhs.INDEX:3:<uint>,rhs.INDEX:3:<uint>,key:3:<int>,personName:3:<string>,carName:3:<string>
 0,0,0,0,Bob ,Pinto
 1,1,1,1,Mary,Tesla
 2,1,2,1,Mary,Jeep 
@@ -2077,7 +2077,7 @@ INDEX:10:<ulong>,string col:10:<string>,Cool Column:10:<string>,numbers:10:<doub
 Standard deviation of IBM close prices: 38.3090214006
 Correlation between AAPL and IBM close prices: 0.390679511924
 The last exponentailly weighted correlation between AAPL and IBM close prices: -0.276248958749
-Means of clusters are: -0.0421229854251, 0.00466334426616, 0.0281030287208, -0.0101235948477, 
+Means of clusters are: 0.029693988024, -0.039640231146, -0.00865352443995, 0.00548007691931, 
 IBM returns 50% quantile: 0.000224447189179, 75% quantile: 0.00742387474272, 95% quantile: 0.0229862030163
 The seasonality of IBM returns is 59 days.
 So use this instead of 170 days in decomposition analysis

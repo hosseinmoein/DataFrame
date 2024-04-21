@@ -1352,7 +1352,7 @@ public:  // Data manipulation
     //   List of triples to specify the column summarization
     //
     template<comparable T, typename I_V, typename ... Ts>
-    [[nodiscard]] DataFrame
+    [[nodiscard]] DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
     groupby1(const char *col_name, I_V &&idx_visitor, Ts&& ... args) const;
 
     // This is the same as above groupby1() but it groups by two columns
@@ -1375,7 +1375,7 @@ public:  // Data manipulation
     //   List of triples to specify the column summarization
     //
     template<comparable T1, comparable T2, typename I_V, typename ... Ts>
-    [[nodiscard]] DataFrame
+    [[nodiscard]] DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
     groupby2(const char *col_name1,
              const char *col_name2,
              I_V &&idx_visitor,
@@ -1406,7 +1406,7 @@ public:  // Data manipulation
     //
     template<comparable T1, comparable T2, comparable T3,
              typename I_V, typename ... Ts>
-    [[nodiscard]] DataFrame
+    [[nodiscard]] DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
     groupby3(const char *col_name1,
              const char *col_name2,
              const char *col_name3,
@@ -1416,7 +1416,8 @@ public:  // Data manipulation
     // Same as groupby1() above, but executed asynchronously
     //
     template<comparable T, typename I_V, typename ... Ts>
-    [[nodiscard]] std::future<DataFrame>
+    [[nodiscard]]
+    std::future<DataFrame<I, HeteroVector<std::size_t(H::align_value)>>>
     groupby1_async(const char *col_name,
                    I_V &&idx_visitor,
                    Ts&& ... args) const;
@@ -1424,7 +1425,8 @@ public:  // Data manipulation
     // Same as groupby2() above, but executed asynchronously
     //
     template<comparable T1, comparable T2, typename I_V, typename ... Ts>
-    [[nodiscard]] std::future<DataFrame>
+    [[nodiscard]]
+    std::future<DataFrame<I, HeteroVector<std::size_t(H::align_value)>>>
     groupby2_async(const char *col_name1,
                    const char *col_name2,
                    I_V &&idx_visitor,
@@ -1434,7 +1436,8 @@ public:  // Data manipulation
     //
     template<comparable T1, comparable T2, comparable T3,
              typename I_V, typename ... Ts>
-    [[nodiscard]] std::future<DataFrame>
+    [[nodiscard]]
+    std::future<DataFrame<I, HeteroVector<std::size_t(H::align_value)>>>
     groupby3_async(const char *col_name1,
                    const char *col_name2,
                    const char *col_name3,
@@ -1503,7 +1506,7 @@ public:  // Data manipulation
     //   Variable argument list of triples as specified above
     //
     template<typename V, typename I_V, typename ... Ts>
-    [[nodiscard]] DataFrame
+    [[nodiscard]] DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
     bucketize(bucket_type bt,
               const V &value,
               I_V &&idx_visitor,
@@ -1512,7 +1515,8 @@ public:  // Data manipulation
     // Same as bucketize() above, but executed asynchronously
     //
     template<typename V, typename I_V, typename ... Ts>
-    [[nodiscard]] std::future<DataFrame>
+    [[nodiscard]]
+    std::future<DataFrame<I, HeteroVector<std::size_t(H::align_value)>>>
     bucketize_async(bucket_type bt,
                     const V &value,
                     I_V &&idx_visitor,
@@ -1561,7 +1565,7 @@ public:  // Data manipulation
     //   (See join_policy definition)
     //
     template<typename RHS_T, typename ... Ts>
-    [[nodiscard]] DataFrame<I, H>
+    [[nodiscard]] DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
     join_by_index(const RHS_T &rhs, join_policy jp) const;
 
     // It joins the data between self (lhs) and rhs and returns the joined data
@@ -1594,7 +1598,8 @@ public:  // Data manipulation
     //   (See join_policy definition)
     //
     template<typename RHS_T, comparable T, typename ... Ts>
-    [[nodiscard]] DataFrame<unsigned int, H>
+    [[nodiscard]]
+    DataFrame<unsigned long, HeteroVector<std::size_t(H::align_value)>>
     join_by_column(const RHS_T &rhs, const char *name, join_policy jp) const;
 
     // It concatenates rhs to the end of self and returns the result as
@@ -1892,7 +1897,7 @@ public: // Read/access and slicing interfaces
     //   Data type of the named column
     //
     template<hashable_equal T>
-    [[nodiscard]] ColumnVecType<T>
+    [[nodiscard]] StlVecType<T>
     get_col_unique_values(const char *name) const;
 
     // It returns a DataFrame (including the index and data columns)

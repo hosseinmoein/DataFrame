@@ -187,15 +187,15 @@ _create_column_from_triple_(DF &df, T &triple) {
 
 // ----------------------------------------------------------------------------
 
-template<typename DF, typename T, typename I_V, typename V>
+template<typename SRC_DF, typename DST_DF, typename T, typename I_V, typename V>
 static inline void
 _load_groupby_data_1_(
-    const DF &source,
-    DF &dest,
+    const SRC_DF &source,
+    DST_DF &dest,
     T &triple,
     I_V &&idx_visitor,
     const V &input_col,
-    const typename DF::template StlVecType<std::size_t> &sort_v,
+    const typename SRC_DF::template StlVecType<std::size_t> &sort_v,
     const char *col_name)  {
 
     std::size_t         marker = 0;
@@ -241,7 +241,8 @@ _load_groupby_data_1_(
 
     const auto          &src_vec =
         source.template get_column<ValueType>(std::get<0>(triple));
-    const std::size_t   max_count = std::min(vec_size, src_vec.size());
+    const std::size_t   max_count =
+        std::min(vec_size, std::size_t(src_vec.size()));
     auto                &dst_vec = _create_column_from_triple_(dest, triple);
     auto                &visitor = std::get<2>(triple);
 
@@ -271,16 +272,17 @@ _load_groupby_data_1_(
 
 // ----------------------------------------------------------------------------
 
-template<typename DF, typename T, typename I_V, typename V1, typename V2>
+template<typename SRC_DF, typename DST_DF, typename T, typename I_V,
+         typename V1, typename V2>
 static inline void
 _load_groupby_data_2_(
-    const DF &source,
-    DF &dest,
+    const SRC_DF &source,
+    DST_DF &dest,
     T &triple,
     I_V &&idx_visitor,
     const V1 &input_col1,
     const V2 &input_col2,
-    const typename DF::template StlVecType<std::size_t> &sort_v,
+    const typename SRC_DF::template StlVecType<std::size_t> &sort_v,
     const char *col_name1,
     const char *col_name2) {
 
@@ -337,7 +339,8 @@ _load_groupby_data_2_(
 
     const auto          &src_vec =
         source.template get_column<ValueType>(std::get<0>(triple));
-    const std::size_t   max_count = std::min(vec_size, src_vec.size());
+    const std::size_t   max_count =
+        std::min(vec_size, std::size_t(src_vec.size()));
     auto                &dst_vec = _create_column_from_triple_(dest, triple);
     auto                &visitor = std::get<2>(triple);
 
@@ -368,18 +371,18 @@ _load_groupby_data_2_(
 
 // ----------------------------------------------------------------------------
 
-template<typename DF, typename T, typename I_V,
+template<typename SRC_DF, typename DST_DF, typename T, typename I_V,
          typename V1, typename V2, typename V3>
 static inline void
 _load_groupby_data_3_(
-    const DF &source,
-    DF &dest,
+    const SRC_DF &source,
+    DST_DF &dest,
     T &triple,
     I_V &&idx_visitor,
     const V1 &input_col1,
     const V2 &input_col2,
     const V3 &input_col3,
-    const typename DF::template StlVecType<std::size_t> &sort_v,
+    const typename SRC_DF::template StlVecType<std::size_t> &sort_v,
     const char *col_name1,
     const char *col_name2,
     const char *col_name3) {
@@ -446,7 +449,8 @@ _load_groupby_data_3_(
 
     const auto          &src_vec =
         source.template get_column<ValueType>(std::get<0>(triple));
-    const std::size_t   max_count = std::min(vec_size, src_vec.size());
+    const std::size_t   max_count =
+        std::min(vec_size, std::size_t(src_vec.size()));
     auto                &dst_vec = _create_column_from_triple_(dest, triple);
     auto                &visitor = std::get<2>(triple);
 
@@ -520,10 +524,10 @@ _bucketize_core_(DV &dst_vec,
 
 // ----------------------------------------------------------------------------
 
-template<typename DF, typename I, typename T>
+template<typename DF, typename RES_DF, typename I, typename T>
 static inline void
 _load_bucket_data_(const DF &source,
-                   DF &dest,
+                   RES_DF &dest,
                    const I &value,
                    bucket_type bt,
                    T &triple,

@@ -39,8 +39,7 @@ namespace hmdf
 
 template<typename I, typename H>
 template<typename RHS_T, typename ... Ts>
-DataFrame<I, H>
-DataFrame<I, H>::
+DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
 join_by_index (const RHS_T &rhs, join_policy mp) const  {
 
     static_assert(comparable<I>, "Index type must have comparison operators");
@@ -116,7 +115,7 @@ join_by_index (const RHS_T &rhs, join_policy mp) const  {
 
 template<typename I, typename H>
 template<typename RHS_T, comparable T, typename ... Ts>
-DataFrame<unsigned int, H>
+DataFrame<unsigned long, HeteroVector<std::size_t(H::align_value)>>
 DataFrame<I, H>::
 join_by_column (const RHS_T &rhs, const char *name, join_policy mp) const  {
 
@@ -236,7 +235,7 @@ index_join_helper_(const LHS_T &lhs,
 
 template<typename I, typename H>
 template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
-DataFrame<unsigned int, HeteroVector<std::size_t(H::align_value)>>
+DataFrame<unsigned long, HeteroVector<std::size_t(H::align_value)>>
 DataFrame<I, H>::
 column_join_helper_(const LHS_T &lhs,
                     const RHS_T &rhs,
@@ -245,23 +244,23 @@ column_join_helper_(const LHS_T &lhs,
 
     using left_idx_t = typename std::remove_reference<LHS_T>::type::IndexType;
     using right_idx_t = typename std::remove_reference<RHS_T>::type::IndexType;
-    using result_t = DataFrame<unsigned int, HeteroVector<align_value>>;
+    using result_t = DataFrame<unsigned long, HeteroVector<align_value>>;
 
     const size_type len = joined_index_idx.size();
     result_t        result;
 
     // Load the new result index
     result.load_index(
-        result_t::gen_sequence_index(0, static_cast<unsigned int>(len), 1));
+        result_t::gen_sequence_index(0, static_cast<unsigned long>(len), 1));
 
     // Load the lhs and rhs indices into two columns in the result
     // Also load the unified named column
     StlVecType<left_idx_t>  lhs_index(len);
     StlVecType<right_idx_t> rhs_index(len);
     StlVecType<T>           named_col_vec(len);
-    const ColumnVecType<T>  &lhs_named_col_vec =
+    const auto              &lhs_named_col_vec =
         lhs.template get_column<T>(col_name);
-    const ColumnVecType<T>  &rhs_named_col_vec =
+    const auto              &rhs_named_col_vec =
         rhs.template get_column<T>(col_name);
     auto                    lbd =
         [&joined_index_idx = std::as_const(joined_index_idx),
@@ -321,7 +320,7 @@ column_join_helper_(const LHS_T &lhs,
                                        false);
     }
 
-    join_helper_common_<LHS_T, RHS_T, unsigned int, Ts ...>
+    join_helper_common_<LHS_T, RHS_T, unsigned long, Ts ...>
         (lhs, rhs, joined_index_idx, result, col_name);
     return(result);
 }
@@ -392,7 +391,7 @@ index_inner_join_(const LHS_T &lhs,
 
 template<typename I, typename H>
 template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
-DataFrame<unsigned int, HeteroVector<std::size_t(H::align_value)>>
+DataFrame<unsigned long, HeteroVector<std::size_t(H::align_value)>>
 DataFrame<I, H>::
 column_inner_join_(const LHS_T &lhs,
                    const RHS_T &rhs,
@@ -479,7 +478,7 @@ index_left_join_(const LHS_T &lhs, const RHS_T &rhs,
 
 template<typename I, typename H>
 template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
-DataFrame<unsigned int, HeteroVector<std::size_t(H::align_value)>>
+DataFrame<unsigned long, HeteroVector<std::size_t(H::align_value)>>
 DataFrame<I, H>::
 column_left_join_(const LHS_T &lhs,
                   const RHS_T &rhs,
@@ -570,7 +569,7 @@ index_right_join_(const LHS_T &lhs, const RHS_T &rhs,
 
 template<typename I, typename H>
 template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
-DataFrame<unsigned int, HeteroVector<std::size_t(H::align_value)>>
+DataFrame<unsigned long, HeteroVector<std::size_t(H::align_value)>>
 DataFrame<I, H>::
 column_right_join_(const LHS_T &lhs,
                    const RHS_T &rhs,
@@ -667,7 +666,7 @@ index_left_right_join_(
 
 template<typename I, typename H>
 template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
-DataFrame<unsigned int, HeteroVector<std::size_t(H::align_value)>>
+DataFrame<unsigned long, HeteroVector<std::size_t(H::align_value)>>
 DataFrame<I, H>::
 column_left_right_join_(const LHS_T &lhs,
                         const RHS_T &rhs,

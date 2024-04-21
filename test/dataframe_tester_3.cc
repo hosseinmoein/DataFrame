@@ -254,9 +254,15 @@ static void test_to_from_string()  {
                  std::make_pair("col_4", i1),
                  std::make_pair("str_col", strvec));
 
+    auto    vw =
+        df.get_view<double, int, std::string>(
+            { "col_1", "col_2", "col_3", "col_4", "str_col" });
+
     std::future<std::string>    f =
         df.to_string_async<double, int, std::string>();
     const std::string           str_dump = f.get();
+    const std::string           str_dump_from_vw =
+        vw.to_string<double, int, std::string>();
 
     // std::cout << str_dump << std::endl;
 
@@ -266,6 +272,7 @@ static void test_to_from_string()  {
     // std::cout << '\n' << std::endl;
     // df2.write<std::ostream, double, int, std::string>(std::cout);
     assert((df.is_equal<double, int, std::string>(df2)));
+    assert(str_dump == str_dump_from_vw);
 }
 
 // ----------------------------------------------------------------------------
@@ -2477,6 +2484,8 @@ static void test_inversion_count()  {
                  std::make_pair("i10", i10),
                  std::make_pair("i11", i11));
 
+   auto    vw = df.get_view<int>( { "i1", "i4", "i9" });
+
     assert(df.inversion_count<int>("i1") == 0);
     assert(df.inversion_count<int>("i2") == 153);
     assert(df.inversion_count<int>("i3") == 1);
@@ -2488,6 +2497,10 @@ static void test_inversion_count()  {
     assert(df.inversion_count<int>("i9") == 153);
     assert(df.inversion_count<int>("i10") == 136);
     assert(df.inversion_count<int>("i11") == 110);
+
+    assert(vw.inversion_count<int>("i1") == 0);
+    assert(vw.inversion_count<int>("i4") == 1);
+    assert(vw.inversion_count<int>("i9") == 153);
 
     assert((df.inversion_count<int, std::greater<int>>("i1") == 153));
     assert((df.inversion_count<int, std::greater<int>>("i2") == 0));

@@ -819,51 +819,50 @@ static void test_combine()  {
 
     std::cout << "\nTesting combine( ) ..." << std::endl;
 
-    StlVecType<unsigned long>  idx1 =
+    StlVecType<unsigned long>   idx1 =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466,
           123467, 123468, 123469, 123470, 123471, 123472, 123473 };
-    StlVecType<unsigned long>  idx2 =
+    StlVecType<unsigned long>   idx2 =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466,
           123467, 123468, 123469, 123470, 123471, 123472, 123473 };
-    StlVecType<unsigned long>  idx3 =
+    StlVecType<unsigned long>   idx3 =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466,
           123467, 123468, 123469, 123470, 123471, 123472, 123473 };
-    StlVecType<unsigned long>  idx4 =
-        { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
-          123457, 123458, 123459, 123460, 123461, 123462, 123466,
-          123467, 123468, 123469, 123470, 123471, 123472, 123473 };
-    StlVecType<double>         d1 =
+    StlVecType<double>          d1 =
         { 1, 2, 100, 4, 5, 6, 7, 8, 9, 10, 11, 300, 13, 14, 15, 16, 17, 18, 19,
           20, 200 };
-    StlVecType<double>         d2 =
+    StlVecType<double>          d2 =
         { 1, 2, 1000, 4, 5, 6, 7, 8, 9, 10, 11, 3000, 13, 14, 15, 16, 17, 18,
           19, 20, 2000 };
-    StlVecType<double>         d3 =
+    StlVecType<double>          d3 =
         { 1, 2, 5000, 4, 5, 6, 7, 8, 9, 10, 11, 7000, 13, 14, 15, 16, 17, 18,
           19, 20, 8000 };
-    StlVecType<double>         d4 =
-        { 1, 2, 10000, 4, 5, 6, 7, 8, 9, 10, 11, 20000, 13, 14, 15, 16, 17,
-          18, 19, 20, 30000 };
     MyDataFrame                 df1;
     MyDataFrame                 df2;
     MyDataFrame                 df3;
-    MyDataFrame                 df4;
 
     df1.load_data(std::move(idx1), std::make_pair("d1_col", d1));
     df2.load_data(std::move(idx2), std::make_pair("d1_col", d2));
+
+    auto    vw2 = df2.get_view<double>( { "d1_col" });
+
     df3.load_data(std::move(idx3), std::make_pair("d1_col", d3));
-    df4.load_data(std::move(idx4), std::make_pair("d1_col", d4));
+
+    auto    vw3 = df3.get_view<double>( { "d1_col" });
 
     df1.load_column("d2_col", df1.combine<double>("d1_col", df2, df3, my_max));
+    df1.load_column("d2_col_from_view",
+                    df1.combine<double>("d1_col", vw2, vw3, my_max));
 
     StlVecType<double> result {
         1, 2, 5000, 4, 5, 6, 7, 8, 9, 10, 11, 7000, 13, 14, 15, 16, 17, 18,
         19, 20, 8000 };
 
     assert(df1.get_column<double>("d2_col") == result);
+    assert(df1.get_column<double>("d2_col_from_view") == result);
 }
 
 // -----------------------------------------------------------------------------
@@ -1062,6 +1061,28 @@ static void test_bucketize()  {
         MyDataFrame result2 = fut2.get();
 
         assert((result.is_equal<double, std::string, long>(result2)));
+
+        auto    vw =
+            df.get_view<double, long, std::string>(
+                { "FORD_Close", "FORD_Volume", "Date" });
+        auto    result3 =
+            vw.bucketize(
+                bucket_type::by_count,
+                100,
+                LastVisitor<MyDataFrame::IndexType, MyDataFrame::IndexType>(),
+                std::make_tuple("Date", "Date", LastVisitor<std::string>()),
+                std::make_tuple("FORD_Close", "High", MaxVisitor<double>()),
+                std::make_tuple("FORD_Close", "Low", MinVisitor<double>()),
+                std::make_tuple("FORD_Close", "Open", FirstVisitor<double>()),
+                std::make_tuple("FORD_Close", "Close", LastVisitor<double>()),
+                std::make_tuple("FORD_Close", "Mean", MeanVisitor<double>()),
+                std::make_tuple("FORD_Close", "Std", StdVisitor<double>()),
+                std::make_tuple("FORD_Volume", "Volume", SumVisitor<long>()));
+
+        assert((result.get_column<double>("Open")[4] ==
+                    result3.get_column<double>("Open")[4]));
+        assert((result.get_column<long>("Volume")[23] ==
+                    result3.get_column<long>("Volume")[23]));
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
@@ -1105,6 +1126,9 @@ static void test_groupby()  {
                  std::make_pair("str_col", strvec2),
                  std::make_pair("ul_col", xulgvec2));
 
+    auto    vw =
+        df.get_view<double, int, unsigned long, std::string>(
+            { "xint_col", "dbl_col", "dbl_col_2", "str_col", "ul_col" });
     auto    fut1 =
         df.groupby1_async<unsigned long>
             (DF_INDEX_COL_NAME,
@@ -1114,9 +1138,20 @@ static void test_groupby()  {
              std::make_tuple("xint_col", "min_int", MinVisitor<int>()),
              std::make_tuple("dbl_col", "sum_dbl", SumVisitor<double>()));
     auto    result1 = fut1.get();
+    auto    result1_from_vw =
+        vw.groupby1<unsigned long>
+            (DF_INDEX_COL_NAME,
+             LastVisitor<decltype(vw)::IndexType, decltype(vw)::IndexType>(),
+             std::make_tuple("str_col", "sum_str", SumVisitor<std::string>()),
+             std::make_tuple("xint_col", "max_int", MaxVisitor<int>()),
+             std::make_tuple("xint_col", "min_int", MinVisitor<int>()),
+             std::make_tuple("dbl_col", "sum_dbl", SumVisitor<double>()));
 
     result1.write<std::ostream, std::string, double, int>
         (std::cout, io_format::csv2);
+    assert(result1.get_index()[4] == result1_from_vw.get_index()[4]);
+    assert((result1.get_column<int>("max_int")[8] ==
+                result1_from_vw.get_column<int>("max_int")[8]));
 
     auto    fut2 =
         df.groupby1_async<unsigned long>
@@ -1187,8 +1222,21 @@ static void test_groupby_2()  {
                  std::make_pair("str_col", strvec2),
                  std::make_pair("ul_col", xulgvec2));
 
+    auto    vw =
+        df.get_view<double, int, unsigned long, std::string>(
+            { "xint_col", "dbl_col", "dbl_col_2", "str_col", "ul_col" });
     auto    result1 =
         df.groupby2<unsigned long, double>
+            (DF_INDEX_COL_NAME,
+             "dbl_col_2",
+             LastVisitor<MyDataFrame::IndexType, MyDataFrame::IndexType>(),
+             std::make_tuple("str_col", "sum_str", SumVisitor<std::string>()),
+             std::make_tuple("xint_col", "max_int", MaxVisitor<int>()),
+             std::make_tuple("xint_col", "min_int", MinVisitor<int>()),
+             std::make_tuple("dbl_col_2", "cnt_dbl", CountVisitor<double>()),
+             std::make_tuple("dbl_col", "sum_dbl", SumVisitor<double>()));
+    auto    result1_from_vw =
+        vw.groupby2<unsigned long, double>
             (DF_INDEX_COL_NAME,
              "dbl_col_2",
              LastVisitor<MyDataFrame::IndexType, MyDataFrame::IndexType>(),
@@ -1200,6 +1248,9 @@ static void test_groupby_2()  {
 
     result1.write<std::ostream, std::string, double, std::size_t, int>
         (std::cout, io_format::csv2);
+    assert(result1.get_index()[4] == result1_from_vw.get_index()[4]);
+    assert((result1.get_column<int>("max_int")[8] ==
+                result1_from_vw.get_column<int>("max_int")[8]));
 
     auto    result2 =
         df.groupby2<double, unsigned long>
@@ -1300,8 +1351,22 @@ static void test_groupby_3()  {
                  std::make_pair("str_col", strvec2),
                  std::make_pair("ul_col", xulgvec2));
 
+    auto    vw =
+        df.get_view<double, int, unsigned long, std::string>(
+            { "xint_col", "dbl_col", "dbl_col_2", "str_col", "ul_col" });
     auto    result1 =
         df.groupby3<double, unsigned long, std::string>
+            ("dbl_col",
+             DF_INDEX_COL_NAME,
+             "str_col",
+             LastVisitor<MyDataFrame::IndexType, MyDataFrame::IndexType>(),
+             std::make_tuple("str_col", "sum_str", SumVisitor<std::string>()),
+             std::make_tuple("xint_col", "max_int", MaxVisitor<int>()),
+             std::make_tuple("xint_col", "min_int", MinVisitor<int>()),
+             std::make_tuple("dbl_col_2", "cnt_dbl", CountVisitor<double>()),
+             std::make_tuple("dbl_col", "sum_dbl", SumVisitor<double>()));
+    auto    result1_from_vw =
+        vw.groupby3<double, unsigned long, std::string>
             ("dbl_col",
              DF_INDEX_COL_NAME,
              "str_col",
@@ -1314,6 +1379,9 @@ static void test_groupby_3()  {
 
     result1.write<std::ostream, std::string, double, std::size_t, int>
         (std::cout, io_format::csv2);
+    assert(result1.get_index()[4] == result1_from_vw.get_index()[4]);
+    assert((result1.get_column<int>("max_int")[8] ==
+                result1_from_vw.get_column<int>("max_int")[8]));
 
 #endif // !_MSC_VER
 }
@@ -2971,7 +3039,7 @@ static void test_YangZhangVolVisitor()  {
             ("FORD_Low", "FORD_High", "FORD_Open", "FORD_Close", yz_v);
 
         assert(yz_v.get_result().size() == 12265);
-		std::cout << std::endl;
+        std::cout << std::endl;
         assert(std::isnan(yz_v.get_result()[0]));
         assert(std::isnan(yz_v.get_result()[29]));
         assert(std::isnan(yz_v.get_result()[30]));

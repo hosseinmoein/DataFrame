@@ -222,6 +222,9 @@ fill_missing(const StlVecType<const char *> &col_names,
              const StlVecType<T> &values,
              int limit)  {
 
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
+                  "Only a StdDataFrame can call fill_missing()");
+
     const size_type                 count = col_names.size();
     const auto                      thread_level =
         (indices_.size() < ThreadPool::MUL_THR_THHOLD)
@@ -316,6 +319,9 @@ template<typename I, typename H>
 template<typename ... Ts>
 void DataFrame<I, H>::
 drop_missing(drop_policy policy, size_type threshold)  {
+
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
+                  "Only a StdDataFrame can call drop_missing()");
 
     DropRowMap                      missing_row_map;
     const size_type                 num_cols = data_.size();
@@ -1738,7 +1744,7 @@ sort_async(const char *name1, sort_spec dir1,
 
 template<typename I, typename H>
 template<comparable T, typename I_V, typename ... Ts>
-DataFrame<I, H> DataFrame<I, H>::
+DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
 groupby1(const char *col_name, I_V &&idx_visitor, Ts&& ... args) const  {
 
     const ColumnVecType<T>  *gb_vec { nullptr };
@@ -1756,9 +1762,11 @@ groupby1(const char *col_name, I_V &&idx_visitor, Ts&& ... args) const  {
                           return (gb_vec->at(i) < gb_vec->at(j));
                       });
 
-    DataFrame   res;
-    auto        args_tuple = std::tuple<Ts ...>(args ...);
-    auto        func =
+    using res_t = DataFrame<I, HeteroVector<std::size_t(H::align_value)>>;
+
+    res_t   res;
+    auto    args_tuple = std::tuple<Ts ...>(args ...);
+    auto    func =
         [this,
          &res,
          gb_vec,
@@ -1784,7 +1792,7 @@ groupby1(const char *col_name, I_V &&idx_visitor, Ts&& ... args) const  {
 
 template<typename I, typename H>
 template<comparable T1, comparable T2, typename I_V, typename ... Ts>
-DataFrame<I, H> DataFrame<I, H>::
+DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
 groupby2(const char *col_name1,
          const char *col_name2,
          I_V &&idx_visitor,
@@ -1825,9 +1833,11 @@ groupby2(const char *col_name1,
                           return (gb_vec2->at(i) < gb_vec2->at(j));
                       });
 
-    DataFrame   res;
-    auto        args_tuple = std::tuple<Ts ...>(args ...);
-    auto        func =
+    using res_t = DataFrame<I, HeteroVector<std::size_t(H::align_value)>>;
+
+    res_t   res;
+    auto    args_tuple = std::tuple<Ts ...>(args ...);
+    auto    func =
         [*this,
          &res,
          gb_vec1,
@@ -1856,7 +1866,7 @@ groupby2(const char *col_name1,
 template<typename I, typename H>
 template<comparable T1, comparable T2, comparable T3,
          typename I_V, typename ... Ts>
-DataFrame<I, H> DataFrame<I, H>::
+DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
 groupby3(const char *col_name1,
          const char *col_name2,
          const char *col_name3,
@@ -1917,9 +1927,11 @@ groupby3(const char *col_name1,
                           return (gb_vec3->at(i) < gb_vec3->at(j));
                       });
 
-    DataFrame   res;
-    auto        args_tuple = std::tuple<Ts ...>(args ...);
-    auto        func =
+    using res_t = DataFrame<I, HeteroVector<std::size_t(H::align_value)>>;
+
+    res_t   res;
+    auto    args_tuple = std::tuple<Ts ...>(args ...);
+    auto    func =
         [*this,
          &res,
          gb_vec1,
@@ -1951,7 +1963,8 @@ groupby3(const char *col_name1,
 
 template<typename I, typename H>
 template<comparable T, typename I_V, typename ... Ts>
-std::future<DataFrame<I, H>> DataFrame<I, H>::
+std::future<DataFrame<I, HeteroVector<std::size_t(H::align_value)>>>
+DataFrame<I, H>::
 groupby1_async(const char *col_name, I_V &&idx_visitor, Ts&& ... args) const {
 
     return (thr_pool_.dispatch(
@@ -1969,7 +1982,8 @@ groupby1_async(const char *col_name, I_V &&idx_visitor, Ts&& ... args) const {
 
 template<typename I, typename H>
 template<comparable T1, comparable T2, typename I_V, typename ... Ts>
-std::future<DataFrame<I, H>> DataFrame<I, H>::
+std::future<DataFrame<I, HeteroVector<std::size_t(H::align_value)>>>
+DataFrame<I, H>::
 groupby2_async(const char *col_name1,
                const char *col_name2,
                I_V &&idx_visitor,
@@ -1994,7 +2008,8 @@ groupby2_async(const char *col_name1,
 template<typename I, typename H>
 template<comparable T1, comparable T2, comparable T3,
          typename I_V, typename ... Ts>
-std::future<DataFrame<I, H>> DataFrame<I, H>::
+std::future<DataFrame<I, HeteroVector<std::size_t(H::align_value)>>>
+DataFrame<I, H>::
 groupby3_async(const char *col_name1,
                const char *col_name2,
                const char *col_name3,
@@ -2093,13 +2108,15 @@ DataFrame<I, H>::value_counts(size_type index) const  {
 
 template<typename I, typename H>
 template<typename V, typename I_V, typename ... Ts>
-DataFrame<I, H> DataFrame<I, H>::
+DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
 bucketize(bucket_type bt,
           const V &value,
           I_V &&idx_visitor,
           Ts&& ... args) const  {
 
-    DataFrame       result;
+    using res_t = DataFrame<I, HeteroVector<std::size_t(H::align_value)>>;
+
+    res_t           result;
     auto            &dst_idx = result.get_index();
     const auto      &src_idx = get_index();
     const size_type idx_s = src_idx.size();
@@ -2131,19 +2148,22 @@ bucketize(bucket_type bt,
 
 template<typename I, typename H>
 template<typename V, typename I_V, typename ... Ts>
-std::future<DataFrame<I, H>>
+std::future<DataFrame<I, HeteroVector<std::size_t(H::align_value)>>>
 DataFrame<I, H>::
 bucketize_async(bucket_type bt,
                 const V &value,
                 I_V &&idx_visitor,
                 Ts&& ... args) const  {
 
+    using res_t = DataFrame<I, HeteroVector<std::size_t(H::align_value)>>;
+
     return (thr_pool_.dispatch(
         true,
-        [bt, &value,
+        [bt,
+         &value,
          idx_visitor = std::forward<I_V>(idx_visitor),
          ... args = std::forward<Ts>(args),
-         this]() mutable -> DataFrame  {
+         this]() mutable -> res_t  {
             return (this->bucketize<V, I_V, Ts ...>(
                         bt,
                         std::cref(value),

@@ -355,18 +355,18 @@ create_join_common_col_functor_<LHS, Ts ...>::operator() (const T &)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename RES_T, typename ... Ts>
+template<typename RES_T, typename RHS_T, typename ... Ts>
 template<typename T>
 void
-DataFrame<I, H>::
-index_join_functor_common_<RES_T, Ts ...>::operator()(const T &lhs_vec)  {
+DataFrame<I, H>::index_join_functor_common_<RES_T, RHS_T, Ts ...>::
+operator()(const T &lhs_vec)  {
 
     using VecType = typename std::remove_reference<T>::type;
     using ValueType = typename VecType::value_type;
 
-    const ColumnVecType<ValueType>  &rhs_vec = rhs.get_column<ValueType>(name);
-    StlVecType<ValueType>           lhs_result_col;
-    StlVecType<ValueType>           rhs_result_col;
+    const auto              &rhs_vec = rhs.template get_column<ValueType>(name);
+    StlVecType<ValueType>   lhs_result_col;
+    StlVecType<ValueType>   rhs_result_col;
 
     lhs_result_col.reserve(joined_index_idx.size());
     rhs_result_col.reserve(joined_index_idx.size());

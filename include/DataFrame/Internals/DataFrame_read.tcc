@@ -1228,6 +1228,9 @@ template<typename I, typename H>
 bool
 DataFrame<I, H>::from_string (const char *data_frame)  {
 
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
+                  "Only a StdDataFrame can call from_string()");
+
     std::stringstream   ss (std::string(data_frame), std::ios_base::in);
 
     read<std::istream>(ss, io_format::csv, false);

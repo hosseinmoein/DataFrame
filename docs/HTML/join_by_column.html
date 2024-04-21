@@ -70,7 +70,7 @@ enum class join_policy : unsigned char  {
       <td bgcolor="blue"> <font color="white">
         <PRE><B>
 template&lt;typename RHS_T, typename T, typename ... Ts&gt;
-StdDataFrame&lt;unsigned int&gt;
+StdDataFrame&lt;unsigned long&gt;
 join_by_column(const RHS_T &amp;rhs,
                const char *name,
                join_policy jp) const;
@@ -78,7 +78,7 @@ join_by_column(const RHS_T &amp;rhs,
       </td>
       <td WIDTH="33.3%">
         It joins the data between self (lhs) and rhs and returns the joined data in a StdDataFrame, based on specification in join_policy.<BR>
-        The returned DataFrame is indexed by a sequence of unsigned integers from 0 to N. The returned DataFrame will at least have two columns names lhs.INDEX and rhs.INDEX containing the lhs and rhs indices based on join policy.<BR>
+        The returned DataFrame is indexed by a sequence of unsigned long from 0 to N. The returned DataFrame will at least have two columns names lhs.INDEX and rhs.INDEX containing the lhs and rhs indices based on join policy.<BR>
         The following conditions must be met for this method<BR>
         to compile and work properly:<BR>
         <OL>

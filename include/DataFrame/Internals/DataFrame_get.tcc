@@ -296,7 +296,7 @@ get_row(size_type row_num) const {
 
 template<typename I, typename H>
 template<hashable_equal T>
-typename DataFrame<I, H>::template ColumnVecType<T> DataFrame<I, H>::
+typename DataFrame<I, H>::template StlVecType<T> DataFrame<I, H>::
 get_col_unique_values(const char *name) const  {
 
     const ColumnVecType<T>  &vec = get_column<T>(name);
@@ -314,11 +314,11 @@ get_col_unique_values(const char *name) const  {
                                    decltype(hash_func),
                                    decltype(equal_func)>;
 
-    unset_t             table (vec.size(), hash_func, equal_func);
-    bool                counted_nan = false;
-    ColumnVecType<T>    result;
+    unset_t         table (vec.size(), hash_func, equal_func);
+    bool            counted_nan = false;
+    StlVecType<T>   result;
 
-    result.reserve(vec.size());
+    result.reserve(vec.size() / 2);
     for (const auto &citer : vec) [[likely]]  {
         if (is_nan<T>(citer) && ! counted_nan)  {
             counted_nan = true;
@@ -2960,7 +2960,7 @@ DataFrame<I, H>::inversion_count(const char *col_name) const  {
 
     const auto      &col = get_column<T>(col_name);
     const auto      col_s = col.size();
-    StlVecType<T>   original = col;
+    StlVecType<T>   original(col.begin(), col.end());
     StlVecType<T>   temp(col_s);
 
     return (_inv_merge_sort_(original, temp, 0, col_s - 1, C { },

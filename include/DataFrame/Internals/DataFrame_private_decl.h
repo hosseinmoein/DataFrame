@@ -78,7 +78,7 @@ index_join_helper_(const LHS_T &lhs,
                    const IndexIdxVector &joined_index_idx);
 
 template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
-static DataFrame<unsigned int, HeteroVector<std::size_t(H::align_value)>>
+static DataFrame<unsigned long, HeteroVector<std::size_t(H::align_value)>>
 column_join_helper_(const LHS_T &lhs,
                     const RHS_T &rhs,
                     const char *col_name,
@@ -96,7 +96,7 @@ index_inner_join_(const LHS_T &lhs, const RHS_T &rhs,
                   const StlVecType<JoinSortingPair<IndexType>> &col_vec_rhs);
 
 template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
-static DataFrame<unsigned int, HeteroVector<std::size_t(H::align_value)>>
+static DataFrame<unsigned long, HeteroVector<std::size_t(H::align_value)>>
 column_inner_join_(const LHS_T &lhs,
                    const RHS_T &rhs,
                    const char *col_name,
@@ -115,7 +115,7 @@ index_left_join_(const LHS_T &lhs, const RHS_T &rhs,
                  const StlVecType<JoinSortingPair<IndexType>> &col_vec_rhs);
 
 template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
-static DataFrame<unsigned int, HeteroVector<std::size_t(H::align_value)>>
+static DataFrame<unsigned long, HeteroVector<std::size_t(H::align_value)>>
 column_left_join_(const LHS_T &lhs,
                   const RHS_T &rhs,
                   const char *col_name,
@@ -134,7 +134,7 @@ index_right_join_(const LHS_T &lhs, const RHS_T &rhs,
                   const StlVecType<JoinSortingPair<IndexType>> &col_vec_rhs);
 
 template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
-static DataFrame<unsigned int, HeteroVector<std::size_t(H::align_value)>>
+static DataFrame<unsigned long, HeteroVector<std::size_t(H::align_value)>>
 column_right_join_(const LHS_T &lhs,
                    const RHS_T &rhs,
                    const char *col_name,
@@ -159,7 +159,7 @@ index_left_right_join_(
     const StlVecType<JoinSortingPair<IndexType>> &col_vec_rhs);
 
 template<typename LHS_T, typename RHS_T, typename T, typename ... Ts>
-static DataFrame<unsigned int, HeteroVector<std::size_t(H::align_value)>>
+static DataFrame<unsigned long, HeteroVector<std::size_t(H::align_value)>>
 column_left_right_join_(const LHS_T &lhs,
                         const RHS_T &rhs,
                         const char *col_name,
@@ -546,7 +546,7 @@ join_helper_common_(
                  &rhs = std::as_const(rhs),
                  &joined_index_idx = std::as_const(joined_index_idx),
                  &result] () -> void  {
-                    index_join_functor_common_<res_t, Ts ...>   functor(
+                    index_join_functor_common_<res_t, RHS_T, Ts ...>    functor(
                         name.c_str(),
                         rhs,
                         joined_index_idx,

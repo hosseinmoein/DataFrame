@@ -438,12 +438,24 @@ static void test_haphazard()  {
     assert(fabs(dvisitor22.get_result() - 0.0264609) < 0.00001);
     assert(ulvisitor.get_result() == 123448);
 
+    auto                vw =
+        dfx.get_view<double, unsigned long, int, std::string>(
+            { "xint_col", "dbl_col", "dbl_col_2", "str_col", "ul_col" });
     const MyDataFrame   dfx_c = dfx;
 
     dfx_c.multi_visit(std::make_pair("xint_col", &ivisitor2),
                       std::make_pair("dbl_col", &dvisitor2),
                       std::make_pair("dbl_col_2", &dvisitor22),
                       std::make_pair("ul_col", &ulvisitor));
+    assert(ivisitor2.get_result() == 19);
+    assert(fabs(dvisitor2.get_result() - 4.5696) < 0.0001);
+    assert(fabs(dvisitor22.get_result() - 0.0264609) < 0.00001);
+    assert(ulvisitor.get_result() == 123448);
+
+    vw.multi_visit(std::make_pair("xint_col", &ivisitor2),
+                   std::make_pair("dbl_col", &dvisitor2),
+                   std::make_pair("dbl_col_2", &dvisitor22),
+                   std::make_pair("ul_col", &ulvisitor));
     assert(ivisitor2.get_result() == 19);
     assert(fabs(dvisitor2.get_result() - 4.5696) < 0.0001);
     assert(fabs(dvisitor22.get_result() - 0.0264609) < 0.00001);
@@ -717,16 +729,17 @@ static void test_get_col_unique_values()  {
 
     std::cout << "\nTesting get_col_unique_values() ..." << std::endl;
 
-    StlVecType<unsigned long>  idx =
+    StlVecType<unsigned long>   idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466 };
-    StlVecType<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
-    StlVecType<double> d2 =
+    StlVecType<double>          d1 =
+        { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
+    StlVecType<double>          d2 =
         { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23, 30, 31, 32, 1.89 };
-    StlVecType<double> d3 =
+    StlVecType<double>          d3 =
         { 15, 16, 15, 18, 19, 16, 21, 0.34, 1.56, 0.34, 2.3, 0.34, 0.89, 19.0 };
-    StlVecType<int>    i1 = { 22, 23, 24, 25, 99, 100, 101, 3, 2 };
-    MyDataFrame         df;
+    StlVecType<int>             i1 = { 22, 23, 24, 25, 99, 100, 101, 3, 2 };
+    MyDataFrame                 df;
 
     df.load_data(std::move(idx),
                  std::make_pair("col_1", d1),
@@ -734,15 +747,21 @@ static void test_get_col_unique_values()  {
                  std::make_pair("col_3", d3),
                  std::make_pair("col_4", i1));
 
+    auto    vw =
+        df.get_view<double, int>({ "col_1", "col_2", "col_3", "col_4" });
+
     df.write<std::ostream, double, int>(std::cout);
     std::cout << "Getting unique values in column col_3" << std::endl;
 
     const StlVecType<double>   result =
         df.get_col_unique_values<double>("col_3");
+    const StlVecType<double>   result_from_vw =
+        vw.get_col_unique_values<double>("col_3");
 
     for (auto &iter : result)
         std::cout << iter << ",";
     std::cout << std::endl;
+    assert(result == result_from_vw);
 }
 
 // -----------------------------------------------------------------------------
@@ -1512,14 +1531,14 @@ static void test_fill_missing_values()  {
     StlVecType<unsigned long>  idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466 };
-    StlVecType<double> d1 = { 1, 2, 3, 4,
+    StlVecType<double>  d1 = { 1, 2, 3, 4,
                                std::numeric_limits<double>::quiet_NaN(),
                                6, 7,
                                std::numeric_limits<double>::quiet_NaN(),
                                std::numeric_limits<double>::quiet_NaN(),
                                std::numeric_limits<double>::quiet_NaN(),
                                11, 12, 13, 14 };
-    StlVecType<double> d2 = { 8, 9,
+    StlVecType<double>  d2 = { 8, 9,
                                std::numeric_limits<double>::quiet_NaN(),
                                11, 12,
                                std::numeric_limits<double>::quiet_NaN(),
@@ -1527,14 +1546,14 @@ static void test_fill_missing_values()  {
                                20, 22, 23, 30, 31,
                                std::numeric_limits<double>::quiet_NaN(),
                                1.89 };
-    StlVecType<double> d3 = { std::numeric_limits<double>::quiet_NaN(),
+    StlVecType<double>  d3 = { std::numeric_limits<double>::quiet_NaN(),
                                16,
                                std::numeric_limits<double>::quiet_NaN(),
                                18, 19, 16,
                                std::numeric_limits<double>::quiet_NaN(),
                                0.34, 1.56, 0.34, 2.3, 0.34,
                                std::numeric_limits<double>::quiet_NaN() };
-    StlVecType<int>    i1 = { 22,
+    StlVecType<int>     i1 = { 22,
                                std::numeric_limits<int>::quiet_NaN(),
                                std::numeric_limits<int>::quiet_NaN(),
                                25,
@@ -4177,16 +4196,17 @@ static void test_join_by_column()  {
 
     std::cout << "\nTesting join by column ..." << std::endl;
 
-    StlVecType<unsigned long>  idx =
+    StlVecType<unsigned long>   idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466 };
-    StlVecType<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
-    StlVecType<double> d2 =
+    StlVecType<double>          d1 =
+        { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
+    StlVecType<double>          d2 =
         { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23, 30, 31, 32, 1.89 };
-    StlVecType<double> d3 =
+    StlVecType<double>          d3 =
         { 15, 16, 15, 18, 19, 16, 21, 0.34, 1.56, 0.34, 2.3, 0.34, 19.0 };
-    StlVecType<int>    i1 = { 22, 23, 24, 25, 99 };
-    MyDataFrame         df;
+    StlVecType<int>             i1 = { 22, 23, 24, 25, 99 };
+    MyDataFrame                 df;
 
     df.load_data(std::move(idx),
                  std::make_pair("col_1", d1),
@@ -4194,18 +4214,21 @@ static void test_join_by_column()  {
                  std::make_pair("col_3", d3),
                  std::make_pair("col_4", i1));
 
-    StlVecType<unsigned long>  idx2 =
+    auto    vw =
+        df.get_view<double, int>( { "col_1", "col_2", "col_3", "col_4" });
+
+    StlVecType<unsigned long>   idx2 =
         { 123452, 123453, 123455, 123458, 123466, 223450, 223451,
           223454, 223456, 223457, 223459, 223460, 223461, 223462 };
-    StlVecType<double> d12 =
+    StlVecType<double>          d12 =
         { 11, 12, 13, 14, 15, 16, 17, 18, 19, 110, 111, 112, 113, 114 };
-    StlVecType<double> d22 =
+    StlVecType<double>          d22 =
         { 8, 19, 110, 111, 9, 113, 114, 99, 122, 123, 130, 131, 20, 11.89 };
-    StlVecType<double> d32 =
+    StlVecType<double>          d32 =
         { 115, 116, 115, 118, 119, 116, 121, 10.34, 11.56, 10.34, 12.3, 10.34,
           119.0 };
-    StlVecType<int>    i12 = { 122, 123, 124, 125, 199 };
-    MyDataFrame         df2;
+    StlVecType<int>             i12 = { 122, 123, 124, 125, 199 };
+    MyDataFrame                 df2;
 
     df2.load_data(std::move(idx2),
                   std::make_pair("xcol_1", d12),
@@ -4213,8 +4236,14 @@ static void test_join_by_column()  {
                   std::make_pair("xcol_3", d32),
                   std::make_pair("col_4", i12));
 
-    StdDataFrame128<unsigned int>  inner_result =
+    auto    vw2 =
+        df2.get_view<double, int>( { "xcol_1", "col_2", "xcol_3", "col_4" });
+
+    StdDataFrame128<unsigned long>  inner_result =
         df.join_by_column<decltype(df2), double, double, int>
+           (df2, "col_2", join_policy::inner_join);
+    StdDataFrame128<unsigned long>  inner_result_vw =
+        vw.join_by_column<decltype(df2), double, double, int>
            (df2, "col_2", join_policy::inner_join);
 
     assert(inner_result.get_index().size() == 3);
@@ -4227,9 +4256,17 @@ static void test_join_by_column()  {
     assert(inner_result.get_column<unsigned long>("rhs.INDEX")[1] == 123466);
     assert(inner_result.get_column<unsigned long>("lhs.INDEX")[2] == 123457);
 
-    StdDataFrame128<unsigned int>  left_result =
+    assert(inner_result_vw.get_index().size() == 3);
+    assert(inner_result_vw.get_column<double>("col_1")[2] == 8.0);
+    assert(inner_result_vw.get_column<int>("lhs.col_4")[0] == 22);
+    assert(inner_result_vw.get_column<unsigned long>("rhs.INDEX")[1] == 123466);
+
+    StdDataFrame128<unsigned long>  left_result =
         df.join_by_column<decltype(df2), double, double, int>
            (df2, "col_2", join_policy::left_join);
+    StdDataFrame128<unsigned long>  left_result_vw =
+        df.join_by_column<decltype(vw2), double, double, int>
+           (vw2, "col_2", join_policy::left_join);
 
     assert(left_result.get_index().size() == 14);
     assert(std::isnan(left_result.get_column<double>("xcol_1")[5]));
@@ -4241,9 +4278,17 @@ static void test_join_by_column()  {
     assert(left_result.get_column<unsigned long>("rhs.INDEX")[3] == 0);
     assert(left_result.get_column<unsigned long>("lhs.INDEX")[11] == 123460);
 
-    StdDataFrame128<unsigned int>  right_result =
+    assert(left_result_vw.get_index().size() == 14);
+    assert(left_result_vw.get_column<double>("col_1")[13] == 13.0);
+    assert(left_result_vw.get_column<int>("lhs.col_4")[5] == 99);
+    assert(left_result_vw.get_column<unsigned long>("lhs.INDEX")[11] == 123460);
+
+    StdDataFrame128<unsigned long>  right_result =
         df.join_by_column<decltype(df2), double, double, int>
            (df2, "col_2", join_policy::right_join);
+    StdDataFrame128<unsigned long>  right_result_vw =
+        vw.join_by_column<decltype(vw2), double, double, int>
+           (vw2, "col_2", join_policy::right_join);
 
     assert(right_result.get_index().size() == 14);
     assert(right_result.get_column<double>("xcol_1")[5] == 18.0);
@@ -4255,7 +4300,14 @@ static void test_join_by_column()  {
     assert(right_result.get_column<unsigned long>("rhs.INDEX")[3] == 123453);
     assert(right_result.get_column<unsigned long>("lhs.INDEX")[11] == 0);
 
-    StdDataFrame128<unsigned int>  left_right_result =
+    assert(right_result_vw.get_index().size() == 14);
+    assert(std::isnan(right_result_vw.get_column<double>("xcol_3")[2]));
+    assert(right_result_vw.get_column<int>("rhs.col_4")[2] == 0);
+    assert(right_result_vw.get_column<int>("lhs.col_4")[5] == 0);
+    assert(right_result_vw.get_column<unsigned long>("rhs.INDEX")[3] == 123453);
+    assert(right_result_vw.get_column<unsigned long>("lhs.INDEX")[11] == 0);
+
+    StdDataFrame128<unsigned long>  left_right_result =
         df.join_by_column<decltype(df2), double, double, int>
            (df2, "col_2", join_policy::left_right_join);
 

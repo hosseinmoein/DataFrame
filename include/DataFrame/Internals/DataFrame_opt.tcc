@@ -69,6 +69,9 @@ template<typename ... Ts>
 DataFrame<I, H> &DataFrame<I, H>::
 modify_by_idx (DataFrame &rhs, sort_state already_sorted)  {
 
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
+                  "Only a StdDataFrame can call modify_by_idx()");
+
     if (already_sorted == sort_state::not_sorted)  {
         rhs.sort<IndexType, Ts ...>(DF_INDEX_COL_NAME, sort_spec::ascen);
         sort<IndexType, Ts ...>(DF_INDEX_COL_NAME, sort_spec::ascen);

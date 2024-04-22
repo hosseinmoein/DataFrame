@@ -112,7 +112,7 @@ int main(int, char *[])  {
     // an exception will be thrown. If the DataFrame root directory is your current directory when running this, it should
     // work fine.
     //
-    ibm_df.read("data/IBM.csv", io_format::csv2);
+    ibm_df.read("IBM.csv", io_format::csv2);
 
     // To access a column, you must know its name (or index) and its type. In case of a "standard" DataFrame (not a view),
     // the columns are returned as a reference to a std::vector of type of that column.
@@ -196,8 +196,8 @@ int main(int, char *[])  {
     // Let’s read the AAPL and IBM market data from their files. The data for these two stocks start and end at different
     // dates. But there is overlapping data between them.
     //
-    ibm_dt_df.read("data/DT_IBM.csv", io_format::csv2);
-    aapl_dt_df.read("data/DT_AAPL.csv", io_format::csv2);
+    ibm_dt_df.read("DT_IBM.csv", io_format::csv2);
+    aapl_dt_df.read("DT_AAPL.csv", io_format::csv2);
 
     // First let’s make sure if there are missing data in our important columns, we fill them up.
     //

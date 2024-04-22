@@ -876,7 +876,7 @@ static void test_RSIVisitor()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/SHORT_IBM.csv", io_format::csv2);
+        df.read("SHORT_IBM.csv", io_format::csv2);
 
         RSIVisitor<double, std::string, 64> rsi(return_policy::percentage);
 
@@ -1022,7 +1022,7 @@ static void test_bucketize()  {
     MyDataFrame df;
 
     try  {
-        df.read("data/FORD.csv", io_format::csv2);
+        df.read("FORD.csv", io_format::csv2);
 
         auto        fut =
             df.bucketize_async(
@@ -1451,7 +1451,7 @@ static void test_io_format_csv2()  {
     MyDataFrame df_read;
 
     try  {
-        df_read.read("data/csv2_format_data.csv", io_format::csv2);
+        df_read.read("csv2_format_data.csv", io_format::csv2);
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
@@ -2608,7 +2608,7 @@ static void test_DT_IBM_data()  {
     DT_DataFrame    df;
 
     try  {
-        df.read("data/DT_IBM.csv", io_format::csv2);
+        df.read("DT_IBM.csv", io_format::csv2);
 
         assert(df.get_column<double>("IBM_Open")[0] == 98.4375);
         assert(df.get_column<double>("IBM_Close")[18] == 97.875);
@@ -2863,7 +2863,7 @@ static void test_WilliamPrcRVisitor()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/IBM.csv", io_format::csv2);
+        df.read("IBM.csv", io_format::csv2);
 
         WilliamPrcRVisitor<double, std::string, 64> wpr_v;
 
@@ -2894,7 +2894,7 @@ static void test_PSLVisitor()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/IBM.csv", io_format::csv2);
+        df.read("IBM.csv", io_format::csv2);
 
         PSLVisitor<double, std::string, 64> psl_v;
 
@@ -2934,7 +2934,7 @@ static void test_CCIVisitor()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/IBM.csv", io_format::csv2);
+        df.read("IBM.csv", io_format::csv2);
 
         CCIVisitor<double, std::string, 64> cci_v;
 
@@ -3000,7 +3000,7 @@ static void test_GarmanKlassVolVisitor()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/IBM.csv", io_format::csv2);
+        df.read("IBM.csv", io_format::csv2);
 
         GarmanKlassVolVisitor<double, std::string, 512>  gkv_v;
 
@@ -3031,7 +3031,7 @@ static void test_YangZhangVolVisitor()  {
     MyDataFrame df;
 
     try  {
-        df.read("data/FORD.csv", io_format::csv2);
+        df.read("FORD.csv", io_format::csv2);
 
         YangZhangVolVisitor<double, unsigned long, 64> yz_v;
 
@@ -3165,9 +3165,9 @@ static void test_no_index_reads()  {
     MyDataFrame df3;
 
     try  {
-        df.read("data/csv2_format_data.csv", io_format::csv2, false);
-        df.read("data/csv2_format_data_2.csv", io_format::csv2, true);
-        df.read("data/csv2_format_data_no_index.csv", io_format::csv2, true);
+        df.read("csv2_format_data.csv", io_format::csv2, false);
+        df.read("csv2_format_data_2.csv", io_format::csv2, true);
+        df.read("csv2_format_data_no_index.csv", io_format::csv2, true);
         df.write<std::ostream,
                  int,
                  unsigned long,
@@ -3178,9 +3178,9 @@ static void test_no_index_reads()  {
                  std::string>(std::cout, io_format::csv2);
 
         std::cout << '\n' << std::endl;
-        df2.read("data/sample_data.csv", io_format::csv, false);
-        df2.read("data/sample_data_2.csv", io_format::csv, true);
-        df2.read("data/sample_data_no_index.csv", io_format::csv, true);
+        df2.read("sample_data.csv", io_format::csv, false);
+        df2.read("sample_data_2.csv", io_format::csv, true);
+        df2.read("sample_data_no_index.csv", io_format::csv, true);
         df2.write<std::ostream,
                   int,
                   unsigned long,
@@ -3197,9 +3197,9 @@ static void test_no_index_reads()  {
                   std::string>(std::cout, io_format::csv2);
 
         std::cout << '\n' << std::endl;
-        df3.read("data/sample_data.json", io_format::json, false);
-        df3.read("data/sample_data_2.json", io_format::json, true);
-        df3.read("data/sample_data_no_index.json", io_format::json, true);
+        df3.read("sample_data.json", io_format::json, false);
+        df3.read("sample_data_2.json", io_format::json, true);
+        df3.read("sample_data_no_index.json", io_format::json, true);
         df3.write<std::ostream,
                   double,
                   char,
@@ -3222,7 +3222,7 @@ static void test_KamaVisitor()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/IBM.csv", io_format::csv2);
+        df.read("IBM.csv", io_format::csv2);
 
         KamaVisitor<double, std::string, 512>    k_v;
 
@@ -3254,7 +3254,7 @@ static void test_FisherTransVisitor()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/IBM.csv", io_format::csv2);
+        df.read("IBM.csv", io_format::csv2);
 
         FisherTransVisitor<double, std::string, 256> ft_v;
 
@@ -3286,7 +3286,7 @@ static void test_PercentPriceOSCIVisitor()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/IBM.csv", io_format::csv2);
+        df.read("IBM.csv", io_format::csv2);
 
         PercentPriceOSCIVisitor<double, std::string, 512>    ppo_v;
 
@@ -3318,7 +3318,7 @@ static void test_SlopeVisitor()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/IBM.csv", io_format::csv2);
+        df.read("IBM.csv", io_format::csv2);
 
         SlopeVisitor<double, std::string, 512>   s_v (10, true, true);
 
@@ -3350,7 +3350,7 @@ static void test_UltimateOSCIVisitor()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/IBM.csv", io_format::csv2);
+        df.read("IBM.csv", io_format::csv2);
 
         UltimateOSCIVisitor<double, std::string, 512> uo_v;
 
@@ -3429,7 +3429,7 @@ static void test_UlcerIndexVisitor()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/IBM.csv", io_format::csv2);
+        df.read("IBM.csv", io_format::csv2);
 
         UlcerIndexVisitor<double, std::string, 1024>  ui_v;
 
@@ -3473,7 +3473,7 @@ static void test_RSXVisitor()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/IBM.csv", io_format::csv2);
+        df.read("IBM.csv", io_format::csv2);
 
         RSXVisitor<double, std::string, 1024> rsx_v;
 
@@ -3506,7 +3506,7 @@ static void test_TTMTrendVisitor()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/IBM.csv", io_format::csv2);
+        df.read("IBM.csv", io_format::csv2);
 
         TTMTrendVisitor<double, std::string, 512>    ttmt_v;
 
@@ -3539,7 +3539,7 @@ static void test_ParabolicSARVisitor()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/SHORT_IBM.csv", io_format::csv2);
+        df.read("SHORT_IBM.csv", io_format::csv2);
 
         ParabolicSARVisitor<double, std::string, 256>    psar_v;
 
@@ -3596,7 +3596,7 @@ static void test_EBSineWaveVisitor()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/SHORT_IBM.csv", io_format::csv2);
+        df.read("SHORT_IBM.csv", io_format::csv2);
 
         EBSineWaveVisitor<double, std::string, 256>  ebsw_v;
 
@@ -3627,7 +3627,7 @@ static void test_EhlerSuperSmootherVisitor()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/SHORT_IBM.csv", io_format::csv2);
+        df.read("SHORT_IBM.csv", io_format::csv2);
 
         // poles = 2
         //
@@ -3674,7 +3674,7 @@ static void test_VarIdxDynAvgVisitor()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/SHORT_IBM.csv", io_format::csv2);
+        df.read("SHORT_IBM.csv", io_format::csv2);
 
         VarIdxDynAvgVisitor<double, std::string, 256>    vidya_v;
 
@@ -3753,7 +3753,7 @@ static void test_PivotPointSRVisitor()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/SHORT_IBM.csv", io_format::csv2);
+        df.read("SHORT_IBM.csv", io_format::csv2);
 
         PivotPointSRVisitor<double, std::string, 256>    ppsr_v;
 
@@ -3839,7 +3839,7 @@ static void test_AvgDirMovIdxVisitor()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/SHORT_IBM.csv", io_format::csv2);
+        df.read("SHORT_IBM.csv", io_format::csv2);
 
         adx_v<double, std::string, 256>  adx_v (3, 4);
 
@@ -3871,7 +3871,7 @@ static void test_HoltWinterChannelVisitor()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/SHORT_IBM.csv", io_format::csv2);
+        df.read("SHORT_IBM.csv", io_format::csv2);
 
         hwc_v<double, std::string, 256>  hwc;
 
@@ -3930,7 +3930,7 @@ static void test_HeikinAshiCndlVisitor()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/SHORT_IBM.csv", io_format::csv2);
+        df.read("SHORT_IBM.csv", io_format::csv2);
 
         ha_cdl_v<double, std::string, 64>  ha;
 
@@ -4045,7 +4045,7 @@ static void test_FastFourierTransVisitor()  {
 
         StrDataFrame    df2;
 
-        df2.read("data/SHORT_IBM.csv", io_format::csv2);
+        df2.read("SHORT_IBM.csv", io_format::csv2);
 
         fft_v<double, std::string, 64>  fft2;
 
@@ -4078,7 +4078,7 @@ static void test_CenterOfGravityVisitor()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/SHORT_IBM.csv", io_format::csv2);
+        df.read("SHORT_IBM.csv", io_format::csv2);
 
         cog_v<double, std::string, 64>  cog;
 
@@ -4110,7 +4110,7 @@ static void test_ArnaudLegouxMAVisitor()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/SHORT_IBM.csv", io_format::csv2);
+        df.read("SHORT_IBM.csv", io_format::csv2);
 
         alma_v<double, std::string, 64> alma;
 
@@ -4142,7 +4142,7 @@ static void test_RateOfChangeVisitor()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/SHORT_IBM.csv", io_format::csv2);
+        df.read("SHORT_IBM.csv", io_format::csv2);
 
         roc_v<double, std::string, 64>  roc (10); // 10 period rate of change
 
@@ -4174,7 +4174,7 @@ static void test_AccumDistVisitor()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/SHORT_IBM.csv", io_format::csv2);
+        df.read("SHORT_IBM.csv", io_format::csv2);
 
         ad_v<double, std::string, 64>   ad;
 
@@ -4208,7 +4208,7 @@ static void test_ChaikinMoneyFlowVisitor()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/SHORT_IBM.csv", io_format::csv2);
+        df.read("SHORT_IBM.csv", io_format::csv2);
 
         cmf_v<double, std::string, 64>  cmf;
 
@@ -4243,7 +4243,7 @@ static void test_VertHorizFilterVisitor()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/SHORT_IBM.csv", io_format::csv2);
+        df.read("SHORT_IBM.csv", io_format::csv2);
 
         vhf_v<double, std::string, 64>  vhf;
 
@@ -4275,7 +4275,7 @@ static void test_OnBalanceVolumeVisitor()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/SHORT_IBM.csv", io_format::csv2);
+        df.read("SHORT_IBM.csv", io_format::csv2);
 
         obv_v<double, std::string, 64>  obv;
 
@@ -4310,7 +4310,7 @@ static void test_TrueRangeVisitor()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/SHORT_IBM.csv", io_format::csv2);
+        df.read("SHORT_IBM.csv", io_format::csv2);
 
         TrueRangeVisitor<double, std::string, 64>   tr;
 
@@ -4366,7 +4366,7 @@ static void test_DecayVisitor()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/SHORT_IBM.csv", io_format::csv2);
+        df.read("SHORT_IBM.csv", io_format::csv2);
 
         DecayVisitor<double, std::string, 64>  decay(5, true);
 
@@ -4398,7 +4398,7 @@ static void test_HodgesTompkinsVolVisitor()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/SHORT_IBM.csv", io_format::csv2);
+        df.read("SHORT_IBM.csv", io_format::csv2);
 
         ht_vol_v<double, std::string, 64>   ht;
 
@@ -4431,7 +4431,7 @@ static void test_ParkinsonVolVisitor()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/SHORT_IBM.csv", io_format::csv2);
+        df.read("SHORT_IBM.csv", io_format::csv2);
 
         p_vol_v<double, std::string, 64>    pv;
 

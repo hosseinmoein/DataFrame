@@ -26,7 +26,8 @@ include(CheckSymbolExists)
 include(CMakePackageConfigHelpers)
 include(GNUInstallDirs)
 
-include(HmdfTargetDataFiles)
+file(GLOB DATA_FILES ${PROJECT_SOURCE_DIR}/data/*.*)
+file(COPY ${DATA_FILES} DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 
 # Build DataFrame library
 check_symbol_exists(clock_gettime "time.h" HMDF_HAVE_CLOCK_GETTIME)
@@ -149,6 +150,7 @@ export(PACKAGE DataFrame)
 # Tests
 if(HMDF_TESTING)
     add_subdirectory(test)
+    file(COPY ${DATA_FILES} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/test)
 endif()
 
 # Examples

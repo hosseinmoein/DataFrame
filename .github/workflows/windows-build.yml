@@ -1,4 +1,4 @@
-name: Windows
+name: Windows-build
 
 on:
   push:
@@ -14,6 +14,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: CMake set-up
-        run: cmake -S . `-D CMAKE_BUILD_TYPE=Release`
+        run: cmake -S . `-DCMAKE_BUILD_TYPE=Release -DHMDF_TESTING=ON -DHMDF_EXAMPLES=ON`
       - name: CMake build
         run: cmake --build . --config Release

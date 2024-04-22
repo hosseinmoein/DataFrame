@@ -1460,9 +1460,6 @@ static void test_dataframe_friend_scaler_operator()  {
 
     StrDataFrame    df;
 
-    std::filesystem::path cwd = std::filesystem::current_path();
-    std::cout << "Current path is: " << cwd << std::endl;
-
     try  {
         df.read("SHORT_IBM.csv", io_format::csv2);
     }

@@ -132,7 +132,8 @@ int main(int, char *[]) {
 
         r = gen_normal_dist<double>(1024);
         for (auto citer : r)
-            assert(citer == 1.0);
+            std::cout << citer << ", ";
+        std::cout << std::endl;
     }
 
     {

@@ -14,6 +14,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: CMake set-up
-        run: cmake -S . `-DCMAKE_BUILD_TYPE=Release -DHMDF_TESTING=ON -DHMDF_EXAMPLES=ON`
+        run: cmake -S . `-DCMAKE_BUILD_TYPE=Release -DHMDF_TESTING=ON -DHMDF_EXAMPLES=ON -DHMDF_BENCHMARKS=ON`
       - name: CMake build
         run: cmake --build . --config Release

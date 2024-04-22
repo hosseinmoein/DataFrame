@@ -19,7 +19,9 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y gcc-13 build-essential
       - name: CMake set-up
-        run: cmake -DHMDF_TESTING=ON -DHMDF_EXAMPLES=ON -DHMDF_BENCHMARKS=ON -DCMAKE_BUILD_TYPE=Release .
+        run: |
+          export CXX=/usr/bin/g++-13ß
+          cmake -DHMDF_TESTING=ON -DHMDF_EXAMPLES=ON -DHMDF_BENCHMARKS=ON -DCMAKE_BUILD_TYPE=Release .
       - name: CMake build
         run: cmake --build . --config Release --parallel $(nproc)
       - name: CMake ctest

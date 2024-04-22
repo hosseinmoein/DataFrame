@@ -167,13 +167,6 @@ public:
     inline void clear () throw ()  { vector_.clear(); }
     inline void resize (size_type n) throw ()  { vector_.resize(n); }
 
-    inline void
-    erase (size_type pos)  { vector_.erase (vector_.begin() + pos); }
-    inline void erase (size_type first, size_type last)  {
-
-        vector_.erase (vector_.begin() + first, vector_.begin() + last);
-    }
-
     inline void insert (size_type pos, value_type *v)  {
 
         vector_.insert (vector_.begin() + pos, v);
@@ -504,6 +497,17 @@ public:
     [[nodiscard]] inline std::reverse_iterator<const_iterator>
     rend() const noexcept { return (std::make_reverse_iterator(begin())); }
 
+    inline void
+    erase (size_type pos)  { vector_.erase (vector_.begin() + pos); }
+    inline void erase (size_type first, size_type last)  {
+
+        vector_.erase (vector_.begin() + first, vector_.begin() + last);
+    }
+    inline void erase (iterator begin, iterator end)  {
+
+        vector_.erase (begin, end);
+    }
+
 private:
 
     vector_type vector_ {  };
@@ -637,13 +641,6 @@ public:
 
     inline void clear () throw ()  { vector_.clear(); }
     inline void resize (size_type n) throw ()  { vector_.resize(n); }
-
-    inline void
-    erase (size_type pos)  { vector_.erase (vector_.begin() + pos); }
-    inline void erase (size_type first, size_type last)  {
-
-        vector_.erase (vector_.begin() + first, vector_.begin() + last);
-    }
 
     inline void insert (size_type pos, value_type *v)  {
 
@@ -830,6 +827,17 @@ public:
     rbegin() const noexcept { return (std::make_reverse_iterator(end())); }
     [[nodiscard]] inline std::reverse_iterator<const_iterator>
     rend() const noexcept { return (std::make_reverse_iterator(begin())); }
+
+    inline void
+    erase (size_type pos)  { vector_.erase (vector_.begin() + pos); }
+    inline void erase (size_type first, size_type last)  {
+
+        vector_.erase (vector_.begin() + first, vector_.begin() + last);
+    }
+    inline void erase (const_iterator begin, const_iterator end)  {
+
+        vector_.erase (begin, end);
+    }
 
 private:
 

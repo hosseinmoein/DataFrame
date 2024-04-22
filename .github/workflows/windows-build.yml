@@ -1,0 +1,19 @@
+name: Windows
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: CMake set-up
+        run: cmake -S . `-D CMAKE_BUILD_TYPE=Release`
+      - name: CMake build
+        run: cmake --build . --config Release

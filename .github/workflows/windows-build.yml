@@ -17,3 +17,5 @@ jobs:
         run: cmake -S . `-DCMAKE_BUILD_TYPE=Release -DHMDF_TESTING=ON -DHMDF_EXAMPLES=ON -DHMDF_BENCHMARKS=ON`
       - name: CMake build
         run: cmake --build . --config Release
+      - name: CMake ctest
+        run: ctest -C Release

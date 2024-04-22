@@ -1,0 +1,21 @@
+name: MacOS-build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: CMake set-up
+        run: cmake -DCMAKE_BUILD_TYPE=Release .
+      - name: make
+        run: cmake --build .
+      - name: CMake ctest
+        run: ctest -C Release

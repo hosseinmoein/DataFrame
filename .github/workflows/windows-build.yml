@@ -3,7 +3,7 @@ name: Windows-build
 on:
   push:
     branches:
-      - *
+      - '*'
   pull_request:
     branches: [ master ]
 

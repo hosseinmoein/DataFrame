@@ -2772,11 +2772,36 @@ static void test_remove_data_by_like()  {
                   std::make_pair("str column 2", strvec22),
                   std::make_pair("int column", intvec2));
 
+    auto    lbd =
+        [](const unsigned long &, const std::string &col) -> bool {
+            return (col != "XXXXXX");
+        };
+    auto    vw =
+        df1.get_view_by_sel<std::string,
+                           decltype(lbd),
+                           std::string,
+                           int>("str column 1", lbd);
+
+    vw.remove_data_by_like<std::string, std::string, int>(
+        "str column 1",
+        "str column 2",
+        "?*[0-9][0-9][0-9][0-9]?*",
+        "?*[0-9][0-9][0-9][0-9]?*");
+    assert(vw.get_index().size() == 11);
+    assert(vw.get_index()[2] == 10);
+    assert(vw.get_column<int>("int column")[2] == 10);
+    assert(vw.get_column<std::string>("str column 1").size() == 11);
+    assert(vw.get_column<std::string>("str column 2").size() == 11);
+    assert((vw.get_column<std::string>("str column 1")[0] == "345&%$abcM"));
+    assert((vw.get_column<std::string>("str column 1")[2] == "345&%$abcM"));
+    assert((vw.get_column<std::string>("str column 2")[0] == "ABFDTiy"));
+    assert((vw.get_column<std::string>("str column 2")[2] == "345&%$abcM"));
+
     df1.remove_data_by_like<std::string, std::string, int>(
-            "str column 1",
-            "str column 2",
-            "?*[0-9][0-9][0-9][0-9]?*",
-            "?*[0-9][0-9][0-9][0-9]?*");
+        "str column 1",
+        "str column 2",
+        "?*[0-9][0-9][0-9][0-9]?*",
+        "?*[0-9][0-9][0-9][0-9]?*");
     assert(df1.get_index().size() == 11);
     assert(df1.get_index()[2] == 10);
     assert(df1.get_column<int>("int column")[2] == 10);

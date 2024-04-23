@@ -48,7 +48,8 @@ remove_column(const char *name);
         </B></PRE></font>
       </td>
       <td>
-        It removes the named column and frees up the memory space.<BR>
+        It removes the named column and frees up the memory space.<BR><BR>
+        <B>NOTE</B>: If this is called from a <I>View</I>, the column is removed from the view but not from the original DataFrame<BR>
       </td>
       <td>
         <B>T</B>: Type of the named column<BR>

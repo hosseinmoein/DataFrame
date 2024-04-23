@@ -70,9 +70,6 @@ template<typename I, typename H>
 template<typename T>
 void DataFrame<I, H>::remove_column (const char *name)  {
 
-    static_assert(std::is_base_of<HeteroVector<align_value>, DataVec>::value,
-                  "Only a StdDataFrame can call remove_column()");
-
     ColumnVecType<T>    &vec = get_column<T>(name);
 
     // Free the memory space
@@ -1055,8 +1052,10 @@ template<typename I, typename H>
 template<typename T, typename F, typename ... Ts>
 void DataFrame<I, H>::remove_data_by_sel (const char *name, F &sel_functor)  {
 
-    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
-                  "Only a StdDataFrame can call remove_data_by_sel()");
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value ||
+				  std::is_base_of<HeteroPtrView<align_value>, H>::value,
+                  "Only a StdDataFrame or a PtrView can call "
+                  "remove_data_by_sel()");
 
     const ColumnVecType<T>  &vec = get_column<T>(name);
     const size_type         col_s = vec.size();
@@ -1078,8 +1077,10 @@ template<typename T1, typename T2, typename F, typename ... Ts>
 void DataFrame<I, H>::
 remove_data_by_sel (const char *name1, const char *name2, F &sel_functor)  {
 
-    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
-                  "Only a StdDataFrame can call remove_data_by_sel()");
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value ||
+				  std::is_base_of<HeteroPtrView<align_value>, H>::value,
+                  "Only a StdDataFrame or a PtrView can call "
+                  "remove_data_by_sel()");
 
     SpinGuard               guard (lock_);
     const ColumnVecType<T1> &vec1 = get_column<T1>(name1, false);
@@ -1114,8 +1115,10 @@ remove_data_by_sel (const char *name1,
                     const char *name3,
                     F &sel_functor)  {
 
-    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
-                  "Only a StdDataFrame can call remove_data_by_sel()");
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value ||
+				  std::is_base_of<HeteroPtrView<align_value>, H>::value,
+                  "Only a StdDataFrame or a PtrView can call "
+                  "remove_data_by_sel()");
 
     SpinGuard               guard (lock_);
     const ColumnVecType<T1> &vec1 = get_column<T1>(name1, false);
@@ -1153,8 +1156,10 @@ remove_data_by_like (const char *name,
                      bool case_insensitive,
                      char esc_char)  {
 
-    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
-                  "Only a StdDataFrame can call remove_data_by_like()");
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value ||
+				  std::is_base_of<HeteroPtrView<align_value>, H>::value,
+                  "Only a StdDataFrame or a PtrView can call "
+                  "remove_data_by_like()");
 
     const ColumnVecType<T>  &vec = get_column<T>(name);
     const size_type         col_s = vec.size();
@@ -1195,8 +1200,10 @@ remove_data_by_like(const char *name1,
                     bool case_insensitive,
                     char esc_char)  {
 
-    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
-                  "Only a StdDataFrame can call remove_data_by_like()");
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value ||
+				  std::is_base_of<HeteroPtrView<align_value>, H>::value,
+                  "Only a StdDataFrame or a PtrView can call "
+                  "remove_data_by_like()");
 
     SpinGuard               guard (lock_);
     const ColumnVecType<T>  &vec1 = get_column<T>(name1, false);

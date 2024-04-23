@@ -733,11 +733,16 @@ operator() (T &vec) const  {
     const size_type vec_s = vec.size();
     size_type       del_count = 0;
 
-    for (size_type i = 0; i < sel_indices_s; ++i)
-        if (sel_indices[i] < vec_s)
-            vec.erase(vec.begin() + (sel_indices[i] - del_count++));
+    for (size_type i = 0; i < sel_indices_s; ++i)  {
+        if (sel_indices[i] < vec_s)  {
+            if constexpr (std::is_base_of<HeteroVector<align_value>, H>::value)
+                vec.erase(vec.begin() + (sel_indices[i] - del_count++));
+			else 
+                vec.erase(sel_indices[i] - del_count++);
+		}
         else
             break;
+	}
 }
 
 // ----------------------------------------------------------------------------

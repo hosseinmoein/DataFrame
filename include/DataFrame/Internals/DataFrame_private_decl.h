@@ -458,9 +458,14 @@ void remove_data_by_sel_common_(const StlVecType<size_type> &col_indices)  {
                 const size_type col_indices_s = col_indices.size();
                 size_type       del_count = 0;
 
-                for (size_type i = 0; i < col_indices_s; ++i) [[likely]]
-                    this->indices_.erase(this->indices_.begin() +
-                                         (col_indices[i] - del_count++));
+                for (size_type i = 0; i < col_indices_s; ++i)  {
+                    if constexpr (
+                       std::is_base_of<HeteroVector<align_value>, H>::value)
+                        this->indices_.erase(this->indices_.begin() +
+                                             (col_indices[i] - del_count++));
+                    else 
+                        this->indices_.erase(col_indices[i] - del_count++);
+                }
             };
             auto    future_idx = thr_pool_.dispatch(false, lbd_idx);
             auto    futures =
@@ -481,8 +486,13 @@ void remove_data_by_sel_common_(const StlVecType<size_type> &col_indices)  {
         const size_type col_indices_s = col_indices.size();
         size_type       del_count = 0;
 
-        for (size_type i = 0; i < col_indices_s; ++i) [[likely]]
-            indices_.erase(indices_.begin() + (col_indices[i] - del_count++));
+        for (size_type i = 0; i < col_indices_s; ++i)  {
+            if constexpr (std::is_base_of<HeteroVector<align_value>, H>::value)
+                indices_.erase(indices_.begin() +
+                               (col_indices[i] - del_count++));
+            else 
+                indices_.erase(col_indices[i] - del_count++);
+        }
     }
 
     return;
@@ -731,7 +741,7 @@ data_by_sel_common_(const StlVecType<size_type> &col_indices,
 
     using res_t = DataFrame<I, HeteroVector<align_value>>;
     using idx_vec_t = res_t::IndexVecType;
-	
+
     res_t       ret_df;
     idx_vec_t   new_index;
 

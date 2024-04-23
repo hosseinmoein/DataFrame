@@ -296,19 +296,19 @@ public:
         template<typename I>
         inline iterator operator + (I step) noexcept  {
 
-            value_type   **ret_node = node_;
+            auto    ret_node = node_;
 
             ret_node += static_cast<long>(step);
-            return (iterator (ret_node));
+            return (iterator { ret_node });
         }
 
         template<typename I>
         inline iterator operator - (I step) noexcept  {
 
-            value_type   **ret_node = node_;
+            auto    ret_node = node_;
 
             ret_node -= static_cast<long>(step);
-            return (iterator (ret_node));
+            return (iterator { ret_node });
         }
 
         friend difference_type operator - (iterator lhs, iterator rhs)  {
@@ -447,19 +447,19 @@ public:
         template<typename I>
         inline const_iterator operator + (I step) noexcept  {
 
-            value_type const    **ret_node = node_;
+            auto const  ret_node = node_;
 
             ret_node += static_cast<long>(step);
-            return (const_iterator (ret_node));
+            return (const_iterator { ret_node });
         }
 
         template<typename I>
         inline const_iterator operator - (I step) noexcept  {
 
-            value_type const    **ret_node = node_;
+            auto const  ret_node = node_;
 
             ret_node -= static_cast<long>(step);
-            return (const_iterator (ret_node));
+            return (const_iterator { ret_node });
         }
 
         friend difference_type operator - (const_iterator lhs,
@@ -502,10 +502,6 @@ public:
     inline void erase (size_type first, size_type last)  {
 
         vector_.erase (vector_.begin() + first, vector_.begin() + last);
-    }
-    inline void erase (iterator begin, iterator end)  {
-
-        vector_.erase (begin, end);
     }
 
 private:
@@ -833,10 +829,6 @@ public:
     inline void erase (size_type first, size_type last)  {
 
         vector_.erase (vector_.begin() + first, vector_.begin() + last);
-    }
-    inline void erase (const_iterator begin, const_iterator end)  {
-
-        vector_.erase (begin, end);
     }
 
 private:

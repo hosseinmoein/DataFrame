@@ -678,6 +678,10 @@ static void test_remove_column()  {
                  std::make_pair("col_int", i1),
                  std::make_pair("col_str", s1));
 
+    auto    vw = df.get_view<double>({ "col_1", "col_2", "col_3" });
+
+    vw.remove_column<double>("col_2");
+
     df.write<std::ostream, double, int, std::string>(std::cout);
     df.remove_column<double>("col_2");
     std::cout << "After removing column `col_2`" << std::endl;

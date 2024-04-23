@@ -69,7 +69,7 @@ static void test_groupby_edge()  {
     dblvec.resize(1);
     strvec.resize(1);
     intvec.resize(1);
-    idxvec.resize(1); // make this greater then one to fix coredump with hack
+    idxvec.resize(1); // make this greater than one to fix coredump with hack
     df.load_data(std::move(idxvec),
                  std::make_pair("dbl_col", dblvec),
                  std::make_pair("dbl_col_2", dblvec2),

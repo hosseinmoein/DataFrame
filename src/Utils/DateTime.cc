@@ -71,10 +71,10 @@ DateTime::DateTime (DT_TIME_ZONE tz) : time_zone_(tz)  {
 
     set_time(tmpres / 1000000UL, (tmpres % 1000000UL) * 1000000);
 #elif defined HMDF_HAVE_CLOCK_GETTIME
-    struct timespec ts;
+    struct timespec ts{};
 
     ::clock_gettime(CLOCK_REALTIME, &ts);
-    set_time(ts.tv_sec, ts.tv_nsec);
+    set_time(ts.tv_sec, (int)ts.tv_nsec);
 #else
     struct timeval  tv { };
 
@@ -565,7 +565,6 @@ void DateTime::set_timezone (DT_TIME_ZONE tz)  {
 
     time_zone_ = tz;
     breaktime_ (t, nanosec ());
-    return;
 }
 
 // ----------------------------------------------------------------------------
@@ -607,7 +606,7 @@ DateTime::DatePartType DateTime::dmonth () const noexcept  {
 
 DateTime::DatePartType DateTime::dyear () const noexcept  {
 
-    struct tm   ltime;
+    struct tm   ltime{};
 
     // It _always_ makes me sad to use const_cast<>. But then I get
     // over it.
@@ -698,7 +697,7 @@ DateTime::NanosecondType DateTime::nanosec () const noexcept  {
 DateTime::EpochType DateTime::time () const noexcept  {
 
     if (time_ == INVALID_TIME_T_)  {
-        struct tm   ltime;
+        struct tm   ltime{};
 
         // It _always_ makes me sad to use const_cast<>. But then I get
         // over it.
@@ -856,7 +855,6 @@ void DateTime::add_days (long days) noexcept  {
         }
     }
 
-    return;
 }
 
 // ----------------------------------------------------------------------------
@@ -874,7 +872,7 @@ void DateTime::add_weekdays (long days) noexcept  {
             days -= addend;
         }
     }
-    return;
+
 }
 
 // ----------------------------------------------------------------------------
@@ -908,14 +906,14 @@ void DateTime::add_months (long months) noexcept  {
                            get_timezone());
 
     *this = new_di;
-    return;
+
 }
 
 // ----------------------------------------------------------------------------
 
 void DateTime::add_years (long years) noexcept  {
 
-    int         new_year = year() + years;
+    int         new_year = year() + years; //TODO fix-> Narrowing implicit casting 'year()'
     int         new_day = dmonth();
     const int   days_max = days_in_month_(month(), new_year);
 
@@ -931,7 +929,7 @@ void DateTime::add_years (long years) noexcept  {
         get_timezone());
 
     *this = new_di;
-    return;
+
 }
 
 // ----------------------------------------------------------------------------
@@ -1045,7 +1043,7 @@ DateTime::breaktime_ (EpochType the_time, NanosecondType nanosec) noexcept  {
 
     change_env_timezone_(time_zone_);
 
-    struct tm   ltime;
+    struct tm   ltime{};
 
 #ifdef _WIN32
     localtime_s (&ltime, &the_time);
@@ -1203,7 +1201,7 @@ DateTime &operator += (DateTime &lhs, double rhs) noexcept  {
 
     const double    new_time = static_cast<double>(lhs) + rhs;
     const int       nano =
-        (new_time - static_cast<time_t>(new_time)) * 1000000000;
+        (new_time - static_cast<time_t>(new_time)) * 1000000000; //TODO fix implicit casting double to int
 
     lhs.set_time(static_cast<time_t>(new_time), nano);
     return (lhs);
@@ -1215,7 +1213,7 @@ DateTime &operator -= (DateTime &lhs, double rhs) noexcept  {
 
     const double    new_time = static_cast<double>(lhs) - rhs;
     const int       nano =
-        (new_time - static_cast<time_t>(new_time)) * 1000000000;
+        (new_time - static_cast<time_t>(new_time)) * 1000000000; //TODO fix implicit casting double to int
 
     lhs.set_time(static_cast<time_t>(new_time), nano);
     return (lhs);
@@ -1227,7 +1225,7 @@ DateTime &operator *= (DateTime &lhs, double rhs) noexcept  {
 
     const double    new_time = static_cast<double>(lhs) * rhs;
     const int       nano =
-        (new_time - static_cast<time_t>(new_time)) * 1000000000;
+        (new_time - static_cast<time_t>(new_time)) * 1000000000; //TODO fix implicit casting double to int
 
     lhs.set_time(static_cast<time_t>(new_time), nano);
     return (lhs);
@@ -1239,7 +1237,7 @@ DateTime &operator /= (DateTime &lhs, double rhs) noexcept  {
 
     const double    new_time = static_cast<double>(lhs) / rhs;
     const int       nano =
-        (new_time - static_cast<time_t>(new_time)) * 1000000000;
+        (new_time - static_cast<time_t>(new_time)) * 1000000000; //TODO fix implicit casting double to int
 
     lhs.set_time(static_cast<time_t>(new_time), nano);
     return (lhs);

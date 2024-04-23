@@ -50,14 +50,14 @@ namespace hmdf
 //
 struct  DataFrameError : public std::runtime_error  {
 
-    DataFrameError (const char *desc) : std::runtime_error (desc)  {   }
+    explicit DataFrameError (const char *desc) : std::runtime_error (desc)  {   }
 };
 
 // Column does not exist error
 //
 struct  ColNotFound : public DataFrameError  {
 
-    ColNotFound (const char *desc) : DataFrameError (desc)  {   }
+    explicit ColNotFound (const char *desc) : DataFrameError (desc)  {   }
 };
 
 // Something in DataFrame/operation is not proper error. For example, trying
@@ -65,14 +65,14 @@ struct  ColNotFound : public DataFrameError  {
 //
 struct  InconsistentData : public DataFrameError  {
 
-    InconsistentData (const char *desc) : DataFrameError (desc)  {   }
+    explicit InconsistentData (const char *desc) : DataFrameError (desc)  {   }
 };
 
 // Bad data range specification error
 //
 struct  BadRange : public DataFrameError  {
 
-    BadRange (const char *desc) : DataFrameError (desc)  {   }
+    explicit BadRange (const char *desc) : DataFrameError (desc)  {   }
 };
 
 // The operation is not feasible error. For example, trying to do interpolation
@@ -80,7 +80,7 @@ struct  BadRange : public DataFrameError  {
 //
 struct  NotFeasible : public DataFrameError  {
 
-    NotFeasible (const char *desc) : DataFrameError (desc)  {   }
+    explicit NotFeasible (const char *desc) : DataFrameError (desc)  {   }
 };
 
 // An I/O operation could not be done. For example, trying to open a file
@@ -88,14 +88,14 @@ struct  NotFeasible : public DataFrameError  {
 //
 struct  BadIO : public DataFrameError  {
 
-    BadIO (const char *desc) : DataFrameError (desc)  {   }
+    explicit BadIO (const char *desc) : DataFrameError (desc)  {   }
 };
 
 // The functionality is not implemented error
 //
 struct  NotImplemented : public DataFrameError  {
 
-    NotImplemented (const char *desc) : DataFrameError (desc)  {   }
+    explicit NotImplemented (const char *desc) : DataFrameError (desc)  {   }
 };
 
 // ----------------------------------------------------------------------------
@@ -828,11 +828,11 @@ struct  StringStats  {
 template <typename T>
 struct  CommonColumn  {
 
-    CommonColumn(std::string_view col_name) : name_ (col_name)  {  }
+    explicit CommonColumn(std::string_view col_name) : name_ (col_name)  {  }
 
     using type = T;
 
-    const char *col_name() const  { return (name_.c_str()); }
+    [[nodiscard]] const char *col_name() const  { return (name_.c_str()); }
 
     std::string name_;
 };

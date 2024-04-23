@@ -42,7 +42,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace hmdf
 {
 
-// Notice memeber variables are initialized twice, but that's cheap
+// Notice member variables are initialized twice, but that's cheap
 //
 template<typename I, typename H>
 DataFrame<I, H>::DataFrame(const DataFrame &that)  { *this = that; }

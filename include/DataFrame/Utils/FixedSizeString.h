@@ -326,9 +326,9 @@ private:
 
 // This is a fixed size NTBS. Its sole purpose is performance. Most often
 // programmers use utility strings with known upper limit size.
-// FixedSizeString makes no dynamic allocation/deallocation and is
-// strictly stack based. This will improve the performance of multi-threaded
-// applications that use a lot of utiltiy strings.
+// FixedSizeString makes no dynamic allocation/de-allocation and is
+// strictly stack based. This will improve the performance of multithreading
+// applications that use a lot of utility strings.
 //
 // NOTE: FixedSizeString makes no boundary checks. It is the
 //       responsibility of the programmer to take care of that.

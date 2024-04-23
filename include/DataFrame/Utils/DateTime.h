@@ -370,7 +370,7 @@ private:
         "UTC",
         "Asia/Seoul",
         "Asia/Taipei",
-        "Eurpoe/Stockholm",
+        "Europe/Stockholm",
         "NZ",
         "Europe/Oslo",
         "Europe/Warsaw",

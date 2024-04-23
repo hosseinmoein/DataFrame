@@ -328,7 +328,7 @@ enum class  return_policy : unsigned char  {
 // ----------------------------------------------------------------------------
 
 // Specification for calling get_[data|view]_by_rand()
-// Number of rows means the n parameter is an positive integer specifying
+// Number of rows means the n parameter is a positive integer specifying
 // the number of rows to select
 // Fraction of rows means the n parameter is a positive real number [0:1]
 // specifying a fraction of rows to select
@@ -580,7 +580,7 @@ enum class  vector_sim_type : unsigned char  {
     cosine_similarity = 5,
     jaccard_similarity = 6, // Relatively expensive to calculate
 
-    // Hamming distance is number of unequal memebrs
+    // Hamming distance is number of unequal members
     // Two vectors must be of equal length
     //
     hamming_dist = 7,
@@ -754,7 +754,7 @@ inline static const std::vector<std::string>   describe_index_col  {
 
 // ----------------------------------------------------------------------------
 
-// Evertyhting is in bytes. The numbers are estimates, since memory allocated
+// Everything is in bytes. The numbers are estimates, since memory allocated
 // is really unknown to the objects such as vectors.
 // If type has dynamically allocated memory, it is not counted here
 //

@@ -119,7 +119,7 @@ public:  // Construction
 public:  // Load/append/remove interfaces
 
     // DataFrame has unprotected static data. If you are using DataFrame in a
-    // multi-threaded program, you must provide a SpinLock. DataFrame will use
+    // multi threaded program, you must provide a SpinLock. DataFrame will use
     // your SpinLock to protect its static data.
     // This is done this way, so by default, there is no locking overhead.
     //
@@ -239,7 +239,7 @@ public:  // Load/append/remove interfaces
 
     // It copies the data from iterators begin to end to the named column.
     // If column does not exist, it will be created. If the column exists,
-    // it will be over written.
+    // it will be overwritten.
     //
     // T:
     //   Type of data being copied
@@ -262,7 +262,7 @@ public:  // Load/append/remove interfaces
 
     // It moves the data to the named column in DataFrame.
     // If column does not exist, it will be created. If the column exists,
-    // it will be over written.
+    // it will be overwritten.
     //
     // T:
     //   Type of data being moved
@@ -343,11 +343,11 @@ public:  // Load/append/remove interfaces
     //     1. The visitor must have a get_result() method
     //     2. The result must be a vector
     //     3. The visitor must define result_type type
-    //     4. Caller must to run the visitor before this call,
+    //     4. Caller must run the visitor before this call,
     //        so the result is already populated
     //
     // NOTE: This call moves the result vector to the DataFrame. After the
-    //       call the the visitor's result vector will be empty
+    //       call the visitor's result vector will be empty
     //
     // V:
     //   Visitor type
@@ -602,7 +602,7 @@ public:  // Load/append/remove interfaces
     // args:
     //   A variable list of arguments consisting of
     //     std::pair(<const char *name, &&data>).
-    //   Each pair, represents a a pair of column name and a single
+    //   Each pair, represents a pair of column name and a single
     //   column value
     //
     // NOTE: This is not the most efficient way of appending values to columns

@@ -160,7 +160,7 @@ write(S &o,
             need_pre_comma = true;
         }
 
-        const SpinGuard guard(lock_);
+        const SpinGuard guard_1(lock_);
 
         for (const auto &[name, idx] : column_list_) [[likely]]  {
             if (need_pre_comma)  o << ',';
@@ -182,7 +182,7 @@ write(S &o,
                 count += 1;
             }
 
-            const SpinGuard guard(lock_);
+            const SpinGuard guard_2(lock_);
 
             for (auto citer = column_list_.begin();
                  citer != column_list_.end(); ++citer, ++count)  {

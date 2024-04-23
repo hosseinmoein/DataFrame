@@ -341,7 +341,7 @@ for_each_list2(IT1 begin1, IT1 end1, IT2 begin2, IT2 end2, F &&func)  {
 
     const std::size_t   min_s = std::min(std::distance(begin1, end1),
                                          std::distance(begin2, end2));
-    F                   loc_f = std::move(func);
+    F                   loc_f = std::forward<F>(func);
 
 
     for (std::size_t i = 0; i < min_s; ++i)
@@ -363,7 +363,7 @@ for_each_list3(IT1 begin1, IT1 end1,
     const std::size_t   min_s = std::min({ std::distance(begin1, end1),
                                            std::distance(begin2, end2),
                                            std::distance(begin3, end3) });
-    F                   loc_f = std::move(func);
+    F                   loc_f = std::forward<F>(func);
 
 
     for (std::size_t i = 0; i < min_s; ++i)
@@ -387,7 +387,7 @@ for_each_list4(IT1 begin1, IT1 end1,
                                            std::distance(begin2, end2),
                                            std::distance(begin3, end3),
                                            std::distance(begin4, end4) });
-    F                   loc_f = std::move(func);
+    F                   loc_f = std::forward<F>(func);
 
 
     for (std::size_t i = 0; i < min_s; ++i)
@@ -414,7 +414,7 @@ for_each_list5(IT1 begin1, IT1 end1,
                                            std::distance(begin3, end3),
                                            std::distance(begin4, end4),
                                            std::distance(begin5, end5) });
-    F                   loc_f = std::move(func);
+    F                   loc_f = std::forward<F>(func);
 
 
     for (std::size_t i = 0; i < min_s; ++i)
@@ -477,7 +477,7 @@ struct  overload : Ts ...  {
 
     using Ts::operator() ...;
 
-    overload (Ts && ... args) : Ts (std::forward<Ts>(args)) ... {   }
+    explicit overload (Ts && ... args) : Ts (std::forward<Ts>(args)) ... {   }
 };
 
 /*

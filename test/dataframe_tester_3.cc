@@ -69,7 +69,7 @@ static void test_groupby_edge()  {
     dblvec.resize(1);
     strvec.resize(1);
     intvec.resize(1);
-    idxvec.resize(1); // make this greater then one to fix coredump with hack
+    idxvec.resize(1); // make this greater than one to fix coredump with hack
     df.load_data(std::move(idxvec),
                  std::make_pair("dbl_col", dblvec),
                  std::make_pair("dbl_col_2", dblvec2),
@@ -284,7 +284,7 @@ static void test_CoppockCurveVisitor()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/SHORT_IBM.csv", io_format::csv2);
+        df.read("SHORT_IBM.csv", io_format::csv2);
 
         coppc_v<double, std::string, 256>  copp;
 
@@ -313,7 +313,7 @@ static void test_BiasVisitor()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/SHORT_IBM.csv", io_format::csv2);
+        df.read("SHORT_IBM.csv", io_format::csv2);
         df.remove_data_by_loc<double, long>({ 0, 1500 });
 
         using avg1 = MeanVisitor<double, std::string>;
@@ -415,7 +415,7 @@ static void test_BalanceOfPowerVisitor()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/SHORT_IBM.csv", io_format::csv2);
+        df.read("SHORT_IBM.csv", io_format::csv2);
 
         bop_v<double, std::string, 256>  bop;
 
@@ -460,7 +460,7 @@ static void test_ChandeKrollStopVisitor()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/SHORT_IBM.csv", io_format::csv2);
+        df.read("SHORT_IBM.csv", io_format::csv2);
 
         cksp_v<double, std::string, 256>  cksp;
 
@@ -501,7 +501,7 @@ static void test_VortexVisitor()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/SHORT_IBM.csv", io_format::csv2);
+        df.read("SHORT_IBM.csv", io_format::csv2);
 
         vtx_v<double, std::string, 256>  vtx;
 
@@ -542,7 +542,7 @@ static void test_KeltnerChannelsVisitor()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/SHORT_IBM.csv", io_format::csv2);
+        df.read("SHORT_IBM.csv", io_format::csv2);
 
         kch_v<double, std::string, 256>  kch;
 
@@ -583,7 +583,7 @@ static void test_TrixVisitor()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/SHORT_IBM.csv", io_format::csv2);
+        df.read("SHORT_IBM.csv", io_format::csv2);
 
         trix_v<double, std::string, 256> trix;
 
@@ -628,7 +628,7 @@ static void test_PrettyGoodOsciVisitor()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/SHORT_IBM.csv", io_format::csv2);
+        df.read("SHORT_IBM.csv", io_format::csv2);
 
         pgo_v<double, std::string, 256>  pgo;
 
@@ -715,7 +715,7 @@ static void test_ZeroLagMovingMeanVisitor()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/SHORT_IBM.csv", io_format::csv2);
+        df.read("SHORT_IBM.csv", io_format::csv2);
 
         zlmm_v<double, std::string, 256>  zlmm(10);
 
@@ -749,7 +749,7 @@ static void test_describe()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/SHORT_IBM.csv", io_format::csv2);
+        df.read("SHORT_IBM.csv", io_format::csv2);
 
         auto    desc = df.describe<double, long>();
 
@@ -769,7 +769,7 @@ static void test_T3MovingMeanVisitor()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/IBM.csv", io_format::csv2);
+        df.read("IBM.csv", io_format::csv2);
 
         t3_v<double, std::string, 256>   t3;
 
@@ -845,7 +845,7 @@ static void test_load_result_as_column()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/SHORT_IBM.csv", io_format::csv2);
+        df.read("SHORT_IBM.csv", io_format::csv2);
 
         // CoppockCurveVisitor
         //
@@ -883,7 +883,7 @@ static void test_load_result_as_column2()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/SHORT_IBM.csv", io_format::csv2);
+        df.read("SHORT_IBM.csv", io_format::csv2);
 
         // Choppiness Index indicator
         //
@@ -1272,7 +1272,7 @@ static void test_reading_in_chunks()  {
     try  {
         StrDataFrame    df1;
 
-        df1.read("data/SHORT_IBM.csv", io_format::csv2, false, 0, 10);
+        df1.read("SHORT_IBM.csv", io_format::csv2, false, 0, 10);
         assert(df1.get_index().size() == 10);
         assert(df1.get_column<double>("IBM_Close").size() == 10);
         assert(df1.get_index()[0] == "2014-01-02");
@@ -1282,7 +1282,7 @@ static void test_reading_in_chunks()  {
 
         StrDataFrame    df2;
 
-        df2.read("data/SHORT_IBM.csv", io_format::csv2, false, 800, 10);
+        df2.read("SHORT_IBM.csv", io_format::csv2, false, 800, 10);
         assert(df2.get_index().size() == 10);
         assert(df2.get_column<double>("IBM_Close").size() == 10);
         assert(df2.get_index()[0] == "2017-03-08");
@@ -1292,7 +1292,7 @@ static void test_reading_in_chunks()  {
 
         StrDataFrame    df3;
 
-        df3.read("data/SHORT_IBM.csv", io_format::csv2, false, 1716, 10);
+        df3.read("SHORT_IBM.csv", io_format::csv2, false, 1716, 10);
         assert(df3.get_index().size() == 5);
         assert(df3.get_column<double>("IBM_Close").size() == 5);
         assert(df3.get_index()[0] == "2020-10-26");
@@ -1314,7 +1314,7 @@ static void test_FixedAutoCorrVisitor()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/IBM.csv", io_format::csv2);
+        df.read("IBM.csv", io_format::csv2);
 
         FixedAutoCorrVisitor<double,
                              std::string>   fac { 31, roll_policy::blocks };
@@ -1356,7 +1356,7 @@ static void test_RVIVisitor()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/SHORT_IBM.csv", io_format::csv2);
+        df.read("SHORT_IBM.csv", io_format::csv2);
 
         rvi_v<double, std::string>  rvi;
 
@@ -1392,7 +1392,7 @@ static void test_LinregMovingMeanVisitor()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/SHORT_IBM.csv", io_format::csv2);
+        df.read("SHORT_IBM.csv", io_format::csv2);
 
         linregmm_v<double, std::string> linreg;
 
@@ -1424,7 +1424,7 @@ static void test_InertiaVisitor()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/SHORT_IBM.csv", io_format::csv2);
+        df.read("SHORT_IBM.csv", io_format::csv2);
 
         iner_v<double, std::string> inertia;
 
@@ -1458,7 +1458,7 @@ static void test_SymmTriangleMovingMeanVisitor()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/SHORT_IBM.csv", io_format::csv2);
+        df.read("SHORT_IBM.csv", io_format::csv2);
 
         symtmm_v<double, std::string>   symm { 14 };
 
@@ -1490,7 +1490,7 @@ static void test_RelativeVigorIndexVisitor()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/SHORT_IBM.csv", io_format::csv2);
+        df.read("SHORT_IBM.csv", io_format::csv2);
 
         rvgi_v<double, std::string, 256>    rvgi;
 
@@ -1532,7 +1532,7 @@ static void test_ElderRayIndexVisitor()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/SHORT_IBM.csv", io_format::csv2);
+        df.read("SHORT_IBM.csv", io_format::csv2);
 
         eri_v<double, std::string>  eri;
 
@@ -1573,7 +1573,7 @@ static void test_ChopIndexVisitor()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/SHORT_IBM.csv", io_format::csv2);
+        df.read("SHORT_IBM.csv", io_format::csv2);
 
         chop_v<double, std::string> chop;
 
@@ -1604,7 +1604,7 @@ static void test_DetrendPriceOsciVisitor()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/SHORT_IBM.csv", io_format::csv2);
+        df.read("SHORT_IBM.csv", io_format::csv2);
 
         dpo_v<double, std::string>  dpo;
 
@@ -1725,7 +1725,7 @@ static void test_AccelerationBandsVisitor()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/SHORT_IBM.csv", io_format::csv2);
+        df.read("SHORT_IBM.csv", io_format::csv2);
 
         aband_v<double, std::string>    aband;
 
@@ -1785,7 +1785,7 @@ static void test_PriceDistanceVisitor()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/SHORT_IBM.csv", io_format::csv2);
+        df.read("SHORT_IBM.csv", io_format::csv2);
 
         pdist_v<double, std::string>    pdist;
 
@@ -1816,7 +1816,7 @@ static void test_EldersThermometerVisitor()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/SHORT_IBM.csv", io_format::csv2);
+        df.read("SHORT_IBM.csv", io_format::csv2);
 
         ether_v<double, std::string>    ether;
 
@@ -2063,7 +2063,7 @@ static void test_EldersForceIndexVisitor()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/SHORT_IBM.csv", io_format::csv2);
+        df.read("SHORT_IBM.csv", io_format::csv2);
 
         efi_v<double, std::string, 64>  efi;
 
@@ -2096,7 +2096,7 @@ static void test_EaseOfMovementVisitor()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/SHORT_IBM.csv", io_format::csv2);
+        df.read("SHORT_IBM.csv", io_format::csv2);
 
         eom_v<double, std::string>  eom;
 
@@ -2129,7 +2129,7 @@ static void test_read_csv_with_vector()  {
     DT_DataFrame    df;
 
     try  {
-        df.read("data/AAPL_10dBucketWithVector.csv", io_format::csv2);
+        df.read("AAPL_10dBucketWithVector.csv", io_format::csv2);
 
         assert(df.get_index().size() == 564);
         assert((std::fabs(
@@ -2163,7 +2163,7 @@ static void test_read_csv_with_maps()  {
     DT_DataFrame    df;
 
     try  {
-        df.read("data/AAPL_10dBucketWithMaps.csv", io_format::csv2);
+        df.read("AAPL_10dBucketWithMaps.csv", io_format::csv2);
 
         // df.write<std::ostream, double, long, map_t, unomap_t>
         //     (std::cout, io_format::csv2);
@@ -2295,7 +2295,7 @@ static void test_PriceVolumeTrendVisitor()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/SHORT_IBM.csv", io_format::csv2);
+        df.read("SHORT_IBM.csv", io_format::csv2);
 
         pvt_v<double, std::string, 64>  pvt;
 
@@ -2331,7 +2331,7 @@ static void test_QuantQualEstimationVisitor()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/SHORT_IBM.csv", io_format::csv2);
+        df.read("SHORT_IBM.csv", io_format::csv2);
 
         qqe_v<double, std::string, 64>  qqe;
 
@@ -2401,7 +2401,7 @@ static void test_get_str_col_stats()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/SHORT_IBM.csv", io_format::csv2);
+        df.read("SHORT_IBM.csv", io_format::csv2);
 
         auto    str_col = df.get_index();
 
@@ -2902,7 +2902,7 @@ static void test_get_data_by_sel_from_view()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/SHORT_IBM.csv", io_format::csv2);
+        df.read("SHORT_IBM.csv", io_format::csv2);
 
         auto    vw =
             df.get_view_by_loc<double, long>(Index2D<long>{ 1000L, 1700L });
@@ -2943,7 +2943,7 @@ static void test_get_data_by_idx_loc_from_view()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/SHORT_IBM.csv", io_format::csv2);
+        df.read("SHORT_IBM.csv", io_format::csv2);
 
         auto    vw =
             df.get_view_by_loc<double, long>(Index2D<long>{ 1000L, 1700L });
@@ -2988,7 +2988,7 @@ static void test_get_data_by_rand_from_view()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/SHORT_IBM.csv", io_format::csv2);
+        df.read("SHORT_IBM.csv", io_format::csv2);
 
         auto    ptr_vw =
             df.get_view_by_rand<double, long>
@@ -3101,7 +3101,7 @@ static void test_get_data_from_view()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/SHORT_IBM.csv", io_format::csv2);
+        df.read("SHORT_IBM.csv", io_format::csv2);
 
         auto    vw =
             df.get_view<double, long>({ "IBM_Close", "IBM_Open",
@@ -3242,7 +3242,7 @@ static void test_get_view_by_sel_from_view()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/SHORT_IBM.csv", io_format::csv2);
+        df.read("SHORT_IBM.csv", io_format::csv2);
 
         auto    vw =
             df.get_view_by_loc<double, long>(Index2D<long>{ 1000L, 1700L });
@@ -3283,7 +3283,7 @@ static void test_get_view_by_idx_loc_from_view()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/SHORT_IBM.csv", io_format::csv2);
+        df.read("SHORT_IBM.csv", io_format::csv2);
 
         auto    vw =
             df.get_view_by_loc<double, long>(Index2D<long>{ 1000L, 1700L });
@@ -3328,7 +3328,7 @@ static void test_get_view_by_rand_from_view()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/SHORT_IBM.csv", io_format::csv2);
+        df.read("SHORT_IBM.csv", io_format::csv2);
 
         auto    ptr_vw =
             df.get_view_by_rand<double, long>
@@ -3441,7 +3441,7 @@ static void test_get_view_from_view()  {
     StrDataFrame    df;
 
     try  {
-        df.read("data/SHORT_IBM.csv", io_format::csv2);
+        df.read("SHORT_IBM.csv", io_format::csv2);
 
         auto    vw =
             df.get_view<double, long>({ "IBM_Close", "IBM_Open",

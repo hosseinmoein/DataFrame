@@ -29,8 +29,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <DataFrame/Utils/Threads/SharedQueue.h>
 
-#include <chrono>
-
 using namespace std::chrono_literals;
 
 // ----------------------------------------------------------------------------

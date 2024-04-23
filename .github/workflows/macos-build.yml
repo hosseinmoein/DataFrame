@@ -1,0 +1,25 @@
+name: MacOS-build
+
+on:
+  push:
+    branches:
+      - '*'
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: macos-14
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '15.3'
+      - name: CMake set-up
+        run: cmake -G "Unix Makefiles" -DHMDF_TESTING=ON -DHMDF_EXAMPLES=ON -DHMDF_BENCHMARKS=ON -DCMAKE_BUILD_TYPE=Release .
+      - name: CMake build
+        run: cmake --build .
+      - name: CMake ctest
+        run: ctest -C Release

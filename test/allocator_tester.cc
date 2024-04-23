@@ -27,13 +27,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <DataFrame/Utils/AlignedAllocator.h>
 
-#include <algorithm>
 #include <cassert>
-#include <cstdlib>
 #include <iostream>
-#include <map>
-#include <random>
-#include <string>
 #include <vector>
 
 using namespace hmdf;

@@ -8124,11 +8124,11 @@ struct  QuantQualEstimationVisitor  {
         }
         else  {
             for (size_type i = 0; i < col_s; ++i)  {
-                const auto  rsi = rsi_ewm_[i];
+                const auto  local_rsi = rsi_ewm_[i];
                 const auto  dar = ewm3.get_result()[i];
 
-                upperband[i] = rsi + dar;
-                lowerband[i] = rsi - dar;
+                upperband[i] = local_rsi + dar;
+                lowerband[i] = local_rsi - dar;
             }
         }
 

@@ -33,6 +33,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/Utils/AlignedAllocator.h>
 
 #include <vector>
+#include <cmath>
+#include <iostream>
+#include <functional>
+#include <random>
+#include <type_traits>
 
 // ----------------------------------------------------------------------------
 

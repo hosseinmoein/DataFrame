@@ -3977,12 +3977,12 @@ struct  DiffVisitor  {
             abs_val_ ? [](const T &x) -> T { return (std::fabs(x)); }
                      : [](const T &x) -> T { return (x); };
         auto                        diff_func =
-            [&cond](bool skip_nan_,
+            [&cond](bool local_skip_nan_,
                     bool &there_is_zero,
                     const auto &i,
                     const auto &j,
                     auto &result) -> void  {
-                if (skip_nan_ && (is_nan__(*i) || is_nan__(*j))) [[unlikely]]
+                if (local_skip_nan_ && (is_nan__(*i) || is_nan__(*j))) [[unlikely]]
                     return;
 
                 const value_type    val = cond(*i - *j);
@@ -4024,10 +4024,10 @@ struct  DiffVisitor  {
             std::reverse(result.begin(), result.end());
 
             if (! skip_nan_)
-                for (size_type i = 0;
-                     i < static_cast<size_type>(std::abs(periods_)) &&
-                         i < col_s;
-                     ++i)
+                for (size_type local_i = 0;
+                     local_i < static_cast<size_type>(std::abs(periods_)) &&
+                     local_i < col_s;
+                     ++local_i)
                     result.push_back(
                         std::numeric_limits<value_type>::quiet_NaN());
         }
@@ -6014,7 +6014,7 @@ using csfit_v = CubicSplineFitVisitor<T, I, A>;
 // This lowess function implements the algorithm given in the reference below
 // using local linear estimates.
 // Suppose the input data has N points. The algorithm works by estimating the
-// `smooth` y_i by taking the frac * N closest points to (x_i, y_i) based on
+// `smooth` y_i by taking the frac * N the closest points to (x_i, y_i) based on
 // their x values and estimating y_i using a weighted linear regression. The
 // weight for (x_j, y_j) is tricube function applied to |x_i - x_j|.
 // If n_loop > 1, then further weighted local linear regressions are performed,
@@ -7143,7 +7143,7 @@ struct  NonZeroRangeVisitor  {
 
             for (auto &fut : futures)  there_is_zero |= fut.get();
             if (there_is_zero)  {
-                auto    futures =
+                auto    local_futures =
                     ThreadGranularity::thr_pool_.parallel_loop(
                         size_type(0),
                         col_s,
@@ -7154,7 +7154,7 @@ struct  NonZeroRangeVisitor  {
                                     std::numeric_limits<value_type>::epsilon();
                         });
 
-                for (auto &fut : futures)  fut.get();
+                for (auto &fut : local_futures)  fut.get();
             }
         }
         else  {

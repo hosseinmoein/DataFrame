@@ -32,6 +32,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <limits>
 #include <memory>
 #include <new>
+#include <algorithm>
+#include <cassert>
+#include <cstdlib>
+#include <iostream>
+#include <map>
+#include <random>
+#include <string>
+#include <vector>
 
 // ----------------------------------------------------------------------------
 
@@ -52,7 +60,7 @@ struct  AlignedValue<T, 0>  {
 
 // ----------------------------------------------------------------------------
 
-// By default the alignment is system defined alignment for the type
+// By default, the alignment is system defined alignment for the type
 //
 template<typename T, std::size_t AS = 0>
 class   AlignedAllocator : public AlignedValue<T, AS>  {

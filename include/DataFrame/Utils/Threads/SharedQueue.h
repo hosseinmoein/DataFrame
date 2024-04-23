@@ -34,6 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <mutex>
 #include <optional>
 #include <queue>
+#include <chrono>
 
 // ----------------------------------------------------------------------------
 
@@ -58,7 +59,7 @@ public:
     inline void push(const value_type &element) noexcept;
 
     // NOTE: The following method returns the data by value.
-    //       Therefore it is not as efficient as front().
+    //       Therefore, it is not as efficient as front().
     //       Use it only if you have to.
     //
     inline optional_ret

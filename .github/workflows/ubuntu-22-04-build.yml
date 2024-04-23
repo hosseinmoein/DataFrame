@@ -1,0 +1,29 @@
+name: ubuntu-22.04
+
+on:
+  push:
+    branches:
+      - '*'
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: install deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-13 build-essential
+      - name: CMake set-up
+        run: |
+          export CXX=/usr/bin/g++-13
+          cmake -DHMDF_TESTING=ON -DHMDF_EXAMPLES=ON -DHMDF_BENCHMARKS=ON -DCMAKE_BUILD_TYPE=Release .
+      - name: CMake build
+        run: cmake --build . --config Release --parallel $(nproc)
+      - name: CMake ctest
+        run: ctest -C Release

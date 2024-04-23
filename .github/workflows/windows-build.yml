@@ -1,0 +1,22 @@
+name: Windows-build
+
+on:
+  push:
+    branches:
+      - '*'
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: CMake set-up
+        run: cmake -S . `-DCMAKE_BUILD_TYPE=Release -DHMDF_TESTING=ON -DHMDF_EXAMPLES=ON -DHMDF_BENCHMARKS=ON`
+      - name: CMake build
+        run: cmake --build . --config Release
+      - name: CMake ctest
+        run: ctest -C Release

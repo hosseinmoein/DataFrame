@@ -62,7 +62,7 @@ enum class DT_FORMAT : unsigned short int  {
     ISO_DT_NANO = 14,  // e.g. 2015-05-05 13:51:04.123456789
 };
 
-// DO NOT change the values of these enums. They are offsets to an
+// DO NOT change the values of these enums. They are offsets to a
 // static array.
 //
 enum class DT_TIME_ZONE : short int  {
@@ -370,7 +370,7 @@ private:
         "UTC",
         "Asia/Seoul",
         "Asia/Taipei",
-        "Eurpoe/Stockholm",
+        "Europe/Stockholm",
         "NZ",
         "Europe/Oslo",
         "Europe/Warsaw",

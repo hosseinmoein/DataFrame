@@ -31,12 +31,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/Utils/FixedSizeString.h>
 #include <DataFrame/Utils/Utils.h>
 
-#include <any>
-#include <cstdlib>
-#include <fstream>
-#include <functional>
-#include <sstream>
-
 // ----------------------------------------------------------------------------
 
 namespace hmdf
@@ -1201,7 +1195,7 @@ read (S &in_s,
         if (starting_row != 0 ||
             num_rows != std::numeric_limits<size_type>::max()) [[unlikely]]
             throw NotImplemented("read(): Reading files in chunks is currently"
-                                 " only impelemented for io_format::csv2");
+                                 " only implemented for io_format::csv2");
 
         read_csv_ (in_s, columns_only);
     }
@@ -1212,7 +1206,7 @@ read (S &in_s,
         if (starting_row != 0 ||
             num_rows != std::numeric_limits<size_type>::max()) [[unlikely]]
             throw NotImplemented("read(): Reading files in chunks is currently"
-                                 " only impelemented for io_format::csv2");
+                                 " only implemented for io_format::csv2");
 
         read_json_ (in_s, columns_only);
     }

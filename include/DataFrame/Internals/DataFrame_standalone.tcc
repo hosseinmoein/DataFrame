@@ -799,9 +799,9 @@ _get_str_dbl_map_from_value_(const char *value)  {
             buffer[bcnt++] = value[vcnt++];
         buffer[bcnt] = '\0';
 
-        const double    value = std::strtod(buffer, nullptr);
+        const double    local_value = std::strtod(buffer, nullptr);
 
-        data.emplace(std::make_pair(std::move(key), value));
+        data.emplace(std::make_pair(std::move(key), local_value));
         vcnt += 1;  // skip separator
     }
     return (data);
@@ -940,7 +940,6 @@ _remove_copy_if_(I first, I last, O d_first, PRE predicate)  {
         if (! predicate (std::distance(first, i)))
             *d_first++ = *i;
 
-    return;
 }
 
 // ----------------------------------------------------------------------------
@@ -1117,7 +1116,7 @@ struct _LikeClauseUtil_  {
     using value_type = unsigned char;
 
     // This lookup table is used to help decode the first byte of
-    // a multi-byte UTF8 character.
+    // a multibyte UTF8 character.
     //
     inline static const value_type  CHAR_TRANS1[] = {
         0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b,

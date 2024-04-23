@@ -60,7 +60,7 @@ struct  AlignedValue<T, 0>  {
 
 // ----------------------------------------------------------------------------
 
-// By default the alignment is system defined alignment for the type
+// By default, the alignment is system defined alignment for the type
 //
 template<typename T, std::size_t AS = 0>
 class   AlignedAllocator : public AlignedValue<T, AS>  {
@@ -115,7 +115,7 @@ public:
     AlignedAllocator &operator=(const AlignedAllocator &) = delete;
 
     template<typename U>
-    inline explicit AlignedAllocator(AlignedAllocator<U, AS> const &) noexcept  {  }
+    inline AlignedAllocator(AlignedAllocator<U, AS> const &) noexcept  {  }
 
     // Always return true for stateless allocators.
     //

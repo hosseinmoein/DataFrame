@@ -128,7 +128,7 @@ concept hashable_equal = hashable<T> && std::equality_comparable<T>;
 template<typename T>
 concept hashable_stringable = requires(const std::remove_reference_t<T> &a,
                                        std::stringstream &ss)  {
-    hashable<T>;
+    requires hashable<T>;
     { ss << a };
 };
 

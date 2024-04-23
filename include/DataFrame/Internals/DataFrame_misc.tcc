@@ -91,7 +91,6 @@ void
 DataFrame<I, H>::sort_functor_<Ts ...>::operator() (T2 &vec)  {
 
     _sort_by_sorted_index_(vec, sorted_idxs, done_vec, idx_s);
-    return;
 }
 
 // ----------------------------------------------------------------------------
@@ -154,7 +153,6 @@ void
 DataFrame<I, H>::remove_functor_<Ts ...>::operator() (T &vec)  {
 
     vec.erase(vec.begin() + begin, vec.begin() + end);
-    return;
 }
 
 // ----------------------------------------------------------------------------
@@ -174,7 +172,6 @@ operator() (T &vec)  {
     dfv.template setup_view_column_<ValueType, typename VecType::iterator>(
         name,
         { vec.begin() + begin, vec.begin() + col_s });
-    return;
 }
 
 // ----------------------------------------------------------------------------
@@ -268,7 +265,6 @@ print_csv2_header_functor_<S, Ts ...>::operator() (const T &vec)  {
 
     _write_csv_df_header_<S, ValueType>(
         os, name, std::min(col_size, long(vec.size())));
-    return;
 }
 
 // ----------------------------------------------------------------------------
@@ -280,7 +276,6 @@ void DataFrame<I, H>::
 print_csv2_data_functor_<S, Ts ...>::operator() (const T &vec)  {
 
     if (vec.size() > index)  _write_csv_df_index_(os, vec[index]);
-    return;
 }
 
 // ----------------------------------------------------------------------------
@@ -460,7 +455,6 @@ operator() (const T &vec)  {
             name, { nc_vec.begin(), nc_vec.end() });
     }
 
-    return;
 }
 
 // ----------------------------------------------------------------------------
@@ -572,7 +566,6 @@ operator()(const T &lhs_vec)  {
                                                   std::move(new_col),
                                                   nan_policy::pad_with_nans,
                                                   false);
-    return;
 }
 
 // ----------------------------------------------------------------------------
@@ -599,7 +592,6 @@ operator()(const T &lhs_vec)  {
                                                   std::move(new_col),
                                                   nan_policy::pad_with_nans,
                                                   false);
-    return;
 }
 
 // ----------------------------------------------------------------------------
@@ -622,7 +614,6 @@ operator()(const T &vec)  {
         }
     }
 
-    return;
 }
 
 // ----------------------------------------------------------------------------
@@ -646,7 +637,6 @@ operator()(T &vec)  {
                                col_num));
     else
         drop_missing_rows_(vec, missing_row_map, policy, threshold, col_num);
-    return;
 }
 
 // ----------------------------------------------------------------------------
@@ -664,7 +654,6 @@ operator()(const T &vec)  {
         result.push_back(vec[row_num]);
     else
         result.push_back(get_nan<typename T::value_type>());
-    return;
 }
 
 // ----------------------------------------------------------------------------
@@ -698,7 +687,6 @@ operator() (const T &vec)  {
                                        std::move(new_col),
                                        nan_policy::dont_pad_with_nans,
                                        false);
-    return;
 }
 
 // ----------------------------------------------------------------------------
@@ -734,7 +722,6 @@ operator() (T &vec)  {
     dfv.data_.emplace_back(data_vec_t(std::move(new_col)));
     dfv.column_tb_.emplace (name, dfv.data_.size() - 1);
     dfv.column_list_.emplace_back (name, dfv.data_.size() - 1);
-    return;
 }
 
 // ----------------------------------------------------------------------------
@@ -756,7 +743,6 @@ operator() (T &vec) const  {
             vec.erase(vec.begin() + (sel_indices[i] - del_count++));
         else
             break;
-    return;
 }
 
 // ----------------------------------------------------------------------------
@@ -770,7 +756,6 @@ shuffle_functor_<Ts ...>::
 operator() (T &vec) const  {
 
     std::shuffle(vec.begin(), vec.end(), g_);
-    return;
 }
 
 // ----------------------------------------------------------------------------
@@ -805,7 +790,6 @@ random_load_data_functor_<DF, Ts ...>::operator() (const T &vec)  {
                                        std::move(new_vec),
                                        nan_policy::dont_pad_with_nans,
                                        false);
-    return;
 }
 
 // ----------------------------------------------------------------------------
@@ -842,7 +826,6 @@ random_load_view_functor_<DF, Ts ...>::operator() (const T &vec) {
     dfv.data_.emplace_back(data_vec_t(std::move(new_vec)));
     dfv.column_tb_.emplace (name, dfv.data_.size() - 1);
     dfv.column_list_.emplace_back (name, dfv.data_.size() - 1);
-    return;
 }
 
 // ----------------------------------------------------------------------------

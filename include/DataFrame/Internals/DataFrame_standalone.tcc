@@ -940,7 +940,6 @@ _remove_copy_if_(I first, I last, O d_first, PRE predicate)  {
         if (! predicate (std::distance(first, i)))
             *d_first++ = *i;
 
-    return;
 }
 
 // ----------------------------------------------------------------------------

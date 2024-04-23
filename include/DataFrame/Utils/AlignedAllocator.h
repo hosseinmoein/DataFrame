@@ -107,7 +107,7 @@ public:
     AlignedAllocator &operator=(const AlignedAllocator &) = delete;
 
     template<typename U>
-    inline AlignedAllocator(AlignedAllocator<U, AS> const &) noexcept  {  }
+    inline explicit AlignedAllocator(AlignedAllocator<U, AS> const &) noexcept  {  }
 
     // Always return true for stateless allocators.
     //

@@ -254,7 +254,6 @@ private:
         }
 
         clusters_.swap(clusters);
-        return;
     }
 
 public:
@@ -418,7 +417,6 @@ private:
             }
         }
 
-        return;
     }
 
 public:
@@ -2226,7 +2224,7 @@ struct  VectorSimilarityVisitor  {
 
     inline void pre ()  { result_ = 0; }
     inline void post ()  {  }
-    inline result_type get_result () const  { return (result_); }
+    [[nodiscard]] inline result_type get_result () const  { return (result_); }
 
     VectorSimilarityVisitor() = default;
 

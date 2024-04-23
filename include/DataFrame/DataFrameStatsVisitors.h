@@ -6014,7 +6014,7 @@ using csfit_v = CubicSplineFitVisitor<T, I, A>;
 // This lowess function implements the algorithm given in the reference below
 // using local linear estimates.
 // Suppose the input data has N points. The algorithm works by estimating the
-// `smooth` y_i by taking the frac * N closest points to (x_i, y_i) based on
+// `smooth` y_i by taking the frac * N the closest points to (x_i, y_i) based on
 // their x values and estimating y_i using a weighted linear regression. The
 // weight for (x_j, y_j) is tricube function applied to |x_i - x_j|.
 // If n_loop > 1, then further weighted local linear regressions are performed,

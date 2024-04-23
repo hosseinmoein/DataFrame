@@ -477,7 +477,7 @@ struct  overload : Ts ...  {
 
     using Ts::operator() ...;
 
-    overload (Ts && ... args) : Ts (std::forward<Ts>(args)) ... {   }
+    explicit overload (Ts && ... args) : Ts (std::forward<Ts>(args)) ... {   }
 };
 
 /*

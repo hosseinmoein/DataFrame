@@ -31,12 +31,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/Utils/FixedSizeString.h>
 #include <DataFrame/Utils/Utils.h>
 
-#include <any>
-#include <cstdlib>
-#include <fstream>
-#include <functional>
-#include <sstream>
-
 // ----------------------------------------------------------------------------
 
 namespace hmdf

@@ -29,14 +29,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <DataFrame/DataFrame.h>
 
-#include <algorithm>
-#include <cmath>
-#include <execution>
-#include <functional>
-#include <future>
-#include <random>
-#include <ranges>
-
 // ----------------------------------------------------------------------------
 
 namespace hmdf

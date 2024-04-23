@@ -29,13 +29,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <DataFrame/Utils/Threads/ThreadPool.h>
 
-#include <chrono>
-#include <cstdlib>
-#include <functional>
-#include <memory>
-#include <stdexcept>
-#include <type_traits>
-
 // ----------------------------------------------------------------------------
 
 namespace hmdf

@@ -52,6 +52,20 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <unordered_set>
 #include <utility>
 #include <vector>
+#include <algorithm>
+#include <cmath>
+#include <execution>
+#include <random>
+#include <ranges>
+#include <cctype>
+#include <cstdio>
+#include <cstring>
+#include <any>
+#include <cstdlib>
+#include <fstream>
+#include <sstream>
+#include <string>
+#include <iterator>
 
 // ----------------------------------------------------------------------------
 

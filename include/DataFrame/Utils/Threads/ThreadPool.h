@@ -44,6 +44,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <type_traits>
 #include <utility>
 #include <vector>
+#include <chrono>
+#include <cstdlib>
+#include <functional>
+#include <memory>
+#include <stdexcept>
+#include <type_traits>
 
 // ----------------------------------------------------------------------------
 

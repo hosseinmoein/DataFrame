@@ -34,6 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <mutex>
 #include <optional>
 #include <queue>
+#include <chrono>
 
 // ----------------------------------------------------------------------------
 

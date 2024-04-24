@@ -742,6 +742,30 @@ Testing Mode ...
 Testing remove_data_by_sel() ...
 
 Testing shuffle() ...
+Original DataFrame:
+INDEX:7:<ulong>:123450,123451,123452,123453,123454,123455,123456,
+col_1:7:<double>:1,2,3,4,5,6,7,
+col_2:7:<double>:8,9,10,11,12,13,14,
+col_3:7:<double>:15,16,17,18,19,20,21,
+col_str:7:<string>:11,22,33,aa,bb,cc,dd,
+col_4:4:<double>:22,23,24,25,
+
+shuffle with no index:
+INDEX:7:<ulong>:123450,123451,123452,123453,123454,123455,123456,
+col_1:7:<double>:4,2,6,3,5,7,1,
+col_2:7:<double>:8,9,10,11,12,13,14,
+col_3:7:<double>:15,16,17,18,19,20,21,
+col_str:7:<string>:cc,22,aa,bb,33,dd,11,
+col_4:4:<double>:22,23,24,25,
+
+shuffle with index:
+INDEX:7:<ulong>:123453,123451,123455,123452,123454,123456,123450,
+col_1:7:<double>:4,2,6,3,5,7,1,
+col_2:7:<double>:13,9,11,12,10,14,8,
+col_3:7:<double>:19,15,21,18,20,17,16,
+col_str:7:<string>:cc,22,aa,bb,33,dd,11,
+col_4:4:<double>:22,23,24,25,
+
 
 Testing SimpleRollAdopter{ } ...
 
@@ -767,12 +791,12 @@ col_3:1:<double>:15,
 col_str:1:<string>:11,
 col_4:1:<double>:22,
 
-INDEX:1:<ulong>:123450,
-col_1:1:<double>:1,
-col_2:1:<double>:8,
-col_3:1:<double>:15,
-col_str:1:<string>:11,
-col_4:1:<double>:22,
+INDEX:1:<ulong>:123452,
+col_1:1:<double>:3,
+col_2:1:<double>:10,
+col_3:1:<double>:17,
+col_str:1:<string>:33,
+col_4:1:<double>:24,
 
 
 Testing write(json) ...
@@ -2077,7 +2101,7 @@ INDEX:10:<ulong>,string col:10:<string>,Cool Column:10:<string>,numbers:10:<doub
 Standard deviation of IBM close prices: 38.3090214006
 Correlation between AAPL and IBM close prices: 0.390679511924
 The last exponentailly weighted correlation between AAPL and IBM close prices: -0.276248958749
-Means of clusters are: 0.029693988024, -0.039640231146, -0.00865352443995, 0.00548007691931, 
+Means of clusters are: 0.00560236688688, 0.0297497833248, -0.00859604794494, -0.0397662142374, 
 IBM returns 50% quantile: 0.000224447189179, 75% quantile: 0.00742387474272, 95% quantile: 0.0229862030163
 The seasonality of IBM returns is 59 days.
 So use this instead of 170 days in decomposition analysis

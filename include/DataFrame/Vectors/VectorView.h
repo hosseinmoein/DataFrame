@@ -51,12 +51,17 @@ public:
     static constexpr std::align_val_t   align_value { A };
 
     using value_type = T;
-    using size_type = unsigned long long int;
+    using size_type =
+        typename std::vector<
+            T, typename allocator_declare<T, A>::type>::size_type;
     using pointer = value_type *;
     using const_pointer = const value_type *;
     using const_pointer_const = const value_type *const;
     using reference = value_type &;
     using const_reference = const value_type &;
+    using difference_type =
+        typename std::vector<
+            T, typename allocator_declare<T, A>::type>::difference_type;
 
     static const size_type  value_size = sizeof(value_type);
 
@@ -148,7 +153,10 @@ public:
         using value_type = T;
         using pointer = value_type *;
         using reference = value_type &;
-        using difference_type = long;
+        using difference_type =
+            typename std::vector<
+                T, typename allocator_declare<T, A>::type>::difference_type;
+
 
     public:
 
@@ -241,7 +249,7 @@ public:
 
             value_type  const  *ret_node = node_;
 
-            ret_node += static_cast<long>(step);
+            ret_node += static_cast<difference_type>(step);
             return (const_iterator (ret_node));
         }
 
@@ -250,7 +258,7 @@ public:
 
             value_type  const  *ret_node = node_;
 
-            ret_node -= static_cast<long>(step);
+            ret_node -= static_cast<difference_type>(step);
             return (const_iterator (ret_node));
         }
 
@@ -282,7 +290,10 @@ public:
         using value_type = T;
         using pointer = value_type *;
         using reference = value_type &;
-        using difference_type = long;
+        using difference_type =
+            typename std::vector<
+                T, typename allocator_declare<T, A>::type>::difference_type;
+
 
     public:
 
@@ -324,7 +335,7 @@ public:
             return (iterator (ret_node));
         }
 
-        inline iterator &operator += (long step) noexcept  {
+        inline iterator &operator += (difference_type step) noexcept  {
 
             node_ += step;
             return (*this);
@@ -354,7 +365,7 @@ public:
 
             value_type  *ret_node = node_;
 
-            ret_node += static_cast<long>(step);
+            ret_node += static_cast<difference_type>(step);
             return (iterator (ret_node));
         }
 
@@ -363,7 +374,7 @@ public:
 
             value_type  *ret_node = node_;
 
-            ret_node -= static_cast<long>(step);
+            ret_node -= static_cast<difference_type>(step);
             return (iterator (ret_node));
         }
 
@@ -419,12 +430,18 @@ public:
     static constexpr std::align_val_t   align_value { A };
 
     using value_type = T;
-    using size_type = unsigned long long int;
+    using size_type =
+        typename std::vector<
+            T, typename allocator_declare<T, A>::type>::size_type;
     using pointer = const value_type *;
     using const_pointer = const value_type *;
     using const_pointer_const = const value_type *const;
     using reference = const value_type &;
     using const_reference = const value_type &;
+    using difference_type =
+        typename std::vector<
+            T, typename allocator_declare<T, A>::type>::difference_type;
+
 
     static const size_type  value_size = sizeof(value_type);
 
@@ -506,7 +523,10 @@ public:
         using value_type = T;
         using pointer = value_type *;
         using reference = value_type &;
-        using difference_type = long;
+        using difference_type =
+            typename std::vector<
+                T, typename allocator_declare<T, A>::type>::difference_type;
+
 
     public:
 
@@ -601,7 +621,7 @@ public:
             return (const_iterator (ret_node));
         }
 
-        inline const_iterator operator + (long step) noexcept  {
+        inline const_iterator operator + (difference_type step) noexcept  {
 
             value_type  const  *ret_node = node_;
 
@@ -609,7 +629,7 @@ public:
             return (const_iterator (ret_node));
         }
 
-        inline const_iterator operator - (long step) noexcept  {
+        inline const_iterator operator - (difference_type step) noexcept  {
 
             value_type  const  *ret_node = node_;
 

@@ -49,6 +49,7 @@ HEADERS = $(LOCAL_INCLUDE_DIR)/DataFrame/Vectors/HeteroVector.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Internals/DataFrame_opt.tcc \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Internals/DataFrame_join.tcc \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Internals/DataFrame_shift.tcc \
+          $(LOCAL_INCLUDE_DIR)/DataFrame/Internals/DataFrame_sort.tcc \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Internals/DataFrame_private_decl.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Internals/DataFrame_functors.h \
           $(LOCAL_INCLUDE_DIR)/DataFrame/Internals/RandGen.tcc \

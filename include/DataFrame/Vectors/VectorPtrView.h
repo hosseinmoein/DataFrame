@@ -210,7 +210,7 @@ public:
         using value_type = T;
         using pointer = value_type *;
         using reference = value_type &;
-        using difference_type = long;
+        using difference_type = typename vector_type::difference_type;
 
     public:
 
@@ -268,7 +268,7 @@ public:
             return (iterator (ret_node));
         }
 
-        inline iterator &operator += (long step) noexcept  {
+        inline iterator &operator += (difference_type step) noexcept  {
 
             node_ += step;
             return (*this);
@@ -298,7 +298,7 @@ public:
 
             auto    ret_node = node_;
 
-            ret_node += static_cast<long>(step);
+            ret_node += static_cast<difference_type>(step);
             return (iterator { ret_node });
         }
 
@@ -307,7 +307,7 @@ public:
 
             auto    ret_node = node_;
 
-            ret_node -= static_cast<long>(step);
+            ret_node -= static_cast<difference_type>(step);
             return (iterator { ret_node });
         }
 
@@ -341,7 +341,7 @@ public:
         using value_type = T;
         using pointer = value_type *;
         using reference = value_type &;
-        using difference_type = long;
+        using difference_type = typename vector_type::difference_type;
 
     public:
 
@@ -449,7 +449,7 @@ public:
 
             auto const  ret_node = node_;
 
-            ret_node += static_cast<long>(step);
+            ret_node += static_cast<difference_type>(step);
             return (const_iterator { ret_node });
         }
 
@@ -458,7 +458,7 @@ public:
 
             auto const  ret_node = node_;
 
-            ret_node -= static_cast<long>(step);
+            ret_node -= static_cast<difference_type>(step);
             return (const_iterator { ret_node });
         }
 
@@ -680,7 +680,7 @@ public:
         using value_type = T;
         using pointer = value_type *;
         using reference = value_type &;
-        using difference_type = long;
+        using difference_type = typename vector_type::difference_type;
 
     public:
 
@@ -793,7 +793,7 @@ public:
             return (const_iterator (ret_node));
         }
 
-        inline const_iterator operator + (long step) noexcept  {
+        inline const_iterator operator + (difference_type step) noexcept  {
 
             value_type const  **ret_node = node_;
 
@@ -801,7 +801,7 @@ public:
             return (const_iterator (ret_node));
         }
 
-        inline const_iterator operator - (long step) noexcept  {
+        inline const_iterator operator - (difference_type step) noexcept  {
 
             value_type const  **ret_node = node_;
 

@@ -635,17 +635,19 @@ join_helper_common_(
 // ----------------------------------------------------------------------------
 
 template<typename MAP, typename ... Ts>
-static DataFrame
+static
+DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
 remove_dups_common_(const DataFrame &s_df,
                     remove_dup_spec rds,
                     const MAP &row_table,
                     const IndexVecType &index)  {
 
     using count_vec = StlVecType<size_type>;
+    using res_t = DataFrame<I, HeteroVector<std::size_t(H::align_value)>>;
 
     count_vec   rows_to_del;
 
-    rows_to_del.reserve(8);
+    rows_to_del.reserve(512);
     if (rds == remove_dup_spec::keep_first)  {
         for (const auto &[val_tuple, idx_vec] : row_table)  {
             if (idx_vec.size() > 1)  {
@@ -671,9 +673,9 @@ remove_dups_common_(const DataFrame &s_df,
         }
     }
 
-    DataFrame<I, H> new_df;
-    IndexVecType    new_index (index.size() - rows_to_del.size());
-    const SpinGuard guard(lock_);
+    res_t                        new_df;
+    typename res_t::IndexVecType new_index (index.size() - rows_to_del.size());
+    const SpinGuard              guard(lock_);
 
     // Load the index
     //
@@ -689,7 +691,7 @@ remove_dups_common_(const DataFrame &s_df,
     // Create the columns, so loading can proceed in parallel
     //
     for (const auto &citer : s_df.column_list_)  {
-        create_col_functor_<DataFrame, Ts ...> functor(
+        create_col_functor_<res_t, Ts ...>  functor(
             citer.first.c_str(), new_df);
 
         s_df.data_[citer.second].change(functor);
@@ -706,9 +708,10 @@ remove_dups_common_(const DataFrame &s_df,
              &new_df]
             (const auto &begin, const auto &end) -> void  {
                 for (auto citer = begin; citer < end; ++citer)  {
-                    copy_remove_functor_<Ts ...> functor (citer->first.c_str(),
-                                                          rows_to_del,
-                                                          new_df);
+                    copy_remove_functor_<res_t, Ts ...> functor(
+                        citer->first.c_str(),
+                        rows_to_del,
+                        new_df);
 
                     s_df.data_[citer->second].change(functor);
                 }
@@ -722,9 +725,9 @@ remove_dups_common_(const DataFrame &s_df,
     }
     else  {
         for (const auto &citer : s_df.column_list_)  {
-            copy_remove_functor_<Ts ...>    functor (citer.first.c_str(),
-                                                     rows_to_del,
-                                                     new_df);
+            copy_remove_functor_<res_t, Ts ...> functor(citer.first.c_str(),
+                                                        rows_to_del,
+                                                        new_df);
 
             s_df.data_[citer.second].change(functor);
         }

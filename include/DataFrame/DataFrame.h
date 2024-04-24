@@ -848,7 +848,7 @@ public:  // Load/append/remove interfaces
     //   Determined which of the duplicated columns to keep
     //
     template<hashable_equal T, typename ... Ts>
-    [[nodiscard]] DataFrame
+    [[nodiscard]] DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
     remove_duplicates(const char *name,
                       bool include_index,
                       remove_dup_spec rds) const;
@@ -877,7 +877,7 @@ public:  // Load/append/remove interfaces
     //   Determined which of the duplicated columns to keep
     //
     template<hashable_equal T1, hashable_equal T2, typename ... Ts>
-    [[nodiscard]] DataFrame
+    [[nodiscard]] DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
     remove_duplicates(const char *name1,
                       const char *name2,
                       bool include_index,
@@ -907,7 +907,7 @@ public:  // Load/append/remove interfaces
     //
     template<hashable_equal T1, hashable_equal T2, hashable_equal T3,
              typename ... Ts>
-    [[nodiscard]] DataFrame
+    [[nodiscard]] DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
     remove_duplicates(const char *name1,
                       const char *name2,
                       const char *name3,
@@ -943,7 +943,7 @@ public:  // Load/append/remove interfaces
     template<hashable_equal T1, hashable_equal T2,
              hashable_equal T3, hashable_equal T4,
              typename ... Ts>
-    [[nodiscard]] DataFrame
+    [[nodiscard]] DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
     remove_duplicates(const char *name1,
                       const char *name2,
                       const char *name3,
@@ -984,7 +984,7 @@ public:  // Load/append/remove interfaces
     template<hashable_equal T1, hashable_equal T2, hashable_equal T3,
              hashable_equal T4, hashable_equal T5,
              typename ... Ts>
-    [[nodiscard]] DataFrame
+    [[nodiscard]] DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
     remove_duplicates(const char *name1,
                       const char *name2,
                       const char *name3,
@@ -1030,7 +1030,7 @@ public:  // Load/append/remove interfaces
     template<hashable_equal T1, hashable_equal T2, hashable_equal T3,
              hashable_equal T4, hashable_equal T5, hashable_equal T6,
              typename ... Ts>
-    [[nodiscard]] DataFrame
+    [[nodiscard]] DataFrame<I, HeteroVector<std::size_t(H::align_value)>>
     remove_duplicates(const char *name1,
                       const char *name2,
                       const char *name3,
@@ -1477,11 +1477,11 @@ public:  // Data manipulation
     //   Name of the column
     //
     template<hashable_equal T>
-    [[nodiscard]] DataFrame<T, H>
+    [[nodiscard]] DataFrame<T, HeteroVector<std::size_t(H::align_value)>>
     value_counts(const char *col_name) const;
 
     template<hashable_equal T>
-    [[nodiscard]] DataFrame<T, H>
+    [[nodiscard]] DataFrame<T, HeteroVector<std::size_t(H::align_value)>>
     value_counts(size_type index) const;
 
     // It bucketizes the data and index into intervals, based on index values

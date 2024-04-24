@@ -929,14 +929,22 @@ static void test_remove_duplicates()  {
                    std::move(intvec),
                    nan_policy::dont_pad_with_nans);
 
+    auto    vw =
+        df.get_view<double, int, std::string>(
+            { "dbl_col", "dbl_col_2", "str_col", "int_col" });
     auto    result1 =
         df.remove_duplicates<double, int, double, std::string, int>
-        ("dbl_col", "int_col", false, remove_dup_spec::keep_first);
+            ("dbl_col", "int_col", false, remove_dup_spec::keep_first);
+    auto    result_vw =
+        vw.remove_duplicates<double, double, int, std::string,
+                             double, std::string, int>
+            ("dbl_col", "dbl_col_2", "int_col", "str_col",
+             false, remove_dup_spec::keep_first);
     auto    result2 =
         df.remove_duplicates<double, double, int, std::string,
                              double, std::string, int>
-        ("dbl_col", "dbl_col_2", "int_col", "str_col",
-         false, remove_dup_spec::keep_first);
+            ("dbl_col", "dbl_col_2", "int_col", "str_col",
+             false, remove_dup_spec::keep_first);
 
     StlVecType<double>         actual_d {
         100, 101, 102, 103, 105, 106.55, 107.34, 1.8, 111, 112, 113,
@@ -948,6 +956,8 @@ static void test_remove_duplicates()  {
     assert(result2.get_index().size() == 14);
     assert(result2.get_column<double>("dbl_col_2") == actual_d);
     assert(result2.get_column<std::string>("str_col") == actual_s);
+
+    assert(result_vw.get_index().size() == 14);
 
     auto    result3 =
         df.remove_duplicates<double, double, int, std::string,
@@ -2335,9 +2345,10 @@ static void test_ExtremumSubArrayVisitor()  {
                            { -3, 1, -8, 4, -1, 2, 1, -5, 5 },
                            nan_policy::dont_pad_with_nans);
 
+    auto                            vw = df.get_view<double>( { "dbl_col1" });
     ExtremumSubArrayVisitor<double> msa_v;
 
-    df.visit<double>("dbl_col1", msa_v);
+    vw.visit<double>("dbl_col1", msa_v);
     assert(msa_v.get_result() == 55);
     assert(msa_v.get_begin_idx() == 0);
     assert(msa_v.get_end_idx() == 10);

@@ -2027,7 +2027,7 @@ groupby3_async(const char *col_name1,
 
 template<typename I, typename H>
 template<hashable_equal T>
-DataFrame<T, H>
+DataFrame<T, HeteroVector<std::size_t(H::align_value)>>
 DataFrame<I, H>::value_counts (const char *col_name) const  {
 
     const ColumnVecType<T>  &vec = get_column<T>(col_name);
@@ -2046,6 +2046,7 @@ DataFrame<I, H>::value_counts (const char *col_name) const  {
                        size_type,
                        decltype(hash_func),
                        decltype(equal_func)>;
+    using res_t = DataFrame<T, HeteroVector<align_value>>;
 
     map_t       values_map(vec.size(), hash_func, equal_func);
     size_type   nan_count = 0;
@@ -2063,8 +2064,8 @@ DataFrame<I, H>::value_counts (const char *col_name) const  {
             insert_result.first->second += 1;
     }
 
-    StlVecType<T>           res_indices;
-    StlVecType<size_type>   counts;
+    typename res_t::IndexVecType                        res_indices;
+    typename res_t::template ColumnVecType<size_type>   counts;
 
     counts.reserve(values_map.size());
     res_indices.reserve(values_map.size());
@@ -2078,7 +2079,7 @@ DataFrame<I, H>::value_counts (const char *col_name) const  {
         counts.emplace_back(nan_count);
     }
 
-    DataFrame<T, HeteroVector<align_value>> result_df;
+    res_t   result_df;
 
     result_df.load_index(std::move(res_indices));
     result_df.template load_column<size_type>("counts", std::move(counts));
@@ -2090,7 +2091,7 @@ DataFrame<I, H>::value_counts (const char *col_name) const  {
 
 template<typename I, typename H>
 template<hashable_equal T>
-DataFrame<T, H>
+DataFrame<T, HeteroVector<std::size_t(H::align_value)>>
 DataFrame<I, H>::value_counts(size_type index) const  {
 
     return (value_counts<T>(column_list_[index].first.c_str()));

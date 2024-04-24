@@ -286,9 +286,11 @@ static void test_CoppockCurveVisitor()  {
     try  {
         df.read("SHORT_IBM.csv", io_format::csv2);
 
+        auto                               vw =
+            df.get_view<double, int>( { "IBM_Close" });
         coppc_v<double, std::string, 256>  copp;
 
-        df.single_act_visit<double>("IBM_Close", copp);
+        vw.single_act_visit<double>("IBM_Close", copp);
 
         assert(copp.get_result().size() == 1721);
         assert(std::isnan(copp.get_result()[0]));
@@ -417,9 +419,12 @@ static void test_BalanceOfPowerVisitor()  {
     try  {
         df.read("SHORT_IBM.csv", io_format::csv2);
 
+        auto                             vw =
+            df.get_view<double>(
+                { "IBM_Low", "IBM_High", "IBM_Open", "IBM_Close" });
         bop_v<double, std::string, 256>  bop;
 
-        df.single_act_visit<double, double, double, double>
+        vw.single_act_visit<double, double, double, double>
             ("IBM_Low", "IBM_High", "IBM_Open", "IBM_Close", bop);
 
         assert(bop.get_result().size() == 1721);

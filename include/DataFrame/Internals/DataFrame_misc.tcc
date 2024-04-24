@@ -845,15 +845,17 @@ DataFrame<I, H>::columns_info_functor_<Ts ...>::operator() (const T &vec)  {
 // ----------------------------------------------------------------------------
 
 template<typename I, typename H>
-template<typename ... Ts>
+template<typename DF, typename ... Ts>
 template<typename T>
 void
-DataFrame<I, H>::copy_remove_functor_<Ts ...>::operator() (const T &vec)  {
+DataFrame<I, H>::copy_remove_functor_<DF, Ts ...>::
+operator() (const T &vec)  {
 
     using VecType = typename std::remove_reference<T>::type;
     using ValueType = typename VecType::value_type;
+    using NewVecType = typename DF::template ColumnVecType<ValueType>;
 
-    VecType new_vec (vec.size() - to_delete.size());
+    NewVecType  new_vec (vec.size() - to_delete.size());
 
     _remove_copy_if_(vec.begin(), vec.end(), new_vec.begin(),
                      [this] (std::size_t n) -> bool  {

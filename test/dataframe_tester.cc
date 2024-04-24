@@ -832,19 +832,20 @@ static void test_value_counts()  {
 
     std::cout << "\nTesting value_counts() ..." << std::endl;
 
-    const double                my_nan =
+    constexpr double            my_nan =
         std::numeric_limits<double>::quiet_NaN();
-    StlVecType<unsigned long>  idx =
+    StlVecType<unsigned long>   idx =
         { 123450, 123451, 123452, 123453, 123454, 123455, 123456,
           123457, 123458, 123459, 123460, 123461, 123462, 123466 };
-    StlVecType<double> d1 = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
-    StlVecType<double> d2 =
+    StlVecType<double>          d1 =
+        { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
+    StlVecType<double>          d2 =
         { 8, 9, 10, 11, 12, 13, 14, 20, 22, 23, 30, 31, 32, 1.89 };
-    StlVecType<double> d3 =
+    StlVecType<double>          d3 =
         { 15, 16, 15, 18, 19, 16, 21, my_nan, 0.34, 1.56, 0.34, 2.3, 0.34,
           19.0 };
-    StlVecType<int>    i1 = { 22, 23, 24, 25, 99 };
-    MyDataFrame         df;
+    StlVecType<int>             i1 = { 22, 23, 24, 25, 99 };
+    MyDataFrame                 df;
 
     df.load_data(std::move(idx),
                  std::make_pair("col_1", d1),
@@ -852,13 +853,20 @@ static void test_value_counts()  {
                  std::make_pair("col_3", d3),
                  std::make_pair("col_4", i1));
 
+    auto    vw =
+        df.get_view<double, int>( { "col_1", "col_2", "col_3", "col_4" });
+
     df.write<std::ostream, double, int>(std::cout);
 
     auto    result = df.value_counts<double>("col_3");
     auto    result2 = df.value_counts<int>("col_4");
     auto    result3 = df.value_counts<int>(3);
+    auto    result_vw = vw.value_counts<double>("col_3");
+    auto    result2_vw = vw.value_counts<int>("col_4");
+    auto    result3_vw = vw.value_counts<int>(3);
 
     assert((result2.is_equal<double, int>(result3)));
+    assert((result2_vw.is_equal<double, int>(result3_vw)));
     std::cout << "After calling value_counts(cols_3)" << std::endl;
     result.write<std::ostream, size_t>(std::cout);
 }
@@ -1488,7 +1496,7 @@ static void test_dataframe_friend_scaler_operator()  {
         assert((plus_volume[i] == (df_volume[i] + 10L)));
     }
 
-	const int       value = 10;
+    const int       value = 10;
     StrDataFrame    minus_result =
         scaler_df_minus<StrDataFrame, int, long, double>(df, value);
     const auto      &minus_idx = minus_result.get_index();
@@ -2602,6 +2610,10 @@ static void test_replace_1()  {
                  std::make_pair("dblcol_3", d3),
                  std::make_pair("dblcol_4", d4),
                  std::make_pair("dblcol_5", d5));
+
+    auto    vw =
+        df.get_view<double>( { "dblcol_1", "dblcol_5" });
+
     assert(df.get_column<double>("dblcol_1")[0] == 1.0);
     assert(df.get_column<double>("dblcol_1")[20] == 4.0);
     assert(df.get_column<double>("dblcol_1")[1] == 10.0);
@@ -2621,7 +2633,7 @@ static void test_replace_1()  {
     assert(df.get_column<double>("dblcol_5")[17] == 1.2);
     assert(df.get_column<double>("dblcol_5")[19] == 23.2);
 
-    auto    result1 = df.replace_async<double>(
+    auto    result1 = vw.replace_async<double>(
         "dblcol_1", { 10.0, 21.0, 11.0 }, { 1000.0, 2100.0, 1100.0 });
 
     df.replace_index({ 20180101, 20180102, 20180103 }, { 1000, 2100, 1100 });
@@ -2886,6 +2898,14 @@ static void test_remove_data_by_sel()  {
                            std::move(d4),
                            nan_policy::dont_pad_with_nans);
 
+    auto    lbd =
+        [](const unsigned long &, const double &col) -> bool {
+            return (col > -10000);
+        };
+    auto    vw =
+        df.get_view_by_sel<double, decltype(lbd),
+                          double, std::string>("col_1", lbd);
+
     shape = df.shape();
     assert(shape.first == 7);
     assert(shape.second == 5);
@@ -2897,6 +2917,8 @@ static void test_remove_data_by_sel()  {
             return (val >= 5);
         };
 
+    vw.remove_data_by_sel<double, decltype(functor), double, std::string>
+        ("col_1", functor);
     df.remove_data_by_sel<double, decltype(functor), double, std::string>
         ("col_1", functor);
 
@@ -2912,6 +2934,19 @@ static void test_remove_data_by_sel()  {
     assert(df.get_column<double>("col_1")[1] == 2);
     assert(df.get_column<double>("col_1")[2] == 3);
     assert(df.get_column<double>("col_4")[3] == 25);
+
+    assert(vw.get_index().size() == 4);
+    assert(vw.get_column<double>("col_1").size() == 4);
+    assert(vw.get_column<std::string>("col_str").size() == 4);
+    assert(vw.get_column<double>("col_4").size() == 4);
+    assert(vw.get_index()[0] == 123450);
+    assert(vw.get_index()[2] == 123452);
+    assert(vw.get_column<double>("col_2")[1] == 9);
+    assert(vw.get_column<std::string>("col_str")[1] == "22");
+    assert(vw.get_column<std::string>("col_str")[2] == "33");
+    assert(vw.get_column<double>("col_1")[1] == 2);
+    assert(vw.get_column<double>("col_1")[2] == 3);
+    assert(vw.get_column<double>("col_4")[3] == 25);
 
     auto    functor2 =
         [](const unsigned long &,
@@ -2968,16 +3003,20 @@ static void test_shuffle()  {
                            std::move(d4),
                            nan_policy::dont_pad_with_nans);
 
-    // std::cout << "Original DatFrasme:" << std::endl;
-    // df.write<std::ostream, int, double, std::string>(std::cout);
+    std::cout << "Original DataFrame:" << std::endl;
+    df.write<std::ostream, int, double, std::string>(std::cout);
 
-    df.shuffle<double, std::string>({"col_1", "col_str"}, false);
-    // std::cout << "shuffle with no index:" << std::endl;
-    // df.write<std::ostream, int, double, std::string>(std::cout);
+    df.shuffle<double, std::string>({"col_1", "col_str"}, false, 1000);
+    std::cout << "shuffle with no index:" << std::endl;
+    df.write<std::ostream, int, double, std::string>(std::cout);
 
-    df.shuffle<double>({"col_2", "col_3"}, true);
-    // std::cout << "shuffle with index:" << std::endl;
-    // df.write<std::ostream, int, double, std::string>(std::cout);
+    auto    vw =
+        df.get_view<double, std::string>(
+            { "col_1", "col_2", "col_3", "col_4", "col_str" });
+
+    vw.shuffle<double>({"col_2", "col_3"}, true, 1000);
+    std::cout << "shuffle with index:" << std::endl;
+    df.write<std::ostream, int, double, std::string>(std::cout);
 }
 
 // -----------------------------------------------------------------------------

@@ -1246,7 +1246,7 @@ remove_data_by_like(const char *name1,
 
 template<typename I, typename H>
 template<hashable_equal T, typename ... Ts>
-DataFrame<I, H> DataFrame<I, H>::
+DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
 remove_duplicates (const char *name,
                    bool include_index,
                    remove_dup_spec rds) const  {
@@ -1281,7 +1281,7 @@ remove_duplicates (const char *name,
 
 template<typename I, typename H>
 template<hashable_equal T1, hashable_equal T2, typename ... Ts>
-DataFrame<I, H> DataFrame<I, H>::
+DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
 remove_duplicates (const char *name1,
                    const char *name2,
                    bool include_index,
@@ -1324,7 +1324,7 @@ remove_duplicates (const char *name1,
 template<typename I, typename H>
 template<hashable_equal T1, hashable_equal T2, hashable_equal T3,
          typename ... Ts>
-DataFrame<I, H> DataFrame<I, H>::
+DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
 remove_duplicates (const char *name1,
                    const char *name2,
                    const char *name3,
@@ -1372,7 +1372,7 @@ template<typename I, typename H>
 template<hashable_equal T1, hashable_equal T2, hashable_equal T3,
          hashable_equal T4,
          typename ... Ts>
-DataFrame<I, H> DataFrame<I, H>::
+DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
 remove_duplicates (const char *name1,
                    const char *name2,
                    const char *name3,
@@ -1424,7 +1424,7 @@ template<typename I, typename H>
 template<hashable_equal T1, hashable_equal T2, hashable_equal T3,
          hashable_equal T4, hashable_equal T5,
          typename ... Ts>
-DataFrame<I, H> DataFrame<I, H>::
+DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
 remove_duplicates (const char *name1,
                    const char *name2,
                    const char *name3,
@@ -1479,7 +1479,7 @@ template<typename I, typename H>
 template<hashable_equal T1, hashable_equal T2, hashable_equal T3,
          hashable_equal T4, hashable_equal T5, hashable_equal T6,
          typename ... Ts>
-DataFrame<I, H> DataFrame<I, H>::
+DataFrame<I, HeteroVector<std::size_t(H::align_value)>> DataFrame<I, H>::
 remove_duplicates (const char *name1,
                    const char *name2,
                    const char *name3,

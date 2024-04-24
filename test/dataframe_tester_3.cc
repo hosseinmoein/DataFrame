@@ -287,7 +287,7 @@ static void test_CoppockCurveVisitor()  {
         df.read("SHORT_IBM.csv", io_format::csv2);
 
         auto                               vw =
-            df.get_view<double, int>( { "IBM_Close" });
+            df.get_view<double>({ "IBM_Close" });
         coppc_v<double, std::string, 256>  copp;
 
         vw.single_act_visit<double>("IBM_Close", copp);

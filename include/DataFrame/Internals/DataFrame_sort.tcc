@@ -39,6 +39,9 @@ template<typename T, typename ...Ts>
 void DataFrame<I, H>::
 sort(const char *name, sort_spec dir, bool ignore_index)  {
 
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
+                  "Only a StdDataFrame can call sort()");
+
     make_consistent<Ts ...>();
 
     ColumnVecType<T>    *vec { nullptr};
@@ -166,6 +169,9 @@ void DataFrame<I, H>::
 sort(const char *name1, sort_spec dir1,
      const char *name2, sort_spec dir2,
      bool ignore_index)  {
+
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
+                  "Only a StdDataFrame can call sort()");
 
     make_consistent<Ts ...>();
 
@@ -589,6 +595,9 @@ sort(const char *name1, sort_spec dir1,
      const char *name3, sort_spec dir3,
      bool ignore_index)  {
 
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
+                  "Only a StdDataFrame can call sort()");
+
     make_consistent<Ts ...>();
 
     ColumnVecType<T1>   *vec1 { nullptr};
@@ -745,6 +754,9 @@ sort(const char *name1, sort_spec dir1,
      const char *name3, sort_spec dir3,
      const char *name4, sort_spec dir4,
      bool ignore_index)  {
+
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
+                  "Only a StdDataFrame can call sort()");
 
     make_consistent<Ts ...>();
 
@@ -940,6 +952,9 @@ sort(const char *name1, sort_spec dir1,
      const char *name4, sort_spec dir4,
      const char *name5, sort_spec dir5,
      bool ignore_index)  {
+
+    static_assert(std::is_base_of<HeteroVector<align_value>, H>::value,
+                  "Only a StdDataFrame can call sort()");
 
     make_consistent<Ts ...>();
 

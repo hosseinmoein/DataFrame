@@ -50,14 +50,16 @@ namespace hmdf
 //
 struct  DataFrameError : public std::runtime_error  {
 
-    explicit DataFrameError (const char *desc) : std::runtime_error (desc)  {   }
+    explicit
+    DataFrameError (const char *desc) : std::runtime_error (desc)  {   }
 };
 
 // Column does not exist error
 //
 struct  ColNotFound : public DataFrameError  {
 
-    explicit ColNotFound (const char *desc) : DataFrameError (desc)  {   }
+    explicit
+    ColNotFound (const char *desc) : DataFrameError (desc)  {   }
 };
 
 // Something in DataFrame/operation is not proper error. For example, trying
@@ -65,14 +67,16 @@ struct  ColNotFound : public DataFrameError  {
 //
 struct  InconsistentData : public DataFrameError  {
 
-    explicit InconsistentData (const char *desc) : DataFrameError (desc)  {   }
+    explicit
+    InconsistentData (const char *desc) : DataFrameError (desc)  {   }
 };
 
 // Bad data range specification error
 //
 struct  BadRange : public DataFrameError  {
 
-    explicit BadRange (const char *desc) : DataFrameError (desc)  {   }
+    explicit
+    BadRange (const char *desc) : DataFrameError (desc)  {   }
 };
 
 // The operation is not feasible error. For example, trying to do interpolation
@@ -80,7 +84,8 @@ struct  BadRange : public DataFrameError  {
 //
 struct  NotFeasible : public DataFrameError  {
 
-    explicit NotFeasible (const char *desc) : DataFrameError (desc)  {   }
+    explicit
+    NotFeasible (const char *desc) : DataFrameError (desc)  {   }
 };
 
 // An I/O operation could not be done. For example, trying to open a file
@@ -88,14 +93,16 @@ struct  NotFeasible : public DataFrameError  {
 //
 struct  BadIO : public DataFrameError  {
 
-    explicit BadIO (const char *desc) : DataFrameError (desc)  {   }
+    explicit
+    BadIO (const char *desc) : DataFrameError (desc)  {   }
 };
 
 // The functionality is not implemented error
 //
 struct  NotImplemented : public DataFrameError  {
 
-    explicit NotImplemented (const char *desc) : DataFrameError (desc)  {   }
+    explicit
+    NotImplemented (const char *desc) : DataFrameError (desc)  {   }
 };
 
 // ----------------------------------------------------------------------------

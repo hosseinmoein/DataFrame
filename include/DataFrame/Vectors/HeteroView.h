@@ -46,7 +46,7 @@ struct HeteroView  {
 
     static constexpr std::align_val_t   align_value { A };
 
-    using size_type = size_t;
+    using size_type = std::size_t;
 
     HeteroView();
     template<typename T>

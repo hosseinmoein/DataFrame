@@ -913,7 +913,8 @@ void DateTime::add_months (long months) noexcept  {
 
 void DateTime::add_years (long years) noexcept  {
 
-    int         new_year = year() + years; //TODO fix-> Narrowing implicit casting 'year()'
+    // TODO fix-> Narrowing implicit casting 'year()'
+    int         new_year = year() + years;
     int         new_day = dmonth();
     const int   days_max = days_in_month_(month(), new_year);
 
@@ -1200,8 +1201,9 @@ double operator / (double lhs, const DateTime &rhs) noexcept  {
 DateTime &operator += (DateTime &lhs, double rhs) noexcept  {
 
     const double    new_time = static_cast<double>(lhs) + rhs;
+    // TODO fix implicit casting double to int
     const int       nano =
-        (new_time - static_cast<time_t>(new_time)) * 1000000000; //TODO fix implicit casting double to int
+        (new_time - static_cast<time_t>(new_time)) * 1000000000;
 
     lhs.set_time(static_cast<time_t>(new_time), nano);
     return (lhs);
@@ -1212,8 +1214,9 @@ DateTime &operator += (DateTime &lhs, double rhs) noexcept  {
 DateTime &operator -= (DateTime &lhs, double rhs) noexcept  {
 
     const double    new_time = static_cast<double>(lhs) - rhs;
+    // TODO fix implicit casting double to int
     const int       nano =
-        (new_time - static_cast<time_t>(new_time)) * 1000000000; //TODO fix implicit casting double to int
+        (new_time - static_cast<time_t>(new_time)) * 1000000000;
 
     lhs.set_time(static_cast<time_t>(new_time), nano);
     return (lhs);
@@ -1224,8 +1227,9 @@ DateTime &operator -= (DateTime &lhs, double rhs) noexcept  {
 DateTime &operator *= (DateTime &lhs, double rhs) noexcept  {
 
     const double    new_time = static_cast<double>(lhs) * rhs;
+    // TODO fix implicit casting double to int
     const int       nano =
-        (new_time - static_cast<time_t>(new_time)) * 1000000000; //TODO fix implicit casting double to int
+        (new_time - static_cast<time_t>(new_time)) * 1000000000;
 
     lhs.set_time(static_cast<time_t>(new_time), nano);
     return (lhs);
@@ -1236,8 +1240,9 @@ DateTime &operator *= (DateTime &lhs, double rhs) noexcept  {
 DateTime &operator /= (DateTime &lhs, double rhs) noexcept  {
 
     const double    new_time = static_cast<double>(lhs) / rhs;
+    // TODO fix implicit casting double to int
     const int       nano =
-        (new_time - static_cast<time_t>(new_time)) * 1000000000; //TODO fix implicit casting double to int
+        (new_time - static_cast<time_t>(new_time)) * 1000000000;
 
     lhs.set_time(static_cast<time_t>(new_time), nano);
     return (lhs);

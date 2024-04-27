@@ -3576,8 +3576,8 @@ static void test_concat_view_from_view()  {
     df2.load_column<double>("dbl_col_2", std::move(dblvec2));
 
     auto    vw =
-        df1.get_view<int, double, std::string>({ "dbl_col", "str_col",
-                                                 "int_col" });
+        df1.get_view<int, double, std::string>(
+            { "dbl_col", "str_col", "int_col" });
     auto    result1 =
         vw.concat_view<MyDataFrame, double, int, std::string>(df2);
     auto    result2 =

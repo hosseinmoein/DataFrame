@@ -3605,6 +3605,33 @@ static void test_concat_view_from_view()  {
 
 // -----------------------------------------------------------------------------
 
+static void test_client_csv_read_test()  {
+
+    std::cout << "\nTesting test_client_csv_read_test{  } ..." << std::endl;
+
+    MyDataFrame df;
+
+    try  {
+        df.read("client_data.csv", io_format::csv2);
+
+        assert(df.get_index().size() == 11);
+        assert(df.get_index()[3] == 3UL);
+        assert(df.get_column<unsigned long>("close2")[1] == 0UL);
+        assert(df.get_column<unsigned long>("close2")[3] == 0UL);
+        assert(df.get_column<double>("close")[2] == 13634.6356);
+        assert(df.get_column<double>("close")[4] == 13534.40545);
+        assert(df.get_column<unsigned long>("close2")[5] == 5UL);
+        assert(df.get_column<unsigned long>("close2")[8] == 8UL);
+        assert(df.get_column<unsigned long>("close2")[10] == 0UL);
+        assert(df.get_column<double>("close")[8] == 13586.30945);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
@@ -3680,6 +3707,7 @@ int main(int, char *[]) {
     test_get_view_from_view();
     test_get_reindexed_view_from_view();
     test_concat_view_from_view();
+    test_client_csv_read_test();
 
     return (0);
 }

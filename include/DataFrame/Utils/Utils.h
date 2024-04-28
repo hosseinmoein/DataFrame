@@ -198,6 +198,10 @@ template<>
 inline float
 get_nan<float>()  { return (std::numeric_limits<float>::quiet_NaN()); }
 
+template<>
+inline DateTime
+get_nan<DateTime>()  { return (DateTime { 19700101 }); }
+
 // ----------------------------------------------------------------------------
 
 template<typename T>

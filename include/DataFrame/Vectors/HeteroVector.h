@@ -70,7 +70,8 @@ struct HeteroVector  {
     [[nodiscard]] std::vector<T, typename allocator_declare<T, A>::type> &
     get_vector();
     template<typename T>
-    [[nodiscard]] const std::vector<T, typename allocator_declare<T, A>::type> &
+    [[nodiscard]]
+    const std::vector<T, typename allocator_declare<T, A>::type> &
     get_vector() const;
 
     // It returns a view of the underlying vector.

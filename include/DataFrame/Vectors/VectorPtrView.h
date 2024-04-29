@@ -41,6 +41,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace hmdf
 {
 
+struct  VPVSentinel  {
+
+    VPVSentinel() = default;
+    VPVSentinel(const VPVSentinel &) = default;
+    VPVSentinel(VPVSentinel &&) = default;
+    VPVSentinel &operator = (const VPVSentinel &) = default;
+    VPVSentinel &operator = (VPVSentinel &&) = default;
+    ~VPVSentinel() = default;
+};
+
+// ----------------------------------------------------------------------------
+
 template<typename T, std::size_t A = 0>
 class VectorPtrView {
 
@@ -213,17 +225,15 @@ public:
 
     public:
 
-       // NOTE: The constructor with no argument initializes
-       //       the iterator to be the "end" iterator
-       //
-        inline iterator () = default;
-        inline iterator (const iterator &) = default;
-        inline iterator (iterator &&) = default;
-        inline iterator &operator = (const iterator &) = default;
-        inline iterator &operator = (iterator &&) = default;
-
         inline iterator (iter_type node) noexcept : node_ (node)  {  }
         inline iterator (pointer *node) noexcept : node_ (node)  {  }
+
+        iterator () = default;
+        ~iterator () = default;
+        iterator (const iterator &) = default;
+        iterator (iterator &&) = default;
+        iterator &operator = (const iterator &) = default;
+        iterator &operator = (iterator &&) = default;
 
         inline iterator &operator = (iter_type rhs) noexcept  {
 
@@ -261,12 +271,24 @@ public:
             return (node_ <= rhs.node_);
         }
 
+        friend bool
+        operator == (const iterator &rhs, VPVSentinel) noexcept  {
+
+            return (rhs.node_ == rhs.vector_.end());
+        }
+        friend bool
+        operator != (const iterator &rhs, VPVSentinel) noexcept  {
+
+            return (rhs.node_ != rhs.vector_.end());
+        }
+
        // Following STL style, this iterator appears as a pointer
        // to value_type.
        //
         inline pointer operator -> () noexcept  { return (*node_); }
         inline reference operator * () noexcept  { return (**node_); }
-        inline const_pointer operator -> () const noexcept  { return (*node_); }
+        inline const_pointer
+        operator -> () const noexcept  { return (*node_); }
         inline const_reference
         operator * () const noexcept  { return (**node_); }
         inline operator pointer() noexcept  { return (*node_); }
@@ -313,7 +335,7 @@ public:
         }
 
         template<typename I>
-        inline iterator operator + (I step) noexcept  {
+        inline iterator operator + (I step) const noexcept  {
 
             auto    ret_node = node_;
 
@@ -321,7 +343,7 @@ public:
             return (iterator { ret_node });
         }
         template<>
-        inline iterator operator + (const iterator &rhs) noexcept {
+        inline iterator operator + (const iterator &rhs) const noexcept {
 
             return (iterator (node_ + rhs.node_));
         }
@@ -333,7 +355,7 @@ public:
         }
 
         template<std::semiregular I>
-        inline iterator operator - (I step) noexcept  {
+        inline iterator operator - (I step) const noexcept  {
 
             auto    ret_node = node_;
 
@@ -377,19 +399,17 @@ public:
 
     public:
 
-       // NOTE: The constructor with no argument initializes
-       //       the iterator to be the "end" iterator
-       //
-        inline const_iterator () = default;
-        inline const_iterator (const const_iterator &) = default;
-        inline const_iterator (const_iterator &&) = default;
-        inline const_iterator &operator = (const const_iterator &) = default;
-        inline const_iterator &operator = (const_iterator &&) = default;
-
         inline const_iterator (iter_type node) noexcept : node_ (node)  {   }
         inline const_iterator (pointer const *node) noexcept
             : node_ (node)  {   }
         inline const_iterator (const iterator &itr) noexcept  { *this = itr; }
+
+        const_iterator () = default;
+        ~const_iterator () = default;
+        const_iterator (const const_iterator &) = default;
+        const_iterator (const_iterator &&) = default;
+        const_iterator &operator = (const const_iterator &) = default;
+        const_iterator &operator = (const_iterator &&) = default;
 
         inline const_iterator &operator = (iter_type rhs) noexcept  {
 
@@ -430,6 +450,17 @@ public:
         inline bool operator <= (const const_iterator &rhs) const noexcept  {
 
             return (node_ <= rhs.node_);
+        }
+
+        friend bool
+        operator == (const const_iterator &rhs, VPVSentinel) noexcept  {
+
+            return (rhs.node_ == rhs.vector_.end());
+        }
+        friend bool
+        operator != (const const_iterator &rhs, VPVSentinel) noexcept  {
+
+            return (rhs.node_ != rhs.vector_.end());
         }
 
        // Following STL style, this iterator appears as a pointer
@@ -491,7 +522,7 @@ public:
         }
 
         template<typename I>
-        inline const_iterator operator + (I step) noexcept  {
+        inline const_iterator operator + (I step) const noexcept  {
 
             auto const  ret_node = node_;
 
@@ -499,7 +530,8 @@ public:
             return (const_iterator { ret_node });
         }
         template<>
-        inline const_iterator operator + (const const_iterator &rhs) noexcept {
+        inline const_iterator
+        operator + (const const_iterator &rhs) const noexcept {
 
             return (const_iterator (node_ + rhs.node_));
         }
@@ -511,7 +543,7 @@ public:
         }
 
         template<std::semiregular I>
-        inline const_iterator operator - (I step) noexcept  {
+        inline const_iterator operator - (I step) const noexcept  {
 
             auto const  ret_node = node_;
 
@@ -532,6 +564,9 @@ public:
 
     using reverse_iterator = std::reverse_iterator<iterator>;
     using const_reverse_iterator = std::reverse_iterator<const_iterator>;
+
+    friend class    iterator;
+    friend class    const_iterator;
 
     [[nodiscard]] inline iterator
     begin () noexcept  { return (iterator(vector_.begin())); }
@@ -628,7 +663,8 @@ public:
     swap (VectorConstPtrView &rhs) noexcept  { vector_.swap (rhs.vector_); }
 
     [[nodiscard]] inline friend bool
-    operator == (const VectorConstPtrView &lhs, const VectorConstPtrView &rhs) {
+    operator == (const VectorConstPtrView &lhs,
+                 const VectorConstPtrView &rhs) {
 
         return (lhs.vector_ == rhs.vector_);
     }
@@ -746,18 +782,16 @@ public:
 
     public:
 
-       // NOTE: The constructor with no argument initializes
-       //       the iterator to be the "end" iterator
-       //
-        inline const_iterator () = default;
-        inline const_iterator (const const_iterator &) = default;
-        inline const_iterator (const_iterator &&) = default;
-        inline const_iterator &operator = (const const_iterator &) = default;
-        inline const_iterator &operator = (const_iterator &&) = default;
-
         inline const_iterator (iter_type node) noexcept : node_ (node)  {   }
         inline const_iterator (pointer const *node) noexcept
             : node_ (node)  {   }
+
+        const_iterator () = default;
+        ~const_iterator () = default;
+        const_iterator (const const_iterator &) = default;
+        const_iterator (const_iterator &&) = default;
+        const_iterator &operator = (const const_iterator &) = default;
+        const_iterator &operator = (const_iterator &&) = default;
 
         inline const_iterator &operator = (iter_type rhs) noexcept  {
 
@@ -793,6 +827,17 @@ public:
         inline bool operator <= (const const_iterator &rhs) const noexcept  {
 
             return (node_ <= rhs.node_);
+        }
+
+        friend bool
+        operator == (const const_iterator &rhs, VPVSentinel) noexcept  {
+
+            return (rhs.node_ == rhs.vector_.end());
+        }
+        friend bool
+        operator != (const const_iterator &rhs, VPVSentinel) noexcept  {
+
+            return (rhs.node_ != rhs.vector_.end());
         }
 
        // Following STL style, this iterator appears as a pointer
@@ -853,7 +898,7 @@ public:
             return (*this);
         }
 
-        inline const_iterator operator + (int step) noexcept  {
+        inline const_iterator operator + (int step) const noexcept  {
 
             value_type const  **ret_node = node_;
 
@@ -861,7 +906,7 @@ public:
             return (const_iterator (ret_node));
         }
 
-        inline const_iterator operator - (int step) noexcept  {
+        inline const_iterator operator - (int step) const noexcept  {
 
             value_type const  **ret_node = node_;
 
@@ -869,7 +914,8 @@ public:
             return (const_iterator (ret_node));
         }
 
-        inline const_iterator operator + (difference_type step) noexcept  {
+        inline const_iterator
+        operator + (difference_type step) const noexcept  {
 
             value_type const  **ret_node = node_;
 
@@ -877,7 +923,8 @@ public:
             return (const_iterator (ret_node));
         }
 
-        inline const_iterator operator - (difference_type step) noexcept  {
+        inline const_iterator
+        operator - (difference_type step) const noexcept  {
 
             value_type const  **ret_node = node_;
 
@@ -897,6 +944,8 @@ public:
 
     using reverse_iterator = std::reverse_iterator<const_iterator>;
     using const_reverse_iterator = std::reverse_iterator<const_iterator>;
+
+    friend class    const_iterator;
 
     [[nodiscard]] inline const_iterator
     begin() const noexcept { return (const_iterator(vector_.begin())); }

@@ -45,7 +45,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef M_PI
 #  define M_PI 3.14159265358979323846264338327950288
 #endif
-
 #include <cstddef>
 #include <functional>
 #include <future>
@@ -58,6 +57,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <unordered_map>
 #include <utility>
 #include <vector>
+
+// 2.0 *  PI
+//
+#define TAU 6.28318530717958647692528676655900576
 
 // ----------------------------------------------------------------------------
 

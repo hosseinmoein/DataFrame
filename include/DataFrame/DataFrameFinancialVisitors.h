@@ -1229,6 +1229,12 @@ struct  RSIVisitor  {
 
         // This data doesn't make sense
         //
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (avg_period_ >= T(col_s - 3))
+            throw DataFrameError("RSIVisitor: avg period must be < "
+                                 "column size - 3");
+#endif // HMDF_SANITY_EXCEPTIONS
+
         if (avg_period_ >= T(col_s - 3))  return;
 
         ReturnVisitor<T, I, A>  return_v { rp_ };
@@ -8218,6 +8224,86 @@ private:
 
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 using qqe_v = QuantQualEstimationVisitor<T, I, A>;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ----------------------------------------------------------------------------
+
+template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
+struct  PeaksAndValleysVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_3
+
+    template <forward_iterator K, forward_iterator H>
+    inline void
+    operator() (const K &/*idx_begin*/, const K &/*idx_end*/,
+                const H &prices_begin, const H &prices_end)  {
+
+        const size_type col_s = std::distance(prices_begin, prices_end);
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (col_s < 4)
+            throw DataFrameError("PeaksAndValleysVisitor: column size must "
+                                 "> 3");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+    }
+
+    inline void pre ()  {
+
+        peaks_.clear();
+        valleys_.clear();
+    }
+    inline void post ()  {  }
+    const result_type &get_result() const  { return (peaks_); }
+    result_type &get_result()  { return (peaks_); }
+    const result_type &get_peaks() const  { return (peaks_); }
+    result_type &get_peaks()  { return (peaks_); }
+    const result_type &get_valleys() const  { return (valleys_); }
+    result_type &get_valleys()  { return (valleys_); }
+
+private:
+
+    result_type peaks_ { };
+    result_type valleys_ { };
+};
+
+template<typename T, typename I = unsigned long, std::size_t A = 0>
+using pav_v = PeaksAndValleysVisitor<T, I, A>;
 
 } // namespace hmdf
 

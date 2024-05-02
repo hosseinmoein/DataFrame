@@ -53,7 +53,7 @@ struct AutoCorrVisitor;
         This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
         This functor class calculates the auto correlation of given column. The result is a vector of auto correlations with lags of 0 up to length of column – 4.<BR>
       </td>
-      <td width="15%">
+      <td width="30%">
         <B>T</B>: Column data type. T must be an arithmetic-enabled type<BR>
         <B>I</B>: Index type.<BR>
         <B>A</B>: Memory alignment boundary for vectors. Default is system default alignment<BR>
@@ -80,7 +80,7 @@ struct FixedAutoCorrVisitor;
     <B>rp</B>: How to roll over the input with the lagged period. See roll_policy
 </I></PRE>
       </td>
-      <td width="15%">
+      <td width="30%">
         <B>T</B>: Column data type. T must be an arithmetic-enabled type<BR>
         <B>I</B>: Index type.<BR>
         <B>A</B>: Memory alignment boundary for vectors. Default is system default alignment<BR>

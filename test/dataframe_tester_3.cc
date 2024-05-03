@@ -3053,7 +3053,7 @@ static void test_get_data_by_rand_from_view()  {
     }
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_get_data_by_like_from_view()  {
 
@@ -3203,7 +3203,7 @@ static void test_get_reindexed_from_view()  {
     assert(result.get_column<double>("dbl_col_2")[10] == 112.0);
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_concat_from_view()  {
 
@@ -3261,7 +3261,7 @@ static void test_concat_from_view()  {
     assert(result.get_column<int>("int_col")[15] == 1);
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_get_view_by_sel_from_view()  {
 
@@ -3393,7 +3393,7 @@ static void test_get_view_by_rand_from_view()  {
     }
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_get_view_by_like_from_view()  {
 
@@ -3543,7 +3543,7 @@ static void test_get_reindexed_view_from_view()  {
     assert(result.get_column<double>("dbl_col_2")[10] == 112.0);
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_concat_view_from_view()  {
 
@@ -3603,7 +3603,7 @@ static void test_concat_view_from_view()  {
     assert(result2.get_index()[14] == 14);
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 static void test_client_csv_read_test()  {
 
@@ -3624,6 +3624,68 @@ static void test_client_csv_read_test()  {
         assert(df.get_column<unsigned long>("close2")[8] == 8UL);
         assert(df.get_column<unsigned long>("close2")[10] == 0UL);
         assert(df.get_column<double>("close")[8] == 13586.30945);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// ----------------------------------------------------------------------------
+
+static void test_PeaksAndValleysVisitor()  {
+
+    std::cout << "\nTesting PeaksAndValleysVisitor{ } ..." << std::endl;
+
+    typedef StdDataFrame64<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("SHORT_IBM.csv", io_format::csv2);
+
+        pav_v<double, std::string, 64>  pav;
+
+        df.single_act_visit<double>("IBM_Close", pav);
+
+        assert(pav.get_peaks().size() == 1721);
+        assert(std::abs(pav.get_peaks()[0].value - 185.53) < 0.0001);
+        assert(pav.get_peaks()[0].index == "2014-01-02");
+        assert(std::abs(pav.get_peaks()[1].value - 186.64) < 0.0001);
+        assert(pav.get_peaks()[1].index == "2014-01-03");
+        assert(std::abs(pav.get_peaks()[19].value - 182.73) < 0.0001);
+        assert(pav.get_peaks()[19].index == "2014-01-23");
+        assert(std::abs(pav.get_peaks()[20].value - 177.36) < 0.0001);
+        assert(pav.get_peaks()[20].index == "2014-01-30");
+        assert(std::abs(pav.get_peaks()[24].value - 177.36) < 0.0001);
+        assert(pav.get_peaks()[24].index == "2014-01-30");
+        assert(std::abs(pav.get_peaks()[25].value - 177.36) < 0.0001);
+        assert(pav.get_peaks()[25].index == "2014-01-30");
+        assert(std::abs(pav.get_peaks()[1720].value - 116.0) < 0.0001);
+        assert(pav.get_peaks()[1720].index == "2020-10-23");
+        assert(std::abs(pav.get_peaks()[1712].value - 125.93) < 0.0001);
+        assert(pav.get_peaks()[1712].index == "2020-10-16");
+        assert(std::abs(pav.get_peaks()[1707].value - 131.49) < 0.0001);
+        assert(pav.get_peaks()[1707].index == "2020-10-08");
+
+        assert(pav.get_valleys().size() == 1721);
+        assert(std::abs(pav.get_valleys()[0].value - 185.53) < 0.0001);
+        assert(pav.get_valleys()[0].index == "2014-01-02");
+        assert(std::abs(pav.get_valleys()[1].value - 186.64) < 0.0001);
+        assert(pav.get_valleys()[1].index == "2014-01-03");
+        assert(std::abs(pav.get_valleys()[19].value - 176.4) < 0.0001);
+        assert(pav.get_valleys()[19].index == "2014-01-29");
+        assert(std::abs(pav.get_valleys()[20].value - 176.4) < 0.0001);
+        assert(pav.get_valleys()[20].index == "2014-01-29");
+        assert(std::abs(pav.get_valleys()[24].value - 172.84) < 0.0001);
+        assert(pav.get_valleys()[24].index == "2014-02-04");
+        assert(std::abs(pav.get_valleys()[25].value - 172.84) < 0.0001);
+        assert(pav.get_valleys()[25].index == "2014-02-04");
+        assert(std::abs(pav.get_valleys()[1720].value - 106.65) < 0.0001);
+        assert(pav.get_valleys()[1720].index == "2020-10-28");
+        assert(std::abs(pav.get_valleys()[1712].value - 124.89) < 0.0001);
+        assert(pav.get_valleys()[1712].index == "2020-10-15");
+        assert(std::abs(pav.get_valleys()[1707].value - 121.97) < 0.0001);
+        assert(pav.get_valleys()[1707].index == "2020-10-06");
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;
@@ -3708,6 +3770,7 @@ int main(int, char *[]) {
     test_get_reindexed_view_from_view();
     test_concat_view_from_view();
     test_client_csv_read_test();
+    test_PeaksAndValleysVisitor();
 
     return (0);
 }

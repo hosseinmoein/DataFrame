@@ -8225,62 +8225,70 @@ private:
 template<typename T, typename I = unsigned long, std::size_t A = 0>
 using qqe_v = QuantQualEstimationVisitor<T, I, A>;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // ----------------------------------------------------------------------------
 
 template<arithmetic T, typename I = unsigned long, std::size_t A = 0>
 struct  PeaksAndValleysVisitor  {
 
-    DEFINE_VISIT_BASIC_TYPES_3
+    struct ResultItem  {
+
+        T   value { };
+        I   index { };
+
+        template<typename S>
+        friend S &operator << (S &stream, const ResultItem &ri)  {
+
+            stream << ri.value << '@' << ri.index;
+            return (stream);
+        }
+    };
+
+    using value_type = T;
+    using index_type = I;
+    using size_type = std::size_t;
+    using result_type =
+        std::vector<ResultItem,
+                    typename allocator_declare<ResultItem, A>::type>;
 
     template <forward_iterator K, forward_iterator H>
     inline void
-    operator() (const K &/*idx_begin*/, const K &/*idx_end*/,
+    operator() (const K &idx_begin, const K &/*idx_end*/,
                 const H &prices_begin, const H &prices_end)  {
 
         const size_type col_s = std::distance(prices_begin, prices_end);
 
 #ifdef HMDF_SANITY_EXCEPTIONS
         if (col_s < 4)
-            throw DataFrameError("PeaksAndValleysVisitor: column size must "
-                                 "> 3");
+            throw DataFrameError(
+                "PeaksAndValleysVisitor: column size must > 3");
 #endif // HMDF_SANITY_EXCEPTIONS
 
+        result_type peaks (col_s);
+        result_type valleys (col_s);
+
+        peaks[0] = valleys[0] = ResultItem { *prices_begin, *idx_begin };
+        peaks[1] = valleys[1] =
+            ResultItem { *(prices_begin + 1), *(idx_begin + 1) };
+        for (size_type i = 2; i < col_s; ++i)  {
+            auto  &curr_peak = peaks[i];
+            auto  &curr_valley = valleys[i];
+
+            curr_peak = peaks[i - 1];
+            curr_valley = valleys[i - 1];
+
+            const auto  val = *(prices_begin + i);
+            const auto  val_1 = *(prices_begin + (i - 1));
+            const auto  idx_1 = *(idx_begin + (i - 1));
+            const auto  val_2 = *(prices_begin + (i - 2));
+
+            if (val_1 > val && val_1 > val_2)
+                curr_peak = ResultItem { val_1, idx_1 };
+            else if (val_1 < val && val_1 < val_2)
+                curr_valley = ResultItem { val_1, idx_1 };
+        }
+
+        peaks_.swap(peaks);
+        valleys_.swap(valleys);
     }
 
     inline void pre ()  {

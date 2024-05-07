@@ -54,6 +54,53 @@ namespace hmdf
 
 // ----------------------------------------------------------------------------
 
+template<arithmetic T, typename I = unsigned long>
+struct  EhlersHighPassFilterVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_4
+
+    template <forward_iterator K, forward_iterator H>
+    inline void
+    operator() (K idx_begin, K idx_end, H column_begin, H column_end) {
+
+        GET_COL_SIZE
+
+        const value_type    ang = TAU / period_;
+        const value_type    ang_cos = std::cos(ang);
+        const value_type    alpha =
+            ang_cos != T(0) ? (ang_cos + std::sin(ang) - T(1)) / ang_cos : T(0);
+        const value_type    t_plus = T(1) + alpha * T(0.5);
+        const value_type    t_minus = T(1) - alpha;
+        value_type          prev_input = *column_begin;
+        value_type          prev_filter = 0;
+
+        for (size_type i = 1; i < col_s; ++i)  {
+            const value_type    diff = *(column_begin + i) - prev_input;
+            const value_type    filter = t_plus * diff + t_minus * prev_filter;
+
+            prev_filter = filter;
+            prev_input = *(column_begin + i);
+            *(column_begin + i) -= filter;
+        }
+    }
+
+    inline void pre ()  {  }
+    inline void post ()  {  }
+    inline result_type get_result () const  { return (0); }
+
+    explicit
+    EhlersHighPassFilterVisitor(value_type period = 20) : period_(period)  {  }
+
+private:
+
+    const value_type    period_;
+};
+
+template<arithmetic T, typename I = unsigned long>
+using ehpf_v = EhlersHighPassFilterVisitor<T, I>;
+
+// ----------------------------------------------------------------------------
+
 template<typename T, typename I = unsigned long>
 struct  ClipVisitor  {
 

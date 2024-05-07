@@ -78,6 +78,8 @@ table {
 	<img src="https://github.com/hosseinmoein/DataFrame/blob/master/docs/LionLookingUp.jpg?raw=true" alt="C++ DataFrame" width="30" height="30"/>
   </center>
 
+  <BR><a href="https://github.com/hosseinmoein/DataFrame?tab=readme-ov-file">&#8592; Back to Github</a><BR>
+  
   <H2><font color="blue">Summary</font></H2>
 <P>
   <font size="+1">DataFrame</font> is a templatized and heterogeneous C++ container designed for data analysis for statistical, machine-learning, or financial applications. You can think of data-frame as a two-dimensional data structure of columns and rows just like an Excel spreadsheet, or a SQL table. But in case of C++ DataFrame, your data needn't be two-dimensional necessarily. Columns in the C++ DataFrame could be vectors of any type, including DataFrames or other containers. So, a C++ DataFrame can be of any dimension. That's the logical layout of the data. C++ DataFrame also includes an intuitive API for data analysis and analytics. The API is designed to be open-ended meaning you can easily include your own custom algorithms.<BR>
@@ -163,7 +165,7 @@ table.hovertable td {
   <table id="hmdf_table" align="center" class="hovertable">
 
     <tr>
-      <th><font color="white">Member Functions</font></th>
+      <th title="These are public member functions of DataFrame class"><font color="white">Member Functions</font></th>
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
@@ -468,11 +470,7 @@ table.hovertable td {
   <div class="column">
   <table id="hmdf_table" align="center" class="hovertable">
     <tr>
-      <th><font color="white">Statistical<BR>Visitors</font></th>
-    </tr>
-
-    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
-      <td title="Converts numeric values to their absolute values">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/AbsVisitor.html">AbsVisitor</a>{}</td>
+      <th title="These are visitors mostly used in statistical analysis"><font color="white">Statistical<BR>Visitors</font></th>
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
@@ -489,10 +487,6 @@ table.hovertable td {
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
       <td title="Categorizes column data">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/CategoryVisitor.html">CategoryVisitor</a>{}</td>
-    </tr>
-
-    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
-      <td title="Clips column data to limits">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/ClipVisitor.html">ClipVisitor</a>{}</td>
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
@@ -544,10 +538,6 @@ table.hovertable td {
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
-      <td title="Exponential smoothing of a time-series">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/ExpoSmootherVisitor.html">ExpoSmootherVisitor</a>{}</td>
-    </tr>
-
-    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
       <td title="Factorizes column data">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/FactorizeVisitor.html">FactorizeVisitor</a>{}</td>
     </tr>
 
@@ -560,15 +550,7 @@ table.hovertable td {
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
-      <td title="Applies Hampel filter to column data">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/HampelFilterVisitor.html">HampelFilterVisitor</a>{}</td>
-    </tr>
-
-    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
       <td title="Calculatews harmonic mean">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/MeanVisitor.html">HarmonicMeanVisitor</a>{}</td>
-    </tr>
-
-    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
-      <td title="Double (Holt-Winters) exponential smoothing of a time-series">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/ExpoSmootherVisitor.html">HWExpoSmootherVisitor</a>{}</td>
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
@@ -702,13 +684,42 @@ table.hovertable td {
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
       <td title="Calculates z-score">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/ZScoreVisitor.html">ZScoreVisitor</a>{}</td>
     </tr>
+
+    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
+      <td title="These visitors change the input column in-place " style="text-align:center;background-color:SlateGrey;color:white">Transformers &amp;<BR>Filters</td>
+    </tr>
+
+    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
+      <td title="Converts numeric values to their absolute values">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/AbsVisitor.html">AbsVisitor</a>{}</td>
+    </tr>
+
+    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
+      <td title="Clips column data to limits">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/ClipVisitor.html">ClipVisitor</a>{}</td>
+    </tr>
+
+    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
+      <td title="Applies Ehlers' smoothing high pass filter">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/EhlersHighPassFilterVisitor.html">EhlersHighPassFilterVisitor</a>{}</td>
+    </tr>
+
+    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
+      <td title="Exponential smoothing of a time-series">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/ExpoSmootherVisitor.html">ExpoSmootherVisitor</a>{}</td>
+    </tr>
+
+    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
+      <td title="Applies Hampel filter to column data">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/HampelFilterVisitor.html">HampelFilterVisitor</a>{}</td>
+    </tr>
+
+    <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
+      <td title="Double (Holt-Winters) exponential smoothing of a time-series">struct <a href="https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/ExpoSmootherVisitor.html">HWExpoSmootherVisitor</a>{}</td>
+    </tr>
+
   </table>
   </div>
 
   <div class="column">
   <table id="hmdf_table" align="center" class="hovertable">
     <tr>
-      <th><font color="white">Artificial-Intelligence<BR>Visitors</font></th>
+      <th title="These are visitors mostly used in ML analysis"><font color="white">Artificial-Intelligence<BR>Visitors</font></th>
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
@@ -805,7 +816,7 @@ table.hovertable td {
   <div class="column">
   <table id="hmdf_table" align="center" class="hovertable">
     <tr>
-      <th><font color="white">Financial<BR>Visitors</font></th>
+      <th title="These are visitors mostly used in financial/trading analysis"><font color="white">Financial<BR>Visitors</font></th>
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
@@ -1085,7 +1096,7 @@ table.hovertable td {
   <div class="column">
   <table id="hmdf_table" align="center" class="hovertable">
     <tr>
-      <th><font color="white">Types</font></th>
+      <th title="These are DataFrame library types"><font color="white">Types</font></th>
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
@@ -1233,7 +1244,7 @@ table.hovertable td {
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
-      <td style="text-align:center;background-color:SlateGrey;color:white">Arithmetic<BR>Operators</td>
+      <td title="These are arithmetic operators between DataFrames" style="text-align:center;background-color:SlateGrey;color:white">Arithmetic<BR>Operators</td>
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
@@ -1269,7 +1280,7 @@ table.hovertable td {
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
-      <td style="text-align:center;background-color:SlateGrey;color:white">Exceptions</td>
+      <td title="These are exceptions thrown by this library" style="text-align:center;background-color:SlateGrey;color:white">Exceptions</td>
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
@@ -1302,7 +1313,7 @@ table.hovertable td {
   <div class="column">
   <table id="hmdf_table" align="center" class="hovertable">
     <tr>
-      <th><font color="white">Stand-alone<BR>Numeric Generators</font></th>
+      <th title="These are public stand-alone functions in DataFrame library"><font color="white">Stand-alone<BR>Numeric Generators</font></th>
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
@@ -1394,7 +1405,7 @@ table.hovertable td {
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
-      <td style="text-align:center;background-color:SlateGrey;color:white">Multithreading<BR>Static Functions</td>
+      <td title="These populate the thread-pool" style="text-align:center;background-color:SlateGrey;color:white">Multithreading<BR>Static Functions</td>
     </tr>
 
     <tr class="item" onmouseover="this.style.backgroundColor='#ffff66';" onmouseout="this.style.backgroundColor='#d4e3e5';">
@@ -1532,7 +1543,7 @@ DataFrame uses multithreading extensively and provides granular tools to adjust 
 	You can also use <I>Conan</I> or <I>VCPKG</I> &#8212; see README
   </P>
 
-  <BR>
+  <BR><a href="https://github.com/hosseinmoein/DataFrame?tab=readme-ov-file">&#8592; Back to Github</a><BR>
 
 </body></html>
 

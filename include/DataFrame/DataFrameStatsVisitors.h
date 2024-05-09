@@ -44,7 +44,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cmath>
 #ifndef M_PI
 #  define M_PI 3.14159265358979323846264338327950288
-#endif
+#endif // M_PI
 #include <cstddef>
 #include <functional>
 #include <future>
@@ -60,7 +60,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // 2PI
 //
-#define TAU 6.28318530717958647692528676655900576
+#ifndef TAU
+#  define TAU 6.28318530717958647692528676655900576
+#endif // TAU
 
 // ----------------------------------------------------------------------------
 

@@ -3732,6 +3732,45 @@ static void test_EhlersHighPassFilterVisitor()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_EhlersBandPassFilterVisitor()  {
+
+    std::cout << "\nTesting EhlersBandPassFilterVisitor{ } ..." << std::endl;
+
+    typedef StdDataFrame64<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("SHORT_IBM.csv", io_format::csv2);
+        df.load_column<double>("Smooth Close",
+                               { df.get_column<double>("IBM_Close").begin(),
+                                 df.get_column<double>("IBM_Close").end() });
+
+        ebpf_v<double, std::string> ebpf(14, 0.8);
+
+        df.single_act_visit<double>("Smooth Close", ebpf);
+
+        const auto  &smooth_close = df.get_column<double>("Smooth Close");
+
+        assert(smooth_close.size() == 1721);
+        assert(std::abs(smooth_close[0] - 185.53) < 0.001);
+        assert(std::abs(smooth_close[1] - 186.64) < 0.001);
+        assert(std::abs(smooth_close[2] - 185.928) < 0.001);
+        assert(std::abs(smooth_close[19] - 180.851) < 0.001);
+        assert(std::abs(smooth_close[20] - 178.903) < 0.001);
+        assert(std::abs(smooth_close[24] - 174.9) < 0.001);
+        assert(std::abs(smooth_close[25] - 176.41) < 0.001);
+        assert(std::abs(smooth_close[1720] - 113.541) < 0.001);
+        assert(std::abs(smooth_close[1712] - 119.954) < 0.001);
+        assert(std::abs(smooth_close[1707] - 123.239) < 0.001);
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
@@ -3810,6 +3849,7 @@ int main(int, char *[]) {
     test_client_csv_read_test();
     test_PeaksAndValleysVisitor();
     test_EhlersHighPassFilterVisitor();
+    test_EhlersBandPassFilterVisitor();
 
     return (0);
 }

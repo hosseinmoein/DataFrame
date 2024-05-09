@@ -56,10 +56,49 @@ using ehpf_v = EhlersHighPassFilterVisitor&lt;T, I&gt;;
       <td>
         This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
         This is a transformer visitor. It means the column(s) passed to this visitor is not read-only and its values will change<BR><BR>
-        This functor class applies Ehlers' <I>high pass</I> smoothing filter to the input. Ehlers suggested a way to improve trend identification using high-pass filters. The basic smoothers like SMA , low-pass filters, have considerable lag in their display. Mr. Ehlers applied the high-pass filter and subtracted the high-pass filter output from the time series input. Doing these steps he removed high-frequency short-wavelength components (the ones causing the wiggles) from the time series.<BR><BR>
+        This functor class applies Ehlers' <I>high-pass</I> smoothing filter to the input. Ehlers suggested a way to improve trend identification using high-pass filters. The basic smoothers like SMA , low-pass filters, have considerable lag in their display. Mr. Ehlers applied the high-pass filter and subtracted the high-pass filter output from the time series input. Doing these steps he removed high-frequency short-wavelength components (the ones causing the wiggles) from the time series.<BR><BR>
         <I><PRE>
     explicit
     EhlersHighPassFilterVisitor(value_type period = 20);
+        </PRE>
+		</I>
+      </td>
+      <td width="30%">
+        <B>T</B>: Column data type.<BR>
+        <B>I</B>: Index type.
+      </td>
+    </tr>
+
+
+
+
+
+
+
+
+
+
+    <tr bgcolor="Azure">
+      <td bgcolor="blue"> <font color="white">
+        <PRE><B>#include &lt;DataFrame/DataFrameTransformVisitors.h&gt;
+
+template&lt;typename T, typename I = unsigned long&gt;
+struct EhlersBandPassFilterVisitor;
+
+// -------------------------------------
+
+template&lt;typename T, typename I = unsigned long&gt;
+using ebpf_v = EhlersBandPassFilterVisitor&lt;T, I&gt;;
+        </B></PRE></font>
+      </td>
+      <td>
+        This is a "single action visitor", meaning it is passed the whole data vector in one call and you must use the single_act_visit() interface.<BR><BR>
+        This is a transformer visitor. It means the column(s) passed to this visitor is not read-only and its values will change<BR><BR>
+        This functor class applies Ehlers' <I>band-pass</I> smoothing filter to the input. The band-pass indicator is an oscillator-type indicator. It makes full use of the digital computational power of your computer and therefore is superior to conventional oscillators such as the relative strength index (RSI) or the stochastic indicator when the market is in a cycle mode. If you were to stop and think about what an oscillator does, you would conclude that it performs two functions: it detrends the price, and it does some smoothing.<BR><BR>
+        <I><PRE>
+    explicit
+    EhlersBandPassFilterVisitor(value_type period = 20,
+                                value_type bandwidth = 0.3);
         </PRE>
 		</I>
       </td>

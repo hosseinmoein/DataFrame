@@ -65,6 +65,12 @@ struct  EhlersHighPassFilterVisitor  {
 
         GET_COL_SIZE
 
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (col_s < 3)
+            throw DataFrameError("EhlersHighPassFilterVisitor: "
+                                 "column size must be > 2");
+#endif // HMDF_SANITY_EXCEPTIONS
+
         const value_type    ang = TAU / period_;
         const value_type    ang_cos = std::cos(ang);
         const value_type    alpha =
@@ -98,6 +104,59 @@ private:
 
 template<arithmetic T, typename I = unsigned long>
 using ehpf_v = EhlersHighPassFilterVisitor<T, I>;
+
+// ----------------------------------------------------------------------------
+
+template<arithmetic T, typename I = unsigned long>
+struct  EhlersBandPassFilterVisitor  {
+
+    DEFINE_VISIT_BASIC_TYPES_4
+
+    template <forward_iterator K, forward_iterator H>
+    inline void
+    operator() (K idx_begin, K idx_end, H column_begin, H column_end) {
+
+        GET_COL_SIZE
+
+#ifdef HMDF_SANITY_EXCEPTIONS
+        if (col_s < 10)
+            throw DataFrameError("EhlersBandPassFilterVisitor: "
+                                 "column size must be > 9");
+#endif // HMDF_SANITY_EXCEPTIONS
+
+        const value_type        beta = std::cos(TAU / period_);
+        const value_type        gamma = T(1) / std::cos(TAU * bandw_ / period_);
+        const value_type        alpha =
+            gamma - std::sqrt(gamma * gamma - T(1));
+        const value_type        f1 = T(0.5) * (T(1) - alpha);
+        const value_type        f2 = beta * (T(1) + alpha);
+        std::vector<value_type> filter(col_s, T(0));
+
+        filter[2] = f1 * (*(column_begin + 2) - *(column_begin));
+        for (size_type i = 3; i < col_s; ++i)
+            filter[i] = f1 * (*(column_begin + i) - *(column_begin + (i - 2))) +
+                        f2 * filter[i - 1] - alpha * filter[i - 2];
+        for (size_type i = 0; i < col_s; ++i)
+            *(column_begin + i) -= filter[i];
+    }
+
+    inline void pre ()  {  }
+    inline void post ()  {  }
+    inline result_type get_result () const  { return (0); }
+
+    explicit
+    EhlersBandPassFilterVisitor(value_type period = 20,
+                                value_type bandwidth = 0.3)
+        : period_(period), bandw_(bandwidth)  {  }
+
+private:
+
+    const value_type    period_;
+    const value_type    bandw_;
+};
+
+template<arithmetic T, typename I = unsigned long>
+using ebpf_v = EhlersBandPassFilterVisitor<T, I>;
 
 // ----------------------------------------------------------------------------
 

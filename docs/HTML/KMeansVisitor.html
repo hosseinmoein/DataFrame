@@ -60,10 +60,9 @@ struct KMeansVisitor;
         <PRE>
 KMeansVisitor(std::size_t num_of_iter,
               bool calc_clusters = true,
-              distance_func f =
-                  [](const T &x, const T &y) -> double {
-                      return ((x - y) * (x - y));
-                  })
+              distance_func f = [](const T &x, const T &y) -> double {
+                                    `return ((x - y) * (x - y));
+                                })
         </PRE>
         </I>
         </LI>

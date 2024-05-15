@@ -933,7 +933,7 @@ col_vector_push_back_cont_func_(V &vec,
 
     value.reserve(2048);
     while (file.get(c)) [[likely]] {
-        if (c == '\n')  break;
+        if (c == '\n') [[unlikely]] break;
         file.unget();
         value.clear();
         _get_token_from_file_(file, ',', value, '\0');

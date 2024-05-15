@@ -197,17 +197,41 @@ DataFrame<I, H>::print_csv_functor_<Ts ...>::operator() (const T &vec)  {
     using VecType = typename std::remove_reference<T>::type;
     using ValueType = typename VecType::value_type;
 
-    _write_csv_df_header_<std::ostream, ValueType>(os, name, vec.size()) << ':';
+    _write_csv_df_header_<std::ostream, ValueType>(os, name, vec.size())
+        << ':';
 
     const long  vec_size = vec.size();
     const long  sr = std::min(start_row, vec_size);
     const long  er = std::min(end_row, vec_size);
 
-    if (vec_size > 0)  {
-        for (long i = sr; i < er; ++i)
-            _write_csv_df_index_(os, vec[i]) << ',';
-    }
+    for (long i = sr; i < er; ++i)
+        _write_csv_df_index_(os, vec[i]) << ',';
     os << '\n';
+
+    return;
+}
+
+// ----------------------------------------------------------------------------
+
+template<typename I, typename H>
+template<typename ... Ts>
+template<typename T>
+void
+DataFrame<I, H>::print_binary_functor_<Ts ...>::operator() (const T &vec)  {
+
+    using VecType = typename std::remove_reference<T>::type;
+    using ValueType = typename VecType::value_type;
+
+    char    col_name[64];
+
+    std::strncpy(col_name, name, sizeof(col_name));
+    os.write(col_name, sizeof(col_name));
+    if constexpr (std::is_same_v<ValueType, std::string>)
+        _write_binary_string_(os, vec);
+    else if constexpr (std::is_same_v<ValueType, DateTime>)
+        _write_binary_datetime_(os, vec);
+    else
+        _write_binary_data_(os, vec);
 
     return;
 }
@@ -696,7 +720,7 @@ operator() (T &vec)  {
 
     using VecType = typename std::remove_reference<T>::type;
     using ValueType = typename VecType::value_type;
-    using ViewType = typename DF::template ColumnVecType<ValueType>; 
+    using ViewType = typename DF::template ColumnVecType<ValueType>;
 
     ViewType        new_col;
     const size_type vec_size = vec.size();
@@ -737,12 +761,12 @@ operator() (T &vec) const  {
         if (sel_indices[i] < vec_s)  {
             if constexpr (std::is_base_of<HeteroVector<align_value>, H>::value)
                 vec.erase(vec.begin() + (sel_indices[i] - del_count++));
-			else 
+            else
                 vec.erase(sel_indices[i] - del_count++);
-		}
+        }
         else
             break;
-	}
+    }
 }
 
 // ----------------------------------------------------------------------------
@@ -772,7 +796,7 @@ random_load_data_functor_<DF, Ts ...>::operator() (const T &vec)  {
 
     const size_type vec_s = vec.size();
     const size_type n_rows = rand_indices.size();
-	typename DF::template ColumnVecType<ValueType>  new_vec;
+    typename DF::template ColumnVecType<ValueType>  new_vec;
     size_type       prev_value { 0 };
 
     new_vec.reserve(n_rows);

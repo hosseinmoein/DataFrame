@@ -347,17 +347,21 @@ shift_left(V &vec, std::size_t n)  {
 
 // ----------------------------------------------------------------------------
 
-template<typename STR, std::size_t SIZ = 64 * 1024>
+template<typename STR, std::size_t SIZ = 128 * 1024>
 struct  IOStreamOpti  {
 
-    IOStreamOpti (STR &stream, const char *file_name)
+    IOStreamOpti (STR &stream, const char *file_name, bool binary = false)
         : stream_(stream),
           tie_(std::cin.tie(nullptr)),
           sync_(std::ios_base::sync_with_stdio(false))  {
 
         stream_.rdbuf()->pubsetbuf(buffer_, SIZ);
-        if (file_name && ! stream_.is_open())
-            stream_.open(file_name);
+        if (file_name && ! stream_.is_open())  {
+            if (! binary)
+                stream_.open(file_name);
+            else
+                stream_.open(file_name, std::ios::binary);
+        }
     }
 
     ~IOStreamOpti ()  {

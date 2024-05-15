@@ -28,6 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include <DataFrame/DataFrame.h>
+#include <DataFrame/Utils/Endianness.h>
 #include <DataFrame/Utils/Utils.h>
 
 // ----------------------------------------------------------------------------
@@ -45,7 +46,7 @@ write(const char *file_name,
       long max_recs) const  {
 
     std::ofstream       stream;
-    const IOStreamOpti  io_opti(stream, file_name);
+    const IOStreamOpti  io_opti(stream, file_name, iof == io_format::binary);
 
     if (stream.fail()) [[unlikely]]  {
         String1K    err;
@@ -83,7 +84,8 @@ write(S &o,
 
     if (iof != io_format::csv &&
         iof != io_format::json &&
-        iof != io_format::csv2)
+        iof != io_format::csv2 &&
+        iof != io_format::binary)
         throw NotImplemented("write(): This io_format is not implemented");
 
     bool    need_pre_comma = false;
@@ -193,10 +195,34 @@ write(S &o,
             o << '\n';
         }
     }
+    else if (iof == io_format::binary)  {
+        const auto  endianness = get_system_endian();
+
+        o.write(reinterpret_cast<const char *>(&endianness), sizeof(endians));
+
+        print_binary_functor_<Ts ...>   idx_functor (DF_INDEX_COL_NAME,
+                                                     o,
+                                                     start_row,
+                                                     end_row);
+
+        idx_functor(indices_);
+
+        const SpinGuard guard(lock_);
+
+        for (const auto &[name, idx] : column_list_) [[likely]]  {
+            print_binary_functor_<Ts ...>   functor (name.c_str(),
+                                                     o,
+                                                     start_row,
+                                                     end_row);
+
+            data_[idx].change(functor);
+        }
+    }
 
     if (iof == io_format::json)
         o << "\n}";
-    o << std::endl;
+    if (iof != io_format::binary)
+        o << std::endl;
     return (true);
 }
 

@@ -32,6 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <DataFrame/RandGen.h>
 
 #include <cassert>
+#include <cstdio>
 #include <iostream>
 #include <string>
 
@@ -3771,6 +3772,31 @@ static void test_EhlersBandPassFilterVisitor()  {
 
 // ----------------------------------------------------------------------------
 
+static void test_writing_binary()  {
+
+    std::cout << "\nTesting test_writing_binary{ } ..." << std::endl;
+
+    typedef StdDataFrame64<std::string> StrDataFrame;
+
+    StrDataFrame    df;
+
+    try  {
+        df.read("SHORT_IBM.csv", io_format::csv2);
+        df.write<double, long>("./SHORT_IBM.csv", io_format::csv);
+        df.write<double, long>("./SHORT_IBM.csv2", io_format::csv2);
+        df.write<double, long>("./SHORT_IBM.dat", io_format::binary);
+
+		std::remove("./SHORT_IBM.csv");
+		std::remove("./SHORT_IBM.csv2");
+		std::remove("./SHORT_IBM.data");
+    }
+    catch (const DataFrameError &ex)  {
+        std::cout << ex.what() << std::endl;
+    }
+}
+
+// ----------------------------------------------------------------------------
+
 int main(int, char *[]) {
 
     MyDataFrame::set_optimum_thread_level();
@@ -3850,6 +3876,7 @@ int main(int, char *[]) {
     test_PeaksAndValleysVisitor();
     test_EhlersHighPassFilterVisitor();
     test_EhlersBandPassFilterVisitor();
+    test_writing_binary();
 
     return (0);
 }

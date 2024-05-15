@@ -3782,13 +3782,24 @@ static void test_writing_binary()  {
 
     try  {
         df.read("SHORT_IBM.csv", io_format::csv2);
-        df.write<double, long>("./SHORT_IBM.csv", io_format::csv);
-        df.write<double, long>("./SHORT_IBM.csv2", io_format::csv2);
-        df.write<double, long>("./SHORT_IBM.dat", io_format::binary);
+        df.write<double, long>("./SHORT_IBM_dup.csv", io_format::csv);
+        df.write<double, long>("./SHORT_IBM_dup.csv2", io_format::csv2);
+        df.write<double, long>("./SHORT_IBM_dup.dat", io_format::binary);
 
-		std::remove("./SHORT_IBM.csv");
-		std::remove("./SHORT_IBM.csv2");
-		std::remove("./SHORT_IBM.data");
+        auto    vw =
+            df.get_view<double, long>(
+                { "IBM_Open", "IBM_High", "IBM_Close", "IBM_Volume" });
+
+        vw.write<double, long>("./FROM_VW_SHORT_IBM.csv", io_format::csv);
+        vw.write<double, long>("./FROM_VW_SHORT_IBM.csv2", io_format::csv2);
+        vw.write<double, long>("./FROM_VW_SHORT_IBM.dat", io_format::binary);
+
+		std::remove("./SHORT_IBM_dup.csv");
+		std::remove("./SHORT_IBM_dup.csv2");
+		std::remove("./SHORT_IBM_dup.dat");
+		std::remove("./FROM_VW_SHORT_IBM.csv");
+		std::remove("./FROM_VW_SHORT_IBM.csv2");
+		std::remove("./FROM_VW_SHORT_IBM.dat");
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;

@@ -893,10 +893,16 @@ inline static STRM &_write_binary_string_(STRM &strm, const V &str_vec)  {
     const uint64_t  vec_size = str_vec.size();
 
     strm.write(reinterpret_cast<const char *>(&vec_size), sizeof(vec_size));
+
+    // It is better for compression, if you write the alike data together
+    //
     for (const auto &str : str_vec)  {
-        strm.write(str.data(), str.size());
-        strm.put('\0');
+        const uint16_t  str_sz = static_cast<uint16_t>(str.size());
+
+        strm.write(reinterpret_cast<const char *>(&str_sz), sizeof(str_sz));
     }
+    for (const auto &str : str_vec)
+        strm.write(str.data(), str.size() * sizeof(char));
     return (strm);
 }
 
@@ -935,10 +941,10 @@ inline static STRM &_write_binary_data_(STRM &strm, const V &vec)  {
 
         if constexpr (has_data_method)  {
             strm.write(reinterpret_cast<const char *>(vec.data()),
-                       sizeof(vec_size) * sizeof(ValueType));
+                       vec_size * sizeof(ValueType));
         }
         else  {
-            for (std::size_t i = 0; i < vec.size(); ++i)
+            for (std::size_t i = 0; i < vec_size; ++i)
                 strm.write(reinterpret_cast<const char *>(&(vec[i])),
                            sizeof(ValueType));
         }
@@ -962,7 +968,7 @@ inline static STRM &_write_binary_datetime_(STRM &strm, const V &dt_vec)  {
     for (const auto &dt : dt_vec)  {
         const double    val = static_cast<double>(dt);
 
-        strm.write(reinterpret_cast<const char *>(&val), sizeof(double));
+        strm.write(reinterpret_cast<const char *>(&val), sizeof(val));
     }
     return (strm);
 }

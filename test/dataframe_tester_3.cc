@@ -3794,12 +3794,12 @@ static void test_writing_binary()  {
         vw.write<double, long>("./FROM_VW_SHORT_IBM.csv2", io_format::csv2);
         vw.write<double, long>("./FROM_VW_SHORT_IBM.dat", io_format::binary);
 
-		std::remove("./SHORT_IBM_dup.csv");
-		std::remove("./SHORT_IBM_dup.csv2");
-		std::remove("./SHORT_IBM_dup.dat");
-		std::remove("./FROM_VW_SHORT_IBM.csv");
-		std::remove("./FROM_VW_SHORT_IBM.csv2");
-		std::remove("./FROM_VW_SHORT_IBM.dat");
+        std::remove("./SHORT_IBM_dup.csv");
+        std::remove("./SHORT_IBM_dup.csv2");
+        std::remove("./SHORT_IBM_dup.dat");
+        std::remove("./FROM_VW_SHORT_IBM.csv");
+        std::remove("./FROM_VW_SHORT_IBM.csv2");
+        std::remove("./FROM_VW_SHORT_IBM.dat");
     }
     catch (const DataFrameError &ex)  {
         std::cout << ex.what() << std::endl;

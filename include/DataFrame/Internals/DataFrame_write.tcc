@@ -196,9 +196,11 @@ write(S &o,
         }
     }
     else if (iof == io_format::binary)  {
-        const auto  endianness = get_system_endian();
+        const auto      endianness = get_system_endian();
+        const uint16_t  col_num = static_cast<uint16_t>(column_list_.size());
 
         o.write(reinterpret_cast<const char *>(&endianness), sizeof(endians));
+        o.write(reinterpret_cast<const char *>(&col_num), sizeof(col_num));
 
         print_binary_functor_<Ts ...>   idx_functor (DF_INDEX_COL_NAME,
                                                      o,
